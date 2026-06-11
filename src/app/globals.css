@@ -1,26 +1,136 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
+/* ─── LCARS Design Tokens ───────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Primärpalette DS9/VOY */
+  --lcars-purple:      #7b68ee;
+  --lcars-purple-dim:  #5b4fcf;
+  --lcars-purple-dark: #2d2550;
+  --lcars-blue:        #4fc3f7;
+  --lcars-amber:       #ffb347;
+  --lcars-red:         #e05a5a;
+  --lcars-green:       #4caf82;
+
+  /* Interface-Flächen */
+  --lcars-bg:          #08081a;
+  --lcars-surface:     #10102a;
+  --lcars-surface-2:   #1a1838;
+  --lcars-border:      #2d2550;
+
+  /* Typografie */
+  --lcars-text:        #c8b8ff;
+  --lcars-text-dim:    #6a5f9e;
+  --lcars-text-data:   #4fc3f7;
+
+  /* Strukturmaße */
+  --lcars-radius-pill: 24px;
+  --lcars-radius-card: 4px 12px 12px 4px;
+  --lcars-elbow-size:  180px;
+  --lcars-bar-width:   48px;
+  --lcars-header-h:    64px;
+  --lcars-footer-h:    40px;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* ─── Reset & Basis ─────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--lcars-bg);
+  color: var(--lcars-text);
+  font-family: var(--font-antonio), 'Antonio', sans-serif;
+  letter-spacing: 0.05em;
+  -webkit-font-smoothing: antialiased;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ─── LCARS Utility-Klassen ─────────────────────────────── */
+
+/* Elbow: die charakteristischen abgerundeten Ecken */
+.lcars-elbow-tl { border-radius: var(--lcars-radius-pill) 0 0 0; }
+.lcars-elbow-tr { border-radius: 0 var(--lcars-radius-pill) 0 0; }
+.lcars-elbow-bl { border-radius: 0 0 0 var(--lcars-radius-pill); }
+.lcars-elbow-br { border-radius: 0 0 var(--lcars-radius-pill) 0; }
+
+/* Pill-Button / Navigation */
+.lcars-pill {
+  height: 32px;
+  border-radius: 16px;
+  padding: 0 18px;
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 13px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.15s, color 0.15s;
+  border: none;
+  text-decoration: none;
+}
+.lcars-pill-primary { background: var(--lcars-purple);     color: var(--lcars-bg); }
+.lcars-pill-dim     { background: var(--lcars-purple-dark); color: var(--lcars-purple); }
+.lcars-pill-blue    { background: var(--lcars-blue);        color: var(--lcars-bg); }
+.lcars-pill-amber   { background: var(--lcars-amber);       color: var(--lcars-bg); }
+.lcars-pill-primary:hover { background: #9d8fff; }
+.lcars-pill-dim:hover     { background: var(--lcars-purple-dim); color: var(--lcars-bg); }
+
+/* Content-Card mit linkem Akzentstreifen */
+.lcars-card {
+  background: var(--lcars-surface);
+  border: 1px solid var(--lcars-border);
+  border-left: 3px solid var(--lcars-purple);
+  border-radius: 0 12px 12px 0;
+  padding: 12px 16px;
+}
+.lcars-card-blue  { border-left-color: var(--lcars-blue); }
+.lcars-card-amber { border-left-color: var(--lcars-amber); }
+.lcars-card-red   { border-left-color: var(--lcars-red); }
+
+/* Labels & Daten-Text */
+.lcars-label {
+  font-size: 10px;
+  color: var(--lcars-text-dim);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.lcars-data {
+  font-family: var(--font-mono-lcars), monospace;
+  font-size: 12px;
+  color: var(--lcars-text-data);
+  letter-spacing: 1px;
+}
+.lcars-heading {
+  font-size: 22px;
+  color: var(--lcars-text);
+  letter-spacing: 3px;
+  text-transform: uppercase;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Trennlinien im LCARS-Stil */
+.lcars-rule {
+  height: 2px;
+  background: var(--lcars-border);
 }
+.lcars-rule-accent {
+  height: 2px;
+  background: var(--lcars-purple);
+}
+
+/* Status-Punkte */
+.lcars-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.lcars-dot-active  { background: var(--lcars-green); }
+.lcars-dot-retired { background: var(--lcars-text-dim); }
+.lcars-dot-dead    { background: var(--lcars-red); }
+
+/* Scrollbar im LCARS-Stil */
+::-webkit-scrollbar       { width: 6px; }
+::-webkit-scrollbar-track { background: var(--lcars-bg); }
+::-webkit-scrollbar-thumb { background: var(--lcars-purple-dark); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--lcars-purple); }
