@@ -15,14 +15,14 @@ interface DatapadLayoutProps {
 // Feste Navigation — später können wir die aktive Route
 // per usePathname() aus next/navigation automatisch ermitteln
 export const MAIN_NAV: NavItem[] = [
-  { label: 'Charaktere', href: '/characters' },
-  { label: 'Aufzeichnungen', href: '/diaries' },
-  { label: 'Lore', href: '/lore' },
-  { label: 'Orte', href: '/locations' },
-  { label: 'Gegenstände', href: '/items' },
-  { label: 'Spezies', href: '/species' },
-  { label: 'Personen', href: '/persons' },
-  { label: 'Verschiedenes', href: '/misc' },
+  { label: 'Charaktere', href: '/characters', style:'primary' },
+  { label: 'Aufzeichnungen', href: '/diaries', style:'amber' },
+  { label: 'Lore', href: '/lore', style: 'blue'},
+  { label: 'Orte', href: '/locations' , style:'primary'},
+  { label: 'Gegenstände', href: '/items', style:'amber' },
+  { label: 'Spezies', href: '/species', style:'blue'},
+  { label: 'Personen', href: '/persons', style:'primary'},
+  { label: 'Verschiedenes', href: '/misc', style:'amber' },
 ];
 
 export default function DatapadLayout({
@@ -31,7 +31,6 @@ export default function DatapadLayout({
   nav,
   statusLeft,
   statusRight,
-  sidebarAccent,
 }: DatapadLayoutProps) {
   return (
     <div
@@ -41,7 +40,7 @@ export default function DatapadLayout({
       <LcarsHeader title={title} nav={nav} />
 
       <div className="flex flex-1 overflow-hidden">
-        <LcarsSidebar accentColor={sidebarAccent} />
+        <LcarsSidebar />
 
         {/* Scrollbarer Content-Bereich */}
         <main className="flex-1 overflow-y-auto p-6">

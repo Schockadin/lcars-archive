@@ -4,7 +4,7 @@ name: "Beispiel Charakter"
 player: "Spieler 1"
 race: "Mensch"
 class: "Magier"
-status: active
+status: dead
 tags: [charakter, test]
 ---
 

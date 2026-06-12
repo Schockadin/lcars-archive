@@ -4,8 +4,8 @@ interface LcarsFooterProps {
 }
 
 export default function LcarsFooter({
-  statusLeft = 'BETRIEB NOMINAL',
-  statusRight,
+  statusLeft = 'BETRIEB: Alpha',
+  statusRight = 'NEO LCARS ARCHIVE V0.1',
 }: LcarsFooterProps) {
   return (
     <footer
@@ -20,7 +20,7 @@ export default function LcarsFooter({
 
       {/* Status-Leiste */}
       <div
-        className="flex-1 flex items-center justify-between px-4 border-t-2 border-lcars-purple"
+        className="flex-1 flex items-center justify-between px-4 border-t-2 border-lcars-amber"
         style={{ background: 'var(--lcars-bg)' }}
       >
         <span className="lcars-data text-xs">{statusLeft}</span>

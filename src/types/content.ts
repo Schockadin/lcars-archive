@@ -19,12 +19,16 @@ export interface CharacterFrontmatter extends BaseFrontmatter {
   portrait?: string;
 }
 
-export interface SessionFrontmatter extends BaseFrontmatter {
+export interface DiaryFrontmatter extends BaseFrontmatter {
   type: 'diary';
-  date: string;
-  location?: string;
-  players?: string[];
-  entry: string;
+  date: string;              // z.B. "2024-03-15"
+  author?: string;           // Welcher Charakter schreibt (optional)
+  location?: string;         // Wo die Abenteuer stattfanden
+  characters?: string[];     // Beteiligte Charaktere
+  number?: number;           // Eintrag #42
+  summary?: string;          // Kurzfassung für Listen
+  tags?: string[];           // z.B. ["mission", "space", "battle"]
+  content: string;           // Rohes Markdown
 }
 
 export interface LoreFrontmatter extends BaseFrontmatter {

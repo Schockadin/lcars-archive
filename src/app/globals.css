@@ -9,7 +9,9 @@
   --lcars-purple-dim:  #5b4fcf;
   --lcars-purple-dark: #2d2550;
   --lcars-blue:        #4fc3f7;
+  --lcars-blue-dim:    #29b6f6;
   --lcars-amber:       #ffb347;
+  --lcars-amber-dim:   #ff9e40;
   --lcars-red:         #e05a5a;
   --lcars-green:       #4caf82;
 
@@ -23,12 +25,13 @@
   --lcars-text:        #c8b8ff;
   --lcars-text-dim:    #6a5f9e;
   --lcars-text-data:   #4fc3f7;
+  --lcars-text-contrast: #ededed;
 
   /* Strukturmaße */
   --lcars-radius-pill: 24px;
   --lcars-radius-card: 4px 12px 12px 4px;
   --lcars-elbow-size:  180px;
-  --lcars-bar-width:   48px;
+  --lcars-bar-width:   64px;
   --lcars-header-h:    64px;
   --lcars-footer-h:    40px;
 }
@@ -38,7 +41,7 @@
 
 html, body {
   height: 100%;
-  background: var(--lcars-bg);
+  /* background: var(--lcars-bg); */
   color: var(--lcars-text);
   font-family: var(--font-antonio), 'Antonio', sans-serif;
   letter-spacing: 0.05em;
@@ -48,33 +51,64 @@ html, body {
 /* ─── LCARS Utility-Klassen ─────────────────────────────── */
 
 /* Elbow: die charakteristischen abgerundeten Ecken */
-.lcars-elbow-tl { border-radius: var(--lcars-radius-pill) 0 0 0; }
-.lcars-elbow-tr { border-radius: 0 var(--lcars-radius-pill) 0 0; }
-.lcars-elbow-bl { border-radius: 0 0 0 var(--lcars-radius-pill); }
-.lcars-elbow-br { border-radius: 0 0 var(--lcars-radius-pill) 0; }
-
-/* Pill-Button / Navigation */
-.lcars-pill {
-  height: 32px;
-  border-radius: 16px;
-  padding: 0 18px;
+.lcars-elbow-tl { border-radius: var(--lcars-radius-pill) 0 0 0; background: var(--lcars-amber);}
+.lcars-elbow-tr { border-radius: 0 var(--lcars-radius-pill) 0 0; background: var(--lcars-amber);}
+.lcars-elbow-bl { border-radius: 0 0 0 var(--lcars-radius-pill); background: var(--lcars-amber);}
+.lcars-elbow-br { border-radius: 0 0 var(--lcars-radius-pill) 0; background: var(--lcars-amber);}
+.lcars-elbow-home { 
+  border-radius: var(--lcars-radius-pill) 0 0; 
+  background: var(--lcars-amber);
+   height: 32px;
   font-family: var(--font-antonio), sans-serif;
-  font-size: 13px;
+  font-size: 18px;
   letter-spacing: 2px;
   text-transform: uppercase;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  transition: background 0.15s, color 0.15s;
-  border: none;
+  transition: background 0.25s, color 0.25s;
   text-decoration: none;
+  font-weight: 600;
+  height:100%;
+}
+.lcars-elbow-home:hover { background: var(--lcars-amber-dim); color: var(--lcars-text-contrast); }
+
+/* Pill-Button / Navigation */
+.lcars-pill {
+  height: 32px;
+  /* border-radius: 16px; */
+  padding: 0 18px;
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 18px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.25s, color 0.25s;
+  text-decoration: none;
+  font-weight: 600;
+  height:100%;
+  margin: 0 1px;
 }
 .lcars-pill-primary { background: var(--lcars-purple);     color: var(--lcars-bg); }
-.lcars-pill-dim     { background: var(--lcars-purple-dark); color: var(--lcars-purple); }
+.lcars-pill-dim     { background: var(--lcars-purple-dark); color: var(--lcars-bg); }
 .lcars-pill-blue    { background: var(--lcars-blue);        color: var(--lcars-bg); }
 .lcars-pill-amber   { background: var(--lcars-amber);       color: var(--lcars-bg); }
-.lcars-pill-primary:hover { background: #9d8fff; }
-.lcars-pill-dim:hover     { background: var(--lcars-purple-dim); color: var(--lcars-bg); }
+.lcars-pill-primary:hover { background: var(--lcars-purple-dim); color:var(--lcard-text-contrast);  box-shadow: inset 0 0 0 1px var(--lcars-bg);}
+.lcars-pill-dim:hover     { background: var(--lcars-purple-dark); color: var(--lcars-text-contrast);  box-shadow: inset 0 0 0 1px var(--lcars-bg);}
+.lcars-pill-blue:hover    { background: var(--lcars-blue-dim); color: var(--lcars-text-contrast);  box-shadow: inset 0 0 0 1px var(--lcars-bg);}
+.lcars-pill-amber:hover   { background: var(--lcars-amber-dim); color: var(--lcars-text-contrast);  box-shadow: inset 0 0 0 1px var(--lcars-bg);}
+.lcars-pill-active { 
+  background: var(--lcars-green); 
+  color: var(--lcars-text-contrast); 
+  box-shadow:inset 0 0 0 2px var(--lcars-bg);
+}
+.lcars-pill-active:hover {
+  background: var(--lcars-green);
+  color: var(--lcars-text-contrast);
+  box-shadow: inset 0 0 0 2px var(--lcars-bg);
+}
 
 /* Content-Card mit linkem Akzentstreifen */
 .lcars-card {
@@ -100,12 +134,34 @@ html, body {
   font-size: 12px;
   color: var(--lcars-text-data);
   letter-spacing: 1px;
+  margin: 0px 5px;
 }
 .lcars-heading {
   font-size: 22px;
   color: var(--lcars-text);
   letter-spacing: 3px;
   text-transform: uppercase;
+  padding: 0px 5px;
+}
+.lcars-heading-amber {
+  font-size: 22px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  padding: 0px 5px;
+  margin-left: 1px;
+  margin-right: 2px;
+  background: var(--lcars-amber);
+  justify-content:center;
+  align-items:center;
+  display:inline-flex;
+  color: var(--lcars-bg);
+  font-weight: 800;
+}
+.lcars-heading-empty {
+  height: 100%;
+  width: 100%;
+  background: var(--lcars-purple);
+  margin: 0px 1px;
 }
 
 /* Trennlinien im LCARS-Stil */
@@ -134,3 +190,139 @@ html, body {
 ::-webkit-scrollbar-track { background: var(--lcars-bg); }
 ::-webkit-scrollbar-thumb { background: var(--lcars-purple-dark); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--lcars-purple); }
+
+/* ─── Markdown Content Styling ────────────────────────────── */
+.lcars-markdown {
+  color: var(--lcars-text);
+  line-height: 1.8;
+}
+
+.lcars-markdown h1,
+.lcars-markdown h2,
+.lcars-markdown h3 {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-family: var(--font-antonio), sans-serif;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--lcars-text);
+}
+
+.lcars-markdown h1 {
+  font-size: 28px;
+  border-bottom: 2px solid var(--lcars-purple);
+  padding-bottom: 0.5rem;
+}
+
+.lcars-markdown h2 {
+  font-size: 20px;
+  color: var(--lcars-blue);
+}
+
+.lcars-markdown h3 {
+  font-size: 16px;
+  color: var(--lcars-text-dim);
+}
+
+.lcars-markdown p {
+  margin-bottom: 1rem;
+}
+
+.lcars-markdown strong {
+  color: var(--lcars-text);
+  font-weight: 700;
+}
+
+.lcars-markdown em {
+  color: var(--lcars-blue);
+  font-style: italic;
+}
+
+.lcars-markdown ul,
+.lcars-markdown ol {
+  margin-left: 2rem;
+  margin-bottom: 1rem;
+}
+
+.lcars-markdown li {
+  margin-bottom: 0.5rem;
+}
+
+.lcars-markdown a {
+  color: var(--lcars-blue);
+  text-decoration: underline;
+  transition: color 0.15s;
+}
+
+.lcars-markdown a:hover {
+  color: var(--lcars-amber);
+}
+
+.lcars-markdown blockquote {
+  border-left: 3px solid var(--lcars-purple);
+  padding-left: 1rem;
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: 1rem;
+  color: var(--lcars-text-dim);
+  font-style: italic;
+}
+
+.lcars-markdown code {
+  background: var(--lcars-surface-2);
+  color: var(--lcars-text-data);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono-lcars), monospace;
+  font-size: 13px;
+}
+
+.lcars-markdown pre {
+  background: var(--lcars-surface-2);
+  border: 1px solid var(--lcars-border);
+  border-left: 3px solid var(--lcars-blue);
+  padding: 1rem;
+  border-radius: 0 8px 8px 0;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.lcars-markdown pre code {
+  background: none;
+  color: var(--lcars-text-data);
+  padding: 0;
+  border-radius: 0;
+}
+
+.lcars-markdown table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1rem;
+}
+
+.lcars-markdown table thead {
+  border-bottom: 2px solid var(--lcars-purple);
+}
+
+.lcars-markdown table th {
+  text-align: left;
+  padding: 0.75rem;
+  color: var(--lcars-text);
+  font-weight: 700;
+}
+
+.lcars-markdown table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--lcars-border);
+}
+
+.lcars-markdown table tr:hover {
+  background: var(--lcars-surface-2);
+}
+
+.lcars-markdown hr {
+  border: none;
+  height: 2px;
+  background: var(--lcars-border);
+  margin: 2rem 0;
+}

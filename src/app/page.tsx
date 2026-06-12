@@ -7,10 +7,10 @@ export default function Home() {
 
   return (
     <DatapadLayout
-      title="Kampagnen-Archiv"
+      title="NEOverse Archiv"
       nav={nav}
       statusLeft="BETRIEB NOMINAL"
-      statusRight="STERNENFLOTTEN-DATENBANK // V.2409"
+      statusRight="STERNENFLOTTEN-DATENBANK // V.1337"
     >
       {/* Hier kommt später der Dashboard-Content */}
       <div className="lcars-card p-6 max-w-lg">
