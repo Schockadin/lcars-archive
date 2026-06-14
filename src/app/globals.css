@@ -14,6 +14,9 @@
   --lcars-amber-dim:   #ff9e40;
   --lcars-red:         #e05a5a;
   --lcars-green:       #4caf82;
+  --lcars-rose-light:  #ffcccb;
+
+   /* Schriftarten */
 
   /* Interface-Flächen */
   --lcars-bg:          #08081a;
@@ -32,7 +35,7 @@
   --lcars-radius-card: 4px 12px 12px 4px;
   --lcars-elbow-size:  180px;
   --lcars-bar-width:   64px;
-  --lcars-header-h:    64px;
+  --lcars-header-h:    200px;
   --lcars-footer-h:    40px;
 }
 
@@ -72,6 +75,35 @@ html, body {
   height:100%;
 }
 .lcars-elbow-home:hover { background: var(--lcars-amber-dim); color: var(--lcars-text-contrast); }
+
+.lcars-elbow-top {
+  position: relative;
+}
+.lcars-elbow-top::after {
+  content: '';
+  position: absolute;
+  top: -32px;        
+  left: 0px;
+  width: 32px;      
+  height: 32px;
+  border-radius: 0% 0% 50% 0%;
+  box-shadow: 8px 8px 0 4px var(--lcars-purple);
+  rotate: 90deg;
+}
+.lcars-elbow-bottom {
+  position: relative;
+}
+.lcars-elbow-bottom::after {
+  content: '';
+  position: absolute;
+  bottom: -32px;        
+  left: 0px;
+  width: 32px;      
+  height: 32px;
+  border-radius: 0% 0% 50% 0%;
+  box-shadow: 8px 8px 0 4px var(--lcars-red);
+  rotate: 180deg;
+}
 
 /* Pill-Button / Navigation */
 .lcars-pill {

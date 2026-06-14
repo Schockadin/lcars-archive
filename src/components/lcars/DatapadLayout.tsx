@@ -44,11 +44,11 @@ export default function DatapadLayout({
 
         {/* Scrollbarer Content-Bereich */}
         <main className="flex-1 overflow-y-auto p-6">
-          {children}
+          {/* {children} */}
         </main>
       </div>
 
-      <LcarsFooter statusLeft={statusLeft} statusRight={statusRight} />
+      {/* <LcarsFooter statusLeft={statusLeft} statusRight={statusRight} /> */}
     </div>
   );
 }

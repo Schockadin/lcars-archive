@@ -12,7 +12,7 @@
 // ];
 
 const BARS = [
-  { fraction: 0.1, color: 'var(--lcars-amber)' },
+  { fraction: 0.1, color: 'var(--lcars-red)' },
   { fraction: 0.2, color: 'var(--lcars-purple-dim)' },
   { fraction: 0.15, color: 'var(--lcars-blue)' },
   { fraction: 0.05, color: 'var(--lcars-purple)' },

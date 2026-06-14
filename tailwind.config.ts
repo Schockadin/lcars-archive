@@ -2,7 +2,9 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
-  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
+  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}',
+  './app/**/*.{js,ts,jsx,tsx,mdx}',   // ← je nach deiner Ordnerstruktur
+  './components/**/*.{js,ts,jsx,tsx,mdx}',],
   theme: {
     extend: {
       colors: {
@@ -21,6 +23,7 @@ const config: Config = {
           text:       '#c8b8ff',
           'text-dim': '#6a5f9e',
           'text-data': '#4fc3f7',
+          'rose-light': '#ffcccb',
         }
       },
       fontFamily: {
@@ -32,6 +35,7 @@ const config: Config = {
       }
     },
   },
+
   plugins: [],
 };
 
