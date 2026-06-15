@@ -1,19 +1,18 @@
-// src/app/charaktere/[slug]/page.tsx
 import { getCharacterBySlug, getAllCharacters } from '@/lib/characters';
 import { notFound } from 'next/navigation';
 
-// Statische Routen zur Build-Zeit generieren
+interface Props {
+  params: Promise<{ slug: string }>;
+}
+
 export async function generateStaticParams() {
   const characters = await getAllCharacters();
   return characters.map(c => ({ slug: c.slug }));
 }
 
-interface Props {
-  params: { slug: string };
-}
-
 export default async function CharakterPage({ params }: Props) {
-  const character = await getCharacterBySlug(params.slug);
+  const { slug } = await params;
+  const character = await getCharacterBySlug(slug);
 
   if (!character) notFound();
 

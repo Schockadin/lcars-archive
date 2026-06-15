@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import { getCharacterBySlug } from '@/lib/characters';
 
 interface Params {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }
 
 export async function GET(_req: Request, { params }: Params) {
   try {
-    const character = await getCharacterBySlug(params.slug);
+    const { slug } = await params;
+    const character = await getCharacterBySlug(slug);
 
     if (!character) {
       return NextResponse.json(
