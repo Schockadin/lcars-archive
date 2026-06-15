@@ -64,7 +64,10 @@ export default function LcarsHeader({ title, nav }: LcarsHeaderProps) {
 
       <div className="flex flex-col h-full w-full">
         {/* Info-Box & Menu */}
-        <div className="flex-grow w-full"></div>
+        <div className="flex-grow w-full">
+
+
+        </div>
 
         {/* Footer Bar */}
         <div className="flex h-[36px] gap-1 justify-start">
@@ -79,7 +82,7 @@ export default function LcarsHeader({ title, nav }: LcarsHeaderProps) {
             <div className='lcars-elbow-bottom w-full'
               style={{
                 background: 'var(--lcars-red)',
-                height: '16px ',
+                height: '16px',
             }}/>
           </div>
 
