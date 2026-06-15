@@ -1,13 +1,11 @@
-import { getCharacterBySlug, getAllCharacters } from '@/lib/characters';
+import { getCharacterBySlug } from '@/lib/characters';
 import { notFound } from 'next/navigation';
+
+// Verhindert statisches Prerendering – Seite wird zur Laufzeit gerendert
+export const dynamic = 'force-dynamic';
 
 interface Props {
   params: Promise<{ slug: string }>;
-}
-
-export async function generateStaticParams() {
-  const characters = await getAllCharacters();
-  return characters.map(c => ({ slug: c.slug }));
 }
 
 export default async function CharakterPage({ params }: Props) {

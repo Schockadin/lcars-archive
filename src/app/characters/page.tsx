@@ -2,6 +2,8 @@
 import { getAllCharacters } from '@/lib/characters';
 import { Character } from '@/types/character';
 
+export const dynamic = 'force-dynamic';
+
 export default async function CharakterePage() {
   const characters = await getAllCharacters();
 

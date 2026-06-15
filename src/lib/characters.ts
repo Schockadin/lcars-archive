@@ -1,7 +1,16 @@
 import sql from '@/lib/db';
-import { Character } from '@/types/character';
+import { Character, CharacterMetadata } from '@/types/character';
 
-// Alle Charaktere, sortiert nach Status dann Name
+// Hilfsfunktion: stellt sicher dass metadata ein Objekt ist
+function parseCharacter(row: Character): Character {
+  return {
+    ...row,
+    metadata: typeof row.metadata === 'string'
+      ? JSON.parse(row.metadata) as CharacterMetadata
+      : row.metadata,
+  };
+}
+
 export async function getAllCharacters(): Promise<Character[]> {
   const rows = await sql<Character[]>`
     SELECT *
@@ -14,10 +23,9 @@ export async function getAllCharacters(): Promise<Character[]> {
       END,
       name ASC
   `;
-  return rows;
+  return rows.map(parseCharacter);
 }
 
-// Einzelner Charakter per Slug
 export async function getCharacterBySlug(
   slug: string
 ): Promise<Character | null> {
@@ -27,10 +35,9 @@ export async function getCharacterBySlug(
     WHERE slug = ${slug}
     LIMIT 1
   `;
-  return rows[0] ?? null;
+  return rows[0] ? parseCharacter(rows[0]) : null;
 }
 
-// Nur aktive Charaktere – z.B. für Autorenauswahl in Logbüchern
 export async function getActiveCharacters(): Promise<Character[]> {
   const rows = await sql<Character[]>`
     SELECT id, slug, name, metadata
@@ -38,5 +45,5 @@ export async function getActiveCharacters(): Promise<Character[]> {
     WHERE status = 'active'
     ORDER BY name ASC
   `;
-  return rows;
+  return rows.map(parseCharacter);
 }
