@@ -7,7 +7,7 @@ export default function CharakterDetailPage({character}: {character : Character}
   usePageMeta(character.name,"characters");
 
   return (
-    <article>
+    <article className="text-justify">
       {/* <div className="mb-[16px]">
         {character.portrait && (
           <img src={character.portrait} alt={character.name} />
