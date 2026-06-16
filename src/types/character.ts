@@ -1,3 +1,5 @@
+export type SectionKey = 'home' | 'characters' | 'missions' | 'archive' | 'timeline'
+
 export interface CharacterAffiliation {
   factions: string[];
   ships: string[];

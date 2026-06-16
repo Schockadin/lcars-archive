@@ -5,142 +5,172 @@
 /* ─── LCARS Design Tokens ───────────────────────────────── */
 :root {
   /* Primärpalette DS9/VOY */
-  --lcars-purple:      #7b68ee;
-  --lcars-purple-dim:  #5b4fcf;
-  --lcars-purple-dark: #2d2550;
-  --lcars-blue:        #4fc3f7;
-  --lcars-blue-dim:    #29b6f6;
-  --lcars-amber:       #ffb347;
-  --lcars-amber-dim:   #ff9e40;
-  --lcars-red:         #e05a5a;
-  --lcars-green:       #4caf82;
-  --lcars-rose-light:  #ffcccb;
-
-   /* Schriftarten */
+  --lcars-purple: #cd9acd;
+  --lcars-blue: #9a9aff;
+  --lcars-red: #cd6666;
+  --lcars-amber: #ff9a00;
+  --lcars-amber-light: #ffcd9a;
+  --lcars-orange: #ff9a66;
+  --lcars-text-light: #edefd2;
+  --lcars-text-dark: #08081a;
+  --lcars-background: #000000;
 
   /* Interface-Flächen */
-  --lcars-bg:          #08081a;
-  --lcars-surface:     #10102a;
-  --lcars-surface-2:   #1a1838;
-  --lcars-border:      #2d2550;
+  --lcars-bg: #08081a;
+  --lcars-surface: #10102a;
+  --lcars-surface-2: #1a1838;
+  --lcars-border: #2d2550;
 
   /* Typografie */
-  --lcars-text:        #c8b8ff;
-  --lcars-text-dim:    #6a5f9e;
-  --lcars-text-data:   #4fc3f7;
+  --lcars-text: #c8b8ff;
+  --lcars-text-dim: #6a5f9e;
+  --lcars-text-data: #4fc3f7;
   --lcars-text-contrast: #ededed;
 
   /* Strukturmaße */
   --lcars-radius-pill: 24px;
   --lcars-radius-card: 4px 12px 12px 4px;
-  --lcars-elbow-size:  180px;
-  --lcars-bar-width:   64px;
-  --lcars-header-h:    200px;
-  --lcars-footer-h:    40px;
+  --lcars-elbow-width: 64px;
+  --lcars-elbow-height: 16px;
+  --lcars-bar-width: 64px;
+  --lcars-header-h: 200px;
+  --lcars-footer-h: 40px;
 }
 
 /* ─── Reset & Basis ─────────────────────────────────────── */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
-html, body {
+html,
+body {
   height: 100%;
-  /* background: var(--lcars-bg); */
+  background: var(--lcars-bg);
   color: var(--lcars-text);
-  font-family: var(--font-antonio), 'Antonio', sans-serif;
+  font-family: var(--font-antonio), "Antonio", sans-serif;
   letter-spacing: 0.05em;
   -webkit-font-smoothing: antialiased;
 }
 
+header {
+  height: var(--lcars-header-h);
+}
+
 /* ─── LCARS Utility-Klassen ─────────────────────────────── */
 
-/* Elbow: die charakteristischen abgerundeten Ecken */
-.lcars-elbow-tl { border-radius: var(--lcars-radius-pill) 0 0 0; background: var(--lcars-amber);}
-.lcars-elbow-tr { border-radius: 0 var(--lcars-radius-pill) 0 0; background: var(--lcars-amber);}
-.lcars-elbow-bl { border-radius: 0 0 0 var(--lcars-radius-pill); background: var(--lcars-amber);}
-.lcars-elbow-br { border-radius: 0 0 var(--lcars-radius-pill) 0; background: var(--lcars-amber);}
-.lcars-elbow-home { 
-  border-radius: var(--lcars-radius-pill) 0 0; 
-  background: var(--lcars-amber);
-   height: 32px;
-  font-family: var(--font-antonio), sans-serif;
-  font-size: 18px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  transition: background 0.25s, color 0.25s;
-  text-decoration: none;
-  font-weight: 600;
-  height:100%;
+/* Header Sidebar */
+.header-side-top {
+  height: calc(0.8 * var(--lcars-header-h) - 5px);
+  width: var(--lcars-bar-width);
+  background-color: var(--lcars-purple);
 }
-.lcars-elbow-home:hover { background: var(--lcars-amber-dim); color: var(--lcars-text-contrast); }
+.header-side-bottom {
+  height: calc(0.2 * var(--lcars-header-h));
+  width: var(--lcars-bar-width);
+  background-color: var(--lcars-blue);
+}
 
+/* Elbow-Bar */
+
+.lcars-elbow-bar {
+  height: 32px;
+  width: 100%;
+  display: flex;
+  align-items: start;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Elbow: die charakteristischen abgerundeten Ecken */
 .lcars-elbow-top {
+  width: var(--lcars-elbow-width);
+  height: var(--lcars-elbow-height);
+  border-radius: 0% 0% 0% 50%;
+  background-color: var(--lcars-blue);
   position: relative;
 }
 .lcars-elbow-top::after {
-  content: '';
+  content: "";
   position: absolute;
-  top: -32px;        
-  left: 0px;
-  width: 32px;      
+  top: -32px;
+  left: 64px;
+  width: 64px;
   height: 32px;
-  border-radius: 0% 0% 50% 0%;
-  box-shadow: 8px 8px 0 4px var(--lcars-purple);
-  rotate: 90deg;
+  border-radius: 0% 0% 0% 50%;
+  box-shadow: -8px 16px 0px 0px var(--lcars-blue);
 }
 .lcars-elbow-bottom {
+  width: var(--lcars-elbow-width);
+  height: var(--lcars-elbow-height);
+  border-radius: 50% 0% 0% 0%;
+  background-color: var(--lcars-red);
   position: relative;
 }
 .lcars-elbow-bottom::after {
-  content: '';
+  content: "";
   position: absolute;
-  bottom: -32px;        
-  left: 0px;
-  width: 32px;      
+  top: 16px;
+  left: 64px;
+  width: 64px;
   height: 32px;
-  border-radius: 0% 0% 50% 0%;
-  box-shadow: 8px 8px 0 4px var(--lcars-red);
-  rotate: 180deg;
+  border-radius: 50% 0% 0% 0%;
+  box-shadow: -8px -16px 0px 0px var(--lcars-red);
 }
 
 /* Pill-Button / Navigation */
 .lcars-pill {
-  height: 32px;
-  /* border-radius: 16px; */
+  height: 48px;
+  border-radius: 16px;
+  width: 150px;
   padding: 0 18px;
   font-family: var(--font-antonio), sans-serif;
-  font-size: 18px;
-  letter-spacing: 2px;
+  font-size: 14px;
+  letter-spacing: 1px;
   text-transform: uppercase;
   cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  transition: background 0.25s, color 0.25s;
+  display: flex;
+  align-items: flex-end; /* ← vertikal: unten */
+  justify-content: flex-end; /* ← horizontal: rechts */
+  padding-bottom: 8px; /* ← etwas Abstand vom unteren Rand */
+  transition:
+    background 0.25s,
+    color 0.25s;
   text-decoration: none;
   font-weight: 600;
-  height:100%;
-  margin: 0 1px;
+  background-color: var(--lcars-amber);
+  color: black;
+  margin: 5px;
 }
-.lcars-pill-primary { background: var(--lcars-purple);     color: var(--lcars-bg); }
-.lcars-pill-dim     { background: var(--lcars-purple-dark); color: var(--lcars-bg); }
-.lcars-pill-blue    { background: var(--lcars-blue);        color: var(--lcars-bg); }
-.lcars-pill-amber   { background: var(--lcars-amber);       color: var(--lcars-bg); }
-.lcars-pill-primary:hover { background: var(--lcars-purple-dim); color:var(--lcard-text-contrast);  box-shadow: inset 0 0 0 1px var(--lcars-bg);}
-.lcars-pill-dim:hover     { background: var(--lcars-purple-dark); color: var(--lcars-text-contrast);  box-shadow: inset 0 0 0 1px var(--lcars-bg);}
-.lcars-pill-blue:hover    { background: var(--lcars-blue-dim); color: var(--lcars-text-contrast);  box-shadow: inset 0 0 0 1px var(--lcars-bg);}
-.lcars-pill-amber:hover   { background: var(--lcars-amber-dim); color: var(--lcars-text-contrast);  box-shadow: inset 0 0 0 1px var(--lcars-bg);}
-.lcars-pill-active { 
-  background: var(--lcars-green); 
-  color: var(--lcars-text-contrast); 
-  box-shadow:inset 0 0 0 2px var(--lcars-bg);
+.lcars-pill-active {
+  background-color: var(--lcars-blue);
 }
-.lcars-pill-active:hover {
-  background: var(--lcars-green);
-  color: var(--lcars-text-contrast);
-  box-shadow: inset 0 0 0 2px var(--lcars-bg);
+
+/* Main Content Sidebar */
+.lcars-sidebar {
+  width: var(--lcars-bar-width);
+  min-height: calc(100dvh - 232px);
+  height: auto;
+  display: flex;
+  flex-direction: column;
 }
+
+.character-list-entry {
+  text-decoration: none;
+  color: var(--lcars-text-contras);
+  font-size: 16px;
+  letter-spacing: 1px;
+  text-transform: capitalize;
+  margin-bottom: 5px;
+}
+.character-list-entry:hover {
+  text-decoration: underline;
+}
+
 
 /* Content-Card mit linkem Akzentstreifen */
 .lcars-card {
@@ -150,9 +180,15 @@ html, body {
   border-radius: 0 12px 12px 0;
   padding: 12px 16px;
 }
-.lcars-card-blue  { border-left-color: var(--lcars-blue); }
-.lcars-card-amber { border-left-color: var(--lcars-amber); }
-.lcars-card-red   { border-left-color: var(--lcars-red); }
+.lcars-card-blue {
+  border-left-color: var(--lcars-blue);
+}
+.lcars-card-amber {
+  border-left-color: var(--lcars-amber);
+}
+.lcars-card-red {
+  border-left-color: var(--lcars-red);
+}
 
 /* Labels & Daten-Text */
 .lcars-label {
@@ -183,9 +219,9 @@ html, body {
   margin-left: 1px;
   margin-right: 2px;
   background: var(--lcars-amber);
-  justify-content:center;
-  align-items:center;
-  display:inline-flex;
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
   color: var(--lcars-bg);
   font-weight: 800;
 }
@@ -208,20 +244,36 @@ html, body {
 
 /* Status-Punkte */
 .lcars-dot {
-  width: 10px; height: 10px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   display: inline-block;
   flex-shrink: 0;
 }
-.lcars-dot-active  { background: var(--lcars-green); }
-.lcars-dot-retired { background: var(--lcars-text-dim); }
-.lcars-dot-dead    { background: var(--lcars-red); }
+.lcars-dot-active {
+  background: var(--lcars-green);
+}
+.lcars-dot-retired {
+  background: var(--lcars-text-dim);
+}
+.lcars-dot-dead {
+  background: var(--lcars-red);
+}
 
 /* Scrollbar im LCARS-Stil */
-::-webkit-scrollbar       { width: 6px; }
-::-webkit-scrollbar-track { background: var(--lcars-bg); }
-::-webkit-scrollbar-thumb { background: var(--lcars-purple-dark); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--lcars-purple); }
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--lcars-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--lcars-purple-dark);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--lcars-purple);
+}
 
 /* ─── Markdown Content Styling ────────────────────────────── */
 .lcars-markdown {
