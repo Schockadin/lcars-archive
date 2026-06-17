@@ -11,8 +11,8 @@ export default function CharacterPage({ characters}: { characters : Character[]}
   const retired  = characters.filter(c => c.status === 'retired');
   const deceased = characters.filter(c => c.status === 'deceased');
   return (
-    <main>
-      <h1 className="mb-[5px]">Charaktere</h1>
+    <main className="flex flex-col items-start w-[75%]">
+      <h1 className="mb-[5px] text-[var(--lcars-amber)]">Charaktere</h1>
 
       {active.length > 0 && (
         <section className="mb-[5px]">

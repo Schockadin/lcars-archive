@@ -1,7 +1,6 @@
 'use client';
 import LcarsPill from './LcarsPill';
 import { useNeo } from '@/context/useNeo';
-import Link from 'next/link';
 
 export interface NavItem {
   id: string;
@@ -21,53 +20,43 @@ export default function LcarsHeader() {
   const { title, activeSection } = useNeo();
 
   return (
-    <header className="flex">
-      {/* Sidebar */}
-      <div className="flex flex-col h-full gap-[5px]">
-        <Link href="/" className='decoration-none'>
-          <div className="header-side-top"/>
-        </Link>
-        <div className="header-side-bottom"/>
-      </div>
-
-      {/* Titelbox */}
-      <div style={{
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        paddingLeft: "24px",
-        paddingBottom: "2px",
-      }}>
-        <div style={{
-          fontFamily: "'Antonio', 'Helvetica Neue', Arial, sans-serif",
-          fontSize: "11px",
-          letterSpacing: "0.25em",
-          color: "var(--lcars-orange)",
-          opacity: 0.6,
-          marginBottom: "2px",
-        }}>
-          ARCHIV-TERMINAL · SEKTION 7
+    <header className="flex w-full h-[var(--lcars-header-h)]">
+      <div className="flex h-full w-full">
+        {/* Sidebar */}
+        <div className="flex flex-col w-[var(--lcars-bar-width)] h-full">
+          <div className="w-[var(--lcars-bar-width)] bg-[var(--lcars-purple)] h-[50%] mb-[5px]"/>
+          <div className="lcars-elbow-top" />
         </div>
-        <div style={{
-          fontFamily: "'Antonio', 'Helvetica Neue', Arial, sans-serif",
-          fontSize: "28px",
-          fontWeight: 700,
-          letterSpacing: "0.15em",
-          color: "var(--lcars-amber)",
-          lineHeight: 1,
-        }}>
-          NEOVERSE
+
+        {/* Header Content */}
+        <div className="lcars-header-wrapper">
+
+          {/* Menu */}
+          <div className="lcars-header-content">
+            <div className="flex flex-col justify-center items-end mr-[10px]">
+              <div className='lcars-header-text'>
+                LCARS / {title}
+              </div>
+              <div className="grid grid-cols-2 justify-center items-center h-[50%] w-auto">
+                  {MAIN_NAV.map(nav => (
+                    <LcarsPill id={nav.id} text={nav.label} href={nav.href} key={nav.id} active={activeSection === nav.href.split("/")[1]}/>
+                  ))}
+              </div>
+            </div>
+          </div>
+
+          {/* LCARS BAR */}
+          <div className="lcars-elbow-bar">
+            <div className="w-[35%] h-[20px] bg-[var(--lcars-blue)] mr-[5px]" />
+            <div className="w-[5%] h-[20px] bg-[var(--lcars-amber)] mr-[5px]" />
+            <div className="w-[20%] h-[20px] bg-[var(--lcars-purple)] mr-[5px]" />
+            <div className="w-[35%] h-[20px] bg-[var(--lcars-purple)] mr-[5px]" />
+            <div className="w-[5%] h-[20px] bg-[var(--lcars-red)]" />
+          </div>
+
+
         </div>
-      </div>
 
-      {/* Leerfeld */}
-      <div className="flex-grow" />
-
-      {/* Menu */}
-      <div className="grid grid-cols-2 justify-center items-center mr-[16px]">
-          {MAIN_NAV.map(nav => (
-            <LcarsPill id={nav.id} text={nav.label} href={nav.href} key={nav.id} active={activeSection === nav.href.split("/")[1]}/>
-          ))}
       </div>
     </header>
   );

@@ -10,7 +10,7 @@ interface NeoProviderProps {
 
 export function NeoProvider({ children }: NeoProviderProps) {
   const [activeSection, setActiveSection] = useState<SectionKey>('home');
-  const [title, setTitle] = useState<string>('NeoVerse Archiv')
+  const [title, setTitle] = useState<string>('Home')
 
   const value: NeoContextValue = {
     activeSection,

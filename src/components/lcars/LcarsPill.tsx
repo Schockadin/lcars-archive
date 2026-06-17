@@ -13,7 +13,7 @@ export default function LcarsPill ({id, text, href, active} : LcarsPillProps) {
     return (
         <div className="flex">
             <Link href={href} className={`lcars-pill ${active ? 'lcars-pill-active' : ''}`}>
-                <div className="text-right">{id + "_" + text}</div>
+                <div className="text-right">{id + "-" + text}</div>
             </Link>
         </div>
     );

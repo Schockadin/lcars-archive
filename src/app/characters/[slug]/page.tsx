@@ -14,5 +14,5 @@ export default async function CharakterPage({ params }: Props) {
 
   if (!character) notFound();
 
-  return <CharakterDetailPage character={character}/>
+  return <CharakterDetailPage character={character}/>;
 }

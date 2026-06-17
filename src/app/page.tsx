@@ -5,19 +5,19 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 // ─── Systemstatus-Daten (statisch, können später aus Vault kommen) ──────────
 const SYSTEM_STATS = [
   { label: "AKTIVE LAUFZEIT",   value: "15+",    unit: "JAHRE"    },
-  { label: "SPIELSYSTEM",       value: "NEOVERSE", unit: ""       },
+  { label: "SPIELSYSTEM",       value: "STA 2e", unit: ""       },
   { label: "STATUS",            value: "AKTIV",  unit: ""         },
 ];
 
 
 export default function Home() {
-  usePageMeta("NeoVerse Archiv", "home");
+  usePageMeta("Home", "home");
 
   return (
     <main className="text-justify" style={{
       maxWidth: "100vw",
       minWidth: "50vw",
-      width: "400px",
+      width: "75%",
     }}>
       <div
         style={{
@@ -133,15 +133,15 @@ function StatBadge({ label, value, unit }: { label: string; value: string; unit:
 function BlinkCursor() {
   const [visible, setVisible] = useState(true);
   useEffect(() => {
-    const t = setInterval(() => setVisible(v => !v), 600);
+    const t = setInterval(() => setVisible(v => !v), 250);
     return () => clearInterval(t);
   }, []);
   return (
     <span
       style={{
         display: "inline-block",
-        width: "10px",
-        height: "1.1em",
+        width: "5px",
+        height: "clamp(28px, 4vw, 48px)",
         background: visible ? "var(--lcars-amber)" : "transparent",
         verticalAlign: "text-bottom",
         marginLeft: "4px",

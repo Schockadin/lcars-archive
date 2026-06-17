@@ -7,8 +7,8 @@ export default function CharakterDetailPage({character}: {character : Character}
   usePageMeta(character.name,"characters");
 
   return (
-    <article className="text-justify">
-      {/* <div className="mb-[16px]">
+    <article className="text-justify w-[75%]">
+      <div className="mb-[16px]">
         {character.portrait && (
           <img src={character.portrait} alt={character.name} />
         )}
@@ -20,7 +20,7 @@ export default function CharakterDetailPage({character}: {character : Character}
         {character.metadata.affiliation && (
           <p>{character.metadata.affiliation.factions.join(', ')}</p>
         )}
-      </div> */}
+      </div>
 
       {character.bio && (
         <section

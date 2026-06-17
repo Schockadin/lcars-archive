@@ -1,8 +1,8 @@
 import { Antonio, Share_Tech_Mono } from 'next/font/google';
 import './globals.css';
-import { LcarsHeader, LcarsSidebar  } from '@/components/lcars';
-import LcarsElbowBar from '@/components/lcars/LcarsElbowBar';
+import { LcarsHeader  } from '@/components/lcars';
 import { NeoProvider } from '@/context/NeoProvider';
+import LcarsMainContent from '@/components/lcars/LcarsMainContent';
 
 const antonio = Antonio({
   subsets: ['latin'],
@@ -21,13 +21,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <html lang="de" className={`${antonio.variable} ${shareTechMono.variable}`}>
         <body>
           <NeoProvider>
-            <LcarsHeader/>
-            <LcarsElbowBar/>
-            <div className="flex w-full h-[calc(100% - var(--lcars-header-h) - 32px)]">
-              <LcarsSidebar/>
-              <main className="px-[16px] pt-[16px] w-full">{children}</main>
+            <div className="flex flex-col">
+              <LcarsHeader/>
+              <LcarsMainContent>{children}</LcarsMainContent>
+              {/* <LcarsFooter/> */}
             </div>
-            {/* <LcarsFooter/> */}
           </NeoProvider>
         </body>
       </html>
