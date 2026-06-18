@@ -1,6 +1,5 @@
 {
-    "cSpell.words": [
-        "gerendert",
-        "homeworld"
-    ]
+  "cSpell.words": ["gerendert", "homeworld"],
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode"
 }

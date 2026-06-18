@@ -1,16 +1,16 @@
 // src/context/RuneProvider.tsx
-'use client'
-import { useState, type ReactNode } from 'react';
-import { NeoContextValue, NeoContext } from './NeoContext';
-import type { SectionKey } from '@/types/character';
+"use client";
+import { useState, type ReactNode } from "react";
+import { NeoContextValue, NeoContext } from "./NeoContext";
+import type { NavKey } from "@/lib/nav";
 
 interface NeoProviderProps {
   children: ReactNode;
 }
 
 export function NeoProvider({ children }: NeoProviderProps) {
-  const [activeSection, setActiveSection] = useState<SectionKey>('home');
-  const [title, setTitle] = useState<string>('Home')
+  const [activeSection, setActiveSection] = useState<NavKey>("home");
+  const [title, setTitle] = useState<string>("Home");
 
   const value: NeoContextValue = {
     activeSection,
@@ -19,9 +19,5 @@ export function NeoProvider({ children }: NeoProviderProps) {
     setTitle,
   };
 
-  return (
-    <NeoContext.Provider value={value}>
-      {children}
-    </NeoContext.Provider>
-  );
+  return <NeoContext.Provider value={value}>{children}</NeoContext.Provider>;
 }

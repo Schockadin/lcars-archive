@@ -1,20 +1,7 @@
-'use client';
-import LcarsPill from './LcarsPill';
-import { useNeo } from '@/context/useNeo';
-
-export interface NavItem {
-  id: string;
-  label: string;
-  href: string;
-  active?: boolean;
-}
-
-export const MAIN_NAV: NavItem[] = [
-  { id: '01', label: 'Charaktere', href: '/characters'},
-  { id: '02', label: 'Missionen', href: '/missions'},
-  { id: '03', label: 'Archiv', href: '/archive'},
-  { id: '04', label: 'Timeline', href: '/timeline'}, 
-];  
+"use client";
+import LcarsMenuItem from "./LcarsMenuItem";
+import { useNeo } from "@/hooks/useNeo";
+import { MAIN_NAV } from "@/lib/nav";
 
 export default function LcarsHeader() {
   const { title, activeSection } = useNeo();
@@ -24,23 +11,29 @@ export default function LcarsHeader() {
       <div className="flex h-full w-full">
         {/* Sidebar */}
         <div className="flex flex-col w-[var(--lcars-bar-width)] h-full">
-          <div className="w-[var(--lcars-bar-width)] bg-[var(--lcars-purple)] h-[50%] mb-[5px]"/>
-          <div className="lcars-elbow-top" />
+          <div className="w-full h-[150px] bg-[var(--lcars-amber)] mb-[5px]" />
+          <div className="lcars-elbow-top flex-grow" />
         </div>
 
         {/* Header Content */}
-        <div className="lcars-header-wrapper">
-
-          {/* Menu */}
+        <div className="flex flex-col h-full w-full bg-[var(--lcars-blue)]">
           <div className="lcars-header-content">
             <div className="flex flex-col justify-center items-end mr-[10px]">
-              <div className='lcars-header-text'>
-                LCARS / {title}
-              </div>
+              <div className="lcars-header-text">{`LCARS / ${title}`}</div>
               <div className="grid grid-cols-2 justify-center items-center h-[50%] w-auto">
-                  {MAIN_NAV.map(nav => (
-                    <LcarsPill id={nav.id} text={nav.label} href={nav.href} key={nav.id} active={activeSection === nav.href.split("/")[1]}/>
-                  ))}
+                {MAIN_NAV.map(
+                  (nav) =>
+                    nav.id != "00" && (
+                      <LcarsMenuItem
+                        id={nav.id}
+                        text={nav.label}
+                        href={nav.href}
+                        key={nav.id}
+                        active={activeSection === nav.href.split("/")[1]}
+                        type="pill"
+                      />
+                    ),
+                )}
               </div>
             </div>
           </div>
@@ -53,10 +46,7 @@ export default function LcarsHeader() {
             <div className="w-[35%] h-[20px] bg-[var(--lcars-purple)] mr-[5px]" />
             <div className="w-[5%] h-[20px] bg-[var(--lcars-red)]" />
           </div>
-
-
         </div>
-
       </div>
     </header>
   );

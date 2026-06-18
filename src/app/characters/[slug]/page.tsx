@@ -1,8 +1,6 @@
-import { getCharacterBySlug } from '@/lib/characters';
-import { notFound } from 'next/navigation';
-import CharakterDetailPage from './CharacterDetailPage';
-
-// export const dynamic = 'force-dynamic';
+import { getCharacterBySlug } from "@/lib/characters";
+import { notFound } from "next/navigation";
+import CharakterDetailPage from "./CharacterDetailPage";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -14,5 +12,5 @@ export default async function CharakterPage({ params }: Props) {
 
   if (!character) notFound();
 
-  return <CharakterDetailPage character={character}/>;
+  return <CharakterDetailPage character={character} />;
 }

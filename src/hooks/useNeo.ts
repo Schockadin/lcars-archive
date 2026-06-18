@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { NeoContext, NeoContextValue } from "./NeoContext";
+import { NeoContext, NeoContextValue } from "@/context/NeoContext";
 
 export function useNeo(): NeoContextValue {
   const context = useContext(NeoContext);

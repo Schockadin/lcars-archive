@@ -30,8 +30,7 @@
   /* Strukturmaße */
   --lcars-radius-pill: 24px;
   --lcars-radius-card: 4px 12px 12px 4px;
-  --lcars-elbow-width: 64px;
-  --lcars-elbow-height: 16px;
+  --lcars-elbow-size: 64px;
   --lcars-bar-width: 200px;
   --lcars-header-h: 320px;
   --lcars-footer-h: 40px;
@@ -63,7 +62,6 @@ body {
   width: 100%;
   height: 100%;
   display: block;
-  /* flex-direction: column; */
   background-color: var(--lcars-blue);
 }
 
@@ -83,15 +81,18 @@ body {
   width: 100%;
   height: calc(100% - 20px);
   position: relative;
-  border-radius: 0px 0px 0px 60px;
+  border-radius: 0px 0px 0px var(--lcars-elbow-size);
   justify-content: end;
   align-items: center;
   background-color: var(--lcars-bg);
 }
 
+/* Elbows */
+
 .lcars-elbow-bar {
   display: flex;
   width: 100%;
+  height: 20px;
   background-color: var(--lcars-bg);
 }
 
@@ -109,44 +110,75 @@ body {
   background-color: var(--lcars-red);
 }
 
-/* Pill-Button / Navigation */
-.lcars-pill {
+/* Menu / Buttons / Navigation */
+.lcars-menu-text {
+  color: black;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1.175;
+  letter-spacing: 1px;
+  font-size: 22px;
+  font-family: var(--font-antonio), sans-serif;
+  text-decoration: none;
+}
+
+.lcars-menu-bar {
+  height: 150px;
+  width: var(--lcars-bar-width);
+  padding: 0 18px;
+  padding-block: 1px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding-bottom: 8px;
+  margin-bottom: 5px;
+  transition:
+    background 0.25s,
+    color 0.25s;
+  background-color: var(--lcars-amber);
+  transition: 250ms;
+}
+.lcars-menu-bar:hover {
+  background-color: var(--lcars-amber-light);
+}
+
+.lcars-menu-pill {
   height: 75px;
   border-radius: 100vmax;
   width: 210px;
   padding: 0 18px;
-  font-family: var(--font-antonio), sans-serif;
-  font-size: 22px;
-  letter-spacing: 1px;
-  line-height: 1.175;
   padding-block: 1px;
-  text-transform: uppercase;
   cursor: pointer;
   display: flex;
-  align-items: flex-end; /* ← vertikal: unten */
-  justify-content: flex-end; /* ← horizontal: rechts */
-  padding-bottom: 8px; /* ← etwas Abstand vom unteren Rand */
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding-bottom: 8px;
   transition:
     background 0.25s,
     color 0.25s;
-  text-decoration: none;
-  font-weight: 600;
   background-color: var(--lcars-amber);
-  color: black;
   margin: 5px;
+  transition: 250ms;
 }
-.lcars-pill-active {
+.lcars-menu-pill:hover {
+  background-color: var(--lcars-amber-light);
+}
+
+.lcars-menu-active {
+  background-color: var(--lcars-blue);
+}
+.lcars-menu-active:hover {
   background-color: var(--lcars-blue);
 }
 
 /* Main Content Sidebar */
 .lcars-sidebar {
-  width: var(--lcars-bar-width);
+  min-width: 264px;
   height: 100dvh;
   display: flex;
-  flex-direction: column;
   position: sticky;
-  top: 16px;
+  top: 0px;
 }
 
 .lcars-to-top {
@@ -162,6 +194,11 @@ body {
 .lcars-to-top:hover {
   box-shadow: inset;
   box-shadow: 0 0 5px 0 var(--lcars-amber-light);
+}
+
+.lcars-main-content {
+  margin-top: 5px;
+  display: flex;
 }
 
 .character-list-entry {

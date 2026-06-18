@@ -1,5 +1,3 @@
-export type SectionKey = 'home' | 'characters' | 'missions' | 'archive' | 'timeline'
-
 export interface CharacterAffiliation {
   factions: string[];
   ships: string[];
@@ -21,7 +19,7 @@ export interface Character {
   id: number;
   slug: string;
   name: string;
-  status: 'active' | 'retired' | 'deceased';
+  status: "active" | "retired" | "deceased";
   portrait: string | null;
   joined_at: string | null;
   left_at: string | null;
