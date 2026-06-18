@@ -16,6 +16,13 @@ const shareTechMono = Share_Tech_Mono({
   variable: "--font-mono-lcars",
 });
 
+export const metadata = {
+  title: {
+    default: "Neo Archive",
+    template: "%s · Neo Archive", // %s wird durch den Seiten-Titel ersetzt
+  },
+};
+
 export default function RootLayout({
   children,
 }: {
