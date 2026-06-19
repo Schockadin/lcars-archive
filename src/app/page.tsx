@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import BlinkingCursor from "@/utils/blinkingCursor";
 
 // ─── Systemstatus-Daten (statisch, können später aus Vault kommen) ──────────
 const SYSTEM_STATS = [
@@ -21,49 +21,12 @@ export default function Home() {
         width: "75%",
       }}
     >
-      <div
-        style={{
-          display: "flex",
-          gap: "40px",
-          borderBottom: `1px solid var(--lcars-amber)`,
-          paddingBottom: "16px",
-          animationDelay: "0.2s",
-        }}
-      >
-        {SYSTEM_STATS.map((stat) => (
-          <StatBadge key={stat.label} {...stat} />
-        ))}
-      </div>
-
       {/* ── Begrüßungstext ── */}
       <div className="mt-[16px]">
-        {/* Eyebrow */}
-        <div
-          style={{
-            fontFamily: "'Antonio', 'Helvetica Neue', Arial, sans-serif",
-            fontSize: "12px",
-            letterSpacing: "0.3em",
-            color: "var(--lcars-orange)",
-            marginBottom: "12px",
-          }}
-        >
-          INITIALISIERUNG // DATENBANKZUGRIFF AUTORISIERT
-        </div>
-
         {/* Hauptüberschrift */}
-        <h1
-          style={{
-            fontFamily: "'Antonio', 'Helvetica Neue', Arial, sans-serif",
-            fontSize: "clamp(28px, 4vw, 48px)",
-            fontWeight: 700,
-            letterSpacing: "0.08em",
-            color: "var(--lcars-amber)",
-            lineHeight: 1.1,
-            marginBottom: "20px",
-          }}
-        >
+        <h1 className="lcars-heading">
           WILLKOMMEN IM ARCHIV
-          <BlinkCursor />
+          <BlinkingCursor />
         </h1>
 
         {/* Trennlinie */}
@@ -149,25 +112,5 @@ function StatBadge({
         )}
       </span>
     </div>
-  );
-}
-
-function BlinkCursor() {
-  const [visible, setVisible] = useState(true);
-  useEffect(() => {
-    const t = setInterval(() => setVisible((v) => !v), 250);
-    return () => clearInterval(t);
-  }, []);
-  return (
-    <span
-      style={{
-        display: "inline-block",
-        width: "5px",
-        height: "clamp(28px, 4vw, 48px)",
-        background: visible ? "var(--lcars-amber)" : "transparent",
-        verticalAlign: "text-bottom",
-        marginLeft: "4px",
-      }}
-    />
   );
 }

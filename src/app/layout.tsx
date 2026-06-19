@@ -1,6 +1,6 @@
 import { Antonio, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
-import { LcarsHeader } from "@/components/lcars";
+import { LcarsHeader, LcarsHeaderBox } from "@/components/lcars";
 import { NeoProvider } from "@/context/NeoProvider";
 import LcarsMainContent from "@/components/lcars/LcarsMainContent";
 
@@ -33,7 +33,7 @@ export default function RootLayout({
       <body>
         <NeoProvider>
           <div className="flex flex-col">
-            <LcarsHeader />
+            <LcarsHeader headerBox={<LcarsHeaderBox />} />
             <LcarsMainContent>{children}</LcarsMainContent>
             {/* <LcarsFooter/> */}
           </div>

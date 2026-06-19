@@ -1,10 +1,12 @@
 "use client";
-import LcarsMenuItem from "./LcarsMenuItem";
 import { useNeo } from "@/hooks/useNeo";
-import { MAIN_NAV } from "@/lib/nav";
 
-export default function LcarsHeader() {
-  const { title, activeSection } = useNeo();
+export default function LcarsHeader({
+  headerBox,
+}: {
+  headerBox: React.ReactNode;
+}) {
+  const { title } = useNeo();
 
   return (
     <header className="flex w-full h-[var(--lcars-header-h)]">
@@ -18,23 +20,14 @@ export default function LcarsHeader() {
         {/* Header Content */}
         <div className="flex flex-col h-full w-full bg-[var(--lcars-blue)]">
           <div className="lcars-header-content">
-            <div className="flex flex-col justify-center items-end mr-[10px]">
-              <div className="lcars-header-text">{`LCARS / ${title}`}</div>
-              <div className="grid grid-cols-2 justify-center items-center h-[50%] w-auto">
-                {MAIN_NAV.map(
-                  (nav) =>
-                    nav.id != "00" && (
-                      <LcarsMenuItem
-                        id={nav.id}
-                        text={nav.label}
-                        href={nav.href}
-                        key={nav.id}
-                        active={activeSection === nav.href.split("/")[1]}
-                        type="pill"
-                      />
-                    ),
-                )}
+            <div className="flex flex-col justify-between items-start h-full ml-[64px]">
+              <div className="flex flex-col justify-start">
+                <div className="lcars-eyebrow">
+                  INITIALISIERUNG // DATENBANKZUGRIFF AUTORISIERT
+                </div>
+                <h1>{`LCARS / ${title}`}</h1>
               </div>
+              <div>{headerBox}</div>
             </div>
           </div>
 

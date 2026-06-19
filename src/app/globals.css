@@ -82,7 +82,7 @@ body {
   height: calc(100% - 20px);
   position: relative;
   border-radius: 0px 0px 0px var(--lcars-elbow-size);
-  justify-content: end;
+  justify-content: space-between;
   align-items: center;
   background-color: var(--lcars-bg);
 }
@@ -211,4 +211,34 @@ body {
 }
 .character-list-entry:hover {
   text-decoration: underline;
+}
+
+/* Headings, Text, etc. */
+.lcars-heading,
+h1 {
+  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(28px, 4vw, 48px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--lcars-amber);
+  line-height: 1.1;
+  margin-bottom: 20px;
+}
+
+.lcars-eyebrow {
+  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  color: var(--lcars-orange);
+  margin-bottom: 12px;
+}
+
+@keyframes lcars-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
 }
