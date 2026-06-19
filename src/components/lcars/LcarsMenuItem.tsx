@@ -23,16 +23,18 @@ export default function LcarsMenuItem({
   return (
     <Link
       href={href}
-      className="lcars-menu-text"
       style={{
         marginBottom: "5px",
         textDecoration: "none",
       }}
     >
       <div
-        className={`lcars-menu-${type} ${active ? "lcars-menu-active" : ""} lcars-menu-text h-full w-full`}
+        className={`flex lcars-menu-${type} ${active ? "lcars-menu-active" : ""} h-full w-full`}
         style={style}
-      >{`${id}-${text}`}</div>
+      >
+        <div className="lcars-menu-id">{id}</div>
+        <div className="lcars-menu-text">-{text}</div>
+      </div>
     </Link>
   );
 }

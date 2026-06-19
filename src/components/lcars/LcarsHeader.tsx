@@ -9,29 +9,27 @@ export default function LcarsHeader({
   const { title } = useNeo();
 
   return (
-    <header className="flex w-full h-[var(--lcars-header-h)]">
+    <header className="w-full h-[var(--lcars-header-h)] bg-red-500">
       <div className="flex h-full w-full">
         {/* Sidebar */}
-        <div className="flex flex-col w-[var(--lcars-bar-width)] h-full">
+        <div className="flex flex-col w-[var(--lcars-bar-width)] shrink-0">
           <div className="w-full h-[150px] bg-[var(--lcars-amber)] mb-[5px]" />
           <div className="lcars-elbow-top flex-grow" />
         </div>
 
         {/* Header Content */}
-        <div className="flex flex-col h-full w-full bg-[var(--lcars-blue)]">
+        <div className="flex flex-col h-full flex-1 min-w-0 bg-[var(--lcars-blue)]">
           <div className="lcars-header-content">
-            <div className="flex flex-col justify-between items-start h-full ml-[64px]">
+            <div className="flex flex-col justify-between items-start h-full ml-[64px] min-w-0">
               <div className="flex flex-col justify-start">
                 <div className="lcars-eyebrow">
                   INITIALISIERUNG // DATENBANKZUGRIFF AUTORISIERT
                 </div>
-                <h1>{`LCARS / ${title}`}</h1>
+                <div className="lcars-header-title">{`LCARS / ${title}`}</div>
               </div>
-              <div>{headerBox}</div>
+              <div className="min-w-0 overflow-hidden">{headerBox}</div>
             </div>
           </div>
-
-          {/* LCARS BAR */}
           <div className="lcars-elbow-bar">
             <div className="w-[35%] h-[20px] bg-[var(--lcars-blue)] mr-[5px]" />
             <div className="w-[5%] h-[20px] bg-[var(--lcars-amber)] mr-[5px]" />

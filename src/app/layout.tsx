@@ -32,11 +32,11 @@ export default function RootLayout({
     <html lang="de" className={`${antonio.variable} ${shareTechMono.variable}`}>
       <body>
         <NeoProvider>
-          <div className="flex flex-col">
-            <LcarsHeader headerBox={<LcarsHeaderBox />} />
-            <LcarsMainContent>{children}</LcarsMainContent>
-            {/* <LcarsFooter/> */}
-          </div>
+          {/* <div className="flex flex-col w-full"> */}
+          <LcarsHeader headerBox={<LcarsHeaderBox />} />
+          <LcarsMainContent>{children}</LcarsMainContent>
+          {/* <LcarsFooter/> */}
+          {/* </div> */}
         </NeoProvider>
       </body>
     </html>

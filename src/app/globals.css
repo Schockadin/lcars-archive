@@ -45,9 +45,15 @@
   padding: 0;
 }
 
-html,
+html {
+  min-height: 100dvh;
+  min-width: 100%;
+  width: 100%;
+}
 body {
-  height: 100%;
+  min-height: 100dvh;
+  min-width: 100%;
+  width: 100%; /* NEU */
   background: var(--lcars-bg);
   color: var(--lcars-text);
   font-family: var(--font-antonio), "Antonio", sans-serif;
@@ -80,11 +86,23 @@ body {
   display: flex;
   width: 100%;
   height: calc(100% - 20px);
+  min-height: calc(var(--lcars-header-h) - 20px);
   position: relative;
   border-radius: 0px 0px 0px var(--lcars-elbow-size);
   justify-content: space-between;
   align-items: center;
   background-color: var(--lcars-bg);
+  overflow: hidden;
+}
+
+.lcars-header-title {
+  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(20px, 3.5vw, 48px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--lcars-amber);
+  line-height: 1.1;
+  white-space: nowrap;
 }
 
 /* Elbows */
@@ -98,20 +116,30 @@ body {
 
 .lcars-elbow-top {
   width: var(--lcars-bar-width);
-  height: calc(0.8 * var(--lcars-bar-width));
+  min-height: calc(0.8 * var(--lcars-bar-width));
   border-radius: 0 0 0 100px;
   background-color: var(--lcars-blue);
 }
 
 .lcars-elbow-bottom {
   width: var(--lcars-bar-width);
-  height: calc(0.8 * var(--lcars-bar-width));
+  min-height: calc(0.8 * var(--lcars-bar-width));
   border-radius: 100px 0 0 0;
   background-color: var(--lcars-red);
 }
 
 /* Menu / Buttons / Navigation */
 .lcars-menu-text {
+  color: black;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1.175;
+  letter-spacing: 1px;
+  font-size: 22px;
+  font-family: var(--font-antonio), sans-serif;
+  text-decoration: none;
+}
+.lcars-menu-id {
   color: black;
   font-weight: 600;
   text-transform: uppercase;
@@ -174,7 +202,7 @@ body {
 
 /* Main Content Sidebar */
 .lcars-sidebar {
-  min-width: 264px;
+  min-width: calc(var(--lcars-bar-width) + var(--lcars-elbow-size));
   height: 100dvh;
   display: flex;
   position: sticky;
@@ -197,8 +225,14 @@ body {
 }
 
 .lcars-main-content {
-  margin-top: 5px;
   display: flex;
+  margin-top: 5px;
+  min-width: 0;
+}
+
+.lcars-page-content {
+  min-width: 0;
+  width: 100%;
 }
 
 .character-list-entry {
@@ -233,6 +267,8 @@ h1 {
   margin-bottom: 12px;
 }
 
+/* Animationen */
+
 @keyframes lcars-pulse {
   0%,
   100% {
@@ -240,5 +276,50 @@ h1 {
   }
   50% {
     opacity: 0.25;
+  }
+}
+
+/* Media Querries */
+
+/* Small (≤ 768px): Sidebar auf 100px */
+@media (max-width: 768px) {
+  :root {
+    --lcars-bar-width: 100px;
+  }
+
+  .lcars-menu-bar {
+    width: var(--lcars-bar-width);
+    padding: 0 8px 6px;
+  }
+
+  /* .lcars-menu-text {
+    font-size: 14px;
+    letter-spacing: 0.5px;
+  } */
+
+  .lcars-menu-text {
+    display: none;
+  }
+
+  .lcars-menu-pill {
+    width: 100%;
+  }
+}
+
+/* Extra-Small (≤ 480px): Sidebar auf 64px */
+@media (max-width: 480px) {
+  :root {
+    --lcars-bar-width: 64px;
+    --lcars-elbow-size: 32px;
+  }
+
+  .lcars-menu-bar {
+    padding: 0 4px 4px;
+    height: 64px; /* kürzer, da kein Text mehr */
+  }
+
+  .lcars-elbow-bottom,
+  .lcars-elbow-top {
+    height: calc(0.8 * var(--lcars-bar-width)); /* Proportion bleibt */
   }
 }
