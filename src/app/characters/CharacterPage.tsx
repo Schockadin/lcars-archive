@@ -14,7 +14,7 @@ export default function CharacterPage({
   const retired = characters.filter((c) => c.status === "retired");
   const deceased = characters.filter((c) => c.status === "deceased");
   return (
-    <main className="flex flex-col items-start w-[75%]">
+    <div className="flex flex-col items-start pr-[var(--lcars-elbow-size)]">
       <h1 className="mb-[5px] text-[var(--lcars-amber)]">Charaktere</h1>
 
       {active.length > 0 && (
@@ -37,7 +37,7 @@ export default function CharacterPage({
           <CharacterGrid characters={deceased} />
         </section>
       )}
-    </main>
+    </div>
   );
 }
 

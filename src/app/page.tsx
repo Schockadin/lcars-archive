@@ -1,26 +1,10 @@
-"use client";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import ClientShell from "./clientShell";
+import StatChipBar from "@/components/lcars/StatChipBar";
 import BlinkingCursor from "@/utils/blinkingCursor";
 
-// ─── Systemstatus-Daten (statisch, können später aus Vault kommen) ──────────
-const SYSTEM_STATS = [
-  { label: "AKTIVE LAUFZEIT", value: "15+", unit: "JAHRE" },
-  { label: "SPIELSYSTEM", value: "STA 2e", unit: "" },
-  { label: "STATUS", value: "AKTIV", unit: "" },
-];
-
-export default function Home() {
-  usePageMeta("Home", "home");
-
+export default function Page() {
   return (
-    <main
-      className="text-justify"
-      style={{
-        maxWidth: "100vw",
-        minWidth: "50vw",
-        width: "75%",
-      }}
-    >
+    <ClientShell>
       {/* ── Begrüßungstext ── */}
       <div className="mt-[16px]">
         {/* Hauptüberschrift */}
@@ -72,45 +56,6 @@ export default function Home() {
           </p>
         </div>
       </div>
-    </main>
-  );
-}
-function StatBadge({
-  label,
-  value,
-  unit,
-}: {
-  label: string;
-  value: string;
-  unit: string;
-}) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-      <span
-        style={{
-          fontFamily: "'Antonio', 'Helvetica Neue', Arial, sans-serif",
-          fontSize: "12px",
-          letterSpacing: "0.2em",
-          color: "var(--lcars-orange)",
-        }}
-      >
-        {label}
-      </span>
-      <span
-        style={{
-          fontFamily: "'Antonio', 'Helvetica Neue', Arial, sans-serif",
-          fontSize: "22px",
-          fontWeight: 700,
-          color: "var(--lcars-amber)",
-          lineHeight: 1,
-          letterSpacing: "0.05em",
-        }}
-      >
-        {value}
-        {unit && (
-          <span style={{ fontSize: "11px", marginLeft: "6px" }}>{unit}</span>
-        )}
-      </span>
-    </div>
+    </ClientShell>
   );
 }

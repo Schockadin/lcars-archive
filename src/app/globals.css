@@ -247,10 +247,6 @@ body {
   /* border: solid 2px white; */
 }
 
-.lcars-page-content {
-  margin-left: calc(var(--lcars-elbow-size) + var(--lcars-bar-width));
-}
-
 .character-list-entry {
   text-decoration: none;
   color: var(--lcars-text-contras);

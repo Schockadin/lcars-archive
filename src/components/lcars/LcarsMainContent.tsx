@@ -1,5 +1,3 @@
-import LcarsSidebar from "./LcarsSidebar";
-
 export default function LcarsMainContent({
   children,
 }: {
@@ -8,7 +6,7 @@ export default function LcarsMainContent({
   return (
     <div className="lcars-main-content">
       <main className="flex-1 w-full flex flex-col">
-        <div className="lcars-page-content">{children}</div>
+        <div className="w-full">{children}</div>
       </main>
     </div>
   );

@@ -1,13 +1,16 @@
-'use client'
+"use client";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Character } from "@/types/character";
 
-export default function CharakterDetailPage({character}: {character : Character}) {
-  const title = `${character.name}\r\n${character.metadata.rank} - ${character.metadata.species}`
-  usePageMeta(character.name,"characters");
+export default function CharakterDetailPage({
+  character,
+}: {
+  character: Character;
+}) {
+  usePageMeta(character.name, "characters");
 
   return (
-    <article className="text-justify w-[75%]">
+    <article className="text-justify pr-[var(--lcars-elbow-size)]">
       <div className="mb-[16px]">
         {character.portrait && (
           <img src={character.portrait} alt={character.name} />
@@ -15,17 +18,15 @@ export default function CharakterDetailPage({character}: {character : Character}
         <h1>{character.name}</h1>
         {character.metadata.rank && <p>{character.metadata.rank}</p>}
         {character.metadata.species.length > 0 && (
-          <p>{character.metadata.species.join(' / ')}</p>
+          <p>{character.metadata.species.join(" / ")}</p>
         )}
         {character.metadata.affiliation && (
-          <p>{character.metadata.affiliation.factions.join(', ')}</p>
+          <p>{character.metadata.affiliation.factions.join(", ")}</p>
         )}
       </div>
 
       {character.bio && (
-        <section
-          dangerouslySetInnerHTML={{ __html: character.bio }}
-        />
+        <section dangerouslySetInnerHTML={{ __html: character.bio }} />
       )}
     </article>
   );
