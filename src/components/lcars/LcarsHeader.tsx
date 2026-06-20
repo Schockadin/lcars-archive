@@ -27,7 +27,7 @@ export default function LcarsHeader({
                 </div>
                 <div className="lcars-header-title">{`LCARS / ${title}`}</div>
               </div>
-              <div className="min-w-0 overflow-hidden">{headerBox}</div>
+              {/* <div className="min-w-0 overflow-hidden">{headerBox}</div> */}
             </div>
           </div>
           <div className="lcars-elbow-bar">

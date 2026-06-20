@@ -9,7 +9,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:setup": "tsx --env-file=.env.local scripts/setup-db.ts",
-    "ingest": "tsx --env-file=.env.local scripts/ingest/index.ts"
+    "db:ingest": "tsx --env-file=.env.local scripts/ingest/index.ts"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
