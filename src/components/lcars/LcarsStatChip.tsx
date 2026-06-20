@@ -2,11 +2,15 @@ export default function LcarsStatChip({
   label,
   value,
   color,
+  withBorder,
 }: {
   label: string;
   value: number | string;
   color: string;
+  withBorder: boolean;
 }) {
+  const border = withBorder ? `3px solid ${color}` : "";
+
   return (
     <div
       style={{
@@ -15,9 +19,8 @@ export default function LcarsStatChip({
         alignItems: "flex-end",
         gap: "2px",
         padding: "4px 12px",
-        // background: "var(--lcars-surface)",
         background: "transparent",
-        borderLeft: `3px solid ${color}`,
+        borderLeft: `${border}`,
       }}
     >
       <span

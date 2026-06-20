@@ -32,8 +32,19 @@
   --lcars-radius-card: 4px 12px 12px 4px;
   --lcars-elbow-size: 64px;
   --lcars-bar-width: 200px;
-  --lcars-header-h: 320px;
+  --lcars-header-h: 200px;
+  --lcars-bar-h: 20px;
   --lcars-footer-h: 40px;
+  --lcars-menu-bar-h: calc(
+    0.2 *
+      calc(
+        100dvh -
+          calc(
+            var(--lcars-header-h) - var(--lcars-bar-h) +
+              var(--lcars-elbow-size) + 155px
+          )
+      )
+  );
 }
 
 /* ─── Reset & Basis ─────────────────────────────────────── */
@@ -51,9 +62,9 @@ html {
   width: 100%;
 }
 body {
-  min-height: 100dvh;
+  /* min-height: 100dvh; */
   min-width: 100%;
-  width: 100%; /* NEU */
+  width: 100%;
   background: var(--lcars-bg);
   color: var(--lcars-text);
   font-family: var(--font-antonio), "Antonio", sans-serif;
@@ -87,12 +98,10 @@ body {
   width: 100%;
   height: calc(100% - 20px);
   min-height: calc(var(--lcars-header-h) - 20px);
-  position: relative;
   border-radius: 0px 0px 0px var(--lcars-elbow-size);
   justify-content: space-between;
   align-items: center;
   background-color: var(--lcars-bg);
-  overflow: hidden;
 }
 
 .lcars-header-title {
@@ -105,12 +114,19 @@ body {
   white-space: nowrap;
 }
 
+.lcars-header-box {
+  display: flex;
+  flex-direction: column;
+  height: calc(100% - 20px);
+  padding: 0px 10px;
+}
+
 /* Elbows */
 
 .lcars-elbow-bar {
   display: flex;
   width: 100%;
-  height: 20px;
+  height: var(--lcars-bar-h);
   background-color: var(--lcars-bg);
 }
 
@@ -151,7 +167,6 @@ body {
 }
 
 .lcars-menu-bar {
-  height: 150px;
   width: var(--lcars-bar-width);
   padding: 0 18px;
   padding-block: 1px;
@@ -166,6 +181,8 @@ body {
     color 0.25s;
   background-color: var(--lcars-amber);
   transition: 250ms;
+  min-height: 60px;
+  height: var(--lcars-menu-bar-h);
 }
 .lcars-menu-bar:hover {
   background-color: var(--lcars-amber-light);
@@ -203,10 +220,8 @@ body {
 /* Main Content Sidebar */
 .lcars-sidebar {
   min-width: calc(var(--lcars-bar-width) + var(--lcars-elbow-size));
-  height: 100dvh;
   display: flex;
-  position: sticky;
-  top: 0px;
+  flex-direction: column;
 }
 
 .lcars-to-top {
@@ -228,11 +243,12 @@ body {
   display: flex;
   margin-top: 5px;
   min-width: 0;
+
+  /* border: solid 2px white; */
 }
 
 .lcars-page-content {
-  min-width: 0;
-  width: 100%;
+  margin-left: calc(var(--lcars-elbow-size) + var(--lcars-bar-width));
 }
 
 .character-list-entry {
@@ -244,7 +260,7 @@ body {
   margin-bottom: 5px;
 }
 .character-list-entry:hover {
-  text-decoration: underline;
+  color: var(--lcars-amber);
 }
 
 /* Headings, Text, etc. */

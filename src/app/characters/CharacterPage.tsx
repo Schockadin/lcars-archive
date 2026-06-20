@@ -43,7 +43,7 @@ export default function CharacterPage({
 
 function CharacterGrid({ characters }: { characters: Character[] }) {
   return (
-    <div className="flex flex-col gap-[10px]">
+    <div className="flex flex-col gap-[10px] mt-[10px]">
       {characters.map((c) => (
         <Link
           className="character-list-entry"

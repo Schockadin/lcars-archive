@@ -10,7 +10,7 @@ export default function LcarsSidebar() {
     <aside className="lcars-sidebar">
       <div className="flex flex-col">
         <div className="lcars-elbow-bottom" />
-        <div className="mt-[5px]">
+        <div className="mt-[5px] flex flex-col flex-1 min-h-0">
           {MAIN_NAV.map((nav) => (
             <LcarsMenuItem
               id={nav.id}
@@ -23,6 +23,7 @@ export default function LcarsSidebar() {
           ))}
         </div>
       </div>
+      {/* Inner Corner */}
       <div
         style={{
           marginBottom: "auto",
@@ -31,9 +32,8 @@ export default function LcarsSidebar() {
           backgroundColor: "var(--lcars-red)",
         }}
       >
-        {/* <div className="h-full w-full bg-[var(--lcars-red)]" /> */}
         <div
-          className="h-full bg-[var(--lcars-bg)]"
+          className="h-[var(--lcars-elbow-size)] bg-[var(--lcars-bg)]"
           style={{
             borderRadius: "64px 0 0 0",
             width: "var(--lcars-elbow-size)",

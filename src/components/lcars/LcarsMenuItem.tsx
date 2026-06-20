@@ -23,13 +23,13 @@ export default function LcarsMenuItem({
   return (
     <Link
       href={href}
+      className="flex-1 min-h-0 flex"
       style={{
-        marginBottom: "5px",
         textDecoration: "none",
       }}
     >
       <div
-        className={`flex lcars-menu-${type} ${active ? "lcars-menu-active" : ""} h-full w-full`}
+        className={`flex lcars-menu-${type} ${active ? "lcars-menu-active" : ""}`}
         style={style}
       >
         <div className="lcars-menu-id">{id}</div>
