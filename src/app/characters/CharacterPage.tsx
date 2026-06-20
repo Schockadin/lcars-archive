@@ -1,15 +1,18 @@
-
-'use client'
+"use client";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Character } from "@/types/character";
 import Link from "next/link";
 
-export default function CharacterPage({ characters}: { characters : Character[]}) {
-  usePageMeta("Charaktere","characters");
+export default function CharacterPage({
+  characters,
+}: {
+  characters: Character[];
+}) {
+  usePageMeta("Charaktere", "characters");
 
-  const active   = characters.filter(c => c.status === 'active');
-  const retired  = characters.filter(c => c.status === 'retired');
-  const deceased = characters.filter(c => c.status === 'deceased');
+  const active = characters.filter((c) => c.status === "active");
+  const retired = characters.filter((c) => c.status === "retired");
+  const deceased = characters.filter((c) => c.status === "deceased");
   return (
     <main className="flex flex-col items-start w-[75%]">
       <h1 className="mb-[5px] text-[var(--lcars-amber)]">Charaktere</h1>
@@ -40,10 +43,16 @@ export default function CharacterPage({ characters}: { characters : Character[]}
 
 function CharacterGrid({ characters }: { characters: Character[] }) {
   return (
-    <>
-      {characters.map(c => (
-        <Link className="character-list-entry" key={c.id} href={`/characters/${c.slug}`}>· {c.metadata.rank} {c.name}</Link>
+    <div className="flex flex-col gap-[10px]">
+      {characters.map((c) => (
+        <Link
+          className="character-list-entry"
+          key={c.id}
+          href={`/characters/${c.slug}`}
+        >
+          · {c.metadata.rank} {c.name}
+        </Link>
       ))}
-    </>
+    </div>
   );
 }
