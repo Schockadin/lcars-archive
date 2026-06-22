@@ -1,9 +1,12 @@
 import { Antonio, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
-import { LcarsHeader, Sidebar } from "@/components/lcars";
+import {
+  LcarsHeader,
+  Sidebar,
+  LcarsMainContent,
+  ElbowBar,
+} from "@/components/lcars";
 import { NeoProvider } from "@/context/NeoProvider";
-import LcarsMainContent from "@/components/lcars/LcarsMainContent";
-import ElbowBar from "@/components/lcars/ElbowBar";
 
 const antonio = Antonio({
   subsets: ["latin"],
@@ -35,7 +38,7 @@ export default function RootLayout({
         <NeoProvider>
           <div className="flex w-full h-full">
             <Sidebar />
-            <div className="flex flex-col w-full">
+            <div className="flex flex-col flex-1">
               <LcarsHeader />
               <ElbowBar />
               <LcarsMainContent>{children}</LcarsMainContent>

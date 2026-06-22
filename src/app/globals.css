@@ -32,19 +32,12 @@
   --lcars-radius-card: 4px 12px 12px 4px;
   --lcars-elbow-size: 64px;
   --lcars-bar-width: 200px;
-  --lcars-header-h: 200px;
+  --lcars-header-h: 180px;
   --lcars-bar-h: 20px;
   --lcars-footer-h: 40px;
-  --lcars-menu-bar-h: calc(
-    0.2 *
-      calc(
-        100dvh -
-          calc(
-            var(--lcars-header-h) - var(--lcars-bar-h) +
-              var(--lcars-elbow-size) + 155px
-          )
-      )
-  );
+  --lcars-sidebar-header-h: calc(var(--lcars-header-h) + var(--lcars-bar-h));
+  --lcars-sidebar-main-h: calc(100% - var(--lcars-bar-h));
+  --lcars-sidebar-w: calc(var(--lcars-bar-width) + var(--lcars-elbow-size));
 }
 
 /* ─── Reset & Basis ─────────────────────────────────────── */
@@ -62,7 +55,7 @@ html {
   width: 100%;
 }
 body {
-  /* min-height: 100dvh; */
+  min-height: 100dvh;
   min-width: 100%;
   width: 100%;
   background: var(--lcars-bg);
@@ -70,6 +63,8 @@ body {
   font-family: var(--font-antonio), "Antonio", sans-serif;
   letter-spacing: 0.05em;
   -webkit-font-smoothing: antialiased;
+
+  /* background: green; */
 }
 
 /* ─── LCARS Utility-Klassen ─────────────────────────────── */
@@ -96,9 +91,7 @@ body {
 .lcars-header-content {
   display: flex;
   width: 100%;
-  height: calc(100% - 20px);
-  min-height: calc(var(--lcars-header-h) - 20px);
-  border-radius: 0px 0px 0px var(--lcars-elbow-size);
+  height: 100%;
   justify-content: space-between;
   align-items: center;
   background-color: var(--lcars-bg);
@@ -215,13 +208,6 @@ body {
 }
 .lcars-menu-active:hover {
   background-color: var(--lcars-blue);
-}
-
-/* Main Content Sidebar */
-.lcars-sidebar {
-  min-width: calc(var(--lcars-bar-width) + var(--lcars-elbow-size));
-  display: flex;
-  flex-direction: column;
 }
 
 .lcars-to-top {

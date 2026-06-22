@@ -1,8 +1,11 @@
-"use client";
-import { usePageMeta } from "@/hooks/usePageMeta";
+export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: {
+    default: "Charaktere",
+  },
+};
 
 export default function MissionsPage() {
-  usePageMeta("Missionen", "missions");
-
   return <h1></h1>;
 }
