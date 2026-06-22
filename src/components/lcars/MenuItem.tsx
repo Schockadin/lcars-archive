@@ -12,7 +12,7 @@ export interface MenuItemProps {
 
 export type MENU_ITEM_TYPE = "bar" | "pill";
 
-export default function LcarsMenuItem({
+export default function MenuItem({
   text,
   href,
   id,

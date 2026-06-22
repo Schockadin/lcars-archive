@@ -3,7 +3,7 @@ import SideBarMenu from "./SidebarMenu";
 
 export default function Sidebar() {
   return (
-    <aside className="flex flex-col w-[var(--lcars-sidebar-w)] h-full border-1">
+    <aside className="flex w-[var(--lcars-sidebar-w)] h-[100dvh] sticky top-[0px]">
       {/* Linke Seite */}
       <div className="flex flex-col h-full w-[var(--lcars-bar-width)]">
         {/* Sidebar Top */}
@@ -13,8 +13,22 @@ export default function Sidebar() {
         </div>
 
         {/* Sidebar Bottom */}
-        <div className="w-full h-full"></div>
-        {/* <SideBarMenu /> */}
+        <SideBarMenu />
+      </div>
+
+      {/* Rechte Seite */}
+      <div className="w-full h-full flex flex-col">
+        {/* Top */}
+        <div className="w-full h-[var(--lcars-sidebar-header-h)] bg-[var(--lcars-blue)]">
+          <div className="w-full h-[var(--lcars-header-h)] bg-[var(--lcars-bg)] rounded-bl-[60px]" />
+          <div className="w-full h-[var(--lcars-bar-h)] bg-[var(--lcars-blue)]" />
+        </div>
+
+        {/* Bottom */}
+        <div className="w-full h-full bg-[var(--lcars-red)] mt-[5px] flex flex-col">
+          <div className="w-full h-[var(--lcars-bar-h)] bg-[var(--lcars-red)]" />
+          <div className="w-full flex-grow bg-[var(--lcars-bg)] rounded-tl-[60px]" />
+        </div>
       </div>
     </aside>
   );

@@ -168,14 +168,13 @@ body {
   align-items: flex-end;
   justify-content: flex-end;
   padding-bottom: 8px;
-  margin-bottom: 5px;
+  margin-top: 5px;
   transition:
     background 0.25s,
     color 0.25s;
   background-color: var(--lcars-amber);
   transition: 250ms;
   min-height: 60px;
-  height: var(--lcars-menu-bar-h);
 }
 .lcars-menu-bar:hover {
   background-color: var(--lcars-amber-light);
@@ -309,11 +308,6 @@ h1 {
   :root {
     --lcars-bar-width: 64px;
     --lcars-elbow-size: 32px;
-  }
-
-  .lcars-menu-bar {
-    padding: 0 4px 4px;
-    height: 64px; /* kürzer, da kein Text mehr */
   }
 
   .lcars-elbow-bottom,

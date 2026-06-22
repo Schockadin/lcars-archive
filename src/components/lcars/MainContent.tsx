@@ -1,4 +1,4 @@
-export default function LcarsMainContent({
+export default function MainContent({
   children,
 }: {
   children: React.ReactNode;

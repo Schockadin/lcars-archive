@@ -1,5 +1,4 @@
 import ClientShell from "./clientShell";
-import StatChipBar from "@/components/lcars/StatChipBar";
 import BlinkingCursor from "@/utils/blinkingCursor";
 
 export default function Page() {

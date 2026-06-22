@@ -1,6 +1,6 @@
 export default function ElbowBar() {
   return (
-    <div className="flex flex-col gap-[5px]">
+    <div className="flex flex-col gap-[5px] bg-[var(--lcars-bg)]">
       <div className="lcars-elbow-bar">
         <div className="w-[35%] h-[20px] bg-[var(--lcars-blue)] mr-[5px]" />
         <div className="w-[5%] h-[20px] bg-[var(--lcars-amber)] mr-[5px]" />

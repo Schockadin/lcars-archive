@@ -2,9 +2,9 @@ import { Antonio, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
 import {
   LcarsHeader,
-  Sidebar,
+  LcarsSidebar,
   LcarsMainContent,
-  ElbowBar,
+  LcarsElbowBar,
 } from "@/components/lcars";
 import { NeoProvider } from "@/context/NeoProvider";
 
@@ -36,11 +36,10 @@ export default function RootLayout({
     <html lang="de" className={`${antonio.variable} ${shareTechMono.variable}`}>
       <body>
         <NeoProvider>
-          <div className="flex w-full h-full">
-            <Sidebar />
+          <div className="flex w-full min-h-[100dvh]">
+            <LcarsSidebar />
             <div className="flex flex-col flex-1">
               <LcarsHeader />
-              <ElbowBar />
               <LcarsMainContent>{children}</LcarsMainContent>
             </div>
             {/* <LcarsFooter/> */}
