@@ -5,3 +5,4 @@ export { default as LcarsSidebarMenu } from "./SidebarMenu";
 export { default as LcarsMenuItem } from "./MenuItem";
 export { default as LcarsMainContent } from "./MainContent";
 export { default as LcarsElbowBar } from "./ElbowBar";
+export { default as LcarsDataRow } from "./DataRow";
