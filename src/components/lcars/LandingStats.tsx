@@ -20,13 +20,13 @@ export default async function LandingStats() {
         label="Charaktere"
         accentColor="var(--lcars-amber-light)"
         color="var(--lcars-blue)"
-        href="/charaktere"
+        href="/characters"
       />
       <LcarsDataRow
         value={sessionCount}
         label="Logs"
         color="var(--lcars-purple)"
-        href="/missionen"
+        href="/missions"
       />
       {lastSession && (
         <LcarsDataRow
@@ -34,7 +34,7 @@ export default async function LandingStats() {
           label="Letzter Eintrag"
           color="var(--lcars-orange)"
           accentColor="var(--lcars-purple)"
-          href={`/missionen/${lastSession.slug}`}
+          href={`/missions/${lastSession.slug}`}
         />
       )}
       <LcarsDataRow
@@ -42,7 +42,7 @@ export default async function LandingStats() {
         label="Archiv"
         accentColor="var(--lcars-blue)"
         color="var(--lcars-red)"
-        href="/archiv"
+        href="/archive"
       />
     </div>
   );

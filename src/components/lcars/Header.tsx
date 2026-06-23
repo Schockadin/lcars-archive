@@ -11,9 +11,7 @@ export default function Header() {
     >
       {/* Header Content */}
       <div className="lcars-header-content">
-        <div className="flex flex-col justify-center items-end pl-[10px] pt-[10px] h-full text-right pr-[10px]">
-          <div className="lcars-header-title uppercase">Neo Archiv</div>
-        </div>
+        <div className="lcars-header-title uppercase">Neo Archiv</div>
       </div>
       <LcarsHeaderBar />
     </header>

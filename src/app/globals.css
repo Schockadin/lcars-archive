@@ -43,6 +43,7 @@
   --lcars-title-size: 48px;
   --lcars-text-size: 24px;
   --lcars-eyebrow-size: 16px;
+  --lcars-datamatrix-text-size: 12px;
 }
 
 /* ─── Reset & Basis ─────────────────────────────────────── */
@@ -90,8 +91,8 @@ body {
   display: flex;
   width: 100%;
   height: var(--lcars-header-h);
-  justify-content: space-between;
-  align-items: center;
+  justify-content: left;
+  align-items: start;
   background-color: var(--lcars-bg);
 }
 
