@@ -9,10 +9,11 @@ export interface HeaderStats {
     title: string | null;
     authorName: string | null;
     logDate: string | null;
+    slug: string | null;
   } | null;
 }
 
-export async function getHeaderStats(): Promise<HeaderStats> {
+export async function getDBStats(): Promise<HeaderStats> {
   const [counts] = await sql<
     [
       {
@@ -34,13 +35,15 @@ export async function getHeaderStats(): Promise<HeaderStats> {
       title: string;
       author_name: string | null;
       log_date: string | null;
+      slug: string;
     }[]
   >`
     SELECT
       ml.session_nr,
       ml.title,
       c.name AS author_name,
-      ml.log_date::text AS log_date
+      ml.log_date::text AS log_date,
+      ml.slug
     FROM mission_logs ml
     LEFT JOIN characters c ON c.id = ml.author_id
     ORDER BY ml.session_nr DESC NULLS LAST, ml.created_at DESC
@@ -57,6 +60,7 @@ export async function getHeaderStats(): Promise<HeaderStats> {
           title: lastSessionRows[0].title,
           authorName: lastSessionRows[0].author_name,
           logDate: lastSessionRows[0].log_date,
+          slug: lastSessionRows[0].slug,
         }
       : null,
   };

@@ -1,8 +1,6 @@
-"use client";
-import { LcarsDataRow } from "@/components/lcars";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { LcarsStats } from "@/components/lcars";
+import LandingPage from "./LandingPage";
 
 export default function Page() {
-  usePageMeta("Home", "home");
-  return <LcarsDataRow label="Test" color="var(--lcars-amber)" value={4} />;
+  return <LandingPage stats={<LcarsStats />} />;
 }

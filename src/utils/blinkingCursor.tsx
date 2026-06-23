@@ -11,12 +11,12 @@ export default function BlinkingCursor() {
   return (
     <span
       style={{
-        display: "inline-block",
-        width: "5px",
-        height: "clamp(28px, 4vw, 48px)",
+        width: "8px",
+        height: "calc(var(--lcars-title-size) - 6px)",
         background: visible ? "var(--lcars-amber)" : "transparent",
         verticalAlign: "text-bottom",
         marginLeft: "4px",
+        marginTop: "9px",
       }}
     />
   );

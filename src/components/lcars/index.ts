@@ -8,3 +8,4 @@ export { HeaderBar as LcarsHeaderBar } from "./ElbowBar";
 export { FooterBar as LcarsFooterBar } from "./ElbowBar";
 export { default as LcarsFooter } from "./Footer";
 export { default as LcarsDataRow } from "./DataRow";
+export { default as LcarsStats } from "./LandingStats";

@@ -19,21 +19,16 @@ export default function DataRow({
 }: DataRowProps) {
   return (
     <div
-      className="w-[300px] h-[40px] flex gap-[8px] items-center"
+      className="lcars-data-row"
       style={{
         containerType: "size",
       }}
     >
       {/* Label */}
       <div
-        className="h-full w-[50px]"
+        className="lcars-data-row-label"
         style={{
           color: labelColor,
-          fontSize: "100cqh",
-          lineHeight: "0.9",
-          textTransform: "uppercase",
-          textAlign: "right",
-          fontWeight: "800",
         }}
       >
         {value}
@@ -51,18 +46,9 @@ export default function DataRow({
       {/* Label-Pill */}
       <Link
         href={href}
-        className="flex-grow h-full rounded-r-[60px]"
+        className=" lcars-data-row-text"
         style={{
-          color: "var(--lcars-bg)",
           backgroundColor: color,
-          fontSize: "72cqh",
-          textTransform: "uppercase",
-          textAlign: "left",
-          paddingLeft: "8px",
-          fontWeight: "600",
-          textDecoration: "none",
-          display: "flex",
-          alignItems: "center",
         }}
       >
         <div className="w-full h-full">{label}</div>
