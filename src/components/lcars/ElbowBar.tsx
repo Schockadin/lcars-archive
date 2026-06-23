@@ -31,7 +31,7 @@ export function FooterBar() {
       <Link href="/impressum" className="lcars-footer-menu mr-[5px]">
         Impressum
       </Link>
-      <Link href="/impressum" className="lcars-footer-menu">
+      <Link href="/datenschutz" className="lcars-footer-menu">
         Datenschutz
       </Link>
     </div>

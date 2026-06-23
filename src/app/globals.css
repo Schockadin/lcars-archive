@@ -91,9 +91,11 @@ body {
   display: flex;
   width: 100%;
   height: var(--lcars-header-h);
-  justify-content: left;
-  align-items: start;
   background-color: var(--lcars-bg);
+  flex-direction: column;
+  justify-content: space-between;
+  padding-top: 5px;
+  padding-bottom: 5px;
 }
 
 .lcars-header-title {

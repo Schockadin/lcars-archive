@@ -1,4 +1,5 @@
 import { LcarsHeaderBar } from ".";
+import BreadcrumbNav from "./BreadCrumbNav";
 
 export default function Header() {
   return (
@@ -12,6 +13,7 @@ export default function Header() {
       {/* Header Content */}
       <div className="lcars-header-content">
         <div className="lcars-header-title uppercase">Neo Archiv</div>
+        <BreadcrumbNav />
       </div>
       <LcarsHeaderBar />
     </header>
