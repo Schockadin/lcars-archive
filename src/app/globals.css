@@ -69,14 +69,7 @@ body {
 
 /* ─── LCARS Utility-Klassen ─────────────────────────────── */
 
-/* Elbow: die charakteristischen abgerundeten Ecken */
-.lcars-header-wrapper {
-  width: 100%;
-  height: 100%;
-  display: block;
-  background-color: var(--lcars-blue);
-}
-
+/* Header */
 .lcars-header-text {
   font-size: 64px;
   font-weight: 400;
@@ -91,7 +84,7 @@ body {
 .lcars-header-content {
   display: flex;
   width: 100%;
-  height: 100%;
+  height: var(--lcars-header-h);
   justify-content: space-between;
   align-items: center;
   background-color: var(--lcars-bg);
@@ -107,13 +100,6 @@ body {
   white-space: nowrap;
 }
 
-.lcars-header-box {
-  display: flex;
-  flex-direction: column;
-  height: calc(100% - 20px);
-  padding: 0px 10px;
-}
-
 /* Elbows */
 
 .lcars-elbow-bar {
@@ -125,7 +111,7 @@ body {
 
 .lcars-elbow-top {
   width: var(--lcars-bar-width);
-  min-height: calc(0.8 * var(--lcars-bar-width));
+  min-height: calc(var(--lcars-bar-h) + var(--lcars-elbow-size));
   border-radius: 0 0 0 100px;
   background-color: var(--lcars-blue);
 }
@@ -208,28 +194,29 @@ body {
 .lcars-menu-active:hover {
   background-color: var(--lcars-blue);
 }
-
-.lcars-to-top {
-  width: 64px;
-  height: 64px;
-  text-align: center;
-  font-size: 32px;
-  font-weight: 600;
+.lcars-footer-menu {
+  text-decoration: none;
+  width: 10%;
+  min-width: 100px;
+  height: var(--lcars-bar-h);
+  background: var(--lcars-amber);
+  font-size: calc(var(--lcars-bar-h) - 4px);
+  padding-right: 4px;
+  text-align: right;
+  transition: 250ms;
   color: black;
-  cursor: pointer;
+  font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: var(--font-antonio), sans-serif;
 }
-.lcars-to-top:hover {
-  box-shadow: inset;
-  box-shadow: 0 0 5px 0 var(--lcars-amber-light);
+.lcars-footer-menu:hover {
+  background: var(--lcars-amber-light);
 }
 
 .lcars-main-content {
   display: flex;
-  margin-top: 5px;
   min-width: 0;
-
-  /* border: solid 2px white; */
 }
 
 .character-list-entry {
@@ -262,6 +249,33 @@ h1 {
   letter-spacing: 0.3em;
   color: var(--lcars-orange);
   margin-bottom: 12px;
+}
+
+/* Scrollbar */
+
+/* Scrollbar-Breite */
+.lcars-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+/* Track (Hintergrund) */
+.lcars-scroll::-webkit-scrollbar-track {
+  background: var(--lcars-blue);
+}
+
+/* Thumb (der ziehbare Balken) */
+.lcars-scroll::-webkit-scrollbar-thumb {
+  background: var(--lcars-red);
+  /* border-radius: 3px; */
+}
+
+.lcars-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--lcars-purple);
+}
+
+.lcars-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--lcars-blue) var(--lcars-surface);
 }
 
 /* Animationen */
@@ -308,10 +322,15 @@ h1 {
   :root {
     --lcars-bar-width: 64px;
     --lcars-elbow-size: 32px;
+    --lcars-bar-h: 10px;
   }
 
   .lcars-elbow-bottom,
   .lcars-elbow-top {
     height: calc(0.8 * var(--lcars-bar-width)); /* Proportion bleibt */
+  }
+
+  .lcars-footer-menu {
+    min-width: 50px;
   }
 }

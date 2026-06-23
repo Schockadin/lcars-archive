@@ -4,7 +4,7 @@ import {
   LcarsHeader,
   LcarsSidebar,
   LcarsMainContent,
-  LcarsElbowBar,
+  LcarsFooter,
 } from "@/components/lcars";
 import { NeoProvider } from "@/context/NeoProvider";
 
@@ -36,13 +36,13 @@ export default function RootLayout({
     <html lang="de" className={`${antonio.variable} ${shareTechMono.variable}`}>
       <body>
         <NeoProvider>
-          <div className="flex w-full min-h-[100dvh]">
+          <div className="flex w-full h-[100dvh]">
             <LcarsSidebar />
-            <div className="flex flex-col flex-1">
+            <div className="flex flex-col flex-1 h-full overflow-hidden">
               <LcarsHeader />
               <LcarsMainContent>{children}</LcarsMainContent>
+              <LcarsFooter />
             </div>
-            {/* <LcarsFooter/> */}
           </div>
         </NeoProvider>
       </body>

@@ -3,31 +3,47 @@ import SideBarMenu from "./SidebarMenu";
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-[var(--lcars-sidebar-w)] h-[100dvh] sticky top-[0px]">
+    <aside className="flex w-[var(--lcars-sidebar-w)] h-[100dvh]">
       {/* Linke Seite */}
       <div className="flex flex-col h-full w-[var(--lcars-bar-width)]">
-        {/* Sidebar Top */}
+        {/* Sidebar Header */}
         <div className="flex flex-col w-[var(--lcars-bar-width)] h-[var(--lcars-sidebar-header-h)] mb-[5px]">
-          <div className="w-full h-[150px] bg-[var(--lcars-amber)] mb-[5px]" />
-          <div className="lcars-elbow-top flex-grow" />
+          <div className="w-full h-[150px] bg-[var(--lcars-orange)] mb-[5px]" />
+          <div className="lcars-elbow-top" />
         </div>
 
-        {/* Sidebar Bottom */}
+        {/* Sidebar Main */}
         <SideBarMenu />
+
+        {/* Sidebar Footer */}
+        <div
+          className="lcars-elbow-top"
+          style={{
+            marginTop: "5px",
+            width: "100%",
+            backgroundColor: "var(--lcars-purple)",
+          }}
+        />
       </div>
 
       {/* Rechte Seite */}
       <div className="w-full h-full flex flex-col">
-        {/* Top */}
+        {/* Sidebar Header */}
         <div className="w-full h-[var(--lcars-sidebar-header-h)] bg-[var(--lcars-blue)]">
           <div className="w-full h-[var(--lcars-header-h)] bg-[var(--lcars-bg)] rounded-bl-[60px]" />
           <div className="w-full h-[var(--lcars-bar-h)] bg-[var(--lcars-blue)]" />
         </div>
 
-        {/* Bottom */}
+        {/* Sidebar Main */}
         <div className="w-full h-full bg-[var(--lcars-red)] mt-[5px] flex flex-col">
           <div className="w-full h-[var(--lcars-bar-h)] bg-[var(--lcars-red)]" />
           <div className="w-full flex-grow bg-[var(--lcars-bg)] rounded-tl-[60px]" />
+        </div>
+
+        {/* Sidebar Footer */}
+        <div className="w-full h-[var(--lcars-sidebar-header-h)] bg-[var(--lcars-purple)]">
+          <div className="w-full h-[var(--lcars-header-h)] bg-[var(--lcars-bg)] rounded-bl-[60px]" />
+          <div className="w-full h-[var(--lcars-bar-h)] bg-[var(--lcars-purple)]" />
         </div>
       </div>
     </aside>

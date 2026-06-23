@@ -19,7 +19,7 @@ export default function DataRow({
 }: DataRowProps) {
   return (
     <div
-      className="w-[300px] h-[40px] flex gap-[5px]"
+      className="w-[300px] h-[40px] flex gap-[8px] items-center"
       style={{
         containerType: "size",
       }}
@@ -41,29 +41,31 @@ export default function DataRow({
 
       {/* Separator */}
       <div
-        className="h-full w-[16px]"
         style={{
           backgroundColor: accentColor,
+          width: "16px",
+          height: "100%",
         }}
       />
 
       {/* Label-Pill */}
       <Link
         href={href}
-        className="flex-grow border-1 h-full rounded-r-[60px] flex items-center"
+        className="flex-grow h-full rounded-r-[60px]"
         style={{
           color: "var(--lcars-bg)",
           backgroundColor: color,
-          fontSize: "75cqh",
+          fontSize: "72cqh",
           textTransform: "uppercase",
-          lineHeight: "1",
           textAlign: "left",
           paddingLeft: "8px",
           fontWeight: "600",
           textDecoration: "none",
+          display: "flex",
+          alignItems: "center",
         }}
       >
-        {label}
+        <div className="w-full h-full">{label}</div>
       </Link>
     </div>
   );
