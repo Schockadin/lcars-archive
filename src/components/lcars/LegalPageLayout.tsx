@@ -10,7 +10,7 @@ export default function LegalPageLayout({
   children: ReactNode;
 }) {
   return (
-    <article className="pr-[var(--lcars-elbow-size)] max-w-[800px]">
+    <article className="pr-[var(--lcars-elbow-size)] max-w-[800px] lcars-body">
       <p className="lcars-eyebrow">{eyebrow}</p>
       <h1>{title}</h1>
       <div className="lcars-legal-body">{children}</div>

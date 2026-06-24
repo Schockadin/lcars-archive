@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import LegalPageLayout from "@/components/lcars/LegalPageLayout";
 
 export const metadata: Metadata = {
-  title: "Datenschutz — LCARS NEO ARCHIVE",
+  title: "Datenschutz",
   robots: { index: false },
 };
 
@@ -14,11 +14,13 @@ export default function DatenschutzPage() {
     <LegalPageLayout eyebrow="Art. 13 DSGVO" title="Datenschutzerklärung">
       <h2>1. Verantwortlicher</h2>
       <address>
-        Dominic [Nachname]
+        Dominic Zander
         <br />
-        [Straße & Hausnummer]
+        Nordsternstr. 6a
         <br />
-        [PLZ] Essen
+        45329 Essen
+        <br />
+        Deutschland
         <br />
         E-Mail:{" "}
         <a href="mailto:wowschockadin@gmail.com">wowschockadin@gmail.com</a>

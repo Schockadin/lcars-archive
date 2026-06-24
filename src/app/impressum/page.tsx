@@ -3,7 +3,7 @@ import { Metadata } from "next";
 import LegalPageLayout from "@/components/lcars/LegalPageLayout";
 
 export const metadata: Metadata = {
-  title: "Impressum — NEO ARCHIVE",
+  title: "Impressum",
   robots: { index: false }, // Impressum muss nicht indexiert werden
 };
 
@@ -19,13 +19,10 @@ export default function ImpressumPage() {
         45329 Essen
         <br />
         Deutschland
-      </address>
-
-      <h2>Kontakt</h2>
-      <p>
+        <br />
         E-Mail:{" "}
         <a href="mailto:wowschockadin@gmail.com">wowschockadin@gmail.com</a>
-      </p>
+      </address>
 
       <h2>Hinweis zum Inhalt</h2>
       <p>

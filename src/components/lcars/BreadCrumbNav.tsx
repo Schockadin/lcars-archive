@@ -1,7 +1,11 @@
-// src/components/lcars/BreadcrumbNav.tsx
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
+// Breadcrumbs werden NUR für Pfade angezeigt, die mit einem
+// dieser Präfixe beginnen. Neue Sektionen müssen hier bewusst
+// eingetragen werden — Impressum, DSGVO, 404 etc. fallen raus.
+const BREADCRUMB_PREFIXES: string[] = ["/characters", "/missions", "/archive"];
 
 // Statische Label-Map für Sektions-Slugs die nicht automatisch
 // korrekt formatiert werden können
@@ -40,12 +44,22 @@ function buildCrumbs(pathname: string): Crumb[] {
   }));
 }
 
+// Prüft ob der aktuelle Pfad unter einem der erlaubten Präfixe liegt.
+function isAllowed(pathname: string): boolean {
+  return BREADCRUMB_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(prefix + "/"),
+  );
+}
+
 export default function BreadcrumbNav() {
   const pathname = usePathname();
   const crumbs = buildCrumbs(pathname);
 
   // Auf der Root-Seite keine Breadcrumbs anzeigen
   if (crumbs.length === 0) return null;
+
+  // Nur Whitelist-Einträge anzeigen
+  if (!isAllowed(pathname)) return null;
 
   return (
     <nav

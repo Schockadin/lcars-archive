@@ -3,7 +3,9 @@ export type NavKey =
   | "characters"
   | "missions"
   | "archive"
-  | "timeline";
+  | "timeline"
+  | "impressum"
+  | "dsgvo";
 
 export interface NavItem {
   id: string;

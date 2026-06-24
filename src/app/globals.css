@@ -222,10 +222,14 @@ body {
   background: var(--lcars-amber-light);
 }
 
+/* Main Content */
+
 .lcars-main-content {
   display: flex;
   min-width: 0;
 }
+
+/* Data Rows */
 
 .lcars-data-row {
   width: 300px;
@@ -263,6 +267,8 @@ body {
   box-shadow: inset 2px 2px var(--lcars-bg);
 }
 
+/* Character Page */
+
 .character-list-entry {
   text-decoration: none;
   color: var(--lcars-text-contras);
@@ -288,14 +294,24 @@ h1 {
   text-transform: uppercase;
 }
 
-.lcars-text,
-p {
+h2 {
+  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+  margin-bottom: 5px;
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--lcars-text);
+  line-height: 1.1;
+  margin-bottom: 5px;
+  margin-top: 10px;
+}
+
+.lcars-text {
   font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
   font-size: var(--lcars-text-size);
   letter-spacing: 0.08em;
   color: var(--lcars-text-light);
   line-height: 1.5;
-  /* text-align: justify; */
   font-weight: 500;
   margin-bottom: 10px;
 }
@@ -305,6 +321,25 @@ p {
   font-size: var(--lcars-eyebrow-size);
   letter-spacing: 0.3em;
   color: var(--lcars-orange);
+}
+
+.lcars-body {
+  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  color: var(--lcars-text-light);
+  line-height: 1.5;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.lcars-body > a {
+  text-decoration: none;
+  color: var(--lcars-text-data);
+  transition: 250ms;
+}
+.lcars-body > a:hover {
+  color: var(--lcars-blue);
+  text-decoration: underline;
 }
 
 /* Scrollbar */
