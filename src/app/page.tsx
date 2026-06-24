@@ -1,6 +1,6 @@
-import { LcarsStats } from "@/components/lcars";
 import LandingPage from "./LandingPage";
+import LandingStats from "@/components/lcars/LandingStats";
 
 export default function Page() {
-  return <LandingPage stats={<LcarsStats />} />;
+  return <LandingPage stats={<LandingStats />} />;
 }

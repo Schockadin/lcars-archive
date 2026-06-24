@@ -2,6 +2,9 @@
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Character } from "@/types/character";
 import Link from "next/link";
+export interface CharacterDataRowProps {
+  characters: Character[];
+}
 
 export default function CharacterPage({
   characters,
@@ -16,32 +19,39 @@ export default function CharacterPage({
   return (
     <div className="flex flex-col items-start pr-[var(--lcars-elbow-size)]">
       <h1 className="mb-[5px] text-[var(--lcars-amber)]">Charaktere</h1>
+      <div className="flex flex-col gap-[32px]">
+        {active.length > 0 && (
+          <section className="mb-[5px]">
+            <h2
+              style={{
+                textDecoration: "underline",
+              }}
+            >
+              AKTIV
+            </h2>
+            <CharacterGrid characters={active} />
+          </section>
+        )}
 
-      {active.length > 0 && (
-        <section className="mb-[5px]">
-          <h2>Aktiv</h2>
-          <CharacterGrid characters={active} />
-        </section>
-      )}
+        {retired.length > 0 && (
+          <section className="mb-[5px]">
+            <h2 style={{ textDecoration: "underline" }}>EHEMALIG</h2>
+            <CharacterGrid characters={retired} />
+          </section>
+        )}
 
-      {retired.length > 0 && (
-        <section className="mb-[5px]">
-          <h2>Ehemalig</h2>
-          <CharacterGrid characters={retired} />
-        </section>
-      )}
-
-      {deceased.length > 0 && (
-        <section className="mb-[5px]">
-          <h2>Verstorben</h2>
-          <CharacterGrid characters={deceased} />
-        </section>
-      )}
+        {deceased.length > 0 && (
+          <section className="mb-[5px]">
+            <h2 style={{ textDecoration: "underline" }}>VERSTORBEN</h2>
+            <CharacterGrid characters={deceased} />
+          </section>
+        )}
+      </div>
     </div>
   );
 }
 
-function CharacterGrid({ characters }: { characters: Character[] }) {
+function CharacterGrid({ characters }: CharacterDataRowProps) {
   return (
     <div className="flex flex-col gap-[10px] mt-[10px]">
       {characters.map((c) => (
@@ -50,7 +60,7 @@ function CharacterGrid({ characters }: { characters: Character[] }) {
           key={c.id}
           href={`/characters/${c.slug}`}
         >
-          · {c.metadata.rank} {c.name}
+          {c.name}
         </Link>
       ))}
     </div>

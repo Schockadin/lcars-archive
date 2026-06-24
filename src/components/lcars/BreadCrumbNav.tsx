@@ -1,11 +1,18 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import HorizontalSeparator from "./HorizontalSeparator";
+import { LcarsDot } from ".";
 
 // Breadcrumbs werden NUR für Pfade angezeigt, die mit einem
 // dieser Präfixe beginnen. Neue Sektionen müssen hier bewusst
 // eingetragen werden — Impressum, DSGVO, 404 etc. fallen raus.
-const BREADCRUMB_PREFIXES: string[] = ["/characters", "/missions", "/archive"];
+const BREADCRUMB_PREFIXES: string[] = [
+  "/characters",
+  "/missions",
+  "/archive",
+  "/timeline",
+];
 
 // Statische Label-Map für Sektions-Slugs die nicht automatisch
 // korrekt formatiert werden können
@@ -62,56 +69,58 @@ export default function BreadcrumbNav() {
   if (!isAllowed(pathname)) return null;
 
   return (
-    <nav
-      aria-label="Breadcrumb"
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: "6px",
-        fontFamily: "'Share Tech Mono', monospace",
-        fontSize: "16px",
-        letterSpacing: "0.2em",
-        textTransform: "uppercase",
-      }}
-    >
-      {crumbs.map((crumb, index) => {
-        const isLast = index === crumbs.length - 1;
+    <div className="flex flex-col gap-[4px]">
+      <HorizontalSeparator startColor="var(--lcars-blue)" />
+      <div className="flex items-center gap-[8px]">
+        <LcarsDot color="var(--lcars-blue)" />
+        <nav aria-label="Breadcrumb" className="lcars-breadcrumbs">
+          {crumbs.map((crumb, index) => {
+            const isLast = index === crumbs.length - 1;
 
-        return (
-          <span
-            key={crumb.href}
-            style={{ display: "flex", alignItems: "center", gap: "6px" }}
-          >
-            {index > 0 && (
-              <span style={{ color: "var(--lcars-amber)", opacity: 0.5 }}>
-                ›
-              </span>
-            )}
-            {isLast ? (
-              // Aktuelle Seite: kein Link, Amber-Farbe
-              <span style={{ color: "var(--lcars-amber)" }}>{crumb.label}</span>
-            ) : (
-              // Übergeordnete Seite: Link, gedimmt
-              <Link
-                href={crumb.href}
-                style={{
-                  color: "var(--lcars-text)",
-                  textDecoration: "none",
-                  transition: "color 150ms",
-                }}
-                onMouseEnter={(e) =>
-                  (e.currentTarget.style.color = "var(--lcars-text-dim)")
-                }
-                onMouseLeave={(e) =>
-                  (e.currentTarget.style.color = "var(--lcars-text)")
-                }
+            return (
+              <span
+                key={crumb.href}
+                style={{ display: "flex", alignItems: "center", gap: "6px" }}
               >
-                {crumb.label}
-              </Link>
-            )}
-          </span>
-        );
-      })}
-    </nav>
+                {index > 0 && (
+                  <span
+                    style={{
+                      color: "var(--lcars-amber)",
+                      // opacity: 0.5
+                    }}
+                  >
+                    ›
+                  </span>
+                )}
+                {isLast ? (
+                  // Aktuelle Seite: kein Link, Amber-Farbe
+                  <span style={{ color: "var(--lcars-amber)" }}>
+                    {crumb.label}
+                  </span>
+                ) : (
+                  // Übergeordnete Seite: Link, gedimmt
+                  <Link
+                    href={crumb.href}
+                    style={{
+                      color: "var(--lcars-text)",
+                      textDecoration: "none",
+                      transition: "color 150ms",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.color = "var(--lcars-text-dim)")
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.color = "var(--lcars-text)")
+                    }
+                  >
+                    {crumb.label}
+                  </Link>
+                )}
+              </span>
+            );
+          })}
+        </nav>
+      </div>
+    </div>
   );
 }

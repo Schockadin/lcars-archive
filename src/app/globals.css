@@ -12,6 +12,7 @@
   --lcars-amber-light: #ffcd9a;
   --lcars-orange: #ff9a66;
   --lcars-background: #000000;
+  --lcars-green: #6bcb8b;
 
   /* Interface-Flächen */
   --lcars-bg: #08081a;
@@ -32,7 +33,7 @@
   --lcars-radius-card: 4px 12px 12px 4px;
   --lcars-elbow-size: 64px;
   --lcars-bar-width: 200px;
-  --lcars-header-h: 180px;
+  --lcars-header-h: 100px;
   --lcars-bar-h: 20px;
   --lcars-footer-h: 40px;
   --lcars-sidebar-header-h: calc(var(--lcars-header-h) + var(--lcars-bar-h));
@@ -100,12 +101,12 @@ body {
 
 .lcars-header-title {
   font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
-  font-size: clamp(20px, 3.5vw, 48px);
+  font-size: 48px;
   font-weight: 700;
   letter-spacing: 0.08em;
   color: var(--lcars-amber);
   line-height: 1.1;
-  white-space: nowrap;
+  /* white-space: nowrap; */
 }
 
 /* Elbows */
@@ -267,21 +268,34 @@ body {
   box-shadow: inset 2px 2px var(--lcars-bg);
 }
 
+/* Horizontale Linie */
+.lcars-separator {
+  height: 2px;
+}
+
 /* Character Page */
 
 .character-list-entry {
   text-decoration: none;
-  color: var(--lcars-text-contras);
-  font-size: 16px;
+  color: var(--lcars-text-contrast);
+  font-size: var(--lcars-text-size);
   letter-spacing: 1px;
   text-transform: capitalize;
   margin-bottom: 5px;
+  transition: 250ms;
 }
 .character-list-entry:hover {
   color: var(--lcars-amber);
 }
 
 /* Headings, Text, etc. */
+.lcars-eyebrow {
+  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--lcars-eyebrow-size);
+  letter-spacing: 0.3em;
+  color: var(--lcars-orange);
+}
+
 .lcars-heading,
 h1 {
   font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
@@ -292,6 +306,7 @@ h1 {
   line-height: 1.1;
   margin-bottom: 20px;
   text-transform: uppercase;
+  text-align: left;
 }
 
 h2 {
@@ -308,38 +323,34 @@ h2 {
 
 .lcars-text {
   font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
-  font-size: var(--lcars-text-size);
   letter-spacing: 0.08em;
   color: var(--lcars-text-light);
   line-height: 1.5;
   font-weight: 500;
   margin-bottom: 10px;
 }
-
-.lcars-eyebrow {
-  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
-  font-size: var(--lcars-eyebrow-size);
-  letter-spacing: 0.3em;
-  color: var(--lcars-orange);
-}
-
-.lcars-body {
-  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
-  font-size: 16px;
-  letter-spacing: 0.08em;
-  color: var(--lcars-text-light);
-  line-height: 1.5;
-  font-weight: 500;
-  margin-bottom: 10px;
-}
-.lcars-body > a {
+.lcars-text > * > a {
   text-decoration: none;
   color: var(--lcars-text-data);
   transition: 250ms;
 }
-.lcars-body > a:hover {
+.lcars-text > * > a:hover {
   color: var(--lcars-blue);
   text-decoration: underline;
+}
+
+.lcars-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Share Tech Mono", monospace;
+  font-size: 16px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+address {
+  font-style: normal;
 }
 
 /* Scrollbar */
@@ -370,6 +381,10 @@ h2 {
 }
 
 /* Animationen */
+
+.animate-lcars-pulse {
+  animation: lcars-pulse 1.5s infinite;
+}
 
 @keyframes lcars-pulse {
   0%,
@@ -406,6 +421,10 @@ h2 {
   .lcars-menu-pill {
     width: 100%;
   }
+
+  .lcars-breadcrumbs {
+    font-size: 14px;
+  }
 }
 
 /* Extra-Small (≤ 480px): Sidebar auf 64px */
@@ -440,10 +459,22 @@ h2 {
     padding-top: 6px;
     font-size: 50cqh;
   }
+  .lcars-breadcrumbs {
+    font-size: 12px;
+  }
 }
 
-@media (max-width: 400) {
+@media (max-width: 375) {
   .lcars-eyebrow {
     display: none;
   }
+  .lcars-separator {
+    display: none;
+  }
+  .lcars-header-title {
+    font-size: 36px;
+  }
+}
+
+@media (max-height: 700) {
 }

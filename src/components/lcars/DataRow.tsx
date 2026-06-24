@@ -7,6 +7,7 @@ interface DataRowProps {
   accentColor?: string;
   labelColor?: string;
   href?: string;
+  width?: string;
 }
 
 export default function DataRow({

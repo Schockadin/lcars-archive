@@ -1,5 +1,6 @@
 "use client";
 import { usePageMeta } from "@/hooks/usePageMeta";
+import { LcarsHorSep } from "@/components/lcars";
 
 export default function LandingPage({ stats }: { stats: React.ReactNode }) {
   usePageMeta("Home", "home");
@@ -12,27 +13,21 @@ export default function LandingPage({ stats }: { stats: React.ReactNode }) {
       </div>
 
       {/* Trennlinie */}
-      <div
-        style={{
-          width: "100%",
-          height: "2px",
-          background:
-            "linear-gradient(to right, var(--lcars-amber), 75%, var(--lcars-bg)",
-        }}
-      />
+      <LcarsHorSep startColor="var(--lcars-amber)" />
+
       <div className="flex">
         <div className="lcars-heading">Willkommen im Neo Archiv</div>
       </div>
 
       {/* Erklärtext */}
-      <p>
+      <p className="lcars-body lcars-text">
         Dieses Terminal dokumentiert eine Pen-&-Paper-Kampagne, die seit ca.
         2011 mit kleineren Unterbrechungen läuft. Alle Sitzungsberichte,
         Charaktere und Weltendaten werden hier archiviert und sind durchsuchbar.
       </p>
 
       {/* DB-Statistiken / Data-Rows */}
-      {stats}
+      <div className="flex">{stats}</div>
     </div>
   );
 }

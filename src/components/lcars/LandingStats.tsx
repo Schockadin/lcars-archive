@@ -7,7 +7,7 @@ export default async function LandingStats() {
 
   return (
     <div className="flex flex-col gap-[8px] mt-[8px]">
-      <div className="lcars-eyebrow">Aktueller Datenbestand:</div>
+      <div className="lcars-eyebrow text-right">Aktueller Datenbestand</div>
       <LcarsDataRow
         value={15}
         label="Dauer"
