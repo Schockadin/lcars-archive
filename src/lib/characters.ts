@@ -1,13 +1,15 @@
-import sql from '@/lib/db';
-import { Character, CharacterMetadata } from '@/types/character';
+import sql from "@/lib/db";
+import { Character, CharacterMetadata } from "@/types/character";
+import { MissionLogPreview } from "@/types/missionLog";
 
 // Hilfsfunktion: stellt sicher dass metadata ein Objekt ist
 function parseCharacter(row: Character): Character {
   return {
     ...row,
-    metadata: typeof row.metadata === 'string'
-      ? JSON.parse(row.metadata) as CharacterMetadata
-      : row.metadata,
+    metadata:
+      typeof row.metadata === "string"
+        ? (JSON.parse(row.metadata) as CharacterMetadata)
+        : row.metadata,
   };
 }
 
@@ -27,7 +29,7 @@ export async function getAllCharacters(): Promise<Character[]> {
 }
 
 export async function getCharacterBySlug(
-  slug: string
+  slug: string,
 ): Promise<Character | null> {
   const rows = await sql<Character[]>`
     SELECT *
@@ -46,4 +48,24 @@ export async function getActiveCharacters(): Promise<Character[]> {
     ORDER BY name ASC
   `;
   return rows.map(parseCharacter);
+}
+
+export async function getLogsByCharacter(
+  characterId: number,
+): Promise<MissionLogPreview[]> {
+  const rows = await sql<MissionLogPreview[]>`
+    SELECT
+      ml.id,
+      ml.slug,
+      ml.title,
+      ml.session_nr,
+      ml.log_date::text AS log_date,
+      m.slug            AS mission_slug,
+      m.title           AS mission_title
+    FROM mission_logs ml
+    JOIN missions m ON m.id = ml.mission_id
+    WHERE ml.author_id = ${characterId}
+    ORDER BY ml.session_nr DESC NULLS LAST
+  `;
+  return rows;
 }
