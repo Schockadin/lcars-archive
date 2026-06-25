@@ -287,9 +287,6 @@
   .lcars-separator {
     display: none;
   }
-  .lcars-header-title {
-    /* font-size: 24px; */
-  }
 }
 
 /* Unter sm-Breakpoint (≤ 639px) */

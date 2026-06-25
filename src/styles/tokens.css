@@ -51,6 +51,7 @@
 
   /* Schriftfamilien */
   --font-antonio: "Antonio", sans-serif;
+  --font-mono: "Share Tech Mono", monospace;
 }
 
 @theme {

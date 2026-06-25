@@ -32,8 +32,8 @@ export default function MenuItem({
         className={`flex lcars-menu-${type} ${active ? "lcars-menu-active" : ""}`}
         style={style}
       >
-        <div className="lcars-menu-id">{id}</div>
-        <div className="lcars-menu-text">-{text}</div>
+        {id && <div className="lcars-menu-id">{id}-</div>}
+        <div className="lcars-menu-text">{text}</div>
       </div>
     </Link>
   );
