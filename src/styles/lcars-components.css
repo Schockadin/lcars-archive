@@ -127,7 +127,7 @@
   height: 100%;
   width: 16%;
   font-size: 100cqh;
-  line-height: 0.9;
+  line-height: 1;
   text-transform: uppercase;
   text-align: right;
   font-weight: 800;
@@ -143,8 +143,6 @@
   padding-left: 8px;
   font-weight: 600;
   text-decoration: none;
-  display: flex;
-  align-items: center;
   width: 84%;
 }
 
@@ -180,6 +178,7 @@
 }
 
 .character-entry {
+  width: 100%;
   display: flex;
   align-items: stretch;
   height: 34px;
@@ -204,7 +203,6 @@
 }
 
 .character-entry-bar {
-  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -368,6 +366,46 @@
   }
 }
 
+@media (max-width: 640px) {
+  :root {
+    --lcars-charpage-w: 350px;
+  }
+
+  .character-entry-name,
+  .character-entry-rank {
+    font-size: 16px;
+  }
+
+  .character-entry-stub {
+    display: none;
+  }
+
+  .character-entry {
+    width: 350px;
+  }
+}
+
+@media (max-width: 520px) {
+  :root {
+    --lcars-charpage-w: 250px;
+  }
+  .lcars-data-row {
+    width: 238px;
+  }
+  .lcars-data-row-label {
+    font-size: 75cqh;
+    padding-top: 3px;
+  }
+  .lcars-data-row-text {
+    font-size: 50cqh;
+    padding-top: 6px;
+  }
+
+  .character-entry {
+    width: 250px;
+  }
+}
+
 /* Extra-Small (≤ 480px): Sidebar auf 64px */
 @media (max-width: 480px) {
   :root {
@@ -392,26 +430,17 @@
   }
   .lcars-data-row-label {
     font-size: 75cqh;
-    padding-top: 3px;
+    padding-top: 1px;
   }
   .lcars-data-row-text {
     font-size: 50cqh;
-    padding-top: 6px;
+    padding-top: 3px;
   }
   .lcars-breadcrumbs {
     font-size: 12px;
   }
   .lcars-menu-id {
     font-size: 16px;
-  }
-
-  .character-entry-name,
-  .character-entry-rank {
-    font-size: 16px;
-  }
-
-  .character-entry-stub {
-    display: none;
   }
 }
 

@@ -59,7 +59,7 @@ export default function DataRow({
         </Link>
       ) : (
         <div
-          className=" lcars-data-row-text"
+          className="lcars-data-row-text"
           style={{
             backgroundColor: color,
           }}
