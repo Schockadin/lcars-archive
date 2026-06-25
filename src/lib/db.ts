@@ -14,7 +14,11 @@ const sql =
     idle_timeout: 20,
   });
 
-if (!globalForDb.sql) {
+// if (!globalForDb.sql) {
+//   globalForDb.sql = sql;
+// }
+
+if (process.env.NODE_ENV !== "production") {
   globalForDb.sql = sql;
 }
 

@@ -2,6 +2,19 @@ import sql from "@/lib/db";
 import { Character, CharacterMetadata } from "@/types/character";
 import { MissionLogPreview } from "@/types/missionLog";
 
+export const RANK_MAP: Record<string, string> = {
+  Ensign: "ENS",
+  "Lieutenant Junior Grade": "LTJG",
+  Lieutenant: "LT",
+  "Lieutenant Commander": "LTC",
+  Commander: "CDR",
+  Captain: "CPT",
+  Commodore: "COM",
+  "Rear Admiral": "RADM",
+  "Vice Admiral": "VADM",
+  Admiral: "ADM",
+};
+
 // Hilfsfunktion: stellt sicher dass metadata ein Objekt ist
 function parseCharacter(row: Character): Character {
   return {

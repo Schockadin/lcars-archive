@@ -1,55 +1,12 @@
+@import "../styles/tokens.css";
+@import "../styles/lcars-components.css";
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ─── LCARS Design Tokens ───────────────────────────────── */
-:root {
-  /* Primärpalette DS9/VOY */
-  --lcars-purple: #cd9acd;
-  --lcars-blue: #9a9aff;
-  --lcars-red: #cd6666;
-  --lcars-amber: #ff9a00;
-  --lcars-amber-light: #ffcd9a;
-  --lcars-orange: #ff9a66;
-  --lcars-background: #000000;
-  --lcars-green: #6bcb8b;
+/* ─── Reset & Basis ──────────────────────────────────────────────── */
 
-  /* Interface-Flächen */
-  --lcars-bg: #08081a;
-  --lcars-surface: #10102a;
-  --lcars-surface-2: #1a1838;
-  --lcars-border: #2d2550;
-
-  /* Typografie */
-  --lcars-text: #c8b8ff;
-  --lcars-text-dim: #6a5f9e;
-  --lcars-text-data: #4fc3f7;
-  --lcars-text-contrast: #ededed;
-  --lcars-text-light: #edefd2;
-  --lcars-text-dark: #08081a;
-
-  /* Strukturmaße */
-  --lcars-radius-pill: 24px;
-  --lcars-radius-card: 4px 12px 12px 4px;
-  --lcars-elbow-size: 64px;
-  --lcars-bar-width: 200px;
-  --lcars-header-h: 100px;
-  --lcars-bar-h: 20px;
-  --lcars-footer-h: 40px;
-  --lcars-sidebar-header-h: calc(var(--lcars-header-h) + var(--lcars-bar-h));
-  --lcars-sidebar-main-h: calc(100% - var(--lcars-bar-h));
-  --lcars-sidebar-w: calc(var(--lcars-bar-width) + var(--lcars-elbow-size));
-  --lcars-datarow-h: 40px;
-
-  /* Schrift */
-  --lcars-title-size: 48px;
-  --lcars-text-size: 24px;
-  --lcars-eyebrow-size: 16px;
-  --lcars-datamatrix-text-size: 12px;
-  --font-antonio: "Antonio", sans-serif;
-}
-
-/* ─── Reset & Basis ─────────────────────────────────────── */
 *,
 *::before,
 *::after {
@@ -63,6 +20,7 @@ html {
   min-width: 100%;
   width: 100%;
 }
+
 body {
   min-height: 100dvh;
   min-width: 100%;
@@ -72,258 +30,12 @@ body {
   font-family: var(--font-antonio), "Antonio", sans-serif;
   letter-spacing: 0.05em;
   -webkit-font-smoothing: antialiased;
-
-  /* background: green; */
 }
 
-/* ─── LCARS Utility-Klassen ─────────────────────────────── */
+/* ─── Basis-Typografie ───────────────────────────────────────────── */
 
-/* Header */
-.lcars-header-text {
-  font-size: 64px;
-  font-weight: 400;
-  letter-spacing: 0.15em;
-  color: var(--lcars-amber);
-  line-height: 1;
-  text-align: right;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-}
-
-.lcars-header-content {
-  display: flex;
-  width: 100%;
-  height: var(--lcars-header-h);
-  background-color: var(--lcars-bg);
-  flex-direction: column;
-  justify-content: space-between;
-  padding-top: 5px;
-  padding-bottom: 5px;
-}
-
-.lcars-header-title {
-  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
-  font-size: 48px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--lcars-amber);
-  line-height: 1.1;
-  /* white-space: nowrap; */
-}
-
-/* Elbows */
-
-.lcars-elbow-bar {
-  display: flex;
-  width: 100%;
-  height: var(--lcars-bar-h);
-  background-color: var(--lcars-bg);
-}
-
-.lcars-elbow-top {
-  width: var(--lcars-bar-width);
-  min-height: calc(var(--lcars-bar-h) + var(--lcars-elbow-size));
-  border-radius: 0 0 0 100px;
-  background-color: var(--lcars-blue);
-}
-
-.lcars-elbow-bottom {
-  width: var(--lcars-bar-width);
-  min-height: calc(0.8 * var(--lcars-bar-width));
-  border-radius: 100px 0 0 0;
-  background-color: var(--lcars-red);
-}
-
-/* Menu / Buttons / Navigation */
-.lcars-menu-text {
-  color: black;
-  font-weight: 600;
-  text-transform: uppercase;
-  line-height: 1.175;
-  letter-spacing: 1px;
-  font-size: 22px;
-  font-family: var(--font-antonio), sans-serif;
-  text-decoration: none;
-}
-.lcars-menu-id {
-  color: black;
-  font-weight: 600;
-  text-transform: uppercase;
-  line-height: 1.175;
-  letter-spacing: 1px;
-  font-size: 22px;
-  font-family: var(--font-antonio), sans-serif;
-  text-decoration: none;
-}
-
-.lcars-menu-bar {
-  width: var(--lcars-bar-width);
-  padding: 0 18px;
-  padding-block: 1px;
-  cursor: pointer;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  padding-bottom: 8px;
-  margin-top: 5px;
-  transition:
-    background 0.25s,
-    color 0.25s;
-  background-color: var(--lcars-amber);
-  transition: 250ms;
-  min-height: 60px;
-}
-.lcars-menu-bar:hover {
-  background-color: var(--lcars-amber-light);
-}
-
-.lcars-menu-pill {
-  height: 75px;
-  border-radius: 100vmax;
-  width: 210px;
-  padding: 0 18px;
-  padding-block: 1px;
-  cursor: pointer;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  padding-bottom: 8px;
-  transition:
-    background 0.25s,
-    color 0.25s;
-  background-color: var(--lcars-amber);
-  margin: 5px;
-  transition: 250ms;
-}
-.lcars-menu-pill:hover {
-  background-color: var(--lcars-amber-light);
-}
-
-.lcars-menu-active {
-  background-color: var(--lcars-blue);
-}
-.lcars-menu-active:hover {
-  background-color: var(--lcars-blue);
-}
-.lcars-footer-menu {
-  text-decoration: none;
-  width: 10%;
-  min-width: 100px;
-  height: var(--lcars-bar-h);
-  background: var(--lcars-amber);
-  font-size: calc(var(--lcars-bar-h) - 4px);
-  padding-right: 4px;
-  text-align: right;
-  transition: 250ms;
-  color: black;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  font-family: var(--font-antonio), sans-serif;
-}
-.lcars-footer-menu:hover {
-  background: var(--lcars-amber-light);
-}
-
-/* Main Content */
-
-.lcars-main-content {
-  display: flex;
-  min-width: 0;
-}
-
-/* Data Rows */
-
-.lcars-data-row {
-  width: 300px;
-  height: var(--lcars-datarow-h);
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  container-type: "size";
-}
-.lcars-data-row-label {
-  height: 100%;
-  width: 16%;
-  font-size: 100cqh;
-  line-height: 0.9;
-  text-transform: uppercase;
-  text-align: right;
-  font-weight: 800;
-}
-.lcars-data-row-text {
-  height: 100%;
-  border-radius: 0px 60px 60px 0px;
-  color: var(--lcars-bg);
-  font-size: 72cqh;
-  text-transform: uppercase;
-  text-align: left;
-  padding-left: 8px;
-  font-weight: 600;
-  text-decoration: none;
-  display: flex;
-  align-items: center;
-  transition: 250ms;
-  width: 84%;
-}
-.lcars-data-row-text:hover {
-  box-shadow: inset 2px 2px var(--lcars-bg);
-}
-
-/* Horizontale Linie */
-.lcars-separator {
-  height: 2px;
-}
-
-/* DataRowHeading */
-.lcars-datarow-heading {
-  color: var(--lcars-bg);
-  font-size: 80cqh;
-  text-transform: uppercase;
-  text-decoration: none;
-  display: flex;
-  transition: 250ms;
-  font-weight: 600;
-  color: var(--lcars-bg);
-}
-
-/* Character Page */
-
-.character-list-entry {
-  text-decoration: none;
-  color: var(--lcars-text-contrast);
-  font-size: var(--lcars-text-size);
-  letter-spacing: 1px;
-  text-transform: capitalize;
-  margin-bottom: 5px;
-  transition: 250ms;
-}
-.character-list-entry:hover {
-  color: var(--lcars-amber);
-}
-.character-portrait {
-  border-top: 3px solid var(--lcars-purple);
-  border-left: 3px solid var(--lcars-purple);
-  border-bottom: 3px solid var(--lcars-purple);
-  border-right: none;
-}
-
-.character-data {
-  display: flex;
-  /* flex-direction: row; */
-  gap: 5px;
-}
-
-/* Headings, Text, etc. */
-.lcars-eyebrow {
-  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
-  font-size: var(--lcars-eyebrow-size);
-  letter-spacing: 0.3em;
-  color: var(--lcars-orange);
-}
-
-.lcars-heading,
-h1 {
+h1,
+.lcars-heading {
   font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
   font-size: var(--lcars-title-size);
   font-weight: 700;
@@ -337,7 +49,6 @@ h1 {
 
 h2 {
   font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
-  margin-bottom: 5px;
   font-size: 20px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -347,6 +58,45 @@ h2 {
   margin-top: 10px;
 }
 
+.lcars-eyebrow {
+  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+  font-size: var(--lcars-eyebrow-size);
+  letter-spacing: 0.3em;
+  color: var(--lcars-orange);
+}
+
+.lcars-header-text {
+  font-size: 64px;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  color: var(--lcars-amber);
+  line-height: 1;
+  text-align: right;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.lcars-header-title {
+  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+  font-size: clamp(24px, 48px, 48px);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--lcars-amber);
+  line-height: 1.1;
+}
+
+.lcars-menu-text,
+.lcars-menu-id {
+  color: black;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1.175;
+  letter-spacing: 1px;
+  font-size: 22px;
+  font-family: var(--font-antonio), sans-serif;
+  text-decoration: none;
+}
+
 .lcars-text {
   font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: 0.08em;
@@ -354,15 +104,6 @@ h2 {
   line-height: 1.5;
   font-weight: 500;
   margin-bottom: 10px;
-}
-.lcars-text > * > a {
-  text-decoration: none;
-  color: var(--lcars-text-data);
-  transition: 250ms;
-}
-.lcars-text > * > a:hover {
-  color: var(--lcars-blue);
-  text-decoration: underline;
 }
 
 .lcars-breadcrumbs {
@@ -375,144 +116,30 @@ h2 {
   text-transform: uppercase;
 }
 
+/* ─── Sonstiges ──────────────────────────────────────────────────── */
+
+.lcars-separator {
+  height: 2px;
+}
+
+.character-list-entry {
+  text-decoration: none;
+  color: var(--lcars-text-contrast);
+  font-size: var(--lcars-text-size);
+  letter-spacing: 1px;
+  text-transform: capitalize;
+  margin-bottom: 5px;
+  transition: color 250ms;
+}
+.character-list-entry:hover {
+  color: var(--lcars-amber);
+}
+
+.character-data {
+  display: flex;
+  gap: 5px;
+}
+
 address {
   font-style: normal;
-}
-
-/* Scrollbar */
-
-/* Scrollbar-Breite */
-.lcars-scroll::-webkit-scrollbar {
-  width: 6px;
-}
-
-/* Track (Hintergrund) */
-.lcars-scroll::-webkit-scrollbar-track {
-  background: var(--lcars-blue);
-}
-
-/* Thumb (der ziehbare Balken) */
-.lcars-scroll::-webkit-scrollbar-thumb {
-  background: var(--lcars-red);
-  /* border-radius: 3px; */
-}
-
-.lcars-scroll::-webkit-scrollbar-thumb:hover {
-  background: var(--lcars-purple);
-}
-
-.lcars-scroll {
-  scrollbar-width: thin;
-  scrollbar-color: var(--lcars-blue) var(--lcars-surface);
-}
-
-/* Animationen */
-
-.animate-lcars-pulse {
-  animation: lcars-pulse 1.5s infinite;
-}
-
-@keyframes lcars-pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.25;
-  }
-}
-
-/* Media Querries */
-
-/* Small (≤ 768px): Sidebar auf 100px */
-@media (max-width: 768px) {
-  :root {
-    --lcars-bar-width: 100px;
-  }
-
-  .lcars-menu-bar {
-    width: var(--lcars-bar-width);
-    padding: 0 8px 6px;
-  }
-
-  /* .lcars-menu-text {
-    font-size: 14px;
-    letter-spacing: 0.5px;
-  } */
-
-  .lcars-menu-text {
-    display: none;
-  }
-
-  .lcars-menu-pill {
-    width: 100%;
-  }
-
-  .lcars-breadcrumbs {
-    font-size: 14px;
-  }
-}
-
-/* Extra-Small (≤ 480px): Sidebar auf 64px */
-@media (max-width: 480px) {
-  :root {
-    --lcars-bar-width: 64px;
-    --lcars-elbow-size: 32px;
-    --lcars-bar-h: 10px;
-    --lcars-title-size: 24px;
-    --lcars-text-size: 16px;
-    --lcars-eyebrow-size: 12px;
-    --lcars-datarow-h: 20px;
-  }
-
-  .lcars-elbow-bottom,
-  .lcars-elbow-top {
-    height: calc(0.8 * var(--lcars-bar-width)); /* Proportion bleibt */
-  }
-
-  .lcars-footer-menu {
-    min-width: 50px;
-  }
-
-  .lcars-data-row {
-    width: 200px;
-  }
-
-  .lcars-data-row-label {
-    font-size: 75cqh;
-    padding-top: 3px;
-  }
-  .lcars-data-row-text {
-    padding-top: 6px;
-    font-size: 50cqh;
-  }
-  .lcars-breadcrumbs {
-    font-size: 12px;
-  }
-  .lcars-menu-id {
-    font-size: 16px;
-  }
-}
-
-@media (max-width: 375) {
-  .lcars-eyebrow {
-    display: none;
-  }
-  .lcars-separator {
-    display: none;
-  }
-  .lcars-header-title {
-    font-size: 36px;
-  }
-}
-
-@media (max-width: 639px) {
-  /* unter sm-Breakpoint */
-  .character-portrait {
-    border-right: 3px solid var(--lcars-purple);
-  }
-
-  .character-data {
-    flex-direction: column;
-  }
 }
