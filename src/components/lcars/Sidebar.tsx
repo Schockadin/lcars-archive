@@ -1,5 +1,11 @@
 "use client";
+import { CSSProperties } from "react";
 import SideBarMenu from "./SidebarMenu";
+
+export interface SidebarProps {
+  style?: CSSProperties | undefined;
+  className?: string | null;
+}
 
 export default function Sidebar() {
   return (
@@ -47,5 +53,14 @@ export default function Sidebar() {
         </div>
       </div>
     </aside>
+  );
+}
+
+export function ContentSidebar({ style, className }: SidebarProps) {
+  return (
+    <aside
+      className={`flex w-[var(--lcars-elbow-size)] h-[100%] bg-lcars-amber ${className}`}
+      style={style}
+    ></aside>
   );
 }

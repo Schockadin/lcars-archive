@@ -40,10 +40,8 @@ export default function NotFound() {
 
       {/* Zurück-Link als LCARS-Pill */}
       <LcarsMenuItem
-        text="zurück"
         href="/"
-        id=""
-        active={false}
+        id="zurück"
         type="pill"
         style={{
           height: "40px",

@@ -1,13 +1,14 @@
-import { readFileSync, readdirSync } from 'fs';
-import { join, extname } from 'path';
-import matter from 'gray-matter';
-import postgres from 'postgres';
+import { readFileSync, readdirSync } from "fs";
+import { join, extname } from "path";
+import matter from "gray-matter";
+import postgres from "postgres";
 import {
   markdownToHtml,
   validateSlug,
   parseDate,
   toStringArray,
-} from './shared.js';
+  toNumberArray,
+} from "./shared.js";
 
 // Typ für rohe Frontmatter-Daten
 interface CharacterFrontmatter {
@@ -25,21 +26,19 @@ interface CharacterFrontmatter {
     division?: string;
   };
   player?: string;
-  joined_at?: string;
-  left_at?: string;
   portrait?: string;
   tags?: string[];
   aliases?: string[];
+  generation?: number[];
 }
 
 export async function ingestCharacters(
   sql: postgres.Sql,
-  vaultPath: string
+  vaultPath: string,
 ): Promise<void> {
-  const dir = join(vaultPath, 'Charaktere');
-  
-  const files = readdirSync(dir)
-    .filter(f => extname(f) === '.md');
+  const dir = join(vaultPath, "Charaktere");
+
+  const files = readdirSync(dir).filter((f) => extname(f) === ".md");
 
   console.log(`\n👤 Charaktere: ${files.length} Dateien gefunden`);
 
@@ -51,17 +50,15 @@ export async function ingestCharacters(
     const filepath = join(dir, file);
 
     try {
-      const raw = readFileSync(filepath, 'utf8');
+      const raw = readFileSync(filepath, "utf8");
       const { data, content } = matter(raw);
       const fm = data as CharacterFrontmatter;
 
-      // Nur Notes mit type: character verarbeiten
-      if (fm.type !== 'character') {
+      if (fm.type !== "character") {
         skipped++;
         continue;
       }
 
-      // Pflichtfelder validieren
       const slug = validateSlug(fm.slug, file);
 
       if (!fm.name?.trim()) {
@@ -69,11 +66,11 @@ export async function ingestCharacters(
       }
 
       // Status validieren
-      const validStatuses = ['active', 'retired', 'deceased'];
-      const status = fm.status ?? 'active';
+      const validStatuses = ["active", "retired", "deceased"];
+      const status = fm.status ?? "active";
       if (!validStatuses.includes(status)) {
         throw new Error(
-          `Ungültiger status "${status}" – erlaubt: ${validStatuses.join(', ')}`
+          `Ungültiger status "${status}" – erlaubt: ${validStatuses.join(", ")}`,
         );
       }
 
@@ -96,21 +93,19 @@ export async function ingestCharacters(
         player: fm.player ?? null,
         tags: toStringArray(fm.tags),
         aliases: toStringArray(fm.aliases),
+        generation: toNumberArray(fm.generation),
       };
 
       // Upsert: existiert → update, neu → insert
       await sql`
         INSERT INTO characters (
-          slug, name, status, portrait,
-          joined_at, left_at, bio, metadata,
+          slug, name, status, portrait, bio, metadata,
           updated_at
         ) VALUES (
           ${slug},
           ${fm.name.trim()},
           ${status},
           ${fm.portrait?.trim() || null},
-          ${parseDate(fm.joined_at)},
-          ${parseDate(fm.left_at)},
           ${bio},
           ${JSON.stringify(metadata)},
           NOW()
@@ -119,8 +114,6 @@ export async function ingestCharacters(
           name       = EXCLUDED.name,
           status     = EXCLUDED.status,
           portrait   = EXCLUDED.portrait,
-          joined_at  = EXCLUDED.joined_at,
-          left_at    = EXCLUDED.left_at,
           bio        = EXCLUDED.bio,
           metadata   = EXCLUDED.metadata,
           updated_at = NOW()
@@ -128,7 +121,6 @@ export async function ingestCharacters(
 
       console.log(`  ✓ ${fm.name}`);
       success++;
-
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       errors.push(`  ✗ ${file}: ${message}`);
@@ -138,7 +130,7 @@ export async function ingestCharacters(
   // Zusammenfassung
   console.log(`  → ${success} importiert, ${skipped} übersprungen`);
   if (errors.length > 0) {
-    console.error('\n  Fehler:');
-    errors.forEach(e => console.error(e));
+    console.error("\n  Fehler:");
+    errors.forEach((e) => console.error(e));
   }
 }

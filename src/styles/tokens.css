@@ -42,6 +42,7 @@
   --lcars-sidebar-header-h: calc(var(--lcars-header-h) + var(--lcars-bar-h));
   --lcars-sidebar-main-h: calc(100% - var(--lcars-bar-h));
   --lcars-sidebar-w: calc(var(--lcars-bar-width) + var(--lcars-elbow-size));
+  --lcars-charpage-w: 465px;
 
   /* Typografie-Größen */
   --lcars-title-size: 48px;
@@ -96,4 +97,5 @@
   --spacing-lcars-bar: 20px;
   --spacing-lcars-footer: 40px;
   --spacing-lcars-datarow: 40px;
+  --spacing-lcars-charpage: 465px;
 }

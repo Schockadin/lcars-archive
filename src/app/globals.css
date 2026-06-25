@@ -112,7 +112,7 @@ h2 {
   gap: 6px;
   font-family: "Share Tech Mono", monospace;
   font-size: 16px;
-  letter-spacing: 0.2em;
+  /* letter-spacing: 0.2em; */
   text-transform: uppercase;
 }
 

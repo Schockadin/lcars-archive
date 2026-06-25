@@ -18,8 +18,6 @@ CREATE TABLE IF NOT EXISTS characters (
   species     TEXT,
   rank        TEXT,
   bio         TEXT,
-  joined_at   DATE,
-  left_at     DATE,
   metadata    JSONB NOT NULL DEFAULT '{}',
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
