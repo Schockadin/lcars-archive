@@ -13,6 +13,7 @@ export interface CharacterMetadata {
   player: string | null;
   tags: string[];
   aliases: string[];
+  generation: number[];
 }
 
 export interface Character {

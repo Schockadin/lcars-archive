@@ -4,12 +4,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --hostname 192.168.178.x",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "db:setup": "tsx --env-file=.env.local scripts/setup-db.ts",
-    "db:ingest": "tsx --env-file=.env.local scripts/ingest/index.ts"
+    "db:ingest": "tsx --env-file=.env.local scripts/ingest/index.ts",
+    "db:reset": "tsx --env-file=.env.local scripts/reset-db.ts"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
@@ -23,7 +24,9 @@
     "rehype-stringify": "^10.0.1",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
-    "remark-html": "^16.0.1"
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.2",
+    "unist-util-visit": "^5.1.0"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.15.11",

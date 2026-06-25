@@ -2,10 +2,10 @@ import Link from "next/link";
 import type { CSSProperties } from "react";
 
 export interface MenuItemProps {
-  text: string;
+  text?: string;
   href: string;
-  id: string;
-  active: boolean;
+  id?: string;
+  active?: boolean;
   type: MENU_ITEM_TYPE;
   style?: CSSProperties;
 }
@@ -13,10 +13,10 @@ export interface MenuItemProps {
 export type MENU_ITEM_TYPE = "bar" | "pill";
 
 export default function MenuItem({
-  text,
+  text = "",
   href,
-  id,
-  active,
+  id = "",
+  active = false,
   type,
   style,
 }: MenuItemProps) {
@@ -32,8 +32,8 @@ export default function MenuItem({
         className={`flex lcars-menu-${type} ${active ? "lcars-menu-active" : ""}`}
         style={style}
       >
-        <div className="lcars-menu-id">{id}</div>
-        <div className="lcars-menu-text">-{text}</div>
+        {id && <div className="lcars-menu-id">{id}</div>}
+        {text && <div className="lcars-menu-text">-{text}</div>}
       </div>
     </Link>
   );

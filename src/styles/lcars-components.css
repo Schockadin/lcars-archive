@@ -1,0 +1,465 @@
+/* ─── LCARS Strukturklassen ──────────────────────────────────────────
+   Nur CSS, das Tailwind nicht abbilden kann:
+   - Komplexe Selektoren  (> * > a, ::-webkit-scrollbar)
+   - Container-Query-Einheiten (cqh)
+   - Keyframe-Animationen
+   - Media Queries mit :root-Overrides
+   - Pseudo-Element-Konstrukte
+──────────────────────────────────────────────────────────────────── */
+
+/* ── Header ─────────────────────────────────────────────────────── */
+
+.lcars-header-content {
+  display: flex;
+  width: 100%;
+  height: var(--lcars-header-h);
+  background-color: var(--lcars-bg);
+  flex-direction: column;
+  justify-content: space-between;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+
+/* ── Elbows ──────────────────────────────────────────────────────── */
+
+.lcars-elbow-bar {
+  display: flex;
+  width: 100%;
+  height: var(--lcars-bar-h);
+  background-color: var(--lcars-bg);
+}
+
+.lcars-elbow-top {
+  width: var(--lcars-bar-width);
+  min-height: calc(var(--lcars-bar-h) + var(--lcars-elbow-size));
+  border-radius: 0 0 0 100px;
+  background-color: var(--lcars-blue);
+}
+
+.lcars-elbow-bottom {
+  width: var(--lcars-bar-width);
+  min-height: calc(0.8 * var(--lcars-bar-width));
+  border-radius: 100px 0 0 0;
+  background-color: var(--lcars-red);
+}
+
+/* ── Navigation ──────────────────────────────────────────────────── */
+
+.lcars-menu-bar {
+  width: var(--lcars-bar-width);
+  padding: 0 18px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  margin-top: 5px;
+  background-color: var(--lcars-amber);
+  min-height: 60px;
+  transition: background 250ms;
+}
+.lcars-menu-bar:hover {
+  background-color: var(--lcars-amber-light);
+}
+
+.lcars-menu-pill {
+  height: 75px;
+  border-radius: 100vmax;
+  width: 210px;
+  padding: 0 18px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  background-color: var(--lcars-amber);
+  margin: 5px;
+  transition: background 250ms;
+}
+.lcars-menu-pill:hover {
+  background-color: var(--lcars-amber-light);
+}
+
+.lcars-menu-active {
+  background-color: var(--lcars-blue);
+}
+.lcars-menu-active:hover {
+  background-color: var(--lcars-blue);
+}
+
+.lcars-footer-menu {
+  text-decoration: none;
+  width: 10%;
+  min-width: 100px;
+  height: var(--lcars-bar-h);
+  background: var(--lcars-amber);
+  font-size: calc(var(--lcars-bar-h) - 4px);
+  padding-right: 4px;
+  text-align: right;
+  color: black;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: var(--font-antonio), sans-serif;
+  transition: background 250ms;
+}
+.lcars-footer-menu:hover {
+  background: var(--lcars-amber-light);
+}
+
+/* ── Layout ──────────────────────────────────────────────────────── */
+
+.lcars-main-content {
+  display: flex;
+  min-width: 0;
+}
+
+/* ── Data Rows (container queries) ───────────────────────────────── */
+
+.lcars-data-row {
+  width: 300px;
+  height: var(--lcars-datarow-h);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  container-type: size;
+}
+
+.lcars-data-row-label {
+  height: 100%;
+  width: 16%;
+  font-size: 100cqh;
+  line-height: 1;
+  text-transform: uppercase;
+  text-align: right;
+  font-weight: 800;
+}
+
+.lcars-data-row-text {
+  height: 100%;
+  border-radius: 0 60px 60px 0;
+  color: var(--lcars-bg);
+  font-size: 72cqh;
+  text-transform: uppercase;
+  text-align: left;
+  padding-left: 8px;
+  font-weight: 600;
+  text-decoration: none;
+  width: 84%;
+}
+
+.lcars-datarow-heading {
+  color: var(--lcars-bg);
+  font-size: 80cqh;
+  text-transform: uppercase;
+  text-decoration: none;
+  display: flex;
+  transition: 250ms;
+  font-weight: 600;
+}
+
+/* ── Typografie mit komplexen Selektoren ─────────────────────────── */
+
+.lcars-text > * > a {
+  text-decoration: none;
+  color: var(--lcars-text-data);
+  transition: color 250ms;
+}
+.lcars-text > * > a:hover {
+  color: var(--lcars-blue);
+  text-decoration: underline;
+}
+
+/* ── Character Page ──────────────────────────────────────────────── */
+
+.character-portrait {
+  border-top: 3px solid var(--lcars-purple);
+  border-left: 3px solid var(--lcars-purple);
+  border-bottom: 3px solid var(--lcars-purple);
+  border-right: none;
+}
+
+.character-entry {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  height: 34px;
+  text-decoration: none;
+}
+
+.character-entry-stub {
+  width: 60px;
+  flex-shrink: 0;
+  border-radius: 100vmax 0 0 100vmax;
+  background: var(--entry-color);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--lcars-bg);
+  transition: filter 100ms;
+}
+
+.character-entry-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 400px;
+  margin-left: 3px;
+  padding: 0 16px;
+  background: var(--lcars-surface);
+  transition:
+    background 150ms,
+    color 150ms;
+}
+
+.character-entry-name {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lcars-text-contrast);
+  line-height: 1;
+}
+
+.character-entry-rank {
+  margin-left: 20px;
+  font-size: 19px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lcars-text-dim);
+  justify-self: right;
+}
+
+.character-entry:hover .character-entry-bar {
+  background: var(--entry-color);
+}
+.character-entry:hover .character-entry-name {
+  color: var(--lcars-bg);
+}
+.character-entry:hover .character-entry-rank {
+  color: var(--lcars-bg);
+  opacity: 0.7;
+}
+.character-entry:hover .character-entry-stub {
+  filter: brightness(1.2);
+}
+
+/* ── Switch-Toggles ──────────────────────────────────────────────── */
+
+.lcars-switch {
+  cursor: pointer;
+  height: 30px;
+  font-size: 16px;
+  font-weight: bolder;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  transition: 200ms;
+  /* text-align: center; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: solid 1px var(--lcars-text-data);
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────── */
+
+.lcars-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.lcars-scroll::-webkit-scrollbar-track {
+  background: var(--lcars-blue);
+}
+.lcars-scroll::-webkit-scrollbar-thumb {
+  background: var(--lcars-red);
+}
+.lcars-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--lcars-purple);
+}
+.lcars-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--lcars-blue) var(--lcars-surface);
+}
+
+/* LCARS DataRow als Kapitelüberschrift */
+.lcars-data-row-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  margin: 32px 0 16px;
+}
+
+.lcars-dr-value {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 40px;
+  line-height: 1;
+  font-weight: 800;
+  color: var(--lcars-text-contrast);
+  text-align: right;
+  width: 50px;
+  flex-shrink: 0;
+}
+
+.lcars-dr-accent {
+  width: 16px;
+  height: 100%;
+  background-color: var(--lcars-amber);
+  flex-shrink: 0;
+}
+
+.lcars-dr-label {
+  flex: 1;
+  height: 100%;
+  background-color: var(--lcars-purple);
+  color: var(--lcars-bg);
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-left: 12px;
+  display: flex;
+  align-items: center;
+  border-radius: 0 60px 60px 0;
+}
+
+/* ── Animationen ─────────────────────────────────────────────────── */
+
+.animate-lcars-pulse {
+  animation: lcars-pulse 1.5s infinite;
+}
+
+@keyframes lcars-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* ── Responsive Overrides ────────────────────────────────────────── */
+
+/* Small (≤ 768px): Sidebar auf 100px */
+@media (max-width: 768px) {
+  :root {
+    --lcars-bar-width: 100px;
+  }
+
+  .lcars-menu-bar {
+    width: var(--lcars-bar-width);
+    padding: 0 8px 6px;
+  }
+  .lcars-menu-text {
+    display: none;
+  }
+  .lcars-menu-pill {
+    width: 100%;
+  }
+  .lcars-breadcrumbs {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --lcars-charpage-w: 350px;
+  }
+
+  .character-entry-name,
+  .character-entry-rank {
+    font-size: 16px;
+  }
+
+  .character-entry-stub {
+    display: none;
+  }
+
+  .character-entry {
+    width: 350px;
+  }
+}
+
+@media (max-width: 520px) {
+  :root {
+    --lcars-charpage-w: 250px;
+  }
+  .lcars-data-row {
+    width: 238px;
+  }
+  .lcars-data-row-label {
+    font-size: 75cqh;
+    padding-top: 3px;
+  }
+  .lcars-data-row-text {
+    font-size: 50cqh;
+    padding-top: 6px;
+  }
+
+  .character-entry {
+    width: 250px;
+  }
+}
+
+/* Extra-Small (≤ 480px): Sidebar auf 64px */
+@media (max-width: 480px) {
+  :root {
+    --lcars-bar-width: 64px;
+    --lcars-elbow-size: 32px;
+    --lcars-bar-h: 10px;
+    --lcars-title-size: 24px;
+    --lcars-text-size: 16px;
+    --lcars-eyebrow-size: 12px;
+    --lcars-datarow-h: 20px;
+  }
+
+  .lcars-elbow-bottom,
+  .lcars-elbow-top {
+    height: calc(0.8 * var(--lcars-bar-width));
+  }
+  .lcars-footer-menu {
+    min-width: 50px;
+  }
+  .lcars-data-row {
+    width: 200px;
+  }
+  .lcars-data-row-label {
+    font-size: 75cqh;
+    padding-top: 1px;
+  }
+  .lcars-data-row-text {
+    font-size: 50cqh;
+    padding-top: 3px;
+  }
+  .lcars-breadcrumbs {
+    font-size: 12px;
+  }
+  .lcars-menu-id {
+    font-size: 16px;
+  }
+}
+
+/* Micro (≤ 375px) */
+@media (max-width: 375px) {
+  .lcars-eyebrow {
+    display: none;
+  }
+  .lcars-separator {
+    display: none;
+  }
+}
+
+/* Unter sm-Breakpoint (≤ 639px) */
+@media (max-width: 639px) {
+  .character-portrait {
+    border-right: 3px solid var(--lcars-purple);
+  }
+  .character-data {
+    flex-direction: column;
+  }
+}

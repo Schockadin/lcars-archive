@@ -1,0 +1,101 @@
+/* ─── LCARS Design Tokens ────────────────────────────────────────────
+   :root  → CSS Custom Properties für var() in Klassen & Inline-Styles
+   @theme → Tailwind 4 Utility-Klassen (bg-lcars-amber, text-lcars-blue …)
+            Hex-Werte notwendig — @theme wird zur Build-Zeit ausgewertet,
+            var() kann erst zur Runtime vom Browser aufgelöst werden.
+──────────────────────────────────────────────────────────────────── */
+
+:root {
+  /* Primärpalette DS9/VOY */
+  --lcars-purple: #cd9acd;
+  --lcars-blue: #9a9aff;
+  --lcars-red: #cd6666;
+  --lcars-amber: #ff9a00;
+  --lcars-amber-light: #ffcd9a;
+  --lcars-orange: #ff9a66;
+  --lcars-green: #6bcb8b;
+  --lcars-background: #000000;
+
+  /* Interface-Flächen */
+  --lcars-bg: #08081a;
+  --lcars-surface: #10102a;
+  --lcars-surface-2: #1a1838;
+  --lcars-border: #2d2550;
+
+  /* Typografie-Farben */
+  --lcars-text: #c8b8ff;
+  --lcars-text-dim: #6a5f9e;
+  --lcars-text-data: #4fc3f7;
+  --lcars-text-contrast: #ededed;
+  --lcars-text-light: #edefd2;
+  --lcars-text-dark: #08081a;
+
+  /* Strukturmaße */
+  --lcars-radius-pill: 24px;
+  --lcars-radius-card: 4px 12px 12px 4px;
+  --lcars-elbow-size: 64px;
+  --lcars-bar-width: 200px;
+  --lcars-header-h: 100px;
+  --lcars-bar-h: 20px;
+  --lcars-footer-h: 40px;
+  --lcars-datarow-h: 40px;
+  --lcars-sidebar-header-h: calc(var(--lcars-header-h) + var(--lcars-bar-h));
+  --lcars-sidebar-main-h: calc(100% - var(--lcars-bar-h));
+  --lcars-sidebar-w: calc(var(--lcars-bar-width) + var(--lcars-elbow-size));
+  --lcars-charpage-w: 465px;
+
+  /* Typografie-Größen */
+  --lcars-title-size: 48px;
+  --lcars-text-size: 24px;
+  --lcars-eyebrow-size: 16px;
+  --lcars-datamatrix-text-size: 12px;
+
+  /* Schriftfamilien */
+  --font-antonio: "Antonio", sans-serif;
+  --font-mono: "Share Tech Mono", monospace;
+}
+
+@theme {
+  /* ── Farben ──────────────────────────────────────────────────────
+     Erzeugt u.a.: bg-lcars-amber, text-lcars-purple, border-lcars-blue,
+     fill-lcars-red, ring-lcars-green … sowie Opacity-Modifier wie
+     bg-lcars-amber/50, text-lcars-blue/75 etc.
+  ─────────────────────────────────────────────────────────────────── */
+  --color-lcars-purple: #cd9acd;
+  --color-lcars-blue: #9a9aff;
+  --color-lcars-red: #cd6666;
+  --color-lcars-amber: #ff9a00;
+  --color-lcars-amber-light: #ffcd9a;
+  --color-lcars-orange: #ff9a66;
+  --color-lcars-green: #6bcb8b;
+  --color-lcars-bg: #08081a;
+  --color-lcars-surface: #10102a;
+  --color-lcars-surface-2: #1a1838;
+  --color-lcars-border: #2d2550;
+  --color-lcars-text: #c8b8ff;
+  --color-lcars-text-dim: #6a5f9e;
+  --color-lcars-text-data: #4fc3f7;
+  --color-lcars-text-contrast: #ededed;
+  --color-lcars-text-light: #edefd2;
+  --color-lcars-text-dark: #08081a;
+
+  /* ── Schriften ───────────────────────────────────────────────────
+     Erzeugt: font-lcars, font-lcars-mono
+  ─────────────────────────────────────────────────────────────────── */
+  --font-lcars: "Antonio", sans-serif;
+  --font-lcars-mono: "Share Tech Mono", monospace;
+
+  /* ── Border Radius ───────────────────────────────────────────────
+     Erzeugt: rounded-lcars-pill
+  ─────────────────────────────────────────────────────────────────── */
+  --radius-lcars-pill: 24px;
+
+  /* ── Spacing / Sizing ────────────────────────────────────────────
+     Erzeugt: h-lcars-bar, h-lcars-footer, h-lcars-datarow
+     Nutzbar als: h-*, w-*, p-*, m-*, gap-* etc.
+  ─────────────────────────────────────────────────────────────────── */
+  --spacing-lcars-bar: 20px;
+  --spacing-lcars-footer: 40px;
+  --spacing-lcars-datarow: 40px;
+  --spacing-lcars-charpage: 465px;
+}

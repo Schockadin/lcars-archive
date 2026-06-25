@@ -1,13 +1,14 @@
 import Link from "next/link";
 
 interface DataRowProps {
-  value: number | string;
-  label: string;
+  value?: number | string;
+  label?: string;
   color?: string;
   accentColor?: string;
   labelColor?: string;
-  href?: string;
+  href?: string | null;
   width?: string;
+  className?: string;
 }
 
 export default function DataRow({
@@ -16,11 +17,12 @@ export default function DataRow({
   color = "var(--lcars-purple)",
   accentColor = "var(--lcars-amber)",
   labelColor = "var(--lcars-text-contrast)",
-  href = "/",
+  href,
+  className = "",
 }: DataRowProps) {
   return (
     <div
-      className="lcars-data-row"
+      className={`lcars-data-row ${className}`}
       style={{
         containerType: "size",
       }}
@@ -45,15 +47,26 @@ export default function DataRow({
       />
 
       {/* Label-Pill */}
-      <Link
-        href={href}
-        className=" lcars-data-row-text"
-        style={{
-          backgroundColor: color,
-        }}
-      >
-        <div className="w-full h-full">{label}</div>
-      </Link>
+      {href != null ? (
+        <Link
+          href={href}
+          className=" lcars-data-row-text"
+          style={{
+            backgroundColor: color,
+          }}
+        >
+          <div className="w-full h-full">{label}</div>
+        </Link>
+      ) : (
+        <div
+          className="lcars-data-row-text"
+          style={{
+            backgroundColor: color,
+          }}
+        >
+          <div className="w-full h-full">{label}</div>
+        </div>
+      )}
     </div>
   );
 }
