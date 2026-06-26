@@ -101,8 +101,7 @@ h2 {
   font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
   letter-spacing: 0.08em;
   color: var(--lcars-text-light);
-  line-height: 1.5;
-  font-weight: 500;
+  line-height: 1.75;
   margin-bottom: 10px;
 }
 

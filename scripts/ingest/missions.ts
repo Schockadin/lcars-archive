@@ -1,5 +1,5 @@
 import { readFileSync, readdirSync, statSync } from "fs";
-import { join, extname } from "path";
+import { join } from "path";
 import matter from "gray-matter";
 import postgres from "postgres";
 import {
@@ -74,6 +74,7 @@ export async function ingestMissions(
 
       const metadata = {
         tags: toStringArray(fm.tags),
+        body: summaryHtml,
       };
 
       // Upsert: existiert → update, neu → insert
@@ -86,7 +87,7 @@ export async function ingestMissions(
           ${slug},
           ${fm.title.trim()},
           ${status},
-          ${fm.summary?.trim() || summaryHtml || null},
+          ${fm.summary?.trim() || null},
           ${parseDate(fm.started_at)},
           ${parseDate(fm.ended_at)},
           ${JSON.stringify(metadata)},
