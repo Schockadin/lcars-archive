@@ -1,58 +1,75 @@
-// src/app/characters/[slug]/CharacterHero.tsx
 import { Character } from "@/types/character";
+import { LcarsToc, type TocHeading } from "@/components/lcars";
 
-// ── Datums-Formatter ──────────────────────────────────────────────────────
-function formatDate(value: string | Date | null): string | null {
-  if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
-  return date.toLocaleDateString("de-DE", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  });
+// ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
-// ── Interne DataLine ──────────────────────────────────────────────────────
-function DataLine({
+function buildBioToc(html: string): { html: string; headings: TocHeading[] } {
+  const headings: TocHeading[] = [];
+  const used = new Set<string>();
+
+  const out = html.replace(
+    /<h3\b([^>]*)>([\s\S]*?)<\/h3>/gi,
+    (match, attrs: string, inner: string) => {
+      const text = inner.replace(/<[^>]*>/g, "").trim();
+
+      // bestehende id übernehmen, sonst aus dem Text ableiten
+      const existing = attrs.match(/\bid=["']([^"']+)["']/);
+      let id = existing?.[1] ?? `bio-${slugify(text) || "abschnitt"}`;
+      if (!existing) {
+        let unique = id;
+        let i = 2;
+        while (used.has(unique)) unique = `${id}-${i++}`;
+        id = unique;
+      }
+      used.add(id);
+      headings.push({ id, text });
+
+      return existing ? match : `<h3${attrs} id="${id}">${inner}</h3>`;
+    },
+  );
+
+  return { html: out, headings };
+}
+
+function makeRng(seed: number) {
+  let s = (seed || 1) >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 0xffffffff;
+  };
+}
+function digits(rng: () => number, n: number): string {
+  let out = "";
+  for (let i = 0; i < n; i++) out += Math.floor(rng() * 10);
+  return out;
+}
+function group(rng: () => number, a: number, b: number): string {
+  return `${digits(rng, a)}-${digits(rng, b)}`;
+}
+
+function FileField({
   label,
   value,
-  blue = false,
 }: {
   label: string;
   value: string | number;
-  blue?: boolean;
 }) {
   return (
-    <div className="flex items-center gap-0">
-      {/* Label — rechtsbündig, feste Breite → alle Separatoren fluchten */}
-      <span
-        className="shrink-0 w-[90px] text-right pr-2 text-[11px] uppercase tracking-[.15em]"
-        style={{ color: "var(--lcars-text-dim)" }}
-      >
-        {label}
-      </span>
-
-      {/* Separator */}
-      <span
-        className="shrink-0 w-[10px] h-[18px] mr-2"
-        style={{ backgroundColor: "var(--lcars-orange)" }}
-        aria-hidden="true"
-      />
-
-      {/* Wert */}
-      <span
-        className="min-w-0 truncate text-[14px] tracking-[.05em]"
-        style={{
-          color: blue ? "var(--lcars-text-data)" : "var(--lcars-text-contrast)",
-        }}
-      >
-        {value}
-      </span>
+    <div className="char-file-field">
+      <span className="char-file-field-label">{label}:</span>
+      <span className="char-file-field-value">{value}</span>
     </div>
   );
 }
 
-// ── Status Badge ──────────────────────────────────────────────────────────
 const STATUS_CONFIG = {
   active: {
     label: "Aktiv",
@@ -75,8 +92,8 @@ function StatusBadge({ status }: { status: Character["status"] }) {
   const cfg = STATUS_CONFIG[status];
   return (
     <span
-      className="inline-flex items-center gap-1.5 rounded-full px-3 py-0.5
-                 text-[11px] uppercase tracking-[.2em]"
+      className="inline-flex items-center gap-1.5 px-3 py-0.5
+                 text-[12px] uppercase tracking-[.2em]"
       style={{ color: cfg.color, backgroundColor: cfg.bg }}
     >
       <span
@@ -89,209 +106,204 @@ function StatusBadge({ status }: { status: Character["status"] }) {
   );
 }
 
-// ── Hauptkomponente ───────────────────────────────────────────────────────
+const PILL_COLORS = [
+  "var(--lcars-blue)",
+  "var(--lcars-purple)",
+  "var(--lcars-amber)",
+  "var(--lcars-red)",
+];
+const BAR_SEGMENTS: { flex: number; color: string }[] = [
+  { flex: 2, color: "var(--lcars-orange)" },
+  { flex: 3, color: "var(--lcars-purple)" },
+  { flex: 1, color: "var(--lcars-blue)" },
+  { flex: 4, color: "var(--lcars-amber)" },
+  { flex: 1, color: "var(--lcars-red)" },
+];
+
 export default function CharacterHero({ character }: { character: Character }) {
   const { metadata } = character;
-  const hasFactions =
-    metadata.affiliation &&
-    (metadata.affiliation.factions.length > 0 ||
-      metadata.affiliation.ships.length > 0);
+
+  // Deko-Codes deterministisch aus der Charakter-ID ableiten
+  const rng = makeRng(character.id * 2654435761);
+  const fileNo = `${digits(rng, 4)}-${String.fromCharCode(
+    65 + Math.floor(rng() * 6),
+  )}`;
+
+  // Format: NEO-01/[character.id]
+  const recordId = `NEO-01/${character.id}`;
+  const pills = PILL_COLORS.map((color) => ({ color, code: group(rng, 4, 3) }));
+  const matrix = Array.from({ length: 15 }, () => digits(rng, 10));
+
+  const factions = metadata.affiliation?.factions ?? [];
+  const ships = metadata.affiliation?.ships ?? [];
+  const division = metadata.affiliation?.division ?? null;
+
+  // Bio aufbereiten: Anker-IDs setzen + Sprungpunkte fürs TOC sammeln
+  const bio = character.bio ? buildBioToc(character.bio) : null;
 
   return (
-    <div className="mb-6">
-      {/* Hero-Block: auf Mobile gestapelt, ab sm nebeneinander */}
-      <div className="character-data">
-        {/* ── Portrait ── */}
-        <div
-          className="w-full sm:w-[180px] sm:shrink-0
-                        self-center sm:self-auto
-                        max-w-[200px] sm:max-w-none"
-        >
-          <div
-            className="relative w-full overflow-hidden character-portrait"
-            style={{
-              aspectRatio: "3 / 4",
-              backgroundColor: "var(--lcars-surface)",
-            }}
-          >
-            {character.portrait ? (
-              <img
-                src={character.portrait}
-                alt={`Portrait von ${character.name}`}
-                className="w-full h-full object-cover object-top"
+    <div className="mb-[12px] mr-[var(--lcars-elbow-size)]">
+      <section className="char-file">
+        {/* ── Kopfzeile: Akten-Code + Code-Pills ── */}
+        <header className="char-file-head">
+          <h2 className="char-file-fileno">Personalakte · {fileNo}</h2>
+          <div className="char-file-pills">
+            {pills.map((p) => (
+              <span
+                key={p.code}
+                className="char-file-pill"
+                style={{ backgroundColor: p.color }}
+              >
+                {p.code}
+              </span>
+            ))}
+          </div>
+        </header>
+
+        {/* ── dekorative Zahlenmatrix ── */}
+        <div className="char-file-matrix" aria-hidden="true">
+          {matrix.map((n, i) => (
+            <span key={i}>{n}</span>
+          ))}
+        </div>
+
+        {/* ── farbiger Trennbalken ── */}
+        <div className="char-file-bar" aria-hidden="true">
+          {BAR_SEGMENTS.map((seg, i) => (
+            <span
+              key={i}
+              style={{ flex: seg.flex, backgroundColor: seg.color }}
+            />
+          ))}
+        </div>
+
+        {/* ── Hauptraster ── */}
+        <div className="char-file-grid">
+          {/* ToDo:  ID-Rail entfernen, ohne Layout zu brechen */}
+          <aside className="char-file-rail" aria-hidden="true">
+            {/* {railIds.map((r) => (
+              <div
+                key={r.code}
+                className="char-file-rail-block"
+                style={{ backgroundColor: r.color }}
+              >
+                {r.code}
+              </div>
+            ))} */}
+          </aside>
+
+          {/* Portrait + Datenfelder */}
+          <div className="min-w-0 char-file-colmid">
+            <div
+              className="relative w-full overflow-hidden character-portrait"
+              style={{
+                aspectRatio: "3 / 4",
+                backgroundColor: "var(--lcars-surface)",
+              }}
+            >
+              {character.portrait ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={character.portrait}
+                  alt={`Portrait von ${character.name}`}
+                  className="w-full h-full object-cover object-top"
+                />
+              ) : (
+                <div
+                  className="w-full h-full flex flex-col items-center justify-center gap-2"
+                  style={{ color: "var(--lcars-text-dim)" }}
+                >
+                  <svg
+                    width="56"
+                    height="68"
+                    viewBox="0 0 56 68"
+                    fill="none"
+                    aria-hidden="true"
+                  >
+                    <circle
+                      cx="28"
+                      cy="20"
+                      r="16"
+                      fill="currentColor"
+                      opacity="0.3"
+                    />
+                    <path
+                      d="M0 68 C0 44 56 44 56 68Z"
+                      fill="currentColor"
+                      opacity="0.3"
+                    />
+                  </svg>
+                  <span className="text-[10px] uppercase tracking-[.3em] opacity-50">
+                    Kein Bild
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div className="char-file-data">
+              <FileField label="Akten-ID" value={recordId} />
+              {metadata.rank && (
+                <FileField label="Rang" value={metadata.rank} />
+              )}
+              {metadata.species.length > 0 && (
+                <FileField
+                  label="Spezies"
+                  value={metadata.species.join(" / ")}
+                />
+              )}
+              {metadata.homeworld && (
+                <FileField label="Heimatwelt" value={metadata.homeworld} />
+              )}
+              {metadata.age != null && (
+                <FileField label="Alter" value={metadata.age} />
+              )}
+              {factions.length > 0 && (
+                <FileField label="Fraktion" value={factions.join(", ")} />
+              )}
+              {ships.length > 0 && (
+                <FileField label="Schiff" value={ships.join(", ")} />
+              )}
+              {division != null && (
+                <FileField label="Abteilung" value={division} />
+              )}
+            </div>
+
+            <div className="mt-3">
+              <StatusBadge status={character.status} />
+            </div>
+
+            {/* Inhaltsverzeichnis der Biografie (sticky, Scrollspy) */}
+            {bio && (
+              <LcarsToc
+                headings={bio.headings}
+                className="char-file-toc"
+                ariaLabel="Biografie-Index"
+              />
+            )}
+          </div>
+
+          {/* Name + Biografie */}
+          <div className="min-w-0">
+            <h1 className="char-file-name">{character.name}</h1>
+            {metadata.aliases.length > 0 && (
+              <p className="char-file-aliases">
+                aka {metadata.aliases.join(" · ")}
+              </p>
+            )}
+
+            {bio ? (
+              <div
+                className="char-file-bio lcars-text"
+                dangerouslySetInnerHTML={{ __html: bio.html }}
               />
             ) : (
-              <div
-                className="w-full h-full flex flex-col items-center justify-center gap-2"
-                style={{ color: "var(--lcars-text-dim)" }}
-              >
-                <svg
-                  width="56"
-                  height="68"
-                  viewBox="0 0 56 68"
-                  fill="none"
-                  aria-hidden="true"
-                >
-                  <circle
-                    cx="28"
-                    cy="20"
-                    r="16"
-                    fill="currentColor"
-                    opacity="0.3"
-                  />
-                  <path
-                    d="M0 68 C0 44 56 44 56 68Z"
-                    fill="currentColor"
-                    opacity="0.3"
-                  />
-                </svg>
-                <span className="text-[10px] uppercase tracking-[.3em] opacity-50">
-                  Kein Bild
-                </span>
-              </div>
+              <p className="char-file-bio-empty">
+                Keine biografischen Daten im Archiv hinterlegt.
+              </p>
             )}
-
-            {/* Eck-Akzent */}
-            <span
-              className="absolute bottom-0 right-0 w-0 h-0"
-              style={{
-                borderStyle: "solid",
-                borderWidth: "0 0 18px 18px",
-                borderColor: `transparent transparent var(--lcars-amber) transparent`,
-              }}
-              aria-hidden="true"
-            />
           </div>
         </div>
-
-        {/* ── Infopanel ── */}
-        <div className="flex flex-col min-w-0 flex-1 gap-0">
-          {/* Name */}
-          <h1
-            className="font-bold uppercase leading-none mb-1"
-            style={{
-              fontSize: "clamp(22px, 4vw, 38px)",
-              color: "var(--lcars-amber)",
-              letterSpacing: ".12em",
-            }}
-          >
-            {character.name}
-          </h1>
-
-          {/* Rang */}
-          {metadata.rank && (
-            <p
-              className="text-[14px] font-semibold uppercase tracking-[.2em] mb-2.5"
-              style={{ color: "var(--lcars-purple)" }}
-            >
-              {metadata.rank}
-            </p>
-          )}
-
-          {/* Trennlinie mit Farbakzent */}
-          <div
-            className="relative h-[3px] rounded-full mb-3 overflow-hidden"
-            style={{ backgroundColor: "var(--lcars-border)" }}
-          >
-            <div
-              className="absolute inset-y-0 left-0 w-[45%] rounded-full"
-              style={{ backgroundColor: "var(--lcars-orange)" }}
-            />
-          </div>
-
-          {/* Datenzeilen */}
-          <div className="flex flex-col gap-[5px] mb-3">
-            {metadata.species.length > 0 && (
-              <DataLine label="Spezies" value={metadata.species.join(" / ")} />
-            )}
-            {metadata.homeworld && (
-              <DataLine label="Heimatwelt" value={metadata.homeworld} />
-            )}
-            {metadata.age != null && (
-              <DataLine label="Alter" value={metadata.age} />
-            )}
-            {character.joined_at && (
-              <DataLine
-                label="Beitritt"
-                value={formatDate(character.joined_at) ?? ""}
-                blue
-              />
-            )}
-            {character.left_at && (
-              <DataLine
-                label="Abgang"
-                value={formatDate(character.left_at) ?? ""}
-                blue
-              />
-            )}
-          </div>
-
-          {/* Status */}
-          <div className="mb-4">
-            <StatusBadge status={character.status} />
-          </div>
-
-          {/* Fraktionen & Schiffe */}
-          {hasFactions && (
-            <div className="flex flex-wrap gap-1.5 mt-auto">
-              {metadata.affiliation!.factions.map((f) => (
-                <span
-                  key={f}
-                  className="text-[11px] uppercase tracking-[.12em] px-2.5 py-1 border-l-[3px]"
-                  style={{
-                    color: "var(--lcars-blue)",
-                    backgroundColor: "var(--lcars-surface)",
-                    borderLeftColor: "var(--lcars-blue)",
-                  }}
-                >
-                  {f}
-                </span>
-              ))}
-              {metadata.affiliation!.ships.map((s) => (
-                <span
-                  key={s}
-                  className="text-[11px] uppercase tracking-[.12em] px-2.5 py-1 border-l-[3px]"
-                  style={{
-                    color: "var(--lcars-purple)",
-                    backgroundColor: "var(--lcars-surface)",
-                    borderLeftColor: "var(--lcars-purple)",
-                  }}
-                >
-                  {s}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Scan-Deko unter dem Hero */}
-      <div className="flex gap-[5px] mt-4" aria-hidden="true">
-        <span
-          className="h-[3px] rounded-sm flex-[2]"
-          style={{ backgroundColor: "var(--lcars-orange)" }}
-        />
-        <span
-          className="h-[3px] rounded-sm flex-[3]"
-          style={{ backgroundColor: "var(--lcars-purple)" }}
-        />
-        <span
-          className="h-[3px] rounded-sm flex-[1]"
-          style={{ backgroundColor: "var(--lcars-blue)" }}
-        />
-        <span
-          className="h-[3px] rounded-sm flex-[4]"
-          style={{ backgroundColor: "var(--lcars-amber)" }}
-        />
-        <span
-          className="h-[3px] rounded-sm flex-[1]"
-          style={{ backgroundColor: "var(--lcars-border)" }}
-        />
-        <span
-          className="h-[3px] rounded-sm flex-[1]"
-          style={{ backgroundColor: "var(--lcars-border)" }}
-        />
-      </div>
+      </section>
     </div>
   );
 }

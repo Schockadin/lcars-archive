@@ -1,9 +1,12 @@
 "use client";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { LcarsHorSep } from "@/components/lcars";
+import { CAMPAIGN_START_YEAR, getCampaignYears } from "@/lib/constants";
 
 export default function LandingPage({ stats }: { stats: React.ReactNode }) {
   usePageMeta("Home", "home");
+
+  const campaignYears = getCampaignYears();
 
   return (
     <div className="flex flex-col py-[10px] items-start max-w-[700px] gap-[8px] pr-[5px]">
@@ -22,8 +25,10 @@ export default function LandingPage({ stats }: { stats: React.ReactNode }) {
       {/* Erklärtext */}
       <p className="lcars-body lcars-text">
         Dieses Terminal dokumentiert eine Pen-&-Paper-Kampagne, die seit ca.
-        2011 mit kleineren Unterbrechungen läuft. Alle Sitzungsberichte,
-        Charaktere und Weltendaten werden hier archiviert und sind durchsuchbar.
+        {" "}
+        {CAMPAIGN_START_YEAR} – also seit rund {campaignYears} Jahren – mit
+        kleineren Unterbrechungen läuft. Alle Sitzungsberichte, Charaktere und
+        Weltendaten werden hier archiviert und sind durchsuchbar.
       </p>
 
       {/* DB-Statistiken / Data-Rows */}

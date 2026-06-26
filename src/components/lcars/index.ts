@@ -11,3 +11,4 @@ export { default as LcarsFooter } from "./Footer";
 export { default as LcarsDataRow } from "./DataRow";
 export { default as LcarsHorSep } from "./HorizontalSeparator";
 export { default as LcarsDot } from "./BlinkingDot";
+export { default as LcarsToc, type TocHeading } from "./Toc";

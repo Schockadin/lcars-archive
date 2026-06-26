@@ -7,6 +7,7 @@ import {
   LcarsFooter,
 } from "@/components/lcars";
 import { NeoProvider } from "@/context/NeoProvider";
+import { getCampaignYears } from "@/lib/constants";
 
 const antonio = Antonio({
   subsets: ["latin"],
@@ -20,11 +21,14 @@ const shareTechMono = Share_Tech_Mono({
   variable: "--font-mono-lcars",
 });
 
+const campaignYears = getCampaignYears();
+
 export const metadata = {
   title: {
     default: "Neo Archive",
     template: "%s · Neo Archive", // %s wird durch den Seiten-Titel ersetzt
   },
+  description: `Kampagnen-Archiv der NeoVerse-Runde – Charaktere, Missionen und Logs aus ${campaignYears} Jahren Pen & Paper.`,
 };
 
 export default function RootLayout({

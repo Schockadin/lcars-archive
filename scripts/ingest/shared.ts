@@ -72,7 +72,7 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .use(remarkGfm)
     .use(remarkRehype)
     .use(rehypeSlug) // IDs setzen – muss vor DataRows kommen
-    .use(rehypeLcarsDataRows) // h2 → LCARS DataRow
+    // .use(rehypeLcarsDataRows) // h2 → LCARS DataRow
     .use(rehypeStringify)
     .process(publicContent);
 

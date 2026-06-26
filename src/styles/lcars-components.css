@@ -127,10 +127,15 @@
   height: 100%;
   width: 16%;
   font-size: 100cqh;
-  line-height: 1;
   text-transform: uppercase;
   text-align: right;
   font-weight: 800;
+  line-height: 0.9;
+}
+
+.lcars-data-row-separator {
+  width: 16px;
+  height: 100%;
 }
 
 .lcars-data-row-text {
@@ -175,6 +180,7 @@
   border-left: 3px solid var(--lcars-purple);
   border-bottom: 3px solid var(--lcars-purple);
   border-right: none;
+  border: 3px solid var(--lcars-purple);
 }
 
 .character-entry {
@@ -248,6 +254,269 @@
   filter: brightness(1.2);
 }
 
+/* ── Personalakte (Character Hero) ───────────────────────────────── */
+
+.char-file {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  container-type: inline-size;
+}
+
+/* Kopfzeile: Akten-Code + Code-Pills */
+.char-file-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.char-file-fileno {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: clamp(20px, 3.4vw, 38px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  color: var(--lcars-amber);
+}
+.char-file-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.char-file-pill {
+  min-width: 96px;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 100vmax;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--lcars-bg);
+}
+
+/* dekorative Zahlenmatrix */
+.char-file-matrix {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px 16px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+  color: var(--lcars-amber);
+  opacity: 0.45;
+}
+
+/* farbiger Trennbalken */
+.char-file-bar {
+  display: flex;
+  gap: 4px;
+  height: 16px;
+}
+.char-file-bar > span {
+  border-radius: 2px;
+}
+.char-file-bar > span:first-child {
+  border-radius: 0 0 0 16px;
+}
+
+/* Grid: Schiene | Portrait + Daten | Biografie */
+.char-file-grid {
+  display: grid;
+  grid-template-columns: 64px minmax(190px, 230px) 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* linke ID-Schiene */
+.char-file-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.char-file-rail-block {
+  height: 60px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 0 8px 6px 0;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--lcars-bg);
+}
+.char-file-rail-block:first-child {
+  border-top-left-radius: 20px;
+  height: 80px;
+}
+.char-file-rail-block:last-child {
+  border-bottom-left-radius: 20px;
+  flex: 1;
+}
+
+/* Mitte: Datenfelder unter dem Portrait */
+.char-file-data {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 12px;
+}
+.char-file-field {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 14.5px;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+}
+.char-file-field-label {
+  color: var(--lcars-text-data);
+  text-transform: uppercase;
+  margin-right: 6px;
+}
+.char-file-field-value {
+  color: var(--lcars-text-contrast);
+  text-transform: uppercase;
+}
+
+/* rechts: Name + Biografie */
+.char-file-name {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: clamp(24px, 4vw, 40px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1.05;
+  color: var(--lcars-amber);
+  text-align: right;
+}
+.char-file-aliases {
+  margin-top: 4px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: var(--lcars-text-dim);
+  text-align: right;
+}
+.char-file-bio-label {
+  margin: 16px 0 8px;
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--lcars-blue);
+}
+.char-file-bio {
+  font-size: 16px;
+}
+.char-file-bio > h3 {
+  font-size: 24px;
+  color: var(--lcars-text-data);
+  scroll-margin-top: 16px;
+}
+.char-file-bio > * + * {
+  margin-top: 0.75em;
+}
+.char-file-bio-empty {
+  color: var(--lcars-text-dim);
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* mittlere Spalte auf volle Zeilenhöhe strecken, damit das sticky TOC
+   über die gesamte Biografie mitwandern kann */
+.char-file-colmid {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Inhaltsverzeichnis (wiederverwendbar) */
+.lcars-toc-title {
+  margin-bottom: 6px;
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--lcars-blue);
+}
+.lcars-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.lcars-toc-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-left: 3px solid transparent;
+  padding: 4px 8px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  color: var(--lcars-text-contrast);
+  transition:
+    color 150ms,
+    background 150ms,
+    border-color 150ms;
+}
+.lcars-toc-link:hover {
+  color: var(--lcars-text);
+  border-left-color: var(--lcars-text-dim);
+}
+.lcars-toc-link[aria-current="true"] {
+  color: var(--lcars-bg);
+  background: var(--lcars-amber);
+  border-left-color: var(--lcars-amber);
+}
+
+/* Einsatzort-spezifisch: TOC in der Personalakte sticky am oberen Rand */
+.char-file-toc {
+  position: sticky;
+  top: 4px;
+  margin-top: 20px;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+}
+
+/* einspaltig + ohne Schiene auf schmalen Containern */
+@container (max-width: 720px) {
+  .char-file-grid {
+    grid-template-columns: 1fr;
+  }
+  .char-file-rail,
+  .char-file-matrix {
+    display: none;
+  }
+  .char-file-name {
+    text-align: left;
+  }
+  .char-file-aliases {
+    text-align: left;
+  }
+  /* einspaltig steht das TOC über der Bio → kein sticky */
+  .char-file-toc {
+    position: static;
+    max-height: none;
+  }
+}
+
 /* ── Switch-Toggles ──────────────────────────────────────────────── */
 
 .lcars-switch {
@@ -263,6 +532,449 @@
   align-items: center;
   justify-content: center;
   border: solid 1px var(--lcars-text-data);
+}
+
+/* ── Missions-Chronik ────────────────────────────────────────────── */
+/* Zeitstrahl-Layout: dekorative Jahres-Schiene links, gestapelte
+   Einsatzakten rechts. Status wird ausschließlich über den farbigen
+   Schienen-Balken der Akte (--mission-color) kommuniziert. */
+
+.mission-chronik {
+  display: flex;
+}
+
+/* dekorative Jahres-Schiene (Elbow-Optik) */
+.mission-rail {
+  width: 58px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mission-rail-cap,
+.mission-rail-foot {
+  height: 36px;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 8px 5px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--lcars-bg);
+}
+.mission-rail-cap {
+  align-items: flex-end;
+  border-radius: 14px 0 0 0;
+  background: var(--lcars-orange);
+}
+.mission-rail-foot {
+  align-items: flex-start;
+  padding: 7px 8px 0;
+  border-radius: 0 0 0 14px;
+  background: var(--lcars-red);
+}
+.mission-rail-fill {
+  flex: 1;
+  min-height: 80px;
+  background: var(--lcars-purple);
+}
+
+/* gestapelte Akten + Spine */
+.mission-list {
+  flex: 1;
+  min-width: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+}
+.mission-list::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: var(--lcars-border);
+}
+
+/* einzelne Einsatzakte (Button: öffnet die Log-Liste) */
+.mission-akte {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  background: var(--lcars-surface);
+  border-radius: 4px 14px 14px 4px;
+  overflow: hidden;
+  text-decoration: none;
+  transition: background 150ms;
+}
+.mission-akte:hover {
+  background: var(--lcars-surface-2);
+}
+.mission-akte-rail {
+  width: 9px;
+  flex-shrink: 0;
+  background: var(--mission-color);
+}
+.mission-akte-body {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 16px 13px;
+}
+.mission-akte-title {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--lcars-amber);
+}
+.mission-akte-summary {
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--lcars-text-light);
+  opacity: 0.85;
+}
+.mission-akte-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 9px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--lcars-text-contrast);
+}
+.mission-akte-meta b {
+  font-weight: 400;
+  color: var(--lcars-text-data);
+}
+
+/* aktive (geöffnete) Mission hervorheben */
+.mission-akte[data-active="true"] {
+  background: var(--lcars-surface-2);
+}
+
+/* ── Master-Detail: Übersicht + Log-Liste ────────────────────────── */
+.mission-split {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+}
+.mission-overview {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 640px;
+}
+.mission-logs {
+  min-width: 0;
+}
+
+/* Kopf der Log-Liste: (mobiler) Zurück-Button + Missionstitel */
+.mission-logs-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 40px;
+  margin-bottom: 4px;
+}
+.mission-logs-title {
+  margin: 0;
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.05;
+  color: var(--mission-color, var(--lcars-amber));
+}
+.mission-logs-sub {
+  margin: 0 0 14px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lcars-text-dim);
+}
+
+.mission-back {
+  display: none;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  cursor: pointer;
+  border: none;
+  height: 30px;
+  padding: 0 16px 0 10px;
+  border-radius: 100vmax;
+  background: var(--lcars-amber);
+  color: var(--lcars-bg);
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: background 200ms;
+}
+.mission-back:hover {
+  background: var(--lcars-amber-light);
+}
+
+/* einzelne Log-Zeile (Stub + Balken) */
+.mission-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mission-log-item {
+  display: block;
+}
+.mission-log-entry {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  background: transparent;
+  text-decoration: none;
+}
+/* Aufgeklapptes Log: Zeile wandert mit und wird 10px unter der
+     Elbow-Bar sticky (Scroll-Container ist .lcars-main-content),
+     analog zum sticky TOC der Personalakte. */
+.mission-log-entry[aria-expanded="true"] {
+  position: sticky;
+  top: 5px;
+  z-index: 2;
+  background: var(--lcars-bg);
+  /* füllt den 10px-Spalt über der gepinnten Zeile, damit dort kein
+       Text durchscrollt */
+  box-shadow: 0 -10px 0 var(--lcars-surface);
+}
+.mission-log-stub {
+  width: 52px;
+  flex-shrink: 0;
+  border-radius: 100vmax 0 0 100vmax;
+  background: var(--mission-color, var(--lcars-amber));
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 9px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--lcars-bg);
+}
+.mission-log-bar {
+  flex: 1;
+  min-width: 0;
+  margin-left: 3px;
+  padding: 0 14px;
+  background: var(--lcars-surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: background 150ms;
+}
+.mission-log-entry:hover .mission-log-bar {
+  background: var(--mission-color);
+}
+.mission-log-name {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lcars-text-contrast);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mission-log-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.mission-log-author {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--lcars-text-data);
+  white-space: nowrap;
+}
+.mission-log-date {
+  flex-shrink: 0;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: var(--lcars-text);
+}
+.mission-log-empty {
+  color: var(--lcars-text-dim);
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* Aufklapp-Indikator */
+.mission-log-caret {
+  flex-shrink: 0;
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--lcars-text-dim);
+  transform: rotate(90deg);
+  transition: transform 200ms ease;
+}
+.mission-log-caret[data-open="true"] {
+  transform: rotate(-90deg);
+  color: var(--mission-color, var(--lcars-amber));
+}
+
+/* Aufklappbarer Log-Text (Grid-Trick für animierte Höhe) */
+.mission-log-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 250ms ease;
+}
+.mission-log-reveal[data-open="true"] {
+  grid-template-rows: 1fr;
+}
+.mission-log-reveal-inner {
+  overflow: hidden;
+}
+.mission-log-content {
+  margin: 3px 0 0;
+  padding-left: 25px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  padding-right: 10px;
+  background: var(--lcars-surface);
+  border-left: 3px solid var(--mission-color, var(--lcars-amber));
+  font-size: 16px;
+  font-weight: lighter;
+}
+.mission-log-content > h2 {
+  font-size: 24px;
+  color: var(--lcars-text-data);
+}
+.mission-log-content > ul {
+  padding-left: 20px;
+}
+
+.mission-log-content > * + * {
+  margin-top: 0.7em;
+}
+
+/* Mission-Body über der Log-Liste */
+.mission-body {
+  margin: 0px 5px 10px 15px;
+  padding-left: 10px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.mission-body > h2 {
+  font-size: 24px;
+  color: var(--lcars-text-data);
+}
+.mission-body > ul > li > ul {
+  margin-left: 20px;
+}
+.mission-body > * + * {
+  margin-top: 0.7em;
+}
+
+/* Autor-Gruppe (Sortierung nach Autor) */
+.mission-log-group + .mission-log-group {
+  margin-top: 18px;
+}
+
+/* Desktop (≥769px): Log-Liste taucht rechts neben der Übersicht auf */
+@media (min-width: 769px) {
+  .mission-split:not([data-open="true"]) .mission-logs {
+    display: none;
+  }
+  .mission-split[data-open="true"] .mission-overview {
+    flex: 0 0 380px;
+    max-width: 380px;
+  }
+  .mission-split[data-open="true"] .mission-logs {
+    flex: 1 1 0;
+    /* kein fill-mode "both": der zurückbleibende transform würde sonst
+       einen Containing-Block bilden und position:sticky der Log-Zeilen
+       brechen */
+    animation: mission-appear 320ms ease;
+  }
+}
+@keyframes mission-appear {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Mobile (≤768px): Panes gleiten horizontal, Höhe folgt aktivem Pane (JS) */
+@media (max-width: 768px) {
+  .mission-split {
+    display: block;
+    position: relative;
+    overflow: hidden;
+    transition: height 350ms ease;
+  }
+  .mission-overview,
+  .mission-logs {
+    width: 100%;
+    max-width: none;
+    transition: transform 350ms ease;
+    will-change: transform;
+  }
+  .mission-logs {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translateX(100%);
+  }
+  .mission-split[data-open="true"] .mission-overview {
+    transform: translateX(-100%);
+  }
+  .mission-split[data-open="true"] .mission-logs {
+    transform: translateX(0);
+  }
+  .mission-back {
+    display: inline-flex;
+  }
+
+  .mission-log-stub {
+    display: none;
+  }
 }
 
 /* ── Scrollbar ───────────────────────────────────────────────────── */
@@ -404,6 +1116,17 @@
   .character-entry {
     width: 250px;
   }
+
+  /* schmal: dekorative Jahres-Schiene + Spine ausblenden */
+  .mission-rail {
+    display: none;
+  }
+  .mission-list {
+    padding-left: 0;
+  }
+  .mission-list::before {
+    display: none;
+  }
 }
 
 /* Extra-Small (≤ 480px): Sidebar auf 64px */
@@ -431,6 +1154,9 @@
   .lcars-data-row-label {
     font-size: 75cqh;
     padding-top: 1px;
+  }
+  .lcars-data-row-separator {
+    width: 8px;
   }
   .lcars-data-row-text {
     font-size: 50cqh;
