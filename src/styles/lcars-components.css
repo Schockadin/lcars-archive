@@ -127,10 +127,15 @@
   height: 100%;
   width: 16%;
   font-size: 100cqh;
-  line-height: 1;
   text-transform: uppercase;
   text-align: right;
   font-weight: 800;
+  line-height: 0.9;
+}
+
+.lcars-data-row-separator {
+  width: 16px;
+  height: 100%;
 }
 
 .lcars-data-row-text {
@@ -175,6 +180,7 @@
   border-left: 3px solid var(--lcars-purple);
   border-bottom: 3px solid var(--lcars-purple);
   border-right: none;
+  border: 3px solid var(--lcars-purple);
 }
 
 .character-entry {
@@ -246,6 +252,271 @@
 }
 .character-entry:hover .character-entry-stub {
   filter: brightness(1.2);
+}
+
+/* ── Personalakte (Character Hero) ───────────────────────────────── */
+
+.char-file {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  container-type: inline-size;
+}
+
+/* Kopfzeile: Akten-Code + Code-Pills */
+.char-file-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.char-file-fileno {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: clamp(20px, 3.4vw, 38px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  color: var(--lcars-amber);
+}
+.char-file-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.char-file-pill {
+  min-width: 96px;
+  height: 30px;
+  padding: 0 14px;
+  border-radius: 100vmax;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--lcars-bg);
+}
+
+/* dekorative Zahlenmatrix */
+.char-file-matrix {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 2px 16px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+  color: var(--lcars-amber);
+  opacity: 0.45;
+}
+
+/* farbiger Trennbalken */
+.char-file-bar {
+  display: flex;
+  gap: 4px;
+  height: 16px;
+}
+.char-file-bar > span {
+  border-radius: 2px;
+}
+.char-file-bar > span:first-child {
+  border-radius: 0 0 0 16px;
+}
+
+/* Grid: Schiene | Portrait + Daten | Biografie */
+.char-file-grid {
+  display: grid;
+  grid-template-columns: 64px minmax(190px, 230px) 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+/* linke ID-Schiene */
+.char-file-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.char-file-rail-block {
+  height: 60px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 0 8px 6px 0;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--lcars-bg);
+}
+.char-file-rail-block:first-child {
+  border-top-left-radius: 20px;
+  height: 80px;
+}
+.char-file-rail-block:last-child {
+  border-bottom-left-radius: 20px;
+  flex: 1;
+}
+
+/* Mitte: Datenfelder unter dem Portrait */
+.char-file-data {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 12px;
+}
+.char-file-field {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 14.5px;
+  line-height: 1.45;
+  letter-spacing: 0.02em;
+}
+.char-file-field-label {
+  color: var(--lcars-text-data);
+  text-transform: uppercase;
+  margin-right: 6px;
+}
+.char-file-field-value {
+  color: var(--lcars-text-contrast);
+  text-transform: uppercase;
+}
+
+/* rechts: Name + Biografie */
+.char-file-name {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: clamp(24px, 4vw, 40px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1.05;
+  color: var(--lcars-amber);
+  text-align: right;
+}
+.char-file-aliases {
+  margin-top: 4px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: var(--lcars-text-dim);
+  text-align: right;
+}
+.char-file-bio-label {
+  margin: 16px 0 8px;
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--lcars-blue);
+}
+.char-file-bio {
+  /* color: var(--lcars-text); */
+  font-size: 14px;
+  line-height: 1.6;
+}
+.char-file-bio > h3 {
+  font-size: 24px;
+  color: var(--lcars-text-data);
+  scroll-margin-top: 16px;
+}
+.char-file-bio > * + * {
+  margin-top: 0.75em;
+}
+.char-file-bio-empty {
+  color: var(--lcars-text-dim);
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* mittlere Spalte auf volle Zeilenhöhe strecken, damit das sticky TOC
+   über die gesamte Biografie mitwandern kann */
+.char-file-colmid {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Inhaltsverzeichnis (wiederverwendbar) */
+.lcars-toc-title {
+  margin-bottom: 6px;
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--lcars-blue);
+}
+.lcars-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.lcars-toc-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-left: 3px solid transparent;
+  padding: 4px 8px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  color: var(--lcars-text-contrast);
+  transition:
+    color 150ms,
+    background 150ms,
+    border-color 150ms;
+}
+.lcars-toc-link:hover {
+  color: var(--lcars-text);
+  border-left-color: var(--lcars-text-dim);
+}
+.lcars-toc-link[aria-current="true"] {
+  color: var(--lcars-bg);
+  background: var(--lcars-amber);
+  border-left-color: var(--lcars-amber);
+}
+
+/* Einsatzort-spezifisch: TOC in der Personalakte sticky am oberen Rand */
+.char-file-toc {
+  position: sticky;
+  top: 4px;
+  margin-top: 20px;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+}
+
+/* einspaltig + ohne Schiene auf schmalen Containern */
+@container (max-width: 720px) {
+  .char-file-grid {
+    grid-template-columns: 1fr;
+  }
+  .char-file-rail,
+  .char-file-matrix {
+    display: none;
+  }
+  .char-file-name {
+    text-align: left;
+  }
+  .char-file-aliases {
+    text-align: left;
+  }
+  /* einspaltig steht das TOC über der Bio → kein sticky */
+  .char-file-toc {
+    position: static;
+    max-height: none;
+  }
 }
 
 /* ── Switch-Toggles ──────────────────────────────────────────────── */
@@ -431,6 +702,9 @@
   .lcars-data-row-label {
     font-size: 75cqh;
     padding-top: 1px;
+  }
+  .lcars-data-row-separator {
+    width: 8px;
   }
   .lcars-data-row-text {
     font-size: 50cqh;

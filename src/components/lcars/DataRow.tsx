@@ -39,10 +39,9 @@ export default function DataRow({
 
       {/* Separator */}
       <div
+        className="lcars-data-row-separator"
         style={{
           backgroundColor: accentColor,
-          width: "16px",
-          height: "100%",
         }}
       />
 
