@@ -3,6 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import HorizontalSeparator from "./HorizontalSeparator";
 import { LcarsDot } from ".";
+import { useNeo } from "@/hooks/useNeo";
 
 // Breadcrumbs werden NUR für Pfade angezeigt, die mit einem
 // dieser Präfixe beginnen. Neue Sektionen müssen hier bewusst
@@ -42,11 +43,15 @@ interface Crumb {
   href: string;
 }
 
-function buildCrumbs(pathname: string): Crumb[] {
+function buildCrumbs(
+  pathname: string,
+  overrides: Record<string, string>,
+): Crumb[] {
   const segments = pathname.split("/").filter(Boolean); // ["missionen", "tanghal-iv", "sitzung-3"]
 
   return segments.map((segment, index) => ({
-    label: slugToLabel(segment),
+    // echtes Label (z.B. Mission-/Log-Titel) bevorzugen, sonst aus dem Slug
+    label: overrides[segment] ?? slugToLabel(segment),
     href: "/" + segments.slice(0, index + 1).join("/"),
   }));
 }
@@ -60,7 +65,8 @@ function isAllowed(pathname: string): boolean {
 
 export default function BreadcrumbNav() {
   const pathname = usePathname();
-  const crumbs = buildCrumbs(pathname);
+  const { crumbLabels } = useNeo();
+  const crumbs = buildCrumbs(pathname, crumbLabels);
 
   // Auf der Root-Seite keine Breadcrumbs anzeigen
   if (crumbs.length === 0) return null;
