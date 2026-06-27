@@ -19,6 +19,8 @@ CREATE TABLE IF NOT EXISTS characters (
   rank        TEXT,
   bio         TEXT,
   metadata    JSONB NOT NULL DEFAULT '{}',
+  source_md   TEXT,
+  frontmatter JSONB NOT NULL DEFAULT '{}',
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -33,6 +35,8 @@ CREATE TABLE IF NOT EXISTS missions (
   started_at  DATE,
   ended_at    DATE,
   metadata    JSONB NOT NULL DEFAULT '{}',
+  source_md   TEXT,
+  frontmatter JSONB NOT NULL DEFAULT '{}',
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -47,6 +51,8 @@ CREATE TABLE IF NOT EXISTS mission_logs (
   log_date    DATE,
   session_nr  INT,
   metadata    JSONB NOT NULL DEFAULT '{}',
+  source_md   TEXT,
+  frontmatter JSONB NOT NULL DEFAULT '{}',
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -63,6 +69,8 @@ CREATE TABLE IF NOT EXISTS archive_entries (
   content     TEXT NOT NULL,
   tags        TEXT[] NOT NULL DEFAULT '{}',
   metadata    JSONB NOT NULL DEFAULT '{}',
+  source_md   TEXT,
+  frontmatter JSONB NOT NULL DEFAULT '{}',
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -74,6 +82,18 @@ CREATE TABLE IF NOT EXISTS archive_links (
   PRIMARY KEY (source_id, target_id),
   CHECK (source_id != target_id)
 );
+
+-- Additive Migrationen für bestehende DBs (CREATE TABLE IF NOT EXISTS oben
+-- legt neue Spalten bei schon vorhandenen Tabellen nicht an).
+-- source_md = roher Markdown-Body, frontmatter = geparstes Frontmatter (JSONB).
+ALTER TABLE characters      ADD COLUMN IF NOT EXISTS source_md   TEXT;
+ALTER TABLE characters      ADD COLUMN IF NOT EXISTS frontmatter JSONB NOT NULL DEFAULT '{}';
+ALTER TABLE missions        ADD COLUMN IF NOT EXISTS source_md   TEXT;
+ALTER TABLE missions        ADD COLUMN IF NOT EXISTS frontmatter JSONB NOT NULL DEFAULT '{}';
+ALTER TABLE mission_logs    ADD COLUMN IF NOT EXISTS source_md   TEXT;
+ALTER TABLE mission_logs    ADD COLUMN IF NOT EXISTS frontmatter JSONB NOT NULL DEFAULT '{}';
+ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS source_md   TEXT;
+ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS frontmatter JSONB NOT NULL DEFAULT '{}';
 
 -- Indizes (IF NOT EXISTS ab PostgreSQL 9.5)
 CREATE INDEX IF NOT EXISTS idx_characters_status    ON characters(status);

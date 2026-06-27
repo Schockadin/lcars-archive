@@ -100,7 +100,7 @@ export async function ingestCharacters(
       await sql`
         INSERT INTO characters (
           slug, name, status, portrait, bio, metadata,
-          updated_at
+          source_md, frontmatter, updated_at
         ) VALUES (
           ${slug},
           ${fm.name.trim()},
@@ -108,15 +108,19 @@ export async function ingestCharacters(
           ${fm.portrait?.trim() || null},
           ${bio},
           ${JSON.stringify(metadata)},
+          ${content},
+          ${JSON.stringify(data)},
           NOW()
         )
         ON CONFLICT (slug) DO UPDATE SET
-          name       = EXCLUDED.name,
-          status     = EXCLUDED.status,
-          portrait   = EXCLUDED.portrait,
-          bio        = EXCLUDED.bio,
-          metadata   = EXCLUDED.metadata,
-          updated_at = NOW()
+          name        = EXCLUDED.name,
+          status      = EXCLUDED.status,
+          portrait    = EXCLUDED.portrait,
+          bio         = EXCLUDED.bio,
+          metadata    = EXCLUDED.metadata,
+          source_md   = EXCLUDED.source_md,
+          frontmatter = EXCLUDED.frontmatter,
+          updated_at  = NOW()
       `;
 
       console.log(`  ✓ ${fm.name}`);
