@@ -11,14 +11,14 @@ const sql =
   postgres(process.env.DATABASE_URL, {
     ssl: { rejectUnauthorized: false },
     max: 10,
-    idle_timeout: 20,
+    idle_timeout: 30,
   });
 
 // if (!globalForDb.sql) {
 //   globalForDb.sql = sql;
 // }
 
-if (process.env.NODE_ENV !== "production") {
+if (!globalForDb.sql) {
   globalForDb.sql = sql;
 }
 
