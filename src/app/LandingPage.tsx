@@ -24,11 +24,10 @@ export default function LandingPage({ stats }: { stats: React.ReactNode }) {
 
       {/* Erklärtext */}
       <p className="lcars-body lcars-text">
-        Dieses Terminal dokumentiert eine Pen-&-Paper-Kampagne, die seit ca.
-        {" "}
+        Dieses Terminal dokumentiert eine Pen-&-Paper-Kampagne, die seit ca.{" "}
         {CAMPAIGN_START_YEAR} – also seit rund {campaignYears} Jahren – mit
         kleineren Unterbrechungen läuft. Alle Sitzungsberichte, Charaktere und
-        Weltendaten werden hier archiviert und sind durchsuchbar.
+        Weltendaten werden hier archiviert und durchsuchbar gemacht.
       </p>
 
       {/* DB-Statistiken / Data-Rows */}

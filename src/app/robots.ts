@@ -1,19 +1,8 @@
 import type { MetadataRoute } from "next";
 
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? "https://neo-archiv.de";
+
 export default function robots(): MetadataRoute.Robots {
-  const isProduction =
-    process.env.CONTEXT === "production" ||
-    (process.env.NODE_ENV === "production" && !process.env.CONTEXT);
-
-  if (!isProduction) {
-    return {
-      rules: {
-        userAgent: "*",
-        disallow: "/",
-      },
-    };
-  }
-
   return {
     rules: [
       {
@@ -21,7 +10,29 @@ export default function robots(): MetadataRoute.Robots {
         allow: "/",
         disallow: ["/api/"],
       },
+
+      {
+        userAgent: [
+          "GPTBot", // OpenAI
+          "ChatGPT-User", // OpenAI ChatGPT browsing
+          "OAI-SearchBot", // OpenAI Search
+          "ClaudeBot", // Anthropic
+          "Claude-Web", // Anthropic (alt)
+          "anthropic-ai", // Anthropic API
+          "PerplexityBot", // Perplexity
+          "YouBot", // You.com
+          "Amazonbot", // Amazon / Alexa AI
+          "Bytespider", // ByteDance / TikTok
+          "CCBot", // Common Crawl (AI-Trainingsdaten)
+          "cohere-ai", // Cohere
+          "Google-Extended", // Google Gemini Training
+          "FacebookBot", // Meta AI
+          "Applebot-Extended", // Apple AI Training
+          "meta-externalagent", // Meta (neu)
+        ],
+        disallow: "/",
+      },
     ],
-    sitemap: "https://neo-archiv.de/sitemap.xml",
+    sitemap: `${BASE_URL}/sitemap.xml`,
   };
 }
