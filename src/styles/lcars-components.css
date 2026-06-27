@@ -865,6 +865,48 @@
   }
 }
 
+/* ── Skeleton-Loading ────────────────────────────────────────────────
+   Platzhalter-Blöcke mit LCARS-Shimmer. Werden von den loading.tsx der
+   datenladenden Routen genutzt, damit bei langsamer Navigation sofort
+   eine Struktur sichtbar ist (Suspense-Fallback). */
+.lcars-skel {
+  position: relative;
+  overflow: hidden;
+  background: var(--lcars-surface);
+  border-radius: 4px;
+}
+.lcars-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(200, 184, 255, 0.12),
+    transparent
+  );
+  animation: lcars-shimmer 1.4s infinite;
+}
+
+@keyframes lcars-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Akzent-Variante: für farbige Stubs/Schienen statt grauer Flächen. */
+.lcars-skel-accent {
+  background: var(--lcars-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lcars-skel::after {
+    animation: lcars-pulse 1.6s infinite;
+    transform: none;
+  }
+}
+
 /* ── Responsive Overrides ────────────────────────────────────────── */
 
 /* Small (≤ 768px): Sidebar auf 100px */
