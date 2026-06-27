@@ -664,45 +664,7 @@
   color: var(--lcars-text-data);
 }
 
-/* aktive (geöffnete) Mission hervorheben */
-.mission-akte[data-active="true"] {
-  background: var(--lcars-surface-2);
-}
-
-/* ── Master-Detail: Übersicht + Log-Liste ────────────────────────── */
-.mission-split {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  width: 100%;
-}
-.mission-overview {
-  flex: 1 1 auto;
-  min-width: 0;
-  max-width: 640px;
-}
-.mission-logs {
-  min-width: 0;
-}
-
-/* Kopf der Log-Liste: (mobiler) Zurück-Button + Missionstitel */
-.mission-logs-head {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 40px;
-  margin-bottom: 4px;
-}
-.mission-logs-title {
-  margin: 0;
-  font-family: var(--font-antonio), sans-serif;
-  font-size: 24px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  line-height: 1.05;
-  color: var(--mission-color, var(--lcars-amber));
-}
+/* ── Log-Liste ───────────────────────────────────────────────────── */
 .mission-logs-sub {
   margin: 0 0 14px;
   font-family: var(--font-share-tech-mono), monospace;
@@ -712,37 +674,11 @@
   color: var(--lcars-text-dim);
 }
 
-.mission-back {
-  display: none;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  cursor: pointer;
-  border: none;
-  height: 30px;
-  padding: 0 16px 0 10px;
-  border-radius: 100vmax;
-  background: var(--lcars-amber);
-  color: var(--lcars-bg);
-  font-family: var(--font-antonio), sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  transition: background 200ms;
-}
-.mission-back:hover {
-  background: var(--lcars-amber-light);
-}
-
 /* einzelne Log-Zeile (Stub + Balken) */
 .mission-log-list {
   display: flex;
   flex-direction: column;
   gap: 3px;
-}
-.mission-log-item {
-  display: block;
 }
 .mission-log-entry {
   display: flex;
@@ -759,18 +695,6 @@
   appearance: none;
   background: transparent;
   text-decoration: none;
-}
-/* Aufgeklapptes Log: Zeile wandert mit und wird 10px unter der
-     Elbow-Bar sticky (Scroll-Container ist .lcars-main-content),
-     analog zum sticky TOC der Personalakte. */
-.mission-log-entry[aria-expanded="true"] {
-  position: sticky;
-  top: 5px;
-  z-index: 2;
-  background: var(--lcars-bg);
-  /* füllt den 10px-Spalt über der gepinnten Zeile, damit dort kein
-       Text durchscrollt */
-  box-shadow: 0 -10px 0 var(--lcars-surface);
 }
 .mission-log-stub {
   width: 52px;
@@ -839,57 +763,7 @@
   font-size: 14px;
 }
 
-/* Aufklapp-Indikator */
-.mission-log-caret {
-  flex-shrink: 0;
-  font-family: var(--font-antonio), sans-serif;
-  font-size: 18px;
-  line-height: 1;
-  color: var(--lcars-text-dim);
-  transform: rotate(90deg);
-  transition: transform 200ms ease;
-}
-.mission-log-caret[data-open="true"] {
-  transform: rotate(-90deg);
-  color: var(--mission-color, var(--lcars-amber));
-}
-
-/* Aufklappbarer Log-Text (Grid-Trick für animierte Höhe) */
-.mission-log-reveal {
-  display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 250ms ease;
-}
-.mission-log-reveal[data-open="true"] {
-  grid-template-rows: 1fr;
-}
-.mission-log-reveal-inner {
-  overflow: hidden;
-}
-.mission-log-content {
-  margin: 3px 0 0;
-  padding-left: 25px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  padding-right: 10px;
-  background: var(--lcars-surface);
-  border-left: 3px solid var(--mission-color, var(--lcars-amber));
-  font-size: 16px;
-  font-weight: lighter;
-}
-.mission-log-content > h2 {
-  font-size: 24px;
-  color: var(--lcars-text-data);
-}
-.mission-log-content > ul {
-  padding-left: 20px;
-}
-
-.mission-log-content > * + * {
-  margin-top: 0.7em;
-}
-
-/* Mission-Body über der Log-Liste */
+/* Mission-Body (Synopsis / Log-Text) */
 .mission-body {
   margin: 0px 5px 10px 15px;
   padding-left: 10px;
@@ -911,70 +785,6 @@
 /* Autor-Gruppe (Sortierung nach Autor) */
 .mission-log-group + .mission-log-group {
   margin-top: 18px;
-}
-
-/* Desktop (≥769px): Log-Liste taucht rechts neben der Übersicht auf */
-@media (min-width: 769px) {
-  .mission-split:not([data-open="true"]) .mission-logs {
-    display: none;
-  }
-  .mission-split[data-open="true"] .mission-overview {
-    flex: 0 0 380px;
-    max-width: 380px;
-  }
-  .mission-split[data-open="true"] .mission-logs {
-    flex: 1 1 0;
-    /* kein fill-mode "both": der zurückbleibende transform würde sonst
-       einen Containing-Block bilden und position:sticky der Log-Zeilen
-       brechen */
-    animation: mission-appear 320ms ease;
-  }
-}
-@keyframes mission-appear {
-  from {
-    opacity: 0;
-    transform: translateX(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-/* Mobile (≤768px): Panes gleiten horizontal, Höhe folgt aktivem Pane (JS) */
-@media (max-width: 768px) {
-  .mission-split {
-    display: block;
-    position: relative;
-    overflow: hidden;
-    transition: height 350ms ease;
-  }
-  .mission-overview,
-  .mission-logs {
-    width: 100%;
-    max-width: none;
-    transition: transform 350ms ease;
-    will-change: transform;
-  }
-  .mission-logs {
-    position: absolute;
-    top: 0;
-    left: 0;
-    transform: translateX(100%);
-  }
-  .mission-split[data-open="true"] .mission-overview {
-    transform: translateX(-100%);
-  }
-  .mission-split[data-open="true"] .mission-logs {
-    transform: translateX(0);
-  }
-  .mission-back {
-    display: inline-flex;
-  }
-
-  .mission-log-stub {
-    display: none;
-  }
 }
 
 /* ── Scrollbar ───────────────────────────────────────────────────── */
@@ -1187,5 +997,153 @@
   }
   .character-data {
     flex-direction: column;
+  }
+}
+
+/* ── Missions-Detailseite (Master-Detail per Route) ──────────────── */
+.mission-detail {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+}
+.mission-detail-logs {
+  flex: 0 0 320px;
+  min-width: 0;
+  /* wandert beim Scrollen mit und bleibt 5px unter der Elbow-Bar stehen;
+     bei sehr langen Listen scrollt sie intern */
+  position: sticky;
+  top: 5px;
+  align-self: flex-start;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+}
+.mission-detail-main {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* linke Log-Liste */
+.mission-loglist-head {
+  margin-bottom: 10px;
+}
+.mission-loglist-back {
+  display: inline-block;
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.05;
+  color: var(--lcars-amber);
+  text-decoration: none;
+  transition: color 150ms;
+}
+.mission-loglist-back:hover {
+  color: var(--lcars-amber-light);
+}
+
+/* Mission-Summary in der linken Spalte */
+.mission-loglist-summary {
+  margin-bottom: 12px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--lcars-text-light);
+  opacity: 0.85;
+}
+
+/* Synopsis-Zeile (oberste Zeile, verlinkt auf die Mission-Synopsis) */
+.mission-log-synopsis {
+  margin-bottom: 8px;
+}
+.mission-log-synopsis .mission-log-stub {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+
+/* aktives Log hervorheben (statt Hover) */
+.mission-log-entry[data-active="true"] .mission-log-bar {
+  background: var(--mission-color);
+}
+.mission-log-entry[data-active="true"] .mission-log-name {
+  color: var(--lcars-bg);
+}
+.mission-log-entry[data-active="true"] .mission-log-author,
+.mission-log-entry[data-active="true"] .mission-log-date {
+  color: var(--lcars-bg);
+  opacity: 0.75;
+}
+
+/* rechte Spalte: Synopsis / Log-Text */
+.mission-detail-article {
+  max-width: 760px;
+}
+.mission-detail-header {
+  margin-bottom: 16px;
+}
+.mission-detail-title {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: clamp(24px, 4vw, 40px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  line-height: 1.05;
+  color: var(--lcars-amber);
+}
+.mission-detail-meta,
+.mission-detail-logmeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-top: 8px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--lcars-text-dim);
+}
+.mission-detail-meta b,
+.mission-detail-logmeta b {
+  font-weight: 400;
+  color: var(--lcars-text-data);
+}
+.mission-detail-logmeta a {
+  color: var(--lcars-text-data);
+  text-decoration: none;
+}
+.mission-detail-logmeta a:hover {
+  color: var(--lcars-blue);
+  text-decoration: underline;
+}
+.mission-detail-status,
+.mission-detail-session {
+  color: var(--lcars-bg);
+  background: var(--mission-color, var(--lcars-amber));
+  padding: 2px 10px;
+  border-radius: 100vmax;
+  font-weight: 700;
+}
+.mission-detail-lead {
+  margin-bottom: 14px;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--lcars-text-light);
+}
+
+/* gestapelt auf schmalen Screens — kein Sticky, Liste oben */
+@media (max-width: 768px) {
+  .mission-detail {
+    flex-direction: column;
+  }
+  .mission-detail-logs {
+    flex: none;
+    width: 100%;
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+  .mission-log-stub {
+    display: none;
   }
 }
