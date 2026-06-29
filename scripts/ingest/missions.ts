@@ -82,7 +82,7 @@ export async function ingestMissions(
         INSERT INTO missions (
           slug, title, status, summary,
           started_at, ended_at, metadata,
-          updated_at
+          source_md, frontmatter, updated_at
         ) VALUES (
           ${slug},
           ${fm.title.trim()},
@@ -91,6 +91,8 @@ export async function ingestMissions(
           ${parseDate(fm.started_at)},
           ${parseDate(fm.ended_at)},
           ${JSON.stringify(metadata)},
+          ${content},
+          ${JSON.stringify(data)},
           NOW()
         )
         ON CONFLICT (slug) DO UPDATE SET
@@ -100,6 +102,8 @@ export async function ingestMissions(
           started_at  = EXCLUDED.started_at,
           ended_at    = EXCLUDED.ended_at,
           metadata    = EXCLUDED.metadata,
+          source_md   = EXCLUDED.source_md,
+          frontmatter = EXCLUDED.frontmatter,
           updated_at  = NOW()
       `;
 

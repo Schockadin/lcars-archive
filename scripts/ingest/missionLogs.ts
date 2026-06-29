@@ -147,7 +147,7 @@ export async function ingestMissionLogs(
         INSERT INTO mission_logs (
           slug, mission_id, author_id, title,
           content, log_date, session_nr, metadata,
-          updated_at
+          source_md, frontmatter, updated_at
         ) VALUES (
           ${slug},
           ${missionRow.id},
@@ -157,6 +157,8 @@ export async function ingestMissionLogs(
           ${parseDate(fm.log_date)},
           ${fm.session_nr},
           ${JSON.stringify(metadata)},
+          ${content},
+          ${JSON.stringify(data)},
           NOW()
         )
         ON CONFLICT (slug) DO UPDATE SET
@@ -167,6 +169,8 @@ export async function ingestMissionLogs(
           log_date    = EXCLUDED.log_date,
           session_nr  = EXCLUDED.session_nr,
           metadata    = EXCLUDED.metadata,
+          source_md   = EXCLUDED.source_md,
+          frontmatter = EXCLUDED.frontmatter,
           updated_at  = NOW()
       `;
 

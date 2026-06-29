@@ -5,8 +5,6 @@ import PageMeta from "@/components/PageMeta";
 import CrumbLabel from "@/components/CrumbLabel";
 import MissionLogList from "../MissionLogList";
 
-export const dynamic = "force-dynamic";
-
 // Persistentes Layout der Mission-Detailseite: links die Log-Liste (bleibt
 // beim Wechsel Mission ⇄ Log erhalten), rechts die jeweilige Page.
 export default async function MissionDetailLayout({
