@@ -1,13 +1,21 @@
 import { notFound } from "next/navigation";
-import { getLogBySlug } from "@/lib/missions";
+import { getAllLogPaths, getLogBySlug } from "@/lib/missions";
 import { stripHtml } from "@/lib/missionFormat";
 import CrumbLabel from "@/components/CrumbLabel";
 import LogDetail from "../../LogDetail";
 
-export const dynamic = "force-dynamic";
-
 interface Props {
   params: Promise<{ missionSlug: string; logSlug: string }>;
+}
+
+// Bekannte Mission/Log-Pfade zur Build-Zeit vorrendern. Neue werden beim ersten
+// Aufruf on-demand erzeugt (dynamicParams = true ist der Default).
+export async function generateStaticParams() {
+  const paths = await getAllLogPaths();
+  return paths.map((path) => ({
+    missionSlug: path.mission_slug,
+    logSlug: path.log_slug,
+  }));
 }
 
 export async function generateMetadata({ params }: Props) {

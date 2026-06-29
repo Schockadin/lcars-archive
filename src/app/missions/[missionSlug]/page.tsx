@@ -1,12 +1,17 @@
 import { notFound } from "next/navigation";
-import { getMissionBySlug } from "@/lib/missions";
+import { getAllMissions, getMissionBySlug } from "@/lib/missions";
 import { stripHtml } from "@/lib/missionFormat";
 import MissionSynopsis from "../MissionSynopsis";
 
-export const dynamic = "force-dynamic";
-
 interface Props {
   params: Promise<{ missionSlug: string }>;
+}
+
+// Bekannte Missionen zur Build-Zeit vorrendern. Neue Slugs werden beim ersten
+// Aufruf on-demand erzeugt (dynamicParams = true ist der Default).
+export async function generateStaticParams() {
+  const missions = await getAllMissions();
+  return missions.map((mission) => ({ missionSlug: mission.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {

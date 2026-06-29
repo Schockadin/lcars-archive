@@ -1,10 +1,21 @@
 // src/app/characters/[slug]/page.tsx
-import { getCharacterBySlug, getLogsByCharacter } from "@/lib/characters";
+import {
+  getAllCharacters,
+  getCharacterBySlug,
+  getLogsByCharacter,
+} from "@/lib/characters";
 import { notFound } from "next/navigation";
 import CharakterDetailPage from "./CharacterDetailPage";
 
 interface Props {
   params: Promise<{ slug: string }>;
+}
+
+// Bekannte Charaktere zur Build-Zeit vorrendern. Neue Slugs werden beim ersten
+// Aufruf on-demand erzeugt (dynamicParams = true ist der Default).
+export async function generateStaticParams() {
+  const characters = await getAllCharacters();
+  return characters.map((character) => ({ slug: character.slug }));
 }
 
 export async function generateMetadata({ params }: Props) {
