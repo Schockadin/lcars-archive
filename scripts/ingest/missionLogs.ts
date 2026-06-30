@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, statSync } from "fs";
 import { join, extname } from "path";
 import matter from "gray-matter";
 import postgres from "postgres";
-import { createInterface } from "readline/promises";
+import { createInterface, type Interface } from "readline/promises";
 import { stdin, stdout } from "process";
 import { markdownToHtml, validateSlug, parseDate } from "./shared.js";
 
@@ -22,11 +22,8 @@ export interface ExistingMissionLogRow {
   updated_at: Date;
 }
 
-// Eine Zeile readline-Interface für die gesamte Skript-Laufzeit,
-// statt pro Kollision neu zu öffnen/schließen
-const rl = createInterface({ input: stdin, output: stdout });
-
 async function askOverwrite(
+  rl: Interface,
   slug: string,
   existing: { title: string; updated_at: Date },
   incoming: { title: string; filepath: string },
@@ -63,6 +60,11 @@ export async function ingestMissionLogs(
   }
 
   console.log(`\n📓 Mission-Logs: ${logFiles.length} Dateien gefunden`);
+
+  // readline-Interface erst hier öffnen (nicht auf Modulebene), damit der
+  // Import dieses Moduls keinen offenen stdin-Handle erzeugt — sonst würde
+  // ein granularer Lauf ohne Mission-Logs nicht sauber beenden.
+  const rl = createInterface({ input: stdin, output: stdout });
 
   let success = 0;
   let skipped = 0;
@@ -124,7 +126,7 @@ export async function ingestMissionLogs(
       >`SELECT title, updated_at FROM mission_logs WHERE slug = ${slug}`;
 
       if (existingRow && existingRow.title !== fm.title.trim()) {
-        const overwrite = await askOverwrite(slug, existingRow, {
+        const overwrite = await askOverwrite(rl, slug, existingRow, {
           title: fm.title.trim(),
           filepath,
         });

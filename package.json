@@ -10,6 +10,10 @@
     "lint": "eslint",
     "db:setup": "tsx --env-file=.env.local scripts/setup-db.ts",
     "db:ingest": "tsx --env-file=.env.local scripts/ingest/index.ts",
+    "db:characters": "tsx --env-file=.env.local scripts/ingest/index.ts characters",
+    "db:missions": "tsx --env-file=.env.local scripts/ingest/index.ts missions",
+    "db:archive": "tsx --env-file=.env.local scripts/ingest/index.ts archive",
+    "db:revalidate": "tsx --env-file=.env.local scripts/ingest/index.ts revalidate",
     "db:reset": "tsx --env-file=.env.local scripts/reset-db.ts"
   },
   "dependencies": {
