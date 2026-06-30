@@ -27,6 +27,7 @@ export function revalidateAllContent(): string[] {
     cacheTags.characters,
     cacheTags.missions,
     cacheTags.missionLogs,
+    cacheTags.archive,
     cacheTags.stats,
   ]);
 }
@@ -56,6 +57,14 @@ export function revalidateLog(missionId: number, logSlug: string): string[] {
     cacheTags.missionLogs,
     cacheTags.missionLogsOf(missionId),
     cacheTags.log(logSlug),
+    cacheTags.stats,
+  ]);
+}
+
+export function revalidateArchiveEntry(slug: string): string[] {
+  return revalidate([
+    cacheTags.archive,
+    cacheTags.archiveEntry(slug),
     cacheTags.stats,
   ]);
 }

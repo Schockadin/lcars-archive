@@ -52,10 +52,20 @@ h2 {
   font-size: 20px;
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: var(--lcars-text);
+  color: var(--lcars-text-data);
   line-height: 1.1;
   margin-bottom: 5px;
   margin-top: 10px;
+  text-transform: capitalize;
+}
+
+h3,
+h4 {
+  color: var(--lcars-text-data);
+}
+
+h5 {
+  color: var(--lcars-text);
 }
 
 .lcars-eyebrow {

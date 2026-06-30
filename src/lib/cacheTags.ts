@@ -18,5 +18,8 @@ export const cacheTags = {
   missionLogsOf: (missionId: number) => `mission-logs:${missionId}`,
   log: (slug: string) => `log:${slug}`,
 
+  archive: "archive",
+  archiveEntry: (slug: string) => `archive:${slug}`,
+
   stats: "stats",
 } as const;

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllCharacters } from "@/lib/characters";
 import { getAllLogPaths, getAllMissions } from "@/lib/missions";
-// später ergänzen: getArchiveEntries, etc.
+import { getAllArchivePaths } from "@/lib/archive";
 
 const BASE_URL = "https://neo-archiv.de";
 
@@ -76,5 +76,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // DB nicht verfügbar → Sitemap läuft trotzdem durch
   }
 
-  return [...staticRoutes, ...characterRoutes, ...missionRoutes, ...logRoutes];
+  // Dynamische Archiv-Routen
+  let archiveRoutes: MetadataRoute.Sitemap = [];
+  try {
+    const entries = await getAllArchivePaths();
+    archiveRoutes = entries.map((e) => ({
+      url: `${BASE_URL}/archive/${e.slug}`,
+      lastModified: new Date(e.updated_at),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    }));
+  } catch {
+    // DB nicht verfügbar → Sitemap läuft trotzdem durch
+  }
+
+  return [
+    ...staticRoutes,
+    ...characterRoutes,
+    ...missionRoutes,
+    ...logRoutes,
+    ...archiveRoutes,
+  ];
 }

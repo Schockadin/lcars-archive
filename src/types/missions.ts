@@ -18,8 +18,16 @@ export interface Mission {
   updated_at: string;
 }
 
+// Autor eines Mission-Logs (für die Filterung der Übersicht). Missionen
+// selbst haben keinen Autor — er wird aus den zugehörigen Logs aggregiert.
+export interface MissionAuthor {
+  name: string;
+  slug: string | null;
+}
+
 // Listenvorschau für die Missions-Übersicht: schlanke Felder + Anzahl
-// der zugehörigen Mission-Logs (per JOIN ermittelt).
+// der zugehörigen Mission-Logs (per JOIN ermittelt) + die distinkten
+// Log-Autoren (für den Autor-Filter).
 export interface MissionPreview {
   id: number;
   slug: string;
@@ -30,6 +38,7 @@ export interface MissionPreview {
   ended_at: string | null;
   metadata: MissionMetaData;
   log_count: number;
+  authors: MissionAuthor[];
 }
 
 // Detailansicht einer Mission (Synopsis + Metadaten).

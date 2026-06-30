@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS archive_entries (
   category    TEXT NOT NULL
                 CHECK (category IN (
                   'person', 'location', 'item', 'faction',
-                  'theory', 'event', 'species', 'other'
+                  'theory', 'event', 'species', 'other', 'npc', 'dialogue'
                 )),
   content     TEXT NOT NULL,
   tags        TEXT[] NOT NULL DEFAULT '{}',

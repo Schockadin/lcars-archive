@@ -1,5 +1,6 @@
 import { Character } from "@/types/character";
-import { LcarsToc, type TocHeading } from "@/components/lcars";
+import { LcarsDataRow, LcarsToc, type TocHeading } from "@/components/lcars";
+import Link from "next/link";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
 function slugify(text: string): string {
@@ -120,7 +121,15 @@ const BAR_SEGMENTS: { flex: number; color: string }[] = [
   { flex: 1, color: "var(--lcars-red)" },
 ];
 
-export default function CharacterHero({ character }: { character: Character }) {
+export default function CharacterHero({
+  character,
+  logCount = 0,
+  conversationCount = 0,
+}: {
+  character: Character;
+  logCount?: number;
+  conversationCount?: number;
+}) {
   const { metadata } = character;
 
   // Deko-Codes deterministisch aus der Charakter-ID ableiten
@@ -146,6 +155,9 @@ export default function CharacterHero({ character }: { character: Character }) {
       <section className="char-file">
         {/* ── Kopfzeile: Akten-Code + Code-Pills ── */}
         <header className="char-file-head">
+          <Link href="/characters" className="character-back">
+            ‹ Charaktere
+          </Link>
           <h2 className="char-file-fileno">Personalakte · {fileNo}</h2>
           <div className="char-file-pills">
             {pills.map((p) => (
@@ -179,19 +191,6 @@ export default function CharacterHero({ character }: { character: Character }) {
 
         {/* ── Hauptraster ── */}
         <div className="char-file-grid">
-          {/* ToDo:  ID-Rail entfernen, ohne Layout zu brechen */}
-          <aside className="char-file-rail" aria-hidden="true">
-            {/* {railIds.map((r) => (
-              <div
-                key={r.code}
-                className="char-file-rail-block"
-                style={{ backgroundColor: r.color }}
-              >
-                {r.code}
-              </div>
-            ))} */}
-          </aside>
-
           {/* Portrait + Datenfelder */}
           <div className="min-w-0 char-file-colmid">
             <div
@@ -238,6 +237,24 @@ export default function CharacterHero({ character }: { character: Character }) {
                   </span>
                 </div>
               )}
+            </div>
+
+            {/* Schnellzugriffe direkt unter dem Bild: Logs + Gespräche
+                des Charakters, jeweils mit Anzahl. Gespräche ist vorerst
+                ein Platzhalter-Link. */}
+            <div className="char-file-links">
+              <LcarsDataRow
+                value={logCount}
+                label="Logs"
+                href={`/characters/${character.slug}/logs`}
+                color="var(--lcars-blue)"
+              />
+              <LcarsDataRow
+                value={conversationCount}
+                label="Gespräche"
+                href="#"
+                color="var(--lcars-purple)"
+              />
             </div>
 
             <div className="char-file-data">

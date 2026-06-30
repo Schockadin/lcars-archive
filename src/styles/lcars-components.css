@@ -125,7 +125,7 @@
 
 .lcars-data-row-label {
   height: 100%;
-  width: 16%;
+  width: 20%;
   font-size: 100cqh;
   text-transform: uppercase;
   text-align: right;
@@ -142,13 +142,15 @@
   height: 100%;
   border-radius: 0 60px 60px 0;
   color: var(--lcars-bg);
-  font-size: 72cqh;
+  font-size: 24px;
   text-transform: uppercase;
   text-align: left;
   padding-left: 8px;
+  padding-top: 3px;
   font-weight: 600;
   text-decoration: none;
-  width: 84%;
+  flex-grow: 1;
+  display: flex;
 }
 
 .lcars-datarow-heading {
@@ -285,6 +287,7 @@
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+  margin-top: 16px;
 }
 .char-file-pill {
   min-width: 96px;
@@ -330,7 +333,7 @@
 /* Grid: Schiene | Portrait + Daten | Biografie */
 .char-file-grid {
   display: grid;
-  grid-template-columns: 64px minmax(190px, 230px) 1fr;
+  grid-template-columns: minmax(190px, 230px) 1fr;
   gap: 16px;
   align-items: start;
 }
@@ -360,6 +363,17 @@
 .char-file-rail-block:last-child {
   border-bottom-left-radius: 20px;
   flex: 1;
+}
+
+/* Schnellzugriff-Zeilen direkt unter dem Portrait (Logs / Gespräche). */
+.char-file-links {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.char-file-links .lcars-data-row {
+  width: 100%;
 }
 
 /* Mitte: Datenfelder unter dem Portrait */
@@ -416,8 +430,11 @@
 .char-file-bio {
   font-size: 16px;
 }
-.char-file-bio > h3 {
+.char-file-bio > h2 {
   font-size: 24px;
+}
+.char-file-bio > h3 {
+  font-size: 20px;
   color: var(--lcars-text-data);
   scroll-margin-top: 16px;
 }
@@ -428,6 +445,10 @@
   color: var(--lcars-text-dim);
   font-style: italic;
   font-size: 14px;
+}
+
+.character-back {
+  margin-top: 16px;
 }
 
 /* mittlere Spalte auf volle Zeilenhöhe strecken, damit das sticky TOC
@@ -532,6 +553,37 @@
   align-items: center;
   justify-content: center;
   border: solid 1px var(--lcars-text-data);
+}
+
+/* ── Missions-Toolbar (Sortierung + Autor-Filter) ────────────────── */
+.mission-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.mission-sort {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  min-width: 220px;
+}
+.mission-author-filter {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background-color: var(--lcars-surface);
+  color: var(--lcars-text-data);
+  border: solid 1px var(--lcars-text-data);
+  cursor: pointer;
+}
+.mission-author-filter:focus {
+  outline: none;
+  border-color: var(--lcars-amber);
 }
 
 /* ── Missions-Chronik ────────────────────────────────────────────── */
@@ -773,7 +825,6 @@
 
 .mission-body > h2 {
   font-size: 24px;
-  color: var(--lcars-text-data);
 }
 .mission-body > ul > li > ul {
   margin-left: 20px;
@@ -1069,7 +1120,8 @@
 .mission-loglist-head {
   margin-bottom: 10px;
 }
-.mission-loglist-back {
+.mission-loglist-back,
+.character-back {
   display: inline-block;
   font-family: var(--font-antonio), sans-serif;
   font-size: 22px;
@@ -1081,7 +1133,8 @@
   text-decoration: none;
   transition: color 150ms;
 }
-.mission-loglist-back:hover {
+.mission-loglist-back:hover,
+.character-back:hover {
   color: var(--lcars-amber-light);
 }
 
@@ -1171,6 +1224,82 @@
   font-size: 16px;
   line-height: 1.6;
   color: var(--lcars-text-light);
+}
+
+/* ── Archiv-Eintrag (Detailseite) ────────────────────────────────── */
+.archive-entry {
+  width: 100%;
+  max-width: 720px;
+}
+.archive-entry-head {
+  margin: 10px 0 18px;
+}
+.archive-entry-badge {
+  display: inline-block;
+  margin-bottom: 10px;
+  padding: 2px 14px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--lcars-bg);
+  background: var(--cat-color, var(--lcars-amber));
+  border-radius: 100vmax;
+}
+.archive-entry-attrs {
+  margin-bottom: 16px;
+}
+.archive-entry-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.archive-entry-tag {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lcars-text-dim);
+  border: 1px solid var(--lcars-border);
+  padding: 2px 10px;
+  border-radius: 100vmax;
+}
+.archive-related {
+  margin-top: 24px;
+}
+.archive-related-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.archive-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  text-decoration: none;
+  padding: 6px 14px;
+  background: var(--lcars-surface);
+  border-left: 4px solid var(--chip-color, var(--lcars-amber));
+  border-radius: 0 4px 4px 0;
+  transition: background 150ms;
+}
+.archive-chip:hover {
+  background: var(--lcars-surface-2);
+}
+.archive-chip-title {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lcars-text-contrast);
+}
+.archive-chip-label {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--lcars-text-dim);
 }
 
 /* gestapelt auf schmalen Screens — kein Sticky, Liste oben */

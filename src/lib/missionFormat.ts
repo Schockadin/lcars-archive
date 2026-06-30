@@ -59,6 +59,19 @@ export function byDateDesc(
   return da < db ? 1 : -1;
 }
 
+// Aufsteigende Datums-Sortierung (ISO-Strings, NULL ans Ende).
+export function byDateAsc(
+  a: { log_date: string | null },
+  b: { log_date: string | null },
+): number {
+  const da = a.log_date ?? "";
+  const db = b.log_date ?? "";
+  if (da === db) return 0;
+  if (!da) return 1;
+  if (!db) return -1;
+  return da < db ? -1 : 1;
+}
+
 // HTML grob zu Text für Meta-Descriptions.
 export function stripHtml(html: string): string {
   return html
