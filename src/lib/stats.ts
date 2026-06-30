@@ -6,13 +6,13 @@ export interface HeaderStats {
   characterCount: number;
   sessionCount: number;
   entryCount: number;
-  lastSession: {
-    sessionNr: number | null;
-    title: string | null;
-    authorName: string | null;
-    logDate: string | null;
-    slug: string | null;
-  } | null;
+  dialogueCount: number;
+  factionCount: number;
+  itemCount: number;
+  loreCount: number;
+  npcCount: number;
+  locationCount: number;
+  speciesCount: number;
 }
 
 // Kennzahlen für den Header/die Landing-Page. Zwei COUNT-lastige Queries —
@@ -26,49 +26,40 @@ export const getDBStats = unstable_cache(
           character_count: string;
           session_count: string;
           entry_count: string;
+          dialogue_count: string;
+          faction_count: string;
+          item_count: string;
+          lore_count: string;
+          npc_count: string;
+          location_count: string;
+          species_count: string;
         },
       ]
     >`
       SELECT
         (SELECT COUNT(*) FROM characters)     AS character_count,
         (SELECT COUNT(*) FROM mission_logs)   AS session_count,
-        (SELECT COUNT(*) FROM archive_entries) AS entry_count
-    `;
-
-    const lastSessionRows = await sql<
-      {
-        session_nr: number | null;
-        title: string;
-        author_name: string | null;
-        log_date: string | null;
-        slug: string;
-      }[]
-    >`
-      SELECT
-        ml.session_nr,
-        ml.title,
-        c.name AS author_name,
-        ml.log_date::text AS log_date,
-        ml.slug
-      FROM mission_logs ml
-      LEFT JOIN characters c ON c.id = ml.author_id
-      ORDER BY ml.session_nr DESC NULLS LAST, ml.created_at DESC
-      LIMIT 1
+        (SELECT COUNT(*) FROM archive_entries) AS entry_count,
+        (SELECT COUNT(*) FROM archive_entries WHERE category = 'dialogue') AS dialogue_count,
+        (SELECT COUNT(*) FROM archive_entries WHERE category = 'faction') AS faction_count,
+        (SELECT COUNT(*) FROM archive_entries WHERE category = 'item') AS item_count,
+        (SELECT COUNT(*) FROM archive_entries WHERE category = 'lore') AS lore_count,
+        (SELECT COUNT(*) FROM archive_entries WHERE category = 'npc') AS npc_count,
+        (SELECT COUNT(*) FROM archive_entries WHERE category = 'location') AS location_count,
+        (SELECT COUNT(*) FROM archive_entries WHERE category = 'species') AS species_count
     `;
 
     return {
       characterCount: parseInt(counts.character_count),
       sessionCount: parseInt(counts.session_count),
       entryCount: parseInt(counts.entry_count),
-      lastSession: lastSessionRows[0]
-        ? {
-            sessionNr: lastSessionRows[0].session_nr,
-            title: lastSessionRows[0].title,
-            authorName: lastSessionRows[0].author_name,
-            logDate: lastSessionRows[0].log_date,
-            slug: lastSessionRows[0].slug,
-          }
-        : null,
+      dialogueCount: parseInt(counts.dialogue_count),
+      factionCount: parseInt(counts.faction_count),
+      itemCount: parseInt(counts.item_count),
+      loreCount: parseInt(counts.lore_count),
+      npcCount: parseInt(counts.npc_count),
+      locationCount: parseInt(counts.location_count),
+      speciesCount: parseInt(counts.species_count),
     };
   },
   ["getDBStats"],
