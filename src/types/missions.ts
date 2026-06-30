@@ -86,3 +86,19 @@ export interface LogPath {
   log_slug: string;
   updated_at: string;
 }
+
+// Ziel für die Vor-/Zurück-Navigation zwischen Logs desselben Autors.
+export interface LogNavItem {
+  slug: string;
+  mission_slug: string;
+  title: string;
+  session_nr: number | null;
+  log_date: string | null;
+}
+
+// Nachbar-Logs desselben Autors (chronologisch: Datum → Session-Nr).
+// prev = älter, next = neuer; jeweils null, wenn es keinen Nachbarn gibt.
+export interface LogNavNeighbors {
+  prev: LogNavItem | null;
+  next: LogNavItem | null;
+}
