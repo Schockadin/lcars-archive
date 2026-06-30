@@ -4,6 +4,7 @@ import {
   getCharacterBySlug,
   getLogsByCharacter,
 } from "@/lib/characters";
+import { getDialogueCountByParticipant } from "@/lib/archive";
 import { notFound } from "next/navigation";
 import CharakterDetailPage from "./CharacterDetailPage";
 
@@ -35,11 +36,18 @@ export default async function CharakterPage({ params }: Props) {
   const character = await getCharacterBySlug(slug);
   if (!character) notFound();
 
-  const logs = await getLogsByCharacter(character.id);
+  const [logs, conversationCount] = await Promise.all([
+    getLogsByCharacter(character.id),
+    getDialogueCountByParticipant(character.slug),
+  ]);
 
   return (
     <div className="h-[90%]">
-      <CharakterDetailPage character={character} logs={logs} />
+      <CharakterDetailPage
+        character={character}
+        logs={logs}
+        conversationCount={conversationCount}
+      />
     </div>
   );
 }

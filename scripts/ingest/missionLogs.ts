@@ -156,9 +156,9 @@ export async function ingestMissionLogs(
           ${contentHtml},
           ${parseDate(fm.log_date)},
           ${fm.session_nr},
-          ${JSON.stringify(metadata)},
+          ${sql.json(metadata)},
           ${content},
-          ${JSON.stringify(data)},
+          ${sql.json(data)},
           NOW()
         )
         ON CONFLICT (slug) DO UPDATE SET

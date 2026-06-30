@@ -1,6 +1,6 @@
 // Geteilte, React-freie Helfer für Archiv-Einträge — nutzbar in Server-
 // und Client-Komponenten sowie im Ingest-Skript.
-import { ArchiveCategory } from "@/types/archive";
+import { ArchiveCategory, ArchiveMetadata } from "@/types/archive";
 
 // Anzeige-Konfiguration je Kategorie: Singular-/Plural-Label + LCARS-Farbe.
 // Die Reihenfolge der Keys bestimmt zugleich die Gruppen-Reihenfolge in der
@@ -57,4 +57,19 @@ export const ARCHIVE_CATEGORIES = CATEGORY_ORDER;
 
 export function isArchiveCategory(value: string): value is ArchiveCategory {
   return (CATEGORY_ORDER as string[]).includes(value);
+}
+
+// Anzeige-Titel. Gespräche tragen keinen eigenen Titel, sondern werden über
+// ihren Schauplatz benannt: "Gespräch auf [setting]".
+export function archiveTitle(entry: {
+  category: ArchiveCategory;
+  title: string;
+  metadata: Pick<ArchiveMetadata, "setting">;
+}): string {
+  if (entry.category === "dialogue") {
+    return entry.metadata.setting
+      ? `Gespräch auf ${entry.metadata.setting}`
+      : "Gespräch";
+  }
+  return entry.title;
 }

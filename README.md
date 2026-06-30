@@ -58,7 +58,7 @@ npm install
 
 ### 2. Umgebungsvariablen anlegen
 
-Lege eine Datei `.env.local` im Projektwurzelverzeichnis an:
+Lege eine Datei `.env.local` an (Vorlage: [`.env.example`](.env.example)):
 
 ```bash
 # PostgreSQL-Verbindungsstring
@@ -66,7 +66,26 @@ DATABASE_URL="postgres://user:password@host:5432/datenbank"
 
 # Pfad zum Markdown-Vault (für die Ingestion)
 VAULT_PATH="/pfad/zum/vault"
+
+# Cache-Revalidation nach dem Ingest (siehe Hinweis unten)
+SITE_URL="http://localhost:3000"
+REVALIDATE_SECRET="ein-langes-zufaelliges-secret"
 ```
+
+> **Cache-Hinweis (wichtig für die lokale Entwicklung):** Die Datenabfragen
+> nutzen `unstable_cache`. Ein Import (`db:ingest`) invalidiert die Caches nur,
+> indem er nach Abschluss `POST /api/revalidate` auf den/die in `SITE_URL`
+> hinterlegten Server schickt. `SITE_URL` darf eine **kommaseparierte Liste**
+> sein — nimm `http://localhost:3000` mit auf, damit auch der laufende
+> Dev-Server invalidiert wird, sonst zeigt er nach dem Import veraltete (oder
+> leere) Daten:
+>
+> ```bash
+> SITE_URL="https://neo-archiv.de, http://localhost:3000"
+> ```
+>
+> `REVALIDATE_SECRET` muss auf jedem Ziel-Server identisch gesetzt sein, und der
+> Dev-Server muss während des Imports laufen.
 
 ### 3. Datenbankschema anlegen
 

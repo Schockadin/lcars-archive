@@ -32,6 +32,21 @@ export interface ArchiveMissionRef {
   title: string;
 }
 
+// Gesprächs-Teilnehmer: ein Charakter (→ /characters), ein Archiv-Eintrag
+// wie ein NPC (→ /archive) oder unaufgelöst ("unknown" → kein Link, z.B. ein
+// NPC ohne eigenen Archiv-Eintrag).
+export interface ArchiveParticipant {
+  slug: string;
+  name: string;
+  kind: "character" | "archive" | "unknown";
+}
+
+// Verlinkter Ort (Archiv-Eintrag).
+export interface ArchiveLocationRef {
+  slug: string;
+  title: string;
+}
+
 export interface ArchiveMetadata {
   // Kurzbeschreibung (Frontmatter "teaser") für Übersicht / Meta-Description.
   summary: string | null;
@@ -40,6 +55,11 @@ export interface ArchiveMetadata {
   // Verknüpfte Charaktere / Missionen (eigene Tabellen).
   characters: ArchiveCharacterRef[];
   missions: ArchiveMissionRef[];
+  // Dialog-spezifisch (sonst leer/null):
+  setting: string | null;
+  logDate: string | null;
+  participants: ArchiveParticipant[];
+  location: ArchiveLocationRef | null;
 }
 
 // Listenvorschau für die Archiv-Übersicht (ohne content).

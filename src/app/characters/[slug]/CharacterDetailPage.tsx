@@ -7,14 +7,13 @@ import CharacterHero from "./CharacterHero";
 export default function CharakterDetailPage({
   character,
   logs,
+  conversationCount,
 }: {
   character: Character;
   logs: MissionLogPreview[];
+  conversationCount: number;
 }) {
   usePageMeta(character.name, "characters");
-
-  // Gespräche sind noch nicht modelliert — vorerst Platzhalter (0).
-  const conversationCount = 0;
 
   return (
     <div className="h-full">

@@ -107,9 +107,9 @@ export async function ingestCharacters(
           ${status},
           ${fm.portrait?.trim() || null},
           ${bio},
-          ${JSON.stringify(metadata)},
+          ${sql.json(metadata)},
           ${content},
-          ${JSON.stringify(data)},
+          ${sql.json(data)},
           NOW()
         )
         ON CONFLICT (slug) DO UPDATE SET
