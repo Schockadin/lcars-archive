@@ -36,7 +36,6 @@ export const getAllArchiveEntries = unstable_cache(
       FROM archive_entries
       ORDER BY title ASC
     `;
-
     return rows.map(parseMeta);
   },
   ["getAllArchiveEntries"],

@@ -39,7 +39,6 @@ export default function ArchiveOverview({
         <h1 className="lcars-data-row-heading">Archiv</h1>
         <p className="lcars-eyebrow">Enzyklopädie der bekannten Welt</p>
       </div>
-
       {entries.length === 0 ? (
         <p className="char-file-bio-empty">Keine Archiv-Einträge hinterlegt.</p>
       ) : (

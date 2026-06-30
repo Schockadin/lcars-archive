@@ -9,6 +9,11 @@ export const CATEGORY_CONFIG: Record<
   ArchiveCategory,
   { label: string; plural: string; color: string }
 > = {
+  dialogue: {
+    label: "Gespräch",
+    plural: "Gespräche",
+    color: "var(--lcars-text-data)",
+  },
   person: { label: "Person", plural: "Personen", color: "var(--lcars-blue)" },
   location: { label: "Ort", plural: "Orte", color: "var(--lcars-green)" },
   faction: {
@@ -37,11 +42,6 @@ export const CATEGORY_CONFIG: Record<
     plural: "NPCs",
     color: "var(--lcars-amber)",
   },
-  dialogue: {
-    label: "Gespräch",
-    plural: "Gespräche",
-    color: "var(--lcars-text-data)",
-  },
   other: {
     label: "Sonstiges",
     plural: "Sonstiges",
@@ -54,8 +54,6 @@ export const CATEGORY_ORDER = Object.keys(CATEGORY_CONFIG) as ArchiveCategory[];
 
 // Liste aller gültigen Kategorien — auch im Ingest zur Validierung genutzt.
 export const ARCHIVE_CATEGORIES = CATEGORY_ORDER;
-
-console.log(ARCHIVE_CATEGORIES);
 
 export function isArchiveCategory(value: string): value is ArchiveCategory {
   return (CATEGORY_ORDER as string[]).includes(value);

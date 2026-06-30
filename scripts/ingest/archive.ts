@@ -7,6 +7,8 @@ import { markdownToHtml, validateSlug, toStringArray } from "./shared.js";
 // Gültige Kategorien — muss exakt dem CHECK-Constraint in schema.sql sowie
 // ArchiveCategory in src/types/archive.ts entsprechen.
 const VALID_CATEGORIES = [
+  "dialogue",
+  "npc",
   "person",
   "location",
   "item",
@@ -20,7 +22,8 @@ const VALID_CATEGORIES = [
 // Top-Level-Ordner unter "Archiv/" → Kategorie. Greift, wenn das Frontmatter
 // keine (gültige) category nennt (z.B. das Orte-Template ohne category-Feld).
 const FOLDER_CATEGORY: Record<string, string> = {
-  dialoge: "other",
+  dialoge: "dialogue",
+  npc: "npc",
   fraktionen: "faction",
   items: "item",
   lore: "other",
@@ -259,7 +262,8 @@ export async function ingestArchive(
       for (const spec of refSpecs) {
         for (const target of toStringArray(fm[spec.key])) {
           const t = target.trim();
-          if (t) references.push({ sourceSlug: slug, target: t, label: spec.label });
+          if (t)
+            references.push({ sourceSlug: slug, target: t, label: spec.label });
         }
       }
 
@@ -285,8 +289,11 @@ export async function ingestArchive(
     let res: ResolvedRef = { kind: "none" };
     const archiveId =
       slugToId.get(slug) ??
-      (await sql<{ id: number }[]>`SELECT id FROM archive_entries WHERE slug = ${slug}`)[0]
-        ?.id;
+      (
+        await sql<
+          { id: number }[]
+        >`SELECT id FROM archive_entries WHERE slug = ${slug}`
+      )[0]?.id;
     if (archiveId != null) {
       slugToId.set(slug, archiveId);
       res = { kind: "archive", id: archiveId };
