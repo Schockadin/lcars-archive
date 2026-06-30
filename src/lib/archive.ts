@@ -9,15 +9,27 @@ import {
   ArchivePath,
 } from "@/types/archive";
 
-// metadata kommt je nach Treiber als JSONB-Objekt oder String — wie bei den
-// Missionen/Charakteren defensiv zum Objekt normalisieren.
+// metadata kommt je nach Treiber als JSONB-Objekt oder String — defensiv
+// parsen UND auf die vollständige Form normalisieren, damit auch ältere
+// Einträge (vor neuen Feldern importiert) eine konsistente Shape haben.
 function parseMeta<T extends { metadata: ArchiveMetadata }>(row: T): T {
+  const raw: Partial<ArchiveMetadata> =
+    typeof row.metadata === "string"
+      ? (JSON.parse(row.metadata) as Partial<ArchiveMetadata>)
+      : (row.metadata ?? {});
+
   return {
     ...row,
-    metadata:
-      typeof row.metadata === "string"
-        ? (JSON.parse(row.metadata) as ArchiveMetadata)
-        : row.metadata,
+    metadata: {
+      summary: raw.summary ?? null,
+      attributes: raw.attributes ?? [],
+      characters: raw.characters ?? [],
+      missions: raw.missions ?? [],
+      setting: raw.setting ?? null,
+      logDate: raw.logDate ?? null,
+      participants: raw.participants ?? [],
+      location: raw.location ?? null,
+    },
   };
 }
 
@@ -36,10 +48,11 @@ export const getAllArchiveEntries = unstable_cache(
       FROM archive_entries
       ORDER BY title ASC
     `;
-
     return rows.map(parseMeta);
   },
-  ["getAllArchiveEntries"],
+  // Key-Version "2": die Metadata-Shape hat sich geändert (neue Felder) —
+  // Bump verwirft alte Cache-Einträge deterministisch (auch poisoned-empty).
+  ["getAllArchiveEntries", "v2"],
   { tags: [cacheTags.archive] },
 );
 
@@ -94,8 +107,28 @@ export async function getArchiveEntryBySlug(
 
       return { ...parseMeta(entry), links, backlinks };
     },
-    ["getArchiveEntryBySlug", slug],
+    ["getArchiveEntryBySlug", "v2", slug],
     { tags: [cacheTags.archive, cacheTags.archiveEntry(slug)] },
+  )();
+}
+
+// Anzahl der Gespräche (Dialoge), an denen ein Teilnehmer (per slug — i.d.R.
+// ein Charakter) beteiligt ist. jsonb-Containment auf metadata.participants.
+export async function getDialogueCountByParticipant(
+  slug: string,
+): Promise<number> {
+  return unstable_cache(
+    async (): Promise<number> => {
+      const [row] = await sql<{ count: number }[]>`
+        SELECT COUNT(*)::int AS count
+        FROM archive_entries
+        WHERE category = 'dialogue'
+          AND metadata->'participants' @> ${sql.json([{ slug }])}
+      `;
+      return row?.count ?? 0;
+    },
+    ["getDialogueCountByParticipant", slug],
+    { tags: [cacheTags.archive] },
   )();
 }
 
@@ -108,6 +141,6 @@ export const getAllArchivePaths = unstable_cache(
     `;
     return rows;
   },
-  ["getAllArchivePaths"],
+  ["getAllArchivePaths", "v2"],
   { tags: [cacheTags.archive] },
 );

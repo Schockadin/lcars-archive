@@ -95,6 +95,15 @@ ALTER TABLE mission_logs    ADD COLUMN IF NOT EXISTS frontmatter JSONB NOT NULL 
 ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS source_md   TEXT;
 ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS frontmatter JSONB NOT NULL DEFAULT '{}';
 
+-- Kategorie-CHECK erweitern (npc, dialogue). Bei bestehenden DBs greift das
+-- inline-CHECK von CREATE TABLE oben nicht — daher Constraint neu setzen.
+ALTER TABLE archive_entries DROP CONSTRAINT IF EXISTS archive_entries_category_check;
+ALTER TABLE archive_entries ADD CONSTRAINT archive_entries_category_check
+  CHECK (category IN (
+    'person', 'location', 'item', 'faction',
+    'theory', 'event', 'species', 'npc', 'dialogue', 'other'
+  ));
+
 -- Indizes (IF NOT EXISTS ab PostgreSQL 9.5)
 CREATE INDEX IF NOT EXISTS idx_characters_status    ON characters(status);
 CREATE INDEX IF NOT EXISTS idx_characters_player    ON characters(player_id);

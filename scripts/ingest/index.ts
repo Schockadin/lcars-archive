@@ -4,32 +4,48 @@ import { ingestCharacters } from "./characters.js";
 import { ingestMissionLogs } from "./missionLogs.js";
 import { ingestMissions } from "./missions.js";
 
-// Nach erfolgreichem Ingest die Inhalts-Caches der deployten Seite invalidieren
-// (Schritt 3). Erfordert SITE_URL + REVALIDATE_SECRET; fehlen diese, wird der
-// Schritt übersprungen — der Ingest selbst gilt trotzdem als erfolgreich.
+// Nach erfolgreichem Ingest die Inhalts-Caches invalidieren (Schritt 3).
+// Erfordert SITE_URL + REVALIDATE_SECRET; fehlen diese, wird der Schritt
+// übersprungen — der Ingest selbst gilt trotzdem als erfolgreich.
+//
+// SITE_URL darf eine kommaseparierte Liste sein, z.B.
+//   SITE_URL = "https://neo-archiv.de, http://localhost:3000"
+// So invalidiert ein lokaler Ingest sowohl Produktion als auch den laufenden
+// Dev-Server (sonst bleibt dessen unstable_cache nach dem Import stale).
 async function triggerRevalidation() {
-  const siteUrl = process.env.SITE_URL;
+  const rawUrls = process.env.SITE_URL;
   const secret = process.env.REVALIDATE_SECRET;
-  if (!siteUrl || !secret) {
+  if (!rawUrls || !secret) {
     console.warn(
       "⚠️  SITE_URL/REVALIDATE_SECRET nicht gesetzt — Cache-Revalidation übersprungen.",
     );
     return;
   }
 
-  try {
-    const res = await fetch(`${siteUrl.replace(/\/$/, "")}/api/revalidate`, {
-      method: "POST",
-      headers: { authorization: `Bearer ${secret}` },
-    });
-    if (!res.ok) {
-      console.warn(`⚠️  Cache-Revalidation fehlgeschlagen: HTTP ${res.status}`);
-      return;
+  const targets = rawUrls
+    .split(",")
+    .map((u) => u.trim())
+    .filter(Boolean);
+
+  for (const base of targets) {
+    const url = `${base.replace(/\/$/, "")}/api/revalidate`;
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { authorization: `Bearer ${secret}` },
+      });
+      if (!res.ok) {
+        console.warn(`⚠️  Revalidation ${base} fehlgeschlagen: HTTP ${res.status}`);
+        continue;
+      }
+      const data = (await res.json()) as { tags?: string[] };
+      console.log(`♻️  Cache revalidiert (${base}): ${data.tags?.join(", ") ?? "ok"}`);
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.warn(
+        `⚠️  Revalidation ${base} nicht erreichbar (Dev-Server aus?): ${msg}`,
+      );
     }
-    const data = (await res.json()) as { tags?: string[] };
-    console.log(`♻️  Cache revalidiert: ${data.tags?.join(", ") ?? "ok"}`);
-  } catch (error) {
-    console.warn("⚠️  Cache-Revalidation-Aufruf fehlgeschlagen:", error);
   }
 }
 

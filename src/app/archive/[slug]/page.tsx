@@ -2,9 +2,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllArchivePaths, getArchiveEntryBySlug } from "@/lib/archive";
-import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
-import { stripHtml } from "@/lib/missionFormat";
-import { ArchiveLink } from "@/types/archive";
+import { CATEGORY_CONFIG, archiveTitle } from "@/lib/archiveFormat";
+import { fmtDate, stripHtml } from "@/lib/missionFormat";
+import { ArchiveEntryDetail, ArchiveLink } from "@/types/archive";
 import PageMeta from "@/components/PageMeta";
 import CrumbLabel from "@/components/CrumbLabel";
 
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props) {
 
   const desc = entry.metadata.summary ?? stripHtml(entry.content);
   return {
-    title: `${entry.title} · Archiv · Neo Archive`,
+    title: `${archiveTitle(entry)} · Archiv · Neo Archive`,
     description: desc.slice(0, 160) || undefined,
   };
 }
@@ -36,38 +36,38 @@ export default async function ArchiveEntryPage({ params }: Props) {
   if (!entry) notFound();
 
   const cfg = CATEGORY_CONFIG[entry.category];
+  const title = archiveTitle(entry);
+
+  // Bei Dialogen erscheinen Teilnehmer + Ort schon im Header — aus den
+  // "Verweisen" herausfiltern, übrige Referenzen (Fraktion, Objekt, …) bleiben.
+  const outgoingLinks =
+    entry.category === "dialogue"
+      ? entry.links.filter((l) => l.label !== "Teilnehmer" && l.label !== "Ort")
+      : entry.links;
 
   return (
     <article
       className="archive-entry"
       style={{ "--cat-color": cfg.color } as React.CSSProperties}
     >
-      <PageMeta title={entry.title} section="archive" />
-      <CrumbLabel slug={entry.slug} label={entry.title} />
+      <PageMeta title={title} section="archive" />
+      <CrumbLabel slug={entry.slug} label={title} />
 
-      <Link href="/archive" className="character-back">
-        ‹ Archiv
+      <Link href={`/archive?cat=${entry.category}`} className="character-back">
+        ‹ {cfg.plural}
       </Link>
 
-      <header className="archive-entry-head">
-        <span className="archive-entry-badge">{cfg.label}</span>
-        <h1 className="char-file-name">{entry.title}</h1>
-        {entry.tags.length > 0 && (
-          <div className="archive-entry-tags">
-            {entry.tags.map((tag) => (
-              <span key={tag} className="archive-entry-tag">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-      </header>
+      {entry.category === "dialogue" ? (
+        <DialogueHeader entry={entry} title={title} label={cfg.label} />
+      ) : (
+        <StandardHeader entry={entry} title={title} label={cfg.label} />
+      )}
 
-      {entry.metadata?.summary && (
+      {entry.metadata.summary && (
         <p className="mission-detail-lead">{entry.metadata.summary}</p>
       )}
 
-      {entry.metadata?.attributes?.length > 0 && (
+      {entry.category !== "dialogue" && entry.metadata.attributes.length > 0 && (
         <div className="char-file-data archive-entry-attrs">
           {entry.metadata.attributes.map((attr) => (
             <div key={attr.label} className="char-file-field">
@@ -89,10 +89,11 @@ export default async function ArchiveEntryPage({ params }: Props) {
         </p>
       )}
 
-      <RelatedSection title="Verweise" links={entry.links} />
+      <RelatedSection title="Verweise" links={outgoingLinks} />
       <RelatedSection title="Erwähnt in" links={entry.backlinks} />
 
-      {entry.metadata.characters != undefined && (
+      {/* Bei Dialogen erscheinen die Charaktere bereits als Teilnehmer. */}
+      {entry.category !== "dialogue" && (
         <RefSection
           title="Charaktere"
           color="var(--lcars-blue)"
@@ -103,17 +104,126 @@ export default async function ArchiveEntryPage({ params }: Props) {
         />
       )}
 
-      {entry.metadata.characters != undefined && (
-        <RefSection
-          title="Missionen"
-          color="var(--lcars-amber)"
-          refs={entry.metadata.missions.map((m) => ({
-            href: `/missions/${m.slug}`,
-            label: m.title,
-          }))}
-        />
-      )}
+      <RefSection
+        title="Missionen"
+        color="var(--lcars-amber)"
+        refs={entry.metadata.missions.map((m) => ({
+          href: `/missions/${m.slug}`,
+          label: m.title,
+        }))}
+      />
     </article>
+  );
+}
+
+function StandardHeader({
+  entry,
+  title,
+  label,
+}: {
+  entry: ArchiveEntryDetail;
+  title: string;
+  label: string;
+}) {
+  return (
+    <header className="archive-entry-head">
+      <span className="archive-entry-badge">{label}</span>
+      <h1 className="char-file-name">{title}</h1>
+      {entry.tags.length > 0 && (
+        <div className="archive-entry-tags">
+          {entry.tags.map((tag) => (
+            <span key={tag} className="archive-entry-tag">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+    </header>
+  );
+}
+
+// Dialog-Header: Titel "Gespräch auf [setting]", verlinkte Teilnehmer + Ort.
+function DialogueHeader({
+  entry,
+  title,
+  label,
+}: {
+  entry: ArchiveEntryDetail;
+  title: string;
+  label: string;
+}) {
+  const { participants, location, logDate } = entry.metadata;
+
+  return (
+    <header className="archive-entry-head">
+      <span className="archive-entry-badge">{label}</span>
+      <h1 className="char-file-name">{title}</h1>
+
+      <div className="archive-dialogue-meta">
+        {participants.length > 0 && (
+          <div className="archive-dialogue-row">
+            <span className="archive-dialogue-label">Teilnehmer</span>
+            <div className="archive-related-grid">
+              {participants.map((p) =>
+                p.kind === "unknown" ? (
+                  // Kein eigener Eintrag → nur Name, kein Link.
+                  <span
+                    key={p.slug}
+                    className="archive-chip archive-chip-static"
+                    style={
+                      {
+                        "--chip-color": "var(--lcars-text-dim)",
+                      } as React.CSSProperties
+                    }
+                  >
+                    <span className="archive-chip-title">{p.name}</span>
+                  </span>
+                ) : (
+                  <Link
+                    key={p.slug}
+                    href={
+                      p.kind === "character"
+                        ? `/characters/${p.slug}`
+                        : `/archive/${p.slug}`
+                    }
+                    className="archive-chip"
+                    style={
+                      {
+                        "--chip-color": "var(--lcars-blue)",
+                      } as React.CSSProperties
+                    }
+                  >
+                    <span className="archive-chip-title">{p.name}</span>
+                  </Link>
+                ),
+              )}
+            </div>
+          </div>
+        )}
+
+        {location && (
+          <div className="archive-dialogue-row">
+            <span className="archive-dialogue-label">Ort</span>
+            <Link
+              href={`/archive/${location.slug}`}
+              className="archive-chip"
+              style={
+                { "--chip-color": "var(--lcars-green)" } as React.CSSProperties
+              }
+            >
+              <span className="archive-chip-title">{location.title}</span>
+            </Link>
+          </div>
+        )}
+
+        {logDate && (
+          <div className="archive-dialogue-row">
+            <span className="archive-dialogue-label">Datum</span>
+            <span className="archive-dialogue-value">{fmtDate(logDate)}</span>
+          </div>
+        )}
+      </div>
+    </header>
   );
 }
 

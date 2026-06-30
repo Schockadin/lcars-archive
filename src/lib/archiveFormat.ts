@@ -1,6 +1,6 @@
 // Geteilte, React-freie Helfer für Archiv-Einträge — nutzbar in Server-
 // und Client-Komponenten sowie im Ingest-Skript.
-import { ArchiveCategory } from "@/types/archive";
+import { ArchiveCategory, ArchiveMetadata } from "@/types/archive";
 
 // Anzeige-Konfiguration je Kategorie: Singular-/Plural-Label + LCARS-Farbe.
 // Die Reihenfolge der Keys bestimmt zugleich die Gruppen-Reihenfolge in der
@@ -9,6 +9,11 @@ export const CATEGORY_CONFIG: Record<
   ArchiveCategory,
   { label: string; plural: string; color: string }
 > = {
+  dialogue: {
+    label: "Gespräch",
+    plural: "Gespräche",
+    color: "var(--lcars-text-data)",
+  },
   person: { label: "Person", plural: "Personen", color: "var(--lcars-blue)" },
   location: { label: "Ort", plural: "Orte", color: "var(--lcars-green)" },
   faction: {
@@ -37,11 +42,6 @@ export const CATEGORY_CONFIG: Record<
     plural: "NPCs",
     color: "var(--lcars-amber)",
   },
-  dialogue: {
-    label: "Gespräch",
-    plural: "Gespräche",
-    color: "var(--lcars-text-data)",
-  },
   other: {
     label: "Sonstiges",
     plural: "Sonstiges",
@@ -55,8 +55,21 @@ export const CATEGORY_ORDER = Object.keys(CATEGORY_CONFIG) as ArchiveCategory[];
 // Liste aller gültigen Kategorien — auch im Ingest zur Validierung genutzt.
 export const ARCHIVE_CATEGORIES = CATEGORY_ORDER;
 
-console.log(ARCHIVE_CATEGORIES);
-
 export function isArchiveCategory(value: string): value is ArchiveCategory {
   return (CATEGORY_ORDER as string[]).includes(value);
+}
+
+// Anzeige-Titel. Gespräche tragen keinen eigenen Titel, sondern werden über
+// ihren Schauplatz benannt: "Gespräch auf [setting]".
+export function archiveTitle(entry: {
+  category: ArchiveCategory;
+  title: string;
+  metadata: Pick<ArchiveMetadata, "setting">;
+}): string {
+  if (entry.category === "dialogue") {
+    return entry.metadata.setting
+      ? `Gespräch auf ${entry.metadata.setting}`
+      : "Gespräch";
+  }
+  return entry.title;
 }

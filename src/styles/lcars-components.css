@@ -1226,6 +1226,86 @@
   color: var(--lcars-text-light);
 }
 
+/* ── Archiv-Browser (Zwei-Spalten: Kategorien | Liste/Eintrag) ────── */
+.archive-browser {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+}
+.archive-browser-nav {
+  flex: 0 0 260px;
+  min-width: 0;
+  position: sticky;
+  top: 5px;
+  align-self: flex-start;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+}
+.archive-browser-main {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.archive-cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.archive-cat {
+  display: flex;
+  align-items: stretch;
+  height: 34px;
+  gap: 3px;
+  text-decoration: none;
+}
+.archive-cat-count {
+  width: 48px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  border-radius: 100vmax 0 0 100vmax;
+  background: var(--cat-color);
+  color: var(--lcars-bg);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+  font-weight: 700;
+}
+.archive-cat-label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  background: var(--lcars-surface);
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lcars-text-contrast);
+  transition:
+    background 150ms,
+    color 150ms;
+}
+.archive-cat:hover .archive-cat-label,
+.archive-cat[data-active="true"] .archive-cat-label {
+  background: var(--cat-color);
+  color: var(--lcars-bg);
+}
+
+/* Eintrags-Liste (Akten-Karten) der gewählten Kategorie */
+.archive-entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+}
+.archive-placeholder {
+  max-width: 520px;
+}
+
 /* ── Archiv-Eintrag (Detailseite) ────────────────────────────────── */
 .archive-entry {
   width: 100%;
@@ -1288,6 +1368,13 @@
 .archive-chip:hover {
   background: var(--lcars-surface-2);
 }
+/* statischer Chip (kein Link, z.B. nicht aufgelöster Teilnehmer) */
+.archive-chip-static {
+  cursor: default;
+}
+.archive-chip-static:hover {
+  background: var(--lcars-surface);
+}
 .archive-chip-title {
   font-family: var(--font-antonio), sans-serif;
   font-size: 16px;
@@ -1302,12 +1389,44 @@
   color: var(--lcars-text-dim);
 }
 
+/* Dialog-Header: Teilnehmer / Ort / Datum */
+.archive-dialogue-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+.archive-dialogue-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.archive-dialogue-label {
+  flex: 0 0 92px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lcars-text-dim);
+}
+.archive-dialogue-row .archive-related-grid {
+  margin-top: 0;
+}
+.archive-dialogue-value {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+  color: var(--lcars-text-data);
+}
+
 /* gestapelt auf schmalen Screens — kein Sticky, Liste oben */
 @media (max-width: 768px) {
-  .mission-detail {
+  .mission-detail,
+  .archive-browser {
     flex-direction: column;
   }
-  .mission-detail-logs {
+  .mission-detail-logs,
+  .archive-browser-nav {
     flex: none;
     width: 100%;
     position: static;

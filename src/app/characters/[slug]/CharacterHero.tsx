@@ -239,9 +239,9 @@ export default function CharacterHero({
               )}
             </div>
 
-            {/* Schnellzugriffe direkt unter dem Bild: Logs + Gespräche
-                des Charakters, jeweils mit Anzahl. Gespräche ist vorerst
-                ein Platzhalter-Link. */}
+            {/* Schnellzugriffe direkt unter dem Bild: Logs + Gespräche des
+                Charakters, jeweils mit Anzahl. Gespräche verlinkt auf die
+                nach diesem Teilnehmer gefilterte Dialog-Liste im Archiv. */}
             <div className="char-file-links">
               <LcarsDataRow
                 value={logCount}
@@ -252,7 +252,7 @@ export default function CharacterHero({
               <LcarsDataRow
                 value={conversationCount}
                 label="Gespräche"
-                href="#"
+                href={`/archive?cat=dialogue&participant=${character.slug}`}
                 color="var(--lcars-purple)"
               />
             </div>

@@ -90,9 +90,9 @@ export async function ingestMissions(
           ${fm.summary?.trim() || null},
           ${parseDate(fm.started_at)},
           ${parseDate(fm.ended_at)},
-          ${JSON.stringify(metadata)},
+          ${sql.json(metadata)},
           ${content},
-          ${JSON.stringify(data)},
+          ${sql.json(data)},
           NOW()
         )
         ON CONFLICT (slug) DO UPDATE SET

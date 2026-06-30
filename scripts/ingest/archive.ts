@@ -7,6 +7,8 @@ import { markdownToHtml, validateSlug, toStringArray } from "./shared.js";
 // Gültige Kategorien — muss exakt dem CHECK-Constraint in schema.sql sowie
 // ArchiveCategory in src/types/archive.ts entsprechen.
 const VALID_CATEGORIES = [
+  "dialogue",
+  "npc",
   "person",
   "location",
   "item",
@@ -20,11 +22,12 @@ const VALID_CATEGORIES = [
 // Top-Level-Ordner unter "Archiv/" → Kategorie. Greift, wenn das Frontmatter
 // keine (gültige) category nennt (z.B. das Orte-Template ohne category-Feld).
 const FOLDER_CATEGORY: Record<string, string> = {
-  dialoge: "other",
+  dialoge: "dialogue",
+  npc: "npc",
+  npcs: "npc",
   fraktionen: "faction",
   items: "item",
   lore: "other",
-  npcs: "person",
   orte: "location",
   schiffe: "location",
   spezies: "species",
@@ -41,6 +44,9 @@ const COMMON_ATTRIBUTES: FieldSpec[] = [{ key: "status", label: "Status" }];
 
 const CATEGORY_ATTRIBUTES: Record<string, FieldSpec[]> = {
   person: [],
+  npc: [],
+  // Dialoge zeigen Schauplatz/Datum nicht als Datenfeld, sondern im Header.
+  dialogue: [],
   location: [
     { key: "location_type", label: "Art" },
     { key: "class", label: "Klasse" },
@@ -84,6 +90,9 @@ const COMMON_REFERENCES: FieldSpec[] = [
 
 const CATEGORY_REFERENCES: Record<string, FieldSpec[]> = {
   person: [],
+  npc: [],
+  // participants → Teilnehmer (NPCs als archive_links, Charaktere in Metadata).
+  dialogue: [{ key: "participants", label: "Teilnehmer" }],
   location: [{ key: "controlled_by", label: "Kontrolliert von" }],
   item: [
     { key: "origin", label: "Ursprung" },
@@ -105,6 +114,16 @@ function str(value: unknown): string | null {
   if (value == null) return null;
   const s = String(value).trim();
   return s === "" ? null : s;
+}
+
+// Slug → lesbarer Name (Fallback für nicht aufgelöste Verweise/Teilnehmer).
+// "atlan-da-gonozal" → "Atlan Da Gonozal".
+function humanize(slug: string): string {
+  return slug
+    .split("-")
+    .filter(Boolean)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 }
 
 // Attribut-Wert hübsch als String (Date → YYYY-MM-DD, Array → Liste).
@@ -145,10 +164,18 @@ function collectMarkdown(
 }
 
 type ResolvedRef =
-  | { kind: "archive"; id: number }
+  | { kind: "archive"; id: number; title: string }
   | { kind: "character"; name: string }
   | { kind: "mission"; title: string }
   | { kind: "none" };
+
+// type (statt interface), damit das Objekt als JSONValue an sql.json() passt
+// (Interfaces erhalten keine implizite Index-Signatur).
+type Participant = {
+  slug: string;
+  name: string;
+  kind: "character" | "archive" | "unknown";
+};
 
 export async function ingestArchive(
   sql: postgres.Sql,
@@ -165,9 +192,13 @@ export async function ingestArchive(
   const errors: string[] = [];
 
   const slugToId = new Map<string, number>();
+  const slugTitle = new Map<string, string>();
   const processedIds: number[] = [];
   const references: { sourceSlug: string; target: string; label: string }[] =
     [];
+  // Dialog-spezifische Roh-Verweise (Teilnehmer / Schauplatz-Ort).
+  const dialogueParticipants: { source: string; target: string }[] = [];
+  const dialogueLocations: { source: string; target: string }[] = [];
 
   // ── Pass 1: Einträge upserten ──
   for (const { filepath, folder } of files) {
@@ -219,6 +250,11 @@ export async function ingestArchive(
         attributes,
         characters: [] as { slug: string; name: string }[],
         missions: [] as { slug: string; title: string }[],
+        // Dialog-spezifisch (im 2. Pass befüllt bzw. hier aus Frontmatter).
+        setting: str(fm.setting),
+        logDate: attrValue(fm.log_date),
+        participants: [] as Participant[],
+        location: null as { slug: string; title: string } | null,
       };
 
       const [row] = await sql<{ id: number }[]>`
@@ -231,9 +267,9 @@ export async function ingestArchive(
           ${category},
           ${contentHtml},
           ${tags},
-          ${JSON.stringify(metadata)},
+          ${sql.json(metadata)},
           ${content},
-          ${JSON.stringify(data)},
+          ${sql.json(data)},
           NOW()
         )
         ON CONFLICT (slug) DO UPDATE SET
@@ -249,6 +285,7 @@ export async function ingestArchive(
       `;
 
       slugToId.set(slug, row.id);
+      slugTitle.set(slug, title);
       processedIds.push(row.id);
 
       // Referenz-Slugs einsammeln (im 2. Pass aufgelöst).
@@ -259,7 +296,20 @@ export async function ingestArchive(
       for (const spec of refSpecs) {
         for (const target of toStringArray(fm[spec.key])) {
           const t = target.trim();
-          if (t) references.push({ sourceSlug: slug, target: t, label: spec.label });
+          if (t)
+            references.push({ sourceSlug: slug, target: t, label: spec.label });
+        }
+      }
+
+      // Dialog: Teilnehmer + verlinkter Schauplatz-Ort strukturiert ablegen.
+      if (category === "dialogue") {
+        for (const p of toStringArray(fm.participants)) {
+          const t = p.trim();
+          if (t) dialogueParticipants.push({ source: slug, target: t });
+        }
+        for (const l of toStringArray(fm.related_locations)) {
+          const t = l.trim();
+          if (t) dialogueLocations.push({ source: slug, target: t });
         }
       }
 
@@ -283,13 +333,21 @@ export async function ingestArchive(
     if (cached) return cached;
 
     let res: ResolvedRef = { kind: "none" };
-    const archiveId =
-      slugToId.get(slug) ??
-      (await sql<{ id: number }[]>`SELECT id FROM archive_entries WHERE slug = ${slug}`)[0]
-        ?.id;
+    let archiveId = slugToId.get(slug);
+    let archiveTitleVal = slugTitle.get(slug);
+    if (archiveId == null) {
+      const [a] = await sql<{ id: number; title: string }[]>`
+        SELECT id, title FROM archive_entries WHERE slug = ${slug}
+      `;
+      if (a) {
+        archiveId = a.id;
+        archiveTitleVal = a.title;
+        slugToId.set(slug, a.id);
+        slugTitle.set(slug, a.title);
+      }
+    }
     if (archiveId != null) {
-      slugToId.set(slug, archiveId);
-      res = { kind: "archive", id: archiveId };
+      res = { kind: "archive", id: archiveId, title: archiveTitleVal ?? slug };
     } else {
       const [c] = await sql<{ name: string }[]>`
         SELECT name FROM characters WHERE slug = ${slug}
@@ -349,19 +407,59 @@ export async function ingestArchive(
     }
   }
 
-  // Charakter-/Missions-Verweise in die Metadata der Quelle schreiben.
-  for (const [sourceSlug, side] of sideRefs) {
+  // Dialog-Teilnehmer auflösen (Charakter → /characters, Archiv/NPC → /archive).
+  // Nicht auflösbare Teilnehmer (z.B. NPC ohne eigenen Eintrag) bleiben erhalten
+  // und werden als "unknown" (ohne Link) angezeigt — es sollen ALLE erscheinen.
+  const participantsBySource = new Map<string, Participant[]>();
+  for (const { source, target } of dialogueParticipants) {
+    const resolved = await resolveRef(target);
+    let p: Participant;
+    if (resolved.kind === "character") {
+      p = { slug: target, name: resolved.name, kind: "character" };
+    } else if (resolved.kind === "archive") {
+      p = { slug: target, name: resolved.title, kind: "archive" };
+    } else {
+      p = { slug: target, name: humanize(target), kind: "unknown" };
+    }
+    const arr = participantsBySource.get(source) ?? [];
+    if (!arr.some((x) => x.slug === p.slug)) arr.push(p);
+    participantsBySource.set(source, arr);
+  }
+
+  // Verlinkter Schauplatz-Ort (erster auflösbarer related_locations-Eintrag).
+  const locationBySource = new Map<string, { slug: string; title: string }>();
+  for (const { source, target } of dialogueLocations) {
+    if (locationBySource.has(source)) continue;
+    const resolved = await resolveRef(target);
+    if (resolved.kind === "archive") {
+      locationBySource.set(source, { slug: target, title: resolved.title });
+    }
+  }
+
+  // Alle strukturierten Verweise pro Quell-Eintrag in die Metadata mergen.
+  const sources = new Set<string>([
+    ...sideRefs.keys(),
+    ...participantsBySource.keys(),
+    ...locationBySource.keys(),
+  ]);
+  for (const sourceSlug of sources) {
     const id = slugToId.get(sourceSlug);
     if (id == null) continue;
-    if (side.characters.size === 0 && side.missions.size === 0) continue;
 
+    const side = sideRefs.get(sourceSlug);
     const extra = {
-      characters: [...side.characters].map(([slug, name]) => ({ slug, name })),
-      missions: [...side.missions].map(([slug, title]) => ({ slug, title })),
+      characters: side
+        ? [...side.characters].map(([slug, name]) => ({ slug, name }))
+        : [],
+      missions: side
+        ? [...side.missions].map(([slug, title]) => ({ slug, title }))
+        : [],
+      participants: participantsBySource.get(sourceSlug) ?? [],
+      location: locationBySource.get(sourceSlug) ?? null,
     };
     await sql`
       UPDATE archive_entries
-      SET metadata = metadata || ${JSON.stringify(extra)}::jsonb
+      SET metadata = metadata || ${sql.json(extra)}
       WHERE id = ${id}
     `;
   }
