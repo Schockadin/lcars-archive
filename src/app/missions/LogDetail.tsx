@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { LogNavItem, LogNavNeighbors, MissionLogDetail } from "@/types/missions";
 import { fmtDate, sessionLabel } from "@/lib/missionFormat";
+import { LcarsReadingModeToggle } from "@/components/lcars";
 
 // Ein Sprung zum Nachbar-Log desselben Autors. `dir` steuert Pfeil + Ausrichtung.
 function LogNavLink({
@@ -45,6 +46,7 @@ export default function LogDetail({
 
   return (
     <article className="mission-detail-article">
+      <LcarsReadingModeToggle />
       <header className="mission-detail-header">
         <div className="mission-detail-logmeta">
           <span className="mission-detail-session">

@@ -12,6 +12,11 @@ export interface NeoContextValue {
   crumbLabels: Record<string, string>;
   setCrumbLabel: (slug: string, label: string) => void;
   clearCrumbLabel: (slug: string) => void;
+  // Lesemodus (nur mobil): blendet Sidebar/Elbow-Bar aus und maximiert
+  // die Lesbarkeit der Inhaltsseite.
+  readingMode: boolean;
+  setReadingMode: (on: boolean) => void;
+  toggleReadingMode: () => void;
 }
 
 export const NeoContext = createContext<NeoContextValue | undefined>(undefined);

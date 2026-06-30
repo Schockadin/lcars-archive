@@ -7,6 +7,7 @@ import { fmtDate, stripHtml } from "@/lib/missionFormat";
 import { ArchiveEntryDetail, ArchiveLink } from "@/types/archive";
 import PageMeta from "@/components/PageMeta";
 import CrumbLabel from "@/components/CrumbLabel";
+import { LcarsReadingModeToggle } from "@/components/lcars";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -52,6 +53,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
     >
       <PageMeta title={title} section="archive" />
       <CrumbLabel slug={entry.slug} label={title} />
+      <LcarsReadingModeToggle />
 
       <Link href={`/archive?cat=${entry.category}`} className="character-back">
         ‹ {cfg.plural}

@@ -13,3 +13,5 @@ export { default as LcarsHorSep } from "./HorizontalSeparator";
 export { default as LcarsDot } from "./BlinkingDot";
 export { default as LcarsToc, type TocHeading } from "./Toc";
 export { default as LcarsSkeleton } from "./Skeleton";
+export { default as LcarsAppShell } from "./AppShell";
+export { default as LcarsReadingModeToggle } from "./ReadingModeToggle";
