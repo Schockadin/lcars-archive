@@ -57,9 +57,6 @@ export default async function ArchivePage({
         <div className="archive-placeholder">
           <h1 className="lcars-data-row-heading">Archiv</h1>
           <p className="lcars-eyebrow">Enzyklopädie der bekannten Welt</p>
-          <p className="char-file-bio-empty mt-[16px]">
-            Wähle links eine Kategorie, um ihre Einträge anzuzeigen.
-          </p>
         </div>
       )}
     </>

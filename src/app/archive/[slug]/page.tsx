@@ -63,20 +63,21 @@ export default async function ArchiveEntryPage({ params }: Props) {
         <StandardHeader entry={entry} title={title} label={cfg.label} />
       )}
 
-      {entry.metadata.summary && (
-        <p className="mission-detail-lead">{entry.metadata.summary}</p>
+      {entry.metadata.summary && entry.category != "dialogue" && (
+        <p className="lcars-eyebrow mb-[5px]">{entry.metadata.summary}</p>
       )}
 
-      {entry.category !== "dialogue" && entry.metadata.attributes.length > 0 && (
-        <div className="char-file-data archive-entry-attrs">
-          {entry.metadata.attributes.map((attr) => (
-            <div key={attr.label} className="char-file-field">
-              <span className="char-file-field-label">{attr.label}:</span>{" "}
-              <span className="char-file-field-value">{attr.value}</span>
-            </div>
-          ))}
-        </div>
-      )}
+      {entry.category !== "dialogue" &&
+        entry.metadata.attributes.length > 0 && (
+          <div className="char-file-data archive-entry-attrs">
+            {entry.metadata.attributes.map((attr) => (
+              <div key={attr.label} className="char-file-field">
+                <span className="char-file-field-label">{attr.label}:</span>{" "}
+                <span className="char-file-field-value">{attr.value}</span>
+              </div>
+            ))}
+          </div>
+        )}
 
       {entry.content ? (
         <div
@@ -146,7 +147,6 @@ function StandardHeader({
 function DialogueHeader({
   entry,
   title,
-  label,
 }: {
   entry: ArchiveEntryDetail;
   title: string;
@@ -156,8 +156,7 @@ function DialogueHeader({
 
   return (
     <header className="archive-entry-head">
-      <span className="archive-entry-badge">{label}</span>
-      <h1 className="char-file-name">{title}</h1>
+      <h1 className="char-file-name text-left">{title}</h1>
 
       <div className="archive-dialogue-meta">
         {participants.length > 0 && (
