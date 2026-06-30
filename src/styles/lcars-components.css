@@ -125,7 +125,7 @@
 
 .lcars-data-row-label {
   height: 100%;
-  width: 16%;
+  width: 20%;
   font-size: 100cqh;
   text-transform: uppercase;
   text-align: right;
@@ -148,7 +148,7 @@
   padding-left: 8px;
   font-weight: 600;
   text-decoration: none;
-  width: 84%;
+  flex-grow: 1;
 }
 
 .lcars-datarow-heading {
@@ -285,6 +285,7 @@
   flex-wrap: wrap;
   gap: 8px;
   justify-content: flex-end;
+  margin-top: 16px;
 }
 .char-file-pill {
   min-width: 96px;
@@ -330,7 +331,7 @@
 /* Grid: Schiene | Portrait + Daten | Biografie */
 .char-file-grid {
   display: grid;
-  grid-template-columns: 64px minmax(190px, 230px) 1fr;
+  grid-template-columns: minmax(190px, 230px) 1fr;
   gap: 16px;
   align-items: start;
 }
@@ -416,8 +417,11 @@
 .char-file-bio {
   font-size: 16px;
 }
-.char-file-bio > h3 {
+.char-file-bio > h2 {
   font-size: 24px;
+}
+.char-file-bio > h3 {
+  font-size: 20px;
   color: var(--lcars-text-data);
   scroll-margin-top: 16px;
 }
@@ -428,6 +432,10 @@
   color: var(--lcars-text-dim);
   font-style: italic;
   font-size: 14px;
+}
+
+.character-back {
+  margin-top: 16px;
 }
 
 /* mittlere Spalte auf volle Zeilenhöhe strecken, damit das sticky TOC
@@ -773,7 +781,6 @@
 
 .mission-body > h2 {
   font-size: 24px;
-  color: var(--lcars-text-data);
 }
 .mission-body > ul > li > ul {
   margin-left: 20px;
@@ -1069,7 +1076,8 @@
 .mission-loglist-head {
   margin-bottom: 10px;
 }
-.mission-loglist-back {
+.mission-loglist-back,
+.character-back {
   display: inline-block;
   font-family: var(--font-antonio), sans-serif;
   font-size: 22px;
@@ -1081,7 +1089,8 @@
   text-decoration: none;
   transition: color 150ms;
 }
-.mission-loglist-back:hover {
+.mission-loglist-back:hover,
+.character-back:hover {
   color: var(--lcars-amber-light);
 }
 

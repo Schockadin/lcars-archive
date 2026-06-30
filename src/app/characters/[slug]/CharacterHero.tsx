@@ -1,5 +1,6 @@
 import { Character } from "@/types/character";
 import { LcarsToc, type TocHeading } from "@/components/lcars";
+import Link from "next/link";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
 function slugify(text: string): string {
@@ -146,6 +147,9 @@ export default function CharacterHero({ character }: { character: Character }) {
       <section className="char-file">
         {/* ── Kopfzeile: Akten-Code + Code-Pills ── */}
         <header className="char-file-head">
+          <Link href="/characters" className="character-back">
+            ‹ Charaktere
+          </Link>
           <h2 className="char-file-fileno">Personalakte · {fileNo}</h2>
           <div className="char-file-pills">
             {pills.map((p) => (
@@ -179,19 +183,6 @@ export default function CharacterHero({ character }: { character: Character }) {
 
         {/* ── Hauptraster ── */}
         <div className="char-file-grid">
-          {/* ToDo:  ID-Rail entfernen, ohne Layout zu brechen */}
-          <aside className="char-file-rail" aria-hidden="true">
-            {/* {railIds.map((r) => (
-              <div
-                key={r.code}
-                className="char-file-rail-block"
-                style={{ backgroundColor: r.color }}
-              >
-                {r.code}
-              </div>
-            ))} */}
-          </aside>
-
           {/* Portrait + Datenfelder */}
           <div className="min-w-0 char-file-colmid">
             <div
