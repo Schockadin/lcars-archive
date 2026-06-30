@@ -33,8 +33,14 @@ async function triggerRevalidation() {
 }
 
 async function main() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL ist nicht gesetzt");
+  // Ingest verbindet sich direkt mit Postgres und umgeht pgBouncer: Bulk-Writes
+  // und Prepared Statements sind auf einer Direktverbindung am effizientesten.
+  // DIRECT_DATABASE_URL sollte auf den direkten Postgres-Endpoint zeigen (nicht
+  // auf pgBouncer); fehlt sie, wird auf DATABASE_URL zurückgegriffen.
+  const connectionString =
+    process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
+  if (!connectionString) {
+    throw new Error("Weder DIRECT_DATABASE_URL noch DATABASE_URL ist gesetzt");
   }
 
   const vaultPath = process.env.VAULT_PATH;
@@ -42,7 +48,7 @@ async function main() {
     throw new Error("VAULT_PATH ist nicht gesetzt");
   }
 
-  const sql = postgres(process.env.DATABASE_URL, {
+  const sql = postgres(connectionString, {
     ssl: { rejectUnauthorized: false },
     max: 1,
   });
