@@ -37,11 +37,17 @@ export const getAllMissions = unstable_cache(
         m.status,
         m.summary,
         m.metadata,
-        m.started_at::text AS started_at,
-        m.ended_at::text   AS ended_at,
-        COUNT(ml.id)::int  AS log_count
+        m.started_at::text         AS started_at,
+        m.ended_at::text           AS ended_at,
+        COUNT(DISTINCT ml.id)::int AS log_count,
+        COALESCE(
+          jsonb_agg(DISTINCT jsonb_build_object('name', c.name, 'slug', c.slug))
+            FILTER (WHERE c.id IS NOT NULL),
+          '[]'::jsonb
+        ) AS authors
       FROM missions m
       LEFT JOIN mission_logs ml ON ml.mission_id = m.id
+      LEFT JOIN characters c    ON c.id = ml.author_id
       GROUP BY m.id
       ORDER BY m.started_at DESC NULLS LAST, m.created_at DESC
     `;

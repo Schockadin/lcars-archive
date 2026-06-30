@@ -6,12 +6,14 @@ import { LcarsDataRow } from "@/components/lcars";
 import { MissionLogListItem } from "@/types/missions";
 import {
   AUTHOR_COLORS,
+  byDateAsc,
   byDateDesc,
   fmtDate,
   sessionLabel,
 } from "@/lib/missionFormat";
 
 type LogSortMode = "date" | "author";
+type DateDir = "desc" | "asc";
 
 // Linke, persistente Log-Liste der Mission-Detailseite. Sortierbar nach
 // Datum (flach, Autor in der Zeile) oder Autor (gruppiert, je Gruppe Datum
@@ -26,6 +28,7 @@ export default function MissionLogList({
   logs: MissionLogListItem[];
 }) {
   const [sort, setSort] = useState<LogSortMode>("author");
+  const [dateDir, setDateDir] = useState<DateDir>("desc");
   const pathname = usePathname();
 
   // Aktives Log = drittes Pfadsegment unter /missions/[mission]/[log]
@@ -35,7 +38,13 @@ export default function MissionLogList({
       ? decodeURIComponent(segs[2])
       : null;
 
+  // Autor-Gruppen sortieren intern immer absteigend; die Datum-Ansicht
+  // folgt der gewählten Richtung.
   const sortedByDate = useMemo(() => [...logs].sort(byDateDesc), [logs]);
+  const dateView = useMemo(
+    () => [...logs].sort(dateDir === "desc" ? byDateDesc : byDateAsc),
+    [logs, dateDir],
+  );
 
   const authorGroups = useMemo(() => {
     const map = new Map<
@@ -90,9 +99,13 @@ export default function MissionLogList({
           <p className="mission-logs-sub">Missions-Logs</p>
           <LogSortSwitch mode={sort} onChange={setSort} />
 
+          {sort === "date" && (
+            <DateDirSwitch dir={dateDir} onChange={setDateDir} />
+          )}
+
           {sort === "date" ? (
             <div className="mission-log-list">
-              {sortedByDate.map((log) => (
+              {dateView.map((log) => (
                 <LogEntry
                   key={log.id}
                   log={log}
@@ -181,6 +194,46 @@ function LogSortSwitch({
     <div className="flex gap-[10px] w-full mb-[12px]">
       {options.map((opt) => {
         const isActive = mode === opt.key;
+        return (
+          <div
+            key={opt.key}
+            onClick={() => onChange(opt.key)}
+            className="lcars-switch flex-1"
+            style={{
+              backgroundColor: isActive
+                ? "var(--lcars-amber)"
+                : "var(--lcars-surface)",
+              color: isActive ? "var(--lcars-bg)" : "var(--lcars-text-data)",
+              borderColor: isActive
+                ? "var(--lcars-amber)"
+                : "var(--lcars-text-data)",
+            }}
+          >
+            {opt.label}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Richtungsumschalter für die Datum-Sortierung (auf-/absteigend).
+function DateDirSwitch({
+  dir,
+  onChange,
+}: {
+  dir: DateDir;
+  onChange: (d: DateDir) => void;
+}) {
+  const options: { key: DateDir; label: string }[] = [
+    { key: "desc", label: "Neueste zuerst" },
+    { key: "asc", label: "Älteste zuerst" },
+  ];
+
+  return (
+    <div className="flex gap-[10px] w-full mb-[12px]">
+      {options.map((opt) => {
+        const isActive = dir === opt.key;
         return (
           <div
             key={opt.key}

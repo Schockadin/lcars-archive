@@ -13,9 +13,16 @@ export default function CharakterDetailPage({
 }) {
   usePageMeta(character.name, "characters");
 
+  // Gespräche sind noch nicht modelliert — vorerst Platzhalter (0).
+  const conversationCount = 0;
+
   return (
     <div className="h-full">
-      <CharacterHero character={character} />
+      <CharacterHero
+        character={character}
+        logCount={logs.length}
+        conversationCount={conversationCount}
+      />
     </div>
   );
 }

@@ -1,8 +1,19 @@
-"use client";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { getAllArchiveEntries } from "@/lib/archive";
+import PageMeta from "@/components/PageMeta";
+import ArchiveOverview from "./ArchiveOverview";
 
-export default function ArchivePage() {
-  usePageMeta("Archiv", "archive");
+export const metadata = {
+  title: {
+    default: "Archiv",
+  },
+};
 
-  return <h1></h1>;
+export default async function ArchivePage() {
+  const entries = await getAllArchiveEntries();
+  return (
+    <>
+      <PageMeta title="Archiv" section="archive" />
+      <ArchiveOverview entries={entries} />
+    </>
+  );
 }

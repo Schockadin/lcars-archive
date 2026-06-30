@@ -1,4 +1,5 @@
 import postgres from "postgres";
+import { ingestArchive } from "./archive.js";
 import { ingestCharacters } from "./characters.js";
 import { ingestMissionLogs } from "./missionLogs.js";
 import { ingestMissions } from "./missions.js";
@@ -60,6 +61,7 @@ async function main() {
     await ingestCharacters(sql, vaultPath);
     await ingestMissions(sql, vaultPath);
     await ingestMissionLogs(sql, vaultPath);
+    await ingestArchive(sql, vaultPath);
     console.log("\n✅ Ingestion abgeschlossen");
     await triggerRevalidation();
   } catch (error) {

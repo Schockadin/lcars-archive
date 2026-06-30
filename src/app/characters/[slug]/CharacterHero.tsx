@@ -1,5 +1,5 @@
 import { Character } from "@/types/character";
-import { LcarsToc, type TocHeading } from "@/components/lcars";
+import { LcarsDataRow, LcarsToc, type TocHeading } from "@/components/lcars";
 import Link from "next/link";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
@@ -121,7 +121,15 @@ const BAR_SEGMENTS: { flex: number; color: string }[] = [
   { flex: 1, color: "var(--lcars-red)" },
 ];
 
-export default function CharacterHero({ character }: { character: Character }) {
+export default function CharacterHero({
+  character,
+  logCount = 0,
+  conversationCount = 0,
+}: {
+  character: Character;
+  logCount?: number;
+  conversationCount?: number;
+}) {
   const { metadata } = character;
 
   // Deko-Codes deterministisch aus der Charakter-ID ableiten
@@ -229,6 +237,24 @@ export default function CharacterHero({ character }: { character: Character }) {
                   </span>
                 </div>
               )}
+            </div>
+
+            {/* Schnellzugriffe direkt unter dem Bild: Logs + Gespräche
+                des Charakters, jeweils mit Anzahl. Gespräche ist vorerst
+                ein Platzhalter-Link. */}
+            <div className="char-file-links">
+              <LcarsDataRow
+                value={logCount}
+                label="Logs"
+                href={`/characters/${character.slug}/logs`}
+                color="var(--lcars-blue)"
+              />
+              <LcarsDataRow
+                value={conversationCount}
+                label="Gespräche"
+                href="#"
+                color="var(--lcars-purple)"
+              />
             </div>
 
             <div className="char-file-data">

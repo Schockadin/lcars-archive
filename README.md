@@ -126,6 +126,7 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 │       ├── characters.ts
 │       ├── missions.ts
 │       ├── missionLogs.ts
+│       ├── archive.ts        # Archiv-Einträge + Querverweise
 │       └── shared.ts         # Markdown→HTML, Validierung
 └── src/
     ├── app/                  # Next.js App Router (Seiten & API-Routes)
@@ -175,9 +176,44 @@ aliases: [Locutus]
 Dieser Abschnitt ist nur für die GM-Sicht und wird nicht veröffentlicht.
 ```
 
-- **`type`** steuert, in welche Tabelle ein Eintrag wandert (`character`, …).
+- **`type`** steuert, in welche Tabelle ein Eintrag wandert (`character`,
+  `mission`, `mission-log`, `archive-entry`).
 - **`slug`** muss URL-sicher sein (`a–z`, `0–9`, `-`).
 - Alles nach `<!-- private -->` wird beim Import abgeschnitten.
+
+Archiv-Einträge (`type: archive`) liegen im Ordner `Archiv/`, organisiert nach
+Kategorie-Unterordnern (`Dialoge/`, `Fraktionen/`, `Items/`, `Lore/`, `NPCs/`,
+`Orte/`, `Schiffe/`, `Spezies/`):
+
+```markdown
+---
+type: archive
+slug: tanghal-iv
+title: Tanghal IV
+category: location # optional — sonst aus dem Ordner abgeleitet
+teaser: Klasse-M-Planet im Epetra-Sektor.
+location_type: planet
+system: Epetra
+controlled_by: sternenflotte # Slug → archive_links
+related_factions: [epetraner]
+related_characters: [lorzan-keen] # Slug → /characters/…
+related_missions: [erster-kontakt] # Slug → /missions/…
+tags: [planet, klasse-m]
+---
+
+Öffentlicher Inhalt …
+```
+
+- **`category`** ist einer der acht Werte (`person`, `location`, `item`,
+  `faction`, `theory`, `event`, `species`, `other`). Fehlt das Feld (z.B. bei
+  Orten/Schiffen), wird es aus dem Top-Level-Ordner abgeleitet.
+- **`teaser`** dient als Kurzbeschreibung (Übersicht + Meta-Description).
+- Typ-spezifische Skalar-Felder (`status`, `system`, `class`, …) erscheinen als
+  Datenfelder auf der Detailseite.
+- **Referenz-Felder** (`related_*`, `controlled_by`, `leader`, `participants`,
+  …) enthalten Ziel-`slugs`. Verweise auf andere Archiv-Einträge landen in
+  `archive_links` (Detailseite: „Verweise“ + Rückverweise „Erwähnt in“);
+  Verweise auf Charaktere bzw. Missionen werden als verlinkte Chips angezeigt.
 
 ---
 
