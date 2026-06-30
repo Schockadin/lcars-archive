@@ -1,5 +1,9 @@
 import { notFound } from "next/navigation";
-import { getAllLogPaths, getLogBySlug } from "@/lib/missions";
+import {
+  getAllLogPaths,
+  getAuthorLogNav,
+  getLogBySlug,
+} from "@/lib/missions";
 import { stripHtml } from "@/lib/missionFormat";
 import CrumbLabel from "@/components/CrumbLabel";
 import LogDetail from "../../LogDetail";
@@ -38,10 +42,15 @@ export default async function LogPage({ params }: Props) {
   // Log muss existieren UND zur Mission im Pfad gehören (sonst 404).
   if (!log || log.mission_slug !== missionSlug) notFound();
 
+  // Vor-/Zurück-Navigation zwischen Logs desselben Autors (sofern Autor bekannt).
+  const nav = log.author_slug
+    ? await getAuthorLogNav(log.author_slug, log.slug)
+    : { prev: null, next: null };
+
   return (
     <>
       <CrumbLabel slug={log.slug} label={log.title} />
-      <LogDetail log={log} />
+      <LogDetail log={log} nav={nav} />
     </>
   );
 }

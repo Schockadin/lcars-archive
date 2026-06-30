@@ -1275,6 +1275,79 @@
   color: var(--lcars-text-light);
 }
 
+/* ── Log-Navigation (Vor/Zurück innerhalb desselben Autors) ───────── */
+.log-nav {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 2px solid var(--lcars-surface);
+}
+.log-nav-spacer {
+  flex: 1 1 0;
+}
+.log-nav-link {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  text-decoration: none;
+  background: var(--lcars-surface);
+  border-radius: 8px;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+.log-nav-link:hover {
+  background: var(--lcars-purple);
+}
+.log-nav-next {
+  flex-direction: row-reverse;
+  text-align: right;
+}
+.log-nav-dir {
+  flex: 0 0 auto;
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--lcars-amber);
+}
+.log-nav-link:hover .log-nav-dir,
+.log-nav-link:hover .log-nav-label,
+.log-nav-link:hover .log-nav-title,
+.log-nav-link:hover .log-nav-meta {
+  color: var(--lcars-bg);
+}
+.log-nav-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.log-nav-label {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lcars-text-dim);
+}
+.log-nav-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--lcars-text-data);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.log-nav-meta {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--lcars-text-dim);
+}
+
 /* ── Archiv-Browser (Zwei-Spalten: Kategorien | Liste/Eintrag) ────── */
 .archive-browser {
   display: flex;

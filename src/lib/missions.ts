@@ -2,6 +2,8 @@ import { unstable_cache } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
 import {
+  LogNavItem,
+  LogNavNeighbors,
   LogPath,
   MissionDetail,
   MissionLogDetail,
@@ -143,6 +145,42 @@ export async function getLogBySlug(
     },
     ["getLogBySlug", slug],
     { tags: [cacheTags.missionLogs, cacheTags.log(slug)] },
+  )();
+}
+
+// Vor-/Zurück-Navigation zwischen den Logs desselben Autors. Sortiert
+// chronologisch nach Datum → Session-Nr (Logs ohne Datum/Session ans Ende);
+// prev = das ältere, next = das neuere Nachbar-Log. Gibt {null,null} zurück,
+// wenn der Autor unbekannt ist oder das Log nicht (mehr) zum Autor gehört.
+export async function getAuthorLogNav(
+  authorSlug: string,
+  currentSlug: string,
+): Promise<LogNavNeighbors> {
+  return unstable_cache(
+    async (): Promise<LogNavNeighbors> => {
+      const logs = await sql<LogNavItem[]>`
+        SELECT
+          ml.slug,
+          m.slug  AS mission_slug,
+          ml.title,
+          ml.session_nr,
+          ml.log_date::text AS log_date
+        FROM mission_logs ml
+        JOIN missions m   ON m.id = ml.mission_id
+        JOIN characters c ON c.id = ml.author_id
+        WHERE c.slug = ${authorSlug}
+        ORDER BY ml.log_date ASC NULLS LAST, ml.session_nr ASC NULLS LAST, ml.id ASC
+      `;
+
+      const i = logs.findIndex((l) => l.slug === currentSlug);
+      if (i === -1) return { prev: null, next: null };
+      return {
+        prev: logs[i - 1] ?? null,
+        next: logs[i + 1] ?? null,
+      };
+    },
+    ["getAuthorLogNav", authorSlug, currentSlug],
+    { tags: [cacheTags.missionLogs, cacheTags.character(authorSlug)] },
   )();
 }
 
