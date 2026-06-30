@@ -18,7 +18,7 @@ export default function DialogueList({
   const [participant, setParticipant] = useState<string | null>(
     initialParticipant,
   );
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   // Distinkte Teilnehmer über alle Gespräche (für die Auswahl).
   const participants = useMemo(() => {
@@ -46,23 +46,25 @@ export default function DialogueList({
 
   return (
     <div>
-      {participants.length > 0 && (
-        <select
-          className="mission-author-filter mb-[16px]"
-          value={participant ?? ""}
-          onChange={(e) => setParticipant(e.target.value || null)}
-          aria-label="Nach Teilnehmer filtern"
-        >
-          <option value="">Alle Teilnehmer</option>
-          {participants.map((p) => (
-            <option key={p.slug} value={p.slug}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      )}
+      <div className="flex max-w-[500px]">
+        {participants.length > 0 && (
+          <select
+            className="mission-author-filter mb-[16px] mr-[5px]"
+            value={participant ?? ""}
+            onChange={(e) => setParticipant(e.target.value || null)}
+            aria-label="Nach Teilnehmer filtern"
+          >
+            <option value="">Alle Teilnehmer</option>
+            {participants.map((p) => (
+              <option key={p.slug} value={p.slug}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+        )}
 
-      <SortDirSwitch dir={sortDir} onChange={setSortDir} />
+        <SortDirSwitch dir={sortDir} onChange={setSortDir} />
+      </div>
 
       {list.length === 0 ? (
         <p className="char-file-bio-empty">
@@ -93,7 +95,7 @@ function SortDirSwitch({
   ];
 
   return (
-    <div className="flex gap-[10px] w-full mb-[16px]">
+    <div className="flex gap-[5px] w-full mb-[16px]">
       {options.map((opt) => {
         const isActive = dir === opt.key;
         return (

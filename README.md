@@ -126,9 +126,13 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run build`     | Erstellt den Produktions-Build                     |
 | `npm run start`     | Startet den Produktionsserver                      |
 | `npm run lint`      | Führt ESLint aus                                   |
-| `npm run db:setup`  | Legt das Datenbankschema an (`scripts/schema.sql`) |
-| `npm run db:ingest` | Importiert den Markdown-Vault in die Datenbank     |
-| `npm run db:reset`  | Setzt die Datenbank zurück                         |
+| `npm run db:setup`      | Legt das Datenbankschema an (`scripts/schema.sql`)        |
+| `npm run db:ingest`     | Importiert den kompletten Markdown-Vault                  |
+| `npm run db:characters` | Importiert nur die Charaktere                            |
+| `npm run db:missions`   | Importiert nur Missionen + Mission-Logs                  |
+| `npm run db:archive`    | Importiert nur die Archiv-Einträge                       |
+| `npm run db:revalidate` | Invalidiert nur die Caches (siehe `SITE_URL`)            |
+| `npm run db:reset`      | Setzt die Datenbank zurück                                |
 
 ---
 

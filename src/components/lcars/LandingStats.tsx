@@ -2,18 +2,7 @@ import { getDBStats } from "@/lib/stats";
 import LcarsDataRow from "@/components/lcars/DataRow";
 
 export default async function LandingStats() {
-  const {
-    characterCount,
-    sessionCount,
-    entryCount,
-    dialogueCount,
-    factionCount,
-    itemCount,
-    loreCount,
-    speciesCount,
-    locationCount,
-    npcCount,
-  } = await getDBStats();
+  const { characterCount, sessionCount, entryCount } = await getDBStats();
 
   return (
     <div className="flex flex-col gap-[8px] mt-[8px]">
@@ -41,55 +30,6 @@ export default async function LandingStats() {
       <LcarsDataRow
         value={entryCount}
         label="Archiv-Einträge"
-        accentColor="var(--lcars-blue)"
-        color="var(--lcars-red)"
-        href="/archive"
-      />
-      <LcarsDataRow
-        value={dialogueCount}
-        label="Gespräche"
-        accentColor="var(--lcars-blue)"
-        color="var(--lcars-red)"
-        href="/archive"
-      />
-      <LcarsDataRow
-        value={npcCount}
-        label="NPCs"
-        accentColor="var(--lcars-blue)"
-        color="var(--lcars-red)"
-        href="/archive"
-      />
-      <LcarsDataRow
-        value={factionCount}
-        label="Fraktionen"
-        accentColor="var(--lcars-blue)"
-        color="var(--lcars-red)"
-        href="/archive"
-      />
-      <LcarsDataRow
-        value={locationCount}
-        label="Orte"
-        accentColor="var(--lcars-blue)"
-        color="var(--lcars-red)"
-        href="/archive"
-      />
-      <LcarsDataRow
-        value={itemCount}
-        label="Gegenstände"
-        accentColor="var(--lcars-blue)"
-        color="var(--lcars-red)"
-        href="/archive"
-      />
-      <LcarsDataRow
-        value={speciesCount}
-        label="Spezies"
-        accentColor="var(--lcars-blue)"
-        color="var(--lcars-red)"
-        href="/archive"
-      />
-      <LcarsDataRow
-        value={loreCount}
-        label="Lore-Einträge"
         accentColor="var(--lcars-blue)"
         color="var(--lcars-red)"
         href="/archive"

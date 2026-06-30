@@ -706,7 +706,7 @@
   gap: 16px;
   margin-top: 9px;
   font-family: var(--font-share-tech-mono), monospace;
-  font-size: 11px;
+  font-size: 14px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--lcars-text-contrast);
@@ -1405,17 +1405,17 @@
 .archive-dialogue-label {
   flex: 0 0 92px;
   font-family: var(--font-share-tech-mono), monospace;
-  font-size: 11px;
+  font-size: 14px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-text);
 }
 .archive-dialogue-row .archive-related-grid {
   margin-top: 0;
 }
 .archive-dialogue-value {
   font-family: var(--font-share-tech-mono), monospace;
-  font-size: 13px;
+  font-size: 14px;
   color: var(--lcars-text-data);
 }
 

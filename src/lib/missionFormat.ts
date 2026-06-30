@@ -14,18 +14,20 @@ export const STATUS_CONFIG: Record<
 
 // Farbzyklus für die Autor-Gruppen-Header in der Log-Liste.
 export const AUTHOR_COLORS = [
-  "var(--lcars-blue)",
+  "var(--lcars-amber-light)",
   "var(--lcars-purple)",
   "var(--lcars-orange)",
-  "var(--lcars-green)",
+  "var(--lcars-blue)",
   "var(--lcars-amber)",
   "var(--lcars-red)",
 ];
 
-// ISO-Datum (2400-09-15) → LCARS-Punktnotation (2400.09.15)
+// ISO-Datum (2400-09-15) → DD.MM.YYYY (15.09.2400)
 export function fmtDate(d: string | null): string {
   if (!d) return "";
-  return d.slice(0, 10).replace(/-/g, ".");
+  const [year, month, day] = d.slice(0, 10).split("-");
+  if (!year || !month || !day) return "";
+  return `${day}.${month}.${year}`;
 }
 
 // Zeitraum-Label. Offenes Ende → "LAUFEND".

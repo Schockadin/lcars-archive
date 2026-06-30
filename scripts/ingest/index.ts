@@ -49,7 +49,11 @@ async function triggerRevalidation() {
   }
 }
 
-async function main() {
+// Granular aufrufbare Schritte. "missions" umfasst Missionen + Mission-Logs.
+const STEPS = ["characters", "missions", "archive"] as const;
+type Step = (typeof STEPS)[number];
+
+async function runIngest(steps: Step[]) {
   // Ingest verbindet sich direkt mit Postgres und umgeht pgBouncer: Bulk-Writes
   // und Prepared Statements sind auf einer Direktverbindung am effizientesten.
   // DIRECT_DATABASE_URL sollte auf den direkten Postgres-Endpoint zeigen (nicht
@@ -72,12 +76,15 @@ async function main() {
 
   console.log("🚀 Starte Ingestion...");
   console.log(`📂 Vault: ${vaultPath}`);
+  console.log(`📦 Schritte: ${steps.join(", ")}`);
 
   try {
-    await ingestCharacters(sql, vaultPath);
-    await ingestMissions(sql, vaultPath);
-    await ingestMissionLogs(sql, vaultPath);
-    await ingestArchive(sql, vaultPath);
+    if (steps.includes("characters")) await ingestCharacters(sql, vaultPath);
+    if (steps.includes("missions")) {
+      await ingestMissions(sql, vaultPath);
+      await ingestMissionLogs(sql, vaultPath);
+    }
+    if (steps.includes("archive")) await ingestArchive(sql, vaultPath);
     console.log("\n✅ Ingestion abgeschlossen");
     await triggerRevalidation();
   } catch (error) {
@@ -86,6 +93,35 @@ async function main() {
   } finally {
     await sql.end();
   }
+}
+
+// CLI:
+//   (ohne Argument)  → alle Schritte
+//   characters       → nur Charaktere
+//   missions         → Missionen + Mission-Logs
+//   archive          → nur Archiv-Einträge
+//   revalidate       → nur Cache invalidieren (keine DB-/Vault-Zugriffe)
+async function main() {
+  const arg = process.argv[2];
+
+  if (arg === "revalidate") {
+    await triggerRevalidation();
+    return;
+  }
+
+  let steps: Step[];
+  if (!arg) {
+    steps = [...STEPS];
+  } else if ((STEPS as readonly string[]).includes(arg)) {
+    steps = [arg as Step];
+  } else {
+    console.error(
+      `Unbekanntes Argument "${arg}". Erlaubt: ${STEPS.join(", ")}, revalidate (oder ohne Argument für alles).`,
+    );
+    process.exit(1);
+  }
+
+  await runIngest(steps);
 }
 
 main();
