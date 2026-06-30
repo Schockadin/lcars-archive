@@ -17,6 +17,7 @@ const sql =
     ssl: { rejectUnauthorized: false },
     max: 5,
     idle_timeout: 30,
+    connect_timeout: 10,
     prepare: false,
   });
 
