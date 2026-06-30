@@ -1,6 +1,7 @@
 import { Character } from "@/types/character";
 import { LcarsDataRow, LcarsToc, type TocHeading } from "@/components/lcars";
 import Link from "next/link";
+import CharacterPortrait from "./CharacterPortrait";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
 function slugify(text: string): string {
@@ -193,51 +194,10 @@ export default function CharacterHero({
         <div className="char-file-grid">
           {/* Portrait + Datenfelder */}
           <div className="min-w-0 char-file-colmid">
-            <div
-              className="relative w-full overflow-hidden character-portrait"
-              style={{
-                aspectRatio: "3 / 4",
-                backgroundColor: "var(--lcars-surface)",
-              }}
-            >
-              {character.portrait ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={character.portrait}
-                  alt={`Portrait von ${character.name}`}
-                  className="w-full h-full object-cover object-top"
-                />
-              ) : (
-                <div
-                  className="w-full h-full flex flex-col items-center justify-center gap-2"
-                  style={{ color: "var(--lcars-text-dim)" }}
-                >
-                  <svg
-                    width="56"
-                    height="68"
-                    viewBox="0 0 56 68"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <circle
-                      cx="28"
-                      cy="20"
-                      r="16"
-                      fill="currentColor"
-                      opacity="0.3"
-                    />
-                    <path
-                      d="M0 68 C0 44 56 44 56 68Z"
-                      fill="currentColor"
-                      opacity="0.3"
-                    />
-                  </svg>
-                  <span className="text-[10px] uppercase tracking-[.3em] opacity-50">
-                    Kein Bild
-                  </span>
-                </div>
-              )}
-            </div>
+            <CharacterPortrait
+              portrait={character.portrait}
+              name={character.name}
+            />
 
             {/* Schnellzugriffe direkt unter dem Bild: Logs + Gespräche des
                 Charakters, jeweils mit Anzahl. Gespräche verlinkt auf die
