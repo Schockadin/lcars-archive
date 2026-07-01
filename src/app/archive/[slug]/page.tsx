@@ -55,10 +55,6 @@ export default async function ArchiveEntryPage({ params }: Props) {
       <CrumbLabel slug={entry.slug} label={title} />
       <LcarsReadingModeToggle />
 
-      <Link href={`/archive?cat=${entry.category}`} className="character-back">
-        ‹ {cfg.plural}
-      </Link>
-
       {entry.category === "dialogue" ? (
         <DialogueHeader entry={entry} title={title} label={cfg.label} />
       ) : (

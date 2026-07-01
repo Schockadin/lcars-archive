@@ -30,7 +30,7 @@ export default async function ArchivePage({
       {category ? (
         <div>
           <h1 className="lcars-data-row-heading">
-            {CATEGORY_CONFIG[category].plural}
+            {`${CATEGORY_CONFIG[category].plural}`}
           </h1>
           {list.length === 0 ? (
             <p className="char-file-bio-empty">
@@ -55,8 +55,8 @@ export default async function ArchivePage({
         </div>
       ) : (
         <div className="archive-placeholder">
-          <h1 className="lcars-data-row-heading">Archiv</h1>
-          <p className="lcars-eyebrow">Enzyklopädie der bekannten Welt</p>
+          {/* <h1 className="lcars-data-row-heading">Archiv</h1>
+          <p className="lcars-eyebrow">Enzyklopädie der bekannten Welt</p> */}
         </div>
       )}
     </>
