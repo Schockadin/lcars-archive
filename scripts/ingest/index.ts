@@ -3,6 +3,7 @@ import { ingestArchive } from "./archive.js";
 import { ingestCharacters } from "./characters.js";
 import { ingestMissionLogs } from "./missionLogs.js";
 import { ingestMissions } from "./missions.js";
+import { resolveWikiLinks } from "./wikilinks.js";
 
 // Nach erfolgreichem Ingest die Inhalts-Caches invalidieren (Schritt 3).
 // Erfordert SITE_URL + REVALIDATE_SECRET; fehlen diese, wird der Schritt
@@ -85,6 +86,10 @@ async function runIngest(steps: Step[]) {
       await ingestMissionLogs(sql, vaultPath);
     }
     if (steps.includes("archive")) await ingestArchive(sql, vaultPath);
+    // Läuft immer über den kompletten Datenbestand (nicht nur die gerade
+    // importierten Dateien), damit Wiki-Links auch dann aufgelöst werden,
+    // wenn ihr Ziel in einem früheren/anderen Lauf importiert wurde.
+    await resolveWikiLinks(sql);
     console.log("\n✅ Ingestion abgeschlossen");
     await triggerRevalidation();
   } catch (error) {
