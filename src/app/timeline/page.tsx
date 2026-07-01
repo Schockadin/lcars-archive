@@ -1,8 +1,19 @@
-"use client";
-import { usePageMeta } from "@/hooks/usePageMeta";
+import { getAllTimelineEvents } from "@/lib/timeline";
+import PageMeta from "@/components/PageMeta";
+import TimelineView from "./TimelineView";
 
-export default function TimelinePage() {
-  usePageMeta("Timeline", "timeline");
+export const metadata = {
+  title: {
+    default: "Timeline",
+  },
+};
 
-  return <h1></h1>;
+export default async function TimelinePage() {
+  const events = await getAllTimelineEvents();
+  return (
+    <>
+      <PageMeta title="Timeline" section="timeline" />
+      <TimelineView events={events} />
+    </>
+  );
 }

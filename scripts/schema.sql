@@ -109,6 +109,25 @@ ALTER TABLE archive_entries ADD CONSTRAINT archive_entries_category_check
     'theory', 'event', 'species', 'npc', 'dialogue', 'other'
   ));
 
+-- Timeline-Ereignisse: bei jedem Ingest komplett aus den <!-- timeline -->-
+-- Markierungen in den Vault-Dateien (+ automatisch aus missions.started_at)
+-- neu aufgebaut (siehe scripts/ingest/timeline.ts). Kein LLM, kein eigenes
+-- Frontmatter-Feld — rein deterministisch aus dem bereits importierten
+-- source_md der vier Content-Tabellen.
+CREATE TABLE IF NOT EXISTS timeline_events (
+  id          SERIAL PRIMARY KEY,
+  event_date  DATE NOT NULL,
+  title       TEXT NOT NULL,
+  category    TEXT NOT NULL DEFAULT 'sonstiges',
+  source_type TEXT NOT NULL
+                CHECK (source_type IN (
+                  'character', 'mission', 'mission_log', 'archive_entry'
+                )),
+  source_slug TEXT NOT NULL,
+  href        TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Indizes (IF NOT EXISTS ab PostgreSQL 9.5)
 CREATE INDEX IF NOT EXISTS idx_characters_status    ON characters(status);
 CREATE INDEX IF NOT EXISTS idx_characters_player    ON characters(player_id);
@@ -119,3 +138,5 @@ CREATE INDEX IF NOT EXISTS idx_archive_category     ON archive_entries(category)
 CREATE INDEX IF NOT EXISTS idx_archive_tags         ON archive_entries USING GIN(tags);
 CREATE INDEX IF NOT EXISTS idx_archive_links_source ON archive_links(source_id);
 CREATE INDEX IF NOT EXISTS idx_archive_links_target ON archive_links(target_id);
+CREATE INDEX IF NOT EXISTS idx_timeline_events_date   ON timeline_events(event_date);
+CREATE INDEX IF NOT EXISTS idx_timeline_events_source ON timeline_events(source_type, source_slug);

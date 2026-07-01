@@ -28,6 +28,7 @@ export function revalidateAllContent(): string[] {
     cacheTags.missions,
     cacheTags.missionLogs,
     cacheTags.archive,
+    cacheTags.timeline,
     cacheTags.stats,
   ]);
 }

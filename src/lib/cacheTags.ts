@@ -21,5 +21,7 @@ export const cacheTags = {
   archive: "archive",
   archiveEntry: (slug: string) => `archive:${slug}`,
 
+  timeline: "timeline",
+
   stats: "stats",
 } as const;
