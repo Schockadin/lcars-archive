@@ -10,7 +10,6 @@ export interface Mission {
   slug: string;
   title: string;
   status: MissionStatus;
-  summary: string | null;
   started_at: string | null;
   ended_at: string | null;
   metadata: MissionMetaData;
@@ -33,7 +32,8 @@ export interface MissionPreview {
   slug: string;
   title: string;
   status: MissionStatus;
-  summary: string | null;
+  // Aus den Mission-Logs generierter Fließtext (scripts/generate-synopsis.ts).
+  synopsis: string | null;
   started_at: string | null;
   ended_at: string | null;
   metadata: MissionMetaData;
@@ -47,7 +47,8 @@ export interface MissionDetail {
   slug: string;
   title: string;
   status: MissionStatus;
-  summary: string | null;
+  // Aus den Mission-Logs generierter Fließtext (scripts/generate-synopsis.ts).
+  synopsis: string | null;
   started_at: string | null;
   ended_at: string | null;
   metadata: MissionMetaData;

@@ -2,7 +2,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { MissionAuthor, MissionPreview } from "@/types/missions";
-import { STATUS_CONFIG, periodLabel, yearOf } from "@/lib/missionFormat";
+import {
+  STATUS_CONFIG,
+  periodLabel,
+  synopsisExcerpt,
+  yearOf,
+} from "@/lib/missionFormat";
 
 type SortDir = "desc" | "asc";
 
@@ -40,7 +45,9 @@ export default function MissionsOverview({
 
   const visible = useMemo(() => {
     const filtered = authorKey
-      ? missions.filter((m) => m.authors.some((a) => authorKeyOf(a) === authorKey))
+      ? missions.filter((m) =>
+          m.authors.some((a) => authorKeyOf(a) === authorKey),
+        )
       : missions;
     return [...filtered].sort((a, b) => cmpStart(a, b, sortDir));
   }, [missions, authorKey, sortDir]);
@@ -183,9 +190,15 @@ function MissionCard({ mission }: { mission: MissionPreview }) {
       <span className="mission-akte-rail" />
       <span className="mission-akte-body text-left">
         <span className="mission-akte-title block">{mission.title}</span>
-        {mission.summary && (
-          <span className="mission-akte-summary block">{mission.summary}</span>
-        )}
+        <span className="mission-akte-summary block">
+          {mission.synopsis ? (
+            synopsisExcerpt(mission.synopsis)
+          ) : (
+            <span className="char-file-bio-empty">
+              Keine Zusammenfassung vorhanden
+            </span>
+          )}
+        </span>
         <span className="mission-akte-meta">
           <span>
             <b>Code</b> {code}

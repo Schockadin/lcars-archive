@@ -81,3 +81,11 @@ export function stripHtml(html: string): string {
     .replace(/\s+/g, " ")
     .trim();
 }
+
+// Kurzer Anrisstext aus der generierten Synopsis für Listen/Karten —
+// Absatzumbrüche geglättet, hart bei maxLen gekappt (Wortgrenze).
+export function synopsisExcerpt(synopsis: string, maxLen = 200): string {
+  const flat = synopsis.replace(/\s+/g, " ").trim();
+  if (flat.length <= maxLen) return flat;
+  return flat.slice(0, flat.lastIndexOf(" ", maxLen)) + "…";
+}

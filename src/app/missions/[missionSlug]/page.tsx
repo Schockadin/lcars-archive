@@ -1,6 +1,5 @@
 import { notFound } from "next/navigation";
 import { getAllMissions, getMissionBySlug } from "@/lib/missions";
-import { stripHtml } from "@/lib/missionFormat";
 import MissionSynopsis from "../MissionSynopsis";
 
 interface Props {
@@ -19,10 +18,9 @@ export async function generateMetadata({ params }: Props) {
   const mission = await getMissionBySlug(missionSlug);
   if (!mission) return { title: "Nicht gefunden" };
 
-  const desc = mission.summary ?? stripHtml(mission.metadata.body ?? "");
   return {
     title: mission.title,
-    description: desc.slice(0, 160) || undefined,
+    description: mission.synopsis?.slice(0, 160) || undefined,
   };
 }
 

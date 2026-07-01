@@ -15,7 +15,6 @@ interface MissionFrontmatter {
   slug?: string;
   title?: string;
   status?: string;
-  summary?: string;
   started_at?: string;
   ended_at?: string;
   tags?: string[];
@@ -80,14 +79,13 @@ export async function ingestMissions(
       // Upsert: existiert → update, neu → insert
       await sql`
         INSERT INTO missions (
-          slug, title, status, summary,
+          slug, title, status,
           started_at, ended_at, metadata,
           source_md, frontmatter, updated_at
         ) VALUES (
           ${slug},
           ${fm.title.trim()},
           ${status},
-          ${fm.summary?.trim() || null},
           ${parseDate(fm.started_at)},
           ${parseDate(fm.ended_at)},
           ${sql.json(metadata)},
@@ -98,7 +96,6 @@ export async function ingestMissions(
         ON CONFLICT (slug) DO UPDATE SET
           title       = EXCLUDED.title,
           status      = EXCLUDED.status,
-          summary     = EXCLUDED.summary,
           started_at  = EXCLUDED.started_at,
           ended_at    = EXCLUDED.ended_at,
           metadata    = EXCLUDED.metadata,
