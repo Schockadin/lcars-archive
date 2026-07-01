@@ -10,6 +10,7 @@ import {
   byDateDesc,
   fmtDate,
   sessionLabel,
+  synopsisExcerpt,
 } from "@/lib/missionFormat";
 
 type LogSortMode = "date" | "author";
@@ -20,11 +21,11 @@ type DateDir = "desc" | "asc";
 // absteigend). Das aktive Log wird aus dem Pfad ermittelt.
 export default function MissionLogList({
   missionSlug,
-  summary,
+  synopsis,
   logs,
 }: {
   missionSlug: string;
-  summary: string | null;
+  synopsis: string | null;
   logs: MissionLogListItem[];
 }) {
   const [sort, setSort] = useState<LogSortMode>("author");
@@ -75,7 +76,15 @@ export default function MissionLogList({
         </Link>
       </div>
 
-      {summary && <p className="mission-loglist-summary">{summary}</p>}
+      <p className="mission-loglist-summary">
+        {synopsis ? (
+          synopsisExcerpt(synopsis)
+        ) : (
+          <span className="char-file-bio-empty">
+            Keine Zusammenfassung vorhanden
+          </span>
+        )}
+      </p>
 
       {/* oberste Zeile: zurück zur Synopsis der Mission */}
       <Link

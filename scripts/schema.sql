@@ -31,7 +31,6 @@ CREATE TABLE IF NOT EXISTS missions (
   title       TEXT NOT NULL,
   status      TEXT NOT NULL DEFAULT 'active'
                 CHECK (status IN ('active', 'completed', 'failed', 'abandoned')),
-  summary     TEXT,
   started_at  DATE,
   ended_at    DATE,
   metadata    JSONB NOT NULL DEFAULT '{}',
@@ -94,6 +93,12 @@ ALTER TABLE mission_logs    ADD COLUMN IF NOT EXISTS source_md   TEXT;
 ALTER TABLE mission_logs    ADD COLUMN IF NOT EXISTS frontmatter JSONB NOT NULL DEFAULT '{}';
 ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS source_md   TEXT;
 ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS frontmatter JSONB NOT NULL DEFAULT '{}';
+
+-- Automatisch aus den Mission-Logs generierte Synopsis (siehe
+-- scripts/generate-synopsis.ts). Ersetzt das frühere, manuell gepflegte
+-- summary-Feld — die Synopsis ist jetzt die einzige Zusammenfassung.
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS synopsis TEXT;
+ALTER TABLE missions DROP COLUMN IF EXISTS summary;
 
 -- Kategorie-CHECK erweitern (npc, dialogue). Bei bestehenden DBs greift das
 -- inline-CHECK von CREATE TABLE oben nicht — daher Constraint neu setzen.

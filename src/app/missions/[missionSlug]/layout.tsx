@@ -32,7 +32,7 @@ export default async function MissionDetailLayout({
       <aside className="mission-detail-logs lcars-scroll">
         <MissionLogList
           missionSlug={mission.slug}
-          summary={mission.summary}
+          synopsis={mission.synopsis}
           logs={logs}
         />
       </aside>
