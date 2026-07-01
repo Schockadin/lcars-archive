@@ -1,5 +1,4 @@
 import { LcarsHeaderBar } from ".";
-import BreadcrumbNav from "./BreadCrumbNav";
 import HeaderSearch from "./HeaderSearch";
 
 export default function Header() {
@@ -15,9 +14,8 @@ export default function Header() {
       <div className="lcars-header-content">
         <div className="lcars-header-top">
           <div className="lcars-header-title uppercase">Neo Archiv</div>
-          <HeaderSearch />
         </div>
-        <BreadcrumbNav />
+        <HeaderSearch />
       </div>
       <LcarsHeaderBar />
     </header>

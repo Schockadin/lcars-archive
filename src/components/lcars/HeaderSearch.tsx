@@ -1,11 +1,5 @@
 "use client";
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { SearchResult } from "@/types/search";
@@ -96,10 +90,7 @@ export default function HeaderSearch() {
     if (!showDropdown) return;
     const onDown = (e: MouseEvent) => {
       const t = e.target as Node;
-      if (
-        !inputRef.current?.contains(t) &&
-        !dropdownRef.current?.contains(t)
-      ) {
+      if (!inputRef.current?.contains(t) && !dropdownRef.current?.contains(t)) {
         setFocused(false);
       }
     };
@@ -160,7 +151,7 @@ export default function HeaderSearch() {
         ref={inputRef}
         type="search"
         className="lcars-search-input"
-        placeholder="Archiv durchsuchen …"
+        placeholder="Archiv durchsuchen…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => setFocused(true)}

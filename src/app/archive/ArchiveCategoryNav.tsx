@@ -1,8 +1,8 @@
 "use client";
-import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { ArchiveCategory } from "@/types/archive";
 import { CATEGORY_CONFIG, CATEGORY_ORDER } from "@/lib/archiveFormat";
+import { LcarsDataRow } from "@/components/lcars";
 
 // Linke, persistente Kategorien-Liste der Archiv-Übersicht. Die aktive
 // Kategorie wird aus ?cat= ermittelt — oder, auf einer Detailseite, aus der
@@ -35,26 +35,21 @@ export default function ArchiveCategoryNav({
   })).filter((c) => c.count > 0);
 
   return (
-    <nav className="archive-nav">
-      <div className="mission-loglist-head">
-        <Link href="/archive" className="mission-loglist-back">
-          Archiv
-        </Link>
-      </div>
-      <p className="mission-logs-sub">Kategorien</p>
+    <nav className="h-full">
+      <div className="mt-[20px] lcars-heading">Kategorien</div>
 
       <div className="archive-cat-list">
         {cats.map((c) => (
-          <Link
-            key={c.cat}
+          <LcarsDataRow
+            value={c.count}
+            label={c.plural}
             href={`/archive?cat=${c.cat}`}
-            className="archive-cat"
             data-active={activeCategory === c.cat ? "true" : "false"}
-            style={{ "--cat-color": c.color } as React.CSSProperties}
-          >
-            <span className="archive-cat-count">{c.count}</span>
-            <span className="archive-cat-label">{c.plural}</span>
-          </Link>
+            color={c.color}
+            accentColor="var(--lcars-amber-light)"
+            key={c.cat}
+            className="w-[100%]"
+          />
         ))}
       </div>
     </nav>

@@ -46,7 +46,7 @@ export default function DialogueList({
 
   return (
     <div>
-      <div className="flex max-w-[500px]">
+      <div className="flex lcars-filters max-w-[500px]">
         {participants.length > 0 && (
           <select
             className="mission-author-filter mb-[16px] mr-[5px]"

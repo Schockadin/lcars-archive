@@ -1,16 +1,14 @@
 import Link from "next/link";
-import { LogNavItem, LogNavNeighbors, MissionLogDetail } from "@/types/missions";
+import {
+  LogNavItem,
+  LogNavNeighbors,
+  MissionLogDetail,
+} from "@/types/missions";
 import { fmtDate, sessionLabel } from "@/lib/missionFormat";
 import { LcarsReadingModeToggle } from "@/components/lcars";
 
 // Ein Sprung zum Nachbar-Log desselben Autors. `dir` steuert Pfeil + Ausrichtung.
-function LogNavLink({
-  item,
-  dir,
-}: {
-  item: LogNavItem;
-  dir: "prev" | "next";
-}) {
+function LogNavLink({ item, dir }: { item: LogNavItem; dir: "prev" | "next" }) {
   const meta = [sessionLabel(item.session_nr), fmtDate(item.log_date)]
     .filter(Boolean)
     .join(" · ");
@@ -45,13 +43,10 @@ export default function LogDetail({
   const hasNav = nav && (nav.prev || nav.next);
 
   return (
-    <article className="mission-detail-article">
+    <article className="mission-detail-article mb-[16px]">
       <LcarsReadingModeToggle />
       <header className="mission-detail-header">
         <div className="mission-detail-logmeta">
-          <span className="mission-detail-session">
-            {sessionLabel(log.session_nr)}
-          </span>
           {log.log_date && <span>{fmtDate(log.log_date)}</span>}
           {log.author_name && (
             <span>

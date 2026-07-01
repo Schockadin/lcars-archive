@@ -18,16 +18,19 @@
   justify-content: space-between;
   padding-top: 5px;
   padding-bottom: 5px;
+  gap: 12px;
 }
 
 /* Titelzeile + globale Suche nebeneinander. */
 .lcars-header-top {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  height: calc(var(--lcars-header-h) - var(--lcars-bar-h) - 10px);
+  /* align-items: center; */
+  /* justify-content: space-between; */
   gap: 16px;
   width: 100%;
   min-width: 0;
+  flex-direction: column;
 }
 
 /* ── Globale Suche (Header) ──────────────────────────────────────── */
@@ -39,11 +42,14 @@
   flex: 0 1 320px;
   min-width: 0;
   height: 34px;
+  max-height: 34px;
   padding: 0 12px;
   background: var(--lcars-surface);
-  border: 1px solid transparent;
+  border: 1px solid var(--lcars-text);
   border-radius: 100vmax;
   color: var(--lcars-text-dim);
+  max-width: 250px;
+  margin-bottom: 5px;
 }
 .lcars-search:focus-within {
   border-color: var(--lcars-blue);
@@ -63,7 +69,7 @@
   font-size: 14px;
 }
 .lcars-search-input::placeholder {
-  color: var(--lcars-text-dim);
+  color: var(--lcars-text);
 }
 .lcars-search-input::-webkit-search-cancel-button {
   -webkit-appearance: none;
@@ -699,16 +705,26 @@
 .lcars-switch {
   cursor: pointer;
   height: 30px;
-  font-size: 16px;
+  font-size: clamp(12px, 16px, 16px);
   font-weight: bolder;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   transition: 200ms;
-  /* text-align: center; */
   display: flex;
   align-items: center;
   justify-content: center;
   border: solid 1px var(--lcars-text-data);
+}
+
+.lcars-filters {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .lcars-filters {
+    flex-direction: row;
+  }
 }
 
 /* ── Missions-Toolbar (Sortierung + Autor-Filter) ────────────────── */
@@ -1264,8 +1280,9 @@
 /* Extra-Small (≤ 480px): Sidebar auf 64px */
 @media (max-width: 480px) {
   :root {
-    --lcars-bar-width: 64px;
-    --lcars-elbow-size: 32px;
+    --lcars-header-h: 120px;
+    --lcars-bar-width: 40px;
+    --lcars-elbow-size: 20px;
     --lcars-bar-h: 10px;
     --lcars-title-size: 24px;
     --lcars-text-size: 16px;
@@ -1545,7 +1562,7 @@
   top: 5px;
   align-self: flex-start;
   max-height: calc(100dvh - 24px);
-  overflow-y: auto;
+  /* overflow-y: auto; */
 }
 .archive-browser-main {
   flex: 1 1 0;
@@ -1615,6 +1632,8 @@
 .archive-entry {
   width: 100%;
   max-width: 720px;
+  margin-bottom: 16px;
+  margin-top: 32px;
 }
 .archive-entry-head {
   margin: 10px 0 18px;

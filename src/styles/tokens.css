@@ -24,7 +24,7 @@
 
   /* Typografie-Farben */
   --lcars-text: #c8b8ff;
-  --lcars-text-dim: #6a5f9e;
+  --lcars-text-dim: hsl(250, 30%, 70%);
   --lcars-text-data: #4fc3f7;
   --lcars-text-contrast: #ededed;
   --lcars-text-light: #edefd2;
@@ -35,7 +35,7 @@
   --lcars-radius-card: 4px 12px 12px 4px;
   --lcars-elbow-size: 64px;
   --lcars-bar-width: 200px;
-  --lcars-header-h: 100px;
+  --lcars-header-h: 150px;
   --lcars-bar-h: 20px;
   --lcars-footer-h: 40px;
   --lcars-datarow-h: 40px;

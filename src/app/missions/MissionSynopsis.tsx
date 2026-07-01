@@ -17,15 +17,7 @@ export default function MissionSynopsis({
       >
         <h1 className="mission-detail-title">{mission.title}</h1>
         <div className="mission-detail-meta">
-          <span className="mission-detail-status">{cfg.label}</span>
-          <span>
-            <b>Zeitraum</b> {periodLabel(mission.started_at, mission.ended_at)}
-          </span>
-          {mission.metadata.tags.length > 0 && (
-            <span>
-              <b>Tags</b> {mission.metadata.tags.join(", ")}
-            </span>
-          )}
+          <b>Zeitraum</b> {periodLabel(mission.started_at, mission.ended_at)}
         </div>
       </header>
 
