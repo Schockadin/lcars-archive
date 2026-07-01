@@ -20,6 +20,113 @@
   padding-bottom: 5px;
 }
 
+/* Titelzeile + globale Suche nebeneinander. */
+.lcars-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* ── Globale Suche (Header) ──────────────────────────────────────── */
+
+.lcars-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 320px;
+  min-width: 0;
+  height: 34px;
+  padding: 0 12px;
+  background: var(--lcars-surface);
+  border: 1px solid transparent;
+  border-radius: 100vmax;
+  color: var(--lcars-text-dim);
+}
+.lcars-search:focus-within {
+  border-color: var(--lcars-blue);
+}
+.lcars-search-icon {
+  flex: 0 0 auto;
+}
+.lcars-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 8px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--lcars-text-light);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 14px;
+}
+.lcars-search-input::placeholder {
+  color: var(--lcars-text-dim);
+}
+.lcars-search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.lcars-search-dropdown {
+  position: fixed;
+  z-index: 1000;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 6px;
+  background: var(--lcars-surface);
+  border: 2px solid var(--lcars-purple);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+.lcars-search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+.lcars-search-item[aria-selected="true"] {
+  background: rgba(205, 154, 205, 0.18);
+}
+.lcars-search-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.lcars-search-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lcars-search-label {
+  font-size: 14px;
+  color: var(--lcars-text-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lcars-search-sub {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--lcars-text-dim);
+}
+.lcars-search-empty {
+  padding: 10px 12px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+  color: var(--lcars-text-dim);
+}
+
 /* ── Elbows ──────────────────────────────────────────────────────── */
 
 .lcars-elbow-bar {
@@ -1007,6 +1114,71 @@
   }
 }
 
+/* ── Lesemodus (nur mobil) ───────────────────────────────────────── */
+
+/* Umschalt-Button: nur auf schmalen Displays sichtbar. */
+.reading-mode-toggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .reading-mode-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 8px 16px;
+    font-family: var(--font-share-tech-mono), monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--lcars-bg);
+    background: var(--lcars-amber);
+    border: none;
+    border-radius: 100vmax;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .reading-mode-toggle[aria-pressed="true"] {
+    background: var(--lcars-purple);
+  }
+  .reading-mode-toggle:hover {
+    background: var(--lcars-blue);
+  }
+
+  /* Aktiver Lesemodus: LCARS-Chrome ausblenden … */
+  .reading-mode > aside {
+    display: none; /* Haupt-Sidebar */
+  }
+  .reading-mode > div > header,
+  .reading-mode > div > footer {
+    display: none; /* Elbow-Bar oben + Footer-Bar unten */
+  }
+  .reading-mode .mission-detail-logs,
+  .reading-mode .archive-browser-nav {
+    display: none; /* sekundäre Listen-Navigation */
+  }
+
+  /* … und die Lesbarkeit der Inhaltsspalte erhöhen. */
+  .reading-mode .lcars-main-content {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .reading-mode .mission-detail-article,
+  .reading-mode .archive-entry,
+  .reading-mode .char-file {
+    max-width: 680px;
+    margin-inline: auto;
+  }
+  .reading-mode .lcars-text {
+    font-size: 17px;
+    line-height: 1.75;
+  }
+  .reading-mode .lcars-text > * + * {
+    margin-top: 1em;
+  }
+}
+
 /* ── Responsive Overrides ────────────────────────────────────────── */
 
 /* Small (≤ 768px): Sidebar auf 100px */
@@ -1046,6 +1218,14 @@
 
   .character-entry {
     width: 350px;
+  }
+
+  /* Suche bekommt Vorrang, Titel schrumpft. */
+  .lcars-header-title {
+    font-size: 28px;
+  }
+  .lcars-search {
+    flex-basis: 190px;
   }
 }
 
@@ -1099,6 +1279,9 @@
   }
   .lcars-footer-menu {
     min-width: 50px;
+  }
+  .lcars-header-title {
+    font-size: 22px;
   }
   .lcars-data-row {
     width: 200px;

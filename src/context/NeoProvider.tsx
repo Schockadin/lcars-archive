@@ -12,6 +12,9 @@ export function NeoProvider({ children }: NeoProviderProps) {
   const [activeSection, setActiveSection] = useState<NavKey>("home");
   const [title, setTitle] = useState<string>("Home");
   const [crumbLabels, setCrumbLabels] = useState<Record<string, string>>({});
+  const [readingMode, setReadingMode] = useState<boolean>(false);
+
+  const toggleReadingMode = useCallback(() => setReadingMode((v) => !v), []);
 
   // Stabil gehalten (useCallback), damit Effekte in den Setzer-Komponenten
   // nicht bei jedem Render neu laufen.
@@ -37,6 +40,9 @@ export function NeoProvider({ children }: NeoProviderProps) {
     crumbLabels,
     setCrumbLabel,
     clearCrumbLabel,
+    readingMode,
+    setReadingMode,
+    toggleReadingMode,
   };
 
   return <NeoContext.Provider value={value}>{children}</NeoContext.Provider>;

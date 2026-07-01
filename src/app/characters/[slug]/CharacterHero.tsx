@@ -1,5 +1,10 @@
 import { Character } from "@/types/character";
-import { LcarsDataRow, LcarsToc, type TocHeading } from "@/components/lcars";
+import {
+  LcarsDataRow,
+  LcarsToc,
+  LcarsReadingModeToggle,
+  type TocHeading,
+} from "@/components/lcars";
 import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
 
@@ -261,6 +266,7 @@ export default function CharacterHero({
 
           {/* Name + Biografie */}
           <div className="min-w-0">
+            <LcarsReadingModeToggle />
             <h1 className="char-file-name">{character.name}</h1>
             {metadata.aliases.length > 0 && (
               <p className="char-file-aliases">
