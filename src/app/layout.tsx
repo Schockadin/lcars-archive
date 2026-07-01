@@ -32,7 +32,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="de" className={`${antonio.variable} ${shareTechMono.variable}`}>
+    <html
+      lang="de"
+      className={`${antonio.variable} ${shareTechMono.variable}`}
+      suppressHydrationWarning
+    >
       <body>
         <NeoProvider>
           <LcarsAppShell>{children}</LcarsAppShell>
