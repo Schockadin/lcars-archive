@@ -15,3 +15,4 @@ export { default as LcarsToc, type TocHeading } from "./Toc";
 export { default as LcarsSkeleton } from "./Skeleton";
 export { default as LcarsAppShell } from "./AppShell";
 export { default as LcarsReadingModeToggle } from "./ReadingModeToggle";
+export { default as LcarsHeaderSearch } from "./HeaderSearch";
