@@ -10,8 +10,10 @@ export const dynamic = "force-dynamic";
 const PER_TYPE_LIMIT = 6;
 
 // Globale Suche über alle Eintragstypen (Charaktere, Missionen, Mission-Logs,
-// Archiv-Einträge). Reine Namens-/Titelsuche per ILIKE — keine DB-Änderungen
-// nötig. Präfix-Treffer werden vor Teilstring-Treffern einsortiert.
+// Archiv-Einträge) per ILIKE — keine DB-Änderungen nötig. Bei Logs und
+// Archiv-Einträgen wird auch der Volltext (content) durchsucht, nicht nur der
+// Titel, sonst fehlen Treffer, die nur im Log-/Gesprächstext vorkommen.
+// Präfix-Treffer auf den Titel werden vor reinen Volltext-Treffern einsortiert.
 export async function GET(req: NextRequest) {
   const q = req.nextUrl.searchParams.get("q")?.trim() ?? "";
   if (q.length < 2) return NextResponse.json({ results: [] });
@@ -46,7 +48,7 @@ export async function GET(req: NextRequest) {
         SELECT ml.title, ml.slug, m.slug AS mission_slug, m.title AS mission_title
         FROM mission_logs ml
         JOIN missions m ON m.id = ml.mission_id
-        WHERE ml.title ILIKE ${like}
+        WHERE ml.title ILIKE ${like} OR ml.content ILIKE ${like}
         ORDER BY (ml.title ILIKE ${prefix}) DESC, ml.title ASC
         LIMIT ${PER_TYPE_LIMIT}
       `,
@@ -61,6 +63,7 @@ export async function GET(req: NextRequest) {
         SELECT title, slug, category, metadata->>'setting' AS setting
         FROM archive_entries
         WHERE title ILIKE ${like}
+           OR content ILIKE ${like}
            OR (category = 'dialogue' AND metadata->>'setting' ILIKE ${like})
         ORDER BY (title ILIKE ${prefix}) DESC, title ASC
         LIMIT ${PER_TYPE_LIMIT}
