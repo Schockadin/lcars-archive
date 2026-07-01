@@ -116,9 +116,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
 }
 
 function StandardHeader({
-  entry,
   title,
-  label,
 }: {
   entry: ArchiveEntryDetail;
   title: string;
@@ -126,17 +124,7 @@ function StandardHeader({
 }) {
   return (
     <header className="archive-entry-head">
-      <span className="archive-entry-badge">{label}</span>
-      <h1 className="char-file-name">{title}</h1>
-      {entry.tags.length > 0 && (
-        <div className="archive-entry-tags">
-          {entry.tags.map((tag) => (
-            <span key={tag} className="archive-entry-tag">
-              {tag}
-            </span>
-          ))}
-        </div>
-      )}
+      <h1 className="char-file-name text-left">{title}</h1>
     </header>
   );
 }
