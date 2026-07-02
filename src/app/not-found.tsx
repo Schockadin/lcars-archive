@@ -1,6 +1,5 @@
 // src/app/not-found.tsx
 import { LcarsMenuItem } from "@/components/lcars";
-import Link from "next/link";
 
 export default function NotFound() {
   return (

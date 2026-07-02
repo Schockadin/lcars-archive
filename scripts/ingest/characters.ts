@@ -5,7 +5,6 @@ import postgres from "postgres";
 import {
   markdownToHtml,
   validateSlug,
-  parseDate,
   toStringArray,
   toNumberArray,
 } from "./shared.js";
