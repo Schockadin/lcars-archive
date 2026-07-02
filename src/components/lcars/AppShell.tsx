@@ -7,7 +7,13 @@ import LcarsFooter from "./Footer";
 
 // Grundgerüst der App. Liegt innerhalb des NeoProviders, damit der Lesemodus
 // (nur mobil) per Klasse die LCARS-Chrome ausblenden kann.
-export default function AppShell({ children }: { children: React.ReactNode }) {
+export default function AppShell({
+  children,
+  appVersion,
+}: {
+  children: React.ReactNode;
+  appVersion: string | null;
+}) {
   const { readingMode } = useNeo();
 
   return (
@@ -18,7 +24,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex flex-col flex-1 h-full overflow-hidden">
         <LcarsHeader />
         <LcarsMainContent>{children}</LcarsMainContent>
-        <LcarsFooter />
+        <LcarsFooter appVersion={appVersion} />
       </div>
     </div>
   );

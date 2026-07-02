@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
+    "dev": "node --env-file=.env.dev scripts/dev.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -14,7 +14,6 @@
     "db:characters": "tsx --env-file=.env.local scripts/ingest/index.ts characters",
     "db:missions": "tsx --env-file=.env.local scripts/ingest/index.ts missions",
     "db:archive": "tsx --env-file=.env.local scripts/ingest/index.ts archive",
-    "db:synopsis": "tsx --env-file=.env.local scripts/generate-synopsis.ts",
     "db:revalidate": "tsx --env-file=.env.local scripts/ingest/index.ts revalidate",
     "db:reset": "tsx --env-file=.env.local scripts/reset-db.ts",
     "db:setup:dev": "tsx --env-file=.env.dev scripts/setup-db.ts",
@@ -23,12 +22,10 @@
     "db:characters:dev": "tsx --env-file=.env.dev scripts/ingest/index.ts characters",
     "db:missions:dev": "tsx --env-file=.env.dev scripts/ingest/index.ts missions",
     "db:archive:dev": "tsx --env-file=.env.dev scripts/ingest/index.ts archive",
-    "db:synopsis:dev": "tsx --env-file=.env.dev scripts/generate-synopsis.ts",
     "db:revalidate:dev": "tsx --env-file=.env.dev scripts/ingest/index.ts revalidate",
     "db:reset:dev": "tsx --env-file=.env.dev scripts/reset-db.ts"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.109.0",
     "gray-matter": "^4.0.3",
     "next": "^16.2.9",
     "next-mdx-remote": "^6.0.0",

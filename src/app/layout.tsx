@@ -3,6 +3,7 @@ import "./globals.css";
 import { LcarsAppShell } from "@/components/lcars";
 import { NeoProvider } from "@/context/NeoProvider";
 import { getCampaignYears } from "@/lib/constants";
+import { APP_VERSION } from "@/lib/version";
 
 const antonio = Antonio({
   subsets: ["latin"],
@@ -39,7 +40,7 @@ export default function RootLayout({
     >
       <body>
         <NeoProvider>
-          <LcarsAppShell>{children}</LcarsAppShell>
+          <LcarsAppShell appVersion={APP_VERSION}>{children}</LcarsAppShell>
         </NeoProvider>
       </body>
     </html>

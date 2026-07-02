@@ -21,13 +21,15 @@ export function HeaderBar() {
   );
 }
 
-export function FooterBar() {
+export function FooterBar({ appVersion }: { appVersion: string | null }) {
   return (
     <div className="lcars-elbow-bar">
       <div className="w-[25%] h-[var(--lcars-bar-h)] bg-[var(--lcars-purple)] mr-[5px]" />
       <div className="w-[15%] h-[var(--lcars-bar-h)] bg-[var(--lcars-blue)] mr-[5px]" />
       <div className="w-[5%] h-[var(--lcars-bar-h)] bg-[var(--lcars-orange)] mr-[5px]" />
-      <div className="w-[35%] h-[var(--lcars-bar-h)] bg-[var(--lcars-red)] mr-[5px]" />
+      <div className="w-[35%] h-[var(--lcars-bar-h)] bg-[var(--lcars-red)] mr-[5px] flex items-center justify-end px-[10px]">
+        {appVersion && <span className="lcars-footer-version">v{appVersion}</span>}
+      </div>
       <Link href="/impressum" className="lcars-footer-menu mr-[5px]">
         Impressum
       </Link>

@@ -5,6 +5,7 @@ import { MissionAuthor, MissionPreview } from "@/types/missions";
 import {
   STATUS_CONFIG,
   periodLabel,
+  stripHtml,
   synopsisExcerpt,
   yearOf,
 } from "@/lib/missionFormat";
@@ -191,8 +192,8 @@ function MissionCard({ mission }: { mission: MissionPreview }) {
       <span className="mission-akte-body text-left">
         <span className="mission-akte-title block">{mission.title}</span>
         <span className="mission-akte-summary block">
-          {mission.synopsis ? (
-            synopsisExcerpt(mission.synopsis)
+          {mission.metadata.body ? (
+            synopsisExcerpt(stripHtml(mission.metadata.body))
           ) : (
             <span className="char-file-bio-empty">
               Keine Zusammenfassung vorhanden

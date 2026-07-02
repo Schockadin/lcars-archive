@@ -82,8 +82,8 @@ export function stripHtml(html: string): string {
     .trim();
 }
 
-// Kurzer Anrisstext aus der generierten Synopsis für Listen/Karten —
-// Absatzumbrüche geglättet, hart bei maxLen gekappt (Wortgrenze).
+// Kurzer Anrisstext aus Fließtext für Listen/Karten — Absatzumbrüche
+// geglättet, hart bei maxLen gekappt (Wortgrenze).
 export function synopsisExcerpt(synopsis: string, maxLen = 200): string {
   const flat = synopsis.replace(/\s+/g, " ").trim();
   if (flat.length <= maxLen) return flat;

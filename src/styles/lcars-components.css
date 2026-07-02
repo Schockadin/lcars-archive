@@ -231,6 +231,15 @@
   background: var(--lcars-amber-light);
 }
 
+.lcars-footer-version {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--lcars-bg);
+  opacity: 0.75;
+  user-select: text;
+}
+
 /* ── Layout ──────────────────────────────────────────────────────── */
 
 .lcars-main-content {
@@ -882,6 +891,50 @@
   background: var(--lcars-border);
 }
 
+/* ── Timeline-Jahres-Rail ────────────────────────────────────────── */
+/* Eigenes Grid-Layout (nicht die Missions-Rail-Klassen oben), weil hier pro
+   Jahreswechsel ein Label exakt auf Höhe der ersten Karte dieses Jahres
+   sitzen muss — das lässt sich mit der rein dekorativen, unabhängig
+   fließenden Missions-Rail nicht abbilden. Rail-Zelle und Karte liegen als
+   Geschwister im selben Grid, dadurch immer in derselben Zeile ausgerichtet. */
+.timeline-chronik {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  column-gap: 20px;
+  row-gap: 14px;
+  padding-bottom: 5px;
+}
+.timeline-rail-cell {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 11px;
+}
+.timeline-rail-cell::before {
+  content: "";
+  position: absolute;
+  right: 7px;
+  top: 0;
+  bottom: -14px;
+  width: 2px;
+  background: var(--lcars-border);
+}
+.timeline-rail-cell--last::before {
+  bottom: 0;
+}
+.timeline-rail-year {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--lcars-bg);
+  background: var(--lcars-orange);
+  padding: 4px 10px;
+  border-radius: 10px 0 0 10px;
+  position: relative;
+  z-index: 1;
+}
+
 /* einzelne Einsatzakte (Button: öffnet die Log-Liste) */
 .mission-akte {
   display: flex;
@@ -1331,6 +1384,12 @@
     padding-left: 0;
   }
   .mission-list::before {
+    display: none;
+  }
+  .timeline-chronik {
+    grid-template-columns: 1fr;
+  }
+  .timeline-rail-cell {
     display: none;
   }
 }

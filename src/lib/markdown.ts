@@ -7,7 +7,14 @@ import remarkRehype from "remark-rehype";
 import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
 import { visit } from "unist-util-visit";
-import type { Root as MdastRoot, Parent as MdastParent, Text as MdastText, Link as MdastLink } from "mdast";
+import type {
+  Root as MdastRoot,
+  Parent as MdastParent,
+  Text as MdastText,
+  Link as MdastLink,
+  Html as MdastHtml,
+} from "mdast";
+import type { Handlers as MdastToHastHandlers } from "mdast-util-to-hast";
 
 // Obsidian-artige [[Ziel]] / [[Ziel|Anzeigetext]] / [[Ziel#Abschnitt|Text]]
 // Verweise. Der Abschnitt (#...) wird beim Auflösen aktuell ignoriert, nur
@@ -54,15 +61,68 @@ function remarkWikiLinks() {
   };
 }
 
+// <!-- timeline: ... -->-Marker. Geteilt mit scripts/ingest/timeline.ts, damit
+// Ingest (Ereignis-Reihenfolge dort) und Renderer (Sprungmarken-Reihenfolge
+// hier) beim Durchzählen der Marker in einer Datei niemals auseinanderlaufen.
+export const TIMELINE_MARKER_RE = /<!--\s*timeline\s*:(.*?)-->/gs;
+
+interface TimelineAnchorNode {
+  type: "timelineAnchor";
+  anchorId: string;
+}
+
+// Ersetzt jeden <!-- timeline: ... -->-Kommentar durch eine unsichtbare
+// Sprungmarke (<span id="timeline-N">) an genau der Stelle im gerenderten
+// HTML, an der der Kommentar im Markdown steht — so kann die Timeline-Seite
+// per Anker direkt dorthin verlinken. Die Nummerierung folgt der
+// Dokumentreihenfolge (1-basiert, jeder Marker zählt, auch ungültige) und
+// muss 1:1 mit parseTimelineMarkers() in scripts/ingest/timeline.ts
+// übereinstimmen, das dieselbe RegExp in derselben Reihenfolge über denselben
+// splitPrivate()-Text auswertet.
+function remarkTimelineAnchors() {
+  return (tree: MdastRoot) => {
+    let counter = 0;
+    visit(tree, "html", (node: MdastHtml, index, parent: MdastParent | null | undefined) => {
+      if (!parent || index == null) return;
+      const matches = node.value.match(TIMELINE_MARKER_RE);
+      if (!matches) return;
+
+      const anchors = matches.map((): TimelineAnchorNode => {
+        counter += 1;
+        return { type: "timelineAnchor", anchorId: `timeline-${counter}` };
+      });
+      parent.children.splice(index, 1, ...(anchors as unknown as MdastHtml[]));
+      return index + anchors.length;
+    });
+  };
+}
+
+const timelineAnchorHandlers = {
+  timelineAnchor: (_state: unknown, node: TimelineAnchorNode) => ({
+    type: "element",
+    tagName: "span",
+    properties: { id: node.anchorId },
+    children: [],
+  }),
+} as unknown as MdastToHastHandlers;
+
+// Markdown bis zum private-Kommentar kürzen (GM-only-Inhalt danach entfernen).
+// Von markdownToHtml genutzt, aber auch vom Timeline-Ingest (scripts/ingest/
+// timeline.ts), der <!-- timeline -->-Marker nur im öffentlichen Teil sucht.
+export function splitPrivate(markdown: string): string {
+  return markdown.split("<!-- private -->")[0].trim();
+}
+
 // Markdown bis zum private-Kommentar kürzen und zu HTML konvertieren
 export async function markdownToHtml(markdown: string): Promise<string> {
-  const publicContent = markdown.split("<!-- private -->")[0].trim();
+  const publicContent = splitPrivate(markdown);
 
   const result = await unified()
     .use(remarkParse)
     .use(remarkGfm)
     .use(remarkWikiLinks)
-    .use(remarkRehype)
+    .use(remarkTimelineAnchors)
+    .use(remarkRehype, { handlers: timelineAnchorHandlers })
     .use(rehypeSlug)
     .use(rehypeStringify)
     .process(publicContent);

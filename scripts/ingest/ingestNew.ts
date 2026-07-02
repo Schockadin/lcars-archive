@@ -16,6 +16,7 @@ import { ingestArchive } from "./archive.js";
 import { ingestCharacters } from "./characters.js";
 import { ingestMissionLogs } from "./missionLogs.js";
 import { ingestMissions } from "./missions.js";
+import { ingestTimeline } from "./timeline.js";
 import { resolveWikiLinks } from "./wikilinks.js";
 
 // Nach dem Ingest die Inhalts-Caches invalidieren — identische Logik wie in
@@ -86,6 +87,9 @@ async function main() {
     // Läuft immer über den kompletten Datenbestand, nicht nur die gerade neu
     // importierten Dateien — funktioniert unverändert wie beim Vollimport.
     await resolveWikiLinks(sql);
+    // Timeline ebenfalls immer komplett neu aufbauen — liest source_md/
+    // metadata aller vier Tabellen, nicht nur der gerade importierten.
+    await ingestTimeline(sql);
     console.log("\n✅ Ingestion abgeschlossen");
     await triggerRevalidation();
   } catch (error) {
