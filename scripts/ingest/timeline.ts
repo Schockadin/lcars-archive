@@ -39,6 +39,10 @@ interface TimelineEventInsert {
 
 const TIMELINE_MARKER_RE = /<!--\s*timeline\s*:(.*?)-->/gs;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+// Erkennt den häufigsten Fehler: Bindestrich statt Pipe zwischen Datum und
+// Titel (z.B. "2400-09-20 - Titel" statt "2400-09-20 | Titel") — gibt dann
+// einen gezielten Hinweis statt der generischen Fehlermeldung.
+const DATE_HYPHEN_MISTAKE_RE = /^\d{4}-\d{2}-\d{2}\s+[-–—]\s+\S/;
 
 // Alle <!-- timeline: ... -->-Marker im öffentlichen Teil eines Markdown-
 // Bodys einsammeln. Ungültige Marker (Datum/Titel fehlt oder falsch
@@ -56,8 +60,11 @@ function parseTimelineMarkers(
   while ((match = TIMELINE_MARKER_RE.exec(publicMd))) {
     const [date, title, category] = match[1].split("|").map((p) => p.trim());
     if (!date || !DATE_RE.test(date) || !title) {
+      const hint = DATE_HYPHEN_MISTAKE_RE.test(date ?? "")
+        ? " (sieht nach Bindestrich statt Pipe zwischen Datum und Titel aus – erwartet wird 'JJJJ-MM-TT | Titel')"
+        : "";
       warnings.push(
-        `Ungueltiger Marker "<!--timeline:${match[1].trim()}-->" - Datum (JJJJ-MM-TT) und Titel sind Pflicht`,
+        `Ungueltiger Marker "<!--timeline:${match[1].trim()}-->" - Datum (JJJJ-MM-TT) und Titel sind Pflicht${hint}`,
       );
       continue;
     }
