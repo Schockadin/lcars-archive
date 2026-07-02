@@ -22,7 +22,6 @@
     "db:characters:dev": "tsx --env-file=.env.dev scripts/ingest/index.ts characters",
     "db:missions:dev": "tsx --env-file=.env.dev scripts/ingest/index.ts missions",
     "db:archive:dev": "tsx --env-file=.env.dev scripts/ingest/index.ts archive",
-    "db:synopsis:dev": "tsx --env-file=.env.dev scripts/generate-synopsis.ts",
     "db:revalidate:dev": "tsx --env-file=.env.dev scripts/ingest/index.ts revalidate",
     "db:reset:dev": "tsx --env-file=.env.dev scripts/reset-db.ts"
   },
