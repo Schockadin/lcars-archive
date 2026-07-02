@@ -180,6 +180,7 @@ type Participant = {
 export async function ingestArchive(
   sql: postgres.Sql,
   vaultPath: string,
+  onlyNew = false,
 ): Promise<void> {
   const dir = join(vaultPath, "Archiv");
 
@@ -189,6 +190,7 @@ export async function ingestArchive(
 
   let success = 0;
   let skipped = 0;
+  let alreadyExists = 0;
   const errors: string[] = [];
 
   const slugToId = new Map<string, number>();
@@ -257,6 +259,22 @@ export async function ingestArchive(
         location: null as { slug: string; title: string } | null,
       };
 
+      // Im onlyNew-Modus wird ein bereits existierender Slug komplett
+      // übersprungen (DO NOTHING liefert dann keine Zeile zurück) — er wird
+      // dann auch nicht zu den unten aufgelösten Verweisen hinzugefügt,
+      // bestehende Verweise/Links bleiben unangetastet.
+      const conflictClause = onlyNew
+        ? sql`ON CONFLICT (slug) DO NOTHING`
+        : sql`ON CONFLICT (slug) DO UPDATE SET
+            title       = EXCLUDED.title,
+            category    = EXCLUDED.category,
+            content     = EXCLUDED.content,
+            tags        = EXCLUDED.tags,
+            metadata    = EXCLUDED.metadata,
+            source_md   = EXCLUDED.source_md,
+            frontmatter = EXCLUDED.frontmatter,
+            updated_at  = NOW()`;
+
       const [row] = await sql<{ id: number }[]>`
         INSERT INTO archive_entries (
           slug, title, category, content, tags, metadata,
@@ -272,17 +290,14 @@ export async function ingestArchive(
           ${sql.json(data)},
           NOW()
         )
-        ON CONFLICT (slug) DO UPDATE SET
-          title       = EXCLUDED.title,
-          category    = EXCLUDED.category,
-          content     = EXCLUDED.content,
-          tags        = EXCLUDED.tags,
-          metadata    = EXCLUDED.metadata,
-          source_md   = EXCLUDED.source_md,
-          frontmatter = EXCLUDED.frontmatter,
-          updated_at  = NOW()
+        ${conflictClause}
         RETURNING id
       `;
+
+      if (!row) {
+        alreadyExists++;
+        continue;
+      }
 
       slugToId.set(slug, row.id);
       slugTitle.set(slug, title);
@@ -465,7 +480,8 @@ export async function ingestArchive(
   }
 
   console.log(
-    `  → ${success} importiert, ${skipped} übersprungen, ${linkCount} Verweise`,
+    `  → ${success} importiert, ${skipped} übersprungen, ${linkCount} Verweise` +
+      (onlyNew ? `, ${alreadyExists} bereits vorhanden` : ""),
   );
   if (errors.length > 0) {
     console.error("\n  Hinweise:");
