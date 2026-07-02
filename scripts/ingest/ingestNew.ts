@@ -18,6 +18,7 @@ import { ingestMissionLogs } from "./missionLogs.js";
 import { ingestMissions } from "./missions.js";
 import { ingestTimeline } from "./timeline.js";
 import { resolveWikiLinks } from "./wikilinks.js";
+import { notifySubscribers } from "./notify.js";
 
 // Nach dem Ingest die Inhalts-Caches invalidieren — identische Logik wie in
 // scripts/ingest/index.ts. Erfordert SITE_URL + REVALIDATE_SECRET; fehlen
@@ -81,9 +82,15 @@ async function main() {
 
   try {
     await ingestCharacters(sql, vaultPath, true);
-    await ingestMissions(sql, vaultPath, true);
-    await ingestMissionLogs(sql, vaultPath, true);
-    await ingestArchive(sql, vaultPath, true);
+
+    const changedMissionSlugs = new Set<string>();
+    for (const slug of await ingestMissions(sql, vaultPath, true)) {
+      changedMissionSlugs.add(slug);
+    }
+    for (const slug of await ingestMissionLogs(sql, vaultPath, true)) {
+      changedMissionSlugs.add(slug);
+    }
+    const changedArchiveSlugs = await ingestArchive(sql, vaultPath, true);
     // Läuft immer über den kompletten Datenbestand, nicht nur die gerade neu
     // importierten Dateien — funktioniert unverändert wie beim Vollimport.
     await resolveWikiLinks(sql);
@@ -91,6 +98,7 @@ async function main() {
     // metadata aller vier Tabellen, nicht nur der gerade importierten.
     await ingestTimeline(sql);
     console.log("\n✅ Ingestion abgeschlossen");
+    await notifySubscribers(sql, changedMissionSlugs, changedArchiveSlugs);
     await triggerRevalidation();
   } catch (error) {
     console.error("\n❌ Fataler Fehler:", error);

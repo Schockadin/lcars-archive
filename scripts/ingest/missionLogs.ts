@@ -42,7 +42,11 @@ export async function ingestMissionLogs(
   sql: postgres.Sql,
   vaultPath: string,
   onlyNew = false,
-): Promise<void> {
+): Promise<Set<string>> {
+  // Mission-Slugs, die einen brandneuen Log bekommen haben (in beiden Modi
+  // relevant — Abonnenten einer Mission sollen auch bei "nur neue Dateien"-
+  // Läufen benachrichtigt werden).
+  const missionsWithNewLogs = new Set<string>();
   const dir = join(vaultPath, "Missionen");
 
   const missionDirs = readdirSync(dir).filter((entry) =>
@@ -199,6 +203,10 @@ export async function ingestMissionLogs(
         continue;
       }
 
+      if (!existingRow) {
+        missionsWithNewLogs.add(fm.mission.trim());
+      }
+
       console.log(`  ✓ ${slug}: ${fm.title}`);
       success++;
     } catch (error) {
@@ -217,4 +225,6 @@ export async function ingestMissionLogs(
     console.error("\n  Fehler:");
     errors.forEach((e) => console.error(e));
   }
+
+  return missionsWithNewLogs;
 }

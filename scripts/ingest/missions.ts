@@ -24,7 +24,8 @@ export async function ingestMissions(
   sql: postgres.Sql,
   vaultPath: string,
   onlyNew = false,
-): Promise<void> {
+): Promise<Set<string>> {
+  const changedSlugs = new Set<string>();
   const dir = join(vaultPath, "Missionen");
 
   // Missionen liegen als Unterordner vor (z.B. Missionen/tanghal-iv/index.md),
@@ -93,7 +94,15 @@ export async function ingestMissions(
             frontmatter = EXCLUDED.frontmatter,
             updated_at  = NOW()`;
 
+      // "old" wird als CTE VOR der Modifikation gegen den Tabellenstand zu
+      // Beginn des Statements ausgewertet — liefert also zuverlässig den
+      // Vor-Update-Zustand für den Änderungs-Vergleich unten, ohne separaten
+      // Roundtrip oder Race Condition gegenüber dem eigentlichen Upsert.
       const [row] = await sql`
+        WITH old AS (
+          SELECT title, status, started_at, ended_at, metadata->>'body' AS body
+          FROM missions WHERE slug = ${slug}
+        )
         INSERT INTO missions (
           slug, title, status,
           started_at, ended_at, metadata,
@@ -110,12 +119,35 @@ export async function ingestMissions(
           NOW()
         )
         ${conflictClause}
-        RETURNING slug
+        RETURNING
+          slug,
+          (SELECT title FROM old) AS old_title,
+          (SELECT status FROM old) AS old_status,
+          (SELECT started_at FROM old) AS old_started_at,
+          (SELECT ended_at FROM old) AS old_ended_at,
+          (SELECT body FROM old) AS old_body
       `;
 
       if (!row) {
         alreadyExists++;
         continue;
+      }
+
+      const hadOldRow = row.old_title != null;
+      if (hadOldRow) {
+        const oldStartedAt = row.old_started_at
+          ? new Date(row.old_started_at).toISOString().slice(0, 10)
+          : null;
+        const oldEndedAt = row.old_ended_at
+          ? new Date(row.old_ended_at).toISOString().slice(0, 10)
+          : null;
+        const changed =
+          row.old_title !== fm.title.trim() ||
+          row.old_status !== status ||
+          oldStartedAt !== parseDate(fm.started_at) ||
+          oldEndedAt !== parseDate(fm.ended_at) ||
+          row.old_body !== summaryHtml;
+        if (changed) changedSlugs.add(slug);
       }
 
       console.log(`  ✓ ${fm.title}`);
@@ -134,4 +166,6 @@ export async function ingestMissions(
     console.error("\n  Fehler:");
     errors.forEach((e) => console.error(e));
   }
+
+  return changedSlugs;
 }

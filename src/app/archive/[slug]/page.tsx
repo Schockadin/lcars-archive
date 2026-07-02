@@ -8,6 +8,7 @@ import { ArchiveEntryDetail, ArchiveLink } from "@/types/archive";
 import PageMeta from "@/components/PageMeta";
 import CrumbLabel from "@/components/CrumbLabel";
 import { LcarsReadingModeToggle } from "@/components/lcars";
+import FollowButtons from "@/components/FollowButtons";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -60,6 +61,8 @@ export default async function ArchiveEntryPage({ params }: Props) {
       ) : (
         <StandardHeader entry={entry} title={title} label={cfg.label} />
       )}
+
+      <FollowButtons targetType="archive_entry" targetSlug={entry.slug} />
 
       {entry.metadata.summary && entry.category != "dialogue" && (
         <p className="lcars-eyebrow mb-[5px]">{entry.metadata.summary}</p>

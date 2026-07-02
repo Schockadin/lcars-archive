@@ -1,5 +1,6 @@
 import { MissionDetail } from "@/types/missions";
 import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
+import FollowButtons from "@/components/FollowButtons";
 
 // Rechte Spalte der Mission-Detailseite: Synopsis + Metadaten.
 export default function MissionSynopsis({
@@ -20,6 +21,8 @@ export default function MissionSynopsis({
           <b>Zeitraum</b> {periodLabel(mission.started_at, mission.ended_at)}
         </div>
       </header>
+
+      <FollowButtons targetType="mission" targetSlug={mission.slug} />
 
       {mission.metadata.body ? (
         <div

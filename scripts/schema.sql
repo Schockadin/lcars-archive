@@ -183,3 +183,20 @@ CREATE TABLE IF NOT EXISTS password_setup_tokens (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_password_setup_tokens_user ON password_setup_tokens(user_id);
+
+-- Lesezeichen/Abos für Missionen und Archiv-Einträge. Zielreferenz per
+-- target_type/target_slug (wie bei timeline_events) statt zweier separater
+-- Tabellen mit je eigenem FK — eine Zeile ohne beides gesetzt wird von
+-- src/lib/follows.ts gelöscht statt mit NULL/NULL liegen zu bleiben.
+CREATE TABLE IF NOT EXISTS content_follows (
+  id            SERIAL PRIMARY KEY,
+  user_id       INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  target_type   TEXT NOT NULL CHECK (target_type IN ('mission', 'archive_entry')),
+  target_slug   TEXT NOT NULL,
+  bookmarked_at TIMESTAMPTZ,
+  subscribed_at TIMESTAMPTZ,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, target_type, target_slug)
+);
+CREATE INDEX IF NOT EXISTS idx_content_follows_user   ON content_follows(user_id);
+CREATE INDEX IF NOT EXISTS idx_content_follows_target ON content_follows(target_type, target_slug);

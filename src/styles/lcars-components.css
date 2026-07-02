@@ -1930,3 +1930,9 @@
 .lcars-cookie-notice .lcars-switch {
   align-self: flex-end;
 }
+
+.follow-buttons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
