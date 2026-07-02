@@ -134,6 +134,11 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:revalidate` | Invalidiert nur die Caches (siehe `SITE_URL`)            |
 | `npm run db:reset`      | Setzt die Datenbank zurück                                |
 
+Jedes `db:*`-Skript gibt es zusätzlich als `:dev`-Variante (z.B.
+`db:setup:dev`, `db:ingest:dev`, `db:reset:dev`) — identisch, nur mit
+`--env-file=.env.dev` statt `.env.local`. Siehe „Dev-/Preview-Umgebung"
+unter Deployment.
+
 ---
 
 ## 📂 Projektstruktur
@@ -245,6 +250,47 @@ tags: [planet, klasse-m]
 Das Projekt ist für **Netlify** vorkonfiguriert (`@netlify/plugin-nextjs`).
 `DATABASE_URL` als Environment-Variable im Netlify-Dashboard hinterlegen; die Ingestion
 (`db:setup` / `db:ingest`) wird gegen die produktive Datenbank ausgeführt.
+
+### Dev-/Preview-Umgebung
+
+Netlify Deploy-Previews (ein Build pro PR) laufen standardmäßig gegen
+dieselbe `DATABASE_URL` wie Production — jede PR, die das Schema ändert,
+riskiert damit entweder einen kaputten Preview-Build (Schema noch nicht
+migriert) oder eine versehentliche Migration gegen Live-Daten. Der Code
+selbst ist environment-agnostisch (`src/lib/db.ts` und alle
+`scripts/ingest/*.ts` lesen nur `DATABASE_URL`/`DIRECT_DATABASE_URL` aus der
+Umgebung, ohne jede Verzweigung) — eine zweite, isolierte DB einzurichten
+ist deshalb reine Konfiguration, kein Code-Change.
+
+**1. Zweite Postgres-Instanz anlegen.** Bei Railway: im Projekt ein
+zweites **Environment** anlegen (z.B. `dev`, neben `production`) und dort
+einen eigenen Postgres-Service erzeugen — Railways eingebautes Feature für
+genau diesen Zweck, optional als Klon der aktuellen Produktionsdaten
+startbar. Die **öffentliche** Connection-URL verwenden (nicht die interne
+private-network-URL) — nur die ist von außerhalb Railways erreichbar, z.B.
+von Netlifys Build-Runnern.
+
+**2. Netlify auf zwei DBs aufteilen** (Netlify-Dashboard, nicht
+`netlify.toml` — dort dürfen keine Secrets landen):
+- Bestehende `DATABASE_URL` auf Scope **„Production"** einschränken
+  (vermutlich aktuell „All contexts").
+- Neue `DATABASE_URL` mit Scope **„Deploy previews"** hinzufügen, Wert =
+  öffentliche Connection-URL der neuen Dev-DB aus Schritt 1.
+  `DIRECT_DATABASE_URL` wird von Next.js selbst nicht gelesen (nur von den
+  Ingest-Skripten, die nie auf Netlify laufen) — dort ist nichts zu tun.
+
+**3. Lokal gegen die Dev-DB arbeiten.** `.env.dev` anlegen (Vorlage
+[`.env.example`](.env.example)) mit der Connection-URL aus Schritt 1, dann
+`npm run db:setup:dev` und `npm run db:ingest:dev` statt der `:local`-Pendants.
+Vor einer Schema-ändernden PR erst `db:setup:dev` gegen die Dev-DB laufen
+lassen, um die Migration risikofrei zu proben — der eigentliche
+Migrationsschritt gegen Production bleibt weiterhin manuell (siehe oben).
+
+> **Hinweis:** Deploy-Previews bauen bei jedem Push neu (Inhalte werden zur
+> Build-Zeit statisch gerendert) — nach einem Ingest in die Dev-DB reicht ein
+> neuer Push bzw. Re-Deploy, um aktualisierte Inhalte in der Preview zu sehen.
+> Eine Revalidation-Verkabelung für die (pro PR wechselnde) Preview-URL ist
+> dafür nicht nötig.
 
 ---
 
