@@ -28,11 +28,15 @@ export default async function UserPage({
   const { id } = await params;
   const { target, isSelf } = await requireSelfOrGM(id);
 
-  const characters = await getCharactersForUser(target.id);
-  const recentEvents = isSelf
-    ? await getRecentActivitySince(target.previous_login_at)
-    : [];
-  const needsPassword = isSelf && !(await hasPassword(target.id));
+  // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
+  // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
+  // innerhalb des User-Bereichs spürbar auf.
+  const [characters, recentEvents, hasPasswordSet] = await Promise.all([
+    getCharactersForUser(target.id),
+    isSelf ? getRecentActivitySince(target.previous_login_at) : Promise.resolve([]),
+    isSelf ? hasPassword(target.id) : Promise.resolve(true),
+  ]);
+  const needsPassword = isSelf && !hasPasswordSet;
 
   return (
     <>
