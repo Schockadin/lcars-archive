@@ -71,7 +71,7 @@ export default function CreateUserForm() {
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch lcars-switch--primary disabled:opacity-50"
+        className="lcars-switch disabled:opacity-50"
       >
         {pending ? "Anlegen…" : "User anlegen"}
       </button>

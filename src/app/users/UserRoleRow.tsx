@@ -47,7 +47,7 @@ export default function UserRoleRow({ user }: { user: UserWithCharacters }) {
         <button
           type="submit"
           disabled={pending}
-          className="lcars-switch lcars-switch--muted disabled:opacity-50"
+          className="lcars-switch disabled:opacity-50"
         >
           Speichern
         </button>

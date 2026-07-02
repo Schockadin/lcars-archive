@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
-import { logout } from "@/app/login/actions";
 import { requireSelfOrGM } from "./dal";
 import { getCharactersForUser } from "@/lib/characters";
 import { getRecentActivitySince } from "@/lib/timeline";
@@ -27,7 +26,7 @@ export default async function UserPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { viewer, target, isSelf } = await requireSelfOrGM(id);
+  const { target, isSelf } = await requireSelfOrGM(id);
 
   const characters = await getCharactersForUser(target.id);
   const recentEvents = isSelf
@@ -70,30 +69,7 @@ export default async function UserPage({
             />
           )}
 
-          {isSelf ? (
-            <div className="flex flex-col gap-[8px]">
-              <p>
-                <Link
-                  href={`/users/${target.id}/settings`}
-                  className="text-lcars-amber underline"
-                >
-                  Einstellungen bearbeiten
-                </Link>
-              </p>
-              {viewer.role === "gm" && (
-                <p>
-                  <Link href="/users" className="text-lcars-amber underline">
-                    Zur Nutzerverwaltung
-                  </Link>
-                </p>
-              )}
-              <form action={logout}>
-                <button type="submit" className="lcars-switch lcars-switch--muted">
-                  Abmelden
-                </button>
-              </form>
-            </div>
-          ) : (
+          {!isSelf && (
             <p>
               <Link href="/users" className="text-lcars-amber underline">
                 ← Zur Nutzerverwaltung

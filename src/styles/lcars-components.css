@@ -755,6 +755,7 @@
   font-weight: bolder;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  text-decoration: none;
   transition: 200ms;
   display: flex;
   align-items: center;
@@ -763,22 +764,25 @@
   background: var(--lcars-surface);
   color: var(--lcars-text-data);
 }
-
-/* Modifier für echte Buttons (Formulare, Cookie-Hinweis) — die Toggle-
-   Varianten (SortSwitch/SortButton) setzen aktiv/inaktiv weiterhin per
-   Inline-Style und ignorieren diese Klassen. */
-.lcars-switch--primary {
+/* "Leeres" Default-Design für alle Buttons/Links (Formulare, Cookie-
+   Hinweis, User-Bereich-Navigation) — füllt erst bei Hover auf amber, statt
+   permanent gefüllt zu sein. Die Toggle-Varianten (SortSwitch/SortButton)
+   setzen aktiv/inaktiv weiterhin per Inline-Style und ignorieren das. */
+.lcars-switch:hover:not(:disabled) {
   background: var(--lcars-amber);
   color: var(--lcars-bg);
   border-color: var(--lcars-amber);
 }
-.lcars-switch--muted {
-  background: var(--lcars-surface-2);
-  color: var(--lcars-text-contrast);
-  border-color: var(--lcars-text-data);
-}
 .lcars-switch:disabled {
   cursor: not-allowed;
+}
+
+/* Aktueller Tab in der User-Bereich-Navigation (UsersNav.tsx) — dauerhaft
+   gefüllt statt nur bei Hover, damit die aktuelle Seite erkennbar bleibt. */
+.lcars-switch--active {
+  background: var(--lcars-amber);
+  color: var(--lcars-bg);
+  border-color: var(--lcars-amber);
 }
 
 .lcars-filters {

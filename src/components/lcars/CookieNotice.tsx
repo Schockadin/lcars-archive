@@ -56,7 +56,7 @@ export default function CookieNotice() {
       <button
         type="button"
         onClick={dismiss}
-        className="lcars-switch lcars-switch--primary"
+        className="lcars-switch"
       >
         Verstanden
       </button>

@@ -52,7 +52,7 @@ export default function ActivateForm({ token }: { token: string }) {
         </p>
       )}
 
-      <button type="submit" disabled={pending} className="lcars-switch lcars-switch--primary self-start disabled:opacity-50">
+      <button type="submit" disabled={pending} className="lcars-switch self-start disabled:opacity-50">
         {pending ? "Wird gespeichert…" : "Konto aktivieren"}
       </button>
     </form>

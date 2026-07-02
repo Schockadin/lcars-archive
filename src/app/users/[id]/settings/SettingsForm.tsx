@@ -62,7 +62,7 @@ export default function SettingsForm({
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch lcars-switch--primary self-start disabled:opacity-50"
+        className="lcars-switch self-start disabled:opacity-50"
       >
         {pending ? "Speichern…" : "Speichern"}
       </button>
