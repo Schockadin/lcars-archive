@@ -802,6 +802,14 @@
   gap: 10px;
 }
 
+/* Hervorhebung des Suchbegriffs im Snippet auf /search. */
+.search-snippet-mark {
+  background: var(--lcars-amber);
+  color: var(--lcars-text-dim);
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
 /* ── Missions-Chronik ────────────────────────────────────────────── */
 /* Zeitstrahl-Layout: dekorative Jahres-Schiene links, gestapelte
    Einsatzakten rechts. Status wird ausschließlich über den farbigen

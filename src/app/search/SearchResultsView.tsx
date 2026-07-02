@@ -96,11 +96,32 @@ export default function SearchResultsView({
       ) : (
         <div className="archive-entry-list">
           {sorted.map((r, i) => (
-            <SearchResultCard key={`${r.href}-${i}`} result={r} />
+            <SearchResultCard key={`${r.href}-${i}`} result={r} query={query} />
           ))}
         </div>
       )}
     </div>
+  );
+}
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Hebt alle Vorkommen von query im Snippet hervor (case-insensitive).
+function highlightSnippet(snippet: string, query: string): React.ReactNode {
+  const q = query.trim();
+  if (!q) return snippet;
+  const parts = snippet.split(new RegExp(`(${escapeRegExp(q)})`, "gi"));
+  // Ungerade Indizes sind die eingefangene Gruppe, also die Treffer selbst.
+  return parts.map((part, i) =>
+    i % 2 === 1 ? (
+      <mark key={i} className="search-snippet-mark">
+        {part}
+      </mark>
+    ) : (
+      part
+    ),
   );
 }
 
@@ -153,7 +174,13 @@ function SortButton({
   );
 }
 
-function SearchResultCard({ result }: { result: SearchResult }) {
+function SearchResultCard({
+  result,
+  query,
+}: {
+  result: SearchResult;
+  query: string;
+}) {
   return (
     <Link
       href={result.href}
@@ -166,7 +193,9 @@ function SearchResultCard({ result }: { result: SearchResult }) {
       <span className="mission-akte-body text-left">
         <span className="mission-akte-title block">{result.label}</span>
         {result.snippet && (
-          <span className="mission-akte-summary block">{result.snippet}</span>
+          <span className="mission-akte-summary block">
+            {highlightSnippet(result.snippet, query)}
+          </span>
         )}
         <span className="mission-akte-meta">
           <span>{result.sublabel}</span>
