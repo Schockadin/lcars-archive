@@ -1,6 +1,7 @@
 import sql from "@/lib/db";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
 import { stripHtml } from "@/lib/missionFormat";
+import { WIKILINK_RE } from "@/lib/markdown";
 import type { ArchiveCategory } from "@/types/archive";
 import type { SearchResult } from "@/types/search";
 
@@ -23,16 +24,18 @@ interface LogRow {
   slug: string;
   mission_slug: string;
   mission_title: string;
-  content: string;
-  source_md: string | null;
+  // Nur selektiert, wenn includeContent (Volltextsuche) — für die
+  // Live-Suche unnötiger Ballast, siehe runSearchQueries().
+  content?: string;
+  source_md?: string | null;
 }
 interface ArchiveRow {
   title: string;
   slug: string;
   category: ArchiveCategory;
   setting: string | null;
-  content: string;
-  source_md: string | null;
+  content?: string;
+  source_md?: string | null;
 }
 
 interface RawRows {
@@ -42,10 +45,10 @@ interface RawRows {
   archive: ArchiveRow[];
 }
 
-// Führt die 4 Such-Queries parallel aus. `includeContent` steuert nur die
-// WHERE-Klausel (Volltext-Treffer ja/nein) — content/source_md werden für
-// logs/archive immer mitselektiert, damit mapResults() bei Bedarf einen
-// Snippet berechnen kann, ohne die Spaltenliste dynamisch bauen zu müssen.
+// Führt die 4 Such-Queries parallel aus. `includeContent` steuert sowohl die
+// WHERE-Klausel (Volltext-Treffer ja/nein) als auch, ob content/source_md
+// überhaupt mitselektiert werden — die Live-Suche (Dropdown, pro Tastendruck)
+// braucht sie nie, da sie nur Titel vergleicht.
 async function runSearchQueries(
   q: string,
   opts: { includeContent: boolean; limit: number },
@@ -70,8 +73,8 @@ async function runSearchQueries(
       LIMIT ${limit}
     `,
     sql<LogRow[]>`
-      SELECT ml.title, ml.slug, ml.content, ml.source_md,
-             m.slug AS mission_slug, m.title AS mission_title
+      SELECT ml.title, ml.slug, m.slug AS mission_slug, m.title AS mission_title
+             ${includeContent ? sql`, ml.content, ml.source_md` : sql``}
       FROM mission_logs ml
       JOIN missions m ON m.id = ml.mission_id
       WHERE ml.title ILIKE ${like}
@@ -80,8 +83,8 @@ async function runSearchQueries(
       LIMIT ${limit}
     `,
     sql<ArchiveRow[]>`
-      SELECT title, slug, category, content, source_md,
-             metadata->>'setting' AS setting
+      SELECT title, slug, category, metadata->>'setting' AS setting
+             ${includeContent ? sql`, content, source_md` : sql``}
       FROM archive_entries
       WHERE title ILIKE ${like}
         ${includeContent ? sql`OR content ILIKE ${like}` : sql``}
@@ -100,15 +103,18 @@ function matchesQuery(text: string, q: string): boolean {
 
 // Reduziert rohes Markdown zu Fließtext für Snippets. Kein vollwertiger
 // Parser — deckt nur ab, was im Korpus vorkommt (siehe scripts/ingest/*):
-// Codeblöcke/Inline-Code, Bilder, Wikilinks [[Ziel]]/[[Ziel|Text]], normale
-// Links, Überschriften-/Zitat-/Listen-Marker, Betonung, Trennlinien.
+// Codeblöcke/Inline-Code, Bilder, Wikilinks (WIKILINK_RE — dieselbe Regex wie
+// in der echten Markdown→HTML-Pipeline, damit z.B. [[Ziel#Abschnitt]] genauso
+// aufgelöst wird wie beim Rendern), normale Links, Überschriften-/Zitat-/
+// Listen-Marker, Betonung, Trennlinien.
 export function stripMarkdown(md: string): string {
   return md
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/`([^`]*)`/g, "$1")
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, "$2")
-    .replace(/\[\[([^\]]+)\]\]/g, "$1")
+    .replace(WIKILINK_RE, (_, target: string, alias?: string) =>
+      (alias ?? target).trim(),
+    )
     .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+\.)\s+/gm, "")
     .replace(/(\*\*|__)(.*?)\1/g, "$2")
@@ -139,8 +145,13 @@ export function buildSnippet(
 
 // Text-Basis für den Ausschnitt: source_md bevorzugt (rohes Markdown, kein
 // HTML), sonst stripHtml(content) als Fallback für Zeilen ohne source_md.
-function plainTextFor(row: { content: string; source_md: string | null }): string {
-  return row.source_md ? stripMarkdown(row.source_md) : stripHtml(row.content);
+// Wird nur aufgerufen, wenn includeContent die Spalten auch selektiert hat.
+function plainTextFor(row: {
+  content?: string;
+  source_md?: string | null;
+}): string {
+  if (row.source_md) return stripMarkdown(row.source_md);
+  return row.content ? stripHtml(row.content) : "";
 }
 
 function mapResults(
@@ -197,22 +208,27 @@ function mapResults(
   return [...characterResults, ...missionResults, ...logResults, ...archiveResults];
 }
 
+// Ein Modus, eine Quelle der Wahrheit für includeContent/limit — verhindert,
+// dass runSearchQueries() und mapResults() für denselben Aufruf versehentlich
+// unterschiedliche includeContent-Werte bekommen.
+async function search(
+  q: string,
+  mode: "live" | "full",
+): Promise<SearchResult[]> {
+  const includeContent = mode === "full";
+  const limit = mode === "full" ? FULL_PER_TYPE_LIMIT : LIVE_PER_TYPE_LIMIT;
+  const rows = await runSearchQueries(q, { includeContent, limit });
+  return mapResults(rows, q, { includeContent });
+}
+
 // Live-Dropdown im Header — reine Titelsuche (inkl. Schauplatz als
 // Titel-Ersatz bei Gesprächen), niedriges Limit.
-export async function searchLive(q: string): Promise<SearchResult[]> {
-  const rows = await runSearchQueries(q, {
-    includeContent: false,
-    limit: LIVE_PER_TYPE_LIMIT,
-  });
-  return mapResults(rows, q, { includeContent: false });
+export function searchLive(q: string): Promise<SearchResult[]> {
+  return search(q, "live");
 }
 
 // Volltextsuche für die eigene Suchseite (/search) — Titel UND Inhalt,
 // großzügiges Limit, mit Snippet für reine Volltext-Treffer.
-export async function searchFull(q: string): Promise<SearchResult[]> {
-  const rows = await runSearchQueries(q, {
-    includeContent: true,
-    limit: FULL_PER_TYPE_LIMIT,
-  });
-  return mapResults(rows, q, { includeContent: true });
+export function searchFull(q: string): Promise<SearchResult[]> {
+  return search(q, "full");
 }

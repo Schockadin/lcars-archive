@@ -37,7 +37,11 @@ export default async function SearchPage({
         ) : q.length < 2 ? (
           <p className="char-file-bio-empty">Mindestens 2 Zeichen eingeben.</p>
         ) : (
-          <SearchResultsView query={q} results={results} />
+          // key={q}: neue Suche über den Header → eigene Filter-/Sort-State-
+          // Instanz, statt den Zustand der vorherigen Suche (z.B. Typ-Filter)
+          // stillschweigend beizubehalten (client-seitige Navigation
+          // rendert sonst dieselbe SearchResultsView-Instanz weiter).
+          <SearchResultsView key={q} query={q} results={results} />
         )}
       </div>
     </>

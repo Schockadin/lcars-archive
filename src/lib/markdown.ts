@@ -17,7 +17,7 @@ import type { Root as MdastRoot, Parent as MdastParent, Text as MdastText, Link 
 // löst das anhand aller Titel/Namen in der DB zum echten href auf, weil zum
 // Zeitpunkt der Markdown→HTML-Konvertierung einzelner Dateien noch nicht
 // bekannt ist, worauf der Verweis zeigt.
-const WIKILINK_RE = /\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]/g;
+export const WIKILINK_RE = /\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]/g;
 
 function remarkWikiLinks() {
   return (tree: MdastRoot) => {
