@@ -750,6 +750,7 @@
 .lcars-switch {
   cursor: pointer;
   height: 30px;
+  padding: 0 24px;
   font-size: clamp(12px, 16px, 16px);
   font-weight: bolder;
   text-transform: uppercase;
@@ -759,6 +760,25 @@
   align-items: center;
   justify-content: center;
   border: solid 1px var(--lcars-text-data);
+  background: var(--lcars-surface);
+  color: var(--lcars-text-data);
+}
+
+/* Modifier für echte Buttons (Formulare, Cookie-Hinweis) — die Toggle-
+   Varianten (SortSwitch/SortButton) setzen aktiv/inaktiv weiterhin per
+   Inline-Style und ignorieren diese Klassen. */
+.lcars-switch--primary {
+  background: var(--lcars-amber);
+  color: var(--lcars-bg);
+  border-color: var(--lcars-amber);
+}
+.lcars-switch--muted {
+  background: var(--lcars-surface-2);
+  color: var(--lcars-text-contrast);
+  border-color: var(--lcars-text-data);
+}
+.lcars-switch:disabled {
+  cursor: not-allowed;
 }
 
 .lcars-filters {
@@ -1875,4 +1895,34 @@
   .mission-log-stub {
     display: none;
   }
+}
+
+/* ── Cookie-Hinweis ───────────────────────────────────────────────────
+   Bewusst als kompakte, unten rechts angedockte Karte statt einer über die
+   volle Breite laufenden Leiste — eine breite Leiste am unteren Rand
+   überlappt sonst leicht interaktive Elemente (z.B. Submit-Buttons kurz
+   angehängter Formulare) und blockiert dort Klicks. */
+.lcars-cookie-notice {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 360px;
+  margin-left: auto;
+  padding: 16px 20px;
+  background: var(--lcars-surface);
+  border: solid 1px var(--lcars-text-data);
+  border-radius: var(--lcars-radius-card);
+  color: var(--lcars-text);
+  font-size: 14px;
+}
+.lcars-cookie-notice p {
+  margin: 0;
+}
+.lcars-cookie-notice .lcars-switch {
+  align-self: flex-end;
 }

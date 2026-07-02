@@ -159,3 +159,27 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS previous_login_at TIMESTAMPTZ;
 -- Unterstützt getRecentActivitySince() (src/lib/timeline.ts), das nach
 -- created_at filtert statt nach dem In-Story-Datum event_date.
 CREATE INDEX IF NOT EXISTS idx_timeline_events_created ON timeline_events(created_at);
+
+-- Passwort-Login. password_hash ist NULL, solange kein Passwort gesetzt
+-- wurde. requires_activation unterscheidet zwei NULL-Fälle:
+--   - false (Default): Bestandskonto von vor dieser Migration — darf sich
+--     weiterhin per E-Mail allein einloggen (siehe login() in
+--     src/app/login/actions.ts), bis es selbst ein Passwort setzt.
+--   - true: vom GM neu angelegtes Konto — darf sich erst einloggen,
+--     nachdem der Aktivierungslink (password_setup_tokens) benutzt wurde.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS requires_activation BOOLEAN NOT NULL DEFAULT false;
+
+-- Einmal-Token für die Aktivierungs-/Passwort-setzen-Mail. token_hash statt
+-- des Rohtokens gespeichert (SHA-256, siehe src/lib/passwordSetupTokens.ts)
+-- — ein DB-Leak macht die Links damit nicht direkt nutzbar. used_at markiert
+-- verbrauchte Tokens statt sie zu löschen (Nachvollziehbarkeit).
+CREATE TABLE IF NOT EXISTS password_setup_tokens (
+  id         SERIAL PRIMARY KEY,
+  user_id    INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at    TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_password_setup_tokens_user ON password_setup_tokens(user_id);

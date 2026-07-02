@@ -1,6 +1,6 @@
 import { Antonio, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
-import { LcarsAppShell } from "@/components/lcars";
+import { LcarsAppShell, LcarsCookieNotice } from "@/components/lcars";
 import { NeoProvider } from "@/context/NeoProvider";
 import { getCampaignYears } from "@/lib/constants";
 import { APP_VERSION } from "@/lib/version";
@@ -41,6 +41,7 @@ export default function RootLayout({
       <body>
         <NeoProvider>
           <LcarsAppShell appVersion={APP_VERSION}>{children}</LcarsAppShell>
+          <LcarsCookieNotice />
         </NeoProvider>
       </body>
     </html>

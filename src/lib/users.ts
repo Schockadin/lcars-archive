@@ -70,11 +70,14 @@ export interface CreateUserInput {
   role: User["role"];
 }
 
+// requires_activation = true: vom GM neu angelegte Konten müssen erst den
+// Aktivierungslink benutzen (siehe scripts/schema.sql), bevor sie sich
+// einloggen können — anders als Bestandskonten ohne Passwort.
 export async function createUser(input: CreateUserInput): Promise<User> {
   try {
     const rows = await sql<User[]>`
-      INSERT INTO users (email, name, role)
-      VALUES (${input.email}, ${input.name}, ${input.role})
+      INSERT INTO users (email, name, role, requires_activation)
+      VALUES (${input.email}, ${input.name}, ${input.role}, true)
       RETURNING ${USER_COLUMNS}
     `;
     return rows[0];
@@ -131,4 +134,61 @@ export async function updateUser(
     }
     throw err;
   }
+}
+
+// ── Passwort/Login-Interna ──────────────────────────────────────────
+// Bewusst getrennt von USER_COLUMNS/User: password_hash darf nie in einer
+// Prop an eine Client Component landen. Diese Funktionen werden
+// ausschließlich serverseitig in Login-/Passwort-Server-Actions benutzt.
+
+export interface UserCredentials {
+  id: number;
+  email: string;
+  role: User["role"];
+  password_hash: string | null;
+  requires_activation: boolean;
+}
+
+export async function getUserCredentialsByEmail(
+  email: string,
+): Promise<UserCredentials | null> {
+  const rows = await sql<UserCredentials[]>`
+    SELECT id, email, role, password_hash, requires_activation
+    FROM users
+    WHERE lower(email) = ${email}
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+}
+
+// Client-sicher: nur das Boolean, nie der Hash selbst (für den
+// "Passwort jetzt festlegen"-Hinweis auf Dashboard/Settings).
+export async function hasPassword(userId: number): Promise<boolean> {
+  const rows = await sql<{ has_password: boolean }[]>`
+    SELECT password_hash IS NOT NULL AS has_password
+    FROM users
+    WHERE id = ${userId}
+  `;
+  return rows[0]?.has_password ?? false;
+}
+
+export async function getPasswordHash(userId: number): Promise<string | null> {
+  const rows = await sql<{ password_hash: string | null }[]>`
+    SELECT password_hash FROM users WHERE id = ${userId}
+  `;
+  return rows[0]?.password_hash ?? null;
+}
+
+// Setzt das Passwort und beendet damit gleichzeitig eine offene
+// Aktivierung (requires_activation) — ab hier entscheidet nur noch
+// password_hash über den Login-Weg.
+export async function setPassword(
+  userId: number,
+  passwordHash: string,
+): Promise<void> {
+  await sql`
+    UPDATE users
+    SET password_hash = ${passwordHash}, requires_activation = false
+    WHERE id = ${userId}
+  `;
 }

@@ -25,6 +25,21 @@ export default function LoginForm() {
         />
       </div>
 
+      <div className="flex flex-col gap-[6px]">
+        <label htmlFor="password" className="lcars-eyebrow">
+          Passwort
+        </label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          // Nicht required: Bestandskonten ohne Passwort loggen sich per
+          // E-Mail allein ein (siehe login() in actions.ts).
+          autoComplete="current-password"
+          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+        />
+      </div>
+
       {state?.error && (
         <p className="text-lcars-red" role="alert">
           {state.error}
@@ -34,7 +49,7 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="self-start rounded-lcars-pill bg-lcars-amber px-[24px] py-[8px] font-lcars uppercase tracking-wide text-lcars-text-dark disabled:opacity-50"
+        className="lcars-switch lcars-switch--primary self-start disabled:opacity-50"
       >
         {pending ? "Anmelden…" : "Anmelden"}
       </button>

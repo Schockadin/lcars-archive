@@ -1,10 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import sql from "@/lib/db";
 import { createSession, deleteSession } from "@/lib/session";
-import { recordLogin } from "@/lib/users";
-import type { User } from "@/types/db";
+import { getUserCredentialsByEmail, recordLogin } from "@/lib/users";
+import { verifyPassword } from "@/lib/password";
 
 export interface LoginState {
   error?: string;
@@ -17,19 +16,32 @@ export async function login(
   const email = String(formData.get("email") ?? "")
     .trim()
     .toLowerCase();
+  const password = String(formData.get("password") ?? "");
 
   if (!email) {
     return { error: "Bitte eine E-Mail-Adresse eingeben." };
   }
 
-  const rows = await sql<Pick<User, "id" | "email" | "role">[]>`
-    SELECT id, email, role FROM users WHERE lower(email) = ${email}
-  `;
-  const user = rows[0];
+  const user = await getUserCredentialsByEmail(email);
 
   if (!user) {
     return { error: "Keine Anmeldung für diese E-Mail-Adresse gefunden." };
   }
+
+  if (user.password_hash) {
+    if (!password || !(await verifyPassword(password, user.password_hash))) {
+      return { error: "E-Mail-Adresse oder Passwort ist falsch." };
+    }
+  } else if (user.requires_activation) {
+    // Vom GM angelegt, aber der Aktivierungslink wurde noch nicht benutzt.
+    return {
+      error:
+        "Dieses Konto ist noch nicht aktiviert. Bitte nutze den Link aus deiner Einladungs-E-Mail.",
+    };
+  }
+  // Sonst: Bestandskonto ohne Passwort (vor der Passwort-Einführung
+  // angelegt) — Login per E-Mail allein bleibt erlaubt, bis selbst ein
+  // Passwort gesetzt wird (siehe /users/[id]/settings).
 
   await recordLogin(user.id);
   await createSession(user);

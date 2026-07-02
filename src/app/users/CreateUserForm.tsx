@@ -1,15 +1,28 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { createUserAction, type AdminActionState } from "./actions";
 
 const initialState: AdminActionState = {};
 
 export default function CreateUserForm() {
+  const router = useRouter();
   const [state, formAction, pending] = useActionState(
     createUserAction,
     initialState,
   );
+
+  // Bei Erfolg redirected die Action selbst (frische Userliste durch
+  // Navigation). Nur wenn die Mail nicht gesendet werden konnte, bleibt die
+  // Seite stehen (siehe manualActivationUrl) — die Liste darunter muss dann
+  // manuell aktualisiert werden, damit der neue User dort auftaucht.
+  useEffect(() => {
+    if (state?.manualActivationUrl) {
+      router.refresh();
+    }
+  }, [state, router]);
 
   return (
     <form action={formAction} className="flex flex-wrap items-end gap-[12px]">
@@ -58,7 +71,7 @@ export default function CreateUserForm() {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lcars-pill bg-lcars-amber px-[24px] py-[8px] font-lcars uppercase tracking-wide text-lcars-text-dark disabled:opacity-50"
+        className="lcars-switch lcars-switch--primary disabled:opacity-50"
       >
         {pending ? "Anlegen…" : "User anlegen"}
       </button>
@@ -67,6 +80,22 @@ export default function CreateUserForm() {
         <p className="w-full text-lcars-red" role="alert">
           {state.error}
         </p>
+      )}
+
+      {state?.warning && (
+        <div className="w-full flex flex-col gap-[4px]">
+          <p className="text-lcars-amber" role="alert">
+            {state.warning}
+          </p>
+          {state.manualActivationUrl && (
+            <input
+              readOnly
+              value={state.manualActivationUrl}
+              onFocus={(e) => e.currentTarget.select()}
+              className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-data outline-none"
+            />
+          )}
+        </div>
       )}
     </form>
   );

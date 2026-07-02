@@ -1,5 +1,6 @@
 "use server";
 
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireGM } from "@/lib/dal";
 import {
@@ -10,6 +11,8 @@ import {
 } from "@/lib/users";
 import { assignCharacterToUser } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
+import { createPasswordSetupToken } from "@/lib/passwordSetupTokens";
+import { sendActivationEmail } from "@/lib/mail";
 import type { User } from "@/types/db";
 
 const ROLES: readonly User["role"][] = ["gm", "player", "viewer"];
@@ -18,8 +21,21 @@ function isValidRole(value: string): value is User["role"] {
   return (ROLES as readonly string[]).includes(value);
 }
 
+// SITE_URL (siehe .env.example) ist bewusst eine kommaseparierte Liste für
+// die Revalidation und deshalb hier ungeeignet — der Host-Header des
+// aktuellen Requests liefert immer die korrekte Basis-URL der gerade
+// laufenden Umgebung (dev/preview/prod).
+async function getBaseUrl(): Promise<string> {
+  const h = await headers();
+  const host = h.get("host") ?? "localhost:3000";
+  const proto = h.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
+  return `${proto}://${host}`;
+}
+
 export interface AdminActionState {
   error?: string;
+  warning?: string;
+  manualActivationUrl?: string;
 }
 
 // Jede Action prüft role === "gm" selbst (siehe requireGM in src/lib/dal.ts)
@@ -42,13 +58,33 @@ export async function createUserAction(
   if (!name) return { error: "Bitte einen Namen angeben." };
   if (!isValidRole(role)) return { error: "Ungültige Rolle." };
 
+  let newUser;
   try {
-    await createUser({ email, name, role });
+    newUser = await createUser({ email, name, role });
   } catch (err) {
     if (err instanceof EmailTakenError) {
       return { error: "Diese E-Mail-Adresse wird bereits verwendet." };
     }
     throw err;
+  }
+
+  const rawToken = await createPasswordSetupToken(newUser.id);
+  const activationUrl = `${await getBaseUrl()}/activate?token=${rawToken}`;
+
+  const result = await sendActivationEmail({
+    to: newUser.email,
+    name: newUser.name,
+    activationUrl,
+  });
+
+  if (!result.sent) {
+    // User ist trotzdem angelegt — der GM kann den Link manuell
+    // weitergeben, statt dass die ganze Aktion fehlschlägt (z.B. wenn
+    // RESEND_API_KEY noch fehlt).
+    return {
+      warning: `User angelegt, aber die Aktivierungs-Mail konnte nicht gesendet werden (${result.error}). Link manuell weitergeben:`,
+      manualActivationUrl: activationUrl,
+    };
   }
 
   redirect("/users");

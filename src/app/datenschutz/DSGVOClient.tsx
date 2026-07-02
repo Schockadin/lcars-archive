@@ -24,9 +24,14 @@ export default function DSGVOClient() {
 
       <h2>2. Erhobene Daten & Zweck</h2>
       <p>
-        Diese Website erhebt keine personenbezogenen Daten durch eigene
-        Mechanismen (kein Tracking, keine Cookies, keine Analysetools, keine
-        Nutzerkonten).
+        Diese Website betreibt kein Tracking und keine Analysetools mit
+        personenbezogenen Daten. Für die Kampagnen-Teilnehmer:innen gibt es
+        einen passwortgeschützten Login-Bereich (<code>/login</code>,{" "}
+        <code>/users/…</code>). Dort werden E-Mail-Adresse, Name, Rolle sowie
+        ein Passwort-Hash gespeichert (Rechtsgrundlage: Art. 6 Abs. 1 lit. b
+        DSGVO — Erfüllung des Nutzungsverhältnisses der Kampagne). Das
+        Passwort selbst wird nicht im Klartext gespeichert, sondern nur als
+        Hash (siehe Abschnitt 4).
       </p>
       <p>
         Beim Aufruf der Website werden durch den Hosting-Anbieter
@@ -59,10 +64,26 @@ export default function DSGVOClient() {
         EU-Kommission vom Juli 2023).
       </p>
 
-      <h2>4. Keine Cookies</h2>
+      <h2>4. Cookies</h2>
       <p>
-        Diese Website setzt keine eigenen Cookies. Netlify kann technische
-        Cookies für den sicheren Betrieb (z. B. DDoS-Schutz) setzen.
+        Diese Website setzt ein einziges eigenes Cookie namens{" "}
+        <code>neo_session</code>. Es hält dich für 30 Tage angemeldet und ist
+        technisch notwendig, um den Login-Bereich (<code>/login</code>,{" "}
+        <code>/users/…</code>) bereitzustellen — ohne dieses Cookie ist kein
+        Login möglich. Es ist <code>HttpOnly</code> gesetzt (kein Zugriff
+        durch JavaScript) und wird nicht an Dritte übertragen.
+      </p>
+      <p>
+        Da es sich um ein unbedingt erforderliches Cookie handelt, ist gemäß
+        § 25 Abs. 2 Nr. 2 TTDSG keine Einwilligung erforderlich
+        (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO). Der Cookie-Hinweis beim
+        ersten Besuch informiert lediglich darüber, ohne eine Wahlmöglichkeit
+        anzubieten, da es keine optionalen Cookies (Tracking, Analyse,
+        Marketing) gibt, die man ablehnen könnte.
+      </p>
+      <p>
+        Netlify kann darüber hinaus technische Cookies für den sicheren
+        Betrieb setzen (z. B. DDoS-Schutz).
       </p>
 
       <h2>5. Externe Schriftarten</h2>

@@ -5,6 +5,7 @@ import { logout } from "@/app/login/actions";
 import { requireSelfOrGM } from "./dal";
 import { getCharactersForUser } from "@/lib/characters";
 import { getRecentActivitySince } from "@/lib/timeline";
+import { hasPassword } from "@/lib/users";
 import DashboardCharacters from "./DashboardCharacters";
 import RecentActivity from "./RecentActivity";
 import type { User } from "@/types/db";
@@ -32,6 +33,7 @@ export default async function UserPage({
   const recentEvents = isSelf
     ? await getRecentActivitySince(target.previous_login_at)
     : [];
+  const needsPassword = isSelf && !(await hasPassword(target.id));
 
   return (
     <>
@@ -45,6 +47,19 @@ export default async function UserPage({
             {isSelf ? "Angemeldet als " : "E-Mail "}
             <strong>{target.email}</strong> ({ROLE_LABELS[target.role]}).
           </p>
+
+          {needsPassword && (
+            <p className="text-lcars-amber">
+              Du hast noch kein Passwort gesetzt.{" "}
+              <Link
+                href={`/users/${target.id}/settings#password`}
+                className="underline"
+              >
+                Jetzt festlegen
+              </Link>
+              .
+            </p>
+          )}
 
           <DashboardCharacters characters={characters} />
 
@@ -73,10 +88,7 @@ export default async function UserPage({
                 </p>
               )}
               <form action={logout}>
-                <button
-                  type="submit"
-                  className="rounded-lcars-pill bg-lcars-surface-2 px-[24px] py-[8px] font-lcars uppercase tracking-wide text-lcars-text-contrast"
-                >
+                <button type="submit" className="lcars-switch lcars-switch--muted">
                   Abmelden
                 </button>
               </form>
