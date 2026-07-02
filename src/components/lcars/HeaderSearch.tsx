@@ -190,9 +190,6 @@ export default function HeaderSearch() {
               <p className="lcars-search-empty">Suche …</p>
             ) : (
               <>
-                {results.length === 0 && (
-                  <p className="lcars-search-empty">Keine Treffer</p>
-                )}
                 {results.map((r, i) => (
                   <button
                     key={`${r.href}-${i}`}

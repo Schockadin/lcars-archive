@@ -800,14 +800,18 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  width: 100%;
+  justify-content: space-between;
 }
 
 /* Hervorhebung des Suchbegriffs im Snippet auf /search. */
 .search-snippet-mark {
-  background: var(--lcars-amber);
-  color: var(--lcars-text-dim);
+  background: var(--lcars-surface-2);
+  color: var(--lcars-text-data);
   border-radius: 2px;
   padding: 0 2px;
+  font-weight: bold;
+  font-size: larger;
 }
 
 /* ── Missions-Chronik ────────────────────────────────────────────── */
