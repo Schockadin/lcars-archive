@@ -3,7 +3,13 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { LcarsHorSep } from "@/components/lcars";
 import { CAMPAIGN_START_YEAR, getCampaignYears } from "@/lib/constants";
 
-export default function LandingPage({ stats }: { stats: React.ReactNode }) {
+export default function LandingPage({
+  stats,
+  appVersion,
+}: {
+  stats: React.ReactNode;
+  appVersion: string | null;
+}) {
   usePageMeta("Home", "home");
 
   const campaignYears = getCampaignYears();
@@ -13,6 +19,7 @@ export default function LandingPage({ stats }: { stats: React.ReactNode }) {
       {/* Begrüßungstext */}
       <div className="lcars-eyebrow my-[8px]">
         INITIALISIERUNG // DATENBANKZUGRIFF AUTORISIERT
+        {appVersion && ` // V${appVersion}`}
       </div>
 
       {/* Trennlinie */}

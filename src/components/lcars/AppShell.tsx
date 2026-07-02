@@ -21,7 +21,7 @@ export default function AppShell({
       className={`flex w-full h-[100dvh]${readingMode ? " reading-mode" : ""}`}
     >
       <LcarsSidebar />
-      <div className="flex flex-col flex-1 h-full overflow-hidden">
+      <div className="flex flex-col flex-1 h-full overflow-clip">
         <LcarsHeader />
         <LcarsMainContent>{children}</LcarsMainContent>
         <LcarsFooter appVersion={appVersion} />
