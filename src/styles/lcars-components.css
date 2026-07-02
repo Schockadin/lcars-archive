@@ -236,6 +236,7 @@
 .lcars-main-content {
   display: flex;
   min-width: 0;
+  padding-right: 5px;
 }
 
 /* ── Data Rows (container queries) ───────────────────────────────── */
@@ -821,6 +822,7 @@
 
 .mission-chronik {
   display: flex;
+  padding-bottom: 5px;
 }
 
 /* dekorative Jahres-Schiene (Elbow-Optik) */
@@ -1343,7 +1345,7 @@
     --lcars-title-size: 24px;
     --lcars-text-size: 16px;
     --lcars-eyebrow-size: 12px;
-    --lcars-datarow-h: 20px;
+    /* --lcars-datarow-h: 20px; */
   }
 
   .lcars-elbow-bottom,
@@ -1356,9 +1358,6 @@
   .lcars-header-title {
     font-size: 22px;
   }
-  .lcars-data-row {
-    width: 200px;
-  }
   .lcars-data-row-label {
     font-size: 75cqh;
     padding-top: 1px;
@@ -1368,7 +1367,7 @@
   }
   .lcars-data-row-text {
     font-size: 50cqh;
-    padding-top: 3px;
+    padding-top: 6px;
   }
   .lcars-breadcrumbs {
     font-size: 12px;
@@ -1679,6 +1678,7 @@
   flex-direction: column;
   gap: 14px;
   margin-top: 16px;
+  margin-bottom: 5px;
 }
 .archive-placeholder {
   max-width: 520px;

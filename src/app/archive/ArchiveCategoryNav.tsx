@@ -48,7 +48,6 @@ export default function ArchiveCategoryNav({
             color={c.color}
             accentColor="var(--lcars-amber-light)"
             key={c.cat}
-            className="w-[100%]"
           />
         ))}
       </div>
