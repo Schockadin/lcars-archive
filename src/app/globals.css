@@ -15,16 +15,29 @@
   padding: 0;
 }
 
+/* AppShell ist ein fixes 100dvh-Grundgerüst, in dem ausschließlich
+   .lcars-main-content scrollt (siehe MainContent.tsx). `overflow: hidden`
+   reicht hier NICHT aus: Elemente mit overflow:hidden lassen sich trotz
+   fehlender Scrollbar weiterhin per Skript scrollen (z.B. scrollIntoView
+   beim Sprung zu einer Timeline-Sprungmarke) — der Browser wählt dabei
+   bevorzugt html/body als Scroll-Ziel statt .lcars-main-content, was
+   body.scrollTop unsichtbar von 0 wegbewegt (window.scrollY bleibt dabei 0,
+   weil das an document.documentElement hängt, nicht an body) und die
+   komplette AppShell inkl. Elbow-Bar ein paar Pixel nach oben verschiebt.
+   `overflow: clip` verhindert das: kein Scroll-Container, auch nicht per
+   Skript. */
 html {
-  min-height: 100dvh;
+  height: 100dvh;
   min-width: 100%;
   width: 100%;
+  overflow: clip;
 }
 
 body {
-  min-height: 100dvh;
+  height: 100dvh;
   min-width: 100%;
   width: 100%;
+  overflow: clip;
   background: var(--lcars-bg);
   color: var(--lcars-text);
   font-family: var(--font-antonio), "Antonio", sans-serif;

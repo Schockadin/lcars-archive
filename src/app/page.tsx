@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import LandingPage from "./LandingPage";
 import LandingStats from "@/components/lcars/LandingStats";
 import { LcarsSkeleton } from "@/components/lcars";
+import { APP_VERSION } from "@/lib/version";
 
 // Platzhalter für die DB-Statistik, während getDBStats() lädt. Der Rest der
 // Startseite rendert sofort, nur dieser Block streamt nach.
@@ -22,6 +23,7 @@ function StatsSkeleton() {
 export default function Page() {
   return (
     <LandingPage
+      appVersion={APP_VERSION}
       stats={
         <Suspense fallback={<StatsSkeleton />}>
           <LandingStats />
