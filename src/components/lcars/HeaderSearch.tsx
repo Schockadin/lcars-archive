@@ -3,14 +3,7 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { SearchResult } from "@/types/search";
-
-// Akzentfarbe je Treffertyp (kleiner Punkt + Typ-Kürzel).
-const TYPE_COLOR: Record<SearchResult["type"], string> = {
-  character: "var(--lcars-blue)",
-  mission: "var(--lcars-amber)",
-  log: "var(--lcars-purple)",
-  archive: "var(--lcars-text-data)",
-};
+import { TYPE_COLOR } from "@/lib/searchFormat";
 
 interface Anchor {
   top: number;
@@ -110,22 +103,36 @@ export default function HeaderSearch() {
     [router],
   );
 
+  // Navigiert zur eigenen Suchseite (Volltextsuche). Anders als go(): Query
+  // und Ergebnisliste bleiben erhalten, damit das Suchfeld danach weiter den
+  // Begriff zeigt.
+  const goToSearchPage = useCallback(() => {
+    router.push(`/search?q=${encodeURIComponent(q)}`);
+    setFocused(false);
+    inputRef.current?.blur();
+  }, [router, q]);
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Escape") {
       setFocused(false);
       inputRef.current?.blur();
       return;
     }
-    if (!showDropdown || results.length === 0) return;
+    // Dropdown-Inhalt noch nicht für das aktuelle q geladen → nichts zu
+    // navigieren (das "mehr"-Pseudo-Element ist erst danach vorhanden).
+    if (!showDropdown || resultsQuery !== q) return;
+    // + 1 für den "mehr"-Pseudo-Stopp am Ende der Liste.
+    const stopCount = results.length + 1;
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActive((i) => (i + 1) % results.length);
+      setActive((i) => (i + 1) % stopCount);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
-      setActive((i) => (i <= 0 ? results.length - 1 : i - 1));
+      setActive((i) => (i <= 0 ? stopCount - 1 : i - 1));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      go(results[active >= 0 ? active : 0]);
+      if (active >= 0 && active < results.length) go(results[active]);
+      else goToSearchPage();
     }
   };
 
@@ -181,35 +188,54 @@ export default function HeaderSearch() {
           >
             {resultsQuery !== q ? (
               <p className="lcars-search-empty">Suche …</p>
-            ) : results.length === 0 ? (
-              <p className="lcars-search-empty">Keine Treffer</p>
             ) : (
-              results.map((r, i) => (
+              <>
+                {results.length === 0 && (
+                  <p className="lcars-search-empty">Keine Treffer</p>
+                )}
+                {results.map((r, i) => (
+                  <button
+                    key={`${r.href}-${i}`}
+                    id={`${listboxId}-opt-${i}`}
+                    type="button"
+                    role="option"
+                    aria-selected={i === active}
+                    className="lcars-search-item"
+                    onMouseEnter={() => setActive(i)}
+                    onMouseDown={(e) => {
+                      // vor dem document-mousedown/blur navigieren
+                      e.preventDefault();
+                      go(r);
+                    }}
+                  >
+                    <span
+                      className="lcars-search-dot"
+                      style={{ backgroundColor: TYPE_COLOR[r.type] }}
+                      aria-hidden="true"
+                    />
+                    <span className="lcars-search-text">
+                      <span className="lcars-search-label">{r.label}</span>
+                      <span className="lcars-search-sub">{r.sublabel}</span>
+                    </span>
+                  </button>
+                ))}
+                {/* Immer sichtbar, auch bei 0 Titel-Treffern — die
+                    Volltextsuche auf /search kann trotzdem etwas finden. */}
                 <button
-                  key={`${r.href}-${i}`}
-                  id={`${listboxId}-opt-${i}`}
+                  id={`${listboxId}-opt-${results.length}`}
                   type="button"
                   role="option"
-                  aria-selected={i === active}
-                  className="lcars-search-item"
-                  onMouseEnter={() => setActive(i)}
+                  aria-selected={active === results.length}
+                  className="lcars-search-item lcars-search-more"
+                  onMouseEnter={() => setActive(results.length)}
                   onMouseDown={(e) => {
-                    // vor dem document-mousedown/blur navigieren
                     e.preventDefault();
-                    go(r);
+                    goToSearchPage();
                   }}
                 >
-                  <span
-                    className="lcars-search-dot"
-                    style={{ backgroundColor: TYPE_COLOR[r.type] }}
-                    aria-hidden="true"
-                  />
-                  <span className="lcars-search-text">
-                    <span className="lcars-search-label">{r.label}</span>
-                    <span className="lcars-search-sub">{r.sublabel}</span>
-                  </span>
+                  Alle Ergebnisse für „{q}“ anzeigen…
                 </button>
-              ))
+              </>
             )}
           </div>,
           document.body,

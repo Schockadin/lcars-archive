@@ -132,6 +132,19 @@
   font-size: 13px;
   color: var(--lcars-text-dim);
 }
+/* "Alle Ergebnisse anzeigen…"-Zeile am Ende des Dropdowns — kein Dot/Label,
+   daher zentriert und optisch als eigene Aktion abgesetzt. */
+.lcars-search-more {
+  justify-content: center;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--lcars-border);
+  color: var(--lcars-amber);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
 
 /* ── Elbows ──────────────────────────────────────────────────────── */
 
@@ -778,6 +791,23 @@
 .mission-author-filter:focus {
   outline: none;
   border-color: var(--lcars-amber);
+}
+
+/* Typ-Filter auf /search: 5 Buttons in einer umbrechenden Reihe (im
+   Unterschied zu .mission-sort, das für genau 2 gleich breite Buttons mit
+   flex:1 ausgelegt ist). */
+.search-type-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Hervorhebung des Suchbegriffs im Snippet auf /search. */
+.search-snippet-mark {
+  background: var(--lcars-amber);
+  color: var(--lcars-text-dim);
+  border-radius: 2px;
+  padding: 0 2px;
 }
 
 /* ── Missions-Chronik ────────────────────────────────────────────── */

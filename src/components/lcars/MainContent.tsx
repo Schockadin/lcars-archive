@@ -1,5 +1,3 @@
-import { LcarsContentSidebar } from ".";
-
 export default function MainContent({
   children,
 }: {

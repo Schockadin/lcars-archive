@@ -7,4 +7,8 @@ export interface SearchResult {
   label: string;
   sublabel: string;
   href: string;
+  // Kurzer Textausschnitt um den ersten Volltext-Treffer — nur von
+  // searchFull() (/search) gesetzt, für log/archive-Treffer bei denen der
+  // Suchbegriff NICHT im Titel vorkommt. Von der Dropdown-Suche unbenutzt.
+  snippet?: string;
 }

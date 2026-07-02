@@ -7,7 +7,6 @@ import remarkRehype from "remark-rehype";
 import rehypeSlug from "rehype-slug";
 import rehypeStringify from "rehype-stringify";
 import { visit } from "unist-util-visit";
-import type { Root, Element, Text } from "hast";
 import type { Root as MdastRoot, Parent as MdastParent, Text as MdastText, Link as MdastLink } from "mdast";
 
 // Obsidian-artige [[Ziel]] / [[Ziel|Anzeigetext]] / [[Ziel#Abschnitt|Text]]
@@ -17,7 +16,7 @@ import type { Root as MdastRoot, Parent as MdastParent, Text as MdastText, Link 
 // löst das anhand aller Titel/Namen in der DB zum echten href auf, weil zum
 // Zeitpunkt der Markdown→HTML-Konvertierung einzelner Dateien noch nicht
 // bekannt ist, worauf der Verweis zeigt.
-const WIKILINK_RE = /\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]/g;
+export const WIKILINK_RE = /\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]/g;
 
 function remarkWikiLinks() {
   return (tree: MdastRoot) => {
@@ -55,61 +54,6 @@ function remarkWikiLinks() {
   };
 }
 
-// Custom rehype-Plugin: ersetzt h2-Elemente durch LCARS DataRow HTML
-function rehypeLcarsDataRows() {
-  return (tree: Root) => {
-    let chapterIndex = 0;
-
-    visit(tree, "element", (node: Element, index, parent) => {
-      if (node.tagName !== "h2" || !parent || index === undefined) return;
-
-      chapterIndex++;
-
-      // Kapitelname aus Text-Knoten extrahieren
-      const label = node.children
-        .filter((c): c is Text => c.type === "text")
-        .map((c) => c.value)
-        .join("");
-
-      // ID wurde von rehypeSlug bereits gesetzt
-      const id = (node.properties?.id as string) ?? "";
-
-      const dataRow: Element = {
-        type: "element",
-        tagName: "div",
-        properties: {
-          className: ["lcars-data-row-heading"],
-          id,
-        },
-        children: [
-          {
-            type: "element",
-            tagName: "span",
-            properties: { className: ["lcars-dr-value"] },
-            children: [
-              { type: "text", value: String(chapterIndex).padStart(2, "0") },
-            ],
-          },
-          {
-            type: "element",
-            tagName: "span",
-            properties: { className: ["lcars-dr-accent"] },
-            children: [],
-          },
-          {
-            type: "element",
-            tagName: "span",
-            properties: { className: ["lcars-dr-label"] },
-            children: [{ type: "text", value: label.toUpperCase() }],
-          },
-        ],
-      };
-
-      parent.children.splice(index, 1, dataRow);
-    });
-  };
-}
-
 // Markdown bis zum private-Kommentar kürzen und zu HTML konvertieren
 export async function markdownToHtml(markdown: string): Promise<string> {
   const publicContent = markdown.split("<!-- private -->")[0].trim();
@@ -119,8 +63,7 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .use(remarkGfm)
     .use(remarkWikiLinks)
     .use(remarkRehype)
-    .use(rehypeSlug) // IDs setzen – muss vor DataRows kommen
-    // .use(rehypeLcarsDataRows) // h2 → LCARS DataRow
+    .use(rehypeSlug)
     .use(rehypeStringify)
     .process(publicContent);
 
