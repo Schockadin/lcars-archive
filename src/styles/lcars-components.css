@@ -231,6 +231,15 @@
   background: var(--lcars-amber-light);
 }
 
+.lcars-footer-version {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--lcars-bg);
+  opacity: 0.75;
+  user-select: text;
+}
+
 /* ── Layout ──────────────────────────────────────────────────────── */
 
 .lcars-main-content {

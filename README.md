@@ -117,9 +117,13 @@ Liest die Markdown-Dateien aus `VAULT_PATH` ein und schreibt sie per Upsert in d
 npm run dev
 ```
 
-> **Hinweis:** Das `dev`-Skript bindet aktuell an einen festen Host
-> (`--hostname 192.168.178.x`). Für lokale Entwicklung ggf. in `package.json` anpassen
-> oder den Wert auf `localhost` setzen.
+> **Hinweis:** `npm run dev` lädt immer `.env.dev` (nicht `.env.local`) —
+> der lokale Entwicklungsserver läuft damit standardmäßig gegen die Dev-DB
+> statt gegen die in `.env.local` hinterlegte Datenbank, um ein versehentliches
+> Schreiben gegen Production beim Entwickeln auszuschließen. `.env.dev` muss
+> dafür angelegt sein (siehe „Dev-/Preview-Umgebung" unter Deployment). Alle
+> anderen Befehle (`db:ingest`, `db:setup`, …) nutzen weiterhin `.env.local`,
+> sofern nicht explizit die `:dev`-Variante aufgerufen wird.
 
 Anschließend die angezeigte Adresse im Browser öffnen.
 
@@ -129,7 +133,7 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 
 | Skript              | Beschreibung                                       |
 | ------------------- | -------------------------------------------------- |
-| `npm run dev`       | Startet den Entwicklungsserver                     |
+| `npm run dev`       | Startet den Entwicklungsserver (gegen `.env.dev`)  |
 | `npm run build`     | Erstellt den Produktions-Build                     |
 | `npm run start`     | Startet den Produktionsserver                      |
 | `npm run lint`      | Führt ESLint aus                                   |
@@ -299,6 +303,26 @@ Migrationsschritt gegen Production bleibt weiterhin manuell (siehe oben).
 > neuer Push bzw. Re-Deploy, um aktualisierte Inhalte in der Preview zu sehen.
 > Eine Revalidation-Verkabelung für die (pro PR wechselnde) Preview-URL ist
 > dafür nicht nötig.
+
+### Versionsnummer
+
+Solange die App in der Beta-/Testphase ist, zeigt der Footer eine
+Versionsnummer der Form `0.<PR-Nr>.<Commit-Nr>` (z.B. `v0.27.6`), sichtbar
+in der roten Leiste neben „Impressum"/„Datenschutz". Wird einmalig beim
+Build aus der Git-Historie ermittelt (`src/lib/version.ts`), kein Code
+nötig, um sie zu pflegen:
+
+- **PR-Nr:** bei Netlify Deploy-Previews aus `REVIEW_ID` (setzt Netlify
+  automatisch pro PR-Build); bei Production-Builds aus der Commit-Message
+  des letzten Commits (GitHub hängt bei Squash-Merges `(#NN)` an, bei
+  regulären Merges gibt es „Merge pull request #NN …").
+- **Commit-Nr:** Anzahl Commits auf dem PR-Branch seit der Abzweigung von
+  `master` — zählt bei jedem Push im PR hoch (`0.27.1`, `0.27.2`, …) und
+  beginnt bei einem neuen PR wieder bei 1. Bei Production-Builds (kein
+  PR-Branch mehr vorhanden) Fallback auf die Gesamt-Commit-Anzahl im Repo.
+
+Lässt sich die PR- oder Commit-Nummer nicht ermitteln (z.B. lokal ohne
+Git-Historie), bleibt die Anzeige einfach leer.
 
 ---
 
