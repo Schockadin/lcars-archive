@@ -14,4 +14,6 @@ export interface User {
   name: string;
   role: 'gm' | 'player' | 'viewer';
   created_at: Date;
+  last_login_at: Date | null;
+  previous_login_at: Date | null;
 }

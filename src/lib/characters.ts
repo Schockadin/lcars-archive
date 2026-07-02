@@ -66,6 +66,37 @@ export const getActiveCharacters = unstable_cache(
   { tags: [cacheTags.characters] },
 );
 
+// Charaktere eines Users (siehe assignCharacterToUser). Kein Cache — die
+// Dashboard-Route ist durch den Session-Zugriff ohnehin dynamisch, analog
+// zu getUserById in src/lib/users.ts.
+export async function getCharactersForUser(
+  userId: number,
+): Promise<Character[]> {
+  const rows = await sql<Character[]>`
+    SELECT *
+    FROM characters
+    WHERE player_id = ${userId}
+    ORDER BY name ASC
+  `;
+  return rows.map(parseCharacter);
+}
+
+// GM-only-Zuweisung (siehe src/app/users/actions.ts). player_id wird vom
+// Ingest nie angefasst (scripts/ingest/characters.ts), Zuweisungen
+// überleben also einen Re-Ingest.
+export async function assignCharacterToUser(
+  characterId: number,
+  userId: number | null,
+): Promise<Character> {
+  const rows = await sql<Character[]>`
+    UPDATE characters
+    SET player_id = ${userId}
+    WHERE id = ${characterId}
+    RETURNING *
+  `;
+  return parseCharacter(rows[0]);
+}
+
 export async function getLogsByCharacter(
   characterId: number,
 ): Promise<MissionLogPreview[]> {

@@ -147,3 +147,15 @@ CREATE INDEX IF NOT EXISTS idx_archive_links_source ON archive_links(source_id);
 CREATE INDEX IF NOT EXISTS idx_archive_links_target ON archive_links(target_id);
 CREATE INDEX IF NOT EXISTS idx_timeline_events_date   ON timeline_events(event_date);
 CREATE INDEX IF NOT EXISTS idx_timeline_events_source ON timeline_events(source_type, source_slug);
+
+-- "Letzter Besuch" für das Dashboard (neu seit deinem letzten Besuch).
+-- previous_login_at wird bei jedem Login aus dem alten last_login_at
+-- übernommen, bevor last_login_at auf NOW() gesetzt wird (recordLogin in
+-- src/lib/users.ts) — so kennt das Dashboard immer die Grenze des
+-- *vorletzten* Logins, unabhängig von Profil-Änderungen währenddessen.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS previous_login_at TIMESTAMPTZ;
+
+-- Unterstützt getRecentActivitySince() (src/lib/timeline.ts), das nach
+-- created_at filtert statt nach dem In-Story-Datum event_date.
+CREATE INDEX IF NOT EXISTS idx_timeline_events_created ON timeline_events(created_at);

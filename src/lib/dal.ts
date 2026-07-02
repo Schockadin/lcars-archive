@@ -24,3 +24,14 @@ export const getCurrentUser = cache(async (): Promise<User> => {
   }
   return user;
 });
+
+// GM-only-Gate für /users (Nutzerverwaltung) und dessen Server Actions.
+// Redirect geht auf die eigene Personendatei, nicht /login — der User ist
+// angemeldet, nur für diese Seite nicht berechtigt.
+export async function requireGM(): Promise<User> {
+  const user = await getCurrentUser();
+  if (user.role !== "gm") {
+    redirect(`/users/${user.id}`);
+  }
+  return user;
+}

@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import sql from "@/lib/db";
 import { createSession, deleteSession } from "@/lib/session";
+import { recordLogin } from "@/lib/users";
 import type { User } from "@/types/db";
 
 export interface LoginState {
@@ -30,6 +31,7 @@ export async function login(
     return { error: "Keine Anmeldung für diese E-Mail-Adresse gefunden." };
   }
 
+  await recordLogin(user.id);
   await createSession(user);
   redirect(`/users/${user.id}`);
 }
