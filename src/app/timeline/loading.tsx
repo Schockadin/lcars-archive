@@ -1,7 +1,8 @@
+import { Fragment } from "react";
 import { LcarsSkeleton } from "@/components/lcars";
 
-// Skeleton-Fallback der Timeline-Chronik: Jahres-Schiene + gestapelte Akten
-// (gleiches Layout wie src/app/missions/loading.tsx).
+// Skeleton-Fallback der Timeline-Chronik: Jahres-Rail + gestapelte Akten im
+// selben Grid-Layout wie TimelineView.tsx.
 export default function Loading() {
   return (
     <div className="w-full max-w-[640px]">
@@ -10,17 +11,13 @@ export default function Loading() {
         <LcarsSkeleton className="h-[14px] w-[320px]" />
       </div>
 
-      <div className="mission-chronik">
-        <div className="mission-rail" aria-hidden="true">
-          <LcarsSkeleton accent className="h-[36px] rounded-tl-[14px]" />
-          <LcarsSkeleton accent className="min-h-[80px] flex-1 rounded-none" />
-          <LcarsSkeleton accent className="h-[36px] rounded-bl-[14px]" />
-        </div>
-
-        <div className="mission-list">
-          {Array.from({ length: 4 }).map((_, i) => (
+      <div className="timeline-chronik">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Fragment key={i}>
+            <div className="timeline-rail-cell" aria-hidden="true">
+              {i === 0 && <LcarsSkeleton accent className="h-[24px] w-[48px]" />}
+            </div>
             <div
-              key={i}
               className="flex w-full overflow-hidden rounded-[4px_14px_14px_4px]"
               style={{ background: "var(--lcars-surface)" }}
             >
@@ -33,8 +30,8 @@ export default function Loading() {
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+          </Fragment>
+        ))}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import Link from "next/link";
 import { TimelineEvent } from "@/types/timeline";
 import {
@@ -13,19 +13,16 @@ import {
 
 type SortDir = "desc" | "asc";
 
-// Übersicht aller Timeline-Ereignisse als LCARS-Chronik (Zeitstrahl mit
-// dekorativer Jahres-Schiene) — gleiches UI-Muster wie die Missions-Chronik
-// (MissionsOverview.tsx), nur sortiert nach event_date statt started_at und
-// gefiltert nach Kategorie statt Autor.
+// Übersicht aller Timeline-Ereignisse als LCARS-Chronik. Anders als die
+// Missions-Chronik (MissionsOverview.tsx, nur Start-/End-Jahr als Kappen)
+// zeigt die Jahres-Rail hier jedes Jahr, in dem mindestens ein Ereignis
+// liegt, jeweils auf Höhe der ersten Karte dieses Jahres (siehe
+// .timeline-chronik-Grid in lcars-components.css) — bei Ereignissen über
+// große Zeitspannen hinweg (z.B. Jahrhunderte) wäre eine durchgängige
+// Auflistung aller Kalenderjahre unlesbar.
 export default function TimelineView({ events }: { events: TimelineEvent[] }) {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [category, setCategory] = useState<string | null>(null);
-
-  const years = events
-    .map((e) => yearOf(e.event_date))
-    .filter((y): y is number => y != null);
-  const latestYear = years.length ? Math.max(...years) : null;
-  const earliestYear = years.length ? Math.min(...years) : null;
 
   // Distinkte Kategorien über alle Ereignisse für die Filter-Auswahl.
   const categories = useMemo(() => {
@@ -39,10 +36,6 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
     const filtered = category ? events.filter((e) => e.category === category) : events;
     return [...filtered].sort(sortDir === "desc" ? byEventDateDesc : byEventDateAsc);
   }, [events, category, sortDir]);
-
-  // Rail-Kappen folgen der Sortierrichtung (oben = erstes Ereignis der Liste).
-  const topCap = sortDir === "desc" ? latestYear : earliestYear;
-  const footCap = sortDir === "desc" ? earliestYear : latestYear;
 
   const activeCategory = category ? categoryVisual(category).label : null;
 
@@ -101,20 +94,30 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
               Keine Ereignisse für diese Kategorie.
             </p>
           ) : (
-            <div className="mission-chronik">
-              <div className="mission-rail" aria-hidden="true">
-                <div className="mission-rail-cap">{topCap ?? ""}</div>
-                <div className="mission-rail-fill" />
-                <div className="mission-rail-foot">
-                  {footCap && footCap !== topCap ? footCap : ""}
-                </div>
-              </div>
-
-              <div className="mission-list">
-                {visible.map((e) => (
-                  <EventCard key={e.id} event={e} />
-                ))}
-              </div>
+            <div className="timeline-chronik">
+              {visible.map((e, i) => {
+                const year = yearOf(e.event_date);
+                const showYear =
+                  i === 0 || yearOf(visible[i - 1].event_date) !== year;
+                const isLast = i === visible.length - 1;
+                return (
+                  <Fragment key={e.id}>
+                    <div
+                      className={
+                        isLast
+                          ? "timeline-rail-cell timeline-rail-cell--last"
+                          : "timeline-rail-cell"
+                      }
+                      aria-hidden="true"
+                    >
+                      {showYear && (
+                        <span className="timeline-rail-year">{year}</span>
+                      )}
+                    </div>
+                    <EventCard event={e} />
+                  </Fragment>
+                );
+              })}
             </div>
           )}
         </>
