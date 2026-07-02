@@ -104,6 +104,13 @@ npm run db:ingest
 
 Liest die Markdown-Dateien aus `VAULT_PATH` ein und schreibt sie per Upsert in die Datenbank.
 
+> **Nur neue Dateien:** `npm run db:ingest:new` verarbeitet ausschließlich
+> Dateien, deren `slug` noch nicht in der Datenbank existiert — nützlich bei
+> großen Vaults, um nicht bei jedem Lauf alles neu zu importieren. Sobald ein
+> Slug einmal importiert wurde, fasst dieses Skript ihn nie wieder an, auch
+> nicht nach Bearbeitungen der Quelldatei — dafür bleibt `npm run db:ingest`
+> zuständig.
+
 ### 5. Entwicklungsserver starten
 
 ```bash
@@ -128,6 +135,7 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run lint`      | Führt ESLint aus                                   |
 | `npm run db:setup`      | Legt das Datenbankschema an (`scripts/schema.sql`)        |
 | `npm run db:ingest`     | Importiert den kompletten Markdown-Vault                  |
+| `npm run db:ingest:new` | Importiert nur Dateien mit noch unbekanntem `slug`        |
 | `npm run db:characters` | Importiert nur die Charaktere                            |
 | `npm run db:missions`   | Importiert nur Missionen + Mission-Logs                  |
 | `npm run db:archive`    | Importiert nur die Archiv-Einträge                       |

@@ -34,6 +34,7 @@ interface CharacterFrontmatter {
 export async function ingestCharacters(
   sql: postgres.Sql,
   vaultPath: string,
+  onlyNew = false,
 ): Promise<void> {
   const dir = join(vaultPath, "Charaktere");
 
@@ -43,6 +44,7 @@ export async function ingestCharacters(
 
   let success = 0;
   let skipped = 0;
+  let alreadyExists = 0;
   const errors: string[] = [];
 
   for (const file of files) {
@@ -95,8 +97,22 @@ export async function ingestCharacters(
         generation: toNumberArray(fm.generation),
       };
 
-      // Upsert: existiert → update, neu → insert
-      await sql`
+      // Upsert: existiert → update, neu → insert. Im onlyNew-Modus wird ein
+      // bereits existierender Slug stattdessen komplett übersprungen (DO
+      // NOTHING liefert dann keine Zeile zurück).
+      const conflictClause = onlyNew
+        ? sql`ON CONFLICT (slug) DO NOTHING`
+        : sql`ON CONFLICT (slug) DO UPDATE SET
+            name        = EXCLUDED.name,
+            status      = EXCLUDED.status,
+            portrait    = EXCLUDED.portrait,
+            bio         = EXCLUDED.bio,
+            metadata    = EXCLUDED.metadata,
+            source_md   = EXCLUDED.source_md,
+            frontmatter = EXCLUDED.frontmatter,
+            updated_at  = NOW()`;
+
+      const [row] = await sql`
         INSERT INTO characters (
           slug, name, status, portrait, bio, metadata,
           source_md, frontmatter, updated_at
@@ -111,16 +127,14 @@ export async function ingestCharacters(
           ${sql.json(data)},
           NOW()
         )
-        ON CONFLICT (slug) DO UPDATE SET
-          name        = EXCLUDED.name,
-          status      = EXCLUDED.status,
-          portrait    = EXCLUDED.portrait,
-          bio         = EXCLUDED.bio,
-          metadata    = EXCLUDED.metadata,
-          source_md   = EXCLUDED.source_md,
-          frontmatter = EXCLUDED.frontmatter,
-          updated_at  = NOW()
+        ${conflictClause}
+        RETURNING slug
       `;
+
+      if (!row) {
+        alreadyExists++;
+        continue;
+      }
 
       console.log(`  ✓ ${fm.name}`);
       success++;
@@ -131,7 +145,10 @@ export async function ingestCharacters(
   }
 
   // Zusammenfassung
-  console.log(`  → ${success} importiert, ${skipped} übersprungen`);
+  console.log(
+    `  → ${success} importiert, ${skipped} übersprungen` +
+      (onlyNew ? `, ${alreadyExists} bereits vorhanden` : ""),
+  );
   if (errors.length > 0) {
     console.error("\n  Fehler:");
     errors.forEach((e) => console.error(e));

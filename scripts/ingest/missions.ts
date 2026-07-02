@@ -23,6 +23,7 @@ interface MissionFrontmatter {
 export async function ingestMissions(
   sql: postgres.Sql,
   vaultPath: string,
+  onlyNew = false,
 ): Promise<void> {
   const dir = join(vaultPath, "Missionen");
 
@@ -36,6 +37,7 @@ export async function ingestMissions(
 
   let success = 0;
   let skipped = 0;
+  let alreadyExists = 0;
   const errors: string[] = [];
 
   for (const missionDir of missionDirs) {
@@ -76,8 +78,22 @@ export async function ingestMissions(
         body: summaryHtml,
       };
 
-      // Upsert: existiert → update, neu → insert
-      await sql`
+      // Upsert: existiert → update, neu → insert. Im onlyNew-Modus wird ein
+      // bereits existierender Slug stattdessen komplett übersprungen (DO
+      // NOTHING liefert dann keine Zeile zurück).
+      const conflictClause = onlyNew
+        ? sql`ON CONFLICT (slug) DO NOTHING`
+        : sql`ON CONFLICT (slug) DO UPDATE SET
+            title       = EXCLUDED.title,
+            status      = EXCLUDED.status,
+            started_at  = EXCLUDED.started_at,
+            ended_at    = EXCLUDED.ended_at,
+            metadata    = EXCLUDED.metadata,
+            source_md   = EXCLUDED.source_md,
+            frontmatter = EXCLUDED.frontmatter,
+            updated_at  = NOW()`;
+
+      const [row] = await sql`
         INSERT INTO missions (
           slug, title, status,
           started_at, ended_at, metadata,
@@ -93,16 +109,14 @@ export async function ingestMissions(
           ${sql.json(data)},
           NOW()
         )
-        ON CONFLICT (slug) DO UPDATE SET
-          title       = EXCLUDED.title,
-          status      = EXCLUDED.status,
-          started_at  = EXCLUDED.started_at,
-          ended_at    = EXCLUDED.ended_at,
-          metadata    = EXCLUDED.metadata,
-          source_md   = EXCLUDED.source_md,
-          frontmatter = EXCLUDED.frontmatter,
-          updated_at  = NOW()
+        ${conflictClause}
+        RETURNING slug
       `;
+
+      if (!row) {
+        alreadyExists++;
+        continue;
+      }
 
       console.log(`  ✓ ${fm.title}`);
       success++;
@@ -112,7 +126,10 @@ export async function ingestMissions(
     }
   }
 
-  console.log(`  → ${success} importiert, ${skipped} übersprungen`);
+  console.log(
+    `  → ${success} importiert, ${skipped} übersprungen` +
+      (onlyNew ? `, ${alreadyExists} bereits vorhanden` : ""),
+  );
   if (errors.length > 0) {
     console.error("\n  Fehler:");
     errors.forEach((e) => console.error(e));

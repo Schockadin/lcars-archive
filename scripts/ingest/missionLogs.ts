@@ -41,6 +41,7 @@ async function askOverwrite(
 export async function ingestMissionLogs(
   sql: postgres.Sql,
   vaultPath: string,
+  onlyNew = false,
 ): Promise<void> {
   const dir = join(vaultPath, "Missionen");
 
@@ -69,6 +70,7 @@ export async function ingestMissionLogs(
   let success = 0;
   let skipped = 0;
   let discarded = 0;
+  let alreadyExists = 0;
   const errors: string[] = [];
 
   for (const { filepath, missionDir } of logFiles) {
@@ -125,6 +127,14 @@ export async function ingestMissionLogs(
         ExistingMissionLogRow[]
       >`SELECT title, updated_at FROM mission_logs WHERE slug = ${slug}`;
 
+      // Im onlyNew-Modus wird ein bereits existierender Slug direkt
+      // übersprungen — kein Kollisions-Prompt nötig (wichtig für
+      // nicht-interaktive Nutzung).
+      if (onlyNew && existingRow) {
+        alreadyExists++;
+        continue;
+      }
+
       if (existingRow && existingRow.title !== fm.title.trim()) {
         const overwrite = await askOverwrite(rl, slug, existingRow, {
           title: fm.title.trim(),
@@ -145,7 +155,24 @@ export async function ingestMissionLogs(
         tags: fm.tags ?? [],
       };
 
-      await sql`
+      // Zusätzliche Absicherung neben der Kollisionsprüfung oben (z.B. bei
+      // gleichem Titel, wo kein Prompt ausgelöst wird): im onlyNew-Modus
+      // trotzdem nie überschreiben.
+      const conflictClause = onlyNew
+        ? sql`ON CONFLICT (slug) DO NOTHING`
+        : sql`ON CONFLICT (slug) DO UPDATE SET
+            mission_id  = EXCLUDED.mission_id,
+            author_id   = EXCLUDED.author_id,
+            title       = EXCLUDED.title,
+            content     = EXCLUDED.content,
+            log_date    = EXCLUDED.log_date,
+            session_nr  = EXCLUDED.session_nr,
+            metadata    = EXCLUDED.metadata,
+            source_md   = EXCLUDED.source_md,
+            frontmatter = EXCLUDED.frontmatter,
+            updated_at  = NOW()`;
+
+      const [row] = await sql`
         INSERT INTO mission_logs (
           slug, mission_id, author_id, title,
           content, log_date, session_nr, metadata,
@@ -163,18 +190,14 @@ export async function ingestMissionLogs(
           ${sql.json(data)},
           NOW()
         )
-        ON CONFLICT (slug) DO UPDATE SET
-          mission_id  = EXCLUDED.mission_id,
-          author_id   = EXCLUDED.author_id,
-          title       = EXCLUDED.title,
-          content     = EXCLUDED.content,
-          log_date    = EXCLUDED.log_date,
-          session_nr  = EXCLUDED.session_nr,
-          metadata    = EXCLUDED.metadata,
-          source_md   = EXCLUDED.source_md,
-          frontmatter = EXCLUDED.frontmatter,
-          updated_at  = NOW()
+        ${conflictClause}
+        RETURNING slug
       `;
+
+      if (!row) {
+        alreadyExists++;
+        continue;
+      }
 
       console.log(`  ✓ ${slug}: ${fm.title}`);
       success++;
@@ -187,7 +210,8 @@ export async function ingestMissionLogs(
   rl.close();
 
   console.log(
-    `  → ${success} importiert, ${skipped} übersprungen, ${discarded} verworfen`,
+    `  → ${success} importiert, ${skipped} übersprungen, ${discarded} verworfen` +
+      (onlyNew ? `, ${alreadyExists} bereits vorhanden` : ""),
   );
   if (errors.length > 0) {
     console.error("\n  Fehler:");
