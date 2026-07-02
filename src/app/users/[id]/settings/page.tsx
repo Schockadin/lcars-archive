@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "../dal";
-import { hasPassword as checkHasPassword } from "@/lib/users";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
 
@@ -16,8 +15,7 @@ export default async function UserSettingsPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const user = await requireOwnUser(id);
-  const userHasPassword = await checkHasPassword(user.id);
+  const user = await requireOwnUser(id); // liefert hasPassword direkt mit
 
   return (
     <>
@@ -30,9 +28,9 @@ export default async function UserSettingsPage({
 
           <section id="password" className="flex flex-col gap-[12px]">
             <p className="lcars-eyebrow">
-              {userHasPassword ? "Passwort ändern" : "Passwort festlegen"}
+              {user.hasPassword ? "Passwort ändern" : "Passwort festlegen"}
             </p>
-            <PasswordForm hasPassword={userHasPassword} />
+            <PasswordForm hasPassword={user.hasPassword} />
           </section>
         </div>
       </article>

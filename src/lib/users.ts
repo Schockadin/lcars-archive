@@ -172,6 +172,29 @@ export async function hasPassword(userId: number): Promise<boolean> {
   return rows[0]?.has_password ?? false;
 }
 
+export interface UserWithPasswordStatus extends User {
+  hasPassword: boolean;
+}
+
+// Wie getUserById, nur zusätzlich mit hasPassword in einer einzigen Query
+// — für die Settings-Seite, die beides in jedem Fall braucht und sich so
+// einen zweiten Roundtrip spart. Wieder ohne den Hash selbst.
+export async function getUserWithPasswordStatus(
+  id: number,
+): Promise<UserWithPasswordStatus | null> {
+  const rows = await sql<(User & { has_password: boolean })[]>`
+    SELECT ${USER_COLUMNS}, password_hash IS NOT NULL AS has_password
+    FROM users
+    WHERE id = ${id}
+    LIMIT 1
+  `;
+  const row = rows[0];
+  if (!row) return null;
+
+  const { has_password, ...user } = row;
+  return { ...user, hasPassword: has_password };
+}
+
 export async function getPasswordHash(userId: number): Promise<string | null> {
   const rows = await sql<{ password_hash: string | null }[]>`
     SELECT password_hash FROM users WHERE id = ${userId}
