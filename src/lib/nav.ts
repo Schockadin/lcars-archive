@@ -4,6 +4,9 @@ export type NavKey =
   | "missions"
   | "archive"
   | "timeline"
+  // /search hat keinen eigenen Nav-Link, braucht aber einen gültigen
+  // section-Wert für <PageMeta>.
+  | "search"
   | "impressum"
   | "dsgvo";
 
