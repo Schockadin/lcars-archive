@@ -21,14 +21,11 @@ export default function MissionSynopsis({
         </div>
       </header>
 
-      {mission.synopsis ? (
-        <div className="mission-body lcars-text">
-          {mission.synopsis
-            .split(/\n{2,}/)
-            .map((p) => p.trim())
-            .filter(Boolean)
-            .map((paragraph, i) => <p key={i}>{paragraph}</p>)}
-        </div>
+      {mission.metadata.body ? (
+        <div
+          className="mission-body lcars-text"
+          dangerouslySetInnerHTML={{ __html: mission.metadata.body }}
+        />
       ) : (
         <p className="char-file-bio-empty">Keine Zusammenfassung vorhanden</p>
       )}

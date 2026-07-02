@@ -54,9 +54,16 @@ function remarkWikiLinks() {
   };
 }
 
+// Markdown bis zum private-Kommentar kürzen (GM-only-Inhalt danach entfernen).
+// Von markdownToHtml genutzt, aber auch vom Timeline-Ingest (scripts/ingest/
+// timeline.ts), der <!-- timeline -->-Marker nur im öffentlichen Teil sucht.
+export function splitPrivate(markdown: string): string {
+  return markdown.split("<!-- private -->")[0].trim();
+}
+
 // Markdown bis zum private-Kommentar kürzen und zu HTML konvertieren
 export async function markdownToHtml(markdown: string): Promise<string> {
-  const publicContent = markdown.split("<!-- private -->")[0].trim();
+  const publicContent = splitPrivate(markdown);
 
   const result = await unified()
     .use(remarkParse)

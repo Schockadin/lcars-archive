@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getLogsByMissionId, getMissionBySlug } from "@/lib/missions";
-import { STATUS_CONFIG } from "@/lib/missionFormat";
+import { STATUS_CONFIG, stripHtml } from "@/lib/missionFormat";
 import PageMeta from "@/components/PageMeta";
 import CrumbLabel from "@/components/CrumbLabel";
 import MissionLogList from "../MissionLogList";
@@ -32,7 +32,7 @@ export default async function MissionDetailLayout({
       <aside className="mission-detail-logs lcars-scroll">
         <MissionLogList
           missionSlug={mission.slug}
-          synopsis={mission.synopsis}
+          synopsis={mission.metadata.body ? stripHtml(mission.metadata.body) : null}
           logs={logs}
         />
       </aside>

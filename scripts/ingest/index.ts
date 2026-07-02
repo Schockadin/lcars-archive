@@ -3,6 +3,7 @@ import { ingestArchive } from "./archive.js";
 import { ingestCharacters } from "./characters.js";
 import { ingestMissionLogs } from "./missionLogs.js";
 import { ingestMissions } from "./missions.js";
+import { ingestTimeline } from "./timeline.js";
 import { resolveWikiLinks } from "./wikilinks.js";
 
 // Nach erfolgreichem Ingest die Inhalts-Caches invalidieren (Schritt 3).
@@ -90,6 +91,9 @@ async function runIngest(steps: Step[]) {
     // importierten Dateien), damit Wiki-Links auch dann aufgelöst werden,
     // wenn ihr Ziel in einem früheren/anderen Lauf importiert wurde.
     await resolveWikiLinks(sql);
+    // Timeline ebenfalls immer komplett neu aufbauen — liest source_md/
+    // metadata aller vier Tabellen, nicht nur der gerade importierten.
+    await ingestTimeline(sql);
     console.log("\n✅ Ingestion abgeschlossen");
     await triggerRevalidation();
   } catch (error) {

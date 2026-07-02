@@ -82,6 +82,26 @@ CREATE TABLE IF NOT EXISTS archive_links (
   CHECK (source_id != target_id)
 );
 
+-- Timeline-Ereignisse: bei jedem Ingest komplett aus dem bereits importierten
+-- Datenbestand neu aufgebaut (siehe scripts/ingest/timeline.ts) — kein LLM,
+-- kein eigener Vault-Zugriff. Automatisch für Missionen (started_at/ended_at)
+-- und Archiv-Einträge der Kategorie event/dialogue mit gesetztem log_date;
+-- alles andere über den <!-- timeline: JJJJ-MM-TT | Titel | Kategorie -->
+-- Marker im Markdown-Body.
+CREATE TABLE IF NOT EXISTS timeline_events (
+  id          SERIAL PRIMARY KEY,
+  event_date  DATE NOT NULL,
+  title       TEXT NOT NULL,
+  category    TEXT NOT NULL DEFAULT 'sonstiges',
+  source_type TEXT NOT NULL
+                CHECK (source_type IN (
+                  'character', 'mission', 'mission_log', 'archive_entry'
+                )),
+  source_slug TEXT NOT NULL,
+  href        TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- Additive Migrationen für bestehende DBs (CREATE TABLE IF NOT EXISTS oben
 -- legt neue Spalten bei schon vorhandenen Tabellen nicht an).
 -- source_md = roher Markdown-Body, frontmatter = geparstes Frontmatter (JSONB).
@@ -99,6 +119,12 @@ ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS frontmatter JSONB NOT NULL 
 -- summary-Feld — die Synopsis ist jetzt die einzige Zusammenfassung.
 ALTER TABLE missions ADD COLUMN IF NOT EXISTS synopsis TEXT;
 ALTER TABLE missions DROP COLUMN IF EXISTS summary;
+
+-- Die LLM-generierte Synopsis entfällt: Zusammenfassung ist jetzt der
+-- ohnehin schon geparste Mission-Body (missions.metadata.body), gepflegt
+-- direkt im Vault statt per API-Aufruf generiert. synopsis ist damit
+-- überflüssig.
+ALTER TABLE missions DROP COLUMN IF EXISTS synopsis;
 
 -- Kategorie-CHECK erweitern (npc, dialogue). Bei bestehenden DBs greift das
 -- inline-CHECK von CREATE TABLE oben nicht — daher Constraint neu setzen.
@@ -119,3 +145,5 @@ CREATE INDEX IF NOT EXISTS idx_archive_category     ON archive_entries(category)
 CREATE INDEX IF NOT EXISTS idx_archive_tags         ON archive_entries USING GIN(tags);
 CREATE INDEX IF NOT EXISTS idx_archive_links_source ON archive_links(source_id);
 CREATE INDEX IF NOT EXISTS idx_archive_links_target ON archive_links(target_id);
+CREATE INDEX IF NOT EXISTS idx_timeline_events_date   ON timeline_events(event_date);
+CREATE INDEX IF NOT EXISTS idx_timeline_events_source ON timeline_events(source_type, source_slug);
