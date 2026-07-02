@@ -11,7 +11,7 @@ export interface Note {
 export interface User {
   id: number;
   email: string;
+  name: string;
   role: 'gm' | 'player' | 'viewer';
   created_at: Date;
-  last_updated: Date;
 }

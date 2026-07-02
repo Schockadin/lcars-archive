@@ -31,7 +31,7 @@ export async function login(
   }
 
   await createSession(user);
-  redirect("/login");
+  redirect(`/users/${user.id}`);
 }
 
 export async function logout(): Promise<void> {
