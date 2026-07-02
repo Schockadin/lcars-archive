@@ -23,8 +23,16 @@
 //
 // Marker nach <!-- private --> werden ignoriert (splitPrivate), damit
 // GM-only-Ereignisse nie auf der öffentlichen Timeline landen.
+//
+// Jeder Marker-erzeugte Eintrag bekommt zusätzlich ein #timeline-N-Fragment
+// an den href angehängt, das auf eine unsichtbare Sprungmarke im gerenderten
+// HTML zeigt (siehe remarkTimelineAnchors in src/lib/markdown.ts) — ein Klick
+// auf das Ereignis in der Timeline springt so direkt zur Marker-Stelle im
+// Fließtext. Automatisch erzeugte Ereignisse (Mission-Start/-Ende,
+// Archiv-Event/-Dialog über logDate) haben keine Marker-Stelle und bekommen
+// deshalb kein Fragment.
 import postgres from "postgres";
-import { splitPrivate } from "../../src/lib/markdown.js";
+import { splitPrivate, TIMELINE_MARKER_RE } from "../../src/lib/markdown.js";
 
 type SourceType = "character" | "mission" | "mission_log" | "archive_entry";
 
@@ -37,7 +45,6 @@ interface TimelineEventInsert {
   href: string;
 }
 
-const TIMELINE_MARKER_RE = /<!--\s*timeline\s*:(.*?)-->/gs;
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 // Erkennt den häufigsten Fehler: Bindestrich statt Pipe zwischen Datum und
 // Titel (z.B. "2400-09-20 - Titel" statt "2400-09-20 | Titel") — gibt dann
@@ -47,17 +54,28 @@ const DATE_HYPHEN_MISTAKE_RE = /^\d{4}-\d{2}-\d{2}\s+[-–—]\s+\S/;
 // Alle <!-- timeline: ... -->-Marker im öffentlichen Teil eines Markdown-
 // Bodys einsammeln. Ungültige Marker (Datum/Titel fehlt oder falsch
 // formatiert) landen als Warnung in `warnings`, statt den Lauf abzubrechen.
+//
+// anchorIndex zählt JEDEN Marker (auch ungültige) in Dokumentreihenfolge hoch
+// und muss 1:1 mit remarkTimelineAnchors() in src/lib/markdown.ts
+// übereinstimmen, das dieselbe RegExp in derselben Reihenfolge über
+// denselben splitPrivate()-Text auswertet, um die Sprungmarke <span
+// id="timeline-N"> im gerenderten HTML zu erzeugen.
 function parseTimelineMarkers(
   sourceMd: string | null,
-): { events: { date: string; title: string; category: string | null }[]; warnings: string[] } {
-  const events: { date: string; title: string; category: string | null }[] = [];
+): {
+  events: { date: string; title: string; category: string | null; anchorIndex: number }[];
+  warnings: string[];
+} {
+  const events: { date: string; title: string; category: string | null; anchorIndex: number }[] = [];
   const warnings: string[] = [];
   if (!sourceMd) return { events, warnings };
 
   const publicMd = splitPrivate(sourceMd);
   TIMELINE_MARKER_RE.lastIndex = 0;
   let match: RegExpExecArray | null;
+  let anchorIndex = 0;
   while ((match = TIMELINE_MARKER_RE.exec(publicMd))) {
+    anchorIndex += 1;
     const [date, title, category] = match[1].split("|").map((p) => p.trim());
     if (!date || !DATE_RE.test(date) || !title) {
       const hint = DATE_HYPHEN_MISTAKE_RE.test(date ?? "")
@@ -68,7 +86,7 @@ function parseTimelineMarkers(
       );
       continue;
     }
-    events.push({ date, title, category: category || null });
+    events.push({ date, title, category: category || null, anchorIndex });
   }
   return { events, warnings };
 }
@@ -114,7 +132,7 @@ export async function ingestTimeline(sql: postgres.Sql): Promise<void> {
         category: e.category ?? "sonstiges",
         source_type: "mission",
         source_slug: m.slug,
-        href,
+        href: `${href}#timeline-${e.anchorIndex}`,
       });
     }
     warnings.forEach((w) => errors.push(`  ✗ Mission "${m.slug}": ${w}`));
@@ -134,7 +152,7 @@ export async function ingestTimeline(sql: postgres.Sql): Promise<void> {
         category: e.category ?? "sonstiges",
         source_type: "character",
         source_slug: c.slug,
-        href: `/characters/${c.slug}`,
+        href: `/characters/${c.slug}#timeline-${e.anchorIndex}`,
       });
     }
     warnings.forEach((w) => errors.push(`  ✗ Charakter "${c.slug}": ${w}`));
@@ -158,7 +176,7 @@ export async function ingestTimeline(sql: postgres.Sql): Promise<void> {
         category: e.category ?? "sonstiges",
         source_type: "mission_log",
         source_slug: log.slug,
-        href: `/missions/${log.mission_slug}/${log.slug}`,
+        href: `/missions/${log.mission_slug}/${log.slug}#timeline-${e.anchorIndex}`,
       });
     }
     warnings.forEach((w) => errors.push(`  ✗ Mission-Log "${log.slug}": ${w}`));
@@ -195,7 +213,7 @@ export async function ingestTimeline(sql: postgres.Sql): Promise<void> {
         category: e.category ?? "sonstiges",
         source_type: "archive_entry",
         source_slug: entry.slug,
-        href,
+        href: `${href}#timeline-${e.anchorIndex}`,
       });
     }
     warnings.forEach((w) => errors.push(`  ✗ Archiv-Eintrag "${entry.slug}": ${w}`));
