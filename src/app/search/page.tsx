@@ -31,11 +31,11 @@ export default async function SearchPage({
         </div>
 
         {q.length === 0 ? (
-          <p className="char-file-bio-empty">
+          <p className="lcars-empty-state">
             Oben im Header einen Suchbegriff eingeben.
           </p>
         ) : q.length < 2 ? (
-          <p className="char-file-bio-empty">Mindestens 2 Zeichen eingeben.</p>
+          <p className="lcars-empty-state">Mindestens 2 Zeichen eingeben.</p>
         ) : (
           // key={q}: neue Suche über den Header → eigene Filter-/Sort-State-
           // Instanz, statt den Zustand der vorherigen Suche (z.B. Typ-Filter)

@@ -23,7 +23,7 @@ export default function FollowedContentSection({
       />
 
       {items.length === 0 ? (
-        <p className="char-file-bio-empty">{emptyLabel}</p>
+        <p className="lcars-empty-state">{emptyLabel}</p>
       ) : (
         <div className="flex flex-col gap-[6px]">
           {items.map((item) => (

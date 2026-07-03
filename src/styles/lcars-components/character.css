@@ -1,0 +1,163 @@
+/* ─── Character Page & Portrait ───────────────────────────────────────
+   Charakterliste (Stub + Balken), Portrait-Rahmen und die
+   Vollbild-Lightbox fürs Portrait.
+──────────────────────────────────────────────────────────────────── */
+
+.character-portrait {
+  border-top: 3px solid var(--lcars-purple);
+  border-left: 3px solid var(--lcars-purple);
+  border-bottom: 3px solid var(--lcars-purple);
+  border-right: none;
+  border: 3px solid var(--lcars-purple);
+}
+
+/* ── Portrait-Lightbox (Vollbild-Overlay) ────────────────────────── */
+.portrait-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(2px);
+  cursor: zoom-out;
+}
+
+.portrait-overlay-img {
+  /* Originalgröße, aber nie größer als der Viewport (abzüglich Rand). */
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 48px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border: 3px solid var(--lcars-purple);
+  cursor: default;
+}
+
+.portrait-overlay-close {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--lcars-bg);
+  background: var(--lcars-purple);
+  border: none;
+  border-radius: 22px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.portrait-overlay-close:hover {
+  background: var(--lcars-amber);
+}
+
+.character-entry {
+  width: 100%;
+  display: flex;
+  align-items: stretch;
+  height: 34px;
+  text-decoration: none;
+}
+
+.character-entry-stub {
+  width: 60px;
+  flex-shrink: 0;
+  border-radius: 100vmax 0 0 100vmax;
+  background: var(--entry-color);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--lcars-bg);
+  transition: filter 100ms;
+}
+
+.character-entry-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 400px;
+  margin-left: 3px;
+  padding: 0 16px;
+  background: var(--lcars-surface);
+  transition:
+    background 150ms,
+    color 150ms;
+}
+
+.character-entry-name {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lcars-text-contrast);
+  line-height: 1;
+}
+
+.character-entry-rank {
+  margin-left: 20px;
+  font-size: 19px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lcars-text-dim);
+  justify-self: right;
+}
+
+.character-entry:hover .character-entry-bar {
+  background: var(--entry-color);
+}
+.character-entry:hover .character-entry-name {
+  color: var(--lcars-bg);
+}
+.character-entry:hover .character-entry-rank {
+  color: var(--lcars-bg);
+  opacity: 0.7;
+}
+.character-entry:hover .character-entry-stub {
+  filter: brightness(1.2);
+}
+
+@media (max-width: 640px) {
+  .character-entry-name,
+  .character-entry-rank {
+    font-size: 16px;
+  }
+
+  .character-entry-stub {
+    display: none;
+  }
+
+  .character-entry {
+    width: 350px;
+  }
+}
+
+@media (max-width: 520px) {
+  .character-entry {
+    width: 250px;
+  }
+}
+
+/* Unter sm-Breakpoint (≤ 639px) */
+@media (max-width: 639px) {
+  .character-portrait {
+    border-right: 3px solid var(--lcars-purple);
+  }
+  .character-data {
+    flex-direction: column;
+  }
+}

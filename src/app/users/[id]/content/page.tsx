@@ -41,7 +41,7 @@ export default async function UserContentPage({
             />
 
             {logs.length === 0 ? (
-              <p className="char-file-bio-empty">
+              <p className="lcars-empty-state">
                 Noch keine Einsatzberichte verfasst.
               </p>
             ) : (
@@ -89,7 +89,7 @@ export default async function UserContentPage({
             />
 
             {dialogues.length === 0 ? (
-              <p className="char-file-bio-empty">
+              <p className="lcars-empty-state">
                 Noch keine Gespräche begonnen.
               </p>
             ) : (

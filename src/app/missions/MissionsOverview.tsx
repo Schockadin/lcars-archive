@@ -73,7 +73,7 @@ export default function MissionsOverview({
       </div>
 
       {missions.length === 0 ? (
-        <p className="char-file-bio-empty">
+        <p className="lcars-empty-state">
           Keine Missionen im Archiv hinterlegt.
         </p>
       ) : (
@@ -112,7 +112,7 @@ export default function MissionsOverview({
           </div>
 
           {visible.length === 0 ? (
-            <p className="char-file-bio-empty">
+            <p className="lcars-empty-state">
               Keine Missionen für diesen Autor.
             </p>
           ) : (
@@ -195,7 +195,7 @@ function MissionCard({ mission }: { mission: MissionPreview }) {
           {mission.metadata.body ? (
             synopsisExcerpt(stripHtml(mission.metadata.body))
           ) : (
-            <span className="char-file-bio-empty">
+            <span className="lcars-empty-state">
               Keine Zusammenfassung vorhanden
             </span>
           )}

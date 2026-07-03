@@ -1,0 +1,70 @@
+/* ─── Lesemodus (nur mobil) ────────────────────────────────────────────
+   Umschaltbarer Modus, der auf schmalen Displays das LCARS-Chrome
+   (Sidebar, Elbow-Bar, Footer, sekundäre Listen-Navigation) ausblendet
+   und die Inhaltsspalte auf Lesbarkeit trimmt. Greift domänenübergreifend
+   in Header/Footer, Missions- und Archiv-Layout ein, daher als eigene
+   Datei statt in einer einzelnen Komponenten-Datei versteckt.
+──────────────────────────────────────────────────────────────────── */
+
+/* Umschalt-Button: nur auf schmalen Displays sichtbar. */
+.reading-mode-toggle {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .reading-mode-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 8px 16px;
+    font-family: var(--font-share-tech-mono), monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--lcars-bg);
+    background: var(--lcars-amber);
+    border: none;
+    border-radius: 100vmax;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+  }
+  .reading-mode-toggle[aria-pressed="true"] {
+    background: var(--lcars-purple);
+  }
+  .reading-mode-toggle:hover {
+    background: var(--lcars-blue);
+  }
+
+  /* Aktiver Lesemodus: LCARS-Chrome ausblenden … */
+  .reading-mode > aside {
+    display: none; /* Haupt-Sidebar */
+  }
+  .reading-mode > div > header,
+  .reading-mode > div > footer {
+    display: none; /* Elbow-Bar oben + Footer-Bar unten */
+  }
+  .reading-mode .mission-detail-logs,
+  .reading-mode .archive-browser-nav {
+    display: none; /* sekundäre Listen-Navigation */
+  }
+
+  /* … und die Lesbarkeit der Inhaltsspalte erhöhen. */
+  .reading-mode .lcars-main-content {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+  .reading-mode .mission-detail-article,
+  .reading-mode .archive-entry,
+  .reading-mode .char-file {
+    max-width: 680px;
+    margin-inline: auto;
+  }
+  .reading-mode .lcars-text {
+    font-size: 17px;
+    line-height: 1.75;
+  }
+  .reading-mode .lcars-text > * + * {
+    margin-top: 1em;
+  }
+}

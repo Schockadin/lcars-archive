@@ -71,7 +71,7 @@ export default function MissionLogList({
   return (
     <div className="mission-loglist">
       <div className="mission-loglist-head">
-        <Link href="/missions" className="mission-loglist-back">
+        <Link href="/missions" className="lcars-back-link">
           ‹ Missionen
         </Link>
       </div>
@@ -80,7 +80,7 @@ export default function MissionLogList({
         {synopsis ? (
           synopsisExcerpt(synopsis)
         ) : (
-          <span className="char-file-bio-empty">
+          <span className="lcars-empty-state">
             Keine Zusammenfassung vorhanden
           </span>
         )}

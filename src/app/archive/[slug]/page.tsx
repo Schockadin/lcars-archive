@@ -118,7 +118,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
           dangerouslySetInnerHTML={{ __html: entry.content }}
         />
       ) : (
-        <p className="char-file-bio-empty">
+        <p className="lcars-empty-state">
           Kein Inhalt zu diesem Eintrag hinterlegt.
         </p>
       )}

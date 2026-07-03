@@ -162,7 +162,7 @@ export default function CharacterHero({
       <section className="char-file">
         {/* ── Kopfzeile: Akten-Code + Code-Pills ── */}
         <header className="char-file-head">
-          <Link href="/characters" className="character-back">
+          <Link href="/characters" className="lcars-back-link">
             ‹ Charaktere
           </Link>
           <h2 className="char-file-fileno">Personalakte · {fileNo}</h2>
@@ -282,7 +282,7 @@ export default function CharacterHero({
                 dangerouslySetInnerHTML={{ __html: bio.html }}
               />
             ) : (
-              <p className="char-file-bio-empty">
+              <p className="lcars-empty-state">
                 Keine biografischen Daten im Archiv hinterlegt.
               </p>
             )}

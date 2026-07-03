@@ -27,11 +27,11 @@ export default function RecentActivity({
       />
 
       {firstVisit ? (
-        <p className="char-file-bio-empty">
+        <p className="lcars-empty-state">
           Das ist dein erster Besuch — willkommen an Bord.
         </p>
       ) : events.length === 0 ? (
-        <p className="char-file-bio-empty">
+        <p className="lcars-empty-state">
           Nichts Neues seit deinem letzten Besuch.
         </p>
       ) : (

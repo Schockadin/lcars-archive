@@ -1,0 +1,38 @@
+/* ─── Responsive Design-Token-Overrides ──────────────────────────────
+   :root-Overrides der Basis-Tokens aus tokens.css, gestaffelt nach
+   Viewport-Breite. Rein token-bezogen — die Komponentenregeln, die
+   dieselben Breakpoints benutzen, leben in den jeweiligen
+   Komponenten-Dateien (header.css, character.css, data-row.css, …).
+──────────────────────────────────────────────────────────────────── */
+
+/* Small (≤ 768px): Sidebar auf 100px */
+@media (max-width: 768px) {
+  :root {
+    --lcars-bar-width: 100px;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --lcars-charpage-w: 350px;
+  }
+}
+
+@media (max-width: 520px) {
+  :root {
+    --lcars-charpage-w: 250px;
+  }
+}
+
+/* Extra-Small (≤ 480px): Sidebar auf 64px */
+@media (max-width: 480px) {
+  :root {
+    --lcars-header-h: 120px;
+    --lcars-bar-width: 40px;
+    --lcars-elbow-size: 20px;
+    --lcars-bar-h: 10px;
+    --lcars-title-size: 24px;
+    --lcars-text-size: 16px;
+    --lcars-eyebrow-size: 12px;
+  }
+}

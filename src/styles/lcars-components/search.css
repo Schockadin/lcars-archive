@@ -1,0 +1,26 @@
+/* ─── Suchergebnisseite (/search) ─────────────────────────────────────
+   Typ-Filter und Treffer-Hervorhebung auf der Ergebnisliste. Nicht zu
+   verwechseln mit der globalen Header-Schnellsuche (.lcars-search-*
+   in header.css).
+──────────────────────────────────────────────────────────────────── */
+
+/* Typ-Filter auf /search: 5 Buttons in einer umbrechenden Reihe (im
+   Unterschied zu .mission-sort, das für genau 2 gleich breite Buttons mit
+   flex:1 ausgelegt ist). */
+.search-type-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+  justify-content: space-between;
+}
+
+/* Hervorhebung des Suchbegriffs im Snippet auf /search. */
+.search-snippet-mark {
+  background: var(--lcars-surface-2);
+  color: var(--lcars-text-data);
+  border-radius: 2px;
+  padding: 0 2px;
+  font-weight: bold;
+  font-size: larger;
+}

@@ -1,0 +1,140 @@
+/* ─── Switch-Toggles, Icon-Buttons, Inputs & Cookie-Hinweis ───────────
+   Interaktive Formular-/Aktionselemente, die Tailwind allein nicht
+   abbildet (Hover-Fülleffekt, kreisförmige Icon-Buttons, Fokus-States).
+──────────────────────────────────────────────────────────────────── */
+
+.lcars-switch {
+  cursor: pointer;
+  height: 30px;
+  padding: 0 24px;
+  font-size: clamp(12px, 16px, 16px);
+  font-weight: bolder;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  transition: 200ms;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: solid 1px var(--lcars-text-data);
+  background: var(--lcars-surface);
+  color: var(--lcars-text-data);
+}
+/* "Leeres" Default-Design für alle Buttons/Links (Formulare, Cookie-
+   Hinweis, User-Bereich-Navigation) — füllt erst bei Hover auf amber, statt
+   permanent gefüllt zu sein. Die Toggle-Varianten (SortSwitch/SortButton)
+   setzen aktiv/inaktiv weiterhin per Inline-Style und ignorieren das. */
+.lcars-switch:hover:not(:disabled) {
+  background: var(--lcars-amber);
+  color: var(--lcars-bg);
+  border-color: var(--lcars-amber);
+}
+.lcars-switch:disabled {
+  cursor: not-allowed;
+}
+
+/* Aktueller Tab in der User-Bereich-Navigation (UsersNav.tsx) — dauerhaft
+   gefüllt statt nur bei Hover, damit die aktuelle Seite erkennbar bleibt. */
+.lcars-switch--active {
+  background: var(--lcars-amber);
+  color: var(--lcars-bg);
+  border-color: var(--lcars-amber);
+}
+
+/* Kompakte Icon-Variante von .lcars-switch für Zeilen-Aktionen (z.B.
+   UserRoleRow.tsx) — gleiche Rahmen-/Hover-Logik, aber als 30px-Kreis mit
+   SVG statt Text-Pille. */
+.lcars-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 100vmax;
+  border: solid 1px var(--lcars-text-data);
+  background: var(--lcars-surface);
+  color: var(--lcars-text-data);
+  transition: 200ms;
+}
+.lcars-icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.lcars-icon-btn:hover:not(:disabled) {
+  background: var(--lcars-amber);
+  color: var(--lcars-bg);
+  border-color: var(--lcars-amber);
+}
+.lcars-icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+/* Löschen: rot statt Standard-Blau, auch im Hover. */
+.lcars-icon-btn--danger {
+  border-color: var(--lcars-red);
+  color: var(--lcars-red);
+}
+.lcars-icon-btn--danger:hover:not(:disabled) {
+  background: var(--lcars-red);
+  color: var(--lcars-bg);
+  border-color: var(--lcars-red);
+}
+
+.lcars-filters {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .lcars-filters {
+    flex-direction: row;
+  }
+}
+
+/* Input-Felder */
+.lcars-input {
+  border: solid 1px var(--lcars-text-data);
+  background: var(--lcars-surface-2);
+  color: var(--lcars-text-contrast);
+  padding: 8px 16px;
+  outline: none;
+  height: 36px;
+  font-size: 16px;
+}
+.lcars-input:hover,
+.lcars-input:focus {
+  border-color: var(--lcars-amber);
+}
+
+/* ── Cookie-Hinweis ───────────────────────────────────────────────────
+   Bewusst als kompakte, unten rechts angedockte Karte statt einer über die
+   volle Breite laufenden Leiste — eine breite Leiste am unteren Rand
+   überlappt sonst leicht interaktive Elemente (z.B. Submit-Buttons kurz
+   angehängter Formulare) und blockiert dort Klicks. */
+.lcars-cookie-notice {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 360px;
+  margin-left: auto;
+  padding: 16px 20px;
+  background: var(--lcars-surface);
+  border: solid 1px var(--lcars-text-data);
+  border-radius: var(--lcars-radius-card);
+  color: var(--lcars-text);
+  font-size: 14px;
+}
+.lcars-cookie-notice p {
+  margin: 0;
+}
+.lcars-cookie-notice .lcars-switch {
+  align-self: flex-end;
+}

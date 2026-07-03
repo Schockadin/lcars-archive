@@ -33,7 +33,7 @@ export default async function ArchivePage({
             {`${CATEGORY_CONFIG[category].plural}`}
           </h1>
           {list.length === 0 ? (
-            <p className="char-file-bio-empty">
+            <p className="lcars-empty-state">
               Keine Einträge in dieser Kategorie.
             </p>
           ) : category === "dialogue" ? (

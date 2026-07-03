@@ -1,0 +1,215 @@
+/* ─── Geteilte Bausteine ───────────────────────────────────────────────
+   Klassen, die domänenübergreifend verwendet werden: Typografie mit
+   komplexen Selektoren, Wiki-Links, das Inhaltsverzeichnis, der
+   "Zurück"-Link, Scrollbar-Styling, Lade-Skeletons und Animationen.
+──────────────────────────────────────────────────────────────────── */
+
+/* ── Layout ──────────────────────────────────────────────────────── */
+
+.lcars-main-content {
+  display: flex;
+  min-width: 0;
+  padding-right: 5px;
+}
+
+/* ── Typografie mit komplexen Selektoren ─────────────────────────── */
+
+.lcars-text > * > a {
+  text-decoration: none;
+  color: var(--lcars-text-data);
+  transition: color 250ms;
+}
+.lcars-text > * > a:hover {
+  color: var(--lcars-blue);
+  text-decoration: underline;
+}
+
+/* Obsidian-artige [[Wiki-Links]] – aufgelöst vs. Ziel nicht gefunden */
+.lcars-wikilink {
+  color: var(--lcars-text-data);
+  text-decoration: none;
+  transition: 250ms;
+}
+.lcars-wikilink:hover {
+  color: var(--lcars-blue);
+  text-decoration: underline;
+}
+
+.lcars-wikilink--missing {
+  color: var(--lcars-red);
+  border-bottom: 1px dashed var(--lcars-red);
+  cursor: help;
+}
+.lcars-wikilink--missing:hover {
+  color: var(--lcars-red);
+  text-decoration: none;
+  border-bottom: 1px dashed var(--lcars-red);
+}
+
+/* Generischer Leerzustand-Hinweis ("Noch keine Einträge…") — domänenweit
+   wiederverwendet (Charaktere, Missionen, Archiv, Suche, User-Bereich). */
+.lcars-empty-state {
+  color: var(--lcars-text-dim);
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* Inhaltsverzeichnis (wiederverwendbar) */
+.lcars-toc-title {
+  margin-bottom: 6px;
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--lcars-blue);
+}
+.lcars-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.lcars-toc-link {
+  display: block;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-left: 3px solid transparent;
+  padding: 4px 8px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  color: var(--lcars-text-contrast);
+  transition:
+    color 150ms,
+    background 150ms,
+    border-color 150ms;
+}
+.lcars-toc-link:hover {
+  color: var(--lcars-text);
+  border-left-color: var(--lcars-text-dim);
+}
+.lcars-toc-link[aria-current="true"] {
+  color: var(--lcars-bg);
+  background: var(--lcars-amber);
+  border-left-color: var(--lcars-amber);
+}
+
+/* "Zurück"-Link (Charakter- und Log-Detailseiten) — vormals zwei
+   identische Klassen (.character-back / .mission-loglist-back) mit
+   gemeinsamem Selektor, jetzt eine geteilte Klasse. */
+.lcars-back-link {
+  display: inline-block;
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.05;
+  color: var(--lcars-amber);
+  text-decoration: none;
+  transition: color 150ms;
+}
+.lcars-back-link:hover {
+  color: var(--lcars-amber-light);
+}
+
+.follow-buttons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────────────── */
+
+.lcars-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.lcars-scroll::-webkit-scrollbar-track {
+  background: var(--lcars-blue);
+}
+.lcars-scroll::-webkit-scrollbar-thumb {
+  background: var(--lcars-red);
+}
+.lcars-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--lcars-purple);
+}
+.lcars-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--lcars-blue) var(--lcars-surface);
+}
+
+/* ── Animationen ─────────────────────────────────────────────────── */
+
+.animate-lcars-pulse {
+  animation: lcars-pulse 1.5s infinite;
+}
+
+@keyframes lcars-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* ── Skeleton-Loading ────────────────────────────────────────────────
+   Platzhalter-Blöcke mit LCARS-Shimmer. Werden von den loading.tsx der
+   datenladenden Routen genutzt, damit bei langsamer Navigation sofort
+   eine Struktur sichtbar ist (Suspense-Fallback). */
+.lcars-skel {
+  position: relative;
+  overflow: hidden;
+  background: var(--lcars-surface);
+  border-radius: 4px;
+}
+.lcars-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(200, 184, 255, 0.12),
+    transparent
+  );
+  animation: lcars-shimmer 1.4s infinite;
+}
+
+@keyframes lcars-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* Akzent-Variante: für farbige Stubs/Schienen statt grauer Flächen. */
+.lcars-skel-accent {
+  background: var(--lcars-border);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lcars-skel::after {
+    animation: lcars-pulse 1.6s infinite;
+    transform: none;
+  }
+}
+
+/* Micro (≤ 375px) */
+@media (max-width: 375px) {
+  .lcars-eyebrow {
+    display: none;
+  }
+  .lcars-separator {
+    display: none;
+  }
+}
