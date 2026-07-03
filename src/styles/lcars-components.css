@@ -33,6 +33,13 @@
   min-width: 0;
 }
 
+/* Basis-Größe (Desktop) — Media Queries unten überschreiben font-size für
+   schmalere Viewports. font-family/-weight/color/line-height bleiben in
+   globals.css, hier lebt nur die viewport-abhängige font-size. */
+.lcars-header-title {
+  font-size: 48px;
+}
+
 /* ── Globale Suche (Header) ──────────────────────────────────────── */
 
 .lcars-search {
@@ -1530,6 +1537,18 @@
   .lcars-search {
     flex-basis: 190px;
   }
+  /* Anmelden-/Abmelden-Pill neben dem Titel — nur die Header-Instanz
+     betroffen (nicht das Pill-Grid unter /users), daher gescoped statt die
+     Basisklasse anzufassen. */
+  .lcars-header-top .lcars-usernav-pill {
+    height: 34px;
+    width: 140px;
+    font-size: 14px;
+    padding: 0 14px 6px;
+  }
+  .lcars-header-top .lcars-usernav-form {
+    width: 140px;
+  }
 }
 
 @media (max-width: 520px) {
@@ -1593,6 +1612,15 @@
   .lcars-header-title {
     font-size: 22px;
   }
+  .lcars-header-top .lcars-usernav-pill {
+    height: 26px;
+    width: 100px;
+    font-size: 11px;
+    padding: 0 10px 4px;
+  }
+  .lcars-header-top .lcars-usernav-form {
+    width: 100px;
+  }
   .lcars-data-row-label {
     font-size: 75cqh;
     padding-top: 1px;
@@ -1609,6 +1637,22 @@
   }
   .lcars-menu-id {
     font-size: 16px;
+  }
+}
+
+/* Sehr schmale Handys (≤ 400px): Titel würde bei 22px sonst umbrechen. */
+@media (max-width: 400px) {
+  .lcars-header-title {
+    font-size: 17px;
+  }
+  .lcars-header-top .lcars-usernav-pill {
+    height: 24px;
+    width: 84px;
+    font-size: 10px;
+    padding: 0 8px 3px;
+  }
+  .lcars-header-top .lcars-usernav-form {
+    width: 84px;
   }
 }
 
