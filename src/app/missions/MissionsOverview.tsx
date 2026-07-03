@@ -1,6 +1,5 @@
 "use client";
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import { MissionAuthor, MissionPreview } from "@/types/missions";
 import {
   STATUS_CONFIG,
@@ -9,6 +8,7 @@ import {
   synopsisExcerpt,
   yearOf,
 } from "@/lib/missionFormat";
+import { LcarsAkteCard, LcarsSwitch } from "@/components/lcars";
 
 type SortDir = "desc" | "asc";
 
@@ -79,20 +79,15 @@ export default function MissionsOverview({
       ) : (
         <>
           <div className="mission-toolbar">
-            <div className="mission-sort">
-              <SortButton
-                active={sortDir === "desc"}
-                onClick={() => setSortDir("desc")}
-              >
-                Neueste zuerst
-              </SortButton>
-              <SortButton
-                active={sortDir === "asc"}
-                onClick={() => setSortDir("asc")}
-              >
-                Älteste zuerst
-              </SortButton>
-            </div>
+            <LcarsSwitch
+              className="mission-sort"
+              options={[
+                { key: "desc", label: "Neueste zuerst" },
+                { key: "asc", label: "Älteste zuerst" },
+              ]}
+              active={sortDir}
+              onChange={setSortDir}
+            />
 
             {authors.length > 0 && (
               <select
@@ -153,54 +148,27 @@ function cmpStart(a: MissionPreview, b: MissionPreview, dir: SortDir): number {
   return da < db ? -1 : 1;
 }
 
-function SortButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      onClick={onClick}
-      className="lcars-switch flex-1"
-      style={{
-        backgroundColor: active ? "var(--lcars-amber)" : "var(--lcars-surface)",
-        color: active ? "var(--lcars-bg)" : "var(--lcars-text-data)",
-        borderColor: active ? "var(--lcars-amber)" : "var(--lcars-text-data)",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
 function MissionCard({ mission }: { mission: MissionPreview }) {
   const cfg = STATUS_CONFIG[mission.status];
   const code = `M-${String(mission.id).padStart(2, "0")}`;
 
   return (
-    <Link
+    <LcarsAkteCard
       href={`/missions/${mission.slug}`}
-      className="mission-akte"
-      aria-label={`${mission.title} — ${cfg.label}`}
-      style={{ "--mission-color": cfg.color } as React.CSSProperties}
-    >
-      <span className="mission-akte-rail" />
-      <span className="mission-akte-body text-left">
-        <span className="mission-akte-title block">{mission.title}</span>
-        <span className="mission-akte-summary block">
-          {mission.metadata.body ? (
-            synopsisExcerpt(stripHtml(mission.metadata.body))
-          ) : (
-            <span className="lcars-empty-state">
-              Keine Zusammenfassung vorhanden
-            </span>
-          )}
-        </span>
-        <span className="mission-akte-meta">
+      color={cfg.color}
+      ariaLabel={`${mission.title} — ${cfg.label}`}
+      title={mission.title}
+      summary={
+        mission.metadata.body ? (
+          synopsisExcerpt(stripHtml(mission.metadata.body))
+        ) : (
+          <span className="lcars-empty-state">
+            Keine Zusammenfassung vorhanden
+          </span>
+        )
+      }
+      meta={
+        <>
           <span>
             <b>Code</b> {code}
           </span>
@@ -210,8 +178,8 @@ function MissionCard({ mission }: { mission: MissionPreview }) {
           <span>
             <b>Logs</b> {mission.log_count}
           </span>
-        </span>
-      </span>
-    </Link>
+        </>
+      }
+    />
   );
 }
