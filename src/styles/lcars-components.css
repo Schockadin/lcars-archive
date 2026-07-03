@@ -14,6 +14,7 @@
 @import "./lcars-components/tokens-responsive.css";
 @import "./lcars-components/header.css";
 @import "./lcars-components/data-row.css";
+@import "./lcars-components/accordion.css";
 @import "./lcars-components/character.css";
 @import "./lcars-components/char-file.css";
 @import "./lcars-components/controls.css";

@@ -556,6 +556,8 @@ export interface DialogueSummary {
   partnerName: string;
   updatedAt: string;
   open: boolean;
+  characterSlug: string;
+  characterName: string;
 }
 
 // "Deine Gespräche" fürs Dashboard (scope "open", Default) bzw. "Meine
@@ -573,7 +575,8 @@ export async function getDialoguesForUser(
   const ownSlugs = new Set(ownCharacters.map((c) => c.slug));
 
   const results = new Map<string, DialogueSummary>();
-  for (const slug of ownSlugs) {
+  for (const character of ownCharacters) {
+    const slug = character.slug;
     const rows =
       scope === "open"
         ? await sql<
@@ -605,6 +608,8 @@ export async function getDialoguesForUser(
         partnerName: partner?.name ?? "Unbekannt",
         updatedAt: row.updated_at,
         open: row.dialogue_open,
+        characterSlug: character.slug,
+        characterName: character.name,
       });
     }
   }

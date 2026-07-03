@@ -128,16 +128,20 @@ export interface UserContentLog {
   log_date: string | null;
   mission_slug: string;
   mission_title: string;
+  character_slug: string;
+  character_name: string;
 }
 
 // Alle Mission-Logs der eigenen Charaktere für /users/[id]/content. Ungecacht
 // wie getCharactersForUser — die Seite ist ohnehin durch requireOwnCharacters
-// (Session-Zugriff) dynamisch.
+// (Session-Zugriff) dynamisch. Liefert den verfassenden eigenen Charakter
+// mit, damit die Seite nach Charakter gruppieren kann.
 export async function getLogsForUser(userId: number): Promise<UserContentLog[]> {
   return sql<UserContentLog[]>`
     SELECT
       ml.id, ml.slug, ml.title, ml.session_nr, ml.log_date::text AS log_date,
-      m.slug AS mission_slug, m.title AS mission_title
+      m.slug AS mission_slug, m.title AS mission_title,
+      c.slug AS character_slug, c.name AS character_name
     FROM mission_logs ml
     JOIN characters c ON c.id = ml.author_id
     JOIN missions m ON m.id = ml.mission_id
