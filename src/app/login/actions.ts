@@ -4,6 +4,9 @@ import { redirect } from "next/navigation";
 import { createSession, deleteSession } from "@/lib/session";
 import { getUserCredentialsByEmail, recordLogin } from "@/lib/users";
 import { verifyPassword } from "@/lib/password";
+import { createPasswordSetupToken } from "@/lib/passwordSetupTokens";
+import { sendActivationEmail } from "@/lib/mail";
+import { getBaseUrl } from "@/lib/http";
 
 export interface LoginState {
   error?: string;
@@ -32,20 +35,30 @@ export async function login(
     return { error: "Dieses Konto wurde deaktiviert." };
   }
 
-  if (user.password_hash) {
-    if (!password || !(await verifyPassword(password, user.password_hash))) {
-      return { error: "E-Mail-Adresse oder Passwort ist falsch." };
-    }
-  } else if (user.requires_activation) {
-    // Vom GM angelegt, aber der Aktivierungslink wurde noch nicht benutzt.
+  if (!user.password_hash) {
+    // Passwort ist Pflicht — weder ein frisch vom Admin angelegtes Konto
+    // (requires_activation) noch ein Alt-Konto (vor der Passwort-Einführung)
+    // darf sich mehr per E-Mail allein einloggen. Statt eines toten Endes
+    // wird bei jedem Versuch ein frischer Aktivierungslink verschickt —
+    // derselbe Mechanismus wie beim Anlegen neuer User (createUserAction).
+    const rawToken = await createPasswordSetupToken(user.id);
+    const activationUrl = `${await getBaseUrl()}/activate?token=${rawToken}`;
+    const result = await sendActivationEmail({
+      to: user.email,
+      name: user.name,
+      activationUrl,
+    });
+
     return {
-      error:
-        "Dieses Konto ist noch nicht aktiviert. Bitte nutze den Link aus deiner Einladungs-E-Mail.",
+      error: result.sent
+        ? "Für dieses Konto ist noch kein Passwort gesetzt. Wir haben dir einen Link zum Festlegen geschickt."
+        : "Für dieses Konto ist noch kein Passwort gesetzt, und die Mail konnte nicht gesendet werden. Bitte wende dich an die Spielleitung.",
     };
   }
-  // Sonst: Bestandskonto ohne Passwort (vor der Passwort-Einführung
-  // angelegt) — Login per E-Mail allein bleibt erlaubt, bis selbst ein
-  // Passwort gesetzt wird (siehe /users/[id]/settings).
+
+  if (!password || !(await verifyPassword(password, user.password_hash))) {
+    return { error: "E-Mail-Adresse oder Passwort ist falsch." };
+  }
 
   await recordLogin(user.id);
   await createSession(user);
