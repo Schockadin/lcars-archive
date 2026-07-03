@@ -84,12 +84,15 @@ async function main() {
     await ingestCharacters(sql, vaultPath, true);
 
     const changedMissionSlugs = new Set<string>();
+    const changedCharacterSlugs = new Set<string>();
+    const newLogSlugs = new Set<string>();
     for (const slug of await ingestMissions(sql, vaultPath, true)) {
       changedMissionSlugs.add(slug);
     }
-    for (const slug of await ingestMissionLogs(sql, vaultPath, true)) {
-      changedMissionSlugs.add(slug);
-    }
+    const logResult = await ingestMissionLogs(sql, vaultPath, true);
+    for (const slug of logResult.missionSlugs) changedMissionSlugs.add(slug);
+    for (const slug of logResult.characterSlugs) changedCharacterSlugs.add(slug);
+    for (const slug of logResult.newLogSlugs) newLogSlugs.add(slug);
     const changedArchiveSlugs = await ingestArchive(sql, vaultPath, true);
     // Läuft immer über den kompletten Datenbestand, nicht nur die gerade neu
     // importierten Dateien — funktioniert unverändert wie beim Vollimport.
@@ -98,7 +101,13 @@ async function main() {
     // metadata aller vier Tabellen, nicht nur der gerade importierten.
     await ingestTimeline(sql);
     console.log("\n✅ Ingestion abgeschlossen");
-    await notifySubscribers(sql, changedMissionSlugs, changedArchiveSlugs);
+    await notifySubscribers(
+      sql,
+      changedMissionSlugs,
+      changedArchiveSlugs,
+      changedCharacterSlugs,
+      newLogSlugs,
+    );
     await triggerRevalidation();
   } catch (error) {
     console.error("\n❌ Fataler Fehler:", error);

@@ -25,12 +25,26 @@ export const getCurrentUser = cache(async (): Promise<User> => {
   return user;
 });
 
-// GM-only-Gate für /users (Nutzerverwaltung) und dessen Server Actions.
-// Redirect geht auf die eigene Personendatei, nicht /login — der User ist
-// angemeldet, nur für diese Seite nicht berechtigt.
+// Gate für /users (Nutzerverwaltung): darf betreten, wer gm ODER admin ist —
+// die Seite selbst zeigt je nach Rolle unterschiedliche Abschnitte (siehe
+// requireAdmin unten für die strengere Admin-only-Prüfung der
+// Useraccount-Verwaltungs-Actions). Redirect geht auf die eigene
+// Personendatei, nicht /login — der User ist angemeldet, nur für diese
+// Seite nicht berechtigt.
 export async function requireGM(): Promise<User> {
   const user = await getCurrentUser();
-  if (user.role !== "gm") {
+  if (user.role !== "gm" && user.role !== "admin") {
+    redirect(`/users/${user.id}`);
+  }
+  return user;
+}
+
+// Strenger als requireGM: nur für Useraccount-Verwaltung (anlegen, Rolle
+// ändern, deaktivieren, löschen, bearbeiten) — ein reiner gm darf weiterhin
+// nur Charaktere zuweisen (assignCharacterAction bleibt bei requireGM).
+export async function requireAdmin(): Promise<User> {
+  const user = await getCurrentUser();
+  if (user.role !== "admin") {
     redirect(`/users/${user.id}`);
   }
   return user;

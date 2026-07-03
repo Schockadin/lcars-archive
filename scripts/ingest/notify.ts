@@ -14,29 +14,38 @@ function resolveBaseUrl(): string {
 interface ChangedItemRow {
   email: string;
   name: string;
-  target_type: "mission" | "archive_entry";
+  target_type: "mission" | "archive_entry" | "mission_log";
   slug: string;
   title: string;
+  mission_slug: string | null;
 }
 
-// Benachrichtigt Abonnenten geänderter Missionen/Archiv-Einträge nach einem
-// Ingest-Lauf per Sammel-Mail (eine Mail pro User über alle Änderungen).
-// Wird sowohl von changedMissionSlugs (Titel/Status/Zeitraum/Body geändert
-// ODER neuer Mission-Log) als auch changedArchiveSlugs (Titel/Kategorie/
-// Inhalt geändert) gespeist — "geändert" wird von den jeweiligen
-// ingest*-Funktionen selbst bestimmt (siehe missions.ts/missionLogs.ts/
-// archive.ts), notify.ts kümmert sich nur noch um Versand.
+// Benachrichtigt Abonnenten geänderter Missionen/Archiv-Einträge/Charaktere
+// nach einem Ingest-Lauf per Sammel-Mail (eine Mail pro User über alle
+// Änderungen). Wird von changedMissionSlugs (Titel/Status/Zeitraum/Body
+// geändert ODER neuer Mission-Log), changedArchiveSlugs (Titel/Kategorie/
+// Inhalt geändert) sowie changedCharacterSlugs+newLogSlugs (neuer
+// Mission-Log eines abonnierten Charakters) gespeist — "geändert" wird von
+// den jeweiligen ingest*-Funktionen selbst bestimmt (siehe missions.ts/
+// missionLogs.ts/archive.ts), notify.ts kümmert sich nur noch um Versand.
 export async function notifySubscribers(
   sql: postgres.Sql,
   changedMissionSlugs: Set<string>,
   changedArchiveSlugs: Set<string>,
+  changedCharacterSlugs: Set<string>,
+  newLogSlugs: Set<string>,
 ): Promise<void> {
-  if (changedMissionSlugs.size === 0 && changedArchiveSlugs.size === 0) {
+  if (
+    changedMissionSlugs.size === 0 &&
+    changedArchiveSlugs.size === 0 &&
+    changedCharacterSlugs.size === 0
+  ) {
     return;
   }
 
   const rows = await sql<ChangedItemRow[]>`
-    SELECT u.email, u.name, 'mission'::text AS target_type, m.slug, m.title
+    SELECT u.email, u.name, 'mission'::text AS target_type, m.slug, m.title,
+           NULL::text AS mission_slug
     FROM content_follows cf
     JOIN users u ON u.id = cf.user_id
     JOIN missions m ON m.slug = cf.target_slug
@@ -44,13 +53,25 @@ export async function notifySubscribers(
       AND cf.subscribed_at IS NOT NULL
       AND cf.target_slug = ANY(${[...changedMissionSlugs]})
     UNION ALL
-    SELECT u.email, u.name, 'archive_entry'::text AS target_type, a.slug, a.title
+    SELECT u.email, u.name, 'archive_entry'::text AS target_type, a.slug, a.title,
+           NULL::text AS mission_slug
     FROM content_follows cf
     JOIN users u ON u.id = cf.user_id
     JOIN archive_entries a ON a.slug = cf.target_slug
     WHERE cf.target_type = 'archive_entry'
       AND cf.subscribed_at IS NOT NULL
       AND cf.target_slug = ANY(${[...changedArchiveSlugs]})
+    UNION ALL
+    SELECT u.email, u.name, 'mission_log'::text AS target_type, ml.slug, ml.title,
+           m.slug AS mission_slug
+    FROM content_follows cf
+    JOIN users u ON u.id = cf.user_id
+    JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
+    JOIN mission_logs ml ON ml.author_id = c.id
+    JOIN missions m ON m.id = ml.mission_id
+    WHERE cf.subscribed_at IS NOT NULL
+      AND cf.target_slug = ANY(${[...changedCharacterSlugs]})
+      AND ml.slug = ANY(${[...newLogSlugs]})
   `;
 
   if (rows.length === 0) {
@@ -65,7 +86,10 @@ export async function notifySubscribers(
   >();
 
   for (const row of rows) {
-    const href = `${baseUrl}/${row.target_type === "mission" ? "missions" : "archive"}/${row.slug}`;
+    const href =
+      row.target_type === "mission_log"
+        ? `${baseUrl}/missions/${row.mission_slug}/${row.slug}`
+        : `${baseUrl}/${row.target_type === "mission" ? "missions" : "archive"}/${row.slug}`;
     const entry = byEmail.get(row.email) ?? { name: row.name, items: [] };
     entry.items.push({ title: row.title, href });
     byEmail.set(row.email, entry);

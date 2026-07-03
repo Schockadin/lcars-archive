@@ -62,6 +62,7 @@ export default function CreateUserForm() {
           defaultValue="player"
           className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
         >
+          <option value="admin">Administration</option>
           <option value="gm">Spielleitung</option>
           <option value="player">Spieler</option>
           <option value="viewer">Beobachter</option>

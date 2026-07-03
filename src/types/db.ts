@@ -12,7 +12,8 @@ export interface User {
   id: number;
   email: string;
   name: string;
-  role: 'gm' | 'player' | 'viewer';
+  role: 'admin' | 'gm' | 'player' | 'viewer';
+  is_active: boolean;
   created_at: Date;
   last_login_at: Date | null;
   previous_login_at: Date | null;

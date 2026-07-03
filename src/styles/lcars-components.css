@@ -2047,3 +2047,8 @@
   line-height: 1.6;
   color: var(--lcars-text-light);
 }
+.dialogue-message-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}

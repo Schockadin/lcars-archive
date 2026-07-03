@@ -1,7 +1,7 @@
 import "server-only";
 import sql from "@/lib/db";
 
-export type FollowTargetType = "mission" | "archive_entry";
+export type FollowTargetType = "mission" | "archive_entry" | "character";
 
 export interface FollowStatus {
   bookmarked: boolean;
@@ -103,7 +103,12 @@ function toFollowedContent(row: {
     targetType: row.target_type,
     slug: row.slug,
     title: row.title,
-    href: row.target_type === "mission" ? `/missions/${row.slug}` : `/archive/${row.slug}`,
+    href:
+      row.target_type === "mission"
+        ? `/missions/${row.slug}`
+        : row.target_type === "character"
+          ? `/characters/${row.slug}`
+          : `/archive/${row.slug}`,
   };
 }
 
@@ -121,6 +126,11 @@ export async function getBookmarkedContent(
     SELECT 'archive_entry'::text AS target_type, a.slug, a.title
     FROM content_follows cf
     JOIN archive_entries a ON a.slug = cf.target_slug AND cf.target_type = 'archive_entry'
+    WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
+    UNION ALL
+    SELECT 'character'::text AS target_type, c.slug, c.name AS title
+    FROM content_follows cf
+    JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
     WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
     ORDER BY title ASC
   `;
@@ -141,6 +151,11 @@ export async function getSubscribedContent(
     SELECT 'archive_entry'::text AS target_type, a.slug, a.title
     FROM content_follows cf
     JOIN archive_entries a ON a.slug = cf.target_slug AND cf.target_type = 'archive_entry'
+    WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
+    UNION ALL
+    SELECT 'character'::text AS target_type, c.slug, c.name AS title
+    FROM content_follows cf
+    JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
     WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
     ORDER BY title ASC
   `;

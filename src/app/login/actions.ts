@@ -28,6 +28,10 @@ export async function login(
     return { error: "Keine Anmeldung für diese E-Mail-Adresse gefunden." };
   }
 
+  if (!user.is_active) {
+    return { error: "Dieses Konto wurde deaktiviert." };
+  }
+
   if (user.password_hash) {
     if (!password || !(await verifyPassword(password, user.password_hash))) {
       return { error: "E-Mail-Adresse oder Passwort ist falsch." };

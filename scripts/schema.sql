@@ -234,3 +234,34 @@ CREATE INDEX IF NOT EXISTS idx_dialogue_messages_author ON dialogue_messages(aut
 -- bleiben beim Default FALSE (= abgeschlossen) — der Ingest muss nichts
 -- davon wissen.
 ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS dialogue_open BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- Nachträgliches Bearbeiten/Löschen eigener Dialog-Nachrichten. Löschen ist
+-- ein Soft-Delete (deleted_at gesetzt) — content/source_md bleiben in der
+-- DB erhalten, werden aber von getDialogueMessages() nie mehr ausgeliefert
+-- (Platzhaltertext stattdessen), damit die Thread-Struktur/Reihenfolge
+-- erhalten bleibt. Kein separates Boolean-Flag: edited_at/deleted_at
+-- IS NOT NULL sind die Flags selbst.
+ALTER TABLE dialogue_messages ADD COLUMN IF NOT EXISTS edited_at  TIMESTAMPTZ;
+ALTER TABLE dialogue_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+-- Charakter-Abos: dritter target_type neben mission/archive_entry. Nutzt
+-- dieselbe content_follows-Tabelle (bookmarked_at/subscribed_at), target_slug
+-- ist der Charakter-Slug.
+ALTER TABLE content_follows DROP CONSTRAINT IF EXISTS content_follows_target_type_check;
+ALTER TABLE content_follows ADD CONSTRAINT content_follows_target_type_check
+  CHECK (target_type IN ('mission', 'archive_entry', 'character'));
+
+-- GM-Rolle wird gesplittet: admin (volle Useraccount-Verwaltung +
+-- Charakter-Zuweisung) und gm (nur noch Charakter-Zuweisung +
+-- Spielleitungs-Befugnisse wie Dialog-Force-Complete). Bestehende
+-- role='gm'-Accounts migrieren zu 'admin', um alle heutigen Rechte zu
+-- behalten (kein Risiko, sich selbst auszusperren). Reihenfolge wichtig:
+-- Constraint zuerst erweitern, dann Daten migrieren.
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check
+  CHECK (role IN ('admin', 'gm', 'player', 'viewer'));
+UPDATE users SET role = 'admin' WHERE role = 'gm';
+
+-- Admin kann Useraccounts deaktivieren (Soft-Block am Login, siehe
+-- src/app/login/actions.ts) statt sie sofort zu löschen.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;

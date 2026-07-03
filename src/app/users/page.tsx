@@ -12,10 +12,14 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// GM-only — kein Sidebar-Eintrag, gleiches Prinzip wie /login. requireGM()
-// leitet Nicht-GMs auf ihre eigene /users/<id> um.
+// Gm-oder-admin — kein Sidebar-Eintrag, gleiches Prinzip wie /login.
+// requireGM() leitet Nicht-Privilegierte auf ihre eigene /users/<id> um.
+// Useraccount-Verwaltung (anlegen/Rolle/Deaktivieren/Löschen/Bearbeiten)
+// ist admin-only und wird für einen reinen gm ausgeblendet — Charakter-
+// Zuweisung bleibt für beide Rollen sichtbar.
 export default async function UsersAdminPage() {
-  await requireGM();
+  const viewer = await requireGM();
+  const isAdmin = viewer.role === "admin";
 
   const [users, characters] = await Promise.all([
     listAllUsers(),
@@ -31,14 +35,16 @@ export default async function UsersAdminPage() {
         <h1>Nutzerverwaltung</h1>
 
         <div className="lcars-text flex flex-col gap-[32px]">
-          <section className="flex flex-col gap-[12px]">
-            <p className="lcars-eyebrow">Neuen User anlegen</p>
-            <CreateUserForm />
-          </section>
+          {isAdmin && (
+            <section className="flex flex-col gap-[12px]">
+              <p className="lcars-eyebrow">Neuen User anlegen</p>
+              <CreateUserForm />
+            </section>
+          )}
 
           <section className="flex flex-col gap-[12px]">
             <p className="lcars-eyebrow">{users.length} registrierte User</p>
-            <UserManagementTable users={users} />
+            <UserManagementTable users={users} isAdmin={isAdmin} />
           </section>
 
           <section className="flex flex-col gap-[12px]">
