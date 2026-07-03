@@ -61,13 +61,13 @@ export default function HeaderContent() {
         <div className="lcars-header-title uppercase">Neo Archiv</div>
         {session &&
           (session.userId ? (
-            <form action={logout}>
-              <button type="submit" className="lcars-switch">
+            <form action={logout} className="lcars-usernav-form">
+              <button type="submit" className="lcars-usernav-pill bg-lcars-red">
                 Abmelden
               </button>
             </form>
           ) : (
-            <Link href="/login" className="lcars-switch">
+            <Link href="/login" className="lcars-usernav-pill bg-lcars-green">
               Anmelden
             </Link>
           ))}
