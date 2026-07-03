@@ -43,7 +43,7 @@ export default async function DialoguePlayPage({ params }: Props) {
   const participant = await getDialogueParticipant(entry.id, session.userId);
   if (!participant) {
     const user = await getUserById(session.userId);
-    if (user?.role !== "gm") {
+    if (user?.role !== "gm" && user?.role !== "admin") {
       redirect(`/users/${session.userId}`);
     }
   }
@@ -62,7 +62,13 @@ export default async function DialoguePlayPage({ params }: Props) {
       />
 
       {messages.length > 0 ? (
-        <DialogueThread messages={messages} participants={entry.participants} />
+        <DialogueThread
+          messages={messages}
+          participants={entry.participants}
+          currentUserId={session.userId}
+          dialogueOpen={entry.open}
+          entrySlug={entry.slug}
+        />
       ) : (
         <p className="char-file-bio-empty">Noch keine Nachrichten.</p>
       )}

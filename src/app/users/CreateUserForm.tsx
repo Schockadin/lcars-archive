@@ -62,6 +62,7 @@ export default function CreateUserForm() {
           defaultValue="player"
           className="rounded-lcars-pill lcars-input"
         >
+          <option value="admin">Administration</option>
           <option value="gm">Spielleitung</option>
           <option value="player">Spieler</option>
         </select>

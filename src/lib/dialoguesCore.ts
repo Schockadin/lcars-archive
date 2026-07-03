@@ -10,6 +10,13 @@ import type { ArchiveParticipant, ArchiveLocationRef } from "@/types/archive";
 
 export class DialogueSlugCollisionError extends Error {}
 export class DialogueClosedError extends Error {}
+export class DialogueMessageNotFoundError extends Error {}
+export class DialogueMessageForbiddenError extends Error {}
+
+// Statischer Platzhalter für gelöschte Nachrichten — kein markdownToSafeHtml
+// nötig (kein User-Input), und der eigentliche Inhalt verlässt so nie die
+// Datenschicht.
+const DELETED_MESSAGE_HTML = "<p><em>Nachricht wurde gelöscht.</em></p>";
 
 function isUniqueViolation(err: unknown): boolean {
   return (
@@ -51,8 +58,11 @@ export interface DialogueMessage {
   characterId: number | null;
   characterSlug: string | null;
   characterName: string | null;
+  authorUserId: number | null;
   content: string;
   createdAt: string;
+  editedAt: string | null;
+  deletedAt: string | null;
 }
 
 // Absteigend (neueste zuerst). Kein unstable_cache — muss nach jeder neuen
@@ -67,14 +77,18 @@ export async function getDialogueMessages(
       character_id: number | null;
       character_slug: string | null;
       character_name: string | null;
+      author_user_id: number | null;
       content: string;
       created_at: string;
+      edited_at: string | null;
+      deleted_at: string | null;
     }[]
   >`
     SELECT
       dm.id, dm.character_id,
       c.slug AS character_slug, c.name AS character_name,
-      dm.content, dm.created_at::text AS created_at
+      dm.author_user_id, dm.content, dm.created_at::text AS created_at,
+      dm.edited_at::text AS edited_at, dm.deleted_at::text AS deleted_at
     FROM dialogue_messages dm
     LEFT JOIN characters c ON c.id = dm.character_id
     WHERE dm.archive_entry_id = ${archiveEntryId}
@@ -86,8 +100,11 @@ export async function getDialogueMessages(
     characterId: r.character_id,
     characterSlug: r.character_slug,
     characterName: r.character_name,
-    content: r.content,
+    authorUserId: r.author_user_id,
+    content: r.deleted_at ? DELETED_MESSAGE_HTML : r.content,
     createdAt: r.created_at,
+    editedAt: r.edited_at,
+    deletedAt: r.deleted_at,
   }));
 }
 
@@ -234,9 +251,160 @@ export async function postDialogueMessage(
       characterId: row.character_id,
       characterSlug: char?.slug ?? null,
       characterName: char?.name ?? null,
+      authorUserId: input.authorUserId,
       content,
       createdAt: row.created_at,
+      editedAt: null,
+      deletedAt: null,
     };
+  });
+}
+
+export interface DialogueMessageForEdit {
+  id: number;
+  archiveEntryId: number;
+  entrySlug: string;
+  authorUserId: number | null;
+  characterId: number | null;
+  sourceMd: string;
+  deletedAt: string | null;
+}
+
+// Reiner interner Lookup ohne eigene Auth-Prüfung — der Aufrufer (Server
+// Action) muss authorUserId === session.userId selbst prüfen, bevor
+// sourceMd an den Client geht.
+export async function getDialogueMessageForEdit(
+  messageId: number,
+): Promise<DialogueMessageForEdit | null> {
+  const [row] = await sql<
+    {
+      id: number;
+      archive_entry_id: number;
+      entry_slug: string;
+      author_user_id: number | null;
+      character_id: number | null;
+      source_md: string;
+      deleted_at: string | null;
+    }[]
+  >`
+    SELECT dm.id, dm.archive_entry_id, ae.slug AS entry_slug,
+           dm.author_user_id, dm.character_id, dm.source_md,
+           dm.deleted_at::text AS deleted_at
+    FROM dialogue_messages dm
+    JOIN archive_entries ae ON ae.id = dm.archive_entry_id
+    WHERE dm.id = ${messageId}
+  `;
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    archiveEntryId: row.archive_entry_id,
+    entrySlug: row.entry_slug,
+    authorUserId: row.author_user_id,
+    characterId: row.character_id,
+    sourceMd: row.source_md,
+    deletedAt: row.deleted_at,
+  };
+}
+
+export interface EditMessageInput {
+  messageId: number;
+  authorUserId: number;
+  bodyMarkdown: string;
+}
+
+export async function editDialogueMessage(
+  input: EditMessageInput,
+): Promise<DialogueMessage> {
+  const content = await markdownToSafeHtml(input.bodyMarkdown);
+
+  return sql.begin(async (tx) => {
+    const [row] = await tx<
+      {
+        id: number;
+        archive_entry_id: number;
+        character_id: number | null;
+        author_user_id: number | null;
+        deleted_at: string | null;
+        dialogue_open: boolean;
+      }[]
+    >`
+      SELECT dm.id, dm.archive_entry_id, dm.character_id, dm.author_user_id,
+             dm.deleted_at::text AS deleted_at, ae.dialogue_open
+      FROM dialogue_messages dm
+      JOIN archive_entries ae ON ae.id = dm.archive_entry_id
+      WHERE dm.id = ${input.messageId}
+      FOR UPDATE OF dm
+    `;
+    if (!row) throw new DialogueMessageNotFoundError();
+    if (row.author_user_id !== input.authorUserId) {
+      throw new DialogueMessageForbiddenError();
+    }
+    if (row.deleted_at) throw new DialogueMessageNotFoundError();
+    if (!row.dialogue_open) throw new DialogueClosedError();
+
+    const [updated] = await tx<
+      { id: number; created_at: string; edited_at: string }[]
+    >`
+      UPDATE dialogue_messages
+      SET content = ${content}, source_md = ${input.bodyMarkdown}, edited_at = NOW()
+      WHERE id = ${input.messageId}
+      RETURNING id, created_at::text AS created_at, edited_at::text AS edited_at
+    `;
+
+    const [char] = row.character_id
+      ? await tx<{ slug: string; name: string }[]>`
+          SELECT slug, name FROM characters WHERE id = ${row.character_id}
+        `
+      : [undefined];
+
+    return {
+      id: updated.id,
+      characterId: row.character_id,
+      characterSlug: char?.slug ?? null,
+      characterName: char?.name ?? null,
+      authorUserId: row.author_user_id,
+      content,
+      createdAt: updated.created_at,
+      editedAt: updated.edited_at,
+      deletedAt: null,
+    };
+  });
+}
+
+export interface DeleteMessageInput {
+  messageId: number;
+  authorUserId: number;
+}
+
+export async function deleteDialogueMessage(
+  input: DeleteMessageInput,
+): Promise<void> {
+  await sql.begin(async (tx) => {
+    const [row] = await tx<
+      {
+        archive_entry_id: number;
+        author_user_id: number | null;
+        deleted_at: string | null;
+        dialogue_open: boolean;
+      }[]
+    >`
+      SELECT dm.archive_entry_id, dm.author_user_id,
+             dm.deleted_at::text AS deleted_at, ae.dialogue_open
+      FROM dialogue_messages dm
+      JOIN archive_entries ae ON ae.id = dm.archive_entry_id
+      WHERE dm.id = ${input.messageId}
+      FOR UPDATE OF dm
+    `;
+    if (!row) throw new DialogueMessageNotFoundError();
+    if (row.author_user_id !== input.authorUserId) {
+      throw new DialogueMessageForbiddenError();
+    }
+    if (row.deleted_at) return; // bereits gelöscht — idempotenter no-op
+    if (!row.dialogue_open) throw new DialogueClosedError();
+
+    await tx`UPDATE dialogue_messages SET deleted_at = NOW() WHERE id = ${input.messageId}`;
+    await tx`UPDATE archive_entries SET updated_at = NOW() WHERE id = ${row.archive_entry_id}`;
   });
 }
 
@@ -365,6 +533,21 @@ export async function getOtherParticipantContact(
     LIMIT 1
   `;
   return row ?? null;
+}
+
+// Abonnenten eines Charakters (subscribed_at gesetzt) — Grundlage für die
+// Dialog-Abschluss-Benachrichtigung in completeDialogueAction.
+export async function getCharacterSubscribers(
+  characterSlug: string,
+): Promise<{ email: string; name: string }[]> {
+  return sql<{ email: string; name: string }[]>`
+    SELECT u.email, u.name
+    FROM content_follows cf
+    JOIN users u ON u.id = cf.user_id
+    WHERE cf.target_type = 'character'
+      AND cf.target_slug = ${characterSlug}
+      AND cf.subscribed_at IS NOT NULL
+  `;
 }
 
 export interface DialogueSummary {

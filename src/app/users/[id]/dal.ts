@@ -69,7 +69,7 @@ export async function requireSelfOrGM(idParam: string): Promise<SelfOrGMAccess> 
   }
 
   const viewer = await getCurrentUser();
-  if (viewer.role !== "gm") {
+  if (viewer.role !== "gm" && viewer.role !== "admin") {
     redirect(`/users/${viewer.id}`);
   }
 

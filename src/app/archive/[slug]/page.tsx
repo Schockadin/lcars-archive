@@ -106,7 +106,12 @@ export default async function ArchiveEntryPage({ params }: Props) {
         )}
 
       {entry.category === "dialogue" && messages.length > 0 ? (
-        <DialogueThread messages={messages} participants={entry.metadata.participants} />
+        <DialogueThread
+          messages={messages}
+          participants={entry.metadata.participants}
+          currentUserId={null}
+          dialogueOpen={false}
+        />
       ) : entry.content ? (
         <div
           className="mission-body lcars-text"

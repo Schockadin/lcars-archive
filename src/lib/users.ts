@@ -3,7 +3,7 @@ import sql from "@/lib/db";
 import type { User } from "@/types/db";
 
 const USER_COLUMNS = sql`
-  id, email, name, role, created_at, last_login_at, previous_login_at
+  id, email, name, role, is_active, created_at, last_login_at, previous_login_at
 `;
 
 export class EmailTakenError extends Error {}
@@ -39,7 +39,7 @@ export interface UserWithCharacters extends User {
 export async function listAllUsers(): Promise<UserWithCharacters[]> {
   const rows = await sql<UserWithCharacters[]>`
     SELECT
-      u.id, u.email, u.name, u.role, u.created_at,
+      u.id, u.email, u.name, u.role, u.is_active, u.created_at,
       u.last_login_at, u.previous_login_at,
       COALESCE(
         jsonb_agg(
@@ -52,7 +52,7 @@ export async function listAllUsers(): Promise<UserWithCharacters[]> {
     LEFT JOIN characters c ON c.player_id = u.id
     GROUP BY u.id
     ORDER BY
-      CASE u.role WHEN 'gm' THEN 1 WHEN 'player' THEN 2 WHEN 'viewer' THEN 3 END,
+      CASE u.role WHEN 'admin' THEN 0 WHEN 'gm' THEN 1 WHEN 'player' THEN 2 WHEN 'viewer' THEN 3 END,
       u.name ASC
   `;
   return rows.map((row) => ({
@@ -102,6 +102,18 @@ export async function updateUserRole(
   return rows[0];
 }
 
+// Deaktivieren ist ein Soft-Block (Login-Gate in src/app/login/actions.ts),
+// Löschen ein hartes DELETE — schema-sicher, da characters.player_id/
+// dialogue_messages.author_user_id ON DELETE SET NULL sind und
+// content_follows.user_id ON DELETE CASCADE ist.
+export async function setUserActive(id: number, active: boolean): Promise<void> {
+  await sql`UPDATE users SET is_active = ${active} WHERE id = ${id}`;
+}
+
+export async function deleteUser(id: number): Promise<void> {
+  await sql`DELETE FROM users WHERE id = ${id}`;
+}
+
 function isUniqueViolation(err: unknown): boolean {
   return (
     typeof err === "object" &&
@@ -145,6 +157,7 @@ export interface UserCredentials {
   id: number;
   email: string;
   role: User["role"];
+  is_active: boolean;
   password_hash: string | null;
   requires_activation: boolean;
 }
@@ -153,7 +166,7 @@ export async function getUserCredentialsByEmail(
   email: string,
 ): Promise<UserCredentials | null> {
   const rows = await sql<UserCredentials[]>`
-    SELECT id, email, role, password_hash, requires_activation
+    SELECT id, email, role, is_active, password_hash, requires_activation
     FROM users
     WHERE lower(email) = ${email}
     LIMIT 1

@@ -19,6 +19,7 @@ export const metadata: Metadata = {
 };
 
 const ROLE_LABELS: Record<User["role"], string> = {
+  admin: "Administration",
   gm: "Spielleitung",
   player: "Spieler",
   viewer: "Beobachter",

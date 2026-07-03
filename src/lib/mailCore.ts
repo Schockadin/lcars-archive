@@ -121,3 +121,26 @@ export async function sendDialogueMessageEmail(input: {
     `,
   });
 }
+
+// Direkt beim Abschließen eines Dialogs an alle Abonnenten der beteiligten
+// Charaktere verschickt (nicht bei Erstellung, nicht pro Antwort) — ein
+// einzelnes, sofortiges Ereignis, kein Sammel-Digest wie bei Missionen/
+// Archiv-Einträgen.
+export async function sendCharacterDialogueClosedEmail(input: {
+  to: string;
+  name: string;
+  characterName: string;
+  dialogueTitle: string;
+  dialogueUrl: string;
+}): Promise<SendEmailResult> {
+  return sendEmail({
+    to: input.to,
+    subject: `Gespräch mit ${input.characterName} abgeschlossen`,
+    html: `
+      <p>Hallo ${input.name},</p>
+      <p>das Gespräch "${input.dialogueTitle}", an dem ${input.characterName} teilgenommen hat, wurde abgeschlossen.</p>
+      <p><a href="${input.dialogueUrl}">${input.dialogueUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}

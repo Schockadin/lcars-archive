@@ -4,7 +4,6 @@ import {
   postDialogueMessageAction,
   type DialogueMessageState,
 } from "@/app/actions/dialogues";
-import CompleteDialogueButton from "./CompleteDialogueButton";
 
 const initialState: DialogueMessageState = {};
 

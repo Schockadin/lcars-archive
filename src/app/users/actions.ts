@@ -1,12 +1,15 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireGM } from "@/lib/dal";
+import { requireGM, requireAdmin } from "@/lib/dal";
 import {
   EmailTakenError,
   createUser,
   getUserById,
   updateUserRole,
+  updateUser,
+  setUserActive,
+  deleteUser,
 } from "@/lib/users";
 import { assignCharacterToUser } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
@@ -15,7 +18,7 @@ import { sendActivationEmail } from "@/lib/mail";
 import { getBaseUrl } from "@/lib/http";
 import type { User } from "@/types/db";
 
-const ROLES: readonly User["role"][] = ["gm", "player", "viewer"];
+const ROLES: readonly User["role"][] = ["admin", "gm", "player", "viewer"];
 
 function isValidRole(value: string): value is User["role"] {
   return (ROLES as readonly string[]).includes(value);
@@ -27,15 +30,18 @@ export interface AdminActionState {
   manualActivationUrl?: string;
 }
 
-// Jede Action prüft role === "gm" selbst (siehe requireGM in src/lib/dal.ts)
-// — nie nur auf ausgeblendete UI verlassen, ein direkter POST muss ebenso
-// abgewiesen werden.
+// Jede Action prüft ihre Berechtigung selbst (requireGM = gm-oder-admin,
+// requireAdmin = nur admin, siehe src/lib/dal.ts) — nie nur auf
+// ausgeblendete UI verlassen, ein direkter POST muss ebenso abgewiesen
+// werden. Useraccount-Verwaltung (anlegen/Rolle ändern/deaktivieren/
+// löschen/bearbeiten) ist admin-only; nur die Charakter-Zuweisung bleibt
+// für gm UND admin.
 
 export async function createUserAction(
   _state: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  await requireGM();
+  await requireAdmin();
 
   const email = String(formData.get("email") ?? "")
     .trim()
@@ -83,7 +89,7 @@ export async function updateUserRoleAction(
   _state: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  const gm = await requireGM();
+  const admin = await requireAdmin();
 
   const userId = Number(formData.get("userId"));
   const role = String(formData.get("role") ?? "");
@@ -91,13 +97,84 @@ export async function updateUserRoleAction(
   if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
   if (!isValidRole(role)) return { error: "Ungültige Rolle." };
 
-  // Aktuell genau ein GM-Account — ohne diese Sperre könnte er sich selbst
-  // versehentlich aussperren.
-  if (userId === gm.id && role !== "gm") {
-    return { error: "Du kannst dir nicht selbst die GM-Rolle entziehen." };
+  // Ohne diese Sperre könnte sich ein Admin selbst versehentlich aussperren
+  // — unabhängig von der Anzahl anderer Admins, einfachste sichere Regel.
+  if (userId === admin.id && role !== "admin") {
+    return { error: "Du kannst dir nicht selbst die Admin-Rolle entziehen." };
   }
 
   await updateUserRole(userId, role);
+  redirect("/users");
+}
+
+export async function deactivateUserAction(
+  _state: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+
+  const userId = Number(formData.get("userId"));
+  if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
+  if (userId === admin.id) {
+    return { error: "Du kannst dich nicht selbst deaktivieren." };
+  }
+
+  await setUserActive(userId, false);
+  redirect("/users");
+}
+
+export async function reactivateUserAction(
+  _state: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  await requireAdmin();
+
+  const userId = Number(formData.get("userId"));
+  if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
+
+  await setUserActive(userId, true);
+  redirect("/users");
+}
+
+export async function deleteUserAction(
+  _state: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+
+  const userId = Number(formData.get("userId"));
+  if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
+  if (userId === admin.id) {
+    return { error: "Du kannst dich nicht selbst löschen." };
+  }
+
+  await deleteUser(userId);
+  redirect("/users");
+}
+
+export async function updateUserProfileAction(
+  _state: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  await requireAdmin();
+
+  const userId = Number(formData.get("userId"));
+  const name = String(formData.get("name") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+
+  if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
+  if (!name) return { error: "Bitte einen Namen angeben." };
+  if (!email) return { error: "Bitte eine E-Mail-Adresse angeben." };
+
+  try {
+    await updateUser(userId, { name, email });
+  } catch (err) {
+    if (err instanceof EmailTakenError) {
+      return { error: "Diese E-Mail-Adresse wird bereits verwendet." };
+    }
+    throw err;
+  }
+
   redirect("/users");
 }
 
