@@ -25,7 +25,8 @@ export const getDBStats = unstable_cache(
       SELECT
         (SELECT COUNT(*) FROM characters)     AS character_count,
         (SELECT COUNT(*) FROM mission_logs)   AS session_count,
-        (SELECT COUNT(*) FROM archive_entries) AS entry_count
+        (SELECT COUNT(*) FROM archive_entries
+          WHERE NOT (category = 'dialogue' AND dialogue_open)) AS entry_count
     `;
 
     return {
@@ -34,6 +35,6 @@ export const getDBStats = unstable_cache(
       entryCount: parseInt(counts.entry_count),
     };
   },
-  ["getDBStats"],
+  ["getDBStats", "v2"],
   { tags: [cacheTags.stats, cacheTags.characters, cacheTags.missionLogs] },
 );

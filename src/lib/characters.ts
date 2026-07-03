@@ -120,6 +120,32 @@ export async function assignCharacterToUser(
   return parseCharacter(rows[0]);
 }
 
+export interface UserContentLog {
+  id: number;
+  slug: string;
+  title: string;
+  session_nr: number | null;
+  log_date: string | null;
+  mission_slug: string;
+  mission_title: string;
+}
+
+// Alle Mission-Logs der eigenen Charaktere für /users/[id]/content. Ungecacht
+// wie getCharactersForUser — die Seite ist ohnehin durch requireOwnCharacters
+// (Session-Zugriff) dynamisch.
+export async function getLogsForUser(userId: number): Promise<UserContentLog[]> {
+  return sql<UserContentLog[]>`
+    SELECT
+      ml.id, ml.slug, ml.title, ml.session_nr, ml.log_date::text AS log_date,
+      m.slug AS mission_slug, m.title AS mission_title
+    FROM mission_logs ml
+    JOIN characters c ON c.id = ml.author_id
+    JOIN missions m ON m.id = ml.mission_id
+    WHERE c.player_id = ${userId}
+    ORDER BY ml.session_nr DESC NULLS LAST
+  `;
+}
+
 export async function getLogsByCharacter(
   characterId: number,
 ): Promise<MissionLogPreview[]> {

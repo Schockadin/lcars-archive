@@ -47,7 +47,7 @@ async function main() {
     SELECT slug FROM archive_entries WHERE slug = ${expectedSlug}
   `;
   if (existing) {
-    console.log(`↷ Beispiel-Dialog existiert bereits: /archive/${existing.slug}`);
+    console.log(`↷ Beispiel-Dialog existiert bereits: /dialogues/${existing.slug} (bzw. /archive/${existing.slug}, falls bereits abgeschlossen)`);
     await sql.end();
     return;
   }
@@ -89,7 +89,7 @@ async function main() {
       "genauer ansehen?",
   });
 
-  console.log(`✓ Beispiel-Dialog angelegt: /archive/${slug}`);
+  console.log(`✓ Beispiel-Dialog angelegt: /dialogues/${slug}`);
   await sql.end();
 }
 

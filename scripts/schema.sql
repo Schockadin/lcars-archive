@@ -228,3 +228,9 @@ CREATE TABLE IF NOT EXISTS dialogue_messages (
 );
 CREATE INDEX IF NOT EXISTS idx_dialogue_messages_entry  ON dialogue_messages(archive_entry_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_dialogue_messages_author ON dialogue_messages(author_user_id);
+
+-- In-App-Dialoge: offen (nur unter /dialogues/<slug> sichtbar, nimmt
+-- Nachrichten an) vs. abgeschlossen (im Archiv, read-only). Vault-Dialoge
+-- bleiben beim Default FALSE (= abgeschlossen) — der Ingest muss nichts
+-- davon wissen.
+ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS dialogue_open BOOLEAN NOT NULL DEFAULT FALSE;

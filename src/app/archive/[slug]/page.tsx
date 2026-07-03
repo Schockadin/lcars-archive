@@ -1,16 +1,16 @@
 // src/app/archive/[slug]/page.tsx
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getAllArchivePaths, getArchiveEntryBySlug } from "@/lib/archive";
 import { CATEGORY_CONFIG, archiveTitle } from "@/lib/archiveFormat";
-import { fmtDate, stripHtml } from "@/lib/missionFormat";
+import { stripHtml } from "@/lib/missionFormat";
 import { ArchiveEntryDetail, ArchiveLink } from "@/types/archive";
 import PageMeta from "@/components/PageMeta";
 import CrumbLabel from "@/components/CrumbLabel";
 import { LcarsReadingModeToggle } from "@/components/lcars";
 import FollowButtons from "@/components/FollowButtons";
 import DialogueThread from "@/components/DialogueThread";
-import DialogueReplyForm from "@/components/DialogueReplyForm";
+import DialogueHeader from "@/components/DialogueHeader";
 import { getDialogueMessages } from "@/lib/dialogues";
 
 interface Props {
@@ -40,6 +40,15 @@ export default async function ArchiveEntryPage({ params }: Props) {
   const entry = await getArchiveEntryBySlug(slug);
   if (!entry) notFound();
 
+  // Offene Dialoge leben unter /dialogues/<slug> (Formular, Abschluss-Button,
+  // Session-Gate) — kein cookies()/headers()-Zugriff hier nötig, die
+  // statische Vorrenderung dieser Seite bleibt erhalten: offene Slugs fehlen
+  // bereits in generateStaticParams und rendern nur on-demand als reiner
+  // Redirect.
+  if (entry.category === "dialogue" && entry.dialogue_open) {
+    redirect(`/dialogues/${entry.slug}`);
+  }
+
   // Einfache, nicht gecachte Abfrage — Frische kommt über die Revalidation
   // der ganzen Seite nach jeder neuen Nachricht (siehe
   // src/app/actions/dialogues.ts), nicht über Query-Caching. Kein
@@ -68,7 +77,12 @@ export default async function ArchiveEntryPage({ params }: Props) {
       <LcarsReadingModeToggle />
 
       {entry.category === "dialogue" ? (
-        <DialogueHeader entry={entry} title={title} label={cfg.label} />
+        <DialogueHeader
+          title={title}
+          participants={entry.metadata.participants}
+          location={entry.metadata.location}
+          logDate={entry.metadata.logDate}
+        />
       ) : (
         <StandardHeader entry={entry} title={title} label={cfg.label} />
       )}
@@ -103,8 +117,6 @@ export default async function ArchiveEntryPage({ params }: Props) {
           Kein Inhalt zu diesem Eintrag hinterlegt.
         </p>
       )}
-
-      {entry.category === "dialogue" && <DialogueReplyForm entrySlug={entry.slug} />}
 
       <RelatedSection title="Verweise" links={outgoingLinks} />
       <RelatedSection title="Erwähnt in" links={entry.backlinks} />
@@ -143,89 +155,6 @@ function StandardHeader({
   return (
     <header className="archive-entry-head">
       <h1 className="char-file-name text-left">{title}</h1>
-    </header>
-  );
-}
-
-// Dialog-Header: Titel "Gespräch auf [setting]", verlinkte Teilnehmer + Ort.
-function DialogueHeader({
-  entry,
-  title,
-}: {
-  entry: ArchiveEntryDetail;
-  title: string;
-  label: string;
-}) {
-  const { participants, location, logDate } = entry.metadata;
-
-  return (
-    <header className="archive-entry-head">
-      <h1 className="char-file-name text-left">{title}</h1>
-
-      <div className="archive-dialogue-meta">
-        {participants.length > 0 && (
-          <div className="archive-dialogue-row">
-            <span className="archive-dialogue-label">Teilnehmer</span>
-            <div className="archive-related-grid">
-              {participants.map((p) =>
-                p.kind === "unknown" ? (
-                  // Kein eigener Eintrag → nur Name, kein Link.
-                  <span
-                    key={p.slug}
-                    className="archive-chip archive-chip-static"
-                    style={
-                      {
-                        "--chip-color": "var(--lcars-text-dim)",
-                      } as React.CSSProperties
-                    }
-                  >
-                    <span className="archive-chip-title">{p.name}</span>
-                  </span>
-                ) : (
-                  <Link
-                    key={p.slug}
-                    href={
-                      p.kind === "character"
-                        ? `/characters/${p.slug}`
-                        : `/archive/${p.slug}`
-                    }
-                    className="archive-chip"
-                    style={
-                      {
-                        "--chip-color": "var(--lcars-blue)",
-                      } as React.CSSProperties
-                    }
-                  >
-                    <span className="archive-chip-title">{p.name}</span>
-                  </Link>
-                ),
-              )}
-            </div>
-          </div>
-        )}
-
-        {location && (
-          <div className="archive-dialogue-row">
-            <span className="archive-dialogue-label">Ort</span>
-            <Link
-              href={`/archive/${location.slug}`}
-              className="archive-chip"
-              style={
-                { "--chip-color": "var(--lcars-green)" } as React.CSSProperties
-              }
-            >
-              <span className="archive-chip-title">{location.title}</span>
-            </Link>
-          </div>
-        )}
-
-        {logDate && (
-          <div className="archive-dialogue-row">
-            <span className="archive-dialogue-label">Datum</span>
-            <span className="archive-dialogue-value">{fmtDate(logDate)}</span>
-          </div>
-        )}
-      </div>
     </header>
   );
 }

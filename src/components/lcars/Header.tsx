@@ -1,5 +1,5 @@
 import { LcarsHeaderBar } from ".";
-import HeaderSearch from "./HeaderSearch";
+import HeaderContent from "./HeaderContent";
 
 export default function Header() {
   return (
@@ -10,13 +10,7 @@ export default function Header() {
           "calc(var(--lcars-header-h) + 5px + calc(2 * var(--lcars-bar-h)))",
       }}
     >
-      {/* Header Content */}
-      <div className="lcars-header-content">
-        <div className="lcars-header-top">
-          <div className="lcars-header-title uppercase">Neo Archiv</div>
-        </div>
-        <HeaderSearch />
-      </div>
+      <HeaderContent />
       <LcarsHeaderBar />
     </header>
   );

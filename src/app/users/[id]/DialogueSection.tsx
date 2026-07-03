@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LcarsDataRow } from "@/components/lcars";
 import type { DialogueSummary } from "@/lib/dialogues";
 
 // Eigenständig statt FollowedContentSection zu verbiegen — dessen Meta-Zeile
@@ -15,16 +16,21 @@ export default function DialogueSection({
 }) {
   return (
     <section className="flex flex-col gap-[8px]">
-      <p className="lcars-eyebrow">Deine Gespräche</p>
+      <LcarsDataRow
+        value={dialogues.length}
+        label="Deine Gespräche"
+        color="var(--lcars-text-data)"
+        className="lcars-data-row--full"
+      />
 
       {dialogues.length === 0 ? (
-        <p className="char-file-bio-empty">Noch keine Gespräche begonnen.</p>
+        <p className="char-file-bio-empty">Keine offenen Gespräche.</p>
       ) : (
         <div className="flex flex-col gap-[6px]">
           {dialogues.map((d) => (
             <Link
               key={d.slug}
-              href={`/archive/${d.slug}`}
+              href={`/dialogues/${d.slug}`}
               className="mission-akte"
               style={{ "--mission-color": "var(--lcars-amber)" } as React.CSSProperties}
             >
