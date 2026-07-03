@@ -219,9 +219,8 @@
 .lcars-usernav {
   --usernav-cols: 3;
   display: grid;
-  grid-template-columns: repeat(var(--usernav-cols), minmax(0, 1fr));
+  grid-template-columns: repeat(var(--usernav-cols), 216px);
   grid-auto-rows: minmax(0, 1fr);
-  gap: 8px;
   flex: 1;
   min-height: 0;
   width: 100%;
@@ -230,6 +229,7 @@
 .lcars-usernav-form {
   display: flex;
   min-height: 0;
+  width: 200px;
 }
 .lcars-usernav-form .lcars-usernav-pill {
   width: 100%;
@@ -240,7 +240,7 @@
   justify-content: flex-end;
   min-height: 0;
   min-width: 0;
-  padding: 0 18px 6px;
+  padding: 0 18px 8px;
   border: none;
   border-radius: 100vmax;
   background-color: var(--lcars-amber);
@@ -251,11 +251,13 @@
   color: black;
   font-family: var(--font-antonio), sans-serif;
   font-weight: 600;
-  font-size: 18px;
+  font-size: 20px;
   letter-spacing: 1px;
   line-height: 1.175;
   text-transform: uppercase;
   transition: background 250ms;
+  width: 200px;
+  height: 48px;
 }
 .lcars-usernav-pill:hover {
   background-color: var(--lcars-amber-light);
@@ -264,13 +266,31 @@
 .lcars-usernav-pill.lcars-menu-active:hover {
   background-color: var(--lcars-blue);
 }
-@media (max-width: 640px) {
+
+@media (max-width: 920px) {
   .lcars-usernav {
-    gap: 6px;
+    grid-template-columns: repeat(var(--usernav-cols), 158px);
+  }
+  .lcars-usernav-pill {
+    font-size: 16px;
+    padding: 0 14px 8px;
+    width: 150px;
+  }
+  .lcars-usernav-form {
+    width: 150px;
+  }
+}
+@media (max-width: 720px) {
+  .lcars-usernav {
+    grid-template-columns: repeat(var(--usernav-cols), 108px);
   }
   .lcars-usernav-pill {
     font-size: 14px;
-    padding: 0 12px 4px;
+    padding: 0 14px 8px;
+    width: 100px;
+  }
+  .lcars-usernav-form {
+    width: 100px;
   }
 }
 
@@ -326,6 +346,9 @@
    Überschriften-Labels in 24px-Uppercase (siehe Dashboard-Sektionen). */
 .lcars-data-row.lcars-data-row--full {
   width: 100%;
+}
+.lcars-data-row--full > .lcars-data-row-text > div {
+  line-height: 1.3;
 }
 
 .lcars-data-row-label {
@@ -863,6 +886,24 @@
   .lcars-filters {
     flex-direction: row;
   }
+}
+
+/* Input-Felder */
+.lcars-input {
+  border: solid 1px var(--lcars-text-data);
+  background: var(--lcars-surface-2);
+  color: var(--lcars-text-contrast);
+  padding: 8px 16px;
+  color: var(--lcars-text-contrast);
+  outline: none;
+  height: 36px;
+  font-size: 16px;
+}
+.lcars-input:hover {
+  border-color: var(--lcars-amber);
+}
+.lcasrs-input:focus {
+  border-color: var(--lcars-amber);
 }
 
 /* ── Missions-Toolbar (Sortierung + Autor-Filter) ────────────────── */

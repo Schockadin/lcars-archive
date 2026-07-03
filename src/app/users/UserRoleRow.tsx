@@ -17,7 +17,7 @@ export default function UserRoleRow({ user }: { user: UserWithCharacters }) {
     <div className="flex flex-col gap-[6px] border-b border-lcars-border pb-[12px]">
       <div className="flex flex-wrap items-center gap-[12px]">
         <span className="font-lcars text-lcars-text-data">{user.name}</span>
-        <span className="text-lcars-text-dim">{user.email}</span>
+        <span className="text-lcars-text">{user.email}</span>
         {user.characters.length > 0 && (
           <span className="flex flex-wrap gap-[6px]">
             {user.characters.map((c) => (
@@ -38,7 +38,7 @@ export default function UserRoleRow({ user }: { user: UserWithCharacters }) {
         <select
           name="role"
           defaultValue={user.role}
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[12px] py-[4px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+          className="rounded-lcars-pill lcars-input"
         >
           <option value="gm">Spielleitung</option>
           <option value="player">Spieler</option>

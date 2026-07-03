@@ -1,7 +1,11 @@
 import Link from "next/link";
 import { LcarsDataRow } from "@/components/lcars";
 import type { RecentActivityEvent } from "@/types/timeline";
-import { SOURCE_TYPE_LABELS, categoryVisual, fmtDate } from "@/lib/timelineFormat";
+import {
+  SOURCE_TYPE_LABELS,
+  categoryVisual,
+  fmtDate,
+} from "@/lib/timelineFormat";
 
 // "Neu seit deinem letzten Besuch" — gleicher Kartenstil wie EventCard in
 // TimelineView.tsx, nur ohne die Jahres-Rail (hier immer chronologisch

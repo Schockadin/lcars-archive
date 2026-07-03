@@ -21,15 +21,14 @@ export default async function UserSettingsPage({
     <>
       <PageMeta title="Einstellungen" section="users" />
       <article className="mb-[10px] max-w-[600px] pr-[var(--lcars-elbow-size)]">
-        <p className="lcars-eyebrow">Personendatei</p>
         <h1>Einstellungen</h1>
         <div className="lcars-text flex flex-col gap-[32px]">
           <SettingsForm user={{ name: user.name, email: user.email }} />
 
           <section id="password" className="flex flex-col gap-[12px]">
-            <p className="lcars-eyebrow">
+            <h2>
               {user.hasPassword ? "Passwort ändern" : "Passwort festlegen"}
-            </p>
+            </h2>
             <PasswordForm hasPassword={user.hasPassword} />
           </section>
         </div>

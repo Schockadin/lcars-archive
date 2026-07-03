@@ -1,4 +1,4 @@
-import { AUTHOR_COLORS, fmtDate } from "@/lib/missionFormat";
+import { AUTHOR_COLORS } from "@/lib/missionFormat";
 import type { DialogueMessage } from "@/lib/dialogues";
 import type { ArchiveParticipant } from "@/types/archive";
 
@@ -31,12 +31,9 @@ export default function DialogueThread({
             <span className="dialogue-message-body">
               <span className="dialogue-message-author">
                 {msg.characterName ?? "Unbekannt"}
-                <span className="dialogue-message-meta">
-                  {fmtDate(msg.createdAt)}
-                </span>
               </span>
               <span
-                className="dialogue-message-text mission-body lcars-text"
+                className="dialogue-message-text mission-body lcars-text text-[18px]"
                 dangerouslySetInnerHTML={{ __html: msg.content }}
               />
             </span>

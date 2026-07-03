@@ -30,7 +30,7 @@ export default function SettingsForm({
           type="text"
           required
           defaultValue={user.name}
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+          className="rounded-lcars-pill lcars-input"
         />
       </div>
 
@@ -44,7 +44,7 @@ export default function SettingsForm({
           type="email"
           required
           defaultValue={user.email}
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+          className="rounded-lcars-pill lcars-input"
         />
       </div>
 
@@ -62,7 +62,7 @@ export default function SettingsForm({
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch self-start disabled:opacity-50"
+        className="lcars-switch self-end disabled:opacity-50"
       >
         {pending ? "Speichern…" : "Speichern"}
       </button>

@@ -32,7 +32,11 @@ export default function DialogueSection({
               key={d.slug}
               href={`/dialogues/${d.slug}`}
               className="mission-akte"
-              style={{ "--mission-color": "var(--lcars-amber)" } as React.CSSProperties}
+              style={
+                {
+                  "--mission-color": "var(--lcars-amber)",
+                } as React.CSSProperties
+              }
             >
               <span className="mission-akte-rail" />
               <span className="mission-akte-body text-left">
@@ -49,7 +53,10 @@ export default function DialogueSection({
       )}
 
       {canStartNew && (
-        <Link href={`/users/${userId}/dialogues/new`} className="lcars-switch self-start">
+        <Link
+          href={`/users/${userId}/dialogues/new`}
+          className="lcars-switch self-end"
+        >
           Neues Gespräch beginnen
         </Link>
       )}

@@ -32,17 +32,19 @@ export default async function UsersAdminPage() {
 
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[12px]">
-            <p className="lcars-eyebrow">Neuen User anlegen</p>
+            <h2 className="text-lcars-amber">Neuen User anlegen</h2>
             <CreateUserForm />
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <p className="lcars-eyebrow">{users.length} registrierte User</p>
+            <h2 className="text-lcars-amber">
+              {users.length} registrierte User
+            </h2>
             <UserManagementTable users={users} />
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <p className="lcars-eyebrow">Charaktere zuordnen</p>
+            <h2 className="text-lcars-amber">Charaktere zuordnen</h2>
             <CharacterAssignmentTable
               characters={characters}
               users={userOptions}

@@ -35,22 +35,29 @@ export default async function UserPage({
   // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
   // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
   // innerhalb des User-Bereichs spürbar auf.
-  const [characters, recentEvents, hasPasswordSet, bookmarks, subscriptions, dialogues] =
-    await Promise.all([
-      getCharactersForUser(target.id),
-      isSelf ? getRecentActivitySince(target.previous_login_at) : Promise.resolve([]),
-      isSelf ? hasPassword(target.id) : Promise.resolve(true),
-      isSelf ? getBookmarkedContent(target.id) : Promise.resolve([]),
-      isSelf ? getSubscribedContent(target.id) : Promise.resolve([]),
-      isSelf ? getDialoguesForUser(target.id) : Promise.resolve([]),
-    ]);
+  const [
+    characters,
+    recentEvents,
+    hasPasswordSet,
+    bookmarks,
+    subscriptions,
+    dialogues,
+  ] = await Promise.all([
+    getCharactersForUser(target.id),
+    isSelf
+      ? getRecentActivitySince(target.previous_login_at)
+      : Promise.resolve([]),
+    isSelf ? hasPassword(target.id) : Promise.resolve(true),
+    isSelf ? getBookmarkedContent(target.id) : Promise.resolve([]),
+    isSelf ? getSubscribedContent(target.id) : Promise.resolve([]),
+    isSelf ? getDialoguesForUser(target.id) : Promise.resolve([]),
+  ]);
   const needsPassword = isSelf && !hasPasswordSet;
 
   return (
     <>
       <PageMeta title={isSelf ? "Mein Profil" : target.name} section="users" />
       <article className="mb-[10px] max-w-[600px] pr-[var(--lcars-elbow-size)]">
-        <p className="lcars-eyebrow">Personendatei</p>
         <h1>{isSelf ? `Willkommen, ${target.name}` : target.name}</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">

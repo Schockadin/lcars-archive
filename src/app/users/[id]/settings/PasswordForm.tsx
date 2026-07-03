@@ -31,7 +31,7 @@ export default function PasswordForm({
             type="password"
             required
             autoComplete="current-password"
-            className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+            className="rounded-lcars-pill lcars-input"
           />
         </div>
       )}
@@ -47,7 +47,7 @@ export default function PasswordForm({
           required
           minLength={10}
           autoComplete="new-password"
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+          className="rounded-lcars-pill lcars-input"
         />
       </div>
 
@@ -62,7 +62,7 @@ export default function PasswordForm({
           required
           minLength={10}
           autoComplete="new-password"
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+          className="rounded-lcars-pill lcars-input"
         />
       </div>
 
@@ -80,7 +80,7 @@ export default function PasswordForm({
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch self-start disabled:opacity-50"
+        className="lcars-switch self-end disabled:opacity-50"
       >
         {pending
           ? "Speichern…"

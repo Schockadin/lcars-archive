@@ -25,7 +25,7 @@ export default function CreateUserForm() {
   }, [state, router]);
 
   return (
-    <form action={formAction} className="flex flex-wrap items-end gap-[12px]">
+    <form action={formAction} className="flex flex-wrap gap-[12px]">
       <div className="flex flex-col gap-[6px]">
         <label htmlFor="new-user-name" className="lcars-eyebrow">
           Name
@@ -35,20 +35,20 @@ export default function CreateUserForm() {
           name="name"
           type="text"
           required
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+          className="rounded-lcars-pill lcars-input"
         />
       </div>
 
       <div className="flex flex-col gap-[6px]">
         <label htmlFor="new-user-email" className="lcars-eyebrow">
-          E-Mail-Adresse
+          E-Mail
         </label>
         <input
           id="new-user-email"
           name="email"
           type="email"
           required
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+          className="rounded-lcars-pill lcars-input"
         />
       </div>
 
@@ -60,11 +60,10 @@ export default function CreateUserForm() {
           id="new-user-role"
           name="role"
           defaultValue="player"
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+          className="rounded-lcars-pill lcars-input"
         >
           <option value="gm">Spielleitung</option>
           <option value="player">Spieler</option>
-          <option value="viewer">Beobachter</option>
         </select>
       </div>
 

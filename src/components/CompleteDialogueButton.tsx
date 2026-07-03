@@ -26,14 +26,18 @@ export default function CompleteDialogueButton({
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch self-start disabled:opacity-50"
+        className="lcars-switch self-start disabled:opacity-50 w-[250px]"
         onClick={(e) => {
-          if (!confirm("Dieses Gespräch wirklich abschließen? Das lässt sich nicht rückgängig machen.")) {
+          if (
+            !confirm(
+              "Dieses Gespräch wirklich abschließen? Das lässt sich nicht rückgängig machen.",
+            )
+          ) {
             e.preventDefault();
           }
         }}
       >
-        {pending ? "Wird abgeschlossen…" : "Gespräch abschließen"}
+        {pending ? "Wird beendet…" : "Beenden"}
       </button>
       {state?.error && (
         <p className="text-lcars-red" role="alert">

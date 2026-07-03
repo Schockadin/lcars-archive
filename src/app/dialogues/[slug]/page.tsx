@@ -23,7 +23,9 @@ export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const entry = await getDialogueForPlay(slug);
   return {
-    title: entry ? `${entry.title} · Neo Archive` : "Nicht gefunden · Neo Archive",
+    title: entry
+      ? `${entry.title} · Neo Archive`
+      : "Nicht gefunden · Neo Archive",
     robots: { index: false, follow: false },
   };
 }
@@ -49,7 +51,7 @@ export default async function DialoguePlayPage({ params }: Props) {
   const messages = await getDialogueMessages(entry.id);
 
   return (
-    <article className="archive-entry">
+    <article className="archive-entry pb-[5px]">
       <PageMeta title={entry.title} section="users" />
 
       <DialogueHeader
@@ -65,9 +67,10 @@ export default async function DialoguePlayPage({ params }: Props) {
         <p className="char-file-bio-empty">Noch keine Nachrichten.</p>
       )}
 
-      {participant && <DialogueReplyForm entrySlug={entry.slug} />}
-
-      <CompleteDialogueButton entrySlug={entry.slug} />
+      <div className="flex flex-col gap-[12px]">
+        {participant && <DialogueReplyForm entrySlug={entry.slug} />}
+        <CompleteDialogueButton entrySlug={entry.slug} />
+      </div>
     </article>
   );
 }

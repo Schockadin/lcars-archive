@@ -25,13 +25,13 @@ export default function CharacterAssignRow({
         className="flex flex-wrap items-center gap-[8px]"
       >
         <input type="hidden" name="characterId" value={character.id} />
-        <span className="font-lcars text-lcars-text-data">
+        <span className="font-lcars text-lcars-text-data flex-1">
           {character.name}
         </span>
         <select
           name="userId"
           defaultValue={character.player_id ? String(character.player_id) : ""}
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[12px] py-[4px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+          className="rounded-lcars-pill lcars-input flex-1"
         >
           <option value="">— kein Spieler —</option>
           {users.map((u) => (
@@ -43,7 +43,7 @@ export default function CharacterAssignRow({
         <button
           type="submit"
           disabled={pending}
-          className="lcars-switch disabled:opacity-50"
+          className="lcars-switch disabled:opacity-50 flex-1"
         >
           Zuweisen
         </button>

@@ -29,7 +29,6 @@ export default async function UserContentPage({
     <>
       <PageMeta title="Meine Inhalte" section="users" />
       <article className="mb-[10px] max-w-[600px] pr-[var(--lcars-elbow-size)]">
-        <p className="lcars-eyebrow">Personendatei</p>
         <h1>Meine Inhalte</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
@@ -52,17 +51,26 @@ export default async function UserContentPage({
                     key={log.id}
                     href={`/missions/${log.mission_slug}/${log.slug}`}
                     className="mission-akte"
-                    style={{ "--mission-color": "var(--lcars-blue)" } as React.CSSProperties}
+                    style={
+                      {
+                        "--mission-color": "var(--lcars-blue)",
+                      } as React.CSSProperties
+                    }
                   >
                     <span className="mission-akte-rail" />
                     <span className="mission-akte-body text-left">
-                      <span className="mission-akte-title block">{log.title}</span>
+                      <span className="mission-akte-title block">
+                        {log.title}
+                      </span>
                       <span className="mission-akte-meta">
                         <span>
                           <b>Session</b> {sessionLabel(log.session_nr)}
                         </span>
                         <span>
                           <b>Datum</b> {fmtDate(log.log_date)}
+                        </span>
+                        <span>
+                          <b>Mission</b> {log.mission_title}
                         </span>
                       </span>
                     </span>
@@ -81,19 +89,31 @@ export default async function UserContentPage({
             />
 
             {dialogues.length === 0 ? (
-              <p className="char-file-bio-empty">Noch keine Gespräche begonnen.</p>
+              <p className="char-file-bio-empty">
+                Noch keine Gespräche begonnen.
+              </p>
             ) : (
               <div className="flex flex-col gap-[6px]">
                 {dialogues.map((d) => (
                   <Link
                     key={d.slug}
-                    href={d.open ? `/dialogues/${d.slug}` : `/archive/${d.slug}`}
+                    href={
+                      d.open ? `/dialogues/${d.slug}` : `/archive/${d.slug}`
+                    }
                     className="mission-akte"
-                    style={{ "--mission-color": "var(--lcars-text-data)" } as React.CSSProperties}
+                    style={
+                      {
+                        "--mission-color": d.open
+                          ? "var(--lcars-green)"
+                          : "var(--lcars-red)",
+                      } as React.CSSProperties
+                    }
                   >
                     <span className="mission-akte-rail" />
                     <span className="mission-akte-body text-left">
-                      <span className="mission-akte-title block">{d.title}</span>
+                      <span className="mission-akte-title block">
+                        {d.title}
+                      </span>
                       <span className="mission-akte-meta">
                         <span>
                           <b>Gesprächspartner</b> {d.partnerName}

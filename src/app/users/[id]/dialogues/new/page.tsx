@@ -23,7 +23,10 @@ export default async function NewDialoguePage({
   // Charakter, keine Partner-/Ort-Liste nötig.
   const [partnerCharacters, archiveEntries] =
     characters.length > 0
-      ? await Promise.all([getCharactersWithPlayers(user.id), getAllArchiveEntries()])
+      ? await Promise.all([
+          getCharactersWithPlayers(user.id),
+          getAllArchiveEntries(),
+        ])
       : [[], []];
   const locations = archiveEntries
     .filter((e) => e.category === "location")
@@ -33,7 +36,6 @@ export default async function NewDialoguePage({
     <>
       <PageMeta title="Neues Gespräch" section="users" />
       <article className="mb-[10px] max-w-[600px] pr-[var(--lcars-elbow-size)]">
-        <p className="lcars-eyebrow">Personendatei</p>
         <h1>Neues Gespräch beginnen</h1>
 
         {characters.length === 0 ? (
@@ -43,7 +45,10 @@ export default async function NewDialoguePage({
               beginnen. Wende dich dafür an die Spielleitung.
             </p>
             <p>
-              <Link href={`/users/${user.id}`} className="text-lcars-amber underline">
+              <Link
+                href={`/users/${user.id}`}
+                className="text-lcars-amber underline"
+              >
                 ← Zurück zum Profil
               </Link>
             </p>
