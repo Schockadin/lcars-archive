@@ -18,3 +18,4 @@ export { default as LcarsAppShell } from "./AppShell";
 export { default as LcarsReadingModeToggle } from "./ReadingModeToggle";
 export { default as LcarsHeaderSearch } from "./HeaderSearch";
 export { default as LcarsCookieNotice } from "./CookieNotice";
+export { default as LcarsServiceWorkerRegister } from "./ServiceWorkerRegister";

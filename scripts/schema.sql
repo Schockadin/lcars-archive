@@ -265,3 +265,32 @@ UPDATE users SET role = 'admin' WHERE role = 'gm';
 -- Admin kann Useraccounts deaktivieren (Soft-Block am Login, siehe
 -- src/app/login/actions.ts) statt sie sofort zu löschen.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
+
+-- Benachrichtigungs-Präferenzen (PWA/Push-Feature): zwei globale Schalter
+-- pro User, gelten einheitlich für alle Benachrichtigungs-Ereignistypen
+-- (neue Dialog-Nachricht, Dialog abgeschlossen, Abo-Digest) — kein
+-- granulares Opt-out pro Ereignis. email_notifications_enabled
+-- DEFAULT true erhält das bisherige Alles-an-Verhalten für Bestandsuser
+-- (E-Mail hatte zuvor gar kein Opt-out). push_notifications_enabled
+-- DEFAULT true ist bis zur ersten registrierten Subscription wirkungslos,
+-- wird aber beim Registrieren eines Geräts ohnehin automatisch (wieder)
+-- auf true gesetzt (siehe saveSubscription in src/lib/pushSubscriptions.ts).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS email_notifications_enabled BOOLEAN NOT NULL DEFAULT true;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS push_notifications_enabled  BOOLEAN NOT NULL DEFAULT true;
+
+-- Web-Push-Subscriptions: mehrere pro User möglich (mehrere Geräte/
+-- Browser). endpoint ist UNIQUE (nicht user_id+endpoint) — ein Endpoint
+-- gehört technisch zu Browser+Origin, nicht zu einem Account; bei einem
+-- Account-Wechsel auf demselben Gerät wird die Zeile per ON CONFLICT
+-- umgehängt statt einen Duplikatsfehler zu werfen (siehe saveSubscription).
+-- ON DELETE CASCADE (nicht SET NULL wie bei dialogue_messages.author_user_id):
+-- eine Subscription ohne Owner hat keinen historischen Wert.
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id          SERIAL PRIMARY KEY,
+  user_id     INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  endpoint    TEXT NOT NULL UNIQUE,
+  p256dh      TEXT NOT NULL,
+  auth        TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(user_id);

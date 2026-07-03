@@ -3,7 +3,8 @@ import sql from "@/lib/db";
 import type { User } from "@/types/db";
 
 const USER_COLUMNS = sql`
-  id, email, name, role, is_active, created_at, last_login_at, previous_login_at
+  id, email, name, role, is_active, created_at, last_login_at, previous_login_at,
+  email_notifications_enabled, push_notifications_enabled
 `;
 
 export class EmailTakenError extends Error {}
@@ -41,6 +42,7 @@ export async function listAllUsers(): Promise<UserWithCharacters[]> {
     SELECT
       u.id, u.email, u.name, u.role, u.is_active, u.created_at,
       u.last_login_at, u.previous_login_at,
+      u.email_notifications_enabled, u.push_notifications_enabled,
       COALESCE(
         jsonb_agg(
           jsonb_build_object('id', c.id, 'slug', c.slug, 'name', c.name)
@@ -126,6 +128,26 @@ function isUniqueViolation(err: unknown): boolean {
 export interface UpdateUserInput {
   name: string;
   email: string;
+}
+
+export interface NotificationPreferencesInput {
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+}
+
+// Zwei globale Schalter, gelten einheitlich für alle Benachrichtigungs-
+// Ereignistypen (siehe scripts/schema.sql) — kein granulares Opt-out pro
+// Ereignis.
+export async function updateNotificationPreferences(
+  id: number,
+  data: NotificationPreferencesInput,
+): Promise<void> {
+  await sql`
+    UPDATE users
+    SET email_notifications_enabled = ${data.emailEnabled},
+        push_notifications_enabled = ${data.pushEnabled}
+    WHERE id = ${id}
+  `;
 }
 
 export async function updateUser(
@@ -233,6 +255,7 @@ export async function getUserForAdmin(
     SELECT
       u.id, u.email, u.name, u.role, u.is_active, u.created_at,
       u.last_login_at, u.previous_login_at,
+      u.email_notifications_enabled, u.push_notifications_enabled,
       u.password_hash IS NOT NULL AS has_password,
       u.requires_activation,
       COALESCE(

@@ -16,8 +16,10 @@ import {
   editDialogueMessage,
   deleteDialogueMessage,
   completeDialogue,
+  type DialogueEmailTarget,
 } from "@/lib/dialogues";
 import { sendDialogueMessageEmail, sendCharacterDialogueClosedEmail } from "@/lib/mail";
+import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
 
@@ -89,13 +91,22 @@ export async function postDialogueMessageAction(
   );
   if (other) {
     const dialogueUrl = `${await getBaseUrl()}/dialogues/${entrySlug}`;
-    await sendDialogueMessageEmail({
-      to: other.email,
-      name: other.name,
-      fromCharacterName: participant.characterName,
-      dialogueTitle: entry.title,
-      dialogueUrl,
-    });
+    if (other.emailNotificationsEnabled) {
+      await sendDialogueMessageEmail({
+        to: other.email,
+        name: other.name,
+        fromCharacterName: participant.characterName,
+        dialogueTitle: entry.title,
+        dialogueUrl,
+      });
+    }
+    if (other.pushNotificationsEnabled) {
+      await sendPushToUser(other.id, {
+        title: `Neue Nachricht in "${entry.title}"`,
+        body: `${participant.characterName} hat geantwortet.`,
+        url: dialogueUrl,
+      });
+    }
   }
 
   return { success: true };
@@ -246,23 +257,32 @@ export async function completeDialogueAction(
   // Erstellung/pro Antwort — siehe getCharacterSubscribers/
   // sendCharacterDialogueClosedEmail). Map dedupliziert automatisch, falls
   // jemand beide Teilnehmer-Charaktere abonniert hat.
-  const recipients = new Map<string, string>();
+  const recipients = new Map<number, DialogueEmailTarget>();
   for (const p of entry.participants) {
     for (const s of await getCharacterSubscribers(p.slug)) {
-      recipients.set(s.email, s.name);
+      recipients.set(s.id, s);
     }
   }
   if (recipients.size > 0) {
     const dialogueUrl = `${await getBaseUrl()}/archive/${entrySlug}`;
     const characterNames = entry.participants.map((p) => p.name).join(" & ");
-    for (const [email, name] of recipients) {
-      await sendCharacterDialogueClosedEmail({
-        to: email,
-        name,
-        characterName: characterNames,
-        dialogueTitle: entry.title,
-        dialogueUrl,
-      });
+    for (const recipient of recipients.values()) {
+      if (recipient.emailNotificationsEnabled) {
+        await sendCharacterDialogueClosedEmail({
+          to: recipient.email,
+          name: recipient.name,
+          characterName: characterNames,
+          dialogueTitle: entry.title,
+          dialogueUrl,
+        });
+      }
+      if (recipient.pushNotificationsEnabled) {
+        await sendPushToUser(recipient.id, {
+          title: `Gespräch mit ${characterNames} abgeschlossen`,
+          body: entry.title,
+          url: dialogueUrl,
+        });
+      }
     }
   }
 

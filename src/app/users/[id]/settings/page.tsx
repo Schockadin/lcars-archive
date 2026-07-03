@@ -3,6 +3,7 @@ import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "../dal";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
+import NotificationSettingsForm from "./NotificationSettingsForm";
 
 export const metadata: Metadata = {
   title: "Einstellungen",
@@ -30,6 +31,16 @@ export default async function UserSettingsPage({
               {user.hasPassword ? "Passwort ändern" : "Passwort festlegen"}
             </h2>
             <PasswordForm hasPassword={user.hasPassword} />
+          </section>
+
+          <section id="notifications" className="flex flex-col gap-[12px]">
+            <h2>Benachrichtigungen</h2>
+            <NotificationSettingsForm
+              user={{
+                emailEnabled: user.email_notifications_enabled,
+                pushEnabled: user.push_notifications_enabled,
+              }}
+            />
           </section>
         </div>
       </article>

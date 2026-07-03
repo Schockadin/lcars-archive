@@ -11,6 +11,7 @@ import DashboardCharacters from "./DashboardCharacters";
 import RecentActivity from "./RecentActivity";
 import FollowedContentSection from "./FollowedContentSection";
 import DialogueSection from "./DialogueSection";
+import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 
 export const metadata: Metadata = {
@@ -66,6 +67,8 @@ export default async function UserPage({
             {isSelf ? "Angemeldet als " : "E-Mail "}
             <strong>{target.email}</strong> ({ROLE_LABELS[target.role]}).
           </p>
+
+          {isSelf && <InstallPwaPrompt />}
 
           {needsPassword && (
             <p className="text-lcars-amber">

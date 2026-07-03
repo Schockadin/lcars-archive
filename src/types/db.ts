@@ -17,4 +17,6 @@ export interface User {
   created_at: Date;
   last_login_at: Date | null;
   previous_login_at: Date | null;
+  email_notifications_enabled: boolean;
+  push_notifications_enabled: boolean;
 }

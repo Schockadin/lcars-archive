@@ -504,13 +504,16 @@ export async function completeDialogue(archiveEntryId: number): Promise<void> {
 }
 
 export interface DialogueEmailTarget {
+  id: number;
   email: string;
   name: string;
+  emailNotificationsEnabled: boolean;
+  pushNotificationsEnabled: boolean;
 }
 
 // Owner des JEWEILS ANDEREN Teilnehmer-Charakters (aktuelle player_id, nicht
 // der Autor-Snapshot in dialogue_messages) — null falls dieser Charakter
-// aktuell niemandem zugeordnet ist (Mail entfällt dann still).
+// aktuell niemandem zugeordnet ist (Benachrichtigung entfällt dann still).
 export async function getOtherParticipantContact(
   archiveEntryId: number,
   excludeCharacterSlug: string,
@@ -525,29 +528,59 @@ export async function getOtherParticipantContact(
   );
   if (!other) return null;
 
-  const [row] = await sql<{ email: string; name: string }[]>`
-    SELECT u.email, u.name
+  const [row] = await sql<
+    {
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
     FROM characters c
     JOIN users u ON u.id = c.player_id
     WHERE c.slug = ${other.slug} AND c.player_id IS NOT NULL
     LIMIT 1
   `;
-  return row ?? null;
+  if (!row) return null;
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    emailNotificationsEnabled: row.email_notifications_enabled,
+    pushNotificationsEnabled: row.push_notifications_enabled,
+  };
 }
 
 // Abonnenten eines Charakters (subscribed_at gesetzt) — Grundlage für die
 // Dialog-Abschluss-Benachrichtigung in completeDialogueAction.
 export async function getCharacterSubscribers(
   characterSlug: string,
-): Promise<{ email: string; name: string }[]> {
-  return sql<{ email: string; name: string }[]>`
-    SELECT u.email, u.name
+): Promise<DialogueEmailTarget[]> {
+  const rows = await sql<
+    {
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
     FROM content_follows cf
     JOIN users u ON u.id = cf.user_id
     WHERE cf.target_type = 'character'
       AND cf.target_slug = ${characterSlug}
       AND cf.subscribed_at IS NOT NULL
   `;
+  return rows.map((row) => ({
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    emailNotificationsEnabled: row.email_notifications_enabled,
+    pushNotificationsEnabled: row.push_notifications_enabled,
+  }));
 }
 
 export interface DialogueSummary {
