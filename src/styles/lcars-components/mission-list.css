@@ -1,0 +1,355 @@
+/* ─── Missions-Übersicht: Toolbar, Chronik & Log-Liste ─────────────────
+   Sortier-/Filter-Toolbar sowie die beiden Jahres-Chronik-Ansichten
+   (Missions-Rail und Timeline-Rail) samt den darin gestapelten
+   Einsatzakten und Log-Zeilen. Die Master-Detail-Seite selbst lebt in
+   mission-detail.css.
+──────────────────────────────────────────────────────────────────── */
+
+/* ── Missions-Toolbar (Sortierung + Autor-Filter) ────────────────── */
+.mission-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.mission-sort {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  min-width: 220px;
+}
+.mission-author-filter {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background-color: var(--lcars-surface);
+  color: var(--lcars-text-data);
+  border: solid 1px var(--lcars-text-data);
+  cursor: pointer;
+}
+.mission-author-filter:focus {
+  outline: none;
+  border-color: var(--lcars-amber);
+}
+
+/* ── Missions-Chronik ────────────────────────────────────────────── */
+/* Zeitstrahl-Layout: dekorative Jahres-Schiene links, gestapelte
+   Einsatzakten rechts. Status wird ausschließlich über den farbigen
+   Schienen-Balken der Akte (--mission-color) kommuniziert. */
+
+.mission-chronik {
+  display: flex;
+  padding-bottom: 5px;
+}
+
+/* dekorative Jahres-Schiene (Elbow-Optik) */
+.mission-rail {
+  width: 58px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mission-rail-cap,
+.mission-rail-foot {
+  height: 36px;
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 8px 5px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--lcars-bg);
+}
+.mission-rail-cap {
+  align-items: flex-end;
+  border-radius: 14px 0 0 0;
+  background: var(--lcars-orange);
+}
+.mission-rail-foot {
+  align-items: flex-start;
+  padding: 7px 8px 0;
+  border-radius: 0 0 0 14px;
+  background: var(--lcars-red);
+}
+.mission-rail-fill {
+  flex: 1;
+  min-height: 80px;
+  background: var(--lcars-purple);
+}
+
+/* gestapelte Akten + Spine */
+.mission-list {
+  flex: 1;
+  min-width: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+}
+.mission-list::before {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  background: var(--lcars-border);
+}
+
+/* ── Timeline-Jahres-Rail ────────────────────────────────────────── */
+/* Eigenes Grid-Layout (nicht die Missions-Rail-Klassen oben), weil hier pro
+   Jahreswechsel ein Label exakt auf Höhe der ersten Karte dieses Jahres
+   sitzen muss — das lässt sich mit der rein dekorativen, unabhängig
+   fließenden Missions-Rail nicht abbilden. Rail-Zelle und Karte liegen als
+   Geschwister im selben Grid, dadurch immer in derselben Zeile ausgerichtet. */
+.timeline-chronik {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  column-gap: 20px;
+  row-gap: 14px;
+  padding-bottom: 5px;
+}
+.timeline-rail-cell {
+  position: relative;
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 11px;
+}
+.timeline-rail-cell::before {
+  content: "";
+  position: absolute;
+  right: 7px;
+  top: 0;
+  bottom: -14px;
+  width: 2px;
+  background: var(--lcars-border);
+}
+.timeline-rail-cell--last::before {
+  bottom: 0;
+}
+.timeline-rail-year {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--lcars-bg);
+  background: var(--lcars-orange);
+  padding: 4px 10px;
+  border-radius: 10px 0 0 10px;
+  position: relative;
+  z-index: 1;
+}
+
+/* einzelne Einsatzakte (Button: öffnet die Log-Liste) */
+.mission-akte {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  background: var(--lcars-surface);
+  border-radius: 4px 14px 14px 4px;
+  overflow: hidden;
+  text-decoration: none;
+  transition: background 150ms;
+}
+.mission-akte:hover {
+  background: var(--lcars-surface-2);
+}
+.mission-akte-rail {
+  width: 9px;
+  flex-shrink: 0;
+  background: var(--mission-color);
+}
+.mission-akte-body {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 16px 13px;
+}
+.mission-akte-title {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 21px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1;
+  color: var(--lcars-amber);
+}
+.mission-akte-summary {
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--lcars-text-light);
+  opacity: 0.85;
+}
+.mission-akte-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 9px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 14px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--lcars-text-contrast);
+}
+.mission-akte-meta b {
+  font-weight: 400;
+  color: var(--lcars-text-data);
+}
+
+/* ── Log-Liste ───────────────────────────────────────────────────── */
+.mission-logs-sub {
+  margin: 0 0 14px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lcars-text-dim);
+}
+
+/* einzelne Log-Zeile (Stub + Balken) */
+.mission-log-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mission-log-entry {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+  background: transparent;
+  text-decoration: none;
+}
+.mission-log-stub {
+  width: 52px;
+  flex-shrink: 0;
+  border-radius: 100vmax 0 0 100vmax;
+  background: var(--mission-color, var(--lcars-amber));
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 9px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--lcars-bg);
+}
+.mission-log-bar {
+  flex: 1;
+  min-width: 0;
+  margin-left: 3px;
+  padding: 0 14px;
+  background: var(--lcars-surface);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: background 150ms;
+}
+.mission-log-entry:hover .mission-log-bar {
+  background: var(--mission-color);
+}
+.mission-log-name {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lcars-text-contrast);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mission-log-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+.mission-log-author {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--lcars-text-data);
+  white-space: nowrap;
+}
+.mission-log-date {
+  flex-shrink: 0;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  color: var(--lcars-text);
+}
+.mission-log-empty {
+  color: var(--lcars-text-dim);
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* Mission-Body (Synopsis / Log-Text) */
+.mission-body {
+  margin: 0px 5px 10px 15px;
+  padding-left: 10px;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.mission-body > h2 {
+  font-size: 24px;
+}
+.mission-body > ul > li > ul {
+  margin-left: 20px;
+}
+.mission-body > * + * {
+  margin-top: 0.7em;
+}
+
+/* Autor-Gruppe (Sortierung nach Autor) */
+.mission-log-group + .mission-log-group {
+  margin-top: 18px;
+}
+
+/* ── Responsive Overrides ─────────────────────────────────────────── */
+
+@media (max-width: 520px) {
+  /* schmal: dekorative Jahres-Schiene + Spine ausblenden */
+  .mission-rail {
+    display: none;
+  }
+  .mission-list {
+    padding-left: 0;
+  }
+  .mission-list::before {
+    display: none;
+  }
+  .timeline-chronik {
+    grid-template-columns: 1fr;
+  }
+  .timeline-rail-cell {
+    display: none;
+  }
+}

@@ -46,7 +46,7 @@ export default function LogDetail({
     <article className="mission-detail-article mb-[16px]">
       <LcarsReadingModeToggle />
       <header className="mission-detail-header">
-        <div className="mission-detail-logmeta">
+        <div className="lcars-meta-row">
           {log.log_date && <span>{fmtDate(log.log_date)}</span>}
           {log.author_name && (
             <span>

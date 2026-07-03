@@ -17,7 +17,7 @@ export default function MissionSynopsis({
         style={{ "--mission-color": cfg.color } as React.CSSProperties}
       >
         <h1 className="mission-detail-title">{mission.title}</h1>
-        <div className="mission-detail-meta">
+        <div className="lcars-meta-row">
           <b>Zeitraum</b> {periodLabel(mission.started_at, mission.ended_at)}
         </div>
       </header>
@@ -30,7 +30,7 @@ export default function MissionSynopsis({
           dangerouslySetInnerHTML={{ __html: mission.metadata.body }}
         />
       ) : (
-        <p className="char-file-bio-empty">Keine Zusammenfassung vorhanden</p>
+        <p className="lcars-empty-state">Keine Zusammenfassung vorhanden</p>
       )}
     </article>
   );

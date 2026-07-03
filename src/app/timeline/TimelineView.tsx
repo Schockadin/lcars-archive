@@ -51,7 +51,7 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
       </div>
 
       {events.length === 0 ? (
-        <p className="char-file-bio-empty">
+        <p className="lcars-empty-state">
           Keine Ereignisse auf der Timeline hinterlegt.
         </p>
       ) : (
@@ -90,7 +90,7 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
           </div>
 
           {visible.length === 0 ? (
-            <p className="char-file-bio-empty">
+            <p className="lcars-empty-state">
               Keine Ereignisse für diese Kategorie.
             </p>
           ) : (

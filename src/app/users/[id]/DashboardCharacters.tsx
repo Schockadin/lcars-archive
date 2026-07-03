@@ -22,7 +22,7 @@ export default function DashboardCharacters({
       />
 
       {characters.length === 0 ? (
-        <p className="char-file-bio-empty">Noch kein Charakter zugeordnet.</p>
+        <p className="lcars-empty-state">Noch kein Charakter zugeordnet.</p>
       ) : (
         <div className="flex flex-col gap-[12px]">
           {characters.map((c) => (

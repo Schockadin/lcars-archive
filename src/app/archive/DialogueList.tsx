@@ -67,7 +67,7 @@ export default function DialogueList({
       </div>
 
       {list.length === 0 ? (
-        <p className="char-file-bio-empty">
+        <p className="lcars-empty-state">
           Keine Gespräche mit diesem Teilnehmer.
         </p>
       ) : (

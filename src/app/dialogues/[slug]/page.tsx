@@ -70,7 +70,7 @@ export default async function DialoguePlayPage({ params }: Props) {
           entrySlug={entry.slug}
         />
       ) : (
-        <p className="char-file-bio-empty">Noch keine Nachrichten.</p>
+        <p className="lcars-empty-state">Noch keine Nachrichten.</p>
       )}
 
       <div className="flex flex-col gap-[12px]">

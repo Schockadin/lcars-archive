@@ -1,0 +1,190 @@
+/* ─── Archiv-Browser, Archiv-Eintrag & Dialoge ────────────────────────
+   Zwei-Spalten-Browser (Kategorien | Liste/Eintrag), die Detailseite
+   eines Archiv-Eintrags samt Chips/Tags sowie die Dialog-Nachrichten
+   zwischen zwei Charakteren.
+──────────────────────────────────────────────────────────────────── */
+
+.archive-browser {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+}
+.archive-browser-nav {
+  flex: 0 0 260px;
+  min-width: 0;
+  position: sticky;
+  top: 5px;
+  align-self: flex-start;
+  max-height: calc(100dvh - 24px);
+}
+.archive-browser-main {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.archive-cat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Eintrags-Liste (Akten-Karten) der gewählten Kategorie */
+.archive-entry-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 16px;
+  margin-bottom: 5px;
+}
+.archive-placeholder {
+  max-width: 520px;
+}
+
+/* ── Archiv-Eintrag (Detailseite) ────────────────────────────────── */
+.archive-entry {
+  width: 100%;
+  max-width: 720px;
+  margin-bottom: 16px;
+  margin-top: 32px;
+}
+.archive-entry-head {
+  margin: 10px 0 18px;
+}
+.archive-entry-attrs {
+  margin-bottom: 16px;
+}
+.archive-related {
+  margin-top: 24px;
+}
+.archive-related-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.archive-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+  text-decoration: none;
+  padding: 6px 14px;
+  background: var(--lcars-surface);
+  border-left: 4px solid var(--chip-color, var(--lcars-amber));
+  border-radius: 0 4px 4px 0;
+  transition: background 150ms;
+}
+.archive-chip:hover {
+  background: var(--lcars-surface-2);
+}
+/* statischer Chip (kein Link, z.B. nicht aufgelöster Teilnehmer) */
+.archive-chip-static {
+  cursor: default;
+}
+.archive-chip-static:hover {
+  background: var(--lcars-surface);
+}
+.archive-chip-title {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lcars-text-contrast);
+}
+.archive-chip-label {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--lcars-text-dim);
+}
+
+/* Dialog-Header: Teilnehmer / Ort / Datum */
+.archive-dialogue-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+.archive-dialogue-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.archive-dialogue-label {
+  flex: 0 0 92px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 14px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lcars-text);
+}
+.archive-dialogue-row .archive-related-grid {
+  margin-top: 0;
+}
+.archive-dialogue-value {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 14px;
+  color: var(--lcars-text-data);
+}
+
+/* Einzelne Dialog-Nachricht: farbige Randleiste wie .mission-akte, aber
+   statischer Block (kein Link/Button) mit Autor-Kopfzeile + Freitext.
+   Farbe kommt aus AUTHOR_COLORS (missionFormat.ts) per --message-color. */
+.dialogue-message {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  border-radius: 4px 14px 14px 4px;
+  overflow: hidden;
+  background: var(--lcars-surface);
+}
+.dialogue-message-rail {
+  width: 9px;
+  flex-shrink: 0;
+  background: var(--message-color);
+}
+.dialogue-message-body {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 16px 13px;
+}
+.dialogue-message-author {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--message-color);
+}
+.dialogue-message-meta {
+  margin-left: 8px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  color: var(--lcars-text-dim);
+}
+.dialogue-message-text {
+  margin-top: 6px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--lcars-text-light);
+}
+.dialogue-message-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* gestapelt auf schmalen Screens — kein Sticky, Liste oben */
+@media (max-width: 768px) {
+  .archive-browser {
+    flex-direction: column;
+  }
+  .archive-browser-nav {
+    flex: none;
+    width: 100%;
+    position: static;
+    max-height: none;
+    overflow: visible;
+  }
+}

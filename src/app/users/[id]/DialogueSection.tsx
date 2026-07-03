@@ -24,7 +24,7 @@ export default function DialogueSection({
       />
 
       {dialogues.length === 0 ? (
-        <p className="char-file-bio-empty">Keine offenen Gespräche.</p>
+        <p className="lcars-empty-state">Keine offenen Gespräche.</p>
       ) : (
         <div className="flex flex-col gap-[6px]">
           {dialogues.map((d) => (

@@ -63,7 +63,7 @@ export default function CharacterLogList({
       <div className="mission-loglist-head">
         <Link
           href={`/characters/${characterSlug}`}
-          className="mission-loglist-back"
+          className="lcars-back-link"
         >
           ‹ {characterName}
         </Link>

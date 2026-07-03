@@ -49,7 +49,7 @@ export default function SearchResultsView({
   }, [filtered, sort]);
 
   if (results.length === 0) {
-    return <p className="char-file-bio-empty">Keine Treffer für „{query}“.</p>;
+    return <p className="lcars-empty-state">Keine Treffer für „{query}“.</p>;
   }
 
   return (
@@ -90,7 +90,7 @@ export default function SearchResultsView({
       </div>
 
       {sorted.length === 0 ? (
-        <p className="char-file-bio-empty">
+        <p className="lcars-empty-state">
           Keine Treffer in dieser Kategorie.
         </p>
       ) : (

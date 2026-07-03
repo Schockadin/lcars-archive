@@ -1,0 +1,412 @@
+/* ─── Header, Suche, Elbows & Navigation ─────────────────────────────
+   Kopfbereich der AppShell: Titel/Login-Zeile, globale Schnellsuche,
+   die farbigen Elbow-Balken, Sidebar-Navigation (Menu-Bar/-Pill) sowie
+   das Header-Pill-Grid des User-Bereichs und die Footer-Leiste.
+──────────────────────────────────────────────────────────────────── */
+
+/* ── Header ─────────────────────────────────────────────────────── */
+
+.lcars-header-content {
+  display: flex;
+  width: 100%;
+  height: var(--lcars-header-h);
+  background-color: var(--lcars-bg);
+  flex-direction: column;
+  justify-content: space-between;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  gap: 12px;
+}
+
+/* Titel links, Anmelden-/Abmelden-Button rechts (nur außerhalb des
+   User-Bereichs — dort übernimmt HeaderUserNav die Navigation). */
+.lcars-header-top {
+  display: flex;
+  height: calc(var(--lcars-header-h) - var(--lcars-bar-h) - 10px);
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Basis-Größe (Desktop) — Media Queries unten überschreiben font-size für
+   schmalere Viewports. font-family/-weight/color/line-height bleiben in
+   globals.css, hier lebt nur die viewport-abhängige font-size. */
+.lcars-header-title {
+  font-size: 48px;
+}
+
+/* ── Globale Suche (Header) ──────────────────────────────────────── */
+
+.lcars-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 0 1 320px;
+  min-width: 0;
+  height: 34px;
+  max-height: 34px;
+  padding: 0 12px;
+  background: var(--lcars-surface);
+  border: 1px solid var(--lcars-text);
+  border-radius: 100vmax;
+  color: var(--lcars-text-dim);
+  max-width: 250px;
+  margin-bottom: 5px;
+}
+.lcars-search:focus-within {
+  border-color: var(--lcars-blue);
+}
+.lcars-search-icon {
+  flex: 0 0 auto;
+}
+.lcars-search-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-left: 8px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--lcars-text-light);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 14px;
+}
+.lcars-search-input::placeholder {
+  color: var(--lcars-text);
+}
+.lcars-search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+.lcars-search-dropdown {
+  position: fixed;
+  z-index: 1000;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 6px;
+  background: var(--lcars-surface);
+  border: 2px solid var(--lcars-purple);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+.lcars-search-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+.lcars-search-item[aria-selected="true"] {
+  background: rgba(205, 154, 205, 0.18);
+}
+.lcars-search-dot {
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+.lcars-search-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.lcars-search-label {
+  font-size: 14px;
+  color: var(--lcars-text-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lcars-search-sub {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--lcars-text-dim);
+}
+.lcars-search-empty {
+  padding: 10px 12px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+  color: var(--lcars-text-dim);
+}
+/* "Alle Ergebnisse anzeigen…"-Zeile am Ende des Dropdowns — kein Dot/Label,
+   daher zentriert und optisch als eigene Aktion abgesetzt. */
+.lcars-search-more {
+  justify-content: center;
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--lcars-border);
+  color: var(--lcars-amber);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* ── Elbows ──────────────────────────────────────────────────────── */
+
+.lcars-elbow-bar {
+  display: flex;
+  width: 100%;
+  height: var(--lcars-bar-h);
+  background-color: var(--lcars-bg);
+}
+
+.lcars-elbow-top {
+  width: var(--lcars-bar-width);
+  min-height: calc(var(--lcars-bar-h) + var(--lcars-elbow-size));
+  border-radius: 0 0 0 100px;
+  background-color: var(--lcars-blue);
+}
+
+.lcars-elbow-bottom {
+  width: var(--lcars-bar-width);
+  min-height: calc(0.8 * var(--lcars-bar-width));
+  border-radius: 100px 0 0 0;
+  background-color: var(--lcars-red);
+}
+
+/* ── Navigation ──────────────────────────────────────────────────── */
+
+.lcars-menu-bar {
+  width: var(--lcars-bar-width);
+  padding: 0 18px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  margin-top: 5px;
+  background-color: var(--lcars-amber);
+  min-height: 60px;
+  transition: background 250ms;
+}
+.lcars-menu-bar:hover {
+  background-color: var(--lcars-amber-light);
+}
+
+.lcars-menu-pill {
+  height: 75px;
+  border-radius: 100vmax;
+  width: 210px;
+  padding: 0 18px 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  background-color: var(--lcars-amber);
+  margin: 5px;
+  transition: background 250ms;
+}
+.lcars-menu-pill:hover {
+  background-color: var(--lcars-amber-light);
+}
+
+.lcars-menu-active {
+  background-color: var(--lcars-blue);
+}
+.lcars-menu-active:hover {
+  background-color: var(--lcars-blue);
+}
+
+/* ── User-Bereich: Header-Pill-Grid (ersetzt Titel+Suche) ────────────
+   --lcars-header-h bewusst NICHT angefasst (an --lcars-sidebar-header-h
+   gekoppelt) — grid-auto-rows: minmax(0,1fr) passt sich dem verfügbaren
+   Innenraum automatisch an, keine fixe Pill-Höhe wie bei .lcars-menu-pill
+   (75px würden hier nicht passen). */
+.lcars-usernav {
+  --usernav-cols: 3;
+  display: grid;
+  grid-template-columns: repeat(var(--usernav-cols), 216px);
+  grid-auto-rows: minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 720px;
+}
+.lcars-usernav-form {
+  display: flex;
+  min-height: 0;
+  width: 200px;
+}
+.lcars-usernav-form .lcars-usernav-pill {
+  width: 100%;
+}
+.lcars-usernav-pill {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  min-height: 0;
+  min-width: 0;
+  padding: 0 18px 8px;
+  border: none;
+  border-radius: 100vmax;
+  background-color: var(--lcars-amber);
+  cursor: pointer;
+  text-decoration: none;
+  overflow: hidden;
+  white-space: nowrap;
+  color: black;
+  font-family: var(--font-antonio), sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: 1px;
+  line-height: 1.175;
+  text-transform: uppercase;
+  transition: background 250ms;
+  width: 200px;
+  height: 48px;
+}
+.lcars-usernav-pill:hover {
+  background-color: var(--lcars-amber-light);
+}
+.lcars-usernav-pill.lcars-menu-active,
+.lcars-usernav-pill.lcars-menu-active:hover {
+  background-color: var(--lcars-blue);
+}
+
+@media (max-width: 920px) {
+  .lcars-usernav {
+    grid-template-columns: repeat(var(--usernav-cols), 158px);
+  }
+  .lcars-usernav-pill {
+    font-size: 16px;
+    padding: 0 14px 8px;
+    width: 150px;
+  }
+  .lcars-usernav-form {
+    width: 150px;
+  }
+}
+@media (max-width: 720px) {
+  .lcars-usernav {
+    grid-template-columns: repeat(var(--usernav-cols), 108px);
+  }
+  .lcars-usernav-pill {
+    font-size: 14px;
+    padding: 0 14px 8px;
+    width: 100px;
+  }
+  .lcars-usernav-form {
+    width: 100px;
+  }
+}
+
+.lcars-footer-menu {
+  text-decoration: none;
+  width: 10%;
+  min-width: 100px;
+  height: var(--lcars-bar-h);
+  background: var(--lcars-amber);
+  font-size: calc(var(--lcars-bar-h) - 4px);
+  padding-right: 4px;
+  text-align: right;
+  color: black;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: var(--font-antonio), sans-serif;
+  transition: background 250ms;
+}
+.lcars-footer-menu:hover {
+  background: var(--lcars-amber-light);
+}
+
+.lcars-footer-version {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 8px;
+  letter-spacing: 0.03em;
+  color: var(--lcars-bg);
+  opacity: 0.65;
+  user-select: text;
+}
+
+/* ── Responsive Overrides ─────────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .lcars-menu-bar {
+    width: var(--lcars-bar-width);
+    padding: 0 8px 6px;
+  }
+  .lcars-menu-text {
+    display: none;
+  }
+  .lcars-menu-pill {
+    width: 100%;
+  }
+  .lcars-breadcrumbs {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Suche bekommt Vorrang, Titel schrumpft. */
+  .lcars-header-title {
+    font-size: 28px;
+  }
+  .lcars-search {
+    flex-basis: 190px;
+  }
+  /* Anmelden-/Abmelden-Pill neben dem Titel — nur die Header-Instanz
+     betroffen (nicht das Pill-Grid unter /users), daher gescoped statt die
+     Basisklasse anzufassen. */
+  .lcars-header-top .lcars-usernav-pill {
+    height: 34px;
+    width: 140px;
+    font-size: 14px;
+    padding: 0 14px 6px;
+  }
+  .lcars-header-top .lcars-usernav-form {
+    width: 140px;
+  }
+}
+
+@media (max-width: 480px) {
+  .lcars-elbow-bottom,
+  .lcars-elbow-top {
+    height: calc(0.8 * var(--lcars-bar-width));
+  }
+  .lcars-footer-menu {
+    min-width: 50px;
+  }
+  .lcars-header-title {
+    font-size: 22px;
+  }
+  .lcars-header-top .lcars-usernav-pill {
+    height: 26px;
+    width: 100px;
+    font-size: 11px;
+    padding: 0 10px 4px;
+  }
+  .lcars-header-top .lcars-usernav-form {
+    width: 100px;
+  }
+  .lcars-breadcrumbs {
+    font-size: 12px;
+  }
+  .lcars-menu-id {
+    font-size: 16px;
+  }
+}
+
+/* Sehr schmale Handys (≤ 400px): Titel würde bei 22px sonst umbrechen. */
+@media (max-width: 400px) {
+  .lcars-header-title {
+    font-size: 17px;
+  }
+  .lcars-header-top .lcars-usernav-pill {
+    height: 24px;
+    width: 84px;
+    font-size: 10px;
+    padding: 0 8px 3px;
+  }
+  .lcars-header-top .lcars-usernav-form {
+    width: 84px;
+  }
+}
