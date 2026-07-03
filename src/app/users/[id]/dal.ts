@@ -2,8 +2,10 @@ import "server-only";
 import { redirect } from "next/navigation";
 import { getCurrentUser, verifySession } from "@/lib/dal";
 import { getUserById, getUserWithPasswordStatus } from "@/lib/users";
+import { getCharactersForUser } from "@/lib/characters";
 import type { User } from "@/types/db";
 import type { UserWithPasswordStatus } from "@/lib/users";
+import type { Character } from "@/types/character";
 
 // Für /settings: Einstellungen bearbeiten bleibt strikt Selbstbedienung,
 // auch für den GM. Der Identitätsvergleich (":id" aus der URL == meine
@@ -77,4 +79,32 @@ export async function requireSelfOrGM(idParam: string): Promise<SelfOrGMAccess> 
   }
 
   return { viewer, target, isSelf: false };
+}
+
+export interface OwnCharactersAccess {
+  user: UserWithPasswordStatus;
+  characters: Character[];
+}
+
+// Für /users/[id]/dialogues/new: Identität wie requireOwnUser (Cookie-
+// basiert). Redirectet NICHT bei 0 Charakteren — die Seite selbst zeigt in
+// dem Fall einen Hinweis statt des Formulars (Verteidigung in der Tiefe
+// zusätzlich zum ausgeblendeten Dashboard-Button, siehe DialogueSection).
+export async function requireOwnCharacters(
+  idParam: string,
+): Promise<OwnCharactersAccess> {
+  const session = await verifySession();
+  const id = Number(idParam);
+
+  if (!Number.isInteger(id) || id !== session.userId) {
+    redirect(`/users/${session.userId}`);
+  }
+
+  const user = await getUserWithPasswordStatus(session.userId);
+  if (!user) {
+    redirect("/login");
+  }
+
+  const characters = await getCharactersForUser(session.userId);
+  return { user, characters };
 }

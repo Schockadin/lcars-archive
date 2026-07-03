@@ -99,3 +99,25 @@ export async function sendSubscriptionDigest(input: {
     `,
   });
 }
+
+// Direkt nach jeder neuen Dialog-Nachricht an den jeweils anderen
+// Teilnehmer verschickt (kein Sammel-Digest wie bei Abos — hier ist jede
+// Nachricht ein einzelnes, sofortiges Ereignis).
+export async function sendDialogueMessageEmail(input: {
+  to: string;
+  name: string;
+  fromCharacterName: string;
+  dialogueTitle: string;
+  dialogueUrl: string;
+}): Promise<SendEmailResult> {
+  return sendEmail({
+    to: input.to,
+    subject: `Neue Nachricht in "${input.dialogueTitle}"`,
+    html: `
+      <p>Hallo ${input.name},</p>
+      <p>${input.fromCharacterName} hat im Gespräch "${input.dialogueTitle}" geantwortet:</p>
+      <p><a href="${input.dialogueUrl}">${input.dialogueUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}

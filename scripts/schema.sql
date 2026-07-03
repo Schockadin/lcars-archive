@@ -200,3 +200,31 @@ CREATE TABLE IF NOT EXISTS content_follows (
 );
 CREATE INDEX IF NOT EXISTS idx_content_follows_user   ON content_follows(user_id);
 CREATE INDEX IF NOT EXISTS idx_content_follows_target ON content_follows(target_type, target_slug);
+
+-- Nachrichten eines In-App-Dialogs. Der Dialog selbst ist ein ganz normaler
+-- archive_entries-Eintrag der Kategorie 'dialogue' (gleiche metadata-Form
+-- wie Vault-Dialoge: participants/location/logDate/setting) — content
+-- bleibt bei In-App-Dialogen bewusst '' und source_md NULL. Nachrichten
+-- werden aufsteigend gespeichert, absteigend (neueste zuerst) angezeigt.
+--
+-- content/source_md folgen exakt dem Muster von missions/archive_entries/
+-- mission_logs: content = gerendertes (sanitisiertes) HTML, source_md =
+-- rohes vom User getipptes Markdown.
+--
+-- character_id/author_user_id: ON DELETE SET NULL statt CASCADE (analog
+-- mission_logs.author_id) — eine spätere Charakter-Neuzuordnung oder ein
+-- gelöschter User reißt bereits geschriebene Nachrichten nicht mit.
+-- author_user_id wird zusätzlich zu character_id gespeichert (nicht nur
+-- zur Anzeigezeit aus characters.player_id abgeleitet), weil player_id
+-- sich später ändern kann — die Autorenschaft bleibt historisch korrekt.
+CREATE TABLE IF NOT EXISTS dialogue_messages (
+  id                SERIAL PRIMARY KEY,
+  archive_entry_id  INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
+  character_id      INT REFERENCES characters(id) ON DELETE SET NULL,
+  author_user_id    INT REFERENCES users(id) ON DELETE SET NULL,
+  content           TEXT NOT NULL,
+  source_md         TEXT NOT NULL,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_dialogue_messages_entry  ON dialogue_messages(archive_entry_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_dialogue_messages_author ON dialogue_messages(author_user_id);

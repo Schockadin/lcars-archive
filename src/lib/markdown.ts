@@ -5,6 +5,7 @@ import remarkParse from "remark-parse";
 import remarkGfm from "remark-gfm";
 import remarkRehype from "remark-rehype";
 import rehypeSlug from "rehype-slug";
+import rehypeSanitize, { defaultSchema } from "rehype-sanitize";
 import rehypeStringify from "rehype-stringify";
 import { visit } from "unist-util-visit";
 import type {
@@ -126,6 +127,27 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .use(rehypeSlug)
     .use(rehypeStringify)
     .process(publicContent);
+
+  return result.toString();
+}
+
+// Wie markdownToHtml, aber zusätzlich sanitisiert (rehype-sanitize,
+// Default-Schema) — ausschließlich für Freitext von Usern (Dialog-
+// Nachrichten). remark-rehype verwirft eingebettetes rohes HTML zwar
+// schon standardmäßig (kein allowDangerousHtml gesetzt), lässt aber
+// Markdown-Links mit gefährlichem URL-Schema (z.B. "javascript:") als
+// <a href="..."> unverändert durch — bei GM-Vault-Inhalt nie relevant,
+// bei beliebigem User-Freitext ein echter Stored-XSS-Vektor. Kein
+// Wikilink-/Timeline-Anker-/private-Marker-Support hier (alles
+// vault-spezifisch, für Chat-Nachrichten nicht sinnvoll).
+export async function markdownToSafeHtml(markdown: string): Promise<string> {
+  const result = await unified()
+    .use(remarkParse)
+    .use(remarkGfm)
+    .use(remarkRehype)
+    .use(rehypeSanitize, defaultSchema)
+    .use(rehypeStringify)
+    .process(markdown);
 
   return result.toString();
 }

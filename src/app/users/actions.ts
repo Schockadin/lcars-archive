@@ -1,6 +1,5 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireGM } from "@/lib/dal";
 import {
@@ -13,23 +12,13 @@ import { assignCharacterToUser } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { createPasswordSetupToken } from "@/lib/passwordSetupTokens";
 import { sendActivationEmail } from "@/lib/mail";
+import { getBaseUrl } from "@/lib/http";
 import type { User } from "@/types/db";
 
 const ROLES: readonly User["role"][] = ["gm", "player", "viewer"];
 
 function isValidRole(value: string): value is User["role"] {
   return (ROLES as readonly string[]).includes(value);
-}
-
-// SITE_URL (siehe .env.example) ist bewusst eine kommaseparierte Liste für
-// die Revalidation und deshalb hier ungeeignet — der Host-Header des
-// aktuellen Requests liefert immer die korrekte Basis-URL der gerade
-// laufenden Umgebung (dev/preview/prod).
-async function getBaseUrl(): Promise<string> {
-  const h = await headers();
-  const host = h.get("host") ?? "localhost:3000";
-  const proto = h.get("x-forwarded-proto") ?? (host.includes("localhost") ? "http" : "https");
-  return `${proto}://${host}`;
 }
 
 export interface AdminActionState {

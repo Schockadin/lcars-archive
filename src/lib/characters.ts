@@ -81,6 +81,29 @@ export async function getCharactersForUser(
   return rows.map(parseCharacter);
 }
 
+export interface CharacterWithOwner {
+  id: number;
+  slug: string;
+  name: string;
+  playerId: number;
+  playerName: string;
+}
+
+// Alle Charaktere mit Spieler außer denen von excludeUserId — Partner-
+// Picker für "Gespräch beginnen" (src/app/users/[id]/dialogues/new). Kein
+// Cache, gleiche Begründung wie getCharactersForUser.
+export async function getCharactersWithPlayers(
+  excludeUserId: number,
+): Promise<CharacterWithOwner[]> {
+  return sql<CharacterWithOwner[]>`
+    SELECT c.id, c.slug, c.name, c.player_id AS "playerId", u.name AS "playerName"
+    FROM characters c
+    JOIN users u ON u.id = c.player_id
+    WHERE c.player_id IS NOT NULL AND c.player_id != ${excludeUserId}
+    ORDER BY c.name ASC
+  `;
+}
+
 // GM-only-Zuweisung (siehe src/app/users/actions.ts). player_id wird vom
 // Ingest nie angefasst (scripts/ingest/characters.ts), Zuweisungen
 // überleben also einen Re-Ingest.

@@ -1936,3 +1936,45 @@
   gap: 12px;
   margin-bottom: 16px;
 }
+
+/* Einzelne Dialog-Nachricht: farbige Randleiste wie .mission-akte, aber
+   statischer Block (kein Link/Button) mit Autor-Kopfzeile + Freitext.
+   Farbe kommt aus AUTHOR_COLORS (missionFormat.ts) per --message-color. */
+.dialogue-message {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  border-radius: 4px 14px 14px 4px;
+  overflow: hidden;
+  background: var(--lcars-surface);
+}
+.dialogue-message-rail {
+  width: 9px;
+  flex-shrink: 0;
+  background: var(--message-color);
+}
+.dialogue-message-body {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 16px 13px;
+}
+.dialogue-message-author {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--message-color);
+}
+.dialogue-message-meta {
+  margin-left: 8px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  color: var(--lcars-text-dim);
+}
+.dialogue-message-text {
+  margin-top: 6px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--lcars-text-light);
+}

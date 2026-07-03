@@ -9,6 +9,9 @@ import PageMeta from "@/components/PageMeta";
 import CrumbLabel from "@/components/CrumbLabel";
 import { LcarsReadingModeToggle } from "@/components/lcars";
 import FollowButtons from "@/components/FollowButtons";
+import DialogueThread from "@/components/DialogueThread";
+import DialogueReplyForm from "@/components/DialogueReplyForm";
+import { getDialogueMessages } from "@/lib/dialogues";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -36,6 +39,14 @@ export default async function ArchiveEntryPage({ params }: Props) {
   const { slug } = await params;
   const entry = await getArchiveEntryBySlug(slug);
   if (!entry) notFound();
+
+  // Einfache, nicht gecachte Abfrage — Frische kommt über die Revalidation
+  // der ganzen Seite nach jeder neuen Nachricht (siehe
+  // src/app/actions/dialogues.ts), nicht über Query-Caching. Kein
+  // cookies()/headers()-Zugriff hier — die statische Vorrenderung dieser
+  // Seite bleibt dadurch erhalten.
+  const messages =
+    entry.category === "dialogue" ? await getDialogueMessages(entry.id) : [];
 
   const cfg = CATEGORY_CONFIG[entry.category];
   const title = archiveTitle(entry);
@@ -80,7 +91,9 @@ export default async function ArchiveEntryPage({ params }: Props) {
           </div>
         )}
 
-      {entry.content ? (
+      {entry.category === "dialogue" && messages.length > 0 ? (
+        <DialogueThread messages={messages} participants={entry.metadata.participants} />
+      ) : entry.content ? (
         <div
           className="mission-body lcars-text"
           dangerouslySetInnerHTML={{ __html: entry.content }}
@@ -90,6 +103,8 @@ export default async function ArchiveEntryPage({ params }: Props) {
           Kein Inhalt zu diesem Eintrag hinterlegt.
         </p>
       )}
+
+      {entry.category === "dialogue" && <DialogueReplyForm entrySlug={entry.slug} />}
 
       <RelatedSection title="Verweise" links={outgoingLinks} />
       <RelatedSection title="Erwähnt in" links={entry.backlinks} />
