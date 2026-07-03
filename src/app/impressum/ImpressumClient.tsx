@@ -23,10 +23,23 @@ export default function ImpressumClient() {
       <h2>Hinweis zum Inhalt</h2>
       <p>
         Diese Website ist eine private, nicht-kommerzielle Fansite zur
-        Dokumentation einer laufenden Pen-&-Paper-Rollenspielkampagne. Sämtliche
-        Inhalte sind fiktional. Star-Trek-Begriffe und das LCARS-Design sind
-        Marken von CBS Studios Inc. / Paramount Global. Diese Seite steht in
-        keiner Verbindung zu diesen Unternehmen.
+        Dokumentation einer laufenden Pen-&-Paper-Rollenspielkampagne, die
+        Elemente mehrerer Science-Fiction-Franchises miteinander verbindet.
+        Sämtliche Inhalte sind fiktional. Die verwendeten Begriffe, Namen und
+        das LCARS-Design sind Marken bzw. urheberrechtlich geschützte Werke
+        ihrer jeweiligen Rechteinhaber, u. a.:
+        <br />
+        Star Trek: CBS Studios Inc. / Paramount Global
+        <br />
+        Stargate: Metro-Goldwyn-Mayer Studios Inc. (MGM)
+        <br />
+        Perry Rhodan: Pabel-Moewig Verlag KG (Bauer Media Group)
+        <br />
+        Star Wars: Lucasfilm Ltd. LLC / The Walt Disney Company
+        <br />
+        Warhammer 40.000: Games Workshop Limited
+        <br />
+        Diese Seite steht in keiner Verbindung zu diesen Unternehmen.
       </p>
 
       <h2>Haftung für Inhalte</h2>

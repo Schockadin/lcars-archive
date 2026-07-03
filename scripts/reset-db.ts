@@ -10,6 +10,7 @@ import { stdin, stdout } from "process";
 const TABLES = [
   "timeline_events",
   "archive_links",
+  "dialogue_messages",
   "archive_entries",
   "mission_logs",
   "missions",

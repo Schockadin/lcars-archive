@@ -23,7 +23,7 @@ export default async function ArchiveLayout({
           <ArchiveCategoryNav entries={navEntries} />
         </Suspense>
       </aside>
-      <div className="archive-browser-main">{children}</div>
+      <div className="archive-browser-main ml-[32px]">{children}</div>
     </div>
   );
 }

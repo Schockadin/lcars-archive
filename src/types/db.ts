@@ -11,7 +11,10 @@ export interface Note {
 export interface User {
   id: number;
   email: string;
-  role: 'gm' | 'player' | 'viewer';
+  name: string;
+  role: 'admin' | 'gm' | 'player' | 'viewer';
+  is_active: boolean;
   created_at: Date;
-  last_updated: Date;
+  last_login_at: Date | null;
+  previous_login_at: Date | null;
 }

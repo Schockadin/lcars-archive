@@ -5,6 +5,7 @@ import { ingestMissionLogs } from "./missionLogs.js";
 import { ingestMissions } from "./missions.js";
 import { ingestTimeline } from "./timeline.js";
 import { resolveWikiLinks } from "./wikilinks.js";
+import { notifySubscribers } from "./notify.js";
 
 // Nach erfolgreichem Ingest die Inhalts-Caches invalidieren (Schritt 3).
 // Erfordert SITE_URL + REVALIDATE_SECRET; fehlen diese, wird der Schritt
@@ -82,11 +83,26 @@ async function runIngest(steps: Step[]) {
 
   try {
     if (steps.includes("characters")) await ingestCharacters(sql, vaultPath);
+
+    const changedMissionSlugs = new Set<string>();
+    const changedArchiveSlugs = new Set<string>();
+    const changedCharacterSlugs = new Set<string>();
+    const newLogSlugs = new Set<string>();
+
     if (steps.includes("missions")) {
-      await ingestMissions(sql, vaultPath);
-      await ingestMissionLogs(sql, vaultPath);
+      for (const slug of await ingestMissions(sql, vaultPath)) {
+        changedMissionSlugs.add(slug);
+      }
+      const logResult = await ingestMissionLogs(sql, vaultPath);
+      for (const slug of logResult.missionSlugs) changedMissionSlugs.add(slug);
+      for (const slug of logResult.characterSlugs) changedCharacterSlugs.add(slug);
+      for (const slug of logResult.newLogSlugs) newLogSlugs.add(slug);
     }
-    if (steps.includes("archive")) await ingestArchive(sql, vaultPath);
+    if (steps.includes("archive")) {
+      for (const slug of await ingestArchive(sql, vaultPath)) {
+        changedArchiveSlugs.add(slug);
+      }
+    }
     // Läuft immer über den kompletten Datenbestand (nicht nur die gerade
     // importierten Dateien), damit Wiki-Links auch dann aufgelöst werden,
     // wenn ihr Ziel in einem früheren/anderen Lauf importiert wurde.
@@ -95,6 +111,13 @@ async function runIngest(steps: Step[]) {
     // metadata aller vier Tabellen, nicht nur der gerade importierten.
     await ingestTimeline(sql);
     console.log("\n✅ Ingestion abgeschlossen");
+    await notifySubscribers(
+      sql,
+      changedMissionSlugs,
+      changedArchiveSlugs,
+      changedCharacterSlugs,
+      newLogSlugs,
+    );
     await triggerRevalidation();
   } catch (error) {
     console.error("\n❌ Fataler Fehler:", error);

@@ -38,11 +38,27 @@ async function askOverwrite(
   return answer.trim().toLowerCase() === "j";
 }
 
+export interface IngestMissionLogsResult {
+  missionSlugs: Set<string>;
+  characterSlugs: Set<string>;
+  newLogSlugs: Set<string>;
+}
+
 export async function ingestMissionLogs(
   sql: postgres.Sql,
   vaultPath: string,
   onlyNew = false,
-): Promise<void> {
+): Promise<IngestMissionLogsResult> {
+  // Mission-Slugs, die einen brandneuen Log bekommen haben (in beiden Modi
+  // relevant — Abonnenten einer Mission sollen auch bei "nur neue Dateien"-
+  // Läufen benachrichtigt werden). charactersWithNewLogs/newLogSlugs
+  // analog für Charakter-Abos (siehe notify.ts) — newLogSlugs exakt statt
+  // über die Mission-ID gefiltert, damit bei Missionen mit mehreren Autoren
+  // nicht auch ältere Logs des abonnierten Charakters fälschlich erneut
+  // auftauchen.
+  const missionsWithNewLogs = new Set<string>();
+  const charactersWithNewLogs = new Set<string>();
+  const newLogSlugs = new Set<string>();
   const dir = join(vaultPath, "Missionen");
 
   const missionDirs = readdirSync(dir).filter((entry) =>
@@ -199,6 +215,12 @@ export async function ingestMissionLogs(
         continue;
       }
 
+      if (!existingRow) {
+        missionsWithNewLogs.add(fm.mission.trim());
+        charactersWithNewLogs.add(fm.author.trim());
+        newLogSlugs.add(slug);
+      }
+
       console.log(`  ✓ ${slug}: ${fm.title}`);
       success++;
     } catch (error) {
@@ -217,4 +239,10 @@ export async function ingestMissionLogs(
     console.error("\n  Fehler:");
     errors.forEach((e) => console.error(e));
   }
+
+  return {
+    missionSlugs: missionsWithNewLogs,
+    characterSlugs: charactersWithNewLogs,
+    newLogSlugs,
+  };
 }

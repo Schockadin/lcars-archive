@@ -181,7 +181,8 @@ export async function ingestArchive(
   sql: postgres.Sql,
   vaultPath: string,
   onlyNew = false,
-): Promise<void> {
+): Promise<Set<string>> {
+  const changedSlugs = new Set<string>();
   const dir = join(vaultPath, "Archiv");
 
   const files = collectMarkdown(dir);
@@ -275,7 +276,17 @@ export async function ingestArchive(
             frontmatter = EXCLUDED.frontmatter,
             updated_at  = NOW()`;
 
-      const [row] = await sql<{ id: number }[]>`
+      // "old" wird als CTE vor der Modifikation gegen den Tabellenstand zu
+      // Beginn des Statements ausgewertet (siehe missions.ts) — nur
+      // title/category/content werden verglichen, nicht die volle
+      // (verschachtelte) metadata, die ohnehin erst im 2. Pass unten final
+      // zusammengeführt wird.
+      const [row] = await sql<
+        { id: number; old_title: string | null; old_category: string | null; old_content: string | null }[]
+      >`
+        WITH old AS (
+          SELECT title, category, content FROM archive_entries WHERE slug = ${slug}
+        )
         INSERT INTO archive_entries (
           slug, title, category, content, tags, metadata,
           source_md, frontmatter, updated_at
@@ -291,12 +302,25 @@ export async function ingestArchive(
           NOW()
         )
         ${conflictClause}
-        RETURNING id
+        RETURNING
+          id,
+          (SELECT title FROM old) AS old_title,
+          (SELECT category FROM old) AS old_category,
+          (SELECT content FROM old) AS old_content
       `;
 
       if (!row) {
         alreadyExists++;
         continue;
+      }
+
+      if (
+        row.old_title != null &&
+        (row.old_title !== title ||
+          row.old_category !== category ||
+          row.old_content !== contentHtml)
+      ) {
+        changedSlugs.add(slug);
       }
 
       slugToId.set(slug, row.id);
@@ -487,4 +511,6 @@ export async function ingestArchive(
     console.error("\n  Hinweise:");
     errors.forEach((e) => console.error(e));
   }
+
+  return changedSlugs;
 }

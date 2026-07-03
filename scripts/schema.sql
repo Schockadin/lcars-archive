@@ -147,3 +147,121 @@ CREATE INDEX IF NOT EXISTS idx_archive_links_source ON archive_links(source_id);
 CREATE INDEX IF NOT EXISTS idx_archive_links_target ON archive_links(target_id);
 CREATE INDEX IF NOT EXISTS idx_timeline_events_date   ON timeline_events(event_date);
 CREATE INDEX IF NOT EXISTS idx_timeline_events_source ON timeline_events(source_type, source_slug);
+
+-- "Letzter Besuch" für das Dashboard (neu seit deinem letzten Besuch).
+-- previous_login_at wird bei jedem Login aus dem alten last_login_at
+-- übernommen, bevor last_login_at auf NOW() gesetzt wird (recordLogin in
+-- src/lib/users.ts) — so kennt das Dashboard immer die Grenze des
+-- *vorletzten* Logins, unabhängig von Profil-Änderungen währenddessen.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS previous_login_at TIMESTAMPTZ;
+
+-- Unterstützt getRecentActivitySince() (src/lib/timeline.ts), das nach
+-- created_at filtert statt nach dem In-Story-Datum event_date.
+CREATE INDEX IF NOT EXISTS idx_timeline_events_created ON timeline_events(created_at);
+
+-- Passwort-Login. password_hash ist NULL, solange kein Passwort gesetzt
+-- wurde. requires_activation unterscheidet zwei NULL-Fälle:
+--   - false (Default): Bestandskonto von vor dieser Migration — darf sich
+--     weiterhin per E-Mail allein einloggen (siehe login() in
+--     src/app/login/actions.ts), bis es selbst ein Passwort setzt.
+--   - true: vom GM neu angelegtes Konto — darf sich erst einloggen,
+--     nachdem der Aktivierungslink (password_setup_tokens) benutzt wurde.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_hash TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS requires_activation BOOLEAN NOT NULL DEFAULT false;
+
+-- Einmal-Token für die Aktivierungs-/Passwort-setzen-Mail. token_hash statt
+-- des Rohtokens gespeichert (SHA-256, siehe src/lib/passwordSetupTokens.ts)
+-- — ein DB-Leak macht die Links damit nicht direkt nutzbar. used_at markiert
+-- verbrauchte Tokens statt sie zu löschen (Nachvollziehbarkeit).
+CREATE TABLE IF NOT EXISTS password_setup_tokens (
+  id         SERIAL PRIMARY KEY,
+  user_id    INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  token_hash TEXT NOT NULL UNIQUE,
+  expires_at TIMESTAMPTZ NOT NULL,
+  used_at    TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_password_setup_tokens_user ON password_setup_tokens(user_id);
+
+-- Lesezeichen/Abos für Missionen und Archiv-Einträge. Zielreferenz per
+-- target_type/target_slug (wie bei timeline_events) statt zweier separater
+-- Tabellen mit je eigenem FK — eine Zeile ohne beides gesetzt wird von
+-- src/lib/follows.ts gelöscht statt mit NULL/NULL liegen zu bleiben.
+CREATE TABLE IF NOT EXISTS content_follows (
+  id            SERIAL PRIMARY KEY,
+  user_id       INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  target_type   TEXT NOT NULL CHECK (target_type IN ('mission', 'archive_entry')),
+  target_slug   TEXT NOT NULL,
+  bookmarked_at TIMESTAMPTZ,
+  subscribed_at TIMESTAMPTZ,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (user_id, target_type, target_slug)
+);
+CREATE INDEX IF NOT EXISTS idx_content_follows_user   ON content_follows(user_id);
+CREATE INDEX IF NOT EXISTS idx_content_follows_target ON content_follows(target_type, target_slug);
+
+-- Nachrichten eines In-App-Dialogs. Der Dialog selbst ist ein ganz normaler
+-- archive_entries-Eintrag der Kategorie 'dialogue' (gleiche metadata-Form
+-- wie Vault-Dialoge: participants/location/logDate/setting) — content
+-- bleibt bei In-App-Dialogen bewusst '' und source_md NULL. Nachrichten
+-- werden aufsteigend gespeichert, absteigend (neueste zuerst) angezeigt.
+--
+-- content/source_md folgen exakt dem Muster von missions/archive_entries/
+-- mission_logs: content = gerendertes (sanitisiertes) HTML, source_md =
+-- rohes vom User getipptes Markdown.
+--
+-- character_id/author_user_id: ON DELETE SET NULL statt CASCADE (analog
+-- mission_logs.author_id) — eine spätere Charakter-Neuzuordnung oder ein
+-- gelöschter User reißt bereits geschriebene Nachrichten nicht mit.
+-- author_user_id wird zusätzlich zu character_id gespeichert (nicht nur
+-- zur Anzeigezeit aus characters.player_id abgeleitet), weil player_id
+-- sich später ändern kann — die Autorenschaft bleibt historisch korrekt.
+CREATE TABLE IF NOT EXISTS dialogue_messages (
+  id                SERIAL PRIMARY KEY,
+  archive_entry_id  INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
+  character_id      INT REFERENCES characters(id) ON DELETE SET NULL,
+  author_user_id    INT REFERENCES users(id) ON DELETE SET NULL,
+  content           TEXT NOT NULL,
+  source_md         TEXT NOT NULL,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_dialogue_messages_entry  ON dialogue_messages(archive_entry_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_dialogue_messages_author ON dialogue_messages(author_user_id);
+
+-- In-App-Dialoge: offen (nur unter /dialogues/<slug> sichtbar, nimmt
+-- Nachrichten an) vs. abgeschlossen (im Archiv, read-only). Vault-Dialoge
+-- bleiben beim Default FALSE (= abgeschlossen) — der Ingest muss nichts
+-- davon wissen.
+ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS dialogue_open BOOLEAN NOT NULL DEFAULT FALSE;
+
+-- Nachträgliches Bearbeiten/Löschen eigener Dialog-Nachrichten. Löschen ist
+-- ein Soft-Delete (deleted_at gesetzt) — content/source_md bleiben in der
+-- DB erhalten, werden aber von getDialogueMessages() nie mehr ausgeliefert
+-- (Platzhaltertext stattdessen), damit die Thread-Struktur/Reihenfolge
+-- erhalten bleibt. Kein separates Boolean-Flag: edited_at/deleted_at
+-- IS NOT NULL sind die Flags selbst.
+ALTER TABLE dialogue_messages ADD COLUMN IF NOT EXISTS edited_at  TIMESTAMPTZ;
+ALTER TABLE dialogue_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+
+-- Charakter-Abos: dritter target_type neben mission/archive_entry. Nutzt
+-- dieselbe content_follows-Tabelle (bookmarked_at/subscribed_at), target_slug
+-- ist der Charakter-Slug.
+ALTER TABLE content_follows DROP CONSTRAINT IF EXISTS content_follows_target_type_check;
+ALTER TABLE content_follows ADD CONSTRAINT content_follows_target_type_check
+  CHECK (target_type IN ('mission', 'archive_entry', 'character'));
+
+-- GM-Rolle wird gesplittet: admin (volle Useraccount-Verwaltung +
+-- Charakter-Zuweisung) und gm (nur noch Charakter-Zuweisung +
+-- Spielleitungs-Befugnisse wie Dialog-Force-Complete). Bestehende
+-- role='gm'-Accounts migrieren zu 'admin', um alle heutigen Rechte zu
+-- behalten (kein Risiko, sich selbst auszusperren). Reihenfolge wichtig:
+-- Constraint zuerst erweitern, dann Daten migrieren.
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check
+  CHECK (role IN ('admin', 'gm', 'player', 'viewer'));
+UPDATE users SET role = 'admin' WHERE role = 'gm';
+
+-- Admin kann Useraccounts deaktivieren (Soft-Block am Login, siehe
+-- src/app/login/actions.ts) statt sie sofort zu löschen.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;

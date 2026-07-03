@@ -66,6 +66,86 @@ export const getActiveCharacters = unstable_cache(
   { tags: [cacheTags.characters] },
 );
 
+// Charaktere eines Users (siehe assignCharacterToUser). Kein Cache — die
+// Dashboard-Route ist durch den Session-Zugriff ohnehin dynamisch, analog
+// zu getUserById in src/lib/users.ts.
+export async function getCharactersForUser(
+  userId: number,
+): Promise<Character[]> {
+  const rows = await sql<Character[]>`
+    SELECT *
+    FROM characters
+    WHERE player_id = ${userId}
+    ORDER BY name ASC
+  `;
+  return rows.map(parseCharacter);
+}
+
+export interface CharacterWithOwner {
+  id: number;
+  slug: string;
+  name: string;
+  playerId: number;
+  playerName: string;
+}
+
+// Alle Charaktere mit Spieler außer denen von excludeUserId — Partner-
+// Picker für "Gespräch beginnen" (src/app/users/[id]/dialogues/new). Kein
+// Cache, gleiche Begründung wie getCharactersForUser.
+export async function getCharactersWithPlayers(
+  excludeUserId: number,
+): Promise<CharacterWithOwner[]> {
+  return sql<CharacterWithOwner[]>`
+    SELECT c.id, c.slug, c.name, c.player_id AS "playerId", u.name AS "playerName"
+    FROM characters c
+    JOIN users u ON u.id = c.player_id
+    WHERE c.player_id IS NOT NULL AND c.player_id != ${excludeUserId}
+    ORDER BY c.name ASC
+  `;
+}
+
+// GM-only-Zuweisung (siehe src/app/users/actions.ts). player_id wird vom
+// Ingest nie angefasst (scripts/ingest/characters.ts), Zuweisungen
+// überleben also einen Re-Ingest.
+export async function assignCharacterToUser(
+  characterId: number,
+  userId: number | null,
+): Promise<Character> {
+  const rows = await sql<Character[]>`
+    UPDATE characters
+    SET player_id = ${userId}
+    WHERE id = ${characterId}
+    RETURNING *
+  `;
+  return parseCharacter(rows[0]);
+}
+
+export interface UserContentLog {
+  id: number;
+  slug: string;
+  title: string;
+  session_nr: number | null;
+  log_date: string | null;
+  mission_slug: string;
+  mission_title: string;
+}
+
+// Alle Mission-Logs der eigenen Charaktere für /users/[id]/content. Ungecacht
+// wie getCharactersForUser — die Seite ist ohnehin durch requireOwnCharacters
+// (Session-Zugriff) dynamisch.
+export async function getLogsForUser(userId: number): Promise<UserContentLog[]> {
+  return sql<UserContentLog[]>`
+    SELECT
+      ml.id, ml.slug, ml.title, ml.session_nr, ml.log_date::text AS log_date,
+      m.slug AS mission_slug, m.title AS mission_title
+    FROM mission_logs ml
+    JOIN characters c ON c.id = ml.author_id
+    JOIN missions m ON m.id = ml.mission_id
+    WHERE c.player_id = ${userId}
+    ORDER BY ml.session_nr DESC NULLS LAST
+  `;
+}
+
 export async function getLogsByCharacter(
   characterId: number,
 ): Promise<MissionLogPreview[]> {

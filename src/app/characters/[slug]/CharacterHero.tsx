@@ -7,6 +7,7 @@ import {
 } from "@/components/lcars";
 import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
+import FollowButtons from "@/components/FollowButtons";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
 function slugify(text: string): string {
@@ -273,6 +274,7 @@ export default function CharacterHero({
                 aka {metadata.aliases.join(" · ")}
               </p>
             )}
+            <FollowButtons targetType="character" targetSlug={character.slug} />
 
             {bio ? (
               <div

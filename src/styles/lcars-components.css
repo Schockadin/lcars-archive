@@ -21,16 +21,23 @@
   gap: 12px;
 }
 
-/* Titelzeile + globale Suche nebeneinander. */
+/* Titel links, Anmelden-/Abmelden-Button rechts (nur außerhalb des
+   User-Bereichs — dort übernimmt HeaderUserNav die Navigation). */
 .lcars-header-top {
   display: flex;
   height: calc(var(--lcars-header-h) - var(--lcars-bar-h) - 10px);
-  /* align-items: center; */
-  /* justify-content: space-between; */
+  align-items: center;
+  justify-content: space-between;
   gap: 16px;
   width: 100%;
   min-width: 0;
-  flex-direction: column;
+}
+
+/* Basis-Größe (Desktop) — Media Queries unten überschreiben font-size für
+   schmalere Viewports. font-family/-weight/color/line-height bleiben in
+   globals.css, hier lebt nur die viewport-abhängige font-size. */
+.lcars-header-title {
+  font-size: 48px;
 }
 
 /* ── Globale Suche (Header) ──────────────────────────────────────── */
@@ -211,6 +218,89 @@
   background-color: var(--lcars-blue);
 }
 
+/* ── User-Bereich: Header-Pill-Grid (ersetzt Titel+Suche) ────────────
+   --lcars-header-h bewusst NICHT angefasst (an --lcars-sidebar-header-h
+   gekoppelt) — grid-auto-rows: minmax(0,1fr) passt sich dem verfügbaren
+   Innenraum automatisch an, keine fixe Pill-Höhe wie bei .lcars-menu-pill
+   (75px würden hier nicht passen). */
+.lcars-usernav {
+  --usernav-cols: 3;
+  display: grid;
+  grid-template-columns: repeat(var(--usernav-cols), 216px);
+  grid-auto-rows: minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 720px;
+}
+.lcars-usernav-form {
+  display: flex;
+  min-height: 0;
+  width: 200px;
+}
+.lcars-usernav-form .lcars-usernav-pill {
+  width: 100%;
+}
+.lcars-usernav-pill {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  min-height: 0;
+  min-width: 0;
+  padding: 0 18px 8px;
+  border: none;
+  border-radius: 100vmax;
+  background-color: var(--lcars-amber);
+  cursor: pointer;
+  text-decoration: none;
+  overflow: hidden;
+  white-space: nowrap;
+  color: black;
+  font-family: var(--font-antonio), sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: 1px;
+  line-height: 1.175;
+  text-transform: uppercase;
+  transition: background 250ms;
+  width: 200px;
+  height: 48px;
+}
+.lcars-usernav-pill:hover {
+  background-color: var(--lcars-amber-light);
+}
+.lcars-usernav-pill.lcars-menu-active,
+.lcars-usernav-pill.lcars-menu-active:hover {
+  background-color: var(--lcars-blue);
+}
+
+@media (max-width: 920px) {
+  .lcars-usernav {
+    grid-template-columns: repeat(var(--usernav-cols), 158px);
+  }
+  .lcars-usernav-pill {
+    font-size: 16px;
+    padding: 0 14px 8px;
+    width: 150px;
+  }
+  .lcars-usernav-form {
+    width: 150px;
+  }
+}
+@media (max-width: 720px) {
+  .lcars-usernav {
+    grid-template-columns: repeat(var(--usernav-cols), 108px);
+  }
+  .lcars-usernav-pill {
+    font-size: 14px;
+    padding: 0 14px 8px;
+    width: 100px;
+  }
+  .lcars-usernav-form {
+    width: 100px;
+  }
+}
+
 .lcars-footer-menu {
   text-decoration: none;
   width: 10%;
@@ -257,6 +347,15 @@
   gap: 8px;
   align-items: center;
   container-type: size;
+}
+
+/* Basisklasse ist fix 300px breit — zu schmal für lange deutsche
+   Überschriften-Labels in 24px-Uppercase (siehe Dashboard-Sektionen). */
+.lcars-data-row.lcars-data-row--full {
+  width: 100%;
+}
+.lcars-data-row--full > .lcars-data-row-text > div {
+  line-height: 1.3;
 }
 
 .lcars-data-row-label {
@@ -750,15 +849,81 @@
 .lcars-switch {
   cursor: pointer;
   height: 30px;
+  padding: 0 24px;
   font-size: clamp(12px, 16px, 16px);
   font-weight: bolder;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+  text-decoration: none;
   transition: 200ms;
   display: flex;
   align-items: center;
   justify-content: center;
   border: solid 1px var(--lcars-text-data);
+  background: var(--lcars-surface);
+  color: var(--lcars-text-data);
+}
+/* "Leeres" Default-Design für alle Buttons/Links (Formulare, Cookie-
+   Hinweis, User-Bereich-Navigation) — füllt erst bei Hover auf amber, statt
+   permanent gefüllt zu sein. Die Toggle-Varianten (SortSwitch/SortButton)
+   setzen aktiv/inaktiv weiterhin per Inline-Style und ignorieren das. */
+.lcars-switch:hover:not(:disabled) {
+  background: var(--lcars-amber);
+  color: var(--lcars-bg);
+  border-color: var(--lcars-amber);
+}
+.lcars-switch:disabled {
+  cursor: not-allowed;
+}
+
+/* Aktueller Tab in der User-Bereich-Navigation (UsersNav.tsx) — dauerhaft
+   gefüllt statt nur bei Hover, damit die aktuelle Seite erkennbar bleibt. */
+.lcars-switch--active {
+  background: var(--lcars-amber);
+  color: var(--lcars-bg);
+  border-color: var(--lcars-amber);
+}
+
+/* Kompakte Icon-Variante von .lcars-switch für Zeilen-Aktionen (z.B.
+   UserRoleRow.tsx) — gleiche Rahmen-/Hover-Logik, aber als 30px-Kreis mit
+   SVG statt Text-Pille. */
+.lcars-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 100vmax;
+  border: solid 1px var(--lcars-text-data);
+  background: var(--lcars-surface);
+  color: var(--lcars-text-data);
+  transition: 200ms;
+}
+.lcars-icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.lcars-icon-btn:hover:not(:disabled) {
+  background: var(--lcars-amber);
+  color: var(--lcars-bg);
+  border-color: var(--lcars-amber);
+}
+.lcars-icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+/* Löschen: rot statt Standard-Blau, auch im Hover. */
+.lcars-icon-btn--danger {
+  border-color: var(--lcars-red);
+  color: var(--lcars-red);
+}
+.lcars-icon-btn--danger:hover:not(:disabled) {
+  background: var(--lcars-red);
+  color: var(--lcars-bg);
+  border-color: var(--lcars-red);
 }
 
 .lcars-filters {
@@ -770,6 +935,24 @@
   .lcars-filters {
     flex-direction: row;
   }
+}
+
+/* Input-Felder */
+.lcars-input {
+  border: solid 1px var(--lcars-text-data);
+  background: var(--lcars-surface-2);
+  color: var(--lcars-text-contrast);
+  padding: 8px 16px;
+  color: var(--lcars-text-contrast);
+  outline: none;
+  height: 36px;
+  font-size: 16px;
+}
+.lcars-input:hover {
+  border-color: var(--lcars-amber);
+}
+.lcasrs-input:focus {
+  border-color: var(--lcars-amber);
 }
 
 /* ── Missions-Toolbar (Sortierung + Autor-Filter) ────────────────── */
@@ -1354,6 +1537,18 @@
   .lcars-search {
     flex-basis: 190px;
   }
+  /* Anmelden-/Abmelden-Pill neben dem Titel — nur die Header-Instanz
+     betroffen (nicht das Pill-Grid unter /users), daher gescoped statt die
+     Basisklasse anzufassen. */
+  .lcars-header-top .lcars-usernav-pill {
+    height: 34px;
+    width: 140px;
+    font-size: 14px;
+    padding: 0 14px 6px;
+  }
+  .lcars-header-top .lcars-usernav-form {
+    width: 140px;
+  }
 }
 
 @media (max-width: 520px) {
@@ -1417,6 +1612,15 @@
   .lcars-header-title {
     font-size: 22px;
   }
+  .lcars-header-top .lcars-usernav-pill {
+    height: 26px;
+    width: 100px;
+    font-size: 11px;
+    padding: 0 10px 4px;
+  }
+  .lcars-header-top .lcars-usernav-form {
+    width: 100px;
+  }
   .lcars-data-row-label {
     font-size: 75cqh;
     padding-top: 1px;
@@ -1433,6 +1637,22 @@
   }
   .lcars-menu-id {
     font-size: 16px;
+  }
+}
+
+/* Sehr schmale Handys (≤ 400px): Titel würde bei 22px sonst umbrechen. */
+@media (max-width: 400px) {
+  .lcars-header-title {
+    font-size: 17px;
+  }
+  .lcars-header-top .lcars-usernav-pill {
+    height: 24px;
+    width: 84px;
+    font-size: 10px;
+    padding: 0 8px 3px;
+  }
+  .lcars-header-top .lcars-usernav-form {
+    width: 84px;
   }
 }
 
@@ -1875,4 +2095,87 @@
   .mission-log-stub {
     display: none;
   }
+}
+
+/* ── Cookie-Hinweis ───────────────────────────────────────────────────
+   Bewusst als kompakte, unten rechts angedockte Karte statt einer über die
+   volle Breite laufenden Leiste — eine breite Leiste am unteren Rand
+   überlappt sonst leicht interaktive Elemente (z.B. Submit-Buttons kurz
+   angehängter Formulare) und blockiert dort Klicks. */
+.lcars-cookie-notice {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 360px;
+  margin-left: auto;
+  padding: 16px 20px;
+  background: var(--lcars-surface);
+  border: solid 1px var(--lcars-text-data);
+  border-radius: var(--lcars-radius-card);
+  color: var(--lcars-text);
+  font-size: 14px;
+}
+.lcars-cookie-notice p {
+  margin: 0;
+}
+.lcars-cookie-notice .lcars-switch {
+  align-self: flex-end;
+}
+
+.follow-buttons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+/* Einzelne Dialog-Nachricht: farbige Randleiste wie .mission-akte, aber
+   statischer Block (kein Link/Button) mit Autor-Kopfzeile + Freitext.
+   Farbe kommt aus AUTHOR_COLORS (missionFormat.ts) per --message-color. */
+.dialogue-message {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  border-radius: 4px 14px 14px 4px;
+  overflow: hidden;
+  background: var(--lcars-surface);
+}
+.dialogue-message-rail {
+  width: 9px;
+  flex-shrink: 0;
+  background: var(--message-color);
+}
+.dialogue-message-body {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 16px 13px;
+}
+.dialogue-message-author {
+  font-family: var(--font-antonio), sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--message-color);
+}
+.dialogue-message-meta {
+  margin-left: 8px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  color: var(--lcars-text-dim);
+}
+.dialogue-message-text {
+  margin-top: 6px;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--lcars-text-light);
+}
+.dialogue-message-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
 }

@@ -21,6 +21,7 @@ export interface Character {
   slug: string;
   name: string;
   status: "active" | "retired" | "deceased";
+  player_id: number | null;
   portrait: string | null;
   joined_at: string | null;
   left_at: string | null;

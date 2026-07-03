@@ -220,14 +220,33 @@ export async function ingestTimeline(sql: postgres.Sql): Promise<void> {
   }
 
   // ── Komplett neu aufbauen (kleine Datenmenge, vermeidet Karteileichen) ──
+  // created_at soll dabei aber NICHT auf NOW() zurückspringen, sonst sähe
+  // nach jedem Ingest-Lauf das komplette Archiv wie "gerade neu
+  // hinzugefügt" aus (siehe getRecentActivitySince in src/lib/timeline.ts,
+  // das genau danach filtert) — bereits bekannte Ereignisse übernehmen
+  // deshalb ihr bisheriges created_at, nur echte Neuzugänge bekommen NOW().
+  const existing = await sql<
+    { source_type: SourceType; source_slug: string; href: string; title: string; created_at: string }[]
+  >`SELECT source_type, source_slug, href, title, created_at FROM timeline_events`;
+  const previousCreatedAt = new Map<string, string>();
+  for (const e of existing) {
+    previousCreatedAt.set(
+      `${e.source_type} ${e.source_slug} ${e.href} ${e.title}`,
+      e.created_at,
+    );
+  }
+
   await sql`DELETE FROM timeline_events`;
   for (const row of rows) {
+    const key = `${row.source_type} ${row.source_slug} ${row.href} ${row.title}`;
+    const createdAt = previousCreatedAt.get(key) ?? null;
     await sql`
       INSERT INTO timeline_events (
-        event_date, title, category, source_type, source_slug, href
+        event_date, title, category, source_type, source_slug, href, created_at
       ) VALUES (
         ${row.event_date}, ${row.title}, ${row.category},
-        ${row.source_type}, ${row.source_slug}, ${row.href}
+        ${row.source_type}, ${row.source_slug}, ${row.href},
+        COALESCE(${createdAt}, NOW())
       )
     `;
   }
