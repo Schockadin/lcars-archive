@@ -46,13 +46,14 @@ export const getAllArchiveEntries = unstable_cache(
         tags,
         metadata
       FROM archive_entries
+      WHERE NOT (category = 'dialogue' AND dialogue_open)
       ORDER BY title ASC
     `;
     return rows.map(parseMeta);
   },
-  // Key-Version "2": die Metadata-Shape hat sich geändert (neue Felder) —
+  // Key-Version "3": offene In-App-Dialoge werden jetzt herausgefiltert —
   // Bump verwirft alte Cache-Einträge deterministisch (auch poisoned-empty).
-  ["getAllArchiveEntries", "v2"],
+  ["getAllArchiveEntries", "v3"],
   { tags: [cacheTags.archive] },
 );
 
@@ -71,6 +72,7 @@ export async function getArchiveEntryBySlug(
           content,
           tags,
           metadata,
+          dialogue_open,
           updated_at::text AS updated_at
         FROM archive_entries
         WHERE slug = ${slug}
@@ -107,7 +109,7 @@ export async function getArchiveEntryBySlug(
 
       return { ...parseMeta(entry), links, backlinks };
     },
-    ["getArchiveEntryBySlug", "v2", slug],
+    ["getArchiveEntryBySlug", "v3", slug],
     { tags: [cacheTags.archive, cacheTags.archiveEntry(slug)] },
   )();
 }
@@ -123,11 +125,12 @@ export async function getDialogueCountByParticipant(
         SELECT COUNT(*)::int AS count
         FROM archive_entries
         WHERE category = 'dialogue'
+          AND NOT dialogue_open
           AND metadata->'participants' @> ${sql.json([{ slug }])}
       `;
       return row?.count ?? 0;
     },
-    ["getDialogueCountByParticipant", slug],
+    ["getDialogueCountByParticipant", "v2", slug],
     { tags: [cacheTags.archive] },
   )();
 }
@@ -138,9 +141,10 @@ export const getAllArchivePaths = unstable_cache(
     const rows = await sql<ArchivePath[]>`
       SELECT slug, updated_at::text AS updated_at
       FROM archive_entries
+      WHERE NOT (category = 'dialogue' AND dialogue_open)
     `;
     return rows;
   },
-  ["getAllArchivePaths", "v2"],
+  ["getAllArchivePaths", "v3"],
   { tags: [cacheTags.archive] },
 );

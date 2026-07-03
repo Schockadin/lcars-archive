@@ -86,9 +86,12 @@ async function runSearchQueries(
       SELECT title, slug, category, metadata->>'setting' AS setting
              ${includeContent ? sql`, content, source_md` : sql``}
       FROM archive_entries
-      WHERE title ILIKE ${like}
-        ${includeContent ? sql`OR content ILIKE ${like}` : sql``}
-        OR (category = 'dialogue' AND metadata->>'setting' ILIKE ${like})
+      WHERE (
+          title ILIKE ${like}
+          ${includeContent ? sql`OR content ILIKE ${like}` : sql``}
+          OR (category = 'dialogue' AND metadata->>'setting' ILIKE ${like})
+        )
+        AND NOT (category = 'dialogue' AND dialogue_open)
       ORDER BY (title ILIKE ${prefix}) DESC, title ASC
       LIMIT ${limit}
     `,

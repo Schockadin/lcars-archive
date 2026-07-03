@@ -9,6 +9,7 @@ import { getCharactersForUser } from "@/lib/characters";
 import type { ArchiveParticipant, ArchiveLocationRef } from "@/types/archive";
 
 export class DialogueSlugCollisionError extends Error {}
+export class DialogueClosedError extends Error {}
 
 function isUniqueViolation(err: unknown): boolean {
   return (
@@ -153,10 +154,10 @@ export async function createDialogue(
       const [entry] = await tx<{ id: number }[]>`
         INSERT INTO archive_entries (
           slug, title, category, content, tags, metadata,
-          source_md, frontmatter, updated_at
+          source_md, frontmatter, dialogue_open, updated_at
         ) VALUES (
           ${slug}, ${input.title}, 'dialogue', '', ${input.tags},
-          ${tx.json(metadata as ReturnType<typeof JSON.parse>)}, NULL, ${tx.json({})}, NOW()
+          ${tx.json(metadata as ReturnType<typeof JSON.parse>)}, NULL, ${tx.json({})}, TRUE, NOW()
         )
         RETURNING id
       `;
@@ -196,6 +197,17 @@ export async function postDialogueMessage(
   const content = await markdownToSafeHtml(input.bodyMarkdown);
 
   return sql.begin(async (tx) => {
+    // Autoritativer Check innerhalb der Transaktion (FOR UPDATE) statt sich
+    // auf den (möglicherweise gecachten) Aufrufer-Read zu verlassen — schützt
+    // gegen den Fall, dass der andere Teilnehmer den Dialog just in diesem
+    // Moment abschließt (TOCTOU).
+    const [entry] = await tx<{ dialogue_open: boolean }[]>`
+      SELECT dialogue_open FROM archive_entries WHERE id = ${input.archiveEntryId} FOR UPDATE
+    `;
+    if (!entry?.dialogue_open) {
+      throw new DialogueClosedError("Dieses Gespräch ist abgeschlossen.");
+    }
+
     const [row] = await tx<
       { id: number; character_id: number | null; created_at: string }[]
     >`
@@ -259,6 +271,70 @@ export async function getDialogueParticipant(
   return { characterId: row.id, characterSlug: row.slug, characterName: row.name };
 }
 
+export interface DialoguePlayEntry {
+  id: number;
+  slug: string;
+  title: string;
+  open: boolean;
+  setting: string | null;
+  logDate: string | null;
+  participants: ArchiveParticipant[];
+  location: ArchiveLocationRef | null;
+}
+
+// Ungecacht — Grundlage für /dialogues/[slug] sowie die Actions (ersetzt
+// dort getArchiveEntryBySlug), da beide immer den frischen Open/Closed-
+// Status brauchen.
+export async function getDialogueForPlay(
+  slug: string,
+): Promise<DialoguePlayEntry | null> {
+  const [row] = await sql<
+    { id: number; slug: string; title: string; metadata: unknown; dialogue_open: boolean }[]
+  >`
+    SELECT id, slug, title, metadata, dialogue_open
+    FROM archive_entries
+    WHERE slug = ${slug} AND category = 'dialogue'
+    LIMIT 1
+  `;
+  if (!row) return null;
+
+  const meta =
+    typeof row.metadata === "string"
+      ? (JSON.parse(row.metadata) as {
+          setting?: string | null;
+          logDate?: string | null;
+          participants?: ArchiveParticipant[];
+          location?: ArchiveLocationRef | null;
+        })
+      : (row.metadata as {
+          setting?: string | null;
+          logDate?: string | null;
+          participants?: ArchiveParticipant[];
+          location?: ArchiveLocationRef | null;
+        } | null) ?? {};
+
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    open: row.dialogue_open,
+    setting: meta.setting ?? null,
+    logDate: meta.logDate ?? null,
+    participants: meta.participants ?? [],
+    location: meta.location ?? null,
+  };
+}
+
+// Abschließen ist bewusst one-way (kein Wiedereröffnen) — siehe
+// completeDialogueAction in src/app/actions/dialogues.ts für die
+// Berechtigungsprüfung (Teilnehmer oder GM).
+export async function completeDialogue(archiveEntryId: number): Promise<void> {
+  await sql`
+    UPDATE archive_entries SET dialogue_open = FALSE, updated_at = NOW()
+    WHERE id = ${archiveEntryId} AND category = 'dialogue'
+  `;
+}
+
 export interface DialogueEmailTarget {
   email: string;
   name: string;
@@ -296,15 +372,18 @@ export interface DialogueSummary {
   title: string;
   partnerName: string;
   updatedAt: string;
+  open: boolean;
 }
 
-// "Deine Gespräche" fürs Dashboard. Fragt pro eigenem Charakter einzeln ab
-// (gleiches jsonb-Containment-Muster wie getDialogueCountByParticipant in
+// "Deine Gespräche" fürs Dashboard (scope "open", Default) bzw. "Meine
+// Inhalte" (scope "all"). Fragt pro eigenem Charakter einzeln ab (gleiches
+// jsonb-Containment-Muster wie getDialogueCountByParticipant in
 // src/lib/archive.ts) statt eines komplexeren Multi-Charakter-JOINs — bei
 // der üblichen Anzahl Charaktere pro Spieler unproblematisch, und deutlich
 // weniger fehleranfällig als jsonb_build_object direkt in SQL zu bauen.
 export async function getDialoguesForUser(
   userId: number,
+  scope: "open" | "all" = "open",
 ): Promise<DialogueSummary[]> {
   const ownCharacters = await getCharactersForUser(userId);
   if (ownCharacters.length === 0) return [];
@@ -312,14 +391,25 @@ export async function getDialoguesForUser(
 
   const results = new Map<string, DialogueSummary>();
   for (const slug of ownSlugs) {
-    const rows = await sql<
-      { slug: string; title: string; metadata: unknown; updated_at: string }[]
-    >`
-      SELECT slug, title, metadata, updated_at::text AS updated_at
-      FROM archive_entries
-      WHERE category = 'dialogue'
-        AND metadata->'participants' @> ${sql.json([{ slug }])}
-    `;
+    const rows =
+      scope === "open"
+        ? await sql<
+            { slug: string; title: string; metadata: unknown; updated_at: string; dialogue_open: boolean }[]
+          >`
+            SELECT slug, title, metadata, updated_at::text AS updated_at, dialogue_open
+            FROM archive_entries
+            WHERE category = 'dialogue'
+              AND metadata->'participants' @> ${sql.json([{ slug }])}
+              AND dialogue_open
+          `
+        : await sql<
+            { slug: string; title: string; metadata: unknown; updated_at: string; dialogue_open: boolean }[]
+          >`
+            SELECT slug, title, metadata, updated_at::text AS updated_at, dialogue_open
+            FROM archive_entries
+            WHERE category = 'dialogue'
+              AND metadata->'participants' @> ${sql.json([{ slug }])}
+          `;
 
     for (const row of rows) {
       if (results.has(row.slug)) continue;
@@ -331,6 +421,7 @@ export async function getDialoguesForUser(
         title: row.title,
         partnerName: partner?.name ?? "Unbekannt",
         updatedAt: row.updated_at,
+        open: row.dialogue_open,
       });
     }
   }

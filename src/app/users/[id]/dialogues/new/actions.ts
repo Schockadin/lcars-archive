@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
 import { getCharactersForUser, getCharactersWithPlayers } from "@/lib/characters";
 import { DialogueSlugCollisionError, createDialogue } from "@/lib/dialogues";
-import { revalidateArchiveEntry } from "@/lib/revalidate";
 
 export interface CreateDialogueState {
   error?: string;
@@ -88,6 +87,5 @@ export async function createDialogueAction(
     throw err;
   }
 
-  revalidateArchiveEntry(slug);
-  redirect(`/archive/${slug}`);
+  redirect(`/dialogues/${slug}`);
 }

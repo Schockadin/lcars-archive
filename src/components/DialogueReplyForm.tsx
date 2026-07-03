@@ -1,19 +1,16 @@
 "use client";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import {
-  getDialogueReplyState,
   postDialogueMessageAction,
   type DialogueMessageState,
 } from "@/app/actions/dialogues";
 
 const initialState: DialogueMessageState = {};
 
-// Muster wie FollowButtons.tsx: Berechtigungsstatus wird client-seitig per
-// Server Action nachgeladen (useEffect), damit /archive/[slug] selbst
-// session-frei und damit statisch bleiben kann. Rendert nichts, solange
-// unbekannt, und dauerhaft nichts für anonyme Besucher/Nicht-Teilnehmer.
+// Wird nur gerendert, wenn der Aufrufer (die Server-Seite) das auch will —
+// /dialogues/[slug] prüft Teilnahme + offen-Status bereits serverseitig,
+// kein Client-Nachladen des Berechtigungsstatus mehr nötig.
 export default function DialogueReplyForm({ entrySlug }: { entrySlug: string }) {
-  const [canReply, setCanReply] = useState<boolean | null>(null);
   const [state, formAction, pending] = useActionState(
     postDialogueMessageAction,
     initialState,
@@ -21,20 +18,8 @@ export default function DialogueReplyForm({ entrySlug }: { entrySlug: string }) 
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    let cancelled = false;
-    getDialogueReplyState(entrySlug).then((result) => {
-      if (!cancelled) setCanReply(result.canReply);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [entrySlug]);
-
-  useEffect(() => {
     if (state?.success) formRef.current?.reset();
   }, [state]);
-
-  if (!canReply) return null;
 
   return (
     <form

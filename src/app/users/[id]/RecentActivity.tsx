@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LcarsDataRow } from "@/components/lcars";
 import type { RecentActivityEvent } from "@/types/timeline";
 import { SOURCE_TYPE_LABELS, categoryVisual, fmtDate } from "@/lib/timelineFormat";
 
@@ -14,7 +15,12 @@ export default function RecentActivity({
 }) {
   return (
     <section className="flex flex-col gap-[8px]">
-      <p className="lcars-eyebrow">Neu seit deinem letzten Besuch</p>
+      <LcarsDataRow
+        value={firstVisit ? 0 : events.length}
+        label="Neu seit deinem letzten Besuch"
+        color="var(--lcars-purple)"
+        className="lcars-data-row--full"
+      />
 
       {firstVisit ? (
         <p className="char-file-bio-empty">

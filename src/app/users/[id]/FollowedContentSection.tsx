@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LcarsDataRow } from "@/components/lcars";
 import type { FollowedContent } from "@/lib/follows";
 
 // Gleicher Kartenstil wie RecentActivity.tsx — hier ohne Meta-Zeile, da
@@ -14,7 +15,12 @@ export default function FollowedContentSection({
 }) {
   return (
     <section className="flex flex-col gap-[8px]">
-      <p className="lcars-eyebrow">{heading}</p>
+      <LcarsDataRow
+        value={items.length}
+        label={heading}
+        color="var(--lcars-amber)"
+        className="lcars-data-row--full"
+      />
 
       {items.length === 0 ? (
         <p className="char-file-bio-empty">{emptyLabel}</p>

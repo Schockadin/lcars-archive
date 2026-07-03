@@ -211,6 +211,69 @@
   background-color: var(--lcars-blue);
 }
 
+/* ── User-Bereich: Header-Pill-Grid (ersetzt Titel+Suche) ────────────
+   --lcars-header-h bewusst NICHT angefasst (an --lcars-sidebar-header-h
+   gekoppelt) — grid-auto-rows: minmax(0,1fr) passt sich dem verfügbaren
+   Innenraum automatisch an, keine fixe Pill-Höhe wie bei .lcars-menu-pill
+   (75px würden hier nicht passen). */
+.lcars-usernav {
+  --usernav-cols: 3;
+  display: grid;
+  grid-template-columns: repeat(var(--usernav-cols), minmax(0, 1fr));
+  grid-auto-rows: minmax(0, 1fr);
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: 720px;
+}
+.lcars-usernav-form {
+  display: flex;
+  min-height: 0;
+}
+.lcars-usernav-form .lcars-usernav-pill {
+  width: 100%;
+}
+.lcars-usernav-pill {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  min-height: 0;
+  min-width: 0;
+  padding: 0 18px 6px;
+  border: none;
+  border-radius: 100vmax;
+  background-color: var(--lcars-amber);
+  cursor: pointer;
+  text-decoration: none;
+  overflow: hidden;
+  white-space: nowrap;
+  color: black;
+  font-family: var(--font-antonio), sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  letter-spacing: 1px;
+  line-height: 1.175;
+  text-transform: uppercase;
+  transition: background 250ms;
+}
+.lcars-usernav-pill:hover {
+  background-color: var(--lcars-amber-light);
+}
+.lcars-usernav-pill.lcars-menu-active,
+.lcars-usernav-pill.lcars-menu-active:hover {
+  background-color: var(--lcars-blue);
+}
+@media (max-width: 640px) {
+  .lcars-usernav {
+    gap: 6px;
+  }
+  .lcars-usernav-pill {
+    font-size: 14px;
+    padding: 0 12px 4px;
+  }
+}
+
 .lcars-footer-menu {
   text-decoration: none;
   width: 10%;
@@ -257,6 +320,12 @@
   gap: 8px;
   align-items: center;
   container-type: size;
+}
+
+/* Basisklasse ist fix 300px breit — zu schmal für lange deutsche
+   Überschriften-Labels in 24px-Uppercase (siehe Dashboard-Sektionen). */
+.lcars-data-row.lcars-data-row--full {
+  width: 100%;
 }
 
 .lcars-data-row-label {
