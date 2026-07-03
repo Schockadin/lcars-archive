@@ -209,6 +209,60 @@ export async function getUserWithPasswordStatus(
   return { ...user, hasPassword: has_password };
 }
 
+export interface UserAdminDetail extends User {
+  hasPassword: boolean;
+  requiresActivation: boolean;
+  characters: { id: number; slug: string; name: string }[];
+}
+
+// Für /users/[id]/edit: alle Felder, die die Admin-Bearbeitungsseite
+// anzeigt — inkl. Passwort-/Aktivierungsstatus (wieder nur als Boolean,
+// nie der Hash selbst, siehe Kommentar oben bei UserCredentials) und
+// zugewiesene Charaktere (read-only Kontext, Zuweisung selbst bleibt
+// CharacterAssignmentTable auf /users vorbehalten).
+export async function getUserForAdmin(
+  id: number,
+): Promise<UserAdminDetail | null> {
+  const rows = await sql<
+    (User & {
+      has_password: boolean;
+      requires_activation: boolean;
+      characters: { id: number; slug: string; name: string }[];
+    })[]
+  >`
+    SELECT
+      u.id, u.email, u.name, u.role, u.is_active, u.created_at,
+      u.last_login_at, u.previous_login_at,
+      u.password_hash IS NOT NULL AS has_password,
+      u.requires_activation,
+      COALESCE(
+        jsonb_agg(
+          jsonb_build_object('id', c.id, 'slug', c.slug, 'name', c.name)
+          ORDER BY c.name
+        ) FILTER (WHERE c.id IS NOT NULL),
+        '[]'::jsonb
+      ) AS characters
+    FROM users u
+    LEFT JOIN characters c ON c.player_id = u.id
+    WHERE u.id = ${id}
+    GROUP BY u.id
+    LIMIT 1
+  `;
+  const row = rows[0];
+  if (!row) return null;
+
+  const { has_password, requires_activation, characters, ...user } = row;
+  return {
+    ...user,
+    hasPassword: has_password,
+    requiresActivation: requires_activation,
+    characters:
+      typeof characters === "string"
+        ? JSON.parse(characters)
+        : characters,
+  };
+}
+
 export async function getPasswordHash(userId: number): Promise<string | null> {
   const rows = await sql<{ password_hash: string | null }[]>`
     SELECT password_hash FROM users WHERE id = ${userId}

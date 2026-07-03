@@ -31,7 +31,7 @@ export default async function UserPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { target, isSelf } = await requireSelfOrGM(id);
+  const { viewer, target, isSelf } = await requireSelfOrGM(id);
 
   // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
   // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
@@ -114,10 +114,18 @@ export default async function UserPage({
           )}
 
           {!isSelf && (
-            <p>
+            <p className="flex flex-wrap gap-[16px]">
               <Link href="/users" className="text-lcars-amber underline">
                 ← Zur Nutzerverwaltung
               </Link>
+              {viewer.role === "admin" && (
+                <Link
+                  href={`/users/${target.id}/edit`}
+                  className="text-lcars-amber underline"
+                >
+                  User bearbeiten
+                </Link>
+              )}
             </p>
           )}
         </div>
