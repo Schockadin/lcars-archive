@@ -21,16 +21,16 @@
   gap: 12px;
 }
 
-/* Titelzeile + globale Suche nebeneinander. */
+/* Titel links, Anmelden-/Abmelden-Button rechts (nur außerhalb des
+   User-Bereichs — dort übernimmt HeaderUserNav die Navigation). */
 .lcars-header-top {
   display: flex;
   height: calc(var(--lcars-header-h) - var(--lcars-bar-h) - 10px);
-  /* align-items: center; */
-  /* justify-content: space-between; */
+  align-items: center;
+  justify-content: space-between;
   gap: 16px;
   width: 100%;
   min-width: 0;
-  flex-direction: column;
 }
 
 /* ── Globale Suche (Header) ──────────────────────────────────────── */
@@ -875,6 +875,48 @@
   background: var(--lcars-amber);
   color: var(--lcars-bg);
   border-color: var(--lcars-amber);
+}
+
+/* Kompakte Icon-Variante von .lcars-switch für Zeilen-Aktionen (z.B.
+   UserRoleRow.tsx) — gleiche Rahmen-/Hover-Logik, aber als 30px-Kreis mit
+   SVG statt Text-Pille. */
+.lcars-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+  border-radius: 100vmax;
+  border: solid 1px var(--lcars-text-data);
+  background: var(--lcars-surface);
+  color: var(--lcars-text-data);
+  transition: 200ms;
+}
+.lcars-icon-btn svg {
+  width: 16px;
+  height: 16px;
+}
+.lcars-icon-btn:hover:not(:disabled) {
+  background: var(--lcars-amber);
+  color: var(--lcars-bg);
+  border-color: var(--lcars-amber);
+}
+.lcars-icon-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+/* Löschen: rot statt Standard-Blau, auch im Hover. */
+.lcars-icon-btn--danger {
+  border-color: var(--lcars-red);
+  color: var(--lcars-red);
+}
+.lcars-icon-btn--danger:hover:not(:disabled) {
+  background: var(--lcars-red);
+  color: var(--lcars-bg);
+  border-color: var(--lcars-red);
 }
 
 .lcars-filters {

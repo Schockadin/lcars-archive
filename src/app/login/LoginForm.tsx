@@ -33,8 +33,7 @@ export default function LoginForm() {
           id="password"
           name="password"
           type="password"
-          // Nicht required: Bestandskonten ohne Passwort loggen sich per
-          // E-Mail allein ein (siehe login() in actions.ts).
+          required
           autoComplete="current-password"
           className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
         />

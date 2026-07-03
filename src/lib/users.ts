@@ -156,6 +156,7 @@ export async function updateUser(
 export interface UserCredentials {
   id: number;
   email: string;
+  name: string;
   role: User["role"];
   is_active: boolean;
   password_hash: string | null;
@@ -166,7 +167,7 @@ export async function getUserCredentialsByEmail(
   email: string,
 ): Promise<UserCredentials | null> {
   const rows = await sql<UserCredentials[]>`
-    SELECT id, email, role, is_active, password_hash, requires_activation
+    SELECT id, email, name, role, is_active, password_hash, requires_activation
     FROM users
     WHERE lower(email) = ${email}
     LIMIT 1
