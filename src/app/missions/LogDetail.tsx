@@ -22,10 +22,10 @@ function LogNavLink({ item, dir }: { item: LogNavItem; dir: "prev" | "next" }) {
         {dir === "prev" ? "‹" : "›"}
       </span>
       <span className="log-nav-body">
-        <span className="log-nav-label">
+        <span className="log-nav-title">
           {dir === "prev" ? "Vorheriges Log" : "Nächstes Log"}
         </span>
-        <span className="log-nav-title">{item.title}</span>
+        {/* <span className="log-nav-title">{item.title}</span> */}
         {meta && <span className="log-nav-meta">{meta}</span>}
       </span>
     </Link>

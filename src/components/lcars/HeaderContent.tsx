@@ -50,7 +50,11 @@ export default function HeaderContent() {
     if (!session?.userId) return <div className="lcars-header-content" />;
     return (
       <div className="lcars-header-content">
-        <HeaderUserNav userId={session.userId} role={session.role} columns={3} />
+        <HeaderUserNav
+          userId={session.userId}
+          role={session.role}
+          columns={3}
+        />
       </div>
     );
   }
@@ -61,13 +65,16 @@ export default function HeaderContent() {
         <div className="lcars-header-title uppercase">Neo Archiv</div>
         {session &&
           (session.userId ? (
-            <form action={logout} className="lcars-usernav-form">
+            <form action={logout} className="lcars-usernav-form mr-[8px]">
               <button type="submit" className="lcars-usernav-pill bg-lcars-red">
                 Abmelden
               </button>
             </form>
           ) : (
-            <Link href="/login" className="lcars-usernav-pill bg-lcars-green">
+            <Link
+              href="/login"
+              className="lcars-usernav-pill bg-lcars-green mr-[8px]"
+            >
               Anmelden
             </Link>
           ))}
