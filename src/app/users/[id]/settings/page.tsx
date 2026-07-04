@@ -4,6 +4,7 @@ import { requireOwnUser } from "../dal";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
 import NotificationSettingsForm from "./NotificationSettingsForm";
+import InstallPwaPrompt from "../InstallPwaPrompt";
 
 export const metadata: Metadata = {
   title: "Einstellungen",
@@ -41,6 +42,11 @@ export default async function UserSettingsPage({
                 pushEnabled: user.push_notifications_enabled,
               }}
             />
+          </section>
+
+          <section id="install" className="flex flex-col gap-[12px]">
+            <h2>App installieren</h2>
+            <InstallPwaPrompt />
           </section>
         </div>
       </article>
