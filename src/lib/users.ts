@@ -1,10 +1,29 @@
 import "server-only";
 import sql from "@/lib/db";
+import { slugifyBase } from "@/lib/slug";
 import type { User } from "@/types/db";
 
 const USER_COLUMNS = sql`
-  id, email, name, role, is_active, created_at, last_login_at, previous_login_at
+  id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at
 `;
+
+// Probiert slugifyBase(name), "${base}-2", "${base}-3", … bis ein Slug in
+// users frei ist — gleiches Muster wie generateUniqueDialogueSlug in
+// src/lib/dialoguesCore.ts.
+async function generateUniqueUserSlug(name: string): Promise<string> {
+  const base = slugifyBase(name);
+  let candidate = base;
+  let n = 2;
+
+  for (;;) {
+    const [row] = await sql<{ exists: boolean }[]>`
+      SELECT EXISTS(SELECT 1 FROM users WHERE slug = ${candidate}) AS exists
+    `;
+    if (!row.exists) return candidate;
+    candidate = `${base}-${n}`;
+    n += 1;
+  }
+}
 
 export class EmailTakenError extends Error {}
 
@@ -39,7 +58,7 @@ export interface UserWithCharacters extends User {
 export async function listAllUsers(): Promise<UserWithCharacters[]> {
   const rows = await sql<UserWithCharacters[]>`
     SELECT
-      u.id, u.email, u.name, u.role, u.is_active, u.created_at,
+      u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
       u.last_login_at, u.previous_login_at,
       COALESCE(
         jsonb_agg(
@@ -75,9 +94,10 @@ export interface CreateUserInput {
 // einloggen können — anders als Bestandskonten ohne Passwort.
 export async function createUser(input: CreateUserInput): Promise<User> {
   try {
+    const slug = await generateUniqueUserSlug(input.name);
     const rows = await sql<User[]>`
-      INSERT INTO users (email, name, role, requires_activation)
-      VALUES (${input.email}, ${input.name}, ${input.role}, true)
+      INSERT INTO users (email, name, slug, role, requires_activation)
+      VALUES (${input.email}, ${input.name}, ${slug}, ${input.role}, true)
       RETURNING ${USER_COLUMNS}
     `;
     return rows[0];

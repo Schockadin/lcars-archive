@@ -61,7 +61,7 @@ async function runSearchQueries(
     sql<CharacterRow[]>`
       SELECT name, slug
       FROM characters
-      WHERE name ILIKE ${like}
+      WHERE name ILIKE ${like} AND visibility = 'public'
       ORDER BY (name ILIKE ${prefix}) DESC, name ASC
       LIMIT ${limit}
     `,
@@ -77,8 +77,11 @@ async function runSearchQueries(
              ${includeContent ? sql`, ml.content, ml.source_md` : sql``}
       FROM mission_logs ml
       JOIN missions m ON m.id = ml.mission_id
-      WHERE ml.title ILIKE ${like}
-        ${includeContent ? sql`OR ml.content ILIKE ${like}` : sql``}
+      WHERE (
+          ml.title ILIKE ${like}
+          ${includeContent ? sql`OR ml.content ILIKE ${like}` : sql``}
+        )
+        AND ml.visibility = 'public'
       ORDER BY (ml.title ILIKE ${prefix}) DESC, ml.title ASC
       LIMIT ${limit}
     `,
@@ -92,6 +95,7 @@ async function runSearchQueries(
           OR (category = 'dialogue' AND metadata->>'setting' ILIKE ${like})
         )
         AND NOT (category = 'dialogue' AND dialogue_open)
+        AND visibility = 'public'
       ORDER BY (title ILIKE ${prefix}) DESC, title ASC
       LIMIT ${limit}
     `,

@@ -66,6 +66,9 @@ export async function createDialogueAction(
   const bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte eine erste Nachricht schreiben." };
 
+  // Checkbox: nur bei angehaktem Feld in der FormData enthalten (Wert "on").
+  const subscribeSelf = formData.get("subscribeSelf") === "on";
+
   let slug: string;
   try {
     const result = await createDialogue({
@@ -78,6 +81,7 @@ export async function createDialogueAction(
       logDate,
       tags,
       bodyMarkdown,
+      subscribeSelf,
     });
     slug = result.slug;
   } catch (err) {

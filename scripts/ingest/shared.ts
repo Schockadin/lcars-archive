@@ -1,9 +1,26 @@
 // scripts/ingest/shared.ts
+import type postgres from "postgres";
 
 // markdownToHtml lebt jetzt in src/lib/markdown.ts (auch im App-Code nutzbar)
 // und wird hier re-exportiert, damit die Ingest-Skripte weiter aus "./shared.js"
 // importieren können. Relativer .js-Pfad (kein @/-Alias) wegen tsx-Auflösung.
 export { markdownToHtml } from "../../src/lib/markdown.js";
+
+// Löst das "owner: <user-slug>"-Frontmatter zu einer users.id auf. Ein
+// leeres/fehlendes Feld oder ein unbekannter Slug bricht den Ingest nicht ab
+// — der Inhalt bleibt dann einfach ownerlos (owner_user_id = NULL).
+export async function resolveOwner(
+  sql: postgres.Sql,
+  ownerSlug: unknown,
+): Promise<number | null> {
+  const slug = typeof ownerSlug === "string" ? ownerSlug.trim() : "";
+  if (!slug) return null;
+
+  const [row] = await sql<{ id: number }[]>`
+    SELECT id FROM users WHERE slug = ${slug}
+  `;
+  return row?.id ?? null;
+}
 
 // Slugs validieren – muss URL-sicher sein
 export function validateSlug(slug: unknown, file: string): string {

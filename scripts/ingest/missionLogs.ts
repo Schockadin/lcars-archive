@@ -4,7 +4,7 @@ import matter from "gray-matter";
 import postgres from "postgres";
 import { createInterface, type Interface } from "readline/promises";
 import { stdin, stdout } from "process";
-import { markdownToHtml, validateSlug, parseDate } from "./shared.js";
+import { markdownToHtml, validateSlug, parseDate, resolveOwner } from "./shared.js";
 
 export interface MissionLogFrontmatter {
   type?: string;
@@ -14,6 +14,7 @@ export interface MissionLogFrontmatter {
   log_date?: string;
   session_nr?: number;
   tags?: string[];
+  owner?: string;
 }
 
 // Neu: benannter Typ für die Kollisionsprüfung
@@ -126,12 +127,18 @@ export async function ingestMissionLogs(
         );
       }
 
-      const [authorRow] = await sql<{ id: number }[]>`
-        SELECT id FROM characters WHERE slug = ${fm.author.trim()}
+      const [authorRow] = await sql<{ id: number; player_id: number | null }[]>`
+        SELECT id, player_id FROM characters WHERE slug = ${fm.author.trim()}
       `;
       if (!authorRow) {
         throw new Error(`Charakter mit slug "${fm.author}" nicht gefunden`);
       }
+
+      // owner: explizites Frontmatter-Feld hat Vorrang; ohne das Feld fällt
+      // der Owner auf den Spieler des Autor-Charakters zurück (naheliegende
+      // Annahme: wer den Log geschrieben hat, "besitzt" ihn auch).
+      const ownerUserId =
+        (await resolveOwner(sql, fm.owner)) ?? authorRow.player_id;
 
       const generatedSlug = `${fm.author.trim()}-${fm.mission.trim()}-${fm.session_nr}`;
       const slug = validateSlug(generatedSlug, filepath);
@@ -177,22 +184,23 @@ export async function ingestMissionLogs(
       const conflictClause = onlyNew
         ? sql`ON CONFLICT (slug) DO NOTHING`
         : sql`ON CONFLICT (slug) DO UPDATE SET
-            mission_id  = EXCLUDED.mission_id,
-            author_id   = EXCLUDED.author_id,
-            title       = EXCLUDED.title,
-            content     = EXCLUDED.content,
-            log_date    = EXCLUDED.log_date,
-            session_nr  = EXCLUDED.session_nr,
-            metadata    = EXCLUDED.metadata,
-            source_md   = EXCLUDED.source_md,
-            frontmatter = EXCLUDED.frontmatter,
-            updated_at  = NOW()`;
+            mission_id    = EXCLUDED.mission_id,
+            author_id     = EXCLUDED.author_id,
+            title         = EXCLUDED.title,
+            content       = EXCLUDED.content,
+            log_date      = EXCLUDED.log_date,
+            session_nr    = EXCLUDED.session_nr,
+            metadata      = EXCLUDED.metadata,
+            source_md     = EXCLUDED.source_md,
+            frontmatter   = EXCLUDED.frontmatter,
+            owner_user_id = EXCLUDED.owner_user_id,
+            updated_at    = NOW()`;
 
       const [row] = await sql`
         INSERT INTO mission_logs (
           slug, mission_id, author_id, title,
           content, log_date, session_nr, metadata,
-          source_md, frontmatter, updated_at
+          source_md, frontmatter, owner_user_id, updated_at
         ) VALUES (
           ${slug},
           ${missionRow.id},
@@ -204,6 +212,7 @@ export async function ingestMissionLogs(
           ${sql.json(metadata)},
           ${content},
           ${sql.json(data)},
+          ${ownerUserId},
           NOW()
         )
         ${conflictClause}
