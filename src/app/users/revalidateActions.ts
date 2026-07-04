@@ -1,43 +1,30 @@
 "use server";
 import { requireAdmin } from "@/lib/dal";
-import { getBaseUrl } from "@/lib/http";
+import { revalidateAllContent } from "@/lib/revalidate";
 
 export interface RevalidateActionState {
   tags?: string[];
   error?: string;
 }
 
-// Admin-Panel-Auslöser für /api/revalidate — ruft den Endpoint bewusst per
-// HTTP auf (statt revalidateAllContent() direkt zu importieren), damit der
-// Button exakt den Codepfad testet/nutzt, den auch der Ingest und ein
-// künftiger Cronjob verwenden (gleiches Secret, gleiche Route). getBaseUrl()
-// liefert die Basis-URL der gerade laufenden Umgebung (dev/preview/prod) aus
-// dem Host-Header — SITE_URL wäre hier ungeeignet, da es als
-// kommaseparierte Liste für mehrere Ziele gedacht ist (siehe src/lib/http.ts).
+// Admin-Panel-Auslöser für die Cache-Invalidierung. Ruft revalidateAllContent()
+// direkt auf, statt wie zuvor per HTTP gegen die eigene /api/revalidate-Route
+// zu fetchen: der Self-Fetch (URL aus getBaseUrl(), also dem Host-Header des
+// aktuellen Requests) landete auf Netlify unzuverlässig nicht bei der Route
+// selbst, sondern z.B. bei einer HTML-Fehler-/Gate-Seite (Deploy-Preview-
+// Zugriffsschutz o.ä.) — das Parsen dieser HTML-Antwort als JSON scheiterte
+// dann mit "Unexpected token '<' ... is not valid JSON". Da diese Server
+// Action ohnehin im selben Prozess läuft wie /api/revalidate, braucht es für
+// den Admin-Button keinen Netzwerk-Umweg. Die HTTP-Route bleibt unverändert
+// für echte externe Aufrufer bestehen (Ingest-Skript, künftiger Cronjob).
 export async function runRevalidateAction(
   _state: RevalidateActionState,
 ): Promise<RevalidateActionState> {
   await requireAdmin();
 
-  const secret = process.env.REVALIDATE_SECRET;
-  if (!secret) {
-    return { error: "REVALIDATE_SECRET ist nicht konfiguriert." };
-  }
-
   try {
-    const res = await fetch(`${await getBaseUrl()}/api/revalidate`, {
-      method: "POST",
-      headers: { authorization: `Bearer ${secret}` },
-    });
-    const data = (await res.json()) as {
-      revalidated?: boolean;
-      tags?: string[];
-      error?: string;
-    };
-    if (!res.ok || !data.revalidated) {
-      return { error: data.error ?? `HTTP ${res.status}` };
-    }
-    return { tags: data.tags ?? [] };
+    const tags = revalidateAllContent();
+    return { tags };
   } catch (err) {
     return {
       error: err instanceof Error ? err.message : "Revalidate fehlgeschlagen.",
