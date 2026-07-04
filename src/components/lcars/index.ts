@@ -17,3 +17,6 @@ export { default as LcarsAppShell } from "./AppShell";
 export { default as LcarsReadingModeToggle } from "./ReadingModeToggle";
 export { default as LcarsHeaderSearch } from "./HeaderSearch";
 export { default as LcarsCookieNotice } from "./CookieNotice";
+export { default as LcarsSwitch, type SwitchOption } from "./Switch";
+export { default as LcarsAkteCard } from "./AkteCard";
+export { default as LcarsLogEntry } from "./LogEntry";

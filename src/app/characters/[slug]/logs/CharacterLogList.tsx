@@ -1,13 +1,12 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { LcarsDataRow } from "@/components/lcars";
+import { LcarsDataRow, LcarsLogEntry, LcarsSwitch } from "@/components/lcars";
 import { MissionLogPreview } from "@/types/missionLog";
 import {
   AUTHOR_COLORS,
   byDateAsc,
   byDateDesc,
-  fmtDate,
   sessionLabel,
 } from "@/lib/missionFormat";
 
@@ -79,7 +78,8 @@ export default function CharacterLogList({
       ) : (
         <>
           <div className="mt-[16px]">
-            <SortSwitch
+            <LcarsSwitch
+              className="flex gap-[10px] w-full mb-[12px]"
               options={[
                 { key: "date", label: "Datum" },
                 { key: "mission", label: "Mission" },
@@ -89,7 +89,8 @@ export default function CharacterLogList({
             />
 
             {sort === "date" && (
-              <SortSwitch
+              <LcarsSwitch
+                className="flex gap-[10px] w-full mb-[12px]"
                 options={[
                   { key: "desc", label: "Neueste zuerst" },
                   { key: "asc", label: "Älteste zuerst" },
@@ -103,7 +104,14 @@ export default function CharacterLogList({
           {sort === "date" ? (
             <div className="mission-log-list">
               {dateView.map((log) => (
-                <LogEntry key={log.id} log={log} showMission />
+                <LcarsLogEntry
+                  key={log.id}
+                  href={`/missions/${log.mission_slug}/${log.slug}`}
+                  stub={sessionLabel(log.session_nr)}
+                  title={log.title}
+                  secondaryLabel={log.mission_title}
+                  date={log.log_date}
+                />
               ))}
             </div>
           ) : (
@@ -118,7 +126,13 @@ export default function CharacterLogList({
                 />
                 <div className="mission-log-list mt-[8px]">
                   {group.logs.map((log) => (
-                    <LogEntry key={log.id} log={log} showMission={false} />
+                    <LcarsLogEntry
+                      key={log.id}
+                      href={`/missions/${log.mission_slug}/${log.slug}`}
+                      stub={sessionLabel(log.session_nr)}
+                      title={log.title}
+                      date={log.log_date}
+                    />
                   ))}
                 </div>
               </section>
@@ -126,71 +140,6 @@ export default function CharacterLogList({
           )}
         </>
       )}
-    </div>
-  );
-}
-
-function LogEntry({
-  log,
-  showMission,
-}: {
-  log: MissionLogPreview;
-  showMission: boolean;
-}) {
-  return (
-    <Link
-      href={`/missions/${log.mission_slug}/${log.slug}`}
-      className="mission-log-entry"
-    >
-      <span className="mission-log-stub">{sessionLabel(log.session_nr)}</span>
-      <span className="mission-log-bar">
-        <span className="mission-log-name">{log.title}</span>
-        <span className="mission-log-meta">
-          {showMission && (
-            <span className="mission-log-author">{log.mission_title}</span>
-          )}
-          {log.log_date && (
-            <span className="mission-log-date">{fmtDate(log.log_date)}</span>
-          )}
-        </span>
-      </span>
-    </Link>
-  );
-}
-
-// Generischer LCARS-Pill-Umschalter (zwei oder mehr Optionen).
-function SortSwitch<T extends string>({
-  options,
-  active,
-  onChange,
-}: {
-  options: { key: T; label: string }[];
-  active: T;
-  onChange: (value: T) => void;
-}) {
-  return (
-    <div className="flex gap-[10px] w-full mb-[12px]">
-      {options.map((opt) => {
-        const isActive = active === opt.key;
-        return (
-          <div
-            key={opt.key}
-            onClick={() => onChange(opt.key)}
-            className="lcars-switch flex-1"
-            style={{
-              backgroundColor: isActive
-                ? "var(--lcars-amber)"
-                : "var(--lcars-surface)",
-              color: isActive ? "var(--lcars-bg)" : "var(--lcars-text-data)",
-              borderColor: isActive
-                ? "var(--lcars-amber)"
-                : "var(--lcars-text-data)",
-            }}
-          >
-            {opt.label}
-          </div>
-        );
-      })}
     </div>
   );
 }

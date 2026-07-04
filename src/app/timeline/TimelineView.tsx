@@ -1,6 +1,5 @@
 "use client";
 import { Fragment, useMemo, useState } from "react";
-import Link from "next/link";
 import { TimelineEvent } from "@/types/timeline";
 import {
   SOURCE_TYPE_LABELS,
@@ -10,6 +9,7 @@ import {
   fmtDate,
   yearOf,
 } from "@/lib/timelineFormat";
+import { LcarsAkteCard, LcarsSwitch } from "@/components/lcars";
 
 type SortDir = "desc" | "asc";
 
@@ -57,20 +57,15 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
       ) : (
         <>
           <div className="mission-toolbar">
-            <div className="mission-sort">
-              <SortButton
-                active={sortDir === "desc"}
-                onClick={() => setSortDir("desc")}
-              >
-                Neueste zuerst
-              </SortButton>
-              <SortButton
-                active={sortDir === "asc"}
-                onClick={() => setSortDir("asc")}
-              >
-                Älteste zuerst
-              </SortButton>
-            </div>
+            <LcarsSwitch
+              className="mission-sort"
+              options={[
+                { key: "desc", label: "Neueste zuerst" },
+                { key: "asc", label: "Älteste zuerst" },
+              ]}
+              active={sortDir}
+              onChange={setSortDir}
+            />
 
             {categories.length > 0 && (
               <select
@@ -126,44 +121,17 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
   );
 }
 
-function SortButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      onClick={onClick}
-      className="lcars-switch flex-1"
-      style={{
-        backgroundColor: active ? "var(--lcars-amber)" : "var(--lcars-surface)",
-        color: active ? "var(--lcars-bg)" : "var(--lcars-text-data)",
-        borderColor: active ? "var(--lcars-amber)" : "var(--lcars-text-data)",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
 function EventCard({ event }: { event: TimelineEvent }) {
   const cfg = categoryVisual(event.category);
 
   return (
-    <Link
+    <LcarsAkteCard
       href={event.href}
-      className="mission-akte"
-      aria-label={`${event.title} — ${cfg.label}`}
-      style={{ "--mission-color": cfg.color } as React.CSSProperties}
-    >
-      <span className="mission-akte-rail" />
-      <span className="mission-akte-body text-left">
-        <span className="mission-akte-title block">{event.title}</span>
-        <span className="mission-akte-meta">
+      color={cfg.color}
+      ariaLabel={`${event.title} — ${cfg.label}`}
+      title={event.title}
+      meta={
+        <>
           <span>
             <b>Datum</b> {fmtDate(event.event_date)}
           </span>
@@ -173,8 +141,8 @@ function EventCard({ event }: { event: TimelineEvent }) {
           <span>
             <b>Quelle</b> {SOURCE_TYPE_LABELS[event.source_type]}
           </span>
-        </span>
-      </span>
-    </Link>
+        </>
+      }
+    />
   );
 }

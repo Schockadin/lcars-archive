@@ -2,13 +2,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LcarsDataRow } from "@/components/lcars";
+import { LcarsDataRow, LcarsLogEntry, LcarsSwitch } from "@/components/lcars";
 import { MissionLogListItem } from "@/types/missions";
 import {
   AUTHOR_COLORS,
   byDateAsc,
   byDateDesc,
-  fmtDate,
   sessionLabel,
   synopsisExcerpt,
 } from "@/lib/missionFormat";
@@ -87,17 +86,13 @@ export default function MissionLogList({
       </p>
 
       {/* oberste Zeile: zurück zur Synopsis der Mission */}
-      <Link
+      <LcarsLogEntry
         href={`/missions/${missionSlug}`}
-        className="mission-log-entry mission-log-synopsis"
-        data-active={activeLogSlug === null ? "true" : "false"}
-        aria-current={activeLogSlug === null ? "page" : undefined}
-      >
-        <span className="mission-log-stub">SYN</span>
-        <span className="mission-log-bar">
-          <span className="mission-log-name">Synopsis</span>
-        </span>
-      </Link>
+        stub="SYN"
+        title="Synopsis"
+        active={activeLogSlug === null}
+        className="mission-log-synopsis"
+      />
 
       {logs.length === 0 ? (
         <p className="mission-log-empty">
@@ -106,21 +101,39 @@ export default function MissionLogList({
       ) : (
         <>
           <p className="mission-logs-sub">Missions-Logs</p>
-          <LogSortSwitch mode={sort} onChange={setSort} />
+          <LcarsSwitch
+            className="flex gap-[10px] w-full mb-[12px]"
+            options={[
+              { key: "date", label: "Datum" },
+              { key: "author", label: "Autor" },
+            ]}
+            active={sort}
+            onChange={setSort}
+          />
 
           {sort === "date" && (
-            <DateDirSwitch dir={dateDir} onChange={setDateDir} />
+            <LcarsSwitch
+              className="flex gap-[10px] w-full mb-[12px]"
+              options={[
+                { key: "desc", label: "Neueste zuerst" },
+                { key: "asc", label: "Älteste zuerst" },
+              ]}
+              active={dateDir}
+              onChange={setDateDir}
+            />
           )}
 
           {sort === "date" ? (
             <div className="mission-log-list">
               {dateView.map((log) => (
-                <LogEntry
+                <LcarsLogEntry
                   key={log.id}
-                  log={log}
-                  missionSlug={missionSlug}
+                  href={`/missions/${missionSlug}/${log.slug}`}
+                  stub={sessionLabel(log.session_nr)}
+                  title={log.title}
+                  secondaryLabel={log.author_name}
+                  date={log.log_date}
                   active={log.slug === activeLogSlug}
-                  showAuthor
                 />
               ))}
             </div>
@@ -135,12 +148,13 @@ export default function MissionLogList({
                 />
                 <div className="mission-log-list mt-[8px]">
                   {group.logs.map((log) => (
-                    <LogEntry
+                    <LcarsLogEntry
                       key={log.id}
-                      log={log}
-                      missionSlug={missionSlug}
+                      href={`/missions/${missionSlug}/${log.slug}`}
+                      stub={sessionLabel(log.session_nr)}
+                      title={log.title}
+                      date={log.log_date}
                       active={log.slug === activeLogSlug}
-                      showAuthor={false}
                     />
                   ))}
                 </div>
@@ -149,119 +163,6 @@ export default function MissionLogList({
           )}
         </>
       )}
-    </div>
-  );
-}
-
-function LogEntry({
-  log,
-  missionSlug,
-  active,
-  showAuthor,
-}: {
-  log: MissionLogListItem;
-  missionSlug: string;
-  active: boolean;
-  showAuthor: boolean;
-}) {
-  return (
-    <Link
-      href={`/missions/${missionSlug}/${log.slug}`}
-      className="mission-log-entry"
-      data-active={active ? "true" : "false"}
-      aria-current={active ? "page" : undefined}
-    >
-      <span className="mission-log-stub">{sessionLabel(log.session_nr)}</span>
-      <span className="mission-log-bar">
-        <span className="mission-log-name">{log.title}</span>
-        <span className="mission-log-meta">
-          {showAuthor && log.author_name && (
-            <span className="mission-log-author">{log.author_name}</span>
-          )}
-          {log.log_date && (
-            <span className="mission-log-date">{fmtDate(log.log_date)}</span>
-          )}
-        </span>
-      </span>
-    </Link>
-  );
-}
-
-function LogSortSwitch({
-  mode,
-  onChange,
-}: {
-  mode: LogSortMode;
-  onChange: (m: LogSortMode) => void;
-}) {
-  const options: { key: LogSortMode; label: string }[] = [
-    { key: "date", label: "Datum" },
-    { key: "author", label: "Autor" },
-  ];
-
-  return (
-    <div className="flex gap-[10px] w-full mb-[12px]">
-      {options.map((opt) => {
-        const isActive = mode === opt.key;
-        return (
-          <div
-            key={opt.key}
-            onClick={() => onChange(opt.key)}
-            className="lcars-switch flex-1"
-            style={{
-              backgroundColor: isActive
-                ? "var(--lcars-amber)"
-                : "var(--lcars-surface)",
-              color: isActive ? "var(--lcars-bg)" : "var(--lcars-text-data)",
-              borderColor: isActive
-                ? "var(--lcars-amber)"
-                : "var(--lcars-text-data)",
-            }}
-          >
-            {opt.label}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// Richtungsumschalter für die Datum-Sortierung (auf-/absteigend).
-function DateDirSwitch({
-  dir,
-  onChange,
-}: {
-  dir: DateDir;
-  onChange: (d: DateDir) => void;
-}) {
-  const options: { key: DateDir; label: string }[] = [
-    { key: "desc", label: "Neueste zuerst" },
-    { key: "asc", label: "Älteste zuerst" },
-  ];
-
-  return (
-    <div className="flex gap-[10px] w-full mb-[12px]">
-      {options.map((opt) => {
-        const isActive = dir === opt.key;
-        return (
-          <div
-            key={opt.key}
-            onClick={() => onChange(opt.key)}
-            className="lcars-switch flex-1"
-            style={{
-              backgroundColor: isActive
-                ? "var(--lcars-amber)"
-                : "var(--lcars-surface)",
-              color: isActive ? "var(--lcars-bg)" : "var(--lcars-text-data)",
-              borderColor: isActive
-                ? "var(--lcars-amber)"
-                : "var(--lcars-text-data)",
-            }}
-          >
-            {opt.label}
-          </div>
-        );
-      })}
     </div>
   );
 }

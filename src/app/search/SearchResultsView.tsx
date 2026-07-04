@@ -1,8 +1,8 @@
 "use client";
 import { useMemo, useState } from "react";
-import Link from "next/link";
 import type { SearchResult, SearchResultType } from "@/types/search";
 import { TYPE_COLOR, TYPE_FILTER_LABEL } from "@/lib/searchFormat";
+import { LcarsAkteCard, LcarsSwitch } from "@/components/lcars";
 
 type TypeFilter = "all" | SearchResultType;
 type SortMode = "relevance" | "alpha";
@@ -55,38 +55,29 @@ export default function SearchResultsView({
   return (
     <div>
       <div className="mission-toolbar">
-        <div className="search-type-filter">
-          <TypeFilterButton
-            active={typeFilter === "all"}
-            onClick={() => setTypeFilter("all")}
-          >
-            Alle ({results.length})
-          </TypeFilterButton>
-          {TYPE_ORDER.map((t) => (
-            <TypeFilterButton
-              key={t}
-              active={typeFilter === t}
-              onClick={() => setTypeFilter(t)}
-            >
-              {TYPE_FILTER_LABEL[t]} ({counts[t]})
-            </TypeFilterButton>
-          ))}
-        </div>
+        <LcarsSwitch
+          className="search-type-filter"
+          itemClassName="lcars-switch"
+          options={[
+            { key: "all" as TypeFilter, label: `Alle (${results.length})` },
+            ...TYPE_ORDER.map((t) => ({
+              key: t as TypeFilter,
+              label: `${TYPE_FILTER_LABEL[t]} (${counts[t]})`,
+            })),
+          ]}
+          active={typeFilter}
+          onChange={setTypeFilter}
+        />
 
-        <div className="mission-sort">
-          <SortButton
-            active={sort === "relevance"}
-            onClick={() => setSort("relevance")}
-          >
-            Relevanz
-          </SortButton>
-          <SortButton
-            active={sort === "alpha"}
-            onClick={() => setSort("alpha")}
-          >
-            Titel (A–Z)
-          </SortButton>
-        </div>
+        <LcarsSwitch
+          className="mission-sort"
+          options={[
+            { key: "relevance", label: "Relevanz" },
+            { key: "alpha", label: "Titel (A–Z)" },
+          ]}
+          active={sort}
+          onChange={setSort}
+        />
       </div>
 
       {sorted.length === 0 ? (
@@ -125,55 +116,6 @@ function highlightSnippet(snippet: string, query: string): React.ReactNode {
   );
 }
 
-function TypeFilterButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      onClick={onClick}
-      className="lcars-switch"
-      style={{
-        backgroundColor: active ? "var(--lcars-amber)" : "var(--lcars-surface)",
-        color: active ? "var(--lcars-bg)" : "var(--lcars-text-data)",
-        borderColor: active ? "var(--lcars-amber)" : "var(--lcars-text-data)",
-        padding: "0 14px",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
-function SortButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      onClick={onClick}
-      className="lcars-switch flex-1"
-      style={{
-        backgroundColor: active ? "var(--lcars-amber)" : "var(--lcars-surface)",
-        color: active ? "var(--lcars-bg)" : "var(--lcars-text-data)",
-        borderColor: active ? "var(--lcars-amber)" : "var(--lcars-text-data)",
-      }}
-    >
-      {children}
-    </div>
-  );
-}
-
 function SearchResultCard({
   result,
   query,
@@ -182,25 +124,14 @@ function SearchResultCard({
   query: string;
 }) {
   return (
-    <Link
+    <LcarsAkteCard
       href={result.href}
-      className="mission-akte"
-      style={
-        { "--mission-color": TYPE_COLOR[result.type] } as React.CSSProperties
+      color={TYPE_COLOR[result.type]}
+      title={result.label}
+      summary={
+        result.snippet ? highlightSnippet(result.snippet, query) : undefined
       }
-    >
-      <span className="mission-akte-rail" />
-      <span className="mission-akte-body text-left">
-        <span className="mission-akte-title block">{result.label}</span>
-        {result.snippet && (
-          <span className="mission-akte-summary block">
-            {highlightSnippet(result.snippet, query)}
-          </span>
-        )}
-        <span className="mission-akte-meta">
-          <span>{result.sublabel}</span>
-        </span>
-      </span>
-    </Link>
+      meta={<span>{result.sublabel}</span>}
+    />
   );
 }
