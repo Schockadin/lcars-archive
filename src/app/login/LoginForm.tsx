@@ -9,7 +9,10 @@ export default function LoginForm() {
   const [state, formAction, pending] = useActionState(login, initialState);
 
   return (
-    <form action={formAction} className="flex max-w-[420px] flex-col gap-[16px]">
+    <form
+      action={formAction}
+      className="flex max-w-[420px] flex-col gap-[16px]"
+    >
       <div className="flex flex-col gap-[6px]">
         <label htmlFor="email" className="lcars-eyebrow">
           E-Mail-Adresse
@@ -20,8 +23,7 @@ export default function LoginForm() {
           type="email"
           required
           autoFocus
-          defaultValue="wowschockadin@gmail.com"
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+          className="rounded-lcars-pill lcars-input"
         />
       </div>
 
@@ -35,7 +37,7 @@ export default function LoginForm() {
           type="password"
           required
           autoComplete="current-password"
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+          className="rounded-lcars-pill lcars-input"
         />
       </div>
 
