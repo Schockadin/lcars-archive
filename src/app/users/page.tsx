@@ -15,6 +15,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+// Erhöht das Timeout-Limit aller Server Actions auf dieser Seite (siehe
+// Next.js-Doku zu maxDuration — bei Server Actions gilt der Wert nur auf
+// Seitenebene, nicht pro Action-Datei). Zusätzliche Absicherung neben der
+// Batch-/Phasen-Aufteilung von Vault-Backup und -Ingest: die tatsächliche
+// Obergrenze setzt am Ende trotzdem die Deployment-Plattform (Netlify).
+export const maxDuration = 60;
+
 // Gm-oder-admin — kein Sidebar-Eintrag, gleiches Prinzip wie /login.
 // requireGM() leitet Nicht-Privilegierte auf ihre eigene /users/<id> um.
 // Useraccount-Verwaltung (anlegen/Rolle/Deaktivieren/Löschen/Bearbeiten UND

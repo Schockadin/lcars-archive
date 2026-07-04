@@ -1,15 +1,20 @@
 import { NextRequest } from "next/server";
 import { exportContentToVault } from "@/lib/vaultExport";
 
-// Geschützter Endpoint für den Vault-Backup-Export — dieselbe Logik wie der
-// Admin-Panel-Button (runVaultExportAction in src/app/users/vaultExportActions.ts),
-// hier aber secret- statt session-authentifiziert, damit er sich später
-// z.B. per Cronjob (Netlify Scheduled Function, GitHub Action, externer
-// Cron-Dienst) auslösen lässt, ohne einen eingeloggten Admin zu brauchen.
-// Authentifizierung über VAULT_EXPORT_SECRET (als
+// Geschützter Endpoint für den Vault-Backup-Export — dieselbe Kernlogik wie
+// der Admin-Panel-Button (src/app/users/VaultExportPanel.tsx), hier aber
+// secret- statt session-authentifiziert und in einem Rutsch statt in
+// Batches (kein Browser, der eine Fortschrittsanzeige bräuchte), damit er
+// sich später z.B. per Cronjob (Netlify Scheduled Function, GitHub Action,
+// externer Cron-Dienst) auslösen lässt, ohne einen eingeloggten Admin zu
+// brauchen. Authentifizierung über VAULT_EXPORT_SECRET (als
 // `Authorization: Bearer <secret>` oder `?secret=<secret>`) — identisches
 // Muster zu /api/revalidate.
 export const dynamic = "force-dynamic";
+// Großzügiges Limit für einen kompletten, nicht in Batches aufgeteilten
+// Export-Lauf — die tatsächliche Obergrenze setzt am Ende die
+// Deployment-Plattform (Netlify).
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   const secret = process.env.VAULT_EXPORT_SECRET;

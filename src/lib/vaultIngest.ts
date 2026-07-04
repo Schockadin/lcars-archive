@@ -17,7 +17,7 @@ import { notifySubscribers } from "../../scripts/ingest/notify";
 // generieren, liest dieser Weg Markdown aus dem Vault-Repo und importiert es
 // in die DB — nutzt dabei bewusst dieselben, bereits bestehenden
 // scripts/ingest/*-Funktionen (kein Duplikat der komplexen
-// Referenz-Auflösung in archive.ts), nur mit zwei Anpassungen gegenüber dem
+// Referenz-Auflösung in archive.ts), nur mit drei Anpassungen gegenüber dem
 // CLI-Aufruf:
 //   1. Die Dateien kommen nicht aus einem lokalen VAULT_PATH-Checkout,
 //      sondern werden per GitHub-API in ein Temp-Verzeichnis geschrieben
@@ -29,14 +29,25 @@ import { notifySubscribers } from "../../scripts/ingest/notify";
 //      ein Admin/GM-Edit in der App darf nicht durch einen älteren
 //      Vault-Stand überschrieben werden. Der volle Reingest (mit
 //      Kollisions-Prompt) bleibt bewusst ein lokales CLI-only-Werkzeug.
+//   3. Der Ablauf ist in vier Phasen aufgeteilt (Charaktere, Missionen,
+//      Archiv, Abschluss), jede ein eigener Server-Aufruf (siehe
+//      vaultIngestActions.ts/VaultIngestPanel.tsx) — ein einzelner Aufruf
+//      über den kompletten Vault reißt bei größeren Datenmengen leicht die
+//      Netlify-Function-Timeout-Grenze (die Verbindung bricht dann
+//      ergebnislos ab, ohne dass der Browser überhaupt eine Antwort und
+//      damit den Konsolen-Output bekommt). Jede Phase lädt nur die für sie
+//      nötigen Dateien in ein eigenes, frisches Temp-Verzeichnis — es gibt
+//      keine Abhängigkeit von einem zwischen Aufrufen fortbestehenden /tmp.
 // notifySubscribers/ingestTimeline/resolveWikiLinks brauchen keinen
 // Vault-Zugriff und laufen unverändert gegen die App-eigene sql-Instanz.
 
-async function downloadVaultToTempDir(): Promise<{
-  dir: string;
-  fileCount: number;
-}> {
-  const files = await listVaultMarkdownFiles();
+async function downloadVaultSubsetToTempDir(
+  prefixes: string[],
+): Promise<{ dir: string; fileCount: number }> {
+  const allFiles = await listVaultMarkdownFiles();
+  const files = allFiles.filter((file) =>
+    prefixes.some((prefix) => file.path.startsWith(prefix)),
+  );
   const dir = mkdtempSync(join(tmpdir(), "vault-ingest-"));
 
   // Blob-Abrufe sind reine Lesezugriffe (anders als die sequenziellen
@@ -92,51 +103,117 @@ async function withCapturedConsole(
   return lines;
 }
 
-export async function runVaultIngest(): Promise<{ log: string[] }> {
-  const { dir: tmpDir, fileCount } = await downloadVaultToTempDir();
+export interface VaultIngestCharactersResult {
+  log: string[];
+}
 
+export async function ingestVaultCharactersPhase(): Promise<VaultIngestCharactersResult> {
+  const { dir, fileCount } = await downloadVaultSubsetToTempDir(["Charaktere/"]);
   try {
     const log = await withCapturedConsole(async () => {
+      console.log(`👤 ${fileCount} Charakter-Datei(en) aus dem Vault geladen`);
+      await ingestCharacters(sql, dir, true);
+    });
+    return { log };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+export interface VaultIngestMissionsResult {
+  log: string[];
+  changedMissionSlugs: string[];
+  changedCharacterSlugs: string[];
+  newLogSlugs: string[];
+}
+
+export async function ingestVaultMissionsPhase(): Promise<VaultIngestMissionsResult> {
+  const { dir, fileCount } = await downloadVaultSubsetToTempDir(["Missionen/"]);
+  try {
+    const changedMissionSlugs = new Set<string>();
+    const changedCharacterSlugs = new Set<string>();
+    const newLogSlugs = new Set<string>();
+
+    const log = await withCapturedConsole(async () => {
       console.log(
-        `🚀 Starte Ingestion (nur neue Dateien) — ${fileCount} Markdown-Dateien aus dem Vault-Repo geladen`,
+        `🚀 ${fileCount} Missions-/Missionslog-Datei(en) aus dem Vault geladen`,
       );
-
-      await ingestCharacters(sql, tmpDir, true);
-
-      const changedMissionSlugs = new Set<string>();
-      const changedCharacterSlugs = new Set<string>();
-      const newLogSlugs = new Set<string>();
-      for (const slug of await ingestMissions(sql, tmpDir, true)) {
+      for (const slug of await ingestMissions(sql, dir, true)) {
         changedMissionSlugs.add(slug);
       }
-      const logResult = await ingestMissionLogs(sql, tmpDir, true);
+      const logResult = await ingestMissionLogs(sql, dir, true);
       for (const slug of logResult.missionSlugs) changedMissionSlugs.add(slug);
       for (const slug of logResult.characterSlugs) {
         changedCharacterSlugs.add(slug);
       }
       for (const slug of logResult.newLogSlugs) newLogSlugs.add(slug);
-      const changedArchiveSlugs = await ingestArchive(sql, tmpDir, true);
-
-      // Beide laufen immer über den kompletten Datenbestand, nicht nur die
-      // gerade neu importierten Dateien (siehe scripts/ingest/index.ts).
-      await resolveWikiLinks(sql);
-      await ingestTimeline(sql);
-
-      console.log("\n✅ Ingestion abgeschlossen");
-
-      await notifySubscribers(
-        sql,
-        changedMissionSlugs,
-        changedArchiveSlugs,
-        changedCharacterSlugs,
-        newLogSlugs,
-      );
-
-      revalidateAllContent();
     });
 
-    return { log };
+    return {
+      log,
+      changedMissionSlugs: [...changedMissionSlugs],
+      changedCharacterSlugs: [...changedCharacterSlugs],
+      newLogSlugs: [...newLogSlugs],
+    };
   } finally {
-    rmSync(tmpDir, { recursive: true, force: true });
+    rmSync(dir, { recursive: true, force: true });
   }
+}
+
+export interface VaultIngestArchiveResult {
+  log: string[];
+  changedArchiveSlugs: string[];
+}
+
+export async function ingestVaultArchivePhase(): Promise<VaultIngestArchiveResult> {
+  const { dir, fileCount } = await downloadVaultSubsetToTempDir(["Archiv/"]);
+  try {
+    let changedArchiveSlugs = new Set<string>();
+
+    const log = await withCapturedConsole(async () => {
+      console.log(`📚 ${fileCount} Archiv-Datei(en) aus dem Vault geladen`);
+      changedArchiveSlugs = await ingestArchive(sql, dir, true);
+    });
+
+    return { log, changedArchiveSlugs: [...changedArchiveSlugs] };
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+}
+
+export interface VaultIngestFinalizeInput {
+  changedMissionSlugs: string[];
+  changedCharacterSlugs: string[];
+  newLogSlugs: string[];
+  changedArchiveSlugs: string[];
+}
+
+export interface VaultIngestFinalizeResult {
+  log: string[];
+}
+
+// Läuft immer über den kompletten Datenbestand, nicht nur die gerade neu
+// importierten Dateien (siehe scripts/ingest/index.ts) — braucht deshalb
+// keinen Vault-Zugriff mehr, nur die changed*-Slugs der vorigen Phasen für
+// die Abo-Benachrichtigung.
+export async function finalizeVaultIngestPhase(
+  input: VaultIngestFinalizeInput,
+): Promise<VaultIngestFinalizeResult> {
+  const log = await withCapturedConsole(async () => {
+    await resolveWikiLinks(sql);
+    await ingestTimeline(sql);
+
+    await notifySubscribers(
+      sql,
+      new Set(input.changedMissionSlugs),
+      new Set(input.changedArchiveSlugs),
+      new Set(input.changedCharacterSlugs),
+      new Set(input.newLogSlugs),
+    );
+
+    console.log("\n✅ Ingestion abgeschlossen");
+    revalidateAllContent();
+  });
+
+  return { log };
 }

@@ -1,30 +1,98 @@
 "use server";
 import { requireAdmin } from "@/lib/dal";
-import { runVaultIngest } from "@/lib/vaultIngest";
+import {
+  ingestVaultCharactersPhase,
+  ingestVaultMissionsPhase,
+  ingestVaultArchivePhase,
+  finalizeVaultIngestPhase,
+  type VaultIngestFinalizeInput,
+} from "@/lib/vaultIngest";
 
-export interface VaultIngestActionState {
+// Vier separate Admin-Panel-Auslöser statt einer einzelnen Action — jede
+// Phase lädt nur ihren Teil des Vaults und läuft als eigener Server-Aufruf
+// (siehe vaultIngest.ts für die Begründung: Netlify-Function-Timeout bei
+// einem einzelnen Aufruf über den ganzen Vault). VaultIngestPanel.tsx ruft
+// alle vier nacheinander auf und reicht die changed*-Slugs aus den
+// Missions-/Archiv-Phasen an die Abschluss-Phase weiter.
+
+export interface CharactersPhaseState {
   log?: string[];
   error?: string;
 }
 
-// Admin-Panel-Auslöser für den Vault-Ingest (src/lib/vaultIngest.ts) —
-// importiert neue Markdown-Dateien aus dem Vault-Repo in die DB, ohne
-// lokalen Checkout zu benötigen. Nur wirklich neue Slugs (kein
-// überschreibender Reingest), siehe Kommentar in vaultIngest.ts.
-export async function runVaultIngestAction(
-  _state: VaultIngestActionState,
-): Promise<VaultIngestActionState> {
+export async function ingestVaultCharactersAction(): Promise<CharactersPhaseState> {
   await requireAdmin();
-
   try {
-    const { log } = await runVaultIngest();
-    return { log };
+    return await ingestVaultCharactersPhase();
   } catch (err) {
     return {
       error:
         err instanceof Error
-          ? `Ingest fehlgeschlagen: ${err.message}`
-          : "Ingest fehlgeschlagen.",
+          ? `Charaktere: ${err.message}`
+          : "Charaktere: Ingest fehlgeschlagen.",
+    };
+  }
+}
+
+export interface MissionsPhaseState {
+  log?: string[];
+  changedMissionSlugs?: string[];
+  changedCharacterSlugs?: string[];
+  newLogSlugs?: string[];
+  error?: string;
+}
+
+export async function ingestVaultMissionsAction(): Promise<MissionsPhaseState> {
+  await requireAdmin();
+  try {
+    return await ingestVaultMissionsPhase();
+  } catch (err) {
+    return {
+      error:
+        err instanceof Error
+          ? `Missionen: ${err.message}`
+          : "Missionen: Ingest fehlgeschlagen.",
+    };
+  }
+}
+
+export interface ArchivePhaseState {
+  log?: string[];
+  changedArchiveSlugs?: string[];
+  error?: string;
+}
+
+export async function ingestVaultArchiveAction(): Promise<ArchivePhaseState> {
+  await requireAdmin();
+  try {
+    return await ingestVaultArchivePhase();
+  } catch (err) {
+    return {
+      error:
+        err instanceof Error
+          ? `Archiv: ${err.message}`
+          : "Archiv: Ingest fehlgeschlagen.",
+    };
+  }
+}
+
+export interface FinalizePhaseState {
+  log?: string[];
+  error?: string;
+}
+
+export async function finalizeVaultIngestAction(
+  input: VaultIngestFinalizeInput,
+): Promise<FinalizePhaseState> {
+  await requireAdmin();
+  try {
+    return await finalizeVaultIngestPhase(input);
+  } catch (err) {
+    return {
+      error:
+        err instanceof Error
+          ? `Abschluss: ${err.message}`
+          : "Abschluss: fehlgeschlagen.",
     };
   }
 }

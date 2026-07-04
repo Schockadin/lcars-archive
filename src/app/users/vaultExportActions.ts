@@ -1,31 +1,60 @@
 "use server";
 import { requireAdmin } from "@/lib/dal";
-import { exportContentToVault, type VaultExportResult } from "@/lib/vaultExport";
+import {
+  buildVaultExportFiles,
+  commitVaultExportBatch,
+  type VaultExportFile,
+  type VaultExportFileResult,
+} from "@/lib/vaultExport";
 
-export interface VaultExportActionState {
-  result?: VaultExportResult;
+export interface PrepareVaultExportResult {
+  files?: VaultExportFile[];
   error?: string;
 }
 
-// Admin-Panel-Auslöser für den Vault-Backup-Export (VaultExportPanel.tsx,
-// eingebunden in /users, admin-only). Teilt sich exportContentToVault() mit
-// dem künftig cronjob-tauglichen Endpoint src/app/api/vault-export/route.ts
-// — dieselbe Logik, nur einmal session-authentifiziert (hier) und einmal
-// secret-authentifiziert (dort).
-export async function runVaultExportAction(
-  _state: VaultExportActionState,
-): Promise<VaultExportActionState> {
+// Schritt 1: baut die Markdown-Dateien aus dem aktuellen DB-Stand (reine
+// DB-Reads, kein GitHub-Zugriff — schnell) und gibt sie an den Client
+// zurück, der daraus die Gesamtzahl für die Fortschrittsanzeige kennt und
+// sie in kleinen Batches an commitVaultExportBatchAction zurückreicht (siehe
+// VaultExportPanel.tsx). Aufgeteilt in zwei Schritte, damit ein einzelner
+// Server-Aufruf nie über den ganzen Vault läuft (Netlify-Function-Timeout).
+export async function prepareVaultExportAction(): Promise<PrepareVaultExportResult> {
   await requireAdmin();
 
   try {
-    const result = await exportContentToVault();
-    return { result };
+    const files = await buildVaultExportFiles();
+    return { files };
   } catch (err) {
     return {
       error:
         err instanceof Error
-          ? `Vault-Export fehlgeschlagen: ${err.message}`
-          : "Vault-Export fehlgeschlagen.",
+          ? `Vorbereitung fehlgeschlagen: ${err.message}`
+          : "Vorbereitung fehlgeschlagen.",
+    };
+  }
+}
+
+export interface CommitVaultExportBatchResult {
+  results?: VaultExportFileResult[];
+  error?: string;
+}
+
+// Schritt 2: committet eine kleine Menge Dateien (siehe BATCH_SIZE in
+// VaultExportPanel.tsx) ins Vault-Repo.
+export async function commitVaultExportBatchAction(
+  files: VaultExportFile[],
+): Promise<CommitVaultExportBatchResult> {
+  await requireAdmin();
+
+  try {
+    const results = await commitVaultExportBatch(files);
+    return { results };
+  } catch (err) {
+    return {
+      error:
+        err instanceof Error
+          ? `Commit fehlgeschlagen: ${err.message}`
+          : "Commit fehlgeschlagen.",
     };
   }
 }
