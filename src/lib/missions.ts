@@ -87,7 +87,10 @@ export async function getMissionBySlug(
   )();
 }
 
-// Logs einer Mission (schlank, ohne content) für die Liste links.
+// Logs einer Mission (schlank, ohne content) für die Liste links. Nur
+// public — diese Nav-Liste wird auf jeder Log-Detailseite der Mission
+// mitgerendert (auch auf privaten/gm-Logs, siehe Layout), ein
+// nicht-public Log würde sonst dort für jeden Betrachter im Titel auftauchen.
 export async function getLogsByMissionId(
   missionId: number,
 ): Promise<MissionLogListItem[]> {
@@ -104,12 +107,12 @@ export async function getLogsByMissionId(
           c.slug AS author_slug
         FROM mission_logs ml
         LEFT JOIN characters c ON c.id = ml.author_id
-        WHERE ml.mission_id = ${missionId}
+        WHERE ml.mission_id = ${missionId} AND ml.visibility = 'public'
         ORDER BY ml.session_nr DESC NULLS LAST, ml.created_at DESC
       `;
       return rows;
     },
-    ["getLogsByMissionId", String(missionId)],
+    ["getLogsByMissionId", "v2", String(missionId)],
     { tags: [cacheTags.missionLogs, cacheTags.missionLogsOf(missionId)] },
   )();
 }
@@ -132,7 +135,9 @@ export async function getLogBySlug(
           c.slug  AS author_slug,
           m.id    AS mission_id,
           m.slug  AS mission_slug,
-          m.title AS mission_title
+          m.title AS mission_title,
+          ml.visibility,
+          ml.owner_user_id AS "ownerUserId"
         FROM mission_logs ml
         JOIN missions m ON m.id = ml.mission_id
         LEFT JOIN characters c ON c.id = ml.author_id
@@ -141,7 +146,7 @@ export async function getLogBySlug(
       `;
       return rows[0] ?? null;
     },
-    ["getLogBySlug", slug],
+    ["getLogBySlug", "v2", slug],
     { tags: [cacheTags.missionLogs, cacheTags.log(slug)] },
   )();
 }
@@ -182,7 +187,27 @@ export async function getAuthorLogNav(
   )();
 }
 
-// Alle Mission-/Log-Pfade für die Sitemap und generateStaticParams.
+// Nur der Owner (Spieler des Autor-Charakters, via Join — Mission-Logs haben
+// kein eigenes direktes user_id-Feld) darf die Sichtbarkeit ändern; ein
+// fremdes/gefälschtes id trifft dann einfach 0 Zeilen.
+export async function setMissionLogVisibility(
+  userId: number,
+  logId: number,
+  visibility: "private" | "gm" | "public",
+): Promise<{ slug: string; missionId: number } | null> {
+  const rows = await sql<{ slug: string; missionId: number }[]>`
+    UPDATE mission_logs ml
+    SET visibility = ${visibility}, updated_at = NOW()
+    FROM characters c
+    WHERE ml.id = ${logId} AND c.id = ml.author_id AND c.player_id = ${userId}
+    RETURNING ml.slug, ml.mission_id AS "missionId"
+  `;
+  return rows[0] ?? null;
+}
+
+// Alle Mission-/Log-Pfade für die Sitemap und generateStaticParams. Nur
+// public, damit private/gm-Logs nicht statisch vorgerendert oder
+// gesitemappt werden (Laufzeit-Guard auf der Detailseite übernimmt sie).
 export const getAllLogPaths = unstable_cache(
   async (): Promise<LogPath[]> => {
     const rows = await sql<LogPath[]>`
@@ -192,9 +217,10 @@ export const getAllLogPaths = unstable_cache(
         ml.updated_at::text AS updated_at
       FROM mission_logs ml
       JOIN missions m ON m.id = ml.mission_id
+      WHERE ml.visibility = 'public'
     `;
     return rows;
   },
-  ["getAllLogPaths"],
+  ["getAllLogPaths", "v2"],
   { tags: [cacheTags.missionLogs] },
 );

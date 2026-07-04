@@ -1,10 +1,7 @@
 // src/app/characters/[slug]/logs/page.tsx
-import {
-  getAllCharacters,
-  getCharacterBySlug,
-  getLogsByCharacter,
-} from "@/lib/characters";
+import { getCharacterBySlug, getLogsByCharacter } from "@/lib/characters";
 import { notFound } from "next/navigation";
+import { getViewer, canView } from "@/lib/visibility";
 import PageMeta from "@/components/PageMeta";
 import CrumbLabel from "@/components/CrumbLabel";
 import CharacterLogList from "./CharacterLogList";
@@ -13,17 +10,20 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// Bekannte Charaktere zur Build-Zeit vorrendern; neue Slugs on-demand.
-export async function generateStaticParams() {
-  const characters = await getAllCharacters();
-  return characters.map((character) => ({ slug: character.slug }));
-}
+// Erzwungen dynamisch — siehe src/app/characters/[slug]/page.tsx: der
+// Sichtbarkeits-Guard unten braucht cookies(), was mit
+// generateStaticParams auf dieser Route sonst zu DYNAMIC_SERVER_USAGE führt.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const character = await getCharacterBySlug(slug);
+  const visible =
+    character &&
+    (character.visibility === "public" ||
+      canView(character.visibility, character.player_id, await getViewer()));
   return {
-    title: character
+    title: visible
       ? `Logs · ${character.name} · Neo Archive`
       : "Nicht gefunden · Neo Archive",
   };
@@ -34,6 +34,13 @@ export default async function CharacterLogsPage({ params }: Props) {
 
   const character = await getCharacterBySlug(slug);
   if (!character) notFound();
+
+  if (character.visibility !== "public") {
+    const viewer = await getViewer();
+    if (!canView(character.visibility, character.player_id, viewer)) {
+      notFound();
+    }
+  }
 
   const logs = await getLogsByCharacter(character.id);
 

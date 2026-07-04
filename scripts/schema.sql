@@ -266,6 +266,79 @@ UPDATE users SET role = 'admin' WHERE role = 'gm';
 -- src/app/login/actions.ts) statt sie sofort zu löschen.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
 
+-- Stabiler, URL-/Frontmatter-sicherer User-Identifier ("owner: <slug>" im
+-- Vault-Markdown, siehe scripts/ingest/shared.ts#resolveOwner). Backfill für
+-- Bestandsuser aus name (gleiche Umlaut-/Zeichen-Regeln wie slugifyBase in
+-- src/lib/slug.ts), Kollisionen bekommen Suffix -2, -3, ... (analog
+-- generateUniqueDialogueSlug in src/lib/dialoguesCore.ts). Neue User bekommen
+-- ihren Slug direkt bei der Anlage (siehe generateUniqueUserSlug in
+-- src/lib/users.ts).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS slug TEXT;
+
+DO $$
+DECLARE
+  u RECORD;
+  base TEXT;
+  candidate TEXT;
+  n INT;
+BEGIN
+  FOR u IN SELECT id, name FROM users WHERE slug IS NULL ORDER BY id LOOP
+    base := u.name;
+    base := replace(base, 'ä', 'ae');
+    base := replace(base, 'ö', 'oe');
+    base := replace(base, 'ü', 'ue');
+    base := replace(base, 'ß', 'ss');
+    base := replace(base, 'Ä', 'Ae');
+    base := replace(base, 'Ö', 'Oe');
+    base := replace(base, 'Ü', 'Ue');
+    base := lower(base);
+    base := regexp_replace(base, '[^a-z0-9]+', '-', 'g');
+    base := regexp_replace(base, '^-+|-+$', '', 'g');
+    IF base = '' THEN
+      base := 'user';
+    END IF;
+
+    candidate := base;
+    n := 2;
+    WHILE EXISTS (SELECT 1 FROM users WHERE slug = candidate) LOOP
+      candidate := base || '-' || n;
+      n := n + 1;
+    END LOOP;
+
+    UPDATE users SET slug = candidate WHERE id = u.id;
+  END LOOP;
+END $$;
+
+ALTER TABLE users ALTER COLUMN slug SET NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_slug ON users(slug);
+
+-- Owner-Zuordnung für Inhalte ohne bestehende direkte User-Referenz
+-- (Charaktere haben mit player_id bereits einen Owner). Wird aus dem
+-- "owner: <user-slug>"-Frontmatter beim Ingest aufgelöst (resolveOwner in
+-- scripts/ingest/shared.ts); fehlt das Feld, bleibt die Spalte NULL (kein
+-- Ingest-Abbruch). In-App-Dialoge setzen sie direkt beim Anlegen auf den
+-- Ersteller.
+ALTER TABLE missions        ADD COLUMN IF NOT EXISTS owner_user_id INT REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE mission_logs    ADD COLUMN IF NOT EXISTS owner_user_id INT REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS owner_user_id INT REFERENCES users(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_missions_owner        ON missions(owner_user_id);
+CREATE INDEX IF NOT EXISTS idx_mission_logs_owner     ON mission_logs(owner_user_id);
+CREATE INDEX IF NOT EXISTS idx_archive_entries_owner  ON archive_entries(owner_user_id);
+
+-- Sichtbarkeit pro Inhalt: private (nur Owner) | gm (Owner + gm/admin) |
+-- public (alle). Default 'public' — Bestandsinhalte bleiben unverändert für
+-- alle sichtbar. Missionen und ownerlose Wiki-Archiv-Einträge bekommen
+-- bewusst (noch) keine Spalte: ohne Owner-Konzept für Missionen wäre
+-- "private" nicht sinnvoll definierbar; sie bleiben immer public. Siehe
+-- src/lib/visibility.ts für die Auswertung.
+ALTER TABLE characters      ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public'
+  CHECK (visibility IN ('private', 'gm', 'public'));
+ALTER TABLE mission_logs    ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public'
+  CHECK (visibility IN ('private', 'gm', 'public'));
+ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'public'
+  CHECK (visibility IN ('private', 'gm', 'public'));
+
 -- Benachrichtigungs-Präferenzen (PWA/Push-Feature): zwei globale Schalter
 -- pro User, gelten einheitlich für alle Benachrichtigungs-Ereignistypen
 -- (neue Dialog-Nachricht, Dialog abgeschlossen, Abo-Digest) — kein

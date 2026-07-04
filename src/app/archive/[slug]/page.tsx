@@ -1,7 +1,7 @@
 // src/app/archive/[slug]/page.tsx
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { getAllArchivePaths, getArchiveEntryBySlug } from "@/lib/archive";
+import { getArchiveEntryBySlug } from "@/lib/archive";
 import { CATEGORY_CONFIG, archiveTitle } from "@/lib/archiveFormat";
 import { stripHtml } from "@/lib/missionFormat";
 import { ArchiveEntryDetail, ArchiveLink } from "@/types/archive";
@@ -12,21 +12,34 @@ import FollowButtons from "@/components/FollowButtons";
 import DialogueThread from "@/components/DialogueThread";
 import DialogueHeader from "@/components/DialogueHeader";
 import { getDialogueMessages } from "@/lib/dialogues";
+import { getViewer, canView } from "@/lib/visibility";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// Bekannte Einträge zur Build-Zeit vorrendern; neue Slugs on-demand.
-export async function generateStaticParams() {
-  const paths = await getAllArchivePaths();
-  return paths.map((p) => ({ slug: p.slug }));
-}
+// Erzwungen dynamisch statt statisch vorgerendert: der Sichtbarkeits-Guard
+// unten braucht cookies() (via getViewer()), sobald ein Eintrag nicht public
+// ist. Next weist bei bedingtem cookies()-Zugriff auf einer Route mit
+// generateStaticParams einen DYNAMIC_SERVER_USAGE-Fehler zurück (production
+// build) statt zuverlässig dynamisch zu rendern — deshalb hier explizit statt
+// implizit, exakt wie schon in src/app/dialogues/[slug]/page.tsx. Kostet die
+// statische Vorrenderung/ISR für ALLE (auch public) Archiv-Einträge.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const entry = await getArchiveEntryBySlug(slug);
   if (!entry) return { title: "Nicht gefunden · Neo Archive" };
+
+  // Offene Dialoge: Zugriff wird auf /dialogues/<slug> per Teilnehmer-Check
+  // entschieden (siehe unten in der Page-Komponente), nicht hier über
+  // owner_user_id — Metadaten dafür also nicht zusätzlich blocken.
+  const visible =
+    entry.visibility === "public" ||
+    (entry.category === "dialogue" && entry.dialogue_open) ||
+    canView(entry.visibility, entry.ownerUserId, await getViewer());
+  if (!visible) return { title: "Nicht gefunden · Neo Archive" };
 
   const desc = entry.metadata.summary ?? stripHtml(entry.content);
   return {
@@ -41,12 +54,24 @@ export default async function ArchiveEntryPage({ params }: Props) {
   if (!entry) notFound();
 
   // Offene Dialoge leben unter /dialogues/<slug> (Formular, Abschluss-Button,
-  // Session-Gate) — kein cookies()/headers()-Zugriff hier nötig, die
-  // statische Vorrenderung dieser Seite bleibt erhalten: offene Slugs fehlen
-  // bereits in generateStaticParams und rendern nur on-demand als reiner
-  // Redirect.
+  // eigener Teilnehmer-Gate). Muss VOR dem Sichtbarkeits-Guard unten
+  // passieren: der Teilnehmer-Check auf /dialogues/<slug> ist die richtige
+  // Zugriffsprüfung für einen offenen Dialog (jeder Teilnehmer, nicht nur der
+  // Ersteller/owner_user_id) — der Sichtbarkeits-Guard hier würde einen
+  // Partner sonst schon hier aussperren, bevor er dorthin überhaupt
+  // umgeleitet wird.
   if (entry.category === "dialogue" && entry.dialogue_open) {
     redirect(`/dialogues/${entry.slug}`);
+  }
+
+  // Nur bei nicht-public Sichtbarkeit überhaupt einen Betrachter auflösen —
+  // spart den Session-/DB-Lookup im (häufigeren) public-Fall. Kein Effekt
+  // mehr auf statische Vorrenderung (siehe `dynamic = "force-dynamic"` oben).
+  if (entry.visibility !== "public") {
+    const viewer = await getViewer();
+    if (!canView(entry.visibility, entry.ownerUserId, viewer)) {
+      notFound();
+    }
   }
 
   // Einfache, nicht gecachte Abfrage — Frische kommt über die Revalidation

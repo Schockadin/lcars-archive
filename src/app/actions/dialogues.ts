@@ -9,7 +9,7 @@ import {
   DialogueMessageNotFoundError,
   getDialogueForPlay,
   getDialogueParticipant,
-  getOtherParticipantContact,
+  getDialogueSubscribers,
   getCharacterSubscribers,
   getDialogueMessageForEdit,
   postDialogueMessage,
@@ -85,28 +85,32 @@ export async function postDialogueMessageAction(
   // src/lib/archive.ts) — nur die eigene, ungecachte Seite muss frisch sein.
   revalidatePath(`/dialogues/${entrySlug}`);
 
-  const other = await getOtherParticipantContact(
-    entry.id,
-    participant.characterSlug,
-  );
-  if (other) {
+  // Nur wer diesen Dialog abonniert hat (Default beim Anlegen, dort und auf
+  // der Dialog-Seite abbestellbar) bekommt eine Mail — statt bedingungslos
+  // den anderen Teilnehmer zu benachrichtigen.
+  const subscribers = await getDialogueSubscribers(entrySlug, session.userId);
+  if (subscribers.length > 0) {
     const dialogueUrl = `${await getBaseUrl()}/dialogues/${entrySlug}`;
-    if (other.emailNotificationsEnabled) {
-      await sendDialogueMessageEmail({
-        to: other.email,
-        name: other.name,
-        fromCharacterName: participant.characterName,
-        dialogueTitle: entry.title,
-        dialogueUrl,
-      });
-    }
-    if (other.pushNotificationsEnabled) {
-      await sendPushToUser(other.id, {
-        title: `Neue Nachricht in "${entry.title}"`,
-        body: `${participant.characterName} hat geantwortet.`,
-        url: dialogueUrl,
-      });
-    }
+    await Promise.all(
+      subscribers.map(async (subscriber) => {
+        if (subscriber.emailNotificationsEnabled) {
+          await sendDialogueMessageEmail({
+            to: subscriber.email,
+            name: subscriber.name,
+            fromCharacterName: participant.characterName,
+            dialogueTitle: entry.title,
+            dialogueUrl,
+          });
+        }
+        if (subscriber.pushNotificationsEnabled) {
+          await sendPushToUser(subscriber.id, {
+            title: `Neue Nachricht in "${entry.title}"`,
+            body: `${participant.characterName} hat geantwortet.`,
+            url: dialogueUrl,
+          });
+        }
+      }),
+    );
   }
 
   return { success: true };

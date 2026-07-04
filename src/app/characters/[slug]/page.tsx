@@ -1,10 +1,7 @@
 // src/app/characters/[slug]/page.tsx
-import {
-  getAllCharacters,
-  getCharacterBySlug,
-  getLogsByCharacter,
-} from "@/lib/characters";
+import { getCharacterBySlug, getLogsByCharacter } from "@/lib/characters";
 import { getDialogueCountByParticipant } from "@/lib/archive";
+import { getViewer, canView } from "@/lib/visibility";
 import { notFound } from "next/navigation";
 import CharakterDetailPage from "./CharacterDetailPage";
 
@@ -12,18 +9,27 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// Bekannte Charaktere zur Build-Zeit vorrendern. Neue Slugs werden beim ersten
-// Aufruf on-demand erzeugt (dynamicParams = true ist der Default).
-export async function generateStaticParams() {
-  const characters = await getAllCharacters();
-  return characters.map((character) => ({ slug: character.slug }));
-}
+// Erzwungen dynamisch: der Sichtbarkeits-Guard unten braucht cookies() (via
+// getViewer()), sobald ein Charakter nicht public ist. Next weist bei
+// bedingtem cookies()-Zugriff auf einer Route mit generateStaticParams einen
+// DYNAMIC_SERVER_USAGE-Fehler zurück (production build) statt zuverlässig
+// dynamisch zu rendern — deshalb hier explizit statt implizit, exakt wie
+// schon in src/app/dialogues/[slug]/page.tsx. Kostet die statische
+// Vorrenderung für ALLE (auch public) Charakterseiten.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const character = await getCharacterBySlug(slug);
+  // Auch der Seitentitel darf einen privaten/gm-Charakternamen nicht an
+  // Betrachter ohne Zugriff verraten (sonst leakt er via <title>/Meta-Tags,
+  // selbst wenn der eigentliche Seiteninhalt korrekt blockiert wird).
+  const visible =
+    character &&
+    (character.visibility === "public" ||
+      canView(character.visibility, character.player_id, await getViewer()));
   return {
-    title: character
+    title: visible
       ? `${character.name} · Neo Archive`
       : "Nicht gefunden · Neo Archive",
   };
@@ -35,6 +41,15 @@ export default async function CharakterPage({ params }: Props) {
   // Erst Charakter laden, dann parallel Logs dazu
   const character = await getCharacterBySlug(slug);
   if (!character) notFound();
+
+  // Nur bei nicht-public Sichtbarkeit einen Betrachter auflösen — spart den
+  // Session-/DB-Lookup im (häufigeren) public-Fall.
+  if (character.visibility !== "public") {
+    const viewer = await getViewer();
+    if (!canView(character.visibility, character.player_id, viewer)) {
+      notFound();
+    }
+  }
 
   const [logs, conversationCount] = await Promise.all([
     getLogsByCharacter(character.id),

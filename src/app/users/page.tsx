@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
-import { getAllCharacters } from "@/lib/characters";
+import { getAllCharactersForAdmin } from "@/lib/characters";
 import CreateUserForm from "./CreateUserForm";
 import UserManagementTable from "./UserManagementTable";
 import CharacterAssignmentTable from "./CharacterAssignmentTable";
@@ -23,7 +23,7 @@ export default async function UsersAdminPage() {
 
   const [users, characters] = await Promise.all([
     listAllUsers(),
-    getAllCharacters(),
+    getAllCharactersForAdmin(),
   ]);
   const userOptions = users.map((u) => ({ id: u.id, name: u.name }));
 

@@ -12,6 +12,7 @@ export interface User {
   id: number;
   email: string;
   name: string;
+  slug: string;
   role: 'admin' | 'gm' | 'player' | 'viewer';
   is_active: boolean;
   created_at: Date;

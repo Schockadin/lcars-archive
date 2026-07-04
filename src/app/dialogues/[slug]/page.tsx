@@ -12,6 +12,7 @@ import DialogueHeader from "@/components/DialogueHeader";
 import DialogueThread from "@/components/DialogueThread";
 import DialogueReplyForm from "@/components/DialogueReplyForm";
 import CompleteDialogueButton from "@/components/CompleteDialogueButton";
+import FollowButtons from "@/components/FollowButtons";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +75,13 @@ export default async function DialoguePlayPage({ params }: Props) {
       )}
 
       <div className="flex flex-col gap-[12px]">
+        {participant && (
+          <FollowButtons
+            targetType="archive_entry"
+            targetSlug={entry.slug}
+            subscribeOnly
+          />
+        )}
         {participant && <DialogueReplyForm entrySlug={entry.slug} />}
         <CompleteDialogueButton entrySlug={entry.slug} />
       </div>

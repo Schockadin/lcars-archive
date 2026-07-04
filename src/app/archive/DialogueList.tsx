@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import { ArchiveEntryPreview } from "@/types/archive";
+import { LcarsSwitch } from "@/components/lcars";
 import ArchiveEntryCard from "./ArchiveEntryCard";
 
 type SortDir = "asc" | "desc";
@@ -63,7 +64,15 @@ export default function DialogueList({
           </select>
         )}
 
-        <SortDirSwitch dir={sortDir} onChange={setSortDir} />
+        <LcarsSwitch
+          className="flex gap-[5px] w-full mb-[16px]"
+          options={[
+            { key: "asc", label: "Älteste zuerst" },
+            { key: "desc", label: "Neueste zuerst" },
+          ]}
+          active={sortDir}
+          onChange={setSortDir}
+        />
       </div>
 
       {list.length === 0 ? (
@@ -77,46 +86,6 @@ export default function DialogueList({
           ))}
         </div>
       )}
-    </div>
-  );
-}
-
-// Umschalter für die Sortierrichtung (nach id auf-/absteigend).
-function SortDirSwitch({
-  dir,
-  onChange,
-}: {
-  dir: SortDir;
-  onChange: (d: SortDir) => void;
-}) {
-  const options: { key: SortDir; label: string }[] = [
-    { key: "asc", label: "Älteste zuerst" },
-    { key: "desc", label: "Neueste zuerst" },
-  ];
-
-  return (
-    <div className="flex gap-[5px] w-full mb-[16px]">
-      {options.map((opt) => {
-        const isActive = dir === opt.key;
-        return (
-          <div
-            key={opt.key}
-            onClick={() => onChange(opt.key)}
-            className="lcars-switch flex-1"
-            style={{
-              backgroundColor: isActive
-                ? "var(--lcars-amber)"
-                : "var(--lcars-surface)",
-              color: isActive ? "var(--lcars-bg)" : "var(--lcars-text-data)",
-              borderColor: isActive
-                ? "var(--lcars-amber)"
-                : "var(--lcars-text-data)",
-            }}
-          >
-            {opt.label}
-          </div>
-        );
-      })}
     </div>
   );
 }

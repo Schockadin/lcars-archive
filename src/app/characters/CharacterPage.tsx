@@ -2,7 +2,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePageMeta } from "@/hooks/usePageMeta";
-import { LcarsDataRow } from "@/components/lcars";
+import { LcarsDataRow, LcarsSwitch } from "@/components/lcars";
 import { Character } from "@/types/character";
 
 // ─── Konfiguration ──────────────────────────────────────────
@@ -72,7 +72,15 @@ export default function CharacterPage({
     <div className="flex flex-col items-start w-[var(--lcars-charpage-w)]">
       <div className="mb-[16px] flex flex-col items-start w-full">
         <h1 className="lcars-data-row-heading">Charaktere</h1>
-        <SortSwitch mode={mode} onChange={setMode} />
+        <LcarsSwitch
+          className="flex gap-[10px] w-full"
+          options={[
+            { key: "status", label: "Status" },
+            { key: "generation", label: "Generation" },
+          ]}
+          active={mode}
+          onChange={setMode}
+        />
       </div>
 
       {groups.map(
@@ -90,47 +98,6 @@ export default function CharacterPage({
             </section>
           ),
       )}
-    </div>
-  );
-}
-
-// ─── Sortier-Umschalter ─────────────────────────────────────
-// Zwei LCARS-Pills, die aktive Auswahl wird hervorgehoben.
-function SortSwitch({
-  mode,
-  onChange,
-}: {
-  mode: SortMode;
-  onChange: (m: SortMode) => void;
-}) {
-  const options: { key: SortMode; label: string }[] = [
-    { key: "status", label: "Status" },
-    { key: "generation", label: "Generation" },
-  ];
-
-  return (
-    <div className="flex gap-[10px] w-full">
-      {options.map((opt) => {
-        const isActive = mode === opt.key;
-        return (
-          <div
-            key={opt.key}
-            onClick={() => onChange(opt.key)}
-            className="lcars-switch flex-1"
-            style={{
-              backgroundColor: isActive
-                ? "var(--lcars-amber)"
-                : "var(--lcars-surface)",
-              color: isActive ? "var(--lcars-bg)" : "var(--lcars-text-data)",
-              borderColor: isActive
-                ? "var(--lcars-amber)"
-                : "var(--lcars-text-data)",
-            }}
-          >
-            {opt.label}
-          </div>
-        );
-      })}
     </div>
   );
 }

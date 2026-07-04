@@ -128,6 +128,19 @@ export default function CreateDialogueForm({
         </p>
       </div>
 
+      <div className="flex items-center gap-[8px]">
+        <input
+          id="dlg-subscribe-self"
+          name="subscribeSelf"
+          type="checkbox"
+          defaultChecked
+          className="h-[16px] w-[16px]"
+        />
+        <label htmlFor="dlg-subscribe-self" className="lcars-text text-[14px]">
+          Mich über neue Nachrichten in diesem Gespräch benachrichtigen
+        </label>
+      </div>
+
       <button
         type="submit"
         disabled={pending}

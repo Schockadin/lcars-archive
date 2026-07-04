@@ -98,6 +98,7 @@ function toFollowedContent(row: {
   target_type: FollowTargetType;
   slug: string;
   title: string;
+  dialogue_open?: boolean | null;
 }): FollowedContent {
   return {
     targetType: row.target_type,
@@ -108,7 +109,11 @@ function toFollowedContent(row: {
         ? `/missions/${row.slug}`
         : row.target_type === "character"
           ? `/characters/${row.slug}`
-          : `/archive/${row.slug}`,
+          : // Offene Dialoge leben unter /dialogues, nicht /archive (siehe
+            // src/app/users/[id]/content/page.tsx für dasselbe Muster).
+            row.dialogue_open
+            ? `/dialogues/${row.slug}`
+            : `/archive/${row.slug}`,
   };
 }
 
@@ -116,22 +121,29 @@ export async function getBookmarkedContent(
   userId: number,
 ): Promise<FollowedContent[]> {
   const rows = await sql<
-    { target_type: FollowTargetType; slug: string; title: string }[]
+    {
+      target_type: FollowTargetType;
+      slug: string;
+      title: string;
+      dialogue_open: boolean | null;
+    }[]
   >`
-    SELECT 'mission'::text AS target_type, m.slug, m.title
+    SELECT 'mission'::text AS target_type, m.slug, m.title, NULL::boolean AS dialogue_open
     FROM content_follows cf
     JOIN missions m ON m.slug = cf.target_slug AND cf.target_type = 'mission'
     WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
     UNION ALL
-    SELECT 'archive_entry'::text AS target_type, a.slug, a.title
+    SELECT 'archive_entry'::text AS target_type, a.slug, a.title, a.dialogue_open
     FROM content_follows cf
     JOIN archive_entries a ON a.slug = cf.target_slug AND cf.target_type = 'archive_entry'
     WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
+      AND (a.visibility = 'public' OR a.owner_user_id = ${userId})
     UNION ALL
-    SELECT 'character'::text AS target_type, c.slug, c.name AS title
+    SELECT 'character'::text AS target_type, c.slug, c.name AS title, NULL::boolean AS dialogue_open
     FROM content_follows cf
     JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
     WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
+      AND (c.visibility = 'public' OR c.player_id = ${userId})
     ORDER BY title ASC
   `;
   return rows.map(toFollowedContent);
@@ -141,22 +153,29 @@ export async function getSubscribedContent(
   userId: number,
 ): Promise<FollowedContent[]> {
   const rows = await sql<
-    { target_type: FollowTargetType; slug: string; title: string }[]
+    {
+      target_type: FollowTargetType;
+      slug: string;
+      title: string;
+      dialogue_open: boolean | null;
+    }[]
   >`
-    SELECT 'mission'::text AS target_type, m.slug, m.title
+    SELECT 'mission'::text AS target_type, m.slug, m.title, NULL::boolean AS dialogue_open
     FROM content_follows cf
     JOIN missions m ON m.slug = cf.target_slug AND cf.target_type = 'mission'
     WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
     UNION ALL
-    SELECT 'archive_entry'::text AS target_type, a.slug, a.title
+    SELECT 'archive_entry'::text AS target_type, a.slug, a.title, a.dialogue_open
     FROM content_follows cf
     JOIN archive_entries a ON a.slug = cf.target_slug AND cf.target_type = 'archive_entry'
     WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
+      AND (a.visibility = 'public' OR a.owner_user_id = ${userId})
     UNION ALL
-    SELECT 'character'::text AS target_type, c.slug, c.name AS title
+    SELECT 'character'::text AS target_type, c.slug, c.name AS title, NULL::boolean AS dialogue_open
     FROM content_follows cf
     JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
     WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
+      AND (c.visibility = 'public' OR c.player_id = ${userId})
     ORDER BY title ASC
   `;
   return rows.map(toFollowedContent);

@@ -7,6 +7,7 @@ import {
   validateSlug,
   parseDate,
   toStringArray,
+  resolveOwner,
 } from "./shared.js";
 
 // Typ für rohe Frontmatter-Daten der Mission-Container
@@ -18,6 +19,7 @@ interface MissionFrontmatter {
   started_at?: string;
   ended_at?: string;
   tags?: string[];
+  owner?: string;
 }
 
 export async function ingestMissions(
@@ -73,6 +75,7 @@ export async function ingestMissions(
 
       // Markdown-Body (z.B. ausführliche Beschreibung) zu HTML
       const summaryHtml = await markdownToHtml(content);
+      const ownerUserId = await resolveOwner(sql, fm.owner);
 
       const metadata = {
         tags: toStringArray(fm.tags),
@@ -85,14 +88,15 @@ export async function ingestMissions(
       const conflictClause = onlyNew
         ? sql`ON CONFLICT (slug) DO NOTHING`
         : sql`ON CONFLICT (slug) DO UPDATE SET
-            title       = EXCLUDED.title,
-            status      = EXCLUDED.status,
-            started_at  = EXCLUDED.started_at,
-            ended_at    = EXCLUDED.ended_at,
-            metadata    = EXCLUDED.metadata,
-            source_md   = EXCLUDED.source_md,
-            frontmatter = EXCLUDED.frontmatter,
-            updated_at  = NOW()`;
+            title         = EXCLUDED.title,
+            status        = EXCLUDED.status,
+            started_at    = EXCLUDED.started_at,
+            ended_at      = EXCLUDED.ended_at,
+            metadata      = EXCLUDED.metadata,
+            source_md     = EXCLUDED.source_md,
+            frontmatter   = EXCLUDED.frontmatter,
+            owner_user_id = EXCLUDED.owner_user_id,
+            updated_at    = NOW()`;
 
       // "old" wird als CTE VOR der Modifikation gegen den Tabellenstand zu
       // Beginn des Statements ausgewertet — liefert also zuverlässig den
@@ -106,7 +110,7 @@ export async function ingestMissions(
         INSERT INTO missions (
           slug, title, status,
           started_at, ended_at, metadata,
-          source_md, frontmatter, updated_at
+          source_md, frontmatter, owner_user_id, updated_at
         ) VALUES (
           ${slug},
           ${fm.title.trim()},
@@ -116,6 +120,7 @@ export async function ingestMissions(
           ${sql.json(metadata)},
           ${content},
           ${sql.json(data)},
+          ${ownerUserId},
           NOW()
         )
         ${conflictClause}

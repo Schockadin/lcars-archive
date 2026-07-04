@@ -6,6 +6,7 @@ import type { UserContentLog } from "@/lib/characters";
 import type { DialogueSummary } from "@/lib/dialoguesCore";
 import { AUTHOR_COLORS, fmtDate, sessionLabel } from "@/lib/missionFormat";
 import type { Character } from "@/types/character";
+import VisibilitySelect from "./VisibilitySelect";
 
 type TypeFilter = "all" | "log" | "dialogue";
 
@@ -24,10 +25,12 @@ export default function UserContentBrowser({
   characters,
   logs,
   dialogues,
+  ownUserId,
 }: {
   characters: Character[];
   logs: UserContentLog[];
   dialogues: DialogueSummary[];
+  ownUserId: number;
 }) {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [characterFilter, setCharacterFilter] = useState<string | null>(null);
@@ -147,34 +150,40 @@ export default function UserContentBrowser({
                 >
                   <div className="flex flex-col gap-[6px]">
                     {group.logs.map((log) => (
-                      <Link
-                        key={log.id}
-                        href={`/missions/${log.mission_slug}/${log.slug}`}
-                        className="mission-akte"
-                        style={
-                          {
-                            "--mission-color": "var(--lcars-blue)",
-                          } as React.CSSProperties
-                        }
-                      >
-                        <span className="mission-akte-rail" />
-                        <span className="mission-akte-body text-left">
-                          <span className="mission-akte-title block">
-                            {log.title}
+                      <div key={log.id} className="flex items-center gap-[8px]">
+                        <Link
+                          href={`/missions/${log.mission_slug}/${log.slug}`}
+                          className="mission-akte flex-1"
+                          style={
+                            {
+                              "--mission-color": "var(--lcars-blue)",
+                            } as React.CSSProperties
+                          }
+                        >
+                          <span className="mission-akte-rail" />
+                          <span className="mission-akte-body text-left">
+                            <span className="mission-akte-title block">
+                              {log.title}
+                            </span>
+                            <span className="mission-akte-meta">
+                              <span>
+                                <b>Session</b> {sessionLabel(log.session_nr)}
+                              </span>
+                              <span>
+                                <b>Datum</b> {fmtDate(log.log_date)}
+                              </span>
+                              <span>
+                                <b>Mission</b> {log.mission_title}
+                              </span>
+                            </span>
                           </span>
-                          <span className="mission-akte-meta">
-                            <span>
-                              <b>Session</b> {sessionLabel(log.session_nr)}
-                            </span>
-                            <span>
-                              <b>Datum</b> {fmtDate(log.log_date)}
-                            </span>
-                            <span>
-                              <b>Mission</b> {log.mission_title}
-                            </span>
-                          </span>
-                        </span>
-                      </Link>
+                        </Link>
+                        <VisibilitySelect
+                          contentType="mission_log"
+                          id={log.id}
+                          initialValue={log.visibility}
+                        />
+                      </div>
                     ))}
                   </div>
                 </LcarsAccordion>
@@ -188,36 +197,49 @@ export default function UserContentBrowser({
                 >
                   <div className="flex flex-col gap-[6px]">
                     {group.dialogues.map((d) => (
-                      <Link
-                        key={d.slug}
-                        href={
-                          d.open ? `/dialogues/${d.slug}` : `/archive/${d.slug}`
-                        }
-                        className="mission-akte"
-                        style={
-                          {
-                            "--mission-color": d.open
-                              ? "var(--lcars-green)"
-                              : "var(--lcars-red)",
-                          } as React.CSSProperties
-                        }
-                      >
-                        <span className="mission-akte-rail" />
-                        <span className="mission-akte-body text-left">
-                          <span className="mission-akte-title block">
-                            {d.title}
-                          </span>
-                          <span className="mission-akte-meta">
-                            <span>
-                              <b>Gesprächspartner</b> {d.partnerName}
+                      <div key={d.slug} className="flex items-center gap-[8px]">
+                        <Link
+                          href={
+                            d.open
+                              ? `/dialogues/${d.slug}`
+                              : `/archive/${d.slug}`
+                          }
+                          className="mission-akte flex-1"
+                          style={
+                            {
+                              "--mission-color": d.open
+                                ? "var(--lcars-green)"
+                                : "var(--lcars-red)",
+                            } as React.CSSProperties
+                          }
+                        >
+                          <span className="mission-akte-rail" />
+                          <span className="mission-akte-body text-left">
+                            <span className="mission-akte-title block">
+                              {d.title}
                             </span>
-                            <span>
-                              <b>Status</b>{" "}
-                              {d.open ? "Offen" : "Abgeschlossen"}
+                            <span className="mission-akte-meta">
+                              <span>
+                                <b>Gesprächspartner</b> {d.partnerName}
+                              </span>
+                              <span>
+                                <b>Status</b>{" "}
+                                {d.open ? "Offen" : "Abgeschlossen"}
+                              </span>
                             </span>
                           </span>
-                        </span>
-                      </Link>
+                        </Link>
+                        {/* Sichtbarkeit ist nur vom Ersteller (owner_user_id)
+                            änderbar — der Gesprächspartner sieht nur den
+                            Status. */}
+                        {d.ownerUserId === ownUserId ? (
+                          <VisibilitySelect
+                            contentType="dialogue"
+                            id={d.id}
+                            initialValue={d.visibility}
+                          />
+                        ) : null}
+                      </div>
                     ))}
                   </div>
                 </LcarsAccordion>

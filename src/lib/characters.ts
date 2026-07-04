@@ -15,7 +15,32 @@ function parseCharacter(row: Character): Character {
   };
 }
 
+// Nur public-Charaktere — speist die öffentliche Übersicht, die Detail-
+// generateStaticParams und die öffentliche API-Route. private/gm-Charaktere
+// bleiben trotzdem über ihre Detailseite erreichbar (Laufzeit-Guard dort).
 export const getAllCharacters = unstable_cache(
+  async (): Promise<Character[]> => {
+    const rows = await sql<Character[]>`
+      SELECT *
+      FROM characters
+      WHERE visibility = 'public'
+      ORDER BY
+        CASE status
+          WHEN 'active'   THEN 1
+          WHEN 'retired'  THEN 2
+          WHEN 'deceased' THEN 3
+        END,
+        name ASC
+    `;
+    return rows.map(parseCharacter);
+  },
+  ["getAllCharacters", "v2"],
+  { tags: [cacheTags.characters] },
+);
+
+// Ungefiltert — nur für die GM/Admin-Charakterzuweisung (/users), die auch
+// private/gm-Charaktere zuordnen können muss.
+export const getAllCharactersForAdmin = unstable_cache(
   async (): Promise<Character[]> => {
     const rows = await sql<Character[]>`
       SELECT *
@@ -30,7 +55,7 @@ export const getAllCharacters = unstable_cache(
     `;
     return rows.map(parseCharacter);
   },
-  ["getAllCharacters"],
+  ["getAllCharactersForAdmin"],
   { tags: [cacheTags.characters] },
 );
 
@@ -57,12 +82,12 @@ export const getActiveCharacters = unstable_cache(
     const rows = await sql<Character[]>`
       SELECT id, slug, name, metadata
       FROM characters
-      WHERE status = 'active'
+      WHERE status = 'active' AND visibility = 'public'
       ORDER BY name ASC
     `;
     return rows.map(parseCharacter);
   },
-  ["getActiveCharacters"],
+  ["getActiveCharacters", "v2"],
   { tags: [cacheTags.characters] },
 );
 
@@ -120,6 +145,23 @@ export async function assignCharacterToUser(
   return parseCharacter(rows[0]);
 }
 
+// Nur der Owner (player_id) darf die Sichtbarkeit ändern — ein fremdes/
+// gefälschtes id trifft dann einfach 0 Zeilen (gleiches Prinzip wie
+// assignCharacterToUser oben).
+export async function setCharacterVisibility(
+  userId: number,
+  characterId: number,
+  visibility: "private" | "gm" | "public",
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE characters
+    SET visibility = ${visibility}, updated_at = NOW()
+    WHERE id = ${characterId} AND player_id = ${userId}
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
+}
+
 export interface UserContentLog {
   id: number;
   slug: string;
@@ -130,6 +172,7 @@ export interface UserContentLog {
   mission_title: string;
   character_slug: string;
   character_name: string;
+  visibility: "private" | "gm" | "public";
 }
 
 // Alle Mission-Logs der eigenen Charaktere für /users/[id]/content. Ungecacht
@@ -140,7 +183,7 @@ export async function getLogsForUser(userId: number): Promise<UserContentLog[]> 
   return sql<UserContentLog[]>`
     SELECT
       ml.id, ml.slug, ml.title, ml.session_nr, ml.log_date::text AS log_date,
-      m.slug AS mission_slug, m.title AS mission_title,
+      m.slug AS mission_slug, m.title AS mission_title, ml.visibility,
       c.slug AS character_slug, c.name AS character_name
     FROM mission_logs ml
     JOIN characters c ON c.id = ml.author_id
@@ -150,6 +193,10 @@ export async function getLogsForUser(userId: number): Promise<UserContentLog[]> 
   `;
 }
 
+// Nur public-Logs — rendert auf der öffentlichen Charakterseite. Eigene
+// private/gm-Logs sieht der Owner weiterhin über "Meine Inhalte"
+// (getLogsForUser, unten) bzw. direkt über die (laufzeitgeprüfte)
+// Log-Detailseite.
 export async function getLogsByCharacter(
   characterId: number,
 ): Promise<MissionLogPreview[]> {
@@ -166,12 +213,12 @@ export async function getLogsByCharacter(
           m.title           AS mission_title
         FROM mission_logs ml
         JOIN missions m ON m.id = ml.mission_id
-        WHERE ml.author_id = ${characterId}
+        WHERE ml.author_id = ${characterId} AND ml.visibility = 'public'
         ORDER BY ml.session_nr DESC NULLS LAST
       `;
       return rows;
     },
-    ["getLogsByCharacter", String(characterId)],
+    ["getLogsByCharacter", "v2", String(characterId)],
     { tags: [cacheTags.missionLogs] },
   )();
 }

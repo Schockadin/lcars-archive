@@ -118,6 +118,11 @@ export interface CreateDialogueInput {
   logDate: string | null;
   tags: string[];
   bodyMarkdown: string;
+  // Opt-Out des Erstellers vom Auto-Abo (siehe unten) — der
+  // Gesprächspartner wird immer abonniert (kann selbst auf der
+  // Dialog-Seite wieder abbestellen), da er dem Anlegen nicht zustimmen
+  // konnte.
+  subscribeSelf: boolean;
 }
 
 // Der Dialog selbst ist ein ganz normaler archive_entries-Eintrag der
@@ -135,8 +140,10 @@ export async function createDialogue(
     const [ownChar] = await tx<{ slug: string; name: string }[]>`
       SELECT slug, name FROM characters WHERE id = ${input.ownCharacterId}
     `;
-    const [partnerChar] = await tx<{ slug: string; name: string }[]>`
-      SELECT slug, name FROM characters WHERE id = ${input.partnerCharacterId}
+    const [partnerChar] = await tx<
+      { slug: string; name: string; player_id: number | null }[]
+    >`
+      SELECT slug, name, player_id FROM characters WHERE id = ${input.partnerCharacterId}
     `;
     if (!ownChar || !partnerChar) {
       throw new Error("Charakter nicht gefunden.");
@@ -171,10 +178,11 @@ export async function createDialogue(
       const [entry] = await tx<{ id: number }[]>`
         INSERT INTO archive_entries (
           slug, title, category, content, tags, metadata,
-          source_md, frontmatter, dialogue_open, updated_at
+          source_md, frontmatter, dialogue_open, owner_user_id, updated_at
         ) VALUES (
           ${slug}, ${input.title}, 'dialogue', '', ${input.tags},
-          ${tx.json(metadata as ReturnType<typeof JSON.parse>)}, NULL, ${tx.json({})}, TRUE, NOW()
+          ${tx.json(metadata as ReturnType<typeof JSON.parse>)}, NULL, ${tx.json({})}, TRUE,
+          ${input.authorUserId}, NOW()
         )
         RETURNING id
       `;
@@ -188,6 +196,29 @@ export async function createDialogue(
           ${content}, ${input.bodyMarkdown}
         )
       `;
+
+      // Beide Teilnehmer-User standardmäßig auf den Dialog abonnieren
+      // (target_type='archive_entry', gleiche Tabelle wie Bookmarks/Missions-
+      // /Charakter-Abos, siehe src/lib/follows.ts). Kein Import von
+      // follows.ts hier (das ist "server-only", dialoguesCore.ts bewusst
+      // nicht — siehe Kommentar am Dateianfang) — daher die gleiche
+      // Upsert-Logik direkt inline.
+      if (input.subscribeSelf) {
+        await tx`
+          INSERT INTO content_follows (user_id, target_type, target_slug, subscribed_at)
+          VALUES (${input.authorUserId}, 'archive_entry', ${slug}, NOW())
+          ON CONFLICT (user_id, target_type, target_slug)
+          DO UPDATE SET subscribed_at = NOW()
+        `;
+      }
+      if (partnerChar.player_id != null) {
+        await tx`
+          INSERT INTO content_follows (user_id, target_type, target_slug, subscribed_at)
+          VALUES (${partnerChar.player_id}, 'archive_entry', ${slug}, NOW())
+          ON CONFLICT (user_id, target_type, target_slug)
+          DO UPDATE SET subscribed_at = NOW()
+        `;
+      }
 
       return { slug };
     } catch (err) {
@@ -503,6 +534,24 @@ export async function completeDialogue(archiveEntryId: number): Promise<void> {
   `;
 }
 
+// Nur der Ersteller (owner_user_id, siehe createDialogue) darf die
+// Sichtbarkeit ändern — ein fremdes/gefälschtes id trifft dann einfach 0
+// Zeilen (kein separater Vorab-Check nötig, gleiches Prinzip wie
+// assignCharacterToUser in src/lib/characters.ts).
+export async function setDialogueVisibility(
+  userId: number,
+  archiveEntryId: number,
+  visibility: "private" | "gm" | "public",
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE archive_entries
+    SET visibility = ${visibility}, updated_at = NOW()
+    WHERE id = ${archiveEntryId} AND category = 'dialogue' AND owner_user_id = ${userId}
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
+}
+
 export interface DialogueEmailTarget {
   id: number;
   email: string;
@@ -511,24 +560,17 @@ export interface DialogueEmailTarget {
   pushNotificationsEnabled: boolean;
 }
 
-// Owner des JEWEILS ANDEREN Teilnehmer-Charakters (aktuelle player_id, nicht
-// der Autor-Snapshot in dialogue_messages) — null falls dieser Charakter
-// aktuell niemandem zugeordnet ist (Benachrichtigung entfällt dann still).
-export async function getOtherParticipantContact(
-  archiveEntryId: number,
-  excludeCharacterSlug: string,
-): Promise<DialogueEmailTarget | null> {
-  const [entry] = await sql<{ metadata: unknown }[]>`
-    SELECT metadata FROM archive_entries WHERE id = ${archiveEntryId}
-  `;
-  if (!entry) return null;
-
-  const other = parseParticipants(entry.metadata).find(
-    (p) => p.slug !== excludeCharacterSlug,
-  );
-  if (!other) return null;
-
-  const [row] = await sql<
+// Abonnenten dieses Dialogs (subscribed_at gesetzt, target_type
+// 'archive_entry'), ohne den Absender der gerade geposteten Nachricht —
+// Grundlage für die Benachrichtigung in postDialogueMessageAction. Ersetzt
+// getOtherParticipantContact als bedingungslosen Empfänger: nur wer
+// abonniert ist (Default beim Anlegen, abbestellbar), bekommt
+// Benachrichtigungen.
+export async function getDialogueSubscribers(
+  dialogueSlug: string,
+  excludeUserId: number,
+): Promise<DialogueEmailTarget[]> {
+  const rows = await sql<
     {
       id: number;
       email: string;
@@ -538,19 +580,20 @@ export async function getOtherParticipantContact(
     }[]
   >`
     SELECT u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
-    FROM characters c
-    JOIN users u ON u.id = c.player_id
-    WHERE c.slug = ${other.slug} AND c.player_id IS NOT NULL
-    LIMIT 1
+    FROM content_follows cf
+    JOIN users u ON u.id = cf.user_id
+    WHERE cf.target_type = 'archive_entry'
+      AND cf.target_slug = ${dialogueSlug}
+      AND cf.subscribed_at IS NOT NULL
+      AND cf.user_id != ${excludeUserId}
   `;
-  if (!row) return null;
-  return {
+  return rows.map((row) => ({
     id: row.id,
     email: row.email,
     name: row.name,
     emailNotificationsEnabled: row.email_notifications_enabled,
     pushNotificationsEnabled: row.push_notifications_enabled,
-  };
+  }));
 }
 
 // Abonnenten eines Charakters (subscribed_at gesetzt) — Grundlage für die
@@ -584,6 +627,7 @@ export async function getCharacterSubscribers(
 }
 
 export interface DialogueSummary {
+  id: number;
   slug: string;
   title: string;
   partnerName: string;
@@ -591,6 +635,8 @@ export interface DialogueSummary {
   open: boolean;
   characterSlug: string;
   characterName: string;
+  visibility: "private" | "gm" | "public";
+  ownerUserId: number | null;
 }
 
 // "Deine Gespräche" fürs Dashboard (scope "open", Default) bzw. "Meine
@@ -610,21 +656,29 @@ export async function getDialoguesForUser(
   const results = new Map<string, DialogueSummary>();
   for (const character of ownCharacters) {
     const slug = character.slug;
+    type DialogueRow = {
+      id: number;
+      slug: string;
+      title: string;
+      metadata: unknown;
+      updated_at: string;
+      dialogue_open: boolean;
+      visibility: "private" | "gm" | "public";
+      owner_user_id: number | null;
+    };
     const rows =
       scope === "open"
-        ? await sql<
-            { slug: string; title: string; metadata: unknown; updated_at: string; dialogue_open: boolean }[]
-          >`
-            SELECT slug, title, metadata, updated_at::text AS updated_at, dialogue_open
+        ? await sql<DialogueRow[]>`
+            SELECT id, slug, title, metadata, updated_at::text AS updated_at,
+                   dialogue_open, visibility, owner_user_id
             FROM archive_entries
             WHERE category = 'dialogue'
               AND metadata->'participants' @> ${sql.json([{ slug }])}
               AND dialogue_open
           `
-        : await sql<
-            { slug: string; title: string; metadata: unknown; updated_at: string; dialogue_open: boolean }[]
-          >`
-            SELECT slug, title, metadata, updated_at::text AS updated_at, dialogue_open
+        : await sql<DialogueRow[]>`
+            SELECT id, slug, title, metadata, updated_at::text AS updated_at,
+                   dialogue_open, visibility, owner_user_id
             FROM archive_entries
             WHERE category = 'dialogue'
               AND metadata->'participants' @> ${sql.json([{ slug }])}
@@ -636,6 +690,7 @@ export async function getDialoguesForUser(
         (p) => !ownSlugs.has(p.slug),
       );
       results.set(row.slug, {
+        id: row.id,
         slug: row.slug,
         title: row.title,
         partnerName: partner?.name ?? "Unbekannt",
@@ -643,6 +698,8 @@ export async function getDialoguesForUser(
         open: row.dialogue_open,
         characterSlug: character.slug,
         characterName: character.name,
+        visibility: row.visibility,
+        ownerUserId: row.owner_user_id,
       });
     }
   }
