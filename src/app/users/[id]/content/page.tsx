@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
-import { LcarsDataRow } from "@/components/lcars";
 import { requireOwnCharacters } from "../dal";
 import { getLogsForUser } from "@/lib/characters";
 import { getDialoguesForUser } from "@/lib/dialogues";
+import { getArchiveEntriesForUser } from "@/lib/archive";
 import UserContentBrowser from "./UserContentBrowser";
-import VisibilitySelect from "./VisibilitySelect";
 
 export const metadata: Metadata = {
   title: "Meine Inhalte",
@@ -21,9 +19,10 @@ export default async function UserContentPage({
   const { id } = await params;
   const { user, characters } = await requireOwnCharacters(id);
 
-  const [logs, dialogues] = await Promise.all([
+  const [logs, dialogues, archiveEntries] = await Promise.all([
     getLogsForUser(user.id),
     getDialoguesForUser(user.id, "all"),
+    getArchiveEntriesForUser(user.id),
   ]);
 
   return (
@@ -36,54 +35,12 @@ export default async function UserContentPage({
           Öffentlich (alle).
         </p>
 
-        <div className="lcars-text flex flex-col gap-[16px]">
-          <section className="flex flex-col gap-[8px]">
-            <LcarsDataRow
-              value={characters.length}
-              label="Charaktere"
-              color="var(--lcars-amber)"
-              className="lcars-data-row--full"
-            />
-
-            {characters.length === 0 ? (
-              <p className="lcars-empty-state">
-                Dir ist noch kein Charakter zugeordnet.
-              </p>
-            ) : (
-              <div className="flex flex-col gap-[6px]">
-                {characters.map((c) => (
-                  <div key={c.id} className="flex items-center gap-[8px]">
-                    <Link
-                      href={`/characters/${c.slug}`}
-                      className="mission-akte flex-1"
-                      style={
-                        {
-                          "--mission-color": "var(--lcars-amber)",
-                        } as React.CSSProperties
-                      }
-                    >
-                      <span className="mission-akte-rail" />
-                      <span className="mission-akte-body text-left">
-                        <span className="mission-akte-title block">
-                          {c.name}
-                        </span>
-                      </span>
-                    </Link>
-                    <VisibilitySelect
-                      contentType="character"
-                      id={c.id}
-                      initialValue={c.visibility}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
-
+        <div className="lcars-text">
           <UserContentBrowser
             characters={characters}
             logs={logs}
             dialogues={dialogues}
+            archiveEntries={archiveEntries}
             ownUserId={user.id}
           />
         </div>

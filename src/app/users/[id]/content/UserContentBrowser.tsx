@@ -1,277 +1,312 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { LcarsDataRow, LcarsAccordion } from "@/components/lcars";
+import { LcarsAccordion } from "@/components/lcars";
 import type { UserContentLog } from "@/lib/characters";
 import type { DialogueSummary } from "@/lib/dialoguesCore";
-import { AUTHOR_COLORS, fmtDate, sessionLabel } from "@/lib/missionFormat";
+import type { UserContentArchiveEntry } from "@/lib/archive";
+import { fmtDate, sessionLabel } from "@/lib/missionFormat";
+import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
 import type { Character } from "@/types/character";
 import VisibilitySelect from "./VisibilitySelect";
 
-type TypeFilter = "all" | "log" | "dialogue";
+type CategoryFilter = "all" | "characters" | "logs" | "dialogues" | "archive";
 
-interface CharacterGroup {
-  slug: string;
-  name: string;
-  color: string;
-  logs: UserContentLog[];
-  dialogues: DialogueSummary[];
-}
+const CATEGORY_LABELS: Record<CategoryFilter, string> = {
+  all: "Alle Kategorien",
+  characters: "Charaktere",
+  logs: "Einsatzberichte",
+  dialogues: "Gespräche",
+  archive: "Archiv-Einträge",
+};
 
-// "Meine Inhalte": gruppiert Einsatzberichte & Gespräche nach eigenem
-// Charakter, darunter nach Typ. Jede Typ-Gruppe ist ein Akkordeon (Einträge
-// standardmäßig eingeklappt), zusätzlich filterbar nach Typ und Charakter.
+// "Meine Inhalte": genau vier feste Kategorien (Charaktere, Einsatzberichte,
+// Gespräche, Archiv-Einträge), jede ein Akkordeon mit Visibility-Switch pro
+// Eintrag. Darüber zwei Filter (Charakter, Kategorie) in einem responsiven
+// Grid — Charakter-Filter wirkt auf Charaktere/Einsatzberichte/Gespräche
+// (Archiv-Einträge sind Owner-, nicht Charakter-gebunden), Kategorie-Filter
+// blendet einzelne Akkordeons komplett aus.
 export default function UserContentBrowser({
   characters,
   logs,
   dialogues,
+  archiveEntries,
   ownUserId,
 }: {
   characters: Character[];
   logs: UserContentLog[];
   dialogues: DialogueSummary[];
+  archiveEntries: UserContentArchiveEntry[];
   ownUserId: number;
 }) {
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [characterFilter, setCharacterFilter] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
 
-  const groups = useMemo(() => {
-    const order = characters.map((c) => c.slug);
-    const map = new Map<string, CharacterGroup>();
-
-    const ensure = (slug: string, name: string): CharacterGroup => {
-      let group = map.get(slug);
-      if (!group) {
-        group = {
-          slug,
-          name,
-          color: AUTHOR_COLORS[map.size % AUTHOR_COLORS.length],
-          logs: [],
-          dialogues: [],
-        };
-        map.set(slug, group);
-      }
-      return group;
-    };
-
-    for (const log of logs) {
-      ensure(log.character_slug, log.character_name).logs.push(log);
-    }
-    for (const d of dialogues) {
-      ensure(d.characterSlug, d.characterName).dialogues.push(d);
-    }
-
-    return [...map.values()].sort((a, b) => {
-      const diff = order.indexOf(a.slug) - order.indexOf(b.slug);
-      return diff !== 0 ? diff : a.name.localeCompare(b.name, "de");
-    });
-  }, [characters, logs, dialogues]);
-
-  const visibleGroups = useMemo(
+  const filteredCharacters = useMemo(
     () =>
-      groups
-        .filter((g) => !characterFilter || g.slug === characterFilter)
-        .map((g) => ({
-          ...g,
-          logs: typeFilter === "dialogue" ? [] : g.logs,
-          dialogues: typeFilter === "log" ? [] : g.dialogues,
-        }))
-        .filter((g) => g.logs.length > 0 || g.dialogues.length > 0),
-    [groups, characterFilter, typeFilter],
+      characters.filter((c) => !characterFilter || c.slug === characterFilter),
+    [characters, characterFilter],
+  );
+  const filteredLogs = useMemo(
+    () =>
+      logs.filter(
+        (l) => !characterFilter || l.character_slug === characterFilter,
+      ),
+    [logs, characterFilter],
+  );
+  const filteredDialogues = useMemo(
+    () =>
+      dialogues.filter(
+        (d) => !characterFilter || d.characterSlug === characterFilter,
+      ),
+    [dialogues, characterFilter],
   );
 
-  const totalLogs = logs.length;
-  const totalDialogues = dialogues.length;
+  const total =
+    characters.length + logs.length + dialogues.length + archiveEntries.length;
 
-  if (totalLogs === 0 && totalDialogues === 0) {
+  if (total === 0) {
     return <p className="lcars-empty-state">Noch keine Inhalte vorhanden.</p>;
   }
 
+  const showCharacters =
+    categoryFilter === "all" || categoryFilter === "characters";
+  const showLogs = categoryFilter === "all" || categoryFilter === "logs";
+  const showDialogues =
+    categoryFilter === "all" || categoryFilter === "dialogues";
+  const showArchive = categoryFilter === "all" || categoryFilter === "archive";
+
   return (
     <div className="flex flex-col gap-[16px]">
-      <div className="mission-toolbar">
-        <div className="mission-sort">
-          <TypeButton
-            active={typeFilter === "all"}
-            onClick={() => setTypeFilter("all")}
-          >
-            Alle ({totalLogs + totalDialogues})
-          </TypeButton>
-          <TypeButton
-            active={typeFilter === "log"}
-            onClick={() => setTypeFilter("log")}
-          >
-            Einsatzberichte ({totalLogs})
-          </TypeButton>
-          <TypeButton
-            active={typeFilter === "dialogue"}
-            onClick={() => setTypeFilter("dialogue")}
-          >
-            Gespräche ({totalDialogues})
-          </TypeButton>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-[12px]">
+        <select
+          className="mission-author-filter"
+          value={characterFilter ?? ""}
+          onChange={(e) => setCharacterFilter(e.target.value || null)}
+          aria-label="Nach Charakter filtern"
+        >
+          <option value="">Alle Charaktere</option>
+          {characters.map((c) => (
+            <option key={c.slug} value={c.slug}>
+              {c.name}
+            </option>
+          ))}
+        </select>
 
-        {groups.length > 1 && (
-          <select
-            className="mission-author-filter"
-            value={characterFilter ?? ""}
-            onChange={(e) => setCharacterFilter(e.target.value || null)}
-            aria-label="Nach Charakter filtern"
-          >
-            <option value="">Alle Charaktere</option>
-            {groups.map((g) => (
-              <option key={g.slug} value={g.slug}>
-                {g.name}
-              </option>
-            ))}
-          </select>
-        )}
+        <select
+          className="mission-author-filter"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
+          aria-label="Nach Kategorie filtern"
+        >
+          {(Object.keys(CATEGORY_LABELS) as CategoryFilter[]).map((key) => (
+            <option key={key} value={key}>
+              {CATEGORY_LABELS[key]}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {visibleGroups.length === 0 ? (
-        <p className="lcars-empty-state">Keine Einträge für diese Auswahl.</p>
-      ) : (
-        visibleGroups.map((group) => (
-          <section key={group.slug} className="flex flex-col gap-[8px]">
-            <LcarsDataRow
-              value={group.logs.length + group.dialogues.length}
-              label={group.name}
-              href={`/characters/${group.slug}`}
-              color={group.color}
-              className="lcars-data-row--full"
-            />
-
-            <div className="flex flex-col gap-[8px] pl-[16px]">
-              {group.logs.length > 0 && (
-                <LcarsAccordion
-                  value={group.logs.length}
-                  label="Einsatzberichte"
-                  color="var(--lcars-blue)"
-                >
-                  <div className="flex flex-col gap-[6px]">
-                    {group.logs.map((log) => (
-                      <div key={log.id} className="flex items-center gap-[8px]">
-                        <Link
-                          href={`/missions/${log.mission_slug}/${log.slug}`}
-                          className="mission-akte flex-1"
-                          style={
-                            {
-                              "--mission-color": "var(--lcars-blue)",
-                            } as React.CSSProperties
-                          }
-                        >
-                          <span className="mission-akte-rail" />
-                          <span className="mission-akte-body text-left">
-                            <span className="mission-akte-title block">
-                              {log.title}
-                            </span>
-                            <span className="mission-akte-meta">
-                              <span>
-                                <b>Session</b> {sessionLabel(log.session_nr)}
-                              </span>
-                              <span>
-                                <b>Datum</b> {fmtDate(log.log_date)}
-                              </span>
-                              <span>
-                                <b>Mission</b> {log.mission_title}
-                              </span>
-                            </span>
-                          </span>
-                        </Link>
-                        <VisibilitySelect
-                          contentType="mission_log"
-                          id={log.id}
-                          initialValue={log.visibility}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </LcarsAccordion>
-              )}
-
-              {group.dialogues.length > 0 && (
-                <LcarsAccordion
-                  value={group.dialogues.length}
-                  label="Gespräche"
-                  color="var(--lcars-text-data)"
-                >
-                  <div className="flex flex-col gap-[6px]">
-                    {group.dialogues.map((d) => (
-                      <div key={d.slug} className="flex items-center gap-[8px]">
-                        <Link
-                          href={
-                            d.open
-                              ? `/dialogues/${d.slug}`
-                              : `/archive/${d.slug}`
-                          }
-                          className="mission-akte flex-1"
-                          style={
-                            {
-                              "--mission-color": d.open
-                                ? "var(--lcars-green)"
-                                : "var(--lcars-red)",
-                            } as React.CSSProperties
-                          }
-                        >
-                          <span className="mission-akte-rail" />
-                          <span className="mission-akte-body text-left">
-                            <span className="mission-akte-title block">
-                              {d.title}
-                            </span>
-                            <span className="mission-akte-meta">
-                              <span>
-                                <b>Gesprächspartner</b> {d.partnerName}
-                              </span>
-                              <span>
-                                <b>Status</b>{" "}
-                                {d.open ? "Offen" : "Abgeschlossen"}
-                              </span>
-                            </span>
-                          </span>
-                        </Link>
-                        {/* Sichtbarkeit ist nur vom Ersteller (owner_user_id)
-                            änderbar — der Gesprächspartner sieht nur den
-                            Status. */}
-                        {d.ownerUserId === ownUserId ? (
-                          <VisibilitySelect
-                            contentType="dialogue"
-                            id={d.id}
-                            initialValue={d.visibility}
-                          />
-                        ) : null}
-                      </div>
-                    ))}
-                  </div>
-                </LcarsAccordion>
-              )}
+      {showCharacters && (
+        <LcarsAccordion
+          value={filteredCharacters.length}
+          label="Charaktere"
+          color="var(--lcars-amber)"
+        >
+          {filteredCharacters.length === 0 ? (
+            <p className="lcars-empty-state">
+              Keine Charaktere für diese Auswahl.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-[6px]">
+              {filteredCharacters.map((c) => (
+                <div key={c.id} className="flex items-center gap-[8px]">
+                  <Link
+                    href={`/characters/${c.slug}`}
+                    className="mission-akte flex-1"
+                    style={
+                      {
+                        "--mission-color": "var(--lcars-amber)",
+                      } as React.CSSProperties
+                    }
+                  >
+                    <span className="mission-akte-rail" />
+                    <span className="mission-akte-body text-left">
+                      <span className="mission-akte-title block">
+                        {c.name}
+                      </span>
+                    </span>
+                  </Link>
+                  <VisibilitySelect
+                    contentType="character"
+                    id={c.id}
+                    initialValue={c.visibility}
+                  />
+                </div>
+              ))}
             </div>
-          </section>
-        ))
+          )}
+        </LcarsAccordion>
       )}
-    </div>
-  );
-}
 
-function TypeButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <div
-      onClick={onClick}
-      className="lcars-switch flex-1"
-      style={{
-        backgroundColor: active ? "var(--lcars-amber)" : "var(--lcars-surface)",
-        color: active ? "var(--lcars-bg)" : "var(--lcars-text-data)",
-        borderColor: active ? "var(--lcars-amber)" : "var(--lcars-text-data)",
-      }}
-    >
-      {children}
+      {showLogs && (
+        <LcarsAccordion
+          value={filteredLogs.length}
+          label="Einsatzberichte"
+          color="var(--lcars-blue)"
+        >
+          {filteredLogs.length === 0 ? (
+            <p className="lcars-empty-state">
+              Keine Einsatzberichte für diese Auswahl.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-[6px]">
+              {filteredLogs.map((log) => (
+                <div key={log.id} className="flex items-center gap-[8px]">
+                  <Link
+                    href={`/missions/${log.mission_slug}/${log.slug}`}
+                    className="mission-akte flex-1"
+                    style={
+                      {
+                        "--mission-color": "var(--lcars-blue)",
+                      } as React.CSSProperties
+                    }
+                  >
+                    <span className="mission-akte-rail" />
+                    <span className="mission-akte-body text-left">
+                      <span className="mission-akte-title block">
+                        {log.title}
+                      </span>
+                      <span className="mission-akte-meta">
+                        <span>
+                          <b>Session</b> {sessionLabel(log.session_nr)}
+                        </span>
+                        <span>
+                          <b>Datum</b> {fmtDate(log.log_date)}
+                        </span>
+                        <span>
+                          <b>Mission</b> {log.mission_title}
+                        </span>
+                      </span>
+                    </span>
+                  </Link>
+                  <VisibilitySelect
+                    contentType="mission_log"
+                    id={log.id}
+                    initialValue={log.visibility}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </LcarsAccordion>
+      )}
+
+      {showDialogues && (
+        <LcarsAccordion
+          value={filteredDialogues.length}
+          label="Gespräche"
+          color="var(--lcars-text-data)"
+        >
+          {filteredDialogues.length === 0 ? (
+            <p className="lcars-empty-state">
+              Keine Gespräche für diese Auswahl.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-[6px]">
+              {filteredDialogues.map((d) => (
+                <div key={d.slug} className="flex items-center gap-[8px]">
+                  <Link
+                    href={
+                      d.open ? `/dialogues/${d.slug}` : `/archive/${d.slug}`
+                    }
+                    className="mission-akte flex-1"
+                    style={
+                      {
+                        "--mission-color": d.open
+                          ? "var(--lcars-green)"
+                          : "var(--lcars-red)",
+                      } as React.CSSProperties
+                    }
+                  >
+                    <span className="mission-akte-rail" />
+                    <span className="mission-akte-body text-left">
+                      <span className="mission-akte-title block">
+                        {d.title}
+                      </span>
+                      <span className="mission-akte-meta">
+                        <span>
+                          <b>Gesprächspartner</b> {d.partnerName}
+                        </span>
+                        <span>
+                          <b>Status</b> {d.open ? "Offen" : "Abgeschlossen"}
+                        </span>
+                      </span>
+                    </span>
+                  </Link>
+                  {/* Sichtbarkeit ist nur vom Ersteller (owner_user_id)
+                      änderbar — der Gesprächspartner sieht nur den Status. */}
+                  {d.ownerUserId === ownUserId ? (
+                    <VisibilitySelect
+                      contentType="dialogue"
+                      id={d.id}
+                      initialValue={d.visibility}
+                    />
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          )}
+        </LcarsAccordion>
+      )}
+
+      {showArchive && (
+        <LcarsAccordion
+          value={archiveEntries.length}
+          label="Archiv-Einträge"
+          color="var(--lcars-purple)"
+        >
+          {archiveEntries.length === 0 ? (
+            <p className="lcars-empty-state">
+              Noch keine eigenen Archiv-Einträge vorhanden.
+            </p>
+          ) : (
+            <div className="flex flex-col gap-[6px]">
+              {archiveEntries.map((entry) => (
+                <div key={entry.id} className="flex items-center gap-[8px]">
+                  <Link
+                    href={`/archive/${entry.slug}`}
+                    className="mission-akte flex-1"
+                    style={
+                      {
+                        "--mission-color": "var(--lcars-purple)",
+                      } as React.CSSProperties
+                    }
+                  >
+                    <span className="mission-akte-rail" />
+                    <span className="mission-akte-body text-left">
+                      <span className="mission-akte-title block">
+                        {entry.title}
+                      </span>
+                      <span className="mission-akte-meta">
+                        <span>
+                          <b>Kategorie</b>{" "}
+                          {CATEGORY_CONFIG[entry.category].label}
+                        </span>
+                      </span>
+                    </span>
+                  </Link>
+                  <VisibilitySelect
+                    contentType="archive_entry"
+                    id={entry.id}
+                    initialValue={entry.visibility}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+        </LcarsAccordion>
+      )}
     </div>
   );
 }
