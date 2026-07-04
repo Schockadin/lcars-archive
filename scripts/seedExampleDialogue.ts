@@ -64,6 +64,7 @@ async function main() {
     bodyMarkdown:
       "Lorzan, hast du einen Moment? Ich habe mir die Sensor-Protokolle von " +
       "gestern noch einmal angesehen — da stimmt etwas nicht.",
+    subscribeSelf: true,
   });
 
   const [{ id: archiveEntryId }] = await sql<{ id: number }[]>`

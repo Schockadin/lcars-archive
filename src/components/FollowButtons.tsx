@@ -16,9 +16,13 @@ import type { FollowTargetType } from "@/lib/follows";
 export default function FollowButtons({
   targetType,
   targetSlug,
+  subscribeOnly = false,
 }: {
   targetType: FollowTargetType;
   targetSlug: string;
+  // Nur den Abo-Umschalter zeigen (kein "Merken") — z.B. für Dialoge, wo
+  // Bookmarks fachlich keinen Sinn ergeben.
+  subscribeOnly?: boolean;
 }) {
   const [state, setState] = useState<FollowState | null>(null);
   const [pending, setPending] = useState<"bookmark" | "subscribe" | null>(null);
@@ -55,14 +59,16 @@ export default function FollowButtons({
 
   return (
     <div className="follow-buttons">
-      <button
-        type="button"
-        className={`lcars-switch${state.bookmarked ? " lcars-switch--active" : ""}`}
-        disabled={pending === "bookmark"}
-        onClick={handleBookmark}
-      >
-        {state.bookmarked ? "Gemerkt" : "Merken"}
-      </button>
+      {!subscribeOnly && (
+        <button
+          type="button"
+          className={`lcars-switch${state.bookmarked ? " lcars-switch--active" : ""}`}
+          disabled={pending === "bookmark"}
+          onClick={handleBookmark}
+        >
+          {state.bookmarked ? "Gemerkt" : "Merken"}
+        </button>
+      )}
       <button
         type="button"
         className={`lcars-switch${state.subscribed ? " lcars-switch--active" : ""}`}

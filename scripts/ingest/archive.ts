@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, statSync } from "fs";
 import { join, extname } from "path";
 import matter from "gray-matter";
 import postgres from "postgres";
-import { markdownToHtml, validateSlug, toStringArray } from "./shared.js";
+import { markdownToHtml, validateSlug, toStringArray, resolveOwner } from "./shared.js";
 
 // Gültige Kategorien — muss exakt dem CHECK-Constraint in schema.sql sowie
 // ArchiveCategory in src/types/archive.ts entsprechen.
@@ -238,6 +238,7 @@ export async function ingestArchive(
 
       const contentHtml = await markdownToHtml(content);
       const tags = toStringArray(fm.tags);
+      const ownerUserId = await resolveOwner(sql, fm.owner);
 
       // Anzeige-Attribute einsammeln (nur vorhandene Werte, in fester Reihenfolge).
       const attrSpecs = [
@@ -267,14 +268,15 @@ export async function ingestArchive(
       const conflictClause = onlyNew
         ? sql`ON CONFLICT (slug) DO NOTHING`
         : sql`ON CONFLICT (slug) DO UPDATE SET
-            title       = EXCLUDED.title,
-            category    = EXCLUDED.category,
-            content     = EXCLUDED.content,
-            tags        = EXCLUDED.tags,
-            metadata    = EXCLUDED.metadata,
-            source_md   = EXCLUDED.source_md,
-            frontmatter = EXCLUDED.frontmatter,
-            updated_at  = NOW()`;
+            title         = EXCLUDED.title,
+            category      = EXCLUDED.category,
+            content       = EXCLUDED.content,
+            tags          = EXCLUDED.tags,
+            metadata      = EXCLUDED.metadata,
+            source_md     = EXCLUDED.source_md,
+            frontmatter   = EXCLUDED.frontmatter,
+            owner_user_id = EXCLUDED.owner_user_id,
+            updated_at    = NOW()`;
 
       // "old" wird als CTE vor der Modifikation gegen den Tabellenstand zu
       // Beginn des Statements ausgewertet (siehe missions.ts) — nur
@@ -289,7 +291,7 @@ export async function ingestArchive(
         )
         INSERT INTO archive_entries (
           slug, title, category, content, tags, metadata,
-          source_md, frontmatter, updated_at
+          source_md, frontmatter, owner_user_id, updated_at
         ) VALUES (
           ${slug},
           ${title},
@@ -299,6 +301,7 @@ export async function ingestArchive(
           ${sql.json(metadata)},
           ${content},
           ${sql.json(data)},
+          ${ownerUserId},
           NOW()
         )
         ${conflictClause}

@@ -219,6 +219,12 @@ Dieser Abschnitt ist nur für die GM-Sicht und wird nicht veröffentlicht.
 - **`type`** steuert, in welche Tabelle ein Eintrag wandert (`character`,
   `mission`, `mission-log`, `archive-entry`).
 - **`slug`** muss URL-sicher sein (`a–z`, `0–9`, `-`).
+- **`owner`** (optional, außer bei Charakteren: dort steuert `player` dieselbe
+  Zuordnung) verweist per User-Slug auf den Owner des Inhalts — Grundlage für
+  das Sichtbarkeits-Flag (`private`/`gm`/`public`). Unbekannte/fehlende Werte
+  brechen den Import nicht ab, der Inhalt bleibt dann ownerlos. Bei
+  Mission-Logs fällt der Owner ohne `owner`-Feld automatisch auf den Spieler
+  des `author`-Charakters zurück.
 - Alles nach `<!-- private -->` wird beim Import abgeschnitten.
 
 Archiv-Einträge (`type: archive`) liegen im Ordner `Archiv/`, organisiert nach

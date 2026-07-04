@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getCharacterBySlug } from '@/lib/characters';
+import { getViewer, canView } from '@/lib/visibility';
 
 interface Params {
   params: Promise<{ slug: string }>;
@@ -15,6 +16,16 @@ export async function GET(_req: Request, { params }: Params) {
         { error: 'Charakter nicht gefunden' },
         { status: 404 }
       );
+    }
+
+    if (character.visibility !== 'public') {
+      const viewer = await getViewer();
+      if (!canView(character.visibility, character.player_id, viewer)) {
+        return NextResponse.json(
+          { error: 'Charakter nicht gefunden' },
+          { status: 404 }
+        );
+      }
     }
 
     return NextResponse.json(character);

@@ -35,6 +35,10 @@ function parseMeta<T extends { metadata: ArchiveMetadata }>(row: T): T {
 
 // Alle Archiv-Einträge für die Übersicht (ohne content). Alphabetisch nach
 // Titel; die Gruppierung nach Kategorie übernimmt die Darstellung.
+// Nur public-Einträge — diese Liste speist Übersicht/Nav/Sitemap und ist
+// nicht nach Betrachter personalisierbar (unstable_cache, kein Session-
+// Zugriff). private/gm-Einträge sind trotzdem über ihre Detailseite
+// erreichbar (Laufzeit-Guard dort, siehe getArchiveEntryBySlug-Aufrufer).
 export const getAllArchiveEntries = unstable_cache(
   async (): Promise<ArchiveEntryPreview[]> => {
     const rows = await sql<ArchiveEntryPreview[]>`
@@ -47,13 +51,14 @@ export const getAllArchiveEntries = unstable_cache(
         metadata
       FROM archive_entries
       WHERE NOT (category = 'dialogue' AND dialogue_open)
+        AND visibility = 'public'
       ORDER BY title ASC
     `;
     return rows.map(parseMeta);
   },
-  // Key-Version "3": offene In-App-Dialoge werden jetzt herausgefiltert —
-  // Bump verwirft alte Cache-Einträge deterministisch (auch poisoned-empty).
-  ["getAllArchiveEntries", "v3"],
+  // Key-Version "4": nur noch public-Einträge — Bump verwirft alte
+  // Cache-Einträge deterministisch (auch poisoned-empty).
+  ["getAllArchiveEntries", "v4"],
   { tags: [cacheTags.archive] },
 );
 
@@ -73,6 +78,8 @@ export async function getArchiveEntryBySlug(
           tags,
           metadata,
           dialogue_open,
+          visibility,
+          owner_user_id AS "ownerUserId",
           updated_at::text AS updated_at
         FROM archive_entries
         WHERE slug = ${slug}
@@ -109,7 +116,7 @@ export async function getArchiveEntryBySlug(
 
       return { ...parseMeta(entry), links, backlinks };
     },
-    ["getArchiveEntryBySlug", "v3", slug],
+    ["getArchiveEntryBySlug", "v4", slug],
     { tags: [cacheTags.archive, cacheTags.archiveEntry(slug)] },
   )();
 }
@@ -126,25 +133,29 @@ export async function getDialogueCountByParticipant(
         FROM archive_entries
         WHERE category = 'dialogue'
           AND NOT dialogue_open
+          AND visibility = 'public'
           AND metadata->'participants' @> ${sql.json([{ slug }])}
       `;
       return row?.count ?? 0;
     },
-    ["getDialogueCountByParticipant", "v2", slug],
+    ["getDialogueCountByParticipant", "v3", slug],
     { tags: [cacheTags.archive] },
   )();
 }
 
-// Alle Pfade für Sitemap und generateStaticParams.
+// Alle Pfade für Sitemap und generateStaticParams — nur public, damit
+// private/gm-Einträge nicht statisch vorgerendert oder gesitemappt werden
+// (siehe getAllArchiveEntries).
 export const getAllArchivePaths = unstable_cache(
   async (): Promise<ArchivePath[]> => {
     const rows = await sql<ArchivePath[]>`
       SELECT slug, updated_at::text AS updated_at
       FROM archive_entries
       WHERE NOT (category = 'dialogue' AND dialogue_open)
+        AND visibility = 'public'
     `;
     return rows;
   },
-  ["getAllArchivePaths", "v3"],
+  ["getAllArchivePaths", "v4"],
   { tags: [cacheTags.archive] },
 );
