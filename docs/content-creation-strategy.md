@@ -1,21 +1,56 @@
-# Strategie: User-Content-Erstellung über die Web-App (Vault-Roundtrip)
+# Strategie: User-Content-Erstellung über die Web-App
 
-Status: Design-Dokument für einen Folge-PR. Nichts hiervon ist in diesem PR
-implementiert — Grundlage ist das in diesem PR gebaute Owner-/Sichtbarkeits-
-Modell (`owner_user_id`/`player_id`, `visibility`, `users.slug`).
+Status: Der ursprüngliche Vault-Roundtrip (App → Vault-Commit → Ingest → DB)
+aus diesem Dokument wurde durch das DB-Source-of-Truth-Modell abgelöst
+(siehe unten). Der historische Abschnitt "Warum ein Vault-Roundtrip und
+nicht DB-direkt?" ist nur noch als Kontext für die getroffene
+Design-Entscheidung erhalten.
 
-## Ziel
+## Aktueller Stand: DB ist Source of Truth, Vault ist Backup
 
-User sollen neue Inhalte (Gespräche, Archiveinträge, Missionslogs) direkt in
-der Web-App anlegen können. Anders als der bestehende In-App-Dialog-Flow
-(`createDialogue` in `src/lib/dialoguesCore.ts`, der bewusst direkt nach
-Postgres schreibt, `source_md = NULL` als Vault-Marker) soll neuer Content
-**zuerst als Markdown im Vault landen** und danach über die **gleichen
-Ingest-Skripte** (`scripts/ingest/*`) in die Datenbank importiert werden —
-identisch zum bestehenden GM-Redaktionsworkflow, nur mit der Web-App als
-zweiter Quelle für Markdown-Dateien.
+Alle Server Actions, die Inhalte anlegen oder bearbeiten (Missionen,
+Mission-Logs, Mission-Synopsis), schreiben ausschließlich in die Datenbank
+(`src/app/users/[id]/missions/new/actions.ts`,
+`.../missions/[missionId]/edit/actions.ts`,
+`.../mission-logs/new/actions.ts`, `.../mission-logs/[logId]/edit/actions.ts`,
+`src/app/actions/missions.ts`). Kein Vault-Commit mehr an diesen Stellen.
 
-## Warum ein Vault-Roundtrip und nicht DB-direkt?
+Der Vault (GitHub-Repo, `GITHUB_VAULT_REPO`) ist stattdessen ein aus der DB
+**generiertes Backup**:
+
+- `src/lib/vaultExport.ts` — `exportContentToVault()` baut für jede Mission,
+  jeden Mission-Log, jeden Charakter und jeden Archiv-Eintrag aus dem
+  aktuellen DB-Stand die passende Markdown-Datei (Frontmatter + Body) und
+  committet sie per `upsertVaultFile` (create-or-update) ins Vault-Repo.
+  Charaktere/Archiv-Einträge haben keinen eigenen App-Schreibpfad — ihr
+  `frontmatter`/`source_md` stammt unverändert vom letzten Ingest und wird
+  nur um die maßgeblichen DB-Spalten (type/slug/title/category bzw.
+  name/status) ergänzt. Missionen/Mission-Logs haben keine gepflegte
+  `frontmatter`-Spalte mehr (App-Schreibpfad setzt sie nicht) — ihr
+  Frontmatter wird bei jedem Export frisch aus den aktuellen Spalten gebaut.
+- Ausgelöst werden kann der Export über zwei gleichwertige Wege, die sich
+  beide `exportContentToVault()` teilen:
+  - **Admin-Panel** (`/users`, admin-only): Button "Vault-Backup jetzt
+    generieren" (`VaultExportPanel.tsx` → `runVaultExportAction`,
+    session-authentifiziert).
+  - **API-Endpoint** `POST /api/vault-export` (`VAULT_EXPORT_SECRET`,
+    gleiches Muster wie `/api/revalidate`) — bewusst so gebaut, dass er sich
+    später ohne Codeänderung per Cronjob auslösen lässt (Netlify Scheduled
+    Function, GitHub-Action-Cron oder externer Cron-Dienst).
+- Bewusst **kein** automatischer Abgleich/Löschen verwaister Vault-Dateien:
+  für Archiv-Einträge ist der ursprüngliche Unterordner nicht in der DB
+  gespeichert, ein automatisches Aufräumen könnte dort falsche Dateien
+  treffen. Gelöschte Mission-Logs werden weiterhin best-effort sofort aus
+  dem Vault entfernt (`deleteMissionLogAction`,
+  `src/app/users/[id]/content/actions.ts`), alle anderen Löschungen bleiben
+  bis zum nächsten manuellen Aufräumen im Vault sichtbar.
+- Die Ingest-Skripte (`scripts/ingest/*`) bleiben als Weg für den
+  ursprünglichen/historischen Import unverändert bestehen, sind aber nicht
+  mehr der reguläre Schreibpfad für App-Inhalte.
+
+## Historisch: Warum ein Vault-Roundtrip und nicht DB-direkt?
+
+Diese Begründung galt für das ursprüngliche (inzwischen abgelöste) Modell:
 
 - Versionierung/Rollback der Inhalte (Markdown in Git).
 - Ein einziger Ingest-Codepfad für Vault- und App-Inhalte, statt einer

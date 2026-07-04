@@ -1,11 +1,11 @@
 "use client";
 import { useActionState } from "react";
 import {
-  createMissionLogVaultAction,
-  type MissionLogVaultState,
+  createMissionLogAction,
+  type MissionLogFormState,
 } from "./actions";
 
-const initialState: MissionLogVaultState = {};
+const initialState: MissionLogFormState = {};
 
 const inputClass = "rounded-lcars-pill lcars-input";
 const textAreaClass =
@@ -23,36 +23,10 @@ export default function NewMissionLogForm({
   defaultSessionNr: number;
 }) {
   const [state, formAction, pending] = useActionState(
-    createMissionLogVaultAction,
+    createMissionLogAction,
     initialState,
   );
   const today = new Date().toISOString().slice(0, 10);
-
-  if (state?.success) {
-    return (
-      <div className="lcars-text flex flex-col gap-[16px]">
-        <p className="text-lcars-amber">
-          Dein Missionslog wurde ins Vault committet und erscheint nach dem
-          nächsten Ingest im Archiv.
-        </p>
-        <p>
-          <a
-            href={state.success.commitUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            Commit auf GitHub ansehen
-          </a>
-        </p>
-        <p>
-          <a href={`/users/${userId}`} className="text-lcars-amber underline">
-            ← Zurück zum Profil
-          </a>
-        </p>
-      </div>
-    );
-  }
 
   return (
     <form action={formAction} className="flex flex-col gap-[16px]">

@@ -7,8 +7,8 @@ import {
   fmtDate,
 } from "@/lib/timelineFormat";
 
-// "Neu seit deinem letzten Besuch" — gleicher Kartenstil wie EventCard in
-// TimelineView.tsx, nur ohne die Jahres-Rail (hier immer chronologisch
+// "Neue Inhalte" seit dem letzten Besuch — gleicher Kartenstil wie EventCard
+// in TimelineView.tsx, nur ohne die Jahres-Rail (hier immer chronologisch
 // kompakt, kein Sortier-/Filter-Bedarf).
 export default function RecentActivity({
   events,
@@ -21,7 +21,7 @@ export default function RecentActivity({
     <section className="flex flex-col gap-[8px]">
       <LcarsDataRow
         value={firstVisit ? 0 : events.length}
-        label="Neu seit deinem letzten Besuch"
+        label="Neue Inhalte"
         color="var(--lcars-purple)"
         className="lcars-data-row--full"
       />

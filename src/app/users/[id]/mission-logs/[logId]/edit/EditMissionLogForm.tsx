@@ -5,7 +5,7 @@ import type { OwnMissionLogForEdit } from "@/lib/missions";
 
 const initialState: EditMissionLogState = {};
 
-const inputClass = "rounded-lcars-pill lcars-input w-[400px]";
+const inputClass = "rounded-lcars-pill lcars-input w-full sm:w-[400px]";
 const textAreaClass =
   "rounded-lcars-pill lcars-input min-h-[500px] resize-y font-mono";
 
@@ -80,15 +80,6 @@ export default function EditMissionLogForm({
       {state?.error && (
         <p className="text-lcars-red" role="alert">
           {state.error}
-        </p>
-      )}
-
-      {state?.warning && (
-        <p className="text-lcars-amber" role="alert">
-          {state.warning}{" "}
-          <a href={`/users/${userId}/content`} className="underline">
-            Zurück zu Meine Inhalte
-          </a>
         </p>
       )}
     </form>

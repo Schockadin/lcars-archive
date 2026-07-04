@@ -1,5 +1,5 @@
 // src/app/dialogues/[slug]/page.tsx
-import { notFound, redirect } from "next/navigation";
+import { notFound, redirect, forbidden } from "next/navigation";
 import { verifySession } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import {
@@ -45,7 +45,7 @@ export default async function DialoguePlayPage({ params }: Props) {
   if (!participant) {
     const user = await getUserById(session.userId);
     if (user?.role !== "gm" && user?.role !== "admin") {
-      redirect(`/users/${session.userId}`);
+      forbidden();
     }
   }
 

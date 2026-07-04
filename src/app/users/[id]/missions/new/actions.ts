@@ -1,27 +1,26 @@
 "use server";
 import { redirect } from "next/navigation";
-import matter from "gray-matter";
 import { verifySession } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
-import { missionSlugExists } from "@/lib/missions";
+import { missionSlugExists, createMission } from "@/lib/missions";
 import { slugifyBase } from "@/lib/slug";
-import { commitVaultFile, VaultFileExistsError } from "@/lib/githubVault";
+import { revalidateMission } from "@/lib/revalidate";
 
-export interface MissionVaultState {
+export interface MissionFormState {
   error?: string;
-  success?: { commitUrl: string; path: string };
 }
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const VALID_STATUSES = ["active", "completed", "failed", "abandoned"];
+const VALID_STATUSES = ["active", "completed", "failed", "abandoned"] as const;
 
-// Analog zu createMissionLogVaultAction (mission-logs/new/actions.ts): reiner
-// Vault-Commit, kein direkter DB-Write — die Mission landet nach dem nächsten
-// Ingest im Archiv. Admin/GM-only, Rolle frisch aus der DB geprüft.
-export async function createMissionVaultAction(
-  _state: MissionVaultState,
+// DB ist Source of Truth (siehe scripts/vaultExport bzw. src/lib/vaultExport.ts
+// für den Weg zurück in den Vault) — die Mission landet direkt in der
+// Datenbank, kein Vault-Commit mehr an dieser Stelle. Admin/GM-only, Rolle
+// frisch aus der DB geprüft.
+export async function createMissionAction(
+  _state: MissionFormState,
   formData: FormData,
-): Promise<MissionVaultState> {
+): Promise<MissionFormState> {
   const session = await verifySession();
 
   const userId = Number(formData.get("userId"));
@@ -44,7 +43,7 @@ export async function createMissionVaultAction(
   const slug = slugifyBase(slugInput || title);
 
   const status = String(formData.get("status") ?? "active");
-  if (!VALID_STATUSES.includes(status)) {
+  if (!VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])) {
     return { error: "Ungültiger Status." };
   }
 
@@ -75,38 +74,17 @@ export async function createMissionVaultAction(
     };
   }
 
-  const fileContent = matter.stringify(bodyMarkdown, {
-    type: "mission",
+  const result = await createMission({
     slug,
     title,
-    status,
-    ...(startedAtRaw ? { started_at: startedAtRaw } : {}),
-    ...(endedAtRaw ? { ended_at: endedAtRaw } : {}),
-    ...(tags.length ? { tags } : {}),
-    owner: user.slug,
+    status: status as (typeof VALID_STATUSES)[number],
+    startedAt: startedAtRaw || null,
+    endedAt: endedAtRaw || null,
+    tags,
+    bodyMarkdown,
+    ownerUserId: user.id,
   });
 
-  const path = `Missionen/${slug}/index.md`;
-
-  try {
-    const { htmlUrl } = await commitVaultFile({
-      path,
-      content: fileContent,
-      message: `Neue Mission: ${title} (via Web-App, ${user.name})`,
-    });
-    return { success: { commitUrl: htmlUrl, path } };
-  } catch (err) {
-    if (err instanceof VaultFileExistsError) {
-      return {
-        error:
-          "Dieser Mission-Slug existiert im Vault bereits (evtl. steht ein Ingest noch aus) — bitte einen anderen wählen.",
-      };
-    }
-    return {
-      error:
-        err instanceof Error
-          ? `Commit ins Vault fehlgeschlagen: ${err.message}`
-          : "Commit ins Vault fehlgeschlagen.",
-    };
-  }
+  revalidateMission(result.slug);
+  redirect(`/users/${session.userId}/content`);
 }

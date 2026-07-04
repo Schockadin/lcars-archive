@@ -1,11 +1,11 @@
 "use client";
 import { useActionState } from "react";
 import {
-  createMissionVaultAction,
-  type MissionVaultState,
+  createMissionAction,
+  type MissionFormState,
 } from "./actions";
 
-const initialState: MissionVaultState = {};
+const initialState: MissionFormState = {};
 
 const inputClass = "rounded-lcars-pill lcars-input";
 const textAreaClass =
@@ -13,35 +13,9 @@ const textAreaClass =
 
 export default function NewMissionForm({ userId }: { userId: number }) {
   const [state, formAction, pending] = useActionState(
-    createMissionVaultAction,
+    createMissionAction,
     initialState,
   );
-
-  if (state?.success) {
-    return (
-      <div className="lcars-text flex flex-col gap-[16px]">
-        <p className="text-lcars-amber">
-          Die Mission wurde ins Vault committet und erscheint nach dem
-          nächsten Ingest im Archiv.
-        </p>
-        <p>
-          <a
-            href={state.success.commitUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            Commit auf GitHub ansehen
-          </a>
-        </p>
-        <p>
-          <a href={`/users/${userId}/content`} className="text-lcars-amber underline">
-            ← Zurück zu Meine Inhalte
-          </a>
-        </p>
-      </div>
-    );
-  }
 
   return (
     <form action={formAction} className="flex flex-col gap-[16px]">
@@ -66,7 +40,7 @@ export default function NewMissionForm({ userId }: { userId: number }) {
         </label>
         <input id="mission-slug" name="slug" type="text" className={inputClass} />
         <p className="text-lcars-text-dim text-[12px]">
-          Bestimmt den Vault-Ordnernamen. Bleibt das Feld leer, wird der Slug
+          Bestimmt die URL der Mission. Bleibt das Feld leer, wird der Slug
           aus dem Titel abgeleitet.
         </p>
       </div>

@@ -115,14 +115,51 @@ export async function getMissionById(id: number): Promise<MissionDetail | null> 
   return rows[0] ? parseMeta(rows[0]) : null;
 }
 
-// Kollisionsprüfung vor dem Vault-Commit einer neuen Mission (analog
+// Kollisionsprüfung vor dem Anlegen einer neuen Mission (analog
 // missionLogSlugExists) — der Slug wird aus dem Titel abgeleitet oder frei
-// vergeben und bildet den Vault-Ordnernamen (Missionen/<slug>/index.md).
+// vergeben und bildet zugleich den Vault-Ordnernamen des Backup-Exports
+// (Missionen/<slug>/index.md, siehe src/lib/vaultExport.ts).
 export async function missionSlugExists(slug: string): Promise<boolean> {
   const [row] = await sql<{ exists: boolean }[]>`
     SELECT EXISTS(SELECT 1 FROM missions WHERE slug = ${slug}) AS exists
   `;
   return row?.exists ?? false;
+}
+
+// Legt eine neue Mission direkt in der DB an (DB ist Source of Truth, siehe
+// createMissionAction in .../missions/new/actions.ts) — der Vault bekommt
+// die Datei erst über den Backup-Export (src/lib/vaultExport.ts), nicht mehr
+// synchron bei der Anlage.
+export async function createMission(input: {
+  slug: string;
+  title: string;
+  status: MissionStatus;
+  startedAt: string | null;
+  endedAt: string | null;
+  tags: string[];
+  bodyMarkdown: string;
+  ownerUserId: number;
+}): Promise<{ id: number; slug: string }> {
+  const bodyHtml = await markdownToHtml(input.bodyMarkdown);
+
+  const rows = await sql<{ id: number; slug: string }[]>`
+    INSERT INTO missions (
+      slug, title, status, started_at, ended_at, metadata, source_md,
+      owner_user_id, updated_at
+    ) VALUES (
+      ${input.slug},
+      ${input.title},
+      ${input.status},
+      ${input.startedAt},
+      ${input.endedAt},
+      ${sql.json({ tags: input.tags, body: bodyHtml })},
+      ${input.bodyMarkdown},
+      ${input.ownerUserId},
+      NOW()
+    )
+    RETURNING id, slug
+  `;
+  return rows[0];
 }
 
 export interface UpdateMissionResult {
@@ -168,18 +205,13 @@ export async function updateMissionContent(
 
 export interface UpdateMissionSynopsisResult {
   slug: string;
-  title: string;
-  status: MissionStatus;
-  startedAt: string | null;
-  endedAt: string | null;
   metadata: MissionMetaData;
-  ownerSlug: string | null;
 }
 
 // Nur-Synopsis-Bearbeitung (inline auf /missions/[slug], MissionSynopsisEditor)
-// — Titel/Status/Zeitraum/Tags bleiben unangetastet, werden hier nur für den
-// Vault-Dual-Write mit zurückgegeben (der Aufrufer baut daraus das komplette
-// Frontmatter neu, siehe updateMissionLogContent-Kommentar oben).
+// — Titel/Status/Zeitraum/Tags bleiben unangetastet. Der Vault-Backup-Export
+// (src/lib/vaultExport.ts) baut das komplette Frontmatter bei Bedarf separat
+// aus den aktuellen Mission-Spalten, braucht diese Rückgabe hier also nicht.
 export async function updateMissionSynopsis(
   missionId: number,
   bodyMarkdown: string,
@@ -197,14 +229,7 @@ export async function updateMissionSynopsis(
       source_md  = ${bodyMarkdown},
       updated_at = NOW()
     WHERE m.id = ${missionId}
-    RETURNING
-      m.slug,
-      m.title,
-      m.status,
-      m.started_at::text AS "startedAt",
-      m.ended_at::text   AS "endedAt",
-      m.metadata,
-      (SELECT slug FROM users WHERE id = m.owner_user_id) AS "ownerSlug"
+    RETURNING m.slug, m.metadata
   `;
   const row = rows[0];
   if (!row) return null;
@@ -233,9 +258,47 @@ export async function getNextSessionNr(
   return row?.next ?? 1;
 }
 
-// Kollisionsprüfung vor dem Vault-Commit (src/app/users/[id]/mission-logs/new/actions.ts)
-// — der Slug ist deterministisch aus author-mission-session_nr gebaut, ein
-// Treffer bedeutet also "diese Kombination gibt es schon".
+// Legt einen neuen Mission-Log direkt in der DB an (siehe createMission
+// oben — gleiches Prinzip: DB ist Source of Truth, der Vault-Backup-Export
+// generiert die Datei separat).
+export async function createMissionLog(input: {
+  slug: string;
+  missionId: number;
+  authorId: number;
+  title: string;
+  bodyMarkdown: string;
+  logDate: string | null;
+  sessionNr: number;
+  ownerUserId: number | null;
+}): Promise<{ id: number; slug: string }> {
+  const contentHtml = await markdownToHtml(input.bodyMarkdown);
+
+  const rows = await sql<{ id: number; slug: string }[]>`
+    INSERT INTO mission_logs (
+      slug, mission_id, author_id, title, content, log_date, session_nr,
+      metadata, source_md, owner_user_id, updated_at
+    ) VALUES (
+      ${input.slug},
+      ${input.missionId},
+      ${input.authorId},
+      ${input.title},
+      ${contentHtml},
+      ${input.logDate},
+      ${input.sessionNr},
+      ${sql.json({ tags: [] })},
+      ${input.bodyMarkdown},
+      ${input.ownerUserId},
+      NOW()
+    )
+    RETURNING id, slug
+  `;
+  return rows[0];
+}
+
+// Kollisionsprüfung vor dem Anlegen eines neuen Mission-Logs
+// (src/app/users/[id]/mission-logs/new/actions.ts) — der Slug ist
+// deterministisch aus author-mission-session_nr gebaut, ein Treffer
+// bedeutet also "diese Kombination gibt es schon".
 export async function missionLogSlugExists(slug: string): Promise<boolean> {
   const [row] = await sql<{ exists: boolean }[]>`
     SELECT EXISTS(SELECT 1 FROM mission_logs WHERE slug = ${slug}) AS exists
@@ -432,14 +495,13 @@ export async function getOwnMissionLogForEdit(
 
 // Bearbeitet Titel/Datum/Text eines eigenen Logs. Slug-bildende Felder
 // (author, mission, session_nr) bleiben unveränderlich, nur Inhalt/Titel/
-// Datum sind editierbar. Schreibt sofort in die DB (siehe
-// updateMissionLogAction) — der Aufrufer committet das zugehörige
-// Vault-File danach per updateVaultFile (Dual-Write, Best-Effort: der Vault
-// soll Single Source of Truth bleiben, siehe deleteMissionLog unten für den
-// gleichen Gedanken beim Löschen). Dafür liefert diese Funktion neben
-// slug/missionId auch die Felder zurück, die für den Wiederaufbau des
-// Vault-Frontmatters gebraucht werden (missionSlug, authorSlug, sessionNr,
-// ownerSlug) — Identitätsfelder, die sich beim Edit nicht ändern.
+// Datum sind editierbar. Schreibt direkt in die DB (siehe
+// updateMissionLogAction) — die DB ist Source of Truth, ein Vault-Backup
+// entsteht nur noch über den separaten Export (src/lib/vaultExport.ts).
+// Liefert neben slug/missionId auch missionSlug/authorSlug/sessionNr/
+// ownerSlug zurück, die dieser Export beim nächsten Lauf fürs
+// Vault-Frontmatter braucht — Identitätsfelder, die sich beim Edit nicht
+// ändern.
 export async function updateMissionLogContent(
   userId: number,
   logId: number,
