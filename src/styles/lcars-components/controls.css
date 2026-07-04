@@ -94,6 +94,13 @@
   }
 }
 
+.lcars-checkbox {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--lcars-amber);
+  cursor: pointer;
+}
+
 /* Input-Felder */
 .lcars-input {
   border: solid 1px var(--lcars-text-data);

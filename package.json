@@ -17,15 +17,15 @@
     "db:revalidate": "tsx --env-file=.env.local scripts/ingest/index.ts revalidate",
     "db:reset": "tsx --env-file=.env.local scripts/reset-db.ts",
     "db:seed-dialogue": "tsx --env-file=.env.local scripts/seedExampleDialogue.ts",
-    "db:setup:dev": "tsx --env-file=.env.dev scripts/setup-db.ts",
-    "db:ingest:dev": "tsx --env-file=.env.dev scripts/ingest/index.ts",
-    "db:ingest:new:dev": "tsx --env-file=.env.dev scripts/ingest/ingestNew.ts",
-    "db:characters:dev": "tsx --env-file=.env.dev scripts/ingest/index.ts characters",
-    "db:missions:dev": "tsx --env-file=.env.dev scripts/ingest/index.ts missions",
-    "db:archive:dev": "tsx --env-file=.env.dev scripts/ingest/index.ts archive",
-    "db:revalidate:dev": "tsx --env-file=.env.dev scripts/ingest/index.ts revalidate",
-    "db:reset:dev": "tsx --env-file=.env.dev scripts/reset-db.ts",
-    "db:seed-dialogue:dev": "tsx --env-file=.env.dev scripts/seedExampleDialogue.ts"
+    "db:setup:dev": "tsx --env-file=.env.development.local scripts/setup-db.ts",
+    "db:ingest:dev": "tsx --env-file=.env.development.local scripts/ingest/index.ts",
+    "db:ingest:new:dev": "tsx --env-file=.env.development.local scripts/ingest/ingestNew.ts",
+    "db:characters:dev": "tsx --env-file=.env.development.local scripts/ingest/index.ts characters",
+    "db:missions:dev": "tsx --env-file=.env.development.local scripts/ingest/index.ts missions",
+    "db:archive:dev": "tsx --env-file=.env.development.local scripts/ingest/index.ts archive",
+    "db:revalidate:dev": "tsx --env-file=.env.development.local scripts/ingest/index.ts revalidate",
+    "db:reset:dev": "tsx --env-file=.env.development.local scripts/reset-db.ts",
+    "db:seed-dialogue:dev": "tsx --env-file=.env.development.local scripts/seedExampleDialogue.ts"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
@@ -42,7 +42,8 @@
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
-    "unist-util-visit": "^5.1.0"
+    "unist-util-visit": "^5.1.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@netlify/plugin-nextjs": "^5.15.11",
@@ -50,6 +51,7 @@
     "@types/node": "^20.19.43",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
     "prettier": "^3.8.4",

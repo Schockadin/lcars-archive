@@ -11,6 +11,7 @@ import DashboardCharacters from "./DashboardCharacters";
 import RecentActivity from "./RecentActivity";
 import FollowedContentSection from "./FollowedContentSection";
 import DialogueSection from "./DialogueSection";
+import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 
 export const metadata: Metadata = {
@@ -31,7 +32,7 @@ export default async function UserPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const { target, isSelf } = await requireSelfOrGM(id);
+  const { viewer, target, isSelf } = await requireSelfOrGM(id);
 
   // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
   // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
@@ -66,6 +67,8 @@ export default async function UserPage({
             {isSelf ? "Angemeldet als " : "E-Mail "}
             <strong>{target.email}</strong> ({ROLE_LABELS[target.role]}).
           </p>
+
+          {isSelf && <InstallPwaPrompt />}
 
           {needsPassword && (
             <p className="text-lcars-amber">
@@ -125,10 +128,18 @@ export default async function UserPage({
           )}
 
           {!isSelf && (
-            <p>
+            <p className="flex flex-wrap gap-[16px]">
               <Link href="/users" className="text-lcars-amber underline">
                 ← Zur Nutzerverwaltung
               </Link>
+              {viewer.role === "admin" && (
+                <Link
+                  href={`/users/${target.id}/edit`}
+                  className="text-lcars-amber underline"
+                >
+                  User bearbeiten
+                </Link>
+              )}
             </p>
           )}
         </div>

@@ -1,5 +1,6 @@
 import postgres from "postgres";
 import { sendSubscriptionDigest } from "../../src/lib/mailCore.js";
+import { sendPushToUser } from "../../src/lib/pushCore.js";
 
 // Erste URL aus SITE_URL (kommaseparierte Liste, siehe index.ts) als
 // Basis für Links in der Mail — ein lokaler Ingest-Lauf gegen eine
@@ -12,8 +13,11 @@ function resolveBaseUrl(): string {
 }
 
 interface ChangedItemRow {
+  user_id: number;
   email: string;
   name: string;
+  email_notifications_enabled: boolean;
+  push_notifications_enabled: boolean;
   target_type: "mission" | "archive_entry" | "mission_log";
   slug: string;
   title: string;
@@ -44,7 +48,9 @@ export async function notifySubscribers(
   }
 
   const rows = await sql<ChangedItemRow[]>`
-    SELECT u.email, u.name, 'mission'::text AS target_type, m.slug, m.title,
+    SELECT u.id AS user_id, u.email, u.name,
+           u.email_notifications_enabled, u.push_notifications_enabled,
+           'mission'::text AS target_type, m.slug, m.title,
            NULL::text AS mission_slug
     FROM content_follows cf
     JOIN users u ON u.id = cf.user_id
@@ -53,7 +59,9 @@ export async function notifySubscribers(
       AND cf.subscribed_at IS NOT NULL
       AND cf.target_slug = ANY(${[...changedMissionSlugs]})
     UNION ALL
-    SELECT u.email, u.name, 'archive_entry'::text AS target_type, a.slug, a.title,
+    SELECT u.id AS user_id, u.email, u.name,
+           u.email_notifications_enabled, u.push_notifications_enabled,
+           'archive_entry'::text AS target_type, a.slug, a.title,
            NULL::text AS mission_slug
     FROM content_follows cf
     JOIN users u ON u.id = cf.user_id
@@ -62,7 +70,9 @@ export async function notifySubscribers(
       AND cf.subscribed_at IS NOT NULL
       AND cf.target_slug = ANY(${[...changedArchiveSlugs]})
     UNION ALL
-    SELECT u.email, u.name, 'mission_log'::text AS target_type, ml.slug, ml.title,
+    SELECT u.id AS user_id, u.email, u.name,
+           u.email_notifications_enabled, u.push_notifications_enabled,
+           'mission_log'::text AS target_type, ml.slug, ml.title,
            m.slug AS mission_slug
     FROM content_follows cf
     JOIN users u ON u.id = cf.user_id
@@ -80,9 +90,15 @@ export async function notifySubscribers(
   }
 
   const baseUrl = resolveBaseUrl();
-  const byEmail = new Map<
-    string,
-    { name: string; items: { title: string; href: string }[] }
+  const byUser = new Map<
+    number,
+    {
+      email: string;
+      name: string;
+      emailEnabled: boolean;
+      pushEnabled: boolean;
+      items: { title: string; href: string }[];
+    }
   >();
 
   for (const row of rows) {
@@ -90,18 +106,35 @@ export async function notifySubscribers(
       row.target_type === "mission_log"
         ? `${baseUrl}/missions/${row.mission_slug}/${row.slug}`
         : `${baseUrl}/${row.target_type === "mission" ? "missions" : "archive"}/${row.slug}`;
-    const entry = byEmail.get(row.email) ?? { name: row.name, items: [] };
+    const entry = byUser.get(row.user_id) ?? {
+      email: row.email,
+      name: row.name,
+      emailEnabled: row.email_notifications_enabled,
+      pushEnabled: row.push_notifications_enabled,
+      items: [],
+    };
     entry.items.push({ title: row.title, href });
-    byEmail.set(row.email, entry);
+    byUser.set(row.user_id, entry);
   }
 
-  console.log(`\n📧 Sende Abo-Benachrichtigungen an ${byEmail.size} Nutzer...`);
-  for (const [email, { name, items }] of byEmail) {
-    const result = await sendSubscriptionDigest({ to: email, name, items });
-    if (!result.sent) {
-      console.warn(`  ⚠ Mail an ${email} fehlgeschlagen: ${result.error}`);
-    } else {
-      console.log(`  ✓ ${email} (${items.length} Änderung(en))`);
+  console.log(`\n📧 Sende Abo-Benachrichtigungen an ${byUser.size} Nutzer...`);
+  for (const [userId, { email, name, emailEnabled, pushEnabled, items }] of byUser) {
+    if (emailEnabled) {
+      const result = await sendSubscriptionDigest({ to: email, name, items });
+      if (!result.sent) {
+        console.warn(`  ⚠ Mail an ${email} fehlgeschlagen: ${result.error}`);
+      } else {
+        console.log(`  ✓ ${email} (${items.length} Änderung(en))`);
+      }
+    }
+
+    if (pushEnabled) {
+      const url = items.length === 1 ? items[0].href : `${baseUrl}/users/${userId}`;
+      await sendPushToUser(sql, userId, {
+        title: "Neuigkeiten im Neo Archive",
+        body: `${items.length} Änderung${items.length === 1 ? "" : "en"} bei deinen Abos`,
+        url,
+      });
     }
   }
 }

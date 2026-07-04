@@ -1,6 +1,11 @@
+import type { Viewport } from "next";
 import { Antonio, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
-import { LcarsAppShell, LcarsCookieNotice } from "@/components/lcars";
+import {
+  LcarsAppShell,
+  LcarsCookieNotice,
+  LcarsServiceWorkerRegister,
+} from "@/components/lcars";
 import { NeoProvider } from "@/context/NeoProvider";
 import { getCampaignYears } from "@/lib/constants";
 import { APP_VERSION } from "@/lib/version";
@@ -27,6 +32,10 @@ export const metadata = {
   description: `Kampagnen-Archiv der NeoVerse-Runde – Charaktere, Missionen und Logs aus ${campaignYears} Jahren Pen & Paper.`,
 };
 
+export const viewport: Viewport = {
+  themeColor: "#08081a",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -42,6 +51,7 @@ export default function RootLayout({
         <NeoProvider>
           <LcarsAppShell appVersion={APP_VERSION}>{children}</LcarsAppShell>
           <LcarsCookieNotice />
+          <LcarsServiceWorkerRegister />
         </NeoProvider>
       </body>
     </html>
