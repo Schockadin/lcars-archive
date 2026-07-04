@@ -9,6 +9,11 @@ interface DataRowProps {
   href?: string | null;
   width?: string;
   className?: string;
+  // Undefined = kein Chevron (normale DataRow). Gesetzt (true/false) =
+  // Auf-/Zuklapp-Chevron am rechten Rand der Pill, Rotation je nach Wert —
+  // siehe Accordion.tsx. Lebt in der Pill selbst statt daneben, damit
+  // Akkordeon-Trigger und normale DataRows exakt gleich breit bleiben.
+  expanded?: boolean;
 }
 
 export default function DataRow({
@@ -19,7 +24,20 @@ export default function DataRow({
   labelColor = "var(--lcars-text-contrast)",
   href,
   className = "",
+  expanded,
 }: DataRowProps) {
+  const content = (
+    <>
+      <div className="flex-1 h-full">{label}</div>
+      {expanded !== undefined && (
+        <span
+          className={`lcars-data-row-chevron${expanded ? " lcars-data-row-chevron--open" : ""}`}
+          aria-hidden="true"
+        />
+      )}
+    </>
+  );
+
   return (
     <div
       className={`lcars-data-row ${className}`}
@@ -54,7 +72,7 @@ export default function DataRow({
             backgroundColor: color,
           }}
         >
-          <div className="w-full h-full">{label}</div>
+          {content}
         </Link>
       ) : (
         <div
@@ -63,7 +81,7 @@ export default function DataRow({
             backgroundColor: color,
           }}
         >
-          <div className="w-full h-full">{label}</div>
+          {content}
         </div>
       )}
     </div>

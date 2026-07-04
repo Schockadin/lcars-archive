@@ -42,9 +42,9 @@ export default function Accordion({
           color={color}
           accentColor={accentColor}
           labelColor={labelColor}
+          expanded={open}
           className="lcars-data-row--full"
         />
-        <span className="lcars-accordion-chevron" aria-hidden="true" />
       </button>
 
       <div className="lcars-accordion-panel" data-open={open}>

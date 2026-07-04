@@ -9,10 +9,12 @@
   margin-top: 8px;
 }
 
+/* Chevron lebt jetzt in der DataRow-Pill selbst (siehe DataRow.tsx#expanded,
+   data-row.css .lcars-data-row-chevron) — der Trigger-Button ist deshalb
+   nur noch ein einfacher Button-Reset ohne eigenes Flex-Layout, die
+   DataRow bleibt exakt so breit wie jede andere .lcars-data-row--full. */
 .lcars-accordion-trigger {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+  display: block;
   width: 100%;
   margin: 0;
   padding: 0;
@@ -23,28 +25,6 @@
   color: inherit;
   text-align: left;
   appearance: none;
-}
-
-/* Überschreibt die feste 300px-Breite von .lcars-data-row, damit die
-   Kopfzeile innerhalb des Trigger-Buttons neben dem Chevron wächst. */
-.lcars-accordion-trigger .lcars-data-row.lcars-data-row--full {
-  width: auto;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.lcars-accordion-chevron {
-  flex-shrink: 0;
-  width: 10px;
-  height: 10px;
-  margin-right: 4px;
-  border-right: 2px solid var(--lcars-text-data);
-  border-bottom: 2px solid var(--lcars-text-data);
-  transform: rotate(45deg);
-  transition: transform 200ms ease;
-}
-.lcars-accordion-trigger[aria-expanded="true"] .lcars-accordion-chevron {
-  transform: rotate(-135deg);
 }
 
 .lcars-accordion-panel {

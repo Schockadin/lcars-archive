@@ -51,6 +51,25 @@
   display: flex;
 }
 
+/* Auf-/Zuklapp-Chevron innerhalb der Pill (siehe DataRow.tsx#expanded) —
+   lebt in der Pill statt daneben, damit Akkordeon-Trigger genauso breit
+   sind wie normale DataRows. Farbe folgt currentColor (= die dunkle
+   Pill-Textfarbe), kein eigener Farbwert nötig. */
+.lcars-data-row-chevron {
+  flex-shrink: 0;
+  align-self: center;
+  width: 10px;
+  height: 10px;
+  margin: 0 16px 0 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 200ms ease;
+}
+.lcars-data-row-chevron--open {
+  transform: rotate(-135deg);
+}
+
 /* LCARS DataRow als Kapitelüberschrift */
 .lcars-data-row-heading {
   display: flex;
