@@ -306,6 +306,20 @@ export async function getUserForAdmin(
   };
 }
 
+export interface AdminContact {
+  email: string;
+  name: string;
+}
+
+// Für den Fan-out einer Sicherheits-Benachrichtigung (/forgot-password) an
+// alle Admins — nur aktive Admin-Konten, ein deaktivierter Admin soll keine
+// Mails mehr bekommen.
+export async function listAdminEmails(): Promise<AdminContact[]> {
+  return sql<AdminContact[]>`
+    SELECT email, name FROM users WHERE role = 'admin' AND is_active = true
+  `;
+}
+
 export async function getPasswordHash(userId: number): Promise<string | null> {
   const rows = await sql<{ password_hash: string | null }[]>`
     SELECT password_hash FROM users WHERE id = ${userId}

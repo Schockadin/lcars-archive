@@ -76,6 +76,55 @@ export async function sendActivationEmail(input: {
   });
 }
 
+// Für zwei Wege genutzt: Admin setzt das Passwort eines Users zurück
+// (resetUserPasswordAction) und der User fordert selbst einen Reset an
+// (/forgot-password) — beide erzeugen denselben Token-Typ wie
+// sendActivationEmail (siehe passwordSetupTokens.ts), nur mit anderem
+// Betreff/Text.
+export async function sendPasswordResetEmail(input: {
+  to: string;
+  name: string;
+  resetUrl: string;
+}): Promise<SendEmailResult> {
+  return sendEmail({
+    to: input.to,
+    subject: "Neues Passwort für dein Neo-Archive-Konto",
+    html: `
+      <p>Hallo ${input.name},</p>
+      <p>
+        Klicke auf den folgenden Link, um ein neues Passwort für dein
+        Neo-Archive-Konto festzulegen:
+      </p>
+      <p><a href="${input.resetUrl}">${input.resetUrl}</a></p>
+      <p>Der Link ist 7 Tage gültig. Hast du das nicht angefordert, kannst du diese Mail ignorieren.</p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
+// Fan-out an alle Admins, wenn ein User über /forgot-password selbst einen
+// Reset anfordert — reine Sicherheits-Benachrichtigung, kein Opt-out über
+// email_notifications_enabled (das gilt nur für Inhalts-Digests).
+export async function sendPasswordResetRequestedEmail(input: {
+  to: string;
+  name: string;
+  requesterEmail: string;
+  requesterName: string;
+}): Promise<SendEmailResult> {
+  return sendEmail({
+    to: input.to,
+    subject: `Passwort-Reset angefordert: ${input.requesterName}`,
+    html: `
+      <p>Hallo ${input.name},</p>
+      <p>
+        ${input.requesterName} (${input.requesterEmail}) hat über
+        "Passwort vergessen" einen Reset-Link angefordert.
+      </p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
 // Sammel-Mail nach einem Ingest-Lauf: eine Mail pro User, unabhängig davon,
 // wie viele abonnierte Inhalte sich geändert haben (kein Mail-Spam bei
 // größeren Vault-Importen mit vielen gleichzeitigen Änderungen).
