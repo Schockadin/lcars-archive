@@ -114,6 +114,34 @@ export async function requireOwnCharacters(
   return { user, characters };
 }
 
+export interface OwnGMAccess {
+  user: UserWithPasswordStatus;
+}
+
+// Für /users/[id]/missions/new (und .../missions/[missionId]/edit): Identität
+// wie requireOwnCharacters (Cookie-basiert), zusätzlich muss die Rolle
+// admin/gm sein — nur die Spielleitung legt Missionen an bzw. bearbeitet sie.
+// Rolle frisch aus der DB geprüft (wie requireSelfOrGM), nicht aus dem
+// Cookie, damit ein gerade entzogenes GM-Recht sofort greift.
+export async function requireOwnGM(idParam: string): Promise<OwnGMAccess> {
+  const session = await verifySession();
+  const id = Number(idParam);
+
+  if (!Number.isInteger(id) || id !== session.userId) {
+    redirect(`/users/${session.userId}`);
+  }
+
+  const user = await getUserWithPasswordStatus(session.userId);
+  if (!user) {
+    redirect("/login");
+  }
+  if (user.role !== "gm" && user.role !== "admin") {
+    redirect(`/users/${user.id}`);
+  }
+
+  return { user };
+}
+
 export interface AdminEditTargetAccess {
   viewer: User;
   target: UserAdminDetail;

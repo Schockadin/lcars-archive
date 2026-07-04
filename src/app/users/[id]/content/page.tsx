@@ -5,6 +5,7 @@ import { requireOwnCharacters } from "../dal";
 import { getLogsForUser } from "@/lib/characters";
 import { getDialoguesForUser } from "@/lib/dialogues";
 import { getArchiveEntriesForUser } from "@/lib/archive";
+import { getAllMissions } from "@/lib/missions";
 import UserContentBrowser from "./UserContentBrowser";
 
 export const metadata: Metadata = {
@@ -19,11 +20,13 @@ export default async function UserContentPage({
 }) {
   const { id } = await params;
   const { user, characters } = await requireOwnCharacters(id);
+  const isGM = user.role === "gm" || user.role === "admin";
 
-  const [logs, dialogues, archiveEntries] = await Promise.all([
+  const [logs, dialogues, archiveEntries, missions] = await Promise.all([
     getLogsForUser(user.id),
     getDialoguesForUser(user.id, "all"),
     getArchiveEntriesForUser(user.id),
+    isGM ? getAllMissions() : Promise.resolve([]),
   ]);
 
   return (
@@ -32,20 +35,32 @@ export default async function UserContentPage({
       <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
         <h1>Meine Inhalte</h1>
 
-        {characters.length > 0 && (
+        {(characters.length > 0 || isGM) && (
           <div className="flex flex-col flex-wrap gap-[12px]">
-            <Link
-              href={`/users/${user.id}/mission-logs/new`}
-              className="lcars-switch"
-            >
-              Neuer Missionslog
-            </Link>
-            <Link
-              href={`/users/${user.id}/dialogues/new`}
-              className="lcars-switch"
-            >
-              Neues Gespräch
-            </Link>
+            {characters.length > 0 && (
+              <>
+                <Link
+                  href={`/users/${user.id}/mission-logs/new`}
+                  className="lcars-switch"
+                >
+                  Neuer Missionslog
+                </Link>
+                <Link
+                  href={`/users/${user.id}/dialogues/new`}
+                  className="lcars-switch"
+                >
+                  Neues Gespräch
+                </Link>
+              </>
+            )}
+            {isGM && (
+              <Link
+                href={`/users/${user.id}/missions/new`}
+                className="lcars-switch"
+              >
+                Neue Mission
+              </Link>
+            )}
           </div>
         )}
 
@@ -60,6 +75,8 @@ export default async function UserContentPage({
             logs={logs}
             dialogues={dialogues}
             archiveEntries={archiveEntries}
+            missions={missions}
+            canManageMissions={isGM}
             ownUserId={user.id}
           />
         </div>

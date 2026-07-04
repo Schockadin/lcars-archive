@@ -11,6 +11,7 @@ import {
   MissionLogListItem,
   MissionMetaData,
   MissionPreview,
+  MissionStatus,
 } from "@/types/missions";
 
 // metadata kommt als JSONB-String aus der DB — wie bei den Charakteren
@@ -77,16 +78,143 @@ export async function getMissionBySlug(
           ended_at::text   AS ended_at,
           metadata,
           updated_at::text AS updated_at,
-          owner_user_id    AS "ownerUserId"
+          owner_user_id    AS "ownerUserId",
+          source_md        AS "sourceMarkdown"
         FROM missions
         WHERE slug = ${slug}
         LIMIT 1
       `;
       return rows[0] ? parseMeta(rows[0]) : null;
     },
-    ["getMissionBySlug", "v2", slug],
+    ["getMissionBySlug", "v3", slug],
     { tags: [cacheTags.missions, cacheTags.mission(slug)] },
   )();
+}
+
+// Eine Mission per numerischer ID — für den Admin/GM-Editier-Weg
+// (/users/[id]/missions/[missionId]/edit), wo die ID aus der Route kommt
+// statt aus dem Slug. Bewusst ohne Cache (wie getOwnMissionLogForEdit):
+// das Formular soll immer den aktuellen Stand zeigen.
+export async function getMissionById(id: number): Promise<MissionDetail | null> {
+  const rows = await sql<MissionDetail[]>`
+    SELECT
+      id,
+      slug,
+      title,
+      status,
+      started_at::text AS started_at,
+      ended_at::text   AS ended_at,
+      metadata,
+      updated_at::text AS updated_at,
+      owner_user_id    AS "ownerUserId",
+      source_md        AS "sourceMarkdown"
+    FROM missions
+    WHERE id = ${id}
+    LIMIT 1
+  `;
+  return rows[0] ? parseMeta(rows[0]) : null;
+}
+
+// Kollisionsprüfung vor dem Vault-Commit einer neuen Mission (analog
+// missionLogSlugExists) — der Slug wird aus dem Titel abgeleitet oder frei
+// vergeben und bildet den Vault-Ordnernamen (Missionen/<slug>/index.md).
+export async function missionSlugExists(slug: string): Promise<boolean> {
+  const [row] = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS(SELECT 1 FROM missions WHERE slug = ${slug}) AS exists
+  `;
+  return row?.exists ?? false;
+}
+
+export interface UpdateMissionResult {
+  slug: string;
+  ownerSlug: string | null;
+}
+
+// Vollständige Bearbeitung einer Mission (Admin/GM-Formular unter
+// /users/[id]/missions/[missionId]/edit). Der Slug bleibt unveränderlich
+// (Identitätsfeld, siehe updateMissionLogContent oben für dasselbe Prinzip
+// bei Logs) — er bildet sowohl den Vault-Ordnernamen als auch die
+// mission_slug-Referenz bestehender Mission-Logs.
+export async function updateMissionContent(
+  missionId: number,
+  input: {
+    title: string;
+    status: MissionStatus;
+    startedAt: string | null;
+    endedAt: string | null;
+    tags: string[];
+    bodyMarkdown: string;
+  },
+): Promise<UpdateMissionResult | null> {
+  const bodyHtml = await markdownToHtml(input.bodyMarkdown);
+
+  const rows = await sql<UpdateMissionResult[]>`
+    UPDATE missions m
+    SET
+      title      = ${input.title},
+      status     = ${input.status},
+      started_at = ${input.startedAt},
+      ended_at   = ${input.endedAt},
+      metadata   = ${sql.json({ tags: input.tags, body: bodyHtml })},
+      source_md  = ${input.bodyMarkdown},
+      updated_at = NOW()
+    WHERE m.id = ${missionId}
+    RETURNING
+      m.slug,
+      (SELECT slug FROM users WHERE id = m.owner_user_id) AS "ownerSlug"
+  `;
+  return rows[0] ?? null;
+}
+
+export interface UpdateMissionSynopsisResult {
+  slug: string;
+  title: string;
+  status: MissionStatus;
+  startedAt: string | null;
+  endedAt: string | null;
+  metadata: MissionMetaData;
+  ownerSlug: string | null;
+}
+
+// Nur-Synopsis-Bearbeitung (inline auf /missions/[slug], MissionSynopsisEditor)
+// — Titel/Status/Zeitraum/Tags bleiben unangetastet, werden hier nur für den
+// Vault-Dual-Write mit zurückgegeben (der Aufrufer baut daraus das komplette
+// Frontmatter neu, siehe updateMissionLogContent-Kommentar oben).
+export async function updateMissionSynopsis(
+  missionId: number,
+  bodyMarkdown: string,
+): Promise<UpdateMissionSynopsisResult | null> {
+  const bodyHtml = await markdownToHtml(bodyMarkdown);
+
+  const rows = await sql<
+    (Omit<UpdateMissionSynopsisResult, "metadata"> & {
+      metadata: MissionMetaData | string;
+    })[]
+  >`
+    UPDATE missions m
+    SET
+      metadata   = jsonb_set(m.metadata, '{body}', to_jsonb(${bodyHtml}::text)),
+      source_md  = ${bodyMarkdown},
+      updated_at = NOW()
+    WHERE m.id = ${missionId}
+    RETURNING
+      m.slug,
+      m.title,
+      m.status,
+      m.started_at::text AS "startedAt",
+      m.ended_at::text   AS "endedAt",
+      m.metadata,
+      (SELECT slug FROM users WHERE id = m.owner_user_id) AS "ownerSlug"
+  `;
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    ...row,
+    metadata:
+      typeof row.metadata === "string"
+        ? (JSON.parse(row.metadata) as MissionMetaData)
+        : row.metadata,
+  };
 }
 
 // Vorschlagswert fürs Session-Nr-Feld im "Neuer Missionslog"-Formular

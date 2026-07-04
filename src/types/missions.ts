@@ -50,6 +50,9 @@ export interface MissionDetail {
   metadata: MissionMetaData;
   updated_at: string;
   ownerUserId: number | null;
+  // Roher Markdown-Body der Synopsis (source_md) — Grundlage für die
+  // inline-Bearbeitung auf der Mission-Detailseite (MissionSynopsisEditor).
+  sourceMarkdown: string | null;
 }
 
 // Log in der Liste links (ohne content — schlank gehalten).

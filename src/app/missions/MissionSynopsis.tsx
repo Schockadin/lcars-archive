@@ -4,6 +4,7 @@ import FollowButtons from "@/components/FollowButtons";
 import { Viewer } from "@/lib/visibility";
 import OwnerSelect from "@/components/OwnerSelect";
 import { UserWithCharacters } from "@/lib/users";
+import MissionSynopsisEditor from "./MissionSynopsisEditor";
 
 // Rechte Spalte der Mission-Detailseite: Synopsis + Metadaten.
 export default function MissionSynopsis({
@@ -41,7 +42,13 @@ export default function MissionSynopsis({
         )}
       </div>
 
-      {mission.metadata.body ? (
+      {viewer?.role === "admin" || viewer?.role === "gm" ? (
+        <MissionSynopsisEditor
+          missionId={mission.id}
+          bodyHtml={mission.metadata.body}
+          sourceMarkdown={mission.sourceMarkdown ?? ""}
+        />
+      ) : mission.metadata.body ? (
         <div
           className="mission-body lcars-text"
           dangerouslySetInnerHTML={{ __html: mission.metadata.body }}
