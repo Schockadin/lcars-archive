@@ -49,6 +49,7 @@ export interface MissionDetail {
   ended_at: string | null;
   metadata: MissionMetaData;
   updated_at: string;
+  ownerUserId: number | null;
 }
 
 // Log in der Liste links (ohne content — schlank gehalten).

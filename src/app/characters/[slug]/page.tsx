@@ -2,6 +2,7 @@
 import { getCharacterBySlug, getLogsByCharacter } from "@/lib/characters";
 import { getDialogueCountByParticipant } from "@/lib/archive";
 import { getViewer, canView } from "@/lib/visibility";
+import { listAllUsers } from "@/lib/users";
 import { notFound } from "next/navigation";
 import CharakterDetailPage from "./CharacterDetailPage";
 
@@ -42,18 +43,21 @@ export default async function CharakterPage({ params }: Props) {
   const character = await getCharacterBySlug(slug);
   if (!character) notFound();
 
-  // Nur bei nicht-public Sichtbarkeit einen Betrachter auflösen — spart den
-  // Session-/DB-Lookup im (häufigeren) public-Fall.
-  if (character.visibility !== "public") {
-    const viewer = await getViewer();
-    if (!canView(character.visibility, character.player_id, viewer)) {
-      notFound();
-    }
+  // Betrachter jetzt immer auflösen (nicht mehr nur bei nicht-public) — der
+  // Admin-Owner-Block unten braucht die Rolle unabhängig von der
+  // Sichtbarkeit dieses Charakters.
+  const viewer = await getViewer();
+  if (
+    character.visibility !== "public" &&
+    !canView(character.visibility, character.player_id, viewer)
+  ) {
+    notFound();
   }
 
-  const [logs, conversationCount] = await Promise.all([
+  const [logs, conversationCount, owners] = await Promise.all([
     getLogsByCharacter(character.id),
     getDialogueCountByParticipant(character.slug),
+    viewer?.role === "admin" ? listAllUsers() : Promise.resolve([]),
   ]);
 
   return (
@@ -62,6 +66,8 @@ export default async function CharakterPage({ params }: Props) {
         character={character}
         logs={logs}
         conversationCount={conversationCount}
+        viewer={viewer}
+        owners={owners}
       />
     </div>
   );

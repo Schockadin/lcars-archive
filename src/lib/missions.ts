@@ -76,14 +76,15 @@ export async function getMissionBySlug(
           started_at::text AS started_at,
           ended_at::text   AS ended_at,
           metadata,
-          updated_at::text AS updated_at
+          updated_at::text AS updated_at,
+          owner_user_id    AS "ownerUserId"
         FROM missions
         WHERE slug = ${slug}
         LIMIT 1
       `;
       return rows[0] ? parseMeta(rows[0]) : null;
     },
-    ["getMissionBySlug", slug],
+    ["getMissionBySlug", "v2", slug],
     { tags: [cacheTags.missions, cacheTags.mission(slug)] },
   )();
 }
@@ -217,6 +218,37 @@ export async function getAuthorLogNav(
 // Nur der Owner (Spieler des Autor-Charakters, via Join — Mission-Logs haben
 // kein eigenes direktes user_id-Feld) darf die Sichtbarkeit ändern; ein
 // fremdes/gefälschtes id trifft dann einfach 0 Zeilen.
+// Admin-Owner-Verwaltung (src/app/actions/owner.ts): anders als
+// setMissionLogVisibility unten NICHT auf den aktuellen Owner gescoped —
+// die Berechtigungsprüfung (nur admin) passiert ausschließlich in der
+// Server Action, hier reicht die ID.
+export async function setMissionOwner(
+  missionId: number,
+  ownerId: number | null,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE missions
+    SET owner_user_id = ${ownerId}, updated_at = NOW()
+    WHERE id = ${missionId}
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
+}
+
+// Siehe setMissionOwner oben — gleiches Prinzip für Mission-Logs.
+export async function setMissionLogOwner(
+  logId: number,
+  ownerId: number | null,
+): Promise<{ slug: string; missionId: number } | null> {
+  const rows = await sql<{ slug: string; missionId: number }[]>`
+    UPDATE mission_logs
+    SET owner_user_id = ${ownerId}, updated_at = NOW()
+    WHERE id = ${logId}
+    RETURNING slug, mission_id AS "missionId"
+  `;
+  return rows[0] ?? null;
+}
+
 export async function setMissionLogVisibility(
   userId: number,
   logId: number,

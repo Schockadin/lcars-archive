@@ -13,6 +13,8 @@ import DialogueThread from "@/components/DialogueThread";
 import DialogueHeader from "@/components/DialogueHeader";
 import { getDialogueMessages } from "@/lib/dialogues";
 import { getViewer, canView } from "@/lib/visibility";
+import { listAllUsers } from "@/lib/users";
+import OwnerSelect from "@/components/OwnerSelect";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -64,15 +66,18 @@ export default async function ArchiveEntryPage({ params }: Props) {
     redirect(`/dialogues/${entry.slug}`);
   }
 
-  // Nur bei nicht-public Sichtbarkeit überhaupt einen Betrachter auflösen —
-  // spart den Session-/DB-Lookup im (häufigeren) public-Fall. Kein Effekt
-  // mehr auf statische Vorrenderung (siehe `dynamic = "force-dynamic"` oben).
-  if (entry.visibility !== "public") {
-    const viewer = await getViewer();
-    if (!canView(entry.visibility, entry.ownerUserId, viewer)) {
-      notFound();
-    }
+  // Betrachter jetzt immer auflösen (nicht mehr nur bei nicht-public) — der
+  // Admin-Owner-Block unten braucht die Rolle unabhängig von der
+  // Sichtbarkeit dieses Eintrags. Kein Effekt mehr auf statische
+  // Vorrenderung (siehe `dynamic = "force-dynamic"` oben).
+  const viewer = await getViewer();
+  if (
+    entry.visibility !== "public" &&
+    !canView(entry.visibility, entry.ownerUserId, viewer)
+  ) {
+    notFound();
   }
+  const owners = viewer?.role === "admin" ? await listAllUsers() : [];
 
   // Einfache, nicht gecachte Abfrage — Frische kommt über die Revalidation
   // der ganzen Seite nach jeder neuen Nachricht (siehe
@@ -100,6 +105,15 @@ export default async function ArchiveEntryPage({ params }: Props) {
       <PageMeta title={title} section="archive" />
       <CrumbLabel slug={entry.slug} label={title} />
       <LcarsReadingModeToggle />
+
+      {viewer?.role === "admin" && entry.category !== "dialogue" && (
+        <OwnerSelect
+          contentType="archive_entry"
+          id={entry.id}
+          initialOwnerId={entry.ownerUserId}
+          users={owners.map((u) => ({ id: u.id, name: u.name }))}
+        />
+      )}
 
       {entry.category === "dialogue" ? (
         <DialogueHeader

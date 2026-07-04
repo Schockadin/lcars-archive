@@ -1,12 +1,19 @@
 import { MissionDetail } from "@/types/missions";
 import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import FollowButtons from "@/components/FollowButtons";
+import { Viewer } from "@/lib/visibility";
+import OwnerSelect from "@/components/OwnerSelect";
+import { UserWithCharacters } from "@/lib/users";
 
 // Rechte Spalte der Mission-Detailseite: Synopsis + Metadaten.
 export default function MissionSynopsis({
   mission,
+  viewer,
+  owners,
 }: {
   mission: MissionDetail;
+  viewer: Viewer | null;
+  owners: UserWithCharacters[];
 }) {
   const cfg = STATUS_CONFIG[mission.status];
 
@@ -22,7 +29,17 @@ export default function MissionSynopsis({
         </div>
       </header>
 
-      <FollowButtons targetType="mission" targetSlug={mission.slug} />
+      <div className="flex gap-[10px] items-center">
+        <FollowButtons targetType="mission" targetSlug={mission.slug} />
+        {viewer?.role === "admin" && (
+          <OwnerSelect
+            contentType="mission"
+            id={mission.id}
+            initialOwnerId={mission.ownerUserId}
+            users={owners.map((u) => ({ id: u.id, name: u.name }))}
+          />
+        )}
+      </div>
 
       {mission.metadata.body ? (
         <div

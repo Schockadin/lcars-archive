@@ -38,12 +38,18 @@ function isGmOrAdmin(viewer: Viewer | null): boolean {
 // ownerId ist die für den Inhaltstyp zuständige Owner-Spalte (player_id bei
 // Charakteren, owner_user_id bei Mission-Logs/Archiv-Einträgen — siehe
 // scripts/schema.sql).
+//
+// Admin sieht IMMER alles, auch "private" (bewusster Bypass für die
+// Admin-Owner-Verwaltung: Admins sollen Owner auch auf sonst privaten
+// Inhalten sehen/ändern können — anders als "gm", dessen private-Sperre
+// unverändert bestehen bleibt).
 export function canView(
   visibility: Visibility,
   ownerId: number | null,
   viewer: Viewer | null,
 ): boolean {
   if (visibility === "public") return true;
+  if (viewer?.role === "admin") return true;
   if (viewer && ownerId != null && viewer.userId === ownerId) return true;
   return visibility === "gm" && isGmOrAdmin(viewer);
 }

@@ -2,8 +2,10 @@ import { notFound } from "next/navigation";
 import { getAuthorLogNav, getLogBySlug } from "@/lib/missions";
 import { stripHtml } from "@/lib/missionFormat";
 import { getViewer, canView } from "@/lib/visibility";
+import { listAllUsers } from "@/lib/users";
 import CrumbLabel from "@/components/CrumbLabel";
 import LogDetail from "../../LogDetail";
+import OwnerSelect from "@/components/OwnerSelect";
 
 interface Props {
   params: Promise<{ missionSlug: string; logSlug: string }>;
@@ -38,23 +40,34 @@ export default async function LogPage({ params }: Props) {
   // Log muss existieren UND zur Mission im Pfad gehören (sonst 404).
   if (!log || log.mission_slug !== missionSlug) notFound();
 
-  // Nur bei nicht-public Sichtbarkeit einen Betrachter auflösen — spart den
-  // Session-/DB-Lookup im (häufigeren) public-Fall.
-  if (log.visibility !== "public") {
-    const viewer = await getViewer();
-    if (!canView(log.visibility, log.ownerUserId, viewer)) {
-      notFound();
-    }
+  // Betrachter jetzt immer auflösen (nicht mehr nur bei nicht-public) — der
+  // Admin-Owner-Block unten braucht die Rolle unabhängig von der
+  // Sichtbarkeit dieses Logs.
+  const viewer = await getViewer();
+  if (
+    log.visibility !== "public" &&
+    !canView(log.visibility, log.ownerUserId, viewer)
+  ) {
+    notFound();
   }
 
   // Vor-/Zurück-Navigation zwischen Logs desselben Autors (sofern Autor bekannt).
   const nav = log.author_slug
     ? await getAuthorLogNav(log.author_slug, log.slug)
     : { prev: null, next: null };
+  const owners = viewer?.role === "admin" ? await listAllUsers() : [];
 
   return (
     <>
       <CrumbLabel slug={log.slug} label={log.title} />
+      {viewer?.role === "admin" && (
+        <OwnerSelect
+          contentType="mission_log"
+          id={log.id}
+          initialOwnerId={log.ownerUserId}
+          users={owners.map((u) => ({ id: u.id, name: u.name }))}
+        />
+      )}
       <LogDetail log={log} nav={nav} />
     </>
   );

@@ -8,6 +8,9 @@ import {
 import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
 import FollowButtons from "@/components/FollowButtons";
+import OwnerSelect from "@/components/OwnerSelect";
+import { UserWithCharacters } from "@/lib/users";
+import { Viewer } from "@/lib/visibility";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
 function slugify(text: string): string {
@@ -132,10 +135,14 @@ export default function CharacterHero({
   character,
   logCount = 0,
   conversationCount = 0,
+  viewer,
+  owners,
 }: {
   character: Character;
   logCount?: number;
   conversationCount?: number;
+  viewer: Viewer | null;
+  owners: UserWithCharacters[];
 }) {
   const { metadata } = character;
 
@@ -268,13 +275,27 @@ export default function CharacterHero({
           {/* Name + Biografie */}
           <div className="min-w-0">
             <LcarsReadingModeToggle />
+
             <h1 className="char-file-name">{character.name}</h1>
             {metadata.aliases.length > 0 && (
               <p className="char-file-aliases">
                 aka {metadata.aliases.join(" · ")}
               </p>
             )}
-            <FollowButtons targetType="character" targetSlug={character.slug} />
+            <div className="flex gap-[10px] items-center">
+              <FollowButtons
+                targetType="character"
+                targetSlug={character.slug}
+              />
+              {viewer?.role === "admin" && (
+                <OwnerSelect
+                  contentType="character"
+                  id={character.id}
+                  initialOwnerId={character.player_id}
+                  users={owners.map((u) => ({ id: u.id, name: u.name }))}
+                />
+              )}
+            </div>
 
             {bio ? (
               <div

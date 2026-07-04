@@ -47,7 +47,7 @@ export default function DialogueList({
 
   return (
     <div>
-      <div className="flex lcars-filters max-w-[500px]">
+      <div className="flex lcars-filters">
         {participants.length > 0 && (
           <select
             className="mission-author-filter mb-[16px] mr-[5px]"
@@ -65,7 +65,7 @@ export default function DialogueList({
         )}
 
         <LcarsSwitch
-          className="flex gap-[5px] w-full mb-[16px]"
+          className="flex gap-[5px] w-[50%] mb-[16px]"
           options={[
             { key: "asc", label: "Älteste zuerst" },
             { key: "desc", label: "Neueste zuerst" },

@@ -20,7 +20,7 @@ export default function HeaderUserNav({
     { href: `/users/${userId}/content`, label: "Inhalte" },
     { href: `/users/${userId}/settings`, label: "Settings" },
     ...(role === "gm" || role === "admin"
-      ? [{ href: "/users", label: "Admin" }]
+      ? [{ href: "/users", label: role === "admin" ? "Admin" : "Leitung" }]
       : []),
   ];
 
