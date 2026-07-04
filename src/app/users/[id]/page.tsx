@@ -2,15 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireSelfOrGM } from "./dal";
-import { getCharactersForUser } from "@/lib/characters";
 import { getRecentActivitySince } from "@/lib/timeline";
 import { hasPassword } from "@/lib/users";
 import { getBookmarkedContent, getSubscribedContent } from "@/lib/follows";
-import { getDialoguesForUser } from "@/lib/dialogues";
-import DashboardCharacters from "./DashboardCharacters";
 import RecentActivity from "./RecentActivity";
 import FollowedContentSection from "./FollowedContentSection";
-import DialogueSection from "./DialogueSection";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 
@@ -37,29 +33,21 @@ export default async function UserPage({
   // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
   // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
   // innerhalb des User-Bereichs spürbar auf.
-  const [
-    characters,
-    recentEvents,
-    hasPasswordSet,
-    bookmarks,
-    subscriptions,
-    dialogues,
-  ] = await Promise.all([
-    getCharactersForUser(target.id),
-    isSelf
-      ? getRecentActivitySince(target.previous_login_at)
-      : Promise.resolve([]),
-    isSelf ? hasPassword(target.id) : Promise.resolve(true),
-    isSelf ? getBookmarkedContent(target.id) : Promise.resolve([]),
-    isSelf ? getSubscribedContent(target.id) : Promise.resolve([]),
-    isSelf ? getDialoguesForUser(target.id) : Promise.resolve([]),
-  ]);
+  const [recentEvents, hasPasswordSet, bookmarks, subscriptions] =
+    await Promise.all([
+      isSelf
+        ? getRecentActivitySince(target.previous_login_at)
+        : Promise.resolve([]),
+      isSelf ? hasPassword(target.id) : Promise.resolve(true),
+      isSelf ? getBookmarkedContent(target.id) : Promise.resolve([]),
+      isSelf ? getSubscribedContent(target.id) : Promise.resolve([]),
+    ]);
   const needsPassword = isSelf && !hasPasswordSet;
 
   return (
     <>
       <PageMeta title={isSelf ? "Mein Profil" : target.name} section="users" />
-      <article className="mb-[10px] max-w-[600px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
         <h1>{isSelf ? `Willkommen, ${target.name}` : target.name}</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
@@ -67,8 +55,6 @@ export default async function UserPage({
             {isSelf ? "Angemeldet als " : "E-Mail "}
             <strong>{target.email}</strong> ({ROLE_LABELS[target.role]}).
           </p>
-
-          {isSelf && <InstallPwaPrompt />}
 
           {needsPassword && (
             <p className="text-lcars-amber">
@@ -82,8 +68,6 @@ export default async function UserPage({
               .
             </p>
           )}
-
-          <DashboardCharacters characters={characters} />
 
           {isSelf && (
             <RecentActivity
@@ -108,14 +92,6 @@ export default async function UserPage({
             />
           )}
 
-          {isSelf && (
-            <DialogueSection
-              dialogues={dialogues}
-              canStartNew={characters.length > 0}
-              userId={target.id}
-            />
-          )}
-
           {!isSelf && (
             <p className="flex flex-wrap gap-[16px]">
               <Link href="/users" className="text-lcars-amber underline">
@@ -131,6 +107,9 @@ export default async function UserPage({
               )}
             </p>
           )}
+          <div className="max-w-[var(--lcars-content-w)]">
+            {isSelf && <InstallPwaPrompt />}
+          </div>
         </div>
       </article>
     </>

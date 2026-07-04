@@ -45,6 +45,16 @@
   text-decoration: none;
   border-bottom: 1px dashed var(--lcars-red);
 }
+.lcars-link-text {
+  color: var(--lcars-text-data);
+  text-decoration: none;
+  cursor: pointer;
+  transition: 250ms;
+}
+.lcars-link-text:hover {
+  color: var(--lcars-blue);
+  text-decoration: underline;
+}
 
 /* Generischer Leerzustand-Hinweis ("Noch keine Einträge…") — domänenweit
    wiederverwendet (Charaktere, Missionen, Archiv, Suche, User-Bereich). */
@@ -124,7 +134,7 @@
 .follow-buttons {
   display: flex;
   gap: 12px;
-  margin-bottom: 16px;
+  /* margin-bottom: 16px; */
 }
 
 /* ── Scrollbar ───────────────────────────────────────────────────── */

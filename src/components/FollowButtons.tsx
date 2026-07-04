@@ -39,22 +39,34 @@ export default function FollowButtons({
 
   if (!state?.loggedIn) return null;
 
+  // Kein useOptimistic hier: der Stand kommt per Client-Fetch (useEffect
+  // oben), nicht als Prop von einer Server Component — es gibt also keine
+  // "echte" Basis, auf die useOptimistic nach der Transition zurückfallen
+  // könnte. Stattdessen manueller Rollback: optimistisch setzen, und falls
+  // die Server Action einen anderen Wert bestätigt als erwartet (z.B.
+  // Session zwischenzeitlich abgelaufen), auf den zuletzt bekannten Stand
+  // zurückfallen statt den (dann falschen) optimistischen Wert stehen zu
+  // lassen.
   async function handleBookmark() {
     if (!state) return;
+    const previous = state;
     const next = !state.bookmarked;
     setState({ ...state, bookmarked: next });
     setPending("bookmark");
-    await toggleBookmark(targetType, targetSlug, next);
+    const confirmed = await toggleBookmark(targetType, targetSlug, next);
     setPending(null);
+    if (confirmed !== next) setState(previous);
   }
 
   async function handleSubscribe() {
     if (!state) return;
+    const previous = state;
     const next = !state.subscribed;
     setState({ ...state, subscribed: next });
     setPending("subscribe");
-    await toggleSubscription(targetType, targetSlug, next);
+    const confirmed = await toggleSubscription(targetType, targetSlug, next);
     setPending(null);
+    if (confirmed !== next) setState(previous);
   }
 
   return (

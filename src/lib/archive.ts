@@ -186,6 +186,24 @@ export async function setArchiveEntryVisibility(
   return rows[0] ?? null;
 }
 
+// Admin-Owner-Verwaltung (src/app/actions/owner.ts): anders als
+// setArchiveEntryVisibility oben NICHT auf den aktuellen Owner gescoped
+// (nur admin darf das, geprüft in der Server Action) — category='dialogue'
+// bleibt trotzdem ausgeschlossen, Dialoge haben ihr eigenes
+// Owner-/Teilnehmer-Modell.
+export async function setArchiveEntryOwner(
+  archiveEntryId: number,
+  ownerId: number | null,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE archive_entries
+    SET owner_user_id = ${ownerId}, updated_at = NOW()
+    WHERE id = ${archiveEntryId} AND category != 'dialogue'
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
+}
+
 // Alle Pfade für Sitemap und generateStaticParams — nur public, damit
 // private/gm-Einträge nicht statisch vorgerendert oder gesitemappt werden
 // (siehe getAllArchiveEntries).

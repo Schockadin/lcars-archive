@@ -17,6 +17,12 @@ export interface NeoContextValue {
   readingMode: boolean;
   setReadingMode: (on: boolean) => void;
   toggleReadingMode: () => void;
+  // Für die Vor-/Zurück-Navigation zwischen Logs (LogDetail): markiert den
+  // nächsten Unmount von ReadingModeToggle als "Seitenwechsel innerhalb
+  // desselben Lesekontexts" — resetReadingModeOnUnmount setzt den
+  // Lesemodus dann NICHT zurück.
+  preserveReadingModeOnce: () => void;
+  resetReadingModeOnUnmount: () => void;
 }
 
 export const NeoContext = createContext<NeoContextValue | undefined>(undefined);

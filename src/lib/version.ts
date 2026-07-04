@@ -27,10 +27,18 @@
 // Historie), bleibt APP_VERSION `null` und die Anzeige wird ausgeblendet,
 // statt den Build zum Absturz zu bringen.
 import { execSync } from "node:child_process";
+import {
+  FIRST_COMMIT_NUMBER,
+  FIRST_PR_NUMBER,
+  VERSION_PREFIX,
+} from "./constants";
 
 function git(cmd: string): string | null {
   try {
-    return execSync(cmd, { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }).trim();
+    return execSync(cmd, {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
   } catch {
     return null;
   }
@@ -51,7 +59,11 @@ function resolvePrNumber(): number | null {
 
 function resolveCommitNumber(): number | null {
   const aheadOfMaster = git("git rev-list --count origin/master..HEAD");
-  if (aheadOfMaster && /^\d+$/.test(aheadOfMaster) && Number(aheadOfMaster) > 0) {
+  if (
+    aheadOfMaster &&
+    /^\d+$/.test(aheadOfMaster) &&
+    Number(aheadOfMaster) > 0
+  ) {
     return Number(aheadOfMaster);
   }
   const total = git("git rev-list --count HEAD");
@@ -60,8 +72,8 @@ function resolveCommitNumber(): number | null {
 }
 
 export const APP_VERSION: string | null = (() => {
-  const pr = resolvePrNumber();
-  const commit = resolveCommitNumber();
+  const pr = (resolvePrNumber() || 0) - FIRST_PR_NUMBER;
+  const commit = (resolveCommitNumber() || 0) - FIRST_COMMIT_NUMBER;
   if (pr == null || commit == null) return null;
-  return `0.${pr}.${commit}`;
+  return `${VERSION_PREFIX}.${pr}.${commit}`;
 })();

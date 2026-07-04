@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
+import { markdownToHtml } from "@/lib/markdown";
 import {
   LogNavItem,
   LogNavNeighbors,
@@ -10,6 +11,7 @@ import {
   MissionLogListItem,
   MissionMetaData,
   MissionPreview,
+  MissionStatus,
 } from "@/types/missions";
 
 // metadata kommt als JSONB-String aus der DB — wie bei den Charakteren
@@ -75,16 +77,170 @@ export async function getMissionBySlug(
           started_at::text AS started_at,
           ended_at::text   AS ended_at,
           metadata,
-          updated_at::text AS updated_at
+          updated_at::text AS updated_at,
+          owner_user_id    AS "ownerUserId",
+          source_md        AS "sourceMarkdown"
         FROM missions
         WHERE slug = ${slug}
         LIMIT 1
       `;
       return rows[0] ? parseMeta(rows[0]) : null;
     },
-    ["getMissionBySlug", slug],
+    ["getMissionBySlug", "v3", slug],
     { tags: [cacheTags.missions, cacheTags.mission(slug)] },
   )();
+}
+
+// Eine Mission per numerischer ID — für den Admin/GM-Editier-Weg
+// (/users/[id]/missions/[missionId]/edit), wo die ID aus der Route kommt
+// statt aus dem Slug. Bewusst ohne Cache (wie getOwnMissionLogForEdit):
+// das Formular soll immer den aktuellen Stand zeigen.
+export async function getMissionById(id: number): Promise<MissionDetail | null> {
+  const rows = await sql<MissionDetail[]>`
+    SELECT
+      id,
+      slug,
+      title,
+      status,
+      started_at::text AS started_at,
+      ended_at::text   AS ended_at,
+      metadata,
+      updated_at::text AS updated_at,
+      owner_user_id    AS "ownerUserId",
+      source_md        AS "sourceMarkdown"
+    FROM missions
+    WHERE id = ${id}
+    LIMIT 1
+  `;
+  return rows[0] ? parseMeta(rows[0]) : null;
+}
+
+// Kollisionsprüfung vor dem Vault-Commit einer neuen Mission (analog
+// missionLogSlugExists) — der Slug wird aus dem Titel abgeleitet oder frei
+// vergeben und bildet den Vault-Ordnernamen (Missionen/<slug>/index.md).
+export async function missionSlugExists(slug: string): Promise<boolean> {
+  const [row] = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS(SELECT 1 FROM missions WHERE slug = ${slug}) AS exists
+  `;
+  return row?.exists ?? false;
+}
+
+export interface UpdateMissionResult {
+  slug: string;
+  ownerSlug: string | null;
+}
+
+// Vollständige Bearbeitung einer Mission (Admin/GM-Formular unter
+// /users/[id]/missions/[missionId]/edit). Der Slug bleibt unveränderlich
+// (Identitätsfeld, siehe updateMissionLogContent oben für dasselbe Prinzip
+// bei Logs) — er bildet sowohl den Vault-Ordnernamen als auch die
+// mission_slug-Referenz bestehender Mission-Logs.
+export async function updateMissionContent(
+  missionId: number,
+  input: {
+    title: string;
+    status: MissionStatus;
+    startedAt: string | null;
+    endedAt: string | null;
+    tags: string[];
+    bodyMarkdown: string;
+  },
+): Promise<UpdateMissionResult | null> {
+  const bodyHtml = await markdownToHtml(input.bodyMarkdown);
+
+  const rows = await sql<UpdateMissionResult[]>`
+    UPDATE missions m
+    SET
+      title      = ${input.title},
+      status     = ${input.status},
+      started_at = ${input.startedAt},
+      ended_at   = ${input.endedAt},
+      metadata   = ${sql.json({ tags: input.tags, body: bodyHtml })},
+      source_md  = ${input.bodyMarkdown},
+      updated_at = NOW()
+    WHERE m.id = ${missionId}
+    RETURNING
+      m.slug,
+      (SELECT slug FROM users WHERE id = m.owner_user_id) AS "ownerSlug"
+  `;
+  return rows[0] ?? null;
+}
+
+export interface UpdateMissionSynopsisResult {
+  slug: string;
+  title: string;
+  status: MissionStatus;
+  startedAt: string | null;
+  endedAt: string | null;
+  metadata: MissionMetaData;
+  ownerSlug: string | null;
+}
+
+// Nur-Synopsis-Bearbeitung (inline auf /missions/[slug], MissionSynopsisEditor)
+// — Titel/Status/Zeitraum/Tags bleiben unangetastet, werden hier nur für den
+// Vault-Dual-Write mit zurückgegeben (der Aufrufer baut daraus das komplette
+// Frontmatter neu, siehe updateMissionLogContent-Kommentar oben).
+export async function updateMissionSynopsis(
+  missionId: number,
+  bodyMarkdown: string,
+): Promise<UpdateMissionSynopsisResult | null> {
+  const bodyHtml = await markdownToHtml(bodyMarkdown);
+
+  const rows = await sql<
+    (Omit<UpdateMissionSynopsisResult, "metadata"> & {
+      metadata: MissionMetaData | string;
+    })[]
+  >`
+    UPDATE missions m
+    SET
+      metadata   = jsonb_set(m.metadata, '{body}', to_jsonb(${bodyHtml}::text)),
+      source_md  = ${bodyMarkdown},
+      updated_at = NOW()
+    WHERE m.id = ${missionId}
+    RETURNING
+      m.slug,
+      m.title,
+      m.status,
+      m.started_at::text AS "startedAt",
+      m.ended_at::text   AS "endedAt",
+      m.metadata,
+      (SELECT slug FROM users WHERE id = m.owner_user_id) AS "ownerSlug"
+  `;
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    ...row,
+    metadata:
+      typeof row.metadata === "string"
+        ? (JSON.parse(row.metadata) as MissionMetaData)
+        : row.metadata,
+  };
+}
+
+// Vorschlagswert fürs Session-Nr-Feld im "Neuer Missionslog"-Formular
+// (src/app/users/[id]/mission-logs/new) — nur ein Default, das Feld bleibt
+// editierbar. Kein Cache: soll bei jedem Seitenaufruf den aktuellen Stand
+// zeigen, nicht bis zur nächsten Tag-Invalidierung stale bleiben.
+export async function getNextSessionNr(
+  missionId: number,
+  authorId: number,
+): Promise<number> {
+  const [row] = await sql<{ next: number }[]>`
+    SELECT COALESCE(MAX(session_nr), 0) + 1 AS next
+    FROM mission_logs
+    WHERE mission_id = ${missionId} AND author_id = ${authorId}
+  `;
+  return row?.next ?? 1;
+}
+
+// Kollisionsprüfung vor dem Vault-Commit (src/app/users/[id]/mission-logs/new/actions.ts)
+// — der Slug ist deterministisch aus author-mission-session_nr gebaut, ein
+// Treffer bedeutet also "diese Kombination gibt es schon".
+export async function missionLogSlugExists(slug: string): Promise<boolean> {
+  const [row] = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS(SELECT 1 FROM mission_logs WHERE slug = ${slug}) AS exists
+  `;
+  return row?.exists ?? false;
 }
 
 // Logs einer Mission (schlank, ohne content) für die Liste links. Nur
@@ -190,6 +346,37 @@ export async function getAuthorLogNav(
 // Nur der Owner (Spieler des Autor-Charakters, via Join — Mission-Logs haben
 // kein eigenes direktes user_id-Feld) darf die Sichtbarkeit ändern; ein
 // fremdes/gefälschtes id trifft dann einfach 0 Zeilen.
+// Admin-Owner-Verwaltung (src/app/actions/owner.ts): anders als
+// setMissionLogVisibility unten NICHT auf den aktuellen Owner gescoped —
+// die Berechtigungsprüfung (nur admin) passiert ausschließlich in der
+// Server Action, hier reicht die ID.
+export async function setMissionOwner(
+  missionId: number,
+  ownerId: number | null,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE missions
+    SET owner_user_id = ${ownerId}, updated_at = NOW()
+    WHERE id = ${missionId}
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
+}
+
+// Siehe setMissionOwner oben — gleiches Prinzip für Mission-Logs.
+export async function setMissionLogOwner(
+  logId: number,
+  ownerId: number | null,
+): Promise<{ slug: string; missionId: number } | null> {
+  const rows = await sql<{ slug: string; missionId: number }[]>`
+    UPDATE mission_logs
+    SET owner_user_id = ${ownerId}, updated_at = NOW()
+    WHERE id = ${logId}
+    RETURNING slug, mission_id AS "missionId"
+  `;
+  return rows[0] ?? null;
+}
+
 export async function setMissionLogVisibility(
   userId: number,
   logId: number,
@@ -203,6 +390,132 @@ export async function setMissionLogVisibility(
     RETURNING ml.slug, ml.mission_id AS "missionId"
   `;
   return rows[0] ?? null;
+}
+
+export interface OwnMissionLogForEdit {
+  id: number;
+  title: string;
+  logDate: string | null;
+  sessionNr: number | null;
+  sourceMarkdown: string;
+  missionSlug: string;
+  missionTitle: string;
+  authorName: string;
+}
+
+// Für /users/[id]/mission-logs/[logId]/edit — lädt den rohen Markdown-Body
+// (source_md) statt content (gerendertes HTML), damit das Formular ihn
+// wieder editierbar vorbefüllen kann. Gleiche Owner-Prüfung wie
+// setMissionLogVisibility (Spieler des Autor-Charakters).
+export async function getOwnMissionLogForEdit(
+  userId: number,
+  logId: number,
+): Promise<OwnMissionLogForEdit | null> {
+  const rows = await sql<OwnMissionLogForEdit[]>`
+    SELECT
+      ml.id,
+      ml.title,
+      ml.log_date::text AS "logDate",
+      ml.session_nr AS "sessionNr",
+      COALESCE(ml.source_md, '') AS "sourceMarkdown",
+      m.slug AS "missionSlug",
+      m.title AS "missionTitle",
+      c.name AS "authorName"
+    FROM mission_logs ml
+    JOIN characters c ON c.id = ml.author_id
+    JOIN missions m ON m.id = ml.mission_id
+    WHERE ml.id = ${logId} AND c.player_id = ${userId}
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+}
+
+// Bearbeitet Titel/Datum/Text eines eigenen Logs. Slug-bildende Felder
+// (author, mission, session_nr) bleiben unveränderlich, nur Inhalt/Titel/
+// Datum sind editierbar. Schreibt sofort in die DB (siehe
+// updateMissionLogAction) — der Aufrufer committet das zugehörige
+// Vault-File danach per updateVaultFile (Dual-Write, Best-Effort: der Vault
+// soll Single Source of Truth bleiben, siehe deleteMissionLog unten für den
+// gleichen Gedanken beim Löschen). Dafür liefert diese Funktion neben
+// slug/missionId auch die Felder zurück, die für den Wiederaufbau des
+// Vault-Frontmatters gebraucht werden (missionSlug, authorSlug, sessionNr,
+// ownerSlug) — Identitätsfelder, die sich beim Edit nicht ändern.
+export async function updateMissionLogContent(
+  userId: number,
+  logId: number,
+  input: { title: string; logDate: string | null; bodyMarkdown: string },
+): Promise<{
+  slug: string;
+  missionId: number;
+  missionSlug: string;
+  authorSlug: string;
+  sessionNr: number | null;
+  ownerSlug: string | null;
+} | null> {
+  const contentHtml = await markdownToHtml(input.bodyMarkdown);
+
+  const rows = await sql<
+    {
+      slug: string;
+      missionId: number;
+      missionSlug: string;
+      authorSlug: string;
+      sessionNr: number | null;
+      ownerSlug: string | null;
+    }[]
+  >`
+    UPDATE mission_logs ml
+    SET
+      title      = ${input.title},
+      log_date   = ${input.logDate},
+      content    = ${contentHtml},
+      source_md  = ${input.bodyMarkdown},
+      updated_at = NOW()
+    FROM characters c, missions m
+    WHERE ml.id = ${logId} AND c.id = ml.author_id AND c.player_id = ${userId}
+      AND m.id = ml.mission_id
+    RETURNING
+      ml.slug,
+      ml.mission_id AS "missionId",
+      m.slug AS "missionSlug",
+      c.slug AS "authorSlug",
+      ml.session_nr AS "sessionNr",
+      (SELECT slug FROM users WHERE id = ml.owner_user_id) AS "ownerSlug"
+  `;
+  return rows[0] ?? null;
+}
+
+// Löscht ein eigenes Log aus der DB und räumt den zugehörigen
+// timeline_events-Eintrag mit auf (der ist nur per source_type/source_slug,
+// nicht per FK verknüpft — bliebe sonst als toter Link stehen, siehe
+// src/lib/timeline.ts). Gibt zusätzlich missionSlug zurück, damit der
+// Aufrufer (Server Action) versuchen kann, die zugehörige Vault-Datei
+// ebenfalls zu löschen (Best-Effort, siehe deleteVaultFile in
+// src/lib/githubVault.ts — der Dateiname im Vault muss nicht zwingend dem
+// Slug entsprechen, v.a. bei älteren, manuell von der Spielleitung
+// angelegten Logs).
+export async function deleteMissionLog(
+  userId: number,
+  logId: number,
+): Promise<{ slug: string; missionSlug: string; missionId: number } | null> {
+  const rows = await sql<
+    { slug: string; missionSlug: string; missionId: number }[]
+  >`
+    DELETE FROM mission_logs ml
+    USING characters c, missions m
+    WHERE ml.id = ${logId}
+      AND c.id = ml.author_id AND c.player_id = ${userId}
+      AND m.id = ml.mission_id
+    RETURNING ml.slug, m.slug AS "missionSlug", ml.mission_id AS "missionId"
+  `;
+  const row = rows[0] ?? null;
+  if (row) {
+    await sql`
+      DELETE FROM timeline_events
+      WHERE source_type = 'mission_log' AND source_slug = ${row.slug}
+    `;
+  }
+  return row;
 }
 
 // Alle Mission-/Log-Pfade für die Sitemap und generateStaticParams. Nur

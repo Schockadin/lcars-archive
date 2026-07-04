@@ -320,10 +320,9 @@
 
 .lcars-footer-version {
   font-family: var(--font-share-tech-mono), monospace;
-  font-size: 8px;
+  font-size: 12px;
   letter-spacing: 0.03em;
-  color: var(--lcars-bg);
-  opacity: 0.65;
+  color: var(--lcars-surface-2);
   user-select: text;
 }
 

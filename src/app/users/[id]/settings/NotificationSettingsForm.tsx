@@ -134,7 +134,7 @@ export default function NotificationSettingsForm({
     <div className="flex flex-col gap-[24px]">
       <form
         action={formAction}
-        className="flex max-w-[420px] flex-col gap-[16px]"
+        className="flex max-w-[var(--lcars-content-w)] flex-col gap-[16px]"
       >
         <div className="flex items-center gap-[10px]">
           <input
@@ -176,36 +176,35 @@ export default function NotificationSettingsForm({
         <button
           type="submit"
           disabled={pending}
-          className="lcars-switch self-end disabled:opacity-50"
+          className="lcars-switch self-end disabled:opacity-50 w-[100%]"
         >
           {pending ? "Speichern…" : "Speichern"}
         </button>
       </form>
 
-      <div className="flex max-w-[420px] flex-col gap-[8px]">
-        <p className="lcars-eyebrow">Push für dieses Gerät</p>
+      <div className="flex max-w-[var(--lcars-content-w)] flex-col gap-[8px]">
+        <p className="lcars-eyebrow">
+          Push <strong>nur</strong> für dieses Gerät
+        </p>
 
         {deviceStatus === "checking" && (
           <p className="text-lcars-text-dim">Prüfe Status…</p>
         )}
         {deviceStatus === "unsupported" && (
           <p className="text-lcars-text-dim">
-            Push-Benachrichtigungen werden von diesem Browser nicht
-            unterstützt.
+            Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.
           </p>
         )}
         {deviceStatus === "subscribed" && (
           <>
-            <p className="text-lcars-green">
-              Push ist für dieses Gerät aktiv.
-            </p>
+            <p className="text-lcars-green">Push ist für dieses Gerät aktiv.</p>
             <button
               type="button"
               disabled={devicePending}
               onClick={disablePush}
               className="lcars-switch self-start disabled:opacity-50"
             >
-              Für dieses Gerät deaktivieren
+              Push deaktivieren
             </button>
           </>
         )}
@@ -214,9 +213,9 @@ export default function NotificationSettingsForm({
             type="button"
             disabled={devicePending}
             onClick={enablePush}
-            className="lcars-switch self-start disabled:opacity-50"
+            className="lcars-switch self-start disabled:opacity-50 w-[100%]"
           >
-            Push für dieses Gerät aktivieren
+            Push aktivieren
           </button>
         )}
 

@@ -43,6 +43,7 @@
   --lcars-sidebar-main-h: calc(100% - var(--lcars-bar-h));
   --lcars-sidebar-w: calc(var(--lcars-bar-width) + var(--lcars-elbow-size));
   --lcars-charpage-w: 465px;
+  --lcars-content-w: 700px;
 
   /* Typografie-Größen */
   --lcars-title-size: 48px;

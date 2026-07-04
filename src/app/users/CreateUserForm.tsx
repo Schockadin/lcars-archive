@@ -25,8 +25,11 @@ export default function CreateUserForm() {
   }, [state, router]);
 
   return (
-    <form action={formAction} className="flex flex-wrap gap-[12px]">
-      <div className="flex flex-col gap-[6px]">
+    <form
+      action={formAction}
+      className="flex flex-wrap gap-[12px] justify-between"
+    >
+      <div className="flex flex-col gap-[6px] flex-1">
         <label htmlFor="new-user-name" className="lcars-eyebrow">
           Name
         </label>
@@ -35,11 +38,11 @@ export default function CreateUserForm() {
           name="name"
           type="text"
           required
-          className="rounded-lcars-pill lcars-input"
+          className="rounded-lcars-pill lcars-input flex-1"
         />
       </div>
 
-      <div className="flex flex-col gap-[6px]">
+      <div className="flex flex-col gap-[6px] flex-1">
         <label htmlFor="new-user-email" className="lcars-eyebrow">
           E-Mail
         </label>
@@ -71,7 +74,7 @@ export default function CreateUserForm() {
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch disabled:opacity-50"
+        className="lcars-switch disabled:opacity-50 w-[100%]"
       >
         {pending ? "Anlegen…" : "User anlegen"}
       </button>

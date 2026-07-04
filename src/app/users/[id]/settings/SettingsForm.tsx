@@ -18,7 +18,7 @@ export default function SettingsForm({
   return (
     <form
       action={formAction}
-      className="flex max-w-[420px] flex-col gap-[16px]"
+      className="flex max-w-[var(--lcars-content-w)] flex-col gap-[16px]"
     >
       <div className="flex flex-col gap-[6px]">
         <label htmlFor="name" className="lcars-eyebrow">
@@ -62,7 +62,7 @@ export default function SettingsForm({
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch self-end disabled:opacity-50"
+        className="lcars-switch self-end disabled:opacity-50 w-[100%]"
       >
         {pending ? "Speichern…" : "Speichern"}
       </button>

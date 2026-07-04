@@ -90,10 +90,11 @@ export interface OwnCharactersAccess {
   characters: Character[];
 }
 
-// Für /users/[id]/dialogues/new: Identität wie requireOwnUser (Cookie-
-// basiert). Redirectet NICHT bei 0 Charakteren — die Seite selbst zeigt in
-// dem Fall einen Hinweis statt des Formulars (Verteidigung in der Tiefe
-// zusätzlich zum ausgeblendeten Dashboard-Button, siehe DialogueSection).
+// Für /users/[id]/dialogues/new (und mission-logs/new): Identität wie
+// requireOwnUser (Cookie-basiert). Redirectet NICHT bei 0 Charakteren — die
+// Seite selbst zeigt in dem Fall einen Hinweis statt des Formulars
+// (Verteidigung in der Tiefe zusätzlich zu den ausgeblendeten Buttons in
+// content/page.tsx).
 export async function requireOwnCharacters(
   idParam: string,
 ): Promise<OwnCharactersAccess> {
@@ -111,6 +112,34 @@ export async function requireOwnCharacters(
 
   const characters = await getCharactersForUser(session.userId);
   return { user, characters };
+}
+
+export interface OwnGMAccess {
+  user: UserWithPasswordStatus;
+}
+
+// Für /users/[id]/missions/new (und .../missions/[missionId]/edit): Identität
+// wie requireOwnCharacters (Cookie-basiert), zusätzlich muss die Rolle
+// admin/gm sein — nur die Spielleitung legt Missionen an bzw. bearbeitet sie.
+// Rolle frisch aus der DB geprüft (wie requireSelfOrGM), nicht aus dem
+// Cookie, damit ein gerade entzogenes GM-Recht sofort greift.
+export async function requireOwnGM(idParam: string): Promise<OwnGMAccess> {
+  const session = await verifySession();
+  const id = Number(idParam);
+
+  if (!Number.isInteger(id) || id !== session.userId) {
+    redirect(`/users/${session.userId}`);
+  }
+
+  const user = await getUserWithPasswordStatus(session.userId);
+  if (!user) {
+    redirect("/login");
+  }
+  if (user.role !== "gm" && user.role !== "admin") {
+    redirect(`/users/${user.id}`);
+  }
+
+  return { user };
 }
 
 export interface AdminEditTargetAccess {

@@ -1,16 +1,24 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useOptimistic, useState } from "react";
 import Link from "next/link";
 import { LcarsAccordion } from "@/components/lcars";
 import type { UserContentLog } from "@/lib/characters";
 import type { DialogueSummary } from "@/lib/dialoguesCore";
 import type { UserContentArchiveEntry } from "@/lib/archive";
-import { fmtDate, sessionLabel } from "@/lib/missionFormat";
+import { fmtDate, sessionLabel, periodLabel } from "@/lib/missionFormat";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
 import type { Character } from "@/types/character";
+import type { MissionPreview } from "@/types/missions";
 import VisibilitySelect from "./VisibilitySelect";
+import DeleteMissionLogButton from "./DeleteMissionLogButton";
 
-type CategoryFilter = "all" | "characters" | "logs" | "dialogues" | "archive";
+type CategoryFilter =
+  | "all"
+  | "characters"
+  | "logs"
+  | "dialogues"
+  | "archive"
+  | "missions";
 
 const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   all: "Alle Kategorien",
@@ -18,6 +26,7 @@ const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   logs: "Einsatzberichte",
   dialogues: "Gespräche",
   archive: "Archiv-Einträge",
+  missions: "Missionen",
 };
 
 // "Meine Inhalte": genau vier feste Kategorien (Charaktere, Einsatzberichte,
@@ -31,16 +40,37 @@ export default function UserContentBrowser({
   logs,
   dialogues,
   archiveEntries,
+  missions,
+  canManageMissions,
   ownUserId,
 }: {
   characters: Character[];
   logs: UserContentLog[];
   dialogues: DialogueSummary[];
   archiveEntries: UserContentArchiveEntry[];
+  missions: MissionPreview[];
+  canManageMissions: boolean;
   ownUserId: number;
 }) {
   const [characterFilter, setCharacterFilter] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+
+  // Missionen sind eine eigene Kategorie, aber nur für Admin/GM sichtbar
+  // (siehe canManageMissions) — kein Owner-/Charakter-Konzept wie bei den
+  // anderen vier Kategorien, deshalb auch vom Charakter-Filter unberührt.
+  const visibleCategoryKeys = (
+    Object.keys(CATEGORY_LABELS) as CategoryFilter[]
+  ).filter((key) => key !== "missions" || canManageMissions);
+
+  // Für die optimistische Löschung (DeleteMissionLogButton): entfernt den
+  // Log sofort aus der Liste, fällt aber automatisch auf `logs` (den echten
+  // Server-Stand) zurück, sobald die Transition abgeschlossen ist — bei
+  // Erfolg über revalidatePath eine kürzere Liste, bei Fehlschlag dieselbe
+  // wie vorher (der gelöschte Log erscheint dann wieder).
+  const [optimisticLogs, removeOptimisticLog] = useOptimistic(
+    logs,
+    (state, deletedId: number) => state.filter((l) => l.id !== deletedId),
+  );
 
   const filteredCharacters = useMemo(
     () =>
@@ -49,10 +79,10 @@ export default function UserContentBrowser({
   );
   const filteredLogs = useMemo(
     () =>
-      logs.filter(
+      optimisticLogs.filter(
         (l) => !characterFilter || l.character_slug === characterFilter,
       ),
-    [logs, characterFilter],
+    [optimisticLogs, characterFilter],
   );
   const filteredDialogues = useMemo(
     () =>
@@ -63,7 +93,11 @@ export default function UserContentBrowser({
   );
 
   const total =
-    characters.length + logs.length + dialogues.length + archiveEntries.length;
+    characters.length +
+    logs.length +
+    dialogues.length +
+    archiveEntries.length +
+    (canManageMissions ? missions.length : 0);
 
   if (total === 0) {
     return <p className="lcars-empty-state">Noch keine Inhalte vorhanden.</p>;
@@ -75,6 +109,9 @@ export default function UserContentBrowser({
   const showDialogues =
     categoryFilter === "all" || categoryFilter === "dialogues";
   const showArchive = categoryFilter === "all" || categoryFilter === "archive";
+  const showMissions =
+    canManageMissions &&
+    (categoryFilter === "all" || categoryFilter === "missions");
 
   return (
     <div className="flex flex-col gap-[16px]">
@@ -99,7 +136,7 @@ export default function UserContentBrowser({
           onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
           aria-label="Nach Kategorie filtern"
         >
-          {(Object.keys(CATEGORY_LABELS) as CategoryFilter[]).map((key) => (
+          {visibleCategoryKeys.map((key) => (
             <option key={key} value={key}>
               {CATEGORY_LABELS[key]}
             </option>
@@ -132,9 +169,7 @@ export default function UserContentBrowser({
                   >
                     <span className="mission-akte-rail" />
                     <span className="mission-akte-body text-left">
-                      <span className="mission-akte-title block">
-                        {c.name}
-                      </span>
+                      <span className="mission-akte-title block">{c.name}</span>
                     </span>
                   </Link>
                   <VisibilitySelect
@@ -190,11 +225,25 @@ export default function UserContentBrowser({
                       </span>
                     </span>
                   </Link>
-                  <VisibilitySelect
-                    contentType="mission_log"
-                    id={log.id}
-                    initialValue={log.visibility}
-                  />
+                  <div className="flex flex-col items-end gap-[4px]">
+                    <VisibilitySelect
+                      contentType="mission_log"
+                      id={log.id}
+                      initialValue={log.visibility}
+                    />
+                    <div className="flex gap-[8px] items-center justify-between">
+                      <Link
+                        href={`/users/${ownUserId}/mission-logs/${log.id}/edit`}
+                        className="lcars-link-text text-[14px]"
+                      >
+                        Bearbeiten
+                      </Link>
+                      <DeleteMissionLogButton
+                        logId={log.id}
+                        onOptimisticDelete={() => removeOptimisticLog(log.id)}
+                      />
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -301,6 +350,48 @@ export default function UserContentBrowser({
                     id={entry.id}
                     initialValue={entry.visibility}
                   />
+                </div>
+              ))}
+            </div>
+          )}
+        </LcarsAccordion>
+      )}
+
+      {showMissions && (
+        <LcarsAccordion
+          value={missions.length}
+          label="Missionen"
+          color="var(--lcars-green)"
+        >
+          {missions.length === 0 ? (
+            <p className="lcars-empty-state">Noch keine Missionen vorhanden.</p>
+          ) : (
+            <div className="flex flex-col gap-[6px]">
+              {missions.map((m) => (
+                <div key={m.id} className="flex items-center gap-[8px]">
+                  <Link
+                    href={`/missions/${m.slug}`}
+                    className="mission-akte flex-1"
+                    style={
+                      { "--mission-color": "var(--lcars-green)" } as React.CSSProperties
+                    }
+                  >
+                    <span className="mission-akte-rail" />
+                    <span className="mission-akte-body text-left">
+                      <span className="mission-akte-title block">{m.title}</span>
+                      <span className="mission-akte-meta">
+                        <span>
+                          <b>Zeitraum</b> {periodLabel(m.started_at, m.ended_at)}
+                        </span>
+                      </span>
+                    </span>
+                  </Link>
+                  <Link
+                    href={`/users/${ownUserId}/missions/${m.id}/edit`}
+                    className="lcars-link-text text-[14px]"
+                  >
+                    Bearbeiten
+                  </Link>
                 </div>
               ))}
             </div>

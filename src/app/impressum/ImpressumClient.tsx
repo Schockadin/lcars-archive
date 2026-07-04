@@ -16,8 +16,7 @@ export default function ImpressumClient() {
         <br />
         Deutschland
         <br />
-        E-Mail:{" "}
-        <a href="mailto:wowschockadin@gmail.com">wowschockadin@gmail.com</a>
+        E-Mail: <a href="mailto:kontakt@neo-archiv.de">kontakt@neo-archiv.de</a>
       </address>
 
       <h2>Hinweis zum Inhalt</h2>

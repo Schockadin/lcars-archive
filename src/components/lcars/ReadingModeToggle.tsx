@@ -4,13 +4,16 @@ import { useNeo } from "@/hooks/useNeo";
 
 // Umschalter für den Lesemodus. Nur auf schmalen Displays sichtbar (CSS).
 // Beim Verlassen der Seite (Unmount) wird der Lesemodus zurückgesetzt, damit
-// man nicht ohne sichtbare Navigation „gefangen" bleibt.
+// man nicht ohne sichtbare Navigation „gefangen" bleibt — außer der Wechsel
+// kam von der Log-Vor/Zurück-Navigation (siehe preserveReadingModeOnce in
+// LogDetail.tsx), dann bleibt er über den Seitenwechsel hinweg erhalten.
 export default function ReadingModeToggle() {
-  const { readingMode, toggleReadingMode, setReadingMode } = useNeo();
+  const { readingMode, toggleReadingMode, resetReadingModeOnUnmount } =
+    useNeo();
 
   useEffect(() => {
-    return () => setReadingMode(false);
-  }, [setReadingMode]);
+    return () => resetReadingModeOnUnmount();
+  }, [resetReadingModeOnUnmount]);
 
   return (
     <button
