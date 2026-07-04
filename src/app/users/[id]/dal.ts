@@ -90,10 +90,11 @@ export interface OwnCharactersAccess {
   characters: Character[];
 }
 
-// Für /users/[id]/dialogues/new: Identität wie requireOwnUser (Cookie-
-// basiert). Redirectet NICHT bei 0 Charakteren — die Seite selbst zeigt in
-// dem Fall einen Hinweis statt des Formulars (Verteidigung in der Tiefe
-// zusätzlich zum ausgeblendeten Dashboard-Button, siehe DialogueSection).
+// Für /users/[id]/dialogues/new (und mission-logs/new): Identität wie
+// requireOwnUser (Cookie-basiert). Redirectet NICHT bei 0 Charakteren — die
+// Seite selbst zeigt in dem Fall einen Hinweis statt des Formulars
+// (Verteidigung in der Tiefe zusätzlich zu den ausgeblendeten Buttons in
+// content/page.tsx).
 export async function requireOwnCharacters(
   idParam: string,
 ): Promise<OwnCharactersAccess> {

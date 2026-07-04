@@ -90,3 +90,54 @@ export async function commitVaultFile(input: {
 
   return { htmlUrl: data.content.html_url, sha: data.content.sha };
 }
+
+// Best-Effort-Löschung beim Entfernen eines eigenen Mission-Logs (siehe
+// deleteMissionLog in src/lib/missions.ts). Der konventionelle Pfad
+// (Missionen/<mission-slug>/<slug>.md) stimmt nur für Logs, die selbst über
+// die App committet wurden — ältere, manuell im Vault angelegte Dateien
+// können abweichend benannt sein. Deshalb: Datei nicht gefunden → kein
+// Fehler, nur { deleted: false }, der DB-Löschung steht das nicht im Weg.
+export async function deleteVaultFile(input: {
+  path: string;
+  message: string;
+}): Promise<{ deleted: boolean }> {
+  const { token, repo, branch } = vaultConfig();
+  const encodedPath = input.path
+    .split("/")
+    .map(encodeURIComponent)
+    .join("/");
+
+  const existing = await githubFetch(
+    `/repos/${repo}/contents/${encodedPath}?ref=${encodeURIComponent(branch)}`,
+    token,
+  );
+  if (existing.status === 404) {
+    return { deleted: false };
+  }
+  if (existing.status !== 200) {
+    const body = await existing.text();
+    throw new Error(
+      `GitHub-Fehler beim Prüfen von "${input.path}" (${existing.status}): ${body}`,
+    );
+  }
+  const existingData = (await existing.json()) as { sha: string };
+
+  const del = await githubFetch(`/repos/${repo}/contents/${encodedPath}`, token, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message: input.message,
+      sha: existingData.sha,
+      branch,
+    }),
+  });
+
+  if (!del.ok) {
+    const body = await del.text();
+    throw new Error(
+      `GitHub-Löschung von "${input.path}" fehlgeschlagen (${del.status}): ${body}`,
+    );
+  }
+
+  return { deleted: true };
+}

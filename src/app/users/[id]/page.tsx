@@ -2,15 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireSelfOrGM } from "./dal";
-import { getCharactersForUser } from "@/lib/characters";
 import { getRecentActivitySince } from "@/lib/timeline";
 import { hasPassword } from "@/lib/users";
 import { getBookmarkedContent, getSubscribedContent } from "@/lib/follows";
-import { getDialoguesForUser } from "@/lib/dialogues";
-import DashboardCharacters from "./DashboardCharacters";
 import RecentActivity from "./RecentActivity";
 import FollowedContentSection from "./FollowedContentSection";
-import DialogueSection from "./DialogueSection";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 
@@ -37,23 +33,15 @@ export default async function UserPage({
   // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
   // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
   // innerhalb des User-Bereichs spürbar auf.
-  const [
-    characters,
-    recentEvents,
-    hasPasswordSet,
-    bookmarks,
-    subscriptions,
-    dialogues,
-  ] = await Promise.all([
-    getCharactersForUser(target.id),
-    isSelf
-      ? getRecentActivitySince(target.previous_login_at)
-      : Promise.resolve([]),
-    isSelf ? hasPassword(target.id) : Promise.resolve(true),
-    isSelf ? getBookmarkedContent(target.id) : Promise.resolve([]),
-    isSelf ? getSubscribedContent(target.id) : Promise.resolve([]),
-    isSelf ? getDialoguesForUser(target.id) : Promise.resolve([]),
-  ]);
+  const [recentEvents, hasPasswordSet, bookmarks, subscriptions] =
+    await Promise.all([
+      isSelf
+        ? getRecentActivitySince(target.previous_login_at)
+        : Promise.resolve([]),
+      isSelf ? hasPassword(target.id) : Promise.resolve(true),
+      isSelf ? getBookmarkedContent(target.id) : Promise.resolve([]),
+      isSelf ? getSubscribedContent(target.id) : Promise.resolve([]),
+    ]);
   const needsPassword = isSelf && !hasPasswordSet;
 
   return (
@@ -83,8 +71,6 @@ export default async function UserPage({
             </p>
           )}
 
-          <DashboardCharacters characters={characters} />
-
           {isSelf && (
             <RecentActivity
               events={recentEvents}
@@ -106,25 +92,6 @@ export default async function UserPage({
               emptyLabel="Noch keine Abos abgeschlossen."
               items={subscriptions}
             />
-          )}
-
-          {isSelf && (
-            <DialogueSection
-              dialogues={dialogues}
-              canStartNew={characters.length > 0}
-              userId={target.id}
-            />
-          )}
-
-          {isSelf && characters.length > 0 && (
-            <p>
-              <Link
-                href={`/users/${target.id}/mission-logs/new`}
-                className="lcars-switch self-end"
-              >
-                Neuer Missionslog
-              </Link>
-            </p>
           )}
 
           {!isSelf && (

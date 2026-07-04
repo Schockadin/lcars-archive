@@ -9,6 +9,7 @@ import { fmtDate, sessionLabel } from "@/lib/missionFormat";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
 import type { Character } from "@/types/character";
 import VisibilitySelect from "./VisibilitySelect";
+import DeleteMissionLogButton from "./DeleteMissionLogButton";
 
 type CategoryFilter = "all" | "characters" | "logs" | "dialogues" | "archive";
 
@@ -190,11 +191,20 @@ export default function UserContentBrowser({
                       </span>
                     </span>
                   </Link>
-                  <VisibilitySelect
-                    contentType="mission_log"
-                    id={log.id}
-                    initialValue={log.visibility}
-                  />
+                  <div className="flex flex-col items-end gap-[4px]">
+                    <VisibilitySelect
+                      contentType="mission_log"
+                      id={log.id}
+                      initialValue={log.visibility}
+                    />
+                    <Link
+                      href={`/users/${ownUserId}/mission-logs/${log.id}/edit`}
+                      className="text-lcars-amber text-[12px] underline"
+                    >
+                      Bearbeiten
+                    </Link>
+                    <DeleteMissionLogButton logId={log.id} />
+                  </div>
                 </div>
               ))}
             </div>

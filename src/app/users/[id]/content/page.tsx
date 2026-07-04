@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnCharacters } from "../dal";
 import { getLogsForUser } from "@/lib/characters";
@@ -34,6 +35,23 @@ export default async function UserContentPage({
           Sichtbarkeit je Eintrag: Privat (nur du) · GM (du + Spielleitung) ·
           Öffentlich (alle).
         </p>
+
+        {characters.length > 0 && (
+          <div className="flex flex-wrap gap-[12px]">
+            <Link
+              href={`/users/${user.id}/mission-logs/new`}
+              className="lcars-switch"
+            >
+              Neuer Missionslog
+            </Link>
+            <Link
+              href={`/users/${user.id}/dialogues/new`}
+              className="lcars-switch"
+            >
+              Neues Gespräch
+            </Link>
+          </div>
+        )}
 
         <div className="lcars-text">
           <UserContentBrowser

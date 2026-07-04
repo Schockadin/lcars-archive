@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
+import { markdownToHtml } from "@/lib/markdown";
 import {
   LogNavItem,
   LogNavNeighbors,
@@ -229,6 +230,109 @@ export async function setMissionLogVisibility(
     RETURNING ml.slug, ml.mission_id AS "missionId"
   `;
   return rows[0] ?? null;
+}
+
+export interface OwnMissionLogForEdit {
+  id: number;
+  title: string;
+  logDate: string | null;
+  sessionNr: number | null;
+  sourceMarkdown: string;
+  missionSlug: string;
+  missionTitle: string;
+  authorName: string;
+}
+
+// Für /users/[id]/mission-logs/[logId]/edit — lädt den rohen Markdown-Body
+// (source_md) statt content (gerendertes HTML), damit das Formular ihn
+// wieder editierbar vorbefüllen kann. Gleiche Owner-Prüfung wie
+// setMissionLogVisibility (Spieler des Autor-Charakters).
+export async function getOwnMissionLogForEdit(
+  userId: number,
+  logId: number,
+): Promise<OwnMissionLogForEdit | null> {
+  const rows = await sql<OwnMissionLogForEdit[]>`
+    SELECT
+      ml.id,
+      ml.title,
+      ml.log_date::text AS "logDate",
+      ml.session_nr AS "sessionNr",
+      COALESCE(ml.source_md, '') AS "sourceMarkdown",
+      m.slug AS "missionSlug",
+      m.title AS "missionTitle",
+      c.name AS "authorName"
+    FROM mission_logs ml
+    JOIN characters c ON c.id = ml.author_id
+    JOIN missions m ON m.id = ml.mission_id
+    WHERE ml.id = ${logId} AND c.player_id = ${userId}
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+}
+
+// Bearbeitet Titel/Datum/Text eines eigenen Logs direkt in der DB — anders
+// als bei der Ersterstellung (mission-logs/new, Commit ins Vault) wird hier
+// NICHT erneut committet. Gleiches Prinzip wie schon bei visibility (auch
+// dort rein DB-seitig, kein Vault-Feld): Slug-bildende Felder (author,
+// mission, session_nr) bleiben unveränderlich, nur Inhalt/Titel/Datum sind
+// editierbar. ACHTUNG: ein späterer manueller VOLLER Reingest
+// (npm run db:ingest, nicht :new) würde title/content/log_date wieder auf
+// den Vault-Stand zurücksetzen (siehe ON CONFLICT DO UPDATE in
+// scripts/ingest/missionLogs.ts) — bewusst hingenommener Trade-off, exakt
+// wie im Design-Dokument für Vault-Edits beschrieben.
+export async function updateMissionLogContent(
+  userId: number,
+  logId: number,
+  input: { title: string; logDate: string | null; bodyMarkdown: string },
+): Promise<{ slug: string; missionId: number } | null> {
+  const contentHtml = await markdownToHtml(input.bodyMarkdown);
+
+  const rows = await sql<{ slug: string; missionId: number }[]>`
+    UPDATE mission_logs ml
+    SET
+      title      = ${input.title},
+      log_date   = ${input.logDate},
+      content    = ${contentHtml},
+      source_md  = ${input.bodyMarkdown},
+      updated_at = NOW()
+    FROM characters c
+    WHERE ml.id = ${logId} AND c.id = ml.author_id AND c.player_id = ${userId}
+    RETURNING ml.slug, ml.mission_id AS "missionId"
+  `;
+  return rows[0] ?? null;
+}
+
+// Löscht ein eigenes Log aus der DB und räumt den zugehörigen
+// timeline_events-Eintrag mit auf (der ist nur per source_type/source_slug,
+// nicht per FK verknüpft — bliebe sonst als toter Link stehen, siehe
+// src/lib/timeline.ts). Gibt zusätzlich missionSlug zurück, damit der
+// Aufrufer (Server Action) versuchen kann, die zugehörige Vault-Datei
+// ebenfalls zu löschen (Best-Effort, siehe deleteVaultFile in
+// src/lib/githubVault.ts — der Dateiname im Vault muss nicht zwingend dem
+// Slug entsprechen, v.a. bei älteren, manuell von der Spielleitung
+// angelegten Logs).
+export async function deleteMissionLog(
+  userId: number,
+  logId: number,
+): Promise<{ slug: string; missionSlug: string; missionId: number } | null> {
+  const rows = await sql<
+    { slug: string; missionSlug: string; missionId: number }[]
+  >`
+    DELETE FROM mission_logs ml
+    USING characters c, missions m
+    WHERE ml.id = ${logId}
+      AND c.id = ml.author_id AND c.player_id = ${userId}
+      AND m.id = ml.mission_id
+    RETURNING ml.slug, m.slug AS "missionSlug", ml.mission_id AS "missionId"
+  `;
+  const row = rows[0] ?? null;
+  if (row) {
+    await sql`
+      DELETE FROM timeline_events
+      WHERE source_type = 'mission_log' AND source_slug = ${row.slug}
+    `;
+  }
+  return row;
 }
 
 // Alle Mission-/Log-Pfade für die Sitemap und generateStaticParams. Nur
