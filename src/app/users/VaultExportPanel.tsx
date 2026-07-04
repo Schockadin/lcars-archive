@@ -24,8 +24,10 @@ export default function VaultExportPanel() {
       <p className="text-lcars-text-dim text-[13px]">
         Generiert aus dem aktuellen Datenbankstand die Markdown-Dateien für
         Charaktere, Missionen, Mission-Logs und Archiv-Einträge neu und
-        committet sie ins Vault-Repo (Backup). Bestehende Inhalte werden
-        gelöscht aus der DB nicht automatisch aus dem Vault entfernt.
+        committet sie ins Vault-Repo (Backup). Aus der DB gelöschte Inhalte
+        werden dabei nicht automatisch aus dem Vault entfernt — ihre
+        Markdown-Datei bleibt bestehen, bis sie manuell im Vault-Repo
+        gelöscht wird.
       </p>
 
       <button
