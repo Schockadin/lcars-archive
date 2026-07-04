@@ -32,7 +32,7 @@
 // Archiv-Event/-Dialog über logDate) haben keine Marker-Stelle und bekommen
 // deshalb kein Fragment.
 import postgres from "postgres";
-import { splitPrivate, TIMELINE_MARKER_RE } from "../../src/lib/markdown.js";
+import { splitPrivate, TIMELINE_MARKER_RE } from "../../src/lib/markdown";
 
 type SourceType = "character" | "mission" | "mission_log" | "archive_entry";
 
