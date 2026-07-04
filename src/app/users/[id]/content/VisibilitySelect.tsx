@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { setVisibilityAction, type VisibilityContentType } from "./actions";
 import type { Visibility } from "@/lib/visibility";
 
@@ -21,28 +21,43 @@ export default function VisibilitySelect({
   id: number;
   initialValue: Visibility;
 }) {
-  const [value, setValue] = useState<Visibility>(initialValue);
+  // useOptimistic statt useState: zeigt den neuen Wert sofort an, fällt aber
+  // automatisch auf initialValue zurück, sobald die Transition abgeschlossen
+  // ist UND initialValue sich NICHT geändert hat (weil setVisibilityAction
+  // fehlgeschlagen ist und revalidatePath deshalb den alten DB-Stand
+  // zurückliefert) — kein manueller Rollback-Code nötig.
+  const [optimisticValue, setOptimisticValue] = useOptimistic(initialValue);
   const [pending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   return (
-    <select
-      value={value}
-      disabled={pending}
-      onChange={(e) => {
-        const next = e.target.value as Visibility;
-        setValue(next);
-        startTransition(async () => {
-          await setVisibilityAction(contentType, id, next);
-        });
-      }}
-      className="lcars-input"
-      aria-label="Sichtbarkeit"
-    >
-      {OPTIONS.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
+    <div className="flex flex-col items-end gap-[2px]">
+      <select
+        value={optimisticValue}
+        disabled={pending}
+        onChange={(e) => {
+          const next = e.target.value as Visibility;
+          setError(null);
+          startTransition(async () => {
+            setOptimisticValue(next);
+            const result = await setVisibilityAction(contentType, id, next);
+            if (result.error) setError(result.error);
+          });
+        }}
+        className="lcars-input"
+        aria-label="Sichtbarkeit"
+      >
+        {OPTIONS.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      {error && (
+        <p className="text-lcars-red text-[11px]" role="alert">
+          {error}
+        </p>
+      )}
+    </div>
   );
 }

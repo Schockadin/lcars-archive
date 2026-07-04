@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useOptimistic, useState } from "react";
 import Link from "next/link";
 import { LcarsAccordion } from "@/components/lcars";
 import type { UserContentLog } from "@/lib/characters";
@@ -43,6 +43,16 @@ export default function UserContentBrowser({
   const [characterFilter, setCharacterFilter] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
 
+  // Für die optimistische Löschung (DeleteMissionLogButton): entfernt den
+  // Log sofort aus der Liste, fällt aber automatisch auf `logs` (den echten
+  // Server-Stand) zurück, sobald die Transition abgeschlossen ist — bei
+  // Erfolg über revalidatePath eine kürzere Liste, bei Fehlschlag dieselbe
+  // wie vorher (der gelöschte Log erscheint dann wieder).
+  const [optimisticLogs, removeOptimisticLog] = useOptimistic(
+    logs,
+    (state, deletedId: number) => state.filter((l) => l.id !== deletedId),
+  );
+
   const filteredCharacters = useMemo(
     () =>
       characters.filter((c) => !characterFilter || c.slug === characterFilter),
@@ -50,10 +60,10 @@ export default function UserContentBrowser({
   );
   const filteredLogs = useMemo(
     () =>
-      logs.filter(
+      optimisticLogs.filter(
         (l) => !characterFilter || l.character_slug === characterFilter,
       ),
-    [logs, characterFilter],
+    [optimisticLogs, characterFilter],
   );
   const filteredDialogues = useMemo(
     () =>
@@ -202,7 +212,10 @@ export default function UserContentBrowser({
                       >
                         Bearbeiten
                       </Link>
-                      <DeleteMissionLogButton logId={log.id} />
+                      <DeleteMissionLogButton
+                        logId={log.id}
+                        onOptimisticDelete={() => removeOptimisticLog(log.id)}
+                      />
                     </div>
                   </div>
                 </div>

@@ -302,24 +302,40 @@ export async function getOwnMissionLogForEdit(
   return rows[0] ?? null;
 }
 
-// Bearbeitet Titel/Datum/Text eines eigenen Logs direkt in der DB — anders
-// als bei der Ersterstellung (mission-logs/new, Commit ins Vault) wird hier
-// NICHT erneut committet. Gleiches Prinzip wie schon bei visibility (auch
-// dort rein DB-seitig, kein Vault-Feld): Slug-bildende Felder (author,
-// mission, session_nr) bleiben unveränderlich, nur Inhalt/Titel/Datum sind
-// editierbar. ACHTUNG: ein späterer manueller VOLLER Reingest
-// (npm run db:ingest, nicht :new) würde title/content/log_date wieder auf
-// den Vault-Stand zurücksetzen (siehe ON CONFLICT DO UPDATE in
-// scripts/ingest/missionLogs.ts) — bewusst hingenommener Trade-off, exakt
-// wie im Design-Dokument für Vault-Edits beschrieben.
+// Bearbeitet Titel/Datum/Text eines eigenen Logs. Slug-bildende Felder
+// (author, mission, session_nr) bleiben unveränderlich, nur Inhalt/Titel/
+// Datum sind editierbar. Schreibt sofort in die DB (siehe
+// updateMissionLogAction) — der Aufrufer committet das zugehörige
+// Vault-File danach per updateVaultFile (Dual-Write, Best-Effort: der Vault
+// soll Single Source of Truth bleiben, siehe deleteMissionLog unten für den
+// gleichen Gedanken beim Löschen). Dafür liefert diese Funktion neben
+// slug/missionId auch die Felder zurück, die für den Wiederaufbau des
+// Vault-Frontmatters gebraucht werden (missionSlug, authorSlug, sessionNr,
+// ownerSlug) — Identitätsfelder, die sich beim Edit nicht ändern.
 export async function updateMissionLogContent(
   userId: number,
   logId: number,
   input: { title: string; logDate: string | null; bodyMarkdown: string },
-): Promise<{ slug: string; missionId: number } | null> {
+): Promise<{
+  slug: string;
+  missionId: number;
+  missionSlug: string;
+  authorSlug: string;
+  sessionNr: number | null;
+  ownerSlug: string | null;
+} | null> {
   const contentHtml = await markdownToHtml(input.bodyMarkdown);
 
-  const rows = await sql<{ slug: string; missionId: number }[]>`
+  const rows = await sql<
+    {
+      slug: string;
+      missionId: number;
+      missionSlug: string;
+      authorSlug: string;
+      sessionNr: number | null;
+      ownerSlug: string | null;
+    }[]
+  >`
     UPDATE mission_logs ml
     SET
       title      = ${input.title},
@@ -327,9 +343,16 @@ export async function updateMissionLogContent(
       content    = ${contentHtml},
       source_md  = ${input.bodyMarkdown},
       updated_at = NOW()
-    FROM characters c
+    FROM characters c, missions m
     WHERE ml.id = ${logId} AND c.id = ml.author_id AND c.player_id = ${userId}
-    RETURNING ml.slug, ml.mission_id AS "missionId"
+      AND m.id = ml.mission_id
+    RETURNING
+      ml.slug,
+      ml.mission_id AS "missionId",
+      m.slug AS "missionSlug",
+      c.slug AS "authorSlug",
+      ml.session_nr AS "sessionNr",
+      (SELECT slug FROM users WHERE id = ml.owner_user_id) AS "ownerSlug"
   `;
   return rows[0] ?? null;
 }

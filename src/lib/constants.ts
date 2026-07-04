@@ -10,4 +10,7 @@ export function getCampaignYears(): number {
   return new Date().getFullYear() - CAMPAIGN_START_YEAR;
 }
 
-export const VERSION_PREFIX = "0.";
+// Für die Versions-Anzeige
+export const VERSION_PREFIX = "0";
+export const FIRST_PR_NUMBER = 0;
+export const FIRST_COMMIT_NUMBER = 0;

@@ -18,8 +18,7 @@ export default function DSGVOClient() {
         <br />
         Deutschland
         <br />
-        E-Mail:{" "}
-        <a href="mailto:wowschockadin@gmail.com">wowschockadin@gmail.com</a>
+        E-Mail: <a href="mailto:kontakt@neo-archiv.de">kontakt@neo-archiv.de</a>
       </address>
 
       <h2>2. Erhobene Daten & Zweck</h2>
@@ -29,20 +28,20 @@ export default function DSGVOClient() {
         einen passwortgeschützten Login-Bereich (<code>/login</code>,{" "}
         <code>/users/…</code>). Dort werden E-Mail-Adresse, Name, Rolle sowie
         ein Passwort-Hash gespeichert (Rechtsgrundlage: Art. 6 Abs. 1 lit. b
-        DSGVO — Erfüllung des Nutzungsverhältnisses der Kampagne). Das
-        Passwort selbst wird nicht im Klartext gespeichert, sondern nur als
-        Hash (siehe Abschnitt 4).
+        DSGVO — Erfüllung des Nutzungsverhältnisses der Kampagne). Das Passwort
+        selbst wird nicht im Klartext gespeichert, sondern nur als Hash (siehe
+        Abschnitt 4).
       </p>
       <p>
         Wer im Login-Bereich Push-Benachrichtigungen aktiviert, erlaubt damit
-        die Speicherung einer geräteseitigen Push-Subscription (eine vom
-        Browser vergebene Endpoint-URL sowie kryptografische Schlüssel zur
+        die Speicherung einer geräteseitigen Push-Subscription (eine vom Browser
+        vergebene Endpoint-URL sowie kryptografische Schlüssel zur
         Verschlüsselung der Benachrichtigung) — keine Klartext-Inhalte,
         ausschließlich zur Zustellung von Benachrichtigungen genutzt
         (Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO — Einwilligung durch
-        aktives Aktivieren). Die Subscription wird gelöscht, sobald sie in
-        den Einstellungen deaktiviert wird, oder automatisch, sobald sie vom
-        Browser für ungültig erklärt wird.
+        aktives Aktivieren). Die Subscription wird gelöscht, sobald sie in den
+        Einstellungen deaktiviert wird, oder automatisch, sobald sie vom Browser
+        für ungültig erklärt wird.
       </p>
       <p>
         Beim Aufruf der Website werden durch den Hosting-Anbieter
@@ -81,20 +80,20 @@ export default function DSGVOClient() {
         <code>neo_session</code>. Es hält dich für 30 Tage angemeldet und ist
         technisch notwendig, um den Login-Bereich (<code>/login</code>,{" "}
         <code>/users/…</code>) bereitzustellen — ohne dieses Cookie ist kein
-        Login möglich. Es ist <code>HttpOnly</code> gesetzt (kein Zugriff
-        durch JavaScript) und wird nicht an Dritte übertragen.
+        Login möglich. Es ist <code>HttpOnly</code> gesetzt (kein Zugriff durch
+        JavaScript) und wird nicht an Dritte übertragen.
       </p>
       <p>
-        Da es sich um ein unbedingt erforderliches Cookie handelt, ist gemäß
-        § 25 Abs. 2 Nr. 2 TTDSG keine Einwilligung erforderlich
-        (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO). Der Cookie-Hinweis beim
-        ersten Besuch informiert lediglich darüber, ohne eine Wahlmöglichkeit
-        anzubieten, da es keine optionalen Cookies (Tracking, Analyse,
-        Marketing) gibt, die man ablehnen könnte.
+        Da es sich um ein unbedingt erforderliches Cookie handelt, ist gemäß §
+        25 Abs. 2 Nr. 2 TTDSG keine Einwilligung erforderlich (Rechtsgrundlage:
+        Art. 6 Abs. 1 lit. b DSGVO). Der Cookie-Hinweis beim ersten Besuch
+        informiert lediglich darüber, ohne eine Wahlmöglichkeit anzubieten, da
+        es keine optionalen Cookies (Tracking, Analyse, Marketing) gibt, die man
+        ablehnen könnte.
       </p>
       <p>
-        Netlify kann darüber hinaus technische Cookies für den sicheren
-        Betrieb setzen (z. B. DDoS-Schutz).
+        Netlify kann darüber hinaus technische Cookies für den sicheren Betrieb
+        setzen (z. B. DDoS-Schutz).
       </p>
 
       <h2>5. Externe Schriftarten</h2>

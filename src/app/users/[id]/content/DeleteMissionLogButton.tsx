@@ -2,9 +2,21 @@
 import { useState, useTransition } from "react";
 import { deleteMissionLogAction } from "./actions";
 
-export default function DeleteMissionLogButton({ logId }: { logId: number }) {
+export default function DeleteMissionLogButton({
+  logId,
+  onOptimisticDelete,
+}: {
+  logId: number;
+  // Von UserContentBrowser.tsx übergeben (dessen useOptimistic-Dispatch) —
+  // wird innerhalb derselben Transition wie der Action-Aufruf ausgelöst,
+  // damit React den Log sofort aus der Liste entfernt und bei einem
+  // Fehlschlag automatisch wieder zurückholt (kein manueller Rollback-Code
+  // hier nötig).
+  onOptimisticDelete: () => void;
+}) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [warning, setWarning] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col items-end gap-[4px]">
@@ -15,9 +27,12 @@ export default function DeleteMissionLogButton({ logId }: { logId: number }) {
         onClick={() => {
           if (!window.confirm("Diesen Missionslog wirklich löschen?")) return;
           setError(null);
+          setWarning(null);
           startTransition(async () => {
+            onOptimisticDelete();
             const result = await deleteMissionLogAction(logId);
             if (result.error) setError(result.error);
+            if (result.warning) setWarning(result.warning);
           });
         }}
       >
@@ -26,6 +41,11 @@ export default function DeleteMissionLogButton({ logId }: { logId: number }) {
       {error && (
         <p className="lcars-link-text text-lcars-red text-[11px]" role="alert">
           {error}
+        </p>
+      )}
+      {warning && (
+        <p className="lcars-link-text text-lcars-amber text-[11px]" role="alert">
+          {warning}
         </p>
       )}
     </div>
