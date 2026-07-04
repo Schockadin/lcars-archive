@@ -29,8 +29,23 @@ export default function DSGVOClient() {
         <code>/users/…</code>). Dort werden E-Mail-Adresse, Name, Rolle sowie
         ein Passwort-Hash gespeichert (Rechtsgrundlage: Art. 6 Abs. 1 lit. b
         DSGVO — Erfüllung des Nutzungsverhältnisses der Kampagne). Das Passwort
-        selbst wird nicht im Klartext gespeichert, sondern nur als Hash (siehe
-        Abschnitt 4).
+        selbst wird nicht im Klartext gespeichert, sondern nur als Hash.
+      </p>
+      <p>
+        Zum Festlegen eines ersten Passworts (Einladung durch die Spielleitung)
+        sowie zum Zurücksetzen eines vergessenen Passworts (<code>
+          /forgot-password
+        </code>
+        , oder ausgelöst durch die Administration) wird ein einmaliger,
+        zeitlich befristeter Link per E-Mail verschickt. Der Link selbst wird
+        nur als Hash gespeichert, verliert nach Benutzung oder nach 7 Tagen
+        seine Gültigkeit (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO). Fordert
+        ein Account selbst einen Reset an, wird die Administration zusätzlich
+        per E-Mail über die anfragende E-Mail-Adresse informiert (berechtigtes
+        Interesse an der Erkennung missbräuchlicher Reset-Anfragen,
+        Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO). Aus dieser Anfrage selbst
+        lässt sich unabhängig von ihrem Ergebnis nicht ableiten, ob zu einer
+        eingegebenen E-Mail-Adresse ein Konto existiert.
       </p>
       <p>
         Wer im Login-Bereich Push-Benachrichtigungen aktiviert, erlaubt damit
@@ -67,14 +82,53 @@ export default function DSGVOClient() {
         </a>
       </p>
 
-      <h2>3. Datenübertragung in Drittländer</h2>
+      <h2>3. E-Mail-Versand</h2>
       <p>
-        Netlify hat Serverstandorte in den USA. Die Übertragung erfolgt auf
-        Basis des EU-US Data Privacy Framework (Angemessenheitsbeschluss der
-        EU-Kommission vom Juli 2023).
+        Aktivierungs-Links, Passwort-Reset-Links sowie Benachrichtigungen zu
+        abonnierten Inhalten und Gesprächsnachrichten werden über den
+        E-Mail-Dienstleister <strong>Resend</strong> (San Francisco, USA)
+        verschickt. Dabei werden E-Mail-Adresse, Name und der jeweilige
+        Mailinhalt (z. B. der Link oder der Titel des betroffenen Inhalts) an
+        Resend übermittelt. Resend verarbeitet diese Daten als
+        Auftragsverarbeiter gemäß Art. 28 DSGVO, ausschließlich zum Versand
+        der jeweiligen E-Mail (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO).
+        Mehr Informationen:{" "}
+        <a href="https://resend.com" target="_blank" rel="noreferrer">
+          resend.com
+        </a>
       </p>
 
-      <h2>4. Cookies</h2>
+      <h2>4. Vault-Backup</h2>
+      <p>
+        Kampagneninhalte (Charaktere, Missionen, Missionslogs, Archiv-Einträge)
+        werden zusätzlich zur Datenbank als Markdown-Dateien in einem
+        Repository bei <strong>GitHub, Inc.</strong> (San Francisco, USA)
+        gesichert. Diese Dateien können ein Kürzel (Slug) enthalten, das aus
+        dem Namen des jeweiligen Erstellers/Bearbeiters abgeleitet ist, um
+        Autorenschaft/Zuständigkeit nachvollziehbar zu halten. GitHub
+        verarbeitet diese Daten als Auftragsverarbeiter gemäß Art. 28 DSGVO
+        (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse
+        an einer versionierten Sicherungskopie der Kampagneninhalte). Mehr
+        Informationen:{" "}
+        <a
+          href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement"
+          target="_blank"
+          rel="noreferrer"
+        >
+          docs.github.com – GitHub Privacy Statement
+        </a>
+      </p>
+
+      <h2>5. Datenübertragung in Drittländer</h2>
+      <p>
+        Netlify, Resend und GitHub haben Serverstandorte in den USA. Die
+        Übertragung erfolgt auf Basis des EU-US Data Privacy Framework
+        (Angemessenheitsbeschluss der EU-Kommission vom Juli 2023) bzw., soweit
+        ein Anbieter diesem nicht angeschlossen ist, auf Basis der
+        EU-Standardvertragsklauseln.
+      </p>
+
+      <h2>6. Cookies</h2>
       <p>
         Diese Website setzt ein einziges eigenes Cookie namens{" "}
         <code>neo_session</code>. Es hält dich für 30 Tage angemeldet und ist
@@ -96,7 +150,7 @@ export default function DSGVOClient() {
         setzen (z. B. DDoS-Schutz).
       </p>
 
-      <h2>5. Externe Schriftarten</h2>
+      <h2>7. Externe Schriftarten</h2>
       <p>
         Die Schriftarten Antonio und Share Tech Mono werden über
         <strong> Google Fonts</strong> eingebunden. Dabei wird deine IP-Adresse
@@ -117,7 +171,7 @@ export default function DSGVOClient() {
         </em>
       </p>
 
-      <h2>6. Deine Rechte</h2>
+      <h2>8. Deine Rechte</h2>
       <p>
         Du hast das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16),
         Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18),
@@ -129,7 +183,7 @@ export default function DSGVOClient() {
         </a>
       </p>
 
-      <h2>7. Aktualität</h2>
+      <h2>9. Aktualität</h2>
       <p>Stand: {currentYear}</p>
     </LegalPageLayout>
   );
