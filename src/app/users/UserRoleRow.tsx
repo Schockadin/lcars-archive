@@ -9,11 +9,14 @@ import {
   deactivateUserAction,
   reactivateUserAction,
   deleteUserAction,
+  resetUserPasswordAction,
   type AdminActionState,
+  type ResetPasswordActionState,
 } from "./actions";
 import type { UserWithCharacters } from "@/lib/users";
 
 const initialState: AdminActionState = {};
+const initialResetState: ResetPasswordActionState = {};
 
 const ROLE_LABELS: Record<UserWithCharacters["role"], string> = {
   admin: "Administration",
@@ -78,6 +81,14 @@ function TrashIcon() {
     </svg>
   );
 }
+function KeyIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="8" cy="15" r="3.5" />
+      <path d="M10.5 12.5 18 5m0 0h-3.5M18 5v3.5" />
+    </svg>
+  );
+}
 
 export default function UserRoleRow({
   user,
@@ -103,6 +114,10 @@ export default function UserRoleRow({
   const [deleteState, deleteAction, deletePending] = useActionState(
     deleteUserAction,
     initialState,
+  );
+  const [resetState, resetAction, resetPending] = useActionState(
+    resetUserPasswordAction,
+    initialResetState,
   );
 
   return (
@@ -233,6 +248,28 @@ export default function UserRoleRow({
                   </button>
                 </form>
 
+                <form action={resetAction}>
+                  <input type="hidden" name="userId" value={user.id} />
+                  <button
+                    type="submit"
+                    disabled={resetPending}
+                    className="lcars-icon-btn"
+                    aria-label="Passwort zurücksetzen"
+                    title="Passwort zurücksetzen"
+                    onClick={(e) => {
+                      if (
+                        !confirm(
+                          `${user.name} einen Link zum Zurücksetzen des Passworts per Mail schicken?`,
+                        )
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    <KeyIcon />
+                  </button>
+                </form>
+
                 <form action={deleteAction}>
                   <input type="hidden" name="userId" value={user.id} />
                   <button
@@ -271,6 +308,26 @@ export default function UserRoleRow({
             <p className="text-lcars-red" role="alert">
               {deleteState.error}
             </p>
+          )}
+          {resetState?.error && (
+            <p className="text-lcars-red" role="alert">
+              {resetState.error}
+            </p>
+          )}
+          {resetState?.warning && (
+            <div className="flex flex-col gap-[4px]">
+              <p className="text-lcars-amber" role="alert">
+                {resetState.warning}
+              </p>
+              {resetState.manualResetUrl && (
+                <input
+                  readOnly
+                  value={resetState.manualResetUrl}
+                  onFocus={(e) => e.currentTarget.select()}
+                  className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-data outline-none"
+                />
+              )}
+            </div>
           )}
         </>
       )}

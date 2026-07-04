@@ -1,6 +1,6 @@
 import postgres from "postgres";
-import { sendSubscriptionDigest } from "../../src/lib/mailCore.js";
-import { sendPushToUser } from "../../src/lib/pushCore.js";
+import { sendSubscriptionDigest } from "../../src/lib/mailCore";
+import { sendPushToUser } from "../../src/lib/pushCore";
 
 // Erste URL aus SITE_URL (kommaseparierte Liste, siehe index.ts) als
 // Basis für Links in der Mail — ein lokaler Ingest-Lauf gegen eine

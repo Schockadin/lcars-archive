@@ -4,7 +4,7 @@ import matter from "gray-matter";
 import postgres from "postgres";
 import { createInterface, type Interface } from "readline/promises";
 import { stdin, stdout } from "process";
-import { markdownToHtml, validateSlug, parseDate, resolveOwner } from "./shared.js";
+import { markdownToHtml, validateSlug, parseDate, resolveOwner } from "./shared";
 
 export interface MissionLogFrontmatter {
   type?: string;

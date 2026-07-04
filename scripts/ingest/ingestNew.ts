@@ -12,13 +12,13 @@
 // unnötig lange dauert, obwohl seit dem letzten Lauf nur wenige neue
 // Dateien hinzugekommen sind.
 import postgres from "postgres";
-import { ingestArchive } from "./archive.js";
-import { ingestCharacters } from "./characters.js";
-import { ingestMissionLogs } from "./missionLogs.js";
-import { ingestMissions } from "./missions.js";
-import { ingestTimeline } from "./timeline.js";
-import { resolveWikiLinks } from "./wikilinks.js";
-import { notifySubscribers } from "./notify.js";
+import { ingestArchive } from "./archive";
+import { ingestCharacters } from "./characters";
+import { ingestMissionLogs } from "./missionLogs";
+import { ingestMissions } from "./missions";
+import { ingestTimeline } from "./timeline";
+import { resolveWikiLinks } from "./wikilinks";
+import { notifySubscribers } from "./notify";
 
 // Nach dem Ingest die Inhalts-Caches invalidieren — identische Logik wie in
 // scripts/ingest/index.ts. Erfordert SITE_URL + REVALIDATE_SECRET; fehlen

@@ -14,7 +14,7 @@ import {
 import { assignCharacterToUser } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { createPasswordSetupToken } from "@/lib/passwordSetupTokens";
-import { sendActivationEmail } from "@/lib/mail";
+import { sendActivationEmail, sendPasswordResetEmail } from "@/lib/mail";
 import { getBaseUrl } from "@/lib/http";
 import type { User } from "@/types/db";
 
@@ -79,6 +79,50 @@ export async function createUserAction(
     return {
       warning: `User angelegt, aber die Aktivierungs-Mail konnte nicht gesendet werden (${result.error}). Link manuell weitergeben:`,
       manualActivationUrl: activationUrl,
+    };
+  }
+
+  redirect("/users");
+}
+
+export interface ResetPasswordActionState {
+  error?: string;
+  warning?: string;
+  manualResetUrl?: string;
+}
+
+// Erzeugt einen frischen Passwort-Setup-Token (dieselbe Tabelle/Mechanik
+// wie bei der Erstanlage, siehe createUserAction) und verschickt ihn per
+// Mail an den betroffenen User — kein Self-Lockout-Risiko wie bei Rolle/
+// Deaktivieren/Löschen, ein Admin darf also auch sein eigenes Passwort so
+// zurücksetzen. Schlägt der Mail-Versand fehl, bleibt der Link zum
+// manuellen Weitergeben stehen (gleiches Fallback-Muster wie
+// createUserAction), statt die Aktion insgesamt scheitern zu lassen.
+export async function resetUserPasswordAction(
+  _state: ResetPasswordActionState,
+  formData: FormData,
+): Promise<ResetPasswordActionState> {
+  await requireAdmin();
+
+  const userId = Number(formData.get("userId"));
+  if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
+
+  const user = await getUserById(userId);
+  if (!user) return { error: "User nicht gefunden." };
+
+  const rawToken = await createPasswordSetupToken(userId);
+  const resetUrl = `${await getBaseUrl()}/activate?token=${rawToken}`;
+
+  const result = await sendPasswordResetEmail({
+    to: user.email,
+    name: user.name,
+    resetUrl,
+  });
+
+  if (!result.sent) {
+    return {
+      warning: `Reset-Link erzeugt, aber die Mail konnte nicht gesendet werden (${result.error}). Link manuell weitergeben:`,
+      manualResetUrl: resetUrl,
     };
   }
 

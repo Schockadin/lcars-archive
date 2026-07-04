@@ -248,3 +248,69 @@ export async function deleteVaultFile(input: {
 
   return { deleted: true };
 }
+
+// ── Lesepfad Vault → App (src/lib/vaultIngest.ts) ─────────────────────
+// Nutzt die Git-Trees/Blobs-API statt der Contents-API: ein einziger
+// Request liefert den kompletten Datei-Baum (statt eines Requests pro
+// Verzeichnis), Blobs kommen bereits Base64-kodiert ohne Umweg über die
+// Contents-API-JSON-Hülle.
+
+export interface VaultTreeEntry {
+  path: string;
+  sha: string;
+}
+
+// Alle Markdown-Dateien unter Charaktere/, Missionen/, Archiv/ — genau die
+// Ordner, die scripts/ingest/* aus einem lokalen Vault-Checkout einlesen.
+export async function listVaultMarkdownFiles(): Promise<VaultTreeEntry[]> {
+  const { token, repo, branch } = vaultConfig();
+
+  const res = await githubFetch(
+    `/repos/${repo}/git/trees/${encodeURIComponent(branch)}?recursive=1`,
+    token,
+  );
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(
+      `GitHub-Baum-Abruf für "${branch}" fehlgeschlagen (${res.status}): ${body}`,
+    );
+  }
+
+  const data = (await res.json()) as {
+    tree: { path: string; type: string; sha: string }[];
+    truncated: boolean;
+  };
+
+  // GitHub kürzt sehr große Bäume statt sie vollständig zurückzugeben —
+  // für den (unwahrscheinlichen) Fall eines so großen Vault-Repos lieber
+  // hart abbrechen als unbemerkt nur einen Teil zu importieren.
+  if (data.truncated) {
+    throw new Error(
+      "Der Vault-Repo-Baum ist zu groß und wurde von GitHub gekürzt — Ingest über die App nicht möglich, bitte lokal per scripts/ingest ausführen.",
+    );
+  }
+
+  return data.tree.filter(
+    (entry) =>
+      entry.type === "blob" &&
+      entry.path.endsWith(".md") &&
+      (entry.path.startsWith("Charaktere/") ||
+        entry.path.startsWith("Missionen/") ||
+        entry.path.startsWith("Archiv/")),
+  );
+}
+
+export async function getVaultBlobContent(sha: string): Promise<string> {
+  const { token, repo } = vaultConfig();
+
+  const res = await githubFetch(`/repos/${repo}/git/blobs/${sha}`, token);
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(
+      `GitHub-Blob-Abruf (${sha}) fehlgeschlagen (${res.status}): ${body}`,
+    );
+  }
+
+  const data = (await res.json()) as { content: string; encoding: string };
+  return Buffer.from(data.content, "base64").toString("utf8");
+}

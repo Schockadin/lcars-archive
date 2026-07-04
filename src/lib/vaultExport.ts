@@ -247,14 +247,54 @@ export async function buildVaultExportFiles(): Promise<VaultExportFile[]> {
   ];
 }
 
-// Committet alle generierten Dateien ins Vault-Repo — sequenziell, nicht
+export interface VaultExportFileResult {
+  path: string;
+  created: boolean;
+  error?: string;
+}
+
+// Committet eine (kleine) Menge Dateien ins Vault-Repo — sequenziell, nicht
 // parallel: die GitHub Contents API braucht pro Datei zwei Requests
 // (SHA-Check + PUT), Parallelisierung würde bei größeren Vaults schnell in
-// GitHubs sekundäre Rate-Limits laufen. Für einen manuell oder per Cron
-// ausgelösten Backup-Lauf ist das niedrigere Tempo (grob 1-2 Dateien/Sekunde)
-// akzeptabel.
+// GitHubs sekundäre Rate-Limits laufen.
+//
+// Bewusst in Batches statt in einem Rutsch für den ganzen Vault: ein
+// einzelner Server-Aufruf über hunderte Dateien reißt auf Netlify leicht die
+// Function-Timeout-Grenze (die Verbindung bricht dann ergebnislos ab, ohne
+// dass der Browser überhaupt eine Antwort bekommt). Der Client
+// (VaultExportPanel.tsx) ruft diese Funktion deshalb wiederholt mit kleinen
+// Häppchen auf und aktualisiert dazwischen eine Fortschrittsanzeige.
+export async function commitVaultExportBatch(
+  files: VaultExportFile[],
+): Promise<VaultExportFileResult[]> {
+  const results: VaultExportFileResult[] = [];
+
+  for (const file of files) {
+    try {
+      const { created } = await upsertVaultFile({
+        path: file.path,
+        content: file.content,
+        message: `Vault-Backup: ${file.path}`,
+      });
+      results.push({ path: file.path, created });
+    } catch (err) {
+      results.push({
+        path: file.path,
+        created: false,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
+
+  return results;
+}
+
+// Weiterhin als ein-Aufruf-Variante für den nicht-interaktiven Cron-Pfad
+// (POST /api/vault-export) — dort gibt es keine Fortschrittsanzeige, die
+// Batches oben sind ausschließlich für den Admin-Panel-Button gedacht.
 export async function exportContentToVault(): Promise<VaultExportResult> {
   const files = await buildVaultExportFiles();
+  const fileResults = await commitVaultExportBatch(files);
 
   const result: VaultExportResult = {
     total: files.length,
@@ -264,19 +304,14 @@ export async function exportContentToVault(): Promise<VaultExportResult> {
     errors: [],
   };
 
-  for (const file of files) {
-    try {
-      const { created } = await upsertVaultFile({
-        path: file.path,
-        content: file.content,
-        message: `Vault-Backup: ${file.path}`,
-      });
-      if (created) result.created++;
-      else result.updated++;
-    } catch (err) {
+  for (const fileResult of fileResults) {
+    if (fileResult.error) {
       result.failed++;
-      const message = err instanceof Error ? err.message : String(err);
-      result.errors.push(`${file.path}: ${message}`);
+      result.errors.push(`${fileResult.path}: ${fileResult.error}`);
+    } else if (fileResult.created) {
+      result.created++;
+    } else {
+      result.updated++;
     }
   }
 

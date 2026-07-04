@@ -7,7 +7,7 @@ import {
   validateSlug,
   toStringArray,
   toNumberArray,
-} from "./shared.js";
+} from "./shared";
 
 // Typ für rohe Frontmatter-Daten
 interface CharacterFrontmatter {

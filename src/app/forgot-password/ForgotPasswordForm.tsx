@@ -1,12 +1,35 @@
 "use client";
 
 import { useActionState } from "react";
-import { login, type LoginState } from "./actions";
+import {
+  requestPasswordResetAction,
+  type ForgotPasswordState,
+} from "./actions";
 
-const initialState: LoginState = {};
+const initialState: ForgotPasswordState = {};
 
-export default function LoginForm() {
-  const [state, formAction, pending] = useActionState(login, initialState);
+export default function ForgotPasswordForm() {
+  const [state, formAction, pending] = useActionState(
+    requestPasswordResetAction,
+    initialState,
+  );
+
+  if (state?.submitted) {
+    return (
+      <div className="flex flex-col gap-[16px]">
+        <p>
+          Falls zu dieser E-Mail-Adresse ein aktives Konto existiert, haben
+          wir gerade einen Link zum Festlegen eines neuen Passworts
+          verschickt.
+        </p>
+        <p>
+          <a href="/login" className="text-lcars-amber underline">
+            ← Zurück zum Login
+          </a>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <form
@@ -27,26 +50,6 @@ export default function LoginForm() {
         />
       </div>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="password" className="lcars-eyebrow">
-          Passwort
-        </label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          required
-          autoComplete="current-password"
-          className="rounded-lcars-pill lcars-input"
-        />
-        <a
-          href="/forgot-password"
-          className="self-end text-lcars-text-dim text-[13px] underline"
-        >
-          Passwort vergessen?
-        </a>
-      </div>
-
       {state?.error && (
         <p className="text-lcars-red" role="alert">
           {state.error}
@@ -58,7 +61,7 @@ export default function LoginForm() {
         disabled={pending}
         className="lcars-switch self-start disabled:opacity-50"
       >
-        {pending ? "Anmelden…" : "Anmelden"}
+        {pending ? "Wird gesendet…" : "Link anfordern"}
       </button>
     </form>
   );

@@ -8,7 +8,7 @@ import {
   parseDate,
   toStringArray,
   resolveOwner,
-} from "./shared.js";
+} from "./shared";
 
 // Typ für rohe Frontmatter-Daten der Mission-Container
 interface MissionFrontmatter {

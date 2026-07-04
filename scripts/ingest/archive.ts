@@ -2,7 +2,7 @@ import { readFileSync, readdirSync, statSync } from "fs";
 import { join, extname } from "path";
 import matter from "gray-matter";
 import postgres from "postgres";
-import { markdownToHtml, validateSlug, toStringArray, resolveOwner } from "./shared.js";
+import { markdownToHtml, validateSlug, toStringArray, resolveOwner } from "./shared";
 
 // Gültige Kategorien — muss exakt dem CHECK-Constraint in schema.sql sowie
 // ArchiveCategory in src/types/archive.ts entsprechen.

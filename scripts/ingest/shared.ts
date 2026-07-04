@@ -2,9 +2,13 @@
 import type postgres from "postgres";
 
 // markdownToHtml lebt jetzt in src/lib/markdown.ts (auch im App-Code nutzbar)
-// und wird hier re-exportiert, damit die Ingest-Skripte weiter aus "./shared.js"
-// importieren können. Relativer .js-Pfad (kein @/-Alias) wegen tsx-Auflösung.
-export { markdownToHtml } from "../../src/lib/markdown.js";
+// und wird hier re-exportiert, damit die Ingest-Skripte weiter aus "./shared"
+// importieren können. Relativer Pfad (kein @/-Alias), damit sowohl tsx (CLI-
+// Ingest) als auch der Next.js-Bundler (Vault-Ingest-Button, src/lib/vaultIngest.ts)
+// diese Module auflösen können — ohne .js-Suffix, das Turbopack beim Bündeln
+// dieser Dateien nicht auf die .ts-Quelle abbildet (tsx dagegen kommt mit
+// beiden Schreibweisen zurecht).
+export { markdownToHtml } from "../../src/lib/markdown";
 
 // Löst das "owner: <user-slug>"-Frontmatter zu einer users.id auf. Ein
 // leeres/fehlendes Feld oder ein unbekannter Slug bricht den Ingest nicht ab

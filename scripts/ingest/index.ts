@@ -1,11 +1,11 @@
 import postgres from "postgres";
-import { ingestArchive } from "./archive.js";
-import { ingestCharacters } from "./characters.js";
-import { ingestMissionLogs } from "./missionLogs.js";
-import { ingestMissions } from "./missions.js";
-import { ingestTimeline } from "./timeline.js";
-import { resolveWikiLinks } from "./wikilinks.js";
-import { notifySubscribers } from "./notify.js";
+import { ingestArchive } from "./archive";
+import { ingestCharacters } from "./characters";
+import { ingestMissionLogs } from "./missionLogs";
+import { ingestMissions } from "./missions";
+import { ingestTimeline } from "./timeline";
+import { resolveWikiLinks } from "./wikilinks";
+import { notifySubscribers } from "./notify";
 
 // Nach erfolgreichem Ingest die Inhalts-Caches invalidieren (Schritt 3).
 // Erfordert SITE_URL + REVALIDATE_SECRET; fehlen diese, wird der Schritt
