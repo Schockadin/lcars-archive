@@ -108,7 +108,16 @@ export default function UserRoleRow({
   return (
     <div className="flex flex-col gap-[6px] border-b border-lcars-border pb-[12px]">
       <div className="flex flex-wrap items-center gap-[12px]">
-        <span className="font-lcars text-lcars-text-data">{user.name}</span>
+        {isAdmin ? (
+          <Link
+            href={`/users/${user.id}/edit`}
+            className="font-lcars text-lcars-text-data underline"
+          >
+            {user.name}
+          </Link>
+        ) : (
+          <span className="font-lcars text-lcars-text-data">{user.name}</span>
+        )}
         <span className="text-lcars-text">{user.email}</span>
         {!user.is_active && <span className="text-lcars-red">Deaktiviert</span>}
         {user.characters.length > 0 && (

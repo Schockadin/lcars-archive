@@ -553,21 +553,33 @@ export async function setDialogueVisibility(
 }
 
 export interface DialogueEmailTarget {
+  id: number;
   email: string;
   name: string;
+  emailNotificationsEnabled: boolean;
+  pushNotificationsEnabled: boolean;
 }
 
 // Abonnenten dieses Dialogs (subscribed_at gesetzt, target_type
 // 'archive_entry'), ohne den Absender der gerade geposteten Nachricht —
 // Grundlage für die Benachrichtigung in postDialogueMessageAction. Ersetzt
 // getOtherParticipantContact als bedingungslosen Empfänger: nur wer
-// abonniert ist (Default beim Anlegen, abbestellbar), bekommt Mail.
+// abonniert ist (Default beim Anlegen, abbestellbar), bekommt
+// Benachrichtigungen.
 export async function getDialogueSubscribers(
   dialogueSlug: string,
   excludeUserId: number,
 ): Promise<DialogueEmailTarget[]> {
-  return sql<DialogueEmailTarget[]>`
-    SELECT u.email, u.name
+  const rows = await sql<
+    {
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
     FROM content_follows cf
     JOIN users u ON u.id = cf.user_id
     WHERE cf.target_type = 'archive_entry'
@@ -575,21 +587,43 @@ export async function getDialogueSubscribers(
       AND cf.subscribed_at IS NOT NULL
       AND cf.user_id != ${excludeUserId}
   `;
+  return rows.map((row) => ({
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    emailNotificationsEnabled: row.email_notifications_enabled,
+    pushNotificationsEnabled: row.push_notifications_enabled,
+  }));
 }
 
 // Abonnenten eines Charakters (subscribed_at gesetzt) — Grundlage für die
 // Dialog-Abschluss-Benachrichtigung in completeDialogueAction.
 export async function getCharacterSubscribers(
   characterSlug: string,
-): Promise<{ email: string; name: string }[]> {
-  return sql<{ email: string; name: string }[]>`
-    SELECT u.email, u.name
+): Promise<DialogueEmailTarget[]> {
+  const rows = await sql<
+    {
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
     FROM content_follows cf
     JOIN users u ON u.id = cf.user_id
     WHERE cf.target_type = 'character'
       AND cf.target_slug = ${characterSlug}
       AND cf.subscribed_at IS NOT NULL
   `;
+  return rows.map((row) => ({
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    emailNotificationsEnabled: row.email_notifications_enabled,
+    pushNotificationsEnabled: row.push_notifications_enabled,
+  }));
 }
 
 export interface DialogueSummary {
@@ -599,6 +633,8 @@ export interface DialogueSummary {
   partnerName: string;
   updatedAt: string;
   open: boolean;
+  characterSlug: string;
+  characterName: string;
   visibility: "private" | "gm" | "public";
   ownerUserId: number | null;
 }
@@ -618,7 +654,8 @@ export async function getDialoguesForUser(
   const ownSlugs = new Set(ownCharacters.map((c) => c.slug));
 
   const results = new Map<string, DialogueSummary>();
-  for (const slug of ownSlugs) {
+  for (const character of ownCharacters) {
+    const slug = character.slug;
     type DialogueRow = {
       id: number;
       slug: string;
@@ -659,6 +696,8 @@ export async function getDialoguesForUser(
         partnerName: partner?.name ?? "Unbekannt",
         updatedAt: row.updated_at,
         open: row.dialogue_open,
+        characterSlug: character.slug,
+        characterName: character.name,
         visibility: row.visibility,
         ownerUserId: row.owner_user_id,
       });

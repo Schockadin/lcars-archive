@@ -4,7 +4,8 @@ import { slugifyBase } from "@/lib/slug";
 import type { User } from "@/types/db";
 
 const USER_COLUMNS = sql`
-  id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at
+  id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
+  email_notifications_enabled, push_notifications_enabled
 `;
 
 // Probiert slugifyBase(name), "${base}-2", "${base}-3", … bis ein Slug in
@@ -60,6 +61,7 @@ export async function listAllUsers(): Promise<UserWithCharacters[]> {
     SELECT
       u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
       u.last_login_at, u.previous_login_at,
+      u.email_notifications_enabled, u.push_notifications_enabled,
       COALESCE(
         jsonb_agg(
           jsonb_build_object('id', c.id, 'slug', c.slug, 'name', c.name)
@@ -148,6 +150,26 @@ export interface UpdateUserInput {
   email: string;
 }
 
+export interface NotificationPreferencesInput {
+  emailEnabled: boolean;
+  pushEnabled: boolean;
+}
+
+// Zwei globale Schalter, gelten einheitlich für alle Benachrichtigungs-
+// Ereignistypen (siehe scripts/schema.sql) — kein granulares Opt-out pro
+// Ereignis.
+export async function updateNotificationPreferences(
+  id: number,
+  data: NotificationPreferencesInput,
+): Promise<void> {
+  await sql`
+    UPDATE users
+    SET email_notifications_enabled = ${data.emailEnabled},
+        push_notifications_enabled = ${data.pushEnabled}
+    WHERE id = ${id}
+  `;
+}
+
 export async function updateUser(
   id: number,
   data: UpdateUserInput,
@@ -227,6 +249,61 @@ export async function getUserWithPasswordStatus(
 
   const { has_password, ...user } = row;
   return { ...user, hasPassword: has_password };
+}
+
+export interface UserAdminDetail extends User {
+  hasPassword: boolean;
+  requiresActivation: boolean;
+  characters: { id: number; slug: string; name: string }[];
+}
+
+// Für /users/[id]/edit: alle Felder, die die Admin-Bearbeitungsseite
+// anzeigt — inkl. Passwort-/Aktivierungsstatus (wieder nur als Boolean,
+// nie der Hash selbst, siehe Kommentar oben bei UserCredentials) und
+// zugewiesene Charaktere (read-only Kontext, Zuweisung selbst bleibt
+// CharacterAssignmentTable auf /users vorbehalten).
+export async function getUserForAdmin(
+  id: number,
+): Promise<UserAdminDetail | null> {
+  const rows = await sql<
+    (User & {
+      has_password: boolean;
+      requires_activation: boolean;
+      characters: { id: number; slug: string; name: string }[];
+    })[]
+  >`
+    SELECT
+      u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
+      u.last_login_at, u.previous_login_at,
+      u.email_notifications_enabled, u.push_notifications_enabled,
+      u.password_hash IS NOT NULL AS has_password,
+      u.requires_activation,
+      COALESCE(
+        jsonb_agg(
+          jsonb_build_object('id', c.id, 'slug', c.slug, 'name', c.name)
+          ORDER BY c.name
+        ) FILTER (WHERE c.id IS NOT NULL),
+        '[]'::jsonb
+      ) AS characters
+    FROM users u
+    LEFT JOIN characters c ON c.player_id = u.id
+    WHERE u.id = ${id}
+    GROUP BY u.id
+    LIMIT 1
+  `;
+  const row = rows[0];
+  if (!row) return null;
+
+  const { has_password, requires_activation, characters, ...user } = row;
+  return {
+    ...user,
+    hasPassword: has_password,
+    requiresActivation: requires_activation,
+    characters:
+      typeof characters === "string"
+        ? JSON.parse(characters)
+        : characters,
+  };
 }
 
 export async function getPasswordHash(userId: number): Promise<string | null> {

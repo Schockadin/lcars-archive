@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
 import {
+  ArchiveCategory,
   ArchiveEntryDetail,
   ArchiveEntryPreview,
   ArchiveLink,
@@ -141,6 +142,48 @@ export async function getDialogueCountByParticipant(
     ["getDialogueCountByParticipant", "v3", slug],
     { tags: [cacheTags.archive] },
   )();
+}
+
+export interface UserContentArchiveEntry {
+  id: number;
+  slug: string;
+  title: string;
+  category: ArchiveCategory;
+  visibility: "private" | "gm" | "public";
+}
+
+// Eigene Archiv-Einträge (owner_user_id, siehe scripts/schema.sql) für
+// /users/[id]/content — ohne Kategorie 'dialogue', die dort separat über
+// getDialoguesForUser läuft. Ungecacht wie getLogsForUser (Charaktere.ts):
+// die Seite ist ohnehin durch requireOwnCharacters (Session-Zugriff)
+// dynamisch.
+export async function getArchiveEntriesForUser(
+  userId: number,
+): Promise<UserContentArchiveEntry[]> {
+  return sql<UserContentArchiveEntry[]>`
+    SELECT id, slug, title, category, visibility
+    FROM archive_entries
+    WHERE owner_user_id = ${userId} AND category != 'dialogue'
+    ORDER BY title ASC
+  `;
+}
+
+// Nur der Owner (owner_user_id) darf die Sichtbarkeit ändern — ein
+// fremdes/gefälschtes id trifft dann einfach 0 Zeilen (gleiches Prinzip wie
+// setDialogueVisibility in src/lib/dialoguesCore.ts, nur ohne die
+// category='dialogue'-Einschränkung).
+export async function setArchiveEntryVisibility(
+  userId: number,
+  archiveEntryId: number,
+  visibility: "private" | "gm" | "public",
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE archive_entries
+    SET visibility = ${visibility}, updated_at = NOW()
+    WHERE id = ${archiveEntryId} AND category != 'dialogue' AND owner_user_id = ${userId}
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
 }
 
 // Alle Pfade für Sitemap und generateStaticParams — nur public, damit

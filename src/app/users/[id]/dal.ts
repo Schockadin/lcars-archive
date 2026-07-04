@@ -1,10 +1,14 @@
 import "server-only";
 import { redirect } from "next/navigation";
-import { getCurrentUser, verifySession } from "@/lib/dal";
-import { getUserById, getUserWithPasswordStatus } from "@/lib/users";
+import { getCurrentUser, requireAdmin, verifySession } from "@/lib/dal";
+import {
+  getUserById,
+  getUserForAdmin,
+  getUserWithPasswordStatus,
+} from "@/lib/users";
 import { getCharactersForUser } from "@/lib/characters";
 import type { User } from "@/types/db";
-import type { UserWithPasswordStatus } from "@/lib/users";
+import type { UserAdminDetail, UserWithPasswordStatus } from "@/lib/users";
 import type { Character } from "@/types/character";
 
 // Für /settings: Einstellungen bearbeiten bleibt strikt Selbstbedienung,
@@ -107,4 +111,33 @@ export async function requireOwnCharacters(
 
   const characters = await getCharactersForUser(session.userId);
   return { user, characters };
+}
+
+export interface AdminEditTargetAccess {
+  viewer: User;
+  target: UserAdminDetail;
+}
+
+// Für /users/[id]/edit: strikt admin-only (nicht requireSelfOrGM — die
+// Useraccount-Bearbeitung selbst ist admin-only, siehe requireAdmin in
+// src/lib/dal.ts und der gleiche Grundsatz in src/app/users/actions.ts;
+// ein reiner gm darf hier nicht rein, auch nicht für sich selbst — dafür
+// gibt es /settings). requireAdmin() prüft frisch aus der DB, nicht aus
+// dem Cookie, damit ein gerade entzogenes Admin-Recht sofort greift.
+export async function requireAdminEditTarget(
+  idParam: string,
+): Promise<AdminEditTargetAccess> {
+  const viewer = await requireAdmin();
+
+  const id = Number(idParam);
+  if (!Number.isInteger(id)) {
+    redirect("/users");
+  }
+
+  const target = await getUserForAdmin(id);
+  if (!target) {
+    redirect("/users");
+  }
+
+  return { viewer, target };
 }

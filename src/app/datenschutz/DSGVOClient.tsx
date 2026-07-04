@@ -34,6 +34,17 @@ export default function DSGVOClient() {
         Hash (siehe Abschnitt 4).
       </p>
       <p>
+        Wer im Login-Bereich Push-Benachrichtigungen aktiviert, erlaubt damit
+        die Speicherung einer geräteseitigen Push-Subscription (eine vom
+        Browser vergebene Endpoint-URL sowie kryptografische Schlüssel zur
+        Verschlüsselung der Benachrichtigung) — keine Klartext-Inhalte,
+        ausschließlich zur Zustellung von Benachrichtigungen genutzt
+        (Rechtsgrundlage: Art. 6 Abs. 1 lit. a DSGVO — Einwilligung durch
+        aktives Aktivieren). Die Subscription wird gelöscht, sobald sie in
+        den Einstellungen deaktiviert wird, oder automatisch, sobald sie vom
+        Browser für ungültig erklärt wird.
+      </p>
+      <p>
         Beim Aufruf der Website werden durch den Hosting-Anbieter
         <strong> Netlify, Inc.</strong> (512 2nd Street, Suite 200, San
         Francisco, CA 94107, USA) technisch bedingt folgende Daten im Server-Log
