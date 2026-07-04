@@ -113,6 +113,17 @@ export default async function UserPage({
             />
           )}
 
+          {isSelf && characters.length > 0 && (
+            <p>
+              <Link
+                href={`/users/${target.id}/mission-logs/new`}
+                className="lcars-switch self-end"
+              >
+                Neuer Missionslog
+              </Link>
+            </p>
+          )}
+
           {!isSelf && (
             <p>
               <Link href="/users" className="text-lcars-amber underline">

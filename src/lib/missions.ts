@@ -87,6 +87,32 @@ export async function getMissionBySlug(
   )();
 }
 
+// Vorschlagswert fürs Session-Nr-Feld im "Neuer Missionslog"-Formular
+// (src/app/users/[id]/mission-logs/new) — nur ein Default, das Feld bleibt
+// editierbar. Kein Cache: soll bei jedem Seitenaufruf den aktuellen Stand
+// zeigen, nicht bis zur nächsten Tag-Invalidierung stale bleiben.
+export async function getNextSessionNr(
+  missionId: number,
+  authorId: number,
+): Promise<number> {
+  const [row] = await sql<{ next: number }[]>`
+    SELECT COALESCE(MAX(session_nr), 0) + 1 AS next
+    FROM mission_logs
+    WHERE mission_id = ${missionId} AND author_id = ${authorId}
+  `;
+  return row?.next ?? 1;
+}
+
+// Kollisionsprüfung vor dem Vault-Commit (src/app/users/[id]/mission-logs/new/actions.ts)
+// — der Slug ist deterministisch aus author-mission-session_nr gebaut, ein
+// Treffer bedeutet also "diese Kombination gibt es schon".
+export async function missionLogSlugExists(slug: string): Promise<boolean> {
+  const [row] = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS(SELECT 1 FROM mission_logs WHERE slug = ${slug}) AS exists
+  `;
+  return row?.exists ?? false;
+}
+
 // Logs einer Mission (schlank, ohne content) für die Liste links. Nur
 // public — diese Nav-Liste wird auf jeder Log-Detailseite der Mission
 // mitgerendert (auch auf privaten/gm-Logs, siehe Layout), ein
