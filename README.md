@@ -2,8 +2,11 @@
 
 Ein webbasiertes Kampagnen-Archiv für eine Sci-Fi-Rollenspielrunde, gestaltet im
 Look-and-Feel des **LCARS**-Computerinterfaces (Library Computer Access/Retrieval System).
-Charaktere, Missionen und Mission-Logs werden aus einem Markdown-Vault eingelesen,
-in einer PostgreSQL-Datenbank gespeichert und als responsives Next.js-Frontend ausgegeben.
+Charaktere, Missionen und Mission-Logs werden in einer PostgreSQL-Datenbank
+gepflegt (Source of Truth) und als responsives Next.js-Frontend ausgegeben.
+Ein Markdown-Vault (GitHub-Repo, Obsidian-kompatibel) dient als
+Ursprungsimport sowie als aus der DB generiertes Backup — siehe
+[`docs/content-creation-strategy.md`](docs/content-creation-strategy.md).
 
 > Die Oberfläche ist durchgängig auf **Deutsch**.
 
@@ -17,9 +20,10 @@ in einer PostgreSQL-Datenbank gespeichert und als responsives Next.js-Frontend a
   Aliassen und Status (`active` / `retired` / `deceased`).
 - **Missionen & Mission-Logs** — Logbucheinträge sind Charakteren und Missionen zugeordnet
   und chronologisch nach Session-Nummer sortiert.
-- **Markdown-Vault als Quelle** — Inhalte werden aus `.md`-Dateien mit YAML-Frontmatter
-  (Obsidian-kompatibel) eingelesen. Ein `<!-- private -->`-Marker trennt öffentliche von
-  GM-internen Inhalten.
+- **Markdown-Vault als Ursprungsimport & Backup** — Inhalte lassen sich initial aus
+  `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
+  entstehen direkt in der App und werden per Admin-Panel-Button (oder künftig Cronjob)
+  wieder als Markdown ins Vault-Repo zurückgeschrieben.
 - **Custom-Markdown-Pipeline** — `remark`/`rehype` wandeln Markdown in HTML um und rendern
   `h2`-Überschriften als LCARS-Data-Rows.
 - **SEO-fertig** — `robots.ts`, `sitemap.ts`, dynamische Metadaten und 404-Seite.
@@ -110,6 +114,12 @@ Liest die Markdown-Dateien aus `VAULT_PATH` ein und schreibt sie per Upsert in d
 > Slug einmal importiert wurde, fasst dieses Skript ihn nie wieder an, auch
 > nicht nach Bearbeitungen der Quelldatei — dafür bleibt `npm run db:ingest`
 > zuständig.
+
+> **Rückrichtung (DB → Vault):** Neue/bearbeitete Inhalte entstehen über die
+> Web-App direkt in der Datenbank. Um sie als Markdown ins Vault-Repo zu
+> sichern, im Admin-Panel (`/users`) auf „Vault-Backup jetzt generieren“
+> klicken, oder `POST /api/vault-export` (Secret `VAULT_EXPORT_SECRET`)
+> aufrufen — siehe `docs/content-creation-strategy.md`.
 
 ### 5. Entwicklungsserver starten
 

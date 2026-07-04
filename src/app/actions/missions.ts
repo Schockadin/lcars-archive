@@ -1,14 +1,11 @@
 "use server";
-import matter from "gray-matter";
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
 import { updateMissionSynopsis } from "@/lib/missions";
 import { revalidateMission } from "@/lib/revalidate";
-import { updateVaultFile } from "@/lib/githubVault";
 
 export interface MissionSynopsisEditState {
   error?: string;
-  warning?: string;
   success?: boolean;
   updatedHtml?: string;
 }
@@ -42,35 +39,6 @@ export async function updateMissionSynopsisAction(
   if (!result) return { error: "Mission nicht gefunden." };
 
   revalidateMission(result.slug);
-
-  const fileContent = matter.stringify(bodyMarkdown, {
-    type: "mission",
-    slug: result.slug,
-    title: result.title,
-    status: result.status,
-    ...(result.startedAt ? { started_at: result.startedAt } : {}),
-    ...(result.endedAt ? { ended_at: result.endedAt } : {}),
-    ...(result.metadata.tags.length ? { tags: result.metadata.tags } : {}),
-    ...(result.ownerSlug ? { owner: result.ownerSlug } : {}),
-  });
-
-  try {
-    await updateVaultFile({
-      path: `Missionen/${result.slug}/index.md`,
-      content: fileContent,
-      message: `Mission-Synopsis bearbeitet: ${result.title} (via Web-App)`,
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return {
-      success: true,
-      updatedHtml: result.metadata.body ?? undefined,
-      warning:
-        `Gespeichert, aber die Vault-Datei konnte nicht mit aktualisiert ` +
-        `werden (${message}). Bei einem künftigen vollen Reingest würde ` +
-        `diese Bearbeitung sonst wieder überschrieben werden.`,
-    };
-  }
 
   return { success: true, updatedHtml: result.metadata.body ?? undefined };
 }

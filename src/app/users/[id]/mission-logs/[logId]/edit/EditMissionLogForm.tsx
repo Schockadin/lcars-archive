@@ -82,15 +82,6 @@ export default function EditMissionLogForm({
           {state.error}
         </p>
       )}
-
-      {state?.warning && (
-        <p className="text-lcars-amber" role="alert">
-          {state.warning}{" "}
-          <a href={`/users/${userId}/content`} className="underline">
-            Zurück zu Meine Inhalte
-          </a>
-        </p>
-      )}
     </form>
   );
 }

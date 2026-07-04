@@ -79,14 +79,15 @@ export async function setVisibilityAction(
 // Löschen eines eigenen Mission-Logs aus "Meine Inhalte" (DeleteMissionLogButton.tsx).
 // deleteMissionLog scoped die DB-Löschung selbst auf den Owner (Spieler des
 // Autor-Charakters) — ein gefälschtes id trifft 0 Zeilen, kein Vorab-Check
-// hier nötig (gleiches Prinzip wie setVisibilityAction oben). Die
-// Vault-Datei-Löschung ist Best-Effort: schlägt sie fehl (Datei anders
-// benannt, Token fehlt, GitHub nicht erreichbar), bleibt das Log trotzdem
-// aus der DB entfernt — das ist für den User das eigentlich sichtbare
-// Ergebnis. Anders als früher aber sichtbar als warning statt nur
-// console.error: sonst merkt niemand, dass der Vault jetzt vom DB-Stand
-// abweicht (die committete Datei existiert weiter, obwohl das Log aus der
-// DB verschwunden ist).
+// hier nötig (gleiches Prinzip wie setVisibilityAction oben). Die DB ist
+// Source of Truth, der Vault nur noch generiertes Backup (siehe
+// src/lib/vaultExport.ts) — die Vault-Datei-Löschung hier ist deshalb
+// Best-Effort: schlägt sie fehl (Datei anders benannt, Token fehlt, GitHub
+// nicht erreichbar), bleibt das Log trotzdem aus der DB entfernt — das ist
+// das eigentlich maßgebliche Ergebnis. Der nächste Vault-Export überschreibt
+// zwar keine verwaisten Dateien, ein sofortiger Best-Effort-Delete hält das
+// Backup aber im Regelfall trotzdem aktuell. Sichtbar als warning statt nur
+// console.error, falls er fehlschlägt.
 export async function deleteMissionLogAction(
   logId: number,
 ): Promise<{ error?: string; warning?: string }> {

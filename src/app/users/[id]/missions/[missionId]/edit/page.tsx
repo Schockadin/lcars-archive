@@ -16,7 +16,7 @@ export default async function EditMissionPage({
   params: Promise<{ id: string; missionId: string }>;
 }) {
   const { id, missionId } = await params;
-  const { user } = await requireOwnGM(id);
+  await requireOwnGM(id);
 
   const mission = await getMissionById(Number(missionId));
   if (!mission) notFound();
@@ -26,7 +26,7 @@ export default async function EditMissionPage({
       <PageMeta title="Mission bearbeiten" section="users" />
       <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
         <h1>Mission bearbeiten</h1>
-        <EditMissionForm userId={user.id} mission={mission} />
+        <EditMissionForm mission={mission} />
       </article>
     </>
   );

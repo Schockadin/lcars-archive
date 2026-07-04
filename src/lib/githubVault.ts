@@ -163,6 +163,53 @@ export async function updateVaultFile(input: {
   return { htmlUrl: data.content.html_url, sha: data.content.sha };
 }
 
+// Erzeugt oder aktualisiert eine Vault-Datei, je nachdem ob sie schon
+// existiert — für den Vault-Backup-Export (src/lib/vaultExport.ts), der
+// beim wiederholten Lauf (Admin-Button oder künftig Cronjob) denselben Pfad
+// mal neu anlegen, mal überschreiben muss, ohne dass der Aufrufer selbst
+// zwischen commitVaultFile/updateVaultFile unterscheiden müsste.
+export async function upsertVaultFile(input: {
+  path: string;
+  content: string;
+  message: string;
+}): Promise<{ htmlUrl: string; sha: string; created: boolean }> {
+  const { token, repo, branch } = vaultConfig();
+
+  const existingSha = await getExistingFileSha(repo, branch, token, input.path);
+
+  const put = await githubFetch(
+    `/repos/${repo}/contents/${encodePath(input.path)}`,
+    token,
+    {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: input.message,
+        content: Buffer.from(input.content, "utf8").toString("base64"),
+        branch,
+        ...(existingSha != null ? { sha: existingSha } : {}),
+      }),
+    },
+  );
+
+  if (!put.ok) {
+    const body = await put.text();
+    throw new Error(
+      `GitHub-Upsert für "${input.path}" fehlgeschlagen (${put.status}): ${body}`,
+    );
+  }
+
+  const data = (await put.json()) as {
+    content: { sha: string; html_url: string };
+  };
+
+  return {
+    htmlUrl: data.content.html_url,
+    sha: data.content.sha,
+    created: existingSha == null,
+  };
+}
+
 // Best-Effort-Löschung beim Entfernen eines eigenen Mission-Logs (siehe
 // deleteMissionLog in src/lib/missions.ts). Gleicher Pfad-Vorbehalt wie bei
 // updateVaultFile oben: Datei nicht gefunden → kein Fehler, nur

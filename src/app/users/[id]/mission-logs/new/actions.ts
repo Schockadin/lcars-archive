@@ -1,23 +1,29 @@
 "use server";
 import { redirect } from "next/navigation";
-import matter from "gray-matter";
 import { verifySession } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { getCharactersForUser } from "@/lib/characters";
-import { getAllMissions, missionLogSlugExists } from "@/lib/missions";
-import { commitVaultFile, VaultFileExistsError } from "@/lib/githubVault";
+import {
+  getAllMissions,
+  missionLogSlugExists,
+  createMissionLog,
+} from "@/lib/missions";
+import { revalidateLog } from "@/lib/revalidate";
 
-export interface MissionLogVaultState {
+export interface MissionLogFormState {
   error?: string;
-  success?: { commitUrl: string; path: string };
 }
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export async function createMissionLogVaultAction(
-  _state: MissionLogVaultState,
+// DB ist Source of Truth (siehe createMissionAction für dasselbe Prinzip) —
+// der Log landet direkt in der Datenbank, kein Vault-Commit mehr an dieser
+// Stelle. Der Vault-Backup-Export (src/lib/vaultExport.ts) generiert die
+// Datei später separat.
+export async function createMissionLogAction(
+  _state: MissionLogFormState,
   formData: FormData,
-): Promise<MissionLogVaultState> {
+): Promise<MissionLogFormState> {
   const session = await verifySession();
 
   const userId = Number(formData.get("userId"));
@@ -57,7 +63,7 @@ export async function createMissionLogVaultAction(
   if (logDateRaw && !DATE_RE.test(logDateRaw)) {
     return { error: "Ungültiges Datum." };
   }
-  const logDate = logDateRaw || undefined;
+  const logDate = logDateRaw || null;
 
   const bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte einen Log-Text schreiben." };
@@ -76,37 +82,17 @@ export async function createMissionLogVaultAction(
     redirect("/login");
   }
 
-  const fileContent = matter.stringify(bodyMarkdown, {
-    type: "mission-log",
+  const result = await createMissionLog({
+    slug,
+    missionId: mission.id,
+    authorId: authorCharacter.id,
     title,
-    mission: mission.slug,
-    author: authorCharacter.slug,
-    session_nr: sessionNr,
-    ...(logDate ? { log_date: logDate } : {}),
-    owner: user.slug,
+    bodyMarkdown,
+    logDate,
+    sessionNr,
+    ownerUserId: user.id,
   });
 
-  const path = `Missionen/${mission.slug}/${slug}.md`;
-
-  try {
-    const { htmlUrl } = await commitVaultFile({
-      path,
-      content: fileContent,
-      message: `Neuer Missionslog: ${title} (via Web-App, ${user.name})`,
-    });
-    return { success: { commitUrl: htmlUrl, path } };
-  } catch (err) {
-    if (err instanceof VaultFileExistsError) {
-      return {
-        error:
-          "Diese Datei existiert im Vault bereits (evtl. steht ein Ingest noch aus) — bitte eine andere Session-Nummer wählen.",
-      };
-    }
-    return {
-      error:
-        err instanceof Error
-          ? `Commit ins Vault fehlgeschlagen: ${err.message}`
-          : "Commit ins Vault fehlgeschlagen.",
-    };
-  }
+  revalidateLog(mission.id, result.slug);
+  redirect(`/users/${session.userId}`);
 }

@@ -65,12 +65,6 @@ export default function MissionSynopsisEditor({
         ) : (
           <p className="lcars-empty-state">Keine Zusammenfassung vorhanden</p>
         )}
-
-        {state.warning && (
-          <p className="text-lcars-amber text-[13px]" role="alert">
-            {state.warning}
-          </p>
-        )}
       </div>
     );
   }
