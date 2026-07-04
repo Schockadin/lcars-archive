@@ -7,6 +7,7 @@ import CreateUserForm from "./CreateUserForm";
 import UserManagementTable from "./UserManagementTable";
 import CharacterAssignmentTable from "./CharacterAssignmentTable";
 import VaultExportPanel from "./VaultExportPanel";
+import RevalidateCachePanel from "./RevalidateCachePanel";
 
 export const metadata: Metadata = {
   title: "Nutzerverwaltung",
@@ -66,6 +67,13 @@ export default async function UsersAdminPage() {
             <section className="flex flex-col gap-[12px]">
               <h2 className="text-lcars-amber">Vault-Backup</h2>
               <VaultExportPanel />
+            </section>
+          )}
+
+          {isAdmin && (
+            <section className="flex flex-col gap-[12px]">
+              <h2 className="text-lcars-amber">Cache</h2>
+              <RevalidateCachePanel />
             </section>
           )}
         </div>

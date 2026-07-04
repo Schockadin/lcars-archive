@@ -33,7 +33,7 @@ export default function VaultExportPanel() {
         disabled={pending}
         className="lcars-switch self-start disabled:opacity-50"
       >
-        {pending ? "Wird exportiert…" : "Vault-Backup jetzt generieren"}
+        {pending ? "Backup läuft" : "Backup starten"}
       </button>
 
       {state?.error && (
