@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useState, type ReactNode } from "react";
 import {
   updateMissionSynopsisAction,
   type MissionSynopsisEditState,
@@ -8,16 +8,20 @@ import {
 const initialState: MissionSynopsisEditState = {};
 
 // Inline-Editor für die Mission-Synopsis, nur für Admin/GM gerendert (siehe
-// MissionSynopsis.tsx). Zeigt standardmäßig den gerenderten Body mit einem
-// Bearbeiten-Link; im Editiermodus ein Markdown-Textfeld statt dessen.
+// MissionSynopsis.tsx). `topRow` (FollowButtons + OwnerSelect) wird zusammen
+// mit dem Bearbeiten-Button in einer gemeinsamen Zeile gerendert. Zeigt
+// standardmäßig den gerenderten Body; im Editiermodus ein Markdown-Textfeld
+// statt dessen.
 export default function MissionSynopsisEditor({
   missionId,
   bodyHtml,
   sourceMarkdown,
+  topRow,
 }: {
   missionId: number;
   bodyHtml: string | null;
   sourceMarkdown: string;
+  topRow: ReactNode;
 }) {
   const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -42,13 +46,16 @@ export default function MissionSynopsisEditor({
   if (!editing) {
     return (
       <div className="flex flex-col gap-[8px]">
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="lcars-link-text text-[13px] self-end"
-        >
-          Synopsis bearbeiten
-        </button>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
+          {topRow}
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="lcars-switch"
+          >
+            Synopsis bearbeiten
+          </button>
+        </div>
 
         {displayHtml ? (
           <div
@@ -69,36 +76,42 @@ export default function MissionSynopsisEditor({
   }
 
   return (
-    <form action={formAction} className="flex flex-col gap-[8px]">
-      <input type="hidden" name="missionId" value={missionId} />
-      <textarea
-        name="bodyMarkdown"
-        required
-        defaultValue={sourceMarkdown}
-        className="rounded-lcars-pill lcars-input min-h-[300px] resize-y font-mono"
-      />
-      <div className="flex gap-[12px] items-center justify-end">
-        <button
-          type="button"
-          onClick={() => setEditing(false)}
-          className="lcars-link-text text-[13px]"
-        >
-          Abbrechen
-        </button>
-        <button
-          type="submit"
-          disabled={pending}
-          className="lcars-switch text-[13px] disabled:opacity-50"
-        >
-          {pending ? "Speichern…" : "Speichern"}
-        </button>
+    <div className="flex flex-col gap-[8px]">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
+        {topRow}
       </div>
 
-      {state.error && (
-        <p className="text-lcars-red text-[13px]" role="alert">
-          {state.error}
-        </p>
-      )}
-    </form>
+      <form action={formAction} className="flex flex-col gap-[8px]">
+        <input type="hidden" name="missionId" value={missionId} />
+        <textarea
+          name="bodyMarkdown"
+          required
+          defaultValue={sourceMarkdown}
+          className="rounded-lcars-pill lcars-input min-h-[300px] resize-y font-mono"
+        />
+        <div className="flex gap-[12px] items-center justify-end">
+          <button
+            type="button"
+            onClick={() => setEditing(false)}
+            className="lcars-switch"
+          >
+            Abbrechen
+          </button>
+          <button
+            type="submit"
+            disabled={pending}
+            className="lcars-switch disabled:opacity-50"
+          >
+            {pending ? "Speichern…" : "Speichern"}
+          </button>
+        </div>
+
+        {state.error && (
+          <p className="text-lcars-red text-[13px]" role="alert">
+            {state.error}
+          </p>
+        )}
+      </form>
+    </div>
   );
 }

@@ -30,31 +30,40 @@ export default function MissionSynopsis({
         </div>
       </header>
 
-      <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
-        <FollowButtons targetType="mission" targetSlug={mission.slug} />
-        {viewer?.role === "admin" && (
-          <OwnerSelect
-            contentType="mission"
-            id={mission.id}
-            initialOwnerId={mission.ownerUserId}
-            users={owners.map((u) => ({ id: u.id, name: u.name }))}
-          />
-        )}
-      </div>
-
       {viewer?.role === "admin" || viewer?.role === "gm" ? (
         <MissionSynopsisEditor
           missionId={mission.id}
           bodyHtml={mission.metadata.body}
           sourceMarkdown={mission.sourceMarkdown ?? ""}
-        />
-      ) : mission.metadata.body ? (
-        <div
-          className="mission-body lcars-text"
-          dangerouslySetInnerHTML={{ __html: mission.metadata.body }}
+          topRow={
+            <>
+              <FollowButtons targetType="mission" targetSlug={mission.slug} />
+              {viewer?.role === "admin" && (
+                <OwnerSelect
+                  contentType="mission"
+                  id={mission.id}
+                  initialOwnerId={mission.ownerUserId}
+                  users={owners.map((u) => ({ id: u.id, name: u.name }))}
+                />
+              )}
+            </>
+          }
         />
       ) : (
-        <p className="lcars-empty-state">Keine Zusammenfassung vorhanden</p>
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
+            <FollowButtons targetType="mission" targetSlug={mission.slug} />
+          </div>
+
+          {mission.metadata.body ? (
+            <div
+              className="mission-body lcars-text"
+              dangerouslySetInnerHTML={{ __html: mission.metadata.body }}
+            />
+          ) : (
+            <p className="lcars-empty-state">Keine Zusammenfassung vorhanden</p>
+          )}
+        </>
       )}
     </article>
   );
