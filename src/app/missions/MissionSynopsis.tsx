@@ -29,7 +29,7 @@ export default function MissionSynopsis({
         </div>
       </header>
 
-      <div className="flex gap-[10px] items-center">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
         <FollowButtons targetType="mission" targetSlug={mission.slug} />
         {viewer?.role === "admin" && (
           <OwnerSelect

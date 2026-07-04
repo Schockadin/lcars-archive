@@ -1,6 +1,6 @@
 // src/context/RuneProvider.tsx
 "use client";
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useRef, useState, type ReactNode } from "react";
 import { NeoContextValue, NeoContext } from "./NeoContext";
 import type { NavKey } from "@/lib/nav";
 
@@ -13,8 +13,25 @@ export function NeoProvider({ children }: NeoProviderProps) {
   const [title, setTitle] = useState<string>("Home");
   const [crumbLabels, setCrumbLabels] = useState<Record<string, string>>({});
   const [readingMode, setReadingMode] = useState<boolean>(false);
+  const preserveReadingModeRef = useRef(false);
 
   const toggleReadingMode = useCallback(() => setReadingMode((v) => !v), []);
+
+  const preserveReadingModeOnce = useCallback(() => {
+    preserveReadingModeRef.current = true;
+  }, []);
+
+  // Cleanup-Funktion für ReadingModeToggle: setzt den Lesemodus zurück,
+  // außer preserveReadingModeOnce wurde direkt vorher (Klick auf einen
+  // Log-Vor/Zurück-Link) aufgerufen — dann bleibt er über den Seitenwechsel
+  // hinweg erhalten und das Flag wird verbraucht.
+  const resetReadingModeOnUnmount = useCallback(() => {
+    if (preserveReadingModeRef.current) {
+      preserveReadingModeRef.current = false;
+      return;
+    }
+    setReadingMode(false);
+  }, []);
 
   // Stabil gehalten (useCallback), damit Effekte in den Setzer-Komponenten
   // nicht bei jedem Render neu laufen.
@@ -43,6 +60,8 @@ export function NeoProvider({ children }: NeoProviderProps) {
     readingMode,
     setReadingMode,
     toggleReadingMode,
+    preserveReadingModeOnce,
+    resetReadingModeOnUnmount,
   };
 
   return <NeoContext.Provider value={value}>{children}</NeoContext.Provider>;

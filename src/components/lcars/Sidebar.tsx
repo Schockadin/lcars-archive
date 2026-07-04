@@ -9,7 +9,7 @@ export interface SidebarProps {
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-[var(--lcars-sidebar-w)] h-[100dvh]">
+    <aside className="flex w-[var(--lcars-sidebar-w)] h-[100svh]">
       {/* Linke Seite */}
       <div className="flex flex-col h-full w-[var(--lcars-bar-width)]">
         {/* Sidebar Header */}

@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 import {
   LogNavItem,
@@ -6,9 +7,11 @@ import {
 } from "@/types/missions";
 import { fmtDate, sessionLabel } from "@/lib/missionFormat";
 import { LcarsReadingModeToggle } from "@/components/lcars";
+import { useNeo } from "@/hooks/useNeo";
 
 // Ein Sprung zum Nachbar-Log desselben Autors. `dir` steuert Pfeil + Ausrichtung.
 function LogNavLink({ item, dir }: { item: LogNavItem; dir: "prev" | "next" }) {
+  const { preserveReadingModeOnce } = useNeo();
   const meta = [sessionLabel(item.session_nr), fmtDate(item.log_date)]
     .filter(Boolean)
     .join(" · ");
@@ -16,6 +19,7 @@ function LogNavLink({ item, dir }: { item: LogNavItem; dir: "prev" | "next" }) {
   return (
     <Link
       href={`/missions/${item.mission_slug}/${item.slug}`}
+      onClick={preserveReadingModeOnce}
       className={`log-nav-link log-nav-${dir}`}
     >
       <span className="log-nav-dir" aria-hidden="true">

@@ -15,7 +15,7 @@
   padding: 0;
 }
 
-/* AppShell ist ein fixes 100dvh-Grundgerüst, in dem ausschließlich
+/* AppShell ist ein fixes 100svh-Grundgerüst, in dem ausschließlich
    .lcars-main-content scrollt (siehe MainContent.tsx). `overflow: hidden`
    reicht hier NICHT aus: Elemente mit overflow:hidden lassen sich trotz
    fehlender Scrollbar weiterhin per Skript scrollen (z.B. scrollIntoView
@@ -25,16 +25,25 @@
    weil das an document.documentElement hängt, nicht an body) und die
    komplette AppShell inkl. Elbow-Bar ein paar Pixel nach oben verschiebt.
    `overflow: clip` verhindert das: kein Scroll-Container, auch nicht per
-   Skript. */
+   Skript.
+
+   svh statt dvh: als installierte PWA (display-mode: standalone) gibt es
+   keine ein-/ausblendende Browser-Leiste mehr, die dvh "dynamisch" tracken
+   müsste — dvh berichtet dort auf einigen Geräten trotzdem kurzzeitig einen
+   Wert, der größer als die tatsächlich sichtbare Fläche ist (Statusleiste/
+   Home-Indicator werden mitgerechnet), wodurch der untere Rand der App
+   (Footer-Leiste) hinter dem overflow:clip verschwindet. svh (small
+   viewport height) ist die garantiert nie zu große Untergrenze und passt
+   ohne sichtbaren Unterschied in Standalone-Apps ohne Browser-Chrome. */
 html {
-  height: 100dvh;
+  height: 100svh;
   min-width: 100%;
   width: 100%;
   overflow: clip;
 }
 
 body {
-  height: 100dvh;
+  height: 100svh;
   min-width: 100%;
   width: 100%;
   overflow: clip;

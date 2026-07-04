@@ -18,7 +18,7 @@ export default function AppShell({
 
   return (
     <div
-      className={`flex w-full h-[100dvh]${readingMode ? " reading-mode" : ""}`}
+      className={`flex w-full h-[100svh]${readingMode ? " reading-mode" : ""}`}
     >
       <LcarsSidebar />
       <div className="flex flex-col flex-1 h-full overflow-clip">
