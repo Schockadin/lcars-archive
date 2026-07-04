@@ -8,6 +8,8 @@ import {
 const initialState: MissionLogVaultState = {};
 
 const inputClass = "rounded-lcars-pill lcars-input";
+const textAreaClass =
+  "rounded-lcars-pill lcars-input min-h-[500px] resize-y font-mono";
 
 export default function NewMissionLogForm({
   userId,
@@ -53,10 +55,7 @@ export default function NewMissionLogForm({
   }
 
   return (
-    <form
-      action={formAction}
-      className="flex flex-col gap-[16px] max-w-[600px]"
-    >
+    <form action={formAction} className="flex flex-col gap-[16px]">
       <input type="hidden" name="userId" value={userId} />
 
       <div className="flex flex-col gap-[6px]">
@@ -144,7 +143,7 @@ export default function NewMissionLogForm({
           id="log-body"
           name="bodyMarkdown"
           required
-          className={`${inputClass} min-h-[500px] resize-y font-mono`}
+          className={textAreaClass}
         />
         <p className="text-lcars-text-dim text-[12px]">
           Unterstützt Markdown-Formatierung.
@@ -154,9 +153,9 @@ export default function NewMissionLogForm({
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch self-start disabled:opacity-50"
+        className="lcars-switch self-start disabled:opacity-50 w-[100%]"
       >
-        {pending ? "Wird committet…" : "Log ins Vault committen"}
+        {pending ? "Speichern…" : "Speichern"}
       </button>
 
       {state?.error && (

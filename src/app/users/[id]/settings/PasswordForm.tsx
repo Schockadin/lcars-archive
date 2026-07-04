@@ -18,7 +18,7 @@ export default function PasswordForm({
   return (
     <form
       action={formAction}
-      className="flex max-w-[420px] flex-col gap-[16px]"
+      className="flex max-w-[var(--lcars-content-w)] flex-col gap-[16px]"
     >
       {hasPassword && (
         <div className="flex flex-col gap-[6px]">
@@ -80,7 +80,7 @@ export default function PasswordForm({
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch self-end disabled:opacity-50"
+        className="lcars-switch self-end disabled:opacity-50 w-[100%]"
       >
         {pending
           ? "Speichern…"

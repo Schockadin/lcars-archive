@@ -5,8 +5,9 @@ import type { CharacterWithOwner } from "@/lib/characters";
 
 const initialState: CreateDialogueState = {};
 
-const inputClass =
-  "rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber";
+const inputClass = "rounded-lcars-pill lcars-input";
+const textAreaClass =
+  "rounded-lcars-pill lcars-input min-h-[500px] resize-y font-mono";
 
 export default function CreateDialogueForm({
   userId,
@@ -23,10 +24,14 @@ export default function CreateDialogueForm({
     createDialogueAction,
     initialState,
   );
-  const today = new Date().toISOString().slice(0, 10);
+  // const today = new Date().toISOString().slice(0, 10);
+  const today = "2240-06-02";
 
   return (
-    <form action={formAction} className="flex flex-col gap-[16px] max-w-[420px]">
+    <form
+      action={formAction}
+      className="flex flex-col gap-[16px] max-w-[420px]"
+    >
       <input type="hidden" name="userId" value={userId} />
 
       <div className="flex flex-col gap-[6px]">
@@ -69,21 +74,37 @@ export default function CreateDialogueForm({
         <label htmlFor="dlg-title" className="lcars-eyebrow">
           Titel
         </label>
-        <input id="dlg-title" name="title" type="text" required className={inputClass} />
+        <input
+          id="dlg-title"
+          name="title"
+          type="text"
+          required
+          className={inputClass}
+        />
       </div>
 
       <div className="flex flex-col gap-[6px]">
         <label htmlFor="dlg-setting" className="lcars-eyebrow">
           Schauplatz
         </label>
-        <input id="dlg-setting" name="setting" type="text" className={inputClass} />
+        <input
+          id="dlg-setting"
+          name="setting"
+          type="text"
+          className={inputClass}
+        />
       </div>
 
       <div className="flex flex-col gap-[6px]">
         <label htmlFor="dlg-location" className="lcars-eyebrow">
           Ort
         </label>
-        <select id="dlg-location" name="locationSlug" defaultValue="" className={inputClass}>
+        <select
+          id="dlg-location"
+          name="locationSlug"
+          defaultValue=""
+          className={inputClass}
+        >
           <option value="">Kein Ort</option>
           {locations.map((l) => (
             <option key={l.slug} value={l.slug}>
@@ -121,7 +142,7 @@ export default function CreateDialogueForm({
           id="dlg-body"
           name="bodyMarkdown"
           required
-          className={`${inputClass} min-h-[120px] resize-y font-mono`}
+          className={textAreaClass}
         />
         <p className="text-lcars-text-dim text-[12px]">
           Unterstützt Markdown-Formatierung.
@@ -144,7 +165,7 @@ export default function CreateDialogueForm({
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch self-start disabled:opacity-50"
+        className="lcars-switch self-start disabled:opacity-50 w-[100%]"
       >
         {pending ? "Wird angelegt…" : "Gespräch beginnen"}
       </button>

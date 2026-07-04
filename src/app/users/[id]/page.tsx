@@ -47,7 +47,7 @@ export default async function UserPage({
   return (
     <>
       <PageMeta title={isSelf ? "Mein Profil" : target.name} section="users" />
-      <article className="mb-[10px] max-w-[600px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
         <h1>{isSelf ? `Willkommen, ${target.name}` : target.name}</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
@@ -55,8 +55,6 @@ export default async function UserPage({
             {isSelf ? "Angemeldet als " : "E-Mail "}
             <strong>{target.email}</strong> ({ROLE_LABELS[target.role]}).
           </p>
-
-          {isSelf && <InstallPwaPrompt />}
 
           {needsPassword && (
             <p className="text-lcars-amber">
@@ -109,6 +107,9 @@ export default async function UserPage({
               )}
             </p>
           )}
+          <div className="max-w-[var(--lcars-content-w)]">
+            {isSelf && <InstallPwaPrompt />}
+          </div>
         </div>
       </article>
     </>

@@ -23,21 +23,21 @@ export default async function ActivatePage({
   return (
     <>
       <PageMeta title="Konto aktivieren" section="login" />
-      <article className="mb-[10px] max-w-[600px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
         <p className="lcars-eyebrow">Zugriff</p>
         <h1>Konto aktivieren</h1>
 
         <div className="lcars-text">
           {!token || !setupToken || !user ? (
             <p className="text-lcars-red">
-              Dieser Link ist ungültig oder abgelaufen. Bitte wende dich an
-              die Spielleitung für eine neue Einladung.
+              Dieser Link ist ungültig oder abgelaufen. Bitte wende dich an die
+              Spielleitung für eine neue Einladung.
             </p>
           ) : (
             <div className="flex flex-col gap-[16px]">
               <p>
-                Willkommen, <strong>{user.name}</strong>. Leg jetzt ein
-                Passwort fest, um dein Konto zu aktivieren.
+                Willkommen, <strong>{user.name}</strong>. Leg jetzt ein Passwort
+                fest, um dein Konto zu aktivieren.
               </p>
               <ActivateForm token={token} />
             </div>

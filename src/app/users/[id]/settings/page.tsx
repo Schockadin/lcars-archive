@@ -22,7 +22,7 @@ export default async function UserSettingsPage({
   return (
     <>
       <PageMeta title="Einstellungen" section="users" />
-      <article className="mb-[10px] max-w-[600px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
         <h1>Einstellungen</h1>
         <div className="lcars-text flex flex-col gap-[32px]">
           <SettingsForm user={{ name: user.name, email: user.email }} />

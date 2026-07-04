@@ -15,7 +15,7 @@ export default function LandingPage({
   const campaignYears = getCampaignYears();
 
   return (
-    <div className="flex flex-col py-[10px] items-start max-w-[700px] gap-[8px] pr-[5px]">
+    <div className="flex flex-col py-[10px] items-start max-w-[var(--lcars-content-w)] gap-[8px] pr-[5px]">
       {/* Begrüßungstext */}
       <div className="lcars-eyebrow my-[8px]">
         INITIALISIERUNG // DATENBANKZUGRIFF AUTORISIERT

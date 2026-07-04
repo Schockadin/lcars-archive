@@ -11,7 +11,7 @@ export default function DeleteMissionLogButton({ logId }: { logId: number }) {
       <button
         type="button"
         disabled={pending}
-        className="text-lcars-red text-[12px] underline disabled:opacity-50"
+        className="lcars-link-text bg-lcars-bg disabled:opacity-50 border-none font-lcars text-lcars-red text-[14px] hover:text-lcars-amber-light"
         onClick={() => {
           if (!window.confirm("Diesen Missionslog wirklich löschen?")) return;
           setError(null);
@@ -21,10 +21,10 @@ export default function DeleteMissionLogButton({ logId }: { logId: number }) {
           });
         }}
       >
-        {pending ? "Wird gelöscht…" : "Löschen"}
+        {pending ? "Löschen…" : "Löschen"}
       </button>
       {error && (
-        <p className="text-lcars-red text-[11px]" role="alert">
+        <p className="lcars-link-text text-lcars-red text-[11px]" role="alert">
           {error}
         </p>
       )}

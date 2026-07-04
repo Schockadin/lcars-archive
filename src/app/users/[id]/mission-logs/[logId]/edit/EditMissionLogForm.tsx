@@ -5,7 +5,9 @@ import type { OwnMissionLogForEdit } from "@/lib/missions";
 
 const initialState: EditMissionLogState = {};
 
-const inputClass = "rounded-lcars-pill lcars-input";
+const inputClass = "rounded-lcars-pill lcars-input w-[400px]";
+const textAreaClass =
+  "rounded-lcars-pill lcars-input min-h-[500px] resize-y font-mono";
 
 export default function EditMissionLogForm({
   userId,
@@ -20,10 +22,7 @@ export default function EditMissionLogForm({
   );
 
   return (
-    <form
-      action={formAction}
-      className="flex flex-col gap-[16px] max-w-[600px]"
-    >
+    <form action={formAction} className="flex flex-col gap-[16px]">
       <input type="hidden" name="userId" value={userId} />
       <input type="hidden" name="logId" value={log.id} />
 
@@ -63,7 +62,7 @@ export default function EditMissionLogForm({
           name="bodyMarkdown"
           required
           defaultValue={log.sourceMarkdown}
-          className={`${inputClass} min-h-[500px] resize-y font-mono`}
+          className={textAreaClass}
         />
         <p className="text-lcars-text-dim text-[12px]">
           Unterstützt Markdown-Formatierung.

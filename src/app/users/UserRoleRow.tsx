@@ -139,119 +139,124 @@ export default function UserRoleRow({
         <span className="text-lcars-text-dim">{ROLE_LABELS[user.role]}</span>
       ) : (
         <>
-          <form action={roleAction} className="flex items-center gap-[8px]">
-            <input type="hidden" name="userId" value={user.id} />
-            <select
-              name="role"
-              defaultValue={user.role}
-              className="rounded-lcars-pill lcars-input"
-            >
-              <option value="admin">Administration</option>
-              <option value="gm">Spielleitung</option>
-              <option value="player">Spieler</option>
-              <option value="viewer">Beobachter</option>
-            </select>
-            <button
-              type="submit"
-              disabled={rolePending}
-              className="lcars-icon-btn"
-              aria-label="Speichern"
-              title="Speichern"
-            >
-              <CheckIcon />
-            </button>
-          </form>
-          {roleState?.error && (
-            <p className="text-lcars-red" role="alert">
-              {roleState.error}
-            </p>
-          )}
-
-          {editingProfile ? (
-            <form
-              action={profileAction}
-              className="flex flex-wrap items-center gap-[8px]"
-            >
+          <div className="flex gap-[16px] items-center">
+            <span className="text-lcars-text-dim">Rolle:</span>
+            <form action={roleAction} className="flex items-center gap-[8px]">
               <input type="hidden" name="userId" value={user.id} />
-              <input
-                name="name"
-                type="text"
-                defaultValue={user.name}
+              <select
+                name="role"
+                defaultValue={user.role}
                 className="rounded-lcars-pill lcars-input"
-              />
-              <input
-                name="email"
-                type="email"
-                defaultValue={user.email}
-                className="rounded-lcars-pill lcars-input"
-              />
+              >
+                <option value="admin">Administration</option>
+                <option value="gm">Spielleitung</option>
+                <option value="player">Spieler</option>
+                <option value="viewer">Beobachter</option>
+              </select>
               <button
                 type="submit"
-                disabled={profilePending}
+                disabled={rolePending}
                 className="lcars-icon-btn"
                 aria-label="Speichern"
                 title="Speichern"
               >
                 <CheckIcon />
               </button>
-              <button
-                type="button"
-                className="lcars-icon-btn"
-                aria-label="Abbrechen"
-                title="Abbrechen"
-                onClick={() => setEditingProfile(false)}
-              >
-                <XIcon />
-              </button>
             </form>
-          ) : (
-            <div className="flex flex-wrap items-center gap-[8px]">
-              <button
-                type="button"
-                className="lcars-icon-btn"
-                aria-label="Bearbeiten"
-                title="Bearbeiten"
-                onClick={() => setEditingProfile(true)}
+            {roleState?.error && (
+              <p className="text-lcars-red" role="alert">
+                {roleState.error}
+              </p>
+            )}
+
+            {editingProfile ? (
+              <form
+                action={profileAction}
+                className="flex flex-wrap items-center gap-[8px]"
               >
-                <PencilIcon />
-              </button>
-
-              <form action={statusAction}>
                 <input type="hidden" name="userId" value={user.id} />
+                <input
+                  name="name"
+                  type="text"
+                  defaultValue={user.name}
+                  className="rounded-lcars-pill lcars-input"
+                />
+                <input
+                  name="email"
+                  type="email"
+                  defaultValue={user.email}
+                  className="rounded-lcars-pill lcars-input"
+                />
                 <button
                   type="submit"
-                  disabled={statusPending}
+                  disabled={profilePending}
                   className="lcars-icon-btn"
-                  aria-label={user.is_active ? "Deaktivieren" : "Reaktivieren"}
-                  title={user.is_active ? "Deaktivieren" : "Reaktivieren"}
+                  aria-label="Speichern"
+                  title="Speichern"
                 >
-                  {user.is_active ? <BanIcon /> : <RestoreIcon />}
+                  <CheckIcon />
                 </button>
-              </form>
-
-              <form action={deleteAction}>
-                <input type="hidden" name="userId" value={user.id} />
                 <button
-                  type="submit"
-                  disabled={deletePending}
-                  className="lcars-icon-btn lcars-icon-btn--danger"
-                  aria-label="Löschen"
-                  title="Löschen"
-                  onClick={(e) => {
-                    if (
-                      !confirm(
-                        `${user.name} wirklich endgültig löschen? Das lässt sich nicht rückgängig machen.`,
-                      )
-                    ) {
-                      e.preventDefault();
-                    }
-                  }}
+                  type="button"
+                  className="lcars-icon-btn"
+                  aria-label="Abbrechen"
+                  title="Abbrechen"
+                  onClick={() => setEditingProfile(false)}
                 >
-                  <TrashIcon />
+                  <XIcon />
                 </button>
               </form>
-            </div>
-          )}
+            ) : (
+              <div className="flex flex-wrap items-center gap-[8px]">
+                <button
+                  type="button"
+                  className="lcars-icon-btn"
+                  aria-label="Bearbeiten"
+                  title="Bearbeiten"
+                  onClick={() => setEditingProfile(true)}
+                >
+                  <PencilIcon />
+                </button>
+
+                <form action={statusAction}>
+                  <input type="hidden" name="userId" value={user.id} />
+                  <button
+                    type="submit"
+                    disabled={statusPending}
+                    className="lcars-icon-btn"
+                    aria-label={
+                      user.is_active ? "Deaktivieren" : "Reaktivieren"
+                    }
+                    title={user.is_active ? "Deaktivieren" : "Reaktivieren"}
+                  >
+                    {user.is_active ? <BanIcon /> : <RestoreIcon />}
+                  </button>
+                </form>
+
+                <form action={deleteAction}>
+                  <input type="hidden" name="userId" value={user.id} />
+                  <button
+                    type="submit"
+                    disabled={deletePending}
+                    className="lcars-icon-btn lcars-icon-btn--danger"
+                    aria-label="Löschen"
+                    title="Löschen"
+                    onClick={(e) => {
+                      if (
+                        !confirm(
+                          `${user.name} wirklich endgültig löschen? Das lässt sich nicht rückgängig machen.`,
+                        )
+                      ) {
+                        e.preventDefault();
+                      }
+                    }}
+                  >
+                    <TrashIcon />
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
           {profileState?.error && (
             <p className="text-lcars-red" role="alert">
               {profileState.error}

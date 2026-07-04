@@ -133,9 +133,7 @@ export default function UserContentBrowser({
                   >
                     <span className="mission-akte-rail" />
                     <span className="mission-akte-body text-left">
-                      <span className="mission-akte-title block">
-                        {c.name}
-                      </span>
+                      <span className="mission-akte-title block">{c.name}</span>
                     </span>
                   </Link>
                   <VisibilitySelect
@@ -197,13 +195,15 @@ export default function UserContentBrowser({
                       id={log.id}
                       initialValue={log.visibility}
                     />
-                    <Link
-                      href={`/users/${ownUserId}/mission-logs/${log.id}/edit`}
-                      className="text-lcars-amber text-[12px] underline"
-                    >
-                      Bearbeiten
-                    </Link>
-                    <DeleteMissionLogButton logId={log.id} />
+                    <div className="flex gap-[8px] items-center justify-between">
+                      <Link
+                        href={`/users/${ownUserId}/mission-logs/${log.id}/edit`}
+                        className="lcars-link-text text-[14px]"
+                      >
+                        Bearbeiten
+                      </Link>
+                      <DeleteMissionLogButton logId={log.id} />
+                    </div>
                   </div>
                 </div>
               ))}

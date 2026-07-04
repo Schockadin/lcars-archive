@@ -30,7 +30,7 @@ export default function NotFound() {
 
       {/* Kurze Erklärung */}
       <p
-        className="max-w-[480px] leading-relaxed text-lcars-text"
+        className="max-w-[var(--lcars-content-w)] leading-relaxed text-lcars-text"
         style={{ fontSize: "16px" }}
       >
         Der angeforderte Datensatz existiert nicht im Neo-Archiv oder wurde aus

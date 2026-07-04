@@ -29,15 +29,11 @@ export default async function UserContentPage({
   return (
     <>
       <PageMeta title="Meine Inhalte" section="users" />
-      <article className="mb-[10px] max-w-[600px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
         <h1>Meine Inhalte</h1>
-        <p className="lcars-text text-[13px] opacity-80">
-          Sichtbarkeit je Eintrag: Privat (nur du) · GM (du + Spielleitung) ·
-          Öffentlich (alle).
-        </p>
 
         {characters.length > 0 && (
-          <div className="flex flex-wrap gap-[12px]">
+          <div className="flex flex-col flex-wrap gap-[12px]">
             <Link
               href={`/users/${user.id}/mission-logs/new`}
               className="lcars-switch"
@@ -52,6 +48,11 @@ export default async function UserContentPage({
             </Link>
           </div>
         )}
+
+        <p className="lcars-text text-[13px] mt-[20px]">
+          Sichtbarkeit je Eintrag: Privat (nur du) · GM (du + Spielleitung) ·
+          Öffentlich (alle).
+        </p>
 
         <div className="lcars-text">
           <UserContentBrowser

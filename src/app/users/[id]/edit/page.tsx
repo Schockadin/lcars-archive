@@ -31,13 +31,7 @@ export default async function EditUserPage({
   return (
     <>
       <PageMeta title={`${target.name} bearbeiten`} section="users" />
-      <article className="mb-[10px] max-w-[600px] pr-[var(--lcars-elbow-size)]">
-        <p>
-          <Link href="/users" className="text-lcars-amber underline">
-            ← Zur Nutzerverwaltung
-          </Link>
-        </p>
-
+      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
         <p className="lcars-eyebrow">Zugriff · Administration</p>
         <h1>{target.name} bearbeiten</h1>
 
