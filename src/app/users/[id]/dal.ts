@@ -1,5 +1,5 @@
 import "server-only";
-import { redirect } from "next/navigation";
+import { redirect, forbidden } from "next/navigation";
 import { getCurrentUser, requireAdmin, verifySession } from "@/lib/dal";
 import {
   getUserById,
@@ -19,7 +19,9 @@ import type { Character } from "@/types/character";
 // reine Identitätsprüfung keine zusätzliche Sicherheit. Der User-Datensatz
 // (inkl. hasPassword, in einer Query statt zwei) wird erst danach geholt,
 // weil Name/E-Mail/Passwort-Status fürs Formular gebraucht werden — hier
-// ist ein DB-Zugriff unvermeidbar.
+// ist ein DB-Zugriff unvermeidbar. forbidden() statt redirect: eine fremde
+// ID ist ein echter Zugriffsversuch auf einen anderen Account, kein bloß
+// falscher Pfad (siehe app/forbidden.tsx).
 export async function requireOwnUser(
   idParam: string,
 ): Promise<UserWithPasswordStatus> {
@@ -27,7 +29,7 @@ export async function requireOwnUser(
   const id = Number(idParam);
 
   if (!Number.isInteger(id) || id !== session.userId) {
-    redirect(`/users/${session.userId}`);
+    forbidden();
   }
 
   const user = await getUserWithPasswordStatus(session.userId);
@@ -74,7 +76,7 @@ export async function requireSelfOrGM(idParam: string): Promise<SelfOrGMAccess> 
 
   const viewer = await getCurrentUser();
   if (viewer.role !== "gm" && viewer.role !== "admin") {
-    redirect(`/users/${viewer.id}`);
+    forbidden();
   }
 
   const target = await getUserById(id);
@@ -91,10 +93,10 @@ export interface OwnCharactersAccess {
 }
 
 // Für /users/[id]/dialogues/new (und mission-logs/new): Identität wie
-// requireOwnUser (Cookie-basiert). Redirectet NICHT bei 0 Charakteren — die
-// Seite selbst zeigt in dem Fall einen Hinweis statt des Formulars
-// (Verteidigung in der Tiefe zusätzlich zu den ausgeblendeten Buttons in
-// content/page.tsx).
+// requireOwnUser (Cookie-basiert, forbidden() bei fremder ID). Redirectet
+// NICHT bei 0 Charakteren — die Seite selbst zeigt in dem Fall einen
+// Hinweis statt des Formulars (Verteidigung in der Tiefe zusätzlich zu den
+// ausgeblendeten Buttons in content/page.tsx).
 export async function requireOwnCharacters(
   idParam: string,
 ): Promise<OwnCharactersAccess> {
@@ -102,7 +104,7 @@ export async function requireOwnCharacters(
   const id = Number(idParam);
 
   if (!Number.isInteger(id) || id !== session.userId) {
-    redirect(`/users/${session.userId}`);
+    forbidden();
   }
 
   const user = await getUserWithPasswordStatus(session.userId);
@@ -119,16 +121,17 @@ export interface OwnGMAccess {
 }
 
 // Für /users/[id]/missions/new (und .../missions/[missionId]/edit): Identität
-// wie requireOwnCharacters (Cookie-basiert), zusätzlich muss die Rolle
-// admin/gm sein — nur die Spielleitung legt Missionen an bzw. bearbeitet sie.
-// Rolle frisch aus der DB geprüft (wie requireSelfOrGM), nicht aus dem
-// Cookie, damit ein gerade entzogenes GM-Recht sofort greift.
+// wie requireOwnCharacters (Cookie-basiert, forbidden() bei fremder ID),
+// zusätzlich muss die Rolle admin/gm sein — nur die Spielleitung legt
+// Missionen an bzw. bearbeitet sie. Rolle frisch aus der DB geprüft (wie
+// requireSelfOrGM), nicht aus dem Cookie, damit ein gerade entzogenes
+// GM-Recht sofort greift.
 export async function requireOwnGM(idParam: string): Promise<OwnGMAccess> {
   const session = await verifySession();
   const id = Number(idParam);
 
   if (!Number.isInteger(id) || id !== session.userId) {
-    redirect(`/users/${session.userId}`);
+    forbidden();
   }
 
   const user = await getUserWithPasswordStatus(session.userId);
@@ -136,7 +139,7 @@ export async function requireOwnGM(idParam: string): Promise<OwnGMAccess> {
     redirect("/login");
   }
   if (user.role !== "gm" && user.role !== "admin") {
-    redirect(`/users/${user.id}`);
+    forbidden();
   }
 
   return { user };

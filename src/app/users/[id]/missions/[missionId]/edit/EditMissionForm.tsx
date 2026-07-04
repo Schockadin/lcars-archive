@@ -5,7 +5,7 @@ import type { MissionDetail } from "@/types/missions";
 
 const initialState: EditMissionState = {};
 
-const inputClass = "rounded-lcars-pill lcars-input w-[400px]";
+const inputClass = "rounded-lcars-pill lcars-input w-full sm:w-[400px]";
 const textAreaClass =
   "rounded-lcars-pill lcars-input min-h-[400px] resize-y font-mono";
 

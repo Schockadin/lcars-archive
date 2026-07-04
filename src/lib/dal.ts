@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import { redirect } from "next/navigation";
+import { redirect, forbidden } from "next/navigation";
 import { getSession, type SessionPayload } from "@/lib/session";
 import { getUserById } from "@/lib/users";
 import type { User } from "@/types/db";
@@ -28,13 +28,13 @@ export const getCurrentUser = cache(async (): Promise<User> => {
 // Gate für /users (Nutzerverwaltung): darf betreten, wer gm ODER admin ist —
 // die Seite selbst zeigt je nach Rolle unterschiedliche Abschnitte (siehe
 // requireAdmin unten für die strengere Admin-only-Prüfung der
-// Useraccount-Verwaltungs-Actions). Redirect geht auf die eigene
-// Personendatei, nicht /login — der User ist angemeldet, nur für diese
-// Seite nicht berechtigt.
+// Useraccount-Verwaltungs-Actions). forbidden() (nicht redirect) — der User
+// ist angemeldet, nur für diese Seite nicht berechtigt (siehe
+// app/forbidden.tsx).
 export async function requireGM(): Promise<User> {
   const user = await getCurrentUser();
   if (user.role !== "gm" && user.role !== "admin") {
-    redirect(`/users/${user.id}`);
+    forbidden();
   }
   return user;
 }
@@ -45,7 +45,7 @@ export async function requireGM(): Promise<User> {
 export async function requireAdmin(): Promise<User> {
   const user = await getCurrentUser();
   if (user.role !== "admin") {
-    redirect(`/users/${user.id}`);
+    forbidden();
   }
   return user;
 }

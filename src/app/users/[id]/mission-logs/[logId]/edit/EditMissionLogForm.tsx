@@ -5,7 +5,7 @@ import type { OwnMissionLogForEdit } from "@/lib/missions";
 
 const initialState: EditMissionLogState = {};
 
-const inputClass = "rounded-lcars-pill lcars-input w-[400px]";
+const inputClass = "rounded-lcars-pill lcars-input w-full sm:w-[400px]";
 const textAreaClass =
   "rounded-lcars-pill lcars-input min-h-[500px] resize-y font-mono";
 
