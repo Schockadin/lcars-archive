@@ -10,6 +10,7 @@ import VaultExportPanel from "./VaultExportPanel";
 import VaultIngestPanel from "./VaultIngestPanel";
 import RevalidateCachePanel from "./RevalidateCachePanel";
 import UserBackupPanel from "./UserBackupPanel";
+import TimelineRegeneratePanel from "./TimelineRegeneratePanel";
 
 export const metadata: Metadata = {
   title: "Nutzerverwaltung",
@@ -97,6 +98,13 @@ export default async function UsersAdminPage() {
             <section className="flex flex-col gap-[12px]">
               <h2 className="text-lcars-amber">Cache</h2>
               <RevalidateCachePanel />
+            </section>
+          )}
+
+          {isAdmin && (
+            <section className="flex flex-col gap-[12px]">
+              <h2 className="text-lcars-amber">Timeline</h2>
+              <TimelineRegeneratePanel />
             </section>
           )}
         </div>
