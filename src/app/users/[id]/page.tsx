@@ -93,19 +93,11 @@ export default async function UserPage({
           )}
 
           {isSelf && (
-            <FollowedContentSection
-              heading="Deine Lesezeichen"
-              emptyLabel="Noch keine Lesezeichen gesetzt."
-              items={bookmarks}
-            />
+            <FollowedContentSection heading="Deine Lesezeichen" items={bookmarks} />
           )}
 
           {isSelf && (
-            <FollowedContentSection
-              heading="Deine Abos"
-              emptyLabel="Noch keine Abos abgeschlossen."
-              items={subscriptions}
-            />
+            <FollowedContentSection heading="Deine Abos" items={subscriptions} />
           )}
 
           {!isSelf && (

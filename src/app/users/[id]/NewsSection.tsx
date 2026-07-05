@@ -64,6 +64,14 @@ function NewsRow({ item }: { item: NewsItem }) {
 // Kopf-Pille, nicht klickbar/klappbar) — die News sollen immer sichtbar
 // sein, dafür in einem scrollbaren Container mit fester Höhe (3 Zeilen,
 // siehe .news-scroll in shared.css) statt eines potenziell langen Akkordeons.
+//
+// className="lcars-data-row--full": ohne children (kein Akkordeon-Zweig in
+// DataRow.tsx) bleibt die Pille sonst bei ihrer festen Default-Breite
+// (300px/238px, siehe .lcars-data-row in data-row.css) statt wie die
+// anderen Akkordeon-Kopfzeilen auf dem Dashboard 100% Breite einzunehmen.
+//
+// Ganz ausgeblendet (kein Platzhalter-Text), wenn es nichts anzuzeigen gibt
+// — wie die übrigen Dashboard-DataRows (siehe FollowedContentSection.tsx).
 export default function NewsSection({
   updated,
   openDialogues,
@@ -72,19 +80,21 @@ export default function NewsSection({
   openDialogues: DialogueSummary[];
 }) {
   const items = toNewsItems(updated, openDialogues);
+  if (items.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-[8px]">
-      <LcarsDataRow value={items.length} label="News" color="var(--lcars-blue)" />
-      {items.length === 0 ? (
-        <p className="lcars-empty-state">Keine News.</p>
-      ) : (
-        <div className="news-scroll">
-          {items.map((item) => (
-            <NewsRow key={item.key} item={item} />
-          ))}
-        </div>
-      )}
+      <LcarsDataRow
+        value={items.length}
+        label="News"
+        color="var(--lcars-blue)"
+        className="lcars-data-row--full"
+      />
+      <div className="news-scroll">
+        {items.map((item) => (
+          <NewsRow key={item.key} item={item} />
+        ))}
+      </div>
     </div>
   );
 }
