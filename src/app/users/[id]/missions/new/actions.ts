@@ -5,7 +5,6 @@ import { getUserById } from "@/lib/users";
 import { missionSlugExists, createMission } from "@/lib/missions";
 import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
-import { MAX_TITLE_LENGTH } from "@/lib/validation";
 
 export interface MissionFormState {
   error?: string;
@@ -39,11 +38,6 @@ export async function createMissionAction(
 
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return { error: "Bitte einen Titel angeben." };
-  if (title.length > MAX_TITLE_LENGTH) {
-    return {
-      error: `Titel darf höchstens ${MAX_TITLE_LENGTH} Zeichen lang sein.`,
-    };
-  }
 
   const slugInput = String(formData.get("slug") ?? "").trim();
   const slug = slugifyBase(slugInput || title);

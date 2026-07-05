@@ -1,7 +1,6 @@
 "use client";
 import { useActionState } from "react";
 import { createMissionLogAction, type MissionLogFormState } from "./actions";
-import { MAX_TITLE_LENGTH } from "@/lib/validation";
 
 const initialState: MissionLogFormState = {};
 
@@ -75,7 +74,6 @@ export default function NewMissionLogForm({
           name="title"
           type="text"
           required
-          maxLength={MAX_TITLE_LENGTH}
           className={inputClass}
         />
       </div>

@@ -1,7 +1,6 @@
 "use client";
 import { useActionState } from "react";
 import { createMissionAction, type MissionFormState } from "./actions";
-import { MAX_TITLE_LENGTH } from "@/lib/validation";
 
 const initialState: MissionFormState = {};
 
@@ -28,7 +27,6 @@ export default function NewMissionForm({ userId }: { userId: number }) {
           name="title"
           type="text"
           required
-          maxLength={MAX_TITLE_LENGTH}
           className={inputClass}
         />
       </div>

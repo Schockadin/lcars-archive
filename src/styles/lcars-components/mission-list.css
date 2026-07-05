@@ -187,6 +187,12 @@
   text-transform: uppercase;
   line-height: 1;
   color: var(--lcars-amber);
+  /* Einzeilig mit Ellipsis statt Umbruch — ein einzelner sehr langer Titel
+     (v.a. Mission-Logs) soll die Karte nicht in die Breite treiben, siehe
+     .mission-log-name/.log-nav-title für dasselbe Muster andernorts. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .mission-akte-summary {
   margin-top: 6px;

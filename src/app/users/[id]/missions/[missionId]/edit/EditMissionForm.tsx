@@ -6,7 +6,6 @@ import {
   type EditMissionState,
 } from "./actions";
 import type { MissionDetail } from "@/types/missions";
-import { MAX_TITLE_LENGTH } from "@/lib/validation";
 
 const initialState: EditMissionState = {};
 
@@ -42,7 +41,6 @@ export default function EditMissionForm({
             name="title"
             type="text"
             required
-            maxLength={MAX_TITLE_LENGTH}
             defaultValue={mission.title}
             className={inputClass}
           />

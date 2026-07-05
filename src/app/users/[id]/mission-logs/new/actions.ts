@@ -9,7 +9,6 @@ import {
   createMissionLog,
 } from "@/lib/missions";
 import { revalidateLog } from "@/lib/revalidate";
-import { MAX_TITLE_LENGTH } from "@/lib/validation";
 
 export interface MissionLogFormState {
   error?: string;
@@ -34,11 +33,6 @@ export async function createMissionLogAction(
 
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return { error: "Bitte einen Titel angeben." };
-  if (title.length > MAX_TITLE_LENGTH) {
-    return {
-      error: `Titel darf höchstens ${MAX_TITLE_LENGTH} Zeichen lang sein.`,
-    };
-  }
 
   const authorCharacterId = Number(formData.get("authorCharacterId"));
   if (!Number.isInteger(authorCharacterId)) {

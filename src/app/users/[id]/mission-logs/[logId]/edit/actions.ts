@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
 import { updateMissionLogContent } from "@/lib/missions";
 import { revalidateLog } from "@/lib/revalidate";
-import { MAX_TITLE_LENGTH } from "@/lib/validation";
 
 export interface EditMissionLogState {
   error?: string;
@@ -29,11 +28,6 @@ export async function updateMissionLogAction(
 
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return { error: "Bitte einen Titel angeben." };
-  if (title.length > MAX_TITLE_LENGTH) {
-    return {
-      error: `Titel darf höchstens ${MAX_TITLE_LENGTH} Zeichen lang sein.`,
-    };
-  }
 
   const logDateRaw = String(formData.get("logDate") ?? "").trim();
   if (logDateRaw && !DATE_RE.test(logDateRaw)) {
