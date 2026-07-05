@@ -288,6 +288,12 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* Ohne flex/min-width bleibt ein Flex-Item auf seiner Inhaltsbreite
+     (min-width: auto) und die Ellipsis oben greift nie — .mission-log-meta
+     (flex-shrink: 0) bleibt dadurch in fester Breite, nur der Titel
+     schrumpft/truncatet. */
+  flex: 1;
+  min-width: 0;
 }
 .mission-log-meta {
   display: flex;
