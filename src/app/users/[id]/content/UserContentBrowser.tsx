@@ -345,11 +345,19 @@ export default function UserContentBrowser({
                       </span>
                     </span>
                   </Link>
-                  <VisibilitySelect
-                    contentType="archive_entry"
-                    id={entry.id}
-                    initialValue={entry.visibility}
-                  />
+                  <div className="flex flex-col items-end gap-[4px]">
+                    <VisibilitySelect
+                      contentType="archive_entry"
+                      id={entry.id}
+                      initialValue={entry.visibility}
+                    />
+                    <Link
+                      href={`/users/${ownUserId}/archive/${entry.id}/edit`}
+                      className="lcars-link-text text-[14px]"
+                    >
+                      Bearbeiten
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>
@@ -373,15 +381,20 @@ export default function UserContentBrowser({
                     href={`/missions/${m.slug}`}
                     className="mission-akte flex-1"
                     style={
-                      { "--mission-color": "var(--lcars-green)" } as React.CSSProperties
+                      {
+                        "--mission-color": "var(--lcars-green)",
+                      } as React.CSSProperties
                     }
                   >
                     <span className="mission-akte-rail" />
                     <span className="mission-akte-body text-left">
-                      <span className="mission-akte-title block">{m.title}</span>
+                      <span className="mission-akte-title block">
+                        {m.title}
+                      </span>
                       <span className="mission-akte-meta">
                         <span>
-                          <b>Zeitraum</b> {periodLabel(m.started_at, m.ended_at)}
+                          <b>Zeitraum</b>{" "}
+                          {periodLabel(m.started_at, m.ended_at)}
                         </span>
                       </span>
                     </span>

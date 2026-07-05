@@ -35,34 +35,38 @@ export default async function UserContentPage({
       <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
         <h1>Meine Inhalte</h1>
 
-        {(characters.length > 0 || isGM) && (
-          <div className="flex flex-col flex-wrap gap-[12px]">
-            {characters.length > 0 && (
-              <>
-                <Link
-                  href={`/users/${user.id}/mission-logs/new`}
-                  className="lcars-switch"
-                >
-                  Neuer Missionslog
-                </Link>
-                <Link
-                  href={`/users/${user.id}/dialogues/new`}
-                  className="lcars-switch"
-                >
-                  Neues Gespräch
-                </Link>
-              </>
-            )}
-            {isGM && (
+        <div className="flex flex-col flex-wrap gap-[12px]">
+          {/* Anders als Missionslog/Gespräch (eigener Charakter) oder Mission
+              (gm/admin) sind Archiv-Einträge an keine Voraussetzung
+              geknüpft — jeder eingeloggte User darf welche anlegen. */}
+          <Link href={`/users/${user.id}/archive/new`} className="lcars-switch">
+            Neuer Archiv-Eintrag
+          </Link>
+          {characters.length > 0 && (
+            <>
               <Link
-                href={`/users/${user.id}/missions/new`}
+                href={`/users/${user.id}/mission-logs/new`}
                 className="lcars-switch"
               >
-                Neue Mission
+                Neuer Missionslog
               </Link>
-            )}
-          </div>
-        )}
+              <Link
+                href={`/users/${user.id}/dialogues/new`}
+                className="lcars-switch"
+              >
+                Neues Gespräch
+              </Link>
+            </>
+          )}
+          {isGM && (
+            <Link
+              href={`/users/${user.id}/missions/new`}
+              className="lcars-switch"
+            >
+              Neue Mission
+            </Link>
+          )}
+        </div>
 
         <p className="lcars-text text-[13px] mt-[20px]">
           Sichtbarkeit je Eintrag: Privat (nur du) · GM (du + Spielleitung) ·

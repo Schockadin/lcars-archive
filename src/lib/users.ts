@@ -9,8 +9,8 @@ const USER_COLUMNS = sql`
 `;
 
 // Probiert slugifyBase(name), "${base}-2", "${base}-3", … bis ein Slug in
-// users frei ist — gleiches Muster wie generateUniqueDialogueSlug in
-// src/lib/dialoguesCore.ts.
+// users frei ist — gleiches Muster wie generateUniqueArchiveEntrySlug in
+// src/lib/archive.ts.
 async function generateUniqueUserSlug(name: string): Promise<string> {
   const base = slugifyBase(name);
   let candidate = base;

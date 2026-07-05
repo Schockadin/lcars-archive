@@ -96,6 +96,11 @@ export interface ArchiveEntryDetail {
   visibility: "private" | "gm" | "public";
   ownerUserId: number | null;
   updated_at: string;
+  // Roher Markdown-Body (leerer String bei Dialogen — deren Inhalt lebt in
+  // dialogue_messages) — für den Inline-Editor des Owners auf der
+  // Detailseite (siehe ArchiveEntryEditor.tsx), analog
+  // MissionDetail.sourceMarkdown.
+  sourceMarkdown: string;
   // Ausgehende Verweise (dieser Eintrag → andere Archiv-Einträge).
   links: ArchiveLink[];
   // Eingehende Verweise (andere Archiv-Einträge → dieser Eintrag).
