@@ -4,7 +4,9 @@ import type { RecentActivityItem } from "@/lib/recentActivity";
 import { SOURCE_TYPE_LABELS, fmtDate } from "@/lib/timelineFormat";
 import type { TimelineSourceType } from "@/types/timeline";
 
-const TYPE_COLOR: Record<TimelineSourceType, string> = {
+// Exportiert, damit NewsSection.tsx dieselben Typ-Farben für die
+// "Aktualisiert"-Hälfte des gemergten News-Feeds verwendet.
+export const TYPE_COLOR: Record<TimelineSourceType, string> = {
   character: "var(--lcars-amber)",
   mission: "var(--lcars-green)",
   mission_log: "var(--lcars-blue)",
@@ -63,19 +65,19 @@ function ActivitySection({
   );
 }
 
-// "Neue Inhalte" seit dem letzten Besuch, in zwei Akkordeons getrennt: neu
-// angelegt vs. seither bearbeitet (created_at bzw. updated_at gegen
+// "Neu angelegte Inhalte" seit dem letzten Besuch (created_at gegen
 // previous_login_at, siehe getRecentActivity in src/lib/recentActivity.ts).
-// Ohne Timeline-Einträge — anders als das frühere RecentActivity.tsx (siehe
-// commit 53e76fa), das komplett auf timeline_events (kuratierte In-Story-
-// Ereignisse) basierte, keine "was ist neu im Archiv"-Quelle.
+// Der "Aktualisiert"-Teil lebt seit der News-Sektion in NewsSection.tsx
+// (zusammengeführt mit offenen Gesprächen) — hier bleibt bewusst nur noch
+// "Neu" als Akkordeon übrig. Ohne Timeline-Einträge — anders als das frühere
+// RecentActivity.tsx (siehe commit 53e76fa), das komplett auf timeline_events
+// (kuratierte In-Story-Ereignisse) basierte, keine "was ist neu im
+// Archiv"-Quelle.
 export default function RecentActivity({
   created,
-  updated,
   firstVisit,
 }: {
   created: RecentActivityItem[];
-  updated: RecentActivityItem[];
   firstVisit: boolean;
 }) {
   if (firstVisit) {
@@ -89,19 +91,11 @@ export default function RecentActivity({
   }
 
   return (
-    <div className="flex flex-col gap-[8px]">
-      <ActivitySection
-        label="Neu"
-        color="var(--lcars-purple)"
-        items={created}
-        emptyLabel="Nichts Neues seit deinem letzten Besuch."
-      />
-      <ActivitySection
-        label="Aktualisiert"
-        color="var(--lcars-amber-light)"
-        items={updated}
-        emptyLabel="Nichts Aktualisiertes seit deinem letzten Besuch."
-      />
-    </div>
+    <ActivitySection
+      label="Neu"
+      color="var(--lcars-purple)"
+      items={created}
+      emptyLabel="Nichts Neues seit deinem letzten Besuch."
+    />
   );
 }

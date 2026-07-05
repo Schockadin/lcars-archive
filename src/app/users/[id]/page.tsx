@@ -8,7 +8,7 @@ import { getRecentActivity } from "@/lib/recentActivity";
 import { getDialoguesForUser } from "@/lib/dialogues";
 import FollowedContentSection from "./FollowedContentSection";
 import RecentActivity from "./RecentActivity";
-import OpenDialoguesSection from "./OpenDialoguesSection";
+import NewsSection from "./NewsSection";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 
@@ -81,12 +81,16 @@ export default async function UserPage({
           {isSelf && (
             <RecentActivity
               created={recentActivity.created}
-              updated={recentActivity.updated}
               firstVisit={target.previous_login_at === null}
             />
           )}
 
-          {isSelf && <OpenDialoguesSection items={openDialogues} />}
+          {isSelf && (
+            <NewsSection
+              updated={recentActivity.updated}
+              openDialogues={openDialogues}
+            />
+          )}
 
           {isSelf && (
             <FollowedContentSection

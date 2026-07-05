@@ -8,6 +8,9 @@ export interface RecentActivityItem {
   title: string;
   href: string;
   timestamp: string;
+  // null bei Vault-Ingest-Inhalten ohne owner_user_id — die NewsRow zeigt in
+  // dem Fall "Spielleitung" (siehe NewsSection.tsx).
+  authorName: string | null;
 }
 
 interface RecentActivityRow {
@@ -16,6 +19,7 @@ interface RecentActivityRow {
   title: string;
   mission_slug: string | null;
   dialogue_open: boolean | null;
+  author_name: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -53,6 +57,12 @@ function toHref(row: RecentActivityRow): string {
 // angelegter UND seither editierter Eintrag zählt nur als "neu". Kein
 // unstable_cache: pro User unterschiedlich, und die Dashboard-Route ist
 // durch den Session-Zugriff ohnehin dynamisch.
+//
+// Offene Gespräche (category='dialogue' AND dialogue_open) werden hier
+// bewusst ausgeschlossen — die leben in einer eigenen Liste
+// (getDialoguesForUser) und erscheinen in der News-Sektion (NewsSection.tsx)
+// zusammen mit "Aktualisiert", nicht hier. Ein abgeschlossenes Gespräch ist
+// danach ein ganz normaler archive_entry und taucht wieder normal auf.
 export async function getRecentActivity(
   userId: number,
   since: Date | null,
@@ -63,8 +73,10 @@ export async function getRecentActivity(
   const rows = await sql<RecentActivityRow[]>`
     SELECT 'character'::text AS target_type, c.slug, c.name AS title,
            NULL::text AS mission_slug, NULL::boolean AS dialogue_open,
+           pu.name AS author_name,
            c.created_at::text AS created_at, c.updated_at::text AS updated_at
     FROM characters c
+    LEFT JOIN users pu ON pu.id = c.player_id
     WHERE (c.visibility = 'public' OR c.player_id = ${userId})
       AND (c.created_at > ${since} OR c.updated_at > ${since})
 
@@ -72,17 +84,21 @@ export async function getRecentActivity(
 
     SELECT 'mission'::text, m.slug, m.title,
            NULL::text, NULL::boolean,
+           ou.name,
            m.created_at::text, m.updated_at::text
     FROM missions m
+    LEFT JOIN users ou ON ou.id = m.owner_user_id
     WHERE m.created_at > ${since} OR m.updated_at > ${since}
 
     UNION ALL
 
     SELECT 'mission_log'::text, ml.slug, ml.title,
            m.slug, NULL::boolean,
+           ou.name,
            ml.created_at::text, ml.updated_at::text
     FROM mission_logs ml
     JOIN missions m ON m.id = ml.mission_id
+    LEFT JOIN users ou ON ou.id = ml.owner_user_id
     WHERE (ml.visibility = 'public' OR ml.owner_user_id = ${userId})
       AND (ml.created_at > ${since} OR ml.updated_at > ${since})
 
@@ -90,10 +106,13 @@ export async function getRecentActivity(
 
     SELECT 'archive_entry'::text, a.slug, a.title,
            NULL::text, a.dialogue_open,
+           au.name,
            a.created_at::text, a.updated_at::text
     FROM archive_entries a
+    LEFT JOIN users au ON au.id = a.owner_user_id
     WHERE (a.visibility = 'public' OR a.owner_user_id = ${userId})
       AND (a.created_at > ${since} OR a.updated_at > ${since})
+      AND (a.category != 'dialogue' OR a.dialogue_open = FALSE)
   `;
 
   const created: RecentActivityItem[] = [];
@@ -105,6 +124,7 @@ export async function getRecentActivity(
       slug: row.slug,
       title: row.title,
       href: toHref(row),
+      authorName: row.author_name,
       timestamp:
         new Date(row.created_at) > since ? row.created_at : row.updated_at,
     };

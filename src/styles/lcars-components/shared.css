@@ -438,3 +438,72 @@
     display: none;
   }
 }
+
+/* ─── News-Feed (NewsSection.tsx) ──────────────────────────────────────
+   Gemergter Feed aus zuletzt bearbeiteten Inhalten + offenen Gesprächen,
+   bewusst kein Akkordeon (immer sichtbar) — stattdessen ein scrollbarer
+   Container mit fester Höhe für genau 3 Zeilen. Feste Zeilenhöhe (statt
+   height:auto) vermeidet die Art von Containment-/Prozent-Höhen-Bug, der
+   bei den Tutorial-DataRows auftrat (siehe Kommentar dort) — hier gibt es
+   ohnehin keine container-type:size-Vorfahren, also unproblematisch, aber
+   die feste Höhe hält .news-scroll trotzdem exakt auf 3 Zeilen begrenzt. */
+.news-scroll {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  /* 3 × 48px Zeilenhöhe + 2 × 6px Gap dazwischen */
+  max-height: 156px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.news-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 48px;
+  flex-shrink: 0;
+  min-width: 0;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.news-row:hover {
+  background: var(--lcars-surface-2);
+}
+
+.news-row-rail {
+  width: 5px;
+  height: 70%;
+  flex-shrink: 0;
+  border-radius: 3px;
+  background: var(--news-color);
+}
+
+.news-row-body {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.news-row-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--lcars-text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.news-row-meta {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  color: var(--lcars-text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
