@@ -8,6 +8,14 @@
 
 .lcars-main-content {
   display: flex;
+  /* Ohne explizite Richtung defaultet Flex auf row — fiel bisher nicht auf,
+     weil HashScrollRestorer (erstes Kind, siehe MainContent.tsx) null
+     rendert und <main> (zweites Kind, flex-1) darum der einzige sichtbare
+     Flex-Teilnehmer war. Seit PullToRefresh als zusätzliches, sichtbares
+     Geschwisterelement davorsteht, würde eine row-Anordnung es als
+     horizontalen Sibling neben <main> einreihen (shrink-to-fit-Breite nach
+     Inhalt, auch bei height:0) und <main> nach rechts verdrängen. */
+  flex-direction: column;
   min-width: 0;
   padding-right: 5px;
 }
@@ -517,17 +525,6 @@
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  flex-shrink: 0;
   transition: height 0.15s ease-out;
-}
-
-.pull-to-refresh-label {
-  font-family: var(--font-share-tech-mono), monospace;
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--lcars-text-dim);
-}
-
-.pull-to-refresh--ready .pull-to-refresh-label {
-  color: var(--lcars-amber);
 }
