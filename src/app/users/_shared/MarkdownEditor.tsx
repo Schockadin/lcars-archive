@@ -236,7 +236,7 @@ export default function MarkdownEditor({
         name={name}
         required={required}
         defaultValue={defaultValue}
-        className={`rounded-lcars-pill lcars-input resize-y font-mono ${
+        className={`rounded-lcars-pill lcars-input w-full resize-y font-mono ${
           large ? "min-h-[400px]" : "min-h-[300px]"
         } ${mode === "preview" ? "hidden" : ""}`}
       />

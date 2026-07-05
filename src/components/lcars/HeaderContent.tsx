@@ -4,7 +4,6 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import HeaderSearch from "./HeaderSearch";
 import HeaderUserNav from "./HeaderUserNav";
-import { logout } from "@/app/login/actions";
 import type { User } from "@/types/db";
 
 interface SessionInfo {
@@ -12,22 +11,18 @@ interface SessionInfo {
   role: User["role"] | null;
 }
 
-// Im User-Bereich (/users/**, /dialogues/**) weicht der generische
-// Titel+Suche-Header einem Pill-Grid mit der User-Navigation — siehe
-// HeaderUserNav. Session wird client-seitig per Fetch geholt (gleiches
-// Muster wie SidebarMenu.tsx' Home-Button), damit das Root-Layout selbst
-// session-frei (und damit statisch) bleiben kann. Erneutes Fetchen bei
-// jedem Routenwechsel (nicht nur beim ersten Mount) — robuster gegenüber
-// einem Login/Logout als ein reiner Once-per-Mount-Effekt, und wird jetzt
-// auch außerhalb des User-Bereichs gebraucht (Anmelden-/Abmelden-Button
-// oben rechts im Standard-Header).
+// Eingeloggte User sehen die UserNav (Pill-Grid, siehe HeaderUserNav) jetzt
+// auf JEDER Seite, nicht mehr nur im früheren User-Bereich (/users/**,
+// /dialogues/**) — der schnelle Zugriff aufs eigene Dashboard/Settings/etc.
+// soll von überall aus möglich sein. Nur wer nicht eingeloggt ist, sieht
+// weiterhin den generischen Titel+Suche-Header. Session wird client-seitig
+// per Fetch geholt (gleiches Muster wie zuvor SidebarMenu.tsx' Home-Button),
+// damit das Root-Layout selbst session-frei (und damit statisch) bleiben
+// kann. Erneutes Fetchen bei jedem Routenwechsel (nicht nur beim ersten
+// Mount) — robuster gegenüber einem Login/Logout als ein reiner
+// Once-per-Mount-Effekt.
 export default function HeaderContent() {
   const pathname = usePathname();
-  const userArea =
-    pathname === "/users" ||
-    pathname.startsWith("/users/") ||
-    pathname.startsWith("/dialogues/");
-
   const [session, setSession] = useState<SessionInfo | null>(null);
 
   useEffect(() => {
@@ -45,9 +40,13 @@ export default function HeaderContent() {
     };
   }, [pathname]);
 
-  if (userArea) {
-    // Kein Flackern: solange die Session noch lädt, nichts rendern.
-    if (!session?.userId) return <div className="lcars-header-content" />;
+  // Kein Flackern: solange die Session noch lädt, nichts rendern (weder
+  // UserNav noch den generischen Header).
+  if (!session) {
+    return <div className="lcars-header-content" />;
+  }
+
+  if (session.userId) {
     return (
       <div className="lcars-header-content">
         <HeaderUserNav
@@ -63,21 +62,12 @@ export default function HeaderContent() {
     <div className="lcars-header-content">
       <div className="lcars-header-top">
         <div className="lcars-header-title uppercase">Neo Archiv</div>
-        {session &&
-          (session.userId ? (
-            <form action={logout} className="lcars-usernav-form mr-[8px]">
-              <button type="submit" className="lcars-usernav-pill bg-lcars-red">
-                Abmelden
-              </button>
-            </form>
-          ) : (
-            <Link
-              href="/login"
-              className="lcars-usernav-pill bg-lcars-green mr-[8px]"
-            >
-              Anmelden
-            </Link>
-          ))}
+        <Link
+          href="/login"
+          className="lcars-usernav-pill bg-lcars-green mr-[8px]"
+        >
+          Anmelden
+        </Link>
       </div>
       <HeaderSearch />
     </div>
