@@ -83,11 +83,12 @@ export async function sendActivationEmail(input: {
   });
 }
 
-// Für zwei Wege genutzt: Admin setzt das Passwort eines Users zurück
-// (resetUserPasswordAction) und der User fordert selbst einen Reset an
-// (/forgot-password) — beide erzeugen denselben Token-Typ wie
-// sendActivationEmail (siehe passwordSetupTokens.ts), nur mit anderem
-// Betreff/Text.
+// Genutzt vom selbstständigen Reset-Request (/forgot-password) — erzeugt
+// denselben Token-Typ wie sendActivationEmail (siehe
+// passwordSetupTokens.ts), nur mit anderem Betreff/Text. Admins können
+// Passwörter anderer User bewusst nicht per Admin-Aktion zurücksetzen
+// (Schutz vor Account-Übernahme) — nur der User selbst kann sich hierüber
+// einen neuen Reset-Link anfordern.
 export async function sendPasswordResetEmail(input: {
   to: string;
   name: string;
