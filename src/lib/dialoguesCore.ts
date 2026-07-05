@@ -38,7 +38,9 @@ function parseParticipants(metadata: unknown): ArchiveParticipant[] {
 // Probiert slugifyBase(title), "${base}-2", "${base}-3", … bis ein Slug in
 // archive_entries frei ist. createDialogue fängt trotzdem Postgres-Code
 // 23505 ab (kleines TOCTOU-Restrisiko bei zeitgleichen identischen Titeln).
-export async function generateUniqueDialogueSlug(title: string): Promise<string> {
+export async function generateUniqueDialogueSlug(
+  title: string,
+): Promise<string> {
   const base = slugifyBase(title);
   let candidate = base;
   let n = 2;
@@ -467,7 +469,11 @@ export async function getDialogueParticipant(
   `;
   if (!row) return null;
 
-  return { characterId: row.id, characterSlug: row.slug, characterName: row.name };
+  return {
+    characterId: row.id,
+    characterSlug: row.slug,
+    characterName: row.name,
+  };
 }
 
 export interface DialoguePlayEntry {
@@ -488,7 +494,13 @@ export async function getDialogueForPlay(
   slug: string,
 ): Promise<DialoguePlayEntry | null> {
   const [row] = await sql<
-    { id: number; slug: string; title: string; metadata: unknown; dialogue_open: boolean }[]
+    {
+      id: number;
+      slug: string;
+      title: string;
+      metadata: unknown;
+      dialogue_open: boolean;
+    }[]
   >`
     SELECT id, slug, title, metadata, dialogue_open
     FROM archive_entries
@@ -505,12 +517,12 @@ export async function getDialogueForPlay(
           participants?: ArchiveParticipant[];
           location?: ArchiveLocationRef | null;
         })
-      : (row.metadata as {
+      : ((row.metadata as {
           setting?: string | null;
           logDate?: string | null;
           participants?: ArchiveParticipant[];
           location?: ArchiveLocationRef | null;
-        } | null) ?? {};
+        } | null) ?? {});
 
   return {
     id: row.id,
@@ -550,6 +562,44 @@ export async function setDialogueVisibility(
     RETURNING slug
   `;
   return rows[0] ?? null;
+}
+
+export interface DeletedDialogueInfo {
+  slug: string;
+  title: string;
+  participantSlugs: string[];
+}
+
+// Admin-only Löschung (siehe deleteDialogueAction in
+// src/app/actions/dialogues.ts) — kein Owner-Scoping wie bei
+// setDialogueVisibility, da nur die Administration diese Action überhaupt
+// aufrufen darf. dialogue_messages hängt per ON DELETE CASCADE dran (siehe
+// scripts/schema.sql), timeline_events dagegen nicht (nur per
+// source_type/source_slug verknüpft, gleiches Prinzip wie deleteMission in
+// src/lib/missions.ts) und wird deshalb hier separat aufgeräumt.
+// participantSlugs im Rückgabewert dient der Info-Mail an die beteiligten
+// Spieler (getDialogueParticipantPlayers unten).
+export async function deleteDialogue(
+  archiveEntryId: number,
+): Promise<DeletedDialogueInfo | null> {
+  const rows = await sql<{ slug: string; title: string; metadata: unknown }[]>`
+    DELETE FROM archive_entries
+    WHERE id = ${archiveEntryId} AND category = 'dialogue'
+    RETURNING slug, title, metadata
+  `;
+  const row = rows[0];
+  if (!row) return null;
+
+  await sql`
+    DELETE FROM timeline_events
+    WHERE source_type = 'archive_entry' AND source_slug = ${row.slug}
+  `;
+
+  return {
+    slug: row.slug,
+    title: row.title,
+    participantSlugs: parseParticipants(row.metadata).map((p) => p.slug),
+  };
 }
 
 export interface DialogueEmailTarget {
@@ -616,6 +666,39 @@ export async function getCharacterSubscribers(
     WHERE cf.target_type = 'character'
       AND cf.target_slug = ${characterSlug}
       AND cf.subscribed_at IS NOT NULL
+  `;
+  return rows.map((row) => ({
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    emailNotificationsEnabled: row.email_notifications_enabled,
+    pushNotificationsEnabled: row.push_notifications_enabled,
+  }));
+}
+
+// Spieler (player_id) der beteiligten Charaktere eines Dialogs — anders als
+// getDialogueSubscribers/getCharacterSubscribers unabhängig von einem Abo,
+// da die Info-Mail beim Löschen (deleteDialogueAction) beide tatsächlich
+// beteiligten Spieler erreichen soll, nicht nur wer abonniert hat. DISTINCT
+// falls jemand beide Teilnehmer-Charaktere spielt.
+export async function getDialogueParticipantPlayers(
+  characterSlugs: string[],
+): Promise<DialogueEmailTarget[]> {
+  if (characterSlugs.length === 0) return [];
+
+  const rows = await sql<
+    {
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT DISTINCT u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
+    FROM characters c
+    JOIN users u ON u.id = c.player_id
+    WHERE c.slug = ANY(${characterSlugs})
   `;
   return rows.map((row) => ({
     id: row.id,

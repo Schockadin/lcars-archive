@@ -27,7 +27,8 @@ export async function sendEmail(input: {
     return { sent: false, error: "RESEND_API_KEY ist nicht gesetzt." };
   }
 
-  const from = process.env.RESEND_FROM_EMAIL || "Neo Archive <onboarding@resend.dev>";
+  const from =
+    process.env.RESEND_FROM_EMAIL || "Neo Archive <onboarding@resend.dev>";
 
   try {
     const res = await fetch(RESEND_ENDPOINT, {
@@ -46,11 +47,17 @@ export async function sendEmail(input: {
 
     if (!res.ok) {
       const body = await res.text();
-      return { sent: false, error: `Resend antwortete mit ${res.status}: ${body}` };
+      return {
+        sent: false,
+        error: `Resend antwortete mit ${res.status}: ${body}`,
+      };
     }
     return { sent: true };
   } catch (err) {
-    return { sent: false, error: err instanceof Error ? err.message : String(err) };
+    return {
+      sent: false,
+      error: err instanceof Error ? err.message : String(err),
+    };
   }
 }
 
@@ -189,6 +196,28 @@ export async function sendCharacterDialogueClosedEmail(input: {
       <p>Hallo ${input.name},</p>
       <p>das Gespräch "${input.dialogueTitle}", an dem ${input.characterName} teilgenommen hat, wurde abgeschlossen.</p>
       <p><a href="${input.dialogueUrl}">${input.dialogueUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
+// An beide beteiligten Spieler verschickt, wenn ein Admin ein Gespräch
+// löscht (deleteDialogueAction) — kein Link, der Dialog existiert danach
+// nicht mehr.
+export async function sendDialogueDeletedEmail(input: {
+  to: string;
+  name: string;
+  dialogueTitle: string;
+}): Promise<SendEmailResult> {
+  return sendEmail({
+    to: input.to,
+    subject: `Gespräch gelöscht: "${input.dialogueTitle}"`,
+    html: `
+      <p>Hallo ${input.name},</p>
+      <p>
+        das Gespräch "${input.dialogueTitle}", an dem du beteiligt warst,
+        wurde von der Administration gelöscht.
+      </p>
       <p>— Neo Archive</p>
     `,
   });

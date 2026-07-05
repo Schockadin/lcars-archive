@@ -12,6 +12,7 @@ import DialogueHeader from "@/components/DialogueHeader";
 import DialogueThread from "@/components/DialogueThread";
 import DialogueReplyForm from "@/components/DialogueReplyForm";
 import CompleteDialogueButton from "@/components/CompleteDialogueButton";
+import DeleteDialogueButton from "@/components/DeleteDialogueButton";
 import FollowButtons from "@/components/FollowButtons";
 
 export const dynamic = "force-dynamic";
@@ -42,11 +43,9 @@ export default async function DialoguePlayPage({ params }: Props) {
   if (!entry.open) redirect(`/archive/${slug}`);
 
   const participant = await getDialogueParticipant(entry.id, session.userId);
-  if (!participant) {
-    const user = await getUserById(session.userId);
-    if (user?.role !== "gm" && user?.role !== "admin") {
-      forbidden();
-    }
+  const viewer = await getUserById(session.userId);
+  if (!participant && viewer?.role !== "gm" && viewer?.role !== "admin") {
+    forbidden();
   }
 
   const messages = await getDialogueMessages(entry.id);
@@ -84,6 +83,9 @@ export default async function DialoguePlayPage({ params }: Props) {
         )}
         {participant && <DialogueReplyForm entrySlug={entry.slug} />}
         <CompleteDialogueButton entrySlug={entry.slug} />
+        {viewer?.role === "admin" && (
+          <DeleteDialogueButton entrySlug={entry.slug} />
+        )}
       </div>
     </article>
   );
