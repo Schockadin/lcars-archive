@@ -19,6 +19,7 @@ export default function HeaderUserNav({
     { href: `/users/${userId}`, label: "Profil" },
     { href: `/users/${userId}/content`, label: "Inhalte" },
     { href: `/users/${userId}/settings`, label: "Settings" },
+    { href: "/search", label: "Suche" },
     ...(role === "gm" || role === "admin"
       ? [{ href: "/users", label: role === "admin" ? "Admin" : "Leitung" }]
       : []),
