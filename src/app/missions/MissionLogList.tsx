@@ -145,6 +145,7 @@ export default function MissionLogList({
                   label={group.name}
                   accentColor={group.color}
                   color={group.color}
+                  className="lcars-data-row--full"
                 />
                 <div className="mission-log-list mt-[8px]">
                   {group.logs.map((log) => (
