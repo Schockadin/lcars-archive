@@ -6,8 +6,10 @@ import { listAllUsers } from "@/lib/users";
 import CrumbLabel from "@/components/CrumbLabel";
 import LogDetail from "../../LogDetail";
 import OwnerSelect from "@/components/OwnerSelect";
+import AdminActionsMenu from "@/components/AdminActionsMenu";
 import AutolinkButton from "@/components/AutolinkButton";
 import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
+import FormatTextButton from "@/components/FormatTextButton";
 
 interface Props {
   params: Promise<{ missionSlug: string; logSlug: string }>;
@@ -70,8 +72,11 @@ export default async function LogPage({ params }: Props) {
             initialOwnerId={log.ownerUserId}
             users={owners.map((u) => ({ id: u.id, name: u.name }))}
           />
-          <AutolinkButton contentType="missionLog" slug={log.slug} />
-          <RemoveWikilinksButton contentType="missionLog" slug={log.slug} />
+          <AdminActionsMenu>
+            <AutolinkButton contentType="missionLog" slug={log.slug} />
+            <RemoveWikilinksButton contentType="missionLog" slug={log.slug} />
+            <FormatTextButton contentType="missionLog" slug={log.slug} />
+          </AdminActionsMenu>
         </div>
       )}
       <LogDetail log={log} nav={nav} />

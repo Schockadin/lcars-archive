@@ -4,9 +4,9 @@ import { useRouter } from "next/navigation";
 import {
   previewAutolinkAction,
   applyAutolinkAction,
-  type AutolinkContentType,
+  type ContentToolType,
   type AutolinkPreviewResult,
-} from "@/app/actions/autolink";
+} from "@/app/actions/contentTools";
 
 const TYPE_LABEL: Record<
   AutolinkPreviewResult["matches"][number]["type"],
@@ -27,7 +27,7 @@ export default function AutolinkButton({
   contentType,
   slug,
 }: {
-  contentType: AutolinkContentType;
+  contentType: ContentToolType;
   slug: string;
 }) {
   const router = useRouter();

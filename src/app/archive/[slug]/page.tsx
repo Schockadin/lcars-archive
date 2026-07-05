@@ -16,8 +16,10 @@ import { getDialogueMessages } from "@/lib/dialogues";
 import { getViewer, canView } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import OwnerSelect from "@/components/OwnerSelect";
+import AdminActionsMenu from "@/components/AdminActionsMenu";
 import AutolinkButton from "@/components/AutolinkButton";
 import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
+import FormatTextButton from "@/components/FormatTextButton";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -117,8 +119,14 @@ export default async function ArchiveEntryPage({ params }: Props) {
             initialOwnerId={entry.ownerUserId}
             users={owners.map((u) => ({ id: u.id, name: u.name }))}
           />
-          <AutolinkButton contentType="archiveEntry" slug={entry.slug} />
-          <RemoveWikilinksButton contentType="archiveEntry" slug={entry.slug} />
+          <AdminActionsMenu>
+            <AutolinkButton contentType="archiveEntry" slug={entry.slug} />
+            <RemoveWikilinksButton
+              contentType="archiveEntry"
+              slug={entry.slug}
+            />
+            <FormatTextButton contentType="archiveEntry" slug={entry.slug} />
+          </AdminActionsMenu>
         </div>
       )}
 

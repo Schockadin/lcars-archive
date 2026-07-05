@@ -2,20 +2,19 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
-  previewWikilinkCleanupAction,
-  applyWikilinkCleanupAction,
+  previewTextFormatAction,
+  applyTextFormatAction,
   type ContentToolType,
-  type WikilinkCleanupPreviewResult,
+  type TextFormatPreviewResult,
 } from "@/app/actions/contentTools";
 
 // Admin-only Action auf den vier Inhalts-Detailseiten (Mission, Log,
-// Archiv-Eintrag, Charakter): entfernt alle [[Ziel]]/[[Ziel|Text]]-
-// Wikilinks aus dem Markdown-Quelltext (siehe src/lib/wikilinkCleanup.ts)
-// und ersetzt sie durch reinen Anzeigetext. Sinnvoll als Aufräum-Schritt
-// nach dem neuen Autolinking-Feature: dessen echte, sofort aufgelöste
-// Links machen die alte, nur beim Vault-Ingest aufgelöste [[...]]-Syntax
-// überflüssig. Gleiches Vorschau-vor-Speichern-Muster wie AutolinkButton.
-export default function RemoveWikilinksButton({
+// Archiv-Eintrag, Charakter): vereinheitlicht die Typografie des Markdown-
+// Quelltexts (gerade Apostrophe → typografischer Apostroph, gerade
+// Anführungszeichen → deutsche „Anführungszeichen") — siehe
+// src/lib/textFormat.ts. Gleiches Vorschau-vor-Speichern-Muster wie
+// AutolinkButton/RemoveWikilinksButton.
+export default function FormatTextButton({
   contentType,
   slug,
 }: {
@@ -23,9 +22,7 @@ export default function RemoveWikilinksButton({
   slug: string;
 }) {
   const router = useRouter();
-  const [preview, setPreview] = useState<WikilinkCleanupPreviewResult | null>(
-    null,
-  );
+  const [preview, setPreview] = useState<TextFormatPreviewResult | null>(null);
   const [error, setError] = useState<string | undefined>();
   const [applied, setApplied] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -34,7 +31,7 @@ export default function RemoveWikilinksButton({
     setError(undefined);
     setApplied(null);
     startTransition(async () => {
-      const result = await previewWikilinkCleanupAction(contentType, slug);
+      const result = await previewTextFormatAction(contentType, slug);
       if ("error" in result) setError(result.error);
       else setPreview(result);
     });
@@ -42,14 +39,14 @@ export default function RemoveWikilinksButton({
 
   function handleConfirm() {
     startTransition(async () => {
-      const result = await applyWikilinkCleanupAction(contentType, slug);
+      const result = await applyTextFormatAction(contentType, slug);
       if ("error" in result) {
         setError(result.error);
         return;
       }
       setPreview(null);
       setApplied(
-        `${result.removedCount} Wikilink${result.removedCount === 1 ? "" : "s"} entfernt.`,
+        `${result.apostropheCount} Apostroph${result.apostropheCount === 1 ? "" : "e"}, ${result.quoteCount} Anführungszeichen angepasst.`,
       );
       router.refresh();
     });
@@ -60,25 +57,16 @@ export default function RemoveWikilinksButton({
   }
 
   if (preview) {
+    const hasChanges = preview.apostropheCount > 0 || preview.quoteCount > 0;
     return (
       <div className="autolink-preview">
         <p className="lcars-eyebrow">
-          {preview.removed.length === 0
-            ? "Keine Wikilinks gefunden."
-            : `${preview.removed.length} Wikilink${preview.removed.length === 1 ? "" : "s"} gefunden:`}
+          {hasChanges
+            ? `${preview.apostropheCount} Apostroph${preview.apostropheCount === 1 ? "" : "e"}, ${preview.quoteCount} Anführungszeichen gefunden:`
+            : "Keine Anführungszeichen oder Apostrophe gefunden."}
         </p>
 
-        {preview.removed.length > 0 && (
-          <ul className="autolink-match-list">
-            {preview.removed.map((r, i) => (
-              <li key={i}>
-                „{r.original}“ → „{r.replacement}“
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {preview.removed.length > 0 && (
+        {hasChanges && (
           <div
             className="mission-body lcars-text autolink-preview-html"
             dangerouslySetInnerHTML={{ __html: preview.previewHtml }}
@@ -94,7 +82,7 @@ export default function RemoveWikilinksButton({
           >
             Abbrechen
           </button>
-          {preview.removed.length > 0 && (
+          {hasChanges && (
             <button
               type="button"
               onClick={handleConfirm}
@@ -123,7 +111,7 @@ export default function RemoveWikilinksButton({
         disabled={pending}
         className="lcars-switch disabled:opacity-50"
       >
-        {pending ? "Prüfe…" : "Wikilinks entfernen"}
+        {pending ? "Prüfe…" : "Text formatieren"}
       </button>
       {applied && (
         <p className="text-lcars-green text-[13px]" role="status">

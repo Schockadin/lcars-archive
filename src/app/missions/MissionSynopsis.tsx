@@ -3,8 +3,10 @@ import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import FollowButtons from "@/components/FollowButtons";
 import { Viewer } from "@/lib/visibility";
 import OwnerSelect from "@/components/OwnerSelect";
+import AdminActionsMenu from "@/components/AdminActionsMenu";
 import AutolinkButton from "@/components/AutolinkButton";
 import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
+import FormatTextButton from "@/components/FormatTextButton";
 import { UserWithCharacters } from "@/lib/users";
 import MissionSynopsisEditor from "./MissionSynopsisEditor";
 
@@ -48,11 +50,17 @@ export default function MissionSynopsis({
                     initialOwnerId={mission.ownerUserId}
                     users={owners.map((u) => ({ id: u.id, name: u.name }))}
                   />
-                  <AutolinkButton contentType="mission" slug={mission.slug} />
-                  <RemoveWikilinksButton
-                    contentType="mission"
-                    slug={mission.slug}
-                  />
+                  <AdminActionsMenu>
+                    <AutolinkButton contentType="mission" slug={mission.slug} />
+                    <RemoveWikilinksButton
+                      contentType="mission"
+                      slug={mission.slug}
+                    />
+                    <FormatTextButton
+                      contentType="mission"
+                      slug={mission.slug}
+                    />
+                  </AdminActionsMenu>
                 </>
               )}
             </>

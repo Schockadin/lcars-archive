@@ -9,8 +9,10 @@ import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
 import FollowButtons from "@/components/FollowButtons";
 import OwnerSelect from "@/components/OwnerSelect";
+import AdminActionsMenu from "@/components/AdminActionsMenu";
 import AutolinkButton from "@/components/AutolinkButton";
 import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
+import FormatTextButton from "@/components/FormatTextButton";
 import { UserWithCharacters } from "@/lib/users";
 import { Viewer } from "@/lib/visibility";
 
@@ -297,14 +299,20 @@ export default function CharacterHero({
                     initialOwnerId={character.player_id}
                     users={owners.map((u) => ({ id: u.id, name: u.name }))}
                   />
-                  <AutolinkButton
-                    contentType="character"
-                    slug={character.slug}
-                  />
-                  <RemoveWikilinksButton
-                    contentType="character"
-                    slug={character.slug}
-                  />
+                  <AdminActionsMenu>
+                    <AutolinkButton
+                      contentType="character"
+                      slug={character.slug}
+                    />
+                    <RemoveWikilinksButton
+                      contentType="character"
+                      slug={character.slug}
+                    />
+                    <FormatTextButton
+                      contentType="character"
+                      slug={character.slug}
+                    />
+                  </AdminActionsMenu>
                 </>
               )}
             </div>
