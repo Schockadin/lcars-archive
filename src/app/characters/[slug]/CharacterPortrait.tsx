@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 
 /**
  * Portrait des Charakters. Ist ein Bild hinterlegt, lässt es sich anklicken und
@@ -48,14 +49,20 @@ export default function CharacterPortrait({
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="group block w-full h-full cursor-zoom-in"
+            className="group relative block w-full h-full cursor-zoom-in"
             aria-label={`Portrait von ${name} vergrößern`}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            {/* Portraits kommen aus Vault-Frontmatter als freie URL (jeder
+                Host denkbar) statt aus einem bekannten, konfigurierbaren
+                Bucket — unoptimized statt next.config.ts-remotePatterns,
+                da sich kein Host vorab eintragen lässt. */}
+            <Image
               src={portrait}
               alt={`Portrait von ${name}`}
-              className="w-full h-full object-cover object-top"
+              fill
+              unoptimized
+              sizes="(max-width: 640px) 100vw, 320px"
+              className="object-cover object-top"
             />
           </button>
 
@@ -76,11 +83,18 @@ export default function CharacterPortrait({
                 >
                   ×
                 </button>
-                {/* Klick auf das Bild selbst soll nicht schließen. */}
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                {/* Klick auf das Bild selbst soll nicht schließen. Echte
+                    Breite/Höhe des Portraits ist unbekannt (freie URL) —
+                    width/height dienen next/image nur als Seitenverhältnis-
+                    Vorgabe, die tatsächliche Darstellungsgröße bestimmt
+                    weiterhin die CSS-Klasse (width/height:auto,
+                    object-fit:contain, siehe character.css). */}
+                <Image
                   src={portrait}
                   alt={`Portrait von ${name}`}
+                  width={1200}
+                  height={1600}
+                  unoptimized
                   className="portrait-overlay-img"
                   onClick={(e) => e.stopPropagation()}
                 />
