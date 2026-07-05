@@ -9,6 +9,7 @@ import CharacterAssignmentTable from "./CharacterAssignmentTable";
 import VaultExportPanel from "./VaultExportPanel";
 import VaultIngestPanel from "./VaultIngestPanel";
 import RevalidateCachePanel from "./RevalidateCachePanel";
+import UserBackupPanel from "./UserBackupPanel";
 
 export const metadata: Metadata = {
   title: "Nutzerverwaltung",
@@ -70,6 +71,13 @@ export default async function UsersAdminPage() {
               users={userOptions}
             />
           </section>
+
+          {isAdmin && (
+            <section className="flex flex-col gap-[12px]">
+              <h2 className="text-lcars-amber">User-Backup</h2>
+              <UserBackupPanel />
+            </section>
+          )}
 
           {isAdmin && (
             <section className="flex flex-col gap-[12px]">
