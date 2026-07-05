@@ -4,18 +4,18 @@
    in header.css).
 ──────────────────────────────────────────────────────────────────── */
 
-/* Typ-Filter auf /search: 5 Buttons in einer umbrechenden Reihe (im
-   Unterschied zu .mission-sort, das für genau 2 gleich breite Buttons mit
-   flex:1 ausgelegt ist). */
+/* Typ-Filter auf /search: 2-spaltiges Grid aus gleich breiten, gestreckten
+   Buttons statt einer umbrechenden Reihe. */
 .search-type-filter {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
   gap: 10px;
   width: 100%;
-  justify-content: space-between;
+  margin-bottom: 16px;
 }
 .search-type-filter .lcars-switch {
   padding: 0 14px;
+  text-align: center;
 }
 
 /* Hervorhebung des Suchbegriffs im Snippet auf /search. */
