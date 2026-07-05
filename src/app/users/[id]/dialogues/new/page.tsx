@@ -4,6 +4,7 @@ import PageMeta from "@/components/PageMeta";
 import { requireOwnCharacters } from "../../dal";
 import { getCharactersWithPlayers } from "@/lib/characters";
 import { getAllArchiveEntries } from "@/lib/archive";
+import { getMostRecentLogDate } from "@/lib/missions";
 import CreateDialogueForm from "./CreateDialogueForm";
 
 export const metadata: Metadata = {
@@ -21,13 +22,14 @@ export default async function NewDialoguePage({
 
   // Nur laden, wenn überhaupt ein Formular gerendert wird — kein
   // Charakter, keine Partner-/Ort-Liste nötig.
-  const [partnerCharacters, archiveEntries] =
+  const [partnerCharacters, archiveEntries, defaultLogDate] =
     characters.length > 0
       ? await Promise.all([
           getCharactersWithPlayers(user.id),
           getAllArchiveEntries(),
+          getMostRecentLogDate(),
         ])
-      : [[], []];
+      : [[], [], null];
   const locations = archiveEntries
     .filter((e) => e.category === "location")
     .map((l) => ({ slug: l.slug, title: l.title }));
@@ -59,6 +61,7 @@ export default async function NewDialoguePage({
             ownCharacters={characters}
             partnerCharacters={partnerCharacters}
             locations={locations}
+            defaultLogDate={defaultLogDate}
           />
         )}
       </article>

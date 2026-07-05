@@ -244,6 +244,19 @@ export async function updateMissionSynopsis(
   };
 }
 
+// Aktuellstes log_date über alle Mission-Logs hinweg — Vorschlagswert für
+// Datumsfelder in "Neuer Missionslog"/"Neue Mission"/"Neues Gespräch"
+// (siehe die jeweiligen new/page.tsx), da die Kampagne einem fiktiven
+// In-Story-Kalender folgt statt dem realen Datum. null, wenn es noch
+// keinen einzigen Mission-Log gibt (dann bleibt das jeweilige Feld leer).
+// Kein Cache, gleiche Begründung wie getNextSessionNr unten.
+export async function getMostRecentLogDate(): Promise<string | null> {
+  const [row] = await sql<{ log_date: string | null }[]>`
+    SELECT MAX(log_date)::text AS log_date FROM mission_logs
+  `;
+  return row?.log_date ?? null;
+}
+
 // Vorschlagswert fürs Session-Nr-Feld im "Neuer Missionslog"-Formular
 // (src/app/users/[id]/mission-logs/new) — nur ein Default, das Feld bleibt
 // editierbar. Kein Cache: soll bei jedem Seitenaufruf den aktuellen Stand

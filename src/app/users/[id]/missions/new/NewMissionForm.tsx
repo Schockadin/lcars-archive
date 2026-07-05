@@ -8,7 +8,13 @@ const inputClass = "rounded-lcars-pill lcars-input";
 const textAreaClass =
   "rounded-lcars-pill lcars-input min-h-[400px] resize-y font-mono";
 
-export default function NewMissionForm({ userId }: { userId: number }) {
+export default function NewMissionForm({
+  userId,
+  defaultStartedAt,
+}: {
+  userId: number;
+  defaultStartedAt: string | null;
+}) {
   const [state, formAction, pending] = useActionState(
     createMissionAction,
     initialState,
@@ -72,6 +78,7 @@ export default function NewMissionForm({ userId }: { userId: number }) {
           id="mission-started"
           name="startedAt"
           type="date"
+          defaultValue={defaultStartedAt ?? ""}
           className={inputClass}
         />
       </div>
