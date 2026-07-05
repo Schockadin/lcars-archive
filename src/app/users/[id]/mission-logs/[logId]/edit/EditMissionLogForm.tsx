@@ -2,12 +2,13 @@
 import { useActionState } from "react";
 import { updateMissionLogAction, type EditMissionLogState } from "./actions";
 import type { OwnMissionLogForEdit } from "@/lib/missions";
+import { SubmitButton, FormError } from "../../../../_shared/FormPrimitives";
+import {
+  MissionLogTitleField,
+  MissionLogDateBodyFields,
+} from "../../_shared/MissionLogFields";
 
 const initialState: EditMissionLogState = {};
-
-const inputClass = "rounded-lcars-pill lcars-input w-full sm:w-[400px]";
-const textAreaClass =
-  "rounded-lcars-pill lcars-input min-h-[500px] resize-y font-mono";
 
 export default function EditMissionLogForm({
   userId,
@@ -26,62 +27,22 @@ export default function EditMissionLogForm({
       <input type="hidden" name="userId" value={userId} />
       <input type="hidden" name="logId" value={log.id} />
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="edit-log-title" className="lcars-eyebrow">
-          Titel
-        </label>
-        <input
-          id="edit-log-title"
-          name="title"
-          type="text"
-          required
-          defaultValue={log.title}
-          className={inputClass}
-        />
-      </div>
+      <MissionLogTitleField idPrefix="edit-log" defaultValue={log.title} />
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="edit-log-date" className="lcars-eyebrow">
-          Datum
-        </label>
-        <input
-          id="edit-log-date"
-          name="logDate"
-          type="date"
-          defaultValue={log.logDate ?? ""}
-          className={inputClass}
-        />
-      </div>
+      <MissionLogDateBodyFields
+        idPrefix="edit-log"
+        defaults={{ logDate: log.logDate, bodyMarkdown: log.sourceMarkdown }}
+      />
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="edit-log-body" className="lcars-eyebrow">
-          Log-Text
-        </label>
-        <textarea
-          id="edit-log-body"
-          name="bodyMarkdown"
-          required
-          defaultValue={log.sourceMarkdown}
-          className={textAreaClass}
-        />
-        <p className="text-lcars-text-dim text-[12px]">
-          Unterstützt Markdown-Formatierung.
-        </p>
-      </div>
-
-      <button
-        type="submit"
-        disabled={pending}
+      <SubmitButton
+        pending={pending}
+        pendingLabel="Wird gespeichert…"
         className="lcars-switch self-start disabled:opacity-50"
       >
-        {pending ? "Wird gespeichert…" : "Änderungen speichern"}
-      </button>
+        Änderungen speichern
+      </SubmitButton>
 
-      {state?.error && (
-        <p className="text-lcars-red" role="alert">
-          {state.error}
-        </p>
-      )}
+      <FormError message={state?.error} />
     </form>
   );
 }
