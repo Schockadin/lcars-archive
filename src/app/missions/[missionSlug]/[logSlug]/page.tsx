@@ -65,7 +65,7 @@ export default async function LogPage({ params }: Props) {
     <>
       <CrumbLabel slug={log.slug} label={log.title} />
       {viewer?.role === "admin" && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
+        <div className="flex flex-col gap-[10px] mb-[10px]">
           <OwnerSelect
             contentType="mission_log"
             id={log.id}

@@ -292,30 +292,33 @@ export default function CharacterHero({
                 targetSlug={character.slug}
               />
               {viewer?.role === "admin" && (
-                <>
-                  <OwnerSelect
-                    contentType="character"
-                    id={character.id}
-                    initialOwnerId={character.player_id}
-                    users={owners.map((u) => ({ id: u.id, name: u.name }))}
-                  />
-                  <AdminActionsMenu>
-                    <AutolinkButton
-                      contentType="character"
-                      slug={character.slug}
-                    />
-                    <RemoveWikilinksButton
-                      contentType="character"
-                      slug={character.slug}
-                    />
-                    <FormatTextButton
-                      contentType="character"
-                      slug={character.slug}
-                    />
-                  </AdminActionsMenu>
-                </>
+                <OwnerSelect
+                  contentType="character"
+                  id={character.id}
+                  initialOwnerId={character.player_id}
+                  users={owners.map((u) => ({ id: u.id, name: u.name }))}
+                />
               )}
             </div>
+
+            {viewer?.role === "admin" && (
+              <div className="mt-3">
+                <AdminActionsMenu>
+                  <AutolinkButton
+                    contentType="character"
+                    slug={character.slug}
+                  />
+                  <RemoveWikilinksButton
+                    contentType="character"
+                    slug={character.slug}
+                  />
+                  <FormatTextButton
+                    contentType="character"
+                    slug={character.slug}
+                  />
+                </AdminActionsMenu>
+              </div>
+            )}
 
             {bio ? (
               <div

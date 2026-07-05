@@ -43,27 +43,26 @@ export default function MissionSynopsis({
             <>
               <FollowButtons targetType="mission" targetSlug={mission.slug} />
               {viewer?.role === "admin" && (
-                <>
-                  <OwnerSelect
-                    contentType="mission"
-                    id={mission.id}
-                    initialOwnerId={mission.ownerUserId}
-                    users={owners.map((u) => ({ id: u.id, name: u.name }))}
-                  />
-                  <AdminActionsMenu>
-                    <AutolinkButton contentType="mission" slug={mission.slug} />
-                    <RemoveWikilinksButton
-                      contentType="mission"
-                      slug={mission.slug}
-                    />
-                    <FormatTextButton
-                      contentType="mission"
-                      slug={mission.slug}
-                    />
-                  </AdminActionsMenu>
-                </>
+                <OwnerSelect
+                  contentType="mission"
+                  id={mission.id}
+                  initialOwnerId={mission.ownerUserId}
+                  users={owners.map((u) => ({ id: u.id, name: u.name }))}
+                />
               )}
             </>
+          }
+          adminActions={
+            viewer?.role === "admin" ? (
+              <AdminActionsMenu>
+                <AutolinkButton contentType="mission" slug={mission.slug} />
+                <RemoveWikilinksButton
+                  contentType="mission"
+                  slug={mission.slug}
+                />
+                <FormatTextButton contentType="mission" slug={mission.slug} />
+              </AdminActionsMenu>
+            ) : undefined
           }
         />
       ) : (

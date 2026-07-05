@@ -9,7 +9,9 @@ const initialState: MissionSynopsisEditState = {};
 
 // Inline-Editor für die Mission-Synopsis, nur für Admin/GM gerendert (siehe
 // MissionSynopsis.tsx). `topRow` (FollowButtons + OwnerSelect) wird zusammen
-// mit dem Bearbeiten-Button in einer gemeinsamen Zeile gerendert. Zeigt
+// mit dem Bearbeiten-Button in einer gemeinsamen Zeile gerendert, `adminActions`
+// (AdminActionsMenu) als eigener Block darunter — es ist ein volles
+// DataRow-Akkordeon und passt nicht in die schmale Button-Zeile. Zeigt
 // standardmäßig den gerenderten Body; im Editiermodus ein Markdown-Textfeld
 // statt dessen.
 export default function MissionSynopsisEditor({
@@ -17,11 +19,13 @@ export default function MissionSynopsisEditor({
   bodyHtml,
   sourceMarkdown,
   topRow,
+  adminActions,
 }: {
   missionId: number;
   bodyHtml: string | null;
   sourceMarkdown: string;
   topRow: ReactNode;
+  adminActions?: ReactNode;
 }) {
   const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -57,6 +61,8 @@ export default function MissionSynopsisEditor({
           </button>
         </div>
 
+        {adminActions}
+
         {displayHtml ? (
           <div
             className="mission-body lcars-text"
@@ -74,6 +80,8 @@ export default function MissionSynopsisEditor({
       <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
         {topRow}
       </div>
+
+      {adminActions}
 
       <form action={formAction} className="flex flex-col gap-[8px]">
         <input type="hidden" name="missionId" value={missionId} />

@@ -112,7 +112,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
       <LcarsReadingModeToggle />
 
       {viewer?.role === "admin" && entry.category !== "dialogue" && (
-        <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
+        <div className="flex flex-col gap-[10px] mb-[10px]">
           <OwnerSelect
             contentType="archive_entry"
             id={entry.id}
