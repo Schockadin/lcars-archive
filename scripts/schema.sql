@@ -376,3 +376,23 @@ CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(use
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
 ALTER TABLE users ADD CONSTRAINT users_role_check
   CHECK (role IN ('admin', 'gm', 'player', 'viewer', 'guest'));
+
+-- Löschprotokoll für die rote "gelöscht"-Kategorie im News-Feed
+-- (NewsSection.tsx). Missionen/Mission-Logs/Gespräche werden hart gelöscht
+-- (DELETE, kein deleted_at auf der Ursprungstabelle) — ohne dieses
+-- Protokoll gäbe es nach dem Löschen keine Zeile mehr, aus der ein
+-- "X wurde gelöscht"-Eintrag entstehen könnte. visibility/owner_user_id
+-- werden zum Löschzeitpunkt übernommen, damit getRecentDeletions dieselbe
+-- Sichtbarkeitsregel (öffentlich ODER eigener Inhalt) wie bei lebenden
+-- Inhalten anwenden kann — visibility NULL steht für Missionen, die (wie
+-- live) keine eigene visibility-Spalte haben und immer öffentlich sind.
+CREATE TABLE IF NOT EXISTS content_deletions (
+  id            SERIAL PRIMARY KEY,
+  target_type   TEXT NOT NULL,
+  title         TEXT NOT NULL,
+  visibility    TEXT,
+  owner_user_id INT REFERENCES users(id) ON DELETE SET NULL,
+  deleted_by    INT REFERENCES users(id) ON DELETE SET NULL,
+  deleted_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_content_deletions_deleted_at ON content_deletions(deleted_at);

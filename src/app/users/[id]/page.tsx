@@ -4,10 +4,10 @@ import PageMeta from "@/components/PageMeta";
 import { requireSelfOrGM } from "./dal";
 import { hasPassword } from "@/lib/users";
 import { getBookmarkedContent, getSubscribedContent } from "@/lib/follows";
-import { getRecentActivity } from "@/lib/recentActivity";
+import { getRecentActivity, getRecentDeletions } from "@/lib/recentActivity";
 import { getDialoguesForUser } from "@/lib/dialogues";
 import FollowedContentSection from "./FollowedContentSection";
-import RecentActivity from "./RecentActivity";
+import OpenDialoguesSection from "./OpenDialoguesSection";
 import NewsSection from "./NewsSection";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
@@ -41,6 +41,7 @@ export default async function UserPage({
     bookmarks,
     subscriptions,
     recentActivity,
+    deletions,
     openDialogues,
   ] = await Promise.all([
     isSelf ? hasPassword(target.id) : Promise.resolve(true),
@@ -49,9 +50,13 @@ export default async function UserPage({
     isSelf
       ? getRecentActivity(target.id, target.previous_login_at)
       : Promise.resolve({ created: [], updated: [] }),
+    isSelf
+      ? getRecentDeletions(target.id, target.previous_login_at)
+      : Promise.resolve([]),
     isSelf ? getDialoguesForUser(target.id, "open") : Promise.resolve([]),
   ]);
   const needsPassword = isSelf && !hasPasswordSet;
+  const firstVisit = target.previous_login_at === null;
 
   return (
     <>
@@ -78,17 +83,19 @@ export default async function UserPage({
             </p>
           )}
 
-          {isSelf && (
-            <RecentActivity
-              created={recentActivity.created}
-              firstVisit={target.previous_login_at === null}
-            />
+          {isSelf && firstVisit && (
+            <p className="lcars-text">
+              Das ist dein erster Besuch — willkommen an Bord.
+            </p>
           )}
+
+          {isSelf && <OpenDialoguesSection items={openDialogues} />}
 
           {isSelf && (
             <NewsSection
+              created={recentActivity.created}
               updated={recentActivity.updated}
-              openDialogues={openDialogues}
+              deleted={deletions}
             />
           )}
 

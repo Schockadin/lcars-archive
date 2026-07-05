@@ -353,7 +353,7 @@ export async function deleteDialogueAction(
     return { error: "Dieser Dialog existiert nicht." };
   }
 
-  const deleted = await deleteDialogue(entry.id);
+  const deleted = await deleteDialogue(entry.id, session.userId);
   if (!deleted) {
     return { error: "Löschen fehlgeschlagen." };
   }

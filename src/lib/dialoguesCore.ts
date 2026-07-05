@@ -600,14 +600,25 @@ export interface DeletedDialogueInfo {
 // source_type/source_slug verknüpft, gleiches Prinzip wie deleteMission in
 // src/lib/missions.ts) und wird deshalb hier separat aufgeräumt.
 // participantSlugs im Rückgabewert dient der Info-Mail an die beteiligten
-// Spieler (getDialogueParticipantPlayers unten).
+// Spieler (getDialogueParticipantPlayers unten). deletedByUserId dient nur
+// dem Löschprotokoll (content_deletions, siehe getRecentDeletions in
+// recentActivity.ts) — hier immer die löschende Admin-Person.
 export async function deleteDialogue(
   archiveEntryId: number,
+  deletedByUserId: number,
 ): Promise<DeletedDialogueInfo | null> {
-  const rows = await sql<{ slug: string; title: string; metadata: unknown }[]>`
+  const rows = await sql<
+    {
+      slug: string;
+      title: string;
+      metadata: unknown;
+      visibility: string;
+      owner_user_id: number | null;
+    }[]
+  >`
     DELETE FROM archive_entries
     WHERE id = ${archiveEntryId} AND category = 'dialogue'
-    RETURNING slug, title, metadata
+    RETURNING slug, title, metadata, visibility, owner_user_id
   `;
   const row = rows[0];
   if (!row) return null;
@@ -615,6 +626,11 @@ export async function deleteDialogue(
   await sql`
     DELETE FROM timeline_events
     WHERE source_type = 'archive_entry' AND source_slug = ${row.slug}
+  `;
+
+  await sql`
+    INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+    VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${row.owner_user_id}, ${deletedByUserId})
   `;
 
   return {

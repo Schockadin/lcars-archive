@@ -60,9 +60,10 @@ function toHref(row: RecentActivityRow): string {
 //
 // Offene Gespräche (category='dialogue' AND dialogue_open) werden hier
 // bewusst ausgeschlossen — die leben in einer eigenen Liste
-// (getDialoguesForUser) und erscheinen in der News-Sektion (NewsSection.tsx)
-// zusammen mit "Aktualisiert", nicht hier. Ein abgeschlossenes Gespräch ist
-// danach ein ganz normaler archive_entry und taucht wieder normal auf.
+// (getDialoguesForUser) und haben ihre eigene, stets offene Akkordeon-
+// Sektion (OpenDialoguesSection.tsx), nicht die News-Sektion
+// (NewsSection.tsx). Ein abgeschlossenes Gespräch ist danach ein ganz
+// normaler archive_entry und taucht wieder normal auf.
 export async function getRecentActivity(
   userId: number,
   since: Date | null,
@@ -139,4 +140,55 @@ export async function getRecentActivity(
   updated.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
 
   return { created: created.slice(0, limit), updated: updated.slice(0, limit) };
+}
+
+export interface DeletionItem {
+  targetType: TimelineSourceType;
+  title: string;
+  timestamp: string;
+  // null, wenn der löschende Account seither selbst gelöscht wurde
+  // (deleted_by ON DELETE SET NULL, siehe scripts/schema.sql) — die
+  // NewsRow zeigt in dem Fall "Spielleitung" (analog authorName oben).
+  deletedByName: string | null;
+}
+
+// Gelöschte Inhalte seit dem letzten Besuch, aus dem Löschprotokoll
+// (content_deletions, siehe scripts/schema.sql) — Missionen/Mission-Logs/
+// Gespräche werden hart gelöscht, ohne dieses Protokoll gäbe es danach
+// keine Zeile mehr, aus der ein "gelöscht"-Eintrag im News-Feed
+// (NewsSection.tsx) entstehen könnte. Kein href: das Ziel existiert nicht
+// mehr. Gleiche Sichtbarkeitsregel wie getRecentActivity — visibility IS
+// NULL steht für Missionen (keine eigene visibility-Spalte, immer
+// öffentlich).
+export async function getRecentDeletions(
+  userId: number,
+  since: Date | null,
+  limit = 20,
+): Promise<DeletionItem[]> {
+  if (!since) return [];
+
+  const rows = await sql<
+    {
+      target_type: TimelineSourceType;
+      title: string;
+      deleted_at: string;
+      deleted_by_name: string | null;
+    }[]
+  >`
+    SELECT cd.target_type, cd.title, cd.deleted_at::text AS deleted_at,
+           du.name AS deleted_by_name
+    FROM content_deletions cd
+    LEFT JOIN users du ON du.id = cd.deleted_by
+    WHERE cd.deleted_at > ${since}
+      AND (cd.visibility IS NULL OR cd.visibility = 'public' OR cd.owner_user_id = ${userId})
+    ORDER BY cd.deleted_at DESC
+    LIMIT ${limit}
+  `;
+
+  return rows.map((row) => ({
+    targetType: row.target_type,
+    title: row.title,
+    timestamp: row.deleted_at,
+    deletedByName: row.deleted_by_name,
+  }));
 }

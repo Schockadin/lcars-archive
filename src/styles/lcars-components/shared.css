@@ -480,6 +480,18 @@
   background: var(--lcars-surface-2);
 }
 
+/* Gelöschte Inhalte (rot) haben kein Ziel mehr zum Verlinken — kein Hover,
+   Titel leicht gedimmt/durchgestrichen statt wie ein normaler Link zu
+   wirken. */
+.news-row--static {
+  cursor: default;
+}
+
+.news-row--static .news-row-title {
+  color: var(--lcars-text-dim);
+  text-decoration: line-through;
+}
+
 .news-row-rail {
   width: 5px;
   height: 70%;
