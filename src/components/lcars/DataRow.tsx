@@ -35,7 +35,7 @@ function DataRowPill({
 }: Omit<DataRowProps, "defaultOpen" | "children">) {
   const content = (
     <>
-      <div className="flex-1 h-full">{label}</div>
+      <div className="lcars-data-row-label-text flex-1 h-full">{label}</div>
       {expanded !== undefined && (
         <span
           className={`lcars-data-row-chevron${expanded ? " lcars-data-row-chevron--open" : ""}`}

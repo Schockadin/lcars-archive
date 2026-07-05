@@ -48,7 +48,22 @@
   font-weight: 600;
   text-decoration: none;
   flex-grow: 1;
+  min-width: 0;
   display: flex;
+}
+
+/* Label-Text der Pill (siehe DataRow.tsx) — einzeilig mit Ellipsis statt
+   Umbruch, sonst sprengt ein langer Wert (z.B. ein Spielername als
+   Gruppen-Label in MissionLogList.tsx) die fixe Zeilenhöhe
+   (--lcars-datarow-h) und überlappt die nächste Zeile. min-width: 0 auf
+   beiden Flex-Ebenen (.lcars-data-row-text und hier), sonst greift die
+   Ellipsis nie (Flex-Items schrumpfen sonst nicht unter ihre
+   Inhaltsbreite). */
+.lcars-data-row-label-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 /* Auf-/Zuklapp-Chevron innerhalb der Pill (siehe DataRow.tsx#expanded) —
