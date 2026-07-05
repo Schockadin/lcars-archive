@@ -4,6 +4,7 @@ import FollowButtons from "@/components/FollowButtons";
 import { Viewer } from "@/lib/visibility";
 import OwnerSelect from "@/components/OwnerSelect";
 import AutolinkButton from "@/components/AutolinkButton";
+import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
 import { UserWithCharacters } from "@/lib/users";
 import MissionSynopsisEditor from "./MissionSynopsisEditor";
 
@@ -48,6 +49,10 @@ export default function MissionSynopsis({
                     users={owners.map((u) => ({ id: u.id, name: u.name }))}
                   />
                   <AutolinkButton contentType="mission" slug={mission.slug} />
+                  <RemoveWikilinksButton
+                    contentType="mission"
+                    slug={mission.slug}
+                  />
                 </>
               )}
             </>

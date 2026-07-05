@@ -10,6 +10,7 @@ import CharacterPortrait from "./CharacterPortrait";
 import FollowButtons from "@/components/FollowButtons";
 import OwnerSelect from "@/components/OwnerSelect";
 import AutolinkButton from "@/components/AutolinkButton";
+import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
 import { UserWithCharacters } from "@/lib/users";
 import { Viewer } from "@/lib/visibility";
 
@@ -297,6 +298,10 @@ export default function CharacterHero({
                     users={owners.map((u) => ({ id: u.id, name: u.name }))}
                   />
                   <AutolinkButton
+                    contentType="character"
+                    slug={character.slug}
+                  />
+                  <RemoveWikilinksButton
                     contentType="character"
                     slug={character.slug}
                   />

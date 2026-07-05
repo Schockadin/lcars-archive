@@ -17,6 +17,7 @@ import { getViewer, canView } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import OwnerSelect from "@/components/OwnerSelect";
 import AutolinkButton from "@/components/AutolinkButton";
+import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -117,6 +118,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
             users={owners.map((u) => ({ id: u.id, name: u.name }))}
           />
           <AutolinkButton contentType="archiveEntry" slug={entry.slug} />
+          <RemoveWikilinksButton contentType="archiveEntry" slug={entry.slug} />
         </div>
       )}
 
