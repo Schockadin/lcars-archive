@@ -5,6 +5,11 @@ import {
   updateNotificationSettingsAction,
   type NotificationSettingsState,
 } from "./notificationActions";
+import {
+  FormError,
+  FormSuccess,
+  SubmitButton,
+} from "../../_shared/FormPrimitives";
 
 const initialState: NotificationSettingsState = {};
 
@@ -162,24 +167,16 @@ export default function NotificationSettingsForm({
           </label>
         </div>
 
-        {state?.error && (
-          <p className="text-lcars-red" role="alert">
-            {state.error}
-          </p>
-        )}
-        {state?.success && (
-          <p className="text-lcars-green" role="status">
-            Gespeichert.
-          </p>
-        )}
+        <FormError message={state?.error} />
+        {state?.success && <FormSuccess>Gespeichert.</FormSuccess>}
 
-        <button
-          type="submit"
-          disabled={pending}
+        <SubmitButton
+          pending={pending}
+          pendingLabel="Speichern…"
           className="lcars-switch self-end disabled:opacity-50 w-[100%]"
         >
-          {pending ? "Speichern…" : "Speichern"}
-        </button>
+          Speichern
+        </SubmitButton>
       </form>
 
       <div className="flex max-w-[var(--lcars-content-w)] flex-col gap-[8px]">
@@ -219,11 +216,7 @@ export default function NotificationSettingsForm({
           </button>
         )}
 
-        {deviceError && (
-          <p className="text-lcars-red" role="alert">
-            {deviceError}
-          </p>
-        )}
+        <FormError message={deviceError ?? undefined} />
       </div>
     </div>
   );
