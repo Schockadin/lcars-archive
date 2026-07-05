@@ -1,5 +1,9 @@
 // src/app/characters/[slug]/page.tsx
-import { getCharacterBySlug, getLogsByCharacter } from "@/lib/characters";
+import {
+  getCharacterBySlug,
+  getLogsByCharacter,
+  getCharacterSourceBySlug,
+} from "@/lib/characters";
 import { getDialogueCountByParticipant } from "@/lib/archive";
 import { getViewer, canView } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
@@ -54,10 +58,16 @@ export default async function CharakterPage({ params }: Props) {
     notFound();
   }
 
-  const [logs, conversationCount, owners] = await Promise.all([
+  // Rohen Markdown-Body nur laden, wenn der Betrachter auch tatsächlich der
+  // Owner ist (einzige Zielgruppe des Inline-Bio-Editors, siehe
+  // CharacterHero.tsx) — spart die Extra-Query für alle anderen Aufrufe.
+  const isOwner = viewer != null && viewer.userId === character.player_id;
+
+  const [logs, conversationCount, owners, source] = await Promise.all([
     getLogsByCharacter(character.id),
     getDialogueCountByParticipant(character.slug),
     viewer?.role === "admin" ? listAllUsers() : Promise.resolve([]),
+    isOwner ? getCharacterSourceBySlug(character.slug) : Promise.resolve(null),
   ]);
 
   return (
@@ -68,6 +78,7 @@ export default async function CharakterPage({ params }: Props) {
         conversationCount={conversationCount}
         viewer={viewer}
         owners={owners}
+        sourceMarkdown={isOwner ? (source?.sourceMarkdown ?? "") : null}
       />
     </div>
   );
