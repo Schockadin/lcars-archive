@@ -40,7 +40,12 @@ export default async function UsersAdminPage() {
     listAllUsers(),
     getAllCharactersForAdmin(),
   ]);
-  const userOptions = users.map((u) => ({ id: u.id, name: u.name }));
+  // Gäste dürfen keinen Charakter zugewiesen bekommen (siehe
+  // assignCharacterAction in ./actions.ts, das dieselbe Regel serverseitig
+  // durchsetzt) — sie fehlen deshalb schon hier in der Auswahl.
+  const userOptions = users
+    .filter((u) => u.role !== "guest")
+    .map((u) => ({ id: u.id, name: u.name }));
 
   // Feste Anzahl an Werkzeug-Panels im "Admin Actions"-Akkordeon — kein
   // DB-Wert, nur der Vollständigkeit halber im Kopf gezeigt (gleiche Optik

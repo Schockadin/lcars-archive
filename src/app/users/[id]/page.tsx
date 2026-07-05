@@ -18,6 +18,7 @@ const ROLE_LABELS: Record<User["role"], string> = {
   gm: "Spielleitung",
   player: "Spieler",
   viewer: "Beobachter",
+  guest: "Gast",
 };
 
 export default async function UserPage({

@@ -11,14 +11,23 @@ import {
   setUserActive,
   deleteUser,
 } from "@/lib/users";
-import { assignCharacterToUser } from "@/lib/characters";
+import {
+  assignCharacterToUser,
+  unassignCharactersFromUser,
+} from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { createPasswordSetupToken } from "@/lib/passwordSetupTokens";
 import { sendActivationEmail, sendPasswordResetEmail } from "@/lib/mail";
 import { getBaseUrl } from "@/lib/http";
 import type { User } from "@/types/db";
 
-const ROLES: readonly User["role"][] = ["admin", "gm", "player", "viewer"];
+const ROLES: readonly User["role"][] = [
+  "admin",
+  "gm",
+  "player",
+  "viewer",
+  "guest",
+];
 
 function isValidRole(value: string): value is User["role"] {
   return (ROLES as readonly string[]).includes(value);
@@ -148,6 +157,13 @@ export async function updateUserRoleAction(
   }
 
   await updateUserRole(userId, role);
+  // Gäste dürfen keinen Charakter zugewiesen haben (siehe
+  // assignCharacterAction unten) — bei einer Herabstufung auf "guest" werden
+  // bestehende Zuweisungen deshalb aufgelöst, statt einen inkonsistenten
+  // Zustand stehen zu lassen.
+  if (role === "guest") {
+    await unassignCharactersFromUser(userId);
+  }
   redirect("/users");
 }
 
@@ -204,7 +220,9 @@ export async function updateUserProfileAction(
 
   const userId = Number(formData.get("userId"));
   const name = String(formData.get("name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const email = String(formData.get("email") ?? "")
+    .trim()
+    .toLowerCase();
 
   if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
   if (!name) return { error: "Bitte einen Namen angeben." };
@@ -238,8 +256,20 @@ export async function assignCharacterAction(
   let userId: number | null = null;
   if (userIdRaw) {
     userId = Number(userIdRaw);
-    if (!Number.isInteger(userId) || !(await getUserById(userId))) {
+    const targetUser = Number.isInteger(userId)
+      ? await getUserById(userId)
+      : null;
+    if (!targetUser) {
       return { error: "Ungültiger User." };
+    }
+    // Gäste dürfen keinen Charakter zugewiesen bekommen (siehe
+    // scripts/schema.sql-Kommentar zur Gast-Rolle) — die Auswahl blendet sie
+    // zwar bereits aus (siehe page.tsx), ein direkter POST muss aber ebenso
+    // abgewiesen werden.
+    if (targetUser.role === "guest") {
+      return {
+        error: "Gast-Accounts können keine Charaktere zugewiesen bekommen.",
+      };
     }
   }
 

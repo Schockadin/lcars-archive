@@ -67,6 +67,7 @@ export default function EditUserForm({
           <option value="gm">Spielleitung</option>
           <option value="player">Spieler</option>
           <option value="viewer">Beobachter</option>
+          <option value="guest">Gast</option>
         </select>
         {isSelf && (
           <p className="text-lcars-text-dim">

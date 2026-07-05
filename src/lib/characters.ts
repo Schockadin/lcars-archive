@@ -145,6 +145,18 @@ export async function assignCharacterToUser(
   return parseCharacter(rows[0]);
 }
 
+// Entfernt alle Charakter-Zuweisungen eines Users — genutzt, wenn ein User
+// auf die Gast-Rolle herabgestuft wird (siehe updateUserRoleAction in
+// src/app/users/actions.ts), da Gästen laut Produktentscheidung kein
+// Charakter zugeordnet sein darf.
+export async function unassignCharactersFromUser(
+  userId: number,
+): Promise<void> {
+  await sql`
+    UPDATE characters SET player_id = NULL WHERE player_id = ${userId}
+  `;
+}
+
 // Nur der Owner (player_id) darf die Sichtbarkeit ändern — ein fremdes/
 // gefälschtes id trifft dann einfach 0 Zeilen (gleiches Prinzip wie
 // assignCharacterToUser oben).
@@ -179,7 +191,9 @@ export interface UserContentLog {
 // wie getCharactersForUser — die Seite ist ohnehin durch requireOwnCharacters
 // (Session-Zugriff) dynamisch. Liefert den verfassenden eigenen Charakter
 // mit, damit die Seite nach Charakter gruppieren kann.
-export async function getLogsForUser(userId: number): Promise<UserContentLog[]> {
+export async function getLogsForUser(
+  userId: number,
+): Promise<UserContentLog[]> {
   return sql<UserContentLog[]>`
     SELECT
       ml.id, ml.slug, ml.title, ml.session_nr, ml.log_date::text AS log_date,

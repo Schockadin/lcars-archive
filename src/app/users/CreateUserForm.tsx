@@ -68,6 +68,7 @@ export default function CreateUserForm() {
           <option value="admin">Administration</option>
           <option value="gm">Spielleitung</option>
           <option value="player">Spieler</option>
+          <option value="guest">Gast</option>
         </select>
       </div>
 

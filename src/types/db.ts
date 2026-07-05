@@ -1,7 +1,7 @@
 export interface Note {
   id: number;
   slug: string;
-  type: 'character' | 'mission' | 'archive';
+  type: "character" | "mission" | "archive";
   frontmatter: Record<string, unknown>;
   content: string;
   updated_at: Date;
@@ -13,7 +13,7 @@ export interface User {
   email: string;
   name: string;
   slug: string;
-  role: 'admin' | 'gm' | 'player' | 'viewer';
+  role: "admin" | "gm" | "player" | "viewer" | "guest";
   is_active: boolean;
   created_at: Date;
   last_login_at: Date | null;

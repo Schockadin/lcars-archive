@@ -73,7 +73,10 @@ export async function listAllUsers(): Promise<UserWithCharacters[]> {
     LEFT JOIN characters c ON c.player_id = u.id
     GROUP BY u.id
     ORDER BY
-      CASE u.role WHEN 'admin' THEN 0 WHEN 'gm' THEN 1 WHEN 'player' THEN 2 WHEN 'viewer' THEN 3 END,
+      CASE u.role
+        WHEN 'admin' THEN 0 WHEN 'gm' THEN 1 WHEN 'player' THEN 2
+        WHEN 'viewer' THEN 3 WHEN 'guest' THEN 4
+      END,
       u.name ASC
   `;
   return rows.map((row) => ({
@@ -128,7 +131,10 @@ export async function updateUserRole(
 // Löschen ein hartes DELETE — schema-sicher, da characters.player_id/
 // dialogue_messages.author_user_id ON DELETE SET NULL sind und
 // content_follows.user_id ON DELETE CASCADE ist.
-export async function setUserActive(id: number, active: boolean): Promise<void> {
+export async function setUserActive(
+  id: number,
+  active: boolean,
+): Promise<void> {
   await sql`UPDATE users SET is_active = ${active} WHERE id = ${id}`;
 }
 
@@ -300,9 +306,7 @@ export async function getUserForAdmin(
     hasPassword: has_password,
     requiresActivation: requires_activation,
     characters:
-      typeof characters === "string"
-        ? JSON.parse(characters)
-        : characters,
+      typeof characters === "string" ? JSON.parse(characters) : characters,
   };
 }
 
