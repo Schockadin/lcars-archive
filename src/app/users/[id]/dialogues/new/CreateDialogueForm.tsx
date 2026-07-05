@@ -2,6 +2,11 @@
 import { useActionState } from "react";
 import { createDialogueAction, type CreateDialogueState } from "./actions";
 import type { CharacterWithOwner } from "@/lib/characters";
+import {
+  FormField,
+  SubmitButton,
+  FormError,
+} from "../../../_shared/FormPrimitives";
 
 const initialState: CreateDialogueState = {};
 
@@ -34,10 +39,7 @@ export default function CreateDialogueForm({
     >
       <input type="hidden" name="userId" value={userId} />
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="dlg-own-character" className="lcars-eyebrow">
-          Dein Charakter
-        </label>
+      <FormField label="Dein Charakter" htmlFor="dlg-own-character">
         <select
           id="dlg-own-character"
           name="ownCharacterId"
@@ -50,12 +52,9 @@ export default function CreateDialogueForm({
             </option>
           ))}
         </select>
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="dlg-partner-character" className="lcars-eyebrow">
-          Gesprächspartner
-        </label>
+      <FormField label="Gesprächspartner" htmlFor="dlg-partner-character">
         <select
           id="dlg-partner-character"
           name="partnerCharacterId"
@@ -68,12 +67,9 @@ export default function CreateDialogueForm({
             </option>
           ))}
         </select>
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="dlg-title" className="lcars-eyebrow">
-          Titel
-        </label>
+      <FormField label="Titel" htmlFor="dlg-title">
         <input
           id="dlg-title"
           name="title"
@@ -81,24 +77,18 @@ export default function CreateDialogueForm({
           required
           className={inputClass}
         />
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="dlg-setting" className="lcars-eyebrow">
-          Schauplatz
-        </label>
+      <FormField label="Schauplatz" htmlFor="dlg-setting">
         <input
           id="dlg-setting"
           name="setting"
           type="text"
           className={inputClass}
         />
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="dlg-location" className="lcars-eyebrow">
-          Ort
-        </label>
+      <FormField label="Ort" htmlFor="dlg-location">
         <select
           id="dlg-location"
           name="locationSlug"
@@ -112,12 +102,9 @@ export default function CreateDialogueForm({
             </option>
           ))}
         </select>
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="dlg-date" className="lcars-eyebrow">
-          Datum
-        </label>
+      <FormField label="Datum" htmlFor="dlg-date">
         <input
           id="dlg-date"
           name="logDate"
@@ -125,29 +112,24 @@ export default function CreateDialogueForm({
           defaultValue={defaultLogDate ?? ""}
           className={inputClass}
         />
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="dlg-tags" className="lcars-eyebrow">
-          Tags (kommagetrennt)
-        </label>
+      <FormField label="Tags (kommagetrennt)" htmlFor="dlg-tags">
         <input id="dlg-tags" name="tags" type="text" className={inputClass} />
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="dlg-body" className="lcars-eyebrow">
-          Erste Nachricht
-        </label>
+      <FormField
+        label="Erste Nachricht"
+        htmlFor="dlg-body"
+        hint="Unterstützt Markdown-Formatierung."
+      >
         <textarea
           id="dlg-body"
           name="bodyMarkdown"
           required
           className={textAreaClass}
         />
-        <p className="text-lcars-text-dim text-[12px]">
-          Unterstützt Markdown-Formatierung.
-        </p>
-      </div>
+      </FormField>
 
       <div className="flex items-center gap-[8px]">
         <input
@@ -162,19 +144,15 @@ export default function CreateDialogueForm({
         </label>
       </div>
 
-      <button
-        type="submit"
-        disabled={pending}
+      <SubmitButton
+        pending={pending}
+        pendingLabel="Wird angelegt…"
         className="lcars-switch self-start disabled:opacity-50 w-[100%]"
       >
-        {pending ? "Wird angelegt…" : "Gespräch beginnen"}
-      </button>
+        Gespräch beginnen
+      </SubmitButton>
 
-      {state?.error && (
-        <p className="text-lcars-red" role="alert">
-          {state.error}
-        </p>
-      )}
+      <FormError message={state?.error} />
     </form>
   );
 }
