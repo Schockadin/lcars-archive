@@ -287,6 +287,39 @@
   color: var(--lcars-text-light);
 }
 
+/* /tutorial (TutorialPage) — Cheatsheet-Tabelle + Inline-Code, gleicher
+   Code-Stil wie .markdown-hint-popover-row code oben. */
+.tutorial-content code {
+  font-family: var(--font-share-tech-mono), monospace;
+  color: var(--lcars-text-data);
+  background: var(--lcars-surface-2);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.tutorial-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+.tutorial-table th,
+.tutorial-table td {
+  text-align: left;
+  padding: 6px 14px 6px 0;
+  border-bottom: 1px solid var(--lcars-border);
+  font-size: 14px;
+  white-space: nowrap;
+}
+.tutorial-table th {
+  color: var(--lcars-amber);
+  font-family: var(--font-antonio), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}
+.tutorial-table td:last-child,
+.tutorial-table th:last-child {
+  white-space: normal;
+}
+
 /* ── Scrollbar ───────────────────────────────────────────────────── */
 
 .lcars-scroll::-webkit-scrollbar {

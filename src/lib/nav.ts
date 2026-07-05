@@ -10,7 +10,8 @@ export type NavKey =
   | "login"
   | "users"
   | "impressum"
-  | "dsgvo";
+  | "dsgvo"
+  | "tutorial";
 
 export interface NavItem {
   id: string;
