@@ -507,3 +507,27 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ─── Pull-to-Refresh (PullToRefresh.tsx) ──────────────────────────────
+   Ersetzt das native Pull-to-Refresh, das html/body mit overflow:clip
+   (siehe globals.css) unmöglich macht — wächst als erstes Kind in
+   .lcars-main-content, wenn am oberen Rand nach unten gezogen wird. */
+.pull-to-refresh {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: height 0.15s ease-out;
+}
+
+.pull-to-refresh-label {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--lcars-text-dim);
+}
+
+.pull-to-refresh--ready .pull-to-refresh-label {
+  color: var(--lcars-amber);
+}
