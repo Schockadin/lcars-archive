@@ -44,6 +44,7 @@ export default async function SearchPage({
             defaultValue={q}
             placeholder="Archiv durchsuchen…"
             className="rounded-lcars-pill lcars-input flex-1"
+            style={{ minWidth: 0 }}
           />
           <button type="submit" className="lcars-switch">
             Suchen
