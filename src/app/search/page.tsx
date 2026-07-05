@@ -1,4 +1,5 @@
 import { searchFull } from "@/lib/search";
+import { getViewer } from "@/lib/visibility";
 import PageMeta from "@/components/PageMeta";
 import SearchResultsView from "./SearchResultsView";
 
@@ -17,7 +18,8 @@ export default async function SearchPage({
   searchParams: Promise<{ q?: string }>;
 }) {
   const q = (await searchParams).q?.trim() ?? "";
-  const results = q.length >= 2 ? await searchFull(q) : [];
+  const viewer = await getViewer();
+  const results = q.length >= 2 ? await searchFull(q, viewer?.userId) : [];
 
   return (
     <>
@@ -44,6 +46,7 @@ export default async function SearchPage({
             defaultValue={q}
             placeholder="Archiv durchsuchen…"
             className="rounded-lcars-pill lcars-input flex-1"
+            style={{ minWidth: 0 }}
           />
           <button type="submit" className="lcars-switch">
             Suchen
@@ -59,7 +62,12 @@ export default async function SearchPage({
           // Instanz, statt den Zustand der vorherigen Suche (z.B. Typ-Filter)
           // stillschweigend beizubehalten (client-seitige Navigation
           // rendert sonst dieselbe SearchResultsView-Instanz weiter).
-          <SearchResultsView key={q} query={q} results={results} />
+          <SearchResultsView
+            key={q}
+            query={q}
+            results={results}
+            isLoggedIn={viewer != null}
+          />
         )}
       </div>
     </>

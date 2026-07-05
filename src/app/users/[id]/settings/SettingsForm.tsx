@@ -2,6 +2,12 @@
 
 import { useActionState } from "react";
 import { updateSettings, type SettingsState } from "./actions";
+import {
+  FormField,
+  FormError,
+  FormSuccess,
+  SubmitButton,
+} from "../../_shared/FormPrimitives";
 
 const initialState: SettingsState = {};
 
@@ -20,10 +26,7 @@ export default function SettingsForm({
       action={formAction}
       className="flex max-w-[var(--lcars-content-w)] flex-col gap-[16px]"
     >
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="name" className="lcars-eyebrow">
-          Name
-        </label>
+      <FormField label="Name" htmlFor="name">
         <input
           id="name"
           name="name"
@@ -32,12 +35,9 @@ export default function SettingsForm({
           defaultValue={user.name}
           className="rounded-lcars-pill lcars-input"
         />
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="email" className="lcars-eyebrow">
-          E-Mail-Adresse
-        </label>
+      <FormField label="E-Mail-Adresse" htmlFor="email">
         <input
           id="email"
           name="email"
@@ -46,26 +46,18 @@ export default function SettingsForm({
           defaultValue={user.email}
           className="rounded-lcars-pill lcars-input"
         />
-      </div>
+      </FormField>
 
-      {state?.error && (
-        <p className="text-lcars-red" role="alert">
-          {state.error}
-        </p>
-      )}
-      {state?.success && (
-        <p className="text-lcars-green" role="status">
-          Gespeichert.
-        </p>
-      )}
+      <FormError message={state?.error} />
+      {state?.success && <FormSuccess>Gespeichert.</FormSuccess>}
 
-      <button
-        type="submit"
-        disabled={pending}
+      <SubmitButton
+        pending={pending}
+        pendingLabel="Speichern…"
         className="lcars-switch self-end disabled:opacity-50 w-[100%]"
       >
-        {pending ? "Speichern…" : "Speichern"}
-      </button>
+        Speichern
+      </SubmitButton>
     </form>
   );
 }

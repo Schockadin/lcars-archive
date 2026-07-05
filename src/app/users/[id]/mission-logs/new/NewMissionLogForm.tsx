@@ -1,12 +1,18 @@
 "use client";
 import { useActionState } from "react";
 import { createMissionLogAction, type MissionLogFormState } from "./actions";
+import {
+  FormField,
+  SubmitButton,
+  FormError,
+} from "../../../_shared/FormPrimitives";
+import {
+  MissionLogTitleField,
+  MissionLogDateBodyFields,
+  missionLogInputClass,
+} from "../_shared/MissionLogFields";
 
 const initialState: MissionLogFormState = {};
-
-const inputClass = "rounded-lcars-pill lcars-input";
-const textAreaClass =
-  "rounded-lcars-pill lcars-input min-h-[500px] resize-y font-mono";
 
 export default function NewMissionLogForm({
   userId,
@@ -30,15 +36,12 @@ export default function NewMissionLogForm({
     <form action={formAction} className="flex flex-col gap-[16px]">
       <input type="hidden" name="userId" value={userId} />
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="log-author" className="lcars-eyebrow">
-          Dein Charakter
-        </label>
+      <FormField label="Dein Charakter" htmlFor="log-author">
         <select
           id="log-author"
           name="authorCharacterId"
           required
-          className={inputClass}
+          className={missionLogInputClass}
         >
           {ownCharacters.map((c) => (
             <option key={c.id} value={c.id}>
@@ -46,17 +49,14 @@ export default function NewMissionLogForm({
             </option>
           ))}
         </select>
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="log-mission" className="lcars-eyebrow">
-          Mission
-        </label>
+      <FormField label="Mission" htmlFor="log-mission">
         <select
           id="log-mission"
           name="missionSlug"
           required
-          className={inputClass}
+          className={missionLogInputClass}
         >
           {missions.map((m) => (
             <option key={m.slug} value={m.slug}>
@@ -64,25 +64,11 @@ export default function NewMissionLogForm({
             </option>
           ))}
         </select>
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="log-title" className="lcars-eyebrow">
-          Titel
-        </label>
-        <input
-          id="log-title"
-          name="title"
-          type="text"
-          required
-          className={inputClass}
-        />
-      </div>
+      <MissionLogTitleField idPrefix="log" />
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="log-session-nr" className="lcars-eyebrow">
-          Session-Nr.
-        </label>
+      <FormField label="Session-Nr." htmlFor="log-session-nr">
         <input
           id="log-session-nr"
           name="sessionNr"
@@ -90,51 +76,24 @@ export default function NewMissionLogForm({
           min={1}
           required
           defaultValue={defaultSessionNr}
-          className={inputClass}
+          className={missionLogInputClass}
         />
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="log-date" className="lcars-eyebrow">
-          Datum
-        </label>
-        <input
-          id="log-date"
-          name="logDate"
-          type="date"
-          defaultValue={defaultLogDate ?? ""}
-          className={inputClass}
-        />
-      </div>
+      <MissionLogDateBodyFields
+        idPrefix="log"
+        defaults={{ logDate: defaultLogDate }}
+      />
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="log-body" className="lcars-eyebrow">
-          Log-Text
-        </label>
-        <textarea
-          id="log-body"
-          name="bodyMarkdown"
-          required
-          className={textAreaClass}
-        />
-        <p className="text-lcars-text-dim text-[12px]">
-          Unterstützt Markdown-Formatierung.
-        </p>
-      </div>
-
-      <button
-        type="submit"
-        disabled={pending}
+      <SubmitButton
+        pending={pending}
+        pendingLabel="Speichern…"
         className="lcars-switch self-start disabled:opacity-50 w-[100%]"
       >
-        {pending ? "Speichern…" : "Speichern"}
-      </button>
+        Speichern
+      </SubmitButton>
 
-      {state?.error && (
-        <p className="text-lcars-red" role="alert">
-          {state.error}
-        </p>
-      )}
+      <FormError message={state?.error} />
     </form>
   );
 }

@@ -308,6 +308,13 @@
   text-transform: uppercase;
   color: var(--lcars-text-data);
   white-space: nowrap;
+  /* Ohne Deckel bleibt .mission-log-meta (flex-shrink: 0) so breit wie ein
+     sehr langer Autorenname und verdrängt .mission-log-name vollständig
+     (dessen flex:1/min-width:0 kann nur den verbleibenden, nicht den
+     benötigten Platz beeinflussen). */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 110px;
 }
 .mission-log-date {
   flex-shrink: 0;

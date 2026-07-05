@@ -11,6 +11,7 @@ export default function AkteCard({
   title,
   summary,
   meta,
+  hardNavigate = false,
 }: {
   href: string;
   color: string;
@@ -18,9 +19,15 @@ export default function AkteCard({
   title: React.ReactNode;
   summary?: React.ReactNode;
   meta?: React.ReactNode;
+  // Echte Browser-Navigation statt Next-Link-Client-Transition — nötig für
+  // Ziele mit #:~:text=-Fragment (Suchtreffer mit Sprungmarke zur
+  // Fundstelle): Browser werten diese Text-Fragment-Direktive nur bei
+  // echter Navigation aus, nicht bei einer pushState-basierten Client-Route.
+  hardNavigate?: boolean;
 }) {
+  const Tag = hardNavigate ? "a" : Link;
   return (
-    <Link
+    <Tag
       href={href}
       className="mission-akte"
       aria-label={ariaLabel}
@@ -34,6 +41,6 @@ export default function AkteCard({
         )}
         {meta && <span className="mission-akte-meta">{meta}</span>}
       </span>
-    </Link>
+    </Tag>
   );
 }

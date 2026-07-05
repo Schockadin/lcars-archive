@@ -2,6 +2,12 @@
 
 import { useActionState } from "react";
 import { updatePasswordAction, type PasswordState } from "./passwordActions";
+import {
+  FormField,
+  FormError,
+  FormSuccess,
+  SubmitButton,
+} from "../../_shared/FormPrimitives";
 
 const initialState: PasswordState = {};
 
@@ -21,10 +27,7 @@ export default function PasswordForm({
       className="flex max-w-[var(--lcars-content-w)] flex-col gap-[16px]"
     >
       {hasPassword && (
-        <div className="flex flex-col gap-[6px]">
-          <label htmlFor="currentPassword" className="lcars-eyebrow">
-            Aktuelles Passwort
-          </label>
+        <FormField label="Aktuelles Passwort" htmlFor="currentPassword">
           <input
             id="currentPassword"
             name="currentPassword"
@@ -33,13 +36,13 @@ export default function PasswordForm({
             autoComplete="current-password"
             className="rounded-lcars-pill lcars-input"
           />
-        </div>
+        </FormField>
       )}
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="newPassword" className="lcars-eyebrow">
-          {hasPassword ? "Neues Passwort" : "Passwort festlegen"}
-        </label>
+      <FormField
+        label={hasPassword ? "Neues Passwort" : "Passwort festlegen"}
+        htmlFor="newPassword"
+      >
         <input
           id="newPassword"
           name="newPassword"
@@ -49,12 +52,9 @@ export default function PasswordForm({
           autoComplete="new-password"
           className="rounded-lcars-pill lcars-input"
         />
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="confirmPassword" className="lcars-eyebrow">
-          Passwort wiederholen
-        </label>
+      <FormField label="Passwort wiederholen" htmlFor="confirmPassword">
         <input
           id="confirmPassword"
           name="confirmPassword"
@@ -64,30 +64,18 @@ export default function PasswordForm({
           autoComplete="new-password"
           className="rounded-lcars-pill lcars-input"
         />
-      </div>
+      </FormField>
 
-      {state?.error && (
-        <p className="text-lcars-red" role="alert">
-          {state.error}
-        </p>
-      )}
-      {state?.success && (
-        <p className="text-lcars-green" role="status">
-          Passwort gespeichert.
-        </p>
-      )}
+      <FormError message={state?.error} />
+      {state?.success && <FormSuccess>Passwort gespeichert.</FormSuccess>}
 
-      <button
-        type="submit"
-        disabled={pending}
+      <SubmitButton
+        pending={pending}
+        pendingLabel="Speichern…"
         className="lcars-switch self-end disabled:opacity-50 w-[100%]"
       >
-        {pending
-          ? "Speichern…"
-          : hasPassword
-            ? "Passwort ändern"
-            : "Passwort festlegen"}
-      </button>
+        {hasPassword ? "Passwort ändern" : "Passwort festlegen"}
+      </SubmitButton>
     </form>
   );
 }

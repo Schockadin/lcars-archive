@@ -3,6 +3,11 @@
 import { useActionState } from "react";
 import { updateUserDetailsAction, type EditUserState } from "./actions";
 import type { UserAdminDetail } from "@/lib/users";
+import {
+  FormField,
+  FormError,
+  SubmitButton,
+} from "../../_shared/FormPrimitives";
 
 const initialState: EditUserState = {};
 
@@ -25,10 +30,7 @@ export default function EditUserForm({
     >
       <input type="hidden" name="userId" value={user.id} />
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="edit-user-name" className="lcars-eyebrow">
-          Name
-        </label>
+      <FormField label="Name" htmlFor="edit-user-name">
         <input
           id="edit-user-name"
           name="name"
@@ -37,12 +39,9 @@ export default function EditUserForm({
           defaultValue={user.name}
           className="rounded-lcars-pill lcars-input"
         />
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="edit-user-email" className="lcars-eyebrow">
-          E-Mail-Adresse
-        </label>
+      <FormField label="E-Mail-Adresse" htmlFor="edit-user-email">
         <input
           id="edit-user-email"
           name="email"
@@ -51,12 +50,9 @@ export default function EditUserForm({
           defaultValue={user.email}
           className="rounded-lcars-pill lcars-input"
         />
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="edit-user-role" className="lcars-eyebrow">
-          Rolle
-        </label>
+      <FormField label="Rolle" htmlFor="edit-user-role">
         <select
           id="edit-user-role"
           name="role"
@@ -74,21 +70,17 @@ export default function EditUserForm({
             Du kannst dir nicht selbst die Admin-Rolle entziehen.
           </p>
         )}
-      </div>
+      </FormField>
 
-      {state?.error && (
-        <p className="text-lcars-red" role="alert">
-          {state.error}
-        </p>
-      )}
+      <FormError message={state?.error} />
 
-      <button
-        type="submit"
-        disabled={pending}
+      <SubmitButton
+        pending={pending}
+        pendingLabel="Speichern…"
         className="lcars-switch self-end disabled:opacity-50 w-[100%]"
       >
-        {pending ? "Speichern…" : "Speichern"}
-      </button>
+        Speichern
+      </SubmitButton>
     </form>
   );
 }

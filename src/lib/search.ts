@@ -3,7 +3,8 @@ import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
 import { stripHtml } from "@/lib/missionFormat";
 import { WIKILINK_RE } from "@/lib/markdown";
 import type { ArchiveCategory } from "@/types/archive";
-import type { SearchResult } from "@/types/search";
+import type { SearchResult, SearchResultType } from "@/types/search";
+import type { FollowTargetType } from "@/lib/follows";
 
 const LIVE_PER_TYPE_LIMIT = 6;
 // Großzügige Sicherheitsgrenze statt echter Pagination — im Repo gibt es
@@ -108,6 +109,16 @@ function matchesQuery(text: string, q: string): boolean {
   return text.toLowerCase().includes(q.toLowerCase());
 }
 
+// Text-Fragment-Direktive (#:~:text=…) für den Browser: springt beim Öffnen
+// des Links direkt zur (ersten) Fundstelle im gerenderten Inhalt und hebt
+// sie hervor — dieselbe Stelle, die buildSnippet() unten anzeigt, da beide
+// auf demselben indexOf()-Prinzip (erste Fundstelle) beruhen. "-" wird von
+// encodeURIComponent nicht kodiert, muss aber laut Spec escaped werden, da
+// es als Trenner der Fragment-Syntax reserviert ist.
+function toTextFragment(text: string): string {
+  return encodeURIComponent(text).replaceAll("-", "%2D");
+}
+
 // Reduziert rohes Markdown zu Fließtext für Snippets. Kein vollwertiger
 // Parser — deckt nur ab, was im Korpus vorkommt (siehe scripts/ingest/*):
 // Codeblöcke/Inline-Code, Bilder, Wikilinks (WIKILINK_RE — dieselbe Regex wie
@@ -173,6 +184,7 @@ function mapResults(
     label: c.name,
     sublabel: "Charakter",
     href: `/characters/${c.slug}`,
+    slug: c.slug,
   }));
 
   const missionResults: SearchResult[] = missions.map((m) => ({
@@ -180,21 +192,31 @@ function mapResults(
     label: m.title,
     sublabel: "Mission",
     href: `/missions/${m.slug}`,
+    slug: m.slug,
   }));
 
-  const logResults: SearchResult[] = logs.map((l) => ({
-    type: "log" as const,
-    label: l.title,
-    sublabel: `Log · ${l.mission_title}`,
-    href: `/missions/${l.mission_slug}/${l.slug}`,
-    snippet:
+  const logResults: SearchResult[] = logs.map((l) => {
+    const snippet =
       opts.includeContent && !matchesQuery(l.title, q)
         ? buildSnippet(plainTextFor(l), q)
-        : undefined,
-  }));
+        : undefined;
+    return {
+      type: "log" as const,
+      label: l.title,
+      sublabel: `Log · ${l.mission_title}`,
+      href: `/missions/${l.mission_slug}/${l.slug}${snippet ? `#:~:text=${toTextFragment(q)}` : ""}`,
+      slug: l.slug,
+      snippet,
+    };
+  });
 
   const archiveResults: SearchResult[] = archive.map((a) => {
-    const titleForMatch = a.category === "dialogue" ? (a.setting ?? "") : a.title;
+    const titleForMatch =
+      a.category === "dialogue" ? (a.setting ?? "") : a.title;
+    const snippet =
+      opts.includeContent && !matchesQuery(titleForMatch, q)
+        ? buildSnippet(plainTextFor(a), q)
+        : undefined;
     return {
       type: "archive" as const,
       label:
@@ -204,15 +226,47 @@ function mapResults(
             : "Gespräch"
           : a.title,
       sublabel: CATEGORY_CONFIG[a.category]?.label ?? "Archiv",
-      href: `/archive/${a.slug}`,
-      snippet:
-        opts.includeContent && !matchesQuery(titleForMatch, q)
-          ? buildSnippet(plainTextFor(a), q)
-          : undefined,
+      href: `/archive/${a.slug}${snippet ? `#:~:text=${toTextFragment(q)}` : ""}`,
+      slug: a.slug,
+      snippet,
     };
   });
 
-  return [...characterResults, ...missionResults, ...logResults, ...archiveResults];
+  return [
+    ...characterResults,
+    ...missionResults,
+    ...logResults,
+    ...archiveResults,
+  ];
+}
+
+// Mission-Logs sind nicht bookmarkbar (siehe FollowTargetType), daher kein
+// Eintrag für "log".
+const TARGET_TYPE_FOR: Partial<Record<SearchResultType, FollowTargetType>> = {
+  character: "character",
+  mission: "mission",
+  archive: "archive_entry",
+};
+
+// Markiert Treffer, die der User bereits gebookmarkt hat (für den
+// "Gespeichert"-Filter auf /search). Eigene, schlanke Abfrage statt
+// getBookmarkedContent() aus lib/follows.ts — die Sichtbarkeits-Joins dort
+// sind hier unnötig, da runSearchQueries() bereits nur sichtbare Treffer
+// liefert.
+async function annotateSaved(
+  results: SearchResult[],
+  userId: number,
+): Promise<SearchResult[]> {
+  const rows = await sql<{ target_type: string; target_slug: string }[]>`
+    SELECT target_type, target_slug FROM content_follows
+    WHERE user_id = ${userId} AND bookmarked_at IS NOT NULL
+  `;
+  const saved = new Set(rows.map((r) => `${r.target_type}:${r.target_slug}`));
+  return results.map((r) => {
+    const targetType = TARGET_TYPE_FOR[r.type];
+    if (!targetType) return r;
+    return { ...r, saved: saved.has(`${targetType}:${r.slug}`) };
+  });
 }
 
 // Ein Modus, eine Quelle der Wahrheit für includeContent/limit — verhindert,
@@ -221,11 +275,13 @@ function mapResults(
 async function search(
   q: string,
   mode: "live" | "full",
+  userId?: number,
 ): Promise<SearchResult[]> {
   const includeContent = mode === "full";
   const limit = mode === "full" ? FULL_PER_TYPE_LIMIT : LIVE_PER_TYPE_LIMIT;
   const rows = await runSearchQueries(q, { includeContent, limit });
-  return mapResults(rows, q, { includeContent });
+  const results = mapResults(rows, q, { includeContent });
+  return userId != null ? annotateSaved(results, userId) : results;
 }
 
 // Live-Dropdown im Header — reine Titelsuche (inkl. Schauplatz als
@@ -235,7 +291,12 @@ export function searchLive(q: string): Promise<SearchResult[]> {
 }
 
 // Volltextsuche für die eigene Suchseite (/search) — Titel UND Inhalt,
-// großzügiges Limit, mit Snippet für reine Volltext-Treffer.
-export function searchFull(q: string): Promise<SearchResult[]> {
-  return search(q, "full");
+// großzügiges Limit, mit Snippet für reine Volltext-Treffer. userId (falls
+// eingeloggt) markiert bereits gebookmarkte Treffer für den
+// "Gespeichert"-Filter.
+export function searchFull(
+  q: string,
+  userId?: number,
+): Promise<SearchResult[]> {
+  return search(q, "full", userId);
 }
