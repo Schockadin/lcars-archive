@@ -18,14 +18,12 @@ export default function RecentActivity({
   firstVisit: boolean;
 }) {
   return (
-    <section className="flex flex-col gap-[8px]">
-      <LcarsDataRow
-        value={firstVisit ? 0 : events.length}
-        label="Neue Inhalte"
-        color="var(--lcars-purple)"
-        className="lcars-data-row--full"
-      />
-
+    <LcarsDataRow
+      value={firstVisit ? 0 : events.length}
+      label="Neue Inhalte"
+      color="var(--lcars-purple)"
+      defaultOpen
+    >
       {firstVisit ? (
         <p className="lcars-empty-state">
           Das ist dein erster Besuch — willkommen an Bord.
@@ -63,6 +61,6 @@ export default function RecentActivity({
           })}
         </div>
       )}
-    </section>
+    </LcarsDataRow>
   );
 }

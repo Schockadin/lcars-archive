@@ -1,8 +1,8 @@
 /* ─── Akkordeon ─────────────────────────────────────────────────────
-   Auf-/zuklappbare Gruppe (siehe Accordion.tsx), z.B. "Meine Inhalte":
-   Charakter → Typ. Höhenanimation per grid-template-rows (0fr → 1fr)
-   statt max-height-Hacks, damit die tatsächliche Inhaltshöhe nicht vorab
-   bekannt sein muss.
+   Auf-/zuklappbare Gruppe (siehe DataRow.tsx#children), z.B. "Meine
+   Inhalte": Charakter → Typ. Höhenanimation per grid-template-rows
+   (0fr → 1fr) statt max-height-Hacks, damit die tatsächliche Inhaltshöhe
+   nicht vorab bekannt sein muss.
 ──────────────────────────────────────────────────────────────────── */
 
 .lcars-accordion + .lcars-accordion {

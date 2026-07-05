@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useOptimistic, useState } from "react";
 import Link from "next/link";
-import { LcarsAccordion } from "@/components/lcars";
+import { LcarsDataRow } from "@/components/lcars";
 import type { UserContentLog } from "@/lib/characters";
 import type { DialogueSummary } from "@/lib/dialoguesCore";
 import type { UserContentArchiveEntry } from "@/lib/archive";
@@ -145,7 +145,7 @@ export default function UserContentBrowser({
       </div>
 
       {showCharacters && (
-        <LcarsAccordion
+        <LcarsDataRow
           value={filteredCharacters.length}
           label="Charaktere"
           color="var(--lcars-amber)"
@@ -181,11 +181,11 @@ export default function UserContentBrowser({
               ))}
             </div>
           )}
-        </LcarsAccordion>
+        </LcarsDataRow>
       )}
 
       {showLogs && (
-        <LcarsAccordion
+        <LcarsDataRow
           value={filteredLogs.length}
           label="Einsatzberichte"
           color="var(--lcars-blue)"
@@ -248,11 +248,11 @@ export default function UserContentBrowser({
               ))}
             </div>
           )}
-        </LcarsAccordion>
+        </LcarsDataRow>
       )}
 
       {showDialogues && (
-        <LcarsAccordion
+        <LcarsDataRow
           value={filteredDialogues.length}
           label="Gespräche"
           color="var(--lcars-text-data)"
@@ -306,11 +306,11 @@ export default function UserContentBrowser({
               ))}
             </div>
           )}
-        </LcarsAccordion>
+        </LcarsDataRow>
       )}
 
       {showArchive && (
-        <LcarsAccordion
+        <LcarsDataRow
           value={archiveEntries.length}
           label="Archiv-Einträge"
           color="var(--lcars-purple)"
@@ -354,11 +354,11 @@ export default function UserContentBrowser({
               ))}
             </div>
           )}
-        </LcarsAccordion>
+        </LcarsDataRow>
       )}
 
       {showMissions && (
-        <LcarsAccordion
+        <LcarsDataRow
           value={missions.length}
           label="Missionen"
           color="var(--lcars-green)"
@@ -396,7 +396,7 @@ export default function UserContentBrowser({
               ))}
             </div>
           )}
-        </LcarsAccordion>
+        </LcarsDataRow>
       )}
     </div>
   );

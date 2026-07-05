@@ -14,14 +14,7 @@ export default function FollowedContentSection({
   items: FollowedContent[];
 }) {
   return (
-    <section className="flex flex-col gap-[8px]">
-      <LcarsDataRow
-        value={items.length}
-        label={heading}
-        color="var(--lcars-amber)"
-        className="lcars-data-row--full"
-      />
-
+    <LcarsDataRow value={items.length} label={heading} color="var(--lcars-amber)">
       {items.length === 0 ? (
         <p className="lcars-empty-state">{emptyLabel}</p>
       ) : (
@@ -47,6 +40,6 @@ export default function FollowedContentSection({
           ))}
         </div>
       )}
-    </section>
+    </LcarsDataRow>
   );
 }
