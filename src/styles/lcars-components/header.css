@@ -297,6 +297,22 @@
     width: 100px;
   }
 }
+/* Sehr schmale Handys — 100px-Spalten (720px-Regel oben) sind hier schon
+   breiter als der verfügbare Platz neben der Sidebar-Leiste, wodurch das
+   Pill-Grid unsichtbar (overflow: clip) über den Viewport hinausragt. */
+@media (max-width: 400px) {
+  .lcars-usernav {
+    grid-template-columns: repeat(var(--usernav-cols), 76px);
+  }
+  .lcars-usernav-pill {
+    font-size: 11px;
+    padding: 0 10px 6px;
+    width: 76px;
+  }
+  .lcars-usernav-form {
+    width: 76px;
+  }
+}
 
 .lcars-footer-menu {
   text-decoration: none;

@@ -103,7 +103,7 @@ export default function MissionSynopsisEditor({
 
         <AutoLinkCheckbox idPrefix={`mission-synopsis-${missionId}`} />
 
-        <div className="flex gap-[12px] items-center justify-end">
+        <div className="flex flex-wrap gap-[12px] items-center justify-end">
           <button
             type="button"
             onClick={() => setEditing(false)}

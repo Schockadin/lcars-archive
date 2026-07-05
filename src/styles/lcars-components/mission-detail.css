@@ -183,6 +183,12 @@
 @media (max-width: 768px) {
   .mission-detail {
     flex-direction: column;
+    /* align-items: flex-start oben steuert bei row-Layout die vertikale
+       Ausrichtung — bei column-Layout hier aber die Breite (Cross-Achse
+       dreht sich mit). Ohne stretch würden Kinder (z.B. .mission-detail-main)
+       nur so breit wie ihr eigener Inhalt, wodurch nicht umbrechbare
+       Button-Zeilen den gesamten Viewport sprengen. */
+    align-items: stretch;
   }
   .mission-detail-logs {
     flex: none;

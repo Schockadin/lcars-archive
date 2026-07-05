@@ -140,9 +140,9 @@ export default function UserRoleRow({
         <span className="text-lcars-text-dim">{ROLE_LABELS[user.role]}</span>
       ) : (
         <>
-          <div className="flex gap-[16px] items-center">
+          <div className="flex flex-wrap gap-[16px] items-center">
             <span className="text-lcars-text-dim">Rolle:</span>
-            <form action={roleAction} className="flex items-center gap-[8px]">
+            <form action={roleAction} className="flex flex-wrap items-center gap-[8px]">
               <input type="hidden" name="userId" value={user.id} />
               <select
                 name="role"

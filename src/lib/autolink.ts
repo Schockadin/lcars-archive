@@ -41,9 +41,8 @@ function escapeRegExp(s: string): string {
 const TYPE_PRIORITY: AutolinkTargetType[] = ["character", "archive", "mission"];
 
 // Durchsucht sourceMd nach Erwähnungen bekannter Namen/Aliase (targets) und
-// ersetzt jeweils die ERSTE Erwähnung pro Ziel durch einen [[Wikilink]]
-// (nicht jede Erwähnung — sonst wird Fließtext mit vielen wiederholten
-// Namen unleserlich). [[Ziel]]-Syntax statt eines direkten Markdown-Links,
+// ersetzt JEDE Erwähnung pro Ziel durch einen [[Wikilink]]. [[Ziel]]-Syntax
+// statt eines direkten Markdown-Links,
 // damit das Ergebnis symmetrisch zum "Wikilinks entfernen"-Feature bleibt
 // (siehe src/lib/wikilinkCleanup.ts) — Auflösung zum echten Link passiert
 // beim Rendern separat über resolveAutolinkedWikilinks() unten, damit die
@@ -89,7 +88,6 @@ export function applyAutolinks(
   const isProtected = (start: number, end: number) =>
     protectedRanges.some(([s, e]) => start < e && end > s);
 
-  const usedTargets = new Set<AutolinkTarget>();
   const matches: AutolinkMatch[] = [];
   const parts: string[] = [];
   let lastIndex = 0;
@@ -99,10 +97,9 @@ export function applyAutolinks(
     const start = m.index;
     const end = start + m[0].length;
     const target = phraseToTarget.get(m[0].toLowerCase());
-    if (!target || isProtected(start, end) || usedTargets.has(target)) {
+    if (!target || isProtected(start, end)) {
       continue;
     }
-    usedTargets.add(target);
     parts.push(sourceMd.slice(lastIndex, start));
     parts.push(
       m[0] === target.canonical

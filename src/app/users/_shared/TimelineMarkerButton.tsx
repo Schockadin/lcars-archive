@@ -132,7 +132,7 @@ export default function TimelineMarkerButton({
                 </datalist>
               </label>
 
-              <div className="flex gap-[12px] items-center justify-end">
+              <div className="flex flex-wrap gap-[12px] items-center justify-end">
                 <button type="button" onClick={close} className="lcars-switch">
                   Abbrechen
                 </button>
