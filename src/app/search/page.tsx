@@ -30,10 +30,28 @@ export default async function SearchPage({
           </p>
         </div>
 
+        {/* Reines GET-Formular statt der Autovervollständigung im Header
+            (HeaderSearch.tsx) — navigiert bei Submit direkt zu ?q=…, ohne
+            Live-Vorschau während des Tippens. */}
+        <form
+          action="/search"
+          method="get"
+          className="flex gap-[8px] mb-[16px]"
+        >
+          <input
+            type="search"
+            name="q"
+            defaultValue={q}
+            placeholder="Archiv durchsuchen…"
+            className="rounded-lcars-pill lcars-input flex-1"
+          />
+          <button type="submit" className="lcars-switch">
+            Suchen
+          </button>
+        </form>
+
         {q.length === 0 ? (
-          <p className="lcars-empty-state">
-            Oben im Header einen Suchbegriff eingeben.
-          </p>
+          <p className="lcars-empty-state">Suchbegriff eingeben.</p>
         ) : q.length < 2 ? (
           <p className="lcars-empty-state">Mindestens 2 Zeichen eingeben.</p>
         ) : (

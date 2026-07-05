@@ -123,6 +123,7 @@ export default function CharacterLogList({
                   accentColor={group.color}
                   color={group.color}
                   href={`/missions/${group.slug}`}
+                  className="lcars-data-row--full"
                 />
                 <div className="mission-log-list mt-[8px]">
                   {group.logs.map((log) => (

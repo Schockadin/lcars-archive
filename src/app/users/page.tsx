@@ -3,12 +3,15 @@ import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
 import { getAllCharactersForAdmin } from "@/lib/characters";
+import { LcarsDataRow } from "@/components/lcars";
 import CreateUserForm from "./CreateUserForm";
 import UserManagementTable from "./UserManagementTable";
 import CharacterAssignmentTable from "./CharacterAssignmentTable";
 import VaultExportPanel from "./VaultExportPanel";
 import VaultIngestPanel from "./VaultIngestPanel";
 import RevalidateCachePanel from "./RevalidateCachePanel";
+import UserBackupPanel from "./UserBackupPanel";
+import TimelineRegeneratePanel from "./TimelineRegeneratePanel";
 
 export const metadata: Metadata = {
   title: "Nutzerverwaltung",
@@ -37,7 +40,18 @@ export default async function UsersAdminPage() {
     listAllUsers(),
     getAllCharactersForAdmin(),
   ]);
-  const userOptions = users.map((u) => ({ id: u.id, name: u.name }));
+  // Gäste dürfen keinen Charakter zugewiesen bekommen (siehe
+  // assignCharacterAction in ./actions.ts, das dieselbe Regel serverseitig
+  // durchsetzt) — sie fehlen deshalb schon hier in der Auswahl.
+  const userOptions = users
+    .filter((u) => u.role !== "guest")
+    .map((u) => ({ id: u.id, name: u.name }));
+
+  // Feste Anzahl an Werkzeug-Panels im "Admin Actions"-Akkordeon — kein
+  // DB-Wert, nur der Vollständigkeit halber im Kopf gezeigt (gleiche Optik
+  // wie die anderen DataRow-Akkordeons hier, die einen Datensatz-Zähler
+  // zeigen).
+  const adminActionCount = 5;
 
   return (
     <>
@@ -46,50 +60,78 @@ export default async function UsersAdminPage() {
         <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
         <h1>{isAdmin ? "Nutzerverwaltung" : "Charaktere zuordnen"}</h1>
 
-        <div className="lcars-text flex flex-col gap-[32px]">
+        <div className="lcars-text flex flex-col gap-[16px]">
           {isAdmin && (
-            <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Neuen User anlegen</h2>
-              <CreateUserForm />
-            </section>
+            <LcarsDataRow
+              value={users.length}
+              label="User"
+              color="var(--lcars-amber)"
+              defaultOpen
+            >
+              <div className="flex flex-col gap-[32px] pt-[8px]">
+                <section className="flex flex-col gap-[12px]">
+                  <h2 className="text-lcars-amber">Neuen User anlegen</h2>
+                  <CreateUserForm />
+                </section>
+
+                <section className="flex flex-col gap-[12px]">
+                  <h2 className="text-lcars-amber">
+                    {users.length} registrierte User
+                  </h2>
+                  <UserManagementTable users={users} isAdmin={isAdmin} />
+                </section>
+              </div>
+            </LcarsDataRow>
           )}
 
-          {isAdmin && (
-            <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">
-                {users.length} registrierte User
-              </h2>
-              <UserManagementTable users={users} isAdmin={isAdmin} />
-            </section>
-          )}
-
-          <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Charaktere zuordnen</h2>
-            <CharacterAssignmentTable
-              characters={characters}
-              users={userOptions}
-            />
-          </section>
+          <LcarsDataRow
+            value={characters.length}
+            label="Charaktere"
+            color="var(--lcars-blue)"
+            defaultOpen
+          >
+            <div className="pt-[8px]">
+              <CharacterAssignmentTable
+                characters={characters}
+                users={userOptions}
+              />
+            </div>
+          </LcarsDataRow>
 
           {isAdmin && (
-            <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Vault-Backup</h2>
-              <VaultExportPanel />
-            </section>
-          )}
+            <LcarsDataRow
+              value={adminActionCount}
+              label="Admin Actions"
+              color="var(--lcars-purple)"
+              defaultOpen
+            >
+              <div className="flex flex-col gap-[32px] pt-[8px]">
+                <section className="flex flex-col gap-[12px]">
+                  <h2 className="text-lcars-amber">User-Backup</h2>
+                  <UserBackupPanel />
+                </section>
 
-          {isAdmin && (
-            <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Vault-Ingest</h2>
-              <VaultIngestPanel />
-            </section>
-          )}
+                <section className="flex flex-col gap-[12px]">
+                  <h2 className="text-lcars-amber">Vault-Backup</h2>
+                  <VaultExportPanel />
+                </section>
 
-          {isAdmin && (
-            <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Cache</h2>
-              <RevalidateCachePanel />
-            </section>
+                <section className="flex flex-col gap-[12px]">
+                  <h2 className="text-lcars-amber">Vault-Ingest</h2>
+                  <VaultIngestPanel />
+                </section>
+
+                <section className="flex flex-col gap-[12px]">
+                  <h2 className="text-lcars-amber">Cache</h2>
+                  <RevalidateCachePanel />
+                </section>
+
+                <section className="flex flex-col gap-[12px]">
+                  <h2 className="text-lcars-amber">Timeline</h2>
+                  <TimelineRegeneratePanel />
+                </section>
+              </div>
+            </LcarsDataRow>
           )}
         </div>
       </article>

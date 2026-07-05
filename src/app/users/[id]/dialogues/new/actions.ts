@@ -1,7 +1,10 @@
 "use server";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
-import { getCharactersForUser, getCharactersWithPlayers } from "@/lib/characters";
+import {
+  getCharactersForUser,
+  getCharactersWithPlayers,
+} from "@/lib/characters";
 import { DialogueSlugCollisionError, createDialogue } from "@/lib/dialogues";
 
 export interface CreateDialogueState {
@@ -46,7 +49,8 @@ export async function createDialogueAction(
   }
 
   const setting = String(formData.get("setting") ?? "").trim() || null;
-  const locationSlug = String(formData.get("locationSlug") ?? "").trim() || null;
+  const locationSlug =
+    String(formData.get("locationSlug") ?? "").trim() || null;
 
   const logDateRaw = String(formData.get("logDate") ?? "").trim();
   if (logDateRaw && !DATE_RE.test(logDateRaw)) {

@@ -28,36 +28,82 @@ export const WIKILINK_RE = /\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]/g;
 
 function remarkWikiLinks() {
   return (tree: MdastRoot) => {
-    visit(tree, "text", (node: MdastText, index, parent: MdastParent | null | undefined) => {
-      if (!parent || index == null) return;
-      WIKILINK_RE.lastIndex = 0;
-      if (!WIKILINK_RE.test(node.value)) return;
-      WIKILINK_RE.lastIndex = 0;
+    visit(
+      tree,
+      "text",
+      (node: MdastText, index, parent: MdastParent | null | undefined) => {
+        if (!parent || index == null) return;
+        WIKILINK_RE.lastIndex = 0;
+        if (!WIKILINK_RE.test(node.value)) return;
+        WIKILINK_RE.lastIndex = 0;
 
-      const value = node.value;
-      const newNodes: (MdastText | MdastLink)[] = [];
-      let lastIndex = 0;
-      let match: RegExpExecArray | null;
+        const value = node.value;
+        const newNodes: (MdastText | MdastLink)[] = [];
+        let lastIndex = 0;
+        let match: RegExpExecArray | null;
 
-      while ((match = WIKILINK_RE.exec(value))) {
-        const [full, target, alias] = match;
-        if (match.index > lastIndex) {
-          newNodes.push({ type: "text", value: value.slice(lastIndex, match.index) });
+        while ((match = WIKILINK_RE.exec(value))) {
+          const [full, target, alias] = match;
+          if (match.index > lastIndex) {
+            newNodes.push({
+              type: "text",
+              value: value.slice(lastIndex, match.index),
+            });
+          }
+          const label = (alias ?? target).trim();
+          newNodes.push({
+            type: "link",
+            url: `wikilink://${encodeURIComponent(target.trim())}`,
+            children: [{ type: "text", value: label }],
+          });
+          lastIndex = match.index + full.length;
         }
-        const label = (alias ?? target).trim();
-        newNodes.push({
-          type: "link",
-          url: `wikilink://${encodeURIComponent(target.trim())}`,
-          children: [{ type: "text", value: label }],
-        });
-        lastIndex = match.index + full.length;
-      }
-      if (lastIndex < value.length) {
-        newNodes.push({ type: "text", value: value.slice(lastIndex) });
-      }
+        if (lastIndex < value.length) {
+          newNodes.push({ type: "text", value: value.slice(lastIndex) });
+        }
 
-      parent.children.splice(index, 1, ...newNodes);
-      return index + newNodes.length;
+        parent.children.splice(index, 1, ...newNodes);
+        return index + newNodes.length;
+      },
+    );
+  };
+}
+
+// Container-Knoten, an denen der öffnen/schließen-Zähler von
+// remarkGermanQuotes() zurückgesetzt wird (siehe dort) — jeweils die
+// kleinste Einheit, in der ein Anführungszeichen-Paar üblicherweise
+// vollständig steht, damit ein einzelnes unpaariges " (z.B. als Zoll-/
+// Sekunden-Angabe) nicht die Zählung im restlichen Dokument verschiebt.
+const GERMAN_QUOTES_RESET_NODE_TYPES = new Set([
+  "paragraph",
+  "heading",
+  "tableCell",
+]);
+
+// Wandelt gerade Anführungszeichen (") in deutsche typografische
+// Anführungszeichen um: „unten am Anfang, oben am Ende" (Rechtsgrundlage:
+// Duden-Empfehlung für deutschsprachige Texte). Arbeitet auf dem mdast-Baum
+// statt per Regex auf dem rohen Markdown-String, damit Code-Blöcke/Inline-
+// Code (eigene Knotentypen, werden von visit(tree, "text", …) automatisch
+// nicht erfasst) unangetastet bleiben. Zählt öffnend/schließend abwechselnd
+// hoch, zurückgesetzt pro Absatz/Überschrift/Tabellenzelle (siehe
+// GERMAN_QUOTES_RESET_NODE_TYPES) — reicht auch über Inline-Formatierung
+// (*kursiv* etc.) hinweg, da mehrere Text-Knoten innerhalb desselben
+// Absatzes in Dokumentreihenfolge besucht werden.
+function remarkGermanQuotes() {
+  return (tree: MdastRoot) => {
+    visit(tree, (node) => {
+      if (!GERMAN_QUOTES_RESET_NODE_TYPES.has(node.type)) return;
+
+      let open = true;
+      visit(node, "text", (textNode: MdastText) => {
+        if (!textNode.value.includes('"')) return;
+        textNode.value = textNode.value.replace(/"/g, () => {
+          const mark = open ? "„" : "“";
+          open = !open;
+          return mark;
+        });
+      });
     });
   };
 }
@@ -83,18 +129,26 @@ interface TimelineAnchorNode {
 function remarkTimelineAnchors() {
   return (tree: MdastRoot) => {
     let counter = 0;
-    visit(tree, "html", (node: MdastHtml, index, parent: MdastParent | null | undefined) => {
-      if (!parent || index == null) return;
-      const matches = node.value.match(TIMELINE_MARKER_RE);
-      if (!matches) return;
+    visit(
+      tree,
+      "html",
+      (node: MdastHtml, index, parent: MdastParent | null | undefined) => {
+        if (!parent || index == null) return;
+        const matches = node.value.match(TIMELINE_MARKER_RE);
+        if (!matches) return;
 
-      const anchors = matches.map((): TimelineAnchorNode => {
-        counter += 1;
-        return { type: "timelineAnchor", anchorId: `timeline-${counter}` };
-      });
-      parent.children.splice(index, 1, ...(anchors as unknown as MdastHtml[]));
-      return index + anchors.length;
-    });
+        const anchors = matches.map((): TimelineAnchorNode => {
+          counter += 1;
+          return { type: "timelineAnchor", anchorId: `timeline-${counter}` };
+        });
+        parent.children.splice(
+          index,
+          1,
+          ...(anchors as unknown as MdastHtml[]),
+        );
+        return index + anchors.length;
+      },
+    );
   };
 }
 
@@ -121,6 +175,7 @@ export async function markdownToHtml(markdown: string): Promise<string> {
   const result = await unified()
     .use(remarkParse)
     .use(remarkGfm)
+    .use(remarkGermanQuotes)
     .use(remarkWikiLinks)
     .use(remarkTimelineAnchors)
     .use(remarkRehype, { handlers: timelineAnchorHandlers })
@@ -144,6 +199,7 @@ export async function markdownToSafeHtml(markdown: string): Promise<string> {
   const result = await unified()
     .use(remarkParse)
     .use(remarkGfm)
+    .use(remarkGermanQuotes)
     .use(remarkRehype)
     .use(rehypeSanitize, defaultSchema)
     .use(rehypeStringify)

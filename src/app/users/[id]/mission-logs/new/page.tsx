@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnCharacters } from "../../dal";
-import { getAllMissions, getNextSessionNr } from "@/lib/missions";
+import {
+  getAllMissions,
+  getNextSessionNr,
+  getMostRecentLogDate,
+} from "@/lib/missions";
 import NewMissionLogForm from "./NewMissionLogForm";
 
 export const metadata: Metadata = {
@@ -30,6 +34,7 @@ export default async function NewMissionLogPage({
     characters.length > 0 && missions.length > 0
       ? await getNextSessionNr(missions[0].id, characters[0].id)
       : 1;
+  const defaultLogDate = await getMostRecentLogDate();
 
   return (
     <>
@@ -77,6 +82,7 @@ export default async function NewMissionLogPage({
             }))}
             missions={missions.map((m) => ({ slug: m.slug, title: m.title }))}
             defaultSessionNr={nextSessionNr}
+            defaultLogDate={defaultLogDate}
           />
         )}
       </article>

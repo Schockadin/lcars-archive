@@ -16,10 +16,3 @@ export interface TimelineEvent {
   source_slug: string;
   href: string;
 }
-
-// Für getRecentActivitySince (src/lib/timeline.ts) — created_at ist die
-// tatsächliche Ingest-Zeit (siehe scripts/ingest/timeline.ts), im
-// Unterschied zu event_date, dem In-Story-Datum.
-export interface RecentActivityEvent extends TimelineEvent {
-  created_at: string;
-}

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { LcarsDataRow } from "@/components/lcars";
 import type { FollowedContent } from "@/lib/follows";
 
-// Gleicher Kartenstil wie RecentActivity.tsx — hier ohne Meta-Zeile, da
-// FollowedContent nur Titel + Ziel-Typ liefert.
+// Gleicher Kartenstil wie die Akkordeons in UserContentBrowser.tsx — hier
+// ohne Meta-Zeile, da FollowedContent nur Titel + Ziel-Typ liefert.
 export default function FollowedContentSection({
   heading,
   emptyLabel,
@@ -14,14 +14,7 @@ export default function FollowedContentSection({
   items: FollowedContent[];
 }) {
   return (
-    <section className="flex flex-col gap-[8px]">
-      <LcarsDataRow
-        value={items.length}
-        label={heading}
-        color="var(--lcars-amber)"
-        className="lcars-data-row--full"
-      />
-
+    <LcarsDataRow value={items.length} label={heading} color="var(--lcars-amber)">
       {items.length === 0 ? (
         <p className="lcars-empty-state">{emptyLabel}</p>
       ) : (
@@ -47,6 +40,6 @@ export default function FollowedContentSection({
           ))}
         </div>
       )}
-    </section>
+    </LcarsDataRow>
   );
 }

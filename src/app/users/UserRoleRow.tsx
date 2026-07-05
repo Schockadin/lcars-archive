@@ -23,6 +23,7 @@ const ROLE_LABELS: Record<UserWithCharacters["role"], string> = {
   gm: "Spielleitung",
   player: "Spieler",
   viewer: "Beobachter",
+  guest: "Gast",
 };
 
 // Inline-SVGs statt Icon-Bibliothek (kein lucide-react/heroicons im Repo) —
@@ -167,6 +168,7 @@ export default function UserRoleRow({
                 <option value="gm">Spielleitung</option>
                 <option value="player">Spieler</option>
                 <option value="viewer">Beobachter</option>
+                <option value="guest">Gast</option>
               </select>
               <button
                 type="submit"

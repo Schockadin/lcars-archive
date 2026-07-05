@@ -39,11 +39,11 @@ export async function getUserById(id: number): Promise<User | null> {
 }
 
 // Vorheriges last_login_at wird nach previous_login_at verschoben, bevor
-// last_login_at auf NOW() gesetzt wird — das Dashboard kennt so immer die
-// Grenze des *vorletzten* Logins (Grundlage für "neu seit deinem letzten
-// Besuch", siehe getRecentActivitySince in src/lib/timeline.ts). Bewusst
-// eine eigene DB-Spalte statt Cookie-Payload, damit ein Profil-Update
-// (updateUser) diesen Zeitpunkt nicht versehentlich zurücksetzen kann.
+// last_login_at auf NOW() gesetzt wird — so bleibt der Zeitpunkt des
+// *vorletzten* Logins nachvollziehbar (angezeigt im Admin-Panel, siehe
+// users/[id]/edit/page.tsx). Bewusst eine eigene DB-Spalte statt
+// Cookie-Payload, damit ein Profil-Update (updateUser) diesen Zeitpunkt
+// nicht versehentlich zurücksetzen kann.
 export async function recordLogin(userId: number): Promise<void> {
   await sql`
     UPDATE users
@@ -73,7 +73,10 @@ export async function listAllUsers(): Promise<UserWithCharacters[]> {
     LEFT JOIN characters c ON c.player_id = u.id
     GROUP BY u.id
     ORDER BY
-      CASE u.role WHEN 'admin' THEN 0 WHEN 'gm' THEN 1 WHEN 'player' THEN 2 WHEN 'viewer' THEN 3 END,
+      CASE u.role
+        WHEN 'admin' THEN 0 WHEN 'gm' THEN 1 WHEN 'player' THEN 2
+        WHEN 'viewer' THEN 3 WHEN 'guest' THEN 4
+      END,
       u.name ASC
   `;
   return rows.map((row) => ({
@@ -128,7 +131,10 @@ export async function updateUserRole(
 // Löschen ein hartes DELETE — schema-sicher, da characters.player_id/
 // dialogue_messages.author_user_id ON DELETE SET NULL sind und
 // content_follows.user_id ON DELETE CASCADE ist.
-export async function setUserActive(id: number, active: boolean): Promise<void> {
+export async function setUserActive(
+  id: number,
+  active: boolean,
+): Promise<void> {
   await sql`UPDATE users SET is_active = ${active} WHERE id = ${id}`;
 }
 
@@ -300,9 +306,7 @@ export async function getUserForAdmin(
     hasPassword: has_password,
     requiresActivation: requires_activation,
     characters:
-      typeof characters === "string"
-        ? JSON.parse(characters)
-        : characters,
+      typeof characters === "string" ? JSON.parse(characters) : characters,
   };
 }
 

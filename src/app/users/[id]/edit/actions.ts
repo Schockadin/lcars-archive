@@ -9,9 +9,16 @@ import {
   updateUser,
   updateUserRole,
 } from "@/lib/users";
+import { unassignCharactersFromUser } from "@/lib/characters";
 import type { User } from "@/types/db";
 
-const ROLES: readonly User["role"][] = ["admin", "gm", "player", "viewer"];
+const ROLES: readonly User["role"][] = [
+  "admin",
+  "gm",
+  "player",
+  "viewer",
+  "guest",
+];
 
 function isValidRole(value: string): value is User["role"] {
   return (ROLES as readonly string[]).includes(value);
@@ -59,6 +66,13 @@ export async function updateUserDetailsAction(
     throw err;
   }
   await updateUserRole(userId, role);
+  // Gäste dürfen keinen Charakter zugewiesen haben (siehe
+  // assignCharacterAction in ../../actions.ts) — bei einer Herabstufung auf
+  // "guest" werden bestehende Zuweisungen deshalb aufgelöst, statt einen
+  // inkonsistenten Zustand stehen zu lassen.
+  if (role === "guest") {
+    await unassignCharactersFromUser(userId);
+  }
 
   redirect(`/users/${userId}/edit`);
 }

@@ -150,28 +150,13 @@ export default function DSGVOClient() {
         setzen (z. B. DDoS-Schutz).
       </p>
 
-      <h2>7. Externe Schriftarten</h2>
-      <p>
-        Die Schriftarten Antonio und Share Tech Mono werden über
-        <strong> Google Fonts</strong> eingebunden. Dabei wird deine IP-Adresse
-        an Google-Server übertragen. Rechtsgrundlage: Art. 6 Abs. 1 lit. f
-        DSGVO. Datenschutzerklärung von Google:{" "}
-        <a
-          href="https://policies.google.com/privacy"
-          target="_blank"
-          rel="noreferrer"
-        >
-          policies.google.com/privacy
-        </a>
-      </p>
-      <p>
-        <em>
-          Alternativ: Falls du die Schriften lokal hostest (self-hosted fonts),
-          entfällt dieser Abschnitt vollständig.
-        </em>
-      </p>
+      {/* Abschnitt "Externe Schriftarten" entfernt: Antonio und Share Tech
+          Mono werden über next/font/google eingebunden (siehe
+          src/app/layout.tsx), das die Font-Dateien bereits zur Build-Zeit
+          herunterlädt und selbst ausliefert — es gibt keine Laufzeit-Anfrage
+          an Google-Server mehr und damit keine Übertragung der IP-Adresse. */}
 
-      <h2>8. Deine Rechte</h2>
+      <h2>7. Deine Rechte</h2>
       <p>
         Du hast das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16),
         Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18),
@@ -183,7 +168,7 @@ export default function DSGVOClient() {
         </a>
       </p>
 
-      <h2>9. Aktualität</h2>
+      <h2>8. Aktualität</h2>
       <p>Stand: {currentYear}</p>
     </LegalPageLayout>
   );

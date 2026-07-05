@@ -17,6 +17,7 @@ const ROLE_LABELS: Record<UserAdminDetail["role"], string> = {
   gm: "Spielleitung",
   player: "Spieler",
   viewer: "Beobachter",
+  guest: "Gast",
 };
 
 export default async function EditUserPage({

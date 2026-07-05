@@ -1,9 +1,6 @@
 "use client";
 import { useActionState } from "react";
-import {
-  createMissionAction,
-  type MissionFormState,
-} from "./actions";
+import { createMissionAction, type MissionFormState } from "./actions";
 
 const initialState: MissionFormState = {};
 
@@ -11,7 +8,13 @@ const inputClass = "rounded-lcars-pill lcars-input";
 const textAreaClass =
   "rounded-lcars-pill lcars-input min-h-[400px] resize-y font-mono";
 
-export default function NewMissionForm({ userId }: { userId: number }) {
+export default function NewMissionForm({
+  userId,
+  defaultStartedAt,
+}: {
+  userId: number;
+  defaultStartedAt: string | null;
+}) {
   const [state, formAction, pending] = useActionState(
     createMissionAction,
     initialState,
@@ -38,10 +41,15 @@ export default function NewMissionForm({ userId }: { userId: number }) {
         <label htmlFor="mission-slug" className="lcars-eyebrow">
           Slug (optional)
         </label>
-        <input id="mission-slug" name="slug" type="text" className={inputClass} />
+        <input
+          id="mission-slug"
+          name="slug"
+          type="text"
+          className={inputClass}
+        />
         <p className="text-lcars-text-dim text-[12px]">
-          Bestimmt die URL der Mission. Bleibt das Feld leer, wird der Slug
-          aus dem Titel abgeleitet.
+          Bestimmt die URL der Mission. Bleibt das Feld leer, wird der Slug aus
+          dem Titel abgeleitet.
         </p>
       </div>
 
@@ -70,6 +78,7 @@ export default function NewMissionForm({ userId }: { userId: number }) {
           id="mission-started"
           name="startedAt"
           type="date"
+          defaultValue={defaultStartedAt ?? ""}
           className={inputClass}
         />
       </div>
@@ -90,7 +99,12 @@ export default function NewMissionForm({ userId }: { userId: number }) {
         <label htmlFor="mission-tags" className="lcars-eyebrow">
           Tags (kommagetrennt)
         </label>
-        <input id="mission-tags" name="tags" type="text" className={inputClass} />
+        <input
+          id="mission-tags"
+          name="tags"
+          type="text"
+          className={inputClass}
+        />
       </div>
 
       <div className="flex flex-col gap-[6px]">

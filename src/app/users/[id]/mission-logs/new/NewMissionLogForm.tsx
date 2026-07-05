@@ -1,9 +1,6 @@
 "use client";
 import { useActionState } from "react";
-import {
-  createMissionLogAction,
-  type MissionLogFormState,
-} from "./actions";
+import { createMissionLogAction, type MissionLogFormState } from "./actions";
 
 const initialState: MissionLogFormState = {};
 
@@ -16,17 +13,18 @@ export default function NewMissionLogForm({
   ownCharacters,
   missions,
   defaultSessionNr,
+  defaultLogDate,
 }: {
   userId: number;
   ownCharacters: { id: number; slug: string; name: string }[];
   missions: { slug: string; title: string }[];
   defaultSessionNr: number;
+  defaultLogDate: string | null;
 }) {
   const [state, formAction, pending] = useActionState(
     createMissionLogAction,
     initialState,
   );
-  const today = new Date().toISOString().slice(0, 10);
 
   return (
     <form action={formAction} className="flex flex-col gap-[16px]">
@@ -104,7 +102,7 @@ export default function NewMissionLogForm({
           id="log-date"
           name="logDate"
           type="date"
-          defaultValue={today}
+          defaultValue={defaultLogDate ?? ""}
           className={inputClass}
         />
       </div>

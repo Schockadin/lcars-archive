@@ -11,14 +11,20 @@ import {
   getDialogueParticipant,
   getDialogueSubscribers,
   getCharacterSubscribers,
+  getDialogueParticipantPlayers,
   getDialogueMessageForEdit,
   postDialogueMessage,
   editDialogueMessage,
   deleteDialogueMessage,
   completeDialogue,
+  deleteDialogue,
   type DialogueEmailTarget,
 } from "@/lib/dialogues";
-import { sendDialogueMessageEmail, sendCharacterDialogueClosedEmail } from "@/lib/mail";
+import {
+  sendDialogueMessageEmail,
+  sendCharacterDialogueClosedEmail,
+  sendDialogueDeletedEmail,
+} from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
@@ -211,7 +217,8 @@ export async function getDialogueMessageSourceAction(
   if (!Number.isInteger(messageId)) return { error: "Ungültige Nachricht." };
 
   const row = await getDialogueMessageForEdit(messageId);
-  if (!row || row.deletedAt) return { error: "Diese Nachricht existiert nicht mehr." };
+  if (!row || row.deletedAt)
+    return { error: "Diese Nachricht existiert nicht mehr." };
   if (row.authorUserId !== session.userId) {
     return { error: "Du kannst nur eigene Nachrichten bearbeiten." };
   }
@@ -291,4 +298,56 @@ export async function completeDialogueAction(
   }
 
   redirect(`/archive/${entrySlug}`);
+}
+
+export interface DeleteDialogueState {
+  error?: string;
+}
+
+// Admin-only, unabhängig vom Open/Closed-Status (siehe deleteDialogue in
+// src/lib/dialoguesCore.ts) — anders als completeDialogueAction dürfen
+// Teilnehmer selbst nicht löschen, nur die Administration. Beide beteiligten
+// Spieler bekommen eine Info-Mail, da ihr Gespräch komplett verschwindet
+// (kein Push, das gibt es bisher nur für laufende Dialog-Ereignisse).
+export async function deleteDialogueAction(
+  _state: DeleteDialogueState,
+  formData: FormData,
+): Promise<DeleteDialogueState> {
+  const session = await getSession();
+  if (!session) {
+    return { error: "Bitte melde dich an." };
+  }
+
+  const admin = await getUserById(session.userId);
+  if (admin?.role !== "admin") {
+    return { error: "Nur die Administration kann Gespräche löschen." };
+  }
+
+  const entrySlug = String(formData.get("entrySlug") ?? "");
+  const entry = await getDialogueForPlay(entrySlug);
+  if (!entry) {
+    return { error: "Dieser Dialog existiert nicht." };
+  }
+
+  const deleted = await deleteDialogue(entry.id);
+  if (!deleted) {
+    return { error: "Löschen fehlgeschlagen." };
+  }
+
+  revalidateArchiveEntry(entrySlug);
+  revalidatePath(`/archive/${entrySlug}`);
+  revalidatePath(`/dialogues/${entrySlug}`);
+
+  const players = await getDialogueParticipantPlayers(deleted.participantSlugs);
+  for (const player of players) {
+    if (player.emailNotificationsEnabled) {
+      await sendDialogueDeletedEmail({
+        to: player.email,
+        name: player.name,
+        dialogueTitle: deleted.title,
+      });
+    }
+  }
+
+  redirect("/archive?cat=dialogue");
 }

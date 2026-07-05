@@ -187,6 +187,12 @@
   text-transform: uppercase;
   line-height: 1;
   color: var(--lcars-amber);
+  /* Einzeilig mit Ellipsis statt Umbruch — ein einzelner sehr langer Titel
+     (v.a. Mission-Logs) soll die Karte nicht in die Breite treiben, siehe
+     .mission-log-name/.log-nav-title für dasselbe Muster andernorts. */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .mission-akte-summary {
   margin-top: 6px;
@@ -282,6 +288,12 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  /* Ohne flex/min-width bleibt ein Flex-Item auf seiner Inhaltsbreite
+     (min-width: auto) und die Ellipsis oben greift nie — .mission-log-meta
+     (flex-shrink: 0) bleibt dadurch in fester Breite, nur der Titel
+     schrumpft/truncatet. */
+  flex: 1;
+  min-width: 0;
 }
 .mission-log-meta {
   display: flex;

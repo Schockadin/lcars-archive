@@ -367,3 +367,12 @@ CREATE TABLE IF NOT EXISTS push_subscriptions (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(user_id);
+
+-- Gast-Rolle: können sich nur Inhalte ansehen sowie bookmarken/abonnieren
+-- (src/app/actions/follows.ts prüft keine Rolle), aber keine Charaktere
+-- zugewiesen bekommen (assignCharacterAction in src/app/users/actions.ts)
+-- und dadurch — da Mission-Logs/Dialoge immer einen eigenen Autor-Charakter
+-- brauchen — auch keine Inhalte erstellen.
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+ALTER TABLE users ADD CONSTRAINT users_role_check
+  CHECK (role IN ('admin', 'gm', 'player', 'viewer', 'guest'));

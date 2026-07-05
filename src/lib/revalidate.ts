@@ -69,3 +69,10 @@ export function revalidateArchiveEntry(slug: string): string[] {
     cacheTags.stats,
   ]);
 }
+
+// Für die Admin-Action "Timeline (re-)generieren" (siehe regenerateTimeline
+// in src/lib/timeline.ts) — dort werden alle timeline_events komplett neu
+// aufgebaut, betrifft also nur den timeline-Tag selbst.
+export function revalidateTimeline(): string[] {
+  return revalidate([cacheTags.timeline]);
+}

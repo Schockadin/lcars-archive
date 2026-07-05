@@ -14,23 +14,23 @@ export default function CreateDialogueForm({
   ownCharacters,
   partnerCharacters,
   locations,
+  defaultLogDate,
 }: {
   userId: number;
   ownCharacters: { id: number; slug: string; name: string }[];
   partnerCharacters: CharacterWithOwner[];
   locations: { slug: string; title: string }[];
+  defaultLogDate: string | null;
 }) {
   const [state, formAction, pending] = useActionState(
     createDialogueAction,
     initialState,
   );
-  // const today = new Date().toISOString().slice(0, 10);
-  const today = "2240-06-02";
 
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-[16px] max-w-[420px]"
+      className="flex flex-col gap-[16px] w-full sm:max-w-[420px]"
     >
       <input type="hidden" name="userId" value={userId} />
 
@@ -122,7 +122,7 @@ export default function CreateDialogueForm({
           id="dlg-date"
           name="logDate"
           type="date"
-          defaultValue={today}
+          defaultValue={defaultLogDate ?? ""}
           className={inputClass}
         />
       </div>

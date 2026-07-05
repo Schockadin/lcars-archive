@@ -11,6 +11,7 @@ import { LcarsReadingModeToggle } from "@/components/lcars";
 import FollowButtons from "@/components/FollowButtons";
 import DialogueThread from "@/components/DialogueThread";
 import DialogueHeader from "@/components/DialogueHeader";
+import DeleteDialogueButton from "@/components/DeleteDialogueButton";
 import { getDialogueMessages } from "@/lib/dialogues";
 import { getViewer, canView } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
@@ -160,6 +161,10 @@ export default async function ArchiveEntryPage({ params }: Props) {
         <p className="lcars-empty-state">
           Kein Inhalt zu diesem Eintrag hinterlegt.
         </p>
+      )}
+
+      {viewer?.role === "admin" && entry.category === "dialogue" && (
+        <DeleteDialogueButton entrySlug={entry.slug} />
       )}
 
       <RelatedSection title="Verweise" links={outgoingLinks} />
