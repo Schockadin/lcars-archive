@@ -2,6 +2,7 @@
 import { useActionState } from "react";
 import { updateMissionLogAction, type EditMissionLogState } from "./actions";
 import type { OwnMissionLogForEdit } from "@/lib/missions";
+import { MAX_TITLE_LENGTH } from "@/lib/validation";
 
 const initialState: EditMissionLogState = {};
 
@@ -35,6 +36,7 @@ export default function EditMissionLogForm({
           name="title"
           type="text"
           required
+          maxLength={MAX_TITLE_LENGTH}
           defaultValue={log.title}
           className={inputClass}
         />

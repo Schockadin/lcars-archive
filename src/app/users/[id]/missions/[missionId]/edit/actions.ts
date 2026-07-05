@@ -5,6 +5,7 @@ import { getUserById } from "@/lib/users";
 import { updateMissionContent, deleteMission } from "@/lib/missions";
 import { revalidateMission, revalidateLog } from "@/lib/revalidate";
 import { deleteVaultFile } from "@/lib/githubVault";
+import { MAX_TITLE_LENGTH } from "@/lib/validation";
 
 export interface EditMissionState {
   error?: string;
@@ -34,6 +35,11 @@ export async function updateMissionAction(
 
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return { error: "Bitte einen Titel angeben." };
+  if (title.length > MAX_TITLE_LENGTH) {
+    return {
+      error: `Titel darf höchstens ${MAX_TITLE_LENGTH} Zeichen lang sein.`,
+    };
+  }
 
   const status = String(formData.get("status") ?? "");
   if (!VALID_STATUSES.includes(status as (typeof VALID_STATUSES)[number])) {

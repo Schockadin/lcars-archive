@@ -2,6 +2,7 @@
 import { useActionState } from "react";
 import { createDialogueAction, type CreateDialogueState } from "./actions";
 import type { CharacterWithOwner } from "@/lib/characters";
+import { MAX_TITLE_LENGTH } from "@/lib/validation";
 
 const initialState: CreateDialogueState = {};
 
@@ -79,6 +80,7 @@ export default function CreateDialogueForm({
           name="title"
           type="text"
           required
+          maxLength={MAX_TITLE_LENGTH}
           className={inputClass}
         />
       </div>

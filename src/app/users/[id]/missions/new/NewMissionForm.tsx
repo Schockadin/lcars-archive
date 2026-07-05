@@ -1,9 +1,7 @@
 "use client";
 import { useActionState } from "react";
-import {
-  createMissionAction,
-  type MissionFormState,
-} from "./actions";
+import { createMissionAction, type MissionFormState } from "./actions";
+import { MAX_TITLE_LENGTH } from "@/lib/validation";
 
 const initialState: MissionFormState = {};
 
@@ -30,6 +28,7 @@ export default function NewMissionForm({ userId }: { userId: number }) {
           name="title"
           type="text"
           required
+          maxLength={MAX_TITLE_LENGTH}
           className={inputClass}
         />
       </div>
@@ -38,10 +37,15 @@ export default function NewMissionForm({ userId }: { userId: number }) {
         <label htmlFor="mission-slug" className="lcars-eyebrow">
           Slug (optional)
         </label>
-        <input id="mission-slug" name="slug" type="text" className={inputClass} />
+        <input
+          id="mission-slug"
+          name="slug"
+          type="text"
+          className={inputClass}
+        />
         <p className="text-lcars-text-dim text-[12px]">
-          Bestimmt die URL der Mission. Bleibt das Feld leer, wird der Slug
-          aus dem Titel abgeleitet.
+          Bestimmt die URL der Mission. Bleibt das Feld leer, wird der Slug aus
+          dem Titel abgeleitet.
         </p>
       </div>
 
@@ -90,7 +94,12 @@ export default function NewMissionForm({ userId }: { userId: number }) {
         <label htmlFor="mission-tags" className="lcars-eyebrow">
           Tags (kommagetrennt)
         </label>
-        <input id="mission-tags" name="tags" type="text" className={inputClass} />
+        <input
+          id="mission-tags"
+          name="tags"
+          type="text"
+          className={inputClass}
+        />
       </div>
 
       <div className="flex flex-col gap-[6px]">
