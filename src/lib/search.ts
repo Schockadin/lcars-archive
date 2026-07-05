@@ -109,6 +109,16 @@ function matchesQuery(text: string, q: string): boolean {
   return text.toLowerCase().includes(q.toLowerCase());
 }
 
+// Text-Fragment-Direktive (#:~:text=…) für den Browser: springt beim Öffnen
+// des Links direkt zur (ersten) Fundstelle im gerenderten Inhalt und hebt
+// sie hervor — dieselbe Stelle, die buildSnippet() unten anzeigt, da beide
+// auf demselben indexOf()-Prinzip (erste Fundstelle) beruhen. "-" wird von
+// encodeURIComponent nicht kodiert, muss aber laut Spec escaped werden, da
+// es als Trenner der Fragment-Syntax reserviert ist.
+function toTextFragment(text: string): string {
+  return encodeURIComponent(text).replaceAll("-", "%2D");
+}
+
 // Reduziert rohes Markdown zu Fließtext für Snippets. Kein vollwertiger
 // Parser — deckt nur ab, was im Korpus vorkommt (siehe scripts/ingest/*):
 // Codeblöcke/Inline-Code, Bilder, Wikilinks (WIKILINK_RE — dieselbe Regex wie
@@ -194,7 +204,7 @@ function mapResults(
       type: "log" as const,
       label: l.title,
       sublabel: `Log · ${l.mission_title}`,
-      href: `/missions/${l.mission_slug}/${l.slug}`,
+      href: `/missions/${l.mission_slug}/${l.slug}${snippet ? `#:~:text=${toTextFragment(q)}` : ""}`,
       slug: l.slug,
       snippet,
     };
@@ -216,7 +226,7 @@ function mapResults(
             : "Gespräch"
           : a.title,
       sublabel: CATEGORY_CONFIG[a.category]?.label ?? "Archiv",
-      href: `/archive/${a.slug}`,
+      href: `/archive/${a.slug}${snippet ? `#:~:text=${toTextFragment(q)}` : ""}`,
       slug: a.slug,
       snippet,
     };

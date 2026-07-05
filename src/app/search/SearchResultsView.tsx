@@ -130,6 +130,7 @@ function SearchResultCard({
         result.snippet ? highlightSnippet(result.snippet, query) : undefined
       }
       meta={<span>{result.sublabel}</span>}
+      hardNavigate={result.href.includes("#:~:text=")}
     />
   );
 }
