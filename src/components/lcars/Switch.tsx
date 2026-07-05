@@ -1,6 +1,7 @@
 export interface SwitchOption<T extends string> {
   key: T;
   label: React.ReactNode;
+  disabled?: boolean;
 }
 
 // Generischer LCARS-Pill-Umschalter für exklusive Optionen (Sortierung,
@@ -27,8 +28,9 @@ export default function Switch<T extends string>({
         return (
           <div
             key={opt.key}
-            onClick={() => onChange(opt.key)}
+            onClick={opt.disabled ? undefined : () => onChange(opt.key)}
             className={itemClassName}
+            aria-disabled={opt.disabled || undefined}
             style={{
               backgroundColor: isActive
                 ? "var(--lcars-amber)"
@@ -37,6 +39,8 @@ export default function Switch<T extends string>({
               borderColor: isActive
                 ? "var(--lcars-amber)"
                 : "var(--lcars-text-data)",
+              opacity: opt.disabled ? 0.4 : 1,
+              cursor: opt.disabled ? "not-allowed" : "pointer",
             }}
           >
             {opt.label}

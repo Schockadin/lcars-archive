@@ -4,7 +4,7 @@ import type { SearchResult, SearchResultType } from "@/types/search";
 import { TYPE_COLOR, TYPE_FILTER_LABEL } from "@/lib/searchFormat";
 import { LcarsAkteCard, LcarsSwitch } from "@/components/lcars";
 
-type TypeFilter = "all" | SearchResultType;
+type TypeFilter = "all" | "saved" | SearchResultType;
 
 const TYPE_ORDER: SearchResultType[] = [
   "character",
@@ -20,9 +20,11 @@ const TYPE_ORDER: SearchResultType[] = [
 export default function SearchResultsView({
   query,
   results,
+  isLoggedIn,
 }: {
   query: string;
   results: SearchResult[];
+  isLoggedIn: boolean;
 }) {
   const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
 
@@ -37,13 +39,16 @@ export default function SearchResultsView({
     return c;
   }, [results]);
 
-  const filtered = useMemo(
-    () =>
-      typeFilter === "all"
-        ? results
-        : results.filter((r) => r.type === typeFilter),
-    [results, typeFilter],
+  const savedCount = useMemo(
+    () => results.filter((r) => r.saved).length,
+    [results],
   );
+
+  const filtered = useMemo(() => {
+    if (typeFilter === "all") return results;
+    if (typeFilter === "saved") return results.filter((r) => r.saved);
+    return results.filter((r) => r.type === typeFilter);
+  }, [results, typeFilter]);
 
   if (results.length === 0) {
     return <p className="lcars-empty-state">Keine Treffer für „{query}“.</p>;
@@ -59,7 +64,17 @@ export default function SearchResultsView({
           ...TYPE_ORDER.map((t) => ({
             key: t as TypeFilter,
             label: `${TYPE_FILTER_LABEL[t]} (${counts[t]})`,
+            disabled: counts[t] === 0,
           })),
+          ...(isLoggedIn
+            ? [
+                {
+                  key: "saved" as TypeFilter,
+                  label: `Gespeichert (${savedCount})`,
+                  disabled: savedCount === 0,
+                },
+              ]
+            : []),
         ]}
         active={typeFilter}
         onChange={setTypeFilter}

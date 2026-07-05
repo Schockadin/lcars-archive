@@ -7,8 +7,13 @@ export interface SearchResult {
   label: string;
   sublabel: string;
   href: string;
+  slug: string;
   // Kurzer Textausschnitt um den ersten Volltext-Treffer — nur von
   // searchFull() (/search) gesetzt, für log/archive-Treffer bei denen der
   // Suchbegriff NICHT im Titel vorkommt. Von der Dropdown-Suche unbenutzt.
   snippet?: string;
+  // Nur gesetzt, wenn searchFull() mit eingeloggtem User aufgerufen wurde
+  // (character/mission/archive — Logs sind nicht bookmarkbar, siehe
+  // FollowTargetType in lib/follows.ts).
+  saved?: boolean;
 }
