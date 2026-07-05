@@ -4,6 +4,8 @@ import {
   updateOwnArchiveEntryAction,
   type ArchiveEntryEditState,
 } from "@/app/actions/archive";
+import TimelineMarkerButton from "@/app/users/_shared/TimelineMarkerButton";
+import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 
 const initialState: ArchiveEntryEditState = {};
 
@@ -18,10 +20,15 @@ export default function ArchiveEntryEditor({
   entryId,
   contentHtml,
   sourceMarkdown,
+  isAdminOrGM,
 }: {
   entryId: number;
   contentHtml: string;
   sourceMarkdown: string;
+  // Der Editor selbst ist owner-gated (jeder Owner darf ihn öffnen), der
+  // Timeline-Marker-Button darin aber zusätzlich rollen-gated — anders als
+  // MissionSynopsisEditor.tsx, wo Owner- und Rollen-Gate zusammenfallen.
+  isAdminOrGM: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -66,15 +73,24 @@ export default function ArchiveEntryEditor({
     );
   }
 
+  const textareaId = `archive-entry-editor-${entryId}`;
+
   return (
     <form action={formAction} className="flex flex-col gap-[8px]">
       <input type="hidden" name="entryId" value={entryId} />
+
+      {isAdminOrGM && <TimelineMarkerButton textareaId={textareaId} />}
+
       <textarea
+        id={textareaId}
         name="bodyMarkdown"
         required
         defaultValue={sourceMarkdown}
         className="rounded-lcars-pill lcars-input min-h-[300px] resize-y font-mono"
       />
+
+      <AutoLinkCheckbox idPrefix={textareaId} />
+
       <div className="flex gap-[12px] items-center justify-end">
         <button
           type="button"

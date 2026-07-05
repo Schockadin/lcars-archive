@@ -2,9 +2,14 @@
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
-import { updateMissionContent, deleteMission } from "@/lib/missions";
+import {
+  updateMissionContent,
+  deleteMission,
+  getMissionById,
+} from "@/lib/missions";
 import { revalidateMission, revalidateLog } from "@/lib/revalidate";
 import { deleteVaultFile } from "@/lib/githubVault";
+import { autoLinkMarkdown } from "@/lib/autolink";
 
 export interface EditMissionState {
   error?: string;
@@ -61,8 +66,23 @@ export async function updateMissionAction(
     ),
   ];
 
-  const bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
+  let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte eine Zusammenfassung schreiben." };
+
+  // Opt-in "Automatisch verlinken" (AutoLinkCheckbox.tsx) — die Mission
+  // selbst muss dabei als Autolinking-Ziel ausgeschlossen werden (sonst
+  // könnte ihr Titel im eigenen Text auf sich selbst verlinken), dafür wird
+  // ihr aktueller Slug vorab geladen.
+  let bodyHtml: string | undefined;
+  if (formData.get("autoLink") === "on") {
+    const mission = await getMissionById(missionId);
+    const linked = await autoLinkMarkdown(
+      bodyMarkdown,
+      mission ? { type: "mission", slug: mission.slug } : undefined,
+    );
+    bodyMarkdown = linked.sourceMd;
+    bodyHtml = linked.html;
+  }
 
   const result = await updateMissionContent(missionId, {
     title,
@@ -71,6 +91,7 @@ export async function updateMissionAction(
     endedAt,
     tags,
     bodyMarkdown,
+    bodyHtml,
   });
   if (!result) {
     return { error: "Mission nicht gefunden." };

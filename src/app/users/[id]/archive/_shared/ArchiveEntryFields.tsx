@@ -1,4 +1,6 @@
 import { FormField } from "../../../_shared/FormPrimitives";
+import TimelineMarkerButton from "../../../_shared/TimelineMarkerButton";
+import AutoLinkCheckbox from "../../../_shared/AutoLinkCheckbox";
 import { CATEGORY_CONFIG, CATEGORY_ORDER } from "@/lib/archiveFormat";
 import type { ArchiveCategory } from "@/types/archive";
 
@@ -26,9 +28,15 @@ export interface ArchiveEntryFieldsDefaults {
 export function ArchiveEntryFields({
   idPrefix,
   defaults = {},
+  isAdminOrGM = false,
 }: {
   idPrefix: string;
   defaults?: ArchiveEntryFieldsDefaults;
+  // Archiv-Einträge dürfen von jedem User angelegt werden (siehe
+  // requireOwnUser in archive/new/page.tsx) — der Timeline-Marker-Button
+  // muss deshalb explizit auf die tatsächliche Rolle geprüft werden, anders
+  // als bei MissionFields.tsx (immer gm/admin-gated).
+  isAdminOrGM?: boolean;
 }) {
   return (
     <>
@@ -68,6 +76,8 @@ export function ArchiveEntryFields({
         />
       </FormField>
 
+      {isAdminOrGM && <TimelineMarkerButton textareaId={`${idPrefix}-body`} />}
+
       <FormField
         label="Inhalt"
         htmlFor={`${idPrefix}-body`}
@@ -81,6 +91,8 @@ export function ArchiveEntryFields({
           className={textAreaClass}
         />
       </FormField>
+
+      <AutoLinkCheckbox idPrefix={idPrefix} />
     </>
   );
 }

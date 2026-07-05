@@ -9,7 +9,13 @@ import { ArchiveEntryFields } from "../_shared/ArchiveEntryFields";
 
 const initialState: ArchiveEntryFormState = {};
 
-export default function NewArchiveEntryForm({ userId }: { userId: number }) {
+export default function NewArchiveEntryForm({
+  userId,
+  isAdminOrGM,
+}: {
+  userId: number;
+  isAdminOrGM: boolean;
+}) {
   const [state, formAction, pending] = useActionState(
     createArchiveEntryAction,
     initialState,
@@ -19,7 +25,7 @@ export default function NewArchiveEntryForm({ userId }: { userId: number }) {
     <form action={formAction} className="flex flex-col gap-[16px]">
       <input type="hidden" name="userId" value={userId} />
 
-      <ArchiveEntryFields idPrefix="archive-entry" />
+      <ArchiveEntryFields idPrefix="archive-entry" isAdminOrGM={isAdminOrGM} />
 
       <SubmitButton
         pending={pending}

@@ -288,9 +288,14 @@ export async function createArchiveEntry(input: {
   tags: string[];
   bodyMarkdown: string;
   ownerUserId: number;
+  // Vorgerendertes HTML überspringt das eigene markdownToHtml() — genutzt
+  // vom Opt-in "Automatisch verlinken" (createArchiveEntryAction), siehe
+  // createMission in src/lib/missions.ts für dieselbe Begründung.
+  contentHtml?: string;
 }): Promise<{ id: number; slug: string }> {
   const slug = await generateUniqueArchiveEntrySlug(input.title);
-  const contentHtml = await markdownToHtml(input.bodyMarkdown);
+  const contentHtml =
+    input.contentHtml ?? (await markdownToHtml(input.bodyMarkdown));
 
   const metadata: ArchiveMetadata = {
     summary: null,
@@ -319,6 +324,7 @@ export async function createArchiveEntry(input: {
 
 export interface OwnArchiveEntryForEdit {
   id: number;
+  slug: string;
   title: string;
   category: ArchiveCategory;
   tags: string[];
@@ -329,13 +335,15 @@ export interface OwnArchiveEntryForEdit {
 // (source_md) statt content, damit das Formular ihn editierbar vorbefüllen
 // kann. Gleiche Owner-Prüfung wie setArchiveEntryVisibility oben, Dialoge
 // ausgeschlossen (die haben kein source_md, ihr Inhalt lebt in
-// dialogue_messages).
+// dialogue_messages). slug wird zusätzlich zurückgegeben, damit das Opt-in
+// "Automatisch verlinken" (updateArchiveEntryAction) den Eintrag selbst als
+// Autolinking-Ziel ausschließen kann.
 export async function getOwnArchiveEntryForEdit(
   userId: number,
   entryId: number,
 ): Promise<OwnArchiveEntryForEdit | null> {
   const rows = await sql<OwnArchiveEntryForEdit[]>`
-    SELECT id, title, category, tags, COALESCE(source_md, '') AS "sourceMarkdown"
+    SELECT id, slug, title, category, tags, COALESCE(source_md, '') AS "sourceMarkdown"
     FROM archive_entries
     WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
     LIMIT 1
@@ -358,9 +366,12 @@ export async function updateOwnArchiveEntryContent(
     category: Exclude<ArchiveCategory, "dialogue">;
     tags: string[];
     bodyMarkdown: string;
+    // Siehe createArchiveEntry oben — Opt-in "Automatisch verlinken".
+    contentHtml?: string;
   },
 ): Promise<{ slug: string } | null> {
-  const contentHtml = await markdownToHtml(input.bodyMarkdown);
+  const contentHtml =
+    input.contentHtml ?? (await markdownToHtml(input.bodyMarkdown));
 
   const rows = await sql<{ slug: string }[]>`
     UPDATE archive_entries
@@ -380,8 +391,11 @@ export async function updateOwnArchiveEntryBody(
   userId: number,
   entryId: number,
   bodyMarkdown: string,
+  // Siehe createArchiveEntry oben — Opt-in "Automatisch verlinken".
+  contentHtmlOverride?: string,
 ): Promise<{ slug: string; contentHtml: string } | null> {
-  const contentHtml = await markdownToHtml(bodyMarkdown);
+  const contentHtml =
+    contentHtmlOverride ?? (await markdownToHtml(bodyMarkdown));
 
   const rows = await sql<{ slug: string }[]>`
     UPDATE archive_entries

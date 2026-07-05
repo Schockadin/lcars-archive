@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
 import { verifySession } from "@/lib/dal";
 import { getOwnArchiveEntryForEdit } from "@/lib/archive";
+import { getUserById } from "@/lib/users";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
 import EditArchiveEntryForm from "./EditArchiveEntryForm";
 
@@ -24,10 +25,10 @@ export default async function EditArchiveEntryPage({
     redirect(`/users/${session.userId}`);
   }
 
-  const entry = await getOwnArchiveEntryForEdit(
-    session.userId,
-    Number(entryId),
-  );
+  const [entry, viewer] = await Promise.all([
+    getOwnArchiveEntryForEdit(session.userId, Number(entryId)),
+    getUserById(session.userId),
+  ]);
   if (!entry) {
     redirect(`/users/${session.userId}/content`);
   }
@@ -41,7 +42,11 @@ export default async function EditArchiveEntryPage({
           {CATEGORY_CONFIG[entry.category].label}
         </p>
 
-        <EditArchiveEntryForm userId={userId} entry={entry} />
+        <EditArchiveEntryForm
+          userId={userId}
+          entry={entry}
+          isAdminOrGM={viewer?.role === "gm" || viewer?.role === "admin"}
+        />
       </article>
     </>
   );

@@ -1,5 +1,6 @@
 import "server-only";
 import sql from "@/lib/db";
+import { markdownToHtml } from "@/lib/markdown";
 
 export type AutolinkTargetType = "character" | "mission" | "archive";
 
@@ -223,4 +224,24 @@ export function resolveAutolinkedWikilinks(
       return href ? `<a href="${href}" class="lcars-wikilink">` : full;
     },
   );
+}
+
+// Für das Opt-in "Automatisch verlinken" unter den Content-Textareas (New/
+// Edit-Formulare + Inline-Editoren): wendet Autolinking auf einen noch
+// nicht gespeicherten Markdown-Text an und liefert sourceMd + sofort
+// aufgelöstes HTML — gleiches Muster wie planAutolink() in
+// src/app/actions/contentTools.ts, nur für frischen Text statt einen schon
+// gespeicherten Inhalt (daher hier, nicht dort: contentTools.ts ist
+// admin-only, dieser Helfer wird von allen Content-Aktionen genutzt).
+export async function autoLinkMarkdown(
+  bodyMarkdown: string,
+  exclude?: AutolinkExclude,
+): Promise<{ sourceMd: string; html: string }> {
+  const targets = await getAutolinkTargets(exclude);
+  const { sourceMd, matches } = applyAutolinks(bodyMarkdown, targets);
+  const html = resolveAutolinkedWikilinks(
+    await markdownToHtml(sourceMd),
+    matches,
+  );
+  return { sourceMd, html };
 }

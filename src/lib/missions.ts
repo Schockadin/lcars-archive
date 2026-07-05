@@ -141,8 +141,15 @@ export async function createMission(input: {
   tags: string[];
   bodyMarkdown: string;
   ownerUserId: number;
+  // Vorgerendertes HTML überspringt das eigene markdownToHtml() — genutzt
+  // vom Opt-in "Automatisch verlinken" (createMissionAction), das den
+  // Markdown-Text vorab per autoLinkMarkdown() transformiert UND rendert,
+  // damit frisch gesetzte Wikilinks sofort aufgelöst sind (siehe
+  // resolveAutolinkedWikilinks in src/lib/autolink.ts) statt beim eigenen
+  // Rendern hier erneut als unaufgelöst "wikilink://" zu erscheinen.
+  bodyHtml?: string;
 }): Promise<{ id: number; slug: string }> {
-  const bodyHtml = await markdownToHtml(input.bodyMarkdown);
+  const bodyHtml = input.bodyHtml ?? (await markdownToHtml(input.bodyMarkdown));
 
   const rows = await sql<{ id: number; slug: string }[]>`
     INSERT INTO missions (
@@ -183,9 +190,11 @@ export async function updateMissionContent(
     endedAt: string | null;
     tags: string[];
     bodyMarkdown: string;
+    // Siehe createMission oben — Opt-in "Automatisch verlinken".
+    bodyHtml?: string;
   },
 ): Promise<UpdateMissionResult | null> {
-  const bodyHtml = await markdownToHtml(input.bodyMarkdown);
+  const bodyHtml = input.bodyHtml ?? (await markdownToHtml(input.bodyMarkdown));
 
   const rows = await sql<UpdateMissionResult[]>`
     UPDATE missions m
@@ -305,8 +314,11 @@ export async function createMissionLog(input: {
   logDate: string | null;
   sessionNr: number;
   ownerUserId: number | null;
+  // Siehe createMission oben — Opt-in "Automatisch verlinken".
+  contentHtml?: string;
 }): Promise<{ id: number; slug: string }> {
-  const contentHtml = await markdownToHtml(input.bodyMarkdown);
+  const contentHtml =
+    input.contentHtml ?? (await markdownToHtml(input.bodyMarkdown));
 
   const rows = await sql<{ id: number; slug: string }[]>`
     INSERT INTO mission_logs (
@@ -540,7 +552,13 @@ export async function getOwnMissionLogForEdit(
 export async function updateMissionLogContent(
   userId: number,
   logId: number,
-  input: { title: string; logDate: string | null; bodyMarkdown: string },
+  input: {
+    title: string;
+    logDate: string | null;
+    bodyMarkdown: string;
+    // Siehe createMission oben — Opt-in "Automatisch verlinken".
+    contentHtml?: string;
+  },
 ): Promise<{
   slug: string;
   missionId: number;
@@ -549,7 +567,8 @@ export async function updateMissionLogContent(
   sessionNr: number | null;
   ownerSlug: string | null;
 } | null> {
-  const contentHtml = await markdownToHtml(input.bodyMarkdown);
+  const contentHtml =
+    input.contentHtml ?? (await markdownToHtml(input.bodyMarkdown));
 
   const rows = await sql<
     {

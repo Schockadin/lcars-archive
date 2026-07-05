@@ -4,6 +4,7 @@ import { verifySession } from "@/lib/dal";
 import { createArchiveEntry } from "@/lib/archive";
 import { isArchiveCategory } from "@/lib/archiveFormat";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
+import { autoLinkMarkdown } from "@/lib/autolink";
 import type { ArchiveCategory } from "@/types/archive";
 
 export interface ArchiveEntryFormState {
@@ -41,14 +42,25 @@ export async function createArchiveEntryAction(
     ),
   ];
 
-  const bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
+  let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte einen Inhalt schreiben." };
+
+  // Opt-in "Automatisch verlinken" (AutoLinkCheckbox.tsx) — kein
+  // Selbst-Ausschluss nötig, der neue Eintrag existiert noch nicht in der
+  // DB und kann deshalb nicht als eigenes Autolinking-Ziel erscheinen.
+  let contentHtml: string | undefined;
+  if (formData.get("autoLink") === "on") {
+    const linked = await autoLinkMarkdown(bodyMarkdown);
+    bodyMarkdown = linked.sourceMd;
+    contentHtml = linked.html;
+  }
 
   const result = await createArchiveEntry({
     title,
     category: category as Exclude<ArchiveCategory, "dialogue">,
     tags,
     bodyMarkdown,
+    contentHtml,
     ownerUserId: session.userId,
   });
 

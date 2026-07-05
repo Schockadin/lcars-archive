@@ -20,12 +20,14 @@ export default function NewMissionLogForm({
   missions,
   defaultSessionNr,
   defaultLogDate,
+  isAdminOrGM,
 }: {
   userId: number;
   ownCharacters: { id: number; slug: string; name: string }[];
   missions: { slug: string; title: string }[];
   defaultSessionNr: number;
   defaultLogDate: string | null;
+  isAdminOrGM: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
     createMissionLogAction,
@@ -83,6 +85,7 @@ export default function NewMissionLogForm({
       <MissionLogDateBodyFields
         idPrefix="log"
         defaults={{ logDate: defaultLogDate }}
+        isAdminOrGM={isAdminOrGM}
       />
 
       <SubmitButton

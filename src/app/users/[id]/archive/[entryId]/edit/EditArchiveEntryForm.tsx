@@ -13,9 +13,11 @@ const initialState: ArchiveEntryFormState = {};
 export default function EditArchiveEntryForm({
   userId,
   entry,
+  isAdminOrGM,
 }: {
   userId: number;
   entry: OwnArchiveEntryForEdit;
+  isAdminOrGM: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
     updateArchiveEntryAction,
@@ -35,6 +37,7 @@ export default function EditArchiveEntryForm({
           tags: entry.tags.join(", "),
           bodyMarkdown: entry.sourceMarkdown,
         }}
+        isAdminOrGM={isAdminOrGM}
       />
 
       <SubmitButton

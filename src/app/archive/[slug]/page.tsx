@@ -178,6 +178,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
           entryId={entry.id}
           contentHtml={entry.content}
           sourceMarkdown={entry.sourceMarkdown}
+          isAdminOrGM={viewer.role === "gm" || viewer.role === "admin"}
         />
       ) : entry.content ? (
         <div

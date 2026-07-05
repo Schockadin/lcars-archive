@@ -1,7 +1,11 @@
 "use server";
 import { getSession } from "@/lib/session";
-import { updateOwnArchiveEntryBody } from "@/lib/archive";
+import {
+  updateOwnArchiveEntryBody,
+  getOwnArchiveEntryForEdit,
+} from "@/lib/archive";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
+import { autoLinkMarkdown } from "@/lib/autolink";
 
 export interface ArchiveEntryEditState {
   error?: string;
@@ -28,13 +32,29 @@ export async function updateOwnArchiveEntryAction(
     return { error: "Ungültiger Archiv-Eintrag." };
   }
 
-  const bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
+  let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte einen Inhalt schreiben." };
+
+  // Opt-in "Automatisch verlinken" (AutoLinkCheckbox.tsx) — der Eintrag
+  // selbst muss dabei als Autolinking-Ziel ausgeschlossen werden, dafür
+  // wird sein aktueller Slug vorab geladen (gleiches Prinzip wie
+  // updateArchiveEntryAction für das volle Formular).
+  let contentHtml: string | undefined;
+  if (formData.get("autoLink") === "on") {
+    const entry = await getOwnArchiveEntryForEdit(session.userId, entryId);
+    const linked = await autoLinkMarkdown(
+      bodyMarkdown,
+      entry ? { type: "archive", slug: entry.slug } : undefined,
+    );
+    bodyMarkdown = linked.sourceMd;
+    contentHtml = linked.html;
+  }
 
   const result = await updateOwnArchiveEntryBody(
     session.userId,
     entryId,
     bodyMarkdown,
+    contentHtml,
   );
   if (!result) {
     return { error: "Eintrag nicht gefunden oder keine Berechtigung." };
