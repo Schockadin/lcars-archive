@@ -7,12 +7,12 @@ import {
   SubmitButton,
   FormError,
 } from "../../../_shared/FormPrimitives";
+import MarkdownEditor from "../../../_shared/MarkdownEditor";
+import { MarkdownFormatHint } from "../../../_shared/MarkdownHint";
 
 const initialState: CreateDialogueState = {};
 
 const inputClass = "rounded-lcars-pill lcars-input";
-const textAreaClass =
-  "rounded-lcars-pill lcars-input min-h-[500px] resize-y font-mono";
 
 export default function CreateDialogueForm({
   userId,
@@ -121,14 +121,9 @@ export default function CreateDialogueForm({
       <FormField
         label="Erste Nachricht"
         htmlFor="dlg-body"
-        hint="Unterstützt Markdown-Formatierung."
+        hint={<MarkdownFormatHint />}
       >
-        <textarea
-          id="dlg-body"
-          name="bodyMarkdown"
-          required
-          className={textAreaClass}
-        />
+        <MarkdownEditor id="dlg-body" required large />
       </FormField>
 
       <div className="flex items-center gap-[8px]">

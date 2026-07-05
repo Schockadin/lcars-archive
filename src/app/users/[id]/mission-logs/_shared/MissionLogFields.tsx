@@ -1,11 +1,10 @@
 import { FormField } from "../../../_shared/FormPrimitives";
-import TimelineMarkerButton from "../../../_shared/TimelineMarkerButton";
 import AutoLinkCheckbox from "../../../_shared/AutoLinkCheckbox";
+import MarkdownEditor from "../../../_shared/MarkdownEditor";
+import { MarkdownFormatHint } from "../../../_shared/MarkdownHint";
 
 export const missionLogInputClass =
   "rounded-lcars-pill lcars-input w-full sm:w-[400px]";
-export const missionLogTextAreaClass =
-  "rounded-lcars-pill lcars-input min-h-[500px] resize-y font-mono";
 
 // Aufgeteilt in zwei Stücke statt einer Feldliste, weil NewMissionLogForm
 // zwischen Titel und Datum/Log-Text noch die Session-Nr einschiebt (Edit
@@ -64,19 +63,17 @@ export function MissionLogDateBodyFields({
         />
       </FormField>
 
-      {isAdminOrGM && <TimelineMarkerButton textareaId={`${idPrefix}-body`} />}
-
       <FormField
         label="Log-Text"
         htmlFor={`${idPrefix}-body`}
-        hint="Unterstützt Markdown-Formatierung."
+        hint={<MarkdownFormatHint />}
       >
-        <textarea
+        <MarkdownEditor
           id={`${idPrefix}-body`}
-          name="bodyMarkdown"
           required
           defaultValue={defaults.bodyMarkdown}
-          className={missionLogTextAreaClass}
+          isAdminOrGM={isAdminOrGM}
+          large
         />
       </FormField>
 

@@ -1,11 +1,10 @@
 import { FormField } from "../../../_shared/FormPrimitives";
-import TimelineMarkerButton from "../../../_shared/TimelineMarkerButton";
 import AutoLinkCheckbox from "../../../_shared/AutoLinkCheckbox";
+import MarkdownEditor from "../../../_shared/MarkdownEditor";
+import { MarkdownFormatHint } from "../../../_shared/MarkdownHint";
 import type { Character } from "@/types/character";
 
 const inputClass = "rounded-lcars-pill lcars-input w-full sm:w-[400px]";
-const textAreaClass =
-  "rounded-lcars-pill lcars-input min-h-[300px] resize-y font-mono";
 
 const STATUS_OPTIONS: { value: Character["status"]; label: string }[] = [
   { value: "active", label: "Aktiv" },
@@ -118,18 +117,15 @@ export function CharacterFields({
         />
       </FormField>
 
-      {isAdminOrGM && <TimelineMarkerButton textareaId={`${idPrefix}-body`} />}
-
       <FormField
         label="Biografie (optional)"
         htmlFor={`${idPrefix}-body`}
-        hint="Unterstützt Markdown-Formatierung."
+        hint={<MarkdownFormatHint />}
       >
-        <textarea
+        <MarkdownEditor
           id={`${idPrefix}-body`}
-          name="bodyMarkdown"
           defaultValue={defaults.bodyMarkdown}
-          className={textAreaClass}
+          isAdminOrGM={isAdminOrGM}
         />
       </FormField>
 

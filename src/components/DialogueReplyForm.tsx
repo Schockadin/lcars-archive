@@ -4,6 +4,7 @@ import {
   postDialogueMessageAction,
   type DialogueMessageState,
 } from "@/app/actions/dialogues";
+import { MarkdownFormatHint } from "@/app/users/_shared/MarkdownHint";
 
 const initialState: DialogueMessageState = {};
 
@@ -43,7 +44,7 @@ export default function DialogueReplyForm({
         className="rounded-lcars-pill lcars-input min-h-[150px] resize-y font-mono"
       />
       <p className="text-lcars-text text-[14px]">
-        Unterstützt Markdown-Formatierung.
+        <MarkdownFormatHint />
       </p>
 
       <button

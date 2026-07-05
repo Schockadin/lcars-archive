@@ -203,6 +203,90 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
+/* MarkdownEditor.tsx — Formatierungs-Toolbar + Rohtext/Vorschau-Umschalter
+   für Content-Textareas. Toolbar-Icon-Buttons nutzen die bestehende
+   .lcars-icon-btn-Klasse (controls.css), hier nur der Tab-Umschalter und
+   die Vorschau-Box. */
+.markdown-editor-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: auto;
+}
+.markdown-editor-preview {
+  border: solid 1px var(--lcars-text-data);
+  border-radius: 12px;
+  padding: 12px 16px;
+  overflow-y: auto;
+}
+
+/* MarkdownHint.tsx — hoverbares/fokussierbares "Markdown"-Wort in den
+   Content-Formular-Hinweisen, zeigt ein kleines Formatierungs-Cheatsheet.
+   position:relative auf dem Wrapper hält das Popover (position:absolute)
+   exakt am Wort verankert; max-width per calc(100vw - …) verhindert
+   Overflow auf schmalen Handys (siehe mission-detail.css/archive.css für
+   dieselbe Problematik bei Button-Zeilen). */
+.markdown-hint {
+  position: relative;
+  display: inline-block;
+}
+.markdown-hint-trigger {
+  cursor: help;
+  color: var(--lcars-blue);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+.markdown-hint-trigger:hover,
+.markdown-hint-trigger:focus-visible {
+  color: var(--lcars-amber);
+}
+.markdown-hint-popover {
+  position: absolute;
+  z-index: 500;
+  top: calc(100% + 6px);
+  left: 0;
+  width: max-content;
+  max-width: min(300px, calc(100vw - 40px));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 8px;
+  background: var(--lcars-bg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.markdown-hint-popover-title {
+  font-family: var(--font-antonio), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 13px;
+  color: var(--lcars-amber);
+}
+.markdown-hint-popover-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.markdown-hint-popover-row {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  font-size: 12.5px;
+}
+.markdown-hint-popover-row code {
+  flex: 0 0 auto;
+  font-family: var(--font-share-tech-mono), monospace;
+  color: var(--lcars-text-data);
+  background: var(--lcars-surface-2);
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.markdown-hint-popover-row span:last-child {
+  color: var(--lcars-text-light);
+}
+
 /* ── Scrollbar ───────────────────────────────────────────────────── */
 
 .lcars-scroll::-webkit-scrollbar {

@@ -4,8 +4,8 @@ import {
   updateOwnCharacterBioAction,
   type CharacterBioEditState,
 } from "@/app/actions/characters";
-import TimelineMarkerButton from "@/app/users/_shared/TimelineMarkerButton";
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
+import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
 
 const initialState: CharacterBioEditState = {};
 
@@ -80,13 +80,10 @@ export default function CharacterBioEditor({
     <form action={formAction} className="flex flex-col gap-[8px]">
       <input type="hidden" name="characterId" value={characterId} />
 
-      {isAdminOrGM && <TimelineMarkerButton textareaId={textareaId} />}
-
-      <textarea
+      <MarkdownEditor
         id={textareaId}
-        name="bodyMarkdown"
         defaultValue={sourceMarkdown}
-        className="rounded-lcars-pill lcars-input min-h-[300px] resize-y font-mono"
+        isAdminOrGM={isAdminOrGM}
       />
 
       <AutoLinkCheckbox idPrefix={textareaId} />
