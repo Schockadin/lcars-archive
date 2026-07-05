@@ -2,10 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireSelfOrGM } from "./dal";
-import { getRecentActivitySince } from "@/lib/timeline";
 import { hasPassword } from "@/lib/users";
 import { getBookmarkedContent, getSubscribedContent } from "@/lib/follows";
-import RecentActivity from "./RecentActivity";
 import FollowedContentSection from "./FollowedContentSection";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
@@ -33,15 +31,11 @@ export default async function UserPage({
   // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
   // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
   // innerhalb des User-Bereichs spürbar auf.
-  const [recentEvents, hasPasswordSet, bookmarks, subscriptions] =
-    await Promise.all([
-      isSelf
-        ? getRecentActivitySince(target.previous_login_at)
-        : Promise.resolve([]),
-      isSelf ? hasPassword(target.id) : Promise.resolve(true),
-      isSelf ? getBookmarkedContent(target.id) : Promise.resolve([]),
-      isSelf ? getSubscribedContent(target.id) : Promise.resolve([]),
-    ]);
+  const [hasPasswordSet, bookmarks, subscriptions] = await Promise.all([
+    isSelf ? hasPassword(target.id) : Promise.resolve(true),
+    isSelf ? getBookmarkedContent(target.id) : Promise.resolve([]),
+    isSelf ? getSubscribedContent(target.id) : Promise.resolve([]),
+  ]);
   const needsPassword = isSelf && !hasPasswordSet;
 
   return (
@@ -67,13 +61,6 @@ export default async function UserPage({
               </Link>
               .
             </p>
-          )}
-
-          {isSelf && (
-            <RecentActivity
-              events={recentEvents}
-              firstVisit={target.previous_login_at === null}
-            />
           )}
 
           {isSelf && (

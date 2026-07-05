@@ -39,11 +39,11 @@ export async function getUserById(id: number): Promise<User | null> {
 }
 
 // Vorheriges last_login_at wird nach previous_login_at verschoben, bevor
-// last_login_at auf NOW() gesetzt wird — das Dashboard kennt so immer die
-// Grenze des *vorletzten* Logins (Grundlage für "neu seit deinem letzten
-// Besuch", siehe getRecentActivitySince in src/lib/timeline.ts). Bewusst
-// eine eigene DB-Spalte statt Cookie-Payload, damit ein Profil-Update
-// (updateUser) diesen Zeitpunkt nicht versehentlich zurücksetzen kann.
+// last_login_at auf NOW() gesetzt wird — so bleibt der Zeitpunkt des
+// *vorletzten* Logins nachvollziehbar (angezeigt im Admin-Panel, siehe
+// users/[id]/edit/page.tsx). Bewusst eine eigene DB-Spalte statt
+// Cookie-Payload, damit ein Profil-Update (updateUser) diesen Zeitpunkt
+// nicht versehentlich zurücksetzen kann.
 export async function recordLogin(userId: number): Promise<void> {
   await sql`
     UPDATE users
