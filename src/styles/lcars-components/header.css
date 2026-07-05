@@ -225,6 +225,7 @@
   display: grid;
   grid-template-columns: repeat(var(--usernav-cols), 216px);
   grid-auto-rows: minmax(0, 1fr);
+  column-gap: 5px;
   flex: 1;
   min-height: 0;
   width: 100%;

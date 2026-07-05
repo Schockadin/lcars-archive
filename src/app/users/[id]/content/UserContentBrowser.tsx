@@ -172,11 +172,19 @@ export default function UserContentBrowser({
                       <span className="mission-akte-title block">{c.name}</span>
                     </span>
                   </Link>
-                  <VisibilitySelect
-                    contentType="character"
-                    id={c.id}
-                    initialValue={c.visibility}
-                  />
+                  <div className="flex flex-col items-end gap-[4px]">
+                    <VisibilitySelect
+                      contentType="character"
+                      id={c.id}
+                      initialValue={c.visibility}
+                    />
+                    <Link
+                      href={`/users/${ownUserId}/characters/${c.id}/edit`}
+                      className="lcars-link-text text-[14px]"
+                    >
+                      Bearbeiten
+                    </Link>
+                  </div>
                 </div>
               ))}
             </div>

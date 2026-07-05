@@ -1,11 +1,10 @@
 import { FormField } from "../../../_shared/FormPrimitives";
-import TimelineMarkerButton from "../../../_shared/TimelineMarkerButton";
 import AutoLinkCheckbox from "../../../_shared/AutoLinkCheckbox";
+import MarkdownEditor from "../../../_shared/MarkdownEditor";
+import { MarkdownFormatHint } from "../../../_shared/MarkdownHint";
 import type { MissionStatus } from "@/types/missions";
 
 const inputClass = "rounded-lcars-pill lcars-input w-full sm:w-[400px]";
-const textAreaClass =
-  "rounded-lcars-pill lcars-input min-h-[400px] resize-y font-mono";
 
 const STATUS_OPTIONS: { value: MissionStatus; label: string }[] = [
   { value: "active", label: "Aktiv" },
@@ -110,22 +109,20 @@ export function MissionFields({
         />
       </FormField>
 
-      {/* Kein isAdminOrGM-Prop nötig — MissionFields wird ausschließlich von
-          New-/EditMissionForm gerendert, beide bereits per requireOwnGM
-          (page.tsx) auf gm/admin beschränkt. */}
-      <TimelineMarkerButton textareaId={`${idPrefix}-body`} />
-
       <FormField
         label="Zusammenfassung"
         htmlFor={`${idPrefix}-body`}
-        hint="Unterstützt Markdown-Formatierung."
+        hint={<MarkdownFormatHint />}
       >
-        <textarea
+        {/* isAdminOrGM fest true — MissionFields wird ausschließlich von
+            New-/EditMissionForm gerendert, beide bereits per requireOwnGM
+            (page.tsx) auf gm/admin beschränkt. */}
+        <MarkdownEditor
           id={`${idPrefix}-body`}
-          name="bodyMarkdown"
           required
           defaultValue={defaults.bodyMarkdown}
-          className={textAreaClass}
+          isAdminOrGM
+          large
         />
       </FormField>
 

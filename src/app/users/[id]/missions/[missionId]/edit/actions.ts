@@ -128,7 +128,7 @@ export async function deleteMissionAction(
     return { error: "Ungültige Mission." };
   }
 
-  const deleted = await deleteMission(missionId);
+  const deleted = await deleteMission(missionId, session.userId);
   if (!deleted) {
     return { error: "Mission nicht gefunden." };
   }

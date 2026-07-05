@@ -4,9 +4,11 @@ import PageMeta from "@/components/PageMeta";
 import { requireSelfOrGM } from "./dal";
 import { hasPassword } from "@/lib/users";
 import { getBookmarkedContent, getSubscribedContent } from "@/lib/follows";
-import { getRecentActivity } from "@/lib/recentActivity";
+import { getRecentActivity, getRecentDeletions } from "@/lib/recentActivity";
+import { getDialoguesForUser } from "@/lib/dialogues";
 import FollowedContentSection from "./FollowedContentSection";
-import RecentActivity from "./RecentActivity";
+import OpenDialoguesSection from "./OpenDialoguesSection";
+import NewsSection from "./NewsSection";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 
@@ -34,16 +36,27 @@ export default async function UserPage({
   // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
   // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
   // innerhalb des User-Bereichs spürbar auf.
-  const [hasPasswordSet, bookmarks, subscriptions, recentActivity] =
-    await Promise.all([
-      isSelf ? hasPassword(target.id) : Promise.resolve(true),
-      isSelf ? getBookmarkedContent(target.id) : Promise.resolve([]),
-      isSelf ? getSubscribedContent(target.id) : Promise.resolve([]),
-      isSelf
-        ? getRecentActivity(target.id, target.previous_login_at)
-        : Promise.resolve({ created: [], updated: [] }),
-    ]);
+  const [
+    hasPasswordSet,
+    bookmarks,
+    subscriptions,
+    recentActivity,
+    deletions,
+    openDialogues,
+  ] = await Promise.all([
+    isSelf ? hasPassword(target.id) : Promise.resolve(true),
+    isSelf ? getBookmarkedContent(target.id) : Promise.resolve([]),
+    isSelf ? getSubscribedContent(target.id) : Promise.resolve([]),
+    isSelf
+      ? getRecentActivity(target.id, target.previous_login_at)
+      : Promise.resolve({ created: [], updated: [] }),
+    isSelf
+      ? getRecentDeletions(target.id, target.previous_login_at)
+      : Promise.resolve([]),
+    isSelf ? getDialoguesForUser(target.id, "open") : Promise.resolve([]),
+  ]);
   const needsPassword = isSelf && !hasPasswordSet;
+  const firstVisit = target.previous_login_at === null;
 
   return (
     <>
@@ -70,28 +83,28 @@ export default async function UserPage({
             </p>
           )}
 
+          {isSelf && firstVisit && (
+            <p className="lcars-text">
+              Das ist dein erster Besuch — willkommen an Bord.
+            </p>
+          )}
+
+          {isSelf && <OpenDialoguesSection items={openDialogues} />}
+
           {isSelf && (
-            <RecentActivity
+            <NewsSection
               created={recentActivity.created}
               updated={recentActivity.updated}
-              firstVisit={target.previous_login_at === null}
+              deleted={deletions}
             />
           )}
 
           {isSelf && (
-            <FollowedContentSection
-              heading="Deine Lesezeichen"
-              emptyLabel="Noch keine Lesezeichen gesetzt."
-              items={bookmarks}
-            />
+            <FollowedContentSection heading="Deine Lesezeichen" items={bookmarks} />
           )}
 
           {isSelf && (
-            <FollowedContentSection
-              heading="Deine Abos"
-              emptyLabel="Noch keine Abos abgeschlossen."
-              items={subscriptions}
-            />
+            <FollowedContentSection heading="Deine Abos" items={subscriptions} />
           )}
 
           {!isSelf && (

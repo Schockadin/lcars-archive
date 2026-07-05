@@ -42,6 +42,18 @@ export default async function UserContentPage({
           <Link href={`/users/${user.id}/archive/new`} className="lcars-switch">
             Neuer Archiv-Eintrag
           </Link>
+          {/* Genau wie Archiv-Einträge an keine Voraussetzung geknüpft
+              (bewusst NICHT hinter characters.length > 0 versteckt — genau
+              damit legt man seinen ERSTEN eigenen Charakter an) — außer
+              Gast-Accounts, siehe requireOwnCharacters/new/actions.ts. */}
+          {user.role !== "guest" && (
+            <Link
+              href={`/users/${user.id}/characters/new`}
+              className="lcars-switch"
+            >
+              Neuer Charakter
+            </Link>
+          )}
           {characters.length > 0 && (
             <>
               <Link

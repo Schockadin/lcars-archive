@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "../dal";
 import SettingsForm from "./SettingsForm";
@@ -25,6 +26,18 @@ export default async function UserSettingsPage({
       <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
         <h1>Einstellungen</h1>
         <div className="lcars-text flex flex-col gap-[32px]">
+          <section id="tutorial" className="flex flex-col gap-[8px]">
+            <h2>Hilfe & Anleitung</h2>
+            <p>
+              Unsicher, wie etwas funktioniert? Das Tutorial erklärt alle
+              Funktionen des Archivs — von der Suche bis zur
+              Markdown-Formatierung.
+            </p>
+            <Link href="/tutorial" className="lcars-switch self-start">
+              Tutorial öffnen
+            </Link>
+          </section>
+
           <SettingsForm user={{ name: user.name, email: user.email }} />
 
           <section id="password" className="flex flex-col gap-[12px]">

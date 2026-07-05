@@ -4,8 +4,8 @@ import {
   updateMissionSynopsisAction,
   type MissionSynopsisEditState,
 } from "@/app/actions/missions";
-import TimelineMarkerButton from "@/app/users/_shared/TimelineMarkerButton";
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
+import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
 
 const initialState: MissionSynopsisEditState = {};
 
@@ -85,20 +85,17 @@ export default function MissionSynopsisEditor({
 
       {adminActions}
 
-      {/* Kein isAdminOrGM-Prop nötig — MissionSynopsisEditor wird
-          ausschließlich für viewer?.role === "admin"/"gm" gerendert (siehe
-          MissionSynopsis.tsx), der Timeline-Marker-Button ist hier also
-          implizit immer erlaubt. */}
-      <TimelineMarkerButton textareaId={`mission-synopsis-${missionId}`} />
-
       <form action={formAction} className="flex flex-col gap-[8px]">
         <input type="hidden" name="missionId" value={missionId} />
-        <textarea
+        {/* isAdminOrGM fest true — MissionSynopsisEditor wird ausschließlich
+            für viewer?.role === "admin"/"gm" gerendert (siehe
+            MissionSynopsis.tsx), der Timeline-Marker-Button ist hier also
+            implizit immer erlaubt. */}
+        <MarkdownEditor
           id={`mission-synopsis-${missionId}`}
-          name="bodyMarkdown"
           required
           defaultValue={sourceMarkdown}
-          className="rounded-lcars-pill lcars-input min-h-[300px] resize-y font-mono"
+          isAdminOrGM
         />
 
         <AutoLinkCheckbox idPrefix={`mission-synopsis-${missionId}`} />

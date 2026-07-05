@@ -1,42 +1,42 @@
 "use client";
 import { useActionState, useState } from "react";
 import {
-  updateOwnArchiveEntryAction,
-  type ArchiveEntryEditState,
-} from "@/app/actions/archive";
+  updateOwnCharacterBioAction,
+  type CharacterBioEditState,
+} from "@/app/actions/characters";
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
 
-const initialState: ArchiveEntryEditState = {};
+const initialState: CharacterBioEditState = {};
 
-// Inline-Editor für den Inhalt eines Archiv-Eintrags, nur für den Owner
-// gerendert (siehe archive/[slug]/page.tsx) — anders als
-// MissionSynopsisEditor.tsx (gm/admin-gated), hier owner-gated: jeder User
-// darf so seine EIGENEN Archiv-Einträge bearbeiten. Titel/Kategorie/Tags
-// bleiben unangetastet (dafür das volle Formular unter
-// /users/[id]/archive/[entryId]/edit). Zeigt standardmäßig den gerenderten
-// Inhalt; im Editiermodus ein Markdown-Textfeld statt dessen.
-export default function ArchiveEntryEditor({
-  entryId,
-  contentHtml,
+// Inline-Editor für die Charakter-Biografie, nur für den Owner (player_id)
+// gerendert (siehe CharacterHero.tsx) — analog ArchiveEntryEditor.tsx
+// (owner-gated), nicht MissionSynopsisEditor.tsx (gm/admin-gated): der
+// Owner einer Charakterakte ist player_id, kein gm/admin-Konzept. Zeigt
+// standardmäßig die gerenderte Bio; im Editiermodus ein Markdown-Textfeld
+// statt dessen. Anders als beim Archiv-Eintrag darf die Bio leer sein (ein
+// Charakter ohne Bio ist ein normaler Zustand).
+export default function CharacterBioEditor({
+  characterId,
+  bioHtml,
   sourceMarkdown,
   isAdminOrGM,
 }: {
-  entryId: number;
-  contentHtml: string;
+  characterId: number;
+  bioHtml: string | null;
   sourceMarkdown: string;
-  // Der Editor selbst ist owner-gated (jeder Owner darf ihn öffnen), der
-  // Timeline-Marker-Button darin aber zusätzlich rollen-gated — anders als
-  // MissionSynopsisEditor.tsx, wo Owner- und Rollen-Gate zusammenfallen.
+  // Der Editor selbst ist owner-gated (siehe CharacterHero.tsx), der
+  // Timeline-Marker-Button darin aber zusätzlich rollen-gated — derselbe
+  // Owner könnte selbst gm/admin sein oder auch nicht.
   isAdminOrGM: boolean;
 }) {
   const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(
-    updateOwnArchiveEntryAction,
+    updateOwnCharacterBioAction,
     initialState,
   );
 
-  // Gleiches Muster wie MissionSynopsisEditor.tsx: Referenzvergleich statt
+  // Gleiches Muster wie ArchiveEntryEditor.tsx: Referenzvergleich statt
   // simplem state.success-Wert, damit jeder abgeschlossene Speichervorgang
   // erkannt wird (useActionState liefert bei jedem Dispatch ein neues
   // state-Objekt). Direkt im Render-Body angepasst statt in einem Effect.
@@ -46,7 +46,8 @@ export default function ArchiveEntryEditor({
     if (state.success) setEditing(false);
   }
 
-  const displayHtml = state.updatedHtml ?? contentHtml;
+  const displayHtml =
+    state.updatedBio !== undefined ? state.updatedBio : bioHtml;
 
   if (!editing) {
     return (
@@ -56,32 +57,31 @@ export default function ArchiveEntryEditor({
           onClick={() => setEditing(true)}
           className="lcars-switch self-start"
         >
-          Inhalt bearbeiten
+          Biografie bearbeiten
         </button>
 
         {displayHtml ? (
           <div
-            className="mission-body lcars-text"
+            className="char-file-bio lcars-text"
             dangerouslySetInnerHTML={{ __html: displayHtml }}
           />
         ) : (
           <p className="lcars-empty-state">
-            Kein Inhalt zu diesem Eintrag hinterlegt.
+            Keine biografischen Daten im Archiv hinterlegt.
           </p>
         )}
       </div>
     );
   }
 
-  const textareaId = `archive-entry-editor-${entryId}`;
+  const textareaId = `character-bio-${characterId}`;
 
   return (
     <form action={formAction} className="flex flex-col gap-[8px]">
-      <input type="hidden" name="entryId" value={entryId} />
+      <input type="hidden" name="characterId" value={characterId} />
 
       <MarkdownEditor
         id={textareaId}
-        required
         defaultValue={sourceMarkdown}
         isAdminOrGM={isAdminOrGM}
       />

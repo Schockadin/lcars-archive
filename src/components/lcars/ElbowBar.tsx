@@ -27,9 +27,16 @@ export function FooterBar({ appVersion }: { appVersion: string | null }) {
       <div className="w-[25%] h-[var(--lcars-bar-h)] bg-[var(--lcars-purple)] mr-[5px]" />
       <div className="w-[15%] h-[var(--lcars-bar-h)] bg-[var(--lcars-blue)] mr-[5px]" />
       <div className="w-[5%] h-[var(--lcars-bar-h)] bg-[var(--lcars-orange)] mr-[5px]" />
-      <div className="w-[35%] h-[var(--lcars-bar-h)] bg-[var(--lcars-red)] mr-[5px] flex items-center justify-end px-[10px]">
+      {/* Von 35% auf 25% verkleinert, um Platz für den dritten
+          Footer-Menü-Link (Tutorial) zu schaffen — .lcars-footer-menu ist
+          fest auf 10% Breite gesetzt, drei Links brauchen also 30% statt
+          der bisherigen 20%. */}
+      <div className="w-[25%] h-[var(--lcars-bar-h)] bg-[var(--lcars-red)] mr-[5px] flex items-center justify-end px-[10px]">
         {appVersion && <span className="lcars-footer-version">v{appVersion}</span>}
       </div>
+      <Link href="/tutorial" className="lcars-footer-menu mr-[5px]">
+        Tutorial
+      </Link>
       <Link href="/impressum" className="lcars-footer-menu mr-[5px]">
         Impressum
       </Link>

@@ -168,6 +168,15 @@ export default async function ArchiveEntryPage({ params }: Props) {
             currentUserId={null}
             dialogueOpen={false}
           />
+        ) : entry.content ? (
+          // Ohne dialogue_messages (z.B. per Vault-Ingest importierte
+          // Gespräche ohne strukturierte Nachrichten) den rohen Inhalt
+          // zeigen statt fälschlich "Kein Inhalt hinterlegt" — der Text
+          // existiert ja, nur eben nicht als Nachrichten-Thread.
+          <div
+            className="mission-body lcars-text"
+            dangerouslySetInnerHTML={{ __html: entry.content }}
+          />
         ) : (
           <p className="lcars-empty-state">
             Kein Inhalt zu diesem Eintrag hinterlegt.

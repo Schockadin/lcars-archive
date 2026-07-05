@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
-import { markdownToHtml } from "@/lib/markdown";
+import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
 import {
   ArchiveCategory,
@@ -288,14 +288,14 @@ export async function createArchiveEntry(input: {
   tags: string[];
   bodyMarkdown: string;
   ownerUserId: number;
-  // Vorgerendertes HTML überspringt das eigene markdownToHtml() — genutzt
+  // Vorgerendertes HTML überspringt das eigene renderContentHtml() — genutzt
   // vom Opt-in "Automatisch verlinken" (createArchiveEntryAction), siehe
   // createMission in src/lib/missions.ts für dieselbe Begründung.
   contentHtml?: string;
 }): Promise<{ id: number; slug: string }> {
   const slug = await generateUniqueArchiveEntrySlug(input.title);
   const contentHtml =
-    input.contentHtml ?? (await markdownToHtml(input.bodyMarkdown));
+    input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
 
   const metadata: ArchiveMetadata = {
     summary: null,
@@ -371,7 +371,7 @@ export async function updateOwnArchiveEntryContent(
   },
 ): Promise<{ slug: string } | null> {
   const contentHtml =
-    input.contentHtml ?? (await markdownToHtml(input.bodyMarkdown));
+    input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
 
   const rows = await sql<{ slug: string }[]>`
     UPDATE archive_entries
@@ -395,7 +395,7 @@ export async function updateOwnArchiveEntryBody(
   contentHtmlOverride?: string,
 ): Promise<{ slug: string; contentHtml: string } | null> {
   const contentHtml =
-    contentHtmlOverride ?? (await markdownToHtml(bodyMarkdown));
+    contentHtmlOverride ?? (await renderContentHtml(bodyMarkdown));
 
   const rows = await sql<{ slug: string }[]>`
     UPDATE archive_entries

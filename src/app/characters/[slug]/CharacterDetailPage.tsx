@@ -12,12 +12,16 @@ export default function CharakterDetailPage({
   conversationCount,
   viewer,
   owners,
+  sourceMarkdown,
 }: {
   character: Character;
   logs: MissionLogPreview[];
   conversationCount: number;
   viewer: Viewer | null;
   owners: UserWithCharacters[];
+  // Nur gesetzt, wenn viewer === Owner (siehe page.tsx) — Grundlage für den
+  // Inline-Bio-Editor in CharacterHero.tsx.
+  sourceMarkdown: string | null;
 }) {
   usePageMeta(character.name, "characters");
 
@@ -29,6 +33,7 @@ export default function CharakterDetailPage({
         conversationCount={conversationCount}
         viewer={viewer}
         owners={owners}
+        sourceMarkdown={sourceMarkdown}
       />
     </div>
   );

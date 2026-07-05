@@ -7,6 +7,7 @@ import {
 } from "@/components/lcars";
 import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
+import CharacterBioEditor from "./CharacterBioEditor";
 import FollowButtons from "@/components/FollowButtons";
 import OwnerSelect from "@/components/OwnerSelect";
 import AdminActionsMenu from "@/components/AdminActionsMenu";
@@ -141,12 +142,15 @@ export default function CharacterHero({
   conversationCount = 0,
   viewer,
   owners,
+  sourceMarkdown,
 }: {
   character: Character;
   logCount?: number;
   conversationCount?: number;
   viewer: Viewer | null;
   owners: UserWithCharacters[];
+  // Nur gesetzt, wenn viewer === Owner (player_id) — siehe page.tsx.
+  sourceMarkdown: string | null;
 }) {
   const { metadata } = character;
 
@@ -320,7 +324,16 @@ export default function CharacterHero({
               </div>
             )}
 
-            {bio ? (
+            {sourceMarkdown != null ? (
+              <CharacterBioEditor
+                characterId={character.id}
+                bioHtml={bio?.html ?? null}
+                sourceMarkdown={sourceMarkdown}
+                isAdminOrGM={
+                  viewer?.role === "gm" || viewer?.role === "admin"
+                }
+              />
+            ) : bio ? (
               <div
                 className="char-file-bio lcars-text"
                 dangerouslySetInnerHTML={{ __html: bio.html }}

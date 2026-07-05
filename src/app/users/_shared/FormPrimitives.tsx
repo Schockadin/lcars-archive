@@ -15,7 +15,7 @@ export function FormField({
 }: {
   label: string;
   htmlFor: string;
-  hint?: string;
+  hint?: React.ReactNode;
   className?: string;
   children: React.ReactNode;
 }) {

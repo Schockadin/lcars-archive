@@ -157,6 +157,29 @@ export async function sendSubscriptionDigest(input: {
   });
 }
 
+// Direkt beim Anlegen eines neuen Dialogs an den Gesprächspartner verschickt
+// (der dem Anlegen ja nicht zustimmen konnte, siehe createDialogue) — ohne
+// diese Mail bemerkt der Partner ein neues Gespräch sonst erst beim nächsten
+// zufälligen Besuch der eigenen Inhalte.
+export async function sendDialogueStartedEmail(input: {
+  to: string;
+  name: string;
+  fromCharacterName: string;
+  dialogueTitle: string;
+  dialogueUrl: string;
+}): Promise<SendEmailResult> {
+  return sendEmail({
+    to: input.to,
+    subject: `Neues Gespräch: "${input.dialogueTitle}"`,
+    html: `
+      <p>Hallo ${input.name},</p>
+      <p>${input.fromCharacterName} hat ein neues Gespräch "${input.dialogueTitle}" mit dir begonnen:</p>
+      <p><a href="${input.dialogueUrl}">${input.dialogueUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
 // Direkt nach jeder neuen Dialog-Nachricht an den jeweils anderen
 // Teilnehmer verschickt (kein Sammel-Digest wie bei Abos — hier ist jede
 // Nachricht ein einzelnes, sofortiges Ereignis).

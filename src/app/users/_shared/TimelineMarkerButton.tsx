@@ -9,6 +9,27 @@ const inputClass = "rounded-lcars-pill lcars-input w-full";
 // started_at/ended_at und sind kein manueller Marker-Anwendungsfall.
 const CATEGORY_SUGGESTIONS = ["event", "dialogue", "sonstiges"];
 
+// Kalender-Icon für die iconOnly-Variante (Integration in MarkdownEditor.tsx'
+// Formatierungs-Toolbar) — gleiches Inline-SVG-Muster wie die Icons in
+// UserRoleRow.tsx (stroke="currentColor", erbt die Textfarbe des Buttons).
+function CalendarIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.6}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3.5" y="5" width="17" height="16" rx="2" />
+      <path d="M8 3v4M16 3v4M3.5 10h17" />
+      <path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01" />
+    </svg>
+  );
+}
+
 function insertAtCursor(textarea: HTMLTextAreaElement, text: string): void {
   const start = textarea.selectionStart ?? textarea.value.length;
   const end = textarea.selectionEnd ?? textarea.value.length;
@@ -40,8 +61,13 @@ function insertAtCursor(textarea: HTMLTextAreaElement, text: string): void {
 // aufwändige Ref-Weiterreichung durch mehrere Formular-Ebenen.
 export default function TimelineMarkerButton({
   textareaId,
+  iconOnly = false,
 }: {
   textareaId: string;
+  // Kompakte Icon-Variante für die Integration in MarkdownEditor.tsx'
+  // Toolbar (neben den übrigen Formatierungsbuttons) statt der eigenständigen
+  // Textpille oberhalb der Textarea — Modal/Einfüge-Logik bleibt identisch.
+  iconOnly?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState("");
@@ -70,13 +96,25 @@ export default function TimelineMarkerButton({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="lcars-switch self-start"
-      >
-        Zeitleisten-Ereignis einfügen
-      </button>
+      {iconOnly ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="lcars-icon-btn"
+          aria-label="Zeitleisten-Ereignis einfügen"
+          title="Zeitleisten-Ereignis einfügen"
+        >
+          <CalendarIcon />
+        </button>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="lcars-switch self-start"
+        >
+          Zeitleisten-Ereignis einfügen
+        </button>
+      )}
 
       {open &&
         createPortal(

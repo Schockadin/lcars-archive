@@ -4,6 +4,7 @@ import {
   applyAutolinks,
   getAutolinkTargets,
   resolveAutolinkedWikilinks,
+  renderContentHtml,
   type AutolinkExclude,
   type AutolinkMatch,
 } from "@/lib/autolink";
@@ -237,7 +238,7 @@ async function planWikilinkCleanup(
   if ("error" in accessor) return accessor;
 
   const { sourceMd, removed } = stripWikilinks(accessor.sourceMd);
-  const previewHtml = await markdownToHtml(sourceMd);
+  const previewHtml = await renderContentHtml(sourceMd);
   return {
     removed,
     previewHtml,
@@ -290,7 +291,7 @@ async function planTextFormat(
   const { sourceMd, apostropheCount, quoteCount } = formatContentText(
     accessor.sourceMd,
   );
-  const previewHtml = await markdownToHtml(sourceMd);
+  const previewHtml = await renderContentHtml(sourceMd);
   return {
     apostropheCount,
     quoteCount,

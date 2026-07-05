@@ -93,30 +93,37 @@ export async function postDialogueMessageAction(
 
   // Nur wer diesen Dialog abonniert hat (Default beim Anlegen, dort und auf
   // der Dialog-Seite abbestellbar) bekommt eine Mail — statt bedingungslos
-  // den anderen Teilnehmer zu benachrichtigen.
+  // den anderen Teilnehmer zu benachrichtigen. Sequentiell statt Promise.all
+  // (gleiches Muster wie scripts/ingest/notify.ts) — parallele Resend-Aufrufe
+  // riskieren bei mehreren Empfängern gleichzeitig ein Rate-Limit, wodurch
+  // einzelne Mails ohne Fehlermeldung verloren gehen könnten; das Ergebnis
+  // wird jetzt außerdem geloggt statt stillschweigend verworfen.
   const subscribers = await getDialogueSubscribers(entrySlug, session.userId);
   if (subscribers.length > 0) {
     const dialogueUrl = `${await getBaseUrl()}/dialogues/${entrySlug}`;
-    await Promise.all(
-      subscribers.map(async (subscriber) => {
-        if (subscriber.emailNotificationsEnabled) {
-          await sendDialogueMessageEmail({
-            to: subscriber.email,
-            name: subscriber.name,
-            fromCharacterName: participant.characterName,
-            dialogueTitle: entry.title,
-            dialogueUrl,
-          });
+    for (const subscriber of subscribers) {
+      if (subscriber.emailNotificationsEnabled) {
+        const result = await sendDialogueMessageEmail({
+          to: subscriber.email,
+          name: subscriber.name,
+          fromCharacterName: participant.characterName,
+          dialogueTitle: entry.title,
+          dialogueUrl,
+        });
+        if (!result.sent) {
+          console.error(
+            `Dialog-Nachrichten-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+          );
         }
-        if (subscriber.pushNotificationsEnabled) {
-          await sendPushToUser(subscriber.id, {
-            title: `Neue Nachricht in "${entry.title}"`,
-            body: `${participant.characterName} hat geantwortet.`,
-            url: dialogueUrl,
-          });
-        }
-      }),
-    );
+      }
+      if (subscriber.pushNotificationsEnabled) {
+        await sendPushToUser(subscriber.id, {
+          title: `Neue Nachricht in "${entry.title}"`,
+          body: `${participant.characterName} hat geantwortet.`,
+          url: dialogueUrl,
+        });
+      }
+    }
   }
 
   return { success: true };
@@ -264,28 +271,45 @@ export async function completeDialogueAction(
   revalidateArchiveEntry(entrySlug);
   revalidatePath(`/archive/${entrySlug}`);
 
-  // Charakter-Abonnenten benachrichtigen (nur beim Abschließen, nicht bei
-  // Erstellung/pro Antwort — siehe getCharacterSubscribers/
-  // sendCharacterDialogueClosedEmail). Map dedupliziert automatisch, falls
-  // jemand beide Teilnehmer-Charaktere abonniert hat.
+  // Sowohl Charakter-Abonnenten (Fans, die keinem der beiden Teilnehmer
+  // selbst entsprechen müssen) als auch die tatsächlichen Teilnehmer-Spieler
+  // benachrichtigen — letztere unabhängig von einem Charakter-Abo, sonst
+  // bekäme der jeweils andere Teilnehmer nur dann eine Mail, wenn er
+  // zufällig den eigenen oder den Partner-Charakter abonniert hat (Bug: bei
+  // fehlendem Abo bekam so je nach abschließender Person mal niemand, mal
+  // fälschlich der Abschließende selbst eine Mail). Wer selbst abschließt,
+  // muss über die eigene Aktion nicht per Mail informiert werden. Map
+  // dedupliziert automatisch, falls jemand beide Teilnehmer-Charaktere
+  // abonniert hat oder zugleich Teilnehmer ist.
   const recipients = new Map<number, DialogueEmailTarget>();
   for (const p of entry.participants) {
     for (const s of await getCharacterSubscribers(p.slug)) {
       recipients.set(s.id, s);
     }
   }
+  for (const player of await getDialogueParticipantPlayers(
+    entry.participants.map((p) => p.slug),
+  )) {
+    recipients.set(player.id, player);
+  }
+  recipients.delete(session.userId);
   if (recipients.size > 0) {
     const dialogueUrl = `${await getBaseUrl()}/archive/${entrySlug}`;
     const characterNames = entry.participants.map((p) => p.name).join(" & ");
     for (const recipient of recipients.values()) {
       if (recipient.emailNotificationsEnabled) {
-        await sendCharacterDialogueClosedEmail({
+        const result = await sendCharacterDialogueClosedEmail({
           to: recipient.email,
           name: recipient.name,
           characterName: characterNames,
           dialogueTitle: entry.title,
           dialogueUrl,
         });
+        if (!result.sent) {
+          console.error(
+            `Gespräch-abgeschlossen-Mail an ${recipient.email} fehlgeschlagen: ${result.error}`,
+          );
+        }
       }
       if (recipient.pushNotificationsEnabled) {
         await sendPushToUser(recipient.id, {
@@ -329,7 +353,7 @@ export async function deleteDialogueAction(
     return { error: "Dieser Dialog existiert nicht." };
   }
 
-  const deleted = await deleteDialogue(entry.id);
+  const deleted = await deleteDialogue(entry.id, session.userId);
   if (!deleted) {
     return { error: "Löschen fehlgeschlagen." };
   }
@@ -341,11 +365,16 @@ export async function deleteDialogueAction(
   const players = await getDialogueParticipantPlayers(deleted.participantSlugs);
   for (const player of players) {
     if (player.emailNotificationsEnabled) {
-      await sendDialogueDeletedEmail({
+      const result = await sendDialogueDeletedEmail({
         to: player.email,
         name: player.name,
         dialogueTitle: deleted.title,
       });
+      if (!result.sent) {
+        console.error(
+          `Gespräch-gelöscht-Mail an ${player.email} fehlgeschlagen: ${result.error}`,
+        );
+      }
     }
   }
 

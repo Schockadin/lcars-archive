@@ -1,6 +1,7 @@
 import "server-only";
 import sql from "@/lib/db";
 import { markdownToHtml } from "@/lib/markdown";
+import { slugifyBase } from "@/lib/slug";
 
 export type AutolinkTargetType = "character" | "mission" | "archive";
 
@@ -203,7 +204,9 @@ function decodeHtmlEntities(s: string): string {
 // matches) und lösen sie hier sofort auf, damit sie unmittelbar nach dem
 // Speichern funktionieren statt bis zum nächsten Ingest als "nicht
 // gefunden" zu erscheinen. Andere, bereits vorher im Inhalt vorhandene
-// Wikilinks bleiben unangetastet (unverändertes Verhalten).
+// Wikilinks bleiben unangetastet (unverändertes Verhalten). Für ALLE
+// anderen [[Ziel]]-Wikilinks (manuell getippt, ohne Autolinking-Opt-in)
+// siehe resolveAllWikilinks() weiter unten.
 export function resolveAutolinkedWikilinks(
   html: string,
   matches: AutolinkMatch[],
@@ -221,6 +224,81 @@ export function resolveAutolinkedWikilinks(
       return href ? `<a href="${href}" class="lcars-wikilink">` : full;
     },
   );
+}
+
+// Vollständiger Wikilink-Match (Text dazwischen), nicht nur das öffnende Tag
+// wie oben — hier auch für den "nicht gefunden"-Fall nötig, der den ganzen
+// Link durch einen Platzhalter-<span> ersetzt (siehe unten).
+const WIKILINK_TAG_RE = /<a href="wikilink:\/\/([^"]*)">([\s\S]*?)<\/a>/g;
+
+// Fallback für Ziele wie [[T'Mok]], die nicht dem Titel/Namen entsprechen,
+// aber dem Slug (t-mok) — analog dem Fallback in scripts/ingest/wikilinks.ts,
+// hier mit slugifyBase() aus src/lib/slug.ts (dieselbe Funktion, die App-
+// seitig auch tatsächlich die Slugs erzeugt).
+function slugifyForWikilinkFallback(value: string): string {
+  return slugifyBase(value);
+}
+
+// Löst [[Ziel]]-Wikilinks (siehe remarkWikiLinks in lib/markdown.ts) IMMER
+// auf, unabhängig vom Opt-in "Automatisch verlinken" — anders als
+// resolveAutolinkedWikilinks oben, das nur die von EINEM Autolinking-Durchlauf
+// selbst erzeugten Links kennt (aus dessen matches-Liste). Wer manuell
+// [[Ziel]] in einen Text tippt (ohne die Checkbox zu aktivieren), bekam
+// bisher einen dauerhaft toten <a href="wikilink://Ziel">-Link, der erst
+// beim nächsten Vault-Ingest aufgelöst worden wäre — der aber für
+// App-erstellte Inhalte nie stattfindet. Sucht deshalb hier direkt in der
+// DB nach ALLEN Zielen (nicht nur öffentlichen wie getAutolinkTargets, siehe
+// dort) — ein manuell gesetzter Wikilink ist eine bewusste Nutzer-Aktion,
+// keine automatische Erkennung, daher dieselbe Auflösen-gegen-alles-
+// Konvention wie scripts/ingest/wikilinks.ts. Nicht auflösbare Ziele werden
+// wie beim Ingest als "nicht gefunden"-Platzhalter markiert statt als toter
+// Link stehen zu bleiben.
+export async function resolveAllWikilinks(html: string): Promise<string> {
+  if (!html.includes("wikilink://")) return html;
+
+  const [characters, missions, archiveEntries] = await Promise.all([
+    sql<{ slug: string; name: string }[]>`SELECT slug, name FROM characters`,
+    sql<{ slug: string; title: string }[]>`SELECT slug, title FROM missions`,
+    sql<{ slug: string; title: string }[]>`SELECT slug, title FROM archive_entries`,
+  ]);
+
+  // Priorität bei Titel-/Slug-Kollisionen: Charaktere > Archiv-Einträge >
+  // Missionen — dieselbe Reihenfolge wie TYPE_PRIORITY oben/beim Ingest.
+  const hrefByTitle = new Map<string, string>();
+  const hrefBySlug = new Map<string, string>();
+  for (const m of missions) {
+    hrefByTitle.set(normalizeWikilinkTarget(m.title), `/missions/${m.slug}`);
+    hrefBySlug.set(m.slug, `/missions/${m.slug}`);
+  }
+  for (const a of archiveEntries) {
+    hrefByTitle.set(normalizeWikilinkTarget(a.title), `/archive/${a.slug}`);
+    hrefBySlug.set(a.slug, `/archive/${a.slug}`);
+  }
+  for (const c of characters) {
+    hrefByTitle.set(normalizeWikilinkTarget(c.name), `/characters/${c.slug}`);
+    hrefBySlug.set(c.slug, `/characters/${c.slug}`);
+  }
+
+  return html.replace(WIKILINK_TAG_RE, (full, rawTarget: string, text: string) => {
+    const target = decodeHtmlEntities(decodeURIComponent(rawTarget));
+    const href =
+      hrefByTitle.get(normalizeWikilinkTarget(target)) ??
+      hrefBySlug.get(slugifyForWikilinkFallback(target));
+    if (!href) {
+      return `<span class="lcars-wikilink lcars-wikilink--missing" title="Kein Eintrag gefunden: ${target}">${text}</span>`;
+    }
+    return `<a href="${href}" class="lcars-wikilink">${text}</a>`;
+  });
+}
+
+// Rendert Markdown zu HTML UND löst darin enthaltene Wikilinks auf — der
+// Standard-Rendering-Pfad für alle Content-Schreibaktionen, die nicht schon
+// über das Autolinking-Opt-in ein fertig aufgelöstes HTML mitbringen (siehe
+// contentHtml/bodyHtml/bioHtml-Parameter in missions.ts/archive.ts/
+// characters.ts). Ersetzt die bisherigen nackten markdownToHtml()-Aufrufe
+// dort, die [[Ziel]]-Wikilinks sonst dauerhaft unaufgelöst gelassen hätten.
+export async function renderContentHtml(bodyMarkdown: string): Promise<string> {
+  return resolveAllWikilinks(await markdownToHtml(bodyMarkdown));
 }
 
 // Für das Opt-in "Automatisch verlinken" unter den Content-Textareas (New/
