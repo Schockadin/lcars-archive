@@ -65,7 +65,7 @@ export default function DialogueList({
         )}
 
         <LcarsSwitch
-          className="flex gap-[5px] w-[50%] mb-[16px]"
+          className="flex gap-[5px] w-full sm:w-[50%] mb-[16px]"
           options={[
             { key: "asc", label: "Älteste zuerst" },
             { key: "desc", label: "Neueste zuerst" },
