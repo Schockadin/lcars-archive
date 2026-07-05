@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
-import { markdownToHtml } from "@/lib/markdown";
+import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
 import { Character, CharacterMetadata } from "@/types/character";
 import { MissionLogPreview } from "@/types/missionLog";
@@ -304,14 +304,14 @@ export async function createCharacter(input: {
   aliases: string[];
   bodyMarkdown: string;
   ownerUserId: number;
-  // Vorgerendertes HTML überspringt das eigene markdownToHtml() — genutzt
+  // Vorgerendertes HTML überspringt das eigene renderContentHtml() — genutzt
   // vom Opt-in "Automatisch verlinken", siehe createArchiveEntry in
   // src/lib/archive.ts für dieselbe Begründung.
   bioHtml?: string;
 }): Promise<{ id: number; slug: string }> {
   const slug = await generateUniqueCharacterSlug(input.name);
   const trimmedBody = input.bodyMarkdown.trim();
-  const bio = trimmedBody ? (input.bioHtml ?? (await markdownToHtml(trimmedBody))) : null;
+  const bio = trimmedBody ? (input.bioHtml ?? (await renderContentHtml(trimmedBody))) : null;
   const sourceMd = trimmedBody || null;
 
   const metadata = {
@@ -425,7 +425,7 @@ export async function updateOwnCharacterContent(
   },
 ): Promise<{ slug: string } | null> {
   const trimmedBody = input.bodyMarkdown.trim();
-  const bio = trimmedBody ? (input.bioHtml ?? (await markdownToHtml(trimmedBody))) : null;
+  const bio = trimmedBody ? (input.bioHtml ?? (await renderContentHtml(trimmedBody))) : null;
   const sourceMd = trimmedBody || null;
 
   const metadataPatch = {
@@ -460,7 +460,7 @@ export async function updateOwnCharacterBio(
   bioHtmlOverride?: string,
 ): Promise<{ slug: string; bio: string | null } | null> {
   const trimmedBody = bodyMarkdown.trim();
-  const bio = trimmedBody ? (bioHtmlOverride ?? (await markdownToHtml(trimmedBody))) : null;
+  const bio = trimmedBody ? (bioHtmlOverride ?? (await renderContentHtml(trimmedBody))) : null;
   const sourceMd = trimmedBody || null;
 
   const rows = await sql<{ slug: string }[]>`

@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
-import { markdownToHtml } from "@/lib/markdown";
+import { renderContentHtml } from "@/lib/autolink";
 import {
   LogNavItem,
   LogNavNeighbors,
@@ -141,15 +141,15 @@ export async function createMission(input: {
   tags: string[];
   bodyMarkdown: string;
   ownerUserId: number;
-  // Vorgerendertes HTML überspringt das eigene markdownToHtml() — genutzt
+  // Vorgerendertes HTML überspringt das eigene renderContentHtml() — genutzt
   // vom Opt-in "Automatisch verlinken" (createMissionAction), das den
   // Markdown-Text vorab per autoLinkMarkdown() transformiert UND rendert,
   // damit frisch gesetzte Wikilinks sofort aufgelöst sind (siehe
   // resolveAutolinkedWikilinks in src/lib/autolink.ts) statt beim eigenen
-  // Rendern hier erneut als unaufgelöst "wikilink://" zu erscheinen.
+  // Rendern hier erneut aufgelöst zu werden (harmlos, aber unnötig).
   bodyHtml?: string;
 }): Promise<{ id: number; slug: string }> {
-  const bodyHtml = input.bodyHtml ?? (await markdownToHtml(input.bodyMarkdown));
+  const bodyHtml = input.bodyHtml ?? (await renderContentHtml(input.bodyMarkdown));
 
   const rows = await sql<{ id: number; slug: string }[]>`
     INSERT INTO missions (
@@ -194,7 +194,7 @@ export async function updateMissionContent(
     bodyHtml?: string;
   },
 ): Promise<UpdateMissionResult | null> {
-  const bodyHtml = input.bodyHtml ?? (await markdownToHtml(input.bodyMarkdown));
+  const bodyHtml = input.bodyHtml ?? (await renderContentHtml(input.bodyMarkdown));
 
   const rows = await sql<UpdateMissionResult[]>`
     UPDATE missions m
@@ -227,7 +227,7 @@ export async function updateMissionSynopsis(
   missionId: number,
   bodyMarkdown: string,
 ): Promise<UpdateMissionSynopsisResult | null> {
-  const bodyHtml = await markdownToHtml(bodyMarkdown);
+  const bodyHtml = await renderContentHtml(bodyMarkdown);
 
   const rows = await sql<
     (Omit<UpdateMissionSynopsisResult, "metadata"> & {
@@ -318,7 +318,7 @@ export async function createMissionLog(input: {
   contentHtml?: string;
 }): Promise<{ id: number; slug: string }> {
   const contentHtml =
-    input.contentHtml ?? (await markdownToHtml(input.bodyMarkdown));
+    input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
 
   const rows = await sql<{ id: number; slug: string }[]>`
     INSERT INTO mission_logs (
@@ -568,7 +568,7 @@ export async function updateMissionLogContent(
   ownerSlug: string | null;
 } | null> {
   const contentHtml =
-    input.contentHtml ?? (await markdownToHtml(input.bodyMarkdown));
+    input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
 
   const rows = await sql<
     {
