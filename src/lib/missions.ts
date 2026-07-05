@@ -95,7 +95,9 @@ export async function getMissionBySlug(
 // (/users/[id]/missions/[missionId]/edit), wo die ID aus der Route kommt
 // statt aus dem Slug. Bewusst ohne Cache (wie getOwnMissionLogForEdit):
 // das Formular soll immer den aktuellen Stand zeigen.
-export async function getMissionById(id: number): Promise<MissionDetail | null> {
+export async function getMissionById(
+  id: number,
+): Promise<MissionDetail | null> {
   const rows = await sql<MissionDetail[]>`
     SELECT
       id,
@@ -578,6 +580,35 @@ export async function deleteMissionLog(
     `;
   }
   return row;
+}
+
+// Löscht eine Mission inkl. aller zugehörigen Mission-Logs (ON DELETE CASCADE,
+// siehe scripts/schema.sql) und räumt deren timeline_events mit auf (nicht
+// per FK verknüpft, gleiches Prinzip wie deleteMissionLog oben — Missionen
+// selbst erzeugen keine eigenen timeline_events). Anders als deleteMissionLog
+// kein Owner-Scoping: nur für admin/gm aufrufbar, siehe deleteMissionAction.
+export async function deleteMission(
+  missionId: number,
+): Promise<{ slug: string; logSlugs: string[] } | null> {
+  const logRows = await sql<{ slug: string }[]>`
+    SELECT slug FROM mission_logs WHERE mission_id = ${missionId}
+  `;
+
+  const rows = await sql<{ slug: string }[]>`
+    DELETE FROM missions WHERE id = ${missionId} RETURNING slug
+  `;
+  const row = rows[0] ?? null;
+  if (!row) return null;
+
+  const logSlugs = logRows.map((l) => l.slug);
+  if (logSlugs.length > 0) {
+    await sql`
+      DELETE FROM timeline_events
+      WHERE source_type = 'mission_log' AND source_slug = ANY(${logSlugs})
+    `;
+  }
+
+  return { slug: row.slug, logSlugs };
 }
 
 // Alle Mission-/Log-Pfade für die Sitemap und generateStaticParams. Nur
