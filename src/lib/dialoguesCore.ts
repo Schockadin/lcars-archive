@@ -113,9 +113,20 @@ export interface CreateDialogueInput {
 // unverändert genauso rendert. content bleibt '' und source_md NULL
 // (Unterscheidungsmerkmal "kommt nicht aus dem Vault"); die eigentliche
 // erste Nachricht landet in dialogue_messages.
+export interface CreateDialogueResult {
+  slug: string;
+  // null, falls der Partner-Charakter (noch) keinem Spieler zugeordnet ist —
+  // in der Praxis nie der Fall, da getCharactersWithPlayers (Partner-Picker
+  // im Formular) nur Charaktere mit player_id anbietet; defensiv trotzdem
+  // nullable, da die Action-Ebene den ownCharacterId/partnerCharacterId nie
+  // blind vertraut (siehe createDialogueAction).
+  partner: DialogueEmailTarget | null;
+  fromCharacterName: string;
+}
+
 export async function createDialogue(
   input: CreateDialogueInput,
-): Promise<{ slug: string }> {
+): Promise<CreateDialogueResult> {
   const slug = await generateUniqueArchiveEntrySlug(input.title);
 
   return sql.begin(async (tx) => {
@@ -123,9 +134,23 @@ export async function createDialogue(
       SELECT slug, name FROM characters WHERE id = ${input.ownCharacterId}
     `;
     const [partnerChar] = await tx<
-      { slug: string; name: string; player_id: number | null }[]
+      {
+        slug: string;
+        name: string;
+        player_id: number | null;
+        player_email: string | null;
+        player_name: string | null;
+        player_email_notifications_enabled: boolean | null;
+        player_push_notifications_enabled: boolean | null;
+      }[]
     >`
-      SELECT slug, name, player_id FROM characters WHERE id = ${input.partnerCharacterId}
+      SELECT c.slug, c.name, c.player_id,
+             u.email AS player_email, u.name AS player_name,
+             u.email_notifications_enabled AS player_email_notifications_enabled,
+             u.push_notifications_enabled AS player_push_notifications_enabled
+      FROM characters c
+      LEFT JOIN users u ON u.id = c.player_id
+      WHERE c.id = ${input.partnerCharacterId}
     `;
     if (!ownChar || !partnerChar) {
       throw new Error("Charakter nicht gefunden.");
@@ -202,7 +227,24 @@ export async function createDialogue(
         `;
       }
 
-      return { slug };
+      return {
+        slug,
+        partner:
+          partnerChar.player_id != null &&
+          partnerChar.player_email != null &&
+          partnerChar.player_name != null
+            ? {
+                id: partnerChar.player_id,
+                email: partnerChar.player_email,
+                name: partnerChar.player_name,
+                emailNotificationsEnabled:
+                  partnerChar.player_email_notifications_enabled ?? false,
+                pushNotificationsEnabled:
+                  partnerChar.player_push_notifications_enabled ?? false,
+              }
+            : null,
+        fromCharacterName: ownChar.name,
+      };
     } catch (err) {
       if (isUniqueViolation(err)) {
         throw new DialogueSlugCollisionError(

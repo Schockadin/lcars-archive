@@ -5,8 +5,10 @@ import { requireSelfOrGM } from "./dal";
 import { hasPassword } from "@/lib/users";
 import { getBookmarkedContent, getSubscribedContent } from "@/lib/follows";
 import { getRecentActivity } from "@/lib/recentActivity";
+import { getDialoguesForUser } from "@/lib/dialogues";
 import FollowedContentSection from "./FollowedContentSection";
 import RecentActivity from "./RecentActivity";
+import OpenDialoguesSection from "./OpenDialoguesSection";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 
@@ -34,15 +36,21 @@ export default async function UserPage({
   // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
   // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
   // innerhalb des User-Bereichs spürbar auf.
-  const [hasPasswordSet, bookmarks, subscriptions, recentActivity] =
-    await Promise.all([
-      isSelf ? hasPassword(target.id) : Promise.resolve(true),
-      isSelf ? getBookmarkedContent(target.id) : Promise.resolve([]),
-      isSelf ? getSubscribedContent(target.id) : Promise.resolve([]),
-      isSelf
-        ? getRecentActivity(target.id, target.previous_login_at)
-        : Promise.resolve({ created: [], updated: [] }),
-    ]);
+  const [
+    hasPasswordSet,
+    bookmarks,
+    subscriptions,
+    recentActivity,
+    openDialogues,
+  ] = await Promise.all([
+    isSelf ? hasPassword(target.id) : Promise.resolve(true),
+    isSelf ? getBookmarkedContent(target.id) : Promise.resolve([]),
+    isSelf ? getSubscribedContent(target.id) : Promise.resolve([]),
+    isSelf
+      ? getRecentActivity(target.id, target.previous_login_at)
+      : Promise.resolve({ created: [], updated: [] }),
+    isSelf ? getDialoguesForUser(target.id, "open") : Promise.resolve([]),
+  ]);
   const needsPassword = isSelf && !hasPasswordSet;
 
   return (
@@ -77,6 +85,8 @@ export default async function UserPage({
               firstVisit={target.previous_login_at === null}
             />
           )}
+
+          {isSelf && <OpenDialoguesSection items={openDialogues} />}
 
           {isSelf && (
             <FollowedContentSection

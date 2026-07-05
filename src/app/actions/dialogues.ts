@@ -271,16 +271,28 @@ export async function completeDialogueAction(
   revalidateArchiveEntry(entrySlug);
   revalidatePath(`/archive/${entrySlug}`);
 
-  // Charakter-Abonnenten benachrichtigen (nur beim Abschließen, nicht bei
-  // Erstellung/pro Antwort — siehe getCharacterSubscribers/
-  // sendCharacterDialogueClosedEmail). Map dedupliziert automatisch, falls
-  // jemand beide Teilnehmer-Charaktere abonniert hat.
+  // Sowohl Charakter-Abonnenten (Fans, die keinem der beiden Teilnehmer
+  // selbst entsprechen müssen) als auch die tatsächlichen Teilnehmer-Spieler
+  // benachrichtigen — letztere unabhängig von einem Charakter-Abo, sonst
+  // bekäme der jeweils andere Teilnehmer nur dann eine Mail, wenn er
+  // zufällig den eigenen oder den Partner-Charakter abonniert hat (Bug: bei
+  // fehlendem Abo bekam so je nach abschließender Person mal niemand, mal
+  // fälschlich der Abschließende selbst eine Mail). Wer selbst abschließt,
+  // muss über die eigene Aktion nicht per Mail informiert werden. Map
+  // dedupliziert automatisch, falls jemand beide Teilnehmer-Charaktere
+  // abonniert hat oder zugleich Teilnehmer ist.
   const recipients = new Map<number, DialogueEmailTarget>();
   for (const p of entry.participants) {
     for (const s of await getCharacterSubscribers(p.slug)) {
       recipients.set(s.id, s);
     }
   }
+  for (const player of await getDialogueParticipantPlayers(
+    entry.participants.map((p) => p.slug),
+  )) {
+    recipients.set(player.id, player);
+  }
+  recipients.delete(session.userId);
   if (recipients.size > 0) {
     const dialogueUrl = `${await getBaseUrl()}/archive/${entrySlug}`;
     const characterNames = entry.participants.map((p) => p.name).join(" & ");

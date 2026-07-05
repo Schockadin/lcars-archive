@@ -6,6 +6,9 @@ import {
   getCharactersWithPlayers,
 } from "@/lib/characters";
 import { DialogueSlugCollisionError, createDialogue } from "@/lib/dialogues";
+import { sendDialogueStartedEmail } from "@/lib/mail";
+import { sendPushToUser } from "@/lib/push";
+import { getBaseUrl } from "@/lib/http";
 
 export interface CreateDialogueState {
   error?: string;
@@ -74,6 +77,8 @@ export async function createDialogueAction(
   const subscribeSelf = formData.get("subscribeSelf") === "on";
 
   let slug: string;
+  let partner: Awaited<ReturnType<typeof createDialogue>>["partner"];
+  let fromCharacterName: string;
   try {
     const result = await createDialogue({
       title,
@@ -88,11 +93,43 @@ export async function createDialogueAction(
       subscribeSelf,
     });
     slug = result.slug;
+    partner = result.partner;
+    fromCharacterName = result.fromCharacterName;
   } catch (err) {
     if (err instanceof DialogueSlugCollisionError) {
       return { error: err.message };
     }
     throw err;
+  }
+
+  // Der Gesprächspartner konnte dem Anlegen nicht zustimmen — anders als bei
+  // neuen Nachrichten (postDialogueMessageAction) ist er hier noch nicht
+  // "Abonnent" im Sinne einer eigenen Wahl, bekommt die Info-Mail also immer
+  // (kein Opt-in nötig), sofern er E-Mail-Benachrichtigungen grundsätzlich
+  // aktiviert hat.
+  if (partner) {
+    const dialogueUrl = `${await getBaseUrl()}/dialogues/${slug}`;
+    if (partner.emailNotificationsEnabled) {
+      const result = await sendDialogueStartedEmail({
+        to: partner.email,
+        name: partner.name,
+        fromCharacterName,
+        dialogueTitle: title,
+        dialogueUrl,
+      });
+      if (!result.sent) {
+        console.error(
+          `Gespräch-begonnen-Mail an ${partner.email} fehlgeschlagen: ${result.error}`,
+        );
+      }
+    }
+    if (partner.pushNotificationsEnabled) {
+      await sendPushToUser(partner.id, {
+        title: `Neues Gespräch: "${title}"`,
+        body: `${fromCharacterName} hat ein Gespräch mit dir begonnen.`,
+        url: dialogueUrl,
+      });
+    }
   }
 
   redirect(`/dialogues/${slug}`);
