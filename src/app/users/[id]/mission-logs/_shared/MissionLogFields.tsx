@@ -1,4 +1,6 @@
 import { FormField } from "../../../_shared/FormPrimitives";
+import TimelineMarkerButton from "../../../_shared/TimelineMarkerButton";
+import AutoLinkCheckbox from "../../../_shared/AutoLinkCheckbox";
 
 export const missionLogInputClass =
   "rounded-lcars-pill lcars-input w-full sm:w-[400px]";
@@ -40,9 +42,15 @@ export interface MissionLogDateBodyDefaults {
 export function MissionLogDateBodyFields({
   idPrefix,
   defaults = {},
+  isAdminOrGM = false,
 }: {
   idPrefix: string;
   defaults?: MissionLogDateBodyDefaults;
+  // Anders als MissionFields.tsx (immer gm/admin-gated) dürfen Missionslogs
+  // von jedem User mit eigenem Charakter angelegt werden — der
+  // Timeline-Marker-Button muss deshalb explizit auf die tatsächliche Rolle
+  // geprüft werden statt implizit vorausgesetzt zu werden.
+  isAdminOrGM?: boolean;
 }) {
   return (
     <>
@@ -55,6 +63,8 @@ export function MissionLogDateBodyFields({
           className={missionLogInputClass}
         />
       </FormField>
+
+      {isAdminOrGM && <TimelineMarkerButton textareaId={`${idPrefix}-body`} />}
 
       <FormField
         label="Log-Text"
@@ -69,6 +79,8 @@ export function MissionLogDateBodyFields({
           className={missionLogTextAreaClass}
         />
       </FormField>
+
+      <AutoLinkCheckbox idPrefix={idPrefix} />
     </>
   );
 }

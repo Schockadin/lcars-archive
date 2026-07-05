@@ -16,6 +16,11 @@ import { getDialogueMessages } from "@/lib/dialogues";
 import { getViewer, canView } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import OwnerSelect from "@/components/OwnerSelect";
+import AdminActionsMenu from "@/components/AdminActionsMenu";
+import AutolinkButton from "@/components/AutolinkButton";
+import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
+import FormatTextButton from "@/components/FormatTextButton";
+import ArchiveEntryEditor from "./ArchiveEntryEditor";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -108,12 +113,22 @@ export default async function ArchiveEntryPage({ params }: Props) {
       <LcarsReadingModeToggle />
 
       {viewer?.role === "admin" && entry.category !== "dialogue" && (
-        <OwnerSelect
-          contentType="archive_entry"
-          id={entry.id}
-          initialOwnerId={entry.ownerUserId}
-          users={owners.map((u) => ({ id: u.id, name: u.name }))}
-        />
+        <div className="flex flex-col gap-[10px] mb-[10px]">
+          <OwnerSelect
+            contentType="archive_entry"
+            id={entry.id}
+            initialOwnerId={entry.ownerUserId}
+            users={owners.map((u) => ({ id: u.id, name: u.name }))}
+          />
+          <AdminActionsMenu>
+            <AutolinkButton contentType="archiveEntry" slug={entry.slug} />
+            <RemoveWikilinksButton
+              contentType="archiveEntry"
+              slug={entry.slug}
+            />
+            <FormatTextButton contentType="archiveEntry" slug={entry.slug} />
+          </AdminActionsMenu>
+        </div>
       )}
 
       {entry.category === "dialogue" ? (
@@ -145,12 +160,25 @@ export default async function ArchiveEntryPage({ params }: Props) {
           </div>
         )}
 
-      {entry.category === "dialogue" && messages.length > 0 ? (
-        <DialogueThread
-          messages={messages}
-          participants={entry.metadata.participants}
-          currentUserId={null}
-          dialogueOpen={false}
+      {entry.category === "dialogue" ? (
+        messages.length > 0 ? (
+          <DialogueThread
+            messages={messages}
+            participants={entry.metadata.participants}
+            currentUserId={null}
+            dialogueOpen={false}
+          />
+        ) : (
+          <p className="lcars-empty-state">
+            Kein Inhalt zu diesem Eintrag hinterlegt.
+          </p>
+        )
+      ) : viewer && viewer.userId === entry.ownerUserId ? (
+        <ArchiveEntryEditor
+          entryId={entry.id}
+          contentHtml={entry.content}
+          sourceMarkdown={entry.sourceMarkdown}
+          isAdminOrGM={viewer.role === "gm" || viewer.role === "admin"}
         />
       ) : entry.content ? (
         <div

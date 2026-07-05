@@ -6,6 +6,10 @@ import { listAllUsers } from "@/lib/users";
 import CrumbLabel from "@/components/CrumbLabel";
 import LogDetail from "../../LogDetail";
 import OwnerSelect from "@/components/OwnerSelect";
+import AdminActionsMenu from "@/components/AdminActionsMenu";
+import AutolinkButton from "@/components/AutolinkButton";
+import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
+import FormatTextButton from "@/components/FormatTextButton";
 
 interface Props {
   params: Promise<{ missionSlug: string; logSlug: string }>;
@@ -61,12 +65,19 @@ export default async function LogPage({ params }: Props) {
     <>
       <CrumbLabel slug={log.slug} label={log.title} />
       {viewer?.role === "admin" && (
-        <OwnerSelect
-          contentType="mission_log"
-          id={log.id}
-          initialOwnerId={log.ownerUserId}
-          users={owners.map((u) => ({ id: u.id, name: u.name }))}
-        />
+        <div className="flex flex-col gap-[10px] mb-[10px]">
+          <OwnerSelect
+            contentType="mission_log"
+            id={log.id}
+            initialOwnerId={log.ownerUserId}
+            users={owners.map((u) => ({ id: u.id, name: u.name }))}
+          />
+          <AdminActionsMenu>
+            <AutolinkButton contentType="missionLog" slug={log.slug} />
+            <RemoveWikilinksButton contentType="missionLog" slug={log.slug} />
+            <FormatTextButton contentType="missionLog" slug={log.slug} />
+          </AdminActionsMenu>
+        </div>
       )}
       <LogDetail log={log} nav={nav} />
     </>

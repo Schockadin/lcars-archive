@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
 import { verifySession } from "@/lib/dal";
 import { getOwnMissionLogForEdit } from "@/lib/missions";
+import { getUserById } from "@/lib/users";
 import EditMissionLogForm from "./EditMissionLogForm";
 
 export const metadata: Metadata = {
@@ -23,7 +24,10 @@ export default async function EditMissionLogPage({
     redirect(`/users/${session.userId}`);
   }
 
-  const log = await getOwnMissionLogForEdit(session.userId, Number(logId));
+  const [log, viewer] = await Promise.all([
+    getOwnMissionLogForEdit(session.userId, Number(logId)),
+    getUserById(session.userId),
+  ]);
   if (!log) {
     redirect(`/users/${session.userId}/content`);
   }
@@ -38,7 +42,11 @@ export default async function EditMissionLogPage({
           {log.sessionNr != null ? ` · Session ${log.sessionNr}` : ""}
         </p>
 
-        <EditMissionLogForm userId={userId} log={log} />
+        <EditMissionLogForm
+          userId={userId}
+          log={log}
+          isAdminOrGM={viewer?.role === "gm" || viewer?.role === "admin"}
+        />
       </article>
     </>
   );

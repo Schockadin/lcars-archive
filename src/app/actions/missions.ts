@@ -1,8 +1,13 @@
 "use server";
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
-import { updateMissionSynopsis } from "@/lib/missions";
+import {
+  updateMissionSynopsis,
+  updateMissionSynopsisWithHtml,
+  getMissionById,
+} from "@/lib/missions";
 import { revalidateMission } from "@/lib/revalidate";
+import { autoLinkMarkdown } from "@/lib/autolink";
 
 export interface MissionSynopsisEditState {
   error?: string;
@@ -34,6 +39,29 @@ export async function updateMissionSynopsisAction(
 
   const bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte eine Zusammenfassung schreiben." };
+
+  // Opt-in "Automatisch verlinken" (AutoLinkCheckbox.tsx) — die Mission
+  // selbst muss dabei als Autolinking-Ziel ausgeschlossen werden, dafür
+  // wird ihr aktueller Slug vorab geladen. updateMissionSynopsisWithHtml
+  // (statt updateMissionSynopsis) übernimmt dabei das schon per
+  // autoLinkMarkdown() gerenderte + aufgelöste HTML unverändert, statt es
+  // ein zweites Mal (und ohne Wikilink-Auflösung) selbst zu rendern.
+  if (formData.get("autoLink") === "on") {
+    const mission = await getMissionById(missionId);
+    if (!mission) return { error: "Mission nicht gefunden." };
+
+    const linked = await autoLinkMarkdown(bodyMarkdown, {
+      type: "mission",
+      slug: mission.slug,
+    });
+    await updateMissionSynopsisWithHtml(
+      missionId,
+      linked.sourceMd,
+      linked.html,
+    );
+    revalidateMission(mission.slug);
+    return { success: true, updatedHtml: linked.html };
+  }
 
   const result = await updateMissionSynopsis(missionId, bodyMarkdown);
   if (!result) return { error: "Mission nicht gefunden." };

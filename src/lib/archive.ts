@@ -1,6 +1,8 @@
 import { unstable_cache } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
+import { markdownToHtml } from "@/lib/markdown";
+import { slugifyBase } from "@/lib/slug";
 import {
   ArchiveCategory,
   ArchiveEntryDetail,
@@ -81,7 +83,8 @@ export async function getArchiveEntryBySlug(
           dialogue_open,
           visibility,
           owner_user_id AS "ownerUserId",
-          updated_at::text AS updated_at
+          updated_at::text AS updated_at,
+          COALESCE(source_md, '') AS "sourceMarkdown"
         FROM archive_entries
         WHERE slug = ${slug}
         LIMIT 1
@@ -220,3 +223,186 @@ export const getAllArchivePaths = unstable_cache(
   ["getAllArchivePaths", "v4"],
   { tags: [cacheTags.archive] },
 );
+
+// Für die Admin-Action "Autolinking" (src/app/actions/autolink.ts) — braucht
+// id + rohen Markdown-Quelltext, unabhängig von Sichtbarkeit/Owner.
+// Gespräche (category = 'dialogue') werden ausgeschlossen — deren Inhalt
+// besteht aus Chat-Nachrichten (dialogue_messages), nicht aus source_md.
+export async function getArchiveEntrySourceBySlug(
+  slug: string,
+): Promise<{ id: number; sourceMarkdown: string | null } | null> {
+  const rows = await sql<{ id: number; sourceMarkdown: string | null }[]>`
+    SELECT id, source_md AS "sourceMarkdown"
+    FROM archive_entries
+    WHERE slug = ${slug} AND category != 'dialogue'
+  `;
+  return rows[0] ?? null;
+}
+
+export async function updateArchiveEntryContent(
+  archiveEntryId: number,
+  bodyMarkdown: string,
+  contentHtml: string,
+): Promise<void> {
+  await sql`
+    UPDATE archive_entries
+    SET content = ${contentHtml}, source_md = ${bodyMarkdown}, updated_at = NOW()
+    WHERE id = ${archiveEntryId}
+  `;
+}
+
+// Probiert slugifyBase(title), "${base}-2", "${base}-3", … bis ein Slug in
+// archive_entries frei ist. Ursprünglich dialog-spezifisch (die Prüfung lief
+// aber schon immer gegen archive_entries, da Dialoge selbst welche sind) —
+// hierher verschoben und generalisiert, seitdem auch für
+// createArchiveEntry unten genutzt. createDialogue (dialoguesCore.ts) fängt
+// trotzdem Postgres-Code 23505 ab (kleines TOCTOU-Restrisiko bei
+// zeitgleichen identischen Titeln).
+export async function generateUniqueArchiveEntrySlug(
+  title: string,
+): Promise<string> {
+  const base = slugifyBase(title);
+  let candidate = base;
+  let n = 2;
+
+  for (;;) {
+    const [row] = await sql<{ exists: boolean }[]>`
+      SELECT EXISTS(SELECT 1 FROM archive_entries WHERE slug = ${candidate}) AS exists
+    `;
+    if (!row.exists) return candidate;
+    candidate = `${base}-${n}`;
+    n += 1;
+  }
+}
+
+// Legt einen neuen, eigenen Archiv-Eintrag an (User-Feature: jeder
+// eingeloggte User darf Archiv-Einträge anlegen, siehe
+// /users/[id]/archive/new/actions.ts). Kategorie 'dialogue' ausgeschlossen —
+// Dialoge haben ihr eigenes Anlage-Formular (createDialogue in
+// dialoguesCore.ts) mit eigenem Daten-/Teilnehmer-Modell. visibility bleibt
+// unangegeben → DB-Default 'public' (gleiche Konvention wie createMission/
+// createMissionLog in src/lib/missions.ts).
+export async function createArchiveEntry(input: {
+  title: string;
+  category: Exclude<ArchiveCategory, "dialogue">;
+  tags: string[];
+  bodyMarkdown: string;
+  ownerUserId: number;
+  // Vorgerendertes HTML überspringt das eigene markdownToHtml() — genutzt
+  // vom Opt-in "Automatisch verlinken" (createArchiveEntryAction), siehe
+  // createMission in src/lib/missions.ts für dieselbe Begründung.
+  contentHtml?: string;
+}): Promise<{ id: number; slug: string }> {
+  const slug = await generateUniqueArchiveEntrySlug(input.title);
+  const contentHtml =
+    input.contentHtml ?? (await markdownToHtml(input.bodyMarkdown));
+
+  const metadata: ArchiveMetadata = {
+    summary: null,
+    attributes: [],
+    characters: [],
+    missions: [],
+    setting: null,
+    logDate: null,
+    participants: [],
+    location: null,
+  };
+
+  const [row] = await sql<{ id: number; slug: string }[]>`
+    INSERT INTO archive_entries (
+      slug, title, category, content, tags, metadata,
+      source_md, frontmatter, owner_user_id, updated_at
+    ) VALUES (
+      ${slug}, ${input.title}, ${input.category}, ${contentHtml}, ${input.tags},
+      ${sql.json(metadata as ReturnType<typeof JSON.parse>)}, ${input.bodyMarkdown},
+      ${sql.json({})}, ${input.ownerUserId}, NOW()
+    )
+    RETURNING id, slug
+  `;
+  return row;
+}
+
+export interface OwnArchiveEntryForEdit {
+  id: number;
+  slug: string;
+  title: string;
+  category: ArchiveCategory;
+  tags: string[];
+  sourceMarkdown: string;
+}
+
+// Für /users/[id]/archive/[entryId]/edit — lädt den rohen Markdown-Body
+// (source_md) statt content, damit das Formular ihn editierbar vorbefüllen
+// kann. Gleiche Owner-Prüfung wie setArchiveEntryVisibility oben, Dialoge
+// ausgeschlossen (die haben kein source_md, ihr Inhalt lebt in
+// dialogue_messages). slug wird zusätzlich zurückgegeben, damit das Opt-in
+// "Automatisch verlinken" (updateArchiveEntryAction) den Eintrag selbst als
+// Autolinking-Ziel ausschließen kann.
+export async function getOwnArchiveEntryForEdit(
+  userId: number,
+  entryId: number,
+): Promise<OwnArchiveEntryForEdit | null> {
+  const rows = await sql<OwnArchiveEntryForEdit[]>`
+    SELECT id, slug, title, category, tags, COALESCE(source_md, '') AS "sourceMarkdown"
+    FROM archive_entries
+    WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
+    LIMIT 1
+  `;
+  return rows[0] ?? null;
+}
+
+// Bearbeitet Titel/Kategorie/Tags/Text eines eigenen Archiv-Eintrags — für
+// das volle Bearbeiten-Formular (/users/[id]/archive/[entryId]/edit). Owner-
+// gescoped im WHERE (ein gefälschtes id trifft dann einfach 0 Zeilen, kein
+// separater Vorab-Check nötig — gleiches Prinzip wie updateMissionLogContent
+// in src/lib/missions.ts). Rendert das Markdown selbst, anders als das
+// admin-only updateArchiveEntryContent oben, das schon von den Content-Tools
+// gerendertes HTML bekommt.
+export async function updateOwnArchiveEntryContent(
+  userId: number,
+  entryId: number,
+  input: {
+    title: string;
+    category: Exclude<ArchiveCategory, "dialogue">;
+    tags: string[];
+    bodyMarkdown: string;
+    // Siehe createArchiveEntry oben — Opt-in "Automatisch verlinken".
+    contentHtml?: string;
+  },
+): Promise<{ slug: string } | null> {
+  const contentHtml =
+    input.contentHtml ?? (await markdownToHtml(input.bodyMarkdown));
+
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE archive_entries
+    SET title = ${input.title}, category = ${input.category}, tags = ${input.tags},
+        content = ${contentHtml}, source_md = ${input.bodyMarkdown}, updated_at = NOW()
+    WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
+}
+
+// Nur der Inhalt, nicht Titel/Kategorie/Tags — für den Inline-Editor auf der
+// Detailseite (ArchiveEntryEditor.tsx), analog updateMissionSynopsis in
+// src/lib/missions.ts (dort ebenfalls nur der Body, nicht Titel/Status/
+// Termine). Owner-gescoped wie updateOwnArchiveEntryContent oben.
+export async function updateOwnArchiveEntryBody(
+  userId: number,
+  entryId: number,
+  bodyMarkdown: string,
+  // Siehe createArchiveEntry oben — Opt-in "Automatisch verlinken".
+  contentHtmlOverride?: string,
+): Promise<{ slug: string; contentHtml: string } | null> {
+  const contentHtml =
+    contentHtmlOverride ?? (await markdownToHtml(bodyMarkdown));
+
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE archive_entries
+    SET content = ${contentHtml}, source_md = ${bodyMarkdown}, updated_at = NOW()
+    WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
+    RETURNING slug
+  `;
+  const row = rows[0];
+  return row ? { slug: row.slug, contentHtml } : null;
+}

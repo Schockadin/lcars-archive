@@ -9,6 +9,7 @@ import {
   createMissionLog,
 } from "@/lib/missions";
 import { revalidateLog } from "@/lib/revalidate";
+import { autoLinkMarkdown } from "@/lib/autolink";
 
 export interface MissionLogFormState {
   error?: string;
@@ -65,7 +66,7 @@ export async function createMissionLogAction(
   }
   const logDate = logDateRaw || null;
 
-  const bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
+  let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte einen Log-Text schreiben." };
 
   const slug = `${authorCharacter.slug}-${mission.slug}-${sessionNr}`;
@@ -82,12 +83,23 @@ export async function createMissionLogAction(
     redirect("/login");
   }
 
+  // Opt-in "Automatisch verlinken" (AutoLinkCheckbox.tsx) — kein
+  // Selbst-Ausschluss nötig, Mission-Logs sind selbst kein Autolinking-Ziel
+  // (siehe getAutolinkTargets in src/lib/autolink.ts).
+  let contentHtml: string | undefined;
+  if (formData.get("autoLink") === "on") {
+    const linked = await autoLinkMarkdown(bodyMarkdown);
+    bodyMarkdown = linked.sourceMd;
+    contentHtml = linked.html;
+  }
+
   const result = await createMissionLog({
     slug,
     missionId: mission.id,
     authorId: authorCharacter.id,
     title,
     bodyMarkdown,
+    contentHtml,
     logDate,
     sessionNr,
     ownerUserId: user.id,

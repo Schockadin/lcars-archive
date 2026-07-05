@@ -236,3 +236,27 @@ export async function getLogsByCharacter(
     { tags: [cacheTags.missionLogs] },
   )();
 }
+
+// Für die Admin-Action "Autolinking" (src/app/actions/autolink.ts) — braucht
+// id + rohen Markdown-Quelltext, unabhängig von Sichtbarkeit/Owner (Admins
+// dürfen jeden Charakter autolinken).
+export async function getCharacterSourceBySlug(
+  slug: string,
+): Promise<{ id: number; sourceMarkdown: string | null } | null> {
+  const rows = await sql<{ id: number; sourceMarkdown: string | null }[]>`
+    SELECT id, source_md AS "sourceMarkdown" FROM characters WHERE slug = ${slug}
+  `;
+  return rows[0] ?? null;
+}
+
+export async function updateCharacterBio(
+  characterId: number,
+  bodyMarkdown: string,
+  bio: string,
+): Promise<void> {
+  await sql`
+    UPDATE characters
+    SET bio = ${bio}, source_md = ${bodyMarkdown}, updated_at = NOW()
+    WHERE id = ${characterId}
+  `;
+}

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 // Öffentliche Route (kein Login nötig) — der Token selbst ist der Nachweis.
 // Kein Nav-Eintrag, nur über den Link aus der Aktivierungs-/Reset-Mail
 // erreichbar. Dieselbe Route/Mechanik bedient beide Fälle (Erstanlage über
-// createUserAction UND Passwort-Reset über resetUserPasswordAction bzw.
+// createUserAction UND selbstständiger Passwort-Reset über
 // /forgot-password) — password_setup_tokens unterscheidet nicht zwischen
 // "Aktivierung" und "Reset", ein neues Passwort zu setzen ist technisch
 // identisch, daher bewusst neutrale Formulierung statt einer zweiten,

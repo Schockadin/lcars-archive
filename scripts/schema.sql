@@ -270,7 +270,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT tr
 -- Vault-Markdown, siehe scripts/ingest/shared.ts#resolveOwner). Backfill für
 -- Bestandsuser aus name (gleiche Umlaut-/Zeichen-Regeln wie slugifyBase in
 -- src/lib/slug.ts), Kollisionen bekommen Suffix -2, -3, ... (analog
--- generateUniqueDialogueSlug in src/lib/dialoguesCore.ts). Neue User bekommen
+-- generateUniqueArchiveEntrySlug in src/lib/archive.ts). Neue User bekommen
 -- ihren Slug direkt bei der Anlage (siehe generateUniqueUserSlug in
 -- src/lib/users.ts).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS slug TEXT;

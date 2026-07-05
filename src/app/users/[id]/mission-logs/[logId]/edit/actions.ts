@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
 import { updateMissionLogContent } from "@/lib/missions";
 import { revalidateLog } from "@/lib/revalidate";
+import { autoLinkMarkdown } from "@/lib/autolink";
 
 export interface EditMissionLogState {
   error?: string;
@@ -35,13 +36,23 @@ export async function updateMissionLogAction(
   }
   const logDate = logDateRaw || null;
 
-  const bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
+  let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte einen Log-Text schreiben." };
+
+  // Opt-in "Automatisch verlinken" (AutoLinkCheckbox.tsx) — kein
+  // Selbst-Ausschluss nötig, Mission-Logs sind selbst kein Autolinking-Ziel.
+  let contentHtml: string | undefined;
+  if (formData.get("autoLink") === "on") {
+    const linked = await autoLinkMarkdown(bodyMarkdown);
+    bodyMarkdown = linked.sourceMd;
+    contentHtml = linked.html;
+  }
 
   const result = await updateMissionLogContent(session.userId, logId, {
     title,
     logDate,
     bodyMarkdown,
+    contentHtml,
   });
   if (!result) {
     return { error: "Log nicht gefunden oder keine Berechtigung." };

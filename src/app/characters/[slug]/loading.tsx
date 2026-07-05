@@ -24,7 +24,7 @@ export default function Loading() {
           <div className="char-file-grid">
             <aside className="char-file-rail" aria-hidden="true" />
 
-            <div className="char-file-colmid min-w-0">
+            <div className="char-file-colmid">
               <LcarsSkeleton
                 className="w-full"
                 style={{ aspectRatio: "3 / 4" }}
@@ -37,7 +37,7 @@ export default function Loading() {
               <LcarsSkeleton className="mt-3 h-[22px] w-[120px]" />
             </div>
 
-            <div className="min-w-0">
+            <div className="char-file-colend">
               <LcarsSkeleton className="mb-[12px] h-[44px] w-[70%]" />
               <LcarsSkeleton className="mb-[20px] h-[16px] w-[40%]" />
               <div className="flex flex-col gap-[10px]">

@@ -9,6 +9,10 @@ import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
 import FollowButtons from "@/components/FollowButtons";
 import OwnerSelect from "@/components/OwnerSelect";
+import AdminActionsMenu from "@/components/AdminActionsMenu";
+import AutolinkButton from "@/components/AutolinkButton";
+import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
+import FormatTextButton from "@/components/FormatTextButton";
 import { UserWithCharacters } from "@/lib/users";
 import { Viewer } from "@/lib/visibility";
 
@@ -206,7 +210,7 @@ export default function CharacterHero({
         {/* ── Hauptraster ── */}
         <div className="char-file-grid">
           {/* Portrait + Datenfelder */}
-          <div className="min-w-0 char-file-colmid">
+          <div className="char-file-colmid">
             <CharacterPortrait
               portrait={character.portrait}
               name={character.name}
@@ -273,7 +277,7 @@ export default function CharacterHero({
           </div>
 
           {/* Name + Biografie */}
-          <div className="min-w-0">
+          <div className="char-file-colend">
             <LcarsReadingModeToggle />
 
             <h1 className="char-file-name">{character.name}</h1>
@@ -296,6 +300,25 @@ export default function CharacterHero({
                 />
               )}
             </div>
+
+            {viewer?.role === "admin" && (
+              <div className="mt-3">
+                <AdminActionsMenu>
+                  <AutolinkButton
+                    contentType="character"
+                    slug={character.slug}
+                  />
+                  <RemoveWikilinksButton
+                    contentType="character"
+                    slug={character.slug}
+                  />
+                  <FormatTextButton
+                    contentType="character"
+                    slug={character.slug}
+                  />
+                </AdminActionsMenu>
+              </div>
+            )}
 
             {bio ? (
               <div

@@ -5,6 +5,7 @@ import { getUserById } from "@/lib/users";
 import { missionSlugExists, createMission } from "@/lib/missions";
 import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
+import { autoLinkMarkdown } from "@/lib/autolink";
 
 export interface MissionFormState {
   error?: string;
@@ -65,13 +66,23 @@ export async function createMissionAction(
     ),
   ];
 
-  const bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
+  let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte eine Zusammenfassung schreiben." };
 
   if (await missionSlugExists(slug)) {
     return {
       error: "Dieser Slug ist bereits vergeben — bitte einen anderen wählen.",
     };
+  }
+
+  // Opt-in "Automatisch verlinken" (AutoLinkCheckbox.tsx) — kein
+  // Selbst-Ausschluss nötig, die neue Mission existiert noch nicht in der
+  // DB und kann deshalb nicht als eigenes Autolinking-Ziel erscheinen.
+  let bodyHtml: string | undefined;
+  if (formData.get("autoLink") === "on") {
+    const linked = await autoLinkMarkdown(bodyMarkdown);
+    bodyMarkdown = linked.sourceMd;
+    bodyHtml = linked.html;
   }
 
   const result = await createMission({
@@ -82,6 +93,7 @@ export async function createMissionAction(
     endedAt: endedAtRaw || null,
     tags,
     bodyMarkdown,
+    bodyHtml,
     ownerUserId: user.id,
   });
 

@@ -4,8 +4,8 @@
 // importiert werden kann — exakt das gleiche Muster wie mailCore.ts/mail.ts.
 import sql from "@/lib/db";
 import { markdownToSafeHtml } from "@/lib/markdown";
-import { slugifyBase } from "@/lib/slug";
 import { getCharactersForUser } from "@/lib/characters";
+import { generateUniqueArchiveEntrySlug } from "@/lib/archive";
 import type { ArchiveParticipant, ArchiveLocationRef } from "@/types/archive";
 
 export class DialogueSlugCollisionError extends Error {}
@@ -33,26 +33,6 @@ function parseParticipants(metadata: unknown): ArchiveParticipant[] {
       ? (JSON.parse(metadata) as { participants?: ArchiveParticipant[] })
       : (metadata as { participants?: ArchiveParticipant[] } | null);
   return parsed?.participants ?? [];
-}
-
-// Probiert slugifyBase(title), "${base}-2", "${base}-3", … bis ein Slug in
-// archive_entries frei ist. createDialogue fängt trotzdem Postgres-Code
-// 23505 ab (kleines TOCTOU-Restrisiko bei zeitgleichen identischen Titeln).
-export async function generateUniqueDialogueSlug(
-  title: string,
-): Promise<string> {
-  const base = slugifyBase(title);
-  let candidate = base;
-  let n = 2;
-
-  for (;;) {
-    const [row] = await sql<{ exists: boolean }[]>`
-      SELECT EXISTS(SELECT 1 FROM archive_entries WHERE slug = ${candidate}) AS exists
-    `;
-    if (!row.exists) return candidate;
-    candidate = `${base}-${n}`;
-    n += 1;
-  }
 }
 
 export interface DialogueMessage {
@@ -136,7 +116,7 @@ export interface CreateDialogueInput {
 export async function createDialogue(
   input: CreateDialogueInput,
 ): Promise<{ slug: string }> {
-  const slug = await generateUniqueDialogueSlug(input.title);
+  const slug = await generateUniqueArchiveEntrySlug(input.title);
 
   return sql.begin(async (tx) => {
     const [ownChar] = await tx<{ slug: string; name: string }[]>`

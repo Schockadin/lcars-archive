@@ -1,4 +1,6 @@
 import { FormField } from "../../../_shared/FormPrimitives";
+import TimelineMarkerButton from "../../../_shared/TimelineMarkerButton";
+import AutoLinkCheckbox from "../../../_shared/AutoLinkCheckbox";
 import type { MissionStatus } from "@/types/missions";
 
 const inputClass = "rounded-lcars-pill lcars-input w-full sm:w-[400px]";
@@ -108,6 +110,11 @@ export function MissionFields({
         />
       </FormField>
 
+      {/* Kein isAdminOrGM-Prop nötig — MissionFields wird ausschließlich von
+          New-/EditMissionForm gerendert, beide bereits per requireOwnGM
+          (page.tsx) auf gm/admin beschränkt. */}
+      <TimelineMarkerButton textareaId={`${idPrefix}-body`} />
+
       <FormField
         label="Zusammenfassung"
         htmlFor={`${idPrefix}-body`}
@@ -121,6 +128,8 @@ export function MissionFields({
           className={textAreaClass}
         />
       </FormField>
+
+      <AutoLinkCheckbox idPrefix={idPrefix} />
     </>
   );
 }

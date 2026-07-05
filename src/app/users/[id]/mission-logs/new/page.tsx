@@ -83,6 +83,7 @@ export default async function NewMissionLogPage({
             missions={missions.map((m) => ({ slug: m.slug, title: m.title }))}
             defaultSessionNr={nextSessionNr}
             defaultLogDate={defaultLogDate}
+            isAdminOrGM={user.role === "gm" || user.role === "admin"}
           />
         )}
       </article>

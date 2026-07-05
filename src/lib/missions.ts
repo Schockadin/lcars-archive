@@ -141,8 +141,15 @@ export async function createMission(input: {
   tags: string[];
   bodyMarkdown: string;
   ownerUserId: number;
+  // Vorgerendertes HTML überspringt das eigene markdownToHtml() — genutzt
+  // vom Opt-in "Automatisch verlinken" (createMissionAction), das den
+  // Markdown-Text vorab per autoLinkMarkdown() transformiert UND rendert,
+  // damit frisch gesetzte Wikilinks sofort aufgelöst sind (siehe
+  // resolveAutolinkedWikilinks in src/lib/autolink.ts) statt beim eigenen
+  // Rendern hier erneut als unaufgelöst "wikilink://" zu erscheinen.
+  bodyHtml?: string;
 }): Promise<{ id: number; slug: string }> {
-  const bodyHtml = await markdownToHtml(input.bodyMarkdown);
+  const bodyHtml = input.bodyHtml ?? (await markdownToHtml(input.bodyMarkdown));
 
   const rows = await sql<{ id: number; slug: string }[]>`
     INSERT INTO missions (
@@ -183,9 +190,11 @@ export async function updateMissionContent(
     endedAt: string | null;
     tags: string[];
     bodyMarkdown: string;
+    // Siehe createMission oben — Opt-in "Automatisch verlinken".
+    bodyHtml?: string;
   },
 ): Promise<UpdateMissionResult | null> {
-  const bodyHtml = await markdownToHtml(input.bodyMarkdown);
+  const bodyHtml = input.bodyHtml ?? (await markdownToHtml(input.bodyMarkdown));
 
   const rows = await sql<UpdateMissionResult[]>`
     UPDATE missions m
@@ -244,6 +253,26 @@ export async function updateMissionSynopsis(
   };
 }
 
+// Für die Admin-Action "Autolinking" (src/app/actions/autolink.ts) — anders
+// als updateMissionSynopsis oben wird bodyHtml NICHT hier gerendert, sondern
+// vom Aufrufer übergeben: der muss zwischen Rendern und Speichern noch die
+// frisch erstellten [[Wikilinks]] auflösen (resolveAutolinkedWikilinks),
+// was updateMissionSynopsis selbst nicht kann.
+export async function updateMissionSynopsisWithHtml(
+  missionId: number,
+  bodyMarkdown: string,
+  bodyHtml: string,
+): Promise<void> {
+  await sql`
+    UPDATE missions m
+    SET
+      metadata   = jsonb_set(m.metadata, '{body}', to_jsonb(${bodyHtml}::text)),
+      source_md  = ${bodyMarkdown},
+      updated_at = NOW()
+    WHERE m.id = ${missionId}
+  `;
+}
+
 // Aktuellstes log_date über alle Mission-Logs hinweg — Vorschlagswert für
 // Datumsfelder in "Neuer Missionslog"/"Neue Mission"/"Neues Gespräch"
 // (siehe die jeweiligen new/page.tsx), da die Kampagne einem fiktiven
@@ -285,8 +314,11 @@ export async function createMissionLog(input: {
   logDate: string | null;
   sessionNr: number;
   ownerUserId: number | null;
+  // Siehe createMission oben — Opt-in "Automatisch verlinken".
+  contentHtml?: string;
 }): Promise<{ id: number; slug: string }> {
-  const contentHtml = await markdownToHtml(input.bodyMarkdown);
+  const contentHtml =
+    input.contentHtml ?? (await markdownToHtml(input.bodyMarkdown));
 
   const rows = await sql<{ id: number; slug: string }[]>`
     INSERT INTO mission_logs (
@@ -520,7 +552,13 @@ export async function getOwnMissionLogForEdit(
 export async function updateMissionLogContent(
   userId: number,
   logId: number,
-  input: { title: string; logDate: string | null; bodyMarkdown: string },
+  input: {
+    title: string;
+    logDate: string | null;
+    bodyMarkdown: string;
+    // Siehe createMission oben — Opt-in "Automatisch verlinken".
+    contentHtml?: string;
+  },
 ): Promise<{
   slug: string;
   missionId: number;
@@ -529,7 +567,8 @@ export async function updateMissionLogContent(
   sessionNr: number | null;
   ownerSlug: string | null;
 } | null> {
-  const contentHtml = await markdownToHtml(input.bodyMarkdown);
+  const contentHtml =
+    input.contentHtml ?? (await markdownToHtml(input.bodyMarkdown));
 
   const rows = await sql<
     {
@@ -643,3 +682,42 @@ export const getAllLogPaths = unstable_cache(
   ["getAllLogPaths", "v2"],
   { tags: [cacheTags.missionLogs] },
 );
+
+// Für die Admin-Action "Autolinking" (src/app/actions/autolink.ts) — braucht
+// id + rohen Markdown-Quelltext, unabhängig von Sichtbarkeit/Owner (Admins
+// dürfen jedes Log autolinken, anders als updateMissionLogContent oben,
+// das nur der eigene Verfasser nutzen darf).
+export async function getMissionLogSourceBySlug(slug: string): Promise<{
+  id: number;
+  missionId: number;
+  missionSlug: string;
+  sourceMarkdown: string | null;
+} | null> {
+  const rows = await sql<
+    {
+      id: number;
+      missionId: number;
+      missionSlug: string;
+      sourceMarkdown: string | null;
+    }[]
+  >`
+    SELECT ml.id, ml.mission_id AS "missionId", m.slug AS "missionSlug",
+           ml.source_md AS "sourceMarkdown"
+    FROM mission_logs ml
+    JOIN missions m ON m.id = ml.mission_id
+    WHERE ml.slug = ${slug}
+  `;
+  return rows[0] ?? null;
+}
+
+export async function updateMissionLogSourceMd(
+  logId: number,
+  bodyMarkdown: string,
+  contentHtml: string,
+): Promise<void> {
+  await sql`
+    UPDATE mission_logs
+    SET content = ${contentHtml}, source_md = ${bodyMarkdown}, updated_at = NOW()
+    WHERE id = ${logId}
+  `;
+}

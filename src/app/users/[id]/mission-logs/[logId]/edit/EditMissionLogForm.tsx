@@ -13,9 +13,11 @@ const initialState: EditMissionLogState = {};
 export default function EditMissionLogForm({
   userId,
   log,
+  isAdminOrGM,
 }: {
   userId: number;
   log: OwnMissionLogForEdit;
+  isAdminOrGM: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
     updateMissionLogAction,
@@ -32,6 +34,7 @@ export default function EditMissionLogForm({
       <MissionLogDateBodyFields
         idPrefix="edit-log"
         defaults={{ logDate: log.logDate, bodyMarkdown: log.sourceMarkdown }}
+        isAdminOrGM={isAdminOrGM}
       />
 
       <SubmitButton
