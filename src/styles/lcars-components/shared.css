@@ -137,6 +137,31 @@
   /* margin-bottom: 16px; */
 }
 
+/* Admin-Action "Autolinking" (AutolinkButton.tsx) — Vorschau-Box auf den
+   vier Inhalts-Detailseiten (Mission, Log, Archiv-Eintrag, Charakter). */
+.autolink-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 8px;
+  background: var(--lcars-surface);
+}
+.autolink-match-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--lcars-text-light);
+}
+.autolink-preview-html {
+  max-height: 320px;
+  overflow-y: auto;
+  padding-top: 8px;
+  border-top: 1px solid var(--lcars-border);
+}
+
 /* ── Scrollbar ───────────────────────────────────────────────────── */
 
 .lcars-scroll::-webkit-scrollbar {

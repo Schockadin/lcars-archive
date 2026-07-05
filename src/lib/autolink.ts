@@ -1,0 +1,172 @@
+import "server-only";
+import sql from "@/lib/db";
+
+export type AutolinkTargetType = "character" | "mission" | "archive";
+
+export interface AutolinkTarget {
+  type: AutolinkTargetType;
+  slug: string;
+  href: string;
+  canonical: string;
+  // Namen/Aliase, gegen die im Fließtext gematcht wird — für Charaktere
+  // zusätzlich metadata.aliases, für Missionen/Archiv-Einträge nur der Titel.
+  phrases: string[];
+}
+
+export interface AutolinkMatch {
+  type: AutolinkTargetType;
+  canonical: string;
+  href: string;
+  matchedText: string;
+}
+
+export interface AutolinkResult {
+  sourceMd: string;
+  matches: AutolinkMatch[];
+}
+
+// Abschnitte, in denen niemals verlinkt werden darf: Codeblöcke/Inline-Code,
+// Bilder, bereits vorhandene Wikilinks/Markdown-Links (sonst würde z.B. ein
+// Linktext selbst nochmal verlinkt oder eine URL zerschnitten).
+const PROTECTED_RE =
+  /```[\s\S]*?```|`[^`\n]*`|!\[[^\]]*\]\([^)]*\)|\[\[[^\]]*\]\]|\[[^\]]*\]\([^)]*\)/g;
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Priorität bei Namens-Kollisionen zwischen Typen, analog zu
+// scripts/ingest/wikilinks.ts: Charaktere > Archiv-Einträge > Missionen.
+const TYPE_PRIORITY: AutolinkTargetType[] = ["character", "archive", "mission"];
+
+// Durchsucht sourceMd nach Erwähnungen bekannter Namen/Aliase (targets) und
+// ersetzt jeweils die ERSTE Erwähnung pro Ziel durch einen Markdown-Link
+// (nicht jede Erwähnung — sonst wird Fließtext mit vielen wiederholten
+// Namen unleserlich). Groß-/Kleinschreibung wird beim Matchen ignoriert,
+// aber im Linktext exakt wie im Original beibehalten. Wortgrenzen per
+// Unicode-Lookaround statt \b, weil \b bei Apostrophen in Namen
+// (z.B. "T'Lorexia") nicht zuverlässig ist.
+export function applyAutolinks(
+  sourceMd: string,
+  targets: AutolinkTarget[],
+): AutolinkResult {
+  const phraseToTarget = new Map<string, AutolinkTarget>();
+  const phraseSet = new Set<string>();
+
+  for (const type of TYPE_PRIORITY) {
+    for (const target of targets.filter((t) => t.type === type)) {
+      for (const raw of target.phrases) {
+        const phrase = raw.trim();
+        if (phrase.length < 2) continue;
+        const key = phrase.toLowerCase();
+        if (!phraseToTarget.has(key)) phraseToTarget.set(key, target);
+        phraseSet.add(phrase);
+      }
+    }
+  }
+
+  if (phraseSet.size === 0) return { sourceMd, matches: [] };
+
+  const phrases = [...phraseSet].sort((a, b) => b.length - a.length);
+  const alternation = phrases
+    .map((p) => `(?<![\\p{L}\\p{N}_])${escapeRegExp(p)}(?![\\p{L}\\p{N}_])`)
+    .join("|");
+  const matchRe = new RegExp(alternation, "giu");
+
+  const protectedRanges: [number, number][] = [];
+  PROTECTED_RE.lastIndex = 0;
+  let pm: RegExpExecArray | null;
+  while ((pm = PROTECTED_RE.exec(sourceMd))) {
+    protectedRanges.push([pm.index, pm.index + pm[0].length]);
+  }
+  const isProtected = (start: number, end: number) =>
+    protectedRanges.some(([s, e]) => start < e && end > s);
+
+  const usedTargets = new Set<AutolinkTarget>();
+  const matches: AutolinkMatch[] = [];
+  const parts: string[] = [];
+  let lastIndex = 0;
+  let m: RegExpExecArray | null;
+
+  while ((m = matchRe.exec(sourceMd))) {
+    const start = m.index;
+    const end = start + m[0].length;
+    const target = phraseToTarget.get(m[0].toLowerCase());
+    if (!target || isProtected(start, end) || usedTargets.has(target)) {
+      continue;
+    }
+    usedTargets.add(target);
+    parts.push(sourceMd.slice(lastIndex, start));
+    parts.push(`[${m[0]}](${target.href})`);
+    matches.push({
+      type: target.type,
+      canonical: target.canonical,
+      href: target.href,
+      matchedText: m[0],
+    });
+    lastIndex = end;
+  }
+  parts.push(sourceMd.slice(lastIndex));
+
+  return { sourceMd: parts.join(""), matches };
+}
+
+export interface AutolinkExclude {
+  type: AutolinkTargetType;
+  slug: string;
+}
+
+// Alle verlinkbaren Ziele aus der DB — nur öffentlich sichtbare (ein per
+// Autolinking gesetzter Link in öffentlichem Inhalt darf nicht auf etwas
+// zeigen, das die meisten Leser gar nicht sehen dürfen). Missionen haben
+// keine eigene Sichtbarkeits-Sperre. Gespräche (category = 'dialogue')
+// werden ausgeschlossen — ihr Titel ist ein generierter Platzhalter, kein
+// Name, den jemand im Fließtext erwähnen würde.
+export async function getAutolinkTargets(
+  exclude?: AutolinkExclude,
+): Promise<AutolinkTarget[]> {
+  const [characters, missions, archiveEntries] = await Promise.all([
+    sql<{ slug: string; name: string; aliases: string[] | null }[]>`
+      SELECT slug, name, metadata->'aliases' AS aliases
+      FROM characters
+      WHERE visibility = 'public'
+    `,
+    sql<{ slug: string; title: string }[]>`
+      SELECT slug, title FROM missions
+    `,
+    sql<{ slug: string; title: string }[]>`
+      SELECT slug, title FROM archive_entries
+      WHERE visibility = 'public' AND category != 'dialogue'
+    `,
+  ]);
+
+  const targets: AutolinkTarget[] = [
+    ...characters.map((c) => ({
+      type: "character" as const,
+      slug: c.slug,
+      href: `/characters/${c.slug}`,
+      canonical: c.name,
+      phrases: [c.name, ...(c.aliases ?? [])],
+    })),
+    ...archiveEntries.map((a) => ({
+      type: "archive" as const,
+      slug: a.slug,
+      href: `/archive/${a.slug}`,
+      canonical: a.title,
+      phrases: [a.title],
+    })),
+    ...missions.map((m) => ({
+      type: "mission" as const,
+      slug: m.slug,
+      href: `/missions/${m.slug}`,
+      canonical: m.title,
+      phrases: [m.title],
+    })),
+  ];
+
+  return exclude
+    ? targets.filter(
+        (t) => !(t.type === exclude.type && t.slug === exclude.slug),
+      )
+    : targets;
+}

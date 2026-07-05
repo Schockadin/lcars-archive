@@ -6,6 +6,7 @@ import { listAllUsers } from "@/lib/users";
 import CrumbLabel from "@/components/CrumbLabel";
 import LogDetail from "../../LogDetail";
 import OwnerSelect from "@/components/OwnerSelect";
+import AutolinkButton from "@/components/AutolinkButton";
 
 interface Props {
   params: Promise<{ missionSlug: string; logSlug: string }>;
@@ -61,12 +62,15 @@ export default async function LogPage({ params }: Props) {
     <>
       <CrumbLabel slug={log.slug} label={log.title} />
       {viewer?.role === "admin" && (
-        <OwnerSelect
-          contentType="mission_log"
-          id={log.id}
-          initialOwnerId={log.ownerUserId}
-          users={owners.map((u) => ({ id: u.id, name: u.name }))}
-        />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
+          <OwnerSelect
+            contentType="mission_log"
+            id={log.id}
+            initialOwnerId={log.ownerUserId}
+            users={owners.map((u) => ({ id: u.id, name: u.name }))}
+          />
+          <AutolinkButton contentType="missionLog" slug={log.slug} />
+        </div>
       )}
       <LogDetail log={log} nav={nav} />
     </>

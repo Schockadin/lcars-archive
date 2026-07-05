@@ -1,6 +1,7 @@
 import { unstable_cache } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
+import { markdownToHtml } from "@/lib/markdown";
 import {
   ArchiveCategory,
   ArchiveEntryDetail,
@@ -220,3 +221,30 @@ export const getAllArchivePaths = unstable_cache(
   ["getAllArchivePaths", "v4"],
   { tags: [cacheTags.archive] },
 );
+
+// Für die Admin-Action "Autolinking" (src/app/actions/autolink.ts) — braucht
+// id + rohen Markdown-Quelltext, unabhängig von Sichtbarkeit/Owner.
+// Gespräche (category = 'dialogue') werden ausgeschlossen — deren Inhalt
+// besteht aus Chat-Nachrichten (dialogue_messages), nicht aus source_md.
+export async function getArchiveEntrySourceBySlug(
+  slug: string,
+): Promise<{ id: number; sourceMarkdown: string | null } | null> {
+  const rows = await sql<{ id: number; sourceMarkdown: string | null }[]>`
+    SELECT id, source_md AS "sourceMarkdown"
+    FROM archive_entries
+    WHERE slug = ${slug} AND category != 'dialogue'
+  `;
+  return rows[0] ?? null;
+}
+
+export async function updateArchiveEntryContent(
+  archiveEntryId: number,
+  bodyMarkdown: string,
+): Promise<void> {
+  const contentHtml = await markdownToHtml(bodyMarkdown);
+  await sql`
+    UPDATE archive_entries
+    SET content = ${contentHtml}, source_md = ${bodyMarkdown}, updated_at = NOW()
+    WHERE id = ${archiveEntryId}
+  `;
+}

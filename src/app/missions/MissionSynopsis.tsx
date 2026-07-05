@@ -3,6 +3,7 @@ import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import FollowButtons from "@/components/FollowButtons";
 import { Viewer } from "@/lib/visibility";
 import OwnerSelect from "@/components/OwnerSelect";
+import AutolinkButton from "@/components/AutolinkButton";
 import { UserWithCharacters } from "@/lib/users";
 import MissionSynopsisEditor from "./MissionSynopsisEditor";
 
@@ -39,12 +40,15 @@ export default function MissionSynopsis({
             <>
               <FollowButtons targetType="mission" targetSlug={mission.slug} />
               {viewer?.role === "admin" && (
-                <OwnerSelect
-                  contentType="mission"
-                  id={mission.id}
-                  initialOwnerId={mission.ownerUserId}
-                  users={owners.map((u) => ({ id: u.id, name: u.name }))}
-                />
+                <>
+                  <OwnerSelect
+                    contentType="mission"
+                    id={mission.id}
+                    initialOwnerId={mission.ownerUserId}
+                    users={owners.map((u) => ({ id: u.id, name: u.name }))}
+                  />
+                  <AutolinkButton contentType="mission" slug={mission.slug} />
+                </>
               )}
             </>
           }

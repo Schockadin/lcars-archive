@@ -16,6 +16,7 @@ import { getDialogueMessages } from "@/lib/dialogues";
 import { getViewer, canView } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import OwnerSelect from "@/components/OwnerSelect";
+import AutolinkButton from "@/components/AutolinkButton";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -108,12 +109,15 @@ export default async function ArchiveEntryPage({ params }: Props) {
       <LcarsReadingModeToggle />
 
       {viewer?.role === "admin" && entry.category !== "dialogue" && (
-        <OwnerSelect
-          contentType="archive_entry"
-          id={entry.id}
-          initialOwnerId={entry.ownerUserId}
-          users={owners.map((u) => ({ id: u.id, name: u.name }))}
-        />
+        <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
+          <OwnerSelect
+            contentType="archive_entry"
+            id={entry.id}
+            initialOwnerId={entry.ownerUserId}
+            users={owners.map((u) => ({ id: u.id, name: u.name }))}
+          />
+          <AutolinkButton contentType="archiveEntry" slug={entry.slug} />
+        </div>
       )}
 
       {entry.category === "dialogue" ? (

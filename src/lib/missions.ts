@@ -643,3 +643,42 @@ export const getAllLogPaths = unstable_cache(
   ["getAllLogPaths", "v2"],
   { tags: [cacheTags.missionLogs] },
 );
+
+// Für die Admin-Action "Autolinking" (src/app/actions/autolink.ts) — braucht
+// id + rohen Markdown-Quelltext, unabhängig von Sichtbarkeit/Owner (Admins
+// dürfen jedes Log autolinken, anders als updateMissionLogContent oben,
+// das nur der eigene Verfasser nutzen darf).
+export async function getMissionLogSourceBySlug(slug: string): Promise<{
+  id: number;
+  missionId: number;
+  missionSlug: string;
+  sourceMarkdown: string | null;
+} | null> {
+  const rows = await sql<
+    {
+      id: number;
+      missionId: number;
+      missionSlug: string;
+      sourceMarkdown: string | null;
+    }[]
+  >`
+    SELECT ml.id, ml.mission_id AS "missionId", m.slug AS "missionSlug",
+           ml.source_md AS "sourceMarkdown"
+    FROM mission_logs ml
+    JOIN missions m ON m.id = ml.mission_id
+    WHERE ml.slug = ${slug}
+  `;
+  return rows[0] ?? null;
+}
+
+export async function updateMissionLogSourceMd(
+  logId: number,
+  bodyMarkdown: string,
+): Promise<void> {
+  const contentHtml = await markdownToHtml(bodyMarkdown);
+  await sql`
+    UPDATE mission_logs
+    SET content = ${contentHtml}, source_md = ${bodyMarkdown}, updated_at = NOW()
+    WHERE id = ${logId}
+  `;
+}

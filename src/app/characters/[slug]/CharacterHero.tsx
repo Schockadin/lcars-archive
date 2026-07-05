@@ -9,6 +9,7 @@ import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
 import FollowButtons from "@/components/FollowButtons";
 import OwnerSelect from "@/components/OwnerSelect";
+import AutolinkButton from "@/components/AutolinkButton";
 import { UserWithCharacters } from "@/lib/users";
 import { Viewer } from "@/lib/visibility";
 
@@ -288,12 +289,18 @@ export default function CharacterHero({
                 targetSlug={character.slug}
               />
               {viewer?.role === "admin" && (
-                <OwnerSelect
-                  contentType="character"
-                  id={character.id}
-                  initialOwnerId={character.player_id}
-                  users={owners.map((u) => ({ id: u.id, name: u.name }))}
-                />
+                <>
+                  <OwnerSelect
+                    contentType="character"
+                    id={character.id}
+                    initialOwnerId={character.player_id}
+                    users={owners.map((u) => ({ id: u.id, name: u.name }))}
+                  />
+                  <AutolinkButton
+                    contentType="character"
+                    slug={character.slug}
+                  />
+                </>
               )}
             </div>
 
