@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { createUserAction, type AdminActionState } from "./actions";
+import { FormField, FormError, SubmitButton } from "./_shared/FormPrimitives";
 
 const initialState: AdminActionState = {};
 
@@ -29,10 +30,7 @@ export default function CreateUserForm() {
       action={formAction}
       className="flex flex-wrap gap-[12px] justify-between"
     >
-      <div className="flex flex-col gap-[6px] flex-1">
-        <label htmlFor="new-user-name" className="lcars-eyebrow">
-          Name
-        </label>
+      <FormField label="Name" htmlFor="new-user-name" className="flex-1">
         <input
           id="new-user-name"
           name="name"
@@ -40,12 +38,9 @@ export default function CreateUserForm() {
           required
           className="rounded-lcars-pill lcars-input flex-1"
         />
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px] flex-1">
-        <label htmlFor="new-user-email" className="lcars-eyebrow">
-          E-Mail
-        </label>
+      <FormField label="E-Mail" htmlFor="new-user-email" className="flex-1">
         <input
           id="new-user-email"
           name="email"
@@ -53,12 +48,9 @@ export default function CreateUserForm() {
           required
           className="rounded-lcars-pill lcars-input"
         />
-      </div>
+      </FormField>
 
-      <div className="flex flex-col gap-[6px]">
-        <label htmlFor="new-user-role" className="lcars-eyebrow">
-          Rolle
-        </label>
+      <FormField label="Rolle" htmlFor="new-user-role">
         <select
           id="new-user-role"
           name="role"
@@ -70,21 +62,17 @@ export default function CreateUserForm() {
           <option value="player">Spieler</option>
           <option value="guest">Gast</option>
         </select>
-      </div>
+      </FormField>
 
-      <button
-        type="submit"
-        disabled={pending}
+      <SubmitButton
+        pending={pending}
+        pendingLabel="Anlegen…"
         className="lcars-switch disabled:opacity-50 w-[100%]"
       >
-        {pending ? "Anlegen…" : "User anlegen"}
-      </button>
+        User anlegen
+      </SubmitButton>
 
-      {state?.error && (
-        <p className="w-full text-lcars-red" role="alert">
-          {state.error}
-        </p>
-      )}
+      <FormError message={state?.error} className="w-full" />
 
       {state?.warning && (
         <div className="w-full flex flex-col gap-[4px]">
