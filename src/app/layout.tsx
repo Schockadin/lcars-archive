@@ -10,6 +10,10 @@ import { NeoProvider } from "@/context/NeoProvider";
 import { getCampaignYears } from "@/lib/constants";
 import { APP_VERSION } from "@/lib/version";
 
+// next/font/google lädt die Font-Dateien zur Build-Zeit herunter und liefert
+// sie selbst aus (self-hosted) — keine Laufzeit-Anfrage an Google-Server,
+// siehe dazu den entfernten Font-Abschnitt in der Datenschutzerklärung
+// (DSGVOClient.tsx).
 const antonio = Antonio({
   subsets: ["latin"],
   weight: ["400", "700"],
