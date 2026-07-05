@@ -210,7 +210,7 @@ export default function CharacterHero({
         {/* ── Hauptraster ── */}
         <div className="char-file-grid">
           {/* Portrait + Datenfelder */}
-          <div className="min-w-0 char-file-colmid">
+          <div className="char-file-colmid">
             <CharacterPortrait
               portrait={character.portrait}
               name={character.name}
@@ -277,7 +277,7 @@ export default function CharacterHero({
           </div>
 
           {/* Name + Biografie */}
-          <div className="min-w-0">
+          <div className="char-file-colend">
             <LcarsReadingModeToggle />
 
             <h1 className="char-file-name">{character.name}</h1>

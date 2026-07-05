@@ -133,6 +133,7 @@
 
 .follow-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   /* margin-bottom: 16px; */
 }
@@ -159,25 +160,23 @@
 .autolink-preview-html {
   max-height: 320px;
   overflow-y: auto;
+  overflow-wrap: anywhere;
   padding-top: 8px;
   border-top: 1px solid var(--lcars-border);
 }
 
 /* AdminActionsMenu.tsx — bündelt die Admin-Content-Tools oben hinter einem
-   Umschalter statt einer wachsenden Button-Reihe. */
+   Umschalter statt einer wachsenden Button-Reihe. Position/Breite (top/
+   left/width) setzt die Komponente selbst per Inline-Style (JS-berechnet,
+   viewport-sicher — siehe Kommentar dort), hier nur das visuelle Styling. */
 .admin-actions-menu {
   position: relative;
 }
 .admin-actions-menu-panel {
-  position: absolute;
   z-index: 20;
-  top: calc(100% + 6px);
-  left: 0;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  width: max(320px, 100%);
-  max-width: 90vw;
   padding: 12px;
   border: 1px solid var(--lcars-border);
   border-radius: 8px;
