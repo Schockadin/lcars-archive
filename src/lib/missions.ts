@@ -244,6 +244,26 @@ export async function updateMissionSynopsis(
   };
 }
 
+// Für die Admin-Action "Autolinking" (src/app/actions/autolink.ts) — anders
+// als updateMissionSynopsis oben wird bodyHtml NICHT hier gerendert, sondern
+// vom Aufrufer übergeben: der muss zwischen Rendern und Speichern noch die
+// frisch erstellten [[Wikilinks]] auflösen (resolveAutolinkedWikilinks),
+// was updateMissionSynopsis selbst nicht kann.
+export async function updateMissionSynopsisWithHtml(
+  missionId: number,
+  bodyMarkdown: string,
+  bodyHtml: string,
+): Promise<void> {
+  await sql`
+    UPDATE missions m
+    SET
+      metadata   = jsonb_set(m.metadata, '{body}', to_jsonb(${bodyHtml}::text)),
+      source_md  = ${bodyMarkdown},
+      updated_at = NOW()
+    WHERE m.id = ${missionId}
+  `;
+}
+
 // Aktuellstes log_date über alle Mission-Logs hinweg — Vorschlagswert für
 // Datumsfelder in "Neuer Missionslog"/"Neue Mission"/"Neues Gespräch"
 // (siehe die jeweiligen new/page.tsx), da die Kampagne einem fiktiven
@@ -674,8 +694,8 @@ export async function getMissionLogSourceBySlug(slug: string): Promise<{
 export async function updateMissionLogSourceMd(
   logId: number,
   bodyMarkdown: string,
+  contentHtml: string,
 ): Promise<void> {
-  const contentHtml = await markdownToHtml(bodyMarkdown);
   await sql`
     UPDATE mission_logs
     SET content = ${contentHtml}, source_md = ${bodyMarkdown}, updated_at = NOW()

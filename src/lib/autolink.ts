@@ -40,11 +40,17 @@ function escapeRegExp(s: string): string {
 const TYPE_PRIORITY: AutolinkTargetType[] = ["character", "archive", "mission"];
 
 // Durchsucht sourceMd nach Erwähnungen bekannter Namen/Aliase (targets) und
-// ersetzt jeweils die ERSTE Erwähnung pro Ziel durch einen Markdown-Link
+// ersetzt jeweils die ERSTE Erwähnung pro Ziel durch einen [[Wikilink]]
 // (nicht jede Erwähnung — sonst wird Fließtext mit vielen wiederholten
-// Namen unleserlich). Groß-/Kleinschreibung wird beim Matchen ignoriert,
-// aber im Linktext exakt wie im Original beibehalten. Wortgrenzen per
-// Unicode-Lookaround statt \b, weil \b bei Apostrophen in Namen
+// Namen unleserlich). [[Ziel]]-Syntax statt eines direkten Markdown-Links,
+// damit das Ergebnis symmetrisch zum "Wikilinks entfernen"-Feature bleibt
+// (siehe src/lib/wikilinkCleanup.ts) — Auflösung zum echten Link passiert
+// beim Rendern separat über resolveAutolinkedWikilinks() unten, damit die
+// frisch erstellten Links (anders als sonstige, nur beim Vault-Ingest
+// aufgelöste Wikilinks) sofort funktionieren. Groß-/Kleinschreibung wird
+// beim Matchen ignoriert, aber im Anzeigetext exakt wie im Original
+// beibehalten (als Alias, falls er vom Zielnamen abweicht). Wortgrenzen
+// per Unicode-Lookaround statt \b, weil \b bei Apostrophen in Namen
 // (z.B. "T'Lorexia") nicht zuverlässig ist.
 export function applyAutolinks(
   sourceMd: string,
@@ -97,7 +103,11 @@ export function applyAutolinks(
     }
     usedTargets.add(target);
     parts.push(sourceMd.slice(lastIndex, start));
-    parts.push(`[${m[0]}](${target.href})`);
+    parts.push(
+      m[0] === target.canonical
+        ? `[[${target.canonical}]]`
+        : `[[${target.canonical}|${m[0]}]]`,
+    );
     matches.push({
       type: target.type,
       canonical: target.canonical,
@@ -169,4 +179,48 @@ export async function getAutolinkTargets(
         (t) => !(t.type === exclude.type && t.slug === exclude.slug),
       )
     : targets;
+}
+
+function normalizeWikilinkTarget(s: string): string {
+  return s.trim().toLowerCase();
+}
+
+// rehype-stringify kodiert Apostrophe im href-Attribut als numerische
+// HTML-Entity (&#x27;, hex — nicht &#39;, dezimal), was decodeURIComponent
+// nicht auflöst. Dieselbe Notwendigkeit wie decodeEntities() in
+// scripts/ingest/wikilinks.ts, hier nur auf das eine Zeichen reduziert,
+// das bei Namen wie "T'Lorexia" vorkommt.
+function decodeHtmlEntities(s: string): string {
+  return s
+    .replace(/&#x27;/gi, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&");
+}
+
+// markdownToHtml() rendert [[Ziel]] (siehe remarkWikiLinks in
+// lib/markdown.ts) zu <a href="wikilink://Ziel">Text</a> — echte
+// Auflösung zum Ziel-Pfad passiert sonst erst beim nächsten Vault-Ingest
+// (scripts/ingest/wikilinks.ts). Für die vom Autolinking SELBST gerade
+// erstellten Wikilinks kennen wir den echten Pfad aber schon (aus
+// matches) und lösen sie hier sofort auf, damit sie unmittelbar nach dem
+// Speichern funktionieren statt bis zum nächsten Ingest als "nicht
+// gefunden" zu erscheinen. Andere, bereits vorher im Inhalt vorhandene
+// Wikilinks bleiben unangetastet (unverändertes Verhalten).
+export function resolveAutolinkedWikilinks(
+  html: string,
+  matches: AutolinkMatch[],
+): string {
+  const hrefByCanonical = new Map(
+    matches.map((m) => [normalizeWikilinkTarget(m.canonical), m.href]),
+  );
+  return html.replace(
+    /<a href="wikilink:\/\/([^"]*)">/g,
+    (full, rawTarget: string) => {
+      const target = normalizeWikilinkTarget(
+        decodeHtmlEntities(decodeURIComponent(rawTarget)),
+      );
+      const href = hrefByCanonical.get(target);
+      return href ? `<a href="${href}" class="lcars-wikilink">` : full;
+    },
+  );
 }

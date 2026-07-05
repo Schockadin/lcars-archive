@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/dal";
 import {
   applyAutolinks,
   getAutolinkTargets,
+  resolveAutolinkedWikilinks,
   type AutolinkExclude,
   type AutolinkMatch,
 } from "@/lib/autolink";
@@ -11,7 +12,7 @@ import { markdownToHtml } from "@/lib/markdown";
 import {
   getMissionBySlug,
   getMissionLogSourceBySlug,
-  updateMissionSynopsis,
+  updateMissionSynopsisWithHtml,
   updateMissionLogSourceMd,
 } from "@/lib/missions";
 import {
@@ -52,14 +53,15 @@ export interface WikilinkCleanupApplyResult {
 
 interface ContentAccessor {
   sourceMd: string;
-  save: (newSourceMd: string) => Promise<void>;
+  save: (newSourceMd: string, newHtml: string) => Promise<void>;
 }
 
 // Gemeinsame Grundlage für Autolinking UND Wikilink-Entfernung: liest den
 // rohen Markdown-Quelltext eines Inhalts unabhängig von Sichtbarkeit/Owner
-// (Admin-Zugriff) und liefert eine passende Speicherfunktion — beide
-// Admin-Actions unten transformieren nur den Text anders, das Lesen/
-// Speichern je Inhaltstyp ist identisch.
+// (Admin-Zugriff) und liefert eine passende Speicherfunktion. save() nimmt
+// das fertig gerenderte HTML als Parameter entgegen (statt es selbst zu
+// rendern) — die Aufrufer unten müssen zwischen Rendern und Speichern noch
+// frisch erstellte [[Wikilinks]] auflösen (siehe planAutolink).
 async function getContentAccessor(
   contentType: AutolinkContentType,
   slug: string,
@@ -73,8 +75,8 @@ async function getContentAccessor(
       }
       return {
         sourceMd: mission.sourceMarkdown,
-        save: async (next) => {
-          await updateMissionSynopsis(mission.id, next);
+        save: async (nextMd, nextHtml) => {
+          await updateMissionSynopsisWithHtml(mission.id, nextMd, nextHtml);
           revalidateMission(slug);
         },
       };
@@ -87,8 +89,8 @@ async function getContentAccessor(
       }
       return {
         sourceMd: log.sourceMarkdown,
-        save: async (next) => {
-          await updateMissionLogSourceMd(log.id, next);
+        save: async (nextMd, nextHtml) => {
+          await updateMissionLogSourceMd(log.id, nextMd, nextHtml);
           revalidateLog(log.missionId, slug);
         },
       };
@@ -101,8 +103,8 @@ async function getContentAccessor(
       }
       return {
         sourceMd: entry.sourceMarkdown,
-        save: async (next) => {
-          await updateArchiveEntryContent(entry.id, next);
+        save: async (nextMd, nextHtml) => {
+          await updateArchiveEntryContent(entry.id, nextMd, nextHtml);
           revalidateArchiveEntry(slug);
         },
       };
@@ -115,8 +117,8 @@ async function getContentAccessor(
       }
       return {
         sourceMd: character.sourceMarkdown,
-        save: async (next) => {
-          await updateCharacterBio(character.id, next);
+        save: async (nextMd, nextHtml) => {
+          await updateCharacterBio(character.id, nextMd, nextHtml);
           revalidateCharacter(slug);
         },
       };
@@ -144,7 +146,7 @@ function selfExcludeFor(
 
 interface AutolinkPlan {
   matches: AutolinkMatch[];
-  sourceMd: string;
+  previewHtml: string;
   save: () => Promise<void>;
 }
 
@@ -153,6 +155,14 @@ interface AutolinkPlan {
 // Übernehmen nie einen ungeprüften/manipulierten Text speichert und
 // Änderungen zwischen Vorschau und Bestätigen (durch einen anderen Admin)
 // nicht stillschweigend überschrieben werden.
+//
+// applyAutolinks() erzeugt [[Wikilinks]] statt direkter Markdown-Links,
+// damit das Ergebnis mit "Wikilinks entfernen" symmetrisch bleibt.
+// markdownToHtml() rendert diese zunächst als <a href="wikilink://…">
+// (siehe remarkWikiLinks in lib/markdown.ts) — resolveAutolinkedWikilinks()
+// löst direkt danach genau die hier neu erstellten anhand der bekannten
+// Ziel-Pfade auf, damit sie sofort funktionieren statt erst beim nächsten
+// Vault-Ingest.
 async function planAutolink(
   contentType: AutolinkContentType,
   slug: string,
@@ -162,7 +172,15 @@ async function planAutolink(
 
   const targets = await getAutolinkTargets(selfExcludeFor(contentType, slug));
   const { sourceMd, matches } = applyAutolinks(accessor.sourceMd, targets);
-  return { sourceMd, matches, save: () => accessor.save(sourceMd) };
+  const previewHtml = resolveAutolinkedWikilinks(
+    await markdownToHtml(sourceMd),
+    matches,
+  );
+  return {
+    matches,
+    previewHtml,
+    save: () => accessor.save(sourceMd, previewHtml),
+  };
 }
 
 export async function previewAutolinkAction(
@@ -174,8 +192,7 @@ export async function previewAutolinkAction(
   const plan = await planAutolink(contentType, slug);
   if ("error" in plan) return plan;
 
-  const previewHtml = await markdownToHtml(plan.sourceMd);
-  return { matches: plan.matches, previewHtml };
+  return { matches: plan.matches, previewHtml: plan.previewHtml };
 }
 
 export async function applyAutolinkAction(
@@ -196,7 +213,7 @@ export async function applyAutolinkAction(
 
 interface WikilinkCleanupPlan {
   removed: WikilinkRemoval[];
-  sourceMd: string;
+  previewHtml: string;
   save: () => Promise<void>;
 }
 
@@ -208,7 +225,12 @@ async function planWikilinkCleanup(
   if ("error" in accessor) return accessor;
 
   const { sourceMd, removed } = stripWikilinks(accessor.sourceMd);
-  return { sourceMd, removed, save: () => accessor.save(sourceMd) };
+  const previewHtml = await markdownToHtml(sourceMd);
+  return {
+    removed,
+    previewHtml,
+    save: () => accessor.save(sourceMd, previewHtml),
+  };
 }
 
 export async function previewWikilinkCleanupAction(
@@ -220,8 +242,7 @@ export async function previewWikilinkCleanupAction(
   const plan = await planWikilinkCleanup(contentType, slug);
   if ("error" in plan) return plan;
 
-  const previewHtml = await markdownToHtml(plan.sourceMd);
-  return { removed: plan.removed, previewHtml };
+  return { removed: plan.removed, previewHtml: plan.previewHtml };
 }
 
 export async function applyWikilinkCleanupAction(

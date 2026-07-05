@@ -1,7 +1,6 @@
 import { unstable_cache } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
-import { markdownToHtml } from "@/lib/markdown";
 import { Character, CharacterMetadata } from "@/types/character";
 import { MissionLogPreview } from "@/types/missionLog";
 
@@ -253,8 +252,8 @@ export async function getCharacterSourceBySlug(
 export async function updateCharacterBio(
   characterId: number,
   bodyMarkdown: string,
+  bio: string,
 ): Promise<void> {
-  const bio = await markdownToHtml(bodyMarkdown);
   await sql`
     UPDATE characters
     SET bio = ${bio}, source_md = ${bodyMarkdown}, updated_at = NOW()

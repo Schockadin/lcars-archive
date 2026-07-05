@@ -1,7 +1,6 @@
 import { unstable_cache } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
-import { markdownToHtml } from "@/lib/markdown";
 import {
   ArchiveCategory,
   ArchiveEntryDetail,
@@ -240,8 +239,8 @@ export async function getArchiveEntrySourceBySlug(
 export async function updateArchiveEntryContent(
   archiveEntryId: number,
   bodyMarkdown: string,
+  contentHtml: string,
 ): Promise<void> {
-  const contentHtml = await markdownToHtml(bodyMarkdown);
   await sql`
     UPDATE archive_entries
     SET content = ${contentHtml}, source_md = ${bodyMarkdown}, updated_at = NOW()
