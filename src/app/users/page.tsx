@@ -12,6 +12,7 @@ import VaultIngestPanel from "./VaultIngestPanel";
 import RevalidateCachePanel from "./RevalidateCachePanel";
 import UserBackupPanel from "./UserBackupPanel";
 import TimelineRegeneratePanel from "./TimelineRegeneratePanel";
+import AssignOwnerlessMissionsPanel from "./AssignOwnerlessMissionsPanel";
 
 export const metadata: Metadata = {
   title: "Nutzerverwaltung",
@@ -46,12 +47,15 @@ export default async function UsersAdminPage() {
   const userOptions = users
     .filter((u) => u.role !== "guest")
     .map((u) => ({ id: u.id, name: u.name }));
+  const gmOptions = users
+    .filter((u) => u.role === "gm" || u.role === "admin")
+    .map((u) => ({ id: u.id, name: u.name }));
 
   // Feste Anzahl an Werkzeug-Panels im "Admin Actions"-Akkordeon — kein
   // DB-Wert, nur der Vollständigkeit halber im Kopf gezeigt (gleiche Optik
   // wie die anderen DataRow-Akkordeons hier, die einen Datensatz-Zähler
   // zeigen).
-  const adminActionCount = 5;
+  const adminActionCount = 6;
 
   return (
     <>
@@ -129,6 +133,11 @@ export default async function UsersAdminPage() {
                 <section className="flex flex-col gap-[12px]">
                   <h2 className="text-lcars-amber">Timeline</h2>
                   <TimelineRegeneratePanel />
+                </section>
+
+                <section className="flex flex-col gap-[12px]">
+                  <h2 className="text-lcars-amber">Missionen ohne Owner</h2>
+                  <AssignOwnerlessMissionsPanel gms={gmOptions} />
                 </section>
               </div>
             </LcarsDataRow>

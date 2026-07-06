@@ -473,6 +473,24 @@ export async function setMissionOwner(
   return rows[0] ?? null;
 }
 
+// Bulk-Variante von setMissionOwner: weist ALLE Missionen ohne Owner (meist
+// per Vault-Ingest entstanden, der owner_user_id nie setzt) auf einen Schlag
+// einem GM zu (siehe assignOwnerlessMissionsAction in
+// src/app/users/missionOwnerActions.ts) — spart das mühsame Einzeln-Zuordnen
+// über OwnerSelect.tsx auf jeder Mission-Detailseite. Bereits zugeordnete
+// Missionen bleiben unangetastet (WHERE owner_user_id IS NULL).
+export async function assignOwnerlessMissionsToUser(
+  ownerId: number,
+): Promise<{ slugs: string[] }> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE missions
+    SET owner_user_id = ${ownerId}, updated_at = NOW()
+    WHERE owner_user_id IS NULL
+    RETURNING slug
+  `;
+  return { slugs: rows.map((r) => r.slug) };
+}
+
 // Siehe setMissionOwner oben — gleiches Prinzip für Mission-Logs.
 export async function setMissionLogOwner(
   logId: number,

@@ -13,8 +13,35 @@ export default function manifest(): MetadataRoute.Manifest {
     background_color: "#08081a",
     theme_color: "#08081a",
     icons: [
-      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
-      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+      {
+        src: "/icons/icon-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "any",
+      },
+      {
+        src: "/icons/icon-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "any",
+      },
+      // Maskable: eigene Varianten mit vollflächigem Hintergrund und dem
+      // Emblem innerhalb der sicheren Zone (zentrierter 80%-Kreis) — Android
+      // schneidet maskable Icons auf wechselnde Formen (Kreis, Squircle, …)
+      // zu; die normalen "any"-Icons hätten dabei den Ring/Text am Rand
+      // verloren, da das Emblem dort bis an den Bildrand reicht.
+      {
+        src: "/icons/icon-maskable-192.png",
+        sizes: "192x192",
+        type: "image/png",
+        purpose: "maskable",
+      },
+      {
+        src: "/icons/icon-maskable-512.png",
+        sizes: "512x512",
+        type: "image/png",
+        purpose: "maskable",
+      },
     ],
   };
 }
