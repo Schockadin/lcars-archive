@@ -21,6 +21,7 @@
 .archive-browser-main {
   flex: 1 1 0;
   min-width: 0;
+  margin-left: 24px;
 }
 
 .archive-cat-list {
@@ -179,9 +180,6 @@
 @media (max-width: 768px) {
   .archive-browser {
     flex-direction: column;
-    /* siehe mission-detail.css: align-items: flex-start oben steuert bei
-       column-Layout die Breite statt der vertikalen Ausrichtung — ohne
-       stretch bricht .archive-browser-main nicht auf Viewport-Breite um. */
     align-items: stretch;
   }
   .archive-browser-nav {
@@ -190,5 +188,8 @@
     position: static;
     max-height: none;
     overflow: visible;
+  }
+  .archive-browser-main {
+    margin-left: 0px;
   }
 }
