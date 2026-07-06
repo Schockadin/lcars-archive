@@ -9,10 +9,15 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      // /home ist jetzt eine echte Seite (src/app/home/page.tsx) statt eines
-      // blanken Redirects auf "/" — zeigt eingeloggten Usern das Dashboard,
-      // anonymen Besuchern weiterhin die Landingpage (redirect() innerhalb
-      // der Seite selbst, nicht mehr hier).
+      // "/" selbst zeigt jetzt je nach Login-Status Dashboard oder
+      // Landingpage (siehe page.tsx) — /home bleibt als reiner Redirect für
+      // alte Links/Lesezeichen bestehen, die eigentliche Nav zeigt direkt
+      // auf "/" (siehe MAIN_NAV in src/lib/nav.ts).
+      {
+        source: "/home",
+        destination: "/",
+        permanent: true,
+      },
       {
         source: "/status",
         destination: "https://stats.uptimerobot.com/3pqHZOOYrY",

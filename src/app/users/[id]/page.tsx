@@ -23,11 +23,11 @@ const ROLE_LABELS: Record<User["role"], string> = {
 };
 
 // Profil und Settings sind zusammengeführt: die Aktivitäts-Übersicht
-// (Neu/News/offene Gespräche/Lesezeichen/Abos) lebt jetzt auf /home (siehe
-// src/app/home/page.tsx) — hier bleibt nur noch die Konto-Verwaltung
-// (Name/E-Mail, Passwort, Benachrichtigungen, PWA-Installation), plus
-// weiterhin die Admin/GM-Ansicht eines FREMDEN Users (isSelf === false,
-// z.B. aus der Nutzerverwaltung).
+// (Neu/News/offene Gespräche/Lesezeichen/Abos) lebt jetzt auf "/" (siehe
+// src/app/Dashboard.tsx, gerendert von src/app/page.tsx für eingeloggte
+// User) — hier bleibt nur noch die Konto-Verwaltung (Name/E-Mail, Passwort,
+// Benachrichtigungen, PWA-Installation), plus weiterhin die Admin/GM-Ansicht
+// eines FREMDEN Users (isSelf === false, z.B. aus der Nutzerverwaltung).
 export default async function UserPage({
   params,
 }: {

@@ -62,7 +62,7 @@ export async function login(
 
   await recordLogin(user.id);
   await createSession(user);
-  redirect(`/users/${user.id}`);
+  redirect("/");
 }
 
 export async function logout(): Promise<void> {

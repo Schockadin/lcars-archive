@@ -1,9 +1,6 @@
-import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
-import { getSession } from "@/lib/session";
-import { getUserById, hasPassword } from "@/lib/users";
+import { hasPassword } from "@/lib/users";
 import { getBookmarkedContent, getSubscribedContent } from "@/lib/follows";
 import { getRecentActivity, getRecentDeletions } from "@/lib/recentActivity";
 import { getDialoguesForUser } from "@/lib/dialogues";
@@ -11,11 +8,6 @@ import FollowedContentSection from "./FollowedContentSection";
 import OpenDialoguesSection from "./OpenDialoguesSection";
 import NewsSection from "./NewsSection";
 import type { User } from "@/types/db";
-
-export const metadata: Metadata = {
-  title: "Home",
-  robots: { index: false, follow: false },
-};
 
 const ROLE_LABELS: Record<User["role"], string> = {
   admin: "Administration",
@@ -25,23 +17,11 @@ const ROLE_LABELS: Record<User["role"], string> = {
   guest: "Gast",
 };
 
-// Ersetzt den früheren blanken Redirect /home -> / (next.config.ts) — für
-// eingeloggte User zeigt "Home" jetzt das persönliche Dashboard, das vorher
-// auf /users/[id] (Profil) lag. Profil selbst ist jetzt mit Settings
-// zusammengeführt (siehe users/[id]/page.tsx) und zeigt nur noch
-// Konto-Verwaltung, keine Aktivitäts-Übersicht mehr. Anonyme Besucher landen
-// weiterhin auf der Landingpage.
-export default async function HomePage() {
-  const session = await getSession();
-  if (!session) {
-    redirect("/");
-  }
-
-  const user = await getUserById(session.userId);
-  if (!user) {
-    redirect("/login");
-  }
-
+// Persönliches Dashboard für eingeloggte User auf "/" (siehe page.tsx) —
+// vorher auf /home, das jetzt wieder ein blanker Redirect auf "/" ist
+// (next.config.ts), und davor auf /users/[id] (Profil), das inzwischen mit
+// Settings zusammengeführt ist und nur noch Konto-Verwaltung zeigt.
+export default async function Dashboard({ user }: { user: User }) {
   // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
   // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
   // spürbar auf.

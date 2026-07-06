@@ -48,5 +48,5 @@ export async function activateAccount(
 
   await recordLogin(user.id);
   await createSession(user);
-  redirect(`/users/${user.id}`);
+  redirect("/");
 }
