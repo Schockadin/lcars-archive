@@ -24,8 +24,8 @@ export default function TutorialPage() {
         <h1>Tutorial</h1>
         <p className="lcars-text">
           Dieses Archiv dokumentiert eine laufende Pen-&-Paper-Kampagne —
-          Charaktere, Missionen, Einsatzberichte und Archiv-Einträge, die
-          sich mit jeder Session weiterentwickeln. Diese Seite erklärt alle
+          Charaktere, Missionen, Einsatzberichte und Archiv-Einträge, die sich
+          mit jeder Session weiterentwickeln. Diese Seite erklärt alle
           Funktionen: was du auch ohne Konto sehen kannst, was du mit einem
           eigenen Konto selbst anlegen darfst, und was Spielleitung (GM) und
           Administration zusätzlich können. Klicke einen Abschnitt an, um ihn
@@ -33,26 +33,30 @@ export default function TutorialPage() {
         </p>
 
         <div className="flex flex-col gap-[10px] mt-[16px]">
-          <LcarsDataRow value={1} label="Für Besucher" color="var(--lcars-blue)" defaultOpen>
+          <LcarsDataRow
+            value={1}
+            label="Für Besucher"
+            color="var(--lcars-blue)"
+          >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Ohne Konto lässt sich der Großteil des Archivs lesen:{" "}
                 <strong>Charaktere</strong> (Personalakten mit Biografie),{" "}
-                <strong>Missionen</strong> (mit ihren Einsatzberichten),
-                das kategorisierte <strong>Archiv</strong> (Personen, Orte,
+                <strong>Missionen</strong> (mit ihren Einsatzberichten), das
+                kategorisierte <strong>Archiv</strong> (Personen, Orte,
                 Fraktionen, Spezies, Objekte, Ereignisse, Theorien, NPCs,
                 abgeschlossene Gespräche und Sonstiges), die{" "}
                 <strong>Timeline</strong> (chronologische Übersicht aller
-                Ereignisse) sowie die <strong>Suche</strong> (Volltextsuche
-                über alle diese Inhalte).
+                Ereignisse) sowie die <strong>Suche</strong> (Volltextsuche über
+                alle diese Inhalte).
               </p>
               <p>
                 Manche Inhalte sind nicht öffentlich: Jeder Eintrag hat eine
                 Sichtbarkeitsstufe — <strong>Öffentlich</strong> (alle),{" "}
                 <strong>GM</strong> (nur Spielleitung + der/die Ersteller:in)
                 oder <strong>Privat</strong> (nur der/die Ersteller:in).
-                Nicht-öffentliche Inhalte sind für dich als Besucher:in
-                einfach nicht vorhanden.
+                Nicht-öffentliche Inhalte sind für dich als Besucher:in einfach
+                nicht vorhanden.
               </p>
               <p>
                 Ein eigenes Konto kannst du dir nicht selbst anlegen — Zugänge
@@ -67,16 +71,19 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={2} label="Konto & Rollen" color="var(--lcars-purple)">
+          <LcarsDataRow
+            value={2}
+            label="Konto & Rollen"
+            color="var(--lcars-purple)"
+          >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Konten entstehen nur durch Einladung: Spielleitung oder
-                Administration legen dein Konto mit E-Mail-Adresse und Rolle
-                an, du bekommst daraufhin eine E-Mail mit einem
-                Aktivierungslink, über den du dein Passwort festlegst. Ein
-                Passwort vergessen? Über „Passwort vergessen“ auf der
-                Login-Seite kannst du dir jederzeit selbst einen neuen
-                Aktivierungslink zuschicken lassen.
+                Administration legen dein Konto mit E-Mail-Adresse und Rolle an,
+                du bekommst daraufhin eine E-Mail mit einem Aktivierungslink,
+                über den du dein Passwort festlegst. Ein Passwort vergessen?
+                Über „Passwort vergessen“ auf der Login-Seite kannst du dir
+                jederzeit selbst einen neuen Aktivierungslink zuschicken lassen.
               </p>
               <p>Es gibt fünf Rollen mit unterschiedlichen Rechten:</p>
               <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
@@ -88,9 +95,9 @@ export default function TutorialPage() {
                 <li>
                   <strong>Spielleitung (GM)</strong> — verwaltet Missionen,
                   weist Charaktere Spieler:innen zu und nutzt die
-                  Admin-Werkzeuge an Inhalten (siehe Abschnitt „Für
-                  Spielleitung & Admins“), aber keine Nutzerverwaltung —
-                  private Inhalte anderer bleiben ihr ebenfalls verborgen.
+                  Admin-Werkzeuge an Inhalten (siehe Abschnitt „Für Spielleitung
+                  & Admins“), aber keine Nutzerverwaltung — private Inhalte
+                  anderer bleiben ihr ebenfalls verborgen.
                 </li>
                 <li>
                   <strong>Spieler:in</strong> — legt eigene Charaktere,
@@ -113,7 +120,11 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={3} label="Eigene Inhalte" color="var(--lcars-amber)">
+          <LcarsDataRow
+            value={3}
+            label="Eigene Inhalte"
+            color="var(--lcars-amber)"
+          >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Unter <strong>„Inhalte“</strong> (Menü oben, sobald du
@@ -129,13 +140,12 @@ export default function TutorialPage() {
                 </li>
                 <li>
                   <strong>Charakter</strong> — darf jede:r außer Gast-Accounts
-                  anlegen; der Charakter wird sofort mit deinem Konto
-                  verknüpft.
+                  anlegen; der Charakter wird sofort mit deinem Konto verknüpft.
                 </li>
                 <li>
-                  <strong>Einsatzbericht</strong> und{" "}
-                  <strong>Gespräch</strong> — setzen einen eigenen Charakter
-                  voraus (der Knopf erscheint erst, sobald du einen hast).
+                  <strong>Einsatzbericht</strong> und <strong>Gespräch</strong>{" "}
+                  — setzen einen eigenen Charakter voraus (der Knopf erscheint
+                  erst, sobald du einen hast).
                 </li>
                 <li>
                   <strong>Mission</strong> — bleibt Spielleitung/Admin
@@ -151,61 +161,66 @@ export default function TutorialPage() {
               </p>
               <p>
                 Mission-Synopsen, Archiv-Einträge und Charakter-Biografien
-                lassen sich zusätzlich <strong>direkt auf ihrer Detailseite</strong>{" "}
-                bearbeiten („Bearbeiten“-Knopf über dem Text) — ohne Umweg
-                über ein separates Formular.
+                lassen sich zusätzlich{" "}
+                <strong>direkt auf ihrer Detailseite</strong> bearbeiten
+                („Bearbeiten“-Knopf über dem Text) — ohne Umweg über ein
+                separates Formular.
               </p>
               <p>
-                Ein <strong>Gespräch</strong> startest du mit deinem
-                Charakter und dem Charakter einer anderen Person; es beginnt{" "}
+                Ein <strong>Gespräch</strong> startest du mit deinem Charakter
+                und dem Charakter einer anderen Person; es beginnt{" "}
                 <strong>offen</strong> — nur ihr beide (oder Spielleitung/
-                Admin) könnt antworten. Sobald eine Seite es abschließt, wird
-                es <strong>unwiderruflich geschlossen</strong> und taucht
-                danach als gewöhnlicher Archiv-Eintrag in der Kategorie
-                „Gespräche“ auf.
+                Admin) könnt antworten. Sobald eine Seite es abschließt, wird es{" "}
+                <strong>unwiderruflich geschlossen</strong> und taucht danach
+                als gewöhnlicher Archiv-Eintrag in der Kategorie „Gespräche“
+                auf.
               </p>
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={4} label="Merken & Abonnieren" color="var(--lcars-blue)">
+          <LcarsDataRow
+            value={4}
+            label="Merken & Abonnieren"
+            color="var(--lcars-blue)"
+          >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Auf Charakter-, Missions- und Archiv-Seiten findest du zwei
-                Knöpfe: <strong>„Merken“</strong> speichert den Eintrag für
-                dich selbst (Filter „Gespeichert“ auf der Suchseite) — ohne
-                jede Benachrichtigung. <strong>„Abonnieren“</strong> meldet
-                dich für Update-Benachrichtigungen zu genau diesem Eintrag an
-                (z.B. wenn ein abonniertes Gespräch abgeschlossen wird).
+                Knöpfe: <strong>„Merken“</strong> speichert den Eintrag für dich
+                selbst (Filter „Gespeichert“ auf der Suchseite) — ohne jede
+                Benachrichtigung. <strong>„Abonnieren“</strong> meldet dich für
+                Update-Benachrichtigungen zu genau diesem Eintrag an (z.B. wenn
+                ein abonniertes Gespräch abgeschlossen wird).
               </p>
               <p>
                 Eingeloggt zeigt dir die <strong>Startseite</strong> dein
                 persönliches Dashboard: offene Gespräche in einer eigenen
-                Sektion sowie einen farbcodierten <strong>News-Feed</strong>{" "}
-                mit neu erstellten (grün), bearbeiteten (blau) und gelöschten
-                (rot) Inhalten — plus deine Lesezeichen und Abos.
+                Sektion sowie einen farbcodierten <strong>News-Feed</strong> mit
+                neu erstellten (grün), bearbeiteten (blau) und gelöschten (rot)
+                Inhalten — plus deine Lesezeichen und Abos.
               </p>
               <p>
-                Ob Benachrichtigungen dich tatsächlich erreichen, steuerst du
-                in deinem <strong>Profil</strong> über zwei Hauptschalter:
-                E-Mail- und Push-Benachrichtigungen. Für Push-Benachrichtigungen
-                muss zusätzlich jedes Gerät einzeln zustimmen (Browser-
-                Berechtigung) — der Hauptschalter bestimmt, ob der Server
-                überhaupt versucht zu senden, die Geräte-Freigabe, ob genau
-                dieses Gerät sie empfängt.
+                Ob Benachrichtigungen dich tatsächlich erreichen, steuerst du in
+                deinem <strong>Profil</strong> über zwei Hauptschalter: E-Mail-
+                und Push-Benachrichtigungen. Für Push-Benachrichtigungen muss
+                zusätzlich jedes Gerät einzeln zustimmen (Browser- Berechtigung)
+                — der Hauptschalter bestimmt, ob der Server überhaupt versucht
+                zu senden, die Geräte-Freigabe, ob genau dieses Gerät sie
+                empfängt.
               </p>
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={5} label="Markdown" color="var(--lcars-amber)" defaultOpen>
+          <LcarsDataRow value={5} label="Markdown" color="var(--lcars-amber)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
                 Archiv-Einträge, Gesprächsnachrichten) werden in{" "}
                 <strong>Markdown</strong> geschrieben — einer einfachen
                 Auszeichnungssprache aus reinem Text. Über jedem Textfeld
-                findest du eine Werkzeugleiste, die die Syntax für dich
-                einfügt, sowie einen <strong>Rohtext/Vorschau</strong>-Umschalter,
-                der zeigt, wie der Text am Ende aussieht. Neben jedem Hinweis
+                findest du eine Werkzeugleiste, die die Syntax für dich einfügt,
+                sowie einen <strong>Rohtext/Vorschau</strong>-Umschalter, der
+                zeigt, wie der Text am Ende aussieht. Neben jedem Hinweis
                 „Unterstützt Markdown-Formatierung“ zeigt ein Fahren mit der
                 Maus über das Wort „Markdown“ zusätzlich dieses Cheatsheet an.
               </p>
@@ -219,39 +234,59 @@ export default function TutorialPage() {
                   </thead>
                   <tbody>
                     <tr>
-                      <td><code># Titel</code></td>
-                      <td>Überschrift (mehr <code>#</code> = kleinere Ebene)</td>
+                      <td>
+                        <code># Titel</code>
+                      </td>
+                      <td>
+                        Überschrift (mehr <code>#</code> = kleinere Ebene)
+                      </td>
                     </tr>
                     <tr>
-                      <td><code>**fett**</code></td>
+                      <td>
+                        <code>**fett**</code>
+                      </td>
                       <td>Fett</td>
                     </tr>
                     <tr>
-                      <td><code>*kursiv*</code></td>
+                      <td>
+                        <code>*kursiv*</code>
+                      </td>
                       <td>Kursiv</td>
                     </tr>
                     <tr>
-                      <td><code>~~text~~</code></td>
+                      <td>
+                        <code>~~text~~</code>
+                      </td>
                       <td>Durchgestrichen</td>
                     </tr>
                     <tr>
-                      <td><code>[Text](https://…)</code></td>
+                      <td>
+                        <code>[Text](https://…)</code>
+                      </td>
                       <td>Link</td>
                     </tr>
                     <tr>
-                      <td><code>- Eintrag</code></td>
+                      <td>
+                        <code>- Eintrag</code>
+                      </td>
                       <td>Aufzählung</td>
                     </tr>
                     <tr>
-                      <td><code>1. Eintrag</code></td>
+                      <td>
+                        <code>1. Eintrag</code>
+                      </td>
                       <td>Nummerierte Liste</td>
                     </tr>
                     <tr>
-                      <td><code>&gt; Zitat</code></td>
+                      <td>
+                        <code>&gt; Zitat</code>
+                      </td>
                       <td>Zitat</td>
                     </tr>
                     <tr>
-                      <td><code>`Code`</code></td>
+                      <td>
+                        <code>`Code`</code>
+                      </td>
                       <td>Inline-Code</td>
                     </tr>
                   </tbody>
@@ -261,22 +296,22 @@ export default function TutorialPage() {
                 Für Spielleitung/Admin gibt es in derselben Werkzeugleiste
                 zusätzlich einen Kalender-Knopf, der an der Cursor-Position
                 einen Zeitleisten-Marker einfügt (siehe „Verlinkung“ unten und
-                den Abschnitt für Spielleitung/Admins) — der markierte
-                Zeitpunkt taucht danach auf der Timeline-Seite auf.
+                den Abschnitt für Spielleitung/Admins) — der markierte Zeitpunkt
+                taucht danach auf der Timeline-Seite auf.
               </p>
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={6} label="Verlinkung" color="var(--lcars-blue)" defaultOpen>
+          <LcarsDataRow value={6} label="Verlinkung" color="var(--lcars-blue)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Um im Fließtext auf einen Charakter, eine Mission oder einen
                 Archiv-Eintrag zu verweisen, schreibst du seinen Namen in
-                doppelte eckige Klammern: <code>[[Name]]</code>. Willst du
-                einen abweichenden Anzeigetext, trennst du ihn mit einem
-                senkrechten Strich ab: <code>[[Name|Anzeigetext]]</code>. Das
-                Archiv löst das automatisch zum passenden Link auf, sobald das
-                Ziel existiert.
+                doppelte eckige Klammern: <code>[[Name]]</code>. Willst du einen
+                abweichenden Anzeigetext, trennst du ihn mit einem senkrechten
+                Strich ab: <code>[[Name|Anzeigetext]]</code>. Das Archiv löst
+                das automatisch zum passenden Link auf, sobald das Ziel
+                existiert.
               </p>
               <p>
                 Wer sich das Tippen der Klammern sparen will, aktiviert beim
@@ -291,22 +326,27 @@ export default function TutorialPage() {
               <p>
                 Spielleitung/Admin haben zusätzlich ein eigenständiges
                 Autolinking-Werkzeug direkt auf jeder Detailseite (im
-                „Admin-Aktionen“-Bereich), das denselben Mechanismus auf
-                bereits gespeicherte Inhalte anwendet, plus ein Werkzeug, um
-                Wikilinks wieder zu entfernen (macht Autolinking-Ergebnisse
-                rückgängig) und eines, das gerade Anführungszeichen/Apostrophe
-                zu typografisch korrekten Zeichen vereinheitlicht.
+                „Admin-Aktionen“-Bereich), das denselben Mechanismus auf bereits
+                gespeicherte Inhalte anwendet, plus ein Werkzeug, um Wikilinks
+                wieder zu entfernen (macht Autolinking-Ergebnisse rückgängig)
+                und eines, das gerade Anführungszeichen/Apostrophe zu
+                typografisch korrekten Zeichen vereinheitlicht.
               </p>
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={7} label="Spielleitung & Admins" color="var(--lcars-purple)">
+          <LcarsDataRow
+            value={7}
+            label="Spielleitung & Admins"
+            color="var(--lcars-purple)"
+          >
             <div className="lcars-text flex flex-col gap-[12px]">
-              <p>
-                Zusätzlich zu allem oben Genannten kann die Spielleitung:
-              </p>
+              <p>Zusätzlich zu allem oben Genannten kann die Spielleitung:</p>
               <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
-                <li>Missionen anlegen, bearbeiten und Einsatzberichte dazu einsehen.</li>
+                <li>
+                  Missionen anlegen, bearbeiten und Einsatzberichte dazu
+                  einsehen.
+                </li>
                 <li>
                   Charaktere Spieler:innen zuweisen (Nutzerverwaltung unter{" "}
                   <code>/users</code>) — Gast-Accounts ausgenommen.
@@ -317,8 +357,11 @@ export default function TutorialPage() {
                   bereits gespeicherte Inhalte anwenden.
                 </li>
                 <li>
-                  Zeitleisten-Marker (<code>&lt;!-- timeline: JJJJ-MM-TT | Titel | Kategorie --&gt;</code>)
-                  über den Kalender-Knopf in der Textwerkzeugleiste einfügen
+                  Zeitleisten-Marker (
+                  <code>
+                    &lt;!-- timeline: JJJJ-MM-TT | Titel | Kategorie --&gt;
+                  </code>
+                  ) über den Kalender-Knopf in der Textwerkzeugleiste einfügen
                   und die komplette Timeline aus den aktuellen Datenbank-
                   Inhalten neu erzeugen lassen.
                 </li>
@@ -333,21 +376,25 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={8} label="App installieren" color="var(--lcars-amber)" defaultOpen>
+          <LcarsDataRow
+            value={8}
+            label="App installieren"
+            color="var(--lcars-amber)"
+          >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Das Archiv lässt sich als eigenständige App auf dein Gerät
-                installieren (Icon auf dem Home-Bildschirm, eigenes Fenster
-                ohne Browser-Leiste) — unter „App installieren“ in deinem
-                Profil oder direkt hier:
+                installieren (Icon auf dem Home-Bildschirm, eigenes Fenster ohne
+                Browser-Leiste) — unter „App installieren“ in deinem Profil oder
+                direkt hier:
               </p>
               <InstallPwaPrompt />
               <p>
                 Wichtig zu wissen: Die installierte App speichert Inhalte{" "}
                 <strong>nicht</strong> für den Offline-Zugriff — du brauchst
                 weiterhin eine Internetverbindung. Der einzige Zweck der
-                App-Installation ist ein bequemerer Zugriff (eigenes Icon,
-                kein Adressleisten-Umweg) sowie die Grundlage für{" "}
+                App-Installation ist ein bequemerer Zugriff (eigenes Icon, kein
+                Adressleisten-Umweg) sowie die Grundlage für{" "}
                 <strong>Push-Benachrichtigungen</strong>, die du wie oben
                 beschrieben in deinem Profil ein-/ausschaltest.
               </p>

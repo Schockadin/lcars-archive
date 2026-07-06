@@ -16,14 +16,21 @@ export default function FollowedContentSection({
   if (items.length === 0) return null;
 
   return (
-    <LcarsDataRow value={items.length} label={heading} color="var(--lcars-amber)">
+    <LcarsDataRow
+      value={items.length}
+      label={heading}
+      color="var(--lcars-amber)"
+      accentColor="var(--lcars-blue)"
+    >
       <div className="flex flex-col gap-[6px]">
         {items.map((item) => (
           <Link
             key={`${item.targetType}-${item.slug}`}
             href={item.href}
             className="mission-akte"
-            style={{ "--mission-color": "var(--lcars-amber)" } as React.CSSProperties}
+            style={
+              { "--mission-color": "var(--lcars-amber)" } as React.CSSProperties
+            }
           >
             <span className="mission-akte-rail" />
             <span className="mission-akte-body text-left">

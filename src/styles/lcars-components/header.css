@@ -225,11 +225,11 @@
   display: grid;
   grid-template-columns: repeat(var(--usernav-cols), 216px);
   grid-auto-rows: minmax(0, 1fr);
-  column-gap: 5px;
   flex: 1;
   min-height: 0;
   width: 100%;
   max-width: 720px;
+  column-gap: 5px;
 }
 .lcars-usernav-form {
   display: flex;
@@ -244,7 +244,7 @@
   align-items: flex-end;
   justify-content: flex-end;
   min-height: 0;
-  min-width: 0;
+  min-width: 0px;
   padding: 0 18px 8px;
   border: none;
   border-radius: 100vmax;
@@ -268,7 +268,8 @@
   background-color: var(--lcars-amber-light);
 }
 .lcars-usernav-pill.lcars-menu-active,
-.lcars-usernav-pill.lcars-menu-active:hover {
+.lcars-usernav-pill.lcars-menu-active:hover,
+.lcars-usernav-pill--active {
   background-color: var(--lcars-blue);
 }
 
@@ -316,6 +317,9 @@
 }
 
 .lcars-footer-menu {
+  display: flex;
+  justify-content: end;
+  align-items: center;
   text-decoration: none;
   width: 10%;
   min-width: 100px;
@@ -323,7 +327,6 @@
   background: var(--lcars-amber);
   font-size: calc(var(--lcars-bar-h) - 4px);
   padding-right: 4px;
-  text-align: right;
   color: black;
   font-weight: 600;
   text-transform: uppercase;
@@ -337,7 +340,7 @@
 
 .lcars-footer-version {
   font-family: var(--font-share-tech-mono), monospace;
-  font-size: 12px;
+  font-size: calc(var(--lcars-bar-h) - 2px);
   letter-spacing: 0.03em;
   color: var(--lcars-surface-2);
   user-select: text;

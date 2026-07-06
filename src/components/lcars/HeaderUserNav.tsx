@@ -16,9 +16,9 @@ export default function HeaderUserNav({
   const pathname = usePathname();
 
   const tabs = [
-    { href: `/users/${userId}`, label: "Profil" },
     { href: `/users/${userId}/content`, label: "Inhalte" },
     { href: "/search", label: "Suche" },
+    { href: `/users/${userId}`, label: "Profil" },
     ...(role === "gm" || role === "admin"
       ? [{ href: "/users", label: role === "admin" ? "Admin" : "Leitung" }]
       : []),
@@ -44,7 +44,7 @@ export default function HeaderUserNav({
       ))}
       <form action={logout} className="lcars-usernav-form">
         <button type="submit" className="lcars-usernav-pill bg-lcars-red">
-          Abmelden
+          Logout
         </button>
       </form>
     </nav>

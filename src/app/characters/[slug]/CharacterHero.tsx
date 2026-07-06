@@ -261,9 +261,10 @@ export default function CharacterHero({
               {ships.length > 0 && (
                 <FileField label="Schiff" value={ships.join(", ")} />
               )}
-              {division != null && (
+              {/* ToDo: Divisions => Array mit join(", ") */}
+              {/* {division != null && (
                 <FileField label="Abteilung" value={division} />
-              )}
+              )} */}
             </div>
 
             <div className="mt-3">
@@ -285,11 +286,6 @@ export default function CharacterHero({
             <LcarsReadingModeToggle />
 
             <h1 className="char-file-name">{character.name}</h1>
-            {metadata.aliases.length > 0 && (
-              <p className="char-file-aliases">
-                aka {metadata.aliases.join(" · ")}
-              </p>
-            )}
             <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
               <FollowButtons
                 targetType="character"
@@ -303,35 +299,32 @@ export default function CharacterHero({
                   users={owners.map((u) => ({ id: u.id, name: u.name }))}
                 />
               )}
+              {viewer?.role === "admin" && (
+                <div className="mt-3">
+                  <AdminActionsMenu>
+                    <AutolinkButton
+                      contentType="character"
+                      slug={character.slug}
+                    />
+                    <RemoveWikilinksButton
+                      contentType="character"
+                      slug={character.slug}
+                    />
+                    <FormatTextButton
+                      contentType="character"
+                      slug={character.slug}
+                    />
+                  </AdminActionsMenu>
+                </div>
+              )}
             </div>
-
-            {viewer?.role === "admin" && (
-              <div className="mt-3">
-                <AdminActionsMenu>
-                  <AutolinkButton
-                    contentType="character"
-                    slug={character.slug}
-                  />
-                  <RemoveWikilinksButton
-                    contentType="character"
-                    slug={character.slug}
-                  />
-                  <FormatTextButton
-                    contentType="character"
-                    slug={character.slug}
-                  />
-                </AdminActionsMenu>
-              </div>
-            )}
 
             {sourceMarkdown != null ? (
               <CharacterBioEditor
                 characterId={character.id}
                 bioHtml={bio?.html ?? null}
                 sourceMarkdown={sourceMarkdown}
-                isAdminOrGM={
-                  viewer?.role === "gm" || viewer?.role === "admin"
-                }
+                isAdminOrGM={viewer?.role === "gm" || viewer?.role === "admin"}
               />
             ) : bio ? (
               <div

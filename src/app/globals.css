@@ -134,6 +134,7 @@ h5 {
   color: var(--lcars-text-light);
   line-height: 1.75;
   margin-bottom: 10px;
+  hyphens: auto;
 }
 
 .lcars-breadcrumbs {

@@ -122,12 +122,12 @@ export default function AutolinkButton({
   }
 
   return (
-    <div className="flex flex-col gap-[6px] items-start">
+    <div className="flex flex-col gap-[6px] items-start w-[85%]">
       <button
         type="button"
         onClick={handlePreview}
         disabled={pending}
-        className="lcars-switch disabled:opacity-50"
+        className="lcars-switch disabled:opacity-50 w-full"
       >
         {pending ? "Prüfe…" : "Autolinking"}
       </button>

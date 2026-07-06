@@ -195,8 +195,8 @@ export default function MarkdownEditor({
   }
 
   return (
-    <div className="markdown-editor">
-      <div className="markdown-editor-toolbar flex flex-wrap items-center gap-[6px]">
+    <div className="markdown-editor mt-[5px]">
+      <div className="markdown-editor-toolbar flex flex-wrap items-center gap-[6px] mb-[5px]">
         {ACTIONS.map((action) => (
           <button
             key={action.label}

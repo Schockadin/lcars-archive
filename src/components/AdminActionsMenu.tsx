@@ -24,6 +24,7 @@ export default function AdminActionsMenu({
       value={Children.count(children)}
       label={label}
       color="var(--lcars-purple)"
+      className="my-[5px] max-w-[350px]"
     >
       <div className="admin-actions-menu-panel">{children}</div>
     </LcarsDataRow>

@@ -74,7 +74,7 @@ export default function FollowButtons({
       {!subscribeOnly && (
         <button
           type="button"
-          className={`lcars-switch${state.bookmarked ? " lcars-switch--active" : ""}`}
+          className={`lcars-usernav-pill${state.bookmarked ? " lcars-usernav-pill--active" : ""}`}
           disabled={pending === "bookmark"}
           onClick={handleBookmark}
         >
@@ -83,7 +83,7 @@ export default function FollowButtons({
       )}
       <button
         type="button"
-        className={`lcars-switch${state.subscribed ? " lcars-switch--active" : ""}`}
+        className={`lcars-usernav-pill${state.subscribed ? " lcars-usernav-pill--active" : ""}`}
         disabled={pending === "subscribe"}
         onClick={handleSubscribe}
       >

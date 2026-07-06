@@ -1,6 +1,7 @@
 import "server-only";
 import sql from "@/lib/db";
 
+// ToDo: Granularer machen: "mission" | "dialogue" | "npc", etc.
 export type FollowTargetType = "mission" | "archive_entry" | "character";
 
 export interface FollowStatus {
