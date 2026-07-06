@@ -7,7 +7,7 @@ import {
   FormError,
   FormSuccess,
   SubmitButton,
-} from "../../_shared/FormPrimitives";
+} from "../_shared/FormPrimitives";
 
 const initialState: PasswordState = {};
 

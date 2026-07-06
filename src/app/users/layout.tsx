@@ -1,6 +1,7 @@
 import { verifySession } from "@/lib/dal";
 
-// Gilt für /users, /users/[id], /users/[id]/settings und /users/[id]/content.
+// Gilt für /users, /users/[id] (Profil + Settings zusammengeführt) und
+// /users/[id]/content.
 // Die eigentliche Navigation zeigt jetzt der Header (HeaderUserNav) — dieses
 // Layout bleibt reines Session-Gate: anonyme Besucher werden zu /login
 // umgeleitet, bevor irgendeine Unterseite rendert. Sicherheitsrelevant ist
