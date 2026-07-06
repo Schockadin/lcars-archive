@@ -82,15 +82,9 @@ function NewsRow({ item }: { item: NewsItem }) {
 // Gemergter, nach Datum sortierter Feed aus neu erstellten, bearbeiteten und
 // gelöschten Inhalten (grün/blau/rot). Offene Gespräche leben seit
 // OpenDialoguesSection.tsx in einer eigenen Sektion, nicht mehr hier.
-// Bewusst KEIN Akkordeon (LcarsDataRow ohne children rendert nur die
-// Kopf-Pille, nicht klickbar/klappbar) — die News sollen immer sichtbar
-// sein, dafür in einem scrollbaren Container mit fester Höhe (3 Zeilen,
-// siehe .news-scroll in shared.css) statt eines potenziell langen Akkordeons.
-//
-// className="lcars-data-row--full": ohne children (kein Akkordeon-Zweig in
-// DataRow.tsx) bleibt die Pille sonst bei ihrer festen Default-Breite
-// (300px/238px, siehe .lcars-data-row in data-row.css) statt wie die
-// anderen Akkordeon-Kopfzeilen auf dem Dashboard 100% Breite einzunehmen.
+// Akkordeon wie OpenDialoguesSection, standardmäßig aufgeklappt (defaultOpen)
+// — der begrenzte, scrollbare Container (3 Zeilen, siehe .news-scroll in
+// shared.css) bleibt trotzdem, damit die Sektion nicht beliebig lang wird.
 //
 // Ganz ausgeblendet (kein Platzhalter-Text), wenn es nichts anzuzeigen gibt
 // — wie die übrigen Dashboard-DataRows (siehe FollowedContentSection.tsx).
@@ -107,18 +101,17 @@ export default function NewsSection({
   if (items.length === 0) return null;
 
   return (
-    <div className="flex flex-col gap-[8px]">
-      <LcarsDataRow
-        value={items.length}
-        label="News"
-        color="var(--lcars-blue)"
-        className="lcars-data-row--full"
-      />
+    <LcarsDataRow
+      value={items.length}
+      label="News"
+      color="var(--lcars-blue)"
+      defaultOpen
+    >
       <div className="news-scroll">
         {items.map((item) => (
           <NewsRow key={item.key} item={item} />
         ))}
       </div>
-    </div>
+    </LcarsDataRow>
   );
 }
