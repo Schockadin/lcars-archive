@@ -3,17 +3,14 @@ import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireSelfOrGM } from "./dal";
 import { hasPassword } from "@/lib/users";
-import { getBookmarkedContent, getSubscribedContent } from "@/lib/follows";
-import { getRecentActivity, getRecentDeletions } from "@/lib/recentActivity";
-import { getDialoguesForUser } from "@/lib/dialogues";
-import FollowedContentSection from "./FollowedContentSection";
-import OpenDialoguesSection from "./OpenDialoguesSection";
-import NewsSection from "./NewsSection";
+import SettingsForm from "./SettingsForm";
+import PasswordForm from "./PasswordForm";
+import NotificationSettingsForm from "./NotificationSettingsForm";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 
 export const metadata: Metadata = {
-  title: "Mein Profil",
+  title: "Profil",
   robots: { index: false, follow: false },
 };
 
@@ -25,6 +22,12 @@ const ROLE_LABELS: Record<User["role"], string> = {
   guest: "Gast",
 };
 
+// Profil und Settings sind zusammengeführt: die Aktivitäts-Übersicht
+// (Neu/News/offene Gespräche/Lesezeichen/Abos) lebt jetzt auf "/" (siehe
+// src/app/Dashboard.tsx, gerendert von src/app/page.tsx für eingeloggte
+// User) — hier bleibt nur noch die Konto-Verwaltung (Name/E-Mail, Passwort,
+// Benachrichtigungen, PWA-Installation), plus weiterhin die Admin/GM-Ansicht
+// eines FREMDEN Users (isSelf === false, z.B. aus der Nutzerverwaltung).
 export default async function UserPage({
   params,
 }: {
@@ -33,36 +36,14 @@ export default async function UserPage({
   const { id } = await params;
   const { viewer, target, isSelf } = await requireSelfOrGM(id);
 
-  // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
-  // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
-  // innerhalb des User-Bereichs spürbar auf.
-  const [
-    hasPasswordSet,
-    bookmarks,
-    subscriptions,
-    recentActivity,
-    deletions,
-    openDialogues,
-  ] = await Promise.all([
-    isSelf ? hasPassword(target.id) : Promise.resolve(true),
-    isSelf ? getBookmarkedContent(target.id) : Promise.resolve([]),
-    isSelf ? getSubscribedContent(target.id) : Promise.resolve([]),
-    isSelf
-      ? getRecentActivity(target.id, target.previous_login_at)
-      : Promise.resolve({ created: [], updated: [] }),
-    isSelf
-      ? getRecentDeletions(target.id, target.previous_login_at)
-      : Promise.resolve([]),
-    isSelf ? getDialoguesForUser(target.id, "open") : Promise.resolve([]),
-  ]);
+  const hasPasswordSet = isSelf ? await hasPassword(target.id) : true;
   const needsPassword = isSelf && !hasPasswordSet;
-  const firstVisit = target.previous_login_at === null;
 
   return (
     <>
-      <PageMeta title={isSelf ? "Mein Profil" : target.name} section="users" />
+      <PageMeta title={isSelf ? "Profil" : target.name} section="users" />
       <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
-        <h1>{isSelf ? `Willkommen, ${target.name}` : target.name}</h1>
+        <h1>{isSelf ? "Profil" : target.name}</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
           <p>
@@ -73,38 +54,49 @@ export default async function UserPage({
           {needsPassword && (
             <p className="text-lcars-amber">
               Du hast noch kein Passwort gesetzt.{" "}
-              <Link
-                href={`/users/${target.id}/settings#password`}
-                className="underline"
-              >
+              <Link href="#password" className="underline">
                 Jetzt festlegen
               </Link>
               .
             </p>
           )}
 
-          {isSelf && firstVisit && (
-            <p className="lcars-text">
-              Das ist dein erster Besuch — willkommen an Bord.
-            </p>
-          )}
-
-          {isSelf && <OpenDialoguesSection items={openDialogues} />}
-
           {isSelf && (
-            <NewsSection
-              created={recentActivity.created}
-              updated={recentActivity.updated}
-              deleted={deletions}
-            />
-          )}
+            <div className="flex flex-col gap-[32px]">
+              <section id="tutorial" className="flex flex-col gap-[8px]">
+                <h2>Hilfe & Anleitung</h2>
+                <p>
+                  Unsicher, wie etwas funktioniert? Das Tutorial erklärt alle
+                  Funktionen des Archivs — von der Suche bis zur
+                  Markdown-Formatierung.
+                </p>
+                <Link href="/tutorial" className="lcars-switch self-start">
+                  Tutorial öffnen
+                </Link>
+              </section>
 
-          {isSelf && (
-            <FollowedContentSection heading="Deine Lesezeichen" items={bookmarks} />
-          )}
+              <SettingsForm user={{ name: target.name, email: target.email }} />
 
-          {isSelf && (
-            <FollowedContentSection heading="Deine Abos" items={subscriptions} />
+              <section id="password" className="flex flex-col gap-[12px]">
+                <h2>{hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}</h2>
+                <PasswordForm hasPassword={hasPasswordSet} />
+              </section>
+
+              <section id="notifications" className="flex flex-col gap-[12px]">
+                <h2>Benachrichtigungen</h2>
+                <NotificationSettingsForm
+                  user={{
+                    emailEnabled: target.email_notifications_enabled,
+                    pushEnabled: target.push_notifications_enabled,
+                  }}
+                />
+              </section>
+
+              <section id="install" className="flex flex-col gap-[12px]">
+                <h2>App installieren</h2>
+                <InstallPwaPrompt />
+              </section>
+            </div>
           )}
 
           {!isSelf && (
@@ -122,9 +114,6 @@ export default async function UserPage({
               )}
             </p>
           )}
-          <div className="max-w-[var(--lcars-content-w)]">
-            {isSelf && <InstallPwaPrompt />}
-          </div>
         </div>
       </article>
     </>

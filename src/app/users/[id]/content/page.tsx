@@ -35,67 +35,74 @@ export default async function UserContentPage({
       <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
         <h1>Meine Inhalte</h1>
 
-        <div className="flex flex-col flex-wrap gap-[12px]">
-          {/* Anders als Missionslog/Gespräch (eigener Charakter) oder Mission
-              (gm/admin) sind Archiv-Einträge an keine Voraussetzung
-              geknüpft — jeder eingeloggte User darf welche anlegen. */}
-          <Link href={`/users/${user.id}/archive/new`} className="lcars-switch">
-            Neuer Archiv-Eintrag
-          </Link>
-          {/* Genau wie Archiv-Einträge an keine Voraussetzung geknüpft
-              (bewusst NICHT hinter characters.length > 0 versteckt — genau
-              damit legt man seinen ERSTEN eigenen Charakter an) — außer
-              Gast-Accounts, siehe requireOwnCharacters/new/actions.ts. */}
-          {user.role !== "guest" && (
-            <Link
-              href={`/users/${user.id}/characters/new`}
-              className="lcars-switch"
-            >
-              Neuer Charakter
+        <section className="flex flex-col gap-[12px]">
+          <h2>Neue Inhalte</h2>
+          <div className="flex flex-col flex-wrap gap-[12px]">
+            {/* Anders als Missionslog/Gespräch (eigener Charakter) oder
+                Mission (gm/admin) sind Archiv-Einträge an keine
+                Voraussetzung geknüpft — jeder eingeloggte User darf welche
+                anlegen. */}
+            <Link href={`/users/${user.id}/archive/new`} className="lcars-switch">
+              Neuer Archiv-Eintrag
             </Link>
-          )}
-          {characters.length > 0 && (
-            <>
+            {/* Genau wie Archiv-Einträge an keine Voraussetzung geknüpft
+                (bewusst NICHT hinter characters.length > 0 versteckt — genau
+                damit legt man seinen ERSTEN eigenen Charakter an) — außer
+                Gast-Accounts, siehe requireOwnCharacters/new/actions.ts. */}
+            {user.role !== "guest" && (
               <Link
-                href={`/users/${user.id}/mission-logs/new`}
+                href={`/users/${user.id}/characters/new`}
                 className="lcars-switch"
               >
-                Neuer Missionslog
+                Neuer Charakter
               </Link>
+            )}
+            {characters.length > 0 && (
+              <>
+                <Link
+                  href={`/users/${user.id}/mission-logs/new`}
+                  className="lcars-switch"
+                >
+                  Neuer Missionslog
+                </Link>
+                <Link
+                  href={`/users/${user.id}/dialogues/new`}
+                  className="lcars-switch"
+                >
+                  Neues Gespräch
+                </Link>
+              </>
+            )}
+            {isGM && (
               <Link
-                href={`/users/${user.id}/dialogues/new`}
+                href={`/users/${user.id}/missions/new`}
                 className="lcars-switch"
               >
-                Neues Gespräch
+                Neue Mission
               </Link>
-            </>
-          )}
-          {isGM && (
-            <Link
-              href={`/users/${user.id}/missions/new`}
-              className="lcars-switch"
-            >
-              Neue Mission
-            </Link>
-          )}
-        </div>
+            )}
+          </div>
+        </section>
 
-        <p className="lcars-text text-[13px] mt-[20px]">
-          Sichtbarkeit je Eintrag: Privat (nur du) · GM (du + Spielleitung) ·
-          Öffentlich (alle).
-        </p>
+        <section className="flex flex-col gap-[12px] mt-[32px]">
+          <h2>Inhalte verwalten</h2>
+          <p className="lcars-text text-[13px]">
+            Sichtbarkeit je Eintrag: Privat (nur du) · GM (du + Spielleitung) ·
+            Öffentlich (alle).
+          </p>
 
-        <div className="lcars-text">
-          <UserContentBrowser
-            characters={characters}
-            logs={logs}
-            dialogues={dialogues}
-            archiveEntries={archiveEntries}
-            missions={missions}
-            canManageMissions={isGM}
-            ownUserId={user.id}
-          />
-        </div>
+          <div className="lcars-text">
+            <UserContentBrowser
+              characters={characters}
+              logs={logs}
+              dialogues={dialogues}
+              archiveEntries={archiveEntries}
+              missions={missions}
+              canManageMissions={isGM}
+              ownUserId={user.id}
+            />
+          </div>
+        </section>
       </article>
     </>
   );

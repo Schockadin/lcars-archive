@@ -20,6 +20,18 @@ Ursprungsimport sowie als aus der DB generiertes Backup — siehe
   Aliassen und Status (`active` / `retired` / `deceased`).
 - **Missionen & Mission-Logs** — Logbucheinträge sind Charakteren und Missionen zugeordnet
   und chronologisch nach Session-Nummer sortiert.
+- **Nutzerkonten & Rollen** — fünf Rollen (Administration/Spielleitung/Spieler:in/
+  Betrachter:in/Gast) mit abgestuften Rechten; Konten entstehen nur per Einladung
+  (Aktivierungsmail mit Passwort-Setup-Link).
+- **Eigene Inhalte** — eingeloggte User legen eigene Charaktere, Einsatzberichte,
+  Archiv-Einträge und Gespräche zwischen Charakteren an, mit Sichtbarkeitsstufen
+  (privat/GM/öffentlich) und einem persönlichen Dashboard (farbcodierter News-Feed,
+  offene Gespräche, Lesezeichen/Abos).
+- **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und
+  automatische bzw. manuelle Verlinkung (`[[Wikilinks]]`) zwischen Inhalten.
+- **PWA mit Push-Benachrichtigungen** — installierbar auf Mobilgeräten (inkl. maskable
+  Icon), Web-Push für neue Dialog-Nachrichten und abonnierte Inhalte.
+- **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und Spielleitung.
 - **Markdown-Vault als Ursprungsimport & Backup** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
   entstehen direkt in der App und werden per Admin-Panel-Button (oder künftig Cronjob)
@@ -180,11 +192,18 @@ unter Deployment.
 │       └── shared.ts         # Markdown→HTML, Validierung
 └── src/
     ├── app/                  # Next.js App Router (Seiten & API-Routes)
-    │   ├── characters/       # Charakterübersicht & -detailseiten
+    │   ├── page.tsx           # "/" — Landingpage (anonym) / Dashboard (eingeloggt)
+    │   ├── Dashboard.tsx       # Persönliches Dashboard: News-Feed, offene Gespräche, Abos
+    │   ├── characters/        # Charakterübersicht & -detailseiten
     │   ├── missions/
     │   ├── archive/
+    │   ├── dialogues/         # Öffentliche Ansicht abgeschlossener Gespräche
     │   ├── timeline/
-    │   ├── api/              # /api/characters, /api/health …
+    │   ├── tutorial/          # Anleitung für Besucher/User/Spielleitung
+    │   ├── login/, activate/, forgot-password/
+    │   ├── users/             # Profil+Settings, Nutzerverwaltung, eigene Inhalte anlegen
+    │   ├── api/               # /api/characters, /api/health …
+    │   ├── manifest.ts        # PWA-Manifest (Icons, inkl. maskable)
     │   ├── robots.ts
     │   └── sitemap.ts
     ├── components/lcars/      # LCARS-UI-Komponenten
@@ -322,23 +341,13 @@ Migrationsschritt gegen Production bleibt weiterhin manuell (siehe oben).
 
 ### Versionsnummer
 
-Solange die App in der Beta-/Testphase ist, zeigt der Footer eine
-Versionsnummer der Form `0.<PR-Nr>.<Commit-Nr>` (z.B. `v0.27.6`), sichtbar
-in der roten Leiste neben „Impressum"/„Datenschutz". Wird einmalig beim
-Build aus der Git-Historie ermittelt (`src/lib/version.ts`), kein Code
-nötig, um sie zu pflegen:
-
-- **PR-Nr:** bei Netlify Deploy-Previews aus `REVIEW_ID` (setzt Netlify
-  automatisch pro PR-Build); bei Production-Builds aus der Commit-Message
-  des letzten Commits (GitHub hängt bei Squash-Merges `(#NN)` an, bei
-  regulären Merges gibt es „Merge pull request #NN …").
-- **Commit-Nr:** Anzahl Commits auf dem PR-Branch seit der Abzweigung von
-  `master` — zählt bei jedem Push im PR hoch (`0.27.1`, `0.27.2`, …) und
-  beginnt bei einem neuen PR wieder bei 1. Bei Production-Builds (kein
-  PR-Branch mehr vorhanden) Fallback auf die Gesamt-Commit-Anzahl im Repo.
-
-Lässt sich die PR- oder Commit-Nummer nicht ermitteln (z.B. lokal ohne
-Git-Historie), bleibt die Anzeige einfach leer.
+Die App hat den Beta-Status verlassen und zeigt im Footer eine feste
+semantische Versionsnummer (z.B. `v1.9.2`), sichtbar in der roten Leiste
+neben „Impressum"/„Datenschutz". Anders als die frühere git-basierte
+Beta-Zählung (`0.<PR-Nr>.<Commit-Nr>`) ist das jetzt eine einfache
+String-Konstante in [`src/lib/version.ts`](src/lib/version.ts), die bei
+jedem Feature/Fix von Hand hochgezählt wird (Patch für Fixes, Minor für
+neue Features) — kein Build-Schritt, keine Git-Historie nötig.
 
 ---
 

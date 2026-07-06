@@ -1,13 +1,13 @@
 "use client";
 
 import { useActionState } from "react";
-import { updateSettings, type SettingsState } from "./actions";
+import { updateSettings, type SettingsState } from "./settingsActions";
 import {
   FormField,
   FormError,
   FormSuccess,
   SubmitButton,
-} from "../../_shared/FormPrimitives";
+} from "../_shared/FormPrimitives";
 
 const initialState: SettingsState = {};
 

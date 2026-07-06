@@ -10,8 +10,8 @@ export const metadata: Metadata = {
 
 // Öffentliche, statische Tutorial-Seite — erklärt das Archiv für drei
 // Zielgruppen (Besucher/User/Spielleitung), erreichbar über /tutorial
-// direkt, den Footer-Link (siehe ElbowBar.tsx) und einen Verweis in den
-// User-Einstellungen. Als DataRow-Akkordeons strukturiert (gleiches Muster
+// direkt, den Footer-Link (siehe ElbowBar.tsx) und einen Verweis im Profil
+// (siehe users/[id]/page.tsx). Als DataRow-Akkordeons strukturiert (gleiches Muster
 // wie "Meine Inhalte"/Admin-Panel) statt einer langen Textwüste — die
 // breitesten Themen (Markdown/Verlinkung/PWA) stehen standardmäßig offen,
 // rollenspezifische Abschnitte eingeklappt.
@@ -33,7 +33,7 @@ export default function TutorialPage() {
         </p>
 
         <div className="flex flex-col gap-[10px] mt-[16px]">
-          <LcarsDataRow value={1} label="Für Besucher (ohne Konto)" color="var(--lcars-blue)" defaultOpen>
+          <LcarsDataRow value={1} label="Für Besucher" color="var(--lcars-blue)" defaultOpen>
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Ohne Konto lässt sich der Großteil des Archivs lesen:{" "}
@@ -67,7 +67,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={2} label="Konto, Rollen & Berechtigungen" color="var(--lcars-purple)">
+          <LcarsDataRow value={2} label="Konto & Rollen" color="var(--lcars-purple)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Konten entstehen nur durch Einladung: Spielleitung oder
@@ -113,12 +113,14 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={3} label="Eigene Inhalte: Anlegen, Bearbeiten & Sichtbarkeit" color="var(--lcars-amber)">
+          <LcarsDataRow value={3} label="Eigene Inhalte" color="var(--lcars-amber)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
-                Unter <strong>„Meine Inhalte“</strong> (verlinkt aus deinem
-                Dashboard) siehst du alles, was dir gehört, und findest die
-                Anlegen-Knöpfe:
+                Unter <strong>„Inhalte“</strong> (Menü oben, sobald du
+                eingeloggt bist) findest du zwei klar getrennte Bereiche:{" "}
+                <strong>„Neue Inhalte“</strong> mit den Anlegen-Knöpfen und{" "}
+                <strong>„Inhalte verwalten“</strong>, wo alles auftaucht, was
+                dir bereits gehört:
               </p>
               <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
                 <li>
@@ -165,7 +167,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={4} label="Merken, Abonnieren & Benachrichtigungen" color="var(--lcars-blue)">
+          <LcarsDataRow value={4} label="Merken & Abonnieren" color="var(--lcars-blue)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Auf Charakter-, Missions- und Archiv-Seiten findest du zwei
@@ -176,8 +178,15 @@ export default function TutorialPage() {
                 (z.B. wenn ein abonniertes Gespräch abgeschlossen wird).
               </p>
               <p>
+                Eingeloggt zeigt dir die <strong>Startseite</strong> dein
+                persönliches Dashboard: offene Gespräche in einer eigenen
+                Sektion sowie einen farbcodierten <strong>News-Feed</strong>{" "}
+                mit neu erstellten (grün), bearbeiteten (blau) und gelöschten
+                (rot) Inhalten — plus deine Lesezeichen und Abos.
+              </p>
+              <p>
                 Ob Benachrichtigungen dich tatsächlich erreichen, steuerst du
-                in den <strong>Einstellungen</strong> über zwei Hauptschalter:
+                in deinem <strong>Profil</strong> über zwei Hauptschalter:
                 E-Mail- und Push-Benachrichtigungen. Für Push-Benachrichtigungen
                 muss zusätzlich jedes Gerät einzeln zustimmen (Browser-
                 Berechtigung) — der Hauptschalter bestimmt, ob der Server
@@ -187,7 +196,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={5} label="Markdown-Formatierung" color="var(--lcars-amber)" defaultOpen>
+          <LcarsDataRow value={5} label="Markdown" color="var(--lcars-amber)" defaultOpen>
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
@@ -258,7 +267,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={6} label="Verlinkung: Wikilinks & Automatisches Verlinken" color="var(--lcars-blue)" defaultOpen>
+          <LcarsDataRow value={6} label="Verlinkung" color="var(--lcars-blue)" defaultOpen>
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Um im Fließtext auf einen Charakter, eine Mission oder einen
@@ -291,7 +300,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={7} label="Für Spielleitung (GM) & Admins" color="var(--lcars-purple)">
+          <LcarsDataRow value={7} label="Spielleitung & Admins" color="var(--lcars-purple)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Zusätzlich zu allem oben Genannten kann die Spielleitung:
@@ -316,19 +325,21 @@ export default function TutorialPage() {
               </ul>
               <p>
                 Administration kann zusätzlich Nutzerkonten anlegen, Rollen
-                ändern, deaktivieren oder löschen — und sieht als einzige
+                ändern, deaktivieren oder löschen, alle Missionen ohne
+                Besitzer:in auf einen Schlag einer Spielleitung zuordnen
+                (Nutzerverwaltung, „Admin Actions“) — und sieht als einzige
                 Rolle ausnahmslos alle Inhalte, auch private.
               </p>
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={8} label="Als App installieren (PWA)" color="var(--lcars-amber)" defaultOpen>
+          <LcarsDataRow value={8} label="App installieren" color="var(--lcars-amber)" defaultOpen>
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Das Archiv lässt sich als eigenständige App auf dein Gerät
                 installieren (Icon auf dem Home-Bildschirm, eigenes Fenster
-                ohne Browser-Leiste) — unter „App installieren“ in den
-                Einstellungen oder direkt hier:
+                ohne Browser-Leiste) — unter „App installieren“ in deinem
+                Profil oder direkt hier:
               </p>
               <InstallPwaPrompt />
               <p>
@@ -338,7 +349,7 @@ export default function TutorialPage() {
                 App-Installation ist ein bequemerer Zugriff (eigenes Icon,
                 kein Adressleisten-Umweg) sowie die Grundlage für{" "}
                 <strong>Push-Benachrichtigungen</strong>, die du wie oben
-                beschrieben in den Einstellungen ein-/ausschaltest.
+                beschrieben in deinem Profil ein-/ausschaltest.
               </p>
             </div>
           </LcarsDataRow>

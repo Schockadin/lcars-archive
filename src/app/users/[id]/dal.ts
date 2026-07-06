@@ -11,9 +11,13 @@ import type { User } from "@/types/db";
 import type { UserAdminDetail, UserWithPasswordStatus } from "@/lib/users";
 import type { Character } from "@/types/character";
 
-// Für /settings: Einstellungen bearbeiten bleibt strikt Selbstbedienung,
-// auch für den GM. Der Identitätsvergleich (":id" aus der URL == meine
-// eigene) kommt bewusst nur aus dem signierten Cookie (verifySession,
+// Reine Identitätsprüfung ohne Rollen-/Charakter-Voraussetzung — genutzt
+// von der eigenen Konto-Verwaltung (Profil-Seite, Settings-Teil davon,
+// bleibt strikt Selbstbedienung auch für den GM) sowie von Formularen ohne
+// weitere Voraussetzung (Archiv-Eintrag/Charakter anlegen, siehe die
+// jeweiligen requireOwnUser-Aufrufer). Der Identitätsvergleich (":id" aus
+// der URL == meine eigene) kommt bewusst nur aus dem signierten Cookie
+// (verifySession,
 // kein DB-Zugriff) — das Cookie ist kryptografisch signiert, niemand kann
 // dort eine fremde userId hineinfälschen, ein DB-Abgleich bringt für diese
 // reine Identitätsprüfung keine zusätzliche Sicherheit. Der User-Datensatz
@@ -154,7 +158,7 @@ export interface AdminEditTargetAccess {
 // Useraccount-Bearbeitung selbst ist admin-only, siehe requireAdmin in
 // src/lib/dal.ts und der gleiche Grundsatz in src/app/users/actions.ts;
 // ein reiner gm darf hier nicht rein, auch nicht für sich selbst — dafür
-// gibt es /settings). requireAdmin() prüft frisch aus der DB, nicht aus
+// gibt es die eigene Profil-Seite). requireAdmin() prüft frisch aus der DB, nicht aus
 // dem Cookie, damit ein gerade entzogenes Admin-Recht sofort greift.
 export async function requireAdminEditTarget(
   idParam: string,
