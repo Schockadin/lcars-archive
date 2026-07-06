@@ -295,38 +295,6 @@
   color: var(--lcars-text-light);
 }
 
-/* /tutorial (TutorialPage) — die DataRow-Akkordeon-Labels sind hier
-   ungewöhnlich lange Sätze statt kurzer Kategorienamen (z.B. "Charaktere"
-   im Admin-Panel) und werden auf schmalen Displays sonst mit "…"
-   abgeschnitten (.lcars-data-row-label-text ist global auf eine Zeile mit
-   Ellipsis ausgelegt). Nur unterhalb von 640px überschrieben — auf
-   Desktop-Breiten passt der volle Text ohnehin in eine Zeile.
-
-   Bewusst eine größere FESTE Höhe statt height:auto: .lcars-data-row-text/
-   -label-text erben height:100% von .lcars-data-row, und container-type:
-   size (inline Style in DataRow.tsx, für den 100cqh-Font-Size-Trick der
-   Zahlen-Spalte) erzwingt zusätzlich Size-Containment. Mit height:auto
-   bricht diese Kette: 100% eines auto-hohen, size-containten Vorfahren
-   löst sich unvorhersehbar gegen einen viel größeren Ahnen auf (getestet:
-   die Zeile wuchs auf über 3000px). Eine feste, großzügig bemessene Höhe
-   umgeht das komplett — 100% eines festen Werts bleibt exakt dieser Wert. */
-@media (max-width: 640px) {
-  .tutorial-content .lcars-data-row {
-    height: 76px;
-  }
-  .tutorial-content .lcars-data-row-label {
-    font-size: 22px;
-  }
-  .tutorial-content .lcars-data-row-label-text {
-    white-space: normal;
-    overflow: hidden;
-    text-overflow: clip;
-    line-height: 1.2;
-    font-size: 15px;
-    letter-spacing: 0.02em;
-  }
-}
-
 /* /tutorial (TutorialPage) — Cheatsheet-Tabelle + Inline-Code, gleicher
    Code-Stil wie .markdown-hint-popover-row code oben. */
 .tutorial-content code {

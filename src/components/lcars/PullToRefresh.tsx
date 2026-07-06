@@ -2,9 +2,14 @@
 import { useEffect, useState } from "react";
 
 // Zieh-Distanz, ab der Loslassen ein Reload auslöst, bzw. visuelle Deckelung
-// des Zieh-Indikators (px).
-const TRIGGER_DISTANCE = 70;
-const MAX_PULL = 100;
+// des Zieh-Indikators (px). Bewusst deutlich über einem beiläufigen
+// Scroll-Ruck (vorher 70px, fühlte sich zu leicht auslösbar an) — Reload
+// soll nur bei einem entschiedenen, langen Ziehen passieren, erkennbar
+// daran, dass der Pfeil vollständig auf Amber umgefärbt ist (siehe
+// RingArrow: colorProgress erreicht 1 exakt bei TRIGGER_DISTANCE, an
+// dieselbe Distanz gekoppelt wie readyToRefresh unten).
+const TRIGGER_DISTANCE = 110;
+const MAX_PULL = 140;
 
 // Blass (--lcars-text-dim) -> Amber (--lcars-amber), siehe tokens.css.
 // Feste RGB-Werte statt CSS-Variablen, weil die Zwischenfarbe während des
