@@ -98,5 +98,5 @@ export async function createMissionAction(
   });
 
   revalidateMission(result.slug);
-  redirect(`/users/${session.userId}/content`);
+  redirect(`/missions/${result.slug}`);
 }

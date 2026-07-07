@@ -6,6 +6,8 @@ import {
 } from "@/app/actions/missions";
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
+import FollowButtons from "@/components/FollowButtons";
+import { PencilIcon } from "@/lib/icons";
 
 const initialState: MissionSynopsisEditState = {};
 
@@ -20,14 +22,14 @@ export default function MissionSynopsisEditor({
   missionId,
   bodyHtml,
   sourceMarkdown,
-  topRow,
   adminActions,
+  slug,
 }: {
   missionId: number;
   bodyHtml: string | null;
   sourceMarkdown: string;
-  topRow: ReactNode;
   adminActions?: ReactNode;
+  slug: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -53,17 +55,19 @@ export default function MissionSynopsisEditor({
     return (
       <div className="flex flex-col gap-[8px]">
         <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
-          {topRow}
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="lcars-switch"
-          >
-            Synopsis bearbeiten
-          </button>
+          <div className="flex">
+            <FollowButtons targetType="mission" targetSlug={slug} />
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="lcars-icon-btn size-[40px] ml-[12px]"
+              aria-label="Bearbeiten"
+              title="Beabeiten"
+            >
+              <PencilIcon />
+            </button>
+          </div>
         </div>
-
-        {adminActions}
 
         {displayHtml ? (
           <div
@@ -80,7 +84,18 @@ export default function MissionSynopsisEditor({
   return (
     <div className="flex flex-col gap-[8px]">
       <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
-        {topRow}
+        <div className="flex">
+          <FollowButtons targetType="mission" targetSlug={slug} />
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="lcars-icon-btn size-[40px] ml-[12px]"
+            aria-label="Bearbeiten"
+            title="Beabeiten"
+          >
+            <PencilIcon />
+          </button>
+        </div>
       </div>
 
       {adminActions}

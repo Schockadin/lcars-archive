@@ -65,5 +65,5 @@ export async function createArchiveEntryAction(
   });
 
   revalidateArchiveEntry(result.slug);
-  redirect(`/users/${session.userId}/content`);
+  redirect(`/archive/${result.slug}`);
 }

@@ -85,5 +85,5 @@ export async function createCharacterAction(
   });
 
   revalidateCharacter(result.slug);
-  redirect(`/users/${session.userId}/content`);
+  redirect(`/characters/${result.slug}`);
 }

@@ -210,7 +210,7 @@ export async function regenerateTimeline(): Promise<RegenerateTimelineResult> {
       metadata: unknown;
       source_md: string | null;
     }[]
-  >`SELECT slug, title, category, metadata, source_md FROM archive_entries`;
+  >`SELECT slug, title, category, metadata, source_md FROM archive_entries WHERE dialogue_open = false`;
 
   for (const entry of archiveEntries) {
     const href = `/archive/${entry.slug}`;

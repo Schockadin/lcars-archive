@@ -65,6 +65,8 @@ export default function AutolinkButton({
     setPreview(null);
   }
 
+  const distinctMatches = [...new Set(preview?.matches)];
+
   if (preview) {
     return (
       <div className="autolink-preview">
@@ -74,38 +76,30 @@ export default function AutolinkButton({
             : `${preview.matches.length} Verknüpfung${preview.matches.length === 1 ? "" : "en"} gefunden:`}
         </p>
 
-        {preview.matches.length > 0 && (
+        {distinctMatches.length > 0 && (
           <ul className="autolink-match-list">
-            {preview.matches.map((m, i) => (
+            {distinctMatches.map((m, i) => (
               <li key={i}>
                 „{m.matchedText}“ → <b>{m.canonical}</b> ({TYPE_LABEL[m.type]})
               </li>
             ))}
           </ul>
         )}
-
-        {preview.matches.length > 0 && (
-          <div
-            className="mission-body lcars-text autolink-preview-html"
-            dangerouslySetInnerHTML={{ __html: preview.previewHtml }}
-          />
-        )}
-
-        <div className="flex gap-[12px] items-center justify-end">
+        <div className="flex gap-[12px] items-center justify-start self-end">
           <button
             type="button"
             onClick={handleCancel}
             disabled={pending}
-            className="lcars-switch"
+            className="lcars-switch w-[40%]"
           >
             Abbrechen
           </button>
-          {preview.matches.length > 0 && (
+          {distinctMatches.length > 0 && (
             <button
               type="button"
               onClick={handleConfirm}
               disabled={pending}
-              className="lcars-switch disabled:opacity-50"
+              className="lcars-switch disabled:opacity-50 w-[40%]"
             >
               {pending ? "Speichern…" : "Übernehmen"}
             </button>

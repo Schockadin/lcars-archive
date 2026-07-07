@@ -6,6 +6,8 @@ import {
 } from "@/app/actions/characters";
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
+import FollowButtons from "@/components/FollowButtons";
+import { PencilIcon } from "@/lib/icons";
 
 const initialState: CharacterBioEditState = {};
 
@@ -21,6 +23,7 @@ export default function CharacterBioEditor({
   bioHtml,
   sourceMarkdown,
   isAdminOrGM,
+  slug,
 }: {
   characterId: number;
   bioHtml: string | null;
@@ -29,6 +32,7 @@ export default function CharacterBioEditor({
   // Timeline-Marker-Button darin aber zusätzlich rollen-gated — derselbe
   // Owner könnte selbst gm/admin sein oder auch nicht.
   isAdminOrGM: boolean;
+  slug: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -52,13 +56,18 @@ export default function CharacterBioEditor({
   if (!editing) {
     return (
       <div className="flex flex-col gap-[8px]">
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="lcars-switch self-start"
-        >
-          Biografie bearbeiten
-        </button>
+        <div className="flex">
+          <FollowButtons targetType="character" targetSlug={slug} />
+          <button
+            type="button"
+            onClick={() => setEditing(true)}
+            className="lcars-icon-btn self-start size-[40px] ml-[12px]"
+            aria-label="Bearbeiten"
+            title="Bearbeiten"
+          >
+            <PencilIcon />
+          </button>
+        </div>
 
         {displayHtml ? (
           <div

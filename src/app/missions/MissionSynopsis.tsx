@@ -3,7 +3,7 @@ import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import FollowButtons from "@/components/FollowButtons";
 import { Viewer } from "@/lib/visibility";
 import OwnerSelect from "@/components/OwnerSelect";
-import AdminActionsMenu from "@/components/AdminActionsMenu";
+import ActionsMenu from "@/components/ActionsMenu";
 import AutolinkButton from "@/components/AutolinkButton";
 import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
 import FormatTextButton from "@/components/FormatTextButton";
@@ -39,29 +39,25 @@ export default function MissionSynopsis({
           missionId={mission.id}
           bodyHtml={mission.metadata.body}
           sourceMarkdown={mission.sourceMarkdown ?? ""}
-          topRow={
-            <>
-              <FollowButtons targetType="mission" targetSlug={mission.slug} />
-              {viewer?.role === "admin" && (
-                <OwnerSelect
-                  contentType="mission"
-                  id={mission.id}
-                  initialOwnerId={mission.ownerUserId}
-                  users={owners.map((u) => ({ id: u.id, name: u.name }))}
-                />
-              )}
-            </>
-          }
+          slug={mission.slug}
           adminActions={
             viewer?.role === "admin" ? (
-              <AdminActionsMenu>
+              <ActionsMenu>
+                {viewer?.role === "admin" && (
+                  <OwnerSelect
+                    contentType="mission"
+                    id={mission.id}
+                    initialOwnerId={mission.ownerUserId}
+                    users={owners.map((u) => ({ id: u.id, name: u.name }))}
+                  />
+                )}
                 <AutolinkButton contentType="mission" slug={mission.slug} />
                 <RemoveWikilinksButton
                   contentType="mission"
                   slug={mission.slug}
                 />
                 <FormatTextButton contentType="mission" slug={mission.slug} />
-              </AdminActionsMenu>
+              </ActionsMenu>
             ) : undefined
           }
         />

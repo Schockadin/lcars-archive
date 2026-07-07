@@ -6,6 +6,8 @@ import {
 } from "@/app/actions/archive";
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
+import FollowButtons from "@/components/FollowButtons";
+import { PencilIcon } from "@/lib/icons";
 
 const initialState: ArchiveEntryEditState = {};
 
@@ -21,6 +23,7 @@ export default function ArchiveEntryEditor({
   contentHtml,
   sourceMarkdown,
   isAdminOrGM,
+  slug,
 }: {
   entryId: number;
   contentHtml: string;
@@ -29,6 +32,7 @@ export default function ArchiveEntryEditor({
   // Timeline-Marker-Button darin aber zusätzlich rollen-gated — anders als
   // MissionSynopsisEditor.tsx, wo Owner- und Rollen-Gate zusammenfallen.
   isAdminOrGM: boolean;
+  slug: string;
 }) {
   const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -51,13 +55,21 @@ export default function ArchiveEntryEditor({
   if (!editing) {
     return (
       <div className="flex flex-col gap-[8px]">
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="lcars-switch self-start"
-        >
-          Inhalt bearbeiten
-        </button>
+        <div className="flex">
+          <FollowButtons targetType="archive_entry" targetSlug={slug} />
+
+          {isAdminOrGM && (
+            <button
+              type="button"
+              onClick={() => setEditing(true)}
+              className="lcars-icon-btn size-[40px] ml-[12px] self-start"
+              aria-label="Bearbeiten"
+              title="Bearbeiten"
+            >
+              <PencilIcon />
+            </button>
+          )}
+        </div>
 
         {displayHtml ? (
           <div

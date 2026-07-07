@@ -75,16 +75,6 @@ export default function MissionLogList({
         </Link>
       </div>
 
-      <p className="mission-loglist-summary">
-        {synopsis ? (
-          synopsisExcerpt(synopsis)
-        ) : (
-          <span className="lcars-empty-state">
-            Keine Zusammenfassung vorhanden
-          </span>
-        )}
-      </p>
-
       {/* oberste Zeile: zurück zur Synopsis der Mission */}
       <LcarsLogEntry
         href={`/missions/${missionSlug}`}
@@ -100,7 +90,6 @@ export default function MissionLogList({
         </p>
       ) : (
         <>
-          <p className="mission-logs-sub">Missions-Logs</p>
           <LcarsSwitch
             className="flex gap-[10px] w-full mb-[12px]"
             options={[

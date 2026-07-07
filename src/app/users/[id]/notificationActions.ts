@@ -6,6 +6,8 @@ import { updateNotificationPreferences } from "@/lib/users";
 export interface NotificationSettingsState {
   error?: string;
   success?: boolean;
+  emailEnabled?: boolean;
+  pushEnabled?: boolean;
 }
 
 // Ignoriert bewusst jede :id aus der URL — geändert wird ausschließlich der
@@ -19,10 +21,17 @@ export async function updateNotificationSettingsAction(
 ): Promise<NotificationSettingsState> {
   const currentUser = await getCurrentUser();
 
+  const email: boolean = formData.has("emailEnabled");
+  const push: boolean = formData.has("pushEnabled");
+
   await updateNotificationPreferences(currentUser.id, {
-    emailEnabled: formData.has("emailEnabled"),
-    pushEnabled: formData.has("pushEnabled"),
+    emailEnabled: email,
+    pushEnabled: push,
   });
 
-  return { success: true };
+  return {
+    success: true,
+    emailEnabled: email,
+    pushEnabled: push,
+  };
 }

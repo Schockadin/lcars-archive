@@ -6,9 +6,7 @@ import { CATEGORY_CONFIG, archiveTitle } from "@/lib/archiveFormat";
 import { stripHtml } from "@/lib/missionFormat";
 import { ArchiveEntryDetail, ArchiveLink } from "@/types/archive";
 import PageMeta from "@/components/PageMeta";
-import CrumbLabel from "@/components/CrumbLabel";
 import { LcarsReadingModeToggle } from "@/components/lcars";
-import FollowButtons from "@/components/FollowButtons";
 import DialogueThread from "@/components/DialogueThread";
 import DialogueHeader from "@/components/DialogueHeader";
 import DeleteDialogueButton from "@/components/DeleteDialogueButton";
@@ -16,11 +14,11 @@ import { getDialogueMessages } from "@/lib/dialogues";
 import { getViewer, canView } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import OwnerSelect from "@/components/OwnerSelect";
-import AdminActionsMenu from "@/components/AdminActionsMenu";
 import AutolinkButton from "@/components/AutolinkButton";
 import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
 import FormatTextButton from "@/components/FormatTextButton";
 import ArchiveEntryEditor from "./ArchiveEntryEditor";
+import ActionsMenu from "@/components/ActionsMenu";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -109,41 +107,38 @@ export default async function ArchiveEntryPage({ params }: Props) {
       style={{ "--cat-color": cfg.color } as React.CSSProperties}
     >
       <PageMeta title={title} section="archive" />
-      <CrumbLabel slug={entry.slug} label={title} />
       <LcarsReadingModeToggle />
 
-      {viewer?.role === "admin" && entry.category !== "dialogue" && (
-        <div className="flex flex-col gap-[10px] mb-[10px]">
-          <OwnerSelect
-            contentType="archive_entry"
-            id={entry.id}
-            initialOwnerId={entry.ownerUserId}
-            users={owners.map((u) => ({ id: u.id, name: u.name }))}
+      <div className="flex items-start">
+        {entry.category !== "dialogue" ? (
+          <StandardHeader entry={entry} title={title} label={cfg.label} />
+        ) : (
+          <DialogueHeader
+            title={title}
+            participants={entry.metadata.participants}
+            location={entry.metadata.location}
+            logDate={entry.metadata.logDate}
           />
-          <AdminActionsMenu>
+        )}
+        <div className="flex flex-col gap-[10px] mb-[10px] ml-auto">
+          <ActionsMenu>
+            {(viewer?.role === "admin" || viewer?.role === "gm") && (
+              <OwnerSelect
+                contentType="archive_entry"
+                id={entry.id}
+                initialOwnerId={entry.ownerUserId}
+                users={owners.map((u) => ({ id: u.id, name: u.name }))}
+              />
+            )}
             <AutolinkButton contentType="archiveEntry" slug={entry.slug} />
             <RemoveWikilinksButton
               contentType="archiveEntry"
               slug={entry.slug}
             />
             <FormatTextButton contentType="archiveEntry" slug={entry.slug} />
-          </AdminActionsMenu>
+          </ActionsMenu>
         </div>
-      )}
-
-      {entry.category === "dialogue" ? (
-        <DialogueHeader
-          title={title}
-          participants={entry.metadata.participants}
-          location={entry.metadata.location}
-          logDate={entry.metadata.logDate}
-        />
-      ) : (
-        <StandardHeader entry={entry} title={title} label={cfg.label} />
-      )}
-
-      <FollowButtons targetType="archive_entry" targetSlug={entry.slug} />
-
+      </div>
       {entry.metadata.summary && entry.category != "dialogue" && (
         <p className="lcars-eyebrow mb-[5px]">{entry.metadata.summary}</p>
       )}
@@ -182,18 +177,22 @@ export default async function ArchiveEntryPage({ params }: Props) {
             Kein Inhalt zu diesem Eintrag hinterlegt.
           </p>
         )
-      ) : viewer && viewer.userId === entry.ownerUserId ? (
-        <ArchiveEntryEditor
-          entryId={entry.id}
-          contentHtml={entry.content}
-          sourceMarkdown={entry.sourceMarkdown}
-          isAdminOrGM={viewer.role === "gm" || viewer.role === "admin"}
-        />
       ) : entry.content ? (
-        <div
-          className="mission-body lcars-text"
-          dangerouslySetInnerHTML={{ __html: entry.content }}
-        />
+        <>
+          <ArchiveEntryEditor
+            entryId={entry.id}
+            contentHtml={entry.content}
+            sourceMarkdown={entry.sourceMarkdown}
+            isAdminOrGM={
+              viewer?.role === "gm" || viewer?.role === "admin" || false
+            }
+            slug={entry.slug}
+          />
+          <div
+            className="mission-body lcars-text"
+            dangerouslySetInnerHTML={{ __html: entry.content }}
+          />
+        </>
       ) : (
         <p className="lcars-empty-state">
           Kein Inhalt zu diesem Eintrag hinterlegt.
