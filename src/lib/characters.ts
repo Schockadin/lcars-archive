@@ -23,17 +23,17 @@ function parseCharacter(row: Character): Character {
 export const getAllCharacters = unstable_cache(
   async (): Promise<Character[]> => {
     const rows = await sql<Character[]>`
-      SELECT *
-      FROM characters
-      WHERE visibility = 'public'
-      ORDER BY
-        CASE status
-          WHEN 'active'   THEN 1
-          WHEN 'retired'  THEN 2
-          WHEN 'deceased' THEN 3
-        END,
-        name ASC
-    `;
+        SELECT *
+        FROM characters
+        WHERE visibility = 'public'
+        ORDER BY
+          CASE status
+            WHEN 'active'   THEN 1
+            WHEN 'retired'  THEN 2
+            WHEN 'deceased' THEN 3
+          END,
+          name ASC
+      `;
     return rows.map(parseCharacter);
   },
   ["getAllCharacters", "v2"],
@@ -311,7 +311,9 @@ export async function createCharacter(input: {
 }): Promise<{ id: number; slug: string }> {
   const slug = await generateUniqueCharacterSlug(input.name);
   const trimmedBody = input.bodyMarkdown.trim();
-  const bio = trimmedBody ? (input.bioHtml ?? (await renderContentHtml(trimmedBody))) : null;
+  const bio = trimmedBody
+    ? (input.bioHtml ?? (await renderContentHtml(trimmedBody)))
+    : null;
   const sourceMd = trimmedBody || null;
 
   const metadata = {
@@ -425,7 +427,9 @@ export async function updateOwnCharacterContent(
   },
 ): Promise<{ slug: string } | null> {
   const trimmedBody = input.bodyMarkdown.trim();
-  const bio = trimmedBody ? (input.bioHtml ?? (await renderContentHtml(trimmedBody))) : null;
+  const bio = trimmedBody
+    ? (input.bioHtml ?? (await renderContentHtml(trimmedBody)))
+    : null;
   const sourceMd = trimmedBody || null;
 
   const metadataPatch = {
@@ -460,7 +464,9 @@ export async function updateOwnCharacterBio(
   bioHtmlOverride?: string,
 ): Promise<{ slug: string; bio: string | null } | null> {
   const trimmedBody = bodyMarkdown.trim();
-  const bio = trimmedBody ? (bioHtmlOverride ?? (await renderContentHtml(trimmedBody))) : null;
+  const bio = trimmedBody
+    ? (bioHtmlOverride ?? (await renderContentHtml(trimmedBody)))
+    : null;
   const sourceMd = trimmedBody || null;
 
   const rows = await sql<{ slug: string }[]>`

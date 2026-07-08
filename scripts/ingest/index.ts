@@ -1,4 +1,4 @@
-import postgres from "postgres";
+import sql from "@/lib/db";
 import { ingestArchive } from "./archive";
 import { ingestCharacters } from "./characters";
 import { ingestMissionLogs } from "./missionLogs";
@@ -38,11 +38,15 @@ async function triggerRevalidation() {
         headers: { authorization: `Bearer ${secret}` },
       });
       if (!res.ok) {
-        console.warn(`⚠️  Revalidation ${base} fehlgeschlagen: HTTP ${res.status}`);
+        console.warn(
+          `⚠️  Revalidation ${base} fehlgeschlagen: HTTP ${res.status}`,
+        );
         continue;
       }
       const data = (await res.json()) as { tags?: string[] };
-      console.log(`♻️  Cache revalidiert (${base}): ${data.tags?.join(", ") ?? "ok"}`);
+      console.log(
+        `♻️  Cache revalidiert (${base}): ${data.tags?.join(", ") ?? "ok"}`,
+      );
     } catch (error) {
       const msg = error instanceof Error ? error.message : String(error);
       console.warn(
@@ -61,21 +65,21 @@ async function runIngest(steps: Step[]) {
   // und Prepared Statements sind auf einer Direktverbindung am effizientesten.
   // DIRECT_DATABASE_URL sollte auf den direkten Postgres-Endpoint zeigen (nicht
   // auf pgBouncer); fehlt sie, wird auf DATABASE_URL zurückgegriffen.
-  const connectionString =
-    process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-  if (!connectionString) {
-    throw new Error("Weder DIRECT_DATABASE_URL noch DATABASE_URL ist gesetzt");
-  }
 
   const vaultPath = process.env.VAULT_PATH;
   if (!vaultPath) {
     throw new Error("VAULT_PATH ist nicht gesetzt");
   }
+  // const connectionString =
+  //   process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
+  // if (!connectionString) {
+  //   throw new Error("Weder DIRECT_DATABASE_URL noch DATABASE_URL ist gesetzt");
+  // }
 
-  const sql = postgres(connectionString, {
-    ssl: { rejectUnauthorized: false },
-    max: 1,
-  });
+  // const sql = postgres(connectionString, {
+  //   ssl: { rejectUnauthorized: false },
+  //   max: 1,
+  // });
 
   console.log("🚀 Starte Ingestion...");
   console.log(`📂 Vault: ${vaultPath}`);
@@ -95,7 +99,8 @@ async function runIngest(steps: Step[]) {
       }
       const logResult = await ingestMissionLogs(sql, vaultPath);
       for (const slug of logResult.missionSlugs) changedMissionSlugs.add(slug);
-      for (const slug of logResult.characterSlugs) changedCharacterSlugs.add(slug);
+      for (const slug of logResult.characterSlugs)
+        changedCharacterSlugs.add(slug);
       for (const slug of logResult.newLogSlugs) newLogSlugs.add(slug);
     }
     if (steps.includes("archive")) {

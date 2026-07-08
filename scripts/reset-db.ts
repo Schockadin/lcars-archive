@@ -1,5 +1,5 @@
 // scripts/reset-db.ts
-import postgres from "postgres";
+import sql from "@/lib/db";
 import { readFileSync } from "fs";
 import { join } from "path";
 import { createInterface } from "readline/promises";
@@ -33,10 +33,6 @@ async function reset() {
     process.exit(1);
   }
 
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL ist nicht gesetzt");
-  }
-
   // ── Interaktive Bestätigung (zweite Sicherheitsstufe) ──
   const rl = createInterface({ input: stdin, output: stdout });
   const answer = await rl.question(
@@ -49,11 +45,15 @@ async function reset() {
     process.exit(0);
   }
 
-  const sql = postgres(process.env.DATABASE_URL, {
-    ssl: { rejectUnauthorized: false },
-    max: 1,
-    onnotice: () => {},
-  });
+  // if (!process.env.DATABASE_URL) {
+  //   throw new Error("DATABASE_URL ist nicht gesetzt");
+  // }
+
+  // const sql = postgres(process.env.DATABASE_URL, {
+  //   ssl: { rejectUnauthorized: false },
+  //   max: 1,
+  //   onnotice: () => {},
+  // });
 
   console.log("\n🔌 Verbinde mit Datenbank...");
 
