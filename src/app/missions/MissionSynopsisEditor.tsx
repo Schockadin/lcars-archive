@@ -6,8 +6,7 @@ import {
 } from "@/app/actions/missions";
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
-import FollowButtons from "@/components/FollowButtons";
-import { PencilIcon } from "@/lib/icons";
+import { useNeo } from "@/hooks/useNeo";
 
 const initialState: MissionSynopsisEditState = {};
 
@@ -22,8 +21,6 @@ export default function MissionSynopsisEditor({
   missionId,
   bodyHtml,
   sourceMarkdown,
-  adminActions,
-  slug,
 }: {
   missionId: number;
   bodyHtml: string | null;
@@ -31,7 +28,8 @@ export default function MissionSynopsisEditor({
   adminActions?: ReactNode;
   slug: string;
 }) {
-  const [editing, setEditing] = useState(false);
+  const { editMode, setEditMode } = useNeo();
+
   const [state, formAction, pending] = useActionState(
     updateMissionSynopsisAction,
     initialState,
@@ -46,29 +44,14 @@ export default function MissionSynopsisEditor({
   const [lastHandledState, setLastHandledState] = useState(state);
   if (state !== lastHandledState) {
     setLastHandledState(state);
-    if (state.success) setEditing(false);
+    if (state.success) setEditMode(false);
   }
 
   const displayHtml = state.updatedHtml ?? bodyHtml;
 
-  if (!editing) {
+  if (!editMode) {
     return (
       <div className="flex flex-col gap-[8px]">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
-          <div className="flex">
-            <FollowButtons targetType="mission" targetSlug={slug} />
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="lcars-icon-btn size-[40px] ml-[12px]"
-              aria-label="Bearbeiten"
-              title="Beabeiten"
-            >
-              <PencilIcon />
-            </button>
-          </div>
-        </div>
-
         {displayHtml ? (
           <div
             className="mission-body lcars-text"
@@ -83,23 +66,6 @@ export default function MissionSynopsisEditor({
 
   return (
     <div className="flex flex-col gap-[8px]">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
-        <div className="flex">
-          <FollowButtons targetType="mission" targetSlug={slug} />
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="lcars-icon-btn size-[40px] ml-[12px]"
-            aria-label="Bearbeiten"
-            title="Beabeiten"
-          >
-            <PencilIcon />
-          </button>
-        </div>
-      </div>
-
-      {adminActions}
-
       <form action={formAction} className="flex flex-col gap-[8px]">
         <input type="hidden" name="missionId" value={missionId} />
         {/* isAdminOrGM fest true — MissionSynopsisEditor wird ausschließlich
@@ -118,7 +84,7 @@ export default function MissionSynopsisEditor({
         <div className="flex flex-wrap gap-[12px] items-center justify-end">
           <button
             type="button"
-            onClick={() => setEditing(false)}
+            onClick={() => setEditMode(false)}
             className="lcars-switch"
           >
             Abbrechen

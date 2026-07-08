@@ -26,8 +26,6 @@ export default function FollowButtons({
 }: {
   targetType: FollowTargetType;
   targetSlug: string;
-  // Nur den Abo-Umschalter zeigen (kein "Merken") — z.B. für Dialoge, wo
-  // Bookmarks fachlich keinen Sinn ergeben.
   subscribeOnly?: boolean;
 }) {
   const [state, setState] = useState<FollowState | null>(null);

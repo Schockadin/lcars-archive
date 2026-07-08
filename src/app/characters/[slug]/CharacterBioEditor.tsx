@@ -6,8 +6,8 @@ import {
 } from "@/app/actions/characters";
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
-import FollowButtons from "@/components/FollowButtons";
-import { PencilIcon } from "@/lib/icons";
+import { Character } from "@/types/character";
+import { useNeo } from "@/hooks/useNeo";
 
 const initialState: CharacterBioEditState = {};
 
@@ -19,26 +19,26 @@ const initialState: CharacterBioEditState = {};
 // statt dessen. Anders als beim Archiv-Eintrag darf die Bio leer sein (ein
 // Charakter ohne Bio ist ein normaler Zustand).
 export default function CharacterBioEditor({
-  characterId,
   bioHtml,
   sourceMarkdown,
-  isAdminOrGM,
-  slug,
+  role = "guest",
+  character,
 }: {
-  characterId: number;
   bioHtml: string | null;
   sourceMarkdown: string;
   // Der Editor selbst ist owner-gated (siehe CharacterHero.tsx), der
   // Timeline-Marker-Button darin aber zusätzlich rollen-gated — derselbe
   // Owner könnte selbst gm/admin sein oder auch nicht.
-  isAdminOrGM: boolean;
-  slug: string;
+  role?: string | undefined;
+  character: Character;
 }) {
-  const [editing, setEditing] = useState(false);
+  const { editMode, toggleEditMode, setEditMode } = useNeo();
   const [state, formAction, pending] = useActionState(
     updateOwnCharacterBioAction,
     initialState,
   );
+
+  const characterId = character.id;
 
   // Gleiches Muster wie ArchiveEntryEditor.tsx: Referenzvergleich statt
   // simplem state.success-Wert, damit jeder abgeschlossene Speichervorgang
@@ -47,28 +47,15 @@ export default function CharacterBioEditor({
   const [lastHandledState, setLastHandledState] = useState(state);
   if (state !== lastHandledState) {
     setLastHandledState(state);
-    if (state.success) setEditing(false);
+    if (state.success) setEditMode(false);
   }
 
   const displayHtml =
     state.updatedBio !== undefined ? state.updatedBio : bioHtml;
 
-  if (!editing) {
+  if (!editMode) {
     return (
       <div className="flex flex-col gap-[8px]">
-        <div className="flex">
-          <FollowButtons targetType="character" targetSlug={slug} />
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="lcars-icon-btn self-start size-[40px] ml-[12px]"
-            aria-label="Bearbeiten"
-            title="Bearbeiten"
-          >
-            <PencilIcon />
-          </button>
-        </div>
-
         {displayHtml ? (
           <div
             className="char-file-bio lcars-text"
@@ -92,17 +79,13 @@ export default function CharacterBioEditor({
       <MarkdownEditor
         id={textareaId}
         defaultValue={sourceMarkdown}
-        isAdminOrGM={isAdminOrGM}
+        isAdminOrGM={role === "admin" || role === "gm"}
       />
 
       <AutoLinkCheckbox idPrefix={textareaId} />
 
       <div className="flex flex-wrap gap-[12px] items-center justify-end">
-        <button
-          type="button"
-          onClick={() => setEditing(false)}
-          className="lcars-switch"
-        >
+        <button type="button" onClick={toggleEditMode} className="lcars-switch">
           Abbrechen
         </button>
         <button

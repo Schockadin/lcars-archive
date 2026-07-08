@@ -8,13 +8,11 @@ import {
 import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
 import CharacterBioEditor from "./CharacterBioEditor";
-import OwnerSelect from "@/components/OwnerSelect";
-import AutolinkButton from "@/components/AutolinkButton";
-import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
-import FormatTextButton from "@/components/FormatTextButton";
 import { UserWithCharacters } from "@/lib/users";
 import { Viewer } from "@/lib/visibility";
 import ActionsMenu from "@/components/ActionsMenu";
+import FollowButtons from "@/components/FollowButtons";
+import { PencilIcon } from "@/lib/icons";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
 function slugify(text: string): string {
@@ -283,41 +281,24 @@ export default function CharacterHero({
           <div className="char-file-colend">
             <div className="flex justify-between">
               <LcarsReadingModeToggle />
-              <ActionsMenu>
-                {viewer?.role === "admin" && (
-                  <OwnerSelect
-                    contentType="character"
-                    id={character.id}
-                    initialOwnerId={character.player_id}
-                    users={owners.map((u) => ({ id: u.id, name: u.name }))}
-                  />
-                )}
-                <AutolinkButton contentType="character" slug={character.slug} />
-                <RemoveWikilinksButton
-                  contentType="character"
-                  slug={character.slug}
-                />
-                <FormatTextButton
-                  contentType="character"
-                  slug={character.slug}
-                />
-              </ActionsMenu>
               <h1 className="char-file-name">{character.name}</h1>
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
-              {/* <FollowButtons
-                targetType="character"
-                targetSlug={character.slug}
-              /> */}
-            </div>
+
+            <ActionsMenu
+              viewer={viewer}
+              owners={owners}
+              content={character}
+              contentType="character"
+              followType="character"
+              playerId={character.player_id}
+            />
 
             {sourceMarkdown != null ? (
               <CharacterBioEditor
-                characterId={character.id}
                 bioHtml={bio?.html ?? null}
                 sourceMarkdown={sourceMarkdown}
-                isAdminOrGM={viewer?.role === "gm" || viewer?.role === "admin"}
-                slug={character.slug}
+                role={viewer?.role}
+                character={character}
               />
             ) : bio ? (
               <div

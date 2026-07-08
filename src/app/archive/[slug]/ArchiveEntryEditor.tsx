@@ -8,6 +8,7 @@ import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
 import FollowButtons from "@/components/FollowButtons";
 import { PencilIcon } from "@/lib/icons";
+import { useNeo } from "@/hooks/useNeo";
 
 const initialState: ArchiveEntryEditState = {};
 
@@ -34,7 +35,7 @@ export default function ArchiveEntryEditor({
   isAdminOrGM: boolean;
   slug: string;
 }) {
-  const [editing, setEditing] = useState(false);
+  const { editMode, setEditMode } = useNeo();
   const [state, formAction, pending] = useActionState(
     updateOwnArchiveEntryAction,
     initialState,
@@ -47,30 +48,14 @@ export default function ArchiveEntryEditor({
   const [lastHandledState, setLastHandledState] = useState(state);
   if (state !== lastHandledState) {
     setLastHandledState(state);
-    if (state.success) setEditing(false);
+    if (state.success) setEditMode(false);
   }
 
   const displayHtml = state.updatedHtml ?? contentHtml;
 
-  if (!editing) {
+  if (!editMode) {
     return (
       <div className="flex flex-col gap-[8px]">
-        <div className="flex">
-          <FollowButtons targetType="archive_entry" targetSlug={slug} />
-
-          {isAdminOrGM && (
-            <button
-              type="button"
-              onClick={() => setEditing(true)}
-              className="lcars-icon-btn size-[40px] ml-[12px] self-start"
-              aria-label="Bearbeiten"
-              title="Bearbeiten"
-            >
-              <PencilIcon />
-            </button>
-          )}
-        </div>
-
         {displayHtml ? (
           <div
             className="mission-body lcars-text"
@@ -103,7 +88,7 @@ export default function ArchiveEntryEditor({
       <div className="flex flex-wrap gap-[12px] items-center justify-end">
         <button
           type="button"
-          onClick={() => setEditing(false)}
+          onClick={() => setEditMode(false)}
           className="lcars-switch"
         >
           Abbrechen

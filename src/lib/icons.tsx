@@ -8,6 +8,98 @@ export const ICON_PROPS = {
   "aria-hidden": true,
 };
 
+export function SpellingIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <g>
+        {" "}
+        <path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z"></path>{" "}
+        <path d="M8.5 12.5L10.5 14.5L15.5 9.5"></path>{" "}
+      </g>
+    </svg>
+  );
+}
+
+export function BoldIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M7 4v16M7 4h5a3.5 3.5 0 0 1 0 7H7M7 11h6a3.5 3.5 0 0 1 0 7H7" />
+    </svg>
+  );
+}
+export function ItalicIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M10 4h6M8 20h6M14 4l-4 16" />
+    </svg>
+  );
+}
+export function HeadingIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M6 4v16M18 4v16M6 12h12" />
+    </svg>
+  );
+}
+export function LinkIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M11,14.52a5.72,5.72,0,0,1-.82-.67h0A5.72,5.72,0,0,1,9.48,13,5.67,5.67,0,0,1,9,12.12a5.63,5.63,0,0,1-.28-1,4.78,4.78,0,0,1-.1-1,4.85,4.85,0,0,1,.1-1,5,5,0,0,1,.76-1.87,5.22,5.22,0,0,1,.67-.82l.37-.37.37-.37.37-.37L11.63,5,12,4.61l.37-.37.37-.37.37-.37a4.72,4.72,0,0,1,.82-.67,5.27,5.27,0,0,1,.91-.48,5.42,5.42,0,0,1,1-.29,5.55,5.55,0,0,1,2,0,5.42,5.42,0,0,1,1,.29,5.27,5.27,0,0,1,.91.48,5.12,5.12,0,0,1,.82.67h0a5.12,5.12,0,0,1,.67.82,5.27,5.27,0,0,1,.48.91,5.42,5.42,0,0,1,.29,1,5.55,5.55,0,0,1,0,2,5.42,5.42,0,0,1-.29,1,5.27,5.27,0,0,1-.48.91,4.72,4.72,0,0,1-.67.82l-.37.37-.37.37-.37.37-.37.37"></path>
+      <path d="M13,9.48a5.72,5.72,0,0,1,.82.67h0a5.72,5.72,0,0,1,.67.82,5,5,0,0,1,.76,1.88,4.78,4.78,0,0,1,.1,1,4.85,4.85,0,0,1-.1,1,5,5,0,0,1-.76,1.87,5.22,5.22,0,0,1-.67.82l-.37.37-.37.37-.37.37-.37.37-.37.37-.37.37-.37.37-.37.37a4.72,4.72,0,0,1-.82.67,5.27,5.27,0,0,1-.91.48,5.42,5.42,0,0,1-1,.29,5.55,5.55,0,0,1-2,0,5.42,5.42,0,0,1-1-.29,5.27,5.27,0,0,1-.91-.48,5.12,5.12,0,0,1-.82-.67h0a5.12,5.12,0,0,1-.67-.82,5.27,5.27,0,0,1-.48-.91,5.42,5.42,0,0,1-.29-1,5.55,5.55,0,0,1,0-2,5.42,5.42,0,0,1,.29-1,5.27,5.27,0,0,1,.48-.91,4.72,4.72,0,0,1,.67-.82l.37-.37.37-.37L4.61,12,5,11.63"></path>
+    </svg>
+  );
+}
+export function UnlinkIcon() {
+  return (
+    <svg {...ICON_PROPS} stroke="var(--lcars-red)">
+      <path d="M15,17h2A5,5,0,0,0,17,7H15"></path>
+      <path d="M9,7H7A5,5,0,0,0,7,17H9"></path>
+      <line x1="7" y1="12" x2="18" y2="12"></line>
+    </svg>
+  );
+}
+
+export function ListIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M9 6h11M9 12h11M9 18h11" />
+      <circle cx="4" cy="6" r="1" fill="currentColor" stroke="none" />
+      <circle cx="4" cy="12" r="1" fill="currentColor" stroke="none" />
+      <circle cx="4" cy="18" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+export function OrderedListIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M9 6h11M9 12h11M9 18h11" />
+      <text x="1.5" y="8.5" fontSize="7" fill="currentColor" stroke="none">
+        1
+      </text>
+      <text x="1.5" y="14.5" fontSize="7" fill="currentColor" stroke="none">
+        2
+      </text>
+      <text x="1.5" y="20.5" fontSize="7" fill="currentColor" stroke="none">
+        3
+      </text>
+    </svg>
+  );
+}
+export function QuoteIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M4 5v14M9 8h11M9 12h11M9 16h7" />
+    </svg>
+  );
+}
+export function CodeIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M8 6 2 12l6 6M16 6l6 6-6 6" />
+    </svg>
+  );
+}
+
 export function BookmarkIcon() {
   return (
     <svg {...ICON_PROPS}>

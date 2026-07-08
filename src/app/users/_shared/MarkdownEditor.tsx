@@ -3,86 +3,16 @@ import { useRef, useState } from "react";
 import { wrapSelection, applyLinePrefix } from "@/lib/textareaEdit";
 import { renderMarkdownPreview } from "@/app/actions/markdownPreview";
 import TimelineMarkerButton from "./TimelineMarkerButton";
-
-const ICON_PROPS = {
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.6,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-  "aria-hidden": true,
-};
-
-function BoldIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M7 4v16M7 4h5a3.5 3.5 0 0 1 0 7H7M7 11h6a3.5 3.5 0 0 1 0 7H7" />
-    </svg>
-  );
-}
-function ItalicIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M10 4h6M8 20h6M14 4l-4 16" />
-    </svg>
-  );
-}
-function HeadingIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M6 4v16M18 4v16M6 12h12" />
-    </svg>
-  );
-}
-function LinkIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M10 14a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07l-1.5 1.5" />
-      <path d="M14 10a5 5 0 0 0-7.07 0L4.8 12.12a5 5 0 0 0 7.07 7.07l1.5-1.5" />
-    </svg>
-  );
-}
-function ListIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M9 6h11M9 12h11M9 18h11" />
-      <circle cx="4" cy="6" r="1" fill="currentColor" stroke="none" />
-      <circle cx="4" cy="12" r="1" fill="currentColor" stroke="none" />
-      <circle cx="4" cy="18" r="1" fill="currentColor" stroke="none" />
-    </svg>
-  );
-}
-function OrderedListIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M9 6h11M9 12h11M9 18h11" />
-      <text x="1.5" y="8.5" fontSize="7" fill="currentColor" stroke="none">
-        1
-      </text>
-      <text x="1.5" y="14.5" fontSize="7" fill="currentColor" stroke="none">
-        2
-      </text>
-      <text x="1.5" y="20.5" fontSize="7" fill="currentColor" stroke="none">
-        3
-      </text>
-    </svg>
-  );
-}
-function QuoteIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M4 5v14M9 8h11M9 12h11M9 16h7" />
-    </svg>
-  );
-}
-function CodeIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M8 6 2 12l6 6M16 6l6 6-6 6" />
-    </svg>
-  );
-}
+import {
+  BoldIcon,
+  ItalicIcon,
+  HeadingIcon,
+  LinkIcon,
+  ListIcon,
+  OrderedListIcon,
+  QuoteIcon,
+  CodeIcon,
+} from "@/lib/icons";
 
 interface ToolbarAction {
   label: string;

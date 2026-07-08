@@ -1,4 +1,3 @@
-// src/app/archive/[slug]/page.tsx
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getArchiveEntryBySlug } from "@/lib/archive";
@@ -13,10 +12,6 @@ import DeleteDialogueButton from "@/components/DeleteDialogueButton";
 import { getDialogueMessages } from "@/lib/dialogues";
 import { getViewer, canView } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
-import OwnerSelect from "@/components/OwnerSelect";
-import AutolinkButton from "@/components/AutolinkButton";
-import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
-import FormatTextButton from "@/components/FormatTextButton";
 import ArchiveEntryEditor from "./ArchiveEntryEditor";
 import ActionsMenu from "@/components/ActionsMenu";
 
@@ -120,25 +115,17 @@ export default async function ArchiveEntryPage({ params }: Props) {
             logDate={entry.metadata.logDate}
           />
         )}
-        <div className="flex flex-col gap-[10px] mb-[10px] ml-auto">
-          <ActionsMenu>
-            {(viewer?.role === "admin" || viewer?.role === "gm") && (
-              <OwnerSelect
-                contentType="archive_entry"
-                id={entry.id}
-                initialOwnerId={entry.ownerUserId}
-                users={owners.map((u) => ({ id: u.id, name: u.name }))}
-              />
-            )}
-            <AutolinkButton contentType="archiveEntry" slug={entry.slug} />
-            <RemoveWikilinksButton
-              contentType="archiveEntry"
-              slug={entry.slug}
-            />
-            <FormatTextButton contentType="archiveEntry" slug={entry.slug} />
-          </ActionsMenu>
-        </div>
       </div>
+
+      <ActionsMenu
+        viewer={viewer}
+        owners={owners}
+        contentType="archiveEntry"
+        followType="archive_entry"
+        playerId={entry.ownerUserId}
+        content={entry}
+      />
+
       {entry.metadata.summary && entry.category != "dialogue" && (
         <p className="lcars-eyebrow mb-[5px]">{entry.metadata.summary}</p>
       )}

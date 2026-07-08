@@ -7,6 +7,8 @@ import {
   type ContentToolType,
   type AutolinkPreviewResult,
 } from "@/app/actions/contentTools";
+import { LinkIcon } from "@/lib/icons";
+import { AutolinkTargetType } from "@/lib/autolink";
 
 const TYPE_LABEL: Record<
   AutolinkPreviewResult["matches"][number]["type"],
@@ -65,7 +67,36 @@ export default function AutolinkButton({
     setPreview(null);
   }
 
-  const distinctMatches = [...new Set(preview?.matches)];
+  const distinctMatches = preview
+    ? Object.values(
+        preview.matches.reduce<
+          Record<
+            string,
+            {
+              canonical: string;
+              href: string;
+              count: number;
+              matchedText: string;
+              type: AutolinkTargetType;
+            }
+          >
+        >((acc, entry) => {
+          if (!acc[entry.canonical]) {
+            acc[entry.canonical] = {
+              canonical: entry.canonical,
+              href: entry.href,
+              count: 0,
+              matchedText: entry.matchedText,
+              type: entry.type,
+            };
+          }
+
+          acc[entry.canonical].count++;
+
+          return acc;
+        }, {}),
+      )
+    : [];
 
   if (preview) {
     return (
@@ -76,11 +107,12 @@ export default function AutolinkButton({
             : `${preview.matches.length} Verknüpfung${preview.matches.length === 1 ? "" : "en"} gefunden:`}
         </p>
 
-        {distinctMatches.length > 0 && (
+        {distinctMatches && distinctMatches.length > 0 && (
           <ul className="autolink-match-list">
             {distinctMatches.map((m, i) => (
               <li key={i}>
-                „{m.matchedText}“ → <b>{m.canonical}</b> ({TYPE_LABEL[m.type]})
+                „{m.matchedText}“ → <b>{m.canonical}</b> ({TYPE_LABEL[m.type]} /{" "}
+                {m.count} mal)
               </li>
             ))}
           </ul>
@@ -121,9 +153,11 @@ export default function AutolinkButton({
         type="button"
         onClick={handlePreview}
         disabled={pending}
-        className="lcars-switch disabled:opacity-50 w-full"
+        className="lcars-icon-btn disabled:opacity-50 size-[40px]"
+        aria-label="Verlinkung hinzufügen"
+        title="Verlinkung hinzufügen"
       >
-        {pending ? "Prüfe…" : "Autolinking"}
+        <LinkIcon />
       </button>
       {applied && (
         <p className="text-lcars-green text-[13px]" role="status">

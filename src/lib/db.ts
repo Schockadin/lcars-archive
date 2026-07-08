@@ -14,11 +14,6 @@ const globalForDb = global as unknown as { sql: postgres.Sql };
 // - connect_timeout begrenzt hängende Verbindungsaufbauten (z.B. unter dem
 //   parallelen Verbindungs-Burst beim Build), statt bis zum Default (30s) zu
 //   warten und die 60s-Build-Grenze von Next zu reißen.
-console.log(">>> DATABASE_URL used by app:", process.env.DATABASE_URL);
-console.log(
-  ">>> Running in:",
-  typeof window === "undefined" ? "server" : "client",
-);
 
 const sql =
   globalForDb.sql ??

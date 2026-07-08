@@ -3,13 +3,8 @@ import { getAuthorLogNav, getLogBySlug } from "@/lib/missions";
 import { stripHtml } from "@/lib/missionFormat";
 import { getViewer, canView } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
-import CrumbLabel from "@/components/CrumbLabel";
 import LogDetail from "../../LogDetail";
-import OwnerSelect from "@/components/OwnerSelect";
-import AdminActionsMenu from "@/components/AdminActionsMenu";
-import AutolinkButton from "@/components/AutolinkButton";
-import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
-import FormatTextButton from "@/components/FormatTextButton";
+import ActionsMenu from "@/components/ActionsMenu";
 
 interface Props {
   params: Promise<{ missionSlug: string; logSlug: string }>;
@@ -63,22 +58,14 @@ export default async function LogPage({ params }: Props) {
 
   return (
     <>
-      <CrumbLabel slug={log.slug} label={log.title} />
-      {viewer?.role === "admin" && (
-        <div className="flex flex-col gap-[10px] mb-[10px]">
-          <OwnerSelect
-            contentType="mission_log"
-            id={log.id}
-            initialOwnerId={log.ownerUserId}
-            users={owners.map((u) => ({ id: u.id, name: u.name }))}
-          />
-          <AdminActionsMenu>
-            <AutolinkButton contentType="missionLog" slug={log.slug} />
-            <RemoveWikilinksButton contentType="missionLog" slug={log.slug} />
-            <FormatTextButton contentType="missionLog" slug={log.slug} />
-          </AdminActionsMenu>
-        </div>
-      )}
+      <ActionsMenu
+        viewer={viewer}
+        owners={owners}
+        content={log}
+        contentType="missionLog"
+        followType="mission_log"
+        playerId={log.ownerUserId}
+      />
       <LogDetail log={log} nav={nav} />
     </>
   );

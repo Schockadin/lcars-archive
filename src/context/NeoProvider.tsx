@@ -13,9 +13,11 @@ export function NeoProvider({ children }: NeoProviderProps) {
   const [title, setTitle] = useState<string>("Home");
   const [crumbLabels, setCrumbLabels] = useState<Record<string, string>>({});
   const [readingMode, setReadingMode] = useState<boolean>(false);
+  const [editMode, setEditMode] = useState<boolean>(false);
   const preserveReadingModeRef = useRef(false);
 
   const toggleReadingMode = useCallback(() => setReadingMode((v) => !v), []);
+  const toggleEditMode = useCallback(() => setEditMode((v) => !v), []);
 
   const preserveReadingModeOnce = useCallback(() => {
     preserveReadingModeRef.current = true;
@@ -62,6 +64,9 @@ export function NeoProvider({ children }: NeoProviderProps) {
     toggleReadingMode,
     preserveReadingModeOnce,
     resetReadingModeOnUnmount,
+    editMode,
+    setEditMode,
+    toggleEditMode,
   };
 
   return <NeoContext.Provider value={value}>{children}</NeoContext.Provider>;
