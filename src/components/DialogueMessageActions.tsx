@@ -71,13 +71,13 @@ export default function DialogueMessageActions({
           <button
             type="submit"
             disabled={editPending}
-            className="lcars-switch self-start disabled:opacity-50"
+            className="lcars-pill-btn--outline self-start disabled:opacity-50"
           >
             {editPending ? "Wird gespeichert…" : "Speichern"}
           </button>
           <button
             type="button"
-            className="lcars-switch self-start"
+            className="lcars-pill-btn--outline self-start"
             onClick={() => setEditing(false)}
           >
             Abbrechen
@@ -94,7 +94,11 @@ export default function DialogueMessageActions({
 
   return (
     <div className="dialogue-message-actions">
-      <button type="button" className="lcars-switch" onClick={startEdit}>
+      <button
+        type="button"
+        className="lcars-pill-btn--outline"
+        onClick={startEdit}
+      >
         Bearbeiten
       </button>
       <form action={deleteAction}>
@@ -103,7 +107,7 @@ export default function DialogueMessageActions({
         <button
           type="submit"
           disabled={deletePending}
-          className="lcars-switch disabled:opacity-50"
+          className="lcars-pill-btn--outline disabled:opacity-50"
           onClick={(e) => {
             if (!confirm("Nachricht wirklich löschen?")) {
               e.preventDefault();

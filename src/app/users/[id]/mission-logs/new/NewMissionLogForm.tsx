@@ -91,7 +91,7 @@ export default function NewMissionLogForm({
       <SubmitButton
         pending={pending}
         pendingLabel="Speichern…"
-        className="lcars-switch self-start disabled:opacity-50 w-[100%]"
+        className="lcars-pill-btn--outline self-start disabled:opacity-50 w-[100%]"
       >
         Speichern
       </SubmitButton>

@@ -40,7 +40,7 @@ export default function EditMissionLogForm({
       <SubmitButton
         pending={pending}
         pendingLabel="Wird gespeichert…"
-        className="lcars-switch self-start disabled:opacity-50"
+        className="lcars-pill-btn--outline self-start disabled:opacity-50"
       >
         Änderungen speichern
       </SubmitButton>

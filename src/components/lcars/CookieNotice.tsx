@@ -46,8 +46,8 @@ export default function CookieNotice() {
     <div className="lcars-cookie-notice" role="status">
       <p>
         Diese Website verwendet ein technisch notwendiges Cookie (
-        <code>neo_session</code>), um den Login-Bereich bereitzustellen —
-        keine Tracking- oder Analyse-Cookies. Details in der{" "}
+        <code>neo_session</code>), um den Login-Bereich bereitzustellen — keine
+        Tracking- oder Analyse-Cookies. Details in der{" "}
         <Link href="/datenschutz" className="text-lcars-amber underline">
           Datenschutzerklärung
         </Link>
@@ -56,7 +56,7 @@ export default function CookieNotice() {
       <button
         type="button"
         onClick={dismiss}
-        className="lcars-switch"
+        className="lcars-pill-btn--outline"
       >
         Verstanden
       </button>

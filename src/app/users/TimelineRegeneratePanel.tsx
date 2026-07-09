@@ -42,7 +42,7 @@ export default function TimelineRegeneratePanel() {
         type="button"
         onClick={handleStart}
         disabled={running}
-        className="lcars-switch self-start disabled:opacity-50"
+        className="lcars-pill-btn--outline self-start disabled:opacity-50"
       >
         {running ? "Timeline wird aufgebaut…" : "Timeline neu generieren"}
       </button>

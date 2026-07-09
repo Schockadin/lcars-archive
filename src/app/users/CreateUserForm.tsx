@@ -67,7 +67,7 @@ export default function CreateUserForm() {
       <SubmitButton
         pending={pending}
         pendingLabel="Anlegen…"
-        className="lcars-switch disabled:opacity-50 w-[100%]"
+        className="lcars-pill-btn--outline disabled:opacity-50 w-[100%]"
       >
         User anlegen
       </SubmitButton>

@@ -15,7 +15,7 @@ export function DangerZoneButton({
   label,
   pendingLabel,
   title,
-  className = "lcars-switch disabled:opacity-50",
+  className = "lcars-pill-btn--outline disabled:opacity-50",
 }: {
   formAction: (formData: FormData) => void;
   hiddenFields: Record<string, string | number>;

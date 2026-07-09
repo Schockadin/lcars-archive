@@ -31,9 +31,9 @@ export default function AssignOwnerlessMissionsPanel({
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
       <p className="text-lcars-text-dim text-[13px]">
-        Weist alle Missionen ohne Owner (meist per Vault-Ingest entstanden)
-        auf einen Schlag der ausgewählten Spielleitung zu. Bereits
-        zugeordnete Missionen bleiben unangetastet.
+        Weist alle Missionen ohne Owner (meist per Vault-Ingest entstanden) auf
+        einen Schlag der ausgewählten Spielleitung zu. Bereits zugeordnete
+        Missionen bleiben unangetastet.
       </p>
 
       <div className="flex flex-wrap items-center gap-[8px]">
@@ -43,7 +43,9 @@ export default function AssignOwnerlessMissionsPanel({
           className="rounded-lcars-pill lcars-input"
           disabled={running || gms.length === 0}
         >
-          {gms.length === 0 && <option value="">Keine Spielleitung vorhanden</option>}
+          {gms.length === 0 && (
+            <option value="">Keine Spielleitung vorhanden</option>
+          )}
           {gms.map((gm) => (
             <option key={gm.id} value={gm.id}>
               {gm.name}
@@ -55,7 +57,7 @@ export default function AssignOwnerlessMissionsPanel({
           type="button"
           onClick={handleAssign}
           disabled={running || ownerId === ""}
-          className="lcars-switch self-start disabled:opacity-50"
+          className="lcars-pill-btn--outline self-start disabled:opacity-50"
         >
           {running ? "Wird zugeordnet…" : "Missionen ohne Owner zuordnen"}
         </button>

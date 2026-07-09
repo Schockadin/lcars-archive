@@ -122,7 +122,7 @@ export default function AutolinkButton({
             type="button"
             onClick={handleCancel}
             disabled={pending}
-            className="lcars-switch w-[40%]"
+            className="lcars-pill-btn--outline w-[40%]"
           >
             Abbrechen
           </button>
@@ -131,7 +131,7 @@ export default function AutolinkButton({
               type="button"
               onClick={handleConfirm}
               disabled={pending}
-              className="lcars-switch disabled:opacity-50 w-[40%]"
+              className="lcars-pill-btn--outline disabled:opacity-50 w-[40%]"
             >
               {pending ? "Speichern…" : "Übernehmen"}
             </button>

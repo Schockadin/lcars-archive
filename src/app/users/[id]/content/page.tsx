@@ -32,17 +32,35 @@ export default async function UserContentPage({
   return (
     <>
       <PageMeta title="Meine Inhalte" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
-        <h1>Meine Inhalte</h1>
-
-        <section className="flex flex-col gap-[12px]">
+      <h1>Meine Inhalte</h1>
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)] gap-[20px] lcars-flex-switch">
+        <section className="flex flex-col gap-[12px] justify-center items-end">
           <h2>Neue Inhalte</h2>
-          <div className="flex flex-col flex-wrap gap-[12px]">
+          <div className="flex flex-col gap-[12px]">
+            {characters.length > 0 && (
+              <>
+                <Link
+                  href={`/users/${user.id}/mission-logs/new`}
+                  className="min-w-[250px] lcars-pill-btn"
+                >
+                  Neuer Missionslog
+                </Link>
+                <Link
+                  href={`/users/${user.id}/dialogues/new`}
+                  className="min-w-[250px] lcars-pill-btn"
+                >
+                  Neues Gespräch
+                </Link>
+              </>
+            )}
             {/* Anders als Missionslog/Gespräch (eigener Charakter) oder
                 Mission (gm/admin) sind Archiv-Einträge an keine
                 Voraussetzung geknüpft — jeder eingeloggte User darf welche
                 anlegen. */}
-            <Link href={`/users/${user.id}/archive/new`} className="lcars-switch">
+            <Link
+              href={`/users/${user.id}/archive/new`}
+              className="min-w-[250px] lcars-pill-btn"
+            >
               Neuer Archiv-Eintrag
             </Link>
             {/* Genau wie Archiv-Einträge an keine Voraussetzung geknüpft
@@ -52,31 +70,15 @@ export default async function UserContentPage({
             {user.role !== "guest" && (
               <Link
                 href={`/users/${user.id}/characters/new`}
-                className="lcars-switch"
+                className="min-w-[250px] lcars-pill-btn"
               >
                 Neuer Charakter
               </Link>
             )}
-            {characters.length > 0 && (
-              <>
-                <Link
-                  href={`/users/${user.id}/mission-logs/new`}
-                  className="lcars-switch"
-                >
-                  Neuer Missionslog
-                </Link>
-                <Link
-                  href={`/users/${user.id}/dialogues/new`}
-                  className="lcars-switch"
-                >
-                  Neues Gespräch
-                </Link>
-              </>
-            )}
             {isGM && (
               <Link
                 href={`/users/${user.id}/missions/new`}
-                className="lcars-switch"
+                className="min-w-[250px] lcars-pill-btn"
               >
                 Neue Mission
               </Link>
@@ -84,14 +86,9 @@ export default async function UserContentPage({
           </div>
         </section>
 
-        <section className="flex flex-col gap-[12px] mt-[32px]">
+        <section className="flex flex-col items-end gap-[12px]">
           <h2>Inhalte verwalten</h2>
-          <p className="lcars-text text-[13px]">
-            Sichtbarkeit je Eintrag: Privat (nur du) · GM (du + Spielleitung) ·
-            Öffentlich (alle).
-          </p>
-
-          <div className="lcars-text">
+          <div className="lcars-text w-full">
             <UserContentBrowser
               characters={characters}
               logs={logs}

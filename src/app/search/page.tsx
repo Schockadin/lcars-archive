@@ -48,7 +48,7 @@ export default async function SearchPage({
             className="rounded-lcars-pill lcars-input flex-1"
             style={{ minWidth: 0 }}
           />
-          <button type="submit" className="lcars-switch">
+          <button type="submit" className="lcars-pill-btn--outline">
             Suchen
           </button>
         </form>

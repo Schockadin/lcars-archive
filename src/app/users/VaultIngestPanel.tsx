@@ -79,16 +79,16 @@ export default function VaultIngestPanel() {
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
       <p className="text-lcars-text-dim text-[13px]">
-        Importiert Markdown-Dateien aus dem Vault-Repo, deren Slug noch nicht
-        in der Datenbank existiert. Bestehende Inhalte werden nicht
-        überschrieben — Bearbeitungen in der App bleiben also unangetastet.
+        Importiert Markdown-Dateien aus dem Vault-Repo, deren Slug noch nicht in
+        der Datenbank existiert. Bestehende Inhalte werden nicht überschrieben —
+        Bearbeitungen in der App bleiben also unangetastet.
       </p>
 
       <button
         type="button"
         onClick={handleStart}
         disabled={running}
-        className="lcars-switch self-start disabled:opacity-50"
+        className="lcars-pill-btn--outline self-start disabled:opacity-50"
       >
         {running
           ? `Ingest läuft (${PHASE_LABELS[phaseIndex ?? 0]}…)`

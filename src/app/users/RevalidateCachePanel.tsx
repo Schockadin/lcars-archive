@@ -27,7 +27,7 @@ export default function RevalidateCachePanel() {
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch self-start disabled:opacity-50"
+        className="lcars-pill-btn--outline self-start disabled:opacity-50"
       >
         {pending ? "Revalidate läuft" : "Revalidate Cache"}
       </button>

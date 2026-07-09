@@ -43,7 +43,7 @@ export default function CharacterAssignRow({
         <button
           type="submit"
           disabled={pending}
-          className="lcars-switch disabled:opacity-50 flex-1"
+          className="lcars-pill-btn--outline disabled:opacity-50 flex-1"
         >
           Zuweisen
         </button>

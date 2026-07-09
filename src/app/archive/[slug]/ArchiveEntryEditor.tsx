@@ -87,14 +87,14 @@ export default function ArchiveEntryEditor({
         <button
           type="button"
           onClick={() => setEditMode(false)}
-          className="lcars-switch"
+          className="lcars-pill-btn--outline"
         >
           Abbrechen
         </button>
         <button
           type="submit"
           disabled={pending}
-          className="lcars-switch disabled:opacity-50"
+          className="lcars-pill-btn--outline disabled:opacity-50"
         >
           {pending ? "Speichern…" : "Speichern"}
         </button>

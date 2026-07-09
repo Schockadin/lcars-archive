@@ -43,7 +43,7 @@ export default function UserStatusActions({
         <button
           type="submit"
           disabled={statusPending || isSelf}
-          className="lcars-switch disabled:opacity-50"
+          className="lcars-pill-btn--outline disabled:opacity-50"
           title={
             isSelf ? "Du kannst dich nicht selbst deaktivieren." : undefined
           }

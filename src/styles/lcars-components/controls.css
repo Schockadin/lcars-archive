@@ -87,6 +87,51 @@
   border-color: var(--lcars-red);
 }
 
+/* Pill Buttons */
+.lcars-pill-btn,
+.lcars-pill-btn--outline {
+  display: flex;
+
+  min-height: 0;
+  min-width: 0px;
+  border: none;
+  border-radius: 100vmax;
+  cursor: pointer;
+  text-decoration: none;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--font-antonio), sans-serif;
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: 1px;
+  line-height: 1.175;
+  text-transform: uppercase;
+  transition: 250ms;
+  height: 48px;
+}
+.lcars-pill-btn:hover,
+.lcars-pill-btn--outline:hover {
+  background-color: var(--lcars-amber-light);
+  color: var(--lcars-bg);
+  border-color: var(--lcars-bg);
+}
+
+.lcars-pill-btn {
+  color: var(--lcars-bg);
+  background-color: var(--lcars-amber);
+  align-items: flex-end;
+  justify-content: flex-end;
+  padding: 0 18px 8px;
+}
+.lcars-pill-btn--outline {
+  color: var(--lcars-text-data);
+  background-color: var(--lcars-surface);
+  border: 1px solid var(--lcars-text-data);
+  align-items: center;
+  justify-content: center;
+  width: 250px;
+}
+
 .lcars-filters {
   display: flex;
   flex-direction: column;
@@ -112,7 +157,7 @@
   color: var(--lcars-text-contrast);
   padding: 8px 16px;
   outline: none;
-  height: 36px;
+  height: 48px;
   font-size: 16px;
 }
 .lcars-input:hover,
@@ -148,4 +193,17 @@
 }
 .lcars-cookie-notice .lcars-switch {
   align-self: flex-end;
+}
+
+.lcars-flex-switch {
+  display: flex;
+  flex-direction: row;
+  align-items: start;
+}
+
+@media (max-width: 925px) {
+  .lcars-flex-switch {
+    flex-direction: column;
+    align-items: end;
+  }
 }

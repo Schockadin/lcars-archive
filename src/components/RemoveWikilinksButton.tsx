@@ -91,7 +91,7 @@ export default function RemoveWikilinksButton({
             type="button"
             onClick={handleCancel}
             disabled={pending}
-            className="lcars-switch"
+            className="lcars-pill-btn--outline"
           >
             Abbrechen
           </button>
@@ -100,7 +100,7 @@ export default function RemoveWikilinksButton({
               type="button"
               onClick={handleConfirm}
               disabled={pending}
-              className="lcars-switch disabled:opacity-50"
+              className="lcars-pill-btn--outline disabled:opacity-50"
             >
               {pending ? "Speichern…" : "Übernehmen"}
             </button>

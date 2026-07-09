@@ -27,9 +27,10 @@ interface ExportSummary {
 // Dateizahl.
 export default function VaultExportPanel() {
   const [running, setRunning] = useState(false);
-  const [progress, setProgress] = useState<{ done: number; total: number } | null>(
-    null,
-  );
+  const [progress, setProgress] = useState<{
+    done: number;
+    total: number;
+  } | null>(null);
   const [summary, setSummary] = useState<ExportSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -97,15 +98,15 @@ export default function VaultExportPanel() {
         Charaktere, Missionen, Mission-Logs und Archiv-Einträge neu und
         committet sie ins Vault-Repo (Backup). Aus der DB gelöschte Inhalte
         werden dabei nicht automatisch aus dem Vault entfernt — ihre
-        Markdown-Datei bleibt bestehen, bis sie manuell im Vault-Repo
-        gelöscht wird.
+        Markdown-Datei bleibt bestehen, bis sie manuell im Vault-Repo gelöscht
+        wird.
       </p>
 
       <button
         type="button"
         onClick={handleStart}
         disabled={running}
-        className="lcars-switch self-start disabled:opacity-50"
+        className="lcars-pill-btn--outline self-start disabled:opacity-50"
       >
         {running ? "Backup läuft" : "Backup starten"}
       </button>
@@ -132,9 +133,8 @@ export default function VaultExportPanel() {
 
       {summary && (
         <p className="text-lcars-amber">
-          {summary.total} Dateien verarbeitet: {summary.created} neu
-          angelegt, {summary.updated} aktualisiert, {summary.failed}{" "}
-          fehlgeschlagen.
+          {summary.total} Dateien verarbeitet: {summary.created} neu angelegt,{" "}
+          {summary.updated} aktualisiert, {summary.failed} fehlgeschlagen.
           {summary.errors.length > 0 && (
             <>
               <br />

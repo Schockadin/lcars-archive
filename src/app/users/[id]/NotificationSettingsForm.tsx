@@ -175,7 +175,7 @@ export default function NotificationSettingsForm({
         <SubmitButton
           pending={pending}
           pendingLabel="Speichern…"
-          className="lcars-switch self-end disabled:opacity-50 w-[100%]"
+          className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%]"
         >
           Speichern
         </SubmitButton>
@@ -201,7 +201,7 @@ export default function NotificationSettingsForm({
               type="button"
               disabled={devicePending}
               onClick={disablePush}
-              className="lcars-switch self-start disabled:opacity-50"
+              className="lcars-pill-btn self-start disabled:opacity-50 w-[100%]"
             >
               Push deaktivieren
             </button>
@@ -212,7 +212,7 @@ export default function NotificationSettingsForm({
             type="button"
             disabled={devicePending}
             onClick={enablePush}
-            className="lcars-switch self-start disabled:opacity-50 w-[100%]"
+            className="lcars-pill-btn--outline self-start disabled:opacity-50 w-[100%]"
           >
             Push aktivieren
           </button>

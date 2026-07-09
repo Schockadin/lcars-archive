@@ -20,7 +20,7 @@ export function FormField({
   children: React.ReactNode;
 }) {
   return (
-    <div className={`flex flex-col gap-[6px] ${className}`}>
+    <div className={`flex flex-col gap-[6px] mb-[8px] ${className}`}>
       <label htmlFor={htmlFor} className="lcars-eyebrow">
         {label}
       </label>
@@ -62,7 +62,7 @@ export function SubmitButton({
   pending,
   pendingLabel,
   children,
-  className = "lcars-switch self-start disabled:opacity-50 w-[100%]",
+  className = "lcars-pill-btn--outline self-start disabled:opacity-50 w-[100%]",
 }: {
   pending: boolean;
   pendingLabel: string;

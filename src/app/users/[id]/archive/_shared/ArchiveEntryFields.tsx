@@ -50,7 +50,7 @@ export function ArchiveEntryFields({
         />
       </FormField>
 
-      <FormField label="Kategorie" htmlFor={`${idPrefix}-category`}>
+      <FormField label="Archiv-Kategorie" htmlFor={`${idPrefix}-category`}>
         <select
           id={`${idPrefix}-category`}
           name="category"

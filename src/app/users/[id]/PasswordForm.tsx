@@ -72,7 +72,7 @@ export default function PasswordForm({
       <SubmitButton
         pending={pending}
         pendingLabel="Speichern…"
-        className="lcars-switch self-end disabled:opacity-50 w-[100%]"
+        className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%]"
       >
         {hasPassword ? "Passwort ändern" : "Passwort festlegen"}
       </SubmitButton>
