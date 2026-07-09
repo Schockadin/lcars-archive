@@ -9,9 +9,5 @@ export const metadata = {
 
 export default async function CharakterePage() {
   const characters = await getAllCharacters();
-  return (
-    <>
-      <CharacterPage characters={characters} />
-    </>
-  );
+  return <CharacterPage characters={characters} />;
 }

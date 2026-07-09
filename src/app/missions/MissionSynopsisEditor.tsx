@@ -6,7 +6,7 @@ import {
 } from "@/app/actions/missions";
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
-import { useNeo } from "@/hooks/useNeo";
+import { useEdit } from "@/hooks/useEdit";
 
 const initialState: MissionSynopsisEditState = {};
 
@@ -28,7 +28,7 @@ export default function MissionSynopsisEditor({
   adminActions?: ReactNode;
   slug: string;
 }) {
-  const { editMode, setEditMode } = useNeo();
+  const { editMode, setEditMode } = useEdit();
 
   const [state, formAction, pending] = useActionState(
     updateMissionSynopsisAction,

@@ -9,7 +9,7 @@ import { getViewer, canView } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import { notFound } from "next/navigation";
 import CharakterDetailPage from "./CharacterDetailPage";
-
+import { EditProvider } from "@/context/EditProvider";
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -71,15 +71,17 @@ export default async function CharakterPage({ params }: Props) {
   ]);
 
   return (
-    <div className="h-[90%]">
-      <CharakterDetailPage
-        character={character}
-        logs={logs}
-        conversationCount={conversationCount}
-        viewer={viewer}
-        owners={owners}
-        sourceMarkdown={isOwner ? (source?.sourceMarkdown ?? "") : null}
-      />
-    </div>
+    <EditProvider>
+      <div className="h-[90%]">
+        <CharakterDetailPage
+          character={character}
+          logs={logs}
+          conversationCount={conversationCount}
+          viewer={viewer}
+          owners={owners}
+          sourceMarkdown={isOwner ? (source?.sourceMarkdown ?? "") : null}
+        />
+      </div>
+    </EditProvider>
   );
 }

@@ -14,6 +14,7 @@ import { getViewer, canView } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import ArchiveEntryEditor from "./ArchiveEntryEditor";
 import ActionsMenu from "@/components/ActionsMenu";
+import { EditProvider } from "@/context/EditProvider";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -97,123 +98,125 @@ export default async function ArchiveEntryPage({ params }: Props) {
       : entry.links;
 
   return (
-    <article
-      className="archive-entry"
-      style={{ "--cat-color": cfg.color } as React.CSSProperties}
-    >
-      <PageMeta title={title} section="archive" />
-      <LcarsReadingModeToggle />
+    <EditProvider>
+      <article
+        className="archive-entry"
+        style={{ "--cat-color": cfg.color } as React.CSSProperties}
+      >
+        <PageMeta title={title} section="archive" />
+        <LcarsReadingModeToggle />
 
-      <div className="flex items-start">
-        {entry.category !== "dialogue" ? (
-          <StandardHeader entry={entry} title={title} label={cfg.label} />
-        ) : (
-          <DialogueHeader
-            title={title}
-            participants={entry.metadata.participants}
-            location={entry.metadata.location}
-            logDate={entry.metadata.logDate}
-          />
-        )}
-      </div>
+        <div className="flex items-start">
+          {entry.category !== "dialogue" ? (
+            <StandardHeader entry={entry} title={title} label={cfg.label} />
+          ) : (
+            <DialogueHeader
+              title={title}
+              participants={entry.metadata.participants}
+              location={entry.metadata.location}
+              logDate={entry.metadata.logDate}
+            />
+          )}
+        </div>
 
-      <ActionsMenu
-        viewer={viewer}
-        owners={owners}
-        contentType="archiveEntry"
-        followType="archive_entry"
-        playerId={entry.ownerUserId}
-        content={entry}
-      />
+        <ActionsMenu
+          viewer={viewer}
+          owners={owners}
+          contentType="archiveEntry"
+          followType="archive_entry"
+          playerId={entry.ownerUserId}
+          content={entry}
+        />
 
-      {entry.metadata.summary && entry.category != "dialogue" && (
-        <p className="lcars-eyebrow mb-[5px]">{entry.metadata.summary}</p>
-      )}
-
-      {entry.category !== "dialogue" &&
-        entry.metadata.attributes.length > 0 && (
-          <div className="char-file-data archive-entry-attrs">
-            {entry.metadata.attributes.map((attr) => (
-              <div key={attr.label} className="char-file-field">
-                <span className="char-file-field-label">{attr.label}:</span>{" "}
-                <span className="char-file-field-value">{attr.value}</span>
-              </div>
-            ))}
-          </div>
+        {entry.metadata.summary && entry.category != "dialogue" && (
+          <p className="lcars-eyebrow mb-[5px]">{entry.metadata.summary}</p>
         )}
 
-      {entry.category === "dialogue" ? (
-        messages.length > 0 ? (
-          <DialogueThread
-            messages={messages}
-            participants={entry.metadata.participants}
-            currentUserId={null}
-            dialogueOpen={false}
-          />
+        {entry.category !== "dialogue" &&
+          entry.metadata.attributes.length > 0 && (
+            <div className="char-file-data archive-entry-attrs">
+              {entry.metadata.attributes.map((attr) => (
+                <div key={attr.label} className="char-file-field">
+                  <span className="char-file-field-label">{attr.label}:</span>{" "}
+                  <span className="char-file-field-value">{attr.value}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+        {entry.category === "dialogue" ? (
+          messages.length > 0 ? (
+            <DialogueThread
+              messages={messages}
+              participants={entry.metadata.participants}
+              currentUserId={null}
+              dialogueOpen={false}
+            />
+          ) : entry.content ? (
+            // Ohne dialogue_messages (z.B. per Vault-Ingest importierte
+            // Gespräche ohne strukturierte Nachrichten) den rohen Inhalt
+            // zeigen statt fälschlich "Kein Inhalt hinterlegt" — der Text
+            // existiert ja, nur eben nicht als Nachrichten-Thread.
+            <div
+              className="mission-body lcars-text"
+              dangerouslySetInnerHTML={{ __html: entry.content }}
+            />
+          ) : (
+            <p className="lcars-empty-state">
+              Kein Inhalt zu diesem Eintrag hinterlegt.
+            </p>
+          )
         ) : entry.content ? (
-          // Ohne dialogue_messages (z.B. per Vault-Ingest importierte
-          // Gespräche ohne strukturierte Nachrichten) den rohen Inhalt
-          // zeigen statt fälschlich "Kein Inhalt hinterlegt" — der Text
-          // existiert ja, nur eben nicht als Nachrichten-Thread.
-          <div
-            className="mission-body lcars-text"
-            dangerouslySetInnerHTML={{ __html: entry.content }}
-          />
+          <>
+            <ArchiveEntryEditor
+              entryId={entry.id}
+              contentHtml={entry.content}
+              sourceMarkdown={entry.sourceMarkdown}
+              isAdminOrGM={
+                viewer?.role === "gm" || viewer?.role === "admin" || false
+              }
+              slug={entry.slug}
+            />
+            <div
+              className="mission-body lcars-text"
+              dangerouslySetInnerHTML={{ __html: entry.content }}
+            />
+          </>
         ) : (
           <p className="lcars-empty-state">
             Kein Inhalt zu diesem Eintrag hinterlegt.
           </p>
-        )
-      ) : entry.content ? (
-        <>
-          <ArchiveEntryEditor
-            entryId={entry.id}
-            contentHtml={entry.content}
-            sourceMarkdown={entry.sourceMarkdown}
-            isAdminOrGM={
-              viewer?.role === "gm" || viewer?.role === "admin" || false
-            }
-            slug={entry.slug}
+        )}
+
+        {viewer?.role === "admin" && entry.category === "dialogue" && (
+          <DeleteDialogueButton entrySlug={entry.slug} />
+        )}
+
+        <RelatedSection title="Verweise" links={outgoingLinks} />
+        <RelatedSection title="Erwähnt in" links={entry.backlinks} />
+
+        {/* Bei Dialogen erscheinen die Charaktere bereits als Teilnehmer. */}
+        {entry.category !== "dialogue" && (
+          <RefSection
+            title="Charaktere"
+            color="var(--lcars-blue)"
+            refs={entry.metadata.characters.map((c) => ({
+              href: `/characters/${c.slug}`,
+              label: c.name,
+            }))}
           />
-          <div
-            className="mission-body lcars-text"
-            dangerouslySetInnerHTML={{ __html: entry.content }}
-          />
-        </>
-      ) : (
-        <p className="lcars-empty-state">
-          Kein Inhalt zu diesem Eintrag hinterlegt.
-        </p>
-      )}
+        )}
 
-      {viewer?.role === "admin" && entry.category === "dialogue" && (
-        <DeleteDialogueButton entrySlug={entry.slug} />
-      )}
-
-      <RelatedSection title="Verweise" links={outgoingLinks} />
-      <RelatedSection title="Erwähnt in" links={entry.backlinks} />
-
-      {/* Bei Dialogen erscheinen die Charaktere bereits als Teilnehmer. */}
-      {entry.category !== "dialogue" && (
         <RefSection
-          title="Charaktere"
-          color="var(--lcars-blue)"
-          refs={entry.metadata.characters.map((c) => ({
-            href: `/characters/${c.slug}`,
-            label: c.name,
+          title="Missionen"
+          color="var(--lcars-amber)"
+          refs={entry.metadata.missions.map((m) => ({
+            href: `/missions/${m.slug}`,
+            label: m.title,
           }))}
         />
-      )}
-
-      <RefSection
-        title="Missionen"
-        color="var(--lcars-amber)"
-        refs={entry.metadata.missions.map((m) => ({
-          href: `/missions/${m.slug}`,
-          label: m.title,
-        }))}
-      />
-    </article>
+      </article>
+    </EditProvider>
   );
 }
 

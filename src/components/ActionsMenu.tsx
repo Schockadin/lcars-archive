@@ -12,8 +12,7 @@ import FollowButtons from "./FollowButtons";
 import { MissionDetail, MissionLogDetail } from "@/types/missions";
 import { ArchiveEntryDetail } from "@/types/archive";
 import { FollowTargetType } from "@/lib/follows";
-import { useNeo } from "@/hooks/useNeo";
-import { useEffect } from "react";
+import { useEdit } from "@/hooks/useEdit";
 
 interface ActionMenuProps {
   viewer: Viewer | null;
@@ -32,12 +31,7 @@ export default function ActionsMenu({
   followType,
   playerId,
 }: ActionMenuProps) {
-  const { toggleEditMode, editMode, setEditMode } = useNeo();
-
-  useEffect(() => {
-    setEditMode(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const { setEditMode } = useEdit();
 
   return (
     <div className="flex flex-col items-start justify-center gap-[8px]">
@@ -67,8 +61,8 @@ export default function ActionsMenu({
           viewer?.userId === playerId) && (
           <button
             type="button"
-            onClick={toggleEditMode}
-            className={`lcars-icon-btn self-start size-[40px] ${editMode ? "bg-lcars-amber text-lcars-bg" : ""}`}
+            onClick={() => setEditMode(true)}
+            className={`lcars-icon-btn self-start`}
             aria-label="Bearbeiten"
             title="Bearbeiten"
           >

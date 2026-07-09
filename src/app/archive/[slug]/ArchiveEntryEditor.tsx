@@ -6,9 +6,7 @@ import {
 } from "@/app/actions/archive";
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
-import FollowButtons from "@/components/FollowButtons";
-import { PencilIcon } from "@/lib/icons";
-import { useNeo } from "@/hooks/useNeo";
+import { useEdit } from "@/hooks/useEdit";
 
 const initialState: ArchiveEntryEditState = {};
 
@@ -35,7 +33,7 @@ export default function ArchiveEntryEditor({
   isAdminOrGM: boolean;
   slug: string;
 }) {
-  const { editMode, setEditMode } = useNeo();
+  const { editMode, setEditMode } = useEdit();
   const [state, formAction, pending] = useActionState(
     updateOwnArchiveEntryAction,
     initialState,

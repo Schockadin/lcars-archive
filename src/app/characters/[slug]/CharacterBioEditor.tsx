@@ -7,7 +7,7 @@ import {
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
 import { Character } from "@/types/character";
-import { useNeo } from "@/hooks/useNeo";
+import { useEdit } from "@/hooks/useEdit";
 
 const initialState: CharacterBioEditState = {};
 
@@ -32,7 +32,7 @@ export default function CharacterBioEditor({
   role?: string | undefined;
   character: Character;
 }) {
-  const { editMode, toggleEditMode, setEditMode } = useNeo();
+  const { editMode, setEditMode } = useEdit();
   const [state, formAction, pending] = useActionState(
     updateOwnCharacterBioAction,
     initialState,
@@ -85,7 +85,11 @@ export default function CharacterBioEditor({
       <AutoLinkCheckbox idPrefix={textareaId} />
 
       <div className="flex flex-wrap gap-[12px] items-center justify-end">
-        <button type="button" onClick={toggleEditMode} className="lcars-switch">
+        <button
+          type="button"
+          onClick={() => setEditMode(false)}
+          className="lcars-switch"
+        >
           Abbrechen
         </button>
         <button

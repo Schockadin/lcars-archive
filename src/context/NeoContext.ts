@@ -23,11 +23,6 @@ export interface NeoContextValue {
   // Lesemodus dann NICHT zurück.
   preserveReadingModeOnce: () => void;
   resetReadingModeOnUnmount: () => void;
-
-  // Speichert, ob ein Inhalt gerade editiert wird
-  editMode: boolean;
-  setEditMode: (toggle: boolean) => void;
-  toggleEditMode: () => void;
 }
 
 export const NeoContext = createContext<NeoContextValue | undefined>(undefined);
