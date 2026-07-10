@@ -21,11 +21,13 @@ mehr.
 Statt eines aus der DB generierten Vault-Backups gibt es ein
 **vollständiges DB-Backup**: `src/lib/dbBackup.ts` (`exportDatabaseBackup`/
 `importDatabaseBackup`, Admin-Panel `/users` → "Admin Actions" →
-"DB-Backup", `DbBackupPanel.tsx`) exportiert/importiert den kompletten
-Inhalt ALLER Tabellen (nicht nur die vier Content-Typen des früheren
-Vault-Exports) als eine JSON-Datei. Der Import ist ein voller Restore —
-er leert vorher alle Tabellen und spielt die Datei 1:1 wieder ein, kein
-Merge mit dem aktuellen Stand.
+"DB-Backup", `DbBackupPanel.tsx`) exportiert/importiert nahezu den
+kompletten Inhalt aller Tabellen (nicht nur die vier Content-Typen des
+früheren Vault-Exports) als eine JSON-Datei — bewusst OHNE `users`, das läuft
+über sein eigenes paralleles Backup (`UserBackupPanel.tsx`/`lib/userBackup.ts`,
+Upsert per E-Mail statt vollem Replace). Der DB-Backup-Import ist ein voller
+Restore der übrigen Tabellen — er leert sie vorher und spielt die Datei 1:1
+wieder ein, kein Merge mit dem aktuellen Stand.
 
 Die Ingest-Skripte (`scripts/ingest/*`) bleiben als Weg für den
 ursprünglichen/historischen Import aus einem Markdown-Vault unverändert

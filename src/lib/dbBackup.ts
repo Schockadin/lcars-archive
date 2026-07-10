@@ -4,18 +4,17 @@ import sql from "@/lib/db";
 // Ersetzt das frühere Vault-Backup (siehe git-history src/lib/vaultExport.ts)
 // als Weg, den kompletten Inhalt der Anwendung zu sichern — anders als das
 // Vault-Backup (nur Charaktere/Missionen/Mission-Logs/Archiv-Einträge als
-// Markdown) ist das hier ein vollständiger, wieder einspielbarer Dump ALLER
-// Tabellen inkl. User-Accounts und Beziehungsdaten (Follows, Dialog-
-// Nachrichten, Timeline, …) als eine JSON-Datei. Tabellen in
-// Eltern-vor-Kind-Reihenfolge (FK-Constraints) — beim Restore relevant für
-// Lesbarkeit, nicht für Korrektheit (TRUNCATE...CASCADE unten ignoriert die
-// Reihenfolge ohnehin).
+// Markdown) ist das hier ein vollständiger, wieder einspielbarer Dump so gut
+// wie aller Tabellen (Beziehungsdaten wie Follows, Dialog-Nachrichten,
+// Timeline, …) als eine JSON-Datei. Bewusst OHNE users: Useraccounts laufen
+// über ihr eigenes, paralleles Backup (UserBackupPanel.tsx/lib/userBackup.ts,
+// Upsert per E-Mail statt vollem Replace) — ein DB-Backup-Restore hier lässt
+// die users-Tabelle unangetastet, referenzierte user_id/player_id-Werte in
+// den restaurierten Zeilen müssen also zu noch vorhandenen Usern passen.
+// Tabellen in Eltern-vor-Kind-Reihenfolge (FK-Constraints) — beim Restore
+// relevant für Lesbarkeit, nicht für Korrektheit (TRUNCATE...CASCADE unten
+// ignoriert die Reihenfolge ohnehin).
 const TABLE_COLUMNS = {
-  users: [
-    "id", "email", "name", "role", "created_at", "last_login_at",
-    "previous_login_at", "password_hash", "requires_activation", "slug",
-    "is_active", "email_notifications_enabled", "push_notifications_enabled",
-  ],
   characters: [
     "id", "slug", "name", "status", "player_id", "portrait", "species",
     "rank", "bio", "metadata", "source_md", "frontmatter", "created_at",
@@ -25,6 +24,7 @@ const TABLE_COLUMNS = {
     "id", "slug", "title", "status", "started_at", "ended_at", "metadata",
     "source_md", "frontmatter", "created_at", "updated_at", "owner_user_id",
   ],
+  mission_participants: ["mission_id", "character_id"],
   mission_logs: [
     "id", "slug", "mission_id", "author_id", "title", "content", "log_date",
     "session_nr", "metadata", "source_md", "frontmatter", "created_at",
@@ -65,9 +65,15 @@ type TableName = (typeof TABLES)[number];
 
 // Tabellen mit SERIAL-id-Spalte — deren Sequence muss nach dem Restore auf
 // MAX(id)+1 gesetzt werden, sonst kollidiert der nächste per App erzeugte
-// Datensatz mit einer wiederhergestellten id (archive_links hat keine id,
-// nutzt (source_id, target_id) als PK).
-const SERIAL_TABLES = TABLES.filter((t) => t !== "archive_links");
+// Datensatz mit einer wiederhergestellten id (archive_links/
+// mission_participants haben keine id, nutzen ein zusammengesetztes PK).
+const NO_SERIAL_ID: readonly TableName[] = [
+  "archive_links",
+  "mission_participants",
+];
+const SERIAL_TABLES = TABLES.filter(
+  (t) => !(NO_SERIAL_ID as string[]).includes(t),
+);
 
 // JSONB-Spalten je Tabelle — beim Insert explizit mit sql.json() markiert
 // (gleiches Prinzip wie an jeder anderen Insert-Stelle in dieser Codebase,

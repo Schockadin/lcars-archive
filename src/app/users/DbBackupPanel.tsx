@@ -3,13 +3,14 @@ import { useRef, useState } from "react";
 import { exportDbBackupAction, importDbBackupAction } from "./dbBackupActions";
 import type { RestoreDbSummary } from "@/lib/dbBackup";
 
-// Admin-only (siehe page.tsx) — Export/Import des GESAMTEN Datenbankinhalts
-// (alle Tabellen, nicht nur User wie UserBackupPanel.tsx) als eine
-// JSON-Datei. Ersetzt das frühere Vault-Backup: die Vault-Anbindung wurde
-// entfernt, hier ist stattdessen der volle DB-Zustand direkt sicherbar.
-// Export wie UserBackupPanel über einen client-seitig erzeugten Blob, Import
-// liest die Datei per FileReader. Anders als der User-Import (Upsert per
-// E-Mail) ist der DB-Import ein voller Restore: er LEERT vorher alle
+// Admin-only (siehe page.tsx) — Export/Import fast des gesamten
+// Datenbankinhalts als eine JSON-Datei, bewusst OHNE die users-Tabelle (die
+// läuft über ihr eigenes paralleles Backup, siehe UserBackupPanel.tsx).
+// Ersetzt das frühere Vault-Backup: die Vault-Anbindung wurde entfernt, hier
+// ist stattdessen der volle DB-Zustand direkt sicherbar. Export wie
+// UserBackupPanel über einen client-seitig erzeugten Blob, Import liest die
+// Datei per FileReader. Anders als der User-Import (Upsert per E-Mail) ist
+// der DB-Import ein voller Restore: er LEERT vorher alle (Nicht-User-)
 // Tabellen — daher die zusätzliche Bestätigung.
 export default function DbBackupPanel() {
   const [exporting, setExporting] = useState(false);
@@ -43,7 +44,7 @@ export default function DbBackupPanel() {
     if (
       !window.confirm(
         "Diese Datei jetzt einspielen? Das ERSETZT den kompletten aktuellen " +
-          "Datenbankinhalt (alle Tabellen) durch den Stand aus der Datei. " +
+          "Datenbankinhalt (außer Useraccounts) durch den Stand aus der Datei. " +
           "Das lässt sich nicht rückgängig machen, außer mit einem neueren Backup.",
       )
     ) {
@@ -72,11 +73,13 @@ export default function DbBackupPanel() {
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
       <p className="text-lcars-text-dim text-[13px]">
-        Exportiert den kompletten Datenbankinhalt (alle Tabellen — Charaktere,
-        Missionen, Mission-Logs, Archiv-Einträge, User, Follows, Dialog-
-        Nachrichten, Timeline, …) als eine JSON-Datei. Der Import ERSETZT den
-        gesamten aktuellen Inhalt durch den Stand der Datei. Die Datei ist
-        entsprechend sensibel — nur für die Administration.
+        Exportiert den kompletten Datenbankinhalt außer Useraccounts
+        (Charaktere, Missionen, Mission-Logs, Archiv-Einträge, Follows,
+        Dialog-Nachrichten, Timeline, …) als eine JSON-Datei. User laufen über
+        ein eigenes, paralleles Backup (siehe "User-Backup" oben). Der Import
+        ERSETZT den gesamten aktuellen Inhalt (außer Usern) durch den Stand
+        der Datei. Die Datei ist entsprechend sensibel — nur für die
+        Administration.
       </p>
 
       <div className="flex flex-wrap items-center gap-[12px]">
