@@ -52,9 +52,11 @@ function insertAtCursor(textarea: HTMLTextAreaElement, text: string): void {
 
 // Admin/GM-Werkzeug oberhalb der Content-Textareas: fügt einen
 // <!-- timeline: JJJJ-MM-TT | Titel | Kategorie --> Marker an der aktuellen
-// Cursor-Position ein (siehe scripts/ingest/timeline.ts für das Marker-
-// Format, das der nächste Vault-Export/Ingest zu einem Timeline-Ereignis
-// macht). Manipuliert die Ziel-Textarea direkt per DOM (textareaId), statt
+// Cursor-Position ein (Format geteilt zwischen scripts/ingest/timeline.ts
+// und src/lib/timeline.ts#regenerateTimeline — Marker in App-Inhalten werden
+// erst beim nächsten "Timeline neu aufbauen" im Admin-Panel zu einem
+// Timeline-Ereignis, siehe TimelineRegeneratePanel.tsx). Manipuliert die
+// Ziel-Textarea direkt per DOM (textareaId), statt
 // über einen Callback/kontrollierten State zu gehen — alle Content-
 // Textareas in der App sind unkontrolliert (defaultValue), ein direkter
 // Werteingriff ist hier deshalb genau das richtige Werkzeug und spart eine

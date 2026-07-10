@@ -98,37 +98,16 @@ export default function DSGVOClient() {
         </a>
       </p>
 
-      <h2>4. Vault-Backup</h2>
+      <h2>4. Datenübertragung in Drittländer</h2>
       <p>
-        Kampagneninhalte (Charaktere, Missionen, Missionslogs, Archiv-Einträge)
-        werden zusätzlich zur Datenbank als Markdown-Dateien in einem
-        Repository bei <strong>GitHub, Inc.</strong> (San Francisco, USA)
-        gesichert. Diese Dateien können ein Kürzel (Slug) enthalten, das aus
-        dem Namen des jeweiligen Erstellers/Bearbeiters abgeleitet ist, um
-        Autorenschaft/Zuständigkeit nachvollziehbar zu halten. GitHub
-        verarbeitet diese Daten als Auftragsverarbeiter gemäß Art. 28 DSGVO
-        (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse
-        an einer versionierten Sicherungskopie der Kampagneninhalte). Mehr
-        Informationen:{" "}
-        <a
-          href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement"
-          target="_blank"
-          rel="noreferrer"
-        >
-          docs.github.com – GitHub Privacy Statement
-        </a>
-      </p>
-
-      <h2>5. Datenübertragung in Drittländer</h2>
-      <p>
-        Netlify, Resend und GitHub haben Serverstandorte in den USA. Die
-        Übertragung erfolgt auf Basis des EU-US Data Privacy Framework
+        Netlify und Resend haben Serverstandorte in den USA. Die Übertragung
+        erfolgt auf Basis des EU-US Data Privacy Framework
         (Angemessenheitsbeschluss der EU-Kommission vom Juli 2023) bzw., soweit
         ein Anbieter diesem nicht angeschlossen ist, auf Basis der
         EU-Standardvertragsklauseln.
       </p>
 
-      <h2>6. Cookies</h2>
+      <h2>5. Cookies</h2>
       <p>
         Diese Website setzt ein einziges eigenes Cookie namens{" "}
         <code>neo_session</code>. Es hält dich für 30 Tage angemeldet und ist
@@ -156,7 +135,7 @@ export default function DSGVOClient() {
           herunterlädt und selbst ausliefert — es gibt keine Laufzeit-Anfrage
           an Google-Server mehr und damit keine Übertragung der IP-Adresse. */}
 
-      <h2>7. Deine Rechte</h2>
+      <h2>6. Deine Rechte</h2>
       <p>
         Du hast das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16),
         Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18),
@@ -168,7 +147,7 @@ export default function DSGVOClient() {
         </a>
       </p>
 
-      <h2>8. Aktualität</h2>
+      <h2>7. Aktualität</h2>
       <p>Stand: {currentYear}</p>
     </LegalPageLayout>
   );

@@ -16,7 +16,6 @@ export default function DeleteMissionLogButton({
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const [warning, setWarning] = useState<string | null>(null);
 
   return (
     <div className="flex flex-col items-end gap-[4px]">
@@ -27,12 +26,10 @@ export default function DeleteMissionLogButton({
         onClick={() => {
           if (!window.confirm("Diesen Missionslog wirklich löschen?")) return;
           setError(null);
-          setWarning(null);
           startTransition(async () => {
             onOptimisticDelete();
             const result = await deleteMissionLogAction(logId);
             if (result.error) setError(result.error);
-            if (result.warning) setWarning(result.warning);
           });
         }}
       >
@@ -41,11 +38,6 @@ export default function DeleteMissionLogButton({
       {error && (
         <p className="lcars-link-text text-lcars-red text-[11px]" role="alert">
           {error}
-        </p>
-      )}
-      {warning && (
-        <p className="lcars-link-text text-lcars-amber text-[11px]" role="alert">
-          {warning}
         </p>
       )}
     </div>

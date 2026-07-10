@@ -7,10 +7,9 @@ import { LcarsDataRow } from "@/components/lcars";
 import CreateUserForm from "./CreateUserForm";
 import UserManagementTable from "./UserManagementTable";
 import CharacterAssignmentTable from "./CharacterAssignmentTable";
-import VaultExportPanel from "./VaultExportPanel";
-import VaultIngestPanel from "./VaultIngestPanel";
 import RevalidateCachePanel from "./RevalidateCachePanel";
 import UserBackupPanel from "./UserBackupPanel";
+import DbBackupPanel from "./DbBackupPanel";
 import TimelineRegeneratePanel from "./TimelineRegeneratePanel";
 import AssignOwnerlessMissionsPanel from "./AssignOwnerlessMissionsPanel";
 
@@ -21,9 +20,10 @@ export const metadata: Metadata = {
 
 // Erhöht das Timeout-Limit aller Server Actions auf dieser Seite (siehe
 // Next.js-Doku zu maxDuration — bei Server Actions gilt der Wert nur auf
-// Seitenebene, nicht pro Action-Datei). Zusätzliche Absicherung neben der
-// Batch-/Phasen-Aufteilung von Vault-Backup und -Ingest: die tatsächliche
-// Obergrenze setzt am Ende trotzdem die Deployment-Plattform (Netlify).
+// Seitenebene, nicht pro Action-Datei) — u.a. für den DB-Backup-Export/
+// -Import, der bei größeren Datenständen länger als das Default-Timeout
+// laufen kann. Die tatsächliche Obergrenze setzt am Ende trotzdem die
+// Deployment-Plattform (Netlify).
 export const maxDuration = 60;
 
 // Gm-oder-admin — kein Sidebar-Eintrag, gleiches Prinzip wie /login.
@@ -55,7 +55,7 @@ export default async function UsersAdminPage() {
   // DB-Wert, nur der Vollständigkeit halber im Kopf gezeigt (gleiche Optik
   // wie die anderen DataRow-Akkordeons hier, die einen Datensatz-Zähler
   // zeigen).
-  const adminActionCount = 6;
+  const adminActionCount = 5;
 
   return (
     <>
@@ -116,13 +116,8 @@ export default async function UsersAdminPage() {
                 </section>
 
                 <section className="flex flex-col gap-[12px]">
-                  <h2 className="text-lcars-amber">Vault-Backup</h2>
-                  <VaultExportPanel />
-                </section>
-
-                <section className="flex flex-col gap-[12px]">
-                  <h2 className="text-lcars-amber">Vault-Ingest</h2>
-                  <VaultIngestPanel />
+                  <h2 className="text-lcars-amber">DB-Backup</h2>
+                  <DbBackupPanel />
                 </section>
 
                 <section className="flex flex-col gap-[12px]">

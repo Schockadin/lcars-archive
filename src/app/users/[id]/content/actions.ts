@@ -5,7 +5,6 @@ import { setCharacterVisibility } from "@/lib/characters";
 import { setMissionLogVisibility, deleteMissionLog } from "@/lib/missions";
 import { setDialogueVisibility } from "@/lib/dialogues";
 import { setArchiveEntryVisibility } from "@/lib/archive";
-import { deleteVaultFile } from "@/lib/githubVault";
 import {
   revalidateCharacter,
   revalidateArchiveEntry,
@@ -79,18 +78,10 @@ export async function setVisibilityAction(
 // Löschen eines eigenen Mission-Logs aus "Meine Inhalte" (DeleteMissionLogButton.tsx).
 // deleteMissionLog scoped die DB-Löschung selbst auf den Owner (Spieler des
 // Autor-Charakters) — ein gefälschtes id trifft 0 Zeilen, kein Vorab-Check
-// hier nötig (gleiches Prinzip wie setVisibilityAction oben). Die DB ist
-// Source of Truth, der Vault nur noch generiertes Backup (siehe
-// src/lib/vaultExport.ts) — die Vault-Datei-Löschung hier ist deshalb
-// Best-Effort: schlägt sie fehl (Datei anders benannt, Token fehlt, GitHub
-// nicht erreichbar), bleibt das Log trotzdem aus der DB entfernt — das ist
-// das eigentlich maßgebliche Ergebnis. Der nächste Vault-Export überschreibt
-// zwar keine verwaisten Dateien, ein sofortiger Best-Effort-Delete hält das
-// Backup aber im Regelfall trotzdem aktuell. Sichtbar als warning statt nur
-// console.error, falls er fehlschlägt.
+// hier nötig (gleiches Prinzip wie setVisibilityAction oben).
 export async function deleteMissionLogAction(
   logId: number,
-): Promise<{ error?: string; warning?: string }> {
+): Promise<{ error?: string }> {
   const session = await getSession();
   if (!session) return { error: "Nicht angemeldet." };
 
@@ -101,20 +92,6 @@ export async function deleteMissionLogAction(
 
   revalidateLog(deleted.missionId, deleted.slug);
   revalidatePath(`/users/${session.userId}/content`);
-
-  try {
-    await deleteVaultFile({
-      path: `Missionen/${deleted.missionSlug}/${deleted.slug}.md`,
-      message: `Missionslog gelöscht: ${deleted.slug} (via Web-App)`,
-    });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    return {
-      warning:
-        `Log wurde gelöscht, aber die Vault-Datei konnte nicht mit entfernt ` +
-        `werden (${message}). Sie bleibt im Vault-Repo bestehen.`,
-    };
-  }
 
   return {};
 }
