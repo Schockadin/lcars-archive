@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { wrapSelection, applyLinePrefix } from "@/lib/textareaEdit";
 import { renderMarkdownPreview } from "@/app/actions/markdownPreview";
 import TimelineMarkerButton from "./TimelineMarkerButton";
+import { LcarsSwitch } from "@/components/lcars";
 import {
   BoldIcon,
   ItalicIcon,
@@ -140,23 +141,19 @@ export default function MarkdownEditor({
         ))}
         {isAdminOrGM && <TimelineMarkerButton textareaId={id} iconOnly />}
 
-        <div className="markdown-editor-tabs">
-          <button
-            type="button"
-            className={`lcars-switch${mode === "raw" ? " lcars-switch--active" : ""}`}
-            onClick={() => setMode("raw")}
-          >
-            Rohtext
-          </button>
-          <button
-            type="button"
-            className={`lcars-switch${mode === "preview" ? " lcars-switch--active" : ""}`}
-            disabled={previewPending}
-            onClick={showPreview}
-          >
-            {previewPending ? "Lädt…" : "Vorschau"}
-          </button>
-        </div>
+        <LcarsSwitch
+          className="markdown-editor-tabs"
+          options={[
+            { key: "raw", label: "Rohtext" },
+            {
+              key: "preview",
+              label: previewPending ? "Lädt…" : "Vorschau",
+              disabled: previewPending,
+            },
+          ]}
+          active={mode}
+          onChange={(next) => (next === "preview" ? showPreview() : setMode("raw"))}
+        />
       </div>
 
       <textarea

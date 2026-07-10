@@ -58,7 +58,6 @@ export default function SearchResultsView({
     <div>
       <LcarsSwitch
         className="search-type-filter"
-        itemClassName="lcars-switch"
         options={[
           { key: "all" as TypeFilter, label: `Alle (${results.length})` },
           ...TYPE_ORDER.map((t) => ({

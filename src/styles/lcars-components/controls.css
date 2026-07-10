@@ -3,7 +3,34 @@
    abbildet (Hover-Fülleffekt, kreisförmige Icon-Buttons, Fokus-States).
 ──────────────────────────────────────────────────────────────────── */
 
-.lcars-switch {
+/* Animierter LCARS-Switch (src/components/lcars/Switch.tsx): ein
+   gemeinsamer Amber-Balken (.lcars-switch-slider) gleitet zur jeweils
+   aktiven Option statt jede Option einzeln ein-/auszufärben. Der Balken
+   wird per JS über getBoundingClientRect() der aktiven Schaltfläche
+   positioniert (siehe Switch.tsx) — funktioniert dadurch auch bei
+   mehrzeiligen Grid-Containern (z.B. .search-type-filter). */
+.lcars-switch-group {
+  position: relative;
+  display: flex;
+  overflow: hidden;
+  border-radius: var(--lcars-radius-pill);
+  border: solid 1px var(--lcars-text-data);
+}
+.lcars-switch-slider {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: var(--lcars-amber);
+  transition:
+    transform 250ms ease,
+    width 250ms ease,
+    height 250ms ease;
+  z-index: 0;
+  pointer-events: none;
+}
+.lcars-switch-item {
+  position: relative;
+  z-index: 1;
   cursor: pointer;
   /* min-height statt height: bei schmalen Viewports kann mehrwortiger
      Button-Text (z.B. "Zeitleisten-Ereignis einfügen") auf zwei Zeilen
@@ -16,33 +43,26 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   text-decoration: none;
-  transition: 200ms;
+  transition: color 200ms;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: solid 1px var(--lcars-text-data);
-  background: var(--lcars-surface);
+  border: none;
+  border-right: solid 1px var(--lcars-text-data);
+  background: transparent;
   color: var(--lcars-text-data);
 }
-/* "Leeres" Default-Design für alle Buttons/Links (Formulare, Cookie-
-   Hinweis, User-Bereich-Navigation) — füllt erst bei Hover auf amber, statt
-   permanent gefüllt zu sein. Die Toggle-Varianten (SortSwitch/SortButton)
-   setzen aktiv/inaktiv weiterhin per Inline-Style und ignorieren das. */
-.lcars-switch:hover:not(:disabled) {
-  background: var(--lcars-amber);
-  color: var(--lcars-bg);
-  border-color: var(--lcars-amber);
+.lcars-switch-item:last-child {
+  border-right: none;
 }
-.lcars-switch:disabled {
+.lcars-switch-item:disabled {
   cursor: not-allowed;
+  opacity: 0.4;
 }
-
-/* Aktueller Tab in der User-Bereich-Navigation (UsersNav.tsx) — dauerhaft
-   gefüllt statt nur bei Hover, damit die aktuelle Seite erkennbar bleibt. */
-.lcars-switch--active {
-  background: var(--lcars-amber);
+/* Text dunkel einfärben, wenn der gleitende Amber-Balken gerade auf dieser
+   Option liegt (Balken selbst ist z-index 0, Text z-index 1 — siehe oben). */
+.lcars-switch-item--active {
   color: var(--lcars-bg);
-  border-color: var(--lcars-amber);
 }
 
 /* Kompakte Icon-Variante von .lcars-switch für Zeilen-Aktionen (z.B.

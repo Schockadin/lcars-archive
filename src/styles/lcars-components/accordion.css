@@ -5,10 +5,6 @@
    nicht vorab bekannt sein muss.
 ──────────────────────────────────────────────────────────────────── */
 
-.lcars-accordion + .lcars-accordion {
-  margin-top: 8px;
-}
-
 /* Chevron lebt jetzt in der DataRow-Pill selbst (siehe DataRow.tsx#expanded,
    data-row.css .lcars-data-row-chevron) — der Trigger-Button ist deshalb
    nur noch ein einfacher Button-Reset ohne eigenes Flex-Layout, die
