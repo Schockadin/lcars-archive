@@ -1,8 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import type { FollowEntry } from "@/lib/follows";
-import type { FollowTargetType } from "@/lib/follows";
+import type { FollowEntry, FollowTargetType } from "@/lib/follows";
 import { endFollow } from "@/app/actions/follows";
 
 const TYPE_LABELS: Record<FollowTargetType, string> = {
