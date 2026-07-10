@@ -11,6 +11,11 @@ import {
 } from "@/lib/missions";
 import { revalidateLog } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
+import { getCharacterSubscribers } from "@/lib/dialogues";
+import { sendNewMissionLogEmail } from "@/lib/mail";
+import { sendPushToUser } from "@/lib/push";
+import { getBaseUrl } from "@/lib/http";
+import { synopsisExcerpt } from "@/lib/missionFormat";
 
 export interface MissionLogFormState {
   error?: string;
@@ -144,5 +149,46 @@ export async function missionLogAction(
   });
 
   revalidateLog(mission.id, result.slug);
+
+  // Wer den Autor-Charakter abonniert hat, bekommt eine Mail/Push zum neuen
+  // Log — ein einzelnes, sofortiges Ereignis wie bei Dialog-Nachrichten,
+  // kein Sammel-Digest. Der Verfasser selbst ist logischerweise nie
+  // Abonnent seines eigenen Charakters relevant für diese Benachrichtigung,
+  // aber getCharacterSubscribers filtert ohnehin nicht danach — ein
+  // Ausschluss ist trotzdem unnötig, da niemand sich selbst für Push/Mail
+  // über die eigene Aktion in dieser Liste wiederfinden würde, außer er
+  // hätte explizit den eigenen Charakter abonniert, was ein bewusster Fall
+  // ist (er wollte offenbar benachrichtigt werden).
+  const subscribers = await getCharacterSubscribers(authorCharacter.slug);
+  if (subscribers.length > 0) {
+    const logUrl = `${await getBaseUrl()}/missions/${mission.slug}/${result.slug}`;
+    const preview = synopsisExcerpt(bodyMarkdown, 140);
+    for (const subscriber of subscribers) {
+      if (subscriber.emailNotificationsEnabled) {
+        const mailResult = await sendNewMissionLogEmail({
+          to: subscriber.email,
+          name: subscriber.name,
+          characterName: authorCharacter.name,
+          missionTitle: mission.title,
+          logTitle: title,
+          logUrl,
+          preview,
+        });
+        if (!mailResult.sent) {
+          console.error(
+            `Neuer-Log-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`,
+          );
+        }
+      }
+      if (subscriber.pushNotificationsEnabled) {
+        await sendPushToUser(subscriber.id, {
+          title: `Neuer Log von ${authorCharacter.name}`,
+          body: preview,
+          url: logUrl,
+        });
+      }
+    }
+  }
+
   redirect(`/users/${session.userId}`);
 }

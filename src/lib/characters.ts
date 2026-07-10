@@ -5,6 +5,19 @@ import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
 import { Character, CharacterMetadata } from "@/types/character";
 import { MissionLogPreview } from "@/types/missionLog";
+// getCharacterSubscribers lebt in dialoguesCore.ts (ursprünglich für den
+// Dialog-Abschluss gebraucht, siehe dort) und wird hier für die
+// Charakter-Update-Benachrichtigung wiederverwendet — Import über den
+// "server-only"-Wrapper @/lib/dialogues statt @/lib/dialoguesCore direkt, da
+// characters.ts (unstable_cache-Import oben) ohnehin nur innerhalb von
+// Next.js läuft, nie per tsx (anders als dialoguesCore.ts selbst, das
+// deshalb bewusst nicht umgekehrt aus @/lib/follows importieren darf, siehe
+// dessen Kommentar in createDialogue).
+import { getCharacterSubscribers } from "@/lib/dialogues";
+import { sendCharacterUpdatedEmail } from "@/lib/mail";
+import { sendPushToUser } from "@/lib/push";
+import { getBaseUrl } from "@/lib/http";
+import { synopsisExcerpt } from "@/lib/missionFormat";
 
 // Hilfsfunktion: stellt sicher dass metadata ein Objekt ist
 function parseCharacter(row: Character): Character {
@@ -127,6 +140,29 @@ export async function getCharactersWithPlayers(
     FROM characters c
     JOIN users u ON u.id = c.player_id
     WHERE c.player_id IS NOT NULL AND c.player_id != ${excludeUserId}
+    ORDER BY c.name ASC
+  `;
+}
+
+export interface CharacterParticipantOption {
+  id: number;
+  name: string;
+  playerName: string | null;
+}
+
+// ALLE Charaktere (unabhängig von Spieler/Status) für den
+// Teilnehmer-Multiselect beim Anlegen/Bearbeiten einer Mission
+// (MissionParticipantsField.tsx) — anders als getCharactersWithPlayers ohne
+// Einschränkung auf einen Spieler, da die Spielleitung jeden Charakter als
+// Teilnehmer markieren können soll, auch NPCs ohne player_id (playerName
+// dann null).
+export async function getCharactersForParticipantPicker(): Promise<
+  CharacterParticipantOption[]
+> {
+  return sql<CharacterParticipantOption[]>`
+    SELECT c.id, c.name, u.name AS "playerName"
+    FROM characters c
+    LEFT JOIN users u ON u.id = c.player_id
     ORDER BY c.name ASC
   `;
 }
@@ -485,6 +521,59 @@ export async function updateOwnCharacterContent(
   return rows[0] ?? null;
 }
 
+// Benachrichtigt alle Abonnenten eines Charakters (content_follows,
+// target_type 'character'), dass sich etwas an der Akte geändert hat —
+// gerufen von beiden Bearbeiten-Wegen (volles Formular:
+// characters/_shared/contentAction.ts; Inline-Bio-Editor:
+// app/actions/characters.ts#updateOwnCharacterBioAction), jeweils NACH dem
+// erfolgreichen Speichern. Best-effort wie die Dialog-Benachrichtigungen in
+// app/actions/dialogues.ts: einzelne fehlgeschlagene Mails werden geloggt,
+// brechen den Rest nicht ab. editingUserId schließt den Bearbeitenden selbst
+// aus — er ist immer der Owner (beide Editier-Wege sind owner-only, siehe
+// CharacterBioEditor.tsx/EditCharacterForm.tsx), braucht also keine
+// Benachrichtigung über die eigene Änderung.
+export async function notifyCharacterSubscribers(input: {
+  characterSlug: string;
+  characterName: string;
+  editingUserId: number;
+  // Roher Bio-Markdown nach der Änderung — die Vorschau wird hier zentral
+  // daraus abgeleitet, statt an jeder Aufrufstelle einzeln zu kürzen.
+  bioMarkdown: string | null;
+}): Promise<void> {
+  const subscribers = (
+    await getCharacterSubscribers(input.characterSlug)
+  ).filter((s) => s.id !== input.editingUserId);
+  if (subscribers.length === 0) return;
+
+  const preview = input.bioMarkdown
+    ? synopsisExcerpt(input.bioMarkdown, 140)
+    : "Die Akte wurde aktualisiert.";
+  const characterUrl = `${await getBaseUrl()}/characters/${input.characterSlug}`;
+  for (const subscriber of subscribers) {
+    if (subscriber.emailNotificationsEnabled) {
+      const result = await sendCharacterUpdatedEmail({
+        to: subscriber.email,
+        name: subscriber.name,
+        characterName: input.characterName,
+        characterUrl,
+        preview,
+      });
+      if (!result.sent) {
+        console.error(
+          `Charakter-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+        );
+      }
+    }
+    if (subscriber.pushNotificationsEnabled) {
+      await sendPushToUser(subscriber.id, {
+        title: `Aktualisiert: ${input.characterName}`,
+        body: preview,
+        url: characterUrl,
+      });
+    }
+  }
+}
+
 // Nur die Biografie, nicht Name/Status/Metadaten — für den Inline-Editor auf
 // der Detailseite (CharacterBioEditor.tsx), analog updateOwnArchiveEntryBody
 // in src/lib/archive.ts. Anders als dort darf der Text leer sein (ein
@@ -497,19 +586,19 @@ export async function updateOwnCharacterBio(
   bodyMarkdown: string,
   // Siehe createCharacter oben — Opt-in "Automatisch verlinken".
   bioHtmlOverride?: string,
-): Promise<{ slug: string; bio: string | null } | null> {
+): Promise<{ slug: string; name: string; bio: string | null } | null> {
   const trimmedBody = bodyMarkdown.trim();
   const bio = trimmedBody
     ? (bioHtmlOverride ?? (await renderContentHtml(trimmedBody)))
     : null;
   const sourceMd = trimmedBody || null;
 
-  const rows = await sql<{ slug: string }[]>`
+  const rows = await sql<{ slug: string; name: string }[]>`
     UPDATE characters
     SET bio = ${bio}, source_md = ${sourceMd}, updated_at = NOW()
     WHERE id = ${characterId} AND player_id = ${userId}
-    RETURNING slug
+    RETURNING slug, name
   `;
   const row = rows[0];
-  return row ? { slug: row.slug, bio } : null;
+  return row ? { slug: row.slug, name: row.name, bio } : null;
 }

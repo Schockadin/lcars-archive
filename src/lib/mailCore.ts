@@ -182,6 +182,15 @@ export async function sendDialogueStartedEmail(input: {
   });
 }
 
+// Rendert eine kurze, kursive Anriss-Zeile unter der Ankündigung — genutzt
+// von jedem "es gibt Neuigkeiten"-Template unten, damit die Mail selbst
+// schon einen Eindruck vom Inhalt gibt statt nur Titel + Link (siehe auch
+// die Push-Pendants in src/lib/pushCore.ts-Aufrufern, die denselben
+// preview-Text im body verwenden).
+function previewBlock(preview: string): string {
+  return `<p style="color:#666;font-style:italic;">${preview}</p>`;
+}
+
 // Direkt nach jeder neuen Dialog-Nachricht an den jeweils anderen
 // Teilnehmer verschickt (kein Sammel-Digest wie bei Abos — hier ist jede
 // Nachricht ein einzelnes, sofortiges Ereignis).
@@ -191,6 +200,7 @@ export async function sendDialogueMessageEmail(input: {
   fromCharacterName: string;
   dialogueTitle: string;
   dialogueUrl: string;
+  preview: string;
 }): Promise<SendEmailResult> {
   return sendEmail({
     to: input.to,
@@ -198,6 +208,7 @@ export async function sendDialogueMessageEmail(input: {
     html: `
       <p>Hallo ${input.name},</p>
       <p>${input.fromCharacterName} hat im Gespräch "${input.dialogueTitle}" geantwortet:</p>
+      ${previewBlock(input.preview)}
       <p><a href="${input.dialogueUrl}">${input.dialogueUrl}</a></p>
       <p>— Neo Archive</p>
     `,
@@ -244,6 +255,92 @@ export async function sendDialogueDeletedEmail(input: {
         das Gespräch "${input.dialogueTitle}", an dem du beteiligt warst,
         wurde von der Administration gelöscht.
       </p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
+// An alle Abonnenten eines Charakters (content_follows, target_type
+// 'character'), sobald dieser Charakter bearbeitet wird — sowohl übers volle
+// Bearbeiten-Formular als auch über den Inline-Bio-Editor auf der
+// Charakterseite (siehe characters/_shared/contentAction.ts bzw.
+// updateOwnCharacterBioAction in app/actions/characters.ts). Der Bearbeitende
+// selbst (immer der Owner) wird vom Aufrufer ausgeschlossen.
+export async function sendCharacterUpdatedEmail(input: {
+  to: string;
+  name: string;
+  characterName: string;
+  characterUrl: string;
+  preview: string;
+}): Promise<SendEmailResult> {
+  return sendEmail({
+    to: input.to,
+    subject: `Aktualisiert: ${input.characterName}`,
+    html: `
+      <p>Hallo ${input.name},</p>
+      <p>die Akte von ${input.characterName}, den du abonniert hast, wurde aktualisiert:</p>
+      ${previewBlock(input.preview)}
+      <p><a href="${input.characterUrl}">${input.characterUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
+// An alle Abonnenten eines Charakters, sobald dieser Charakter einen neuen
+// Mission-Log verfasst (createMissionLog-Aufrufer in
+// mission-logs/_shared/contentAction.ts) — ein einzelnes, sofortiges
+// Ereignis wie bei Dialog-Nachrichten, kein Sammel-Digest.
+export async function sendNewMissionLogEmail(input: {
+  to: string;
+  name: string;
+  characterName: string;
+  missionTitle: string;
+  logTitle: string;
+  logUrl: string;
+  preview: string;
+}): Promise<SendEmailResult> {
+  return sendEmail({
+    to: input.to,
+    subject: `Neuer Log von ${input.characterName}: "${input.logTitle}"`,
+    html: `
+      <p>Hallo ${input.name},</p>
+      <p>
+        ${input.characterName}, den du abonniert hast, hat einen neuen
+        Mission-Log in "${input.missionTitle}" verfasst: "${input.logTitle}"
+      </p>
+      ${previewBlock(input.preview)}
+      <p><a href="${input.logUrl}">${input.logUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
+// An die Spieler teilnehmender Charaktere beim Anlegen einer Mission
+// (missionAction, missions/_shared/contentAction.ts) — die Mission wird
+// bewusst NICHT automatisch abonniert (siehe mission_participants in
+// schema.sql), deshalb der separate activateUrl-Link, um das Abo mit einem
+// Klick nachzuholen, statt es dem Spieler zu oktroyieren.
+export async function sendMissionParticipantEmail(input: {
+  to: string;
+  name: string;
+  missionTitle: string;
+  missionUrl: string;
+  activateUrl: string;
+  preview: string;
+}): Promise<SendEmailResult> {
+  return sendEmail({
+    to: input.to,
+    subject: `Neue Mission: "${input.missionTitle}"`,
+    html: `
+      <p>Hallo ${input.name},</p>
+      <p>dein Charakter nimmt an der neuen Mission "${input.missionTitle}" teil:</p>
+      ${previewBlock(input.preview)}
+      <p><a href="${input.missionUrl}">${input.missionUrl}</a></p>
+      <p>
+        Die Mission ist noch nicht automatisch abonniert — klicke hier, um
+        über Neuigkeiten benachrichtigt zu werden:
+      </p>
+      <p><a href="${input.activateUrl}">${input.activateUrl}</a></p>
       <p>— Neo Archive</p>
     `,
   });

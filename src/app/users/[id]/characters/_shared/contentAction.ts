@@ -6,6 +6,7 @@ import {
   createCharacter,
   updateOwnCharacterContent,
   getOwnCharacterForEdit,
+  notifyCharacterSubscribers,
 } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
@@ -131,6 +132,12 @@ export async function characterAction(
       return { error: "Charakter nicht gefunden oder keine Berechtigung." };
     }
     revalidateCharacter(result.slug);
+    await notifyCharacterSubscribers({
+      characterSlug: result.slug,
+      characterName: name,
+      editingUserId: session.userId,
+      bioMarkdown: bodyMarkdown || null,
+    });
     redirect(`/users/${session.userId}/content`);
   }
 

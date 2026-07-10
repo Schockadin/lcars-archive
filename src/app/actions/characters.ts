@@ -3,6 +3,7 @@ import { getSession } from "@/lib/session";
 import {
   updateOwnCharacterBio,
   getOwnCharacterForEdit,
+  notifyCharacterSubscribers,
 } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
@@ -58,6 +59,12 @@ export async function updateOwnCharacterBioAction(
   }
 
   revalidateCharacter(result.slug);
+  await notifyCharacterSubscribers({
+    characterSlug: result.slug,
+    characterName: result.name,
+    editingUserId: session.userId,
+    bioMarkdown: bodyMarkdown || null,
+  });
 
   return { success: true, updatedBio: result.bio };
 }
