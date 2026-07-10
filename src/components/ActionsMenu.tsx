@@ -18,7 +18,10 @@ interface ActionMenuProps {
   owners: UserWithCharacters[];
   content: Character | MissionDetail | MissionLogDetail | ArchiveEntryDetail;
   contentType: ContentToolType;
-  followType: FollowTargetType;
+  // Optional: Mission-Logs sind nicht followbar (siehe FollowTargetType in
+  // lib/follows.ts) — die Mission-Log-Detailseite übergibt deshalb gar
+  // keinen followType, statt ihn auf einen ungültigen Wert zu zwingen.
+  followType?: FollowTargetType;
   playerId: number | null;
   // Optional statt required: Server Components (z.B. der Dialog-Zweig in
   // archive/[slug]/page.tsx oder die Mission-Log-Detailseite) rendern
@@ -59,7 +62,7 @@ export default function ActionsMenu({
             <FormatTextButton contentType={contentType} slug={content.slug} />
           </div>
         )}
-        {viewer?.role && (
+        {viewer?.role && followType && (
           <FollowButtons targetType={followType} targetSlug={content.slug} />
         )}
         {/* "character" ist hier wie "missionLog" ausgeschlossen: der

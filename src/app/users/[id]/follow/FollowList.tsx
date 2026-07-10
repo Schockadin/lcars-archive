@@ -3,19 +3,18 @@ import { useState, useTransition } from "react";
 import Link from "next/link";
 import type { FollowEntry, FollowTargetType } from "@/lib/follows";
 import { endFollow } from "@/app/actions/follows";
+import { XIcon } from "@/lib/icons";
 
 const TYPE_LABELS: Record<FollowTargetType, string> = {
   mission: "Mission",
   archive_entry: "Archiv-Eintrag",
   character: "Charakter",
-  mission_log: "Einsatzbericht",
 };
 
 const TYPE_COLORS: Record<FollowTargetType, string> = {
   mission: "var(--lcars-green)",
   archive_entry: "var(--lcars-purple)",
   character: "var(--lcars-amber)",
-  mission_log: "var(--lcars-blue)",
 };
 
 function statusLabel(item: FollowEntry): string {
@@ -45,10 +44,10 @@ export default function FollowList({ items }: { items: FollowEntry[] }) {
       {list.map((item) => {
         const key = itemKey(item);
         return (
-          <div key={key} className="flex items-center gap-[8px]">
+          <div key={key} className="relative">
             <Link
               href={item.href}
-              className="mission-akte flex-1"
+              className="mission-akte"
               style={
                 {
                   "--mission-color": TYPE_COLORS[item.targetType],
@@ -56,7 +55,7 @@ export default function FollowList({ items }: { items: FollowEntry[] }) {
               }
             >
               <span className="mission-akte-rail" />
-              <span className="mission-akte-body text-left">
+              <span className="mission-akte-body text-left pr-[48px]">
                 <span className="mission-akte-title block">{item.title}</span>
                 <span className="mission-akte-meta">
                   <span>
@@ -71,7 +70,9 @@ export default function FollowList({ items }: { items: FollowEntry[] }) {
             <button
               type="button"
               disabled={pendingKey === key}
-              className="lcars-pill-btn--outline shrink-0 disabled:opacity-50"
+              className="lcars-icon-btn lcars-icon-btn--danger absolute top-[6px] right-[6px] disabled:opacity-50"
+              aria-label="Follow beenden"
+              title="Follow beenden"
               onClick={() => {
                 setPendingKey(key);
                 startTransition(async () => {
@@ -81,7 +82,7 @@ export default function FollowList({ items }: { items: FollowEntry[] }) {
                 });
               }}
             >
-              Follow beenden
+              <XIcon />
             </button>
           </div>
         );

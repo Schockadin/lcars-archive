@@ -2,11 +2,12 @@ import "server-only";
 import sql from "@/lib/db";
 
 // ToDo: Granularer machen: "mission" | "dialogue" | "npc", etc.
-export type FollowTargetType =
-  | "mission"
-  | "archive_entry"
-  | "character"
-  | "mission_log";
+// mission_log ist bewusst NICHT Teil dieser Liste: Mission-Logs sind reine
+// Session-Protokolle innerhalb einer Mission, die Mission selbst trägt schon
+// das Follow — ein zusätzliches Follow pro einzelnem Log wäre Rauschen ohne
+// echten Zusatznutzen (siehe ActionsMenu.tsx, das für contentType
+// "missionLog" deshalb gar kein followType übergibt).
+export type FollowTargetType = "mission" | "archive_entry" | "character";
 
 export interface FollowStatus {
   bookmarked: boolean;
@@ -178,9 +179,7 @@ function toFollowEntry(row: {
 // nicht wie getBookmarkedContent/getSubscribedContent getrennt) — eine Zeile
 // pro content_follows-Datensatz mit beiden Flags, damit die Seite pro
 // Eintrag einen einzigen "Follow beenden"-Button zeigen kann statt zwei
-// getrennte. mission_log fehlt hier bewusst wie auch in den beiden
-// Funktionen oben: der Constraint content_follows_target_type_check erlaubt
-// aktuell nur 'mission' | 'archive_entry' | 'character' (siehe schema.sql).
+// getrennte.
 export async function getAllFollows(userId: number): Promise<FollowEntry[]> {
   const rows = await sql<
     {

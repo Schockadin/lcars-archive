@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { assignCharacterAction, type AdminActionState } from "./actions";
 import type { Character } from "@/types/character";
+import { PlusIcon } from "@/lib/icons";
 
 const initialState: AdminActionState = {};
 
@@ -25,7 +26,7 @@ export default function CharacterAssignRow({
         className="flex flex-wrap items-center gap-[8px]"
       >
         <input type="hidden" name="characterId" value={character.id} />
-        <span className="font-lcars text-lcars-text-data flex-1">
+        <span className="font-lcars text-lcars-text-data flex-1 min-w-0 whitespace-nowrap overflow-hidden text-ellipsis">
           {character.name}
         </span>
         <select
@@ -43,9 +44,11 @@ export default function CharacterAssignRow({
         <button
           type="submit"
           disabled={pending}
-          className="lcars-pill-btn--outline disabled:opacity-50 flex-1"
+          className="lcars-icon-btn disabled:opacity-50"
+          aria-label="Zuweisen"
+          title="Zuweisen"
         >
-          Zuweisen
+          <PlusIcon />
         </button>
       </form>
 

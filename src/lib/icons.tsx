@@ -183,6 +183,13 @@ export function RestoreIcon() {
     </svg>
   );
 }
+export function PlusIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
 export function KeyIcon() {
   return (
     <svg {...ICON_PROPS}>
