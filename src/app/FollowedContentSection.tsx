@@ -1,6 +1,12 @@
 import Link from "next/link";
 import { LcarsDataRow } from "@/components/lcars";
-import type { FollowedContent } from "@/lib/follows";
+import type { FollowedContent, FollowTargetType } from "@/lib/follows";
+
+const TYPE_LABELS: Record<FollowTargetType, string> = {
+  mission: "Mission",
+  archive_entry: "Archiv-Eintrag",
+  character: "Charakter",
+};
 
 // Gleicher Kartenstil wie die Akkordeons in UserContentBrowser.tsx — hier
 // ohne Meta-Zeile, da FollowedContent nur Titel + Ziel-Typ liefert. Ganz
@@ -37,8 +43,7 @@ export default function FollowedContentSection({
               <span className="mission-akte-title block">{item.title}</span>
               <span className="mission-akte-meta">
                 <span>
-                  <b>Typ</b>{" "}
-                  {item.targetType === "mission" ? "Mission" : "Archiv-Eintrag"}
+                  <b>Typ</b> {TYPE_LABELS[item.targetType]}
                 </span>
               </span>
             </span>

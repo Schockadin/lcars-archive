@@ -1,8 +1,8 @@
 "use client";
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import type { FollowEntry, FollowTargetType } from "@/lib/follows";
-import { endFollow } from "@/app/actions/follows";
+import type { FollowedContent, FollowTargetType } from "@/lib/follows";
+import { toggleSubscription } from "@/app/actions/follows";
 import { XIcon } from "@/lib/icons";
 
 const TYPE_LABELS: Record<FollowTargetType, string> = {
@@ -17,20 +17,18 @@ const TYPE_COLORS: Record<FollowTargetType, string> = {
   character: "var(--lcars-amber)",
 };
 
-function statusLabel(item: FollowEntry): string {
-  if (item.bookmarked && item.subscribed) return "Gespeichert & Abonniert";
-  return item.bookmarked ? "Gespeichert" : "Abonniert";
-}
-
-function itemKey(item: Pick<FollowEntry, "targetType" | "slug">): string {
+function itemKey(item: Pick<FollowedContent, "targetType" | "slug">): string {
   return `${item.targetType}-${item.slug}`;
 }
 
-// Rein client-seitige Liste (wie FollowButtons.tsx): endFollow() räumt in
-// der DB auf, die entfernte Zeile verschwindet hier direkt aus dem lokalen
-// State — kein revalidatePath/Reload nötig, ein erneuter Seitenaufruf zeigt
-// ohnehin den echten (identischen) Stand.
-export default function FollowList({ items }: { items: FollowEntry[] }) {
+// Rein client-seitige Liste (wie FollowButtons.tsx): toggleSubscription(...,
+// false) räumt in der DB auf, die entfernte Zeile verschwindet hier direkt
+// aus dem lokalen State — kein revalidatePath/Reload nötig, ein erneuter
+// Seitenaufruf zeigt ohnehin den echten (identischen) Stand. Ein eventuelles
+// Lesezeichen auf demselben Inhalt bleibt dabei unangetastet (siehe
+// toggleSubscription statt eines vollständigen Follow-Removes) — Follows
+// verwalten hier nur Abos, keine Lesezeichen (die leben auf dem Dashboard).
+export default function FollowList({ items }: { items: FollowedContent[] }) {
   const [list, setList] = useState(items);
   const [pendingKey, setPendingKey] = useState<string | null>(null);
   const [, startTransition] = useTransition();
@@ -61,9 +59,6 @@ export default function FollowList({ items }: { items: FollowEntry[] }) {
                   <span>
                     <b>Typ</b> {TYPE_LABELS[item.targetType]}
                   </span>
-                  <span>
-                    <b>Status</b> {statusLabel(item)}
-                  </span>
                 </span>
               </span>
             </Link>
@@ -76,7 +71,7 @@ export default function FollowList({ items }: { items: FollowEntry[] }) {
               onClick={() => {
                 setPendingKey(key);
                 startTransition(async () => {
-                  await endFollow(item.targetType, item.slug);
+                  await toggleSubscription(item.targetType, item.slug, false);
                   setList((current) => current.filter((i) => itemKey(i) !== key));
                   setPendingKey(null);
                 });

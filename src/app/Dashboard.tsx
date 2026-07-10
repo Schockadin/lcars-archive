@@ -1,7 +1,7 @@
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { hasPassword } from "@/lib/users";
-import { getBookmarkedContent, getSubscribedContent } from "@/lib/follows";
+import { getBookmarkedContent } from "@/lib/follows";
 import { getRecentActivity, getRecentDeletions } from "@/lib/recentActivity";
 import { getDialoguesForUser } from "@/lib/dialogues";
 import FollowedContentSection from "./FollowedContentSection";
@@ -25,11 +25,10 @@ export default async function Dashboard({ user }: { user: User }) {
   // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
   // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
   // spürbar auf.
-  const [hasPasswordSet, bookmarks, subscriptions, recentActivity, deletions, openDialogues] =
+  const [hasPasswordSet, bookmarks, recentActivity, deletions, openDialogues] =
     await Promise.all([
       hasPassword(user.id),
       getBookmarkedContent(user.id),
-      getSubscribedContent(user.id),
       getRecentActivity(user.id, user.previous_login_at),
       getRecentDeletions(user.id, user.previous_login_at),
       getDialoguesForUser(user.id, "open"),
@@ -73,8 +72,6 @@ export default async function Dashboard({ user }: { user: User }) {
           />
 
           <FollowedContentSection heading="Deine Lesezeichen" items={bookmarks} />
-
-          <FollowedContentSection heading="Deine Abos" items={subscriptions} />
         </div>
       </article>
     </>

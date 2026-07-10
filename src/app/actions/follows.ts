@@ -4,7 +4,6 @@ import {
   getFollowStatus,
   setBookmark,
   setSubscription,
-  removeFollow,
   type FollowTargetType,
 } from "@/lib/follows";
 
@@ -57,20 +56,4 @@ export async function toggleSubscription(
 
   await setSubscription(session.userId, targetType, targetSlug, value);
   return value;
-}
-
-// Beendet einen Follow (Lesezeichen + Abo) vollständig — genutzt vom
-// "Follow beenden"-Button auf /users/[id]/follow (FollowList.tsx). Kein
-// revalidatePath nötig: die Liste dort hält ihren eigenen Client-State und
-// entfernt die Zeile lokal, genau wie FollowButtons.tsx oben rein
-// client-seitig ohne Revalidierung auskommt.
-export async function endFollow(
-  targetType: FollowTargetType,
-  targetSlug: string,
-): Promise<boolean> {
-  const session = await getSession();
-  if (!session) return false;
-
-  await removeFollow(session.userId, targetType, targetSlug);
-  return true;
 }

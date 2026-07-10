@@ -23,11 +23,12 @@ const ROLE_LABELS: Record<User["role"], string> = {
 };
 
 // Profil und Settings sind zusammengeführt: die Aktivitäts-Übersicht
-// (Neu/News/offene Gespräche/Lesezeichen/Abos) lebt jetzt auf "/" (siehe
+// (Neu/News/offene Gespräche/Lesezeichen) lebt jetzt auf "/" (siehe
 // src/app/Dashboard.tsx, gerendert von src/app/page.tsx für eingeloggte
 // User) — hier bleibt nur noch die Konto-Verwaltung (Name/E-Mail, Passwort,
-// Benachrichtigungen, PWA-Installation), plus weiterhin die Admin/GM-Ansicht
-// eines FREMDEN Users (isSelf === false, z.B. aus der Nutzerverwaltung).
+// Benachrichtigungen, PWA-Installation) plus die Follow-Verwaltung (Abos,
+// siehe /users/[id]/follow), außerdem weiterhin die Admin/GM-Ansicht eines
+// FREMDEN Users (isSelf === false, z.B. aus der Nutzerverwaltung).
 export default async function UserPage({
   params,
 }: {
@@ -63,6 +64,21 @@ export default async function UserPage({
 
           {isSelf && (
             <div className="flex flex-col gap-[32px]">
+              <section id="follows" className="flex flex-col gap-[8px]">
+                <h2>Follows</h2>
+                <p>
+                  Alle Missionen, Archiv-Einträge und Charaktere, die du
+                  abonniert hast, an einem Ort — inklusive der Möglichkeit,
+                  einzelne Follows wieder zu beenden.
+                </p>
+                <Link
+                  href={`/users/${target.id}/follow`}
+                  className="lcars-pill-btn--outline self-start"
+                >
+                  Follows verwalten
+                </Link>
+              </section>
+
               <section id="tutorial" className="flex flex-col gap-[8px]">
                 <h2>Hilfe & Anleitung</h2>
                 <p>
@@ -75,21 +91,6 @@ export default async function UserPage({
                   className="lcars-pill-btn--outline self-start"
                 >
                   Tutorial öffnen
-                </Link>
-              </section>
-
-              <section id="follows" className="flex flex-col gap-[8px]">
-                <h2>Follows</h2>
-                <p>
-                  Alle Missionen, Archiv-Einträge und Charaktere, die du
-                  gespeichert oder abonniert hast, an einem Ort — inklusive
-                  der Möglichkeit, einzelne Follows wieder zu beenden.
-                </p>
-                <Link
-                  href={`/users/${target.id}/follow`}
-                  className="lcars-pill-btn--outline self-start"
-                >
-                  Follows verwalten
                 </Link>
               </section>
 
