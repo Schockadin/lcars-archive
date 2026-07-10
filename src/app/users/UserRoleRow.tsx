@@ -9,6 +9,7 @@ import {
   deactivateUserAction,
   reactivateUserAction,
   deleteUserAction,
+  resetUserPasswordAction,
   type AdminActionState,
 } from "./actions";
 import type { UserWithCharacters } from "@/lib/users";
@@ -19,6 +20,7 @@ import {
   BanIcon,
   RestoreIcon,
   TrashIcon,
+  KeyIcon,
 } from "@/lib/icons";
 
 const initialState: AdminActionState = {};
@@ -54,6 +56,10 @@ export default function UserRoleRow({
   );
   const [deleteState, deleteAction, deletePending] = useActionState(
     deleteUserAction,
+    initialState,
+  );
+  const [resetState, resetAction, resetPending] = useActionState(
+    resetUserPasswordAction,
     initialState,
   );
 
@@ -189,6 +195,19 @@ export default function UserRoleRow({
                   </button>
                 </form>
 
+                <form action={resetAction}>
+                  <input type="hidden" name="userId" value={user.id} />
+                  <button
+                    type="submit"
+                    disabled={resetPending}
+                    className="lcars-icon-btn"
+                    aria-label="Passwort zurücksetzen"
+                    title="Passwort zurücksetzen"
+                  >
+                    <KeyIcon />
+                  </button>
+                </form>
+
                 <form action={deleteAction}>
                   <input type="hidden" name="userId" value={user.id} />
                   <button
@@ -227,6 +246,31 @@ export default function UserRoleRow({
             <p className="text-lcars-red" role="alert">
               {deleteState.error}
             </p>
+          )}
+          {resetState?.error && (
+            <p className="text-lcars-red" role="alert">
+              {resetState.error}
+            </p>
+          )}
+          {resetState?.sent && (
+            <p className="text-lcars-text-data" role="status">
+              Reset-Mail an {user.email} gesendet.
+            </p>
+          )}
+          {resetState?.warning && (
+            <div className="flex flex-col gap-[4px]">
+              <p className="text-lcars-amber" role="alert">
+                {resetState.warning}
+              </p>
+              {resetState.manualActivationUrl && (
+                <input
+                  readOnly
+                  value={resetState.manualActivationUrl}
+                  onFocus={(e) => e.currentTarget.select()}
+                  className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-data outline-none"
+                />
+              )}
+            </div>
           )}
         </>
       )}

@@ -17,7 +17,7 @@ import {
 } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { createPasswordSetupToken } from "@/lib/passwordSetupTokens";
-import { sendActivationEmail } from "@/lib/mail";
+import { sendActivationEmail, sendPasswordResetEmail } from "@/lib/mail";
 import { getBaseUrl } from "@/lib/http";
 import type { User } from "@/types/db";
 
@@ -37,6 +37,10 @@ export interface AdminActionState {
   error?: string;
   warning?: string;
   manualActivationUrl?: string;
+  // Nur von resetUserPasswordAction gesetzt — zeigt eine Erfolgsmeldung
+  // inline in der Zeile statt (wie die übrigen Actions hier) auf /users
+  // umzuleiten, was den Erfolg gar nicht sichtbar machen würde.
+  sent?: boolean;
 }
 
 // Jede Action prüft ihre Berechtigung selbst (requireGM = gm-oder-admin,
@@ -92,6 +96,44 @@ export async function createUserAction(
   }
 
   redirect("/users");
+}
+
+// Löst denselben Reset-Link aus wie die Selbstbedienung unter
+// /forgot-password (createPasswordSetupToken + sendPasswordResetEmail) —
+// der Admin setzt dabei nie selbst ein Passwort und erfährt es auch nicht,
+// er stößt nur den Mailversand an den Owner an. Bewusst kein direktes
+// Setzen eines Passworts durch den Admin (siehe Kommentar bei
+// sendPasswordResetEmail in mailCore.ts: Schutz vor Account-Übernahme durch
+// einen kompromittierten Admin-Account).
+export async function resetUserPasswordAction(
+  _state: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  await requireAdmin();
+
+  const userId = Number(formData.get("userId"));
+  if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
+
+  const user = await getUserById(userId);
+  if (!user) return { error: "User nicht gefunden." };
+
+  const rawToken = await createPasswordSetupToken(user.id);
+  const resetUrl = `${await getBaseUrl()}/activate?token=${rawToken}`;
+
+  const result = await sendPasswordResetEmail({
+    to: user.email,
+    name: user.name,
+    resetUrl,
+  });
+
+  if (!result.sent) {
+    return {
+      warning: `Reset-Mail konnte nicht gesendet werden (${result.error}). Link manuell weitergeben:`,
+      manualActivationUrl: resetUrl,
+    };
+  }
+
+  return { sent: true };
 }
 
 export async function updateUserRoleAction(

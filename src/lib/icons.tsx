@@ -183,6 +183,16 @@ export function RestoreIcon() {
     </svg>
   );
 }
+export function KeyIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="8" cy="15" r="4.5" />
+      <path d="M11.2 11.8 20 3" />
+      <path d="M15.5 7.5 18 10" />
+      <path d="M18 4.5 20.5 7" />
+    </svg>
+  );
+}
 export function TrashIcon() {
   return (
     <svg {...ICON_PROPS}>
