@@ -62,7 +62,14 @@ export default function ActionsMenu({
         {viewer?.role && (
           <FollowButtons targetType={followType} targetSlug={content.slug} />
         )}
-        {((contentType !== "missionLog" && viewer?.role === "admin") ||
+        {/* "character" ist hier wie "missionLog" ausgeschlossen: der
+            Bio-Editor ist bewusst reines Owner-Feature ohne Admin-Konzept
+            (siehe CharacterBioEditor.tsx) — sourceMarkdown wird serverseitig
+            nur für den Owner geladen, ein Admin-Klick würde sonst ins Leere
+            laufen. */}
+        {((contentType !== "missionLog" &&
+          contentType !== "character" &&
+          viewer?.role === "admin") ||
           viewer?.userId === playerId) && (
           <button
             type="button"

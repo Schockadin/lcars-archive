@@ -13,8 +13,6 @@ import CharacterBioEditor from "./CharacterBioEditor";
 import { UserWithCharacters } from "@/lib/users";
 import { Viewer } from "@/lib/visibility";
 import ActionsMenu from "@/components/ActionsMenu";
-import FollowButtons from "@/components/FollowButtons";
-import { PencilIcon } from "@/lib/icons";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
 function slugify(text: string): string {
