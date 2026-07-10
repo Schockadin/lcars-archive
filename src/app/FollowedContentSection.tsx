@@ -6,6 +6,7 @@ const TYPE_LABELS: Record<FollowTargetType, string> = {
   mission: "Mission",
   archive_entry: "Archiv-Eintrag",
   character: "Charakter",
+  user: "User",
 };
 
 // Gleicher Kartenstil wie die Akkordeons in UserContentBrowser.tsx — hier

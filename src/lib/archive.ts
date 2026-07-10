@@ -265,6 +265,21 @@ export async function getArchiveEntriesForUser(
   `;
 }
 
+// Nur public Archiv-Einträge eines Users für die öffentliche Profilseite
+// /users/[id] — Gegenstück zu getArchiveEntriesForUser (dort ALLE eigenen
+// Einträge für "Meine Inhalte", hier nur was auch fremde Besucher sehen
+// dürfen).
+export async function getPublicArchiveEntriesForUser(
+  userId: number,
+): Promise<UserContentArchiveEntry[]> {
+  return sql<UserContentArchiveEntry[]>`
+    SELECT id, slug, title, category, visibility
+    FROM archive_entries
+    WHERE owner_user_id = ${userId} AND category != 'dialogue' AND visibility = 'public'
+    ORDER BY title ASC
+  `;
+}
+
 // Nur der Owner (owner_user_id) darf die Sichtbarkeit ändern — ein
 // fremdes/gefälschtes id trifft dann einfach 0 Zeilen (gleiches Prinzip wie
 // setDialogueVisibility in src/lib/dialoguesCore.ts, nur ohne die
@@ -273,12 +288,14 @@ export async function setArchiveEntryVisibility(
   userId: number,
   archiveEntryId: number,
   visibility: "private" | "gm" | "public",
-): Promise<{ slug: string } | null> {
-  const rows = await sql<{ slug: string }[]>`
+): Promise<{ slug: string; title: string; sourceMarkdown: string | null } | null> {
+  const rows = await sql<
+    { slug: string; title: string; sourceMarkdown: string | null }[]
+  >`
     UPDATE archive_entries
     SET visibility = ${visibility}, updated_at = NOW()
     WHERE id = ${archiveEntryId} AND category != 'dialogue' AND owner_user_id = ${userId}
-    RETURNING slug
+    RETURNING slug, title, source_md AS "sourceMarkdown"
   `;
   return rows[0] ?? null;
 }
@@ -542,20 +559,22 @@ export async function updateOwnArchiveEntryContent(
     // Siehe createArchiveEntry oben — Opt-in "Automatisch verlinken".
     contentHtml?: string;
   },
-): Promise<{ slug: string } | null> {
+): Promise<{ slug: string; visibility: "private" | "gm" | "public" } | null> {
   const contentHtml =
     input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
   const attributes = buildArchiveAttributes(input.category, input.attributeValues);
   const metadataPatch = { summary: input.summary, attributes };
 
-  const rows = await sql<{ slug: string }[]>`
+  const rows = await sql<
+    { slug: string; visibility: "private" | "gm" | "public" }[]
+  >`
     UPDATE archive_entries
     SET title = ${input.title}, category = ${input.category}, tags = ${input.tags},
         content = ${contentHtml}, source_md = ${input.bodyMarkdown},
         metadata = metadata || ${sql.json(metadataPatch as ReturnType<typeof JSON.parse>)},
         updated_at = NOW()
     WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
-    RETURNING slug
+    RETURNING slug, visibility
   `;
   const result = rows[0];
   if (!result) return null;

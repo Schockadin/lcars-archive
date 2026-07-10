@@ -202,12 +202,14 @@ export async function setCharacterVisibility(
   userId: number,
   characterId: number,
   visibility: "private" | "gm" | "public",
-): Promise<{ slug: string } | null> {
-  const rows = await sql<{ slug: string }[]>`
+): Promise<{ slug: string; name: string; sourceMarkdown: string | null } | null> {
+  const rows = await sql<
+    { slug: string; name: string; sourceMarkdown: string | null }[]
+  >`
     UPDATE characters
     SET visibility = ${visibility}, updated_at = NOW()
     WHERE id = ${characterId} AND player_id = ${userId}
-    RETURNING slug
+    RETURNING slug, name, source_md AS "sourceMarkdown"
   `;
   return rows[0] ?? null;
 }
@@ -241,6 +243,41 @@ export async function getLogsForUser(
     JOIN characters c ON c.id = ml.author_id
     JOIN missions m ON m.id = ml.mission_id
     WHERE c.player_id = ${userId}
+    ORDER BY ml.session_nr DESC NULLS LAST
+  `;
+}
+
+// Nur public-Charaktere eines Users für die öffentliche Profilseite
+// /users/[id] — Gegenstück zu getCharactersForUser (dort ALLE eigenen
+// Charaktere für "Meine Inhalte", hier nur was auch fremde Besucher sehen
+// dürfen).
+export async function getPublicCharactersForUser(
+  userId: number,
+): Promise<Character[]> {
+  const rows = await sql<Character[]>`
+    SELECT *
+    FROM characters
+    WHERE player_id = ${userId} AND visibility = 'public'
+    ORDER BY name ASC
+  `;
+  return rows.map(parseCharacter);
+}
+
+// Nur public-Mission-Logs eines Users für die öffentliche Profilseite
+// /users/[id] — Gegenstück zu getLogsForUser (dort ALLE eigenen Logs für
+// "Meine Inhalte", hier nur was auch fremde Besucher sehen dürfen).
+export async function getPublicLogsForUser(
+  userId: number,
+): Promise<UserContentLog[]> {
+  return sql<UserContentLog[]>`
+    SELECT
+      ml.id, ml.slug, ml.title, ml.session_nr, ml.log_date::text AS log_date,
+      m.slug AS mission_slug, m.title AS mission_title, ml.visibility,
+      c.slug AS character_slug, c.name AS character_name
+    FROM mission_logs ml
+    JOIN characters c ON c.id = ml.author_id
+    JOIN missions m ON m.id = ml.mission_id
+    WHERE c.player_id = ${userId} AND ml.visibility = 'public'
     ORDER BY ml.session_nr DESC NULLS LAST
   `;
 }
@@ -487,7 +524,7 @@ export async function updateOwnCharacterContent(
     // Siehe createCharacter oben — Opt-in "Automatisch verlinken".
     bioHtml?: string;
   },
-): Promise<{ slug: string } | null> {
+): Promise<{ slug: string; visibility: "private" | "gm" | "public" } | null> {
   const trimmedBody = input.bodyMarkdown.trim();
   const bio = trimmedBody
     ? (input.bioHtml ?? (await renderContentHtml(trimmedBody)))
@@ -510,13 +547,15 @@ export async function updateOwnCharacterContent(
     tags: input.tags,
   };
 
-  const rows = await sql<{ slug: string }[]>`
+  const rows = await sql<
+    { slug: string; visibility: "private" | "gm" | "public" }[]
+  >`
     UPDATE characters
     SET name = ${input.name}, status = ${input.status}, portrait = ${input.portrait},
         metadata = metadata || ${sql.json(metadataPatch as ReturnType<typeof JSON.parse>)},
         bio = ${bio}, source_md = ${sourceMd}, updated_at = NOW()
     WHERE id = ${characterId} AND player_id = ${userId}
-    RETURNING slug
+    RETURNING slug, visibility
   `;
   return rows[0] ?? null;
 }

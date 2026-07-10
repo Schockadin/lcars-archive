@@ -9,12 +9,14 @@ const TYPE_LABELS: Record<FollowTargetType, string> = {
   mission: "Mission",
   archive_entry: "Archiv-Eintrag",
   character: "Charakter",
+  user: "User",
 };
 
 const TYPE_COLORS: Record<FollowTargetType, string> = {
   mission: "var(--lcars-green)",
   archive_entry: "var(--lcars-purple)",
   character: "var(--lcars-amber)",
+  user: "var(--lcars-blue)",
 };
 
 function itemKey(item: Pick<FollowedContent, "targetType" | "slug">): string {

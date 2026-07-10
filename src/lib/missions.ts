@@ -604,13 +604,29 @@ export async function setMissionLogVisibility(
   userId: number,
   logId: number,
   visibility: "private" | "gm" | "public",
-): Promise<{ slug: string; missionId: number } | null> {
-  const rows = await sql<{ slug: string; missionId: number }[]>`
+): Promise<{
+  slug: string;
+  missionId: number;
+  missionSlug: string;
+  title: string;
+  sourceMarkdown: string | null;
+} | null> {
+  const rows = await sql<
+    {
+      slug: string;
+      missionId: number;
+      missionSlug: string;
+      title: string;
+      sourceMarkdown: string | null;
+    }[]
+  >`
     UPDATE mission_logs ml
     SET visibility = ${visibility}, updated_at = NOW()
-    FROM characters c
+    FROM characters c, missions m
     WHERE ml.id = ${logId} AND c.id = ml.author_id AND c.player_id = ${userId}
-    RETURNING ml.slug, ml.mission_id AS "missionId"
+      AND m.id = ml.mission_id
+    RETURNING ml.slug, ml.mission_id AS "missionId", m.slug AS "missionSlug",
+              ml.title, ml.source_md AS "sourceMarkdown"
   `;
   return rows[0] ?? null;
 }
@@ -677,12 +693,22 @@ export async function updateMissionLogContent(
     // Siehe createMission oben — Opt-in "Automatisch verlinken".
     contentHtml?: string;
   },
-): Promise<{ slug: string; missionId: number } | null> {
+): Promise<{
+  slug: string;
+  missionId: number;
+  missionSlug: string;
+  visibility: "private" | "gm" | "public";
+} | null> {
   const contentHtml =
     input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
 
   const rows = await sql<
-    { slug: string; missionId: number }[]
+    {
+      slug: string;
+      missionId: number;
+      missionSlug: string;
+      visibility: "private" | "gm" | "public";
+    }[]
   >`
     UPDATE mission_logs ml
     SET
@@ -692,9 +718,11 @@ export async function updateMissionLogContent(
       source_md  = ${input.bodyMarkdown},
       metadata   = metadata || ${sql.json({ tags: input.tags } as ReturnType<typeof JSON.parse>)},
       updated_at = NOW()
-    FROM characters c
+    FROM characters c, missions m
     WHERE ml.id = ${logId} AND c.id = ml.author_id AND c.player_id = ${userId}
-    RETURNING ml.slug, ml.mission_id AS "missionId"
+      AND m.id = ml.mission_id
+    RETURNING ml.slug, ml.mission_id AS "missionId", m.slug AS "missionSlug",
+              ml.visibility
   `;
   return rows[0] ?? null;
 }

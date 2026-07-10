@@ -576,12 +576,12 @@ export async function setDialogueVisibility(
   userId: number,
   archiveEntryId: number,
   visibility: "private" | "gm" | "public",
-): Promise<{ slug: string } | null> {
-  const rows = await sql<{ slug: string }[]>`
+): Promise<{ slug: string; title: string } | null> {
+  const rows = await sql<{ slug: string; title: string }[]>`
     UPDATE archive_entries
     SET visibility = ${visibility}, updated_at = NOW()
     WHERE id = ${archiveEntryId} AND category = 'dialogue' AND owner_user_id = ${userId}
-    RETURNING slug
+    RETURNING slug, title
   `;
   return rows[0] ?? null;
 }
@@ -828,4 +828,34 @@ export async function getDialoguesForUser(
   return [...results.values()].sort((a, b) =>
     b.updatedAt.localeCompare(a.updatedAt),
   );
+}
+
+export interface PublicDialogue {
+  slug: string;
+  title: string;
+  participantNames: string[];
+}
+
+// Öffentliche Gespräche eines Users (owner_user_id, wie bei Missionen/
+// Mission-Logs/Archiv-Einträgen — siehe scripts/schema.sql) für die
+// öffentliche Profilseite /users/[id] — anders als getDialoguesForUser oben
+// (Session-User, gefiltert auf "eigene Charaktere als Teilnehmer") reine
+// Owner-Abfrage ohne Partner-Ausschluss, da hier beide Teilnehmer angezeigt
+// werden.
+export async function getPublicDialoguesForUser(
+  userId: number,
+): Promise<PublicDialogue[]> {
+  const rows = await sql<
+    { slug: string; title: string; metadata: unknown }[]
+  >`
+    SELECT slug, title, metadata
+    FROM archive_entries
+    WHERE category = 'dialogue' AND owner_user_id = ${userId} AND visibility = 'public'
+    ORDER BY title ASC
+  `;
+  return rows.map((row) => ({
+    slug: row.slug,
+    title: row.title,
+    participantNames: parseParticipants(row.metadata).map((p) => p.name),
+  }));
 }

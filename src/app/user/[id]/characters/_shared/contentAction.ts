@@ -10,6 +10,9 @@ import {
 } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
+import { notifyUserSubscribers } from "@/lib/follows";
+import { getBaseUrl } from "@/lib/http";
+import { synopsisExcerpt } from "@/lib/missionFormat";
 import type { Character } from "@/types/character";
 
 export interface CharacterFormState {
@@ -138,6 +141,17 @@ export async function characterAction(
       editingUserId: session.userId,
       bioMarkdown: bodyMarkdown || null,
     });
+    if (result.visibility === "public") {
+      await notifyUserSubscribers({
+        authorUserId: session.userId,
+        contentTypeLabel: "einen Charakter",
+        contentTitle: name,
+        contentUrl: `${await getBaseUrl()}/characters/${result.slug}`,
+        preview: bodyMarkdown
+          ? synopsisExcerpt(bodyMarkdown, 140)
+          : "Die Akte wurde aktualisiert.",
+      });
+    }
     redirect(`/user/${session.userId}/content`);
   }
 
@@ -160,5 +174,17 @@ export async function characterAction(
     ownerUserId: session.userId,
   });
   revalidateCharacter(result.slug);
+  // Charaktere sind standardmäßig public (siehe scripts/schema.sql) — ein
+  // neu angelegter Charakter benachrichtigt die Abonnenten des Erstellers
+  // deshalb ungegated (keine separate visibility im createCharacter-Result).
+  await notifyUserSubscribers({
+    authorUserId: session.userId,
+    contentTypeLabel: "einen neuen Charakter",
+    contentTitle: name,
+    contentUrl: `${await getBaseUrl()}/characters/${result.slug}`,
+    preview: bodyMarkdown
+      ? synopsisExcerpt(bodyMarkdown, 140)
+      : "Ein neuer Charakter wurde angelegt.",
+  });
   redirect(`/characters/${result.slug}`);
 }

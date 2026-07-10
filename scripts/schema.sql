@@ -370,7 +370,7 @@ CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(use
 
 -- Gast-Rolle: können sich nur Inhalte ansehen sowie bookmarken/abonnieren
 -- (src/app/actions/follows.ts prüft keine Rolle), aber keine Charaktere
--- zugewiesen bekommen (assignCharacterAction in src/app/users/actions.ts)
+-- zugewiesen bekommen (assignCharacterAction in src/app/admin/actions.ts)
 -- und dadurch — da Mission-Logs/Dialoge immer einen eigenen Autor-Charakter
 -- brauchen — auch keine Inhalte erstellen.
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
@@ -400,7 +400,7 @@ CREATE INDEX IF NOT EXISTS idx_content_deletions_deleted_at ON content_deletions
 -- Teilnehmende Charaktere einer Mission (Multiselect beim Anlegen, siehe
 -- MissionParticipantsField.tsx). Rein informativ/für die
 -- Anlage-Benachrichtigung (missionAction in
--- src/app/users/[id]/missions/_shared/contentAction.ts) — löst KEIN
+-- src/app/user/[id]/missions/_shared/contentAction.ts) — löst KEIN
 -- automatisches Mission-Abo aus, das bleibt dem Follow-Button vorbehalten.
 CREATE TABLE IF NOT EXISTS mission_participants (
   mission_id   INT NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
@@ -408,3 +408,11 @@ CREATE TABLE IF NOT EXISTS mission_participants (
   PRIMARY KEY (mission_id, character_id)
 );
 CREATE INDEX IF NOT EXISTS idx_mission_participants_character ON mission_participants(character_id);
+
+-- User-Abos: vierter target_type neben mission/archive_entry/character.
+-- target_slug ist der User-Slug (users.slug) — ein Abo benachrichtigt bei
+-- jedem NEUEN oder GEÄNDERTEN öffentlichen Inhalt (visibility='public') des
+-- abonnierten Users, siehe notifyUserSubscribers in src/lib/follows.ts.
+ALTER TABLE content_follows DROP CONSTRAINT IF EXISTS content_follows_target_type_check;
+ALTER TABLE content_follows ADD CONSTRAINT content_follows_target_type_check
+  CHECK (target_type IN ('mission', 'archive_entry', 'character', 'user'));

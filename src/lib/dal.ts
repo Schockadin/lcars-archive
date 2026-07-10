@@ -49,3 +49,15 @@ export async function requireAdmin(): Promise<User> {
   }
   return user;
 }
+
+// Gate für /users (Userübersicht) und /users/[id] (öffentliches Profil):
+// jede Rolle außer guest darf rein — Gäste dürfen laut Produktentscheidung
+// nur Inhalte ansehen/bookmarken/abonnieren (siehe scripts/schema.sql), eine
+// Userliste mit Subscribe-Aktion gehört nicht dazu.
+export async function requireNonGuest(): Promise<User> {
+  const user = await getCurrentUser();
+  if (user.role === "guest") {
+    forbidden();
+  }
+  return user;
+}

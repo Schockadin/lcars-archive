@@ -18,6 +18,7 @@ export default function HeaderUserNav({
   const tabs = [
     { href: `/user/${userId}/content`, label: "Inhalte" },
     { href: "/search", label: "Suche" },
+    ...(role !== "guest" ? [{ href: "/users", label: "User" }] : []),
     { href: `/user/${userId}`, label: "Profil" },
     ...(role === "gm" || role === "admin"
       ? [{ href: "/admin", label: role === "admin" ? "Admin" : "Leitung" }]

@@ -14,6 +14,7 @@ import { autoLinkMarkdown } from "@/lib/autolink";
 import { getCharacterSubscribers } from "@/lib/dialogues";
 import { sendNewMissionLogEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
+import { notifyUserSubscribers } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 
@@ -91,6 +92,15 @@ export async function missionLogAction(
       return { error: "Log nicht gefunden oder keine Berechtigung." };
     }
     revalidateLog(result.missionId, result.slug);
+    if (result.visibility === "public") {
+      await notifyUserSubscribers({
+        authorUserId: session.userId,
+        contentTypeLabel: "einen Mission-Log",
+        contentTitle: title,
+        contentUrl: `${await getBaseUrl()}/missions/${result.missionSlug}/${result.slug}`,
+        preview: synopsisExcerpt(bodyMarkdown, 140),
+      });
+    }
     redirect(`/user/${session.userId}/content`);
   }
 
@@ -189,6 +199,18 @@ export async function missionLogAction(
       }
     }
   }
+
+  // Mission-Logs sind standardmäßig public (siehe scripts/schema.sql) — ein
+  // neu angelegter Log benachrichtigt die Abonnenten des Erstellers (nicht
+  // des Autor-Charakters, siehe getCharacterSubscribers oben) deshalb
+  // ungegated.
+  await notifyUserSubscribers({
+    authorUserId: session.userId,
+    contentTypeLabel: "einen neuen Mission-Log",
+    contentTitle: title,
+    contentUrl: `${await getBaseUrl()}/missions/${mission.slug}/${result.slug}`,
+    preview: synopsisExcerpt(bodyMarkdown, 140),
+  });
 
   redirect(`/user/${session.userId}`);
 }

@@ -9,6 +9,9 @@ import {
 import { isArchiveCategory } from "@/lib/archiveFormat";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
+import { notifyUserSubscribers } from "@/lib/follows";
+import { getBaseUrl } from "@/lib/http";
+import { synopsisExcerpt } from "@/lib/missionFormat";
 import {
   getAttributeFields,
   getReferenceFields,
@@ -115,6 +118,15 @@ export async function archiveEntryAction(
       return { error: "Eintrag nicht gefunden oder keine Berechtigung." };
     }
     revalidateArchiveEntry(result.slug);
+    if (result.visibility === "public") {
+      await notifyUserSubscribers({
+        authorUserId: session.userId,
+        contentTypeLabel: "einen Archiv-Eintrag",
+        contentTitle: title,
+        contentUrl: `${await getBaseUrl()}/archive/${result.slug}`,
+        preview: synopsisExcerpt(bodyMarkdown, 140),
+      });
+    }
     redirect(`/user/${session.userId}/content`);
   }
 
@@ -130,5 +142,15 @@ export async function archiveEntryAction(
     ownerUserId: session.userId,
   });
   revalidateArchiveEntry(result.slug);
+  // Archiv-Einträge sind standardmäßig public (siehe scripts/schema.sql) —
+  // ein neu angelegter Eintrag benachrichtigt die Abonnenten des Erstellers
+  // deshalb ungegated (keine separate visibility im createArchiveEntry-Result).
+  await notifyUserSubscribers({
+    authorUserId: session.userId,
+    contentTypeLabel: "einen neuen Archiv-Eintrag",
+    contentTitle: title,
+    contentUrl: `${await getBaseUrl()}/archive/${result.slug}`,
+    preview: synopsisExcerpt(bodyMarkdown, 140),
+  });
   redirect(`/archive/${result.slug}`);
 }

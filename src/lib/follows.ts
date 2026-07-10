@@ -1,5 +1,7 @@
 import "server-only";
 import sql from "@/lib/db";
+import { sendUserContentEmail } from "@/lib/mail";
+import { sendPushToUser } from "@/lib/push";
 
 // ToDo: Granularer machen: "mission" | "dialogue" | "npc", etc.
 // mission_log ist bewusst NICHT Teil dieser Liste: Mission-Logs sind reine
@@ -7,7 +9,15 @@ import sql from "@/lib/db";
 // das Follow — ein zusätzliches Follow pro einzelnem Log wäre Rauschen ohne
 // echten Zusatznutzen (siehe ActionsMenu.tsx, das für contentType
 // "missionLog" deshalb gar kein followType übergibt).
-export type FollowTargetType = "mission" | "archive_entry" | "character";
+// "user" (target_slug = users.slug) ist kein einzelner Inhalt, sondern ein
+// Sammel-Abo: benachrichtigt bei jedem neuen/geänderten öffentlichen Inhalt
+// des abonnierten Users (siehe notifyUserSubscribers unten) — subscribeOnly
+// in FollowButtons, ein Bookmark auf einen User ergibt keinen Sinn.
+export type FollowTargetType =
+  | "mission"
+  | "archive_entry"
+  | "character"
+  | "user";
 
 export interface FollowStatus {
   bookmarked: boolean;
@@ -115,11 +125,13 @@ function toFollowedContent(row: {
         ? `/missions/${row.slug}`
         : row.target_type === "character"
           ? `/characters/${row.slug}`
-          : // Offene Dialoge leben unter /dialogues, nicht /archive (siehe
-            // src/app/user/[id]/content/page.tsx für dasselbe Muster).
-            row.dialogue_open
-            ? `/dialogues/${row.slug}`
-            : `/archive/${row.slug}`,
+          : row.target_type === "user"
+            ? `/users/${row.slug}`
+            : // Offene Dialoge leben unter /dialogues, nicht /archive (siehe
+              // src/app/user/[id]/content/page.tsx für dasselbe Muster).
+              row.dialogue_open
+              ? `/dialogues/${row.slug}`
+              : `/archive/${row.slug}`,
   };
 }
 
@@ -150,6 +162,11 @@ export async function getBookmarkedContent(
     JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
     WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
       AND (c.visibility = 'public' OR c.player_id = ${userId})
+    UNION ALL
+    SELECT 'user'::text AS target_type, u.slug, u.name AS title, NULL::boolean AS dialogue_open
+    FROM content_follows cf
+    JOIN users u ON u.slug = cf.target_slug AND cf.target_type = 'user'
+    WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
     ORDER BY title ASC
   `;
   return rows.map(toFollowedContent);
@@ -182,7 +199,76 @@ export async function getSubscribedContent(
     JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
     WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
       AND (c.visibility = 'public' OR c.player_id = ${userId})
+    UNION ALL
+    SELECT 'user'::text AS target_type, u.slug, u.name AS title, NULL::boolean AS dialogue_open
+    FROM content_follows cf
+    JOIN users u ON u.slug = cf.target_slug AND cf.target_type = 'user'
+    WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
     ORDER BY title ASC
   `;
   return rows.map(toFollowedContent);
+}
+
+// An alle Abonnenten eines Users (target_type 'user', siehe FollowTargetType
+// oben), sobald dieser User einen neuen öffentlichen Inhalt erstellt oder
+// einen bestehenden auf public umstellt — aufgerufen aus setVisibilityAction
+// (user/[id]/content/actions.ts, der zentralen Sichtbarkeits-Action für alle
+// vier Inhaltstypen) sowie den jeweiligen Anlage-Actions. Author-Name/-Slug
+// wird hier selbst nachgeschlagen, damit Aufrufer nicht extra dafür laden
+// müssen. Schließt den Autor selbst aus (falls er sich versehentlich selbst
+// abonniert hat).
+export async function notifyUserSubscribers(input: {
+  authorUserId: number;
+  contentTypeLabel: string;
+  contentTitle: string;
+  contentUrl: string;
+  preview: string;
+}): Promise<void> {
+  const [author] = await sql<{ slug: string; name: string }[]>`
+    SELECT slug, name FROM users WHERE id = ${input.authorUserId}
+  `;
+  if (!author) return;
+
+  const subscribers = await sql<
+    {
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
+    FROM content_follows cf
+    JOIN users u ON u.id = cf.user_id
+    WHERE cf.target_type = 'user' AND cf.target_slug = ${author.slug}
+      AND cf.subscribed_at IS NOT NULL AND cf.user_id != ${input.authorUserId}
+  `;
+  if (subscribers.length === 0) return;
+
+  for (const subscriber of subscribers) {
+    if (subscriber.email_notifications_enabled) {
+      const result = await sendUserContentEmail({
+        to: subscriber.email,
+        name: subscriber.name,
+        authorName: author.name,
+        contentTypeLabel: input.contentTypeLabel,
+        contentTitle: input.contentTitle,
+        contentUrl: input.contentUrl,
+        preview: input.preview,
+      });
+      if (!result.sent) {
+        console.error(
+          `User-Abo-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+        );
+      }
+    }
+    if (subscriber.push_notifications_enabled) {
+      await sendPushToUser(subscriber.id, {
+        title: `${author.name}: ${input.contentTitle}`,
+        body: input.preview,
+        url: input.contentUrl,
+      });
+    }
+  }
 }

@@ -345,3 +345,35 @@ export async function sendMissionParticipantEmail(input: {
     `,
   });
 }
+
+// An alle Abonnenten eines Users (content_follows, target_type 'user'),
+// sobald dieser User einen neuen öffentlichen Inhalt erstellt oder einen
+// bestehenden auf public umstellt (notifyUserSubscribers in
+// src/lib/follows.ts, aufgerufen aus setVisibilityAction in
+// user/[id]/content/actions.ts bzw. den jeweiligen Anlage-Actions) — ein
+// einzelnes, sofortiges Ereignis wie bei Charakter-/Mission-Log-Abos, kein
+// Sammel-Digest.
+export async function sendUserContentEmail(input: {
+  to: string;
+  name: string;
+  authorName: string;
+  contentTypeLabel: string;
+  contentTitle: string;
+  contentUrl: string;
+  preview: string;
+}): Promise<SendEmailResult> {
+  return sendEmail({
+    to: input.to,
+    subject: `Neuer öffentlicher Inhalt von ${input.authorName}: "${input.contentTitle}"`,
+    html: `
+      <p>Hallo ${input.name},</p>
+      <p>
+        ${input.authorName}, den/die du abonniert hast, hat ${input.contentTypeLabel}
+        veröffentlicht: "${input.contentTitle}"
+      </p>
+      ${previewBlock(input.preview)}
+      <p><a href="${input.contentUrl}">${input.contentUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
