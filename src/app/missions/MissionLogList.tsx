@@ -2,7 +2,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LcarsDataRow, LcarsLogEntry, LcarsSwitch } from "@/components/lcars";
+import {
+  LcarsDataRow,
+  LcarsLogEntry,
+  LcarsSortSwitch,
+  type SortDir,
+} from "@/components/lcars";
 import { MissionLogListItem } from "@/types/missions";
 import {
   AUTHOR_COLORS,
@@ -13,7 +18,6 @@ import {
 } from "@/lib/missionFormat";
 
 type LogSortMode = "date" | "author";
-type DateDir = "desc" | "asc";
 
 // Linke, persistente Log-Liste der Mission-Detailseite. Sortierbar nach
 // Datum (flach, Autor in der Zeile) oder Autor (gruppiert, je Gruppe Datum
@@ -28,7 +32,7 @@ export default function MissionLogList({
   logs: MissionLogListItem[];
 }) {
   const [sort, setSort] = useState<LogSortMode>("author");
-  const [dateDir, setDateDir] = useState<DateDir>("desc");
+  const [dateDir, setDateDir] = useState<SortDir>("desc");
   const pathname = usePathname();
 
   // Aktives Log = drittes Pfadsegment unter /missions/[mission]/[log]
@@ -90,27 +94,19 @@ export default function MissionLogList({
         </p>
       ) : (
         <>
-          <LcarsSwitch
+          <LcarsSortSwitch
             className="flex gap-[10px] w-full mb-[12px]"
             options={[
               { key: "date", label: "Datum" },
-              { key: "author", label: "Autor" },
+              { key: "author", label: "Autor", sortable: false },
             ]}
-            active={sort}
-            onChange={setSort}
+            sortKey={sort}
+            sortDir={dateDir}
+            onChange={(key, dir) => {
+              setSort(key);
+              setDateDir(dir);
+            }}
           />
-
-          {sort === "date" && (
-            <LcarsSwitch
-              className="flex gap-[10px] w-full mb-[12px]"
-              options={[
-                { key: "desc", label: "Neueste zuerst" },
-                { key: "asc", label: "Älteste zuerst" },
-              ]}
-              active={dateDir}
-              onChange={setDateDir}
-            />
-          )}
 
           {sort === "date" ? (
             <div className="mission-log-list">

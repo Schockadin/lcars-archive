@@ -190,3 +190,14 @@ export function TrashIcon() {
     </svg>
   );
 }
+
+// Sortier-Pfeil (SortSwitch.tsx) — zeigt per Default aufsteigend (nach oben);
+// für absteigend wird das SVG vom Aufrufer um 180° gedreht statt ein
+// zweites Icon zu pflegen.
+export function SortArrowIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M12 19V5M6 11l6-6 6 6" />
+    </svg>
+  );
+}

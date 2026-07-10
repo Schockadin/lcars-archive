@@ -20,7 +20,7 @@
   position: absolute;
   top: 0;
   left: 0;
-  background: var(--lcars-amber);
+  background: var(--lcars-text-data);
   transition:
     transform 250ms ease,
     width 250ms ease,
@@ -63,6 +63,18 @@
    Option liegt (Balken selbst ist z-index 0, Text z-index 1 — siehe oben). */
 .lcars-switch-item--active {
   color: var(--lcars-bg);
+}
+
+/* SortSwitch.tsx: Label + Richtungs-Pfeil der aktiven, sortierbaren Option. */
+.lcars-sort-switch-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.lcars-sort-switch-arrow svg {
+  width: 14px;
+  height: 14px;
+  transition: transform 200ms ease;
 }
 
 /* Kompakte Icon-Variante von .lcars-switch für Zeilen-Aktionen (z.B.

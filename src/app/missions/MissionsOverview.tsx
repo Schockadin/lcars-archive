@@ -8,9 +8,7 @@ import {
   synopsisExcerpt,
   yearOf,
 } from "@/lib/missionFormat";
-import { LcarsAkteCard, LcarsSwitch } from "@/components/lcars";
-
-type SortDir = "desc" | "asc";
+import { LcarsAkteCard, LcarsSortSwitch, type SortDir } from "@/components/lcars";
 
 // Übersicht aller Missionen als LCARS-Chronik (Zeitstrahl mit dekorativer
 // Jahres-Schiene). Sortierbar nach Datum (auf-/absteigend) und filterbar
@@ -79,14 +77,12 @@ export default function MissionsOverview({
       ) : (
         <>
           <div className="mission-toolbar">
-            <LcarsSwitch
+            <LcarsSortSwitch
               className="mission-sort"
-              options={[
-                { key: "desc", label: "Neueste zuerst" },
-                { key: "asc", label: "Älteste zuerst" },
-              ]}
-              active={sortDir}
-              onChange={setSortDir}
+              options={[{ key: "date", label: "Datum" }]}
+              sortKey="date"
+              sortDir={sortDir}
+              onChange={(_key, dir) => setSortDir(dir)}
             />
 
             {authors.length > 0 && (

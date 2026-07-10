@@ -41,13 +41,24 @@ export default function Switch<T extends string>({
     if (!container || !activeEl) return;
 
     const measure = () => {
+      // getBoundingClientRect() statt offsetLeft/Top/Width/Height: Flex-Kinder
+      // mit gleicher Breite (flex-1) landen bei ungerader Aufteilung auf
+      // Subpixel-Breiten (z.B. 227.33px) — offsetWidth/offsetLeft runden auf
+      // ganze Pixel, was sich über mehrere Geschwister-Elemente aufsummiert
+      // und den Balken bei weiter rechts liegenden Optionen zunehmend zu
+      // schmal/verschoben erscheinen lässt. getBoundingClientRect() liefert
+      // die tatsächlichen Subpixel-Werte; einzig die eigene Border-Breite des
+      // Containers muss man selbst herausrechnen (clientLeft/clientTop), da
+      // absolut positionierte Kinder relativ zur Padding-Box (innerhalb des
+      // Rands) positioniert werden, nicht relativ zur Border-Box.
       const containerRect = container.getBoundingClientRect();
       const rect = activeEl.getBoundingClientRect();
       setSliderStyle({
         opacity: 1,
-        width: rect.width,
+        width: rect.width + 10,
         height: rect.height,
-        transform: `translate(${rect.left - containerRect.left}px, ${rect.top - containerRect.top}px)`,
+        transform: `translate(${rect.left - containerRect.left - container.clientLeft - 10}px, ${rect.top - containerRect.top - container.clientTop}px)`,
+        borderRadius: getComputedStyle(activeEl).borderRadius,
       });
     };
     measure();
@@ -60,7 +71,11 @@ export default function Switch<T extends string>({
 
   return (
     <div ref={containerRef} className={`lcars-switch-group ${className ?? ""}`}>
-      <div className="lcars-switch-slider" style={sliderStyle} aria-hidden="true" />
+      <div
+        className="lcars-switch-slider"
+        style={sliderStyle}
+        aria-hidden="true"
+      />
       {options.map((opt) => (
         <button
           key={opt.key}

@@ -1,10 +1,8 @@
 "use client";
 import { useMemo, useState } from "react";
 import { ArchiveEntryPreview } from "@/types/archive";
-import { LcarsSwitch } from "@/components/lcars";
+import { LcarsSortSwitch, type SortDir } from "@/components/lcars";
 import ArchiveEntryCard from "./ArchiveEntryCard";
-
-type SortDir = "asc" | "desc";
 
 // Gesprächs-Liste mit Teilnehmer-Filter. Sortierung nach id, Richtung per
 // Switch umschaltbar. initialParticipant (z.B. aus ?participant=<slug>) belegt
@@ -64,14 +62,12 @@ export default function DialogueList({
           </select>
         )}
 
-        <LcarsSwitch
+        <LcarsSortSwitch
           className="flex gap-[5px] w-full sm:w-[50%] mb-[16px]"
-          options={[
-            { key: "asc", label: "Älteste zuerst" },
-            { key: "desc", label: "Neueste zuerst" },
-          ]}
-          active={sortDir}
-          onChange={setSortDir}
+          options={[{ key: "date", label: "Datum" }]}
+          sortKey="date"
+          sortDir={sortDir}
+          onChange={(_key, dir) => setSortDir(dir)}
         />
       </div>
 

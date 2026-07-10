@@ -1,7 +1,12 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { LcarsDataRow, LcarsLogEntry, LcarsSwitch } from "@/components/lcars";
+import {
+  LcarsDataRow,
+  LcarsLogEntry,
+  LcarsSortSwitch,
+  type SortDir,
+} from "@/components/lcars";
 import { MissionLogPreview } from "@/types/missionLog";
 import {
   AUTHOR_COLORS,
@@ -11,7 +16,6 @@ import {
 } from "@/lib/missionFormat";
 
 type LogSortMode = "date" | "mission";
-type DateDir = "desc" | "asc";
 
 // Alle Logs eines Charakters. Umschaltbar zwischen flacher Datums-Ansicht
 // (auf-/absteigend) und einer Gruppierung nach Mission. Jeder Eintrag
@@ -26,7 +30,7 @@ export default function CharacterLogList({
   logs: MissionLogPreview[];
 }) {
   const [sort, setSort] = useState<LogSortMode>("mission");
-  const [dateDir, setDateDir] = useState<DateDir>("desc");
+  const [dateDir, setDateDir] = useState<SortDir>("desc");
 
   // Gruppen sortieren intern immer absteigend; die Datum-Ansicht folgt
   // der gewählten Richtung.
@@ -78,27 +82,19 @@ export default function CharacterLogList({
       ) : (
         <>
           <div className="mt-[16px]">
-            <LcarsSwitch
+            <LcarsSortSwitch
               className="flex gap-[10px] w-full mb-[12px]"
               options={[
                 { key: "date", label: "Datum" },
-                { key: "mission", label: "Mission" },
+                { key: "mission", label: "Mission", sortable: false },
               ]}
-              active={sort}
-              onChange={setSort}
+              sortKey={sort}
+              sortDir={dateDir}
+              onChange={(key, dir) => {
+                setSort(key);
+                setDateDir(dir);
+              }}
             />
-
-            {sort === "date" && (
-              <LcarsSwitch
-                className="flex gap-[10px] w-full mb-[12px]"
-                options={[
-                  { key: "desc", label: "Neueste zuerst" },
-                  { key: "asc", label: "Älteste zuerst" },
-                ]}
-                active={dateDir}
-                onChange={setDateDir}
-              />
-            )}
           </div>
 
           {sort === "date" ? (

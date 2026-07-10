@@ -18,5 +18,10 @@ export { default as LcarsHeaderSearch } from "./HeaderSearch";
 export { default as LcarsCookieNotice } from "./CookieNotice";
 export { default as LcarsServiceWorkerRegister } from "./ServiceWorkerRegister";
 export { default as LcarsSwitch, type SwitchOption } from "./Switch";
+export {
+  default as LcarsSortSwitch,
+  type SortSwitchOption,
+  type SortDir,
+} from "./SortSwitch";
 export { default as LcarsAkteCard } from "./AkteCard";
 export { default as LcarsLogEntry } from "./LogEntry";
