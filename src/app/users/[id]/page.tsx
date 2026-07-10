@@ -78,6 +78,21 @@ export default async function UserPage({
                 </Link>
               </section>
 
+              <section id="follows" className="flex flex-col gap-[8px]">
+                <h2>Follows</h2>
+                <p>
+                  Alle Missionen, Archiv-Einträge und Charaktere, die du
+                  gespeichert oder abonniert hast, an einem Ort — inklusive
+                  der Möglichkeit, einzelne Follows wieder zu beenden.
+                </p>
+                <Link
+                  href={`/users/${target.id}/follow`}
+                  className="lcars-pill-btn--outline self-start"
+                >
+                  Follows verwalten
+                </Link>
+              </section>
+
               <SettingsForm user={{ name: target.name, email: target.email }} />
 
               <section id="password" className="flex flex-col gap-[12px]">

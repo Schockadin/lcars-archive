@@ -154,6 +154,82 @@ export async function getBookmarkedContent(
   return rows.map(toFollowedContent);
 }
 
+export interface FollowEntry extends FollowedContent {
+  bookmarked: boolean;
+  subscribed: boolean;
+}
+
+function toFollowEntry(row: {
+  target_type: FollowTargetType;
+  slug: string;
+  title: string;
+  dialogue_open?: boolean | null;
+  bookmarked: boolean;
+  subscribed: boolean;
+}): FollowEntry {
+  return {
+    ...toFollowedContent(row),
+    bookmarked: row.bookmarked,
+    subscribed: row.subscribed,
+  };
+}
+
+// Für /users/[id]/follow: alle Follows (Lesezeichen + Abos zusammengefasst,
+// nicht wie getBookmarkedContent/getSubscribedContent getrennt) — eine Zeile
+// pro content_follows-Datensatz mit beiden Flags, damit die Seite pro
+// Eintrag einen einzigen "Follow beenden"-Button zeigen kann statt zwei
+// getrennte. mission_log fehlt hier bewusst wie auch in den beiden
+// Funktionen oben: der Constraint content_follows_target_type_check erlaubt
+// aktuell nur 'mission' | 'archive_entry' | 'character' (siehe schema.sql).
+export async function getAllFollows(userId: number): Promise<FollowEntry[]> {
+  const rows = await sql<
+    {
+      target_type: FollowTargetType;
+      slug: string;
+      title: string;
+      dialogue_open: boolean | null;
+      bookmarked: boolean;
+      subscribed: boolean;
+    }[]
+  >`
+    SELECT 'mission'::text AS target_type, m.slug, m.title, NULL::boolean AS dialogue_open,
+           cf.bookmarked_at IS NOT NULL AS bookmarked, cf.subscribed_at IS NOT NULL AS subscribed
+    FROM content_follows cf
+    JOIN missions m ON m.slug = cf.target_slug AND cf.target_type = 'mission'
+    WHERE cf.user_id = ${userId}
+    UNION ALL
+    SELECT 'archive_entry'::text AS target_type, a.slug, a.title, a.dialogue_open,
+           cf.bookmarked_at IS NOT NULL AS bookmarked, cf.subscribed_at IS NOT NULL AS subscribed
+    FROM content_follows cf
+    JOIN archive_entries a ON a.slug = cf.target_slug AND cf.target_type = 'archive_entry'
+    WHERE cf.user_id = ${userId}
+      AND (a.visibility = 'public' OR a.owner_user_id = ${userId})
+    UNION ALL
+    SELECT 'character'::text AS target_type, c.slug, c.name AS title, NULL::boolean AS dialogue_open,
+           cf.bookmarked_at IS NOT NULL AS bookmarked, cf.subscribed_at IS NOT NULL AS subscribed
+    FROM content_follows cf
+    JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
+    WHERE cf.user_id = ${userId}
+      AND (c.visibility = 'public' OR c.player_id = ${userId})
+    ORDER BY title ASC
+  `;
+  return rows.map(toFollowEntry);
+}
+
+// Beendet einen Follow vollständig (Lesezeichen UND Abo), statt wie
+// setBookmark/setSubscription nur ein einzelnes Flag zu löschen — passend
+// zum einzelnen "Follow beenden"-Button auf /users/[id]/follow.
+export async function removeFollow(
+  userId: number,
+  targetType: FollowTargetType,
+  targetSlug: string,
+): Promise<void> {
+  await sql`
+    DELETE FROM content_follows
+    WHERE user_id = ${userId} AND target_type = ${targetType} AND target_slug = ${targetSlug}
+  `;
+}
+
 export async function getSubscribedContent(
   userId: number,
 ): Promise<FollowedContent[]> {
