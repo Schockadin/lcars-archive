@@ -1,26 +1,26 @@
 "use client";
 import { useActionState } from "react";
-import {
-  updateMissionAction,
-  deleteMissionAction,
-  type EditMissionState,
-} from "./actions";
+import { deleteMissionAction, type EditMissionState } from "./actions";
+import { missionAction } from "../../_shared/contentAction";
 import type { MissionDetail } from "@/types/missions";
-import { SubmitButton, FormError } from "../../../../_shared/FormPrimitives";
+import { FormError } from "../../../../_shared/FormPrimitives";
 import { DangerZoneButton } from "../../../../_shared/DangerZoneButton";
-import { MissionFields } from "../../_shared/MissionFields";
+import {
+  missionHeadFields,
+  missionMetadataFields,
+} from "../../_shared/missionHeadFields";
+import { MarkdownFormatHint } from "../../../../_shared/MarkdownHint";
+import ContentEditor from "@/components/ContentEditor/ContentEditor";
 
 const initialState: EditMissionState = {};
 
 export default function EditMissionForm({
+  userId,
   mission,
 }: {
+  userId: number;
   mission: MissionDetail;
 }) {
-  const [state, formAction, pending] = useActionState(
-    updateMissionAction,
-    initialState,
-  );
   const [deleteState, deleteAction, deletePending] = useActionState(
     deleteMissionAction,
     initialState,
@@ -28,31 +28,31 @@ export default function EditMissionForm({
 
   return (
     <>
-      <form action={formAction} className="flex flex-col gap-[16px]">
-        <input type="hidden" name="missionId" value={mission.id} />
-
-        <MissionFields
-          idPrefix="edit-mission"
-          defaults={{
-            title: mission.title,
-            status: mission.status,
-            startedAt: mission.started_at,
-            endedAt: mission.ended_at,
-            tags: mission.metadata.tags.join(", "),
-            bodyMarkdown: mission.sourceMarkdown ?? "",
-          }}
-        />
-
-        <SubmitButton
-          pending={pending}
-          pendingLabel="Wird gespeichert…"
-          className="lcars-switch self-start disabled:opacity-50"
-        >
-          Änderungen speichern
-        </SubmitButton>
-
-        <FormError message={state?.error} />
-      </form>
+      <ContentEditor
+        mode="edit"
+        action={missionAction}
+        initialState={initialState}
+        hiddenFields={{ userId, missionId: mission.id }}
+        headFields={missionHeadFields}
+        metadataFields={missionMetadataFields}
+        defaults={{
+          title: mission.title,
+          status: mission.status,
+          startedAt: mission.started_at ?? undefined,
+          endedAt: mission.ended_at ?? undefined,
+          tags: mission.metadata.tags.join(", "),
+          teaser: mission.metadata.teaser ?? undefined,
+        }}
+        idPrefix="edit-mission"
+        bodyLabel="Zusammenfassung"
+        bodyHint={<MarkdownFormatHint />}
+        bodyDefaultValue={mission.sourceMarkdown ?? ""}
+        bodyRequired
+        bodyLarge
+        isAdminOrGM
+        submitLabel="Änderungen speichern"
+        submitPendingLabel="Wird gespeichert…"
+      />
 
       <section className="flex flex-col gap-[12px] mt-[32px]">
         <h2 className="text-lcars-red">Gefahrenzone</h2>

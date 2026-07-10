@@ -9,9 +9,7 @@ import {
   fmtDate,
   yearOf,
 } from "@/lib/timelineFormat";
-import { LcarsAkteCard, LcarsSwitch } from "@/components/lcars";
-
-type SortDir = "desc" | "asc";
+import { LcarsAkteCard, LcarsSortSwitch, type SortDir } from "@/components/lcars";
 
 // Übersicht aller Timeline-Ereignisse als LCARS-Chronik. Anders als die
 // Missions-Chronik (MissionsOverview.tsx, nur Start-/End-Jahr als Kappen)
@@ -57,14 +55,12 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
       ) : (
         <>
           <div className="mission-toolbar">
-            <LcarsSwitch
+            <LcarsSortSwitch
               className="mission-sort"
-              options={[
-                { key: "desc", label: "Neueste zuerst" },
-                { key: "asc", label: "Älteste zuerst" },
-              ]}
-              active={sortDir}
-              onChange={setSortDir}
+              options={[{ key: "date", label: "Datum" }]}
+              sortKey="date"
+              sortDir={sortDir}
+              onChange={(_key, dir) => setSortDir(dir)}
             />
 
             {categories.length > 0 && (

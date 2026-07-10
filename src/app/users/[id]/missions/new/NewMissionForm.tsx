@@ -1,8 +1,11 @@
 "use client";
-import { useActionState } from "react";
-import { createMissionAction, type MissionFormState } from "./actions";
-import { SubmitButton, FormError } from "../../../_shared/FormPrimitives";
-import { MissionFields } from "../_shared/MissionFields";
+import ContentEditor from "@/components/ContentEditor/ContentEditor";
+import { missionAction, type MissionFormState } from "../_shared/contentAction";
+import {
+  missionHeadFields,
+  missionMetadataFields,
+} from "../_shared/missionHeadFields";
+import { MarkdownFormatHint } from "../../../_shared/MarkdownHint";
 
 const initialState: MissionFormState = {};
 
@@ -13,30 +16,23 @@ export default function NewMissionForm({
   userId: number;
   defaultStartedAt: string | null;
 }) {
-  const [state, formAction, pending] = useActionState(
-    createMissionAction,
-    initialState,
-  );
-
   return (
-    <form action={formAction} className="flex flex-col gap-[16px]">
-      <input type="hidden" name="userId" value={userId} />
-
-      <MissionFields
-        idPrefix="mission"
-        defaults={{ startedAt: defaultStartedAt }}
-        showSlugField
-      />
-
-      <SubmitButton
-        pending={pending}
-        pendingLabel="Speichern…"
-        className="lcars-switch self-start disabled:opacity-50 w-[100%]"
-      >
-        Speichern
-      </SubmitButton>
-
-      <FormError message={state?.error} />
-    </form>
+    <ContentEditor
+      mode="create"
+      action={missionAction}
+      initialState={initialState}
+      hiddenFields={{ userId }}
+      headFields={missionHeadFields}
+      metadataFields={missionMetadataFields}
+      defaults={{ status: "active", startedAt: defaultStartedAt ?? undefined }}
+      idPrefix="mission"
+      bodyLabel="Zusammenfassung"
+      bodyHint={<MarkdownFormatHint />}
+      bodyRequired
+      bodyLarge
+      isAdminOrGM
+      submitLabel="Speichern"
+      submitPendingLabel="Speichern…"
+    />
   );
 }

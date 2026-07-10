@@ -142,7 +142,7 @@ export default function CreateDialogueForm({
       <SubmitButton
         pending={pending}
         pendingLabel="Wird angelegt…"
-        className="lcars-switch self-start disabled:opacity-50 w-[100%]"
+        className="lcars-pill-btn--outline self-start disabled:opacity-50 w-[100%]"
       >
         Gespräch beginnen
       </SubmitButton>

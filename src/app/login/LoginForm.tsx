@@ -56,7 +56,7 @@ export default function LoginForm() {
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch self-start disabled:opacity-50"
+        className="lcars-pill-btn--outline self-start disabled:opacity-50"
       >
         {pending ? "Anmelden…" : "Anmelden"}
       </button>

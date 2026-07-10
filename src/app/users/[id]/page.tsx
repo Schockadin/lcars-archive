@@ -70,7 +70,10 @@ export default async function UserPage({
                   Funktionen des Archivs — von der Suche bis zur
                   Markdown-Formatierung.
                 </p>
-                <Link href="/tutorial" className="lcars-switch self-start">
+                <Link
+                  href="/tutorial"
+                  className="lcars-pill-btn--outline self-start"
+                >
                   Tutorial öffnen
                 </Link>
               </section>
@@ -78,7 +81,9 @@ export default async function UserPage({
               <SettingsForm user={{ name: target.name, email: target.email }} />
 
               <section id="password" className="flex flex-col gap-[12px]">
-                <h2>{hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}</h2>
+                <h2>
+                  {hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}
+                </h2>
                 <PasswordForm hasPassword={hasPasswordSet} />
               </section>
 

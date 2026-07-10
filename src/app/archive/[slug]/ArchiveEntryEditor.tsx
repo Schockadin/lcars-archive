@@ -21,6 +21,9 @@ export default function ArchiveEntryEditor({
   contentHtml,
   sourceMarkdown,
   isAdminOrGM,
+  slug,
+  editMode,
+  onEditModeChange,
 }: {
   entryId: number;
   contentHtml: string;
@@ -29,8 +32,10 @@ export default function ArchiveEntryEditor({
   // Timeline-Marker-Button darin aber zusätzlich rollen-gated — anders als
   // MissionSynopsisEditor.tsx, wo Owner- und Rollen-Gate zusammenfallen.
   isAdminOrGM: boolean;
+  slug: string;
+  editMode: boolean;
+  onEditModeChange: (v: boolean) => void;
 }) {
-  const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(
     updateOwnArchiveEntryAction,
     initialState,
@@ -43,22 +48,14 @@ export default function ArchiveEntryEditor({
   const [lastHandledState, setLastHandledState] = useState(state);
   if (state !== lastHandledState) {
     setLastHandledState(state);
-    if (state.success) setEditing(false);
+    if (state.success) onEditModeChange(false);
   }
 
   const displayHtml = state.updatedHtml ?? contentHtml;
 
-  if (!editing) {
+  if (!editMode) {
     return (
       <div className="flex flex-col gap-[8px]">
-        <button
-          type="button"
-          onClick={() => setEditing(true)}
-          className="lcars-switch self-start"
-        >
-          Inhalt bearbeiten
-        </button>
-
         {displayHtml ? (
           <div
             className="mission-body lcars-text"
@@ -91,15 +88,15 @@ export default function ArchiveEntryEditor({
       <div className="flex flex-wrap gap-[12px] items-center justify-end">
         <button
           type="button"
-          onClick={() => setEditing(false)}
-          className="lcars-switch"
+          onClick={() => onEditModeChange(false)}
+          className="lcars-pill-btn--outline"
         >
           Abbrechen
         </button>
         <button
           type="submit"
           disabled={pending}
-          className="lcars-switch disabled:opacity-50"
+          className="lcars-pill-btn--outline disabled:opacity-50"
         >
           {pending ? "Speichern…" : "Speichern"}
         </button>

@@ -168,7 +168,9 @@
 
 .lcars-elbow-bottom {
   width: var(--lcars-bar-width);
-  min-height: calc(0.8 * var(--lcars-bar-width));
+  min-height: 100px;
+  max-height: 160px;
+  flex: 1;
   border-radius: 100px 0 0 0;
   background-color: var(--lcars-red);
 }

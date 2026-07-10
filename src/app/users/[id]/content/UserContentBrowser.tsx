@@ -117,7 +117,7 @@ export default function UserContentBrowser({
     <div className="flex flex-col gap-[16px]">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-[12px]">
         <select
-          className="mission-author-filter"
+          className="lcars-input rounded-full text-right"
           value={characterFilter ?? ""}
           onChange={(e) => setCharacterFilter(e.target.value || null)}
           aria-label="Nach Charakter filtern"
@@ -131,7 +131,7 @@ export default function UserContentBrowser({
         </select>
 
         <select
-          className="mission-author-filter"
+          className="lcars-input rounded-full text-right"
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
           aria-label="Nach Kategorie filtern"

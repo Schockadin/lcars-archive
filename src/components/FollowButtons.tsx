@@ -7,6 +7,12 @@ import {
   type FollowState,
 } from "@/app/actions/follows";
 import type { FollowTargetType } from "@/lib/follows";
+import {
+  SubscribeIcon,
+  UnsubscribeIcon,
+  BookmarkIcon,
+  UnbookmarkIcon,
+} from "@/lib/icons";
 
 // Rendert nichts, solange nicht bekannt ist, ob eine Session existiert (und
 // dauerhaft nichts für anonyme Besucher) — bewusst per Client-Fetch auf eine
@@ -20,8 +26,6 @@ export default function FollowButtons({
 }: {
   targetType: FollowTargetType;
   targetSlug: string;
-  // Nur den Abo-Umschalter zeigen (kein "Merken") — z.B. für Dialoge, wo
-  // Bookmarks fachlich keinen Sinn ergeben.
   subscribeOnly?: boolean;
 }) {
   const [state, setState] = useState<FollowState | null>(null);
@@ -74,20 +78,24 @@ export default function FollowButtons({
       {!subscribeOnly && (
         <button
           type="button"
-          className={`lcars-usernav-pill${state.bookmarked ? " lcars-usernav-pill--active" : ""}`}
+          className={`lcars-icon-btn size-[40px] ${state.bookmarked ? "bg-lcars-amber text-lcars-bg" : ""}`}
           disabled={pending === "bookmark"}
           onClick={handleBookmark}
+          aria-label={state.bookmarked ? "Nicht mehr speichern" : "Speichern"}
+          title={state.bookmarked ? "Nicht mehr speichern" : "Speichern"}
         >
-          {state.bookmarked ? "Gemerkt" : "Merken"}
+          {state.bookmarked ? <UnbookmarkIcon /> : <BookmarkIcon />}
         </button>
       )}
       <button
         type="button"
-        className={`lcars-usernav-pill${state.subscribed ? " lcars-usernav-pill--active" : ""}`}
+        className={`lcars-icon-btn size-[40px] ${state.subscribed ? "bg-lcars-amber text-lcars-bg" : ""}`}
         disabled={pending === "subscribe"}
         onClick={handleSubscribe}
+        aria-label={state.subscribed ? "Nicht mehr folgen" : "Folgen"}
+        title={state.subscribed ? "Nicht mehr folgen" : "Folgen"}
       >
-        {state.subscribed ? "Abonniert" : "Abonnieren"}
+        {state.subscribed ? <UnsubscribeIcon /> : <SubscribeIcon />}
       </button>
     </div>
   );

@@ -4,13 +4,107 @@ import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
 import {
+  getAttributeFields,
+  getReferenceFields,
+  OWN_TABLE_REFERENCE_KEYS,
+} from "@/lib/archiveMetadataFields";
+import {
   ArchiveCategory,
+  ArchiveCharacterRef,
   ArchiveEntryDetail,
   ArchiveEntryPreview,
   ArchiveLink,
   ArchiveMetadata,
+  ArchiveMissionRef,
+  ArchiveAttribute,
   ArchivePath,
 } from "@/types/archive";
+
+// Baut metadata.attributes aus den Formularwerten der "Metadaten +/-"-Sektion
+// — nur Felder, die für die jeweilige Kategorie vorgesehen sind (siehe
+// getAttributeFields), nur nicht-leere Werte.
+function buildArchiveAttributes(
+  category: ArchiveCategory,
+  attributeValues: Record<string, string>,
+): ArchiveAttribute[] {
+  return getAttributeFields(category)
+    .map((field) => ({ label: field.label, value: (attributeValues[field.key] ?? "").trim() }))
+    .filter((attr): attr is ArchiveAttribute => attr.value !== "");
+}
+
+function parseSlugList(csv: string): string[] {
+  return [
+    ...new Set(
+      csv
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+    ),
+  ];
+}
+
+// Löst die "Metadaten +/-"-Verweisfelder (related_missions/related_characters
+// + kategorie-spezifische Verweise wie leader/headquarters/participants) auf
+// und schreibt sie: related_missions/related_characters → metadata.missions/
+// characters (eigene Tabellen), alle anderen → archive_links mit dem
+// jeweiligen FieldSpec-Label. Ersetzt bestehende Links des Eintrags komplett
+// (DELETE + INSERT), analog zum 2-Pass-Ingest (scripts/ingest/archive.ts).
+async function saveArchiveReferences(
+  entryId: number,
+  ownSlug: string,
+  category: ArchiveCategory,
+  referenceValues: Record<string, string>,
+): Promise<{ missions: ArchiveMissionRef[]; characters: ArchiveCharacterRef[] }> {
+  let missions: ArchiveMissionRef[] = [];
+  let characters: ArchiveCharacterRef[] = [];
+  const linkTargets: { targetId: number; label: string }[] = [];
+
+  for (const field of getReferenceFields(category)) {
+    const slugs = parseSlugList(referenceValues[field.key] ?? "").filter(
+      (s) => s !== ownSlug,
+    );
+    if (slugs.length === 0) continue;
+
+    if (field.key === "related_missions") {
+      const rows = await sql<ArchiveMissionRef[]>`
+        SELECT slug, title FROM missions WHERE slug = ANY(${slugs})
+      `;
+      missions = rows;
+    } else if (field.key === "related_characters") {
+      const rows = await sql<ArchiveCharacterRef[]>`
+        SELECT slug, name FROM characters WHERE slug = ANY(${slugs})
+      `;
+      characters = rows;
+    } else if (!OWN_TABLE_REFERENCE_KEYS.has(field.key)) {
+      const rows = await sql<{ id: number }[]>`
+        SELECT id FROM archive_entries WHERE slug = ANY(${slugs})
+      `;
+      for (const row of rows) {
+        linkTargets.push({ targetId: row.id, label: field.label });
+      }
+    }
+  }
+
+  await sql`DELETE FROM archive_links WHERE source_id = ${entryId}`;
+  if (linkTargets.length > 0) {
+    // Ein Ziel kann über mehrere Felder mehrfach vorkommen (z.B. derselbe
+    // NPC-Slug sowohl unter related_npcs als auch unter "leader") —
+    // archive_links hat PRIMARY KEY (source_id, target_id), also pro
+    // (source,target) nur eine Zeile; letztes Label gewinnt.
+    const uniqueTargets = new Map<number, string>();
+    for (const { targetId, label } of linkTargets) uniqueTargets.set(targetId, label);
+    const rows = Array.from(uniqueTargets, ([targetId, label]) => ({
+      source_id: entryId,
+      target_id: targetId,
+      label,
+    }));
+    await sql`
+      INSERT INTO archive_links ${sql(rows, "source_id", "target_id", "label")}
+    `;
+  }
+
+  return { missions, characters };
+}
 
 // metadata kommt je nach Treiber als JSONB-Objekt oder String — defensiv
 // parsen UND auf die vollständige Form normalisieren, damit auch ältere
@@ -286,6 +380,9 @@ export async function createArchiveEntry(input: {
   title: string;
   category: Exclude<ArchiveCategory, "dialogue">;
   tags: string[];
+  summary: string | null;
+  attributeValues: Record<string, string>;
+  referenceValues: Record<string, string>;
   bodyMarkdown: string;
   ownerUserId: number;
   // Vorgerendertes HTML überspringt das eigene renderContentHtml() — genutzt
@@ -296,10 +393,11 @@ export async function createArchiveEntry(input: {
   const slug = await generateUniqueArchiveEntrySlug(input.title);
   const contentHtml =
     input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
+  const attributes = buildArchiveAttributes(input.category, input.attributeValues);
 
   const metadata: ArchiveMetadata = {
-    summary: null,
-    attributes: [],
+    summary: input.summary,
+    attributes,
     characters: [],
     missions: [],
     setting: null,
@@ -319,6 +417,23 @@ export async function createArchiveEntry(input: {
     )
     RETURNING id, slug
   `;
+
+  // Verweisfelder (related_missions/-characters/archive_links) erst nach dem
+  // Insert auflösbar — braucht die neue entryId als source_id.
+  const { missions, characters } = await saveArchiveReferences(
+    row.id,
+    slug,
+    input.category,
+    input.referenceValues,
+  );
+  if (missions.length > 0 || characters.length > 0) {
+    await sql`
+      UPDATE archive_entries
+      SET metadata = metadata || ${sql.json({ missions, characters } as ReturnType<typeof JSON.parse>)}
+      WHERE id = ${row.id}
+    `;
+  }
+
   return row;
 }
 
@@ -329,6 +444,11 @@ export interface OwnArchiveEntryForEdit {
   category: ArchiveCategory;
   tags: string[];
   sourceMarkdown: string;
+  summary: string | null;
+  // key (siehe archiveMetadataFields.ts) → aktueller Wert, für die
+  // "Metadaten +/-"-Sektion.
+  attributeValues: Record<string, string>;
+  referenceValues: Record<string, string>;
 }
 
 // Für /users/[id]/archive/[entryId]/edit — lädt den rohen Markdown-Body
@@ -342,13 +462,63 @@ export async function getOwnArchiveEntryForEdit(
   userId: number,
   entryId: number,
 ): Promise<OwnArchiveEntryForEdit | null> {
-  const rows = await sql<OwnArchiveEntryForEdit[]>`
-    SELECT id, slug, title, category, tags, COALESCE(source_md, '') AS "sourceMarkdown"
+  const rows = await sql<
+    {
+      id: number;
+      slug: string;
+      title: string;
+      category: ArchiveCategory;
+      tags: string[];
+      sourceMarkdown: string;
+      metadata: ArchiveMetadata | string;
+    }[]
+  >`
+    SELECT id, slug, title, category, tags, COALESCE(source_md, '') AS "sourceMarkdown", metadata
     FROM archive_entries
     WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
     LIMIT 1
   `;
-  return rows[0] ?? null;
+  const row = rows[0];
+  if (!row) return null;
+
+  const metadata: ArchiveMetadata =
+    typeof row.metadata === "string" ? JSON.parse(row.metadata) : row.metadata;
+
+  const attributeValues: Record<string, string> = {};
+  for (const field of getAttributeFields(row.category)) {
+    const found = metadata.attributes?.find((a) => a.label === field.label);
+    if (found) attributeValues[field.key] = found.value;
+  }
+
+  const referenceValues: Record<string, string> = {
+    related_missions: (metadata.missions ?? []).map((m) => m.slug).join(", "),
+    related_characters: (metadata.characters ?? []).map((c) => c.slug).join(", "),
+  };
+  const linkRows = await sql<{ slug: string; label: string | null }[]>`
+    SELECT e.slug, al.label
+    FROM archive_links al
+    JOIN archive_entries e ON e.id = al.target_id
+    WHERE al.source_id = ${entryId}
+  `;
+  for (const field of getReferenceFields(row.category)) {
+    if (OWN_TABLE_REFERENCE_KEYS.has(field.key)) continue;
+    const slugs = linkRows
+      .filter((l) => l.label === field.label)
+      .map((l) => l.slug);
+    if (slugs.length > 0) referenceValues[field.key] = slugs.join(", ");
+  }
+
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    category: row.category,
+    tags: row.tags,
+    sourceMarkdown: row.sourceMarkdown,
+    summary: metadata.summary,
+    attributeValues,
+    referenceValues,
+  };
 }
 
 // Bearbeitet Titel/Kategorie/Tags/Text eines eigenen Archiv-Eintrags — für
@@ -365,6 +535,9 @@ export async function updateOwnArchiveEntryContent(
     title: string;
     category: Exclude<ArchiveCategory, "dialogue">;
     tags: string[];
+    summary: string | null;
+    attributeValues: Record<string, string>;
+    referenceValues: Record<string, string>;
     bodyMarkdown: string;
     // Siehe createArchiveEntry oben — Opt-in "Automatisch verlinken".
     contentHtml?: string;
@@ -372,15 +545,37 @@ export async function updateOwnArchiveEntryContent(
 ): Promise<{ slug: string } | null> {
   const contentHtml =
     input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
+  const attributes = buildArchiveAttributes(input.category, input.attributeValues);
+  const metadataPatch = { summary: input.summary, attributes };
 
   const rows = await sql<{ slug: string }[]>`
     UPDATE archive_entries
     SET title = ${input.title}, category = ${input.category}, tags = ${input.tags},
-        content = ${contentHtml}, source_md = ${input.bodyMarkdown}, updated_at = NOW()
+        content = ${contentHtml}, source_md = ${input.bodyMarkdown},
+        metadata = metadata || ${sql.json(metadataPatch as ReturnType<typeof JSON.parse>)},
+        updated_at = NOW()
     WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
     RETURNING slug
   `;
-  return rows[0] ?? null;
+  const result = rows[0];
+  if (!result) return null;
+
+  // Erst nach bestätigtem Owner-Zugriff (obige UPDATE traf eine Zeile) die
+  // Verweisfelder auflösen/schreiben — saveArchiveReferences selbst prüft
+  // keine Berechtigung.
+  const { missions, characters } = await saveArchiveReferences(
+    entryId,
+    result.slug,
+    input.category,
+    input.referenceValues,
+  );
+  await sql`
+    UPDATE archive_entries
+    SET metadata = metadata || ${sql.json({ missions, characters } as ReturnType<typeof JSON.parse>)}
+    WHERE id = ${entryId}
+  `;
+
+  return result;
 }
 
 // Nur der Inhalt, nicht Titel/Kategorie/Tags — für den Inline-Editor auf der

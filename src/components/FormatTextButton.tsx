@@ -7,6 +7,7 @@ import {
   type ContentToolType,
   type TextFormatPreviewResult,
 } from "@/app/actions/contentTools";
+import { SpellingIcon } from "@/lib/icons";
 
 // Admin-only Action auf den vier Inhalts-Detailseiten (Mission, Log,
 // Archiv-Eintrag, Charakter): vereinheitlicht die Typografie des Markdown-
@@ -78,7 +79,7 @@ export default function FormatTextButton({
             type="button"
             onClick={handleCancel}
             disabled={pending}
-            className="lcars-switch"
+            className="lcars-pill-btn--outline"
           >
             Abbrechen
           </button>
@@ -87,7 +88,7 @@ export default function FormatTextButton({
               type="button"
               onClick={handleConfirm}
               disabled={pending}
-              className="lcars-switch disabled:opacity-50"
+              className="lcars-pill-btn--outline disabled:opacity-50"
             >
               {pending ? "Speichern…" : "Übernehmen"}
             </button>
@@ -109,9 +110,11 @@ export default function FormatTextButton({
         type="button"
         onClick={handlePreview}
         disabled={pending}
-        className="lcars-switch disabled:opacity-50 w-full"
+        className="lcars-icon-btn size-[40px] disabled:opacity-50"
+        aria-label="Formatierung"
+        title="Formatierung"
       >
-        {pending ? "Prüfe…" : "Text formatieren"}
+        <SpellingIcon />
       </button>
       {applied && (
         <p className="text-lcars-green text-[13px]" role="status">

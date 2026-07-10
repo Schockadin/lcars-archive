@@ -110,7 +110,7 @@ export default function TimelineMarkerButton({
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="lcars-switch self-start"
+          className="lcars-pill-btn self-start"
         >
           Zeitleisten-Ereignis einfügen
         </button>
@@ -171,10 +171,14 @@ export default function TimelineMarkerButton({
               </label>
 
               <div className="flex flex-wrap gap-[12px] items-center justify-end">
-                <button type="button" onClick={close} className="lcars-switch">
+                <button
+                  type="button"
+                  onClick={close}
+                  className="lcars-pill-btn--outline"
+                >
                   Abbrechen
                 </button>
-                <button type="submit" className="lcars-switch">
+                <button type="submit" className="lcars-pill-btn--outline">
                   Einfügen
                 </button>
               </div>

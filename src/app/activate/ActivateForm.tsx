@@ -12,7 +12,10 @@ export default function ActivateForm({ token }: { token: string }) {
   );
 
   return (
-    <form action={formAction} className="flex max-w-[420px] flex-col gap-[16px]">
+    <form
+      action={formAction}
+      className="flex max-w-[420px] flex-col gap-[16px]"
+    >
       <input type="hidden" name="token" value={token} />
 
       <div className="flex flex-col gap-[6px]">
@@ -52,7 +55,11 @@ export default function ActivateForm({ token }: { token: string }) {
         </p>
       )}
 
-      <button type="submit" disabled={pending} className="lcars-switch self-start disabled:opacity-50">
+      <button
+        type="submit"
+        disabled={pending}
+        className="lcars-pill-btn--outline self-start disabled:opacity-50"
+      >
         {pending ? "Wird gespeichert…" : "Passwort speichern"}
       </button>
     </form>

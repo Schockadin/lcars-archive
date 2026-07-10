@@ -2,7 +2,6 @@
 export { default as LcarsHeader } from "./Header";
 export { default as LcarsSidebar } from "./Sidebar";
 export { default as LcarsSidebarMenu } from "./SidebarMenu";
-export { ContentSidebar as LcarsContentSidebar } from "./Sidebar";
 export { default as LcarsMenuItem } from "./MenuItem";
 export { default as LcarsMainContent } from "./MainContent";
 export { HeaderBar as LcarsHeaderBar } from "./ElbowBar";
@@ -19,5 +18,10 @@ export { default as LcarsHeaderSearch } from "./HeaderSearch";
 export { default as LcarsCookieNotice } from "./CookieNotice";
 export { default as LcarsServiceWorkerRegister } from "./ServiceWorkerRegister";
 export { default as LcarsSwitch, type SwitchOption } from "./Switch";
+export {
+  default as LcarsSortSwitch,
+  type SortSwitchOption,
+  type SortDir,
+} from "./SortSwitch";
 export { default as LcarsAkteCard } from "./AkteCard";
 export { default as LcarsLogEntry } from "./LogEntry";

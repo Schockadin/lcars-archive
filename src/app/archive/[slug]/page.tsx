@@ -1,4 +1,3 @@
-// src/app/archive/[slug]/page.tsx
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getArchiveEntryBySlug } from "@/lib/archive";
@@ -6,21 +5,13 @@ import { CATEGORY_CONFIG, archiveTitle } from "@/lib/archiveFormat";
 import { stripHtml } from "@/lib/missionFormat";
 import { ArchiveEntryDetail, ArchiveLink } from "@/types/archive";
 import PageMeta from "@/components/PageMeta";
-import CrumbLabel from "@/components/CrumbLabel";
 import { LcarsReadingModeToggle } from "@/components/lcars";
-import FollowButtons from "@/components/FollowButtons";
-import DialogueThread from "@/components/DialogueThread";
 import DialogueHeader from "@/components/DialogueHeader";
 import DeleteDialogueButton from "@/components/DeleteDialogueButton";
 import { getDialogueMessages } from "@/lib/dialogues";
 import { getViewer, canView } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
-import OwnerSelect from "@/components/OwnerSelect";
-import AdminActionsMenu from "@/components/AdminActionsMenu";
-import AutolinkButton from "@/components/AutolinkButton";
-import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
-import FormatTextButton from "@/components/FormatTextButton";
-import ArchiveEntryEditor from "./ArchiveEntryEditor";
+import ArchiveEntryBody from "./ArchiveEntryBody";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -109,96 +100,27 @@ export default async function ArchiveEntryPage({ params }: Props) {
       style={{ "--cat-color": cfg.color } as React.CSSProperties}
     >
       <PageMeta title={title} section="archive" />
-      <CrumbLabel slug={entry.slug} label={title} />
       <LcarsReadingModeToggle />
 
-      {viewer?.role === "admin" && entry.category !== "dialogue" && (
-        <div className="flex flex-col gap-[10px] mb-[10px]">
-          <OwnerSelect
-            contentType="archive_entry"
-            id={entry.id}
-            initialOwnerId={entry.ownerUserId}
-            users={owners.map((u) => ({ id: u.id, name: u.name }))}
-          />
-          <AdminActionsMenu>
-            <AutolinkButton contentType="archiveEntry" slug={entry.slug} />
-            <RemoveWikilinksButton
-              contentType="archiveEntry"
-              slug={entry.slug}
-            />
-            <FormatTextButton contentType="archiveEntry" slug={entry.slug} />
-          </AdminActionsMenu>
-        </div>
-      )}
-
-      {entry.category === "dialogue" ? (
-        <DialogueHeader
-          title={title}
-          participants={entry.metadata.participants}
-          location={entry.metadata.location}
-          logDate={entry.metadata.logDate}
-        />
-      ) : (
-        <StandardHeader entry={entry} title={title} label={cfg.label} />
-      )}
-
-      <FollowButtons targetType="archive_entry" targetSlug={entry.slug} />
-
-      {entry.metadata.summary && entry.category != "dialogue" && (
-        <p className="lcars-eyebrow mb-[5px]">{entry.metadata.summary}</p>
-      )}
-
-      {entry.category !== "dialogue" &&
-        entry.metadata.attributes.length > 0 && (
-          <div className="char-file-data archive-entry-attrs">
-            {entry.metadata.attributes.map((attr) => (
-              <div key={attr.label} className="char-file-field">
-                <span className="char-file-field-label">{attr.label}:</span>{" "}
-                <span className="char-file-field-value">{attr.value}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
-      {entry.category === "dialogue" ? (
-        messages.length > 0 ? (
-          <DialogueThread
-            messages={messages}
-            participants={entry.metadata.participants}
-            currentUserId={null}
-            dialogueOpen={false}
-          />
-        ) : entry.content ? (
-          // Ohne dialogue_messages (z.B. per Vault-Ingest importierte
-          // Gespräche ohne strukturierte Nachrichten) den rohen Inhalt
-          // zeigen statt fälschlich "Kein Inhalt hinterlegt" — der Text
-          // existiert ja, nur eben nicht als Nachrichten-Thread.
-          <div
-            className="mission-body lcars-text"
-            dangerouslySetInnerHTML={{ __html: entry.content }}
-          />
+      <div className="flex items-start">
+        {entry.category !== "dialogue" ? (
+          <StandardHeader entry={entry} title={title} label={cfg.label} />
         ) : (
-          <p className="lcars-empty-state">
-            Kein Inhalt zu diesem Eintrag hinterlegt.
-          </p>
-        )
-      ) : viewer && viewer.userId === entry.ownerUserId ? (
-        <ArchiveEntryEditor
-          entryId={entry.id}
-          contentHtml={entry.content}
-          sourceMarkdown={entry.sourceMarkdown}
-          isAdminOrGM={viewer.role === "gm" || viewer.role === "admin"}
-        />
-      ) : entry.content ? (
-        <div
-          className="mission-body lcars-text"
-          dangerouslySetInnerHTML={{ __html: entry.content }}
-        />
-      ) : (
-        <p className="lcars-empty-state">
-          Kein Inhalt zu diesem Eintrag hinterlegt.
-        </p>
-      )}
+          <DialogueHeader
+            title={title}
+            participants={entry.metadata.participants}
+            location={entry.metadata.location}
+            logDate={entry.metadata.logDate}
+          />
+        )}
+      </div>
+
+      <ArchiveEntryBody
+        entry={entry}
+        viewer={viewer}
+        owners={owners}
+        messages={messages}
+      />
 
       {viewer?.role === "admin" && entry.category === "dialogue" && (
         <DeleteDialogueButton entrySlug={entry.slug} />

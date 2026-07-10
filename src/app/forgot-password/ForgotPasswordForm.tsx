@@ -18,9 +18,8 @@ export default function ForgotPasswordForm() {
     return (
       <div className="flex flex-col gap-[16px]">
         <p>
-          Falls zu dieser E-Mail-Adresse ein aktives Konto existiert, haben
-          wir gerade einen Link zum Festlegen eines neuen Passworts
-          verschickt.
+          Falls zu dieser E-Mail-Adresse ein aktives Konto existiert, haben wir
+          gerade einen Link zum Festlegen eines neuen Passworts verschickt.
         </p>
         <p>
           <a href="/login" className="text-lcars-amber underline">
@@ -59,7 +58,7 @@ export default function ForgotPasswordForm() {
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch self-start disabled:opacity-50"
+        className="lcars-pill-btn--outline self-start disabled:opacity-50"
       >
         {pending ? "Wird gesendet…" : "Link anfordern"}
       </button>

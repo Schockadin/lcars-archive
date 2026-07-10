@@ -61,11 +61,10 @@ export default function UserBackupPanel() {
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
       <p className="text-lcars-text-dim text-[13px]">
-        Exportiert alle registrierten User (inkl. Passwort-Hash) als
-        JSON-Datei. Der Import legt anhand der E-Mail-Adresse fehlende User
-        neu an bzw. überschreibt bestehende vollständig mit dem Stand der
-        Datei. Die Datei ist entsprechend sensibel — nur für die
-        Administration.
+        Exportiert alle registrierten User (inkl. Passwort-Hash) als JSON-Datei.
+        Der Import legt anhand der E-Mail-Adresse fehlende User neu an bzw.
+        überschreibt bestehende vollständig mit dem Stand der Datei. Die Datei
+        ist entsprechend sensibel — nur für die Administration.
       </p>
 
       <div className="flex flex-wrap items-center gap-[12px]">
@@ -73,12 +72,12 @@ export default function UserBackupPanel() {
           type="button"
           onClick={handleExport}
           disabled={exporting}
-          className="lcars-switch self-start disabled:opacity-50"
+          className="lcars-pill-btn--outline self-start disabled:opacity-50"
         >
           {exporting ? "Export läuft…" : "Backup herunterladen"}
         </button>
 
-        <label className="lcars-switch self-start cursor-pointer disabled:opacity-50">
+        <label className="lcars-pill-btn--outline self-start cursor-pointer disabled:opacity-50">
           {importing ? "Import läuft…" : "Backup importieren"}
           <input
             ref={fileInputRef}

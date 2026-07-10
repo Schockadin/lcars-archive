@@ -4,7 +4,6 @@ import { stripHtml } from "@/lib/missionFormat";
 import { getViewer } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import MissionSynopsis from "../MissionSynopsis";
-
 interface Props {
   params: Promise<{ missionSlug: string }>;
 }
@@ -45,9 +44,5 @@ export default async function MissionPage({ params }: Props) {
   const viewer = await getViewer();
   const owners = viewer?.role === "admin" ? await listAllUsers() : [];
 
-  return (
-    <>
-      <MissionSynopsis mission={mission} owners={owners} viewer={viewer} />
-    </>
-  );
+  return <MissionSynopsis mission={mission} owners={owners} viewer={viewer} />;
 }

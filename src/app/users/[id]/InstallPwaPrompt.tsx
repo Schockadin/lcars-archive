@@ -103,8 +103,8 @@ export default function InstallPwaPrompt() {
   if (status === "unsupported") {
     return (
       <p className="text-lcars-text-dim">
-        Dieser Browser unterstützt die Installation als App nicht. Probiere
-        z.B. Chrome, Edge oder Samsung Internet.
+        Dieser Browser unterstützt die Installation als App nicht. Probiere z.B.
+        Chrome, Edge oder Samsung Internet.
       </p>
     );
   }
@@ -114,7 +114,7 @@ export default function InstallPwaPrompt() {
   return (
     <button
       type="button"
-      className="lcars-switch"
+      className="lcars-pill-btn--outline"
       onClick={async () => {
         await deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;

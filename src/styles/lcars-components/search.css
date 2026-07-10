@@ -13,9 +13,27 @@
   width: 100%;
   margin-bottom: 16px;
 }
-.search-type-filter .lcars-switch {
+.search-type-filter .lcars-switch-item {
   padding: 0 14px;
   text-align: center;
+  /* Durchgehende Trennlinie (::before unten) ersetzt die einzelnen
+     Zeilen-Ränder, die durch das 2-spaltige Grid ohnehin nur pro Zeile
+     unterbrochen wären, statt über alle Zeilen hinweg durchzugehen. */
+  border-right: none;
+}
+/* Durchgehende Trennlinie zwischen den zwei Spalten über alle Zeilen
+   hinweg — ein einzelner border-right pro Button wäre durch den
+   Zeilen-gap unterbrochen statt eine Linie über die volle Höhe zu bilden. */
+.search-type-filter::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--lcars-text-data);
+  z-index: 0;
 }
 
 /* Hervorhebung des Suchbegriffs im Snippet auf /search. */

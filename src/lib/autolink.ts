@@ -259,7 +259,9 @@ export async function resolveAllWikilinks(html: string): Promise<string> {
   const [characters, missions, archiveEntries] = await Promise.all([
     sql<{ slug: string; name: string }[]>`SELECT slug, name FROM characters`,
     sql<{ slug: string; title: string }[]>`SELECT slug, title FROM missions`,
-    sql<{ slug: string; title: string }[]>`SELECT slug, title FROM archive_entries`,
+    sql<
+      { slug: string; title: string }[]
+    >`SELECT slug, title FROM archive_entries`,
   ]);
 
   // Priorität bei Titel-/Slug-Kollisionen: Charaktere > Archiv-Einträge >
@@ -279,16 +281,19 @@ export async function resolveAllWikilinks(html: string): Promise<string> {
     hrefBySlug.set(c.slug, `/characters/${c.slug}`);
   }
 
-  return html.replace(WIKILINK_TAG_RE, (full, rawTarget: string, text: string) => {
-    const target = decodeHtmlEntities(decodeURIComponent(rawTarget));
-    const href =
-      hrefByTitle.get(normalizeWikilinkTarget(target)) ??
-      hrefBySlug.get(slugifyForWikilinkFallback(target));
-    if (!href) {
-      return `<span class="lcars-wikilink lcars-wikilink--missing" title="Kein Eintrag gefunden: ${target}">${text}</span>`;
-    }
-    return `<a href="${href}" class="lcars-wikilink">${text}</a>`;
-  });
+  return html.replace(
+    WIKILINK_TAG_RE,
+    (full, rawTarget: string, text: string) => {
+      const target = decodeHtmlEntities(decodeURIComponent(rawTarget));
+      const href =
+        hrefByTitle.get(normalizeWikilinkTarget(target)) ??
+        hrefBySlug.get(slugifyForWikilinkFallback(target));
+      if (!href) {
+        return `<span class="lcars-wikilink lcars-wikilink--missing" title="Kein Eintrag gefunden: ${target}">${text}</span>`;
+      }
+      return `<a href="${href}" class="lcars-wikilink">${text}</a>`;
+    },
+  );
 }
 
 // Rendert Markdown zu HTML UND löst darin enthaltene Wikilinks auf — der

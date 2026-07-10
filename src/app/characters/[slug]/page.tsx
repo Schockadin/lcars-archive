@@ -9,7 +9,6 @@ import { getViewer, canView } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import { notFound } from "next/navigation";
 import CharakterDetailPage from "./CharacterDetailPage";
-
 interface Props {
   params: Promise<{ slug: string }>;
 }

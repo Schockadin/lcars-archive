@@ -20,16 +20,17 @@ export default function MissionSynopsisEditor({
   missionId,
   bodyHtml,
   sourceMarkdown,
-  topRow,
-  adminActions,
+  editMode,
+  onEditModeChange,
 }: {
   missionId: number;
   bodyHtml: string | null;
   sourceMarkdown: string;
-  topRow: ReactNode;
   adminActions?: ReactNode;
+  slug: string;
+  editMode: boolean;
+  onEditModeChange: (v: boolean) => void;
 }) {
-  const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(
     updateMissionSynopsisAction,
     initialState,
@@ -44,27 +45,14 @@ export default function MissionSynopsisEditor({
   const [lastHandledState, setLastHandledState] = useState(state);
   if (state !== lastHandledState) {
     setLastHandledState(state);
-    if (state.success) setEditing(false);
+    if (state.success) onEditModeChange(false);
   }
 
   const displayHtml = state.updatedHtml ?? bodyHtml;
 
-  if (!editing) {
+  if (!editMode) {
     return (
       <div className="flex flex-col gap-[8px]">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
-          {topRow}
-          <button
-            type="button"
-            onClick={() => setEditing(true)}
-            className="lcars-switch"
-          >
-            Synopsis bearbeiten
-          </button>
-        </div>
-
-        {adminActions}
-
         {displayHtml ? (
           <div
             className="mission-body lcars-text"
@@ -79,12 +67,6 @@ export default function MissionSynopsisEditor({
 
   return (
     <div className="flex flex-col gap-[8px]">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
-        {topRow}
-      </div>
-
-      {adminActions}
-
       <form action={formAction} className="flex flex-col gap-[8px]">
         <input type="hidden" name="missionId" value={missionId} />
         {/* isAdminOrGM fest true — MissionSynopsisEditor wird ausschließlich
@@ -103,15 +85,15 @@ export default function MissionSynopsisEditor({
         <div className="flex flex-wrap gap-[12px] items-center justify-end">
           <button
             type="button"
-            onClick={() => setEditing(false)}
-            className="lcars-switch"
+            onClick={() => onEditModeChange(false)}
+            className="lcars-pill-btn--outline"
           >
             Abbrechen
           </button>
           <button
             type="submit"
             disabled={pending}
-            className="lcars-switch disabled:opacity-50"
+            className="lcars-pill-btn--outline disabled:opacity-50"
           >
             {pending ? "Speichern…" : "Speichern"}
           </button>

@@ -2,7 +2,6 @@ import { notFound } from "next/navigation";
 import { getLogsByMissionId, getMissionBySlug } from "@/lib/missions";
 import { STATUS_CONFIG, stripHtml } from "@/lib/missionFormat";
 import PageMeta from "@/components/PageMeta";
-import CrumbLabel from "@/components/CrumbLabel";
 import MissionLogList from "../MissionLogList";
 
 // Persistentes Layout der Mission-Detailseite: links die Log-Liste (bleibt
@@ -27,12 +26,13 @@ export default async function MissionDetailLayout({
       style={{ "--mission-color": color } as React.CSSProperties}
     >
       <PageMeta title={mission.title} section="missions" />
-      <CrumbLabel slug={mission.slug} label={mission.title} />
 
       <aside className="mission-detail-logs lcars-scroll">
         <MissionLogList
           missionSlug={mission.slug}
-          synopsis={mission.metadata.body ? stripHtml(mission.metadata.body) : null}
+          synopsis={
+            mission.metadata.body ? stripHtml(mission.metadata.body) : null
+          }
           logs={logs}
         />
       </aside>

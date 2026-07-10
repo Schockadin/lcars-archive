@@ -12,6 +12,14 @@ import {
   type AdminActionState,
 } from "./actions";
 import type { UserWithCharacters } from "@/lib/users";
+import {
+  CheckIcon,
+  XIcon,
+  PencilIcon,
+  BanIcon,
+  RestoreIcon,
+  TrashIcon,
+} from "@/lib/icons";
 
 const initialState: AdminActionState = {};
 
@@ -22,63 +30,6 @@ const ROLE_LABELS: Record<UserWithCharacters["role"], string> = {
   viewer: "Beobachter",
   guest: "Gast",
 };
-
-// Inline-SVGs statt Icon-Bibliothek (kein lucide-react/heroicons im Repo) —
-// gleiches Muster wie das Such-Icon in HeaderSearch.tsx (stroke="currentColor",
-// erbt die Textfarbe des umgebenden .lcars-icon-btn).
-const ICON_PROPS = {
-  viewBox: "0 0 24 24",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.6,
-  strokeLinecap: "round" as const,
-  strokeLinejoin: "round" as const,
-  "aria-hidden": true,
-};
-
-function CheckIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M5 13l4 4L19 7" />
-    </svg>
-  );
-}
-function XIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M6 6l12 12M18 6 6 18" />
-    </svg>
-  );
-}
-function PencilIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M16.86 4.49a2.1 2.1 0 1 1 2.97 2.97L7.5 19.79l-4 1 1-4L16.86 4.49Z" />
-    </svg>
-  );
-}
-function BanIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <circle cx="12" cy="12" r="8" />
-      <path d="M6.5 6.5l11 11" />
-    </svg>
-  );
-}
-function RestoreIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M4 4v5h5M4.6 15a8 8 0 1 0 1-9.4L4 9" />
-    </svg>
-  );
-}
-function TrashIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M6 7h12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-9 0 1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13" />
-    </svg>
-  );
-}
 
 export default function UserRoleRow({
   user,
@@ -142,7 +93,10 @@ export default function UserRoleRow({
         <>
           <div className="flex flex-wrap gap-[16px] items-center">
             <span className="text-lcars-text-dim">Rolle:</span>
-            <form action={roleAction} className="flex flex-wrap items-center gap-[8px]">
+            <form
+              action={roleAction}
+              className="flex flex-wrap items-center gap-[8px]"
+            >
               <input type="hidden" name="userId" value={user.id} />
               <select
                 name="role"

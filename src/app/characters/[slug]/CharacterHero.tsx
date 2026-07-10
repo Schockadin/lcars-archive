@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import { Character } from "@/types/character";
 import {
   LcarsDataRow,
@@ -8,14 +10,11 @@ import {
 import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
 import CharacterBioEditor from "./CharacterBioEditor";
-import FollowButtons from "@/components/FollowButtons";
-import OwnerSelect from "@/components/OwnerSelect";
-import AdminActionsMenu from "@/components/AdminActionsMenu";
-import AutolinkButton from "@/components/AutolinkButton";
-import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
-import FormatTextButton from "@/components/FormatTextButton";
 import { UserWithCharacters } from "@/lib/users";
 import { Viewer } from "@/lib/visibility";
+import ActionsMenu from "@/components/ActionsMenu";
+import FollowButtons from "@/components/FollowButtons";
+import { PencilIcon } from "@/lib/icons";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
 function slugify(text: string): string {
@@ -153,6 +152,7 @@ export default function CharacterHero({
   sourceMarkdown: string | null;
 }) {
   const { metadata } = character;
+  const [editMode, setEditMode] = useState(false);
 
   // Deko-Codes deterministisch aus der Charakter-ID ableiten
   const rng = makeRng(character.id * 2654435761);
@@ -167,7 +167,6 @@ export default function CharacterHero({
 
   const factions = metadata.affiliation?.factions ?? [];
   const ships = metadata.affiliation?.ships ?? [];
-  const division = metadata.affiliation?.division ?? null;
 
   // Bio aufbereiten: Anker-IDs setzen + Sprungpunkte fürs TOC sammeln
   const bio = character.bio ? buildBioToc(character.bio) : null;
@@ -283,48 +282,29 @@ export default function CharacterHero({
 
           {/* Name + Biografie */}
           <div className="char-file-colend">
-            <LcarsReadingModeToggle />
-
-            <h1 className="char-file-name">{character.name}</h1>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
-              <FollowButtons
-                targetType="character"
-                targetSlug={character.slug}
-              />
-              {viewer?.role === "admin" && (
-                <OwnerSelect
-                  contentType="character"
-                  id={character.id}
-                  initialOwnerId={character.player_id}
-                  users={owners.map((u) => ({ id: u.id, name: u.name }))}
-                />
-              )}
-              {viewer?.role === "admin" && (
-                <div className="mt-3">
-                  <AdminActionsMenu>
-                    <AutolinkButton
-                      contentType="character"
-                      slug={character.slug}
-                    />
-                    <RemoveWikilinksButton
-                      contentType="character"
-                      slug={character.slug}
-                    />
-                    <FormatTextButton
-                      contentType="character"
-                      slug={character.slug}
-                    />
-                  </AdminActionsMenu>
-                </div>
-              )}
+            <div className="flex justify-between">
+              <LcarsReadingModeToggle />
+              <h1 className="char-file-name">{character.name}</h1>
             </div>
+
+            <ActionsMenu
+              viewer={viewer}
+              owners={owners}
+              content={character}
+              contentType="character"
+              followType="character"
+              playerId={character.player_id}
+              onEdit={() => setEditMode(true)}
+            />
 
             {sourceMarkdown != null ? (
               <CharacterBioEditor
-                characterId={character.id}
                 bioHtml={bio?.html ?? null}
                 sourceMarkdown={sourceMarkdown}
-                isAdminOrGM={viewer?.role === "gm" || viewer?.role === "admin"}
+                role={viewer?.role}
+                character={character}
+                editMode={editMode}
+                onEditModeChange={setEditMode}
               />
             ) : bio ? (
               <div

@@ -1,14 +1,11 @@
+"use client";
+import { useState } from "react";
 import { MissionDetail } from "@/types/missions";
 import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
-import FollowButtons from "@/components/FollowButtons";
 import { Viewer } from "@/lib/visibility";
-import OwnerSelect from "@/components/OwnerSelect";
-import AdminActionsMenu from "@/components/AdminActionsMenu";
-import AutolinkButton from "@/components/AutolinkButton";
-import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
-import FormatTextButton from "@/components/FormatTextButton";
 import { UserWithCharacters } from "@/lib/users";
 import MissionSynopsisEditor from "./MissionSynopsisEditor";
+import ActionsMenu from "@/components/ActionsMenu";
 
 // Rechte Spalte der Mission-Detailseite: Synopsis + Metadaten.
 export default function MissionSynopsis({
@@ -21,6 +18,7 @@ export default function MissionSynopsis({
   owners: UserWithCharacters[];
 }) {
   const cfg = STATUS_CONFIG[mission.status];
+  const [editMode, setEditMode] = useState(false);
 
   return (
     <article className="mission-detail-article">
@@ -34,43 +32,27 @@ export default function MissionSynopsis({
         </div>
       </header>
 
+      <ActionsMenu
+        viewer={viewer}
+        owners={owners}
+        contentType="mission"
+        followType="mission"
+        content={mission}
+        playerId={mission.ownerUserId}
+        onEdit={() => setEditMode(true)}
+      />
+
       {viewer?.role === "admin" || viewer?.role === "gm" ? (
         <MissionSynopsisEditor
           missionId={mission.id}
           bodyHtml={mission.metadata.body}
           sourceMarkdown={mission.sourceMarkdown ?? ""}
-          topRow={
-            <>
-              <FollowButtons targetType="mission" targetSlug={mission.slug} />
-              {viewer?.role === "admin" && (
-                <OwnerSelect
-                  contentType="mission"
-                  id={mission.id}
-                  initialOwnerId={mission.ownerUserId}
-                  users={owners.map((u) => ({ id: u.id, name: u.name }))}
-                />
-              )}
-            </>
-          }
-          adminActions={
-            viewer?.role === "admin" ? (
-              <AdminActionsMenu>
-                <AutolinkButton contentType="mission" slug={mission.slug} />
-                <RemoveWikilinksButton
-                  contentType="mission"
-                  slug={mission.slug}
-                />
-                <FormatTextButton contentType="mission" slug={mission.slug} />
-              </AdminActionsMenu>
-            ) : undefined
-          }
+          slug={mission.slug}
+          editMode={editMode}
+          onEditModeChange={setEditMode}
         />
       ) : (
         <>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-[10px]">
-            <FollowButtons targetType="mission" targetSlug={mission.slug} />
-          </div>
-
           {mission.metadata.body ? (
             <div
               className="mission-body lcars-text"

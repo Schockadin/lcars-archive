@@ -26,7 +26,7 @@ export default function DeleteDialogueButton({
       <button
         type="submit"
         disabled={pending}
-        className="lcars-switch self-start disabled:opacity-50 w-[250px]"
+        className="lcars-pill-btn--outline self-start disabled:opacity-50 w-[250px]"
         onClick={(e) => {
           if (
             !confirm(

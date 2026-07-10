@@ -1,8 +1,14 @@
 "use client";
-import { useActionState } from "react";
-import { createCharacterAction, type CharacterFormState } from "./actions";
-import { SubmitButton, FormError } from "../../../_shared/FormPrimitives";
-import { CharacterFields } from "../_shared/CharacterFields";
+import ContentEditor from "@/components/ContentEditor/ContentEditor";
+import {
+  characterAction,
+  type CharacterFormState,
+} from "../_shared/contentAction";
+import {
+  characterHeadFields,
+  characterMetadataFields,
+} from "../_shared/characterHeadFields";
+import { MarkdownFormatHint } from "../../../_shared/MarkdownHint";
 
 const initialState: CharacterFormState = {};
 
@@ -13,26 +19,21 @@ export default function NewCharacterForm({
   userId: number;
   isAdminOrGM: boolean;
 }) {
-  const [state, formAction, pending] = useActionState(
-    createCharacterAction,
-    initialState,
-  );
-
   return (
-    <form action={formAction} className="flex flex-col gap-[16px]">
-      <input type="hidden" name="userId" value={userId} />
-
-      <CharacterFields idPrefix="character" isAdminOrGM={isAdminOrGM} />
-
-      <SubmitButton
-        pending={pending}
-        pendingLabel="Speichern…"
-        className="lcars-switch self-start disabled:opacity-50 w-[100%]"
-      >
-        Speichern
-      </SubmitButton>
-
-      <FormError message={state?.error} />
-    </form>
+    <ContentEditor
+      mode="create"
+      action={characterAction}
+      initialState={initialState}
+      hiddenFields={{ userId }}
+      headFields={characterHeadFields}
+      metadataFields={characterMetadataFields}
+      defaults={{ status: "active" }}
+      idPrefix="character"
+      bodyLabel="Biografie (optional)"
+      bodyHint={<MarkdownFormatHint />}
+      isAdminOrGM={isAdminOrGM}
+      submitLabel="Speichern"
+      submitPendingLabel="Speichern…"
+    />
   );
 }
