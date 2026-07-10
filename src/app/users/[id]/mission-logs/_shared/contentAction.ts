@@ -7,6 +7,7 @@ import {
   getAllMissions,
   missionLogSlugExists,
   createMissionLog,
+  updateMissionLogContent,
 } from "@/lib/missions";
 import { revalidateLog } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
@@ -17,11 +18,14 @@ export interface MissionLogFormState {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-// DB ist Source of Truth (siehe createMissionAction für dasselbe Prinzip) —
-// der Log landet direkt in der Datenbank, kein Vault-Commit mehr an dieser
-// Stelle. Der Vault-Backup-Export (src/lib/vaultExport.ts) generiert die
-// Datei später separat.
-export async function createMissionLogAction(
+// Vereint createMissionLogAction + updateMissionLogAction (vorher
+// new/actions.ts + [logId]/edit/actions.ts) zu einer Action für
+// ContentEditor — Branch auf Vorhandensein von logId. Größte Asymmetrie
+// unter den 4 Content-Typen: Autor/Mission/Session-Nr/Slug existieren nur
+// beim Anlegen — nach dem Anlegen sind sie unveränderlich (siehe
+// updateMissionLogContent in src/lib/missions.ts, das nur title/logDate/
+// bodyMarkdown kennt).
+export async function missionLogAction(
   _state: MissionLogFormState,
   formData: FormData,
 ): Promise<MissionLogFormState> {
@@ -32,9 +36,52 @@ export async function createMissionLogAction(
     redirect(`/users/${session.userId}`);
   }
 
+  const logIdRaw = formData.get("logId");
+  const isEdit = logIdRaw != null && logIdRaw !== "";
+  const logId = isEdit ? Number(logIdRaw) : null;
+  if (isEdit && !Number.isInteger(logId)) {
+    return { error: "Ungültiges Log." };
+  }
+
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return { error: "Bitte einen Titel angeben." };
 
+  const logDateRaw = String(formData.get("logDate") ?? "").trim();
+  if (logDateRaw && !DATE_RE.test(logDateRaw)) {
+    return { error: "Ungültiges Datum." };
+  }
+  const logDate = logDateRaw || null;
+
+  let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
+  if (!bodyMarkdown) return { error: "Bitte einen Log-Text schreiben." };
+
+  // Opt-in "Automatisch verlinken" (AutoLinkCheckbox.tsx) — kein
+  // Selbst-Ausschluss nötig, Mission-Logs sind selbst kein Autolinking-Ziel
+  // (siehe getAutolinkTargets in src/lib/autolink.ts).
+  let contentHtml: string | undefined;
+  if (formData.get("autoLink") === "on") {
+    const linked = await autoLinkMarkdown(bodyMarkdown);
+    bodyMarkdown = linked.sourceMd;
+    contentHtml = linked.html;
+  }
+
+  if (isEdit) {
+    const result = await updateMissionLogContent(session.userId, logId!, {
+      title,
+      logDate,
+      bodyMarkdown,
+      contentHtml,
+    });
+    if (!result) {
+      return { error: "Log nicht gefunden oder keine Berechtigung." };
+    }
+    revalidateLog(result.missionId, result.slug);
+    redirect(`/users/${session.userId}/content`);
+  }
+
+  // Autor/Mission/Session-Nr/Slug nur beim Anlegen — im Edit-Modus fehlen
+  // diese Felder im Formular (siehe missionLogHeadFields.ts showIf +
+  // extraHeadSlot in NewMissionLogForm.tsx).
   const authorCharacterId = Number(formData.get("authorCharacterId"));
   if (!Number.isInteger(authorCharacterId)) {
     return { error: "Bitte einen Charakter auswählen." };
@@ -60,17 +107,7 @@ export async function createMissionLogAction(
     return { error: "Ungültige Session-Nummer." };
   }
 
-  const logDateRaw = String(formData.get("logDate") ?? "").trim();
-  if (logDateRaw && !DATE_RE.test(logDateRaw)) {
-    return { error: "Ungültiges Datum." };
-  }
-  const logDate = logDateRaw || null;
-
-  let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
-  if (!bodyMarkdown) return { error: "Bitte einen Log-Text schreiben." };
-
   const slug = `${authorCharacter.slug}-${mission.slug}-${sessionNr}`;
-
   if (await missionLogSlugExists(slug)) {
     return {
       error:
@@ -81,16 +118,6 @@ export async function createMissionLogAction(
   const user = await getUserById(session.userId);
   if (!user) {
     redirect("/login");
-  }
-
-  // Opt-in "Automatisch verlinken" (AutoLinkCheckbox.tsx) — kein
-  // Selbst-Ausschluss nötig, Mission-Logs sind selbst kein Autolinking-Ziel
-  // (siehe getAutolinkTargets in src/lib/autolink.ts).
-  let contentHtml: string | undefined;
-  if (formData.get("autoLink") === "on") {
-    const linked = await autoLinkMarkdown(bodyMarkdown);
-    bodyMarkdown = linked.sourceMd;
-    contentHtml = linked.html;
   }
 
   const result = await createMissionLog({

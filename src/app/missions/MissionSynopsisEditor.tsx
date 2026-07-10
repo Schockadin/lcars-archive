@@ -6,7 +6,6 @@ import {
 } from "@/app/actions/missions";
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
-import { useEdit } from "@/hooks/useEdit";
 
 const initialState: MissionSynopsisEditState = {};
 
@@ -21,15 +20,17 @@ export default function MissionSynopsisEditor({
   missionId,
   bodyHtml,
   sourceMarkdown,
+  editMode,
+  onEditModeChange,
 }: {
   missionId: number;
   bodyHtml: string | null;
   sourceMarkdown: string;
   adminActions?: ReactNode;
   slug: string;
+  editMode: boolean;
+  onEditModeChange: (v: boolean) => void;
 }) {
-  const { editMode, setEditMode } = useEdit();
-
   const [state, formAction, pending] = useActionState(
     updateMissionSynopsisAction,
     initialState,
@@ -44,7 +45,7 @@ export default function MissionSynopsisEditor({
   const [lastHandledState, setLastHandledState] = useState(state);
   if (state !== lastHandledState) {
     setLastHandledState(state);
-    if (state.success) setEditMode(false);
+    if (state.success) onEditModeChange(false);
   }
 
   const displayHtml = state.updatedHtml ?? bodyHtml;
@@ -84,7 +85,7 @@ export default function MissionSynopsisEditor({
         <div className="flex flex-wrap gap-[12px] items-center justify-end">
           <button
             type="button"
-            onClick={() => setEditMode(false)}
+            onClick={() => onEditModeChange(false)}
             className="lcars-pill-btn--outline"
           >
             Abbrechen

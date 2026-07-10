@@ -1,7 +1,11 @@
 "use server";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
-import { createArchiveEntry } from "@/lib/archive";
+import {
+  createArchiveEntry,
+  updateOwnArchiveEntryContent,
+  getOwnArchiveEntryForEdit,
+} from "@/lib/archive";
 import { isArchiveCategory } from "@/lib/archiveFormat";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
@@ -11,10 +15,11 @@ export interface ArchiveEntryFormState {
   error?: string;
 }
 
-// Jeder eingeloggte User darf Archiv-Einträge anlegen (anders als Missionen,
-// die gm/admin-only sind) — hier reicht deshalb der reine Identitätscheck,
-// keine Rollenprüfung.
-export async function createArchiveEntryAction(
+// Vereint createArchiveEntryAction + updateArchiveEntryAction (vorher
+// new/actions.ts + [entryId]/edit/actions.ts) zu einer Action für
+// ContentEditor — Branch auf Vorhandensein von entryId statt zwei fast
+// identischer Funktionen.
+export async function archiveEntryAction(
   _state: ArchiveEntryFormState,
   formData: FormData,
 ): Promise<ArchiveEntryFormState> {
@@ -23,6 +28,13 @@ export async function createArchiveEntryAction(
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId) || userId !== session.userId) {
     redirect(`/users/${session.userId}`);
+  }
+
+  const entryIdRaw = formData.get("entryId");
+  const isEdit = entryIdRaw != null && entryIdRaw !== "";
+  const entryId = isEdit ? Number(entryIdRaw) : null;
+  if (isEdit && !Number.isInteger(entryId)) {
+    return { error: "Ungültiger Archiv-Eintrag." };
   }
 
   const title = String(formData.get("title") ?? "").trim();
@@ -45,25 +57,47 @@ export async function createArchiveEntryAction(
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte einen Inhalt schreiben." };
 
-  // Opt-in "Automatisch verlinken" (AutoLinkCheckbox.tsx) — kein
-  // Selbst-Ausschluss nötig, der neue Eintrag existiert noch nicht in der
+  // Opt-in "Automatisch verlinken" (AutoLinkCheckbox.tsx) — Selbstausschluss
+  // nur beim Bearbeiten nötig, ein neuer Eintrag existiert noch nicht in der
   // DB und kann deshalb nicht als eigenes Autolinking-Ziel erscheinen.
   let contentHtml: string | undefined;
   if (formData.get("autoLink") === "on") {
-    const linked = await autoLinkMarkdown(bodyMarkdown);
+    const selfExclusion = isEdit
+      ? await getOwnArchiveEntryForEdit(session.userId, entryId!)
+      : null;
+    const linked = await autoLinkMarkdown(
+      bodyMarkdown,
+      selfExclusion ? { type: "archive", slug: selfExclusion.slug } : undefined,
+    );
     bodyMarkdown = linked.sourceMd;
     contentHtml = linked.html;
   }
 
+  const categoryValue = category as Exclude<ArchiveCategory, "dialogue">;
+
+  if (isEdit) {
+    const result = await updateOwnArchiveEntryContent(session.userId, entryId!, {
+      title,
+      category: categoryValue,
+      tags,
+      bodyMarkdown,
+      contentHtml,
+    });
+    if (!result) {
+      return { error: "Eintrag nicht gefunden oder keine Berechtigung." };
+    }
+    revalidateArchiveEntry(result.slug);
+    redirect(`/users/${session.userId}/content`);
+  }
+
   const result = await createArchiveEntry({
     title,
-    category: category as Exclude<ArchiveCategory, "dialogue">,
+    category: categoryValue,
     tags,
     bodyMarkdown,
     contentHtml,
     ownerUserId: session.userId,
   });
-
   revalidateArchiveEntry(result.slug);
   redirect(`/archive/${result.slug}`);
 }

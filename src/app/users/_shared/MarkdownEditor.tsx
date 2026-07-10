@@ -13,9 +13,6 @@ import {
   QuoteIcon,
   CodeIcon,
 } from "@/lib/icons";
-import { LcarsDataRow } from "@/components/lcars";
-import { FormField } from "./FormPrimitives";
-
 interface ToolbarAction {
   label: string;
   icon: React.ReactNode;
@@ -74,27 +71,6 @@ const ACTIONS: ToolbarAction[] = [
   },
 ];
 
-interface Metadata {
-  label: string;
-  text: string;
-  values?: string[];
-}
-
-const METADATA_FIELDS: Metadata[] = [
-  { label: "rank", text: "Rang / Beruf" },
-  { label: "affiliations", text: "Zugehörigkeiten" },
-  { label: "generation", text: "Generation", values: ["1", "2", "3"] },
-  { label: "aliases", text: "Aliases" },
-  { label: "related_missions", text: "Zugehörige Missionen" },
-  { label: "related_characters", text: "Zugehörige Charaktere" },
-  { label: "related_npcs", text: "Zugehörige NPCs" },
-  { label: "related_locations", text: "Zugehörige Orte" },
-  { label: "related_species", text: "Zugehörige Spezies" },
-  { label: "related_factions", text: "Zugehörige Fraktionen" },
-  { label: "related_items", text: "Zugehörige Gegenstände" },
-  { label: "related_lore", text: "Zugehörige Theorien" },
-];
-
 // Markdown-Editor mit Formatierungs-Toolbar + Rohtext/Vorschau-Umschalter —
 // ersetzt die bisherigen einfachen <textarea>-Felder an allen Content-
 // Textstellen (Mission/Mission-Log/Archiv-Eintrag/Charakter-Formulare +
@@ -149,25 +125,6 @@ export default function MarkdownEditor({
 
   return (
     <div className="markdown-editor mt-[5px]">
-      <div id="metadata-area" className="my-[15px]">
-        <LcarsDataRow label="Metadaten" value={METADATA_FIELDS.length}>
-          {METADATA_FIELDS.map((field) => (
-            <FormField
-              key={field.label}
-              label={field.text}
-              htmlFor="new-user-name"
-              className="flex-1"
-            >
-              <input
-                id={field.label}
-                name={field.label}
-                type="text"
-                className="rounded-lcars-pill lcars-input flex-1"
-              />
-            </FormField>
-          ))}
-        </LcarsDataRow>
-      </div>
       <div className="markdown-editor-toolbar flex flex-wrap items-center gap-[6px] mb-[5px]">
         {ACTIONS.map((action) => (
           <button

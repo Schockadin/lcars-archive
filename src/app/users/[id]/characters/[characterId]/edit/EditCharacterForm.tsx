@@ -1,9 +1,12 @@
 "use client";
-import { useActionState } from "react";
-import { updateCharacterAction, type CharacterFormState } from "./actions";
+import ContentEditor from "@/components/ContentEditor/ContentEditor";
+import {
+  characterAction,
+  type CharacterFormState,
+} from "../../_shared/contentAction";
+import { characterHeadFields } from "../../_shared/characterHeadFields";
 import type { OwnCharacterForEdit } from "@/lib/characters";
-import { SubmitButton, FormError } from "../../../../_shared/FormPrimitives";
-import { CharacterFields } from "../../_shared/CharacterFields";
+import { MarkdownFormatHint } from "../../../../_shared/MarkdownHint";
 
 const initialState: CharacterFormState = {};
 
@@ -16,40 +19,29 @@ export default function EditCharacterForm({
   character: OwnCharacterForEdit;
   isAdminOrGM: boolean;
 }) {
-  const [state, formAction, pending] = useActionState(
-    updateCharacterAction,
-    initialState,
-  );
-
   return (
-    <form action={formAction} className="flex flex-col gap-[16px]">
-      <input type="hidden" name="userId" value={userId} />
-      <input type="hidden" name="characterId" value={character.id} />
-
-      <CharacterFields
-        idPrefix="edit-character"
-        defaults={{
-          name: character.name,
-          status: character.status,
-          portrait: character.portrait ?? undefined,
-          rank: character.rank ?? undefined,
-          species: character.species.join(", "),
-          homeworld: character.homeworld ?? undefined,
-          aliases: character.aliases.join(", "),
-          bodyMarkdown: character.sourceMarkdown,
-        }}
-        isAdminOrGM={isAdminOrGM}
-      />
-
-      <SubmitButton
-        pending={pending}
-        pendingLabel="Wird gespeichert…"
-        className="lcars-pill-btn--outline self-start disabled:opacity-50"
-      >
-        Änderungen speichern
-      </SubmitButton>
-
-      <FormError message={state?.error} />
-    </form>
+    <ContentEditor
+      mode="edit"
+      action={characterAction}
+      initialState={initialState}
+      hiddenFields={{ userId, characterId: character.id }}
+      headFields={characterHeadFields}
+      defaults={{
+        name: character.name,
+        status: character.status,
+        portrait: character.portrait ?? undefined,
+        rank: character.rank ?? undefined,
+        species: character.species.join(", "),
+        homeworld: character.homeworld ?? undefined,
+        aliases: character.aliases.join(", "),
+      }}
+      idPrefix="edit-character"
+      bodyLabel="Biografie (optional)"
+      bodyHint={<MarkdownFormatHint />}
+      bodyDefaultValue={character.sourceMarkdown}
+      isAdminOrGM={isAdminOrGM}
+      submitLabel="Änderungen speichern"
+      submitPendingLabel="Wird gespeichert…"
+    />
   );
 }

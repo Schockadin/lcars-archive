@@ -11,9 +11,9 @@ export default function Sidebar() {
   return (
     <aside className="flex w-[var(--lcars-sidebar-w)] h-[100svh]">
       {/* Linke Seite */}
-      <div className="flex flex-col h-full w-[var(--lcars-bar-width)]">
+      <div className="flex flex-col h-full w-[var(--lcars-bar-width)] gap-[5px]">
         {/* Sidebar Header */}
-        <div className="flex flex-col w-[var(--lcars-bar-width)] h-[var(--lcars-sidebar-header-h)] mb-[5px]">
+        <div className="flex flex-col w-[var(--lcars-bar-width)] h-[var(--lcars-sidebar-header-h)] gap-[5px]">
           <div className="w-full h-[150px] bg-[var(--lcars-orange)] mb-[5px]" />
           <div className="lcars-elbow-top" />
         </div>
@@ -25,7 +25,6 @@ export default function Sidebar() {
         <div
           className="lcars-elbow-top"
           style={{
-            marginTop: "5px",
             width: "100%",
             backgroundColor: "var(--lcars-purple)",
           }}
@@ -33,7 +32,7 @@ export default function Sidebar() {
       </div>
 
       {/* Rechte Seite */}
-      <div className="w-full h-full flex flex-col">
+      <div className="w-full h-full flex flex-col gap-[5px]">
         {/* Sidebar Header */}
         <div className="w-full h-[var(--lcars-sidebar-header-h)] bg-[var(--lcars-blue)]">
           <div className="w-full h-[var(--lcars-header-h)] bg-[var(--lcars-bg)] rounded-bl-[60px]" />

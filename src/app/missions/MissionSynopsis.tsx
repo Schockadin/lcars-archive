@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import { MissionDetail } from "@/types/missions";
 import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import { Viewer } from "@/lib/visibility";
@@ -16,6 +18,7 @@ export default function MissionSynopsis({
   owners: UserWithCharacters[];
 }) {
   const cfg = STATUS_CONFIG[mission.status];
+  const [editMode, setEditMode] = useState(false);
 
   return (
     <article className="mission-detail-article">
@@ -36,6 +39,7 @@ export default function MissionSynopsis({
         followType="mission"
         content={mission}
         playerId={mission.ownerUserId}
+        onEdit={() => setEditMode(true)}
       />
 
       {viewer?.role === "admin" || viewer?.role === "gm" ? (
@@ -44,6 +48,8 @@ export default function MissionSynopsis({
           bodyHtml={mission.metadata.body}
           sourceMarkdown={mission.sourceMarkdown ?? ""}
           slug={mission.slug}
+          editMode={editMode}
+          onEditModeChange={setEditMode}
         />
       ) : (
         <>

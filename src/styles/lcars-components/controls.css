@@ -107,7 +107,7 @@
   line-height: 1.175;
   text-transform: uppercase;
   transition: 250ms;
-  height: 48px;
+  height: 40px;
 }
 .lcars-pill-btn:hover,
 .lcars-pill-btn--outline:hover {
@@ -143,6 +143,25 @@
   }
 }
 
+/* Head-Datenfelder von ContentEditor (Titel/Name/Metadaten): 1 Spalte auf
+   schmalen Viewports, 2 Spalten ab 640px. Einzelne Felder (z.B. Titel/Name)
+   spannen per .content-editor-field--full beide Spalten. */
+.content-editor-head-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0 16px;
+}
+
+@media (min-width: 640px) {
+  .content-editor-head-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.content-editor-field--full {
+  grid-column: 1 / -1;
+}
+
 .lcars-checkbox {
   width: 20px;
   height: 20px;
@@ -157,7 +176,7 @@
   color: var(--lcars-text-contrast);
   padding: 8px 16px;
   outline: none;
-  height: 48px;
+  height: 40px;
   font-size: 16px;
 }
 .lcars-input:hover,

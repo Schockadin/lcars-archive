@@ -1,3 +1,5 @@
+"use client";
+import { useState } from "react";
 import { Character } from "@/types/character";
 import {
   LcarsDataRow,
@@ -150,6 +152,7 @@ export default function CharacterHero({
   sourceMarkdown: string | null;
 }) {
   const { metadata } = character;
+  const [editMode, setEditMode] = useState(false);
 
   // Deko-Codes deterministisch aus der Charakter-ID ableiten
   const rng = makeRng(character.id * 2654435761);
@@ -291,6 +294,7 @@ export default function CharacterHero({
               contentType="character"
               followType="character"
               playerId={character.player_id}
+              onEdit={() => setEditMode(true)}
             />
 
             {sourceMarkdown != null ? (
@@ -299,6 +303,8 @@ export default function CharacterHero({
                 sourceMarkdown={sourceMarkdown}
                 role={viewer?.role}
                 character={character}
+                editMode={editMode}
+                onEditModeChange={setEditMode}
               />
             ) : bio ? (
               <div

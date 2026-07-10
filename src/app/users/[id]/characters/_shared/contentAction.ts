@@ -1,7 +1,9 @@
 "use server";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
+import { getUserById } from "@/lib/users";
 import {
+  createCharacter,
   updateOwnCharacterContent,
   getOwnCharacterForEdit,
 } from "@/lib/characters";
@@ -26,7 +28,10 @@ function parseList(value: FormDataEntryValue | null): string[] {
   ];
 }
 
-export async function updateCharacterAction(
+// Vereint createCharacterAction + updateCharacterAction (vorher new/actions.ts
+// + [characterId]/edit/actions.ts) zu einer Action für ContentEditor — Branch
+// auf Vorhandensein von characterId statt zwei fast identischer Funktionen.
+export async function characterAction(
   _state: CharacterFormState,
   formData: FormData,
 ): Promise<CharacterFormState> {
@@ -37,9 +42,21 @@ export async function updateCharacterAction(
     redirect(`/users/${session.userId}`);
   }
 
-  const characterId = Number(formData.get("characterId"));
-  if (!Number.isInteger(characterId)) {
+  const characterIdRaw = formData.get("characterId");
+  const isEdit = characterIdRaw != null && characterIdRaw !== "";
+  const characterId = isEdit ? Number(characterIdRaw) : null;
+  if (isEdit && !Number.isInteger(characterId)) {
     return { error: "Ungültiger Charakter." };
+  }
+
+  // Gast-Check nur beim Anlegen (siehe createCharacterAction vorher) — die
+  // Rolle wird frisch aus der DB geprüft, nicht aus dem Cookie, da eine
+  // Selbstanlage player_id sofort auf den eigenen Account setzen würde.
+  if (!isEdit) {
+    const user = await getUserById(session.userId);
+    if (!user || user.role === "guest") {
+      return { error: "Gast-Accounts können keine Charaktere anlegen." };
+    }
   }
 
   const name = String(formData.get("name") ?? "").trim();
@@ -58,24 +75,45 @@ export async function updateCharacterAction(
 
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
 
-  // Opt-in "Automatisch verlinken" — der Charakter selbst muss dabei als
-  // Autolinking-Ziel ausgeschlossen werden (sonst könnte sein eigener Name
-  // im Text auf sich selbst verlinken), dafür wird sein aktueller Slug
-  // vorab geladen (gleiches Prinzip wie updateArchiveEntryAction).
+  // Opt-in "Automatisch verlinken" — Selbstausschluss nur beim Bearbeiten
+  // nötig (sonst könnte der eigene Name im Text auf sich selbst verlinken).
   let bioHtml: string | undefined;
   if (bodyMarkdown && formData.get("autoLink") === "on") {
-    const own = await getOwnCharacterForEdit(session.userId, characterId);
+    const selfExclusion = isEdit
+      ? await getOwnCharacterForEdit(session.userId, characterId!)
+      : null;
     const linked = await autoLinkMarkdown(
       bodyMarkdown,
-      own ? { type: "character", slug: own.slug } : undefined,
+      selfExclusion ? { type: "character", slug: selfExclusion.slug } : undefined,
     );
     bodyMarkdown = linked.sourceMd;
     bioHtml = linked.html;
   }
 
-  const result = await updateOwnCharacterContent(session.userId, characterId, {
+  const statusValue = status as Character["status"];
+
+  if (isEdit) {
+    const result = await updateOwnCharacterContent(session.userId, characterId!, {
+      name,
+      status: statusValue,
+      portrait,
+      rank,
+      species,
+      homeworld,
+      aliases,
+      bodyMarkdown,
+      bioHtml,
+    });
+    if (!result) {
+      return { error: "Charakter nicht gefunden oder keine Berechtigung." };
+    }
+    revalidateCharacter(result.slug);
+    redirect(`/users/${session.userId}/content`);
+  }
+
+  const result = await createCharacter({
     name,
-    status: status as Character["status"],
+    status: statusValue,
     portrait,
     rank,
     species,
@@ -83,11 +121,8 @@ export async function updateCharacterAction(
     aliases,
     bodyMarkdown,
     bioHtml,
+    ownerUserId: session.userId,
   });
-  if (!result) {
-    return { error: "Charakter nicht gefunden oder keine Berechtigung." };
-  }
-
   revalidateCharacter(result.slug);
-  redirect(`/users/${session.userId}/content`);
+  redirect(`/characters/${result.slug}`);
 }

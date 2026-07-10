@@ -7,7 +7,6 @@ import {
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
 import { Character } from "@/types/character";
-import { useEdit } from "@/hooks/useEdit";
 
 const initialState: CharacterBioEditState = {};
 
@@ -23,6 +22,8 @@ export default function CharacterBioEditor({
   sourceMarkdown,
   role = "guest",
   character,
+  editMode,
+  onEditModeChange,
 }: {
   bioHtml: string | null;
   sourceMarkdown: string;
@@ -31,8 +32,9 @@ export default function CharacterBioEditor({
   // Owner könnte selbst gm/admin sein oder auch nicht.
   role?: string | undefined;
   character: Character;
+  editMode: boolean;
+  onEditModeChange: (v: boolean) => void;
 }) {
-  const { editMode, setEditMode } = useEdit();
   const [state, formAction, pending] = useActionState(
     updateOwnCharacterBioAction,
     initialState,
@@ -47,7 +49,7 @@ export default function CharacterBioEditor({
   const [lastHandledState, setLastHandledState] = useState(state);
   if (state !== lastHandledState) {
     setLastHandledState(state);
-    if (state.success) setEditMode(false);
+    if (state.success) onEditModeChange(false);
   }
 
   const displayHtml =
@@ -87,7 +89,7 @@ export default function CharacterBioEditor({
       <div className="flex flex-wrap gap-[12px] items-center justify-end">
         <button
           type="button"
-          onClick={() => setEditMode(false)}
+          onClick={() => onEditModeChange(false)}
           className="lcars-pill-btn--outline"
         >
           Abbrechen

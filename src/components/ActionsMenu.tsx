@@ -12,7 +12,6 @@ import FollowButtons from "./FollowButtons";
 import { MissionDetail, MissionLogDetail } from "@/types/missions";
 import { ArchiveEntryDetail } from "@/types/archive";
 import { FollowTargetType } from "@/lib/follows";
-import { useEdit } from "@/hooks/useEdit";
 
 interface ActionMenuProps {
   viewer: Viewer | null;
@@ -21,6 +20,13 @@ interface ActionMenuProps {
   contentType: ContentToolType;
   followType: FollowTargetType;
   playerId: number | null;
+  // Optional statt required: Server Components (z.B. der Dialog-Zweig in
+  // archive/[slug]/page.tsx oder die Mission-Log-Detailseite) rendern
+  // ActionsMenu direkt, ohne dass dort ein Editor existiert, der editMode
+  // liest — und dürfen als Server Component keine Inline-Funktion als Prop
+  // übergeben. Der No-op-Default lebt deshalb hier in der Client Component
+  // selbst statt von außen durchgereicht zu werden.
+  onEdit?: () => void;
 }
 
 export default function ActionsMenu({
@@ -30,9 +36,8 @@ export default function ActionsMenu({
   contentType,
   followType,
   playerId,
+  onEdit = () => {},
 }: ActionMenuProps) {
-  const { setEditMode } = useEdit();
-
   return (
     <div className="flex flex-col items-start justify-center gap-[8px]">
       {(viewer?.role === "admin" || viewer?.role === "gm") && (
@@ -61,7 +66,7 @@ export default function ActionsMenu({
           viewer?.userId === playerId) && (
           <button
             type="button"
-            onClick={() => setEditMode(true)}
+            onClick={onEdit}
             className={`lcars-icon-btn self-start`}
             aria-label="Bearbeiten"
             title="Bearbeiten"

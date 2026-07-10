@@ -6,7 +6,6 @@ import {
 } from "@/app/actions/archive";
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
-import { useEdit } from "@/hooks/useEdit";
 
 const initialState: ArchiveEntryEditState = {};
 
@@ -23,6 +22,8 @@ export default function ArchiveEntryEditor({
   sourceMarkdown,
   isAdminOrGM,
   slug,
+  editMode,
+  onEditModeChange,
 }: {
   entryId: number;
   contentHtml: string;
@@ -32,8 +33,9 @@ export default function ArchiveEntryEditor({
   // MissionSynopsisEditor.tsx, wo Owner- und Rollen-Gate zusammenfallen.
   isAdminOrGM: boolean;
   slug: string;
+  editMode: boolean;
+  onEditModeChange: (v: boolean) => void;
 }) {
-  const { editMode, setEditMode } = useEdit();
   const [state, formAction, pending] = useActionState(
     updateOwnArchiveEntryAction,
     initialState,
@@ -46,7 +48,7 @@ export default function ArchiveEntryEditor({
   const [lastHandledState, setLastHandledState] = useState(state);
   if (state !== lastHandledState) {
     setLastHandledState(state);
-    if (state.success) setEditMode(false);
+    if (state.success) onEditModeChange(false);
   }
 
   const displayHtml = state.updatedHtml ?? contentHtml;
@@ -86,7 +88,7 @@ export default function ArchiveEntryEditor({
       <div className="flex flex-wrap gap-[12px] items-center justify-end">
         <button
           type="button"
-          onClick={() => setEditMode(false)}
+          onClick={() => onEditModeChange(false)}
           className="lcars-pill-btn--outline"
         >
           Abbrechen

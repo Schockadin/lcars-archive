@@ -1,5 +1,6 @@
 @import "../styles/tokens.css";
 @import "../styles/lcars-components.css";
+@import "tailwindcss";
 
 @tailwind base;
 @tailwind components;
