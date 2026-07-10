@@ -9,7 +9,29 @@ import {
 import { isArchiveCategory } from "@/lib/archiveFormat";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
+import {
+  getAttributeFields,
+  getReferenceFields,
+} from "@/lib/archiveMetadataFields";
 import type { ArchiveCategory } from "@/types/archive";
+
+// Liest alle Metadaten-Felder (Attribute + Verweise) für die gewählte
+// Kategorie aus dem FormData — welche Felder das sind, hängt von der
+// Kategorie ab (siehe archiveMetadataFields.ts).
+function readMetadataValues(
+  formData: FormData,
+  category: Exclude<ArchiveCategory, "dialogue">,
+): { attributeValues: Record<string, string>; referenceValues: Record<string, string> } {
+  const attributeValues: Record<string, string> = {};
+  for (const field of getAttributeFields(category)) {
+    attributeValues[field.key] = String(formData.get(field.key) ?? "").trim();
+  }
+  const referenceValues: Record<string, string> = {};
+  for (const field of getReferenceFields(category)) {
+    referenceValues[field.key] = String(formData.get(field.key) ?? "").trim();
+  }
+  return { attributeValues, referenceValues };
+}
 
 export interface ArchiveEntryFormState {
   error?: string;
@@ -54,6 +76,8 @@ export async function archiveEntryAction(
     ),
   ];
 
+  const summary = String(formData.get("summary") ?? "").trim() || null;
+
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte einen Inhalt schreiben." };
 
@@ -74,12 +98,16 @@ export async function archiveEntryAction(
   }
 
   const categoryValue = category as Exclude<ArchiveCategory, "dialogue">;
+  const { attributeValues, referenceValues } = readMetadataValues(formData, categoryValue);
 
   if (isEdit) {
     const result = await updateOwnArchiveEntryContent(session.userId, entryId!, {
       title,
       category: categoryValue,
       tags,
+      summary,
+      attributeValues,
+      referenceValues,
       bodyMarkdown,
       contentHtml,
     });
@@ -94,6 +122,9 @@ export async function archiveEntryAction(
     title,
     category: categoryValue,
     tags,
+    summary,
+    attributeValues,
+    referenceValues,
     bodyMarkdown,
     contentHtml,
     ownerUserId: session.userId,

@@ -290,10 +290,8 @@ export async function generateUniqueCharacterSlug(
 // siehe assignCharacterAction in src/app/users/actions.ts). player_id wird
 // direkt auf den anlegenden User gesetzt (sofortige Verknüpfung).
 // visibility bleibt unangegeben → DB-Default 'public' (gleiche Konvention
-// wie createArchiveEntry/createMission). Felder ohne eigene Spalte
-// (age/affiliation/player/tags/generation) bleiben leer/null — das volle
-// Bearbeiten-Formular deckt nur die für Spieler-Charaktere relevanten
-// Metadaten-Felder ab, der Rest ist admin-only Ingest-Domäne.
+// wie createArchiveEntry/createMission). player (Anzeigename, ingest-only)
+// bleibt null — das Formular deckt nur Spieler-relevante Felder ab.
 export async function createCharacter(input: {
   name: string;
   status: Character["status"];
@@ -302,6 +300,12 @@ export async function createCharacter(input: {
   species: string[];
   homeworld: string | null;
   aliases: string[];
+  age: number | null;
+  generation: number[];
+  factions: string[];
+  ships: string[];
+  division: string | null;
+  tags: string[];
   bodyMarkdown: string;
   ownerUserId: number;
   // Vorgerendertes HTML überspringt das eigene renderContentHtml() — genutzt
@@ -316,16 +320,21 @@ export async function createCharacter(input: {
     : null;
   const sourceMd = trimmedBody || null;
 
+  const hasAffiliation =
+    input.factions.length > 0 || input.ships.length > 0 || input.division;
+
   const metadata = {
     rank: input.rank,
     species: input.species,
     homeworld: input.homeworld,
-    age: null,
-    affiliation: null,
+    age: input.age,
+    affiliation: hasAffiliation
+      ? { factions: input.factions, ships: input.ships, division: input.division }
+      : null,
     player: null,
-    tags: [],
+    tags: input.tags,
     aliases: input.aliases,
-    generation: [],
+    generation: input.generation,
   };
 
   const [row] = await sql<{ id: number; slug: string }[]>`
@@ -352,6 +361,12 @@ export interface OwnCharacterForEdit {
   species: string[];
   homeworld: string | null;
   aliases: string[];
+  age: number | null;
+  generation: number[];
+  factions: string[];
+  ships: string[];
+  division: string | null;
+  tags: string[];
   sourceMarkdown: string;
 }
 
@@ -400,16 +415,21 @@ export async function getOwnCharacterForEdit(
     species: metadata.species,
     homeworld: metadata.homeworld,
     aliases: metadata.aliases,
+    age: metadata.age,
+    generation: metadata.generation,
+    factions: metadata.affiliation?.factions ?? [],
+    ships: metadata.affiliation?.ships ?? [],
+    division: metadata.affiliation?.division ?? null,
+    tags: metadata.tags,
   };
 }
 
-// Bearbeitet Name/Status/Portrait/Metadaten-Teilmenge/Bio eines eigenen
-// Charakters — für das volle Bearbeiten-Formular. Owner-gescoped im WHERE
-// (gleiches Prinzip wie updateOwnArchiveEntryContent in src/lib/archive.ts).
-// metadata wird per jsonb-||-Merge nur in den hier editierten Feldern
-// überschrieben (rank/species/homeworld/aliases) — age/affiliation/player/
-// tags/generation (nicht Teil dieses Formulars) bleiben dadurch unangetastet
-// statt bei jedem Speichern verloren zu gehen.
+// Bearbeitet Name/Status/Portrait/Metadaten/Bio eines eigenen Charakters —
+// für das volle Bearbeiten-Formular. Owner-gescoped im WHERE (gleiches
+// Prinzip wie updateOwnArchiveEntryContent in src/lib/archive.ts). metadata
+// wird per jsonb-||-Merge nur in den hier editierten Feldern überschrieben —
+// player (nicht Teil dieses Formulars, admin-only Ingest-Domäne) bleibt
+// dadurch unangetastet statt bei jedem Speichern verloren zu gehen.
 export async function updateOwnCharacterContent(
   userId: number,
   characterId: number,
@@ -421,6 +441,12 @@ export async function updateOwnCharacterContent(
     species: string[];
     homeworld: string | null;
     aliases: string[];
+    age: number | null;
+    generation: number[];
+    factions: string[];
+    ships: string[];
+    division: string | null;
+    tags: string[];
     bodyMarkdown: string;
     // Siehe createCharacter oben — Opt-in "Automatisch verlinken".
     bioHtml?: string;
@@ -432,11 +458,20 @@ export async function updateOwnCharacterContent(
     : null;
   const sourceMd = trimmedBody || null;
 
+  const hasAffiliation =
+    input.factions.length > 0 || input.ships.length > 0 || input.division;
+
   const metadataPatch = {
     rank: input.rank,
     species: input.species,
     homeworld: input.homeworld,
     aliases: input.aliases,
+    age: input.age,
+    generation: input.generation,
+    affiliation: hasAffiliation
+      ? { factions: input.factions, ships: input.ships, division: input.division }
+      : null,
+    tags: input.tags,
   };
 
   const rows = await sql<{ slug: string }[]>`

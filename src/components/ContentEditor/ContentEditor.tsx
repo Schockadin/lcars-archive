@@ -4,6 +4,7 @@ import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
 import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
 import { FormField, SubmitButton, FormError } from "@/app/users/_shared/FormPrimitives";
 import HeadFieldRenderer from "./HeadFieldRenderer";
+import MetadataSection from "./MetadataSection";
 import type { HeadField } from "./headFields";
 
 export interface ContentEditorState {
@@ -32,6 +33,15 @@ export interface ContentEditorProps {
   isAdminOrGM?: boolean;
   // z.B. Mission-Logs Autor-/Missions-Select (dynamische Optionen, nur create).
   extraHeadSlot?: ReactNode;
+  // Statische Zusatzfelder in der aufklappbaren "Metadaten +/-"-Sektion
+  // (Charakter/Mission/Mission-Log — keine Reaktivität auf andere Feldwerte
+  // nötig). Für Archiv-Einträge (Metadaten-Felder hängen von der gewählten
+  // Kategorie ab) stattdessen metadataSlot verwenden.
+  metadataFields?: HeadField[];
+  // Voll selbst gebauter Ersatz für metadataFields, inkl. eigenem
+  // MetadataSection-Wrapper — für Fälle, die auf andere Feldwerte reagieren
+  // müssen (z.B. Archiv-Kategorie).
+  metadataSlot?: ReactNode;
   submitLabel: string;
   submitPendingLabel: string;
 }
@@ -52,6 +62,8 @@ export default function ContentEditor({
   bodyLarge = false,
   isAdminOrGM = false,
   extraHeadSlot,
+  metadataFields,
+  metadataSlot,
   submitLabel,
   submitPendingLabel,
 }: ContentEditorProps) {
@@ -67,9 +79,8 @@ export default function ContentEditor({
         <input key={name} type="hidden" name={name} value={value} />
       ))}
 
-      {extraHeadSlot}
-
       <div className="content-editor-head-grid">
+        {extraHeadSlot}
         {visibleFields.map((field) => (
           <HeadFieldRenderer
             key={field.name}
@@ -79,6 +90,22 @@ export default function ContentEditor({
           />
         ))}
       </div>
+
+      {metadataSlot}
+      {!metadataSlot && metadataFields && metadataFields.length > 0 && (
+        <MetadataSection>
+          {metadataFields
+            .filter((field) => !field.showIf || field.showIf({ mode }))
+            .map((field) => (
+              <HeadFieldRenderer
+                key={field.name}
+                field={field}
+                idPrefix={idPrefix}
+                defaultValue={defaults[field.name]}
+              />
+            ))}
+        </MetadataSection>
+      )}
 
       <FormField
         label={bodyLabel}

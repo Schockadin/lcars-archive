@@ -4,7 +4,10 @@ import {
   characterAction,
   type CharacterFormState,
 } from "../../_shared/contentAction";
-import { characterHeadFields } from "../../_shared/characterHeadFields";
+import {
+  characterHeadFields,
+  characterMetadataFields,
+} from "../../_shared/characterHeadFields";
 import type { OwnCharacterForEdit } from "@/lib/characters";
 import { MarkdownFormatHint } from "../../../../_shared/MarkdownHint";
 
@@ -26,6 +29,7 @@ export default function EditCharacterForm({
       initialState={initialState}
       hiddenFields={{ userId, characterId: character.id }}
       headFields={characterHeadFields}
+      metadataFields={characterMetadataFields}
       defaults={{
         name: character.name,
         status: character.status,
@@ -34,6 +38,12 @@ export default function EditCharacterForm({
         species: character.species.join(", "),
         homeworld: character.homeworld ?? undefined,
         aliases: character.aliases.join(", "),
+        age: character.age ?? undefined,
+        generation: character.generation.join(", "),
+        factions: character.factions.join(", "),
+        ships: character.ships.join(", "),
+        division: character.division ?? undefined,
+        tags: character.tags.join(", "),
       }}
       idPrefix="edit-character"
       bodyLabel="Biografie (optional)"

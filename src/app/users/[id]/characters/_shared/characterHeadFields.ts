@@ -15,3 +15,12 @@ export const characterHeadFields: HeadField[] = [
   { kind: "text", name: "homeworld", label: "Heimatwelt (optional)" },
   { kind: "text", name: "aliases", label: "Aliase (kommagetrennt)" },
 ];
+
+export const characterMetadataFields: HeadField[] = [
+  { kind: "number", name: "age", label: "Alter", min: 0 },
+  { kind: "text", name: "generation", label: "Generation (kommagetrennt)" },
+  { kind: "text", name: "factions", label: "Fraktionen (kommagetrennt)" },
+  { kind: "text", name: "ships", label: "Schiffe (kommagetrennt)" },
+  { kind: "text", name: "division", label: "Division" },
+  { kind: "text", name: "tags", label: "Tags (kommagetrennt)" },
+];

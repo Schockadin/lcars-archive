@@ -139,6 +139,7 @@ export async function createMission(input: {
   startedAt: string | null;
   endedAt: string | null;
   tags: string[];
+  teaser: string | null;
   bodyMarkdown: string;
   ownerUserId: number;
   // Vorgerendertes HTML überspringt das eigene renderContentHtml() — genutzt
@@ -161,7 +162,7 @@ export async function createMission(input: {
       ${input.status},
       ${input.startedAt},
       ${input.endedAt},
-      ${sql.json({ tags: input.tags, body: bodyHtml })},
+      ${sql.json({ tags: input.tags, body: bodyHtml, teaser: input.teaser })},
       ${input.bodyMarkdown},
       ${input.ownerUserId},
       NOW()
@@ -189,6 +190,7 @@ export async function updateMissionContent(
     startedAt: string | null;
     endedAt: string | null;
     tags: string[];
+    teaser: string | null;
     bodyMarkdown: string;
     // Siehe createMission oben — Opt-in "Automatisch verlinken".
     bodyHtml?: string;
@@ -203,7 +205,7 @@ export async function updateMissionContent(
       status     = ${input.status},
       started_at = ${input.startedAt},
       ended_at   = ${input.endedAt},
-      metadata   = ${sql.json({ tags: input.tags, body: bodyHtml })},
+      metadata   = ${sql.json({ tags: input.tags, body: bodyHtml, teaser: input.teaser })},
       source_md  = ${input.bodyMarkdown},
       updated_at = NOW()
     WHERE m.id = ${missionId}
@@ -313,6 +315,7 @@ export async function createMissionLog(input: {
   bodyMarkdown: string;
   logDate: string | null;
   sessionNr: number;
+  tags: string[];
   ownerUserId: number | null;
   // Siehe createMission oben — Opt-in "Automatisch verlinken".
   contentHtml?: string;
@@ -332,7 +335,7 @@ export async function createMissionLog(input: {
       ${contentHtml},
       ${input.logDate},
       ${input.sessionNr},
-      ${sql.json({ tags: [] })},
+      ${sql.json({ tags: input.tags })},
       ${input.bodyMarkdown},
       ${input.ownerUserId},
       NOW()
@@ -529,6 +532,7 @@ export interface OwnMissionLogForEdit {
   missionSlug: string;
   missionTitle: string;
   authorName: string;
+  tags: string[];
 }
 
 // Für /users/[id]/mission-logs/[logId]/edit — lädt den rohen Markdown-Body
@@ -539,7 +543,9 @@ export async function getOwnMissionLogForEdit(
   userId: number,
   logId: number,
 ): Promise<OwnMissionLogForEdit | null> {
-  const rows = await sql<OwnMissionLogForEdit[]>`
+  const rows = await sql<
+    (Omit<OwnMissionLogForEdit, "tags"> & { tags: string[] | string })[]
+  >`
     SELECT
       ml.id,
       ml.title,
@@ -548,14 +554,20 @@ export async function getOwnMissionLogForEdit(
       COALESCE(ml.source_md, '') AS "sourceMarkdown",
       m.slug AS "missionSlug",
       m.title AS "missionTitle",
-      c.name AS "authorName"
+      c.name AS "authorName",
+      COALESCE(ml.metadata->'tags', '[]'::jsonb) AS "tags"
     FROM mission_logs ml
     JOIN characters c ON c.id = ml.author_id
     JOIN missions m ON m.id = ml.mission_id
     WHERE ml.id = ${logId} AND c.player_id = ${userId}
     LIMIT 1
   `;
-  return rows[0] ?? null;
+  const row = rows[0];
+  if (!row) return null;
+  return {
+    ...row,
+    tags: typeof row.tags === "string" ? JSON.parse(row.tags) : row.tags,
+  };
 }
 
 // Bearbeitet Titel/Datum/Text eines eigenen Logs. Slug-bildende Felder
@@ -573,6 +585,7 @@ export async function updateMissionLogContent(
   input: {
     title: string;
     logDate: string | null;
+    tags: string[];
     bodyMarkdown: string;
     // Siehe createMission oben — Opt-in "Automatisch verlinken".
     contentHtml?: string;
@@ -604,6 +617,7 @@ export async function updateMissionLogContent(
       log_date   = ${input.logDate},
       content    = ${contentHtml},
       source_md  = ${input.bodyMarkdown},
+      metadata   = metadata || ${sql.json({ tags: input.tags } as ReturnType<typeof JSON.parse>)},
       updated_at = NOW()
     FROM characters c, missions m
     WHERE ml.id = ${logId} AND c.id = ml.author_id AND c.player_id = ${userId}

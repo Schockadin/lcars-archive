@@ -4,7 +4,10 @@ import {
   missionLogAction,
   type MissionLogFormState,
 } from "../../_shared/contentAction";
-import { missionLogHeadFields } from "../../_shared/missionLogHeadFields";
+import {
+  missionLogHeadFields,
+  missionLogMetadataFields,
+} from "../../_shared/missionLogHeadFields";
 import type { OwnMissionLogForEdit } from "@/lib/missions";
 import { MarkdownFormatHint } from "../../../../_shared/MarkdownHint";
 
@@ -26,7 +29,12 @@ export default function EditMissionLogForm({
       initialState={initialState}
       hiddenFields={{ userId, logId: log.id }}
       headFields={missionLogHeadFields}
-      defaults={{ title: log.title, logDate: log.logDate ?? undefined }}
+      metadataFields={missionLogMetadataFields}
+      defaults={{
+        title: log.title,
+        logDate: log.logDate ?? undefined,
+        tags: log.tags.join(", "),
+      }}
       idPrefix="edit-log"
       bodyLabel="Log-Text"
       bodyHint={<MarkdownFormatHint />}

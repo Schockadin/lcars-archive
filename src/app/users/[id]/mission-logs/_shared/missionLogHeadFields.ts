@@ -12,3 +12,7 @@ export const missionLogHeadFields: HeadField[] = [
   },
   { kind: "date", name: "logDate", label: "Datum" },
 ];
+
+export const missionLogMetadataFields: HeadField[] = [
+  { kind: "text", name: "tags", label: "Tags (kommagetrennt)" },
+];

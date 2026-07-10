@@ -22,3 +22,7 @@ export const missionHeadFields: HeadField[] = [
   { kind: "date", name: "endedAt", label: "Ende (optional)" },
   { kind: "text", name: "tags", label: "Tags (kommagetrennt)" },
 ];
+
+export const missionMetadataFields: HeadField[] = [
+  { kind: "text", name: "teaser", label: "Teaser", fullWidth: true },
+];

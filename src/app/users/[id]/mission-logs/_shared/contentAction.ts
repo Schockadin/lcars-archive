@@ -52,6 +52,15 @@ export async function missionLogAction(
   }
   const logDate = logDateRaw || null;
 
+  const tags = [
+    ...new Set(
+      String(formData.get("tags") ?? "")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
+    ),
+  ];
+
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte einen Log-Text schreiben." };
 
@@ -69,6 +78,7 @@ export async function missionLogAction(
     const result = await updateMissionLogContent(session.userId, logId!, {
       title,
       logDate,
+      tags,
       bodyMarkdown,
       contentHtml,
     });
@@ -129,6 +139,7 @@ export async function missionLogAction(
     contentHtml,
     logDate,
     sessionNr,
+    tags,
     ownerUserId: user.id,
   });
 

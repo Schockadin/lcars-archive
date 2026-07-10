@@ -1,19 +1,27 @@
-@import "../styles/tokens.css";
-@import "../styles/lcars-components.css";
 @import "tailwindcss";
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "../styles/tokens.css";
+/* layer(components): Tailwind v4 legt mit obigem @import bereits die
+   Layer-Reihenfolge theme→base→components→utilities fest. Ohne dieses
+   layer() läge das gesamte custom CSS unlayered und würde (unabhängig von
+   Spezifität) IMMER über @layer utilities gewinnen — z.B. hätte
+   .lcars-usernav-pill (background: amber) jede bg-lcars-red-Utility auf
+   dem Logout-Button überschrieben. */
+@import "../styles/lcars-components.css" layer(components);
 
 /* ─── Reset & Basis ──────────────────────────────────────────────── */
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+/* In @layer base statt unlayered CSS: v4 gewichtet unlayered Regeln höher
+   als jede @layer-Regel (auch @layer utilities), unabhängig von Spezifität
+   — ohne @layer würde dieser Reset sämtliche Utility-Klassen mit
+   margin/padding (z.B. mt-[20px]) überschreiben. */
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 /* AppShell ist ein fixes 100svh-Grundgerüst, in dem ausschließlich
@@ -36,142 +44,144 @@
    (Footer-Leiste) hinter dem overflow:clip verschwindet. svh (small
    viewport height) ist die garantiert nie zu große Untergrenze und passt
    ohne sichtbaren Unterschied in Standalone-Apps ohne Browser-Chrome. */
-html {
-  height: 100svh;
-  min-width: 100%;
-  width: 100%;
-  overflow: clip;
-}
+@layer base {
+  html {
+    height: 100svh;
+    min-width: 100%;
+    width: 100%;
+    overflow: clip;
+  }
 
-body {
-  height: 100svh;
-  min-width: 100%;
-  width: 100%;
-  overflow: clip;
-  background: var(--lcars-bg);
-  color: var(--lcars-text);
-  font-family: var(--font-antonio), "Antonio", sans-serif;
-  letter-spacing: 0.05em;
-  -webkit-font-smoothing: antialiased;
-}
+  body {
+    height: 100svh;
+    min-width: 100%;
+    width: 100%;
+    overflow: clip;
+    background: var(--lcars-bg);
+    color: var(--lcars-text);
+    font-family: var(--font-antonio), "Antonio", sans-serif;
+    letter-spacing: 0.05em;
+    -webkit-font-smoothing: antialiased;
+  }
 
-/* ─── Basis-Typografie ───────────────────────────────────────────── */
+  /* ─── Basis-Typografie ───────────────────────────────────────────── */
 
-h1,
-.lcars-heading {
-  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
-  font-size: var(--lcars-title-size);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--lcars-amber);
-  line-height: 1.1;
-  margin-bottom: 20px;
-  text-transform: uppercase;
-  text-align: left;
-}
+  h1,
+  .lcars-heading {
+    font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+    font-size: var(--lcars-title-size);
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--lcars-amber);
+    line-height: 1.1;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    text-align: left;
+  }
 
-h2 {
-  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
-  font-size: 20px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--lcars-text-data);
-  line-height: 1.1;
-  margin-bottom: 5px;
-  margin-top: 10px;
-  text-transform: capitalize;
-}
+  h2 {
+    font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    color: var(--lcars-text-data);
+    line-height: 1.1;
+    margin-bottom: 5px;
+    margin-top: 10px;
+    text-transform: capitalize;
+  }
 
-h3,
-h4 {
-  color: var(--lcars-text-data);
-}
+  h3,
+  h4 {
+    color: var(--lcars-text-data);
+  }
 
-h5 {
-  color: var(--lcars-text);
-}
+  h5 {
+    color: var(--lcars-text);
+  }
 
-.lcars-eyebrow {
-  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
-  font-size: var(--lcars-eyebrow-size);
-  letter-spacing: 0.3em;
-  color: var(--lcars-orange);
-}
+  .lcars-eyebrow {
+    font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+    font-size: var(--lcars-eyebrow-size);
+    letter-spacing: 0.3em;
+    color: var(--lcars-orange);
+  }
 
-.lcars-header-text {
-  font-size: 64px;
-  font-weight: 400;
-  letter-spacing: 0.15em;
-  color: var(--lcars-amber);
-  line-height: 1;
-  text-align: right;
-  margin-bottom: 10px;
-  text-transform: uppercase;
-}
+  .lcars-header-text {
+    font-size: 64px;
+    font-weight: 400;
+    letter-spacing: 0.15em;
+    color: var(--lcars-amber);
+    line-height: 1;
+    text-align: right;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
 
-.lcars-header-title {
-  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  color: var(--lcars-amber);
-  line-height: 1.1;
-}
+  .lcars-header-title {
+    font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--lcars-amber);
+    line-height: 1.1;
+  }
 
-.lcars-menu-text,
-.lcars-menu-id {
-  color: black;
-  font-weight: 600;
-  text-transform: uppercase;
-  line-height: 1.175;
-  letter-spacing: 1px;
-  font-size: 22px;
-  font-family: var(--font-antonio), sans-serif;
-  text-decoration: none;
-}
+  .lcars-menu-text,
+  .lcars-menu-id {
+    color: black;
+    font-weight: 600;
+    text-transform: uppercase;
+    line-height: 1.175;
+    letter-spacing: 1px;
+    font-size: 22px;
+    font-family: var(--font-antonio), sans-serif;
+    text-decoration: none;
+  }
 
-.lcars-text {
-  font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
-  letter-spacing: 0.08em;
-  color: var(--lcars-text-light);
-  line-height: 1.75;
-  margin-bottom: 10px;
-  hyphens: auto;
-}
+  .lcars-text {
+    font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+    letter-spacing: 0.08em;
+    color: var(--lcars-text-light);
+    line-height: 1.75;
+    margin-bottom: 10px;
+    hyphens: auto;
+  }
 
-.lcars-breadcrumbs {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: "Share Tech Mono", monospace;
-  font-size: 16px;
-  /* letter-spacing: 0.2em; */
-  text-transform: uppercase;
-}
+  .lcars-breadcrumbs {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: "Share Tech Mono", monospace;
+    font-size: 16px;
+    /* letter-spacing: 0.2em; */
+    text-transform: uppercase;
+  }
 
-/* ─── Sonstiges ──────────────────────────────────────────────────── */
+  /* ─── Sonstiges ──────────────────────────────────────────────────── */
 
-.lcars-separator {
-  height: 2px;
-}
+  .lcars-separator {
+    height: 2px;
+  }
 
-.character-list-entry {
-  text-decoration: none;
-  color: var(--lcars-text-contrast);
-  font-size: var(--lcars-text-size);
-  letter-spacing: 1px;
-  text-transform: capitalize;
-  margin-bottom: 5px;
-  transition: color 250ms;
-}
-.character-list-entry:hover {
-  color: var(--lcars-amber);
-}
+  .character-list-entry {
+    text-decoration: none;
+    color: var(--lcars-text-contrast);
+    font-size: var(--lcars-text-size);
+    letter-spacing: 1px;
+    text-transform: capitalize;
+    margin-bottom: 5px;
+    transition: color 250ms;
+  }
+  .character-list-entry:hover {
+    color: var(--lcars-amber);
+  }
 
-.character-data {
-  display: flex;
-  gap: 5px;
-}
+  .character-data {
+    display: flex;
+    gap: 5px;
+  }
 
-address {
-  font-style: normal;
+  address {
+    font-style: normal;
+  }
 }

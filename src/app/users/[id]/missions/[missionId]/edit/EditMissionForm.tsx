@@ -5,7 +5,10 @@ import { missionAction } from "../../_shared/contentAction";
 import type { MissionDetail } from "@/types/missions";
 import { FormError } from "../../../../_shared/FormPrimitives";
 import { DangerZoneButton } from "../../../../_shared/DangerZoneButton";
-import { missionHeadFields } from "../../_shared/missionHeadFields";
+import {
+  missionHeadFields,
+  missionMetadataFields,
+} from "../../_shared/missionHeadFields";
 import { MarkdownFormatHint } from "../../../../_shared/MarkdownHint";
 import ContentEditor from "@/components/ContentEditor/ContentEditor";
 
@@ -31,12 +34,14 @@ export default function EditMissionForm({
         initialState={initialState}
         hiddenFields={{ userId, missionId: mission.id }}
         headFields={missionHeadFields}
+        metadataFields={missionMetadataFields}
         defaults={{
           title: mission.title,
           status: mission.status,
           startedAt: mission.started_at ?? undefined,
           endedAt: mission.ended_at ?? undefined,
           tags: mission.metadata.tags.join(", "),
+          teaser: mission.metadata.teaser ?? undefined,
         }}
         idPrefix="edit-mission"
         bodyLabel="Zusammenfassung"

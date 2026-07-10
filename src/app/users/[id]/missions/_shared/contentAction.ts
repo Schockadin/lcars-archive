@@ -76,6 +76,8 @@ export async function missionAction(
     ),
   ];
 
+  const teaser = String(formData.get("teaser") ?? "").trim() || null;
+
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte eine Zusammenfassung schreiben." };
 
@@ -101,6 +103,7 @@ export async function missionAction(
       startedAt: startedAtRaw || null,
       endedAt: endedAtRaw || null,
       tags,
+      teaser,
       bodyMarkdown,
       bodyHtml,
     });
@@ -129,6 +132,7 @@ export async function missionAction(
     startedAt: startedAtRaw || null,
     endedAt: endedAtRaw || null,
     tags,
+    teaser,
     bodyMarkdown,
     bodyHtml,
     ownerUserId: user.id,

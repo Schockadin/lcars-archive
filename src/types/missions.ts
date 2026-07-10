@@ -3,6 +3,7 @@ export type MissionStatus = "active" | "completed" | "failed" | "abandoned";
 export interface MissionMetaData {
   tags: string[];
   body: string | null;
+  teaser: string | null;
 }
 
 export interface Mission {

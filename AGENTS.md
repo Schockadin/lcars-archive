@@ -6,9 +6,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # How to handle version.ts
 
-Versionsnummer ist wie folgt aufgebaut: <MajorVersion>.<MinorVersion>.<Subversion>
+The version number is as follows: <MajorVersion>.<MinorVersion>.<Subversion>
 
-- Die Major-Version wird nur händisch erhöht
-- Die Minor-Version erhöht sich bei jedem Pullrequest (reset auf 0 bei neuer Major-Version)
-- Die Sub-Version erhöht sich bei jedem Commit im aktuellen PR (reset auf 0 bei neuem PR)
+- Major version only increases by hand
+- Minor version increases with every opened Pull Request, resetting with each Major Version change to 0
+- Sub version increases with every commit in the same Pull Request and resets with a new Pull Request to 0
+
+# The Pull Request Body
+
+Always make sure to keep the Body of the recent open Pull Request updated. Add a new section for each commit.
+
 <!-- END:nextjs-agent-rules -->

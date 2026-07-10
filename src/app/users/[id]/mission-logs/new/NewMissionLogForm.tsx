@@ -4,11 +4,14 @@ import {
   missionLogAction,
   type MissionLogFormState,
 } from "../_shared/contentAction";
-import { missionLogHeadFields } from "../_shared/missionLogHeadFields";
+import {
+  missionLogHeadFields,
+  missionLogMetadataFields,
+} from "../_shared/missionLogHeadFields";
 import { FormField } from "../../../_shared/FormPrimitives";
 import { MarkdownFormatHint } from "../../../_shared/MarkdownHint";
 
-const missionLogInputClass = "rounded-lcars-pill lcars-input w-full sm:w-[400px]";
+const missionLogInputClass = "rounded-lcars-pill lcars-input w-full";
 
 const initialState: MissionLogFormState = {};
 
@@ -34,6 +37,7 @@ export default function NewMissionLogForm({
       initialState={initialState}
       hiddenFields={{ userId }}
       headFields={missionLogHeadFields}
+      metadataFields={missionLogMetadataFields}
       defaults={{ sessionNr: defaultSessionNr, logDate: defaultLogDate ?? undefined }}
       idPrefix="log"
       bodyLabel="Log-Text"

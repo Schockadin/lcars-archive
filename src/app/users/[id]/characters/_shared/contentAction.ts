@@ -28,6 +28,12 @@ function parseList(value: FormDataEntryValue | null): string[] {
   ];
 }
 
+function parseNumberList(value: FormDataEntryValue | null): number[] {
+  return parseList(value)
+    .map((v) => Number(v))
+    .filter((n) => Number.isInteger(n));
+}
+
 // Vereint createCharacterAction + updateCharacterAction (vorher new/actions.ts
 // + [characterId]/edit/actions.ts) zu einer Action für ContentEditor — Branch
 // auf Vorhandensein von characterId statt zwei fast identischer Funktionen.
@@ -73,6 +79,17 @@ export async function characterAction(
   const species = parseList(formData.get("species"));
   const aliases = parseList(formData.get("aliases"));
 
+  const ageRaw = String(formData.get("age") ?? "").trim();
+  const age = ageRaw ? Number(ageRaw) : null;
+  if (ageRaw && !Number.isInteger(age)) {
+    return { error: "Ungültiges Alter." };
+  }
+  const generation = parseNumberList(formData.get("generation"));
+  const factions = parseList(formData.get("factions"));
+  const ships = parseList(formData.get("ships"));
+  const division = String(formData.get("division") ?? "").trim() || null;
+  const tags = parseList(formData.get("tags"));
+
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
 
   // Opt-in "Automatisch verlinken" — Selbstausschluss nur beim Bearbeiten
@@ -101,6 +118,12 @@ export async function characterAction(
       species,
       homeworld,
       aliases,
+      age,
+      generation,
+      factions,
+      ships,
+      division,
+      tags,
       bodyMarkdown,
       bioHtml,
     });
@@ -119,6 +142,12 @@ export async function characterAction(
     species,
     homeworld,
     aliases,
+    age,
+    generation,
+    factions,
+    ships,
+    division,
+    tags,
     bodyMarkdown,
     bioHtml,
     ownerUserId: session.userId,

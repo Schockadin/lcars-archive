@@ -5,7 +5,9 @@ import {
   type ArchiveEntryFormState,
 } from "../../_shared/contentAction";
 import { archiveEntryHeadFields } from "../../_shared/archiveEntryHeadFields";
+import ArchiveMetadataSlot from "../../_shared/ArchiveMetadataSlot";
 import type { OwnArchiveEntryForEdit } from "@/lib/archive";
+import type { ArchiveCategory } from "@/types/archive";
 import { MarkdownFormatHint } from "../../../../_shared/MarkdownHint";
 
 const initialState: ArchiveEntryFormState = {};
@@ -31,6 +33,16 @@ export default function EditArchiveEntryForm({
         category: entry.category,
         tags: entry.tags.join(", "),
       }}
+      metadataSlot={
+        <ArchiveMetadataSlot
+          idPrefix="edit-archive-entry"
+          categorySelectId="edit-archive-entry-category"
+          initialCategory={entry.category as Exclude<ArchiveCategory, "dialogue">}
+          summaryDefault={entry.summary ?? undefined}
+          attributeDefaults={entry.attributeValues}
+          referenceDefaults={entry.referenceValues}
+        />
+      }
       idPrefix="edit-archive-entry"
       bodyLabel="Inhalt"
       bodyHint={<MarkdownFormatHint />}

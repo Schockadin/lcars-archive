@@ -4,7 +4,10 @@ import {
   characterAction,
   type CharacterFormState,
 } from "../_shared/contentAction";
-import { characterHeadFields } from "../_shared/characterHeadFields";
+import {
+  characterHeadFields,
+  characterMetadataFields,
+} from "../_shared/characterHeadFields";
 import { MarkdownFormatHint } from "../../../_shared/MarkdownHint";
 
 const initialState: CharacterFormState = {};
@@ -23,6 +26,7 @@ export default function NewCharacterForm({
       initialState={initialState}
       hiddenFields={{ userId }}
       headFields={characterHeadFields}
+      metadataFields={characterMetadataFields}
       defaults={{ status: "active" }}
       idPrefix="character"
       bodyLabel="Biografie (optional)"
