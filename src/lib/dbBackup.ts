@@ -160,7 +160,7 @@ export async function importDatabaseBackup(
         const values = columns.map((col) => {
           const value = row[col];
           return jsonbCols.has(col) && value !== null
-            ? tx.json(value as object)
+            ? tx.json(value as ReturnType<typeof JSON.parse>)
             : value;
         });
         const identifierList = columns.map((c) => `"${c}"`).join(", ");
