@@ -2,7 +2,8 @@
 import { LcarsMenuItem } from "@/components/lcars";
 
 // Wird von forbidden() (next/navigation) gerendert — ausgelöst von den
-// Zugriffs-Guards in src/lib/dal.ts und src/app/users/[id]/dal.ts, wenn ein
+// Zugriffs-Guards in src/lib/dal.ts, src/app/user/[id]/dal.ts und
+// src/app/admin/[id]/dal.ts, wenn ein
 // angemeldeter User eine geschützte Route ohne die nötige Rolle/Identität
 // aufruft (anders als eine fehlende Session, die weiterhin auf /login
 // umleitet). Benötigt experimental.authInterrupts in next.config.ts.

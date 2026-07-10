@@ -16,7 +16,7 @@ export interface CharacterBioEditState {
 
 // Inline-Bearbeitung der Biografie direkt auf /characters/[slug]
 // (CharacterBioEditor) — schlanker als das volle Formular unter
-// /users/[id]/characters/[characterId]/edit: nur die Biografie ändert sich,
+// /user/[id]/characters/[characterId]/edit: nur die Biografie ändert sich,
 // Name/Status/Metadaten bleiben unangetastet. Owner-only (analog
 // updateOwnArchiveEntryAction in src/app/actions/archive.ts) —
 // updateOwnCharacterBio scoped die Schreibung selbst auf player_id, ein

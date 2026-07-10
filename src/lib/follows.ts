@@ -116,7 +116,7 @@ function toFollowedContent(row: {
         : row.target_type === "character"
           ? `/characters/${row.slug}`
           : // Offene Dialoge leben unter /dialogues, nicht /archive (siehe
-            // src/app/users/[id]/content/page.tsx für dasselbe Muster).
+            // src/app/user/[id]/content/page.tsx für dasselbe Muster).
             row.dialogue_open
             ? `/dialogues/${row.slug}`
             : `/archive/${row.slug}`,

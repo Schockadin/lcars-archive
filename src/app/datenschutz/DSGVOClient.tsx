@@ -26,7 +26,7 @@ export default function DSGVOClient() {
         Diese Website betreibt kein Tracking und keine Analysetools mit
         personenbezogenen Daten. Für die Kampagnen-Teilnehmer:innen gibt es
         einen passwortgeschützten Login-Bereich (<code>/login</code>,{" "}
-        <code>/users/…</code>). Dort werden E-Mail-Adresse, Name, Rolle sowie
+        <code>/user/…</code>). Dort werden E-Mail-Adresse, Name, Rolle sowie
         ein Passwort-Hash gespeichert (Rechtsgrundlage: Art. 6 Abs. 1 lit. b
         DSGVO — Erfüllung des Nutzungsverhältnisses der Kampagne). Das Passwort
         selbst wird nicht im Klartext gespeichert, sondern nur als Hash.
@@ -112,7 +112,7 @@ export default function DSGVOClient() {
         Diese Website setzt ein einziges eigenes Cookie namens{" "}
         <code>neo_session</code>. Es hält dich für 30 Tage angemeldet und ist
         technisch notwendig, um den Login-Bereich (<code>/login</code>,{" "}
-        <code>/users/…</code>) bereitzustellen — ohne dieses Cookie ist kein
+        <code>/user/…</code>) bereitzustellen — ohne dieses Cookie ist kein
         Login möglich. Es ist <code>HttpOnly</code> gesetzt (kein Zugriff durch
         JavaScript) und wird nicht an Dritte übertragen.
       </p>

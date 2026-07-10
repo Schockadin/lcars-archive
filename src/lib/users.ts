@@ -41,7 +41,7 @@ export async function getUserById(id: number): Promise<User | null> {
 // Vorheriges last_login_at wird nach previous_login_at verschoben, bevor
 // last_login_at auf NOW() gesetzt wird — so bleibt der Zeitpunkt des
 // *vorletzten* Logins nachvollziehbar (angezeigt im Admin-Panel, siehe
-// users/[id]/edit/page.tsx). Bewusst eine eigene DB-Spalte statt
+// admin/[id]/edit/page.tsx). Bewusst eine eigene DB-Spalte statt
 // Cookie-Payload, damit ein Profil-Update (updateUser) diesen Zeitpunkt
 // nicht versehentlich zurücksetzen kann.
 export async function recordLogin(userId: number): Promise<void> {
@@ -263,11 +263,11 @@ export interface UserAdminDetail extends User {
   characters: { id: number; slug: string; name: string }[];
 }
 
-// Für /users/[id]/edit: alle Felder, die die Admin-Bearbeitungsseite
+// Für /admin/[id]/edit: alle Felder, die die Admin-Bearbeitungsseite
 // anzeigt — inkl. Passwort-/Aktivierungsstatus (wieder nur als Boolean,
 // nie der Hash selbst, siehe Kommentar oben bei UserCredentials) und
 // zugewiesene Charaktere (read-only Kontext, Zuweisung selbst bleibt
-// CharacterAssignmentTable auf /users vorbehalten).
+// CharacterAssignmentTable auf /admin vorbehalten).
 export async function getUserForAdmin(
   id: number,
 ): Promise<UserAdminDetail | null> {

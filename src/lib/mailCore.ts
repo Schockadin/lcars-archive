@@ -84,7 +84,7 @@ export async function sendActivationEmail(input: {
 }
 
 // Genutzt vom selbstständigen Reset-Request (/forgot-password) UND von
-// resetUserPasswordAction (src/app/users/actions.ts, Admin-Aktion in der
+// resetUserPasswordAction (src/app/admin/actions.ts, Admin-Aktion in der
 // Userverwaltung) — erzeugt denselben Token-Typ wie sendActivationEmail
 // (siehe passwordSetupTokens.ts), nur mit anderem Betreff/Text. In beiden
 // Fällen setzt/erfährt ausschließlich der Owner selbst das neue Passwort

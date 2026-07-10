@@ -25,7 +25,7 @@ export const getCurrentUser = cache(async (): Promise<User> => {
   return user;
 });
 
-// Gate für /users (Nutzerverwaltung): darf betreten, wer gm ODER admin ist —
+// Gate für /admin (Nutzerverwaltung): darf betreten, wer gm ODER admin ist —
 // die Seite selbst zeigt je nach Rolle unterschiedliche Abschnitte (siehe
 // requireAdmin unten für die strengere Admin-only-Prüfung der
 // Useraccount-Verwaltungs-Actions). forbidden() (nicht redirect) — der User

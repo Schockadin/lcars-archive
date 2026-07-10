@@ -15,7 +15,7 @@ export interface ArchiveEntryEditState {
 
 // Inline-Bearbeitung des Inhalts direkt auf /archive/[slug]
 // (ArchiveEntryEditor) — schlanker als das volle Formular unter
-// /users/[id]/archive/[entryId]/edit: nur der Fließtext ändert sich,
+// /user/[id]/archive/[entryId]/edit: nur der Fließtext ändert sich,
 // Titel/Kategorie/Tags bleiben unangetastet. Owner-only (anders als
 // updateMissionSynopsisAction, das gm/admin-gated ist) —
 // updateOwnArchiveEntryBody scoped die Schreibung selbst auf

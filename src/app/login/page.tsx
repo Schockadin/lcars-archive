@@ -17,7 +17,7 @@ export default async function LoginPage() {
   // Bereits angemeldet — die eigene Personendatei ist der eigentliche
   // Ziel-Bereich, /login ist nur der Einstieg dorthin.
   if (session) {
-    redirect(`/users/${session.userId}`);
+    redirect(`/user/${session.userId}`);
   }
 
   return (

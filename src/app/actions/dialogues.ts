@@ -36,7 +36,7 @@ export interface DialogueMessageState {
 }
 
 // Jede Prüfung serverseitig, nie auf ausgeblendete UI verlassen — exakt
-// das bestehende Prinzip aus src/app/users/actions.ts. Sichtbarkeit des
+// das bestehende Prinzip aus src/app/admin/actions.ts. Sichtbarkeit des
 // Formulars selbst entscheidet /dialogues/[slug] (Server-gated), kein
 // Client-seitiger Vorab-Check mehr nötig.
 export async function postDialogueMessageAction(

@@ -16,11 +16,11 @@ export default function HeaderUserNav({
   const pathname = usePathname();
 
   const tabs = [
-    { href: `/users/${userId}/content`, label: "Inhalte" },
+    { href: `/user/${userId}/content`, label: "Inhalte" },
     { href: "/search", label: "Suche" },
-    { href: `/users/${userId}`, label: "Profil" },
+    { href: `/user/${userId}`, label: "Profil" },
     ...(role === "gm" || role === "admin"
-      ? [{ href: "/users", label: role === "admin" ? "Admin" : "Leitung" }]
+      ? [{ href: "/admin", label: role === "admin" ? "Admin" : "Leitung" }]
       : []),
   ];
 

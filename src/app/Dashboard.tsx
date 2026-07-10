@@ -19,7 +19,7 @@ const ROLE_LABELS: Record<User["role"], string> = {
 
 // Persönliches Dashboard für eingeloggte User auf "/" (siehe page.tsx) —
 // vorher auf /home, das jetzt wieder ein blanker Redirect auf "/" ist
-// (next.config.ts), und davor auf /users/[id] (Profil), das inzwischen mit
+// (next.config.ts), und davor auf /user/[id] (Profil), das inzwischen mit
 // Settings zusammengeführt ist und nur noch Konto-Verwaltung zeigt.
 export default async function Dashboard({ user }: { user: User }) {
   // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
@@ -50,7 +50,7 @@ export default async function Dashboard({ user }: { user: User }) {
           {needsPassword && (
             <p className="text-lcars-amber">
               Du hast noch kein Passwort gesetzt.{" "}
-              <Link href={`/users/${user.id}#password`} className="underline">
+              <Link href={`/user/${user.id}#password`} className="underline">
                 Jetzt festlegen
               </Link>
               .

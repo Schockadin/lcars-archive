@@ -4,7 +4,7 @@ import {
   postDialogueMessageAction,
   type DialogueMessageState,
 } from "@/app/actions/dialogues";
-import { MarkdownFormatHint } from "@/app/users/_shared/MarkdownHint";
+import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
 
 const initialState: DialogueMessageState = {};
 

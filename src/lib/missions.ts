@@ -122,7 +122,7 @@ export async function getMissionBySlug(
 }
 
 // Eine Mission per numerischer ID — für den Admin/GM-Editier-Weg
-// (/users/[id]/missions/[missionId]/edit), wo die ID aus der Route kommt
+// (/user/[id]/missions/[missionId]/edit), wo die ID aus der Route kommt
 // statt aus dem Slug. Bewusst ohne Cache (wie getOwnMissionLogForEdit):
 // das Formular soll immer den aktuellen Stand zeigen.
 export async function getMissionById(
@@ -272,7 +272,7 @@ export interface UpdateMissionResult {
 }
 
 // Vollständige Bearbeitung einer Mission (Admin/GM-Formular unter
-// /users/[id]/missions/[missionId]/edit). Der Slug bleibt unveränderlich
+// /user/[id]/missions/[missionId]/edit). Der Slug bleibt unveränderlich
 // (Identitätsfeld, siehe updateMissionLogContent oben für dasselbe Prinzip
 // bei Logs) — er bildet sowohl den Vault-Ordnernamen als auch die
 // mission_slug-Referenz bestehender Mission-Logs.
@@ -382,7 +382,7 @@ export async function getMostRecentLogDate(): Promise<string | null> {
 }
 
 // Vorschlagswert fürs Session-Nr-Feld im "Neuer Missionslog"-Formular
-// (src/app/users/[id]/mission-logs/new) — nur ein Default, das Feld bleibt
+// (src/app/user/[id]/mission-logs/new) — nur ein Default, das Feld bleibt
 // editierbar. Kein Cache: soll bei jedem Seitenaufruf den aktuellen Stand
 // zeigen, nicht bis zur nächsten Tag-Invalidierung stale bleiben.
 export async function getNextSessionNr(
@@ -438,7 +438,7 @@ export async function createMissionLog(input: {
 }
 
 // Kollisionsprüfung vor dem Anlegen eines neuen Mission-Logs
-// (src/app/users/[id]/mission-logs/new/actions.ts) — der Slug ist
+// (src/app/user/[id]/mission-logs/new/actions.ts) — der Slug ist
 // deterministisch aus author-mission-session_nr gebaut, ein Treffer
 // bedeutet also "diese Kombination gibt es schon".
 export async function missionLogSlugExists(slug: string): Promise<boolean> {
@@ -571,7 +571,7 @@ export async function setMissionOwner(
 // Bulk-Variante von setMissionOwner: weist ALLE Missionen ohne Owner (meist
 // per Vault-Ingest entstanden, der owner_user_id nie setzt) auf einen Schlag
 // einem GM zu (siehe assignOwnerlessMissionsAction in
-// src/app/users/missionOwnerActions.ts) — spart das mühsame Einzeln-Zuordnen
+// src/app/admin/missionOwnerActions.ts) — spart das mühsame Einzeln-Zuordnen
 // über OwnerSelect.tsx auf jeder Mission-Detailseite. Bereits zugeordnete
 // Missionen bleiben unangetastet (WHERE owner_user_id IS NULL).
 export async function assignOwnerlessMissionsToUser(
@@ -627,7 +627,7 @@ export interface OwnMissionLogForEdit {
   tags: string[];
 }
 
-// Für /users/[id]/mission-logs/[logId]/edit — lädt den rohen Markdown-Body
+// Für /user/[id]/mission-logs/[logId]/edit — lädt den rohen Markdown-Body
 // (source_md) statt content (gerendertes HTML), damit das Formular ihn
 // wieder editierbar vorbefüllen kann. Gleiche Owner-Prüfung wie
 // setMissionLogVisibility (Spieler des Autor-Charakters).

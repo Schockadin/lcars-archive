@@ -130,7 +130,7 @@ export interface CharacterWithOwner {
 }
 
 // Alle Charaktere mit Spieler außer denen von excludeUserId — Partner-
-// Picker für "Gespräch beginnen" (src/app/users/[id]/dialogues/new). Kein
+// Picker für "Gespräch beginnen" (src/app/user/[id]/dialogues/new). Kein
 // Cache, gleiche Begründung wie getCharactersForUser.
 export async function getCharactersWithPlayers(
   excludeUserId: number,
@@ -167,7 +167,7 @@ export async function getCharactersForParticipantPicker(): Promise<
   `;
 }
 
-// GM-only-Zuweisung (siehe src/app/users/actions.ts). player_id wird vom
+// GM-only-Zuweisung (siehe src/app/admin/actions.ts). player_id wird vom
 // Ingest nie angefasst (scripts/ingest/characters.ts), Zuweisungen
 // überleben also einen Re-Ingest.
 export async function assignCharacterToUser(
@@ -185,7 +185,7 @@ export async function assignCharacterToUser(
 
 // Entfernt alle Charakter-Zuweisungen eines Users — genutzt, wenn ein User
 // auf die Gast-Rolle herabgestuft wird (siehe updateUserRoleAction in
-// src/app/users/actions.ts), da Gästen laut Produktentscheidung kein
+// src/app/admin/actions.ts), da Gästen laut Produktentscheidung kein
 // Charakter zugeordnet sein darf.
 export async function unassignCharactersFromUser(
   userId: number,
@@ -225,7 +225,7 @@ export interface UserContentLog {
   visibility: "private" | "gm" | "public";
 }
 
-// Alle Mission-Logs der eigenen Charaktere für /users/[id]/content. Ungecacht
+// Alle Mission-Logs der eigenen Charaktere für /user/[id]/content. Ungecacht
 // wie getCharactersForUser — die Seite ist ohnehin durch requireOwnCharacters
 // (Session-Zugriff) dynamisch. Liefert den verfassenden eigenen Charakter
 // mit, damit die Seite nach Charakter gruppieren kann.
@@ -321,9 +321,9 @@ export async function generateUniqueCharacterSlug(
 
 // Legt einen neuen, eigenen Charakter an (User-Feature: jeder eingeloggte
 // User außer Gast-Accounts darf eigene Charaktere anlegen, siehe
-// /users/[id]/characters/new/actions.ts — die Gast-Sperre lebt dort, weil
+// /user/[id]/characters/new/actions.ts — die Gast-Sperre lebt dort, weil
 // Gäste laut Produktentscheidung keinen Charakter zugewiesen haben dürfen,
-// siehe assignCharacterAction in src/app/users/actions.ts). player_id wird
+// siehe assignCharacterAction in src/app/admin/actions.ts). player_id wird
 // direkt auf den anlegenden User gesetzt (sofortige Verknüpfung).
 // visibility bleibt unangegeben → DB-Default 'public' (gleiche Konvention
 // wie createArchiveEntry/createMission). player (Anzeigename, ingest-only)
@@ -406,7 +406,7 @@ export interface OwnCharacterForEdit {
   sourceMarkdown: string;
 }
 
-// Für /users/[id]/characters/[characterId]/edit — lädt die für das volle
+// Für /user/[id]/characters/[characterId]/edit — lädt die für das volle
 // Bearbeiten-Formular relevanten Felder (Metadaten-Teilmenge, siehe
 // createCharacter oben) plus den rohen Markdown-Body. Owner-gescoped wie
 // setCharacterVisibility oben — ein fremdes/gefälschtes id trifft dann

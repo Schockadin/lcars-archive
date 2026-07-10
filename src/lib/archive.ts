@@ -250,7 +250,7 @@ export interface UserContentArchiveEntry {
 }
 
 // Eigene Archiv-Einträge (owner_user_id, siehe scripts/schema.sql) für
-// /users/[id]/content — ohne Kategorie 'dialogue', die dort separat über
+// /user/[id]/content — ohne Kategorie 'dialogue', die dort separat über
 // getDialoguesForUser läuft. Ungecacht wie getLogsForUser (Charaktere.ts):
 // die Seite ist ohnehin durch requireOwnCharacters (Session-Zugriff)
 // dynamisch.
@@ -371,7 +371,7 @@ export async function generateUniqueArchiveEntrySlug(
 
 // Legt einen neuen, eigenen Archiv-Eintrag an (User-Feature: jeder
 // eingeloggte User darf Archiv-Einträge anlegen, siehe
-// /users/[id]/archive/new/actions.ts). Kategorie 'dialogue' ausgeschlossen —
+// /user/[id]/archive/new/actions.ts). Kategorie 'dialogue' ausgeschlossen —
 // Dialoge haben ihr eigenes Anlage-Formular (createDialogue in
 // dialoguesCore.ts) mit eigenem Daten-/Teilnehmer-Modell. visibility bleibt
 // unangegeben → DB-Default 'public' (gleiche Konvention wie createMission/
@@ -451,7 +451,7 @@ export interface OwnArchiveEntryForEdit {
   referenceValues: Record<string, string>;
 }
 
-// Für /users/[id]/archive/[entryId]/edit — lädt den rohen Markdown-Body
+// Für /user/[id]/archive/[entryId]/edit — lädt den rohen Markdown-Body
 // (source_md) statt content, damit das Formular ihn editierbar vorbefüllen
 // kann. Gleiche Owner-Prüfung wie setArchiveEntryVisibility oben, Dialoge
 // ausgeschlossen (die haben kein source_md, ihr Inhalt lebt in
@@ -522,7 +522,7 @@ export async function getOwnArchiveEntryForEdit(
 }
 
 // Bearbeitet Titel/Kategorie/Tags/Text eines eigenen Archiv-Eintrags — für
-// das volle Bearbeiten-Formular (/users/[id]/archive/[entryId]/edit). Owner-
+// das volle Bearbeiten-Formular (/user/[id]/archive/[entryId]/edit). Owner-
 // gescoped im WHERE (ein gefälschtes id trifft dann einfach 0 Zeilen, kein
 // separater Vorab-Check nötig — gleiches Prinzip wie updateMissionLogContent
 // in src/lib/missions.ts). Rendert das Markdown selbst, anders als das

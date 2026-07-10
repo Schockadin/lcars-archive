@@ -5,7 +5,7 @@ import { LcarsDataRow } from "@/components/lcars";
 // formatieren, …) der Inhalts-Detailseiten hinter einem DataRow-Akkordeon
 // (siehe DataRow.tsx#children) statt eines eigenen Dropdown/Overlay-Panels
 // — dasselbe Muster wie "User"/"Charaktere"/"Admin Actions" im
-// Nutzerverwaltungs-Panel (/users/page.tsx). Rein generisch — kennt die
+// Nutzerverwaltungs-Panel (/admin/page.tsx). Rein generisch — kennt die
 // einzelnen Tools nicht, rendert nur deren bestehende Button-Komponenten
 // als children. Das Akkordeon-Panel klappt als normaler Block-Inhalt
 // unterhalb der Zeile auf statt als absolut/fixed positioniertes Overlay
