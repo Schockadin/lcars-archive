@@ -5,16 +5,20 @@ import {
   missionHeadFields,
   missionMetadataFields,
 } from "../_shared/missionHeadFields";
+import MissionParticipantsField from "../_shared/MissionParticipantsField";
 import { MarkdownFormatHint } from "../../../_shared/MarkdownHint";
+import type { CharacterParticipantOption } from "@/lib/characters";
 
 const initialState: MissionFormState = {};
 
 export default function NewMissionForm({
   userId,
   defaultStartedAt,
+  characters,
 }: {
   userId: number;
   defaultStartedAt: string | null;
+  characters: CharacterParticipantOption[];
 }) {
   return (
     <ContentEditor
@@ -33,6 +37,9 @@ export default function NewMissionForm({
       isAdminOrGM
       submitLabel="Speichern"
       submitPendingLabel="Speichern…"
+      extraHeadSlot={
+        <MissionParticipantsField idPrefix="mission" characters={characters} />
+      }
     />
   );
 }

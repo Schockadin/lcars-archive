@@ -396,3 +396,15 @@ CREATE TABLE IF NOT EXISTS content_deletions (
   deleted_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_content_deletions_deleted_at ON content_deletions(deleted_at);
+
+-- Teilnehmende Charaktere einer Mission (Multiselect beim Anlegen, siehe
+-- MissionParticipantsField.tsx). Rein informativ/für die
+-- Anlage-Benachrichtigung (missionAction in
+-- src/app/users/[id]/missions/_shared/contentAction.ts) — löst KEIN
+-- automatisches Mission-Abo aus, das bleibt dem Follow-Button vorbehalten.
+CREATE TABLE IF NOT EXISTS mission_participants (
+  mission_id   INT NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
+  character_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  PRIMARY KEY (mission_id, character_id)
+);
+CREATE INDEX IF NOT EXISTS idx_mission_participants_character ON mission_participants(character_id);

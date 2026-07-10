@@ -10,6 +10,7 @@ import {
   MissionLogDetail,
   MissionLogListItem,
   MissionMetaData,
+  MissionParticipant,
   MissionPreview,
   MissionStatus,
 } from "@/types/missions";
@@ -60,6 +61,32 @@ export const getAllMissions = unstable_cache(
   { tags: [cacheTags.missions, cacheTags.missionLogs] },
 );
 
+type MissionRow = Omit<MissionDetail, "participants">;
+
+async function getMissionParticipants(
+  missionId: number,
+): Promise<MissionParticipant[]> {
+  return sql<MissionParticipant[]>`
+    SELECT c.slug, c.name
+    FROM mission_participants mp
+    JOIN characters c ON c.id = mp.character_id
+    WHERE mp.mission_id = ${missionId}
+    ORDER BY c.name ASC
+  `;
+}
+
+// Charakter-IDs (nicht Slug/Name wie getMissionParticipants oben) — Grundlage
+// für die vorbelegten Checkboxen im Bearbeiten-Formular
+// (MissionParticipantsField.tsx defaultSelectedIds).
+export async function getMissionParticipantIds(
+  missionId: number,
+): Promise<number[]> {
+  const rows = await sql<{ character_id: number }[]>`
+    SELECT character_id FROM mission_participants WHERE mission_id = ${missionId}
+  `;
+  return rows.map((r) => r.character_id);
+}
+
 // Eine Mission per Slug. Persistenter Cache, getaggt mit missions + mission:<slug>.
 // unstable_cache dedupliziert auch innerhalb eines Requests (Layout + Page
 // fragen dieselbe Mission ab), ersetzt also das frühere React-cache().
@@ -68,7 +95,7 @@ export async function getMissionBySlug(
 ): Promise<MissionDetail | null> {
   return unstable_cache(
     async (): Promise<MissionDetail | null> => {
-      const rows = await sql<MissionDetail[]>`
+      const rows = await sql<MissionRow[]>`
         SELECT
           id,
           slug,
@@ -84,9 +111,12 @@ export async function getMissionBySlug(
         WHERE slug = ${slug}
         LIMIT 1
       `;
-      return rows[0] ? parseMeta(rows[0]) : null;
+      if (!rows[0]) return null;
+      const mission = parseMeta(rows[0]);
+      const participants = await getMissionParticipants(mission.id);
+      return { ...mission, participants };
     },
-    ["getMissionBySlug", "v3", slug],
+    ["getMissionBySlug", "v4", slug],
     { tags: [cacheTags.missions, cacheTags.mission(slug)] },
   )();
 }
@@ -98,7 +128,7 @@ export async function getMissionBySlug(
 export async function getMissionById(
   id: number,
 ): Promise<MissionDetail | null> {
-  const rows = await sql<MissionDetail[]>`
+  const rows = await sql<MissionRow[]>`
     SELECT
       id,
       slug,
@@ -114,7 +144,74 @@ export async function getMissionById(
     WHERE id = ${id}
     LIMIT 1
   `;
-  return rows[0] ? parseMeta(rows[0]) : null;
+  if (!rows[0]) return null;
+  const mission = parseMeta(rows[0]);
+  const participants = await getMissionParticipants(mission.id);
+  return { ...mission, participants };
+}
+
+// Ersetzt die komplette Teilnehmerliste einer Mission (Multiselect beim
+// Anlegen/Bearbeiten, siehe MissionParticipantsField.tsx) — DELETE+INSERT
+// statt Diff, da die Liste bei jedem Speichern vollständig aus dem Formular
+// kommt (keine Teilmenge). Kein Owner-Scoping nötig: nur admin/gm erreichen
+// missionAction überhaupt (siehe contentAction.ts).
+export async function setMissionParticipants(
+  missionId: number,
+  characterIds: number[],
+): Promise<void> {
+  await sql`DELETE FROM mission_participants WHERE mission_id = ${missionId}`;
+  if (characterIds.length === 0) return;
+
+  const rows = characterIds.map((characterId) => ({
+    mission_id: missionId,
+    character_id: characterId,
+  }));
+  await sql`
+    INSERT INTO mission_participants ${sql(rows, "mission_id", "character_id")}
+    ON CONFLICT DO NOTHING
+  `;
+}
+
+// Distinct Spieler (player_id) der teilnehmenden Charaktere — Grundlage für
+// die Teilnehmer-Benachrichtigung beim Anlegen einer Mission
+// (missionAction). Unabhängig von einem Mission-Abo, das hier bewusst NICHT
+// automatisch gesetzt wird (siehe Kommentar an mission_participants in
+// schema.sql) — die Benachrichtigung selbst enthält stattdessen einen Link,
+// um das Abo zu aktivieren.
+export async function getMissionParticipantUsers(
+  characterIds: number[],
+): Promise<
+  {
+    id: number;
+    email: string;
+    name: string;
+    emailNotificationsEnabled: boolean;
+    pushNotificationsEnabled: boolean;
+  }[]
+> {
+  if (characterIds.length === 0) return [];
+
+  const rows = await sql<
+    {
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT DISTINCT u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
+    FROM characters c
+    JOIN users u ON u.id = c.player_id
+    WHERE c.id = ANY(${characterIds})
+  `;
+  return rows.map((row) => ({
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    emailNotificationsEnabled: row.email_notifications_enabled,
+    pushNotificationsEnabled: row.push_notifications_enabled,
+  }));
 }
 
 // Kollisionsprüfung vor dem Anlegen einer neuen Mission (analog

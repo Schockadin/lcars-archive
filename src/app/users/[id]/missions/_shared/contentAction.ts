@@ -7,10 +7,16 @@ import {
   createMission,
   updateMissionContent,
   getMissionById,
+  setMissionParticipants,
+  getMissionParticipantUsers,
 } from "@/lib/missions";
 import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
+import { sendMissionParticipantEmail } from "@/lib/mail";
+import { sendPushToUser } from "@/lib/push";
+import { getBaseUrl } from "@/lib/http";
+import { synopsisExcerpt } from "@/lib/missionFormat";
 
 export interface MissionFormState {
   error?: string;
@@ -78,6 +84,11 @@ export async function missionAction(
 
   const teaser = String(formData.get("teaser") ?? "").trim() || null;
 
+  const participantCharacterIds = formData
+    .getAll("participantCharacterIds")
+    .map((v) => Number(v))
+    .filter((n) => Number.isInteger(n));
+
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte eine Zusammenfassung schreiben." };
 
@@ -110,6 +121,11 @@ export async function missionAction(
     if (!result) {
       return { error: "Mission nicht gefunden." };
     }
+    // Teilnehmerliste beim Bearbeiten aktualisieren, aber OHNE erneute
+    // Teilnehmer-Benachrichtigung — die gibt es laut Anforderung nur beim
+    // erstmaligen Anlegen (s.u.), nicht bei jeder späteren Änderung der
+    // Liste.
+    await setMissionParticipants(missionId!, participantCharacterIds);
     revalidateMission(result.slug);
     redirect(`/users/${session.userId}/content`);
   }
@@ -138,5 +154,51 @@ export async function missionAction(
     ownerUserId: user.id,
   });
   revalidateMission(result.slug);
+
+  if (participantCharacterIds.length > 0) {
+    await setMissionParticipants(result.id, participantCharacterIds);
+
+    // Teilnehmer-Spieler informieren — die Mission wird dabei bewusst NICHT
+    // automatisch abonniert (siehe mission_participants in schema.sql), die
+    // Mail/Push enthält stattdessen einen separaten Link, der das Abo mit
+    // einem Klick aktiviert (siehe missions/[missionSlug]/page.tsx,
+    // ?activateFollow=1). Der anlegende GM/Admin wird ausgeschlossen, falls
+    // er selbst einen teilnehmenden Charakter spielt.
+    const recipients = (
+      await getMissionParticipantUsers(participantCharacterIds)
+    ).filter((r) => r.id !== session.userId);
+
+    if (recipients.length > 0) {
+      const missionUrl = `${await getBaseUrl()}/missions/${result.slug}`;
+      const activateUrl = `${missionUrl}?activateFollow=1`;
+      const preview = synopsisExcerpt(teaser ?? bodyMarkdown, 140);
+
+      for (const recipient of recipients) {
+        if (recipient.emailNotificationsEnabled) {
+          const mailResult = await sendMissionParticipantEmail({
+            to: recipient.email,
+            name: recipient.name,
+            missionTitle: title,
+            missionUrl,
+            activateUrl,
+            preview,
+          });
+          if (!mailResult.sent) {
+            console.error(
+              `Teilnehmer-Mail an ${recipient.email} fehlgeschlagen: ${mailResult.error}`,
+            );
+          }
+        }
+        if (recipient.pushNotificationsEnabled) {
+          await sendPushToUser(recipient.id, {
+            title: `Neue Mission: "${title}"`,
+            body: preview,
+            url: missionUrl,
+          });
+        }
+      }
+    }
+  }
+
   redirect(`/missions/${result.slug}`);
 }

@@ -9,17 +9,23 @@ import {
   missionHeadFields,
   missionMetadataFields,
 } from "../../_shared/missionHeadFields";
+import MissionParticipantsField from "../../_shared/MissionParticipantsField";
 import { MarkdownFormatHint } from "../../../../_shared/MarkdownHint";
 import ContentEditor from "@/components/ContentEditor/ContentEditor";
+import type { CharacterParticipantOption } from "@/lib/characters";
 
 const initialState: EditMissionState = {};
 
 export default function EditMissionForm({
   userId,
   mission,
+  characters,
+  participantIds,
 }: {
   userId: number;
   mission: MissionDetail;
+  characters: CharacterParticipantOption[];
+  participantIds: number[];
 }) {
   const [deleteState, deleteAction, deletePending] = useActionState(
     deleteMissionAction,
@@ -50,6 +56,13 @@ export default function EditMissionForm({
         bodyRequired
         bodyLarge
         isAdminOrGM
+        extraHeadSlot={
+          <MissionParticipantsField
+            idPrefix="edit-mission"
+            characters={characters}
+            defaultSelectedIds={participantIds}
+          />
+        }
         submitLabel="Änderungen speichern"
         submitPendingLabel="Wird gespeichert…"
       />
