@@ -377,3 +377,63 @@ export async function sendUserContentEmail(input: {
     `,
   });
 }
+
+// An alle Abonnenten eines teilnehmenden Charakters (content_follows,
+// target_type 'character'), wenn dessen Mission neu angelegt wird (siehe
+// missionAction, missions/_shared/contentAction.ts) — zusätzlich zur
+// direkten Benachrichtigung des Spielers selbst (sendMissionParticipantEmail
+// oben). Schließt den Spieler des Charakters aus, der die direkte Mail
+// bereits bekommt.
+export async function sendCharacterMissionParticipationEmail(input: {
+  to: string;
+  name: string;
+  characterName: string;
+  missionTitle: string;
+  missionUrl: string;
+  preview: string;
+}): Promise<SendEmailResult> {
+  return sendEmail({
+    to: input.to,
+    subject: `${input.characterName} ist jetzt Teil von „${input.missionTitle}"`,
+    html: `
+      <p>Hallo ${input.name},</p>
+      <p>
+        ${input.characterName}, den du abonniert hast, nimmt jetzt an der
+        Mission „${input.missionTitle}" teil:
+      </p>
+      ${previewBlock(input.preview)}
+      <p><a href="${input.missionUrl}">${input.missionUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
+// An alle Abonnenten des Users, dem ein teilnehmender Charakter gehört
+// (content_follows, target_type 'user'), wenn dessen Mission neu angelegt
+// wird — gleiches Ereignis wie sendCharacterMissionParticipationEmail oben,
+// nur für Userabos statt Charakterabos. Schließt ebenfalls den Spieler
+// selbst aus.
+export async function sendUserMissionParticipationEmail(input: {
+  to: string;
+  name: string;
+  authorName: string;
+  characterName: string;
+  missionTitle: string;
+  missionUrl: string;
+  preview: string;
+}): Promise<SendEmailResult> {
+  return sendEmail({
+    to: input.to,
+    subject: `${input.authorName}s Charakter ${input.characterName} ist jetzt Teil von „${input.missionTitle}"`,
+    html: `
+      <p>Hallo ${input.name},</p>
+      <p>
+        ${input.authorName}, den/die du abonniert hast, spielt mit
+        ${input.characterName} jetzt in der Mission „${input.missionTitle}" mit:
+      </p>
+      ${previewBlock(input.preview)}
+      <p><a href="${input.missionUrl}">${input.missionUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}

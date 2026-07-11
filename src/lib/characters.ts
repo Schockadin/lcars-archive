@@ -167,6 +167,34 @@ export async function getCharactersForParticipantPicker(): Promise<
   `;
 }
 
+export interface ParticipantCharacterForNotification {
+  id: number;
+  slug: string;
+  name: string;
+  playerId: number | null;
+  playerSlug: string | null;
+  playerName: string | null;
+}
+
+// Charakter-Slug/-Name + Spieler-ID/-Slug/-Name für die
+// Teilnehmer-Benachrichtigung beim Mission-Anlegen (missionAction,
+// missions/_shared/contentAction.ts) — dort werden zusätzlich zum Spieler
+// selbst (getMissionParticipantUsers) auch dessen Charakter- und
+// User-Abonnenten benachrichtigt, wofür Slug/Name gebraucht werden.
+// playerSlug/playerName sind null bei Charakteren ohne Spieler (NPCs).
+export async function getParticipantCharactersForNotification(
+  characterIds: number[],
+): Promise<ParticipantCharacterForNotification[]> {
+  if (characterIds.length === 0) return [];
+  return sql<ParticipantCharacterForNotification[]>`
+    SELECT c.id, c.slug, c.name, c.player_id AS "playerId",
+           u.slug AS "playerSlug", u.name AS "playerName"
+    FROM characters c
+    LEFT JOIN users u ON u.id = c.player_id
+    WHERE c.id = ANY(${characterIds})
+  `;
+}
+
 // GM-only-Zuweisung (siehe src/app/admin/actions.ts). player_id wird vom
 // Ingest nie angefasst (scripts/ingest/characters.ts), Zuweisungen
 // überleben also einen Re-Ingest.

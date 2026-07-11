@@ -10,10 +10,17 @@ import {
   setMissionParticipants,
   getMissionParticipantUsers,
 } from "@/lib/missions";
+import { getParticipantCharactersForNotification } from "@/lib/characters";
+import { getCharacterSubscribers } from "@/lib/dialogues";
+import { getUserSubscribers } from "@/lib/follows";
 import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
-import { sendMissionParticipantEmail } from "@/lib/mail";
+import {
+  sendMissionParticipantEmail,
+  sendCharacterMissionParticipationEmail,
+  sendUserMissionParticipationEmail,
+} from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
@@ -158,6 +165,10 @@ export async function missionAction(
   if (participantCharacterIds.length > 0) {
     await setMissionParticipants(result.id, participantCharacterIds);
 
+    const missionUrl = `${await getBaseUrl()}/missions/${result.slug}`;
+    const activateUrl = `${missionUrl}?activateFollow=1`;
+    const preview = synopsisExcerpt(teaser ?? bodyMarkdown, 140);
+
     // Teilnehmer-Spieler informieren — die Mission wird dabei bewusst NICHT
     // automatisch abonniert (siehe mission_participants in schema.sql), die
     // Mail/Push enthält stattdessen einen separaten Link, der das Abo mit
@@ -168,33 +179,100 @@ export async function missionAction(
       await getMissionParticipantUsers(participantCharacterIds)
     ).filter((r) => r.id !== session.userId);
 
-    if (recipients.length > 0) {
-      const missionUrl = `${await getBaseUrl()}/missions/${result.slug}`;
-      const activateUrl = `${missionUrl}?activateFollow=1`;
-      const preview = synopsisExcerpt(teaser ?? bodyMarkdown, 140);
+    for (const recipient of recipients) {
+      if (recipient.emailNotificationsEnabled) {
+        const mailResult = await sendMissionParticipantEmail({
+          to: recipient.email,
+          name: recipient.name,
+          missionTitle: title,
+          missionUrl,
+          activateUrl,
+          preview,
+        });
+        if (!mailResult.sent) {
+          console.error(
+            `Teilnehmer-Mail an ${recipient.email} fehlgeschlagen: ${mailResult.error}`,
+          );
+        }
+      }
+      if (recipient.pushNotificationsEnabled) {
+        await sendPushToUser(recipient.id, {
+          title: `Neue Mission: "${title}"`,
+          body: preview,
+          url: missionUrl,
+        });
+      }
+    }
 
-      for (const recipient of recipients) {
-        if (recipient.emailNotificationsEnabled) {
-          const mailResult = await sendMissionParticipantEmail({
-            to: recipient.email,
-            name: recipient.name,
+    // Zusätzlich zur direkten Spieler-Mail oben: wer einen teilnehmenden
+    // Charakter ODER dessen Spieler abonniert hat, wird ebenfalls
+    // benachrichtigt — der Spieler selbst wird dabei ausgeschlossen (der
+    // bekommt bereits die direkte Mail oben), genau wie der anlegende
+    // GM/Admin.
+    const participantCharacters =
+      await getParticipantCharactersForNotification(participantCharacterIds);
+
+    for (const character of participantCharacters) {
+      const characterSubscribers = (
+        await getCharacterSubscribers(character.slug)
+      ).filter(
+        (s) => s.id !== session.userId && s.id !== character.playerId,
+      );
+      for (const subscriber of characterSubscribers) {
+        if (subscriber.emailNotificationsEnabled) {
+          const mailResult = await sendCharacterMissionParticipationEmail({
+            to: subscriber.email,
+            name: subscriber.name,
+            characterName: character.name,
             missionTitle: title,
             missionUrl,
-            activateUrl,
             preview,
           });
           if (!mailResult.sent) {
             console.error(
-              `Teilnehmer-Mail an ${recipient.email} fehlgeschlagen: ${mailResult.error}`,
+              `Charakter-Abo-Mission-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`,
             );
           }
         }
-        if (recipient.pushNotificationsEnabled) {
-          await sendPushToUser(recipient.id, {
-            title: `Neue Mission: "${title}"`,
+        if (subscriber.pushNotificationsEnabled) {
+          await sendPushToUser(subscriber.id, {
+            title: `${character.name}: neue Mission`,
             body: preview,
             url: missionUrl,
           });
+        }
+      }
+
+      if (character.playerId && character.playerSlug) {
+        const userSubscribers = (
+          await getUserSubscribers(character.playerSlug)
+        ).filter(
+          (s) => s.id !== session.userId && s.id !== character.playerId,
+        );
+        for (const subscriber of userSubscribers) {
+          if (subscriber.emailNotificationsEnabled) {
+            const mailResult = await sendUserMissionParticipationEmail({
+              to: subscriber.email,
+              name: subscriber.name,
+              authorName: character.playerName ?? "",
+              characterName: character.name,
+              missionTitle: title,
+              missionUrl,
+              preview,
+            });
+            if (!mailResult.sent) {
+              console.error(
+                `User-Abo-Mission-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`,
+              );
+            }
+          }
+          if (subscriber.pushNotificationsEnabled) {
+            await sendPushToUser(subscriber.id, {
+              title: `${character.playerName}: neue Mission`,
+              body: preview,
+              url: missionUrl,
+            });
+          }
         }
       }
     }

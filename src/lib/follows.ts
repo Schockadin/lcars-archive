@@ -209,14 +209,53 @@ export async function getSubscribedContent(
   return rows.map(toFollowedContent);
 }
 
-// An alle Abonnenten eines Users (target_type 'user', siehe FollowTargetType
-// oben), sobald dieser User einen neuen öffentlichen Inhalt erstellt oder
-// einen bestehenden auf public umstellt — aufgerufen aus setVisibilityAction
-// (user/[id]/content/actions.ts, der zentralen Sichtbarkeits-Action für alle
-// vier Inhaltstypen) sowie den jeweiligen Anlage-Actions. Author-Name/-Slug
-// wird hier selbst nachgeschlagen, damit Aufrufer nicht extra dafür laden
-// müssen. Schließt den Autor selbst aus (falls er sich versehentlich selbst
-// abonniert hat).
+export interface FollowSubscriber {
+  id: number;
+  email: string;
+  name: string;
+  emailNotificationsEnabled: boolean;
+  pushNotificationsEnabled: boolean;
+}
+
+// Abonnenten eines Users (target_type 'user', siehe FollowTargetType oben)
+// — eigenständig exportiert (nicht nur intern in notifyUserSubscribers),
+// damit z.B. missions/_shared/contentAction.ts dieselbe Liste für eine
+// andere Benachrichtigung (Mission-Teilnahme eines abonnierten Users) nutzen
+// kann, ohne die Query zu duplizieren.
+export async function getUserSubscribers(
+  userSlug: string,
+): Promise<FollowSubscriber[]> {
+  const rows = await sql<
+    {
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
+    FROM content_follows cf
+    JOIN users u ON u.id = cf.user_id
+    WHERE cf.target_type = 'user' AND cf.target_slug = ${userSlug}
+      AND cf.subscribed_at IS NOT NULL
+  `;
+  return rows.map((row) => ({
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    emailNotificationsEnabled: row.email_notifications_enabled,
+    pushNotificationsEnabled: row.push_notifications_enabled,
+  }));
+}
+
+// An alle Abonnenten eines Users, sobald dieser User einen neuen öffentlichen
+// Inhalt erstellt oder einen bestehenden auf public umstellt — aufgerufen aus
+// setVisibilityAction (user/content/actions.ts, der zentralen
+// Sichtbarkeits-Action für alle vier Inhaltstypen) sowie den jeweiligen
+// Anlage-Actions. Author-Name/-Slug wird hier selbst nachgeschlagen, damit
+// Aufrufer nicht extra dafür laden müssen. Schließt den Autor selbst aus
+// (falls er sich versehentlich selbst abonniert hat).
 export async function notifyUserSubscribers(input: {
   authorUserId: number;
   contentTypeLabel: string;
@@ -229,25 +268,13 @@ export async function notifyUserSubscribers(input: {
   `;
   if (!author) return;
 
-  const subscribers = await sql<
-    {
-      id: number;
-      email: string;
-      name: string;
-      email_notifications_enabled: boolean;
-      push_notifications_enabled: boolean;
-    }[]
-  >`
-    SELECT u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
-    FROM content_follows cf
-    JOIN users u ON u.id = cf.user_id
-    WHERE cf.target_type = 'user' AND cf.target_slug = ${author.slug}
-      AND cf.subscribed_at IS NOT NULL AND cf.user_id != ${input.authorUserId}
-  `;
+  const subscribers = (await getUserSubscribers(author.slug)).filter(
+    (s) => s.id !== input.authorUserId,
+  );
   if (subscribers.length === 0) return;
 
   for (const subscriber of subscribers) {
-    if (subscriber.email_notifications_enabled) {
+    if (subscriber.emailNotificationsEnabled) {
       const result = await sendUserContentEmail({
         to: subscriber.email,
         name: subscriber.name,
@@ -263,7 +290,7 @@ export async function notifyUserSubscribers(input: {
         );
       }
     }
-    if (subscriber.push_notifications_enabled) {
+    if (subscriber.pushNotificationsEnabled) {
       await sendPushToUser(subscriber.id, {
         title: `${author.name}: ${input.contentTitle}`,
         body: input.preview,
