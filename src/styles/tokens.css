@@ -92,11 +92,16 @@
   --radius-lcars-pill: 24px;
 
   /* ── Spacing / Sizing ────────────────────────────────────────────
-     Erzeugt: h-lcars-bar, h-lcars-footer, h-lcars-datarow
+     Erzeugt: h-lcars-footer, h-lcars-datarow
      Nutzbar als: h-*, w-*, p-*, m-*, gap-* etc.
+
+     WICHTIG: --lcars-bar-h und --lcars-charpage-w (oben in :root) haben
+     Responsive-Overrides in tokens-responsive.css — dafür bewusst KEIN
+     @theme-Pendant, da @theme-Tokens statisch zur Build-Zeit ausgewertet
+     werden und Media-Query-Overrides des :root-Werts nicht mitbekommen.
+     Für diese beiden bleibt h-[var(--lcars-bar-h)]/w-[var(--lcars-charpage-w)]
+     die richtige Form.
   ─────────────────────────────────────────────────────────────────── */
-  --spacing-lcars-bar: 20px;
   --spacing-lcars-footer: 40px;
   --spacing-lcars-datarow: 40px;
-  --spacing-lcars-charpage: 465px;
 }

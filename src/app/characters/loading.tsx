@@ -10,7 +10,7 @@ export default function Loading() {
   ];
 
   return (
-    <div className="flex flex-col items-start w-lcars-charpage">
+    <div className="flex flex-col items-start w-[var(--lcars-charpage-w)]">
       <div className="mb-[16px] flex w-full flex-col items-start gap-[12px]">
         <LcarsSkeleton className="h-[40px] w-[260px]" />
         <div className="flex w-full gap-[10px]">
