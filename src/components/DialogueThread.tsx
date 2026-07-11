@@ -3,7 +3,7 @@ import type { DialogueMessage } from "@/lib/dialogues";
 import type { ArchiveParticipant } from "@/types/archive";
 import DialogueMessageActions from "./DialogueMessageActions";
 
-// Reihenfolge kommt bereits absteigend (neueste zuerst) aus
+// Reihenfolge kommt bereits chronologisch (ältester zuerst) aus
 // getDialogueMessages — kein Re-Sort nötig. Farbe wird deterministisch aus
 // der Position im Teilnehmer-Array abgeleitet (AUTHOR_COLORS, bereits für
 // Mission-Log-Autoren genutzt) statt separat gespeichert.

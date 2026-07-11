@@ -5,7 +5,8 @@ import type { User } from "@/types/db";
 
 const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
-  email_notifications_enabled, push_notifications_enabled
+  last_visit_at, last_dashboard_visit_at,
+  email_notifications_enabled, push_notifications_enabled, notify_content_types
 `;
 
 // Probiert slugifyBase(name), "${base}-2", "${base}-3", … bis ein Slug in
@@ -41,7 +42,7 @@ export async function getUserById(id: number): Promise<User | null> {
 // Vorheriges last_login_at wird nach previous_login_at verschoben, bevor
 // last_login_at auf NOW() gesetzt wird — so bleibt der Zeitpunkt des
 // *vorletzten* Logins nachvollziehbar (angezeigt im Admin-Panel, siehe
-// users/[id]/edit/page.tsx). Bewusst eine eigene DB-Spalte statt
+// admin/[id]/edit/page.tsx). Bewusst eine eigene DB-Spalte statt
 // Cookie-Payload, damit ein Profil-Update (updateUser) diesen Zeitpunkt
 // nicht versehentlich zurücksetzen kann.
 export async function recordLogin(userId: number): Promise<void> {
@@ -52,6 +53,33 @@ export async function recordLogin(userId: number): Promise<void> {
   `;
 }
 
+// Aktualisiert last_visit_at bei (praktisch) jedem Seitenaufruf — aufgerufen
+// aus /api/session/route.ts, das der Header client-seitig auf jeder Seite
+// abfragt. Ohne Drosselung wäre das ein DB-Write pro Seitenaufruf; das
+// bedingte UPDATE (kein Write, wenn der Wert noch keine 15 Minuten alt ist)
+// senkt das auf höchstens einen Write pro Nutzer alle 15 Minuten, ganz ohne
+// In-Memory-Cache oder zusätzliches Cookie — funktioniert dadurch unverändert
+// über mehrere Serverless-Instanzen hinweg. Synchron awaited (kein after()
+// mehr, siehe Kommentar in /api/session/route.ts) — die geringe Antwortzeit
+// eines gedrosselten No-op-UPDATE ist der sichere Trade-off gegenüber einem
+// nach der Response möglicherweise abgebrochenen Background-Write.
+export async function touchLastVisit(userId: number): Promise<void> {
+  await sql`
+    UPDATE users
+    SET last_visit_at = NOW()
+    WHERE id = ${userId}
+      AND (last_visit_at IS NULL OR last_visit_at < NOW() - INTERVAL '15 minutes')
+  `;
+}
+
+// Anders als touchLastVisit oben bewusst ungedrosselt: das Dashboard wird
+// weit seltener aufgerufen als irgendeine Seite, und Dashboard.tsx liest
+// last_dashboard_visit_at im selben Request als "seit wann?"-Grenze für die
+// News-Sektion, BEVOR dieser Aufruf ihn überschreibt.
+export async function touchDashboardVisit(userId: number): Promise<void> {
+  await sql`UPDATE users SET last_dashboard_visit_at = NOW() WHERE id = ${userId}`;
+}
+
 export interface UserWithCharacters extends User {
   characters: { id: number; slug: string; name: string }[];
 }
@@ -60,8 +88,8 @@ export async function listAllUsers(): Promise<UserWithCharacters[]> {
   const rows = await sql<UserWithCharacters[]>`
     SELECT
       u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
-      u.last_login_at, u.previous_login_at,
-      u.email_notifications_enabled, u.push_notifications_enabled,
+      u.last_login_at, u.previous_login_at, u.last_visit_at, u.last_dashboard_visit_at,
+      u.email_notifications_enabled, u.push_notifications_enabled, u.notify_content_types,
       COALESCE(
         jsonb_agg(
           jsonb_build_object('id', c.id, 'slug', c.slug, 'name', c.name)
@@ -159,6 +187,10 @@ export interface UpdateUserInput {
 export interface NotificationPreferencesInput {
   emailEnabled: boolean;
   pushEnabled: boolean;
+  // Admin-Opt-in "Über alle Inhalte benachrichtigt werden" — nur bei Admins
+  // in der UI editierbar (NotificationSettingsForm.tsx), für alle anderen
+  // Rollen bleibt das Array leer.
+  notifyContentTypes: string[];
 }
 
 // Zwei globale Schalter, gelten einheitlich für alle Benachrichtigungs-
@@ -171,7 +203,8 @@ export async function updateNotificationPreferences(
   await sql`
     UPDATE users
     SET email_notifications_enabled = ${data.emailEnabled},
-        push_notifications_enabled = ${data.pushEnabled}
+        push_notifications_enabled = ${data.pushEnabled},
+        notify_content_types = ${data.notifyContentTypes}
     WHERE id = ${id}
   `;
 }
@@ -263,11 +296,11 @@ export interface UserAdminDetail extends User {
   characters: { id: number; slug: string; name: string }[];
 }
 
-// Für /users/[id]/edit: alle Felder, die die Admin-Bearbeitungsseite
+// Für /admin/[id]/edit: alle Felder, die die Admin-Bearbeitungsseite
 // anzeigt — inkl. Passwort-/Aktivierungsstatus (wieder nur als Boolean,
 // nie der Hash selbst, siehe Kommentar oben bei UserCredentials) und
 // zugewiesene Charaktere (read-only Kontext, Zuweisung selbst bleibt
-// CharacterAssignmentTable auf /users vorbehalten).
+// CharacterAssignmentTable auf /admin vorbehalten).
 export async function getUserForAdmin(
   id: number,
 ): Promise<UserAdminDetail | null> {
@@ -280,8 +313,8 @@ export async function getUserForAdmin(
   >`
     SELECT
       u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
-      u.last_login_at, u.previous_login_at,
-      u.email_notifications_enabled, u.push_notifications_enabled,
+      u.last_login_at, u.previous_login_at, u.last_visit_at, u.last_dashboard_visit_at,
+      u.email_notifications_enabled, u.push_notifications_enabled, u.notify_content_types,
       u.password_hash IS NOT NULL AS has_password,
       u.requires_activation,
       COALESCE(

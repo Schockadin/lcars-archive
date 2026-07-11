@@ -47,8 +47,8 @@ export interface DialogueMessage {
   deletedAt: string | null;
 }
 
-// Absteigend (neueste zuerst). Kein unstable_cache — muss nach jeder neuen
-// Nachricht sofort frisch sein (Server Actions revalidieren die Seite
+// Chronologisch (ältester zuerst). Kein unstable_cache — muss nach jeder
+// neuen Nachricht sofort frisch sein (Server Actions revalidieren die Seite
 // gezielt, siehe src/app/actions/dialogues.ts).
 export async function getDialogueMessages(
   archiveEntryId: number,
@@ -74,7 +74,7 @@ export async function getDialogueMessages(
     FROM dialogue_messages dm
     LEFT JOIN characters c ON c.id = dm.character_id
     WHERE dm.archive_entry_id = ${archiveEntryId}
-    ORDER BY dm.created_at DESC
+    ORDER BY dm.created_at ASC
   `;
 
   return rows.map((r) => ({
@@ -576,12 +576,12 @@ export async function setDialogueVisibility(
   userId: number,
   archiveEntryId: number,
   visibility: "private" | "gm" | "public",
-): Promise<{ slug: string } | null> {
-  const rows = await sql<{ slug: string }[]>`
+): Promise<{ slug: string; title: string } | null> {
+  const rows = await sql<{ slug: string; title: string }[]>`
     UPDATE archive_entries
     SET visibility = ${visibility}, updated_at = NOW()
     WHERE id = ${archiveEntryId} AND category = 'dialogue' AND owner_user_id = ${userId}
-    RETURNING slug
+    RETURNING slug, title
   `;
   return rows[0] ?? null;
 }
@@ -828,4 +828,34 @@ export async function getDialoguesForUser(
   return [...results.values()].sort((a, b) =>
     b.updatedAt.localeCompare(a.updatedAt),
   );
+}
+
+export interface PublicDialogue {
+  slug: string;
+  title: string;
+  participantNames: string[];
+}
+
+// Öffentliche Gespräche eines Users (owner_user_id, wie bei Missionen/
+// Mission-Logs/Archiv-Einträgen — siehe scripts/schema.sql) für die
+// öffentliche Profilseite /users/[id] — anders als getDialoguesForUser oben
+// (Session-User, gefiltert auf "eigene Charaktere als Teilnehmer") reine
+// Owner-Abfrage ohne Partner-Ausschluss, da hier beide Teilnehmer angezeigt
+// werden.
+export async function getPublicDialoguesForUser(
+  userId: number,
+): Promise<PublicDialogue[]> {
+  const rows = await sql<
+    { slug: string; title: string; metadata: unknown }[]
+  >`
+    SELECT slug, title, metadata
+    FROM archive_entries
+    WHERE category = 'dialogue' AND owner_user_id = ${userId} AND visibility = 'public'
+    ORDER BY title ASC
+  `;
+  return rows.map((row) => ({
+    slug: row.slug,
+    title: row.title,
+    participantNames: parseParticipants(row.metadata).map((p) => p.name),
+  }));
 }

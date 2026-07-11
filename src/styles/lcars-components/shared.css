@@ -146,9 +146,58 @@
   /* margin-bottom: 16px; */
 }
 
-/* Admin-Content-Tools (AutolinkButton/RemoveWikilinksButton/
-   FormatTextButton) — gemeinsame Vorschau-Box auf den vier Inhalts-
-   Detailseiten (Mission, Log, Archiv-Eintrag, Charakter). */
+/* FollowButtons.tsx — Teilen-Dropdown, gleiches optisches Muster wie
+   .lcars-search-dropdown (header.css), aber relativ zum Icon-Button
+   positioniert statt fixed+JS-berechnet, da hier keine Verschiebung durch
+   Scroll/Viewport-Ränder ausgeglichen werden muss. */
+.follow-share-wrapper {
+  position: relative;
+}
+.follow-share-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  min-width: 160px;
+  padding: 6px;
+  background: var(--lcars-surface);
+  border: 2px solid var(--lcars-purple);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+}
+.follow-share-menu-item {
+  padding: 8px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  text-align: left;
+  color: var(--lcars-text-light);
+  font-size: 14px;
+  cursor: pointer;
+}
+.follow-share-menu-item:hover {
+  background: rgba(205, 154, 205, 0.18);
+}
+.follow-share-toast {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 50;
+  padding: 8px 12px;
+  background: var(--lcars-surface);
+  border: 2px solid var(--lcars-amber);
+  border-radius: 12px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  color: var(--lcars-text-light);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Admin-Content-Tools (AutolinkButton/RemoveWikilinksButton) — gemeinsame
+   Vorschau-Box auf den vier Inhalts-Detailseiten (Mission, Log,
+   Archiv-Eintrag, Charakter). */
 .autolink-preview {
   display: flex;
   flex-direction: column;

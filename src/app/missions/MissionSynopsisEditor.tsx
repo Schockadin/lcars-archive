@@ -4,8 +4,8 @@ import {
   updateMissionSynopsisAction,
   type MissionSynopsisEditState,
 } from "@/app/actions/missions";
-import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
-import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
+import AutoLinkCheckbox from "@/app/_shared/AutoLinkCheckbox";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 
 const initialState: MissionSynopsisEditState = {};
 

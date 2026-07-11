@@ -26,10 +26,12 @@ export default function MissionLogList({
   missionSlug,
   synopsis,
   logs,
+  canCreateLog,
 }: {
   missionSlug: string;
   synopsis: string | null;
   logs: MissionLogListItem[];
+  canCreateLog: boolean;
 }) {
   const [sort, setSort] = useState<LogSortMode>("author");
   const [dateDir, setDateDir] = useState<SortDir>("desc");
@@ -78,6 +80,15 @@ export default function MissionLogList({
           ‹ Missionen
         </Link>
       </div>
+
+      {canCreateLog && (
+        <Link
+          href={`/user/mission-logs/new?mission=${missionSlug}`}
+          className="lcars-pill-btn w-full mb-[8px]"
+        >
+          Neues Log
+        </Link>
+      )}
 
       {/* oberste Zeile: zurück zur Synopsis der Mission */}
       <LcarsLogEntry

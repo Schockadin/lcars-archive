@@ -345,7 +345,12 @@
   font-size: calc(var(--lcars-bar-h) - 2px);
   letter-spacing: 0.03em;
   color: var(--lcars-surface-2);
+  text-decoration: none;
   user-select: text;
+  transition: color 150ms;
+}
+.lcars-footer-version:hover {
+  color: var(--lcars-text-contrast);
 }
 
 /* ── Responsive Overrides ─────────────────────────────────────────── */
@@ -375,7 +380,7 @@
     flex-basis: 190px;
   }
   /* Anmelden-/Abmelden-Pill neben dem Titel — nur die Header-Instanz
-     betroffen (nicht das Pill-Grid unter /users), daher gescoped statt die
+     betroffen (nicht das Pill-Grid unter /admin), daher gescoped statt die
      Basisklasse anzufassen. */
   .lcars-header-top .lcars-usernav-pill {
     height: 34px;

@@ -25,7 +25,7 @@ export const getCurrentUser = cache(async (): Promise<User> => {
   return user;
 });
 
-// Gate für /users (Nutzerverwaltung): darf betreten, wer gm ODER admin ist —
+// Gate für /admin (Nutzerverwaltung): darf betreten, wer gm ODER admin ist —
 // die Seite selbst zeigt je nach Rolle unterschiedliche Abschnitte (siehe
 // requireAdmin unten für die strengere Admin-only-Prüfung der
 // Useraccount-Verwaltungs-Actions). forbidden() (nicht redirect) — der User
@@ -45,6 +45,18 @@ export async function requireGM(): Promise<User> {
 export async function requireAdmin(): Promise<User> {
   const user = await getCurrentUser();
   if (user.role !== "admin") {
+    forbidden();
+  }
+  return user;
+}
+
+// Gate für /users (Userübersicht) und /users/[id] (öffentliches Profil):
+// jede Rolle außer guest darf rein — Gäste dürfen laut Produktentscheidung
+// nur Inhalte ansehen/bookmarken/abonnieren (siehe scripts/schema.sql), eine
+// Userliste mit Subscribe-Aktion gehört nicht dazu.
+export async function requireNonGuest(): Promise<User> {
+  const user = await getCurrentUser();
+  if (user.role === "guest") {
     forbidden();
   }
   return user;

@@ -60,6 +60,24 @@ export default function RemoveWikilinksButton({
     setPreview(null);
   }
 
+  const distinctRemoved = preview
+    ? Object.values(
+        preview.removed.reduce<
+          Record<string, { original: string; replacement: string; count: number }>
+        >((acc, entry) => {
+          if (!acc[entry.original]) {
+            acc[entry.original] = {
+              original: entry.original,
+              replacement: entry.replacement,
+              count: 0,
+            };
+          }
+          acc[entry.original].count++;
+          return acc;
+        }, {}),
+      )
+    : [];
+
   if (preview) {
     return (
       <div className="autolink-preview">
@@ -69,11 +87,11 @@ export default function RemoveWikilinksButton({
             : `${preview.removed.length} Wikilink${preview.removed.length === 1 ? "" : "s"} gefunden:`}
         </p>
 
-        {preview.removed.length > 0 && (
+        {distinctRemoved.length > 0 && (
           <ul className="autolink-match-list">
-            {preview.removed.map((r, i) => (
+            {distinctRemoved.map((r, i) => (
               <li key={i}>
-                „{r.original}“ → „{r.replacement}“
+                „{r.original}“ → „{r.replacement}“ ({r.count} mal)
               </li>
             ))}
           </ul>

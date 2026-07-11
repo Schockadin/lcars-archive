@@ -41,8 +41,8 @@ function toHref(row: RecentActivityRow): string {
   }
 }
 
-// "Neu"/"Aktualisiert" seit dem letzten Besuch (previous_login_at, siehe
-// recordLogin in src/lib/users.ts) — bewusst direkt aus den Inhaltstabellen
+// "Neu"/"Aktualisiert" seit dem letzten Dashboard-Besuch (last_dashboard_visit_at,
+// siehe touchDashboardVisit in src/lib/users.ts) — bewusst direkt aus den Inhaltstabellen
 // (created_at/updated_at) statt aus timeline_events: Timeline-Einträge sind
 // kuratierte In-Story-Ereignisse (eigene Kategorie/Datum), keine "was ist neu
 // im Archiv"-Quelle (siehe commit 53e76fa, das die vorherige, komplett auf

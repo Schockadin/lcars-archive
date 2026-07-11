@@ -1,4 +1,4 @@
-import { FormField } from "@/app/users/_shared/FormPrimitives";
+import { FormField } from "@/app/_shared/FormPrimitives";
 import type { HeadField } from "./headFields";
 
 const inputClass = "rounded-lcars-pill lcars-input w-full";

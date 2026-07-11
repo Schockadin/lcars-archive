@@ -1,7 +1,7 @@
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
-import { hasPassword } from "@/lib/users";
-import { getBookmarkedContent, getSubscribedContent } from "@/lib/follows";
+import { hasPassword, touchDashboardVisit } from "@/lib/users";
+import { getBookmarkedContent } from "@/lib/follows";
 import { getRecentActivity, getRecentDeletions } from "@/lib/recentActivity";
 import { getDialoguesForUser } from "@/lib/dialogues";
 import FollowedContentSection from "./FollowedContentSection";
@@ -19,23 +19,33 @@ const ROLE_LABELS: Record<User["role"], string> = {
 
 // Persönliches Dashboard für eingeloggte User auf "/" (siehe page.tsx) —
 // vorher auf /home, das jetzt wieder ein blanker Redirect auf "/" ist
-// (next.config.ts), und davor auf /users/[id] (Profil), das inzwischen mit
+// (next.config.ts), und davor auf /user/[id] (Profil), das inzwischen mit
 // Settings zusammengeführt ist und nur noch Konto-Verwaltung zeigt.
 export default async function Dashboard({ user }: { user: User }) {
   // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
   // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
   // spürbar auf.
-  const [hasPasswordSet, bookmarks, subscriptions, recentActivity, deletions, openDialogues] =
+  const [hasPasswordSet, bookmarks, recentActivity, deletions, openDialogues] =
     await Promise.all([
       hasPassword(user.id),
       getBookmarkedContent(user.id),
-      getSubscribedContent(user.id),
-      getRecentActivity(user.id, user.previous_login_at),
-      getRecentDeletions(user.id, user.previous_login_at),
+      getRecentActivity(user.id, user.last_dashboard_visit_at),
+      getRecentDeletions(user.id, user.last_dashboard_visit_at),
       getDialoguesForUser(user.id, "open"),
     ]);
   const needsPassword = !hasPasswordSet;
   const firstVisit = user.previous_login_at === null;
+
+  // last_dashboard_visit_at erst NACH dem Lesen oben überschreiben (wird
+  // dort als "seit wann?"-Grenze für die News-Sektion gebraucht) — anders
+  // als touchLastVisit (lib/users.ts) bewusst ungedrosselt, ein
+  // Dashboard-Besuch ist selten genug, dass ein synchroner Write pro Besuch
+  // unproblematisch ist. BEWUSST kein after() (mehr): siehe Kommentar in
+  // src/app/api/session/route.ts — mit lib/db.ts' max:1-Verbindung pro
+  // Funktionsinstanz kann ein nach der Response noch laufender
+  // after()-Callback die eine Verbindung hängen lassen und damit jede
+  // weitere Anfrage auf derselben Instanz blockieren.
+  await touchDashboardVisit(user.id);
 
   return (
     <>
@@ -51,7 +61,7 @@ export default async function Dashboard({ user }: { user: User }) {
           {needsPassword && (
             <p className="text-lcars-amber">
               Du hast noch kein Passwort gesetzt.{" "}
-              <Link href={`/users/${user.id}#password`} className="underline">
+              <Link href="/user#password" className="underline">
                 Jetzt festlegen
               </Link>
               .
@@ -73,8 +83,6 @@ export default async function Dashboard({ user }: { user: User }) {
           />
 
           <FollowedContentSection heading="Deine Lesezeichen" items={bookmarks} />
-
-          <FollowedContentSection heading="Deine Abos" items={subscriptions} />
         </div>
       </article>
     </>

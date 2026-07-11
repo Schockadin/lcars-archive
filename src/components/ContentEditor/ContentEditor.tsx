@@ -1,8 +1,8 @@
 "use client";
 import { useActionState, type ReactNode } from "react";
-import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
-import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
-import { FormField, SubmitButton, FormError } from "@/app/users/_shared/FormPrimitives";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
+import AutoLinkCheckbox from "@/app/_shared/AutoLinkCheckbox";
+import { FormField, SubmitButton, FormError } from "@/app/_shared/FormPrimitives";
 import HeadFieldRenderer from "./HeadFieldRenderer";
 import MetadataSection from "./MetadataSection";
 import type { HeadField } from "./headFields";

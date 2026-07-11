@@ -5,6 +5,19 @@ import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
 import { Character, CharacterMetadata } from "@/types/character";
 import { MissionLogPreview } from "@/types/missionLog";
+// getCharacterSubscribers lebt in dialoguesCore.ts (ursprünglich für den
+// Dialog-Abschluss gebraucht, siehe dort) und wird hier für die
+// Charakter-Update-Benachrichtigung wiederverwendet — Import über den
+// "server-only"-Wrapper @/lib/dialogues statt @/lib/dialoguesCore direkt, da
+// characters.ts (unstable_cache-Import oben) ohnehin nur innerhalb von
+// Next.js läuft, nie per tsx (anders als dialoguesCore.ts selbst, das
+// deshalb bewusst nicht umgekehrt aus @/lib/follows importieren darf, siehe
+// dessen Kommentar in createDialogue).
+import { getCharacterSubscribers } from "@/lib/dialogues";
+import { sendCharacterUpdatedEmail } from "@/lib/mail";
+import { sendPushToUser } from "@/lib/push";
+import { getBaseUrl } from "@/lib/http";
+import { synopsisExcerpt } from "@/lib/missionFormat";
 
 // Hilfsfunktion: stellt sicher dass metadata ein Objekt ist
 function parseCharacter(row: Character): Character {
@@ -117,7 +130,7 @@ export interface CharacterWithOwner {
 }
 
 // Alle Charaktere mit Spieler außer denen von excludeUserId — Partner-
-// Picker für "Gespräch beginnen" (src/app/users/[id]/dialogues/new). Kein
+// Picker für "Gespräch beginnen" (src/app/user/dialogues/new). Kein
 // Cache, gleiche Begründung wie getCharactersForUser.
 export async function getCharactersWithPlayers(
   excludeUserId: number,
@@ -131,25 +144,76 @@ export async function getCharactersWithPlayers(
   `;
 }
 
-// GM-only-Zuweisung (siehe src/app/users/actions.ts). player_id wird vom
+export interface CharacterParticipantOption {
+  id: number;
+  name: string;
+  playerName: string;
+}
+
+// Nur Charaktere MIT zugewiesenem Spieler für den Teilnehmer-Multiselect
+// beim Anlegen/Bearbeiten einer Mission (MissionParticipantsField.tsx) — ein
+// NPC ohne player_id kann nicht "teilnehmen" im Sinne dieses Features, da
+// die ganze Teilnehmer-Benachrichtigung (siehe missionAction,
+// missions/_shared/contentAction.ts) auf einen Spieler abzielt, der
+// informiert werden kann.
+export async function getCharactersForParticipantPicker(): Promise<
+  CharacterParticipantOption[]
+> {
+  return sql<CharacterParticipantOption[]>`
+    SELECT c.id, c.name, u.name AS "playerName"
+    FROM characters c
+    JOIN users u ON u.id = c.player_id
+    ORDER BY c.name ASC
+  `;
+}
+
+export interface ParticipantCharacterForNotification {
+  id: number;
+  slug: string;
+  name: string;
+  playerId: number | null;
+  playerSlug: string | null;
+  playerName: string | null;
+}
+
+// Charakter-Slug/-Name + Spieler-ID/-Slug/-Name für die
+// Teilnehmer-Benachrichtigung beim Mission-Anlegen (missionAction,
+// missions/_shared/contentAction.ts) — dort werden zusätzlich zum Spieler
+// selbst (getMissionParticipantUsers) auch dessen Charakter- und
+// User-Abonnenten benachrichtigt, wofür Slug/Name gebraucht werden.
+// playerSlug/playerName sind null bei Charakteren ohne Spieler (NPCs).
+export async function getParticipantCharactersForNotification(
+  characterIds: number[],
+): Promise<ParticipantCharacterForNotification[]> {
+  if (characterIds.length === 0) return [];
+  return sql<ParticipantCharacterForNotification[]>`
+    SELECT c.id, c.slug, c.name, c.player_id AS "playerId",
+           u.slug AS "playerSlug", u.name AS "playerName"
+    FROM characters c
+    LEFT JOIN users u ON u.id = c.player_id
+    WHERE c.id = ANY(${characterIds})
+  `;
+}
+
+// GM-only-Zuweisung (siehe src/app/admin/actions.ts). player_id wird vom
 // Ingest nie angefasst (scripts/ingest/characters.ts), Zuweisungen
 // überleben also einen Re-Ingest.
 export async function assignCharacterToUser(
   characterId: number,
   userId: number | null,
-): Promise<Character> {
+): Promise<Character | null> {
   const rows = await sql<Character[]>`
     UPDATE characters
     SET player_id = ${userId}
     WHERE id = ${characterId}
     RETURNING *
   `;
-  return parseCharacter(rows[0]);
+  return rows[0] ? parseCharacter(rows[0]) : null;
 }
 
 // Entfernt alle Charakter-Zuweisungen eines Users — genutzt, wenn ein User
 // auf die Gast-Rolle herabgestuft wird (siehe updateUserRoleAction in
-// src/app/users/actions.ts), da Gästen laut Produktentscheidung kein
+// src/app/admin/actions.ts), da Gästen laut Produktentscheidung kein
 // Charakter zugeordnet sein darf.
 export async function unassignCharactersFromUser(
   userId: number,
@@ -166,11 +230,30 @@ export async function setCharacterVisibility(
   userId: number,
   characterId: number,
   visibility: "private" | "gm" | "public",
+): Promise<{ slug: string; name: string; sourceMarkdown: string | null } | null> {
+  const rows = await sql<
+    { slug: string; name: string; sourceMarkdown: string | null }[]
+  >`
+    UPDATE characters
+    SET visibility = ${visibility}, updated_at = NOW()
+    WHERE id = ${characterId} AND player_id = ${userId}
+    RETURNING slug, name, source_md AS "sourceMarkdown"
+  `;
+  return rows[0] ?? null;
+}
+
+// Admin-Sichtbarkeits-Verwaltung (ActionsMenu.tsx/AdminVisibilitySelect.tsx):
+// anders als setCharacterVisibility oben NICHT auf den Owner gescoped (nur
+// admin darf das, geprüft in setVisibilityAdminAction) — mirrort
+// setOwnerAction/assignCharacterToUser in src/app/actions/owner.ts.
+export async function setCharacterVisibilityAdmin(
+  characterId: number,
+  visibility: "private" | "gm" | "public",
 ): Promise<{ slug: string } | null> {
   const rows = await sql<{ slug: string }[]>`
     UPDATE characters
     SET visibility = ${visibility}, updated_at = NOW()
-    WHERE id = ${characterId} AND player_id = ${userId}
+    WHERE id = ${characterId}
     RETURNING slug
   `;
   return rows[0] ?? null;
@@ -189,7 +272,7 @@ export interface UserContentLog {
   visibility: "private" | "gm" | "public";
 }
 
-// Alle Mission-Logs der eigenen Charaktere für /users/[id]/content. Ungecacht
+// Alle Mission-Logs der eigenen Charaktere für /user/content. Ungecacht
 // wie getCharactersForUser — die Seite ist ohnehin durch requireOwnCharacters
 // (Session-Zugriff) dynamisch. Liefert den verfassenden eigenen Charakter
 // mit, damit die Seite nach Charakter gruppieren kann.
@@ -205,6 +288,41 @@ export async function getLogsForUser(
     JOIN characters c ON c.id = ml.author_id
     JOIN missions m ON m.id = ml.mission_id
     WHERE c.player_id = ${userId}
+    ORDER BY ml.session_nr DESC NULLS LAST
+  `;
+}
+
+// Nur public-Charaktere eines Users für die öffentliche Profilseite
+// /users/[id] — Gegenstück zu getCharactersForUser (dort ALLE eigenen
+// Charaktere für "Meine Inhalte", hier nur was auch fremde Besucher sehen
+// dürfen).
+export async function getPublicCharactersForUser(
+  userId: number,
+): Promise<Character[]> {
+  const rows = await sql<Character[]>`
+    SELECT *
+    FROM characters
+    WHERE player_id = ${userId} AND visibility = 'public'
+    ORDER BY name ASC
+  `;
+  return rows.map(parseCharacter);
+}
+
+// Nur public-Mission-Logs eines Users für die öffentliche Profilseite
+// /users/[id] — Gegenstück zu getLogsForUser (dort ALLE eigenen Logs für
+// "Meine Inhalte", hier nur was auch fremde Besucher sehen dürfen).
+export async function getPublicLogsForUser(
+  userId: number,
+): Promise<UserContentLog[]> {
+  return sql<UserContentLog[]>`
+    SELECT
+      ml.id, ml.slug, ml.title, ml.session_nr, ml.log_date::text AS log_date,
+      m.slug AS mission_slug, m.title AS mission_title, ml.visibility,
+      c.slug AS character_slug, c.name AS character_name
+    FROM mission_logs ml
+    JOIN characters c ON c.id = ml.author_id
+    JOIN missions m ON m.id = ml.mission_id
+    WHERE c.player_id = ${userId} AND ml.visibility = 'public'
     ORDER BY ml.session_nr DESC NULLS LAST
   `;
 }
@@ -285,9 +403,9 @@ export async function generateUniqueCharacterSlug(
 
 // Legt einen neuen, eigenen Charakter an (User-Feature: jeder eingeloggte
 // User außer Gast-Accounts darf eigene Charaktere anlegen, siehe
-// /users/[id]/characters/new/actions.ts — die Gast-Sperre lebt dort, weil
+// /user/characters/new/actions.ts — die Gast-Sperre lebt dort, weil
 // Gäste laut Produktentscheidung keinen Charakter zugewiesen haben dürfen,
-// siehe assignCharacterAction in src/app/users/actions.ts). player_id wird
+// siehe assignCharacterAction in src/app/admin/actions.ts). player_id wird
 // direkt auf den anlegenden User gesetzt (sofortige Verknüpfung).
 // visibility bleibt unangegeben → DB-Default 'public' (gleiche Konvention
 // wie createArchiveEntry/createMission). player (Anzeigename, ingest-only)
@@ -370,7 +488,7 @@ export interface OwnCharacterForEdit {
   sourceMarkdown: string;
 }
 
-// Für /users/[id]/characters/[characterId]/edit — lädt die für das volle
+// Für /user/characters/[characterId]/edit — lädt die für das volle
 // Bearbeiten-Formular relevanten Felder (Metadaten-Teilmenge, siehe
 // createCharacter oben) plus den rohen Markdown-Body. Owner-gescoped wie
 // setCharacterVisibility oben — ein fremdes/gefälschtes id trifft dann
@@ -451,7 +569,7 @@ export async function updateOwnCharacterContent(
     // Siehe createCharacter oben — Opt-in "Automatisch verlinken".
     bioHtml?: string;
   },
-): Promise<{ slug: string } | null> {
+): Promise<{ slug: string; visibility: "private" | "gm" | "public" } | null> {
   const trimmedBody = input.bodyMarkdown.trim();
   const bio = trimmedBody
     ? (input.bioHtml ?? (await renderContentHtml(trimmedBody)))
@@ -474,15 +592,70 @@ export async function updateOwnCharacterContent(
     tags: input.tags,
   };
 
-  const rows = await sql<{ slug: string }[]>`
+  const rows = await sql<
+    { slug: string; visibility: "private" | "gm" | "public" }[]
+  >`
     UPDATE characters
     SET name = ${input.name}, status = ${input.status}, portrait = ${input.portrait},
         metadata = metadata || ${sql.json(metadataPatch as ReturnType<typeof JSON.parse>)},
         bio = ${bio}, source_md = ${sourceMd}, updated_at = NOW()
     WHERE id = ${characterId} AND player_id = ${userId}
-    RETURNING slug
+    RETURNING slug, visibility
   `;
   return rows[0] ?? null;
+}
+
+// Benachrichtigt alle Abonnenten eines Charakters (content_follows,
+// target_type 'character'), dass sich etwas an der Akte geändert hat —
+// gerufen von beiden Bearbeiten-Wegen (volles Formular:
+// characters/_shared/contentAction.ts; Inline-Bio-Editor:
+// app/actions/characters.ts#updateOwnCharacterBioAction), jeweils NACH dem
+// erfolgreichen Speichern. Best-effort wie die Dialog-Benachrichtigungen in
+// app/actions/dialogues.ts: einzelne fehlgeschlagene Mails werden geloggt,
+// brechen den Rest nicht ab. editingUserId schließt den Bearbeitenden selbst
+// aus — er ist immer der Owner (beide Editier-Wege sind owner-only, siehe
+// CharacterBioEditor.tsx/EditCharacterForm.tsx), braucht also keine
+// Benachrichtigung über die eigene Änderung.
+export async function notifyCharacterSubscribers(input: {
+  characterSlug: string;
+  characterName: string;
+  editingUserId: number;
+  // Roher Bio-Markdown nach der Änderung — die Vorschau wird hier zentral
+  // daraus abgeleitet, statt an jeder Aufrufstelle einzeln zu kürzen.
+  bioMarkdown: string | null;
+}): Promise<void> {
+  const subscribers = (
+    await getCharacterSubscribers(input.characterSlug)
+  ).filter((s) => s.id !== input.editingUserId);
+  if (subscribers.length === 0) return;
+
+  const preview = input.bioMarkdown
+    ? synopsisExcerpt(input.bioMarkdown, 140)
+    : "Die Akte wurde aktualisiert.";
+  const characterUrl = `${await getBaseUrl()}/characters/${input.characterSlug}`;
+  for (const subscriber of subscribers) {
+    if (subscriber.emailNotificationsEnabled) {
+      const result = await sendCharacterUpdatedEmail({
+        to: subscriber.email,
+        name: subscriber.name,
+        characterName: input.characterName,
+        characterUrl,
+        preview,
+      });
+      if (!result.sent) {
+        console.error(
+          `Charakter-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+        );
+      }
+    }
+    if (subscriber.pushNotificationsEnabled) {
+      await sendPushToUser(subscriber.id, {
+        title: `Aktualisiert: ${input.characterName}`,
+        body: preview,
+        url: characterUrl,
+      });
+    }
+  }
 }
 
 // Nur die Biografie, nicht Name/Status/Metadaten — für den Inline-Editor auf
@@ -497,19 +670,19 @@ export async function updateOwnCharacterBio(
   bodyMarkdown: string,
   // Siehe createCharacter oben — Opt-in "Automatisch verlinken".
   bioHtmlOverride?: string,
-): Promise<{ slug: string; bio: string | null } | null> {
+): Promise<{ slug: string; name: string; bio: string | null } | null> {
   const trimmedBody = bodyMarkdown.trim();
   const bio = trimmedBody
     ? (bioHtmlOverride ?? (await renderContentHtml(trimmedBody)))
     : null;
   const sourceMd = trimmedBody || null;
 
-  const rows = await sql<{ slug: string }[]>`
+  const rows = await sql<{ slug: string; name: string }[]>`
     UPDATE characters
     SET bio = ${bio}, source_md = ${sourceMd}, updated_at = NOW()
     WHERE id = ${characterId} AND player_id = ${userId}
-    RETURNING slug
+    RETURNING slug, name
   `;
   const row = rows[0];
-  return row ? { slug: row.slug, bio } : null;
+  return row ? { slug: row.slug, name: row.name, bio } : null;
 }

@@ -12,7 +12,7 @@ interface SessionInfo {
 }
 
 // Eingeloggte User sehen die UserNav (Pill-Grid, siehe HeaderUserNav) jetzt
-// auf JEDER Seite, nicht mehr nur im früheren User-Bereich (/users/**,
+// auf JEDER Seite, nicht mehr nur im früheren User-Bereich (/user/**,
 // /dialogues/**) — der schnelle Zugriff aufs eigene Dashboard/Settings/etc.
 // soll von überall aus möglich sein. Nur wer nicht eingeloggt ist, sieht
 // weiterhin den generischen Titel+Suche-Header. Session wird client-seitig
@@ -49,11 +49,7 @@ export default function HeaderContent() {
   if (session.userId) {
     return (
       <div className="lcars-header-content">
-        <HeaderUserNav
-          userId={session.userId}
-          role={session.role}
-          columns={3}
-        />
+        <HeaderUserNav role={session.role} columns={3} />
       </div>
     );
   }

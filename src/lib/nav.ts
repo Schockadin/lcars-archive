@@ -4,14 +4,15 @@ export type NavKey =
   | "missions"
   | "archive"
   | "timeline"
-  // /search, /login und /users/<id> haben keinen eigenen Nav-Link, brauchen
+  // /search, /login und /user haben keinen eigenen Nav-Link, brauchen
   // aber einen gültigen section-Wert für <PageMeta>.
   | "search"
   | "login"
   | "users"
   | "impressum"
   | "dsgvo"
-  | "tutorial";
+  | "tutorial"
+  | "changelog";
 
 export interface NavItem {
   id: string;

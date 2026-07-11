@@ -8,18 +8,6 @@ export const ICON_PROPS = {
   "aria-hidden": true,
 };
 
-export function SpellingIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <g>
-        {" "}
-        <path d="M2 12C2 7.28595 2 4.92893 3.46447 3.46447C4.92893 2 7.28595 2 12 2C16.714 2 19.0711 2 20.5355 3.46447C22 4.92893 22 7.28595 22 12C22 16.714 22 19.0711 20.5355 20.5355C19.0711 22 16.714 22 12 22C7.28595 22 4.92893 22 3.46447 20.5355C2 19.0711 2 16.714 2 12Z"></path>{" "}
-        <path d="M8.5 12.5L10.5 14.5L15.5 9.5"></path>{" "}
-      </g>
-    </svg>
-  );
-}
-
 export function BoldIcon() {
   return (
     <svg {...ICON_PROPS}>
@@ -180,6 +168,32 @@ export function RestoreIcon() {
   return (
     <svg {...ICON_PROPS}>
       <path d="M4 4v5h5M4.6 15a8 8 0 1 0 1-9.4L4 9" />
+    </svg>
+  );
+}
+export function PlusIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M12 5v14M5 12h14" />
+    </svg>
+  );
+}
+export function ShareIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M12 15V3" />
+      <path d="M7 8l5-5 5 5" />
+      <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+    </svg>
+  );
+}
+export function KeyIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="8" cy="15" r="4.5" />
+      <path d="M11.2 11.8 20 3" />
+      <path d="M15.5 7.5 18 10" />
+      <path d="M18 4.5 20.5 7" />
     </svg>
   );
 }

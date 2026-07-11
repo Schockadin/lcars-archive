@@ -28,7 +28,9 @@ export function FooterBar({ appVersion }: { appVersion: string | null }) {
       <div className="w-[15%] h-[var(--lcars-bar-h)] bg-[var(--lcars-blue)]" />
       <div className="w-[30%] h-[var(--lcars-bar-h)] bg-[var(--lcars-red)] flex items-center justify-end px-[10px]">
         {appVersion && (
-          <span className="lcars-footer-version">v{appVersion}</span>
+          <Link href="/changelog" className="lcars-footer-version">
+            v{appVersion}
+          </Link>
         )}
       </div>
       <Link href="/tutorial" className="lcars-footer-menu">

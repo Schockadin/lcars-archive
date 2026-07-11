@@ -9,7 +9,6 @@ import {
   type AutolinkMatch,
 } from "@/lib/autolink";
 import { stripWikilinks, type WikilinkRemoval } from "@/lib/wikilinkCleanup";
-import { formatContentText } from "@/lib/textFormat";
 import { markdownToHtml } from "@/lib/markdown";
 import {
   getMissionBySlug,
@@ -51,17 +50,6 @@ export interface WikilinkCleanupPreviewResult {
 
 export interface WikilinkCleanupApplyResult {
   removedCount: number;
-}
-
-export interface TextFormatPreviewResult {
-  apostropheCount: number;
-  quoteCount: number;
-  previewHtml: string;
-}
-
-export interface TextFormatApplyResult {
-  apostropheCount: number;
-  quoteCount: number;
 }
 
 interface ContentAccessor {
@@ -272,65 +260,4 @@ export async function applyWikilinkCleanupAction(
 
   await plan.save();
   return { removedCount: plan.removed.length };
-}
-
-interface TextFormatPlan {
-  apostropheCount: number;
-  quoteCount: number;
-  previewHtml: string;
-  save: () => Promise<void>;
-}
-
-async function planTextFormat(
-  contentType: ContentToolType,
-  slug: string,
-): Promise<TextFormatPlan | { error: string }> {
-  const accessor = await getContentAccessor(contentType, slug);
-  if ("error" in accessor) return accessor;
-
-  const { sourceMd, apostropheCount, quoteCount } = formatContentText(
-    accessor.sourceMd,
-  );
-  const previewHtml = await renderContentHtml(sourceMd);
-  return {
-    apostropheCount,
-    quoteCount,
-    previewHtml,
-    save: () => accessor.save(sourceMd, previewHtml),
-  };
-}
-
-export async function previewTextFormatAction(
-  contentType: ContentToolType,
-  slug: string,
-): Promise<TextFormatPreviewResult | { error: string }> {
-  await requireAdmin();
-
-  const plan = await planTextFormat(contentType, slug);
-  if ("error" in plan) return plan;
-
-  return {
-    apostropheCount: plan.apostropheCount,
-    quoteCount: plan.quoteCount,
-    previewHtml: plan.previewHtml,
-  };
-}
-
-export async function applyTextFormatAction(
-  contentType: ContentToolType,
-  slug: string,
-): Promise<TextFormatApplyResult | { error: string }> {
-  await requireAdmin();
-
-  const plan = await planTextFormat(contentType, slug);
-  if ("error" in plan) return plan;
-  if (plan.apostropheCount === 0 && plan.quoteCount === 0) {
-    return { error: "Keine Anführungszeichen oder Apostrophe gefunden." };
-  }
-
-  await plan.save();
-  return {
-    apostropheCount: plan.apostropheCount,
-    quoteCount: plan.quoteCount,
-  };
 }

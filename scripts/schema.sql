@@ -148,13 +148,25 @@ CREATE INDEX IF NOT EXISTS idx_archive_links_target ON archive_links(target_id);
 CREATE INDEX IF NOT EXISTS idx_timeline_events_date   ON timeline_events(event_date);
 CREATE INDEX IF NOT EXISTS idx_timeline_events_source ON timeline_events(source_type, source_slug);
 
--- "Letzter Besuch" für das Dashboard (neu seit deinem letzten Besuch).
--- previous_login_at wird bei jedem Login aus dem alten last_login_at
--- übernommen, bevor last_login_at auf NOW() gesetzt wird (recordLogin in
--- src/lib/users.ts) — so kennt das Dashboard immer die Grenze des
--- *vorletzten* Logins, unabhängig von Profil-Änderungen währenddessen.
+-- Login-Historie fürs Admin-Panel (/admin/[id]/edit). previous_login_at
+-- wird bei jedem Login aus dem alten last_login_at übernommen, bevor
+-- last_login_at auf NOW() gesetzt wird (recordLogin in src/lib/users.ts) —
+-- so bleibt der Zeitpunkt des *vorletzten* Logins nachvollziehbar,
+-- unabhängig von Profil-Änderungen währenddessen. Dient außerdem als
+-- "warst du schon mal hier?"-Flag auf dem Dashboard (Dashboard.tsx).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS previous_login_at TIMESTAMPTZ;
+
+-- last_visit_at: Zeitpunkt des letzten Seitenaufrufs (jede Seite, siehe
+-- /api/session/route.ts), gedrosselt auf max. einen Write pro 15 Minuten
+-- (touchLastVisit in src/lib/users.ts) — nur für Admins sichtbar
+-- (/admin/[id]/edit). last_dashboard_visit_at: Zeitpunkt des letzten
+-- Dashboard-Besuchs, ungedrosselt bei jedem Aufruf aktualisiert
+-- (touchDashboardVisit) — Grundlage für "neu seit deinem letzten Besuch"
+-- in der News-Sektion des Dashboards (ersetzt die frühere Verwendung von
+-- previous_login_at dafür).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_visit_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_dashboard_visit_at TIMESTAMPTZ;
 
 -- Unterstützt getRecentActivitySince() (src/lib/timeline.ts), das nach
 -- created_at filtert statt nach dem In-Story-Datum event_date.
@@ -370,7 +382,7 @@ CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(use
 
 -- Gast-Rolle: können sich nur Inhalte ansehen sowie bookmarken/abonnieren
 -- (src/app/actions/follows.ts prüft keine Rolle), aber keine Charaktere
--- zugewiesen bekommen (assignCharacterAction in src/app/users/actions.ts)
+-- zugewiesen bekommen (assignCharacterAction in src/app/admin/actions.ts)
 -- und dadurch — da Mission-Logs/Dialoge immer einen eigenen Autor-Charakter
 -- brauchen — auch keine Inhalte erstellen.
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
@@ -396,3 +408,35 @@ CREATE TABLE IF NOT EXISTS content_deletions (
   deleted_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_content_deletions_deleted_at ON content_deletions(deleted_at);
+
+-- Teilnehmende Charaktere einer Mission (Multiselect beim Anlegen, siehe
+-- MissionParticipantsField.tsx). Rein informativ/für die
+-- Anlage-Benachrichtigungen (missionAction in
+-- src/app/user/missions/_shared/contentAction.ts — direkt an die
+-- teilnehmenden Spieler sowie an alle Charakter-/User-Abonnenten der
+-- Teilnehmer) — löst KEIN automatisches Mission-Abo aus, das bleibt dem
+-- Follow-Button vorbehalten.
+CREATE TABLE IF NOT EXISTS mission_participants (
+  mission_id   INT NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
+  character_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  PRIMARY KEY (mission_id, character_id)
+);
+CREATE INDEX IF NOT EXISTS idx_mission_participants_character ON mission_participants(character_id);
+
+-- User-Abos: vierter target_type neben mission/archive_entry/character.
+-- target_slug ist der User-Slug (users.slug) — ein Abo benachrichtigt bei
+-- jedem NEUEN oder GEÄNDERTEN öffentlichen Inhalt (visibility='public') des
+-- abonnierten Users, siehe notifyUserSubscribers in src/lib/follows.ts.
+ALTER TABLE content_follows DROP CONSTRAINT IF EXISTS content_follows_target_type_check;
+ALTER TABLE content_follows ADD CONSTRAINT content_follows_target_type_check
+  CHECK (target_type IN ('mission', 'archive_entry', 'character', 'user'));
+
+-- Admin-Opt-in "Über alle Inhalte benachrichtigt werden" (NotificationSettingsForm.tsx,
+-- admin-only Checkbox-Liste) — welche der vier Inhaltstypen (character/mission/
+-- mission_log/archive_entry) einen Admin per Mail/Push benachrichtigen sollen,
+-- sobald IRGENDEIN User einen Inhalt dieses Typs anlegt oder bearbeitet
+-- (unabhängig von visibility/Owner, siehe notifyAdminContentSubscribers in
+-- src/lib/follows.ts) — anders als notifyUserSubscribers, das nur öffentliche
+-- Inhalte eigener Abonnenten meldet. Leeres Array (Default) = kein Opt-in,
+-- gleiches Freitext-Array-Muster wie tags auf den Inhaltstabellen oben.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS notify_content_types TEXT[] NOT NULL DEFAULT '{}';

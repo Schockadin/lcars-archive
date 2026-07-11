@@ -250,7 +250,7 @@ export interface UserContentArchiveEntry {
 }
 
 // Eigene Archiv-Einträge (owner_user_id, siehe scripts/schema.sql) für
-// /users/[id]/content — ohne Kategorie 'dialogue', die dort separat über
+// /user/content — ohne Kategorie 'dialogue', die dort separat über
 // getDialoguesForUser läuft. Ungecacht wie getLogsForUser (Charaktere.ts):
 // die Seite ist ohnehin durch requireOwnCharacters (Session-Zugriff)
 // dynamisch.
@@ -265,6 +265,21 @@ export async function getArchiveEntriesForUser(
   `;
 }
 
+// Nur public Archiv-Einträge eines Users für die öffentliche Profilseite
+// /users/[id] — Gegenstück zu getArchiveEntriesForUser (dort ALLE eigenen
+// Einträge für "Meine Inhalte", hier nur was auch fremde Besucher sehen
+// dürfen).
+export async function getPublicArchiveEntriesForUser(
+  userId: number,
+): Promise<UserContentArchiveEntry[]> {
+  return sql<UserContentArchiveEntry[]>`
+    SELECT id, slug, title, category, visibility
+    FROM archive_entries
+    WHERE owner_user_id = ${userId} AND category != 'dialogue' AND visibility = 'public'
+    ORDER BY title ASC
+  `;
+}
+
 // Nur der Owner (owner_user_id) darf die Sichtbarkeit ändern — ein
 // fremdes/gefälschtes id trifft dann einfach 0 Zeilen (gleiches Prinzip wie
 // setDialogueVisibility in src/lib/dialoguesCore.ts, nur ohne die
@@ -273,11 +288,34 @@ export async function setArchiveEntryVisibility(
   userId: number,
   archiveEntryId: number,
   visibility: "private" | "gm" | "public",
+): Promise<{ slug: string; title: string; sourceMarkdown: string | null } | null> {
+  const rows = await sql<
+    { slug: string; title: string; sourceMarkdown: string | null }[]
+  >`
+    UPDATE archive_entries
+    SET visibility = ${visibility}, updated_at = NOW()
+    WHERE id = ${archiveEntryId} AND category != 'dialogue' AND owner_user_id = ${userId}
+    RETURNING slug, title, source_md AS "sourceMarkdown"
+  `;
+  return rows[0] ?? null;
+}
+
+// Admin-Sichtbarkeits-Verwaltung (ActionsMenu.tsx/AdminVisibilitySelect.tsx):
+// anders als setArchiveEntryVisibility/setDialogueVisibility oben NICHT auf
+// den Owner gescoped (nur admin darf das, geprüft in
+// setVisibilityAdminAction) und OHNE category-Einschränkung — Admins dürfen
+// hier bewusst auch Gespräche umstellen, anders als setArchiveEntryOwner
+// unten, das Dialoge bewusst ausschließt (eigenes Owner-/Teilnehmer-Modell,
+// aber kein eigenes Sichtbarkeits-Modell: dialogue-Einträge nutzen dieselbe
+// visibility-Spalte).
+export async function setArchiveEntryVisibilityAdmin(
+  archiveEntryId: number,
+  visibility: "private" | "gm" | "public",
 ): Promise<{ slug: string } | null> {
   const rows = await sql<{ slug: string }[]>`
     UPDATE archive_entries
     SET visibility = ${visibility}, updated_at = NOW()
-    WHERE id = ${archiveEntryId} AND category != 'dialogue' AND owner_user_id = ${userId}
+    WHERE id = ${archiveEntryId}
     RETURNING slug
   `;
   return rows[0] ?? null;
@@ -371,7 +409,7 @@ export async function generateUniqueArchiveEntrySlug(
 
 // Legt einen neuen, eigenen Archiv-Eintrag an (User-Feature: jeder
 // eingeloggte User darf Archiv-Einträge anlegen, siehe
-// /users/[id]/archive/new/actions.ts). Kategorie 'dialogue' ausgeschlossen —
+// /user/archive/new/actions.ts). Kategorie 'dialogue' ausgeschlossen —
 // Dialoge haben ihr eigenes Anlage-Formular (createDialogue in
 // dialoguesCore.ts) mit eigenem Daten-/Teilnehmer-Modell. visibility bleibt
 // unangegeben → DB-Default 'public' (gleiche Konvention wie createMission/
@@ -451,7 +489,7 @@ export interface OwnArchiveEntryForEdit {
   referenceValues: Record<string, string>;
 }
 
-// Für /users/[id]/archive/[entryId]/edit — lädt den rohen Markdown-Body
+// Für /user/archive/[entryId]/edit — lädt den rohen Markdown-Body
 // (source_md) statt content, damit das Formular ihn editierbar vorbefüllen
 // kann. Gleiche Owner-Prüfung wie setArchiveEntryVisibility oben, Dialoge
 // ausgeschlossen (die haben kein source_md, ihr Inhalt lebt in
@@ -522,7 +560,7 @@ export async function getOwnArchiveEntryForEdit(
 }
 
 // Bearbeitet Titel/Kategorie/Tags/Text eines eigenen Archiv-Eintrags — für
-// das volle Bearbeiten-Formular (/users/[id]/archive/[entryId]/edit). Owner-
+// das volle Bearbeiten-Formular (/user/archive/[entryId]/edit). Owner-
 // gescoped im WHERE (ein gefälschtes id trifft dann einfach 0 Zeilen, kein
 // separater Vorab-Check nötig — gleiches Prinzip wie updateMissionLogContent
 // in src/lib/missions.ts). Rendert das Markdown selbst, anders als das
@@ -542,20 +580,22 @@ export async function updateOwnArchiveEntryContent(
     // Siehe createArchiveEntry oben — Opt-in "Automatisch verlinken".
     contentHtml?: string;
   },
-): Promise<{ slug: string } | null> {
+): Promise<{ slug: string; visibility: "private" | "gm" | "public" } | null> {
   const contentHtml =
     input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
   const attributes = buildArchiveAttributes(input.category, input.attributeValues);
   const metadataPatch = { summary: input.summary, attributes };
 
-  const rows = await sql<{ slug: string }[]>`
+  const rows = await sql<
+    { slug: string; visibility: "private" | "gm" | "public" }[]
+  >`
     UPDATE archive_entries
     SET title = ${input.title}, category = ${input.category}, tags = ${input.tags},
         content = ${contentHtml}, source_md = ${input.bodyMarkdown},
         metadata = metadata || ${sql.json(metadataPatch as ReturnType<typeof JSON.parse>)},
         updated_at = NOW()
     WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
-    RETURNING slug
+    RETURNING slug, visibility
   `;
   const result = rows[0];
   if (!result) return null;

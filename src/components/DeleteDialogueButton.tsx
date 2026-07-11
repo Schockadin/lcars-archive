@@ -4,12 +4,14 @@ import {
   deleteDialogueAction,
   type DeleteDialogueState,
 } from "@/app/actions/dialogues";
+import { TrashIcon } from "@/lib/icons";
 
 const initialState: DeleteDialogueState = {};
 
 // Admin-only (siehe Sichtbarkeits-Gate in den beiden aufrufenden Pages) —
 // unwiderruflich, daher confirm() vor dem Submit wie bei
-// CompleteDialogueButton.tsx.
+// CompleteDialogueButton.tsx. Icon-Button statt beschrifteter Pille, analog
+// dem "Follow beenden"-Muster in FollowList.tsx (/user/follow).
 export default function DeleteDialogueButton({
   entrySlug,
 }: {
@@ -26,7 +28,9 @@ export default function DeleteDialogueButton({
       <button
         type="submit"
         disabled={pending}
-        className="lcars-pill-btn--outline self-start disabled:opacity-50 w-[250px]"
+        className="lcars-icon-btn lcars-icon-btn--danger self-start disabled:opacity-50"
+        aria-label="Gespräch löschen"
+        title="Gespräch löschen"
         onClick={(e) => {
           if (
             !confirm(
@@ -37,7 +41,7 @@ export default function DeleteDialogueButton({
           }
         }}
       >
-        {pending ? "Wird gelöscht…" : "Gespräch löschen"}
+        <TrashIcon />
       </button>
       {state?.error && (
         <p className="text-lcars-red" role="alert">

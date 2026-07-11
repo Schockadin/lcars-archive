@@ -4,8 +4,8 @@ import {
   updateOwnCharacterBioAction,
   type CharacterBioEditState,
 } from "@/app/actions/characters";
-import AutoLinkCheckbox from "@/app/users/_shared/AutoLinkCheckbox";
-import MarkdownEditor from "@/app/users/_shared/MarkdownEditor";
+import AutoLinkCheckbox from "@/app/_shared/AutoLinkCheckbox";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { Character } from "@/types/character";
 
 const initialState: CharacterBioEditState = {};

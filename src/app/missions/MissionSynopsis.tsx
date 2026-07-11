@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { MissionDetail } from "@/types/missions";
 import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import { Viewer } from "@/lib/visibility";
@@ -30,6 +31,17 @@ export default function MissionSynopsis({
         <div className="lcars-meta-row">
           <b>Zeitraum</b> {periodLabel(mission.started_at, mission.ended_at)}
         </div>
+        {mission.participants.length > 0 && (
+          <div className="lcars-meta-row">
+            <b>Teilnehmer</b>{" "}
+            {mission.participants.map((p, i) => (
+              <span key={p.slug}>
+                {i > 0 && ", "}
+                <Link href={`/characters/${p.slug}`}>{p.name}</Link>
+              </span>
+            ))}
+          </div>
+        )}
       </header>
 
       <ActionsMenu

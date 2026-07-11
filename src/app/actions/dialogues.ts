@@ -28,6 +28,7 @@ import {
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
+import { synopsisExcerpt } from "@/lib/missionFormat";
 
 export interface DialogueMessageState {
   error?: string;
@@ -35,7 +36,7 @@ export interface DialogueMessageState {
 }
 
 // Jede Prüfung serverseitig, nie auf ausgeblendete UI verlassen — exakt
-// das bestehende Prinzip aus src/app/users/actions.ts. Sichtbarkeit des
+// das bestehende Prinzip aus src/app/admin/actions.ts. Sichtbarkeit des
 // Formulars selbst entscheidet /dialogues/[slug] (Server-gated), kein
 // Client-seitiger Vorab-Check mehr nötig.
 export async function postDialogueMessageAction(
@@ -101,6 +102,11 @@ export async function postDialogueMessageAction(
   const subscribers = await getDialogueSubscribers(entrySlug, session.userId);
   if (subscribers.length > 0) {
     const dialogueUrl = `${await getBaseUrl()}/dialogues/${entrySlug}`;
+    // Roher Markdown-Text statt gerendertem HTML — für eine kurze Vorschau
+    // reicht der angerissene Rohtext, ein voller Markdown→Text-Parser wäre
+    // hier unnötiger Aufwand (gleiches Prinzip wie stripHtml für HTML-Inhalte
+    // an anderen Vorschau-Stellen).
+    const preview = synopsisExcerpt(bodyMarkdown, 140);
     for (const subscriber of subscribers) {
       if (subscriber.emailNotificationsEnabled) {
         const result = await sendDialogueMessageEmail({
@@ -109,6 +115,7 @@ export async function postDialogueMessageAction(
           fromCharacterName: participant.characterName,
           dialogueTitle: entry.title,
           dialogueUrl,
+          preview,
         });
         if (!result.sent) {
           console.error(
@@ -119,7 +126,7 @@ export async function postDialogueMessageAction(
       if (subscriber.pushNotificationsEnabled) {
         await sendPushToUser(subscriber.id, {
           title: `Neue Nachricht in "${entry.title}"`,
-          body: `${participant.characterName} hat geantwortet.`,
+          body: `${participant.characterName}: ${preview}`,
           url: dialogueUrl,
         });
       }

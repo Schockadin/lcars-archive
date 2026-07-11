@@ -1,5 +1,23 @@
 @import "tailwindcss";
 @import "../styles/tokens.css";
+/* Unlayered, wie tokens.css oben — bewusst NICHT Teil des
+   layer(components)-Imports unten (siehe dessen Kommentar). Layered CSS
+   verliert in Tailwind v4 IMMER gegen unlayered CSS, unabhängig von
+   Media-Query/Spezifität — läge dieser Import stattdessen in
+   lcars-components.css (wie vor diesem Fix), würden die :root-Overrides
+   hier (Sidebar-Breite, Elbow-Bar-Höhe/-Breite, …) nie greifen, weil
+   tokens.css' Basiswerte unlayered immer gewinnen. Beide Dateien müssen im
+   selben (unlayered) Cascade-Tier liegen, damit die normale
+   Media-Query-Kaskade zwischen ihnen entscheidet. */
+@import "../styles/lcars-components/tokens-responsive.css";
+/* Unlayered, aus demselben Grund wie tokens-responsive.css oben: der
+   Lesemodus muss u.a. die Sidebar (<aside className="flex …">) per
+   display:none ausblenden. Läge diese Regel (wie vorher) in
+   lcars-components.css unter layer(components), würde sie gegen
+   Tailwinds eigene flex-Utility (layer utilities, immer später/gewinnend
+   als layer components) verlieren — die Sidebar bliebe trotz aktivem
+   Lesemodus sichtbar. */
+@import "../styles/lcars-components/reading-mode.css";
 /* layer(components): Tailwind v4 legt mit obigem @import bereits die
    Layer-Reihenfolge theme→base→components→utilities fest. Ohne dieses
    layer() läge das gesamte custom CSS unlayered und würde (unabhängig von

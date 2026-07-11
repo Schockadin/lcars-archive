@@ -63,7 +63,6 @@ export default async function LogPage({ params }: Props) {
         owners={owners}
         content={log}
         contentType="missionLog"
-        followType="mission_log"
         playerId={log.ownerUserId}
       />
       <LogDetail log={log} nav={nav} />

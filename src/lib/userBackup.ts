@@ -15,6 +15,8 @@ export interface UserBackupRecord {
   created_at: string;
   last_login_at: string | null;
   previous_login_at: string | null;
+  last_visit_at: string | null;
+  last_dashboard_visit_at: string | null;
 }
 
 // Admin-only Vollsicherung aller User-Datensätze inkl. password_hash, damit
@@ -27,7 +29,8 @@ export async function getAllUsersBackup(): Promise<UserBackupRecord[]> {
     SELECT
       email, name, slug, role, is_active, password_hash,
       requires_activation, email_notifications_enabled,
-      push_notifications_enabled, created_at, last_login_at, previous_login_at
+      push_notifications_enabled, created_at, last_login_at, previous_login_at,
+      last_visit_at, last_dashboard_visit_at
     FROM users
     ORDER BY id
   `;
@@ -64,12 +67,13 @@ export async function restoreUsersBackup(
         INSERT INTO users (
           email, name, slug, role, is_active, password_hash,
           requires_activation, email_notifications_enabled,
-          push_notifications_enabled, created_at, last_login_at, previous_login_at
+          push_notifications_enabled, created_at, last_login_at, previous_login_at,
+          last_visit_at, last_dashboard_visit_at
         ) VALUES (
           ${r.email}, ${r.name}, ${r.slug}, ${r.role}, ${r.is_active}, ${r.password_hash},
           ${r.requires_activation}, ${r.email_notifications_enabled},
           ${r.push_notifications_enabled}, ${r.created_at}, ${r.last_login_at},
-          ${r.previous_login_at}
+          ${r.previous_login_at}, ${r.last_visit_at}, ${r.last_dashboard_visit_at}
         )
         ON CONFLICT (email) DO UPDATE SET
           name = EXCLUDED.name,
@@ -81,7 +85,9 @@ export async function restoreUsersBackup(
           email_notifications_enabled = EXCLUDED.email_notifications_enabled,
           push_notifications_enabled = EXCLUDED.push_notifications_enabled,
           last_login_at = EXCLUDED.last_login_at,
-          previous_login_at = EXCLUDED.previous_login_at
+          previous_login_at = EXCLUDED.previous_login_at,
+          last_visit_at = EXCLUDED.last_visit_at,
+          last_dashboard_visit_at = EXCLUDED.last_dashboard_visit_at
         RETURNING (xmax = 0) AS inserted
       `;
       if (rows[0]?.inserted) {

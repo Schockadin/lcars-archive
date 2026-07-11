@@ -17,3 +17,7 @@ The version number is as follows: <MajorVersion>.<MinorVersion>.<Subversion>
 Always make sure to keep the Body of the recent open Pull Request updated. Add a new section for each commit.
 
 <!-- END:nextjs-agent-rules -->
+
+# The public changelog (/changelog)
+
+`src/lib/changelog.ts` holds one entry per Major.Minor version (i.e. one entry per merged Pull Request, not per commit) and powers the public `/changelog` page. Whenever a Pull Request is opened or merged (i.e. whenever `version.ts`'s Minor number changes), add a new entry to that array — a short (3-6 sentence), end-user-facing German paragraph summarizing what changed in that version, written for a campaign player/GM, not a developer changelog. Skip pure bugfixes/refactors with no user-visible effect unless they fixed something a user would have noticed being broken. Base the summary on the current Pull Request's body (see "The Pull Request Body" above) — keep the changelog entry for the currently-open PR's version up to date as that body gains new commit sections, the same way the PR body itself is kept current.

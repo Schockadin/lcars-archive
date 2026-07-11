@@ -25,6 +25,14 @@ export interface MissionAuthor {
   slug: string | null;
 }
 
+// Teilnehmender Charakter einer Mission (mission_participants, siehe
+// schema.sql) — rein informativ + Grundlage für die
+// Teilnehmer-Benachrichtigung beim Anlegen (kein automatisches Abo).
+export interface MissionParticipant {
+  slug: string;
+  name: string;
+}
+
 // Listenvorschau für die Missions-Übersicht: schlanke Felder + Anzahl
 // der zugehörigen Mission-Logs (per JOIN ermittelt) + die distinkten
 // Log-Autoren (für den Autor-Filter).
@@ -54,6 +62,7 @@ export interface MissionDetail {
   // Roher Markdown-Body der Synopsis (source_md) — Grundlage für die
   // inline-Bearbeitung auf der Mission-Detailseite (MissionSynopsisEditor).
   sourceMarkdown: string | null;
+  participants: MissionParticipant[];
 }
 
 // Log in der Liste links (ohne content — schlank gehalten).

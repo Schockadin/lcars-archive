@@ -11,7 +11,6 @@
    gemeinsam finden lassen.
 ──────────────────────────────────────────────────────────────────── */
 
-@import "./lcars-components/tokens-responsive.css";
 @import "./lcars-components/header.css";
 @import "./lcars-components/data-row.css";
 @import "./lcars-components/accordion.css";
@@ -23,4 +22,3 @@
 @import "./lcars-components/archive.css";
 @import "./lcars-components/search.css";
 @import "./lcars-components/shared.css";
-@import "./lcars-components/reading-mode.css";

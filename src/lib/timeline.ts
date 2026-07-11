@@ -94,7 +94,7 @@ export interface RegenerateTimelineResult {
 
 // Baut timeline_events komplett aus dem aktuellen DB-Stand neu auf — als
 // Admin-Action nutzbar (siehe regenerateTimelineAction in
-// src/app/users/timelineActions.ts), z.B. nachdem Marker im Vault-Ingest
+// src/app/admin/timelineActions.ts), z.B. nachdem Marker im Vault-Ingest
 // hinzugekommen sind oder Ereignisse manuell inkonsistent geworden sind.
 // Gleiche Regeln wie scripts/ingest/timeline.ts (automatisch: Mission
 // started_at/ended_at sowie Archiv-Einträge der Kategorie event/dialogue mit
