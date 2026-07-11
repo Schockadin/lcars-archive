@@ -92,8 +92,15 @@
   text-transform: uppercase;
   color: var(--lcars-text-contrast);
 }
-.archive-chip-label {
+/* Gemeinsame Mono-Schriftfamilie für kleine Metadaten-Labels — Größe/Farbe
+   bleiben je Kontext unterschiedlich (Chip-Label/Dialog-Wert/Nachrichten-
+   Meta), nur die Schriftfamilie ist über alle drei identisch. */
+.archive-chip-label,
+.archive-dialogue-value,
+.dialogue-message-meta {
   font-family: var(--font-share-tech-mono), monospace;
+}
+.archive-chip-label {
   font-size: 11px;
   text-transform: uppercase;
   color: var(--lcars-text-dim);
@@ -124,7 +131,6 @@
   margin-top: 0;
 }
 .archive-dialogue-value {
-  font-family: var(--font-share-tech-mono), monospace;
   font-size: 14px;
   color: var(--lcars-text-data);
 }
@@ -160,7 +166,6 @@
 }
 .dialogue-message-meta {
   margin-left: 8px;
-  font-family: var(--font-share-tech-mono), monospace;
   font-size: 12px;
   color: var(--lcars-text-dim);
 }

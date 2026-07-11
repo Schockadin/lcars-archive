@@ -125,17 +125,6 @@
     color: var(--lcars-orange);
   }
 
-  .lcars-header-text {
-    font-size: 64px;
-    font-weight: 400;
-    letter-spacing: 0.15em;
-    color: var(--lcars-amber);
-    line-height: 1;
-    text-align: right;
-    margin-bottom: 10px;
-    text-transform: uppercase;
-  }
-
   .lcars-header-title {
     font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
     font-weight: 700;
@@ -179,24 +168,6 @@
 
   .lcars-separator {
     height: 2px;
-  }
-
-  .character-list-entry {
-    text-decoration: none;
-    color: var(--lcars-text-contrast);
-    font-size: var(--lcars-text-size);
-    letter-spacing: 1px;
-    text-transform: capitalize;
-    margin-bottom: 5px;
-    transition: color 250ms;
-  }
-  .character-list-entry:hover {
-    color: var(--lcars-amber);
-  }
-
-  .character-data {
-    display: flex;
-    gap: 5px;
   }
 
   address {

@@ -29,19 +29,19 @@ export default function Sidebar() {
         {/* Sidebar Header */}
         <div className="w-full h-[var(--lcars-sidebar-header-h)] bg-[var(--lcars-blue)]">
           <div className="w-full h-[var(--lcars-header-h)] bg-[var(--lcars-bg)] rounded-bl-[60px]" />
-          <div className="w-full h-[var(--lcars-bar-h)] bg-[var(--lcars-blue)]" />
+          <div className="w-full h-lcars-bar bg-[var(--lcars-blue)]" />
         </div>
 
         {/* Sidebar Main */}
         <div className="w-full h-full bg-[var(--lcars-red)] flex flex-col">
-          <div className="w-full h-[var(--lcars-bar-h)] bg-[var(--lcars-red)]" />
+          <div className="w-full h-lcars-bar bg-[var(--lcars-red)]" />
           <div className="w-full flex-grow bg-[var(--lcars-bg)] rounded-tl-[60px]" />
         </div>
 
         {/* Sidebar Footer */}
         <div className="w-full h-[var(--lcars-sidebar-header-h)] bg-[var(--lcars-purple)]">
           <div className="w-full h-[var(--lcars-header-h)] bg-[var(--lcars-bg)] rounded-bl-[60px]" />
-          <div className="w-full h-[var(--lcars-bar-h)] bg-[var(--lcars-purple)]" />
+          <div className="w-full h-lcars-bar bg-[var(--lcars-purple)]" />
         </div>
       </div>
     </aside>

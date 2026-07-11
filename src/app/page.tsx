@@ -16,7 +16,7 @@ function StatsSkeleton() {
       {Array.from({ length: 5 }).map((_, i) => (
         <LcarsSkeleton
           key={i}
-          className="h-[var(--lcars-datarow-h)] w-[320px]"
+          className="h-lcars-datarow w-[320px]"
         />
       ))}
     </div>

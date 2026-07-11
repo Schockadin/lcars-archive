@@ -177,37 +177,35 @@
 
 /* ── Navigation ──────────────────────────────────────────────────── */
 
-.lcars-menu-bar {
-  width: var(--lcars-bar-width);
+/* .lcars-menu-bar (schmale Elbow-Leiste) und .lcars-menu-pill (runde
+   Sidebar-Pille) teilen Layout/Hover, unterscheiden sich nur in
+   Form/Maßen (eigene Regeln unten). */
+.lcars-menu-bar,
+.lcars-menu-pill {
   padding: 0 18px 8px;
   cursor: pointer;
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  margin-top: 5px;
   background-color: var(--lcars-amber);
-  min-height: 60px;
   transition: background 250ms;
 }
-.lcars-menu-bar:hover {
+.lcars-menu-bar:hover,
+.lcars-menu-pill:hover {
   background-color: var(--lcars-amber-light);
+}
+
+.lcars-menu-bar {
+  width: var(--lcars-bar-width);
+  margin-top: 5px;
+  min-height: 60px;
 }
 
 .lcars-menu-pill {
   height: 75px;
   border-radius: 100vmax;
   width: 210px;
-  padding: 0 18px 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-end;
-  background-color: var(--lcars-amber);
   margin: 5px;
-  transition: background 250ms;
-}
-.lcars-menu-pill:hover {
-  background-color: var(--lcars-amber-light);
 }
 
 .lcars-menu-active {
@@ -241,28 +239,15 @@
 .lcars-usernav-form .lcars-usernav-pill {
   width: 100%;
 }
+/* Basis-Look (Größe/Form/Typografie) teilt sich mit .lcars-pill-btn /
+   .lcars-pill-btn--outline (controls.css) — siehe die kombinierte Regel
+   dort; hier bleiben nur die Header-spezifischen Farben/Maße. */
 .lcars-usernav-pill {
-  display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  min-height: 0;
-  min-width: 0px;
   padding: 0 18px 8px;
-  border: none;
-  border-radius: 100vmax;
   background-color: var(--lcars-amber);
-  cursor: pointer;
-  text-decoration: none;
-  overflow: hidden;
-  white-space: nowrap;
   color: black;
-  font-family: var(--font-antonio), sans-serif;
-  font-weight: 600;
-  font-size: 20px;
-  letter-spacing: 1px;
-  line-height: 1.175;
-  text-transform: uppercase;
-  transition: background 250ms;
   width: 200px;
   height: 48px;
 }
@@ -270,8 +255,7 @@
   background-color: var(--lcars-amber-light);
 }
 .lcars-usernav-pill.lcars-menu-active,
-.lcars-usernav-pill.lcars-menu-active:hover,
-.lcars-usernav-pill--active {
+.lcars-usernav-pill.lcars-menu-active:hover {
   background-color: var(--lcars-blue);
 }
 

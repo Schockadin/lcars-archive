@@ -30,15 +30,6 @@
   margin-bottom: 10px;
 }
 
-/* Mission-Summary in der linken Spalte */
-.mission-loglist-summary {
-  margin-bottom: 12px;
-  font-size: 13.5px;
-  line-height: 1.5;
-  color: var(--lcars-text-light);
-  opacity: 0.85;
-}
-
 /* Synopsis-Zeile (oberste Zeile, verlinkt auf die Mission-Synopsis) */
 .mission-log-synopsis {
   margin-bottom: 8px;
@@ -146,7 +137,6 @@
   color: var(--lcars-amber);
 }
 .log-nav-link:hover .log-nav-dir,
-.log-nav-link:hover .log-nav-label,
 .log-nav-link:hover .log-nav-title,
 .log-nav-link:hover .log-nav-meta {
   color: var(--lcars-bg);
@@ -156,13 +146,6 @@
   flex-direction: column;
   gap: 2px;
   min-width: 0;
-}
-.log-nav-label {
-  font-family: var(--font-share-tech-mono), monospace;
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--lcars-text-dim);
 }
 .log-nav-title {
   font-size: 15px;

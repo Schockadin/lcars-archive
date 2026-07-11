@@ -69,7 +69,7 @@ export default function CharacterPage({
         }));
 
   return (
-    <div className="flex flex-col items-start w-[var(--lcars-charpage-w)]">
+    <div className="flex flex-col items-start w-lcars-charpage">
       <div className="mb-[16px] flex flex-col items-start w-full">
         <h1 className="lcars-data-row-heading">Charaktere</h1>
         <LcarsSwitch

@@ -10,7 +10,7 @@ export default function Loading() {
   ];
 
   return (
-    <div className="flex flex-col items-start w-[var(--lcars-charpage-w)]">
+    <div className="flex flex-col items-start w-lcars-charpage">
       <div className="mb-[16px] flex w-full flex-col items-start gap-[12px]">
         <LcarsSkeleton className="h-[40px] w-[260px]" />
         <div className="flex w-full gap-[10px]">
@@ -23,7 +23,7 @@ export default function Loading() {
         <section key={i} className="mb-[20px] w-full">
           <LcarsSkeleton
             accent
-            className="ml-[12px] mb-[8px] h-[var(--lcars-datarow-h)] w-[200px]"
+            className="ml-[12px] mb-[8px] h-lcars-datarow w-[200px]"
             style={{ background: group.color, opacity: 0.5 }}
           />
           <div className="flex flex-col gap-[3px]">
