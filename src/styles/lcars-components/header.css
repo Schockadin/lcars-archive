@@ -345,7 +345,12 @@
   font-size: calc(var(--lcars-bar-h) - 2px);
   letter-spacing: 0.03em;
   color: var(--lcars-surface-2);
+  text-decoration: none;
   user-select: text;
+  transition: color 150ms;
+}
+.lcars-footer-version:hover {
+  color: var(--lcars-text-contrast);
 }
 
 /* ── Responsive Overrides ─────────────────────────────────────────── */

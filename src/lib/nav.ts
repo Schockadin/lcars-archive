@@ -11,7 +11,8 @@ export type NavKey =
   | "users"
   | "impressum"
   | "dsgvo"
-  | "tutorial";
+  | "tutorial"
+  | "changelog";
 
 export interface NavItem {
   id: string;
