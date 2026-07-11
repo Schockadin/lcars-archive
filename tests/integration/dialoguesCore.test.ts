@@ -219,7 +219,10 @@ describe("deleteDialogue", () => {
     ]);
     expect(remainingEntry).toBeUndefined();
     expect(remainingMessages).toHaveLength(0);
-    expect(deletion.target_type).toBe("dialogue");
+    // Dialoge sind technisch archive_entries (category='dialogue') — das
+    // Löschprotokoll nutzt entsprechend denselben target_type wie jeder
+    // andere gelöschte Archiv-Eintrag, keinen eigenen "dialogue"-Typ.
+    expect(deletion.target_type).toBe("archive_entry");
     expect(deletion.deleted_by).toBe(admin.id);
   });
 });
