@@ -106,7 +106,7 @@ export default function MissionLogList({
       ) : (
         <>
           <LcarsSortSwitch
-            className="flex gap-[10px] w-full mb-[12px]"
+            className="flex w-full mb-[12px]"
             options={[
               { key: "date", label: "Datum" },
               { key: "author", label: "Autor", sortable: false },

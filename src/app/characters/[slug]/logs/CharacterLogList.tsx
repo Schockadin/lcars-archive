@@ -83,7 +83,7 @@ export default function CharacterLogList({
         <>
           <div className="mt-[16px]">
             <LcarsSortSwitch
-              className="flex gap-[10px] w-full mb-[12px]"
+              className="flex w-full mb-[12px]"
               options={[
                 { key: "date", label: "Datum" },
                 { key: "mission", label: "Mission", sortable: false },

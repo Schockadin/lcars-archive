@@ -93,7 +93,7 @@ export default function UsersTable({
           ))}
         </select>
         <LcarsSortSwitch
-          className="flex gap-[10px]"
+          className="flex"
           options={[
             { key: "name", label: "Name" },
             { key: "role", label: "Rolle" },

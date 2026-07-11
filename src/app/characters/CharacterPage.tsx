@@ -73,7 +73,7 @@ export default function CharacterPage({
       <div className="mb-[16px] flex flex-col items-start w-full">
         <h1 className="lcars-data-row-heading">Charaktere</h1>
         <LcarsSwitch
-          className="flex gap-[10px] w-full"
+          className="flex w-full"
           options={[
             { key: "status", label: "Status" },
             { key: "generation", label: "Generation" },
