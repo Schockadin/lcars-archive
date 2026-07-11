@@ -11,6 +11,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:setup": "tsx --env-file=.env.local scripts/setup-db.ts",
     "db:ingest": "tsx --env-file=.env.local scripts/ingest/index.ts",
     "db:ingest:new": "tsx --env-file=.env.local scripts/ingest/ingestNew.ts",
