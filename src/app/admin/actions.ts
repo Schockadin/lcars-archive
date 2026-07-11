@@ -272,6 +272,9 @@ export async function assignCharacterAction(
   }
 
   const character = await assignCharacterToUser(characterId, userId);
+  if (!character) {
+    return { error: "Charakter nicht gefunden." };
+  }
   revalidateCharacter(character.slug);
 
   redirect("/admin");

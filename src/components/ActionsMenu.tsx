@@ -12,6 +12,21 @@ import FollowButtons from "./FollowButtons";
 import { MissionDetail, MissionLogDetail } from "@/types/missions";
 import { ArchiveEntryDetail } from "@/types/archive";
 import { FollowTargetType } from "@/lib/follows";
+import type { OwnerContentType } from "@/app/actions/owner";
+
+// ContentToolType (Autolink/Wikilinks/Format-Buttons) und OwnerContentType
+// (setOwnerAction) heißen für Mission-Log/Archiv-Eintrag unterschiedlich
+// ("missionLog"/"archiveEntry" vs. "mission_log"/"archive_entry") — diese
+// Zuordnung war vorher fest auf "character" verdrahtet, wodurch OwnerSelect
+// auf jeder Nicht-Charakter-Seite (Mission, Mission-Log, Archiv-Eintrag)
+// versehentlich den Owner eines völlig anderen Charakters (per zufällig
+// gleicher ID) statt den tatsächlichen Inhalt umgehängt hat.
+const OWNER_CONTENT_TYPE: Record<ContentToolType, OwnerContentType> = {
+  character: "character",
+  mission: "mission",
+  missionLog: "mission_log",
+  archiveEntry: "archive_entry",
+};
 
 interface ActionMenuProps {
   viewer: Viewer | null;
@@ -45,7 +60,7 @@ export default function ActionsMenu({
     <div className="flex flex-col items-start justify-center gap-[8px]">
       {(viewer?.role === "admin" || viewer?.role === "gm") && (
         <OwnerSelect
-          contentType="character"
+          contentType={OWNER_CONTENT_TYPE[contentType]}
           id={content.id}
           initialOwnerId={playerId}
           users={owners.map((u) => ({ id: u.id, name: u.name }))}

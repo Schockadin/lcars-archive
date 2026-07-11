@@ -40,6 +40,7 @@ export async function setOwnerAction(
 
   if (contentType === "character") {
     const character = await assignCharacterToUser(id, ownerId);
+    if (!character) return { error: "Charakter nicht gefunden." };
     revalidateCharacter(character.slug);
   } else if (contentType === "mission") {
     const mission = await setMissionOwner(id, ownerId);

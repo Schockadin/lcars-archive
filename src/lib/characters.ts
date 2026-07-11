@@ -130,7 +130,7 @@ export interface CharacterWithOwner {
 }
 
 // Alle Charaktere mit Spieler außer denen von excludeUserId — Partner-
-// Picker für "Gespräch beginnen" (src/app/user/[id]/dialogues/new). Kein
+// Picker für "Gespräch beginnen" (src/app/user/dialogues/new). Kein
 // Cache, gleiche Begründung wie getCharactersForUser.
 export async function getCharactersWithPlayers(
   excludeUserId: number,
@@ -173,14 +173,14 @@ export async function getCharactersForParticipantPicker(): Promise<
 export async function assignCharacterToUser(
   characterId: number,
   userId: number | null,
-): Promise<Character> {
+): Promise<Character | null> {
   const rows = await sql<Character[]>`
     UPDATE characters
     SET player_id = ${userId}
     WHERE id = ${characterId}
     RETURNING *
   `;
-  return parseCharacter(rows[0]);
+  return rows[0] ? parseCharacter(rows[0]) : null;
 }
 
 // Entfernt alle Charakter-Zuweisungen eines Users — genutzt, wenn ein User
@@ -227,7 +227,7 @@ export interface UserContentLog {
   visibility: "private" | "gm" | "public";
 }
 
-// Alle Mission-Logs der eigenen Charaktere für /user/[id]/content. Ungecacht
+// Alle Mission-Logs der eigenen Charaktere für /user/content. Ungecacht
 // wie getCharactersForUser — die Seite ist ohnehin durch requireOwnCharacters
 // (Session-Zugriff) dynamisch. Liefert den verfassenden eigenen Charakter
 // mit, damit die Seite nach Charakter gruppieren kann.
@@ -358,7 +358,7 @@ export async function generateUniqueCharacterSlug(
 
 // Legt einen neuen, eigenen Charakter an (User-Feature: jeder eingeloggte
 // User außer Gast-Accounts darf eigene Charaktere anlegen, siehe
-// /user/[id]/characters/new/actions.ts — die Gast-Sperre lebt dort, weil
+// /user/characters/new/actions.ts — die Gast-Sperre lebt dort, weil
 // Gäste laut Produktentscheidung keinen Charakter zugewiesen haben dürfen,
 // siehe assignCharacterAction in src/app/admin/actions.ts). player_id wird
 // direkt auf den anlegenden User gesetzt (sofortige Verknüpfung).
@@ -443,7 +443,7 @@ export interface OwnCharacterForEdit {
   sourceMarkdown: string;
 }
 
-// Für /user/[id]/characters/[characterId]/edit — lädt die für das volle
+// Für /user/characters/[characterId]/edit — lädt die für das volle
 // Bearbeiten-Formular relevanten Felder (Metadaten-Teilmenge, siehe
 // createCharacter oben) plus den rohen Markdown-Body. Owner-gescoped wie
 // setCharacterVisibility oben — ein fremdes/gefälschtes id trifft dann
