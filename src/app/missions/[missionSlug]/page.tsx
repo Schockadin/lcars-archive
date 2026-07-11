@@ -58,7 +58,8 @@ export default async function MissionPage({ params, searchParams }: Props) {
     redirect(`/missions/${missionSlug}`);
   }
 
-  const owners = viewer?.role === "admin" ? await listAllUsers() : [];
+  const allUsers = viewer?.role === "admin" ? await listAllUsers() : [];
+  const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
   return <MissionSynopsis mission={mission} owners={owners} viewer={viewer} />;
 }

@@ -44,6 +44,36 @@ export async function getFollowStatus(
   };
 }
 
+// Batch-Variante von getFollowStatus für Listen mit vielen FollowButtons-
+// Instanzen (z.B. /users) — eine Anfrage für alle targetSlugs statt einer
+// pro Zeile (N+1). Slugs ohne content_follows-Zeile fehlen im Ergebnis-
+// Record; der Aufrufer behandelt das wie {bookmarked:false,subscribed:false}.
+export async function getFollowStatuses(
+  userId: number,
+  targetType: FollowTargetType,
+  targetSlugs: string[],
+): Promise<Record<string, FollowStatus>> {
+  if (targetSlugs.length === 0) return {};
+
+  const rows = await sql<
+    { target_slug: string; bookmarked_at: Date | null; subscribed_at: Date | null }[]
+  >`
+    SELECT target_slug, bookmarked_at, subscribed_at
+    FROM content_follows
+    WHERE user_id = ${userId} AND target_type = ${targetType}
+      AND target_slug = ANY(${targetSlugs})
+  `;
+
+  const result: Record<string, FollowStatus> = {};
+  for (const row of rows) {
+    result[row.target_slug] = {
+      bookmarked: row.bookmarked_at != null,
+      subscribed: row.subscribed_at != null,
+    };
+  }
+  return result;
+}
+
 async function deleteIfEmpty(
   userId: number,
   targetType: FollowTargetType,

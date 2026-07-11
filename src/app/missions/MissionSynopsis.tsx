@@ -4,7 +4,6 @@ import Link from "next/link";
 import { MissionDetail } from "@/types/missions";
 import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import { Viewer } from "@/lib/visibility";
-import { UserWithCharacters } from "@/lib/users";
 import MissionSynopsisEditor from "./MissionSynopsisEditor";
 import ActionsMenu from "@/components/ActionsMenu";
 
@@ -16,7 +15,7 @@ export default function MissionSynopsis({
 }: {
   mission: MissionDetail;
   viewer: Viewer | null;
-  owners: UserWithCharacters[];
+  owners: { id: number; name: string }[];
 }) {
   const cfg = STATUS_CONFIG[mission.status];
   const [editMode, setEditMode] = useState(false);

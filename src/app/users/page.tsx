@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireNonGuest } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
+import { getFollowStatuses } from "@/lib/follows";
 import UsersTable from "./UsersTable";
 
 export const metadata: Metadata = {
@@ -30,6 +31,13 @@ export default async function UsersOverviewPage() {
     slug: u.slug,
     role: u.role,
   }));
+  // Ein gebündelter Follow-Status-Fetch für alle Zeilen statt eines eigenen
+  // Fetches pro FollowButtons-Instanz (siehe getFollowStatuses).
+  const followStatuses = await getFollowStatuses(
+    viewer.id,
+    "user",
+    rows.map((u) => u.slug),
+  );
 
   return (
     <>
@@ -40,6 +48,7 @@ export default async function UsersOverviewPage() {
           users={rows}
           viewerId={viewer.id}
           isAdmin={viewer.role === "admin"}
+          followStatuses={followStatuses}
         />
       </article>
     </>

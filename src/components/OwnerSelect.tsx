@@ -1,6 +1,7 @@
 "use client";
 import { setOwnerAction, type OwnerContentType } from "@/app/actions/owner";
 import { useOptimisticAdminSelect } from "@/hooks/useOptimisticAdminSelect";
+import AdminSelectField from "./AdminSelectField";
 
 // Admin-only Owner-Anzeige/-Änderung auf den vier Inhalts-Detailseiten
 // (Charakter, Mission, Missionslog, Archiv-Eintrag) — mirrort
@@ -23,27 +24,17 @@ export default function OwnerSelect({
   );
 
   return (
-    <div className="flex items-center gap-[8px] text-[13px]">
-      <span className="lcars-eyebrow">Owner:</span>
-      <select
-        value={value ?? ""}
-        disabled={pending}
-        onChange={(e) => change(e.target.value ? Number(e.target.value) : null)}
-        className="lcars-input"
-        aria-label="Owner"
-      >
-        <option value="">— kein Owner —</option>
-        {users.map((u) => (
-          <option key={u.id} value={u.id}>
-            {u.name}
-          </option>
-        ))}
-      </select>
-      {error && (
-        <p className="text-lcars-red text-[12px]" role="alert">
-          {error}
-        </p>
-      )}
-    </div>
+    <AdminSelectField
+      label="Owner:"
+      value={value != null ? String(value) : ""}
+      onChange={(v) => change(v ? Number(v) : null)}
+      disabled={pending}
+      options={[
+        { value: "", label: "— kein Owner —" },
+        ...users.map((u) => ({ value: String(u.id), label: u.name })),
+      ]}
+      ariaLabel="Owner"
+      error={error}
+    />
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import { Viewer } from "@/lib/visibility";
-import { UserWithCharacters } from "@/lib/users";
 import { Character } from "@/types/character";
 import OwnerSelect from "./OwnerSelect";
 import AdminVisibilitySelect from "./AdminVisibilitySelect";
@@ -43,7 +42,7 @@ const VISIBILITY_CONTENT_TYPE: Partial<
 
 interface ActionMenuProps {
   viewer: Viewer | null;
-  owners: UserWithCharacters[];
+  owners: { id: number; name: string }[];
   content: Character | MissionDetail | MissionLogDetail | ArchiveEntryDetail;
   contentType: ContentToolType;
   // Optional: Mission-Logs sind nicht followbar (siehe FollowTargetType in
@@ -84,7 +83,7 @@ export default function ActionsMenu({
           contentType={OWNER_CONTENT_TYPE[contentType]}
           id={content.id}
           initialOwnerId={playerId}
-          users={owners.map((u) => ({ id: u.id, name: u.name }))}
+          users={owners}
         />
       )}
       {viewer?.role === "admin" && visibilityContentType && "visibility" in content && (

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LcarsSortSwitch, type SortDir } from "@/components/lcars";
 import FollowButtons from "@/components/FollowButtons";
 import type { User } from "@/types/db";
+import type { FollowStatus } from "@/lib/follows";
 
 export interface UserRow {
   id: number;
@@ -42,10 +43,14 @@ export default function UsersTable({
   users,
   viewerId,
   isAdmin,
+  followStatuses,
 }: {
   users: UserRow[];
   viewerId: number;
   isAdmin: boolean;
+  // Gebündelt von der Server Component vorgeladen (siehe getFollowStatuses
+  // in lib/follows.ts) statt eines eigenen Fetches pro FollowButtons-Zeile.
+  followStatuses: Record<string, FollowStatus>;
 }) {
   const [query, setQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
@@ -137,6 +142,11 @@ export default function UsersTable({
                     targetSlug={u.slug}
                     subscribeOnly
                     showShare={false}
+                    initialState={{
+                      loggedIn: true,
+                      bookmarked: followStatuses[u.slug]?.bookmarked ?? false,
+                      subscribed: followStatuses[u.slug]?.subscribed ?? false,
+                    }}
                   />
                 )}
               </div>

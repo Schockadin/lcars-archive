@@ -74,7 +74,8 @@ export default async function ArchiveEntryPage({ params }: Props) {
   ) {
     notFound();
   }
-  const owners = viewer?.role === "admin" ? await listAllUsers() : [];
+  const allUsers = viewer?.role === "admin" ? await listAllUsers() : [];
+  const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
   // Einfache, nicht gecachte Abfrage — Frische kommt über die Revalidation
   // der ganzen Seite nach jeder neuen Nachricht (siehe

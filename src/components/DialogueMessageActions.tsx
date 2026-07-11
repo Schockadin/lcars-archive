@@ -8,6 +8,8 @@ import {
   type DeleteMessageState,
 } from "@/app/actions/dialogues";
 import { PencilIcon, TrashIcon } from "@/lib/icons";
+import { confirmSubmit } from "@/lib/confirmSubmit";
+import { FormError } from "@/app/_shared/FormPrimitives";
 
 const initialEditState: EditMessageState = {};
 const initialDeleteState: DeleteMessageState = {};
@@ -84,11 +86,7 @@ export default function DialogueMessageActions({
             Abbrechen
           </button>
         </div>
-        {editState?.error && (
-          <p className="text-lcars-red" role="alert">
-            {editState.error}
-          </p>
-        )}
+        <FormError message={editState?.error} />
       </form>
     );
   }
@@ -117,25 +115,13 @@ export default function DialogueMessageActions({
           className="lcars-icon-btn lcars-icon-btn--danger size-[40px] max-sm:size-[30px] disabled:opacity-50"
           aria-label="Nachricht löschen"
           title="Nachricht löschen"
-          onClick={(e) => {
-            if (!confirm("Nachricht wirklich löschen?")) {
-              e.preventDefault();
-            }
-          }}
+          onClick={confirmSubmit("Nachricht wirklich löschen?")}
         >
           <TrashIcon />
         </button>
       </form>
-      {loadError && (
-        <p className="text-lcars-red" role="alert">
-          {loadError}
-        </p>
-      )}
-      {deleteState?.error && (
-        <p className="text-lcars-red" role="alert">
-          {deleteState.error}
-        </p>
-      )}
+      <FormError message={loadError ?? undefined} />
+      <FormError message={deleteState?.error} />
     </div>
   );
 }

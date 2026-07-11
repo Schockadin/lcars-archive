@@ -233,16 +233,6 @@
   border-top: 1px solid var(--lcars-border);
 }
 
-/* AdminActionsMenu.tsx — bündelt die Admin-Content-Tools als DataRow-
-   Akkordeon (siehe accordion.css), hier nur der Abstand zwischen den
-   einzelnen Tool-Buttons im aufgeklappten Panel. */
-.admin-actions-menu-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: end;
-}
-
 /* TimelineMarkerButton.tsx — Modal zum Einfügen eines Zeitleisten-Markers
    an der Cursor-Position, gleiches Overlay-Muster wie die Portrait-
    Lightbox (character.css .portrait-overlay), nur als Formular-Karte statt

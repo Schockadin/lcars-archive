@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Character } from "@/types/character";
 import {
   LcarsDataRow,
@@ -10,7 +10,6 @@ import {
 import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
 import CharacterBioEditor from "./CharacterBioEditor";
-import { UserWithCharacters } from "@/lib/users";
 import { Viewer } from "@/lib/visibility";
 import ActionsMenu from "@/components/ActionsMenu";
 
@@ -145,7 +144,7 @@ export default function CharacterHero({
   logCount?: number;
   conversationCount?: number;
   viewer: Viewer | null;
-  owners: UserWithCharacters[];
+  owners: { id: number; name: string }[];
   // Nur gesetzt, wenn viewer === Owner (player_id) — siehe page.tsx.
   sourceMarkdown: string | null;
 }) {
@@ -166,8 +165,15 @@ export default function CharacterHero({
   const factions = metadata.affiliation?.factions ?? [];
   const ships = metadata.affiliation?.ships ?? [];
 
-  // Bio aufbereiten: Anker-IDs setzen + Sprungpunkte fürs TOC sammeln
-  const bio = character.bio ? buildBioToc(character.bio) : null;
+  // Bio aufbereiten: Anker-IDs setzen + Sprungpunkte fürs TOC sammeln.
+  // Memoisiert auf character.bio: ohne useMemo entstünde bei jedem Render
+  // (z.B. editMode-Toggle) ein neues headings-Array, an dessen Referenz
+  // LcarsToc's Scrollspy-Effect hängt — IntersectionObserver würde dadurch
+  // unnötig ab-/wieder aufgebaut.
+  const bio = useMemo(
+    () => (character.bio ? buildBioToc(character.bio) : null),
+    [character.bio],
+  );
 
   return (
     <div className="mb-[12px] mr-[var(--lcars-elbow-size)]">

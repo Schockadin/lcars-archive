@@ -7,8 +7,9 @@ import {
   type AutolinkPreviewResult,
 } from "@/app/actions/contentTools";
 import { LinkIcon } from "@/lib/icons";
-import { AutolinkTargetType } from "@/lib/autolink";
 import { usePreviewConfirmAction } from "@/hooks/usePreviewConfirmAction";
+import { groupByCount } from "@/lib/groupByCount";
+import PreviewConfirmFooter from "./PreviewConfirmFooter";
 
 const TYPE_LABEL: Record<
   AutolinkPreviewResult["matches"][number]["type"],
@@ -45,33 +46,15 @@ export default function AutolinkButton({
   const distinctMatches = useMemo(
     () =>
       preview
-        ? Object.values(
-            preview.matches.reduce<
-              Record<
-                string,
-                {
-                  canonical: string;
-                  href: string;
-                  count: number;
-                  matchedText: string;
-                  type: AutolinkTargetType;
-                }
-              >
-            >((acc, entry) => {
-              if (!acc[entry.canonical]) {
-                acc[entry.canonical] = {
-                  canonical: entry.canonical,
-                  href: entry.href,
-                  count: 0,
-                  matchedText: entry.matchedText,
-                  type: entry.type,
-                };
-              }
-
-              acc[entry.canonical].count++;
-
-              return acc;
-            }, {}),
+        ? groupByCount(
+            preview.matches,
+            (entry) => entry.canonical,
+            (entry) => ({
+              canonical: entry.canonical,
+              href: entry.href,
+              matchedText: entry.matchedText,
+              type: entry.type,
+            }),
           )
         : [],
     [preview],
@@ -96,26 +79,14 @@ export default function AutolinkButton({
             ))}
           </ul>
         )}
-        <div className="flex gap-[12px] items-center justify-start self-end">
-          <button
-            type="button"
-            onClick={handleCancel}
-            disabled={pending}
-            className="lcars-pill-btn--outline w-[40%]"
-          >
-            Abbrechen
-          </button>
-          {distinctMatches.length > 0 && (
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={pending}
-              className="lcars-pill-btn--outline disabled:opacity-50 w-[40%]"
-            >
-              {pending ? "Speichern…" : "Übernehmen"}
-            </button>
-          )}
-        </div>
+        <PreviewConfirmFooter
+          onCancel={handleCancel}
+          onConfirm={handleConfirm}
+          pending={pending}
+          canConfirm={distinctMatches.length > 0}
+          className="flex gap-[12px] items-center justify-start self-end"
+          buttonClassName="lcars-pill-btn--outline w-[40%]"
+        />
 
         {error && (
           <p className="text-lcars-red text-[13px]" role="alert">

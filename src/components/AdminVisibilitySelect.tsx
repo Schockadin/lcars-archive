@@ -4,6 +4,7 @@ import {
   type AdminVisibilityContentType,
 } from "@/app/actions/visibility";
 import { useOptimisticAdminSelect } from "@/hooks/useOptimisticAdminSelect";
+import AdminSelectField from "./AdminSelectField";
 import type { Visibility } from "@/lib/visibility";
 
 const OPTIONS: { value: Visibility; label: string }[] = [
@@ -33,26 +34,14 @@ export default function AdminVisibilitySelect({
   );
 
   return (
-    <div className="flex items-center gap-[8px] text-[13px]">
-      <span className="lcars-eyebrow">Sichtbarkeit:</span>
-      <select
-        value={value}
-        disabled={pending}
-        onChange={(e) => change(e.target.value as Visibility)}
-        className="lcars-input"
-        aria-label="Sichtbarkeit"
-      >
-        {OPTIONS.map((o) => (
-          <option key={o.value} value={o.value}>
-            {o.label}
-          </option>
-        ))}
-      </select>
-      {error && (
-        <p className="text-lcars-red text-[12px]" role="alert">
-          {error}
-        </p>
-      )}
-    </div>
+    <AdminSelectField
+      label="Sichtbarkeit:"
+      value={value}
+      onChange={(v) => change(v as Visibility)}
+      disabled={pending}
+      options={OPTIONS}
+      ariaLabel="Sichtbarkeit"
+      error={error}
+    />
   );
 }

@@ -4,7 +4,6 @@ import { Character } from "@/types/character";
 import { MissionLogPreview } from "@/types/missionLog";
 import CharacterHero from "./CharacterHero";
 import { Viewer } from "@/lib/visibility";
-import { UserWithCharacters } from "@/lib/users";
 
 export default function CharakterDetailPage({
   character,
@@ -18,7 +17,7 @@ export default function CharakterDetailPage({
   logs: MissionLogPreview[];
   conversationCount: number;
   viewer: Viewer | null;
-  owners: UserWithCharacters[];
+  owners: { id: number; name: string }[];
   // Nur gesetzt, wenn viewer === Owner (siehe page.tsx) — Grundlage für den
   // Inline-Bio-Editor in CharacterHero.tsx.
   sourceMarkdown: string | null;
