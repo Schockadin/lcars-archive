@@ -1,6 +1,7 @@
+import { after } from "next/server";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
-import { hasPassword } from "@/lib/users";
+import { hasPassword, touchDashboardVisit } from "@/lib/users";
 import { getBookmarkedContent } from "@/lib/follows";
 import { getRecentActivity, getRecentDeletions } from "@/lib/recentActivity";
 import { getDialoguesForUser } from "@/lib/dialogues";
@@ -29,12 +30,19 @@ export default async function Dashboard({ user }: { user: User }) {
     await Promise.all([
       hasPassword(user.id),
       getBookmarkedContent(user.id),
-      getRecentActivity(user.id, user.previous_login_at),
-      getRecentDeletions(user.id, user.previous_login_at),
+      getRecentActivity(user.id, user.last_dashboard_visit_at),
+      getRecentDeletions(user.id, user.last_dashboard_visit_at),
       getDialoguesForUser(user.id, "open"),
     ]);
   const needsPassword = !hasPasswordSet;
   const firstVisit = user.previous_login_at === null;
+
+  // last_dashboard_visit_at erst NACH dem Lesen oben überschreiben (wird
+  // dort als "seit wann?"-Grenze für die News-Sektion gebraucht) — anders
+  // als touchLastVisit (lib/users.ts) bewusst ungedrosselt, ein
+  // Dashboard-Besuch ist selten genug, dass ein Write pro Besuch
+  // unproblematisch ist. after() verschiebt den Write hinter die Response.
+  after(() => touchDashboardVisit(user.id));
 
   return (
     <>

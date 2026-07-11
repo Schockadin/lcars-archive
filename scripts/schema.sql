@@ -148,13 +148,25 @@ CREATE INDEX IF NOT EXISTS idx_archive_links_target ON archive_links(target_id);
 CREATE INDEX IF NOT EXISTS idx_timeline_events_date   ON timeline_events(event_date);
 CREATE INDEX IF NOT EXISTS idx_timeline_events_source ON timeline_events(source_type, source_slug);
 
--- "Letzter Besuch" für das Dashboard (neu seit deinem letzten Besuch).
--- previous_login_at wird bei jedem Login aus dem alten last_login_at
--- übernommen, bevor last_login_at auf NOW() gesetzt wird (recordLogin in
--- src/lib/users.ts) — so kennt das Dashboard immer die Grenze des
--- *vorletzten* Logins, unabhängig von Profil-Änderungen währenddessen.
+-- Login-Historie fürs Admin-Panel (/admin/[id]/edit). previous_login_at
+-- wird bei jedem Login aus dem alten last_login_at übernommen, bevor
+-- last_login_at auf NOW() gesetzt wird (recordLogin in src/lib/users.ts) —
+-- so bleibt der Zeitpunkt des *vorletzten* Logins nachvollziehbar,
+-- unabhängig von Profil-Änderungen währenddessen. Dient außerdem als
+-- "warst du schon mal hier?"-Flag auf dem Dashboard (Dashboard.tsx).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS last_login_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS previous_login_at TIMESTAMPTZ;
+
+-- last_visit_at: Zeitpunkt des letzten Seitenaufrufs (jede Seite, siehe
+-- /api/session/route.ts), gedrosselt auf max. einen Write pro 15 Minuten
+-- (touchLastVisit in src/lib/users.ts) — nur für Admins sichtbar
+-- (/admin/[id]/edit). last_dashboard_visit_at: Zeitpunkt des letzten
+-- Dashboard-Besuchs, ungedrosselt bei jedem Aufruf aktualisiert
+-- (touchDashboardVisit) — Grundlage für "neu seit deinem letzten Besuch"
+-- in der News-Sektion des Dashboards (ersetzt die frühere Verwendung von
+-- previous_login_at dafür).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_visit_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS last_dashboard_visit_at TIMESTAMPTZ;
 
 -- Unterstützt getRecentActivitySince() (src/lib/timeline.ts), das nach
 -- created_at filtert statt nach dem In-Story-Datum event_date.

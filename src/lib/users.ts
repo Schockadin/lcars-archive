@@ -5,6 +5,7 @@ import type { User } from "@/types/db";
 
 const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
+  last_visit_at, last_dashboard_visit_at,
   email_notifications_enabled, push_notifications_enabled
 `;
 
@@ -52,6 +53,32 @@ export async function recordLogin(userId: number): Promise<void> {
   `;
 }
 
+// Aktualisiert last_visit_at bei (praktisch) jedem Seitenaufruf — aufgerufen
+// aus /api/session/route.ts, das der Header client-seitig auf jeder Seite
+// abfragt. Ohne Drosselung wäre das ein DB-Write pro Seitenaufruf; das
+// bedingte UPDATE (kein Write, wenn der Wert noch keine 15 Minuten alt ist)
+// senkt das auf höchstens einen Write pro Nutzer alle 15 Minuten, ganz ohne
+// In-Memory-Cache oder zusätzliches Cookie — funktioniert dadurch unverändert
+// über mehrere Serverless-Instanzen hinweg. Der Aufruf selbst hängt zusätzlich
+// an after() (siehe dort), blockiert also nicht mal die (ohnehin geringe)
+// Antwortzeit dieses Endpunkts.
+export async function touchLastVisit(userId: number): Promise<void> {
+  await sql`
+    UPDATE users
+    SET last_visit_at = NOW()
+    WHERE id = ${userId}
+      AND (last_visit_at IS NULL OR last_visit_at < NOW() - INTERVAL '15 minutes')
+  `;
+}
+
+// Anders als touchLastVisit oben bewusst ungedrosselt: das Dashboard wird
+// weit seltener aufgerufen als irgendeine Seite, und Dashboard.tsx liest
+// last_dashboard_visit_at im selben Request als "seit wann?"-Grenze für die
+// News-Sektion, BEVOR dieser Aufruf ihn überschreibt.
+export async function touchDashboardVisit(userId: number): Promise<void> {
+  await sql`UPDATE users SET last_dashboard_visit_at = NOW() WHERE id = ${userId}`;
+}
+
 export interface UserWithCharacters extends User {
   characters: { id: number; slug: string; name: string }[];
 }
@@ -60,7 +87,7 @@ export async function listAllUsers(): Promise<UserWithCharacters[]> {
   const rows = await sql<UserWithCharacters[]>`
     SELECT
       u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
-      u.last_login_at, u.previous_login_at,
+      u.last_login_at, u.previous_login_at, u.last_visit_at, u.last_dashboard_visit_at,
       u.email_notifications_enabled, u.push_notifications_enabled,
       COALESCE(
         jsonb_agg(
@@ -280,7 +307,7 @@ export async function getUserForAdmin(
   >`
     SELECT
       u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
-      u.last_login_at, u.previous_login_at,
+      u.last_login_at, u.previous_login_at, u.last_visit_at, u.last_dashboard_visit_at,
       u.email_notifications_enabled, u.push_notifications_enabled,
       u.password_hash IS NOT NULL AS has_password,
       u.requires_activation,

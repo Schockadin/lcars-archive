@@ -52,6 +52,10 @@ export default async function EditUserPage({
               label="Vorheriger Login"
               value={formatDateTime(target.previous_login_at)}
             />
+            <DetailRow
+              label="Letzter Seitenaufruf"
+              value={formatDateTime(target.last_visit_at)}
+            />
             <DetailRow label="Passwort" value={passwordStatusLabel(target)} />
             <DetailRow
               label="Charaktere"
