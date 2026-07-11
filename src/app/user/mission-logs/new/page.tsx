@@ -14,20 +14,36 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function NewMissionLogPage() {
+export default async function NewMissionLogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ mission?: string }>;
+}) {
   const { user, characters } = await requireOwnCharacters();
 
   // Nur laden, wenn überhaupt ein Formular gerendert wird — analog zu
   // dialogues/new/page.tsx.
   const missions = characters.length > 0 ? await getAllMissions() : [];
 
-  // Grober Vorschlagswert für Session-Nr (erster eigener Charakter + erste
-  // Mission) — das Formular selbst kann ihn client-seitig ohne weiteren
-  // Server-Roundtrip nicht neu berechnen, wenn die Auswahl wechselt. Das
-  // Feld bleibt editierbar, der User kann die Zahl bei Bedarf anpassen.
+  // Vorbelegung der Mission über ?mission=<slug> — verlinkt vom "Neues
+  // Log"-Button auf der Mission-Detailseite (MissionLogList.tsx). Nur
+  // übernehmen, wenn der Slug tatsächlich zu einer bestehenden Mission
+  // gehört, sonst bleibt es beim ersten Eintrag der Liste (Default des
+  // <select> ohne explizite defaultValue).
+  const { mission: missionSlugParam } = await searchParams;
+  const preselectedMission = missionSlugParam
+    ? missions.find((m) => m.slug === missionSlugParam)
+    : undefined;
+
+  // Grober Vorschlagswert für Session-Nr (erster eigener Charakter +
+  // vorbelegte bzw. erste Mission) — das Formular selbst kann ihn
+  // client-seitig ohne weiteren Server-Roundtrip nicht neu berechnen, wenn
+  // die Auswahl wechselt. Das Feld bleibt editierbar, der User kann die Zahl
+  // bei Bedarf anpassen.
+  const sessionNrMission = preselectedMission ?? missions[0];
   const nextSessionNr =
-    characters.length > 0 && missions.length > 0
-      ? await getNextSessionNr(missions[0].id, characters[0].id)
+    characters.length > 0 && sessionNrMission
+      ? await getNextSessionNr(sessionNrMission.id, characters[0].id)
       : 1;
   const defaultLogDate = await getMostRecentLogDate();
 
@@ -78,6 +94,7 @@ export default async function NewMissionLogPage() {
             missions={missions.map((m) => ({ slug: m.slug, title: m.title }))}
             defaultSessionNr={nextSessionNr}
             defaultLogDate={defaultLogDate}
+            defaultMissionSlug={preselectedMission?.slug}
             isAdminOrGM={user.role === "gm" || user.role === "admin"}
           />
         )}

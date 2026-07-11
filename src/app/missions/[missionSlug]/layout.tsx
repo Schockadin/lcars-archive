@@ -1,6 +1,8 @@
 import { notFound } from "next/navigation";
 import { getLogsByMissionId, getMissionBySlug } from "@/lib/missions";
+import { getCharactersForUser } from "@/lib/characters";
 import { STATUS_CONFIG, stripHtml } from "@/lib/missionFormat";
+import { getViewer } from "@/lib/visibility";
 import PageMeta from "@/components/PageMeta";
 import MissionLogList from "../MissionLogList";
 
@@ -20,6 +22,15 @@ export default async function MissionDetailLayout({
   const logs = await getLogsByMissionId(mission.id);
   const color = STATUS_CONFIG[mission.status].color;
 
+  // "Neues Log"-Button in der Log-Liste nur, wer auch tatsächlich einen
+  // eigenen Charakter hat, um damit einen Log zu schreiben (gleiche
+  // Voraussetzung wie /user/mission-logs/new selbst) — cookies()-Zugriff
+  // über getViewer() ist hier unproblematisch, die Seite ist über das
+  // page.tsx der Detailseite ohnehin schon force-dynamic.
+  const viewer = await getViewer();
+  const characters = viewer ? await getCharactersForUser(viewer.userId) : [];
+  const canCreateLog = characters.length > 0;
+
   return (
     <div
       className="mission-detail"
@@ -34,6 +45,7 @@ export default async function MissionDetailLayout({
             mission.metadata.body ? stripHtml(mission.metadata.body) : null
           }
           logs={logs}
+          canCreateLog={canCreateLog}
         />
       </aside>
 

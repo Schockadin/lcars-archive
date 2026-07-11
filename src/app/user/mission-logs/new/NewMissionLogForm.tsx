@@ -21,6 +21,7 @@ export default function NewMissionLogForm({
   missions,
   defaultSessionNr,
   defaultLogDate,
+  defaultMissionSlug,
   isAdminOrGM,
 }: {
   userId: number;
@@ -28,6 +29,7 @@ export default function NewMissionLogForm({
   missions: { slug: string; title: string }[];
   defaultSessionNr: number;
   defaultLogDate: string | null;
+  defaultMissionSlug?: string;
   isAdminOrGM: boolean;
 }) {
   return (
@@ -69,6 +71,7 @@ export default function NewMissionLogForm({
               id="log-mission"
               name="missionSlug"
               required
+              defaultValue={defaultMissionSlug}
               className={missionLogInputClass}
             >
               {missions.map((m) => (
