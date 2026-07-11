@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      # Dummy-Wert: der postgres-Client verbindet erst lazy bei der ersten
+      # Query (siehe src/lib/db.ts) — reicht aus, damit Module, die ihn beim
+      # Import referenzieren (z.B. /search → visibility.ts → users.ts),
+      # laden können, ohne eine echte DB in CI zu benötigen.
+      DATABASE_URL: "postgresql://user:pass@127.0.0.1:5432/dummy"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm test
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run test:e2e
