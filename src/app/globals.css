@@ -10,6 +10,14 @@
    selben (unlayered) Cascade-Tier liegen, damit die normale
    Media-Query-Kaskade zwischen ihnen entscheidet. */
 @import "../styles/lcars-components/tokens-responsive.css";
+/* Unlayered, aus demselben Grund wie tokens-responsive.css oben: der
+   Lesemodus muss u.a. die Sidebar (<aside className="flex …">) per
+   display:none ausblenden. Läge diese Regel (wie vorher) in
+   lcars-components.css unter layer(components), würde sie gegen
+   Tailwinds eigene flex-Utility (layer utilities, immer später/gewinnend
+   als layer components) verlieren — die Sidebar bliebe trotz aktivem
+   Lesemodus sichtbar. */
+@import "../styles/lcars-components/reading-mode.css";
 /* layer(components): Tailwind v4 legt mit obigem @import bereits die
    Layer-Reihenfolge theme→base→components→utilities fest. Ohne dieses
    layer() läge das gesamte custom CSS unlayered und würde (unabhängig von
