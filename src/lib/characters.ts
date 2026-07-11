@@ -147,22 +147,22 @@ export async function getCharactersWithPlayers(
 export interface CharacterParticipantOption {
   id: number;
   name: string;
-  playerName: string | null;
+  playerName: string;
 }
 
-// ALLE Charaktere (unabhängig von Spieler/Status) für den
-// Teilnehmer-Multiselect beim Anlegen/Bearbeiten einer Mission
-// (MissionParticipantsField.tsx) — anders als getCharactersWithPlayers ohne
-// Einschränkung auf einen Spieler, da die Spielleitung jeden Charakter als
-// Teilnehmer markieren können soll, auch NPCs ohne player_id (playerName
-// dann null).
+// Nur Charaktere MIT zugewiesenem Spieler für den Teilnehmer-Multiselect
+// beim Anlegen/Bearbeiten einer Mission (MissionParticipantsField.tsx) — ein
+// NPC ohne player_id kann nicht "teilnehmen" im Sinne dieses Features, da
+// die ganze Teilnehmer-Benachrichtigung (siehe missionAction,
+// missions/_shared/contentAction.ts) auf einen Spieler abzielt, der
+// informiert werden kann.
 export async function getCharactersForParticipantPicker(): Promise<
   CharacterParticipantOption[]
 > {
   return sql<CharacterParticipantOption[]>`
     SELECT c.id, c.name, u.name AS "playerName"
     FROM characters c
-    LEFT JOIN users u ON u.id = c.player_id
+    JOIN users u ON u.id = c.player_id
     ORDER BY c.name ASC
   `;
 }
