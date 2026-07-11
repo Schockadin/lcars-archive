@@ -23,10 +23,12 @@ export default function FollowButtons({
   targetType,
   targetSlug,
   subscribeOnly = false,
+  showShare = true,
 }: {
   targetType: FollowTargetType;
   targetSlug: string;
   subscribeOnly?: boolean;
+  showShare?: boolean;
 }) {
   const [state, setState] = useState<FollowState | null>(null);
   const [pending, setPending] = useState<"bookmark" | "subscribe" | null>(null);
@@ -97,7 +99,7 @@ export default function FollowButtons({
           {state.subscribed ? <UnsubscribeIcon /> : <SubscribeIcon />}
         </button>
       )}
-      <ShareMenu />
+      {showShare && <ShareMenu />}
     </div>
   );
 }

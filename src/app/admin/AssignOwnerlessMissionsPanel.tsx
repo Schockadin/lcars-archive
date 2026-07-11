@@ -59,7 +59,7 @@ export default function AssignOwnerlessMissionsPanel({
           disabled={running || ownerId === ""}
           className="lcars-pill-btn--outline self-start disabled:opacity-50"
         >
-          {running ? "Wird zugeordnet…" : "Missionen ohne Owner zuordnen"}
+          {running ? "Wird zugeordnet…" : "Zuordnen"}
         </button>
       </div>
 

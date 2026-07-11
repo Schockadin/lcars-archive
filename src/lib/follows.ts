@@ -9,10 +9,11 @@ import { sendPushToUser } from "@/lib/push";
 // das Follow — ein zusätzliches Follow pro einzelnem Log wäre Rauschen ohne
 // echten Zusatznutzen (siehe ActionsMenu.tsx, das für contentType
 // "missionLog" deshalb gar kein followType übergibt).
-// "user" (target_slug = users.slug) ist kein einzelner Inhalt, sondern ein
-// Sammel-Abo: benachrichtigt bei jedem neuen/geänderten öffentlichen Inhalt
-// des abonnierten Users (siehe notifyUserSubscribers unten) — subscribeOnly
-// in FollowButtons, ein Bookmark auf einen User ergibt keinen Sinn.
+// "user" (target_slug = users.slug) ist zusätzlich ein Sammel-Abo:
+// benachrichtigt bei jedem neuen/geänderten öffentlichen Inhalt des
+// abonnierten Users (siehe notifyUserSubscribers unten). Auf /users nur
+// subscribeOnly in FollowButtons (kompakte Zeile), auf /users/[id] zusätzlich
+// bookmarkbar wie jeder andere Inhaltstyp.
 export type FollowTargetType =
   | "mission"
   | "archive_entry"

@@ -117,11 +117,19 @@
   white-space: nowrap;
   font-family: var(--font-antonio), sans-serif;
   font-weight: 600;
-  font-size: 20px;
   letter-spacing: 1px;
   line-height: 1.175;
   text-transform: uppercase;
   transition: 250ms;
+}
+/* font-size bewusst NICHT hier (statt in .lcars-usernav-pill selbst,
+   header.css): .lcars-usernav-pill hat dort viewport-abhängige
+   font-size-Overrides via @media — läge die Basisgröße hier in
+   controls.css, würde sie (gleiche Spezifität, aber später importiert als
+   header.css) diese Overrides bei jedem Breakpoint überstimmen. */
+.lcars-pill-btn,
+.lcars-pill-btn--outline {
+  font-size: 20px;
 }
 .lcars-pill-btn:hover,
 .lcars-pill-btn--outline:hover {

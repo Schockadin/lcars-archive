@@ -66,10 +66,14 @@ export default async function UserPublicProfilePage({
     <>
       <PageMeta title={target.name} section="users" />
       <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
-        <div className="flex flex-wrap items-center gap-[16px]">
+        <div className="flex flex-wrap items-start justify-between gap-[16px]">
           <h1>{target.name}</h1>
           {viewer.id !== target.id && (
-            <FollowButtons targetType="user" targetSlug={target.slug} subscribeOnly />
+            <FollowButtons
+              targetType="user"
+              targetSlug={target.slug}
+              showShare={false}
+            />
           )}
         </div>
 

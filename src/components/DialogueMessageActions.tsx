@@ -7,6 +7,7 @@ import {
   type EditMessageState,
   type DeleteMessageState,
 } from "@/app/actions/dialogues";
+import { PencilIcon, TrashIcon } from "@/lib/icons";
 
 const initialEditState: EditMessageState = {};
 const initialDeleteState: DeleteMessageState = {};
@@ -94,12 +95,18 @@ export default function DialogueMessageActions({
 
   return (
     <div className="dialogue-message-actions">
+      {/* Icon-Buttons statt beschrifteter Pillen, analog dem
+          "Follow beenden"-Muster in FollowList.tsx (/user/follow) — auf
+          mobile kompakter (30px statt 40px), da hier pro Nachricht zwei
+          Buttons nebeneinander stehen. */}
       <button
         type="button"
-        className="lcars-pill-btn--outline"
+        className="lcars-icon-btn size-[40px] max-sm:size-[30px]"
         onClick={startEdit}
+        aria-label="Nachricht bearbeiten"
+        title="Nachricht bearbeiten"
       >
-        Bearbeiten
+        <PencilIcon />
       </button>
       <form action={deleteAction}>
         <input type="hidden" name="messageId" value={messageId} />
@@ -107,14 +114,16 @@ export default function DialogueMessageActions({
         <button
           type="submit"
           disabled={deletePending}
-          className="lcars-pill-btn--outline disabled:opacity-50"
+          className="lcars-icon-btn lcars-icon-btn--danger size-[40px] max-sm:size-[30px] disabled:opacity-50"
+          aria-label="Nachricht löschen"
+          title="Nachricht löschen"
           onClick={(e) => {
             if (!confirm("Nachricht wirklich löschen?")) {
               e.preventDefault();
             }
           }}
         >
-          {deletePending ? "Wird gelöscht…" : "Löschen"}
+          <TrashIcon />
         </button>
       </form>
       {loadError && (

@@ -69,7 +69,7 @@ export default async function UserPage() {
               </p>
               <Link
                 href="/user/follow"
-                className="lcars-pill-btn--outline self-start"
+                className="lcars-pill-btn--outline self-start max-sm:w-full max-sm:self-stretch"
               >
                 Follows verwalten
               </Link>
@@ -84,7 +84,7 @@ export default async function UserPage() {
               </p>
               <Link
                 href="/tutorial"
-                className="lcars-pill-btn--outline self-start"
+                className="lcars-pill-btn--outline self-start max-sm:w-full max-sm:self-stretch"
               >
                 Tutorial öffnen
               </Link>

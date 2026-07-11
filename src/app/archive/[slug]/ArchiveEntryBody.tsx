@@ -37,6 +37,7 @@ export default function ArchiveEntryBody({
         playerId={entry.ownerUserId}
         content={entry}
         onEdit={() => setEditMode(true)}
+        hideEdit={entry.category === "dialogue"}
       />
 
       {entry.metadata.summary && entry.category != "dialogue" && (
