@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   getFollowState,
   toggleBookmark,
@@ -12,13 +12,13 @@ import {
   UnsubscribeIcon,
   BookmarkIcon,
   UnbookmarkIcon,
+  ShareIcon,
 } from "@/lib/icons";
 
-// Rendert nichts, solange nicht bekannt ist, ob eine Session existiert (und
-// dauerhaft nichts für anonyme Besucher) — bewusst per Client-Fetch auf eine
-// Server Action gelöst statt die statisch vorgerenderten Missions-/
-// Archiv-Detailseiten selbst dynamisch zu machen (gleiches Muster wie beim
-// Home-Button in der Sidebar).
+// Bookmark/Abo brauchen eine Session (Rendern erst nach dem Client-Fetch,
+// dauerhaft nichts für anonyme Besucher) — Teilen dagegen funktioniert immer
+// und wird deshalb unabhängig vom Login-Status gerendert, siehe
+// ShareMenu unten.
 export default function FollowButtons({
   targetType,
   targetSlug,
@@ -40,8 +40,6 @@ export default function FollowButtons({
       cancelled = true;
     };
   }, [targetType, targetSlug]);
-
-  if (!state?.loggedIn) return null;
 
   // Kein useOptimistic hier: der Stand kommt per Client-Fetch (useEffect
   // oben), nicht als Prop von einer Server Component — es gibt also keine
@@ -75,7 +73,7 @@ export default function FollowButtons({
 
   return (
     <div className="follow-buttons">
-      {!subscribeOnly && (
+      {state?.loggedIn && !subscribeOnly && (
         <button
           type="button"
           className={`lcars-icon-btn size-[40px] ${state.bookmarked ? "bg-lcars-amber text-lcars-bg" : ""}`}
@@ -87,16 +85,80 @@ export default function FollowButtons({
           {state.bookmarked ? <UnbookmarkIcon /> : <BookmarkIcon />}
         </button>
       )}
+      {state?.loggedIn && (
+        <button
+          type="button"
+          className={`lcars-icon-btn size-[40px] ${state.subscribed ? "bg-lcars-amber text-lcars-bg" : ""}`}
+          disabled={pending === "subscribe"}
+          onClick={handleSubscribe}
+          aria-label={state.subscribed ? "Nicht mehr folgen" : "Folgen"}
+          title={state.subscribed ? "Nicht mehr folgen" : "Folgen"}
+        >
+          {state.subscribed ? <UnsubscribeIcon /> : <SubscribeIcon />}
+        </button>
+      )}
+      <ShareMenu />
+    </div>
+  );
+}
+
+// Eigene Teilen-Schaltfläche mit Dropdown — aktuell nur "Link kopieren",
+// aber als Menü statt Einzel-Button angelegt, damit weitere Optionen (z.B.
+// native Web-Share-API auf unterstützten Geräten) später ohne Umbau
+// dazukommen können.
+function ShareMenu() {
+  const [open, setOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClickOutside(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [open]);
+
+  async function handleCopyLink() {
+    await navigator.clipboard.writeText(window.location.href);
+    setCopied(true);
+    setOpen(false);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  return (
+    <div className="follow-share-wrapper" ref={wrapperRef}>
       <button
         type="button"
-        className={`lcars-icon-btn size-[40px] ${state.subscribed ? "bg-lcars-amber text-lcars-bg" : ""}`}
-        disabled={pending === "subscribe"}
-        onClick={handleSubscribe}
-        aria-label={state.subscribed ? "Nicht mehr folgen" : "Folgen"}
-        title={state.subscribed ? "Nicht mehr folgen" : "Folgen"}
+        className="lcars-icon-btn size-[40px]"
+        onClick={() => setOpen((v) => !v)}
+        aria-label="Teilen"
+        title="Teilen"
+        aria-haspopup="menu"
+        aria-expanded={open}
       >
-        {state.subscribed ? <UnsubscribeIcon /> : <SubscribeIcon />}
+        <ShareIcon />
       </button>
+      {open && (
+        <div className="follow-share-menu" role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            className="follow-share-menu-item"
+            onClick={handleCopyLink}
+          >
+            Link kopieren
+          </button>
+        </div>
+      )}
+      {copied && (
+        <div className="follow-share-toast" role="status">
+          Link kopiert!
+        </div>
+      )}
     </div>
   );
 }
