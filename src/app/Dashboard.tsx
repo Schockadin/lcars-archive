@@ -1,4 +1,3 @@
-import { after } from "next/server";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { hasPassword, touchDashboardVisit } from "@/lib/users";
@@ -40,9 +39,13 @@ export default async function Dashboard({ user }: { user: User }) {
   // last_dashboard_visit_at erst NACH dem Lesen oben überschreiben (wird
   // dort als "seit wann?"-Grenze für die News-Sektion gebraucht) — anders
   // als touchLastVisit (lib/users.ts) bewusst ungedrosselt, ein
-  // Dashboard-Besuch ist selten genug, dass ein Write pro Besuch
-  // unproblematisch ist. after() verschiebt den Write hinter die Response.
-  after(() => touchDashboardVisit(user.id));
+  // Dashboard-Besuch ist selten genug, dass ein synchroner Write pro Besuch
+  // unproblematisch ist. BEWUSST kein after() (mehr): siehe Kommentar in
+  // src/app/api/session/route.ts — mit lib/db.ts' max:1-Verbindung pro
+  // Funktionsinstanz kann ein nach der Response noch laufender
+  // after()-Callback die eine Verbindung hängen lassen und damit jede
+  // weitere Anfrage auf derselben Instanz blockieren.
+  await touchDashboardVisit(user.id);
 
   return (
     <>

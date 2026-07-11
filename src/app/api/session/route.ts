@@ -1,4 +1,4 @@
-import { NextResponse, after } from "next/server";
+import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { touchLastVisit } from "@/lib/users";
 
@@ -18,12 +18,19 @@ export const dynamic = "force-dynamic";
 // pflegen ("Aufruf einer Seite durch den User"), ohne dafür eine eigene
 // Server-Component-Stelle auf jeder einzelnen Seite einzubauen. touchLastVisit
 // selbst drosselt auf einen DB-Write pro Nutzer alle 15 Minuten (siehe
-// lib/users.ts); after() verschiebt selbst diesen gedrosselten Write hinter
-// die Response, sodass die Antwortzeit für den Client unverändert bleibt.
+// lib/users.ts) — der synchrone await hier kostet praktisch nie eine
+// zusätzliche Antwortzeit spürbarer Größe. BEWUSST kein after() (mehr):
+// lib/db.ts hält pro Funktionsinstanz nur eine einzige DB-Verbindung
+// (max: 1, PgBouncer-Transaction-Mode) — friert Netlifys Node-Function-
+// Runtime die Instanz ein, bevor ein nachgelagerter after()-Callback seine
+// Query beendet hat, bleibt diese eine Verbindung in einem hängenden
+// Zustand zurück und blockiert JEDE weitere Anfrage auf derselben
+// (wiederverwendeten) Instanz auf unbestimmte Zeit — beobachtet als leerer
+// Header/endlose Ladezustände auf komplett anderen Seiten.
 export async function GET() {
   const session = await getSession();
   if (session) {
-    after(() => touchLastVisit(session.userId));
+    await touchLastVisit(session.userId);
   }
   return NextResponse.json({
     userId: session?.userId ?? null,

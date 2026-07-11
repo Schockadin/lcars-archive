@@ -59,9 +59,10 @@ export async function recordLogin(userId: number): Promise<void> {
 // bedingte UPDATE (kein Write, wenn der Wert noch keine 15 Minuten alt ist)
 // senkt das auf höchstens einen Write pro Nutzer alle 15 Minuten, ganz ohne
 // In-Memory-Cache oder zusätzliches Cookie — funktioniert dadurch unverändert
-// über mehrere Serverless-Instanzen hinweg. Der Aufruf selbst hängt zusätzlich
-// an after() (siehe dort), blockiert also nicht mal die (ohnehin geringe)
-// Antwortzeit dieses Endpunkts.
+// über mehrere Serverless-Instanzen hinweg. Synchron awaited (kein after()
+// mehr, siehe Kommentar in /api/session/route.ts) — die geringe Antwortzeit
+// eines gedrosselten No-op-UPDATE ist der sichere Trade-off gegenüber einem
+// nach der Response möglicherweise abgebrochenen Background-Write.
 export async function touchLastVisit(userId: number): Promise<void> {
   await sql`
     UPDATE users
