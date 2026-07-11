@@ -714,6 +714,49 @@ export async function getCharacterSubscribers(
   }));
 }
 
+// Batch-Variante von getCharacterSubscribers für mehrere Charaktere in einem
+// Rutsch (z.B. alle teilnehmenden Charaktere einer neu angelegten Mission,
+// siehe missions/_shared/contentAction.ts) — eine Query statt einer Query
+// pro Charakter, nach target_slug gruppiert zurückgegeben.
+export async function getCharacterSubscribersForSlugs(
+  characterSlugs: string[],
+): Promise<Map<string, DialogueEmailTarget[]>> {
+  if (characterSlugs.length === 0) return new Map();
+
+  const rows = await sql<
+    {
+      target_slug: string;
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT cf.target_slug, u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
+    FROM content_follows cf
+    JOIN users u ON u.id = cf.user_id
+    WHERE cf.target_type = 'character'
+      AND cf.target_slug = ANY(${characterSlugs})
+      AND cf.subscribed_at IS NOT NULL
+  `;
+
+  const bySlug = new Map<string, DialogueEmailTarget[]>();
+  for (const row of rows) {
+    const target: DialogueEmailTarget = {
+      id: row.id,
+      email: row.email,
+      name: row.name,
+      emailNotificationsEnabled: row.email_notifications_enabled,
+      pushNotificationsEnabled: row.push_notifications_enabled,
+    };
+    const list = bySlug.get(row.target_slug);
+    if (list) list.push(target);
+    else bySlug.set(row.target_slug, [target]);
+  }
+  return bySlug;
+}
+
 // Spieler (player_id) der beteiligten Charaktere eines Dialogs — anders als
 // getDialogueSubscribers/getCharacterSubscribers unabhängig von einem Abo,
 // da die Info-Mail beim Löschen (deleteDialogueAction) beide tatsächlich

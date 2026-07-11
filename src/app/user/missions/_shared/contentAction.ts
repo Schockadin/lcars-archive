@@ -11,8 +11,11 @@ import {
   getMissionParticipantUsers,
 } from "@/lib/missions";
 import { getParticipantCharactersForNotification } from "@/lib/characters";
-import { getCharacterSubscribers } from "@/lib/dialogues";
-import { getUserSubscribers, notifyAdminContentSubscribers } from "@/lib/follows";
+import { getCharacterSubscribersForSlugs } from "@/lib/dialogues";
+import {
+  getUserSubscribersForSlugs,
+  notifyAdminContentSubscribers,
+} from "@/lib/follows";
 import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
@@ -138,6 +141,7 @@ export async function missionAction(
       contentType: "mission",
       event: "updated",
       authorUserId: session.userId,
+      authorName: user.name,
       contentTypeLabel: "eine Mission",
       contentTitle: title,
       contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
@@ -174,6 +178,7 @@ export async function missionAction(
     contentType: "mission",
     event: "created",
     authorUserId: session.userId,
+    authorName: user.name,
     contentTypeLabel: "eine neue Mission",
     contentTitle: title,
     contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
@@ -230,9 +235,21 @@ export async function missionAction(
     const participantCharacters =
       await getParticipantCharactersForNotification(participantCharacterIds);
 
+    // Subscriber für alle teilnehmenden Charaktere/Spieler in je einer Query
+    // vorab laden (statt pro Charakter einzeln, N+1) — bei N Teilnehmern
+    // sonst bis zu 2N sequentielle Anfragen in dieser einen Server Action.
+    const playerSlugs = participantCharacters
+      .map((c) => c.playerSlug)
+      .filter((slug): slug is string => slug != null);
+    const [characterSubscribersBySlug, userSubscribersBySlug] =
+      await Promise.all([
+        getCharacterSubscribersForSlugs(participantCharacters.map((c) => c.slug)),
+        getUserSubscribersForSlugs(playerSlugs),
+      ]);
+
     for (const character of participantCharacters) {
       const characterSubscribers = (
-        await getCharacterSubscribers(character.slug)
+        characterSubscribersBySlug.get(character.slug) ?? []
       ).filter(
         (s) => s.id !== session.userId && s.id !== character.playerId,
       );
@@ -263,7 +280,7 @@ export async function missionAction(
 
       if (character.playerId && character.playerSlug) {
         const userSubscribers = (
-          await getUserSubscribers(character.playerSlug)
+          userSubscribersBySlug.get(character.playerSlug) ?? []
         ).filter(
           (s) => s.id !== session.userId && s.id !== character.playerId,
         );

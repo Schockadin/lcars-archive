@@ -1,12 +1,11 @@
 "use client";
-import { useOptimistic, useState, useTransition } from "react";
 import { setOwnerAction, type OwnerContentType } from "@/app/actions/owner";
+import { useOptimisticAdminSelect } from "@/hooks/useOptimisticAdminSelect";
 
 // Admin-only Owner-Anzeige/-Änderung auf den vier Inhalts-Detailseiten
 // (Charakter, Mission, Missionslog, Archiv-Eintrag) — mirrort
-// VisibilitySelect.tsx (useOptimistic statt useState: automatischer
-// Rollback, falls setOwnerAction fehlschlägt und die Seite deshalb beim
-// nächsten Datenabruf denselben Owner wie vorher zeigt).
+// VisibilitySelect.tsx/AdminVisibilitySelect.tsx (useOptimisticAdminSelect:
+// automatischer Rollback, falls setOwnerAction fehlschlägt).
 export default function OwnerSelect({
   contentType,
   id,
@@ -18,25 +17,18 @@ export default function OwnerSelect({
   initialOwnerId: number | null;
   users: { id: number; name: string }[];
 }) {
-  const [optimisticOwnerId, setOptimisticOwnerId] = useOptimistic(initialOwnerId);
-  const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
+  const { value, pending, error, change } = useOptimisticAdminSelect(
+    initialOwnerId,
+    (next) => setOwnerAction(contentType, id, next),
+  );
 
   return (
     <div className="flex items-center gap-[8px] text-[13px]">
       <span className="lcars-eyebrow">Owner:</span>
       <select
-        value={optimisticOwnerId ?? ""}
+        value={value ?? ""}
         disabled={pending}
-        onChange={(e) => {
-          const next = e.target.value ? Number(e.target.value) : null;
-          setError(null);
-          startTransition(async () => {
-            setOptimisticOwnerId(next);
-            const result = await setOwnerAction(contentType, id, next);
-            if (result.error) setError(result.error);
-          });
-        }}
+        onChange={(e) => change(e.target.value ? Number(e.target.value) : null)}
         className="lcars-input"
         aria-label="Owner"
       >

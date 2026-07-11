@@ -62,9 +62,12 @@ export async function characterAction(
   // Gast-Check nur beim Anlegen (siehe createCharacterAction vorher) — die
   // Rolle wird frisch aus der DB geprüft, nicht aus dem Cookie, da eine
   // Selbstanlage player_id sofort auf den eigenen Account setzen würde.
+  // Der geladene User wird weiter unten für notifyAdminContentSubscribers
+  // wiederverwendet (authorName), statt ihn dafür ein zweites Mal zu laden.
+  let currentUser = null;
   if (!isEdit) {
-    const user = await getUserById(session.userId);
-    if (!user || user.role === "guest") {
+    currentUser = await getUserById(session.userId);
+    if (!currentUser || currentUser.role === "guest") {
       return { error: "Gast-Accounts können keine Charaktere anlegen." };
     }
   }
@@ -141,28 +144,40 @@ export async function characterAction(
       editingUserId: session.userId,
       bioMarkdown: bodyMarkdown || null,
     });
-    await notifyAdminContentSubscribers({
-      contentType: "character",
-      event: "updated",
-      authorUserId: session.userId,
-      contentTypeLabel: "einen Charakter",
-      contentTitle: name,
-      contentUrl: `${await getBaseUrl()}/characters/${result.slug}`,
-      preview: bodyMarkdown
-        ? synopsisExcerpt(bodyMarkdown, 140)
-        : "Die Akte wurde aktualisiert.",
-    });
-    if (result.visibility === "public") {
-      await notifyUserSubscribers({
+
+    const contentUrl = `${await getBaseUrl()}/characters/${result.slug}`;
+    const preview = bodyMarkdown
+      ? synopsisExcerpt(bodyMarkdown, 140)
+      : "Die Akte wurde aktualisiert.";
+    const author = await getUserById(session.userId);
+
+    // notifyAdminContentSubscribers/notifyUserSubscribers sind unabhängig
+    // voneinander (unterschiedliche Empfängerlisten) — parallel statt
+    // sequentiell, sonst addieren sich zwei Runden Mail/Push-Versand zur
+    // Formular-Antwortzeit auf.
+    await Promise.all([
+      notifyAdminContentSubscribers({
+        contentType: "character",
+        event: "updated",
         authorUserId: session.userId,
+        authorName: author?.name ?? "Unbekannt",
         contentTypeLabel: "einen Charakter",
         contentTitle: name,
-        contentUrl: `${await getBaseUrl()}/characters/${result.slug}`,
-        preview: bodyMarkdown
-          ? synopsisExcerpt(bodyMarkdown, 140)
-          : "Die Akte wurde aktualisiert.",
-      });
-    }
+        contentUrl,
+        preview,
+      }),
+      ...(result.visibility === "public"
+        ? [
+            notifyUserSubscribers({
+              authorUserId: session.userId,
+              contentTypeLabel: "einen Charakter",
+              contentTitle: name,
+              contentUrl,
+              preview,
+            }),
+          ]
+        : []),
+    ]);
     redirect("/user/content");
   }
 
@@ -185,28 +200,34 @@ export async function characterAction(
     ownerUserId: session.userId,
   });
   revalidateCharacter(result.slug);
+
+  const contentUrl = `${await getBaseUrl()}/characters/${result.slug}`;
+  const preview = bodyMarkdown
+    ? synopsisExcerpt(bodyMarkdown, 140)
+    : "Ein neuer Charakter wurde angelegt.";
+
   // Charaktere sind standardmäßig public (siehe scripts/schema.sql) — ein
   // neu angelegter Charakter benachrichtigt die Abonnenten des Erstellers
   // deshalb ungegated (keine separate visibility im createCharacter-Result).
-  await notifyUserSubscribers({
-    authorUserId: session.userId,
-    contentTypeLabel: "einen neuen Charakter",
-    contentTitle: name,
-    contentUrl: `${await getBaseUrl()}/characters/${result.slug}`,
-    preview: bodyMarkdown
-      ? synopsisExcerpt(bodyMarkdown, 140)
-      : "Ein neuer Charakter wurde angelegt.",
-  });
-  await notifyAdminContentSubscribers({
-    contentType: "character",
-    event: "created",
-    authorUserId: session.userId,
-    contentTypeLabel: "einen neuen Charakter",
-    contentTitle: name,
-    contentUrl: `${await getBaseUrl()}/characters/${result.slug}`,
-    preview: bodyMarkdown
-      ? synopsisExcerpt(bodyMarkdown, 140)
-      : "Ein neuer Charakter wurde angelegt.",
-  });
+  // Parallel statt sequentiell, siehe Kommentar im Edit-Zweig oben.
+  await Promise.all([
+    notifyUserSubscribers({
+      authorUserId: session.userId,
+      contentTypeLabel: "einen neuen Charakter",
+      contentTitle: name,
+      contentUrl,
+      preview,
+    }),
+    notifyAdminContentSubscribers({
+      contentType: "character",
+      event: "created",
+      authorUserId: session.userId,
+      authorName: currentUser?.name ?? "Unbekannt",
+      contentTypeLabel: "einen neuen Charakter",
+      contentTitle: name,
+      contentUrl,
+      preview,
+    }),
+  ]);
   redirect(`/characters/${result.slug}`);
 }

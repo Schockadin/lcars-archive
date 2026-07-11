@@ -1,6 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/dal";
+import { getUserById } from "@/lib/users";
 import {
   createArchiveEntry,
   updateOwnArchiveEntryContent,
@@ -118,24 +119,38 @@ export async function archiveEntryAction(
       return { error: "Eintrag nicht gefunden oder keine Berechtigung." };
     }
     revalidateArchiveEntry(result.slug);
-    await notifyAdminContentSubscribers({
-      contentType: "archive_entry",
-      event: "updated",
-      authorUserId: session.userId,
-      contentTypeLabel: "einen Archiv-Eintrag",
-      contentTitle: title,
-      contentUrl: `${await getBaseUrl()}/archive/${result.slug}`,
-      preview: synopsisExcerpt(bodyMarkdown, 140),
-    });
-    if (result.visibility === "public") {
-      await notifyUserSubscribers({
+
+    const contentUrl = `${await getBaseUrl()}/archive/${result.slug}`;
+    const preview = synopsisExcerpt(bodyMarkdown, 140);
+    const author = await getUserById(session.userId);
+
+    // notifyAdminContentSubscribers/notifyUserSubscribers sind unabhängig
+    // voneinander (unterschiedliche Empfängerlisten) — parallel statt
+    // sequentiell, sonst addieren sich zwei Runden Mail/Push-Versand zur
+    // Formular-Antwortzeit auf.
+    await Promise.all([
+      notifyAdminContentSubscribers({
+        contentType: "archive_entry",
+        event: "updated",
         authorUserId: session.userId,
+        authorName: author?.name ?? "Unbekannt",
         contentTypeLabel: "einen Archiv-Eintrag",
         contentTitle: title,
-        contentUrl: `${await getBaseUrl()}/archive/${result.slug}`,
-        preview: synopsisExcerpt(bodyMarkdown, 140),
-      });
-    }
+        contentUrl,
+        preview,
+      }),
+      ...(result.visibility === "public"
+        ? [
+            notifyUserSubscribers({
+              authorUserId: session.userId,
+              contentTypeLabel: "einen Archiv-Eintrag",
+              contentTitle: title,
+              contentUrl,
+              preview,
+            }),
+          ]
+        : []),
+    ]);
     redirect("/user/content");
   }
 
@@ -151,24 +166,33 @@ export async function archiveEntryAction(
     ownerUserId: session.userId,
   });
   revalidateArchiveEntry(result.slug);
+
+  const contentUrl = `${await getBaseUrl()}/archive/${result.slug}`;
+  const preview = synopsisExcerpt(bodyMarkdown, 140);
+  const author = await getUserById(session.userId);
+
   // Archiv-Einträge sind standardmäßig public (siehe scripts/schema.sql) —
   // ein neu angelegter Eintrag benachrichtigt die Abonnenten des Erstellers
   // deshalb ungegated (keine separate visibility im createArchiveEntry-Result).
-  await notifyUserSubscribers({
-    authorUserId: session.userId,
-    contentTypeLabel: "einen neuen Archiv-Eintrag",
-    contentTitle: title,
-    contentUrl: `${await getBaseUrl()}/archive/${result.slug}`,
-    preview: synopsisExcerpt(bodyMarkdown, 140),
-  });
-  await notifyAdminContentSubscribers({
-    contentType: "archive_entry",
-    event: "created",
-    authorUserId: session.userId,
-    contentTypeLabel: "einen neuen Archiv-Eintrag",
-    contentTitle: title,
-    contentUrl: `${await getBaseUrl()}/archive/${result.slug}`,
-    preview: synopsisExcerpt(bodyMarkdown, 140),
-  });
+  // Parallel statt sequentiell, siehe Kommentar im Edit-Zweig oben.
+  await Promise.all([
+    notifyUserSubscribers({
+      authorUserId: session.userId,
+      contentTypeLabel: "einen neuen Archiv-Eintrag",
+      contentTitle: title,
+      contentUrl,
+      preview,
+    }),
+    notifyAdminContentSubscribers({
+      contentType: "archive_entry",
+      event: "created",
+      authorUserId: session.userId,
+      authorName: author?.name ?? "Unbekannt",
+      contentTypeLabel: "einen neuen Archiv-Eintrag",
+      contentTitle: title,
+      contentUrl,
+      preview,
+    }),
+  ]);
   redirect(`/archive/${result.slug}`);
 }

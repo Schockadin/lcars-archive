@@ -92,24 +92,38 @@ export async function missionLogAction(
       return { error: "Log nicht gefunden oder keine Berechtigung." };
     }
     revalidateLog(result.missionId, result.slug);
-    await notifyAdminContentSubscribers({
-      contentType: "mission_log",
-      event: "updated",
-      authorUserId: session.userId,
-      contentTypeLabel: "einen Mission-Log",
-      contentTitle: title,
-      contentUrl: `${await getBaseUrl()}/missions/${result.missionSlug}/${result.slug}`,
-      preview: synopsisExcerpt(bodyMarkdown, 140),
-    });
-    if (result.visibility === "public") {
-      await notifyUserSubscribers({
+
+    const contentUrl = `${await getBaseUrl()}/missions/${result.missionSlug}/${result.slug}`;
+    const preview = synopsisExcerpt(bodyMarkdown, 140);
+    const author = await getUserById(session.userId);
+
+    // notifyAdminContentSubscribers/notifyUserSubscribers sind unabhängig
+    // voneinander (unterschiedliche Empfängerlisten) — parallel statt
+    // sequentiell, sonst addieren sich zwei Runden Mail/Push-Versand zur
+    // Formular-Antwortzeit auf.
+    await Promise.all([
+      notifyAdminContentSubscribers({
+        contentType: "mission_log",
+        event: "updated",
         authorUserId: session.userId,
+        authorName: author?.name ?? "Unbekannt",
         contentTypeLabel: "einen Mission-Log",
         contentTitle: title,
-        contentUrl: `${await getBaseUrl()}/missions/${result.missionSlug}/${result.slug}`,
-        preview: synopsisExcerpt(bodyMarkdown, 140),
-      });
-    }
+        contentUrl,
+        preview,
+      }),
+      ...(result.visibility === "public"
+        ? [
+            notifyUserSubscribers({
+              authorUserId: session.userId,
+              contentTypeLabel: "einen Mission-Log",
+              contentTitle: title,
+              contentUrl,
+              preview,
+            }),
+          ]
+        : []),
+    ]);
     redirect("/user/content");
   }
 
@@ -212,23 +226,28 @@ export async function missionLogAction(
   // Mission-Logs sind standardmäßig public (siehe scripts/schema.sql) — ein
   // neu angelegter Log benachrichtigt die Abonnenten des Erstellers (nicht
   // des Autor-Charakters, siehe getCharacterSubscribers oben) deshalb
-  // ungegated.
-  await notifyUserSubscribers({
-    authorUserId: session.userId,
-    contentTypeLabel: "einen neuen Mission-Log",
-    contentTitle: title,
-    contentUrl: `${await getBaseUrl()}/missions/${mission.slug}/${result.slug}`,
-    preview: synopsisExcerpt(bodyMarkdown, 140),
-  });
-  await notifyAdminContentSubscribers({
-    contentType: "mission_log",
-    event: "created",
-    authorUserId: session.userId,
-    contentTypeLabel: "einen neuen Mission-Log",
-    contentTitle: title,
-    contentUrl: `${await getBaseUrl()}/missions/${mission.slug}/${result.slug}`,
-    preview: synopsisExcerpt(bodyMarkdown, 140),
-  });
+  // ungegated. Parallel statt sequentiell, siehe Kommentar im Edit-Zweig oben.
+  const newLogContentUrl = `${await getBaseUrl()}/missions/${mission.slug}/${result.slug}`;
+  const newLogPreview = synopsisExcerpt(bodyMarkdown, 140);
+  await Promise.all([
+    notifyUserSubscribers({
+      authorUserId: session.userId,
+      contentTypeLabel: "einen neuen Mission-Log",
+      contentTitle: title,
+      contentUrl: newLogContentUrl,
+      preview: newLogPreview,
+    }),
+    notifyAdminContentSubscribers({
+      contentType: "mission_log",
+      event: "created",
+      authorUserId: session.userId,
+      authorName: user.name,
+      contentTypeLabel: "einen neuen Mission-Log",
+      contentTitle: title,
+      contentUrl: newLogContentUrl,
+      preview: newLogPreview,
+    }),
+  ]);
 
   redirect("/user");
 }
