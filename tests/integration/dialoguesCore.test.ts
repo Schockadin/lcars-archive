@@ -210,7 +210,7 @@ describe("deleteDialogue", () => {
     expect(result?.slug).toBe(dialogue.slug);
     expect(result?.participantSlugs).toContain(partnerChar.slug);
 
-    const [[remainingEntry], [remainingMessages], [deletion]] = await Promise.all([
+    const [[remainingEntry], remainingMessages, [deletion]] = await Promise.all([
       sql`SELECT id FROM archive_entries WHERE id = ${entryId}`,
       sql`SELECT id FROM dialogue_messages WHERE archive_entry_id = ${entryId}`,
       sql<{ target_type: string; deleted_by: number }[]>`
