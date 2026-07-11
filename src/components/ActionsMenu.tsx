@@ -1,4 +1,5 @@
 "use client";
+import Link from "next/link";
 import { Viewer } from "@/lib/visibility";
 import { UserWithCharacters } from "@/lib/users";
 import { Character } from "@/types/character";
@@ -110,17 +111,32 @@ export default function ActionsMenu({
         {((contentType !== "missionLog" &&
           contentType !== "character" &&
           viewer?.role === "admin") ||
-          viewer?.userId === playerId) && (
-          <button
-            type="button"
-            onClick={onEdit}
-            className={`lcars-icon-btn self-start`}
-            aria-label="Bearbeiten"
-            title="Bearbeiten"
-          >
-            <PencilIcon />
-          </button>
-        )}
+          viewer?.userId === playerId) &&
+          (contentType === "missionLog" ? (
+            // Mission-Logs haben (anders als Charakter/Mission/Archiv-Eintrag)
+            // keinen Inline-Editor auf der Detailseite — die Mission-Log-
+            // Detailseite übergibt deshalb auch gar kein onEdit (bliebe sonst
+            // der No-op-Default). Bearbeiten passiert stattdessen auf der
+            // eigenen Formular-Seite, wie auch in UserContentBrowser.tsx.
+            <Link
+              href={`/user/mission-logs/${content.id}/edit`}
+              className="lcars-icon-btn self-start"
+              aria-label="Bearbeiten"
+              title="Bearbeiten"
+            >
+              <PencilIcon />
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="lcars-icon-btn self-start"
+              aria-label="Bearbeiten"
+              title="Bearbeiten"
+            >
+              <PencilIcon />
+            </button>
+          ))}
       </div>
     </div>
   );
