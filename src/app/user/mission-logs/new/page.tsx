@@ -14,13 +14,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function NewMissionLogPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const { user, characters } = await requireOwnCharacters(id);
+export default async function NewMissionLogPage() {
+  const { user, characters } = await requireOwnCharacters();
 
   // Nur laden, wenn überhaupt ein Formular gerendert wird — analog zu
   // dialogues/new/page.tsx.
@@ -50,7 +45,7 @@ export default async function NewMissionLogPage({
             </p>
             <p>
               <Link
-                href={`/user/${user.id}`}
+                href="/user"
                 className="text-lcars-amber underline"
               >
                 ← Zurück zum Profil
@@ -65,7 +60,7 @@ export default async function NewMissionLogPage({
             </p>
             <p>
               <Link
-                href={`/user/${user.id}`}
+                href="/user"
                 className="text-lcars-amber underline"
               >
                 ← Zurück zum Profil

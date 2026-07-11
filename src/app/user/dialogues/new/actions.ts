@@ -24,7 +24,7 @@ export async function createDialogueAction(
 
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect(`/user/${session.userId}`);
+    redirect("/user");
   }
 
   const title = String(formData.get("title") ?? "").trim();

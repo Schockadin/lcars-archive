@@ -30,7 +30,7 @@ export async function generateMetadata({
 
 // Öffentliche Profilseite eines Users: zeigt nur dessen public Inhalte
 // (Charaktere, Einsatzberichte, Gespräche, Archiv-Einträge) — Gegenstück zu
-// /user/[id]/content ("Meine Inhalte", ALLE eigenen Inhalte inkl. privat,
+// /user/content ("Meine Inhalte", ALLE eigenen Inhalte inkl. privat,
 // nur für den Owner selbst). Reine Lesansicht ohne Sichtbarkeits-Switches
 // oder Bearbeiten-Links, dafür mit FollowButtons zum Userabo (siehe
 // notifyUserSubscribers in lib/follows.ts).

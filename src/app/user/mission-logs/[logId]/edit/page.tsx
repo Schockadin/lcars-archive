@@ -14,22 +14,17 @@ export const metadata: Metadata = {
 export default async function EditMissionLogPage({
   params,
 }: {
-  params: Promise<{ id: string; logId: string }>;
+  params: Promise<{ logId: string }>;
 }) {
-  const { id, logId } = await params;
+  const { logId } = await params;
   const session = await verifySession();
-
-  const userId = Number(id);
-  if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect(`/user/${session.userId}`);
-  }
 
   const [log, viewer] = await Promise.all([
     getOwnMissionLogForEdit(session.userId, Number(logId)),
     getUserById(session.userId),
   ]);
   if (!log) {
-    redirect(`/user/${session.userId}/content`);
+    redirect("/user/content");
   }
 
   return (
@@ -43,7 +38,7 @@ export default async function EditMissionLogPage({
         </p>
 
         <EditMissionLogForm
-          userId={userId}
+          userId={session.userId}
           log={log}
           isAdminOrGM={viewer?.role === "gm" || viewer?.role === "admin"}
         />

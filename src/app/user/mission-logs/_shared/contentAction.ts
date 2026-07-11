@@ -39,7 +39,7 @@ export async function missionLogAction(
 
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect(`/user/${session.userId}`);
+    redirect("/user");
   }
 
   const logIdRaw = formData.get("logId");
@@ -101,7 +101,7 @@ export async function missionLogAction(
         preview: synopsisExcerpt(bodyMarkdown, 140),
       });
     }
-    redirect(`/user/${session.userId}/content`);
+    redirect("/user/content");
   }
 
   // Autor/Mission/Session-Nr/Slug nur beim Anlegen — im Edit-Modus fehlen
@@ -212,5 +212,5 @@ export async function missionLogAction(
     preview: synopsisExcerpt(bodyMarkdown, 140),
   });
 
-  redirect(`/user/${session.userId}`);
+  redirect("/user");
 }

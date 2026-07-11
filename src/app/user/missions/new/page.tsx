@@ -10,13 +10,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function NewMissionPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const { user } = await requireOwnGM(id);
+export default async function NewMissionPage() {
+  const { user } = await requireOwnGM();
   const [defaultStartedAt, characters] = await Promise.all([
     getMostRecentLogDate(),
     getCharactersForParticipantPicker(),

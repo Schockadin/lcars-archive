@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 export const maxDuration = 60;
 
 // Gm-oder-admin — kein Sidebar-Eintrag, gleiches Prinzip wie /login.
-// requireGM() leitet Nicht-Privilegierte auf ihre eigene /user/<id> um.
+// requireGM() leitet Nicht-Privilegierte auf ihre eigene /user um.
 // Useraccount-Verwaltung (anlegen/Rolle/Deaktivieren/Löschen/Bearbeiten UND
 // die reine Übersicht "registrierte User") ist admin-only und wird für
 // einen reinen gm komplett ausgeblendet — die Seite zeigt einem gm dann nur

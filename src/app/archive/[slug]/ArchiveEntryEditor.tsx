@@ -14,7 +14,7 @@ const initialState: ArchiveEntryEditState = {};
 // MissionSynopsisEditor.tsx (gm/admin-gated), hier owner-gated: jeder User
 // darf so seine EIGENEN Archiv-Einträge bearbeiten. Titel/Kategorie/Tags
 // bleiben unangetastet (dafür das volle Formular unter
-// /user/[id]/archive/[entryId]/edit). Zeigt standardmäßig den gerenderten
+// /user/archive/[entryId]/edit). Zeigt standardmäßig den gerenderten
 // Inhalt; im Editiermodus ein Markdown-Textfeld statt dessen.
 export default function ArchiveEntryEditor({
   entryId,

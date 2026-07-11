@@ -46,7 +46,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
   const viewer = await getViewer();
 
   // Aktivierungslink aus der Teilnehmer-Benachrichtigung (missionAction,
-  // src/app/user/[id]/missions/_shared/contentAction.ts) — die Mission wird
+  // src/app/user/missions/_shared/contentAction.ts) — die Mission wird
   // beim Anlegen bewusst NICHT automatisch abonniert, dieser Link holt das
   // mit einem Klick nach. Nur wirksam, wenn der Link in einer bereits
   // eingeloggten Session geöffnet wird; sonst einfach ein no-op (der Follow-

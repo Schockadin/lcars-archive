@@ -14,10 +14,10 @@ export const metadata: Metadata = {
 export default async function EditMissionPage({
   params,
 }: {
-  params: Promise<{ id: string; missionId: string }>;
+  params: Promise<{ missionId: string }>;
 }) {
-  const { id, missionId } = await params;
-  await requireOwnGM(id);
+  const { missionId } = await params;
+  const { user } = await requireOwnGM();
 
   const mission = await getMissionById(Number(missionId));
   if (!mission) notFound();
@@ -33,7 +33,7 @@ export default async function EditMissionPage({
       <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
         <h1>Mission bearbeiten</h1>
         <EditMissionForm
-          userId={Number(id)}
+          userId={user.id}
           mission={mission}
           characters={characters}
           participantIds={participantIds}

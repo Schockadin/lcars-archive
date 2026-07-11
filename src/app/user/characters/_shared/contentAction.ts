@@ -49,7 +49,7 @@ export async function characterAction(
 
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect(`/user/${session.userId}`);
+    redirect("/user");
   }
 
   const characterIdRaw = formData.get("characterId");
@@ -152,7 +152,7 @@ export async function characterAction(
           : "Die Akte wurde aktualisiert.",
       });
     }
-    redirect(`/user/${session.userId}/content`);
+    redirect("/user/content");
   }
 
   const result = await createCharacter({

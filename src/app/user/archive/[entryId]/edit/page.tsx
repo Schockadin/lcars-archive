@@ -15,22 +15,17 @@ export const metadata: Metadata = {
 export default async function EditArchiveEntryPage({
   params,
 }: {
-  params: Promise<{ id: string; entryId: string }>;
+  params: Promise<{ entryId: string }>;
 }) {
-  const { id, entryId } = await params;
+  const { entryId } = await params;
   const session = await verifySession();
-
-  const userId = Number(id);
-  if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect(`/user/${session.userId}`);
-  }
 
   const [entry, viewer] = await Promise.all([
     getOwnArchiveEntryForEdit(session.userId, Number(entryId)),
     getUserById(session.userId),
   ]);
   if (!entry) {
-    redirect(`/user/${session.userId}/content`);
+    redirect("/user/content");
   }
 
   return (
@@ -43,7 +38,7 @@ export default async function EditArchiveEntryPage({
         </p>
 
         <EditArchiveEntryForm
-          userId={userId}
+          userId={session.userId}
           entry={entry}
           isAdminOrGM={viewer?.role === "gm" || viewer?.role === "admin"}
         />

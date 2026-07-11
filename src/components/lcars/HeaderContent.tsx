@@ -49,11 +49,7 @@ export default function HeaderContent() {
   if (session.userId) {
     return (
       <div className="lcars-header-content">
-        <HeaderUserNav
-          userId={session.userId}
-          role={session.role}
-          columns={3}
-        />
+        <HeaderUserNav role={session.role} columns={3} />
       </div>
     );
   }

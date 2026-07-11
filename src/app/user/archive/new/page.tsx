@@ -12,13 +12,8 @@ export const metadata: Metadata = {
 // Charakter) darf JEDER eingeloggte User Archiv-Einträge anlegen — daher
 // requireOwnUser statt requireOwnGM/requireOwnCharacters (keine Rollen-/
 // Charakter-Voraussetzung).
-export default async function NewArchiveEntryPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const user = await requireOwnUser(id);
+export default async function NewArchiveEntryPage() {
+  const user = await requireOwnUser();
 
   return (
     <>

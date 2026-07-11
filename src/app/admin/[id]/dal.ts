@@ -14,7 +14,7 @@ export interface AdminEditTargetAccess {
 // selbst ist admin-only, siehe requireAdmin in src/lib/dal.ts und der
 // gleiche Grundsatz in src/app/admin/actions.ts; ein reiner gm darf hier
 // nicht rein, auch nicht für sich selbst — dafür gibt es die eigene
-// Profil-Seite unter /user/[id]). requireAdmin() prüft frisch aus der DB,
+// Profil-Seite unter /user). requireAdmin() prüft frisch aus der DB,
 // nicht aus dem Cookie, damit ein gerade entzogenes Admin-Recht sofort
 // greift.
 export async function requireAdminEditTarget(

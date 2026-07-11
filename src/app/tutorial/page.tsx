@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { LcarsDataRow } from "@/components/lcars";
-import InstallPwaPrompt from "@/app/user/[id]/InstallPwaPrompt";
+import InstallPwaPrompt from "@/app/user/InstallPwaPrompt";
 
 export const metadata: Metadata = {
   title: "Tutorial",

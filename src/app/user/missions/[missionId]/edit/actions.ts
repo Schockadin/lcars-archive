@@ -25,7 +25,7 @@ export async function deleteMissionAction(
     redirect("/login");
   }
   if (user.role !== "gm" && user.role !== "admin") {
-    redirect(`/user/${session.userId}`);
+    redirect("/user");
   }
 
   const missionId = Number(formData.get("missionId"));
@@ -43,5 +43,5 @@ export async function deleteMissionAction(
     revalidateLog(missionId, logSlug);
   }
 
-  redirect(`/user/${session.userId}/content`);
+  redirect("/user/content");
 }

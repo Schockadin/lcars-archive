@@ -9,18 +9,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// Reine Selbstbedienung (requireOwnUser, wie /user/[id]/content) — Follows
-// sind Privatsache, kein GM/Admin-Einblick in fremde Follows vorgesehen.
-// Zeigt bewusst nur Abos, keine Lesezeichen (die leben auf dem Dashboard,
-// siehe Dashboard.tsx) — Follows sind hier die Dinge, über die man
-// benachrichtigt werden will, nicht bloß gespeicherte Inhalte.
-export default async function UserFollowPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const user = await requireOwnUser(id);
+// Reine Selbstbedienung (requireOwnUser, wie /user/content) — Follows sind
+// Privatsache, kein GM/Admin-Einblick in fremde Follows vorgesehen. Zeigt
+// bewusst nur Abos, keine Lesezeichen (die leben auf dem Dashboard, siehe
+// Dashboard.tsx) — Follows sind hier die Dinge, über die man benachrichtigt
+// werden will, nicht bloß gespeicherte Inhalte.
+export default async function UserFollowPage() {
+  const user = await requireOwnUser();
   const follows = await getSubscribedContent(user.id);
 
   return (

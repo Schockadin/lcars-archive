@@ -27,16 +27,12 @@ const ROLE_LABELS: Record<User["role"], string> = {
 // src/app/Dashboard.tsx, gerendert von src/app/page.tsx für eingeloggte
 // User) — hier bleibt nur noch die Konto-Verwaltung (Name/E-Mail, Passwort,
 // Benachrichtigungen, PWA-Installation) plus die Follow-Verwaltung (Abos,
-// siehe /user/[id]/follow). Reine Selbstbedienung (requireOwnUser) — das
-// Ansehen FREMDER User (Übersicht + deren öffentliche Inhalte) lebt seit dem
-// Routing-Split unter /users/[id] (Plural), nicht mehr hier.
-export default async function UserPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const target = await requireOwnUser(id);
+// siehe /user/follow). Reine Selbstbedienung (requireOwnUser, ID kommt aus
+// der Session, kein :id-Segment in der URL) — das Ansehen FREMDER User
+// (Übersicht + deren öffentliche Inhalte) lebt unter /users/[id] (Plural),
+// nicht mehr hier.
+export default async function UserPage() {
+  const target = await requireOwnUser();
 
   const hasPasswordSet = await hasPassword(target.id);
   const needsPassword = !hasPasswordSet;
@@ -72,7 +68,7 @@ export default async function UserPage({
                 einzelne Follows wieder zu beenden.
               </p>
               <Link
-                href={`/user/${target.id}/follow`}
+                href="/user/follow"
                 className="lcars-pill-btn--outline self-start"
               >
                 Follows verwalten

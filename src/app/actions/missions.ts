@@ -17,7 +17,7 @@ export interface MissionSynopsisEditState {
 
 // Inline-Bearbeitung der Synopsis direkt auf /missions/[slug]
 // (MissionSynopsisEditor) — schlanker als das volle Mission-Formular unter
-// /user/[id]/missions/[missionId]/edit: nur der Fließtext ändert sich,
+// /user/missions/[missionId]/edit: nur der Fließtext ändert sich,
 // Titel/Status/Zeitraum/Tags bleiben unangetastet. Admin/GM-only, Rolle
 // frisch aus der DB geprüft (wie setOwnerAction in actions/owner.ts).
 export async function updateMissionSynopsisAction(

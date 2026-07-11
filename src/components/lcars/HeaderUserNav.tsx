@@ -5,21 +5,19 @@ import { logout } from "@/app/login/actions";
 import type { User } from "@/types/db";
 
 export default function HeaderUserNav({
-  userId,
   role,
   columns = 3,
 }: {
-  userId: number;
   role: User["role"] | null;
   columns?: number;
 }) {
   const pathname = usePathname();
 
   const tabs = [
-    { href: `/user/${userId}/content`, label: "Inhalte" },
+    { href: "/user/content", label: "Inhalte" },
     { href: "/search", label: "Suche" },
     ...(role !== "guest" ? [{ href: "/users", label: "User" }] : []),
-    { href: `/user/${userId}`, label: "Profil" },
+    { href: "/user", label: "Profil" },
     ...(role === "gm" || role === "admin"
       ? [{ href: "/admin", label: role === "admin" ? "Admin" : "Leitung" }]
       : []),

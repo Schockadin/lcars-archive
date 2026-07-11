@@ -13,13 +13,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function UserContentPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const { user, characters } = await requireOwnCharacters(id);
+export default async function UserContentPage() {
+  const { user, characters } = await requireOwnCharacters();
   const isGM = user.role === "gm" || user.role === "admin";
 
   const [logs, dialogues, archiveEntries, missions] = await Promise.all([
@@ -40,13 +35,13 @@ export default async function UserContentPage({
             {characters.length > 0 && (
               <>
                 <Link
-                  href={`/user/${user.id}/mission-logs/new`}
+                  href="/user/mission-logs/new"
                   className="min-w-[250px] lcars-pill-btn"
                 >
                   Neuer Missionslog
                 </Link>
                 <Link
-                  href={`/user/${user.id}/dialogues/new`}
+                  href="/user/dialogues/new"
                   className="min-w-[250px] lcars-pill-btn"
                 >
                   Neues Gespräch
@@ -58,7 +53,7 @@ export default async function UserContentPage({
                 Voraussetzung geknüpft — jeder eingeloggte User darf welche
                 anlegen. */}
             <Link
-              href={`/user/${user.id}/archive/new`}
+              href="/user/archive/new"
               className="min-w-[250px] lcars-pill-btn"
             >
               Neuer Archiv-Eintrag
@@ -69,7 +64,7 @@ export default async function UserContentPage({
                 Gast-Accounts, siehe requireOwnCharacters/new/actions.ts. */}
             {user.role !== "guest" && (
               <Link
-                href={`/user/${user.id}/characters/new`}
+                href="/user/characters/new"
                 className="min-w-[250px] lcars-pill-btn"
               >
                 Neuer Charakter
@@ -77,7 +72,7 @@ export default async function UserContentPage({
             )}
             {isGM && (
               <Link
-                href={`/user/${user.id}/missions/new`}
+                href="/user/missions/new"
                 className="min-w-[250px] lcars-pill-btn"
               >
                 Neue Mission

@@ -52,7 +52,7 @@ export async function archiveEntryAction(
 
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect(`/user/${session.userId}`);
+    redirect("/user");
   }
 
   const entryIdRaw = formData.get("entryId");
@@ -127,7 +127,7 @@ export async function archiveEntryAction(
         preview: synopsisExcerpt(bodyMarkdown, 140),
       });
     }
-    redirect(`/user/${session.userId}/content`);
+    redirect("/user/content");
   }
 
   const result = await createArchiveEntry({

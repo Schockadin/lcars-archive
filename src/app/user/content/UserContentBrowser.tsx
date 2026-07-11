@@ -179,7 +179,7 @@ export default function UserContentBrowser({
                       initialValue={c.visibility}
                     />
                     <Link
-                      href={`/user/${ownUserId}/characters/${c.id}/edit`}
+                      href={`/user/characters/${c.id}/edit`}
                       className="lcars-link-text text-[14px]"
                     >
                       Bearbeiten
@@ -241,7 +241,7 @@ export default function UserContentBrowser({
                     />
                     <div className="flex gap-[8px] items-center justify-between">
                       <Link
-                        href={`/user/${ownUserId}/mission-logs/${log.id}/edit`}
+                        href={`/user/mission-logs/${log.id}/edit`}
                         className="lcars-link-text text-[14px]"
                       >
                         Bearbeiten
@@ -360,7 +360,7 @@ export default function UserContentBrowser({
                       initialValue={entry.visibility}
                     />
                     <Link
-                      href={`/user/${ownUserId}/archive/${entry.id}/edit`}
+                      href={`/user/archive/${entry.id}/edit`}
                       className="lcars-link-text text-[14px]"
                     >
                       Bearbeiten
@@ -408,7 +408,7 @@ export default function UserContentBrowser({
                     </span>
                   </Link>
                   <Link
-                    href={`/user/${ownUserId}/missions/${m.id}/edit`}
+                    href={`/user/missions/${m.id}/edit`}
                     className="lcars-link-text text-[14px]"
                   >
                     Bearbeiten

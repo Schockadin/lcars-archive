@@ -3,7 +3,7 @@ import type { ArchiveCategory } from "@/types/archive";
 import type { HeadField } from "@/components/ContentEditor/headFields";
 
 // Kategorie 'dialogue' bewusst ausgeschlossen — Gespräche haben ihr eigenes
-// Anlage-/Bearbeiten-Formular (/user/[id]/dialogues/new) mit eigenem
+// Anlage-/Bearbeiten-Formular (/user/dialogues/new) mit eigenem
 // Daten-/Teilnehmer-Modell statt eines freien Markdown-Bodys.
 const SELECTABLE_CATEGORIES = CATEGORY_ORDER.filter(
   (c) => c !== "dialogue",

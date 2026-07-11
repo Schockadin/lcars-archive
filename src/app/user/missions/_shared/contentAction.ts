@@ -38,7 +38,7 @@ export async function missionAction(
 
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect(`/user/${session.userId}`);
+    redirect("/user");
   }
 
   const user = await getUserById(session.userId);
@@ -46,7 +46,7 @@ export async function missionAction(
     redirect("/login");
   }
   if (user.role !== "gm" && user.role !== "admin") {
-    redirect(`/user/${session.userId}`);
+    redirect("/user");
   }
 
   const missionIdRaw = formData.get("missionId");
@@ -127,7 +127,7 @@ export async function missionAction(
     // Liste.
     await setMissionParticipants(missionId!, participantCharacterIds);
     revalidateMission(result.slug);
-    redirect(`/user/${session.userId}/content`);
+    redirect("/user/content");
   }
 
   // Slug-Vergabe + Uniqueness-Check nur beim Anlegen — beim Bearbeiten ist

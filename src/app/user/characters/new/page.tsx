@@ -14,13 +14,8 @@ export const metadata: Metadata = {
 // assignCharacterAction in src/app/admin/actions.ts) — requireOwnUser prüft
 // nur die Identität, die Rollen-Sperre kommt hier zusätzlich (Verteidigung
 // in der Tiefe zusammen mit dem erneuten Check in actions.ts).
-export default async function NewCharacterPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
-  const { id } = await params;
-  const user = await requireOwnUser(id);
+export default async function NewCharacterPage() {
+  const user = await requireOwnUser();
 
   if (user.role === "guest") {
     return (

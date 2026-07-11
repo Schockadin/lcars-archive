@@ -14,22 +14,17 @@ export const metadata: Metadata = {
 export default async function EditCharacterPage({
   params,
 }: {
-  params: Promise<{ id: string; characterId: string }>;
+  params: Promise<{ characterId: string }>;
 }) {
-  const { id, characterId } = await params;
+  const { characterId } = await params;
   const session = await verifySession();
-
-  const userId = Number(id);
-  if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect(`/user/${session.userId}`);
-  }
 
   const [character, viewer] = await Promise.all([
     getOwnCharacterForEdit(session.userId, Number(characterId)),
     getUserById(session.userId),
   ]);
   if (!character) {
-    redirect(`/user/${session.userId}/content`);
+    redirect("/user/content");
   }
 
   return (
@@ -39,7 +34,7 @@ export default async function EditCharacterPage({
         <h1>Charakter bearbeiten</h1>
 
         <EditCharacterForm
-          userId={userId}
+          userId={session.userId}
           character={character}
           isAdminOrGM={viewer?.role === "gm" || viewer?.role === "admin"}
         />

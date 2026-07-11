@@ -124,7 +124,7 @@ export async function setVisibilityAction(
     }
   }
 
-  revalidatePath(`/user/${session.userId}/content`);
+  revalidatePath("/user/content");
   return ok ? {} : { error: "Änderung fehlgeschlagen (keine Berechtigung?)." };
 }
 
@@ -144,7 +144,7 @@ export async function deleteMissionLogAction(
   }
 
   revalidateLog(deleted.missionId, deleted.slug);
-  revalidatePath(`/user/${session.userId}/content`);
+  revalidatePath("/user/content");
 
   return {};
 }
