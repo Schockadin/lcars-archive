@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { verifySession } from "@/lib/dal";
+import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import {
   createArchiveEntry,
@@ -10,9 +10,10 @@ import {
 import { isArchiveCategory } from "@/lib/archiveFormat";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
-import { notifyUserSubscribers, notifyAdminContentSubscribers } from "@/lib/follows";
+import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
+import { parseList } from "@/lib/formParsing";
 import {
   getAttributeFields,
   getReferenceFields,
@@ -50,11 +51,7 @@ export async function archiveEntryAction(
   formData: FormData,
 ): Promise<ArchiveEntryFormState> {
   const session = await verifySession();
-
-  const userId = Number(formData.get("userId"));
-  if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect("/user");
-  }
+  requireMatchingFormUserId(formData, session);
 
   const entryIdRaw = formData.get("entryId");
   const isEdit = entryIdRaw != null && entryIdRaw !== "";
@@ -71,14 +68,7 @@ export async function archiveEntryAction(
     return { error: "Ungültige Kategorie." };
   }
 
-  const tags = [
-    ...new Set(
-      String(formData.get("tags") ?? "")
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    ),
-  ];
+  const tags = parseList(formData.get("tags"));
 
   const summary = String(formData.get("summary") ?? "").trim() || null;
 
@@ -124,33 +114,17 @@ export async function archiveEntryAction(
     const preview = synopsisExcerpt(bodyMarkdown, 140);
     const author = await getUserById(session.userId);
 
-    // notifyAdminContentSubscribers/notifyUserSubscribers sind unabhängig
-    // voneinander (unterschiedliche Empfängerlisten) — parallel statt
-    // sequentiell, sonst addieren sich zwei Runden Mail/Push-Versand zur
-    // Formular-Antwortzeit auf.
-    await Promise.all([
-      notifyAdminContentSubscribers({
-        contentType: "archive_entry",
-        event: "updated",
-        authorUserId: session.userId,
-        authorName: author?.name ?? "Unbekannt",
-        contentTypeLabel: "einen Archiv-Eintrag",
-        contentTitle: title,
-        contentUrl,
-        preview,
-      }),
-      ...(result.visibility === "public"
-        ? [
-            notifyUserSubscribers({
-              authorUserId: session.userId,
-              contentTypeLabel: "einen Archiv-Eintrag",
-              contentTitle: title,
-              contentUrl,
-              preview,
-            }),
-          ]
-        : []),
-    ]);
+    await notifyContentChange({
+      contentType: "archive_entry",
+      event: "updated",
+      authorUserId: session.userId,
+      authorName: author?.name ?? "Unbekannt",
+      contentTypeLabel: "einen Archiv-Eintrag",
+      contentTitle: title,
+      contentUrl,
+      preview,
+      notifyPublic: result.visibility === "public",
+    });
     redirect("/user/content");
   }
 
@@ -174,25 +148,16 @@ export async function archiveEntryAction(
   // Archiv-Einträge sind standardmäßig public (siehe scripts/schema.sql) —
   // ein neu angelegter Eintrag benachrichtigt die Abonnenten des Erstellers
   // deshalb ungegated (keine separate visibility im createArchiveEntry-Result).
-  // Parallel statt sequentiell, siehe Kommentar im Edit-Zweig oben.
-  await Promise.all([
-    notifyUserSubscribers({
-      authorUserId: session.userId,
-      contentTypeLabel: "einen neuen Archiv-Eintrag",
-      contentTitle: title,
-      contentUrl,
-      preview,
-    }),
-    notifyAdminContentSubscribers({
-      contentType: "archive_entry",
-      event: "created",
-      authorUserId: session.userId,
-      authorName: author?.name ?? "Unbekannt",
-      contentTypeLabel: "einen neuen Archiv-Eintrag",
-      contentTitle: title,
-      contentUrl,
-      preview,
-    }),
-  ]);
+  await notifyContentChange({
+    contentType: "archive_entry",
+    event: "created",
+    authorUserId: session.userId,
+    authorName: author?.name ?? "Unbekannt",
+    contentTypeLabel: "einen neuen Archiv-Eintrag",
+    contentTitle: title,
+    contentUrl,
+    preview,
+    notifyPublic: true,
+  });
   redirect(`/archive/${result.slug}`);
 }

@@ -1,13 +1,12 @@
 "use client";
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import {
   previewWikilinkCleanupAction,
   applyWikilinkCleanupAction,
   type ContentToolType,
-  type WikilinkCleanupPreviewResult,
 } from "@/app/actions/contentTools";
 import { UnlinkIcon } from "@/lib/icons";
+import { usePreviewConfirmAction } from "@/hooks/usePreviewConfirmAction";
 
 // Admin-only Action auf den vier Inhalts-Detailseiten (Mission, Log,
 // Archiv-Eintrag, Charakter): entfernt alle [[Ziel]]/[[Ziel|Text]]-
@@ -23,60 +22,37 @@ export default function RemoveWikilinksButton({
   contentType: ContentToolType;
   slug: string;
 }) {
-  const router = useRouter();
-  const [preview, setPreview] = useState<WikilinkCleanupPreviewResult | null>(
-    null,
-  );
-  const [error, setError] = useState<string | undefined>();
-  const [applied, setApplied] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-
-  function handlePreview() {
-    setError(undefined);
-    setApplied(null);
-    startTransition(async () => {
-      const result = await previewWikilinkCleanupAction(contentType, slug);
-      if ("error" in result) setError(result.error);
-      else setPreview(result);
-    });
-  }
-
-  function handleConfirm() {
-    startTransition(async () => {
-      const result = await applyWikilinkCleanupAction(contentType, slug);
-      if ("error" in result) {
-        setError(result.error);
-        return;
-      }
-      setPreview(null);
-      setApplied(
+  const { preview, error, applied, pending, handlePreview, handleConfirm, handleCancel } =
+    usePreviewConfirmAction(
+      contentType,
+      slug,
+      previewWikilinkCleanupAction,
+      applyWikilinkCleanupAction,
+      (result) =>
         `${result.removedCount} Wikilink${result.removedCount === 1 ? "" : "s"} entfernt.`,
-      );
-      router.refresh();
-    });
-  }
+    );
 
-  function handleCancel() {
-    setPreview(null);
-  }
-
-  const distinctRemoved = preview
-    ? Object.values(
-        preview.removed.reduce<
-          Record<string, { original: string; replacement: string; count: number }>
-        >((acc, entry) => {
-          if (!acc[entry.original]) {
-            acc[entry.original] = {
-              original: entry.original,
-              replacement: entry.replacement,
-              count: 0,
-            };
-          }
-          acc[entry.original].count++;
-          return acc;
-        }, {}),
-      )
-    : [];
+  const distinctRemoved = useMemo(
+    () =>
+      preview
+        ? Object.values(
+            preview.removed.reduce<
+              Record<string, { original: string; replacement: string; count: number }>
+            >((acc, entry) => {
+              if (!acc[entry.original]) {
+                acc[entry.original] = {
+                  original: entry.original,
+                  replacement: entry.replacement,
+                  count: 0,
+                };
+              }
+              acc[entry.original].count++;
+              return acc;
+            }, {}),
+          )
+        : [],
+    [preview],
+  );
 
   if (preview) {
     return (

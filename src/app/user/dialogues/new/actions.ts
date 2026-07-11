@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { verifySession } from "@/lib/dal";
+import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
 import {
   getCharactersForUser,
   getCharactersWithPlayers,
@@ -9,6 +9,7 @@ import { DialogueSlugCollisionError, createDialogue } from "@/lib/dialogues";
 import { sendDialogueStartedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
+import { parseList } from "@/lib/formParsing";
 
 export interface CreateDialogueState {
   error?: string;
@@ -21,11 +22,7 @@ export async function createDialogueAction(
   formData: FormData,
 ): Promise<CreateDialogueState> {
   const session = await verifySession();
-
-  const userId = Number(formData.get("userId"));
-  if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect("/user");
-  }
+  requireMatchingFormUserId(formData, session);
 
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return { error: "Bitte einen Titel angeben." };
@@ -61,14 +58,7 @@ export async function createDialogueAction(
   }
   const logDate = logDateRaw || null;
 
-  const tags = [
-    ...new Set(
-      String(formData.get("tags") ?? "")
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    ),
-  ];
+  const tags = parseList(formData.get("tags"));
 
   const bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte eine erste Nachricht schreiben." };

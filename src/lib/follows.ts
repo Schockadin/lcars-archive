@@ -441,3 +441,47 @@ export async function notifyAdminContentSubscribers(input: {
     "Admin-Inhalts-Mail",
   );
 }
+
+// Gemeinsamer Aufruf-Wrapper für die 4 Content-Actions (Charakter/Mission/
+// Mission-Log/Archiv-Eintrag, je Anlegen UND Bearbeiten): meldet eine
+// Änderung IMMER den Admin-Abonnenten (notifyAdminContentSubscribers) und
+// PARALLEL dazu — nur wenn notifyPublic true ist — den eigenen Abonnenten
+// des Erstellers (notifyUserSubscribers). notifyPublic ist bei Missionen
+// immer false (keine visibility-Spalte, kein Public-Follow-Modell für
+// Missionen selbst), bei den anderen drei Typen true bei Neuanlage bzw. bei
+// `result.visibility === "public"` beim Bearbeiten.
+export async function notifyContentChange(input: {
+  contentType: AdminContentNotifyType;
+  event: "created" | "updated";
+  authorUserId: number;
+  authorName: string;
+  contentTypeLabel: string;
+  contentTitle: string;
+  contentUrl: string;
+  preview: string;
+  notifyPublic: boolean;
+}): Promise<void> {
+  await Promise.all([
+    notifyAdminContentSubscribers({
+      contentType: input.contentType,
+      event: input.event,
+      authorUserId: input.authorUserId,
+      authorName: input.authorName,
+      contentTypeLabel: input.contentTypeLabel,
+      contentTitle: input.contentTitle,
+      contentUrl: input.contentUrl,
+      preview: input.preview,
+    }),
+    ...(input.notifyPublic
+      ? [
+          notifyUserSubscribers({
+            authorUserId: input.authorUserId,
+            contentTypeLabel: input.contentTypeLabel,
+            contentTitle: input.contentTitle,
+            contentUrl: input.contentUrl,
+            preview: input.preview,
+          }),
+        ]
+      : []),
+  ]);
+}

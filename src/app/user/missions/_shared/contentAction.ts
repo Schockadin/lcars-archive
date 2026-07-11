@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { verifySession } from "@/lib/dal";
+import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import {
   missionSlugExists,
@@ -12,10 +12,7 @@ import {
 } from "@/lib/missions";
 import { getParticipantCharactersForNotification } from "@/lib/characters";
 import { getCharacterSubscribersForSlugs } from "@/lib/dialogues";
-import {
-  getUserSubscribersForSlugs,
-  notifyAdminContentSubscribers,
-} from "@/lib/follows";
+import { getUserSubscribersForSlugs, notifyContentChange } from "@/lib/follows";
 import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
@@ -27,6 +24,7 @@ import {
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
+import { parseList } from "@/lib/formParsing";
 
 export interface MissionFormState {
   error?: string;
@@ -45,11 +43,7 @@ export async function missionAction(
   formData: FormData,
 ): Promise<MissionFormState> {
   const session = await verifySession();
-
-  const userId = Number(formData.get("userId"));
-  if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect("/user");
-  }
+  requireMatchingFormUserId(formData, session);
 
   const user = await getUserById(session.userId);
   if (!user) {
@@ -83,14 +77,7 @@ export async function missionAction(
     return { error: "Ungültiges Enddatum." };
   }
 
-  const tags = [
-    ...new Set(
-      String(formData.get("tags") ?? "")
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    ),
-  ];
+  const tags = parseList(formData.get("tags"));
 
   const teaser = String(formData.get("teaser") ?? "").trim() || null;
 
@@ -137,7 +124,7 @@ export async function missionAction(
     // Liste.
     await setMissionParticipants(missionId!, participantCharacterIds);
     revalidateMission(result.slug);
-    await notifyAdminContentSubscribers({
+    await notifyContentChange({
       contentType: "mission",
       event: "updated",
       authorUserId: session.userId,
@@ -146,6 +133,7 @@ export async function missionAction(
       contentTitle: title,
       contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
       preview: synopsisExcerpt(teaser ?? bodyMarkdown, 140),
+      notifyPublic: false,
     });
     redirect("/user/content");
   }
@@ -174,7 +162,7 @@ export async function missionAction(
     ownerUserId: user.id,
   });
   revalidateMission(result.slug);
-  await notifyAdminContentSubscribers({
+  await notifyContentChange({
     contentType: "mission",
     event: "created",
     authorUserId: session.userId,
@@ -183,6 +171,7 @@ export async function missionAction(
     contentTitle: title,
     contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
     preview: synopsisExcerpt(teaser ?? bodyMarkdown, 140),
+    notifyPublic: false,
   });
 
   if (participantCharacterIds.length > 0) {

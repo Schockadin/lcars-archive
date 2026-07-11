@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { verifySession } from "@/lib/dal";
+import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import {
   createCharacter,
@@ -10,9 +10,10 @@ import {
 } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
-import { notifyUserSubscribers, notifyAdminContentSubscribers } from "@/lib/follows";
+import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
+import { parseList, parseNumberList } from "@/lib/formParsing";
 import type { Character } from "@/types/character";
 
 export interface CharacterFormState {
@@ -20,23 +21,6 @@ export interface CharacterFormState {
 }
 
 const VALID_STATUSES: Character["status"][] = ["active", "retired", "deceased"];
-
-function parseList(value: FormDataEntryValue | null): string[] {
-  return [
-    ...new Set(
-      String(value ?? "")
-        .split(",")
-        .map((v) => v.trim())
-        .filter(Boolean),
-    ),
-  ];
-}
-
-function parseNumberList(value: FormDataEntryValue | null): number[] {
-  return parseList(value)
-    .map((v) => Number(v))
-    .filter((n) => Number.isInteger(n));
-}
 
 // Vereint createCharacterAction + updateCharacterAction (vorher new/actions.ts
 // + [characterId]/edit/actions.ts) zu einer Action für ContentEditor — Branch
@@ -46,11 +30,7 @@ export async function characterAction(
   formData: FormData,
 ): Promise<CharacterFormState> {
   const session = await verifySession();
-
-  const userId = Number(formData.get("userId"));
-  if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect("/user");
-  }
+  requireMatchingFormUserId(formData, session);
 
   const characterIdRaw = formData.get("characterId");
   const isEdit = characterIdRaw != null && characterIdRaw !== "";
@@ -62,7 +42,7 @@ export async function characterAction(
   // Gast-Check nur beim Anlegen (siehe createCharacterAction vorher) — die
   // Rolle wird frisch aus der DB geprüft, nicht aus dem Cookie, da eine
   // Selbstanlage player_id sofort auf den eigenen Account setzen würde.
-  // Der geladene User wird weiter unten für notifyAdminContentSubscribers
+  // Der geladene User wird weiter unten für notifyContentChange
   // wiederverwendet (authorName), statt ihn dafür ein zweites Mal zu laden.
   let currentUser = null;
   if (!isEdit) {
@@ -151,33 +131,17 @@ export async function characterAction(
       : "Die Akte wurde aktualisiert.";
     const author = await getUserById(session.userId);
 
-    // notifyAdminContentSubscribers/notifyUserSubscribers sind unabhängig
-    // voneinander (unterschiedliche Empfängerlisten) — parallel statt
-    // sequentiell, sonst addieren sich zwei Runden Mail/Push-Versand zur
-    // Formular-Antwortzeit auf.
-    await Promise.all([
-      notifyAdminContentSubscribers({
-        contentType: "character",
-        event: "updated",
-        authorUserId: session.userId,
-        authorName: author?.name ?? "Unbekannt",
-        contentTypeLabel: "einen Charakter",
-        contentTitle: name,
-        contentUrl,
-        preview,
-      }),
-      ...(result.visibility === "public"
-        ? [
-            notifyUserSubscribers({
-              authorUserId: session.userId,
-              contentTypeLabel: "einen Charakter",
-              contentTitle: name,
-              contentUrl,
-              preview,
-            }),
-          ]
-        : []),
-    ]);
+    await notifyContentChange({
+      contentType: "character",
+      event: "updated",
+      authorUserId: session.userId,
+      authorName: author?.name ?? "Unbekannt",
+      contentTypeLabel: "einen Charakter",
+      contentTitle: name,
+      contentUrl,
+      preview,
+      notifyPublic: result.visibility === "public",
+    });
     redirect("/user/content");
   }
 
@@ -209,25 +173,16 @@ export async function characterAction(
   // Charaktere sind standardmäßig public (siehe scripts/schema.sql) — ein
   // neu angelegter Charakter benachrichtigt die Abonnenten des Erstellers
   // deshalb ungegated (keine separate visibility im createCharacter-Result).
-  // Parallel statt sequentiell, siehe Kommentar im Edit-Zweig oben.
-  await Promise.all([
-    notifyUserSubscribers({
-      authorUserId: session.userId,
-      contentTypeLabel: "einen neuen Charakter",
-      contentTitle: name,
-      contentUrl,
-      preview,
-    }),
-    notifyAdminContentSubscribers({
-      contentType: "character",
-      event: "created",
-      authorUserId: session.userId,
-      authorName: currentUser?.name ?? "Unbekannt",
-      contentTypeLabel: "einen neuen Charakter",
-      contentTitle: name,
-      contentUrl,
-      preview,
-    }),
-  ]);
+  await notifyContentChange({
+    contentType: "character",
+    event: "created",
+    authorUserId: session.userId,
+    authorName: currentUser?.name ?? "Unbekannt",
+    contentTypeLabel: "einen neuen Charakter",
+    contentTitle: name,
+    contentUrl,
+    preview,
+    notifyPublic: true,
+  });
   redirect(`/characters/${result.slug}`);
 }

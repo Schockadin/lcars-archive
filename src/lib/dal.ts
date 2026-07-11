@@ -61,3 +61,18 @@ export async function requireNonGuest(): Promise<User> {
   }
   return user;
 }
+
+// Gemeinsamer Guard in den Content-Actions (Charakter/Mission/Mission-Log/
+// Archiv-Eintrag/Dialog anlegen bzw. bearbeiten): das Formular führt userId
+// als Hidden-Field mit — ein manipuliertes Formular mit fremder userId soll
+// trotzdem nur im eigenen Namen handeln können, nie der im Formular
+// mitgeschickte Wert selbst.
+export function requireMatchingFormUserId(
+  formData: FormData,
+  session: SessionPayload,
+): void {
+  const userId = Number(formData.get("userId"));
+  if (!Number.isInteger(userId) || userId !== session.userId) {
+    redirect("/user");
+  }
+}

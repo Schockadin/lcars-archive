@@ -1,6 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import {
   previewAutolinkAction,
   applyAutolinkAction,
@@ -9,6 +8,7 @@ import {
 } from "@/app/actions/contentTools";
 import { LinkIcon } from "@/lib/icons";
 import { AutolinkTargetType } from "@/lib/autolink";
+import { usePreviewConfirmAction } from "@/hooks/usePreviewConfirmAction";
 
 const TYPE_LABEL: Record<
   AutolinkPreviewResult["matches"][number]["type"],
@@ -32,71 +32,50 @@ export default function AutolinkButton({
   contentType: ContentToolType;
   slug: string;
 }) {
-  const router = useRouter();
-  const [preview, setPreview] = useState<AutolinkPreviewResult | null>(null);
-  const [error, setError] = useState<string | undefined>();
-  const [applied, setApplied] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-
-  function handlePreview() {
-    setError(undefined);
-    setApplied(null);
-    startTransition(async () => {
-      const result = await previewAutolinkAction(contentType, slug);
-      if ("error" in result) setError(result.error);
-      else setPreview(result);
-    });
-  }
-
-  function handleConfirm() {
-    startTransition(async () => {
-      const result = await applyAutolinkAction(contentType, slug);
-      if ("error" in result) {
-        setError(result.error);
-        return;
-      }
-      setPreview(null);
-      setApplied(
+  const { preview, error, applied, pending, handlePreview, handleConfirm, handleCancel } =
+    usePreviewConfirmAction(
+      contentType,
+      slug,
+      previewAutolinkAction,
+      applyAutolinkAction,
+      (result) =>
         `${result.matchCount} Verknüpfung${result.matchCount === 1 ? "" : "en"} gespeichert.`,
-      );
-      router.refresh();
-    });
-  }
+    );
 
-  function handleCancel() {
-    setPreview(null);
-  }
+  const distinctMatches = useMemo(
+    () =>
+      preview
+        ? Object.values(
+            preview.matches.reduce<
+              Record<
+                string,
+                {
+                  canonical: string;
+                  href: string;
+                  count: number;
+                  matchedText: string;
+                  type: AutolinkTargetType;
+                }
+              >
+            >((acc, entry) => {
+              if (!acc[entry.canonical]) {
+                acc[entry.canonical] = {
+                  canonical: entry.canonical,
+                  href: entry.href,
+                  count: 0,
+                  matchedText: entry.matchedText,
+                  type: entry.type,
+                };
+              }
 
-  const distinctMatches = preview
-    ? Object.values(
-        preview.matches.reduce<
-          Record<
-            string,
-            {
-              canonical: string;
-              href: string;
-              count: number;
-              matchedText: string;
-              type: AutolinkTargetType;
-            }
-          >
-        >((acc, entry) => {
-          if (!acc[entry.canonical]) {
-            acc[entry.canonical] = {
-              canonical: entry.canonical,
-              href: entry.href,
-              count: 0,
-              matchedText: entry.matchedText,
-              type: entry.type,
-            };
-          }
+              acc[entry.canonical].count++;
 
-          acc[entry.canonical].count++;
-
-          return acc;
-        }, {}),
-      )
-    : [];
+              return acc;
+            }, {}),
+          )
+        : [],
+    [preview],
+  );
 
   if (preview) {
     return (

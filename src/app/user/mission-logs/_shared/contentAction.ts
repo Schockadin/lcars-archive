@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { verifySession } from "@/lib/dal";
+import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { getCharactersForUser } from "@/lib/characters";
 import {
@@ -14,9 +14,10 @@ import { autoLinkMarkdown } from "@/lib/autolink";
 import { getCharacterSubscribers } from "@/lib/dialogues";
 import { sendNewMissionLogEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
-import { notifyUserSubscribers, notifyAdminContentSubscribers } from "@/lib/follows";
+import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
+import { parseList } from "@/lib/formParsing";
 
 export interface MissionLogFormState {
   error?: string;
@@ -36,11 +37,7 @@ export async function missionLogAction(
   formData: FormData,
 ): Promise<MissionLogFormState> {
   const session = await verifySession();
-
-  const userId = Number(formData.get("userId"));
-  if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect("/user");
-  }
+  requireMatchingFormUserId(formData, session);
 
   const logIdRaw = formData.get("logId");
   const isEdit = logIdRaw != null && logIdRaw !== "";
@@ -58,14 +55,7 @@ export async function missionLogAction(
   }
   const logDate = logDateRaw || null;
 
-  const tags = [
-    ...new Set(
-      String(formData.get("tags") ?? "")
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    ),
-  ];
+  const tags = parseList(formData.get("tags"));
 
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) return { error: "Bitte einen Log-Text schreiben." };
@@ -97,33 +87,17 @@ export async function missionLogAction(
     const preview = synopsisExcerpt(bodyMarkdown, 140);
     const author = await getUserById(session.userId);
 
-    // notifyAdminContentSubscribers/notifyUserSubscribers sind unabhängig
-    // voneinander (unterschiedliche Empfängerlisten) — parallel statt
-    // sequentiell, sonst addieren sich zwei Runden Mail/Push-Versand zur
-    // Formular-Antwortzeit auf.
-    await Promise.all([
-      notifyAdminContentSubscribers({
-        contentType: "mission_log",
-        event: "updated",
-        authorUserId: session.userId,
-        authorName: author?.name ?? "Unbekannt",
-        contentTypeLabel: "einen Mission-Log",
-        contentTitle: title,
-        contentUrl,
-        preview,
-      }),
-      ...(result.visibility === "public"
-        ? [
-            notifyUserSubscribers({
-              authorUserId: session.userId,
-              contentTypeLabel: "einen Mission-Log",
-              contentTitle: title,
-              contentUrl,
-              preview,
-            }),
-          ]
-        : []),
-    ]);
+    await notifyContentChange({
+      contentType: "mission_log",
+      event: "updated",
+      authorUserId: session.userId,
+      authorName: author?.name ?? "Unbekannt",
+      contentTypeLabel: "einen Mission-Log",
+      contentTitle: title,
+      contentUrl,
+      preview,
+      notifyPublic: result.visibility === "public",
+    });
     redirect("/user/content");
   }
 
@@ -226,28 +200,18 @@ export async function missionLogAction(
   // Mission-Logs sind standardmäßig public (siehe scripts/schema.sql) — ein
   // neu angelegter Log benachrichtigt die Abonnenten des Erstellers (nicht
   // des Autor-Charakters, siehe getCharacterSubscribers oben) deshalb
-  // ungegated. Parallel statt sequentiell, siehe Kommentar im Edit-Zweig oben.
-  const newLogContentUrl = `${await getBaseUrl()}/missions/${mission.slug}/${result.slug}`;
-  const newLogPreview = synopsisExcerpt(bodyMarkdown, 140);
-  await Promise.all([
-    notifyUserSubscribers({
-      authorUserId: session.userId,
-      contentTypeLabel: "einen neuen Mission-Log",
-      contentTitle: title,
-      contentUrl: newLogContentUrl,
-      preview: newLogPreview,
-    }),
-    notifyAdminContentSubscribers({
-      contentType: "mission_log",
-      event: "created",
-      authorUserId: session.userId,
-      authorName: user.name,
-      contentTypeLabel: "einen neuen Mission-Log",
-      contentTitle: title,
-      contentUrl: newLogContentUrl,
-      preview: newLogPreview,
-    }),
-  ]);
+  // ungegated.
+  await notifyContentChange({
+    contentType: "mission_log",
+    event: "created",
+    authorUserId: session.userId,
+    authorName: user.name,
+    contentTypeLabel: "einen neuen Mission-Log",
+    contentTitle: title,
+    contentUrl: `${await getBaseUrl()}/missions/${mission.slug}/${result.slug}`,
+    preview: synopsisExcerpt(bodyMarkdown, 140),
+    notifyPublic: true,
+  });
 
   redirect("/user");
 }
