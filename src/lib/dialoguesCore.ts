@@ -47,8 +47,8 @@ export interface DialogueMessage {
   deletedAt: string | null;
 }
 
-// Absteigend (neueste zuerst). Kein unstable_cache — muss nach jeder neuen
-// Nachricht sofort frisch sein (Server Actions revalidieren die Seite
+// Chronologisch (ältester zuerst). Kein unstable_cache — muss nach jeder
+// neuen Nachricht sofort frisch sein (Server Actions revalidieren die Seite
 // gezielt, siehe src/app/actions/dialogues.ts).
 export async function getDialogueMessages(
   archiveEntryId: number,
@@ -74,7 +74,7 @@ export async function getDialogueMessages(
     FROM dialogue_messages dm
     LEFT JOIN characters c ON c.id = dm.character_id
     WHERE dm.archive_entry_id = ${archiveEntryId}
-    ORDER BY dm.created_at DESC
+    ORDER BY dm.created_at ASC
   `;
 
   return rows.map((r) => ({

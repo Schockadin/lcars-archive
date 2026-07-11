@@ -7,7 +7,6 @@ import OwnerSelect from "./OwnerSelect";
 import AdminVisibilitySelect from "./AdminVisibilitySelect";
 import AutolinkButton from "@/components/AutolinkButton";
 import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
-import FormatTextButton from "@/components/FormatTextButton";
 import { ContentToolType } from "@/app/actions/contentTools";
 import { PencilIcon } from "@/lib/icons";
 import FollowButtons from "./FollowButtons";
@@ -97,7 +96,6 @@ export default function ActionsMenu({
               contentType={contentType}
               slug={content.slug}
             />
-            <FormatTextButton contentType={contentType} slug={content.slug} />
           </div>
         )}
         {viewer?.role && followType && (

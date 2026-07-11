@@ -195,9 +195,9 @@
   white-space: nowrap;
 }
 
-/* Admin-Content-Tools (AutolinkButton/RemoveWikilinksButton/
-   FormatTextButton) — gemeinsame Vorschau-Box auf den vier Inhalts-
-   Detailseiten (Mission, Log, Archiv-Eintrag, Charakter). */
+/* Admin-Content-Tools (AutolinkButton/RemoveWikilinksButton) — gemeinsame
+   Vorschau-Box auf den vier Inhalts-Detailseiten (Mission, Log,
+   Archiv-Eintrag, Charakter). */
 .autolink-preview {
   display: flex;
   flex-direction: column;
