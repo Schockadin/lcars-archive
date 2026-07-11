@@ -6,7 +6,7 @@ import type { User } from "@/types/db";
 const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
   last_visit_at, last_dashboard_visit_at,
-  email_notifications_enabled, push_notifications_enabled
+  email_notifications_enabled, push_notifications_enabled, notify_content_types
 `;
 
 // Probiert slugifyBase(name), "${base}-2", "${base}-3", … bis ein Slug in
@@ -88,7 +88,7 @@ export async function listAllUsers(): Promise<UserWithCharacters[]> {
     SELECT
       u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
       u.last_login_at, u.previous_login_at, u.last_visit_at, u.last_dashboard_visit_at,
-      u.email_notifications_enabled, u.push_notifications_enabled,
+      u.email_notifications_enabled, u.push_notifications_enabled, u.notify_content_types,
       COALESCE(
         jsonb_agg(
           jsonb_build_object('id', c.id, 'slug', c.slug, 'name', c.name)
@@ -186,6 +186,10 @@ export interface UpdateUserInput {
 export interface NotificationPreferencesInput {
   emailEnabled: boolean;
   pushEnabled: boolean;
+  // Admin-Opt-in "Über alle Inhalte benachrichtigt werden" — nur bei Admins
+  // in der UI editierbar (NotificationSettingsForm.tsx), für alle anderen
+  // Rollen bleibt das Array leer.
+  notifyContentTypes: string[];
 }
 
 // Zwei globale Schalter, gelten einheitlich für alle Benachrichtigungs-
@@ -198,7 +202,8 @@ export async function updateNotificationPreferences(
   await sql`
     UPDATE users
     SET email_notifications_enabled = ${data.emailEnabled},
-        push_notifications_enabled = ${data.pushEnabled}
+        push_notifications_enabled = ${data.pushEnabled},
+        notify_content_types = ${data.notifyContentTypes}
     WHERE id = ${id}
   `;
 }
@@ -308,7 +313,7 @@ export async function getUserForAdmin(
     SELECT
       u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
       u.last_login_at, u.previous_login_at, u.last_visit_at, u.last_dashboard_visit_at,
-      u.email_notifications_enabled, u.push_notifications_enabled,
+      u.email_notifications_enabled, u.push_notifications_enabled, u.notify_content_types,
       u.password_hash IS NOT NULL AS has_password,
       u.requires_activation,
       COALESCE(

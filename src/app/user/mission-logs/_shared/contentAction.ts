@@ -14,7 +14,7 @@ import { autoLinkMarkdown } from "@/lib/autolink";
 import { getCharacterSubscribers } from "@/lib/dialogues";
 import { sendNewMissionLogEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
-import { notifyUserSubscribers } from "@/lib/follows";
+import { notifyUserSubscribers, notifyAdminContentSubscribers } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 
@@ -92,6 +92,15 @@ export async function missionLogAction(
       return { error: "Log nicht gefunden oder keine Berechtigung." };
     }
     revalidateLog(result.missionId, result.slug);
+    await notifyAdminContentSubscribers({
+      contentType: "mission_log",
+      event: "updated",
+      authorUserId: session.userId,
+      contentTypeLabel: "einen Mission-Log",
+      contentTitle: title,
+      contentUrl: `${await getBaseUrl()}/missions/${result.missionSlug}/${result.slug}`,
+      preview: synopsisExcerpt(bodyMarkdown, 140),
+    });
     if (result.visibility === "public") {
       await notifyUserSubscribers({
         authorUserId: session.userId,
@@ -205,6 +214,15 @@ export async function missionLogAction(
   // des Autor-Charakters, siehe getCharacterSubscribers oben) deshalb
   // ungegated.
   await notifyUserSubscribers({
+    authorUserId: session.userId,
+    contentTypeLabel: "einen neuen Mission-Log",
+    contentTitle: title,
+    contentUrl: `${await getBaseUrl()}/missions/${mission.slug}/${result.slug}`,
+    preview: synopsisExcerpt(bodyMarkdown, 140),
+  });
+  await notifyAdminContentSubscribers({
+    contentType: "mission_log",
+    event: "created",
     authorUserId: session.userId,
     contentTypeLabel: "einen neuen Mission-Log",
     contentTitle: title,

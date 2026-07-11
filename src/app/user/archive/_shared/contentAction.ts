@@ -9,7 +9,7 @@ import {
 import { isArchiveCategory } from "@/lib/archiveFormat";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
-import { notifyUserSubscribers } from "@/lib/follows";
+import { notifyUserSubscribers, notifyAdminContentSubscribers } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import {
@@ -118,6 +118,15 @@ export async function archiveEntryAction(
       return { error: "Eintrag nicht gefunden oder keine Berechtigung." };
     }
     revalidateArchiveEntry(result.slug);
+    await notifyAdminContentSubscribers({
+      contentType: "archive_entry",
+      event: "updated",
+      authorUserId: session.userId,
+      contentTypeLabel: "einen Archiv-Eintrag",
+      contentTitle: title,
+      contentUrl: `${await getBaseUrl()}/archive/${result.slug}`,
+      preview: synopsisExcerpt(bodyMarkdown, 140),
+    });
     if (result.visibility === "public") {
       await notifyUserSubscribers({
         authorUserId: session.userId,
@@ -146,6 +155,15 @@ export async function archiveEntryAction(
   // ein neu angelegter Eintrag benachrichtigt die Abonnenten des Erstellers
   // deshalb ungegated (keine separate visibility im createArchiveEntry-Result).
   await notifyUserSubscribers({
+    authorUserId: session.userId,
+    contentTypeLabel: "einen neuen Archiv-Eintrag",
+    contentTitle: title,
+    contentUrl: `${await getBaseUrl()}/archive/${result.slug}`,
+    preview: synopsisExcerpt(bodyMarkdown, 140),
+  });
+  await notifyAdminContentSubscribers({
+    contentType: "archive_entry",
+    event: "created",
     authorUserId: session.userId,
     contentTypeLabel: "einen neuen Archiv-Eintrag",
     contentTitle: title,

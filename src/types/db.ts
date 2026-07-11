@@ -26,4 +26,10 @@ export interface User {
   last_dashboard_visit_at: Date | null;
   email_notifications_enabled: boolean;
   push_notifications_enabled: boolean;
+  // Admin-Opt-in "Über alle Inhalte benachrichtigt werden" — Teilmenge von
+  // "character"|"mission"|"mission_log"|"archive_entry" (siehe
+  // notifyAdminContentSubscribers in lib/follows.ts). Leeres Array = kein
+  // Opt-in. Nur für Admins in der UI editierbar, die Spalte existiert aber
+  // für jeden User (ungenutzt bei anderen Rollen).
+  notify_content_types: string[];
 }

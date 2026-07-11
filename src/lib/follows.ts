@@ -299,3 +299,95 @@ export async function notifyUserSubscribers(input: {
     }
   }
 }
+
+// Die vier Inhaltstypen, die ein Admin per Checkbox-Liste abonnieren kann
+// (users.notify_content_types, siehe scripts/schema.sql und
+// NotificationSettingsForm.tsx) — dieselbe Vierheit wie OwnerContentType in
+// src/app/actions/owner.ts.
+export type AdminContentNotifyType =
+  | "character"
+  | "mission"
+  | "mission_log"
+  | "archive_entry";
+
+async function getAdminContentSubscribers(
+  contentType: AdminContentNotifyType,
+  excludeUserId: number,
+): Promise<FollowSubscriber[]> {
+  const rows = await sql<
+    {
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT id, email, name, email_notifications_enabled, push_notifications_enabled
+    FROM users
+    WHERE role = 'admin' AND is_active = true AND id != ${excludeUserId}
+      AND ${contentType} = ANY(notify_content_types)
+  `;
+  return rows.map((row) => ({
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    emailNotificationsEnabled: row.email_notifications_enabled,
+    pushNotificationsEnabled: row.push_notifications_enabled,
+  }));
+}
+
+// Admin-Opt-in "Über alle Inhalte benachrichtigt werden" (notify_content_types)
+// — anders als notifyUserSubscribers oben (nur öffentliche Inhalte eigener
+// Abonnenten) meldet dies JEDES Anlegen/Bearbeiten des gewählten Inhaltstyps
+// durch JEDEN User, unabhängig von visibility/Owner (Admins dürfen ohnehin
+// alles sehen, siehe canView in lib/visibility.ts). Schließt den handelnden
+// User selbst aus (ein Admin, der selbst editiert, muss sich nicht über die
+// eigene Aktion benachrichtigen).
+export async function notifyAdminContentSubscribers(input: {
+  contentType: AdminContentNotifyType;
+  event: "created" | "updated";
+  authorUserId: number;
+  contentTypeLabel: string;
+  contentTitle: string;
+  contentUrl: string;
+  preview: string;
+}): Promise<void> {
+  const admins = await getAdminContentSubscribers(
+    input.contentType,
+    input.authorUserId,
+  );
+  if (admins.length === 0) return;
+
+  const [author] = await sql<{ name: string }[]>`
+    SELECT name FROM users WHERE id = ${input.authorUserId}
+  `;
+  const verb = input.event === "created" ? "neu angelegt" : "bearbeitet";
+  const authorName = author?.name ?? "Unbekannt";
+
+  for (const admin of admins) {
+    if (admin.emailNotificationsEnabled) {
+      const result = await sendUserContentEmail({
+        to: admin.email,
+        name: admin.name,
+        authorName,
+        contentTypeLabel: `${input.contentTypeLabel} (${verb})`,
+        contentTitle: input.contentTitle,
+        contentUrl: input.contentUrl,
+        preview: input.preview,
+      });
+      if (!result.sent) {
+        console.error(
+          `Admin-Inhalts-Mail an ${admin.email} fehlgeschlagen: ${result.error}`,
+        );
+      }
+    }
+    if (admin.pushNotificationsEnabled) {
+      await sendPushToUser(admin.id, {
+        title: `${authorName}: ${input.contentTitle}`,
+        body: input.preview,
+        url: input.contentUrl,
+      });
+    }
+  }
+}

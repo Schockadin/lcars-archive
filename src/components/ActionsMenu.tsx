@@ -3,6 +3,7 @@ import { Viewer } from "@/lib/visibility";
 import { UserWithCharacters } from "@/lib/users";
 import { Character } from "@/types/character";
 import OwnerSelect from "./OwnerSelect";
+import AdminVisibilitySelect from "./AdminVisibilitySelect";
 import AutolinkButton from "@/components/AutolinkButton";
 import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
 import FormatTextButton from "@/components/FormatTextButton";
@@ -13,6 +14,7 @@ import { MissionDetail, MissionLogDetail } from "@/types/missions";
 import { ArchiveEntryDetail } from "@/types/archive";
 import { FollowTargetType } from "@/lib/follows";
 import type { OwnerContentType } from "@/app/actions/owner";
+import type { AdminVisibilityContentType } from "@/app/actions/visibility";
 
 // ContentToolType (Autolink/Wikilinks/Format-Buttons) und OwnerContentType
 // (setOwnerAction) heißen für Mission-Log/Archiv-Eintrag unterschiedlich
@@ -24,6 +26,17 @@ import type { OwnerContentType } from "@/app/actions/owner";
 const OWNER_CONTENT_TYPE: Record<ContentToolType, OwnerContentType> = {
   character: "character",
   mission: "mission",
+  missionLog: "mission_log",
+  archiveEntry: "archive_entry",
+};
+
+// Wie OWNER_CONTENT_TYPE oben, aber ohne "mission" — Missionen haben keine
+// visibility-Spalte (immer öffentlich, siehe lib/missions.ts), AdminVisibilitySelect
+// wird für contentType "mission" deshalb gar nicht gerendert.
+const VISIBILITY_CONTENT_TYPE: Partial<
+  Record<ContentToolType, AdminVisibilityContentType>
+> = {
+  character: "character",
   missionLog: "mission_log",
   archiveEntry: "archive_entry",
 };
@@ -56,6 +69,8 @@ export default function ActionsMenu({
   playerId,
   onEdit = () => {},
 }: ActionMenuProps) {
+  const visibilityContentType = VISIBILITY_CONTENT_TYPE[contentType];
+
   return (
     <div className="flex flex-col items-start justify-center gap-[8px]">
       {(viewer?.role === "admin" || viewer?.role === "gm") && (
@@ -64,6 +79,13 @@ export default function ActionsMenu({
           id={content.id}
           initialOwnerId={playerId}
           users={owners.map((u) => ({ id: u.id, name: u.name }))}
+        />
+      )}
+      {viewer?.role === "admin" && visibilityContentType && "visibility" in content && (
+        <AdminVisibilitySelect
+          contentType={visibilityContentType}
+          id={content.id}
+          initialValue={content.visibility}
         />
       )}
       <div className="flex gap-[8px]">

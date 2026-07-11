@@ -242,6 +242,23 @@ export async function setCharacterVisibility(
   return rows[0] ?? null;
 }
 
+// Admin-Sichtbarkeits-Verwaltung (ActionsMenu.tsx/AdminVisibilitySelect.tsx):
+// anders als setCharacterVisibility oben NICHT auf den Owner gescoped (nur
+// admin darf das, geprüft in setVisibilityAdminAction) — mirrort
+// setOwnerAction/assignCharacterToUser in src/app/actions/owner.ts.
+export async function setCharacterVisibilityAdmin(
+  characterId: number,
+  visibility: "private" | "gm" | "public",
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE characters
+    SET visibility = ${visibility}, updated_at = NOW()
+    WHERE id = ${characterId}
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
+}
+
 export interface UserContentLog {
   id: number;
   slug: string;

@@ -430,3 +430,13 @@ CREATE INDEX IF NOT EXISTS idx_mission_participants_character ON mission_partici
 ALTER TABLE content_follows DROP CONSTRAINT IF EXISTS content_follows_target_type_check;
 ALTER TABLE content_follows ADD CONSTRAINT content_follows_target_type_check
   CHECK (target_type IN ('mission', 'archive_entry', 'character', 'user'));
+
+-- Admin-Opt-in "Über alle Inhalte benachrichtigt werden" (NotificationSettingsForm.tsx,
+-- admin-only Checkbox-Liste) — welche der vier Inhaltstypen (character/mission/
+-- mission_log/archive_entry) einen Admin per Mail/Push benachrichtigen sollen,
+-- sobald IRGENDEIN User einen Inhalt dieses Typs anlegt oder bearbeitet
+-- (unabhängig von visibility/Owner, siehe notifyAdminContentSubscribers in
+-- src/lib/follows.ts) — anders als notifyUserSubscribers, das nur öffentliche
+-- Inhalte eigener Abonnenten meldet. Leeres Array (Default) = kein Opt-in,
+-- gleiches Freitext-Array-Muster wie tags auf den Inhaltstabellen oben.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS notify_content_types TEXT[] NOT NULL DEFAULT '{}';

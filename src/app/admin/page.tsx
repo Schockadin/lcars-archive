@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
@@ -55,7 +56,7 @@ export default async function UsersAdminPage() {
   // DB-Wert, nur der Vollständigkeit halber im Kopf gezeigt (gleiche Optik
   // wie die anderen DataRow-Akkordeons hier, die einen Datensatz-Zähler
   // zeigen).
-  const adminActionCount = 5;
+  const adminActionCount = 6;
 
   return (
     <>
@@ -133,6 +134,21 @@ export default async function UsersAdminPage() {
                 <section className="flex flex-col gap-[12px]">
                   <h2 className="text-lcars-amber">Missionen ohne Owner</h2>
                   <AssignOwnerlessMissionsPanel gms={gmOptions} />
+                </section>
+
+                <section className="flex flex-col gap-[12px]">
+                  <h2 className="text-lcars-amber">Inhaltsübersicht</h2>
+                  <p className="text-lcars-text-dim text-[13px]">
+                    Alle Inhalte über alle User hinweg — filter-/gruppierbar
+                    nach Owner und Kategorie, inklusive Mass-Edit-Owner-
+                    Zuordnung per Checkbox-Auswahl.
+                  </p>
+                  <Link
+                    href="/admin/content"
+                    className="lcars-pill-btn--outline self-start"
+                  >
+                    Inhaltsübersicht öffnen
+                  </Link>
                 </section>
               </div>
             </LcarsDataRow>

@@ -28,13 +28,30 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 
 type DeviceStatus = "checking" | "unsupported" | "subscribed" | "unsubscribed";
 
+const ADMIN_CONTENT_TYPE_OPTIONS: { value: string; label: string }[] = [
+  { value: "character", label: "Charaktere" },
+  { value: "mission", label: "Missionen" },
+  { value: "mission_log", label: "Mission-Logs" },
+  { value: "archive_entry", label: "Archiv-Einträge" },
+];
+
 // Zwei unabhängige Teile: oben die Präferenzen (globale Schalter, per
 // Formular gespeichert), unten die Geräte-Registrierung für Push (rein
-// client-seitig, kein Page-Reload — verwaltet nur "dieses Gerät").
+// client-seitig, kein Page-Reload — verwaltet nur "dieses Gerät"). isAdmin
+// blendet die Checkbox-Liste "Über alle Inhalte benachrichtigt werden" ein
+// (notify_content_types, siehe notificationActions.ts) — die Spalte
+// existiert zwar für jede Rolle, ist aber nur für Admins sinnvoll (siehe
+// notifyAdminContentSubscribers in lib/follows.ts).
 export default function NotificationSettingsForm({
   user,
+  isAdmin,
 }: {
-  user: { emailEnabled: boolean; pushEnabled: boolean };
+  user: {
+    emailEnabled: boolean;
+    pushEnabled: boolean;
+    notifyContentTypes: string[];
+  };
+  isAdmin: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
     updateNotificationSettingsAction,
@@ -135,8 +152,6 @@ export default function NotificationSettingsForm({
     }
   }
 
-  console.log(user);
-
   return (
     <div className="flex flex-col gap-[24px]">
       <form
@@ -168,6 +183,38 @@ export default function NotificationSettingsForm({
             Push-Benachrichtigungen
           </label>
         </div>
+
+        {isAdmin && (
+          <div className="flex flex-col gap-[8px]">
+            <span className="lcars-eyebrow">
+              Über alle Inhalte benachrichtigen
+            </span>
+            <p className="text-lcars-text-dim text-[13px]">
+              Zusätzlich zu eigenen Abos: Mail/Push bei jedem Anlegen/
+              Bearbeiten der ausgewählten Inhaltstypen durch beliebige User.
+            </p>
+            <div className="flex flex-col gap-[6px]">
+              {ADMIN_CONTENT_TYPE_OPTIONS.map((option) => (
+                <div key={option.value} className="flex items-center gap-[10px]">
+                  <input
+                    id={`notifyContentTypes-${option.value}`}
+                    name="notifyContentTypes"
+                    type="checkbox"
+                    value={option.value}
+                    defaultChecked={user.notifyContentTypes.includes(option.value)}
+                    className="lcars-checkbox"
+                  />
+                  <label
+                    htmlFor={`notifyContentTypes-${option.value}`}
+                    className="lcars-eyebrow"
+                  >
+                    {option.label}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <FormError message={state?.error} />
         {state?.success && <FormSuccess>Gespeichert.</FormSuccess>}

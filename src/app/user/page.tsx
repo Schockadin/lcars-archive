@@ -103,7 +103,9 @@ export default async function UserPage() {
                 user={{
                   emailEnabled: target.email_notifications_enabled,
                   pushEnabled: target.push_notifications_enabled,
+                  notifyContentTypes: target.notify_content_types,
                 }}
+                isAdmin={target.role === "admin"}
               />
             </section>
 

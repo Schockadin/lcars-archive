@@ -300,6 +300,27 @@ export async function setArchiveEntryVisibility(
   return rows[0] ?? null;
 }
 
+// Admin-Sichtbarkeits-Verwaltung (ActionsMenu.tsx/AdminVisibilitySelect.tsx):
+// anders als setArchiveEntryVisibility/setDialogueVisibility oben NICHT auf
+// den Owner gescoped (nur admin darf das, geprüft in
+// setVisibilityAdminAction) und OHNE category-Einschränkung — Admins dürfen
+// hier bewusst auch Gespräche umstellen, anders als setArchiveEntryOwner
+// unten, das Dialoge bewusst ausschließt (eigenes Owner-/Teilnehmer-Modell,
+// aber kein eigenes Sichtbarkeits-Modell: dialogue-Einträge nutzen dieselbe
+// visibility-Spalte).
+export async function setArchiveEntryVisibilityAdmin(
+  archiveEntryId: number,
+  visibility: "private" | "gm" | "public",
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE archive_entries
+    SET visibility = ${visibility}, updated_at = NOW()
+    WHERE id = ${archiveEntryId}
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
+}
+
 // Admin-Owner-Verwaltung (src/app/actions/owner.ts): anders als
 // setArchiveEntryVisibility oben NICHT auf den aktuellen Owner gescoped
 // (nur admin darf das, geprüft in der Server Action) — category='dialogue'

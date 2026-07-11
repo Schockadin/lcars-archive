@@ -631,6 +631,23 @@ export async function setMissionLogVisibility(
   return rows[0] ?? null;
 }
 
+// Admin-Sichtbarkeits-Verwaltung (ActionsMenu.tsx/AdminVisibilitySelect.tsx):
+// anders als setMissionLogVisibility oben NICHT auf den Autor-Charakter des
+// aufrufenden Users gescoped (nur admin darf das, geprüft in
+// setVisibilityAdminAction) — mirrort setMissionLogOwner oben.
+export async function setMissionLogVisibilityAdmin(
+  logId: number,
+  visibility: "private" | "gm" | "public",
+): Promise<{ slug: string; missionId: number } | null> {
+  const rows = await sql<{ slug: string; missionId: number }[]>`
+    UPDATE mission_logs
+    SET visibility = ${visibility}, updated_at = NOW()
+    WHERE id = ${logId}
+    RETURNING slug, mission_id AS "missionId"
+  `;
+  return rows[0] ?? null;
+}
+
 export interface OwnMissionLogForEdit {
   id: number;
   title: string;

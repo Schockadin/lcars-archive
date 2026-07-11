@@ -82,10 +82,12 @@ export default async function DialoguePlayPage({ params }: Props) {
           />
         )}
         {participant && <DialogueReplyForm entrySlug={entry.slug} />}
-        <CompleteDialogueButton entrySlug={entry.slug} />
-        {viewer?.role === "admin" && (
-          <DeleteDialogueButton entrySlug={entry.slug} />
-        )}
+        <div className="flex items-center gap-[8px]">
+          <CompleteDialogueButton entrySlug={entry.slug} />
+          {viewer?.role === "admin" && (
+            <DeleteDialogueButton entrySlug={entry.slug} />
+          )}
+        </div>
       </div>
     </article>
   );

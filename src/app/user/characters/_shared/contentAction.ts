@@ -10,7 +10,7 @@ import {
 } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
-import { notifyUserSubscribers } from "@/lib/follows";
+import { notifyUserSubscribers, notifyAdminContentSubscribers } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import type { Character } from "@/types/character";
@@ -141,6 +141,17 @@ export async function characterAction(
       editingUserId: session.userId,
       bioMarkdown: bodyMarkdown || null,
     });
+    await notifyAdminContentSubscribers({
+      contentType: "character",
+      event: "updated",
+      authorUserId: session.userId,
+      contentTypeLabel: "einen Charakter",
+      contentTitle: name,
+      contentUrl: `${await getBaseUrl()}/characters/${result.slug}`,
+      preview: bodyMarkdown
+        ? synopsisExcerpt(bodyMarkdown, 140)
+        : "Die Akte wurde aktualisiert.",
+    });
     if (result.visibility === "public") {
       await notifyUserSubscribers({
         authorUserId: session.userId,
@@ -178,6 +189,17 @@ export async function characterAction(
   // neu angelegter Charakter benachrichtigt die Abonnenten des Erstellers
   // deshalb ungegated (keine separate visibility im createCharacter-Result).
   await notifyUserSubscribers({
+    authorUserId: session.userId,
+    contentTypeLabel: "einen neuen Charakter",
+    contentTitle: name,
+    contentUrl: `${await getBaseUrl()}/characters/${result.slug}`,
+    preview: bodyMarkdown
+      ? synopsisExcerpt(bodyMarkdown, 140)
+      : "Ein neuer Charakter wurde angelegt.",
+  });
+  await notifyAdminContentSubscribers({
+    contentType: "character",
+    event: "created",
     authorUserId: session.userId,
     contentTypeLabel: "einen neuen Charakter",
     contentTitle: name,

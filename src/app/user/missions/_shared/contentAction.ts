@@ -12,7 +12,7 @@ import {
 } from "@/lib/missions";
 import { getParticipantCharactersForNotification } from "@/lib/characters";
 import { getCharacterSubscribers } from "@/lib/dialogues";
-import { getUserSubscribers } from "@/lib/follows";
+import { getUserSubscribers, notifyAdminContentSubscribers } from "@/lib/follows";
 import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
@@ -134,6 +134,15 @@ export async function missionAction(
     // Liste.
     await setMissionParticipants(missionId!, participantCharacterIds);
     revalidateMission(result.slug);
+    await notifyAdminContentSubscribers({
+      contentType: "mission",
+      event: "updated",
+      authorUserId: session.userId,
+      contentTypeLabel: "eine Mission",
+      contentTitle: title,
+      contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
+      preview: synopsisExcerpt(teaser ?? bodyMarkdown, 140),
+    });
     redirect("/user/content");
   }
 
@@ -161,6 +170,15 @@ export async function missionAction(
     ownerUserId: user.id,
   });
   revalidateMission(result.slug);
+  await notifyAdminContentSubscribers({
+    contentType: "mission",
+    event: "created",
+    authorUserId: session.userId,
+    contentTypeLabel: "eine neue Mission",
+    contentTitle: title,
+    contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
+    preview: synopsisExcerpt(teaser ?? bodyMarkdown, 140),
+  });
 
   if (participantCharacterIds.length > 0) {
     await setMissionParticipants(result.id, participantCharacterIds);
