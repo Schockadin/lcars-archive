@@ -607,37 +607,49 @@ export async function deleteDialogue(
   archiveEntryId: number,
   deletedByUserId: number,
 ): Promise<DeletedDialogueInfo | null> {
-  const rows = await sql<
-    {
-      slug: string;
-      title: string;
-      metadata: unknown;
-      visibility: string;
-      owner_user_id: number | null;
-    }[]
-  >`
-    DELETE FROM archive_entries
-    WHERE id = ${archiveEntryId} AND category = 'dialogue'
-    RETURNING slug, title, metadata, visibility, owner_user_id
-  `;
-  const row = rows[0];
-  if (!row) return null;
+  return sql.begin(async (tx) => {
+    const rows = await tx<
+      {
+        slug: string;
+        title: string;
+        metadata: unknown;
+        visibility: string;
+        owner_user_id: number | null;
+      }[]
+    >`
+      DELETE FROM archive_entries
+      WHERE id = ${archiveEntryId} AND category = 'dialogue'
+      RETURNING slug, title, metadata, visibility, owner_user_id
+    `;
+    const row = rows[0];
+    if (!row) return null;
 
-  await sql`
-    DELETE FROM timeline_events
-    WHERE source_type = 'archive_entry' AND source_slug = ${row.slug}
-  `;
+    await tx`
+      DELETE FROM timeline_events
+      WHERE source_type = 'archive_entry' AND source_slug = ${row.slug}
+    `;
 
-  await sql`
-    INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
-    VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${row.owner_user_id}, ${deletedByUserId})
-  `;
+    // Bookmarks/Abos auf den Dialog (content_follows, target_type
+    // 'archive_entry' — Dialoge sind archive_entries der Kategorie
+    // 'dialogue', siehe getBookmarkedContent/getUserSubscribers in
+    // follows.ts) räumen sich sonst nicht auf und zeigen danach auf einen
+    // nicht mehr existierenden Slug.
+    await tx`
+      DELETE FROM content_follows
+      WHERE target_type = 'archive_entry' AND target_slug = ${row.slug}
+    `;
 
-  return {
-    slug: row.slug,
-    title: row.title,
-    participantSlugs: parseParticipants(row.metadata).map((p) => p.slug),
-  };
+    await tx`
+      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+      VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${row.owner_user_id}, ${deletedByUserId})
+    `;
+
+    return {
+      slug: row.slug,
+      title: row.title,
+      participantSlugs: parseParticipants(row.metadata).map((p) => p.slug),
+    };
+  });
 }
 
 export interface DialogueEmailTarget {

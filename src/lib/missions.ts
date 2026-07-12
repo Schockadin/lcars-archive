@@ -786,46 +786,65 @@ export async function deleteMissionLog(
 }
 
 // Löscht eine Mission inkl. aller zugehörigen Mission-Logs (ON DELETE CASCADE,
-// siehe scripts/schema.sql) und räumt deren timeline_events mit auf (nicht
-// per FK verknüpft, gleiches Prinzip wie deleteMissionLog oben — Missionen
-// selbst erzeugen keine eigenen timeline_events). Anders als deleteMissionLog
-// kein Owner-Scoping: nur für admin/gm aufrufbar, siehe deleteMissionAction.
-// deletedByUserId dient nur dem Löschprotokoll (content_deletions, siehe
-// getRecentDeletions in recentActivity.ts) — hier immer die aufrufende
-// admin/gm-Person, nicht owner_user_id der Mission selbst.
+// siehe scripts/schema.sql) und räumt sowohl deren timeline_events als auch
+// die der Mission selbst mit auf (nicht per FK verknüpft, gleiches Prinzip
+// wie deleteMissionLog oben — Missionen erzeugen über started_at/ended_at und
+// eigene <!-- timeline --> Marker im Body durchaus eigene timeline_events mit
+// source_type='mission', siehe regenerateTimeline in timeline.ts). Ebenso
+// werden Bookmarks/Abos (content_follows) auf die Mission entfernt, sonst
+// blieben verwaiste Zeilen liegen, die auf einen nicht mehr existierenden
+// Slug zeigen. Alles in einer Transaktion, damit ein Fehler mitten im
+// Aufräumen nicht eine bereits gelöschte Mission mit noch vorhandenen
+// Altlasten zurücklässt. Anders als deleteMissionLog kein Owner-Scoping: nur
+// für admin/gm aufrufbar, siehe deleteMissionAction. deletedByUserId dient
+// nur dem Löschprotokoll (content_deletions, siehe getRecentDeletions in
+// recentActivity.ts) — hier immer die aufrufende admin/gm-Person, nicht
+// owner_user_id der Mission selbst.
 export async function deleteMission(
   missionId: number,
   deletedByUserId: number,
 ): Promise<{ slug: string; logSlugs: string[] } | null> {
-  const logRows = await sql<{ slug: string }[]>`
-    SELECT slug FROM mission_logs WHERE mission_id = ${missionId}
-  `;
-
-  const rows = await sql<
-    { slug: string; title: string; ownerUserId: number | null }[]
-  >`
-    DELETE FROM missions WHERE id = ${missionId}
-    RETURNING slug, title, owner_user_id AS "ownerUserId"
-  `;
-  const row = rows[0] ?? null;
-  if (!row) return null;
-
-  // Missionen haben keine visibility-Spalte (immer öffentlich) — visibility
-  // bleibt NULL, getRecentDeletions behandelt das wie live Missionen.
-  await sql`
-    INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
-    VALUES ('mission', ${row.title}, NULL, ${row.ownerUserId}, ${deletedByUserId})
-  `;
-
-  const logSlugs = logRows.map((l) => l.slug);
-  if (logSlugs.length > 0) {
-    await sql`
-      DELETE FROM timeline_events
-      WHERE source_type = 'mission_log' AND source_slug = ANY(${logSlugs})
+  return sql.begin(async (tx) => {
+    const logRows = await tx<{ slug: string }[]>`
+      SELECT slug FROM mission_logs WHERE mission_id = ${missionId}
     `;
-  }
 
-  return { slug: row.slug, logSlugs };
+    const rows = await tx<
+      { slug: string; title: string; ownerUserId: number | null }[]
+    >`
+      DELETE FROM missions WHERE id = ${missionId}
+      RETURNING slug, title, owner_user_id AS "ownerUserId"
+    `;
+    const row = rows[0] ?? null;
+    if (!row) return null;
+
+    // Missionen haben keine visibility-Spalte (immer öffentlich) — visibility
+    // bleibt NULL, getRecentDeletions behandelt das wie live Missionen.
+    await tx`
+      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+      VALUES ('mission', ${row.title}, NULL, ${row.ownerUserId}, ${deletedByUserId})
+    `;
+
+    await tx`
+      DELETE FROM timeline_events
+      WHERE source_type = 'mission' AND source_slug = ${row.slug}
+    `;
+
+    const logSlugs = logRows.map((l) => l.slug);
+    if (logSlugs.length > 0) {
+      await tx`
+        DELETE FROM timeline_events
+        WHERE source_type = 'mission_log' AND source_slug = ANY(${logSlugs})
+      `;
+    }
+
+    await tx`
+      DELETE FROM content_follows
+      WHERE target_type = 'mission' AND target_slug = ${row.slug}
+    `;
+
+    return { slug: row.slug, logSlugs };
+  });
 }
 
 // Alle Mission-/Log-Pfade für die Sitemap und generateStaticParams. Nur

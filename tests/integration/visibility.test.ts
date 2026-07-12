@@ -88,7 +88,7 @@ describe("getViewer", () => {
 
   it("resolves the session's user fresh from the DB", async () => {
     const user = await insertUser({ role: "gm" });
-    await createSession({ id: user.id, email: user.email, role: "gm" });
+    await createSession({ id: user.id, email: user.email, role: "gm", session_version: 0 });
 
     const result = await getViewer();
 
@@ -96,7 +96,7 @@ describe("getViewer", () => {
   });
 
   it("returns null when the session references a user that no longer exists", async () => {
-    await createSession({ id: 999999, email: "ghost@example.test", role: "player" });
+    await createSession({ id: 999999, email: "ghost@example.test", role: "player", session_version: 0 });
 
     const result = await getViewer();
 
@@ -105,7 +105,7 @@ describe("getViewer", () => {
 
   it("reflects the user's CURRENT role from the DB, not the stale session payload", async () => {
     const user = await insertUser({ role: "player" });
-    await createSession({ id: user.id, email: user.email, role: "player" });
+    await createSession({ id: user.id, email: user.email, role: "player", session_version: 0 });
 
     await sql`UPDATE users SET role = 'admin' WHERE id = ${user.id}`;
 

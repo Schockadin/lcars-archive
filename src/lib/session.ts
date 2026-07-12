@@ -11,6 +11,11 @@ export interface SessionPayload {
   email: string;
   role: User["role"];
   expiresAt: number;
+  // Muss mit users.session_version übereinstimmen (siehe getCurrentUser in
+  // dal.ts) — erhöht sich bei jeder Passwortänderung (setPassword), damit
+  // ein zu diesem Zeitpunkt bereits ausgestelltes Cookie danach verworfen
+  // wird statt bis zum natürlichen Ablauf (30 Tage) gültig zu bleiben.
+  sessionVersion: number;
 }
 
 function getSecret(): string {
@@ -58,6 +63,7 @@ export async function createSession(user: {
   id: number;
   email: string;
   role: User["role"];
+  session_version: number;
 }): Promise<void> {
   const expiresAt = Date.now() + SESSION_DURATION_MS;
   const token = encode({
@@ -65,6 +71,7 @@ export async function createSession(user: {
     email: user.email,
     role: user.role,
     expiresAt,
+    sessionVersion: user.session_version,
   });
 
   const cookieStore = await cookies();

@@ -440,3 +440,12 @@ ALTER TABLE content_follows ADD CONSTRAINT content_follows_target_type_check
 -- Inhalte eigener Abonnenten meldet. Leeres Array (Default) = kein Opt-in,
 -- gleiches Freitext-Array-Muster wie tags auf den Inhaltstabellen oben.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS notify_content_types TEXT[] NOT NULL DEFAULT '{}';
+
+-- Session-Invalidierung bei Passwortänderung: wird bei jedem setPassword()
+-- (Passwort-Änderung in den Settings, Aktivierung, Passwort-Reset) um 1
+-- erhöht und beim Ausstellen eines Sessions-Cookies (createSession) in
+-- dessen Payload eingebettet (siehe src/lib/session.ts). Ein bereits
+-- ausgestelltes Cookie mit veraltetem Wert wird von getCurrentUser()
+-- (src/lib/dal.ts) verworfen — ohne das würde ein gestohlenes Cookie eine
+-- Passwortänderung bis zum natürlichen Ablauf (30 Tage) überleben.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INT NOT NULL DEFAULT 0;
