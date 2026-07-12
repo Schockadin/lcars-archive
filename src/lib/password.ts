@@ -43,3 +43,12 @@ export async function verifyPassword(
 
   return crypto.timingSafeEqual(derived, storedBuffer);
 }
+
+// Platzhalter im selben "salt:hash"-Format wie hashPassword() (32 bzw. 128
+// Hex-Zeichen), aber ohne Bezug zu einem echten Passwort. login/actions.ts
+// vergleicht damit auch dann per verifyPassword(), wenn gar kein User (oder
+// keiner mit gesetztem Passwort) existiert — sonst wäre die Antwortzeit für
+// "Adresse unbekannt" messbar kürzer als für "falsches Passwort" (kein
+// scrypt-Aufwand), was einem Angreifer verriete, welche Adressen registriert
+// sind, selbst bei identischer Fehlermeldung.
+export const DUMMY_PASSWORD_HASH = `${"0".repeat(32)}:${"0".repeat(128)}`;

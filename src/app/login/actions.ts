@@ -3,10 +3,11 @@
 import { redirect } from "next/navigation";
 import { createSession, deleteSession } from "@/lib/session";
 import { getUserCredentialsByEmail, recordLogin } from "@/lib/users";
-import { verifyPassword } from "@/lib/password";
+import { verifyPassword, DUMMY_PASSWORD_HASH } from "@/lib/password";
 import { createPasswordSetupToken } from "@/lib/passwordSetupTokens";
 import { sendActivationEmail } from "@/lib/mail";
-import { getBaseUrl } from "@/lib/http";
+import { getBaseUrl, getClientIp } from "@/lib/http";
+import { isLoginLocked, recordLoginAttempt } from "@/lib/loginAttempts";
 
 export interface LoginState {
   error?: string;
@@ -25,22 +26,27 @@ export async function login(
     return { error: "Bitte eine E-Mail-Adresse eingeben." };
   }
 
-  const user = await getUserCredentialsByEmail(email);
-
-  if (!user) {
-    return { error: "Keine Anmeldung für diese E-Mail-Adresse gefunden." };
+  const ip = await getClientIp();
+  if (await isLoginLocked(email, ip)) {
+    return {
+      error: "Zu viele Anmeldeversuche. Bitte versuche es in ein paar Minuten erneut.",
+    };
   }
 
-  if (!user.is_active) {
+  const user = await getUserCredentialsByEmail(email);
+
+  if (user && !user.is_active) {
+    await recordLoginAttempt(email, ip, false);
     return { error: "Dieses Konto wurde deaktiviert." };
   }
 
-  if (!user.password_hash) {
+  if (user && !user.password_hash) {
     // Passwort ist Pflicht — weder ein frisch vom Admin angelegtes Konto
     // (requires_activation) noch ein Alt-Konto (vor der Passwort-Einführung)
     // darf sich mehr per E-Mail allein einloggen. Statt eines toten Endes
     // wird bei jedem Versuch ein frischer Aktivierungslink verschickt —
     // derselbe Mechanismus wie beim Anlegen neuer User (createUserAction).
+    await recordLoginAttempt(email, ip, false);
     const rawToken = await createPasswordSetupToken(user.id);
     const activationUrl = `${await getBaseUrl()}/activate?token=${rawToken}`;
     const result = await sendActivationEmail({
@@ -56,10 +62,22 @@ export async function login(
     };
   }
 
-  if (!password || !(await verifyPassword(password, user.password_hash))) {
+  // Unabhängig davon, ob user existiert: verifyPassword läuft in JEDEM Fall
+  // (gegen DUMMY_PASSWORD_HASH, falls nicht) und beide Fälle liefern dieselbe
+  // Fehlermeldung — sonst würden Antwortzeit oder Meldungstext verraten, ob
+  // eine E-Mail-Adresse registriert ist (anders als bei /forgot-password
+  // bewusst in Kauf genommen, siehe Kommentar dort — hier gibt es aber
+  // keinen Grund mehr, die beiden Fälle noch zu unterscheiden).
+  const passwordValid = await verifyPassword(
+    password,
+    user?.password_hash ?? DUMMY_PASSWORD_HASH,
+  );
+  if (!user || !passwordValid) {
+    await recordLoginAttempt(email, ip, false);
     return { error: "E-Mail-Adresse oder Passwort ist falsch." };
   }
 
+  await recordLoginAttempt(email, ip, true);
   await recordLogin(user.id);
   await createSession(user);
   redirect("/");
