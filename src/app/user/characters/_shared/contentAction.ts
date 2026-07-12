@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { verifySession } from "@/lib/dal";
+import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import {
   createCharacter,
@@ -10,9 +10,10 @@ import {
 } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
-import { notifyUserSubscribers, notifyAdminContentSubscribers } from "@/lib/follows";
+import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
+import { parseList, parseNumberList } from "@/lib/formParsing";
 import type { Character } from "@/types/character";
 
 export interface CharacterFormState {
@@ -20,23 +21,6 @@ export interface CharacterFormState {
 }
 
 const VALID_STATUSES: Character["status"][] = ["active", "retired", "deceased"];
-
-function parseList(value: FormDataEntryValue | null): string[] {
-  return [
-    ...new Set(
-      String(value ?? "")
-        .split(",")
-        .map((v) => v.trim())
-        .filter(Boolean),
-    ),
-  ];
-}
-
-function parseNumberList(value: FormDataEntryValue | null): number[] {
-  return parseList(value)
-    .map((v) => Number(v))
-    .filter((n) => Number.isInteger(n));
-}
 
 // Vereint createCharacterAction + updateCharacterAction (vorher new/actions.ts
 // + [characterId]/edit/actions.ts) zu einer Action für ContentEditor — Branch
@@ -46,11 +30,7 @@ export async function characterAction(
   formData: FormData,
 ): Promise<CharacterFormState> {
   const session = await verifySession();
-
-  const userId = Number(formData.get("userId"));
-  if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect("/user");
-  }
+  requireMatchingFormUserId(formData, session);
 
   const characterIdRaw = formData.get("characterId");
   const isEdit = characterIdRaw != null && characterIdRaw !== "";
@@ -62,9 +42,12 @@ export async function characterAction(
   // Gast-Check nur beim Anlegen (siehe createCharacterAction vorher) — die
   // Rolle wird frisch aus der DB geprüft, nicht aus dem Cookie, da eine
   // Selbstanlage player_id sofort auf den eigenen Account setzen würde.
+  // Der geladene User wird weiter unten für notifyContentChange
+  // wiederverwendet (authorName), statt ihn dafür ein zweites Mal zu laden.
+  let currentUser = null;
   if (!isEdit) {
-    const user = await getUserById(session.userId);
-    if (!user || user.role === "guest") {
+    currentUser = await getUserById(session.userId);
+    if (!currentUser || currentUser.role === "guest") {
       return { error: "Gast-Accounts können keine Charaktere anlegen." };
     }
   }
@@ -141,28 +124,24 @@ export async function characterAction(
       editingUserId: session.userId,
       bioMarkdown: bodyMarkdown || null,
     });
-    await notifyAdminContentSubscribers({
+
+    const contentUrl = `${await getBaseUrl()}/characters/${result.slug}`;
+    const preview = bodyMarkdown
+      ? synopsisExcerpt(bodyMarkdown, 140)
+      : "Die Akte wurde aktualisiert.";
+    const author = await getUserById(session.userId);
+
+    await notifyContentChange({
       contentType: "character",
       event: "updated",
       authorUserId: session.userId,
+      authorName: author?.name ?? "Unbekannt",
       contentTypeLabel: "einen Charakter",
       contentTitle: name,
-      contentUrl: `${await getBaseUrl()}/characters/${result.slug}`,
-      preview: bodyMarkdown
-        ? synopsisExcerpt(bodyMarkdown, 140)
-        : "Die Akte wurde aktualisiert.",
+      contentUrl,
+      preview,
+      notifyPublic: result.visibility === "public",
     });
-    if (result.visibility === "public") {
-      await notifyUserSubscribers({
-        authorUserId: session.userId,
-        contentTypeLabel: "einen Charakter",
-        contentTitle: name,
-        contentUrl: `${await getBaseUrl()}/characters/${result.slug}`,
-        preview: bodyMarkdown
-          ? synopsisExcerpt(bodyMarkdown, 140)
-          : "Die Akte wurde aktualisiert.",
-      });
-    }
     redirect("/user/content");
   }
 
@@ -185,28 +164,25 @@ export async function characterAction(
     ownerUserId: session.userId,
   });
   revalidateCharacter(result.slug);
+
+  const contentUrl = `${await getBaseUrl()}/characters/${result.slug}`;
+  const preview = bodyMarkdown
+    ? synopsisExcerpt(bodyMarkdown, 140)
+    : "Ein neuer Charakter wurde angelegt.";
+
   // Charaktere sind standardmäßig public (siehe scripts/schema.sql) — ein
   // neu angelegter Charakter benachrichtigt die Abonnenten des Erstellers
   // deshalb ungegated (keine separate visibility im createCharacter-Result).
-  await notifyUserSubscribers({
-    authorUserId: session.userId,
-    contentTypeLabel: "einen neuen Charakter",
-    contentTitle: name,
-    contentUrl: `${await getBaseUrl()}/characters/${result.slug}`,
-    preview: bodyMarkdown
-      ? synopsisExcerpt(bodyMarkdown, 140)
-      : "Ein neuer Charakter wurde angelegt.",
-  });
-  await notifyAdminContentSubscribers({
+  await notifyContentChange({
     contentType: "character",
     event: "created",
     authorUserId: session.userId,
+    authorName: currentUser?.name ?? "Unbekannt",
     contentTypeLabel: "einen neuen Charakter",
     contentTitle: name,
-    contentUrl: `${await getBaseUrl()}/characters/${result.slug}`,
-    preview: bodyMarkdown
-      ? synopsisExcerpt(bodyMarkdown, 140)
-      : "Ein neuer Charakter wurde angelegt.",
+    contentUrl,
+    preview,
+    notifyPublic: true,
   });
   redirect(`/characters/${result.slug}`);
 }

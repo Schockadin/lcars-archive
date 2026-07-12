@@ -88,27 +88,27 @@ export function CodeIcon() {
   );
 }
 
-export function BookmarkIcon() {
+// Gemeinsame Grundform für Bookmark/Unbookmark — die beiden unterscheiden
+// sich nur durch die vertikale Linie des Plus-Zeichens (Bookmark hinzufügen
+// vs. bereits gesetzt/entfernen), sonst identisches Lesezeichen-Symbol.
+function BookmarkGlyph({ plus }: { plus: boolean }) {
   return (
     <svg {...ICON_PROPS}>
       <g>
         <polygon points="20 22 12 16 4 22 4 2 20 2 20 22"></polygon>
-        <line x1="12" y1="6" x2="12" y2="12"></line>
+        {plus && <line x1="12" y1="6" x2="12" y2="12"></line>}
         <line x1="15" y1="9" x2="9" y2="9"></line>
       </g>
     </svg>
   );
 }
 
+export function BookmarkIcon() {
+  return <BookmarkGlyph plus />;
+}
+
 export function UnbookmarkIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <g>
-        <polygon points="20 22 12 16 4 22 4 2 20 2 20 22"></polygon>
-        <line x1="15" y1="9" x2="9" y2="9"></line>
-      </g>
-    </svg>
-  );
+  return <BookmarkGlyph plus={false} />;
 }
 
 export function SubscribeIcon() {

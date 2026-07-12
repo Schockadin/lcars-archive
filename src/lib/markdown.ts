@@ -16,6 +16,7 @@ import type {
   Html as MdastHtml,
 } from "mdast";
 import type { Handlers as MdastToHastHandlers } from "mdast-util-to-hast";
+import type { Root as HastRoot, Element as HastElement } from "hast";
 
 // Obsidian-artige [[Ziel]] / [[Ziel|Anzeigetext]] / [[Ziel#Abschnitt|Text]]
 // Verweise. Der Abschnitt (#...) wird beim Auflösen aktuell ignoriert, nur
@@ -161,6 +162,44 @@ const timelineAnchorHandlers = {
   }),
 } as unknown as MdastToHastHandlers;
 
+// remark-rehype verwirft eingebettetes rohes HTML bereits standardmäßig
+// (kein allowDangerousHtml gesetzt), lässt aber Markdown-Links/-Bilder mit
+// gefährlichem URL-Schema (z.B. "javascript:") als <a href="...">/<img
+// src="..."> unverändert durch — ein Stored-XSS-Vektor, sobald der Markdown-
+// Text von gewöhnlichen Spielern stammt (Charakter-Bios, Missions-/Log-Texte,
+// Archiv-Einträge), nicht nur von vertrauenswürdigem GM-Vault-Content. Volles
+// rehype-sanitize (wie in markdownToSafeHtml) kommt hier bewusst nicht zum
+// Einsatz: dessen clobber-Schutz würde jede id (u.a. die von rehypeSlug
+// erzeugten Überschriften-Anker und die timelineAnchor-Spans oben) mit
+// "user-content-" prefixen und damit bestehende Anker-Links (Toc.tsx,
+// Timeline-Seite) brechen. Stattdessen nur die URL-Schemata von href/src auf
+// eine feste Positivliste beschränken — gezielt genau die im Kommentar oben
+// beschriebene Lücke, ohne sonstiges Verhalten zu verändern.
+const SAFE_URL_PROTOCOLS = new Set(["http:", "https:", "mailto:", "wikilink:"]);
+const URL_PROTOCOL_RE = /^\s*([a-z][a-z0-9+.-]*):/i;
+
+function isSafeUrl(url: string): boolean {
+  const match = URL_PROTOCOL_RE.exec(url);
+  if (!match) return true; // relative/protokoll-loser Pfad — unbedenklich
+  return SAFE_URL_PROTOCOLS.has(match[1].toLowerCase() + ":");
+}
+
+function rehypeSafeUrls() {
+  return (tree: HastRoot) => {
+    visit(tree, "element", (node: HastElement) => {
+      if (node.tagName === "a" && typeof node.properties?.href === "string") {
+        if (!isSafeUrl(node.properties.href)) node.properties.href = "";
+      }
+      if (
+        (node.tagName === "img" || node.tagName === "source") &&
+        typeof node.properties?.src === "string"
+      ) {
+        if (!isSafeUrl(node.properties.src)) node.properties.src = "";
+      }
+    });
+  };
+}
+
 // Markdown bis zum private-Kommentar kürzen (GM-only-Inhalt danach entfernen).
 // Von markdownToHtml genutzt, aber auch vom Timeline-Ingest (scripts/ingest/
 // timeline.ts), der <!-- timeline -->-Marker nur im öffentlichen Teil sucht.
@@ -180,6 +219,7 @@ export async function markdownToHtml(markdown: string): Promise<string> {
     .use(remarkTimelineAnchors)
     .use(remarkRehype, { handlers: timelineAnchorHandlers })
     .use(rehypeSlug)
+    .use(rehypeSafeUrls)
     .use(rehypeStringify)
     .process(publicContent);
 

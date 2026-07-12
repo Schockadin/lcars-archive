@@ -1,6 +1,6 @@
 // src/context/RuneProvider.tsx
 "use client";
-import { useCallback, useRef, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useRef, useState, type ReactNode } from "react";
 import { NeoContextValue, NeoContext } from "./NeoContext";
 import type { NavKey } from "@/lib/nav";
 
@@ -49,20 +49,39 @@ export function NeoProvider({ children }: NeoProviderProps) {
     });
   }, []);
 
-  const value: NeoContextValue = {
-    activeSection,
-    setActiveSection,
-    title,
-    setTitle,
-    crumbLabels,
-    setCrumbLabel,
-    clearCrumbLabel,
-    readingMode,
-    setReadingMode,
-    toggleReadingMode,
-    preserveReadingModeOnce,
-    resetReadingModeOnUnmount,
-  };
+  // Memoisiert: ohne useMemo wäre value bei jedem Render ein neues Objekt,
+  // wodurch ALLE Consumer (BreadCrumbNav, SidebarMenu, ReadingModeToggle, …)
+  // bei jeder Zustandsänderung neu rendern würden, unabhängig davon, welchen
+  // Ausschnitt sie tatsächlich lesen. Setter/Callbacks sind bereits stabil
+  // (useState-Setter bzw. useCallback), nur die Primitiv-/Objektwerte lösen
+  // eine neue Referenz aus.
+  const value: NeoContextValue = useMemo(
+    () => ({
+      activeSection,
+      setActiveSection,
+      title,
+      setTitle,
+      crumbLabels,
+      setCrumbLabel,
+      clearCrumbLabel,
+      readingMode,
+      setReadingMode,
+      toggleReadingMode,
+      preserveReadingModeOnce,
+      resetReadingModeOnUnmount,
+    }),
+    [
+      activeSection,
+      title,
+      crumbLabels,
+      setCrumbLabel,
+      clearCrumbLabel,
+      readingMode,
+      toggleReadingMode,
+      preserveReadingModeOnce,
+      resetReadingModeOnUnmount,
+    ],
+  );
 
   return <NeoContext.Provider value={value}>{children}</NeoContext.Provider>;
 }

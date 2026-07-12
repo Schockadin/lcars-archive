@@ -23,7 +23,7 @@ export default function Loading() {
         <section key={i} className="mb-[20px] w-full">
           <LcarsSkeleton
             accent
-            className="ml-[12px] mb-[8px] h-[var(--lcars-datarow-h)] w-[200px]"
+            className="ml-[12px] mb-[8px] h-lcars-datarow w-[200px]"
             style={{ background: group.color, opacity: 0.5 }}
           />
           <div className="flex flex-col gap-[3px]">

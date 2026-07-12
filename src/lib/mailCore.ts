@@ -5,6 +5,22 @@
 // (siehe next/dist/compiled/server-only), unter tsx/Node direkt nicht.
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
+// Alle Templates unten interpolieren User-Content (Charakter-/Mission-/
+// Dialog-Titel, Anzeigenamen, Vorschau-Auszüge aus Bios/Logs) direkt in
+// HTML-Mails an ANDERE User — ohne Escaping wäre z.B. ein Charaktername wie
+// `<img src=x onerror=...>` ein HTML-Injection-/Phishing-Vektor gegen jeden
+// Abonnenten/Gesprächspartner, der die Mail öffnet. Jeder interpolierte Wert
+// (auch die serverseitig gebauten URLs, aus Konsistenzgründen) läuft daher
+// durch escapeHtml().
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 export interface SendEmailResult {
   sent: boolean;
   error?: string;
@@ -66,17 +82,18 @@ export async function sendActivationEmail(input: {
   name: string;
   activationUrl: string;
 }): Promise<SendEmailResult> {
+  const activationUrl = escapeHtml(input.activationUrl);
   return sendEmail({
     to: input.to,
     subject: "Dein Zugang zum Neo Archive",
     html: `
-      <p>Hallo ${input.name},</p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
       <p>für dich wurde ein Zugang zum Neo Archive angelegt.</p>
       <p>
         Klicke auf den folgenden Link, um dein Konto zu aktivieren und ein
         Passwort festzulegen:
       </p>
-      <p><a href="${input.activationUrl}">${input.activationUrl}</a></p>
+      <p><a href="${activationUrl}">${activationUrl}</a></p>
       <p>Der Link ist 7 Tage gültig.</p>
       <p>— Neo Archive</p>
     `,
@@ -96,16 +113,17 @@ export async function sendPasswordResetEmail(input: {
   name: string;
   resetUrl: string;
 }): Promise<SendEmailResult> {
+  const resetUrl = escapeHtml(input.resetUrl);
   return sendEmail({
     to: input.to,
     subject: "Neues Passwort für dein Neo-Archive-Konto",
     html: `
-      <p>Hallo ${input.name},</p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
       <p>
         Klicke auf den folgenden Link, um ein neues Passwort für dein
         Neo-Archive-Konto festzulegen:
       </p>
-      <p><a href="${input.resetUrl}">${input.resetUrl}</a></p>
+      <p><a href="${resetUrl}">${resetUrl}</a></p>
       <p>Der Link ist 7 Tage gültig. Hast du das nicht angefordert, kannst du diese Mail ignorieren.</p>
       <p>— Neo Archive</p>
     `,
@@ -125,9 +143,9 @@ export async function sendPasswordResetRequestedEmail(input: {
     to: input.to,
     subject: `Passwort-Reset angefordert: ${input.requesterName}`,
     html: `
-      <p>Hallo ${input.name},</p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
       <p>
-        ${input.requesterName} (${input.requesterEmail}) hat über
+        ${escapeHtml(input.requesterName)} (${escapeHtml(input.requesterEmail)}) hat über
         "Passwort vergessen" einen Reset-Link angefordert.
       </p>
       <p>— Neo Archive</p>
@@ -144,14 +162,17 @@ export async function sendSubscriptionDigest(input: {
   items: { title: string; href: string }[];
 }): Promise<SendEmailResult> {
   const list = input.items
-    .map((item) => `<li><a href="${item.href}">${item.title}</a></li>`)
+    .map(
+      (item) =>
+        `<li><a href="${escapeHtml(item.href)}">${escapeHtml(item.title)}</a></li>`,
+    )
     .join("\n");
 
   return sendEmail({
     to: input.to,
     subject: "Neuigkeiten zu deinen Abos im Neo Archive",
     html: `
-      <p>Hallo ${input.name},</p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
       <p>bei folgenden von dir abonnierten Inhalten gibt es Neuigkeiten:</p>
       <ul>${list}</ul>
       <p>— Neo Archive</p>
@@ -170,13 +191,14 @@ export async function sendDialogueStartedEmail(input: {
   dialogueTitle: string;
   dialogueUrl: string;
 }): Promise<SendEmailResult> {
+  const dialogueUrl = escapeHtml(input.dialogueUrl);
   return sendEmail({
     to: input.to,
     subject: `Neues Gespräch: "${input.dialogueTitle}"`,
     html: `
-      <p>Hallo ${input.name},</p>
-      <p>${input.fromCharacterName} hat ein neues Gespräch "${input.dialogueTitle}" mit dir begonnen:</p>
-      <p><a href="${input.dialogueUrl}">${input.dialogueUrl}</a></p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>${escapeHtml(input.fromCharacterName)} hat ein neues Gespräch "${escapeHtml(input.dialogueTitle)}" mit dir begonnen:</p>
+      <p><a href="${dialogueUrl}">${dialogueUrl}</a></p>
       <p>— Neo Archive</p>
     `,
   });
@@ -188,7 +210,7 @@ export async function sendDialogueStartedEmail(input: {
 // die Push-Pendants in src/lib/pushCore.ts-Aufrufern, die denselben
 // preview-Text im body verwenden).
 function previewBlock(preview: string): string {
-  return `<p style="color:#666;font-style:italic;">${preview}</p>`;
+  return `<p style="color:#666;font-style:italic;">${escapeHtml(preview)}</p>`;
 }
 
 // Direkt nach jeder neuen Dialog-Nachricht an den jeweils anderen
@@ -202,14 +224,15 @@ export async function sendDialogueMessageEmail(input: {
   dialogueUrl: string;
   preview: string;
 }): Promise<SendEmailResult> {
+  const dialogueUrl = escapeHtml(input.dialogueUrl);
   return sendEmail({
     to: input.to,
     subject: `Neue Nachricht in "${input.dialogueTitle}"`,
     html: `
-      <p>Hallo ${input.name},</p>
-      <p>${input.fromCharacterName} hat im Gespräch "${input.dialogueTitle}" geantwortet:</p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>${escapeHtml(input.fromCharacterName)} hat im Gespräch "${escapeHtml(input.dialogueTitle)}" geantwortet:</p>
       ${previewBlock(input.preview)}
-      <p><a href="${input.dialogueUrl}">${input.dialogueUrl}</a></p>
+      <p><a href="${dialogueUrl}">${dialogueUrl}</a></p>
       <p>— Neo Archive</p>
     `,
   });
@@ -226,13 +249,14 @@ export async function sendCharacterDialogueClosedEmail(input: {
   dialogueTitle: string;
   dialogueUrl: string;
 }): Promise<SendEmailResult> {
+  const dialogueUrl = escapeHtml(input.dialogueUrl);
   return sendEmail({
     to: input.to,
     subject: `Gespräch mit ${input.characterName} abgeschlossen`,
     html: `
-      <p>Hallo ${input.name},</p>
-      <p>das Gespräch "${input.dialogueTitle}", an dem ${input.characterName} teilgenommen hat, wurde abgeschlossen.</p>
-      <p><a href="${input.dialogueUrl}">${input.dialogueUrl}</a></p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>das Gespräch "${escapeHtml(input.dialogueTitle)}", an dem ${escapeHtml(input.characterName)} teilgenommen hat, wurde abgeschlossen.</p>
+      <p><a href="${dialogueUrl}">${dialogueUrl}</a></p>
       <p>— Neo Archive</p>
     `,
   });
@@ -250,9 +274,9 @@ export async function sendDialogueDeletedEmail(input: {
     to: input.to,
     subject: `Gespräch gelöscht: "${input.dialogueTitle}"`,
     html: `
-      <p>Hallo ${input.name},</p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
       <p>
-        das Gespräch "${input.dialogueTitle}", an dem du beteiligt warst,
+        das Gespräch "${escapeHtml(input.dialogueTitle)}", an dem du beteiligt warst,
         wurde von der Administration gelöscht.
       </p>
       <p>— Neo Archive</p>
@@ -273,14 +297,15 @@ export async function sendCharacterUpdatedEmail(input: {
   characterUrl: string;
   preview: string;
 }): Promise<SendEmailResult> {
+  const characterUrl = escapeHtml(input.characterUrl);
   return sendEmail({
     to: input.to,
     subject: `Aktualisiert: ${input.characterName}`,
     html: `
-      <p>Hallo ${input.name},</p>
-      <p>die Akte von ${input.characterName}, den du abonniert hast, wurde aktualisiert:</p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>die Akte von ${escapeHtml(input.characterName)}, den du abonniert hast, wurde aktualisiert:</p>
       ${previewBlock(input.preview)}
-      <p><a href="${input.characterUrl}">${input.characterUrl}</a></p>
+      <p><a href="${characterUrl}">${characterUrl}</a></p>
       <p>— Neo Archive</p>
     `,
   });
@@ -299,17 +324,18 @@ export async function sendNewMissionLogEmail(input: {
   logUrl: string;
   preview: string;
 }): Promise<SendEmailResult> {
+  const logUrl = escapeHtml(input.logUrl);
   return sendEmail({
     to: input.to,
     subject: `Neuer Log von ${input.characterName}: "${input.logTitle}"`,
     html: `
-      <p>Hallo ${input.name},</p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
       <p>
-        ${input.characterName}, den du abonniert hast, hat einen neuen
-        Mission-Log in "${input.missionTitle}" verfasst: "${input.logTitle}"
+        ${escapeHtml(input.characterName)}, den du abonniert hast, hat einen neuen
+        Mission-Log in "${escapeHtml(input.missionTitle)}" verfasst: "${escapeHtml(input.logTitle)}"
       </p>
       ${previewBlock(input.preview)}
-      <p><a href="${input.logUrl}">${input.logUrl}</a></p>
+      <p><a href="${logUrl}">${logUrl}</a></p>
       <p>— Neo Archive</p>
     `,
   });
@@ -328,19 +354,21 @@ export async function sendMissionParticipantEmail(input: {
   activateUrl: string;
   preview: string;
 }): Promise<SendEmailResult> {
+  const missionUrl = escapeHtml(input.missionUrl);
+  const activateUrl = escapeHtml(input.activateUrl);
   return sendEmail({
     to: input.to,
     subject: `Neue Mission: "${input.missionTitle}"`,
     html: `
-      <p>Hallo ${input.name},</p>
-      <p>dein Charakter nimmt an der neuen Mission "${input.missionTitle}" teil:</p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>dein Charakter nimmt an der neuen Mission "${escapeHtml(input.missionTitle)}" teil:</p>
       ${previewBlock(input.preview)}
-      <p><a href="${input.missionUrl}">${input.missionUrl}</a></p>
+      <p><a href="${missionUrl}">${missionUrl}</a></p>
       <p>
         Die Mission ist noch nicht automatisch abonniert — klicke hier, um
         über Neuigkeiten benachrichtigt zu werden:
       </p>
-      <p><a href="${input.activateUrl}">${input.activateUrl}</a></p>
+      <p><a href="${activateUrl}">${activateUrl}</a></p>
       <p>— Neo Archive</p>
     `,
   });
@@ -362,17 +390,18 @@ export async function sendUserContentEmail(input: {
   contentUrl: string;
   preview: string;
 }): Promise<SendEmailResult> {
+  const contentUrl = escapeHtml(input.contentUrl);
   return sendEmail({
     to: input.to,
     subject: `Neuer öffentlicher Inhalt von ${input.authorName}: "${input.contentTitle}"`,
     html: `
-      <p>Hallo ${input.name},</p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
       <p>
-        ${input.authorName}, den/die du abonniert hast, hat ${input.contentTypeLabel}
-        veröffentlicht: "${input.contentTitle}"
+        ${escapeHtml(input.authorName)}, den/die du abonniert hast, hat ${escapeHtml(input.contentTypeLabel)}
+        veröffentlicht: "${escapeHtml(input.contentTitle)}"
       </p>
       ${previewBlock(input.preview)}
-      <p><a href="${input.contentUrl}">${input.contentUrl}</a></p>
+      <p><a href="${contentUrl}">${contentUrl}</a></p>
       <p>— Neo Archive</p>
     `,
   });
@@ -392,17 +421,18 @@ export async function sendCharacterMissionParticipationEmail(input: {
   missionUrl: string;
   preview: string;
 }): Promise<SendEmailResult> {
+  const missionUrl = escapeHtml(input.missionUrl);
   return sendEmail({
     to: input.to,
     subject: `${input.characterName} ist jetzt Teil von „${input.missionTitle}"`,
     html: `
-      <p>Hallo ${input.name},</p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
       <p>
-        ${input.characterName}, den du abonniert hast, nimmt jetzt an der
-        Mission „${input.missionTitle}" teil:
+        ${escapeHtml(input.characterName)}, den du abonniert hast, nimmt jetzt an der
+        Mission „${escapeHtml(input.missionTitle)}" teil:
       </p>
       ${previewBlock(input.preview)}
-      <p><a href="${input.missionUrl}">${input.missionUrl}</a></p>
+      <p><a href="${missionUrl}">${missionUrl}</a></p>
       <p>— Neo Archive</p>
     `,
   });
@@ -422,17 +452,18 @@ export async function sendUserMissionParticipationEmail(input: {
   missionUrl: string;
   preview: string;
 }): Promise<SendEmailResult> {
+  const missionUrl = escapeHtml(input.missionUrl);
   return sendEmail({
     to: input.to,
     subject: `${input.authorName}s Charakter ${input.characterName} ist jetzt Teil von „${input.missionTitle}"`,
     html: `
-      <p>Hallo ${input.name},</p>
+      <p>Hallo ${escapeHtml(input.name)},</p>
       <p>
-        ${input.authorName}, den/die du abonniert hast, spielt mit
-        ${input.characterName} jetzt in der Mission „${input.missionTitle}" mit:
+        ${escapeHtml(input.authorName)}, den/die du abonniert hast, spielt mit
+        ${escapeHtml(input.characterName)} jetzt in der Mission „${escapeHtml(input.missionTitle)}" mit:
       </p>
       ${previewBlock(input.preview)}
-      <p><a href="${input.missionUrl}">${input.missionUrl}</a></p>
+      <p><a href="${missionUrl}">${missionUrl}</a></p>
       <p>— Neo Archive</p>
     `,
   });

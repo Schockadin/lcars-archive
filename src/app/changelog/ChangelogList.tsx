@@ -67,7 +67,7 @@ export default function ChangelogList({
   return (
     <div className="flex flex-col gap-[16px]">
       <LcarsSortSwitch
-        className="flex gap-[10px] w-full mb-[4px]"
+        className="flex w-full mb-[4px]"
         options={[{ key: "version", label: "Version" }]}
         sortKey="version"
         sortDir={sortDir}

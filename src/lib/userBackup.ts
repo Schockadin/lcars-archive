@@ -17,6 +17,7 @@ export interface UserBackupRecord {
   previous_login_at: string | null;
   last_visit_at: string | null;
   last_dashboard_visit_at: string | null;
+  notify_content_types: string[];
 }
 
 // Admin-only Vollsicherung aller User-Datensätze inkl. password_hash, damit
@@ -30,7 +31,7 @@ export async function getAllUsersBackup(): Promise<UserBackupRecord[]> {
       email, name, slug, role, is_active, password_hash,
       requires_activation, email_notifications_enabled,
       push_notifications_enabled, created_at, last_login_at, previous_login_at,
-      last_visit_at, last_dashboard_visit_at
+      last_visit_at, last_dashboard_visit_at, notify_content_types
     FROM users
     ORDER BY id
   `;
@@ -68,12 +69,13 @@ export async function restoreUsersBackup(
           email, name, slug, role, is_active, password_hash,
           requires_activation, email_notifications_enabled,
           push_notifications_enabled, created_at, last_login_at, previous_login_at,
-          last_visit_at, last_dashboard_visit_at
+          last_visit_at, last_dashboard_visit_at, notify_content_types
         ) VALUES (
           ${r.email}, ${r.name}, ${r.slug}, ${r.role}, ${r.is_active}, ${r.password_hash},
           ${r.requires_activation}, ${r.email_notifications_enabled},
           ${r.push_notifications_enabled}, ${r.created_at}, ${r.last_login_at},
-          ${r.previous_login_at}, ${r.last_visit_at}, ${r.last_dashboard_visit_at}
+          ${r.previous_login_at}, ${r.last_visit_at}, ${r.last_dashboard_visit_at},
+          ${r.notify_content_types}
         )
         ON CONFLICT (email) DO UPDATE SET
           name = EXCLUDED.name,
@@ -87,7 +89,8 @@ export async function restoreUsersBackup(
           last_login_at = EXCLUDED.last_login_at,
           previous_login_at = EXCLUDED.previous_login_at,
           last_visit_at = EXCLUDED.last_visit_at,
-          last_dashboard_visit_at = EXCLUDED.last_dashboard_visit_at
+          last_dashboard_visit_at = EXCLUDED.last_dashboard_visit_at,
+          notify_content_types = EXCLUDED.notify_content_types
         RETURNING (xmax = 0) AS inserted
       `;
       if (rows[0]?.inserted) {

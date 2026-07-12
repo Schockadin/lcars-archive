@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { verifySession } from "@/lib/dal";
+import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import {
   missionSlugExists,
@@ -11,8 +11,8 @@ import {
   getMissionParticipantUsers,
 } from "@/lib/missions";
 import { getParticipantCharactersForNotification } from "@/lib/characters";
-import { getCharacterSubscribers } from "@/lib/dialogues";
-import { getUserSubscribers, notifyAdminContentSubscribers } from "@/lib/follows";
+import { getCharacterSubscribersForSlugs } from "@/lib/dialogues";
+import { getUserSubscribersForSlugs, notifyContentChange } from "@/lib/follows";
 import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
@@ -24,6 +24,7 @@ import {
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
+import { parseList } from "@/lib/formParsing";
 
 export interface MissionFormState {
   error?: string;
@@ -42,11 +43,7 @@ export async function missionAction(
   formData: FormData,
 ): Promise<MissionFormState> {
   const session = await verifySession();
-
-  const userId = Number(formData.get("userId"));
-  if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect("/user");
-  }
+  requireMatchingFormUserId(formData, session);
 
   const user = await getUserById(session.userId);
   if (!user) {
@@ -80,14 +77,7 @@ export async function missionAction(
     return { error: "Ungültiges Enddatum." };
   }
 
-  const tags = [
-    ...new Set(
-      String(formData.get("tags") ?? "")
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    ),
-  ];
+  const tags = parseList(formData.get("tags"));
 
   const teaser = String(formData.get("teaser") ?? "").trim() || null;
 
@@ -134,14 +124,16 @@ export async function missionAction(
     // Liste.
     await setMissionParticipants(missionId!, participantCharacterIds);
     revalidateMission(result.slug);
-    await notifyAdminContentSubscribers({
+    await notifyContentChange({
       contentType: "mission",
       event: "updated",
       authorUserId: session.userId,
+      authorName: user.name,
       contentTypeLabel: "eine Mission",
       contentTitle: title,
       contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
       preview: synopsisExcerpt(teaser ?? bodyMarkdown, 140),
+      notifyPublic: false,
     });
     redirect("/user/content");
   }
@@ -170,14 +162,16 @@ export async function missionAction(
     ownerUserId: user.id,
   });
   revalidateMission(result.slug);
-  await notifyAdminContentSubscribers({
+  await notifyContentChange({
     contentType: "mission",
     event: "created",
     authorUserId: session.userId,
+    authorName: user.name,
     contentTypeLabel: "eine neue Mission",
     contentTitle: title,
     contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
     preview: synopsisExcerpt(teaser ?? bodyMarkdown, 140),
+    notifyPublic: false,
   });
 
   if (participantCharacterIds.length > 0) {
@@ -230,9 +224,21 @@ export async function missionAction(
     const participantCharacters =
       await getParticipantCharactersForNotification(participantCharacterIds);
 
+    // Subscriber für alle teilnehmenden Charaktere/Spieler in je einer Query
+    // vorab laden (statt pro Charakter einzeln, N+1) — bei N Teilnehmern
+    // sonst bis zu 2N sequentielle Anfragen in dieser einen Server Action.
+    const playerSlugs = participantCharacters
+      .map((c) => c.playerSlug)
+      .filter((slug): slug is string => slug != null);
+    const [characterSubscribersBySlug, userSubscribersBySlug] =
+      await Promise.all([
+        getCharacterSubscribersForSlugs(participantCharacters.map((c) => c.slug)),
+        getUserSubscribersForSlugs(playerSlugs),
+      ]);
+
     for (const character of participantCharacters) {
       const characterSubscribers = (
-        await getCharacterSubscribers(character.slug)
+        characterSubscribersBySlug.get(character.slug) ?? []
       ).filter(
         (s) => s.id !== session.userId && s.id !== character.playerId,
       );
@@ -263,7 +269,7 @@ export async function missionAction(
 
       if (character.playerId && character.playerSlug) {
         const userSubscribers = (
-          await getUserSubscribers(character.playerSlug)
+          userSubscribersBySlug.get(character.playerSlug) ?? []
         ).filter(
           (s) => s.id !== session.userId && s.id !== character.playerId,
         );

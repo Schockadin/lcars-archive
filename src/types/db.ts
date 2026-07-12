@@ -32,4 +32,10 @@ export interface User {
   // Opt-in. Nur für Admins in der UI editierbar, die Spalte existiert aber
   // für jeden User (ungenutzt bei anderen Rollen).
   notify_content_types: string[];
+  // Wird bei jeder Passwortänderung (setPassword) erhöht und im
+  // Session-Cookie mitgeführt (siehe SessionPayload.sessionVersion) — ein
+  // Cookie mit veraltetem Wert wird von getCurrentUser() als abgelaufen
+  // behandelt, damit ein gestohlenes Cookie eine Passwortänderung nicht
+  // überlebt.
+  session_version: number;
 }

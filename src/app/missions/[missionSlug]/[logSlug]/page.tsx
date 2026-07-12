@@ -54,7 +54,8 @@ export default async function LogPage({ params }: Props) {
   const nav = log.author_slug
     ? await getAuthorLogNav(log.author_slug, log.slug)
     : { prev: null, next: null };
-  const owners = viewer?.role === "admin" ? await listAllUsers() : [];
+  const allUsers = viewer?.role === "admin" ? await listAllUsers() : [];
+  const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
   return (
     <>

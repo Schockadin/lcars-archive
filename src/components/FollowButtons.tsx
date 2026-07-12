@@ -23,15 +23,24 @@ export default function FollowButtons({
   targetType,
   targetSlug,
   subscribeOnly = false,
+  showShare = true,
+  initialState,
 }: {
   targetType: FollowTargetType;
   targetSlug: string;
   subscribeOnly?: boolean;
+  showShare?: boolean;
+  // Überspringt den eigenen Client-Fetch, wenn der Aufrufer den Stand schon
+  // hat (z.B. UsersTable.tsx: ein gebündelter Batch-Fetch für alle Zeilen
+  // statt eines Fetches pro FollowButtons-Instanz, siehe getFollowStatuses
+  // in lib/follows.ts).
+  initialState?: FollowState;
 }) {
-  const [state, setState] = useState<FollowState | null>(null);
+  const [state, setState] = useState<FollowState | null>(initialState ?? null);
   const [pending, setPending] = useState<"bookmark" | "subscribe" | null>(null);
 
   useEffect(() => {
+    if (initialState) return;
     let cancelled = false;
     getFollowState(targetType, targetSlug).then((result) => {
       if (!cancelled) setState(result);
@@ -39,7 +48,7 @@ export default function FollowButtons({
     return () => {
       cancelled = true;
     };
-  }, [targetType, targetSlug]);
+  }, [targetType, targetSlug, initialState]);
 
   // Kein useOptimistic hier: der Stand kommt per Client-Fetch (useEffect
   // oben), nicht als Prop von einer Server Component — es gibt also keine
@@ -97,7 +106,7 @@ export default function FollowButtons({
           {state.subscribed ? <UnsubscribeIcon /> : <SubscribeIcon />}
         </button>
       )}
-      <ShareMenu />
+      {showShare && <ShareMenu />}
     </div>
   );
 }

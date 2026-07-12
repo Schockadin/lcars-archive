@@ -1,6 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
-import { verifySession } from "@/lib/dal";
+import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
+import { getUserById } from "@/lib/users";
 import {
   createArchiveEntry,
   updateOwnArchiveEntryContent,
@@ -9,9 +10,10 @@ import {
 import { isArchiveCategory } from "@/lib/archiveFormat";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
-import { notifyUserSubscribers, notifyAdminContentSubscribers } from "@/lib/follows";
+import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
+import { parseList } from "@/lib/formParsing";
 import {
   getAttributeFields,
   getReferenceFields,
@@ -49,11 +51,7 @@ export async function archiveEntryAction(
   formData: FormData,
 ): Promise<ArchiveEntryFormState> {
   const session = await verifySession();
-
-  const userId = Number(formData.get("userId"));
-  if (!Number.isInteger(userId) || userId !== session.userId) {
-    redirect("/user");
-  }
+  requireMatchingFormUserId(formData, session);
 
   const entryIdRaw = formData.get("entryId");
   const isEdit = entryIdRaw != null && entryIdRaw !== "";
@@ -70,14 +68,7 @@ export async function archiveEntryAction(
     return { error: "Ungültige Kategorie." };
   }
 
-  const tags = [
-    ...new Set(
-      String(formData.get("tags") ?? "")
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-    ),
-  ];
+  const tags = parseList(formData.get("tags"));
 
   const summary = String(formData.get("summary") ?? "").trim() || null;
 
@@ -118,24 +109,22 @@ export async function archiveEntryAction(
       return { error: "Eintrag nicht gefunden oder keine Berechtigung." };
     }
     revalidateArchiveEntry(result.slug);
-    await notifyAdminContentSubscribers({
+
+    const contentUrl = `${await getBaseUrl()}/archive/${result.slug}`;
+    const preview = synopsisExcerpt(bodyMarkdown, 140);
+    const author = await getUserById(session.userId);
+
+    await notifyContentChange({
       contentType: "archive_entry",
       event: "updated",
       authorUserId: session.userId,
+      authorName: author?.name ?? "Unbekannt",
       contentTypeLabel: "einen Archiv-Eintrag",
       contentTitle: title,
-      contentUrl: `${await getBaseUrl()}/archive/${result.slug}`,
-      preview: synopsisExcerpt(bodyMarkdown, 140),
+      contentUrl,
+      preview,
+      notifyPublic: result.visibility === "public",
     });
-    if (result.visibility === "public") {
-      await notifyUserSubscribers({
-        authorUserId: session.userId,
-        contentTypeLabel: "einen Archiv-Eintrag",
-        contentTitle: title,
-        contentUrl: `${await getBaseUrl()}/archive/${result.slug}`,
-        preview: synopsisExcerpt(bodyMarkdown, 140),
-      });
-    }
     redirect("/user/content");
   }
 
@@ -151,24 +140,24 @@ export async function archiveEntryAction(
     ownerUserId: session.userId,
   });
   revalidateArchiveEntry(result.slug);
+
+  const contentUrl = `${await getBaseUrl()}/archive/${result.slug}`;
+  const preview = synopsisExcerpt(bodyMarkdown, 140);
+  const author = await getUserById(session.userId);
+
   // Archiv-Einträge sind standardmäßig public (siehe scripts/schema.sql) —
   // ein neu angelegter Eintrag benachrichtigt die Abonnenten des Erstellers
   // deshalb ungegated (keine separate visibility im createArchiveEntry-Result).
-  await notifyUserSubscribers({
-    authorUserId: session.userId,
-    contentTypeLabel: "einen neuen Archiv-Eintrag",
-    contentTitle: title,
-    contentUrl: `${await getBaseUrl()}/archive/${result.slug}`,
-    preview: synopsisExcerpt(bodyMarkdown, 140),
-  });
-  await notifyAdminContentSubscribers({
+  await notifyContentChange({
     contentType: "archive_entry",
     event: "created",
     authorUserId: session.userId,
+    authorName: author?.name ?? "Unbekannt",
     contentTypeLabel: "einen neuen Archiv-Eintrag",
     contentTitle: title,
-    contentUrl: `${await getBaseUrl()}/archive/${result.slug}`,
-    preview: synopsisExcerpt(bodyMarkdown, 140),
+    contentUrl,
+    preview,
+    notifyPublic: true,
   });
   redirect(`/archive/${result.slug}`);
 }

@@ -32,15 +32,22 @@
   text-decoration: underline;
 }
 
-/* Obsidian-artige [[Wiki-Links]] – aufgelöst vs. Ziel nicht gefunden */
-.lcars-wikilink {
+/* Obsidian-artige [[Wiki-Links]] – aufgelöst vs. Ziel nicht gefunden.
+   .lcars-link-text ist dieselbe Optik für Klartext-Links (z.B. "Bearbeiten"),
+   nur mit cursor: pointer zusätzlich. */
+.lcars-wikilink,
+.lcars-link-text {
   color: var(--lcars-text-data);
   text-decoration: none;
   transition: 250ms;
 }
-.lcars-wikilink:hover {
+.lcars-wikilink:hover,
+.lcars-link-text:hover {
   color: var(--lcars-blue);
   text-decoration: underline;
+}
+.lcars-link-text {
+  cursor: pointer;
 }
 
 .lcars-wikilink--missing {
@@ -53,15 +60,17 @@
   text-decoration: none;
   border-bottom: 1px dashed var(--lcars-red);
 }
-.lcars-link-text {
-  color: var(--lcars-text-data);
-  text-decoration: none;
-  cursor: pointer;
-  transition: 250ms;
-}
-.lcars-link-text:hover {
-  color: var(--lcars-blue);
-  text-decoration: underline;
+
+/* Gemeinsame Typografie für .char-file-pill (char-file.css, Personalakte)
+   und .character-entry-stub (character.css, Charakterliste) — beide sind
+   kleine, dunkel eingefärbte Mono-Label-Chips, nur letter-spacing
+   unterscheidet sich je Kontext (bleibt in der jeweiligen eigenen Regel). */
+.char-file-pill,
+.character-entry-stub {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--lcars-bg);
 }
 
 /* Generischer Leerzustand-Hinweis ("Noch keine Einträge…") — domänenweit
@@ -224,16 +233,6 @@
   border-top: 1px solid var(--lcars-border);
 }
 
-/* AdminActionsMenu.tsx — bündelt die Admin-Content-Tools als DataRow-
-   Akkordeon (siehe accordion.css), hier nur der Abstand zwischen den
-   einzelnen Tool-Buttons im aufgeklappten Panel. */
-.admin-actions-menu-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  align-items: end;
-}
-
 /* TimelineMarkerButton.tsx — Modal zum Einfügen eines Zeitleisten-Markers
    an der Cursor-Position, gleiches Overlay-Muster wie die Portrait-
    Lightbox (character.css .portrait-overlay), nur als Formular-Karte statt
@@ -270,7 +269,6 @@
 .markdown-editor-tabs {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
   margin-left: auto;
 }
 .markdown-editor-preview {
@@ -336,19 +334,15 @@
 }
 .markdown-hint-popover-row code {
   flex: 0 0 auto;
-  font-family: var(--font-share-tech-mono), monospace;
-  color: var(--lcars-text-data);
-  background: var(--lcars-surface-2);
-  padding: 1px 6px;
-  border-radius: 4px;
   white-space: nowrap;
 }
 .markdown-hint-popover-row span:last-child {
   color: var(--lcars-text-light);
 }
 
-/* /tutorial (TutorialPage) — Cheatsheet-Tabelle + Inline-Code, gleicher
-   Code-Stil wie .markdown-hint-popover-row code oben. */
+/* /tutorial (TutorialPage) — Cheatsheet-Tabelle + Inline-Code, gemeinsamer
+   Code-Stil mit .markdown-hint-popover-row code oben. */
+.markdown-hint-popover-row code,
 .tutorial-content code {
   font-family: var(--font-share-tech-mono), monospace;
   color: var(--lcars-text-data);

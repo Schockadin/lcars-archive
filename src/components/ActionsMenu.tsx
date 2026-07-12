@@ -1,7 +1,6 @@
 "use client";
 import Link from "next/link";
 import { Viewer } from "@/lib/visibility";
-import { UserWithCharacters } from "@/lib/users";
 import { Character } from "@/types/character";
 import OwnerSelect from "./OwnerSelect";
 import AdminVisibilitySelect from "./AdminVisibilitySelect";
@@ -43,7 +42,7 @@ const VISIBILITY_CONTENT_TYPE: Partial<
 
 interface ActionMenuProps {
   viewer: Viewer | null;
-  owners: UserWithCharacters[];
+  owners: { id: number; name: string }[];
   content: Character | MissionDetail | MissionLogDetail | ArchiveEntryDetail;
   contentType: ContentToolType;
   // Optional: Mission-Logs sind nicht followbar (siehe FollowTargetType in
@@ -58,6 +57,11 @@ interface ActionMenuProps {
   // übergeben. Der No-op-Default lebt deshalb hier in der Client Component
   // selbst statt von außen durchgereicht zu werden.
   onEdit?: () => void;
+  // Abgeschlossene Dialoge (archive/[slug]/ArchiveEntryBody.tsx) bleiben
+  // vollständig read-only, auch für den ursprünglichen Autor (siehe
+  // DialogueThread.tsx) — dafür gibt es keinen Inline-Editor, der onEdit
+  // liest, der Bearbeiten-Button wäre dort also nur eine tote Schaltfläche.
+  hideEdit?: boolean;
 }
 
 export default function ActionsMenu({
@@ -68,6 +72,7 @@ export default function ActionsMenu({
   followType,
   playerId,
   onEdit = () => {},
+  hideEdit = false,
 }: ActionMenuProps) {
   const visibilityContentType = VISIBILITY_CONTENT_TYPE[contentType];
 
@@ -78,7 +83,7 @@ export default function ActionsMenu({
           contentType={OWNER_CONTENT_TYPE[contentType]}
           id={content.id}
           initialOwnerId={playerId}
-          users={owners.map((u) => ({ id: u.id, name: u.name }))}
+          users={owners}
         />
       )}
       {viewer?.role === "admin" && visibilityContentType && "visibility" in content && (
@@ -106,10 +111,11 @@ export default function ActionsMenu({
             (siehe CharacterBioEditor.tsx) — sourceMarkdown wird serverseitig
             nur für den Owner geladen, ein Admin-Klick würde sonst ins Leere
             laufen. */}
-        {((contentType !== "missionLog" &&
-          contentType !== "character" &&
-          viewer?.role === "admin") ||
-          viewer?.userId === playerId) &&
+        {!hideEdit &&
+          ((contentType !== "missionLog" &&
+            contentType !== "character" &&
+            viewer?.role === "admin") ||
+            viewer?.userId === playerId) &&
           (contentType === "missionLog" ? (
             // Mission-Logs haben (anders als Charakter/Mission/Archiv-Eintrag)
             // keinen Inline-Editor auf der Detailseite — die Mission-Log-

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export interface HeadFieldOption {
+interface HeadFieldOption {
   value: string;
   label: string;
 }

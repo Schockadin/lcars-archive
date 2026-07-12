@@ -63,7 +63,7 @@ export default function DialogueList({
         )}
 
         <LcarsSortSwitch
-          className="flex gap-[5px] w-full sm:w-[50%] mb-[16px]"
+          className="flex w-full sm:w-[50%] mb-[16px]"
           options={[{ key: "date", label: "Datum" }]}
           sortKey="date"
           sortDir={sortDir}

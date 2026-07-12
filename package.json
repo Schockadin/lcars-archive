@@ -8,6 +8,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
     "db:setup": "tsx --env-file=.env.local scripts/setup-db.ts",
     "db:ingest": "tsx --env-file=.env.local scripts/ingest/index.ts",
     "db:ingest:new": "tsx --env-file=.env.local scripts/ingest/ingestNew.ts",
@@ -25,7 +29,8 @@
     "db:archive:dev": "tsx --env-file=.env.development.local scripts/ingest/index.ts archive",
     "db:revalidate:dev": "tsx --env-file=.env.development.local scripts/ingest/index.ts revalidate",
     "db:reset:dev": "tsx --env-file=.env.development.local scripts/reset-db.ts",
-    "db:seed-dialogue:dev": "tsx --env-file=.env.development.local scripts/seedExampleDialogue.ts"
+    "db:seed-dialogue:dev": "tsx --env-file=.env.development.local scripts/seedExampleDialogue.ts",
+    "db:backup": "tsx --conditions=react-server scripts/backup-db.ts"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
@@ -43,24 +48,33 @@
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
+    "server-only": "^0.0.1",
     "unist-util-visit": "^5.1.0",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1085.0",
     "@netlify/plugin-nextjs": "^5.15.11",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20.19.43",
     "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/web-push": "^3.6.4",
+    "@vitejs/plugin-react": "^6.0.3",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "jsdom": "^29.1.1",
     "prettier": "^3.8.4",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "tsx": "^4.22.4",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.10"
   }
 }

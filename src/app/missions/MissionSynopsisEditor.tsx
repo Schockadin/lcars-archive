@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useState, type ReactNode } from "react";
+import { useActionState, useState } from "react";
 import {
   updateMissionSynopsisAction,
   type MissionSynopsisEditState,
@@ -10,12 +10,8 @@ import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 const initialState: MissionSynopsisEditState = {};
 
 // Inline-Editor für die Mission-Synopsis, nur für Admin/GM gerendert (siehe
-// MissionSynopsis.tsx). `topRow` (FollowButtons + OwnerSelect) wird zusammen
-// mit dem Bearbeiten-Button in einer gemeinsamen Zeile gerendert, `adminActions`
-// (AdminActionsMenu) als eigener Block darunter — es ist ein volles
-// DataRow-Akkordeon und passt nicht in die schmale Button-Zeile. Zeigt
-// standardmäßig den gerenderten Body; im Editiermodus ein Markdown-Textfeld
-// statt dessen.
+// MissionSynopsis.tsx). Zeigt standardmäßig den gerenderten Body; im
+// Editiermodus ein Markdown-Textfeld statt dessen.
 export default function MissionSynopsisEditor({
   missionId,
   bodyHtml,
@@ -26,7 +22,6 @@ export default function MissionSynopsisEditor({
   missionId: number;
   bodyHtml: string | null;
   sourceMarkdown: string;
-  adminActions?: ReactNode;
   slug: string;
   editMode: boolean;
   onEditModeChange: (v: boolean) => void;

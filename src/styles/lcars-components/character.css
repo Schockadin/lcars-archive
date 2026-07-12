@@ -68,6 +68,9 @@
   text-decoration: none;
 }
 
+/* Typografie (Mono, 12px, 700, dunkle Schrift) teilt sich mit
+   .char-file-pill (char-file.css) — siehe die kombinierte Regel in
+   shared.css. */
 .character-entry-stub {
   width: 60px;
   flex-shrink: 0;
@@ -77,11 +80,7 @@
   align-items: center;
   justify-content: flex-end;
   padding-right: 10px;
-  font-family: var(--font-share-tech-mono), monospace;
-  font-size: 12px;
-  font-weight: 700;
   letter-spacing: 0.05em;
-  color: var(--lcars-bg);
   transition: filter 100ms;
 }
 
@@ -156,8 +155,5 @@
 @media (max-width: 639px) {
   .character-portrait {
     border-right: 3px solid var(--lcars-purple);
-  }
-  .character-data {
-    flex-direction: column;
   }
 }

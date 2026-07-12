@@ -38,7 +38,7 @@ export default async function SearchPage({
         <form
           action="/search"
           method="get"
-          className="flex gap-[8px] mb-[16px]"
+          className="flex flex-col sm:flex-row gap-[8px] mb-[16px]"
         >
           <input
             type="search"
@@ -48,7 +48,10 @@ export default async function SearchPage({
             className="rounded-lcars-pill lcars-input flex-1"
             style={{ minWidth: 0 }}
           />
-          <button type="submit" className="lcars-pill-btn--outline">
+          <button
+            type="submit"
+            className="lcars-pill-btn--outline w-full sm:w-auto"
+          >
             Suchen
           </button>
         </form>

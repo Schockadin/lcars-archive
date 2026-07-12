@@ -7,11 +7,11 @@ import HeadFieldRenderer from "./HeadFieldRenderer";
 import MetadataSection from "./MetadataSection";
 import type { HeadField } from "./headFields";
 
-export interface ContentEditorState {
+interface ContentEditorState {
   error?: string;
 }
 
-export interface ContentEditorProps {
+interface ContentEditorProps {
   mode: "create" | "edit";
   action: (
     state: ContentEditorState,

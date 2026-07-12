@@ -1,6 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo } from "react";
 import {
   previewAutolinkAction,
   applyAutolinkAction,
@@ -8,7 +7,9 @@ import {
   type AutolinkPreviewResult,
 } from "@/app/actions/contentTools";
 import { LinkIcon } from "@/lib/icons";
-import { AutolinkTargetType } from "@/lib/autolink";
+import { usePreviewConfirmAction } from "@/hooks/usePreviewConfirmAction";
+import { groupByCount } from "@/lib/groupByCount";
+import PreviewConfirmFooter from "./PreviewConfirmFooter";
 
 const TYPE_LABEL: Record<
   AutolinkPreviewResult["matches"][number]["type"],
@@ -32,71 +33,32 @@ export default function AutolinkButton({
   contentType: ContentToolType;
   slug: string;
 }) {
-  const router = useRouter();
-  const [preview, setPreview] = useState<AutolinkPreviewResult | null>(null);
-  const [error, setError] = useState<string | undefined>();
-  const [applied, setApplied] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-
-  function handlePreview() {
-    setError(undefined);
-    setApplied(null);
-    startTransition(async () => {
-      const result = await previewAutolinkAction(contentType, slug);
-      if ("error" in result) setError(result.error);
-      else setPreview(result);
-    });
-  }
-
-  function handleConfirm() {
-    startTransition(async () => {
-      const result = await applyAutolinkAction(contentType, slug);
-      if ("error" in result) {
-        setError(result.error);
-        return;
-      }
-      setPreview(null);
-      setApplied(
+  const { preview, error, applied, pending, handlePreview, handleConfirm, handleCancel } =
+    usePreviewConfirmAction(
+      contentType,
+      slug,
+      previewAutolinkAction,
+      applyAutolinkAction,
+      (result) =>
         `${result.matchCount} Verknüpfung${result.matchCount === 1 ? "" : "en"} gespeichert.`,
-      );
-      router.refresh();
-    });
-  }
+    );
 
-  function handleCancel() {
-    setPreview(null);
-  }
-
-  const distinctMatches = preview
-    ? Object.values(
-        preview.matches.reduce<
-          Record<
-            string,
-            {
-              canonical: string;
-              href: string;
-              count: number;
-              matchedText: string;
-              type: AutolinkTargetType;
-            }
-          >
-        >((acc, entry) => {
-          if (!acc[entry.canonical]) {
-            acc[entry.canonical] = {
+  const distinctMatches = useMemo(
+    () =>
+      preview
+        ? groupByCount(
+            preview.matches,
+            (entry) => entry.canonical,
+            (entry) => ({
               canonical: entry.canonical,
               href: entry.href,
-              count: 0,
               matchedText: entry.matchedText,
               type: entry.type,
-            };
-          }
-
-          acc[entry.canonical].count++;
-
-          return acc;
-        }, {}),
-      )
-    : [];
+            }),
+          )
+        : [],
+    [preview],
+  );
 
   if (preview) {
     return (
@@ -117,26 +79,14 @@ export default function AutolinkButton({
             ))}
           </ul>
         )}
-        <div className="flex gap-[12px] items-center justify-start self-end">
-          <button
-            type="button"
-            onClick={handleCancel}
-            disabled={pending}
-            className="lcars-pill-btn--outline w-[40%]"
-          >
-            Abbrechen
-          </button>
-          {distinctMatches.length > 0 && (
-            <button
-              type="button"
-              onClick={handleConfirm}
-              disabled={pending}
-              className="lcars-pill-btn--outline disabled:opacity-50 w-[40%]"
-            >
-              {pending ? "Speichern…" : "Übernehmen"}
-            </button>
-          )}
-        </div>
+        <PreviewConfirmFooter
+          onCancel={handleCancel}
+          onConfirm={handleConfirm}
+          pending={pending}
+          canConfirm={distinctMatches.length > 0}
+          className="flex gap-[12px] items-center justify-start self-end"
+          buttonClassName="lcars-pill-btn--outline w-[40%]"
+        />
 
         {error && (
           <p className="text-lcars-red text-[13px]" role="alert">

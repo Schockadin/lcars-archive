@@ -62,12 +62,17 @@ export default async function CharakterPage({ params }: Props) {
   // CharacterHero.tsx) — spart die Extra-Query für alle anderen Aufrufe.
   const isOwner = viewer != null && viewer.userId === character.player_id;
 
-  const [logs, conversationCount, owners, source] = await Promise.all([
+  const [logs, conversationCount, allUsers, source] = await Promise.all([
     getLogsByCharacter(character.id),
     getDialogueCountByParticipant(character.slug),
     viewer?.role === "admin" ? listAllUsers() : Promise.resolve([]),
     isOwner ? getCharacterSourceBySlug(character.slug) : Promise.resolve(null),
   ]);
+  // Nur {id,name} an die Client Component durchreichen — der volle
+  // UserWithCharacters-Datensatz (E-Mail, Login-Zeitstempel, …) würde sonst
+  // unnötig ins Client-Bundle dieser Seite wandern (ActionsMenu braucht nur
+  // id/name für OwnerSelect).
+  const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
   return (
     <div className="h-[90%]">

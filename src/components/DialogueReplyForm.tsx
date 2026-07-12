@@ -5,6 +5,7 @@ import {
   type DialogueMessageState,
 } from "@/app/actions/dialogues";
 import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
+import { FormError } from "@/app/_shared/FormPrimitives";
 
 const initialState: DialogueMessageState = {};
 
@@ -55,11 +56,7 @@ export default function DialogueReplyForm({
         {pending ? "Wird gesendet…" : "Senden"}
       </button>
 
-      {state?.error && (
-        <p className="text-lcars-red" role="alert">
-          {state.error}
-        </p>
-      )}
+      <FormError message={state?.error} />
     </form>
   );
 }

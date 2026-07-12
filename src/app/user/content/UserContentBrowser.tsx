@@ -157,7 +157,10 @@ export default function UserContentBrowser({
           ) : (
             <div className="flex flex-col gap-[6px]">
               {filteredCharacters.map((c) => (
-                <div key={c.id} className="flex items-center gap-[8px]">
+                <div
+                  key={c.id}
+                  className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
+                >
                   <Link
                     href={`/characters/${c.slug}`}
                     className="mission-akte flex-1"
@@ -172,7 +175,7 @@ export default function UserContentBrowser({
                       <span className="mission-akte-title block">{c.name}</span>
                     </span>
                   </Link>
-                  <div className="flex flex-col items-end gap-[4px]">
+                  <div className="flex flex-col items-stretch sm:items-end gap-[4px]">
                     <VisibilitySelect
                       contentType="character"
                       id={c.id}
@@ -205,7 +208,10 @@ export default function UserContentBrowser({
           ) : (
             <div className="flex flex-col gap-[6px]">
               {filteredLogs.map((log) => (
-                <div key={log.id} className="flex items-center gap-[8px]">
+                <div
+                  key={log.id}
+                  className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
+                >
                   <Link
                     href={`/missions/${log.mission_slug}/${log.slug}`}
                     className="mission-akte flex-1"
@@ -233,7 +239,7 @@ export default function UserContentBrowser({
                       </span>
                     </span>
                   </Link>
-                  <div className="flex flex-col items-end gap-[4px]">
+                  <div className="flex flex-col items-stretch sm:items-end gap-[4px]">
                     <VisibilitySelect
                       contentType="mission_log"
                       id={log.id}
@@ -272,7 +278,10 @@ export default function UserContentBrowser({
           ) : (
             <div className="flex flex-col gap-[6px]">
               {filteredDialogues.map((d) => (
-                <div key={d.slug} className="flex items-center gap-[8px]">
+                <div
+                  key={d.slug}
+                  className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
+                >
                   <Link
                     href={
                       d.open ? `/dialogues/${d.slug}` : `/archive/${d.slug}`
@@ -330,7 +339,10 @@ export default function UserContentBrowser({
           ) : (
             <div className="flex flex-col gap-[6px]">
               {archiveEntries.map((entry) => (
-                <div key={entry.id} className="flex items-center gap-[8px]">
+                <div
+                  key={entry.id}
+                  className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
+                >
                   <Link
                     href={`/archive/${entry.slug}`}
                     className="mission-akte flex-1"
@@ -353,7 +365,7 @@ export default function UserContentBrowser({
                       </span>
                     </span>
                   </Link>
-                  <div className="flex flex-col items-end gap-[4px]">
+                  <div className="flex flex-col items-stretch sm:items-end gap-[4px]">
                     <VisibilitySelect
                       contentType="archive_entry"
                       id={entry.id}
@@ -384,7 +396,10 @@ export default function UserContentBrowser({
           ) : (
             <div className="flex flex-col gap-[6px]">
               {missions.map((m) => (
-                <div key={m.id} className="flex items-center gap-[8px]">
+                <div
+                  key={m.id}
+                  className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
+                >
                   <Link
                     href={`/missions/${m.slug}`}
                     className="mission-akte flex-1"

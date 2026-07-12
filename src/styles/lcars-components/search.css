@@ -8,7 +8,13 @@
    Buttons statt einer umbrechenden Reihe. */
 .search-type-filter {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0, 1fr) statt 1fr: reines "1fr" nutzt eine Auto-Mindestbreite
+     pro Spalte, die sich am längsten unbrechbaren Wort in dieser Spalte
+     orientiert — bei unterschiedlich langen Labels (z.B. "Archiv-Einträge"
+     vs. "Logs") wurden die beiden Spalten dadurch sichtbar unterschiedlich
+     breit (x-Offset der Hintergrund-/Trennlinie). minmax(0, …) erzwingt
+     wirklich gleich breite Spalten, überlanger Text bricht stattdessen um. */
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   width: 100%;
   margin-bottom: 16px;

@@ -9,10 +9,11 @@ import { sendPushToUser } from "@/lib/push";
 // das Follow — ein zusätzliches Follow pro einzelnem Log wäre Rauschen ohne
 // echten Zusatznutzen (siehe ActionsMenu.tsx, das für contentType
 // "missionLog" deshalb gar kein followType übergibt).
-// "user" (target_slug = users.slug) ist kein einzelner Inhalt, sondern ein
-// Sammel-Abo: benachrichtigt bei jedem neuen/geänderten öffentlichen Inhalt
-// des abonnierten Users (siehe notifyUserSubscribers unten) — subscribeOnly
-// in FollowButtons, ein Bookmark auf einen User ergibt keinen Sinn.
+// "user" (target_slug = users.slug) ist zusätzlich ein Sammel-Abo:
+// benachrichtigt bei jedem neuen/geänderten öffentlichen Inhalt des
+// abonnierten Users (siehe notifyUserSubscribers unten). Auf /users nur
+// subscribeOnly in FollowButtons (kompakte Zeile), auf /users/[id] zusätzlich
+// bookmarkbar wie jeder andere Inhaltstyp.
 export type FollowTargetType =
   | "mission"
   | "archive_entry"
@@ -41,6 +42,36 @@ export async function getFollowStatus(
     bookmarked: row?.bookmarked_at != null,
     subscribed: row?.subscribed_at != null,
   };
+}
+
+// Batch-Variante von getFollowStatus für Listen mit vielen FollowButtons-
+// Instanzen (z.B. /users) — eine Anfrage für alle targetSlugs statt einer
+// pro Zeile (N+1). Slugs ohne content_follows-Zeile fehlen im Ergebnis-
+// Record; der Aufrufer behandelt das wie {bookmarked:false,subscribed:false}.
+export async function getFollowStatuses(
+  userId: number,
+  targetType: FollowTargetType,
+  targetSlugs: string[],
+): Promise<Record<string, FollowStatus>> {
+  if (targetSlugs.length === 0) return {};
+
+  const rows = await sql<
+    { target_slug: string; bookmarked_at: Date | null; subscribed_at: Date | null }[]
+  >`
+    SELECT target_slug, bookmarked_at, subscribed_at
+    FROM content_follows
+    WHERE user_id = ${userId} AND target_type = ${targetType}
+      AND target_slug = ANY(${targetSlugs})
+  `;
+
+  const result: Record<string, FollowStatus> = {};
+  for (const row of rows) {
+    result[row.target_slug] = {
+      bookmarked: row.bookmarked_at != null,
+      subscribed: row.subscribed_at != null,
+    };
+  }
+  return result;
 }
 
 async function deleteIfEmpty(
@@ -217,6 +248,22 @@ export interface FollowSubscriber {
   pushNotificationsEnabled: boolean;
 }
 
+function toFollowSubscriber(row: {
+  id: number;
+  email: string;
+  name: string;
+  email_notifications_enabled: boolean;
+  push_notifications_enabled: boolean;
+}): FollowSubscriber {
+  return {
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    emailNotificationsEnabled: row.email_notifications_enabled,
+    pushNotificationsEnabled: row.push_notifications_enabled,
+  };
+}
+
 // Abonnenten eines Users (target_type 'user', siehe FollowTargetType oben)
 // — eigenständig exportiert (nicht nur intern in notifyUserSubscribers),
 // damit z.B. missions/_shared/contentAction.ts dieselbe Liste für eine
@@ -240,13 +287,86 @@ export async function getUserSubscribers(
     WHERE cf.target_type = 'user' AND cf.target_slug = ${userSlug}
       AND cf.subscribed_at IS NOT NULL
   `;
-  return rows.map((row) => ({
-    id: row.id,
-    email: row.email,
-    name: row.name,
-    emailNotificationsEnabled: row.email_notifications_enabled,
-    pushNotificationsEnabled: row.push_notifications_enabled,
-  }));
+  return rows.map(toFollowSubscriber);
+}
+
+// Batch-Variante von getUserSubscribers für mehrere User in einem Rutsch
+// (z.B. alle Spieler teilnehmender Charaktere einer neu angelegten Mission,
+// siehe missions/_shared/contentAction.ts) — eine Query statt einer Query
+// pro User, nach target_slug gruppiert zurückgegeben.
+export async function getUserSubscribersForSlugs(
+  userSlugs: string[],
+): Promise<Map<string, FollowSubscriber[]>> {
+  if (userSlugs.length === 0) return new Map();
+
+  const rows = await sql<
+    {
+      target_slug: string;
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT cf.target_slug, u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
+    FROM content_follows cf
+    JOIN users u ON u.id = cf.user_id
+    WHERE cf.target_type = 'user' AND cf.target_slug = ANY(${userSlugs})
+      AND cf.subscribed_at IS NOT NULL
+  `;
+
+  const bySlug = new Map<string, FollowSubscriber[]>();
+  for (const row of rows) {
+    const subscriber = toFollowSubscriber(row);
+    const list = bySlug.get(row.target_slug);
+    if (list) list.push(subscriber);
+    else bySlug.set(row.target_slug, [subscriber]);
+  }
+  return bySlug;
+}
+
+interface NotificationMessage {
+  authorName: string;
+  contentTypeLabel: string;
+  contentTitle: string;
+  contentUrl: string;
+  preview: string;
+}
+
+// Gemeinsame Mail-dann-Push-Zustellung für notifyUserSubscribers UND
+// notifyAdminContentSubscribers unten — beide unterscheiden sich nur in der
+// Empfängerliste und im Fehler-Log-Label, nicht im Zustellungsablauf selbst.
+async function dispatchToSubscribers(
+  subscribers: FollowSubscriber[],
+  message: NotificationMessage,
+  errorLabel: string,
+): Promise<void> {
+  for (const subscriber of subscribers) {
+    if (subscriber.emailNotificationsEnabled) {
+      const result = await sendUserContentEmail({
+        to: subscriber.email,
+        name: subscriber.name,
+        authorName: message.authorName,
+        contentTypeLabel: message.contentTypeLabel,
+        contentTitle: message.contentTitle,
+        contentUrl: message.contentUrl,
+        preview: message.preview,
+      });
+      if (!result.sent) {
+        console.error(
+          `${errorLabel} an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+        );
+      }
+    }
+    if (subscriber.pushNotificationsEnabled) {
+      await sendPushToUser(subscriber.id, {
+        title: `${message.authorName}: ${message.contentTitle}`,
+        body: message.preview,
+        url: message.contentUrl,
+      });
+    }
+  }
 }
 
 // An alle Abonnenten eines Users, sobald dieser User einen neuen öffentlichen
@@ -273,31 +393,11 @@ export async function notifyUserSubscribers(input: {
   );
   if (subscribers.length === 0) return;
 
-  for (const subscriber of subscribers) {
-    if (subscriber.emailNotificationsEnabled) {
-      const result = await sendUserContentEmail({
-        to: subscriber.email,
-        name: subscriber.name,
-        authorName: author.name,
-        contentTypeLabel: input.contentTypeLabel,
-        contentTitle: input.contentTitle,
-        contentUrl: input.contentUrl,
-        preview: input.preview,
-      });
-      if (!result.sent) {
-        console.error(
-          `User-Abo-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
-        );
-      }
-    }
-    if (subscriber.pushNotificationsEnabled) {
-      await sendPushToUser(subscriber.id, {
-        title: `${author.name}: ${input.contentTitle}`,
-        body: input.preview,
-        url: input.contentUrl,
-      });
-    }
-  }
+  await dispatchToSubscribers(
+    subscribers,
+    { ...input, authorName: author.name },
+    "User-Abo-Mail",
+  );
 }
 
 // Die vier Inhaltstypen, die ein Admin per Checkbox-Liste abonnieren kann
@@ -328,13 +428,7 @@ async function getAdminContentSubscribers(
     WHERE role = 'admin' AND is_active = true AND id != ${excludeUserId}
       AND ${contentType} = ANY(notify_content_types)
   `;
-  return rows.map((row) => ({
-    id: row.id,
-    email: row.email,
-    name: row.name,
-    emailNotificationsEnabled: row.email_notifications_enabled,
-    pushNotificationsEnabled: row.push_notifications_enabled,
-  }));
+  return rows.map(toFollowSubscriber);
 }
 
 // Admin-Opt-in "Über alle Inhalte benachrichtigt werden" (notify_content_types)
@@ -343,11 +437,16 @@ async function getAdminContentSubscribers(
 // durch JEDEN User, unabhängig von visibility/Owner (Admins dürfen ohnehin
 // alles sehen, siehe canView in lib/visibility.ts). Schließt den handelnden
 // User selbst aus (ein Admin, der selbst editiert, muss sich nicht über die
-// eigene Aktion benachrichtigen).
+// eigene Aktion benachrichtigen). authorName kommt vom Aufrufer statt einer
+// eigenen SELECT-Query — Aufrufer haben den Namen des handelnden Users
+// (session.userId) ohnehin schon geladen (Rollenprüfung, notifyUserSubscribers-
+// Aufruf direkt daneben, o.ä.), ein zweiter Roundtrip für denselben Namen
+// im selben Request wäre reine Verschwendung.
 export async function notifyAdminContentSubscribers(input: {
   contentType: AdminContentNotifyType;
   event: "created" | "updated";
   authorUserId: number;
+  authorName: string;
   contentTypeLabel: string;
   contentTitle: string;
   contentUrl: string;
@@ -359,35 +458,61 @@ export async function notifyAdminContentSubscribers(input: {
   );
   if (admins.length === 0) return;
 
-  const [author] = await sql<{ name: string }[]>`
-    SELECT name FROM users WHERE id = ${input.authorUserId}
-  `;
   const verb = input.event === "created" ? "neu angelegt" : "bearbeitet";
-  const authorName = author?.name ?? "Unbekannt";
 
-  for (const admin of admins) {
-    if (admin.emailNotificationsEnabled) {
-      const result = await sendUserContentEmail({
-        to: admin.email,
-        name: admin.name,
-        authorName,
-        contentTypeLabel: `${input.contentTypeLabel} (${verb})`,
-        contentTitle: input.contentTitle,
-        contentUrl: input.contentUrl,
-        preview: input.preview,
-      });
-      if (!result.sent) {
-        console.error(
-          `Admin-Inhalts-Mail an ${admin.email} fehlgeschlagen: ${result.error}`,
-        );
-      }
-    }
-    if (admin.pushNotificationsEnabled) {
-      await sendPushToUser(admin.id, {
-        title: `${authorName}: ${input.contentTitle}`,
-        body: input.preview,
-        url: input.contentUrl,
-      });
-    }
-  }
+  await dispatchToSubscribers(
+    admins,
+    {
+      authorName: input.authorName,
+      contentTypeLabel: `${input.contentTypeLabel} (${verb})`,
+      contentTitle: input.contentTitle,
+      contentUrl: input.contentUrl,
+      preview: input.preview,
+    },
+    "Admin-Inhalts-Mail",
+  );
+}
+
+// Gemeinsamer Aufruf-Wrapper für die 4 Content-Actions (Charakter/Mission/
+// Mission-Log/Archiv-Eintrag, je Anlegen UND Bearbeiten): meldet eine
+// Änderung IMMER den Admin-Abonnenten (notifyAdminContentSubscribers) und
+// PARALLEL dazu — nur wenn notifyPublic true ist — den eigenen Abonnenten
+// des Erstellers (notifyUserSubscribers). notifyPublic ist bei Missionen
+// immer false (keine visibility-Spalte, kein Public-Follow-Modell für
+// Missionen selbst), bei den anderen drei Typen true bei Neuanlage bzw. bei
+// `result.visibility === "public"` beim Bearbeiten.
+export async function notifyContentChange(input: {
+  contentType: AdminContentNotifyType;
+  event: "created" | "updated";
+  authorUserId: number;
+  authorName: string;
+  contentTypeLabel: string;
+  contentTitle: string;
+  contentUrl: string;
+  preview: string;
+  notifyPublic: boolean;
+}): Promise<void> {
+  await Promise.all([
+    notifyAdminContentSubscribers({
+      contentType: input.contentType,
+      event: input.event,
+      authorUserId: input.authorUserId,
+      authorName: input.authorName,
+      contentTypeLabel: input.contentTypeLabel,
+      contentTitle: input.contentTitle,
+      contentUrl: input.contentUrl,
+      preview: input.preview,
+    }),
+    ...(input.notifyPublic
+      ? [
+          notifyUserSubscribers({
+            authorUserId: input.authorUserId,
+            contentTypeLabel: input.contentTypeLabel,
+            contentTitle: input.contentTitle,
+            contentUrl: input.contentUrl,
+            preview: input.preview,
+          }),
+        ]
+      : []),
+  ]);
 }

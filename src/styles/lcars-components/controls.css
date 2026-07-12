@@ -99,11 +99,14 @@
   border-color: var(--lcars-red);
 }
 
-/* Pill Buttons */
+/* Pill Buttons — Basis-Look (Größe/Form/Typografie) auch von
+   .lcars-usernav-pill (header.css) geteilt, das denselben "Amber-Pille"-
+   Aufbau für die Header-Navigation braucht; nur Farbe/Maße/Hover
+   unterscheiden sich dort (eigene Regeln in header.css). */
 .lcars-pill-btn,
-.lcars-pill-btn--outline {
+.lcars-pill-btn--outline,
+.lcars-usernav-pill {
   display: flex;
-
   min-height: 0;
   min-width: 0px;
   border: none;
@@ -114,12 +117,19 @@
   white-space: nowrap;
   font-family: var(--font-antonio), sans-serif;
   font-weight: 600;
-  font-size: 20px;
   letter-spacing: 1px;
   line-height: 1.175;
   text-transform: uppercase;
   transition: 250ms;
-  height: 40px;
+}
+/* font-size bewusst NICHT hier (statt in .lcars-usernav-pill selbst,
+   header.css): .lcars-usernav-pill hat dort viewport-abhängige
+   font-size-Overrides via @media — läge die Basisgröße hier in
+   controls.css, würde sie (gleiche Spezifität, aber später importiert als
+   header.css) diese Overrides bei jedem Breakpoint überstimmen. */
+.lcars-pill-btn,
+.lcars-pill-btn--outline {
+  font-size: 20px;
 }
 .lcars-pill-btn:hover,
 .lcars-pill-btn--outline:hover {
@@ -134,6 +144,7 @@
   align-items: flex-end;
   justify-content: flex-end;
   padding: 0 18px 8px;
+  height: 40px;
 }
 .lcars-pill-btn--outline {
   color: var(--lcars-text-data);
@@ -142,6 +153,7 @@
   align-items: center;
   justify-content: center;
   width: 250px;
+  height: 40px;
 }
 
 .lcars-filters {

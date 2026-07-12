@@ -1,16 +1,16 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 
-export interface MenuItemProps {
+type MenuItemType = "bar" | "pill";
+
+interface MenuItemProps {
   text?: string;
   href: string;
   id?: string;
   active?: boolean;
-  type: MENU_ITEM_TYPE;
+  type: MenuItemType;
   style?: CSSProperties;
 }
-
-export type MENU_ITEM_TYPE = "bar" | "pill";
 
 export default function MenuItem({
   text = "",

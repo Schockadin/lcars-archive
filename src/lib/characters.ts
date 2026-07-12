@@ -401,6 +401,22 @@ export async function generateUniqueCharacterSlug(
   }
 }
 
+// Gemeinsame Ableitung für createCharacter/updateOwnCharacterContent: keine
+// der drei Angaben gesetzt → affiliation bleibt null statt eines leeren
+// {factions:[],ships:[],division:null}-Objekts (unterscheidet "keine Angabe"
+// von "explizit leer" in der UI, siehe char-file.css/CharFile-Rendering).
+function buildAffiliation(input: {
+  factions: string[];
+  ships: string[];
+  division: string | null;
+}): { factions: string[]; ships: string[]; division: string | null } | null {
+  const hasAffiliation =
+    input.factions.length > 0 || input.ships.length > 0 || input.division;
+  return hasAffiliation
+    ? { factions: input.factions, ships: input.ships, division: input.division }
+    : null;
+}
+
 // Legt einen neuen, eigenen Charakter an (User-Feature: jeder eingeloggte
 // User außer Gast-Accounts darf eigene Charaktere anlegen, siehe
 // /user/characters/new/actions.ts — die Gast-Sperre lebt dort, weil
@@ -438,17 +454,12 @@ export async function createCharacter(input: {
     : null;
   const sourceMd = trimmedBody || null;
 
-  const hasAffiliation =
-    input.factions.length > 0 || input.ships.length > 0 || input.division;
-
   const metadata = {
     rank: input.rank,
     species: input.species,
     homeworld: input.homeworld,
     age: input.age,
-    affiliation: hasAffiliation
-      ? { factions: input.factions, ships: input.ships, division: input.division }
-      : null,
+    affiliation: buildAffiliation(input),
     player: null,
     tags: input.tags,
     aliases: input.aliases,
@@ -576,9 +587,6 @@ export async function updateOwnCharacterContent(
     : null;
   const sourceMd = trimmedBody || null;
 
-  const hasAffiliation =
-    input.factions.length > 0 || input.ships.length > 0 || input.division;
-
   const metadataPatch = {
     rank: input.rank,
     species: input.species,
@@ -586,9 +594,7 @@ export async function updateOwnCharacterContent(
     aliases: input.aliases,
     age: input.age,
     generation: input.generation,
-    affiliation: hasAffiliation
-      ? { factions: input.factions, ships: input.ships, division: input.division }
-      : null,
+    affiliation: buildAffiliation(input),
     tags: input.tags,
   };
 

@@ -6,7 +6,8 @@ import type { User } from "@/types/db";
 const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
   last_visit_at, last_dashboard_visit_at,
-  email_notifications_enabled, push_notifications_enabled, notify_content_types
+  email_notifications_enabled, push_notifications_enabled, notify_content_types,
+  session_version
 `;
 
 // Probiert slugifyBase(name), "${base}-2", "${base}-3", … bis ein Slug in
@@ -242,13 +243,14 @@ export interface UserCredentials {
   is_active: boolean;
   password_hash: string | null;
   requires_activation: boolean;
+  session_version: number;
 }
 
 export async function getUserCredentialsByEmail(
   email: string,
 ): Promise<UserCredentials | null> {
   const rows = await sql<UserCredentials[]>`
-    SELECT id, email, name, role, is_active, password_hash, requires_activation
+    SELECT id, email, name, role, is_active, password_hash, requires_activation, session_version
     FROM users
     WHERE lower(email) = ${email}
     LIMIT 1
@@ -366,14 +368,17 @@ export async function getPasswordHash(userId: number): Promise<string | null> {
 
 // Setzt das Passwort und beendet damit gleichzeitig eine offene
 // Aktivierung (requires_activation) — ab hier entscheidet nur noch
-// password_hash über den Login-Weg.
+// password_hash über den Login-Weg. session_version wird erhöht, damit
+// alle bereits ausgestellten Session-Cookies (andere Geräte/Browser)
+// ungültig werden — siehe SessionPayload.sessionVersion in session.ts.
 export async function setPassword(
   userId: number,
   passwordHash: string,
 ): Promise<void> {
   await sql`
     UPDATE users
-    SET password_hash = ${passwordHash}, requires_activation = false
+    SET password_hash = ${passwordHash}, requires_activation = false,
+        session_version = session_version + 1
     WHERE id = ${userId}
   `;
 }

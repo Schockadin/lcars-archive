@@ -22,6 +22,26 @@ export const getCurrentUser = cache(async (): Promise<User> => {
     // Session verweist auf einen inzwischen gelöschten User.
     redirect("/login");
   }
+  // is_active wird sonst nur beim Login geprüft (siehe login/actions.ts) —
+  // ohne diesen Check würde ein bereits ausgestelltes Session-Cookie eine
+  // nachträglich deaktivierte Person bis zum natürlichen Ablauf (30 Tage)
+  // weiterhin durch jedes DAL-Gate lassen (Deaktivieren wäre wirkungslos,
+  // bis das Cookie abläuft). Das Cookie selbst wird hier NICHT gelöscht —
+  // cookies().delete() ist während des Renderns nicht erlaubt, nur in
+  // Server Actions/Route Handlern; der Redirect allein reicht, da jeder
+  // weitere Aufruf denselben Check erneut durchläuft.
+  if (!user.is_active) {
+    redirect("/login");
+  }
+  // Passwortänderung (setPassword) erhöht session_version — ein Cookie, das
+  // vor dieser Änderung ausgestellt wurde (z.B. gestohlen oder auf einem
+  // anderen Gerät), trägt noch den alten Wert und wird hier verworfen,
+  // statt bis zum natürlichen Ablauf (30 Tage) gültig zu bleiben. Gleiches
+  // Render-Constraint wie beim is_active-Check oben: kein deleteSession()
+  // hier, der Redirect allein reicht.
+  if (session.sessionVersion !== user.session_version) {
+    redirect("/login");
+  }
   return user;
 });
 
@@ -60,4 +80,19 @@ export async function requireNonGuest(): Promise<User> {
     forbidden();
   }
   return user;
+}
+
+// Gemeinsamer Guard in den Content-Actions (Charakter/Mission/Mission-Log/
+// Archiv-Eintrag/Dialog anlegen bzw. bearbeiten): das Formular führt userId
+// als Hidden-Field mit — ein manipuliertes Formular mit fremder userId soll
+// trotzdem nur im eigenen Namen handeln können, nie der im Formular
+// mitgeschickte Wert selbst.
+export function requireMatchingFormUserId(
+  formData: FormData,
+  session: SessionPayload,
+): void {
+  const userId = Number(formData.get("userId"));
+  if (!Number.isInteger(userId) || userId !== session.userId) {
+    redirect("/user");
+  }
 }

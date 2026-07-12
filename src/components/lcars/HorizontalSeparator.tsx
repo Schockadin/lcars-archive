@@ -1,4 +1,4 @@
-export interface SeparatorProps {
+interface SeparatorProps {
   startColor: string;
   endColor?: string;
   align?: "to left" | "to right";

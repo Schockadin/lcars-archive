@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
-import { deleteSubscription, saveSubscription } from "@/lib/pushSubscriptions";
+import {
+  deleteSubscription,
+  saveSubscription,
+  InvalidPushEndpointError,
+} from "@/lib/pushSubscriptions";
 
 export const dynamic = "force-dynamic";
 
@@ -31,7 +35,17 @@ export async function POST(request: Request) {
     );
   }
 
-  await saveSubscription(session.userId, { endpoint, p256dh, auth });
+  try {
+    await saveSubscription(session.userId, { endpoint, p256dh, auth });
+  } catch (err) {
+    if (err instanceof InvalidPushEndpointError) {
+      return NextResponse.json(
+        { error: "Ungültiger Push-Endpoint." },
+        { status: 400 },
+      );
+    }
+    throw err;
+  }
   return NextResponse.json({ saved: true });
 }
 

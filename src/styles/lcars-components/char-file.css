@@ -34,6 +34,9 @@
   justify-content: flex-end;
   margin-top: 16px;
 }
+/* Typografie (Mono, 12px, 700, dunkle Schrift) teilt sich .char-file-pill
+   mit .character-entry-stub (character.css) — siehe die kombinierte Regel
+   in shared.css. */
 .char-file-pill {
   min-width: 96px;
   height: 30px;
@@ -42,11 +45,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-share-tech-mono), monospace;
-  font-size: 12px;
-  font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--lcars-bg);
 }
 
 /* dekorative Zahlenmatrix */
@@ -142,14 +141,6 @@
   color: var(--lcars-amber);
   text-align: right;
 }
-.char-file-aliases {
-  margin-top: 4px;
-  font-family: var(--font-share-tech-mono), monospace;
-  font-size: 12px;
-  letter-spacing: 0.05em;
-  color: var(--lcars-text-dim);
-  text-align: right;
-}
 .char-file-bio {
   font-size: 16px;
 }
@@ -193,9 +184,6 @@
     display: none;
   }
   .char-file-name {
-    text-align: left;
-  }
-  .char-file-aliases {
     text-align: left;
   }
   /* einspaltig steht das TOC über der Bio → kein sticky */

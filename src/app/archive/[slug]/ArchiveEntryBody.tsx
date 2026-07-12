@@ -5,7 +5,6 @@ import DialogueThread from "@/components/DialogueThread";
 import ArchiveEntryEditor from "./ArchiveEntryEditor";
 import { ArchiveEntryDetail } from "@/types/archive";
 import { Viewer } from "@/lib/visibility";
-import { UserWithCharacters } from "@/lib/users";
 import type { DialogueMessage } from "@/lib/dialoguesCore";
 
 // Hält den editMode lokal (statt über einen globalen Context) — ActionsMenu
@@ -21,7 +20,7 @@ export default function ArchiveEntryBody({
 }: {
   entry: ArchiveEntryDetail;
   viewer: Viewer | null;
-  owners: UserWithCharacters[];
+  owners: { id: number; name: string }[];
   messages: DialogueMessage[];
 }) {
   const [editMode, setEditMode] = useState(false);
@@ -37,6 +36,7 @@ export default function ArchiveEntryBody({
         playerId={entry.ownerUserId}
         content={entry}
         onEdit={() => setEditMode(true)}
+        hideEdit={entry.category === "dialogue"}
       />
 
       {entry.metadata.summary && entry.category != "dialogue" && (

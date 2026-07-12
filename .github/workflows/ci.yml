@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      # Dummy-Wert: der postgres-Client verbindet erst lazy bei der ersten
+      # Query (siehe src/lib/db.ts) — reicht aus, damit Module, die ihn beim
+      # Import referenzieren (z.B. /search → visibility.ts → users.ts),
+      # laden können, ohne eine echte DB in CI zu benötigen.
+      DATABASE_URL: "postgresql://user:pass@127.0.0.1:5432/dummy"
+    services:
+      # Für die DB-Integrationstests (tests/integration/) — dort wird
+      # DATABASE_URL pro Step auf diesen Container gesetzt (s.u.), der obige
+      # Dummy-Wert bleibt für Lint/Unit-Tests/E2E unverändert.
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: lcars_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - run: npm run lint
+
+      - run: npm test
+
+      - run: npx playwright install --with-deps chromium
+
+      - run: npm run test:e2e
+
+      - name: Apply schema to integration test DB
+        run: npx tsx scripts/setup-db.ts
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/lcars_test"
+
+      - name: Run DB integration tests
+        run: npm run test:integration
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/lcars_test"

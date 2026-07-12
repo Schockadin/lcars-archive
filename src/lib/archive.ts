@@ -59,6 +59,13 @@ async function saveArchiveReferences(
   let characters: ArchiveCharacterRef[] = [];
   const linkTargets: { targetId: number; label: string }[] = [];
 
+  // Slugs der archive_entries-Verweisfelder (leader, headquarters,
+  // participants, related_npcs, …) über alle Felder hinweg sammeln, statt
+  // pro Feld eine eigene Query zu schicken — eine Kategorie kann mehrere
+  // solcher Felder haben, ein Eintrag mit vielen ausgefüllten Verweisen sonst
+  // ein Query pro Feld statt einer gebündelten Auflösung.
+  const archiveEntryFieldSlugs: { slugs: string[]; label: string }[] = [];
+
   for (const field of getReferenceFields(category)) {
     const slugs = parseSlugList(referenceValues[field.key] ?? "").filter(
       (s) => s !== ownSlug,
@@ -76,11 +83,22 @@ async function saveArchiveReferences(
       `;
       characters = rows;
     } else if (!OWN_TABLE_REFERENCE_KEYS.has(field.key)) {
-      const rows = await sql<{ id: number }[]>`
-        SELECT id FROM archive_entries WHERE slug = ANY(${slugs})
-      `;
-      for (const row of rows) {
-        linkTargets.push({ targetId: row.id, label: field.label });
+      archiveEntryFieldSlugs.push({ slugs, label: field.label });
+    }
+  }
+
+  if (archiveEntryFieldSlugs.length > 0) {
+    const allSlugs = [
+      ...new Set(archiveEntryFieldSlugs.flatMap((f) => f.slugs)),
+    ];
+    const rows = await sql<{ id: number; slug: string }[]>`
+      SELECT id, slug FROM archive_entries WHERE slug = ANY(${allSlugs})
+    `;
+    const idBySlug = new Map(rows.map((r) => [r.slug, r.id]));
+    for (const { slugs, label } of archiveEntryFieldSlugs) {
+      for (const slug of slugs) {
+        const id = idBySlug.get(slug);
+        if (id != null) linkTargets.push({ targetId: id, label });
       }
     }
   }
