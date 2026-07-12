@@ -1,0 +1,37 @@
+name: Daily DB Backup
+
+on:
+  schedule:
+    # 03:00 UTC täglich — außerhalb üblicher Nutzungszeiten.
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Erwartet folgende Repository-Secrets (Settings → Secrets and
+      # variables → Actions), siehe README.md#deployment:
+      #   DATABASE_URL       — produktive DB (dieselbe wie im Netlify-
+      #                        Dashboard hinterlegt, hier separat als
+      #                        GitHub-Secret nötig)
+      #   R2_ACCOUNT_ID       — Cloudflare-Account-ID
+      #   R2_ACCESS_KEY_ID    — R2-API-Token Access Key ID
+      #   R2_SECRET_ACCESS_KEY — R2-API-Token Secret Access Key
+      #   R2_BUCKET_NAME      — Ziel-Bucket für die Backup-Dateien
+      - run: npm run db:backup
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}

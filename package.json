@@ -29,7 +29,8 @@
     "db:archive:dev": "tsx --env-file=.env.development.local scripts/ingest/index.ts archive",
     "db:revalidate:dev": "tsx --env-file=.env.development.local scripts/ingest/index.ts revalidate",
     "db:reset:dev": "tsx --env-file=.env.development.local scripts/reset-db.ts",
-    "db:seed-dialogue:dev": "tsx --env-file=.env.development.local scripts/seedExampleDialogue.ts"
+    "db:seed-dialogue:dev": "tsx --env-file=.env.development.local scripts/seedExampleDialogue.ts",
+    "db:backup": "tsx --conditions=react-server scripts/backup-db.ts"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",
@@ -47,10 +48,12 @@
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.2",
+    "server-only": "^0.0.1",
     "unist-util-visit": "^5.1.0",
     "web-push": "^3.6.7"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1085.0",
     "@netlify/plugin-nextjs": "^5.15.11",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",

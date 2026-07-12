@@ -301,6 +301,26 @@ Das Projekt ist für **Netlify** vorkonfiguriert (`@netlify/plugin-nextjs`).
 `DATABASE_URL` als Environment-Variable im Netlify-Dashboard hinterlegen; die Ingestion
 (`db:setup` / `db:ingest`) wird gegen die produktive Datenbank ausgeführt.
 
+### Tägliches DB-Backup
+
+`.github/workflows/daily-db-backup.yml` läuft täglich um 03:00 UTC (plus
+manuell auslösbar über "Run workflow") und lädt einen vollständigen
+DB-Export (`scripts/backup-db.ts`, dieselbe Export-Logik wie der
+"DB-Backup herunterladen"-Button im Adminpanel) nach Cloudflare R2 hoch.
+Dafür müssen folgende Repository-Secrets gesetzt sein (GitHub → Settings →
+Secrets and variables → Actions → "New repository secret"):
+
+| Secret | Wert |
+|---|---|
+| `DATABASE_URL` | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. |
+| `R2_ACCOUNT_ID` | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens"). |
+| `R2_BUCKET_NAME` | Name des Ziel-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). |
+
+Aufbewahrungsfrist/automatisches Löschen alter Backups ist bewusst kein
+Skript-Feature, sondern über eine Lifecycle-Regel direkt auf dem R2-Bucket
+konfigurierbar (Cloudflare-Dashboard → Bucket → Lifecycle Rules).
+
 ### Dev-/Preview-Umgebung
 
 Netlify Deploy-Previews (ein Build pro PR) laufen standardmäßig gegen
