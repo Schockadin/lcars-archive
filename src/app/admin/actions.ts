@@ -19,6 +19,7 @@ import { revalidateCharacter } from "@/lib/revalidate";
 import { createPasswordSetupToken } from "@/lib/passwordSetupTokens";
 import { sendActivationEmail, sendPasswordResetEmail } from "@/lib/mail";
 import { getBaseUrl } from "@/lib/http";
+import { logAdminAction } from "@/lib/auditLog";
 import type { User } from "@/types/db";
 
 const ROLES: readonly User["role"][] = [
@@ -54,7 +55,7 @@ export async function createUserAction(
   _state: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const email = String(formData.get("email") ?? "")
     .trim()
@@ -75,6 +76,12 @@ export async function createUserAction(
     }
     throw err;
   }
+  await logAdminAction(
+    admin.id,
+    "create_user",
+    newUser.id,
+    `${newUser.name} <${newUser.email}>, Rolle: ${role}`,
+  );
 
   const rawToken = await createPasswordSetupToken(newUser.id);
   const activationUrl = `${await getBaseUrl()}/activate?token=${rawToken}`;
@@ -109,13 +116,19 @@ export async function resetUserPasswordAction(
   _state: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
 
   const user = await getUserById(userId);
   if (!user) return { error: "User nicht gefunden." };
+  await logAdminAction(
+    admin.id,
+    "reset_password",
+    user.id,
+    `${user.name} <${user.email}>`,
+  );
 
   const rawToken = await createPasswordSetupToken(user.id);
   const resetUrl = `${await getBaseUrl()}/activate?token=${rawToken}`;
@@ -154,7 +167,16 @@ export async function updateUserRoleAction(
     return { error: "Du kannst dir nicht selbst die Admin-Rolle entziehen." };
   }
 
+  const target = await getUserById(userId);
+  if (!target) return { error: "User nicht gefunden." };
+
   await updateUserRole(userId, role);
+  await logAdminAction(
+    admin.id,
+    "update_role",
+    userId,
+    `${target.name} <${target.email}>: ${target.role} → ${role}`,
+  );
   // Gäste dürfen keinen Charakter zugewiesen haben (siehe
   // assignCharacterAction unten) — bei einer Herabstufung auf "guest" werden
   // bestehende Zuweisungen deshalb aufgelöst, statt einen inkonsistenten
@@ -177,7 +199,16 @@ export async function deactivateUserAction(
     return { error: "Du kannst dich nicht selbst deaktivieren." };
   }
 
+  const target = await getUserById(userId);
+  if (!target) return { error: "User nicht gefunden." };
+
   await setUserActive(userId, false);
+  await logAdminAction(
+    admin.id,
+    "deactivate_user",
+    userId,
+    `${target.name} <${target.email}>`,
+  );
   redirect("/admin");
 }
 
@@ -185,12 +216,21 @@ export async function reactivateUserAction(
   _state: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  await requireAdmin();
+  const admin = await requireAdmin();
 
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
 
+  const target = await getUserById(userId);
+  if (!target) return { error: "User nicht gefunden." };
+
   await setUserActive(userId, true);
+  await logAdminAction(
+    admin.id,
+    "reactivate_user",
+    userId,
+    `${target.name} <${target.email}>`,
+  );
   redirect("/admin");
 }
 
@@ -206,6 +246,19 @@ export async function deleteUserAction(
     return { error: "Du kannst dich nicht selbst löschen." };
   }
 
+  const target = await getUserById(userId);
+  if (!target) return { error: "User nicht gefunden." };
+
+  // Vor dem Löschen protokollieren (target_user_id verweist zu diesem
+  // Zeitpunkt noch auf eine existierende Zeile) — details hält Name/E-Mail
+  // zusätzlich als Klartext fest, da target_user_id danach durch die
+  // ON DELETE SET NULL-Regel automatisch auf NULL wechselt.
+  await logAdminAction(
+    admin.id,
+    "delete_user",
+    userId,
+    `${target.name} <${target.email}>`,
+  );
   await deleteUser(userId);
   redirect("/admin");
 }

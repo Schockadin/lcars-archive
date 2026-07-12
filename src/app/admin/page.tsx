@@ -56,7 +56,7 @@ export default async function UsersAdminPage() {
   // DB-Wert, nur der Vollständigkeit halber im Kopf gezeigt (gleiche Optik
   // wie die anderen DataRow-Akkordeons hier, die einen Datensatz-Zähler
   // zeigen).
-  const adminActionCount = 6;
+  const adminActionCount = 7;
 
   return (
     <>
@@ -148,6 +148,21 @@ export default async function UsersAdminPage() {
                     className="lcars-pill-btn--outline self-start"
                   >
                     Inhaltsübersicht öffnen
+                  </Link>
+                </section>
+
+                <section className="flex flex-col gap-[12px]">
+                  <h2 className="text-lcars-amber">Audit-Log</h2>
+                  <p className="text-lcars-text-dim text-[13px]">
+                    Wer hat wann welche Useraccount-Action ausgeführt
+                    (anlegen, Rolle ändern, (de)aktivieren, löschen,
+                    Passwort-Reset auslösen).
+                  </p>
+                  <Link
+                    href="/admin/audit-log"
+                    className="lcars-pill-btn--outline self-start"
+                  >
+                    Audit-Log öffnen
                   </Link>
                 </section>
               </div>
