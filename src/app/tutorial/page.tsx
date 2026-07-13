@@ -189,8 +189,10 @@ export default function TutorialPage() {
                 Knöpfe: <strong>„Merken“</strong> speichert den Eintrag für dich
                 selbst (Filter „Gespeichert“ auf der Suchseite) — ohne jede
                 Benachrichtigung. <strong>„Abonnieren“</strong> meldet dich für
-                Update-Benachrichtigungen zu genau diesem Eintrag an (z.B. wenn
-                ein abonniertes Gespräch abgeschlossen wird).
+                Update-Benachrichtigungen zu genau diesem Eintrag an — du
+                bekommst eine Nachricht, sobald der Charakter, die Mission oder
+                der Archiv-Eintrag bearbeitet wird (z.B. wenn ein abonniertes
+                Gespräch abgeschlossen wird).
               </p>
               <p>
                 Eingeloggt zeigt dir die <strong>Startseite</strong> dein
@@ -348,8 +350,9 @@ export default function TutorialPage() {
                   einsehen.
                 </li>
                 <li>
-                  Charaktere Spieler:innen zuweisen (Nutzerverwaltung unter{" "}
-                  <code>/users</code>) — Gast-Accounts ausgenommen.
+                  Charaktere Spieler:innen zuweisen (unter{" "}
+                  <code>Admin → Charaktere</code> im Header-Menü) — Gast-
+                  Accounts ausgenommen.
                 </li>
                 <li>
                   Über die „Admin-Aktionen“ jeder Detailseite Autolinking,
@@ -367,11 +370,32 @@ export default function TutorialPage() {
                 </li>
               </ul>
               <p>
-                Administration kann zusätzlich Nutzerkonten anlegen, Rollen
-                ändern, deaktivieren oder löschen, alle Missionen ohne
-                Besitzer:in auf einen Schlag einer Spielleitung zuordnen
-                (Nutzerverwaltung, „Admin Actions“) — und sieht als einzige
-                Rolle ausnahmslos alle Inhalte, auch private.
+                Administration hat zusätzlich einen eigenen Bereich, erreichbar
+                über das <strong>„Admin“</strong>-Menü im Header:
+              </p>
+              <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
+                <li>
+                  Unter <strong>„User“</strong> Nutzerkonten anlegen und in
+                  einer durchsuchbaren, sortierbaren Übersicht einsehen; über
+                  die Detailseite eines Users dessen Rolle ändern, das Konto
+                  (de)aktivieren oder löschen, einen Passwort-Reset auslösen
+                  oder es auf allen Geräten abmelden.
+                </li>
+                <li>
+                  Unter <strong>„Scripts“</strong> alle Missionen ohne
+                  Besitzer:in auf einen Schlag einer Spielleitung zuordnen,
+                  sowie Cache/Timeline neu aufbauen.
+                </li>
+                <li>
+                  Unter <strong>„Audit-Log“</strong> nachvollziehen, wer wann
+                  welche sicherheitsrelevante Kontoaktion durchgeführt hat,
+                  sowie eine separate Übersicht aller in den letzten drei Tagen
+                  neu angelegten, bearbeiteten oder gelöschten Inhalte.
+                </li>
+              </ul>
+              <p>
+                Administration sieht außerdem als einzige Rolle ausnahmslos
+                alle Inhalte, auch private.
               </p>
             </div>
           </LcarsDataRow>

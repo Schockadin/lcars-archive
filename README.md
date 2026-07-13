@@ -37,7 +37,17 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
   entstehen danach direkt in der App (Datenbank als alleinige Source of Truth).
 - **DB-Backup** — der komplette Datenbankinhalt lässt sich im Admin-Panel als
-  JSON-Datei herunterladen und bei Bedarf wieder vollständig einspielen.
+  JSON-Datei herunterladen und bei Bedarf wieder vollständig einspielen; ein
+  täglicher Cronjob sichert zusätzlich automatisch nach Cloudflare R2 und
+  löscht dort Backups, die älter als 30 Tage sind.
+- **Admin-Bereich** — eigene Unterseiten für Nutzerverwaltung (durchsuchbare/
+  sortierbare Tabelle, Detailseite pro User für Rolle/Aktivierung/Löschen/
+  Passwort-Reset), Charakter-Zuweisung, Wartungs-Skripte sowie einen
+  read-only Datenbank-Tabellenbrowser inkl. freiem, schreibgeschütztem
+  SQL-Abfragefeld (Syntaxhervorhebung via CodeMirror). Ein Audit-Log
+  protokolliert sicherheitsrelevante Useraccount-Aktionen (inkl. IP-Adresse)
+  sowie, separat, eine 3-Tage-Übersicht aller neu angelegten, bearbeiteten
+  und gelöschten Inhalte.
 - **Custom-Markdown-Pipeline** — `remark`/`rehype` wandeln Markdown in HTML um und rendern
   `h2`-Überschriften als LCARS-Data-Rows.
 - **SEO-fertig** — `robots.ts`, `sitemap.ts`, dynamische Metadaten und 404-Seite.
@@ -142,10 +152,13 @@ Liest die Markdown-Dateien aus `VAULT_PATH` ein und schreibt sie per Upsert in d
 
 > **Sicherung des DB-Stands:** Neue/bearbeitete Inhalte entstehen über die
 > Web-App direkt in der Datenbank, es gibt keine Rückrichtung DB → Vault mehr.
-> Um den kompletten Datenbankinhalt zu sichern, im Admin-Panel (`/users` →
-> „Admin Actions“ → „DB-Backup“) auf „Backup herunterladen“ klicken; über
-> „Backup einspielen“ lässt sich eine solche Datei auch wieder vollständig
-> zurückspielen — siehe `docs/content-creation-strategy.md`.
+> Um den kompletten Datenbankinhalt zu sichern, im Admin-Panel (`/admin/db` →
+> „DB-Backup“) auf „Backup herunterladen“ klicken; über „Backup einspielen“
+> lässt sich eine solche Datei auch wieder vollständig zurückspielen — siehe
+> `docs/content-creation-strategy.md`. Derselbe Bereich bietet außerdem einen
+> read-only Tabellenbrowser und ein freies, schreibgeschütztes SQL-Abfragefeld
+> für einzelne Tabellen, ohne dafür erst ein komplettes Backup exportieren zu
+> müssen.
 
 ### 6. Entwicklungsserver starten
 
@@ -182,10 +195,17 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:archive`    | Importiert nur die Archiv-Einträge                       |
 | `npm run db:revalidate` | Invalidiert nur die Caches (siehe `SITE_URL`)            |
 | `npm run db:reset`      | Setzt die Datenbank zurück                                |
+| `npm run db:backup`     | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup") |
+| `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind             |
+| `npm run test`          | Führt die Unit-Tests aus (`src/**/*.test.ts`)             |
+| `npm run test:integration` | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz) |
 
-Jedes `db:*`-Skript gibt es zusätzlich als `:dev`-Variante (z.B.
-`db:setup:dev`, `db:ingest:dev`, `db:reset:dev`) — identisch, nur mit
-`--env-file=.env.dev` statt `.env.local`. Siehe „Dev-/Preview-Umgebung"
+Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
+(z.B. `db:setup:dev`, `db:ingest:dev`, `db:reset:dev`) — identisch, nur mit
+`--env-file=.env.dev` statt `.env.local`. Ausnahme: `db:backup`/
+`db:backup:cleanup` lesen `DATABASE_URL`/die R2-Zugangsdaten direkt aus der
+Prozessumgebung (kein `--env-file`, siehe GitHub-Actions-Secrets oben) und
+haben deshalb keine `:dev`-Variante. Siehe „Dev-/Preview-Umgebung"
 unter Deployment.
 
 ---
@@ -198,6 +218,8 @@ unter Deployment.
 │   ├── schema.sql            # PostgreSQL-Schema
 │   ├── setup-db.ts           # Schema anlegen
 │   ├── reset-db.ts           # Datenbank zurücksetzen
+│   ├── backup-db.ts          # Voll-Backup nach R2 (täglicher Cronjob)
+│   ├── cleanup-db-backups.ts # Löscht R2-Backups älter als 30 Tage
 │   └── ingest/               # Markdown-Vault → Datenbank
 │       ├── index.ts          # Einstiegspunkt der Ingestion
 │       ├── characters.ts
@@ -216,7 +238,15 @@ unter Deployment.
     │   ├── timeline/
     │   ├── tutorial/          # Anleitung für Besucher/User/Spielleitung
     │   ├── login/, activate/, forgot-password/
-    │   ├── users/             # Profil+Settings, Nutzerverwaltung, eigene Inhalte anlegen
+    │   ├── users/             # Öffentliche Nutzerübersicht + Profilseiten anderer User
+    │   ├── user/              # Eigenes Profil, Settings, eigene Inhalte anlegen/verwalten
+    │   ├── admin/             # Admin-Bereich (gm-or-admin bzw. admin-only je Unterseite):
+    │   │   ├── users/          #   Nutzerverwaltung (Tabelle + Detailseite [id]/edit/)
+    │   │   ├── characters/     #   Charakter-Zuweisung
+    │   │   ├── db/             #   DB-Backup, Tabellenbrowser, freies SQL-Abfragefeld
+    │   │   ├── scripts/        #   Cache-Revalidation, Timeline-Neuaufbau, u.a.
+    │   │   ├── audit-log/      #   Sicherheits-Audit-Log + Content-Aktivitätsfeed
+    │   │   └── content/        #   Owner-/Sichtbarkeits-Übersteuerung fremder Inhalte
     │   ├── api/               # /api/characters, /api/health …
     │   ├── manifest.ts        # PWA-Manifest (Icons, inkl. maskable)
     │   ├── robots.ts
@@ -318,20 +348,20 @@ Das Projekt ist für **Netlify** vorkonfiguriert (`@netlify/plugin-nextjs`).
 `.github/workflows/daily-db-backup.yml` läuft täglich um 03:00 UTC (plus
 manuell auslösbar über "Run workflow") und lädt einen vollständigen
 DB-Export (`scripts/backup-db.ts`, dieselbe Export-Logik wie der
-"DB-Backup herunterladen"-Button im Adminpanel) nach Cloudflare R2 hoch.
+"DB-Backup herunterladen"-Button im Adminpanel unter `/admin/db`) nach
+Cloudflare R2 hoch. Im selben Lauf löscht anschließend
+`scripts/cleanup-db-backups.ts` (`npm run db:backup:cleanup`) alle Backups,
+die älter als 30 Tage sind — das Alter wird aus dem Datei-Key selbst
+gelesen (`db-backups/JJJJ-MM-TT.json`), nicht aus S3s `LastModified`.
 Dafür müssen folgende Repository-Secrets gesetzt sein (GitHub → Settings →
 Secrets and variables → Actions → "New repository secret"):
 
 | Secret | Wert |
 |---|---|
-| `DATABASE_URL` | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. |
+| `DATABASE_URL` | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. Nur für den Backup-Schritt nötig, nicht für das Cleanup. |
 | `R2_ACCOUNT_ID` | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens"). |
 | `R2_BUCKET_NAME` | Name des Ziel-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). |
-
-Aufbewahrungsfrist/automatisches Löschen alter Backups ist bewusst kein
-Skript-Feature, sondern über eine Lifecycle-Regel direkt auf dem R2-Bucket
-konfigurierbar (Cloudflare-Dashboard → Bucket → Lifecycle Rules).
 
 ### Dev-/Preview-Umgebung
 
