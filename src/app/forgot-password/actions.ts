@@ -10,6 +10,7 @@ import { getBaseUrl, getClientIp } from "@/lib/http";
 import {
   isPasswordResetRateLimited,
   recordPasswordResetRequest,
+  withEmailResetLock,
 } from "@/lib/passwordResetLimiter";
 
 export interface ForgotPasswordState {
@@ -34,13 +35,22 @@ export async function requestPasswordResetAction(
   if (!email) return { error: "Bitte eine E-Mail-Adresse angeben." };
 
   const ip = await getClientIp();
-  // Bei Überschreiten still bei { submitted: true } bleiben (siehe
-  // Kommentar in passwordResetLimiter.ts) statt eines eigenen Fehlers, sonst
-  // wäre die Sperre selbst wieder ein Enumeration-Kanal.
-  if (await isPasswordResetRateLimited(email, ip)) {
+  // Prüfung+Eintrag laufen innerhalb von withEmailResetLock (siehe
+  // passwordResetLimiter.ts) — schließt dieselbe TOCTOU-Lücke zwischen
+  // Prüfung und Eintrag wie withEmailLoginLock beim Login. Bei Überschreiten
+  // still bei { submitted: true } bleiben (siehe Kommentar in
+  // passwordResetLimiter.ts) statt eines eigenen Fehlers, sonst wäre die
+  // Sperre selbst wieder ein Enumeration-Kanal.
+  const limited = await withEmailResetLock(email, async (tx) => {
+    if (await isPasswordResetRateLimited(email, ip, tx)) {
+      return true;
+    }
+    await recordPasswordResetRequest(email, ip, tx);
+    return false;
+  });
+  if (limited) {
     return { submitted: true };
   }
-  await recordPasswordResetRequest(email, ip);
 
   const user = await getUserCredentialsByEmail(email);
   if (user && user.is_active) {

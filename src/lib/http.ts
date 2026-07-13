@@ -13,18 +13,16 @@ export async function getBaseUrl(): Promise<string> {
 }
 
 // Für Rate-Limiting (src/lib/loginAttempts.ts, src/lib/passwordResetLimiter.ts).
-// x-nf-client-connection-ip kommt direkt von Netlifys Edge und ist dort nicht
-// vom Client fälschbar (im Gegensatz zu x-forwarded-for, das ein Client
-// selbst mitschicken könnte) — bevorzugt, wenn vorhanden. x-forwarded-for
-// bleibt der Fallback für lokale Entwicklung/andere Umgebungen; nur der
-// erste (am weitesten client-seitige) Eintrag der Liste zählt.
+// NUR x-nf-client-connection-ip, kein x-forwarded-for-Fallback mehr: Diese
+// App läuft ausschließlich auf Netlify (siehe netlify.toml/README), wo dieser
+// Header immer von Netlifys Edge gesetzt wird und für den Client nicht
+// fälschbar ist. x-forwarded-for dagegen kann ein Client ohne vorgeschalteten
+// Proxy selbst mitschicken — ein Angreifer könnte damit bei jedem Versuch
+// eine andere IP vortäuschen und so das Pro-IP-Limit umgehen. null (statt
+// eines fälschbaren Werts) ist der sicherere Fallback: die Rate-Limiter
+// behandeln eine fehlende IP als "nur die E-Mail-Grenze greift" statt
+// stillschweigend einer manipulierbaren zu vertrauen.
 export async function getClientIp(): Promise<string | null> {
   const h = await headers();
-  const nfIp = h.get("x-nf-client-connection-ip");
-  if (nfIp) return nfIp;
-
-  const forwardedFor = h.get("x-forwarded-for");
-  if (forwardedFor) return forwardedFor.split(",")[0].trim();
-
-  return null;
+  return h.get("x-nf-client-connection-ip");
 }

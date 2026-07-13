@@ -25,3 +25,7 @@ export {
 } from "./SortSwitch";
 export { default as LcarsAkteCard } from "./AkteCard";
 export { default as LcarsLogEntry } from "./LogEntry";
+export {
+  default as LcarsCodeEditor,
+  type CodeEditorLanguage,
+} from "./CodeEditor";

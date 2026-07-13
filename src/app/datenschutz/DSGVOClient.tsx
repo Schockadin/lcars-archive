@@ -48,6 +48,25 @@ export default function DSGVOClient() {
         eingegebenen E-Mail-Adresse ein Konto existiert.
       </p>
       <p>
+        Zum Schutz vor automatisierten Anmelde- bzw. Reset-Versuchen
+        (Brute-Force) speichert die Anwendung selbst bei jedem Login-Versuch
+        und jeder Anfrage über „Passwort vergessen“ zusätzlich E-Mail-Adresse,
+        IP-Adresse und Zeitpunkt (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO —
+        berechtigtes Interesse an der Verhinderung automatisierter
+        Angriffsversuche). Diese Einträge werden nach spätestens 24 Stunden
+        automatisch gelöscht.
+      </p>
+      <p>
+        Sicherheitsrelevante Aktionen der Administration auf Useraccounts
+        (Anlegen, Rollen-/Profiländerung, (De-)Aktivierung, Löschung,
+        Passwort-Reset auslösen, Abmelden auf allen Geräten) werden zusammen
+        mit Zeitpunkt, ausführendem Account und IP-Adresse dauerhaft in einem
+        nur für Administration einsehbaren Protokoll festgehalten
+        (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse
+        an der Nachvollziehbarkeit privilegierter Kontoaktionen, u. a. zur
+        Aufklärung eines vermuteten kompromittierten Admin-Accounts).
+      </p>
+      <p>
         Wer im Login-Bereich Push-Benachrichtigungen aktiviert, erlaubt damit
         die Speicherung einer geräteseitigen Push-Subscription (eine vom Browser
         vergebene Endpoint-URL sowie kryptografische Schlüssel zur

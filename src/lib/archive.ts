@@ -3,6 +3,13 @@ import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
+// getDialogueSubscribers deckt jeden archive_entry-Slug ab, nicht nur offene
+// Dialoge (siehe Kommentar dort in dialoguesCore.ts) — hier für "normale"
+// (nicht-Dialog-)Einträge wiederverwendet statt einer identischen Query.
+import { getDialogueSubscribers } from "@/lib/dialogues";
+import { sendArchiveEntryUpdatedEmail } from "@/lib/mail";
+import { sendPushToUser } from "@/lib/push";
+import { getBaseUrl } from "@/lib/http";
 import {
   getAttributeFields,
   getReferenceFields,
@@ -646,16 +653,67 @@ export async function updateOwnArchiveEntryBody(
   bodyMarkdown: string,
   // Siehe createArchiveEntry oben — Opt-in "Automatisch verlinken".
   contentHtmlOverride?: string,
-): Promise<{ slug: string; contentHtml: string } | null> {
+): Promise<{ slug: string; title: string; contentHtml: string } | null> {
   const contentHtml =
     contentHtmlOverride ?? (await renderContentHtml(bodyMarkdown));
 
-  const rows = await sql<{ slug: string }[]>`
+  const rows = await sql<{ slug: string; title: string }[]>`
     UPDATE archive_entries
     SET content = ${contentHtml}, source_md = ${bodyMarkdown}, updated_at = NOW()
     WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
-    RETURNING slug
+    RETURNING slug, title
   `;
   const row = rows[0];
-  return row ? { slug: row.slug, contentHtml } : null;
+  return row ? { slug: row.slug, title: row.title, contentHtml } : null;
+}
+
+// Benachrichtigt alle Abonnenten eines Archiv-Eintrags (content_follows,
+// target_type 'archive_entry'), dass sich etwas an ihm geändert hat — analog
+// notifyCharacterSubscribers in characters.ts. Gerufen von beiden
+// Bearbeiten-Wegen (volles Formular: archive/_shared/contentAction.ts;
+// Inline-Body-Editor: app/actions/archive.ts#updateOwnArchiveEntryAction),
+// jeweils NACH dem erfolgreichen Speichern. Nur für nicht-Dialog-Einträge
+// relevant (beide Aufrufer schließen category='dialogue' bereits aus) —
+// Dialoge haben ihre eigene Benachrichtigung (Nachrichten-Abo, siehe
+// dialoguesCore.ts). editingUserId schließt den Bearbeitenden selbst aus.
+export async function notifyArchiveEntrySubscribers(input: {
+  entrySlug: string;
+  entryTitle: string;
+  editingUserId: number;
+  preview: string;
+}): Promise<void> {
+  const subscribers = await getDialogueSubscribers(
+    input.entrySlug,
+    input.editingUserId,
+  );
+  if (subscribers.length === 0) return;
+
+  const entryUrl = `${await getBaseUrl()}/archive/${input.entrySlug}`;
+  // Parallel statt sequenziell — siehe gleicher Kommentar bei
+  // notifyMissionSubscribers in missions.ts.
+  await Promise.allSettled(
+    subscribers.map(async (subscriber) => {
+      if (subscriber.emailNotificationsEnabled) {
+        const result = await sendArchiveEntryUpdatedEmail({
+          to: subscriber.email,
+          name: subscriber.name,
+          entryTitle: input.entryTitle,
+          entryUrl,
+          preview: input.preview,
+        });
+        if (!result.sent) {
+          console.error(
+            `Archiv-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+          );
+        }
+      }
+      if (subscriber.pushNotificationsEnabled) {
+        await sendPushToUser(subscriber.id, {
+          title: `Aktualisiert: ${input.entryTitle}`,
+          body: input.preview,
+          url: entryUrl,
+        });
+      }
+    }),
+  );
 }

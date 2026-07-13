@@ -9,41 +9,22 @@
 // über seine "react-server"-Exportbedingung auf den No-op-Stub statt auf
 // den werfenden Default-Export auflöst — exakt die Bedingung, die Next.js'
 // eigener Server-Build normalerweise implizit setzt.
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 import sql from "@/lib/db";
 import { exportDatabaseBackup } from "@/lib/dbBackup";
-
-function requireEnv(name: string): string {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`${name} ist nicht gesetzt`);
-  }
-  return value;
-}
+import { createR2Client } from "./r2Client";
 
 async function main() {
   console.log("🔌 Exportiere Datenbank...");
   const backup = await exportDatabaseBackup();
   const json = JSON.stringify(backup);
 
-  const accountId = requireEnv("R2_ACCOUNT_ID");
-  const accessKeyId = requireEnv("R2_ACCESS_KEY_ID");
-  const secretAccessKey = requireEnv("R2_SECRET_ACCESS_KEY");
-  const bucket = requireEnv("R2_BUCKET_NAME");
-
-  // R2 spricht die S3-API, braucht aber "auto" statt einer echten AWS-Region
-  // (siehe Cloudflare-R2-Doku) und den Account-spezifischen S3-Endpoint.
-  const client = new S3Client({
-    region: "auto",
-    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
-    credentials: { accessKeyId, secretAccessKey },
-  });
+  const { client, bucket } = createR2Client();
 
   // Ein Key pro Kalendertag (nicht Timestamp) — ein erneuter Lauf am selben
   // Tag überschreibt statt zu duplizieren. Aufbewahrungsfrist/Aufräumen alter
-  // Backups ist bewusst kein Skript-Feature, sondern eine R2-Lifecycle-Regel
-  // auf dem Bucket selbst (Cloudflare-Dashboard) — verlässlicher als
-  // selbstgebaute Lösch-Logik in diesem Skript.
+  // Backups übernimmt cleanup-db-backups.ts, im selben Cronjob direkt im
+  // Anschluss an diesen Upload (siehe .github/workflows/daily-db-backup.yml).
   const date = new Date().toISOString().slice(0, 10);
   const key = `db-backups/${date}.json`;
 

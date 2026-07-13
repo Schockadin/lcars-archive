@@ -14,7 +14,9 @@ import sql from "@/lib/db";
 // Tabellen in Eltern-vor-Kind-Reihenfolge (FK-Constraints) — beim Restore
 // relevant für Lesbarkeit, nicht für Korrektheit (TRUNCATE...CASCADE unten
 // ignoriert die Reihenfolge ohnehin).
-const TABLE_COLUMNS = {
+// Exportiert (statt modul-intern) — src/lib/dbInspect.ts nutzt dieselbe
+// Whitelist für den read-only Tabellen-Viewer im Admin-Bereich.
+export const TABLE_COLUMNS = {
   characters: [
     "id", "slug", "name", "status", "player_id", "portrait", "species",
     "rank", "bio", "metadata", "source_md", "frontmatter", "created_at",
@@ -61,7 +63,7 @@ const TABLE_COLUMNS = {
 } as const satisfies Record<string, readonly string[]>;
 
 const TABLES = Object.keys(TABLE_COLUMNS) as (keyof typeof TABLE_COLUMNS)[];
-type TableName = (typeof TABLES)[number];
+export type TableName = (typeof TABLES)[number];
 
 // Tabellen mit SERIAL-id-Spalte — deren Sequence muss nach dem Restore auf
 // MAX(id)+1 gesetzt werden, sonst kollidiert der nächste per App erzeugte

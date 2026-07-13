@@ -6,6 +6,7 @@ import {
   createArchiveEntry,
   updateOwnArchiveEntryContent,
   getOwnArchiveEntryForEdit,
+  notifyArchiveEntrySubscribers,
 } from "@/lib/archive";
 import { isArchiveCategory } from "@/lib/archiveFormat";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
@@ -114,6 +115,12 @@ export async function archiveEntryAction(
     const preview = synopsisExcerpt(bodyMarkdown, 140);
     const author = await getUserById(session.userId);
 
+    await notifyArchiveEntrySubscribers({
+      entrySlug: result.slug,
+      entryTitle: title,
+      editingUserId: session.userId,
+      preview,
+    });
     await notifyContentChange({
       contentType: "archive_entry",
       event: "updated",

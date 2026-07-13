@@ -501,3 +501,21 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
   created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created_at ON admin_audit_log(created_at);
+
+-- Wie jede andere enum-artige TEXT-Spalte im Schema per CHECK abgesichert,
+-- statt sich allein auf den TS-Union-Typ AdminAuditAction (src/lib/auditLog.ts)
+-- zu verlassen. update_profile ist neu: Name-/E-Mail-Änderungen durch einen
+-- Admin wurden bisher gar nicht protokolliert.
+ALTER TABLE admin_audit_log DROP CONSTRAINT IF EXISTS admin_audit_log_action_check;
+ALTER TABLE admin_audit_log ADD CONSTRAINT admin_audit_log_action_check
+  CHECK (action IN (
+    'create_user', 'reset_password', 'update_role', 'update_profile',
+    'deactivate_user', 'reactivate_user', 'delete_user', 'force_logout'
+  ));
+
+-- Actor-IP (siehe getClientIp in src/lib/http.ts) — bisher wurde zwar
+-- protokolliert, WER eine Aktion ausgeführt hat, aber nicht VON WO, obwohl
+-- genau dieselbe IP-Ermittlung für das Login-Rate-Limiting bereits an jeder
+-- betroffenen Action verfügbar ist. Wichtig für die forensische Aufarbeitung
+-- eines vermuteten kompromittierten Admin-Accounts.
+ALTER TABLE admin_audit_log ADD COLUMN IF NOT EXISTS ip TEXT;

@@ -11,7 +11,7 @@ const CATEGORY_SUGGESTIONS = ["event", "dialogue", "sonstiges"];
 
 // Kalender-Icon für die iconOnly-Variante (Integration in MarkdownEditor.tsx'
 // Formatierungs-Toolbar) — gleiches Inline-SVG-Muster wie die Icons in
-// UserRoleRow.tsx (stroke="currentColor", erbt die Textfarbe des Buttons).
+// @/lib/icons (stroke="currentColor", erbt die Textfarbe des Buttons).
 function CalendarIcon() {
   return (
     <svg

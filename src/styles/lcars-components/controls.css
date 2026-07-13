@@ -57,9 +57,8 @@
   transition: transform 200ms ease;
 }
 
-/* Kompakte Icon-Variante von .lcars-switch für Zeilen-Aktionen (z.B.
-   UserRoleRow.tsx) — gleiche Rahmen-/Hover-Logik, aber als 30px-Kreis mit
-   SVG statt Text-Pille. */
+/* Kompakte Icon-Variante von .lcars-switch für Zeilen-Aktionen — gleiche
+   Rahmen-/Hover-Logik, aber als 30px-Kreis mit SVG statt Text-Pille. */
 .lcars-icon-btn {
   display: inline-flex;
   align-items: center;
@@ -250,3 +249,11 @@
     align-items: end;
   }
 }
+
+/* Wrapper um CodeEditor.tsx (CodeMirror) — Theming/Farben laufen über das
+   EditorView.theme() im Component selbst, hier nur die Breite. */
+.lcars-code-editor,
+.lcars-code-editor .cm-editor {
+  width: 100%;
+}
+

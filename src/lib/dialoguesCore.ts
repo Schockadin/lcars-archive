@@ -665,7 +665,12 @@ export interface DialogueEmailTarget {
 // Grundlage für die Benachrichtigung in postDialogueMessageAction. Ersetzt
 // getOtherParticipantContact als bedingungslosen Empfänger: nur wer
 // abonniert ist (Default beim Anlegen, abbestellbar), bekommt
-// Benachrichtigungen.
+// Benachrichtigungen. Dialoge sind archive_entries (category='dialogue'),
+// die Query prüft aber nur target_type/target_slug — funktioniert deshalb
+// unverändert für JEDEN archive_entry-Slug, nicht nur offene Dialoge (siehe
+// notifyArchiveEntrySubscribers in archive.ts, das diese Funktion für genau
+// diesen generischen Zweck wiederverwendet statt eine eigene, identische
+// Query zu duplizieren).
 export async function getDialogueSubscribers(
   dialogueSlug: string,
   excludeUserId: number,
@@ -716,6 +721,39 @@ export async function getCharacterSubscribers(
     WHERE cf.target_type = 'character'
       AND cf.target_slug = ${characterSlug}
       AND cf.subscribed_at IS NOT NULL
+  `;
+  return rows.map((row) => ({
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    emailNotificationsEnabled: row.email_notifications_enabled,
+    pushNotificationsEnabled: row.push_notifications_enabled,
+  }));
+}
+
+// Abonnenten einer Mission (subscribed_at gesetzt, target_type 'mission') —
+// Grundlage für notifyMissionSubscribers in missions.ts, gleiches Muster wie
+// getCharacterSubscribers/getDialogueSubscribers oben.
+export async function getMissionSubscribers(
+  missionSlug: string,
+  excludeUserId: number,
+): Promise<DialogueEmailTarget[]> {
+  const rows = await sql<
+    {
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
+    FROM content_follows cf
+    JOIN users u ON u.id = cf.user_id
+    WHERE cf.target_type = 'mission'
+      AND cf.target_slug = ${missionSlug}
+      AND cf.subscribed_at IS NOT NULL
+      AND cf.user_id != ${excludeUserId}
   `;
   return rows.map((row) => ({
     id: row.id,
