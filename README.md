@@ -114,7 +114,18 @@ npm run db:setup
 Liest `scripts/schema.sql` ein und erstellt alle Tabellen
 (`characters`, `missions`, `mission_logs`, `archive_entries`, …).
 
-### 4. Inhalte importieren
+### 4. Ersten Admin-User anlegen
+
+```bash
+npm run db:create-admin
+```
+
+Legt einen Admin-Account an, aber nur wenn `users` noch komplett leer ist —
+Adresse/Name kommen aus `ADMIN_EMAIL`/`ADMIN_NAME` (siehe `.env.example`).
+Ohne gesetztes `ADMIN_PASSWORD` wird eins generiert und einmalig in der
+Konsole ausgegeben.
+
+### 5. Inhalte importieren
 
 ```bash
 npm run db:ingest
@@ -136,7 +147,7 @@ Liest die Markdown-Dateien aus `VAULT_PATH` ein und schreibt sie per Upsert in d
 > „Backup einspielen“ lässt sich eine solche Datei auch wieder vollständig
 > zurückspielen — siehe `docs/content-creation-strategy.md`.
 
-### 5. Entwicklungsserver starten
+### 6. Entwicklungsserver starten
 
 ```bash
 npm run dev
@@ -163,6 +174,7 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run start`     | Startet den Produktionsserver                      |
 | `npm run lint`      | Führt ESLint aus                                   |
 | `npm run db:setup`      | Legt das Datenbankschema an (`scripts/schema.sql`)        |
+| `npm run db:create-admin` | Legt einen Admin-User an, nur wenn `users` leer ist      |
 | `npm run db:ingest`     | Importiert den kompletten Markdown-Vault                  |
 | `npm run db:ingest:new` | Importiert nur Dateien mit noch unbekanntem `slug`        |
 | `npm run db:characters` | Importiert nur die Charaktere                            |
