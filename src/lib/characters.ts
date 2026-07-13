@@ -639,29 +639,33 @@ export async function notifyCharacterSubscribers(input: {
     ? synopsisExcerpt(input.bioMarkdown, 140)
     : "Die Akte wurde aktualisiert.";
   const characterUrl = `${await getBaseUrl()}/characters/${input.characterSlug}`;
-  for (const subscriber of subscribers) {
-    if (subscriber.emailNotificationsEnabled) {
-      const result = await sendCharacterUpdatedEmail({
-        to: subscriber.email,
-        name: subscriber.name,
-        characterName: input.characterName,
-        characterUrl,
-        preview,
-      });
-      if (!result.sent) {
-        console.error(
-          `Charakter-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
-        );
+  // Parallel statt sequenziell — siehe gleicher Kommentar bei
+  // notifyMissionSubscribers in missions.ts.
+  await Promise.allSettled(
+    subscribers.map(async (subscriber) => {
+      if (subscriber.emailNotificationsEnabled) {
+        const result = await sendCharacterUpdatedEmail({
+          to: subscriber.email,
+          name: subscriber.name,
+          characterName: input.characterName,
+          characterUrl,
+          preview,
+        });
+        if (!result.sent) {
+          console.error(
+            `Charakter-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+          );
+        }
       }
-    }
-    if (subscriber.pushNotificationsEnabled) {
-      await sendPushToUser(subscriber.id, {
-        title: `Aktualisiert: ${input.characterName}`,
-        body: preview,
-        url: characterUrl,
-      });
-    }
-  }
+      if (subscriber.pushNotificationsEnabled) {
+        await sendPushToUser(subscriber.id, {
+          title: `Aktualisiert: ${input.characterName}`,
+          body: preview,
+          url: characterUrl,
+        });
+      }
+    }),
+  );
 }
 
 // Nur die Biografie, nicht Name/Status/Metadaten — für den Inline-Editor auf

@@ -67,6 +67,17 @@ export function enumOptionsFor(
   return ENUM_COLUMNS[table]?.[column] ?? null;
 }
 
+// Fremdschlüssel-Spalten werden in der Anzeige (siehe resolveReferences
+// unten) durch den Slug der referenzierten Zeile ersetzt, die SQL-Sortierung
+// läuft aber immer über den rohen numerischen Wert (Sortierung passiert VOR
+// der Auflösung). Sortieren nach einer FK-Spalte würde deshalb nach interner
+// id statt nach dem angezeigten Slug ordnen — für den Admin nicht
+// nachvollziehbar. admin/db/page.tsx nutzt das, um für diese Spalten keinen
+// Sortier-Link anzubieten (reine Anzeige-Spalte im Header statt Link).
+export function isForeignKeyColumn(table: TableName, column: string): boolean {
+  return column in (FK_COLUMNS[table] ?? {});
+}
+
 // Echte Boolean-Spalten unter den ENUM_COLUMNS oben — Postgres' ::text-Cast
 // eines boolean liefert "t"/"f", nicht "true"/"false", ein ILIKE-Substring-
 // Filter (wie für alle anderen Spalten unten) würde deshalb nie treffen.
@@ -172,8 +183,16 @@ function buildFilterClause(
   for (const [col, value] of Object.entries(filters)) {
     if (!validColumns.has(col) || !value.trim()) continue;
     if (booleanColumns.has(col)) {
+      // Nur "true"/"false" (die einzigen Werte, die das <select> im UI
+      // anbietet) werden tatsächlich als Filter angewandt — ein
+      // manipulierter f_<spalte>-Query-Param mit einem anderen Wert würde
+      // sonst als ungültiges ::boolean-Literal einen ungefangenen
+      // Postgres-Fehler auslösen (statt die Seite einfach ungefiltert zu
+      // zeigen).
+      const normalized = value.trim().toLowerCase();
+      if (normalized !== "true" && normalized !== "false") continue;
       clauses.push(`"${col}" = $${i}::boolean`);
-      params.push(value.trim());
+      params.push(normalized);
     } else {
       clauses.push(`"${col}"::text ILIKE $${i}`);
       params.push(`%${value.trim()}%`);
@@ -241,11 +260,25 @@ export async function listTableRows(
 
 export class UnsafeQueryError extends Error {}
 
-// Nur früher, freundlicher Fehler für den offensichtlichen Fall (mehrere
-// Anweisungen, kein SELECT/WITH) — KEIN Sicherheitsmechanismus für sich
-// allein (siehe runReadOnlyQuery unten, das die eigentliche Durchsetzung
-// über eine READ ONLY-Transaktion übernimmt). Ein einfacher Text-Check
-// könnte z.B. eine schreibende CTE wie
+// Funktionen mit Seiteneffekten, die eine READ ONLY-Transaktion NICHT
+// verhindert (siehe Kommentar bei runReadOnlyQuery unten) — nextval/setval
+// verschieben eine Sequenz dauerhaft, die pg_advisory_*-Familie hält Locks
+// (session-gebunden bei pg_advisory_lock, gefährlich unter pgBouncers
+// Transaction-Mode-Pooling, siehe src/lib/db.ts), pg_sleep/pg_terminate_
+// backend/pg_cancel_backend sind ein einfacher DoS-Hebel, dblink/lo_* können
+// externe Verbindungen bzw. Large Objects schreiben. Zusätzliche
+// Verteidigungsebene zur READ ONLY-Transaktion, kein Ersatz dafür — ein
+// Text-Check kann z.B. eine in einen Kommentar oder String-Literal
+// eingebettete Umgehung nicht zuverlässig ausschließen.
+const FORBIDDEN_FUNCTION_CALL =
+  /\b(nextval|setval|pg_advisory_(?:xact_)?lock(?:_shared)?|pg_try_advisory_(?:xact_)?lock(?:_shared)?|pg_advisory_unlock(?:_all|_shared)?|lo_(?:import|export|creat|create|write|put|unlink)|dblink(?:_exec)?|pg_sleep(?:_for|_until)?|pg_terminate_backend|pg_cancel_backend|set_config|pg_reload_conf)\s*\(/i;
+
+// Nur früher, freundlicher Fehler für die offensichtlichen Fälle (mehrere
+// Anweisungen, kein SELECT/WITH, bekannte Funktionen mit Seiteneffekten) —
+// KEIN vollständiger Sicherheitsmechanismus für sich allein (siehe
+// runReadOnlyQuery unten, das die eigentliche Durchsetzung über eine READ
+// ONLY-Transaktion übernimmt). Ein einfacher Text-Check könnte z.B. eine
+// schreibende CTE wie
 // "WITH x AS (DELETE FROM t RETURNING *) SELECT * FROM x" nicht zuverlässig
 // erkennen — die fängt erst die READ ONLY-Transaktion ab.
 function assertReadOnlyQuery(query: string): void {
@@ -267,6 +300,11 @@ function assertReadOnlyQuery(query: string): void {
   if (firstWord !== "select" && firstWord !== "with") {
     throw new UnsafeQueryError("Nur SELECT-Anweisungen sind erlaubt.");
   }
+  if (FORBIDDEN_FUNCTION_CALL.test(withoutTrailingSemicolon)) {
+    throw new UnsafeQueryError(
+      "Diese Query enthält eine nicht erlaubte Funktion (Sequenzen, Locks, Sleep/Backend-Kontrolle, dblink/Large Objects).",
+    );
+  }
 }
 
 const FREE_QUERY_ROW_LIMIT = 500;
@@ -280,15 +318,19 @@ export interface FreeQueryResult {
 // Freie, schreibgeschützte SQL-Query für Admins (/admin/db) — anders als
 // listTableRows/countTableRows oben NICHT auf die TABLE_COLUMNS-Whitelist
 // beschränkt (ein Admin kann über den DB-Backup-Export ohnehin schon die
-// komplette DB einsehen, siehe dbBackup.ts). Die eigentliche Sicherheit kommt
-// nicht aus einer Tabellen-Whitelist, sondern aus "SET TRANSACTION READ
-// ONLY": das verhindert JEDE Schreiboperation auf Postgres-Engine-Ebene,
-// auch versteckt in einer schreibenden CTE (siehe assertReadOnlyQuery oben).
-// Die Query wird in eine Subquery mit fester LIMIT gewrappt, damit auch ein
-// "SELECT * FROM riesige_tabelle" ohne eigenes LIMIT nicht den ganzen
-// Request-Speicher sprengt — ein bereits vorhandenes ORDER BY in der
-// Subquery bleibt dabei zwar meist, aber nicht garantiert erhalten (kein
-// Problem für dieses Debug-Werkzeug).
+// komplette DB einsehen, siehe dbBackup.ts). Die Sicherheit kommt vor allem
+// aus "SET TRANSACTION READ ONLY": das verhindert INSERT/UPDATE/DELETE/
+// TRUNCATE/DDL auf normalen Tabellen, auch versteckt in einer schreibenden
+// CTE (siehe assertReadOnlyQuery oben) — ABER laut Postgres-Dokumentation
+// ausdrücklich NICHT Schreibzugriffe auf temporäre Tabellen, Sequenz-
+// Vorschub (nextval/setval) oder Advisory-Locks. Diese Lücke wird zusätzlich
+// über einen Funktions-Denylist in assertReadOnlyQuery geschlossen (siehe
+// dort) — beide Mechanismen zusammen, nicht die Transaktion allein, bilden
+// die tatsächliche Absicherung. Die Query wird außerdem in eine Subquery mit
+// fester LIMIT gewrappt, damit auch ein "SELECT * FROM riesige_tabelle" ohne
+// eigenes LIMIT nicht den ganzen Request-Speicher sprengt — ein bereits
+// vorhandenes ORDER BY in der Subquery bleibt dabei zwar meist, aber nicht
+// garantiert erhalten (kein Problem für dieses Debug-Werkzeug).
 export async function runReadOnlyQuery(query: string): Promise<FreeQueryResult> {
   assertReadOnlyQuery(query);
   const inner = query.trim().replace(/;\s*$/, "");

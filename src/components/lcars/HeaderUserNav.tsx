@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { logout } from "@/app/login/actions";
+import { useAnchoredDropdown } from "./useAnchoredDropdown";
 import type { User } from "@/types/db";
 
 interface AdminMenuItem {
@@ -20,12 +21,6 @@ const ADMIN_ITEMS: AdminMenuItem[] = [
   { href: "/admin/audit-log", label: "Audit-Log" },
 ];
 
-interface Anchor {
-  top: number;
-  left: number;
-  width: number;
-}
-
 export default function HeaderUserNav({
   role,
   columns = 3,
@@ -35,7 +30,6 @@ export default function HeaderUserNav({
 }) {
   const pathname = usePathname();
   const [adminOpen, setAdminOpen] = useState(false);
-  const [anchor, setAnchor] = useState<Anchor | null>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -50,46 +44,12 @@ export default function HeaderUserNav({
     setAdminOpen(false);
   }
 
-  const measure = useCallback(() => {
-    const el = triggerRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    setAnchor({ top: r.bottom + 4, left: r.left, width: r.width });
-  }, []);
-
-  // Position aktuell halten, solange das Dropdown offen ist (gleiches Muster
-  // wie HeaderSearch.tsx) — per Portal an <body> gehängt, da ein Vorfahr des
-  // Headers overflow:hidden setzt und das Dropdown sonst abgeschnitten würde.
-  useEffect(() => {
-    if (!adminOpen) return;
-    measure();
-    window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, true);
-    return () => {
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure, true);
-    };
-  }, [adminOpen, measure]);
-
-  // Klick außerhalb (Trigger UND Panel) sowie Escape schließen das Dropdown.
-  useEffect(() => {
-    if (!adminOpen) return;
-    const onDown = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (!triggerRef.current?.contains(t) && !panelRef.current?.contains(t)) {
-        setAdminOpen(false);
-      }
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setAdminOpen(false);
-    };
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", onKey);
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", onKey);
-    };
-  }, [adminOpen]);
+  const anchor = useAnchoredDropdown({
+    isOpen: adminOpen,
+    triggerRef,
+    panelRef,
+    onClose: () => setAdminOpen(false),
+  });
 
   const tabs = [
     { href: "/user/content", label: "Inhalte" },

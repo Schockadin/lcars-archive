@@ -7,6 +7,7 @@ const ACTION_LABELS: Record<AdminAuditAction, string> = {
   create_user: "User angelegt",
   reset_password: "Passwort-Reset ausgelöst",
   update_role: "Rolle geändert",
+  update_profile: "Profil bearbeitet",
   deactivate_user: "User deaktiviert",
   reactivate_user: "User reaktiviert",
   delete_user: "User gelöscht",
@@ -41,6 +42,13 @@ const columns: LogColumn<AdminAuditLogEntry>[] = [
     sortValue: (e) => e.details ?? "",
     filterValue: (e) => e.details ?? "",
     render: (e) => e.details ?? "—",
+  },
+  {
+    key: "ip",
+    label: "IP",
+    sortValue: (e) => e.ip ?? "",
+    filterValue: (e) => e.ip ?? "",
+    render: (e) => e.ip ?? "—",
   },
 ];
 

@@ -4,12 +4,7 @@ import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import type { SearchResult } from "@/types/search";
 import { TYPE_COLOR } from "@/lib/searchFormat";
-
-interface Anchor {
-  top: number;
-  left: number;
-  width: number;
-}
+import { useAnchoredDropdown } from "./useAnchoredDropdown";
 
 // Globale Suche im Header mit Autovervollständigung. Ergebnisliste wird per
 // Portal an <body> gehängt, da ein Vorfahr des Headers overflow:hidden setzt
@@ -23,7 +18,6 @@ export default function HeaderSearch() {
   const [resultsQuery, setResultsQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [active, setActive] = useState(-1);
-  const [anchor, setAnchor] = useState<Anchor | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -31,13 +25,6 @@ export default function HeaderSearch() {
 
   const q = query.trim();
   const showDropdown = focused && q.length >= 2;
-
-  const measure = useCallback(() => {
-    const el = inputRef.current;
-    if (!el) return;
-    const r = el.getBoundingClientRect();
-    setAnchor({ top: r.bottom + 5, left: r.left, width: r.width });
-  }, []);
 
   // Debounced Fetch (250 ms). Laufende Anfragen werden bei neuer Eingabe
   // abgebrochen, damit späte Antworten nicht die aktuelle Liste überschreiben.
@@ -66,30 +53,17 @@ export default function HeaderSearch() {
     };
   }, [q]);
 
-  // Position des Dropdowns aktuell halten, solange es offen ist.
-  useEffect(() => {
-    if (!showDropdown) return;
-    measure();
-    window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, true);
-    return () => {
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure, true);
-    };
-  }, [showDropdown, measure]);
-
-  // Klick außerhalb (Input UND Dropdown) schließt die Liste.
-  useEffect(() => {
-    if (!showDropdown) return;
-    const onDown = (e: MouseEvent) => {
-      const t = e.target as Node;
-      if (!inputRef.current?.contains(t) && !dropdownRef.current?.contains(t)) {
-        setFocused(false);
-      }
-    };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [showDropdown]);
+  // closeOnEscape: false — Escape wird schon im onKeyDown des Inputs unten
+  // behandelt (dort auch nötig für die Pfeiltasten-Navigation), ein
+  // zusätzlicher document-weiter Escape-Handler wäre hier nur redundant.
+  const anchor = useAnchoredDropdown({
+    isOpen: showDropdown,
+    triggerRef: inputRef,
+    panelRef: dropdownRef,
+    onClose: () => setFocused(false),
+    offset: 5,
+    closeOnEscape: false,
+  });
 
   const go = useCallback(
     (r: SearchResult) => {

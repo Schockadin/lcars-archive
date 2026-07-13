@@ -7,6 +7,7 @@ import {
   isViewableTable,
   viewableColumns,
   enumOptionsFor,
+  isForeignKeyColumn,
   countTableRows,
   listTableRows,
 } from "@/lib/dbInspect";
@@ -134,7 +135,9 @@ export default async function AdminDbPage({
               Nur einzelne SELECT-Anweisungen, ausgeführt in einer READ-ONLY-
               Transaktion (kein Zugriff auf die TABLE_COLUMNS-Whitelist der
               Tabellenansicht unten nötig) — max. 500 Zeilen, 5 Sekunden
-              Timeout.
+              Timeout. Anders als in der Tabellenansicht unten werden
+              Fremdschlüssel-Spalten hier NICHT zu einem Slug aufgelöst,
+              sondern zeigen die rohe numerische id.
             </p>
             <SqlQueryPanel />
           </section>
@@ -176,6 +179,22 @@ export default async function AdminDbPage({
                             const isActive = c === sortColumn;
                             const nextDir =
                               isActive && sortDir === "asc" ? "desc" : "asc";
+                            // Fremdschlüssel-Spalten zeigen den aufgelösten
+                            // Slug an, sortiert würde aber nach der rohen id
+                            // (siehe isForeignKeyColumn-Kommentar in
+                            // dbInspect.ts) — deshalb kein Sortier-Link,
+                            // reiner Text-Header statt eines irreführenden
+                            // Sortierergebnisses.
+                            if (isForeignKeyColumn(table, c)) {
+                              return (
+                                <th
+                                  key={c}
+                                  className="lcars-eyebrow pr-[16px] pb-[8px] whitespace-nowrap"
+                                >
+                                  {c}
+                                </th>
+                              );
+                            }
                             return (
                               <th
                                 key={c}

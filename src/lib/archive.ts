@@ -689,27 +689,31 @@ export async function notifyArchiveEntrySubscribers(input: {
   if (subscribers.length === 0) return;
 
   const entryUrl = `${await getBaseUrl()}/archive/${input.entrySlug}`;
-  for (const subscriber of subscribers) {
-    if (subscriber.emailNotificationsEnabled) {
-      const result = await sendArchiveEntryUpdatedEmail({
-        to: subscriber.email,
-        name: subscriber.name,
-        entryTitle: input.entryTitle,
-        entryUrl,
-        preview: input.preview,
-      });
-      if (!result.sent) {
-        console.error(
-          `Archiv-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
-        );
+  // Parallel statt sequenziell — siehe gleicher Kommentar bei
+  // notifyMissionSubscribers in missions.ts.
+  await Promise.allSettled(
+    subscribers.map(async (subscriber) => {
+      if (subscriber.emailNotificationsEnabled) {
+        const result = await sendArchiveEntryUpdatedEmail({
+          to: subscriber.email,
+          name: subscriber.name,
+          entryTitle: input.entryTitle,
+          entryUrl,
+          preview: input.preview,
+        });
+        if (!result.sent) {
+          console.error(
+            `Archiv-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+          );
+        }
       }
-    }
-    if (subscriber.pushNotificationsEnabled) {
-      await sendPushToUser(subscriber.id, {
-        title: `Aktualisiert: ${input.entryTitle}`,
-        body: input.preview,
-        url: entryUrl,
-      });
-    }
-  }
+      if (subscriber.pushNotificationsEnabled) {
+        await sendPushToUser(subscriber.id, {
+          title: `Aktualisiert: ${input.entryTitle}`,
+          body: input.preview,
+          url: entryUrl,
+        });
+      }
+    }),
+  );
 }

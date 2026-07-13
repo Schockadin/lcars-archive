@@ -340,29 +340,37 @@ export async function notifyMissionSubscribers(input: {
   if (subscribers.length === 0) return;
 
   const missionUrl = `${await getBaseUrl()}/missions/${input.missionSlug}`;
-  for (const subscriber of subscribers) {
-    if (subscriber.emailNotificationsEnabled) {
-      const result = await sendMissionUpdatedEmail({
-        to: subscriber.email,
-        name: subscriber.name,
-        missionTitle: input.missionTitle,
-        missionUrl,
-        preview: input.preview,
-      });
-      if (!result.sent) {
-        console.error(
-          `Mission-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
-        );
+  // Parallel statt sequenziell: die Aktion, die diese Funktion aufruft
+  // (Inline-Synopsis-Editor wie voller Formular-Speichern), wartet auf das
+  // Ergebnis, bevor sie ihren Erfolg zurückmeldet — bei vielen Abonnenten
+  // würde eine sequenzielle Schleife die Antwortzeit linear mit der
+  // Abonnentenzahl wachsen lassen (gleiches Prinzip wie notifyContentChange
+  // in follows.ts).
+  await Promise.allSettled(
+    subscribers.map(async (subscriber) => {
+      if (subscriber.emailNotificationsEnabled) {
+        const result = await sendMissionUpdatedEmail({
+          to: subscriber.email,
+          name: subscriber.name,
+          missionTitle: input.missionTitle,
+          missionUrl,
+          preview: input.preview,
+        });
+        if (!result.sent) {
+          console.error(
+            `Mission-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+          );
+        }
       }
-    }
-    if (subscriber.pushNotificationsEnabled) {
-      await sendPushToUser(subscriber.id, {
-        title: `Aktualisiert: ${input.missionTitle}`,
-        body: input.preview,
-        url: missionUrl,
-      });
-    }
-  }
+      if (subscriber.pushNotificationsEnabled) {
+        await sendPushToUser(subscriber.id, {
+          title: `Aktualisiert: ${input.missionTitle}`,
+          body: input.preview,
+          url: missionUrl,
+        });
+      }
+    }),
+  );
 }
 
 export interface UpdateMissionSynopsisResult {

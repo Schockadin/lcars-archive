@@ -5,11 +5,14 @@ import { requireAdmin } from "@/lib/dal";
 import {
   EmailTakenError,
   deleteUser,
+  getUserById,
   setUserActive,
   updateUser,
   updateUserRole,
 } from "@/lib/users";
 import { unassignCharactersFromUser } from "@/lib/characters";
+import { getClientIp } from "@/lib/http";
+import { logAdminAction } from "@/lib/auditLog";
 import type { User } from "@/types/db";
 
 const ROLES: readonly User["role"][] = [
@@ -57,6 +60,9 @@ export async function updateUserDetailsAction(
     return { error: "Du kannst dir nicht selbst die Admin-Rolle entziehen." };
   }
 
+  const before = await getUserById(userId);
+  if (!before) return { error: "User nicht gefunden." };
+
   try {
     await updateUser(userId, { name, email });
   } catch (err) {
@@ -65,13 +71,33 @@ export async function updateUserDetailsAction(
     }
     throw err;
   }
-  await updateUserRole(userId, role);
-  // Gäste dürfen keinen Charakter zugewiesen haben (siehe
-  // assignCharacterAction in ../../actions.ts) — bei einer Herabstufung auf
-  // "guest" werden bestehende Zuweisungen deshalb aufgelöst, statt einen
-  // inkonsistenten Zustand stehen zu lassen.
-  if (role === "guest") {
-    await unassignCharactersFromUser(userId);
+  const ip = await getClientIp();
+  if (before.name !== name || before.email !== email) {
+    await logAdminAction(
+      admin.id,
+      "update_profile",
+      userId,
+      `${before.name} <${before.email}> → ${name} <${email}>`,
+      ip,
+    );
+  }
+
+  if (role !== before.role) {
+    await updateUserRole(userId, role);
+    await logAdminAction(
+      admin.id,
+      "update_role",
+      userId,
+      `${name} <${email}>: ${before.role} → ${role}`,
+      ip,
+    );
+    // Gäste dürfen keinen Charakter zugewiesen haben (siehe
+    // assignCharacterAction in ../../actions.ts) — bei einer Herabstufung auf
+    // "guest" werden bestehende Zuweisungen deshalb aufgelöst, statt einen
+    // inkonsistenten Zustand stehen zu lassen.
+    if (role === "guest") {
+      await unassignCharactersFromUser(userId);
+    }
   }
 
   redirect(`/admin/${userId}/edit`);
@@ -91,7 +117,17 @@ export async function setUserActiveAction(
     return { error: "Du kannst dich nicht selbst deaktivieren." };
   }
 
+  const target = await getUserById(userId);
+  if (!target) return { error: "User nicht gefunden." };
+
   await setUserActive(userId, active);
+  await logAdminAction(
+    admin.id,
+    active ? "reactivate_user" : "deactivate_user",
+    userId,
+    `${target.name} <${target.email}>`,
+    await getClientIp(),
+  );
   redirect(`/admin/${userId}/edit`);
 }
 
@@ -107,6 +143,20 @@ export async function deleteUserFromEditAction(
     return { error: "Du kannst dich nicht selbst löschen." };
   }
 
+  const target = await getUserById(userId);
+  if (!target) return { error: "User nicht gefunden." };
+
+  // Vor dem Löschen protokollieren (target_user_id verweist zu diesem
+  // Zeitpunkt noch auf eine existierende Zeile, siehe FK-Kommentar in
+  // scripts/schema.sql) — details hält Name/E-Mail zusätzlich als Klartext
+  // fest, da target_user_id danach durch ON DELETE SET NULL auf NULL wechselt.
+  await logAdminAction(
+    admin.id,
+    "delete_user",
+    userId,
+    `${target.name} <${target.email}>`,
+    await getClientIp(),
+  );
   await deleteUser(userId);
   redirect("/admin/users");
 }

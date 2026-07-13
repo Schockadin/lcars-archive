@@ -5,6 +5,7 @@ export type AdminAuditAction =
   | "create_user"
   | "reset_password"
   | "update_role"
+  | "update_profile"
   | "deactivate_user"
   | "reactivate_user"
   | "delete_user"
@@ -18,24 +19,29 @@ export interface AdminAuditLogEntry {
   targetUserId: number | null;
   targetName: string | null;
   details: string | null;
+  ip: string | null;
   createdAt: string;
 }
 
-// Protokolliert sicherheitsrelevante Useraccount-Actions aus admin/actions.ts
-// (anlegen, Rolle ändern, (de)aktivieren, löschen, Passwort-Reset auslösen).
-// details ist ein Klartext-Schnappschuss (z.B. "Name <email>" oder
-// "alt: gm → neu: admin"), damit ein Eintrag auch nachvollziehbar bleibt,
-// wenn der betroffene User später gelöscht wird (target_user_id wird dann
-// NULL, siehe scripts/schema.sql).
+// Protokolliert sicherheitsrelevante Useraccount-Actions (anlegen, Rolle
+// ändern, Profil bearbeiten, (de)aktivieren, löschen, Passwort-Reset
+// auslösen, Zwangs-Logout — siehe admin/actions.ts und admin/[id]/edit/
+// actions.ts). details ist ein Klartext-Schnappschuss (z.B. "Name <email>"
+// oder "alt: gm → neu: admin"), damit ein Eintrag auch nachvollziehbar
+// bleibt, wenn der betroffene User später gelöscht wird (target_user_id
+// wird dann NULL, siehe scripts/schema.sql). ip stammt aus getClientIp()
+// (src/lib/http.ts) — für die forensische Aufarbeitung eines vermuteten
+// kompromittierten Admin-Accounts.
 export async function logAdminAction(
   actorId: number,
   action: AdminAuditAction,
   targetUserId: number | null,
   details?: string,
+  ip?: string | null,
 ): Promise<void> {
   await sql`
-    INSERT INTO admin_audit_log (actor_id, action, target_user_id, details)
-    VALUES (${actorId}, ${action}, ${targetUserId}, ${details ?? null})
+    INSERT INTO admin_audit_log (actor_id, action, target_user_id, details, ip)
+    VALUES (${actorId}, ${action}, ${targetUserId}, ${details ?? null}, ${ip ?? null})
   `;
 }
 
@@ -51,13 +57,14 @@ export async function listRecentAdminActions(
       target_user_id: number | null;
       target_name: string | null;
       details: string | null;
+      ip: string | null;
       created_at: string;
     }[]
   >`
     SELECT
       l.id, l.actor_id, actor.name AS actor_name,
       l.action, l.target_user_id, target.name AS target_name,
-      l.details, l.created_at
+      l.details, l.ip, l.created_at
     FROM admin_audit_log l
     LEFT JOIN users actor ON actor.id = l.actor_id
     LEFT JOIN users target ON target.id = l.target_user_id
@@ -72,6 +79,7 @@ export async function listRecentAdminActions(
     targetUserId: row.target_user_id,
     targetName: row.target_name,
     details: row.details,
+    ip: row.ip,
     createdAt: row.created_at,
   }));
 }
