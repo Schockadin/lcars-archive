@@ -258,10 +258,13 @@ ALTER TABLE dialogue_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
 
 -- Charakter-Abos: dritter target_type neben mission/archive_entry. Nutzt
 -- dieselbe content_follows-Tabelle (bookmarked_at/subscribed_at), target_slug
--- ist der Charakter-Slug.
+-- ist der Charakter-Slug. 'user' ist hier (statt erst weiter unten) schon
+-- mit erlaubt: db:setup spielt beim Re-Run diese ganze Datei erneut gegen
+-- eine bereits befüllte DB ab — mit nur drei Werten würde der Constraint
+-- an bestehenden target_type='user'-Zeilen (siehe unten) scheitern.
 ALTER TABLE content_follows DROP CONSTRAINT IF EXISTS content_follows_target_type_check;
 ALTER TABLE content_follows ADD CONSTRAINT content_follows_target_type_check
-  CHECK (target_type IN ('mission', 'archive_entry', 'character'));
+  CHECK (target_type IN ('mission', 'archive_entry', 'character', 'user'));
 
 -- GM-Rolle wird gesplittet: admin (volle Useraccount-Verwaltung +
 -- Charakter-Zuweisung) und gm (nur noch Charakter-Zuweisung +
