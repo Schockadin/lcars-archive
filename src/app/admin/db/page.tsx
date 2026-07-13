@@ -6,14 +6,13 @@ import {
   VIEWABLE_TABLES,
   isViewableTable,
   viewableColumns,
+  enumOptionsFor,
   countTableRows,
   listTableRows,
 } from "@/lib/dbInspect";
-import { formatDateTime } from "@/utils/formateISODate";
-import { synopsisExcerpt } from "@/lib/missionFormat";
 import { SortArrowIcon } from "@/lib/icons";
 import DbBackupPanel from "../DbBackupPanel";
-import type { TableName } from "@/lib/dbBackup";
+import DbTableRows from "./DbTableRows";
 
 export const metadata: Metadata = {
   title: "Datenbank",
@@ -24,22 +23,6 @@ export const maxDuration = 60;
 
 const PAGE_SIZE = 50;
 const FILTER_PARAM_PREFIX = "f_";
-
-function formatCell(table: TableName, column: string, value: unknown): string {
-  if (value === null || value === undefined) return "—";
-  if (value instanceof Date) return formatDateTime(value);
-  if (typeof value === "object") return JSON.stringify(value);
-  const text = String(value);
-  // Die bio-Spalte von characters enthält bereits gerendertes HTML
-  // (renderContentHtml, siehe characters.ts) und kann sehr lang werden —
-  // gekürzt auf eine Vorschau wie an anderen Stellen im Code (z.B.
-  // notifyCharacterSubscribers in characters.ts), sonst sprengt eine
-  // einzelne Spalte die ganze Tabelle.
-  if (table === "characters" && column === "bio") {
-    return synopsisExcerpt(text, 140);
-  }
-  return text;
-}
 
 // Admin-only: DB-Backup (Export/Import aller Tabellen außer users) + neuer
 // read-only Tabellen-Viewer, gesteuert über ?table=&page=&sort=&dir=&f_<spalte>=
@@ -211,34 +194,40 @@ export default async function AdminDbPage({
                           })}
                         </tr>
                         <tr>
-                          {columns.map((c) => (
-                            <td key={c} className="pr-[16px] pb-[8px]">
-                              <input
-                                type="search"
-                                name={`${FILTER_PARAM_PREFIX}${c}`}
-                                defaultValue={filters[c] ?? ""}
-                                placeholder="Filtern…"
-                                aria-label={`Nach ${c} filtern`}
-                                className="lcars-input rounded-full w-full text-[12px]"
-                              />
-                            </td>
-                          ))}
+                          {columns.map((c) => {
+                            const options = enumOptionsFor(table, c);
+                            return (
+                              <td key={c} className="pr-[16px] pb-[8px]">
+                                {options ? (
+                                  <select
+                                    name={`${FILTER_PARAM_PREFIX}${c}`}
+                                    defaultValue={filters[c] ?? ""}
+                                    aria-label={`Nach ${c} filtern`}
+                                    className="lcars-input rounded-full w-full text-[12px]"
+                                  >
+                                    <option value="">Alle</option>
+                                    {options.map((opt) => (
+                                      <option key={opt} value={opt}>
+                                        {opt}
+                                      </option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <input
+                                    type="search"
+                                    name={`${FILTER_PARAM_PREFIX}${c}`}
+                                    defaultValue={filters[c] ?? ""}
+                                    placeholder="Filtern…"
+                                    aria-label={`Nach ${c} filtern`}
+                                    className="lcars-input rounded-full w-full text-[12px]"
+                                  />
+                                )}
+                              </td>
+                            );
+                          })}
                         </tr>
                       </thead>
-                      <tbody>
-                        {rows.map((row, i) => (
-                          <tr key={i} className="border-t border-lcars-border">
-                            {columns.map((c) => (
-                              <td
-                                key={c}
-                                className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text"
-                              >
-                                {formatCell(table, c, row[c])}
-                              </td>
-                            ))}
-                          </tr>
-                        ))}
-                      </tbody>
+                      <DbTableRows columns={columns} rows={rows} />
                     </table>
                   </div>
                   <button

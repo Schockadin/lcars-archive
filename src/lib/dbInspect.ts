@@ -25,28 +25,85 @@ export function viewableColumns(table: TableName): readonly string[] {
   return TABLE_COLUMNS[table];
 }
 
-// Baut eine WHERE-Klausel für einen Substring-Filter pro Spalte — nur für
-// Spalten aus der TABLE_COLUMNS-Whitelist (nie aus rohem User-Input als
-// Identifier), Filterwerte werden dagegen IMMER als gebundener $n-Parameter
-// übergeben, nie in den SQL-String interpoliert (gleiches Prinzip wie beim
-// Backup-Export in dbBackup.ts). ::text erlaubt eine einheitliche
-// Substring-Suche über beliebige Spaltentypen (Zahlen, Booleans, Timestamps,
-// JSONB, Arrays) hinweg, ohne für jeden Typ eine eigene Filter-UI zu bauen —
-// für dieses admin-only Debug-Werkzeug ausreichend, kein Anspruch auf
-// Index-Nutzung/Performance bei sehr großen Tabellen.
+// Spalten mit fest begrenztem Wertebereich (DB-CHECK-Constraints bzw. — bei
+// content_deletions.target_type — die in der Praxis tatsächlich verwendeten
+// Werte, siehe scripts/schema.sql) — der Filter für diese Spalten wird im
+// UI als <select> statt Freitext angeboten (siehe admin/db/page.tsx).
+const ENUM_COLUMNS: Partial<Record<TableName, Record<string, readonly string[]>>> = {
+  characters: {
+    status: ["active", "retired", "deceased"],
+    visibility: ["private", "gm", "public"],
+  },
+  missions: {
+    status: ["active", "completed", "failed", "abandoned"],
+  },
+  mission_logs: {
+    visibility: ["private", "gm", "public"],
+  },
+  archive_entries: {
+    category: [
+      "person", "location", "item", "faction", "theory", "event",
+      "species", "npc", "dialogue", "other",
+    ],
+    visibility: ["private", "gm", "public"],
+    dialogue_open: ["true", "false"],
+  },
+  timeline_events: {
+    source_type: ["character", "mission", "mission_log", "archive_entry"],
+  },
+  content_follows: {
+    target_type: ["mission", "archive_entry", "character", "user"],
+  },
+  content_deletions: {
+    target_type: ["mission", "mission_log", "archive_entry"],
+    visibility: ["private", "gm", "public"],
+  },
+};
+
+export function enumOptionsFor(
+  table: TableName,
+  column: string,
+): readonly string[] | null {
+  return ENUM_COLUMNS[table]?.[column] ?? null;
+}
+
+// Echte Boolean-Spalten unter den ENUM_COLUMNS oben — Postgres' ::text-Cast
+// eines boolean liefert "t"/"f", nicht "true"/"false", ein ILIKE-Substring-
+// Filter (wie für alle anderen Spalten unten) würde deshalb nie treffen.
+// Der Filter vergleicht hier stattdessen exakt gegen den echten Boolean-Wert.
+const BOOLEAN_COLUMNS: Partial<Record<TableName, readonly string[]>> = {
+  archive_entries: ["dialogue_open"],
+};
+
+// Baut eine WHERE-Klausel pro Spalte — nur für Spalten aus der
+// TABLE_COLUMNS-Whitelist (nie aus rohem User-Input als Identifier),
+// Filterwerte werden dagegen IMMER als gebundener $n-Parameter übergeben,
+// nie in den SQL-String interpoliert (gleiches Prinzip wie beim
+// Backup-Export in dbBackup.ts). Für die meisten Spalten ein
+// ::text-ILIKE-Substring-Filter (einheitlich über beliebige Spaltentypen
+// hinweg, ohne für jeden Typ eine eigene Filter-UI zu bauen — für dieses
+// admin-only Debug-Werkzeug ausreichend, kein Anspruch auf Index-Nutzung/
+// Performance bei sehr großen Tabellen), für BOOLEAN_COLUMNS ein exakter
+// Vergleich gegen den echten Boolean-Wert (siehe Kommentar dort).
 function buildFilterClause(
   table: TableName,
   filters: Record<string, string>,
   startIndex: number,
 ): { whereSql: string; params: string[] } {
   const validColumns = new Set<string>(TABLE_COLUMNS[table]);
+  const booleanColumns = new Set<string>(BOOLEAN_COLUMNS[table] ?? []);
   const clauses: string[] = [];
   const params: string[] = [];
   let i = startIndex;
   for (const [col, value] of Object.entries(filters)) {
     if (!validColumns.has(col) || !value.trim()) continue;
-    clauses.push(`"${col}"::text ILIKE $${i}`);
-    params.push(`%${value.trim()}%`);
+    if (booleanColumns.has(col)) {
+      clauses.push(`"${col}" = $${i}::boolean`);
+      params.push(value.trim());
+    } else {
+      clauses.push(`"${col}"::text ILIKE $${i}`);
+      params.push(`%${value.trim()}%`);
+    }
     i++;
   }
   return {
