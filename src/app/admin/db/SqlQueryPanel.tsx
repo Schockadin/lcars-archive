@@ -33,11 +33,12 @@ export default function SqlQueryPanel() {
     <div className="flex flex-col gap-[12px]">
       <form action={formAction} className="flex flex-col gap-[12px]">
         <div className="sql-editor">
-          <pre ref={preRef} className="sql-editor-highlight" aria-hidden="true">
-            <code
-              dangerouslySetInnerHTML={{ __html: `${highlightSql(query)}\n` }}
-            />
-          </pre>
+          <pre
+            ref={preRef}
+            className="sql-editor-highlight"
+            aria-hidden="true"
+            dangerouslySetInnerHTML={{ __html: `${highlightSql(query)}\n` }}
+          />
           <textarea
             ref={textareaRef}
             name="query"
