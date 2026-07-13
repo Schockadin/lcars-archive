@@ -250,55 +250,10 @@
   }
 }
 
-/* ── SQL-Query-Feld mit Syntaxhighlighting (admin/db/SqlQueryPanel.tsx) ──
-   Klassische "unsichtbare Textarea über farbigem <pre>"-Technik: beide
-   Ebenen teilen sich exakt Font/Padding/Zeilenhöhe, damit der getippte Text
-   deckungsgleich über der hervorgehobenen Vorschau liegt. */
-.sql-editor {
-  position: relative;
+/* Wrapper um CodeEditor.tsx (CodeMirror) — Theming/Farben laufen über das
+   EditorView.theme() im Component selbst, hier nur die Breite. */
+.lcars-code-editor,
+.lcars-code-editor .cm-editor {
   width: 100%;
 }
-.sql-editor-highlight,
-.sql-editor-textarea {
-  box-sizing: border-box;
-  margin: 0;
-  width: 100%;
-  min-height: 140px;
-  padding: 12px 16px;
-  border: 1px solid var(--lcars-border);
-  border-radius: 8px;
-  font-family: var(--font-share-tech-mono), monospace;
-  font-size: 13px;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  word-wrap: break-word;
-  overflow: auto;
-}
-.sql-editor-highlight {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  color: var(--lcars-text);
-  background: var(--lcars-surface);
-}
-.sql-editor-textarea {
-  position: relative;
-  background: transparent;
-  color: transparent;
-  caret-color: var(--lcars-text-data);
-  resize: vertical;
-}
-.sql-keyword {
-  color: var(--lcars-blue);
-  font-weight: 600;
-}
-.sql-string {
-  color: var(--lcars-amber);
-}
-.sql-number {
-  color: var(--lcars-purple);
-}
-.sql-comment {
-  color: var(--lcars-text-dim);
-  font-style: italic;
-}
+
