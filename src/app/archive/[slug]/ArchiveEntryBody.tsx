@@ -83,7 +83,6 @@ export default function ArchiveEntryBody({
           contentHtml={entry.content}
           sourceMarkdown={entry.sourceMarkdown}
           isAdminOrGM={isAdminOrGM}
-          slug={entry.slug}
           editMode={editMode}
           onEditModeChange={setEditMode}
         />

@@ -6,7 +6,11 @@ import {
   sendPasswordResetEmail,
   sendPasswordResetRequestedEmail,
 } from "@/lib/mail";
-import { getBaseUrl } from "@/lib/http";
+import { getBaseUrl, getClientIp } from "@/lib/http";
+import {
+  isPasswordResetRateLimited,
+  recordPasswordResetRequest,
+} from "@/lib/passwordResetLimiter";
 
 export interface ForgotPasswordState {
   submitted?: boolean;
@@ -28,6 +32,15 @@ export async function requestPasswordResetAction(
     .trim()
     .toLowerCase();
   if (!email) return { error: "Bitte eine E-Mail-Adresse angeben." };
+
+  const ip = await getClientIp();
+  // Bei Überschreiten still bei { submitted: true } bleiben (siehe
+  // Kommentar in passwordResetLimiter.ts) statt eines eigenen Fehlers, sonst
+  // wäre die Sperre selbst wieder ein Enumeration-Kanal.
+  if (await isPasswordResetRateLimited(email, ip)) {
+    return { submitted: true };
+  }
+  await recordPasswordResetRequest(email, ip);
 
   const user = await getUserCredentialsByEmail(email);
   if (user && user.is_active) {

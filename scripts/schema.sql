@@ -449,3 +449,52 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS notify_content_types TEXT[] NOT NULL 
 -- (src/lib/dal.ts) verworfen — ohne das würde ein gestohlenes Cookie eine
 -- Passwortänderung bis zum natürlichen Ablauf (30 Tage) überleben.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS session_version INT NOT NULL DEFAULT 0;
+
+-- Fehlgeschlagene UND erfolgreiche Login-Versuche (siehe
+-- src/lib/loginAttempts.ts) — Grundlage für die Brute-Force-Sperre in
+-- src/app/login/actions.ts. Bewusst eine DB-Tabelle statt In-Memory-Zähler:
+-- die App läuft auf Serverless-Funktionsinstanzen (siehe Kommentar zu
+-- src/lib/db.ts), ein In-Memory-Zähler würde pro Instanz getrennt zählen und
+-- die Sperre dadurch wirkungslos machen. email wird unabhängig davon
+-- gezählt, ob überhaupt ein User mit dieser Adresse existiert (siehe
+-- Kommentar in login/actions.ts) — sonst ließe sich über das Ausbleiben
+-- einer Sperre die Existenz einer Adresse erschließen.
+CREATE TABLE IF NOT EXISTS login_attempts (
+  id           SERIAL PRIMARY KEY,
+  email        TEXT NOT NULL,
+  ip           TEXT,
+  succeeded    BOOLEAN NOT NULL,
+  attempted_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_email_time ON login_attempts(email, attempted_at);
+CREATE INDEX IF NOT EXISTS idx_login_attempts_ip_time ON login_attempts(ip, attempted_at);
+
+-- Analog zu login_attempts, aber für /forgot-password (siehe
+-- src/lib/passwordResetLimiter.ts) — begrenzt, wie oft pro E-Mail-Adresse
+-- bzw. IP ein Reset-Mailversand (inkl. Admin-Benachrichtigungs-Fanout, siehe
+-- forgot-password/actions.ts) pro Zeitfenster ausgelöst werden kann.
+CREATE TABLE IF NOT EXISTS password_reset_requests (
+  id           SERIAL PRIMARY KEY,
+  email        TEXT NOT NULL,
+  ip           TEXT,
+  requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_password_reset_requests_email_time ON password_reset_requests(email, requested_at);
+CREATE INDEX IF NOT EXISTS idx_password_reset_requests_ip_time ON password_reset_requests(ip, requested_at);
+
+-- Protokoll sicherheitsrelevanter Admin-Actions auf Useraccounts (anlegen,
+-- Rolle ändern, (de)aktivieren, löschen, Passwort-Reset auslösen — siehe
+-- src/lib/auditLog.ts und das Wiring in src/app/admin/actions.ts). Rein
+-- lesend über /admin/audit-log einsehbar, keine eigene UI zum Bearbeiten.
+-- target_user_id bleibt bei einem gelöschten User NULL (siehe deleteUser) —
+-- details enthält deshalb zusätzlich Name/E-Mail als Klartext-Schnappschuss,
+-- damit ein Löschen-Eintrag auch danach noch nachvollziehbar bleibt.
+CREATE TABLE IF NOT EXISTS admin_audit_log (
+  id             SERIAL PRIMARY KEY,
+  actor_id       INT REFERENCES users(id) ON DELETE SET NULL,
+  action         TEXT NOT NULL,
+  target_user_id INT REFERENCES users(id) ON DELETE SET NULL,
+  details        TEXT,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created_at ON admin_audit_log(created_at);

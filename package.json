@@ -21,6 +21,7 @@
     "db:revalidate": "tsx --env-file=.env.local scripts/ingest/index.ts revalidate",
     "db:reset": "tsx --env-file=.env.local scripts/reset-db.ts",
     "db:seed-dialogue": "tsx --env-file=.env.local scripts/seedExampleDialogue.ts",
+    "db:create-admin": "tsx --conditions=react-server --env-file=.env.local scripts/create-initial-admin.ts",
     "db:setup:dev": "tsx --env-file=.env.development.local scripts/setup-db.ts",
     "db:ingest:dev": "tsx --env-file=.env.development.local scripts/ingest/index.ts",
     "db:ingest:new:dev": "tsx --env-file=.env.development.local scripts/ingest/ingestNew.ts",
@@ -30,6 +31,7 @@
     "db:revalidate:dev": "tsx --env-file=.env.development.local scripts/ingest/index.ts revalidate",
     "db:reset:dev": "tsx --env-file=.env.development.local scripts/reset-db.ts",
     "db:seed-dialogue:dev": "tsx --env-file=.env.development.local scripts/seedExampleDialogue.ts",
+    "db:create-admin:dev": "tsx --conditions=react-server --env-file=.env.development.local scripts/create-initial-admin.ts",
     "db:backup": "tsx --conditions=react-server scripts/backup-db.ts"
   },
   "dependencies": {

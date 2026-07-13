@@ -5,6 +5,7 @@ import { requireOwnUser } from "./dal";
 import { hasPassword } from "@/lib/users";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
+import LogoutEverywhereButton from "./LogoutEverywhereButton";
 import NotificationSettingsForm from "./NotificationSettingsForm";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
@@ -95,6 +96,16 @@ export default async function UserPage() {
             <section id="password" className="flex flex-col gap-[12px]">
               <h2>{hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}</h2>
               <PasswordForm hasPassword={hasPasswordSet} />
+            </section>
+
+            <section id="sessions" className="flex flex-col gap-[12px]">
+              <h2>Sitzungen</h2>
+              <p>
+                Vermutest du, dass noch ein fremdes Gerät angemeldet ist? Hier
+                kannst du alle anderen Sitzungen beenden, ohne dein Passwort
+                zu ändern.
+              </p>
+              <LogoutEverywhereButton />
             </section>
 
             <section id="notifications" className="flex flex-col gap-[12px]">

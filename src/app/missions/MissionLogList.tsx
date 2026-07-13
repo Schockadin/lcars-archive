@@ -14,7 +14,6 @@ import {
   byDateAsc,
   byDateDesc,
   sessionLabel,
-  synopsisExcerpt,
 } from "@/lib/missionFormat";
 
 type LogSortMode = "date" | "author";
@@ -24,12 +23,10 @@ type LogSortMode = "date" | "author";
 // absteigend). Das aktive Log wird aus dem Pfad ermittelt.
 export default function MissionLogList({
   missionSlug,
-  synopsis,
   logs,
   canCreateLog,
 }: {
   missionSlug: string;
-  synopsis: string | null;
   logs: MissionLogListItem[];
   canCreateLog: boolean;
 }) {

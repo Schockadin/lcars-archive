@@ -382,3 +382,21 @@ export async function setPassword(
     WHERE id = ${userId}
   `;
 }
+
+// Self-Service-Pendant zu setPassword oben, aber ohne Passwortänderung: für
+// den "Auf allen anderen Geräten abmelden"-Knopf in den Profil-Settings
+// (sessionActions.ts). Gibt den neuen Wert zurück, damit der Aufrufer sofort
+// ein frisches Cookie mit der aktuellen session_version für die eigene,
+// gerade laufende Sitzung ausstellen kann — sonst würde der nächste Request
+// dieser Sitzung sich selbst mit aussperren.
+export async function invalidateOtherSessions(
+  userId: number,
+): Promise<number> {
+  const [row] = await sql<{ session_version: number }[]>`
+    UPDATE users
+    SET session_version = session_version + 1
+    WHERE id = ${userId}
+    RETURNING session_version
+  `;
+  return row.session_version;
+}

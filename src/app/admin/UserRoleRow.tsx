@@ -10,6 +10,7 @@ import {
   reactivateUserAction,
   deleteUserAction,
   resetUserPasswordAction,
+  forceLogoutUserAction,
   type AdminActionState,
 } from "./actions";
 import type { UserWithCharacters } from "@/lib/users";
@@ -21,6 +22,7 @@ import {
   RestoreIcon,
   TrashIcon,
   KeyIcon,
+  LogOutIcon,
 } from "@/lib/icons";
 
 const initialState: AdminActionState = {};
@@ -60,6 +62,10 @@ export default function UserRoleRow({
   );
   const [resetState, resetAction, resetPending] = useActionState(
     resetUserPasswordAction,
+    initialState,
+  );
+  const [logoutState, logoutAction, logoutPending] = useActionState(
+    forceLogoutUserAction,
     initialState,
   );
 
@@ -208,6 +214,19 @@ export default function UserRoleRow({
                   </button>
                 </form>
 
+                <form action={logoutAction}>
+                  <input type="hidden" name="userId" value={user.id} />
+                  <button
+                    type="submit"
+                    disabled={logoutPending}
+                    className="lcars-icon-btn"
+                    aria-label="Auf allen Geräten abmelden"
+                    title="Auf allen Geräten abmelden"
+                  >
+                    <LogOutIcon />
+                  </button>
+                </form>
+
                 <form action={deleteAction}>
                   <input type="hidden" name="userId" value={user.id} />
                   <button
@@ -255,6 +274,16 @@ export default function UserRoleRow({
           {resetState?.sent && (
             <p className="text-lcars-text-data" role="status">
               Reset-Mail an {user.email} gesendet.
+            </p>
+          )}
+          {logoutState?.error && (
+            <p className="text-lcars-red" role="alert">
+              {logoutState.error}
+            </p>
+          )}
+          {logoutState?.loggedOut && (
+            <p className="text-lcars-text-data" role="status">
+              {user.name} wurde auf allen Geräten abgemeldet.
             </p>
           )}
           {resetState?.warning && (
