@@ -16,6 +16,7 @@ const ACTION_LABELS: Record<AdminAuditAction, string> = {
   deactivate_user: "User deaktiviert",
   reactivate_user: "User reaktiviert",
   delete_user: "User gelöscht",
+  force_logout: "User abgemeldet (alle Geräte)",
 };
 
 // Rein lesende Übersicht der letzten sicherheitsrelevanten Admin-Actions auf

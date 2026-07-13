@@ -10,6 +10,7 @@ import {
   updateUser,
   setUserActive,
   deleteUser,
+  invalidateOtherSessions,
 } from "@/lib/users";
 import {
   assignCharacterToUser,
@@ -42,6 +43,8 @@ export interface AdminActionState {
   // inline in der Zeile statt (wie die übrigen Actions hier) auf /users
   // umzuleiten, was den Erfolg gar nicht sichtbar machen würde.
   sent?: boolean;
+  // Nur von forceLogoutUserAction gesetzt — gleiches Prinzip wie sent oben.
+  loggedOut?: boolean;
 }
 
 // Jede Action prüft ihre Berechtigung selbst (requireGM = gm-oder-admin,
@@ -147,6 +150,42 @@ export async function resetUserPasswordAction(
   }
 
   return { sent: true };
+}
+
+// Meldet einen fremden User auf ALLEN Geräten ab (erhöht session_version,
+// siehe invalidateOtherSessions in users.ts) — für den Verdacht auf ein
+// kompromittiertes oder unbeaufsichtigtes Konto, ohne dafür erst ein
+// Passwort zurücksetzen zu müssen. Anders als das Self-Service-Pendant in
+// src/app/user/sessionActions.ts wird hier kein frisches Cookie
+// ausgestellt (der Admin meldet ja nicht sich selbst ab) — der betroffene
+// User braucht sich beim nächsten Request einfach neu einzuloggen.
+export async function forceLogoutUserAction(
+  _state: AdminActionState,
+  formData: FormData,
+): Promise<AdminActionState> {
+  const admin = await requireAdmin();
+
+  const userId = Number(formData.get("userId"));
+  if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
+  if (userId === admin.id) {
+    return {
+      error:
+        "Nutze dafür deine eigenen Profil-Einstellungen (\"Auf allen anderen Geräten abmelden\").",
+    };
+  }
+
+  const user = await getUserById(userId);
+  if (!user) return { error: "User nicht gefunden." };
+
+  await invalidateOtherSessions(userId);
+  await logAdminAction(
+    admin.id,
+    "force_logout",
+    userId,
+    `${user.name} <${user.email}>`,
+  );
+
+  return { loggedOut: true };
 }
 
 export async function updateUserRoleAction(
