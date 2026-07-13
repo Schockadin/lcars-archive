@@ -10,8 +10,10 @@ import {
   listTableRows,
 } from "@/lib/dbInspect";
 import { formatDateTime } from "@/utils/formateISODate";
+import { synopsisExcerpt } from "@/lib/missionFormat";
 import { SortArrowIcon } from "@/lib/icons";
 import DbBackupPanel from "../DbBackupPanel";
+import type { TableName } from "@/lib/dbBackup";
 
 export const metadata: Metadata = {
   title: "Datenbank",
@@ -23,11 +25,20 @@ export const maxDuration = 60;
 const PAGE_SIZE = 50;
 const FILTER_PARAM_PREFIX = "f_";
 
-function formatCell(value: unknown): string {
+function formatCell(table: TableName, column: string, value: unknown): string {
   if (value === null || value === undefined) return "—";
   if (value instanceof Date) return formatDateTime(value);
   if (typeof value === "object") return JSON.stringify(value);
-  return String(value);
+  const text = String(value);
+  // Die bio-Spalte von characters enthält bereits gerendertes HTML
+  // (renderContentHtml, siehe characters.ts) und kann sehr lang werden —
+  // gekürzt auf eine Vorschau wie an anderen Stellen im Code (z.B.
+  // notifyCharacterSubscribers in characters.ts), sonst sprengt eine
+  // einzelne Spalte die ganze Tabelle.
+  if (table === "characters" && column === "bio") {
+    return synopsisExcerpt(text, 140);
+  }
+  return text;
 }
 
 // Admin-only: DB-Backup (Export/Import aller Tabellen außer users) + neuer
@@ -222,7 +233,7 @@ export default async function AdminDbPage({
                                 key={c}
                                 className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text"
                               >
-                                {formatCell(row[c])}
+                                {formatCell(table, c, row[c])}
                               </td>
                             ))}
                           </tr>
