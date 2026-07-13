@@ -1,8 +1,30 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { logout } from "@/app/login/actions";
 import type { User } from "@/types/db";
+
+interface AdminMenuItem {
+  href: string;
+  label: string;
+}
+
+const ADMIN_ITEMS: AdminMenuItem[] = [
+  { href: "/admin/users", label: "User" },
+  { href: "/admin/characters", label: "Charaktere" },
+  { href: "/admin/db", label: "DB" },
+  { href: "/admin/scripts", label: "Scripts" },
+  { href: "/admin/content", label: "Inhalte" },
+  { href: "/admin/audit-log", label: "Audit-Log" },
+];
+
+interface Anchor {
+  top: number;
+  left: number;
+  width: number;
+}
 
 export default function HeaderUserNav({
   role,
@@ -12,16 +34,71 @@ export default function HeaderUserNav({
   columns?: number;
 }) {
   const pathname = usePathname();
+  const [adminOpen, setAdminOpen] = useState(false);
+  const [anchor, setAnchor] = useState<Anchor | null>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Navigation (auch per Browser-Zurück) schließt ein offen gebliebenes
+  // Dropdown — State-Anpassung während des Renders statt in einem Effect
+  // (siehe React-Doku "Adjusting state when a prop changes"), sonst würde
+  // ein setState direkt im Effect-Body einen unnötigen Zusatz-Render
+  // auslösen.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setAdminOpen(false);
+  }
+
+  const measure = useCallback(() => {
+    const el = triggerRef.current;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    setAnchor({ top: r.bottom + 4, left: r.left, width: r.width });
+  }, []);
+
+  // Position aktuell halten, solange das Dropdown offen ist (gleiches Muster
+  // wie HeaderSearch.tsx) — per Portal an <body> gehängt, da ein Vorfahr des
+  // Headers overflow:hidden setzt und das Dropdown sonst abgeschnitten würde.
+  useEffect(() => {
+    if (!adminOpen) return;
+    measure();
+    window.addEventListener("resize", measure);
+    window.addEventListener("scroll", measure, true);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.removeEventListener("scroll", measure, true);
+    };
+  }, [adminOpen, measure]);
+
+  // Klick außerhalb (Trigger UND Panel) sowie Escape schließen das Dropdown.
+  useEffect(() => {
+    if (!adminOpen) return;
+    const onDown = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (!triggerRef.current?.contains(t) && !panelRef.current?.contains(t)) {
+        setAdminOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setAdminOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [adminOpen]);
 
   const tabs = [
     { href: "/user/content", label: "Inhalte" },
     { href: "/search", label: "Suche" },
     ...(role !== "guest" ? [{ href: "/users", label: "User" }] : []),
     { href: "/user", label: "Profil" },
-    ...(role === "gm" || role === "admin"
-      ? [{ href: "/admin", label: role === "admin" ? "Admin" : "Leitung" }]
-      : []),
   ];
+
+  const isAdminSection = pathname.startsWith("/admin");
 
   return (
     <nav
@@ -29,12 +106,7 @@ export default function HeaderUserNav({
       style={{ "--usernav-cols": columns } as React.CSSProperties}
     >
       {tabs.map((tab) => {
-        // /admin selbst redirected nur noch weiter (siehe admin/page.tsx) —
-        // ohne startsWith bliebe dieses Pill auf jeder /admin/*-Unterseite
-        // unmarkiert, weil pathname dort nie exakt "/admin" ist.
-        const isActive =
-          pathname === tab.href ||
-          (tab.href === "/admin" && pathname.startsWith("/admin/"));
+        const isActive = pathname === tab.href;
         return (
           <Link
             key={tab.href}
@@ -49,6 +121,76 @@ export default function HeaderUserNav({
           </Link>
         );
       })}
+
+      {/* Ein reiner gm hat nur ein Ziel (Charakter-Zuordnung) — dafür lohnt
+          kein Dropdown, das Pill verlinkt wie bisher direkt. */}
+      {role === "gm" && (
+        <Link
+          href="/admin/characters"
+          className={
+            isAdminSection
+              ? "lcars-usernav-pill lcars-menu-active"
+              : "lcars-usernav-pill"
+          }
+        >
+          Leitung
+        </Link>
+      )}
+
+      {/* Admin: Dropdown statt Direktlink — das Pill selbst verlinkt
+          bewusst nirgends hin, nur die Einträge im Dropdown tun das. */}
+      {role === "admin" && (
+        <>
+          <button
+            ref={triggerRef}
+            type="button"
+            onClick={() => setAdminOpen((v) => !v)}
+            aria-haspopup="true"
+            aria-expanded={adminOpen}
+            className={
+              isAdminSection
+                ? "lcars-usernav-pill lcars-menu-active"
+                : "lcars-usernav-pill"
+            }
+          >
+            Admin
+          </button>
+
+          {adminOpen &&
+            anchor &&
+            createPortal(
+              <div
+                ref={panelRef}
+                role="menu"
+                aria-label="Admin"
+                className="lcars-search-dropdown"
+                style={{
+                  top: anchor.top,
+                  left: anchor.left,
+                  minWidth: anchor.width,
+                }}
+              >
+                {ADMIN_ITEMS.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    role="menuitem"
+                    onClick={() => setAdminOpen(false)}
+                    className={
+                      pathname === item.href
+                        ? "lcars-search-item lcars-menu-active"
+                        : "lcars-search-item"
+                    }
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>,
+              document.body,
+            )}
+        </>
+      )}
+
       <form action={logout} className="lcars-usernav-form">
         <button type="submit" className="lcars-usernav-pill bg-lcars-red">
           Logout

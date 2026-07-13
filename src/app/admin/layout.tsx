@@ -1,5 +1,4 @@
 import { requireGM } from "@/lib/dal";
-import AdminSubNav from "./AdminSubNav";
 
 // Gilt für /admin und alle Unterseiten (/admin/users, /admin/characters,
 // /admin/db, /admin/scripts, /admin/content, /admin/audit-log,
@@ -7,19 +6,15 @@ import AdminSubNav from "./AdminSubNav";
 // (gm-oder-admin) für den ganzen Bereich und leitet Nicht-Privilegierte auf
 // /login um — die admin-only-Unterseiten verschärfen das in ihrer eigenen
 // Seite zusätzlich per requireAdmin() (Defense in Depth, gleiches Prinzip
-// wie schon bei /admin/content und /admin/audit-log). Rendert außerdem die
-// Pill-Subnav (AdminSubNav) einmal für den ganzen Bereich statt pro Seite.
+// wie schon bei /admin/content und /admin/audit-log). Die Navigation
+// zwischen den Unterseiten läuft über das Admin-Dropdown im Header
+// (HeaderUserNav.tsx), nicht mehr über eine eigene Subnav hier.
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const viewer = await requireGM();
+  await requireGM();
 
-  return (
-    <div className="flex flex-col gap-[16px]">
-      <AdminSubNav isAdmin={viewer.role === "admin"} />
-      {children}
-    </div>
-  );
+  return <div className="flex flex-col gap-[16px]">{children}</div>;
 }
