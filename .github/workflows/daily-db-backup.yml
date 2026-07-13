@@ -35,3 +35,13 @@ jobs:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+
+      # Löscht Backups älter als 30 Tage (siehe scripts/cleanup-db-backups.ts)
+      # — läuft nach dem Upload oben, im selben täglichen Job statt als
+      # eigener Cronjob, da beide Schritte dieselben R2-Secrets brauchen.
+      - run: npm run db:backup:cleanup
+        env:
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}

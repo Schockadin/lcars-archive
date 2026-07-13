@@ -32,7 +32,8 @@
     "db:reset:dev": "tsx --env-file=.env.development.local scripts/reset-db.ts",
     "db:seed-dialogue:dev": "tsx --env-file=.env.development.local scripts/seedExampleDialogue.ts",
     "db:create-admin:dev": "tsx --conditions=react-server --env-file=.env.development.local scripts/create-initial-admin.ts",
-    "db:backup": "tsx --conditions=react-server scripts/backup-db.ts"
+    "db:backup": "tsx --conditions=react-server scripts/backup-db.ts",
+    "db:backup:cleanup": "tsx --conditions=react-server scripts/cleanup-db-backups.ts"
   },
   "dependencies": {
     "gray-matter": "^4.0.3",

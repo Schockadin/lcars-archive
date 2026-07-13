@@ -3,9 +3,15 @@ import sql from "@/lib/db";
 import { TABLE_COLUMNS, type TableName } from "./dbBackup";
 
 // Read-only Tabellen-Viewer für /admin/db — nutzt dieselbe Spalten-Whitelist
-// wie der DB-Backup-Export (dbBackup.ts), aber OHNE password_setup_tokens:
-// die Tabelle enthält token_hash, den auch ein Admin nicht einsehen soll.
-const HIDDEN_FROM_VIEW: readonly TableName[] = ["password_setup_tokens"];
+// wie der DB-Backup-Export (dbBackup.ts), aber OHNE password_setup_tokens
+// (enthält token_hash, den auch ein Admin nicht einsehen soll) und ohne
+// mission_participants (reine n:m-Relationstabelle ohne eigene Spalten
+// außer den beiden FKs — anders als z.B. archive_links, das mit label noch
+// eigene Daten trägt und deshalb sichtbar bleibt).
+const HIDDEN_FROM_VIEW: readonly TableName[] = [
+  "password_setup_tokens",
+  "mission_participants",
+];
 
 export const VIEWABLE_TABLES = (
   Object.keys(TABLE_COLUMNS) as TableName[]
