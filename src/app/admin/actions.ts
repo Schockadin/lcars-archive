@@ -105,7 +105,7 @@ export async function createUserAction(
     };
   }
 
-  redirect("/admin");
+  redirect("/admin/users");
 }
 
 // Löst denselben Reset-Link aus wie die Selbstbedienung unter
@@ -223,7 +223,7 @@ export async function updateUserRoleAction(
   if (role === "guest") {
     await unassignCharactersFromUser(userId);
   }
-  redirect("/admin");
+  redirect("/admin/users");
 }
 
 export async function deactivateUserAction(
@@ -248,7 +248,7 @@ export async function deactivateUserAction(
     userId,
     `${target.name} <${target.email}>`,
   );
-  redirect("/admin");
+  redirect("/admin/users");
 }
 
 export async function reactivateUserAction(
@@ -270,7 +270,7 @@ export async function reactivateUserAction(
     userId,
     `${target.name} <${target.email}>`,
   );
-  redirect("/admin");
+  redirect("/admin/users");
 }
 
 export async function deleteUserAction(
@@ -299,7 +299,7 @@ export async function deleteUserAction(
     `${target.name} <${target.email}>`,
   );
   await deleteUser(userId);
-  redirect("/admin");
+  redirect("/admin/users");
 }
 
 export async function updateUserProfileAction(
@@ -327,7 +327,7 @@ export async function updateUserProfileAction(
     throw err;
   }
 
-  redirect("/admin");
+  redirect("/admin/users");
 }
 
 export async function assignCharacterAction(
@@ -369,5 +369,5 @@ export async function assignCharacterAction(
   }
   revalidateCharacter(character.slug);
 
-  redirect("/admin");
+  redirect("/admin/characters");
 }

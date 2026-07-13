@@ -69,4 +69,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     summary:
       "Diese Ära dreht sich um die Absicherung von Login und Kontoverwaltung, größtenteils unsichtbar im Alltag: Zu viele fehlgeschlagene Anmeldeversuche in kurzer Zeit sperren jetzt vorübergehend, unabhängig davon, ob die eingegebene Adresse überhaupt existiert, und die Login-Fehlermeldung verrät nicht mehr, ob eine E-Mail-Adresse registriert ist. „Passwort vergessen“ kann nicht mehr beliebig oft hintereinander eine Mail an die betroffene Person und alle Admins auslösen. Ein neues Audit-Log im Adminbereich zeigt, wer wann welche Useraccount-Aktion (Anlegen, Rolle ändern, (De-)Aktivieren, Löschen, Passwort-Reset auslösen) durchgeführt hat. Im eigenen Profil gibt es außerdem einen neuen „Auf allen anderen Geräten abmelden“-Knopf, mit dem sich bei Verdacht auf ein fremdes angemeldetes Gerät alle anderen Sitzungen sofort beenden lassen, ohne dafür das eigene Passwort ändern zu müssen. Admins können jetzt außerdem jeden anderen Useraccount direkt aus der Nutzerverwaltung heraus auf allen Geräten abmelden, etwa bei einem Verdacht auf einen kompromittierten oder unbeaufsichtigten Account.",
   },
+  {
+    version: "1.14",
+    title: "Admin-Bereich neu strukturiert: eigene Unterseiten für User, DB, Scripts",
+    summary:
+      "Der Adminbereich war bisher eine einzige lange Seite mit aufklappbaren Abschnitten – jetzt gibt es unterhalb des Headers eine Pill-Navigation zu klar getrennten Unterseiten: User, Charaktere, DB, Scripts, Inhalte und Audit-Log. Die Nutzerübersicht zeigt jetzt eine richtige Tabelle mit Suche, Filter und Sortierung, inklusive der Zeitpunkte des letzten Logins und des letzten Seitenaufrufs; die eigentliche Kontoverwaltung (Rolle, Aktivierung, Löschen, Passwort-Reset, Geräte abmelden) findet sich gebündelt auf der Detailseite eines Users. Neu auf der DB-Seite: Admins können sich die Inhalte der wichtigsten Datenbank-Tabellen jetzt direkt und rein lesend ansehen, ohne dafür erst ein Backup exportieren zu müssen.",
+  },
 ];

@@ -28,19 +28,27 @@ export default function HeaderUserNav({
       className="lcars-usernav"
       style={{ "--usernav-cols": columns } as React.CSSProperties}
     >
-      {tabs.map((tab) => (
-        <Link
-          key={tab.href}
-          href={tab.href}
-          className={
-            pathname === tab.href
-              ? "lcars-usernav-pill lcars-menu-active"
-              : "lcars-usernav-pill"
-          }
-        >
-          {tab.label}
-        </Link>
-      ))}
+      {tabs.map((tab) => {
+        // /admin selbst redirected nur noch weiter (siehe admin/page.tsx) —
+        // ohne startsWith bliebe dieses Pill auf jeder /admin/*-Unterseite
+        // unmarkiert, weil pathname dort nie exakt "/admin" ist.
+        const isActive =
+          pathname === tab.href ||
+          (tab.href === "/admin" && pathname.startsWith("/admin/"));
+        return (
+          <Link
+            key={tab.href}
+            href={tab.href}
+            className={
+              isActive
+                ? "lcars-usernav-pill lcars-menu-active"
+                : "lcars-usernav-pill"
+            }
+          >
+            {tab.label}
+          </Link>
+        );
+      })}
       <form action={logout} className="lcars-usernav-form">
         <button type="submit" className="lcars-usernav-pill bg-lcars-red">
           Logout

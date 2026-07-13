@@ -108,5 +108,5 @@ export async function deleteUserFromEditAction(
   }
 
   await deleteUser(userId);
-  redirect("/admin");
+  redirect("/admin/users");
 }
