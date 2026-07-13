@@ -13,6 +13,7 @@ import {
 import { SortArrowIcon } from "@/lib/icons";
 import DbBackupPanel from "../DbBackupPanel";
 import DbTableRows from "./DbTableRows";
+import SqlQueryPanel from "./SqlQueryPanel";
 
 export const metadata: Metadata = {
   title: "Datenbank",
@@ -24,13 +25,17 @@ export const maxDuration = 60;
 const PAGE_SIZE = 50;
 const FILTER_PARAM_PREFIX = "f_";
 
-// Admin-only: DB-Backup (Export/Import aller Tabellen außer users) + neuer
-// read-only Tabellen-Viewer, gesteuert über ?table=&page=&sort=&dir=&f_<spalte>=
-// (kein Client-JS nötig, gleiches Muster wie /search bzw. /archive). Der
-// Viewer zeigt nur die Whitelist aus src/lib/dbInspect.ts (= dieselbe wie
-// beim Backup, aber ohne password_setup_tokens/mission_participants) und
-// immer nur die dort gelisteten Spalten. Sortierung läuft über die
-// Spalten-Header (Links, die Sortierspalte/-richtung umschalten), Filter
+// Admin-only: DB-Backup (Export/Import aller Tabellen außer users), ein
+// freies SQL-Query-Feld (SqlQueryPanel.tsx, read-only, jede Tabelle) sowie
+// ein read-only Tabellen-Viewer, gesteuert über
+// ?table=&page=&sort=&dir=&f_<spalte>= (kein Client-JS nötig, gleiches
+// Muster wie /search bzw. /archive). Der Viewer zeigt nur die Whitelist aus
+// src/lib/dbInspect.ts (= dieselbe wie beim Backup, aber ohne
+// password_setup_tokens/mission_participants) und immer nur die dort
+// gelisteten Spalten — Fremdschlüssel-Spalten zeigen dort den Slug der
+// referenzierten Zeile statt der rohen id (resolveReferences in
+// dbInspect.ts, keine Verlinkung, reine Lesbarkeit). Sortierung läuft über
+// die Spalten-Header (Links, die Sortierspalte/-richtung umschalten), Filter
 // über ein GET-Formular mit einem Textfeld pro Spalte (Substring-Suche via
 // ::text ILIKE in dbInspect.ts) — beides verändert die SQL-Query direkt
 // statt nur die aktuell geladene Seite umzusortieren, da Tabellen beliebig
@@ -121,6 +126,17 @@ export default async function AdminDbPage({
           <section className="flex flex-col gap-[12px]">
             <h2 className="text-lcars-amber">DB-Backup</h2>
             <DbBackupPanel />
+          </section>
+
+          <section className="flex flex-col gap-[12px]">
+            <h2 className="text-lcars-amber">Freie SQL-Query (read-only)</h2>
+            <p className="text-lcars-text-dim text-[13px]">
+              Nur einzelne SELECT-Anweisungen, ausgeführt in einer READ-ONLY-
+              Transaktion (kein Zugriff auf die TABLE_COLUMNS-Whitelist der
+              Tabellenansicht unten nötig) — max. 500 Zeilen, 5 Sekunden
+              Timeout.
+            </p>
+            <SqlQueryPanel />
           </section>
 
           <section className="flex flex-col gap-[12px]">

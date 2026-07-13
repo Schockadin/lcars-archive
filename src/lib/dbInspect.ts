@@ -75,6 +75,80 @@ const BOOLEAN_COLUMNS: Partial<Record<TableName, readonly string[]>> = {
   archive_entries: ["dialogue_open"],
 };
 
+// Fremdschlüssel-Spalten (siehe REFERENCES-Constraints in schema.sql) —
+// ihr numerischer Wert wird in der Anzeige durch den Slug der referenzierten
+// Zeile ersetzt (siehe resolveReferences unten), reine Lesbarkeits-Hilfe,
+// keine Verlinkung. "users" ist zwar selbst keine VIEWABLE_TABLE, aber als
+// Ziel einer Fremdschlüssel-Auflösung trotzdem erlaubt (nur die id→slug-
+// Zuordnung wird gelesen, keine weiteren User-Spalten).
+type ReferenceTarget = "users" | "characters" | "missions" | "archive_entries";
+const FK_COLUMNS: Partial<Record<TableName, Record<string, ReferenceTarget>>> = {
+  characters: { player_id: "users" },
+  missions: { owner_user_id: "users" },
+  mission_logs: {
+    mission_id: "missions",
+    author_id: "characters",
+    owner_user_id: "users",
+  },
+  archive_entries: { owner_user_id: "users" },
+  archive_links: { source_id: "archive_entries", target_id: "archive_entries" },
+  dialogue_messages: {
+    archive_entry_id: "archive_entries",
+    character_id: "characters",
+    author_user_id: "users",
+  },
+  content_follows: { user_id: "users" },
+  push_subscriptions: { user_id: "users" },
+  content_deletions: { owner_user_id: "users", deleted_by: "users" },
+};
+
+// Ersetzt Fremdschlüssel-Werte (numerische id) durch den Slug der
+// referenzierten Zeile — eine Lookup-Query pro Zieltabelle (dedupliziert
+// über alle FK-Spalten der aktuellen Seite hinweg), nicht pro Zeile (N+1).
+// Ein Wert ohne Treffer (z.B. eine per ON DELETE SET NULL bereits entfernte
+// Referenz sollte hier nie auftreten, da dann NULL statt einer id steht —
+// defensiv trotzdem mit "#<id>" statt eines stillen Datenverlusts) fällt auf
+// die rohe id zurück.
+async function resolveReferences(
+  table: TableName,
+  rows: Record<string, unknown>[],
+): Promise<Record<string, unknown>[]> {
+  const fkColumns = FK_COLUMNS[table];
+  if (!fkColumns || rows.length === 0) return rows;
+
+  const idsByTarget = new Map<ReferenceTarget, Set<number>>();
+  for (const [col, target] of Object.entries(fkColumns)) {
+    for (const row of rows) {
+      const value = row[col];
+      if (typeof value === "number") {
+        if (!idsByTarget.has(target)) idsByTarget.set(target, new Set());
+        idsByTarget.get(target)!.add(value);
+      }
+    }
+  }
+  if (idsByTarget.size === 0) return rows;
+
+  const slugsByTarget = new Map<ReferenceTarget, Map<number, string>>();
+  for (const [target, ids] of idsByTarget) {
+    const slugRows = await sql.unsafe<{ id: number; slug: string }[]>(
+      `SELECT id, slug FROM "${target}" WHERE id = ANY($1)`,
+      [[...ids]],
+    );
+    slugsByTarget.set(target, new Map(slugRows.map((r) => [r.id, r.slug])));
+  }
+
+  return rows.map((row) => {
+    const resolved = { ...row };
+    for (const [col, target] of Object.entries(fkColumns)) {
+      const value = row[col];
+      if (typeof value === "number") {
+        resolved[col] = slugsByTarget.get(target)?.get(value) ?? `#${value}`;
+      }
+    }
+    return resolved;
+  });
+}
+
 // Baut eine WHERE-Klausel pro Spalte — nur für Spalten aus der
 // TABLE_COLUMNS-Whitelist (nie aus rohem User-Input als Identifier),
 // Filterwerte werden dagegen IMMER als gebundener $n-Parameter übergeben,
@@ -158,8 +232,78 @@ export async function listTableRows(
   const limitIndex = params.length + 1;
   const offsetIndex = params.length + 2;
 
-  return sql.unsafe(
+  const rows = await sql.unsafe<Record<string, unknown>[]>(
     `SELECT ${columns} FROM "${table}" ${whereSql} ORDER BY "${sortColumn}" ${sortDir} LIMIT $${limitIndex} OFFSET $${offsetIndex}`,
     [...params, limit, offset],
   );
+  return resolveReferences(table, rows);
+}
+
+export class UnsafeQueryError extends Error {}
+
+// Nur früher, freundlicher Fehler für den offensichtlichen Fall (mehrere
+// Anweisungen, kein SELECT/WITH) — KEIN Sicherheitsmechanismus für sich
+// allein (siehe runReadOnlyQuery unten, das die eigentliche Durchsetzung
+// über eine READ ONLY-Transaktion übernimmt). Ein einfacher Text-Check
+// könnte z.B. eine schreibende CTE wie
+// "WITH x AS (DELETE FROM t RETURNING *) SELECT * FROM x" nicht zuverlässig
+// erkennen — die fängt erst die READ ONLY-Transaktion ab.
+function assertReadOnlyQuery(query: string): void {
+  const trimmed = query.trim();
+  if (!trimmed) {
+    throw new UnsafeQueryError("Bitte eine Query eingeben.");
+  }
+  const withoutTrailingSemicolon = trimmed.replace(/;\s*$/, "");
+  if (withoutTrailingSemicolon.includes(";")) {
+    throw new UnsafeQueryError("Nur eine einzelne Anweisung ist erlaubt.");
+  }
+  const withoutLeadingComments = withoutTrailingSemicolon.replace(
+    /^(\s*--[^\n]*\n)+/,
+    "",
+  );
+  const firstWord = withoutLeadingComments
+    .match(/^\s*(\w+)/)?.[1]
+    ?.toLowerCase();
+  if (firstWord !== "select" && firstWord !== "with") {
+    throw new UnsafeQueryError("Nur SELECT-Anweisungen sind erlaubt.");
+  }
+}
+
+const FREE_QUERY_ROW_LIMIT = 500;
+const FREE_QUERY_TIMEOUT_MS = 5000;
+
+export interface FreeQueryResult {
+  columns: string[];
+  rows: Record<string, unknown>[];
+}
+
+// Freie, schreibgeschützte SQL-Query für Admins (/admin/db) — anders als
+// listTableRows/countTableRows oben NICHT auf die TABLE_COLUMNS-Whitelist
+// beschränkt (ein Admin kann über den DB-Backup-Export ohnehin schon die
+// komplette DB einsehen, siehe dbBackup.ts). Die eigentliche Sicherheit kommt
+// nicht aus einer Tabellen-Whitelist, sondern aus "SET TRANSACTION READ
+// ONLY": das verhindert JEDE Schreiboperation auf Postgres-Engine-Ebene,
+// auch versteckt in einer schreibenden CTE (siehe assertReadOnlyQuery oben).
+// Die Query wird in eine Subquery mit fester LIMIT gewrappt, damit auch ein
+// "SELECT * FROM riesige_tabelle" ohne eigenes LIMIT nicht den ganzen
+// Request-Speicher sprengt — ein bereits vorhandenes ORDER BY in der
+// Subquery bleibt dabei zwar meist, aber nicht garantiert erhalten (kein
+// Problem für dieses Debug-Werkzeug).
+export async function runReadOnlyQuery(query: string): Promise<FreeQueryResult> {
+  assertReadOnlyQuery(query);
+  const inner = query.trim().replace(/;\s*$/, "");
+
+  return sql.begin(async (tx) => {
+    await tx.unsafe("SET TRANSACTION READ ONLY");
+    await tx.unsafe(`SET LOCAL statement_timeout = ${FREE_QUERY_TIMEOUT_MS}`);
+    const rows = await tx.unsafe<Record<string, unknown>[]>(
+      `SELECT * FROM (${inner}) AS _admin_query LIMIT ${FREE_QUERY_ROW_LIMIT}`,
+    );
+    const columns = rows.columns
+      ? rows.columns.map((c) => c.name)
+      : rows[0]
+        ? Object.keys(rows[0])
+        : [];
+    return { columns, rows: [...rows] };
+  });
 }
