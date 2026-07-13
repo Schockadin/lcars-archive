@@ -311,6 +311,58 @@ export async function sendCharacterUpdatedEmail(input: {
   });
 }
 
+// An alle Abonnenten einer Mission (content_follows, target_type
+// 'mission'), sobald diese Mission bearbeitet wird (siehe
+// notifyMissionSubscribers in src/lib/missions.ts, gerufen aus
+// missions/_shared/contentAction.ts). Der Bearbeitende selbst wird vom
+// Aufrufer ausgeschlossen.
+export async function sendMissionUpdatedEmail(input: {
+  to: string;
+  name: string;
+  missionTitle: string;
+  missionUrl: string;
+  preview: string;
+}): Promise<SendEmailResult> {
+  const missionUrl = escapeHtml(input.missionUrl);
+  return sendEmail({
+    to: input.to,
+    subject: `Aktualisiert: ${input.missionTitle}`,
+    html: `
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>die Mission "${escapeHtml(input.missionTitle)}", die du abonniert hast, wurde aktualisiert:</p>
+      ${previewBlock(input.preview)}
+      <p><a href="${missionUrl}">${missionUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
+// An alle Abonnenten eines Archiv-Eintrags (content_follows, target_type
+// 'archive_entry'), sobald dieser Eintrag bearbeitet wird (siehe
+// notifyArchiveEntrySubscribers in src/lib/archive.ts, gerufen aus
+// archive/_shared/contentAction.ts). Der Bearbeitende selbst wird vom
+// Aufrufer ausgeschlossen.
+export async function sendArchiveEntryUpdatedEmail(input: {
+  to: string;
+  name: string;
+  entryTitle: string;
+  entryUrl: string;
+  preview: string;
+}): Promise<SendEmailResult> {
+  const entryUrl = escapeHtml(input.entryUrl);
+  return sendEmail({
+    to: input.to,
+    subject: `Aktualisiert: ${input.entryTitle}`,
+    html: `
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>der Archiv-Eintrag "${escapeHtml(input.entryTitle)}", den du abonniert hast, wurde aktualisiert:</p>
+      ${previewBlock(input.preview)}
+      <p><a href="${entryUrl}">${entryUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
 // An alle Abonnenten eines Charakters, sobald dieser Charakter einen neuen
 // Mission-Log verfasst (createMissionLog-Aufrufer in
 // mission-logs/_shared/contentAction.ts) — ein einzelnes, sofortiges

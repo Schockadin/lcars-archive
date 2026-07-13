@@ -3,9 +3,11 @@ import { getSession } from "@/lib/session";
 import {
   updateOwnArchiveEntryBody,
   getOwnArchiveEntryForEdit,
+  notifyArchiveEntrySubscribers,
 } from "@/lib/archive";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
+import { synopsisExcerpt } from "@/lib/missionFormat";
 
 export interface ArchiveEntryEditState {
   error?: string;
@@ -61,6 +63,12 @@ export async function updateOwnArchiveEntryAction(
   }
 
   revalidateArchiveEntry(result.slug);
+  await notifyArchiveEntrySubscribers({
+    entrySlug: result.slug,
+    entryTitle: result.title,
+    editingUserId: session.userId,
+    preview: synopsisExcerpt(bodyMarkdown, 140),
+  });
 
   return { success: true, updatedHtml: result.contentHtml };
 }

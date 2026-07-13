@@ -5,9 +5,11 @@ import {
   updateMissionSynopsis,
   updateMissionSynopsisWithHtml,
   getMissionById,
+  notifyMissionSubscribers,
 } from "@/lib/missions";
 import { revalidateMission } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
+import { synopsisExcerpt } from "@/lib/missionFormat";
 
 export interface MissionSynopsisEditState {
   error?: string;
@@ -60,6 +62,12 @@ export async function updateMissionSynopsisAction(
       linked.html,
     );
     revalidateMission(mission.slug);
+    await notifyMissionSubscribers({
+      missionSlug: mission.slug,
+      missionTitle: mission.title,
+      editingUserId: session.userId,
+      preview: synopsisExcerpt(linked.sourceMd, 140),
+    });
     return { success: true, updatedHtml: linked.html };
   }
 
@@ -67,6 +75,12 @@ export async function updateMissionSynopsisAction(
   if (!result) return { error: "Mission nicht gefunden." };
 
   revalidateMission(result.slug);
+  await notifyMissionSubscribers({
+    missionSlug: result.slug,
+    missionTitle: result.title,
+    editingUserId: session.userId,
+    preview: synopsisExcerpt(bodyMarkdown, 140),
+  });
 
   return { success: true, updatedHtml: result.metadata.body ?? undefined };
 }

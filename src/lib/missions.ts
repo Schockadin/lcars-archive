@@ -2,6 +2,12 @@ import { unstable_cache } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
+// getMissionSubscribers lebt in dialoguesCore.ts, siehe Kommentar bei
+// getCharacterSubscribers dort — gleiches Muster wie in characters.ts.
+import { getMissionSubscribers } from "@/lib/dialogues";
+import { sendMissionUpdatedEmail } from "@/lib/mail";
+import { sendPushToUser } from "@/lib/push";
+import { getBaseUrl } from "@/lib/http";
 import {
   LogNavItem,
   LogNavNeighbors,
@@ -310,14 +316,66 @@ export async function updateMissionContent(
   return rows[0] ?? null;
 }
 
+// Benachrichtigt alle Abonnenten einer Mission (content_follows, target_type
+// 'mission'), dass sich etwas an ihr geändert hat — analog
+// notifyCharacterSubscribers in characters.ts. Gerufen von beiden
+// Bearbeiten-Wegen (volles Formular: missions/_shared/contentAction.ts;
+// Inline-Synopsis-Editor: app/actions/missions.ts#updateMissionSynopsisAction),
+// jeweils NACH dem erfolgreichen Speichern. Best-effort wie dort: einzelne
+// fehlgeschlagene Mails werden geloggt, brechen den Rest nicht ab.
+// editingUserId schließt den Bearbeitenden selbst aus. Anders als bei
+// Charakteren ist die Zusammenfassung bei Missionen ein Pflichtfeld, preview
+// kommt deshalb direkt vom Aufrufer statt hier aus rohem Markdown abgeleitet
+// zu werden (der hat preview für notifyContentChange ohnehin schon parat).
+export async function notifyMissionSubscribers(input: {
+  missionSlug: string;
+  missionTitle: string;
+  editingUserId: number;
+  preview: string;
+}): Promise<void> {
+  const subscribers = await getMissionSubscribers(
+    input.missionSlug,
+    input.editingUserId,
+  );
+  if (subscribers.length === 0) return;
+
+  const missionUrl = `${await getBaseUrl()}/missions/${input.missionSlug}`;
+  for (const subscriber of subscribers) {
+    if (subscriber.emailNotificationsEnabled) {
+      const result = await sendMissionUpdatedEmail({
+        to: subscriber.email,
+        name: subscriber.name,
+        missionTitle: input.missionTitle,
+        missionUrl,
+        preview: input.preview,
+      });
+      if (!result.sent) {
+        console.error(
+          `Mission-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+        );
+      }
+    }
+    if (subscriber.pushNotificationsEnabled) {
+      await sendPushToUser(subscriber.id, {
+        title: `Aktualisiert: ${input.missionTitle}`,
+        body: input.preview,
+        url: missionUrl,
+      });
+    }
+  }
+}
+
 export interface UpdateMissionSynopsisResult {
   slug: string;
+  title: string;
   metadata: MissionMetaData;
 }
 
 // Nur-Synopsis-Bearbeitung (inline auf /missions/[slug], MissionSynopsisEditor)
 // — Titel/Status/Zeitraum/Tags bleiben unangetastet, deshalb reicht slug +
-// die aktualisierte metadata als Rückgabe.
+// die aktualisierte metadata als Rückgabe. title zusätzlich (nicht nur slug)
+// für notifyMissionSubscribers im Aufrufer (actions/missions.ts), der sonst
+// eine zweite Query bräuchte.
 export async function updateMissionSynopsis(
   missionId: number,
   bodyMarkdown: string,
@@ -335,7 +393,7 @@ export async function updateMissionSynopsis(
       source_md  = ${bodyMarkdown},
       updated_at = NOW()
     WHERE m.id = ${missionId}
-    RETURNING m.slug, m.metadata
+    RETURNING m.slug, m.title, m.metadata
   `;
   const row = rows[0];
   if (!row) return null;

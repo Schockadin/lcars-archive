@@ -9,6 +9,7 @@ import {
   getMissionById,
   setMissionParticipants,
   getMissionParticipantUsers,
+  notifyMissionSubscribers,
 } from "@/lib/missions";
 import { getParticipantCharactersForNotification } from "@/lib/characters";
 import { getCharacterSubscribersForSlugs } from "@/lib/dialogues";
@@ -124,6 +125,14 @@ export async function missionAction(
     // Liste.
     await setMissionParticipants(missionId!, participantCharacterIds);
     revalidateMission(result.slug);
+
+    const updatePreview = synopsisExcerpt(teaser ?? bodyMarkdown, 140);
+    await notifyMissionSubscribers({
+      missionSlug: result.slug,
+      missionTitle: title,
+      editingUserId: session.userId,
+      preview: updatePreview,
+    });
     await notifyContentChange({
       contentType: "mission",
       event: "updated",
@@ -132,7 +141,7 @@ export async function missionAction(
       contentTypeLabel: "eine Mission",
       contentTitle: title,
       contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
-      preview: synopsisExcerpt(teaser ?? bodyMarkdown, 140),
+      preview: updatePreview,
       notifyPublic: false,
     });
     redirect("/user/content");
