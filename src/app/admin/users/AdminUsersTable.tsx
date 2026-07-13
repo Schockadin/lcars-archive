@@ -140,7 +140,7 @@ export default function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
                   <td className="py-[6px] pr-[16px] whitespace-nowrap">
                     {u.email}
                   </td>
-                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text-dim">
+                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text">
                     {ROLE_LABELS[u.role]}
                   </td>
                   <td className="py-[6px] pr-[16px] whitespace-nowrap">
@@ -150,13 +150,13 @@ export default function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
                       <span className="text-lcars-red">Deaktiviert</span>
                     )}
                   </td>
-                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text-dim">
+                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text">
                     {formatDateTime(u.created_at)}
                   </td>
-                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text-dim">
+                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text">
                     {formatDateTime(u.last_login_at)}
                   </td>
-                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text-dim">
+                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text">
                     {formatDateTime(u.last_visit_at)}
                   </td>
                   <td className="py-[6px] whitespace-nowrap">

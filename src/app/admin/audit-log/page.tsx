@@ -67,7 +67,7 @@ export default async function AdminAuditLogPage() {
                       <td className="py-[6px] pr-[16px] whitespace-nowrap">
                         {ACTION_LABELS[entry.action]}
                       </td>
-                      <td className="py-[6px] text-lcars-text-dim">
+                      <td className="py-[6px] text-lcars-text">
                         {entry.details ?? "—"}
                       </td>
                     </tr>

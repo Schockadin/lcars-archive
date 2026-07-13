@@ -107,7 +107,7 @@ export default async function AdminDbPage({
                           {columns.map((c) => (
                             <td
                               key={c}
-                              className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text-dim"
+                              className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text"
                             >
                               {formatCell(row[c])}
                             </td>
