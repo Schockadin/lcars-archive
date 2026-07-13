@@ -5,7 +5,7 @@ import {
   getMissionParticipantIds,
 } from "@/lib/missions";
 import { getCharactersForUser } from "@/lib/characters";
-import { STATUS_CONFIG, stripHtml } from "@/lib/missionFormat";
+import { STATUS_CONFIG } from "@/lib/missionFormat";
 import { getViewer } from "@/lib/visibility";
 import PageMeta from "@/components/PageMeta";
 import MissionLogList from "../MissionLogList";
@@ -51,9 +51,6 @@ export default async function MissionDetailLayout({
       <aside className="mission-detail-logs lcars-scroll">
         <MissionLogList
           missionSlug={mission.slug}
-          synopsis={
-            mission.metadata.body ? stripHtml(mission.metadata.body) : null
-          }
           logs={logs}
           canCreateLog={canCreateLog}
         />

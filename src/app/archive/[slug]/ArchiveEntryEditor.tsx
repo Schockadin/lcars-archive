@@ -21,7 +21,6 @@ export default function ArchiveEntryEditor({
   contentHtml,
   sourceMarkdown,
   isAdminOrGM,
-  slug,
   editMode,
   onEditModeChange,
 }: {
@@ -32,7 +31,6 @@ export default function ArchiveEntryEditor({
   // Timeline-Marker-Button darin aber zusätzlich rollen-gated — anders als
   // MissionSynopsisEditor.tsx, wo Owner- und Rollen-Gate zusammenfallen.
   isAdminOrGM: boolean;
-  slug: string;
   editMode: boolean;
   onEditModeChange: (v: boolean) => void;
 }) {
