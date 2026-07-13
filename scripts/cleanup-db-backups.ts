@@ -12,22 +12,14 @@ import {
   DeleteObjectsCommand,
 } from "@aws-sdk/client-s3";
 import { createR2Client } from "./r2Client";
+import { computeBackupCutoff, isStaleBackupKey } from "@/lib/backupRetention";
 
-const RETENTION_DAYS = 30;
 const PREFIX = "db-backups/";
-const KEY_PATTERN = /^db-backups\/(\d{4}-\d{2}-\d{2})\.json$/;
 
 async function main() {
   const { client, bucket } = createR2Client();
 
-  // UTC-Mitternacht statt der aktuellen Uhrzeit — Backup-Daten werden aus
-  // dem Key ("YYYY-MM-DD") ebenfalls als UTC-Mitternacht geparst (siehe
-  // new Date(match[1]) unten), sonst würde die Uhrzeit des Cronjob-Laufs die
-  // effektive Aufbewahrungsdauer um bis zu einen Tag verschieben.
-  const now = new Date();
-  const cutoff = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - RETENTION_DAYS),
-  );
+  const cutoff = computeBackupCutoff(new Date());
   console.log(
     `🔎 Suche Backups älter als ${cutoff.toISOString().slice(0, 10)}...`,
   );
@@ -43,9 +35,8 @@ async function main() {
       }),
     );
     for (const obj of page.Contents ?? []) {
-      const match = obj.Key?.match(KEY_PATTERN);
-      if (match && new Date(match[1]) < cutoff) {
-        staleKeys.push(obj.Key!);
+      if (obj.Key && isStaleBackupKey(obj.Key, cutoff)) {
+        staleKeys.push(obj.Key);
       }
     }
     continuationToken = page.IsTruncated

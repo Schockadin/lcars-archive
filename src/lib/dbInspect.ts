@@ -170,7 +170,9 @@ async function resolveReferences(
 // admin-only Debug-Werkzeug ausreichend, kein Anspruch auf Index-Nutzung/
 // Performance bei sehr großen Tabellen), für BOOLEAN_COLUMNS ein exakter
 // Vergleich gegen den echten Boolean-Wert (siehe Kommentar dort).
-function buildFilterClause(
+// exportiert nur für dbInspect.test.ts (reine String-/Wert-Logik, keine
+// DB-Verbindung nötig) — kein weiterer Aufrufer außerhalb dieser Datei.
+export function buildFilterClause(
   table: TableName,
   filters: Record<string, string>,
   startIndex: number,
@@ -280,8 +282,9 @@ const FORBIDDEN_FUNCTION_CALL =
 // ONLY-Transaktion übernimmt). Ein einfacher Text-Check könnte z.B. eine
 // schreibende CTE wie
 // "WITH x AS (DELETE FROM t RETURNING *) SELECT * FROM x" nicht zuverlässig
-// erkennen — die fängt erst die READ ONLY-Transaktion ab.
-function assertReadOnlyQuery(query: string): void {
+// erkennen — die fängt erst die READ ONLY-Transaktion ab. Exportiert nur für
+// dbInspect.test.ts (reine String-Logik, keine DB-Verbindung nötig).
+export function assertReadOnlyQuery(query: string): void {
   const trimmed = query.trim();
   if (!trimmed) {
     throw new UnsafeQueryError("Bitte eine Query eingeben.");

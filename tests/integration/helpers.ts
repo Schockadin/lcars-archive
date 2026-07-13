@@ -11,6 +11,7 @@ export async function resetDb(): Promise<void> {
       timeline_events, archive_links, dialogue_messages, archive_entries,
       mission_logs, missions, mission_participants, content_follows,
       content_deletions, push_subscriptions, password_setup_tokens,
+      admin_audit_log, login_attempts, password_reset_requests,
       characters, users
     RESTART IDENTITY CASCADE
   `;
