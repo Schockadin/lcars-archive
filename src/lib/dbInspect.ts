@@ -25,27 +25,84 @@ export function viewableColumns(table: TableName): readonly string[] {
   return TABLE_COLUMNS[table];
 }
 
-export async function countTableRows(table: TableName): Promise<number> {
+// Baut eine WHERE-Klausel für einen Substring-Filter pro Spalte — nur für
+// Spalten aus der TABLE_COLUMNS-Whitelist (nie aus rohem User-Input als
+// Identifier), Filterwerte werden dagegen IMMER als gebundener $n-Parameter
+// übergeben, nie in den SQL-String interpoliert (gleiches Prinzip wie beim
+// Backup-Export in dbBackup.ts). ::text erlaubt eine einheitliche
+// Substring-Suche über beliebige Spaltentypen (Zahlen, Booleans, Timestamps,
+// JSONB, Arrays) hinweg, ohne für jeden Typ eine eigene Filter-UI zu bauen —
+// für dieses admin-only Debug-Werkzeug ausreichend, kein Anspruch auf
+// Index-Nutzung/Performance bei sehr großen Tabellen.
+function buildFilterClause(
+  table: TableName,
+  filters: Record<string, string>,
+  startIndex: number,
+): { whereSql: string; params: string[] } {
+  const validColumns = new Set<string>(TABLE_COLUMNS[table]);
+  const clauses: string[] = [];
+  const params: string[] = [];
+  let i = startIndex;
+  for (const [col, value] of Object.entries(filters)) {
+    if (!validColumns.has(col) || !value.trim()) continue;
+    clauses.push(`"${col}"::text ILIKE $${i}`);
+    params.push(`%${value.trim()}%`);
+    i++;
+  }
+  return {
+    whereSql: clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "",
+    params,
+  };
+}
+
+export async function countTableRows(
+  table: TableName,
+  filters: Record<string, string> = {},
+): Promise<number> {
+  const { whereSql, params } = buildFilterClause(table, filters, 1);
   const [row] = await sql.unsafe<{ count: string }[]>(
-    `SELECT COUNT(*) AS count FROM "${table}"`,
+    `SELECT COUNT(*) AS count FROM "${table}" ${whereSql}`,
+    params,
   );
   return Number(row.count);
 }
 
-// Spaltennamen kommen wie beim Backup-Export nie aus User-Input, sondern
-// immer aus der TABLE_COLUMNS-Whitelist — nur table/limit/offset sind
-// veränderlich, table ist über isViewableTable() bereits geprüft, bevor
-// diese Funktion aufgerufen wird.
+export interface ListTableRowsOptions {
+  sortColumn?: string;
+  sortDir?: "asc" | "desc";
+  filters?: Record<string, string>;
+}
+
+// Spaltennamen (SELECT-Liste, sortColumn) kommen wie beim Backup-Export nie
+// aus User-Input, sondern immer aus der TABLE_COLUMNS-Whitelist — nur
+// table/limit/offset/Filterwerte sind veränderlich, table ist über
+// isViewableTable() bereits geprüft, bevor diese Funktion aufgerufen wird.
 export async function listTableRows(
   table: TableName,
   limit: number,
   offset: number,
+  options: ListTableRowsOptions = {},
 ): Promise<Record<string, unknown>[]> {
-  const columns = TABLE_COLUMNS[table]
-    .map((c) => `"${c}"`)
-    .join(", ");
+  const validColumns = TABLE_COLUMNS[table] as readonly string[];
+  const columns = validColumns.map((c) => `"${c}"`).join(", ");
+
+  const { whereSql, params } = buildFilterClause(
+    table,
+    options.filters ?? {},
+    1,
+  );
+
+  const sortColumn =
+    options.sortColumn && validColumns.includes(options.sortColumn)
+      ? options.sortColumn
+      : validColumns[0];
+  const sortDir = options.sortDir === "desc" ? "DESC" : "ASC";
+
+  const limitIndex = params.length + 1;
+  const offsetIndex = params.length + 2;
+
   return sql.unsafe(
-    `SELECT ${columns} FROM "${table}" ORDER BY 1 LIMIT $1 OFFSET $2`,
-    [limit, offset],
+    `SELECT ${columns} FROM "${table}" ${whereSql} ORDER BY "${sortColumn}" ${sortDir} LIMIT $${limitIndex} OFFSET $${offsetIndex}`,
+    [...params, limit, offset],
   );
 }

@@ -10,6 +10,7 @@ import {
   listTableRows,
 } from "@/lib/dbInspect";
 import { formatDateTime } from "@/utils/formateISODate";
+import { SortArrowIcon } from "@/lib/icons";
 import DbBackupPanel from "../DbBackupPanel";
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export const metadata: Metadata = {
 export const maxDuration = 60;
 
 const PAGE_SIZE = 50;
+const FILTER_PARAM_PREFIX = "f_";
 
 function formatCell(value: unknown): string {
   if (value === null || value === undefined) return "—";
@@ -29,14 +31,26 @@ function formatCell(value: unknown): string {
 }
 
 // Admin-only: DB-Backup (Export/Import aller Tabellen außer users) + neuer
-// read-only Tabellen-Viewer, gesteuert über ?table=&page= (kein Client-JS
-// nötig, gleiches Muster wie /search bzw. /archive). Der Viewer zeigt nur
-// die Whitelist aus src/lib/dbInspect.ts (= dieselbe wie beim Backup, aber
-// ohne password_setup_tokens) und immer nur die dort gelisteten Spalten.
+// read-only Tabellen-Viewer, gesteuert über ?table=&page=&sort=&dir=&f_<spalte>=
+// (kein Client-JS nötig, gleiches Muster wie /search bzw. /archive). Der
+// Viewer zeigt nur die Whitelist aus src/lib/dbInspect.ts (= dieselbe wie
+// beim Backup, aber ohne password_setup_tokens/mission_participants) und
+// immer nur die dort gelisteten Spalten. Sortierung läuft über die
+// Spalten-Header (Links, die Sortierspalte/-richtung umschalten), Filter
+// über ein GET-Formular mit einem Textfeld pro Spalte (Substring-Suche via
+// ::text ILIKE in dbInspect.ts) — beides verändert die SQL-Query direkt
+// statt nur die aktuell geladene Seite umzusortieren, da Tabellen beliebig
+// groß sein können.
 export default async function AdminDbPage({
   searchParams,
 }: {
-  searchParams: Promise<{ table?: string; page?: string }>;
+  searchParams: Promise<{
+    table?: string;
+    page?: string;
+    sort?: string;
+    dir?: string;
+    [key: string]: string | undefined;
+  }>;
 }) {
   await requireAdmin();
   const params = await searchParams;
@@ -44,15 +58,63 @@ export default async function AdminDbPage({
     ? params.table
     : null;
   const page = Math.max(1, Number(params.page) || 1);
+  const columns = table ? viewableColumns(table) : [];
+
+  // Nur f_<spalte>-Parameter übernehmen, deren Spalte auch wirklich zur
+  // aktuell gewählten Tabelle gehört (schützt außerdem davor, dass ein
+  // Filter aus einer vorherigen Tabelle nach einem Tabellenwechsel über die
+  // URL versehentlich wirksam bleibt).
+  const filters: Record<string, string> = {};
+  if (table) {
+    for (const [key, value] of Object.entries(params)) {
+      if (!key.startsWith(FILTER_PARAM_PREFIX) || !value) continue;
+      const col = key.slice(FILTER_PARAM_PREFIX.length);
+      if (columns.includes(col)) filters[col] = value;
+    }
+  }
+
+  const sortColumn =
+    table && params.sort && columns.includes(params.sort)
+      ? params.sort
+      : (columns[0] ?? undefined);
+  const sortDir: "asc" | "desc" = params.dir === "desc" ? "desc" : "asc";
 
   const [total, rows] = table
     ? await Promise.all([
-        countTableRows(table),
-        listTableRows(table, PAGE_SIZE, (page - 1) * PAGE_SIZE),
+        countTableRows(table, filters),
+        listTableRows(table, PAGE_SIZE, (page - 1) * PAGE_SIZE, {
+          sortColumn,
+          sortDir,
+          filters,
+        }),
       ])
     : [0, []];
-  const columns = table ? viewableColumns(table) : [];
   const totalPages = table ? Math.max(1, Math.ceil(total / PAGE_SIZE)) : 1;
+
+  // Baut eine /admin/db-URL aus dem aktuellen Zustand (Tabelle, Sortierung,
+  // aktive Filter) plus overrides — ein Wert von undefined in overrides
+  // entfernt den Key (z.B. "page" bei einer Sortier-/Filteränderung, damit
+  // die Paginierung automatisch auf Seite 1 zurückspringt).
+  function withParams(overrides: Record<string, string | undefined>): string {
+    const merged: Record<string, string | undefined> = {
+      table: table ?? undefined,
+      sort: sortColumn,
+      dir: sortDir,
+      page: String(page),
+      ...Object.fromEntries(
+        Object.entries(filters).map(([col, value]) => [
+          `${FILTER_PARAM_PREFIX}${col}`,
+          value,
+        ]),
+      ),
+      ...overrides,
+    };
+    const sp = new URLSearchParams();
+    for (const [key, value] of Object.entries(merged)) {
+      if (value !== undefined) sp.set(key, value);
+    }
+    return `/admin/db?${sp.toString()}`;
+  }
 
   return (
     <>
@@ -90,37 +152,95 @@ export default async function AdminDbPage({
                 <p className="text-lcars-text-dim text-[13px]">
                   {total} Zeilen — Seite {page}/{totalPages}
                 </p>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-[13px]">
-                    <thead>
-                      <tr className="text-lcars-amber">
-                        {columns.map((c) => (
-                          <th key={c} className="pr-[16px] pb-[8px] whitespace-nowrap">
-                            {c}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {rows.map((row, i) => (
-                        <tr key={i} className="border-t border-lcars-border">
+                <form method="get" action="/admin/db">
+                  <input type="hidden" name="table" value={table} />
+                  {sortColumn && (
+                    <input type="hidden" name="sort" value={sortColumn} />
+                  )}
+                  <input type="hidden" name="dir" value={sortDir} />
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-[13px]">
+                      <thead>
+                        <tr className="text-lcars-amber">
+                          {columns.map((c) => {
+                            const isActive = c === sortColumn;
+                            const nextDir =
+                              isActive && sortDir === "asc" ? "desc" : "asc";
+                            return (
+                              <th
+                                key={c}
+                                className="pr-[16px] pb-[8px] whitespace-nowrap"
+                              >
+                                <Link
+                                  href={withParams({
+                                    sort: c,
+                                    dir: nextDir,
+                                    page: undefined,
+                                  })}
+                                  className="lcars-eyebrow lcars-sort-switch-label"
+                                >
+                                  {c}
+                                  {isActive && (
+                                    <span
+                                      className="lcars-sort-switch-arrow"
+                                      style={{
+                                        display: "inline-flex",
+                                        transform:
+                                          sortDir === "desc"
+                                            ? "rotate(180deg)"
+                                            : undefined,
+                                      }}
+                                    >
+                                      <SortArrowIcon />
+                                    </span>
+                                  )}
+                                </Link>
+                              </th>
+                            );
+                          })}
+                        </tr>
+                        <tr>
                           {columns.map((c) => (
-                            <td
-                              key={c}
-                              className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text"
-                            >
-                              {formatCell(row[c])}
+                            <td key={c} className="pr-[16px] pb-[8px]">
+                              <input
+                                type="search"
+                                name={`${FILTER_PARAM_PREFIX}${c}`}
+                                defaultValue={filters[c] ?? ""}
+                                placeholder="Filtern…"
+                                aria-label={`Nach ${c} filtern`}
+                                className="lcars-input rounded-full w-full text-[12px]"
+                              />
                             </td>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody>
+                        {rows.map((row, i) => (
+                          <tr key={i} className="border-t border-lcars-border">
+                            {columns.map((c) => (
+                              <td
+                                key={c}
+                                className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text"
+                              >
+                                {formatCell(row[c])}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <button
+                    type="submit"
+                    className="lcars-pill-btn--outline mt-[12px]"
+                  >
+                    Filtern
+                  </button>
+                </form>
                 <div className="flex gap-[16px]">
                   {page > 1 && (
                     <Link
-                      href={`/admin/db?table=${table}&page=${page - 1}`}
+                      href={withParams({ page: String(page - 1) })}
                       className="lcars-link-text text-[14px]"
                     >
                       ← Vorherige
@@ -128,7 +248,7 @@ export default async function AdminDbPage({
                   )}
                   {page < totalPages && (
                     <Link
-                      href={`/admin/db?table=${table}&page=${page + 1}`}
+                      href={withParams({ page: String(page + 1) })}
                       className="lcars-link-text text-[14px]"
                     >
                       Nächste →

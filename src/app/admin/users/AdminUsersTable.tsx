@@ -2,8 +2,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { SortDir } from "@/components/lcars";
-import { SortArrowIcon } from "@/lib/icons";
 import { formatDateTime } from "@/utils/formateISODate";
+import SortableHeader from "../SortableHeader";
 import type { User } from "@/types/db";
 
 export interface AdminUserRow {
@@ -34,49 +34,14 @@ const ROLE_ORDER: Record<User["role"], number> = {
 };
 
 type RoleFilter = "all" | User["role"];
-type SortKey = "name" | "role" | "last_login_at" | "last_visit_at";
-
-// Klickbare Spaltenüberschrift statt separatem Sortier-Switch (siehe
-// SortSwitch.tsx, dessen Klick-/Pfeil-Logik hier dupliziert wird): erster
-// Klick auf eine inaktive Spalte sortiert aufsteigend, jeder weitere Klick
-// auf dieselbe Spalte togglet die Richtung.
-function SortableHeader({
-  label,
-  sortKeyValue,
-  activeKey,
-  dir,
-  onSort,
-}: {
-  label: string;
-  sortKeyValue: SortKey;
-  activeKey: SortKey;
-  dir: SortDir;
-  onSort: (key: SortKey) => void;
-}) {
-  const isActive = activeKey === sortKeyValue;
-  return (
-    <th className="pr-[16px] pb-[8px] whitespace-nowrap">
-      <button
-        type="button"
-        onClick={() => onSort(sortKeyValue)}
-        className="lcars-eyebrow lcars-sort-switch-label"
-      >
-        {label}
-        {isActive && (
-          <span
-            className="lcars-sort-switch-arrow"
-            style={{
-              display: "inline-flex",
-              transform: dir === "desc" ? "rotate(180deg)" : undefined,
-            }}
-          >
-            <SortArrowIcon />
-          </span>
-        )}
-      </button>
-    </th>
-  );
-}
+type SortKey =
+  | "name"
+  | "email"
+  | "role"
+  | "is_active"
+  | "created_at"
+  | "last_login_at"
+  | "last_visit_at";
 
 // Tabellarische Übersicht analog src/app/users/UsersTable.tsx (Suche,
 // Rollenfilter, Sortierung), aber admin-only mit zusätzlichen Spalten
@@ -113,15 +78,24 @@ export default function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
     });
     const dir = sortDir === "asc" ? 1 : -1;
     return filtered.sort((a, b) => {
-      if (sortKey === "role") {
-        return (ROLE_ORDER[a.role] - ROLE_ORDER[b.role]) * dir;
+      switch (sortKey) {
+        case "role":
+          return (ROLE_ORDER[a.role] - ROLE_ORDER[b.role]) * dir;
+        case "is_active":
+          return (Number(a.is_active) - Number(b.is_active)) * dir;
+        case "email":
+          return a.email.localeCompare(b.email) * dir;
+        case "created_at":
+        case "last_login_at":
+        case "last_visit_at": {
+          const av = a[sortKey]?.getTime() ?? 0;
+          const bv = b[sortKey]?.getTime() ?? 0;
+          return (av - bv) * dir;
+        }
+        case "name":
+        default:
+          return a.name.localeCompare(b.name) * dir;
       }
-      if (sortKey === "last_login_at" || sortKey === "last_visit_at") {
-        const av = a[sortKey]?.getTime() ?? 0;
-        const bv = b[sortKey]?.getTime() ?? 0;
-        return (av - bv) * dir;
-      }
-      return a.name.localeCompare(b.name) * dir;
     });
   }, [users, query, roleFilter, sortKey, sortDir]);
 
@@ -165,9 +139,13 @@ export default function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
                   dir={sortDir}
                   onSort={handleSort}
                 />
-                <th className="lcars-eyebrow pr-[16px] pb-[8px] whitespace-nowrap">
-                  E-Mail
-                </th>
+                <SortableHeader
+                  label="E-Mail"
+                  sortKeyValue="email"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={handleSort}
+                />
                 <SortableHeader
                   label="Rolle"
                   sortKeyValue="role"
@@ -175,12 +153,20 @@ export default function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
                   dir={sortDir}
                   onSort={handleSort}
                 />
-                <th className="lcars-eyebrow pr-[16px] pb-[8px] whitespace-nowrap">
-                  Status
-                </th>
-                <th className="lcars-eyebrow pr-[16px] pb-[8px] whitespace-nowrap">
-                  Erstellt
-                </th>
+                <SortableHeader
+                  label="Status"
+                  sortKeyValue="is_active"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={handleSort}
+                />
+                <SortableHeader
+                  label="Erstellt"
+                  sortKeyValue="created_at"
+                  activeKey={sortKey}
+                  dir={sortDir}
+                  onSort={handleSort}
+                />
                 <SortableHeader
                   label="Letzter Login"
                   sortKeyValue="last_login_at"
