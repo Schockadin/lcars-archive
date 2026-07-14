@@ -271,10 +271,15 @@ ALTER TABLE content_follows ADD CONSTRAINT content_follows_target_type_check
 -- Spielleitungs-Befugnisse wie Dialog-Force-Complete). Bestehende
 -- role='gm'-Accounts migrieren zu 'admin', um alle heutigen Rechte zu
 -- behalten (kein Risiko, sich selbst auszusperren). Reihenfolge wichtig:
--- Constraint zuerst erweitern, dann Daten migrieren.
+-- Constraint zuerst erweitern, dann Daten migrieren. 'guest' ist hier
+-- (statt erst weiter unten) schon mit erlaubt: db:setup spielt beim
+-- Re-Run diese ganze Datei erneut gegen eine bereits befüllte DB ab —
+-- ohne 'guest' würde dieser Constraint an bestehenden role='guest'-Zeilen
+-- (siehe unten) scheitern, genau wie bei content_follows_target_type_check
+-- weiter oben.
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
 ALTER TABLE users ADD CONSTRAINT users_role_check
-  CHECK (role IN ('admin', 'gm', 'player', 'viewer'));
+  CHECK (role IN ('admin', 'gm', 'player', 'viewer', 'guest'));
 UPDATE users SET role = 'admin' WHERE role = 'gm';
 
 -- Admin kann Useraccounts deaktivieren (Soft-Block am Login, siehe
@@ -387,10 +392,9 @@ CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(use
 -- (src/app/actions/follows.ts prüft keine Rolle), aber keine Charaktere
 -- zugewiesen bekommen (assignCharacterAction in src/app/admin/actions.ts)
 -- und dadurch — da Mission-Logs/Dialoge immer einen eigenen Autor-Charakter
--- brauchen — auch keine Inhalte erstellen.
-ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
-ALTER TABLE users ADD CONSTRAINT users_role_check
-  CHECK (role IN ('admin', 'gm', 'player', 'viewer', 'guest'));
+-- brauchen — auch keine Inhalte erstellen. users_role_check erlaubt 'guest'
+-- bereits seit der GM-Rollen-Aufsplittung weiter oben (kein erneutes
+-- DROP/ADD hier nötig).
 
 -- Löschprotokoll für die rote "gelöscht"-Kategorie im News-Feed
 -- (NewsSection.tsx). Missionen/Mission-Logs/Gespräche werden hart gelöscht
