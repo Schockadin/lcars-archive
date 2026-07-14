@@ -27,18 +27,22 @@ export async function insertUser(
     name: string;
     slug: string;
     role: string;
+    passwordHash: string | null;
+    isActive: boolean;
   }> = {},
 ): Promise<{ id: number; slug: string; email: string; name: string; role: string }> {
   const s = suffix();
   const [row] = await sql<
     { id: number; slug: string; email: string; name: string; role: string }[]
   >`
-    INSERT INTO users (email, name, slug, role)
+    INSERT INTO users (email, name, slug, role, password_hash, is_active)
     VALUES (
       ${overrides.email ?? `user-${s}@example.test`},
       ${overrides.name ?? "Test User"},
       ${overrides.slug ?? `test-user-${s}`},
-      ${overrides.role ?? "player"}
+      ${overrides.role ?? "player"},
+      ${overrides.passwordHash ?? null},
+      ${overrides.isActive ?? true}
     )
     RETURNING id, slug, email, name, role
   `;
@@ -67,6 +71,30 @@ export async function insertCharacter(
     RETURNING id, slug
   `;
   return row;
+}
+
+// next/navigation's redirect() throws an Error with a NEXT_REDIRECT digest
+// instead of actually navigating — see node_modules/next/dist/client/
+// components/redirect.js. Resolves to the redirect target path, or rejects
+// if the action returned normally / threw something else.
+export async function redirectedTo<T>(promise: Promise<T>): Promise<string> {
+  let result: T;
+  try {
+    result = await promise;
+  } catch (err) {
+    const digest = (err as { digest?: string } | undefined)?.digest;
+    if (typeof digest === "string" && digest.startsWith("NEXT_REDIRECT")) {
+      return digest.split(";")[2];
+    }
+    throw err;
+  }
+  throw new Error(`expected a redirect, got a normal return: ${JSON.stringify(result)}`);
+}
+
+export function formData(fields: Record<string, string>): FormData {
+  const fd = new FormData();
+  for (const [key, value] of Object.entries(fields)) fd.set(key, value);
+  return fd;
 }
 
 export async function insertMission(

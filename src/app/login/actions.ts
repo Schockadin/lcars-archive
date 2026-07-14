@@ -53,7 +53,7 @@ export async function login(
       return { kind: "locked" };
     }
 
-    const user = await getUserCredentialsByEmail(email);
+    const user = await getUserCredentialsByEmail(email, tx);
 
     // is_active/password_hash-Sonderfälle unten liefern absichtlich einen
     // anderen Text als "E-Mail-Adresse oder Passwort ist falsch" (hilfreich

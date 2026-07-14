@@ -1,7 +1,16 @@
 import "server-only";
+import postgres from "postgres";
 import sql from "@/lib/db";
 import { slugifyBase } from "@/lib/slug";
 import type { User } from "@/types/db";
+
+// Optionaler Client-Parameter für Aufrufe innerhalb einer Transaktion (z.B.
+// withEmailLoginLock in loginAttempts.ts) — nötig, weil src/lib/db.ts nur
+// EINE Connection pro Prozess erlaubt (max: 1): ein Aufruf über den
+// globalen sql-Client während eine sql.begin()-Transaktion die einzige
+// Connection hält, würde sonst auf eine nie freiwerdende Connection warten
+// (Deadlock, siehe Kommentar bei getUserCredentialsByEmail unten).
+type SqlClient = postgres.ISql;
 
 const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
@@ -246,10 +255,16 @@ export interface UserCredentials {
   session_version: number;
 }
 
+// client optional per Default der globale sql-Client, kann aber eine
+// Transaction (tx aus sql.begin()) sein — siehe withEmailLoginLock in
+// loginAttempts.ts: login/actions.ts ruft diese Funktion innerhalb dieser
+// Transaktion auf und MUSS dafür tx übergeben (siehe SqlClient-Kommentar
+// oben).
 export async function getUserCredentialsByEmail(
   email: string,
+  client: SqlClient = sql,
 ): Promise<UserCredentials | null> {
-  const rows = await sql<UserCredentials[]>`
+  const rows = await client<UserCredentials[]>`
     SELECT id, email, name, role, is_active, password_hash, requires_activation, session_version
     FROM users
     WHERE lower(email) = ${email}

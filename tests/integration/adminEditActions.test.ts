@@ -2,12 +2,11 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import sql from "@/lib/db";
 import { createSession } from "@/lib/session";
 import { listRecentAdminActions } from "@/lib/auditLog";
-import { insertUser, insertCharacter } from "./helpers";
+import { insertUser, insertCharacter, redirectedTo, formData } from "./helpers";
 import {
   updateUserDetailsAction,
   setUserActiveAction,
   deleteUserFromEditAction,
-  type EditUserState,
 } from "@/app/admin/[id]/edit/actions";
 
 // Gleiches Muster wie tests/integration/visibility.test.ts: next/headers'
@@ -46,30 +45,6 @@ async function loginAsAdmin(overrides: Parameters<typeof insertUser>[0] = {}) {
     session_version: 0,
   });
   return admin;
-}
-
-// next/navigation's redirect() throws an Error with a NEXT_REDIRECT digest
-// instead of actually navigating — see node_modules/next/dist/client/
-// components/redirect.js. Resolves to the redirect target path, or rejects
-// if the action returned normally / threw something else.
-async function redirectedTo(promise: Promise<EditUserState>): Promise<string> {
-  let result: EditUserState;
-  try {
-    result = await promise;
-  } catch (err) {
-    const digest = (err as { digest?: string } | undefined)?.digest;
-    if (typeof digest === "string" && digest.startsWith("NEXT_REDIRECT")) {
-      return digest.split(";")[2];
-    }
-    throw err;
-  }
-  throw new Error(`expected a redirect, got a normal return: ${JSON.stringify(result)}`);
-}
-
-function formData(fields: Record<string, string>): FormData {
-  const fd = new FormData();
-  for (const [key, value] of Object.entries(fields)) fd.set(key, value);
-  return fd;
 }
 
 describe("updateUserDetailsAction", () => {
