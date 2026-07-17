@@ -169,11 +169,20 @@ export default function TutorialPage() {
               <p>
                 Ein <strong>Gespräch</strong> startest du mit deinem Charakter
                 und dem Charakter einer anderen Person; es beginnt{" "}
-                <strong>offen</strong> — nur ihr beide (oder Spielleitung/
-                Admin) könnt antworten. Wer mit mehreren eigenen Charakteren
-                teilnimmt, kann nicht zweimal hintereinander mit demselben
-                Charakter antworten — dazwischen muss der andere Charakter am
-                Zug gewesen sein. Sobald eine Seite es abschließt, wird es{" "}
+                <strong>offen</strong> — nur Teilnehmende können antworten.
+                Der Owner (wer das Gespräch begonnen hat) kann jederzeit
+                weitere Personen direkt hinzufügen (samt Info-Mail an sie).
+                Wer mit mehreren eigenen Charakteren teilnimmt, kann nicht
+                zweimal hintereinander mit demselben Charakter antworten —
+                dazwischen muss ein anderer Charakter am Zug gewesen sein.
+                Sobald ein Gespräch mehr als zwei Teilnehmende hat, muss man
+                sich das Antwortrecht zusätzlich erst per Button für zwei
+                Stunden reservieren, bevor man schreiben kann — solange
+                jemand anderes reserviert hat, seht ihr, wer gerade dran ist
+                und könnt euch optional per Mail/Push benachrichtigen lassen,
+                sobald die Sperre wieder endet (oder wenn die reservierende
+                Person selbst antwortet, endet sie vorzeitig). Sobald eine
+                teilnehmende Person es abschließt, wird es{" "}
                 <strong>unwiderruflich geschlossen</strong> und taucht danach
                 als gewöhnlicher Archiv-Eintrag in der Kategorie „Gespräche“
                 auf — standardmäßig als zusammenhängender Lesetext, per

@@ -27,7 +27,11 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Eigene Inhalte** — eingeloggte User legen eigene Charaktere, Einsatzberichte,
   Archiv-Einträge und Gespräche zwischen Charakteren an, mit Sichtbarkeitsstufen
   (privat/GM/öffentlich) und einem persönlichen Dashboard (farbcodierter News-Feed,
-  offene Gespräche, Lesezeichen/Abos).
+  offene Gespräche, Lesezeichen/Abos). Gespräche können jederzeit um weitere
+  Teilnehmende erweitert werden (Direkt-Hinzufügen durch den Owner samt
+  Info-Mail); haben mehr als zwei Teilnehmende, muss man sich das Antwortrecht
+  erst per Button für zwei Stunden reservieren, mit Sperr-Anzeige und
+  optionaler Mail/Push-Benachrichtigung, sobald die Sperre wieder endet.
 - **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und
   automatische bzw. manuelle Verlinkung (`[[Wikilinks]]`) zwischen Inhalten.
 - **PWA mit Push-Benachrichtigungen** — installierbar auf Mobilgeräten (inkl. maskable
@@ -50,9 +54,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   SQL-Abfragefeld (Syntaxhervorhebung via CodeMirror). Ein Audit-Log
   protokolliert sicherheitsrelevante Useraccount-Aktionen (inkl. IP-Adresse)
   sowie, separat, eine 3-Tage-Übersicht aller neu angelegten, bearbeiteten
-  und gelöschten Inhalte. Admins und Spielleitung dürfen außerdem als
-  Moderation jede Nachricht in jedem Gespräch bearbeiten oder löschen, auch
-  fremde und auch in bereits abgeschlossenen Gesprächen.
+  und gelöschten Inhalte. Nur Admins dürfen außerdem als Moderation jede
+  Nachricht in jedem Gespräch bearbeiten oder löschen, auch fremde und auch
+  in bereits abgeschlossenen Gesprächen, sowie jederzeit den Besitzer eines
+  Gesprächs neu zuordnen.
 - **Custom-Markdown-Pipeline** — `remark`/`rehype` wandeln Markdown in HTML um und rendern
   `h2`-Überschriften als LCARS-Data-Rows.
 - **SEO-fertig** — `robots.ts`, `sitemap.ts`, dynamische Metadaten und 404-Seite.

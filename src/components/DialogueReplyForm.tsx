@@ -11,11 +11,19 @@ const initialState: DialogueMessageState = {};
 
 // Wird nur gerendert, wenn der Aufrufer (die Server-Seite) das auch will —
 // /dialogues/[slug] prüft Teilnahme + offen-Status bereits serverseitig,
-// kein Client-Nachladen des Berechtigungsstatus mehr nötig.
+// kein Client-Nachladen des Berechtigungsstatus mehr nötig. canReplyNow ist
+// zusätzlich für Dialoge mit mehr als zwei Teilnehmenden relevant: dort muss
+// die aufrufende Person zuerst die Antwort-Reservierung halten (siehe
+// DialogueLockPanel.tsx) — ohne canReplyNow bleibt das Formular ausgeblendet,
+// DialogueLockPanel zeigt stattdessen den Sperr-Status/Reservieren-Button.
+// Bei genau zwei Teilnehmenden ist canReplyNow immer true (kein
+// Reservierungssystem nötig).
 export default function DialogueReplyForm({
   entrySlug,
+  canReplyNow = true,
 }: {
   entrySlug: string;
+  canReplyNow?: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
     postDialogueMessageAction,
@@ -26,6 +34,8 @@ export default function DialogueReplyForm({
   useEffect(() => {
     if (state?.success) formRef.current?.reset();
   }, [state]);
+
+  if (!canReplyNow) return null;
 
   return (
     <form

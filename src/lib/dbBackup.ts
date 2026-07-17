@@ -60,6 +60,12 @@ export const TABLE_COLUMNS = {
     "id", "target_type", "title", "visibility", "owner_user_id",
     "deleted_by", "deleted_at",
   ],
+  dialogue_reservations: [
+    "archive_entry_id", "held_by_user_id", "expires_at", "created_at",
+  ],
+  dialogue_reservation_notify_requests: [
+    "archive_entry_id", "user_id", "created_at",
+  ],
 } as const satisfies Record<string, readonly string[]>;
 
 const TABLES = Object.keys(TABLE_COLUMNS) as (keyof typeof TABLE_COLUMNS)[];
@@ -72,6 +78,8 @@ export type TableName = (typeof TABLES)[number];
 const NO_SERIAL_ID: readonly TableName[] = [
   "archive_links",
   "mission_participants",
+  "dialogue_reservations",
+  "dialogue_reservation_notify_requests",
 ];
 const SERIAL_TABLES = TABLES.filter(
   (t) => !(NO_SERIAL_ID as string[]).includes(t),

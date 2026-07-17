@@ -114,17 +114,13 @@ ALTER TABLE mission_logs    ADD COLUMN IF NOT EXISTS frontmatter JSONB NOT NULL 
 ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS source_md   TEXT;
 ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS frontmatter JSONB NOT NULL DEFAULT '{}';
 
--- Automatisch aus den Mission-Logs generierte Synopsis (siehe
--- scripts/generate-synopsis.ts). Ersetzt das frühere, manuell gepflegte
--- summary-Feld — die Synopsis ist jetzt die einzige Zusammenfassung.
-ALTER TABLE missions ADD COLUMN IF NOT EXISTS synopsis TEXT;
+-- Frühere summary-Spalte entfernt: Zusammenfassung ist der ohnehin schon
+-- geparste Mission-Body (missions.metadata.body), gepflegt direkt im Vault.
+-- (Eine dazwischenliegende, per API generierte synopsis-Spalte wurde in
+-- einer späteren Version wieder eingeführt und noch später wieder entfernt —
+-- beide Schritte sind aus dieser Datei entfernt, da sie sich für den
+-- Endzustand jeder DB gegenseitig aufheben und nur Verwirrung stifteten.)
 ALTER TABLE missions DROP COLUMN IF EXISTS summary;
-
--- Die LLM-generierte Synopsis entfällt: Zusammenfassung ist jetzt der
--- ohnehin schon geparste Mission-Body (missions.metadata.body), gepflegt
--- direkt im Vault statt per API-Aufruf generiert. synopsis ist damit
--- überflüssig.
-ALTER TABLE missions DROP COLUMN IF EXISTS synopsis;
 
 -- Kategorie-CHECK erweitern (npc, dialogue). Bei bestehenden DBs greift das
 -- inline-CHECK von CREATE TABLE oben nicht — daher Constraint neu setzen.
@@ -256,12 +252,15 @@ ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS dialogue_open BOOLEAN NOT N
 ALTER TABLE dialogue_messages ADD COLUMN IF NOT EXISTS edited_at  TIMESTAMPTZ;
 ALTER TABLE dialogue_messages ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
 
--- Charakter-Abos: dritter target_type neben mission/archive_entry. Nutzt
--- dieselbe content_follows-Tabelle (bookmarked_at/subscribed_at), target_slug
--- ist der Charakter-Slug. 'user' ist hier (statt erst weiter unten) schon
--- mit erlaubt: db:setup spielt beim Re-Run diese ganze Datei erneut gegen
--- eine bereits befüllte DB ab — mit nur drei Werten würde der Constraint
--- an bestehenden target_type='user'-Zeilen (siehe unten) scheitern.
+-- Charakter- UND User-Abos: dritter/vierter target_type neben mission/
+-- archive_entry (User-Abos benachrichtigen bei jedem NEUEN oder GEÄNDERTEN
+-- öffentlichen Inhalt eines abonnierten Users, target_slug = users.slug,
+-- siehe notifyUserSubscribers in src/lib/follows.ts). Beide bereits hier auf
+-- einmal erlaubt (nicht erst einzeln nachgezogen, sobald der jeweilige
+-- Feature-Code sie braucht): db:setup spielt beim Re-Run diese ganze Datei
+-- erneut gegen eine bereits befüllte DB ab — ein zu enger Constraint würde
+-- an bestehenden Zeilen mit dem neueren target_type scheitern, exakt das
+-- gleiche Prinzip wie bei users_role_check weiter unten.
 ALTER TABLE content_follows DROP CONSTRAINT IF EXISTS content_follows_target_type_check;
 ALTER TABLE content_follows ADD CONSTRAINT content_follows_target_type_check
   CHECK (target_type IN ('mission', 'archive_entry', 'character', 'user'));
@@ -439,14 +438,6 @@ CREATE TABLE IF NOT EXISTS mission_participants (
 );
 CREATE INDEX IF NOT EXISTS idx_mission_participants_character ON mission_participants(character_id);
 
--- User-Abos: vierter target_type neben mission/archive_entry/character.
--- target_slug ist der User-Slug (users.slug) — ein Abo benachrichtigt bei
--- jedem NEUEN oder GEÄNDERTEN öffentlichen Inhalt (visibility='public') des
--- abonnierten Users, siehe notifyUserSubscribers in src/lib/follows.ts.
-ALTER TABLE content_follows DROP CONSTRAINT IF EXISTS content_follows_target_type_check;
-ALTER TABLE content_follows ADD CONSTRAINT content_follows_target_type_check
-  CHECK (target_type IN ('mission', 'archive_entry', 'character', 'user'));
-
 -- Admin-Opt-in "Über alle Inhalte benachrichtigt werden" (NotificationSettingsForm.tsx,
 -- admin-only Checkbox-Liste) — welche der vier Inhaltstypen (character/mission/
 -- mission_log/archive_entry) einen Admin per Mail/Push benachrichtigen sollen,
@@ -540,3 +531,36 @@ ALTER TABLE admin_audit_log ADD COLUMN IF NOT EXISTS ip TEXT;
 -- Dialog-Seite (DialogueViewToggle.tsx). DEFAULT true, da Fließtext die
 -- neue primäre Darstellung ist.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS dialogue_flowing_text_enabled BOOLEAN NOT NULL DEFAULT true;
+
+-- Antwort-Reservierung für Mehrparteien-Dialoge (mehr als zwei Teilnehmende,
+-- siehe postDialogueMessage in dialoguesCore.ts): wer antworten will,
+-- reserviert sich zuerst per Button-Klick für 2 Stunden exklusiv das
+-- Antwortrecht — alle anderen Teilnehmenden sind bis dahin vom Antworten
+-- ausgeschlossen. Höchstens eine aktive Reservierung pro Dialog —
+-- archive_entry_id ist deshalb selbst der Primärschlüssel, kein
+-- Surrogatschlüssel nötig. Sperrt die ganze Person (held_by_user_id), nicht
+-- nur einen einzelnen Charakter — wer mit mehreren eigenen Charakteren in
+-- diesem Dialog mitspielt, ist während der eigenen Reservierung komplett
+-- gesperrt. Freigabe erfolgt passiv (kein Cronjob): jeder Lese-/
+-- Schreibzugriff räumt zuerst abgelaufene Zeilen weg (siehe
+-- releaseExpiredDialogueReservation), außerdem endet die Frist vorzeitig,
+-- sobald die reservierende Person selbst geantwortet hat.
+CREATE TABLE IF NOT EXISTS dialogue_reservations (
+  archive_entry_id INT PRIMARY KEY REFERENCES archive_entries(id) ON DELETE CASCADE,
+  held_by_user_id  INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  expires_at       TIMESTAMPTZ NOT NULL,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Einmal-Opt-in "informiere mich (Mail/Push), wenn diese Antwort-Sperre
+-- endet" (siehe requestDialogueReservationNotification/
+-- releaseExpiredDialogueReservation in dialoguesCore.ts) — bewusst NICHT
+-- über content_follows, das ist ein dauerhaftes Abo, während dieses Opt-in
+-- ein Einmal-Ereignis pro Sperre ist und beim Auslösen (oder wenn die Sperre
+-- vorher schon durch eine Antwort endet) sofort wieder gelöscht wird.
+CREATE TABLE IF NOT EXISTS dialogue_reservation_notify_requests (
+  archive_entry_id INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
+  user_id          INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (archive_entry_id, user_id)
+);

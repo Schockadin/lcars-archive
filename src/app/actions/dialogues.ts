@@ -8,6 +8,8 @@ import {
   DialogueMessageForbiddenError,
   DialogueMessageNotFoundError,
   DialogueSelfReplyError,
+  DialogueLockActiveError,
+  DialogueReservationRequiredError,
   getDialogueForPlay,
   getDialogueParticipant,
   getDialogueSubscribers,
@@ -19,12 +21,18 @@ import {
   deleteDialogueMessage,
   completeDialogue,
   deleteDialogue,
+  inviteDialogueParticipants,
+  reserveDialogueReply,
+  requestDialogueReservationNotification,
   type DialogueEmailTarget,
+  type ReleasedReservationInfo,
 } from "@/lib/dialogues";
 import {
   sendDialogueMessageEmail,
   sendCharacterDialogueClosedEmail,
   sendDialogueDeletedEmail,
+  sendDialogueInvitedEmail,
+  sendDialogueReservationEndedEmail,
 } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
@@ -87,6 +95,12 @@ export async function postDialogueMessageAction(
       };
     }
     if (err instanceof DialogueSelfReplyError) {
+      return { error: err.message };
+    }
+    if (
+      err instanceof DialogueLockActiveError ||
+      err instanceof DialogueReservationRequiredError
+    ) {
       return { error: err.message };
     }
     throw err;
@@ -432,4 +446,176 @@ export async function setDialogueViewPreferenceAction(
 
   await updateDialogueViewPreference(session.userId, flowingTextEnabled);
   revalidatePath(`/archive/${entrySlug}`);
+}
+
+// Verschickt Mail/Push an alle, die "informiere mich, wenn die Sperre
+// endet" angeklickt hatten (siehe dialogueReservationNotifyAction) — genutzt
+// von reserveDialogueReplyAction, wenn dabei nebenbei eine abgelaufene
+// fremde Reservierung aufgeräumt wird (siehe
+// releaseExpiredDialogueReservation in dialoguesCore.ts).
+async function notifyReservationReleased(
+  released: ReleasedReservationInfo | null,
+): Promise<void> {
+  if (!released || released.notifyTargets.length === 0) return;
+
+  const dialogueUrl = `${await getBaseUrl()}/dialogues/${released.dialogueSlug}`;
+  for (const target of released.notifyTargets) {
+    if (target.emailNotificationsEnabled) {
+      const result = await sendDialogueReservationEndedEmail({
+        to: target.email,
+        name: target.name,
+        dialogueTitle: released.dialogueTitle,
+        dialogueUrl,
+      });
+      if (!result.sent) {
+        console.error(
+          `Sperre-aufgehoben-Mail an ${target.email} fehlgeschlagen: ${result.error}`,
+        );
+      }
+    }
+    if (target.pushNotificationsEnabled) {
+      await sendPushToUser(target.id, {
+        title: `Antwort-Sperre in "${released.dialogueTitle}" aufgehoben`,
+        body: "Du kannst jetzt antworten.",
+        url: dialogueUrl,
+      });
+    }
+  }
+}
+
+export interface InviteParticipantState {
+  error?: string;
+}
+
+// Nur der Owner (wer den Dialog begonnen hat, siehe createDialogue) darf
+// weitere Personen einladen — jederzeit, auch in einem bereits laufenden
+// Dialog. Direkt-Hinzufügen ohne Annehmen/Ablehnen, nur eine Info-Mail an
+// die neu Eingeladenen. Direkt aus einem Client-onClick aufgerufen
+// (useTransition), kein useActionState-Formular nötig.
+export async function inviteDialogueParticipantAction(
+  entrySlug: string,
+  characterIds: number[],
+): Promise<InviteParticipantState> {
+  const session = await getSession();
+  if (!session) return { error: "Bitte melde dich an." };
+
+  const entry = await getDialogueForPlay(entrySlug);
+  if (!entry) return { error: "Dieser Dialog existiert nicht." };
+  if (entry.ownerUserId !== session.userId) {
+    return { error: "Nur der Ersteller kann weitere Personen einladen." };
+  }
+  if (characterIds.length === 0) return {};
+
+  const inviter = await getUserById(session.userId);
+  let title: string;
+  let invited: DialogueEmailTarget[];
+  try {
+    ({ title, invited } = await inviteDialogueParticipants(
+      entry.id,
+      characterIds,
+    ));
+  } catch {
+    // TOCTOU: der Dialog wurde zwischen dem obigen getDialogueForPlay-Check
+    // und diesem Aufruf gelöscht (siehe deleteDialogueAction) — kein
+    // ungefangener 500er, sondern eine normale Formular-Fehlermeldung.
+    return { error: "Dieser Dialog existiert nicht mehr." };
+  }
+
+  revalidatePath(`/dialogues/${entrySlug}`);
+  revalidateArchiveEntry(entrySlug);
+  revalidatePath(`/archive/${entrySlug}`);
+
+  if (invited.length > 0) {
+    const dialogueUrl = `${await getBaseUrl()}/dialogues/${entrySlug}`;
+    for (const target of invited) {
+      if (target.emailNotificationsEnabled) {
+        const result = await sendDialogueInvitedEmail({
+          to: target.email,
+          name: target.name,
+          invitedByName: inviter?.name ?? "Die Administration",
+          dialogueTitle: title,
+          dialogueUrl,
+        });
+        if (!result.sent) {
+          console.error(
+            `Einladungs-Mail an ${target.email} fehlgeschlagen: ${result.error}`,
+          );
+        }
+      }
+      if (target.pushNotificationsEnabled) {
+        await sendPushToUser(target.id, {
+          title: `Zum Gespräch "${title}" hinzugefügt`,
+          body: `${inviter?.name ?? "Die Administration"} hat dich hinzugefügt.`,
+          url: dialogueUrl,
+        });
+      }
+    }
+  }
+
+  return {};
+}
+
+export interface ReserveReplyState {
+  error?: string;
+}
+
+// Reserviert für 2 Stunden exklusiv das Antwortrecht in einem Dialog mit
+// mehr als zwei Teilnehmenden (siehe DialogueLockPanel.tsx). Nur Teilnehmer
+// dürfen reservieren. Der >2-Teilnehmenden-Check spiegelt exakt die Regel in
+// postDialogueMessage — ohne ihn ließe sich diese Action direkt (am UI
+// vorbei) auch für einen 2-Personen-Dialog aufrufen und eine Reservierung
+// anlegen, die postDialogueMessage dort nie prüft und die deshalb nie mehr
+// aufgeräumt würde (dead state).
+export async function reserveDialogueReplyAction(
+  entrySlug: string,
+): Promise<ReserveReplyState> {
+  const session = await getSession();
+  if (!session) return { error: "Bitte melde dich an." };
+
+  const entry = await getDialogueForPlay(entrySlug);
+  if (!entry) return { error: "Dieser Dialog existiert nicht." };
+  if (entry.participants.length <= 2) {
+    return { error: "Für dieses Gespräch ist keine Reservierung nötig." };
+  }
+
+  const participant = await getDialogueParticipant(entry.id, session.userId);
+  if (!participant) {
+    return { error: "Du bist kein Teilnehmer dieses Gesprächs." };
+  }
+
+  try {
+    const { released } = await reserveDialogueReply(entry.id, session.userId);
+    await notifyReservationReleased(released);
+  } catch (err) {
+    if (err instanceof DialogueLockActiveError) {
+      return { error: err.message };
+    }
+    throw err;
+  }
+
+  revalidatePath(`/dialogues/${entrySlug}`);
+  return {};
+}
+
+// Einmal-Opt-in "informiere mich, wenn die aktuelle Antwort-Sperre endet"
+// (siehe DialogueLockPanel.tsx) — direkt aus einem Client-onClick
+// aufgerufen, kein Fehlerzustand in der UI vorgesehen, deshalb weiterhin
+// Promise<void>. Teilnehmer-Check UND >2-Teilnehmenden-Check trotzdem nötig
+// (nicht nur UI-Kosmetik): ohne sie könnte jede eingeloggte Person über
+// diese Action für einen ihr fremden Dialog Mail/Push-Benachrichtigungen
+// (inkl. Titel/Link) abonnieren, auch wenn sie gar nicht teilnimmt.
+export async function dialogueReservationNotifyAction(
+  entrySlug: string,
+): Promise<void> {
+  const session = await getSession();
+  if (!session) return;
+
+  const entry = await getDialogueForPlay(entrySlug);
+  if (!entry || entry.participants.length <= 2) return;
+
+  const participant = await getDialogueParticipant(entry.id, session.userId);
+  if (!participant) return;
+
+  await requestDialogueReservationNotification(entry.id, session.userId);
+  revalidatePath(`/dialogues/${entrySlug}`);
 }

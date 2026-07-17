@@ -26,6 +26,15 @@ export class DialogueMessageForbiddenError extends Error {}
 // Verhindert Selbstgespräche: die nächste Nachricht in einem Dialog darf
 // nicht vom selben Charakter kommen wie die letzte (siehe postDialogueMessage).
 export class DialogueSelfReplyError extends Error {}
+// Antwort-Reservierung (siehe reserveDialogueReply/postDialogueMessage) —
+// nur bei mehr als zwei Teilnehmenden relevant. Aktiv gesperrt durch eine
+// andere Person.
+export class DialogueLockActiveError extends Error {}
+// Bei mehr als zwei Teilnehmenden muss vor dem Antworten erst per Button
+// reserviert werden (siehe reserveDialogueReply) — dieser Fehler bedeutet:
+// noch niemand hat sich reserviert, insbesondere nicht der Antwortende
+// selbst.
+export class DialogueReservationRequiredError extends Error {}
 
 // Statischer Platzhalter für gelöschte Nachrichten — kein markdownToSafeHtml
 // nötig (kein User-Input), und der eigentliche Inhalt verlässt so nie die
@@ -270,6 +279,107 @@ export async function createDialogue(
   });
 }
 
+export interface InviteParticipantsResult {
+  title: string;
+  invited: DialogueEmailTarget[];
+}
+
+// Fügt weitere Charaktere zu einem Dialog hinzu — jederzeit möglich, auch
+// während der Dialog noch offen ist (siehe inviteDialogueParticipantAction,
+// dort auch der Owner-Only-Check). Teilnehmer bleiben ausschließlich in
+// archive_entries.metadata.participants gespeichert, keine eigene Tabelle
+// (siehe Kommentar am Dateianfang zu ArchiveParticipant) — die Leseseite
+// (getDialogueParticipant/getDialogueParticipantPlayers) arbeitet bereits
+// generisch über beliebig viele Einträge, eine zweite Tabelle wäre nur eine
+// zusätzliche, potenziell auseinanderlaufende Quelle der Wahrheit. FOR
+// UPDATE schützt gegen zwei gleichzeitige Einladungen, die sich sonst beim
+// Read-Modify-Write auf das JSONB-Feld gegenseitig überschreiben könnten.
+// Bereits teilnehmende Charaktere werden still übersprungen (kein Fehler,
+// keine doppelte Mail) — Direkt-Hinzufügen ohne Annehmen/Ablehnen, wie beim
+// initialen Erstellen eines Dialogs. Mail/Push für die neu Eingeladenen
+// verschickt wie gewohnt die Action-Ebene, nicht diese Funktion.
+export async function inviteDialogueParticipants(
+  archiveEntryId: number,
+  characterIds: number[],
+): Promise<InviteParticipantsResult> {
+  return sql.begin(async (tx) => {
+    const [entry] = await tx<{ slug: string; title: string; metadata: unknown }[]>`
+      SELECT slug, title, metadata FROM archive_entries
+      WHERE id = ${archiveEntryId} AND category = 'dialogue'
+      FOR UPDATE
+    `;
+    if (!entry) throw new Error("Dialog nicht gefunden.");
+    if (characterIds.length === 0) return { title: entry.title, invited: [] };
+
+    const participants = parseParticipants(entry.metadata);
+    const existingSlugs = new Set(participants.map((p) => p.slug));
+
+    const chars = await tx<
+      {
+        slug: string;
+        name: string;
+        player_id: number | null;
+        player_email: string | null;
+        player_name: string | null;
+        player_email_notifications_enabled: boolean | null;
+        player_push_notifications_enabled: boolean | null;
+      }[]
+    >`
+      SELECT c.slug, c.name, c.player_id,
+             u.email AS player_email, u.name AS player_name,
+             u.email_notifications_enabled AS player_email_notifications_enabled,
+             u.push_notifications_enabled AS player_push_notifications_enabled
+      FROM characters c
+      LEFT JOIN users u ON u.id = c.player_id
+      WHERE c.id = ANY(${characterIds})
+    `;
+    const newChars = chars.filter((c) => !existingSlugs.has(c.slug));
+    if (newChars.length === 0) return { title: entry.title, invited: [] };
+
+    const metadata = {
+      ...(typeof entry.metadata === "string"
+        ? (JSON.parse(entry.metadata) as Record<string, unknown>)
+        : ((entry.metadata as Record<string, unknown> | null) ?? {})),
+      participants: [
+        ...participants,
+        ...newChars.map((c) => ({
+          slug: c.slug,
+          name: c.name,
+          kind: "character" as const,
+        })),
+      ],
+    };
+
+    await tx`
+      UPDATE archive_entries
+      SET metadata = ${tx.json(metadata as ReturnType<typeof JSON.parse>)}, updated_at = NOW()
+      WHERE id = ${archiveEntryId}
+    `;
+
+    const invited: DialogueEmailTarget[] = [];
+    for (const c of newChars) {
+      if (c.player_id == null) continue;
+      await tx`
+        INSERT INTO content_follows (user_id, target_type, target_slug, subscribed_at)
+        VALUES (${c.player_id}, 'archive_entry', ${entry.slug}, NOW())
+        ON CONFLICT (user_id, target_type, target_slug)
+        DO UPDATE SET subscribed_at = NOW()
+      `;
+      if (c.player_email != null && c.player_name != null) {
+        invited.push({
+          id: c.player_id,
+          email: c.player_email,
+          name: c.player_name,
+          emailNotificationsEnabled: c.player_email_notifications_enabled ?? false,
+          pushNotificationsEnabled: c.player_push_notifications_enabled ?? false,
+        });
+      }
+    }
+
+    return { title: entry.title, invited };
+  });
+}
+
 export interface PostMessageInput {
   archiveEntryId: number;
   characterId: number;
@@ -286,9 +396,12 @@ export async function postDialogueMessage(
     // Autoritativer Check innerhalb der Transaktion (FOR UPDATE) statt sich
     // auf den (möglicherweise gecachten) Aufrufer-Read zu verlassen — schützt
     // gegen den Fall, dass der andere Teilnehmer den Dialog just in diesem
-    // Moment abschließt (TOCTOU).
-    const [entry] = await tx<{ dialogue_open: boolean }[]>`
-      SELECT dialogue_open FROM archive_entries WHERE id = ${input.archiveEntryId} FOR UPDATE
+    // Moment abschließt (TOCTOU). metadata wird gleich mitgeladen, um die
+    // Teilnehmerzahl für den Reservierungs-Check unten zu kennen (siehe
+    // parseParticipants).
+    const [entry] = await tx<{ dialogue_open: boolean; metadata: unknown }[]>`
+      SELECT dialogue_open, metadata FROM archive_entries
+      WHERE id = ${input.archiveEntryId} FOR UPDATE
     `;
     if (!entry?.dialogue_open) {
       throw new DialogueClosedError("Dieses Gespräch ist abgeschlossen.");
@@ -310,6 +423,36 @@ export async function postDialogueMessage(
       );
     }
 
+    // Antwort-Reservierung: nur relevant bei mehr als zwei Teilnehmenden
+    // (siehe Kontext-Kommentar bei DialogueLockActiveError). Bei genau zwei
+    // Teilnehmenden bleibt das obige Selbstgespräch-Verbot der einzige
+    // Schutzmechanismus, unverändert.
+    const participantCount = parseParticipants(entry.metadata).length;
+    let selfReleasedReservation = false;
+    if (participantCount > 2) {
+      // Nur die Zeile selbst freigeben, Notify-Requests bewusst NICHT hier
+      // schon benachrichtigen/löschen (siehe deleteExpiredReservationRow) —
+      // dieser Codepfad lehnt die Nachricht anschließend meist sowieso ab
+      // (kein/fremdes Reservierungsrecht) und postDialogueMessage kann keine
+      // Benachrichtigung an die Action-Ebene zurückgeben.
+      await deleteExpiredReservationRow(tx, input.archiveEntryId);
+      const [reservation] = await tx<{ held_by_user_id: number }[]>`
+        SELECT held_by_user_id FROM dialogue_reservations
+        WHERE archive_entry_id = ${input.archiveEntryId}
+      `;
+      if (!reservation) {
+        throw new DialogueReservationRequiredError(
+          "Bitte reserviere dir zuerst per Button das Antwortrecht, bevor du antwortest.",
+        );
+      }
+      if (reservation.held_by_user_id !== input.authorUserId) {
+        throw new DialogueLockActiveError(
+          "Ein anderes Mitglied hat sich gerade das Antwortrecht reserviert. Bitte warte, bis die Sperre endet.",
+        );
+      }
+      selfReleasedReservation = true;
+    }
+
     const [row] = await tx<
       { id: number; character_id: number | null; created_at: string }[]
     >`
@@ -326,6 +469,22 @@ export async function postDialogueMessage(
     await tx`
       UPDATE archive_entries SET updated_at = NOW() WHERE id = ${input.archiveEntryId}
     `;
+
+    // Die Reservierung endet vorzeitig, sobald die reservierende Person
+    // tatsächlich geantwortet hat — Notify-Requests werden dabei bewusst
+    // ohne Benachrichtigung geleert (kein "Sperre endet"-Hinweis nötig, wenn
+    // im selben Moment auch schon die neue Nachricht sichtbar wird), anders
+    // als bei releaseExpiredDialogueReservation (Ablauf ohne Antwort).
+    if (selfReleasedReservation) {
+      await tx`
+        DELETE FROM dialogue_reservations
+        WHERE archive_entry_id = ${input.archiveEntryId} AND held_by_user_id = ${input.authorUserId}
+      `;
+      await tx`
+        DELETE FROM dialogue_reservation_notify_requests
+        WHERE archive_entry_id = ${input.archiveEntryId}
+      `;
+    }
 
     const [char] = await tx<{ slug: string; name: string }[]>`
       SELECT slug, name FROM characters WHERE id = ${input.characterId}
@@ -521,6 +680,193 @@ export async function deleteDialogueMessage(
   });
 }
 
+export interface DialogueLockStatus {
+  heldByUserId: number;
+  heldByName: string;
+  expiresAt: string;
+}
+
+// Reiner Lese-Zugriff für die Anzeige (Dialog-Seite) — löst bewusst KEINE
+// Aufräum-/Benachrichtigungs-Nebenwirkung aus (ein GET-Request/Seitenaufruf
+// soll keine Mails verschicken). Eine abgelaufene, aber noch nicht
+// aufgeräumte Zeile gilt für die Anzeige einfach als "keine aktive Sperre"
+// (expires_at > NOW() in der WHERE-Klausel) — das tatsächliche Aufräumen
+// (inkl. Benachrichtigung der Notify-Requests) passiert lazy beim nächsten
+// Schreibzugriff, siehe releaseExpiredDialogueReservation.
+export async function getDialogueLockStatus(
+  archiveEntryId: number,
+): Promise<DialogueLockStatus | null> {
+  const [row] = await sql<
+    { held_by_user_id: number; name: string; expires_at: string }[]
+  >`
+    SELECT r.held_by_user_id, u.name, r.expires_at::text AS expires_at
+    FROM dialogue_reservations r
+    JOIN users u ON u.id = r.held_by_user_id
+    WHERE r.archive_entry_id = ${archiveEntryId} AND r.expires_at > NOW()
+  `;
+  if (!row) return null;
+  return {
+    heldByUserId: row.held_by_user_id,
+    heldByName: row.name,
+    expiresAt: row.expires_at,
+  };
+}
+
+export interface ReleasedReservationInfo {
+  notifyTargets: DialogueEmailTarget[];
+  dialogueSlug: string;
+  dialogueTitle: string;
+}
+
+// Löscht nur die abgelaufene Reservierungszeile selbst, OHNE die
+// Notify-Requests anzurühren — genutzt von postDialogueMessage, das nach
+// dieser Freigabe direkt selbst prüft, ob es sie neu vergeben darf, und bei
+// Ablehnung (kein/fremdes Reservierungsrecht) keine Möglichkeit hat, eine
+// Benachrichtigung an die Action-Ebene durchzureichen (siehe
+// DialogueMessage-Rückgabetyp, der dafür nicht erweitert werden soll).
+// dialogue_reservation_notify_requests bleiben deshalb hier bewusst
+// bestehen — sie werden beim nächsten reserveDialogueReply-Aufruf für
+// diesen Dialog (durch irgendeine Person) alsdann via
+// releaseExpiredDialogueReservation nachträglich benachrichtigt, statt beim
+// bloßen Ablauf-Zeitpunkt selbst spurlos gelöscht zu werden.
+async function deleteExpiredReservationRow(
+  client: SqlClient,
+  archiveEntryId: number,
+): Promise<boolean> {
+  const [deleted] = await client<{ archive_entry_id: number }[]>`
+    DELETE FROM dialogue_reservations
+    WHERE archive_entry_id = ${archiveEntryId} AND expires_at <= NOW()
+    RETURNING archive_entry_id
+  `;
+  return !!deleted;
+}
+
+// Räumt eine abgelaufene Reservierung weg und meldet zurück, wer laut
+// dialogue_reservation_notify_requests über das Ende der Sperre informiert
+// werden wollte (Mail/Push verschickt wie überall in dieser Datei erst die
+// Action-Ebene, nicht dieser DB-Layer) — null, wenn nichts abgelaufen war.
+// Nur von reserveDialogueReply aufgerufen (postDialogueMessage nutzt
+// bewusst nur deleteExpiredReservationRow, siehe dortiger Kommentar).
+// Nimmt einen SqlClient-Parameter, da der Aufrufer selbst schon in einer
+// Transaktion läuft (siehe SqlClient-Kommentar am Dateianfang).
+async function releaseExpiredDialogueReservation(
+  client: SqlClient,
+  archiveEntryId: number,
+): Promise<ReleasedReservationInfo | null> {
+  if (!(await deleteExpiredReservationRow(client, archiveEntryId))) return null;
+
+  const notifyRows = await client<
+    {
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
+    FROM dialogue_reservation_notify_requests n
+    JOIN users u ON u.id = n.user_id
+    WHERE n.archive_entry_id = ${archiveEntryId}
+  `;
+  await client`
+    DELETE FROM dialogue_reservation_notify_requests WHERE archive_entry_id = ${archiveEntryId}
+  `;
+
+  const [entry] = await client<{ slug: string; title: string }[]>`
+    SELECT slug, title FROM archive_entries WHERE id = ${archiveEntryId}
+  `;
+
+  return {
+    notifyTargets: notifyRows.map((r) => ({
+      id: r.id,
+      email: r.email,
+      name: r.name,
+      emailNotificationsEnabled: r.email_notifications_enabled,
+      pushNotificationsEnabled: r.push_notifications_enabled,
+    })),
+    dialogueSlug: entry?.slug ?? "",
+    dialogueTitle: entry?.title ?? "",
+  };
+}
+
+export interface ReserveReplyResult {
+  // Falls beim Reservieren nebenbei eine fremde, abgelaufene Reservierung
+  // weggeräumt wurde: wer davon per Mail/Push informiert werden wollte
+  // (siehe releaseExpiredDialogueReservation) — die Action-Ebene verschickt
+  // das dann.
+  released: ReleasedReservationInfo | null;
+}
+
+// Reserviert für 2 Stunden exklusiv das Antwortrecht in einem Dialog mit
+// mehr als zwei Teilnehmenden (siehe reserveDialogueReplyAction für den
+// Teilnehmer-Check). Sperrt die ganze Person (userId), nicht nur einen
+// Charakter. ON CONFLICT ... WHERE expires_at <= NOW() würde zwar auch eine
+// abgelaufene fremde Reservierung atomar ersetzen, hier trotzdem zusätzlich
+// der explizite releaseExpiredDialogueReservation-Aufruf davor — nur so
+// bekommen wartende Notify-Requests überhaupt ihre Benachrichtigung
+// (ON CONFLICT DO UPDATE allein würde die alte Zeile stillschweigend
+// überschreiben, ohne dass diese Funktion je davon erfährt).
+export async function reserveDialogueReply(
+  archiveEntryId: number,
+  userId: number,
+): Promise<ReserveReplyResult> {
+  return sql.begin(async (tx) => {
+    const released = await releaseExpiredDialogueReservation(tx, archiveEntryId);
+
+    const rows = await tx<{ held_by_user_id: number }[]>`
+      INSERT INTO dialogue_reservations (archive_entry_id, held_by_user_id, expires_at)
+      VALUES (${archiveEntryId}, ${userId}, NOW() + INTERVAL '2 hours')
+      ON CONFLICT (archive_entry_id) DO NOTHING
+      RETURNING held_by_user_id
+    `;
+    if (rows.length === 0) {
+      const [existing] = await tx<{ held_by_user_id: number; name: string }[]>`
+        SELECT r.held_by_user_id, u.name
+        FROM dialogue_reservations r
+        JOIN users u ON u.id = r.held_by_user_id
+        WHERE r.archive_entry_id = ${archiveEntryId}
+      `;
+      if (existing && existing.held_by_user_id !== userId) {
+        throw new DialogueLockActiveError(
+          `${existing.name} hat sich bereits das Antwortrecht für dieses Gespräch reserviert. Bitte warte, bis die Sperre endet.`,
+        );
+      }
+      // existing.held_by_user_id === userId: bereits selbst reserviert — kein Fehler, no-op.
+    }
+
+    return { released };
+  });
+}
+
+// Einmal-Opt-in "informiere mich, wenn die aktuelle Antwort-Sperre endet"
+// (siehe dialogueReservationNotifyAction) — ON CONFLICT DO NOTHING, ein
+// zweiter Klick ist ein no-op statt eines Fehlers.
+export async function requestDialogueReservationNotification(
+  archiveEntryId: number,
+  userId: number,
+): Promise<void> {
+  await sql`
+    INSERT INTO dialogue_reservation_notify_requests (archive_entry_id, user_id)
+    VALUES (${archiveEntryId}, ${userId})
+    ON CONFLICT (archive_entry_id, user_id) DO NOTHING
+  `;
+}
+
+// Für die Anzeige des "Informiere mich"-Buttons (DialogueLockPanel.tsx) —
+// ohne diesen Check würde der Button nach einem Seiten-Reload wieder aktiv
+// erscheinen, obwohl bereits ein Opt-in besteht.
+export async function hasRequestedDialogueReservationNotification(
+  archiveEntryId: number,
+  userId: number,
+): Promise<boolean> {
+  const [row] = await sql<{ archive_entry_id: number }[]>`
+    SELECT archive_entry_id FROM dialogue_reservation_notify_requests
+    WHERE archive_entry_id = ${archiveEntryId} AND user_id = ${userId}
+  `;
+  return !!row;
+}
+
 export interface DialogueParticipantInfo {
   characterId: number;
   characterSlug: string;
@@ -565,6 +911,12 @@ export interface DialoguePlayEntry {
   logDate: string | null;
   participants: ArchiveParticipant[];
   location: ArchiveLocationRef | null;
+  // Wer den Dialog begonnen hat (siehe createDialogue) — Grundlage für den
+  // Einladen-Button (nur der Owner darf weitere Teilnehmer hinzufügen, siehe
+  // inviteDialogueParticipantAction). Bleibt bei Owner-Neuzuordnung durch
+  // einen Admin (setArchiveEntryOwner) aktuell, ändert aber selbst nie die
+  // participants.
+  ownerUserId: number | null;
 }
 
 // Ungecacht — Grundlage für /dialogues/[slug] sowie die Actions (ersetzt
@@ -580,9 +932,10 @@ export async function getDialogueForPlay(
       title: string;
       metadata: unknown;
       dialogue_open: boolean;
+      owner_user_id: number | null;
     }[]
   >`
-    SELECT id, slug, title, metadata, dialogue_open
+    SELECT id, slug, title, metadata, dialogue_open, owner_user_id
     FROM archive_entries
     WHERE slug = ${slug} AND category = 'dialogue'
     LIMIT 1
@@ -613,6 +966,7 @@ export async function getDialogueForPlay(
     logDate: meta.logDate ?? null,
     participants: meta.participants ?? [],
     location: meta.location ?? null,
+    ownerUserId: row.owner_user_id,
   };
 }
 

@@ -9,9 +9,16 @@ import {
   deleteDialogue,
   completeDialogue,
   regenerateAllClosedDialogueContent,
+  inviteDialogueParticipants,
+  reserveDialogueReply,
+  requestDialogueReservationNotification,
+  hasRequestedDialogueReservationNotification,
+  getDialogueLockStatus,
   DialogueClosedError,
   DialogueMessageForbiddenError,
   DialogueSelfReplyError,
+  DialogueLockActiveError,
+  DialogueReservationRequiredError,
 } from "@/lib/dialoguesCore";
 import { insertUser, insertCharacter } from "./helpers";
 
@@ -472,5 +479,261 @@ describe("regenerateAllClosedDialogueContent", () => {
     const count = await regenerateAllClosedDialogueContent();
 
     expect(count).toBe(0);
+  });
+});
+
+// Erweitert eine per setupDialogue() angelegte 2-Personen-Unterhaltung um
+// einen dritten Charakter — Grundlage für alle Tests, die eine Reservierung
+// erfordern (nur bei mehr als zwei Teilnehmenden relevant, siehe
+// postDialogueMessage).
+async function setupTriDialogue() {
+  const base = await setupDialogue();
+  const thirdUser = await insertUser();
+  const thirdChar = await insertCharacter({
+    playerId: thirdUser.id,
+    name: "Dritte",
+  });
+
+  const { invited } = await inviteDialogueParticipants(base.entryId, [
+    thirdChar.id,
+  ]);
+
+  return { ...base, thirdUser, thirdChar, invited };
+}
+
+describe("inviteDialogueParticipants", () => {
+  it("appends a new participant to metadata.participants and subscribes their player", async () => {
+    const { entryId, dialogue } = await setupDialogue();
+    const thirdUser = await insertUser();
+    const thirdChar = await insertCharacter({
+      playerId: thirdUser.id,
+      name: "Dritte",
+    });
+
+    const { invited } = await inviteDialogueParticipants(entryId, [
+      thirdChar.id,
+    ]);
+
+    expect(invited.map((i) => i.id)).toEqual([thirdUser.id]);
+
+    const [entry] = await sql<{ metadata: { participants: { slug: string }[] } }[]>`
+      SELECT metadata FROM archive_entries WHERE id = ${entryId}
+    `;
+    const slugs = entry.metadata.participants.map((p) => p.slug);
+    expect(slugs).toHaveLength(3);
+    expect(slugs).toContain(thirdChar.slug);
+
+    const follow = await sql<{ subscribed_at: string | null }[]>`
+      SELECT subscribed_at FROM content_follows
+      WHERE user_id = ${thirdUser.id} AND target_type = 'archive_entry' AND target_slug = ${dialogue.slug}
+    `;
+    expect(follow).toHaveLength(1);
+    expect(follow[0].subscribed_at).not.toBeNull();
+  });
+
+  it("silently skips characters that already participate, without a duplicate or an error", async () => {
+    const { entryId, ownChar } = await setupDialogue();
+
+    const { invited } = await inviteDialogueParticipants(entryId, [
+      ownChar.id,
+    ]);
+
+    expect(invited).toEqual([]);
+    const [entry] = await sql<{ metadata: { participants: unknown[] } }[]>`
+      SELECT metadata FROM archive_entries WHERE id = ${entryId}
+    `;
+    expect(entry.metadata.participants).toHaveLength(2);
+  });
+});
+
+describe("reserveDialogueReply / getDialogueLockStatus", () => {
+  it("grants the reservation when no active lock exists", async () => {
+    const { entryId, ownUser } = await setupTriDialogue();
+
+    await reserveDialogueReply(entryId, ownUser.id);
+
+    const status = await getDialogueLockStatus(entryId);
+    expect(status?.heldByUserId).toBe(ownUser.id);
+  });
+
+  it("rejects a reservation attempt while another person's lock is still active", async () => {
+    const { entryId, ownUser, partnerUser } = await setupTriDialogue();
+    await reserveDialogueReply(entryId, ownUser.id);
+
+    await expect(
+      reserveDialogueReply(entryId, partnerUser.id),
+    ).rejects.toBeInstanceOf(DialogueLockActiveError);
+  });
+
+  it("allows re-reserving once the previous holder's lock has expired", async () => {
+    const { entryId, ownUser, partnerUser } = await setupTriDialogue();
+    await reserveDialogueReply(entryId, ownUser.id);
+    await sql`
+      UPDATE dialogue_reservations SET expires_at = NOW() - INTERVAL '1 minute'
+      WHERE archive_entry_id = ${entryId}
+    `;
+
+    await reserveDialogueReply(entryId, partnerUser.id);
+
+    const status = await getDialogueLockStatus(entryId);
+    expect(status?.heldByUserId).toBe(partnerUser.id);
+  });
+
+  it("getDialogueLockStatus treats an expired-but-not-yet-cleaned-up row as no active lock", async () => {
+    const { entryId, ownUser } = await setupTriDialogue();
+    await reserveDialogueReply(entryId, ownUser.id);
+    await sql`
+      UPDATE dialogue_reservations SET expires_at = NOW() - INTERVAL '1 minute'
+      WHERE archive_entry_id = ${entryId}
+    `;
+
+    expect(await getDialogueLockStatus(entryId)).toBeNull();
+  });
+
+  it("re-reserving by the same holder before expiry is a no-op, not an error", async () => {
+    const { entryId, ownUser } = await setupTriDialogue();
+    await reserveDialogueReply(entryId, ownUser.id);
+
+    await expect(
+      reserveDialogueReply(entryId, ownUser.id),
+    ).resolves.not.toThrow();
+  });
+});
+
+describe("requestDialogueReservationNotification", () => {
+  it("records the opt-in and hasRequestedDialogueReservationNotification reflects it", async () => {
+    const { entryId, partnerUser } = await setupTriDialogue();
+
+    expect(
+      await hasRequestedDialogueReservationNotification(entryId, partnerUser.id),
+    ).toBe(false);
+
+    await requestDialogueReservationNotification(entryId, partnerUser.id);
+
+    expect(
+      await hasRequestedDialogueReservationNotification(entryId, partnerUser.id),
+    ).toBe(true);
+  });
+
+  it("a second opt-in for the same user/dialogue is a no-op, not a conflict error", async () => {
+    const { entryId, partnerUser } = await setupTriDialogue();
+    await requestDialogueReservationNotification(entryId, partnerUser.id);
+
+    await expect(
+      requestDialogueReservationNotification(entryId, partnerUser.id),
+    ).resolves.not.toThrow();
+  });
+});
+
+describe("postDialogueMessage with more than two participants", () => {
+  it("rejects a reply when nobody has reserved the right to answer yet", async () => {
+    const { entryId, partnerChar, partnerUser } = await setupTriDialogue();
+
+    await expect(
+      postDialogueMessage({
+        archiveEntryId: entryId,
+        characterId: partnerChar.id,
+        authorUserId: partnerUser.id,
+        bodyMarkdown: "Ich antworte einfach mal ungefragt",
+      }),
+    ).rejects.toBeInstanceOf(DialogueReservationRequiredError);
+  });
+
+  it("rejects a reply from someone other than the person holding the reservation", async () => {
+    const { entryId, ownUser, partnerChar, partnerUser } = await setupTriDialogue();
+    await reserveDialogueReply(entryId, ownUser.id);
+
+    await expect(
+      postDialogueMessage({
+        archiveEntryId: entryId,
+        characterId: partnerChar.id,
+        authorUserId: partnerUser.id,
+        bodyMarkdown: "Ich war aber nicht dran",
+      }),
+    ).rejects.toBeInstanceOf(DialogueLockActiveError);
+  });
+
+  it("allows the reservation holder to reply and releases the lock afterwards", async () => {
+    const { entryId, partnerChar, partnerUser } = await setupTriDialogue();
+    await reserveDialogueReply(entryId, partnerUser.id);
+
+    const msg = await postDialogueMessage({
+      archiveEntryId: entryId,
+      characterId: partnerChar.id,
+      authorUserId: partnerUser.id,
+      bodyMarkdown: "Jetzt bin ich dran",
+    });
+
+    expect(msg.characterId).toBe(partnerChar.id);
+    expect(await getDialogueLockStatus(entryId)).toBeNull();
+  });
+
+  it("does not silently drop a pending notify-request when cleaning up an expired reservation on a rejected reply attempt", async () => {
+    // Regression: postDialogueMessage muss abgelaufene Reservierungen
+    // aufräumen können, ohne die dabei noch bestehenden Notify-Requests zu
+    // verlieren — die werden stattdessen beim nächsten reserveDialogueReply
+    // für diesen Dialog benachrichtigt (siehe deleteExpiredReservationRow).
+    const { entryId, ownUser, partnerChar, partnerUser, thirdUser } =
+      await setupTriDialogue();
+    await reserveDialogueReply(entryId, ownUser.id);
+    await requestDialogueReservationNotification(entryId, thirdUser.id);
+    await sql`
+      UPDATE dialogue_reservations SET expires_at = NOW() - INTERVAL '1 minute'
+      WHERE archive_entry_id = ${entryId}
+    `;
+
+    // Löst die Ablauf-Bereinigung aus, schlägt aber selbst fehl (niemand hat
+    // sich neu reserviert) — die Notify-Anfrage darf hierbei nicht verloren
+    // gehen.
+    await expect(
+      postDialogueMessage({
+        archiveEntryId: entryId,
+        characterId: partnerChar.id,
+        authorUserId: partnerUser.id,
+        bodyMarkdown: "Reserviere zuerst",
+      }),
+    ).rejects.toBeInstanceOf(DialogueReservationRequiredError);
+
+    expect(
+      await hasRequestedDialogueReservationNotification(entryId, thirdUser.id),
+    ).toBe(true);
+
+    // Die nächste erfolgreiche Reservierung räumt die (immer noch
+    // abgelaufene) Zeile endgültig weg und meldet die wartende Notify-Anfrage.
+    const { released } = await reserveDialogueReply(entryId, partnerUser.id);
+    expect(released?.notifyTargets.map((t) => t.id)).toEqual([thirdUser.id]);
+  });
+
+  it("clears pending notify-requests silently when the lock ends via the holder's own reply", async () => {
+    const { entryId, partnerChar, partnerUser, thirdUser } =
+      await setupTriDialogue();
+    await reserveDialogueReply(entryId, partnerUser.id);
+    await requestDialogueReservationNotification(entryId, thirdUser.id);
+
+    await postDialogueMessage({
+      archiveEntryId: entryId,
+      characterId: partnerChar.id,
+      authorUserId: partnerUser.id,
+      bodyMarkdown: "So, jetzt bin ich dran",
+    });
+
+    expect(
+      await hasRequestedDialogueReservationNotification(entryId, thirdUser.id),
+    ).toBe(false);
+  });
+});
+
+describe("postDialogueMessage with exactly two participants", () => {
+  it("keeps working without any reservation, unaffected by the lock mechanism", async () => {
+    const { entryId, partnerChar, partnerUser } = await setupDialogue();
+
+    const msg = await postDialogueMessage({
+      archiveEntryId: entryId,
+      characterId: partnerChar.id,
+      authorUserId: partnerUser.id,
+      bodyMarkdown: "Ganz normal, keine Reservierung nötig",
+    });
+
+    expect(msg.characterId).toBe(partnerChar.id);
   });
 });

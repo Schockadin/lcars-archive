@@ -6,11 +6,17 @@ import {
   getDialogueForPlay,
   getDialogueParticipant,
   getDialogueMessages,
+  getDialogueLockStatus,
+  hasRequestedDialogueReservationNotification,
 } from "@/lib/dialogues";
+import { getCharactersForParticipantPicker } from "@/lib/characters";
+import { canReplyToDialogue } from "@/lib/dialogueLock";
 import PageMeta from "@/components/PageMeta";
 import DialogueHeader from "@/components/DialogueHeader";
 import DialogueThread from "@/components/DialogueThread";
 import DialogueReplyForm from "@/components/DialogueReplyForm";
+import DialogueLockPanel from "@/components/DialogueLockPanel";
+import InviteDialogueParticipantForm from "@/components/InviteDialogueParticipantForm";
 import CompleteDialogueButton from "@/components/CompleteDialogueButton";
 import DeleteDialogueButton from "@/components/DeleteDialogueButton";
 import FollowButtons from "@/components/FollowButtons";
@@ -50,6 +56,34 @@ export default async function DialoguePlayPage({ params }: Props) {
 
   const messages = await getDialogueMessages(entry.id);
 
+  // Antwort-Reservierung nur bei mehr als zwei Teilnehmenden relevant (siehe
+  // DialogueLockPanel.tsx) — bei genau zwei bleibt das Selbstgespräch-Verbot
+  // in postDialogueMessage der einzige Schutzmechanismus.
+  const multiParty = entry.participants.length > 2;
+  const lockStatus = multiParty ? await getDialogueLockStatus(entry.id) : null;
+  const canReplyNow = canReplyToDialogue(
+    entry.participants.length,
+    lockStatus,
+    session.userId,
+  );
+  // Nur relevant, wenn DialogueLockPanel tatsächlich den "Informiere
+  // mich"-Button zeigen könnte — nicht wenn der Viewer die Sperre selbst
+  // hält (dort zeigt die Komponente nur den eigenen Status, ohne den Button).
+  const alreadyRequestedNotify =
+    lockStatus !== null && lockStatus.heldByUserId !== session.userId
+      ? await hasRequestedDialogueReservationNotification(
+          entry.id,
+          session.userId,
+        )
+      : false;
+
+  const isOwner = entry.ownerUserId === session.userId;
+  const inviteCandidates = isOwner
+    ? (await getCharactersForParticipantPicker()).filter(
+        (c) => !entry.participants.some((p) => p.slug === c.slug),
+      )
+    : [];
+
   return (
     <article className="archive-entry pb-[5px]">
       <PageMeta title={entry.title} section="users" />
@@ -82,7 +116,23 @@ export default async function DialoguePlayPage({ params }: Props) {
             subscribeOnly
           />
         )}
-        {participant && <DialogueReplyForm entrySlug={entry.slug} />}
+        {participant && (
+          <DialogueReplyForm entrySlug={entry.slug} canReplyNow={canReplyNow} />
+        )}
+        {participant && multiParty && !canReplyNow && (
+          <DialogueLockPanel
+            entrySlug={entry.slug}
+            lockStatus={lockStatus}
+            currentUserId={session.userId}
+            alreadyRequestedNotify={alreadyRequestedNotify}
+          />
+        )}
+        {isOwner && (
+          <InviteDialogueParticipantForm
+            entrySlug={entry.slug}
+            candidates={inviteCandidates}
+          />
+        )}
         <div className="flex items-center gap-[8px]">
           <CompleteDialogueButton entrySlug={entry.slug} />
           {viewer?.role === "admin" && (

@@ -146,6 +146,7 @@ export async function getCharactersWithPlayers(
 
 export interface CharacterParticipantOption {
   id: number;
+  slug: string;
   name: string;
   playerName: string;
   status: Character["status"];
@@ -165,7 +166,7 @@ export async function getCharactersForParticipantPicker(): Promise<
   CharacterParticipantOption[]
 > {
   return sql<CharacterParticipantOption[]>`
-    SELECT c.id, c.name, u.name AS "playerName", c.status
+    SELECT c.id, c.slug, c.name, u.name AS "playerName", c.status
     FROM characters c
     JOIN users u ON u.id = c.player_id
     ORDER BY c.name ASC
