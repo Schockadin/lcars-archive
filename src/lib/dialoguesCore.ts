@@ -446,11 +446,12 @@ export async function editDialogueMessage(
       RETURNING id, created_at::text AS created_at, edited_at::text AS edited_at
     `;
 
-    // Moderations-Edit an einem bereits geschlossenen Dialog: der
-    // gespeicherte Fließtext (regenerateDialogueContent) muss synchron
-    // bleiben — der einzige Fall, in dem sich ein geschlossener Dialog nach
-    // Abschluss noch inhaltlich ändert (Posten neuer Nachrichten bleibt
-    // unabhängig von der Rolle gesperrt, siehe postDialogueMessage).
+    // Moderations-Edit an einem bereits geschlossenen Dialog: füllt den
+    // Fließtext nur nach, falls für diesen Dialog noch nie einer erzeugt
+    // wurde (regenerateDialogueContent überschreibt nie einen bereits
+    // vorhandenen) — ein Dialog mit bereits generiertem Fließtext bleibt
+    // also auch nach dieser Bearbeitung unverändert, bewusst kein
+    // automatisches Resync.
     if (input.isModerator && !row.dialogue_open) {
       await regenerateDialogueContent(tx, row.archive_entry_id);
     }
@@ -511,9 +512,9 @@ export async function deleteDialogueMessage(
     await tx`UPDATE dialogue_messages SET deleted_at = NOW() WHERE id = ${input.messageId}`;
     await tx`UPDATE archive_entries SET updated_at = NOW() WHERE id = ${row.archive_entry_id}`;
 
-    // Siehe gleicher Kommentar in editDialogueMessage — Fließtext synchron
-    // halten, wenn ein Admin eine Nachricht in einem bereits geschlossenen
-    // Dialog löscht.
+    // Siehe gleicher Kommentar in editDialogueMessage — füllt den Fließtext
+    // nur nach, falls noch keiner existiert; ein bereits vorhandener
+    // Fließtext bleibt auch nach dieser Löschung unverändert.
     if (input.isModerator && !row.dialogue_open) {
       await regenerateDialogueContent(tx, row.archive_entry_id);
     }
@@ -639,36 +640,51 @@ async function buildDialogueFlowingText(
   };
 }
 
-// Schreibt den aktuellen Fließtext-Stand in archive_entries.content/
-// source_md — aufgerufen beim Abschließen (completeDialogue) und erneut
-// nach jeder nachträglichen Moderations-Änderung (Admin bearbeitet/löscht
-// eine Nachricht in einem bereits geschlossenen Dialog, siehe
-// editDialogueMessage/deleteDialogueMessage), damit der gespeicherte
-// Fließtext nie veraltet. Nimmt bewusst einen Client-Parameter statt fest
-// den globalen sql zu nutzen (siehe SqlClient-Kommentar oben).
+// Schreibt den Fließtext EINMALIG in archive_entries.content/source_md —
+// nur wenn dort noch nichts steht (content leer/NULL). Einmal gesetzt,
+// bleibt der Fließtext für immer unangetastet, auch durch spätere Aufrufe
+// (Admin bearbeitet/löscht nachträglich eine Nachricht in einem bereits
+// geschlossenen Dialog, siehe editDialogueMessage/deleteDialogueMessage,
+// oder der Admin-Backfill läuft ein zweites Mal) — bewusst kein
+// automatisches "immer synchron halten": ein unbedingtes, wiederholbares
+// UPDATE ohne Schutz gegen erneutes Ausführen ist exakt das Muster, das
+// den GM-Rollen-Hochstufungs-Bug verursacht hat (siehe scripts/schema.sql-
+// Kommentar zu users_role_check). Ein Admin-Edit an einem bereits
+// befüllten Dialog aktualisiert den gespeicherten Fließtext deshalb NICHT
+// — er füllt nur nach, wenn für diesen Dialog noch nie einer erzeugt
+// wurde (z.B. ein alter, noch nicht per Backfill befüllter Dialog).
+// Rückgabewert: ob tatsächlich geschrieben wurde (RETURNING-Zeile
+// vorhanden) — genutzt von regenerateAllClosedDialogueContent, um nur
+// echte Änderungen zu zählen. Nimmt bewusst einen Client-Parameter statt
+// fest den globalen sql zu nutzen (siehe SqlClient-Kommentar oben).
 export async function regenerateDialogueContent(
   client: SqlClient,
   archiveEntryId: number,
-): Promise<void> {
+): Promise<boolean> {
   const { html, markdown } = await buildDialogueFlowingText(client, archiveEntryId);
-  await client`
+  const rows = await client<{ id: number }[]>`
     UPDATE archive_entries SET content = ${html}, source_md = ${markdown}
-    WHERE id = ${archiveEntryId}
+    WHERE id = ${archiveEntryId} AND (content IS NULL OR content = '')
+    RETURNING id
   `;
+  return rows.length > 0;
 }
 
 // Admin-Backfill (/admin/scripts) für bereits geschlossene Dialoge, die vor
-// Einführung des Fließtext-Features abgeschlossen wurden. Sequentiell statt
-// Promise.all — max: 1 in src/lib/db.ts erlaubt ohnehin nur eine Query
-// gleichzeitig.
+// Einführung des Fließtext-Features abgeschlossen wurden (oder noch keinen
+// Fließtext haben) — Dialoge mit bereits vorhandenem Fließtext werden
+// übersprungen (siehe regenerateDialogueContent), ein zweiter Lauf ist
+// deshalb gefahrlos und meldet 0. Sequentiell statt Promise.all — max: 1
+// in src/lib/db.ts erlaubt ohnehin nur eine Query gleichzeitig.
 export async function regenerateAllClosedDialogueContent(): Promise<number> {
   const rows = await sql<{ id: number }[]>`
     SELECT id FROM archive_entries WHERE category = 'dialogue' AND dialogue_open = FALSE
   `;
+  let updated = 0;
   for (const row of rows) {
-    await regenerateDialogueContent(sql, row.id);
+    if (await regenerateDialogueContent(sql, row.id)) updated++;
   }
-  return rows.length;
+  return updated;
 }
 
 // Abschließen ist bewusst one-way (kein Wiedereröffnen) — siehe

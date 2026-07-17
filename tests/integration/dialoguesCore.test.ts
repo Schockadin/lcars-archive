@@ -356,10 +356,13 @@ describe("completeDialogue (Fließtext-Generierung)", () => {
   });
 });
 
-describe("moderator edits on a closed dialogue regenerate the flowing text", () => {
-  it("editDialogueMessage keeps content/source_md in sync when a moderator edits a message after closing", async () => {
+describe("moderator edits on a closed dialogue never overwrite an existing flowing text", () => {
+  it("editDialogueMessage does not touch content/source_md when a flowing text already exists", async () => {
     const { partnerUser, entryId } = await setupDialogue();
     await completeDialogue(entryId);
+    const [before] = await sql<{ source_md: string }[]>`
+      SELECT source_md FROM archive_entries WHERE id = ${entryId}
+    `;
     const [msg] = await sql<{ id: number }[]>`
       SELECT id FROM dialogue_messages WHERE archive_entry_id = ${entryId}
     `;
@@ -371,21 +374,28 @@ describe("moderator edits on a closed dialogue regenerate the flowing text", () 
       isModerator: true,
     });
 
-    const [row] = await sql<{ source_md: string }[]>`
+    const [after] = await sql<{ source_md: string }[]>`
       SELECT source_md FROM archive_entries WHERE id = ${entryId}
     `;
-    expect(row.source_md).toContain("Nachträglich von einem Admin korrigiert");
+    // Die Nachricht selbst wurde geändert (dialogue_messages), der bereits
+    // beim Abschluss generierte Fließtext bleibt aber unverändert — kein
+    // automatisches Resync (siehe regenerateDialogueContent).
+    expect(after.source_md).toBe(before.source_md);
+    expect(after.source_md).not.toContain("Nachträglich von einem Admin korrigiert");
   });
 
-  it("deleteDialogueMessage keeps content/source_md in sync when a moderator deletes a message after closing", async () => {
+  it("deleteDialogueMessage does not touch content/source_md when a flowing text already exists", async () => {
     const { partnerChar, partnerUser, entryId } = await setupDialogue();
     const second = await postDialogueMessage({
       archiveEntryId: entryId,
       characterId: partnerChar.id,
       authorUserId: partnerUser.id,
-      bodyMarkdown: "Wird nach Abschluss von einem Admin gelöscht",
+      bodyMarkdown: "Bleibt im gespeicherten Fließtext erhalten",
     });
     await completeDialogue(entryId);
+    const [before] = await sql<{ source_md: string }[]>`
+      SELECT source_md FROM archive_entries WHERE id = ${entryId}
+    `;
 
     await deleteDialogueMessage({
       messageId: second.id,
@@ -393,10 +403,36 @@ describe("moderator edits on a closed dialogue regenerate the flowing text", () 
       isModerator: true,
     });
 
+    const [after] = await sql<{ source_md: string }[]>`
+      SELECT source_md FROM archive_entries WHERE id = ${entryId}
+    `;
+    expect(after.source_md).toBe(before.source_md);
+    expect(after.source_md).toContain("Bleibt im gespeicherten Fließtext erhalten");
+  });
+
+  it("lazily backfills the flowing text on a moderator edit if none was ever generated", async () => {
+    // Simuliert einen alten, geschlossenen Dialog von vor Einführung des
+    // Fließtext-Features (noch nicht per Backfill befüllt).
+    const { partnerUser, entryId } = await setupDialogue();
+    await sql`
+      UPDATE archive_entries SET dialogue_open = FALSE, content = '', source_md = ''
+      WHERE id = ${entryId}
+    `;
+    const [msg] = await sql<{ id: number }[]>`
+      SELECT id FROM dialogue_messages WHERE archive_entry_id = ${entryId}
+    `;
+
+    await editDialogueMessage({
+      messageId: msg.id,
+      authorUserId: partnerUser.id,
+      bodyMarkdown: "Erste Bearbeitung nach altem Abschluss",
+      isModerator: true,
+    });
+
     const [row] = await sql<{ source_md: string }[]>`
       SELECT source_md FROM archive_entries WHERE id = ${entryId}
     `;
-    expect(row.source_md).not.toContain("Wird nach Abschluss von einem Admin gelöscht");
+    expect(row.source_md).toContain("Erste Bearbeitung nach altem Abschluss");
   });
 });
 
@@ -427,5 +463,14 @@ describe("regenerateAllClosedDialogueContent", () => {
     // gesetzt bekommen (DB-Default NULL, keine leere Zeichenkette) — anders
     // als der zuvor manuell auf '' gesetzte "closed"-Testfall oben.
     expect(openRow.source_md).toBeNull();
+  });
+
+  it("is idempotent — a second run reports 0 once every closed dialogue already has a flowing text", async () => {
+    const { entryId } = await setupDialogue();
+    await completeDialogue(entryId);
+
+    const count = await regenerateAllClosedDialogueContent();
+
+    expect(count).toBe(0);
   });
 });
