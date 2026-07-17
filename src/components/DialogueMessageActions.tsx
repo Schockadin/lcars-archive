@@ -14,10 +14,11 @@ import { FormError } from "@/app/_shared/FormPrimitives";
 const initialEditState: EditMessageState = {};
 const initialDeleteState: DeleteMessageState = {};
 
-// Wird von DialogueThread nur für die eigenen, nicht gelöschten Nachrichten
-// des Betrachters gerendert, solange der Dialog offen ist (siehe die
-// Bedingung dort) — kein weiterer Sichtbarkeits-Check hier nötig, die
-// Server Actions selbst prüfen Autorenschaft/offen-Status ohnehin erneut.
+// Wird von DialogueThread nur für nicht gelöschte Nachrichten gerendert —
+// entweder die eigenen des Betrachters in einem offenen Dialog, oder jede
+// Nachricht für Admins/GMs (Moderation, auch in geschlossenen Dialogen).
+// Kein weiterer Sichtbarkeits-Check hier nötig, die Server Actions prüfen
+// Autorenschaft/offen-Status/Moderatorrolle ohnehin serverseitig erneut.
 export default function DialogueMessageActions({
   messageId,
   entrySlug,

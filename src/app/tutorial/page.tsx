@@ -368,6 +368,11 @@ export default function TutorialPage() {
                   und die komplette Timeline aus den aktuellen Datenbank-
                   Inhalten neu erzeugen lassen.
                 </li>
+                <li>
+                  In jedem Gespräch als Moderation jede Nachricht bearbeiten
+                  oder löschen, auch fremde und auch in bereits abgeschlossenen
+                  Gesprächen.
+                </li>
               </ul>
               <p>
                 Administration hat zusätzlich einen eigenen Bereich, erreichbar
@@ -391,6 +396,12 @@ export default function TutorialPage() {
                   welche sicherheitsrelevante Kontoaktion durchgeführt hat,
                   sowie eine separate Übersicht aller in den letzten drei Tagen
                   neu angelegten, bearbeiteten oder gelöschten Inhalte.
+                </li>
+                <li>
+                  Unter <strong>„Import“</strong> eine oder mehrere
+                  Markdown-Dateien im Vault-Frontmatter-Format hochladen und
+                  nach Vorschau einzeln bestätigen, um daraus neue
+                  Archiv-Einträge, Missionen oder Charaktere anzulegen.
                 </li>
               </ul>
               <p>

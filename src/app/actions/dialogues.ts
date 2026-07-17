@@ -156,11 +156,18 @@ export async function editDialogueMessageAction(
   if (!Number.isInteger(messageId)) return { error: "Ungültige Nachricht." };
   if (!bodyMarkdown) return { error: "Bitte eine Nachricht eingeben." };
 
+  // Rollen-Check DB-frisch (analog completeDialogueAction) — Admins/GMs
+  // dürfen als Moderation auch fremde und Nachrichten in bereits
+  // abgeschlossenen Dialogen bearbeiten.
+  const user = await getUserById(session.userId);
+  const isModerator = user?.role === "admin" || user?.role === "gm";
+
   try {
     await editDialogueMessage({
       messageId,
       authorUserId: session.userId,
       bodyMarkdown,
+      isModerator,
     });
   } catch (err) {
     if (err instanceof DialogueMessageForbiddenError) {
@@ -175,7 +182,13 @@ export async function editDialogueMessageAction(
     throw err;
   }
 
+  // Ein offener Dialog lebt unter /dialogues, ein geschlossener unter
+  // /archive (siehe Redirect in beiden Seiten) — welcher zutrifft, ist hier
+  // nicht bekannt, deshalb werden vorsichtshalber beide invalidiert (nötig
+  // erst seit Moderations-Edits auch auf geschlossenen Dialogen möglich sind).
   revalidatePath(`/dialogues/${entrySlug}`);
+  revalidateArchiveEntry(entrySlug);
+  revalidatePath(`/archive/${entrySlug}`);
   return { success: true };
 }
 
@@ -196,8 +209,15 @@ export async function deleteDialogueMessageAction(
   const entrySlug = String(formData.get("entrySlug") ?? "");
   if (!Number.isInteger(messageId)) return { error: "Ungültige Nachricht." };
 
+  const user = await getUserById(session.userId);
+  const isModerator = user?.role === "admin" || user?.role === "gm";
+
   try {
-    await deleteDialogueMessage({ messageId, authorUserId: session.userId });
+    await deleteDialogueMessage({
+      messageId,
+      authorUserId: session.userId,
+      isModerator,
+    });
   } catch (err) {
     if (err instanceof DialogueMessageForbiddenError) {
       return { error: "Du kannst nur eigene Nachrichten löschen." };
@@ -212,6 +232,8 @@ export async function deleteDialogueMessageAction(
   }
 
   revalidatePath(`/dialogues/${entrySlug}`);
+  revalidateArchiveEntry(entrySlug);
+  revalidatePath(`/archive/${entrySlug}`);
   return {};
 }
 
@@ -234,7 +256,10 @@ export async function getDialogueMessageSourceAction(
   if (!row || row.deletedAt)
     return { error: "Diese Nachricht existiert nicht mehr." };
   if (row.authorUserId !== session.userId) {
-    return { error: "Du kannst nur eigene Nachrichten bearbeiten." };
+    const user = await getUserById(session.userId);
+    if (user?.role !== "admin" && user?.role !== "gm") {
+      return { error: "Du kannst nur eigene Nachrichten bearbeiten." };
+    }
   }
 
   return { sourceMd: row.sourceMd };

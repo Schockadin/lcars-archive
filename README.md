@@ -36,6 +36,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Markdown-Vault als Ursprungsimport** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
   entstehen danach direkt in der App (Datenbank als alleinige Source of Truth).
+  Admins können im selben Frontmatter-Format zusätzlich einzelne oder mehrere
+  `.md`-Dateien direkt im Adminbereich hochladen (mit Vorschau, die pro Datei
+  einzeln bestätigt werden muss), ohne dafür das CLI-Ingest-Skript zu brauchen.
 - **DB-Backup** — der komplette Datenbankinhalt lässt sich im Admin-Panel als
   JSON-Datei herunterladen und bei Bedarf wieder vollständig einspielen; ein
   täglicher Cronjob sichert zusätzlich automatisch nach Cloudflare R2 und
@@ -47,7 +50,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   SQL-Abfragefeld (Syntaxhervorhebung via CodeMirror). Ein Audit-Log
   protokolliert sicherheitsrelevante Useraccount-Aktionen (inkl. IP-Adresse)
   sowie, separat, eine 3-Tage-Übersicht aller neu angelegten, bearbeiteten
-  und gelöschten Inhalte.
+  und gelöschten Inhalte. Admins und Spielleitung dürfen außerdem als
+  Moderation jede Nachricht in jedem Gespräch bearbeiten oder löschen, auch
+  fremde und auch in bereits abgeschlossenen Gesprächen.
 - **Custom-Markdown-Pipeline** — `remark`/`rehype` wandeln Markdown in HTML um und rendern
   `h2`-Überschriften als LCARS-Data-Rows.
 - **SEO-fertig** — `robots.ts`, `sitemap.ts`, dynamische Metadaten und 404-Seite.
@@ -246,7 +251,8 @@ unter Deployment.
     │   │   ├── db/             #   DB-Backup, Tabellenbrowser, freies SQL-Abfragefeld
     │   │   ├── scripts/        #   Cache-Revalidation, Timeline-Neuaufbau, u.a.
     │   │   ├── audit-log/      #   Sicherheits-Audit-Log + Content-Aktivitätsfeed
-    │   │   └── content/        #   Owner-/Sichtbarkeits-Übersteuerung fremder Inhalte
+    │   │   ├── content/        #   Owner-/Sichtbarkeits-Übersteuerung fremder Inhalte
+    │   │   └── import/         #   Markdown-Datei-Upload → neue Einträge (mit Vorschau)
     │   ├── api/               # /api/characters, /api/health …
     │   ├── manifest.ts        # PWA-Manifest (Icons, inkl. maskable)
     │   ├── robots.ts

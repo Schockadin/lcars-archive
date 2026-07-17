@@ -60,8 +60,10 @@ export default function ArchiveEntryBody({
           <DialogueThread
             messages={messages}
             participants={entry.metadata.participants}
-            currentUserId={null}
+            currentUserId={viewer?.userId ?? null}
             dialogueOpen={false}
+            entrySlug={entry.slug}
+            viewerRole={viewer?.role ?? null}
           />
         ) : entry.content ? (
           // Ohne dialogue_messages (z.B. per Vault-Ingest importierte

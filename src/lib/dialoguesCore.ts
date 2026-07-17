@@ -366,6 +366,11 @@ export interface EditMessageInput {
   messageId: number;
   authorUserId: number;
   bodyMarkdown: string;
+  // Admins/GMs dürfen als Moderation JEDE Nachricht in JEDEM Dialog
+  // bearbeiten — auch fremde, auch nach Abschluss. Umgeht dafür sowohl den
+  // Autoren- als auch den Offen-Check unten; der Aufrufer (editDialogueMessageAction)
+  // ermittelt die Rolle serverseitig frisch aus der Session.
+  isModerator?: boolean;
 }
 
 export async function editDialogueMessage(
@@ -392,11 +397,15 @@ export async function editDialogueMessage(
       FOR UPDATE OF dm
     `;
     if (!row) throw new DialogueMessageNotFoundError();
-    if (row.author_user_id !== input.authorUserId) {
-      throw new DialogueMessageForbiddenError();
+    if (!input.isModerator) {
+      if (row.author_user_id !== input.authorUserId) {
+        throw new DialogueMessageForbiddenError();
+      }
+      if (row.deleted_at) throw new DialogueMessageNotFoundError();
+      if (!row.dialogue_open) throw new DialogueClosedError();
+    } else if (row.deleted_at) {
+      throw new DialogueMessageNotFoundError();
     }
-    if (row.deleted_at) throw new DialogueMessageNotFoundError();
-    if (!row.dialogue_open) throw new DialogueClosedError();
 
     const [updated] = await tx<
       { id: number; created_at: string; edited_at: string }[]
@@ -430,6 +439,8 @@ export async function editDialogueMessage(
 export interface DeleteMessageInput {
   messageId: number;
   authorUserId: number;
+  // Siehe EditMessageInput.isModerator — gleiche Bypass-Logik.
+  isModerator?: boolean;
 }
 
 export async function deleteDialogueMessage(
@@ -452,11 +463,11 @@ export async function deleteDialogueMessage(
       FOR UPDATE OF dm
     `;
     if (!row) throw new DialogueMessageNotFoundError();
-    if (row.author_user_id !== input.authorUserId) {
+    if (!input.isModerator && row.author_user_id !== input.authorUserId) {
       throw new DialogueMessageForbiddenError();
     }
     if (row.deleted_at) return; // bereits gelöscht — idempotenter no-op
-    if (!row.dialogue_open) throw new DialogueClosedError();
+    if (!input.isModerator && !row.dialogue_open) throw new DialogueClosedError();
 
     await tx`UPDATE dialogue_messages SET deleted_at = NOW() WHERE id = ${input.messageId}`;
     await tx`UPDATE archive_entries SET updated_at = NOW() WHERE id = ${row.archive_entry_id}`;

@@ -9,21 +9,28 @@ import DialogueMessageActions from "./DialogueMessageActions";
 // Mission-Log-Autoren genutzt) statt separat gespeichert.
 //
 // currentUserId/dialogueOpen/entrySlug steuern, ob Bearbeiten/Löschen pro
-// Nachricht angezeigt wird — bewusst nur bei offenen Dialogen (abgeschlossene
-// Dialoge bleiben vollständig read-only, auch für den ursprünglichen Autor).
+// Nachricht angezeigt wird — bei offenen Dialogen für den eigenen Autor,
+// unabhängig davon für Admins/GMs (Moderation): die dürfen jede Nachricht in
+// jedem Dialog bearbeiten/löschen, auch fremde und auch nach Abschluss (die
+// Server Actions setzen das serverseitig durch, siehe editDialogueMessage/
+// deleteDialogueMessage in dialoguesCore.ts).
 export default function DialogueThread({
   messages,
   participants,
   currentUserId = null,
   dialogueOpen = false,
   entrySlug,
+  viewerRole = null,
 }: {
   messages: DialogueMessage[];
   participants: ArchiveParticipant[];
   currentUserId?: number | null;
   dialogueOpen?: boolean;
   entrySlug?: string;
+  viewerRole?: "admin" | "gm" | "player" | "viewer" | "guest" | null;
 }) {
+  const isModerator = viewerRole === "admin" || viewerRole === "gm";
+
   return (
     <div className="flex flex-col gap-[10px]">
       {messages.map((msg) => {
@@ -50,10 +57,10 @@ export default function DialogueThread({
                 className="dialogue-message-text mission-body lcars-text text-[18px]"
                 dangerouslySetInnerHTML={{ __html: msg.content }}
               />
-              {dialogueOpen &&
-                entrySlug &&
+              {entrySlug &&
                 !msg.deletedAt &&
-                msg.authorUserId === currentUserId && (
+                ((dialogueOpen && msg.authorUserId === currentUserId) ||
+                  isModerator) && (
                   <DialogueMessageActions
                     messageId={msg.id}
                     entrySlug={entrySlug}

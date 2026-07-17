@@ -68,6 +68,7 @@ export default async function DialoguePlayPage({ params }: Props) {
           currentUserId={session.userId}
           dialogueOpen={entry.open}
           entrySlug={entry.slug}
+          viewerRole={viewer?.role ?? null}
         />
       ) : (
         <p className="lcars-empty-state">Noch keine Nachrichten.</p>
