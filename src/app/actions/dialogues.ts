@@ -7,6 +7,7 @@ import {
   DialogueClosedError,
   DialogueMessageForbiddenError,
   DialogueMessageNotFoundError,
+  DialogueSelfReplyError,
   getDialogueForPlay,
   getDialogueParticipant,
   getDialogueSubscribers,
@@ -85,6 +86,9 @@ export async function postDialogueMessageAction(
           "Dieses Gespräch ist abgeschlossen — neue Nachrichten sind nicht mehr möglich.",
       };
     }
+    if (err instanceof DialogueSelfReplyError) {
+      return { error: err.message };
+    }
     throw err;
   }
 
@@ -156,11 +160,12 @@ export async function editDialogueMessageAction(
   if (!Number.isInteger(messageId)) return { error: "Ungültige Nachricht." };
   if (!bodyMarkdown) return { error: "Bitte eine Nachricht eingeben." };
 
-  // Rollen-Check DB-frisch (analog completeDialogueAction) — Admins/GMs
+  // Rollen-Check DB-frisch (analog completeDialogueAction) — nur Admins
   // dürfen als Moderation auch fremde und Nachrichten in bereits
-  // abgeschlossenen Dialogen bearbeiten.
+  // abgeschlossenen Dialogen bearbeiten (GM ausdrücklich nicht, anders als
+  // bei completeDialogueAction).
   const user = await getUserById(session.userId);
-  const isModerator = user?.role === "admin" || user?.role === "gm";
+  const isModerator = user?.role === "admin";
 
   try {
     await editDialogueMessage({
@@ -210,7 +215,7 @@ export async function deleteDialogueMessageAction(
   if (!Number.isInteger(messageId)) return { error: "Ungültige Nachricht." };
 
   const user = await getUserById(session.userId);
-  const isModerator = user?.role === "admin" || user?.role === "gm";
+  const isModerator = user?.role === "admin";
 
   try {
     await deleteDialogueMessage({
@@ -257,7 +262,7 @@ export async function getDialogueMessageSourceAction(
     return { error: "Diese Nachricht existiert nicht mehr." };
   if (row.authorUserId !== session.userId) {
     const user = await getUserById(session.userId);
-    if (user?.role !== "admin" && user?.role !== "gm") {
+    if (user?.role !== "admin") {
       return { error: "Du kannst nur eigene Nachrichten bearbeiten." };
     }
   }

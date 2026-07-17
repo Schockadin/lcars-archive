@@ -25,6 +25,15 @@ export default function MissionParticipantsField({
   defaultSelectedIds?: number[];
 }) {
   const [selectedCount, setSelectedCount] = useState(defaultSelectedIds.length);
+  const [showAll, setShowAll] = useState(false);
+
+  // Standardmäßig nur aktive Charaktere — bereits ausgewählte, inzwischen
+  // inaktive Teilnehmer bleiben trotzdem sichtbar (sonst verschwindet eine
+  // bestehende Zuordnung beim Bearbeiten unbemerkt aus der Auswahl, sobald
+  // der Charakter z.B. auf "retired" gesetzt wird).
+  const visibleCharacters = characters.filter(
+    (c) => showAll || c.status === "active" || defaultSelectedIds.includes(c.id),
+  );
 
   return (
     <FormField
@@ -46,7 +55,7 @@ export default function MissionParticipantsField({
             id={`${idPrefix}-participants`}
             name="participantCharacterIds"
             multiple
-            size={Math.min(8, characters.length)}
+            size={Math.min(8, visibleCharacters.length)}
             defaultValue={defaultSelectedIds.map(String)}
             onChange={(e) =>
               setSelectedCount(
@@ -55,12 +64,20 @@ export default function MissionParticipantsField({
             }
             className="lcars-input rounded-lcars-pill w-full h-auto py-[8px]"
           >
-            {characters.map((c) => (
+            {visibleCharacters.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name} ({c.playerName})
               </option>
             ))}
           </select>
+          <label className="flex items-center gap-[6px] px-[12px] text-[13px] text-lcars-text-dim">
+            <input
+              type="checkbox"
+              checked={showAll}
+              onChange={(e) => setShowAll(e.target.checked)}
+            />
+            Alle Charaktere anzeigen (auch inaktive)
+          </label>
           <p className="text-lcars-text-dim text-[13px] px-[12px]">
             {selectedCount === 0
               ? "Keine Teilnehmer ausgewählt."

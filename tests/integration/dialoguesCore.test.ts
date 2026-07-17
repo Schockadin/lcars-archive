@@ -9,6 +9,7 @@ import {
   deleteDialogue,
   DialogueClosedError,
   DialogueMessageForbiddenError,
+  DialogueSelfReplyError,
 } from "@/lib/dialoguesCore";
 import { insertUser, insertCharacter } from "./helpers";
 
@@ -86,33 +87,71 @@ describe("createDialogue", () => {
 });
 
 describe("postDialogueMessage", () => {
-  it("appends a message to an open dialogue", async () => {
-    const { ownChar, ownUser, entryId } = await setupDialogue();
+  it("appends a message from the other participant to an open dialogue", async () => {
+    // Die erste Nachricht (aus createDialogue) stammt von ownChar — die
+    // Selbst-Antwort-Regel verlangt hier zwingend einen anderen Charakter.
+    const { partnerChar, partnerUser, entryId } = await setupDialogue();
 
     const message = await postDialogueMessage({
       archiveEntryId: entryId,
-      characterId: ownChar.id,
-      authorUserId: ownUser.id,
+      characterId: partnerChar.id,
+      authorUserId: partnerUser.id,
       bodyMarkdown: "Zweite Nachricht",
     });
 
-    expect(message.characterSlug).toBe(ownChar.slug);
+    expect(message.characterSlug).toBe(partnerChar.slug);
     const rows = await sql`SELECT id FROM dialogue_messages WHERE archive_entry_id = ${entryId}`;
     expect(rows).toHaveLength(2);
   });
 
   it("refuses to post to a closed dialogue", async () => {
-    const { ownChar, ownUser, entryId } = await setupDialogue();
+    const { partnerChar, partnerUser, entryId } = await setupDialogue();
     await sql`UPDATE archive_entries SET dialogue_open = FALSE WHERE id = ${entryId}`;
+
+    await expect(
+      postDialogueMessage({
+        archiveEntryId: entryId,
+        characterId: partnerChar.id,
+        authorUserId: partnerUser.id,
+        bodyMarkdown: "Zu spät",
+      }),
+    ).rejects.toThrow(DialogueClosedError);
+  });
+
+  it("refuses a second message in a row from the same character (no self-reply)", async () => {
+    const { ownChar, ownUser, entryId } = await setupDialogue();
 
     await expect(
       postDialogueMessage({
         archiveEntryId: entryId,
         characterId: ownChar.id,
         authorUserId: ownUser.id,
-        bodyMarkdown: "Zu spät",
+        bodyMarkdown: "Ich rede mit mir selbst",
       }),
-    ).rejects.toThrow(DialogueClosedError);
+    ).rejects.toThrow(DialogueSelfReplyError);
+  });
+
+  it("allows a different character to reply after a self-reply attempt would have been blocked", async () => {
+    const { ownChar, ownUser, partnerChar, partnerUser, entryId } = await setupDialogue();
+
+    const message = await postDialogueMessage({
+      archiveEntryId: entryId,
+      characterId: partnerChar.id,
+      authorUserId: partnerUser.id,
+      bodyMarkdown: "Antwort",
+    });
+    expect(message.characterSlug).toBe(partnerChar.slug);
+
+    // Nach der Antwort des Partners darf ownChar wieder schreiben —
+    // die Sperre bezieht sich nur auf zwei aufeinanderfolgende Nachrichten
+    // desselben Charakters, nicht auf den Charakter generell.
+    const followUp = await postDialogueMessage({
+      archiveEntryId: entryId,
+      characterId: ownChar.id,
+      authorUserId: ownUser.id,
+      bodyMarkdown: "Wieder ownChar",
+    });
+    expect(followUp.characterSlug).toBe(ownChar.slug);
   });
 });
 
@@ -147,6 +186,27 @@ describe("editDialogueMessage", () => {
       }),
     ).rejects.toThrow(DialogueMessageForbiddenError);
   });
+
+  it("isModerator bypasses both the author check and the closed-dialogue check", async () => {
+    const { partnerUser, entryId } = await setupDialogue();
+    await sql`UPDATE archive_entries SET dialogue_open = FALSE WHERE id = ${entryId}`;
+    const [msg] = await sql<{ id: number }[]>`
+      SELECT id FROM dialogue_messages WHERE archive_entry_id = ${entryId}
+    `;
+
+    // partnerUser ist weder Autor der Nachricht noch (in diesem reinen
+    // Core-Test) irgendeine Rolle zugeordnet — isModerator umgeht beide
+    // Prüfungen unabhängig davon, wer die Rolle letztlich zuweist (das
+    // entscheidet actions/dialogues.ts, nicht dialoguesCore.ts).
+    const result = await editDialogueMessage({
+      messageId: msg.id,
+      authorUserId: partnerUser.id,
+      bodyMarkdown: "Moderiert",
+      isModerator: true,
+    });
+
+    expect(result.content).toContain("Moderiert");
+  });
 });
 
 describe("deleteDialogueMessage", () => {
@@ -175,6 +235,25 @@ describe("deleteDialogueMessage", () => {
     await expect(
       deleteDialogueMessage({ messageId: msg.id, authorUserId: ownUser.id }),
     ).resolves.toBeUndefined();
+  });
+
+  it("isModerator deletes someone else's message in a closed dialogue", async () => {
+    const { partnerUser, entryId } = await setupDialogue();
+    await sql`UPDATE archive_entries SET dialogue_open = FALSE WHERE id = ${entryId}`;
+    const [msg] = await sql<{ id: number }[]>`
+      SELECT id FROM dialogue_messages WHERE archive_entry_id = ${entryId}
+    `;
+
+    await deleteDialogueMessage({
+      messageId: msg.id,
+      authorUserId: partnerUser.id,
+      isModerator: true,
+    });
+
+    const [row] = await sql<{ deleted_at: string | null }[]>`
+      SELECT deleted_at FROM dialogue_messages WHERE id = ${msg.id}
+    `;
+    expect(row.deleted_at).not.toBeNull();
   });
 });
 

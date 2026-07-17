@@ -170,10 +170,14 @@ export default function TutorialPage() {
                 Ein <strong>Gespräch</strong> startest du mit deinem Charakter
                 und dem Charakter einer anderen Person; es beginnt{" "}
                 <strong>offen</strong> — nur ihr beide (oder Spielleitung/
-                Admin) könnt antworten. Sobald eine Seite es abschließt, wird es{" "}
+                Admin) könnt antworten. Wer mit mehreren eigenen Charakteren
+                teilnimmt, kann nicht zweimal hintereinander mit demselben
+                Charakter antworten — dazwischen muss der andere Charakter am
+                Zug gewesen sein. Sobald eine Seite es abschließt, wird es{" "}
                 <strong>unwiderruflich geschlossen</strong> und taucht danach
-                als gewöhnlicher Archiv-Eintrag in der Kategorie „Gespräche“
-                auf.
+                als gewöhnlicher, rein textueller Archiv-Eintrag (ohne die
+                farbige Nachrichten-Darstellung offener Gespräche) in der
+                Kategorie „Gespräche“ auf.
               </p>
             </div>
           </LcarsDataRow>
@@ -368,11 +372,6 @@ export default function TutorialPage() {
                   und die komplette Timeline aus den aktuellen Datenbank-
                   Inhalten neu erzeugen lassen.
                 </li>
-                <li>
-                  In jedem Gespräch als Moderation jede Nachricht bearbeiten
-                  oder löschen, auch fremde und auch in bereits abgeschlossenen
-                  Gesprächen.
-                </li>
               </ul>
               <p>
                 Administration hat zusätzlich einen eigenen Bereich, erreichbar
@@ -402,6 +401,13 @@ export default function TutorialPage() {
                   Markdown-Dateien im Vault-Frontmatter-Format hochladen und
                   nach Vorschau einzeln bestätigen, um daraus neue
                   Archiv-Einträge, Missionen oder Charaktere anzulegen.
+                </li>
+                <li>
+                  In jedem Gespräch als Moderation jede Nachricht bearbeiten
+                  oder löschen (auch fremde und auch in bereits
+                  abgeschlossenen Gesprächen) sowie dessen Besitzer:in ändern —
+                  beides ausschließlich der Administration vorbehalten, nicht
+                  der Spielleitung.
                 </li>
               </ul>
               <p>

@@ -8,12 +8,19 @@ import DialogueMessageActions from "./DialogueMessageActions";
 // der Position im Teilnehmer-Array abgeleitet (AUTHOR_COLORS, bereits für
 // Mission-Log-Autoren genutzt) statt separat gespeichert.
 //
+// Offene Dialoge zeigen die farbige Karte (Randleiste in --message-color)
+// wie bisher; abgeschlossene Dialoge (dialogueOpen === false, das sind alle
+// Aufrufe von archive/[slug]/ArchiveEntryBody.tsx) zeigen stattdessen nur
+// den reinen Text, ohne Farbcodierung — auf Wunsch, damit ein archiviertes
+// Gespräch wie ein normaler Lesetext wirkt statt wie ein aktiver Chat.
+//
 // currentUserId/dialogueOpen/entrySlug steuern, ob Bearbeiten/Löschen pro
 // Nachricht angezeigt wird — bei offenen Dialogen für den eigenen Autor,
-// unabhängig davon für Admins/GMs (Moderation): die dürfen jede Nachricht in
+// unabhängig davon für Admins (Moderation): die dürfen jede Nachricht in
 // jedem Dialog bearbeiten/löschen, auch fremde und auch nach Abschluss (die
 // Server Actions setzen das serverseitig durch, siehe editDialogueMessage/
-// deleteDialogueMessage in dialoguesCore.ts).
+// deleteDialogueMessage in dialoguesCore.ts). GM hat dieses Moderationsrecht
+// bewusst nicht (mehr) — anders als z.B. beim Abschließen eines Dialogs.
 export default function DialogueThread({
   messages,
   participants,
@@ -29,11 +36,39 @@ export default function DialogueThread({
   entrySlug?: string;
   viewerRole?: "admin" | "gm" | "player" | "viewer" | "guest" | null;
 }) {
-  const isModerator = viewerRole === "admin" || viewerRole === "gm";
+  const isModerator = viewerRole === "admin";
 
   return (
     <div className="flex flex-col gap-[10px]">
       {messages.map((msg) => {
+        const canModerate =
+          !msg.deletedAt &&
+          ((dialogueOpen && msg.authorUserId === currentUserId) || isModerator);
+        const editedBadge = msg.editedAt && !msg.deletedAt && (
+          <span className="dialogue-message-meta">bearbeitet</span>
+        );
+
+        if (!dialogueOpen) {
+          return (
+            <div key={msg.id} className="dialogue-message-plain">
+              <span className="dialogue-message-plain-author">
+                {msg.characterName ?? "Unbekannt"}
+                {editedBadge}
+              </span>
+              <span
+                className="dialogue-message-text mission-body lcars-text text-[18px]"
+                dangerouslySetInnerHTML={{ __html: msg.content }}
+              />
+              {entrySlug && canModerate && (
+                <DialogueMessageActions
+                  messageId={msg.id}
+                  entrySlug={entrySlug}
+                />
+              )}
+            </div>
+          );
+        }
+
         const colorIndex = participants.findIndex(
           (p) => p.slug === msg.characterSlug,
         );
@@ -49,23 +84,18 @@ export default function DialogueThread({
             <span className="dialogue-message-body">
               <span className="dialogue-message-author">
                 {msg.characterName ?? "Unbekannt"}
-                {msg.editedAt && !msg.deletedAt && (
-                  <span className="dialogue-message-meta">bearbeitet</span>
-                )}
+                {editedBadge}
               </span>
               <span
                 className="dialogue-message-text mission-body lcars-text text-[18px]"
                 dangerouslySetInnerHTML={{ __html: msg.content }}
               />
-              {entrySlug &&
-                !msg.deletedAt &&
-                ((dialogueOpen && msg.authorUserId === currentUserId) ||
-                  isModerator) && (
-                  <DialogueMessageActions
-                    messageId={msg.id}
-                    entrySlug={entrySlug}
-                  />
-                )}
+              {entrySlug && canModerate && (
+                <DialogueMessageActions
+                  messageId={msg.id}
+                  entrySlug={entrySlug}
+                />
+              )}
             </span>
           </div>
         );

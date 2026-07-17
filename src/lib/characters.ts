@@ -148,6 +148,7 @@ export interface CharacterParticipantOption {
   id: number;
   name: string;
   playerName: string;
+  status: Character["status"];
 }
 
 // Nur Charaktere MIT zugewiesenem Spieler für den Teilnehmer-Multiselect
@@ -155,12 +156,16 @@ export interface CharacterParticipantOption {
 // NPC ohne player_id kann nicht "teilnehmen" im Sinne dieses Features, da
 // die ganze Teilnehmer-Benachrichtigung (siehe missionAction,
 // missions/_shared/contentAction.ts) auf einen Spieler abzielt, der
-// informiert werden kann.
+// informiert werden kann. status wird mitgeliefert, damit die Auswahl
+// standardmäßig nicht mehr aktive Charaktere ausblenden kann (Filterung
+// passiert client-seitig in MissionParticipantsField.tsx, nicht hier — alle
+// Charaktere werden geladen, damit ein bereits ausgewählter, inzwischen
+// inaktiver Teilnehmer beim Bearbeiten nicht unbemerkt aus der Liste fällt).
 export async function getCharactersForParticipantPicker(): Promise<
   CharacterParticipantOption[]
 > {
   return sql<CharacterParticipantOption[]>`
-    SELECT c.id, c.name, u.name AS "playerName"
+    SELECT c.id, c.name, u.name AS "playerName", c.status
     FROM characters c
     JOIN users u ON u.id = c.player_id
     ORDER BY c.name ASC

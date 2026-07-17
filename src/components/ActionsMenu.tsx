@@ -77,18 +77,18 @@ export default function ActionsMenu({
   const visibilityContentType = VISIBILITY_CONTENT_TYPE[contentType];
 
   // Dialoge (category "dialogue") haben kein source_md (Inhalt lebt in
-  // dialogue_messages) und kein Einzel-Owner-Konzept (Autorenschaft liegt pro
-  // Nachricht bei dialogue_messages.author_user_id, siehe setArchiveEntryOwner/
-  // getArchiveEntrySourceBySlug in src/lib/archive.ts, beide schließen
-  // category = 'dialogue' bewusst aus) — Owner-Zuweisung, Autolinking und
-  // Wikilinks-Entfernen liefen hier bisher ins Leere ("Eintrag nicht
-  // gefunden"), weil ActionsMenu das nicht wusste. Analog zu hideEdit oben.
+  // dialogue_messages) — Autolinking und Wikilinks-Entfernen liefen hier
+  // bisher ins Leere ("Eintrag nicht gefunden"), siehe
+  // getArchiveEntrySourceBySlug in src/lib/archive.ts. Owner-Zuweisung
+  // funktioniert für Dialoge dagegen bewusst (Owner = wer den Dialog
+  // gestartet hat, admin-only wie bei jedem anderen Inhaltstyp — der Server
+  // setOwnerAction lehnt GM ohnehin schon ab, siehe src/app/actions/owner.ts).
   const isDialogue =
     contentType === "archiveEntry" && "category" in content && content.category === "dialogue";
 
   return (
     <div className="flex flex-col items-start justify-center gap-[8px]">
-      {(viewer?.role === "admin" || viewer?.role === "gm") && !isDialogue && (
+      {(viewer?.role === "admin" || viewer?.role === "gm") && (
         <OwnerSelect
           contentType={OWNER_CONTENT_TYPE[contentType]}
           id={content.id}

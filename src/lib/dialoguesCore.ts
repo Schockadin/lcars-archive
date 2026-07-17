@@ -12,6 +12,9 @@ export class DialogueSlugCollisionError extends Error {}
 export class DialogueClosedError extends Error {}
 export class DialogueMessageNotFoundError extends Error {}
 export class DialogueMessageForbiddenError extends Error {}
+// Verhindert Selbstgespräche: die nächste Nachricht in einem Dialog darf
+// nicht vom selben Charakter kommen wie die letzte (siehe postDialogueMessage).
+export class DialogueSelfReplyError extends Error {}
 
 // Statischer Platzhalter für gelöschte Nachrichten — kein markdownToSafeHtml
 // nötig (kein User-Input), und der eigentliche Inhalt verlässt so nie die
@@ -278,6 +281,22 @@ export async function postDialogueMessage(
     `;
     if (!entry?.dialogue_open) {
       throw new DialogueClosedError("Dieses Gespräch ist abgeschlossen.");
+    }
+
+    // Verhindert Selbstgespräche: wer mit mehreren eigenen Charakteren
+    // teilnimmt, darf nicht mit demselben Charakter zweimal hintereinander
+    // antworten — die nächste Nachricht muss von einem anderen Charakter
+    // kommen. Nur die letzte NICHT gelöschte Nachricht zählt.
+    const [lastMessage] = await tx<{ character_id: number | null }[]>`
+      SELECT character_id FROM dialogue_messages
+      WHERE archive_entry_id = ${input.archiveEntryId} AND deleted_at IS NULL
+      ORDER BY created_at DESC, id DESC
+      LIMIT 1
+    `;
+    if (lastMessage && lastMessage.character_id === input.characterId) {
+      throw new DialogueSelfReplyError(
+        "Warte, bis jemand anderes geantwortet hat, bevor du erneut schreibst.",
+      );
     }
 
     const [row] = await tx<

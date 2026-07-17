@@ -347,10 +347,10 @@ export async function setArchiveEntryVisibilityAdmin(
 }
 
 // Admin-Owner-Verwaltung (src/app/actions/owner.ts): anders als
-// setArchiveEntryVisibility oben NICHT auf den aktuellen Owner gescoped
-// (nur admin darf das, geprüft in der Server Action) — category='dialogue'
-// bleibt trotzdem ausgeschlossen, Dialoge haben ihr eigenes
-// Owner-/Teilnehmer-Modell.
+// setArchiveEntryVisibility oben NICHT auf den aktuellen Owner gescoped (nur
+// admin darf das, geprüft in der Server Action). Gilt auch für Dialoge (owner
+// = wer den Dialog gestartet hat, siehe createDialogue) — reines
+// owner_user_id-Update, berührt metadata.participants nicht.
 export async function setArchiveEntryOwner(
   archiveEntryId: number,
   ownerId: number | null,
@@ -358,7 +358,7 @@ export async function setArchiveEntryOwner(
   const rows = await sql<{ slug: string }[]>`
     UPDATE archive_entries
     SET owner_user_id = ${ownerId}, updated_at = NOW()
-    WHERE id = ${archiveEntryId} AND category != 'dialogue'
+    WHERE id = ${archiveEntryId}
     RETURNING slug
   `;
   return rows[0] ?? null;
