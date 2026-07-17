@@ -3,6 +3,7 @@ import {
   BACKUP_RETENTION_DAYS,
   computeBackupCutoff,
   isStaleBackupKey,
+  buildManualDbBackupKey,
 } from "./backupRetention";
 
 describe("computeBackupCutoff", () => {
@@ -55,5 +56,28 @@ describe("isStaleBackupKey", () => {
     expect(isStaleBackupKey("some-other-prefix/2026-01-01.json", cutoff)).toBe(
       false,
     );
+  });
+});
+
+describe("buildManualDbBackupKey", () => {
+  it("builds a manual-prefixed, timestamp-based key under db-backups/", () => {
+    const now = new Date("2026-07-17T14:32:05.123Z");
+    expect(buildManualDbBackupKey(now)).toBe(
+      "db-backups/manual-2026-07-17T14-32-05-123Z.json",
+    );
+  });
+
+  it("never matches BACKUP_KEY_PATTERN, so cleanup never treats it as stale", () => {
+    const now = new Date("2020-01-01T00:00:00.000Z");
+    const cutoffFarInTheFuture = new Date("2999-01-01T00:00:00.000Z");
+    expect(isStaleBackupKey(buildManualDbBackupKey(now), cutoffFarInTheFuture)).toBe(
+      false,
+    );
+  });
+
+  it("produces distinct keys for two calls a second apart (no same-day collision)", () => {
+    const first = buildManualDbBackupKey(new Date("2026-07-17T14:32:05.000Z"));
+    const second = buildManualDbBackupKey(new Date("2026-07-17T14:32:06.000Z"));
+    expect(first).not.toBe(second);
   });
 });

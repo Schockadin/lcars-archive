@@ -36,6 +36,7 @@
     "db:backup:cleanup": "tsx --conditions=react-server scripts/cleanup-db-backups.ts"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1085.0",
     "@codemirror/lang-markdown": "^6.5.0",
     "@codemirror/lang-sql": "^6.10.0",
     "@codemirror/language": "^6.12.4",
@@ -65,7 +66,6 @@
     "web-push": "^3.6.7"
   },
   "devDependencies": {
-    "@aws-sdk/client-s3": "^3.1085.0",
     "@netlify/plugin-nextjs": "^5.15.11",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/postcss": "^4",

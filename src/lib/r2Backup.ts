@@ -1,0 +1,116 @@
+// Cloudflare-R2-Zugriff (S3-kompatible API) für DB-Backups — gemeinsame
+// Quelle sowohl für den täglichen Cronjob (scripts/backup-db.ts/
+// cleanup-db-backups.ts, re-exportiert über scripts/r2Client.ts, läuft per
+// tsx außerhalb von Next, siehe dortiger --conditions=react-server-Kommentar)
+// als auch für den manuellen Export/Import im Adminpanel (dbBackupActions.ts,
+// läuft als Next.js Server Action). "auto" statt einer echten AWS-Region und
+// der Account-spezifische S3-Endpoint, siehe Cloudflare-R2-Doku.
+import "server-only";
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+} from "@aws-sdk/client-s3";
+import { BACKUP_PREFIX, buildManualDbBackupKey } from "@/lib/backupRetention";
+
+export { buildManualDbBackupKey };
+
+export function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) {
+    throw new Error(`${name} ist nicht gesetzt`);
+  }
+  return value;
+}
+
+export function createR2Client(): { client: S3Client; bucket: string } {
+  const accountId = requireEnv("R2_ACCOUNT_ID");
+  const accessKeyId = requireEnv("R2_ACCESS_KEY_ID");
+  const secretAccessKey = requireEnv("R2_SECRET_ACCESS_KEY");
+  const bucket = requireEnv("R2_BUCKET_NAME");
+
+  const client = new S3Client({
+    region: "auto",
+    endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+    credentials: { accessKeyId, secretAccessKey },
+  });
+
+  return { client, bucket };
+}
+
+// Lädt einen fertigen DB-Backup-JSON-Export nach R2 hoch — der Aufrufer baut
+// den Key selbst (Cronjob: db-backups/JJJJ-MM-TT.json, siehe backup-db.ts;
+// manueller Export: buildManualDbBackupKey, siehe src/lib/backupRetention.ts),
+// diese Funktion kennt nur den Upload-Mechanismus.
+export async function uploadDbBackupToR2(key: string, json: string): Promise<void> {
+  const { client, bucket } = createR2Client();
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: json,
+      ContentType: "application/json",
+    }),
+  );
+}
+
+export interface R2BackupObject {
+  key: string;
+  sizeBytes: number;
+  lastModified: string | null;
+}
+
+// Listet alle DB-Backup-Objekte im Bucket (tägliche Cronjob-Backups UND
+// manuelle), neueste zuerst — Grundlage für "Aus R2-Bucket importieren" im
+// Adminpanel.
+export async function listDbBackupsInR2(): Promise<R2BackupObject[]> {
+  const { client, bucket } = createR2Client();
+
+  const objects: R2BackupObject[] = [];
+  let continuationToken: string | undefined;
+  do {
+    const page = await client.send(
+      new ListObjectsV2Command({
+        Bucket: bucket,
+        Prefix: BACKUP_PREFIX,
+        ContinuationToken: continuationToken,
+      }),
+    );
+    for (const obj of page.Contents ?? []) {
+      if (obj.Key) {
+        objects.push({
+          key: obj.Key,
+          sizeBytes: obj.Size ?? 0,
+          lastModified: obj.LastModified?.toISOString() ?? null,
+        });
+      }
+    }
+    continuationToken = page.IsTruncated ? page.NextContinuationToken : undefined;
+  } while (continuationToken);
+
+  return objects.sort((a, b) => b.key.localeCompare(a.key));
+}
+
+// Der Backup-Key kommt beim Import client->server als String (Auswahl aus
+// listDbBackupsInR2, siehe importDbBackupFromR2Action) — defensiv gegen
+// einen manipulierten Wert geprüft, damit sich darüber nicht auf beliebige
+// Bucket-Objekte außerhalb von db-backups/ zugreifen lässt.
+export class InvalidBackupKeyError extends Error {}
+
+// Lädt genau ein Backup-Objekt aus R2 und gibt seinen Inhalt als Text
+// zurück (JSON, noch ungeparst — Parsing/Validieren bleibt bei
+// importDatabaseBackup in dbBackup.ts, gleiches Prinzip wie beim lokalen
+// Datei-Import).
+export async function downloadDbBackupFromR2(key: string): Promise<string> {
+  if (!key.startsWith(BACKUP_PREFIX) || key.includes("..")) {
+    throw new InvalidBackupKeyError(`Ungültiger Backup-Key: "${key}"`);
+  }
+  const { client, bucket } = createR2Client();
+  const result = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+  const body = await result.Body?.transformToString();
+  if (body == null) {
+    throw new Error(`Backup "${key}" konnte nicht gelesen werden (leerer Inhalt).`);
+  }
+  return body;
+}

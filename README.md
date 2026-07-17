@@ -363,11 +363,15 @@ Das Projekt ist für **Netlify** vorkonfiguriert (`@netlify/plugin-nextjs`).
 `.github/workflows/daily-db-backup.yml` läuft täglich um 03:00 UTC (plus
 manuell auslösbar über "Run workflow") und lädt einen vollständigen
 DB-Export (`scripts/backup-db.ts`, dieselbe Export-Logik wie der
-"DB-Backup herunterladen"-Button im Adminpanel unter `/admin/db`) nach
-Cloudflare R2 hoch. Im selben Lauf löscht anschließend
-`scripts/cleanup-db-backups.ts` (`npm run db:backup:cleanup`) alle Backups,
-die älter als 30 Tage sind — das Alter wird aus dem Datei-Key selbst
-gelesen (`db-backups/JJJJ-MM-TT.json`), nicht aus S3s `LastModified`.
+DB-Backup-Bereich im Adminpanel unter `/admin/db`) nach Cloudflare R2 hoch.
+Im selben Lauf löscht anschließend `scripts/cleanup-db-backups.ts`
+(`npm run db:backup:cleanup`) alle Backups, die älter als 30 Tage sind —
+das Alter wird aus dem Datei-Key selbst gelesen (`db-backups/JJJJ-MM-TT.json`),
+nicht aus S3s `LastModified`. Manuell im Adminpanel nach R2 gespeicherte
+Backups bekommen einen davon unterscheidbaren Key
+(`db-backups/manual-<Zeitstempel>.json`, siehe `buildManualDbBackupKey` in
+`src/lib/r2Backup.ts`) und fallen deshalb bewusst NICHT unter dieses
+automatische Aufräumen — sie bleiben bis zur manuellen Löschung erhalten.
 Dafür müssen folgende Repository-Secrets gesetzt sein (GitHub → Settings →
 Secrets and variables → Actions → "New repository secret"):
 
@@ -377,6 +381,15 @@ Secrets and variables → Actions → "New repository secret"):
 | `R2_ACCOUNT_ID` | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens"). |
 | `R2_BUCKET_NAME` | Name des Ziel-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). |
+
+**Wichtig für das manuelle R2-Backup im Adminpanel** (`/admin/db` — "Im
+R2-Bucket speichern" / "Aus R2-Bucket importieren"): dieselben vier
+`R2_*`-Variablen müssen **zusätzlich** im Netlify-Dashboard als
+Environment-Variablen hinterlegt werden. Die GitHub-Secrets oben gelten nur
+für den Cronjob (GitHub Actions) — die deployte Next.js-App auf Netlify
+liest sie separat aus ihrer eigenen Umgebung. Ohne diese Netlify-Variablen
+zeigen die R2-Buttons im Adminpanel einen Fehler ("... ist nicht gesetzt"),
+der lokale Download/Upload-Weg funktioniert davon unabhängig immer.
 
 ### Dev-/Preview-Umgebung
 
