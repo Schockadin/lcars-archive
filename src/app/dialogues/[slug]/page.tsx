@@ -13,13 +13,7 @@ import { getCharactersForParticipantPicker } from "@/lib/characters";
 import { canReplyToDialogue } from "@/lib/dialogueLock";
 import PageMeta from "@/components/PageMeta";
 import DialogueHeader from "@/components/DialogueHeader";
-import DialogueThread from "@/components/DialogueThread";
-import DialogueReplyForm from "@/components/DialogueReplyForm";
-import DialogueLockPanel from "@/components/DialogueLockPanel";
-import InviteDialogueParticipantForm from "@/components/InviteDialogueParticipantForm";
-import CompleteDialogueButton from "@/components/CompleteDialogueButton";
-import DeleteDialogueButton from "@/components/DeleteDialogueButton";
-import FollowButtons from "@/components/FollowButtons";
+import DialogueLiveView from "@/components/DialogueLiveView";
 
 export const dynamic = "force-dynamic";
 
@@ -95,51 +89,19 @@ export default async function DialoguePlayPage({ params }: Props) {
         logDate={entry.logDate}
       />
 
-      {messages.length > 0 ? (
-        <DialogueThread
-          messages={messages}
-          participants={entry.participants}
-          currentUserId={session.userId}
-          dialogueOpen={entry.open}
-          entrySlug={entry.slug}
-          viewerRole={viewer?.role ?? null}
-        />
-      ) : (
-        <p className="lcars-empty-state">Noch keine Nachrichten.</p>
-      )}
-
-      <div className="flex flex-col gap-[12px]">
-        {participant && (
-          <FollowButtons
-            targetType="archive_entry"
-            targetSlug={entry.slug}
-            subscribeOnly
-          />
-        )}
-        {participant && (
-          <DialogueReplyForm entrySlug={entry.slug} canReplyNow={canReplyNow} />
-        )}
-        {participant && multiParty && !canReplyNow && (
-          <DialogueLockPanel
-            entrySlug={entry.slug}
-            lockStatus={lockStatus}
-            currentUserId={session.userId}
-            alreadyRequestedNotify={alreadyRequestedNotify}
-          />
-        )}
-        {isOwner && (
-          <InviteDialogueParticipantForm
-            entrySlug={entry.slug}
-            candidates={inviteCandidates}
-          />
-        )}
-        <div className="flex items-center gap-[8px]">
-          <CompleteDialogueButton entrySlug={entry.slug} />
-          {viewer?.role === "admin" && (
-            <DeleteDialogueButton entrySlug={entry.slug} />
-          )}
-        </div>
-      </div>
+      <DialogueLiveView
+        entrySlug={entry.slug}
+        participants={entry.participants}
+        currentUserId={session.userId}
+        viewerRole={viewer?.role ?? null}
+        isParticipant={!!participant}
+        isOwner={isOwner}
+        inviteCandidates={inviteCandidates}
+        initialMessages={messages}
+        initialLockStatus={lockStatus}
+        initialCanReplyNow={canReplyNow}
+        alreadyRequestedNotify={alreadyRequestedNotify}
+      />
     </article>
   );
 }

@@ -181,7 +181,10 @@ export default function TutorialPage() {
                 jemand anderes reserviert hat, seht ihr, wer gerade dran ist
                 und könnt euch optional per Mail/Push benachrichtigen lassen,
                 sobald die Sperre wieder endet (oder wenn die reservierende
-                Person selbst antwortet, endet sie vorzeitig). Sobald eine
+                Person selbst antwortet, endet sie vorzeitig). Ein offenes
+                Gespräch aktualisiert sich dabei automatisch — neue
+                Nachrichten und Änderungen am Antwortrecht erscheinen von
+                selbst, ohne dass du die Seite neu laden musst. Sobald eine
                 teilnehmende Person es abschließt, wird es{" "}
                 <strong>unwiderruflich geschlossen</strong> und taucht danach
                 als gewöhnlicher Archiv-Eintrag in der Kategorie „Gespräche“

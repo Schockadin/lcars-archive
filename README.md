@@ -32,6 +32,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Info-Mail); haben mehr als zwei Teilnehmende, muss man sich das Antwortrecht
   erst per Button für zwei Stunden reservieren, mit Sperr-Anzeige und
   optionaler Mail/Push-Benachrichtigung, sobald die Sperre wieder endet.
+  Offene Gespräche aktualisieren sich dabei automatisch per Polling (alle
+  8 Sekunden, pausiert bei nicht sichtbarem Tab) — neue Nachrichten und
+  Sperr-Status-Änderungen erscheinen ohne manuelles Neuladen der Seite.
 - **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und
   automatische bzw. manuelle Verlinkung (`[[Wikilinks]]`) zwischen Inhalten.
 - **PWA mit Push-Benachrichtigungen** — installierbar auf Mobilgeräten (inkl. maskable

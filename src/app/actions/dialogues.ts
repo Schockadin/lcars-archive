@@ -16,6 +16,8 @@ import {
   getCharacterSubscribers,
   getDialogueParticipantPlayers,
   getDialogueMessageForEdit,
+  getDialogueMessages,
+  getDialogueLockStatus,
   postDialogueMessage,
   editDialogueMessage,
   deleteDialogueMessage,
@@ -26,7 +28,10 @@ import {
   requestDialogueReservationNotification,
   type DialogueEmailTarget,
   type ReleasedReservationInfo,
+  type DialogueMessage,
+  type DialogueLockStatus,
 } from "@/lib/dialogues";
+import { canReplyToDialogue } from "@/lib/dialogueLock";
 import {
   sendDialogueMessageEmail,
   sendCharacterDialogueClosedEmail,
@@ -282,6 +287,58 @@ export async function getDialogueMessageSourceAction(
   }
 
   return { sourceMd: row.sourceMd };
+}
+
+export interface DialogueSnapshot {
+  open: boolean;
+  messages: DialogueMessage[];
+  lockStatus: DialogueLockStatus | null;
+  canReplyNow: boolean;
+}
+
+const CLOSED_SNAPSHOT: DialogueSnapshot = {
+  open: false,
+  messages: [],
+  lockStatus: null,
+  canReplyNow: false,
+};
+
+// Grundlage für das Polling in DialogueLiveView.tsx (Live-Aktualisierung
+// offener Dialoge ohne manuelles Neuladen, siehe dortiger Kommentar) — ein
+// kompletter Snapshot statt Delta, damit Bearbeitungen/Soft-Deletes an
+// bestehenden Nachrichten automatisch mit abgedeckt sind. Bewusst OHNE
+// alreadyRequestedNotify (ändert sich selten, würde jeden Poll unnötig
+// verteuern — bleibt ein reiner SSR-Initialwert in DialogueLockPanel).
+// open: false deckt sowohl "Dialog während des Betrachtens gelöscht" als
+// auch "kein Teilnehmer (mehr)" ab — DialogueLiveView stoppt das Polling in
+// beiden Fällen und zeigt einen Hinweis.
+export async function getDialogueSnapshotAction(
+  entrySlug: string,
+): Promise<DialogueSnapshot> {
+  const session = await getSession();
+  if (!session) return CLOSED_SNAPSHOT;
+
+  const entry = await getDialogueForPlay(entrySlug);
+  if (!entry || !entry.open) return CLOSED_SNAPSHOT;
+
+  const participant = await getDialogueParticipant(entry.id, session.userId);
+  const viewer = await getUserById(session.userId);
+  if (!participant && viewer?.role !== "gm" && viewer?.role !== "admin") {
+    return CLOSED_SNAPSHOT;
+  }
+
+  const multiParty = entry.participants.length > 2;
+  const [messages, lockStatus] = await Promise.all([
+    getDialogueMessages(entry.id),
+    multiParty ? getDialogueLockStatus(entry.id) : Promise.resolve(null),
+  ]);
+  const canReplyNow = canReplyToDialogue(
+    entry.participants.length,
+    lockStatus,
+    session.userId,
+  );
+
+  return { open: true, messages, lockStatus, canReplyNow };
 }
 
 export interface CompleteDialogueState {
