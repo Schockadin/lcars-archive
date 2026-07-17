@@ -9,6 +9,7 @@ import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
 import { ContentToolType } from "@/app/actions/contentTools";
 import { PencilIcon } from "@/lib/icons";
 import FollowButtons from "./FollowButtons";
+import ShareMenu from "./ShareMenu";
 import { MissionDetail, MissionLogDetail } from "@/types/missions";
 import { ArchiveEntryDetail } from "@/types/archive";
 import { FollowTargetType } from "@/lib/follows";
@@ -86,6 +87,10 @@ export default function ActionsMenu({
   const isDialogue =
     contentType === "archiveEntry" && "category" in content && content.category === "dialogue";
 
+  // Für den WhatsApp-Teilen-Text im ShareMenu (siehe FollowButtons.tsx) —
+  // Character hat "name" statt "title" wie die übrigen drei Inhaltstypen.
+  const contentTitle = "title" in content ? content.title : content.name;
+
   return (
     <div className="flex flex-col items-start justify-center gap-[8px]">
       {(viewer?.role === "admin" || viewer?.role === "gm") && (
@@ -114,7 +119,21 @@ export default function ActionsMenu({
           </div>
         )}
         {viewer?.role && followType && (
-          <FollowButtons targetType={followType} targetSlug={content.slug} />
+          <FollowButtons
+            targetType={followType}
+            targetSlug={content.slug}
+            title={contentTitle}
+          />
+        )}
+        {/* Missionslogs sind nicht followbar (kein FollowTargetType dafür,
+            siehe lib/follows.ts), bekommen aber trotzdem Teilen/Export —
+            eigenständiges ShareMenu statt über FollowButtons. */}
+        {viewer?.role && contentType === "missionLog" && (
+          <ShareMenu
+            title={contentTitle}
+            exportType="mission_log"
+            exportSlug={content.slug}
+          />
         )}
         {/* "character" ist hier wie "missionLog" ausgeschlossen: der
             Bio-Editor ist bewusst reines Owner-Feature ohne Admin-Konzept

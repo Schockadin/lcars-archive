@@ -168,10 +168,12 @@ export default function TutorialPage() {
               </p>
               <p>
                 Ein <strong>Gespräch</strong> startest du mit deinem Charakter
-                und dem Charakter einer anderen Person; es beginnt{" "}
+                und dem Charakter einer oder mehrerer anderer Personen
+                (Mehrfachauswahl); es beginnt{" "}
                 <strong>offen</strong> — nur Teilnehmende können antworten.
-                Der Owner (wer das Gespräch begonnen hat) kann jederzeit
-                weitere Personen direkt hinzufügen (samt Info-Mail an sie).
+                Der Owner (wer das Gespräch begonnen hat) kann auch danach
+                jederzeit weitere Personen direkt hinzufügen (samt Info-Mail
+                an sie).
                 Wer mit mehreren eigenen Charakteren teilnimmt, kann nicht
                 zweimal hintereinander mit demselben Charakter antworten —
                 dazwischen muss ein anderer Charakter am Zug gewesen sein.
@@ -212,6 +214,12 @@ export default function TutorialPage() {
                 bekommst eine Nachricht, sobald der Charakter, die Mission oder
                 der Archiv-Eintrag bearbeitet wird (z.B. wenn ein abonniertes
                 Gespräch abgeschlossen wird).
+              </p>
+              <p>
+                Daneben findest du auf denselben Seiten (zusätzlich auch bei
+                Missionslogs und Gesprächen) einen <strong>„Teilen“</strong>-
+                Knopf: Link kopieren, per WhatsApp teilen, oder den Inhalt als
+                Markdown-Datei (mit Frontmatter) bzw. als PDF herunterladen.
               </p>
               <p>
                 Eingeloggt zeigt dir die <strong>Startseite</strong> dein

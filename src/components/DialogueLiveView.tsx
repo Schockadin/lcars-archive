@@ -31,6 +31,7 @@ const POLL_INTERVAL_MS = 8000;
 // in DialogueReplyForm bleibt gemountet).
 export default function DialogueLiveView({
   entrySlug,
+  title,
   participants,
   currentUserId,
   viewerRole,
@@ -43,6 +44,7 @@ export default function DialogueLiveView({
   alreadyRequestedNotify,
 }: {
   entrySlug: string;
+  title: string;
   participants: ArchiveParticipant[];
   currentUserId: number;
   viewerRole: "admin" | "gm" | "player" | "viewer" | "guest" | null;
@@ -124,6 +126,7 @@ export default function DialogueLiveView({
           <FollowButtons
             targetType="archive_entry"
             targetSlug={entrySlug}
+            title={title}
             subscribeOnly
           />
         )}

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   getFollowState,
   toggleBookmark,
@@ -7,24 +7,32 @@ import {
   type FollowState,
 } from "@/app/actions/follows";
 import type { FollowTargetType } from "@/lib/follows";
-import {
-  SubscribeIcon,
-  UnsubscribeIcon,
-  BookmarkIcon,
-  UnbookmarkIcon,
-  ShareIcon,
-} from "@/lib/icons";
+import type { ExportContentType } from "@/lib/contentExport";
+import { SubscribeIcon, UnsubscribeIcon, BookmarkIcon, UnbookmarkIcon } from "@/lib/icons";
+import ShareMenu from "./ShareMenu";
+
+// FollowTargetType kennt zusätzlich "user" (Follow-System, siehe
+// lib/follows.ts) — User-Profile bekommen aber bewusst keine Export-Optionen
+// (Kontodaten sind kein Kampagnen-Inhalt, siehe ShareMenu-Aufrufstelle
+// dort mit showShare={false}); der Typ hier ist deshalb enger als
+// FollowTargetType.
+const EXPORT_TYPE_BY_TARGET: Partial<Record<FollowTargetType, ExportContentType>> = {
+  archive_entry: "archive_entry",
+  mission: "mission",
+  character: "character",
+};
 
 // Bookmark/Abo brauchen eine Session (Rendern erst nach dem Client-Fetch,
 // dauerhaft nichts für anonyme Besucher) — Teilen dagegen funktioniert immer
 // und wird deshalb unabhängig vom Login-Status gerendert, siehe
-// ShareMenu unten.
+// ShareMenu.tsx.
 export default function FollowButtons({
   targetType,
   targetSlug,
   subscribeOnly = false,
   showShare = true,
   initialState,
+  title = "",
 }: {
   targetType: FollowTargetType;
   targetSlug: string;
@@ -35,6 +43,9 @@ export default function FollowButtons({
   // statt eines Fetches pro FollowButtons-Instanz, siehe getFollowStatuses
   // in lib/follows.ts).
   initialState?: FollowState;
+  // Für den WhatsApp-Teilen-Text im ShareMenu — ohne Angabe wird nur die URL
+  // geteilt (kein Fehler, nur ein weniger sprechender Text).
+  title?: string;
 }) {
   const [state, setState] = useState<FollowState | null>(initialState ?? null);
   const [pending, setPending] = useState<"bookmark" | "subscribe" | null>(null);
@@ -106,67 +117,12 @@ export default function FollowButtons({
           {state.subscribed ? <UnsubscribeIcon /> : <SubscribeIcon />}
         </button>
       )}
-      {showShare && <ShareMenu />}
-    </div>
-  );
-}
-
-// Eigene Teilen-Schaltfläche mit Dropdown — aktuell nur "Link kopieren",
-// aber als Menü statt Einzel-Button angelegt, damit weitere Optionen (z.B.
-// native Web-Share-API auf unterstützten Geräten) später ohne Umbau
-// dazukommen können.
-function ShareMenu() {
-  const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    function handleClickOutside(e: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [open]);
-
-  async function handleCopyLink() {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setOpen(false);
-    setTimeout(() => setCopied(false), 2000);
-  }
-
-  return (
-    <div className="follow-share-wrapper" ref={wrapperRef}>
-      <button
-        type="button"
-        className="lcars-icon-btn size-[40px]"
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Teilen"
-        title="Teilen"
-        aria-haspopup="menu"
-        aria-expanded={open}
-      >
-        <ShareIcon />
-      </button>
-      {open && (
-        <div className="follow-share-menu" role="menu">
-          <button
-            type="button"
-            role="menuitem"
-            className="follow-share-menu-item"
-            onClick={handleCopyLink}
-          >
-            Link kopieren
-          </button>
-        </div>
-      )}
-      {copied && (
-        <div className="follow-share-toast" role="status">
-          Link kopiert!
-        </div>
+      {showShare && (
+        <ShareMenu
+          title={title}
+          exportType={EXPORT_TYPE_BY_TARGET[targetType]}
+          exportSlug={targetSlug}
+        />
       )}
     </div>
   );

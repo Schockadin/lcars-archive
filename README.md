@@ -27,14 +27,22 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Eigene Inhalte** — eingeloggte User legen eigene Charaktere, Einsatzberichte,
   Archiv-Einträge und Gespräche zwischen Charakteren an, mit Sichtbarkeitsstufen
   (privat/GM/öffentlich) und einem persönlichen Dashboard (farbcodierter News-Feed,
-  offene Gespräche, Lesezeichen/Abos). Gespräche können jederzeit um weitere
-  Teilnehmende erweitert werden (Direkt-Hinzufügen durch den Owner samt
-  Info-Mail); haben mehr als zwei Teilnehmende, muss man sich das Antwortrecht
+  offene Gespräche, Lesezeichen/Abos). Gespräche können bereits bei der
+  Erstellung mehr als einen Gesprächspartner haben (Mehrfachauswahl) und
+  jederzeit auch danach um weitere Teilnehmende erweitert werden
+  (Direkt-Hinzufügen durch den Owner samt Info-Mail); haben mehr als zwei
+  Teilnehmende, muss man sich das Antwortrecht
   erst per Button für zwei Stunden reservieren, mit Sperr-Anzeige und
   optionaler Mail/Push-Benachrichtigung, sobald die Sperre wieder endet.
   Offene Gespräche aktualisieren sich dabei automatisch per Polling (alle
   8 Sekunden, pausiert bei nicht sichtbarem Tab) — neue Nachrichten und
   Sperr-Status-Änderungen erscheinen ohne manuelles Neuladen der Seite.
+- **Teilen & Export** — der „Teilen“-Knopf auf Charakter-, Missions-,
+  Missionslog-, Archiv-Eintrag- und Gesprächsseiten bietet neben Link
+  kopieren/WhatsApp auch den Download des Inhalts als Markdown-Datei (mit
+  YAML-Frontmatter) oder als PDF (serverseitig erzeugt, ohne Chromium/
+  Puppeteer — läuft dadurch auf Netlify Functions). Berücksichtigt dieselbe
+  Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst.
 - **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und
   automatische bzw. manuelle Verlinkung (`[[Wikilinks]]`) zwischen Inhalten.
 - **PWA mit Push-Benachrichtigungen** — installierbar auf Mobilgeräten (inkl. maskable
