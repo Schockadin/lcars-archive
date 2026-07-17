@@ -10,6 +10,7 @@ import { LinkIcon } from "@/lib/icons";
 import { usePreviewConfirmAction } from "@/hooks/usePreviewConfirmAction";
 import { groupByCount } from "@/lib/groupByCount";
 import PreviewConfirmFooter from "./PreviewConfirmFooter";
+import ContentToolPreviewOverlay from "./ContentToolPreviewOverlay";
 
 const TYPE_LABEL: Record<
   AutolinkPreviewResult["matches"][number]["type"],
@@ -62,7 +63,10 @@ export default function AutolinkButton({
 
   if (preview) {
     return (
-      <div className="autolink-preview">
+      <ContentToolPreviewOverlay
+        title="Verlinkung hinzufügen — Vorschau"
+        onClose={handleCancel}
+      >
         <p className="lcars-eyebrow">
           {preview.matches.length === 0
             ? "Keine neuen Verknüpfungen gefunden."
@@ -84,8 +88,6 @@ export default function AutolinkButton({
           onConfirm={handleConfirm}
           pending={pending}
           canConfirm={distinctMatches.length > 0}
-          className="flex gap-[12px] items-center justify-start self-end"
-          buttonClassName="lcars-pill-btn--outline w-[40%]"
         />
 
         {error && (
@@ -93,7 +95,7 @@ export default function AutolinkButton({
             {error}
           </p>
         )}
-      </div>
+      </ContentToolPreviewOverlay>
     );
   }
 

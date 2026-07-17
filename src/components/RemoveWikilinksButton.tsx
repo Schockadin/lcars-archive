@@ -9,6 +9,7 @@ import { UnlinkIcon } from "@/lib/icons";
 import { usePreviewConfirmAction } from "@/hooks/usePreviewConfirmAction";
 import { groupByCount } from "@/lib/groupByCount";
 import PreviewConfirmFooter from "./PreviewConfirmFooter";
+import ContentToolPreviewOverlay from "./ContentToolPreviewOverlay";
 
 // Admin-only Action auf den vier Inhalts-Detailseiten (Mission, Log,
 // Archiv-Eintrag, Charakter): entfernt alle [[Ziel]]/[[Ziel|Text]]-
@@ -51,7 +52,10 @@ export default function RemoveWikilinksButton({
 
   if (preview) {
     return (
-      <div className="autolink-preview">
+      <ContentToolPreviewOverlay
+        title="Verlinkung entfernen — Vorschau"
+        onClose={handleCancel}
+      >
         <p className="lcars-eyebrow">
           {preview.removed.length === 0
             ? "Keine Wikilinks gefunden."
@@ -87,7 +91,7 @@ export default function RemoveWikilinksButton({
             {error}
           </p>
         )}
-      </div>
+      </ContentToolPreviewOverlay>
     );
   }
 

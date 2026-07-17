@@ -76,9 +76,19 @@ export default function ActionsMenu({
 }: ActionMenuProps) {
   const visibilityContentType = VISIBILITY_CONTENT_TYPE[contentType];
 
+  // Dialoge (category "dialogue") haben kein source_md (Inhalt lebt in
+  // dialogue_messages) und kein Einzel-Owner-Konzept (Autorenschaft liegt pro
+  // Nachricht bei dialogue_messages.author_user_id, siehe setArchiveEntryOwner/
+  // getArchiveEntrySourceBySlug in src/lib/archive.ts, beide schließen
+  // category = 'dialogue' bewusst aus) — Owner-Zuweisung, Autolinking und
+  // Wikilinks-Entfernen liefen hier bisher ins Leere ("Eintrag nicht
+  // gefunden"), weil ActionsMenu das nicht wusste. Analog zu hideEdit oben.
+  const isDialogue =
+    contentType === "archiveEntry" && "category" in content && content.category === "dialogue";
+
   return (
     <div className="flex flex-col items-start justify-center gap-[8px]">
-      {(viewer?.role === "admin" || viewer?.role === "gm") && (
+      {(viewer?.role === "admin" || viewer?.role === "gm") && !isDialogue && (
         <OwnerSelect
           contentType={OWNER_CONTENT_TYPE[contentType]}
           id={content.id}
@@ -94,7 +104,7 @@ export default function ActionsMenu({
         />
       )}
       <div className="flex gap-[8px]">
-        {(viewer?.role === "gm" || viewer?.role === "admin") && (
+        {(viewer?.role === "gm" || viewer?.role === "admin") && !isDialogue && (
           <div className="flex gap-[8px]">
             <AutolinkButton contentType={contentType} slug={content.slug} />
             <RemoveWikilinksButton
