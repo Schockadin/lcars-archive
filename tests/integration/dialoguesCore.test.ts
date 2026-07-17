@@ -419,10 +419,13 @@ describe("regenerateAllClosedDialogueContent", () => {
     `;
     expect(closedRow.source_md).toContain("Hallo");
 
-    const [openRow] = await sql<{ source_md: string; dialogue_open: boolean }[]>`
+    const [openRow] = await sql<{ source_md: string | null; dialogue_open: boolean }[]>`
       SELECT source_md, dialogue_open FROM archive_entries WHERE id = ${open.entryId}
     `;
     expect(openRow.dialogue_open).toBe(true);
-    expect(openRow.source_md).toBe("");
+    // Ein frisch angelegter, noch offener Dialog hat nie ein source_md
+    // gesetzt bekommen (DB-Default NULL, keine leere Zeichenkette) — anders
+    // als der zuvor manuell auf '' gesetzte "closed"-Testfall oben.
+    expect(openRow.source_md).toBeNull();
   });
 });
