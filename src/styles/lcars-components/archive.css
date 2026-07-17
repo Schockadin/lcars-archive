@@ -181,29 +181,6 @@
   margin-top: 8px;
 }
 
-/* Abgeschlossene Dialoge (DialogueThread.tsx, dialogueOpen === false):
-   reiner Text statt der farbigen Karte oben — keine Randleiste, kein
-   --message-color, nur ein dezenter Trenner zwischen den Nachrichten. */
-.dialogue-message-plain {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-width: 0;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--lcars-border);
-}
-.dialogue-message-plain:last-child {
-  border-bottom: none;
-}
-.dialogue-message-plain-author {
-  font-family: var(--font-antonio), sans-serif;
-  font-size: 15px;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--lcars-text-data);
-}
-
 /* gestapelt auf schmalen Screens — kein Sticky, Liste oben */
 @media (max-width: 768px) {
   .archive-browser {

@@ -8,11 +8,11 @@ import DialogueMessageActions from "./DialogueMessageActions";
 // der Position im Teilnehmer-Array abgeleitet (AUTHOR_COLORS, bereits für
 // Mission-Log-Autoren genutzt) statt separat gespeichert.
 //
-// Offene Dialoge zeigen die farbige Karte (Randleiste in --message-color)
-// wie bisher; abgeschlossene Dialoge (dialogueOpen === false, das sind alle
-// Aufrufe von archive/[slug]/ArchiveEntryBody.tsx) zeigen stattdessen nur
-// den reinen Text, ohne Farbcodierung — auf Wunsch, damit ein archiviertes
-// Gespräch wie ein normaler Lesetext wirkt statt wie ein aktiver Chat.
+// Rendert einheitlich die farbige Karte, egal ob offener oder
+// geschlossener Dialog — die alternative Ansicht für geschlossene Dialoge
+// ist jetzt der generierte Fließtext (archive_entries.content, siehe
+// DialogueViewToggle.tsx/ArchiveEntryBody.tsx), nicht mehr eine
+// eingefärbte Variante dieser Komponente.
 //
 // currentUserId/dialogueOpen/entrySlug steuern, ob Bearbeiten/Löschen pro
 // Nachricht angezeigt wird — bei offenen Dialogen für den eigenen Autor,
@@ -47,27 +47,6 @@ export default function DialogueThread({
         const editedBadge = msg.editedAt && !msg.deletedAt && (
           <span className="dialogue-message-meta">bearbeitet</span>
         );
-
-        if (!dialogueOpen) {
-          return (
-            <div key={msg.id} className="dialogue-message-plain">
-              <span className="dialogue-message-plain-author">
-                {msg.characterName ?? "Unbekannt"}
-                {editedBadge}
-              </span>
-              <span
-                className="dialogue-message-text mission-body lcars-text text-[18px]"
-                dangerouslySetInnerHTML={{ __html: msg.content }}
-              />
-              {entrySlug && canModerate && (
-                <DialogueMessageActions
-                  messageId={msg.id}
-                  entrySlug={entrySlug}
-                />
-              )}
-            </div>
-          );
-        }
 
         const colorIndex = participants.findIndex(
           (p) => p.slug === msg.characterSlug,

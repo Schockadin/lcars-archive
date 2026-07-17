@@ -7,6 +7,8 @@ import {
   deleteDialogueMessage,
   setDialogueVisibility,
   deleteDialogue,
+  completeDialogue,
+  regenerateAllClosedDialogueContent,
   DialogueClosedError,
   DialogueMessageForbiddenError,
   DialogueSelfReplyError,
@@ -303,5 +305,124 @@ describe("deleteDialogue", () => {
     // andere gelöschte Archiv-Eintrag, keinen eigenen "dialogue"-Typ.
     expect(deletion.target_type).toBe("archive_entry");
     expect(deletion.deleted_by).toBe(admin.id);
+  });
+});
+
+describe("completeDialogue (Fließtext-Generierung)", () => {
+  it("populates content/source_md from the messages in chronological order, without speaker attribution", async () => {
+    const { ownChar, ownUser, partnerChar, partnerUser, entryId } = await setupDialogue();
+    await postDialogueMessage({
+      archiveEntryId: entryId,
+      characterId: partnerChar.id,
+      authorUserId: partnerUser.id,
+      bodyMarkdown: "Zweite Nachricht",
+    });
+    await postDialogueMessage({
+      archiveEntryId: entryId,
+      characterId: ownChar.id,
+      authorUserId: ownUser.id,
+      bodyMarkdown: "Dritte Nachricht",
+    });
+
+    await completeDialogue(entryId);
+
+    const [row] = await sql<{ content: string; source_md: string; dialogue_open: boolean }[]>`
+      SELECT content, source_md, dialogue_open FROM archive_entries WHERE id = ${entryId}
+    `;
+    expect(row.dialogue_open).toBe(false);
+    expect(row.content.indexOf("Hallo")).toBeLessThan(row.content.indexOf("Zweite"));
+    expect(row.content.indexOf("Zweite")).toBeLessThan(row.content.indexOf("Dritte"));
+    expect(row.source_md).toContain("Hallo");
+    expect(row.source_md).toContain("Zweite Nachricht");
+    expect(row.source_md).toContain("Dritte Nachricht");
+  });
+
+  it("omits deleted messages from the generated flowing text", async () => {
+    const { partnerChar, partnerUser, entryId } = await setupDialogue();
+    const second = await postDialogueMessage({
+      archiveEntryId: entryId,
+      characterId: partnerChar.id,
+      authorUserId: partnerUser.id,
+      bodyMarkdown: "Wird gelöscht",
+    });
+    await deleteDialogueMessage({ messageId: second.id, authorUserId: partnerUser.id });
+
+    await completeDialogue(entryId);
+
+    const [row] = await sql<{ source_md: string }[]>`
+      SELECT source_md FROM archive_entries WHERE id = ${entryId}
+    `;
+    expect(row.source_md).not.toContain("Wird gelöscht");
+  });
+});
+
+describe("moderator edits on a closed dialogue regenerate the flowing text", () => {
+  it("editDialogueMessage keeps content/source_md in sync when a moderator edits a message after closing", async () => {
+    const { partnerUser, entryId } = await setupDialogue();
+    await completeDialogue(entryId);
+    const [msg] = await sql<{ id: number }[]>`
+      SELECT id FROM dialogue_messages WHERE archive_entry_id = ${entryId}
+    `;
+
+    await editDialogueMessage({
+      messageId: msg.id,
+      authorUserId: partnerUser.id,
+      bodyMarkdown: "Nachträglich von einem Admin korrigiert",
+      isModerator: true,
+    });
+
+    const [row] = await sql<{ source_md: string }[]>`
+      SELECT source_md FROM archive_entries WHERE id = ${entryId}
+    `;
+    expect(row.source_md).toContain("Nachträglich von einem Admin korrigiert");
+  });
+
+  it("deleteDialogueMessage keeps content/source_md in sync when a moderator deletes a message after closing", async () => {
+    const { partnerChar, partnerUser, entryId } = await setupDialogue();
+    const second = await postDialogueMessage({
+      archiveEntryId: entryId,
+      characterId: partnerChar.id,
+      authorUserId: partnerUser.id,
+      bodyMarkdown: "Wird nach Abschluss von einem Admin gelöscht",
+    });
+    await completeDialogue(entryId);
+
+    await deleteDialogueMessage({
+      messageId: second.id,
+      authorUserId: partnerUser.id,
+      isModerator: true,
+    });
+
+    const [row] = await sql<{ source_md: string }[]>`
+      SELECT source_md FROM archive_entries WHERE id = ${entryId}
+    `;
+    expect(row.source_md).not.toContain("Wird nach Abschluss von einem Admin gelöscht");
+  });
+});
+
+describe("regenerateAllClosedDialogueContent", () => {
+  it("backfills content for closed dialogues and leaves open ones untouched", async () => {
+    const closed = await setupDialogue();
+    const open = await setupDialogue();
+    // Simuliert einen vor Einführung des Features geschlossenen Dialog:
+    // dialogue_open = FALSE, aber content/source_md noch leer.
+    await sql`
+      UPDATE archive_entries SET dialogue_open = FALSE, content = '', source_md = ''
+      WHERE id = ${closed.entryId}
+    `;
+
+    const count = await regenerateAllClosedDialogueContent();
+
+    expect(count).toBeGreaterThanOrEqual(1);
+    const [closedRow] = await sql<{ source_md: string }[]>`
+      SELECT source_md FROM archive_entries WHERE id = ${closed.entryId}
+    `;
+    expect(closedRow.source_md).toContain("Hallo");
+
+    const [openRow] = await sql<{ source_md: string; dialogue_open: boolean }[]>`
+      SELECT source_md, dialogue_open FROM archive_entries WHERE id = ${open.entryId}
+    `;
+    expect(openRow.dialogue_open).toBe(true);
+    expect(openRow.source_md).toBe("");
   });
 });

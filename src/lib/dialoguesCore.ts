@@ -2,11 +2,22 @@
 // sie sowohl von der App (via dialogues.ts) als auch von
 // scripts/seedExampleDialogue.ts (per tsx außerhalb von Next ausgeführt)
 // importiert werden kann — exakt das gleiche Muster wie mailCore.ts/mail.ts.
+import postgres from "postgres";
 import sql from "@/lib/db";
 import { markdownToSafeHtml } from "@/lib/markdown";
 import { getCharactersForUser } from "@/lib/characters";
 import { generateUniqueArchiveEntrySlug } from "@/lib/archive";
 import type { ArchiveParticipant, ArchiveLocationRef } from "@/types/archive";
+
+// Optionaler Client-Parameter für Aufrufe innerhalb einer bestehenden
+// Transaktion (regenerateDialogueContent wird sowohl standalone als auch aus
+// completeDialogue/editDialogueMessage/deleteDialogueMessage heraus
+// aufgerufen) — src/lib/db.ts erlaubt nur EINE Connection pro Prozess
+// (max: 1), ein Aufruf über den globalen sql-Client während eine
+// sql.begin()-Transaktion die einzige Connection hält, würde sonst auf eine
+// nie freiwerdende Connection warten (Deadlock, siehe SqlClient-Kommentar in
+// src/lib/users.ts, wo dieses Muster zuerst eingeführt wurde).
+type SqlClient = postgres.ISql;
 
 export class DialogueSlugCollisionError extends Error {}
 export class DialogueClosedError extends Error {}
@@ -435,6 +446,15 @@ export async function editDialogueMessage(
       RETURNING id, created_at::text AS created_at, edited_at::text AS edited_at
     `;
 
+    // Moderations-Edit an einem bereits geschlossenen Dialog: der
+    // gespeicherte Fließtext (regenerateDialogueContent) muss synchron
+    // bleiben — der einzige Fall, in dem sich ein geschlossener Dialog nach
+    // Abschluss noch inhaltlich ändert (Posten neuer Nachrichten bleibt
+    // unabhängig von der Rolle gesperrt, siehe postDialogueMessage).
+    if (input.isModerator && !row.dialogue_open) {
+      await regenerateDialogueContent(tx, row.archive_entry_id);
+    }
+
     const [char] = row.character_id
       ? await tx<{ slug: string; name: string }[]>`
           SELECT slug, name FROM characters WHERE id = ${row.character_id}
@@ -490,6 +510,13 @@ export async function deleteDialogueMessage(
 
     await tx`UPDATE dialogue_messages SET deleted_at = NOW() WHERE id = ${input.messageId}`;
     await tx`UPDATE archive_entries SET updated_at = NOW() WHERE id = ${row.archive_entry_id}`;
+
+    // Siehe gleicher Kommentar in editDialogueMessage — Fließtext synchron
+    // halten, wenn ein Admin eine Nachricht in einem bereits geschlossenen
+    // Dialog löscht.
+    if (input.isModerator && !row.dialogue_open) {
+      await regenerateDialogueContent(tx, row.archive_entry_id);
+    }
   });
 }
 
@@ -588,14 +615,75 @@ export async function getDialogueForPlay(
   };
 }
 
+// Baut aus den (nicht gelöschten) Nachrichten eines Dialogs ein
+// Fließtext-Dokument — bewusst OHNE Sprecher-Zuordnung, rein narrativ
+// (Nachrichtentexte chronologisch aneinandergereiht). html konkateniert die
+// bereits gerenderten content-Fragmente jeder Nachricht (jedes schon
+// valides <p>...</p> aus markdownToSafeHtml, kein erneutes Rendern nötig);
+// markdown verbindet die source_md-Rohtexte mit Leerzeile. Gelöschte
+// Nachrichten fehlen ganz (kein Platzhalter, anders als in der
+// Karten-Ansicht — ein Fließtext mit "Nachricht wurde gelöscht."
+// dazwischen wäre unlesbar).
+async function buildDialogueFlowingText(
+  client: SqlClient,
+  archiveEntryId: number,
+): Promise<{ html: string; markdown: string }> {
+  const rows = await client<{ content: string; source_md: string }[]>`
+    SELECT content, source_md FROM dialogue_messages
+    WHERE archive_entry_id = ${archiveEntryId} AND deleted_at IS NULL
+    ORDER BY created_at ASC
+  `;
+  return {
+    html: rows.map((r) => r.content).join(""),
+    markdown: rows.map((r) => r.source_md).join("\n\n"),
+  };
+}
+
+// Schreibt den aktuellen Fließtext-Stand in archive_entries.content/
+// source_md — aufgerufen beim Abschließen (completeDialogue) und erneut
+// nach jeder nachträglichen Moderations-Änderung (Admin bearbeitet/löscht
+// eine Nachricht in einem bereits geschlossenen Dialog, siehe
+// editDialogueMessage/deleteDialogueMessage), damit der gespeicherte
+// Fließtext nie veraltet. Nimmt bewusst einen Client-Parameter statt fest
+// den globalen sql zu nutzen (siehe SqlClient-Kommentar oben).
+export async function regenerateDialogueContent(
+  client: SqlClient,
+  archiveEntryId: number,
+): Promise<void> {
+  const { html, markdown } = await buildDialogueFlowingText(client, archiveEntryId);
+  await client`
+    UPDATE archive_entries SET content = ${html}, source_md = ${markdown}
+    WHERE id = ${archiveEntryId}
+  `;
+}
+
+// Admin-Backfill (/admin/scripts) für bereits geschlossene Dialoge, die vor
+// Einführung des Fließtext-Features abgeschlossen wurden. Sequentiell statt
+// Promise.all — max: 1 in src/lib/db.ts erlaubt ohnehin nur eine Query
+// gleichzeitig.
+export async function regenerateAllClosedDialogueContent(): Promise<number> {
+  const rows = await sql<{ id: number }[]>`
+    SELECT id FROM archive_entries WHERE category = 'dialogue' AND dialogue_open = FALSE
+  `;
+  for (const row of rows) {
+    await regenerateDialogueContent(sql, row.id);
+  }
+  return rows.length;
+}
+
 // Abschließen ist bewusst one-way (kein Wiedereröffnen) — siehe
 // completeDialogueAction in src/app/actions/dialogues.ts für die
-// Berechtigungsprüfung (Teilnehmer oder GM).
+// Berechtigungsprüfung (Teilnehmer oder GM). Läuft jetzt in einer
+// Transaktion, damit der Fließtext (regenerateDialogueContent) im selben
+// Schritt wie das Schließen entsteht.
 export async function completeDialogue(archiveEntryId: number): Promise<void> {
-  await sql`
-    UPDATE archive_entries SET dialogue_open = FALSE, updated_at = NOW()
-    WHERE id = ${archiveEntryId} AND category = 'dialogue'
-  `;
+  await sql.begin(async (tx) => {
+    await tx`
+      UPDATE archive_entries SET dialogue_open = FALSE, updated_at = NOW()
+      WHERE id = ${archiveEntryId} AND category = 'dialogue'
+    `;
+    await regenerateDialogueContent(tx, archiveEntryId);
+  });
 }
 
 // Nur der Ersteller (owner_user_id, siehe createDialogue) darf die

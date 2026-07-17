@@ -2,7 +2,7 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
-import { getUserById } from "@/lib/users";
+import { getUserById, updateDialogueViewPreference } from "@/lib/users";
 import {
   DialogueClosedError,
   DialogueMessageForbiddenError,
@@ -416,4 +416,20 @@ export async function deleteDialogueAction(
   }
 
   redirect("/archive?cat=dialogue");
+}
+
+// Globale Präferenz (nicht pro Dialog, siehe DialogueViewToggle.tsx) —
+// direkt aus einem Client-onClick aufgerufen, kein useActionState-Formular
+// nötig (keine Fehleranzeige gebraucht: nicht eingeloggt heißt einfach
+// no-op, der Umschalter wird eingeloggten Betrachtern ohnehin nur
+// angezeigt).
+export async function setDialogueViewPreferenceAction(
+  flowingTextEnabled: boolean,
+  entrySlug: string,
+): Promise<void> {
+  const session = await getSession();
+  if (!session) return;
+
+  await updateDialogueViewPreference(session.userId, flowingTextEnabled);
+  revalidatePath(`/archive/${entrySlug}`);
 }

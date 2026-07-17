@@ -5,6 +5,7 @@ import { listAllUsers } from "@/lib/users";
 import RevalidateCachePanel from "../RevalidateCachePanel";
 import TimelineRegeneratePanel from "../TimelineRegeneratePanel";
 import AssignOwnerlessMissionsPanel from "../AssignOwnerlessMissionsPanel";
+import DialogueContentRegeneratePanel from "../DialogueContentRegeneratePanel";
 
 export const metadata: Metadata = {
   title: "Scripts",
@@ -44,6 +45,11 @@ export default async function AdminScriptsPage() {
           <section className="flex flex-col gap-[12px]">
             <h2 className="text-lcars-amber">Missionen ohne Owner</h2>
             <AssignOwnerlessMissionsPanel gms={gmOptions} />
+          </section>
+
+          <section className="flex flex-col gap-[12px]">
+            <h2 className="text-lcars-amber">Gespräche</h2>
+            <DialogueContentRegeneratePanel />
           </section>
         </div>
       </article>

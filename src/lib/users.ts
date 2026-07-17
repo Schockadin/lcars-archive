@@ -219,6 +219,28 @@ export async function updateNotificationPreferences(
   `;
 }
 
+// Globale Präferenz (nicht pro Dialog): Fließtext oder Karten-Ansicht für
+// abgeschlossene Dialoge (siehe DialogueViewToggle.tsx). Eigene schlanke
+// Lese-/Schreibfunktionen statt Teil von USER_COLUMNS/dem vollen User-Objekt
+// — wird gezielt nur dort gebraucht, wo ein geschlossener Dialog gerendert
+// wird (archive/[slug]/page.tsx), nicht bei jedem User-Fetch.
+export async function getDialogueViewPreference(userId: number): Promise<boolean> {
+  const [row] = await sql<{ dialogue_flowing_text_enabled: boolean }[]>`
+    SELECT dialogue_flowing_text_enabled FROM users WHERE id = ${userId}
+  `;
+  return row?.dialogue_flowing_text_enabled ?? true;
+}
+
+export async function updateDialogueViewPreference(
+  userId: number,
+  flowingTextEnabled: boolean,
+): Promise<void> {
+  await sql`
+    UPDATE users SET dialogue_flowing_text_enabled = ${flowingTextEnabled}
+    WHERE id = ${userId}
+  `;
+}
+
 export async function updateUser(
   id: number,
   data: UpdateUserInput,

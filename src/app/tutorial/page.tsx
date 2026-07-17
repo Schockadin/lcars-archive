@@ -175,9 +175,12 @@ export default function TutorialPage() {
                 Charakter antworten — dazwischen muss der andere Charakter am
                 Zug gewesen sein. Sobald eine Seite es abschließt, wird es{" "}
                 <strong>unwiderruflich geschlossen</strong> und taucht danach
-                als gewöhnlicher, rein textueller Archiv-Eintrag (ohne die
-                farbige Nachrichten-Darstellung offener Gespräche) in der
-                Kategorie „Gespräche“ auf.
+                als gewöhnlicher Archiv-Eintrag in der Kategorie „Gespräche“
+                auf — standardmäßig als zusammenhängender Lesetext, per
+                Umschalter oben auf der Seite aber auch wie ein offenes
+                Gespräch mit einzelnen Nachrichtenkarten anzeigbar. Diese
+                Einstellung gilt für alle abgeschlossenen Gespräche, die du
+                dir ansiehst.
               </p>
             </div>
           </LcarsDataRow>

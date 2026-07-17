@@ -10,7 +10,7 @@ import DialogueHeader from "@/components/DialogueHeader";
 import DeleteDialogueButton from "@/components/DeleteDialogueButton";
 import { getDialogueMessages } from "@/lib/dialogues";
 import { getViewer, canView } from "@/lib/visibility";
-import { listAllUsers } from "@/lib/users";
+import { listAllUsers, getDialogueViewPreference } from "@/lib/users";
 import ArchiveEntryBody from "./ArchiveEntryBody";
 
 interface Props {
@@ -85,6 +85,15 @@ export default async function ArchiveEntryPage({ params }: Props) {
   const messages =
     entry.category === "dialogue" ? await getDialogueMessages(entry.id) : [];
 
+  // Globale Präferenz (siehe DialogueViewToggle.tsx) — nur für eingeloggte
+  // Betrachter eines (an dieser Stelle immer bereits geschlossenen, siehe
+  // Redirect oben) Dialogs relevant. Anonyme Betrachter/andere
+  // Inhaltstypen bekommen den Default true, ohne extra DB-Zugriff.
+  const flowingTextPreferred =
+    entry.category === "dialogue" && viewer
+      ? await getDialogueViewPreference(viewer.userId)
+      : true;
+
   const cfg = CATEGORY_CONFIG[entry.category];
   const title = archiveTitle(entry);
 
@@ -121,6 +130,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
         viewer={viewer}
         owners={owners}
         messages={messages}
+        flowingTextPreferred={flowingTextPreferred}
       />
 
       {viewer?.role === "admin" && entry.category === "dialogue" && (

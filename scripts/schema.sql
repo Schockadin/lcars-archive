@@ -532,3 +532,11 @@ ALTER TABLE admin_audit_log ADD CONSTRAINT admin_audit_log_action_check
 -- betroffenen Action verfügbar ist. Wichtig für die forensische Aufarbeitung
 -- eines vermuteten kompromittierten Admin-Accounts.
 ALTER TABLE admin_audit_log ADD COLUMN IF NOT EXISTS ip TEXT;
+
+-- Globale User-Präferenz (nicht pro Dialog): abgeschlossene Dialoge zeigen
+-- entweder den generierten Fließtext (archive_entries.content/source_md,
+-- siehe regenerateDialogueContent in dialoguesCore.ts) oder die farbige
+-- Karten-Ansicht wie offene Dialoge — umschaltbar direkt auf der
+-- Dialog-Seite (DialogueViewToggle.tsx). DEFAULT true, da Fließtext die
+-- neue primäre Darstellung ist.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS dialogue_flowing_text_enabled BOOLEAN NOT NULL DEFAULT true;
