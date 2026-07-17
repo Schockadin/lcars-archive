@@ -174,7 +174,7 @@ describe("setArchiveEntryOwner", () => {
     const dialogue = await createDialogue({
       title: "Ein Gespräch",
       ownCharacterId: ownChar.id,
-      partnerCharacterId: partnerChar.id,
+      partnerCharacterIds: [partnerChar.id],
       authorUserId: ownUser.id,
       setting: null,
       locationSlug: null,

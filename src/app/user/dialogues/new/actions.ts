@@ -28,13 +28,20 @@ export async function createDialogueAction(
   if (!title) return { error: "Bitte einen Titel angeben." };
 
   const ownCharacterId = Number(formData.get("ownCharacterId"));
-  const partnerCharacterId = Number(formData.get("partnerCharacterId"));
+  const partnerCharacterIds = [
+    ...new Set(
+      formData.getAll("partnerCharacterIds").map((v) => Number(v)),
+    ),
+  ];
   if (
     !Number.isInteger(ownCharacterId) ||
-    !Number.isInteger(partnerCharacterId) ||
-    ownCharacterId === partnerCharacterId
+    partnerCharacterIds.length === 0 ||
+    partnerCharacterIds.some((id) => !Number.isInteger(id)) ||
+    partnerCharacterIds.includes(ownCharacterId)
   ) {
-    return { error: "Bitte zwei unterschiedliche Charaktere auswählen." };
+    return {
+      error: "Bitte den eigenen und mindestens einen weiteren Charakter auswählen.",
+    };
   }
 
   // Nie den <select>-Werten aus dem Client blind vertrauen — wie
@@ -44,7 +51,9 @@ export async function createDialogueAction(
     return { error: "Ungültiger eigener Charakter." };
   }
   const partnerCharacters = await getCharactersWithPlayers(session.userId);
-  if (!partnerCharacters.some((c) => c.id === partnerCharacterId)) {
+  if (
+    !partnerCharacterIds.every((id) => partnerCharacters.some((c) => c.id === id))
+  ) {
     return { error: "Ungültiger Gesprächspartner." };
   }
 
@@ -67,13 +76,13 @@ export async function createDialogueAction(
   const subscribeSelf = formData.get("subscribeSelf") === "on";
 
   let slug: string;
-  let partner: Awaited<ReturnType<typeof createDialogue>>["partner"];
+  let partners: Awaited<ReturnType<typeof createDialogue>>["partners"];
   let fromCharacterName: string;
   try {
     const result = await createDialogue({
       title,
       ownCharacterId,
-      partnerCharacterId,
+      partnerCharacterIds,
       authorUserId: session.userId,
       setting,
       locationSlug,
@@ -83,7 +92,7 @@ export async function createDialogueAction(
       subscribeSelf,
     });
     slug = result.slug;
-    partner = result.partner;
+    partners = result.partners;
     fromCharacterName = result.fromCharacterName;
   } catch (err) {
     if (err instanceof DialogueSlugCollisionError) {
@@ -92,13 +101,15 @@ export async function createDialogueAction(
     throw err;
   }
 
-  // Der Gesprächspartner konnte dem Anlegen nicht zustimmen — anders als bei
-  // neuen Nachrichten (postDialogueMessageAction) ist er hier noch nicht
-  // "Abonnent" im Sinne einer eigenen Wahl, bekommt die Info-Mail also immer
-  // (kein Opt-in nötig), sofern er E-Mail-Benachrichtigungen grundsätzlich
-  // aktiviert hat.
-  if (partner) {
-    const dialogueUrl = `${await getBaseUrl()}/dialogues/${slug}`;
+  // Kein Partner konnte dem Anlegen zustimmen — anders als bei neuen
+  // Nachrichten (postDialogueMessageAction) sind sie hier noch keine
+  // "Abonnenten" im Sinne einer eigenen Wahl, bekommen die Info-Mail also
+  // immer (kein Opt-in nötig), sofern E-Mail-Benachrichtigungen grundsätzlich
+  // aktiviert sind. Sequentiell statt Promise.all (gleiches Muster wie
+  // postDialogueMessageAction) — parallele Resend-Aufrufe riskieren bei
+  // mehreren Empfängern gleichzeitig ein Rate-Limit.
+  const dialogueUrl = `${await getBaseUrl()}/dialogues/${slug}`;
+  for (const partner of partners) {
     if (partner.emailNotificationsEnabled) {
       const result = await sendDialogueStartedEmail({
         to: partner.email,

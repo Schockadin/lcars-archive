@@ -34,7 +34,7 @@ async function setupDialogue() {
   const dialogue = await createDialogue({
     title: "Ein Gespräch",
     ownCharacterId: ownChar.id,
-    partnerCharacterId: partnerChar.id,
+    partnerCharacterIds: [partnerChar.id],
     authorUserId: ownUser.id,
     setting: null,
     locationSlug: null,
@@ -81,7 +81,7 @@ describe("createDialogue", () => {
     const second = await createDialogue({
       title: "Ein Gespräch",
       ownCharacterId: ownChar.id,
-      partnerCharacterId: partnerChar.id,
+      partnerCharacterIds: [partnerChar.id],
       authorUserId: ownUser.id,
       setting: null,
       locationSlug: null,
@@ -92,6 +92,75 @@ describe("createDialogue", () => {
     });
 
     expect(second.slug).not.toBe(first.slug);
+  });
+
+  it("creates a dialogue with more than two participants at once and subscribes/notifies every partner", async () => {
+    const ownUser = await insertUser();
+    const partnerUser1 = await insertUser();
+    const partnerUser2 = await insertUser();
+    const ownChar = await insertCharacter({ playerId: ownUser.id, name: "Own" });
+    const partnerChar1 = await insertCharacter({
+      playerId: partnerUser1.id,
+      name: "Partner 1",
+    });
+    const partnerChar2 = await insertCharacter({
+      playerId: partnerUser2.id,
+      name: "Partner 2",
+    });
+
+    const dialogue = await createDialogue({
+      title: "Ein Gespräch zu dritt",
+      ownCharacterId: ownChar.id,
+      partnerCharacterIds: [partnerChar1.id, partnerChar2.id],
+      authorUserId: ownUser.id,
+      setting: null,
+      locationSlug: null,
+      logDate: null,
+      tags: [],
+      bodyMarkdown: "Hallo zusammen!",
+      subscribeSelf: true,
+    });
+
+    expect(dialogue.partners.map((p) => p.id).sort()).toEqual(
+      [partnerUser1.id, partnerUser2.id].sort(),
+    );
+
+    const [entry] = await sql<{ metadata: unknown }[]>`
+      SELECT metadata FROM archive_entries WHERE slug = ${dialogue.slug}
+    `;
+    const metadata = entry.metadata as { participants: { slug: string }[] };
+    expect(metadata.participants.map((p) => p.slug).sort()).toEqual(
+      [ownChar.slug, partnerChar1.slug, partnerChar2.slug].sort(),
+    );
+
+    const follows = await sql<{ user_id: number }[]>`
+      SELECT user_id FROM content_follows WHERE target_slug = ${dialogue.slug}
+    `;
+    expect(follows.map((f) => f.user_id).sort()).toEqual(
+      [ownUser.id, partnerUser1.id, partnerUser2.id].sort(),
+    );
+  });
+
+  it("rejects an unresolvable partner character id", async () => {
+    const ownUser = await insertUser();
+    const partnerUser = await insertUser();
+    const ownChar = await insertCharacter({ playerId: ownUser.id });
+    const partnerChar = await insertCharacter({ playerId: partnerUser.id });
+
+    await expect(
+      createDialogue({
+        title: "Ein Gespräch",
+        ownCharacterId: ownChar.id,
+        partnerCharacterIds: [partnerChar.id, 999999],
+        authorUserId: ownUser.id,
+        setting: null,
+        locationSlug: null,
+        logDate: null,
+        tags: [],
+        bodyMarkdown: "Hallo!",
+        subscribeSelf: true,
+      }),
+    ).rejects.toThrow("Charakter nicht gefunden.");
   });
 });
 

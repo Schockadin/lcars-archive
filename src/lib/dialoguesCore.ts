@@ -116,14 +116,18 @@ export async function getDialogueMessages(
 export interface CreateDialogueInput {
   title: string;
   ownCharacterId: number;
-  partnerCharacterId: number;
+  // Mindestens einer — Gespräche können bereits bei der Erstellung mehr als
+  // zwei Teilnehmende haben (statt sie erst nachträglich per
+  // inviteDialogueParticipants einzeln hinzuzufügen). Bei genau einem
+  // Element unverändertes Verhalten zu vorher.
+  partnerCharacterIds: number[];
   authorUserId: number;
   setting: string | null;
   locationSlug: string | null;
   logDate: string | null;
   tags: string[];
   bodyMarkdown: string;
-  // Opt-Out des Erstellers vom Auto-Abo (siehe unten) — der
+  // Opt-Out des Erstellers vom Auto-Abo (siehe unten) — jeder
   // Gesprächspartner wird immer abonniert (kann selbst auf der
   // Dialog-Seite wieder abbestellen), da er dem Anlegen nicht zustimmen
   // konnte.
@@ -138,12 +142,12 @@ export interface CreateDialogueInput {
 // erste Nachricht landet in dialogue_messages.
 export interface CreateDialogueResult {
   slug: string;
-  // null, falls der Partner-Charakter (noch) keinem Spieler zugeordnet ist —
-  // in der Praxis nie der Fall, da getCharactersWithPlayers (Partner-Picker
-  // im Formular) nur Charaktere mit player_id anbietet; defensiv trotzdem
-  // nullable, da die Action-Ebene den ownCharacterId/partnerCharacterId nie
-  // blind vertraut (siehe createDialogueAction).
-  partner: DialogueEmailTarget | null;
+  // Ein Eintrag pro Partner-Charakter mit zugeordnetem Spieler — in der
+  // Praxis nie leerer als partnerCharacterIds, da getCharactersWithPlayers
+  // (Partner-Picker im Formular) nur Charaktere mit player_id anbietet;
+  // defensiv trotzdem gefiltert, da die Action-Ebene die IDs nie blind
+  // vertraut (siehe createDialogueAction).
+  partners: DialogueEmailTarget[];
   fromCharacterName: string;
 }
 
@@ -156,8 +160,9 @@ export async function createDialogue(
     const [ownChar] = await tx<{ slug: string; name: string }[]>`
       SELECT slug, name FROM characters WHERE id = ${input.ownCharacterId}
     `;
-    const [partnerChar] = await tx<
+    const partnerChars = await tx<
       {
+        id: number;
         slug: string;
         name: string;
         player_id: number | null;
@@ -167,15 +172,15 @@ export async function createDialogue(
         player_push_notifications_enabled: boolean | null;
       }[]
     >`
-      SELECT c.slug, c.name, c.player_id,
+      SELECT c.id, c.slug, c.name, c.player_id,
              u.email AS player_email, u.name AS player_name,
              u.email_notifications_enabled AS player_email_notifications_enabled,
              u.push_notifications_enabled AS player_push_notifications_enabled
       FROM characters c
       LEFT JOIN users u ON u.id = c.player_id
-      WHERE c.id = ${input.partnerCharacterId}
+      WHERE c.id = ANY(${input.partnerCharacterIds})
     `;
-    if (!ownChar || !partnerChar) {
+    if (!ownChar || partnerChars.length !== input.partnerCharacterIds.length) {
       throw new Error("Charakter nicht gefunden.");
     }
 
@@ -190,7 +195,9 @@ export async function createDialogue(
 
     const participants: ArchiveParticipant[] = [
       { slug: ownChar.slug, name: ownChar.name, kind: "character" },
-      { slug: partnerChar.slug, name: partnerChar.name, kind: "character" },
+      ...partnerChars.map(
+        (p): ArchiveParticipant => ({ slug: p.slug, name: p.name, kind: "character" }),
+      ),
     ];
 
     const metadata = {
@@ -241,10 +248,17 @@ export async function createDialogue(
           DO UPDATE SET subscribed_at = NOW()
         `;
       }
-      if (partnerChar.player_id != null) {
+      // Jeden Partner-Spieler abonnieren — deduplizierende Menge, falls
+      // jemand mit mehreren eigenen Charakteren gleichzeitig als Partner
+      // ausgewählt wurde (dann nur ein Abo statt mehrerer identischer
+      // Upserts).
+      const partnerPlayerIds = new Set(
+        partnerChars.map((p) => p.player_id).filter((id): id is number => id != null),
+      );
+      for (const playerId of partnerPlayerIds) {
         await tx`
           INSERT INTO content_follows (user_id, target_type, target_slug, subscribed_at)
-          VALUES (${partnerChar.player_id}, 'archive_entry', ${slug}, NOW())
+          VALUES (${playerId}, 'archive_entry', ${slug}, NOW())
           ON CONFLICT (user_id, target_type, target_slug)
           DO UPDATE SET subscribed_at = NOW()
         `;
@@ -252,20 +266,18 @@ export async function createDialogue(
 
       return {
         slug,
-        partner:
-          partnerChar.player_id != null &&
-          partnerChar.player_email != null &&
-          partnerChar.player_name != null
-            ? {
-                id: partnerChar.player_id,
-                email: partnerChar.player_email,
-                name: partnerChar.player_name,
-                emailNotificationsEnabled:
-                  partnerChar.player_email_notifications_enabled ?? false,
-                pushNotificationsEnabled:
-                  partnerChar.player_push_notifications_enabled ?? false,
-              }
-            : null,
+        partners: partnerChars
+          .filter(
+            (p): p is typeof p & { player_id: number; player_email: string; player_name: string } =>
+              p.player_id != null && p.player_email != null && p.player_name != null,
+          )
+          .map((p) => ({
+            id: p.player_id,
+            email: p.player_email,
+            name: p.player_name,
+            emailNotificationsEnabled: p.player_email_notifications_enabled ?? false,
+            pushNotificationsEnabled: p.player_push_notifications_enabled ?? false,
+          })),
         fromCharacterName: ownChar.name,
       };
     } catch (err) {
@@ -979,7 +991,11 @@ export async function getDialogueForPlay(
 // Nachrichten fehlen ganz (kein Platzhalter, anders als in der
 // Karten-Ansicht — ein Fließtext mit "Nachricht wurde gelöscht."
 // dazwischen wäre unlesbar).
-async function buildDialogueFlowingText(
+// Exportiert (statt privat), da src/lib/contentExport.ts dieselbe Funktion
+// für den Markdown-Export offener Dialoge wiederverwendet (dort existiert
+// noch kein source_md auf der archive_entries-Zeile selbst, siehe dortiger
+// Kommentar) — identische Fließtext-Logik statt einer zweiten Kopie.
+export async function buildDialogueFlowingText(
   client: SqlClient,
   archiveEntryId: number,
 ): Promise<{ html: string; markdown: string }> {

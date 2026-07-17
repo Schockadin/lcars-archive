@@ -91,6 +91,7 @@ export default async function DialoguePlayPage({ params }: Props) {
 
       <DialogueLiveView
         entrySlug={entry.slug}
+        title={entry.title}
         participants={entry.participants}
         currentUserId={session.userId}
         viewerRole={viewer?.role ?? null}
