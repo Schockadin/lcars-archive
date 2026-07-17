@@ -7,22 +7,36 @@ import {
   commitMissionMarkdown,
   previewCharacterMarkdown,
   commitCharacterMarkdown,
+  previewMissionLogMarkdown,
+  commitMissionLogMarkdown,
   type ArchivePreviewResult,
   type MissionPreviewResult,
   type CharacterPreviewResult,
+  type MissionLogPreviewResult,
+  type ArchiveImportEdits,
+  type MissionImportEdits,
+  type CharacterImportEdits,
+  type MissionLogImportEdits,
   type CommitResult,
 } from "@/lib/markdownImport";
 import {
   revalidateArchiveEntry,
   revalidateMission,
   revalidateCharacter,
+  revalidateAllContent,
 } from "@/lib/revalidate";
 
-export type ImportContentType = "archive" | "mission" | "character";
+export type ImportContentType = "archive" | "mission" | "character" | "mission_log";
 export type ImportPreviewResult =
   | ArchivePreviewResult
   | MissionPreviewResult
-  | CharacterPreviewResult;
+  | CharacterPreviewResult
+  | MissionLogPreviewResult;
+export type ImportEdits =
+  | ArchiveImportEdits
+  | MissionImportEdits
+  | CharacterImportEdits
+  | MissionLogImportEdits;
 
 export interface UploadedFile {
   filename: string;
@@ -42,38 +56,51 @@ export async function previewMarkdownImportAction(
       ? previewArchiveMarkdown
       : contentType === "mission"
         ? previewMissionMarkdown
-        : previewCharacterMarkdown;
+        : contentType === "character"
+          ? previewCharacterMarkdown
+          : previewMissionLogMarkdown;
 
-  // Reine Lese-Operationen (Frontmatter parsen, Slug-Kollision prüfen) —
+  // Reine Lese-Operationen (Frontmatter parsen, Slug-/Referenz-Auflösung) —
   // unabhängig voneinander, deshalb parallel statt sequentiell.
   return Promise.all(files.map((f) => previewFn(f.filename, f.content)));
 }
 
 // Legt EINEN einzelnen Eintrag an — wird erst nach expliziter Bestätigung
-// der Preview pro Datei aufgerufen (siehe MarkdownImportPanel.tsx). Parst
-// die rohe Markdown-Datei server-seitig erneut statt der bereits geparsten
-// Preview zu vertrauen — die Rohdatei bleibt die alleinige Quelle der
-// Wahrheit, nicht ein vom Client zurückgereichtes, potenziell manipulierbares
-// Zwischenergebnis.
+// der (in der UI editierbaren) Vorschau pro Datei aufgerufen (siehe
+// MarkdownImportPanel.tsx). edits enthält die aktuellen (ggf. von der
+// Administration angepassten) Feldwerte und gewinnt beim Commit gegenüber
+// dem ursprünglich geparsten Frontmatter — siehe Kopfkommentar in
+// markdownImport.ts für die Begründung, warum das kein Sicherheitsproblem
+// ist (requireAdmin() gilt für beide Actions).
 export async function confirmMarkdownImportAction(
   contentType: ImportContentType,
   filename: string,
   content: string,
+  edits: ImportEdits,
 ): Promise<CommitResult> {
   await requireAdmin();
 
-  const commitFn =
-    contentType === "archive"
-      ? commitArchiveMarkdown
-      : contentType === "mission"
-        ? commitMissionMarkdown
-        : commitCharacterMarkdown;
+  let result: CommitResult;
+  if (contentType === "archive") {
+    result = await commitArchiveMarkdown(filename, content, edits as ArchiveImportEdits);
+  } else if (contentType === "mission") {
+    result = await commitMissionMarkdown(filename, content, edits as MissionImportEdits);
+  } else if (contentType === "character") {
+    result = await commitCharacterMarkdown(filename, content, edits as CharacterImportEdits);
+  } else {
+    result = await commitMissionLogMarkdown(filename, content, edits as MissionLogImportEdits);
+  }
 
-  const result = await commitFn(filename, content);
   if (result.ok) {
     if (contentType === "archive") revalidateArchiveEntry(result.slug);
     else if (contentType === "mission") revalidateMission(result.slug);
-    else revalidateCharacter(result.slug);
+    else if (contentType === "character") revalidateCharacter(result.slug);
+    // Missionslogs: kein dediziertes revalidate*(slug) hier — revalidateLog
+    // braucht die mission_id, die dem Aufrufer hier nicht vorliegt (nur die
+    // neue Log-id). Grobkörnige Invalidierung statt Zusatz-Query, analog zum
+    // Admin-Backfill in DialogueContentRegeneratePanel.tsx — ein seltener
+    // Admin-Vorgang, kein Hot Path.
+    else revalidateAllContent();
   }
   return result;
 }

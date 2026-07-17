@@ -410,9 +410,11 @@ export default function TutorialPage() {
                 </li>
                 <li>
                   Unter <strong>„Import“</strong> eine oder mehrere
-                  Markdown-Dateien im Vault-Frontmatter-Format hochladen und
-                  nach Vorschau einzeln bestätigen, um daraus neue
-                  Archiv-Einträge, Missionen oder Charaktere anzulegen.
+                  Markdown-Dateien im Vault-Frontmatter-Format hochladen, um
+                  daraus neue Archiv-Einträge, Missionen, Charaktere oder
+                  Missionslogs anzulegen. Jede Datei lässt sich einzeln
+                  durchblättern, vor dem Anlegen noch bearbeiten und muss
+                  danach einzeln bestätigt werden.
                 </li>
                 <li>
                   In jedem Gespräch als Moderation jede Nachricht bearbeiten

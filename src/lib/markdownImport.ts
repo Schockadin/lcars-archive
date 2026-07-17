@@ -1,9 +1,11 @@
 // Admin-Markdown-Upload (/admin/import): parst hochgeladene .md-Dateien im
 // selben Frontmatter-Format wie das CLI-Ingest (scripts/ingest/*.ts, siehe
 // dortige VaultPath-basierte Batch-Verarbeitung) und legt daraus neue
-// Archiv-Einträge/Missionen/Charaktere an — aber einzeln statt als Batch:
-// jede Datei wird zuerst nur geparst (preview*, keine Schreibaktion) und erst
-// nach expliziter Bestätigung pro Datei committet (commit*).
+// Archiv-Einträge/Missionen/Charaktere/Missionslogs an — aber einzeln statt
+// als Batch: jede Datei wird zuerst nur geparst (preview*, keine
+// Schreibaktion) und kann vor dem Anlegen in der UI bearbeitet werden
+// (siehe *Edits-Interfaces unten), bevor sie einzeln bestätigt wird
+// (commit*).
 //
 // Zwei bewusste Abweichungen vom CLI-Ingest:
 // - Kategorie-Ableitung aus dem Ordnernamen (FOLDER_CATEGORY) entfällt beim
@@ -21,11 +23,22 @@
 // einen bereits vergebenen Slug hart ab — ein versehentliches Überschreiben
 // bestehender Inhalte über eine Web-Upload-Fläche (ohne git-Review wie beim
 // Vault-Ingest) ist ein deutlich größeres Risiko als beim CLI-Tool.
+//
+// commit* nimmt zusätzlich zur rohen Datei ein *Edits-Objekt mit genau den
+// Feldern entgegen, die die Vorschau in der UI auch anzeigt (Titel/Tags/
+// Slug/Body-Text etc., siehe MarkdownImportPanel.tsx) — diese Werte
+// gewinnen gegenüber dem geparsten Frontmatter. Alles, was die Vorschau
+// NICHT anzeigt (Attribute/Referenzen bei Archiv-Einträgen, das restliche
+// Charakter-Metadata), bleibt unverändert aus dem geparsten Frontmatter.
+// Kein Sicherheitsproblem, da beide Actions bereits requireAdmin() prüfen —
+// derselbe Vertrauensrahmen wie jedes andere Inhalts-Erstellformular, das
+// ebenfalls beliebige Freitext-Werte einer eingeloggten Person entgegennimmt.
 import "server-only";
 import matter from "gray-matter";
 import type postgres from "postgres";
 import sql from "@/lib/db";
 import { markdownToHtml } from "@/lib/markdown";
+import { createMissionLog, missionLogSlugExists } from "@/lib/missions";
 import {
   validateSlug,
   parseDate,
@@ -46,6 +59,15 @@ import {
 import type { ArchiveMetadata, ArchiveParticipant } from "@/types/archive";
 
 type SqlClient = postgres.ISql;
+
+function isUniqueViolation(err: unknown): boolean {
+  return (
+    typeof err === "object" &&
+    err !== null &&
+    "code" in err &&
+    (err as { code?: string }).code === "23505"
+  );
+}
 
 export interface ImportFailure {
   ok: false;
@@ -79,6 +101,7 @@ export interface ArchiveImportPreview {
   tags: string[];
   summary: string | null;
   contentHtml: string;
+  bodyMarkdown: string;
   attributes: { label: string; value: string }[];
   referenceTargets: { label: string; target: string }[];
   ownerSlug: string | null;
@@ -87,6 +110,19 @@ export interface ArchiveImportPreview {
 }
 
 export type ArchivePreviewResult = ArchiveImportPreview | ImportFailure;
+
+// Editierbare Teilmenge der Vorschau (siehe Datei-Kopfkommentar) — category
+// bleibt bewusst NICHT editierbar: attributes/referenceTargets wurden schon
+// beim Parsen gegen die ursprüngliche category aufgelöst (siehe
+// CATEGORY_ATTRIBUTES/CATEGORY_REFERENCES), ein nachträglicher
+// Kategoriewechsel würde sie inkonsistent machen.
+export interface ArchiveImportEdits {
+  slug: string;
+  title: string;
+  tags: string[];
+  summary: string | null;
+  bodyMarkdown: string;
+}
 
 interface ParsedArchiveFrontmatter {
   slug: string;
@@ -185,6 +221,7 @@ export async function previewArchiveMarkdown(
       tags: parsed.tags,
       summary: str(data.teaser),
       contentHtml: parsed.contentHtml,
+      bodyMarkdown: parsed.content,
       attributes: parsed.attributes,
       referenceTargets: parsed.referenceTargets,
       ownerSlug: typeof data.owner === "string" ? data.owner.trim() || null : null,
@@ -217,6 +254,7 @@ async function resolveArchiveRef(client: SqlClient, slug: string): Promise<Resol
 export async function commitArchiveMarkdown(
   filename: string,
   raw: string,
+  edits: ArchiveImportEdits,
 ): Promise<CommitResult> {
   let parsed: ParsedArchiveFrontmatter;
   try {
@@ -225,11 +263,21 @@ export async function commitArchiveMarkdown(
     return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
 
+  let slug: string;
+  try {
+    slug = validateSlug(edits.slug, filename);
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+  }
+  const title = edits.title.trim();
+  if (!title) return { ok: false, error: 'Pflichtfeld "Titel" darf nicht leer sein.' };
+  const contentHtml = await markdownToHtml(edits.bodyMarkdown);
+
   return sql.begin(async (tx) => {
     const ownerUserId = await resolveOwner(tx, parsed.data.owner);
 
     const metadata: ArchiveMetadata = {
-      summary: str(parsed.data.teaser),
+      summary: edits.summary,
       attributes: parsed.attributes,
       characters: [],
       missions: [],
@@ -244,15 +292,15 @@ export async function commitArchiveMarkdown(
         slug, title, category, content, tags, metadata,
         source_md, frontmatter, owner_user_id, updated_at
       ) VALUES (
-        ${parsed.slug}, ${parsed.title}, ${parsed.category}, ${parsed.contentHtml}, ${parsed.tags},
-        ${tx.json(metadata as unknown as ReturnType<typeof JSON.parse>)}, ${parsed.content},
+        ${slug}, ${title}, ${parsed.category}, ${contentHtml}, ${edits.tags},
+        ${tx.json(metadata as unknown as ReturnType<typeof JSON.parse>)}, ${edits.bodyMarkdown},
         ${tx.json(parsed.data as ReturnType<typeof JSON.parse>)}, ${ownerUserId}, NOW()
       )
       ON CONFLICT (slug) DO NOTHING
       RETURNING id
     `;
     if (!row) {
-      return { ok: false, error: `Slug "${parsed.slug}" ist bereits vergeben.` };
+      return { ok: false, error: `Slug "${slug}" ist bereits vergeben.` };
     }
 
     const warnings: string[] = [];
@@ -310,7 +358,7 @@ export async function commitArchiveMarkdown(
       `;
     }
 
-    return { ok: true, slug: parsed.slug, id: row.id, warnings };
+    return { ok: true, slug, id: row.id, warnings };
   });
 }
 
@@ -329,12 +377,23 @@ export interface MissionImportPreview {
   endedAt: string | null;
   tags: string[];
   bodyHtml: string;
+  bodyMarkdown: string;
   ownerSlug: string | null;
   slugTaken: boolean;
   warnings: string[];
 }
 
 export type MissionPreviewResult = MissionImportPreview | ImportFailure;
+
+export interface MissionImportEdits {
+  slug: string;
+  title: string;
+  status: string;
+  startedAt: string | null;
+  endedAt: string | null;
+  tags: string[];
+  bodyMarkdown: string;
+}
 
 interface ParsedMissionFrontmatter {
   slug: string;
@@ -385,6 +444,7 @@ export async function previewMissionMarkdown(
       endedAt: parseDate(parsed.data.ended_at),
       tags: toStringArray(parsed.data.tags),
       bodyHtml: parsed.bodyHtml,
+      bodyMarkdown: parsed.content,
       ownerSlug: typeof parsed.data.owner === "string" ? parsed.data.owner.trim() || null : null,
       slugTaken: !!existing,
       warnings: existing ? [`Slug "${parsed.slug}" ist bereits vergeben.`] : [],
@@ -397,6 +457,7 @@ export async function previewMissionMarkdown(
 export async function commitMissionMarkdown(
   filename: string,
   raw: string,
+  edits: MissionImportEdits,
 ): Promise<CommitResult> {
   let parsed: ParsedMissionFrontmatter;
   try {
@@ -405,7 +466,22 @@ export async function commitMissionMarkdown(
     return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
 
-  const metadata = { tags: toStringArray(parsed.data.tags), body: parsed.bodyHtml };
+  let slug: string;
+  try {
+    slug = validateSlug(edits.slug, filename);
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+  }
+  const title = edits.title.trim();
+  if (!title) return { ok: false, error: 'Pflichtfeld "Titel" darf nicht leer sein.' };
+  if (!MISSION_STATUSES.includes(edits.status)) {
+    return {
+      ok: false,
+      error: `Ungültiger status "${edits.status}" – erlaubt: ${MISSION_STATUSES.join(", ")}`,
+    };
+  }
+  const bodyHtml = await markdownToHtml(edits.bodyMarkdown);
+  const metadata = { tags: edits.tags, body: bodyHtml };
 
   return sql.begin(async (tx) => {
     const ownerUserId = await resolveOwner(tx, parsed.data.owner);
@@ -414,18 +490,18 @@ export async function commitMissionMarkdown(
         slug, title, status, started_at, ended_at, metadata,
         source_md, frontmatter, owner_user_id, updated_at
       ) VALUES (
-        ${parsed.slug}, ${parsed.title}, ${parsed.status},
-        ${parseDate(parsed.data.started_at)}, ${parseDate(parsed.data.ended_at)},
-        ${tx.json(metadata as ReturnType<typeof JSON.parse>)}, ${parsed.content},
+        ${slug}, ${title}, ${edits.status},
+        ${edits.startedAt}, ${edits.endedAt},
+        ${tx.json(metadata as ReturnType<typeof JSON.parse>)}, ${edits.bodyMarkdown},
         ${tx.json(parsed.data as ReturnType<typeof JSON.parse>)}, ${ownerUserId}, NOW()
       )
       ON CONFLICT (slug) DO NOTHING
       RETURNING id
     `;
     if (!row) {
-      return { ok: false, error: `Slug "${parsed.slug}" ist bereits vergeben.` };
+      return { ok: false, error: `Slug "${slug}" ist bereits vergeben.` };
     }
-    return { ok: true, slug: parsed.slug, id: row.id, warnings: [] };
+    return { ok: true, slug, id: row.id, warnings: [] };
   });
 }
 
@@ -441,11 +517,19 @@ export interface CharacterImportPreview {
   name: string;
   status: string;
   bio: string;
+  bodyMarkdown: string;
   slugTaken: boolean;
   warnings: string[];
 }
 
 export type CharacterPreviewResult = CharacterImportPreview | ImportFailure;
+
+export interface CharacterImportEdits {
+  slug: string;
+  name: string;
+  status: string;
+  bodyMarkdown: string;
+}
 
 interface ParsedCharacterFrontmatter {
   slug: string;
@@ -493,6 +577,7 @@ export async function previewCharacterMarkdown(
       name: parsed.name,
       status: parsed.status,
       bio: parsed.bio,
+      bodyMarkdown: parsed.content,
       slugTaken: !!existing,
       warnings: existing ? [`Slug "${parsed.slug}" ist bereits vergeben.`] : [],
     };
@@ -510,6 +595,7 @@ interface CharacterAffiliation {
 export async function commitCharacterMarkdown(
   filename: string,
   raw: string,
+  edits: CharacterImportEdits,
 ): Promise<CommitResult> {
   let parsed: ParsedCharacterFrontmatter;
   try {
@@ -517,6 +603,22 @@ export async function commitCharacterMarkdown(
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : String(error) };
   }
+
+  let slug: string;
+  try {
+    slug = validateSlug(edits.slug, filename);
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+  }
+  const name = edits.name.trim();
+  if (!name) return { ok: false, error: 'Pflichtfeld "Name" darf nicht leer sein.' };
+  if (!CHARACTER_STATUSES.includes(edits.status)) {
+    return {
+      ok: false,
+      error: `Ungültiger status "${edits.status}" – erlaubt: ${CHARACTER_STATUSES.join(", ")}`,
+    };
+  }
+  const bio = await markdownToHtml(edits.bodyMarkdown);
 
   const fm = parsed.data;
   const affiliation = fm.affiliation as CharacterAffiliation | undefined;
@@ -543,15 +645,221 @@ export async function commitCharacterMarkdown(
       slug, name, status, portrait, bio, metadata,
       source_md, frontmatter, updated_at
     ) VALUES (
-      ${parsed.slug}, ${parsed.name}, ${parsed.status}, ${str(fm.portrait)}, ${parsed.bio},
-      ${sql.json(metadata as ReturnType<typeof JSON.parse>)}, ${parsed.content},
+      ${slug}, ${name}, ${edits.status}, ${str(fm.portrait)}, ${bio},
+      ${sql.json(metadata as ReturnType<typeof JSON.parse>)}, ${edits.bodyMarkdown},
       ${sql.json(fm as ReturnType<typeof JSON.parse>)}, NOW()
     )
     ON CONFLICT (slug) DO NOTHING
     RETURNING id
   `;
   if (!row) {
-    return { ok: false, error: `Slug "${parsed.slug}" ist bereits vergeben.` };
+    return { ok: false, error: `Slug "${slug}" ist bereits vergeben.` };
   }
-  return { ok: true, slug: parsed.slug, id: row.id, warnings: [] };
+  return { ok: true, slug, id: row.id, warnings: [] };
+}
+
+// ── Missionslogs ─────────────────────────────────────────────────────────
+//
+// Anders als die drei Typen oben gibt es hier keinen "reinen Parse dann
+// Commit"-Pfad ohne Edits: mission_id/author_id sind NOT NULL-Fremdschlüssel
+// (siehe scripts/schema.sql), die sich aus Slugs im Frontmatter oft nicht
+// zuverlässig auflösen lassen (Tippfehler, Datei isoliert hochgeladen ohne
+// Kontext). previewMissionLogMarkdown bricht deshalb bei unauflösbarer
+// Mission/Autor NICHT ab (anders als scripts/ingest/missionLogs.ts) —
+// stattdessen bleiben missionTitle/authorName null, die UI zeigt zwei leere
+// Auswahlfelder, und commitMissionLogMarkdown verlangt zwingend gültige
+// edits.missionSlug/authorSlug. Der Slug wird wie beim CLI-Ingest aus
+// author-mission-session_nr gebaut, nicht aus dem Frontmatter übernommen.
+
+const MISSION_LOG_TYPE_MARKER = "mission-log";
+
+export interface MissionLogImportPreview {
+  kind: "mission_log";
+  ok: true;
+  filename: string;
+  title: string;
+  logDate: string | null;
+  sessionNr: number | null;
+  tags: string[];
+  bodyHtml: string;
+  bodyMarkdown: string;
+  missionSlug: string;
+  missionTitle: string | null;
+  authorSlug: string;
+  authorName: string | null;
+  ownerSlug: string | null;
+  warnings: string[];
+}
+
+export type MissionLogPreviewResult = MissionLogImportPreview | ImportFailure;
+
+export interface MissionLogImportEdits {
+  title: string;
+  missionSlug: string;
+  authorSlug: string;
+  logDate: string | null;
+  sessionNr: number;
+  tags: string[];
+  bodyMarkdown: string;
+  ownerSlug: string | null;
+}
+
+interface ParsedMissionLogFrontmatter {
+  title: string;
+  content: string;
+  bodyHtml: string;
+  data: Record<string, unknown>;
+  missionSlug: string;
+  authorSlug: string;
+  sessionNr: number | null;
+  logDate: string | null;
+  tags: string[];
+}
+
+function toOptionalInt(value: unknown): number | null {
+  if (typeof value === "number" && Number.isInteger(value)) return value;
+  if (typeof value === "string" && value.trim() !== "" && /^-?\d+$/.test(value.trim())) {
+    return Number(value.trim());
+  }
+  return null;
+}
+
+async function parseMissionLogFrontmatter(
+  filename: string,
+  raw: string,
+): Promise<ParsedMissionLogFrontmatter> {
+  const { data, content } = matter(raw);
+  const fm = data as Record<string, unknown>;
+
+  if (str(fm.type) !== MISSION_LOG_TYPE_MARKER) {
+    throw new Error('Frontmatter "type: mission-log" fehlt.');
+  }
+  const title = str(fm.title);
+  if (!title) throw new Error('Pflichtfeld "title" fehlt oder ist leer.');
+  const bodyHtml = await markdownToHtml(content);
+
+  return {
+    title,
+    content,
+    bodyHtml,
+    data: fm,
+    missionSlug: typeof fm.mission === "string" ? fm.mission.trim() : "",
+    authorSlug: typeof fm.author === "string" ? fm.author.trim() : "",
+    sessionNr: toOptionalInt(fm.session_nr),
+    logDate: parseDate(fm.log_date),
+    tags: toStringArray(fm.tags),
+  };
+}
+
+export async function previewMissionLogMarkdown(
+  filename: string,
+  raw: string,
+): Promise<MissionLogPreviewResult> {
+  try {
+    const parsed = await parseMissionLogFrontmatter(filename, raw);
+    const warnings: string[] = [];
+
+    let missionTitle: string | null = null;
+    if (parsed.missionSlug) {
+      const [m] = await sql<{ title: string }[]>`
+        SELECT title FROM missions WHERE slug = ${parsed.missionSlug}
+      `;
+      missionTitle = m?.title ?? null;
+      if (!m) {
+        warnings.push(`Mission "${parsed.missionSlug}" nicht gefunden — bitte manuell auswählen.`);
+      }
+    } else {
+      warnings.push("Keine Mission im Frontmatter angegeben — bitte auswählen.");
+    }
+
+    let authorName: string | null = null;
+    if (parsed.authorSlug) {
+      const [c] = await sql<{ name: string }[]>`
+        SELECT name FROM characters WHERE slug = ${parsed.authorSlug}
+      `;
+      authorName = c?.name ?? null;
+      if (!c) {
+        warnings.push(`Charakter "${parsed.authorSlug}" nicht gefunden — bitte manuell auswählen.`);
+      }
+    } else {
+      warnings.push("Kein Autor im Frontmatter angegeben — bitte auswählen.");
+    }
+
+    return {
+      kind: "mission_log",
+      ok: true,
+      filename,
+      title: parsed.title,
+      logDate: parsed.logDate,
+      sessionNr: parsed.sessionNr,
+      tags: parsed.tags,
+      bodyHtml: parsed.bodyHtml,
+      bodyMarkdown: parsed.content,
+      missionSlug: parsed.missionSlug,
+      missionTitle,
+      authorSlug: parsed.authorSlug,
+      authorName,
+      ownerSlug: typeof parsed.data.owner === "string" ? parsed.data.owner.trim() || null : null,
+      warnings,
+    };
+  } catch (error) {
+    return { ok: false, filename, error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+export async function commitMissionLogMarkdown(
+  filename: string,
+  _raw: string,
+  edits: MissionLogImportEdits,
+): Promise<CommitResult> {
+  const title = edits.title.trim();
+  if (!title) return { ok: false, error: 'Pflichtfeld "Titel" darf nicht leer sein.' };
+  if (!Number.isInteger(edits.sessionNr) || edits.sessionNr < 1) {
+    return { ok: false, error: "Sitzungsnummer muss eine positive ganze Zahl sein." };
+  }
+
+  const [mission] = await sql<{ id: number; slug: string }[]>`
+    SELECT id, slug FROM missions WHERE slug = ${edits.missionSlug}
+  `;
+  if (!mission) return { ok: false, error: `Mission "${edits.missionSlug}" nicht gefunden.` };
+
+  const [author] = await sql<{ id: number; slug: string; player_id: number | null }[]>`
+    SELECT id, slug, player_id FROM characters WHERE slug = ${edits.authorSlug}
+  `;
+  if (!author) return { ok: false, error: `Charakter "${edits.authorSlug}" nicht gefunden.` };
+
+  let slug: string;
+  try {
+    slug = validateSlug(`${author.slug}-${mission.slug}-${edits.sessionNr}`, filename);
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : String(error) };
+  }
+
+  if (await missionLogSlugExists(slug)) {
+    return { ok: false, error: `Slug "${slug}" ist bereits vergeben.` };
+  }
+
+  const ownerUserId = edits.ownerSlug
+    ? await resolveOwner(sql, edits.ownerSlug)
+    : author.player_id;
+
+  try {
+    const { id } = await createMissionLog({
+      slug,
+      missionId: mission.id,
+      authorId: author.id,
+      title,
+      bodyMarkdown: edits.bodyMarkdown,
+      logDate: edits.logDate,
+      sessionNr: edits.sessionNr,
+      tags: edits.tags,
+      ownerUserId,
+    });
+    return { ok: true, slug, id, warnings: [] };
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      return { ok: false, error: `Slug "${slug}" ist bereits vergeben.` };
+    }
+    throw error;
+  }
 }

@@ -224,3 +224,19 @@ export function SortArrowIcon() {
     </svg>
   );
 }
+
+// Zurück/Weiter-Navigation (MarkdownImportPanel.tsx — Vorschau-Karussell).
+export function ChevronLeftIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M15 5l-7 7 7 7" />
+    </svg>
+  );
+}
+export function ChevronRightIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M9 5l7 7-7 7" />
+    </svg>
+  );
+}

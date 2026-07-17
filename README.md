@@ -41,8 +41,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
   entstehen danach direkt in der App (Datenbank als alleinige Source of Truth).
   Admins können im selben Frontmatter-Format zusätzlich einzelne oder mehrere
-  `.md`-Dateien direkt im Adminbereich hochladen (mit Vorschau, die pro Datei
-  einzeln bestätigt werden muss), ohne dafür das CLI-Ingest-Skript zu brauchen.
+  `.md`-Dateien direkt im Adminbereich hochladen — Archiv-Einträge, Missionen,
+  Charaktere und Missionslogs —, ohne dafür das CLI-Ingest-Skript zu brauchen.
+  Jede Datei wird zunächst nur geparst und als durchblätterbare Vorschau
+  angezeigt (Datei 1 von N mit Vor-/Zurück-Navigation), in der sich alle
+  Felder inklusive Text noch bearbeiten lassen, bevor sie einzeln bestätigt
+  wird.
 - **DB-Backup** — der komplette Datenbankinhalt lässt sich im Admin-Panel als
   JSON-Datei herunterladen und bei Bedarf wieder vollständig einspielen; ein
   täglicher Cronjob sichert zusätzlich automatisch nach Cloudflare R2 und
