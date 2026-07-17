@@ -268,19 +268,28 @@ ALTER TABLE content_follows ADD CONSTRAINT content_follows_target_type_check
 
 -- GM-Rolle wird gesplittet: admin (volle Useraccount-Verwaltung +
 -- Charakter-Zuweisung) und gm (nur noch Charakter-Zuweisung +
--- Spielleitungs-Befugnisse wie Dialog-Force-Complete). Bestehende
--- role='gm'-Accounts migrieren zu 'admin', um alle heutigen Rechte zu
--- behalten (kein Risiko, sich selbst auszusperren). Reihenfolge wichtig:
--- Constraint zuerst erweitern, dann Daten migrieren. 'guest' ist hier
+-- Spielleitungs-Befugnisse wie Dialog-Force-Complete). 'guest' ist hier
 -- (statt erst weiter unten) schon mit erlaubt: db:setup spielt beim
 -- Re-Run diese ganze Datei erneut gegen eine bereits befüllte DB ab —
 -- ohne 'guest' würde dieser Constraint an bestehenden role='guest'-Zeilen
 -- (siehe unten) scheitern, genau wie bei content_follows_target_type_check
 -- weiter oben.
+--
+-- WICHTIG — Bug behoben: hier stand früher zusätzlich
+-- "UPDATE users SET role = 'admin' WHERE role = 'gm';", einmalig gedacht,
+-- um beim Split bestehende role='gm'-Accounts auf 'admin' zu heben (kein
+-- Risiko, sich selbst auszusperren). Diese Datei wird aber bei jedem
+-- db:setup erneut komplett abgespielt, und das UPDATE hatte keinerlei
+-- Sperre gegen Wiederholung — jeder aktuelle 'gm'-User wurde dadurch bei
+-- JEDEM db:setup-Lauf erneut still auf 'admin' hochgestuft, ganz ohne
+-- Admin-Audit-Log-Eintrag (rohes SQL, kein logAdminAction) und ohne dass
+-- irgendjemand das ausgelöst hätte — eine Privilegien-Eskalation, die bei
+-- jedem Schema-Update erneut zuschlug. 'gm' ist eine aktiv genutzte,
+-- eigenständige Rolle (siehe requireGM in src/lib/dal.ts) und darf nicht
+-- bei jedem Setup-Lauf wieder zu 'admin' migriert werden.
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
 ALTER TABLE users ADD CONSTRAINT users_role_check
   CHECK (role IN ('admin', 'gm', 'player', 'viewer', 'guest'));
-UPDATE users SET role = 'admin' WHERE role = 'gm';
 
 -- Admin kann Useraccounts deaktivieren (Soft-Block am Login, siehe
 -- src/app/login/actions.ts) statt sie sofort zu löschen.

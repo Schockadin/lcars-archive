@@ -75,4 +75,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     summary:
       "Der Adminbereich war bisher eine einzige lange Seite – jetzt führt ein Dropdown-Menü über „Admin“ im Header zu eigenen Unterseiten für User, Charaktere, DB, Scripts, Inhalte und Audit-Log. Die Nutzerübersicht zeigt jetzt eine durchsuchbare, sortier- und filterbare Tabelle inklusive der Zeitpunkte des letzten Logins und Seitenaufrufs, die eigentliche Kontoverwaltung findet sich gebündelt auf der Detailseite eines Users. Neu auf der DB-Seite: Admins können sich Datenbank-Tabellen jetzt direkt und rein lesend ansehen (inklusive Sortierung, Filtern und einem freien SQL-Abfragefeld), ohne dafür erst ein Backup exportieren zu müssen. Das Audit-Log zeigt zusätzlich, welche Inhalte in den letzten drei Tagen hinzugefügt, bearbeitet oder gelöscht wurden. Wer eine Mission oder einen Archiv-Eintrag abonniert hat, bekommt jetzt außerdem eine Benachrichtigung, wenn genau dieser Inhalt bearbeitet wird – bisher gab es das nur bei abonnierten Charakteren.",
   },
+  {
+    version: "1.15",
+    title: "Fehlerhafte automatische Rollen-Hochstufung behoben",
+    summary:
+      "Ein hartnäckiger Fehler ist behoben: bei jeder technischen Datenbank-Aktualisierung wurde die Rolle bestehender Spielleitungs-Accounts automatisch und ohne Ankündigung auf Administration hochgestuft, statt unverändert zu bleiben. Dadurch konnte eine bewusst auf Spielleitung zurückgestufte Person nach einem Update ungewollt wieder volle Administrationsrechte bekommen, ohne dass das irgendwo protokolliert wurde. Zusätzlich ist abgesichert, dass die im Header angezeigten Anmeldedaten (Name, Rolle) nie über einen Zwischenspeicher an die falsche Person ausgeliefert werden können.",
+  },
 ];

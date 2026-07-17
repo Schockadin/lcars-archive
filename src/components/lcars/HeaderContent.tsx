@@ -46,7 +46,11 @@ export default function HeaderContent() {
 
     let cancelled = false;
     hasFetchedRef.current = true;
-    fetch("/api/session")
+    // cache: "no-store" — zusätzlich zu den No-Store-Response-Headern in
+    // /api/session/route.ts: verhindert, dass der Browser selbst diese
+    // personalisierte Antwort (userId/role) aus seinem HTTP-Cache
+    // wiederverwendet, statt jedes Mal frisch nachzufragen.
+    fetch("/api/session", { cache: "no-store" })
       .then((res) => res.json())
       .then((data: SessionInfo) => {
         if (!cancelled) setSession(data);

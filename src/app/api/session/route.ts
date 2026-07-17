@@ -32,8 +32,21 @@ export async function GET() {
   if (session) {
     await touchLastVisit(session.userId);
   }
-  return NextResponse.json({
-    userId: session?.userId ?? null,
-    role: session?.role ?? null,
-  });
+  // Explizite No-Store-Header statt uns allein auf force-dynamic zu
+  // verlassen: dieser Endpunkt liefert userId/role, personalisierte Daten,
+  // die niemals von einem zwischengeschalteten Cache (Netlifys CDN/Edge,
+  // Browser-HTTP-Cache) für einen anderen User wiederverwendet werden
+  // dürfen — genau das würde sonst wie ein fremder eingeloggter Account im
+  // Header aussehen.
+  return NextResponse.json(
+    {
+      userId: session?.userId ?? null,
+      role: session?.role ?? null,
+    },
+    {
+      headers: {
+        "Cache-Control": "private, no-store, no-cache, must-revalidate",
+      },
+    },
+  );
 }
