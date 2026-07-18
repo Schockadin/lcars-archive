@@ -145,14 +145,32 @@
   padding: 0 18px 8px;
   height: 40px;
 }
+/* min-width statt fester width: eine feste 250px-Box hat längere
+   Beschriftungen (z.B. "Antwortrecht reservieren (2 Stunden)") bisher
+   wegen white-space:nowrap + overflow:hidden ohne text-overflow:ellipsis
+   unsichtbar abgeschnitten, statt umzubrechen oder sich anzupassen — mit
+   width:auto wächst die Box mit ihrem Inhalt, min-width hält kurze
+   Beschriftungen (z.B. "Speichern") trotzdem einheitlich breit. Auf sehr
+   schmalen Viewports (≤480px) volle Breite, damit ein einzeln stehender
+   Button nicht schmaler als sein Container wirkt — mehrbuttonige Reihen
+   nutzen an den Call-Sites bereits flex-wrap und profitieren automatisch
+   von der neuen Auto-Breite ohne diese Regel. */
 .lcars-pill-btn--outline {
   color: var(--lcars-text-data);
   background-color: var(--lcars-surface);
   border: 1px solid var(--lcars-text-data);
   align-items: center;
   justify-content: center;
-  width: 250px;
+  min-width: 180px;
+  width: auto;
+  padding: 0 20px;
   height: 40px;
+}
+
+@media (max-width: 480px) {
+  .lcars-pill-btn--outline {
+    width: 100%;
+  }
 }
 
 .lcars-filters {

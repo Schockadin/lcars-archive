@@ -9,6 +9,7 @@ import {
 } from "./dbBackupActions";
 import type { RestoreDbSummary } from "@/lib/dbBackup";
 import type { R2BackupObject } from "@/lib/r2Backup";
+import { DownloadIcon, UploadIcon, CloudIcon } from "@/lib/icons";
 
 const CONFIRM_IMPORT_MESSAGE =
   "Dieses Backup jetzt einspielen? Das ERSETZT den kompletten aktuellen " +
@@ -165,17 +166,21 @@ export default function DbBackupPanel() {
             type="button"
             onClick={handleExportLocal}
             disabled={exportingLocal}
-            className="lcars-pill-btn--outline self-start disabled:opacity-50"
+            className="lcars-pill-btn--outline self-start disabled:opacity-50 gap-[8px]"
+            title="Lokal herunterladen"
           >
-            {exportingLocal ? "Export läuft…" : "Lokal herunterladen"}
+            <DownloadIcon />
+            {exportingLocal ? "Export läuft…" : "Lokal"}
           </button>
           <button
             type="button"
             onClick={handleExportR2}
             disabled={exportingR2}
-            className="lcars-pill-btn--outline self-start disabled:opacity-50"
+            className="lcars-pill-btn--outline self-start disabled:opacity-50 gap-[8px]"
+            title="Im R2-Bucket speichern"
           >
-            {exportingR2 ? "Wird hochgeladen…" : "Im R2-Bucket speichern"}
+            <CloudIcon />
+            {exportingR2 ? "Wird hochgeladen…" : "Im R2 speichern"}
           </button>
         </div>
         {r2SavedKey && (
@@ -188,8 +193,12 @@ export default function DbBackupPanel() {
       <div className="flex flex-col gap-[6px]">
         <p className="lcars-eyebrow">Import</p>
         <div className="flex flex-wrap items-center gap-[12px]">
-          <label className="lcars-pill-btn--outline self-start cursor-pointer disabled:opacity-50">
-            {importing ? "Import läuft…" : "Lokale Datei einspielen"}
+          <label
+            className="lcars-pill-btn--outline self-start cursor-pointer disabled:opacity-50 gap-[8px]"
+            title="Lokale Datei einspielen"
+          >
+            <UploadIcon />
+            {importing ? "Import läuft…" : "Datei einspielen"}
             <input
               ref={fileInputRef}
               type="file"
@@ -208,9 +217,11 @@ export default function DbBackupPanel() {
               type="button"
               onClick={loadR2Backups}
               disabled={r2Listing}
-              className="lcars-pill-btn--outline self-start disabled:opacity-50"
+              className="lcars-pill-btn--outline self-start disabled:opacity-50 gap-[8px]"
+              title="Aus R2-Bucket importieren"
             >
-              {r2Listing ? "Lädt…" : "Aus R2-Bucket importieren"}
+              <CloudIcon />
+              {r2Listing ? "Lädt…" : "Aus R2 importieren"}
             </button>
           )}
         </div>
@@ -245,8 +256,9 @@ export default function DbBackupPanel() {
                   onClick={handleImportFromR2}
                   disabled={r2Importing}
                   className="lcars-pill-btn--outline self-start disabled:opacity-50"
+                  title="Dieses Backup einspielen"
                 >
-                  {r2Importing ? "Import läuft…" : "Dieses Backup einspielen"}
+                  {r2Importing ? "Import läuft…" : "Einspielen"}
                 </button>
               </>
             )}

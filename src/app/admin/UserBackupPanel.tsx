@@ -5,6 +5,7 @@ import {
   importUsersBackupAction,
 } from "./userBackupActions";
 import type { RestoreUsersSummary } from "@/lib/userBackup";
+import { DownloadIcon, UploadIcon } from "@/lib/icons";
 
 // Admin-only (siehe page.tsx) — Export/Import NUR der User-Datensätze als
 // JSON-Datei, per Upsert über die E-Mail-Adresse (siehe
@@ -76,13 +77,19 @@ export default function UserBackupPanel() {
           type="button"
           onClick={handleExport}
           disabled={exporting}
-          className="lcars-pill-btn--outline self-start disabled:opacity-50"
+          className="lcars-pill-btn--outline self-start disabled:opacity-50 gap-[8px]"
+          title="Backup herunterladen"
         >
-          {exporting ? "Export läuft…" : "Backup herunterladen"}
+          <DownloadIcon />
+          {exporting ? "Export läuft…" : "Herunterladen"}
         </button>
 
-        <label className="lcars-pill-btn--outline self-start cursor-pointer disabled:opacity-50">
-          {importing ? "Import läuft…" : "Backup importieren"}
+        <label
+          className="lcars-pill-btn--outline self-start cursor-pointer disabled:opacity-50 gap-[8px]"
+          title="Backup importieren"
+        >
+          <UploadIcon />
+          {importing ? "Import läuft…" : "Importieren"}
           <input
             ref={fileInputRef}
             type="file"

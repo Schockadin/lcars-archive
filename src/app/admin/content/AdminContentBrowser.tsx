@@ -161,11 +161,17 @@ export default function AdminContentBrowser({
           onClick={toggleSelectAllVisible}
           className="lcars-pill-btn--outline"
           disabled={filteredItems.length === 0}
+          title={
+            filteredItems.length > 0 &&
+            filteredItems.every((i) => selected.has(itemKey(i)))
+              ? "Auswahl aufheben"
+              : "Alle sichtbaren auswählen"
+          }
         >
           {filteredItems.length > 0 &&
           filteredItems.every((i) => selected.has(itemKey(i)))
             ? "Auswahl aufheben"
-            : "Alle sichtbaren auswählen"}
+            : "Alle auswählen"}
         </button>
 
         <select
@@ -188,10 +194,9 @@ export default function AdminContentBrowser({
           onClick={handleBulkAssign}
           disabled={pending || selected.size === 0}
           className="lcars-pill-btn--outline disabled:opacity-50"
+          title={`Owner für ${selected.size} Auswahl${selected.size === 1 ? "" : "en"} setzen`}
         >
-          {pending
-            ? "Wird zugeordnet…"
-            : `Owner für ${selected.size} Auswahl${selected.size === 1 ? "" : "en"} setzen`}
+          {pending ? "Wird zugeordnet…" : `Owner setzen (${selected.size})`}
         </button>
 
         {error && (

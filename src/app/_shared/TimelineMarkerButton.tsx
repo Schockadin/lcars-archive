@@ -1,6 +1,7 @@
 "use client";
 import { useId, useState } from "react";
 import { createPortal } from "react-dom";
+import { CheckIcon, XIcon } from "@/lib/icons";
 
 const inputClass = "rounded-lcars-pill lcars-input w-full";
 
@@ -113,8 +114,9 @@ export default function TimelineMarkerButton({
           type="button"
           onClick={() => setOpen(true)}
           className="lcars-pill-btn self-start"
+          title="Zeitleisten-Ereignis einfügen"
         >
-          Zeitleisten-Ereignis einfügen
+          Ereignis einfügen
         </button>
       )}
 
@@ -172,16 +174,23 @@ export default function TimelineMarkerButton({
                 </datalist>
               </label>
 
-              <div className="flex flex-wrap gap-[12px] items-center justify-end">
+              <div className="flex gap-[12px] items-center justify-end">
                 <button
                   type="button"
                   onClick={close}
-                  className="lcars-pill-btn--outline"
+                  className="lcars-icon-btn lcars-icon-btn--danger size-[40px]"
+                  aria-label="Abbrechen"
+                  title="Abbrechen"
                 >
-                  Abbrechen
+                  <XIcon />
                 </button>
-                <button type="submit" className="lcars-pill-btn--outline">
-                  Einfügen
+                <button
+                  type="submit"
+                  className="lcars-icon-btn size-[40px]"
+                  aria-label="Einfügen"
+                  title="Einfügen"
+                >
+                  <CheckIcon />
                 </button>
               </div>
             </form>

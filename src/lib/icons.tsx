@@ -240,3 +240,28 @@ export function ChevronRightIcon() {
     </svg>
   );
 }
+
+// DB-Backup-Panel (lokaler Export/Import, siehe DbBackupPanel.tsx/UserBackupPanel.tsx).
+export function DownloadIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M12 3v12M7 10l5 5 5-5" />
+      <path d="M4 19h16" />
+    </svg>
+  );
+}
+export function UploadIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M12 15V3M7 8l5-5 5 5" />
+      <path d="M4 19h16" />
+    </svg>
+  );
+}
+export function CloudIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M7 18a4.5 4.5 0 0 1-.4-8.98A5.5 5.5 0 0 1 17.4 8.1 4 4 0 0 1 17 18H7Z" />
+    </svg>
+  );
+}

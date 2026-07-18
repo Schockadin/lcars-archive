@@ -7,7 +7,7 @@ import {
   type EditMessageState,
   type DeleteMessageState,
 } from "@/app/actions/dialogues";
-import { PencilIcon, TrashIcon } from "@/lib/icons";
+import { PencilIcon, TrashIcon, CheckIcon, XIcon } from "@/lib/icons";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { FormError } from "@/app/_shared/FormPrimitives";
 
@@ -71,20 +71,28 @@ export default function DialogueMessageActions({
           defaultValue={sourceMd ?? ""}
           className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber min-h-[80px] resize-y font-mono"
         />
+        {/* Icon- statt Textbuttons (gleiches Muster wie
+            PreviewConfirmFooter.tsx/die eigenen Icon-Buttons weiter unten in
+            diesem File) — vorher zwei 250px-Textbuttons nebeneinander, die
+            auf schmalen Bildschirmen überliefen. */}
         <div className="flex gap-[8px]">
+          <button
+            type="button"
+            className="lcars-icon-btn lcars-icon-btn--danger size-[40px]"
+            onClick={() => setEditing(false)}
+            aria-label="Abbrechen"
+            title="Abbrechen"
+          >
+            <XIcon />
+          </button>
           <button
             type="submit"
             disabled={editPending}
-            className="lcars-pill-btn--outline self-start disabled:opacity-50"
+            className="lcars-icon-btn size-[40px] disabled:opacity-50"
+            aria-label={editPending ? "Wird gespeichert…" : "Speichern"}
+            title={editPending ? "Wird gespeichert…" : "Speichern"}
           >
-            {editPending ? "Wird gespeichert…" : "Speichern"}
-          </button>
-          <button
-            type="button"
-            className="lcars-pill-btn--outline self-start"
-            onClick={() => setEditing(false)}
-          >
-            Abbrechen
+            <CheckIcon />
           </button>
         </div>
         <FormError message={editState?.error} />

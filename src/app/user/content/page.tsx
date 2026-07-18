@@ -31,18 +31,18 @@ export default async function UserContentPage() {
       <article className="mb-[10px] pr-[var(--lcars-elbow-size)] gap-[20px] lcars-flex-switch">
         <section className="flex flex-col gap-[12px] justify-center items-end">
           <h2>Neue Inhalte</h2>
-          <div className="flex flex-col gap-[12px]">
+          <div className="flex flex-col gap-[12px] max-sm:w-full">
             {characters.length > 0 && (
               <>
                 <Link
                   href="/user/mission-logs/new"
-                  className="min-w-[250px] lcars-pill-btn"
+                  className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
                 >
                   Neuer Missionslog
                 </Link>
                 <Link
                   href="/user/dialogues/new"
-                  className="min-w-[250px] lcars-pill-btn"
+                  className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
                 >
                   Neues Gespräch
                 </Link>
@@ -54,7 +54,7 @@ export default async function UserContentPage() {
                 anlegen. */}
             <Link
               href="/user/archive/new"
-              className="min-w-[250px] lcars-pill-btn"
+              className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
             >
               Neuer Archiv-Eintrag
             </Link>
@@ -65,7 +65,7 @@ export default async function UserContentPage() {
             {user.role !== "guest" && (
               <Link
                 href="/user/characters/new"
-                className="min-w-[250px] lcars-pill-btn"
+                className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
               >
                 Neuer Charakter
               </Link>
@@ -73,7 +73,7 @@ export default async function UserContentPage() {
             {isGM && (
               <Link
                 href="/user/missions/new"
-                className="min-w-[250px] lcars-pill-btn"
+                className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
               >
                 Neue Mission
               </Link>

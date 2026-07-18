@@ -53,8 +53,9 @@ export default function DialogueLockPanel({
           onClick={handleReserve}
           disabled={pending}
           className="lcars-pill-btn--outline self-start disabled:opacity-50"
+          title="Reserviert das Antwortrecht für 2 Stunden"
         >
-          {pending ? "Wird reserviert…" : "Antwortrecht reservieren (2 Stunden)"}
+          {pending ? "Wird reserviert…" : "Antwortrecht reservieren"}
         </button>
         <FormError message={error} />
       </div>
@@ -85,8 +86,9 @@ export default function DialogueLockPanel({
           onClick={handleNotifyMe}
           disabled={pending}
           className="lcars-pill-btn--outline self-start disabled:opacity-50"
+          title="Informiere mich, wenn die Sperre endet"
         >
-          Informiere mich, wenn die Sperre endet
+          Informiere mich
         </button>
       )}
       {requested && (
