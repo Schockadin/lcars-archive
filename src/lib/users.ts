@@ -241,6 +241,30 @@ export async function updateDialogueViewPreference(
   `;
 }
 
+// Globale Präferenz (nicht pro Feld): native Browser-Rechtschreibprüfung in
+// allen Markdown-Editor-Feldern (MarkdownEditor.tsx). Eigene schlanke
+// Lese-/Schreibfunktionen statt Teil von USER_COLUMNS — MarkdownEditor.tsx
+// holt sich den Wert per direktem Client-Fetch (getEditorSpellcheckPreferenceAction
+// in app/actions/editorPreferences.ts, siehe getFollowState/FollowButtons.tsx
+// für dasselbe Muster) statt durch alle sechs Aufrufstellen durchgereicht zu
+// werden.
+export async function getEditorSpellcheckPreference(userId: number): Promise<boolean> {
+  const [row] = await sql<{ editor_spellcheck_enabled: boolean }[]>`
+    SELECT editor_spellcheck_enabled FROM users WHERE id = ${userId}
+  `;
+  return row?.editor_spellcheck_enabled ?? true;
+}
+
+export async function updateEditorSpellcheckPreference(
+  userId: number,
+  enabled: boolean,
+): Promise<void> {
+  await sql`
+    UPDATE users SET editor_spellcheck_enabled = ${enabled}
+    WHERE id = ${userId}
+  `;
+}
+
 export async function updateUser(
   id: number,
   data: UpdateUserInput,

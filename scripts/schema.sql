@@ -591,3 +591,9 @@ CREATE TABLE IF NOT EXISTS error_logs (
 );
 CREATE INDEX IF NOT EXISTS idx_error_logs_created_at ON error_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_error_logs_digest ON error_logs(digest);
+
+-- Globale User-Präferenz: native Rechtschreibprüfung des Browsers (HTML
+-- spellcheck-Attribut) in allen Markdown-Editor-Feldern (MarkdownEditor.tsx)
+-- an-/abschaltbar im Profil. DEFAULT true, da eine aktive Rechtschreib-
+-- prüfung der bisherige (Browser-Default-)Zustand ist.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS editor_spellcheck_enabled BOOLEAN NOT NULL DEFAULT true;
