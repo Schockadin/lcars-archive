@@ -1,14 +1,16 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   uploadContentImagesAction,
   deleteContentImageAction,
   getContentImagesAction,
+  setCharacterPortraitAction,
 } from "@/app/actions/contentImages";
 import type { ContentImage, ContentImageType } from "@/lib/contentImages";
 import ContentToolPreviewOverlay from "./ContentToolPreviewOverlay";
-import { ImageIcon, UploadIcon, TrashIcon, XIcon } from "@/lib/icons";
+import { ImageIcon, UploadIcon, TrashIcon, XIcon, PortraitIcon } from "@/lib/icons";
 
 // Bilder-Galerie für Charaktere/Missionen/Missionslogs/Archiv-Einträge
 // (nicht Dialoge) — analog zu AutolinkButton.tsx als Icon-Button + Modal
@@ -34,6 +36,7 @@ export default function ContentImageGallery({
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const router = useRouter();
 
   useEffect(() => {
     if (!open) return;
@@ -73,6 +76,24 @@ export default function ContentImageGallery({
       } else {
         setError(null);
         setImages(result.images ?? []);
+      }
+    });
+  }
+
+  // Nur für Charaktere: das Portrait liegt in characters.portrait (Spalte,
+  // kein content_images-Eintrag) und wird von CharacterPortrait.tsx als RSC-
+  // Prop gerendert — router.refresh() holt diesen Server-Zustand nach dem
+  // revalidateCharacter() in setCharacterPortraitAction frisch, ein reines
+  // Client-State-Update hier würde die Portrait-Anzeige sonst nicht
+  // erreichen.
+  function handleSetPortrait(imageId: number) {
+    startTransition(async () => {
+      const result = await setCharacterPortraitAction(contentId, imageId);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setError(null);
+        router.refresh();
       }
     });
   }
@@ -122,16 +143,30 @@ export default function ContentImageGallery({
                     className="size-[100px] object-cover rounded-[4px]"
                   />
                   {canManage && (
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(image.id)}
-                      disabled={pending}
-                      className="lcars-icon-btn lcars-icon-btn--danger absolute top-[2px] right-[2px] size-[28px] disabled:opacity-50"
-                      aria-label="Bild löschen"
-                      title="Bild löschen"
-                    >
-                      <TrashIcon />
-                    </button>
+                    <div className="absolute top-[2px] right-[2px] flex gap-[4px]">
+                      {contentType === "character" && (
+                        <button
+                          type="button"
+                          onClick={() => handleSetPortrait(image.id)}
+                          disabled={pending}
+                          className="lcars-icon-btn size-[28px] disabled:opacity-50"
+                          aria-label="Als Profilbild festlegen"
+                          title="Als Profilbild festlegen"
+                        >
+                          <PortraitIcon />
+                        </button>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(image.id)}
+                        disabled={pending}
+                        className="lcars-icon-btn lcars-icon-btn--danger size-[28px] disabled:opacity-50"
+                        aria-label="Bild löschen"
+                        title="Bild löschen"
+                      >
+                        <TrashIcon />
+                      </button>
+                    </div>
                   )}
                 </div>
               ))}

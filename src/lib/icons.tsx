@@ -276,3 +276,12 @@ export function ImageIcon() {
     </svg>
   );
 }
+export function PortraitIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <circle cx="12" cy="10" r="3" />
+      <path d="M7 18c0-2.8 2.2-4.5 5-4.5s5 1.7 5 4.5" />
+    </svg>
+  );
+}

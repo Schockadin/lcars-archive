@@ -6,6 +6,7 @@ import { FormField, SubmitButton, FormError } from "@/app/_shared/FormPrimitives
 import HeadFieldRenderer from "./HeadFieldRenderer";
 import MetadataSection from "./MetadataSection";
 import type { HeadField } from "./headFields";
+import type { ContentImageType } from "@/lib/contentImages";
 
 interface ContentEditorState {
   error?: string;
@@ -31,6 +32,8 @@ interface ContentEditorProps {
   bodyRequired?: boolean;
   bodyLarge?: boolean;
   isAdminOrGM?: boolean;
+  // Nur im Edit-Modus sinnvoll (contentId bekannt) — siehe MarkdownEditor.tsx.
+  insertImage?: { contentType: ContentImageType; contentId: number };
   // z.B. Mission-Logs Autor-/Missions-Select (dynamische Optionen, nur create).
   extraHeadSlot?: ReactNode;
   // Statische Zusatzfelder in der aufklappbaren "Metadaten +/-"-Sektion
@@ -61,6 +64,7 @@ export default function ContentEditor({
   bodyRequired = false,
   bodyLarge = false,
   isAdminOrGM = false,
+  insertImage,
   extraHeadSlot,
   metadataFields,
   metadataSlot,
@@ -119,6 +123,7 @@ export default function ContentEditor({
           defaultValue={bodyDefaultValue}
           isAdminOrGM={isAdminOrGM}
           large={bodyLarge}
+          insertImage={insertImage}
         />
       </FormField>
 

@@ -74,6 +74,7 @@ export default function MissionSynopsisEditor({
           required
           defaultValue={sourceMarkdown}
           isAdminOrGM
+          insertImage={{ contentType: "mission", contentId: missionId }}
         />
 
         <AutoLinkCheckbox idPrefix={`mission-synopsis-${missionId}`} />

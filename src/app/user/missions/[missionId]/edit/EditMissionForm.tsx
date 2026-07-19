@@ -56,6 +56,7 @@ export default function EditMissionForm({
         bodyRequired
         bodyLarge
         isAdminOrGM
+        insertImage={{ contentType: "mission", contentId: mission.id }}
         extraHeadSlot={
           <MissionParticipantsField
             idPrefix="edit-mission"

@@ -2,6 +2,7 @@
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
 import { getViewer, canView } from "@/lib/visibility";
+import { revalidateCharacter } from "@/lib/revalidate";
 import {
   isContentImageType,
   getContentAccessContext,
@@ -9,6 +10,7 @@ import {
   uploadContentImage,
   deleteContentImage,
   listContentImages,
+  setCharacterPortraitFromImage,
   InvalidContentImageError,
   type ContentImage,
   type ContentImageType,
@@ -123,4 +125,22 @@ export async function getContentImagesAction(
   if (!canView(access.visibility, access.ownerId, viewer)) return [];
 
   return listContentImages(contentTypeRaw, contentId);
+}
+
+// Setzt eines der bereits hochgeladenen Bilder als Profilbild — dieselbe
+// Owner-only-Berechtigung wie Bild-Upload/-Löschen für Charaktere
+// (requireContentImageAccess("character", ...), kein Admin-Bypass, siehe
+// canManageContentImages).
+export async function setCharacterPortraitAction(
+  characterId: number,
+  imageId: number,
+): Promise<{ error?: string }> {
+  const access = await requireContentImageAccess("character", characterId);
+  if ("error" in access) return access;
+
+  const slug = await setCharacterPortraitFromImage(characterId, imageId);
+  if (!slug) return { error: "Bild nicht gefunden." };
+
+  revalidateCharacter(slug);
+  return {};
 }

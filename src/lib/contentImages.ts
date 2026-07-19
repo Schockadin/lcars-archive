@@ -230,4 +230,144 @@ export async function deleteContentImage(
   return true;
 }
 
+// Entfernt alle Bilder eines Inhalts inkl. R2-Objekten — von purgeContent.ts
+// beim endgültigen Löschen eines Inhalts aufgerufen. content_images hat
+// keine Fremdschlüssel-Beziehung zu den vier Inhaltstabellen (polymorph
+// über content_type/content_id), ein DELETE der Ursprungszeile räumt Bilder
+// deshalb nicht automatisch mit auf — ohne diesen Aufruf blieben sowohl die
+// DB-Zeilen als auch die R2-Objekte für immer verwaist liegen.
+export async function purgeContentImagesFor(
+  contentType: ContentImageType,
+  contentId: number,
+): Promise<void> {
+  const rows = await sql<{ r2_key: string }[]>`
+    DELETE FROM content_images
+    WHERE content_type = ${contentType} AND content_id = ${contentId}
+    RETURNING r2_key
+  `;
+  for (const row of rows) {
+    await deleteObjectFromR2(row.r2_key);
+  }
+}
+
+// Admin-only Löschen ohne Content-Scoping (siehe Kommentar über
+// deleteContentImage oben) — für /admin/content/images, wo ein Admin
+// gezielt jedes Bild löschen darf, auch ohne die zugehörige Inhalts-ID zu
+// kennen (z.B. bei verwaisten Bildern, deren Inhalt bereits entfernt
+// wurde). Der Aufrufer (deleteContentImageAdminAction) prüft die
+// Admin-Rolle bereits selbst.
+export async function deleteContentImageAsAdmin(id: number): Promise<boolean> {
+  const [row] = await sql<{ r2_key: string }[]>`
+    DELETE FROM content_images WHERE id = ${id} RETURNING r2_key
+  `;
+  if (!row) return false;
+  await deleteObjectFromR2(row.r2_key);
+  return true;
+}
+
+export interface AdminContentImage extends ContentImage {
+  // null, wenn der zugehörige Inhalt inzwischen (hart) gelöscht/purged wurde
+  // — content_images hat keine Fremdschlüssel-Beziehung zu den vier
+  // Inhaltstabellen (polymorph über content_type), ein solches Bild bleibt
+  // deshalb ohne automatisches Aufräumen bestehen. purgeContent.ts räumt
+  // das inzwischen mit auf; ältere, bereits verwaiste Zeilen (vor diesem
+  // Fix) tauchen hier trotzdem noch auf, damit ein Admin sie manuell
+  // löschen kann.
+  contentTitle: string | null;
+  contentHref: string | null;
+  uploadedByName: string | null;
+}
+
+interface AdminContentImageRow extends ContentImageRow {
+  content_title: string | null;
+  content_href: string | null;
+  uploaded_by_name: string | null;
+}
+
+// Für /admin/content/images (Bucket-Übersicht über alle vier Inhaltstypen
+// hinweg) — LEFT JOIN statt JOIN, damit auch Bilder zu bereits gelöschtem
+// Inhalt sichtbar bleiben (siehe AdminContentImage-Kommentar oben).
+export async function getAllContentImagesForAdmin(): Promise<AdminContentImage[]> {
+  const rows = await sql<AdminContentImageRow[]>`
+    SELECT ci.id, ci.content_type, ci.content_id, ci.r2_key, ci.content_mime,
+           ci.size_bytes, ci.uploaded_by, ci.created_at,
+           c.name AS content_title, ('/characters/' || c.slug) AS content_href,
+           u.name AS uploaded_by_name
+    FROM content_images ci
+    LEFT JOIN characters c ON c.id = ci.content_id AND ci.content_type = 'character'
+    LEFT JOIN users u ON u.id = ci.uploaded_by
+    WHERE ci.content_type = 'character'
+
+    UNION ALL
+
+    SELECT ci.id, ci.content_type, ci.content_id, ci.r2_key, ci.content_mime,
+           ci.size_bytes, ci.uploaded_by, ci.created_at,
+           m.title, ('/missions/' || m.slug),
+           u.name
+    FROM content_images ci
+    LEFT JOIN missions m ON m.id = ci.content_id AND ci.content_type = 'mission'
+    LEFT JOIN users u ON u.id = ci.uploaded_by
+    WHERE ci.content_type = 'mission'
+
+    UNION ALL
+
+    SELECT ci.id, ci.content_type, ci.content_id, ci.r2_key, ci.content_mime,
+           ci.size_bytes, ci.uploaded_by, ci.created_at,
+           ml.title, ('/missions/' || mi.slug || '/' || ml.slug),
+           u.name
+    FROM content_images ci
+    LEFT JOIN mission_logs ml ON ml.id = ci.content_id AND ci.content_type = 'mission_log'
+    LEFT JOIN missions mi ON mi.id = ml.mission_id
+    LEFT JOIN users u ON u.id = ci.uploaded_by
+    WHERE ci.content_type = 'mission_log'
+
+    UNION ALL
+
+    SELECT ci.id, ci.content_type, ci.content_id, ci.r2_key, ci.content_mime,
+           ci.size_bytes, ci.uploaded_by, ci.created_at,
+           a.title, ('/archive/' || a.slug),
+           u.name
+    FROM content_images ci
+    LEFT JOIN archive_entries a ON a.id = ci.content_id AND ci.content_type = 'archive_entry'
+    LEFT JOIN users u ON u.id = ci.uploaded_by
+    WHERE ci.content_type = 'archive_entry'
+
+    ORDER BY created_at DESC
+  `;
+
+  return rows.map((row) => ({
+    ...mapRow(row),
+    contentTitle: row.content_title,
+    contentHref: row.content_href,
+    uploadedByName: row.uploaded_by_name,
+  }));
+}
+
+// Setzt characters.portrait auf die Serving-URL eines bereits hochgeladenen
+// Bildes dieses Charakters — validiert dabei, dass das Bild wirklich zu
+// diesem Charakter gehört (gleiche Content-Scoping-Überlegung wie
+// deleteContentImage). Bewusst kein Rollback des vorherigen portrait-Werts:
+// bei einer Vault-importierten externen Portrait-URL geht dieser Wert damit
+// verloren, das ist beabsichtigt (das eigene Bild soll ab jetzt die Quelle
+// sein).
+// Gibt den Charakter-Slug zurück (für revalidateCharacter beim Aufrufer,
+// src/app/actions/contentImages.ts) statt nur eines Booleans.
+export async function setCharacterPortraitFromImage(
+  characterId: number,
+  imageId: number,
+): Promise<string | null> {
+  const [image] = await sql<{ id: number }[]>`
+    SELECT id FROM content_images
+    WHERE id = ${imageId} AND content_type = 'character' AND content_id = ${characterId}
+  `;
+  if (!image) return null;
+
+  const [character] = await sql<{ slug: string }[]>`
+    UPDATE characters SET portrait = ${`/api/content-images/${imageId}`}, updated_at = NOW()
+    WHERE id = ${characterId}
+    RETURNING slug
+  `;
+  return character?.slug ?? null;
+}
+
 export { canView };

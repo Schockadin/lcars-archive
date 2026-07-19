@@ -60,6 +60,39 @@
   background: var(--lcars-amber);
 }
 
+/* Karussell-Pfeile (Vor/Zurück durch alle hochgeladenen Bilder, siehe
+   CharacterPortrait.tsx) — gleiche Kreis-Optik wie .portrait-overlay-close,
+   nur links/rechts vertikal zentriert statt oben rechts. */
+.portrait-overlay-nav {
+  position: fixed;
+  top: 50%;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--lcars-bg);
+  background: var(--lcars-purple);
+  border: none;
+  border-radius: 22px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  transform: translateY(-50%);
+}
+
+.portrait-overlay-nav:hover {
+  background: var(--lcars-amber);
+}
+
+.portrait-overlay-nav--prev {
+  left: 20px;
+}
+
+.portrait-overlay-nav--next {
+  right: 20px;
+}
+
 .character-entry {
   width: 100%;
   display: flex;

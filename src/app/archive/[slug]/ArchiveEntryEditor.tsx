@@ -80,6 +80,7 @@ export default function ArchiveEntryEditor({
         required
         defaultValue={sourceMarkdown}
         isAdminOrGM={isAdminOrGM}
+        insertImage={{ contentType: "archive_entry", contentId: entryId }}
       />
 
       <AutoLinkCheckbox idPrefix={textareaId} />

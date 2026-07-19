@@ -2,6 +2,7 @@
 import { useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { CheckIcon, XIcon } from "@/lib/icons";
+import { insertAtCursor } from "@/lib/textareaEdit";
 
 const inputClass = "rounded-lcars-pill lcars-input w-full";
 
@@ -29,26 +30,6 @@ function CalendarIcon() {
       <path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01" />
     </svg>
   );
-}
-
-function insertAtCursor(textarea: HTMLTextAreaElement, text: string): void {
-  const start = textarea.selectionStart ?? textarea.value.length;
-  const end = textarea.selectionEnd ?? textarea.value.length;
-  const before = textarea.value.slice(0, start);
-  const after = textarea.value.slice(end);
-
-  // Marker landet auf einer eigenen Zeile, unabhängig davon, wo genau der
-  // Cursor im Text steht.
-  const leadingNewline =
-    before.length > 0 && !before.endsWith("\n") ? "\n" : "";
-  const trailingNewline =
-    after.length > 0 && !after.startsWith("\n") ? "\n" : "";
-  const insert = `${leadingNewline}${text}${trailingNewline}`;
-
-  textarea.value = before + insert + after;
-  const cursorPos = (before + insert).length;
-  textarea.setSelectionRange(cursorPos, cursorPos);
-  textarea.focus();
 }
 
 // Admin/GM-Werkzeug oberhalb der Content-Textareas: fügt einen
@@ -89,7 +70,7 @@ export default function TimelineMarkerButton({
 
     const cat = category.trim();
     const marker = `<!-- timeline: ${date} | ${title.trim()}${cat ? ` | ${cat}` : ""} -->`;
-    insertAtCursor(textarea, marker);
+    insertAtCursor(textarea, marker, { ownLine: true });
 
     setDate("");
     setTitle("");

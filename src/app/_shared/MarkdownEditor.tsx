@@ -4,7 +4,9 @@ import { wrapSelection, applyLinePrefix } from "@/lib/textareaEdit";
 import { renderMarkdownPreview } from "@/app/actions/markdownPreview";
 import { getEditorSpellcheckPreferenceAction } from "@/app/actions/editorPreferences";
 import TimelineMarkerButton from "./TimelineMarkerButton";
+import InsertImageButton from "./InsertImageButton";
 import { LcarsSwitch } from "@/components/lcars";
+import type { ContentImageType } from "@/lib/contentImages";
 import {
   BoldIcon,
   ItalicIcon,
@@ -90,6 +92,7 @@ export default function MarkdownEditor({
   required = false,
   isAdminOrGM = false,
   large = false,
+  insertImage,
 }: {
   id: string;
   name?: string;
@@ -103,6 +106,12 @@ export default function MarkdownEditor({
   // der kompakteren Inline-Editoren (300px) — zwei feste Tailwind-Klassen,
   // da sich Utility-Klassen nicht dynamisch aus Props zusammensetzen lassen.
   large?: boolean;
+  // Nur gesetzt, wenn der Inhalt bereits existiert (contentId bekannt) —
+  // ohne das kann noch kein Bild dafür hochgeladen worden sein (siehe
+  // InsertImageButton.tsx). Charaktere bewusst ausgenommen: dort gibt es
+  // stattdessen Portrait-Auswahl + Karussell statt Bild-Einbettung im
+  // Fließtext (siehe CharacterPortrait.tsx/ContentImageGallery.tsx).
+  insertImage?: { contentType: ContentImageType; contentId: number };
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [mode, setMode] = useState<"raw" | "preview">("raw");
@@ -156,6 +165,13 @@ export default function MarkdownEditor({
           </button>
         ))}
         {isAdminOrGM && <TimelineMarkerButton textareaId={id} iconOnly />}
+        {insertImage && (
+          <InsertImageButton
+            textareaId={id}
+            contentType={insertImage.contentType}
+            contentId={insertImage.contentId}
+          />
+        )}
 
         <LcarsSwitch
           className="markdown-editor-tabs"

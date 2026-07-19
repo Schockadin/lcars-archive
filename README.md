@@ -49,7 +49,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (nicht Gespräche) können mehrere Bilder haben (JPEG/PNG/WebP/GIF, max. 5 MB
   pro Datei); Hochladen/Löschen ist auf dieselbe Person beschränkt, die den
   Inhalt auch sonst bearbeiten darf. Speicherung im selben R2-Bucket wie die
-  DB-Backups (eigener Präfix, keine zusätzliche Konfiguration nötig).
+  DB-Backups (eigener Präfix, keine zusätzliche Konfiguration nötig). Bei
+  Charakteren lässt sich eines der hochgeladenen Bilder als Profilbild
+  festlegen; ein Klick aufs Portrait öffnet ein Karussell über alle
+  hochgeladenen Bilder statt nur des einzelnen Portraits. Bei Missionen,
+  Missionslogs und Archiv-Einträgen lässt sich außerdem ein bereits
+  hochgeladenes Bild direkt aus der Formatierungsleiste des Markdown-Editors
+  in den Text einfügen. Admins sehen unter `/admin/content/images`
+  ("Bilder") zusätzlich alle hochgeladenen Bilder über alle Inhalte hinweg
+  mit Vorschau und können sie dort einzeln endgültig löschen, auch verwaiste
+  Bilder, deren zugehöriger Inhalt bereits gelöscht wurde.
 - **PWA mit Push-Benachrichtigungen** — installierbar auf Mobilgeräten (inkl. maskable
   Icon), Web-Push für neue Dialog-Nachrichten und abonnierte Inhalte.
 - **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und Spielleitung.
@@ -413,16 +422,19 @@ Als dritter Schritt im selben Job entfernt `scripts/purge-soft-deleted.ts`
 für Inhalte" weiter unten), deren `deleted_at` mehr als 7 Tage zurückliegt,
 endgültig aus der DB — bewusst NACH dem Backup-Upload, damit ein zu
 purgender Inhalt notfalls noch aus dem frischen Backup wiederhergestellt
-werden könnte. Dafür müssen folgende Repository-Secrets gesetzt sein
-(GitHub → Settings → Secrets and variables → Actions → "New repository
+werden könnte. Dabei löscht `purgeContentImagesFor()` auch die zum Inhalt
+gehörenden Bilder samt R2-Objekten mit (siehe „Bilder für Inhalte" weiter
+unten) — der Purge-Schritt braucht deshalb zusätzlich zu `DATABASE_URL` auch
+die vier `R2_*`-Secrets. Dafür müssen folgende Repository-Secrets gesetzt
+sein (GitHub → Settings → Secrets and variables → Actions → "New repository
 secret"):
 
 | Secret | Wert |
 |---|---|
 | `DATABASE_URL` | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. Nötig für den Backup- UND den Purge-Schritt, nicht für das R2-Cleanup. |
-| `R2_ACCOUNT_ID` | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). |
+| `R2_ACCOUNT_ID` | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). Nötig für den Backup- UND den Purge-Schritt (Bild-Cleanup), nicht für das R2-Cleanup. |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens"). |
-| `R2_BUCKET_NAME` | Name des Ziel-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). |
+| `R2_BUCKET_NAME` | Name des Ziel-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag) sowie für die Bilder (`content-images/...`). |
 
 **Wichtig für das manuelle R2-Backup im Adminpanel** (`/admin/db` — "Im
 R2-Bucket speichern" / "Aus R2-Bucket importieren", genauso für das
@@ -459,7 +471,20 @@ nicht direkt aus R2, sondern über eine eigene, sichtbarkeitsgeprüfte Route
 darf (private/GM-only-Sichtbarkeit), sieht auch seine Bilder nicht. Erlaubt
 sind JPEG/PNG/WebP/GIF bis 5 MB pro Datei; Hochladen/Löschen darf, wer den
 jeweiligen Inhalt auch sonst bearbeiten darf (bei Charakteren/Missionslogs
-nur der Owner, bei Missionen/Archiv-Einträgen zusätzlich jeder Admin).
+nur der Owner, bei Missionen/Archiv-Einträgen zusätzlich jeder Admin). Bei
+Charakteren lässt sich eines der hochgeladenen Bilder als Profilbild
+festlegen (`characters.portrait`); das Portrait öffnet per Klick ein
+Karussell über alle hochgeladenen Bilder. Bei Missionen, Missionslogs und
+Archiv-Einträgen lässt sich stattdessen ein bereits hochgeladenes Bild direkt
+aus der Markdown-Editor-Toolbar heraus als `![Bild](...)` in den Text
+einfügen. Wird der zugehörige Inhalt endgültig gelöscht (Papierkorb-Purge
+oder Admin-Direktlöschung), räumt `purgeContentImagesFor()`
+(`src/lib/purgeContent.ts`) automatisch auch dessen Bilder samt R2-Objekten
+mit auf — bleibt das aus (z. B. bei einem Fehler), tauchen verwaiste Bilder
+weiterhin in der Admin-Übersicht `/admin/content/images` (Adminbereich →
+"Bilder") auf, die alle hochgeladenen Bilder über alle Inhalte hinweg mit
+Vorschau zeigt und pro Bild einen Admin-Löschen-Button unabhängig vom
+jeweiligen Owner bietet.
 
 ### Dev-/Preview-Umgebung
 
