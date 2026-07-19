@@ -173,6 +173,18 @@
   }
 }
 
+/* Icon+Text-Pillen (z.B. DbBackupPanel.tsx/UserBackupPanel.tsx): ohne diese
+   Regel rendert ein SVG-Icon ohne eigenes width/height-Attribut in seiner
+   ungebremsten Intrinsic-Größe (Browser-Default 300×150) statt kompakt
+   neben dem Text — anders als .lcars-icon-btn, das seine SVGs bereits fest
+   sizt. */
+.lcars-pill-btn svg,
+.lcars-pill-btn--outline svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
 .lcars-filters {
   display: flex;
   flex-direction: column;

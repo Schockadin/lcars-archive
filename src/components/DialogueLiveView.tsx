@@ -128,6 +128,7 @@ export default function DialogueLiveView({
             targetSlug={entrySlug}
             title={title}
             subscribeOnly
+            showShare={false}
           />
         )}
         {open && isParticipant && (
