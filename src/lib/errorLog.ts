@@ -59,28 +59,18 @@ export async function logCaughtError(error: unknown, context: string): Promise<v
   await logServerError({ message, stack, routePath: context, routeType: "caught" });
 }
 
-export async function getServerErrorByDigest(
-  digest: string,
-): Promise<ErrorLogRow | null> {
-  const [row] = await sql<
-    {
-      id: number;
-      digest: string | null;
-      message: string;
-      stack: string | null;
-      route_path: string | null;
-      route_type: string | null;
-      method: string | null;
-      created_at: string;
-    }[]
-  >`
-    SELECT id, digest, message, stack, route_path, route_type, method, created_at
-    FROM error_logs
-    WHERE digest = ${digest}
-    ORDER BY created_at DESC
-    LIMIT 1
-  `;
-  if (!row) return null;
+interface RawErrorLogRow {
+  id: number;
+  digest: string | null;
+  message: string;
+  stack: string | null;
+  route_path: string | null;
+  route_type: string | null;
+  method: string | null;
+  created_at: string;
+}
+
+function mapErrorLogRow(row: RawErrorLogRow): ErrorLogRow {
   return {
     id: row.id,
     digest: row.digest,
@@ -93,32 +83,25 @@ export async function getServerErrorByDigest(
   };
 }
 
+export async function getServerErrorByDigest(
+  digest: string,
+): Promise<ErrorLogRow | null> {
+  const [row] = await sql<RawErrorLogRow[]>`
+    SELECT id, digest, message, stack, route_path, route_type, method, created_at
+    FROM error_logs
+    WHERE digest = ${digest}
+    ORDER BY created_at DESC
+    LIMIT 1
+  `;
+  return row ? mapErrorLogRow(row) : null;
+}
+
 export async function listRecentServerErrors(limit = 200): Promise<ErrorLogRow[]> {
-  const rows = await sql<
-    {
-      id: number;
-      digest: string | null;
-      message: string;
-      stack: string | null;
-      route_path: string | null;
-      route_type: string | null;
-      method: string | null;
-      created_at: string;
-    }[]
-  >`
+  const rows = await sql<RawErrorLogRow[]>`
     SELECT id, digest, message, stack, route_path, route_type, method, created_at
     FROM error_logs
     ORDER BY created_at DESC
     LIMIT ${limit}
   `;
-  return rows.map((row) => ({
-    id: row.id,
-    digest: row.digest,
-    message: row.message,
-    stack: row.stack,
-    routePath: row.route_path,
-    routeType: row.route_type,
-    method: row.method,
-    createdAt: row.created_at,
-  }));
+  return rows.map(mapErrorLogRow);
 }

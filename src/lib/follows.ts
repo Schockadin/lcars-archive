@@ -355,10 +355,9 @@ async function dispatchToSubscribers(
         preview: message.preview,
       });
       if (!result.sent) {
-        console.error(
-          `${errorLabel} an ${subscriber.email} fehlgeschlagen: ${result.error}`,
-        );
-        await logCaughtError(new Error(result.error), `follows.ts:${errorLabel}`);
+        const message = `${errorLabel} an ${subscriber.email} fehlgeschlagen: ${result.error}`;
+        console.error(message);
+        void logCaughtError(new Error(message), `follows.ts:${errorLabel}`);
       }
     }
     if (subscriber.pushNotificationsEnabled) {

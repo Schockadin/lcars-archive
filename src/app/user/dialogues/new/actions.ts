@@ -120,11 +120,10 @@ export async function createDialogueAction(
         dialogueUrl,
       });
       if (!result.sent) {
-        console.error(
-          `Gespräch-begonnen-Mail an ${partner.email} fehlgeschlagen: ${result.error}`,
-        );
-        await logCaughtError(
-          new Error(result.error),
+        const message = `Gespräch-begonnen-Mail an ${partner.email} fehlgeschlagen: ${result.error}`;
+        console.error(message);
+        void logCaughtError(
+          new Error(message),
           "user/dialogues/new/actions.ts:createDialogueAction",
         );
       }

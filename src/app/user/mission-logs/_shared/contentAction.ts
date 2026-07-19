@@ -183,11 +183,10 @@ export async function missionLogAction(
           preview,
         });
         if (!mailResult.sent) {
-          console.error(
-            `Neuer-Log-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`,
-          );
-          await logCaughtError(
-            new Error(mailResult.error),
+          const message = `Neuer-Log-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`;
+          console.error(message);
+          void logCaughtError(
+            new Error(message),
             "user/mission-logs/_shared/contentAction.ts:subscriberNotify",
           );
         }

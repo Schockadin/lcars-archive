@@ -358,13 +358,9 @@ export async function notifyMissionSubscribers(input: {
           preview: input.preview,
         });
         if (!result.sent) {
-          console.error(
-            `Mission-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
-          );
-          await logCaughtError(
-            new Error(result.error),
-            "missions.ts:notifyMissionSubscribers",
-          );
+          const message = `Mission-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`;
+          console.error(message);
+          void logCaughtError(new Error(message), "missions.ts:notifyMissionSubscribers");
         }
       }
       if (subscriber.pushNotificationsEnabled) {

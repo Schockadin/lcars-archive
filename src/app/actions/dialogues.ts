@@ -142,11 +142,10 @@ export async function postDialogueMessageAction(
           preview,
         });
         if (!result.sent) {
-          console.error(
-            `Dialog-Nachrichten-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
-          );
-          await logCaughtError(
-            new Error(result.error),
+          const message = `Dialog-Nachrichten-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`;
+          console.error(message);
+          void logCaughtError(
+            new Error(message),
             "actions/dialogues.ts:postDialogueMessageAction",
           );
         }
@@ -419,11 +418,10 @@ export async function completeDialogueAction(
           dialogueUrl,
         });
         if (!result.sent) {
-          console.error(
-            `Gespräch-abgeschlossen-Mail an ${recipient.email} fehlgeschlagen: ${result.error}`,
-          );
-          await logCaughtError(
-            new Error(result.error),
+          const message = `Gespräch-abgeschlossen-Mail an ${recipient.email} fehlgeschlagen: ${result.error}`;
+          console.error(message);
+          void logCaughtError(
+            new Error(message),
             "actions/dialogues.ts:completeDialogueAction",
           );
         }
@@ -488,13 +486,9 @@ export async function deleteDialogueAction(
         dialogueTitle: deleted.title,
       });
       if (!result.sent) {
-        console.error(
-          `Gespräch-gelöscht-Mail an ${player.email} fehlgeschlagen: ${result.error}`,
-        );
-        await logCaughtError(
-          new Error(result.error),
-          "actions/dialogues.ts:deleteDialogueAction",
-        );
+        const message = `Gespräch-gelöscht-Mail an ${player.email} fehlgeschlagen: ${result.error}`;
+        console.error(message);
+        void logCaughtError(new Error(message), "actions/dialogues.ts:deleteDialogueAction");
       }
     }
   }
@@ -538,11 +532,10 @@ async function notifyReservationReleased(
         dialogueUrl,
       });
       if (!result.sent) {
-        console.error(
-          `Sperre-aufgehoben-Mail an ${target.email} fehlgeschlagen: ${result.error}`,
-        );
-        await logCaughtError(
-          new Error(result.error),
+        const message = `Sperre-aufgehoben-Mail an ${target.email} fehlgeschlagen: ${result.error}`;
+        console.error(message);
+        void logCaughtError(
+          new Error(message),
           "actions/dialogues.ts:notifyReservationReleased",
         );
       }
@@ -611,11 +604,10 @@ export async function inviteDialogueParticipantAction(
           dialogueUrl,
         });
         if (!result.sent) {
-          console.error(
-            `Einladungs-Mail an ${target.email} fehlgeschlagen: ${result.error}`,
-          );
-          await logCaughtError(
-            new Error(result.error),
+          const message = `Einladungs-Mail an ${target.email} fehlgeschlagen: ${result.error}`;
+          console.error(message);
+          void logCaughtError(
+            new Error(message),
             "actions/dialogues.ts:inviteDialogueParticipantAction",
           );
         }

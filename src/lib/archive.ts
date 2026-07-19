@@ -703,13 +703,9 @@ export async function notifyArchiveEntrySubscribers(input: {
           preview: input.preview,
         });
         if (!result.sent) {
-          console.error(
-            `Archiv-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
-          );
-          await logCaughtError(
-            new Error(result.error),
-            "archive.ts:notifyArchiveEntrySubscribers",
-          );
+          const message = `Archiv-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`;
+          console.error(message);
+          void logCaughtError(new Error(message), "archive.ts:notifyArchiveEntrySubscribers");
         }
       }
       if (subscriber.pushNotificationsEnabled) {

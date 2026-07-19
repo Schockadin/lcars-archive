@@ -50,8 +50,9 @@ export default function ServerErrorContent({
           const res = await fetch(`/api/errors/${error.digest}`, {
             cache: "no-store",
           });
-          if (!cancelled && res.ok) {
-            setDetail(await res.json());
+          if (res.ok) {
+            const json = await res.json();
+            if (!cancelled) setDetail(json);
           }
         } else {
           // Client-Component-Fehler: error.message/stack liegen hier schon
@@ -112,7 +113,7 @@ export default function ServerErrorContent({
       >
         Bei der Verarbeitung ist ein unerwarteter Fehler aufgetreten. Die
         Administration wurde automatisch benachrichtigt.
-        {error.digest && !isAdmin && (
+        {error.digest && !detail && (
           <>
             <br />
             Fehler-Referenz: <code>{error.digest}</code>

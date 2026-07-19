@@ -659,13 +659,9 @@ export async function notifyCharacterSubscribers(input: {
           preview,
         });
         if (!result.sent) {
-          console.error(
-            `Charakter-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
-          );
-          await logCaughtError(
-            new Error(result.error),
-            "characters.ts:notifyCharacterSubscribers",
-          );
+          const message = `Charakter-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`;
+          console.error(message);
+          void logCaughtError(new Error(message), "characters.ts:notifyCharacterSubscribers");
         }
       }
       if (subscriber.pushNotificationsEnabled) {

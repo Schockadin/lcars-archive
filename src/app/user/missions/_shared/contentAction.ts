@@ -212,11 +212,10 @@ export async function missionAction(
           preview,
         });
         if (!mailResult.sent) {
-          console.error(
-            `Teilnehmer-Mail an ${recipient.email} fehlgeschlagen: ${mailResult.error}`,
-          );
-          await logCaughtError(
-            new Error(mailResult.error),
+          const message = `Teilnehmer-Mail an ${recipient.email} fehlgeschlagen: ${mailResult.error}`;
+          console.error(message);
+          void logCaughtError(
+            new Error(message),
             "user/missions/_shared/contentAction.ts:participantNotify",
           );
         }
@@ -267,11 +266,10 @@ export async function missionAction(
             preview,
           });
           if (!mailResult.sent) {
-            console.error(
-              `Charakter-Abo-Mission-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`,
-            );
-            await logCaughtError(
-              new Error(mailResult.error),
+            const message = `Charakter-Abo-Mission-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`;
+            console.error(message);
+            void logCaughtError(
+              new Error(message),
               "user/missions/_shared/contentAction.ts:characterSubscriberNotify",
             );
           }
@@ -303,11 +301,10 @@ export async function missionAction(
               preview,
             });
             if (!mailResult.sent) {
-              console.error(
-                `User-Abo-Mission-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`,
-              );
-              await logCaughtError(
-                new Error(mailResult.error),
+              const message = `User-Abo-Mission-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`;
+              console.error(message);
+              void logCaughtError(
+                new Error(message),
                 "user/missions/_shared/contentAction.ts:userSubscriberNotify",
               );
             }
