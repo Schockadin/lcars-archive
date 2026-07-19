@@ -28,6 +28,14 @@ function buildCspHeader(): string {
     "connect-src 'self'",
     "worker-src 'self'",
     "manifest-src 'self'",
+    // Netlifys eigenes Deploy-Preview-Toolbar/CDP-Overlay bettet sich selbst
+    // per <iframe src="https://app.netlify.com/..."> in JEDEN Deploy-Preview
+    // ein (nicht Teil dieser App, von Netlifys Infrastruktur injiziert) —
+    // ohne explizites frame-src fällt das auf default-src 'self' zurück und
+    // blockiert das Overlay (Konsole: "Refused to frame ... default-src").
+    // frame-ancestors weiter unten ist die Gegenrichtung (wer darf UNS
+    // einbetten) und bleibt unverändert 'none'.
+    "frame-src 'self' https://app.netlify.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
