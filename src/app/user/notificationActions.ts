@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/dal";
 import { updateNotificationPreferences } from "@/lib/users";
 
@@ -44,6 +45,8 @@ export async function updateNotificationSettingsAction(
     pushEnabled: push,
     notifyContentTypes,
   });
+
+  revalidatePath("/user");
 
   return {
     success: true,

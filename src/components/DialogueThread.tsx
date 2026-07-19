@@ -1,3 +1,5 @@
+"use client";
+import { useEffect, useRef } from "react";
 import { AUTHOR_COLORS } from "@/lib/missionFormat";
 import type { DialogueMessage } from "@/lib/dialogues";
 import type { ArchiveParticipant } from "@/types/archive";
@@ -37,9 +39,26 @@ export default function DialogueThread({
   viewerRole?: "admin" | "gm" | "player" | "viewer" | "guest" | null;
 }) {
   const isModerator = viewerRole === "admin";
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Bei offenen Dialogen direkt zur letzten Nachricht springen (wie ein
+  // Chat), statt den Verlauf von oben lesen zu müssen — nur beim initialen
+  // Mount (leeres Deps-Array), damit spätere Polls (siehe
+  // DialogueLiveView.tsx) die Leseposition nicht immer wieder nach unten
+  // reißen, während gerade ältere Nachrichten gelesen werden. Geschlossene
+  // Dialoge bleiben unangetastet — dort ist der gesamte, meist kürzere
+  // Verlauf (oder der Fließtext) das eigentliche Leseerlebnis.
+  useEffect(() => {
+    if (!dialogueOpen) return;
+    containerRef.current?.lastElementChild?.scrollIntoView({
+      behavior: "instant",
+      block: "end",
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <div className="flex flex-col gap-[10px]">
+    <div ref={containerRef} className="flex flex-col gap-[10px]">
       {messages.map((msg) => {
         const canModerate =
           !msg.deletedAt &&

@@ -92,7 +92,7 @@ export default function ActionsMenu({
   const contentTitle = "title" in content ? content.title : content.name;
 
   return (
-    <div className="flex flex-col items-start justify-center gap-[8px]">
+    <div className="flex flex-col items-start justify-center gap-[5px]">
       {(viewer?.role === "admin" || viewer?.role === "gm") && (
         <OwnerSelect
           contentType={OWNER_CONTENT_TYPE[contentType]}
@@ -108,9 +108,9 @@ export default function ActionsMenu({
           initialValue={content.visibility}
         />
       )}
-      <div className="flex gap-[8px]">
+      <div className="flex gap-[5px]">
         {(viewer?.role === "gm" || viewer?.role === "admin") && !isDialogue && (
-          <div className="flex gap-[8px]">
+          <div className="flex gap-[5px]">
             <AutolinkButton contentType={contentType} slug={content.slug} />
             <RemoveWikilinksButton
               contentType={contentType}

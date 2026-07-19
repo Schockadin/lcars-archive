@@ -58,6 +58,32 @@ export default function NotificationSettingsForm({
     initialState,
   );
 
+  // Die Checkboxen sind unkontrolliert (defaultChecked) — React wendet
+  // defaultChecked nur beim Mount an, ein bloßer Re-Render mit neuen Props
+  // aktualisiert sie nicht. Nach einem erfolgreichen Speichern enthält
+  // state bereits die soeben bestätigten Werte (siehe
+  // notificationActions.ts); saveCount zählt jeden Erfolg hoch und dient
+  // als key, um die Checkboxen gezielt neu zu mounten und dabei den
+  // frischen, server-bestätigten Wert statt des ursprünglichen
+  // user-Props anzuzeigen — sonst zeigte die UI direkt nach dem Klick auf
+  // "Speichern" kurzzeitig wieder den alten Stand. State-Anpassung direkt im
+  // Render-Body statt in einem Effect (React-empfohlenes Muster für
+  // "state, das sich ändert, wenn sich eine Prop/ein anderer State ändert"),
+  // da ein synchrones setState im Effect selbst kaskadierende Re-Renders
+  // auslösen würde (react-hooks/set-state-in-effect).
+  const [saveCount, setSaveCount] = useState(0);
+  const [lastHandledState, setLastHandledState] = useState(state);
+  if (state !== lastHandledState) {
+    setLastHandledState(state);
+    if (state.success) setSaveCount((c) => c + 1);
+  }
+
+  const emailChecked = state.success ? !!state.emailEnabled : user.emailEnabled;
+  const pushChecked = state.success ? !!state.pushEnabled : user.pushEnabled;
+  const notifyContentTypes = state.success
+    ? (state.notifyContentTypes ?? [])
+    : user.notifyContentTypes;
+
   // Initialstatus immer "checking" (auf Server UND Client identisch — Node
   // hat seit v21 ein eigenes globales navigator-Objekt ohne serviceWorker,
   // ein synchroner Support-Check hier würde also einen Hydration-Mismatch
@@ -160,10 +186,11 @@ export default function NotificationSettingsForm({
       >
         <div className="flex items-center gap-[10px]">
           <input
+            key={`email-${saveCount}`}
             id="emailEnabled"
             name="emailEnabled"
             type="checkbox"
-            defaultChecked={user.emailEnabled}
+            defaultChecked={emailChecked}
             className="lcars-checkbox"
           />
           <label htmlFor="emailEnabled" className="lcars-eyebrow">
@@ -173,10 +200,11 @@ export default function NotificationSettingsForm({
 
         <div className="flex items-center gap-[10px]">
           <input
+            key={`push-${saveCount}`}
             id="pushEnabled"
             name="pushEnabled"
             type="checkbox"
-            defaultChecked={user.pushEnabled}
+            defaultChecked={pushChecked}
             className="lcars-checkbox"
           />
           <label htmlFor="pushEnabled" className="lcars-eyebrow">
@@ -197,11 +225,12 @@ export default function NotificationSettingsForm({
               {ADMIN_CONTENT_TYPE_OPTIONS.map((option) => (
                 <div key={option.value} className="flex items-center gap-[10px]">
                   <input
+                    key={`notify-${option.value}-${saveCount}`}
                     id={`notifyContentTypes-${option.value}`}
                     name="notifyContentTypes"
                     type="checkbox"
                     value={option.value}
-                    defaultChecked={user.notifyContentTypes.includes(option.value)}
+                    defaultChecked={notifyContentTypes.includes(option.value)}
                     className="lcars-checkbox"
                   />
                   <label
