@@ -12,6 +12,10 @@ import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import PreviewConfirmFooter from "@/components/PreviewConfirmFooter";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
+import {
+  getAttributeFields,
+  getReferenceFields,
+} from "@/lib/archiveMetadataFields";
 
 const CONTENT_TYPE_LABELS: Record<ImportContentType, string> = {
   archive: "Archiv-Eintrag",
@@ -52,6 +56,21 @@ function splitTags(value: string): string[] {
     .filter(Boolean);
 }
 
+// Liest alle Attribut-/Verweisfelder eines idPrefix-Präfixes aus dem
+// FormData in ein Record<key,value> — die Feldnamen entsprechen exakt den
+// Keys aus getAttributeFields/getReferenceFields (siehe
+// ArchiveEditFieldsSection unten), daher genügt ein Präfix-Scan statt einer
+// festen Feldliste.
+function collectPrefixed(fd: FormData, prefix: string): Record<string, string> {
+  const values: Record<string, string> = {};
+  for (const [name, value] of fd.entries()) {
+    if (name.startsWith(prefix)) {
+      values[name.slice(prefix.length)] = String(value);
+    }
+  }
+  return values;
+}
+
 // Baut aus dem aktuellen Formularinhalt einer Zeile das *Edits-Objekt für
 // confirmMarkdownImportAction — siehe markdownImport.ts, wo diese Felder
 // gegenüber dem ursprünglich geparsten Frontmatter gewinnen. Serverseitig
@@ -70,6 +89,9 @@ function buildEdits(kind: string, fd: FormData): ImportEdits {
       tags,
       summary: String(fd.get("summary") ?? "").trim() || null,
       bodyMarkdown,
+      ownerSlug: String(fd.get("ownerSlug") ?? "").trim() || null,
+      attributeValues: collectPrefixed(fd, "attr__"),
+      referenceValues: collectPrefixed(fd, "ref__"),
     };
   }
   if (kind === "mission") {
@@ -81,6 +103,7 @@ function buildEdits(kind: string, fd: FormData): ImportEdits {
       endedAt: String(fd.get("endedAt") ?? "").trim() || null,
       tags,
       bodyMarkdown,
+      ownerSlug: String(fd.get("ownerSlug") ?? "").trim() || null,
     };
   }
   if (kind === "character") {
@@ -89,6 +112,20 @@ function buildEdits(kind: string, fd: FormData): ImportEdits {
       name: String(fd.get("name") ?? ""),
       status: String(fd.get("status") ?? "active"),
       bodyMarkdown,
+      portrait: String(fd.get("portrait") ?? "").trim() || null,
+      rank: String(fd.get("rank") ?? "").trim() || null,
+      species: splitTags(String(fd.get("species") ?? "")),
+      homeworld: String(fd.get("homeworld") ?? "").trim() || null,
+      age: String(fd.get("age") ?? "").trim() ? Number(fd.get("age")) : null,
+      affiliationFactions: splitTags(String(fd.get("affiliationFactions") ?? "")),
+      affiliationShips: splitTags(String(fd.get("affiliationShips") ?? "")),
+      affiliationDivision: String(fd.get("affiliationDivision") ?? "").trim() || null,
+      player: String(fd.get("player") ?? "").trim() || null,
+      aliases: splitTags(String(fd.get("aliases") ?? "")),
+      generation: splitTags(String(fd.get("generation") ?? ""))
+        .map(Number)
+        .filter((n) => Number.isFinite(n)),
+      tags,
     };
   }
   // mission_log
@@ -439,6 +476,38 @@ function ImportEditFields({
             className={`${inputClass} min-h-[60px] resize-y`}
           />
         </FormField>
+        <FormField label="Eigentümer (User-Slug)" htmlFor={`${idPrefix}-owner`}>
+          <input
+            id={`${idPrefix}-owner`}
+            name="ownerSlug"
+            defaultValue={preview.ownerSlug ?? ""}
+            className={inputClass}
+          />
+        </FormField>
+        {getAttributeFields(preview.category).map((field) => (
+          <FormField key={field.key} label={field.label} htmlFor={`${idPrefix}-attr-${field.key}`}>
+            <input
+              id={`${idPrefix}-attr-${field.key}`}
+              name={`attr__${field.key}`}
+              defaultValue={preview.attributeValues[field.key] ?? ""}
+              className={inputClass}
+            />
+          </FormField>
+        ))}
+        {getReferenceFields(preview.category).map((field) => (
+          <FormField
+            key={field.key}
+            label={`${field.label} (kommagetrennte Slugs)`}
+            htmlFor={`${idPrefix}-ref-${field.key}`}
+          >
+            <input
+              id={`${idPrefix}-ref-${field.key}`}
+              name={`ref__${field.key}`}
+              defaultValue={preview.referenceValues[field.key] ?? ""}
+              className={inputClass}
+            />
+          </FormField>
+        ))}
         <FormField label="Text" htmlFor={`${idPrefix}-body`} hint={<MarkdownFormatHint />}>
           <MarkdownEditor id={`${idPrefix}-body`} defaultValue={preview.bodyMarkdown} />
         </FormField>
@@ -494,6 +563,14 @@ function ImportEditFields({
             className={inputClass}
           />
         </FormField>
+        <FormField label="Eigentümer (User-Slug)" htmlFor={`${idPrefix}-owner`}>
+          <input
+            id={`${idPrefix}-owner`}
+            name="ownerSlug"
+            defaultValue={preview.ownerSlug ?? ""}
+            className={inputClass}
+          />
+        </FormField>
         <FormField label="Text" htmlFor={`${idPrefix}-body`} hint={<MarkdownFormatHint />}>
           <MarkdownEditor id={`${idPrefix}-body`} defaultValue={preview.bodyMarkdown} />
         </FormField>
@@ -522,6 +599,99 @@ function ImportEditFields({
               </option>
             ))}
           </select>
+        </FormField>
+        <FormField label="Portrait (Bild-URL)" htmlFor={`${idPrefix}-portrait`}>
+          <input
+            id={`${idPrefix}-portrait`}
+            name="portrait"
+            defaultValue={preview.portrait ?? ""}
+            className={inputClass}
+          />
+        </FormField>
+        <FormField label="Rang" htmlFor={`${idPrefix}-rank`}>
+          <input id={`${idPrefix}-rank`} name="rank" defaultValue={preview.rank ?? ""} className={inputClass} />
+        </FormField>
+        <FormField label="Spezies (kommagetrennt)" htmlFor={`${idPrefix}-species`}>
+          <input
+            id={`${idPrefix}-species`}
+            name="species"
+            defaultValue={preview.species.join(", ")}
+            className={inputClass}
+          />
+        </FormField>
+        <FormField label="Heimatwelt" htmlFor={`${idPrefix}-homeworld`}>
+          <input
+            id={`${idPrefix}-homeworld`}
+            name="homeworld"
+            defaultValue={preview.homeworld ?? ""}
+            className={inputClass}
+          />
+        </FormField>
+        <FormField label="Alter" htmlFor={`${idPrefix}-age`}>
+          <input
+            id={`${idPrefix}-age`}
+            name="age"
+            type="number"
+            min={0}
+            defaultValue={preview.age ?? ""}
+            className={inputClass}
+          />
+        </FormField>
+        <FormField label="Fraktionen (kommagetrennt)" htmlFor={`${idPrefix}-factions`}>
+          <input
+            id={`${idPrefix}-factions`}
+            name="affiliationFactions"
+            defaultValue={preview.affiliationFactions.join(", ")}
+            className={inputClass}
+          />
+        </FormField>
+        <FormField label="Schiffe (kommagetrennt)" htmlFor={`${idPrefix}-ships`}>
+          <input
+            id={`${idPrefix}-ships`}
+            name="affiliationShips"
+            defaultValue={preview.affiliationShips.join(", ")}
+            className={inputClass}
+          />
+        </FormField>
+        <FormField label="Division" htmlFor={`${idPrefix}-division`}>
+          <input
+            id={`${idPrefix}-division`}
+            name="affiliationDivision"
+            defaultValue={preview.affiliationDivision ?? ""}
+            className={inputClass}
+          />
+        </FormField>
+        <FormField label="Spieler:in (User-Slug)" htmlFor={`${idPrefix}-player`}>
+          <input
+            id={`${idPrefix}-player`}
+            name="player"
+            defaultValue={preview.player ?? ""}
+            className={inputClass}
+          />
+        </FormField>
+        <FormField label="Aliase (kommagetrennt)" htmlFor={`${idPrefix}-aliases`}>
+          <input
+            id={`${idPrefix}-aliases`}
+            name="aliases"
+            defaultValue={preview.aliases.join(", ")}
+            className={inputClass}
+          />
+        </FormField>
+        <FormField label="Generation (kommagetrennte Zahlen)" htmlFor={`${idPrefix}-generation`}>
+          <input
+            id={`${idPrefix}-generation`}
+            name="generation"
+            defaultValue={preview.generation.join(", ")}
+            className={inputClass}
+          />
+        </FormField>
+        <FormField label="Tags (kommagetrennt)" htmlFor={`${idPrefix}-tags`}>
+          <input
+            id={`${idPrefix}-tags`}
+            name="tags"
+            defaultValue={preview.tags.join(", ")}
+            className={inputClass}
+          />
         </FormField>
         <FormField label="Biografie" htmlFor={`${idPrefix}-body`} hint={<MarkdownFormatHint />}>
           <MarkdownEditor id={`${idPrefix}-body`} defaultValue={preview.bodyMarkdown} />
@@ -594,6 +764,14 @@ function ImportEditFields({
           id={`${idPrefix}-tags`}
           name="tags"
           defaultValue={preview.tags.join(", ")}
+          className={inputClass}
+        />
+      </FormField>
+      <FormField label="Eigentümer (User-Slug)" htmlFor={`${idPrefix}-owner`}>
+        <input
+          id={`${idPrefix}-owner`}
+          name="ownerSlug"
+          defaultValue={preview.ownerSlug ?? ""}
           className={inputClass}
         />
       </FormField>

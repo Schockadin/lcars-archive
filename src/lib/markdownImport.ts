@@ -24,21 +24,23 @@
 // bestehender Inhalte über eine Web-Upload-Fläche (ohne git-Review wie beim
 // Vault-Ingest) ist ein deutlich größeres Risiko als beim CLI-Tool.
 //
-// commit* nimmt zusätzlich zur rohen Datei ein *Edits-Objekt mit genau den
-// Feldern entgegen, die die Vorschau in der UI auch anzeigt (Titel/Tags/
-// Slug/Body-Text etc., siehe MarkdownImportPanel.tsx) — diese Werte
-// gewinnen gegenüber dem geparsten Frontmatter. Alles, was die Vorschau
-// NICHT anzeigt (Attribute/Referenzen bei Archiv-Einträgen, das restliche
-// Charakter-Metadata), bleibt unverändert aus dem geparsten Frontmatter.
-// Kein Sicherheitsproblem, da beide Actions bereits requireAdmin() prüfen —
-// derselbe Vertrauensrahmen wie jedes andere Inhalts-Erstellformular, das
-// ebenfalls beliebige Freitext-Werte einer eingeloggten Person entgegennimmt.
+// commit* nimmt zusätzlich zur rohen Datei ein *Edits-Objekt entgegen, das
+// ALLE editierbaren Felder der Vorschau abdeckt (Titel/Tags/Slug/Body-Text,
+// Eigentümer, sowie bei Archiv-Einträgen die Attribut-/Verweisfelder und bei
+// Charakteren die restlichen Metadaten-Felder, siehe MarkdownImportPanel.tsx)
+// — diese Werte gewinnen vollständig gegenüber dem geparsten Frontmatter, nur
+// category/Frontmatter-Rohtext (frontmatter-Spalte) kommen weiterhin aus der
+// Datei. Kein Sicherheitsproblem, da beide Actions bereits requireAdmin()
+// prüfen — derselbe Vertrauensrahmen wie jedes andere
+// Inhalts-Erstellformular, das ebenfalls beliebige Freitext-Werte einer
+// eingeloggten Person entgegennimmt.
 import "server-only";
 import matter from "gray-matter";
 import type postgres from "postgres";
 import sql from "@/lib/db";
 import { markdownToHtml } from "@/lib/markdown";
 import { createMissionLog, missionLogSlugExists } from "@/lib/missions";
+import { buildArchiveAttributes } from "@/lib/archive";
 import {
   validateSlug,
   parseDate,
@@ -48,15 +50,15 @@ import {
 } from "@/lib/ingestShared";
 import {
   VALID_CATEGORIES,
-  COMMON_ATTRIBUTES,
-  CATEGORY_ATTRIBUTES,
-  COMMON_REFERENCES,
-  CATEGORY_REFERENCES,
   attrValue,
   humanize,
   str,
 } from "@/lib/archiveFrontmatterFields";
-import type { ArchiveMetadata, ArchiveParticipant } from "@/types/archive";
+import {
+  getAttributeFields,
+  getReferenceFields,
+} from "@/lib/archiveMetadataFields";
+import type { ArchiveCategory, ArchiveMetadata, ArchiveParticipant } from "@/types/archive";
 
 type SqlClient = postgres.ISql;
 
@@ -97,13 +99,18 @@ export interface ArchiveImportPreview {
   filename: string;
   slug: string;
   title: string;
-  category: string;
+  category: ArchiveCategory;
   tags: string[];
   summary: string | null;
   contentHtml: string;
   bodyMarkdown: string;
-  attributes: { label: string; value: string }[];
-  referenceTargets: { label: string; target: string }[];
+  // key (siehe archiveMetadataFields.ts) → aktueller Wert, exakt dieselbe
+  // Konvention wie das manuelle Bearbeiten-Formular (getOwnArchiveEntryForEdit
+  // in lib/archive.ts) — attributeValues für Attributfelder, referenceValues
+  // für kommagetrennte Verweisfelder (inkl. participants/related_locations
+  // bei category="dialogue").
+  attributeValues: Record<string, string>;
+  referenceValues: Record<string, string>;
   ownerSlug: string | null;
   slugTaken: boolean;
   warnings: string[];
@@ -112,30 +119,28 @@ export interface ArchiveImportPreview {
 export type ArchivePreviewResult = ArchiveImportPreview | ImportFailure;
 
 // Editierbare Teilmenge der Vorschau (siehe Datei-Kopfkommentar) — category
-// bleibt bewusst NICHT editierbar: attributes/referenceTargets wurden schon
-// beim Parsen gegen die ursprüngliche category aufgelöst (siehe
-// CATEGORY_ATTRIBUTES/CATEGORY_REFERENCES), ein nachträglicher
-// Kategoriewechsel würde sie inkonsistent machen.
+// bleibt bewusst NICHT editierbar: attributeValues/referenceValues gelten für
+// die ursprüngliche category (siehe getAttributeFields/getReferenceFields),
+// ein nachträglicher Kategoriewechsel würde sie inkonsistent machen.
 export interface ArchiveImportEdits {
   slug: string;
   title: string;
   tags: string[];
   summary: string | null;
   bodyMarkdown: string;
+  ownerSlug: string | null;
+  attributeValues: Record<string, string>;
+  referenceValues: Record<string, string>;
 }
 
 interface ParsedArchiveFrontmatter {
   slug: string;
   title: string;
-  category: string;
+  category: ArchiveCategory;
   tags: string[];
   contentHtml: string;
   content: string;
   data: Record<string, unknown>;
-  attributes: { label: string; value: string }[];
-  referenceTargets: { label: string; target: string }[];
-  dialogueParticipantTargets: string[];
-  dialogueLocationTargets: string[];
 }
 
 async function parseArchiveFrontmatter(
@@ -163,42 +168,45 @@ async function parseArchiveFrontmatter(
   const contentHtml = await markdownToHtml(content);
   const tags = toStringArray(fm.tags);
 
-  const attrSpecs = [...COMMON_ATTRIBUTES, ...(CATEGORY_ATTRIBUTES[category] ?? [])];
-  const attributes = attrSpecs
-    .map((spec) => ({ label: spec.label, value: attrValue(fm[spec.key]) }))
-    .filter((a): a is { label: string; value: string } => a.value != null);
-
-  const refSpecs = [...(CATEGORY_REFERENCES[category] ?? []), ...COMMON_REFERENCES];
-  const referenceTargets: { label: string; target: string }[] = [];
-  for (const spec of refSpecs) {
-    for (const target of toStringArray(fm[spec.key])) {
-      const t = target.trim();
-      if (t) referenceTargets.push({ label: spec.label, target: t });
-    }
-  }
-
-  const dialogueParticipantTargets =
-    category === "dialogue"
-      ? toStringArray(fm.participants).map((t) => t.trim()).filter(Boolean)
-      : [];
-  const dialogueLocationTargets =
-    category === "dialogue"
-      ? toStringArray(fm.related_locations).map((t) => t.trim()).filter(Boolean)
-      : [];
-
   return {
     slug,
     title,
-    category,
+    category: category as ArchiveCategory,
     tags,
     contentHtml,
     content,
     data: fm,
-    attributes,
-    referenceTargets,
-    dialogueParticipantTargets,
-    dialogueLocationTargets,
   };
+}
+
+// Baut die Vorbelegung für die editierbaren Attribut-/Verweisfelder aus dem
+// geparsten Frontmatter — dieselben Feldlisten (getAttributeFields/
+// getReferenceFields) wie das manuelle Formular, aber Werte kommen aus dem
+// Frontmatter statt aus der DB. attrValue()/toStringArray() normalisieren
+// beliebige YAML-Wertformen (Skalar, Liste, ...) zu Strings für ein
+// Text-Input.
+function defaultAttributeValues(
+  category: ArchiveCategory,
+  fm: Record<string, unknown>,
+): Record<string, string> {
+  const values: Record<string, string> = {};
+  for (const field of getAttributeFields(category)) {
+    const value = attrValue(fm[field.key]);
+    if (value != null) values[field.key] = value;
+  }
+  return values;
+}
+
+function defaultReferenceValues(
+  category: ArchiveCategory,
+  fm: Record<string, unknown>,
+): Record<string, string> {
+  const values: Record<string, string> = {};
+  for (const field of getReferenceFields(category)) {
+    const targets = toStringArray(fm[field.key]).map((t) => t.trim()).filter(Boolean);
+    if (targets.length > 0) values[field.key] = targets.join(", ");
+  }
+  return values;
 }
 
 export async function previewArchiveMarkdown(
@@ -222,8 +230,8 @@ export async function previewArchiveMarkdown(
       summary: str(data.teaser),
       contentHtml: parsed.contentHtml,
       bodyMarkdown: parsed.content,
-      attributes: parsed.attributes,
-      referenceTargets: parsed.referenceTargets,
+      attributeValues: defaultAttributeValues(parsed.category, data),
+      referenceValues: defaultReferenceValues(parsed.category, data),
       ownerSlug: typeof data.owner === "string" ? data.owner.trim() || null : null,
       slugTaken: !!existing,
       warnings: existing ? [`Slug "${parsed.slug}" ist bereits vergeben.`] : [],
@@ -274,15 +282,15 @@ export async function commitArchiveMarkdown(
   const contentHtml = await markdownToHtml(edits.bodyMarkdown);
 
   return sql.begin(async (tx) => {
-    const ownerUserId = await resolveOwner(tx, parsed.data.owner);
+    const ownerUserId = await resolveOwner(tx, edits.ownerSlug);
 
     const metadata: ArchiveMetadata = {
       summary: edits.summary,
-      attributes: parsed.attributes,
+      attributes: buildArchiveAttributes(parsed.category, edits.attributeValues),
       characters: [],
       missions: [],
-      setting: str(parsed.data.setting),
-      logDate: attrValue(parsed.data.log_date),
+      setting: (edits.attributeValues.setting ?? "").trim() || null,
+      logDate: (edits.attributeValues.log_date ?? "").trim() || null,
       participants: [],
       location: null,
     };
@@ -307,42 +315,66 @@ export async function commitArchiveMarkdown(
     const sideCharacters = new Map<string, string>();
     const sideMissions = new Map<string, string>();
 
-    for (const ref of parsed.referenceTargets) {
-      const resolved = await resolveArchiveRef(tx, ref.target);
-      if (resolved.kind === "archive") {
-        if (resolved.id === row.id) continue; // Selbstverweis überspringen
-        await tx`
-          INSERT INTO archive_links (source_id, target_id, label)
-          VALUES (${row.id}, ${resolved.id}, ${ref.label})
-          ON CONFLICT (source_id, target_id) DO UPDATE SET label = EXCLUDED.label
-        `;
-      } else if (resolved.kind === "character") {
-        sideCharacters.set(ref.target, resolved.name);
-      } else if (resolved.kind === "mission") {
-        sideMissions.set(ref.target, resolved.title);
-      } else {
-        warnings.push(`Verweis "${ref.target}" (${ref.label}) nicht gefunden, wurde ignoriert.`);
+    // referenceValues kommt aus der editierbaren Vorschau (siehe
+    // getReferenceFields) statt aus dem ursprünglichen Frontmatter — gewinnt
+    // damit gegenüber der geparsten Datei, exakt wie alle anderen edits-Felder
+    // (siehe Kopfkommentar der Datei).
+    for (const field of getReferenceFields(parsed.category)) {
+      const targets = (edits.referenceValues[field.key] ?? "")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      for (const target of targets) {
+        const resolved = await resolveArchiveRef(tx, target);
+        if (resolved.kind === "archive") {
+          if (resolved.id === row.id) continue; // Selbstverweis überspringen
+          await tx`
+            INSERT INTO archive_links (source_id, target_id, label)
+            VALUES (${row.id}, ${resolved.id}, ${field.label})
+            ON CONFLICT (source_id, target_id) DO UPDATE SET label = EXCLUDED.label
+          `;
+        } else if (resolved.kind === "character") {
+          sideCharacters.set(target, resolved.name);
+        } else if (resolved.kind === "mission") {
+          sideMissions.set(target, resolved.title);
+        } else {
+          warnings.push(`Verweis "${target}" (${field.label}) nicht gefunden, wurde ignoriert.`);
+        }
       }
     }
 
+    // Dialog-Metadaten (strukturierte Teilnehmer-/Schauplatz-Anzeige, siehe
+    // DialogueThread.tsx-Vorlage in ArchiveEntryBody.tsx) — dieselben Slugs
+    // wie die generischen participants/related_locations-Verweisfelder oben,
+    // zusätzlich strukturiert für die Dialog-Kopfzeile.
     const participants: ArchiveParticipant[] = [];
-    for (const target of parsed.dialogueParticipantTargets) {
-      const resolved = await resolveArchiveRef(tx, target);
-      if (resolved.kind === "character") {
-        participants.push({ slug: target, name: resolved.name, kind: "character" });
-      } else if (resolved.kind === "archive") {
-        participants.push({ slug: target, name: resolved.title, kind: "archive" });
-      } else {
-        participants.push({ slug: target, name: humanize(target), kind: "unknown" });
-      }
-    }
-
     let location: { slug: string; title: string } | null = null;
-    for (const target of parsed.dialogueLocationTargets) {
-      const resolved = await resolveArchiveRef(tx, target);
-      if (resolved.kind === "archive") {
-        location = { slug: target, title: resolved.title };
-        break;
+    if (parsed.category === "dialogue") {
+      const participantTargets = (edits.referenceValues.participants ?? "")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      for (const target of participantTargets) {
+        const resolved = await resolveArchiveRef(tx, target);
+        if (resolved.kind === "character") {
+          participants.push({ slug: target, name: resolved.name, kind: "character" });
+        } else if (resolved.kind === "archive") {
+          participants.push({ slug: target, name: resolved.title, kind: "archive" });
+        } else {
+          participants.push({ slug: target, name: humanize(target), kind: "unknown" });
+        }
+      }
+
+      const locationTargets = (edits.referenceValues.related_locations ?? "")
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      for (const target of locationTargets) {
+        const resolved = await resolveArchiveRef(tx, target);
+        if (resolved.kind === "archive") {
+          location = { slug: target, title: resolved.title };
+          break;
+        }
       }
     }
 
@@ -393,6 +425,7 @@ export interface MissionImportEdits {
   endedAt: string | null;
   tags: string[];
   bodyMarkdown: string;
+  ownerSlug: string | null;
 }
 
 interface ParsedMissionFrontmatter {
@@ -484,7 +517,7 @@ export async function commitMissionMarkdown(
   const metadata = { tags: edits.tags, body: bodyHtml };
 
   return sql.begin(async (tx) => {
-    const ownerUserId = await resolveOwner(tx, parsed.data.owner);
+    const ownerUserId = await resolveOwner(tx, edits.ownerSlug);
     const [row] = await tx<{ id: number }[]>`
       INSERT INTO missions (
         slug, title, status, started_at, ended_at, metadata,
@@ -518,6 +551,18 @@ export interface CharacterImportPreview {
   status: string;
   bio: string;
   bodyMarkdown: string;
+  portrait: string | null;
+  rank: string | null;
+  species: string[];
+  homeworld: string | null;
+  age: number | null;
+  affiliationFactions: string[];
+  affiliationShips: string[];
+  affiliationDivision: string | null;
+  player: string | null;
+  aliases: string[];
+  generation: number[];
+  tags: string[];
   slugTaken: boolean;
   warnings: string[];
 }
@@ -529,6 +574,24 @@ export interface CharacterImportEdits {
   name: string;
   status: string;
   bodyMarkdown: string;
+  portrait: string | null;
+  rank: string | null;
+  species: string[];
+  homeworld: string | null;
+  age: number | null;
+  affiliationFactions: string[];
+  affiliationShips: string[];
+  affiliationDivision: string | null;
+  player: string | null;
+  aliases: string[];
+  generation: number[];
+  tags: string[];
+}
+
+interface CharacterAffiliation {
+  factions?: string | string[];
+  ships?: string | string[];
+  division?: string;
 }
 
 interface ParsedCharacterFrontmatter {
@@ -569,6 +632,8 @@ export async function previewCharacterMarkdown(
   try {
     const parsed = await parseCharacterFrontmatter(filename, raw);
     const [existing] = await sql<{ id: number }[]>`SELECT id FROM characters WHERE slug = ${parsed.slug}`;
+    const fm = parsed.data;
+    const affiliation = fm.affiliation as CharacterAffiliation | undefined;
     return {
       kind: "character",
       ok: true,
@@ -578,18 +643,24 @@ export async function previewCharacterMarkdown(
       status: parsed.status,
       bio: parsed.bio,
       bodyMarkdown: parsed.content,
+      portrait: str(fm.portrait),
+      rank: str(fm.rank),
+      species: toStringArray(fm.species),
+      homeworld: str(fm.homeworld),
+      age: typeof fm.age === "number" ? fm.age : null,
+      affiliationFactions: toStringArray(affiliation?.factions),
+      affiliationShips: toStringArray(affiliation?.ships),
+      affiliationDivision: str(affiliation?.division ?? null),
+      player: str(fm.player),
+      aliases: toStringArray(fm.aliases),
+      generation: toNumberArray(fm.generation),
+      tags: toStringArray(fm.tags),
       slugTaken: !!existing,
       warnings: existing ? [`Slug "${parsed.slug}" ist bereits vergeben.`] : [],
     };
   } catch (error) {
     return { ok: false, filename, error: error instanceof Error ? error.message : String(error) };
   }
-}
-
-interface CharacterAffiliation {
-  factions?: string | string[];
-  ships?: string | string[];
-  division?: string;
 }
 
 export async function commitCharacterMarkdown(
@@ -621,23 +692,23 @@ export async function commitCharacterMarkdown(
   const bio = await markdownToHtml(edits.bodyMarkdown);
 
   const fm = parsed.data;
-  const affiliation = fm.affiliation as CharacterAffiliation | undefined;
   const metadata = {
-    rank: str(fm.rank),
-    species: toStringArray(fm.species),
-    homeworld: str(fm.homeworld),
-    age: typeof fm.age === "number" ? fm.age : null,
-    affiliation: affiliation
-      ? {
-          factions: toStringArray(affiliation.factions),
-          ships: toStringArray(affiliation.ships),
-          division: str(affiliation.division ?? null),
-        }
-      : null,
-    player: str(fm.player),
-    tags: toStringArray(fm.tags),
-    aliases: toStringArray(fm.aliases),
-    generation: toNumberArray(fm.generation),
+    rank: edits.rank,
+    species: edits.species,
+    homeworld: edits.homeworld,
+    age: edits.age,
+    affiliation:
+      edits.affiliationFactions.length || edits.affiliationShips.length || edits.affiliationDivision
+        ? {
+            factions: edits.affiliationFactions,
+            ships: edits.affiliationShips,
+            division: edits.affiliationDivision,
+          }
+        : null,
+    player: edits.player,
+    tags: edits.tags,
+    aliases: edits.aliases,
+    generation: edits.generation,
   };
 
   const [row] = await sql<{ id: number }[]>`
@@ -645,7 +716,7 @@ export async function commitCharacterMarkdown(
       slug, name, status, portrait, bio, metadata,
       source_md, frontmatter, updated_at
     ) VALUES (
-      ${slug}, ${name}, ${edits.status}, ${str(fm.portrait)}, ${bio},
+      ${slug}, ${name}, ${edits.status}, ${edits.portrait}, ${bio},
       ${sql.json(metadata as ReturnType<typeof JSON.parse>)}, ${edits.bodyMarkdown},
       ${sql.json(fm as ReturnType<typeof JSON.parse>)}, NOW()
     )

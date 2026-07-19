@@ -31,7 +31,10 @@ import {
 // Baut metadata.attributes aus den Formularwerten der "Metadaten +/-"-Sektion
 // — nur Felder, die für die jeweilige Kategorie vorgesehen sind (siehe
 // getAttributeFields), nur nicht-leere Werte.
-function buildArchiveAttributes(
+// Exportiert, da auch der Markdown-Import (markdownImport.ts) dieselbe
+// Record<string,string>-Konvention für Attributfelder verwendet und diese
+// Logik nicht dupliziert.
+export function buildArchiveAttributes(
   category: ArchiveCategory,
   attributeValues: Record<string, string>,
 ): ArchiveAttribute[] {

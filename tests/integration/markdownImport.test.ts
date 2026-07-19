@@ -40,6 +40,9 @@ function archiveEdits(overrides: Partial<ArchiveImportEdits> = {}, body = "Inhal
     tags: [],
     summary: null,
     bodyMarkdown: body,
+    ownerSlug: null,
+    attributeValues: {},
+    referenceValues: {},
     ...overrides,
   };
 }
@@ -137,7 +140,11 @@ describe("commitArchiveMarkdown", () => {
         category: "location",
         related_npcs: "target-npc",
       }),
-      archiveEdits({ slug: "source-location", title: "Ein Ort" }),
+      archiveEdits({
+        slug: "source-location",
+        title: "Ein Ort",
+        referenceValues: { related_npcs: "target-npc" },
+      }),
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -157,7 +164,7 @@ describe("commitArchiveMarkdown", () => {
     const result = await commitArchiveMarkdown(
       "x.md",
       archiveMd({ related_npcs: "does-not-exist" }),
-      archiveEdits(),
+      archiveEdits({ referenceValues: { related_npcs: "does-not-exist" } }),
     );
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -185,6 +192,7 @@ function missionEdits(overrides: Partial<MissionImportEdits> = {}, body = "Besch
     endedAt: null,
     tags: [],
     bodyMarkdown: body,
+    ownerSlug: null,
     ...overrides,
   };
 }
@@ -235,6 +243,18 @@ function characterEdits(overrides: Partial<CharacterImportEdits> = {}, body = "B
     name: "Test Charakter",
     status: "active",
     bodyMarkdown: body,
+    portrait: null,
+    rank: null,
+    species: [],
+    homeworld: null,
+    age: null,
+    affiliationFactions: [],
+    affiliationShips: [],
+    affiliationDivision: null,
+    player: null,
+    aliases: [],
+    generation: [],
+    tags: [],
     ...overrides,
   };
 }
