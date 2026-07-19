@@ -181,19 +181,19 @@ export async function getBookmarkedContent(
     SELECT 'mission'::text AS target_type, m.slug, m.title, NULL::boolean AS dialogue_open
     FROM content_follows cf
     JOIN missions m ON m.slug = cf.target_slug AND cf.target_type = 'mission'
-    WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
+    WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL AND m.deleted_at IS NULL
     UNION ALL
     SELECT 'archive_entry'::text AS target_type, a.slug, a.title, a.dialogue_open
     FROM content_follows cf
     JOIN archive_entries a ON a.slug = cf.target_slug AND cf.target_type = 'archive_entry'
     WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
-      AND (a.visibility = 'public' OR a.owner_user_id = ${userId})
+      AND (a.visibility = 'public' OR a.owner_user_id = ${userId}) AND a.deleted_at IS NULL
     UNION ALL
     SELECT 'character'::text AS target_type, c.slug, c.name AS title, NULL::boolean AS dialogue_open
     FROM content_follows cf
     JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
     WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
-      AND (c.visibility = 'public' OR c.player_id = ${userId})
+      AND (c.visibility = 'public' OR c.player_id = ${userId}) AND c.deleted_at IS NULL
     UNION ALL
     SELECT 'user'::text AS target_type, u.slug, u.name AS title, NULL::boolean AS dialogue_open
     FROM content_follows cf
@@ -218,19 +218,19 @@ export async function getSubscribedContent(
     SELECT 'mission'::text AS target_type, m.slug, m.title, NULL::boolean AS dialogue_open
     FROM content_follows cf
     JOIN missions m ON m.slug = cf.target_slug AND cf.target_type = 'mission'
-    WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
+    WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL AND m.deleted_at IS NULL
     UNION ALL
     SELECT 'archive_entry'::text AS target_type, a.slug, a.title, a.dialogue_open
     FROM content_follows cf
     JOIN archive_entries a ON a.slug = cf.target_slug AND cf.target_type = 'archive_entry'
     WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
-      AND (a.visibility = 'public' OR a.owner_user_id = ${userId})
+      AND (a.visibility = 'public' OR a.owner_user_id = ${userId}) AND a.deleted_at IS NULL
     UNION ALL
     SELECT 'character'::text AS target_type, c.slug, c.name AS title, NULL::boolean AS dialogue_open
     FROM content_follows cf
     JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
     WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
-      AND (c.visibility = 'public' OR c.player_id = ${userId})
+      AND (c.visibility = 'public' OR c.player_id = ${userId}) AND c.deleted_at IS NULL
     UNION ALL
     SELECT 'user'::text AS target_type, u.slug, u.name AS title, NULL::boolean AS dialogue_open
     FROM content_follows cf

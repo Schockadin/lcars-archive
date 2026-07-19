@@ -7,6 +7,7 @@ import {
   deleteDialogueMessage,
   setDialogueVisibility,
   deleteDialogue,
+  restoreDialogue,
   completeDialogue,
   regenerateAllClosedDialogueContent,
   inviteDialogueParticipants,
@@ -358,7 +359,7 @@ describe("setDialogueVisibility", () => {
 });
 
 describe("deleteDialogue", () => {
-  it("deletes the entry, cascades its messages, and writes a content_deletions row", async () => {
+  it("soft-deletes the entry (keeps messages intact) and writes a content_deletions row", async () => {
     const { partnerChar, entryId, dialogue } = await setupDialogue();
     const admin = await insertUser({ role: "admin" });
 
@@ -367,20 +368,39 @@ describe("deleteDialogue", () => {
     expect(result?.slug).toBe(dialogue.slug);
     expect(result?.participantSlugs).toContain(partnerChar.slug);
 
-    const [[remainingEntry], remainingMessages, [deletion]] = await Promise.all([
-      sql`SELECT id FROM archive_entries WHERE id = ${entryId}`,
+    const [[entry], remainingMessages, [deletion]] = await Promise.all([
+      sql<{ deleted_at: string | null }[]>`
+        SELECT deleted_at FROM archive_entries WHERE id = ${entryId}
+      `,
       sql`SELECT id FROM dialogue_messages WHERE archive_entry_id = ${entryId}`,
       sql<{ target_type: string; deleted_by: number }[]>`
         SELECT target_type, deleted_by FROM content_deletions WHERE title = 'Ein Gespräch'
       `,
     ]);
-    expect(remainingEntry).toBeUndefined();
-    expect(remainingMessages).toHaveLength(0);
+    // Soft-Delete: die Zeile bleibt bestehen (deleted_at gesetzt), Nachrichten
+    // werden NICHT mitgelöscht — ein späteres Restore soll den vollen
+    // Verlauf zurückbekommen (siehe restoreDialogue).
+    expect(entry.deleted_at).not.toBeNull();
+    expect(remainingMessages).toHaveLength(1);
     // Dialoge sind technisch archive_entries (category='dialogue') — das
     // Löschprotokoll nutzt entsprechend denselben target_type wie jeder
     // andere gelöschte Archiv-Eintrag, keinen eigenen "dialogue"-Typ.
     expect(deletion.target_type).toBe("archive_entry");
     expect(deletion.deleted_by).toBe(admin.id);
+  });
+
+  it("restoreDialogue makes a soft-deleted dialogue visible again", async () => {
+    const { entryId } = await setupDialogue();
+    const admin = await insertUser({ role: "admin" });
+    await deleteDialogue(entryId, admin.id);
+
+    const restored = await restoreDialogue(entryId);
+
+    expect(restored).not.toBeNull();
+    const [entry] = await sql<{ deleted_at: string | null }[]>`
+      SELECT deleted_at FROM archive_entries WHERE id = ${entryId}
+    `;
+    expect(entry.deleted_at).toBeNull();
   });
 });
 

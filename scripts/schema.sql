@@ -405,14 +405,19 @@ CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(use
 -- DROP/ADD hier nötig).
 
 -- Löschprotokoll für die rote "gelöscht"-Kategorie im News-Feed
--- (NewsSection.tsx). Missionen/Mission-Logs/Gespräche werden hart gelöscht
--- (DELETE, kein deleted_at auf der Ursprungstabelle) — ohne dieses
--- Protokoll gäbe es nach dem Löschen keine Zeile mehr, aus der ein
--- "X wurde gelöscht"-Eintrag entstehen könnte. visibility/owner_user_id
--- werden zum Löschzeitpunkt übernommen, damit getRecentDeletions dieselbe
--- Sichtbarkeitsregel (öffentlich ODER eigener Inhalt) wie bei lebenden
--- Inhalten anwenden kann — visibility NULL steht für Missionen, die (wie
--- live) keine eigene visibility-Spalte haben und immer öffentlich sind.
+-- (NewsSection.tsx). Inhalte werden inzwischen weich gelöscht (deleted_at auf
+-- der Ursprungstabelle, siehe deleted_at-Spalten weiter unten in dieser
+-- Datei) statt hart per DELETE — dieses Protokoll bleibt trotzdem bestehen
+-- und wird beim Weich-Löschen weiterhin befüllt: aus Sicht aller Nicht-
+-- Admins ist der Inhalt in diesem Moment "weg", ohne dieses Protokoll gäbe
+-- es keine eigenständige Datenquelle für einen "X wurde gelöscht"-Eintrag
+-- (die Ursprungszeile bleibt zwar noch bis zum Purge in der DB, aber
+-- title/visibility könnten sich bis dahin durch ein Restore+Bearbeiten wieder
+-- ändern). visibility/owner_user_id werden zum Löschzeitpunkt übernommen,
+-- damit getRecentDeletions dieselbe Sichtbarkeitsregel (öffentlich ODER
+-- eigener Inhalt) wie bei lebenden Inhalten anwenden kann — visibility NULL
+-- steht für Missionen, die (wie live) keine eigene visibility-Spalte haben
+-- und immer öffentlich sind.
 CREATE TABLE IF NOT EXISTS content_deletions (
   id            SERIAL PRIMARY KEY,
   target_type   TEXT NOT NULL,
@@ -597,3 +602,22 @@ CREATE INDEX IF NOT EXISTS idx_error_logs_digest ON error_logs(digest);
 -- an-/abschaltbar im Profil. DEFAULT true, da eine aktive Rechtschreib-
 -- prüfung der bisherige (Browser-Default-)Zustand ist.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS editor_spellcheck_enabled BOOLEAN NOT NULL DEFAULT true;
+
+-- Soft-Delete für Inhalte (Charaktere, Missionen, Missionslogs, Archiv-
+-- Einträge inkl. Dialoge — dieselbe Tabelle) statt hartem DELETE: gelöschte
+-- Zeilen bleiben in der DB, verschwinden aber aus Suche/Timeline/allen
+-- Listen für alle außer Admins (siehe getAllContentForAdmin/Trash-Ansicht in
+-- lib/adminContent.ts) und werden nach 7 Tagen von einem täglichen Cronjob
+-- (scripts/purge-soft-deleted.ts) endgültig entfernt. Gleiche Konvention wie
+-- dialogue_messages.deleted_at oben: kein separates Boolean-Flag,
+-- deleted_at IS NOT NULL ist das Flag selbst. Ein Index pro Tabelle bedient
+-- sowohl die "IS NULL"-Filter der Listen-Queries als auch den
+-- "< NOW() - INTERVAL '7 days'"-Range-Scan des Purge-Jobs.
+ALTER TABLE characters      ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE missions        ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE mission_logs    ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMPTZ;
+CREATE INDEX IF NOT EXISTS idx_characters_deleted_at      ON characters(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_missions_deleted_at        ON missions(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_mission_logs_deleted_at    ON mission_logs(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_archive_entries_deleted_at ON archive_entries(deleted_at);

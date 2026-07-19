@@ -178,13 +178,14 @@ export const getAllArchiveEntries = unstable_cache(
       FROM archive_entries
       WHERE NOT (category = 'dialogue' AND dialogue_open)
         AND visibility = 'public'
+        AND deleted_at IS NULL
       ORDER BY title ASC
     `;
     return rows.map(parseMeta);
   },
-  // Key-Version "4": nur noch public-Einträge — Bump verwirft alte
-  // Cache-Einträge deterministisch (auch poisoned-empty).
-  ["getAllArchiveEntries", "v4"],
+  // Key-Version "5": + deleted_at-Filter — Bump verwirft alte Cache-Einträge
+  // deterministisch (auch poisoned-empty).
+  ["getAllArchiveEntries", "v5"],
   { tags: [cacheTags.archive] },
 );
 
@@ -209,7 +210,7 @@ export async function getArchiveEntryBySlug(
           updated_at::text AS updated_at,
           COALESCE(source_md, '') AS "sourceMarkdown"
         FROM archive_entries
-        WHERE slug = ${slug}
+        WHERE slug = ${slug} AND deleted_at IS NULL
         LIMIT 1
       `;
       const entry = rows[0];
@@ -224,7 +225,7 @@ export async function getArchiveEntryBySlug(
           al.label
         FROM archive_links al
         JOIN archive_entries e ON e.id = al.target_id
-        WHERE al.source_id = ${entry.id}
+        WHERE al.source_id = ${entry.id} AND e.deleted_at IS NULL
         ORDER BY e.title ASC
       `;
 
@@ -237,13 +238,13 @@ export async function getArchiveEntryBySlug(
           al.label
         FROM archive_links al
         JOIN archive_entries e ON e.id = al.source_id
-        WHERE al.target_id = ${entry.id}
+        WHERE al.target_id = ${entry.id} AND e.deleted_at IS NULL
         ORDER BY e.title ASC
       `;
 
       return { ...parseMeta(entry), links, backlinks };
     },
-    ["getArchiveEntryBySlug", "v4", slug],
+    ["getArchiveEntryBySlug", "v5", slug],
     { tags: [cacheTags.archive, cacheTags.archiveEntry(slug)] },
   )();
 }
@@ -261,11 +262,12 @@ export async function getDialogueCountByParticipant(
         WHERE category = 'dialogue'
           AND NOT dialogue_open
           AND visibility = 'public'
+          AND deleted_at IS NULL
           AND metadata->'participants' @> ${sql.json([{ slug }])}
       `;
       return row?.count ?? 0;
     },
-    ["getDialogueCountByParticipant", "v3", slug],
+    ["getDialogueCountByParticipant", "v4", slug],
     { tags: [cacheTags.archive] },
   )();
 }
@@ -289,7 +291,7 @@ export async function getArchiveEntriesForUser(
   return sql<UserContentArchiveEntry[]>`
     SELECT id, slug, title, category, visibility
     FROM archive_entries
-    WHERE owner_user_id = ${userId} AND category != 'dialogue'
+    WHERE owner_user_id = ${userId} AND category != 'dialogue' AND deleted_at IS NULL
     ORDER BY title ASC
   `;
 }
@@ -305,6 +307,7 @@ export async function getPublicArchiveEntriesForUser(
     SELECT id, slug, title, category, visibility
     FROM archive_entries
     WHERE owner_user_id = ${userId} AND category != 'dialogue' AND visibility = 'public'
+      AND deleted_at IS NULL
     ORDER BY title ASC
   `;
 }
@@ -378,10 +381,11 @@ export const getAllArchivePaths = unstable_cache(
       FROM archive_entries
       WHERE NOT (category = 'dialogue' AND dialogue_open)
         AND visibility = 'public'
+        AND deleted_at IS NULL
     `;
     return rows;
   },
-  ["getAllArchivePaths", "v4"],
+  ["getAllArchivePaths", "v5"],
   { tags: [cacheTags.archive] },
 );
 
@@ -543,6 +547,7 @@ export async function getOwnArchiveEntryForEdit(
     SELECT id, slug, title, category, tags, COALESCE(source_md, '') AS "sourceMarkdown", metadata
     FROM archive_entries
     WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
+      AND deleted_at IS NULL
     LIMIT 1
   `;
   const row = rows[0];
@@ -720,4 +725,49 @@ export async function notifyArchiveEntrySubscribers(input: {
       }
     }),
   );
+}
+
+// Löscht einen Archiv-Eintrag (KEINE Dialoge — dafür siehe deleteDialogue in
+// dialoguesCore.ts, gleiche Soft-Delete-Semantik) weich (deleted_at gesetzt
+// statt DELETE) — bleibt in der DB, verschwindet aber aus allen Listen/der
+// Suche/der Timeline für alle außer Admins (siehe getAllContentForAdmin/
+// Trash-Ansicht in lib/adminContent.ts) und wird nach 7 Tagen vom
+// Purge-Cronjob endgültig entfernt. archive_links/content_follows werden
+// bewusst NICHT sofort entfernt — ein wiederhergestellter Eintrag soll seine
+// Verweise/Abos zurückbekommen (siehe restoreArchiveEntry), Bereinigung
+// passiert erst beim endgültigen Purge. Admin-only, kein Owner-Scoping.
+// deletedByUserId dient nur dem Löschprotokoll (content_deletions, siehe
+// getRecentDeletions in recentActivity.ts).
+export async function deleteArchiveEntry(
+  archiveEntryId: number,
+  deletedByUserId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<
+    { slug: string; title: string; visibility: string; ownerUserId: number | null }[]
+  >`
+    UPDATE archive_entries
+    SET deleted_at = NOW()
+    WHERE id = ${archiveEntryId} AND category != 'dialogue' AND deleted_at IS NULL
+    RETURNING slug, title, visibility, owner_user_id AS "ownerUserId"
+  `;
+  const row = rows[0] ?? null;
+  if (row) {
+    await sql`
+      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+      VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${row.ownerUserId}, ${deletedByUserId})
+    `;
+  }
+  return row ? { slug: row.slug } : null;
+}
+
+// Macht einen weich gelöschten Archiv-Eintrag wieder sichtbar (Admin-Trash-Ansicht).
+export async function restoreArchiveEntry(
+  archiveEntryId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE archive_entries SET deleted_at = NULL
+    WHERE id = ${archiveEntryId} AND deleted_at IS NOT NULL
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
 }

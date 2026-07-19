@@ -5,7 +5,9 @@ import {
   createMissionLog,
   setMissionLogVisibility,
   deleteMissionLog,
+  restoreMissionLog,
   deleteMission,
+  restoreMission,
 } from "@/lib/missions";
 import { insertUser, insertCharacter, insertMission } from "./helpers";
 
@@ -127,16 +129,39 @@ describe("deleteMissionLog", () => {
     const result = await deleteMissionLog(author.id, log.id);
 
     expect(result?.slug).toBe(log.slug);
-    const [[remainingLog], [remainingTimeline], [deletion]] = await Promise.all([
-      sql`SELECT id FROM mission_logs WHERE id = ${log.id}`,
+    const [[log_row], [remainingTimeline], [deletion]] = await Promise.all([
+      sql<{ deleted_at: string | null }[]>`
+        SELECT deleted_at FROM mission_logs WHERE id = ${log.id}
+      `,
       sql`SELECT id FROM timeline_events WHERE source_slug = ${log.slug}`,
       sql<{ target_type: string }[]>`
         SELECT target_type FROM content_deletions WHERE title = 'Testlog'
       `,
     ]);
-    expect(remainingLog).toBeUndefined();
-    expect(remainingTimeline).toBeUndefined();
+    // Soft-Delete: die Zeile bleibt bestehen (deleted_at gesetzt),
+    // timeline_events werden erst beim endgültigen Purge entfernt (siehe
+    // purgeContent.ts) — ein Restore soll sie zurückbekommen.
+    expect(log_row.deleted_at).not.toBeNull();
+    expect(remainingTimeline).toBeDefined();
     expect(deletion.target_type).toBe("mission_log");
+  });
+
+  it("restoreMissionLog makes a soft-deleted log visible again", async () => {
+    const author = await insertUser();
+    const mission = await insertMission();
+    const character = await insertCharacter({ playerId: author.id });
+    const log = await createMissionLog(
+      baseLogInput({ missionId: mission.id, authorId: character.id }),
+    );
+    await deleteMissionLog(author.id, log.id);
+
+    const restored = await restoreMissionLog(log.id);
+
+    expect(restored?.slug).toBe(log.slug);
+    const [row] = await sql<{ deleted_at: string | null }[]>`
+      SELECT deleted_at FROM mission_logs WHERE id = ${log.id}
+    `;
+    expect(row.deleted_at).toBeNull();
   });
 
   it("returns null when the requesting user is not the author's player", async () => {
@@ -169,16 +194,21 @@ describe("deleteMission", () => {
     const result = await deleteMission(mission.id, admin.id);
 
     expect(result?.logSlugs).toEqual([log.slug]);
-    const [[remainingMission], [remainingLog], [deletion]] = await Promise.all([
-      sql`SELECT id FROM missions WHERE id = ${mission.id}`,
-      sql`SELECT id FROM mission_logs WHERE id = ${log.id}`,
+    const [[missionRow], [logRow], [deletion]] = await Promise.all([
+      sql<{ deleted_at: string | null }[]>`
+        SELECT deleted_at FROM missions WHERE id = ${mission.id}
+      `,
+      sql<{ deleted_at: string | null }[]>`
+        SELECT deleted_at FROM mission_logs WHERE id = ${log.id}
+      `,
       sql<{ target_type: string; deleted_by: number }[]>`
         SELECT target_type, deleted_by FROM content_deletions
         WHERE title = 'Zu löschende Mission'
       `,
     ]);
-    expect(remainingMission).toBeUndefined();
-    expect(remainingLog).toBeUndefined();
+    // Soft-Delete: beide Zeilen bleiben bestehen (deleted_at gesetzt).
+    expect(missionRow.deleted_at).not.toBeNull();
+    expect(logRow.deleted_at).not.toBeNull();
     expect(deletion.target_type).toBe("mission");
     expect(deletion.deleted_by).toBe(admin.id);
   });
@@ -189,5 +219,30 @@ describe("deleteMission", () => {
     const result = await deleteMission(999999, admin.id);
 
     expect(result).toBeNull();
+  });
+
+  it("restoreMission makes a soft-deleted mission and its logs visible again", async () => {
+    const admin = await insertUser({ role: "admin" });
+    const author = await insertUser();
+    const mission = await insertMission({ title: "Wiederherstellbare Mission" });
+    const character = await insertCharacter({ playerId: author.id });
+    const log = await createMissionLog(
+      baseLogInput({ missionId: mission.id, authorId: character.id }),
+    );
+    await deleteMission(mission.id, admin.id);
+
+    const restored = await restoreMission(mission.id);
+
+    expect(restored?.slug).toBe(mission.slug);
+    const [[missionRow], [logRow]] = await Promise.all([
+      sql<{ deleted_at: string | null }[]>`
+        SELECT deleted_at FROM missions WHERE id = ${mission.id}
+      `,
+      sql<{ deleted_at: string | null }[]>`
+        SELECT deleted_at FROM mission_logs WHERE id = ${log.id}
+      `,
+    ]);
+    expect(missionRow.deleted_at).toBeNull();
+    expect(logRow.deleted_at).toBeNull();
   });
 });

@@ -6,6 +6,7 @@ import OwnerSelect from "./OwnerSelect";
 import AdminVisibilitySelect from "./AdminVisibilitySelect";
 import AutolinkButton from "@/components/AutolinkButton";
 import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
+import DeleteContentButton from "@/components/DeleteContentButton";
 import { ContentToolType } from "@/app/actions/contentTools";
 import { PencilIcon } from "@/lib/icons";
 import FollowButtons from "./FollowButtons";
@@ -14,6 +15,7 @@ import { MissionDetail, MissionLogDetail } from "@/types/missions";
 import { ArchiveEntryDetail } from "@/types/archive";
 import { FollowTargetType } from "@/lib/follows";
 import type { OwnerContentType } from "@/app/actions/owner";
+import type { TrashContentType } from "@/lib/adminContent";
 import type { AdminVisibilityContentType } from "@/app/actions/visibility";
 
 // ContentToolType (Autolink/Wikilinks/Format-Buttons) und OwnerContentType
@@ -90,6 +92,24 @@ export default function ActionsMenu({
   // Für den WhatsApp-Teilen-Text im ShareMenu (siehe FollowButtons.tsx) —
   // Character hat "name" statt "title" wie die übrigen drei Inhaltstypen.
   const contentTitle = "title" in content ? content.title : content.name;
+
+  // Löschen-Knopf (DeleteContentButton, admin-only) — trashContentType weicht
+  // von OWNER_CONTENT_TYPE für Dialoge ab (eigener Löschpfad, siehe
+  // deleteContentAction), redirectTo führt nach dem Löschen auf eine
+  // sinnvolle Übersichtsseite, da die aktuelle Detailseite sonst mit einem
+  // Notfound-Flackern enden würde.
+  const trashContentType: TrashContentType = isDialogue
+    ? "dialogue"
+    : OWNER_CONTENT_TYPE[contentType];
+  const deleteRedirectTo = isDialogue
+    ? "/archive?cat=dialogue"
+    : contentType === "character"
+      ? "/characters"
+      : contentType === "mission"
+        ? "/missions"
+        : contentType === "missionLog" && "mission_slug" in content
+          ? `/missions/${content.mission_slug}`
+          : "/archive";
 
   return (
     <div className="flex flex-col items-start justify-center gap-[5px]">
@@ -170,6 +190,13 @@ export default function ActionsMenu({
               <PencilIcon />
             </button>
           ))}
+        {viewer?.role === "admin" && (
+          <DeleteContentButton
+            contentType={trashContentType}
+            id={content.id}
+            redirectTo={deleteRedirectTo}
+          />
+        )}
       </div>
     </div>
   );

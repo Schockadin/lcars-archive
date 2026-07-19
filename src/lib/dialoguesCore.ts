@@ -949,7 +949,7 @@ export async function getDialogueForPlay(
   >`
     SELECT id, slug, title, metadata, dialogue_open, owner_user_id
     FROM archive_entries
-    WHERE slug = ${slug} AND category = 'dialogue'
+    WHERE slug = ${slug} AND category = 'dialogue' AND deleted_at IS NULL
     LIMIT 1
   `;
   if (!row) return null;
@@ -1099,61 +1099,61 @@ export interface DeletedDialogueInfo {
 // Admin-only Löschung (siehe deleteDialogueAction in
 // src/app/actions/dialogues.ts) — kein Owner-Scoping wie bei
 // setDialogueVisibility, da nur die Administration diese Action überhaupt
-// aufrufen darf. dialogue_messages hängt per ON DELETE CASCADE dran (siehe
-// scripts/schema.sql), timeline_events dagegen nicht (nur per
-// source_type/source_slug verknüpft, gleiches Prinzip wie deleteMission in
-// src/lib/missions.ts) und wird deshalb hier separat aufgeräumt.
-// participantSlugs im Rückgabewert dient der Info-Mail an die beteiligten
-// Spieler (getDialogueParticipantPlayers unten). deletedByUserId dient nur
-// dem Löschprotokoll (content_deletions, siehe getRecentDeletions in
-// recentActivity.ts) — hier immer die löschende Admin-Person.
+// aufrufen darf. Soft-Delete (deleted_at gesetzt statt DELETE) — dieselbe
+// Semantik wie deleteMission in src/lib/missions.ts: bleibt in der DB,
+// verschwindet aus allen Listen/der Suche/der Timeline für alle außer
+// Admins und wird nach 7 Tagen vom Purge-Cronjob endgültig entfernt.
+// dialogue_messages/timeline_events/content_follows werden bewusst NICHT
+// sofort entfernt — ein wiederhergestellter Dialog (restoreDialogue) soll
+// seinen Nachrichtenverlauf/seine Abos zurückbekommen, Bereinigung passiert
+// erst beim endgültigen Purge. participantSlugs im Rückgabewert dient der
+// Info-Mail an die beteiligten Spieler (getDialogueParticipantPlayers
+// unten). deletedByUserId dient nur dem Löschprotokoll (content_deletions,
+// siehe getRecentDeletions in recentActivity.ts) — hier immer die löschende
+// Admin-Person.
 export async function deleteDialogue(
   archiveEntryId: number,
   deletedByUserId: number,
 ): Promise<DeletedDialogueInfo | null> {
-  return sql.begin(async (tx) => {
-    const rows = await tx<
-      {
-        slug: string;
-        title: string;
-        metadata: unknown;
-        visibility: string;
-        owner_user_id: number | null;
-      }[]
-    >`
-      DELETE FROM archive_entries
-      WHERE id = ${archiveEntryId} AND category = 'dialogue'
-      RETURNING slug, title, metadata, visibility, owner_user_id
-    `;
-    const row = rows[0];
-    if (!row) return null;
+  const rows = await sql<
+    {
+      slug: string;
+      title: string;
+      metadata: unknown;
+      visibility: string;
+      owner_user_id: number | null;
+    }[]
+  >`
+    UPDATE archive_entries
+    SET deleted_at = NOW()
+    WHERE id = ${archiveEntryId} AND category = 'dialogue' AND deleted_at IS NULL
+    RETURNING slug, title, metadata, visibility, owner_user_id
+  `;
+  const row = rows[0];
+  if (!row) return null;
 
-    await tx`
-      DELETE FROM timeline_events
-      WHERE source_type = 'archive_entry' AND source_slug = ${row.slug}
-    `;
+  await sql`
+    INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+    VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${row.owner_user_id}, ${deletedByUserId})
+  `;
 
-    // Bookmarks/Abos auf den Dialog (content_follows, target_type
-    // 'archive_entry' — Dialoge sind archive_entries der Kategorie
-    // 'dialogue', siehe getBookmarkedContent/getUserSubscribers in
-    // follows.ts) räumen sich sonst nicht auf und zeigen danach auf einen
-    // nicht mehr existierenden Slug.
-    await tx`
-      DELETE FROM content_follows
-      WHERE target_type = 'archive_entry' AND target_slug = ${row.slug}
-    `;
+  return {
+    slug: row.slug,
+    title: row.title,
+    participantSlugs: parseParticipants(row.metadata).map((p) => p.slug),
+  };
+}
 
-    await tx`
-      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
-      VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${row.owner_user_id}, ${deletedByUserId})
-    `;
-
-    return {
-      slug: row.slug,
-      title: row.title,
-      participantSlugs: parseParticipants(row.metadata).map((p) => p.slug),
-    };
-  });
+// Macht einen weich gelöschten Dialog wieder sichtbar (Admin-Trash-Ansicht).
+export async function restoreDialogue(
+  archiveEntryId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE archive_entries SET deleted_at = NULL
+    WHERE id = ${archiveEntryId} AND category = 'dialogue' AND deleted_at IS NOT NULL
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
 }
 
 export interface DialogueEmailTarget {
@@ -1393,6 +1393,7 @@ export async function getDialoguesForUser(
             WHERE category = 'dialogue'
               AND metadata->'participants' @> ${sql.json([{ slug }])}
               AND dialogue_open
+              AND deleted_at IS NULL
           `
         : await sql<DialogueRow[]>`
             SELECT id, slug, title, metadata, updated_at::text AS updated_at,
@@ -1400,6 +1401,7 @@ export async function getDialoguesForUser(
             FROM archive_entries
             WHERE category = 'dialogue'
               AND metadata->'participants' @> ${sql.json([{ slug }])}
+              AND deleted_at IS NULL
           `;
 
     for (const row of rows) {
@@ -1448,6 +1450,7 @@ export async function getPublicDialoguesForUser(
     SELECT slug, title, metadata
     FROM archive_entries
     WHERE category = 'dialogue' AND owner_user_id = ${userId} AND visibility = 'public'
+      AND deleted_at IS NULL
     ORDER BY title ASC
   `;
   return rows.map((row) => ({

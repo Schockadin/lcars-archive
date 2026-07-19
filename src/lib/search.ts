@@ -62,14 +62,14 @@ async function runSearchQueries(
     sql<CharacterRow[]>`
       SELECT name, slug
       FROM characters
-      WHERE name ILIKE ${like} AND visibility = 'public'
+      WHERE name ILIKE ${like} AND visibility = 'public' AND deleted_at IS NULL
       ORDER BY (name ILIKE ${prefix}) DESC, name ASC
       LIMIT ${limit}
     `,
     sql<MissionRow[]>`
       SELECT title, slug
       FROM missions
-      WHERE title ILIKE ${like}
+      WHERE title ILIKE ${like} AND deleted_at IS NULL
       ORDER BY (title ILIKE ${prefix}) DESC, title ASC
       LIMIT ${limit}
     `,
@@ -83,6 +83,7 @@ async function runSearchQueries(
           ${includeContent ? sql`OR ml.content ILIKE ${like}` : sql``}
         )
         AND ml.visibility = 'public'
+        AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
       ORDER BY (ml.title ILIKE ${prefix}) DESC, ml.title ASC
       LIMIT ${limit}
     `,
@@ -97,6 +98,7 @@ async function runSearchQueries(
         )
         AND NOT (category = 'dialogue' AND dialogue_open)
         AND visibility = 'public'
+        AND deleted_at IS NULL
       ORDER BY (title ILIKE ${prefix}) DESC, title ASC
       LIMIT ${limit}
     `,

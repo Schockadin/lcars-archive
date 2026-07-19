@@ -236,16 +236,17 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:reset`      | Setzt die Datenbank zurück                                |
 | `npm run db:backup`     | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup") |
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind             |
+| `npm run db:purge-deleted` | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist |
 | `npm run test`          | Führt die Unit-Tests aus (`src/**/*.test.ts`)             |
 | `npm run test:integration` | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz) |
 
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
 (z.B. `db:setup:dev`, `db:ingest:dev`, `db:reset:dev`) — identisch, nur mit
 `--env-file=.env.dev` statt `.env.local`. Ausnahme: `db:backup`/
-`db:backup:cleanup` lesen `DATABASE_URL`/die R2-Zugangsdaten direkt aus der
-Prozessumgebung (kein `--env-file`, siehe GitHub-Actions-Secrets oben) und
-haben deshalb keine `:dev`-Variante. Siehe „Dev-/Preview-Umgebung"
-unter Deployment.
+`db:backup:cleanup`/`db:purge-deleted` lesen `DATABASE_URL`/die
+R2-Zugangsdaten direkt aus der Prozessumgebung (kein `--env-file`, siehe
+GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
+„Dev-/Preview-Umgebung" unter Deployment.
 
 ---
 
@@ -259,6 +260,7 @@ unter Deployment.
 │   ├── reset-db.ts           # Datenbank zurücksetzen
 │   ├── backup-db.ts          # Voll-Backup nach R2 (täglicher Cronjob)
 │   ├── cleanup-db-backups.ts # Löscht R2-Backups älter als 30 Tage
+│   ├── purge-soft-deleted.ts # Entfernt weich gelöschte Inhalte älter als 7 Tage endgültig
 │   └── ingest/               # Markdown-Vault → Datenbank
 │       ├── index.ts          # Einstiegspunkt der Ingestion
 │       ├── characters.ts
@@ -400,12 +402,19 @@ Backups bekommen einen davon unterscheidbaren Key
 (`db-backups/manual-<Zeitstempel>.json`, siehe `buildManualDbBackupKey` in
 `src/lib/r2Backup.ts`) und fallen deshalb bewusst NICHT unter dieses
 automatische Aufräumen — sie bleiben bis zur manuellen Löschung erhalten.
-Dafür müssen folgende Repository-Secrets gesetzt sein (GitHub → Settings →
-Secrets and variables → Actions → "New repository secret"):
+Als dritter Schritt im selben Job entfernt `scripts/purge-soft-deleted.ts`
+(`npm run db:purge-deleted`) anschließend alle weich gelöschten Inhalte
+(Charaktere/Missionen/Missionslogs/Archiv-Einträge/Dialoge, siehe „Soft-Delete
+für Inhalte" weiter unten), deren `deleted_at` mehr als 7 Tage zurückliegt,
+endgültig aus der DB — bewusst NACH dem Backup-Upload, damit ein zu
+purgender Inhalt notfalls noch aus dem frischen Backup wiederhergestellt
+werden könnte. Dafür müssen folgende Repository-Secrets gesetzt sein
+(GitHub → Settings → Secrets and variables → Actions → "New repository
+secret"):
 
 | Secret | Wert |
 |---|---|
-| `DATABASE_URL` | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. Nur für den Backup-Schritt nötig, nicht für das Cleanup. |
+| `DATABASE_URL` | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. Nötig für den Backup- UND den Purge-Schritt, nicht für das R2-Cleanup. |
 | `R2_ACCOUNT_ID` | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens"). |
 | `R2_BUCKET_NAME` | Name des Ziel-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). |
@@ -419,6 +428,18 @@ nur für den Cronjob (GitHub Actions) — die deployte Next.js-App auf Netlify
 liest sie separat aus ihrer eigenen Umgebung. Ohne diese Netlify-Variablen
 zeigen die R2-Buttons im Adminpanel einen Fehler ("... ist nicht gesetzt"),
 der lokale Download/Upload-Weg funktioniert davon unabhängig immer.
+
+### Soft-Delete für Inhalte
+
+Charaktere, Missionen, Missionslogs, Archiv-Einträge und Dialoge werden beim
+Löschen nicht mehr sofort aus der Datenbank entfernt, sondern nur mit einem
+`deleted_at`-Zeitstempel markiert (siehe `scripts/schema.sql`). Für alle
+außer Admins verschwinden sie damit sofort aus Suche, Timeline und allen
+Übersichten — Admins sehen sie weiterhin im Papierkorb unter
+`/admin/content/trash` (Adminbereich → "Papierkorb") und können sie dort
+wiederherstellen oder sofort endgültig löschen. Ohne manuelles Eingreifen
+entfernt der tägliche Cronjob (`scripts/purge-soft-deleted.ts`, siehe oben)
+weich gelöschte Inhalte automatisch nach 7 Tagen.
 
 ### Dev-/Preview-Umgebung
 

@@ -57,8 +57,9 @@ export const getAllMissions = unstable_cache(
           '[]'::jsonb
         ) AS authors
       FROM missions m
-      LEFT JOIN mission_logs ml ON ml.mission_id = m.id
+      LEFT JOIN mission_logs ml ON ml.mission_id = m.id AND ml.deleted_at IS NULL
       LEFT JOIN characters c    ON c.id = ml.author_id
+      WHERE m.deleted_at IS NULL
       GROUP BY m.id
       ORDER BY m.started_at DESC NULLS LAST, m.created_at DESC
     `;
@@ -115,7 +116,7 @@ export async function getMissionBySlug(
           owner_user_id    AS "ownerUserId",
           source_md        AS "sourceMarkdown"
         FROM missions
-        WHERE slug = ${slug}
+        WHERE slug = ${slug} AND deleted_at IS NULL
         LIMIT 1
       `;
       if (!rows[0]) return null;
@@ -123,7 +124,7 @@ export async function getMissionBySlug(
       const participants = await getMissionParticipants(mission.id);
       return { ...mission, participants };
     },
-    ["getMissionBySlug", "v4", slug],
+    ["getMissionBySlug", "v5", slug],
     { tags: [cacheTags.missions, cacheTags.mission(slug)] },
   )();
 }
@@ -148,7 +149,7 @@ export async function getMissionById(
       owner_user_id    AS "ownerUserId",
       source_md        AS "sourceMarkdown"
     FROM missions
-    WHERE id = ${id}
+    WHERE id = ${id} AND deleted_at IS NULL
     LIMIT 1
   `;
   if (!rows[0]) return null;
@@ -443,7 +444,7 @@ export async function updateMissionSynopsisWithHtml(
 // Kein Cache, gleiche Begründung wie getNextSessionNr unten.
 export async function getMostRecentLogDate(): Promise<string | null> {
   const [row] = await sql<{ log_date: string | null }[]>`
-    SELECT MAX(log_date)::text AS log_date FROM mission_logs
+    SELECT MAX(log_date)::text AS log_date FROM mission_logs WHERE deleted_at IS NULL
   `;
   return row?.log_date ?? null;
 }
@@ -459,7 +460,7 @@ export async function getNextSessionNr(
   const [row] = await sql<{ next: number }[]>`
     SELECT COALESCE(MAX(session_nr), 0) + 1 AS next
     FROM mission_logs
-    WHERE mission_id = ${missionId} AND author_id = ${authorId}
+    WHERE mission_id = ${missionId} AND author_id = ${authorId} AND deleted_at IS NULL
   `;
   return row?.next ?? 1;
 }
@@ -535,12 +536,12 @@ export async function getLogsByMissionId(
           c.slug AS author_slug
         FROM mission_logs ml
         LEFT JOIN characters c ON c.id = ml.author_id
-        WHERE ml.mission_id = ${missionId} AND ml.visibility = 'public'
+        WHERE ml.mission_id = ${missionId} AND ml.visibility = 'public' AND ml.deleted_at IS NULL
         ORDER BY ml.session_nr DESC NULLS LAST, ml.created_at DESC
       `;
       return rows;
     },
-    ["getLogsByMissionId", "v2", String(missionId)],
+    ["getLogsByMissionId", "v3", String(missionId)],
     { tags: [cacheTags.missionLogs, cacheTags.missionLogsOf(missionId)] },
   )();
 }
@@ -569,12 +570,12 @@ export async function getLogBySlug(
         FROM mission_logs ml
         JOIN missions m ON m.id = ml.mission_id
         LEFT JOIN characters c ON c.id = ml.author_id
-        WHERE ml.slug = ${slug}
+        WHERE ml.slug = ${slug} AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
         LIMIT 1
       `;
       return rows[0] ?? null;
     },
-    ["getLogBySlug", "v2", slug],
+    ["getLogBySlug", "v3", slug],
     { tags: [cacheTags.missionLogs, cacheTags.log(slug)] },
   )();
 }
@@ -599,7 +600,7 @@ export async function getAuthorLogNav(
         FROM mission_logs ml
         JOIN missions m   ON m.id = ml.mission_id
         JOIN characters c ON c.id = ml.author_id
-        WHERE c.slug = ${authorSlug}
+        WHERE c.slug = ${authorSlug} AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
         ORDER BY ml.log_date ASC NULLS LAST, ml.session_nr ASC NULLS LAST, ml.id ASC
       `;
 
@@ -751,7 +752,7 @@ export async function getOwnMissionLogForEdit(
     FROM mission_logs ml
     JOIN characters c ON c.id = ml.author_id
     JOIN missions m ON m.id = ml.mission_id
-    WHERE ml.id = ${logId} AND c.player_id = ${userId}
+    WHERE ml.id = ${logId} AND c.player_id = ${userId} AND ml.deleted_at IS NULL
     LIMIT 1
   `;
   const row = rows[0];
@@ -811,10 +812,13 @@ export async function updateMissionLogContent(
   return rows[0] ?? null;
 }
 
-// Löscht ein eigenes Log aus der DB und räumt den zugehörigen
-// timeline_events-Eintrag mit auf (der ist nur per source_type/source_slug,
-// nicht per FK verknüpft — bliebe sonst als toter Link stehen, siehe
-// src/lib/timeline.ts).
+// Löscht ein eigenes Log weich (deleted_at gesetzt statt DELETE) — bleibt in
+// der DB, verschwindet aber aus allen Listen/der Suche/der Timeline für
+// alle außer Admins (siehe getAllContentForAdmin/Trash-Ansicht in
+// lib/adminContent.ts) und wird nach 7 Tagen vom Purge-Cronjob endgültig
+// entfernt (dort auch die Bereinigung von timeline_events/content_follows,
+// die hier bewusst NICHT sofort passiert — ein wiederhergestelltes Log
+// soll seine Timeline-Einträge/Abos zurückbekommen, siehe restoreMissionLog).
 export async function deleteMissionLog(
   userId: number,
   logId: number,
@@ -828,22 +832,21 @@ export async function deleteMissionLog(
       ownerUserId: number | null;
     }[]
   >`
-    DELETE FROM mission_logs ml
-    USING characters c
+    UPDATE mission_logs ml
+    SET deleted_at = NOW()
+    FROM characters c
     WHERE ml.id = ${logId}
       AND c.id = ml.author_id AND c.player_id = ${userId}
+      AND ml.deleted_at IS NULL
     RETURNING ml.slug, ml.mission_id AS "missionId",
               ml.title, ml.visibility, ml.owner_user_id AS "ownerUserId"
   `;
   const row = rows[0] ?? null;
   if (row) {
-    await sql`
-      DELETE FROM timeline_events
-      WHERE source_type = 'mission_log' AND source_slug = ${row.slug}
-    `;
     // Löschprotokoll fürs News-Feed (siehe getRecentDeletions in
-    // recentActivity.ts) — der Log selbst ist jetzt weg, ohne dieses
-    // Protokoll gäbe es keine Datenquelle mehr für einen "gelöscht"-Eintrag.
+    // recentActivity.ts) — aus Sicht aller Nicht-Admins ist der Log jetzt
+    // weg, ohne dieses Protokoll gäbe es keine Datenquelle mehr für einen
+    // "gelöscht"-Eintrag.
     await sql`
       INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
       VALUES ('mission_log', ${row.title}, ${row.visibility}, ${row.ownerUserId}, ${userId})
@@ -852,34 +855,79 @@ export async function deleteMissionLog(
   return row;
 }
 
-// Löscht eine Mission inkl. aller zugehörigen Mission-Logs (ON DELETE CASCADE,
-// siehe scripts/schema.sql) und räumt sowohl deren timeline_events als auch
-// die der Mission selbst mit auf (nicht per FK verknüpft, gleiches Prinzip
-// wie deleteMissionLog oben — Missionen erzeugen über started_at/ended_at und
-// eigene <!-- timeline --> Marker im Body durchaus eigene timeline_events mit
-// source_type='mission', siehe regenerateTimeline in timeline.ts). Ebenso
-// werden Bookmarks/Abos (content_follows) auf die Mission entfernt, sonst
-// blieben verwaiste Zeilen liegen, die auf einen nicht mehr existierenden
-// Slug zeigen. Alles in einer Transaktion, damit ein Fehler mitten im
-// Aufräumen nicht eine bereits gelöschte Mission mit noch vorhandenen
-// Altlasten zurücklässt. Anders als deleteMissionLog kein Owner-Scoping: nur
-// für admin/gm aufrufbar, siehe deleteMissionAction. deletedByUserId dient
-// nur dem Löschprotokoll (content_deletions, siehe getRecentDeletions in
-// recentActivity.ts) — hier immer die aufrufende admin/gm-Person, nicht
-// owner_user_id der Mission selbst.
+// Macht ein weich gelöschtes Log wieder sichtbar (Admin-Trash-Ansicht) —
+// timeline_events/content_follows wurden beim Löschen nie entfernt, tauchen
+// also automatisch wieder auf (Timeline erst nach der nächsten manuellen
+// Regenerierung, siehe regenerateTimeline in timeline.ts).
+export async function restoreMissionLog(
+  logId: number,
+): Promise<{ slug: string; missionId: number } | null> {
+  const rows = await sql<{ slug: string; missionId: number }[]>`
+    UPDATE mission_logs SET deleted_at = NULL
+    WHERE id = ${logId} AND deleted_at IS NOT NULL
+    RETURNING slug, mission_id AS "missionId"
+  `;
+  return rows[0] ?? null;
+}
+
+// Wie deleteMissionLog oben, aber ohne Owner-Scoping (author.player_id) —
+// für den Admin-Löschknopf in ActionsMenu.tsx/der Trash-Ansicht, wo bereits
+// requireAdmin() im Aufrufer die Berechtigung prüft. deletedByUserId kann
+// null sein (siehe content_deletions.deleted_by ON DELETE SET NULL) — die
+// Trash-Ansicht selbst zeigt aber immer die aufrufende Admin-Person an.
+export async function deleteMissionLogAsAdmin(
+  logId: number,
+  deletedByUserId: number,
+): Promise<{ slug: string; missionId: number } | null> {
+  const rows = await sql<
+    {
+      slug: string;
+      missionId: number;
+      title: string;
+      visibility: string;
+      ownerUserId: number | null;
+    }[]
+  >`
+    UPDATE mission_logs
+    SET deleted_at = NOW()
+    WHERE id = ${logId} AND deleted_at IS NULL
+    RETURNING slug, mission_id AS "missionId",
+              title, visibility, owner_user_id AS "ownerUserId"
+  `;
+  const row = rows[0] ?? null;
+  if (row) {
+    await sql`
+      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+      VALUES ('mission_log', ${row.title}, ${row.visibility}, ${row.ownerUserId}, ${deletedByUserId})
+    `;
+  }
+  return row;
+}
+
+// Löscht eine Mission weich, inkl. aller ihrer (noch nicht individuell
+// gelöschten) Mission-Logs — dieselbe Soft-Delete-Semantik wie
+// deleteMissionLog oben, kein hartes DELETE/CASCADE mehr. Kein eigener
+// content_deletions-Eintrag pro mitgelöschtem Log: das Löschen der Mission
+// selbst ist das relevante Ereignis fürs News-Feed. Anders als
+// deleteMissionLog kein Owner-Scoping: nur für admin/gm aufrufbar, siehe
+// deleteMissionAction. deletedByUserId dient nur dem Löschprotokoll
+// (content_deletions, siehe getRecentDeletions in recentActivity.ts) — hier
+// immer die aufrufende admin/gm-Person, nicht owner_user_id der Mission
+// selbst.
 export async function deleteMission(
   missionId: number,
   deletedByUserId: number,
 ): Promise<{ slug: string; logSlugs: string[] } | null> {
   return sql.begin(async (tx) => {
     const logRows = await tx<{ slug: string }[]>`
-      SELECT slug FROM mission_logs WHERE mission_id = ${missionId}
+      SELECT slug FROM mission_logs WHERE mission_id = ${missionId} AND deleted_at IS NULL
     `;
 
     const rows = await tx<
       { slug: string; title: string; ownerUserId: number | null }[]
     >`
-      DELETE FROM missions WHERE id = ${missionId}
+      UPDATE missions SET deleted_at = NOW()
+      WHERE id = ${missionId} AND deleted_at IS NULL
       RETURNING slug, title, owner_user_id AS "ownerUserId"
     `;
     const row = rows[0] ?? null;
@@ -892,25 +940,40 @@ export async function deleteMission(
       VALUES ('mission', ${row.title}, NULL, ${row.ownerUserId}, ${deletedByUserId})
     `;
 
-    await tx`
-      DELETE FROM timeline_events
-      WHERE source_type = 'mission' AND source_slug = ${row.slug}
-    `;
-
     const logSlugs = logRows.map((l) => l.slug);
     if (logSlugs.length > 0) {
       await tx`
-        DELETE FROM timeline_events
-        WHERE source_type = 'mission_log' AND source_slug = ANY(${logSlugs})
+        UPDATE mission_logs SET deleted_at = NOW()
+        WHERE mission_id = ${missionId} AND deleted_at IS NULL
       `;
     }
 
-    await tx`
-      DELETE FROM content_follows
-      WHERE target_type = 'mission' AND target_slug = ${row.slug}
-    `;
-
     return { slug: row.slug, logSlugs };
+  });
+}
+
+// Macht eine weich gelöschte Mission inkl. der zusammen mit ihr gelöschten
+// Logs wieder sichtbar (Admin-Trash-Ansicht) — restauriert bewusst ALLE
+// aktuell gelöschten Logs der Mission, nicht nur die beim Mission-Löschen
+// mitgelöschten (ein Log, das schon vorher einzeln gelöscht wurde, kommt
+// dadurch ebenfalls zurück; seltener Edge-Case, aber einfacher als eine
+// eigene "durch Kaskade gelöscht"-Markierung zu pflegen).
+export async function restoreMission(
+  missionId: number,
+): Promise<{ slug: string } | null> {
+  return sql.begin(async (tx) => {
+    const rows = await tx<{ slug: string }[]>`
+      UPDATE missions SET deleted_at = NULL
+      WHERE id = ${missionId} AND deleted_at IS NOT NULL
+      RETURNING slug
+    `;
+    const row = rows[0] ?? null;
+    if (!row) return null;
+
+    await tx`
+      UPDATE mission_logs SET deleted_at = NULL WHERE mission_id = ${missionId}
+    `;
+    return row;
   });
 }
 
@@ -926,11 +989,11 @@ export const getAllLogPaths = unstable_cache(
         ml.updated_at::text AS updated_at
       FROM mission_logs ml
       JOIN missions m ON m.id = ml.mission_id
-      WHERE ml.visibility = 'public'
+      WHERE ml.visibility = 'public' AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
     `;
     return rows;
   },
-  ["getAllLogPaths", "v2"],
+  ["getAllLogPaths", "v3"],
   { tags: [cacheTags.missionLogs] },
 );
 

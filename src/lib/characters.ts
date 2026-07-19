@@ -39,7 +39,7 @@ export const getAllCharacters = unstable_cache(
     const rows = await sql<Character[]>`
         SELECT *
         FROM characters
-        WHERE visibility = 'public'
+        WHERE visibility = 'public' AND deleted_at IS NULL
         ORDER BY
           CASE status
             WHEN 'active'   THEN 1
@@ -50,7 +50,7 @@ export const getAllCharacters = unstable_cache(
       `;
     return rows.map(parseCharacter);
   },
-  ["getAllCharacters", "v2"],
+  ["getAllCharacters", "v3"],
   { tags: [cacheTags.characters] },
 );
 
@@ -61,6 +61,7 @@ export const getAllCharactersForAdmin = unstable_cache(
     const rows = await sql<Character[]>`
       SELECT *
       FROM characters
+      WHERE deleted_at IS NULL
       ORDER BY
         CASE status
           WHEN 'active'   THEN 1
@@ -71,7 +72,7 @@ export const getAllCharactersForAdmin = unstable_cache(
     `;
     return rows.map(parseCharacter);
   },
-  ["getAllCharactersForAdmin"],
+  ["getAllCharactersForAdmin", "v2"],
   { tags: [cacheTags.characters] },
 );
 
@@ -83,12 +84,12 @@ export async function getCharacterBySlug(
       const rows = await sql<Character[]>`
         SELECT *
         FROM characters
-        WHERE slug = ${slug}
+        WHERE slug = ${slug} AND deleted_at IS NULL
         LIMIT 1
       `;
       return rows[0] ? parseCharacter(rows[0]) : null;
     },
-    ["getCharacterBySlug", slug],
+    ["getCharacterBySlug", "v2", slug],
     { tags: [cacheTags.characters, cacheTags.character(slug)] },
   )();
 }
@@ -98,12 +99,12 @@ export const getActiveCharacters = unstable_cache(
     const rows = await sql<Character[]>`
       SELECT id, slug, name, metadata
       FROM characters
-      WHERE status = 'active' AND visibility = 'public'
+      WHERE status = 'active' AND visibility = 'public' AND deleted_at IS NULL
       ORDER BY name ASC
     `;
     return rows.map(parseCharacter);
   },
-  ["getActiveCharacters", "v2"],
+  ["getActiveCharacters", "v3"],
   { tags: [cacheTags.characters] },
 );
 
@@ -116,7 +117,7 @@ export async function getCharactersForUser(
   const rows = await sql<Character[]>`
     SELECT *
     FROM characters
-    WHERE player_id = ${userId}
+    WHERE player_id = ${userId} AND deleted_at IS NULL
     ORDER BY name ASC
   `;
   return rows.map(parseCharacter);
@@ -140,7 +141,7 @@ export async function getCharactersWithPlayers(
     SELECT c.id, c.slug, c.name, c.player_id AS "playerId", u.name AS "playerName"
     FROM characters c
     JOIN users u ON u.id = c.player_id
-    WHERE c.player_id IS NOT NULL AND c.player_id != ${excludeUserId}
+    WHERE c.player_id IS NOT NULL AND c.player_id != ${excludeUserId} AND c.deleted_at IS NULL
     ORDER BY c.name ASC
   `;
 }
@@ -170,6 +171,7 @@ export async function getCharactersForParticipantPicker(): Promise<
     SELECT c.id, c.slug, c.name, u.name AS "playerName", c.status
     FROM characters c
     JOIN users u ON u.id = c.player_id
+    WHERE c.deleted_at IS NULL
     ORDER BY c.name ASC
   `;
 }
@@ -294,7 +296,7 @@ export async function getLogsForUser(
     FROM mission_logs ml
     JOIN characters c ON c.id = ml.author_id
     JOIN missions m ON m.id = ml.mission_id
-    WHERE c.player_id = ${userId}
+    WHERE c.player_id = ${userId} AND ml.deleted_at IS NULL
     ORDER BY ml.session_nr DESC NULLS LAST
   `;
 }
@@ -309,7 +311,7 @@ export async function getPublicCharactersForUser(
   const rows = await sql<Character[]>`
     SELECT *
     FROM characters
-    WHERE player_id = ${userId} AND visibility = 'public'
+    WHERE player_id = ${userId} AND visibility = 'public' AND deleted_at IS NULL
     ORDER BY name ASC
   `;
   return rows.map(parseCharacter);
@@ -329,7 +331,7 @@ export async function getPublicLogsForUser(
     FROM mission_logs ml
     JOIN characters c ON c.id = ml.author_id
     JOIN missions m ON m.id = ml.mission_id
-    WHERE c.player_id = ${userId} AND ml.visibility = 'public'
+    WHERE c.player_id = ${userId} AND ml.visibility = 'public' AND ml.deleted_at IS NULL
     ORDER BY ml.session_nr DESC NULLS LAST
   `;
 }
@@ -354,12 +356,12 @@ export async function getLogsByCharacter(
           m.title           AS mission_title
         FROM mission_logs ml
         JOIN missions m ON m.id = ml.mission_id
-        WHERE ml.author_id = ${characterId} AND ml.visibility = 'public'
+        WHERE ml.author_id = ${characterId} AND ml.visibility = 'public' AND ml.deleted_at IS NULL
         ORDER BY ml.session_nr DESC NULLS LAST
       `;
       return rows;
     },
-    ["getLogsByCharacter", "v2", String(characterId)],
+    ["getLogsByCharacter", "v3", String(characterId)],
     { tags: [cacheTags.missionLogs] },
   )();
 }
@@ -531,7 +533,7 @@ export async function getOwnCharacterForEdit(
     SELECT id, slug, name, status, portrait, metadata,
            COALESCE(source_md, '') AS "sourceMarkdown"
     FROM characters
-    WHERE id = ${characterId} AND player_id = ${userId}
+    WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
     LIMIT 1
   `;
   const row = rows[0];
@@ -702,4 +704,47 @@ export async function updateOwnCharacterBio(
   `;
   const row = rows[0];
   return row ? { slug: row.slug, name: row.name, bio } : null;
+}
+
+// Löscht einen Charakter weich (deleted_at gesetzt statt DELETE) — bleibt in
+// der DB, verschwindet aber aus allen Listen/der Suche/der Timeline für
+// alle außer Admins (siehe getAllContentForAdmin/Trash-Ansicht in
+// lib/adminContent.ts) und wird nach 7 Tagen vom Purge-Cronjob endgültig
+// entfernt. Admin-only (kein Owner-Scoping wie bei
+// updateOwnCharacterContent) — anders als bei Missions-Logs gibt es aktuell
+// keine Selbstlöschung durch die spielende Person. deletedByUserId dient
+// nur dem Löschprotokoll (content_deletions, siehe getRecentDeletions in
+// recentActivity.ts).
+export async function deleteCharacter(
+  characterId: number,
+  deletedByUserId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<
+    { slug: string; name: string; visibility: string; ownerUserId: number | null }[]
+  >`
+    UPDATE characters
+    SET deleted_at = NOW()
+    WHERE id = ${characterId} AND deleted_at IS NULL
+    RETURNING slug, name, visibility, player_id AS "ownerUserId"
+  `;
+  const row = rows[0] ?? null;
+  if (row) {
+    await sql`
+      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+      VALUES ('character', ${row.name}, ${row.visibility}, ${row.ownerUserId}, ${deletedByUserId})
+    `;
+  }
+  return row ? { slug: row.slug } : null;
+}
+
+// Macht einen weich gelöschten Charakter wieder sichtbar (Admin-Trash-Ansicht).
+export async function restoreCharacter(
+  characterId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE characters SET deleted_at = NULL
+    WHERE id = ${characterId} AND deleted_at IS NOT NULL
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
 }
