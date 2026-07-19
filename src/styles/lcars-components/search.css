@@ -15,7 +15,14 @@
      breit (x-Offset der Hintergrund-/Trennlinie). minmax(0, …) erzwingt
      wirklich gleich breite Spalten, überlanger Text bricht stattdessen um. */
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  /* row-gap/column-gap statt gap-Shorthand: die beiden Spalten müssen ohne
+     Zwischenraum aneinanderstoßen, sonst bleibt links/rechts der von
+     ::before gezeichneten Trennlinie ein unausgefüllter Streifen übrig, in
+     dem der Hintergrund einer aktiven Option nicht bis zur Mitte reicht
+     ("Background nicht breit genug"). Zwischen den Zeilen (bei mehr als 2
+     Optionen, die umbrechen) bleibt weiterhin Abstand. */
+  row-gap: 10px;
+  column-gap: 0;
   width: 100%;
   margin-bottom: 16px;
 }

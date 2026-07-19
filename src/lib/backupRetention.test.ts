@@ -4,6 +4,7 @@ import {
   computeBackupCutoff,
   isStaleBackupKey,
   buildManualDbBackupKey,
+  buildManualUserBackupKey,
 } from "./backupRetention";
 
 describe("computeBackupCutoff", () => {
@@ -79,5 +80,19 @@ describe("buildManualDbBackupKey", () => {
     const first = buildManualDbBackupKey(new Date("2026-07-17T14:32:05.000Z"));
     const second = buildManualDbBackupKey(new Date("2026-07-17T14:32:06.000Z"));
     expect(first).not.toBe(second);
+  });
+});
+
+describe("buildManualUserBackupKey", () => {
+  it("builds a manual-prefixed, timestamp-based key under user-backups/", () => {
+    const now = new Date("2026-07-17T14:32:05.123Z");
+    expect(buildManualUserBackupKey(now)).toBe(
+      "user-backups/manual-2026-07-17T14-32-05-123Z.json",
+    );
+  });
+
+  it("never collides with a db-backups/ key, even at the same timestamp", () => {
+    const now = new Date("2026-07-17T14:32:05.123Z");
+    expect(buildManualUserBackupKey(now)).not.toBe(buildManualDbBackupKey(now));
   });
 });

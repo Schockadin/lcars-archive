@@ -24,6 +24,18 @@ export function buildManualDbBackupKey(now: Date = new Date()): string {
   return `${BACKUP_PREFIX}manual-${timestamp}.json`;
 }
 
+// User-Backups (Adminpanel "Im R2-Bucket speichern" in UserBackupPanel.tsx)
+// laufen über einen eigenen Präfix im selben Bucket — rein manuell, kein
+// täglicher Cronjob und damit auch keine automatische Löschung wie bei
+// db-backups/ (cleanup-db-backups.ts filtert ohnehin nur nach BACKUP_PREFIX,
+// user-backups/-Objekte bleiben davon unberührt).
+export const USER_BACKUP_PREFIX = "user-backups/";
+
+export function buildManualUserBackupKey(now: Date = new Date()): string {
+  const timestamp = now.toISOString().replace(/[:.]/g, "-");
+  return `${USER_BACKUP_PREFIX}manual-${timestamp}.json`;
+}
+
 // UTC-Mitternacht statt der aktuellen Uhrzeit — Backup-Daten werden aus dem
 // Key ("YYYY-MM-DD") ebenfalls als UTC-Mitternacht geparst (siehe
 // isStaleBackupKey unten), sonst würde die Uhrzeit des Cronjob-Laufs die

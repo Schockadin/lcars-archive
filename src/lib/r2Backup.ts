@@ -12,9 +12,13 @@ import {
   GetObjectCommand,
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
-import { BACKUP_PREFIX, buildManualDbBackupKey } from "@/lib/backupRetention";
+import {
+  BACKUP_PREFIX,
+  buildManualDbBackupKey,
+  buildManualUserBackupKey,
+} from "@/lib/backupRetention";
 
-export { buildManualDbBackupKey };
+export { buildManualDbBackupKey, buildManualUserBackupKey };
 
 export function requireEnv(name: string): string {
   const value = process.env[name];
@@ -39,10 +43,12 @@ export function createR2Client(): { client: S3Client; bucket: string } {
   return { client, bucket };
 }
 
-// Lädt einen fertigen DB-Backup-JSON-Export nach R2 hoch — der Aufrufer baut
+// Lädt einen fertigen Backup-JSON-Export nach R2 hoch — der Aufrufer baut
 // den Key selbst (Cronjob: db-backups/JJJJ-MM-TT.json, siehe backup-db.ts;
-// manueller Export: buildManualDbBackupKey, siehe src/lib/backupRetention.ts),
-// diese Funktion kennt nur den Upload-Mechanismus.
+// manueller DB-Export: buildManualDbBackupKey; manueller User-Export:
+// buildManualUserBackupKey, beide in src/lib/backupRetention.ts), diese
+// Funktion kennt nur den Upload-Mechanismus und wird für beide Backup-Arten
+// (DB + User) genutzt.
 export async function uploadDbBackupToR2(key: string, json: string): Promise<void> {
   const { client, bucket } = createR2Client();
   await client.send(
@@ -61,10 +67,13 @@ export interface R2BackupObject {
   lastModified: string | null;
 }
 
-// Listet alle DB-Backup-Objekte im Bucket (tägliche Cronjob-Backups UND
-// manuelle), neueste zuerst — Grundlage für "Aus R2-Bucket importieren" im
-// Adminpanel.
-export async function listDbBackupsInR2(): Promise<R2BackupObject[]> {
+// Listet alle Backup-Objekte im Bucket unter einem Präfix (Default:
+// db-backups/, tägliche Cronjob-Backups UND manuelle; UserBackupPanel.tsx
+// ruft mit USER_BACKUP_PREFIX auf), neueste zuerst — Grundlage für "Aus
+// R2-Bucket importieren" im Adminpanel.
+export async function listDbBackupsInR2(
+  prefix: string = BACKUP_PREFIX,
+): Promise<R2BackupObject[]> {
   const { client, bucket } = createR2Client();
 
   const objects: R2BackupObject[] = [];
@@ -73,7 +82,7 @@ export async function listDbBackupsInR2(): Promise<R2BackupObject[]> {
     const page = await client.send(
       new ListObjectsV2Command({
         Bucket: bucket,
-        Prefix: BACKUP_PREFIX,
+        Prefix: prefix,
         ContinuationToken: continuationToken,
       }),
     );
@@ -95,15 +104,19 @@ export async function listDbBackupsInR2(): Promise<R2BackupObject[]> {
 // Der Backup-Key kommt beim Import client->server als String (Auswahl aus
 // listDbBackupsInR2, siehe importDbBackupFromR2Action) — defensiv gegen
 // einen manipulierten Wert geprüft, damit sich darüber nicht auf beliebige
-// Bucket-Objekte außerhalb von db-backups/ zugreifen lässt.
+// Bucket-Objekte außerhalb des erwarteten Präfixes zugreifen lässt.
 export class InvalidBackupKeyError extends Error {}
 
 // Lädt genau ein Backup-Objekt aus R2 und gibt seinen Inhalt als Text
-// zurück (JSON, noch ungeparst — Parsing/Validieren bleibt bei
-// importDatabaseBackup in dbBackup.ts, gleiches Prinzip wie beim lokalen
-// Datei-Import).
-export async function downloadDbBackupFromR2(key: string): Promise<string> {
-  if (!key.startsWith(BACKUP_PREFIX) || key.includes("..")) {
+// zurück (JSON, noch ungeparst — Parsing/Validieren bleibt beim jeweiligen
+// Aufrufer, gleiches Prinzip wie beim lokalen Datei-Import). requiredPrefix
+// grenzt ein, aus welchem "Namensraum" (db-backups/ vs. user-backups/)
+// gelesen werden darf.
+export async function downloadDbBackupFromR2(
+  key: string,
+  requiredPrefix: string = BACKUP_PREFIX,
+): Promise<string> {
+  if (!key.startsWith(requiredPrefix) || key.includes("..")) {
     throw new InvalidBackupKeyError(`Ungültiger Backup-Key: "${key}"`);
   }
   const { client, bucket } = createR2Client();

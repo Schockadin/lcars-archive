@@ -61,7 +61,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **DB-Backup** — der komplette Datenbankinhalt lässt sich im Admin-Panel als
   JSON-Datei herunterladen und bei Bedarf wieder vollständig einspielen; ein
   täglicher Cronjob sichert zusätzlich automatisch nach Cloudflare R2 und
-  löscht dort Backups, die älter als 30 Tage sind.
+  löscht dort Backups, die älter als 30 Tage sind. Manuelles Sichern/
+  Einspielen ist außerdem direkt im selben R2-Bucket möglich (eigener Key
+  pro Sicherung, fällt nicht unter die automatische Löschung). Das separate
+  User-Backup (nur Useraccounts, per Upsert über die E-Mail-Adresse statt
+  vollem Restore) bietet denselben R2-Cloud-Weg unter einem eigenen Präfix
+  (`user-backups/`) im gleichen Bucket.
 - **Admin-Bereich** — eigene Unterseiten für Nutzerverwaltung (durchsuchbare/
   sortierbare Tabelle, Detailseite pro User für Rolle/Aktivierung/Löschen/
   Passwort-Reset), Charakter-Zuweisung, Wartungs-Skripte sowie einen
@@ -406,10 +411,11 @@ Secrets and variables → Actions → "New repository secret"):
 | `R2_BUCKET_NAME` | Name des Ziel-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). |
 
 **Wichtig für das manuelle R2-Backup im Adminpanel** (`/admin/db` — "Im
-R2-Bucket speichern" / "Aus R2-Bucket importieren"): dieselben vier
-`R2_*`-Variablen müssen **zusätzlich** im Netlify-Dashboard als
-Environment-Variablen hinterlegt werden. Die GitHub-Secrets oben gelten nur
-für den Cronjob (GitHub Actions) — die deployte Next.js-App auf Netlify
+R2-Bucket speichern" / "Aus R2-Bucket importieren", genauso für das
+User-Backup unter demselben Adminbereich mit `user-backups/`-Präfix):
+dieselben vier `R2_*`-Variablen müssen **zusätzlich** im Netlify-Dashboard
+als Environment-Variablen hinterlegt werden. Die GitHub-Secrets oben gelten
+nur für den Cronjob (GitHub Actions) — die deployte Next.js-App auf Netlify
 liest sie separat aus ihrer eigenen Umgebung. Ohne diese Netlify-Variablen
 zeigen die R2-Buttons im Adminpanel einen Fehler ("... ist nicht gesetzt"),
 der lokale Download/Upload-Weg funktioniert davon unabhängig immer.
