@@ -1,15 +1,19 @@
-// Cloudflare-R2-Zugriff (S3-kompatible API) für DB-Backups — gemeinsame
-// Quelle sowohl für den täglichen Cronjob (scripts/backup-db.ts/
-// cleanup-db-backups.ts, re-exportiert über scripts/r2Client.ts, läuft per
-// tsx außerhalb von Next, siehe dortiger --conditions=react-server-Kommentar)
-// als auch für den manuellen Export/Import im Adminpanel (dbBackupActions.ts,
-// läuft als Next.js Server Action). "auto" statt einer echten AWS-Region und
-// der Account-spezifische S3-Endpoint, siehe Cloudflare-R2-Doku.
+// Cloudflare-R2-Zugriff (S3-kompatible API) — gemeinsame Quelle sowohl für
+// den täglichen Backup-Cronjob (scripts/backup-db.ts/cleanup-db-backups.ts,
+// re-exportiert über scripts/r2Client.ts, läuft per tsx außerhalb von Next,
+// siehe dortiger --conditions=react-server-Kommentar) als auch für den
+// manuellen Export/Import im Adminpanel (dbBackupActions.ts) UND für
+// beliebige Binärobjekte (Content-Bilder, src/lib/contentImages.ts) — alle
+// drei teilen sich denselben Bucket (R2_BUCKET_NAME), nur der Key-Präfix
+// unterscheidet den "Namensraum" (db-backups/, user-backups/,
+// content-images/). "auto" statt einer echten AWS-Region und der
+// Account-spezifische S3-Endpoint, siehe Cloudflare-R2-Doku.
 import "server-only";
 import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
+  DeleteObjectCommand,
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import {
@@ -126,4 +130,42 @@ export async function downloadDbBackupFromR2(
     throw new Error(`Backup "${key}" konnte nicht gelesen werden (leerer Inhalt).`);
   }
   return body;
+}
+
+// Generische Binärobjekt-Funktionen (Content-Bilder, siehe
+// src/lib/contentImages.ts) — anders als uploadDbBackupToR2/
+// downloadDbBackupFromR2 oben kein Text/JSON, sondern beliebige Bytes mit
+// eigenem Content-Type.
+export async function uploadObjectToR2(
+  key: string,
+  body: Buffer,
+  contentType: string,
+): Promise<void> {
+  const { client, bucket } = createR2Client();
+  await client.send(
+    new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: contentType }),
+  );
+}
+
+export interface R2ObjectBytes {
+  body: Buffer;
+  contentType: string | null;
+}
+
+export async function getObjectBytesFromR2(key: string): Promise<R2ObjectBytes | null> {
+  const { client, bucket } = createR2Client();
+  try {
+    const result = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    const bytes = await result.Body?.transformToByteArray();
+    if (bytes == null) return null;
+    return { body: Buffer.from(bytes), contentType: result.ContentType ?? null };
+  } catch (err) {
+    if (err instanceof Error && err.name === "NoSuchKey") return null;
+    throw err;
+  }
+}
+
+export async function deleteObjectFromR2(key: string): Promise<void> {
+  const { client, bucket } = createR2Client();
+  await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
 }

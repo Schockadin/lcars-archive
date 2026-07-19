@@ -45,6 +45,11 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst.
 - **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und
   automatische bzw. manuelle Verlinkung (`[[Wikilinks]]`) zwischen Inhalten.
+- **Bilder-Galerie** — Charaktere, Missionen, Missionslogs und Archiv-Einträge
+  (nicht Gespräche) können mehrere Bilder haben (JPEG/PNG/WebP/GIF, max. 5 MB
+  pro Datei); Hochladen/Löschen ist auf dieselbe Person beschränkt, die den
+  Inhalt auch sonst bearbeiten darf. Speicherung im selben R2-Bucket wie die
+  DB-Backups (eigener Präfix, keine zusätzliche Konfiguration nötig).
 - **PWA mit Push-Benachrichtigungen** — installierbar auf Mobilgeräten (inkl. maskable
   Icon), Web-Push für neue Dialog-Nachrichten und abonnierte Inhalte.
 - **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und Spielleitung.
@@ -440,6 +445,21 @@ außer Admins verschwinden sie damit sofort aus Suche, Timeline und allen
 wiederherstellen oder sofort endgültig löschen. Ohne manuelles Eingreifen
 entfernt der tägliche Cronjob (`scripts/purge-soft-deleted.ts`, siehe oben)
 weich gelöschte Inhalte automatisch nach 7 Tagen.
+
+### Bilder für Inhalte
+
+Charaktere, Missionen, Missionslogs und Archiv-Einträge (nicht Gespräche —
+siehe `src/lib/contentImages.ts`) können beliebig viele Bilder haben. Die
+Bytes landen im selben R2-Bucket wie die DB-Backups, unter dem eigenen
+Präfix `content-images/<Typ>/<ID>/<UUID>.<Endung>` — dieselben vier
+`R2_*`-Variablen aus dem Backup-Abschnitt oben genügen, es ist **keine**
+weitere Konfiguration nötig. Der Bucket bleibt dabei privat: Bilder werden
+nicht direkt aus R2, sondern über eine eigene, sichtbarkeitsgeprüfte Route
+(`/api/content-images/[id]`) ausgeliefert — wer den Inhalt selbst nicht sehen
+darf (private/GM-only-Sichtbarkeit), sieht auch seine Bilder nicht. Erlaubt
+sind JPEG/PNG/WebP/GIF bis 5 MB pro Datei; Hochladen/Löschen darf, wer den
+jeweiligen Inhalt auch sonst bearbeiten darf (bei Charakteren/Missionslogs
+nur der Owner, bei Missionen/Archiv-Einträgen zusätzlich jeder Admin).
 
 ### Dev-/Preview-Umgebung
 

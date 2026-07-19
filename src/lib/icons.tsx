@@ -267,3 +267,12 @@ export function CloudIcon() {
     </svg>
   );
 }
+export function ImageIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="8.5" cy="9.5" r="1.5" />
+      <path d="M21 16l-5.5-5.5a2 2 0 0 0-2.8 0L4 19" />
+    </svg>
+  );
+}

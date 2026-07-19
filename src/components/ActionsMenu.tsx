@@ -7,7 +7,9 @@ import AdminVisibilitySelect from "./AdminVisibilitySelect";
 import AutolinkButton from "@/components/AutolinkButton";
 import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
 import DeleteContentButton from "@/components/DeleteContentButton";
+import ContentImageGallery from "@/components/ContentImageGallery";
 import { ContentToolType } from "@/app/actions/contentTools";
+import type { ContentImageType } from "@/lib/contentImages";
 import { PencilIcon } from "@/lib/icons";
 import FollowButtons from "./FollowButtons";
 import ShareMenu from "./ShareMenu";
@@ -26,6 +28,16 @@ import type { AdminVisibilityContentType } from "@/app/actions/visibility";
 // versehentlich den Owner eines völlig anderen Charakters (per zufällig
 // gleicher ID) statt den tatsächlichen Inhalt umgehängt hat.
 const OWNER_CONTENT_TYPE: Record<ContentToolType, OwnerContentType> = {
+  character: "character",
+  mission: "mission",
+  missionLog: "mission_log",
+  archiveEntry: "archive_entry",
+};
+
+// ContentImageType (src/lib/contentImages.ts) nutzt dieselben DB-Namen wie
+// OwnerContentType (mission_log/archive_entry statt missionLog/archiveEntry)
+// — identisches Mapping, eigene Konstante nur wegen des eigenen Typs.
+const IMAGE_CONTENT_TYPE: Record<ContentToolType, ContentImageType> = {
   character: "character",
   mission: "mission",
   missionLog: "mission_log",
@@ -88,6 +100,17 @@ export default function ActionsMenu({
   // setOwnerAction lehnt GM ohnehin schon ab, siehe src/app/actions/owner.ts).
   const isDialogue =
     contentType === "archiveEntry" && "category" in content && content.category === "dialogue";
+
+  // Wer darf diesen Inhalt bearbeiten? Bei Mission/Archiv-Eintrag jeder
+  // Admin, bei Missionslog/Charakter ausschließlich der Owner selbst (kein
+  // Admin-Bypass, siehe updateOwnCharacterBioAction). Sowohl für den
+  // Bearbeiten-Button unten als auch für die Bilder-Galerie genutzt (wer
+  // bearbeiten darf, darf auch Bilder hochladen/löschen).
+  const canManageContent =
+    (contentType !== "missionLog" &&
+      contentType !== "character" &&
+      viewer?.role === "admin") ||
+    viewer?.userId === playerId;
 
   // Für den WhatsApp-Teilen-Text im ShareMenu (siehe FollowButtons.tsx) —
   // Character hat "name" statt "title" wie die übrigen drei Inhaltstypen.
@@ -160,11 +183,15 @@ export default function ActionsMenu({
             (siehe CharacterBioEditor.tsx) — sourceMarkdown wird serverseitig
             nur für den Owner geladen, ein Admin-Klick würde sonst ins Leere
             laufen. */}
+        {!isDialogue && (
+          <ContentImageGallery
+            contentType={IMAGE_CONTENT_TYPE[contentType]}
+            contentId={content.id}
+            canManage={canManageContent}
+          />
+        )}
         {!hideEdit &&
-          ((contentType !== "missionLog" &&
-            contentType !== "character" &&
-            viewer?.role === "admin") ||
-            viewer?.userId === playerId) &&
+          canManageContent &&
           (contentType === "missionLog" ? (
             // Mission-Logs haben (anders als Charakter/Mission/Archiv-Eintrag)
             // keinen Inline-Editor auf der Detailseite — die Mission-Log-

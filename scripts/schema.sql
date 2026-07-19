@@ -621,3 +621,26 @@ CREATE INDEX IF NOT EXISTS idx_characters_deleted_at      ON characters(deleted_
 CREATE INDEX IF NOT EXISTS idx_missions_deleted_at        ON missions(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_mission_logs_deleted_at    ON mission_logs(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_archive_entries_deleted_at ON archive_entries(deleted_at);
+
+-- Bild-Uploads für Charaktere/Missionen/Missionslogs/Archiv-Einträge (bewusst
+-- nicht für Dialoge — deren "Inhalt" sind Nachrichten, kein klassischer
+-- Content-Datensatz). Ein Inhalt kann mehrere Bilder haben (Grundlage für
+-- die Charakter-Bildergalerie/-Karussell), deshalb eigene Tabelle statt
+-- einer einzelnen Spalte wie characters.portrait (die bleibt unverändert
+-- als "aktuell ausgewähltes Profilbild" bestehen). r2_key verweist auf das
+-- Objekt im selben R2-Bucket wie die DB-Backups, eigener Präfix
+-- (content-images/, siehe src/lib/r2Backup.ts) statt eines zweiten Buckets.
+CREATE TABLE IF NOT EXISTS content_images (
+  id           SERIAL PRIMARY KEY,
+  content_type TEXT NOT NULL
+                 CHECK (content_type IN (
+                   'character', 'mission', 'mission_log', 'archive_entry'
+                 )),
+  content_id   INT NOT NULL,
+  r2_key       TEXT UNIQUE NOT NULL,
+  content_mime TEXT NOT NULL,
+  size_bytes   INT NOT NULL,
+  uploaded_by  INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_content_images_content ON content_images(content_type, content_id);
