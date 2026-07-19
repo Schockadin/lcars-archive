@@ -217,9 +217,11 @@ export default function TutorialPage() {
               </p>
               <p>
                 Daneben findest du auf denselben Seiten (zusätzlich auch bei
-                Missionslogs und Gesprächen) einen <strong>„Teilen“</strong>-
-                Knopf: Link kopieren, per WhatsApp teilen, oder den Inhalt als
-                Markdown-Datei (mit Frontmatter) bzw. als PDF herunterladen.
+                Missionslogs und bereits abgeschlossenen Gesprächen) einen{" "}
+                <strong>„Teilen“</strong>-Knopf: Link kopieren, per WhatsApp
+                teilen, oder den Inhalt als Markdown-Datei (mit Frontmatter)
+                bzw. als PDF herunterladen. Bei noch offenen, laufenden
+                Gesprächen fehlt er bewusst, da sich deren Inhalt noch ändert.
               </p>
               <p>
                 Eingeloggt zeigt dir die <strong>Startseite</strong> dein

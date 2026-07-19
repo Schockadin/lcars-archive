@@ -139,7 +139,7 @@ export default function ServerErrorContent({
         </details>
       )}
 
-      <div className="flex gap-[12px]">
+      <div className="flex flex-col sm:flex-row items-center gap-[12px]">
         <button
           type="button"
           onClick={onRetry}
