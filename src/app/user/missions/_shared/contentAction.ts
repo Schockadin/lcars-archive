@@ -13,6 +13,7 @@ import {
 } from "@/lib/missions";
 import { getParticipantCharactersForNotification } from "@/lib/characters";
 import { getCharacterSubscribersForSlugs } from "@/lib/dialogues";
+import { logCaughtError } from "@/lib/errorLog";
 import { getUserSubscribersForSlugs, notifyContentChange } from "@/lib/follows";
 import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
@@ -214,6 +215,10 @@ export async function missionAction(
           console.error(
             `Teilnehmer-Mail an ${recipient.email} fehlgeschlagen: ${mailResult.error}`,
           );
+          await logCaughtError(
+            new Error(mailResult.error),
+            "user/missions/_shared/contentAction.ts:participantNotify",
+          );
         }
       }
       if (recipient.pushNotificationsEnabled) {
@@ -265,6 +270,10 @@ export async function missionAction(
             console.error(
               `Charakter-Abo-Mission-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`,
             );
+            await logCaughtError(
+              new Error(mailResult.error),
+              "user/missions/_shared/contentAction.ts:characterSubscriberNotify",
+            );
           }
         }
         if (subscriber.pushNotificationsEnabled) {
@@ -296,6 +305,10 @@ export async function missionAction(
             if (!mailResult.sent) {
               console.error(
                 `User-Abo-Mission-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`,
+              );
+              await logCaughtError(
+                new Error(mailResult.error),
+                "user/missions/_shared/contentAction.ts:userSubscriberNotify",
               );
             }
           }

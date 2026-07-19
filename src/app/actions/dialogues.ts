@@ -43,6 +43,7 @@ import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
 import { synopsisExcerpt } from "@/lib/missionFormat";
+import { logCaughtError } from "@/lib/errorLog";
 
 export interface DialogueMessageState {
   error?: string;
@@ -143,6 +144,10 @@ export async function postDialogueMessageAction(
         if (!result.sent) {
           console.error(
             `Dialog-Nachrichten-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+          );
+          await logCaughtError(
+            new Error(result.error),
+            "actions/dialogues.ts:postDialogueMessageAction",
           );
         }
       }
@@ -417,6 +422,10 @@ export async function completeDialogueAction(
           console.error(
             `Gespräch-abgeschlossen-Mail an ${recipient.email} fehlgeschlagen: ${result.error}`,
           );
+          await logCaughtError(
+            new Error(result.error),
+            "actions/dialogues.ts:completeDialogueAction",
+          );
         }
       }
       if (recipient.pushNotificationsEnabled) {
@@ -482,6 +491,10 @@ export async function deleteDialogueAction(
         console.error(
           `Gespräch-gelöscht-Mail an ${player.email} fehlgeschlagen: ${result.error}`,
         );
+        await logCaughtError(
+          new Error(result.error),
+          "actions/dialogues.ts:deleteDialogueAction",
+        );
       }
     }
   }
@@ -527,6 +540,10 @@ async function notifyReservationReleased(
       if (!result.sent) {
         console.error(
           `Sperre-aufgehoben-Mail an ${target.email} fehlgeschlagen: ${result.error}`,
+        );
+        await logCaughtError(
+          new Error(result.error),
+          "actions/dialogues.ts:notifyReservationReleased",
         );
       }
     }
@@ -596,6 +613,10 @@ export async function inviteDialogueParticipantAction(
         if (!result.sent) {
           console.error(
             `Einladungs-Mail an ${target.email} fehlgeschlagen: ${result.error}`,
+          );
+          await logCaughtError(
+            new Error(result.error),
+            "actions/dialogues.ts:inviteDialogueParticipantAction",
           );
         }
       }

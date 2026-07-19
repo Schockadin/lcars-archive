@@ -8,6 +8,7 @@ import { getMissionSubscribers } from "@/lib/dialogues";
 import { sendMissionUpdatedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
+import { logCaughtError } from "@/lib/errorLog";
 import {
   LogNavItem,
   LogNavNeighbors,
@@ -359,6 +360,10 @@ export async function notifyMissionSubscribers(input: {
         if (!result.sent) {
           console.error(
             `Mission-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+          );
+          await logCaughtError(
+            new Error(result.error),
+            "missions.ts:notifyMissionSubscribers",
           );
         }
       }

@@ -10,6 +10,7 @@ import { getDialogueSubscribers } from "@/lib/dialogues";
 import { sendArchiveEntryUpdatedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
+import { logCaughtError } from "@/lib/errorLog";
 import {
   getAttributeFields,
   getReferenceFields,
@@ -704,6 +705,10 @@ export async function notifyArchiveEntrySubscribers(input: {
         if (!result.sent) {
           console.error(
             `Archiv-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+          );
+          await logCaughtError(
+            new Error(result.error),
+            "archive.ts:notifyArchiveEntrySubscribers",
           );
         }
       }

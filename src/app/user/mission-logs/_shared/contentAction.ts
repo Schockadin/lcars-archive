@@ -13,6 +13,7 @@ import { revalidateLog } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
 import { getCharacterSubscribers } from "@/lib/dialogues";
 import { sendNewMissionLogEmail } from "@/lib/mail";
+import { logCaughtError } from "@/lib/errorLog";
 import { sendPushToUser } from "@/lib/push";
 import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
@@ -184,6 +185,10 @@ export async function missionLogAction(
         if (!mailResult.sent) {
           console.error(
             `Neuer-Log-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`,
+          );
+          await logCaughtError(
+            new Error(mailResult.error),
+            "user/mission-logs/_shared/contentAction.ts:subscriberNotify",
           );
         }
       }

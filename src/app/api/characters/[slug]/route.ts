@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getCharacterBySlug } from '@/lib/characters';
 import { getViewer, canView } from '@/lib/visibility';
+import { logCaughtError } from '@/lib/errorLog';
 
 interface Params {
   params: Promise<{ slug: string }>;
@@ -31,6 +32,7 @@ export async function GET(_req: Request, { params }: Params) {
     return NextResponse.json(character);
   } catch (error) {
     console.error('Fehler beim Laden des Charakters:', error);
+    await logCaughtError(error, 'api/characters/[slug]/route.ts:GET');
     return NextResponse.json(
       { error: 'Charakter konnte nicht geladen werden' },
       { status: 500 }

@@ -10,6 +10,7 @@ import { sendDialogueStartedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { parseList } from "@/lib/formParsing";
+import { logCaughtError } from "@/lib/errorLog";
 
 export interface CreateDialogueState {
   error?: string;
@@ -121,6 +122,10 @@ export async function createDialogueAction(
       if (!result.sent) {
         console.error(
           `Gespräch-begonnen-Mail an ${partner.email} fehlgeschlagen: ${result.error}`,
+        );
+        await logCaughtError(
+          new Error(result.error),
+          "user/dialogues/new/actions.ts:createDialogueAction",
         );
       }
     }

@@ -72,7 +72,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   und gelöschten Inhalte. Nur Admins dürfen außerdem als Moderation jede
   Nachricht in jedem Gespräch bearbeiten oder löschen, auch fremde und auch
   in bereits abgeschlossenen Gesprächen, sowie jederzeit den Besitzer eines
-  Gesprächs neu zuordnen.
+  Gesprächs neu zuordnen. Eine weitere Unterseite, das Fehler-Log, listet
+  alle unerwarteten Serverfehler (Zeitpunkt, Route, Meldung, Digest).
+- **Custom-404/500-Seiten** — unerwartete Serverfehler zeigen eine
+  LCARS-gestaltete 500-Seite statt der Next.js-Standardfehlerseite; alle
+  Besucher sehen eine freundliche Meldung mit Referenz-Code, eingeloggte
+  Admins zusätzlich die volle Fehlermeldung inkl. Stacktrace. Jeder
+  Serverfehler (auch bereits im Code abgefangene) wird dauerhaft über
+  `src/instrumentation.ts` bzw. `logCaughtError()` in der Tabelle
+  `error_logs` protokolliert und ist im Adminbereich unter „Fehler-Log“
+  einsehbar.
 - **Custom-Markdown-Pipeline** — `remark`/`rehype` wandeln Markdown in HTML um und rendern
   `h2`-Überschriften als LCARS-Data-Rows.
 - **SEO-fertig** — `robots.ts`, `sitemap.ts`, dynamische Metadaten und 404-Seite.
@@ -271,9 +280,12 @@ unter Deployment.
     │   │   ├── db/             #   DB-Backup, Tabellenbrowser, freies SQL-Abfragefeld
     │   │   ├── scripts/        #   Cache-Revalidation, Timeline-Neuaufbau, u.a.
     │   │   ├── audit-log/      #   Sicherheits-Audit-Log + Content-Aktivitätsfeed
+    │   │   ├── error-log/      #   Protokollierte Serverfehler (Zeitpunkt, Route, Meldung)
     │   │   ├── content/        #   Owner-/Sichtbarkeits-Übersteuerung fremder Inhalte
     │   │   └── import/         #   Markdown-Datei-Upload → neue Einträge (mit Vorschau)
     │   ├── api/               # /api/characters, /api/health …
+    │   ├── error.tsx           # Custom 500-Seite (Server Components/Route Handlers)
+    │   ├── global-error.tsx    # Custom 500-Seite bei Fehlern im Root-Layout selbst
     │   ├── manifest.ts        # PWA-Manifest (Icons, inkl. maskable)
     │   ├── robots.ts
     │   └── sitemap.ts

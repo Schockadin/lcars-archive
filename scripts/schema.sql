@@ -564,3 +564,30 @@ CREATE TABLE IF NOT EXISTS dialogue_reservation_notify_requests (
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (archive_entry_id, user_id)
 );
+
+-- Protokoll unerwarteter Serverfehler (Next.js instrumentation.ts/
+-- onRequestError, siehe src/lib/errorLog.ts) — sowohl automatisch nicht
+-- abgefangene Abstürze (route_type 'render'/'route'/'action', kommt aus dem
+-- onRequestError-Hook) als auch bereits an Ort und Stelle abgefangene,
+-- unkritische Fehler (route_type 'caught', manuell per logCaughtError aus
+-- bestehenden catch-Blöcken ergänzt). Rein lesend über /admin/error-log
+-- einsehbar (admin-only, siehe dortiges page.tsx), kein Bearbeiten/Löschen
+-- einzelner Einträge, kein automatisches Aufräumen (gleiche Konvention wie
+-- admin_audit_log). digest ist der von Next.js für Server-Component-Fehler
+-- generierte Korrelations-Hash (siehe error.tsx) — nullable, da nicht jeder
+-- Fehlerpfad einen liefert (Client-Component-Fehler, manuell geloggte
+-- Fehler). route_type bewusst freies TEXT ohne CHECK, da sowohl die von
+-- Next.js selbst gelieferten Werte als auch das manuelle "caught" abgedeckt
+-- werden müssen.
+CREATE TABLE IF NOT EXISTS error_logs (
+  id         SERIAL PRIMARY KEY,
+  digest     TEXT,
+  message    TEXT NOT NULL,
+  stack      TEXT,
+  route_path TEXT,
+  route_type TEXT,
+  method     TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_error_logs_created_at ON error_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_error_logs_digest ON error_logs(digest);

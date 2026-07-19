@@ -18,6 +18,7 @@ import { sendCharacterUpdatedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
+import { logCaughtError } from "@/lib/errorLog";
 
 // Hilfsfunktion: stellt sicher dass metadata ein Objekt ist
 function parseCharacter(row: Character): Character {
@@ -660,6 +661,10 @@ export async function notifyCharacterSubscribers(input: {
         if (!result.sent) {
           console.error(
             `Charakter-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
+          );
+          await logCaughtError(
+            new Error(result.error),
+            "characters.ts:notifyCharacterSubscribers",
           );
         }
       }

@@ -420,6 +420,14 @@ export default function TutorialPage() {
                   neu angelegten, bearbeiteten oder gelöschten Inhalte.
                 </li>
                 <li>
+                  Unter <strong>„Fehler-Log“</strong> alle unerwarteten
+                  Serverfehler einsehen (Zeitpunkt, Route, Meldung samt
+                  Stacktrace). Tritt ein solcher Fehler auf, sehen alle
+                  Besucher eine LCARS-Fehlerseite mit Referenzcode,
+                  Administration zusätzlich die volle Fehlermeldung direkt
+                  auf dieser Seite.
+                </li>
+                <li>
                   Unter <strong>„Import“</strong> eine oder mehrere
                   Markdown-Dateien im Vault-Frontmatter-Format hochladen, um
                   daraus neue Archiv-Einträge, Missionen, Charaktere oder

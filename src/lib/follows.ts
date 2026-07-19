@@ -2,6 +2,7 @@ import "server-only";
 import sql from "@/lib/db";
 import { sendUserContentEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
+import { logCaughtError } from "@/lib/errorLog";
 
 // ToDo: Granularer machen: "mission" | "dialogue" | "npc", etc.
 // mission_log ist bewusst NICHT Teil dieser Liste: Mission-Logs sind reine
@@ -357,6 +358,7 @@ async function dispatchToSubscribers(
         console.error(
           `${errorLabel} an ${subscriber.email} fehlgeschlagen: ${result.error}`,
         );
+        await logCaughtError(new Error(result.error), `follows.ts:${errorLabel}`);
       }
     }
     if (subscriber.pushNotificationsEnabled) {

@@ -19,6 +19,7 @@ const ADMIN_ITEMS: AdminMenuItem[] = [
   { href: "/admin/scripts", label: "Scripts" },
   { href: "/admin/content", label: "Inhalte" },
   { href: "/admin/audit-log", label: "Audit-Log" },
+  { href: "/admin/error-log", label: "Fehler-Log" },
   { href: "/admin/import", label: "Import" },
 ];
 
