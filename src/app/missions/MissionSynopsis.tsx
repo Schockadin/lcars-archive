@@ -6,6 +6,7 @@ import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import { Viewer } from "@/lib/visibility";
 import MissionSynopsisEditor from "./MissionSynopsisEditor";
 import ActionsMenu from "@/components/ActionsMenu";
+import ContentBody from "@/components/ContentBody";
 
 // Rechte Spalte der Mission-Detailseite: Synopsis + Metadaten.
 export default function MissionSynopsis({
@@ -65,10 +66,7 @@ export default function MissionSynopsis({
       ) : (
         <>
           {mission.metadata.body ? (
-            <div
-              className="mission-body lcars-text"
-              dangerouslySetInnerHTML={{ __html: mission.metadata.body }}
-            />
+            <ContentBody html={mission.metadata.body} />
           ) : (
             <p className="lcars-empty-state">Keine Zusammenfassung vorhanden</p>
           )}

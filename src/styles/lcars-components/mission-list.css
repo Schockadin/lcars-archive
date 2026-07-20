@@ -347,6 +347,16 @@
   margin-top: 0.7em;
 }
 
+/* Per InsertImageButton.tsx eingebettete Bilder (ContentBody.tsx macht sie
+   per Klick als Vollbild-Karussell aufrufbar) — ohne max-width würden sie in
+   ihrer vollen Originalgröße gerendert und die Spaltenbreite sprengen. */
+.mission-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  cursor: zoom-in;
+}
+
 /* Autor-Gruppe (Sortierung nach Autor) */
 .mission-log-group + .mission-log-group {
   margin-top: 18px;

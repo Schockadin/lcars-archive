@@ -6,6 +6,7 @@ import {
 } from "@/app/actions/missions";
 import AutoLinkCheckbox from "@/app/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
+import ContentBody from "@/components/ContentBody";
 import { CheckIcon, XIcon } from "@/lib/icons";
 
 const initialState: MissionSynopsisEditState = {};
@@ -50,10 +51,7 @@ export default function MissionSynopsisEditor({
     return (
       <div className="flex flex-col gap-[8px]">
         {displayHtml ? (
-          <div
-            className="mission-body lcars-text"
-            dangerouslySetInnerHTML={{ __html: displayHtml }}
-          />
+          <ContentBody html={displayHtml} />
         ) : (
           <p className="lcars-empty-state">Keine Zusammenfassung vorhanden</p>
         )}

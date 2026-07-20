@@ -253,10 +253,94 @@
   border-top: 1px solid var(--lcars-border);
 }
 
+/* Vollbild-Lightbox mit optionalem Bild-Karussell — geteilt zwischen
+   CharacterPortrait.tsx (Portrait + alle hochgeladenen Bilder eines
+   Charakters) und ContentBody.tsx (Inline-Bilder in Missions-/Log-/
+   Archiv-Texten, Karussell über alle Bilder desselben Inhalts). */
+.portrait-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(2px);
+  cursor: zoom-out;
+}
+
+.portrait-overlay-img {
+  /* Originalgröße, aber nie größer als der Viewport (abzüglich Rand). */
+  max-width: calc(100vw - 48px);
+  max-height: calc(100vh - 48px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border: 3px solid var(--lcars-purple);
+  cursor: default;
+}
+
+.portrait-overlay-close {
+  position: fixed;
+  top: 16px;
+  right: 20px;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  font-size: 30px;
+  line-height: 1;
+  color: var(--lcars-bg);
+  background: var(--lcars-purple);
+  border: none;
+  border-radius: 22px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.portrait-overlay-close:hover {
+  background: var(--lcars-amber);
+}
+
+/* Karussell-Pfeile (Vor/Zurück durch alle Bilder) — gleiche Kreis-Optik wie
+   .portrait-overlay-close, nur links/rechts vertikal zentriert statt oben
+   rechts. */
+.portrait-overlay-nav {
+  position: fixed;
+  top: 50%;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  color: var(--lcars-bg);
+  background: var(--lcars-purple);
+  border: none;
+  border-radius: 22px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  transform: translateY(-50%);
+}
+
+.portrait-overlay-nav:hover {
+  background: var(--lcars-amber);
+}
+
+.portrait-overlay-nav--prev {
+  left: 20px;
+}
+
+.portrait-overlay-nav--next {
+  right: 20px;
+}
+
 /* TimelineMarkerButton.tsx — Modal zum Einfügen eines Zeitleisten-Markers
    an der Cursor-Position, gleiches Overlay-Muster wie die Portrait-
-   Lightbox (character.css .portrait-overlay), nur als Formular-Karte statt
-   Vollbild. */
+   Lightbox oben, nur als Formular-Karte statt Vollbild. */
 .timeline-marker-overlay {
   position: fixed;
   inset: 0;

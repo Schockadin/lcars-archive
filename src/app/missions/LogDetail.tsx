@@ -7,6 +7,7 @@ import {
 } from "@/types/missions";
 import { fmtDate, sessionLabel } from "@/lib/missionFormat";
 import { LcarsReadingModeToggle } from "@/components/lcars";
+import ContentBody from "@/components/ContentBody";
 import { useNeo } from "@/hooks/useNeo";
 
 // Ein Sprung zum Nachbar-Log desselben Autors. `dir` steuert Pfeil + Ausrichtung.
@@ -68,10 +69,7 @@ export default function LogDetail({
         <h1 className="mission-detail-title">{log.title}</h1>
       </header>
 
-      <div
-        className="mission-body lcars-text"
-        dangerouslySetInnerHTML={{ __html: log.content }}
-      />
+      <ContentBody html={log.content} />
 
       {/* Navigation zu den Logs desselben Autors (chronologisch). */}
       {hasNav && (
