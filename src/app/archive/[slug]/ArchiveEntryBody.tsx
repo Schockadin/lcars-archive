@@ -2,6 +2,7 @@
 import { useState } from "react";
 import ActionsMenu from "@/components/ActionsMenu";
 import DialogueThread from "@/components/DialogueThread";
+import DialogueFlowingText from "@/components/DialogueFlowingText";
 import DialogueViewToggle from "@/components/DialogueViewToggle";
 import ArchiveEntryEditor from "./ArchiveEntryEditor";
 import { ArchiveEntryDetail } from "@/types/archive";
@@ -70,10 +71,11 @@ export default function ArchiveEntryBody({
                   flowingTextEnabled={true}
                 />
               )}
-              <div
-                className="mission-body lcars-text"
-                dangerouslySetInnerHTML={{ __html: entry.content }}
-              />
+              {/* Aus den Nachrichten gerendert (statt entry.content), damit die
+                  wörtliche Rede pro Sprecher in dessen Charakter-Farbe
+                  erscheint — siehe DialogueFlowingText.tsx. entry.content
+                  bleibt oben nur die Bedingung "Fließtext wurde erzeugt". */}
+              <DialogueFlowingText messages={messages} />
             </>
           ) : (
             <>

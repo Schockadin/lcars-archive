@@ -265,6 +265,31 @@ export async function updateEditorSpellcheckPreference(
   `;
 }
 
+// Charakter-Farbe (siehe src/lib/characterColor.ts) — wie die beiden
+// Präferenzen oben eine eigene schlanke Lese-/Schreibfunktion statt Teil von
+// USER_COLUMNS/User: nur im Profil-Farbwähler und (per Join) beim Rendern des
+// Fließtext-Modus gebraucht, nicht bei jedem User-Fetch. Liefert den rohen
+// gespeicherten Wert (Schlüssel oder NULL) — die Auflösung auf eine effektive
+// Farbe (Default aus der ID) macht resolveCharacterColor.
+export async function getCharacterColorPreference(
+  userId: number,
+): Promise<string | null> {
+  const [row] = await sql<{ character_color: string | null }[]>`
+    SELECT character_color FROM users WHERE id = ${userId}
+  `;
+  return row?.character_color ?? null;
+}
+
+export async function updateCharacterColorPreference(
+  userId: number,
+  color: string,
+): Promise<void> {
+  await sql`
+    UPDATE users SET character_color = ${color}
+    WHERE id = ${userId}
+  `;
+}
+
 export async function updateUser(
   id: number,
   data: UpdateUserInput,

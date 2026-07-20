@@ -7,6 +7,10 @@ import sql from "@/lib/db";
 import { markdownToSafeHtml } from "@/lib/markdown";
 import { getCharactersForUser } from "@/lib/characters";
 import { generateUniqueArchiveEntrySlug } from "@/lib/archive";
+import {
+  resolveCharacterColor,
+  type CharacterColorKey,
+} from "@/lib/characterColor";
 import type { ArchiveParticipant, ArchiveLocationRef } from "@/types/archive";
 
 // Optionaler Client-Parameter für Aufrufe innerhalb einer bestehenden
@@ -68,6 +72,13 @@ export interface DialogueMessage {
   createdAt: string;
   editedAt: string | null;
   deletedAt: string | null;
+  // Effektive Charakter-Farbe des Sprechers (aufgelöst aus der Farbwahl des
+  // spielenden Users bzw. deterministisch aus dessen ID, siehe
+  // src/lib/characterColor.ts) — nur von getDialogueMessages befüllt (für die
+  // Einfärbung der wörtlichen Rede im Fließtext-Modus, DialogueFlowingText.tsx).
+  // Optional, weil die optimistischen Rückgaben von postDialogueMessage/
+  // editDialogueMessage (Karten-/Live-Ansicht) keine Farbe brauchen.
+  characterColor?: CharacterColorKey | null;
 }
 
 // Chronologisch (ältester zuerst). Kein unstable_cache — muss nach jeder
@@ -82,6 +93,8 @@ export async function getDialogueMessages(
       character_id: number | null;
       character_slug: string | null;
       character_name: string | null;
+      player_id: number | null;
+      character_color: string | null;
       author_user_id: number | null;
       content: string;
       created_at: string;
@@ -92,10 +105,12 @@ export async function getDialogueMessages(
     SELECT
       dm.id, dm.character_id,
       c.slug AS character_slug, c.name AS character_name,
+      c.player_id AS player_id, u.character_color AS character_color,
       dm.author_user_id, dm.content, dm.created_at::text AS created_at,
       dm.edited_at::text AS edited_at, dm.deleted_at::text AS deleted_at
     FROM dialogue_messages dm
     LEFT JOIN characters c ON c.id = dm.character_id
+    LEFT JOIN users u ON u.id = c.player_id
     WHERE dm.archive_entry_id = ${archiveEntryId}
     ORDER BY dm.created_at ASC
   `;
@@ -110,6 +125,16 @@ export async function getDialogueMessages(
     createdAt: r.created_at,
     editedAt: r.edited_at,
     deletedAt: r.deleted_at,
+    // Seed für den Default: bevorzugt die User-ID des Spielers, sonst die
+    // Charakter-ID (NPC ohne Spieler), damit auch ohne explizite Farbwahl eine
+    // stabile Farbe herauskommt. Kein Charakter (gelöscht) → keine Farbe.
+    characterColor:
+      r.character_id != null
+        ? resolveCharacterColor(
+            r.character_color,
+            r.player_id ?? r.character_id,
+          )
+        : null,
   }));
 }
 

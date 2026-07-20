@@ -213,7 +213,11 @@ export default function TutorialPage() {
                 — standardmäßig als zusammenhängender Lesetext, per Umschalter
                 oben auf der Seite aber auch wie ein offenes Gespräch mit
                 einzelnen Nachrichtenkarten anzeigbar. Diese Einstellung gilt
-                für alle abgeschlossenen Gespräche, die du dir ansiehst.
+                für alle abgeschlossenen Gespräche, die du dir ansiehst. Im
+                Lesetext wird die wörtliche Rede jeder Person in deren{" "}
+                <strong>Charakter-Farbe</strong> dargestellt — diese Farbe legst
+                du selbst im Profil unter „Charakter-Farbe“ fest (ohne eigene
+                Wahl bekommst du automatisch eine der LCARS-Farben).
               </p>
             </div>
           </LcarsDataRow>

@@ -65,6 +65,10 @@
 --    Fließtext (true) vs. farbige Karten-Ansicht (DialogueViewToggle.tsx).
 --  - editor_spellcheck_enabled: native Browser-Rechtschreibprüfung in den
 --    Markdown-Editor-Feldern (im Profil abschaltbar).
+--  - character_color: im Profil gewählte LCARS-Farbe für die eigenen
+--    Charaktere (färbt deren wörtliche Rede im Fließtext-Modus, siehe
+--    src/lib/characterColor.ts). NULL = keine explizite Wahl → die App leitet
+--    deterministisch eine der LCARS-Farben aus der User-ID ab.
 CREATE TABLE IF NOT EXISTS users (
   id                            SERIAL PRIMARY KEY,
   email                         TEXT UNIQUE NOT NULL,
@@ -85,7 +89,11 @@ CREATE TABLE IF NOT EXISTS users (
   notify_content_types          TEXT[] NOT NULL DEFAULT '{}',
   session_version               INT NOT NULL DEFAULT 0,
   dialogue_flowing_text_enabled BOOLEAN NOT NULL DEFAULT true,
-  editor_spellcheck_enabled     BOOLEAN NOT NULL DEFAULT true
+  editor_spellcheck_enabled     BOOLEAN NOT NULL DEFAULT true,
+  character_color               TEXT
+                                  CHECK (character_color IS NULL OR character_color IN (
+                                    'amber', 'blue', 'green', 'red', 'purple', 'orange'
+                                  ))
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_slug ON users(slug);
 
@@ -515,3 +523,17 @@ CREATE TABLE IF NOT EXISTS content_images (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_content_images_content ON content_images(content_type, content_id);
+
+-- ---------------------------------------------------------------------------
+-- Migrationen seit der letzten Schema-Konsolidierung
+-- ---------------------------------------------------------------------------
+-- Neue Spalten sind in den CREATE-TABLE-Blöcken oben bereits vollständig
+-- enthalten (frische DBs bekommen sie direkt). Bestehende DBs werden von
+-- CREATE TABLE IF NOT EXISTS aber nicht mehr angefasst — für sie zieht der
+-- folgende, idempotente ALTER die neue Spalte nach. Bleibt bewusst additiv
+-- (ADD COLUMN IF NOT EXISTS, kein datenveränderndes UPDATE) und wird bei der
+-- nächsten Konsolidierung wieder in den users-Block oben eingeklappt.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS character_color TEXT
+  CHECK (character_color IS NULL OR character_color IN (
+    'amber', 'blue', 'green', 'red', 'purple', 'orange'
+  ));
