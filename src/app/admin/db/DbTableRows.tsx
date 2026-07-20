@@ -1,9 +1,8 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { useState } from "react";
 import { formatDateTime } from "@/utils/formateISODate";
 import { synopsisExcerpt } from "@/lib/missionFormat";
-import { XIcon } from "@/lib/icons";
+import RowDetailModal from "@/components/RowDetailModal";
 
 const TRUNCATE_LENGTH = 140;
 
@@ -35,22 +34,6 @@ export default function DbTableRows({
   rows: Record<string, unknown>[];
 }) {
   const [selected, setSelected] = useState<number | null>(null);
-  const close = useCallback(() => setSelected(null), []);
-
-  useEffect(() => {
-    if (selected === null) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-    };
-    document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [selected, close]);
-
   const selectedRow = selected !== null ? rows[selected] : null;
 
   return (
@@ -74,44 +57,16 @@ export default function DbTableRows({
         ))}
       </tbody>
 
-      {selectedRow &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/70 p-[16px]"
-            role="dialog"
-            aria-modal="true"
-            aria-label="Zeilendetails"
-            onClick={close}
-          >
-            <div
-              className="flex max-h-[80vh] w-full max-w-[720px] flex-col gap-[16px] overflow-y-auto rounded-[8px] border border-lcars-border bg-lcars-surface p-[24px]"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-start justify-between gap-[16px]">
-                <h2 className="text-lcars-amber">Zeilendetails</h2>
-                <button
-                  type="button"
-                  onClick={close}
-                  className="lcars-icon-btn"
-                  aria-label="Schließen"
-                >
-                  <XIcon />
-                </button>
-              </div>
-              <dl className="flex flex-col gap-[12px]">
-                {columns.map((c) => (
-                  <div key={c}>
-                    <dt className="lcars-eyebrow">{c}</dt>
-                    <dd className="text-lcars-text text-[13px] whitespace-pre-wrap break-words">
-                      {formatValue(selectedRow[c], false)}
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          </div>,
-          document.body,
-        )}
+      {selectedRow && (
+        <RowDetailModal
+          title="Zeilendetails"
+          fields={columns.map((c) => ({
+            label: c,
+            value: formatValue(selectedRow[c], false),
+          }))}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </>
   );
 }

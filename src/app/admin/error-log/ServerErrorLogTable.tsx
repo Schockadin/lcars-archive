@@ -45,14 +45,11 @@ const columns: LogColumn<ErrorLogRow>[] = [
     label: "Meldung",
     sortValue: (e) => e.message,
     filterValue: (e) => e.message,
-    render: (e) => (
-      <span
-        className="block max-w-[400px] truncate"
-        title={e.stack ? `${e.message}\n\n${e.stack}` : e.message}
-      >
-        {e.message}
-      </span>
-    ),
+    render: (e) => <span className="block max-w-[400px] truncate">{e.message}</span>,
+    // Volle Meldung + Stacktrace fürs Zeilendetails-Modal statt nur des
+    // bisherigen title-Tooltips — Stacktraces sind oft mehrere hundert
+    // Zeichen lang und in einem Hover-Tooltip kaum lesbar.
+    modalValue: (e) => (e.stack ? `${e.message}\n\n${e.stack}` : e.message),
   },
   {
     key: "digest",

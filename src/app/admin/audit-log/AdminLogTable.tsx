@@ -1,6 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import type { SortDir } from "@/components/lcars";
+import RowDetailModal from "@/components/RowDetailModal";
 import SortableHeader from "../SortableHeader";
 
 export interface LogColumn<T> {
@@ -9,17 +10,28 @@ export interface LogColumn<T> {
   sortValue: (row: T) => string | number;
   filterValue: (row: T) => string;
   render: (row: T) => React.ReactNode;
+  // Optional: vollständiger, ungekürzter Text fürs Zeilendetails-Modal
+  // (RowDetailModal, gleiches Muster wie /admin/db) — fällt sonst auf
+  // filterValue zurück. Eigenes Feld statt render() wiederzuverwenden, da
+  // render() bewusst tabellenkompakte Darstellung liefert (z.B. gekürzt mit
+  // Tooltip, oder ein <Link> statt reinem Text), das Modal aber den vollen
+  // Rohtext braucht.
+  modalValue?: (row: T) => string;
 }
 
-// Generische sortier-/filterbare Tabelle für /admin/audit-log (zwei
-// Verwendungen: AuditActionsTable, ContentActivityTable) — beide Datensätze
-// sind klein und schon vollständig serverseitig geladen, deshalb rein
+// Generische sortier-/filterbare Tabelle für /admin/audit-log (drei
+// Verwendungen: AuditActionsTable, ContentActivityTable, sowie
+// /admin/error-log über ServerErrorLogTable) — beide/alle Datensätze sind
+// klein und schon vollständig serverseitig geladen, deshalb rein
 // client-seitiger useMemo-Filter/Sort wie in AdminUsersTable.tsx, aber hier
 // mit einem Text-Filter PRO Spalte statt einer einzelnen Suchleiste. Nimmt
 // bewusst rows/columns als Props statt selbst zu laden — Server Components
 // können keine Funktionen (sortValue/filterValue/render) an Client
 // Components übergeben, die konkreten Spalten-Definitionen leben deshalb in
-// den beiden Wrapper-Komponenten, nicht in page.tsx.
+// den Wrapper-Komponenten, nicht in page.tsx. Ein Klick auf eine Zeile öffnet
+// dasselbe Zeilendetails-Modal (RowDetailModal) wie der DB-Viewer unter
+// /admin/db (DbTableRows.tsx) — zeigt die vollständigen, ungekürzten Werte
+// aller Spalten dieser Zeile.
 export default function AdminLogTable<T>({
   rows,
   columns,
@@ -38,6 +50,7 @@ export default function AdminLogTable<T>({
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [sortKey, setSortKey] = useState(defaultSortKey);
   const [sortDir, setSortDir] = useState<SortDir>(defaultSortDir);
+  const [selectedRow, setSelectedRow] = useState<T | null>(null);
 
   function handleSort(key: string) {
     if (key === sortKey) {
@@ -120,7 +133,11 @@ export default function AdminLogTable<T>({
                 </tr>
               ) : (
                 visibleRows.map((row) => (
-                  <tr key={rowKey(row)} className="border-t border-lcars-border">
+                  <tr
+                    key={rowKey(row)}
+                    className="border-t border-lcars-border cursor-pointer hover:bg-lcars-surface"
+                    onClick={() => setSelectedRow(row)}
+                  >
                     {columns.map((c) => (
                       <td
                         key={c.key}
@@ -135,6 +152,17 @@ export default function AdminLogTable<T>({
             </tbody>
           </table>
         </div>
+      )}
+
+      {selectedRow && (
+        <RowDetailModal
+          title="Zeilendetails"
+          fields={columns.map((c) => ({
+            label: c.label,
+            value: c.modalValue ? c.modalValue(selectedRow) : c.filterValue(selectedRow),
+          }))}
+          onClose={() => setSelectedRow(null)}
+        />
       )}
     </div>
   );
