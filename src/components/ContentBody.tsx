@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
+import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@/lib/icons";
 
 // Ersetzt die bisherigen einfachen <div dangerouslySetInnerHTML> für
 // Missions-/Log-/Archiv-Eintrag-Texte (MissionSynopsis.tsx,
@@ -100,7 +100,7 @@ export default function ContentBody({
               className="portrait-overlay-close"
               aria-label="Schließen"
             >
-              ×
+              <XIcon />
             </button>
             {images.length > 1 && (
               <>

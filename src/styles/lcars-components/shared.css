@@ -291,8 +291,6 @@
   justify-content: center;
   width: 44px;
   height: 44px;
-  font-size: 30px;
-  line-height: 1;
   color: var(--lcars-bg);
   background: var(--lcars-purple);
   border: none;
@@ -303,6 +301,12 @@
 
 .portrait-overlay-close:hover {
   background: var(--lcars-amber);
+}
+
+.portrait-overlay-close svg,
+.portrait-overlay-nav svg {
+  width: 20px;
+  height: 20px;
 }
 
 /* Karussell-Pfeile (Vor/Zurück durch alle Bilder) — gleiche Kreis-Optik wie

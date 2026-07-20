@@ -32,7 +32,7 @@ export default function DialogueViewToggle({
 
   return (
     <Switch
-      className="mb-[10px]"
+      className="my-[5px]"
       active={active}
       onChange={handleChange}
       options={[

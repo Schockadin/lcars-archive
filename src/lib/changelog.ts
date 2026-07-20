@@ -195,6 +195,8 @@ export const CHANGELOG: ChangelogEntry[] = [
       "In offenen Gesprächen erscheint die eigene gesendete Nachricht bzw. eine gerade reservierte Antwortrecht-Sperre jetzt sofort, statt bis zu 8 Sekunden auf die automatische Aktualisierung zu warten.",
       "Die Spielleitung bekommt jetzt ein eigenes „Leitung“-Dropdown im Header (analog zum Admin-Menü) mit drei Übersichten: alle Missionen mit Bearbeiten/Löschen/Besitzer:in-Zuordnung direkt in der Liste, die bestehende Charakter-Zuweisung sowie alle aktuell offenen Gespräche — auch ohne eigene Teilnahme, mit lesendem Zugriff auf das jeweilige Gespräch.",
       "Über jedes neu begonnene Gespräch wird jetzt außerdem jeder aktive GM-Account automatisch per Mail/Push informiert, unabhängig davon, ob er selbst daran teilnimmt.",
+      "Die Vollbild-Anzeige von Bildern (Charakter-Portrait-Karussell und eingebettete Bilder in Texten) hat jetzt Symbol- statt Textknöpfe zum Schließen und Durchblättern.",
+      "Behoben: Der Klick auf „Home“ in der Navigation führte gelegentlich zu einem kurzen Fehler und einer sichtbaren Vollseiten-Neuladung statt einer nahtlosen Navigation.",
     ],
   },
 ];

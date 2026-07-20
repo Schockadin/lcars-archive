@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { getContentImagesAction } from "@/app/actions/contentImages";
-import { ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
+import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@/lib/icons";
 
 /**
  * Portrait des Charakters. Ist ein Bild hinterlegt, lässt es sich anklicken und
@@ -128,7 +128,7 @@ export default function CharacterPortrait({
                   className="portrait-overlay-close"
                   aria-label="Schließen"
                 >
-                  ×
+                  <XIcon />
                 </button>
                 {slides.length > 1 && (
                   <>
