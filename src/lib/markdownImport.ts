@@ -925,6 +925,7 @@ export async function commitMissionLogMarkdown(
       sessionNr: edits.sessionNr,
       tags: edits.tags,
       ownerUserId,
+      isDraft: false,
     });
     return { ok: true, slug, id, warnings: [] };
   } catch (error) {

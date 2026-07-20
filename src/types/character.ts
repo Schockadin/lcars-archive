@@ -28,6 +28,7 @@ export interface Character {
   bio: string | null;
   metadata: CharacterMetadata;
   visibility: "private" | "gm" | "public";
+  is_draft: boolean;
   created_at: string;
   updated_at: string;
 }

@@ -50,6 +50,7 @@ export default function EditArchiveEntryForm({
       bodyRequired
       bodyLarge
       isAdminOrGM={isAdminOrGM}
+      draftDefaultValue={entry.isDraft}
       insertImage={{ contentType: "archive_entry", contentId: entry.id }}
       submitLabel="Änderungen speichern"
       submitPendingLabel="Wird gespeichert…"

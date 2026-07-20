@@ -42,6 +42,7 @@ export default function EditMissionLogForm({
       bodyRequired
       bodyLarge
       isAdminOrGM={isAdminOrGM}
+      draftDefaultValue={log.isDraft}
       insertImage={{ contentType: "mission_log", contentId: log.id }}
       submitLabel="Änderungen speichern"
       submitPendingLabel="Wird gespeichert…"

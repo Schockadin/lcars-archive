@@ -95,6 +95,7 @@ export interface ArchiveEntryDetail {
   dialogue_open: boolean;
   visibility: "private" | "gm" | "public";
   ownerUserId: number | null;
+  isDraft: boolean;
   updated_at: string;
   // Roher Markdown-Body (leerer String bei Dialogen — deren Inhalt lebt in
   // dialogue_messages) — für den Inline-Editor des Owners auf der

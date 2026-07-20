@@ -5,7 +5,7 @@ import { requireOwnCharacters } from "../dal";
 import { getLogsForUser } from "@/lib/characters";
 import { getDialoguesForUser } from "@/lib/dialogues";
 import { getArchiveEntriesForUser } from "@/lib/archive";
-import { getAllMissions } from "@/lib/missions";
+import { getAllMissionsIncludingDrafts } from "@/lib/missions";
 import UserContentBrowser from "./UserContentBrowser";
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export default async function UserContentPage() {
     getLogsForUser(user.id),
     getDialoguesForUser(user.id, "all"),
     getArchiveEntriesForUser(user.id),
-    isGM ? getAllMissions() : Promise.resolve([]),
+    isGM ? getAllMissionsIncludingDrafts() : Promise.resolve([]),
   ]);
 
   return (

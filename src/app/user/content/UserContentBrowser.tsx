@@ -173,6 +173,14 @@ export default function UserContentBrowser({
                     <span className="mission-akte-rail" />
                     <span className="mission-akte-body text-left">
                       <span className="mission-akte-title block">{c.name}</span>
+                      {c.is_draft && (
+                        <span className="mission-akte-meta">
+                          <span>
+                            <b>Status</b>{" "}
+                            <span className="text-lcars-red">Entwurf</span>
+                          </span>
+                        </span>
+                      )}
                     </span>
                   </Link>
                   <div className="flex flex-col items-stretch sm:items-end gap-[4px]">
@@ -236,6 +244,12 @@ export default function UserContentBrowser({
                         <span>
                           <b>Mission</b> {log.mission_title}
                         </span>
+                        {log.is_draft && (
+                          <span>
+                            <b>Status</b>{" "}
+                            <span className="text-lcars-red">Entwurf</span>
+                          </span>
+                        )}
                       </span>
                     </span>
                   </Link>
@@ -362,6 +376,12 @@ export default function UserContentBrowser({
                           <b>Kategorie</b>{" "}
                           {CATEGORY_CONFIG[entry.category].label}
                         </span>
+                        {entry.isDraft && (
+                          <span>
+                            <b>Status</b>{" "}
+                            <span className="text-lcars-red">Entwurf</span>
+                          </span>
+                        )}
                       </span>
                     </span>
                   </Link>
@@ -419,6 +439,12 @@ export default function UserContentBrowser({
                           <b>Zeitraum</b>{" "}
                           {periodLabel(m.started_at, m.ended_at)}
                         </span>
+                        {m.isDraft && (
+                          <span>
+                            <b>Status</b>{" "}
+                            <span className="text-lcars-red">Entwurf</span>
+                          </span>
+                        )}
                       </span>
                     </span>
                   </Link>

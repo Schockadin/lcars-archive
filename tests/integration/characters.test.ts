@@ -27,6 +27,7 @@ function baseCharacterInput(overrides: Partial<Parameters<typeof createCharacter
     tags: [],
     bodyMarkdown: "",
     ownerUserId: 0,
+    isDraft: false,
     ...overrides,
   };
 }

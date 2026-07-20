@@ -50,6 +50,7 @@ export default function EditCharacterForm({
       bodyHint={<MarkdownFormatHint />}
       bodyDefaultValue={character.sourceMarkdown}
       isAdminOrGM={isAdminOrGM}
+      draftDefaultValue={character.isDraft}
       submitLabel="Änderungen speichern"
       submitPendingLabel="Wird gespeichert…"
     />

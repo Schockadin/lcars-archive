@@ -160,6 +160,18 @@ export default function TutorialPage() {
                 Inhalte“.
               </p>
               <p>
+                Beim Anlegen oder Bearbeiten eines Charakters, einer Mission,
+                eines Einsatzberichts oder eines Archiv-Eintrags kannst du das
+                Formular statt zu veröffentlichen auch erst als{" "}
+                <strong>Entwurf</strong> speichern (Checkbox unter dem
+                Textfeld) — der Text ist dann nicht mehr Pflicht. Ein Entwurf
+                bleibt unabhängig von seiner Sichtbarkeitsstufe für niemanden
+                außer dir sichtbar, nicht einmal für Spielleitung oder
+                Administration (Ausnahme: Missionen sehen alle aus der
+                Spielleitung, da sie kein Einzel-Owner-Modell haben), erscheint
+                aber bereits unter „Meine Inhalte“, dort deutlich markiert.
+              </p>
+              <p>
                 Mission-Synopsen, Archiv-Einträge und Charakter-Biografien
                 lassen sich zusätzlich{" "}
                 <strong>direkt auf ihrer Detailseite</strong> bearbeiten

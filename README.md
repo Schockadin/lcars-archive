@@ -59,6 +59,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   ("Bilder") zusätzlich alle hochgeladenen Bilder über alle Inhalte hinweg
   mit Vorschau und können sie dort einzeln endgültig löschen, auch verwaiste
   Bilder, deren zugehöriger Inhalt bereits gelöscht wurde.
+- **Entwürfe** — Charaktere, Missionen, Missionslogs und Archiv-Einträge lassen
+  sich beim Anlegen/Bearbeiten statt zu veröffentlichen erst als Entwurf
+  speichern (Text-Pflichtfeld entfällt dann); ein Entwurf ist unabhängig von
+  seiner Sichtbarkeitsstufe für niemanden außer der eigenen Person sichtbar,
+  auch nicht für Spielleitung/Administration (Ausnahme: Missionen, die jede
+  Spielleitung sehen kann, da Missionen kein Einzel-Owner-Modell haben), und
+  erscheint bis zur Veröffentlichung nur unter „Meine Inhalte“.
 - **PWA mit Push-Benachrichtigungen** — installierbar auf Mobilgeräten (inkl. maskable
   Icon), Web-Push für neue Dialog-Nachrichten und abonnierte Inhalte.
 - **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und Spielleitung.

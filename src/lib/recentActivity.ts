@@ -81,6 +81,7 @@ export async function getRecentActivity(
     WHERE (c.visibility = 'public' OR c.player_id = ${userId})
       AND (c.created_at > ${since} OR c.updated_at > ${since})
       AND c.deleted_at IS NULL
+      AND (c.is_draft = false OR c.player_id = ${userId})
 
     UNION ALL
 
@@ -92,6 +93,7 @@ export async function getRecentActivity(
     LEFT JOIN users ou ON ou.id = m.owner_user_id
     WHERE (m.created_at > ${since} OR m.updated_at > ${since})
       AND m.deleted_at IS NULL
+      AND m.is_draft = false
 
     UNION ALL
 
@@ -105,6 +107,7 @@ export async function getRecentActivity(
     WHERE (ml.visibility = 'public' OR ml.owner_user_id = ${userId})
       AND (ml.created_at > ${since} OR ml.updated_at > ${since})
       AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
+      AND (ml.is_draft = false OR ml.owner_user_id = ${userId})
 
     UNION ALL
 
@@ -118,6 +121,7 @@ export async function getRecentActivity(
       AND (a.created_at > ${since} OR a.updated_at > ${since})
       AND (a.category != 'dialogue' OR a.dialogue_open = FALSE)
       AND a.deleted_at IS NULL
+      AND (a.is_draft = false OR a.owner_user_id = ${userId})
   `;
 
   const created: RecentActivityItem[] = [];

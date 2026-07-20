@@ -22,6 +22,7 @@ function baseMissionInput(overrides: Partial<Parameters<typeof createMission>[0]
     teaser: null,
     bodyMarkdown: "",
     ownerUserId: 0,
+    isDraft: false,
     ...overrides,
   };
 }
@@ -37,6 +38,7 @@ function baseLogInput(overrides: Partial<Parameters<typeof createMissionLog>[0]>
     sessionNr: 1,
     tags: [],
     ownerUserId: null,
+    isDraft: false,
     ...overrides,
   };
 }

@@ -26,6 +26,55 @@ export interface MissionLogFormState {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
+// Benachrichtigt die Abonnenten des Autor-Charakters über einen neuen/
+// veröffentlichten Log — identischer Ablauf, ob der Log gerade frisch
+// angelegt wird oder gerade von Entwurf auf veröffentlicht wechselt (siehe
+// notifyMissionParticipants in missions/_shared/contentAction.ts für
+// dieselbe Begründung).
+async function notifyLogSubscribers(
+  authorCharacterSlug: string,
+  authorCharacterName: string,
+  missionSlug: string,
+  missionTitle: string,
+  logSlug: string,
+  logTitle: string,
+  bodyMarkdown: string,
+): Promise<void> {
+  const subscribers = await getCharacterSubscribers(authorCharacterSlug);
+  if (subscribers.length === 0) return;
+
+  const logUrl = `${await getBaseUrl()}/missions/${missionSlug}/${logSlug}`;
+  const preview = synopsisExcerpt(bodyMarkdown, 140);
+  for (const subscriber of subscribers) {
+    if (subscriber.emailNotificationsEnabled) {
+      const mailResult = await sendNewMissionLogEmail({
+        to: subscriber.email,
+        name: subscriber.name,
+        characterName: authorCharacterName,
+        missionTitle,
+        logTitle,
+        logUrl,
+        preview,
+      });
+      if (!mailResult.sent) {
+        const message = `Neuer-Log-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`;
+        console.error(message);
+        void logCaughtError(
+          new Error(message),
+          "user/mission-logs/_shared/contentAction.ts:subscriberNotify",
+        );
+      }
+    }
+    if (subscriber.pushNotificationsEnabled) {
+      await sendPushToUser(subscriber.id, {
+        title: `Neuer Log von ${authorCharacterName}`,
+        body: preview,
+        url: logUrl,
+      });
+    }
+  }
+}
+
 // Vereint createMissionLogAction + updateMissionLogAction (vorher
 // new/actions.ts + [logId]/edit/actions.ts) zu einer Action für
 // ContentEditor — Branch auf Vorhandensein von logId. Größte Asymmetrie
@@ -47,6 +96,12 @@ export async function missionLogAction(
     return { error: "Ungültiges Log." };
   }
 
+  // Im Entwurf-Modus (ContentEditor.tsx-Checkbox) ist nur der Log-Text
+  // optional — Autor/Mission/Session-Nr bleiben beim Anlegen in jedem Fall
+  // Pflicht, da sie den Slug bilden und danach unveränderlich sind (siehe
+  // Kommentar oben).
+  const isDraft = formData.get("isDraft") === "on";
+
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return { error: "Bitte einen Titel angeben." };
 
@@ -59,13 +114,15 @@ export async function missionLogAction(
   const tags = parseList(formData.get("tags"));
 
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
-  if (!bodyMarkdown) return { error: "Bitte einen Log-Text schreiben." };
+  if (!bodyMarkdown && !isDraft) {
+    return { error: "Bitte einen Log-Text schreiben." };
+  }
 
   // Opt-in "Automatisch verlinken" (AutoLinkCheckbox.tsx) — kein
   // Selbst-Ausschluss nötig, Mission-Logs sind selbst kein Autolinking-Ziel
   // (siehe getAutolinkTargets in src/lib/autolink.ts).
   let contentHtml: string | undefined;
-  if (formData.get("autoLink") === "on") {
+  if (bodyMarkdown && formData.get("autoLink") === "on") {
     const linked = await autoLinkMarkdown(bodyMarkdown);
     bodyMarkdown = linked.sourceMd;
     contentHtml = linked.html;
@@ -77,6 +134,7 @@ export async function missionLogAction(
       logDate,
       tags,
       bodyMarkdown,
+      isDraft,
       contentHtml,
     });
     if (!result) {
@@ -84,21 +142,47 @@ export async function missionLogAction(
     }
     revalidateLog(result.missionId, result.slug);
 
-    const contentUrl = `${await getBaseUrl()}/missions/${result.missionSlug}/${result.slug}`;
-    const preview = synopsisExcerpt(bodyMarkdown, 140);
-    const author = await getUserById(session.userId);
+    if (!isDraft) {
+      const contentUrl = `${await getBaseUrl()}/missions/${result.missionSlug}/${result.slug}`;
+      const preview = synopsisExcerpt(bodyMarkdown, 140);
 
-    await notifyContentChange({
-      contentType: "mission_log",
-      event: "updated",
-      authorUserId: session.userId,
-      authorName: author?.name ?? "Unbekannt",
-      contentTypeLabel: "einen Mission-Log",
-      contentTitle: title,
-      contentUrl,
-      preview,
-      notifyPublic: result.visibility === "public",
-    });
+      if (result.wasDraft) {
+        const author = await getUserById(session.userId);
+        await notifyContentChange({
+          contentType: "mission_log",
+          event: "created",
+          authorUserId: session.userId,
+          authorName: author?.name ?? "Unbekannt",
+          contentTypeLabel: "einen neuen Mission-Log",
+          contentTitle: title,
+          contentUrl,
+          preview,
+          notifyPublic: result.visibility === "public",
+        });
+        await notifyLogSubscribers(
+          result.authorSlug,
+          result.authorName,
+          result.missionSlug,
+          title,
+          result.slug,
+          title,
+          bodyMarkdown,
+        );
+      } else {
+        const author = await getUserById(session.userId);
+        await notifyContentChange({
+          contentType: "mission_log",
+          event: "updated",
+          authorUserId: session.userId,
+          authorName: author?.name ?? "Unbekannt",
+          contentTypeLabel: "einen Mission-Log",
+          contentTitle: title,
+          contentUrl,
+          preview,
+          notifyPublic: result.visibility === "public",
+        });
+      }
+    }
     redirect("/user/content");
   }
 
@@ -153,69 +237,38 @@ export async function missionLogAction(
     logDate,
     sessionNr,
     tags,
+    isDraft,
     ownerUserId: user.id,
   });
 
   revalidateLog(mission.id, result.slug);
 
-  // Wer den Autor-Charakter abonniert hat, bekommt eine Mail/Push zum neuen
-  // Log — ein einzelnes, sofortiges Ereignis wie bei Dialog-Nachrichten,
-  // kein Sammel-Digest. Der Verfasser selbst ist logischerweise nie
-  // Abonnent seines eigenen Charakters relevant für diese Benachrichtigung,
-  // aber getCharacterSubscribers filtert ohnehin nicht danach — ein
-  // Ausschluss ist trotzdem unnötig, da niemand sich selbst für Push/Mail
-  // über die eigene Aktion in dieser Liste wiederfinden würde, außer er
-  // hätte explizit den eigenen Charakter abonniert, was ein bewusster Fall
-  // ist (er wollte offenbar benachrichtigt werden).
-  const subscribers = await getCharacterSubscribers(authorCharacter.slug);
-  if (subscribers.length > 0) {
-    const logUrl = `${await getBaseUrl()}/missions/${mission.slug}/${result.slug}`;
-    const preview = synopsisExcerpt(bodyMarkdown, 140);
-    for (const subscriber of subscribers) {
-      if (subscriber.emailNotificationsEnabled) {
-        const mailResult = await sendNewMissionLogEmail({
-          to: subscriber.email,
-          name: subscriber.name,
-          characterName: authorCharacter.name,
-          missionTitle: mission.title,
-          logTitle: title,
-          logUrl,
-          preview,
-        });
-        if (!mailResult.sent) {
-          const message = `Neuer-Log-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`;
-          console.error(message);
-          void logCaughtError(
-            new Error(message),
-            "user/mission-logs/_shared/contentAction.ts:subscriberNotify",
-          );
-        }
-      }
-      if (subscriber.pushNotificationsEnabled) {
-        await sendPushToUser(subscriber.id, {
-          title: `Neuer Log von ${authorCharacter.name}`,
-          body: preview,
-          url: logUrl,
-        });
-      }
-    }
+  if (!isDraft) {
+    // Mission-Logs sind standardmäßig public (siehe scripts/schema.sql) —
+    // ein neu angelegter Log benachrichtigt die Abonnenten des Erstellers
+    // (nicht des Autor-Charakters, siehe notifyLogSubscribers oben) deshalb
+    // ungegated.
+    await notifyLogSubscribers(
+      authorCharacter.slug,
+      authorCharacter.name,
+      mission.slug,
+      mission.title,
+      result.slug,
+      title,
+      bodyMarkdown,
+    );
+    await notifyContentChange({
+      contentType: "mission_log",
+      event: "created",
+      authorUserId: session.userId,
+      authorName: user.name,
+      contentTypeLabel: "einen neuen Mission-Log",
+      contentTitle: title,
+      contentUrl: `${await getBaseUrl()}/missions/${mission.slug}/${result.slug}`,
+      preview: synopsisExcerpt(bodyMarkdown, 140),
+      notifyPublic: true,
+    });
   }
-
-  // Mission-Logs sind standardmäßig public (siehe scripts/schema.sql) — ein
-  // neu angelegter Log benachrichtigt die Abonnenten des Erstellers (nicht
-  // des Autor-Charakters, siehe getCharacterSubscribers oben) deshalb
-  // ungegated.
-  await notifyContentChange({
-    contentType: "mission_log",
-    event: "created",
-    authorUserId: session.userId,
-    authorName: user.name,
-    contentTypeLabel: "einen neuen Mission-Log",
-    contentTitle: title,
-    contentUrl: `${await getBaseUrl()}/missions/${mission.slug}/${result.slug}`,
-    preview: synopsisExcerpt(bodyMarkdown, 140),
-    notifyPublic: true,
-  });
 
   redirect("/user");
 }

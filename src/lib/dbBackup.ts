@@ -20,22 +20,23 @@ export const TABLE_COLUMNS = {
   characters: [
     "id", "slug", "name", "status", "player_id", "portrait", "species",
     "rank", "bio", "metadata", "source_md", "frontmatter", "created_at",
-    "updated_at", "visibility",
+    "updated_at", "visibility", "deleted_at", "is_draft",
   ],
   missions: [
     "id", "slug", "title", "status", "started_at", "ended_at", "metadata",
     "source_md", "frontmatter", "created_at", "updated_at", "owner_user_id",
+    "deleted_at", "is_draft",
   ],
   mission_participants: ["mission_id", "character_id"],
   mission_logs: [
     "id", "slug", "mission_id", "author_id", "title", "content", "log_date",
     "session_nr", "metadata", "source_md", "frontmatter", "created_at",
-    "updated_at", "owner_user_id", "visibility",
+    "updated_at", "owner_user_id", "visibility", "deleted_at", "is_draft",
   ],
   archive_entries: [
     "id", "slug", "title", "category", "content", "tags", "metadata",
     "source_md", "frontmatter", "created_at", "updated_at", "dialogue_open",
-    "owner_user_id", "visibility",
+    "owner_user_id", "visibility", "deleted_at", "is_draft",
   ],
   archive_links: ["source_id", "target_id", "label"],
   dialogue_messages: [

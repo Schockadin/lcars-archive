@@ -1,6 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import sql from "@/lib/db";
-import { canView, canSetVisibility, getViewer, type Viewer } from "@/lib/visibility";
+import {
+  canView,
+  canViewDraft,
+  canViewMissionDraft,
+  canSetVisibility,
+  getViewer,
+  type Viewer,
+} from "@/lib/visibility";
 import { createSession } from "@/lib/session";
 import { insertUser } from "./helpers";
 
@@ -61,6 +68,66 @@ describe("canView", () => {
     expect(canView("gm", 4, gm)).toBe(true);
     expect(canView("gm", 4, admin)).toBe(true);
     expect(canView("gm", 4, player)).toBe(false);
+  });
+});
+
+describe("canViewDraft", () => {
+  const admin: Viewer = { userId: 1, role: "admin" };
+  const gm: Viewer = { userId: 2, role: "gm" };
+  const player: Viewer = { userId: 3, role: "player" };
+  const owner: Viewer = { userId: 4, role: "player" };
+
+  it("lets anyone see non-draft content regardless of viewer", () => {
+    expect(canViewDraft(false, 4, null)).toBe(true);
+    expect(canViewDraft(false, 4, player)).toBe(true);
+  });
+
+  it("lets the owner see their own draft", () => {
+    expect(canViewDraft(true, 4, owner)).toBe(true);
+  });
+
+  it("does NOT let an admin see a draft they don't own, unlike canView", () => {
+    expect(canViewDraft(true, 4, admin)).toBe(false);
+  });
+
+  it("does NOT let a gm see a draft they don't own", () => {
+    expect(canViewDraft(true, 4, gm)).toBe(false);
+  });
+
+  it("does not let a non-owning player see a draft", () => {
+    expect(canViewDraft(true, 4, player)).toBe(false);
+  });
+
+  it("does not let an anonymous viewer see a draft", () => {
+    expect(canViewDraft(true, 4, null)).toBe(false);
+  });
+
+  it("returns false when there is no owner to match against, even for the same userId coincidentally matching null", () => {
+    expect(canViewDraft(true, null, owner)).toBe(false);
+  });
+});
+
+describe("canViewMissionDraft", () => {
+  const admin: Viewer = { userId: 1, role: "admin" };
+  const gm: Viewer = { userId: 2, role: "gm" };
+  const player: Viewer = { userId: 3, role: "player" };
+
+  it("lets anyone see a non-draft mission regardless of viewer", () => {
+    expect(canViewMissionDraft(false, null)).toBe(true);
+    expect(canViewMissionDraft(false, player)).toBe(true);
+  });
+
+  it("lets ANY gm or admin see a mission draft, not just the creator, unlike canViewDraft", () => {
+    expect(canViewMissionDraft(true, gm)).toBe(true);
+    expect(canViewMissionDraft(true, admin)).toBe(true);
+  });
+
+  it("does not let a plain player see a mission draft", () => {
+    expect(canViewMissionDraft(true, player)).toBe(false);
+  });
+
+  it("does not let an anonymous viewer see a mission draft", () => {
+    expect(canViewMissionDraft(true, null)).toBe(false);
   });
 });
 

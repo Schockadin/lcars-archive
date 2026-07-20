@@ -22,6 +22,7 @@ function baseEntryInput(
     referenceValues: {},
     bodyMarkdown: "",
     ownerUserId: 0,
+    isDraft: false,
     ...overrides,
   };
 }

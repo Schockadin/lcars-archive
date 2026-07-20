@@ -38,7 +38,11 @@ function parseMeta<T extends { metadata: MissionMetaData }>(row: T): T {
 // Die Anzahl der Mission-Logs wird per LEFT JOIN mitgezählt, damit
 // auch Missionen ohne Logs (log_count = 0) erscheinen.
 // Persistenter Cache bis zur Tag-Invalidierung (hängt an missions + mission-logs,
-// da log_count mitgezählt wird).
+// da log_count mitgezählt wird). Nur veröffentlichte Missionen (is_draft =
+// false) — speist die öffentliche Übersicht, generateStaticParams und die
+// Suche/Timeline/Statistik. Für die GM/Admin-Ansicht unter /user/content
+// (die auch eigene Entwürfe zeigen soll) siehe getAllMissionsIncludingDrafts
+// unten.
 export const getAllMissions = unstable_cache(
   async (): Promise<MissionPreview[]> => {
     const rows = await sql<MissionPreview[]>`
@@ -55,7 +59,46 @@ export const getAllMissions = unstable_cache(
           jsonb_agg(DISTINCT jsonb_build_object('name', c.name, 'slug', c.slug))
             FILTER (WHERE c.id IS NOT NULL),
           '[]'::jsonb
-        ) AS authors
+        ) AS authors,
+        m.is_draft AS "isDraft"
+      FROM missions m
+      LEFT JOIN mission_logs ml ON ml.mission_id = m.id AND ml.deleted_at IS NULL
+      LEFT JOIN characters c    ON c.id = ml.author_id
+      WHERE m.deleted_at IS NULL AND m.is_draft = false
+      GROUP BY m.id
+      ORDER BY m.started_at DESC NULLS LAST, m.created_at DESC
+    `;
+    return rows.map(parseMeta);
+  },
+  ["getAllMissions", "v2"],
+  { tags: [cacheTags.missions, cacheTags.missionLogs] },
+);
+
+// Wie getAllMissions, aber inklusive Entwürfe — für /user/content: anders
+// als Charaktere/Missionslogs/Archiv-Einträge haben Missionen kein
+// Einzel-Owner-Bearbeitungsmodell (jeder GM/Admin darf jede Mission
+// bearbeiten, siehe missionAction), ein Mission-Entwurf ist deshalb für
+// jeden GM/Admin sichtbar statt nur für den ursprünglichen Ersteller (siehe
+// canViewDraft-Kommentar in missions/[missionSlug]/page.tsx für dieselbe
+// Abweichung auf der Detailseite).
+export const getAllMissionsIncludingDrafts = unstable_cache(
+  async (): Promise<MissionPreview[]> => {
+    const rows = await sql<MissionPreview[]>`
+      SELECT
+        m.id,
+        m.slug,
+        m.title,
+        m.status,
+        m.metadata,
+        m.started_at::text         AS started_at,
+        m.ended_at::text           AS ended_at,
+        COUNT(DISTINCT ml.id)::int AS log_count,
+        COALESCE(
+          jsonb_agg(DISTINCT jsonb_build_object('name', c.name, 'slug', c.slug))
+            FILTER (WHERE c.id IS NOT NULL),
+          '[]'::jsonb
+        ) AS authors,
+        m.is_draft AS "isDraft"
       FROM missions m
       LEFT JOIN mission_logs ml ON ml.mission_id = m.id AND ml.deleted_at IS NULL
       LEFT JOIN characters c    ON c.id = ml.author_id
@@ -65,7 +108,7 @@ export const getAllMissions = unstable_cache(
     `;
     return rows.map(parseMeta);
   },
-  ["getAllMissions"],
+  ["getAllMissionsIncludingDrafts"],
   { tags: [cacheTags.missions, cacheTags.missionLogs] },
 );
 
@@ -114,6 +157,7 @@ export async function getMissionBySlug(
           metadata,
           updated_at::text AS updated_at,
           owner_user_id    AS "ownerUserId",
+          is_draft         AS "isDraft",
           source_md        AS "sourceMarkdown"
         FROM missions
         WHERE slug = ${slug} AND deleted_at IS NULL
@@ -124,7 +168,7 @@ export async function getMissionBySlug(
       const participants = await getMissionParticipants(mission.id);
       return { ...mission, participants };
     },
-    ["getMissionBySlug", "v5", slug],
+    ["getMissionBySlug", "v6", slug],
     { tags: [cacheTags.missions, cacheTags.mission(slug)] },
   )();
 }
@@ -147,6 +191,7 @@ export async function getMissionById(
       metadata,
       updated_at::text AS updated_at,
       owner_user_id    AS "ownerUserId",
+      is_draft         AS "isDraft",
       source_md        AS "sourceMarkdown"
     FROM missions
     WHERE id = ${id} AND deleted_at IS NULL
@@ -244,6 +289,7 @@ export async function createMission(input: {
   teaser: string | null;
   bodyMarkdown: string;
   ownerUserId: number;
+  isDraft: boolean;
   // Vorgerendertes HTML überspringt das eigene renderContentHtml() — genutzt
   // vom Opt-in "Automatisch verlinken" (createMissionAction), das den
   // Markdown-Text vorab per autoLinkMarkdown() transformiert UND rendert,
@@ -257,7 +303,7 @@ export async function createMission(input: {
   const rows = await sql<{ id: number; slug: string }[]>`
     INSERT INTO missions (
       slug, title, status, started_at, ended_at, metadata, source_md,
-      owner_user_id, updated_at
+      owner_user_id, is_draft, updated_at
     ) VALUES (
       ${input.slug},
       ${input.title},
@@ -267,6 +313,7 @@ export async function createMission(input: {
       ${sql.json({ tags: input.tags, body: bodyHtml, teaser: input.teaser })},
       ${input.bodyMarkdown},
       ${input.ownerUserId},
+      ${input.isDraft},
       NOW()
     )
     RETURNING id, slug
@@ -277,13 +324,17 @@ export async function createMission(input: {
 export interface UpdateMissionResult {
   slug: string;
   ownerSlug: string | null;
+  wasDraft: boolean;
 }
 
 // Vollständige Bearbeitung einer Mission (Admin/GM-Formular unter
 // /user/missions/[missionId]/edit). Der Slug bleibt unveränderlich
 // (Identitätsfeld, siehe updateMissionLogContent oben für dasselbe Prinzip
 // bei Logs) — er bildet sowohl den Vault-Ordnernamen als auch die
-// mission_slug-Referenz bestehender Mission-Logs.
+// mission_slug-Referenz bestehender Mission-Logs. wasDraft (Stand VOR
+// diesem Update, per CTE) erlaubt dem Aufrufer, einen Entwurf→
+// Veröffentlicht-Übergang von einer normalen Bearbeitung zu unterscheiden
+// (siehe contentAction.ts).
 export async function updateMissionContent(
   missionId: number,
   input: {
@@ -294,6 +345,7 @@ export async function updateMissionContent(
     tags: string[];
     teaser: string | null;
     bodyMarkdown: string;
+    isDraft: boolean;
     // Siehe createMission oben — Opt-in "Automatisch verlinken".
     bodyHtml?: string;
   },
@@ -301,6 +353,7 @@ export async function updateMissionContent(
   const bodyHtml = input.bodyHtml ?? (await renderContentHtml(input.bodyMarkdown));
 
   const rows = await sql<UpdateMissionResult[]>`
+    WITH old AS (SELECT is_draft FROM missions WHERE id = ${missionId})
     UPDATE missions m
     SET
       title      = ${input.title},
@@ -309,11 +362,14 @@ export async function updateMissionContent(
       ended_at   = ${input.endedAt},
       metadata   = ${sql.json({ tags: input.tags, body: bodyHtml, teaser: input.teaser })},
       source_md  = ${input.bodyMarkdown},
+      is_draft   = ${input.isDraft},
       updated_at = NOW()
+    FROM old
     WHERE m.id = ${missionId}
     RETURNING
       m.slug,
-      (SELECT slug FROM users WHERE id = m.owner_user_id) AS "ownerSlug"
+      (SELECT slug FROM users WHERE id = m.owner_user_id) AS "ownerSlug",
+      old.is_draft AS "wasDraft"
   `;
   return rows[0] ?? null;
 }
@@ -477,6 +533,7 @@ export async function createMissionLog(input: {
   sessionNr: number;
   tags: string[];
   ownerUserId: number | null;
+  isDraft: boolean;
   // Siehe createMission oben — Opt-in "Automatisch verlinken".
   contentHtml?: string;
 }): Promise<{ id: number; slug: string }> {
@@ -486,7 +543,7 @@ export async function createMissionLog(input: {
   const rows = await sql<{ id: number; slug: string }[]>`
     INSERT INTO mission_logs (
       slug, mission_id, author_id, title, content, log_date, session_nr,
-      metadata, source_md, owner_user_id, updated_at
+      metadata, source_md, owner_user_id, is_draft, updated_at
     ) VALUES (
       ${input.slug},
       ${input.missionId},
@@ -498,6 +555,7 @@ export async function createMissionLog(input: {
       ${sql.json({ tags: input.tags })},
       ${input.bodyMarkdown},
       ${input.ownerUserId},
+      ${input.isDraft},
       NOW()
     )
     RETURNING id, slug
@@ -537,11 +595,12 @@ export async function getLogsByMissionId(
         FROM mission_logs ml
         LEFT JOIN characters c ON c.id = ml.author_id
         WHERE ml.mission_id = ${missionId} AND ml.visibility = 'public' AND ml.deleted_at IS NULL
+          AND ml.is_draft = false
         ORDER BY ml.session_nr DESC NULLS LAST, ml.created_at DESC
       `;
       return rows;
     },
-    ["getLogsByMissionId", "v3", String(missionId)],
+    ["getLogsByMissionId", "v4", String(missionId)],
     { tags: [cacheTags.missionLogs, cacheTags.missionLogsOf(missionId)] },
   )();
 }
@@ -566,7 +625,8 @@ export async function getLogBySlug(
           m.slug  AS mission_slug,
           m.title AS mission_title,
           ml.visibility,
-          ml.owner_user_id AS "ownerUserId"
+          ml.owner_user_id AS "ownerUserId",
+          ml.is_draft AS "isDraft"
         FROM mission_logs ml
         JOIN missions m ON m.id = ml.mission_id
         LEFT JOIN characters c ON c.id = ml.author_id
@@ -575,7 +635,7 @@ export async function getLogBySlug(
       `;
       return rows[0] ?? null;
     },
-    ["getLogBySlug", "v3", slug],
+    ["getLogBySlug", "v4", slug],
     { tags: [cacheTags.missionLogs, cacheTags.log(slug)] },
   )();
 }
@@ -601,6 +661,7 @@ export async function getAuthorLogNav(
         JOIN missions m   ON m.id = ml.mission_id
         JOIN characters c ON c.id = ml.author_id
         WHERE c.slug = ${authorSlug} AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
+          AND ml.is_draft = false
         ORDER BY ml.log_date ASC NULLS LAST, ml.session_nr ASC NULLS LAST, ml.id ASC
       `;
 
@@ -611,7 +672,7 @@ export async function getAuthorLogNav(
         next: logs[i + 1] ?? null,
       };
     },
-    ["getAuthorLogNav", authorSlug, currentSlug],
+    ["getAuthorLogNav", "v2", authorSlug, currentSlug],
     { tags: [cacheTags.missionLogs, cacheTags.character(authorSlug)] },
   )();
 }
@@ -726,6 +787,7 @@ export interface OwnMissionLogForEdit {
   missionTitle: string;
   authorName: string;
   tags: string[];
+  isDraft: boolean;
 }
 
 // Für /user/mission-logs/[logId]/edit — lädt den rohen Markdown-Body
@@ -748,7 +810,8 @@ export async function getOwnMissionLogForEdit(
       m.slug AS "missionSlug",
       m.title AS "missionTitle",
       c.name AS "authorName",
-      COALESCE(ml.metadata->'tags', '[]'::jsonb) AS "tags"
+      COALESCE(ml.metadata->'tags', '[]'::jsonb) AS "tags",
+      ml.is_draft AS "isDraft"
     FROM mission_logs ml
     JOIN characters c ON c.id = ml.author_id
     JOIN missions m ON m.id = ml.mission_id
@@ -766,7 +829,11 @@ export async function getOwnMissionLogForEdit(
 // Bearbeitet Titel/Datum/Text eines eigenen Logs. Slug-bildende Felder
 // (author, mission, session_nr) bleiben unveränderlich, nur Inhalt/Titel/
 // Datum sind editierbar. Schreibt direkt in die DB (siehe
-// updateMissionLogAction) — die DB ist alleinige Source of Truth.
+// updateMissionLogAction) — die DB ist alleinige Source of Truth. wasDraft
+// (Stand VOR diesem Update, per CTE) + authorSlug/authorName erlauben dem
+// Aufrufer, bei einem Entwurf→Veröffentlicht-Übergang dieselbe
+// Autor-Abonnenten-Benachrichtigung wie beim erstmaligen Anlegen
+// auszulösen (siehe contentAction.ts).
 export async function updateMissionLogContent(
   userId: number,
   logId: number,
@@ -775,6 +842,7 @@ export async function updateMissionLogContent(
     logDate: string | null;
     tags: string[];
     bodyMarkdown: string;
+    isDraft: boolean;
     // Siehe createMission oben — Opt-in "Automatisch verlinken".
     contentHtml?: string;
   },
@@ -783,6 +851,9 @@ export async function updateMissionLogContent(
   missionId: number;
   missionSlug: string;
   visibility: "private" | "gm" | "public";
+  wasDraft: boolean;
+  authorSlug: string;
+  authorName: string;
 } | null> {
   const contentHtml =
     input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
@@ -793,8 +864,12 @@ export async function updateMissionLogContent(
       missionId: number;
       missionSlug: string;
       visibility: "private" | "gm" | "public";
+      wasDraft: boolean;
+      authorSlug: string;
+      authorName: string;
     }[]
   >`
+    WITH old AS (SELECT is_draft FROM mission_logs WHERE id = ${logId})
     UPDATE mission_logs ml
     SET
       title      = ${input.title},
@@ -802,12 +877,14 @@ export async function updateMissionLogContent(
       content    = ${contentHtml},
       source_md  = ${input.bodyMarkdown},
       metadata   = metadata || ${sql.json({ tags: input.tags } as ReturnType<typeof JSON.parse>)},
+      is_draft   = ${input.isDraft},
       updated_at = NOW()
-    FROM characters c, missions m
+    FROM characters c, missions m, old
     WHERE ml.id = ${logId} AND c.id = ml.author_id AND c.player_id = ${userId}
       AND m.id = ml.mission_id
     RETURNING ml.slug, ml.mission_id AS "missionId", m.slug AS "missionSlug",
-              ml.visibility
+              ml.visibility, old.is_draft AS "wasDraft",
+              c.slug AS "authorSlug", c.name AS "authorName"
   `;
   return rows[0] ?? null;
 }
@@ -830,6 +907,7 @@ export async function deleteMissionLog(
       title: string;
       visibility: string;
       ownerUserId: number | null;
+      isDraft: boolean;
     }[]
   >`
     UPDATE mission_logs ml
@@ -839,14 +917,16 @@ export async function deleteMissionLog(
       AND c.id = ml.author_id AND c.player_id = ${userId}
       AND ml.deleted_at IS NULL
     RETURNING ml.slug, ml.mission_id AS "missionId",
-              ml.title, ml.visibility, ml.owner_user_id AS "ownerUserId"
+              ml.title, ml.visibility, ml.owner_user_id AS "ownerUserId",
+              ml.is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
-  if (row) {
-    // Löschprotokoll fürs News-Feed (siehe getRecentDeletions in
-    // recentActivity.ts) — aus Sicht aller Nicht-Admins ist der Log jetzt
-    // weg, ohne dieses Protokoll gäbe es keine Datenquelle mehr für einen
-    // "gelöscht"-Eintrag.
+  // Löschprotokoll fürs News-Feed (siehe getRecentDeletions in
+  // recentActivity.ts) — aus Sicht aller Nicht-Admins ist der Log jetzt weg,
+  // ohne dieses Protokoll gäbe es keine Datenquelle mehr für einen
+  // "gelöscht"-Eintrag. Ausgenommen Entwürfe: die waren für niemanden außer
+  // dem Owner sichtbar, ihr Löschen darf also nicht im News-Feed auftauchen.
+  if (row && !row.isDraft) {
     await sql`
       INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
       VALUES ('mission_log', ${row.title}, ${row.visibility}, ${row.ownerUserId}, ${userId})
@@ -886,16 +966,17 @@ export async function deleteMissionLogAsAdmin(
       title: string;
       visibility: string;
       ownerUserId: number | null;
+      isDraft: boolean;
     }[]
   >`
     UPDATE mission_logs
     SET deleted_at = NOW()
     WHERE id = ${logId} AND deleted_at IS NULL
     RETURNING slug, mission_id AS "missionId",
-              title, visibility, owner_user_id AS "ownerUserId"
+              title, visibility, owner_user_id AS "ownerUserId", is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
-  if (row) {
+  if (row && !row.isDraft) {
     await sql`
       INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
       VALUES ('mission_log', ${row.title}, ${row.visibility}, ${row.ownerUserId}, ${deletedByUserId})
@@ -924,21 +1005,24 @@ export async function deleteMission(
     `;
 
     const rows = await tx<
-      { slug: string; title: string; ownerUserId: number | null }[]
+      { slug: string; title: string; ownerUserId: number | null; isDraft: boolean }[]
     >`
       UPDATE missions SET deleted_at = NOW()
       WHERE id = ${missionId} AND deleted_at IS NULL
-      RETURNING slug, title, owner_user_id AS "ownerUserId"
+      RETURNING slug, title, owner_user_id AS "ownerUserId", is_draft AS "isDraft"
     `;
     const row = rows[0] ?? null;
     if (!row) return null;
 
     // Missionen haben keine visibility-Spalte (immer öffentlich) — visibility
     // bleibt NULL, getRecentDeletions behandelt das wie live Missionen.
-    await tx`
-      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
-      VALUES ('mission', ${row.title}, NULL, ${row.ownerUserId}, ${deletedByUserId})
-    `;
+    // Entwürfe ausgenommen (waren für niemanden außer GM/Admin sichtbar).
+    if (!row.isDraft) {
+      await tx`
+        INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+        VALUES ('mission', ${row.title}, NULL, ${row.ownerUserId}, ${deletedByUserId})
+      `;
+    }
 
     const logSlugs = logRows.map((l) => l.slug);
     if (logSlugs.length > 0) {
@@ -990,10 +1074,11 @@ export const getAllLogPaths = unstable_cache(
       FROM mission_logs ml
       JOIN missions m ON m.id = ml.mission_id
       WHERE ml.visibility = 'public' AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
+        AND ml.is_draft = false
     `;
     return rows;
   },
-  ["getAllLogPaths", "v3"],
+  ["getAllLogPaths", "v4"],
   { tags: [cacheTags.missionLogs] },
 );
 

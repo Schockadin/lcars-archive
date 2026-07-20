@@ -41,7 +41,7 @@ export async function getAllContentForAdmin(): Promise<AdminContentItem[]> {
            c.updated_at::text AS updated_at
     FROM characters c
     LEFT JOIN users ou ON ou.id = c.player_id
-    WHERE c.deleted_at IS NULL
+    WHERE c.deleted_at IS NULL AND c.is_draft = false
 
     UNION ALL
 
@@ -51,7 +51,7 @@ export async function getAllContentForAdmin(): Promise<AdminContentItem[]> {
            m.updated_at::text
     FROM missions m
     LEFT JOIN users ou ON ou.id = m.owner_user_id
-    WHERE m.deleted_at IS NULL
+    WHERE m.deleted_at IS NULL AND m.is_draft = false
 
     UNION ALL
 
@@ -62,7 +62,7 @@ export async function getAllContentForAdmin(): Promise<AdminContentItem[]> {
     FROM mission_logs ml
     JOIN missions m ON m.id = ml.mission_id
     LEFT JOIN users ou ON ou.id = ml.owner_user_id
-    WHERE ml.deleted_at IS NULL
+    WHERE ml.deleted_at IS NULL AND ml.is_draft = false
 
     UNION ALL
 
@@ -72,7 +72,7 @@ export async function getAllContentForAdmin(): Promise<AdminContentItem[]> {
            a.updated_at::text
     FROM archive_entries a
     LEFT JOIN users ou ON ou.id = a.owner_user_id
-    WHERE a.category != 'dialogue' AND a.deleted_at IS NULL
+    WHERE a.category != 'dialogue' AND a.deleted_at IS NULL AND a.is_draft = false
 
     ORDER BY title ASC
   `;
@@ -122,7 +122,7 @@ export async function getDeletedContentForAdmin(): Promise<TrashItem[]> {
            c.deleted_at::text AS deleted_at
     FROM characters c
     LEFT JOIN users ou ON ou.id = c.player_id
-    WHERE c.deleted_at IS NOT NULL
+    WHERE c.deleted_at IS NOT NULL AND c.is_draft = false
 
     UNION ALL
 
@@ -131,7 +131,7 @@ export async function getDeletedContentForAdmin(): Promise<TrashItem[]> {
            m.deleted_at::text
     FROM missions m
     LEFT JOIN users ou ON ou.id = m.owner_user_id
-    WHERE m.deleted_at IS NOT NULL
+    WHERE m.deleted_at IS NOT NULL AND m.is_draft = false
 
     UNION ALL
 
@@ -140,7 +140,7 @@ export async function getDeletedContentForAdmin(): Promise<TrashItem[]> {
            ml.deleted_at::text
     FROM mission_logs ml
     LEFT JOIN users ou ON ou.id = ml.owner_user_id
-    WHERE ml.deleted_at IS NOT NULL
+    WHERE ml.deleted_at IS NOT NULL AND ml.is_draft = false
 
     UNION ALL
 
@@ -149,7 +149,7 @@ export async function getDeletedContentForAdmin(): Promise<TrashItem[]> {
            a.deleted_at::text
     FROM archive_entries a
     LEFT JOIN users ou ON ou.id = a.owner_user_id
-    WHERE a.category != 'dialogue' AND a.deleted_at IS NOT NULL
+    WHERE a.category != 'dialogue' AND a.deleted_at IS NOT NULL AND a.is_draft = false
 
     UNION ALL
 

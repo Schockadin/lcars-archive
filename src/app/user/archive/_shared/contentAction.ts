@@ -73,14 +73,20 @@ export async function archiveEntryAction(
 
   const summary = String(formData.get("summary") ?? "").trim() || null;
 
+  // Im Entwurf-Modus (ContentEditor.tsx-Checkbox) ist nur der Inhalt
+  // optional — siehe canViewDraft-Kommentar in src/lib/visibility.ts.
+  const isDraft = formData.get("isDraft") === "on";
+
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
-  if (!bodyMarkdown) return { error: "Bitte einen Inhalt schreiben." };
+  if (!bodyMarkdown && !isDraft) {
+    return { error: "Bitte einen Inhalt schreiben." };
+  }
 
   // Opt-in "Automatisch verlinken" (AutoLinkCheckbox.tsx) — Selbstausschluss
   // nur beim Bearbeiten nötig, ein neuer Eintrag existiert noch nicht in der
   // DB und kann deshalb nicht als eigenes Autolinking-Ziel erscheinen.
   let contentHtml: string | undefined;
-  if (formData.get("autoLink") === "on") {
+  if (bodyMarkdown && formData.get("autoLink") === "on") {
     const selfExclusion = isEdit
       ? await getOwnArchiveEntryForEdit(session.userId, entryId!)
       : null;
@@ -104,6 +110,7 @@ export async function archiveEntryAction(
       attributeValues,
       referenceValues,
       bodyMarkdown,
+      isDraft,
       contentHtml,
     });
     if (!result) {
@@ -111,27 +118,48 @@ export async function archiveEntryAction(
     }
     revalidateArchiveEntry(result.slug);
 
-    const contentUrl = `${await getBaseUrl()}/archive/${result.slug}`;
-    const preview = synopsisExcerpt(bodyMarkdown, 140);
-    const author = await getUserById(session.userId);
+    // Solange der Eintrag ein Entwurf bleibt, sieht ihn außer dem Owner
+    // niemand — keine Benachrichtigung. Beim Veröffentlichen (wasDraft true,
+    // isDraft jetzt false) gilt das wie ein Neuanlegen ("created" statt
+    // "updated"), siehe notifyMissionParticipants in
+    // missions/_shared/contentAction.ts für dieselbe Begründung.
+    if (!isDraft) {
+      const contentUrl = `${await getBaseUrl()}/archive/${result.slug}`;
+      const preview = synopsisExcerpt(bodyMarkdown, 140);
+      const author = await getUserById(session.userId);
 
-    await notifyArchiveEntrySubscribers({
-      entrySlug: result.slug,
-      entryTitle: title,
-      editingUserId: session.userId,
-      preview,
-    });
-    await notifyContentChange({
-      contentType: "archive_entry",
-      event: "updated",
-      authorUserId: session.userId,
-      authorName: author?.name ?? "Unbekannt",
-      contentTypeLabel: "einen Archiv-Eintrag",
-      contentTitle: title,
-      contentUrl,
-      preview,
-      notifyPublic: result.visibility === "public",
-    });
+      if (result.wasDraft) {
+        await notifyContentChange({
+          contentType: "archive_entry",
+          event: "created",
+          authorUserId: session.userId,
+          authorName: author?.name ?? "Unbekannt",
+          contentTypeLabel: "einen neuen Archiv-Eintrag",
+          contentTitle: title,
+          contentUrl,
+          preview,
+          notifyPublic: result.visibility === "public",
+        });
+      } else {
+        await notifyArchiveEntrySubscribers({
+          entrySlug: result.slug,
+          entryTitle: title,
+          editingUserId: session.userId,
+          preview,
+        });
+        await notifyContentChange({
+          contentType: "archive_entry",
+          event: "updated",
+          authorUserId: session.userId,
+          authorName: author?.name ?? "Unbekannt",
+          contentTypeLabel: "einen Archiv-Eintrag",
+          contentTitle: title,
+          contentUrl,
+          preview,
+          notifyPublic: result.visibility === "public",
+        });
+      }
+    }
     redirect("/user/content");
   }
 
@@ -143,28 +171,32 @@ export async function archiveEntryAction(
     attributeValues,
     referenceValues,
     bodyMarkdown,
+    isDraft,
     contentHtml,
     ownerUserId: session.userId,
   });
   revalidateArchiveEntry(result.slug);
 
-  const contentUrl = `${await getBaseUrl()}/archive/${result.slug}`;
-  const preview = synopsisExcerpt(bodyMarkdown, 140);
-  const author = await getUserById(session.userId);
+  if (!isDraft) {
+    const contentUrl = `${await getBaseUrl()}/archive/${result.slug}`;
+    const preview = synopsisExcerpt(bodyMarkdown, 140);
+    const author = await getUserById(session.userId);
 
-  // Archiv-Einträge sind standardmäßig public (siehe scripts/schema.sql) —
-  // ein neu angelegter Eintrag benachrichtigt die Abonnenten des Erstellers
-  // deshalb ungegated (keine separate visibility im createArchiveEntry-Result).
-  await notifyContentChange({
-    contentType: "archive_entry",
-    event: "created",
-    authorUserId: session.userId,
-    authorName: author?.name ?? "Unbekannt",
-    contentTypeLabel: "einen neuen Archiv-Eintrag",
-    contentTitle: title,
-    contentUrl,
-    preview,
-    notifyPublic: true,
-  });
+    // Archiv-Einträge sind standardmäßig public (siehe scripts/schema.sql) —
+    // ein neu angelegter Eintrag benachrichtigt die Abonnenten des
+    // Erstellers deshalb ungegated (keine separate visibility im
+    // createArchiveEntry-Result).
+    await notifyContentChange({
+      contentType: "archive_entry",
+      event: "created",
+      authorUserId: session.userId,
+      authorName: author?.name ?? "Unbekannt",
+      contentTypeLabel: "einen neuen Archiv-Eintrag",
+      contentTitle: title,
+      contentUrl,
+      preview,
+      notifyPublic: true,
+    });
+  }
   redirect(`/archive/${result.slug}`);
 }

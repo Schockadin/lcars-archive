@@ -5,7 +5,7 @@ import {
   getCharacterSourceBySlug,
 } from "@/lib/characters";
 import { getDialogueCountByParticipant } from "@/lib/archive";
-import { getViewer, canView } from "@/lib/visibility";
+import { getViewer, canView, canViewDraft } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import { notFound } from "next/navigation";
 import CharakterDetailPage from "./CharacterDetailPage";
@@ -27,11 +27,14 @@ export async function generateMetadata({ params }: Props) {
   const character = await getCharacterBySlug(slug);
   // Auch der Seitentitel darf einen privaten/gm-Charakternamen nicht an
   // Betrachter ohne Zugriff verraten (sonst leakt er via <title>/Meta-Tags,
-  // selbst wenn der eigentliche Seiteninhalt korrekt blockiert wird).
+  // selbst wenn der eigentliche Seiteninhalt korrekt blockiert wird). Ein
+  // Entwurf ist dabei noch strenger als "privat" — siehe canViewDraft.
+  const viewerForMeta = await getViewer();
   const visible =
     character &&
     (character.visibility === "public" ||
-      canView(character.visibility, character.player_id, await getViewer()));
+      canView(character.visibility, character.player_id, viewerForMeta)) &&
+    canViewDraft(character.is_draft, character.player_id, viewerForMeta);
   return {
     title: visible
       ? `${character.name} · Neo Archive`
@@ -54,6 +57,9 @@ export default async function CharakterPage({ params }: Props) {
     character.visibility !== "public" &&
     !canView(character.visibility, character.player_id, viewer)
   ) {
+    notFound();
+  }
+  if (!canViewDraft(character.is_draft, character.player_id, viewer)) {
     notFound();
   }
 

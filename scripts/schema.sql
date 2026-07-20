@@ -644,3 +644,20 @@ CREATE TABLE IF NOT EXISTS content_images (
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_content_images_content ON content_images(content_type, content_id);
+
+-- Entwürfe (Charaktere, Missionen, Missionslogs, Archiv-Einträge — nicht
+-- Gespräche, die kein klassisches Anlegen/Bearbeiten-Formular haben). Anders
+-- als visibility (wer darf es sehen, falls fertig) ist is_draft eine
+-- eigene, strengere Achse (ist es überhaupt fertig?) — ein Entwurf ist
+-- unabhängig von seiner visibility-Spalte für NIEMANDEN außer dem Owner
+-- selbst sichtbar, nicht mal für Admins/GM (siehe canViewDraft in
+-- src/lib/visibility.ts), und erlaubt beim Speichern einen leeren Text
+-- (Pflichtfeld-Prüfung entfällt fürs Textfeld, siehe ContentEditor.tsx).
+ALTER TABLE characters      ADD COLUMN IF NOT EXISTS is_draft BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE missions        ADD COLUMN IF NOT EXISTS is_draft BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE mission_logs    ADD COLUMN IF NOT EXISTS is_draft BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS is_draft BOOLEAN NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS idx_characters_is_draft      ON characters(is_draft);
+CREATE INDEX IF NOT EXISTS idx_missions_is_draft        ON missions(is_draft);
+CREATE INDEX IF NOT EXISTS idx_mission_logs_is_draft    ON mission_logs(is_draft);
+CREATE INDEX IF NOT EXISTS idx_archive_entries_is_draft ON archive_entries(is_draft);

@@ -23,10 +23,11 @@ export const getDBStats = unstable_cache(
       ]
     >`
       SELECT
-        (SELECT COUNT(*) FROM characters WHERE deleted_at IS NULL)   AS character_count,
-        (SELECT COUNT(*) FROM mission_logs WHERE deleted_at IS NULL) AS session_count,
+        (SELECT COUNT(*) FROM characters WHERE deleted_at IS NULL AND is_draft = false)   AS character_count,
+        (SELECT COUNT(*) FROM mission_logs WHERE deleted_at IS NULL AND is_draft = false) AS session_count,
         (SELECT COUNT(*) FROM archive_entries
-          WHERE NOT (category = 'dialogue' AND dialogue_open) AND deleted_at IS NULL) AS entry_count
+          WHERE NOT (category = 'dialogue' AND dialogue_open) AND deleted_at IS NULL
+            AND is_draft = false) AS entry_count
     `;
 
     return {
@@ -35,6 +36,6 @@ export const getDBStats = unstable_cache(
       entryCount: parseInt(counts.entry_count),
     };
   },
-  ["getDBStats", "v3"],
+  ["getDBStats", "v4"],
   { tags: [cacheTags.stats, cacheTags.characters, cacheTags.missionLogs] },
 );

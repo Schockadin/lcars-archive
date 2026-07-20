@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, type ReactNode } from "react";
+import { useActionState, useState, type ReactNode } from "react";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import AutoLinkCheckbox from "@/app/_shared/AutoLinkCheckbox";
 import { FormField, SubmitButton, FormError } from "@/app/_shared/FormPrimitives";
@@ -45,6 +45,10 @@ interface ContentEditorProps {
   // MetadataSection-Wrapper — für Fälle, die auf andere Feldwerte reagieren
   // müssen (z.B. Archiv-Kategorie).
   metadataSlot?: ReactNode;
+  // Aktueller Entwurf-Status beim Bearbeiten (aus content.isDraft) — steuert
+  // den Startwert der "Als Entwurf speichern"-Checkbox. Im Create-Modus
+  // bewusst weggelassen (Default: unchecked, sofort veröffentlichen).
+  draftDefaultValue?: boolean;
   submitLabel: string;
   submitPendingLabel: string;
 }
@@ -68,10 +72,18 @@ export default function ContentEditor({
   extraHeadSlot,
   metadataFields,
   metadataSlot,
+  draftDefaultValue = false,
   submitLabel,
   submitPendingLabel,
 }: ContentEditorProps) {
   const [state, formAction, pending] = useActionState(action, initialState);
+  // Steuert sowohl die Checkbox als auch das required-Attribut des
+  // Textfelds unten (siehe MarkdownEditor required={bodyRequired &&
+  // !isDraft}) — ein Entwurf darf ohne Text gespeichert werden, das ist der
+  // eigentliche Sinn eines Entwurfs. Titel & Co. bleiben bewusst immer
+  // Pflicht (siehe headFields.ts) — die sind auch für einen Entwurf
+  // trivial ausfüllbar und werden u.a. für die Slug-Bildung gebraucht.
+  const [isDraft, setIsDraft] = useState(draftDefaultValue);
 
   const visibleFields = headFields.filter(
     (field) => !field.showIf || field.showIf({ mode }),
@@ -111,6 +123,21 @@ export default function ContentEditor({
         </MetadataSection>
       )}
 
+      <div className="flex items-center gap-[8px]">
+        <input
+          id={`${idPrefix}-is-draft`}
+          name="isDraft"
+          type="checkbox"
+          checked={isDraft}
+          onChange={(e) => setIsDraft(e.target.checked)}
+          className="h-[16px] w-[16px]"
+        />
+        <label htmlFor={`${idPrefix}-is-draft`} className="lcars-text text-[14px]">
+          Als Entwurf speichern (Text ist dann optional; sichtbar nur für dich,
+          bis du den Entwurf veröffentlichst)
+        </label>
+      </div>
+
       <FormField
         label={bodyLabel}
         htmlFor={`${idPrefix}-body`}
@@ -119,7 +146,7 @@ export default function ContentEditor({
         <MarkdownEditor
           id={`${idPrefix}-body`}
           name={bodyName}
-          required={bodyRequired}
+          required={bodyRequired && !isDraft}
           defaultValue={bodyDefaultValue}
           isAdminOrGM={isAdminOrGM}
           large={bodyLarge}

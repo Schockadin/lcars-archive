@@ -29,11 +29,13 @@ export const getAllTimelineEvents = unstable_cache(
       WHERE COALESCE(ch.visibility, ml.visibility, ae.visibility, 'public') = 'public'
         AND ch.deleted_at IS NULL AND ml.deleted_at IS NULL
         AND ae.deleted_at IS NULL AND mi.deleted_at IS NULL
+        AND ch.is_draft IS NOT TRUE AND ml.is_draft IS NOT TRUE
+        AND ae.is_draft IS NOT TRUE AND mi.is_draft IS NOT TRUE
       ORDER BY te.event_date DESC NULLS LAST, te.id DESC
     `;
     return rows;
   },
-  ["getAllTimelineEvents", "v3"],
+  ["getAllTimelineEvents", "v4"],
   { tags: [cacheTags.timeline] },
 );
 

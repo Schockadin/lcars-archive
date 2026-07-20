@@ -21,9 +21,16 @@ export default async function NewMissionLogPage({
 }) {
   const { user, characters } = await requireOwnCharacters();
 
+  // Nur eigene bereits veröffentlichte Charaktere kommen als Autor für einen
+  // neuen Log infrage — ein noch als Entwurf gespeicherter Charakter ist für
+  // niemand außer dem Owner sichtbar (siehe canViewDraft in visibility.ts),
+  // der Autor-Link im Log würde also für alle anderen ins Leere laufen.
+  const publishedCharacters = characters.filter((c) => !c.is_draft);
+
   // Nur laden, wenn überhaupt ein Formular gerendert wird — analog zu
   // dialogues/new/page.tsx.
-  const missions = characters.length > 0 ? await getAllMissions() : [];
+  const missions =
+    publishedCharacters.length > 0 ? await getAllMissions() : [];
 
   // Vorbelegung der Mission über ?mission=<slug> — verlinkt vom "Neues
   // Log"-Button auf der Mission-Detailseite (MissionLogList.tsx). Nur
@@ -42,8 +49,8 @@ export default async function NewMissionLogPage({
   // bei Bedarf anpassen.
   const sessionNrMission = preselectedMission ?? missions[0];
   const nextSessionNr =
-    characters.length > 0 && sessionNrMission
-      ? await getNextSessionNr(sessionNrMission.id, characters[0].id)
+    publishedCharacters.length > 0 && sessionNrMission
+      ? await getNextSessionNr(sessionNrMission.id, publishedCharacters[0].id)
       : 1;
   const defaultLogDate = await getMostRecentLogDate();
 
@@ -53,7 +60,7 @@ export default async function NewMissionLogPage({
       <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
         <h1>Neuen Missionslog anlegen</h1>
 
-        {characters.length === 0 ? (
+        {publishedCharacters.length === 0 ? (
           <div className="lcars-text flex flex-col gap-[16px]">
             <p>
               Du brauchst zuerst einen eigenen Charakter, um einen Missionslog
@@ -86,7 +93,7 @@ export default async function NewMissionLogPage({
         ) : (
           <NewMissionLogForm
             userId={user.id}
-            ownCharacters={characters.map((c) => ({
+            ownCharacters={publishedCharacters.map((c) => ({
               id: c.id,
               slug: c.slug,
               name: c.name,

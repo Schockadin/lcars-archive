@@ -95,6 +95,10 @@ export async function characterAction(
   }
 
   const statusValue = status as Character["status"];
+  // Im Entwurf-Modus (ContentEditor.tsx-Checkbox) — Charaktere haben ohnehin
+  // schon immer eine optionale Bio (siehe Kommentar an updateOwnCharacterBio
+  // in characters.ts), hier geht es also nur um Sichtbarkeit/Benachrichtigung.
+  const isDraft = formData.get("isDraft") === "on";
 
   if (isEdit) {
     const result = await updateOwnCharacterContent(session.userId, characterId!, {
@@ -112,36 +116,58 @@ export async function characterAction(
       division,
       tags,
       bodyMarkdown,
+      isDraft,
       bioHtml,
     });
     if (!result) {
       return { error: "Charakter nicht gefunden oder keine Berechtigung." };
     }
     revalidateCharacter(result.slug);
-    await notifyCharacterSubscribers({
-      characterSlug: result.slug,
-      characterName: name,
-      editingUserId: session.userId,
-      bioMarkdown: bodyMarkdown || null,
-    });
 
-    const contentUrl = `${await getBaseUrl()}/characters/${result.slug}`;
-    const preview = bodyMarkdown
-      ? synopsisExcerpt(bodyMarkdown, 140)
-      : "Die Akte wurde aktualisiert.";
-    const author = await getUserById(session.userId);
+    // Solange der Charakter ein Entwurf bleibt, sieht ihn außer dem Owner
+    // niemand — keine Benachrichtigung. Beim Veröffentlichen (wasDraft true,
+    // isDraft jetzt false) gilt das wie ein Neuanlegen ("created" statt
+    // "updated"), siehe notifyMissionParticipants in
+    // missions/_shared/contentAction.ts für dieselbe Begründung.
+    if (!isDraft) {
+      const contentUrl = `${await getBaseUrl()}/characters/${result.slug}`;
+      const preview = bodyMarkdown
+        ? synopsisExcerpt(bodyMarkdown, 140)
+        : "Die Akte wurde aktualisiert.";
+      const author = await getUserById(session.userId);
 
-    await notifyContentChange({
-      contentType: "character",
-      event: "updated",
-      authorUserId: session.userId,
-      authorName: author?.name ?? "Unbekannt",
-      contentTypeLabel: "einen Charakter",
-      contentTitle: name,
-      contentUrl,
-      preview,
-      notifyPublic: result.visibility === "public",
-    });
+      if (result.wasDraft) {
+        await notifyContentChange({
+          contentType: "character",
+          event: "created",
+          authorUserId: session.userId,
+          authorName: author?.name ?? "Unbekannt",
+          contentTypeLabel: "einen neuen Charakter",
+          contentTitle: name,
+          contentUrl,
+          preview,
+          notifyPublic: result.visibility === "public",
+        });
+      } else {
+        await notifyCharacterSubscribers({
+          characterSlug: result.slug,
+          characterName: name,
+          editingUserId: session.userId,
+          bioMarkdown: bodyMarkdown || null,
+        });
+        await notifyContentChange({
+          contentType: "character",
+          event: "updated",
+          authorUserId: session.userId,
+          authorName: author?.name ?? "Unbekannt",
+          contentTypeLabel: "einen Charakter",
+          contentTitle: name,
+          contentUrl,
+          preview,
+          notifyPublic: result.visibility === "public",
+        });
+      }
+    }
     redirect("/user/content");
   }
 
@@ -160,29 +186,32 @@ export async function characterAction(
     division,
     tags,
     bodyMarkdown,
+    isDraft,
     bioHtml,
     ownerUserId: session.userId,
   });
   revalidateCharacter(result.slug);
 
-  const contentUrl = `${await getBaseUrl()}/characters/${result.slug}`;
-  const preview = bodyMarkdown
-    ? synopsisExcerpt(bodyMarkdown, 140)
-    : "Ein neuer Charakter wurde angelegt.";
+  if (!isDraft) {
+    const contentUrl = `${await getBaseUrl()}/characters/${result.slug}`;
+    const preview = bodyMarkdown
+      ? synopsisExcerpt(bodyMarkdown, 140)
+      : "Ein neuer Charakter wurde angelegt.";
 
-  // Charaktere sind standardmäßig public (siehe scripts/schema.sql) — ein
-  // neu angelegter Charakter benachrichtigt die Abonnenten des Erstellers
-  // deshalb ungegated (keine separate visibility im createCharacter-Result).
-  await notifyContentChange({
-    contentType: "character",
-    event: "created",
-    authorUserId: session.userId,
-    authorName: currentUser?.name ?? "Unbekannt",
-    contentTypeLabel: "einen neuen Charakter",
-    contentTitle: name,
-    contentUrl,
-    preview,
-    notifyPublic: true,
-  });
+    // Charaktere sind standardmäßig public (siehe scripts/schema.sql) — ein
+    // neu angelegter Charakter benachrichtigt die Abonnenten des Erstellers
+    // deshalb ungegated (keine separate visibility im createCharacter-Result).
+    await notifyContentChange({
+      contentType: "character",
+      event: "created",
+      authorUserId: session.userId,
+      authorName: currentUser?.name ?? "Unbekannt",
+      contentTypeLabel: "einen neuen Charakter",
+      contentTitle: name,
+      contentUrl,
+      preview,
+      notifyPublic: true,
+    });
+  }
   redirect(`/characters/${result.slug}`);
 }
