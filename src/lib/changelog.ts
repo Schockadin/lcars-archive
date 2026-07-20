@@ -198,6 +198,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Die Vollbild-Anzeige von Bildern (Charakter-Portrait-Karussell und eingebettete Bilder in Texten) hat jetzt Symbol- statt Textknöpfe zum Schließen und Durchblättern.",
       "Behoben: Der Klick auf „Home“ in der Navigation führte gelegentlich zu einem kurzen Fehler und einer sichtbaren Vollseiten-Neuladung statt einer nahtlosen Navigation.",
       "Die beiden Admin/Spielleitungs-Werkzeuge auf Inhaltsseiten zum automatischen Verlinken bzw. Entfernen von Verlinkungen sind jetzt ein einzelner Knopf mit kleinem Umschalter (Standard: Verlinken hinzufügen) statt zweier getrennter Knöpfe.",
+      "Das „Admin“-Menü im Header zeigt Charaktere, Missionen und Gespräche nicht mehr an — diese drei bleiben dem „Leitung“-Menü der Spielleitung vorbehalten.",
     ],
   },
 ];

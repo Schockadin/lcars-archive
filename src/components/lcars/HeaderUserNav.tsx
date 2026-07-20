@@ -12,11 +12,12 @@ interface AdminMenuItem {
   label: string;
 }
 
+// Charaktere/Missionen/Gespräche bewusst NICHT im Admin-Menü (nur im
+// GM-Menü unten) — die drei sind Spielleitungs-Werkzeuge; ein Admin
+// erreicht sie bei Bedarf weiterhin direkt per URL (requireGM lässt Admins
+// ohnehin durch), soll sie aber nicht im eigenen Menü angeboten bekommen.
 const ADMIN_ITEMS: AdminMenuItem[] = [
   { href: "/admin/users", label: "User" },
-  { href: "/admin/characters", label: "Charaktere" },
-  { href: "/admin/missions", label: "Missionen" },
-  { href: "/admin/dialogues", label: "Gespräche" },
   { href: "/admin/db", label: "DB" },
   { href: "/admin/scripts", label: "Scripts" },
   { href: "/admin/content", label: "Inhalte" },
