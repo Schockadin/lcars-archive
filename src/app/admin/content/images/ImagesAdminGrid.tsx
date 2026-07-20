@@ -23,14 +23,19 @@ function formatSize(bytes: number): string {
 // audit-log) — Bilder sind der eigentliche Inhalt hier, eine reine
 // Text-Tabelle würde die Vorschau (der explizit gewünschte Teil dieser
 // Seite) nur als winzige Extra-Spalte behandeln.
-export default function ImagesAdminGrid({ images }: { images: AdminContentImage[] }) {
+export default function ImagesAdminGrid({
+  images,
+}: {
+  images: AdminContentImage[];
+}) {
   const [items, setItems] = useState(images);
   const [pendingId, setPendingId] = useState<number | null>(null);
   const [, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
 
   function handleDelete(id: number) {
-    if (!window.confirm("Dieses Bild endgültig aus dem Bucket löschen?")) return;
+    if (!window.confirm("Dieses Bild endgültig aus dem Bucket löschen?"))
+      return;
     setPendingId(id);
     startTransition(async () => {
       const result = await deleteContentImageAdminAction(id);
@@ -69,20 +74,28 @@ export default function ImagesAdminGrid({ images }: { images: AdminContentImage[
               unoptimized
               className="size-[140px] object-cover rounded-[4px]"
             />
-            <p className="text-[11px] uppercase tracking-[.1em] text-lcars-text-dim">
+            <p className="text-[11px] uppercase tracking-[.1em] text-lcars-text">
               {CONTENT_TYPE_LABEL[image.contentType]}
             </p>
             {image.contentTitle && image.contentHref ? (
-              <Link href={image.contentHref} className="text-[13px] underline truncate">
+              <Link
+                href={image.contentHref}
+                className="text-[13px] underline truncate"
+              >
                 {image.contentTitle}
               </Link>
             ) : (
-              <p className="text-[13px] text-lcars-text-dim">Verwaist (Inhalt gelöscht)</p>
+              <p className="text-[13px] text-lcars-text">
+                Verwaist (Inhalt gelöscht)
+              </p>
             )}
-            <p className="text-[11px] text-lcars-text-dim">
-              {image.uploadedByName ?? "Unbekannt"} · {formatDateTime(image.createdAt)}
+            <p className="text-[11px] text-lcars-text">
+              {image.uploadedByName ?? "Unbekannt"} ·{" "}
+              {formatDateTime(image.createdAt)}
             </p>
-            <p className="text-[11px] text-lcars-text-dim">{formatSize(image.sizeBytes)}</p>
+            <p className="text-[11px] text-lcars-text">
+              {formatSize(image.sizeBytes)}
+            </p>
             <button
               type="button"
               onClick={() => handleDelete(image.id)}

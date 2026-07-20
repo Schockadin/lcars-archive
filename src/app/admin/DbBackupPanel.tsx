@@ -9,6 +9,7 @@ import {
 } from "./dbBackupActions";
 import type { RestoreDbSummary } from "@/lib/dbBackup";
 import type { R2BackupObject } from "@/lib/r2Backup";
+import { BUTTON_CLASSNAMES } from "@/lib/constants";
 import { DownloadIcon, UploadIcon, CloudIcon } from "@/lib/icons";
 
 const CONFIRM_IMPORT_MESSAGE =
@@ -122,7 +123,9 @@ export default function DbBackupPanel() {
     setR2Listing(false);
 
     if (result.error || !result.backups) {
-      setR2ListError(result.error ?? "Backup-Liste konnte nicht geladen werden.");
+      setR2ListError(
+        result.error ?? "Backup-Liste konnte nicht geladen werden.",
+      );
       return;
     }
     setR2Backups(result.backups);
@@ -154,140 +157,139 @@ export default function DbBackupPanel() {
         (Charaktere, Missionen, Mission-Logs, Archiv-Einträge, Follows,
         Dialog-Nachrichten, Timeline, …) als eine JSON-Datei. User laufen über
         ein eigenes, paralleles Backup (siehe „User-Backup“ oben). Der Import
-        ERSETZT den gesamten aktuellen Inhalt (außer Usern) durch den Stand
-        der gewählten Datei. Die Datei ist entsprechend sensibel — nur für die
+        ERSETZT den gesamten aktuellen Inhalt (außer Usern) durch den Stand der
+        gewählten Datei. Die Datei ist entsprechend sensibel — nur für die
         Administration.
       </p>
-
-      <div className="flex flex-col gap-[6px]">
-        <p className="lcars-eyebrow">Export</p>
-        <div className="flex flex-wrap items-center gap-[12px]">
-          <button
-            type="button"
-            onClick={handleExportLocal}
-            disabled={exportingLocal}
-            className="lcars-pill-btn--outline self-start disabled:opacity-50 gap-[8px]"
-            title="Lokal herunterladen"
-          >
-            <DownloadIcon />
-            {exportingLocal ? "Export läuft…" : "Lokal"}
-          </button>
-          <button
-            type="button"
-            onClick={handleExportR2}
-            disabled={exportingR2}
-            className="lcars-pill-btn--outline self-start disabled:opacity-50 gap-[8px]"
-            title="Im R2-Bucket speichern"
-          >
-            <CloudIcon />
-            {exportingR2 ? "Wird hochgeladen…" : "Im R2 speichern"}
-          </button>
-        </div>
-        {r2SavedKey && (
-          <p className="text-lcars-amber text-[13px]">
-            Im Bucket gespeichert als „{r2SavedKey}“.
-          </p>
-        )}
-      </div>
-
-      <div className="flex flex-col gap-[6px]">
-        <p className="lcars-eyebrow">Import</p>
-        <div className="flex flex-wrap items-center gap-[12px]">
-          <label
-            className="lcars-pill-btn--outline self-start cursor-pointer disabled:opacity-50 gap-[8px]"
-            title="Lokale Datei einspielen"
-          >
-            <UploadIcon />
-            {importing ? "Import läuft…" : "Datei einspielen"}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="application/json"
-              className="hidden"
-              disabled={importing}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) handleImportLocal(file);
-              }}
-            />
-          </label>
-
-          {r2Backups === null && (
+      <div className="grid grid-cols-1 md:grid-cols-2">
+        <div className="flex flex-col gap-[6px]">
+          <p className="lcars-eyebrow">Export</p>
+          <div className="flex flex-wrap items-center gap-[12px]">
             <button
               type="button"
-              onClick={loadR2Backups}
-              disabled={r2Listing}
-              className="lcars-pill-btn--outline self-start disabled:opacity-50 gap-[8px]"
-              title="Aus R2-Bucket importieren"
+              onClick={handleExportLocal}
+              disabled={exportingLocal}
+              className={BUTTON_CLASSNAMES}
+              title="Lokal herunterladen"
+            >
+              <DownloadIcon />
+              {exportingLocal ? "Export läuft…" : "Lokal"}
+            </button>
+            <button
+              type="button"
+              onClick={handleExportR2}
+              disabled={exportingR2}
+              className={BUTTON_CLASSNAMES}
+              title="Im R2-Bucket speichern"
             >
               <CloudIcon />
-              {r2Listing ? "Lädt…" : "Aus R2 importieren"}
+              {exportingR2 ? "Wird hochgeladen…" : "Im R2 speichern"}
             </button>
+          </div>
+          {r2SavedKey && (
+            <p className="text-lcars-amber text-[13px]">
+              Im Bucket gespeichert als „{r2SavedKey}“.
+            </p>
           )}
         </div>
 
-        {r2ListError && (
+        <div className="flex flex-col gap-[6px]">
+          <p className="lcars-eyebrow">Import</p>
+          <div className="flex flex-wrap items-center gap-[12px]">
+            <label
+              className={BUTTON_CLASSNAMES}
+              title="Lokale Datei einspielen"
+            >
+              <UploadIcon />
+              {importing ? "Import läuft…" : "Datei einspielen"}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="application/json"
+                className="hidden"
+                disabled={importing}
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleImportLocal(file);
+                }}
+              />
+            </label>
+
+            {r2Backups === null && (
+              <button
+                type="button"
+                onClick={loadR2Backups}
+                disabled={r2Listing}
+                className={BUTTON_CLASSNAMES}
+                title="Aus R2-Bucket importieren"
+              >
+                <CloudIcon />
+                {r2Listing ? "Lädt…" : "Aus R2 importieren"}
+              </button>
+            )}
+          </div>
+
+          {r2ListError && (
+            <p className="text-lcars-red" role="alert">
+              {r2ListError}
+            </p>
+          )}
+
+          {r2Backups !== null && (
+            <div className="flex flex-wrap items-center gap-[12px]">
+              {r2Backups.length === 0 ? (
+                <p className="text-lcars-text-dim text-[13px]">
+                  Keine Backups im Bucket gefunden.
+                </p>
+              ) : (
+                <>
+                  <select
+                    value={selectedR2Key}
+                    onChange={(e) => setSelectedR2Key(e.target.value)}
+                    className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+                  >
+                    {r2Backups.map((b) => (
+                      <option key={b.key} value={b.key}>
+                        {formatBackupLabel(b)}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={handleImportFromR2}
+                    disabled={r2Importing}
+                    className="lcars-pill-btn--outline self-start disabled:opacity-50"
+                    title="Dieses Backup einspielen"
+                  >
+                    {r2Importing ? "Import läuft…" : "Einspielen"}
+                  </button>
+                </>
+              )}
+              <button
+                type="button"
+                onClick={loadR2Backups}
+                disabled={r2Listing}
+                className="lcars-pill-btn--outline self-start disabled:opacity-50"
+              >
+                {r2Listing ? "Lädt…" : "Liste neu laden"}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {error && (
           <p className="text-lcars-red" role="alert">
-            {r2ListError}
+            {error}
           </p>
         )}
 
-        {r2Backups !== null && (
-          <div className="flex flex-wrap items-center gap-[12px]">
-            {r2Backups.length === 0 ? (
-              <p className="text-lcars-text-dim text-[13px]">
-                Keine Backups im Bucket gefunden.
-              </p>
-            ) : (
-              <>
-                <select
-                  value={selectedR2Key}
-                  onChange={(e) => setSelectedR2Key(e.target.value)}
-                  className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
-                >
-                  {r2Backups.map((b) => (
-                    <option key={b.key} value={b.key}>
-                      {formatBackupLabel(b)}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  type="button"
-                  onClick={handleImportFromR2}
-                  disabled={r2Importing}
-                  className="lcars-pill-btn--outline self-start disabled:opacity-50"
-                  title="Dieses Backup einspielen"
-                >
-                  {r2Importing ? "Import läuft…" : "Einspielen"}
-                </button>
-              </>
-            )}
-            <button
-              type="button"
-              onClick={loadR2Backups}
-              disabled={r2Listing}
-              className="lcars-pill-btn--outline self-start disabled:opacity-50"
-            >
-              {r2Listing ? "Lädt…" : "Liste neu laden"}
-            </button>
-          </div>
+        {summary && (
+          <p className="text-lcars-amber">
+            Wiederhergestellt:{" "}
+            {summary.tables.map((t) => `${t.name} (${t.rows})`).join(" · ")}
+          </p>
         )}
       </div>
-
-      {error && (
-        <p className="text-lcars-red" role="alert">
-          {error}
-        </p>
-      )}
-
-      {summary && (
-        <p className="text-lcars-amber">
-          Wiederhergestellt:{" "}
-          {summary.tables
-            .map((t) => `${t.name} (${t.rows})`)
-            .join(" · ")}
-        </p>
-      )}
     </div>
   );
 }

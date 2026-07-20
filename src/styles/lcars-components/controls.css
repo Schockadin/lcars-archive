@@ -12,6 +12,7 @@
   overflow: hidden;
   border-radius: var(--lcars-radius-pill);
   border: solid 1px var(--lcars-text-data);
+  max-width: 500px;
 }
 .lcars-switch-item {
   cursor: pointer;
@@ -286,4 +287,3 @@
 .lcars-code-editor .cm-editor {
   width: 100%;
 }
-

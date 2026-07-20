@@ -23,17 +23,17 @@ export default async function AdminErrorLogPage() {
   return (
     <>
       <PageMeta title="Fehler-Log" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <p className="lcars-eyebrow">Zugriff · Administration</p>
         <h1>Fehler-Log</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
           <p className="text-lcars-text-dim text-[13px]">
             Die letzten {entries.length} geloggten Serverfehler — sowohl nicht
-            abgefangene Abstürze (Route/Render/Action, zeigen der
-            betroffenen Person die 500-Seite) als auch bereits an Ort und
-            Stelle abgefangene, unkritische Fehler (Typ „caught“, z.B.
-            fehlgeschlagene Benachrichtigungs-Mails).
+            abgefangene Abstürze (Route/Render/Action, zeigen der betroffenen
+            Person die 500-Seite) als auch bereits an Ort und Stelle
+            abgefangene, unkritische Fehler (Typ „caught“, z.B. fehlgeschlagene
+            Benachrichtigungs-Mails).
           </p>
           <ServerErrorLogTable entries={entries} />
         </div>

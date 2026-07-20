@@ -22,10 +22,7 @@ export default function SettingsForm({
   );
 
   return (
-    <form
-      action={formAction}
-      className="flex max-w-[var(--lcars-content-w)] flex-col gap-[16px]"
-    >
+    <form action={formAction} className="flex flex-col gap-[16px]">
       <FormField label="Name" htmlFor="name">
         <input
           id="name"

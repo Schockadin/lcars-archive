@@ -21,7 +21,7 @@ export default async function UserFollowPage() {
   return (
     <>
       <PageMeta title="Follows" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <h1>Follows</h1>
         <p className="lcars-text mb-[16px]">
           Alles, was du abonniert hast. Beende einzelne Follows über den

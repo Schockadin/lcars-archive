@@ -10,6 +10,7 @@ import {
 import type { RestoreUsersSummary } from "@/lib/userBackup";
 import type { R2BackupObject } from "@/lib/r2Backup";
 import { DownloadIcon, UploadIcon, CloudIcon } from "@/lib/icons";
+import { BUTTON_CLASSNAMES } from "@/lib/constants";
 
 const CONFIRM_IMPORT_MESSAGE =
   "Dieses User-Backup jetzt einspielen? Bestehende User (per E-Mail-Adresse " +
@@ -112,7 +113,9 @@ export default function UserBackupPanel() {
     setR2Listing(false);
 
     if (result.error || !result.backups) {
-      setR2ListError(result.error ?? "Backup-Liste konnte nicht geladen werden.");
+      setR2ListError(
+        result.error ?? "Backup-Liste konnte nicht geladen werden.",
+      );
       return;
     }
     setR2Backups(result.backups);
@@ -153,7 +156,7 @@ export default function UserBackupPanel() {
             type="button"
             onClick={handleExportLocal}
             disabled={exportingLocal}
-            className="lcars-pill-btn--outline self-start disabled:opacity-50 gap-[8px]"
+            className={BUTTON_CLASSNAMES}
             title="Lokal herunterladen"
           >
             <DownloadIcon />
@@ -163,7 +166,7 @@ export default function UserBackupPanel() {
             type="button"
             onClick={handleExportR2}
             disabled={exportingR2}
-            className="lcars-pill-btn--outline self-start disabled:opacity-50 gap-[8px]"
+            className={BUTTON_CLASSNAMES}
             title="Im R2-Bucket speichern"
           >
             <CloudIcon />
@@ -180,10 +183,7 @@ export default function UserBackupPanel() {
       <div className="flex flex-col gap-[6px]">
         <p className="lcars-eyebrow">Import</p>
         <div className="flex flex-wrap items-center gap-[12px]">
-          <label
-            className="lcars-pill-btn--outline self-start cursor-pointer disabled:opacity-50 gap-[8px]"
-            title="Lokale Datei einspielen"
-          >
+          <label className={BUTTON_CLASSNAMES} title="Lokale Datei einspielen">
             <UploadIcon />
             {importing ? "Import läuft…" : "Datei einspielen"}
             <input
@@ -204,7 +204,7 @@ export default function UserBackupPanel() {
               type="button"
               onClick={loadR2Backups}
               disabled={r2Listing}
-              className="lcars-pill-btn--outline self-start disabled:opacity-50 gap-[8px]"
+              className={BUTTON_CLASSNAMES}
               title="Aus R2-Bucket importieren"
             >
               <CloudIcon />

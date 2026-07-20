@@ -33,10 +33,7 @@ export default function EditorSpellcheckSettingsForm({
   const checked = state.success ? !!state.enabled : enabled;
 
   return (
-    <form
-      action={formAction}
-      className="flex max-w-[var(--lcars-content-w)] flex-col gap-[16px]"
-    >
+    <form action={formAction} className="flex flex-col gap-[16px]">
       <div className="flex items-center gap-[10px]">
         <input
           key={`spellcheck-${saveCount}`}

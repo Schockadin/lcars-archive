@@ -30,7 +30,7 @@ export default async function EditCharacterPage({
   return (
     <>
       <PageMeta title="Charakter bearbeiten" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <h1>Charakter bearbeiten</h1>
 
         <EditCharacterForm

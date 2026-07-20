@@ -55,7 +55,8 @@ export default async function Dashboard({ user }: { user: User }) {
 
         <div className="lcars-text flex flex-col gap-[16px]">
           <p>
-            Angemeldet als <strong>{user.email}</strong> ({ROLE_LABELS[user.role]}).
+            Angemeldet als <strong>{user.email}</strong> (
+            {ROLE_LABELS[user.role]}).
           </p>
 
           {needsPassword && (
@@ -82,7 +83,10 @@ export default async function Dashboard({ user }: { user: User }) {
             deleted={deletions}
           />
 
-          <FollowedContentSection heading="Deine Lesezeichen" items={bookmarks} />
+          <FollowedContentSection
+            heading="Deine Lesezeichen"
+            items={bookmarks}
+          />
         </div>
       </article>
     </>

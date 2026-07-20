@@ -42,7 +42,7 @@ export default async function UsersOverviewPage() {
   return (
     <>
       <PageMeta title="User" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <h1>User</h1>
         <UsersTable
           users={rows}

@@ -29,8 +29,7 @@ export default async function NewMissionLogPage({
 
   // Nur laden, wenn überhaupt ein Formular gerendert wird — analog zu
   // dialogues/new/page.tsx.
-  const missions =
-    publishedCharacters.length > 0 ? await getAllMissions() : [];
+  const missions = publishedCharacters.length > 0 ? await getAllMissions() : [];
 
   // Vorbelegung der Mission über ?mission=<slug> — verlinkt vom "Neues
   // Log"-Button auf der Mission-Detailseite (MissionLogList.tsx). Nur
@@ -57,7 +56,7 @@ export default async function NewMissionLogPage({
   return (
     <>
       <PageMeta title="Neuer Missionslog" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <h1>Neuen Missionslog anlegen</h1>
 
         {publishedCharacters.length === 0 ? (
@@ -67,10 +66,7 @@ export default async function NewMissionLogPage({
               zu schreiben. Wende dich dafür an die Spielleitung.
             </p>
             <p>
-              <Link
-                href="/user"
-                className="text-lcars-amber underline"
-              >
+              <Link href="/user" className="text-lcars-amber underline">
                 ← Zurück zum Profil
               </Link>
             </p>
@@ -82,10 +78,7 @@ export default async function NewMissionLogPage({
               könnte.
             </p>
             <p>
-              <Link
-                href="/user"
-                className="text-lcars-amber underline"
-              >
+              <Link href="/user" className="text-lcars-amber underline">
                 ← Zurück zum Profil
               </Link>
             </p>

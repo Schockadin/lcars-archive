@@ -69,7 +69,9 @@ export default function AdminLogTable<T>({
     const filtered = rows.filter((row) =>
       activeFilters.every(([key, value]) => {
         const column = columns.find((c) => c.key === key);
-        return column ? column.filterValue(row).toLowerCase().includes(value) : true;
+        return column
+          ? column.filterValue(row).toLowerCase().includes(value)
+          : true;
       }),
     );
 
@@ -93,32 +95,44 @@ export default function AdminLogTable<T>({
           <table className="w-full text-left text-[13px]">
             <thead>
               <tr>
-                {columns.map((c) => (
-                  <SortableHeader
-                    key={c.key}
-                    label={c.label}
-                    sortKeyValue={c.key}
-                    activeKey={sortKey}
-                    dir={sortDir}
-                    onSort={handleSort}
-                  />
-                ))}
+                {columns.map((c) =>
+                  c.key !== "actions" ? (
+                    <SortableHeader
+                      key={c.key}
+                      label={c.label}
+                      sortKeyValue={c.key}
+                      activeKey={sortKey}
+                      dir={sortDir}
+                      onSort={handleSort}
+                    />
+                  ) : (
+                    <div key={c.key} className="lcars-eyebrow font-bold">
+                      {c.label}
+                    </div>
+                  ),
+                )}
               </tr>
               <tr>
-                {columns.map((c) => (
-                  <td key={c.key} className="pr-[16px] pb-[8px]">
-                    <input
-                      type="search"
-                      value={filters[c.key] ?? ""}
-                      onChange={(e) =>
-                        setFilters((prev) => ({ ...prev, [c.key]: e.target.value }))
-                      }
-                      placeholder="Filtern…"
-                      aria-label={`Nach ${c.label} filtern`}
-                      className="lcars-input rounded-full w-full text-[12px]"
-                    />
-                  </td>
-                ))}
+                {columns.map(
+                  (c) =>
+                    c.key !== "actions" && (
+                      <td key={c.key} className="pr-[16px] pb-[8px]">
+                        <input
+                          type="search"
+                          value={filters[c.key] ?? ""}
+                          onChange={(e) =>
+                            setFilters((prev) => ({
+                              ...prev,
+                              [c.key]: e.target.value,
+                            }))
+                          }
+                          placeholder="Filtern…"
+                          aria-label={`Nach ${c.label} filtern`}
+                          className="lcars-input rounded-full w-full text-[12px]"
+                        />
+                      </td>
+                    ),
+                )}
               </tr>
             </thead>
             <tbody>
@@ -136,12 +150,17 @@ export default function AdminLogTable<T>({
                   <tr
                     key={rowKey(row)}
                     className="border-t border-lcars-border cursor-pointer hover:bg-lcars-surface"
-                    onClick={() => setSelectedRow(row)}
+                    // onClick={() => setSelectedRow(row)}
                   >
                     {columns.map((c) => (
                       <td
                         key={c.key}
                         className="py-[6px] pr-[16px] whitespace-nowrap"
+                        onClick={
+                          c.key !== "actions"
+                            ? () => setSelectedRow(row)
+                            : () => {}
+                        }
                       >
                         {c.render(row)}
                       </td>
@@ -159,7 +178,9 @@ export default function AdminLogTable<T>({
           title="Zeilendetails"
           fields={columns.map((c) => ({
             label: c.label,
-            value: c.modalValue ? c.modalValue(selectedRow) : c.filterValue(selectedRow),
+            value: c.modalValue
+              ? c.modalValue(selectedRow)
+              : c.filterValue(selectedRow),
           }))}
           onClose={() => setSelectedRow(null)}
         />

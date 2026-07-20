@@ -132,7 +132,7 @@ export default function DialogueLiveView({
         </p>
       )}
 
-      <div className="flex flex-col gap-[12px]">
+      <div className="flex flex-col gap-[12px] mt-[5px]">
         {isParticipant && (
           <FollowButtons
             targetType="archive_entry"

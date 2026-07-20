@@ -29,13 +29,17 @@ export default async function AdminImportPage() {
   return (
     <>
       <PageMeta title="Import" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <p className="lcars-eyebrow">Zugriff · Administration</p>
         <h1>Import</h1>
 
         <MarkdownImportPanel
           missions={missions.map((m) => ({ slug: m.slug, title: m.title }))}
-          characters={characters.map((c) => ({ slug: c.slug, name: c.name, playerName: c.playerName }))}
+          characters={characters.map((c) => ({
+            slug: c.slug,
+            name: c.name,
+            playerName: c.playerName,
+          }))}
         />
       </article>
     </>

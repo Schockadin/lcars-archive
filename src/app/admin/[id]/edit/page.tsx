@@ -32,7 +32,7 @@ export default async function EditUserPage({
   return (
     <>
       <PageMeta title={`${target.name} bearbeiten`} section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <p className="lcars-eyebrow">Zugriff · Administration</p>
         <h1>{target.name} bearbeiten</h1>
 

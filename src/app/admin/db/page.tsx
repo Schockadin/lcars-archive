@@ -54,9 +54,8 @@ export default async function AdminDbPage({
 }) {
   await requireAdmin();
   const params = await searchParams;
-  const table = params.table && isViewableTable(params.table)
-    ? params.table
-    : null;
+  const table =
+    params.table && isViewableTable(params.table) ? params.table : null;
   const page = Math.max(1, Number(params.page) || 1);
   const columns = table ? viewableColumns(table) : [];
 
@@ -119,7 +118,7 @@ export default async function AdminDbPage({
   return (
     <>
       <PageMeta title="Datenbank" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <p className="lcars-eyebrow">Zugriff · Administration</p>
         <h1>Datenbank</h1>
 
@@ -136,15 +135,15 @@ export default async function AdminDbPage({
               Transaktion (kein Zugriff auf die TABLE_COLUMNS-Whitelist der
               Tabellenansicht unten nötig) — max. 500 Zeilen, 5 Sekunden
               Timeout. Anders als in der Tabellenansicht unten werden
-              Fremdschlüssel-Spalten hier NICHT zu einem Slug aufgelöst,
-              sondern zeigen die rohe numerische id.
+              Fremdschlüssel-Spalten hier NICHT zu einem Slug aufgelöst, sondern
+              zeigen die rohe numerische id.
             </p>
             <SqlQueryPanel />
           </section>
 
           <section className="flex flex-col gap-[12px]">
             <h2 className="text-lcars-amber">Tabelleninhalte (read-only)</h2>
-            <nav className="flex flex-wrap gap-[8px]">
+            <nav className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-[8px]">
               {VIEWABLE_TABLES.map((t) => (
                 <Link
                   key={t}

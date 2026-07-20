@@ -37,7 +37,7 @@ export default async function NewDialoguePage() {
   return (
     <>
       <PageMeta title="Neues Gespräch" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <h1>Neues Gespräch beginnen</h1>
 
         {publishedCharacters.length === 0 ? (
@@ -47,10 +47,7 @@ export default async function NewDialoguePage() {
               beginnen. Wende dich dafür an die Spielleitung.
             </p>
             <p>
-              <Link
-                href="/user"
-                className="text-lcars-amber underline"
-              >
+              <Link href="/user" className="text-lcars-amber underline">
                 ← Zurück zum Profil
               </Link>
             </p>

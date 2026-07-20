@@ -180,10 +180,7 @@ export default function NotificationSettingsForm({
 
   return (
     <div className="flex flex-col gap-[24px]">
-      <form
-        action={formAction}
-        className="flex max-w-[var(--lcars-content-w)] flex-col gap-[16px]"
-      >
+      <form action={formAction} className="flex flex-col gap-[16px]">
         <div className="flex items-center gap-[10px]">
           <input
             key={`email-${saveCount}`}
@@ -223,7 +220,10 @@ export default function NotificationSettingsForm({
             </p>
             <div className="flex flex-col gap-[6px]">
               {ADMIN_CONTENT_TYPE_OPTIONS.map((option) => (
-                <div key={option.value} className="flex items-center gap-[10px]">
+                <div
+                  key={option.value}
+                  className="flex items-center gap-[10px]"
+                >
                   <input
                     key={`notify-${option.value}-${saveCount}`}
                     id={`notifyContentTypes-${option.value}`}
@@ -257,7 +257,7 @@ export default function NotificationSettingsForm({
         </SubmitButton>
       </form>
 
-      <div className="flex max-w-[var(--lcars-content-w)] flex-col gap-[8px]">
+      <div className="flex flex-col gap-[8px]">
         <p className="lcars-eyebrow">
           Push <strong>nur</strong> für dieses Gerät
         </p>

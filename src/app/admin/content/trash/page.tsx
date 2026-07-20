@@ -24,16 +24,16 @@ export default async function AdminTrashPage() {
   return (
     <>
       <PageMeta title="Papierkorb" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <p className="lcars-eyebrow">Zugriff · Administration</p>
         <h1>Papierkorb</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
           <p className="text-lcars-text-dim text-[13px]">
             Gelöschte Inhalte bleiben hier 7 Tage lang sichtbar und
-            wiederherstellbar, bevor sie automatisch endgültig entfernt
-            werden. Nur für Admins sichtbar — in Suche, Timeline und allen
-            übrigen Listen tauchen diese Inhalte nicht mehr auf.
+            wiederherstellbar, bevor sie automatisch endgültig entfernt werden.
+            Nur für Admins sichtbar — in Suche, Timeline und allen übrigen
+            Listen tauchen diese Inhalte nicht mehr auf.
           </p>
           <Link
             href="/admin/content"

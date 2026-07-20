@@ -43,7 +43,7 @@ export default async function UserPage() {
   return (
     <>
       <PageMeta title="Profil" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <h1>Profil</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
@@ -66,9 +66,9 @@ export default async function UserPage() {
             <section id="follows" className="flex flex-col gap-[8px]">
               <h2>Follows</h2>
               <p>
-                Alle Missionen, Archiv-Einträge und Charaktere, die du
-                abonniert hast, an einem Ort — inklusive der Möglichkeit,
-                einzelne Follows wieder zu beenden.
+                Alle Missionen, Archiv-Einträge und Charaktere, die du abonniert
+                hast, an einem Ort — inklusive der Möglichkeit, einzelne Follows
+                wieder zu beenden.
               </p>
               <Link
                 href="/user/follow"
@@ -96,7 +96,9 @@ export default async function UserPage() {
             <SettingsForm user={{ name: target.name, email: target.email }} />
 
             <section id="password" className="flex flex-col gap-[12px]">
-              <h2>{hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}</h2>
+              <h2>
+                {hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}
+              </h2>
               <PasswordForm hasPassword={hasPasswordSet} />
             </section>
 
@@ -104,8 +106,8 @@ export default async function UserPage() {
               <h2>Sitzungen</h2>
               <p>
                 Vermutest du, dass noch ein fremdes Gerät angemeldet ist? Hier
-                kannst du alle anderen Sitzungen beenden, ohne dein Passwort
-                zu ändern.
+                kannst du alle anderen Sitzungen beenden, ohne dein Passwort zu
+                ändern.
               </p>
               <LogoutEverywhereButton />
             </section>
