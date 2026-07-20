@@ -4,7 +4,8 @@ import { useRouter } from "next/navigation";
 import type { ContentToolType } from "@/app/actions/contentTools";
 
 // Gemeinsames Vorschau-vor-Speichern-Muster für die Admin-Content-Tools auf
-// den vier Inhalts-Detailseiten (AutolinkButton, RemoveWikilinksButton):
+// den vier Inhalts-Detailseiten (ContentLinkToolButton, Autolink- wie
+// Delink-Modus):
 // Preview laden, anzeigen, erst nach explizitem Bestätigen tatsächlich
 // speichern (kein Blind-Apply) — statt derselben preview/error/applied/
 // pending-State-Maschine in jeder Button-Komponente neu zu schreiben.

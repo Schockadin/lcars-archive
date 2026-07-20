@@ -1,9 +1,10 @@
 "use client";
 import { CheckIcon, XIcon } from "@/lib/icons";
 
-// Abbrechen/Übernehmen-Footer der Vorschau-vor-Speichern-Buttons
-// (AutolinkButton.tsx, RemoveWikilinksButton.tsx) — beide nutzen bereits
-// usePreviewConfirmAction für den State, hier nur das gemeinsame Footer-JSX.
+// Abbrechen/Übernehmen-Footer der Vorschau-vor-Speichern-Aktionen
+// (ContentLinkToolButton.tsx, Autolink- wie Delink-Modus) — beide nutzen
+// bereits usePreviewConfirmAction für den State, hier nur das gemeinsame
+// Footer-JSX.
 // Icon- statt Textbuttons (gleiches Muster wie DialogueMessageActions.tsx),
 // dadurch auf schmalen Bildschirmen kompakter und ohne Zeilenumbruch.
 export default function PreviewConfirmFooter({

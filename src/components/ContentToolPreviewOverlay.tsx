@@ -1,7 +1,7 @@
 "use client";
 import { createPortal } from "react-dom";
 
-// Gemeinsames Overlay für AutolinkButton.tsx/RemoveWikilinksButton.tsx —
+// Gemeinsames Overlay für beide Modi des ContentLinkToolButton.tsx —
 // gleiches Muster wie TimelineMarkerButton.tsx (.timeline-marker-overlay):
 // als Portal auf document.body gerendert, Klick auf den Hintergrund
 // entspricht Abbrechen. Vorher lag die Vorschau inline im schmalen

@@ -197,6 +197,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Über jedes neu begonnene Gespräch wird jetzt außerdem jeder aktive GM-Account automatisch per Mail/Push informiert, unabhängig davon, ob er selbst daran teilnimmt.",
       "Die Vollbild-Anzeige von Bildern (Charakter-Portrait-Karussell und eingebettete Bilder in Texten) hat jetzt Symbol- statt Textknöpfe zum Schließen und Durchblättern.",
       "Behoben: Der Klick auf „Home“ in der Navigation führte gelegentlich zu einem kurzen Fehler und einer sichtbaren Vollseiten-Neuladung statt einer nahtlosen Navigation.",
+      "Die beiden Admin/Spielleitungs-Werkzeuge auf Inhaltsseiten zum automatischen Verlinken bzw. Entfernen von Verlinkungen sind jetzt ein einzelner Knopf mit kleinem Umschalter (Standard: Verlinken hinzufügen) statt zweier getrennter Knöpfe.",
     ],
   },
 ];

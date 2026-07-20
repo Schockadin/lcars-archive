@@ -13,7 +13,7 @@ import ContentToolPreviewOverlay from "./ContentToolPreviewOverlay";
 import { ImageIcon, UploadIcon, TrashIcon, XIcon, PortraitIcon } from "@/lib/icons";
 
 // Bilder-Galerie für Charaktere/Missionen/Missionslogs/Archiv-Einträge
-// (nicht Dialoge) — analog zu AutolinkButton.tsx als Icon-Button + Modal
+// (nicht Dialoge) — analog zu ContentLinkToolButton.tsx als Icon-Button + Modal
 // (ContentToolPreviewOverlay), da ActionsMenu.tsx nur eine schmale Spalte
 // aus Icon-Buttons ist und eine dauerhaft eingebettete Galerie den Rahmen
 // jeder Detailseite sprengen würde. Lädt die Bilderliste client-seitig beim

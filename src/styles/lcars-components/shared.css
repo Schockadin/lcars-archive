@@ -204,9 +204,9 @@
   white-space: nowrap;
 }
 
-/* Admin-Content-Tools (AutolinkButton/RemoveWikilinksButton) — gemeinsames
-   Vorschau-Overlay auf den vier Inhalts-Detailseiten (Mission, Log,
-   Archiv-Eintrag, Charakter), gerendert über ContentToolPreviewOverlay.tsx.
+/* Admin-Content-Tools (ContentLinkToolButton, Autolink- wie Delink-Modus) —
+   gemeinsames Vorschau-Overlay auf den vier Inhalts-Detailseiten (Mission,
+   Log, Archiv-Eintrag, Charakter), gerendert über ContentToolPreviewOverlay.tsx.
    Gleiches Overlay-Muster wie TimelineMarkerButton.tsx
    (.timeline-marker-overlay), nur breiter für Trefferlisten + optionale
    HTML-Vorschau. Vorher lag die Vorschau inline in einer per width:110%/

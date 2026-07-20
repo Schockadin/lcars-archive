@@ -4,8 +4,7 @@ import { Viewer } from "@/lib/visibility";
 import { Character } from "@/types/character";
 import OwnerSelect from "./OwnerSelect";
 import AdminVisibilitySelect from "./AdminVisibilitySelect";
-import AutolinkButton from "@/components/AutolinkButton";
-import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
+import ContentLinkToolButton from "@/components/ContentLinkToolButton";
 import DeleteContentButton from "@/components/DeleteContentButton";
 import ContentImageGallery from "@/components/ContentImageGallery";
 import { ContentToolType } from "@/app/actions/contentTools";
@@ -153,13 +152,10 @@ export default function ActionsMenu({
       )}
       <div className="flex gap-[5px]">
         {(viewer?.role === "gm" || viewer?.role === "admin") && !isDialogue && (
-          <div className="flex gap-[5px]">
-            <AutolinkButton contentType={contentType} slug={content.slug} />
-            <RemoveWikilinksButton
-              contentType={contentType}
-              slug={content.slug}
-            />
-          </div>
+          <ContentLinkToolButton
+            contentType={contentType}
+            slug={content.slug}
+          />
         )}
         {viewer?.role && followType && (
           <FollowButtons
