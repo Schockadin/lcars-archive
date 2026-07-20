@@ -782,6 +782,40 @@ export async function deleteArchiveEntry(
   return row ? { slug: row.slug } : null;
 }
 
+// Selbstlöschung durch die Owner-Person (Meine Inhalte) — Ownership per
+// owner_user_id direkt im WHERE erzwungen statt per Vorab-Check, gleiches
+// Prinzip wie deleteMissionLog in missions.ts. Ein Eintrag ohne Owner
+// (owner_user_id IS NULL) matcht dadurch für niemanden, kein Sonderfall
+// nötig. Kein Admin-Bypass — für fremde Einträge bleibt deleteArchiveEntry
+// (requireAdmin) der richtige Weg.
+export async function deleteOwnArchiveEntry(
+  userId: number,
+  archiveEntryId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<
+    {
+      slug: string;
+      title: string;
+      visibility: string;
+      isDraft: boolean;
+    }[]
+  >`
+    UPDATE archive_entries
+    SET deleted_at = NOW()
+    WHERE id = ${archiveEntryId} AND owner_user_id = ${userId}
+      AND category != 'dialogue' AND deleted_at IS NULL
+    RETURNING slug, title, visibility, is_draft AS "isDraft"
+  `;
+  const row = rows[0] ?? null;
+  if (row && !row.isDraft) {
+    await sql`
+      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+      VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${userId}, ${userId})
+    `;
+  }
+  return row ? { slug: row.slug } : null;
+}
+
 // Macht einen weich gelöschten Archiv-Eintrag wieder sichtbar (Admin-Trash-Ansicht).
 export async function restoreArchiveEntry(
   archiveEntryId: number,

@@ -734,9 +734,9 @@ export async function updateOwnCharacterBio(
 // alle außer Admins (siehe getAllContentForAdmin/Trash-Ansicht in
 // lib/adminContent.ts) und wird nach 7 Tagen vom Purge-Cronjob endgültig
 // entfernt. Admin-only (kein Owner-Scoping wie bei
-// updateOwnCharacterContent) — anders als bei Missions-Logs gibt es aktuell
-// keine Selbstlöschung durch die spielende Person. deletedByUserId dient
-// nur dem Löschprotokoll (content_deletions, siehe getRecentDeletions in
+// updateOwnCharacterContent) — für die Selbstlöschung durch die spielende
+// Person selbst siehe deleteOwnCharacter unten. deletedByUserId dient nur
+// dem Löschprotokoll (content_deletions, siehe getRecentDeletions in
 // recentActivity.ts).
 export async function deleteCharacter(
   characterId: number,
@@ -765,6 +765,38 @@ export async function deleteCharacter(
     await sql`
       INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
       VALUES ('character', ${row.name}, ${row.visibility}, ${row.ownerUserId}, ${deletedByUserId})
+    `;
+  }
+  return row ? { slug: row.slug } : null;
+}
+
+// Selbstlöschung durch die spielende Person (Meine Inhalte) — Ownership per
+// player_id direkt im WHERE erzwungen statt per Vorab-Check, gleiches
+// Prinzip wie deleteMissionLog in missions.ts. Kein Admin-Bypass (auch ein
+// Admin muss für fremde Charaktere weiterhin deleteCharacter/requireAdmin
+// benutzen) — bewusst strikt, analog zu updateOwnCharacterContent.
+export async function deleteOwnCharacter(
+  userId: number,
+  characterId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<
+    {
+      slug: string;
+      name: string;
+      visibility: string;
+      isDraft: boolean;
+    }[]
+  >`
+    UPDATE characters
+    SET deleted_at = NOW()
+    WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
+    RETURNING slug, name, visibility, is_draft AS "isDraft"
+  `;
+  const row = rows[0] ?? null;
+  if (row && !row.isDraft) {
+    await sql`
+      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+      VALUES ('character', ${row.name}, ${row.visibility}, ${userId}, ${userId})
     `;
   }
   return row ? { slug: row.slug } : null;

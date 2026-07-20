@@ -1144,6 +1144,35 @@ export async function deleteDialogue(
   };
 }
 
+// Selbstlöschung durch den Owner (wer das Gespräch begonnen hat, Meine
+// Inhalte) — Ownership per owner_user_id direkt im WHERE erzwungen, gleiches
+// Prinzip wie setDialogueVisibility oben und deleteMissionLog in
+// missions.ts. Kein Admin-Bypass (bleibt deleteDialogue vorbehalten) und kein
+// isDraft-Guard nötig — Dialoge kennen kein Entwurf-Konzept, landen also
+// immer im "gelöscht"-News-Feed wie bisher.
+export async function deleteOwnDialogue(
+  userId: number,
+  archiveEntryId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<
+    { slug: string; title: string; visibility: string }[]
+  >`
+    UPDATE archive_entries
+    SET deleted_at = NOW()
+    WHERE id = ${archiveEntryId} AND category = 'dialogue'
+      AND owner_user_id = ${userId} AND deleted_at IS NULL
+    RETURNING slug, title, visibility
+  `;
+  const row = rows[0] ?? null;
+  if (row) {
+    await sql`
+      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+      VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${userId}, ${userId})
+    `;
+  }
+  return row ? { slug: row.slug } : null;
+}
+
 // Macht einen weich gelöschten Dialog wieder sichtbar (Admin-Trash-Ansicht).
 export async function restoreDialogue(
   archiveEntryId: number,

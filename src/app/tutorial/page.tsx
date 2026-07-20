@@ -157,7 +157,17 @@ export default function TutorialPage() {
                 <strong>Privat</strong> (nur du), <strong>GM</strong> (du +
                 Spielleitung) oder <strong>Öffentlich</strong> (alle) — änderbar
                 jederzeit über das Dropdown neben dem Eintrag in „Meine
-                Inhalte“.
+                Inhalte“. Direkt daneben findest du zwei Symbol-Knöpfe zum{" "}
+                <strong>Bearbeiten</strong> (Stift) und{" "}
+                <strong>Löschen</strong> (Mülleimer) — Löschen steht bei allen
+                fünf Inhaltstypen zur Verfügung, auch bei eigenen
+                Charakteren, Missionen (nur Spielleitung) und Gesprächen (nur
+                für die Person, die es begonnen hat).
+              </p>
+              <p>
+                Eigene Entwürfe (siehe unten) erscheinen in „Meine Inhalte“
+                gesammelt ganz oben in einer eigenen Übersicht, unabhängig
+                vom Kategorie-Filter.
               </p>
               <p>
                 Beim Anlegen oder Bearbeiten eines Charakters, einer Mission,
