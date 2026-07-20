@@ -876,7 +876,7 @@ export async function updateMissionLogContent(
       log_date   = ${input.logDate},
       content    = ${contentHtml},
       source_md  = ${input.bodyMarkdown},
-      metadata   = metadata || ${sql.json({ tags: input.tags } as ReturnType<typeof JSON.parse>)},
+      metadata   = ml.metadata || ${sql.json({ tags: input.tags } as ReturnType<typeof JSON.parse>)},
       is_draft   = ${input.isDraft},
       updated_at = NOW()
     FROM characters c, missions m, old
