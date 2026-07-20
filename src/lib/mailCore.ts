@@ -229,6 +229,33 @@ export async function sendDialogueInvitedEmail(input: {
   });
 }
 
+// An alle aktiven GM-Accounts, sobald irgendein User ein neues Gespräch
+// beginnt (siehe createDialogueAction) — unabhängig von eigener Teilnahme,
+// reine Oversight-Info ohne Opt-in (anders als sendDialogueStartedEmail
+// oben, das an die eingeladenen Partner geht).
+export async function sendNewDialogueGmNotificationEmail(input: {
+  to: string;
+  name: string;
+  participantNames: string[];
+  dialogueTitle: string;
+  dialogueUrl: string;
+}): Promise<SendEmailResult> {
+  const dialogueUrl = escapeHtml(input.dialogueUrl);
+  return sendEmail({
+    to: input.to,
+    subject: `Neues Gespräch: "${input.dialogueTitle}"`,
+    html: `
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>
+        ${escapeHtml(input.participantNames.join(", "))} haben ein neues Gespräch
+        "${escapeHtml(input.dialogueTitle)}" begonnen:
+      </p>
+      <p><a href="${dialogueUrl}">${dialogueUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
 // An alle verschickt, die sich per "Informiere mich" (siehe
 // requestDialogueReservationNotification) für das Ende einer
 // Antwort-Sperre in einem Mehrparteien-Dialog eingetragen hatten (siehe

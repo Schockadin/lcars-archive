@@ -100,6 +100,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   in bereits abgeschlossenen Gesprächen, sowie jederzeit den Besitzer eines
   Gesprächs neu zuordnen. Eine weitere Unterseite, das Fehler-Log, listet
   alle unerwarteten Serverfehler (Zeitpunkt, Route, Meldung, Digest).
+  Spielleitung bekommt über ein eigenes „Leitung“-Dropdown im Header
+  (analog zum Admin-Menü) Zugriff auf drei Übersichten: alle Missionen
+  (Bearbeiten/Löschen/Besitzer:in-Zuordnung pro Zeile), die bestehende
+  Charakter-Zuweisung sowie alle aktuell offenen Gespräche — auch ohne
+  eigene Teilnahme, verlinkt auf die read-only-Ansicht des jeweiligen
+  Gesprächs. Über jedes neu begonnene Gespräch wird jeder aktive
+  GM-Account zusätzlich automatisch per Mail/Push informiert.
 - **Custom-404/500-Seiten** — unerwartete Serverfehler zeigen eine
   LCARS-gestaltete 500-Seite statt der Next.js-Standardfehlerseite; alle
   Besucher sehen eine freundliche Meldung mit Referenz-Code, eingeloggte
@@ -305,6 +312,8 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     │   ├── admin/             # Admin-Bereich (gm-or-admin bzw. admin-only je Unterseite):
     │   │   ├── users/          #   Nutzerverwaltung (Tabelle + Detailseite [id]/edit/)
     │   │   ├── characters/     #   Charakter-Zuweisung
+    │   │   ├── missions/       #   Missionsübersicht: Bearbeiten/Löschen/Besitzer:in
+    │   │   ├── dialogues/      #   Alle offenen Gespräche, auch ohne eigene Teilnahme
     │   │   ├── db/             #   DB-Backup, Tabellenbrowser, freies SQL-Abfragefeld
     │   │   ├── scripts/        #   Cache-Revalidation, Timeline-Neuaufbau, u.a.
     │   │   ├── audit-log/      #   Sicherheits-Audit-Log + Content-Aktivitätsfeed

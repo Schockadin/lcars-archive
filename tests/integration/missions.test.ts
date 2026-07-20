@@ -8,6 +8,7 @@ import {
   restoreMissionLog,
   deleteMission,
   restoreMission,
+  getAllMissionsForGmOverview,
 } from "@/lib/missions";
 import { insertUser, insertCharacter, insertMission } from "./helpers";
 
@@ -246,5 +247,37 @@ describe("deleteMission", () => {
     ]);
     expect(missionRow.deleted_at).toBeNull();
     expect(logRow.deleted_at).toBeNull();
+  });
+});
+
+describe("getAllMissionsForGmOverview", () => {
+  it("lists a mission with its resolved owner name, including drafts", async () => {
+    const owner = await insertUser({ role: "gm", name: "Spielleitung Eins" });
+    await createMission(
+      baseMissionInput({
+        slug: "gm-overview-draft",
+        title: "Entwurfsmission",
+        ownerUserId: owner.id,
+        isDraft: true,
+      }),
+    );
+
+    const overview = await getAllMissionsForGmOverview();
+    const item = overview.find((m) => m.slug === "gm-overview-draft");
+
+    expect(item).toBeDefined();
+    expect(item?.isDraft).toBe(true);
+    expect(item?.ownerId).toBe(owner.id);
+    expect(item?.ownerName).toBe("Spielleitung Eins");
+  });
+
+  it("excludes soft-deleted missions", async () => {
+    const admin = await insertUser({ role: "admin" });
+    const mission = await insertMission({ title: "Zu löschende GM-Übersichtsmission" });
+    await deleteMission(mission.id, admin.id);
+
+    const overview = await getAllMissionsForGmOverview();
+
+    expect(overview.some((m) => m.slug === mission.slug)).toBe(false);
   });
 });

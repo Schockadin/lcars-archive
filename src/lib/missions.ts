@@ -112,6 +112,55 @@ export const getAllMissionsIncludingDrafts = unstable_cache(
   { tags: [cacheTags.missions, cacheTags.missionLogs] },
 );
 
+export interface GmMissionOverviewItem {
+  id: number;
+  slug: string;
+  title: string;
+  status: MissionStatus;
+  isDraft: boolean;
+  ownerId: number | null;
+  ownerName: string | null;
+}
+
+// GM/Admin-Übersicht ALLER Missionen (inkl. Entwürfe, ohne Owner-Filter) für
+// die neue /admin/missions-Seite (GM-Menüpunkt "Missionen") — anders als
+// getAllMissionsIncludingDrafts oben (MissionPreview mit Log-Zählung/Autoren
+// fürs Karten-Layout in /user/content) hier nur die schlanken Felder für
+// eine Tabelle inkl. Owner-Name, uncached wie getAllContentForAdmin
+// (lib/adminContent.ts) — geringe Traffic, Owner-Änderungen sollen sofort
+// sichtbar sein.
+export async function getAllMissionsForGmOverview(): Promise<
+  GmMissionOverviewItem[]
+> {
+  const rows = await sql<
+    {
+      id: number;
+      slug: string;
+      title: string;
+      status: MissionStatus;
+      is_draft: boolean;
+      owner_user_id: number | null;
+      owner_name: string | null;
+    }[]
+  >`
+    SELECT m.id, m.slug, m.title, m.status, m.is_draft AS is_draft,
+           m.owner_user_id, u.name AS owner_name
+    FROM missions m
+    LEFT JOIN users u ON u.id = m.owner_user_id
+    WHERE m.deleted_at IS NULL
+    ORDER BY m.title ASC
+  `;
+  return rows.map((row) => ({
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    status: row.status,
+    isDraft: row.is_draft,
+    ownerId: row.owner_user_id,
+    ownerName: row.owner_name,
+  }));
+}
+
 type MissionRow = Omit<MissionDetail, "participants">;
 
 async function getMissionParticipants(

@@ -5,8 +5,12 @@ import {
   getCharactersForUser,
   getCharactersWithPlayers,
 } from "@/lib/characters";
-import { DialogueSlugCollisionError, createDialogue } from "@/lib/dialogues";
-import { sendDialogueStartedEmail } from "@/lib/mail";
+import {
+  DialogueSlugCollisionError,
+  createDialogue,
+  getActiveGMs,
+} from "@/lib/dialogues";
+import { sendDialogueStartedEmail, sendNewDialogueGmNotificationEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { parseList } from "@/lib/formParsing";
@@ -79,6 +83,7 @@ export async function createDialogueAction(
   let slug: string;
   let partners: Awaited<ReturnType<typeof createDialogue>>["partners"];
   let fromCharacterName: string;
+  let participantNames: string[];
   try {
     const result = await createDialogue({
       title,
@@ -95,6 +100,7 @@ export async function createDialogueAction(
     slug = result.slug;
     partners = result.partners;
     fromCharacterName = result.fromCharacterName;
+    participantNames = result.participantNames;
   } catch (err) {
     if (err instanceof DialogueSlugCollisionError) {
       return { error: err.message };
@@ -132,6 +138,39 @@ export async function createDialogueAction(
       await sendPushToUser(partner.id, {
         title: `Neues Gespräch: "${title}"`,
         body: `${fromCharacterName} hat ein Gespräch mit dir begonnen.`,
+        url: dialogueUrl,
+      });
+    }
+  }
+
+  // GM-Oversight: alle aktiven GM-Accounts bekommen unabhängig von eigener
+  // Teilnahme eine Info (siehe getAllOpenDialoguesForGM/"Gespräche" im
+  // GM-Menü) — bereits als Partner benachrichtigte GMs (partnerIds) nicht
+  // ein zweites Mal.
+  const partnerIds = new Set(partners.map((p) => p.id));
+  for (const gm of await getActiveGMs(session.userId)) {
+    if (partnerIds.has(gm.id)) continue;
+    if (gm.emailNotificationsEnabled) {
+      const result = await sendNewDialogueGmNotificationEmail({
+        to: gm.email,
+        name: gm.name,
+        participantNames,
+        dialogueTitle: title,
+        dialogueUrl,
+      });
+      if (!result.sent) {
+        const message = `Neues-Gespräch-GM-Mail an ${gm.email} fehlgeschlagen: ${result.error}`;
+        console.error(message);
+        void logCaughtError(
+          new Error(message),
+          "user/dialogues/new/actions.ts:createDialogueAction",
+        );
+      }
+    }
+    if (gm.pushNotificationsEnabled) {
+      await sendPushToUser(gm.id, {
+        title: `Neues Gespräch: "${title}"`,
+        body: `${participantNames.join(", ")} haben ein Gespräch begonnen.`,
         url: dialogueUrl,
       });
     }

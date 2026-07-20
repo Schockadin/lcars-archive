@@ -149,6 +149,10 @@ export interface CreateDialogueResult {
   // vertraut (siehe createDialogueAction).
   partners: DialogueEmailTarget[];
   fromCharacterName: string;
+  // Für die GM-Benachrichtigung (createDialogueAction) — alle beteiligten
+  // Charakternamen (eigener + Partner), nicht nur der eigene wie
+  // fromCharacterName.
+  participantNames: string[];
 }
 
 export async function createDialogue(
@@ -279,6 +283,7 @@ export async function createDialogue(
             pushNotificationsEnabled: p.player_push_notifications_enabled ?? false,
           })),
         fromCharacterName: ownChar.name,
+        participantNames: [ownChar.name, ...partnerChars.map((p) => p.name)],
       };
     } catch (err) {
       if (isUniqueViolation(err)) {
@@ -1373,6 +1378,36 @@ export async function getDialogueParticipantPlayers(
   }));
 }
 
+// Alle aktiven GM-Accounts — Grundlage für die automatische Benachrichtigung
+// bei jedem neu erstellten Dialog (siehe createDialogueAction), unabhängig
+// von eigener Teilnahme und ohne Opt-in (anders als notify_content_types,
+// das nur Admins zur Verfügung steht und Dialoge ohnehin nicht abdeckt,
+// siehe ADMIN_CONTENT_TYPE_OPTIONS in NotificationSettingsForm.tsx).
+export async function getActiveGMs(
+  excludeUserId: number,
+): Promise<DialogueEmailTarget[]> {
+  const rows = await sql<
+    {
+      id: number;
+      email: string;
+      name: string;
+      email_notifications_enabled: boolean;
+      push_notifications_enabled: boolean;
+    }[]
+  >`
+    SELECT id, email, name, email_notifications_enabled, push_notifications_enabled
+    FROM users
+    WHERE role = 'gm' AND is_active = true AND id != ${excludeUserId}
+  `;
+  return rows.map((row) => ({
+    id: row.id,
+    email: row.email,
+    name: row.name,
+    emailNotificationsEnabled: row.email_notifications_enabled,
+    pushNotificationsEnabled: row.push_notifications_enabled,
+  }));
+}
+
 export interface DialogueSummary {
   id: number;
   slug: string;
@@ -1456,6 +1491,51 @@ export async function getDialoguesForUser(
   return [...results.values()].sort((a, b) =>
     b.updatedAt.localeCompare(a.updatedAt),
   );
+}
+
+export interface GmDialogueOverviewItem {
+  id: number;
+  slug: string;
+  title: string;
+  participantNames: string[];
+  updatedAt: string;
+  ownerName: string | null;
+}
+
+// ALLE offenen Dialoge, unabhängig von eigener Teilnahme — anders als
+// getDialoguesForUser oben (nur Dialoge EIGENER Charaktere) Grundlage für
+// die neue GM-Übersicht "Gespräche" (/admin/dialogues), damit GM/Admin auch
+// Dialoge sehen, an denen sie selbst nicht beteiligt sind. Verlinkt von dort
+// auf /dialogues/[slug], das Nicht-Teilnehmenden mit GM/Admin-Rolle bereits
+// Lesezugriff ohne Antwortformular gewährt (siehe dort).
+export async function getAllOpenDialoguesForGM(): Promise<
+  GmDialogueOverviewItem[]
+> {
+  const rows = await sql<
+    {
+      id: number;
+      slug: string;
+      title: string;
+      metadata: unknown;
+      updated_at: string;
+      owner_name: string | null;
+    }[]
+  >`
+    SELECT ae.id, ae.slug, ae.title, ae.metadata, ae.updated_at::text AS updated_at,
+           u.name AS owner_name
+    FROM archive_entries ae
+    LEFT JOIN users u ON u.id = ae.owner_user_id
+    WHERE ae.category = 'dialogue' AND ae.dialogue_open AND ae.deleted_at IS NULL
+    ORDER BY ae.updated_at DESC
+  `;
+  return rows.map((row) => ({
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    participantNames: parseParticipants(row.metadata).map((p) => p.name),
+    updatedAt: row.updated_at,
+    ownerName: row.owner_name,
+  }));
 }
 
 export interface PublicDialogue {

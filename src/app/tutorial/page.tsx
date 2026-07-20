@@ -398,9 +398,18 @@ export default function TutorialPage() {
                   einsehen.
                 </li>
                 <li>
-                  Charaktere Spieler:innen zuweisen (unter{" "}
-                  <code>Admin → Charaktere</code> im Header-Menü) — Gast-
-                  Accounts ausgenommen.
+                  Über das eigene <strong>„Leitung“</strong>-Menü im Header
+                  (analog zum Admin-Menü) auf drei Übersichten zugreifen:
+                  unter <strong>„Missionen“</strong> alle Missionen mit
+                  Bearbeiten-, Löschen- und Besitzer:in-Zuordnung pro Zeile
+                  statt einzeln über die jeweilige Detailseite; unter{" "}
+                  <strong>„Charaktere“</strong> Charaktere Spieler:innen
+                  zuweisen (Gast-Accounts ausgenommen); unter{" "}
+                  <strong>„Gespräche“</strong> alle aktuell offenen Gespräche
+                  einsehen, auch ohne eigene Teilnahme — ein Klick öffnet das
+                  Gespräch lesend, ohne Antwortformular. Über jedes neu
+                  begonnene Gespräch wird die Spielleitung außerdem automatisch
+                  per Mail/Push informiert, unabhängig von eigener Teilnahme.
                 </li>
                 <li>
                   Über die „Admin-Aktionen“ jeder Detailseite Autolinking,

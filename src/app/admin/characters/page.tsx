@@ -29,7 +29,7 @@ export default async function AdminCharactersPage() {
   return (
     <>
       <PageMeta title="Charaktere" section="users" />
-      <article className="mb-[10px] max-w-[800px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
         <h1>Charaktere zuordnen</h1>
 

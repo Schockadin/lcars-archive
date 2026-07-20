@@ -15,6 +15,8 @@ import {
   requestDialogueReservationNotification,
   hasRequestedDialogueReservationNotification,
   getDialogueLockStatus,
+  getActiveGMs,
+  getAllOpenDialoguesForGM,
   DialogueClosedError,
   DialogueMessageForbiddenError,
   DialogueSelfReplyError,
@@ -824,5 +826,53 @@ describe("postDialogueMessage with exactly two participants", () => {
     });
 
     expect(msg.characterId).toBe(partnerChar.id);
+  });
+});
+
+describe("getActiveGMs", () => {
+  it("returns only active gm accounts, excluding the given user and other roles", async () => {
+    const excluded = await insertUser({ role: "gm" });
+    const gm = await insertUser({ role: "gm" });
+    const inactiveGm = await insertUser({ role: "gm", isActive: false });
+    await insertUser({ role: "admin" });
+    await insertUser({ role: "player" });
+
+    const gms = await getActiveGMs(excluded.id);
+    const ids = gms.map((g) => g.id);
+
+    expect(ids).toContain(gm.id);
+    expect(ids).not.toContain(excluded.id);
+    expect(ids).not.toContain(inactiveGm.id);
+  });
+});
+
+describe("getAllOpenDialoguesForGM", () => {
+  it("lists an open dialogue even though the caller is not a participant", async () => {
+    const { dialogue } = await setupDialogue();
+
+    const overview = await getAllOpenDialoguesForGM();
+    const item = overview.find((d) => d.slug === dialogue.slug);
+
+    // "Own"/"Partner" sind die in setupDialogue() vergebenen Charakternamen.
+    expect(item).toBeDefined();
+    expect(item?.participantNames.sort()).toEqual(["Own", "Partner"].sort());
+  });
+
+  it("excludes closed dialogues", async () => {
+    const { dialogue, entryId } = await setupDialogue();
+    await completeDialogue(entryId);
+
+    const overview = await getAllOpenDialoguesForGM();
+
+    expect(overview.some((d) => d.slug === dialogue.slug)).toBe(false);
+  });
+
+  it("excludes deleted dialogues", async () => {
+    const { dialogue, entryId, ownUser } = await setupDialogue();
+    await deleteDialogue(entryId, ownUser.id);
+
+    const overview = await getAllOpenDialoguesForGM();
+
+    expect(overview.some((d) => d.slug === dialogue.slug)).toBe(false);
   });
 });
