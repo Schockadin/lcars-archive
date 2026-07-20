@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getDialogueSnapshotAction } from "@/app/actions/dialogues";
 import type { DialogueMessage, DialogueLockStatus } from "@/lib/dialogues";
 import type { ArchiveParticipant } from "@/types/archive";
@@ -64,23 +64,35 @@ export default function DialogueLiveView({
   // wird. Kann danach nur noch durch einen Poll auf false wechseln.
   const [open, setOpen] = useState(true);
   const stoppedRef = useRef(false);
+  const mountedRef = useRef(true);
 
   useEffect(() => {
-    let cancelled = false;
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
-    async function poll() {
-      const snapshot = await getDialogueSnapshotAction(entrySlug);
-      if (cancelled) return;
-      if (!snapshot.open) {
-        stoppedRef.current = true;
-        setOpen(false);
-        return;
-      }
-      setMessages(snapshot.messages);
-      setLockStatus(snapshot.lockStatus);
-      setCanReplyNow(snapshot.canReplyNow);
+  // Eigenständig (useCallback statt nur im Interval-Effect definiert), damit
+  // DialogueReplyForm/DialogueLockPanel nach einer eigenen Aktion (Antwort
+  // gesendet, Antwortrecht reserviert) sofort denselben Poll auslösen können,
+  // statt bis zu 8 Sekunden auf den nächsten Intervall-Tick zu warten — die
+  // eigene Nachricht bzw. der neue Sperr-Status erscheint sonst erst mit
+  // spürbarer Verzögerung.
+  const poll = useCallback(async () => {
+    const snapshot = await getDialogueSnapshotAction(entrySlug);
+    if (!mountedRef.current) return;
+    if (!snapshot.open) {
+      stoppedRef.current = true;
+      setOpen(false);
+      return;
     }
+    setMessages(snapshot.messages);
+    setLockStatus(snapshot.lockStatus);
+    setCanReplyNow(snapshot.canReplyNow);
+  }, [entrySlug]);
 
+  useEffect(() => {
     const intervalId = setInterval(() => {
       if (!stoppedRef.current && !document.hidden) poll();
     }, POLL_INTERVAL_MS);
@@ -91,11 +103,10 @@ export default function DialogueLiveView({
     document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
-      cancelled = true;
       clearInterval(intervalId);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [entrySlug]);
+  }, [poll]);
 
   const multiParty = participants.length > 2;
 
@@ -132,7 +143,11 @@ export default function DialogueLiveView({
           />
         )}
         {open && isParticipant && (
-          <DialogueReplyForm entrySlug={entrySlug} canReplyNow={canReplyNow} />
+          <DialogueReplyForm
+            entrySlug={entrySlug}
+            canReplyNow={canReplyNow}
+            onSent={poll}
+          />
         )}
         {open && isParticipant && multiParty && !canReplyNow && (
           <DialogueLockPanel
@@ -140,6 +155,7 @@ export default function DialogueLiveView({
             lockStatus={lockStatus}
             currentUserId={currentUserId}
             alreadyRequestedNotify={alreadyRequestedNotify}
+            onReserved={poll}
           />
         )}
         {isOwner && (

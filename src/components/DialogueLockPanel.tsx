@@ -20,11 +20,17 @@ export default function DialogueLockPanel({
   lockStatus,
   currentUserId,
   alreadyRequestedNotify,
+  onReserved,
 }: {
   entrySlug: string;
   lockStatus: DialogueLockStatus | null;
   currentUserId: number;
   alreadyRequestedNotify: boolean;
+  // Von DialogueLiveView.tsx übergeben (dessen Poll-Funktion) — löst nach
+  // erfolgreicher Reservierung sofort einen Snapshot-Poll aus, statt bis zu
+  // 8 Sekunden auf den nächsten Intervall-Tick zu warten, damit das
+  // Antwortformular ohne spürbare Verzögerung erscheint.
+  onReserved?: () => void;
 }) {
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | undefined>();
@@ -34,7 +40,11 @@ export default function DialogueLockPanel({
     setError(undefined);
     startTransition(async () => {
       const result = await reserveDialogueReplyAction(entrySlug);
-      if (result.error) setError(result.error);
+      if (result.error) {
+        setError(result.error);
+        return;
+      }
+      onReserved?.();
     });
   }
 

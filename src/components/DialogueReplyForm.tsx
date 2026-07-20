@@ -21,9 +21,15 @@ const initialState: DialogueMessageState = {};
 export default function DialogueReplyForm({
   entrySlug,
   canReplyNow = true,
+  onSent,
 }: {
   entrySlug: string;
   canReplyNow?: boolean;
+  // Von DialogueLiveView.tsx übergeben (dessen Poll-Funktion) — löst nach
+  // erfolgreichem Senden sofort einen Snapshot-Poll aus, statt bis zu 8
+  // Sekunden auf den nächsten Intervall-Tick zu warten, damit die eigene
+  // Nachricht ohne spürbare Verzögerung im Thread erscheint.
+  onSent?: () => void;
 }) {
   const [state, formAction, pending] = useActionState(
     postDialogueMessageAction,
@@ -32,8 +38,11 @@ export default function DialogueReplyForm({
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (state?.success) formRef.current?.reset();
-  }, [state]);
+    if (state?.success) {
+      formRef.current?.reset();
+      onSent?.();
+    }
+  }, [state, onSent]);
 
   if (!canReplyNow) return null;
 
