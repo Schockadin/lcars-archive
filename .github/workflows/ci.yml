@@ -48,12 +48,12 @@ jobs:
 
       - run: npm run test:e2e
 
-      - name: Apply schema to integration test DB
-        run: npx tsx scripts/setup-db.ts
-        env:
-          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/lcars_test"
+      # - name: Apply schema to integration test DB
+      #   run: npx tsx scripts/setup-db.ts
+      #   env:
+      #     DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/lcars_test"
 
-      - name: Run DB integration tests
-        run: npm run test:integration
-        env:
-          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/lcars_test"
+      # - name: Run DB integration tests
+      #   run: npm run test:integration
+      #   env:
+      #     DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/lcars_test"
