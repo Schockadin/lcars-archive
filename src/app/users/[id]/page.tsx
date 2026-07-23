@@ -65,7 +65,7 @@ export default async function UserPublicProfilePage({
   return (
     <>
       <PageMeta title={target.name} section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <div className="flex flex-wrap items-start justify-between gap-[16px]">
           <h1>{target.name}</h1>
           {viewer.id !== target.id && (
@@ -95,11 +95,17 @@ export default async function UserPublicProfilePage({
                       key={c.id}
                       href={`/characters/${c.slug}`}
                       className="mission-akte flex-1"
-                      style={{ "--mission-color": "var(--lcars-amber)" } as React.CSSProperties}
+                      style={
+                        {
+                          "--mission-color": "var(--lcars-amber)",
+                        } as React.CSSProperties
+                      }
                     >
                       <span className="mission-akte-rail" />
                       <span className="mission-akte-body text-left">
-                        <span className="mission-akte-title block">{c.name}</span>
+                        <span className="mission-akte-title block">
+                          {c.name}
+                        </span>
                       </span>
                     </Link>
                   ))}
@@ -119,11 +125,17 @@ export default async function UserPublicProfilePage({
                       key={log.id}
                       href={`/missions/${log.mission_slug}/${log.slug}`}
                       className="mission-akte flex-1"
-                      style={{ "--mission-color": "var(--lcars-blue)" } as React.CSSProperties}
+                      style={
+                        {
+                          "--mission-color": "var(--lcars-blue)",
+                        } as React.CSSProperties
+                      }
                     >
                       <span className="mission-akte-rail" />
                       <span className="mission-akte-body text-left">
-                        <span className="mission-akte-title block">{log.title}</span>
+                        <span className="mission-akte-title block">
+                          {log.title}
+                        </span>
                         <span className="mission-akte-meta">
                           <span>
                             <b>Session</b> {sessionLabel(log.session_nr)}
@@ -154,11 +166,17 @@ export default async function UserPublicProfilePage({
                       key={d.slug}
                       href={`/archive/${d.slug}`}
                       className="mission-akte flex-1"
-                      style={{ "--mission-color": "var(--lcars-red)" } as React.CSSProperties}
+                      style={
+                        {
+                          "--mission-color": "var(--lcars-red)",
+                        } as React.CSSProperties
+                      }
                     >
                       <span className="mission-akte-rail" />
                       <span className="mission-akte-body text-left">
-                        <span className="mission-akte-title block">{d.title}</span>
+                        <span className="mission-akte-title block">
+                          {d.title}
+                        </span>
                         <span className="mission-akte-meta">
                           <span>
                             <b>Teilnehmer</b> {d.participantNames.join(", ")}
@@ -183,14 +201,21 @@ export default async function UserPublicProfilePage({
                       key={entry.id}
                       href={`/archive/${entry.slug}`}
                       className="mission-akte flex-1"
-                      style={{ "--mission-color": "var(--lcars-purple)" } as React.CSSProperties}
+                      style={
+                        {
+                          "--mission-color": "var(--lcars-purple)",
+                        } as React.CSSProperties
+                      }
                     >
                       <span className="mission-akte-rail" />
                       <span className="mission-akte-body text-left">
-                        <span className="mission-akte-title block">{entry.title}</span>
+                        <span className="mission-akte-title block">
+                          {entry.title}
+                        </span>
                         <span className="mission-akte-meta">
                           <span>
-                            <b>Kategorie</b> {CATEGORY_CONFIG[entry.category].label}
+                            <b>Kategorie</b>{" "}
+                            {CATEGORY_CONFIG[entry.category].label}
                           </span>
                         </span>
                       </span>

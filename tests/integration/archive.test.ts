@@ -5,8 +5,10 @@ import {
   updateOwnArchiveEntryContent,
   setArchiveEntryVisibility,
   getOwnArchiveEntryForEdit,
+  setArchiveEntryOwner,
 } from "@/lib/archive";
-import { insertUser } from "./helpers";
+import { createDialogue } from "@/lib/dialoguesCore";
+import { insertUser, insertCharacter } from "./helpers";
 
 function baseEntryInput(
   overrides: Partial<Parameters<typeof createArchiveEntry>[0]> = {},
@@ -20,6 +22,7 @@ function baseEntryInput(
     referenceValues: {},
     bodyMarkdown: "",
     ownerUserId: 0,
+    isDraft: false,
     ...overrides,
   };
 }
@@ -140,6 +143,59 @@ describe("setArchiveEntryVisibility", () => {
     const result = await setArchiveEntryVisibility(intruder.id, entry.id, "private");
 
     expect(result).toBeNull();
+  });
+});
+
+describe("setArchiveEntryOwner", () => {
+  it("reassigns the owner of a regular archive entry", async () => {
+    const owner = await insertUser();
+    const newOwner = await insertUser();
+    const entry = await createArchiveEntry(baseEntryInput({ ownerUserId: owner.id }));
+
+    const result = await setArchiveEntryOwner(entry.id, newOwner.id);
+
+    expect(result?.slug).toBe(entry.slug);
+    const [row] = await sql<{ owner_user_id: number }[]>`
+      SELECT owner_user_id FROM archive_entries WHERE id = ${entry.id}
+    `;
+    expect(row.owner_user_id).toBe(newOwner.id);
+  });
+
+  // Dialoge (category 'dialogue') waren hier bisher ausgeschlossen — die
+  // Owner-Zuweisung schlug mit "Eintrag nicht gefunden" fehl, siehe
+  // ActionsMenu.tsx-Fix. Owner-Wechsel darf dabei metadata.participants
+  // nicht anfassen.
+  it("reassigns the owner of a dialogue without touching participants", async () => {
+    const ownUser = await insertUser();
+    const partnerUser = await insertUser();
+    const newOwner = await insertUser();
+    const ownChar = await insertCharacter({ playerId: ownUser.id, name: "Own" });
+    const partnerChar = await insertCharacter({ playerId: partnerUser.id, name: "Partner" });
+
+    const dialogue = await createDialogue({
+      title: "Ein Gespräch",
+      ownCharacterId: ownChar.id,
+      partnerCharacterIds: [partnerChar.id],
+      authorUserId: ownUser.id,
+      setting: null,
+      locationSlug: null,
+      logDate: null,
+      tags: [],
+      bodyMarkdown: "Hallo!",
+      subscribeSelf: true,
+    });
+    const [entry] = await sql<{ id: number }[]>`
+      SELECT id FROM archive_entries WHERE slug = ${dialogue.slug}
+    `;
+
+    const result = await setArchiveEntryOwner(entry.id, newOwner.id);
+
+    expect(result?.slug).toBe(dialogue.slug);
+    const [row] = await sql<{ owner_user_id: number; metadata: { participants: unknown[] } }[]>`
+      SELECT owner_user_id, metadata FROM archive_entries WHERE id = ${entry.id}
+    `;
+    expect(row.owner_user_id).toBe(newOwner.id);
+    expect(row.metadata.participants).toHaveLength(2);
   });
 });
 

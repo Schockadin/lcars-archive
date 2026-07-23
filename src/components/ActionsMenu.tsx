@@ -4,15 +4,19 @@ import { Viewer } from "@/lib/visibility";
 import { Character } from "@/types/character";
 import OwnerSelect from "./OwnerSelect";
 import AdminVisibilitySelect from "./AdminVisibilitySelect";
-import AutolinkButton from "@/components/AutolinkButton";
-import RemoveWikilinksButton from "@/components/RemoveWikilinksButton";
+import ContentLinkToolButton from "@/components/ContentLinkToolButton";
+import DeleteContentButton from "@/components/DeleteContentButton";
+import ContentImageGallery from "@/components/ContentImageGallery";
 import { ContentToolType } from "@/app/actions/contentTools";
+import type { ContentImageType } from "@/lib/contentImages";
 import { PencilIcon } from "@/lib/icons";
 import FollowButtons from "./FollowButtons";
+import ShareMenu from "./ShareMenu";
 import { MissionDetail, MissionLogDetail } from "@/types/missions";
 import { ArchiveEntryDetail } from "@/types/archive";
 import { FollowTargetType } from "@/lib/follows";
 import type { OwnerContentType } from "@/app/actions/owner";
+import type { TrashContentType } from "@/lib/adminContent";
 import type { AdminVisibilityContentType } from "@/app/actions/visibility";
 
 // ContentToolType (Autolink/Wikilinks/Format-Buttons) und OwnerContentType
@@ -23,6 +27,16 @@ import type { AdminVisibilityContentType } from "@/app/actions/visibility";
 // versehentlich den Owner eines völlig anderen Charakters (per zufällig
 // gleicher ID) statt den tatsächlichen Inhalt umgehängt hat.
 const OWNER_CONTENT_TYPE: Record<ContentToolType, OwnerContentType> = {
+  character: "character",
+  mission: "mission",
+  missionLog: "mission_log",
+  archiveEntry: "archive_entry",
+};
+
+// ContentImageType (src/lib/contentImages.ts) nutzt dieselben DB-Namen wie
+// OwnerContentType (mission_log/archive_entry statt missionLog/archiveEntry)
+// — identisches Mapping, eigene Konstante nur wegen des eigenen Typs.
+const IMAGE_CONTENT_TYPE: Record<ContentToolType, ContentImageType> = {
   character: "character",
   mission: "mission",
   missionLog: "mission_log",
@@ -76,8 +90,51 @@ export default function ActionsMenu({
 }: ActionMenuProps) {
   const visibilityContentType = VISIBILITY_CONTENT_TYPE[contentType];
 
+  // Dialoge (category "dialogue") haben kein source_md (Inhalt lebt in
+  // dialogue_messages) — Autolinking und Wikilinks-Entfernen liefen hier
+  // bisher ins Leere ("Eintrag nicht gefunden"), siehe
+  // getArchiveEntrySourceBySlug in src/lib/archive.ts. Owner-Zuweisung
+  // funktioniert für Dialoge dagegen bewusst (Owner = wer den Dialog
+  // gestartet hat, admin-only wie bei jedem anderen Inhaltstyp — der Server
+  // setOwnerAction lehnt GM ohnehin schon ab, siehe src/app/actions/owner.ts).
+  const isDialogue =
+    contentType === "archiveEntry" && "category" in content && content.category === "dialogue";
+
+  // Wer darf diesen Inhalt bearbeiten? Bei Mission/Archiv-Eintrag jeder
+  // Admin, bei Missionslog/Charakter ausschließlich der Owner selbst (kein
+  // Admin-Bypass, siehe updateOwnCharacterBioAction). Sowohl für den
+  // Bearbeiten-Button unten als auch für die Bilder-Galerie genutzt (wer
+  // bearbeiten darf, darf auch Bilder hochladen/löschen).
+  const canManageContent =
+    (contentType !== "missionLog" &&
+      contentType !== "character" &&
+      viewer?.role === "admin") ||
+    viewer?.userId === playerId;
+
+  // Für den WhatsApp-Teilen-Text im ShareMenu (siehe FollowButtons.tsx) —
+  // Character hat "name" statt "title" wie die übrigen drei Inhaltstypen.
+  const contentTitle = "title" in content ? content.title : content.name;
+
+  // Löschen-Knopf (DeleteContentButton, admin-only) — trashContentType weicht
+  // von OWNER_CONTENT_TYPE für Dialoge ab (eigener Löschpfad, siehe
+  // deleteContentAction), redirectTo führt nach dem Löschen auf eine
+  // sinnvolle Übersichtsseite, da die aktuelle Detailseite sonst mit einem
+  // Notfound-Flackern enden würde.
+  const trashContentType: TrashContentType = isDialogue
+    ? "dialogue"
+    : OWNER_CONTENT_TYPE[contentType];
+  const deleteRedirectTo = isDialogue
+    ? "/archive?cat=dialogue"
+    : contentType === "character"
+      ? "/characters"
+      : contentType === "mission"
+        ? "/missions"
+        : contentType === "missionLog" && "mission_slug" in content
+          ? `/missions/${content.mission_slug}`
+          : "/archive";
+
   return (
-    <div className="flex flex-col items-start justify-center gap-[8px]">
+    <div className="flex flex-col items-start justify-center gap-[5px]">
       {(viewer?.role === "admin" || viewer?.role === "gm") && (
         <OwnerSelect
           contentType={OWNER_CONTENT_TYPE[contentType]}
@@ -93,29 +150,44 @@ export default function ActionsMenu({
           initialValue={content.visibility}
         />
       )}
-      <div className="flex gap-[8px]">
-        {(viewer?.role === "gm" || viewer?.role === "admin") && (
-          <div className="flex gap-[8px]">
-            <AutolinkButton contentType={contentType} slug={content.slug} />
-            <RemoveWikilinksButton
-              contentType={contentType}
-              slug={content.slug}
-            />
-          </div>
+      <div className="flex gap-[5px]">
+        {(viewer?.role === "gm" || viewer?.role === "admin") && !isDialogue && (
+          <ContentLinkToolButton
+            contentType={contentType}
+            slug={content.slug}
+          />
         )}
         {viewer?.role && followType && (
-          <FollowButtons targetType={followType} targetSlug={content.slug} />
+          <FollowButtons
+            targetType={followType}
+            targetSlug={content.slug}
+            title={contentTitle}
+          />
+        )}
+        {/* Missionslogs sind nicht followbar (kein FollowTargetType dafür,
+            siehe lib/follows.ts), bekommen aber trotzdem Teilen/Export —
+            eigenständiges ShareMenu statt über FollowButtons. */}
+        {viewer?.role && contentType === "missionLog" && (
+          <ShareMenu
+            title={contentTitle}
+            exportType="mission_log"
+            exportSlug={content.slug}
+          />
         )}
         {/* "character" ist hier wie "missionLog" ausgeschlossen: der
             Bio-Editor ist bewusst reines Owner-Feature ohne Admin-Konzept
             (siehe CharacterBioEditor.tsx) — sourceMarkdown wird serverseitig
             nur für den Owner geladen, ein Admin-Klick würde sonst ins Leere
             laufen. */}
+        {!isDialogue && (
+          <ContentImageGallery
+            contentType={IMAGE_CONTENT_TYPE[contentType]}
+            contentId={content.id}
+            canManage={canManageContent}
+          />
+        )}
         {!hideEdit &&
-          ((contentType !== "missionLog" &&
-            contentType !== "character" &&
-            viewer?.role === "admin") ||
-            viewer?.userId === playerId) &&
+          canManageContent &&
           (contentType === "missionLog" ? (
             // Mission-Logs haben (anders als Charakter/Mission/Archiv-Eintrag)
             // keinen Inline-Editor auf der Detailseite — die Mission-Log-
@@ -141,6 +213,13 @@ export default function ActionsMenu({
               <PencilIcon />
             </button>
           ))}
+        {viewer?.role === "admin" && (
+          <DeleteContentButton
+            contentType={trashContentType}
+            id={content.id}
+            redirectTo={deleteRedirectTo}
+          />
+        )}
       </div>
     </div>
   );

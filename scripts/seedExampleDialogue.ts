@@ -55,7 +55,7 @@ async function main() {
   const { slug } = await createDialogue({
     title: DIALOGUE_TITLE,
     ownCharacterId: desmond.id,
-    partnerCharacterId: lorzan.id,
+    partnerCharacterIds: [lorzan.id],
     authorUserId: OWNER_USER_ID,
     setting: null,
     locationSlug: null,

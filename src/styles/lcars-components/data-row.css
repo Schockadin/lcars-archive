@@ -16,6 +16,8 @@
    Überschriften-Labels in 24px-Uppercase (siehe Dashboard-Sektionen). */
 .lcars-data-row.lcars-data-row--full {
   width: 100%;
+  max-width: 500px;
+  margin-left: auto;
 }
 .lcars-data-row--full > .lcars-data-row-text > div {
   line-height: 1.3;

@@ -204,6 +204,81 @@ export async function sendDialogueStartedEmail(input: {
   });
 }
 
+// Direkt-Hinzufügen zu einem laufenden oder bereits abgeschlossenen Dialog
+// durch den Owner (siehe inviteDialogueParticipantAction) — kein
+// Annehmen/Ablehnen, die Mail ist reine Info. invitedByName ist der
+// Anzeigename der einladenden Person (nicht eines Charakters — Einladen ist
+// eine administrative Owner-Aktion, keine In-Character-Handlung).
+export async function sendDialogueInvitedEmail(input: {
+  to: string;
+  name: string;
+  invitedByName: string;
+  dialogueTitle: string;
+  dialogueUrl: string;
+}): Promise<SendEmailResult> {
+  const dialogueUrl = escapeHtml(input.dialogueUrl);
+  return sendEmail({
+    to: input.to,
+    subject: `Zum Gespräch "${input.dialogueTitle}" hinzugefügt`,
+    html: `
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>${escapeHtml(input.invitedByName)} hat dich zum Gespräch "${escapeHtml(input.dialogueTitle)}" hinzugefügt:</p>
+      <p><a href="${dialogueUrl}">${dialogueUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
+// An alle aktiven GM-Accounts, sobald irgendein User ein neues Gespräch
+// beginnt (siehe createDialogueAction) — unabhängig von eigener Teilnahme,
+// reine Oversight-Info ohne Opt-in (anders als sendDialogueStartedEmail
+// oben, das an die eingeladenen Partner geht).
+export async function sendNewDialogueGmNotificationEmail(input: {
+  to: string;
+  name: string;
+  participantNames: string[];
+  dialogueTitle: string;
+  dialogueUrl: string;
+}): Promise<SendEmailResult> {
+  const dialogueUrl = escapeHtml(input.dialogueUrl);
+  return sendEmail({
+    to: input.to,
+    subject: `Neues Gespräch: "${input.dialogueTitle}"`,
+    html: `
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>
+        ${escapeHtml(input.participantNames.join(", "))} haben ein neues Gespräch
+        "${escapeHtml(input.dialogueTitle)}" begonnen:
+      </p>
+      <p><a href="${dialogueUrl}">${dialogueUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
+// An alle verschickt, die sich per "Informiere mich" (siehe
+// requestDialogueReservationNotification) für das Ende einer
+// Antwort-Sperre in einem Mehrparteien-Dialog eingetragen hatten (siehe
+// releaseExpiredDialogueReservation).
+export async function sendDialogueReservationEndedEmail(input: {
+  to: string;
+  name: string;
+  dialogueTitle: string;
+  dialogueUrl: string;
+}): Promise<SendEmailResult> {
+  const dialogueUrl = escapeHtml(input.dialogueUrl);
+  return sendEmail({
+    to: input.to,
+    subject: `Antwort-Sperre in "${input.dialogueTitle}" aufgehoben`,
+    html: `
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>die Antwort-Sperre im Gespräch "${escapeHtml(input.dialogueTitle)}" wurde aufgehoben — du kannst jetzt antworten:</p>
+      <p><a href="${dialogueUrl}">${dialogueUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
 // Rendert eine kurze, kursive Anriss-Zeile unter der Ankündigung — genutzt
 // von jedem "es gibt Neuigkeiten"-Template unten, damit die Mail selbst
 // schon einen Eindruck vom Inhalt gibt statt nur Titel + Link (siehe auch

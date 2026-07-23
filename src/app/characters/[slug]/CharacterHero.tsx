@@ -221,6 +221,7 @@ export default function CharacterHero({
             <CharacterPortrait
               portrait={character.portrait}
               name={character.name}
+              characterId={character.id}
             />
 
             {/* Schnellzugriffe direkt unter dem Bild: Logs + Gespräche des

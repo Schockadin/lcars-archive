@@ -2,6 +2,8 @@
 import { useState } from "react";
 import ActionsMenu from "@/components/ActionsMenu";
 import DialogueThread from "@/components/DialogueThread";
+import DialogueFlowingText from "@/components/DialogueFlowingText";
+import DialogueViewToggle from "@/components/DialogueViewToggle";
 import ArchiveEntryEditor from "./ArchiveEntryEditor";
 import { ArchiveEntryDetail } from "@/types/archive";
 import { Viewer } from "@/lib/visibility";
@@ -17,11 +19,15 @@ export default function ArchiveEntryBody({
   viewer,
   owners,
   messages,
+  flowingTextPreferred,
 }: {
   entry: ArchiveEntryDetail;
   viewer: Viewer | null;
   owners: { id: number; name: string }[];
   messages: DialogueMessage[];
+  // Globale User-Präferenz (siehe DialogueViewToggle.tsx) — nur relevant,
+  // wenn dieser Eintrag ein Dialog MIT strukturierten Nachrichten ist.
+  flowingTextPreferred: boolean;
 }) {
   const [editMode, setEditMode] = useState(false);
   const isAdminOrGM = viewer?.role === "gm" || viewer?.role === "admin" || false;
@@ -57,12 +63,38 @@ export default function ArchiveEntryBody({
 
       {entry.category === "dialogue" ? (
         messages.length > 0 ? (
-          <DialogueThread
-            messages={messages}
-            participants={entry.metadata.participants}
-            currentUserId={null}
-            dialogueOpen={false}
-          />
+          flowingTextPreferred && entry.content ? (
+            <>
+              {viewer && (
+                <DialogueViewToggle
+                  entrySlug={entry.slug}
+                  flowingTextEnabled={true}
+                />
+              )}
+              {/* Aus den Nachrichten gerendert (statt entry.content), damit die
+                  wörtliche Rede pro Sprecher in dessen Charakter-Farbe
+                  erscheint — siehe DialogueFlowingText.tsx. entry.content
+                  bleibt oben nur die Bedingung "Fließtext wurde erzeugt". */}
+              <DialogueFlowingText messages={messages} />
+            </>
+          ) : (
+            <>
+              {viewer && entry.content && (
+                <DialogueViewToggle
+                  entrySlug={entry.slug}
+                  flowingTextEnabled={false}
+                />
+              )}
+              <DialogueThread
+                messages={messages}
+                participants={entry.metadata.participants}
+                currentUserId={viewer?.userId ?? null}
+                dialogueOpen={false}
+                entrySlug={entry.slug}
+                viewerRole={viewer?.role ?? null}
+              />
+            </>
+          )
         ) : entry.content ? (
           // Ohne dialogue_messages (z.B. per Vault-Ingest importierte
           // Gespräche ohne strukturierte Nachrichten) den rohen Inhalt

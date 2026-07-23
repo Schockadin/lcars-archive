@@ -9,34 +9,26 @@
 // über seine "react-server"-Exportbedingung auf den No-op-Stub statt auf
 // den werfenden Default-Export auflöst — exakt die Bedingung, die Next.js'
 // eigener Server-Build normalerweise implizit setzt.
-import { PutObjectCommand } from "@aws-sdk/client-s3";
 import sql from "@/lib/db";
 import { exportDatabaseBackup } from "@/lib/dbBackup";
-import { createR2Client } from "./r2Client";
+import { uploadDbBackupToR2 } from "./r2Client";
 
 async function main() {
   console.log("🔌 Exportiere Datenbank...");
   const backup = await exportDatabaseBackup();
   const json = JSON.stringify(backup);
 
-  const { client, bucket } = createR2Client();
-
   // Ein Key pro Kalendertag (nicht Timestamp) — ein erneuter Lauf am selben
   // Tag überschreibt statt zu duplizieren. Aufbewahrungsfrist/Aufräumen alter
   // Backups übernimmt cleanup-db-backups.ts, im selben Cronjob direkt im
   // Anschluss an diesen Upload (siehe .github/workflows/daily-db-backup.yml).
+  // Manuelle Backups aus dem Adminpanel bekommen einen davon unterscheidbaren
+  // Key, siehe buildManualDbBackupKey in src/lib/r2Backup.ts.
   const date = new Date().toISOString().slice(0, 10);
   const key = `db-backups/${date}.json`;
 
-  console.log(`☁️  Lade Backup nach r2://${bucket}/${key} hoch...`);
-  await client.send(
-    new PutObjectCommand({
-      Bucket: bucket,
-      Key: key,
-      Body: json,
-      ContentType: "application/json",
-    }),
-  );
+  console.log(`☁️  Lade Backup nach R2 hoch (Key: ${key})...`);
+  await uploadDbBackupToR2(key, json);
 
   console.log(`✓ Backup hochgeladen (${(json.length / 1024).toFixed(1)} KB)`);
 }

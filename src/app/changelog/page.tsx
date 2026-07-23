@@ -17,7 +17,7 @@ export default function ChangelogPage() {
   return (
     <>
       <PageMeta title="Changelog" section="changelog" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <h1>Changelog</h1>
         <p className="lcars-text mb-[16px]">
           Alle größeren Änderungen am Archiv, Version für Version.

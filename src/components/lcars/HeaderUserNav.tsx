@@ -12,13 +12,30 @@ interface AdminMenuItem {
   label: string;
 }
 
+// Charaktere/Missionen/Gespräche bewusst NICHT im Admin-Menü (nur im
+// GM-Menü unten) — die drei sind Spielleitungs-Werkzeuge; ein Admin
+// erreicht sie bei Bedarf weiterhin direkt per URL (requireGM lässt Admins
+// ohnehin durch), soll sie aber nicht im eigenen Menü angeboten bekommen.
 const ADMIN_ITEMS: AdminMenuItem[] = [
   { href: "/admin/users", label: "User" },
-  { href: "/admin/characters", label: "Charaktere" },
   { href: "/admin/db", label: "DB" },
   { href: "/admin/scripts", label: "Scripts" },
   { href: "/admin/content", label: "Inhalte" },
+  { href: "/admin/content/trash", label: "Papierkorb" },
+  { href: "/admin/content/images", label: "Bilder" },
   { href: "/admin/audit-log", label: "Audit-Log" },
+  { href: "/admin/error-log", label: "Fehler-Log" },
+  { href: "/admin/import", label: "Import" },
+];
+
+// GM-Dropdown (analog zum Admin-Dropdown oben, nur drei Ziele): die
+// Charakterzuordnung gab es vorher schon (bisheriges Direkt-Pill "Leitung"),
+// Missionen/Gespräche sind neu — GM sieht damit erstmals auch Missionen/
+// Dialoge, an denen er nicht selbst beteiligt ist, an einem Ort.
+const GM_ITEMS: AdminMenuItem[] = [
+  { href: "/admin/missions", label: "Missionen" },
+  { href: "/admin/characters", label: "Charaktere" },
+  { href: "/admin/dialogues", label: "Gespräche" },
 ];
 
 export default function HeaderUserNav({
@@ -60,6 +77,13 @@ export default function HeaderUserNav({
 
   const isAdminSection = pathname.startsWith("/admin");
 
+  // Gemeinsames Dropdown für GM und Admin (unterschiedliche Item-Listen,
+  // gleiche UI) — role admin/gm schließen sich gegenseitig aus, daher genügt
+  // ein einzelner Dropdown-State/Trigger für beide.
+  const dropdownItems =
+    role === "admin" ? ADMIN_ITEMS : role === "gm" ? GM_ITEMS : null;
+  const dropdownLabel = role === "admin" ? "Admin" : "Leitung";
+
   return (
     <nav
       className="lcars-usernav"
@@ -82,24 +106,12 @@ export default function HeaderUserNav({
         );
       })}
 
-      {/* Ein reiner gm hat nur ein Ziel (Charakter-Zuordnung) — dafür lohnt
-          kein Dropdown, das Pill verlinkt wie bisher direkt. */}
-      {role === "gm" && (
-        <Link
-          href="/admin/characters"
-          className={
-            isAdminSection
-              ? "lcars-usernav-pill lcars-menu-active"
-              : "lcars-usernav-pill"
-          }
-        >
-          Leitung
-        </Link>
-      )}
-
-      {/* Admin: Dropdown statt Direktlink — das Pill selbst verlinkt
-          bewusst nirgends hin, nur die Einträge im Dropdown tun das. */}
-      {role === "admin" && (
+      {/* GM/Admin: Dropdown statt Direktlink — das Pill selbst verlinkt
+          bewusst nirgends hin, nur die Einträge im Dropdown tun das. GM
+          bekam bis vor Kurzem ein einzelnes Direkt-Pill (nur
+          Charakterzuordnung) — jetzt analog zum Admin-Dropdown, seit GM auch
+          Missionen/Gespräche über eigene Übersichten erreicht. */}
+      {dropdownItems && (
         <>
           <button
             ref={triggerRef}
@@ -113,7 +125,7 @@ export default function HeaderUserNav({
                 : "lcars-usernav-pill"
             }
           >
-            Admin
+            {dropdownLabel}
           </button>
 
           {adminOpen &&
@@ -122,7 +134,7 @@ export default function HeaderUserNav({
               <div
                 ref={panelRef}
                 role="menu"
-                aria-label="Admin"
+                aria-label={dropdownLabel}
                 className="lcars-search-dropdown"
                 style={{
                   top: anchor.top,
@@ -130,7 +142,7 @@ export default function HeaderUserNav({
                   minWidth: anchor.width,
                 }}
               >
-                {ADMIN_ITEMS.map((item) => (
+                {dropdownItems.map((item) => (
                   <Link
                     key={item.href}
                     href={item.href}

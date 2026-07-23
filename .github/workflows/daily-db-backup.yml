@@ -45,3 +45,18 @@ jobs:
           R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+
+      # Entfernt weich gelöschte Inhalte (deleted_at älter als 7 Tage,
+      # siehe scripts/purge-soft-deleted.ts) endgültig — läuft bewusst NACH
+      # dem Backup-Upload oben, damit ein zu purgender Inhalt notfalls noch
+      # aus dem frischen Backup wiederhergestellt werden könnte. Braucht
+      # zusätzlich zu DATABASE_URL auch die R2-Secrets: räumt seit der
+      # Bild-Upload-Funktion auch die zugehörigen content_images-Objekte im
+      # selben Bucket mit auf (purgeContentImagesFor in contentImages.ts).
+      - run: npm run db:purge-deleted
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}

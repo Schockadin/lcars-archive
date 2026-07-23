@@ -67,6 +67,16 @@ export default function DSGVOClient() {
         Aufklärung eines vermuteten kompromittierten Admin-Accounts).
       </p>
       <p>
+        Tritt ein unerwarteter Serverfehler auf, werden Fehlermeldung,
+        Stacktrace, betroffene Route und Zeitpunkt dauerhaft in einem nur für
+        Administration einsehbaren Protokoll gespeichert (Rechtsgrundlage:
+        Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse an der
+        Fehlerdiagnose und einem sicheren Betrieb der Anwendung). Diese
+        technischen Diagnosedaten können in Einzelfällen personenbezogene
+        Daten enthalten, etwa eine E-Mail-Adresse in der Fehlermeldung eines
+        fehlgeschlagenen Mail-Versands.
+      </p>
+      <p>
         Wer im Login-Bereich Push-Benachrichtigungen aktiviert, erlaubt damit
         die Speicherung einer geräteseitigen Push-Subscription (eine vom Browser
         vergebene Endpoint-URL sowie kryptografische Schlüssel zur

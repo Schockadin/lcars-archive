@@ -2,8 +2,10 @@
 import { useState } from "react";
 import { DataRowPill, type DataRowPillProps } from "./DataRowPill";
 
-export interface DataRowAccordionProps
-  extends Omit<DataRowPillProps, "expanded" | "href"> {
+export interface DataRowAccordionProps extends Omit<
+  DataRowPillProps,
+  "expanded" | "href"
+> {
   // Startzustand des Akkordeons.
   defaultOpen?: boolean;
   children: React.ReactNode;

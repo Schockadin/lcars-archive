@@ -2,11 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "./dal";
-import { hasPassword } from "@/lib/users";
+import { hasPassword, getEditorSpellcheckPreference } from "@/lib/users";
+import { getCharactersForUser, getUsedCharacterColors } from "@/lib/characters";
+import { resolveCharacterDefaultColor, normalizeHex } from "@/lib/characterColor";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
 import LogoutEverywhereButton from "./LogoutEverywhereButton";
 import NotificationSettingsForm from "./NotificationSettingsForm";
+import EditorSpellcheckSettingsForm from "./EditorSpellcheckSettingsForm";
+import CharacterColorForm from "./CharacterColorForm";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 
@@ -37,11 +41,32 @@ export default async function UserPage() {
 
   const hasPasswordSet = await hasPassword(target.id);
   const needsPassword = !hasPasswordSet;
+  const spellcheckEnabled = await getEditorSpellcheckPreference(target.id);
+
+  // Charakter-Farben: eine Liste statt einer einzigen Wahl, seit die Farbe
+  // pro Charakter statt pro User lebt (Multis sollen für jeden Charakter
+  // eine eigene wählen können, siehe src/lib/characterColor.ts). takenColors
+  // pro Charakter einzeln ermitteln (schließt jeweils nur den eigenen
+  // Charakter aus, nicht die übrigen eigenen — der partielle UNIQUE-Index
+  // macht jede Farbe global exklusiv, auch zwischen den eigenen Charakteren).
+  const characters = await getCharactersForUser(target.id);
+  const characterColors = await Promise.all(
+    characters.map(async (c) => {
+      const usedColors = await getUsedCharacterColors(c.id);
+      const takenColors = usedColors.map(normalizeHex);
+      const ownColor = resolveCharacterDefaultColor(
+        c.character_color,
+        c.id,
+        new Set(takenColors),
+      );
+      return { character: c, ownColor, takenColors };
+    }),
+  );
 
   return (
     <>
       <PageMeta title="Profil" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <h1>Profil</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
@@ -64,9 +89,9 @@ export default async function UserPage() {
             <section id="follows" className="flex flex-col gap-[8px]">
               <h2>Follows</h2>
               <p>
-                Alle Missionen, Archiv-Einträge und Charaktere, die du
-                abonniert hast, an einem Ort — inklusive der Möglichkeit,
-                einzelne Follows wieder zu beenden.
+                Alle Missionen, Archiv-Einträge und Charaktere, die du abonniert
+                hast, an einem Ort — inklusive der Möglichkeit, einzelne Follows
+                wieder zu beenden.
               </p>
               <Link
                 href="/user/follow"
@@ -94,7 +119,9 @@ export default async function UserPage() {
             <SettingsForm user={{ name: target.name, email: target.email }} />
 
             <section id="password" className="flex flex-col gap-[12px]">
-              <h2>{hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}</h2>
+              <h2>
+                {hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}
+              </h2>
               <PasswordForm hasPassword={hasPasswordSet} />
             </section>
 
@@ -102,8 +129,8 @@ export default async function UserPage() {
               <h2>Sitzungen</h2>
               <p>
                 Vermutest du, dass noch ein fremdes Gerät angemeldet ist? Hier
-                kannst du alle anderen Sitzungen beenden, ohne dein Passwort
-                zu ändern.
+                kannst du alle anderen Sitzungen beenden, ohne dein Passwort zu
+                ändern.
               </p>
               <LogoutEverywhereButton />
             </section>
@@ -119,6 +146,39 @@ export default async function UserPage() {
                 isAdmin={target.role === "admin"}
               />
             </section>
+
+            <section id="editor" className="flex flex-col gap-[12px]">
+              <h2>Editor</h2>
+              <EditorSpellcheckSettingsForm enabled={spellcheckEnabled} />
+            </section>
+
+            {characterColors.length > 0 && (
+              <section
+                id="character-colors"
+                className="flex flex-col gap-[24px]"
+              >
+                <h2>Charakter-Farben</h2>
+                <p>
+                  Jeder deiner Charaktere kann eine eigene Farbe haben — sie
+                  färbt seine wörtliche Rede im Fließtext-Modus abgeschlossener
+                  Gespräche sowie seine Nachrichten-Karten in Gesprächen ein.
+                </p>
+                {characterColors.map(({ character, ownColor, takenColors }) => (
+                  <div key={character.id} className="flex flex-col gap-[12px]">
+                    <h3>
+                      <Link href={`/characters/${character.slug}`}>
+                        {character.name}
+                      </Link>
+                    </h3>
+                    <CharacterColorForm
+                      characterId={character.id}
+                      ownColor={ownColor}
+                      takenColors={takenColors}
+                    />
+                  </div>
+                ))}
+              </section>
+            )}
 
             <section id="install" className="flex flex-col gap-[12px]">
               <h2>App installieren</h2>

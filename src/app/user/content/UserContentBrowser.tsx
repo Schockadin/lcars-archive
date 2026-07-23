@@ -7,10 +7,11 @@ import type { DialogueSummary } from "@/lib/dialoguesCore";
 import type { UserContentArchiveEntry } from "@/lib/archive";
 import { fmtDate, sessionLabel, periodLabel } from "@/lib/missionFormat";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
+import { PencilIcon } from "@/lib/icons";
 import type { Character } from "@/types/character";
 import type { MissionPreview } from "@/types/missions";
 import VisibilitySelect from "./VisibilitySelect";
-import DeleteMissionLogButton from "./DeleteMissionLogButton";
+import DeleteOwnContentButton from "./DeleteOwnContentButton";
 
 type CategoryFilter =
   | "all"
@@ -29,12 +30,49 @@ const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   missions: "Missionen",
 };
 
-// "Meine Inhalte": genau vier feste Kategorien (Charaktere, Einsatzberichte,
-// Gespräche, Archiv-Einträge), jede ein Akkordeon mit Visibility-Switch pro
-// Eintrag. Darüber zwei Filter (Charakter, Kategorie) in einem responsiven
+// Eine Zeile mit allen drei möglichen Aktionen (Sichtbarkeit/Bearbeiten/
+// Löschen) statt gestapelter Einzelelemente — jede Aktion ist optional, da
+// nicht jeder Inhaltstyp alle drei kennt (Missionen z.B. keine Sichtbarkeit,
+// Gespräche kein Bearbeiten-Formular).
+function ContentActionRow({
+  visibility,
+  editHref,
+  deleteButton,
+}: {
+  visibility?: React.ReactNode;
+  editHref?: string;
+  deleteButton?: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-[8px]">
+      {visibility}
+      {editHref && (
+        <Link
+          href={editHref}
+          className="lcars-icon-btn"
+          aria-label="Bearbeiten"
+          title="Bearbeiten"
+        >
+          <PencilIcon />
+        </Link>
+      )}
+      {deleteButton}
+    </div>
+  );
+}
+
+// "Meine Inhalte": fünf feste Kategorien (Charaktere, Einsatzberichte,
+// Gespräche, Archiv-Einträge, Missionen), jede ein Akkordeon mit
+// Sichtbarkeit/Bearbeiten/Löschen pro Eintrag in einer Zeile. Eigene
+// Charaktere/Missionen/Einsatzberichte/Archiv-Einträge, die noch als Entwurf
+// gespeichert sind (siehe is_draft, scripts/schema.sql), werden aus ihren
+// jeweiligen Akkordeons herausgenommen und stattdessen gemeinsam in einer
+// eigenen "Entwürfe"-DataRow oben angezeigt — unabhängig vom Kategorie-Filter,
+// da sie den schnellen Überblick über die eigene unfertige Arbeit bieten
+// soll. Darüber zwei Filter (Charakter, Kategorie) in einem responsiven
 // Grid — Charakter-Filter wirkt auf Charaktere/Einsatzberichte/Gespräche
-// (Archiv-Einträge sind Owner-, nicht Charakter-gebunden), Kategorie-Filter
-// blendet einzelne Akkordeons komplett aus.
+// (Archiv-Einträge/Missionen sind Owner-, nicht Charakter-gebunden),
+// Kategorie-Filter blendet einzelne Akkordeons (außer Entwürfe) komplett aus.
 export default function UserContentBrowser({
   characters,
   logs,
@@ -62,20 +100,38 @@ export default function UserContentBrowser({
     Object.keys(CATEGORY_LABELS) as CategoryFilter[]
   ).filter((key) => key !== "missions" || canManageMissions);
 
-  // Für die optimistische Löschung (DeleteMissionLogButton): entfernt den
-  // Log sofort aus der Liste, fällt aber automatisch auf `logs` (den echten
-  // Server-Stand) zurück, sobald die Transition abgeschlossen ist — bei
+  // Für die optimistische Löschung (DeleteOwnContentButton): entfernt den
+  // Eintrag sofort aus der jeweiligen Liste, fällt aber automatisch auf die
+  // echten Props zurück, sobald die Transition abgeschlossen ist — bei
   // Erfolg über revalidatePath eine kürzere Liste, bei Fehlschlag dieselbe
-  // wie vorher (der gelöschte Log erscheint dann wieder).
+  // wie vorher (der Eintrag erscheint dann wieder).
+  const [optimisticCharacters, removeOptimisticCharacter] = useOptimistic(
+    characters,
+    (state, id: number) => state.filter((c) => c.id !== id),
+  );
   const [optimisticLogs, removeOptimisticLog] = useOptimistic(
     logs,
-    (state, deletedId: number) => state.filter((l) => l.id !== deletedId),
+    (state, id: number) => state.filter((l) => l.id !== id),
+  );
+  const [optimisticDialogues, removeOptimisticDialogue] = useOptimistic(
+    dialogues,
+    (state, id: number) => state.filter((d) => d.id !== id),
+  );
+  const [optimisticArchiveEntries, removeOptimisticArchiveEntry] =
+    useOptimistic(archiveEntries, (state, id: number) =>
+      state.filter((e) => e.id !== id),
+    );
+  const [optimisticMissions, removeOptimisticMission] = useOptimistic(
+    missions,
+    (state, id: number) => state.filter((m) => m.id !== id),
   );
 
   const filteredCharacters = useMemo(
     () =>
-      characters.filter((c) => !characterFilter || c.slug === characterFilter),
-    [characters, characterFilter],
+      optimisticCharacters.filter(
+        (c) => !characterFilter || c.slug === characterFilter,
+      ),
+    [optimisticCharacters, characterFilter],
   );
   const filteredLogs = useMemo(
     () =>
@@ -86,11 +142,52 @@ export default function UserContentBrowser({
   );
   const filteredDialogues = useMemo(
     () =>
-      dialogues.filter(
+      optimisticDialogues.filter(
         (d) => !characterFilter || d.characterSlug === characterFilter,
       ),
-    [dialogues, characterFilter],
+    [optimisticDialogues, characterFilter],
   );
+
+  // Entwürfe aus den jeweiligen Listen herausgetrennt — publishedX rendert
+  // im normalen Akkordeon, draftX in der gemeinsamen Entwürfe-DataRow unten.
+  const publishedCharacters = useMemo(
+    () => filteredCharacters.filter((c) => !c.is_draft),
+    [filteredCharacters],
+  );
+  const draftCharacters = useMemo(
+    () => filteredCharacters.filter((c) => c.is_draft),
+    [filteredCharacters],
+  );
+  const publishedLogs = useMemo(
+    () => filteredLogs.filter((l) => !l.is_draft),
+    [filteredLogs],
+  );
+  const draftLogs = useMemo(
+    () => filteredLogs.filter((l) => l.is_draft),
+    [filteredLogs],
+  );
+  const publishedArchiveEntries = useMemo(
+    () => optimisticArchiveEntries.filter((e) => !e.isDraft),
+    [optimisticArchiveEntries],
+  );
+  const draftArchiveEntries = useMemo(
+    () => optimisticArchiveEntries.filter((e) => e.isDraft),
+    [optimisticArchiveEntries],
+  );
+  const publishedMissions = useMemo(
+    () => optimisticMissions.filter((m) => !m.isDraft),
+    [optimisticMissions],
+  );
+  const draftMissions = useMemo(
+    () => optimisticMissions.filter((m) => m.isDraft),
+    [optimisticMissions],
+  );
+
+  const totalDrafts =
+    draftCharacters.length +
+    draftLogs.length +
+    draftArchiveEntries.length +
+    (canManageMissions ? draftMissions.length : 0);
 
   const total =
     characters.length +
@@ -144,19 +241,186 @@ export default function UserContentBrowser({
         </select>
       </div>
 
+      <LcarsDataRow value={totalDrafts} label="Entwürfe" color="var(--lcars-red)">
+        {totalDrafts === 0 ? (
+          <p className="lcars-empty-state">Keine Entwürfe vorhanden.</p>
+        ) : (
+          <div className="flex flex-col gap-[6px]">
+            {draftCharacters.map((c) => (
+              <div
+                key={`character-${c.id}`}
+                className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
+              >
+                <Link
+                  href={`/characters/${c.slug}`}
+                  className="mission-akte flex-1"
+                  style={{ "--mission-color": "var(--lcars-red)" } as React.CSSProperties}
+                >
+                  <span className="mission-akte-rail" />
+                  <span className="mission-akte-body text-left">
+                    <span className="mission-akte-title block">{c.name}</span>
+                    <span className="mission-akte-meta">
+                      <span>
+                        <b>Typ</b> Charakter
+                      </span>
+                    </span>
+                  </span>
+                </Link>
+                <ContentActionRow
+                  visibility={
+                    <VisibilitySelect
+                      contentType="character"
+                      id={c.id}
+                      initialValue={c.visibility}
+                    />
+                  }
+                  editHref={`/user/characters/${c.id}/edit`}
+                  deleteButton={
+                    <DeleteOwnContentButton
+                      contentType="character"
+                      id={c.id}
+                      onOptimisticDelete={() => removeOptimisticCharacter(c.id)}
+                    />
+                  }
+                />
+              </div>
+            ))}
+            {canManageMissions &&
+              draftMissions.map((m) => (
+                <div
+                  key={`mission-${m.id}`}
+                  className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
+                >
+                  <Link
+                    href={`/missions/${m.slug}`}
+                    className="mission-akte flex-1"
+                    style={{ "--mission-color": "var(--lcars-red)" } as React.CSSProperties}
+                  >
+                    <span className="mission-akte-rail" />
+                    <span className="mission-akte-body text-left">
+                      <span className="mission-akte-title block">{m.title}</span>
+                      <span className="mission-akte-meta">
+                        <span>
+                          <b>Typ</b> Mission
+                        </span>
+                      </span>
+                    </span>
+                  </Link>
+                  <ContentActionRow
+                    editHref={`/user/missions/${m.id}/edit`}
+                    deleteButton={
+                      <DeleteOwnContentButton
+                        contentType="mission"
+                        id={m.id}
+                        onOptimisticDelete={() => removeOptimisticMission(m.id)}
+                      />
+                    }
+                  />
+                </div>
+              ))}
+            {draftLogs.map((log) => (
+              <div
+                key={`log-${log.id}`}
+                className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
+              >
+                <Link
+                  href={`/missions/${log.mission_slug}/${log.slug}`}
+                  className="mission-akte flex-1"
+                  style={{ "--mission-color": "var(--lcars-red)" } as React.CSSProperties}
+                >
+                  <span className="mission-akte-rail" />
+                  <span className="mission-akte-body text-left">
+                    <span className="mission-akte-title block">{log.title}</span>
+                    <span className="mission-akte-meta">
+                      <span>
+                        <b>Typ</b> Einsatzbericht
+                      </span>
+                      <span>
+                        <b>Mission</b> {log.mission_title}
+                      </span>
+                    </span>
+                  </span>
+                </Link>
+                <ContentActionRow
+                  visibility={
+                    <VisibilitySelect
+                      contentType="mission_log"
+                      id={log.id}
+                      initialValue={log.visibility}
+                    />
+                  }
+                  editHref={`/user/mission-logs/${log.id}/edit`}
+                  deleteButton={
+                    <DeleteOwnContentButton
+                      contentType="mission_log"
+                      id={log.id}
+                      onOptimisticDelete={() => removeOptimisticLog(log.id)}
+                    />
+                  }
+                />
+              </div>
+            ))}
+            {draftArchiveEntries.map((entry) => (
+              <div
+                key={`archive-${entry.id}`}
+                className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
+              >
+                <Link
+                  href={`/archive/${entry.slug}`}
+                  className="mission-akte flex-1"
+                  style={{ "--mission-color": "var(--lcars-red)" } as React.CSSProperties}
+                >
+                  <span className="mission-akte-rail" />
+                  <span className="mission-akte-body text-left">
+                    <span className="mission-akte-title block">{entry.title}</span>
+                    <span className="mission-akte-meta">
+                      <span>
+                        <b>Typ</b> Archiv-Eintrag
+                      </span>
+                      <span>
+                        <b>Kategorie</b> {CATEGORY_CONFIG[entry.category].label}
+                      </span>
+                    </span>
+                  </span>
+                </Link>
+                <ContentActionRow
+                  visibility={
+                    <VisibilitySelect
+                      contentType="archive_entry"
+                      id={entry.id}
+                      initialValue={entry.visibility}
+                    />
+                  }
+                  editHref={`/user/archive/${entry.id}/edit`}
+                  deleteButton={
+                    <DeleteOwnContentButton
+                      contentType="archive_entry"
+                      id={entry.id}
+                      onOptimisticDelete={() =>
+                        removeOptimisticArchiveEntry(entry.id)
+                      }
+                    />
+                  }
+                />
+              </div>
+            ))}
+          </div>
+        )}
+      </LcarsDataRow>
+
       {showCharacters && (
         <LcarsDataRow
-          value={filteredCharacters.length}
+          value={publishedCharacters.length}
           label="Charaktere"
           color="var(--lcars-amber)"
         >
-          {filteredCharacters.length === 0 ? (
+          {publishedCharacters.length === 0 ? (
             <p className="lcars-empty-state">
               Keine Charaktere für diese Auswahl.
             </p>
           ) : (
             <div className="flex flex-col gap-[6px]">
-              {filteredCharacters.map((c) => (
+              {publishedCharacters.map((c) => (
                 <div
                   key={c.id}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
@@ -175,19 +439,23 @@ export default function UserContentBrowser({
                       <span className="mission-akte-title block">{c.name}</span>
                     </span>
                   </Link>
-                  <div className="flex flex-col items-stretch sm:items-end gap-[4px]">
-                    <VisibilitySelect
-                      contentType="character"
-                      id={c.id}
-                      initialValue={c.visibility}
-                    />
-                    <Link
-                      href={`/user/characters/${c.id}/edit`}
-                      className="lcars-link-text text-[14px]"
-                    >
-                      Bearbeiten
-                    </Link>
-                  </div>
+                  <ContentActionRow
+                    visibility={
+                      <VisibilitySelect
+                        contentType="character"
+                        id={c.id}
+                        initialValue={c.visibility}
+                      />
+                    }
+                    editHref={`/user/characters/${c.id}/edit`}
+                    deleteButton={
+                      <DeleteOwnContentButton
+                        contentType="character"
+                        id={c.id}
+                        onOptimisticDelete={() => removeOptimisticCharacter(c.id)}
+                      />
+                    }
+                  />
                 </div>
               ))}
             </div>
@@ -197,17 +465,17 @@ export default function UserContentBrowser({
 
       {showLogs && (
         <LcarsDataRow
-          value={filteredLogs.length}
+          value={publishedLogs.length}
           label="Einsatzberichte"
           color="var(--lcars-blue)"
         >
-          {filteredLogs.length === 0 ? (
+          {publishedLogs.length === 0 ? (
             <p className="lcars-empty-state">
               Keine Einsatzberichte für diese Auswahl.
             </p>
           ) : (
             <div className="flex flex-col gap-[6px]">
-              {filteredLogs.map((log) => (
+              {publishedLogs.map((log) => (
                 <div
                   key={log.id}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
@@ -239,25 +507,23 @@ export default function UserContentBrowser({
                       </span>
                     </span>
                   </Link>
-                  <div className="flex flex-col items-stretch sm:items-end gap-[4px]">
-                    <VisibilitySelect
-                      contentType="mission_log"
-                      id={log.id}
-                      initialValue={log.visibility}
-                    />
-                    <div className="flex gap-[8px] items-center justify-between">
-                      <Link
-                        href={`/user/mission-logs/${log.id}/edit`}
-                        className="lcars-link-text text-[14px]"
-                      >
-                        Bearbeiten
-                      </Link>
-                      <DeleteMissionLogButton
-                        logId={log.id}
+                  <ContentActionRow
+                    visibility={
+                      <VisibilitySelect
+                        contentType="mission_log"
+                        id={log.id}
+                        initialValue={log.visibility}
+                      />
+                    }
+                    editHref={`/user/mission-logs/${log.id}/edit`}
+                    deleteButton={
+                      <DeleteOwnContentButton
+                        contentType="mission_log"
+                        id={log.id}
                         onOptimisticDelete={() => removeOptimisticLog(log.id)}
                       />
-                    </div>
-                  </div>
+                    }
+                  />
                 </div>
               ))}
             </div>
@@ -310,13 +576,26 @@ export default function UserContentBrowser({
                       </span>
                     </span>
                   </Link>
-                  {/* Sichtbarkeit ist nur vom Ersteller (owner_user_id)
-                      änderbar — der Gesprächspartner sieht nur den Status. */}
+                  {/* Sichtbarkeit/Löschen sind nur vom Ersteller (owner_user_id)
+                      nutzbar — der Gesprächspartner sieht nur den Status. */}
                   {d.ownerUserId === ownUserId ? (
-                    <VisibilitySelect
-                      contentType="dialogue"
-                      id={d.id}
-                      initialValue={d.visibility}
+                    <ContentActionRow
+                      visibility={
+                        <VisibilitySelect
+                          contentType="dialogue"
+                          id={d.id}
+                          initialValue={d.visibility}
+                        />
+                      }
+                      deleteButton={
+                        <DeleteOwnContentButton
+                          contentType="dialogue"
+                          id={d.id}
+                          onOptimisticDelete={() =>
+                            removeOptimisticDialogue(d.id)
+                          }
+                        />
+                      }
                     />
                   ) : null}
                 </div>
@@ -328,17 +607,17 @@ export default function UserContentBrowser({
 
       {showArchive && (
         <LcarsDataRow
-          value={archiveEntries.length}
+          value={publishedArchiveEntries.length}
           label="Archiv-Einträge"
           color="var(--lcars-purple)"
         >
-          {archiveEntries.length === 0 ? (
+          {publishedArchiveEntries.length === 0 ? (
             <p className="lcars-empty-state">
               Noch keine eigenen Archiv-Einträge vorhanden.
             </p>
           ) : (
             <div className="flex flex-col gap-[6px]">
-              {archiveEntries.map((entry) => (
+              {publishedArchiveEntries.map((entry) => (
                 <div
                   key={entry.id}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
@@ -365,19 +644,25 @@ export default function UserContentBrowser({
                       </span>
                     </span>
                   </Link>
-                  <div className="flex flex-col items-stretch sm:items-end gap-[4px]">
-                    <VisibilitySelect
-                      contentType="archive_entry"
-                      id={entry.id}
-                      initialValue={entry.visibility}
-                    />
-                    <Link
-                      href={`/user/archive/${entry.id}/edit`}
-                      className="lcars-link-text text-[14px]"
-                    >
-                      Bearbeiten
-                    </Link>
-                  </div>
+                  <ContentActionRow
+                    visibility={
+                      <VisibilitySelect
+                        contentType="archive_entry"
+                        id={entry.id}
+                        initialValue={entry.visibility}
+                      />
+                    }
+                    editHref={`/user/archive/${entry.id}/edit`}
+                    deleteButton={
+                      <DeleteOwnContentButton
+                        contentType="archive_entry"
+                        id={entry.id}
+                        onOptimisticDelete={() =>
+                          removeOptimisticArchiveEntry(entry.id)
+                        }
+                      />
+                    }
+                  />
                 </div>
               ))}
             </div>
@@ -387,15 +672,15 @@ export default function UserContentBrowser({
 
       {showMissions && (
         <LcarsDataRow
-          value={missions.length}
+          value={publishedMissions.length}
           label="Missionen"
           color="var(--lcars-green)"
         >
-          {missions.length === 0 ? (
+          {publishedMissions.length === 0 ? (
             <p className="lcars-empty-state">Noch keine Missionen vorhanden.</p>
           ) : (
             <div className="flex flex-col gap-[6px]">
-              {missions.map((m) => (
+              {publishedMissions.map((m) => (
                 <div
                   key={m.id}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
@@ -422,12 +707,16 @@ export default function UserContentBrowser({
                       </span>
                     </span>
                   </Link>
-                  <Link
-                    href={`/user/missions/${m.id}/edit`}
-                    className="lcars-link-text text-[14px]"
-                  >
-                    Bearbeiten
-                  </Link>
+                  <ContentActionRow
+                    editHref={`/user/missions/${m.id}/edit`}
+                    deleteButton={
+                      <DeleteOwnContentButton
+                        contentType="mission"
+                        id={m.id}
+                        onOptimisticDelete={() => removeOptimisticMission(m.id)}
+                      />
+                    }
+                  />
                 </div>
               ))}
             </div>

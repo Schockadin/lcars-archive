@@ -80,6 +80,8 @@ export async function getRecentActivity(
     LEFT JOIN users pu ON pu.id = c.player_id
     WHERE (c.visibility = 'public' OR c.player_id = ${userId})
       AND (c.created_at > ${since} OR c.updated_at > ${since})
+      AND c.deleted_at IS NULL
+      AND (c.is_draft = false OR c.player_id = ${userId})
 
     UNION ALL
 
@@ -89,7 +91,9 @@ export async function getRecentActivity(
            m.created_at::text, m.updated_at::text
     FROM missions m
     LEFT JOIN users ou ON ou.id = m.owner_user_id
-    WHERE m.created_at > ${since} OR m.updated_at > ${since}
+    WHERE (m.created_at > ${since} OR m.updated_at > ${since})
+      AND m.deleted_at IS NULL
+      AND m.is_draft = false
 
     UNION ALL
 
@@ -102,6 +106,8 @@ export async function getRecentActivity(
     LEFT JOIN users ou ON ou.id = ml.owner_user_id
     WHERE (ml.visibility = 'public' OR ml.owner_user_id = ${userId})
       AND (ml.created_at > ${since} OR ml.updated_at > ${since})
+      AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
+      AND (ml.is_draft = false OR ml.owner_user_id = ${userId})
 
     UNION ALL
 
@@ -114,6 +120,8 @@ export async function getRecentActivity(
     WHERE (a.visibility = 'public' OR a.owner_user_id = ${userId})
       AND (a.created_at > ${since} OR a.updated_at > ${since})
       AND (a.category != 'dialogue' OR a.dialogue_open = FALSE)
+      AND a.deleted_at IS NULL
+      AND (a.is_draft = false OR a.owner_user_id = ${userId})
   `;
 
   const created: RecentActivityItem[] = [];

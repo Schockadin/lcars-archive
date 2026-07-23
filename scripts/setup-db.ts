@@ -3,12 +3,14 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import sql from "@/lib/db";
 
+const SCHEMA_NAME = "schema.sql";
+
 async function setup() {
   console.log("🔌 Verbinde mit Datenbank...");
 
   try {
     const schema = readFileSync(
-      join(process.cwd(), "scripts", "schema.sql"),
+      join(process.cwd(), "scripts", SCHEMA_NAME),
       "utf8",
     );
 

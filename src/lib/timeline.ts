@@ -25,12 +25,17 @@ export const getAllTimelineEvents = unstable_cache(
       LEFT JOIN characters      ch ON te.source_type = 'character'     AND ch.slug = te.source_slug
       LEFT JOIN mission_logs    ml ON te.source_type = 'mission_log'   AND ml.slug = te.source_slug
       LEFT JOIN archive_entries ae ON te.source_type = 'archive_entry' AND ae.slug = te.source_slug
+      LEFT JOIN missions        mi ON te.source_type = 'mission'       AND mi.slug = te.source_slug
       WHERE COALESCE(ch.visibility, ml.visibility, ae.visibility, 'public') = 'public'
+        AND ch.deleted_at IS NULL AND ml.deleted_at IS NULL
+        AND ae.deleted_at IS NULL AND mi.deleted_at IS NULL
+        AND ch.is_draft IS NOT TRUE AND ml.is_draft IS NOT TRUE
+        AND ae.is_draft IS NOT TRUE AND mi.is_draft IS NOT TRUE
       ORDER BY te.event_date DESC NULLS LAST, te.id DESC
     `;
     return rows;
   },
-  ["getAllTimelineEvents", "v2"],
+  ["getAllTimelineEvents", "v4"],
   { tags: [cacheTags.timeline] },
 );
 
@@ -114,7 +119,7 @@ export async function regenerateTimeline(): Promise<RegenerateTimelineResult> {
       ended_at: string | null;
       source_md: string | null;
     }[]
-  >`SELECT slug, title, started_at::text AS started_at, ended_at::text AS ended_at, source_md FROM missions`;
+  >`SELECT slug, title, started_at::text AS started_at, ended_at::text AS ended_at, source_md FROM missions WHERE deleted_at IS NULL`;
 
   for (const m of missions) {
     const href = `/missions/${m.slug}`;
@@ -155,7 +160,7 @@ export async function regenerateTimeline(): Promise<RegenerateTimelineResult> {
   }
 
   const characters = await sql<{ slug: string; source_md: string | null }[]>`
-    SELECT slug, source_md FROM characters
+    SELECT slug, source_md FROM characters WHERE deleted_at IS NULL
   `;
 
   for (const c of characters) {
@@ -181,6 +186,7 @@ export async function regenerateTimeline(): Promise<RegenerateTimelineResult> {
     SELECT ml.slug, ml.source_md, m.slug AS mission_slug
     FROM mission_logs ml
     JOIN missions m ON m.id = ml.mission_id
+    WHERE ml.deleted_at IS NULL AND m.deleted_at IS NULL
   `;
 
   for (const log of logs) {
@@ -210,7 +216,7 @@ export async function regenerateTimeline(): Promise<RegenerateTimelineResult> {
       metadata: unknown;
       source_md: string | null;
     }[]
-  >`SELECT slug, title, category, metadata, source_md FROM archive_entries WHERE dialogue_open = false`;
+  >`SELECT slug, title, category, metadata, source_md FROM archive_entries WHERE dialogue_open = false AND deleted_at IS NULL`;
 
   for (const entry of archiveEntries) {
     const href = `/archive/${entry.slug}`;

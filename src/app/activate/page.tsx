@@ -29,7 +29,7 @@ export default async function ActivatePage({
   return (
     <>
       <PageMeta title="Passwort festlegen" section="login" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <p className="lcars-eyebrow">Zugriff</p>
         <h1>Passwort festlegen</h1>
 

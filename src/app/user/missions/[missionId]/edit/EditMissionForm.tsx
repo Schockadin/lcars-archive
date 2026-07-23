@@ -56,6 +56,8 @@ export default function EditMissionForm({
         bodyRequired
         bodyLarge
         isAdminOrGM
+        draftDefaultValue={mission.isDraft}
+        insertImage={{ contentType: "mission", contentId: mission.id }}
         extraHeadSlot={
           <MissionParticipantsField
             idPrefix="edit-mission"

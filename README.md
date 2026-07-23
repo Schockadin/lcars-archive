@@ -27,19 +27,67 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Eigene Inhalte** — eingeloggte User legen eigene Charaktere, Einsatzberichte,
   Archiv-Einträge und Gespräche zwischen Charakteren an, mit Sichtbarkeitsstufen
   (privat/GM/öffentlich) und einem persönlichen Dashboard (farbcodierter News-Feed,
-  offene Gespräche, Lesezeichen/Abos).
+  offene Gespräche, Lesezeichen/Abos). Gespräche können bereits bei der
+  Erstellung mehr als einen Gesprächspartner haben (Mehrfachauswahl) und
+  jederzeit auch danach um weitere Teilnehmende erweitert werden
+  (Direkt-Hinzufügen durch den Owner samt Info-Mail); haben mehr als zwei
+  Teilnehmende, muss man sich das Antwortrecht
+  erst per Button für zwei Stunden reservieren, mit Sperr-Anzeige und
+  optionaler Mail/Push-Benachrichtigung, sobald die Sperre wieder endet.
+  Offene Gespräche aktualisieren sich dabei automatisch per Polling (alle
+  8 Sekunden, pausiert bei nicht sichtbarem Tab) — neue Nachrichten und
+  Sperr-Status-Änderungen erscheinen ohne manuelles Neuladen der Seite.
+- **Teilen & Export** — der „Teilen“-Knopf auf Charakter-, Missions-,
+  Missionslog-, Archiv-Eintrag- und Gesprächsseiten bietet neben Link
+  kopieren/WhatsApp auch den Download des Inhalts als Markdown-Datei (mit
+  YAML-Frontmatter) oder als PDF (serverseitig erzeugt, ohne Chromium/
+  Puppeteer — läuft dadurch auf Netlify Functions). Berücksichtigt dieselbe
+  Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst.
 - **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und
   automatische bzw. manuelle Verlinkung (`[[Wikilinks]]`) zwischen Inhalten.
+- **Bilder-Galerie** — Charaktere, Missionen, Missionslogs und Archiv-Einträge
+  (nicht Gespräche) können mehrere Bilder haben (JPEG/PNG/WebP/GIF, max. 5 MB
+  pro Datei); Hochladen/Löschen ist auf dieselbe Person beschränkt, die den
+  Inhalt auch sonst bearbeiten darf. Speicherung im selben R2-Bucket wie die
+  DB-Backups (eigener Präfix, keine zusätzliche Konfiguration nötig). Bei
+  Charakteren lässt sich eines der hochgeladenen Bilder als Profilbild
+  festlegen; ein Klick aufs Portrait öffnet ein Karussell über alle
+  hochgeladenen Bilder statt nur des einzelnen Portraits. Bei Missionen,
+  Missionslogs und Archiv-Einträgen lässt sich außerdem ein bereits
+  hochgeladenes Bild direkt aus der Formatierungsleiste des Markdown-Editors
+  in den Text einfügen. Admins sehen unter `/admin/content/images`
+  ("Bilder") zusätzlich alle hochgeladenen Bilder über alle Inhalte hinweg
+  mit Vorschau und können sie dort einzeln endgültig löschen, auch verwaiste
+  Bilder, deren zugehöriger Inhalt bereits gelöscht wurde.
+- **Entwürfe** — Charaktere, Missionen, Missionslogs und Archiv-Einträge lassen
+  sich beim Anlegen/Bearbeiten statt zu veröffentlichen erst als Entwurf
+  speichern (Text-Pflichtfeld entfällt dann); ein Entwurf ist unabhängig von
+  seiner Sichtbarkeitsstufe für niemanden außer der eigenen Person sichtbar,
+  auch nicht für Spielleitung/Administration (Ausnahme: Missionen, die jede
+  Spielleitung sehen kann, da Missionen kein Einzel-Owner-Modell haben), und
+  erscheint bis zur Veröffentlichung nur unter „Meine Inhalte“.
 - **PWA mit Push-Benachrichtigungen** — installierbar auf Mobilgeräten (inkl. maskable
   Icon), Web-Push für neue Dialog-Nachrichten und abonnierte Inhalte.
 - **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und Spielleitung.
 - **Markdown-Vault als Ursprungsimport** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
   entstehen danach direkt in der App (Datenbank als alleinige Source of Truth).
+  Admins können im selben Frontmatter-Format zusätzlich einzelne oder mehrere
+  `.md`-Dateien direkt im Adminbereich hochladen — Archiv-Einträge, Missionen,
+  Charaktere und Missionslogs —, ohne dafür das CLI-Ingest-Skript zu brauchen.
+  Jede Datei wird zunächst nur geparst und als durchblätterbare Vorschau
+  angezeigt (Datei 1 von N mit Vor-/Zurück-Navigation), in der sich alle
+  Felder inklusive Text noch bearbeiten lassen, bevor sie einzeln bestätigt
+  wird.
 - **DB-Backup** — der komplette Datenbankinhalt lässt sich im Admin-Panel als
   JSON-Datei herunterladen und bei Bedarf wieder vollständig einspielen; ein
   täglicher Cronjob sichert zusätzlich automatisch nach Cloudflare R2 und
-  löscht dort Backups, die älter als 30 Tage sind.
+  löscht dort Backups, die älter als 30 Tage sind. Manuelles Sichern/
+  Einspielen ist außerdem direkt im selben R2-Bucket möglich (eigener Key
+  pro Sicherung, fällt nicht unter die automatische Löschung). Das separate
+  User-Backup (nur Useraccounts, per Upsert über die E-Mail-Adresse statt
+  vollem Restore) bietet denselben R2-Cloud-Weg unter einem eigenen Präfix
+  (`user-backups/`) im gleichen Bucket.
 - **Admin-Bereich** — eigene Unterseiten für Nutzerverwaltung (durchsuchbare/
   sortierbare Tabelle, Detailseite pro User für Rolle/Aktivierung/Löschen/
   Passwort-Reset), Charakter-Zuweisung, Wartungs-Skripte sowie einen
@@ -47,7 +95,26 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   SQL-Abfragefeld (Syntaxhervorhebung via CodeMirror). Ein Audit-Log
   protokolliert sicherheitsrelevante Useraccount-Aktionen (inkl. IP-Adresse)
   sowie, separat, eine 3-Tage-Übersicht aller neu angelegten, bearbeiteten
-  und gelöschten Inhalte.
+  und gelöschten Inhalte. Nur Admins dürfen außerdem als Moderation jede
+  Nachricht in jedem Gespräch bearbeiten oder löschen, auch fremde und auch
+  in bereits abgeschlossenen Gesprächen, sowie jederzeit den Besitzer eines
+  Gesprächs neu zuordnen. Eine weitere Unterseite, das Fehler-Log, listet
+  alle unerwarteten Serverfehler (Zeitpunkt, Route, Meldung, Digest).
+  Spielleitung bekommt über ein eigenes „Leitung“-Dropdown im Header
+  (analog zum Admin-Menü) Zugriff auf drei Übersichten: alle Missionen
+  (Bearbeiten/Löschen/Besitzer:in-Zuordnung pro Zeile), die bestehende
+  Charakter-Zuweisung sowie alle aktuell offenen Gespräche — auch ohne
+  eigene Teilnahme, verlinkt auf die read-only-Ansicht des jeweiligen
+  Gesprächs. Über jedes neu begonnene Gespräch wird jeder aktive
+  GM-Account zusätzlich automatisch per Mail/Push informiert.
+- **Custom-404/500-Seiten** — unerwartete Serverfehler zeigen eine
+  LCARS-gestaltete 500-Seite statt der Next.js-Standardfehlerseite; alle
+  Besucher sehen eine freundliche Meldung mit Referenz-Code, eingeloggte
+  Admins zusätzlich die volle Fehlermeldung inkl. Stacktrace. Jeder
+  Serverfehler (auch bereits im Code abgefangene) wird dauerhaft über
+  `src/instrumentation.ts` bzw. `logCaughtError()` in der Tabelle
+  `error_logs` protokolliert und ist im Adminbereich unter „Fehler-Log“
+  einsehbar.
 - **Custom-Markdown-Pipeline** — `remark`/`rehype` wandeln Markdown in HTML um und rendern
   `h2`-Überschriften als LCARS-Data-Rows.
 - **SEO-fertig** — `robots.ts`, `sitemap.ts`, dynamische Metadaten und 404-Seite.
@@ -197,16 +264,17 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:reset`      | Setzt die Datenbank zurück                                |
 | `npm run db:backup`     | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup") |
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind             |
+| `npm run db:purge-deleted` | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist |
 | `npm run test`          | Führt die Unit-Tests aus (`src/**/*.test.ts`)             |
 | `npm run test:integration` | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz) |
 
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
 (z.B. `db:setup:dev`, `db:ingest:dev`, `db:reset:dev`) — identisch, nur mit
 `--env-file=.env.dev` statt `.env.local`. Ausnahme: `db:backup`/
-`db:backup:cleanup` lesen `DATABASE_URL`/die R2-Zugangsdaten direkt aus der
-Prozessumgebung (kein `--env-file`, siehe GitHub-Actions-Secrets oben) und
-haben deshalb keine `:dev`-Variante. Siehe „Dev-/Preview-Umgebung"
-unter Deployment.
+`db:backup:cleanup`/`db:purge-deleted` lesen `DATABASE_URL`/die
+R2-Zugangsdaten direkt aus der Prozessumgebung (kein `--env-file`, siehe
+GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
+„Dev-/Preview-Umgebung" unter Deployment.
 
 ---
 
@@ -220,6 +288,7 @@ unter Deployment.
 │   ├── reset-db.ts           # Datenbank zurücksetzen
 │   ├── backup-db.ts          # Voll-Backup nach R2 (täglicher Cronjob)
 │   ├── cleanup-db-backups.ts # Löscht R2-Backups älter als 30 Tage
+│   ├── purge-soft-deleted.ts # Entfernt weich gelöschte Inhalte älter als 7 Tage endgültig
 │   └── ingest/               # Markdown-Vault → Datenbank
 │       ├── index.ts          # Einstiegspunkt der Ingestion
 │       ├── characters.ts
@@ -243,11 +312,17 @@ unter Deployment.
     │   ├── admin/             # Admin-Bereich (gm-or-admin bzw. admin-only je Unterseite):
     │   │   ├── users/          #   Nutzerverwaltung (Tabelle + Detailseite [id]/edit/)
     │   │   ├── characters/     #   Charakter-Zuweisung
+    │   │   ├── missions/       #   Missionsübersicht: Bearbeiten/Löschen/Besitzer:in
+    │   │   ├── dialogues/      #   Alle offenen Gespräche, auch ohne eigene Teilnahme
     │   │   ├── db/             #   DB-Backup, Tabellenbrowser, freies SQL-Abfragefeld
     │   │   ├── scripts/        #   Cache-Revalidation, Timeline-Neuaufbau, u.a.
     │   │   ├── audit-log/      #   Sicherheits-Audit-Log + Content-Aktivitätsfeed
-    │   │   └── content/        #   Owner-/Sichtbarkeits-Übersteuerung fremder Inhalte
+    │   │   ├── error-log/      #   Protokollierte Serverfehler (Zeitpunkt, Route, Meldung)
+    │   │   ├── content/        #   Owner-/Sichtbarkeits-Übersteuerung fremder Inhalte
+    │   │   └── import/         #   Markdown-Datei-Upload → neue Einträge (mit Vorschau)
     │   ├── api/               # /api/characters, /api/health …
+    │   ├── error.tsx           # Custom 500-Seite (Server Components/Route Handlers)
+    │   ├── global-error.tsx    # Custom 500-Seite bei Fehlern im Root-Layout selbst
     │   ├── manifest.ts        # PWA-Manifest (Icons, inkl. maskable)
     │   ├── robots.ts
     │   └── sitemap.ts
@@ -348,20 +423,84 @@ Das Projekt ist für **Netlify** vorkonfiguriert (`@netlify/plugin-nextjs`).
 `.github/workflows/daily-db-backup.yml` läuft täglich um 03:00 UTC (plus
 manuell auslösbar über "Run workflow") und lädt einen vollständigen
 DB-Export (`scripts/backup-db.ts`, dieselbe Export-Logik wie der
-"DB-Backup herunterladen"-Button im Adminpanel unter `/admin/db`) nach
-Cloudflare R2 hoch. Im selben Lauf löscht anschließend
-`scripts/cleanup-db-backups.ts` (`npm run db:backup:cleanup`) alle Backups,
-die älter als 30 Tage sind — das Alter wird aus dem Datei-Key selbst
-gelesen (`db-backups/JJJJ-MM-TT.json`), nicht aus S3s `LastModified`.
-Dafür müssen folgende Repository-Secrets gesetzt sein (GitHub → Settings →
-Secrets and variables → Actions → "New repository secret"):
+DB-Backup-Bereich im Adminpanel unter `/admin/db`) nach Cloudflare R2 hoch.
+Im selben Lauf löscht anschließend `scripts/cleanup-db-backups.ts`
+(`npm run db:backup:cleanup`) alle Backups, die älter als 30 Tage sind —
+das Alter wird aus dem Datei-Key selbst gelesen (`db-backups/JJJJ-MM-TT.json`),
+nicht aus S3s `LastModified`. Manuell im Adminpanel nach R2 gespeicherte
+Backups bekommen einen davon unterscheidbaren Key
+(`db-backups/manual-<Zeitstempel>.json`, siehe `buildManualDbBackupKey` in
+`src/lib/r2Backup.ts`) und fallen deshalb bewusst NICHT unter dieses
+automatische Aufräumen — sie bleiben bis zur manuellen Löschung erhalten.
+Als dritter Schritt im selben Job entfernt `scripts/purge-soft-deleted.ts`
+(`npm run db:purge-deleted`) anschließend alle weich gelöschten Inhalte
+(Charaktere/Missionen/Missionslogs/Archiv-Einträge/Dialoge, siehe „Soft-Delete
+für Inhalte" weiter unten), deren `deleted_at` mehr als 7 Tage zurückliegt,
+endgültig aus der DB — bewusst NACH dem Backup-Upload, damit ein zu
+purgender Inhalt notfalls noch aus dem frischen Backup wiederhergestellt
+werden könnte. Dabei löscht `purgeContentImagesFor()` auch die zum Inhalt
+gehörenden Bilder samt R2-Objekten mit (siehe „Bilder für Inhalte" weiter
+unten) — der Purge-Schritt braucht deshalb zusätzlich zu `DATABASE_URL` auch
+die vier `R2_*`-Secrets. Dafür müssen folgende Repository-Secrets gesetzt
+sein (GitHub → Settings → Secrets and variables → Actions → "New repository
+secret"):
 
 | Secret | Wert |
 |---|---|
-| `DATABASE_URL` | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. Nur für den Backup-Schritt nötig, nicht für das Cleanup. |
-| `R2_ACCOUNT_ID` | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). |
+| `DATABASE_URL` | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. Nötig für den Backup- UND den Purge-Schritt, nicht für das R2-Cleanup. |
+| `R2_ACCOUNT_ID` | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). Nötig für den Backup- UND den Purge-Schritt (Bild-Cleanup), nicht für das R2-Cleanup. |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens"). |
-| `R2_BUCKET_NAME` | Name des Ziel-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). |
+| `R2_BUCKET_NAME` | Name des Ziel-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag) sowie für die Bilder (`content-images/...`). |
+
+**Wichtig für das manuelle R2-Backup im Adminpanel** (`/admin/db` — "Im
+R2-Bucket speichern" / "Aus R2-Bucket importieren", genauso für das
+User-Backup unter demselben Adminbereich mit `user-backups/`-Präfix):
+dieselben vier `R2_*`-Variablen müssen **zusätzlich** im Netlify-Dashboard
+als Environment-Variablen hinterlegt werden. Die GitHub-Secrets oben gelten
+nur für den Cronjob (GitHub Actions) — die deployte Next.js-App auf Netlify
+liest sie separat aus ihrer eigenen Umgebung. Ohne diese Netlify-Variablen
+zeigen die R2-Buttons im Adminpanel einen Fehler ("... ist nicht gesetzt"),
+der lokale Download/Upload-Weg funktioniert davon unabhängig immer.
+
+### Soft-Delete für Inhalte
+
+Charaktere, Missionen, Missionslogs, Archiv-Einträge und Dialoge werden beim
+Löschen nicht mehr sofort aus der Datenbank entfernt, sondern nur mit einem
+`deleted_at`-Zeitstempel markiert (siehe `scripts/schema.sql`). Für alle
+außer Admins verschwinden sie damit sofort aus Suche, Timeline und allen
+Übersichten — Admins sehen sie weiterhin im Papierkorb unter
+`/admin/content/trash` (Adminbereich → "Papierkorb") und können sie dort
+wiederherstellen oder sofort endgültig löschen. Ohne manuelles Eingreifen
+entfernt der tägliche Cronjob (`scripts/purge-soft-deleted.ts`, siehe oben)
+weich gelöschte Inhalte automatisch nach 7 Tagen.
+
+### Bilder für Inhalte
+
+Charaktere, Missionen, Missionslogs und Archiv-Einträge (nicht Gespräche —
+siehe `src/lib/contentImages.ts`) können beliebig viele Bilder haben. Die
+Bytes landen im selben R2-Bucket wie die DB-Backups, unter dem eigenen
+Präfix `content-images/<Typ>/<ID>/<UUID>.<Endung>` — dieselben vier
+`R2_*`-Variablen aus dem Backup-Abschnitt oben genügen, es ist **keine**
+weitere Konfiguration nötig. Der Bucket bleibt dabei privat: Bilder werden
+nicht direkt aus R2, sondern über eine eigene, sichtbarkeitsgeprüfte Route
+(`/api/content-images/[id]`) ausgeliefert — wer den Inhalt selbst nicht sehen
+darf (private/GM-only-Sichtbarkeit), sieht auch seine Bilder nicht. Erlaubt
+sind JPEG/PNG/WebP/GIF bis 5 MB pro Datei; Hochladen/Löschen darf, wer den
+jeweiligen Inhalt auch sonst bearbeiten darf (bei Charakteren/Missionslogs
+nur der Owner, bei Missionen/Archiv-Einträgen zusätzlich jeder Admin). Bei
+Charakteren lässt sich eines der hochgeladenen Bilder als Profilbild
+festlegen (`characters.portrait`); das Portrait öffnet per Klick ein
+Karussell über alle hochgeladenen Bilder. Bei Missionen, Missionslogs und
+Archiv-Einträgen lässt sich stattdessen ein bereits hochgeladenes Bild direkt
+aus der Markdown-Editor-Toolbar heraus als `![Bild](...)` in den Text
+einfügen. Wird der zugehörige Inhalt endgültig gelöscht (Papierkorb-Purge
+oder Admin-Direktlöschung), räumt `purgeContentImagesFor()`
+(`src/lib/purgeContent.ts`) automatisch auch dessen Bilder samt R2-Objekten
+mit auf — bleibt das aus (z. B. bei einem Fehler), tauchen verwaiste Bilder
+weiterhin in der Admin-Übersicht `/admin/content/images` (Adminbereich →
+"Bilder") auf, die alle hochgeladenen Bilder über alle Inhalte hinweg mit
+Vorschau zeigt und pro Bild einen Admin-Löschen-Button unabhängig vom
+jeweiligen Owner bietet.
 
 ### Dev-/Preview-Umgebung
 

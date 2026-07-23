@@ -19,10 +19,15 @@ export type OwnerContentType =
 
 // Owner sehen/ändern auf den vier Inhalts-Detailseiten (OwnerSelect.tsx)
 // ist admin-only — anders als die Sichtbarkeits-Änderung (nur der Owner
-// selbst) darf hier bewusst jeder Admin JEDEN Inhalt umverteilen. Stiller
-// Return statt Redirect (Aufruf kommt aus einem useTransition-Dropdown,
-// kein Formular) — Rolle frisch aus der DB geprüft, nie aus dem
-// Session-Cookie (gleiches Prinzip wie in completeDialogueAction).
+// selbst) darf hier bewusst jeder Admin JEDEN Inhalt umverteilen. Ausnahme
+// "mission": Missionen haben ohnehin kein Einzel-Owner-Bearbeitungsmodell
+// (jede Spielleitung darf jede Mission bearbeiten/löschen, siehe
+// deleteOwnContentAction), die neue GM-Missionsübersicht (/admin/missions)
+// braucht deshalb auch für GM eine funktionierende Owner-Zuweisung —
+// character/mission_log/archive_entry bleiben admin-only. Stiller Return
+// statt Redirect (Aufruf kommt aus einem useTransition-Dropdown, kein
+// Formular) — Rolle frisch aus der DB geprüft, nie aus dem Session-Cookie
+// (gleiches Prinzip wie in completeDialogueAction).
 export async function setOwnerAction(
   contentType: OwnerContentType,
   id: number,
@@ -32,7 +37,9 @@ export async function setOwnerAction(
   if (!session) return { error: "Nicht angemeldet." };
 
   const user = await getUserById(session.userId);
-  if (user?.role !== "admin") return { error: "Nur für Admins." };
+  const allowed =
+    user?.role === "admin" || (user?.role === "gm" && contentType === "mission");
+  if (!allowed) return { error: "Nur für Admins." };
 
   if (ownerId != null && !(await getUserById(ownerId))) {
     return { error: "Ungültiger User." };

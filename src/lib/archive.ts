@@ -10,6 +10,7 @@ import { getDialogueSubscribers } from "@/lib/dialogues";
 import { sendArchiveEntryUpdatedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
+import { logCaughtError } from "@/lib/errorLog";
 import {
   getAttributeFields,
   getReferenceFields,
@@ -30,7 +31,10 @@ import {
 // Baut metadata.attributes aus den Formularwerten der "Metadaten +/-"-Sektion
 // — nur Felder, die für die jeweilige Kategorie vorgesehen sind (siehe
 // getAttributeFields), nur nicht-leere Werte.
-function buildArchiveAttributes(
+// Exportiert, da auch der Markdown-Import (markdownImport.ts) dieselbe
+// Record<string,string>-Konvention für Attributfelder verwendet und diese
+// Logik nicht dupliziert.
+export function buildArchiveAttributes(
   category: ArchiveCategory,
   attributeValues: Record<string, string>,
 ): ArchiveAttribute[] {
@@ -174,13 +178,15 @@ export const getAllArchiveEntries = unstable_cache(
       FROM archive_entries
       WHERE NOT (category = 'dialogue' AND dialogue_open)
         AND visibility = 'public'
+        AND deleted_at IS NULL
+        AND is_draft = false
       ORDER BY title ASC
     `;
     return rows.map(parseMeta);
   },
-  // Key-Version "4": nur noch public-Einträge — Bump verwirft alte
-  // Cache-Einträge deterministisch (auch poisoned-empty).
-  ["getAllArchiveEntries", "v4"],
+  // Key-Version "5": + deleted_at-Filter — Bump verwirft alte Cache-Einträge
+  // deterministisch (auch poisoned-empty). "6": + is_draft-Filter.
+  ["getAllArchiveEntries", "v6"],
   { tags: [cacheTags.archive] },
 );
 
@@ -202,10 +208,11 @@ export async function getArchiveEntryBySlug(
           dialogue_open,
           visibility,
           owner_user_id AS "ownerUserId",
+          is_draft AS "isDraft",
           updated_at::text AS updated_at,
           COALESCE(source_md, '') AS "sourceMarkdown"
         FROM archive_entries
-        WHERE slug = ${slug}
+        WHERE slug = ${slug} AND deleted_at IS NULL
         LIMIT 1
       `;
       const entry = rows[0];
@@ -220,7 +227,7 @@ export async function getArchiveEntryBySlug(
           al.label
         FROM archive_links al
         JOIN archive_entries e ON e.id = al.target_id
-        WHERE al.source_id = ${entry.id}
+        WHERE al.source_id = ${entry.id} AND e.deleted_at IS NULL
         ORDER BY e.title ASC
       `;
 
@@ -233,13 +240,13 @@ export async function getArchiveEntryBySlug(
           al.label
         FROM archive_links al
         JOIN archive_entries e ON e.id = al.source_id
-        WHERE al.target_id = ${entry.id}
+        WHERE al.target_id = ${entry.id} AND e.deleted_at IS NULL
         ORDER BY e.title ASC
       `;
 
       return { ...parseMeta(entry), links, backlinks };
     },
-    ["getArchiveEntryBySlug", "v4", slug],
+    ["getArchiveEntryBySlug", "v6", slug],
     { tags: [cacheTags.archive, cacheTags.archiveEntry(slug)] },
   )();
 }
@@ -257,11 +264,12 @@ export async function getDialogueCountByParticipant(
         WHERE category = 'dialogue'
           AND NOT dialogue_open
           AND visibility = 'public'
+          AND deleted_at IS NULL
           AND metadata->'participants' @> ${sql.json([{ slug }])}
       `;
       return row?.count ?? 0;
     },
-    ["getDialogueCountByParticipant", "v3", slug],
+    ["getDialogueCountByParticipant", "v4", slug],
     { tags: [cacheTags.archive] },
   )();
 }
@@ -272,6 +280,7 @@ export interface UserContentArchiveEntry {
   title: string;
   category: ArchiveCategory;
   visibility: "private" | "gm" | "public";
+  isDraft: boolean;
 }
 
 // Eigene Archiv-Einträge (owner_user_id, siehe scripts/schema.sql) für
@@ -283,9 +292,9 @@ export async function getArchiveEntriesForUser(
   userId: number,
 ): Promise<UserContentArchiveEntry[]> {
   return sql<UserContentArchiveEntry[]>`
-    SELECT id, slug, title, category, visibility
+    SELECT id, slug, title, category, visibility, is_draft AS "isDraft"
     FROM archive_entries
-    WHERE owner_user_id = ${userId} AND category != 'dialogue'
+    WHERE owner_user_id = ${userId} AND category != 'dialogue' AND deleted_at IS NULL
     ORDER BY title ASC
   `;
 }
@@ -298,9 +307,10 @@ export async function getPublicArchiveEntriesForUser(
   userId: number,
 ): Promise<UserContentArchiveEntry[]> {
   return sql<UserContentArchiveEntry[]>`
-    SELECT id, slug, title, category, visibility
+    SELECT id, slug, title, category, visibility, is_draft AS "isDraft"
     FROM archive_entries
     WHERE owner_user_id = ${userId} AND category != 'dialogue' AND visibility = 'public'
+      AND deleted_at IS NULL AND is_draft = false
     ORDER BY title ASC
   `;
 }
@@ -347,10 +357,10 @@ export async function setArchiveEntryVisibilityAdmin(
 }
 
 // Admin-Owner-Verwaltung (src/app/actions/owner.ts): anders als
-// setArchiveEntryVisibility oben NICHT auf den aktuellen Owner gescoped
-// (nur admin darf das, geprüft in der Server Action) — category='dialogue'
-// bleibt trotzdem ausgeschlossen, Dialoge haben ihr eigenes
-// Owner-/Teilnehmer-Modell.
+// setArchiveEntryVisibility oben NICHT auf den aktuellen Owner gescoped (nur
+// admin darf das, geprüft in der Server Action). Gilt auch für Dialoge (owner
+// = wer den Dialog gestartet hat, siehe createDialogue) — reines
+// owner_user_id-Update, berührt metadata.participants nicht.
 export async function setArchiveEntryOwner(
   archiveEntryId: number,
   ownerId: number | null,
@@ -358,7 +368,7 @@ export async function setArchiveEntryOwner(
   const rows = await sql<{ slug: string }[]>`
     UPDATE archive_entries
     SET owner_user_id = ${ownerId}, updated_at = NOW()
-    WHERE id = ${archiveEntryId} AND category != 'dialogue'
+    WHERE id = ${archiveEntryId}
     RETURNING slug
   `;
   return rows[0] ?? null;
@@ -374,10 +384,12 @@ export const getAllArchivePaths = unstable_cache(
       FROM archive_entries
       WHERE NOT (category = 'dialogue' AND dialogue_open)
         AND visibility = 'public'
+        AND deleted_at IS NULL
+        AND is_draft = false
     `;
     return rows;
   },
-  ["getAllArchivePaths", "v4"],
+  ["getAllArchivePaths", "v6"],
   { tags: [cacheTags.archive] },
 );
 
@@ -448,6 +460,7 @@ export async function createArchiveEntry(input: {
   referenceValues: Record<string, string>;
   bodyMarkdown: string;
   ownerUserId: number;
+  isDraft: boolean;
   // Vorgerendertes HTML überspringt das eigene renderContentHtml() — genutzt
   // vom Opt-in "Automatisch verlinken" (createArchiveEntryAction), siehe
   // createMission in src/lib/missions.ts für dieselbe Begründung.
@@ -472,11 +485,11 @@ export async function createArchiveEntry(input: {
   const [row] = await sql<{ id: number; slug: string }[]>`
     INSERT INTO archive_entries (
       slug, title, category, content, tags, metadata,
-      source_md, frontmatter, owner_user_id, updated_at
+      source_md, frontmatter, owner_user_id, is_draft, updated_at
     ) VALUES (
       ${slug}, ${input.title}, ${input.category}, ${contentHtml}, ${input.tags},
       ${sql.json(metadata as ReturnType<typeof JSON.parse>)}, ${input.bodyMarkdown},
-      ${sql.json({})}, ${input.ownerUserId}, NOW()
+      ${sql.json({})}, ${input.ownerUserId}, ${input.isDraft}, NOW()
     )
     RETURNING id, slug
   `;
@@ -512,6 +525,7 @@ export interface OwnArchiveEntryForEdit {
   // "Metadaten +/-"-Sektion.
   attributeValues: Record<string, string>;
   referenceValues: Record<string, string>;
+  isDraft: boolean;
 }
 
 // Für /user/archive/[entryId]/edit — lädt den rohen Markdown-Body
@@ -534,11 +548,14 @@ export async function getOwnArchiveEntryForEdit(
       tags: string[];
       sourceMarkdown: string;
       metadata: ArchiveMetadata | string;
+      isDraft: boolean;
     }[]
   >`
-    SELECT id, slug, title, category, tags, COALESCE(source_md, '') AS "sourceMarkdown", metadata
+    SELECT id, slug, title, category, tags, COALESCE(source_md, '') AS "sourceMarkdown",
+           metadata, is_draft AS "isDraft"
     FROM archive_entries
     WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
+      AND deleted_at IS NULL
     LIMIT 1
   `;
   const row = rows[0];
@@ -581,6 +598,7 @@ export async function getOwnArchiveEntryForEdit(
     summary: metadata.summary,
     attributeValues,
     referenceValues,
+    isDraft: row.isDraft,
   };
 }
 
@@ -602,25 +620,32 @@ export async function updateOwnArchiveEntryContent(
     attributeValues: Record<string, string>;
     referenceValues: Record<string, string>;
     bodyMarkdown: string;
+    isDraft: boolean;
     // Siehe createArchiveEntry oben — Opt-in "Automatisch verlinken".
     contentHtml?: string;
   },
-): Promise<{ slug: string; visibility: "private" | "gm" | "public" } | null> {
+): Promise<
+  { slug: string; visibility: "private" | "gm" | "public"; wasDraft: boolean } | null
+> {
   const contentHtml =
     input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
   const attributes = buildArchiveAttributes(input.category, input.attributeValues);
   const metadataPatch = { summary: input.summary, attributes };
 
+  // wasDraft (Stand VOR diesem Update) per CTE — siehe
+  // updateOwnCharacterContent in characters.ts für dieselbe Begründung.
   const rows = await sql<
-    { slug: string; visibility: "private" | "gm" | "public" }[]
+    { slug: string; visibility: "private" | "gm" | "public"; wasDraft: boolean }[]
   >`
+    WITH old AS (SELECT is_draft FROM archive_entries WHERE id = ${entryId})
     UPDATE archive_entries
     SET title = ${input.title}, category = ${input.category}, tags = ${input.tags},
         content = ${contentHtml}, source_md = ${input.bodyMarkdown},
         metadata = metadata || ${sql.json(metadataPatch as ReturnType<typeof JSON.parse>)},
-        updated_at = NOW()
+        is_draft = ${input.isDraft}, updated_at = NOW()
+    FROM old
     WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
-    RETURNING slug, visibility
+    RETURNING slug, visibility, old.is_draft AS "wasDraft"
   `;
   const result = rows[0];
   if (!result) return null;
@@ -702,9 +727,9 @@ export async function notifyArchiveEntrySubscribers(input: {
           preview: input.preview,
         });
         if (!result.sent) {
-          console.error(
-            `Archiv-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
-          );
+          const message = `Archiv-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`;
+          console.error(message);
+          void logCaughtError(new Error(message), "archive.ts:notifyArchiveEntrySubscribers");
         }
       }
       if (subscriber.pushNotificationsEnabled) {
@@ -716,4 +741,89 @@ export async function notifyArchiveEntrySubscribers(input: {
       }
     }),
   );
+}
+
+// Löscht einen Archiv-Eintrag (KEINE Dialoge — dafür siehe deleteDialogue in
+// dialoguesCore.ts, gleiche Soft-Delete-Semantik) weich (deleted_at gesetzt
+// statt DELETE) — bleibt in der DB, verschwindet aber aus allen Listen/der
+// Suche/der Timeline für alle außer Admins (siehe getAllContentForAdmin/
+// Trash-Ansicht in lib/adminContent.ts) und wird nach 7 Tagen vom
+// Purge-Cronjob endgültig entfernt. archive_links/content_follows werden
+// bewusst NICHT sofort entfernt — ein wiederhergestellter Eintrag soll seine
+// Verweise/Abos zurückbekommen (siehe restoreArchiveEntry), Bereinigung
+// passiert erst beim endgültigen Purge. Admin-only, kein Owner-Scoping.
+// deletedByUserId dient nur dem Löschprotokoll (content_deletions, siehe
+// getRecentDeletions in recentActivity.ts).
+export async function deleteArchiveEntry(
+  archiveEntryId: number,
+  deletedByUserId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<
+    {
+      slug: string;
+      title: string;
+      visibility: string;
+      ownerUserId: number | null;
+      isDraft: boolean;
+    }[]
+  >`
+    UPDATE archive_entries
+    SET deleted_at = NOW()
+    WHERE id = ${archiveEntryId} AND category != 'dialogue' AND deleted_at IS NULL
+    RETURNING slug, title, visibility, owner_user_id AS "ownerUserId", is_draft AS "isDraft"
+  `;
+  const row = rows[0] ?? null;
+  if (row && !row.isDraft) {
+    await sql`
+      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+      VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${row.ownerUserId}, ${deletedByUserId})
+    `;
+  }
+  return row ? { slug: row.slug } : null;
+}
+
+// Selbstlöschung durch die Owner-Person (Meine Inhalte) — Ownership per
+// owner_user_id direkt im WHERE erzwungen statt per Vorab-Check, gleiches
+// Prinzip wie deleteMissionLog in missions.ts. Ein Eintrag ohne Owner
+// (owner_user_id IS NULL) matcht dadurch für niemanden, kein Sonderfall
+// nötig. Kein Admin-Bypass — für fremde Einträge bleibt deleteArchiveEntry
+// (requireAdmin) der richtige Weg.
+export async function deleteOwnArchiveEntry(
+  userId: number,
+  archiveEntryId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<
+    {
+      slug: string;
+      title: string;
+      visibility: string;
+      isDraft: boolean;
+    }[]
+  >`
+    UPDATE archive_entries
+    SET deleted_at = NOW()
+    WHERE id = ${archiveEntryId} AND owner_user_id = ${userId}
+      AND category != 'dialogue' AND deleted_at IS NULL
+    RETURNING slug, title, visibility, is_draft AS "isDraft"
+  `;
+  const row = rows[0] ?? null;
+  if (row && !row.isDraft) {
+    await sql`
+      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+      VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${userId}, ${userId})
+    `;
+  }
+  return row ? { slug: row.slug } : null;
+}
+
+// Macht einen weich gelöschten Archiv-Eintrag wieder sichtbar (Admin-Trash-Ansicht).
+export async function restoreArchiveEntry(
+  archiveEntryId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE archive_entries SET deleted_at = NULL
+    WHERE id = ${archiveEntryId} AND deleted_at IS NOT NULL
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
 }

@@ -18,6 +18,8 @@ import { sendCharacterUpdatedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
+import { logCaughtError } from "@/lib/errorLog";
+import { isUniqueViolation } from "@/lib/users";
 
 // Hilfsfunktion: stellt sicher dass metadata ein Objekt ist
 function parseCharacter(row: Character): Character {
@@ -38,7 +40,7 @@ export const getAllCharacters = unstable_cache(
     const rows = await sql<Character[]>`
         SELECT *
         FROM characters
-        WHERE visibility = 'public'
+        WHERE visibility = 'public' AND deleted_at IS NULL AND is_draft = false
         ORDER BY
           CASE status
             WHEN 'active'   THEN 1
@@ -49,7 +51,7 @@ export const getAllCharacters = unstable_cache(
       `;
     return rows.map(parseCharacter);
   },
-  ["getAllCharacters", "v2"],
+  ["getAllCharacters", "v4"],
   { tags: [cacheTags.characters] },
 );
 
@@ -60,6 +62,7 @@ export const getAllCharactersForAdmin = unstable_cache(
     const rows = await sql<Character[]>`
       SELECT *
       FROM characters
+      WHERE deleted_at IS NULL AND is_draft = false
       ORDER BY
         CASE status
           WHEN 'active'   THEN 1
@@ -70,7 +73,7 @@ export const getAllCharactersForAdmin = unstable_cache(
     `;
     return rows.map(parseCharacter);
   },
-  ["getAllCharactersForAdmin"],
+  ["getAllCharactersForAdmin", "v3"],
   { tags: [cacheTags.characters] },
 );
 
@@ -82,12 +85,12 @@ export async function getCharacterBySlug(
       const rows = await sql<Character[]>`
         SELECT *
         FROM characters
-        WHERE slug = ${slug}
+        WHERE slug = ${slug} AND deleted_at IS NULL
         LIMIT 1
       `;
       return rows[0] ? parseCharacter(rows[0]) : null;
     },
-    ["getCharacterBySlug", slug],
+    ["getCharacterBySlug", "v2", slug],
     { tags: [cacheTags.characters, cacheTags.character(slug)] },
   )();
 }
@@ -97,12 +100,13 @@ export const getActiveCharacters = unstable_cache(
     const rows = await sql<Character[]>`
       SELECT id, slug, name, metadata
       FROM characters
-      WHERE status = 'active' AND visibility = 'public'
+      WHERE status = 'active' AND visibility = 'public' AND deleted_at IS NULL
+        AND is_draft = false
       ORDER BY name ASC
     `;
     return rows.map(parseCharacter);
   },
-  ["getActiveCharacters", "v2"],
+  ["getActiveCharacters", "v4"],
   { tags: [cacheTags.characters] },
 );
 
@@ -115,7 +119,7 @@ export async function getCharactersForUser(
   const rows = await sql<Character[]>`
     SELECT *
     FROM characters
-    WHERE player_id = ${userId}
+    WHERE player_id = ${userId} AND deleted_at IS NULL
     ORDER BY name ASC
   `;
   return rows.map(parseCharacter);
@@ -140,14 +144,17 @@ export async function getCharactersWithPlayers(
     FROM characters c
     JOIN users u ON u.id = c.player_id
     WHERE c.player_id IS NOT NULL AND c.player_id != ${excludeUserId}
+      AND c.deleted_at IS NULL AND c.is_draft = false
     ORDER BY c.name ASC
   `;
 }
 
 export interface CharacterParticipantOption {
   id: number;
+  slug: string;
   name: string;
   playerName: string;
+  status: Character["status"];
 }
 
 // Nur Charaktere MIT zugewiesenem Spieler für den Teilnehmer-Multiselect
@@ -155,14 +162,19 @@ export interface CharacterParticipantOption {
 // NPC ohne player_id kann nicht "teilnehmen" im Sinne dieses Features, da
 // die ganze Teilnehmer-Benachrichtigung (siehe missionAction,
 // missions/_shared/contentAction.ts) auf einen Spieler abzielt, der
-// informiert werden kann.
+// informiert werden kann. status wird mitgeliefert, damit die Auswahl
+// standardmäßig nicht mehr aktive Charaktere ausblenden kann (Filterung
+// passiert client-seitig in MissionParticipantsField.tsx, nicht hier — alle
+// Charaktere werden geladen, damit ein bereits ausgewählter, inzwischen
+// inaktiver Teilnehmer beim Bearbeiten nicht unbemerkt aus der Liste fällt).
 export async function getCharactersForParticipantPicker(): Promise<
   CharacterParticipantOption[]
 > {
   return sql<CharacterParticipantOption[]>`
-    SELECT c.id, c.name, u.name AS "playerName"
+    SELECT c.id, c.slug, c.name, u.name AS "playerName", c.status
     FROM characters c
     JOIN users u ON u.id = c.player_id
+    WHERE c.deleted_at IS NULL AND c.is_draft = false
     ORDER BY c.name ASC
   `;
 }
@@ -270,6 +282,7 @@ export interface UserContentLog {
   character_slug: string;
   character_name: string;
   visibility: "private" | "gm" | "public";
+  is_draft: boolean;
 }
 
 // Alle Mission-Logs der eigenen Charaktere für /user/content. Ungecacht
@@ -283,11 +296,11 @@ export async function getLogsForUser(
     SELECT
       ml.id, ml.slug, ml.title, ml.session_nr, ml.log_date::text AS log_date,
       m.slug AS mission_slug, m.title AS mission_title, ml.visibility,
-      c.slug AS character_slug, c.name AS character_name
+      c.slug AS character_slug, c.name AS character_name, ml.is_draft
     FROM mission_logs ml
     JOIN characters c ON c.id = ml.author_id
     JOIN missions m ON m.id = ml.mission_id
-    WHERE c.player_id = ${userId}
+    WHERE c.player_id = ${userId} AND ml.deleted_at IS NULL
     ORDER BY ml.session_nr DESC NULLS LAST
   `;
 }
@@ -302,7 +315,8 @@ export async function getPublicCharactersForUser(
   const rows = await sql<Character[]>`
     SELECT *
     FROM characters
-    WHERE player_id = ${userId} AND visibility = 'public'
+    WHERE player_id = ${userId} AND visibility = 'public' AND deleted_at IS NULL
+      AND is_draft = false
     ORDER BY name ASC
   `;
   return rows.map(parseCharacter);
@@ -322,7 +336,8 @@ export async function getPublicLogsForUser(
     FROM mission_logs ml
     JOIN characters c ON c.id = ml.author_id
     JOIN missions m ON m.id = ml.mission_id
-    WHERE c.player_id = ${userId} AND ml.visibility = 'public'
+    WHERE c.player_id = ${userId} AND ml.visibility = 'public' AND ml.deleted_at IS NULL
+      AND ml.is_draft = false
     ORDER BY ml.session_nr DESC NULLS LAST
   `;
 }
@@ -347,12 +362,13 @@ export async function getLogsByCharacter(
           m.title           AS mission_title
         FROM mission_logs ml
         JOIN missions m ON m.id = ml.mission_id
-        WHERE ml.author_id = ${characterId} AND ml.visibility = 'public'
+        WHERE ml.author_id = ${characterId} AND ml.visibility = 'public' AND ml.deleted_at IS NULL
+          AND ml.is_draft = false
         ORDER BY ml.session_nr DESC NULLS LAST
       `;
       return rows;
     },
-    ["getLogsByCharacter", "v2", String(characterId)],
+    ["getLogsByCharacter", "v4", String(characterId)],
     { tags: [cacheTags.missionLogs] },
   )();
 }
@@ -442,6 +458,10 @@ export async function createCharacter(input: {
   tags: string[];
   bodyMarkdown: string;
   ownerUserId: number;
+  // Entwurf statt sofort veröffentlicht (siehe canViewDraft in
+  // src/lib/visibility.ts) — bewusst kein Default hier, jeder Aufrufer muss
+  // sich explizit entscheiden.
+  isDraft: boolean;
   // Vorgerendertes HTML überspringt das eigene renderContentHtml() — genutzt
   // vom Opt-in "Automatisch verlinken", siehe createArchiveEntry in
   // src/lib/archive.ts für dieselbe Begründung.
@@ -469,11 +489,11 @@ export async function createCharacter(input: {
   const [row] = await sql<{ id: number; slug: string }[]>`
     INSERT INTO characters (
       slug, name, status, player_id, portrait, bio, metadata,
-      source_md, frontmatter, updated_at
+      source_md, frontmatter, is_draft, updated_at
     ) VALUES (
       ${slug}, ${input.name}, ${input.status}, ${input.ownerUserId}, ${input.portrait},
       ${bio}, ${sql.json(metadata as ReturnType<typeof JSON.parse>)}, ${sourceMd},
-      ${sql.json({})}, NOW()
+      ${sql.json({})}, ${input.isDraft}, NOW()
     )
     RETURNING id, slug
   `;
@@ -497,6 +517,7 @@ export interface OwnCharacterForEdit {
   division: string | null;
   tags: string[];
   sourceMarkdown: string;
+  isDraft: boolean;
 }
 
 // Für /user/characters/[characterId]/edit — lädt die für das volle
@@ -519,12 +540,13 @@ export async function getOwnCharacterForEdit(
       portrait: string | null;
       metadata: CharacterMetadata | string;
       sourceMarkdown: string;
+      isDraft: boolean;
     }[]
   >`
-    SELECT id, slug, name, status, portrait, metadata,
+    SELECT id, slug, name, status, portrait, metadata, is_draft AS "isDraft",
            COALESCE(source_md, '') AS "sourceMarkdown"
     FROM characters
-    WHERE id = ${characterId} AND player_id = ${userId}
+    WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
     LIMIT 1
   `;
   const row = rows[0];
@@ -540,6 +562,7 @@ export async function getOwnCharacterForEdit(
     status: row.status,
     portrait: row.portrait,
     sourceMarkdown: row.sourceMarkdown,
+    isDraft: row.isDraft,
     rank: metadata.rank,
     species: metadata.species,
     homeworld: metadata.homeworld,
@@ -577,10 +600,13 @@ export async function updateOwnCharacterContent(
     division: string | null;
     tags: string[];
     bodyMarkdown: string;
+    isDraft: boolean;
     // Siehe createCharacter oben — Opt-in "Automatisch verlinken".
     bioHtml?: string;
   },
-): Promise<{ slug: string; visibility: "private" | "gm" | "public" } | null> {
+): Promise<
+  { slug: string; visibility: "private" | "gm" | "public"; wasDraft: boolean } | null
+> {
   const trimmedBody = input.bodyMarkdown.trim();
   const bio = trimmedBody
     ? (input.bioHtml ?? (await renderContentHtml(trimmedBody)))
@@ -598,15 +624,22 @@ export async function updateOwnCharacterContent(
     tags: input.tags,
   };
 
+  // "wasDraft" (Stand VOR diesem Update) per CTE mitgeliefert — der
+  // Aufrufer (contentAction.ts) braucht ihn, um einen Entwurf→Veröffentlicht-
+  // Übergang von einer normalen Bearbeitung zu unterscheiden (siehe
+  // canViewDraft-Kommentar).
   const rows = await sql<
-    { slug: string; visibility: "private" | "gm" | "public" }[]
+    { slug: string; visibility: "private" | "gm" | "public"; wasDraft: boolean }[]
   >`
+    WITH old AS (SELECT is_draft FROM characters WHERE id = ${characterId})
     UPDATE characters
     SET name = ${input.name}, status = ${input.status}, portrait = ${input.portrait},
         metadata = metadata || ${sql.json(metadataPatch as ReturnType<typeof JSON.parse>)},
-        bio = ${bio}, source_md = ${sourceMd}, updated_at = NOW()
+        bio = ${bio}, source_md = ${sourceMd}, is_draft = ${input.isDraft},
+        updated_at = NOW()
+    FROM old
     WHERE id = ${characterId} AND player_id = ${userId}
-    RETURNING slug, visibility
+    RETURNING slug, visibility, old.is_draft AS "wasDraft"
   `;
   return rows[0] ?? null;
 }
@@ -652,9 +685,9 @@ export async function notifyCharacterSubscribers(input: {
           preview,
         });
         if (!result.sent) {
-          console.error(
-            `Charakter-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`,
-          );
+          const message = `Charakter-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`;
+          console.error(message);
+          void logCaughtError(new Error(message), "characters.ts:notifyCharacterSubscribers");
         }
       }
       if (subscriber.pushNotificationsEnabled) {
@@ -695,4 +728,148 @@ export async function updateOwnCharacterBio(
   `;
   const row = rows[0];
   return row ? { slug: row.slug, name: row.name, bio } : null;
+}
+
+// Charakter-Farbe (siehe src/lib/characterColor.ts) — PRO CHARAKTER statt pro
+// User: eine spielende Person mit mehreren Charakteren ("Multis") bekommt so
+// für jeden Charakter eine eigene, unterscheidbare Farbe statt einer
+// einzigen für alle. Eigene schlanke Lese-/Schreibfunktion statt Teil des
+// vollen Character-Fetches (SELECT * in getCharacterBySlug liefert die Spalte
+// zwar mit, aber die Auflösung auf einen effektiven Hex braucht
+// resolveCharacterColor, nicht diese Rohfunktionen).
+export async function getCharacterColorPreference(
+  characterId: number,
+): Promise<string | null> {
+  const [row] = await sql<{ character_color: string | null }[]>`
+    SELECT character_color FROM characters WHERE id = ${characterId}
+  `;
+  return row?.character_color ?? null;
+}
+
+// Alle von ANDEREN Charakteren belegten Farben (character_color IS NOT NULL,
+// ohne den eigenen) — Grundlage für die „in Benutzung"-Sperre im Farbwähler
+// auf der Charakter-Detailseite. Der partielle UNIQUE-Index
+// (scripts/schema.sql) erzwingt die Eindeutigkeit zusätzlich auf DB-Ebene.
+export async function getUsedCharacterColors(
+  excludeCharacterId: number,
+): Promise<string[]> {
+  const rows = await sql<{ character_color: string }[]>`
+    SELECT character_color FROM characters
+    WHERE character_color IS NOT NULL AND id != ${excludeCharacterId}
+  `;
+  return rows.map((r) => r.character_color);
+}
+
+// Wirft ColorTakenError, wenn die Farbe bereits von einem anderen Charakter
+// belegt ist (partieller UNIQUE-Index → Unique-Violation).
+export class ColorTakenError extends Error {}
+
+// Owner-Scoping wie updateOwnCharacterBio (WHERE id = characterId AND
+// player_id = userId statt eines separaten Zugriffs-Checks) — eine leere
+// RETURNING-Liste bedeutet entweder "Charakter existiert nicht" oder "gehört
+// nicht diesem User", beides meldet der Aufrufer als generischen Fehler.
+// Liefert bei Erfolg den Slug zurück (für revalidateCharacter beim Aufrufer).
+export async function updateCharacterColorPreference(
+  characterId: number,
+  userId: number,
+  color: string,
+): Promise<string | null> {
+  try {
+    const rows = await sql<{ slug: string }[]>`
+      UPDATE characters SET character_color = ${color}
+      WHERE id = ${characterId} AND player_id = ${userId}
+      RETURNING slug
+    `;
+    return rows[0]?.slug ?? null;
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      throw new ColorTakenError("Diese Farbe ist bereits vergeben.");
+    }
+    throw err;
+  }
+}
+
+// Löscht einen Charakter weich (deleted_at gesetzt statt DELETE) — bleibt in
+// der DB, verschwindet aber aus allen Listen/der Suche/der Timeline für
+// alle außer Admins (siehe getAllContentForAdmin/Trash-Ansicht in
+// lib/adminContent.ts) und wird nach 7 Tagen vom Purge-Cronjob endgültig
+// entfernt. Admin-only (kein Owner-Scoping wie bei
+// updateOwnCharacterContent) — für die Selbstlöschung durch die spielende
+// Person selbst siehe deleteOwnCharacter unten. deletedByUserId dient nur
+// dem Löschprotokoll (content_deletions, siehe getRecentDeletions in
+// recentActivity.ts).
+export async function deleteCharacter(
+  characterId: number,
+  deletedByUserId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<
+    {
+      slug: string;
+      name: string;
+      visibility: string;
+      ownerUserId: number | null;
+      isDraft: boolean;
+    }[]
+  >`
+    UPDATE characters
+    SET deleted_at = NOW()
+    WHERE id = ${characterId} AND deleted_at IS NULL
+    RETURNING slug, name, visibility, player_id AS "ownerUserId", is_draft AS "isDraft"
+  `;
+  const row = rows[0] ?? null;
+  // Ein Entwurf war für niemanden außer dem Owner sichtbar — sein Löschen
+  // darf deshalb nicht im "gelöscht"-News-Feed auftauchen (der Titel wäre
+  // sonst die erste Info, die überhaupt irgendjemand außer dem Owner von
+  // diesem Entwurf erfährt).
+  if (row && !row.isDraft) {
+    await sql`
+      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+      VALUES ('character', ${row.name}, ${row.visibility}, ${row.ownerUserId}, ${deletedByUserId})
+    `;
+  }
+  return row ? { slug: row.slug } : null;
+}
+
+// Selbstlöschung durch die spielende Person (Meine Inhalte) — Ownership per
+// player_id direkt im WHERE erzwungen statt per Vorab-Check, gleiches
+// Prinzip wie deleteMissionLog in missions.ts. Kein Admin-Bypass (auch ein
+// Admin muss für fremde Charaktere weiterhin deleteCharacter/requireAdmin
+// benutzen) — bewusst strikt, analog zu updateOwnCharacterContent.
+export async function deleteOwnCharacter(
+  userId: number,
+  characterId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<
+    {
+      slug: string;
+      name: string;
+      visibility: string;
+      isDraft: boolean;
+    }[]
+  >`
+    UPDATE characters
+    SET deleted_at = NOW()
+    WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
+    RETURNING slug, name, visibility, is_draft AS "isDraft"
+  `;
+  const row = rows[0] ?? null;
+  if (row && !row.isDraft) {
+    await sql`
+      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
+      VALUES ('character', ${row.name}, ${row.visibility}, ${userId}, ${userId})
+    `;
+  }
+  return row ? { slug: row.slug } : null;
+}
+
+// Macht einen weich gelöschten Charakter wieder sichtbar (Admin-Trash-Ansicht).
+export async function restoreCharacter(
+  characterId: number,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE characters SET deleted_at = NULL
+    WHERE id = ${characterId} AND deleted_at IS NOT NULL
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
 }

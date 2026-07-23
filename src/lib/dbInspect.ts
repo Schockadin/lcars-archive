@@ -111,6 +111,14 @@ const FK_COLUMNS: Partial<Record<TableName, Record<string, ReferenceTarget>>> = 
   content_follows: { user_id: "users" },
   push_subscriptions: { user_id: "users" },
   content_deletions: { owner_user_id: "users", deleted_by: "users" },
+  dialogue_reservations: {
+    archive_entry_id: "archive_entries",
+    held_by_user_id: "users",
+  },
+  dialogue_reservation_notify_requests: {
+    archive_entry_id: "archive_entries",
+    user_id: "users",
+  },
 };
 
 // Ersetzt Fremdschlüssel-Werte (numerische id) durch den Slug der

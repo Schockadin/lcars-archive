@@ -1,7 +1,7 @@
 // Gruppiert Einträge nach einem Schlüssel und zählt Duplikate — gemeinsame
-// Logik hinter AutolinkButton.tsx' distinctMatches und
-// RemoveWikilinksButton.tsx' distinctRemoved (beide bauten dieselbe
-// Reduce-in-Record-dann-Object.values-Group-by-Count-Logik einzeln nach).
+// Logik hinter ContentLinkToolButton.tsx' distinctMatches (Autolink-Treffer)
+// und distinctRemoved (entfernte Wikilinks); beide bauten dieselbe
+// Reduce-in-Record-dann-Object.values-Group-by-Count-Logik einzeln nach.
 export function groupByCount<T, R extends object>(
   items: T[],
   keyFn: (item: T) => string,

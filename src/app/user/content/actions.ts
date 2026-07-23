@@ -1,15 +1,21 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
-import { setCharacterVisibility } from "@/lib/characters";
-import { setMissionLogVisibility, deleteMissionLog } from "@/lib/missions";
-import { setDialogueVisibility } from "@/lib/dialogues";
-import { setArchiveEntryVisibility } from "@/lib/archive";
+import { getUserById } from "@/lib/users";
+import { setCharacterVisibility, deleteOwnCharacter } from "@/lib/characters";
+import {
+  setMissionLogVisibility,
+  deleteMissionLog,
+  deleteMission,
+} from "@/lib/missions";
+import { setDialogueVisibility, deleteOwnDialogue } from "@/lib/dialogues";
+import { setArchiveEntryVisibility, deleteOwnArchiveEntry } from "@/lib/archive";
 import { notifyUserSubscribers } from "@/lib/follows";
 import {
   revalidateCharacter,
   revalidateArchiveEntry,
   revalidateLog,
+  revalidateMission,
 } from "@/lib/revalidate";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
@@ -128,23 +134,59 @@ export async function setVisibilityAction(
   return ok ? {} : { error: "Änderung fehlgeschlagen (keine Berechtigung?)." };
 }
 
-// Löschen eines eigenen Mission-Logs aus "Meine Inhalte" (DeleteMissionLogButton.tsx).
-// deleteMissionLog scoped die DB-Löschung selbst auf den Owner (Spieler des
-// Autor-Charakters) — ein gefälschtes id trifft 0 Zeilen, kein Vorab-Check
-// hier nötig (gleiches Prinzip wie setVisibilityAction oben).
-export async function deleteMissionLogAction(
-  logId: number,
+export type DeleteContentType =
+  | "character"
+  | "mission"
+  | "mission_log"
+  | "dialogue"
+  | "archive_entry";
+
+// Eine gemeinsame Löschen-Action für "Meine Inhalte" (DeleteOwnContentButton.tsx)
+// statt fünf fast identischer Varianten, gleiches Muster wie
+// setVisibilityAction oben. Vier der fünf Zweige scopen ihre DB-Löschung
+// selbst auf den Owner (siehe deleteOwnCharacter/deleteOwnArchiveEntry/
+// deleteOwnDialogue/deleteMissionLog) — ein gefälschtes id trifft dort
+// einfach 0 Zeilen, kein Vorab-Check nötig. Missionen haben kein
+// Einzel-Owner-Modell (jede Spielleitung darf jede Mission bearbeiten/
+// löschen, siehe missionAction) — dafür wird die Rolle frisch aus der DB
+// geprüft statt aus dem Session-Cookie (nie der stale Session-Payload
+// vertrauen, siehe requireOwnGM in src/lib/dal.ts).
+export async function deleteOwnContentAction(
+  contentType: DeleteContentType,
+  id: number,
 ): Promise<{ error?: string }> {
   const session = await getSession();
   if (!session) return { error: "Nicht angemeldet." };
 
-  const deleted = await deleteMissionLog(session.userId, logId);
-  if (!deleted) {
-    return { error: "Log nicht gefunden oder keine Berechtigung." };
+  if (contentType === "character") {
+    const deleted = await deleteOwnCharacter(session.userId, id);
+    if (!deleted) return { error: "Charakter nicht gefunden oder keine Berechtigung." };
+    revalidateCharacter(deleted.slug);
+  } else if (contentType === "archive_entry") {
+    const deleted = await deleteOwnArchiveEntry(session.userId, id);
+    if (!deleted) {
+      return { error: "Archiv-Eintrag nicht gefunden oder keine Berechtigung." };
+    }
+    revalidateArchiveEntry(deleted.slug);
+  } else if (contentType === "dialogue") {
+    const deleted = await deleteOwnDialogue(session.userId, id);
+    if (!deleted) return { error: "Gespräch nicht gefunden oder keine Berechtigung." };
+    revalidateArchiveEntry(deleted.slug);
+  } else if (contentType === "mission") {
+    const user = await getUserById(session.userId);
+    if (!user || (user.role !== "gm" && user.role !== "admin")) {
+      return { error: "Keine Berechtigung." };
+    }
+    const deleted = await deleteMission(id, session.userId);
+    if (!deleted) return { error: "Mission nicht gefunden." };
+    revalidateMission(deleted.slug);
+    for (const logSlug of deleted.logSlugs) revalidateLog(id, logSlug);
+  } else {
+    const deleted = await deleteMissionLog(session.userId, id);
+    if (!deleted) return { error: "Log nicht gefunden oder keine Berechtigung." };
+    revalidateLog(deleted.missionId, deleted.slug);
   }
 
-  revalidateLog(deleted.missionId, deleted.slug);
   revalidatePath("/user/content");
-
   return {};
 }

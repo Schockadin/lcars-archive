@@ -19,7 +19,7 @@ export default function TutorialPage() {
   return (
     <>
       <PageMeta title="Tutorial" section="tutorial" />
-      <article className="mb-[10px] max-w-[800px] pr-[var(--lcars-elbow-size)] tutorial-content">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)] tutorial-content">
         <p className="lcars-eyebrow">Anleitung</p>
         <h1>Tutorial</h1>
         <p className="lcars-text">
@@ -157,7 +157,29 @@ export default function TutorialPage() {
                 <strong>Privat</strong> (nur du), <strong>GM</strong> (du +
                 Spielleitung) oder <strong>Öffentlich</strong> (alle) — änderbar
                 jederzeit über das Dropdown neben dem Eintrag in „Meine
-                Inhalte“.
+                Inhalte“. Direkt daneben findest du zwei Symbol-Knöpfe zum{" "}
+                <strong>Bearbeiten</strong> (Stift) und <strong>Löschen</strong>{" "}
+                (Mülleimer) — Löschen steht bei allen fünf Inhaltstypen zur
+                Verfügung, auch bei eigenen Charakteren, Missionen (nur
+                Spielleitung) und Gesprächen (nur für die Person, die es
+                begonnen hat).
+              </p>
+              <p>
+                Eigene Entwürfe (siehe unten) erscheinen in „Meine Inhalte“
+                gesammelt ganz oben in einer eigenen Übersicht, unabhängig vom
+                Kategorie-Filter.
+              </p>
+              <p>
+                Beim Anlegen oder Bearbeiten eines Charakters, einer Mission,
+                eines Einsatzberichts oder eines Archiv-Eintrags kannst du das
+                Formular statt zu veröffentlichen auch erst als{" "}
+                <strong>Entwurf</strong> speichern (Checkbox unter dem Textfeld)
+                — der Text ist dann nicht mehr Pflicht. Ein Entwurf bleibt
+                unabhängig von seiner Sichtbarkeitsstufe für niemanden außer dir
+                sichtbar, nicht einmal für Spielleitung oder Administration
+                (Ausnahme: Missionen sehen alle aus der Spielleitung, da sie
+                kein Einzel-Owner-Modell haben), erscheint aber bereits unter
+                „Meine Inhalte“, dort deutlich markiert.
               </p>
               <p>
                 Mission-Synopsen, Archiv-Einträge und Charakter-Biografien
@@ -168,12 +190,36 @@ export default function TutorialPage() {
               </p>
               <p>
                 Ein <strong>Gespräch</strong> startest du mit deinem Charakter
-                und dem Charakter einer anderen Person; es beginnt{" "}
-                <strong>offen</strong> — nur ihr beide (oder Spielleitung/
-                Admin) könnt antworten. Sobald eine Seite es abschließt, wird es{" "}
+                und dem Charakter einer oder mehrerer anderer Personen
+                (Mehrfachauswahl); es beginnt <strong>offen</strong> — nur
+                Teilnehmende können antworten. Der Owner (wer das Gespräch
+                begonnen hat) kann auch danach jederzeit weitere Personen direkt
+                hinzufügen (samt Info-Mail an sie). Wer mit mehreren eigenen
+                Charakteren teilnimmt, kann nicht zweimal hintereinander mit
+                demselben Charakter antworten — dazwischen muss ein anderer
+                Charakter am Zug gewesen sein. Sobald ein Gespräch mehr als zwei
+                Teilnehmende hat, muss man sich das Antwortrecht zusätzlich erst
+                per Button für zwei Stunden reservieren, bevor man schreiben
+                kann — solange jemand anderes reserviert hat, seht ihr, wer
+                gerade dran ist und könnt euch optional per Mail/Push
+                benachrichtigen lassen, sobald die Sperre wieder endet (oder
+                wenn die reservierende Person selbst antwortet, endet sie
+                vorzeitig). Ein offenes Gespräch aktualisiert sich dabei
+                automatisch — neue Nachrichten und Änderungen am Antwortrecht
+                erscheinen von selbst, ohne dass du die Seite neu laden musst.
+                Sobald eine teilnehmende Person es abschließt, wird es{" "}
                 <strong>unwiderruflich geschlossen</strong> und taucht danach
-                als gewöhnlicher Archiv-Eintrag in der Kategorie „Gespräche“
-                auf.
+                als gewöhnlicher Archiv-Eintrag in der Kategorie „Gespräche“ auf
+                — standardmäßig als zusammenhängender Lesetext, per Umschalter
+                oben auf der Seite aber auch wie ein offenes Gespräch mit
+                einzelnen Nachrichtenkarten anzeigbar. Diese Einstellung gilt
+                für alle abgeschlossenen Gespräche, die du dir ansiehst. Im
+                Lesetext wird die wörtliche Rede jedes Charakters in dessen{" "}
+                <strong>Charakter-Farbe</strong> dargestellt, ebenso die
+                Nachrichten-Karten in offenen wie geschlossenen Gesprächen —
+                diese Farbe legst du im Profil unter „Charakter-Farben“ fest,
+                für jeden deiner Charaktere einzeln (ohne eigene Wahl bekommt
+                er automatisch eine der LCARS-Farben).
               </p>
             </div>
           </LcarsDataRow>
@@ -193,6 +239,14 @@ export default function TutorialPage() {
                 bekommst eine Nachricht, sobald der Charakter, die Mission oder
                 der Archiv-Eintrag bearbeitet wird (z.B. wenn ein abonniertes
                 Gespräch abgeschlossen wird).
+              </p>
+              <p>
+                Daneben findest du auf denselben Seiten (zusätzlich auch bei
+                Missionslogs und bereits abgeschlossenen Gesprächen) einen{" "}
+                <strong>„Teilen“</strong>-Knopf: Link kopieren, per WhatsApp
+                teilen, oder den Inhalt als Markdown-Datei (mit Frontmatter)
+                bzw. als PDF herunterladen. Bei noch offenen, laufenden
+                Gesprächen fehlt er bewusst, da sich deren Inhalt noch ändert.
               </p>
               <p>
                 Eingeloggt zeigt dir die <strong>Startseite</strong> dein
@@ -350,9 +404,18 @@ export default function TutorialPage() {
                   einsehen.
                 </li>
                 <li>
-                  Charaktere Spieler:innen zuweisen (unter{" "}
-                  <code>Admin → Charaktere</code> im Header-Menü) — Gast-
-                  Accounts ausgenommen.
+                  Über das eigene <strong>„Leitung“</strong>-Menü im Header
+                  (analog zum Admin-Menü) auf drei Übersichten zugreifen:
+                  unter <strong>„Missionen“</strong> alle Missionen mit
+                  Bearbeiten-, Löschen- und Besitzer:in-Zuordnung pro Zeile
+                  statt einzeln über die jeweilige Detailseite; unter{" "}
+                  <strong>„Charaktere“</strong> Charaktere Spieler:innen
+                  zuweisen (Gast-Accounts ausgenommen); unter{" "}
+                  <strong>„Gespräche“</strong> alle aktuell offenen Gespräche
+                  einsehen, auch ohne eigene Teilnahme — ein Klick öffnet das
+                  Gespräch lesend, ohne Antwortformular. Über jedes neu
+                  begonnene Gespräch wird die Spielleitung außerdem automatisch
+                  per Mail/Push informiert, unabhängig von eigener Teilnahme.
                 </li>
                 <li>
                   Über die „Admin-Aktionen“ jeder Detailseite Autolinking,
@@ -392,10 +455,32 @@ export default function TutorialPage() {
                   sowie eine separate Übersicht aller in den letzten drei Tagen
                   neu angelegten, bearbeiteten oder gelöschten Inhalte.
                 </li>
+                <li>
+                  Unter <strong>„Fehler-Log“</strong> alle unerwarteten
+                  Serverfehler einsehen (Zeitpunkt, Route, Meldung samt
+                  Stacktrace). Tritt ein solcher Fehler auf, sehen alle Besucher
+                  eine LCARS-Fehlerseite mit Referenzcode, Administration
+                  zusätzlich die volle Fehlermeldung direkt auf dieser Seite.
+                </li>
+                <li>
+                  Unter <strong>„Import“</strong> eine oder mehrere
+                  Markdown-Dateien im Vault-Frontmatter-Format hochladen, um
+                  daraus neue Archiv-Einträge, Missionen, Charaktere oder
+                  Missionslogs anzulegen. Jede Datei lässt sich einzeln
+                  durchblättern, vor dem Anlegen noch bearbeiten und muss danach
+                  einzeln bestätigt werden.
+                </li>
+                <li>
+                  In jedem Gespräch als Moderation jede Nachricht bearbeiten
+                  oder löschen (auch fremde und auch in bereits abgeschlossenen
+                  Gesprächen) sowie dessen Besitzer:in ändern — beides
+                  ausschließlich der Administration vorbehalten, nicht der
+                  Spielleitung.
+                </li>
               </ul>
               <p>
-                Administration sieht außerdem als einzige Rolle ausnahmslos
-                alle Inhalte, auch private.
+                Administration sieht außerdem als einzige Rolle ausnahmslos alle
+                Inhalte, auch private.
               </p>
             </div>
           </LcarsDataRow>

@@ -1,9 +1,12 @@
 "use client";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { wrapSelection, applyLinePrefix } from "@/lib/textareaEdit";
 import { renderMarkdownPreview } from "@/app/actions/markdownPreview";
+import { getEditorSpellcheckPreferenceAction } from "@/app/actions/editorPreferences";
 import TimelineMarkerButton from "./TimelineMarkerButton";
+import InsertImageButton from "./InsertImageButton";
 import { LcarsSwitch } from "@/components/lcars";
+import type { ContentImageType } from "@/lib/contentImages";
 import {
   BoldIcon,
   ItalicIcon,
@@ -89,6 +92,7 @@ export default function MarkdownEditor({
   required = false,
   isAdminOrGM = false,
   large = false,
+  insertImage,
 }: {
   id: string;
   name?: string;
@@ -102,11 +106,32 @@ export default function MarkdownEditor({
   // der kompakteren Inline-Editoren (300px) — zwei feste Tailwind-Klassen,
   // da sich Utility-Klassen nicht dynamisch aus Props zusammensetzen lassen.
   large?: boolean;
+  // Nur gesetzt, wenn der Inhalt bereits existiert (contentId bekannt) —
+  // ohne das kann noch kein Bild dafür hochgeladen worden sein (siehe
+  // InsertImageButton.tsx). Charaktere bewusst ausgenommen: dort gibt es
+  // stattdessen Portrait-Auswahl + Karussell statt Bild-Einbettung im
+  // Fließtext (siehe CharacterPortrait.tsx/ContentImageGallery.tsx).
+  insertImage?: { contentType: ContentImageType; contentId: number };
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [mode, setMode] = useState<"raw" | "preview">("raw");
   const [previewHtml, setPreviewHtml] = useState("");
   const [previewPending, setPreviewPending] = useState(false);
+  // DB-Default ist true (siehe getEditorSpellcheckPreference in
+  // lib/users.ts) — als Startwert übernommen, damit der häufige Fall (Prüfung
+  // aktiv) ohne sichtbares Aufflackern gerendert wird; nur bei explizit
+  // deaktivierter Präferenz wechselt der Wert nach dem Client-Fetch.
+  const [spellCheckEnabled, setSpellCheckEnabled] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    getEditorSpellcheckPreferenceAction().then((enabled) => {
+      if (!cancelled) setSpellCheckEnabled(enabled);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   function runAction(action: ToolbarAction) {
     const el = textareaRef.current;
@@ -140,6 +165,13 @@ export default function MarkdownEditor({
           </button>
         ))}
         {isAdminOrGM && <TimelineMarkerButton textareaId={id} iconOnly />}
+        {insertImage && (
+          <InsertImageButton
+            textareaId={id}
+            contentType={insertImage.contentType}
+            contentId={insertImage.contentId}
+          />
+        )}
 
         <LcarsSwitch
           className="markdown-editor-tabs"
@@ -162,6 +194,7 @@ export default function MarkdownEditor({
         name={name}
         required={required}
         defaultValue={defaultValue}
+        spellCheck={spellCheckEnabled}
         className={`rounded-lcars-pill lcars-input w-full resize-y font-mono ${
           large ? "min-h-[400px]" : "min-h-[300px]"
         } ${mode === "preview" ? "hidden" : ""}`}

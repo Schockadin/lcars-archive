@@ -13,6 +13,7 @@ import {
 } from "@/lib/missions";
 import { getParticipantCharactersForNotification } from "@/lib/characters";
 import { getCharacterSubscribersForSlugs } from "@/lib/dialogues";
+import { logCaughtError } from "@/lib/errorLog";
 import { getUserSubscribersForSlugs, notifyContentChange } from "@/lib/follows";
 import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
@@ -33,6 +34,151 @@ export interface MissionFormState {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const VALID_STATUSES = ["active", "completed", "failed", "abandoned"] as const;
+
+// Benachrichtigt Teilnehmer-Spieler + deren Charakter-/User-Abonnenten über
+// eine neue Mission — identischer Ablauf, ob die Mission gerade frisch
+// angelegt wird (Create-Branch, participantCharacterIds direkt aus dem
+// Formular) oder gerade von Entwurf auf veröffentlicht wechselt (Edit-
+// Branch, wasDraft && !isDraft): in beiden Fällen ist das der Moment, in dem
+// die Mission für die Teilnehmenden überhaupt erstmals sichtbar wird — bei
+// einem Entwurf konnte vorher niemand Teilnehmer-Benachrichtigungen
+// bekommen haben, egal ob per Anlegen oder per späterer Veröffentlichung.
+async function notifyMissionParticipants(
+  missionSlug: string,
+  missionTitle: string,
+  participantCharacterIds: number[],
+  preview: string,
+  actingUserId: number,
+): Promise<void> {
+  if (participantCharacterIds.length === 0) return;
+
+  const missionUrl = `${await getBaseUrl()}/missions/${missionSlug}`;
+  const activateUrl = `${missionUrl}?activateFollow=1`;
+
+  // Teilnehmer-Spieler informieren — die Mission wird dabei bewusst NICHT
+  // automatisch abonniert (siehe mission_participants in schema.sql), die
+  // Mail/Push enthält stattdessen einen separaten Link, der das Abo mit
+  // einem Klick aktiviert (siehe missions/[missionSlug]/page.tsx,
+  // ?activateFollow=1). Die anlegende/veröffentlichende Person wird
+  // ausgeschlossen, falls sie selbst einen teilnehmenden Charakter spielt.
+  const recipients = (
+    await getMissionParticipantUsers(participantCharacterIds)
+  ).filter((r) => r.id !== actingUserId);
+
+  for (const recipient of recipients) {
+    if (recipient.emailNotificationsEnabled) {
+      const mailResult = await sendMissionParticipantEmail({
+        to: recipient.email,
+        name: recipient.name,
+        missionTitle,
+        missionUrl,
+        activateUrl,
+        preview,
+      });
+      if (!mailResult.sent) {
+        const message = `Teilnehmer-Mail an ${recipient.email} fehlgeschlagen: ${mailResult.error}`;
+        console.error(message);
+        void logCaughtError(
+          new Error(message),
+          "user/missions/_shared/contentAction.ts:participantNotify",
+        );
+      }
+    }
+    if (recipient.pushNotificationsEnabled) {
+      await sendPushToUser(recipient.id, {
+        title: `Neue Mission: "${missionTitle}"`,
+        body: preview,
+        url: missionUrl,
+      });
+    }
+  }
+
+  // Zusätzlich zur direkten Spieler-Mail oben: wer einen teilnehmenden
+  // Charakter ODER dessen Spieler abonniert hat, wird ebenfalls
+  // benachrichtigt — der Spieler selbst wird dabei ausgeschlossen (der
+  // bekommt bereits die direkte Mail oben), genau wie die anlegende/
+  // veröffentlichende Person.
+  const participantCharacters =
+    await getParticipantCharactersForNotification(participantCharacterIds);
+
+  // Subscriber für alle teilnehmenden Charaktere/Spieler in je einer Query
+  // vorab laden (statt pro Charakter einzeln, N+1) — bei N Teilnehmern
+  // sonst bis zu 2N sequentielle Anfragen in dieser einen Server Action.
+  const playerSlugs = participantCharacters
+    .map((c) => c.playerSlug)
+    .filter((slug): slug is string => slug != null);
+  const [characterSubscribersBySlug, userSubscribersBySlug] = await Promise.all([
+    getCharacterSubscribersForSlugs(participantCharacters.map((c) => c.slug)),
+    getUserSubscribersForSlugs(playerSlugs),
+  ]);
+
+  for (const character of participantCharacters) {
+    const characterSubscribers = (
+      characterSubscribersBySlug.get(character.slug) ?? []
+    ).filter((s) => s.id !== actingUserId && s.id !== character.playerId);
+    for (const subscriber of characterSubscribers) {
+      if (subscriber.emailNotificationsEnabled) {
+        const mailResult = await sendCharacterMissionParticipationEmail({
+          to: subscriber.email,
+          name: subscriber.name,
+          characterName: character.name,
+          missionTitle,
+          missionUrl,
+          preview,
+        });
+        if (!mailResult.sent) {
+          const message = `Charakter-Abo-Mission-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`;
+          console.error(message);
+          void logCaughtError(
+            new Error(message),
+            "user/missions/_shared/contentAction.ts:characterSubscriberNotify",
+          );
+        }
+      }
+      if (subscriber.pushNotificationsEnabled) {
+        await sendPushToUser(subscriber.id, {
+          title: `${character.name}: neue Mission`,
+          body: preview,
+          url: missionUrl,
+        });
+      }
+    }
+
+    if (character.playerId && character.playerSlug) {
+      const userSubscribers = (
+        userSubscribersBySlug.get(character.playerSlug) ?? []
+      ).filter((s) => s.id !== actingUserId && s.id !== character.playerId);
+      for (const subscriber of userSubscribers) {
+        if (subscriber.emailNotificationsEnabled) {
+          const mailResult = await sendUserMissionParticipationEmail({
+            to: subscriber.email,
+            name: subscriber.name,
+            authorName: character.playerName ?? "",
+            characterName: character.name,
+            missionTitle,
+            missionUrl,
+            preview,
+          });
+          if (!mailResult.sent) {
+            const message = `User-Abo-Mission-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`;
+            console.error(message);
+            void logCaughtError(
+              new Error(message),
+              "user/missions/_shared/contentAction.ts:userSubscriberNotify",
+            );
+          }
+        }
+        if (subscriber.pushNotificationsEnabled) {
+          await sendPushToUser(subscriber.id, {
+            title: `${character.playerName}: neue Mission`,
+            body: preview,
+            url: missionUrl,
+          });
+        }
+      }
+    }
+  }
+}
 
 // Vereint createMissionAction + updateMissionAction (vorher new/actions.ts +
 // [missionId]/edit/actions.ts) zu einer Action für ContentEditor — Branch auf
@@ -61,6 +207,11 @@ export async function missionAction(
     return { error: "Ungültige Mission." };
   }
 
+  // Im Entwurf-Modus (siehe ContentEditor.tsx-Checkbox) ist nur der Text
+  // optional — Titel & Co. bleiben Pflicht, siehe canViewDraft-Kommentar in
+  // src/lib/visibility.ts für die Begründung.
+  const isDraft = formData.get("isDraft") === "on";
+
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return { error: "Bitte einen Titel angeben." };
 
@@ -88,14 +239,16 @@ export async function missionAction(
     .filter((n) => Number.isInteger(n));
 
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
-  if (!bodyMarkdown) return { error: "Bitte eine Zusammenfassung schreiben." };
+  if (!bodyMarkdown && !isDraft) {
+    return { error: "Bitte eine Zusammenfassung schreiben." };
+  }
 
   const statusValue = status as (typeof VALID_STATUSES)[number];
 
   // Opt-in "Automatisch verlinken" — Selbstausschluss nur beim Bearbeiten
   // nötig (sonst könnte der Titel im eigenen Text auf sich selbst verlinken).
   let bodyHtml: string | undefined;
-  if (formData.get("autoLink") === "on") {
+  if (bodyMarkdown && formData.get("autoLink") === "on") {
     const selfExclusion = isEdit ? await getMissionById(missionId!) : null;
     const linked = await autoLinkMarkdown(
       bodyMarkdown,
@@ -114,36 +267,66 @@ export async function missionAction(
       tags,
       teaser,
       bodyMarkdown,
+      isDraft,
       bodyHtml,
     });
     if (!result) {
       return { error: "Mission nicht gefunden." };
     }
     // Teilnehmerliste beim Bearbeiten aktualisieren, aber OHNE erneute
-    // Teilnehmer-Benachrichtigung — die gibt es laut Anforderung nur beim
-    // erstmaligen Anlegen (s.u.), nicht bei jeder späteren Änderung der
-    // Liste.
+    // Teilnehmer-Benachrichtigung bei einer normalen Bearbeitung — die gibt
+    // es laut Anforderung nur beim erstmaligen Anlegen bzw. beim
+    // Veröffentlichen eines Entwurfs (s.u.), nicht bei jeder späteren
+    // Änderung der Liste.
     await setMissionParticipants(missionId!, participantCharacterIds);
     revalidateMission(result.slug);
 
     const updatePreview = synopsisExcerpt(teaser ?? bodyMarkdown, 140);
-    await notifyMissionSubscribers({
-      missionSlug: result.slug,
-      missionTitle: title,
-      editingUserId: session.userId,
-      preview: updatePreview,
-    });
-    await notifyContentChange({
-      contentType: "mission",
-      event: "updated",
-      authorUserId: session.userId,
-      authorName: user.name,
-      contentTypeLabel: "eine Mission",
-      contentTitle: title,
-      contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
-      preview: updatePreview,
-      notifyPublic: false,
-    });
+
+    // Solange die Mission ein Entwurf bleibt, sieht sie außer GM/Admin
+    // niemand — keine Benachrichtigung. Beim Veröffentlichen (wasDraft
+    // true, isDraft jetzt false) gilt das wie ein Neuanlegen: "created"
+    // statt "updated", plus die Teilnehmer-Benachrichtigung.
+    if (!isDraft) {
+      if (result.wasDraft) {
+        await notifyContentChange({
+          contentType: "mission",
+          event: "created",
+          authorUserId: session.userId,
+          authorName: user.name,
+          contentTypeLabel: "eine neue Mission",
+          contentTitle: title,
+          contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
+          preview: updatePreview,
+          notifyPublic: false,
+        });
+        await notifyMissionParticipants(
+          result.slug,
+          title,
+          participantCharacterIds,
+          updatePreview,
+          session.userId,
+        );
+      } else {
+        await notifyMissionSubscribers({
+          missionSlug: result.slug,
+          missionTitle: title,
+          editingUserId: session.userId,
+          preview: updatePreview,
+        });
+        await notifyContentChange({
+          contentType: "mission",
+          event: "updated",
+          authorUserId: session.userId,
+          authorName: user.name,
+          contentTypeLabel: "eine Mission",
+          contentTitle: title,
+          contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
+          preview: updatePreview,
+          notifyPublic: false,
+        });
+      }
+    }
     redirect("/user/content");
   }
 
@@ -167,148 +350,36 @@ export async function missionAction(
     tags,
     teaser,
     bodyMarkdown,
+    isDraft,
     bodyHtml,
     ownerUserId: user.id,
   });
   revalidateMission(result.slug);
-  await notifyContentChange({
-    contentType: "mission",
-    event: "created",
-    authorUserId: session.userId,
-    authorName: user.name,
-    contentTypeLabel: "eine neue Mission",
-    contentTitle: title,
-    contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
-    preview: synopsisExcerpt(teaser ?? bodyMarkdown, 140),
-    notifyPublic: false,
-  });
 
   if (participantCharacterIds.length > 0) {
     await setMissionParticipants(result.id, participantCharacterIds);
+  }
 
-    const missionUrl = `${await getBaseUrl()}/missions/${result.slug}`;
-    const activateUrl = `${missionUrl}?activateFollow=1`;
+  if (!isDraft) {
     const preview = synopsisExcerpt(teaser ?? bodyMarkdown, 140);
-
-    // Teilnehmer-Spieler informieren — die Mission wird dabei bewusst NICHT
-    // automatisch abonniert (siehe mission_participants in schema.sql), die
-    // Mail/Push enthält stattdessen einen separaten Link, der das Abo mit
-    // einem Klick aktiviert (siehe missions/[missionSlug]/page.tsx,
-    // ?activateFollow=1). Der anlegende GM/Admin wird ausgeschlossen, falls
-    // er selbst einen teilnehmenden Charakter spielt.
-    const recipients = (
-      await getMissionParticipantUsers(participantCharacterIds)
-    ).filter((r) => r.id !== session.userId);
-
-    for (const recipient of recipients) {
-      if (recipient.emailNotificationsEnabled) {
-        const mailResult = await sendMissionParticipantEmail({
-          to: recipient.email,
-          name: recipient.name,
-          missionTitle: title,
-          missionUrl,
-          activateUrl,
-          preview,
-        });
-        if (!mailResult.sent) {
-          console.error(
-            `Teilnehmer-Mail an ${recipient.email} fehlgeschlagen: ${mailResult.error}`,
-          );
-        }
-      }
-      if (recipient.pushNotificationsEnabled) {
-        await sendPushToUser(recipient.id, {
-          title: `Neue Mission: "${title}"`,
-          body: preview,
-          url: missionUrl,
-        });
-      }
-    }
-
-    // Zusätzlich zur direkten Spieler-Mail oben: wer einen teilnehmenden
-    // Charakter ODER dessen Spieler abonniert hat, wird ebenfalls
-    // benachrichtigt — der Spieler selbst wird dabei ausgeschlossen (der
-    // bekommt bereits die direkte Mail oben), genau wie der anlegende
-    // GM/Admin.
-    const participantCharacters =
-      await getParticipantCharactersForNotification(participantCharacterIds);
-
-    // Subscriber für alle teilnehmenden Charaktere/Spieler in je einer Query
-    // vorab laden (statt pro Charakter einzeln, N+1) — bei N Teilnehmern
-    // sonst bis zu 2N sequentielle Anfragen in dieser einen Server Action.
-    const playerSlugs = participantCharacters
-      .map((c) => c.playerSlug)
-      .filter((slug): slug is string => slug != null);
-    const [characterSubscribersBySlug, userSubscribersBySlug] =
-      await Promise.all([
-        getCharacterSubscribersForSlugs(participantCharacters.map((c) => c.slug)),
-        getUserSubscribersForSlugs(playerSlugs),
-      ]);
-
-    for (const character of participantCharacters) {
-      const characterSubscribers = (
-        characterSubscribersBySlug.get(character.slug) ?? []
-      ).filter(
-        (s) => s.id !== session.userId && s.id !== character.playerId,
-      );
-      for (const subscriber of characterSubscribers) {
-        if (subscriber.emailNotificationsEnabled) {
-          const mailResult = await sendCharacterMissionParticipationEmail({
-            to: subscriber.email,
-            name: subscriber.name,
-            characterName: character.name,
-            missionTitle: title,
-            missionUrl,
-            preview,
-          });
-          if (!mailResult.sent) {
-            console.error(
-              `Charakter-Abo-Mission-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`,
-            );
-          }
-        }
-        if (subscriber.pushNotificationsEnabled) {
-          await sendPushToUser(subscriber.id, {
-            title: `${character.name}: neue Mission`,
-            body: preview,
-            url: missionUrl,
-          });
-        }
-      }
-
-      if (character.playerId && character.playerSlug) {
-        const userSubscribers = (
-          userSubscribersBySlug.get(character.playerSlug) ?? []
-        ).filter(
-          (s) => s.id !== session.userId && s.id !== character.playerId,
-        );
-        for (const subscriber of userSubscribers) {
-          if (subscriber.emailNotificationsEnabled) {
-            const mailResult = await sendUserMissionParticipationEmail({
-              to: subscriber.email,
-              name: subscriber.name,
-              authorName: character.playerName ?? "",
-              characterName: character.name,
-              missionTitle: title,
-              missionUrl,
-              preview,
-            });
-            if (!mailResult.sent) {
-              console.error(
-                `User-Abo-Mission-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`,
-              );
-            }
-          }
-          if (subscriber.pushNotificationsEnabled) {
-            await sendPushToUser(subscriber.id, {
-              title: `${character.playerName}: neue Mission`,
-              body: preview,
-              url: missionUrl,
-            });
-          }
-        }
-      }
-    }
+    await notifyContentChange({
+      contentType: "mission",
+      event: "created",
+      authorUserId: session.userId,
+      authorName: user.name,
+      contentTypeLabel: "eine neue Mission",
+      contentTitle: title,
+      contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
+      preview,
+      notifyPublic: false,
+    });
+    await notifyMissionParticipants(
+      result.slug,
+      title,
+      participantCharacterIds,
+      preview,
+      session.userId,
+    );
   }
 
   redirect(`/missions/${result.slug}`);

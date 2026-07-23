@@ -1,6 +1,8 @@
 "use client";
 import { useId, useState } from "react";
 import { createPortal } from "react-dom";
+import { CheckIcon, XIcon } from "@/lib/icons";
+import { insertAtCursor } from "@/lib/textareaEdit";
 
 const inputClass = "rounded-lcars-pill lcars-input w-full";
 
@@ -28,26 +30,6 @@ function CalendarIcon() {
       <path d="M8 14h.01M12 14h.01M16 14h.01M8 17.5h.01M12 17.5h.01" />
     </svg>
   );
-}
-
-function insertAtCursor(textarea: HTMLTextAreaElement, text: string): void {
-  const start = textarea.selectionStart ?? textarea.value.length;
-  const end = textarea.selectionEnd ?? textarea.value.length;
-  const before = textarea.value.slice(0, start);
-  const after = textarea.value.slice(end);
-
-  // Marker landet auf einer eigenen Zeile, unabhängig davon, wo genau der
-  // Cursor im Text steht.
-  const leadingNewline =
-    before.length > 0 && !before.endsWith("\n") ? "\n" : "";
-  const trailingNewline =
-    after.length > 0 && !after.startsWith("\n") ? "\n" : "";
-  const insert = `${leadingNewline}${text}${trailingNewline}`;
-
-  textarea.value = before + insert + after;
-  const cursorPos = (before + insert).length;
-  textarea.setSelectionRange(cursorPos, cursorPos);
-  textarea.focus();
 }
 
 // Admin/GM-Werkzeug oberhalb der Content-Textareas: fügt einen
@@ -88,7 +70,7 @@ export default function TimelineMarkerButton({
 
     const cat = category.trim();
     const marker = `<!-- timeline: ${date} | ${title.trim()}${cat ? ` | ${cat}` : ""} -->`;
-    insertAtCursor(textarea, marker);
+    insertAtCursor(textarea, marker, { ownLine: true });
 
     setDate("");
     setTitle("");
@@ -113,8 +95,9 @@ export default function TimelineMarkerButton({
           type="button"
           onClick={() => setOpen(true)}
           className="lcars-pill-btn self-start"
+          title="Zeitleisten-Ereignis einfügen"
         >
-          Zeitleisten-Ereignis einfügen
+          Ereignis einfügen
         </button>
       )}
 
@@ -172,16 +155,23 @@ export default function TimelineMarkerButton({
                 </datalist>
               </label>
 
-              <div className="flex flex-wrap gap-[12px] items-center justify-end">
+              <div className="flex gap-[12px] items-center justify-end">
                 <button
                   type="button"
                   onClick={close}
-                  className="lcars-pill-btn--outline"
+                  className="lcars-icon-btn lcars-icon-btn--danger size-[40px]"
+                  aria-label="Abbrechen"
+                  title="Abbrechen"
                 >
-                  Abbrechen
+                  <XIcon />
                 </button>
-                <button type="submit" className="lcars-pill-btn--outline">
-                  Einfügen
+                <button
+                  type="submit"
+                  className="lcars-icon-btn size-[40px]"
+                  aria-label="Einfügen"
+                  title="Einfügen"
+                >
+                  <CheckIcon />
                 </button>
               </div>
             </form>

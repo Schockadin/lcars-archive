@@ -20,22 +20,23 @@ export const TABLE_COLUMNS = {
   characters: [
     "id", "slug", "name", "status", "player_id", "portrait", "species",
     "rank", "bio", "metadata", "source_md", "frontmatter", "created_at",
-    "updated_at", "visibility",
+    "updated_at", "visibility", "deleted_at", "is_draft",
   ],
   missions: [
     "id", "slug", "title", "status", "started_at", "ended_at", "metadata",
     "source_md", "frontmatter", "created_at", "updated_at", "owner_user_id",
+    "deleted_at", "is_draft",
   ],
   mission_participants: ["mission_id", "character_id"],
   mission_logs: [
     "id", "slug", "mission_id", "author_id", "title", "content", "log_date",
     "session_nr", "metadata", "source_md", "frontmatter", "created_at",
-    "updated_at", "owner_user_id", "visibility",
+    "updated_at", "owner_user_id", "visibility", "deleted_at", "is_draft",
   ],
   archive_entries: [
     "id", "slug", "title", "category", "content", "tags", "metadata",
     "source_md", "frontmatter", "created_at", "updated_at", "dialogue_open",
-    "owner_user_id", "visibility",
+    "owner_user_id", "visibility", "deleted_at", "is_draft",
   ],
   archive_links: ["source_id", "target_id", "label"],
   dialogue_messages: [
@@ -60,6 +61,12 @@ export const TABLE_COLUMNS = {
     "id", "target_type", "title", "visibility", "owner_user_id",
     "deleted_by", "deleted_at",
   ],
+  dialogue_reservations: [
+    "archive_entry_id", "held_by_user_id", "expires_at", "created_at",
+  ],
+  dialogue_reservation_notify_requests: [
+    "archive_entry_id", "user_id", "created_at",
+  ],
 } as const satisfies Record<string, readonly string[]>;
 
 const TABLES = Object.keys(TABLE_COLUMNS) as (keyof typeof TABLE_COLUMNS)[];
@@ -72,6 +79,8 @@ export type TableName = (typeof TABLES)[number];
 const NO_SERIAL_ID: readonly TableName[] = [
   "archive_links",
   "mission_participants",
+  "dialogue_reservations",
+  "dialogue_reservation_notify_requests",
 ];
 const SERIAL_TABLES = TABLES.filter(
   (t) => !(NO_SERIAL_ID as string[]).includes(t),

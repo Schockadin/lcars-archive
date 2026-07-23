@@ -5,11 +5,16 @@ import {
   getCharactersForUser,
   getCharactersWithPlayers,
 } from "@/lib/characters";
-import { DialogueSlugCollisionError, createDialogue } from "@/lib/dialogues";
-import { sendDialogueStartedEmail } from "@/lib/mail";
+import {
+  DialogueSlugCollisionError,
+  createDialogue,
+  getActiveGMs,
+} from "@/lib/dialogues";
+import { sendDialogueStartedEmail, sendNewDialogueGmNotificationEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { parseList } from "@/lib/formParsing";
+import { logCaughtError } from "@/lib/errorLog";
 
 export interface CreateDialogueState {
   error?: string;
@@ -28,13 +33,20 @@ export async function createDialogueAction(
   if (!title) return { error: "Bitte einen Titel angeben." };
 
   const ownCharacterId = Number(formData.get("ownCharacterId"));
-  const partnerCharacterId = Number(formData.get("partnerCharacterId"));
+  const partnerCharacterIds = [
+    ...new Set(
+      formData.getAll("partnerCharacterIds").map((v) => Number(v)),
+    ),
+  ];
   if (
     !Number.isInteger(ownCharacterId) ||
-    !Number.isInteger(partnerCharacterId) ||
-    ownCharacterId === partnerCharacterId
+    partnerCharacterIds.length === 0 ||
+    partnerCharacterIds.some((id) => !Number.isInteger(id)) ||
+    partnerCharacterIds.includes(ownCharacterId)
   ) {
-    return { error: "Bitte zwei unterschiedliche Charaktere auswählen." };
+    return {
+      error: "Bitte den eigenen und mindestens einen weiteren Charakter auswählen.",
+    };
   }
 
   // Nie den <select>-Werten aus dem Client blind vertrauen — wie
@@ -44,7 +56,9 @@ export async function createDialogueAction(
     return { error: "Ungültiger eigener Charakter." };
   }
   const partnerCharacters = await getCharactersWithPlayers(session.userId);
-  if (!partnerCharacters.some((c) => c.id === partnerCharacterId)) {
+  if (
+    !partnerCharacterIds.every((id) => partnerCharacters.some((c) => c.id === id))
+  ) {
     return { error: "Ungültiger Gesprächspartner." };
   }
 
@@ -67,13 +81,14 @@ export async function createDialogueAction(
   const subscribeSelf = formData.get("subscribeSelf") === "on";
 
   let slug: string;
-  let partner: Awaited<ReturnType<typeof createDialogue>>["partner"];
+  let partners: Awaited<ReturnType<typeof createDialogue>>["partners"];
   let fromCharacterName: string;
+  let participantNames: string[];
   try {
     const result = await createDialogue({
       title,
       ownCharacterId,
-      partnerCharacterId,
+      partnerCharacterIds,
       authorUserId: session.userId,
       setting,
       locationSlug,
@@ -83,8 +98,9 @@ export async function createDialogueAction(
       subscribeSelf,
     });
     slug = result.slug;
-    partner = result.partner;
+    partners = result.partners;
     fromCharacterName = result.fromCharacterName;
+    participantNames = result.participantNames;
   } catch (err) {
     if (err instanceof DialogueSlugCollisionError) {
       return { error: err.message };
@@ -92,13 +108,15 @@ export async function createDialogueAction(
     throw err;
   }
 
-  // Der Gesprächspartner konnte dem Anlegen nicht zustimmen — anders als bei
-  // neuen Nachrichten (postDialogueMessageAction) ist er hier noch nicht
-  // "Abonnent" im Sinne einer eigenen Wahl, bekommt die Info-Mail also immer
-  // (kein Opt-in nötig), sofern er E-Mail-Benachrichtigungen grundsätzlich
-  // aktiviert hat.
-  if (partner) {
-    const dialogueUrl = `${await getBaseUrl()}/dialogues/${slug}`;
+  // Kein Partner konnte dem Anlegen zustimmen — anders als bei neuen
+  // Nachrichten (postDialogueMessageAction) sind sie hier noch keine
+  // "Abonnenten" im Sinne einer eigenen Wahl, bekommen die Info-Mail also
+  // immer (kein Opt-in nötig), sofern E-Mail-Benachrichtigungen grundsätzlich
+  // aktiviert sind. Sequentiell statt Promise.all (gleiches Muster wie
+  // postDialogueMessageAction) — parallele Resend-Aufrufe riskieren bei
+  // mehreren Empfängern gleichzeitig ein Rate-Limit.
+  const dialogueUrl = `${await getBaseUrl()}/dialogues/${slug}`;
+  for (const partner of partners) {
     if (partner.emailNotificationsEnabled) {
       const result = await sendDialogueStartedEmail({
         to: partner.email,
@@ -108,8 +126,11 @@ export async function createDialogueAction(
         dialogueUrl,
       });
       if (!result.sent) {
-        console.error(
-          `Gespräch-begonnen-Mail an ${partner.email} fehlgeschlagen: ${result.error}`,
+        const message = `Gespräch-begonnen-Mail an ${partner.email} fehlgeschlagen: ${result.error}`;
+        console.error(message);
+        void logCaughtError(
+          new Error(message),
+          "user/dialogues/new/actions.ts:createDialogueAction",
         );
       }
     }
@@ -117,6 +138,39 @@ export async function createDialogueAction(
       await sendPushToUser(partner.id, {
         title: `Neues Gespräch: "${title}"`,
         body: `${fromCharacterName} hat ein Gespräch mit dir begonnen.`,
+        url: dialogueUrl,
+      });
+    }
+  }
+
+  // GM-Oversight: alle aktiven GM-Accounts bekommen unabhängig von eigener
+  // Teilnahme eine Info (siehe getAllOpenDialoguesForGM/"Gespräche" im
+  // GM-Menü) — bereits als Partner benachrichtigte GMs (partnerIds) nicht
+  // ein zweites Mal.
+  const partnerIds = new Set(partners.map((p) => p.id));
+  for (const gm of await getActiveGMs(session.userId)) {
+    if (partnerIds.has(gm.id)) continue;
+    if (gm.emailNotificationsEnabled) {
+      const result = await sendNewDialogueGmNotificationEmail({
+        to: gm.email,
+        name: gm.name,
+        participantNames,
+        dialogueTitle: title,
+        dialogueUrl,
+      });
+      if (!result.sent) {
+        const message = `Neues-Gespräch-GM-Mail an ${gm.email} fehlgeschlagen: ${result.error}`;
+        console.error(message);
+        void logCaughtError(
+          new Error(message),
+          "user/dialogues/new/actions.ts:createDialogueAction",
+        );
+      }
+    }
+    if (gm.pushNotificationsEnabled) {
+      await sendPushToUser(gm.id, {
+        title: `Neues Gespräch: "${title}"`,
+        body: `${participantNames.join(", ")} haben ein Gespräch begonnen.`,
         url: dialogueUrl,
       });
     }

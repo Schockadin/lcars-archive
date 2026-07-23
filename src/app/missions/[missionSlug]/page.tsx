@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { getAllMissions, getMissionBySlug } from "@/lib/missions";
 import { stripHtml } from "@/lib/missionFormat";
-import { getViewer } from "@/lib/visibility";
+import { getViewer, canViewMissionDraft } from "@/lib/visibility";
 import { setSubscription } from "@/lib/follows";
 import { listAllUsers } from "@/lib/users";
 import MissionSynopsis from "../MissionSynopsis";
@@ -28,7 +28,9 @@ export const dynamic = "force-dynamic";
 export async function generateMetadata({ params }: Props) {
   const { missionSlug } = await params;
   const mission = await getMissionBySlug(missionSlug);
-  if (!mission) return { title: "Nicht gefunden" };
+  if (!mission || !canViewMissionDraft(mission.isDraft, await getViewer())) {
+    return { title: "Nicht gefunden" };
+  }
 
   return {
     title: mission.title,
@@ -44,6 +46,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
   if (!mission) notFound();
 
   const viewer = await getViewer();
+  if (!canViewMissionDraft(mission.isDraft, viewer)) notFound();
 
   // Aktivierungslink aus der Teilnehmer-Benachrichtigung (missionAction,
   // src/app/user/missions/_shared/contentAction.ts) — die Mission wird

@@ -54,12 +54,18 @@ export default function CreateDialogueForm({
         </select>
       </FormField>
 
-      <FormField label="Gesprächspartner" htmlFor="dlg-partner-character">
+      <FormField
+        label="Gesprächspartner"
+        htmlFor="dlg-partner-character"
+        hint="Mehrfachauswahl per Strg/Cmd- oder Shift-Klick möglich — ein Gespräch kann bereits bei der Erstellung mehr als zwei Teilnehmende haben."
+      >
         <select
           id="dlg-partner-character"
-          name="partnerCharacterId"
+          name="partnerCharacterIds"
+          multiple
           required
-          className={inputClass}
+          size={Math.min(6, partnerCharacters.length)}
+          className={`${inputClass} h-auto py-[8px]`}
         >
           {partnerCharacters.map((c) => (
             <option key={c.id} value={c.id}>

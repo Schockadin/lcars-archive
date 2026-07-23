@@ -39,7 +39,7 @@ export function LinkIcon() {
 }
 export function UnlinkIcon() {
   return (
-    <svg {...ICON_PROPS} stroke="var(--lcars-red)">
+    <svg {...ICON_PROPS}>
       <path d="M15,17h2A5,5,0,0,0,17,7H15"></path>
       <path d="M9,7H7A5,5,0,0,0,7,17H9"></path>
       <line x1="7" y1="12" x2="18" y2="12"></line>
@@ -180,10 +180,12 @@ export function PlusIcon() {
 }
 export function ShareIcon() {
   return (
-    <svg {...ICON_PROPS}>
-      <path d="M12 15V3" />
-      <path d="M7 8l5-5 5 5" />
-      <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+    <svg {...ICON_PROPS} fill="currentColor" stroke="none">
+      <path
+        fillRule="evenodd"
+        clipRule="evenodd"
+        d="M3.75 4.5H5.25V18.75H19.5V20.25H3.75V4.5ZM17.6515 8.25001L15.2196 5.81812L16.2803 4.75746L20.4851 8.96229L16.2803 13.1671L15.2196 12.1065L17.5761 9.75001L14.25 9.75C11.7647 9.75 9.75 11.7647 9.75 14.25V16.5H8.25V14.25C8.25 10.9363 10.9363 8.25 14.25 8.25L17.6515 8.25001Z"
+      />
     </svg>
   );
 }
@@ -221,6 +223,73 @@ export function SortArrowIcon() {
   return (
     <svg {...ICON_PROPS}>
       <path d="M12 19V5M6 11l6-6 6 6" />
+    </svg>
+  );
+}
+
+// Zurück/Weiter-Navigation (MarkdownImportPanel.tsx — Vorschau-Karussell).
+export function ChevronLeftIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M15 5l-7 7 7 7" />
+    </svg>
+  );
+}
+export function ChevronRightIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M9 5l7 7-7 7" />
+    </svg>
+  );
+}
+
+// DB-Backup-Panel (lokaler Export/Import, siehe DbBackupPanel.tsx/UserBackupPanel.tsx).
+export function DownloadIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M12 3v12M7 10l5 5 5-5" />
+      <path d="M4 19h16" />
+    </svg>
+  );
+}
+export function UploadIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M12 15V3M7 8l5-5 5 5" />
+      <path d="M4 19h16" />
+    </svg>
+  );
+}
+export function CloudIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M7 18a4.5 4.5 0 0 1-.4-8.98A5.5 5.5 0 0 1 17.4 8.1 4 4 0 0 1 17 18H7Z" />
+    </svg>
+  );
+}
+export function ImageIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="3" y="4" width="18" height="16" rx="2" />
+      <circle cx="8.5" cy="9.5" r="1.5" />
+      <path d="M21 16l-5.5-5.5a2 2 0 0 0-2.8 0L4 19" />
+    </svg>
+  );
+}
+export function PortraitIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <circle cx="12" cy="10" r="3" />
+      <path d="M7 18c0-2.8 2.2-4.5 5-4.5s5 1.7 5 4.5" />
+    </svg>
+  );
+}
+export function CopyIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="9" y="9" width="12" height="12" rx="2" />
+      <path d="M5 15V5a2 2 0 0 1 2-2h10" />
     </svg>
   );
 }

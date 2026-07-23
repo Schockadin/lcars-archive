@@ -180,7 +180,9 @@ export async function deleteUser(id: number): Promise<void> {
   await sql`DELETE FROM users WHERE id = ${id}`;
 }
 
-function isUniqueViolation(err: unknown): boolean {
+// Exportiert (auch für src/lib/characters.ts — charakterbezogene Unique-
+// Constraints wie characters_character_color_check nutzen dieselbe Prüfung).
+export function isUniqueViolation(err: unknown): boolean {
   return (
     typeof err === "object" &&
     err !== null &&
@@ -218,6 +220,58 @@ export async function updateNotificationPreferences(
     WHERE id = ${id}
   `;
 }
+
+// Globale Präferenz (nicht pro Dialog): Fließtext oder Karten-Ansicht für
+// abgeschlossene Dialoge (siehe DialogueViewToggle.tsx). Eigene schlanke
+// Lese-/Schreibfunktionen statt Teil von USER_COLUMNS/dem vollen User-Objekt
+// — wird gezielt nur dort gebraucht, wo ein geschlossener Dialog gerendert
+// wird (archive/[slug]/page.tsx), nicht bei jedem User-Fetch.
+export async function getDialogueViewPreference(userId: number): Promise<boolean> {
+  const [row] = await sql<{ dialogue_flowing_text_enabled: boolean }[]>`
+    SELECT dialogue_flowing_text_enabled FROM users WHERE id = ${userId}
+  `;
+  return row?.dialogue_flowing_text_enabled ?? true;
+}
+
+export async function updateDialogueViewPreference(
+  userId: number,
+  flowingTextEnabled: boolean,
+): Promise<void> {
+  await sql`
+    UPDATE users SET dialogue_flowing_text_enabled = ${flowingTextEnabled}
+    WHERE id = ${userId}
+  `;
+}
+
+// Globale Präferenz (nicht pro Feld): native Browser-Rechtschreibprüfung in
+// allen Markdown-Editor-Feldern (MarkdownEditor.tsx). Eigene schlanke
+// Lese-/Schreibfunktionen statt Teil von USER_COLUMNS — MarkdownEditor.tsx
+// holt sich den Wert per direktem Client-Fetch (getEditorSpellcheckPreferenceAction
+// in app/actions/editorPreferences.ts, siehe getFollowState/FollowButtons.tsx
+// für dasselbe Muster) statt durch alle sechs Aufrufstellen durchgereicht zu
+// werden.
+export async function getEditorSpellcheckPreference(userId: number): Promise<boolean> {
+  const [row] = await sql<{ editor_spellcheck_enabled: boolean }[]>`
+    SELECT editor_spellcheck_enabled FROM users WHERE id = ${userId}
+  `;
+  return row?.editor_spellcheck_enabled ?? true;
+}
+
+export async function updateEditorSpellcheckPreference(
+  userId: number,
+  enabled: boolean,
+): Promise<void> {
+  await sql`
+    UPDATE users SET editor_spellcheck_enabled = ${enabled}
+    WHERE id = ${userId}
+  `;
+}
+
+// Charakter-Farbe: lebt jetzt auf characters.character_color statt hier (ein
+// User mit mehreren Charakteren — „Multis" — kann so für jeden Charakter eine
+// eigene Farbe wählen statt einer einzigen für alle). Siehe
+// getCharacterColorPreference/getUsedCharacterColors/
+// updateCharacterColorPreference/ColorTakenError in src/lib/characters.ts.
 
 export async function updateUser(
   id: number,

@@ -22,7 +22,7 @@ export interface NavItem {
 }
 
 export const MAIN_NAV: NavItem[] = [
-  { id: "00", label: "Home", href: "/home" },
+  { id: "00", label: "Home", href: "/" },
   { id: "01", label: "Charaktere", href: "/characters" },
   { id: "02", label: "Missionen", href: "/missions" },
   { id: "03", label: "Archiv", href: "/archive" },

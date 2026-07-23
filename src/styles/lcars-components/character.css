@@ -1,6 +1,8 @@
 /* ─── Character Page & Portrait ───────────────────────────────────────
-   Charakterliste (Stub + Balken), Portrait-Rahmen und die
-   Vollbild-Lightbox fürs Portrait.
+   Charakterliste (Stub + Balken) und der Portrait-Rahmen. Die
+   Vollbild-Lightbox selbst (.portrait-overlay*) lebt in shared.css, da sie
+   sich CharacterPortrait.tsx jetzt mit ContentBody.tsx (Inline-Bilder in
+   Missions-/Log-/Archiv-Texten) teilt.
 ──────────────────────────────────────────────────────────────────── */
 
 .character-portrait {
@@ -9,55 +11,6 @@
   border-bottom: 3px solid var(--lcars-purple);
   border-right: none;
   border: 3px solid var(--lcars-purple);
-}
-
-/* ── Portrait-Lightbox (Vollbild-Overlay) ────────────────────────── */
-.portrait-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(2px);
-  cursor: zoom-out;
-}
-
-.portrait-overlay-img {
-  /* Originalgröße, aber nie größer als der Viewport (abzüglich Rand). */
-  max-width: calc(100vw - 48px);
-  max-height: calc(100vh - 48px);
-  width: auto;
-  height: auto;
-  object-fit: contain;
-  border: 3px solid var(--lcars-purple);
-  cursor: default;
-}
-
-.portrait-overlay-close {
-  position: fixed;
-  top: 16px;
-  right: 20px;
-  z-index: 1001;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  font-size: 30px;
-  line-height: 1;
-  color: var(--lcars-bg);
-  background: var(--lcars-purple);
-  border: none;
-  border-radius: 22px;
-  cursor: pointer;
-  transition: background-color 0.15s ease;
-}
-
-.portrait-overlay-close:hover {
-  background: var(--lcars-amber);
 }
 
 .character-entry {

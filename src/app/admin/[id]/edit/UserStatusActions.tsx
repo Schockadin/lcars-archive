@@ -46,7 +46,7 @@ export default function UserStatusActions({
     <section className="flex flex-col gap-[12px]">
       <h2 className="text-lcars-amber">Status</h2>
 
-      <form action={statusAction} className="flex items-center gap-[12px]">
+      <form action={statusAction} className="flex flex-wrap items-center gap-[12px]">
         <input type="hidden" name="userId" value={user.id} />
         <input type="hidden" name="active" value={String(!user.is_active)} />
         <span
@@ -67,7 +67,7 @@ export default function UserStatusActions({
       </form>
       <FormError message={statusState?.error} />
 
-      <form action={resetAction} className="flex items-center gap-[12px]">
+      <form action={resetAction} className="flex flex-wrap items-center gap-[12px]">
         <input type="hidden" name="userId" value={user.id} />
         <button
           type="submit"
@@ -99,7 +99,7 @@ export default function UserStatusActions({
         </div>
       )}
 
-      <form action={logoutAction} className="flex items-center gap-[12px]">
+      <form action={logoutAction} className="flex flex-wrap items-center gap-[12px]">
         <input type="hidden" name="userId" value={user.id} />
         <button
           type="submit"
@@ -108,10 +108,10 @@ export default function UserStatusActions({
           title={
             isSelf
               ? 'Nutze dafür deine eigenen Profil-Einstellungen ("Auf allen anderen Geräten abmelden").'
-              : undefined
+              : "Auf allen Geräten abmelden"
           }
         >
-          Auf allen Geräten abmelden
+          Überall abmelden
         </button>
         {logoutState?.loggedOut && (
           <span className="text-lcars-text-data" role="status">

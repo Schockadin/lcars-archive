@@ -36,7 +36,7 @@ export default async function AdminAuditLogPage() {
   return (
     <>
       <PageMeta title="Audit-Log" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <p className="lcars-eyebrow">Zugriff · Administration</p>
         <h1>Audit-Log</h1>
 
@@ -56,12 +56,12 @@ export default async function AdminAuditLogPage() {
               Content-Aktivität (letzte {CONTENT_ACTIVITY_DAYS} Tage)
             </h2>
             <p className="text-lcars-text-dim text-[13px]">
-              Alle Charaktere, Missionen, Mission-Logs und Archiv-Einträge,
-              die in den letzten {CONTENT_ACTIVITY_DAYS} Tagen hinzugefügt,
-              bearbeitet oder gelöscht wurden. „Von“ zeigt den Owner
-              (bzw. bei Löschungen die löschende Person) — bearbeitet ein
-              Admin oder eine Spielleitung fremden Inhalt, erscheint hier
-              weiterhin der Owner, da es keine separate Bearbeiter-Spur gibt.
+              Alle Charaktere, Missionen, Mission-Logs und Archiv-Einträge, die
+              in den letzten {CONTENT_ACTIVITY_DAYS} Tagen hinzugefügt,
+              bearbeitet oder gelöscht wurden. „Von“ zeigt den Owner (bzw. bei
+              Löschungen die löschende Person) — bearbeitet ein Admin oder eine
+              Spielleitung fremden Inhalt, erscheint hier weiterhin der Owner,
+              da es keine separate Bearbeiter-Spur gibt.
             </p>
             <ContentActivityTable items={contentActivity} />
           </section>

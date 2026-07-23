@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { getAuthorLogNav, getLogBySlug } from "@/lib/missions";
 import { stripHtml } from "@/lib/missionFormat";
-import { getViewer, canView } from "@/lib/visibility";
+import { getViewer, canView, canViewDraft } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import LogDetail from "../../LogDetail";
 import ActionsMenu from "@/components/ActionsMenu";
@@ -21,9 +21,11 @@ export async function generateMetadata({ params }: Props) {
   if (!log || log.mission_slug !== missionSlug) {
     return { title: "Nicht gefunden" };
   }
+  const viewerForMeta = await getViewer();
   const visible =
-    log.visibility === "public" ||
-    canView(log.visibility, log.ownerUserId, await getViewer());
+    (log.visibility === "public" ||
+      canView(log.visibility, log.ownerUserId, viewerForMeta)) &&
+    canViewDraft(log.isDraft, log.ownerUserId, viewerForMeta);
   if (!visible) return { title: "Nicht gefunden" };
 
   return {
@@ -49,6 +51,7 @@ export default async function LogPage({ params }: Props) {
   ) {
     notFound();
   }
+  if (!canViewDraft(log.isDraft, log.ownerUserId, viewer)) notFound();
 
   // Vor-/Zurück-Navigation zwischen Logs desselben Autors (sofern Autor bekannt).
   const nav = log.author_slug

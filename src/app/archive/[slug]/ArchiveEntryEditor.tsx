@@ -6,6 +6,8 @@ import {
 } from "@/app/actions/archive";
 import AutoLinkCheckbox from "@/app/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
+import ContentBody from "@/components/ContentBody";
+import { CheckIcon, XIcon } from "@/lib/icons";
 
 const initialState: ArchiveEntryEditState = {};
 
@@ -55,10 +57,7 @@ export default function ArchiveEntryEditor({
     return (
       <div className="flex flex-col gap-[8px]">
         {displayHtml ? (
-          <div
-            className="mission-body lcars-text"
-            dangerouslySetInnerHTML={{ __html: displayHtml }}
-          />
+          <ContentBody html={displayHtml} />
         ) : (
           <p className="lcars-empty-state">
             Kein Inhalt zu diesem Eintrag hinterlegt.
@@ -79,24 +78,29 @@ export default function ArchiveEntryEditor({
         required
         defaultValue={sourceMarkdown}
         isAdminOrGM={isAdminOrGM}
+        insertImage={{ contentType: "archive_entry", contentId: entryId }}
       />
 
       <AutoLinkCheckbox idPrefix={textareaId} />
 
-      <div className="flex flex-wrap gap-[12px] items-center justify-end">
+      <div className="flex gap-[12px] items-center justify-end">
         <button
           type="button"
           onClick={() => onEditModeChange(false)}
-          className="lcars-pill-btn--outline"
+          className="lcars-icon-btn lcars-icon-btn--danger size-[40px]"
+          aria-label="Abbrechen"
+          title="Abbrechen"
         >
-          Abbrechen
+          <XIcon />
         </button>
         <button
           type="submit"
           disabled={pending}
-          className="lcars-pill-btn--outline disabled:opacity-50"
+          className="lcars-icon-btn size-[40px] disabled:opacity-50"
+          aria-label={pending ? "Wird gespeichert…" : "Speichern"}
+          title={pending ? "Wird gespeichert…" : "Speichern"}
         >
-          {pending ? "Speichern…" : "Speichern"}
+          <CheckIcon />
         </button>
       </div>
 

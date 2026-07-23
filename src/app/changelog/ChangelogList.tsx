@@ -1,6 +1,10 @@
 "use client";
 import { useState } from "react";
-import { LcarsDataRow, LcarsSortSwitch, type SortDir } from "@/components/lcars";
+import {
+  LcarsDataRow,
+  LcarsSortSwitch,
+  type SortDir,
+} from "@/components/lcars";
 import type { ChangelogEntry } from "@/lib/changelog";
 
 // Zyklische Farbpaare pro Akkordeon-Zeile (Label-Pill-Hintergrund +
@@ -67,7 +71,7 @@ export default function ChangelogList({
   return (
     <div className="flex flex-col gap-[16px]">
       <LcarsSortSwitch
-        className="flex w-full mb-[4px]"
+        className="flex w-full ml-auto mb-[4px]"
         options={[{ key: "version", label: "Version" }]}
         sortKey="version"
         sortDir={sortDir}
@@ -87,7 +91,11 @@ export default function ChangelogList({
           >
             <div className="lcars-text flex flex-col gap-[8px]">
               <h3>{entry.title}</h3>
-              <p>{entry.summary}</p>
+              <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
+                {entry.items.map((item, itemIndex) => (
+                  <li key={itemIndex}>{item}</li>
+                ))}
+              </ul>
             </div>
           </LcarsDataRow>
         ))}

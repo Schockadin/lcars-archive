@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchLive } from "@/lib/search";
+import { logCaughtError } from "@/lib/errorLog";
 
 // Jederzeit frisch — die Suche hängt am Query-Parameter.
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ results });
   } catch (error) {
     console.error("Suche fehlgeschlagen:", error);
+    await logCaughtError(error, "api/search/route.ts:GET");
     return NextResponse.json(
       { error: "Suche fehlgeschlagen" },
       { status: 500 },

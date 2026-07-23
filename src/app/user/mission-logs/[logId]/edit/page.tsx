@@ -30,7 +30,7 @@ export default async function EditMissionLogPage({
   return (
     <>
       <PageMeta title="Missionslog bearbeiten" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <h1>Missionslog bearbeiten</h1>
         <p className="lcars-text text-[13px] opacity-80">
           {log.authorName} · {log.missionTitle}

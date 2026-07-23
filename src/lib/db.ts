@@ -20,7 +20,7 @@ const sql =
   postgres(process.env.DATABASE_URL, {
     ssl: false,
     max: 1, // wichtig: 1 Verbindung pro Client
-    idle_timeout: 0, // wichtig: deaktivieren
+    idle_timeout: 20, // Sekunden, bevor eine ungenutzte Verbindung geschlossen wird
     connect_timeout: 10,
     prepare: false, // wichtig für Transaction Mode
   });

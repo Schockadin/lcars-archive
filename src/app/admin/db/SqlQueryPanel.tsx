@@ -14,7 +14,7 @@ const PLACEHOLDER = "SELECT * FROM characters ORDER BY name LIMIT 20";
 // Textarea über farbigem <pre>"-Technik driftete je nach Font-Vererbung
 // zwischen sichtbarem Text und Cursor auseinander.
 export default function SqlQueryPanel() {
-  const [query, setQuery] = useState(PLACEHOLDER);
+  const [query, setQuery] = useState("");
   const [state, formAction, pending] = useActionState(
     runAdminSqlQueryAction,
     initialState,

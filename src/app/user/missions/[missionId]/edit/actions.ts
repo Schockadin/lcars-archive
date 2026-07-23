@@ -10,10 +10,14 @@ export interface EditMissionState {
 }
 
 // Löscht eine Mission inkl. aller Mission-Logs (siehe deleteMission in
-// src/lib/missions.ts) — anders als deleteMissionLogAction (Meine Inhalte,
-// nur der eigene Log) ist das hier admin/gm-only ohne Owner-Bezug, siehe
-// EditMissionForm.tsx ("Gefahrenzone", gleiches Muster wie
-// deleteUserFromEditAction in src/app/admin/[id]/edit/actions.ts).
+// src/lib/missions.ts) — admin/gm-only ohne Owner-Bezug (jede Spielleitung
+// darf jede Mission löschen), siehe EditMissionForm.tsx ("Gefahrenzone",
+// gleiches Muster wie deleteUserFromEditAction in
+// src/app/admin/[id]/edit/actions.ts). Eigenständiger Löschpfad neben dem
+// Icon-Button in "Meine Inhalte" (deleteOwnContentAction,
+// src/app/user/content/actions.ts) — beide rufen dasselbe deleteMission auf,
+// nur mit unterschiedlicher UX (Formular mit Redirect hier vs. optimistischer
+// Icon-Button dort).
 export async function deleteMissionAction(
   _state: EditMissionState,
   formData: FormData,

@@ -63,3 +63,33 @@ export function canSetVisibility(
 ): boolean {
   return viewer != null && ownerId != null && viewer.userId === ownerId;
 }
+
+// Entwürfe (is_draft, siehe scripts/schema.sql) sind eine eigene, striktere
+// Sichtbarkeitsachse als canView oben: unabhängig von visibility sieht sie
+// NIEMAND außer dem Owner selbst — bewusst OHNE Admin-Bypass (anders als
+// canView), da ein Entwurf schlicht noch nicht existieren soll, solange die
+// Owner-Person ihn nicht veröffentlicht. Gilt nur für Charaktere/Missionen/
+// Missionslogs/Archiv-Einträge; Dialoge kennen kein Entwurf-Konzept.
+export function canViewDraft(
+  isDraft: boolean,
+  ownerId: number | null,
+  viewer: Viewer | null,
+): boolean {
+  if (!isDraft) return true;
+  return viewer != null && ownerId != null && viewer.userId === ownerId;
+}
+
+// Entwurf-Gate für Missionen: anders als bei Charakteren/Missionslogs/
+// Archiv-Einträgen (canViewDraft oben, dort strikt Owner-only) dürfen hier
+// ALLE GM/Admin einen Mission-Entwurf sehen, nicht nur die anlegende Person
+// — Missionen haben kein Einzel-Owner-Bearbeitungsmodell, jeder GM/Admin
+// darf jede Mission ohnehin bearbeiten (siehe missionAction in
+// user/missions/_shared/contentAction.ts). canViewDraft passt mit seinem
+// strikten ownerId-Vergleich hier deshalb nicht.
+export function canViewMissionDraft(
+  isDraft: boolean,
+  viewer: Viewer | null,
+): boolean {
+  if (!isDraft) return true;
+  return isGmOrAdmin(viewer);
+}

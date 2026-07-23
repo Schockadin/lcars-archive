@@ -9,8 +9,8 @@ import { LcarsReadingModeToggle } from "@/components/lcars";
 import DialogueHeader from "@/components/DialogueHeader";
 import DeleteDialogueButton from "@/components/DeleteDialogueButton";
 import { getDialogueMessages } from "@/lib/dialogues";
-import { getViewer, canView } from "@/lib/visibility";
-import { listAllUsers } from "@/lib/users";
+import { getViewer, canView, canViewDraft } from "@/lib/visibility";
+import { listAllUsers, getDialogueViewPreference } from "@/lib/users";
 import ArchiveEntryBody from "./ArchiveEntryBody";
 
 interface Props {
@@ -34,10 +34,12 @@ export async function generateMetadata({ params }: Props) {
   // Offene Dialoge: Zugriff wird auf /dialogues/<slug> per Teilnehmer-Check
   // entschieden (siehe unten in der Page-Komponente), nicht hier über
   // owner_user_id — Metadaten dafür also nicht zusätzlich blocken.
+  const viewerForMeta = await getViewer();
   const visible =
-    entry.visibility === "public" ||
-    (entry.category === "dialogue" && entry.dialogue_open) ||
-    canView(entry.visibility, entry.ownerUserId, await getViewer());
+    (entry.visibility === "public" ||
+      (entry.category === "dialogue" && entry.dialogue_open) ||
+      canView(entry.visibility, entry.ownerUserId, viewerForMeta)) &&
+    canViewDraft(entry.isDraft, entry.ownerUserId, viewerForMeta);
   if (!visible) return { title: "Nicht gefunden · Neo Archive" };
 
   const desc = entry.metadata.summary ?? stripHtml(entry.content);
@@ -74,6 +76,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
   ) {
     notFound();
   }
+  if (!canViewDraft(entry.isDraft, entry.ownerUserId, viewer)) notFound();
   const allUsers = viewer?.role === "admin" ? await listAllUsers() : [];
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
@@ -84,6 +87,15 @@ export default async function ArchiveEntryPage({ params }: Props) {
   // Seite bleibt dadurch erhalten.
   const messages =
     entry.category === "dialogue" ? await getDialogueMessages(entry.id) : [];
+
+  // Globale Präferenz (siehe DialogueViewToggle.tsx) — nur für eingeloggte
+  // Betrachter eines (an dieser Stelle immer bereits geschlossenen, siehe
+  // Redirect oben) Dialogs relevant. Anonyme Betrachter/andere
+  // Inhaltstypen bekommen den Default true, ohne extra DB-Zugriff.
+  const flowingTextPreferred =
+    entry.category === "dialogue" && viewer
+      ? await getDialogueViewPreference(viewer.userId)
+      : true;
 
   const cfg = CATEGORY_CONFIG[entry.category];
   const title = archiveTitle(entry);
@@ -121,6 +133,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
         viewer={viewer}
         owners={owners}
         messages={messages}
+        flowingTextPreferred={flowingTextPreferred}
       />
 
       {viewer?.role === "admin" && entry.category === "dialogue" && (

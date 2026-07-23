@@ -24,10 +24,7 @@ export default function EditUserForm({
   );
 
   return (
-    <form
-      action={formAction}
-      className="flex max-w-[var(--lcars-content-w)] flex-col gap-[16px]"
-    >
+    <form action={formAction} className="flex flex-col gap-[16px]">
       <input type="hidden" name="userId" value={user.id} />
 
       <FormField label="Name" htmlFor="edit-user-name">

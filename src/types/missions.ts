@@ -46,6 +46,7 @@ export interface MissionPreview {
   metadata: MissionMetaData;
   log_count: number;
   authors: MissionAuthor[];
+  isDraft: boolean;
 }
 
 // Detailansicht einer Mission (Synopsis + Metadaten).
@@ -59,6 +60,7 @@ export interface MissionDetail {
   metadata: MissionMetaData;
   updated_at: string;
   ownerUserId: number | null;
+  isDraft: boolean;
   // Roher Markdown-Body der Synopsis (source_md) — Grundlage für die
   // inline-Bearbeitung auf der Mission-Detailseite (MissionSynopsisEditor).
   sourceMarkdown: string | null;
@@ -91,6 +93,7 @@ export interface MissionLogDetail {
   mission_title: string;
   visibility: "private" | "gm" | "public";
   ownerUserId: number | null;
+  isDraft: boolean;
 }
 
 // Schlanke Pfad-Info für die Sitemap.

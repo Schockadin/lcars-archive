@@ -6,6 +6,7 @@ import {
   setCharacterVisibility,
   assignCharacterToUser,
   getPublicCharactersForUser,
+  getCharactersForParticipantPicker,
 } from "@/lib/characters";
 import { insertUser, insertCharacter } from "./helpers";
 
@@ -26,6 +27,7 @@ function baseCharacterInput(overrides: Partial<Parameters<typeof createCharacter
     tags: [],
     bodyMarkdown: "",
     ownerUserId: 0,
+    isDraft: false,
     ...overrides,
   };
 }
@@ -191,5 +193,19 @@ describe("getPublicCharactersForUser", () => {
     const result = await getPublicCharactersForUser(user.id);
 
     expect(result).toEqual([]);
+  });
+});
+
+describe("getCharactersForParticipantPicker", () => {
+  it("includes status so the picker can hide inactive characters by default", async () => {
+    const user = await insertUser();
+    const active = await insertCharacter({ playerId: user.id, status: "active" });
+    const retired = await insertCharacter({ playerId: user.id, status: "retired" });
+
+    const result = await getCharactersForParticipantPicker();
+
+    const byId = new Map(result.map((c) => [c.id, c]));
+    expect(byId.get(active.id)?.status).toBe("active");
+    expect(byId.get(retired.id)?.status).toBe("retired");
   });
 });
