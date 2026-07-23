@@ -202,6 +202,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Im Profil lässt sich eine Charakter-Farbe (eine der LCARS-Farben) wählen; die wörtliche Rede der eigenen Charaktere wird damit im Fließtext-Modus abgeschlossener Gespräche eingefärbt.",
       "Bei Gesprächen mit mehreren Teilnehmenden kann das Antwortrecht nur noch reserviert werden, wenn der eigene Charakter nicht zuletzt am Zug war; der antwortende Charakter wird immer angezeigt, bei mehreren eigenen Teilnehmer-Charakteren ist er wählbar; Admins können hängende Reservierungen sofort freigeben.",
       "Die Charakter-Farbe im Profil unterstützt jetzt neben den sechs LCARS-Tönen beliebige Hex-Farben über einen Color-Picker; bereits von anderen verwendete Farben sind gesperrt; eine Vorschau mit Beispieldialog zeigt die gewählte Farbe sofort; im Fließtext-Modus werden jetzt auch die Anführungszeichen selbst eingefärbt.",
+      "Behoben: Das Verlinken/Entfernen-Werkzeug auf Inhaltsseiten war für die Spielleitung zwar sichtbar, ein Klick scheiterte aber immer an einer Admin-only-Berechtigungsprüfung.",
     ],
   },
 ];

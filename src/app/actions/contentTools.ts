@@ -1,5 +1,5 @@
 "use server";
-import { requireAdmin, requireGM } from "@/lib/dal";
+import { requireGM } from "@/lib/dal";
 import {
   applyAutolinks,
   getAutolinkTargets,
@@ -189,8 +189,7 @@ async function planAutolink(
 // rendern (der teure Teil von planAutolink) — läuft beim Laden jeder der
 // vier Inhalts-Detailseiten für GM/Admin-Betrachter einmal automatisch,
 // damit der Button direkt den vermutlich sinnvolleren Modus zeigt (Autolink,
-// wenn es noch etwas zu verknüpfen gibt, sonst Delink). requireGM() statt
-// requireAdmin(), da der Button selbst schon für GM UND Admin sichtbar ist.
+// wenn es noch etwas zu verknüpfen gibt, sonst Delink).
 //
 // Bewusst live berechnet statt als DB-Flag zwischengespeichert: ein Flag
 // müsste bei JEDER Änderung an JEDEM potenziellen Autolink-Ziel (neuer/
@@ -216,7 +215,7 @@ export async function previewAutolinkAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<AutolinkPreviewResult | { error: string }> {
-  await requireAdmin();
+  await requireGM();
 
   const plan = await planAutolink(contentType, slug);
   if ("error" in plan) return plan;
@@ -228,7 +227,7 @@ export async function applyAutolinkAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<AutolinkApplyResult | { error: string }> {
-  await requireAdmin();
+  await requireGM();
 
   const plan = await planAutolink(contentType, slug);
   if ("error" in plan) return plan;
@@ -266,7 +265,7 @@ export async function previewWikilinkCleanupAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<WikilinkCleanupPreviewResult | { error: string }> {
-  await requireAdmin();
+  await requireGM();
 
   const plan = await planWikilinkCleanup(contentType, slug);
   if ("error" in plan) return plan;
@@ -278,7 +277,7 @@ export async function applyWikilinkCleanupAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<WikilinkCleanupApplyResult | { error: string }> {
-  await requireAdmin();
+  await requireGM();
 
   const plan = await planWikilinkCleanup(contentType, slug);
   if ("error" in plan) return plan;
