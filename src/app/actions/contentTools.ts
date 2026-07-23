@@ -1,5 +1,5 @@
 "use server";
-import { requireAdmin } from "@/lib/dal";
+import { requireAdmin, requireGM } from "@/lib/dal";
 import {
   applyAutolinks,
   getAutolinkTargets,
@@ -182,6 +182,34 @@ async function planAutolink(
     previewHtml,
     save: () => accessor.save(sourceMd, previewHtml),
   };
+}
+
+// Leichtgewichtiger Vorab-Check für den Default-Modus von
+// ContentLinkToolButton.tsx: nur die Treffer zählen, OHNE das HTML zu
+// rendern (der teure Teil von planAutolink) — läuft beim Laden jeder der
+// vier Inhalts-Detailseiten für GM/Admin-Betrachter einmal automatisch,
+// damit der Button direkt den vermutlich sinnvolleren Modus zeigt (Autolink,
+// wenn es noch etwas zu verknüpfen gibt, sonst Delink). requireGM() statt
+// requireAdmin(), da der Button selbst schon für GM UND Admin sichtbar ist.
+//
+// Bewusst live berechnet statt als DB-Flag zwischengespeichert: ein Flag
+// müsste bei JEDER Änderung an JEDEM potenziellen Autolink-Ziel (neuer/
+// umbenannter Charakter, neue Mission, neuer Archiv-Eintrag) für ALLE
+// bestehenden Inhalte neu berechnet werden, nicht nur für den gerade
+// bearbeiteten — das wäre in Summe mehr Aufwand und eine zusätzliche
+// Fehlerquelle (veraltetes Flag) gegenüber einer einzelnen Live-Prüfung des
+// gerade angezeigten Inhalts.
+export async function hasAutolinkMatchesAction(
+  contentType: ContentToolType,
+  slug: string,
+): Promise<boolean> {
+  await requireGM();
+
+  const accessor = await getContentAccessor(contentType, slug);
+  if ("error" in accessor) return false;
+
+  const targets = await getAutolinkTargets(selfExcludeFor(contentType, slug));
+  return applyAutolinks(accessor.sourceMd, targets).matches.length > 0;
 }
 
 export async function previewAutolinkAction(

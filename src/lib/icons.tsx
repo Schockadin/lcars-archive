@@ -39,7 +39,7 @@ export function LinkIcon() {
 }
 export function UnlinkIcon() {
   return (
-    <svg {...ICON_PROPS} stroke="var(--lcars-red)">
+    <svg {...ICON_PROPS}>
       <path d="M15,17h2A5,5,0,0,0,17,7H15"></path>
       <path d="M9,7H7A5,5,0,0,0,7,17H9"></path>
       <line x1="7" y1="12" x2="18" y2="12"></line>
