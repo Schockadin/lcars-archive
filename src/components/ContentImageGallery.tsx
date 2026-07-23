@@ -10,7 +10,13 @@ import {
 } from "@/app/actions/contentImages";
 import type { ContentImage, ContentImageType } from "@/lib/contentImages";
 import ContentToolPreviewOverlay from "./ContentToolPreviewOverlay";
-import { ImageIcon, UploadIcon, TrashIcon, XIcon, PortraitIcon } from "@/lib/icons";
+import {
+  ImageIcon,
+  UploadIcon,
+  TrashIcon,
+  XIcon,
+  PortraitIcon,
+} from "@/lib/icons";
 
 // Bilder-Galerie für Charaktere/Missionen/Missionslogs/Archiv-Einträge
 // (nicht Dialoge) — analog zu ContentLinkToolButton.tsx als Icon-Button + Modal
@@ -70,7 +76,11 @@ export default function ContentImageGallery({
 
   function handleDelete(imageId: number) {
     startTransition(async () => {
-      const result = await deleteContentImageAction(contentType, contentId, imageId);
+      const result = await deleteContentImageAction(
+        contentType,
+        contentId,
+        imageId,
+      );
       if (result.error) {
         setError(result.error);
       } else {
@@ -110,7 +120,10 @@ export default function ContentImageGallery({
         <ImageIcon />
       </button>
       {open && (
-        <ContentToolPreviewOverlay title="Bilder" onClose={() => setOpen(false)}>
+        <ContentToolPreviewOverlay
+          title="Bilder"
+          onClose={() => setOpen(false)}
+        >
           <div className="flex items-center justify-between gap-[12px]">
             <p className="lcars-eyebrow">Bilder</p>
             <button
@@ -129,6 +142,8 @@ export default function ContentImageGallery({
           {images !== null && images.length === 0 && (
             <p className="text-[13px]">Noch keine Bilder hochgeladen.</p>
           )}
+
+          <p className="text-[13px]">(Max. 10MB pro Upload)</p>
 
           {images !== null && images.length > 0 && (
             <div className="flex flex-wrap gap-[10px]">

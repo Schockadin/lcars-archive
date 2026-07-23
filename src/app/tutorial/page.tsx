@@ -214,10 +214,13 @@ export default function TutorialPage() {
                 oben auf der Seite aber auch wie ein offenes Gespräch mit
                 einzelnen Nachrichtenkarten anzeigbar. Diese Einstellung gilt
                 für alle abgeschlossenen Gespräche, die du dir ansiehst. Im
-                Lesetext wird die wörtliche Rede jeder Person in deren{" "}
-                <strong>Charakter-Farbe</strong> dargestellt — diese Farbe legst
-                du selbst im Profil unter „Charakter-Farbe“ fest (ohne eigene
-                Wahl bekommst du automatisch eine der LCARS-Farben).
+                Lesetext wird die wörtliche Rede jedes Charakters in dessen{" "}
+                <strong>Charakter-Farbe</strong> dargestellt, ebenso die
+                Nachrichten-Karten in offenen wie geschlossenen Gesprächen —
+                diese Farbe legst du auf der jeweiligen Charakter-Seite unter
+                „Charakter-Farbe“ fest (jeder deiner Charaktere kann eine
+                eigene haben; ohne eigene Wahl bekommt er automatisch eine der
+                LCARS-Farben).
               </p>
             </div>
           </LcarsDataRow>

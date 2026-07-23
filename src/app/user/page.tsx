@@ -2,22 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "./dal";
-import {
-  hasPassword,
-  getEditorSpellcheckPreference,
-  getCharacterColorPreference,
-  getUsedCharacterColors,
-} from "@/lib/users";
-import {
-  resolveProfileDefaultColor,
-  normalizeHex,
-} from "@/lib/characterColor";
+import { hasPassword, getEditorSpellcheckPreference } from "@/lib/users";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
 import LogoutEverywhereButton from "./LogoutEverywhereButton";
 import NotificationSettingsForm from "./NotificationSettingsForm";
 import EditorSpellcheckSettingsForm from "./EditorSpellcheckSettingsForm";
-import CharacterColorForm from "./CharacterColorForm";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 
@@ -49,16 +39,6 @@ export default async function UserPage() {
   const hasPasswordSet = await hasPassword(target.id);
   const needsPassword = !hasPasswordSet;
   const spellcheckEnabled = await getEditorSpellcheckPreference(target.id);
-  const [storedColor, usedColors] = await Promise.all([
-    getCharacterColorPreference(target.id),
-    getUsedCharacterColors(target.id),
-  ]);
-  const takenColors = usedColors.map(normalizeHex);
-  const ownColor = resolveProfileDefaultColor(
-    storedColor,
-    target.id,
-    new Set(takenColors),
-  );
 
   return (
     <>
@@ -147,14 +127,6 @@ export default async function UserPage() {
             <section id="editor" className="flex flex-col gap-[12px]">
               <h2>Editor</h2>
               <EditorSpellcheckSettingsForm enabled={spellcheckEnabled} />
-            </section>
-
-            <section id="character-color" className="flex flex-col gap-[12px]">
-              <h2>Charakter-Farbe</h2>
-              <CharacterColorForm
-                ownColor={ownColor}
-                takenColors={takenColors}
-              />
             </section>
 
             <section id="install" className="flex flex-col gap-[12px]">

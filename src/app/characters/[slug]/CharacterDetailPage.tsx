@@ -12,6 +12,8 @@ export default function CharakterDetailPage({
   viewer,
   owners,
   sourceMarkdown,
+  ownColor,
+  takenColors,
 }: {
   character: Character;
   logs: MissionLogPreview[];
@@ -21,6 +23,10 @@ export default function CharakterDetailPage({
   // Nur gesetzt, wenn viewer === Owner (siehe page.tsx) — Grundlage für den
   // Inline-Bio-Editor in CharacterHero.tsx.
   sourceMarkdown: string | null;
+  // Nur gesetzt, wenn viewer === Owner — Grundlage für den Farbwähler
+  // (CharacterColorForm) in CharacterHero.tsx.
+  ownColor: string | null;
+  takenColors: string[];
 }) {
   usePageMeta(character.name, "characters");
 
@@ -33,6 +39,8 @@ export default function CharakterDetailPage({
         viewer={viewer}
         owners={owners}
         sourceMarkdown={sourceMarkdown}
+        ownColor={ownColor}
+        takenColors={takenColors}
       />
     </div>
   );

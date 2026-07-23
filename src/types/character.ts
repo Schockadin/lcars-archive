@@ -31,4 +31,8 @@ export interface Character {
   is_draft: boolean;
   created_at: string;
   updated_at: string;
+  // Farbe (siehe src/lib/characterColor.ts) — pro Charakter statt pro User,
+  // damit ein User mit mehreren Charakteren ("Multis") für jeden eine eigene
+  // wählen kann. Hex (#rrggbb) oder NULL (kein expliziter Default gewählt).
+  character_color: string | null;
 }

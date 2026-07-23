@@ -5,7 +5,7 @@ import {
   isHexColor,
   normalizeHex,
   resolveCharacterColor,
-  resolveProfileDefaultColor,
+  resolveCharacterDefaultColor,
   colorizeDirectSpeech,
 } from "./characterColor";
 
@@ -50,24 +50,24 @@ describe("resolveCharacterColor", () => {
   });
 });
 
-describe("resolveProfileDefaultColor", () => {
+describe("resolveCharacterDefaultColor", () => {
   it("returns the stored hex regardless of taken set", () => {
     expect(
-      resolveProfileDefaultColor("#123456", 1, new Set(["#123456"])),
+      resolveCharacterDefaultColor("#123456", 1, new Set(["#123456"])),
     ).toBe("#123456");
   });
 
   it("skips taken presets when deriving a default", () => {
     // seed 0 would normally give PRESET_HEXES[0]; mark it taken → next free.
     const taken = new Set([PRESET_HEXES[0]]);
-    const out = resolveProfileDefaultColor(null, 0, taken);
+    const out = resolveCharacterDefaultColor(null, 0, taken);
     expect(out).toBe(PRESET_HEXES[1]);
     expect(taken.has(out)).toBe(false);
   });
 
   it("falls back to the deterministic value if all presets are taken", () => {
     const taken = new Set(PRESET_HEXES);
-    const out = resolveProfileDefaultColor(null, 2, taken);
+    const out = resolveCharacterDefaultColor(null, 2, taken);
     expect(out).toBe(PRESET_HEXES[2]);
   });
 });

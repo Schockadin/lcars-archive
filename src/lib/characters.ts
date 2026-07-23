@@ -19,6 +19,7 @@ import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { logCaughtError } from "@/lib/errorLog";
+import { isUniqueViolation } from "@/lib/users";
 
 // Hilfsfunktion: stellt sicher dass metadata ein Objekt ist
 function parseCharacter(row: Character): Character {
@@ -727,6 +728,65 @@ export async function updateOwnCharacterBio(
   `;
   const row = rows[0];
   return row ? { slug: row.slug, name: row.name, bio } : null;
+}
+
+// Charakter-Farbe (siehe src/lib/characterColor.ts) — PRO CHARAKTER statt pro
+// User: eine spielende Person mit mehreren Charakteren ("Multis") bekommt so
+// für jeden Charakter eine eigene, unterscheidbare Farbe statt einer
+// einzigen für alle. Eigene schlanke Lese-/Schreibfunktion statt Teil des
+// vollen Character-Fetches (SELECT * in getCharacterBySlug liefert die Spalte
+// zwar mit, aber die Auflösung auf einen effektiven Hex braucht
+// resolveCharacterColor, nicht diese Rohfunktionen).
+export async function getCharacterColorPreference(
+  characterId: number,
+): Promise<string | null> {
+  const [row] = await sql<{ character_color: string | null }[]>`
+    SELECT character_color FROM characters WHERE id = ${characterId}
+  `;
+  return row?.character_color ?? null;
+}
+
+// Alle von ANDEREN Charakteren belegten Farben (character_color IS NOT NULL,
+// ohne den eigenen) — Grundlage für die „in Benutzung"-Sperre im Farbwähler
+// auf der Charakter-Detailseite. Der partielle UNIQUE-Index
+// (scripts/schema.sql) erzwingt die Eindeutigkeit zusätzlich auf DB-Ebene.
+export async function getUsedCharacterColors(
+  excludeCharacterId: number,
+): Promise<string[]> {
+  const rows = await sql<{ character_color: string }[]>`
+    SELECT character_color FROM characters
+    WHERE character_color IS NOT NULL AND id != ${excludeCharacterId}
+  `;
+  return rows.map((r) => r.character_color);
+}
+
+// Wirft ColorTakenError, wenn die Farbe bereits von einem anderen Charakter
+// belegt ist (partieller UNIQUE-Index → Unique-Violation).
+export class ColorTakenError extends Error {}
+
+// Owner-Scoping wie updateOwnCharacterBio (WHERE id = characterId AND
+// player_id = userId statt eines separaten Zugriffs-Checks) — eine leere
+// RETURNING-Liste bedeutet entweder "Charakter existiert nicht" oder "gehört
+// nicht diesem User", beides meldet der Aufrufer als generischen Fehler.
+// Liefert bei Erfolg den Slug zurück (für revalidateCharacter beim Aufrufer).
+export async function updateCharacterColorPreference(
+  characterId: number,
+  userId: number,
+  color: string,
+): Promise<string | null> {
+  try {
+    const rows = await sql<{ slug: string }[]>`
+      UPDATE characters SET character_color = ${color}
+      WHERE id = ${characterId} AND player_id = ${userId}
+      RETURNING slug
+    `;
+    return rows[0]?.slug ?? null;
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      throw new ColorTakenError("Diese Farbe ist bereits vergeben.");
+    }
+    throw err;
+  }
 }
 
 // Löscht einen Charakter weich (deleted_at gesetzt statt DELETE) — bleibt in

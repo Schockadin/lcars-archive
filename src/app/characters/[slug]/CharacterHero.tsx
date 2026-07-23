@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
 import CharacterBioEditor from "./CharacterBioEditor";
+import CharacterColorForm from "./CharacterColorForm";
 import { Viewer } from "@/lib/visibility";
 import ActionsMenu from "@/components/ActionsMenu";
 
@@ -139,6 +140,8 @@ export default function CharacterHero({
   viewer,
   owners,
   sourceMarkdown,
+  ownColor,
+  takenColors,
 }: {
   character: Character;
   logCount?: number;
@@ -147,6 +150,9 @@ export default function CharacterHero({
   owners: { id: number; name: string }[];
   // Nur gesetzt, wenn viewer === Owner (player_id) — siehe page.tsx.
   sourceMarkdown: string | null;
+  // Nur gesetzt, wenn viewer === Owner — Grundlage für den Farbwähler unten.
+  ownColor: string | null;
+  takenColors: string[];
 }) {
   const { metadata } = character;
   const [editMode, setEditMode] = useState(false);
@@ -320,6 +326,17 @@ export default function CharacterHero({
               <p className="lcars-empty-state">
                 Keine biografischen Daten im Archiv hinterlegt.
               </p>
+            )}
+
+            {ownColor != null && (
+              <section className="mt-[24px] flex flex-col gap-[12px]">
+                <h2>Charakter-Farbe</h2>
+                <CharacterColorForm
+                  characterId={character.id}
+                  ownColor={ownColor}
+                  takenColors={takenColors}
+                />
+              </section>
             )}
           </div>
         </div>

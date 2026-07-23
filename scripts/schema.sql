@@ -65,12 +65,6 @@
 --    Fließtext (true) vs. farbige Karten-Ansicht (DialogueViewToggle.tsx).
 --  - editor_spellcheck_enabled: native Browser-Rechtschreibprüfung in den
 --    Markdown-Editor-Feldern (im Profil abschaltbar).
---  - character_color: im Profil gewählte Farbe für die eigenen Charaktere
---    (färbt deren wörtliche Rede im Fließtext-Modus, siehe
---    src/lib/characterColor.ts) — freie Hex-Farbe (#rrggbb), NULL = keine
---    explizite Wahl → die App leitet deterministisch eine LCARS-Farbe aus der
---    User-ID ab. Partieller UNIQUE-Index (unten) macht jede belegte Farbe
---    exklusiv (in Benutzung = für andere gesperrt).
 CREATE TABLE IF NOT EXISTS users (
   id                            SERIAL PRIMARY KEY,
   email                         TEXT UNIQUE NOT NULL,
@@ -91,16 +85,9 @@ CREATE TABLE IF NOT EXISTS users (
   notify_content_types          TEXT[] NOT NULL DEFAULT '{}',
   session_version               INT NOT NULL DEFAULT 0,
   dialogue_flowing_text_enabled BOOLEAN NOT NULL DEFAULT true,
-  editor_spellcheck_enabled     BOOLEAN NOT NULL DEFAULT true,
-  character_color               TEXT
-                                  CHECK (character_color IS NULL OR character_color ~ '^#[0-9a-fA-F]{6}$')
+  editor_spellcheck_enabled     BOOLEAN NOT NULL DEFAULT true
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_slug ON users(slug);
--- Jede explizit gewählte Farbe ist exklusiv einem User zugeordnet (in
--- Benutzung → für andere gesperrt). Partiell (WHERE NOT NULL), da beliebig
--- viele User NULL (= abgeleiteter Default) haben dürfen.
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_character_color
-  ON users(character_color) WHERE character_color IS NOT NULL;
 
 -- ---------------------------------------------------------------------------
 -- characters
@@ -110,32 +97,49 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_users_character_color
 -- Auswertung in src/lib/visibility.ts. deleted_at: Soft-Delete (7-Tage-
 -- Papierkorb, danach purge-soft-deleted.ts). is_draft: unfertiger Entwurf,
 -- für NIEMANDEN außer dem Owner sichtbar (auch nicht Admin/GM, siehe
--- canViewDraft), erlaubt leeren Text beim Speichern.
+-- canViewDraft), erlaubt leeren Text beim Speichern. character_color: vom
+-- Owner gewählte Farbe für DIESEN Charakter (färbt dessen wörtliche Rede im
+-- Fließtext-Modus sowie seine Nachrichten-Karten in Dialogen, siehe
+-- src/lib/characterColor.ts) — freie Hex-Farbe (#rrggbb), NULL = keine
+-- explizite Wahl → die App leitet deterministisch eine LCARS-Farbe aus der
+-- Charakter-ID ab. PRO CHARAKTER statt pro User, damit ein User mit
+-- mehreren Charakteren ("Multis") für jeden eine eigene Farbe wählen kann.
+-- Partieller UNIQUE-Index (unten) macht jede belegte Farbe exklusiv (in
+-- Benutzung = für andere Charaktere gesperrt).
 CREATE TABLE IF NOT EXISTS characters (
-  id          SERIAL PRIMARY KEY,
-  slug        TEXT UNIQUE NOT NULL,
-  name        TEXT NOT NULL,
-  status      TEXT NOT NULL DEFAULT 'active'
-                CHECK (status IN ('active', 'retired', 'deceased')),
-  player_id   INT REFERENCES users(id) ON DELETE SET NULL,
-  portrait    TEXT,
-  species     TEXT,
-  rank        TEXT,
-  bio         TEXT,
-  metadata    JSONB NOT NULL DEFAULT '{}',
-  source_md   TEXT,
-  frontmatter JSONB NOT NULL DEFAULT '{}',
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  visibility  TEXT NOT NULL DEFAULT 'public'
-                CHECK (visibility IN ('private', 'gm', 'public')),
-  deleted_at  TIMESTAMPTZ,
-  is_draft    BOOLEAN NOT NULL DEFAULT false
+  id              SERIAL PRIMARY KEY,
+  slug            TEXT UNIQUE NOT NULL,
+  name            TEXT NOT NULL,
+  status          TEXT NOT NULL DEFAULT 'active'
+                    CHECK (status IN ('active', 'retired', 'deceased')),
+  player_id       INT REFERENCES users(id) ON DELETE SET NULL,
+  portrait        TEXT,
+  species         TEXT,
+  rank            TEXT,
+  bio             TEXT,
+  metadata        JSONB NOT NULL DEFAULT '{}',
+  source_md       TEXT,
+  frontmatter     JSONB NOT NULL DEFAULT '{}',
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  visibility      TEXT NOT NULL DEFAULT 'public'
+                    CHECK (visibility IN ('private', 'gm', 'public')),
+  deleted_at      TIMESTAMPTZ,
+  is_draft        BOOLEAN NOT NULL DEFAULT false,
+  character_color TEXT
+                    CHECK (character_color IS NULL OR character_color ~ '^#[0-9a-fA-F]{6}$')
 );
 CREATE INDEX IF NOT EXISTS idx_characters_status     ON characters(status);
 CREATE INDEX IF NOT EXISTS idx_characters_player     ON characters(player_id);
 CREATE INDEX IF NOT EXISTS idx_characters_deleted_at ON characters(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_characters_is_draft   ON characters(is_draft);
+-- Der partielle UNIQUE-Index auf character_color (macht jede belegte Farbe
+-- exklusiv) steht bewusst NICHT hier, sondern erst im Migrationen-Abschnitt
+-- unten: character_color ist neu genug, dass er auf einer bereits
+-- bestehenden characters-Tabelle (CREATE TABLE IF NOT EXISTS oben ist dort
+-- ein No-op) erst durch die dortige ALTER TABLE ... ADD COLUMN entsteht —
+-- ein Index direkt hier würde auf einer solchen DB mit "column does not
+-- exist" fehlschlagen, bevor die Spalte angelegt wurde.
 
 -- ---------------------------------------------------------------------------
 -- missions
@@ -539,13 +543,22 @@ CREATE INDEX IF NOT EXISTS idx_content_images_content ON content_images(content_
 -- (kein datenveränderndes UPDATE) und wird bei der nächsten Konsolidierung
 -- wieder in die CREATE-TABLE-Blöcke oben eingeklappt.
 
--- character_color: Spalte anlegen (falls fehlt) und den CHECK von der
--- ursprünglichen Schlüssel-Palette (amber/blue/...) auf freie Hex-Farben
--- umstellen. DROP/ADD CONSTRAINT ersetzt einen evtl. noch vorhandenen alten
--- Schlüssel-CHECK; der partielle UNIQUE-Index macht belegte Farben exklusiv.
-ALTER TABLE users ADD COLUMN IF NOT EXISTS character_color TEXT;
-ALTER TABLE users DROP CONSTRAINT IF EXISTS users_character_color_check;
-ALTER TABLE users ADD CONSTRAINT users_character_color_check
+-- character_color: Spalte auf characters anlegen (falls fehlt) — lebt PRO
+-- CHARAKTER, nicht pro User (ein User mit mehreren Charakteren, "Multis",
+-- kann so für jeden eine eigene Farbe wählen). DROP/ADD CONSTRAINT ersetzt
+-- einen evtl. noch vorhandenen alten CHECK; der partielle UNIQUE-Index macht
+-- belegte Farben exklusiv.
+ALTER TABLE characters ADD COLUMN IF NOT EXISTS character_color TEXT;
+ALTER TABLE characters DROP CONSTRAINT IF EXISTS characters_character_color_check;
+ALTER TABLE characters ADD CONSTRAINT characters_character_color_check
   CHECK (character_color IS NULL OR character_color ~ '^#[0-9a-fA-F]{6}$');
-CREATE UNIQUE INDEX IF NOT EXISTS idx_users_character_color
-  ON users(character_color) WHERE character_color IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_characters_character_color
+  ON characters(character_color) WHERE character_color IS NOT NULL;
+
+-- Die frühere (nie in Produktion ausgerollte) Fassung dieser Spalte lag auf
+-- users statt characters — falls eine DB (z.B. lokale Entwicklungsumgebung)
+-- diese Zwischenversion bereits angelegt hat, wird sie hier zurückgebaut,
+-- damit users nicht dauerhaft eine tote, ungenutzte Spalte behält.
+DROP INDEX IF EXISTS idx_users_character_color;
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_character_color_check;
+ALTER TABLE users DROP COLUMN IF EXISTS character_color;

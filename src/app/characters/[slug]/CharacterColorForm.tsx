@@ -21,17 +21,23 @@ const PREVIEW_HTML =
   "<p>Sie blickte auf und sagte: „Lorem ipsum, dolor sit amet.“</p>" +
   "<p>Er nickte langsam. „Consetetur sadipscing elitr“, erwiderte er ruhig.</p>";
 
-// Farbwähler im Profil (/user): sechs LCARS-Preset-Swatches PLUS ein freier
-// Color-Picker. Bereits von anderen Usern belegte Farben (takenColors) sind
-// gesperrt; die eigene aktuelle Farbe (ownColor) bleibt immer wählbar. Darunter
-// eine Live-Vorschau eines Beispiel-Dialogs in der gewählten Farbe.
-// Kontrollierter State (kein defaultChecked-Remount-Trick nötig).
+// Farbwähler auf der Charakter-Detailseite (nur für den Owner sichtbar, siehe
+// CharacterHero.tsx) — sechs LCARS-Preset-Swatches PLUS ein freier
+// Color-Picker. Bewusst PRO CHARAKTER statt pro User (wie ursprünglich im
+// Profil): ein User mit mehreren Charakteren ("Multis") kann so für jeden
+// Charakter eine eigene, unterscheidbare Farbe wählen. Bereits von ANDEREN
+// Charakteren belegte Farben (takenColors) sind gesperrt; die eigene
+// aktuelle Farbe (ownColor) bleibt immer wählbar. Darunter eine Live-Vorschau
+// eines Beispiel-Dialogs in der gewählten Farbe. Kontrollierter State (kein
+// defaultChecked-Remount-Trick nötig).
 export default function CharacterColorForm({
+  characterId,
   ownColor,
   takenColors,
 }: {
-  ownColor: string; // Hex, aktuelle/abgeleitete Farbe des Users
-  takenColors: string[]; // Hex, von ANDEREN belegt
+  characterId: number;
+  ownColor: string; // Hex, aktuelle/abgeleitete Farbe dieses Charakters
+  takenColors: string[]; // Hex, von ANDEREN Charakteren belegt
 }) {
   const [state, formAction, pending] = useActionState(
     updateCharacterColorAction,
@@ -52,11 +58,13 @@ export default function CharacterColorForm({
   return (
     <form action={formAction} className="flex flex-col gap-[16px]">
       <p className="text-lcars-text-dim text-[13px]">
-        Diese Farbe färbt die wörtliche Rede deiner Charaktere im
-        Fließtext-Modus abgeschlossener Gespräche ein. Bereits von anderen
+        Diese Farbe färbt die wörtliche Rede dieses Charakters im
+        Fließtext-Modus abgeschlossener Gespräche sowie seine
+        Nachrichten-Karten in Gesprächen ein. Bereits von anderen Charakteren
         vergebene Farben sind gesperrt.
       </p>
 
+      <input type="hidden" name="characterId" value={characterId} />
       <input type="hidden" name="characterColor" value={selected} />
 
       <div

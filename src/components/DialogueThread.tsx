@@ -6,9 +6,13 @@ import type { ArchiveParticipant } from "@/types/archive";
 import DialogueMessageActions from "./DialogueMessageActions";
 
 // Reihenfolge kommt bereits chronologisch (ältester zuerst) aus
-// getDialogueMessages — kein Re-Sort nötig. Farbe wird deterministisch aus
-// der Position im Teilnehmer-Array abgeleitet (AUTHOR_COLORS, bereits für
-// Mission-Log-Autoren genutzt) statt separat gespeichert.
+// getDialogueMessages — kein Re-Sort nötig. Farbe kommt von der Charakter-
+// Farbe des Sprechers (msg.characterColor, siehe src/lib/characterColor.ts —
+// pro Charakter, nicht pro User, damit "Multis" für jeden ihrer Charaktere
+// eine eigene Farbe haben können) — dieselbe Farbe wie im Fließtext-Modus
+// abgeschlossener Dialoge (DialogueFlowingText.tsx). AUTHOR_COLORS
+// (positionsbasiert, bereits für Mission-Log-Autoren genutzt) bleibt nur noch
+// Fallback für Nachrichten ohne Charakter (z.B. gelöscht).
 //
 // Rendert einheitlich die farbige Karte, egal ob offener oder
 // geschlossener Dialog — die alternative Ansicht für geschlossene Dialoge
@@ -70,7 +74,9 @@ export default function DialogueThread({
         const colorIndex = participants.findIndex(
           (p) => p.slug === msg.characterSlug,
         );
-        const color = AUTHOR_COLORS[colorIndex >= 0 ? colorIndex : 0];
+        const color =
+          msg.characterColor ??
+          AUTHOR_COLORS[colorIndex >= 0 ? colorIndex : 0];
 
         return (
           <div

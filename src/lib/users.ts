@@ -180,7 +180,9 @@ export async function deleteUser(id: number): Promise<void> {
   await sql`DELETE FROM users WHERE id = ${id}`;
 }
 
-function isUniqueViolation(err: unknown): boolean {
+// Exportiert (auch für src/lib/characters.ts — charakterbezogene Unique-
+// Constraints wie characters_character_color_check nutzen dieselbe Prüfung).
+export function isUniqueViolation(err: unknown): boolean {
   return (
     typeof err === "object" &&
     err !== null &&
@@ -265,55 +267,11 @@ export async function updateEditorSpellcheckPreference(
   `;
 }
 
-// Charakter-Farbe (siehe src/lib/characterColor.ts) — wie die beiden
-// Präferenzen oben eine eigene schlanke Lese-/Schreibfunktion statt Teil von
-// USER_COLUMNS/User: nur im Profil-Farbwähler und (per Join) beim Rendern des
-// Fließtext-Modus gebraucht, nicht bei jedem User-Fetch. Liefert den rohen
-// gespeicherten Wert (Schlüssel oder NULL) — die Auflösung auf eine effektive
-// Farbe (Default aus der ID) macht resolveCharacterColor.
-export async function getCharacterColorPreference(
-  userId: number,
-): Promise<string | null> {
-  const [row] = await sql<{ character_color: string | null }[]>`
-    SELECT character_color FROM users WHERE id = ${userId}
-  `;
-  return row?.character_color ?? null;
-}
-
-// Alle von ANDEREN Usern belegten Farben (character_color IS NOT NULL, ohne
-// den eigenen Account) — Grundlage für die „in Benutzung"-Sperre im
-// Farbwähler. Der partielle UNIQUE-Index (scripts/schema.sql) erzwingt die
-// Eindeutigkeit zusätzlich auf DB-Ebene.
-export async function getUsedCharacterColors(
-  excludeUserId: number,
-): Promise<string[]> {
-  const rows = await sql<{ character_color: string }[]>`
-    SELECT character_color FROM users
-    WHERE character_color IS NOT NULL AND id != ${excludeUserId}
-  `;
-  return rows.map((r) => r.character_color);
-}
-
-// Wirft ColorTakenError, wenn die Farbe bereits von einem anderen User belegt
-// ist (partieller UNIQUE-Index → Unique-Violation).
-export class ColorTakenError extends Error {}
-
-export async function updateCharacterColorPreference(
-  userId: number,
-  color: string,
-): Promise<void> {
-  try {
-    await sql`
-      UPDATE users SET character_color = ${color}
-      WHERE id = ${userId}
-    `;
-  } catch (err) {
-    if (isUniqueViolation(err)) {
-      throw new ColorTakenError("Diese Farbe ist bereits vergeben.");
-    }
-    throw err;
-  }
-}
+// Charakter-Farbe: lebt jetzt auf characters.character_color statt hier (ein
+// User mit mehreren Charakteren — „Multis" — kann so für jeden Charakter eine
+// eigene Farbe wählen statt einer einzigen für alle). Siehe
+// getCharacterColorPreference/getUsedCharacterColors/
+// updateCharacterColorPreference/ColorTakenError in src/lib/characters.ts.
 
 export async function updateUser(
   id: number,

@@ -1,10 +1,10 @@
 "use server";
-import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/dal";
 import {
   updateCharacterColorPreference,
   ColorTakenError,
-} from "@/lib/users";
+} from "@/lib/characters";
+import { revalidateCharacter } from "@/lib/revalidate";
 import { isHexColor, normalizeHex } from "@/lib/characterColor";
 
 export interface CharacterColorState {
@@ -13,31 +13,46 @@ export interface CharacterColorState {
   error?: string;
 }
 
-// Formular-Action für den Farbwähler im Profil (/user). Akzeptiert jede
-// gültige Hex-Farbe (#rrggbb) — sowohl LCARS-Presets als auch frei per
-// Color-Picker gewählte. Bereits von anderen belegte Farben lehnt
-// updateCharacterColorPreference per ColorTakenError ab (DB-UNIQUE-Index).
+// Formular-Action für den Farbwähler auf der Charakter-Detailseite
+// (CharacterColorForm.tsx). Akzeptiert jede gültige Hex-Farbe (#rrggbb) —
+// sowohl LCARS-Presets als auch frei per Color-Picker gewählte.
+// updateCharacterColorPreference prüft Ownership per WHERE-Klausel (id +
+// player_id) und meldet mit false, wenn der Charakter nicht existiert oder
+// nicht diesem User gehört; bereits von einem ANDEREN Charakter belegte
+// Farben lehnt sie per ColorTakenError ab (DB-UNIQUE-Index).
 export async function updateCharacterColorAction(
   _state: CharacterColorState,
   formData: FormData,
 ): Promise<CharacterColorState> {
   const currentUser = await getCurrentUser();
+  const characterId = Number(formData.get("characterId"));
   const raw = String(formData.get("characterColor") ?? "");
 
+  if (!Number.isInteger(characterId)) {
+    return { error: "Ungültiger Charakter." };
+  }
   if (!isHexColor(raw)) {
     return { error: "Ungültige Farbe." };
   }
   const color = normalizeHex(raw);
 
+  let slug: string | null;
   try {
-    await updateCharacterColorPreference(currentUser.id, color);
+    slug = await updateCharacterColorPreference(
+      characterId,
+      currentUser.id,
+      color,
+    );
   } catch (err) {
     if (err instanceof ColorTakenError) {
       return { error: err.message };
     }
     throw err;
   }
+  if (!slug) {
+    return { error: "Dieser Charakter gehört dir nicht." };
+  }
 
-  revalidatePath("/user");
+  revalidateCharacter(slug);
   return { success: true, color };
 }

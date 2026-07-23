@@ -3,10 +3,12 @@ import {
   getCharacterBySlug,
   getLogsByCharacter,
   getCharacterSourceBySlug,
+  getUsedCharacterColors,
 } from "@/lib/characters";
 import { getDialogueCountByParticipant } from "@/lib/archive";
 import { getViewer, canView, canViewDraft } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
+import { resolveCharacterDefaultColor, normalizeHex } from "@/lib/characterColor";
 import { notFound } from "next/navigation";
 import CharakterDetailPage from "./CharacterDetailPage";
 interface Props {
@@ -68,17 +70,34 @@ export default async function CharakterPage({ params }: Props) {
   // CharacterHero.tsx) — spart die Extra-Query für alle anderen Aufrufe.
   const isOwner = viewer != null && viewer.userId === character.player_id;
 
-  const [logs, conversationCount, allUsers, source] = await Promise.all([
-    getLogsByCharacter(character.id),
-    getDialogueCountByParticipant(character.slug),
-    viewer?.role === "admin" ? listAllUsers() : Promise.resolve([]),
-    isOwner ? getCharacterSourceBySlug(character.slug) : Promise.resolve(null),
-  ]);
+  const [logs, conversationCount, allUsers, source, usedColors] =
+    await Promise.all([
+      getLogsByCharacter(character.id),
+      getDialogueCountByParticipant(character.slug),
+      viewer?.role === "admin" ? listAllUsers() : Promise.resolve([]),
+      isOwner
+        ? getCharacterSourceBySlug(character.slug)
+        : Promise.resolve(null),
+      // Farbwähler (CharacterColorForm) ist Owner-only — spart die Extra-
+      // Query für alle anderen Aufrufe, wie sourceMarkdown oben.
+      isOwner
+        ? getUsedCharacterColors(character.id)
+        : Promise.resolve([]),
+    ]);
   // Nur {id,name} an die Client Component durchreichen — der volle
   // UserWithCharacters-Datensatz (E-Mail, Login-Zeitstempel, …) würde sonst
   // unnötig ins Client-Bundle dieser Seite wandern (ActionsMenu braucht nur
   // id/name für OwnerSelect).
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
+
+  const takenColors = usedColors.map(normalizeHex);
+  const ownColor = isOwner
+    ? resolveCharacterDefaultColor(
+        character.character_color,
+        character.id,
+        new Set(takenColors),
+      )
+    : null;
 
   return (
     <div className="h-[90%]">
@@ -89,6 +108,8 @@ export default async function CharakterPage({ params }: Props) {
         viewer={viewer}
         owners={owners}
         sourceMarkdown={isOwner ? (source?.sourceMarkdown ?? "") : null}
+        ownColor={ownColor}
+        takenColors={takenColors}
       />
     </div>
   );

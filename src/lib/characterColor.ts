@@ -1,10 +1,14 @@
-// Charakter-Farbe: eine pro User gewählte Farbe, die die wörtliche Rede seiner
-// Charaktere im Fließtext-Modus geschlossener Dialoge einfärbt (siehe
-// DialogueFlowingText.tsx). Gespeichert als Hex-Farbe (#rrggbb) — neben den
-// LCARS-Presets ist auch eine frei per Color-Picker gewählte Farbe möglich.
-// Bewusst OHNE "server-only" — sowohl die Server-Auflösung (getDialogueMessages
-// in dialoguesCore.ts) als auch die Client-Komponenten (Profil-Farbwähler,
-// Fließtext-Rendering) nutzen dieselben Helfer.
+// Charakter-Farbe: eine PRO CHARAKTER gewählte Farbe (nicht pro User — eine
+// spielende Person mit mehreren Charakteren, "Multis", bekommt so für jeden
+// Charakter eine eigene, unterscheidbare Farbe), die dessen wörtliche Rede im
+// Fließtext-Modus geschlossener Dialoge sowie die Nachrichten-Karten in
+// offenen wie geschlossenen Dialogen einfärbt (siehe DialogueFlowingText.tsx,
+// DialogueThread.tsx). Gespeichert als Hex-Farbe (#rrggbb) auf
+// characters.character_color — neben den LCARS-Presets ist auch eine frei per
+// Color-Picker gewählte Farbe möglich. Bewusst OHNE "server-only" — sowohl die
+// Server-Auflösung (getDialogueMessages in dialoguesCore.ts) als auch die
+// Client-Komponenten (Farbwähler auf der Charakter-Detailseite, Fließtext-/
+// Karten-Rendering) nutzen dieselben Helfer.
 
 // LCARS-Preset-Farben (Hex aus src/styles/tokens.css) — Vorauswahl im
 // Farbwähler. Reihenfolge = Anzeige. `key` dient nur der stabilen React-Key-
@@ -36,9 +40,10 @@ export function normalizeHex(hex: string): string {
 
 // Effektive Farbe: ein explizit gewählter, gültiger Hex gewinnt, sonst wird
 // deterministisch eine der LCARS-Preset-Farben aus einem stabilen Wert
-// (i.d.R. der User-ID) abgeleitet — so hat jeder auch ohne eigene Wahl eine
-// gültige Default-Farbe („default: eine der lcars-farben"), und verschiedene
-// User bekommen meist verschiedene. Liefert immer einen gültigen Hex.
+// (der Charakter-ID) abgeleitet — so hat jeder Charakter auch ohne eigene Wahl
+// eine gültige Default-Farbe („default: eine der lcars-farben"), und
+// verschiedene Charaktere bekommen meist verschiedene. Liefert immer einen
+// gültigen Hex.
 export function resolveCharacterColor(
   stored: string | null | undefined,
   seed: number,
@@ -49,12 +54,13 @@ export function resolveCharacterColor(
   return PRESET_HEXES[i];
 }
 
-// Wie resolveCharacterColor, aber für die Profil-Vorauswahl: überspringt bei
-// abgeleitetem Default bereits von ANDEREN belegte Preset-Farben, damit der
-// vorgeschlagene Default auch speicherbar ist (nicht schon gesperrt). Belegte
-// Farben kommen aus getUsedCharacterColors. Sind alle Presets belegt, fällt es
-// auf den einfachen deterministischen Wert zurück.
-export function resolveProfileDefaultColor(
+// Wie resolveCharacterColor, aber für die Vorauswahl im Farbwähler auf der
+// Charakter-Detailseite: überspringt bei abgeleitetem Default bereits von
+// ANDEREN Charakteren belegte Preset-Farben, damit der vorgeschlagene Default
+// auch speicherbar ist (nicht schon gesperrt). Belegte Farben kommen aus
+// getUsedCharacterColors. Sind alle Presets belegt, fällt es auf den
+// einfachen deterministischen Wert zurück.
+export function resolveCharacterDefaultColor(
   stored: string | null | undefined,
   seed: number,
   taken: ReadonlySet<string>,

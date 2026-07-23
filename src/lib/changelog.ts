@@ -199,10 +199,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Behoben: Der Klick auf „Home“ in der Navigation führte gelegentlich zu einem kurzen Fehler und einer sichtbaren Vollseiten-Neuladung statt einer nahtlosen Navigation.",
       "Die beiden Admin/Spielleitungs-Werkzeuge auf Inhaltsseiten zum automatischen Verlinken bzw. Entfernen von Verlinkungen sind jetzt ein einzelner Knopf statt zweier getrennter Knöpfe; er zeigt beim Öffnen der Seite automatisch den vermutlich sinnvolleren Modus (Verlinken, solange es noch etwas zu verknüpfen gibt, sonst Entfernen).",
       "Das „Admin“-Menü im Header zeigt Charaktere, Missionen und Gespräche nicht mehr an — diese drei bleiben dem „Leitung“-Menü der Spielleitung vorbehalten.",
-      "Im Profil lässt sich eine Charakter-Farbe (eine der LCARS-Farben) wählen; die wörtliche Rede der eigenen Charaktere wird damit im Fließtext-Modus abgeschlossener Gespräche eingefärbt.",
       "Bei Gesprächen mit mehreren Teilnehmenden kann das Antwortrecht nur noch reserviert werden, wenn der eigene Charakter nicht zuletzt am Zug war; der antwortende Charakter wird immer angezeigt, bei mehreren eigenen Teilnehmer-Charakteren ist er wählbar; Admins können hängende Reservierungen sofort freigeben.",
-      "Die Charakter-Farbe im Profil unterstützt jetzt neben den sechs LCARS-Tönen beliebige Hex-Farben über einen Color-Picker; bereits von anderen verwendete Farben sind gesperrt; eine Vorschau mit Beispieldialog zeigt die gewählte Farbe sofort; im Fließtext-Modus werden jetzt auch die Anführungszeichen selbst eingefärbt.",
       "Behoben: Das Verlinken/Entfernen-Werkzeug auf Inhaltsseiten war für die Spielleitung zwar sichtbar, ein Klick scheiterte aber immer an einer Admin-only-Berechtigungsprüfung.",
+      "Jeder Charakter bekommt jetzt auf seiner eigenen Seite eine wählbare Charakter-Farbe (sechs LCARS-Töne oder eine frei per Color-Picker gewählte Hex-Farbe, mit Vorschau und Sperre bereits vergebener Farben) — spielst du mehrere Charaktere, kann also jeder seine eigene Farbe haben statt einer gemeinsamen. Diese Farbe färbt sowohl die wörtliche Rede (inklusive Anführungszeichen) im Fließtext-Modus abgeschlossener Gespräche als auch die Nachrichten-Karten in offenen wie geschlossenen Gesprächen ein.",
     ],
   },
 ];

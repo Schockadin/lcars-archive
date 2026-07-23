@@ -58,7 +58,10 @@ export default function InsertImageButton({
         <ImageIcon />
       </button>
       {open && (
-        <ContentToolPreviewOverlay title="Bild einfügen" onClose={() => setOpen(false)}>
+        <ContentToolPreviewOverlay
+          title="Bild einfügen"
+          onClose={() => setOpen(false)}
+        >
           <p className="lcars-eyebrow">Bild einfügen</p>
 
           {images === null && <p className="text-[13px]">Lädt…</p>}
