@@ -7,10 +7,7 @@ import sql from "@/lib/db";
 import { markdownToSafeHtml } from "@/lib/markdown";
 import { getCharactersForUser } from "@/lib/characters";
 import { generateUniqueArchiveEntrySlug } from "@/lib/archive";
-import {
-  resolveCharacterColor,
-  type CharacterColorKey,
-} from "@/lib/characterColor";
+import { resolveCharacterColor } from "@/lib/characterColor";
 import type { ArchiveParticipant, ArchiveLocationRef } from "@/types/archive";
 
 // Optionaler Client-Parameter für Aufrufe innerhalb einer bestehenden
@@ -78,7 +75,8 @@ export interface DialogueMessage {
   // Einfärbung der wörtlichen Rede im Fließtext-Modus, DialogueFlowingText.tsx).
   // Optional, weil die optimistischen Rückgaben von postDialogueMessage/
   // editDialogueMessage (Karten-/Live-Ansicht) keine Farbe brauchen.
-  characterColor?: CharacterColorKey | null;
+  // Hex-Farbe (#rrggbb) oder null (kein Charakter, z.B. gelöschte Nachricht).
+  characterColor?: string | null;
 }
 
 // Chronologisch (ältester zuerst). Kein unstable_cache — muss nach jeder
@@ -136,6 +134,23 @@ export async function getDialogueMessages(
           )
         : null,
   }));
+}
+
+// Charakter-ID der letzten NICHT gelöschten Nachricht (der zuletzt am Zug war)
+// — Grundlage für die Antwort-Berechtigung: die nächste Nachricht darf nicht
+// vom selben Charakter kommen (Selbstgespräch-Verbot, siehe postDialogueMessage).
+// Genutzt vom Server-Guard in reserveDialogueReplyAction. null, wenn es noch
+// keine Nachricht gibt. Exakt dieselbe Sortierung wie der Self-Reply-Check.
+export async function getLastDialogueSpeakerCharacterId(
+  archiveEntryId: number,
+): Promise<number | null> {
+  const [row] = await sql<{ character_id: number | null }[]>`
+    SELECT character_id FROM dialogue_messages
+    WHERE archive_entry_id = ${archiveEntryId} AND deleted_at IS NULL
+    ORDER BY created_at DESC, id DESC
+    LIMIT 1
+  `;
+  return row?.character_id ?? null;
 }
 
 export interface CreateDialogueInput {
@@ -942,6 +957,91 @@ export async function getDialogueParticipant(
     characterSlug: row.slug,
     characterName: row.name,
   };
+}
+
+// ALLE Teilnehmer-Charaktere dieses Dialogs, die userId gehören (nicht nur der
+// erste wie getDialogueParticipant) — Grundlage für die Antwort-Charakter-
+// Auswahl (DialogueReplyForm): wer mit mehreren eigenen Charakteren teilnimmt,
+// wählt beim Antworten, mit welchem. Reihenfolge = Teilnehmer-Reihenfolge im
+// Dialog (metadata.participants), stabil für die Anzeige.
+export async function getDialogueParticipantCharacters(
+  archiveEntryId: number,
+  userId: number,
+): Promise<DialogueParticipantInfo[]> {
+  const [entry] = await sql<{ metadata: unknown }[]>`
+    SELECT metadata FROM archive_entries WHERE id = ${archiveEntryId}
+  `;
+  if (!entry) return [];
+
+  const slugs = parseParticipants(entry.metadata).map((p) => p.slug);
+  if (slugs.length === 0) return [];
+
+  const rows = await sql<{ id: number; slug: string; name: string }[]>`
+    SELECT id, slug, name FROM characters
+    WHERE slug = ANY(${slugs}) AND player_id = ${userId}
+  `;
+  const bySlug = new Map(rows.map((r) => [r.slug, r]));
+  // In Teilnehmer-Reihenfolge zurückgeben (slugs behält die Reihenfolge aus
+  // metadata.participants).
+  return slugs
+    .map((slug) => bySlug.get(slug))
+    .filter((r): r is { id: number; slug: string; name: string } => !!r)
+    .map((r) => ({
+      characterId: r.id,
+      characterSlug: r.slug,
+      characterName: r.name,
+    }));
+}
+
+// Force-Freigabe der Antwort-Reservierung durch einen Admin (siehe
+// releaseDialogueReservationAction) — anders als releaseExpiredDialogueReservation
+// UNBEDINGT (unabhängig von expires_at), damit eine hängengebliebene Sperre
+// (jemand reserviert, kann/will aber nicht antworten) nicht bis zum Ablauf
+// alle anderen blockiert. Gibt wie beim Ablauf zurück, wer laut Notify-Requests
+// über das Ende informiert werden wollte (die Action-Ebene verschickt).
+export async function forceReleaseDialogueReservation(
+  archiveEntryId: number,
+): Promise<ReleasedReservationInfo | null> {
+  return sql.begin(async (tx) => {
+    const [deleted] = await tx<{ archive_entry_id: number }[]>`
+      DELETE FROM dialogue_reservations
+      WHERE archive_entry_id = ${archiveEntryId}
+      RETURNING archive_entry_id
+    `;
+    if (!deleted) return null;
+
+    const notifyRows = await tx<
+      {
+        id: number;
+        email: string;
+        name: string;
+        email_notifications_enabled: boolean;
+        push_notifications_enabled: boolean;
+      }[]
+    >`
+      SELECT u.id, u.email, u.name, u.email_notifications_enabled, u.push_notifications_enabled
+      FROM dialogue_reservation_notify_requests n
+      JOIN users u ON u.id = n.user_id
+      WHERE n.archive_entry_id = ${archiveEntryId}
+    `;
+    await tx`
+      DELETE FROM dialogue_reservation_notify_requests WHERE archive_entry_id = ${archiveEntryId}
+    `;
+    const [entry] = await tx<{ slug: string; title: string }[]>`
+      SELECT slug, title FROM archive_entries WHERE id = ${archiveEntryId}
+    `;
+    return {
+      notifyTargets: notifyRows.map((r) => ({
+        id: r.id,
+        email: r.email,
+        name: r.name,
+        emailNotificationsEnabled: r.email_notifications_enabled,
+        pushNotificationsEnabled: r.push_notifications_enabled,
+      })),
+      dialogueSlug: entry?.slug ?? "",
+      dialogueTitle: entry?.title ?? "",
+    };
+  });
 }
 
 export interface DialoguePlayEntry {

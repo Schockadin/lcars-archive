@@ -1,6 +1,9 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { getDialogueSnapshotAction } from "@/app/actions/dialogues";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import {
+  getDialogueSnapshotAction,
+  releaseDialogueReservationAction,
+} from "@/app/actions/dialogues";
 import type { DialogueMessage, DialogueLockStatus } from "@/lib/dialogues";
 import type { ArchiveParticipant } from "@/types/archive";
 import type { CharacterParticipantOption } from "@/lib/characters";
@@ -11,6 +14,11 @@ import InviteDialogueParticipantForm from "./InviteDialogueParticipantForm";
 import CompleteDialogueButton from "./CompleteDialogueButton";
 import DeleteDialogueButton from "./DeleteDialogueButton";
 import FollowButtons from "./FollowButtons";
+
+export interface DialogueReplyCharacter {
+  id: number;
+  name: string;
+}
 
 const POLL_INTERVAL_MS = 8000;
 
@@ -36,6 +44,7 @@ export default function DialogueLiveView({
   currentUserId,
   viewerRole,
   isParticipant,
+  myCharacters,
   isOwner,
   inviteCandidates,
   initialMessages,
@@ -49,6 +58,9 @@ export default function DialogueLiveView({
   currentUserId: number;
   viewerRole: "admin" | "gm" | "player" | "viewer" | "guest" | null;
   isParticipant: boolean;
+  // Teilnehmer-Charaktere DIESER Person (für die Antwort-Charakter-Auswahl) —
+  // leer, wenn Nicht-Teilnehmer (Admin/GM-Betrachter).
+  myCharacters: DialogueReplyCharacter[];
   isOwner: boolean;
   inviteCandidates: CharacterParticipantOption[];
   initialMessages: DialogueMessage[];
@@ -110,6 +122,27 @@ export default function DialogueLiveView({
 
   const multiParty = participants.length > 2;
 
+  // Zuletzt am Zug gewesener Charakter (aus den bereits vorliegenden, per Poll
+  // aktuellen Nachrichten) — die nächste Nachricht darf nicht von ihm kommen
+  // (Selbstgespräch-Verbot). Daraus leiten sich die für DIESE Person aktuell
+  // antwortberechtigten Charaktere ab.
+  const lastSpeakerCharacterId =
+    [...messages].reverse().find((m) => !m.deletedAt)?.characterId ?? null;
+  const eligibleReplyCharacters = myCharacters.filter(
+    (c) => c.id !== lastSpeakerCharacterId,
+  );
+  // Wer keinen antwortberechtigten Charakter hat, darf auch nicht reservieren
+  // (der Reserve-Button wird gesperrt, Server-Guard zusätzlich).
+  const canReserve = eligibleReplyCharacters.length > 0;
+
+  const [releasePending, startRelease] = useTransition();
+  function handleRelease() {
+    startRelease(async () => {
+      await releaseDialogueReservationAction(entrySlug);
+      poll();
+    });
+  }
+
   return (
     <>
       {messages.length > 0 ? (
@@ -146,6 +179,10 @@ export default function DialogueLiveView({
           <DialogueReplyForm
             entrySlug={entrySlug}
             canReplyNow={canReplyNow}
+            replyCharacters={eligibleReplyCharacters}
+            hasOnlyBlockedCharacter={
+              myCharacters.length > 0 && eligibleReplyCharacters.length === 0
+            }
             onSent={poll}
           />
         )}
@@ -154,9 +191,25 @@ export default function DialogueLiveView({
             entrySlug={entrySlug}
             lockStatus={lockStatus}
             currentUserId={currentUserId}
+            canReserve={canReserve}
             alreadyRequestedNotify={alreadyRequestedNotify}
             onReserved={poll}
           />
+        )}
+        {/* Admin-Rettungsanker: eine aktive Reservierung sofort freigeben,
+            falls sie hängt (auch für Nicht-Teilnehmer-Admins sichtbar). */}
+        {open && viewerRole === "admin" && multiParty && lockStatus && (
+          <button
+            type="button"
+            onClick={handleRelease}
+            disabled={releasePending}
+            className="lcars-pill-btn--outline self-start disabled:opacity-50"
+            title="Die aktive Antwort-Reservierung dieses Gesprächs sofort freigeben"
+          >
+            {releasePending
+              ? "Wird freigegeben…"
+              : `Reservierung von ${lockStatus.heldByName} freigeben`}
+          </button>
         )}
         {isOwner && (
           <InviteDialogueParticipantForm

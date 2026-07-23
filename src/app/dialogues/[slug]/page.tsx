@@ -4,7 +4,7 @@ import { verifySession } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import {
   getDialogueForPlay,
-  getDialogueParticipant,
+  getDialogueParticipantCharacters,
   getDialogueMessages,
   getDialogueLockStatus,
   hasRequestedDialogueReservationNotification,
@@ -42,11 +42,20 @@ export default async function DialoguePlayPage({ params }: Props) {
   // Abgeschlossene Dialoge leben unter /archive — kein doppeltes Ziel.
   if (!entry.open) redirect(`/archive/${slug}`);
 
-  const participant = await getDialogueParticipant(entry.id, session.userId);
+  const myParticipantCharacters = await getDialogueParticipantCharacters(
+    entry.id,
+    session.userId,
+  );
+  const isParticipant = myParticipantCharacters.length > 0;
   const viewer = await getUserById(session.userId);
-  if (!participant && viewer?.role !== "gm" && viewer?.role !== "admin") {
+  if (!isParticipant && viewer?.role !== "gm" && viewer?.role !== "admin") {
     forbidden();
   }
+  // Schlanke {id,name}-Liste für die Antwort-Charakter-Auswahl im Client.
+  const myCharacters = myParticipantCharacters.map((c) => ({
+    id: c.characterId,
+    name: c.characterName,
+  }));
 
   const messages = await getDialogueMessages(entry.id);
 
@@ -95,7 +104,8 @@ export default async function DialoguePlayPage({ params }: Props) {
         participants={entry.participants}
         currentUserId={session.userId}
         viewerRole={viewer?.role ?? null}
-        isParticipant={!!participant}
+        isParticipant={isParticipant}
+        myCharacters={myCharacters}
         isOwner={isOwner}
         inviteCandidates={inviteCandidates}
         initialMessages={messages}

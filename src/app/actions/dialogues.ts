@@ -12,6 +12,8 @@ import {
   DialogueReservationRequiredError,
   getDialogueForPlay,
   getDialogueParticipant,
+  getDialogueParticipantCharacters,
+  getLastDialogueSpeakerCharacterId,
   getDialogueSubscribers,
   getCharacterSubscribers,
   getDialogueParticipantPlayers,
@@ -25,6 +27,7 @@ import {
   deleteDialogue,
   inviteDialogueParticipants,
   reserveDialogueReply,
+  forceReleaseDialogueReservation,
   requestDialogueReservationNotification,
   type DialogueEmailTarget,
   type ReleasedReservationInfo,
@@ -69,8 +72,14 @@ export async function postDialogueMessageAction(
     return { error: "Dieser Dialog existiert nicht." };
   }
 
-  const participant = await getDialogueParticipant(entry.id, session.userId);
-  if (!participant) {
+  // Alle Teilnehmer-Charaktere dieser Person (nicht nur der erste) — der Client
+  // schickt bei mehreren die Auswahl als characterId mit; nie blind vertrauen,
+  // sondern gegen die tatsächlichen eigenen Teilnehmer-Charaktere prüfen.
+  const myCharacters = await getDialogueParticipantCharacters(
+    entry.id,
+    session.userId,
+  );
+  if (myCharacters.length === 0) {
     return { error: "Du bist kein Teilnehmer dieses Gesprächs." };
   }
 
@@ -81,6 +90,19 @@ export async function postDialogueMessageAction(
     };
   }
 
+  // characterId ist optional im Formular (Ein-Charakter-Fall braucht keine
+  // Auswahl) — dann der einzige eigene Teilnehmer-Charakter. Bei mehreren muss
+  // die mitgeschickte ID einer der eigenen sein.
+  const rawCharacterId = Number(formData.get("characterId"));
+  const chosen = Number.isInteger(rawCharacterId)
+    ? myCharacters.find((c) => c.characterId === rawCharacterId)
+    : myCharacters.length === 1
+      ? myCharacters[0]
+      : undefined;
+  if (!chosen) {
+    return { error: "Bitte wähle einen deiner Charaktere aus." };
+  }
+
   const bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
   if (!bodyMarkdown) {
     return { error: "Bitte eine Nachricht eingeben." };
@@ -89,7 +111,7 @@ export async function postDialogueMessageAction(
   try {
     await postDialogueMessage({
       archiveEntryId: entry.id,
-      characterId: participant.characterId,
+      characterId: chosen.characterId,
       authorUserId: session.userId,
       bodyMarkdown,
     });
@@ -136,7 +158,7 @@ export async function postDialogueMessageAction(
         const result = await sendDialogueMessageEmail({
           to: subscriber.email,
           name: subscriber.name,
-          fromCharacterName: participant.characterName,
+          fromCharacterName: chosen.characterName,
           dialogueTitle: entry.title,
           dialogueUrl,
           preview,
@@ -153,7 +175,7 @@ export async function postDialogueMessageAction(
       if (subscriber.pushNotificationsEnabled) {
         await sendPushToUser(subscriber.id, {
           title: `Neue Nachricht in "${entry.title}"`,
-          body: `${participant.characterName}: ${preview}`,
+          body: `${chosen.characterName}: ${preview}`,
           url: dialogueUrl,
         });
       }
@@ -648,9 +670,25 @@ export async function reserveDialogueReplyAction(
     return { error: "Für dieses Gespräch ist keine Reservierung nötig." };
   }
 
-  const participant = await getDialogueParticipant(entry.id, session.userId);
-  if (!participant) {
+  const myCharacters = await getDialogueParticipantCharacters(
+    entry.id,
+    session.userId,
+  );
+  if (myCharacters.length === 0) {
     return { error: "Du bist kein Teilnehmer dieses Gesprächs." };
+  }
+
+  // Wer gerade gar nicht antworten kann, soll auch keine Antwortzeit
+  // reservieren (sonst blockiert die Reservierung nur alle anderen). „Kann
+  // antworten" = mindestens ein eigener Teilnehmer-Charakter ist NICHT der
+  // zuletzt am Zug gewesene (Selbstgespräch-Verbot, siehe postDialogueMessage).
+  const lastSpeaker = await getLastDialogueSpeakerCharacterId(entry.id);
+  const canReply = myCharacters.some((c) => c.characterId !== lastSpeaker);
+  if (!canReply) {
+    return {
+      error:
+        "Dein Charakter war zuletzt am Zug — warte, bis jemand anderes geantwortet hat.",
+    };
   }
 
   try {
@@ -662,6 +700,33 @@ export async function reserveDialogueReplyAction(
     }
     throw err;
   }
+
+  revalidatePath(`/dialogues/${entrySlug}`);
+  return {};
+}
+
+// Admin-Force-Freigabe der Antwort-Reservierung in einem Mehrparteien-Dialog
+// (siehe DialogueLiveView.tsx) — Rettungsanker, falls jemand reserviert hat,
+// aber nicht antworten kann/will und dadurch alle anderen bis zum Ablauf (2h)
+// blockiert. Admin-only (frisch aus der DB geprüft, nicht aus dem
+// Session-Cookie). Benachrichtigt wie beim regulären Ablauf alle, die sich für
+// das Sperr-Ende eingetragen hatten.
+export async function releaseDialogueReservationAction(
+  entrySlug: string,
+): Promise<ReserveReplyState> {
+  const session = await getSession();
+  if (!session) return { error: "Bitte melde dich an." };
+
+  const user = await getUserById(session.userId);
+  if (user?.role !== "admin") {
+    return { error: "Nur die Administration darf Reservierungen freigeben." };
+  }
+
+  const entry = await getDialogueForPlay(entrySlug);
+  if (!entry) return { error: "Dieser Dialog existiert nicht." };
+
+  const released = await forceReleaseDialogueReservation(entry.id);
+  await notifyReservationReleased(released);
 
   revalidatePath(`/dialogues/${entrySlug}`);
   return {};

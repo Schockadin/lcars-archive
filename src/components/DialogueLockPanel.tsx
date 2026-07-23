@@ -19,12 +19,19 @@ export default function DialogueLockPanel({
   entrySlug,
   lockStatus,
   currentUserId,
+  canReserve = true,
   alreadyRequestedNotify,
   onReserved,
 }: {
   entrySlug: string;
   lockStatus: DialogueLockStatus | null;
   currentUserId: number;
+  // Ob diese Person aktuell überhaupt antworten könnte (mind. ein eigener
+  // Teilnehmer-Charakter ist nicht der zuletzt am Zug gewesene). Wenn nicht,
+  // ist der Reservieren-Button gesperrt — reservieren, ohne antworten zu
+  // können, würde nur alle anderen blockieren (Server-Guard zusätzlich in
+  // reserveDialogueReplyAction).
+  canReserve?: boolean;
   alreadyRequestedNotify: boolean;
   // Von DialogueLiveView.tsx übergeben (dessen Poll-Funktion) — löst nach
   // erfolgreicher Reservierung sofort einen Snapshot-Poll aus, statt bis zu
@@ -61,12 +68,22 @@ export default function DialogueLockPanel({
         <button
           type="button"
           onClick={handleReserve}
-          disabled={pending}
+          disabled={pending || !canReserve}
           className="lcars-pill-btn--outline self-start disabled:opacity-50"
-          title="Reserviert das Antwortrecht für 2 Stunden"
+          title={
+            canReserve
+              ? "Reserviert das Antwortrecht für 2 Stunden"
+              : "Dein Charakter war zuletzt am Zug — du kannst gerade nicht antworten"
+          }
         >
           {pending ? "Wird reserviert…" : "Antwortrecht reservieren"}
         </button>
+        {!canReserve && (
+          <p className="text-lcars-text-dim text-[12px]">
+            Dein Charakter war zuletzt am Zug — warte, bis jemand anderes
+            geantwortet hat, bevor du reservieren kannst.
+          </p>
+        )}
         <FormError message={error} />
       </div>
     );
