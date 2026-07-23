@@ -51,6 +51,12 @@ const nextConfig: NextConfig = {
   // Zugriffsverweigerungen.
   experimental: {
     authInterrupts: true,
+    serverActions: {
+      // Standard-Limit (1 MB) greift bei Bild-Uploads — erhöht auf 10 MB,
+      // da Charakter-Portraits und Content-Bilder typischerweise mehrere MB
+      // groß sind (JPEG/PNG-Originale vor R2-Speicherung).
+      bodySizeLimit: "10mb",
+    },
   },
   // Lighthouse (Best Practices) bemängelte fehlende Source Maps für die
   // ausgelieferten Browser-Bundles — ohne sie zeigt die Fehler-Konsole/
