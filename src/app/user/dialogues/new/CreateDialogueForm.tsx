@@ -35,7 +35,7 @@ export default function CreateDialogueForm({
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-[16px] w-full sm:max-w-[420px]"
+      className="flex flex-col gap-[16px] max-w-[var(--lcars-content-w)]"
     >
       <input type="hidden" name="userId" value={userId} />
 

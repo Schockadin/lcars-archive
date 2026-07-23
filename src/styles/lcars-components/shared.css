@@ -654,3 +654,17 @@
   flex-shrink: 0;
   transition: height 0.15s ease-out;
 }
+
+.horizontalBar {
+  width: 100%;
+  height: 5px;
+  /* background: linear-gradient(
+    to right,
+    var(--lcars-text-data),
+    80%,
+    var(--lcars-bg)
+  ); */
+  background-color: var(--lcars-text-data);
+  border-radius: 5px;
+  margin: 16px 0px;
+}
