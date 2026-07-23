@@ -13,12 +13,12 @@ export interface CharacterColorState {
   error?: string;
 }
 
-// Formular-Action für den Farbwähler auf der Charakter-Detailseite
-// (CharacterColorForm.tsx). Akzeptiert jede gültige Hex-Farbe (#rrggbb) —
-// sowohl LCARS-Presets als auch frei per Color-Picker gewählte.
-// updateCharacterColorPreference prüft Ownership per WHERE-Klausel (id +
-// player_id) und meldet mit false, wenn der Charakter nicht existiert oder
-// nicht diesem User gehört; bereits von einem ANDEREN Charakter belegte
+// Formular-Action für den Farbwähler im Profil (/user, eine Instanz pro
+// Charakter — siehe CharacterColorForm.tsx). Akzeptiert jede gültige
+// Hex-Farbe (#rrggbb) — sowohl LCARS-Presets als auch frei per Color-Picker
+// gewählte. updateCharacterColorPreference prüft Ownership per WHERE-Klausel
+// (id + player_id) und meldet mit false, wenn der Charakter nicht existiert
+// oder nicht diesem User gehört; bereits von einem ANDEREN Charakter belegte
 // Farben lehnt sie per ColorTakenError ab (DB-UNIQUE-Index).
 export async function updateCharacterColorAction(
   _state: CharacterColorState,

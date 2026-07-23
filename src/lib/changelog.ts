@@ -201,7 +201,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Das „Admin“-Menü im Header zeigt Charaktere, Missionen und Gespräche nicht mehr an — diese drei bleiben dem „Leitung“-Menü der Spielleitung vorbehalten.",
       "Bei Gesprächen mit mehreren Teilnehmenden kann das Antwortrecht nur noch reserviert werden, wenn der eigene Charakter nicht zuletzt am Zug war; der antwortende Charakter wird immer angezeigt, bei mehreren eigenen Teilnehmer-Charakteren ist er wählbar; Admins können hängende Reservierungen sofort freigeben.",
       "Behoben: Das Verlinken/Entfernen-Werkzeug auf Inhaltsseiten war für die Spielleitung zwar sichtbar, ein Klick scheiterte aber immer an einer Admin-only-Berechtigungsprüfung.",
-      "Jeder Charakter bekommt jetzt auf seiner eigenen Seite eine wählbare Charakter-Farbe (sechs LCARS-Töne oder eine frei per Color-Picker gewählte Hex-Farbe, mit Vorschau und Sperre bereits vergebener Farben) — spielst du mehrere Charaktere, kann also jeder seine eigene Farbe haben statt einer gemeinsamen. Diese Farbe färbt sowohl die wörtliche Rede (inklusive Anführungszeichen) im Fließtext-Modus abgeschlossener Gespräche als auch die Nachrichten-Karten in offenen wie geschlossenen Gesprächen ein.",
+      "Im Profil gibt es jetzt eine Charakter-Farben-Liste mit einem Farbwähler (sechs LCARS-Töne oder eine frei per Color-Picker gewählte Hex-Farbe, mit Vorschau und Sperre bereits vergebener Farben) für jeden deiner Charaktere einzeln — spielst du mehrere, kann also jeder seine eigene Farbe haben statt einer gemeinsamen. Diese Farbe färbt sowohl die wörtliche Rede (inklusive Anführungszeichen) im Fließtext-Modus abgeschlossener Gespräche als auch die Nachrichten-Karten in offenen wie geschlossenen Gesprächen ein.",
     ],
   },
 ];

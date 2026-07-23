@@ -217,10 +217,9 @@ export default function TutorialPage() {
                 Lesetext wird die wörtliche Rede jedes Charakters in dessen{" "}
                 <strong>Charakter-Farbe</strong> dargestellt, ebenso die
                 Nachrichten-Karten in offenen wie geschlossenen Gesprächen —
-                diese Farbe legst du auf der jeweiligen Charakter-Seite unter
-                „Charakter-Farbe“ fest (jeder deiner Charaktere kann eine
-                eigene haben; ohne eigene Wahl bekommt er automatisch eine der
-                LCARS-Farben).
+                diese Farbe legst du im Profil unter „Charakter-Farben“ fest,
+                für jeden deiner Charaktere einzeln (ohne eigene Wahl bekommt
+                er automatisch eine der LCARS-Farben).
               </p>
             </div>
           </LcarsDataRow>

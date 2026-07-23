@@ -3,11 +3,14 @@ import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "./dal";
 import { hasPassword, getEditorSpellcheckPreference } from "@/lib/users";
+import { getCharactersForUser, getUsedCharacterColors } from "@/lib/characters";
+import { resolveCharacterDefaultColor, normalizeHex } from "@/lib/characterColor";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
 import LogoutEverywhereButton from "./LogoutEverywhereButton";
 import NotificationSettingsForm from "./NotificationSettingsForm";
 import EditorSpellcheckSettingsForm from "./EditorSpellcheckSettingsForm";
+import CharacterColorForm from "./CharacterColorForm";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 
@@ -39,6 +42,26 @@ export default async function UserPage() {
   const hasPasswordSet = await hasPassword(target.id);
   const needsPassword = !hasPasswordSet;
   const spellcheckEnabled = await getEditorSpellcheckPreference(target.id);
+
+  // Charakter-Farben: eine Liste statt einer einzigen Wahl, seit die Farbe
+  // pro Charakter statt pro User lebt (Multis sollen für jeden Charakter
+  // eine eigene wählen können, siehe src/lib/characterColor.ts). takenColors
+  // pro Charakter einzeln ermitteln (schließt jeweils nur den eigenen
+  // Charakter aus, nicht die übrigen eigenen — der partielle UNIQUE-Index
+  // macht jede Farbe global exklusiv, auch zwischen den eigenen Charakteren).
+  const characters = await getCharactersForUser(target.id);
+  const characterColors = await Promise.all(
+    characters.map(async (c) => {
+      const usedColors = await getUsedCharacterColors(c.id);
+      const takenColors = usedColors.map(normalizeHex);
+      const ownColor = resolveCharacterDefaultColor(
+        c.character_color,
+        c.id,
+        new Set(takenColors),
+      );
+      return { character: c, ownColor, takenColors };
+    }),
+  );
 
   return (
     <>
@@ -128,6 +151,34 @@ export default async function UserPage() {
               <h2>Editor</h2>
               <EditorSpellcheckSettingsForm enabled={spellcheckEnabled} />
             </section>
+
+            {characterColors.length > 0 && (
+              <section
+                id="character-colors"
+                className="flex flex-col gap-[24px]"
+              >
+                <h2>Charakter-Farben</h2>
+                <p>
+                  Jeder deiner Charaktere kann eine eigene Farbe haben — sie
+                  färbt seine wörtliche Rede im Fließtext-Modus abgeschlossener
+                  Gespräche sowie seine Nachrichten-Karten in Gesprächen ein.
+                </p>
+                {characterColors.map(({ character, ownColor, takenColors }) => (
+                  <div key={character.id} className="flex flex-col gap-[12px]">
+                    <h3>
+                      <Link href={`/characters/${character.slug}`}>
+                        {character.name}
+                      </Link>
+                    </h3>
+                    <CharacterColorForm
+                      characterId={character.id}
+                      ownColor={ownColor}
+                      takenColors={takenColors}
+                    />
+                  </div>
+                ))}
+              </section>
+            )}
 
             <section id="install" className="flex flex-col gap-[12px]">
               <h2>App installieren</h2>

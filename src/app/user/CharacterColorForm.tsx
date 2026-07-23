@@ -21,15 +21,17 @@ const PREVIEW_HTML =
   "<p>Sie blickte auf und sagte: „Lorem ipsum, dolor sit amet.“</p>" +
   "<p>Er nickte langsam. „Consetetur sadipscing elitr“, erwiderte er ruhig.</p>";
 
-// Farbwähler auf der Charakter-Detailseite (nur für den Owner sichtbar, siehe
-// CharacterHero.tsx) — sechs LCARS-Preset-Swatches PLUS ein freier
-// Color-Picker. Bewusst PRO CHARAKTER statt pro User (wie ursprünglich im
-// Profil): ein User mit mehreren Charakteren ("Multis") kann so für jeden
-// Charakter eine eigene, unterscheidbare Farbe wählen. Bereits von ANDEREN
-// Charakteren belegte Farben (takenColors) sind gesperrt; die eigene
-// aktuelle Farbe (ownColor) bleibt immer wählbar. Darunter eine Live-Vorschau
-// eines Beispiel-Dialogs in der gewählten Farbe. Kontrollierter State (kein
-// defaultChecked-Remount-Trick nötig).
+// Farbwähler im Profil (/user) — dort einmal PRO CHARAKTER gerendert (siehe
+// die Liste in page.tsx), nicht mehr auf der jeweiligen Charakter-
+// Detailseite: ein User mit mehreren Charakteren ("Multis") sieht so alle
+// seine Charaktere samt Farbwahl an einem Ort statt einzeln auf verstreuten
+// Seiten. Sechs LCARS-Preset-Swatches PLUS ein freier Color-Picker. Bereits
+// von ANDEREN Charakteren belegte Farben (takenColors) sind gesperrt — auch
+// von den EIGENEN übrigen Charakteren, der partielle UNIQUE-Index in der DB
+// macht jede Farbe global exklusiv; die eigene aktuelle Farbe (ownColor)
+// bleibt immer wählbar. Darunter eine Live-Vorschau eines Beispiel-Dialogs in
+// der gewählten Farbe. Kontrollierter State (kein defaultChecked-Remount-
+// Trick nötig).
 export default function CharacterColorForm({
   characterId,
   ownColor,

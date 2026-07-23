@@ -7,8 +7,8 @@
 // characters.character_color — neben den LCARS-Presets ist auch eine frei per
 // Color-Picker gewählte Farbe möglich. Bewusst OHNE "server-only" — sowohl die
 // Server-Auflösung (getDialogueMessages in dialoguesCore.ts) als auch die
-// Client-Komponenten (Farbwähler auf der Charakter-Detailseite, Fließtext-/
-// Karten-Rendering) nutzen dieselben Helfer.
+// Client-Komponenten (Farbwähler im Profil, Fließtext-/Karten-Rendering)
+// nutzen dieselben Helfer.
 
 // LCARS-Preset-Farben (Hex aus src/styles/tokens.css) — Vorauswahl im
 // Farbwähler. Reihenfolge = Anzeige. `key` dient nur der stabilen React-Key-
@@ -54,11 +54,11 @@ export function resolveCharacterColor(
   return PRESET_HEXES[i];
 }
 
-// Wie resolveCharacterColor, aber für die Vorauswahl im Farbwähler auf der
-// Charakter-Detailseite: überspringt bei abgeleitetem Default bereits von
-// ANDEREN Charakteren belegte Preset-Farben, damit der vorgeschlagene Default
-// auch speicherbar ist (nicht schon gesperrt). Belegte Farben kommen aus
-// getUsedCharacterColors. Sind alle Presets belegt, fällt es auf den
+// Wie resolveCharacterColor, aber für die Vorauswahl im Farbwähler im Profil
+// (eine Instanz pro Charakter): überspringt bei abgeleitetem Default bereits
+// von ANDEREN Charakteren belegte Preset-Farben, damit der vorgeschlagene
+// Default auch speicherbar ist (nicht schon gesperrt). Belegte Farben kommen
+// aus getUsedCharacterColors. Sind alle Presets belegt, fällt es auf den
 // einfachen deterministischen Wert zurück.
 export function resolveCharacterDefaultColor(
   stored: string | null | undefined,
