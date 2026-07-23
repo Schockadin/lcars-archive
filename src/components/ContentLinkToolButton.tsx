@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   previewAutolinkAction,
   applyAutolinkAction,
@@ -30,10 +30,17 @@ type Mode = "autolink" | "delink";
 // AutolinkButton/RemoveWikilinksButton zu EINEM Aktions-Button, der zwischen
 // „Verlinkung hinzufügen“ (Autolinking, siehe src/lib/autolink.ts) und
 // „Verlinkung entfernen“ (Wikilink-Cleanup, siehe src/lib/wikilinkCleanup.ts)
-// umschaltet. Default ist Autolink; der kleine Umschalter daneben flippt den
-// Modus. Beide Modi laufen weiter über dasselbe Vorschau-vor-Speichern-Muster
-// (usePreviewConfirmAction) — kein Blind-Apply, erst Trefferliste + Vorschau,
-// dann explizites Bestätigen.
+// umschaltet — nach demselben Ein-Button-Toggle-Muster wie die
+// Bookmark-/Abo-Buttons in FollowButtons.tsx (ein lcars-icon-btn, aktiver
+// Zustand farblich hervorgehoben, kein separates Umschalt-Element daneben).
+// Default ist Autolink; ein Klick auf den Button führt sofort die Aktion des
+// gerade angezeigten Modus aus (kein zusätzlicher „Scharfstellen“-Klick nötig
+// — deckungsgleich mit dem bisherigen Ein-Klick-Verhalten). Sobald die
+// Vorschau danach schließt (bestätigt oder abgebrochen), wechselt der Modus
+// automatisch zum jeweils anderen, sodass Delink über denselben Button ohne
+// weiteres UI-Element erreichbar bleibt. Beide Modi laufen weiter über
+// dasselbe Vorschau-vor-Speichern-Muster (usePreviewConfirmAction) — kein
+// Blind-Apply, erst Trefferliste + Vorschau, dann explizites Bestätigen.
 export default function ContentLinkToolButton({
   contentType,
   slug,
@@ -62,6 +69,24 @@ export default function ContentLinkToolButton({
     (result) =>
       `${result.removedCount} Wikilink${result.removedCount === 1 ? "" : "s"} entfernt.`,
   );
+
+  // Springt automatisch zum jeweils anderen Modus, sobald eine offene
+  // Vorschau schließt (egal ob durch Bestätigen oder Abbrechen) — erkannt an
+  // preview: non-null → null. Läuft NICHT bei einem Fehler während des
+  // Bestätigens (dort bleibt preview gesetzt, siehe usePreviewConfirmAction),
+  // der Modus bleibt also stehen, bis der Vorgang tatsächlich abgeschlossen
+  // oder abgebrochen wurde.
+  const prevAutolinkPreview = useRef(autolink.preview);
+  useEffect(() => {
+    if (prevAutolinkPreview.current && !autolink.preview) setMode("delink");
+    prevAutolinkPreview.current = autolink.preview;
+  }, [autolink.preview]);
+
+  const prevDelinkPreview = useRef(delink.preview);
+  useEffect(() => {
+    if (prevDelinkPreview.current && !delink.preview) setMode("autolink");
+    prevDelinkPreview.current = delink.preview;
+  }, [delink.preview]);
 
   const distinctMatches = useMemo(
     () =>
@@ -184,48 +209,26 @@ export default function ContentLinkToolButton({
 
   return (
     <div className="flex flex-col gap-[6px] items-start w-[85%]">
-      <div className="flex items-center gap-[5px]">
-        <button
-          type="button"
-          onClick={active.handlePreview}
-          disabled={active.pending}
-          className={`lcars-icon-btn size-[40px] disabled:opacity-50${
-            mode === "delink" ? " border-lcars-red" : ""
-          }`}
-          aria-label={
-            mode === "autolink"
-              ? "Verlinkung hinzufügen"
-              : "Verlinkung entfernen"
-          }
-          title={
-            mode === "autolink"
-              ? "Verlinkung hinzufügen"
-              : "Verlinkung entfernen"
-          }
-        >
-          {mode === "autolink" ? <LinkIcon /> : <UnlinkIcon />}
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            setMode((m) => (m === "autolink" ? "delink" : "autolink"))
-          }
-          disabled={active.pending}
-          className="lcars-link-tool-toggle"
-          aria-label={
-            mode === "autolink"
-              ? "Auf „Verlinkung entfernen“ umschalten"
-              : "Auf „Verlinkung hinzufügen“ umschalten"
-          }
-          title={
-            mode === "autolink"
-              ? "Auf „Verlinkung entfernen“ umschalten"
-              : "Auf „Verlinkung hinzufügen“ umschalten"
-          }
-        >
-          {mode === "autolink" ? <UnlinkIcon /> : <LinkIcon />}
-        </button>
-      </div>
+      <button
+        type="button"
+        onClick={active.handlePreview}
+        disabled={active.pending}
+        className={`lcars-icon-btn size-[40px] disabled:opacity-50${
+          mode === "delink" ? " bg-lcars-red text-lcars-bg" : ""
+        }`}
+        aria-label={
+          mode === "autolink"
+            ? "Verlinkung hinzufügen"
+            : "Verlinkung entfernen"
+        }
+        title={
+          mode === "autolink"
+            ? "Verlinkung hinzufügen"
+            : "Verlinkung entfernen"
+        }
+      >
+        {mode === "autolink" ? <LinkIcon /> : <UnlinkIcon />}
+      </button>
       {active.applied && (
         <p className="text-lcars-green text-[13px]" role="status">
           {active.applied}

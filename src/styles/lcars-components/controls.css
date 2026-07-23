@@ -99,39 +99,6 @@
   border-color: var(--lcars-red);
 }
 
-/* Kleiner Modus-Umschalter neben dem Aktions-Button in
-   ContentLinkToolButton.tsx (Autolink ⇄ Delink) — bewusst subordiniert
-   (kleiner, gedimmt), damit die Kombination als EIN primärer Button mit
-   Nebenschalter liest statt als zwei gleichrangige Buttons wie zuvor. */
-.lcars-link-tool-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
-  flex-shrink: 0;
-  cursor: pointer;
-  border-radius: 100vmax;
-  border: solid 1px var(--lcars-text-dim);
-  background: transparent;
-  color: var(--lcars-text-dim);
-  transition: 200ms;
-}
-.lcars-link-tool-toggle svg {
-  width: 12px;
-  height: 12px;
-}
-.lcars-link-tool-toggle:hover:not(:disabled) {
-  background: var(--lcars-amber);
-  color: var(--lcars-bg);
-  border-color: var(--lcars-amber);
-}
-.lcars-link-tool-toggle:disabled {
-  cursor: not-allowed;
-  opacity: 0.5;
-}
-
 /* Pill Buttons — Basis-Look (Größe/Form/Typografie) auch von
    .lcars-usernav-pill (header.css) geteilt, das denselben "Amber-Pille"-
    Aufbau für die Header-Navigation braucht; nur Farbe/Maße/Hover
