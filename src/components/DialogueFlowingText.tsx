@@ -1,5 +1,5 @@
 "use client";
-import { colorizeDirectSpeech, characterColorVar } from "@/lib/characterColor";
+import { colorizeDirectSpeech } from "@/lib/characterColor";
 import type { DialogueMessage } from "@/lib/dialoguesCore";
 
 // Fließtext-Ansicht eines abgeschlossenen Dialogs: reiht die (nicht
@@ -23,7 +23,7 @@ export default function DialogueFlowingText({
     .filter((m) => !m.deletedAt)
     .map((m) =>
       m.characterColor
-        ? colorizeDirectSpeech(m.content, characterColorVar(m.characterColor))
+        ? colorizeDirectSpeech(m.content, m.characterColor)
         : m.content,
     )
     .join("");

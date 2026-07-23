@@ -280,14 +280,39 @@ export async function getCharacterColorPreference(
   return row?.character_color ?? null;
 }
 
+// Alle von ANDEREN Usern belegten Farben (character_color IS NOT NULL, ohne
+// den eigenen Account) — Grundlage für die „in Benutzung"-Sperre im
+// Farbwähler. Der partielle UNIQUE-Index (scripts/schema.sql) erzwingt die
+// Eindeutigkeit zusätzlich auf DB-Ebene.
+export async function getUsedCharacterColors(
+  excludeUserId: number,
+): Promise<string[]> {
+  const rows = await sql<{ character_color: string }[]>`
+    SELECT character_color FROM users
+    WHERE character_color IS NOT NULL AND id != ${excludeUserId}
+  `;
+  return rows.map((r) => r.character_color);
+}
+
+// Wirft ColorTakenError, wenn die Farbe bereits von einem anderen User belegt
+// ist (partieller UNIQUE-Index → Unique-Violation).
+export class ColorTakenError extends Error {}
+
 export async function updateCharacterColorPreference(
   userId: number,
   color: string,
 ): Promise<void> {
-  await sql`
-    UPDATE users SET character_color = ${color}
-    WHERE id = ${userId}
-  `;
+  try {
+    await sql`
+      UPDATE users SET character_color = ${color}
+      WHERE id = ${userId}
+    `;
+  } catch (err) {
+    if (isUniqueViolation(err)) {
+      throw new ColorTakenError("Diese Farbe ist bereits vergeben.");
+    }
+    throw err;
+  }
 }
 
 export async function updateUser(

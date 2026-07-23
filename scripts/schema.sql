@@ -65,10 +65,12 @@
 --    Fließtext (true) vs. farbige Karten-Ansicht (DialogueViewToggle.tsx).
 --  - editor_spellcheck_enabled: native Browser-Rechtschreibprüfung in den
 --    Markdown-Editor-Feldern (im Profil abschaltbar).
---  - character_color: im Profil gewählte LCARS-Farbe für die eigenen
---    Charaktere (färbt deren wörtliche Rede im Fließtext-Modus, siehe
---    src/lib/characterColor.ts). NULL = keine explizite Wahl → die App leitet
---    deterministisch eine der LCARS-Farben aus der User-ID ab.
+--  - character_color: im Profil gewählte Farbe für die eigenen Charaktere
+--    (färbt deren wörtliche Rede im Fließtext-Modus, siehe
+--    src/lib/characterColor.ts) — freie Hex-Farbe (#rrggbb), NULL = keine
+--    explizite Wahl → die App leitet deterministisch eine LCARS-Farbe aus der
+--    User-ID ab. Partieller UNIQUE-Index (unten) macht jede belegte Farbe
+--    exklusiv (in Benutzung = für andere gesperrt).
 CREATE TABLE IF NOT EXISTS users (
   id                            SERIAL PRIMARY KEY,
   email                         TEXT UNIQUE NOT NULL,
@@ -91,11 +93,14 @@ CREATE TABLE IF NOT EXISTS users (
   dialogue_flowing_text_enabled BOOLEAN NOT NULL DEFAULT true,
   editor_spellcheck_enabled     BOOLEAN NOT NULL DEFAULT true,
   character_color               TEXT
-                                  CHECK (character_color IS NULL OR character_color IN (
-                                    'amber', 'blue', 'green', 'red', 'purple', 'orange'
-                                  ))
+                                  CHECK (character_color IS NULL OR character_color ~ '^#[0-9a-fA-F]{6}$')
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_slug ON users(slug);
+-- Jede explizit gewählte Farbe ist exklusiv einem User zugeordnet (in
+-- Benutzung → für andere gesperrt). Partiell (WHERE NOT NULL), da beliebig
+-- viele User NULL (= abgeleiteter Default) haben dürfen.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_character_color
+  ON users(character_color) WHERE character_color IS NOT NULL;
 
 -- ---------------------------------------------------------------------------
 -- characters
@@ -529,11 +534,18 @@ CREATE INDEX IF NOT EXISTS idx_content_images_content ON content_images(content_
 -- ---------------------------------------------------------------------------
 -- Neue Spalten sind in den CREATE-TABLE-Blöcken oben bereits vollständig
 -- enthalten (frische DBs bekommen sie direkt). Bestehende DBs werden von
--- CREATE TABLE IF NOT EXISTS aber nicht mehr angefasst — für sie zieht der
--- folgende, idempotente ALTER die neue Spalte nach. Bleibt bewusst additiv
--- (ADD COLUMN IF NOT EXISTS, kein datenveränderndes UPDATE) und wird bei der
--- nächsten Konsolidierung wieder in den users-Block oben eingeklappt.
-ALTER TABLE users ADD COLUMN IF NOT EXISTS character_color TEXT
-  CHECK (character_color IS NULL OR character_color IN (
-    'amber', 'blue', 'green', 'red', 'purple', 'orange'
-  ));
+-- CREATE TABLE IF NOT EXISTS aber nicht mehr angefasst — für sie ziehen die
+-- folgenden, idempotenten ALTER die Änderungen nach. Bleibt bewusst additiv
+-- (kein datenveränderndes UPDATE) und wird bei der nächsten Konsolidierung
+-- wieder in die CREATE-TABLE-Blöcke oben eingeklappt.
+
+-- character_color: Spalte anlegen (falls fehlt) und den CHECK von der
+-- ursprünglichen Schlüssel-Palette (amber/blue/...) auf freie Hex-Farben
+-- umstellen. DROP/ADD CONSTRAINT ersetzt einen evtl. noch vorhandenen alten
+-- Schlüssel-CHECK; der partielle UNIQUE-Index macht belegte Farben exklusiv.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS character_color TEXT;
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_character_color_check;
+ALTER TABLE users ADD CONSTRAINT users_character_color_check
+  CHECK (character_color IS NULL OR character_color ~ '^#[0-9a-fA-F]{6}$');
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_character_color
+  ON users(character_color) WHERE character_color IS NOT NULL;

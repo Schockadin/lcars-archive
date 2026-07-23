@@ -6,8 +6,12 @@ import {
   hasPassword,
   getEditorSpellcheckPreference,
   getCharacterColorPreference,
+  getUsedCharacterColors,
 } from "@/lib/users";
-import { resolveCharacterColor } from "@/lib/characterColor";
+import {
+  resolveProfileDefaultColor,
+  normalizeHex,
+} from "@/lib/characterColor";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
 import LogoutEverywhereButton from "./LogoutEverywhereButton";
@@ -45,9 +49,15 @@ export default async function UserPage() {
   const hasPasswordSet = await hasPassword(target.id);
   const needsPassword = !hasPasswordSet;
   const spellcheckEnabled = await getEditorSpellcheckPreference(target.id);
-  const characterColor = resolveCharacterColor(
-    await getCharacterColorPreference(target.id),
+  const [storedColor, usedColors] = await Promise.all([
+    getCharacterColorPreference(target.id),
+    getUsedCharacterColors(target.id),
+  ]);
+  const takenColors = usedColors.map(normalizeHex);
+  const ownColor = resolveProfileDefaultColor(
+    storedColor,
     target.id,
+    new Set(takenColors),
   );
 
   return (
@@ -141,7 +151,10 @@ export default async function UserPage() {
 
             <section id="character-color" className="flex flex-col gap-[12px]">
               <h2>Charakter-Farbe</h2>
-              <CharacterColorForm initialColor={characterColor} />
+              <CharacterColorForm
+                ownColor={ownColor}
+                takenColors={takenColors}
+              />
             </section>
 
             <section id="install" className="flex flex-col gap-[12px]">
