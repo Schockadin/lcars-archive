@@ -12,6 +12,7 @@ import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
 import LogoutEverywhereButton from "./LogoutEverywhereButton";
 import NotificationSettingsForm from "./NotificationSettingsForm";
+import NewsSettingsForm from "./NewsSettingsForm";
 import EditorSpellcheckSettingsForm from "./EditorSpellcheckSettingsForm";
 import CharacterColorForm from "./CharacterColorForm";
 import InstallPwaPrompt from "./InstallPwaPrompt";
@@ -133,7 +134,7 @@ export default async function UserPage() {
 
             <DataRow
               label="Settings"
-              value={8}
+              value={9}
               accentColor="var(--lcars-red)"
               color="var(--lcars-amber-light)"
             >
@@ -207,6 +208,13 @@ export default async function UserPage() {
                   }}
                   isAdmin={target.role === "admin"}
                 />
+              </section>
+
+              <div className="horizontalBar" />
+
+              <section id="news" className="flex flex-col gap-[12px]">
+                <h2>News</h2>
+                <NewsSettingsForm newsKinds={target.news_kinds} />
               </section>
 
               <div className="horizontalBar" />

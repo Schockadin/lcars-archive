@@ -1689,3 +1689,107 @@ export async function getPublicDialoguesForUser(
     participantNames: parseParticipants(row.metadata).map((p) => p.name),
   }));
 }
+
+// ---------------------------------------------------------------------------
+// Admin-Bearbeitung der Dialog-Metadaten
+// ---------------------------------------------------------------------------
+// Admins dürfen die Metadaten eines Gesprächs bearbeiten (Titel, Datum,
+// Schauplatz, Ort, Tags) — NICHT den eigentlichen Gesprächsverlauf (die
+// Nachrichten in dialogue_messages bleiben unangetastet). Deckt offene wie
+// abgeschlossene Gespräche ab (kein dialogue_open-Filter).
+
+export interface DialogueMetadataForEdit {
+  id: number;
+  slug: string;
+  title: string;
+  setting: string | null;
+  logDate: string | null;
+  locationSlug: string | null;
+  tags: string[];
+}
+
+function parseDialogueMeta(metadata: unknown): {
+  setting: string | null;
+  logDate: string | null;
+  location: ArchiveLocationRef | null;
+} {
+  const parsed =
+    typeof metadata === "string"
+      ? (JSON.parse(metadata) as Record<string, unknown>)
+      : ((metadata as Record<string, unknown> | null) ?? {});
+  return {
+    setting: (parsed.setting as string | null) ?? null,
+    logDate: (parsed.logDate as string | null) ?? null,
+    location: (parsed.location as ArchiveLocationRef | null) ?? null,
+  };
+}
+
+// Lädt die editierbaren Metadaten eines Gesprächs (per Slug) für das
+// Admin-Bearbeiten-Formular. Gibt null zurück, wenn es kein (nicht gelöschtes)
+// Gespräch mit diesem Slug gibt.
+export async function getDialogueMetadataForEdit(
+  slug: string,
+): Promise<DialogueMetadataForEdit | null> {
+  const [row] = await sql<
+    { id: number; slug: string; title: string; tags: string[]; metadata: unknown }[]
+  >`
+    SELECT id, slug, title, tags, metadata
+    FROM archive_entries
+    WHERE slug = ${slug} AND category = 'dialogue' AND deleted_at IS NULL
+    LIMIT 1
+  `;
+  if (!row) return null;
+  const meta = parseDialogueMeta(row.metadata);
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    setting: meta.setting,
+    logDate: meta.logDate,
+    locationSlug: meta.location?.slug ?? null,
+    tags: row.tags,
+  };
+}
+
+// Schreibt die bearbeiteten Metadaten zurück. metadata wird per jsonb-||-Merge
+// nur in setting/logDate/location überschrieben — participants/characters/
+// missions/summary usw. bleiben erhalten. Der Ort-Slug wird (falls gesetzt)
+// gegen archive_entries aufgelöst, damit auch der Titel des Ortes gespeichert
+// wird (wie bei createDialogue). Gibt den Slug zurück (für die Revalidierung
+// beim Aufrufer) bzw. null, wenn kein passendes Gespräch existiert.
+export async function updateDialogueMetadata(
+  id: number,
+  input: {
+    title: string;
+    setting: string | null;
+    logDate: string | null;
+    locationSlug: string | null;
+    tags: string[];
+  },
+): Promise<{ slug: string } | null> {
+  let location: ArchiveLocationRef | null = null;
+  if (input.locationSlug) {
+    const [loc] = await sql<{ title: string }[]>`
+      SELECT title FROM archive_entries
+      WHERE slug = ${input.locationSlug} AND category = 'location'
+    `;
+    if (loc) location = { slug: input.locationSlug, title: loc.title };
+  }
+
+  const metadataPatch = {
+    setting: input.setting,
+    logDate: input.logDate,
+    location,
+  };
+
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE archive_entries
+    SET title = ${input.title},
+        tags = ${input.tags},
+        metadata = metadata || ${sql.json(metadataPatch as ReturnType<typeof JSON.parse>)},
+        updated_at = NOW()
+    WHERE id = ${id} AND category = 'dialogue' AND deleted_at IS NULL
+    RETURNING slug
+  `;
+  return rows[0] ?? null;
+}

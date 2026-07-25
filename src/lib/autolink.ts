@@ -180,6 +180,86 @@ export async function getAutolinkTargets(
     : targets;
 }
 
+// Inhaltstyp für das Bulk-Autolinking (admin-only "Alle Inhalte verlinken",
+// siehe src/app/actions/autolinkAll.ts). Deckt genau die vier Inhaltstypen
+// mit rohem Markdown-Body ab (Gespräche haben keinen source_md und sind kein
+// Autolink-Ziel, siehe getAutolinkTargets).
+export type AutolinkContentType =
+  | "character"
+  | "mission"
+  | "missionLog"
+  | "archiveEntry";
+
+export interface AutolinkableContent {
+  contentType: AutolinkContentType;
+  id: number;
+  slug: string;
+  // Für die Revalidierung nach dem Speichern (Mission-Log braucht zusätzlich
+  // die Mission-ID, siehe revalidateLog).
+  missionId: number | null;
+  sourceMd: string;
+}
+
+// Alle Inhalte mit rohem Markdown-Quelltext (source_md) — Grundlage für das
+// Bulk-Autolinking. Nur Inhalte mit tatsächlichem Text (source_md IS NOT NULL
+// / != ''); Gespräche (category = 'dialogue') sind ausgeschlossen (kein
+// source_md). Bewusst OHNE Sichtbarkeits-/Draft-Filter: das Werkzeug ist
+// admin-only und soll alle Inhalte verlinken, nicht nur öffentliche.
+export async function getAllAutolinkableContent(): Promise<
+  AutolinkableContent[]
+> {
+  const [characters, missions, logs, archiveEntries] = await Promise.all([
+    sql<{ id: number; slug: string; source_md: string }[]>`
+      SELECT id, slug, source_md FROM characters
+      WHERE source_md IS NOT NULL AND source_md <> '' AND deleted_at IS NULL
+    `,
+    sql<{ id: number; slug: string; source_md: string }[]>`
+      SELECT id, slug, source_md FROM missions
+      WHERE source_md IS NOT NULL AND source_md <> '' AND deleted_at IS NULL
+    `,
+    sql<{ id: number; slug: string; mission_id: number; source_md: string }[]>`
+      SELECT id, slug, mission_id, source_md FROM mission_logs
+      WHERE source_md IS NOT NULL AND source_md <> '' AND deleted_at IS NULL
+    `,
+    sql<{ id: number; slug: string; source_md: string }[]>`
+      SELECT id, slug, source_md FROM archive_entries
+      WHERE source_md IS NOT NULL AND source_md <> ''
+        AND category <> 'dialogue' AND deleted_at IS NULL
+    `,
+  ]);
+
+  return [
+    ...characters.map((c) => ({
+      contentType: "character" as const,
+      id: c.id,
+      slug: c.slug,
+      missionId: null,
+      sourceMd: c.source_md,
+    })),
+    ...missions.map((m) => ({
+      contentType: "mission" as const,
+      id: m.id,
+      slug: m.slug,
+      missionId: null,
+      sourceMd: m.source_md,
+    })),
+    ...logs.map((l) => ({
+      contentType: "missionLog" as const,
+      id: l.id,
+      slug: l.slug,
+      missionId: l.mission_id,
+      sourceMd: l.source_md,
+    })),
+    ...archiveEntries.map((a) => ({
+      contentType: "archiveEntry" as const,
+      id: a.id,
+      slug: a.slug,
+      missionId: null,
+      sourceMd: a.source_md,
+    })),
+  ];
+}
+
 function normalizeWikilinkTarget(s: string): string {
   return s.trim().toLowerCase();
 }

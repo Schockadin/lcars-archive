@@ -11,6 +11,7 @@ export default function CharakterDetailPage({
   conversationCount,
   viewer,
   owners,
+  displayAge,
   sourceMarkdown,
 }: {
   character: Character;
@@ -18,6 +19,10 @@ export default function CharakterDetailPage({
   conversationCount: number;
   viewer: Viewer | null;
   owners: { id: number; name: string }[];
+  // Aus Geburtsdatum + Ingame-Jahr abgeleitetes Alter (Fallback: metadata.age),
+  // serverseitig berechnet (siehe page.tsx) — CharacterHero ist eine Client
+  // Component und kann das server-only campaign.ts nicht selbst importieren.
+  displayAge: number | null;
   // Nur gesetzt, wenn viewer === Owner (siehe page.tsx) — Grundlage für den
   // Inline-Bio-Editor in CharacterHero.tsx.
   sourceMarkdown: string | null;
@@ -32,6 +37,7 @@ export default function CharakterDetailPage({
         conversationCount={conversationCount}
         viewer={viewer}
         owners={owners}
+        displayAge={displayAge}
         sourceMarkdown={sourceMarkdown}
       />
     </div>

@@ -5,6 +5,7 @@ import { getViewer, canViewMissionDraft } from "@/lib/visibility";
 import { setSubscription } from "@/lib/follows";
 import { listAllUsers } from "@/lib/users";
 import MissionSynopsis from "../MissionSynopsis";
+import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 interface Props {
   params: Promise<{ missionSlug: string }>;
   searchParams: Promise<{ activateFollow?: string }>;
@@ -64,5 +65,10 @@ export default async function MissionPage({ params, searchParams }: Props) {
   const allUsers = viewer?.role === "admin" ? await listAllUsers() : [];
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
-  return <MissionSynopsis mission={mission} owners={owners} viewer={viewer} />;
+  return (
+    <>
+      <MarkNewsSeen type="mission" slug={mission.slug} />
+      <MissionSynopsis mission={mission} owners={owners} viewer={viewer} />
+    </>
+  );
 }

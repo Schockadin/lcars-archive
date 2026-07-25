@@ -28,13 +28,14 @@ const ADMIN_ITEMS: AdminMenuItem[] = [
   { href: "/admin/import", label: "Import" },
 ];
 
-// GM-Dropdown (analog zum Admin-Dropdown oben, nur drei Ziele): die
-// Charakterzuordnung gab es vorher schon (bisheriges Direkt-Pill "Leitung"),
-// Missionen/Gespräche sind neu — GM sieht damit erstmals auch Missionen/
-// Dialoge, an denen er nicht selbst beteiligt ist, an einem Ort.
+// GM-Dropdown (analog zum Admin-Dropdown oben): "Kampagne" bündelt seit PR #51
+// Ingame-Jahr, Charakter-Zuordnung und Missions-Übersicht auf einer Seite
+// (/admin/campaign) und löst damit die früher getrennten Punkte "Missionen"
+// und "Charaktere" ab. "Gespräche" gibt GM Einblick in alle offenen Dialoge,
+// auch ohne eigene Teilnahme. Die alten Routen /admin/missions und
+// /admin/characters bleiben per Direktlink erreichbar.
 const GM_ITEMS: AdminMenuItem[] = [
-  { href: "/admin/missions", label: "Missionen" },
-  { href: "/admin/characters", label: "Charaktere" },
+  { href: "/admin/campaign", label: "Kampagne" },
   { href: "/admin/dialogues", label: "Gespräche" },
 ];
 

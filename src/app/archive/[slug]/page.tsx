@@ -12,6 +12,7 @@ import { getDialogueMessages } from "@/lib/dialogues";
 import { getViewer, canView, canViewDraft } from "@/lib/visibility";
 import { listAllUsers, getDialogueViewPreference } from "@/lib/users";
 import ArchiveEntryBody from "./ArchiveEntryBody";
+import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -113,6 +114,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
       style={{ "--cat-color": cfg.color } as React.CSSProperties}
     >
       <PageMeta title={title} section="archive" />
+      <MarkNewsSeen type="archive_entry" slug={entry.slug} />
       <LcarsReadingModeToggle />
 
       <div className="flex items-start">

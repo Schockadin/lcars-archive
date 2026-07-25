@@ -17,7 +17,18 @@ export const characterHeadFields: HeadField[] = [
 ];
 
 export const characterMetadataFields: HeadField[] = [
-  { kind: "number", name: "age", label: "Alter", min: 0 },
+  {
+    kind: "date",
+    name: "dateOfBirth",
+    label: "Geburtsdatum",
+    hint: "Ist es gesetzt, wird das Alter automatisch aus dem aktuellen Ingame-Jahr berechnet (siehe Kampagne).",
+  },
+  {
+    kind: "number",
+    name: "age",
+    label: "Alter (nur ohne Geburtsdatum)",
+    min: 0,
+  },
   { kind: "text", name: "generation", label: "Generation (kommagetrennt)" },
   { kind: "text", name: "factions", label: "Fraktionen (kommagetrennt)" },
   { kind: "text", name: "ships", label: "Schiffe (kommagetrennt)" },

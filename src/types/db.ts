@@ -32,6 +32,10 @@ export interface User {
   // Opt-in. Nur für Admins in der UI editierbar, die Spalte existiert aber
   // für jeden User (ungenutzt bei anderen Rollen).
   notify_content_types: string[];
+  // Welche News-Arten der User auf dem Dashboard sehen will — Teilmenge von
+  // "created"|"updated"|"deleted" (siehe NewsSection.tsx / recentActivity.ts).
+  // Leeres Array = keine News. Default (DB) = alle drei ("alles").
+  news_kinds: string[];
   // Wird bei jeder Passwortänderung (setPassword) erhöht und im
   // Session-Cookie mitgeführt (siehe SessionPayload.sessionVersion) — ein
   // Cookie mit veraltetem Wert wird von getCurrentUser() als abgelaufen

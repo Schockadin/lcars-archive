@@ -37,7 +37,8 @@
     "db:create-admin:dev": "tsx --conditions=react-server --env-file=.env.development.local scripts/create-initial-admin.ts",
     "db:backup": "tsx --conditions=react-server scripts/backup-db.ts",
     "db:backup:cleanup": "tsx --conditions=react-server scripts/cleanup-db-backups.ts",
-    "db:purge-deleted": "tsx --conditions=react-server scripts/purge-soft-deleted.ts"
+    "db:purge-deleted": "tsx --conditions=react-server scripts/purge-soft-deleted.ts",
+    "admin:log-digest": "tsx --conditions=react-server scripts/send-admin-log-digest.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1085.0",

@@ -5,10 +5,12 @@ import {
   getCharacterSourceBySlug,
 } from "@/lib/characters";
 import { getDialogueCountByParticipant } from "@/lib/archive";
+import { getIngameYear, inferAgeFromDateOfBirth } from "@/lib/campaign";
 import { getViewer, canView, canViewDraft } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import { notFound } from "next/navigation";
 import CharakterDetailPage from "./CharacterDetailPage";
+import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -68,12 +70,19 @@ export default async function CharakterPage({ params }: Props) {
   // CharacterHero.tsx) — spart die Extra-Query für alle anderen Aufrufe.
   const isOwner = viewer != null && viewer.userId === character.player_id;
 
-  const [logs, conversationCount, allUsers, source] = await Promise.all([
-    getLogsByCharacter(character.id),
-    getDialogueCountByParticipant(character.slug),
-    viewer?.role === "admin" ? listAllUsers() : Promise.resolve([]),
-    isOwner ? getCharacterSourceBySlug(character.slug) : Promise.resolve(null),
-  ]);
+  const [logs, conversationCount, allUsers, source, ingameYear] =
+    await Promise.all([
+      getLogsByCharacter(character.id),
+      getDialogueCountByParticipant(character.slug),
+      viewer?.role === "admin" ? listAllUsers() : Promise.resolve([]),
+      isOwner ? getCharacterSourceBySlug(character.slug) : Promise.resolve(null),
+      getIngameYear(),
+    ]);
+  // Angezeigtes Alter: aus Geburtsdatum + Ingame-Jahr abgeleitet, sonst das
+  // manuell gepflegte metadata.age als Fallback (siehe campaign.ts).
+  const displayAge =
+    inferAgeFromDateOfBirth(character.metadata.dateOfBirth, ingameYear) ??
+    character.metadata.age;
   // Nur {id,name} an die Client Component durchreichen — der volle
   // UserWithCharacters-Datensatz (E-Mail, Login-Zeitstempel, …) würde sonst
   // unnötig ins Client-Bundle dieser Seite wandern (ActionsMenu braucht nur
@@ -82,12 +91,14 @@ export default async function CharakterPage({ params }: Props) {
 
   return (
     <div className="h-[90%]">
+      <MarkNewsSeen type="character" slug={character.slug} />
       <CharakterDetailPage
         character={character}
         logs={logs}
         conversationCount={conversationCount}
         viewer={viewer}
         owners={owners}
+        displayAge={displayAge}
         sourceMarkdown={isOwner ? (source?.sourceMarkdown ?? "") : null}
       />
     </div>

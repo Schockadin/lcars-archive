@@ -204,4 +204,18 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Im Profil gibt es jetzt eine Charakter-Farben-Liste mit einem Farbwähler (sechs LCARS-Töne oder eine frei per Color-Picker gewählte Hex-Farbe, mit Vorschau und Sperre bereits vergebener Farben) für jeden deiner Charaktere einzeln — spielst du mehrere, kann also jeder seine eigene Farbe haben statt einer gemeinsamen. Diese Farbe färbt sowohl die wörtliche Rede (inklusive Anführungszeichen) im Fließtext-Modus abgeschlossener Gespräche als auch die Nachrichten-Karten in offenen wie geschlossenen Gesprächen ein.",
     ],
   },
+  {
+    version: "1.16",
+    title: "Kampagne, Geburtsdatum, persistente News, Dialog-Metadaten",
+    items: [
+      "Die Spielleitung hat jetzt einen neuen Menüpunkt „Kampagne“ (ersetzt „Missionen“) mit Charakter-Zuweisung, Missions-Übersicht und dem neuen, einstellbaren aktuellen Ingame-Jahr an einem Ort.",
+      "Charaktere haben jetzt ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen Ingame-Jahr automatisch berechnet.",
+      "Die News auf dem Dashboard bleiben jetzt dauerhaft sichtbar (statt nur bis zum nächsten Besuch): jede News lässt sich einzeln über ein kleines X ausblenden und verschwindet außerdem automatisch, sobald du den zugehörigen Inhalt aufrufst.",
+      "Im Profil lässt sich jetzt einstellen, welche News-Arten du überhaupt sehen willst — neue, bearbeitete und/oder gelöschte Inhalte.",
+      "Die Administration bekommt jetzt jeden Morgen um 6 Uhr (Berliner Zeit) automatisch eine Mail mit allen Fehler- und Audit-Log-Einträgen der letzten 24 Stunden.",
+      "Neu angelegte Inhalte werden jetzt standardmäßig automatisch verlinkt (die entsprechende Option ist beim Anlegen vorausgewählt).",
+      "Im Adminbereich unter „Scripts“ gibt es jetzt einen Knopf, der alle bestehenden Inhalte auf einmal automatisch verlinkt.",
+      "Die Administration kann jetzt die Metadaten von Gesprächen bearbeiten (Titel, Datum, Schauplatz, Ort, Tags) — der eigentliche Gesprächsverlauf bleibt dabei unangetastet.",
+    ],
+  },
 ];

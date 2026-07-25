@@ -16,6 +16,7 @@ const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
   last_visit_at, last_dashboard_visit_at,
   email_notifications_enabled, push_notifications_enabled, notify_content_types,
+  news_kinds,
   session_version
 `;
 
@@ -100,6 +101,7 @@ export async function listAllUsers(): Promise<UserWithCharacters[]> {
       u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
       u.last_login_at, u.previous_login_at, u.last_visit_at, u.last_dashboard_visit_at,
       u.email_notifications_enabled, u.push_notifications_enabled, u.notify_content_types,
+      u.news_kinds,
       COALESCE(
         jsonb_agg(
           jsonb_build_object('id', c.id, 'slug', c.slug, 'name', c.name)
@@ -218,6 +220,18 @@ export async function updateNotificationPreferences(
         push_notifications_enabled = ${data.pushEnabled},
         notify_content_types = ${data.notifyContentTypes}
     WHERE id = ${id}
+  `;
+}
+
+// Welche News-Arten der User auf dem Dashboard sehen will (Teilmenge von
+// "created"/"updated"/"deleted", siehe NewsSection.tsx). Leeres Array =
+// keine News.
+export async function updateNewsKinds(
+  id: number,
+  kinds: string[],
+): Promise<void> {
+  await sql`
+    UPDATE users SET news_kinds = ${kinds} WHERE id = ${id}
   `;
 }
 
@@ -386,6 +400,7 @@ export async function getUserForAdmin(
       u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
       u.last_login_at, u.previous_login_at, u.last_visit_at, u.last_dashboard_visit_at,
       u.email_notifications_enabled, u.push_notifications_enabled, u.notify_content_types,
+      u.news_kinds,
       u.password_hash IS NOT NULL AS has_password,
       u.requires_activation,
       COALESCE(

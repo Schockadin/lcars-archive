@@ -71,6 +71,18 @@ export async function characterAction(
   if (ageRaw && !Number.isInteger(age)) {
     return { error: "Ungültiges Alter." };
   }
+  // Geburtsdatum (optional) — nur das Datum (YYYY-MM-DD), aus dem später
+  // zusammen mit dem Ingame-Jahr das Alter abgeleitet wird (siehe
+  // inferAgeFromDateOfBirth). Ein <input type="date"> liefert bereits das
+  // ISO-Format; wir validieren defensiv und schneiden auf 10 Zeichen.
+  const dobRaw = String(formData.get("dateOfBirth") ?? "").trim();
+  let dateOfBirth: string | null = null;
+  if (dobRaw) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dobRaw)) {
+      return { error: "Ungültiges Geburtsdatum." };
+    }
+    dateOfBirth = dobRaw;
+  }
   const generation = parseNumberList(formData.get("generation"));
   const factions = parseList(formData.get("factions"));
   const ships = parseList(formData.get("ships"));
@@ -110,6 +122,7 @@ export async function characterAction(
       homeworld,
       aliases,
       age,
+      dateOfBirth,
       generation,
       factions,
       ships,
@@ -180,6 +193,7 @@ export async function characterAction(
     homeworld,
     aliases,
     age,
+    dateOfBirth,
     generation,
     factions,
     ships,

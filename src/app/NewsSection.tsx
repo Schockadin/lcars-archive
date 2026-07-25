@@ -1,115 +1,116 @@
+"use client";
+import { useState } from "react";
 import Link from "next/link";
 import { LcarsDataRow } from "@/components/lcars";
-import type { RecentActivityItem, DeletionItem } from "@/lib/recentActivity";
+import type { NewsFeedItem } from "@/lib/recentActivity";
+import { dismissNewsAction } from "@/app/actions/news";
 import { SOURCE_TYPE_LABELS, fmtDate } from "@/lib/timelineFormat";
 
-interface NewsItem {
-  key: string;
-  title: string;
-  href: string | null;
-  timestamp: string;
-  meta: string;
-  color: string;
+// Farbe + Verb je News-Art (neu/bearbeitet/gelöscht) — Vorgabe: grün = neu,
+// blau = bearbeitet, rot = gelöscht.
+const KIND_META: Record<
+  NewsFeedItem["kind"],
+  { color: string; verb: string }
+> = {
+  created: { color: "var(--lcars-green)", verb: "Neu" },
+  updated: { color: "var(--lcars-blue)", verb: "Bearbeitet" },
+  deleted: { color: "var(--lcars-red)", verb: "Gelöscht" },
+};
+
+function metaLine(item: NewsFeedItem): string {
+  const { verb } = KIND_META[item.kind];
+  // Für Löschungen steht in SOURCE_TYPE_LABELS kein 'deletion'-Eintrag; der
+  // Typ ist dort ohnehin nicht mehr auflösbar (Ziel existiert nicht mehr).
+  const typeLabel =
+    item.targetType === "deletion"
+      ? "Inhalt"
+      : SOURCE_TYPE_LABELS[item.targetType];
+  const by = item.authorName ?? "Spielleitung";
+  return `${typeLabel} · ${verb} von ${by}`;
 }
 
-// Farbe richtet sich nach der Aktion (neu/bearbeitet/gelöscht), nicht mehr
-// nach dem Inhaltstyp — Vorgabe: grün = neuer Inhalt, blau = bearbeitet,
-// rot = gelöscht.
-function toNewsItems(
-  created: RecentActivityItem[],
-  updated: RecentActivityItem[],
-  deleted: DeletionItem[],
-): NewsItem[] {
-  const fromCreated: NewsItem[] = created.map((item) => ({
-    key: `created-${item.targetType}-${item.slug}`,
-    title: item.title,
-    href: item.href,
-    timestamp: item.timestamp,
-    meta: `${SOURCE_TYPE_LABELS[item.targetType]} · Neu von ${item.authorName ?? "Spielleitung"}`,
-    color: "var(--lcars-green)",
-  }));
-  const fromUpdated: NewsItem[] = updated.map((item) => ({
-    key: `updated-${item.targetType}-${item.slug}`,
-    title: item.title,
-    href: item.href,
-    timestamp: item.timestamp,
-    meta: `${SOURCE_TYPE_LABELS[item.targetType]} · Bearbeitet von ${item.authorName ?? "Spielleitung"}`,
-    color: "var(--lcars-blue)",
-  }));
-  // Kein href: das Ziel existiert nicht mehr (hart gelöscht, siehe
-  // getRecentDeletions).
-  const fromDeleted: NewsItem[] = deleted.map((item) => ({
-    key: `deleted-${item.timestamp}-${item.title}`,
-    title: item.title,
-    href: null,
-    timestamp: item.timestamp,
-    meta: `${SOURCE_TYPE_LABELS[item.targetType]} · Gelöscht von ${item.deletedByName ?? "Spielleitung"}`,
-    color: "var(--lcars-red)",
-  }));
-  return [...fromCreated, ...fromUpdated, ...fromDeleted].sort((a, b) =>
-    a.timestamp < b.timestamp ? 1 : a.timestamp > b.timestamp ? -1 : 0,
-  );
-}
+function NewsRow({
+  item,
+  onDismiss,
+}: {
+  item: NewsFeedItem;
+  onDismiss: (item: NewsFeedItem) => void;
+}) {
+  const style = { "--news-color": KIND_META[item.kind].color } as React.CSSProperties;
 
-function NewsRow({ item }: { item: NewsItem }) {
-  const body = (
+  const inner = (
     <>
       <span className="news-row-rail" />
       <span className="news-row-body">
         <span className="news-row-title">{item.title}</span>
         <span className="news-row-meta">
-          {item.meta} · {fmtDate(item.timestamp)}
+          {metaLine(item)} · {fmtDate(item.timestamp)}
         </span>
       </span>
     </>
   );
-  const style = { "--news-color": item.color } as React.CSSProperties;
 
-  if (!item.href) {
-    return (
-      <div className="news-row news-row--static" style={style}>
-        {body}
-      </div>
-    );
-  }
+  // 20px-Schließen-Button (X) blendet die News aus. preventDefault/
+  // stopPropagation, damit ein Klick auf das X nicht dem umschließenden Link
+  // folgt.
+  const dismissBtn = (
+    <button
+      type="button"
+      aria-label="News ausblenden"
+      title="Ausblenden"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onDismiss(item);
+      }}
+      className="news-row-dismiss"
+    >
+      ×
+    </button>
+  );
+
   return (
-    <Link href={item.href} className="news-row" style={style}>
-      {body}
-    </Link>
+    <div className="news-row-wrap">
+      {item.href ? (
+        <Link href={item.href} className="news-row" style={style}>
+          {inner}
+        </Link>
+      ) : (
+        <div className="news-row news-row--static" style={style}>
+          {inner}
+        </div>
+      )}
+      {dismissBtn}
+    </div>
   );
 }
 
-// Gemergter, nach Datum sortierter Feed aus neu erstellten, bearbeiteten und
-// gelöschten Inhalten (grün/blau/rot). Offene Gespräche leben seit
-// OpenDialoguesSection.tsx in einer eigenen Sektion, nicht mehr hier.
-// Akkordeon wie OpenDialoguesSection, standardmäßig aufgeklappt (defaultOpen)
-// — der begrenzte, scrollbare Container (3 Zeilen, siehe .news-scroll in
-// shared.css) bleibt trotzdem, damit die Sektion nicht beliebig lang wird.
-//
-// Ganz ausgeblendet (kein Platzhalter-Text), wenn es nichts anzuzeigen gibt
-// — wie die übrigen Dashboard-DataRows (siehe FollowedContentSection.tsx).
-export default function NewsSection({
-  created,
-  updated,
-  deleted,
-}: {
-  created: RecentActivityItem[];
-  updated: RecentActivityItem[];
-  deleted: DeletionItem[];
-}) {
-  const items = toNewsItems(created, updated, deleted);
-  if (items.length === 0) return null;
+// Persistenter, nach Datum sortierter News-Feed (grün/blau/rot). Anders als
+// früher bleiben die News über Dashboard-Besuche hinweg sichtbar; jede lässt
+// sich per X einzeln ausblenden (dismissNewsAction) und verschwindet außerdem,
+// sobald der zugehörige Inhalt aufgerufen wird (MarkNewsSeen). Offene
+// Gespräche leben in einer eigenen Sektion (OpenDialoguesSection.tsx).
+export default function NewsSection({ items }: { items: NewsFeedItem[] }) {
+  const [visible, setVisible] = useState(items);
+
+  function dismiss(item: NewsFeedItem) {
+    // Optimistisch entfernen, dann serverseitig als „gesehen" markieren.
+    setVisible((prev) => prev.filter((i) => i.key !== item.key));
+    void dismissNewsAction(item.targetType, item.targetKey, item.timestamp);
+  }
+
+  if (visible.length === 0) return null;
 
   return (
     <LcarsDataRow
-      value={items.length}
+      value={visible.length}
       label="News"
       color="var(--lcars-blue)"
       defaultOpen
     >
       <div className="news-scroll">
-        {items.map((item) => (
-          <NewsRow key={item.key} item={item} />
+        {visible.map((item) => (
+          <NewsRow key={item.key} item={item} onDismiss={dismiss} />
         ))}
       </div>
     </LcarsDataRow>

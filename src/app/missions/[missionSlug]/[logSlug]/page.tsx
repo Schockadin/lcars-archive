@@ -5,6 +5,7 @@ import { getViewer, canView, canViewDraft } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import LogDetail from "../../LogDetail";
 import ActionsMenu from "@/components/ActionsMenu";
+import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 
 interface Props {
   params: Promise<{ missionSlug: string; logSlug: string }>;
@@ -62,6 +63,7 @@ export default async function LogPage({ params }: Props) {
 
   return (
     <>
+      <MarkNewsSeen type="mission_log" slug={log.slug} />
       <ActionsMenu
         viewer={viewer}
         owners={owners}

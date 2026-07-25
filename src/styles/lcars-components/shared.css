@@ -642,6 +642,42 @@
   text-overflow: ellipsis;
 }
 
+/* Zeile + 20px-Ausblenden-Button (X) nebeneinander. Die eigentliche
+   .news-row (Link/statisch) nimmt den restlichen Platz, der Button bleibt
+   fix bei 20px (Vorgabe). */
+.news-row-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.news-row-wrap .news-row {
+  flex: 1;
+  min-width: 0;
+}
+
+.news-row-dismiss {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--lcars-surface-2);
+  color: var(--lcars-text-dim);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.news-row-dismiss:hover {
+  background: var(--lcars-red);
+  color: var(--lcars-text-contrast);
+}
+
 /* ─── Pull-to-Refresh (PullToRefresh.tsx) ──────────────────────────────
    Ersetzt das native Pull-to-Refresh, das html/body mit overflow:clip
    (siehe globals.css) unmöglich macht — wächst als erstes Kind in

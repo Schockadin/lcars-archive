@@ -1,8 +1,8 @@
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
-import { hasPassword, touchDashboardVisit } from "@/lib/users";
+import { hasPassword } from "@/lib/users";
 import { getBookmarkedContent } from "@/lib/follows";
-import { getRecentActivity, getRecentDeletions } from "@/lib/recentActivity";
+import { getNewsItems } from "@/lib/recentActivity";
 import { getDialoguesForUser } from "@/lib/dialogues";
 import FollowedContentSection from "./FollowedContentSection";
 import OpenDialoguesSection from "./OpenDialoguesSection";
@@ -24,28 +24,19 @@ const ROLE_LABELS: Record<User["role"], string> = {
 export default async function Dashboard({ user }: { user: User }) {
   // Voneinander unabhängig — parallel statt nacheinander abfragen, sonst
   // addieren sich die Roundtrips zur (entfernten) DB bei jeder Navigation
-  // spürbar auf.
-  const [hasPasswordSet, bookmarks, recentActivity, deletions, openDialogues] =
+  // spürbar auf. News sind seit PR #51 persistent (nicht mehr "seit letztem
+  // Besuch"), gefiltert nach den im Profil gewählten News-Arten
+  // (user.news_kinds) und dem "gesehen"-Status (news_seen) — daher hier auch
+  // kein touchDashboardVisit mehr, das die Grenze früher fortschrieb.
+  const [hasPasswordSet, bookmarks, newsItems, openDialogues] =
     await Promise.all([
       hasPassword(user.id),
       getBookmarkedContent(user.id),
-      getRecentActivity(user.id, user.last_dashboard_visit_at),
-      getRecentDeletions(user.id, user.last_dashboard_visit_at),
+      getNewsItems(user.id, user.news_kinds),
       getDialoguesForUser(user.id, "open"),
     ]);
   const needsPassword = !hasPasswordSet;
   const firstVisit = user.previous_login_at === null;
-
-  // last_dashboard_visit_at erst NACH dem Lesen oben überschreiben (wird
-  // dort als "seit wann?"-Grenze für die News-Sektion gebraucht) — anders
-  // als touchLastVisit (lib/users.ts) bewusst ungedrosselt, ein
-  // Dashboard-Besuch ist selten genug, dass ein synchroner Write pro Besuch
-  // unproblematisch ist. BEWUSST kein after() (mehr): siehe Kommentar in
-  // src/app/api/session/route.ts — mit lib/db.ts' max:1-Verbindung pro
-  // Funktionsinstanz kann ein nach der Response noch laufender
-  // after()-Callback die eine Verbindung hängen lassen und damit jede
-  // weitere Anfrage auf derselben Instanz blockieren.
-  await touchDashboardVisit(user.id);
 
   return (
     <>
@@ -77,11 +68,7 @@ export default async function Dashboard({ user }: { user: User }) {
 
           <OpenDialoguesSection items={openDialogues} />
 
-          <NewsSection
-            created={recentActivity.created}
-            updated={recentActivity.updated}
-            deleted={deletions}
-          />
+          <NewsSection items={newsItems} />
 
           <FollowedContentSection
             heading="Deine Lesezeichen"

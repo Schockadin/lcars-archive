@@ -2,14 +2,18 @@
 // wendet beim Speichern Autolinking auf den Text an (siehe
 // autoLinkMarkdown in src/lib/autolink.ts) — dieselbe Erkennung wie das
 // admin-only "Autolinking"-Werkzeug (ContentLinkToolButton.tsx), hier direkt beim
-// Anlegen/Bearbeiten statt als separater Schritt danach. Unchecked per
-// Default, da eine automatische Textänderung beim Speichern keine
-// Überraschung sein soll. Reiner Formular-Checkbox-Wert (name="autoLink"),
-// serverseitig ausgewertet als formData.get("autoLink") === "on".
+// Anlegen/Bearbeiten statt als separater Schritt danach. Bei NEUEN Inhalten
+// standardmäßig aktiv (defaultChecked, seit PR #51) — dort ist automatisches
+// Verlinken erwünschtes Standardverhalten; beim Bearbeiten bleibt es aus, um
+// eine unerwartete Textänderung an bestehenden Inhalten zu vermeiden. Reiner
+// Formular-Checkbox-Wert (name="autoLink"), serverseitig ausgewertet als
+// formData.get("autoLink") === "on".
 export default function AutoLinkCheckbox({
   idPrefix = "content",
+  defaultChecked = false,
 }: {
   idPrefix?: string;
+  defaultChecked?: boolean;
 }) {
   const id = `${idPrefix}-auto-link`;
   return (
@@ -18,6 +22,7 @@ export default function AutoLinkCheckbox({
         id={id}
         name="autoLink"
         type="checkbox"
+        defaultChecked={defaultChecked}
         className="h-[16px] w-[16px]"
       />
       <label htmlFor={id} className="lcars-text text-[14px]">

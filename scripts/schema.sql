@@ -65,6 +65,8 @@
 --    Fließtext (true) vs. farbige Karten-Ansicht (DialogueViewToggle.tsx).
 --  - editor_spellcheck_enabled: native Browser-Rechtschreibprüfung in den
 --    Markdown-Editor-Feldern (im Profil abschaltbar).
+--  - news_kinds: welche News-Arten der User auf dem Dashboard sehen will
+--    (Teilmenge von created/updated/deleted). Default = alle drei ("alles").
 CREATE TABLE IF NOT EXISTS users (
   id                            SERIAL PRIMARY KEY,
   email                         TEXT UNIQUE NOT NULL,
@@ -85,7 +87,8 @@ CREATE TABLE IF NOT EXISTS users (
   notify_content_types          TEXT[] NOT NULL DEFAULT '{}',
   session_version               INT NOT NULL DEFAULT 0,
   dialogue_flowing_text_enabled BOOLEAN NOT NULL DEFAULT true,
-  editor_spellcheck_enabled     BOOLEAN NOT NULL DEFAULT true
+  editor_spellcheck_enabled     BOOLEAN NOT NULL DEFAULT true,
+  news_kinds                    TEXT[] NOT NULL DEFAULT '{created,updated,deleted}'
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_slug ON users(slug);
 
@@ -534,6 +537,39 @@ CREATE TABLE IF NOT EXISTS content_images (
 CREATE INDEX IF NOT EXISTS idx_content_images_content ON content_images(content_type, content_id);
 
 -- ---------------------------------------------------------------------------
+-- campaign_settings
+-- ---------------------------------------------------------------------------
+-- Kampagnen-weite Einstellungen der Spielleitung (Einzeilen-Tabelle) — hält
+-- das aktuelle Ingame-Jahr, aus dem zusammen mit characters.metadata.dateOfBirth das
+-- angezeigte Charakter-Alter abgeleitet wird (src/lib/campaign.ts). Der
+-- BOOLEAN-Primärschlüssel mit CHECK (id) erzwingt höchstens eine Zeile.
+CREATE TABLE IF NOT EXISTS campaign_settings (
+  id          BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (id),
+  ingame_year INT,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ---------------------------------------------------------------------------
+-- news_seen
+-- ---------------------------------------------------------------------------
+-- Persistente News-Anzeige auf dem Dashboard (NewsSection.tsx): eine News
+-- bleibt sichtbar, bis der User sie per X ausblendet ODER den zugehörigen
+-- Inhalt aufruft — löste das frühere „News seit dem letzten Dashboard-Besuch"-
+-- Modell (last_dashboard_visit_at als Grenze) ab. seen_at ist die Grenze pro
+-- Ziel: eine News gilt als erledigt, wenn ihr Zeitstempel <= seen_at ist (eine
+-- spätere Bearbeitung mit neuerem Zeitstempel taucht dadurch wieder auf).
+-- target_key = Slug bei Inhalten, content_deletions.id (als Text) bei
+-- Löschungen (target_type 'deletion', die nie „aufgerufen" werden können).
+CREATE TABLE IF NOT EXISTS news_seen (
+  user_id     INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  target_type TEXT NOT NULL,
+  target_key  TEXT NOT NULL,
+  seen_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, target_type, target_key)
+);
+CREATE INDEX IF NOT EXISTS idx_news_seen_user ON news_seen(user_id);
+
+-- ---------------------------------------------------------------------------
 -- Migrationen seit der letzten Schema-Konsolidierung
 -- ---------------------------------------------------------------------------
 -- Neue Spalten sind in den CREATE-TABLE-Blöcken oben bereits vollständig
@@ -562,3 +598,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_characters_character_color
 DROP INDEX IF EXISTS idx_users_character_color;
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_character_color_check;
 ALTER TABLE users DROP COLUMN IF EXISTS character_color;
+
+-- news_kinds: welche News-Arten der User sehen will (Default = alle drei).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS news_kinds TEXT[] NOT NULL
+  DEFAULT '{created,updated,deleted}';
