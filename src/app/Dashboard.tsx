@@ -32,7 +32,7 @@ export default async function Dashboard({ user }: { user: User }) {
     await Promise.all([
       hasPassword(user.id),
       getBookmarkedContent(user.id),
-      getNewsItems(user.id, user.news_kinds),
+      getNewsItems(user.id, user.news_kinds, user.role),
       getDialoguesForUser(user.id, "open"),
     ]);
   const needsPassword = !hasPasswordSet;

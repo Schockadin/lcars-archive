@@ -66,7 +66,7 @@
 --  - editor_spellcheck_enabled: native Browser-Rechtschreibprüfung in den
 --    Markdown-Editor-Feldern (im Profil abschaltbar).
 --  - news_kinds: welche News-Arten der User auf dem Dashboard sehen will
---    (Teilmenge von created/updated/deleted). Default = alle drei ("alles").
+--    (Teilmenge von created/updated/deleted). Default = nur 'created' ("Neu").
 CREATE TABLE IF NOT EXISTS users (
   id                            SERIAL PRIMARY KEY,
   email                         TEXT UNIQUE NOT NULL,
@@ -88,7 +88,7 @@ CREATE TABLE IF NOT EXISTS users (
   session_version               INT NOT NULL DEFAULT 0,
   dialogue_flowing_text_enabled BOOLEAN NOT NULL DEFAULT true,
   editor_spellcheck_enabled     BOOLEAN NOT NULL DEFAULT true,
-  news_kinds                    TEXT[] NOT NULL DEFAULT '{created,updated,deleted}'
+  news_kinds                    TEXT[] NOT NULL DEFAULT '{created}'
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_slug ON users(slug);
 
@@ -599,6 +599,6 @@ DROP INDEX IF EXISTS idx_users_character_color;
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_character_color_check;
 ALTER TABLE users DROP COLUMN IF EXISTS character_color;
 
--- news_kinds: welche News-Arten der User sehen will (Default = alle drei).
+-- news_kinds: welche News-Arten der User sehen will (Default = nur 'created').
 ALTER TABLE users ADD COLUMN IF NOT EXISTS news_kinds TEXT[] NOT NULL
-  DEFAULT '{created,updated,deleted}';
+  DEFAULT '{created}';

@@ -72,12 +72,20 @@ const NEWS_WINDOW_DAYS = 90;
 export async function getNewsItems(
   userId: number,
   newsKinds: string[],
+  viewerRole: string,
   limit = 50,
 ): Promise<NewsFeedItem[]> {
   const wantCreated = newsKinds.includes("created");
   const wantUpdated = newsKinds.includes("updated");
   const wantDeleted = newsKinds.includes("deleted");
   if (!wantCreated && !wantUpdated && !wantDeleted) return [];
+
+  // News umfassen ALLE neuen Inhalte, die der Betrachter sehen darf: Admins
+  // sehen jede Sichtbarkeit, GMs zusätzlich gm-Inhalte, alle anderen nur
+  // öffentliche + eigene (Entwürfe bleiben immer owner-only, siehe
+  // canViewDraft). Die Rolle steuert die Sichtbarkeits-Bedingung unten.
+  const isAdmin = viewerRole === "admin";
+  const isGmOrAdmin = viewerRole === "gm" || isAdmin;
 
   const since = new Date();
   since.setDate(since.getDate() - NEWS_WINDOW_DAYS);
@@ -107,7 +115,8 @@ export async function getNewsItems(
              c.created_at::text AS created_at, c.updated_at::text AS updated_at
       FROM characters c
       LEFT JOIN users pu ON pu.id = c.player_id
-      WHERE (c.visibility = 'public' OR c.player_id = ${userId})
+      WHERE (c.visibility = 'public' OR c.player_id = ${userId}
+             OR ${isAdmin} OR (${isGmOrAdmin} AND c.visibility = 'gm'))
         AND (c.created_at > ${since} OR c.updated_at > ${since})
         AND c.deleted_at IS NULL
         AND (c.is_draft = false OR c.player_id = ${userId})
@@ -133,7 +142,8 @@ export async function getNewsItems(
       FROM mission_logs ml
       JOIN missions m ON m.id = ml.mission_id
       LEFT JOIN users ou ON ou.id = ml.owner_user_id
-      WHERE (ml.visibility = 'public' OR ml.owner_user_id = ${userId})
+      WHERE (ml.visibility = 'public' OR ml.owner_user_id = ${userId}
+             OR ${isAdmin} OR (${isGmOrAdmin} AND ml.visibility = 'gm'))
         AND (ml.created_at > ${since} OR ml.updated_at > ${since})
         AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
         AND (ml.is_draft = false OR ml.owner_user_id = ${userId})
@@ -146,7 +156,8 @@ export async function getNewsItems(
              a.created_at::text, a.updated_at::text
       FROM archive_entries a
       LEFT JOIN users au ON au.id = a.owner_user_id
-      WHERE (a.visibility = 'public' OR a.owner_user_id = ${userId})
+      WHERE (a.visibility = 'public' OR a.owner_user_id = ${userId}
+             OR ${isAdmin} OR (${isGmOrAdmin} AND a.visibility = 'gm'))
         AND (a.created_at > ${since} OR a.updated_at > ${since})
         AND (a.category != 'dialogue' OR a.dialogue_open = FALSE)
         AND a.deleted_at IS NULL
@@ -210,7 +221,9 @@ export async function getNewsItems(
       FROM content_deletions cd
       LEFT JOIN users du ON du.id = cd.deleted_by
       WHERE cd.deleted_at > ${since}
-        AND (cd.visibility IS NULL OR cd.visibility = 'public' OR cd.owner_user_id = ${userId})
+        AND (cd.visibility IS NULL OR cd.visibility = 'public'
+             OR cd.owner_user_id = ${userId}
+             OR ${isAdmin} OR (${isGmOrAdmin} AND cd.visibility = 'gm'))
       ORDER BY cd.deleted_at DESC
     `;
 

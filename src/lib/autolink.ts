@@ -212,19 +212,23 @@ export async function getAllAutolinkableContent(): Promise<
     sql<{ id: number; slug: string; source_md: string }[]>`
       SELECT id, slug, source_md FROM characters
       WHERE source_md IS NOT NULL AND source_md <> '' AND deleted_at IS NULL
+      ORDER BY id
     `,
     sql<{ id: number; slug: string; source_md: string }[]>`
       SELECT id, slug, source_md FROM missions
       WHERE source_md IS NOT NULL AND source_md <> '' AND deleted_at IS NULL
+      ORDER BY id
     `,
     sql<{ id: number; slug: string; mission_id: number; source_md: string }[]>`
       SELECT id, slug, mission_id, source_md FROM mission_logs
       WHERE source_md IS NOT NULL AND source_md <> '' AND deleted_at IS NULL
+      ORDER BY id
     `,
     sql<{ id: number; slug: string; source_md: string }[]>`
       SELECT id, slug, source_md FROM archive_entries
       WHERE source_md IS NOT NULL AND source_md <> ''
         AND category <> 'dialogue' AND deleted_at IS NULL
+      ORDER BY id
     `,
   ]);
 

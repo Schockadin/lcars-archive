@@ -22,18 +22,21 @@ import {
   revalidateArchiveEntry,
 } from "@/lib/revalidate";
 
-export interface LinkAllContentState {
+export interface LinkAllBatchResult {
   error?: string;
-  // Bei Erfolg gesetzt: Anzahl geänderter Inhalte (mindestens ein neuer Link),
-  // Gesamtzahl gesetzter Verknüpfungen und Gesamtzahl geprüfter Inhalte.
-  changedCount?: number;
-  linkCount?: number;
-  totalScanned?: number;
+  // Gesamtzahl der zu prüfenden Inhalte (stabil über alle Batches).
+  total?: number;
+  // Wie viele Inhalte nach diesem Batch insgesamt geprüft wurden.
+  processed?: number;
+  // In DIESEM Batch geänderte Inhalte bzw. gesetzte Verknüpfungen.
+  changedInBatch?: number;
+  linksInBatch?: number;
+  // true, sobald alle Inhalte abgearbeitet sind.
+  done?: boolean;
 }
 
 // Self-Ausschluss: ein Inhalt darf nicht auf sich selbst verlinken.
-// Mission-Logs sind selbst kein Autolink-Ziel (siehe getAutolinkTargets) und
-// brauchen deshalb keinen Ausschluss.
+// Mission-Logs sind selbst kein Autolink-Ziel (siehe getAutolinkTargets).
 function selfKey(
   contentType: AutolinkContentType,
   slug: string,
@@ -50,28 +53,38 @@ function selfKey(
   }
 }
 
-// Admin-only Bulk-Werkzeug (/admin/scripts): wendet Autolinking auf ALLE
-// bestehenden Inhalte an (Charaktere, Missionen, Mission-Logs, Archiv-
-// Einträge). Dieselbe Erkennung/Auflösung wie das per-Inhalt-Werkzeug
-// (contentTools.ts / planAutolink) — hier nur einmal die Ziel-Liste laden und
-// pro Inhalt in-memory den Selbst-Bezug ausschließen, statt sie für jeden
-// Inhalt neu aus der DB zu holen. Speichert nur Inhalte, bei denen tatsächlich
-// mindestens ein neuer [[Wikilink]] entsteht.
-export async function linkAllContentAction(
-  _state: LinkAllContentState,
-  _formData: FormData,
-): Promise<LinkAllContentState> {
+// Admin-only Bulk-Autolinking (/admin/scripts) — arbeitet BATCH-weise: der
+// Client ruft diese Action seriell mit wachsendem offset auf und zeigt einen
+// Fortschrittsbalken (siehe LinkAllContentPanel.tsx). So bleibt jeder einzelne
+// Server-Request klein (batchSize Inhalte), was Timeouts bei vielen Inhalten
+// verhindert. Die Inhaltsliste hat eine stabile Reihenfolge (ORDER BY id je
+// Typ, siehe getAllAutolinkableContent), damit die offset-Slices über die
+// Aufrufe hinweg konsistent sind. Nur Inhalte mit tatsächlich neuen
+// [[Wikilinks]] werden gespeichert.
+export async function linkAllContentBatchAction(
+  offset: number,
+  batchSize: number,
+): Promise<LinkAllBatchResult> {
   await requireAdmin();
+
+  const safeOffset = Number.isInteger(offset) && offset >= 0 ? offset : 0;
+  const safeBatch =
+    Number.isInteger(batchSize) && batchSize > 0 && batchSize <= 100
+      ? batchSize
+      : 20;
 
   const [allTargets, contents] = await Promise.all([
     getAutolinkTargets(),
     getAllAutolinkableContent(),
   ]);
 
-  let changedCount = 0;
-  let linkCount = 0;
+  const total = contents.length;
+  const slice = contents.slice(safeOffset, safeOffset + safeBatch);
 
-  for (const content of contents) {
+  let changedInBatch = 0;
+  let linksInBatch = 0;
+
+  for (const content of slice) {
     const self = selfKey(content.contentType, content.slug);
     const targets = self
       ? allTargets.filter(
@@ -108,9 +121,16 @@ export async function linkAllContentAction(
         break;
     }
 
-    changedCount += 1;
-    linkCount += matches.length;
+    changedInBatch += 1;
+    linksInBatch += matches.length;
   }
 
-  return { changedCount, linkCount, totalScanned: contents.length };
+  const processed = Math.min(safeOffset + safeBatch, total);
+  return {
+    total,
+    processed,
+    changedInBatch,
+    linksInBatch,
+    done: processed >= total,
+  };
 }

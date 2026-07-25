@@ -139,7 +139,17 @@ export default async function ArchiveEntryPage({ params }: Props) {
       />
 
       {viewer?.role === "admin" && entry.category === "dialogue" && (
-        <DeleteDialogueButton entrySlug={entry.slug} />
+        <div className="flex flex-wrap items-center gap-[8px]">
+          {/* Metadaten (Titel/Datum/Ort/Tags) bearbeiten — auch für
+              abgeschlossene Gespräche, nicht der Gesprächsverlauf. */}
+          <Link
+            href={`/admin/dialogues/${entry.slug}/edit`}
+            className="lcars-pill-btn--outline"
+          >
+            Metadaten bearbeiten
+          </Link>
+          <DeleteDialogueButton entrySlug={entry.slug} />
+        </div>
       )}
 
       <RelatedSection title="Verweise" links={outgoingLinks} />

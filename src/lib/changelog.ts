@@ -215,7 +215,11 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Die Administration bekommt jetzt jeden Morgen um 6 Uhr (Berliner Zeit) automatisch eine Mail mit allen Fehler- und Audit-Log-Einträgen der letzten 24 Stunden.",
       "Neu angelegte Inhalte werden jetzt standardmäßig automatisch verlinkt (die entsprechende Option ist beim Anlegen vorausgewählt).",
       "Im Adminbereich unter „Scripts“ gibt es jetzt einen Knopf, der alle bestehenden Inhalte auf einmal automatisch verlinkt.",
-      "Die Administration kann jetzt die Metadaten von Gesprächen bearbeiten (Titel, Datum, Schauplatz, Ort, Tags) — der eigentliche Gesprächsverlauf bleibt dabei unangetastet.",
+      "Die Administration kann jetzt die Metadaten von Gesprächen bearbeiten (Titel, Datum, Schauplatz, Ort, Tags) — sowohl bei offenen als auch bei bereits abgeschlossenen Gesprächen (direkt auf der Gesprächsseite), der eigentliche Gesprächsverlauf bleibt dabei unangetastet.",
+      "Die News zeigen jetzt standardmäßig nur neue Inhalte an (Editiert/Gelöscht lassen sich im Profil dazuschalten) und umfassen alle neuen Inhalte, die man sehen darf; das News-Feld auf dem Dashboard ist doppelt so hoch.",
+      "Zähler an den LCARS-Listenzeilen zeigen bei mehr als 99 Einträgen „99+“ an, statt die Anzeige zu sprengen.",
+      "In der Inhalts-Übersicht (Adminbereich) liegt die Owner-Zuordnung jetzt unter jedem Eintrag, zusammen mit Bearbeiten- und Löschen-Knopf in einer Reihe.",
+      "Das Admin-Werkzeug „Alle Inhalte verlinken“ arbeitet jetzt blockweise mit Fortschrittsbalken, damit es auch bei vielen Inhalten nicht mehr in eine Zeitüberschreitung läuft.",
     ],
   },
 ];

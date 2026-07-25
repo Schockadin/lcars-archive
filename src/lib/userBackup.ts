@@ -23,8 +23,9 @@ export interface UserBackupRecord {
   news_kinds?: string[];
 }
 
-// Default, wenn ein (älteres) Backup news_kinds nicht enthält.
-const DEFAULT_NEWS_KINDS = ["created", "updated", "deleted"];
+// Default, wenn ein (älteres) Backup news_kinds nicht enthält — entspricht
+// dem DB-Default (nur "Neu").
+const DEFAULT_NEWS_KINDS = ["created"];
 
 // Admin-only Vollsicherung aller User-Datensätze inkl. password_hash, damit
 // ein Restore (siehe restoreUsersBackup) Konten ohne erzwungenes

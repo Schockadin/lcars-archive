@@ -10,10 +10,10 @@
 -- ---------------------------------------------------------------------------
 
 -- Welche News-Arten der User auf dem Dashboard sehen will (Neu/Editiert/
--- Gelöscht). Leeres Array = keine News. Default = alle drei (bisheriges
--- Verhalten, "alles"), siehe NewsSection.tsx / recentActivity.ts.
+-- Gelöscht). Leeres Array = keine News. Default = nur 'created' ("Neu"),
+-- siehe NewsSection.tsx / recentActivity.ts.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS news_kinds TEXT[] NOT NULL
-  DEFAULT '{created,updated,deleted}';
+  DEFAULT '{created}';
 
 -- Hinweis: das Geburtsdatum eines Charakters (Feature „Alter aus Ingame-Jahr
 -- ableiten") wird bewusst NICHT als eigene Spalte, sondern in
