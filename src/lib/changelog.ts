@@ -220,6 +220,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Zähler an den LCARS-Listenzeilen zeigen bei mehr als 99 Einträgen „99+“ an, statt die Anzeige zu sprengen.",
       "In der Inhalts-Übersicht (Adminbereich) liegt die Owner-Zuordnung jetzt unter jedem Eintrag, zusammen mit Bearbeiten- und Löschen-Knopf in einer Reihe.",
       "Das Admin-Werkzeug „Alle Inhalte verlinken“ arbeitet jetzt blockweise mit Fortschrittsbalken, damit es auch bei vielen Inhalten nicht mehr in eine Zeitüberschreitung läuft.",
+      "Eine weggeklickte News gilt jetzt dauerhaft als gelesen, und mit „Alles als gelesen markieren“ lassen sich alle News auf einmal ausblenden.",
     ],
   },
 ];

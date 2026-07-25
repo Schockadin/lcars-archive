@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { LcarsDataRow } from "@/components/lcars";
 import type { NewsFeedItem } from "@/lib/recentActivity";
-import { dismissNewsAction } from "@/app/actions/news";
+import { dismissNewsAction, markAllNewsSeenAction } from "@/app/actions/news";
 import { SOURCE_TYPE_LABELS, fmtDate } from "@/lib/timelineFormat";
 
 // Farbe + Verb je News-Art (neu/bearbeitet/gelöscht) — Vorgabe: grün = neu,
@@ -94,9 +94,21 @@ export default function NewsSection({ items }: { items: NewsFeedItem[] }) {
   const [visible, setVisible] = useState(items);
 
   function dismiss(item: NewsFeedItem) {
-    // Optimistisch entfernen, dann serverseitig als „gesehen" markieren.
+    // Optimistisch entfernen, dann serverseitig als „gesehen"/gelesen markieren.
     setVisible((prev) => prev.filter((i) => i.key !== item.key));
     void dismissNewsAction(item.targetType, item.targetKey, item.timestamp);
+  }
+
+  function markAllRead() {
+    const snapshot = visible;
+    setVisible([]);
+    void markAllNewsSeenAction(
+      snapshot.map((i) => ({
+        targetType: i.targetType,
+        targetKey: i.targetKey,
+        timestamp: i.timestamp,
+      })),
+    );
   }
 
   if (visible.length === 0) return null;
@@ -108,10 +120,19 @@ export default function NewsSection({ items }: { items: NewsFeedItem[] }) {
       color="var(--lcars-blue)"
       defaultOpen
     >
-      <div className="news-scroll">
-        {visible.map((item) => (
-          <NewsRow key={item.key} item={item} onDismiss={dismiss} />
-        ))}
+      <div className="flex flex-col gap-[8px]">
+        <button
+          type="button"
+          onClick={markAllRead}
+          className="lcars-pill-btn--outline self-end text-[12px]"
+        >
+          Alles als gelesen markieren
+        </button>
+        <div className="news-scroll">
+          {visible.map((item) => (
+            <NewsRow key={item.key} item={item} onDismiss={dismiss} />
+          ))}
+        </div>
       </div>
     </LcarsDataRow>
   );

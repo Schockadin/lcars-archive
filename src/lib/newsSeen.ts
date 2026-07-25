@@ -30,6 +30,33 @@ export async function markNewsSeen(
   `;
 }
 
+export interface MarkSeenInput {
+  targetType: NewsSeenTargetType;
+  targetKey: string;
+  seenAt: Date;
+}
+
+// Mehrere "gesehen"-Grenzen auf einmal setzen — für "Alles als gelesen
+// markieren" (NewsSection.tsx). Ein einzelnes Bulk-Upsert mit GREATEST-Merge
+// wie bei markNewsSeen, statt pro Eintrag eine eigene Query.
+export async function markManyNewsSeen(
+  userId: number,
+  entries: MarkSeenInput[],
+): Promise<void> {
+  if (entries.length === 0) return;
+  const rows = entries.map((e) => ({
+    user_id: userId,
+    target_type: e.targetType,
+    target_key: e.targetKey,
+    seen_at: e.seenAt,
+  }));
+  await sql`
+    INSERT INTO news_seen ${sql(rows, "user_id", "target_type", "target_key", "seen_at")}
+    ON CONFLICT (user_id, target_type, target_key)
+    DO UPDATE SET seen_at = GREATEST(news_seen.seen_at, EXCLUDED.seen_at)
+  `;
+}
+
 export interface NewsSeenEntry {
   targetType: string;
   targetKey: string;
