@@ -73,7 +73,6 @@ export async function getNewsItems(
   userId: number,
   newsKinds: string[],
   viewerRole: string,
-  limit = 50,
 ): Promise<NewsFeedItem[]> {
   const wantCreated = newsKinds.includes("created");
   const wantUpdated = newsKinds.includes("updated");
@@ -243,6 +242,10 @@ export async function getNewsItems(
     }
   }
 
+  // Bewusst KEIN Limit: der Feed enthält ALLE offenen News (des Fensters), die
+  // scrollbare News-Sektion begrenzt nur die sichtbare Höhe. So markiert
+  // „Alles als gelesen markieren" auch wirklich alles und nicht nur die ersten
+  // paar Einträge.
   items.sort((a, b) => (a.timestamp < b.timestamp ? 1 : a.timestamp > b.timestamp ? -1 : 0));
-  return items.slice(0, limit);
+  return items;
 }
