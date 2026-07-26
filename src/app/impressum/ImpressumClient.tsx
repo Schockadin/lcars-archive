@@ -55,6 +55,14 @@ export default function ImpressumClient() {
         oder Verwertung außerhalb der Grenzen des Urheberrechts bedürfen der
         schriftlichen Zustimmung.
       </p>
+      <p>
+        Die Rechte an den von den Mitspielenden selbst verfassten Inhalten –
+        etwa Charakterbiografien, Einsatzberichten, Gesprächen und
+        Archiv-Einträgen – liegen bei den jeweiligen Autor*innen. Der
+        Seitenbetreiber stellt lediglich die Plattform zur gemeinsamen
+        Dokumentation der Kampagne bereit und beansprucht keine darüber
+        hinausgehenden Rechte an diesen nutzergenerierten Beiträgen.
+      </p>
     </LegalPageLayout>
   );
 }

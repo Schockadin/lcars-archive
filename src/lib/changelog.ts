@@ -221,6 +221,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "In der Inhalts-Übersicht (Adminbereich) liegt die Owner-Zuordnung jetzt unter jedem Eintrag, zusammen mit Bearbeiten- und Löschen-Knopf in einer Reihe.",
       "Das Admin-Werkzeug „Alle Inhalte verlinken“ arbeitet jetzt blockweise mit Fortschrittsbalken, damit es auch bei vielen Inhalten nicht mehr in eine Zeitüberschreitung läuft.",
       "Eine weggeklickte News gilt jetzt dauerhaft als gelesen, und mit „Alles als gelesen markieren“ lassen sich alle News auf einmal als gelesen markieren — die News-Liste zeigt jetzt außerdem alle offenen News statt nur der letzten 50, sodass „Alles als gelesen markieren“ wirklich alles erfasst.",
+      "Tutorial und Datenschutzerklärung wurden um die neuen Funktionen ergänzt; das Impressum stellt jetzt klar, dass die Rechte an selbst verfassten Inhalten (Charaktere, Berichte, Gespräche, Archiv-Einträge) bei den jeweiligen Autor*innen liegen.",
     ],
   },
 ];

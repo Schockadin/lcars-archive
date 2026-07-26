@@ -77,6 +77,14 @@ export default function DSGVOClient() {
         fehlgeschlagenen Mail-Versands.
       </p>
       <p>
+        Für die persönliche „News“-Übersicht auf dem Dashboard wird pro
+        Login-Account gespeichert, welche Neuigkeiten bereits gesehen bzw.
+        ausgeblendet wurden (Inhaltstyp, Kennung und Zeitpunkt), damit erledigte
+        News nicht erneut angezeigt werden (Rechtsgrundlage: Art. 6 Abs. 1 lit.
+        b DSGVO — Bereitstellung dieser Komfortfunktion). Es werden dabei keine
+        Inhalte, sondern nur Verweise auf bereits gesehene Einträge gespeichert.
+      </p>
+      <p>
         Wer im Login-Bereich Push-Benachrichtigungen aktiviert, erlaubt damit
         die Speicherung einer geräteseitigen Push-Subscription (eine vom Browser
         vergebene Endpoint-URL sowie kryptografische Schlüssel zur
@@ -125,6 +133,14 @@ export default function DSGVOClient() {
         <a href="https://resend.com" target="_blank" rel="noreferrer">
           resend.com
         </a>
+      </p>
+      <p>
+        Zusätzlich erhält die Administration einmal täglich eine
+        Zusammenfassungs-Mail mit den Fehler- und Audit-Log-Einträgen der
+        letzten 24 Stunden (siehe Abschnitt 2). Diese Mail geht ausschließlich
+        an die Administrations-Accounts und dient dem sicheren Betrieb und der
+        Nachvollziehbarkeit privilegierter Aktionen (Rechtsgrundlage: Art. 6
+        Abs. 1 lit. f DSGVO); der Versand erfolgt ebenfalls über Resend.
       </p>
 
       <h2>4. Datenübertragung in Drittländer</h2>

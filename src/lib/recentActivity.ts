@@ -1,54 +1,15 @@
 import "server-only";
 import sql from "@/lib/db";
-import type { TimelineSourceType } from "@/types/timeline";
 import { getNewsSeenForUser } from "@/lib/newsSeen";
+import {
+  computeNewsItems,
+  type NewsContentRow,
+  type NewsDeletionRow,
+  type NewsFeedItem,
+} from "@/lib/recentActivityFormat";
 
-// News-Kind: neu erstellt / bearbeitet / gelöscht. Entspricht den drei
-// einstellbaren News-Arten im Profil (users.news_kinds).
-export type NewsKind = "created" | "updated" | "deleted";
-
-export interface NewsFeedItem {
-  // Stabiler Client-Key (kind + Ziel + Zeitstempel).
-  key: string;
-  kind: NewsKind;
-  // Ziel für das Ausblenden/„gesehen"-Tracking (news_seen): bei Inhalten der
-  // Inhaltstyp + Slug, bei Löschungen 'deletion' + content_deletions.id.
-  targetType: TimelineSourceType | "deletion";
-  targetKey: string;
-  title: string;
-  // null bei gelöschten Inhalten (Ziel existiert nicht mehr).
-  href: string | null;
-  timestamp: string;
-  authorName: string | null;
-}
-
-interface RecentActivityRow {
-  target_type: TimelineSourceType;
-  slug: string;
-  title: string;
-  mission_slug: string | null;
-  dialogue_open: boolean | null;
-  author_name: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-function toHref(row: RecentActivityRow): string {
-  switch (row.target_type) {
-    case "character":
-      return `/characters/${row.slug}`;
-    case "mission":
-      return `/missions/${row.slug}`;
-    case "mission_log":
-      return `/missions/${row.mission_slug}/${row.slug}`;
-    case "archive_entry":
-      // Offene Dialoge leben unter /dialogues, nicht /archive (siehe
-      // toFollowedContent in src/lib/follows.ts für dasselbe Muster).
-      return row.dialogue_open
-        ? `/dialogues/${row.slug}`
-        : `/archive/${row.slug}`;
-  }
-}
+// Re-Export für bestehende Importe (NewsSection.tsx).
+export type { NewsFeedItem, NewsKind } from "@/lib/recentActivityFormat";
 
 // Zeitfenster, aus dem News überhaupt noch stammen können. Anders als früher
 // (News nur seit dem letzten Dashboard-Besuch, danach für immer weg) bleiben
@@ -57,18 +18,15 @@ function toHref(row: RecentActivityRow): string {
 // Kandidatenmenge, damit uralte Änderungen nicht ewig als „News" gelten.
 const NEWS_WINDOW_DAYS = 90;
 
-// Persistenter News-Feed fürs Dashboard (NewsSection.tsx). Liefert neu
-// erstellte, bearbeitete und gelöschte Inhalte der letzten NEWS_WINDOW_DAYS,
-// gefiltert nach:
-//   - den vom User gewählten News-Arten (users.news_kinds),
-//   - der Sichtbarkeit (öffentlich ODER eigener Inhalt — wie zuvor),
-//   - dem „gesehen"-Status (news_seen): eine News verschwindet, sobald ihr
-//     Ziel per X ausgeblendet ODER der Inhalt aufgerufen wurde.
+// Persistenter News-Feed fürs Dashboard (NewsSection.tsx). Lädt die
+// Kandidaten-Zeilen aus der DB und überlässt die eigentliche Aufbereitung
+// (created/updated-Ableitung, „gesehen"-Filter, Sortierung) der reinen,
+// getesteten Funktion computeNewsItems (recentActivityFormat.ts).
 //
-// Ein Inhalt kann sowohl eine „created"- als auch (nach einer späteren
-// Bearbeitung) eine „updated"-News erzeugen — mit unterschiedlichem
-// Zeitstempel, aber gleichem Ziel; das „gesehen"-Tracking (seen_at) blendet
-// beide korrekt aus. Offene Gespräche bleiben ausgeschlossen (eigene Sektion).
+// News umfassen ALLE neuen Inhalte, die der Betrachter sehen darf: Admins
+// sehen jede Sichtbarkeit, GMs zusätzlich gm-Inhalte, alle anderen nur
+// öffentliche + eigene (Entwürfe bleiben immer owner-only, siehe
+// canViewDraft). Offene Gespräche bleiben ausgeschlossen (eigene Sektion).
 export async function getNewsItems(
   userId: number,
   newsKinds: string[],
@@ -79,35 +37,17 @@ export async function getNewsItems(
   const wantDeleted = newsKinds.includes("deleted");
   if (!wantCreated && !wantUpdated && !wantDeleted) return [];
 
-  // News umfassen ALLE neuen Inhalte, die der Betrachter sehen darf: Admins
-  // sehen jede Sichtbarkeit, GMs zusätzlich gm-Inhalte, alle anderen nur
-  // öffentliche + eigene (Entwürfe bleiben immer owner-only, siehe
-  // canViewDraft). Die Rolle steuert die Sichtbarkeits-Bedingung unten.
   const isAdmin = viewerRole === "admin";
   const isGmOrAdmin = viewerRole === "gm" || isAdmin;
 
   const since = new Date();
   since.setDate(since.getDate() - NEWS_WINDOW_DAYS);
 
-  const seen = await getNewsSeenForUser(userId);
-  const seenMap = new Map<string, Date>();
-  for (const s of seen) {
-    seenMap.set(`${s.targetType}:${s.targetKey}`, new Date(s.seenAt));
-  }
-  // Eine News mit Zeitstempel <= seen_at ihres Ziels gilt als erledigt.
-  const isSeen = (
-    targetType: string,
-    targetKey: string,
-    timestamp: string,
-  ): boolean => {
-    const seenAt = seenMap.get(`${targetType}:${targetKey}`);
-    return seenAt != null && new Date(timestamp) <= seenAt;
-  };
+  const seenEntries = await getNewsSeenForUser(userId);
 
-  const items: NewsFeedItem[] = [];
-
+  let contentRows: NewsContentRow[] = [];
   if (wantCreated || wantUpdated) {
-    const rows = await sql<RecentActivityRow[]>`
+    contentRows = await sql<NewsContentRow[]>`
       SELECT 'character'::text AS target_type, c.slug, c.name AS title,
              NULL::text AS mission_slug, NULL::boolean AS dialogue_open,
              pu.name AS author_name,
@@ -162,59 +102,11 @@ export async function getNewsItems(
         AND a.deleted_at IS NULL
         AND (a.is_draft = false OR a.owner_user_id = ${userId})
     `;
-
-    for (const row of rows) {
-      const href = toHref(row);
-      const createdInWindow = new Date(row.created_at) > since;
-      const wasEdited = new Date(row.updated_at) > new Date(row.created_at);
-
-      if (
-        wantCreated &&
-        createdInWindow &&
-        !isSeen(row.target_type, row.slug, row.created_at)
-      ) {
-        items.push({
-          key: `created-${row.target_type}-${row.slug}`,
-          kind: "created",
-          targetType: row.target_type,
-          targetKey: row.slug,
-          title: row.title,
-          href,
-          timestamp: row.created_at,
-          authorName: row.author_name,
-        });
-      }
-
-      if (
-        wantUpdated &&
-        wasEdited &&
-        new Date(row.updated_at) > since &&
-        !isSeen(row.target_type, row.slug, row.updated_at)
-      ) {
-        items.push({
-          key: `updated-${row.target_type}-${row.slug}`,
-          kind: "updated",
-          targetType: row.target_type,
-          targetKey: row.slug,
-          title: row.title,
-          href,
-          timestamp: row.updated_at,
-          authorName: row.author_name,
-        });
-      }
-    }
   }
 
+  let deletionRows: NewsDeletionRow[] = [];
   if (wantDeleted) {
-    const rows = await sql<
-      {
-        id: number;
-        target_type: TimelineSourceType;
-        title: string;
-        deleted_at: string;
-        deleted_by_name: string | null;
-      }[]
-    >`
+    deletionRows = await sql<NewsDeletionRow[]>`
       SELECT cd.id, cd.target_type, cd.title, cd.deleted_at::text AS deleted_at,
              du.name AS deleted_by_name
       FROM content_deletions cd
@@ -225,27 +117,13 @@ export async function getNewsItems(
              OR ${isAdmin} OR (${isGmOrAdmin} AND cd.visibility = 'gm'))
       ORDER BY cd.deleted_at DESC
     `;
-
-    for (const row of rows) {
-      const key = String(row.id);
-      if (isSeen("deletion", key, row.deleted_at)) continue;
-      items.push({
-        key: `deleted-${row.id}`,
-        kind: "deleted",
-        targetType: "deletion",
-        targetKey: key,
-        title: row.title,
-        href: null,
-        timestamp: row.deleted_at,
-        authorName: row.deleted_by_name,
-      });
-    }
   }
 
-  // Bewusst KEIN Limit: der Feed enthält ALLE offenen News (des Fensters), die
-  // scrollbare News-Sektion begrenzt nur die sichtbare Höhe. So markiert
-  // „Alles als gelesen markieren" auch wirklich alles und nicht nur die ersten
-  // paar Einträge.
-  items.sort((a, b) => (a.timestamp < b.timestamp ? 1 : a.timestamp > b.timestamp ? -1 : 0));
-  return items;
+  return computeNewsItems({
+    contentRows,
+    deletionRows,
+    seenEntries,
+    newsKinds,
+    since,
+  });
 }

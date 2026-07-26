@@ -256,6 +256,18 @@ export default function TutorialPage() {
                 Inhalten — plus deine Lesezeichen und Abos.
               </p>
               <p>
+                Der News-Feed bleibt <strong>dauerhaft</strong> sichtbar (nicht
+                nur bis zum nächsten Besuch): Jede News blendest du über das
+                kleine <strong>×</strong> rechts einzeln aus — sie gilt damit als
+                gelesen und kommt nicht wieder. Eine News verschwindet außerdem
+                automatisch, sobald du den zugehörigen Inhalt aufrufst. Mit{" "}
+                <strong>„Alles als gelesen markieren“</strong> räumst du den
+                ganzen Feed auf einmal ab. Welche News-Arten überhaupt
+                erscheinen (Neu, Editiert und/oder Gelöscht), legst du im{" "}
+                <strong>Profil</strong> unter „News“ fest — standardmäßig nur
+                „Neu“.
+              </p>
+              <p>
                 Ob Benachrichtigungen dich tatsächlich erreichen, steuerst du in
                 deinem <strong>Profil</strong> über zwei Hauptschalter: E-Mail-
                 und Push-Benachrichtigungen. Für Push-Benachrichtigungen muss
@@ -370,14 +382,16 @@ export default function TutorialPage() {
                 existiert.
               </p>
               <p>
-                Wer sich das Tippen der Klammern sparen will, aktiviert beim
+                Wer sich das Tippen der Klammern sparen will, nutzt beim
                 Speichern das Kästchen <strong>„Automatisch verlinken“</strong>{" "}
                 unter dem Textfeld: Es durchsucht deinen Text nach bekannten
                 Charakter-Namen (inkl. Aliasen), Missions- und
                 Archiv-Eintrag-Titeln und verlinkt <strong>jede</strong>{" "}
-                Erwähnung automatisch. Codeblöcke, Inline-Code, Bilder und
-                bereits vorhandene Links bleiben dabei unangetastet, und dein
-                eigener Eintrag verlinkt sich nie selbst.
+                Erwähnung automatisch. Bei <strong>neuen</strong> Inhalten ist
+                dieses Kästchen bereits vorausgewählt; beim Bearbeiten
+                bestehender Inhalte ist es standardmäßig aus. Codeblöcke,
+                Inline-Code, Bilder und bereits vorhandene Links bleiben dabei
+                unangetastet, und dein eigener Eintrag verlinkt sich nie selbst.
               </p>
               <p>
                 Spielleitung/Admin haben zusätzlich ein eigenständiges
@@ -386,7 +400,10 @@ export default function TutorialPage() {
                 gespeicherte Inhalte anwendet, plus ein Werkzeug, um Wikilinks
                 wieder zu entfernen (macht Autolinking-Ergebnisse rückgängig)
                 und eines, das gerade Anführungszeichen/Apostrophe zu
-                typografisch korrekten Zeichen vereinheitlicht.
+                typografisch korrekten Zeichen vereinheitlicht. Für alle Inhalte
+                auf einmal gibt es unter „Scripts“ im Adminbereich den Knopf{" "}
+                <strong>„Alle Inhalte verlinken“</strong> (siehe Abschnitt für
+                Spielleitung &amp; Admins).
               </p>
             </div>
           </LcarsDataRow>
@@ -405,17 +422,24 @@ export default function TutorialPage() {
                 </li>
                 <li>
                   Über das eigene <strong>„Leitung“</strong>-Menü im Header
-                  (analog zum Admin-Menü) auf drei Übersichten zugreifen:
-                  unter <strong>„Missionen“</strong> alle Missionen mit
-                  Bearbeiten-, Löschen- und Besitzer:in-Zuordnung pro Zeile
-                  statt einzeln über die jeweilige Detailseite; unter{" "}
-                  <strong>„Charaktere“</strong> Charaktere Spieler:innen
-                  zuweisen (Gast-Accounts ausgenommen); unter{" "}
-                  <strong>„Gespräche“</strong> alle aktuell offenen Gespräche
-                  einsehen, auch ohne eigene Teilnahme — ein Klick öffnet das
-                  Gespräch lesend, ohne Antwortformular. Über jedes neu
-                  begonnene Gespräch wird die Spielleitung außerdem automatisch
-                  per Mail/Push informiert, unabhängig von eigener Teilnahme.
+                  (analog zum Admin-Menü) auf zwei Übersichten zugreifen: unter{" "}
+                  <strong>„Kampagne“</strong> an einer Stelle das aktuelle{" "}
+                  <strong>Ingame-Jahr</strong> einstellen, Charaktere
+                  Spieler:innen zuweisen (Gast-Accounts ausgenommen) und alle
+                  Missionen mit Bearbeiten-, Löschen- und Besitzer:in-Zuordnung
+                  pro Zeile verwalten; unter <strong>„Gespräche“</strong> alle
+                  aktuell offenen Gespräche einsehen, auch ohne eigene Teilnahme
+                  — ein Klick öffnet das Gespräch lesend, ohne Antwortformular.
+                  Über jedes neu begonnene Gespräch wird die Spielleitung
+                  außerdem automatisch per Mail/Push informiert, unabhängig von
+                  eigener Teilnahme.
+                </li>
+                <li>
+                  Das <strong>Ingame-Jahr</strong> (unter „Kampagne“) bestimmt
+                  das angezeigte <strong>Alter</strong> von Charakteren: Trägt
+                  ein Charakter ein Geburtsdatum, wird sein Alter automatisch aus
+                  Ingame-Jahr minus Geburtsjahr berechnet (sonst gilt das
+                  manuell eingetragene Alter).
                 </li>
                 <li>
                   Über die „Admin-Aktionen“ jeder Detailseite Autolinking,
@@ -447,7 +471,10 @@ export default function TutorialPage() {
                 <li>
                   Unter <strong>„Scripts“</strong> alle Missionen ohne
                   Besitzer:in auf einen Schlag einer Spielleitung zuordnen,
-                  sowie Cache/Timeline neu aufbauen.
+                  Cache/Timeline neu aufbauen sowie mit{" "}
+                  <strong>„Alle Inhalte verlinken“</strong> das Autolinking auf
+                  einen Rutsch über alle bestehenden Inhalte laufen lassen
+                  (blockweise mit Fortschrittsbalken).
                 </li>
                 <li>
                   Unter <strong>„Audit-Log“</strong> nachvollziehen, wer wann
@@ -461,6 +488,9 @@ export default function TutorialPage() {
                   Stacktrace). Tritt ein solcher Fehler auf, sehen alle Besucher
                   eine LCARS-Fehlerseite mit Referenzcode, Administration
                   zusätzlich die volle Fehlermeldung direkt auf dieser Seite.
+                  Zusätzlich erhält die Administration jeden Morgen um 6 Uhr
+                  (Berliner Zeit) automatisch eine Mail mit allen Fehler- und
+                  Audit-Log-Einträgen der letzten 24 Stunden.
                 </li>
                 <li>
                   Unter <strong>„Import“</strong> eine oder mehrere
@@ -475,7 +505,11 @@ export default function TutorialPage() {
                   oder löschen (auch fremde und auch in bereits abgeschlossenen
                   Gesprächen) sowie dessen Besitzer:in ändern — beides
                   ausschließlich der Administration vorbehalten, nicht der
-                  Spielleitung.
+                  Spielleitung. Ebenso lassen sich die{" "}
+                  <strong>Metadaten eines Gesprächs</strong> (Titel, Datum,
+                  Schauplatz, Ort, Tags) über „Metadaten bearbeiten“ anpassen —
+                  auch bei abgeschlossenen Gesprächen; der eigentliche
+                  Gesprächsverlauf bleibt dabei unangetastet.
                 </li>
               </ul>
               <p>
