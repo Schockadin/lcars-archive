@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
 import { touchLastVisit, getUserById } from "@/lib/users";
+import { getRoleMap } from "@/lib/roles";
 import { userPermissions } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,9 @@ export async function GET() {
   if (session) {
     await touchLastVisit(session.userId);
   }
+  // Rollen-Map laden, damit userPermissions gegen die aktuellen (evtl.
+  // bearbeiteten/eigenen) Rollen auflöst.
+  if (user) await getRoleMap();
   const permissions = user ? [...userPermissions(user)] : [];
   // Explizite No-Store-Header statt uns allein auf force-dynamic zu
   // verlassen: dieser Endpunkt liefert userId/role, personalisierte Daten,

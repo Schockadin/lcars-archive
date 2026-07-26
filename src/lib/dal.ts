@@ -3,6 +3,7 @@ import { cache } from "react";
 import { redirect, forbidden } from "next/navigation";
 import { getSession, type SessionPayload } from "@/lib/session";
 import { getUserById } from "@/lib/users";
+import { getRoleMap } from "@/lib/roles";
 import type { User, Role } from "@/types/db";
 import {
   resolvePermissions,
@@ -46,6 +47,11 @@ export const getCurrentUser = cache(async (): Promise<User> => {
   if (session.sessionVersion !== user.session_version) {
     redirect("/login");
   }
+  // Aktive Rollen-Map (permissions.ts) einmal pro Anfrage aus der DB laden —
+  // so lösen auch die vielen synchronen userCan(...)-Aufrufstellen in Server-
+  // Komponenten/Actions gegen die aktuellen (evtl. bearbeiteten/eigenen) Rollen
+  // auf, ohne selbst eine DB-Abfrage einbauen zu müssen. Cache-dedupliziert.
+  await getRoleMap();
   return user;
 });
 

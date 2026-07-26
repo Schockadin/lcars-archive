@@ -2,19 +2,33 @@
 // in Server-, Client-Komponenten UND Tests nutzbar ist (gleiches Muster wie
 // campaignFormat.ts / recentActivityFormat.ts).
 //
-// Modell: Es gibt Preset-Rollen (admin, gm, player, viewer, guest). Ein User
-// kann MEHRERE Rollen gleichzeitig haben (users.role als Primärrolle +
+// Modell: Es gibt Rollen (System-Rollen admin, gm, player, viewer, guest plus
+// beliebige, über /admin/permissions angelegte eigene Rollen). Ein User kann
+// MEHRERE Rollen gleichzeitig haben (users.role als Primärrolle +
 // users.additional_roles). Die effektiven Rechte sind die VEREINIGUNG der
-// Presets aller zugewiesenen Rollen, auf die anschließend individuelle
+// Rechte-Sets aller zugewiesenen Rollen, auf die anschließend individuelle
 // Overrides (gezielt gewähren/entziehen) angewendet werden.
 //
-// Die Presets sind bewusst ADDITIV/ORTHOGONAL: keine Rolle wiederholt die
+// Die System-Presets sind bewusst ADDITIV/ORTHOGONAL: keine Rolle wiederholt die
 // Spezial-Rechte einer anderen. Wer mehrere Funktionen braucht, bekommt mehrere
 // Rollen (z.B. Seiteninhaber = admin + gm + player).
+//
+// Rollen sind DB-gestützt (Tabelle roles, siehe src/lib/roles.ts): welche Rechte
+// ein Rollen-Schlüssel gewährt, kann in /admin/permissions bearbeitet werden.
+// Damit die vielen bestehenden, synchronen Aufrufstellen (userCan/…) NICHT alle
+// eine DB-Abfrage einbauen müssen, hält dieses Modul eine prozessweite „aktive
+// Rollen-Map" (activeRolePresets). Server-Code lädt sie zu Beginn jeder Anfrage
+// aus der DB (getRoleMap in src/lib/roles.ts ruft setActiveRolePresets) — davor
+// und in Tests gelten die eingebauten DEFAULT_ROLE_PRESETS. Wo eine explizite
+// Map vorliegt (z.B. an Client-Komponenten durchgereicht), kann sie den
+// Funktionen als letztes Argument übergeben werden.
 
 import type { User } from "@/types/db";
 
 export type Role = User["role"];
+
+// Rollen-Schlüssel → gewährte Rechte.
+export type RoleMap = Record<string, Permission[]>;
 
 // Alle bekannten Rechte (Funktionsbereiche, keine Einzelaktionen).
 export const PERMISSIONS = [
@@ -56,10 +70,13 @@ export const PERMISSION_LABELS: Record<Permission, { label: string; description:
   "content.follow": { label: "Folgen/Bookmarken", description: "Inhalte abonnieren und mit Lesezeichen versehen." },
 };
 
-// Preset-Rollen → ADDITIVE, minimal überlappende Rechte-Sets.
+// System-Rollen (fest verdrahtete Schlüssel) → ADDITIVE, minimal überlappende
+// Rechte-Sets. Diese Defaults dienen dreifach: (a) Seed für die roles-Tabelle,
+// (b) Fallback, falls die DB (noch) keinen Eintrag für eine System-Rolle hat,
+// (c) die Map, die in Tests / vor dem ersten DB-Laden gilt.
 // Gemeinsamer Nenner bewusst klein gehalten: content.follow für alle
 // eingeloggten User; users.browse für alle Nicht-Gast-Rollen.
-export const ROLE_PRESETS: Record<Role, Permission[]> = {
+export const DEFAULT_ROLE_PRESETS: RoleMap = {
   guest: ["content.follow"],
   viewer: ["content.follow", "users.browse"],
   player: ["content.follow", "users.browse", "content.create", "characters.assignable"],
@@ -84,7 +101,31 @@ export const ROLE_PRESETS: Record<Role, Permission[]> = {
   ],
 };
 
-export const ROLE_LABELS: Record<Role, string> = {
+// Rückwärtskompatibler Alias (Tests/ältere Importe). Zeigt bewusst auf die
+// eingebauten Defaults, nicht auf die (mutierbare) aktive Map.
+export const ROLE_PRESETS: RoleMap = DEFAULT_ROLE_PRESETS;
+
+// Prozessweite AKTIVE Rollen-Map. Startwert = eingebaute Defaults; Server-Code
+// aktualisiert sie pro Anfrage aus der DB (setActiveRolePresets, aufgerufen von
+// getRoleMap in src/lib/roles.ts), damit bearbeitete System-Rollen und eigene
+// Rollen überall wirken, wo die Auflösungs-Funktionen ohne explizite Map
+// benutzt werden. Enthält KEINE nutzerspezifischen Daten (nur globale
+// Rollendefinitionen), daher unkritisch als Modul-Global.
+let activeRolePresets: RoleMap = DEFAULT_ROLE_PRESETS;
+
+export function setActiveRolePresets(map: RoleMap): void {
+  activeRolePresets = map;
+}
+
+export function getActiveRolePresets(): RoleMap {
+  return activeRolePresets;
+}
+
+// System-Rollen (Schlüssel + Anzeige-Labels). Eigene Rollen holen Label/Rechte
+// aus der DB; hier stehen nur die eingebauten.
+export const SYSTEM_ROLES: Role[] = ["admin", "gm", "player", "viewer", "guest"];
+
+export const ROLE_LABELS: Record<string, string> = {
   admin: "Administration",
   gm: "Spielleitung",
   player: "Spieler",
@@ -92,7 +133,21 @@ export const ROLE_LABELS: Record<Role, string> = {
   guest: "Gast",
 };
 
-export const ALL_ROLES: Role[] = ["admin", "gm", "player", "viewer", "guest"];
+// Rückwärtskompatibler Alias (nur System-Rollen).
+export const ALL_ROLES: Role[] = SYSTEM_ROLES;
+
+export function isSystemRole(key: string): boolean {
+  return (SYSTEM_ROLES as readonly string[]).includes(key);
+}
+
+// Anzeige-Label einer Rolle: bevorzugt aus der übergebenen (DB-)Label-Map, dann
+// die eingebauten System-Labels, sonst der Schlüssel selbst.
+export function roleLabel(
+  key: string,
+  labels?: Record<string, string>,
+): string {
+  return labels?.[key] ?? ROLE_LABELS[key] ?? key;
+}
 
 export type PermissionOverrides = Partial<Record<Permission, boolean>>;
 
@@ -100,25 +155,31 @@ function isPermission(value: string): value is Permission {
   return (PERMISSIONS as readonly string[]).includes(value);
 }
 
-// Rechte, die allein aus den Rollen-Presets folgen (ohne Overrides) — Basis für
-// die „geerbt vs. überschrieben“-Anzeige im Rechte-Editor.
-export function rolePermissions(roles: Role[]): Set<Permission> {
+// Rechte, die allein aus den Rollen folgen (ohne Overrides) — Basis für die
+// „geerbt vs. überschrieben“-Anzeige im Rechte-Editor. roleMap default = aktive
+// Map (Server nach DB-Laden bzw. Defaults); Client-Komponenten reichen ihre
+// eigene, serverseitig aufgelöste Map explizit durch.
+export function rolePermissions(
+  roles: Role[],
+  roleMap: RoleMap = activeRolePresets,
+): Set<Permission> {
   const set = new Set<Permission>();
   for (const role of roles) {
-    const preset = ROLE_PRESETS[role];
+    const preset = roleMap[role];
     if (!preset) continue; // unbekannte Rolle wird ignoriert
-    for (const p of preset) set.add(p);
+    for (const p of preset) if (isPermission(p)) set.add(p);
   }
   return set;
 }
 
-// Effektive Rechte: Vereinigung der Rollen-Presets, danach Overrides anwenden
+// Effektive Rechte: Vereinigung der Rollen-Rechte, danach Overrides anwenden
 // (true = zusätzlich gewähren, false = entziehen).
 export function resolvePermissions(
   roles: Role[],
   overrides: PermissionOverrides | null | undefined,
+  roleMap: RoleMap = activeRolePresets,
 ): Set<Permission> {
-  const set = rolePermissions(roles);
+  const set = rolePermissions(roles, roleMap);
   if (overrides) {
     for (const [key, granted] of Object.entries(overrides)) {
       if (!isPermission(key)) continue;
@@ -146,12 +207,19 @@ export function effectiveRolesOf(user: {
 
 // Effektive Rechte eines vollen User-Objekts — bequemer Helfer für Server-
 // Komponenten/Actions, die ohnehin einen User geladen haben.
-export function userPermissions(user: {
-  role: Role;
-  additional_roles: Role[];
-  permission_overrides: Record<string, boolean>;
-}): Set<Permission> {
-  return resolvePermissions(effectiveRolesOf(user), user.permission_overrides);
+export function userPermissions(
+  user: {
+    role: Role;
+    additional_roles: Role[];
+    permission_overrides: Record<string, boolean>;
+  },
+  roleMap: RoleMap = activeRolePresets,
+): Set<Permission> {
+  return resolvePermissions(
+    effectiveRolesOf(user),
+    user.permission_overrides,
+    roleMap,
+  );
 }
 
 export function userCan(
@@ -161,6 +229,7 @@ export function userCan(
     permission_overrides: Record<string, boolean>;
   },
   permission: Permission,
+  roleMap: RoleMap = activeRolePresets,
 ): boolean {
-  return userPermissions(user).has(permission);
+  return userPermissions(user, roleMap).has(permission);
 }

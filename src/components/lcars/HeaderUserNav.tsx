@@ -22,6 +22,7 @@ const STAFF_ITEMS: AdminMenuItem[] = [
   { href: "/admin/campaign", label: "Kampagne", permission: "gm.access" },
   { href: "/admin/dialogues", label: "Gespräche", permission: "gm.access" },
   { href: "/admin/users", label: "User", permission: "users.manage" },
+  { href: "/admin/permissions", label: "Rollen", permission: "users.manage" },
   { href: "/admin/db", label: "DB", permission: "admin.access" },
   { href: "/admin/scripts", label: "Scripts", permission: "admin.access" },
   { href: "/admin/content", label: "Inhalte", permission: "content.moderate" },

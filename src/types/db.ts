@@ -8,10 +8,15 @@ export interface Note {
   last_updated: Date;
 }
 
-// Preset-Rolle. Ein User hat eine Primärrolle (role, u.a. für Anzeige/Session)
-// und kann weitere Rollen tragen (additional_roles) — siehe granulares RBAC in
-// src/lib/permissions.ts.
-export type Role = "admin" | "gm" | "player" | "viewer" | "guest";
+// Rollen-Schlüssel. Seit dem Rollen-Editor (/admin/permissions) sind Rollen
+// DB-gestützt (Tabelle roles): Neben den fünf System-Rollen (admin, gm, player,
+// viewer, guest) können beliebige eigene Rollen angelegt werden — deshalb ist
+// der Typ ein freier String, kein festes Union mehr. Welche Rechte ein
+// Schlüssel gewährt, steht in der roles-Tabelle bzw. den Code-Defaults
+// (DEFAULT_ROLE_PRESETS in src/lib/permissions.ts). Ein User hat eine
+// Primärrolle (role, u.a. für Anzeige/Session) und kann weitere Rollen tragen
+// (additional_roles) — granulares RBAC, siehe src/lib/permissions.ts.
+export type Role = string;
 
 export interface User {
   id: number;

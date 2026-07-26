@@ -8,6 +8,7 @@ import {
   rolePermissions,
   resolvePermissions,
   type Role,
+  type RoleMap,
 } from "@/lib/permissions";
 import { FormError, SubmitButton } from "@/app/_shared/FormPrimitives";
 
@@ -21,19 +22,24 @@ export default function PermissionsForm({
   userId,
   roles,
   overrides,
+  roleMap,
 }: {
   userId: number;
   // Effektive Rollen des Users (Primär + Zusatz).
   roles: Role[];
   overrides: Record<string, boolean>;
+  // Rollen→Rechte-Definitionen (aus der DB, siehe page.tsx) — nötig, weil die
+  // Client-Komponente die prozessweite aktive Map des Servers nicht kennt und
+  // eigene/bearbeitete Rollen sonst falsch „geerbt“ anzeigen würde.
+  roleMap: RoleMap;
 }) {
   const [state, formAction, pending] = useActionState(
     updateUserPermissionsAction,
     initialState,
   );
 
-  const inherited = rolePermissions(roles);
-  const effective = resolvePermissions(roles, overrides);
+  const inherited = rolePermissions(roles, roleMap);
+  const effective = resolvePermissions(roles, overrides, roleMap);
 
   return (
     <form action={formAction} className="flex flex-col gap-[12px]">

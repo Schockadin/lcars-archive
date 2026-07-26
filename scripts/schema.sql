@@ -76,8 +76,10 @@ CREATE TABLE IF NOT EXISTS users (
   id                            SERIAL PRIMARY KEY,
   email                         TEXT UNIQUE NOT NULL,
   name                          TEXT NOT NULL,
-  role                          TEXT NOT NULL DEFAULT 'player'
-                                  CHECK (role IN ('admin', 'gm', 'player', 'viewer', 'guest')),
+  -- Primär-/Anzeigerolle. KEIN CHECK auf feste Werte mehr: Rollen sind
+  -- DB-gestützt (Tabelle roles, siehe unten) und über /admin/permissions frei
+  -- anlegbar; gültige Schlüssel prüft die Anwendung gegen die roles-Tabelle.
+  role                          TEXT NOT NULL DEFAULT 'player',
   created_at                    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   last_login_at                 TIMESTAMPTZ,
   previous_login_at             TIMESTAMPTZ,
@@ -98,6 +100,29 @@ CREATE TABLE IF NOT EXISTS users (
   permission_overrides          JSONB NOT NULL DEFAULT '{}'
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_slug ON users(slug);
+
+-- ---------------------------------------------------------------------------
+-- roles
+-- ---------------------------------------------------------------------------
+-- DB-gestützte Rollendefinitionen (granulares RBAC, siehe src/lib/permissions.ts
+-- und src/lib/roles.ts). Über /admin/permissions anleg-/bearbeitbar. key ist
+-- der in users.role / users.additional_roles referenzierte Schlüssel;
+-- permissions ist die Menge der von der Rolle gewährten Rechte (Funktionsbereich-
+-- Schlüssel aus PERMISSIONS). is_system markiert die fünf eingebauten Rollen
+-- (admin/gm/player/viewer/guest): inhaltlich bearbeitbar, aber nicht löschbar,
+-- Schlüssel unveränderlich. Die System-Rollen werden von der Anwendung bei
+-- Bedarf selbst nachgezogen (ensureSystemRoles), daher hier bewusst KEIN
+-- Daten-Seed (schema.sql bleibt datenfrei).
+CREATE TABLE IF NOT EXISTS roles (
+  key         TEXT PRIMARY KEY,
+  label       TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  permissions TEXT[] NOT NULL DEFAULT '{}',
+  is_system   BOOLEAN NOT NULL DEFAULT false,
+  sort_order  INT NOT NULL DEFAULT 100,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 -- ---------------------------------------------------------------------------
 -- characters
@@ -459,7 +484,8 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
                    CHECK (action IN (
                      'create_user', 'reset_password', 'update_role', 'update_profile',
                      'deactivate_user', 'reactivate_user', 'delete_user', 'force_logout',
-                     'update_roles', 'update_permissions'
+                     'update_roles', 'update_permissions',
+                     'create_role', 'edit_role', 'delete_role'
                    )),
   target_user_id INT REFERENCES users(id) ON DELETE SET NULL,
   details        TEXT,
@@ -618,12 +644,30 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS news_kinds TEXT[] NOT NULL
 ALTER TABLE users ADD COLUMN IF NOT EXISTS additional_roles TEXT[] NOT NULL DEFAULT '{}';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS permission_overrides JSONB NOT NULL DEFAULT '{}';
 
--- admin_audit_log: neue Aktionsarten 'update_roles'/'update_permissions'
--- zulassen (DROP/ADD des CHECK, idempotent).
+-- RBAC: Rollen sind jetzt DB-gestützt (Tabelle roles) und frei anlegbar. Der
+-- alte feste CHECK auf users.role wird entfernt; gültige Schlüssel prüft die
+-- Anwendung gegen die roles-Tabelle. roles-Tabelle idempotent nachziehen
+-- (Struktur; die System-Rollen zieht die App per ensureSystemRoles nach).
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+CREATE TABLE IF NOT EXISTS roles (
+  key         TEXT PRIMARY KEY,
+  label       TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  permissions TEXT[] NOT NULL DEFAULT '{}',
+  is_system   BOOLEAN NOT NULL DEFAULT false,
+  sort_order  INT NOT NULL DEFAULT 100,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- admin_audit_log: neue Aktionsarten 'update_roles'/'update_permissions' sowie
+-- die Rollen-Editor-Aktionen 'create_role'/'edit_role'/'delete_role' zulassen
+-- (DROP/ADD des CHECK, idempotent).
 ALTER TABLE admin_audit_log DROP CONSTRAINT IF EXISTS admin_audit_log_action_check;
 ALTER TABLE admin_audit_log ADD CONSTRAINT admin_audit_log_action_check
   CHECK (action IN (
     'create_user', 'reset_password', 'update_role', 'update_profile',
     'deactivate_user', 'reactivate_user', 'delete_user', 'force_logout',
-    'update_roles', 'update_permissions'
+    'update_roles', 'update_permissions',
+    'create_role', 'edit_role', 'delete_role'
   ));

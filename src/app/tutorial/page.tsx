@@ -126,6 +126,14 @@ export default function TutorialPage() {
                 sich z.B. jemandem nur das Verwalten von Missionen erlauben, ohne
                 gleich die ganze Spielleitungs-Rolle zu vergeben.
               </p>
+              <p>
+                Über die Admin-Seite <strong>„Rollen“</strong> (Rollen &amp;
+                Rechte) kann die Administration außerdem <strong>eigene
+                Rollen</strong> anlegen, die Rechte jeder Rolle (auch der fünf
+                System-Rollen) anpassen und Rollen dort direkt den Usern
+                zuweisen. Die fünf System-Rollen bleiben dabei immer erhalten und
+                können nicht gelöscht werden.
+              </p>
             </div>
           </LcarsDataRow>
 
@@ -473,9 +481,14 @@ export default function TutorialPage() {
                 <li>
                   Unter <strong>„User“</strong> Nutzerkonten anlegen und in
                   einer durchsuchbaren, sortierbaren Übersicht einsehen; über
-                  die Detailseite eines Users dessen Rolle ändern, das Konto
-                  (de)aktivieren oder löschen, einen Passwort-Reset auslösen
-                  oder es auf allen Geräten abmelden.
+                  die Detailseite eines Users dessen Rolle(n) und Einzelrechte
+                  ändern, das Konto (de)aktivieren oder löschen, einen
+                  Passwort-Reset auslösen oder es auf allen Geräten abmelden.
+                </li>
+                <li>
+                  Unter <strong>„Rollen“</strong> eigene Rollen anlegen und
+                  bearbeiten, die Rechte jeder Rolle (auch der System-Rollen)
+                  anpassen und Rollen direkt den Usern zuweisen.
                 </li>
                 <li>
                   Unter <strong>„Scripts“</strong> alle Missionen ohne

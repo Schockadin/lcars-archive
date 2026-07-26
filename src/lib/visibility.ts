@@ -1,6 +1,7 @@
 import "server-only";
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
+import { getRoleMap } from "@/lib/roles";
 import type { User } from "@/types/db";
 import {
   resolvePermissions,
@@ -70,6 +71,9 @@ export async function getViewer(): Promise<Viewer | null> {
   if (!session) return null;
   const user = await getUserById(session.userId);
   if (!user) return null;
+  // Aktive Rollen-Map laden, bevor die Rechte des Betrachters aufgelöst werden
+  // (öffentliche Seiten gehen über getViewer, nicht über getCurrentUser).
+  await getRoleMap();
   return resolveViewer(user);
 }
 

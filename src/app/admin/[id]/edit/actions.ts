@@ -14,8 +14,8 @@ import {
 import { unassignCharactersFromUser } from "@/lib/characters";
 import { getClientIp } from "@/lib/http";
 import { logAdminAction } from "@/lib/auditLog";
+import { getRoleMap } from "@/lib/roles";
 import {
-  ALL_ROLES,
   PERMISSIONS,
   rolePermissions,
   userCan,
@@ -23,10 +23,6 @@ import {
   type Permission,
   type PermissionOverrides,
 } from "@/lib/permissions";
-
-function isValidRole(value: string): value is Role {
-  return (ALL_ROLES as readonly string[]).includes(value);
-}
 
 export interface EditUserState {
   error?: string;
@@ -45,6 +41,12 @@ export async function updateUserDetailsAction(
   formData: FormData,
 ): Promise<EditUserState> {
   const admin = await requirePermission("users.manage");
+
+  // Gültige Rollen-Schlüssel kommen jetzt aus der DB (Tabelle roles), nicht mehr
+  // aus einer festen Liste — eigene Rollen sind so zuweisbar.
+  const roleMap = await getRoleMap();
+  const validRoles = new Set(Object.keys(roleMap));
+  const isValidRole = (value: string): value is Role => validRoles.has(value);
 
   const userId = Number(formData.get("userId"));
   const name = String(formData.get("name") ?? "").trim();
@@ -65,10 +67,22 @@ export async function updateUserDetailsAction(
   if (!isValidRole(role)) return { error: "Ungültige Rolle." };
 
   const effectiveRoles = Array.from(new Set<Role>([role, ...additionalRoles]));
-  // Selbstschutz: die eigene Admin-Berechtigung darf man sich nicht entziehen
-  // (sonst sperrt man sich selbst aus). Geprüft an den effektiven Rollen.
-  if (userId === admin.id && !effectiveRoles.includes("admin")) {
-    return { error: "Du kannst dir nicht selbst die Admin-Rolle entziehen." };
+  // Selbstschutz: das eigene Admin-Recht darf man sich nicht entziehen (sonst
+  // sperrt man sich selbst aus). Geprüft am RECHT (admin.access), nicht am
+  // Rollen-Namen — mit eigenen Rollen kann admin.access auch anders erteilt
+  // sein. Die eigenen Overrides bleiben in dieser Action unverändert.
+  if (
+    userId === admin.id &&
+    !userCan(
+      {
+        role,
+        additional_roles: additionalRoles,
+        permission_overrides: admin.permission_overrides,
+      },
+      "admin.access",
+    )
+  ) {
+    return { error: "Du kannst dir nicht selbst das Admin-Recht entziehen." };
   }
 
   const before = await getUserById(userId);

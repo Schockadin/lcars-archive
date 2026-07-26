@@ -3,7 +3,6 @@
 import { useActionState } from "react";
 import { updateUserDetailsAction, type EditUserState } from "./actions";
 import type { UserAdminDetail } from "@/lib/users";
-import { ALL_ROLES, ROLE_LABELS } from "@/lib/permissions";
 import {
   FormField,
   FormError,
@@ -12,12 +11,20 @@ import {
 
 const initialState: EditUserState = {};
 
+export interface RoleOption {
+  key: string;
+  label: string;
+}
+
 export default function EditUserForm({
   user,
   isSelf,
+  roleOptions,
 }: {
   user: UserAdminDetail;
   isSelf: boolean;
+  // Alle wählbaren Rollen (System + eigene), aus der DB (siehe page.tsx).
+  roleOptions: RoleOption[];
 }) {
   const [state, formAction, pending] = useActionState(
     updateUserDetailsAction,
@@ -57,11 +64,11 @@ export default function EditUserForm({
           defaultValue={user.role}
           className="rounded-lcars-pill lcars-input"
         >
-          <option value="admin">Administration</option>
-          <option value="gm">Spielleitung</option>
-          <option value="player">Spieler</option>
-          <option value="viewer">Beobachter</option>
-          <option value="guest">Gast</option>
+          {roleOptions.map((r) => (
+            <option key={r.key} value={r.key}>
+              {r.label}
+            </option>
+          ))}
         </select>
         {isSelf && (
           <p className="text-lcars-text-dim">
@@ -78,16 +85,19 @@ export default function EditUserForm({
           dazu). Die einzelnen Rechte lassen sich darunter feinjustieren.
         </p>
         <div className="flex flex-col gap-[6px]">
-          {ALL_ROLES.map((r) => (
-            <label key={r} className="flex items-center gap-[10px] lcars-eyebrow">
+          {roleOptions.map((r) => (
+            <label
+              key={r.key}
+              className="flex items-center gap-[10px] lcars-eyebrow"
+            >
               <input
                 type="checkbox"
                 name="additionalRoles"
-                value={r}
-                defaultChecked={user.additional_roles.includes(r)}
+                value={r.key}
+                defaultChecked={user.additional_roles.includes(r.key)}
                 className="lcars-checkbox"
               />
-              {ROLE_LABELS[r]}
+              {r.label}
             </label>
           ))}
         </div>
