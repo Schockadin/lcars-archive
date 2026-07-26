@@ -37,29 +37,19 @@ export interface MarkSeenInput {
 }
 
 // Mehrere "gesehen"-Grenzen auf einmal setzen — für "Alles als gelesen
-// markieren" (NewsSection.tsx). Ein einzelnes Upsert über unnest() (drei
-// parallele Arrays) mit GREATEST-Merge wie bei markNewsSeen. Bewusst über
-// unnest statt des sql(rows, …)-Zeilen-Helpers: Letzterer erzeugte in
-// Kombination mit ON CONFLICT keinen zuverlässig persistierenden Insert.
+// markieren" (NewsSection.tsx). Bewusst ein einfacher Loop über exakt dasselbe
+// Einzel-Upsert wie markNewsSeen (das nachweislich zuverlässig persistiert),
+// statt eines Bulk-Inserts: frühere Bulk-Varianten (sql(rows, …) bzw. unnest())
+// haben in Kombination mit ON CONFLICT nicht zuverlässig geschrieben. Die
+// News-Anzahl ist durch das Zeitfenster begrenzt, der Loop ist also
+// unproblematisch.
 export async function markManyNewsSeen(
   userId: number,
   entries: MarkSeenInput[],
 ): Promise<void> {
-  if (entries.length === 0) return;
-  const types = entries.map((e) => e.targetType);
-  const keys = entries.map((e) => e.targetKey);
-  const seenAts = entries.map((e) => e.seenAt);
-  await sql`
-    INSERT INTO news_seen (user_id, target_type, target_key, seen_at)
-    SELECT ${userId}, t.target_type, t.target_key, t.seen_at
-    FROM unnest(
-      ${types}::text[],
-      ${keys}::text[],
-      ${seenAts}::timestamptz[]
-    ) AS t(target_type, target_key, seen_at)
-    ON CONFLICT (user_id, target_type, target_key)
-    DO UPDATE SET seen_at = GREATEST(news_seen.seen_at, EXCLUDED.seen_at)
-  `;
+  for (const entry of entries) {
+    await markNewsSeen(userId, entry.targetType, entry.targetKey, entry.seenAt);
+  }
 }
 
 export interface NewsSeenEntry {

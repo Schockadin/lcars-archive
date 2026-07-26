@@ -114,7 +114,10 @@ export default function NewsSection({ items }: { items: NewsFeedItem[] }) {
           timestamp: i.timestamp,
         })),
       );
+      // Nur bei bestätigter Speicherung leeren — sonst bleibt die Liste stehen.
       if (res.ok) setVisible([]);
+    } catch {
+      // Fehler: Liste bewusst NICHT leeren (es wurde nichts gespeichert).
     } finally {
       setMarkingAll(false);
     }
