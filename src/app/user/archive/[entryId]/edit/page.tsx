@@ -1,3 +1,4 @@
+import { userCan } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
@@ -40,7 +41,7 @@ export default async function EditArchiveEntryPage({
         <EditArchiveEntryForm
           userId={session.userId}
           entry={entry}
-          isAdminOrGM={viewer?.role === "gm" || viewer?.role === "admin"}
+          isAdminOrGM={!!viewer && userCan(viewer, "content.autolink_tools")}
         />
       </article>
     </>

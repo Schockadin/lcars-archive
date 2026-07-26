@@ -1,6 +1,7 @@
 "use server";
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
+import { userCan } from "@/lib/permissions";
 import { assignCharacterToUser } from "@/lib/characters";
 import { setMissionOwner, setMissionLogOwner } from "@/lib/missions";
 import { setArchiveEntryOwner } from "@/lib/archive";
@@ -38,7 +39,9 @@ export async function setOwnerAction(
 
   const user = await getUserById(session.userId);
   const allowed =
-    user?.role === "admin" || (user?.role === "gm" && contentType === "mission");
+    !!user &&
+    (userCan(user, "content.moderate") ||
+      (userCan(user, "missions.manage") && contentType === "mission"));
   if (!allowed) return { error: "Nur für Admins." };
 
   if (ownerId != null && !(await getUserById(ownerId))) {

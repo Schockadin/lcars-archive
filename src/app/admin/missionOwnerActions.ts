@@ -1,6 +1,7 @@
 "use server";
 import { requireAdmin } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
+import { userCan } from "@/lib/permissions";
 import { assignOwnerlessMissionsToUser } from "@/lib/missions";
 import { revalidateMission } from "@/lib/revalidate";
 
@@ -22,7 +23,7 @@ export async function assignOwnerlessMissionsAction(
   if (!owner) {
     return { error: "Ungültiger User." };
   }
-  if (owner.role !== "gm" && owner.role !== "admin") {
+  if (!userCan(owner, "missions.manage")) {
     return { error: "Nur Spielleitung/Administration kann zugeordnet werden." };
   }
 

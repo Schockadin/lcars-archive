@@ -30,7 +30,10 @@ export default function ArchiveEntryBody({
   flowingTextPreferred: boolean;
 }) {
   const [editMode, setEditMode] = useState(false);
-  const isAdminOrGM = viewer?.role === "gm" || viewer?.role === "admin" || false;
+  const isAdminOrGM =
+    viewer?.permissions.includes("content.autolink_tools") ?? false;
+  const canModerateDialogue =
+    viewer?.permissions.includes("dialogues.moderate") ?? false;
 
   return (
     <>
@@ -91,7 +94,7 @@ export default function ArchiveEntryBody({
                 currentUserId={viewer?.userId ?? null}
                 dialogueOpen={false}
                 entrySlug={entry.slug}
-                viewerRole={viewer?.role ?? null}
+                canModerate={canModerateDialogue}
               />
             </>
           )

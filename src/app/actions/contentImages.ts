@@ -1,7 +1,7 @@
 "use server";
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
-import { getViewer, canView } from "@/lib/visibility";
+import { getViewer, canView, resolveViewer } from "@/lib/visibility";
 import { revalidateCharacter } from "@/lib/revalidate";
 import {
   isContentImageType,
@@ -41,7 +41,7 @@ async function requireContentImageAccess(
   const access = await getContentAccessContext(contentTypeRaw, contentId);
   if (!access) return { error: "Inhalt nicht gefunden." };
 
-  if (!canManageContentImages(contentTypeRaw, access.ownerId, { userId: user.id, role: user.role })) {
+  if (!canManageContentImages(contentTypeRaw, access.ownerId, resolveViewer(user))) {
     return { error: "Keine Berechtigung." };
   }
   return { contentType: contentTypeRaw };

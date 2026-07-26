@@ -1,4 +1,4 @@
-import { requireGM } from "@/lib/dal";
+import { requireStaff } from "@/lib/dal";
 
 // Gilt für /admin und alle Unterseiten (/admin/users, /admin/characters,
 // /admin/db, /admin/scripts, /admin/content, /admin/audit-log,
@@ -14,7 +14,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireGM();
+  await requireStaff();
 
   return <div className="flex flex-col gap-[16px]">{children}</div>;
 }

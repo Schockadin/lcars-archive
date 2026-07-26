@@ -14,6 +14,7 @@ import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { parseList, parseNumberList } from "@/lib/formParsing";
+import { userCan } from "@/lib/permissions";
 import type { Character } from "@/types/character";
 
 export interface CharacterFormState {
@@ -47,7 +48,7 @@ export async function characterAction(
   let currentUser = null;
   if (!isEdit) {
     currentUser = await getUserById(session.userId);
-    if (!currentUser || currentUser.role === "guest") {
+    if (!currentUser || !userCan(currentUser, "content.create")) {
       return { error: "Gast-Accounts können keine Charaktere anlegen." };
     }
   }

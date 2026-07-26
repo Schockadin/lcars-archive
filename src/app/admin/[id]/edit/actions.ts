@@ -1,30 +1,31 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/dal";
+import { requirePermission } from "@/lib/dal";
 import {
   EmailTakenError,
   deleteUser,
   getUserById,
   setUserActive,
   updateUser,
-  updateUserRole,
+  updateUserRoles,
+  updateUserPermissionOverrides,
 } from "@/lib/users";
 import { unassignCharactersFromUser } from "@/lib/characters";
 import { getClientIp } from "@/lib/http";
 import { logAdminAction } from "@/lib/auditLog";
-import type { User } from "@/types/db";
+import {
+  ALL_ROLES,
+  PERMISSIONS,
+  rolePermissions,
+  userCan,
+  type Role,
+  type Permission,
+  type PermissionOverrides,
+} from "@/lib/permissions";
 
-const ROLES: readonly User["role"][] = [
-  "admin",
-  "gm",
-  "player",
-  "viewer",
-  "guest",
-];
-
-function isValidRole(value: string): value is User["role"] {
-  return (ROLES as readonly string[]).includes(value);
+function isValidRole(value: string): value is Role {
+  return (ALL_ROLES as readonly string[]).includes(value);
 }
 
 export interface EditUserState {
@@ -43,7 +44,7 @@ export async function updateUserDetailsAction(
   _state: EditUserState,
   formData: FormData,
 ): Promise<EditUserState> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("users.manage");
 
   const userId = Number(formData.get("userId"));
   const name = String(formData.get("name") ?? "").trim();
@@ -51,12 +52,22 @@ export async function updateUserDetailsAction(
     .trim()
     .toLowerCase();
   const role = String(formData.get("role") ?? "");
+  // Zusatzrollen (Mehrfachauswahl) — die Primärrolle wird beim Speichern
+  // ohnehin ausgefiltert (siehe updateUserRoles).
+  const additionalRoles = formData
+    .getAll("additionalRoles")
+    .map(String)
+    .filter(isValidRole);
 
   if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
   if (!name) return { error: "Bitte einen Namen angeben." };
   if (!email) return { error: "Bitte eine E-Mail-Adresse angeben." };
   if (!isValidRole(role)) return { error: "Ungültige Rolle." };
-  if (userId === admin.id && role !== "admin") {
+
+  const effectiveRoles = Array.from(new Set<Role>([role, ...additionalRoles]));
+  // Selbstschutz: die eigene Admin-Berechtigung darf man sich nicht entziehen
+  // (sonst sperrt man sich selbst aus). Geprüft an den effektiven Rollen.
+  if (userId === admin.id && !effectiveRoles.includes("admin")) {
     return { error: "Du kannst dir nicht selbst die Admin-Rolle entziehen." };
   }
 
@@ -82,23 +93,78 @@ export async function updateUserDetailsAction(
     );
   }
 
-  if (role !== before.role) {
-    await updateUserRole(userId, role);
+  const beforeRoles = Array.from(
+    new Set<Role>([before.role, ...before.additional_roles]),
+  );
+  const rolesChanged =
+    beforeRoles.slice().sort().join(",") !==
+    effectiveRoles.slice().sort().join(",");
+  if (rolesChanged) {
+    const updated = await updateUserRoles(userId, role, additionalRoles);
     await logAdminAction(
       admin.id,
-      "update_role",
+      "update_roles",
       userId,
-      `${name} <${email}>: ${before.role} → ${role}`,
+      `${name} <${email}>: [${beforeRoles.join(", ")}] → [${effectiveRoles.join(", ")}]`,
       ip,
     );
-    // Gäste dürfen keinen Charakter zugewiesen haben (siehe
-    // assignCharacterAction in ../../actions.ts) — bei einer Herabstufung auf
-    // "guest" werden bestehende Zuweisungen deshalb aufgelöst, statt einen
-    // inkonsistenten Zustand stehen zu lassen.
-    if (role === "guest") {
+    // Wer (nach Rollen + Overrides) keinen Charakter mehr zugewiesen bekommen
+    // darf (characters.assignable), verliert bestehende Zuweisungen — statt
+    // einen inkonsistenten Zustand stehen zu lassen (früher: Herabstufung auf
+    // "guest").
+    if (!userCan(updated, "characters.assignable")) {
       await unassignCharactersFromUser(userId);
     }
   }
+
+  redirect(`/admin/${userId}/edit`);
+}
+
+// Speichert die individuellen Rechte-Overrides eines Users. Das Formular
+// schickt pro Recht den GEWÜNSCHTEN effektiven Zustand (Checkbox an/aus);
+// gespeichert wird nur die Abweichung vom Rollen-Default (grant/deny), damit
+// eine spätere Rollenänderung geerbte Rechte weiterhin automatisch mitzieht.
+export async function updateUserPermissionsAction(
+  _state: EditUserState,
+  formData: FormData,
+): Promise<EditUserState> {
+  const admin = await requirePermission("users.manage");
+
+  const userId = Number(formData.get("userId"));
+  if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
+
+  const target = await getUserById(userId);
+  if (!target) return { error: "User nicht gefunden." };
+
+  const roles = Array.from(
+    new Set<Role>([target.role, ...target.additional_roles]),
+  );
+  const roleDefaults = rolePermissions(roles);
+  const desired = new Set(
+    formData.getAll("permissions").map(String),
+  );
+
+  const overrides: PermissionOverrides = {};
+  for (const perm of PERMISSIONS as readonly Permission[]) {
+    const want = desired.has(perm);
+    const inherited = roleDefaults.has(perm);
+    if (want !== inherited) overrides[perm] = want;
+  }
+
+  await updateUserPermissionOverrides(userId, overrides);
+  await logAdminAction(
+    admin.id,
+    "update_permissions",
+    userId,
+    `${target.name} <${target.email}>: ${
+      Object.keys(overrides).length === 0
+        ? "keine Overrides"
+        : Object.entries(overrides)
+            .map(([k, v]) => `${v ? "+" : "−"}${k}`)
+            .join(", ")
+    }`,
+    await getClientIp(),
+  );
 
   redirect(`/admin/${userId}/edit`);
 }
@@ -107,7 +173,7 @@ export async function setUserActiveAction(
   _state: EditUserState,
   formData: FormData,
 ): Promise<EditUserState> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("users.manage");
 
   const userId = Number(formData.get("userId"));
   const active = formData.get("active") === "true";
@@ -135,7 +201,7 @@ export async function deleteUserFromEditAction(
   _state: EditUserState,
   formData: FormData,
 ): Promise<EditUserState> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("users.manage");
 
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId)) return { error: "Ungültiger User." };

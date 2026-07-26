@@ -117,6 +117,15 @@ export default function TutorialPage() {
                   Archiv-Einträge anzulegen.
                 </li>
               </ul>
+              <p>
+                Die Rollen sind nur <strong>Vorlagen</strong>: Ein Konto kann{" "}
+                <strong>mehrere Rollen</strong> gleichzeitig haben (die Rechte
+                addieren sich), und die Administration kann darüber hinaus{" "}
+                <strong>einzelne Rechte</strong> pro Person gezielt gewähren oder
+                entziehen (im User-Editor unter „Individuelle Rechte“). So lässt
+                sich z.B. jemandem nur das Verwalten von Missionen erlauben, ohne
+                gleich die ganze Spielleitungs-Rolle zu vergeben.
+              </p>
             </div>
           </LcarsDataRow>
 

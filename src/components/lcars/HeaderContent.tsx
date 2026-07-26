@@ -9,6 +9,7 @@ import type { User } from "@/types/db";
 interface SessionInfo {
   userId: number | null;
   role: User["role"] | null;
+  permissions?: string[];
 }
 
 // Eingeloggte User sehen die UserNav (Pill-Grid, siehe HeaderUserNav) jetzt
@@ -72,7 +73,7 @@ export default function HeaderContent() {
   if (session.userId) {
     return (
       <div className="lcars-header-content">
-        <HeaderUserNav role={session.role} columns={3} />
+        <HeaderUserNav permissions={session.permissions ?? []} columns={3} />
       </div>
     );
   }

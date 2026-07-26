@@ -67,6 +67,11 @@
 --    Markdown-Editor-Feldern (im Profil abschaltbar).
 --  - news_kinds: welche News-Arten der User auf dem Dashboard sehen will
 --    (Teilmenge von created/updated/deleted). Default = nur 'created' ("Neu").
+--  - additional_roles/permission_overrides: granulares RBAC (siehe
+--    src/lib/permissions.ts). role bleibt die Primär-/Anzeigerolle;
+--    additional_roles hält weitere Preset-Rollen (ein User kann mehrere haben).
+--    Effektive Rechte = Vereinigung der Presets aller Rollen ⊕
+--    permission_overrides (JSONB: Permission→bool, true=gewähren/false=entziehen).
 CREATE TABLE IF NOT EXISTS users (
   id                            SERIAL PRIMARY KEY,
   email                         TEXT UNIQUE NOT NULL,
@@ -88,7 +93,9 @@ CREATE TABLE IF NOT EXISTS users (
   session_version               INT NOT NULL DEFAULT 0,
   dialogue_flowing_text_enabled BOOLEAN NOT NULL DEFAULT true,
   editor_spellcheck_enabled     BOOLEAN NOT NULL DEFAULT true,
-  news_kinds                    TEXT[] NOT NULL DEFAULT '{created}'
+  news_kinds                    TEXT[] NOT NULL DEFAULT '{created}',
+  additional_roles              TEXT[] NOT NULL DEFAULT '{}',
+  permission_overrides          JSONB NOT NULL DEFAULT '{}'
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_slug ON users(slug);
 
@@ -451,7 +458,8 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
   action         TEXT NOT NULL
                    CHECK (action IN (
                      'create_user', 'reset_password', 'update_role', 'update_profile',
-                     'deactivate_user', 'reactivate_user', 'delete_user', 'force_logout'
+                     'deactivate_user', 'reactivate_user', 'delete_user', 'force_logout',
+                     'update_roles', 'update_permissions'
                    )),
   target_user_id INT REFERENCES users(id) ON DELETE SET NULL,
   details        TEXT,
@@ -602,3 +610,20 @@ ALTER TABLE users DROP COLUMN IF EXISTS character_color;
 -- news_kinds: welche News-Arten der User sehen will (Default = nur 'created').
 ALTER TABLE users ADD COLUMN IF NOT EXISTS news_kinds TEXT[] NOT NULL
   DEFAULT '{created}';
+
+-- RBAC: weitere Rollen (ein User kann mehrere haben) + individuelle
+-- Rechte-Overrides (siehe src/lib/permissions.ts). Reine Struktur-Anlage; die
+-- verhaltenswahrende Backfill-Zuweisung der Zusatzrollen für Bestandskonten
+-- lebt bewusst nur in migrate-pr51.sql (kein datenveränderndes UPDATE hier).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS additional_roles TEXT[] NOT NULL DEFAULT '{}';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS permission_overrides JSONB NOT NULL DEFAULT '{}';
+
+-- admin_audit_log: neue Aktionsarten 'update_roles'/'update_permissions'
+-- zulassen (DROP/ADD des CHECK, idempotent).
+ALTER TABLE admin_audit_log DROP CONSTRAINT IF EXISTS admin_audit_log_action_check;
+ALTER TABLE admin_audit_log ADD CONSTRAINT admin_audit_log_action_check
+  CHECK (action IN (
+    'create_user', 'reset_password', 'update_role', 'update_profile',
+    'deactivate_user', 'reactivate_user', 'delete_user', 'force_logout',
+    'update_roles', 'update_permissions'
+  ));

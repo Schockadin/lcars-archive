@@ -1,6 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
-import { requireAdmin } from "@/lib/dal";
+import { requirePermission } from "@/lib/dal";
 import { updateDialogueMetadata } from "@/lib/dialogues";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
 import { parseList } from "@/lib/formParsing";
@@ -17,7 +17,7 @@ export async function updateDialogueMetadataAction(
   _state: DialogueMetaFormState,
   formData: FormData,
 ): Promise<DialogueMetaFormState> {
-  await requireAdmin();
+  await requirePermission("dialogues.moderate");
 
   const idRaw = formData.get("dialogueId");
   const id = Number(idRaw);

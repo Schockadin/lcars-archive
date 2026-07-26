@@ -2,6 +2,10 @@ import "server-only";
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
 import type { User } from "@/types/db";
+import {
+  resolvePermissions,
+  type Permission,
+} from "@/lib/permissions";
 
 export type Visibility = "private" | "gm" | "public";
 
@@ -16,22 +20,62 @@ export const VISIBILITY_OPTIONS: Visibility[] = ["private", "gm", "public"];
 export interface Viewer {
   userId: number;
   role: User["role"];
+  // Effektive Rechte (aus allen Rollen + Overrides, siehe permissions.ts).
+  // Bewusst ein Array (kein Set): Viewer wird an Client-Komponenten
+  // durchgereicht und muss über die RSC-Grenze serialisierbar sein.
+  permissions: Permission[];
 }
 
-// Betrachter frisch aus der DB auflösen (Rolle nie aus dem Cookie
-// übernehmen, siehe requireGM/requireAdmin in src/lib/dal.ts) — aber ohne
-// Redirect: ein anonymer Betrachter (Rückgabe null) ist hier ein gültiger
-// Fall, der nur public-Inhalte sieht.
+// Kleiner Helfer für Server UND Client (statt selbst mit dem Array zu
+// hantieren).
+export function viewerHasPermission(
+  viewer: Viewer | null,
+  permission: Permission,
+): boolean {
+  return viewer != null && viewer.permissions.includes(permission);
+}
+
+// Baut einen Viewer aus Rollen (+ optionalen Overrides) — praktisch für Tests
+// und für Stellen, die keinen vollen User-Datensatz haben.
+export function makeViewer(
+  userId: number,
+  roles: User["role"][],
+  overrides: Record<string, boolean> = {},
+): Viewer {
+  return {
+    userId,
+    role: roles[0] ?? "guest",
+    permissions: [...resolvePermissions(roles, overrides)],
+  };
+}
+
+// Baut einen Viewer (inkl. effektiver Rechte) aus einem vollen User-Objekt —
+// zentral, damit jede Stelle die Rechte identisch auflöst.
+export function resolveViewer(user: User): Viewer {
+  const roles = Array.from(new Set([user.role, ...user.additional_roles]));
+  return {
+    userId: user.id,
+    role: user.role,
+    permissions: [...resolvePermissions(roles, user.permission_overrides)],
+  };
+}
+
+// Betrachter frisch aus der DB auflösen (Rolle nie aus dem Cookie übernehmen,
+// siehe requireGM/requireAdmin in src/lib/dal.ts) — aber ohne Redirect: ein
+// anonymer Betrachter (Rückgabe null) ist hier ein gültiger Fall, der nur
+// public-Inhalte sieht.
+
 export async function getViewer(): Promise<Viewer | null> {
   const session = await getSession();
   if (!session) return null;
   const user = await getUserById(session.userId);
   if (!user) return null;
-  return { userId: user.id, role: user.role };
+  return resolveViewer(user);
 }
 
-function isGmOrAdmin(viewer: Viewer | null): boolean {
-  return viewer?.role === "gm" || viewer?.role === "admin";
+// „GM-Sicht“ heißt jetzt: darf gm-sichtbare Inhalte sehen (content.view_gm).
+function canViewGm(viewer: Viewer | null): boolean {
+  return viewer != null && viewer.permissions.includes("content.view_gm");
 }
 
 // Darf dieser Betrachter einen Inhalt mit dieser visibility/Owner sehen?
@@ -49,9 +93,10 @@ export function canView(
   viewer: Viewer | null,
 ): boolean {
   if (visibility === "public") return true;
-  if (viewer?.role === "admin") return true;
+  // „Alles sehen“ (content.view_all) ist der frühere Admin-Bypass.
+  if (viewer?.permissions.includes("content.view_all")) return true;
   if (viewer && ownerId != null && viewer.userId === ownerId) return true;
-  return visibility === "gm" && isGmOrAdmin(viewer);
+  return visibility === "gm" && canViewGm(viewer);
 }
 
 // Darf dieser Betrachter die Sichtbarkeit dieses Inhalts ändern? Nur der
@@ -91,5 +136,11 @@ export function canViewMissionDraft(
   viewer: Viewer | null,
 ): boolean {
   if (!isDraft) return true;
-  return isGmOrAdmin(viewer);
+  // Wer Missionen verwaltet (missions.manage) oder alles sieht (content.view_all)
+  // darf auch Mission-Entwürfe sehen — Entsprechung zum früheren „gm oder admin“.
+  return (
+    viewer != null &&
+    (viewer.permissions.includes("missions.manage") ||
+      viewer.permissions.includes("content.view_all"))
+  );
 }

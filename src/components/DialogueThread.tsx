@@ -33,16 +33,18 @@ export default function DialogueThread({
   currentUserId = null,
   dialogueOpen = false,
   entrySlug,
-  viewerRole = null,
+  canModerate = false,
 }: {
   messages: DialogueMessage[];
   participants: ArchiveParticipant[];
   currentUserId?: number | null;
   dialogueOpen?: boolean;
   entrySlug?: string;
-  viewerRole?: "admin" | "gm" | "player" | "viewer" | "guest" | null;
+  // Darf fremde Nachrichten moderieren (Recht dialogues.moderate) — ersetzt
+  // den früheren Rollen-Check „viewerRole === admin“.
+  canModerate?: boolean;
 }) {
-  const isModerator = viewerRole === "admin";
+  const isModerator = canModerate;
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Bei offenen Dialogen direkt zur letzten Nachricht springen (wie ein

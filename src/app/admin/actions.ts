@@ -1,7 +1,8 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requireGM, requireAdmin } from "@/lib/dal";
+import { requirePermission } from "@/lib/dal";
+import { userCan } from "@/lib/permissions";
 import {
   EmailTakenError,
   createUser,
@@ -51,7 +52,7 @@ export async function createUserAction(
   _state: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("users.manage");
 
   const email = String(formData.get("email") ?? "")
     .trim()
@@ -113,7 +114,7 @@ export async function resetUserPasswordAction(
   _state: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("users.manage");
 
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
@@ -163,7 +164,7 @@ export async function forceLogoutUserAction(
   _state: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("users.manage");
 
   const userId = Number(formData.get("userId"));
   if (!Number.isInteger(userId)) return { error: "Ungültiger User." };
@@ -197,7 +198,7 @@ export async function assignCharacterAction(
   _state: AdminActionState,
   formData: FormData,
 ): Promise<AdminActionState> {
-  await requireGM();
+  await requirePermission("characters.assign");
 
   const characterId = Number(formData.get("characterId"));
   const userIdRaw = String(formData.get("userId") ?? "");
@@ -219,7 +220,7 @@ export async function assignCharacterAction(
     // scripts/schema.sql-Kommentar zur Gast-Rolle) — die Auswahl blendet sie
     // zwar bereits aus (siehe page.tsx), ein direkter POST muss aber ebenso
     // abgewiesen werden.
-    if (targetUser.role === "guest") {
+    if (!userCan(targetUser, "characters.assignable")) {
       return {
         error: "Gast-Accounts können keine Charaktere zugewiesen bekommen.",
       };

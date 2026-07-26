@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/dal";
+import { requirePermission } from "@/lib/dal";
 import {
   getAllUsersBackup,
   restoreUsersBackup,
@@ -23,7 +23,7 @@ export interface ExportUsersBackupResult {
 }
 
 export async function exportUsersBackupAction(): Promise<ExportUsersBackupResult> {
-  await requireAdmin();
+  await requirePermission("users.manage");
 
   try {
     const records = await getAllUsersBackup();
@@ -71,7 +71,7 @@ async function parseAndImportUsersBackup(json: string): Promise<ImportUsersBacku
 export async function importUsersBackupAction(
   json: string,
 ): Promise<ImportUsersBackupResult> {
-  await requireAdmin();
+  await requirePermission("users.manage");
   return parseAndImportUsersBackup(json);
 }
 
@@ -84,7 +84,7 @@ export interface ExportUsersBackupToR2Result {
 // wie das DB-Backup, aber einen eigenen Präfix (USER_BACKUP_PREFIX), damit
 // die beiden Backup-Arten sich im Bucket nicht vermischen.
 export async function exportUsersBackupToR2Action(): Promise<ExportUsersBackupToR2Result> {
-  await requireAdmin();
+  await requirePermission("users.manage");
 
   try {
     const records = await getAllUsersBackup();
@@ -110,7 +110,7 @@ export interface ListR2UserBackupsResult {
 // Listet die im Bucket unter USER_BACKUP_PREFIX vorhandenen User-Backups für
 // die Auswahl beim "Aus R2-Bucket importieren".
 export async function listR2UserBackupsAction(): Promise<ListR2UserBackupsResult> {
-  await requireAdmin();
+  await requirePermission("users.manage");
 
   try {
     const backups = await listDbBackupsInR2(USER_BACKUP_PREFIX);
@@ -130,7 +130,7 @@ export async function listR2UserBackupsAction(): Promise<ListR2UserBackupsResult
 export async function importUsersBackupFromR2Action(
   key: string,
 ): Promise<ImportUsersBackupResult> {
-  await requireAdmin();
+  await requirePermission("users.manage");
 
   let json: string;
   try {

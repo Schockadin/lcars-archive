@@ -1,6 +1,7 @@
 "use server";
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
+import { userCan } from "@/lib/permissions";
 import {
   updateMissionSynopsis,
   updateMissionSynopsisWithHtml,
@@ -30,7 +31,7 @@ export async function updateMissionSynopsisAction(
   if (!session) return { error: "Nicht angemeldet." };
 
   const user = await getUserById(session.userId);
-  if (!user || (user.role !== "gm" && user.role !== "admin")) {
+  if (!user || !userCan(user, "missions.manage")) {
     return { error: "Nur für die Spielleitung." };
   }
 

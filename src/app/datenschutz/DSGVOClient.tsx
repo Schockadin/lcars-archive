@@ -26,10 +26,16 @@ export default function DSGVOClient() {
         Diese Website betreibt kein Tracking und keine Analysetools mit
         personenbezogenen Daten. Für die Kampagnen-Teilnehmer:innen gibt es
         einen passwortgeschützten Login-Bereich (<code>/login</code>,{" "}
-        <code>/user/…</code>). Dort werden E-Mail-Adresse, Name, Rolle sowie
+        <code>/user/…</code>). Dort werden E-Mail-Adresse, Name, Rolle(n) sowie
         ein Passwort-Hash gespeichert (Rechtsgrundlage: Art. 6 Abs. 1 lit. b
-        DSGVO — Erfüllung des Nutzungsverhältnisses der Kampagne). Das Passwort
-        selbst wird nicht im Klartext gespeichert, sondern nur als Hash.
+        DSGVO — Erfüllung des Nutzungsverhältnisses der Kampagne). Zur
+        Rechteverwaltung werden pro Konto zusätzlich die zugewiesenen Rollen
+        sowie einzelne gezielt gewährte oder entzogene Rechte
+        (Rechte-Ausnahmen) gespeichert; sie steuern ausschließlich, welche
+        Funktionen der Kampagnen-Anwendung der Person zur Verfügung stehen
+        (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse an
+        einer geordneten Zugriffsverwaltung). Das Passwort selbst wird nicht im
+        Klartext gespeichert, sondern nur als Hash.
       </p>
       <p>
         Zum Festlegen eines ersten Passworts (Einladung durch die Spielleitung)

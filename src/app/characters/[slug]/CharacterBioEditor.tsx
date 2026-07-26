@@ -21,17 +21,18 @@ const initialState: CharacterBioEditState = {};
 export default function CharacterBioEditor({
   bioHtml,
   sourceMarkdown,
-  role = "guest",
+  isAdminOrGM = false,
   character,
   editMode,
   onEditModeChange,
 }: {
   bioHtml: string | null;
   sourceMarkdown: string;
-  // Der Editor selbst ist owner-gated (siehe CharacterHero.tsx), der
-  // Timeline-Marker-Button darin aber zusätzlich rollen-gated — derselbe
-  // Owner könnte selbst gm/admin sein oder auch nicht.
-  role?: string | undefined;
+  // Der Editor selbst ist owner-gated (siehe CharacterHero.tsx), die
+  // erweiterten Editor-Werkzeuge (Timeline-Marker/Autolinking) darin aber
+  // zusätzlich rechte-gated (content.autolink_tools) — derselbe Owner könnte
+  // sie haben oder nicht.
+  isAdminOrGM?: boolean;
   character: Character;
   editMode: boolean;
   onEditModeChange: (v: boolean) => void;
@@ -82,7 +83,7 @@ export default function CharacterBioEditor({
       <MarkdownEditor
         id={textareaId}
         defaultValue={sourceMarkdown}
-        isAdminOrGM={role === "admin" || role === "gm"}
+        isAdminOrGM={isAdminOrGM}
       />
 
       <AutoLinkCheckbox idPrefix={textareaId} />

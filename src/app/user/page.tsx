@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { userCan } from "@/lib/permissions";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "./dal";
@@ -206,7 +207,7 @@ export default async function UserPage() {
                     pushEnabled: target.push_notifications_enabled,
                     notifyContentTypes: target.notify_content_types,
                   }}
-                  isAdmin={target.role === "admin"}
+                  isAdmin={userCan(target, "admin.access")}
                 />
               </section>
 

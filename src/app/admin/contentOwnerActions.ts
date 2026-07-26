@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/dal";
+import { requirePermission } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { setOwnerAction, type OwnerContentType } from "@/app/actions/owner";
 
@@ -23,7 +23,7 @@ export async function bulkSetContentOwnerAction(
   items: { contentType: OwnerContentType; id: number }[],
   ownerId: number | null,
 ): Promise<BulkSetOwnerResult> {
-  await requireAdmin();
+  await requirePermission("content.moderate");
 
   if (ownerId != null && !(await getUserById(ownerId))) {
     return { error: "Ungültiger User." };

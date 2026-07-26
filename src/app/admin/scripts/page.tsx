@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { userCan } from "@/lib/permissions";
 import PageMeta from "@/components/PageMeta";
 import { requireAdmin } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
@@ -22,7 +23,7 @@ export default async function AdminScriptsPage() {
   await requireAdmin();
   const users = await listAllUsers();
   const gmOptions = users
-    .filter((u) => u.role === "gm" || u.role === "admin")
+    .filter((u) => userCan(u, "missions.manage"))
     .map((u) => ({ id: u.id, name: u.name }));
 
   return (

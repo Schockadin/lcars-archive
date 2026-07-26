@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
-import { requireAdmin } from "@/lib/dal";
+import { requirePermission } from "@/lib/dal";
 import { getDialogueMetadataForEdit } from "@/lib/dialogues";
 import { getAllArchiveEntries } from "@/lib/archive";
 import EditDialogueMetadataForm from "./EditDialogueMetadataForm";
@@ -19,7 +19,7 @@ export default async function EditDialoguePage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await requireAdmin();
+  await requirePermission("dialogues.moderate");
   const { slug } = await params;
 
   const [dialogue, archiveEntries] = await Promise.all([

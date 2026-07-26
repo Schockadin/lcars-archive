@@ -310,7 +310,9 @@ export default function CharacterHero({
               <CharacterBioEditor
                 bioHtml={bio?.html ?? null}
                 sourceMarkdown={sourceMarkdown}
-                role={viewer?.role}
+                isAdminOrGM={
+                  viewer?.permissions.includes("content.autolink_tools") ?? false
+                }
                 character={character}
                 editMode={editMode}
                 onEditModeChange={setEditMode}

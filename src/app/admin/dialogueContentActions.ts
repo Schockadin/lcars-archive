@@ -1,5 +1,5 @@
 "use server";
-import { requireAdmin } from "@/lib/dal";
+import { requirePermission } from "@/lib/dal";
 import { regenerateAllClosedDialogueContent } from "@/lib/dialoguesCore";
 import { revalidateAllContent } from "@/lib/revalidate";
 
@@ -14,7 +14,7 @@ export interface RegenerateDialogueContentActionResult {
 // ihren Fließtext bereits automatisch, dieser Knopf ist nur für den
 // historischen Bestand nötig.
 export async function regenerateAllDialogueContentAction(): Promise<RegenerateDialogueContentActionResult> {
-  await requireAdmin();
+  await requirePermission("dialogues.moderate");
 
   try {
     const count = await regenerateAllClosedDialogueContent();

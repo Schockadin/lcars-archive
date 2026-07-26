@@ -9,7 +9,9 @@ export type AdminAuditAction =
   | "deactivate_user"
   | "reactivate_user"
   | "delete_user"
-  | "force_logout";
+  | "force_logout"
+  | "update_roles"
+  | "update_permissions";
 
 export interface AdminAuditLogEntry {
   id: number;

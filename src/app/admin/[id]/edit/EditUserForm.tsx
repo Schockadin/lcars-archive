@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { updateUserDetailsAction, type EditUserState } from "./actions";
 import type { UserAdminDetail } from "@/lib/users";
+import { ALL_ROLES, ROLE_LABELS } from "@/lib/permissions";
 import {
   FormField,
   FormError,
@@ -68,6 +69,29 @@ export default function EditUserForm({
           </p>
         )}
       </FormField>
+
+      <fieldset className="flex flex-col gap-[8px]">
+        <legend className="lcars-eyebrow">Zusätzliche Rollen</legend>
+        <p className="text-lcars-text-dim text-[13px]">
+          Ein User kann mehrere Rollen haben — die effektiven Rechte sind die
+          Vereinigung aller Rollen (die oben gewählte Primärrolle zählt immer
+          dazu). Die einzelnen Rechte lassen sich darunter feinjustieren.
+        </p>
+        <div className="flex flex-col gap-[6px]">
+          {ALL_ROLES.map((r) => (
+            <label key={r} className="flex items-center gap-[10px] lcars-eyebrow">
+              <input
+                type="checkbox"
+                name="additionalRoles"
+                value={r}
+                defaultChecked={user.additional_roles.includes(r)}
+                className="lcars-checkbox"
+              />
+              {ROLE_LABELS[r]}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <FormError message={state?.error} />
 

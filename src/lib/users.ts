@@ -16,7 +16,7 @@ const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
   last_visit_at, last_dashboard_visit_at,
   email_notifications_enabled, push_notifications_enabled, notify_content_types,
-  news_kinds,
+  news_kinds, additional_roles, permission_overrides,
   session_version
 `;
 
@@ -101,7 +101,7 @@ export async function listAllUsers(): Promise<UserWithCharacters[]> {
       u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
       u.last_login_at, u.previous_login_at, u.last_visit_at, u.last_dashboard_visit_at,
       u.email_notifications_enabled, u.push_notifications_enabled, u.notify_content_types,
-      u.news_kinds,
+      u.news_kinds, u.additional_roles, u.permission_overrides,
       COALESCE(
         jsonb_agg(
           jsonb_build_object('id', c.id, 'slug', c.slug, 'name', c.name)
@@ -161,6 +161,39 @@ export async function updateUserRole(
   const rows = await sql<User[]>`
     UPDATE users
     SET role = ${role}
+    WHERE id = ${id}
+    RETURNING ${USER_COLUMNS}
+  `;
+  return rows[0];
+}
+
+// Granulares RBAC: setzt Primärrolle + Zusatzrollen zusammen (ein User kann
+// mehrere Rollen haben, siehe src/lib/permissions.ts). additionalRoles wird
+// ohne die Primärrolle gespeichert (Duplikate/Primärrolle werden beim Auflösen
+// ohnehin dedupliziert).
+export async function updateUserRoles(
+  id: number,
+  role: User["role"],
+  additionalRoles: User["role"][],
+): Promise<User> {
+  const extra = additionalRoles.filter((r) => r !== role);
+  const rows = await sql<User[]>`
+    UPDATE users
+    SET role = ${role}, additional_roles = ${extra}
+    WHERE id = ${id}
+    RETURNING ${USER_COLUMNS}
+  `;
+  return rows[0];
+}
+
+// Individuelle Rechte-Overrides (Permission→bool) eines Users setzen.
+export async function updateUserPermissionOverrides(
+  id: number,
+  overrides: Record<string, boolean>,
+): Promise<User> {
+  const rows = await sql<User[]>`
+    UPDATE users
+    SET permission_overrides = ${sql.json(overrides)}
     WHERE id = ${id}
     RETURNING ${USER_COLUMNS}
   `;
@@ -400,7 +433,7 @@ export async function getUserForAdmin(
       u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
       u.last_login_at, u.previous_login_at, u.last_visit_at, u.last_dashboard_visit_at,
       u.email_notifications_enabled, u.push_notifications_enabled, u.notify_content_types,
-      u.news_kinds,
+      u.news_kinds, u.additional_roles, u.permission_overrides,
       u.password_hash IS NOT NULL AS has_password,
       u.requires_activation,
       COALESCE(

@@ -6,7 +6,7 @@ import {
 } from "@/lib/characters";
 import { getDialogueCountByParticipant } from "@/lib/archive";
 import { getIngameYear, inferAgeFromDateOfBirth } from "@/lib/campaign";
-import { getViewer, canView, canViewDraft } from "@/lib/visibility";
+import { getViewer, canView, canViewDraft, viewerHasPermission } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import { notFound } from "next/navigation";
 import CharakterDetailPage from "./CharacterDetailPage";
@@ -74,7 +74,7 @@ export default async function CharakterPage({ params }: Props) {
     await Promise.all([
       getLogsByCharacter(character.id),
       getDialogueCountByParticipant(character.slug),
-      viewer?.role === "admin" ? listAllUsers() : Promise.resolve([]),
+      viewerHasPermission(viewer, "content.moderate") ? listAllUsers() : Promise.resolve([]),
       isOwner ? getCharacterSourceBySlug(character.slug) : Promise.resolve(null),
       getIngameYear(),
     ]);

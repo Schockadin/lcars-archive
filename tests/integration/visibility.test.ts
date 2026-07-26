@@ -6,6 +6,7 @@ import {
   canViewMissionDraft,
   canSetVisibility,
   getViewer,
+  makeViewer,
   type Viewer,
 } from "@/lib/visibility";
 import { createSession } from "@/lib/session";
@@ -38,10 +39,10 @@ beforeEach(() => {
 });
 
 describe("canView", () => {
-  const admin: Viewer = { userId: 1, role: "admin" };
-  const gm: Viewer = { userId: 2, role: "gm" };
-  const player: Viewer = { userId: 3, role: "player" };
-  const owner: Viewer = { userId: 4, role: "player" };
+  const admin: Viewer = makeViewer(1, ["admin"]);
+  const gm: Viewer = makeViewer(2, ["gm"]);
+  const player: Viewer = makeViewer(3, ["player"]);
+  const owner: Viewer = makeViewer(4, ["player"]);
 
   it("lets anyone see public content, even anonymous viewers", () => {
     expect(canView("public", null, null)).toBe(true);
@@ -72,10 +73,10 @@ describe("canView", () => {
 });
 
 describe("canViewDraft", () => {
-  const admin: Viewer = { userId: 1, role: "admin" };
-  const gm: Viewer = { userId: 2, role: "gm" };
-  const player: Viewer = { userId: 3, role: "player" };
-  const owner: Viewer = { userId: 4, role: "player" };
+  const admin: Viewer = makeViewer(1, ["admin"]);
+  const gm: Viewer = makeViewer(2, ["gm"]);
+  const player: Viewer = makeViewer(3, ["player"]);
+  const owner: Viewer = makeViewer(4, ["player"]);
 
   it("lets anyone see non-draft content regardless of viewer", () => {
     expect(canViewDraft(false, 4, null)).toBe(true);
@@ -108,9 +109,9 @@ describe("canViewDraft", () => {
 });
 
 describe("canViewMissionDraft", () => {
-  const admin: Viewer = { userId: 1, role: "admin" };
-  const gm: Viewer = { userId: 2, role: "gm" };
-  const player: Viewer = { userId: 3, role: "player" };
+  const admin: Viewer = makeViewer(1, ["admin"]);
+  const gm: Viewer = makeViewer(2, ["gm"]);
+  const player: Viewer = makeViewer(3, ["player"]);
 
   it("lets anyone see a non-draft mission regardless of viewer", () => {
     expect(canViewMissionDraft(false, null)).toBe(true);
@@ -133,8 +134,8 @@ describe("canViewMissionDraft", () => {
 
 describe("canSetVisibility", () => {
   it("only lets the owner change visibility, not admin/gm/anonymous", () => {
-    const owner: Viewer = { userId: 4, role: "player" };
-    const admin: Viewer = { userId: 1, role: "admin" };
+    const owner: Viewer = makeViewer(4, ["player"]);
+    const admin: Viewer = makeViewer(1, ["admin"]);
 
     expect(canSetVisibility(4, owner)).toBe(true);
     expect(canSetVisibility(4, admin)).toBe(false);
@@ -142,7 +143,7 @@ describe("canSetVisibility", () => {
   });
 
   it("returns false when there is no owner to match against", () => {
-    const owner: Viewer = { userId: 4, role: "player" };
+    const owner: Viewer = makeViewer(4, ["player"]);
     expect(canSetVisibility(null, owner)).toBe(false);
   });
 });
@@ -159,7 +160,7 @@ describe("getViewer", () => {
 
     const result = await getViewer();
 
-    expect(result).toEqual({ userId: user.id, role: "gm" });
+    expect(result).toEqual(makeViewer(user.id, ["gm"]));
   });
 
   it("returns null when the session references a user that no longer exists", async () => {

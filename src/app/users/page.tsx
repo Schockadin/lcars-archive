@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { userCan } from "@/lib/permissions";
 import PageMeta from "@/components/PageMeta";
 import { requireNonGuest } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
@@ -47,7 +48,7 @@ export default async function UsersOverviewPage() {
         <UsersTable
           users={rows}
           viewerId={viewer.id}
-          isAdmin={viewer.role === "admin"}
+          isAdmin={userCan(viewer, "users.manage")}
           followStatuses={followStatuses}
         />
       </article>

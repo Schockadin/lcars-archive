@@ -21,6 +21,10 @@ export interface UserBackupRecord {
   // Optional: ältere Backups (vor PR #51) kennen dieses Feld noch nicht — beim
   // Restore fällt es dann auf den Default (alle News-Arten) zurück.
   news_kinds?: string[];
+  // RBAC (optional, ältere Backups kennen die Felder nicht): weitere Rollen +
+  // individuelle Rechte-Overrides (siehe src/lib/permissions.ts).
+  additional_roles?: string[];
+  permission_overrides?: Record<string, boolean>;
 }
 
 // Default, wenn ein (älteres) Backup news_kinds nicht enthält — entspricht
@@ -38,7 +42,8 @@ export async function getAllUsersBackup(): Promise<UserBackupRecord[]> {
       email, name, slug, role, is_active, password_hash,
       requires_activation, email_notifications_enabled,
       push_notifications_enabled, created_at, last_login_at, previous_login_at,
-      last_visit_at, last_dashboard_visit_at, notify_content_types, news_kinds
+      last_visit_at, last_dashboard_visit_at, notify_content_types, news_kinds,
+      additional_roles, permission_overrides
     FROM users
     ORDER BY id
   `;
@@ -76,13 +81,15 @@ export async function restoreUsersBackup(
           email, name, slug, role, is_active, password_hash,
           requires_activation, email_notifications_enabled,
           push_notifications_enabled, created_at, last_login_at, previous_login_at,
-          last_visit_at, last_dashboard_visit_at, notify_content_types, news_kinds
+          last_visit_at, last_dashboard_visit_at, notify_content_types, news_kinds,
+          additional_roles, permission_overrides
         ) VALUES (
           ${r.email}, ${r.name}, ${r.slug}, ${r.role}, ${r.is_active}, ${r.password_hash},
           ${r.requires_activation}, ${r.email_notifications_enabled},
           ${r.push_notifications_enabled}, ${r.created_at}, ${r.last_login_at},
           ${r.previous_login_at}, ${r.last_visit_at}, ${r.last_dashboard_visit_at},
-          ${r.notify_content_types}, ${r.news_kinds ?? DEFAULT_NEWS_KINDS}
+          ${r.notify_content_types}, ${r.news_kinds ?? DEFAULT_NEWS_KINDS},
+          ${r.additional_roles ?? []}, ${sql.json(r.permission_overrides ?? {})}
         )
         ON CONFLICT (email) DO UPDATE SET
           name = EXCLUDED.name,
@@ -98,7 +105,9 @@ export async function restoreUsersBackup(
           last_visit_at = EXCLUDED.last_visit_at,
           last_dashboard_visit_at = EXCLUDED.last_dashboard_visit_at,
           notify_content_types = EXCLUDED.notify_content_types,
-          news_kinds = EXCLUDED.news_kinds
+          news_kinds = EXCLUDED.news_kinds,
+          additional_roles = EXCLUDED.additional_roles,
+          permission_overrides = EXCLUDED.permission_overrides
         RETURNING (xmax = 0) AS inserted
       `;
       if (rows[0]?.inserted) {

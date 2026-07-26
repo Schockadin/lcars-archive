@@ -4,6 +4,7 @@ import PageMeta from "@/components/PageMeta";
 import { requireAdminEditTarget } from "../dal";
 import { formatDateTime } from "@/utils/formateISODate";
 import EditUserForm from "./EditUserForm";
+import PermissionsForm from "./PermissionsForm";
 import UserStatusActions from "./UserStatusActions";
 import type { UserAdminDetail } from "@/lib/users";
 
@@ -80,8 +81,19 @@ export default async function EditUserPage({
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Daten bearbeiten</h2>
+            <h2 className="text-lcars-amber">Daten & Rollen bearbeiten</h2>
             <EditUserForm user={target} isSelf={isSelf} />
+          </section>
+
+          <section className="flex flex-col gap-[12px]">
+            <h2 className="text-lcars-amber">Individuelle Rechte</h2>
+            <PermissionsForm
+              userId={target.id}
+              roles={Array.from(
+                new Set([target.role, ...target.additional_roles]),
+              )}
+              overrides={target.permission_overrides}
+            />
           </section>
 
           <UserStatusActions user={target} isSelf={isSelf} />

@@ -1,6 +1,7 @@
 "use server";
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
+import { userCan } from "@/lib/permissions";
 import { setCharacterVisibilityAdmin } from "@/lib/characters";
 import { setMissionLogVisibilityAdmin } from "@/lib/missions";
 import { setArchiveEntryVisibilityAdmin } from "@/lib/archive";
@@ -38,7 +39,9 @@ export async function setVisibilityAdminAction(
   if (!session) return { error: "Nicht angemeldet." };
 
   const user = await getUserById(session.userId);
-  if (user?.role !== "admin") return { error: "Nur für Admins." };
+  if (!user || !userCan(user, "content.moderate")) {
+    return { error: "Nur für Admins." };
+  }
 
   if (!isValidVisibility(visibility)) return { error: "Ungültige Sichtbarkeit." };
 

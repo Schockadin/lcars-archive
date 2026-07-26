@@ -10,6 +10,7 @@ import {
   canManageContentImages,
   InvalidContentImageError,
 } from "@/lib/contentImages";
+import { makeViewer } from "@/lib/visibility";
 
 // r2Backup.ts braucht echte R2_*-Credentials (S3Client) — hier durch eine
 // In-Memory-"Bucket"-Map ersetzt, damit sich die DB+R2-Orchestrierung in
@@ -170,16 +171,16 @@ describe("getContentAccessContext", () => {
 
 describe("canManageContentImages", () => {
   it("allows only the owner for character/mission_log, no admin bypass", () => {
-    const owner = { userId: 1, role: "player" as const };
-    const admin = { userId: 2, role: "admin" as const };
+    const owner = makeViewer(1, ["player"]);
+    const admin = makeViewer(2, ["admin"]);
     expect(canManageContentImages("character", 1, owner)).toBe(true);
     expect(canManageContentImages("character", 1, admin)).toBe(false);
   });
 
   it("allows owner or admin for mission/archive_entry", () => {
-    const owner = { userId: 1, role: "player" as const };
-    const admin = { userId: 2, role: "admin" as const };
-    const stranger = { userId: 3, role: "player" as const };
+    const owner = makeViewer(1, ["player"]);
+    const admin = makeViewer(2, ["admin"]);
+    const stranger = makeViewer(3, ["player"]);
     expect(canManageContentImages("mission", 1, owner)).toBe(true);
     expect(canManageContentImages("mission", 1, admin)).toBe(true);
     expect(canManageContentImages("mission", 1, stranger)).toBe(false);

@@ -1,3 +1,4 @@
+import { userCan } from "@/lib/permissions";
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "../../dal";
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
 export default async function NewCharacterPage() {
   const user = await requireOwnUser();
 
-  if (user.role === "guest") {
+  if (!userCan(user, "content.create")) {
     return (
       <>
         <PageMeta title="Neuer Charakter" section="users" />
@@ -38,7 +39,7 @@ export default async function NewCharacterPage() {
         <h1>Neuen Charakter anlegen</h1>
         <NewCharacterForm
           userId={user.id}
-          isAdminOrGM={user.role === "gm" || user.role === "admin"}
+          isAdminOrGM={userCan(user, "content.autolink_tools")}
         />
       </article>
     </>

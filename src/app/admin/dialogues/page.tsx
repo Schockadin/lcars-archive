@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { userCan } from "@/lib/permissions";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
@@ -19,7 +20,7 @@ export const metadata: Metadata = {
 // read-only-Modus nötig.
 export default async function AdminDialoguesPage() {
   const viewer = await requireGM();
-  const isAdmin = viewer.role === "admin";
+  const canModerate = userCan(viewer, "dialogues.moderate");
 
   const dialogues = await getAllOpenDialoguesForGM();
 
@@ -70,7 +71,7 @@ export default async function AdminDialoguesPage() {
                       </span>
                     </span>
                   </Link>
-                  {isAdmin && (
+                  {canModerate && (
                     <Link
                       href={`/admin/dialogues/${d.slug}/edit`}
                       className="text-lcars-amber underline text-[13px] self-start"

@@ -8,12 +8,24 @@ export interface Note {
   last_updated: Date;
 }
 
+// Preset-Rolle. Ein User hat eine Primärrolle (role, u.a. für Anzeige/Session)
+// und kann weitere Rollen tragen (additional_roles) — siehe granulares RBAC in
+// src/lib/permissions.ts.
+export type Role = "admin" | "gm" | "player" | "viewer" | "guest";
+
 export interface User {
   id: number;
   email: string;
   name: string;
   slug: string;
-  role: "admin" | "gm" | "player" | "viewer" | "guest";
+  role: Role;
+  // Weitere Preset-Rollen zusätzlich zur Primärrolle. Effektive Rechte =
+  // Vereinigung der Presets aus [role, ...additional_roles] ⊕
+  // permission_overrides (siehe resolvePermissions in src/lib/permissions.ts).
+  additional_roles: Role[];
+  // Individuelle Rechte-Overrides (Permission→bool: true=zusätzlich gewähren,
+  // false=entziehen), unabhängig von den Rollen-Presets.
+  permission_overrides: Record<string, boolean>;
   is_active: boolean;
   created_at: Date;
   last_login_at: Date | null;

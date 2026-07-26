@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
 import { getUserById, updateDialogueViewPreference } from "@/lib/users";
+import { userCan } from "@/lib/permissions";
 import {
   DialogueClosedError,
   DialogueMessageForbiddenError,
@@ -210,7 +211,7 @@ export async function editDialogueMessageAction(
   // abgeschlossenen Dialogen bearbeiten (GM ausdrücklich nicht, anders als
   // bei completeDialogueAction).
   const user = await getUserById(session.userId);
-  const isModerator = user?.role === "admin";
+  const isModerator = !!user && userCan(user, "dialogues.moderate");
 
   try {
     await editDialogueMessage({
@@ -260,7 +261,7 @@ export async function deleteDialogueMessageAction(
   if (!Number.isInteger(messageId)) return { error: "Ungültige Nachricht." };
 
   const user = await getUserById(session.userId);
-  const isModerator = user?.role === "admin";
+  const isModerator = !!user && userCan(user, "dialogues.moderate");
 
   try {
     await deleteDialogueMessage({
@@ -307,7 +308,7 @@ export async function getDialogueMessageSourceAction(
     return { error: "Diese Nachricht existiert nicht mehr." };
   if (row.authorUserId !== session.userId) {
     const user = await getUserById(session.userId);
-    if (user?.role !== "admin") {
+    if (!user || !userCan(user, "dialogues.moderate")) {
       return { error: "Du kannst nur eigene Nachrichten bearbeiten." };
     }
   }
@@ -349,7 +350,7 @@ export async function getDialogueSnapshotAction(
 
   const participant = await getDialogueParticipant(entry.id, session.userId);
   const viewer = await getUserById(session.userId);
-  if (!participant && viewer?.role !== "gm" && viewer?.role !== "admin") {
+  if (!participant && !(viewer && userCan(viewer, "gm.access"))) {
     return CLOSED_SNAPSHOT;
   }
 
@@ -395,7 +396,7 @@ export async function completeDialogueAction(
   const participant = await getDialogueParticipant(entry.id, session.userId);
   if (!participant) {
     const user = await getUserById(session.userId);
-    if (user?.role !== "gm" && user?.role !== "admin") {
+    if (!user || !userCan(user, "gm.access")) {
       return { error: "Du darfst dieses Gespräch nicht abschließen." };
     }
   }
@@ -480,7 +481,7 @@ export async function deleteDialogueAction(
   }
 
   const admin = await getUserById(session.userId);
-  if (admin?.role !== "admin") {
+  if (!admin || !userCan(admin, "dialogues.moderate")) {
     return { error: "Nur die Administration kann Gespräche löschen." };
   }
 
@@ -718,7 +719,7 @@ export async function releaseDialogueReservationAction(
   if (!session) return { error: "Bitte melde dich an." };
 
   const user = await getUserById(session.userId);
-  if (user?.role !== "admin") {
+  if (!user || !userCan(user, "dialogues.moderate")) {
     return { error: "Nur die Administration darf Reservierungen freigeben." };
   }
 
