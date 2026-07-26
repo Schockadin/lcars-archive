@@ -92,6 +92,7 @@ function NewsRow({
 // Gespräche leben in einer eigenen Sektion (OpenDialoguesSection.tsx).
 export default function NewsSection({ items }: { items: NewsFeedItem[] }) {
   const [visible, setVisible] = useState(items);
+  const [markingAll, setMarkingAll] = useState(false);
 
   function dismiss(item: NewsFeedItem) {
     // Optimistisch entfernen, dann serverseitig als „gesehen"/gelesen markieren.
@@ -99,16 +100,24 @@ export default function NewsSection({ items }: { items: NewsFeedItem[] }) {
     void dismissNewsAction(item.targetType, item.targetKey, item.timestamp);
   }
 
-  function markAllRead() {
+  // Erst serverseitig als gelesen speichern, DANN leeren — schlägt der Server-
+  // Aufruf fehl, bleibt die Liste stehen (statt sie nur optisch zu leeren,
+  // ohne dass etwas persistiert wurde).
+  async function markAllRead() {
     const snapshot = visible;
-    setVisible([]);
-    void markAllNewsSeenAction(
-      snapshot.map((i) => ({
-        targetType: i.targetType,
-        targetKey: i.targetKey,
-        timestamp: i.timestamp,
-      })),
-    );
+    setMarkingAll(true);
+    try {
+      const res = await markAllNewsSeenAction(
+        snapshot.map((i) => ({
+          targetType: i.targetType,
+          targetKey: i.targetKey,
+          timestamp: i.timestamp,
+        })),
+      );
+      if (res.ok) setVisible([]);
+    } finally {
+      setMarkingAll(false);
+    }
   }
 
   if (visible.length === 0) return null;
@@ -124,9 +133,10 @@ export default function NewsSection({ items }: { items: NewsFeedItem[] }) {
         <button
           type="button"
           onClick={markAllRead}
-          className="lcars-pill-btn--outline self-end text-[12px]"
+          disabled={markingAll}
+          className="lcars-pill-btn--outline self-end text-[12px] disabled:opacity-50"
         >
-          Alles als gelesen markieren
+          {markingAll ? "Wird gespeichert…" : "Alles als gelesen markieren"}
         </button>
         <div className="news-scroll">
           {visible.map((item) => (
