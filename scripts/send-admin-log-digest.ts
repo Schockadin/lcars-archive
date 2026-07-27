@@ -18,8 +18,46 @@
 // Zeitfenster übersprungen.
 import sql from "@/lib/db";
 import { sendEmail } from "@/lib/mailCore";
+import {
+  userPermissions,
+  DEFAULT_ROLE_PRESETS,
+  type RoleMap,
+  type Permission,
+} from "@/lib/permissions";
 
 const FORCE = process.argv.includes("--force");
+
+// „Admin" = hat das Recht admin.access (granulares RBAC), nicht mehr nur die
+// Primärrolle role='admin'. Bewusst rohes SQL + die REINE permissions.ts-Logik
+// (kein Import von users.ts/roles.ts) — dieses Skript läuft außerhalb von Next
+// und vermeidet gezielt die "server-only"/next-cache-Importkette (siehe
+// Datei-Kopf). Bei fehlender roles-Tabelle greifen die Code-Defaults.
+async function listAdminRecipients(): Promise<{ email: string; name: string }[]> {
+  let roleMap: RoleMap = { ...DEFAULT_ROLE_PRESETS };
+  try {
+    const roleRows = await sql<{ key: string; permissions: string[] }[]>`
+      SELECT key, permissions FROM roles
+    `;
+    for (const r of roleRows) roleMap[r.key] = r.permissions as Permission[];
+  } catch {
+    roleMap = { ...DEFAULT_ROLE_PRESETS };
+  }
+  const users = await sql<
+    {
+      email: string;
+      name: string;
+      role: string;
+      additional_roles: string[];
+      permission_overrides: Record<string, boolean>;
+    }[]
+  >`
+    SELECT email, name, role, additional_roles, permission_overrides
+    FROM users WHERE is_active = true
+  `;
+  return users
+    .filter((u) => userPermissions(u, roleMap).has("admin.access"))
+    .map((u) => ({ email: u.email, name: u.name }));
+}
 
 function escapeHtml(value: string): string {
   return value
@@ -91,9 +129,7 @@ async function main() {
       WHERE al.created_at > NOW() - INTERVAL '24 hours'
       ORDER BY al.created_at DESC
     `,
-    sql<{ email: string; name: string }[]>`
-      SELECT email, name FROM users WHERE role = 'admin' AND is_active = true
-    `,
+    listAdminRecipients(),
   ]);
 
   if (admins.length === 0) {

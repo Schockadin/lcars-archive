@@ -206,43 +206,77 @@ export default function TutorialPage() {
                 separates Formular.
               </p>
               <p>
+                <strong>Gespräche</strong> sind ein eigener Inhaltstyp mit ein
+                paar Besonderheiten — sie haben weiter unten eine eigene
+                Sektion.
+              </p>
+            </div>
+          </LcarsDataRow>
+
+          <LcarsDataRow value={4} label="Gespräche" color="var(--lcars-amber)">
+            <div className="lcars-text flex flex-col gap-[12px]">
+              <p>
                 Ein <strong>Gespräch</strong> startest du mit deinem Charakter
                 und dem Charakter einer oder mehrerer anderer Personen
                 (Mehrfachauswahl); es beginnt <strong>offen</strong> — nur
                 Teilnehmende können antworten. Der Owner (wer das Gespräch
                 begonnen hat) kann auch danach jederzeit weitere Personen direkt
-                hinzufügen (samt Info-Mail an sie). Wer mit mehreren eigenen
+                hinzufügen (samt Info-Mail an sie) und ist die einzige Person,
+                die das Gespräch löschen darf. Wer mit mehreren eigenen
                 Charakteren teilnimmt, kann nicht zweimal hintereinander mit
                 demselben Charakter antworten — dazwischen muss ein anderer
-                Charakter am Zug gewesen sein. Sobald ein Gespräch mehr als zwei
-                Teilnehmende hat, muss man sich das Antwortrecht zusätzlich erst
-                per Button für zwei Stunden reservieren, bevor man schreiben
-                kann — solange jemand anderes reserviert hat, seht ihr, wer
-                gerade dran ist und könnt euch optional per Mail/Push
-                benachrichtigen lassen, sobald die Sperre wieder endet (oder
-                wenn die reservierende Person selbst antwortet, endet sie
-                vorzeitig). Ein offenes Gespräch aktualisiert sich dabei
-                automatisch — neue Nachrichten und Änderungen am Antwortrecht
-                erscheinen von selbst, ohne dass du die Seite neu laden musst.
+                Charakter am Zug gewesen sein.
+              </p>
+              <p>
+                Sobald ein Gespräch <strong>mehr als zwei Teilnehmende</strong>{" "}
+                hat, muss man sich das Antwortrecht zusätzlich erst per Button
+                für zwei Stunden reservieren, bevor man schreiben kann — solange
+                jemand anderes reserviert hat, seht ihr, wer gerade dran ist,
+                und könnt euch optional per Mail/Push benachrichtigen lassen,
+                sobald die Sperre wieder endet (antwortet die reservierende
+                Person selbst, endet sie vorzeitig). Ein offenes Gespräch
+                aktualisiert sich dabei automatisch — neue Nachrichten und
+                Änderungen am Antwortrecht erscheinen von selbst, ohne dass du
+                die Seite neu laden musst.
+              </p>
+              <p>
                 Sobald eine teilnehmende Person es abschließt, wird es{" "}
-                <strong>unwiderruflich geschlossen</strong> und taucht danach
-                als gewöhnlicher Archiv-Eintrag in der Kategorie „Gespräche“ auf
-                — standardmäßig als zusammenhängender Lesetext, per Umschalter
-                oben auf der Seite aber auch wie ein offenes Gespräch mit
-                einzelnen Nachrichtenkarten anzeigbar. Diese Einstellung gilt
-                für alle abgeschlossenen Gespräche, die du dir ansiehst. Im
-                Lesetext wird die wörtliche Rede jedes Charakters in dessen{" "}
+                <strong>unwiderruflich geschlossen</strong> und taucht danach als
+                gewöhnlicher Archiv-Eintrag in der Kategorie „Gespräche“ auf —
+                standardmäßig als zusammenhängender Lesetext, per Umschalter oben
+                auf der Seite aber auch wie ein offenes Gespräch mit einzelnen
+                Nachrichtenkarten anzeigbar. Diese Einstellung gilt für alle
+                abgeschlossenen Gespräche, die du dir ansiehst. Im Lesetext wird
+                die wörtliche Rede jedes Charakters in dessen{" "}
                 <strong>Charakter-Farbe</strong> dargestellt, ebenso die
                 Nachrichten-Karten in offenen wie geschlossenen Gesprächen —
-                diese Farbe legst du im Profil unter „Charakter-Farben“ fest,
-                für jeden deiner Charaktere einzeln (ohne eigene Wahl bekommt
-                er automatisch eine der LCARS-Farben).
+                diese Farbe legst du im Profil unter „Charakter-Farben“ fest, für
+                jeden deiner Charaktere einzeln (ohne eigene Wahl bekommt er
+                automatisch eine der LCARS-Farben).
+              </p>
+              <p>
+                <strong>Spielleitung:</strong> Über das „Leitung“-Menü im Header
+                (Eintrag „Gespräche“) sieht die Spielleitung alle aktuell offenen
+                Gespräche, auch ohne eigene Teilnahme — ein Klick öffnet das
+                Gespräch lesend, ohne Antwortformular. Über jedes neu begonnene
+                Gespräch wird die Spielleitung außerdem automatisch per Mail/Push
+                informiert.
+              </p>
+              <p>
+                <strong>Moderation (Administration):</strong> Wer das Recht zur
+                Gesprächs-Moderation hat (standardmäßig die Administration), darf
+                in jedem Gespräch jede Nachricht bearbeiten oder löschen (auch
+                fremde und auch in bereits abgeschlossenen Gesprächen), dessen
+                Besitzer:in ändern sowie die <strong>Metadaten</strong> (Titel,
+                Datum, Schauplatz, Ort, Tags) über „Metadaten bearbeiten“
+                anpassen — auch bei abgeschlossenen Gesprächen; der eigentliche
+                Gesprächsverlauf bleibt dabei unangetastet.
               </p>
             </div>
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={4}
+            value={5}
             label="Merken & Abonnieren"
             color="var(--lcars-blue)"
           >
@@ -296,7 +330,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={5} label="Markdown" color="var(--lcars-amber)">
+          <LcarsDataRow value={6} label="Markdown" color="var(--lcars-amber)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
@@ -387,7 +421,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={6} label="Verlinkung" color="var(--lcars-blue)">
+          <LcarsDataRow value={7} label="Verlinkung" color="var(--lcars-blue)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Um im Fließtext auf einen Charakter, eine Mission oder einen
@@ -426,7 +460,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={7}
+            value={8}
             label="Spielleitung & Admins"
             color="var(--lcars-purple)"
           >
@@ -439,17 +473,13 @@ export default function TutorialPage() {
                 </li>
                 <li>
                   Über das eigene <strong>„Leitung“</strong>-Menü im Header
-                  (analog zum Admin-Menü) auf zwei Übersichten zugreifen: unter{" "}
-                  <strong>„Kampagne“</strong> an einer Stelle das aktuelle{" "}
-                  <strong>Ingame-Jahr</strong> einstellen, Charaktere
-                  Spieler:innen zuweisen (Gast-Accounts ausgenommen) und alle
-                  Missionen mit Bearbeiten-, Löschen- und Besitzer:in-Zuordnung
-                  pro Zeile verwalten; unter <strong>„Gespräche“</strong> alle
-                  aktuell offenen Gespräche einsehen, auch ohne eigene Teilnahme
-                  — ein Klick öffnet das Gespräch lesend, ohne Antwortformular.
-                  Über jedes neu begonnene Gespräch wird die Spielleitung
-                  außerdem automatisch per Mail/Push informiert, unabhängig von
-                  eigener Teilnahme.
+                  (analog zum Admin-Menü) unter <strong>„Kampagne“</strong> an
+                  einer Stelle das aktuelle <strong>Ingame-Jahr</strong>{" "}
+                  einstellen, Charaktere Spieler:innen zuweisen (Gast-Accounts
+                  ausgenommen) und alle Missionen mit Bearbeiten-, Löschen- und
+                  Besitzer:in-Zuordnung pro Zeile verwalten. (Der ebenfalls dort
+                  liegende Eintrag <strong>„Gespräche“</strong> ist in der
+                  eigenen Gespräche-Sektion oben beschrieben.)
                 </li>
                 <li>
                   Das <strong>Ingame-Jahr</strong> (unter „Kampagne“) bestimmt
@@ -522,27 +552,18 @@ export default function TutorialPage() {
                   durchblättern, vor dem Anlegen noch bearbeiten und muss danach
                   einzeln bestätigt werden.
                 </li>
-                <li>
-                  In jedem Gespräch als Moderation jede Nachricht bearbeiten
-                  oder löschen (auch fremde und auch in bereits abgeschlossenen
-                  Gesprächen) sowie dessen Besitzer:in ändern — beides
-                  ausschließlich der Administration vorbehalten, nicht der
-                  Spielleitung. Ebenso lassen sich die{" "}
-                  <strong>Metadaten eines Gesprächs</strong> (Titel, Datum,
-                  Schauplatz, Ort, Tags) über „Metadaten bearbeiten“ anpassen —
-                  auch bei abgeschlossenen Gesprächen; der eigentliche
-                  Gesprächsverlauf bleibt dabei unangetastet.
-                </li>
               </ul>
               <p>
                 Administration sieht außerdem als einzige Rolle ausnahmslos alle
-                Inhalte, auch private.
+                Inhalte, auch private. Die Moderation von Gesprächen (fremde
+                Nachrichten/Metadaten/Besitzer:in) ist in der eigenen
+                Gespräche-Sektion oben beschrieben.
               </p>
             </div>
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={8}
+            value={9}
             label="App installieren"
             color="var(--lcars-amber)"
           >

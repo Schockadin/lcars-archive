@@ -226,6 +226,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Neue Admin-Seite „Rollen“ (unter Rollen & Rechte): Hier lassen sich eigene Rollen anlegen und bearbeiten, die Rechte jeder Rolle (auch der System-Rollen) anpassen und Rollen direkt den Usern zuweisen.",
       "Die Admin-Werkzeuge „Gespräche-Fließtext erzeugen“ und „Missionen ohne Owner zuordnen“ (unter Scripts) laufen jetzt in Blöcken mit Fortschrittsbalken (kein Timeout mehr bei vielen Einträgen); jeder Fortschrittsbalken lässt sich per kleinem X ausblenden.",
       "Sicherheitsnetz bei der Rechteverwaltung: Man kann sich nicht mehr versehentlich selbst das Admin-Recht entziehen — weder über die individuellen Rechte einer Person noch durch Bearbeiten einer Rolle, die man selbst innehat.",
+      "Administrative Benachrichtigungen (Sicherheitsmail bei Passwort-Reset-Anfragen, täglicher Log-Digest) erreichen jetzt alle Konten mit Admin-Recht — auch wenn dieses über eine Zusatz- oder eigene Rolle bzw. eine Einzelrecht-Freigabe erteilt wurde, nicht nur die reine Primärrolle „Administration“.",
     ],
   },
 ];

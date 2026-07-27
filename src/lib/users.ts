@@ -2,6 +2,8 @@ import "server-only";
 import postgres from "postgres";
 import sql from "@/lib/db";
 import { slugifyBase } from "@/lib/slug";
+import { buildRoleMap } from "@/lib/roles";
+import { userPermissions } from "@/lib/permissions";
 import type { User } from "@/types/db";
 
 // Optionaler Client-Parameter für Aufrufe innerhalb einer Transaktion (z.B.
@@ -467,13 +469,32 @@ export interface AdminContact {
   name: string;
 }
 
-// Für den Fan-out einer Sicherheits-Benachrichtigung (/forgot-password) an
-// alle Admins — nur aktive Admin-Konten, ein deaktivierter Admin soll keine
-// Mails mehr bekommen.
+// Für den Fan-out administrativer Benachrichtigungen (Sicherheitsmail bei
+// /forgot-password, täglicher Log-Digest) an alle Admins — nur AKTIVE Konten.
+// „Admin" heißt hier: hat das Recht admin.access — nicht mehr nur die
+// Primärrolle role='admin'. So erreicht die Mail auch Konten, die admin.access
+// über eine Zusatzrolle, eine eigene Rolle oder einen Rechte-Override haben
+// (granulares RBAC, siehe src/lib/permissions.ts). Auflösung über die
+// uncachte buildRoleMap, damit die Funktion auch in Standalone-Cron-Skripten
+// (scripts/send-admin-log-digest.ts) außerhalb des Next-Requests funktioniert.
 export async function listAdminEmails(): Promise<AdminContact[]> {
-  return sql<AdminContact[]>`
-    SELECT email, name FROM users WHERE role = 'admin' AND is_active = true
+  const roleMap = await buildRoleMap();
+  const rows = await sql<
+    {
+      email: string;
+      name: string;
+      role: string;
+      additional_roles: string[];
+      permission_overrides: Record<string, boolean>;
+    }[]
+  >`
+    SELECT email, name, role, additional_roles, permission_overrides
+    FROM users
+    WHERE is_active = true
   `;
+  return rows
+    .filter((u) => userPermissions(u, roleMap).has("admin.access"))
+    .map((u) => ({ email: u.email, name: u.name }));
 }
 
 export async function getPasswordHash(userId: number): Promise<string | null> {

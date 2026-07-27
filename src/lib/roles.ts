@@ -69,6 +69,14 @@ const getRoleRows = unstable_cache(
 // kommen hinzu. Setzt zusätzlich die prozessweite aktive Map (permissions.ts),
 // damit die vielen synchronen userCan/…-Aufrufstellen ohne DB-Abfrage korrekt
 // auflösen. React-cache-dedupliziert pro Anfrage.
+function mapFromRows(rows: RoleRow[]): RoleMap {
+  const map: RoleMap = { ...DEFAULT_ROLE_PRESETS };
+  for (const r of rows) {
+    map[r.key] = onlyKnownPermissions(r.permissions);
+  }
+  return map;
+}
+
 export const getRoleMap = cache(async (): Promise<RoleMap> => {
   let rows: RoleRow[] = [];
   try {
@@ -76,13 +84,28 @@ export const getRoleMap = cache(async (): Promise<RoleMap> => {
   } catch {
     rows = [];
   }
-  const map: RoleMap = { ...DEFAULT_ROLE_PRESETS };
-  for (const r of rows) {
-    map[r.key] = onlyKnownPermissions(r.permissions);
-  }
+  const map = mapFromRows(rows);
   setActiveRolePresets(map);
   return map;
 });
+
+// Uncached, seiteneffektfreie Variante für Kontexte OHNE Next-Request — z.B.
+// Standalone-Cron-Skripte (scripts/*.ts), in denen unstable_cache/React cache
+// bzw. setActiveRolePresets nicht greifen. Fragt die roles-Tabelle direkt ab und
+// merged wie getRoleMap über die Code-Defaults (Fallback bei DB-Fehler).
+export async function buildRoleMap(): Promise<RoleMap> {
+  let rows: RoleRow[] = [];
+  try {
+    rows = await sql<RoleRow[]>`
+      SELECT key, label, description, permissions, is_system, sort_order
+      FROM roles
+      ORDER BY sort_order ASC, key ASC
+    `;
+  } catch {
+    rows = [];
+  }
+  return mapFromRows(rows);
+}
 
 // Rollen-Schlüssel → Anzeige-Label (DB-Labels über System-Labels), z.B. für die
 // User-Bearbeitungsseite. Ebenfalls über getRoleMap-Ladepfad frisch.
