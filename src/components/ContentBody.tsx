@@ -20,20 +20,13 @@ export default function ContentBody({
   className?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  // Liste der Bild-Quellen für das Karussell — erst BEIM ÖFFNEN (Klick auf ein
+  // Bild) frisch aus dem gerenderten DOM eingesammelt, nicht per Effect nach
+  // jedem html-Wechsel. So bleibt die Liste ohne abgeleiteten State/Effect
+  // immer aktuell (die Lightbox öffnet ohnehin nur über einen Klick), und das
+  // Karussell bewegt sich weiterhin nur über Bilder DIESES Inhalts.
   const [images, setImages] = useState<string[]>([]);
   const [index, setIndex] = useState<number | null>(null);
-
-  // Nach jedem Render der IMG-Quellen im aktuellen HTML einsammeln — das
-  // Karussell darf sich nur über Bilder DIESES Inhalts bewegen, nicht über
-  // alle jemals hochgeladenen Bilder.
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) {
-      setImages([]);
-      return;
-    }
-    setImages(Array.from(container.querySelectorAll("img")).map((img) => img.src));
-  }, [html]);
 
   const close = useCallback(() => setIndex(null), []);
   const prev = useCallback(
@@ -69,9 +62,18 @@ export default function ContentBody({
   function handleClick(e: React.MouseEvent<HTMLDivElement>) {
     const target = e.target as HTMLElement;
     if (target.tagName !== "IMG") return;
-    const src = (target as HTMLImageElement).src;
-    const i = images.indexOf(src);
-    if (i !== -1) setIndex(i);
+    const container = containerRef.current;
+    if (!container) return;
+    // Bildliste im Moment des Klicks aus dem DOM lesen — dieselben aufgelösten
+    // src-Werte, die auch target.src liefert (so matcht indexOf zuverlässig).
+    const list = Array.from(container.querySelectorAll("img")).map(
+      (img) => img.src,
+    );
+    const i = list.indexOf((target as HTMLImageElement).src);
+    if (i !== -1) {
+      setImages(list);
+      setIndex(i);
+    }
   }
 
   const current = index !== null ? images[index] : null;

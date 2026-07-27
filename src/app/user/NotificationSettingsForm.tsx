@@ -112,6 +112,11 @@ export default function NotificationSettingsForm({
       }
     }
 
+    // Asynchroner Support-/Abo-Status-Check (navigator.serviceWorker.ready,
+    // getSubscription) beim Mount — kein synchroner externer Store, also kein
+    // Fall für useSyncExternalStore; Initialwert bleibt „checking", damit
+    // Server- und Client-Render identisch sind (kein Hydration-Mismatch).
+    // eslint-disable-next-line react-you-might-not-need-an-effect/no-external-store-subscription, react-you-might-not-need-an-effect/no-initialize-state
     checkStatus();
     return () => {
       cancelled = true;

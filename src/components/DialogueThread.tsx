@@ -55,6 +55,11 @@ export default function DialogueThread({
   // Dialoge bleiben unangetastet — dort ist der gesamte, meist kürzere
   // Verlauf (oder der Fließtext) das eigentliche Leseerlebnis.
   useEffect(() => {
+    // Kein „Event-Handler per Prop/Effect", sondern ein reiner DOM-Nebeneffekt
+    // beim initialen Mount: einmalig ans Ende scrollen. dialogueOpen ist hier
+    // nur die Bedingung, ob überhaupt gescrollt wird — es gibt kein Ereignis im
+    // Parent, das man stattdessen behandeln könnte.
+    // eslint-disable-next-line react-you-might-not-need-an-effect/no-event-handler
     if (!dialogueOpen) return;
     containerRef.current?.lastElementChild?.scrollIntoView({
       behavior: "instant",
