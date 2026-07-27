@@ -104,8 +104,6 @@ export default function AdminLogTable<T>({
           currentPage * pageSize,
         );
 
-  const PAGE_SIZE_OPTIONS: (number | "all")[] = [10, 20, 50, "all"];
-
   return (
     <div className="flex flex-col gap-[12px]">
       {rows.length === 0 ? (
@@ -193,48 +191,47 @@ export default function AdminLogTable<T>({
       )}
 
       {rows.length > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-[10px] text-[12px]">
-          <div className="flex items-center gap-[6px]">
-            <span className="text-lcars-text-dim">Pro Seite:</span>
-            {PAGE_SIZE_OPTIONS.map((opt) => (
-              <button
-                key={String(opt)}
-                type="button"
-                onClick={() => {
-                  setPageSize(opt);
-                  setPage(1);
-                }}
-                className={`rounded-full px-[12px] py-[3px] ${
-                  pageSize === opt
-                    ? "bg-lcars-amber text-black font-bold"
-                    : "lcars-pill-btn--outline"
-                }`}
-              >
-                {opt === "all" ? "Alle" : opt}
-              </button>
-            ))}
-          </div>
+        <div className="lcars-log-pagination">
+          <label className="lcars-log-pagination-size">
+            <span className="text-lcars-text-dim">Pro Seite</span>
+            <select
+              value={String(pageSize)}
+              onChange={(e) => {
+                const v = e.target.value;
+                setPageSize(v === "all" ? "all" : Number(v));
+                setPage(1);
+              }}
+              aria-label="Einträge pro Seite"
+              className="lcars-input rounded-full text-[12px] py-[2px] pl-[10px] pr-[6px]"
+            >
+              <option value="10">10</option>
+              <option value="20">20</option>
+              <option value="50">50</option>
+              <option value="all">Alle</option>
+            </select>
+          </label>
           {pageSize !== "all" && totalPages > 1 && (
-            <div className="flex items-center gap-[10px]">
+            <div className="lcars-log-pagination-nav">
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage <= 1}
-                className="lcars-pill-btn--outline px-[12px] py-[3px] disabled:opacity-40"
+                className="lcars-icon-btn disabled:opacity-40"
                 aria-label="Vorherige Seite"
+                title="Vorherige Seite"
               >
                 ‹
               </button>
-              <span className="text-lcars-text-dim whitespace-nowrap">
-                Seite {currentPage} / {totalPages} · {visibleRows.length}{" "}
-                Einträge
+              <span className="text-lcars-text-dim whitespace-nowrap tabular-nums">
+                {currentPage} / {totalPages}
               </span>
               <button
                 type="button"
                 onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage >= totalPages}
-                className="lcars-pill-btn--outline px-[12px] py-[3px] disabled:opacity-40"
+                className="lcars-icon-btn disabled:opacity-40"
                 aria-label="Nächste Seite"
+                title="Nächste Seite"
               >
                 ›
               </button>

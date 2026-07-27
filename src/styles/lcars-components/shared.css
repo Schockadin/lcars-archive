@@ -707,6 +707,36 @@
   pointer-events: none;
 }
 
+/* Log-Paginierung (AdminLogTable.tsx) — ein einzelnes, kompaktes Element:
+   Seitengröße als Select + kompakte Vor/Zurück-Navigation. inline-flex mit
+   Umbruch und max-width:100%, damit es auch auf schmalen Screens die Breite
+   nicht sprengt. */
+.lcars-log-pagination {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  max-width: 100%;
+  font-size: 12px;
+}
+.lcars-log-pagination-size,
+.lcars-log-pagination-nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.lcars-log-pagination-size select {
+  width: auto;
+  min-width: 0;
+}
+.lcars-log-pagination-nav button {
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  line-height: 1;
+}
+
 /* Passwort-Feld mit Sichtbarkeits-Umschalter (PasswordInput.tsx). Das Feld
    selbst behält seine bestehenden Klassen (lcars-input/rounded-lcars-pill);
    der Wrapper positioniert nur den Auge-Button rechts im Feld und schafft
