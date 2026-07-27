@@ -1,7 +1,25 @@
 "use client";
+import type { ReactNode } from "react";
 import { useNeo } from "@/hooks/useNeo";
 import { MAIN_NAV } from "@/lib/nav";
+import {
+  HomeNavIcon,
+  CharactersNavIcon,
+  MissionsNavIcon,
+  ArchiveNavIcon,
+  TimelineNavIcon,
+} from "@/lib/icons";
 import LcarsMenuItem from "./MenuItem";
+
+// Icon je Navigationsziel — auf Mobile (Menütext ausgeblendet) wird es statt
+// der reinen Nummer angezeigt, damit die Einträge wiedererkennbar bleiben.
+const NAV_ICONS: Record<string, ReactNode> = {
+  "/": <HomeNavIcon />,
+  "/characters": <CharactersNavIcon />,
+  "/missions": <MissionsNavIcon />,
+  "/archive": <ArchiveNavIcon />,
+  "/timeline": <TimelineNavIcon />,
+};
 
 // "Home" führt direkt auf "/" (zeigt je nach Login-Status Dashboard oder
 // Landingpage, siehe app/page.tsx) — /home bleibt nur noch als Redirect für
@@ -25,6 +43,7 @@ export default function SideBarMenu() {
               id={nav.id}
               text={nav.label}
               href={nav.href}
+              icon={NAV_ICONS[nav.href]}
               key={nav.id}
               // "/" hat keinen Pfad-Segment-Namen (split("/")[1] wäre "") —
               // Dashboard/Landingpage setzen ihren PageMeta-Section-Wert

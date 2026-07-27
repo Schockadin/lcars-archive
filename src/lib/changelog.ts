@@ -231,6 +231,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Neue, dezente Kurzmeldungen (Toasts) unten rechts bestätigen kurze Aktionen wie „Link kopiert“ und blenden sich nach ein paar Sekunden von selbst wieder aus (oder per Klick auf das X).",
       "Die automatische Umwandlung in deutsche Anführungszeichen („…“) wurde überarbeitet: Schluss-Anführungszeichen stehen jetzt zuverlässig oben, und wörtliche Rede über mehrere Absätze wird korrekt behandelt. Ein neues Admin-Werkzeug „Typografie korrigieren“ (unter Scripts) wendet die Korrektur blockweise auf alle bestehenden Inhalte an.",
       "Der Kopfbereich zeigt beim Laden jetzt einen dezenten Platzhalter (Skeleton) statt eines leeren Kastens.",
+      "Auf schmalen Bildschirmen sind die Navigations-Pillen im Kopfbereich jetzt flacher, und das Seitenmenü zeigt statt der bloßen Nummern nun erkennbare Symbole (Home, Charaktere, Missionen, Archiv, Timeline) mit kleiner Nummer als Akzent.",
     ],
   },
 ];

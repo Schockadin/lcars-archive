@@ -21,7 +21,11 @@ export default function HeaderSkeleton({
       {Array.from({ length: count }).map((_, i) => (
         <LcarsSkeleton
           key={i}
-          className="h-[48px] w-full rounded-lcars-pill"
+          className="w-full rounded-lcars-pill"
+          // Gleiche (responsive) Pillen-Höhe wie die echte UserNav
+          // (--usernav-pill-h, siehe header.css), damit der Wechsel nicht
+          // springt und auf Mobile ebenfalls flacher ausfällt.
+          style={{ height: "var(--usernav-pill-h, 48px)" }}
         />
       ))}
     </nav>

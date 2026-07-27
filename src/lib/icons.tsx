@@ -293,3 +293,54 @@ export function CopyIcon() {
     </svg>
   );
 }
+
+// Haupt-Navigation (SidebarMenu.tsx) — auf schmalen Screens wird der
+// Menütext ausgeblendet, sodass sonst nur die kryptische Nummer (00–04)
+// bliebe. Diese Icons machen die Ziele dort wiedererkennbar.
+export function HomeNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M4 11 12 4l8 7" />
+      <path d="M6 10v9h12v-9" />
+      <path d="M10 19v-5h4v5" />
+    </svg>
+  );
+}
+export function CharactersNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="9" cy="8" r="3" />
+      <path d="M3.5 19c0-3 2.5-5 5.5-5s5.5 2 5.5 5" />
+      <path d="M16 6a3 3 0 0 1 0 6" />
+      <path d="M17.5 14c2.2.5 3.5 2.3 3.5 5" />
+    </svg>
+  );
+}
+export function MissionsNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M12 3c3 1.5 5 4.5 5 8 0 2.4-1 4.3-2 5.5H9c-1-1.2-2-3.1-2-5.5 0-3.5 2-6.5 5-8Z" />
+      <circle cx="12" cy="10" r="1.8" />
+      <path d="M9 16.5 6.5 20M15 16.5 17.5 20" />
+    </svg>
+  );
+}
+export function ArchiveNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="3" y="4" width="18" height="4" rx="1" />
+      <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
+      <path d="M10 12h4" />
+    </svg>
+  );
+}
+export function TimelineNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M5 4v16" />
+      <circle cx="5" cy="8" r="1.6" fill="currentColor" stroke="none" />
+      <circle cx="5" cy="16" r="1.6" fill="currentColor" stroke="none" />
+      <path d="M8 8h11M8 16h11" />
+    </svg>
+  );
+}
