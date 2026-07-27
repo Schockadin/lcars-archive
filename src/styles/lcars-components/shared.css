@@ -693,6 +693,83 @@
   transition: width 0.2s ease;
 }
 
+/* App-weite Toast-Benachrichtigungen (ToastProvider.tsx). Fest unten rechts,
+   gestapelt; auf schmalen Screens über die volle Breite. */
+.lcars-toast-region {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 1200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(360px, calc(100vw - 32px));
+  pointer-events: none;
+}
+
+.lcars-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border-left: 6px solid var(--lcars-amber);
+  background: var(--lcars-surface-2);
+  color: var(--lcars-text-contrast);
+  box-shadow: 0 6px 20px rgb(0 0 0 / 45%);
+  animation: lcars-toast-in 0.18s ease-out;
+}
+
+.lcars-toast--success {
+  border-left-color: var(--lcars-green);
+}
+
+.lcars-toast--error {
+  border-left-color: var(--lcars-red);
+}
+
+.lcars-toast--info {
+  border-left-color: var(--lcars-blue);
+}
+
+.lcars-toast-message {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.lcars-toast-dismiss {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--lcars-red);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+@keyframes lcars-toast-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Toasts respektieren „prefers-reduced-motion". */
+@media (prefers-reduced-motion: reduce) {
+  .lcars-toast {
+    animation: none;
+  }
+}
+
 /* ─── Pull-to-Refresh (PullToRefresh.tsx) ──────────────────────────────
    Ersetzt das native Pull-to-Refresh, das html/body mit overflow:clip
    (siehe globals.css) unmöglich macht — wächst als erstes Kind in

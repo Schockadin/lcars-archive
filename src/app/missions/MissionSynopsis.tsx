@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { MissionDetail } from "@/types/missions";
 import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
-import { Viewer } from "@/lib/visibility";
+import { Viewer, viewerHasPermission } from "@/lib/visibility";
 import MissionSynopsisEditor from "./MissionSynopsisEditor";
 import ActionsMenu from "@/components/ActionsMenu";
 import ContentBody from "@/components/ContentBody";
@@ -54,7 +54,7 @@ export default function MissionSynopsis({
         onEdit={() => setEditMode(true)}
       />
 
-      {viewer?.role === "admin" || viewer?.role === "gm" ? (
+      {viewerHasPermission(viewer, "missions.manage") ? (
         <MissionSynopsisEditor
           missionId={mission.id}
           bodyHtml={mission.metadata.body}
