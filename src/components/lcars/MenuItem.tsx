@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, MouseEventHandler, ReactNode } from "react";
 
 type MenuItemType = "bar" | "pill";
 
@@ -14,6 +14,9 @@ interface MenuItemProps {
   // statt der bloßen Nummer angezeigt, damit die Ziele wiedererkennbar
   // bleiben (siehe header.css, .lcars-menu-icon).
   icon?: ReactNode;
+  // Optionaler Klick-Handler (z.B. für die optimistische Aktiv-Markierung in
+  // SidebarMenu). Wird zusätzlich zur normalen Link-Navigation ausgelöst.
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
 }
 
 export default function MenuItem({
@@ -24,10 +27,12 @@ export default function MenuItem({
   type,
   style,
   icon,
+  onClick,
 }: MenuItemProps) {
   return (
     <Link
       href={href}
+      onClick={onClick}
       className="flex-1 min-h-0 flex"
       style={{
         textDecoration: "none",

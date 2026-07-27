@@ -232,6 +232,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Die automatische Umwandlung in deutsche Anführungszeichen („…“) wurde überarbeitet: Schluss-Anführungszeichen stehen jetzt zuverlässig oben, und wörtliche Rede über mehrere Absätze wird korrekt behandelt. Ein neues Admin-Werkzeug „Typografie korrigieren“ (unter Scripts) wendet die Korrektur blockweise auf alle bestehenden Inhalte an.",
       "Der Kopfbereich zeigt beim Laden jetzt einen dezenten Platzhalter (Skeleton) statt eines leeren Kastens.",
       "Auf schmalen Bildschirmen sind die Navigations-Pillen im Kopfbereich jetzt flacher, und das Seitenmenü zeigt statt der bloßen Nummern nun erkennbare Symbole (Home, Charaktere, Missionen, Archiv, Timeline) mit kleiner Nummer als Akzent.",
+      "Die Menüpunkte im Seitenmenü färben sich jetzt sofort beim Antippen ein (statt erst, wenn die Zielseite geladen ist) und springen bei einem Navigationsfehler wieder auf die tatsächliche Seite zurück; im Archiv erscheint beim Kategorienwechsel kein Platzhalter-Skelett mehr.",
     ],
   },
 ];
