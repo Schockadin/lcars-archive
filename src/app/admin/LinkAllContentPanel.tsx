@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { linkAllContentBatchAction } from "@/app/actions/autolinkAll";
+import ScriptProgress from "./ScriptProgress";
 
 const BATCH_SIZE = 15;
 
@@ -22,12 +23,14 @@ export default function LinkAllContentPanel() {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<Progress | null>(null);
   const [done, setDone] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
   async function run() {
     setRunning(true);
     setError(null);
     setDone(false);
     setProgress(null);
+    setDismissed(false);
 
     let offset = 0;
     let changed = 0;
@@ -82,29 +85,24 @@ export default function LinkAllContentPanel() {
         {running ? "Verlinke alle Inhalte…" : "Alle Inhalte verlinken"}
       </button>
 
-      {progress && (
-        <div className="flex flex-col gap-[4px]">
-          <div
-            className="lcars-progress-track"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={pct}
-          >
-            <div className="lcars-progress-bar" style={{ width: `${pct}%` }} />
-          </div>
-          <p className="text-lcars-text-dim text-[12px]">
-            {progress.processed}/{progress.total} geprüft · {progress.changed}{" "}
-            Inhalte verlinkt · {progress.links} Verknüpfungen
-          </p>
-        </div>
-      )}
-
-      {done && progress && (
-        <p className="text-lcars-amber">
-          Fertig: {progress.changed} von {progress.total} Inhalten verlinkt (
-          {progress.links} Verknüpfungen gesetzt).
-        </p>
+      {progress && !dismissed && (
+        <ScriptProgress
+          pct={pct}
+          onDismiss={() => setDismissed(true)}
+          caption={
+            done ? (
+              <span className="text-lcars-amber">
+                Fertig: {progress.changed} von {progress.total} Inhalten verlinkt
+                ({progress.links} Verknüpfungen gesetzt).
+              </span>
+            ) : (
+              <>
+                {progress.processed}/{progress.total} geprüft · {progress.changed}{" "}
+                Inhalte verlinkt · {progress.links} Verknüpfungen
+              </>
+            )
+          }
+        />
       )}
 
       {error && (

@@ -9,7 +9,9 @@ import {
   deleteDialogue,
   restoreDialogue,
   completeDialogue,
-  regenerateAllClosedDialogueContent,
+  regenerateDialogueContent,
+  getDialoguesNeedingContentBatch,
+  countDialoguesNeedingContent,
   inviteDialogueParticipants,
   reserveDialogueReply,
   requestDialogueReservationNotification,
@@ -534,7 +536,24 @@ describe("moderator edits on a closed dialogue never overwrite an existing flowi
   });
 });
 
-describe("regenerateAllClosedDialogueContent", () => {
+// Der Backfill läuft in Produktion BATCH-weise (Fortschrittsanzeige, siehe
+// DialogueContentRegeneratePanel.tsx / regenerateDialogueContentBatchAction).
+// Dieser Helfer spiegelt genau diese Batch-Schleife über den DB-Primitiven und
+// gibt die Zahl der erzeugten Fließtexte zurück.
+async function backfillAllClosedDialogueContent(): Promise<number> {
+  let changed = 0;
+  for (;;) {
+    const ids = await getDialoguesNeedingContentBatch(50);
+    if (ids.length === 0) break;
+    for (const id of ids) {
+      if (await regenerateDialogueContent(sql, id)) changed++;
+    }
+    if ((await countDialoguesNeedingContent()) === 0) break;
+  }
+  return changed;
+}
+
+describe("Dialog-Fließtext-Backfill (Batch)", () => {
   it("backfills content for closed dialogues and leaves open ones untouched", async () => {
     const closed = await setupDialogue();
     const open = await setupDialogue();
@@ -545,7 +564,7 @@ describe("regenerateAllClosedDialogueContent", () => {
       WHERE id = ${closed.entryId}
     `;
 
-    const count = await regenerateAllClosedDialogueContent();
+    const count = await backfillAllClosedDialogueContent();
 
     expect(count).toBeGreaterThanOrEqual(1);
     const [closedRow] = await sql<{ source_md: string }[]>`
@@ -567,7 +586,7 @@ describe("regenerateAllClosedDialogueContent", () => {
     const { entryId } = await setupDialogue();
     await completeDialogue(entryId);
 
-    const count = await regenerateAllClosedDialogueContent();
+    const count = await backfillAllClosedDialogueContent();
 
     expect(count).toBe(0);
   });

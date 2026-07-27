@@ -224,6 +224,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Tutorial und Datenschutzerklärung wurden um die neuen Funktionen ergänzt; das Impressum stellt jetzt klar, dass die Rechte an selbst verfassten Inhalten (Charaktere, Berichte, Gespräche, Archiv-Einträge) bei den jeweiligen Autor*innen liegen.",
       "Die Rechteverwaltung wurde auf ein feingranulares System umgestellt: Neben den bekannten Rollen (Administration, Spielleitung, Spieler, Beobachter, Gast) kann die Administration einer Person jetzt mehrere Rollen gleichzeitig geben und einzelne Rechte gezielt gewähren oder entziehen. Für bestehende Konten ändert sich nichts — sie behalten exakt ihre bisherigen Möglichkeiten.",
       "Neue Admin-Seite „Rollen“ (unter Rollen & Rechte): Hier lassen sich eigene Rollen anlegen und bearbeiten, die Rechte jeder Rolle (auch der System-Rollen) anpassen und Rollen direkt den Usern zuweisen.",
+      "Die Admin-Werkzeuge „Gespräche-Fließtext erzeugen“ und „Missionen ohne Owner zuordnen“ (unter Scripts) laufen jetzt in Blöcken mit Fortschrittsbalken (kein Timeout mehr bei vielen Einträgen); jeder Fortschrittsbalken lässt sich per kleinem X ausblenden.",
     ],
   },
 ];

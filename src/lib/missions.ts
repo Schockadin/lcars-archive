@@ -746,19 +746,33 @@ export async function setMissionOwner(
   return rows[0] ?? null;
 }
 
-// Bulk-Variante von setMissionOwner: weist ALLE Missionen ohne Owner (meist
-// per Vault-Ingest entstanden, der owner_user_id nie setzt) auf einen Schlag
-// einem GM zu (siehe assignOwnerlessMissionsAction in
-// src/app/admin/missionOwnerActions.ts) — spart das mühsame Einzeln-Zuordnen
-// über OwnerSelect.tsx auf jeder Mission-Detailseite. Bereits zugeordnete
-// Missionen bleiben unangetastet (WHERE owner_user_id IS NULL).
-export async function assignOwnerlessMissionsToUser(
+// Bulk-Zuordnung aller besitzerlosen Missionen (meist per Vault-Ingest
+// entstanden, der owner_user_id nie setzt) an einen GM — spart das mühsame
+// Einzeln-Zuordnen über OwnerSelect.tsx auf jeder Mission-Detailseite. Bereits
+// zugeordnete Missionen bleiben unangetastet (WHERE owner_user_id IS NULL).
+//
+// Batch-Varianten für die Fortschrittsanzeige im Admin-Panel
+// (AssignOwnerlessMissionsPanel.tsx): weist höchstens `limit` noch besitzerlose
+// Missionen zu. Da zugeordnete Missionen die Menge (owner_user_id IS NULL)
+// verlassen, schrumpft countOwnerlessMissions von Batch zu Batch — der Client
+// bildet den Fortschritt daraus stateless ab (kein offset nötig).
+export async function countOwnerlessMissions(): Promise<number> {
+  const [row] = await sql<{ count: number }[]>`
+    SELECT COUNT(*)::int AS count FROM missions WHERE owner_user_id IS NULL
+  `;
+  return row?.count ?? 0;
+}
+
+export async function assignOwnerlessMissionsBatch(
   ownerId: number,
+  limit: number,
 ): Promise<{ slugs: string[] }> {
   const rows = await sql<{ slug: string }[]>`
     UPDATE missions
     SET owner_user_id = ${ownerId}, updated_at = NOW()
-    WHERE owner_user_id IS NULL
+    WHERE id IN (
+      SELECT id FROM missions WHERE owner_user_id IS NULL ORDER BY id ASC LIMIT ${limit}
+    )
     RETURNING slug
   `;
   return { slugs: rows.map((r) => r.slug) };

@@ -2,21 +2,31 @@
 import { requireAdmin } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { userCan } from "@/lib/permissions";
-import { assignOwnerlessMissionsToUser } from "@/lib/missions";
+import {
+  assignOwnerlessMissionsBatch,
+  countOwnerlessMissions,
+} from "@/lib/missions";
 import { revalidateMission } from "@/lib/revalidate";
 
-export interface AssignOwnerlessMissionsResult {
-  count?: number;
+export interface AssignOwnerlessMissionsBatchResult {
   error?: string;
+  // In DIESEM Batch zugeordnete Missionen.
+  assignedInBatch?: number;
+  // Noch besitzerlose Missionen NACH diesem Batch.
+  remaining?: number;
 }
 
-// Admin-only (wie setOwnerAction in src/app/actions/owner.ts) — im
-// Gegensatz dazu keine einzelne Mission, sondern alle auf einen Schlag, die
-// noch owner_user_id IS NULL haben (siehe assignOwnerlessMissionsToUser in
-// src/lib/missions.ts).
-export async function assignOwnerlessMissionsAction(
+// Admin-only (wie setOwnerAction in src/app/actions/owner.ts) — weist alle
+// Missionen ohne Owner der ausgewählten Spielleitung zu. Arbeitet BATCH-weise
+// für die Fortschrittsanzeige (siehe AssignOwnerlessMissionsPanel.tsx): der
+// Client ruft die Action seriell auf, bis remaining 0 erreicht. So bleibt jeder
+// Request klein (kein Timeout bei sehr vielen Missionen). Kein offset nötig —
+// zugeordnete Missionen verlassen die Menge „owner_user_id IS NULL", die
+// Auswahl greift also immer die nächsten offenen.
+export async function assignOwnerlessMissionsBatchAction(
   ownerId: number,
-): Promise<AssignOwnerlessMissionsResult> {
+  batchSize: number,
+): Promise<AssignOwnerlessMissionsBatchResult> {
   await requireAdmin();
 
   const owner = await getUserById(ownerId);
@@ -27,10 +37,16 @@ export async function assignOwnerlessMissionsAction(
     return { error: "Nur Spielleitung/Administration kann zugeordnet werden." };
   }
 
-  const { slugs } = await assignOwnerlessMissionsToUser(ownerId);
+  const safeBatch =
+    Number.isInteger(batchSize) && batchSize > 0 && batchSize <= 100
+      ? batchSize
+      : 20;
+
+  const { slugs } = await assignOwnerlessMissionsBatch(ownerId, safeBatch);
   for (const slug of slugs) {
     revalidateMission(slug);
   }
+  const remaining = await countOwnerlessMissions();
 
-  return { count: slugs.length };
+  return { assignedInBatch: slugs.length, remaining };
 }

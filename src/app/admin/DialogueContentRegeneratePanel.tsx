@@ -1,34 +1,69 @@
 "use client";
 import { useState } from "react";
-import { regenerateAllDialogueContentAction } from "./dialogueContentActions";
+import { regenerateDialogueContentBatchAction } from "./dialogueContentActions";
+import ScriptProgress from "./ScriptProgress";
+
+const BATCH_SIZE = 15;
+
+interface Progress {
+  processed: number;
+  total: number;
+  changed: number;
+}
 
 // Admin-only (siehe page.tsx) — Backfill für bereits geschlossene Dialoge,
 // die vor Einführung des Fließtext-Features (archive_entries.content/
 // source_md aus dialogue_messages, siehe dialoguesCore.ts) abgeschlossen
 // wurden. Neu abgeschlossene Dialoge brauchen das nicht — die bekommen
-// ihren Fließtext automatisch. regenerateDialogueContent überschreibt nie
-// einen bereits vorhandenen Fließtext, ein erneuter Klick ist also
-// gefahrlos (meldet dann 0 aktualisierte Gespräche).
+// ihren Fließtext automatisch. Läuft BATCH-weise (seriell) mit
+// Fortschrittsbalken, damit auch viele Dialoge nicht in ein Timeout laufen;
+// ein erneuter Lauf ist gefahrlos (meldet dann 0 erzeugte Fließtexte).
 export default function DialogueContentRegeneratePanel() {
   const [running, setRunning] = useState(false);
-  const [count, setCount] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [progress, setProgress] = useState<Progress | null>(null);
+  const [done, setDone] = useState(false);
+  const [dismissed, setDismissed] = useState(false);
 
-  async function handleStart() {
+  async function run() {
     setRunning(true);
     setError(null);
-    setCount(null);
+    setDone(false);
+    setProgress(null);
+    setDismissed(false);
 
-    const result = await regenerateAllDialogueContentAction();
-    setRunning(false);
+    let total: number | null = null;
+    let changed = 0;
 
-    if (result.error || result.count == null) {
-      setError(result.error ?? "Regenerierung fehlgeschlagen.");
-      return;
+    try {
+      for (;;) {
+        const res = await regenerateDialogueContentBatchAction(BATCH_SIZE);
+        if (res.error) {
+          setError(res.error);
+          return;
+        }
+        changed += res.changedInBatch ?? 0;
+        const remaining = res.remaining ?? 0;
+        const processedInBatch = res.processedInBatch ?? 0;
+        if (total === null) total = processedInBatch + remaining;
+        setProgress({ processed: total - remaining, total, changed });
+
+        if (remaining === 0 || processedInBatch === 0) {
+          setDone(true);
+          return;
+        }
+      }
+    } catch {
+      setError("Beim Erzeugen ist ein Fehler aufgetreten.");
+    } finally {
+      setRunning(false);
     }
-
-    setCount(result.count);
   }
+
+  const pct =
+    progress && progress.total > 0
+      ? Math.round((progress.processed / progress.total) * 100)
+      : 0;
 
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
@@ -37,26 +72,43 @@ export default function DialogueContentRegeneratePanel() {
         Fließtext (Vorlesbare Zusammenfassung statt Karten-Ansicht) einen
         — nötig einmalig für Dialoge, die vor Einführung dieses Features
         abgeschlossen wurden. Bereits vorhandener Fließtext bleibt dabei
-        immer unverändert.
+        immer unverändert. Läuft in Blöcken mit Fortschrittsanzeige.
       </p>
 
       <button
         type="button"
-        onClick={handleStart}
+        onClick={run}
         disabled={running}
         className="lcars-pill-btn--outline self-start disabled:opacity-50"
       >
-        {running ? "Wird erzeugt…" : "Fehlenden Fließtext nachträglich erzeugen"}
+        {running ? "Wird erzeugt…" : "Erzeugen"}
       </button>
+
+      {progress && !dismissed && (
+        <ScriptProgress
+          pct={pct}
+          onDismiss={() => setDismissed(true)}
+          caption={
+            done ? (
+              <span className="text-lcars-amber">
+                Fertig: {progress.changed}{" "}
+                {progress.changed === 1 ? "Fließtext" : "Fließtexte"} erzeugt
+                {progress.total === 0 ? " (nichts zu tun)" : ""}.
+              </span>
+            ) : (
+              <>
+                {progress.processed}/{progress.total} geprüft · {progress.changed}{" "}
+                erzeugt
+              </>
+            )
+          }
+        />
+      )}
 
       {error && (
         <p className="text-lcars-red" role="alert">
           {error}
         </p>
-      )}
-
-      {count !== null && (
-        <p className="text-lcars-amber">{count} Gespräche aktualisiert.</p>
       )}
     </div>
   );

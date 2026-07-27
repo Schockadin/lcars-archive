@@ -1150,9 +1150,10 @@ export async function buildDialogueFlowingText(
 // — er füllt nur nach, wenn für diesen Dialog noch nie einer erzeugt
 // wurde (z.B. ein alter, noch nicht per Backfill befüllter Dialog).
 // Rückgabewert: ob tatsächlich geschrieben wurde (RETURNING-Zeile
-// vorhanden) — genutzt von regenerateAllClosedDialogueContent, um nur
-// echte Änderungen zu zählen. Nimmt bewusst einen Client-Parameter statt
-// fest den globalen sql zu nutzen (siehe SqlClient-Kommentar oben).
+// vorhanden) — genutzt vom Batch-Backfill (getDialoguesNeedingContentBatch +
+// regenerateDialogueContentBatchAction), um nur echte Änderungen zu zählen.
+// Nimmt bewusst einen Client-Parameter statt fest den globalen sql zu nutzen
+// (siehe SqlClient-Kommentar oben).
 export async function regenerateDialogueContent(
   client: SqlClient,
   archiveEntryId: number,
@@ -1166,21 +1167,31 @@ export async function regenerateDialogueContent(
   return rows.length > 0;
 }
 
-// Admin-Backfill (/admin/scripts) für bereits geschlossene Dialoge, die vor
-// Einführung des Fließtext-Features abgeschlossen wurden (oder noch keinen
-// Fließtext haben) — Dialoge mit bereits vorhandenem Fließtext werden
-// übersprungen (siehe regenerateDialogueContent), ein zweiter Lauf ist
-// deshalb gefahrlos und meldet 0. Sequentiell statt Promise.all — max: 1
-// in src/lib/db.ts erlaubt ohnehin nur eine Query gleichzeitig.
-export async function regenerateAllClosedDialogueContent(): Promise<number> {
-  const rows = await sql<{ id: number }[]>`
-    SELECT id FROM archive_entries WHERE category = 'dialogue' AND dialogue_open = FALSE
+// Batch-Varianten für die Fortschrittsanzeige im Admin-Panel
+// (DialogueContentRegeneratePanel.tsx): abgeschlossene Dialoge OHNE Fließtext.
+// Da regenerateDialogueContent den Fließtext füllt, verlässt ein Dialog nach der
+// Bearbeitung diese Menge — die Anzahl schrumpft also von Batch zu Batch, was
+// den Fortschritt stateless abbildet (kein offset nötig).
+export async function countDialoguesNeedingContent(): Promise<number> {
+  const [row] = await sql<{ count: number }[]>`
+    SELECT COUNT(*)::int AS count FROM archive_entries
+    WHERE category = 'dialogue' AND dialogue_open = FALSE
+      AND (content IS NULL OR content = '')
   `;
-  let updated = 0;
-  for (const row of rows) {
-    if (await regenerateDialogueContent(sql, row.id)) updated++;
-  }
-  return updated;
+  return row?.count ?? 0;
+}
+
+export async function getDialoguesNeedingContentBatch(
+  limit: number,
+): Promise<number[]> {
+  const rows = await sql<{ id: number }[]>`
+    SELECT id FROM archive_entries
+    WHERE category = 'dialogue' AND dialogue_open = FALSE
+      AND (content IS NULL OR content = '')
+    ORDER BY id ASC
+    LIMIT ${limit}
+  `;
+  return rows.map((r) => r.id);
 }
 
 // Abschließen ist bewusst one-way (kein Wiedereröffnen) — siehe
