@@ -1,5 +1,5 @@
 "use server";
-import { requirePermission } from "@/lib/dal";
+import { requireAdmin } from "@/lib/dal";
 import {
   regenerateDialogueContent,
   getDialoguesNeedingContentBatch,
@@ -31,7 +31,12 @@ export interface RegenerateDialogueContentBatchResult {
 export async function regenerateDialogueContentBatchAction(
   batchSize: number,
 ): Promise<RegenerateDialogueContentBatchResult> {
-  await requirePermission("dialogues.moderate");
+  // admin.access (wie die /admin/scripts-Seite selbst und das Missionen-Panel)
+  // — dies ist eine Bulk-WARTUNGSAKTION, nicht die feingranulare
+  // Einzeldialog-Moderation (dialogues.moderate). Vorher auf dialogues.moderate
+  // gegatet, was Admins ohne dieses (in eigenen Rollen entziehbare) Recht
+  // aussperrte, obwohl sie die Seite betreten dürfen.
+  await requireAdmin();
 
   const safeBatch =
     Number.isInteger(batchSize) && batchSize > 0 && batchSize <= 100
