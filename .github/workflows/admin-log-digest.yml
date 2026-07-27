@@ -1,0 +1,36 @@
+name: Admin Log Digest
+
+on:
+  schedule:
+    # GitHub-Actions-Cron kennt nur UTC. Für "6 Uhr Berliner Zeit" feuern wir
+    # um 04:00 UTC (= 06:00 im Sommer, CEST) und 05:00 UTC (= 06:00 im Winter,
+    # CET). Das Skript selbst sendet nur, wenn es in Europe/Berlin gerade 6 Uhr
+    # ist (siehe scripts/send-admin-log-digest.ts) — so wird pro Tag genau
+    # einmal um 6 Uhr Berliner Zeit versendet, über Sommer-/Winterzeit hinweg.
+    - cron: "0 4 * * *"
+    - cron: "0 5 * * *"
+  workflow_dispatch:
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Erwartet folgende Repository-Secrets (Settings → Secrets and
+      # variables → Actions), siehe README.md#deployment:
+      #   DATABASE_URL       — produktive DB
+      #   RESEND_API_KEY     — Resend-API-Key für den Mailversand
+      #   RESEND_FROM_EMAIL  — Absenderadresse (optional, sonst Resend-Default)
+      - run: npm run admin:log-digest
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          RESEND_FROM_EMAIL: ${{ secrets.RESEND_FROM_EMAIL }}

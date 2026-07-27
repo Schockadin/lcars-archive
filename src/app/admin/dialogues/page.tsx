@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { userCan } from "@/lib/permissions";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
@@ -18,7 +19,8 @@ export const metadata: Metadata = {
 // Lesezugriff ohne Antwortformular gewährt (siehe dort) — kein eigener
 // read-only-Modus nötig.
 export default async function AdminDialoguesPage() {
-  await requireGM();
+  const viewer = await requireGM();
+  const canModerate = userCan(viewer, "dialogues.moderate");
 
   const dialogues = await getAllOpenDialoguesForGM();
 
@@ -39,36 +41,45 @@ export default async function AdminDialoguesPage() {
           {dialogues.length === 0 ? (
             <p className="lcars-empty-state">Keine offenen Gespräche.</p>
           ) : (
-            <div className="flex flex-col gap-[6px]">
+            <div className="flex flex-col gap-[12px]">
               {dialogues.map((d) => (
-                <Link
-                  key={d.slug}
-                  href={`/dialogues/${d.slug}`}
-                  className="mission-akte"
-                  style={
-                    {
-                      "--mission-color": "var(--lcars-green)",
-                    } as React.CSSProperties
-                  }
-                >
-                  <span className="mission-akte-rail" />
-                  <span className="mission-akte-body text-left">
-                    <span className="mission-akte-title block">
-                      {d.title}
+                <div key={d.slug} className="flex flex-col gap-[4px]">
+                  <Link
+                    href={`/dialogues/${d.slug}`}
+                    className="mission-akte"
+                    style={
+                      {
+                        "--mission-color": "var(--lcars-green)",
+                      } as React.CSSProperties
+                    }
+                  >
+                    <span className="mission-akte-rail" />
+                    <span className="mission-akte-body text-left">
+                      <span className="mission-akte-title block">
+                        {d.title}
+                      </span>
+                      <span className="mission-akte-meta">
+                        <span>
+                          <b>Teilnehmer</b> {d.participantNames.join(", ")}
+                        </span>
+                        <span>
+                          <b>Owner</b> {d.ownerName ?? "— kein Owner —"}
+                        </span>
+                        <span>
+                          <b>Zuletzt aktiv</b> {formatDateTime(d.updatedAt)}
+                        </span>
+                      </span>
                     </span>
-                    <span className="mission-akte-meta">
-                      <span>
-                        <b>Teilnehmer</b> {d.participantNames.join(", ")}
-                      </span>
-                      <span>
-                        <b>Owner</b> {d.ownerName ?? "— kein Owner —"}
-                      </span>
-                      <span>
-                        <b>Zuletzt aktiv</b> {formatDateTime(d.updatedAt)}
-                      </span>
-                    </span>
-                  </span>
-                </Link>
+                  </Link>
+                  {canModerate && (
+                    <Link
+                      href={`/admin/dialogues/${d.slug}/edit`}
+                      className="text-lcars-amber underline text-[13px] self-start"
+                    >
+                      Metadaten bearbeiten
+                    </Link>
+                  )}
+                </div>
               ))}
             </div>
           )}

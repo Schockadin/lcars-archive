@@ -12,6 +12,11 @@ const ACTION_LABELS: Record<AdminAuditAction, string> = {
   reactivate_user: "User reaktiviert",
   delete_user: "User gelöscht",
   force_logout: "User abgemeldet (alle Geräte)",
+  update_roles: "Rollen geändert",
+  update_permissions: "Rechte geändert",
+  create_role: "Rolle angelegt",
+  edit_role: "Rolle bearbeitet",
+  delete_role: "Rolle gelöscht",
 };
 
 const columns: LogColumn<AdminAuditLogEntry>[] = [

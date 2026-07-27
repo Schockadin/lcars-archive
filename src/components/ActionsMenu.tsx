@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Viewer } from "@/lib/visibility";
+import type { Viewer } from "@/lib/visibility";
 import { Character } from "@/types/character";
 import OwnerSelect from "./OwnerSelect";
 import AdminVisibilitySelect from "./AdminVisibilitySelect";
@@ -14,7 +14,7 @@ import FollowButtons from "./FollowButtons";
 import ShareMenu from "./ShareMenu";
 import { MissionDetail, MissionLogDetail } from "@/types/missions";
 import { ArchiveEntryDetail } from "@/types/archive";
-import { FollowTargetType } from "@/lib/follows";
+import type { FollowTargetType } from "@/lib/follows";
 import type { OwnerContentType } from "@/app/actions/owner";
 import type { TrashContentType } from "@/lib/adminContent";
 import type { AdminVisibilityContentType } from "@/app/actions/visibility";
@@ -108,7 +108,7 @@ export default function ActionsMenu({
   const canManageContent =
     (contentType !== "missionLog" &&
       contentType !== "character" &&
-      viewer?.role === "admin") ||
+      !!viewer?.permissions.includes("content.moderate")) ||
     viewer?.userId === playerId;
 
   // Für den WhatsApp-Teilen-Text im ShareMenu (siehe FollowButtons.tsx) —
@@ -135,7 +135,9 @@ export default function ActionsMenu({
 
   return (
     <div className="flex flex-col items-start justify-center gap-[5px]">
-      {(viewer?.role === "admin" || viewer?.role === "gm") && (
+      {(viewer?.permissions.includes("content.moderate") ||
+        (viewer?.permissions.includes("missions.manage") &&
+          contentType === "mission")) && (
         <OwnerSelect
           contentType={OWNER_CONTENT_TYPE[contentType]}
           id={content.id}
@@ -143,15 +145,17 @@ export default function ActionsMenu({
           users={owners}
         />
       )}
-      {viewer?.role === "admin" && visibilityContentType && "visibility" in content && (
-        <AdminVisibilitySelect
-          contentType={visibilityContentType}
-          id={content.id}
-          initialValue={content.visibility}
-        />
-      )}
+      {viewer?.permissions.includes("content.moderate") &&
+        visibilityContentType &&
+        "visibility" in content && (
+          <AdminVisibilitySelect
+            contentType={visibilityContentType}
+            id={content.id}
+            initialValue={content.visibility}
+          />
+        )}
       <div className="flex gap-[5px]">
-        {(viewer?.role === "gm" || viewer?.role === "admin") && !isDialogue && (
+        {viewer?.permissions.includes("content.autolink_tools") && !isDialogue && (
           <ContentLinkToolButton
             contentType={contentType}
             slug={content.slug}
@@ -213,7 +217,7 @@ export default function ActionsMenu({
               <PencilIcon />
             </button>
           ))}
-        {viewer?.role === "admin" && (
+        {viewer?.permissions.includes("content.moderate") && (
           <DeleteContentButton
             contentType={trashContentType}
             id={content.id}

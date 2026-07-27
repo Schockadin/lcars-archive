@@ -26,6 +26,11 @@ export function DataRowPill({
   className,
   expanded,
 }: DataRowPillProps) {
+  // Zähler über 99 werden als "99+" angezeigt, damit die Wert-Spalte der
+  // DataRow bei vielen Inhalten nicht überläuft.
+  const displayValue =
+    typeof value === "number" && value > 99 ? "99+" : value;
+
   const content = (
     <>
       <div className="lcars-data-row-label-text flex-1 h-full">{label}</div>
@@ -52,7 +57,7 @@ export function DataRowPill({
           color: labelColor,
         }}
       >
-        {value}
+        {displayValue}
       </div>
 
       {/* Separator */}

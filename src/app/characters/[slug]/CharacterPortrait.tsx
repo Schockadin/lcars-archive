@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import Image from "next/image";
 import { getContentImagesAction } from "@/app/actions/contentImages";
 import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@/lib/icons";
+import { useReturnFocus } from "@/hooks/useReturnFocus";
 
 /**
  * Portrait des Charakters. Ist ein Bild hinterlegt, lässt es sich anklicken und
@@ -27,6 +28,8 @@ export default function CharacterPortrait({
   const [open, setOpen] = useState(false);
   const [gallery, setGallery] = useState<string[]>([]);
   const [index, setIndex] = useState(0);
+  // Fokus nach dem Schließen der Lightbox an das Portrait-Trigger zurückgeben.
+  useReturnFocus(open);
 
   // Karussell-Bilder erst beim Öffnen laden (gleiches Muster wie
   // ContentImageGallery) statt auf jeder Charakterseite unbedingt — Portrait

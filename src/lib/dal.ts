@@ -3,7 +3,12 @@ import { cache } from "react";
 import { redirect, forbidden } from "next/navigation";
 import { getSession, type SessionPayload } from "@/lib/session";
 import { getUserById } from "@/lib/users";
-import type { User } from "@/types/db";
+import { getRoleMap } from "@/lib/roles";
+import type { User, Role } from "@/types/db";
+import {
+  resolvePermissions,
+  type Permission,
+} from "@/lib/permissions";
 
 // React cache() dedupliziert wiederholte Aufrufe innerhalb eines
 // Render-Durchlaufs (siehe Next.js-Doku zur Data Access Layer).
@@ -42,6 +47,11 @@ export const getCurrentUser = cache(async (): Promise<User> => {
   if (session.sessionVersion !== user.session_version) {
     redirect("/login");
   }
+  // Aktive Rollen-Map (permissions.ts) einmal pro Anfrage aus der DB laden —
+  // so lösen auch die vielen synchronen userCan(...)-Aufrufstellen in Server-
+  // Komponenten/Actions gegen die aktuellen (evtl. bearbeiteten/eigenen) Rollen
+  // auf, ohne selbst eine DB-Abfrage einbauen zu müssen. Cache-dedupliziert.
+  await getRoleMap();
   return user;
 });
 
@@ -51,35 +61,65 @@ export const getCurrentUser = cache(async (): Promise<User> => {
 // Useraccount-Verwaltungs-Actions). forbidden() (nicht redirect) — der User
 // ist angemeldet, nur für diese Seite nicht berechtigt (siehe
 // app/forbidden.tsx).
+// Granulares RBAC: effektive Rollen eines Users = Primärrolle + Zusatzrollen
+// (dedupliziert), siehe src/lib/permissions.ts.
+export function effectiveRoles(user: User): Role[] {
+  return Array.from(new Set<Role>([user.role, ...user.additional_roles]));
+}
+
+// Effektive Rechte des aktuell eingeloggten Users (aus allen Rollen +
+// Overrides). React-cache-dedupliziert pro Render, resolvt frisch aus der DB
+// (nie aus dem Cookie — gleiche Begründung wie bei getCurrentUser).
+export const getCurrentUserPermissions = cache(
+  async (): Promise<Set<Permission>> => {
+    const user = await getCurrentUser();
+    return resolvePermissions(effectiveRoles(user), user.permission_overrides);
+  },
+);
+
+// Gate: fordert genau ein Recht. forbidden() (nicht redirect) — der User ist
+// angemeldet, nur für diese Aktion nicht berechtigt.
+export async function requirePermission(
+  permission: Permission,
+): Promise<User> {
+  const user = await getCurrentUser();
+  const perms = await getCurrentUserPermissions();
+  if (!perms.has(permission)) forbidden();
+  return user;
+}
+
+// Gate: fordert mindestens EINES der Rechte.
+export async function requireAnyPermission(
+  permissions: Permission[],
+): Promise<User> {
+  const user = await getCurrentUser();
+  const perms = await getCurrentUserPermissions();
+  if (!permissions.some((p) => perms.has(p))) forbidden();
+  return user;
+}
+
+// Rückwärtskompatible Guards, jetzt über das RBAC ausgedrückt (Signaturen
+// unverändert, damit die vielen bestehenden Aufrufstellen unangetastet
+// bleiben). requireGM = „darf Spielleitungs-Werkzeuge nutzen“ (gm.access),
+// requireAdmin = „Verwaltung“ (admin.access), requireNonGuest = „darf die
+// User-Liste sehen/abonnieren“ (users.browse).
 export async function requireGM(): Promise<User> {
-  const user = await getCurrentUser();
-  if (user.role !== "gm" && user.role !== "admin") {
-    forbidden();
-  }
-  return user;
+  return requirePermission("gm.access");
 }
 
-// Strenger als requireGM: nur für Useraccount-Verwaltung (anlegen, Rolle
-// ändern, deaktivieren, löschen, bearbeiten) — ein reiner gm darf weiterhin
-// nur Charaktere zuweisen (assignCharacterAction bleibt bei requireGM).
 export async function requireAdmin(): Promise<User> {
-  const user = await getCurrentUser();
-  if (user.role !== "admin") {
-    forbidden();
-  }
-  return user;
+  return requirePermission("admin.access");
 }
 
-// Gate für /users (Userübersicht) und /users/[id] (öffentliches Profil):
-// jede Rolle außer guest darf rein — Gäste dürfen laut Produktentscheidung
-// nur Inhalte ansehen/bookmarken/abonnieren (siehe scripts/schema.sql), eine
-// Userliste mit Subscribe-Aktion gehört nicht dazu.
 export async function requireNonGuest(): Promise<User> {
-  const user = await getCurrentUser();
-  if (user.role === "guest") {
-    forbidden();
-  }
-  return user;
+  return requirePermission("users.browse");
+}
+
+// Baseline für den /admin-Bereich (Layout): sowohl reine Admins als auch reine
+// GMs dürfen den Staff-Bereich betreten; die Unterseiten gaten anschließend
+// spezifisch (requireAdmin/requireGM bzw. feinere Rechte).
+export async function requireStaff(): Promise<User> {
+  return requireAnyPermission(["admin.access", "gm.access"]);
 }
 
 // Gemeinsamer Guard in den Content-Actions (Charakter/Mission/Mission-Log/

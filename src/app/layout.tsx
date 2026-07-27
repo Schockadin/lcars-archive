@@ -7,6 +7,7 @@ import {
   LcarsServiceWorkerRegister,
 } from "@/components/lcars";
 import { NeoProvider } from "@/context/NeoProvider";
+import { ToastProvider } from "@/components/toast/ToastProvider";
 import { getCampaignYears } from "@/lib/constants";
 import { APP_VERSION } from "@/lib/version";
 
@@ -53,9 +54,11 @@ export default function RootLayout({
     >
       <body>
         <NeoProvider>
-          <LcarsAppShell appVersion={APP_VERSION}>{children}</LcarsAppShell>
-          <LcarsCookieNotice />
-          <LcarsServiceWorkerRegister />
+          <ToastProvider>
+            <LcarsAppShell appVersion={APP_VERSION}>{children}</LcarsAppShell>
+            <LcarsCookieNotice />
+            <LcarsServiceWorkerRegister />
+          </ToastProvider>
         </NeoProvider>
       </body>
     </html>

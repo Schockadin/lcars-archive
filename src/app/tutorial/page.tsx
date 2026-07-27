@@ -117,6 +117,23 @@ export default function TutorialPage() {
                   Archiv-Einträge anzulegen.
                 </li>
               </ul>
+              <p>
+                Die Rollen sind nur <strong>Vorlagen</strong>: Ein Konto kann{" "}
+                <strong>mehrere Rollen</strong> gleichzeitig haben (die Rechte
+                addieren sich), und die Administration kann darüber hinaus{" "}
+                <strong>einzelne Rechte</strong> pro Person gezielt gewähren oder
+                entziehen (im User-Editor unter „Individuelle Rechte“). So lässt
+                sich z.B. jemandem nur das Verwalten von Missionen erlauben, ohne
+                gleich die ganze Spielleitungs-Rolle zu vergeben.
+              </p>
+              <p>
+                Über die Admin-Seite <strong>„Rollen“</strong> (Rollen &amp;
+                Rechte) kann die Administration außerdem <strong>eigene
+                Rollen</strong> anlegen, die Rechte jeder Rolle (auch der fünf
+                System-Rollen) anpassen und Rollen dort direkt den Usern
+                zuweisen. Die fünf System-Rollen bleiben dabei immer erhalten und
+                können nicht gelöscht werden.
+              </p>
             </div>
           </LcarsDataRow>
 
@@ -189,43 +206,77 @@ export default function TutorialPage() {
                 separates Formular.
               </p>
               <p>
+                <strong>Gespräche</strong> sind ein eigener Inhaltstyp mit ein
+                paar Besonderheiten — sie haben weiter unten eine eigene
+                Sektion.
+              </p>
+            </div>
+          </LcarsDataRow>
+
+          <LcarsDataRow value={4} label="Gespräche" color="var(--lcars-amber)">
+            <div className="lcars-text flex flex-col gap-[12px]">
+              <p>
                 Ein <strong>Gespräch</strong> startest du mit deinem Charakter
                 und dem Charakter einer oder mehrerer anderer Personen
                 (Mehrfachauswahl); es beginnt <strong>offen</strong> — nur
                 Teilnehmende können antworten. Der Owner (wer das Gespräch
                 begonnen hat) kann auch danach jederzeit weitere Personen direkt
-                hinzufügen (samt Info-Mail an sie). Wer mit mehreren eigenen
+                hinzufügen (samt Info-Mail an sie) und ist die einzige Person,
+                die das Gespräch löschen darf. Wer mit mehreren eigenen
                 Charakteren teilnimmt, kann nicht zweimal hintereinander mit
                 demselben Charakter antworten — dazwischen muss ein anderer
-                Charakter am Zug gewesen sein. Sobald ein Gespräch mehr als zwei
-                Teilnehmende hat, muss man sich das Antwortrecht zusätzlich erst
-                per Button für zwei Stunden reservieren, bevor man schreiben
-                kann — solange jemand anderes reserviert hat, seht ihr, wer
-                gerade dran ist und könnt euch optional per Mail/Push
-                benachrichtigen lassen, sobald die Sperre wieder endet (oder
-                wenn die reservierende Person selbst antwortet, endet sie
-                vorzeitig). Ein offenes Gespräch aktualisiert sich dabei
-                automatisch — neue Nachrichten und Änderungen am Antwortrecht
-                erscheinen von selbst, ohne dass du die Seite neu laden musst.
+                Charakter am Zug gewesen sein.
+              </p>
+              <p>
+                Sobald ein Gespräch <strong>mehr als zwei Teilnehmende</strong>{" "}
+                hat, muss man sich das Antwortrecht zusätzlich erst per Button
+                für zwei Stunden reservieren, bevor man schreiben kann — solange
+                jemand anderes reserviert hat, seht ihr, wer gerade dran ist,
+                und könnt euch optional per Mail/Push benachrichtigen lassen,
+                sobald die Sperre wieder endet (antwortet die reservierende
+                Person selbst, endet sie vorzeitig). Ein offenes Gespräch
+                aktualisiert sich dabei automatisch — neue Nachrichten und
+                Änderungen am Antwortrecht erscheinen von selbst, ohne dass du
+                die Seite neu laden musst.
+              </p>
+              <p>
                 Sobald eine teilnehmende Person es abschließt, wird es{" "}
-                <strong>unwiderruflich geschlossen</strong> und taucht danach
-                als gewöhnlicher Archiv-Eintrag in der Kategorie „Gespräche“ auf
-                — standardmäßig als zusammenhängender Lesetext, per Umschalter
-                oben auf der Seite aber auch wie ein offenes Gespräch mit
-                einzelnen Nachrichtenkarten anzeigbar. Diese Einstellung gilt
-                für alle abgeschlossenen Gespräche, die du dir ansiehst. Im
-                Lesetext wird die wörtliche Rede jedes Charakters in dessen{" "}
+                <strong>unwiderruflich geschlossen</strong> und taucht danach als
+                gewöhnlicher Archiv-Eintrag in der Kategorie „Gespräche“ auf —
+                standardmäßig als zusammenhängender Lesetext, per Umschalter oben
+                auf der Seite aber auch wie ein offenes Gespräch mit einzelnen
+                Nachrichtenkarten anzeigbar. Diese Einstellung gilt für alle
+                abgeschlossenen Gespräche, die du dir ansiehst. Im Lesetext wird
+                die wörtliche Rede jedes Charakters in dessen{" "}
                 <strong>Charakter-Farbe</strong> dargestellt, ebenso die
                 Nachrichten-Karten in offenen wie geschlossenen Gesprächen —
-                diese Farbe legst du im Profil unter „Charakter-Farben“ fest,
-                für jeden deiner Charaktere einzeln (ohne eigene Wahl bekommt
-                er automatisch eine der LCARS-Farben).
+                diese Farbe legst du im Profil unter „Charakter-Farben“ fest, für
+                jeden deiner Charaktere einzeln (ohne eigene Wahl bekommt er
+                automatisch eine der LCARS-Farben).
+              </p>
+              <p>
+                <strong>Spielleitung:</strong> Über das „Leitung“-Menü im Header
+                (Eintrag „Gespräche“) sieht die Spielleitung alle aktuell offenen
+                Gespräche, auch ohne eigene Teilnahme — ein Klick öffnet das
+                Gespräch lesend, ohne Antwortformular. Über jedes neu begonnene
+                Gespräch wird die Spielleitung außerdem automatisch per Mail/Push
+                informiert.
+              </p>
+              <p>
+                <strong>Moderation (Administration):</strong> Wer das Recht zur
+                Gesprächs-Moderation hat (standardmäßig die Administration), darf
+                in jedem Gespräch jede Nachricht bearbeiten oder löschen (auch
+                fremde und auch in bereits abgeschlossenen Gesprächen), dessen
+                Besitzer:in ändern sowie die <strong>Metadaten</strong> (Titel,
+                Datum, Schauplatz, Ort, Tags) über „Metadaten bearbeiten“
+                anpassen — auch bei abgeschlossenen Gesprächen; der eigentliche
+                Gesprächsverlauf bleibt dabei unangetastet.
               </p>
             </div>
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={4}
+            value={5}
             label="Merken & Abonnieren"
             color="var(--lcars-blue)"
           >
@@ -256,6 +307,18 @@ export default function TutorialPage() {
                 Inhalten — plus deine Lesezeichen und Abos.
               </p>
               <p>
+                Der News-Feed bleibt <strong>dauerhaft</strong> sichtbar (nicht
+                nur bis zum nächsten Besuch): Jede News blendest du über das
+                kleine <strong>×</strong> rechts einzeln aus — sie gilt damit als
+                gelesen und kommt nicht wieder. Eine News verschwindet außerdem
+                automatisch, sobald du den zugehörigen Inhalt aufrufst. Mit{" "}
+                <strong>„Alles als gelesen markieren“</strong> räumst du den
+                ganzen Feed auf einmal ab. Welche News-Arten überhaupt
+                erscheinen (Neu, Editiert und/oder Gelöscht), legst du im{" "}
+                <strong>Profil</strong> unter „News“ fest — standardmäßig nur
+                „Neu“.
+              </p>
+              <p>
                 Ob Benachrichtigungen dich tatsächlich erreichen, steuerst du in
                 deinem <strong>Profil</strong> über zwei Hauptschalter: E-Mail-
                 und Push-Benachrichtigungen. Für Push-Benachrichtigungen muss
@@ -267,7 +330,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={5} label="Markdown" color="var(--lcars-amber)">
+          <LcarsDataRow value={6} label="Markdown" color="var(--lcars-amber)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
@@ -358,7 +421,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={6} label="Verlinkung" color="var(--lcars-blue)">
+          <LcarsDataRow value={7} label="Verlinkung" color="var(--lcars-blue)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Um im Fließtext auf einen Charakter, eine Mission oder einen
@@ -370,14 +433,16 @@ export default function TutorialPage() {
                 existiert.
               </p>
               <p>
-                Wer sich das Tippen der Klammern sparen will, aktiviert beim
+                Wer sich das Tippen der Klammern sparen will, nutzt beim
                 Speichern das Kästchen <strong>„Automatisch verlinken“</strong>{" "}
                 unter dem Textfeld: Es durchsucht deinen Text nach bekannten
                 Charakter-Namen (inkl. Aliasen), Missions- und
                 Archiv-Eintrag-Titeln und verlinkt <strong>jede</strong>{" "}
-                Erwähnung automatisch. Codeblöcke, Inline-Code, Bilder und
-                bereits vorhandene Links bleiben dabei unangetastet, und dein
-                eigener Eintrag verlinkt sich nie selbst.
+                Erwähnung automatisch. Bei <strong>neuen</strong> Inhalten ist
+                dieses Kästchen bereits vorausgewählt; beim Bearbeiten
+                bestehender Inhalte ist es standardmäßig aus. Codeblöcke,
+                Inline-Code, Bilder und bereits vorhandene Links bleiben dabei
+                unangetastet, und dein eigener Eintrag verlinkt sich nie selbst.
               </p>
               <p>
                 Spielleitung/Admin haben zusätzlich ein eigenständiges
@@ -386,13 +451,16 @@ export default function TutorialPage() {
                 gespeicherte Inhalte anwendet, plus ein Werkzeug, um Wikilinks
                 wieder zu entfernen (macht Autolinking-Ergebnisse rückgängig)
                 und eines, das gerade Anführungszeichen/Apostrophe zu
-                typografisch korrekten Zeichen vereinheitlicht.
+                typografisch korrekten Zeichen vereinheitlicht. Für alle Inhalte
+                auf einmal gibt es unter „Scripts“ im Adminbereich den Knopf{" "}
+                <strong>„Alle Inhalte verlinken“</strong> (siehe Abschnitt für
+                Spielleitung &amp; Admins).
               </p>
             </div>
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={7}
+            value={8}
             label="Spielleitung & Admins"
             color="var(--lcars-purple)"
           >
@@ -405,17 +473,20 @@ export default function TutorialPage() {
                 </li>
                 <li>
                   Über das eigene <strong>„Leitung“</strong>-Menü im Header
-                  (analog zum Admin-Menü) auf drei Übersichten zugreifen:
-                  unter <strong>„Missionen“</strong> alle Missionen mit
-                  Bearbeiten-, Löschen- und Besitzer:in-Zuordnung pro Zeile
-                  statt einzeln über die jeweilige Detailseite; unter{" "}
-                  <strong>„Charaktere“</strong> Charaktere Spieler:innen
-                  zuweisen (Gast-Accounts ausgenommen); unter{" "}
-                  <strong>„Gespräche“</strong> alle aktuell offenen Gespräche
-                  einsehen, auch ohne eigene Teilnahme — ein Klick öffnet das
-                  Gespräch lesend, ohne Antwortformular. Über jedes neu
-                  begonnene Gespräch wird die Spielleitung außerdem automatisch
-                  per Mail/Push informiert, unabhängig von eigener Teilnahme.
+                  (analog zum Admin-Menü) unter <strong>„Kampagne“</strong> an
+                  einer Stelle das aktuelle <strong>Ingame-Jahr</strong>{" "}
+                  einstellen, Charaktere Spieler:innen zuweisen (Gast-Accounts
+                  ausgenommen) und alle Missionen mit Bearbeiten-, Löschen- und
+                  Besitzer:in-Zuordnung pro Zeile verwalten. (Der ebenfalls dort
+                  liegende Eintrag <strong>„Gespräche“</strong> ist in der
+                  eigenen Gespräche-Sektion oben beschrieben.)
+                </li>
+                <li>
+                  Das <strong>Ingame-Jahr</strong> (unter „Kampagne“) bestimmt
+                  das angezeigte <strong>Alter</strong> von Charakteren: Trägt
+                  ein Charakter ein Geburtsdatum, wird sein Alter automatisch aus
+                  Ingame-Jahr minus Geburtsjahr berechnet (sonst gilt das
+                  manuell eingetragene Alter).
                 </li>
                 <li>
                   Über die „Admin-Aktionen“ jeder Detailseite Autolinking,
@@ -440,14 +511,24 @@ export default function TutorialPage() {
                 <li>
                   Unter <strong>„User“</strong> Nutzerkonten anlegen und in
                   einer durchsuchbaren, sortierbaren Übersicht einsehen; über
-                  die Detailseite eines Users dessen Rolle ändern, das Konto
-                  (de)aktivieren oder löschen, einen Passwort-Reset auslösen
-                  oder es auf allen Geräten abmelden.
+                  die Detailseite eines Users dessen Rolle(n) und Einzelrechte
+                  ändern, das Konto (de)aktivieren oder löschen, einen
+                  Passwort-Reset auslösen oder es auf allen Geräten abmelden.
+                </li>
+                <li>
+                  Unter <strong>„Rollen“</strong> eigene Rollen anlegen und
+                  bearbeiten, die Rechte jeder Rolle (auch der System-Rollen)
+                  anpassen und Rollen direkt den Usern zuweisen.
                 </li>
                 <li>
                   Unter <strong>„Scripts“</strong> alle Missionen ohne
                   Besitzer:in auf einen Schlag einer Spielleitung zuordnen,
-                  sowie Cache/Timeline neu aufbauen.
+                  Cache/Timeline neu aufbauen, mit{" "}
+                  <strong>„Alle Inhalte verlinken“</strong> das Autolinking auf
+                  einen Rutsch über alle bestehenden Inhalte laufen lassen sowie
+                  mit <strong>„Typografie korrigieren“</strong> gerade
+                  Anführungszeichen in allen Inhalten in deutsche („…“)
+                  umwandeln (alles blockweise mit Fortschrittsbalken).
                 </li>
                 <li>
                   Unter <strong>„Audit-Log“</strong> nachvollziehen, wer wann
@@ -461,6 +542,9 @@ export default function TutorialPage() {
                   Stacktrace). Tritt ein solcher Fehler auf, sehen alle Besucher
                   eine LCARS-Fehlerseite mit Referenzcode, Administration
                   zusätzlich die volle Fehlermeldung direkt auf dieser Seite.
+                  Zusätzlich erhält die Administration jeden Morgen um 6 Uhr
+                  (Berliner Zeit) automatisch eine Mail mit allen Fehler- und
+                  Audit-Log-Einträgen der letzten 24 Stunden.
                 </li>
                 <li>
                   Unter <strong>„Import“</strong> eine oder mehrere
@@ -470,23 +554,18 @@ export default function TutorialPage() {
                   durchblättern, vor dem Anlegen noch bearbeiten und muss danach
                   einzeln bestätigt werden.
                 </li>
-                <li>
-                  In jedem Gespräch als Moderation jede Nachricht bearbeiten
-                  oder löschen (auch fremde und auch in bereits abgeschlossenen
-                  Gesprächen) sowie dessen Besitzer:in ändern — beides
-                  ausschließlich der Administration vorbehalten, nicht der
-                  Spielleitung.
-                </li>
               </ul>
               <p>
                 Administration sieht außerdem als einzige Rolle ausnahmslos alle
-                Inhalte, auch private.
+                Inhalte, auch private. Die Moderation von Gesprächen (fremde
+                Nachrichten/Metadaten/Besitzer:in) ist in der eigenen
+                Gespräche-Sektion oben beschrieben.
               </p>
             </div>
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={8}
+            value={9}
             label="App installieren"
             color="var(--lcars-amber)"
           >

@@ -8,12 +8,29 @@ export interface Note {
   last_updated: Date;
 }
 
+// Rollen-Schlüssel. Seit dem Rollen-Editor (/admin/permissions) sind Rollen
+// DB-gestützt (Tabelle roles): Neben den fünf System-Rollen (admin, gm, player,
+// viewer, guest) können beliebige eigene Rollen angelegt werden — deshalb ist
+// der Typ ein freier String, kein festes Union mehr. Welche Rechte ein
+// Schlüssel gewährt, steht in der roles-Tabelle bzw. den Code-Defaults
+// (DEFAULT_ROLE_PRESETS in src/lib/permissions.ts). Ein User hat eine
+// Primärrolle (role, u.a. für Anzeige/Session) und kann weitere Rollen tragen
+// (additional_roles) — granulares RBAC, siehe src/lib/permissions.ts.
+export type Role = string;
+
 export interface User {
   id: number;
   email: string;
   name: string;
   slug: string;
-  role: "admin" | "gm" | "player" | "viewer" | "guest";
+  role: Role;
+  // Weitere Preset-Rollen zusätzlich zur Primärrolle. Effektive Rechte =
+  // Vereinigung der Presets aus [role, ...additional_roles] ⊕
+  // permission_overrides (siehe resolvePermissions in src/lib/permissions.ts).
+  additional_roles: Role[];
+  // Individuelle Rechte-Overrides (Permission→bool: true=zusätzlich gewähren,
+  // false=entziehen), unabhängig von den Rollen-Presets.
+  permission_overrides: Record<string, boolean>;
   is_active: boolean;
   created_at: Date;
   last_login_at: Date | null;
@@ -32,6 +49,10 @@ export interface User {
   // Opt-in. Nur für Admins in der UI editierbar, die Spalte existiert aber
   // für jeden User (ungenutzt bei anderen Rollen).
   notify_content_types: string[];
+  // Welche News-Arten der User auf dem Dashboard sehen will — Teilmenge von
+  // "created"|"updated"|"deleted" (siehe NewsSection.tsx / recentActivity.ts).
+  // Leeres Array = keine News. Default (DB) = nur "created" ("Neu").
+  news_kinds: string[];
   // Wird bei jeder Passwortänderung (setPassword) erhöht und im
   // Session-Cookie mitgeführt (siehe SessionPayload.sessionVersion) — ein
   // Cookie mit veraltetem Wert wird von getCurrentUser() als abgelaufen

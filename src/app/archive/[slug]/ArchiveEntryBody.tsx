@@ -6,7 +6,7 @@ import DialogueFlowingText from "@/components/DialogueFlowingText";
 import DialogueViewToggle from "@/components/DialogueViewToggle";
 import ArchiveEntryEditor from "./ArchiveEntryEditor";
 import { ArchiveEntryDetail } from "@/types/archive";
-import { Viewer } from "@/lib/visibility";
+import type { Viewer } from "@/lib/visibility";
 import type { DialogueMessage } from "@/lib/dialoguesCore";
 
 // Hält den editMode lokal (statt über einen globalen Context) — ActionsMenu
@@ -30,7 +30,10 @@ export default function ArchiveEntryBody({
   flowingTextPreferred: boolean;
 }) {
   const [editMode, setEditMode] = useState(false);
-  const isAdminOrGM = viewer?.role === "gm" || viewer?.role === "admin" || false;
+  const isAdminOrGM =
+    viewer?.permissions.includes("content.autolink_tools") ?? false;
+  const canModerateDialogue =
+    viewer?.permissions.includes("dialogues.moderate") ?? false;
 
   return (
     <>
@@ -91,7 +94,7 @@ export default function ArchiveEntryBody({
                 currentUserId={viewer?.userId ?? null}
                 dialogueOpen={false}
                 entrySlug={entry.slug}
-                viewerRole={viewer?.role ?? null}
+                canModerate={canModerateDialogue}
               />
             </>
           )

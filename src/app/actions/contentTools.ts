@@ -1,5 +1,5 @@
 "use server";
-import { requireGM } from "@/lib/dal";
+import { requirePermission } from "@/lib/dal";
 import {
   applyAutolinks,
   getAutolinkTargets,
@@ -202,7 +202,7 @@ export async function hasAutolinkMatchesAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<boolean> {
-  await requireGM();
+  await requirePermission("content.autolink_tools");
 
   const accessor = await getContentAccessor(contentType, slug);
   if ("error" in accessor) return false;
@@ -215,7 +215,7 @@ export async function previewAutolinkAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<AutolinkPreviewResult | { error: string }> {
-  await requireGM();
+  await requirePermission("content.autolink_tools");
 
   const plan = await planAutolink(contentType, slug);
   if ("error" in plan) return plan;
@@ -227,7 +227,7 @@ export async function applyAutolinkAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<AutolinkApplyResult | { error: string }> {
-  await requireGM();
+  await requirePermission("content.autolink_tools");
 
   const plan = await planAutolink(contentType, slug);
   if ("error" in plan) return plan;
@@ -265,7 +265,7 @@ export async function previewWikilinkCleanupAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<WikilinkCleanupPreviewResult | { error: string }> {
-  await requireGM();
+  await requirePermission("content.autolink_tools");
 
   const plan = await planWikilinkCleanup(contentType, slug);
   if ("error" in plan) return plan;
@@ -277,7 +277,7 @@ export async function applyWikilinkCleanupAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<WikilinkCleanupApplyResult | { error: string }> {
-  await requireGM();
+  await requirePermission("content.autolink_tools");
 
   const plan = await planWikilinkCleanup(contentType, slug);
   if ("error" in plan) return plan;

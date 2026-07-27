@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
 import CharacterBioEditor from "./CharacterBioEditor";
-import { Viewer } from "@/lib/visibility";
+import type { Viewer } from "@/lib/visibility";
 import ActionsMenu from "@/components/ActionsMenu";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
@@ -138,6 +138,7 @@ export default function CharacterHero({
   conversationCount = 0,
   viewer,
   owners,
+  displayAge = null,
   sourceMarkdown,
 }: {
   character: Character;
@@ -145,6 +146,9 @@ export default function CharacterHero({
   conversationCount?: number;
   viewer: Viewer | null;
   owners: { id: number; name: string }[];
+  // Aus Geburtsdatum + Ingame-Jahr abgeleitetes Alter (Fallback: metadata.age),
+  // serverseitig berechnet und durchgereicht (siehe CharacterDetailPage).
+  displayAge?: number | null;
   // Nur gesetzt, wenn viewer === Owner (player_id) — siehe page.tsx.
   sourceMarkdown: string | null;
 }) {
@@ -256,8 +260,8 @@ export default function CharacterHero({
               {metadata.homeworld && (
                 <FileField label="Heimatwelt" value={metadata.homeworld} />
               )}
-              {metadata.age != null && (
-                <FileField label="Alter" value={metadata.age} />
+              {displayAge != null && (
+                <FileField label="Alter" value={displayAge} />
               )}
               {factions.length > 0 && (
                 <FileField label="Fraktion" value={factions.join(", ")} />
@@ -306,7 +310,9 @@ export default function CharacterHero({
               <CharacterBioEditor
                 bioHtml={bio?.html ?? null}
                 sourceMarkdown={sourceMarkdown}
-                role={viewer?.role}
+                isAdminOrGM={
+                  viewer?.permissions.includes("content.autolink_tools") ?? false
+                }
                 character={character}
                 editMode={editMode}
                 onEditModeChange={setEditMode}

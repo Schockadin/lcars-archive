@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/session";
-import { touchLastVisit } from "@/lib/users";
+import { touchLastVisit, getUserById } from "@/lib/users";
+import { getRoleMap } from "@/lib/roles";
+import { userPermissions } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -29,9 +31,18 @@ export const dynamic = "force-dynamic";
 // Header/endlose Ladezustände auf komplett anderen Seiten.
 export async function GET() {
   const session = await getSession();
+  // Rolle UND effektive Rechte frisch aus der DB auflösen (nicht aus dem
+  // Cookie) — eine vom Admin geänderte Rolle/Rechte-Zuweisung wirkt so sofort,
+  // ohne dass sich der User neu einloggen muss. Steuert die Header-Navigation
+  // (HeaderUserNav) per Recht statt per Rolle.
+  const user = session ? await getUserById(session.userId) : null;
   if (session) {
     await touchLastVisit(session.userId);
   }
+  // Rollen-Map laden, damit userPermissions gegen die aktuellen (evtl.
+  // bearbeiteten/eigenen) Rollen auflöst.
+  if (user) await getRoleMap();
+  const permissions = user ? [...userPermissions(user)] : [];
   // Explizite No-Store-Header statt uns allein auf force-dynamic zu
   // verlassen: dieser Endpunkt liefert userId/role, personalisierte Daten,
   // die niemals von einem zwischengeschalteten Cache (Netlifys CDN/Edge,
@@ -41,7 +52,8 @@ export async function GET() {
   return NextResponse.json(
     {
       userId: session?.userId ?? null,
-      role: session?.role ?? null,
+      role: user?.role ?? session?.role ?? null,
+      permissions,
     },
     {
       headers: {

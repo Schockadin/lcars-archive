@@ -74,6 +74,10 @@ export default function ServerErrorContent({
       }
     }
 
+    // Kein externer Store, sondern ein asynchroner Fetch beim Mount (Session-
+    // /Detail-Abruf) — useSyncExternalStore (die Empfehlung der Regel) passt
+    // hier nicht, da es einen synchronen Snapshot erwartet.
+    // eslint-disable-next-line react-you-might-not-need-an-effect/no-external-store-subscription
     loadAdminDetail();
     return () => {
       cancelled = true;

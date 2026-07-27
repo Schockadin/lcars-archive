@@ -21,6 +21,16 @@ for (const { path, heading } of PAGES) {
   });
 }
 
+test("/tutorial shows the dedicated Gespräche section", async ({ page }) => {
+  await page.goto("/tutorial");
+  // Die Tutorial-Abschnitte sind Akkordeons (Inhalt eingeklappt), ihre
+  // Kopfzeilen-Labels sind aber immer sichtbar — verifiziert, dass der
+  // ausgelagerte „Gespräche"-Abschnitt vorhanden ist.
+  await expect(
+    page.getByText("Gespräche", { exact: true }).first(),
+  ).toBeVisible();
+});
+
 test("/search form stacks vertically on mobile (no horizontal overflow)", async ({
   page,
 }) => {

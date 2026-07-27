@@ -1,5 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
+import { userCan } from "@/lib/permissions";
 import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import {
@@ -196,7 +197,7 @@ export async function missionAction(
   if (!user) {
     redirect("/login");
   }
-  if (user.role !== "gm" && user.role !== "admin") {
+  if (!userCan(user, "missions.manage")) {
     redirect("/user");
   }
 

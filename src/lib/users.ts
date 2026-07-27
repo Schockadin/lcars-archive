@@ -2,6 +2,8 @@ import "server-only";
 import postgres from "postgres";
 import sql from "@/lib/db";
 import { slugifyBase } from "@/lib/slug";
+import { buildRoleMap } from "@/lib/roles";
+import { userPermissions } from "@/lib/permissions";
 import type { User } from "@/types/db";
 
 // Optionaler Client-Parameter für Aufrufe innerhalb einer Transaktion (z.B.
@@ -16,6 +18,7 @@ const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
   last_visit_at, last_dashboard_visit_at,
   email_notifications_enabled, push_notifications_enabled, notify_content_types,
+  news_kinds, additional_roles, permission_overrides,
   session_version
 `;
 
@@ -100,6 +103,7 @@ export async function listAllUsers(): Promise<UserWithCharacters[]> {
       u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
       u.last_login_at, u.previous_login_at, u.last_visit_at, u.last_dashboard_visit_at,
       u.email_notifications_enabled, u.push_notifications_enabled, u.notify_content_types,
+      u.news_kinds, u.additional_roles, u.permission_overrides,
       COALESCE(
         jsonb_agg(
           jsonb_build_object('id', c.id, 'slug', c.slug, 'name', c.name)
@@ -165,6 +169,39 @@ export async function updateUserRole(
   return rows[0];
 }
 
+// Granulares RBAC: setzt Primärrolle + Zusatzrollen zusammen (ein User kann
+// mehrere Rollen haben, siehe src/lib/permissions.ts). additionalRoles wird
+// ohne die Primärrolle gespeichert (Duplikate/Primärrolle werden beim Auflösen
+// ohnehin dedupliziert).
+export async function updateUserRoles(
+  id: number,
+  role: User["role"],
+  additionalRoles: User["role"][],
+): Promise<User> {
+  const extra = additionalRoles.filter((r) => r !== role);
+  const rows = await sql<User[]>`
+    UPDATE users
+    SET role = ${role}, additional_roles = ${extra}
+    WHERE id = ${id}
+    RETURNING ${USER_COLUMNS}
+  `;
+  return rows[0];
+}
+
+// Individuelle Rechte-Overrides (Permission→bool) eines Users setzen.
+export async function updateUserPermissionOverrides(
+  id: number,
+  overrides: Record<string, boolean>,
+): Promise<User> {
+  const rows = await sql<User[]>`
+    UPDATE users
+    SET permission_overrides = ${sql.json(overrides)}
+    WHERE id = ${id}
+    RETURNING ${USER_COLUMNS}
+  `;
+  return rows[0];
+}
+
 // Deaktivieren ist ein Soft-Block (Login-Gate in src/app/login/actions.ts),
 // Löschen ein hartes DELETE — schema-sicher, da characters.player_id/
 // dialogue_messages.author_user_id ON DELETE SET NULL sind und
@@ -218,6 +255,18 @@ export async function updateNotificationPreferences(
         push_notifications_enabled = ${data.pushEnabled},
         notify_content_types = ${data.notifyContentTypes}
     WHERE id = ${id}
+  `;
+}
+
+// Welche News-Arten der User auf dem Dashboard sehen will (Teilmenge von
+// "created"/"updated"/"deleted", siehe NewsSection.tsx). Leeres Array =
+// keine News.
+export async function updateNewsKinds(
+  id: number,
+  kinds: string[],
+): Promise<void> {
+  await sql`
+    UPDATE users SET news_kinds = ${kinds} WHERE id = ${id}
   `;
 }
 
@@ -386,6 +435,7 @@ export async function getUserForAdmin(
       u.id, u.email, u.name, u.slug, u.role, u.is_active, u.created_at,
       u.last_login_at, u.previous_login_at, u.last_visit_at, u.last_dashboard_visit_at,
       u.email_notifications_enabled, u.push_notifications_enabled, u.notify_content_types,
+      u.news_kinds, u.additional_roles, u.permission_overrides,
       u.password_hash IS NOT NULL AS has_password,
       u.requires_activation,
       COALESCE(
@@ -419,13 +469,32 @@ export interface AdminContact {
   name: string;
 }
 
-// Für den Fan-out einer Sicherheits-Benachrichtigung (/forgot-password) an
-// alle Admins — nur aktive Admin-Konten, ein deaktivierter Admin soll keine
-// Mails mehr bekommen.
+// Für den Fan-out administrativer Benachrichtigungen (Sicherheitsmail bei
+// /forgot-password, täglicher Log-Digest) an alle Admins — nur AKTIVE Konten.
+// „Admin" heißt hier: hat das Recht admin.access — nicht mehr nur die
+// Primärrolle role='admin'. So erreicht die Mail auch Konten, die admin.access
+// über eine Zusatzrolle, eine eigene Rolle oder einen Rechte-Override haben
+// (granulares RBAC, siehe src/lib/permissions.ts). Auflösung über die
+// uncachte buildRoleMap, damit die Funktion auch in Standalone-Cron-Skripten
+// (scripts/send-admin-log-digest.ts) außerhalb des Next-Requests funktioniert.
 export async function listAdminEmails(): Promise<AdminContact[]> {
-  return sql<AdminContact[]>`
-    SELECT email, name FROM users WHERE role = 'admin' AND is_active = true
+  const roleMap = await buildRoleMap();
+  const rows = await sql<
+    {
+      email: string;
+      name: string;
+      role: string;
+      additional_roles: string[];
+      permission_overrides: Record<string, boolean>;
+    }[]
+  >`
+    SELECT email, name, role, additional_roles, permission_overrides
+    FROM users
+    WHERE is_active = true
   `;
+  return rows
+    .filter((u) => userPermissions(u, roleMap).has("admin.access"))
+    .map((u) => ({ email: u.email, name: u.name }));
 }
 
 export async function getPasswordHash(userId: number): Promise<string | null> {

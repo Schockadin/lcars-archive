@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { userCan } from "@/lib/permissions";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "./dal";
@@ -12,6 +13,7 @@ import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
 import LogoutEverywhereButton from "./LogoutEverywhereButton";
 import NotificationSettingsForm from "./NotificationSettingsForm";
+import NewsSettingsForm from "./NewsSettingsForm";
 import EditorSpellcheckSettingsForm from "./EditorSpellcheckSettingsForm";
 import CharacterColorForm from "./CharacterColorForm";
 import InstallPwaPrompt from "./InstallPwaPrompt";
@@ -133,7 +135,7 @@ export default async function UserPage() {
 
             <DataRow
               label="Settings"
-              value={8}
+              value={9}
               accentColor="var(--lcars-red)"
               color="var(--lcars-amber-light)"
             >
@@ -205,8 +207,15 @@ export default async function UserPage() {
                     pushEnabled: target.push_notifications_enabled,
                     notifyContentTypes: target.notify_content_types,
                   }}
-                  isAdmin={target.role === "admin"}
+                  isAdmin={userCan(target, "admin.access")}
                 />
+              </section>
+
+              <div className="horizontalBar" />
+
+              <section id="news" className="flex flex-col gap-[12px]">
+                <h2>News</h2>
+                <NewsSettingsForm newsKinds={target.news_kinds} />
               </section>
 
               <div className="horizontalBar" />

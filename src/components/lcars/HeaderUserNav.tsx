@@ -5,44 +5,39 @@ import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { logout } from "@/app/login/actions";
 import { useAnchoredDropdown } from "./useAnchoredDropdown";
-import type { User } from "@/types/db";
 
 interface AdminMenuItem {
   href: string;
   label: string;
+  // Recht, das den Eintrag freischaltet (granulares RBAC, siehe permissions.ts).
+  permission: string;
 }
 
-// Charaktere/Missionen/Gespräche bewusst NICHT im Admin-Menü (nur im
-// GM-Menü unten) — die drei sind Spielleitungs-Werkzeuge; ein Admin
-// erreicht sie bei Bedarf weiterhin direkt per URL (requireGM lässt Admins
-// ohnehin durch), soll sie aber nicht im eigenen Menü angeboten bekommen.
-const ADMIN_ITEMS: AdminMenuItem[] = [
-  { href: "/admin/users", label: "User" },
-  { href: "/admin/db", label: "DB" },
-  { href: "/admin/scripts", label: "Scripts" },
-  { href: "/admin/content", label: "Inhalte" },
-  { href: "/admin/content/trash", label: "Papierkorb" },
-  { href: "/admin/content/images", label: "Bilder" },
-  { href: "/admin/audit-log", label: "Audit-Log" },
-  { href: "/admin/error-log", label: "Fehler-Log" },
-  { href: "/admin/import", label: "Import" },
-];
-
-// GM-Dropdown (analog zum Admin-Dropdown oben, nur drei Ziele): die
-// Charakterzuordnung gab es vorher schon (bisheriges Direkt-Pill "Leitung"),
-// Missionen/Gespräche sind neu — GM sieht damit erstmals auch Missionen/
-// Dialoge, an denen er nicht selbst beteiligt ist, an einem Ort.
-const GM_ITEMS: AdminMenuItem[] = [
-  { href: "/admin/missions", label: "Missionen" },
-  { href: "/admin/characters", label: "Charaktere" },
-  { href: "/admin/dialogues", label: "Gespräche" },
+// Ein einziges Staff-Dropdown, dessen Einträge NACH RECHTEN gefiltert werden
+// (nicht mehr nach Rolle). Ein User mit mehreren Rollen sieht so genau die
+// Einträge, für die er berechtigt ist — GM-Werkzeuge (gm.access) und/oder
+// Admin-Werkzeuge (admin.access/…), auch beides gleichzeitig. "Kampagne"
+// bündelt Ingame-Jahr, Charakter-Zuordnung und Missions-Übersicht.
+const STAFF_ITEMS: AdminMenuItem[] = [
+  { href: "/admin/campaign", label: "Kampagne", permission: "gm.access" },
+  { href: "/admin/dialogues", label: "Gespräche", permission: "gm.access" },
+  { href: "/admin/users", label: "User", permission: "users.manage" },
+  { href: "/admin/permissions", label: "Rollen", permission: "users.manage" },
+  { href: "/admin/db", label: "DB", permission: "admin.access" },
+  { href: "/admin/scripts", label: "Scripts", permission: "admin.access" },
+  { href: "/admin/content", label: "Inhalte", permission: "content.moderate" },
+  { href: "/admin/content/trash", label: "Papierkorb", permission: "content.moderate" },
+  { href: "/admin/content/images", label: "Bilder", permission: "content.moderate" },
+  { href: "/admin/audit-log", label: "Audit-Log", permission: "admin.access" },
+  { href: "/admin/error-log", label: "Fehler-Log", permission: "admin.access" },
+  { href: "/admin/import", label: "Import", permission: "admin.access" },
 ];
 
 export default function HeaderUserNav({
-  role,
+  permissions,
   columns = 3,
 }: {
-  role: User["role"] | null;
+  permissions: string[];
   columns?: number;
 }) {
   const pathname = usePathname();
@@ -71,18 +66,24 @@ export default function HeaderUserNav({
   const tabs = [
     { href: "/user/content", label: "Inhalte" },
     { href: "/search", label: "Suche" },
-    ...(role !== "guest" ? [{ href: "/users", label: "User" }] : []),
+    ...(permissions.includes("users.browse")
+      ? [{ href: "/users", label: "User" }]
+      : []),
     { href: "/user", label: "Profil" },
   ];
 
   const isAdminSection = pathname.startsWith("/admin");
 
-  // Gemeinsames Dropdown für GM und Admin (unterschiedliche Item-Listen,
-  // gleiche UI) — role admin/gm schließen sich gegenseitig aus, daher genügt
-  // ein einzelner Dropdown-State/Trigger für beide.
-  const dropdownItems =
-    role === "admin" ? ADMIN_ITEMS : role === "gm" ? GM_ITEMS : null;
-  const dropdownLabel = role === "admin" ? "Admin" : "Leitung";
+  // Ein Staff-Dropdown, dessen Einträge nach Rechten gefiltert werden (statt
+  // nach Rolle). Label „Admin“, sobald Admin-Rechte vorhanden sind, sonst
+  // „Leitung“. Kein Eintrag berechtigt → kein Dropdown.
+  const visibleStaffItems = STAFF_ITEMS.filter((item) =>
+    permissions.includes(item.permission),
+  );
+  const dropdownItems = visibleStaffItems.length > 0 ? visibleStaffItems : null;
+  const dropdownLabel = permissions.includes("admin.access")
+    ? "Admin"
+    : "Leitung";
 
   return (
     <nav

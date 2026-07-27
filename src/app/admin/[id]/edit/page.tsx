@@ -3,21 +3,16 @@ import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireAdminEditTarget } from "../dal";
 import { formatDateTime } from "@/utils/formateISODate";
+import { getRoleMap, getRoleLabelMap } from "@/lib/roles";
+import { roleLabel } from "@/lib/permissions";
 import EditUserForm from "./EditUserForm";
+import PermissionsForm from "./PermissionsForm";
 import UserStatusActions from "./UserStatusActions";
 import type { UserAdminDetail } from "@/lib/users";
 
 export const metadata: Metadata = {
   title: "User bearbeiten",
   robots: { index: false, follow: false },
-};
-
-const ROLE_LABELS: Record<UserAdminDetail["role"], string> = {
-  admin: "Administration",
-  gm: "Spielleitung",
-  player: "Spieler",
-  viewer: "Beobachter",
-  guest: "Gast",
 };
 
 export default async function EditUserPage({
@@ -29,6 +24,17 @@ export default async function EditUserPage({
   const { viewer, target } = await requireAdminEditTarget(id);
   const isSelf = viewer.id === target.id;
 
+  // Rollen sind DB-gestützt (Tabelle roles) — Auswahl/Labels/Rechte-Auflösung
+  // ziehen aus der aktuellen Definition, damit eigene Rollen mit auftauchen.
+  const [roleMap, roleLabels] = await Promise.all([
+    getRoleMap(),
+    getRoleLabelMap(),
+  ]);
+  const roleOptions = Object.keys(roleMap).map((key) => ({
+    key,
+    label: roleLabel(key, roleLabels),
+  }));
+
   return (
     <>
       <PageMeta title={`${target.name} bearbeiten`} section="users" />
@@ -39,7 +45,10 @@ export default async function EditUserPage({
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[6px]">
             <DetailRow label="ID" value={String(target.id)} />
-            <DetailRow label="Rolle" value={ROLE_LABELS[target.role]} />
+            <DetailRow
+              label="Rolle"
+              value={roleLabel(target.role, roleLabels)}
+            />
             <DetailRow
               label="Erstellt am"
               value={formatDateTime(target.created_at)}
@@ -80,8 +89,24 @@ export default async function EditUserPage({
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Daten bearbeiten</h2>
-            <EditUserForm user={target} isSelf={isSelf} />
+            <h2 className="text-lcars-amber">Daten & Rollen bearbeiten</h2>
+            <EditUserForm
+              user={target}
+              isSelf={isSelf}
+              roleOptions={roleOptions}
+            />
+          </section>
+
+          <section className="flex flex-col gap-[12px]">
+            <h2 className="text-lcars-amber">Individuelle Rechte</h2>
+            <PermissionsForm
+              userId={target.id}
+              roles={Array.from(
+                new Set([target.role, ...target.additional_roles]),
+              )}
+              overrides={target.permission_overrides}
+              roleMap={roleMap}
+            />
           </section>
 
           <UserStatusActions user={target} isSelf={isSelf} />

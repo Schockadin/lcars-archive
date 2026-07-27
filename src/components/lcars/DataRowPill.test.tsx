@@ -9,6 +9,17 @@ describe("DataRowPill", () => {
     expect(screen.getByText("Alter")).toBeInTheDocument();
   });
 
+  it("caps numeric values over 99 to \"99+\"", () => {
+    render(<DataRowPill value={150} label="Viele" />);
+    expect(screen.getByText("99+")).toBeInTheDocument();
+    expect(screen.queryByText("150")).toBeNull();
+  });
+
+  it("shows exact numeric values up to 99", () => {
+    render(<DataRowPill value={99} label="Genau" />);
+    expect(screen.getByText("99")).toBeInTheDocument();
+  });
+
   it("renders no chevron when expanded is undefined", () => {
     const { container } = render(<DataRowPill value="1" label="X" />);
     expect(container.querySelector(".lcars-data-row-chevron")).toBeNull();

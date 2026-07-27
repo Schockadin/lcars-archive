@@ -14,6 +14,7 @@ import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { parseList, parseNumberList } from "@/lib/formParsing";
+import { userCan } from "@/lib/permissions";
 import type { Character } from "@/types/character";
 
 export interface CharacterFormState {
@@ -47,7 +48,7 @@ export async function characterAction(
   let currentUser = null;
   if (!isEdit) {
     currentUser = await getUserById(session.userId);
-    if (!currentUser || currentUser.role === "guest") {
+    if (!currentUser || !userCan(currentUser, "content.create")) {
       return { error: "Gast-Accounts können keine Charaktere anlegen." };
     }
   }
@@ -70,6 +71,18 @@ export async function characterAction(
   const age = ageRaw ? Number(ageRaw) : null;
   if (ageRaw && !Number.isInteger(age)) {
     return { error: "Ungültiges Alter." };
+  }
+  // Geburtsdatum (optional) — nur das Datum (YYYY-MM-DD), aus dem später
+  // zusammen mit dem Ingame-Jahr das Alter abgeleitet wird (siehe
+  // inferAgeFromDateOfBirth). Ein <input type="date"> liefert bereits das
+  // ISO-Format; wir validieren defensiv und schneiden auf 10 Zeichen.
+  const dobRaw = String(formData.get("dateOfBirth") ?? "").trim();
+  let dateOfBirth: string | null = null;
+  if (dobRaw) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dobRaw)) {
+      return { error: "Ungültiges Geburtsdatum." };
+    }
+    dateOfBirth = dobRaw;
   }
   const generation = parseNumberList(formData.get("generation"));
   const factions = parseList(formData.get("factions"));
@@ -110,6 +123,7 @@ export async function characterAction(
       homeworld,
       aliases,
       age,
+      dateOfBirth,
       generation,
       factions,
       ships,
@@ -180,6 +194,7 @@ export async function characterAction(
     homeworld,
     aliases,
     age,
+    dateOfBirth,
     generation,
     factions,
     ships,

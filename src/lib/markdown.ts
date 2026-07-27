@@ -17,6 +17,11 @@ import type {
 } from "mdast";
 import type { Handlers as MdastToHastHandlers } from "mdast-util-to-hast";
 import type { Root as HastRoot, Element as HastElement } from "hast";
+import {
+  opensQuote,
+  GERMAN_QUOTE_OPEN,
+  GERMAN_QUOTE_CLOSE,
+} from "@/lib/typography";
 
 // Obsidian-artige [[Ziel]] / [[Ziel|Anzeigetext]] / [[Ziel#Abschnitt|Text]]
 // Verweise. Der Abschnitt (#...) wird beim Auflösen aktuell ignoriert, nur
@@ -70,40 +75,49 @@ function remarkWikiLinks() {
   };
 }
 
-// Container-Knoten, an denen der öffnen/schließen-Zähler von
-// remarkGermanQuotes() zurückgesetzt wird (siehe dort) — jeweils die
-// kleinste Einheit, in der ein Anführungszeichen-Paar üblicherweise
-// vollständig steht, damit ein einzelnes unpaariges " (z.B. als Zoll-/
-// Sekunden-Angabe) nicht die Zählung im restlichen Dokument verschiebt.
-const GERMAN_QUOTES_RESET_NODE_TYPES = new Set([
+// Block-Knoten, an deren Anfang der „Vorzeichen"-Kontext von
+// remarkGermanQuotes() neu bei „Zeilenanfang" startet — die kleinste Einheit,
+// die im gerenderten Text als eigene Zeile/Zelle beginnt.
+const GERMAN_QUOTES_BLOCK_NODE_TYPES = new Set([
   "paragraph",
   "heading",
   "tableCell",
 ]);
 
-// Wandelt gerade Anführungszeichen (") in deutsche typografische
-// Anführungszeichen um: „unten am Anfang, oben am Ende" (Rechtsgrundlage:
-// Duden-Empfehlung für deutschsprachige Texte). Arbeitet auf dem mdast-Baum
-// statt per Regex auf dem rohen Markdown-String, damit Code-Blöcke/Inline-
-// Code (eigene Knotentypen, werden von visit(tree, "text", …) automatisch
-// nicht erfasst) unangetastet bleiben. Zählt öffnend/schließend abwechselnd
-// hoch, zurückgesetzt pro Absatz/Überschrift/Tabellenzelle (siehe
-// GERMAN_QUOTES_RESET_NODE_TYPES) — reicht auch über Inline-Formatierung
-// (*kursiv* etc.) hinweg, da mehrere Text-Knoten innerhalb desselben
-// Absatzes in Dokumentreihenfolge besucht werden.
+// Wandelt gerade Anführungszeichen (") in deutsche typografische um: „unten am
+// Anfang", „oben am Ende" (Duden-Empfehlung). Arbeitet auf dem mdast-Baum statt
+// per Regex auf dem rohen String, damit Code-Blöcke/Inline-Code (eigene
+// Knotentypen) unangetastet bleiben. Die Öffnend/Schließend-Entscheidung ist
+// KONTEXTBASIERT (opensQuote, siehe src/lib/typography.ts) statt paritätsbasiert
+// — dadurch korrekt bei unpaarigen " UND bei wörtlicher Rede über mehrere
+// Absätze. Das zuletzt gesehene Zeichen (lastChar) wird über mehrere
+// Text-Knoten desselben Blocks hinweg mitgeführt (Dokumentreihenfolge), damit
+// auch ein " direkt nach *kursiv* korrekt schließt.
 function remarkGermanQuotes() {
   return (tree: MdastRoot) => {
     visit(tree, (node) => {
-      if (!GERMAN_QUOTES_RESET_NODE_TYPES.has(node.type)) return;
+      if (!GERMAN_QUOTES_BLOCK_NODE_TYPES.has(node.type)) return;
 
-      let open = true;
+      let lastChar: string | undefined = undefined;
       visit(node, "text", (textNode: MdastText) => {
-        if (!textNode.value.includes('"')) return;
-        textNode.value = textNode.value.replace(/"/g, () => {
-          const mark = open ? "„" : "“";
-          open = !open;
-          return mark;
-        });
+        if (!textNode.value.includes('"')) {
+          if (textNode.value.length > 0) {
+            lastChar = textNode.value[textNode.value.length - 1];
+          }
+          return;
+        }
+        let out = "";
+        for (const ch of textNode.value) {
+          if (ch === '"') {
+            out += opensQuote(lastChar)
+              ? GERMAN_QUOTE_OPEN
+              : GERMAN_QUOTE_CLOSE;
+          } else {
+            out += ch;
+          }
+          lastChar = ch;
+        }
+        textNode.value = out;
       });
     });
   };

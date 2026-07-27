@@ -9,7 +9,8 @@ import {
   deleteDialogue,
   restoreDialogue,
   completeDialogue,
-  regenerateAllClosedDialogueContent,
+  regenerateDialogueContent,
+  getClosedDialogueIds,
   inviteDialogueParticipants,
   reserveDialogueReply,
   requestDialogueReservationNotification,
@@ -534,7 +535,21 @@ describe("moderator edits on a closed dialogue never overwrite an existing flowi
   });
 });
 
-describe("regenerateAllClosedDialogueContent", () => {
+// Der Backfill läuft in Produktion BATCH-weise über eine stabile Liste
+// (getClosedDialogueIds, per offset durchlaufen — siehe
+// DialogueContentRegeneratePanel.tsx / regenerateDialogueContentBatchAction).
+// Dieser Helfer spiegelt genau diesen Durchlauf über den DB-Primitiven und gibt
+// die Zahl der erzeugten Fließtexte zurück.
+async function backfillAllClosedDialogueContent(): Promise<number> {
+  const ids = await getClosedDialogueIds();
+  let changed = 0;
+  for (const id of ids) {
+    if (await regenerateDialogueContent(sql, id)) changed++;
+  }
+  return changed;
+}
+
+describe("Dialog-Fließtext-Backfill (Batch)", () => {
   it("backfills content for closed dialogues and leaves open ones untouched", async () => {
     const closed = await setupDialogue();
     const open = await setupDialogue();
@@ -545,7 +560,7 @@ describe("regenerateAllClosedDialogueContent", () => {
       WHERE id = ${closed.entryId}
     `;
 
-    const count = await regenerateAllClosedDialogueContent();
+    const count = await backfillAllClosedDialogueContent();
 
     expect(count).toBeGreaterThanOrEqual(1);
     const [closedRow] = await sql<{ source_md: string }[]>`
@@ -567,7 +582,7 @@ describe("regenerateAllClosedDialogueContent", () => {
     const { entryId } = await setupDialogue();
     await completeDialogue(entryId);
 
-    const count = await regenerateAllClosedDialogueContent();
+    const count = await backfillAllClosedDialogueContent();
 
     expect(count).toBe(0);
   });

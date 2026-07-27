@@ -39,6 +39,7 @@ export default function EditCharacterForm({
         homeworld: character.homeworld ?? undefined,
         aliases: character.aliases.join(", "),
         age: character.age ?? undefined,
+        dateOfBirth: character.dateOfBirth ?? undefined,
         generation: character.generation.join(", "),
         factions: character.factions.join(", "),
         ships: character.ships.join(", "),

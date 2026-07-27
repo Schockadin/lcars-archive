@@ -2,6 +2,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { CopyIcon, CheckIcon, XIcon } from "@/lib/icons";
+import { useReturnFocus } from "@/hooks/useReturnFocus";
+import { useToast } from "@/components/toast/ToastProvider";
 
 export interface RowDetailField {
   label: string;
@@ -25,6 +27,10 @@ export default function RowDetailModal({
 }) {
   const close = useCallback(() => onClose(), [onClose]);
   const [copied, setCopied] = useState(false);
+  const { showToast } = useToast();
+  // Wird nur bei geöffnetem Modal gemountet → Fokus beim Schließen (Unmount)
+  // an das auslösende Element (die angeklickte Tabellenzeile) zurückgeben.
+  useReturnFocus(true);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -43,9 +49,14 @@ export default function RowDetailModal({
   // dieselbe Reihenfolge wie im Modal angezeigt.
   async function handleCopy() {
     const text = fields.map((f) => `${f.label}: ${f.value}`).join("\n\n");
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+      showToast("In die Zwischenablage kopiert.", { kind: "success" });
+    } catch {
+      showToast("Kopieren fehlgeschlagen.", { kind: "error" });
+    }
   }
 
   return createPortal(
@@ -77,6 +88,7 @@ export default function RowDetailModal({
               onClick={close}
               className="lcars-icon-btn"
               aria-label="Schließen"
+              autoFocus
             >
               <XIcon />
             </button>

@@ -42,7 +42,7 @@ export default function DialogueLiveView({
   title,
   participants,
   currentUserId,
-  viewerRole,
+  canModerate,
   isParticipant,
   myCharacters,
   isOwner,
@@ -56,7 +56,8 @@ export default function DialogueLiveView({
   title: string;
   participants: ArchiveParticipant[];
   currentUserId: number;
-  viewerRole: "admin" | "gm" | "player" | "viewer" | "guest" | null;
+  // Darf fremde Nachrichten/Reservierungen moderieren (dialogues.moderate).
+  canModerate: boolean;
   isParticipant: boolean;
   // Teilnehmer-Charaktere DIESER Person (für die Antwort-Charakter-Auswahl) —
   // leer, wenn Nicht-Teilnehmer (Admin/GM-Betrachter).
@@ -152,7 +153,7 @@ export default function DialogueLiveView({
           currentUserId={currentUserId}
           dialogueOpen={open}
           entrySlug={entrySlug}
-          viewerRole={viewerRole}
+          canModerate={canModerate}
         />
       ) : (
         <p className="lcars-empty-state">Noch keine Nachrichten.</p>
@@ -198,7 +199,7 @@ export default function DialogueLiveView({
         )}
         {/* Admin-Rettungsanker: eine aktive Reservierung sofort freigeben,
             falls sie hängt (auch für Nicht-Teilnehmer-Admins sichtbar). */}
-        {open && viewerRole === "admin" && multiParty && lockStatus && (
+        {open && canModerate && multiParty && lockStatus && (
           <button
             type="button"
             onClick={handleRelease}
@@ -219,7 +220,7 @@ export default function DialogueLiveView({
         )}
         <div className="flex items-center gap-[8px]">
           <CompleteDialogueButton entrySlug={entrySlug} />
-          {viewerRole === "admin" && (
+          {canModerate && (
             <DeleteDialogueButton entrySlug={entrySlug} />
           )}
         </div>

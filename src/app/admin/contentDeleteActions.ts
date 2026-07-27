@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/dal";
+import { requirePermission } from "@/lib/dal";
 import { deleteCharacter, restoreCharacter } from "@/lib/characters";
 import {
   deleteMission,
@@ -30,7 +30,7 @@ export async function deleteContentAction(
   contentType: TrashContentType,
   id: number,
 ): Promise<{ error?: string }> {
-  const admin = await requireAdmin();
+  const admin = await requirePermission("content.moderate");
 
   if (contentType === "character") {
     const result = await deleteCharacter(id, admin.id);
@@ -70,7 +70,7 @@ export async function purgeContentAction(
   contentType: TrashContentType,
   id: number,
 ): Promise<{ error?: string }> {
-  await requireAdmin();
+  await requirePermission("content.moderate");
 
   const purged = await purgeContentById(contentType, id);
   if (!purged) return { error: "Eintrag nicht gefunden oder nicht gelöscht." };
@@ -83,7 +83,7 @@ export async function restoreContentAction(
   contentType: TrashContentType,
   id: number,
 ): Promise<{ error?: string }> {
-  await requireAdmin();
+  await requirePermission("content.moderate");
 
   if (contentType === "character") {
     const result = await restoreCharacter(id);

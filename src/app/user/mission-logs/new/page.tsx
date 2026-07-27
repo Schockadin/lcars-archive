@@ -1,3 +1,4 @@
+import { userCan } from "@/lib/permissions";
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
@@ -95,7 +96,7 @@ export default async function NewMissionLogPage({
             defaultSessionNr={nextSessionNr}
             defaultLogDate={defaultLogDate}
             defaultMissionSlug={preselectedMission?.slug}
-            isAdminOrGM={user.role === "gm" || user.role === "admin"}
+            isAdminOrGM={userCan(user, "content.autolink_tools")}
           />
         )}
       </article>

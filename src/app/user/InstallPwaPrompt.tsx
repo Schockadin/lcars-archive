@@ -61,6 +61,12 @@ export default function InstallPwaPrompt() {
       }
       return false;
     }
+    // Bewusst im Effect statt als Initial-State: window fehlt beim SSR, und die
+    // clientseitige Erkennung (ios/installed) darf erst NACH der Hydration
+    // laufen, sonst weicht das erste Client-Render vom Server-Render ab. Zudem
+    // wird unten das beforeinstallprompt-Event samt Payload (deferredPrompt)
+    // festgehalten — kein Fall für useSyncExternalStore.
+    // eslint-disable-next-line react-you-might-not-need-an-effect/no-external-store-subscription, react-you-might-not-need-an-effect/no-initialize-state
     if (detect()) return;
 
     const onBeforeInstallPrompt = (e: Event) => {

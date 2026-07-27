@@ -1,3 +1,4 @@
+import { userCan } from "@/lib/permissions";
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "../../dal";
@@ -22,7 +23,7 @@ export default async function NewArchiveEntryPage() {
         <h1>Neuen Archiv-Eintrag anlegen</h1>
         <NewArchiveEntryForm
           userId={user.id}
-          isAdminOrGM={user.role === "gm" || user.role === "admin"}
+          isAdminOrGM={userCan(user, "content.autolink_tools")}
         />
       </article>
     </>

@@ -1,3 +1,4 @@
+import { userCan } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
@@ -36,7 +37,7 @@ export default async function EditCharacterPage({
         <EditCharacterForm
           userId={session.userId}
           character={character}
-          isAdminOrGM={viewer?.role === "gm" || viewer?.role === "admin"}
+          isAdminOrGM={!!viewer && userCan(viewer, "content.autolink_tools")}
         />
       </article>
     </>

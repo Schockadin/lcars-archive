@@ -451,6 +451,7 @@ export async function createCharacter(input: {
   homeworld: string | null;
   aliases: string[];
   age: number | null;
+  dateOfBirth?: string | null;
   generation: number[];
   factions: string[];
   ships: string[];
@@ -479,6 +480,7 @@ export async function createCharacter(input: {
     species: input.species,
     homeworld: input.homeworld,
     age: input.age,
+    dateOfBirth: input.dateOfBirth ?? null,
     affiliation: buildAffiliation(input),
     player: null,
     tags: input.tags,
@@ -511,6 +513,7 @@ export interface OwnCharacterForEdit {
   homeworld: string | null;
   aliases: string[];
   age: number | null;
+  dateOfBirth: string | null;
   generation: number[];
   factions: string[];
   ships: string[];
@@ -568,6 +571,7 @@ export async function getOwnCharacterForEdit(
     homeworld: metadata.homeworld,
     aliases: metadata.aliases,
     age: metadata.age,
+    dateOfBirth: metadata.dateOfBirth ?? null,
     generation: metadata.generation,
     factions: metadata.affiliation?.factions ?? [],
     ships: metadata.affiliation?.ships ?? [],
@@ -594,6 +598,7 @@ export async function updateOwnCharacterContent(
     homeworld: string | null;
     aliases: string[];
     age: number | null;
+    dateOfBirth?: string | null;
     generation: number[];
     factions: string[];
     ships: string[];
@@ -619,6 +624,7 @@ export async function updateOwnCharacterContent(
     homeworld: input.homeworld,
     aliases: input.aliases,
     age: input.age,
+    dateOfBirth: input.dateOfBirth ?? null,
     generation: input.generation,
     affiliation: buildAffiliation(input),
     tags: input.tags,

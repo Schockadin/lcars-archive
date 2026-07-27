@@ -154,7 +154,9 @@ export default function ContentEditor({
         />
       </FormField>
 
-      <AutoLinkCheckbox idPrefix={idPrefix} />
+      {/* Neue Inhalte: Autolinking standardmäßig aktiv (siehe AutoLinkCheckbox);
+          beim Bearbeiten bleibt es aus. */}
+      <AutoLinkCheckbox idPrefix={idPrefix} defaultChecked={mode === "create"} />
 
       <SubmitButton pending={pending} pendingLabel={submitPendingLabel}>
         {submitLabel}

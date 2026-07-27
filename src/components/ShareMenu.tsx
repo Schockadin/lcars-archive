@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { ShareIcon } from "@/lib/icons";
+import { useToast } from "@/components/toast/ToastProvider";
 import type { ExportContentType } from "@/lib/contentExport";
 
 // Eigene Teilen-Schaltfläche mit Dropdown — ursprünglich Teil von
@@ -21,8 +22,8 @@ export default function ShareMenu({
   exportSlug?: string;
 }) {
   const [open, setOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const { showToast } = useToast();
 
   useEffect(() => {
     if (!open) return;
@@ -36,10 +37,13 @@ export default function ShareMenu({
   }, [open]);
 
   async function handleCopyLink() {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      showToast("Link kopiert!", { kind: "success" });
+    } catch {
+      showToast("Link konnte nicht kopiert werden.", { kind: "error" });
+    }
     setOpen(false);
-    setTimeout(() => setCopied(false), 2000);
   }
 
   // window.location.href nur hier (im Click-Handler) gelesen, nie beim
@@ -115,11 +119,6 @@ export default function ShareMenu({
               </button>
             </>
           )}
-        </div>
-      )}
-      {copied && (
-        <div className="follow-share-toast" role="status">
-          Link kopiert!
         </div>
       )}
     </div>

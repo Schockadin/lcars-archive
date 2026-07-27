@@ -21,9 +21,17 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Aliassen und Status (`active` / `retired` / `deceased`).
 - **Missionen & Mission-Logs** — Logbucheinträge sind Charakteren und Missionen zugeordnet
   und chronologisch nach Session-Nummer sortiert.
-- **Nutzerkonten & Rollen** — fünf Rollen (Administration/Spielleitung/Spieler:in/
-  Betrachter:in/Gast) mit abgestuften Rechten; Konten entstehen nur per Einladung
-  (Aktivierungsmail mit Passwort-Setup-Link).
+- **Nutzerkonten & granulares Rechtesystem (RBAC)** — die Autorisierung läuft über
+  einzelne Rechte (Funktionsbereiche wie `admin.access`, `gm.access`,
+  `content.moderate`, `dialogues.moderate`, `campaign.manage`, …), nicht mehr über
+  feste Rollen-Abfragen. Rollen bündeln solche Rechte und sind **DB-gestützt**: Neben
+  den fünf System-Rollen (Administration/Spielleitung/Spieler:in/Beobachter:in/Gast)
+  lassen sich unter `/admin/permissions` eigene Rollen anlegen, die Rechte jeder
+  Rolle (auch der System-Rollen) bearbeiten und Rollen direkt Usern zuweisen. Ein
+  Konto kann **mehrere Rollen gleichzeitig** haben (effektive Rechte = Vereinigung
+  aller Rollen) und pro Person lassen sich einzelne Rechte zusätzlich gezielt
+  **gewähren oder entziehen** (Overrides). Konten entstehen weiterhin nur per
+  Einladung (Aktivierungsmail mit Passwort-Setup-Link).
 - **Eigene Inhalte** — eingeloggte User legen eigene Charaktere, Einsatzberichte,
   Archiv-Einträge und Gespräche zwischen Charakteren an, mit Sichtbarkeitsstufen
   (privat/GM/öffentlich) und einem persönlichen Dashboard (farbcodierter News-Feed,
@@ -37,6 +45,20 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Offene Gespräche aktualisieren sich dabei automatisch per Polling (alle
   8 Sekunden, pausiert bei nicht sichtbarem Tab) — neue Nachrichten und
   Sperr-Status-Änderungen erscheinen ohne manuelles Neuladen der Seite.
+- **Persönliche News** — der News-Feed auf dem Dashboard bleibt persistent
+  sichtbar (nicht mehr nur bis zum nächsten Besuch): jede Meldung lässt sich
+  einzeln per X ausblenden (gilt danach als gelesen) und verschwindet automatisch,
+  sobald der zugehörige Inhalt aufgerufen wird; ein Knopf markiert alle offenen
+  News auf einmal als gelesen. Im Profil lässt sich einstellen, welche News-Arten
+  (neu/bearbeitet/gelöscht) überhaupt angezeigt werden (Standard: nur neue).
+  Persistenz über die Tabelle `news_seen`.
+- **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/admin/campaign`
+  („Kampagne", ersetzt das frühere reine „Missionen") an einem Ort das aktuelle
+  Ingame-Jahr, die Charakter-Zuweisung und die Missions-Übersicht. Charaktere
+  haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen
+  Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
+- **Öffentliches Changelog** — die Seite `/changelog` listet je Version die
+  end-nutzerrelevanten Neuerungen (gepflegt in `src/lib/changelog.ts`).
 - **Teilen & Export** — der „Teilen“-Knopf auf Charakter-, Missions-,
   Missionslog-, Archiv-Eintrag- und Gesprächsseiten bietet neben Link
   kopieren/WhatsApp auch den Download des Inhalts als Markdown-Datei (mit
@@ -89,24 +111,33 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   vollem Restore) bietet denselben R2-Cloud-Weg unter einem eigenen Präfix
   (`user-backups/`) im gleichen Bucket.
 - **Admin-Bereich** — eigene Unterseiten für Nutzerverwaltung (durchsuchbare/
-  sortierbare Tabelle, Detailseite pro User für Rolle/Aktivierung/Löschen/
-  Passwort-Reset), Charakter-Zuweisung, Wartungs-Skripte sowie einen
-  read-only Datenbank-Tabellenbrowser inkl. freiem, schreibgeschütztem
-  SQL-Abfragefeld (Syntaxhervorhebung via CodeMirror). Ein Audit-Log
-  protokolliert sicherheitsrelevante Useraccount-Aktionen (inkl. IP-Adresse)
-  sowie, separat, eine 3-Tage-Übersicht aller neu angelegten, bearbeiteten
-  und gelöschten Inhalte. Nur Admins dürfen außerdem als Moderation jede
-  Nachricht in jedem Gespräch bearbeiten oder löschen, auch fremde und auch
-  in bereits abgeschlossenen Gesprächen, sowie jederzeit den Besitzer eines
-  Gesprächs neu zuordnen. Eine weitere Unterseite, das Fehler-Log, listet
-  alle unerwarteten Serverfehler (Zeitpunkt, Route, Meldung, Digest).
-  Spielleitung bekommt über ein eigenes „Leitung“-Dropdown im Header
-  (analog zum Admin-Menü) Zugriff auf drei Übersichten: alle Missionen
-  (Bearbeiten/Löschen/Besitzer:in-Zuordnung pro Zeile), die bestehende
-  Charakter-Zuweisung sowie alle aktuell offenen Gespräche — auch ohne
-  eigene Teilnahme, verlinkt auf die read-only-Ansicht des jeweiligen
-  Gesprächs. Über jedes neu begonnene Gespräch wird jeder aktive
-  GM-Account zusätzlich automatisch per Mail/Push informiert.
+  sortierbare Tabelle, Detailseite pro User für Rollen/Einzelrechte/Aktivierung/
+  Löschen/Passwort-Reset), den Rollen-Editor `/admin/permissions` (Rollen anlegen/
+  bearbeiten, Rechte je Rolle setzen, Mitglieder zuweisen), Charakter-Zuweisung,
+  Wartungs-Skripte sowie einen read-only Datenbank-Tabellenbrowser inkl. freiem,
+  schreibgeschütztem SQL-Abfragefeld (Syntaxhervorhebung via CodeMirror). Ein
+  Audit-Log protokolliert sicherheitsrelevante Useraccount- sowie Rollen-/
+  Rechteänderungen (inkl. IP-Adresse) sowie, separat, eine 3-Tage-Übersicht aller
+  neu angelegten, bearbeiteten und gelöschten Inhalte. Zwei Wartungs-Skripte
+  laufen blockweise mit Fortschrittsanzeige (jeweils ausblendbar): „Alle Inhalte
+  verlinken" (Bulk-Autolinking; Autolinking ist bei neuen Inhalten außerdem
+  standardmäßig vorausgewählt) und „Gespräche-Fließtext erzeugen" (Backfill für
+  vor Einführung des Features abgeschlossene Dialoge). Wer `dialogues.moderate`
+  hat (per Default Admins), darf als Moderation jede Nachricht in jedem Gespräch
+  bearbeiten oder löschen, auch fremde und auch in bereits abgeschlossenen
+  Gesprächen, dessen Metadaten (Titel/Datum/Schauplatz/Ort/Tags — nicht den
+  Verlauf) direkt auf der Gesprächsseite bearbeiten, sowie jederzeit den Besitzer
+  eines Gesprächs neu zuordnen. Eine weitere Unterseite, das Fehler-Log, listet
+  alle unerwarteten Serverfehler (Zeitpunkt, Route, Meldung, Digest); zusätzlich
+  erhält die Administration jeden Morgen um 6 Uhr (Berliner Zeit) automatisch eine
+  Mail mit allen Fehler- und Audit-Log-Einträgen der letzten 24 Stunden.
+  Spielleitung bekommt über ein eigenes „Leitung“-/„Kampagne“-Dropdown im Header
+  (analog zum Admin-Menü) Zugriff auf die Kampagnen-Seite (Ingame-Jahr,
+  Charakter-Zuweisung, Missions-Übersicht mit Bearbeiten/Löschen/Besitzer:in-
+  Zuordnung) sowie alle aktuell offenen Gespräche — auch ohne eigene Teilnahme,
+  verlinkt auf die read-only-Ansicht des jeweiligen Gesprächs. Über jedes neu
+  begonnene Gespräch wird jeder aktive GM-Account zusätzlich automatisch per
+  Mail/Push informiert.
 - **Custom-404/500-Seiten** — unerwartete Serverfehler zeigen eine
   LCARS-gestaltete 500-Seite statt der Next.js-Standardfehlerseite; alle
   Besucher sehen eine freundliche Meldung mit Referenz-Code, eingeloggte
@@ -266,6 +297,7 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind             |
 | `npm run db:purge-deleted` | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist |
 | `npm run test`          | Führt die Unit-Tests aus (`src/**/*.test.ts`)             |
+| `npm run test:e2e`      | Führt die Playwright-E2E-Tests aus (öffentliche Seiten)   |
 | `npm run test:integration` | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz) |
 
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
@@ -283,7 +315,8 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
 ```
 .
 ├── scripts/
-│   ├── schema.sql            # PostgreSQL-Schema
+│   ├── schema.sql            # PostgreSQL-Schema (idempotent, keine Datenänderung)
+│   ├── migrate-pr<NN>.sql    # Pro Pull Request: Migration der Produktions-Daten
 │   ├── setup-db.ts           # Schema anlegen
 │   ├── reset-db.ts           # Datenbank zurücksetzen
 │   ├── backup-db.ts          # Voll-Backup nach R2 (täglicher Cronjob)
@@ -309,13 +342,14 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     │   ├── login/, activate/, forgot-password/
     │   ├── users/             # Öffentliche Nutzerübersicht + Profilseiten anderer User
     │   ├── user/              # Eigenes Profil, Settings, eigene Inhalte anlegen/verwalten
-    │   ├── admin/             # Admin-Bereich (gm-or-admin bzw. admin-only je Unterseite):
+    │   ├── admin/             # Admin-Bereich (staff-baseline, feiner je Unterseite):
     │   │   ├── users/          #   Nutzerverwaltung (Tabelle + Detailseite [id]/edit/)
+    │   │   ├── permissions/    #   Rollen-Editor: Rollen anlegen/bearbeiten + zuweisen
+    │   │   ├── campaign/       #   Kampagne: Ingame-Jahr, Charakter-Zuweisung, Missionen
     │   │   ├── characters/     #   Charakter-Zuweisung
-    │   │   ├── missions/       #   Missionsübersicht: Bearbeiten/Löschen/Besitzer:in
     │   │   ├── dialogues/      #   Alle offenen Gespräche, auch ohne eigene Teilnahme
     │   │   ├── db/             #   DB-Backup, Tabellenbrowser, freies SQL-Abfragefeld
-    │   │   ├── scripts/        #   Cache-Revalidation, Timeline-Neuaufbau, u.a.
+    │   │   ├── scripts/        #   Bulk-Autolinking, Gespräche-Fließtext, Timeline, u.a.
     │   │   ├── audit-log/      #   Sicherheits-Audit-Log + Content-Aktivitätsfeed
     │   │   ├── error-log/      #   Protokollierte Serverfehler (Zeitpunkt, Route, Meldung)
     │   │   ├── content/        #   Owner-/Sichtbarkeits-Übersteuerung fremder Inhalte
@@ -543,15 +577,24 @@ Migrationsschritt gegen Production bleibt weiterhin manuell (siehe oben).
 > Eine Revalidation-Verkabelung für die (pro PR wechselnde) Preview-URL ist
 > dafür nicht nötig.
 
-### Versionsnummer
+### Versionsnummer & DB-Migrationen
 
-Die App hat den Beta-Status verlassen und zeigt im Footer eine feste
-semantische Versionsnummer (z.B. `v1.9.2`), sichtbar in der roten Leiste
-neben „Impressum"/„Datenschutz". Anders als die frühere git-basierte
-Beta-Zählung (`0.<PR-Nr>.<Commit-Nr>`) ist das jetzt eine einfache
-String-Konstante in [`src/lib/version.ts`](src/lib/version.ts), die bei
-jedem Feature/Fix von Hand hochgezählt wird (Patch für Fixes, Minor für
-neue Features) — kein Build-Schritt, keine Git-Historie nötig.
+Die App zeigt im Footer eine feste Versionsnummer (`v<Major>.<Minor>.<Sub>`,
+sichtbar in der roten Leiste neben „Impressum"/„Datenschutz") als
+String-Konstante in [`src/lib/version.ts`](src/lib/version.ts). Das Schema:
+die **Major**-Version wird nur von Hand erhöht; die **Minor**-Version steigt mit
+jedem geöffneten Pull Request (Reset auf 0 bei neuer Major-Version); die
+**Sub**-Version steigt mit jedem Commit im selben PR (Reset auf 0 bei neuem PR).
+Passend dazu bekommt jede Version genau einen Eintrag im öffentlichen Changelog
+([`src/lib/changelog.ts`](src/lib/changelog.ts) → `/changelog`).
+
+**DB-Migrationen:** `scripts/schema.sql` bleibt idempotent und **datenfrei**
+(nur `CREATE TABLE/INDEX IF NOT EXISTS` und additive `ALTER … IF NOT EXISTS`,
+keine datenverändernden `UPDATE`s — ein solcher Schritt hat historisch einen
+Rollen-Hochstufungs-Bug verursacht). Datenverändernde bzw. einmalige Schritte
+(Backfills, Seeds, Constraint-Wechsel) liegen pro Pull Request in einer eigenen
+`scripts/migrate-pr<NN>.sql`, die nach dem Merge einmalig gegen die Produktions-
+DB ausgeführt wird.
 
 ---
 
@@ -563,4 +606,3 @@ Dieses Fan-Projekt steht in keiner Verbindung zu den Rechteinhabern.
 ---
 
 <p align="center"><em>„Live long and prosper.“ 🖖</em></p>
-```

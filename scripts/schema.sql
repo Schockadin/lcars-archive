@@ -65,12 +65,21 @@
 --    Fließtext (true) vs. farbige Karten-Ansicht (DialogueViewToggle.tsx).
 --  - editor_spellcheck_enabled: native Browser-Rechtschreibprüfung in den
 --    Markdown-Editor-Feldern (im Profil abschaltbar).
+--  - news_kinds: welche News-Arten der User auf dem Dashboard sehen will
+--    (Teilmenge von created/updated/deleted). Default = nur 'created' ("Neu").
+--  - additional_roles/permission_overrides: granulares RBAC (siehe
+--    src/lib/permissions.ts). role bleibt die Primär-/Anzeigerolle;
+--    additional_roles hält weitere Preset-Rollen (ein User kann mehrere haben).
+--    Effektive Rechte = Vereinigung der Presets aller Rollen ⊕
+--    permission_overrides (JSONB: Permission→bool, true=gewähren/false=entziehen).
 CREATE TABLE IF NOT EXISTS users (
   id                            SERIAL PRIMARY KEY,
   email                         TEXT UNIQUE NOT NULL,
   name                          TEXT NOT NULL,
-  role                          TEXT NOT NULL DEFAULT 'player'
-                                  CHECK (role IN ('admin', 'gm', 'player', 'viewer', 'guest')),
+  -- Primär-/Anzeigerolle. KEIN CHECK auf feste Werte mehr: Rollen sind
+  -- DB-gestützt (Tabelle roles, siehe unten) und über /admin/permissions frei
+  -- anlegbar; gültige Schlüssel prüft die Anwendung gegen die roles-Tabelle.
+  role                          TEXT NOT NULL DEFAULT 'player',
   created_at                    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   last_login_at                 TIMESTAMPTZ,
   previous_login_at             TIMESTAMPTZ,
@@ -85,9 +94,35 @@ CREATE TABLE IF NOT EXISTS users (
   notify_content_types          TEXT[] NOT NULL DEFAULT '{}',
   session_version               INT NOT NULL DEFAULT 0,
   dialogue_flowing_text_enabled BOOLEAN NOT NULL DEFAULT true,
-  editor_spellcheck_enabled     BOOLEAN NOT NULL DEFAULT true
+  editor_spellcheck_enabled     BOOLEAN NOT NULL DEFAULT true,
+  news_kinds                    TEXT[] NOT NULL DEFAULT '{created}',
+  additional_roles              TEXT[] NOT NULL DEFAULT '{}',
+  permission_overrides          JSONB NOT NULL DEFAULT '{}'
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_slug ON users(slug);
+
+-- ---------------------------------------------------------------------------
+-- roles
+-- ---------------------------------------------------------------------------
+-- DB-gestützte Rollendefinitionen (granulares RBAC, siehe src/lib/permissions.ts
+-- und src/lib/roles.ts). Über /admin/permissions anleg-/bearbeitbar. key ist
+-- der in users.role / users.additional_roles referenzierte Schlüssel;
+-- permissions ist die Menge der von der Rolle gewährten Rechte (Funktionsbereich-
+-- Schlüssel aus PERMISSIONS). is_system markiert die fünf eingebauten Rollen
+-- (admin/gm/player/viewer/guest): inhaltlich bearbeitbar, aber nicht löschbar,
+-- Schlüssel unveränderlich. Die System-Rollen werden von der Anwendung bei
+-- Bedarf selbst nachgezogen (ensureSystemRoles), daher hier bewusst KEIN
+-- Daten-Seed (schema.sql bleibt datenfrei).
+CREATE TABLE IF NOT EXISTS roles (
+  key         TEXT PRIMARY KEY,
+  label       TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  permissions TEXT[] NOT NULL DEFAULT '{}',
+  is_system   BOOLEAN NOT NULL DEFAULT false,
+  sort_order  INT NOT NULL DEFAULT 100,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
 -- ---------------------------------------------------------------------------
 -- characters
@@ -448,7 +483,9 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
   action         TEXT NOT NULL
                    CHECK (action IN (
                      'create_user', 'reset_password', 'update_role', 'update_profile',
-                     'deactivate_user', 'reactivate_user', 'delete_user', 'force_logout'
+                     'deactivate_user', 'reactivate_user', 'delete_user', 'force_logout',
+                     'update_roles', 'update_permissions',
+                     'create_role', 'edit_role', 'delete_role'
                    )),
   target_user_id INT REFERENCES users(id) ON DELETE SET NULL,
   details        TEXT,
@@ -534,6 +571,39 @@ CREATE TABLE IF NOT EXISTS content_images (
 CREATE INDEX IF NOT EXISTS idx_content_images_content ON content_images(content_type, content_id);
 
 -- ---------------------------------------------------------------------------
+-- campaign_settings
+-- ---------------------------------------------------------------------------
+-- Kampagnen-weite Einstellungen der Spielleitung (Einzeilen-Tabelle) — hält
+-- das aktuelle Ingame-Jahr, aus dem zusammen mit characters.metadata.dateOfBirth das
+-- angezeigte Charakter-Alter abgeleitet wird (src/lib/campaign.ts). Der
+-- BOOLEAN-Primärschlüssel mit CHECK (id) erzwingt höchstens eine Zeile.
+CREATE TABLE IF NOT EXISTS campaign_settings (
+  id          BOOLEAN PRIMARY KEY DEFAULT TRUE CHECK (id),
+  ingame_year INT,
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ---------------------------------------------------------------------------
+-- news_seen
+-- ---------------------------------------------------------------------------
+-- Persistente News-Anzeige auf dem Dashboard (NewsSection.tsx): eine News
+-- bleibt sichtbar, bis der User sie per X ausblendet ODER den zugehörigen
+-- Inhalt aufruft — löste das frühere „News seit dem letzten Dashboard-Besuch"-
+-- Modell (last_dashboard_visit_at als Grenze) ab. seen_at ist die Grenze pro
+-- Ziel: eine News gilt als erledigt, wenn ihr Zeitstempel <= seen_at ist (eine
+-- spätere Bearbeitung mit neuerem Zeitstempel taucht dadurch wieder auf).
+-- target_key = Slug bei Inhalten, content_deletions.id (als Text) bei
+-- Löschungen (target_type 'deletion', die nie „aufgerufen" werden können).
+CREATE TABLE IF NOT EXISTS news_seen (
+  user_id     INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  target_type TEXT NOT NULL,
+  target_key  TEXT NOT NULL,
+  seen_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, target_type, target_key)
+);
+CREATE INDEX IF NOT EXISTS idx_news_seen_user ON news_seen(user_id);
+
+-- ---------------------------------------------------------------------------
 -- Migrationen seit der letzten Schema-Konsolidierung
 -- ---------------------------------------------------------------------------
 -- Neue Spalten sind in den CREATE-TABLE-Blöcken oben bereits vollständig
@@ -562,3 +632,42 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_characters_character_color
 DROP INDEX IF EXISTS idx_users_character_color;
 ALTER TABLE users DROP CONSTRAINT IF EXISTS users_character_color_check;
 ALTER TABLE users DROP COLUMN IF EXISTS character_color;
+
+-- news_kinds: welche News-Arten der User sehen will (Default = nur 'created').
+ALTER TABLE users ADD COLUMN IF NOT EXISTS news_kinds TEXT[] NOT NULL
+  DEFAULT '{created}';
+
+-- RBAC: weitere Rollen (ein User kann mehrere haben) + individuelle
+-- Rechte-Overrides (siehe src/lib/permissions.ts). Reine Struktur-Anlage; die
+-- verhaltenswahrende Backfill-Zuweisung der Zusatzrollen für Bestandskonten
+-- lebt bewusst nur in migrate-pr51.sql (kein datenveränderndes UPDATE hier).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS additional_roles TEXT[] NOT NULL DEFAULT '{}';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS permission_overrides JSONB NOT NULL DEFAULT '{}';
+
+-- RBAC: Rollen sind jetzt DB-gestützt (Tabelle roles) und frei anlegbar. Der
+-- alte feste CHECK auf users.role wird entfernt; gültige Schlüssel prüft die
+-- Anwendung gegen die roles-Tabelle. roles-Tabelle idempotent nachziehen
+-- (Struktur; die System-Rollen zieht die App per ensureSystemRoles nach).
+ALTER TABLE users DROP CONSTRAINT IF EXISTS users_role_check;
+CREATE TABLE IF NOT EXISTS roles (
+  key         TEXT PRIMARY KEY,
+  label       TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  permissions TEXT[] NOT NULL DEFAULT '{}',
+  is_system   BOOLEAN NOT NULL DEFAULT false,
+  sort_order  INT NOT NULL DEFAULT 100,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- admin_audit_log: neue Aktionsarten 'update_roles'/'update_permissions' sowie
+-- die Rollen-Editor-Aktionen 'create_role'/'edit_role'/'delete_role' zulassen
+-- (DROP/ADD des CHECK, idempotent).
+ALTER TABLE admin_audit_log DROP CONSTRAINT IF EXISTS admin_audit_log_action_check;
+ALTER TABLE admin_audit_log ADD CONSTRAINT admin_audit_log_action_check
+  CHECK (action IN (
+    'create_user', 'reset_password', 'update_role', 'update_profile',
+    'deactivate_user', 'reactivate_user', 'delete_user', 'force_logout',
+    'update_roles', 'update_permissions',
+    'create_role', 'edit_role', 'delete_role'
+  ));

@@ -11,12 +11,20 @@ import {
 
 const initialState: EditUserState = {};
 
+export interface RoleOption {
+  key: string;
+  label: string;
+}
+
 export default function EditUserForm({
   user,
   isSelf,
+  roleOptions,
 }: {
   user: UserAdminDetail;
   isSelf: boolean;
+  // Alle wählbaren Rollen (System + eigene), aus der DB (siehe page.tsx).
+  roleOptions: RoleOption[];
 }) {
   const [state, formAction, pending] = useActionState(
     updateUserDetailsAction,
@@ -56,11 +64,11 @@ export default function EditUserForm({
           defaultValue={user.role}
           className="rounded-lcars-pill lcars-input"
         >
-          <option value="admin">Administration</option>
-          <option value="gm">Spielleitung</option>
-          <option value="player">Spieler</option>
-          <option value="viewer">Beobachter</option>
-          <option value="guest">Gast</option>
+          {roleOptions.map((r) => (
+            <option key={r.key} value={r.key}>
+              {r.label}
+            </option>
+          ))}
         </select>
         {isSelf && (
           <p className="text-lcars-text-dim">
@@ -68,6 +76,32 @@ export default function EditUserForm({
           </p>
         )}
       </FormField>
+
+      <fieldset className="flex flex-col gap-[8px]">
+        <legend className="lcars-eyebrow">Zusätzliche Rollen</legend>
+        <p className="text-lcars-text-dim text-[13px]">
+          Ein User kann mehrere Rollen haben — die effektiven Rechte sind die
+          Vereinigung aller Rollen (die oben gewählte Primärrolle zählt immer
+          dazu). Die einzelnen Rechte lassen sich darunter feinjustieren.
+        </p>
+        <div className="flex flex-col gap-[6px]">
+          {roleOptions.map((r) => (
+            <label
+              key={r.key}
+              className="flex items-center gap-[10px] lcars-eyebrow"
+            >
+              <input
+                type="checkbox"
+                name="additionalRoles"
+                value={r.key}
+                defaultChecked={user.additional_roles.includes(r.key)}
+                className="lcars-checkbox"
+              />
+              {r.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <FormError message={state?.error} />
 

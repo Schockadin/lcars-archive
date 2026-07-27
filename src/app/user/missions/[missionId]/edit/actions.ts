@@ -1,5 +1,6 @@
 "use server";
 import { redirect } from "next/navigation";
+import { userCan } from "@/lib/permissions";
 import { verifySession } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { deleteMission } from "@/lib/missions";
@@ -28,7 +29,7 @@ export async function deleteMissionAction(
   if (!user) {
     redirect("/login");
   }
-  if (user.role !== "gm" && user.role !== "admin") {
+  if (!userCan(user, "missions.manage")) {
     redirect("/user");
   }
 

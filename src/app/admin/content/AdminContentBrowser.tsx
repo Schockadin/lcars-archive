@@ -3,6 +3,8 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { LcarsDataRow } from "@/components/lcars";
 import OwnerSelect from "@/components/OwnerSelect";
+import DeleteContentButton from "@/components/DeleteContentButton";
+import { PencilIcon } from "@/lib/icons";
 import { bulkSetContentOwnerAction } from "../contentOwnerActions";
 import type { AdminContentItem } from "@/lib/adminContent";
 import type { OwnerContentType } from "@/app/actions/owner";
@@ -234,41 +236,68 @@ export default function AdminContentBrowser({
                 {groupItems.map((item) => {
                   const key = itemKey(item);
                   return (
-                    <div key={key} className="flex items-center gap-[8px]">
-                      <input
-                        type="checkbox"
-                        className="lcars-checkbox"
-                        checked={selected.has(key)}
-                        onChange={() => toggleSelected(key)}
-                        aria-label={`${item.title} auswählen`}
-                      />
-                      <Link
-                        href={item.href}
-                        className="mission-akte flex-1"
-                        style={
-                          {
-                            "--mission-color": CATEGORY_COLORS[contentType],
-                          } as React.CSSProperties
-                        }
-                      >
-                        <span className="mission-akte-rail" />
-                        <span className="mission-akte-body text-left">
-                          <span className="mission-akte-title block">
-                            {item.title}
-                          </span>
-                          <span className="mission-akte-meta">
-                            <span>
-                              <b>Owner</b> {item.ownerName ?? "— kein Owner —"}
+                    <div key={key} className="flex flex-col gap-[6px]">
+                      {/* Zeile 1: Auswahl-Checkbox + Eintrag */}
+                      <div className="flex items-center gap-[8px]">
+                        <input
+                          type="checkbox"
+                          className="lcars-checkbox"
+                          checked={selected.has(key)}
+                          onChange={() => toggleSelected(key)}
+                          aria-label={`${item.title} auswählen`}
+                        />
+                        <Link
+                          href={item.href}
+                          className="mission-akte flex-1"
+                          style={
+                            {
+                              "--mission-color": CATEGORY_COLORS[contentType],
+                            } as React.CSSProperties
+                          }
+                        >
+                          <span className="mission-akte-rail" />
+                          <span className="mission-akte-body text-left">
+                            <span className="mission-akte-title block">
+                              {item.title}
+                            </span>
+                            <span className="mission-akte-meta">
+                              <span>
+                                <b>Owner</b>{" "}
+                                {item.ownerName ?? "— kein Owner —"}
+                              </span>
                             </span>
                           </span>
-                        </span>
-                      </Link>
-                      <OwnerSelect
-                        contentType={item.contentType}
-                        id={item.id}
-                        initialOwnerId={item.ownerId}
-                        users={users}
-                      />
+                        </Link>
+                      </div>
+
+                      {/* Zeile 2 (unter dem Eintrag): Owner-Wechsel-Select +
+                          Bearbeiten/Löschen in einer Flex-Row. Bearbeiten führt
+                          auf die Detailseite (dort läuft die Admin-Bearbeitung
+                          über das ActionsMenu — die /user/…/edit-Routen sind
+                          owner-scoped und daher für fremde Inhalte nicht
+                          nutzbar). Löschen ist weich (Papierkorb) und lädt die
+                          Übersicht danach neu. */}
+                      <div className="flex flex-wrap items-center gap-[8px] pl-[28px]">
+                        <OwnerSelect
+                          contentType={item.contentType}
+                          id={item.id}
+                          initialOwnerId={item.ownerId}
+                          users={users}
+                        />
+                        <Link
+                          href={item.href}
+                          className="lcars-icon-btn"
+                          aria-label="Bearbeiten"
+                          title="Bearbeiten"
+                        >
+                          <PencilIcon />
+                        </Link>
+                        <DeleteContentButton
+                          contentType={item.contentType}
+                          id={item.id}
+                          redirectTo="/admin/content"
+                        />
+                      </div>
                     </div>
                   );
                 })}
