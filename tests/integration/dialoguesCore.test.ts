@@ -10,8 +10,7 @@ import {
   restoreDialogue,
   completeDialogue,
   regenerateDialogueContent,
-  getDialoguesNeedingContentBatch,
-  countDialoguesNeedingContent,
+  getClosedDialogueIds,
   inviteDialogueParticipants,
   reserveDialogueReply,
   requestDialogueReservationNotification,
@@ -536,19 +535,16 @@ describe("moderator edits on a closed dialogue never overwrite an existing flowi
   });
 });
 
-// Der Backfill läuft in Produktion BATCH-weise (Fortschrittsanzeige, siehe
+// Der Backfill läuft in Produktion BATCH-weise über eine stabile Liste
+// (getClosedDialogueIds, per offset durchlaufen — siehe
 // DialogueContentRegeneratePanel.tsx / regenerateDialogueContentBatchAction).
-// Dieser Helfer spiegelt genau diese Batch-Schleife über den DB-Primitiven und
-// gibt die Zahl der erzeugten Fließtexte zurück.
+// Dieser Helfer spiegelt genau diesen Durchlauf über den DB-Primitiven und gibt
+// die Zahl der erzeugten Fließtexte zurück.
 async function backfillAllClosedDialogueContent(): Promise<number> {
+  const ids = await getClosedDialogueIds();
   let changed = 0;
-  for (;;) {
-    const ids = await getDialoguesNeedingContentBatch(50);
-    if (ids.length === 0) break;
-    for (const id of ids) {
-      if (await regenerateDialogueContent(sql, id)) changed++;
-    }
-    if ((await countDialoguesNeedingContent()) === 0) break;
+  for (const id of ids) {
+    if (await regenerateDialogueContent(sql, id)) changed++;
   }
   return changed;
 }

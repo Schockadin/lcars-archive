@@ -32,26 +32,29 @@ export default function DialogueContentRegeneratePanel() {
     setProgress(null);
     setDismissed(false);
 
-    let total: number | null = null;
+    let offset = 0;
     let changed = 0;
 
     try {
       for (;;) {
-        const res = await regenerateDialogueContentBatchAction(BATCH_SIZE);
+        const res = await regenerateDialogueContentBatchAction(
+          offset,
+          BATCH_SIZE,
+        );
         if (res.error) {
           setError(res.error);
           return;
         }
         changed += res.changedInBatch ?? 0;
-        const remaining = res.remaining ?? 0;
-        const processedInBatch = res.processedInBatch ?? 0;
-        if (total === null) total = processedInBatch + remaining;
-        setProgress({ processed: total - remaining, total, changed });
+        const total = res.total ?? 0;
+        const processed = res.processed ?? total;
+        setProgress({ processed, total, changed });
 
-        if (remaining === 0 || processedInBatch === 0) {
+        if (res.done || total === 0) {
           setDone(true);
           return;
         }
+        offset = processed;
       }
     } catch {
       setError("Beim Erzeugen ist ein Fehler aufgetreten.");
