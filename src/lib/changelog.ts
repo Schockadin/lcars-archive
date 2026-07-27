@@ -235,4 +235,12 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Die Menüpunkte im Seitenmenü färben sich jetzt sofort beim Antippen ein (statt erst, wenn die Zielseite geladen ist) und springen bei einem Navigationsfehler wieder auf die tatsächliche Seite zurück; im Archiv erscheint beim Kategorienwechsel kein Platzhalter-Skelett mehr.",
     ],
   },
+  {
+    version: "1.17",
+    title: "Schnellere Auslieferung: Cache Components & PWA-Asset-Caching",
+    items: [
+      "Umstellung auf das neue Caching-Modell von Next.js (Cache Components): Seiten erscheinen dank einer sofort ausgelieferten statischen Hülle schneller, während persönliche bzw. rechteabhängige Teile nahtlos nachladen.",
+      "Statische Dateien (Skripte, Styles, Schriften, Symbole) hält der Browser jetzt vor, sodass wiederholte Seitenaufrufe spürbar schneller laden — weiterhin ohne Offline-Modus.",
+    ],
+  },
 ];
