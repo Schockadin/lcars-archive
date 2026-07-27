@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import HeaderSearch from "./HeaderSearch";
 import HeaderUserNav from "./HeaderUserNav";
+import HeaderSkeleton from "./HeaderSkeleton";
 import type { User } from "@/types/db";
 
 interface SessionInfo {
@@ -64,10 +65,14 @@ export default function HeaderContent() {
     };
   }, [pathname]);
 
-  // Kein Flackern: solange die Session noch lädt, nichts rendern (weder
-  // UserNav noch den generischen Header).
+  // Solange die Session noch lädt: Skeleton-Platzhalter im UserNav-Layout
+  // (statt eines leeren Kastens), damit der Header nicht „leer" wirkt.
   if (!session) {
-    return <div className="lcars-header-content" />;
+    return (
+      <div className="lcars-header-content">
+        <HeaderSkeleton columns={3} />
+      </div>
+    );
   }
 
   if (session.userId) {
