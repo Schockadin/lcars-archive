@@ -11,8 +11,10 @@ interface Props {
   params: Promise<{ missionSlug: string; logSlug: string }>;
 }
 
-// Cache Components: force-dynamic entfällt (unzulässig). Der cookies()-Guard
-// läuft in einer Suspense-Insel (siehe unten).
+// Erzwungen dynamisch — siehe src/app/characters/[slug]/page.tsx: der
+// Sichtbarkeits-Guard unten braucht cookies(), was mit
+// generateStaticParams auf dieser Route sonst zu DYNAMIC_SERVER_USAGE führt.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props) {
   const { missionSlug, logSlug } = await params;

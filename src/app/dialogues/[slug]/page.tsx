@@ -16,6 +16,8 @@ import PageMeta from "@/components/PageMeta";
 import DialogueHeader from "@/components/DialogueHeader";
 import DialogueLiveView from "@/components/DialogueLiveView";
 
+export const dynamic = "force-dynamic";
+
 interface Props {
   params: Promise<{ slug: string }>;
 }

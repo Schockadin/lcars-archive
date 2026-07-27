@@ -7,6 +7,7 @@ import { revalidateAllContent } from "@/lib/revalidate";
 //
 // Authentifizierung über REVALIDATE_SECRET (als `Authorization: Bearer <secret>`
 // oder `?secret=<secret>`).
+export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
   const secret = process.env.REVALIDATE_SECRET;

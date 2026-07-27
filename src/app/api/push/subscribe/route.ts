@@ -6,6 +6,8 @@ import {
   InvalidPushEndpointError,
 } from "@/lib/pushSubscriptions";
 
+export const dynamic = "force-dynamic";
+
 interface SubscribeBody {
   endpoint?: string;
   keys?: { p256dh?: string; auth?: string };

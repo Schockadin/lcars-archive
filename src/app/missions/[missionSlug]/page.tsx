@@ -18,10 +18,13 @@ export async function generateStaticParams() {
   return missions.map((mission) => ({ missionSlug: mission.slug }));
 }
 
-// Missionen sind immer öffentlich lesbar. Der Admin-Owner-Block braucht
-// getViewer() (cookies()) — unter Cache Components läuft dieser Teil in einer
-// Suspense-Insel, der öffentliche Inhalt kann statische Shell werden.
-// force-dynamic entfällt (mit cacheComponents unzulässig).
+// Missionen haben keine eigene Sichtbarkeits-Sperre (immer öffentlich
+// lesbar), waren deshalb bisher die einzige der vier Inhalts-Detailseiten
+// mit echtem SSG. Der Admin-Owner-Block unten braucht aber getViewer()
+// (cookies()) auf JEDER Anfrage, um die Rolle zu kennen — das erzwingt
+// force-dynamic, exakt der bereits akzeptierte Trade-off bei
+// Charakteren/Logs/Archiv-Einträgen (siehe deren page.tsx-Kommentare).
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props) {
   const { missionSlug } = await params;
