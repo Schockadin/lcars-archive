@@ -523,10 +523,12 @@ export default function TutorialPage() {
                 <li>
                   Unter <strong>„Scripts“</strong> alle Missionen ohne
                   Besitzer:in auf einen Schlag einer Spielleitung zuordnen,
-                  Cache/Timeline neu aufbauen sowie mit{" "}
+                  Cache/Timeline neu aufbauen, mit{" "}
                   <strong>„Alle Inhalte verlinken“</strong> das Autolinking auf
-                  einen Rutsch über alle bestehenden Inhalte laufen lassen
-                  (blockweise mit Fortschrittsbalken).
+                  einen Rutsch über alle bestehenden Inhalte laufen lassen sowie
+                  mit <strong>„Typografie korrigieren“</strong> gerade
+                  Anführungszeichen in allen Inhalten in deutsche („…“)
+                  umwandeln (alles blockweise mit Fortschrittsbalken).
                 </li>
                 <li>
                   Unter <strong>„Audit-Log“</strong> nachvollziehen, wer wann

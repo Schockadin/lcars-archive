@@ -8,6 +8,7 @@ import TimelineRegeneratePanel from "../TimelineRegeneratePanel";
 import AssignOwnerlessMissionsPanel from "../AssignOwnerlessMissionsPanel";
 import DialogueContentRegeneratePanel from "../DialogueContentRegeneratePanel";
 import LinkAllContentPanel from "../LinkAllContentPanel";
+import TypographyFixPanel from "../TypographyFixPanel";
 
 export const metadata: Metadata = {
   title: "Scripts",
@@ -57,6 +58,11 @@ export default async function AdminScriptsPage() {
           <section className="flex flex-col gap-[12px]">
             <h2 className="text-lcars-amber">Alle Inhalte verlinken</h2>
             <LinkAllContentPanel />
+          </section>
+
+          <section className="flex flex-col gap-[12px]">
+            <h2 className="text-lcars-amber">Typografie korrigieren</h2>
+            <TypographyFixPanel />
           </section>
         </div>
       </article>
