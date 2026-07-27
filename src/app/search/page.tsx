@@ -9,8 +9,8 @@ export const metadata = {
   },
 };
 
-// Hängt am ?q=-Parameter — wie /api/search immer frisch ausliefern.
-export const dynamic = "force-dynamic";
+// Hängt am ?q=-Parameter (searchParams) → unter Cache Components ohnehin
+// dynamisch; force-dynamic entfällt (unzulässig).
 
 export default async function SearchPage({
   searchParams,

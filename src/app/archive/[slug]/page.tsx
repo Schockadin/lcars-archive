@@ -18,14 +18,9 @@ interface Props {
   params: Promise<{ slug: string }>;
 }
 
-// Erzwungen dynamisch statt statisch vorgerendert: der Sichtbarkeits-Guard
-// unten braucht cookies() (via getViewer()), sobald ein Eintrag nicht public
-// ist. Next weist bei bedingtem cookies()-Zugriff auf einer Route mit
-// generateStaticParams einen DYNAMIC_SERVER_USAGE-Fehler zurück (production
-// build) statt zuverlässig dynamisch zu rendern — deshalb hier explizit statt
-// implizit, exakt wie schon in src/app/dialogues/[slug]/page.tsx. Kostet die
-// statische Vorrenderung/ISR für ALLE (auch public) Archiv-Einträge.
-export const dynamic = "force-dynamic";
+// Cache Components: force-dynamic entfällt (unzulässig). Der cookies()-lesende
+// Sichtbarkeits-Guard läuft in einer Suspense-Insel; der Rest kann statische
+// Shell werden (siehe unten).
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;

@@ -4,8 +4,6 @@ import { touchLastVisit, getUserById } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
 import { userPermissions } from "@/lib/permissions";
 
-export const dynamic = "force-dynamic";
-
 // Winziger, für den Client selbst DB-freier Endpunkt (nur Cookie-Signatur-
 // Prüfung), damit die Sidebar client-seitig weiß, ob "Home" auf das eigene
 // Dashboard zeigen soll. Bewusst NICHT über den Root-Layout/Server-

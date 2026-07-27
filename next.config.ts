@@ -45,6 +45,11 @@ function buildCspHeader(): string {
 }
 
 const nextConfig: NextConfig = {
+  // Next 16 Cache Components: alles ist dynamisch by default, gecacht wird
+  // gezielt per "use cache" (+ cacheLife/cacheTag). Ersetzt das frühere
+  // unstable_cache/force-dynamic-Modell und aktiviert PPR (statische Shell +
+  // gestreamte dynamische Inseln). Siehe AGENTS.md / Migrations-Guide.
+  cacheComponents: true,
   // Schaltet forbidden()/app/forbidden.tsx frei (next/navigation) — genutzt
   // von den Zugriffs-Guards in src/lib/dal.ts, src/app/user/dal.ts und
   // src/app/admin/[id]/dal.ts für rollen-/identitätsbasierte
