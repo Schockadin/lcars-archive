@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { CopyIcon, CheckIcon, XIcon } from "@/lib/icons";
+import { useReturnFocus } from "@/hooks/useReturnFocus";
 
 export interface RowDetailField {
   label: string;
@@ -25,6 +26,9 @@ export default function RowDetailModal({
 }) {
   const close = useCallback(() => onClose(), [onClose]);
   const [copied, setCopied] = useState(false);
+  // Wird nur bei geöffnetem Modal gemountet → Fokus beim Schließen (Unmount)
+  // an das auslösende Element (die angeklickte Tabellenzeile) zurückgeben.
+  useReturnFocus(true);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -77,6 +81,7 @@ export default function RowDetailModal({
               onClick={close}
               className="lcars-icon-btn"
               aria-label="Schließen"
+              autoFocus
             >
               <XIcon />
             </button>

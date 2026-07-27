@@ -63,14 +63,23 @@ export function SubmitButton({
   pendingLabel,
   children,
   className = "lcars-pill-btn--outline self-start disabled:opacity-50 w-[100%]",
+  onClick,
 }: {
   pending: boolean;
   pendingLabel: string;
   children: React.ReactNode;
   className?: string;
+  // Optionaler Klick-Handler, z.B. für ein confirm() vor dem Absenden
+  // (verhindert den Submit per preventDefault, siehe confirmSubmit).
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }) {
   return (
-    <button type="submit" disabled={pending} className={className}>
+    <button
+      type="submit"
+      disabled={pending}
+      className={className}
+      onClick={onClick}
+    >
       {pending ? pendingLabel : children}
     </button>
   );

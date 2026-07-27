@@ -69,7 +69,7 @@ export default function LogDetail({
         <h1 className="mission-detail-title">{log.title}</h1>
       </header>
 
-      <ContentBody html={log.content} />
+      <ContentBody html={log.content} imageAlt={`Bild aus „${log.title}“`} />
 
       {/* Navigation zu den Logs desselben Autors (chronologisch). */}
       {hasNav && (

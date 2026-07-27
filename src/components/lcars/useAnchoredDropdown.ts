@@ -63,7 +63,13 @@ export function useAnchoredDropdown({
       return () => document.removeEventListener("mousedown", onDown);
     }
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        // Fokus per Tastatur zurück auf den Trigger (bei Außenklick bewusst
+        // NICHT — dort hat die Person den Fokus absichtlich woanders hin
+        // bewegt).
+        triggerRef.current?.focus();
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => {

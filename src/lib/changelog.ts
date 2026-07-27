@@ -227,6 +227,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Die Admin-Werkzeuge „Gespräche-Fließtext erzeugen“ und „Missionen ohne Owner zuordnen“ (unter Scripts) laufen jetzt in Blöcken mit Fortschrittsbalken (kein Timeout mehr bei vielen Einträgen); jeder Fortschrittsbalken lässt sich per kleinem X ausblenden.",
       "Sicherheitsnetz bei der Rechteverwaltung: Man kann sich nicht mehr versehentlich selbst das Admin-Recht entziehen — weder über die individuellen Rechte einer Person noch durch Bearbeiten einer Rolle, die man selbst innehat.",
       "Administrative Benachrichtigungen (Sicherheitsmail bei Passwort-Reset-Anfragen, täglicher Log-Digest) erreichen jetzt alle Konten mit Admin-Recht — auch wenn dieses über eine Zusatz- oder eigene Rolle bzw. eine Einzelrecht-Freigabe erteilt wurde, nicht nur die reine Primärrolle „Administration“.",
+      "UX-Feinschliff: Das Löschen einer Rolle fragt jetzt vorher nach (wie alle anderen Lösch-Aktionen), lange Mitgliederlisten im Rollen-Editor lassen sich durchsuchen, beim Anlegen einer Rolle wird der erzeugte Schlüssel live angezeigt; Ladeskelette auch in den eingeloggten Bereichen; nach dem Schließen von Bildansichten/Dialogen/Menüs kehrt der Tastatur-Fokus zum Auslöser zurück; Vollbild-Bilder tragen einen aussagekräftigeren Alternativtext.",
     ],
   },
 ];

@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import Link from "next/link";
 import {
   updateRoleAction,
@@ -9,6 +9,7 @@ import {
   type RolesState,
 } from "./actions";
 import PermissionCheckboxList from "./PermissionCheckboxList";
+import { confirmSubmit } from "@/lib/confirmSubmit";
 import {
   FormError,
   FormSuccess,
@@ -54,6 +55,11 @@ export default function RoleEditor({
     updateRoleMembersAction,
     initialState,
   );
+  // Mitglieder-Suchfilter: blendet nicht passende Zeilen nur AUS (CSS hidden),
+  // entfernt sie NICHT aus dem DOM — sonst würden angehakte, aber gerade
+  // ausgefilterte Mitglieder beim Speichern als „nicht mehr Mitglied" gewertet.
+  const [memberQuery, setMemberQuery] = useState("");
+  const q = memberQuery.trim().toLowerCase();
 
   return (
     <details className="lcars-panel p-[16px] flex flex-col gap-[12px]">
@@ -130,29 +136,52 @@ export default function RoleEditor({
             </Link>
             .
           </p>
+          {members.length > 8 && (
+            <input
+              type="search"
+              value={memberQuery}
+              onChange={(e) => setMemberQuery(e.target.value)}
+              placeholder="Mitglieder filtern (Name/E-Mail)…"
+              aria-label="Mitglieder filtern"
+              className="rounded-lcars-pill lcars-input"
+            />
+          )}
           <div className="flex flex-col gap-[6px]">
-            {members.map((m) => (
-              <label key={m.id} className="flex items-center gap-[10px]">
-                <input
-                  type="checkbox"
-                  name="members"
-                  value={m.id}
-                  defaultChecked={m.isMember}
-                  disabled={m.isPrimary}
-                  className="lcars-checkbox"
-                />
-                <span
+            {members.map((m) => {
+              const matches =
+                q === "" ||
+                m.name.toLowerCase().includes(q) ||
+                m.email.toLowerCase().includes(q);
+              return (
+                <label
+                  key={m.id}
                   className={
-                    m.isPrimary ? "text-lcars-text-dim" : "text-lcars-text-data"
+                    matches ? "flex items-center gap-[10px]" : "hidden"
                   }
                 >
-                  {m.name}{" "}
-                  <span className="text-lcars-text-dim text-[12px]">
-                    &lt;{m.email}&gt;{m.isPrimary ? " · Primärrolle" : ""}
+                  <input
+                    type="checkbox"
+                    name="members"
+                    value={m.id}
+                    defaultChecked={m.isMember}
+                    disabled={m.isPrimary}
+                    className="lcars-checkbox"
+                  />
+                  <span
+                    className={
+                      m.isPrimary
+                        ? "text-lcars-text-dim"
+                        : "text-lcars-text-data"
+                    }
+                  >
+                    {m.name}{" "}
+                    <span className="text-lcars-text-dim text-[12px]">
+                      &lt;{m.email}&gt;{m.isPrimary ? " · Primärrolle" : ""}
+                    </span>
                   </span>
-                </span>
-              </label>
-            ))}
+                </label>
+              );
+            })}
           </div>
 
           <FormError message={membersState?.error} />
@@ -177,6 +206,9 @@ export default function RoleEditor({
             <SubmitButton
               pending={deleting}
               pendingLabel="Löschen…"
+              onClick={confirmSubmit(
+                `Rolle „${role.label}" wirklich löschen? Das lässt sich nicht rückgängig machen.`,
+              )}
               className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%] bg-lcars-red text-black"
             >
               Rolle löschen

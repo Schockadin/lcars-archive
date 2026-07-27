@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@/lib/icons";
+import { useReturnFocus } from "@/hooks/useReturnFocus";
 
 // Ersetzt die bisherigen einfachen <div dangerouslySetInnerHTML> für
 // Missions-/Log-/Archiv-Eintrag-Texte (MissionSynopsis.tsx,
@@ -15,9 +16,14 @@ import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@/lib/icons";
 export default function ContentBody({
   html,
   className = "mission-body lcars-text",
+  imageAlt = "Bild",
 }: {
   html: string;
   className?: string;
+  // Fallback-Alt-Text für die Lightbox, wenn das Bild im Text selbst keinen
+  // (aussagekräftigen) Alt-Text trägt — Aufrufer geben hier z.B. den Titel des
+  // Inhalts mit ("Bild aus …"), sonst bleibt es beim generischen "Bild".
+  imageAlt?: string;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
   // Liste der Bild-Quellen für das Karussell — erst BEIM ÖFFNEN (Klick auf ein
@@ -26,7 +32,11 @@ export default function ContentBody({
   // immer aktuell (die Lightbox öffnet ohnehin nur über einen Klick), und das
   // Karussell bewegt sich weiterhin nur über Bilder DIESES Inhalts.
   const [images, setImages] = useState<string[]>([]);
+  // Parallele Alt-Texte zu images (aus dem jeweiligen <img alt="…">).
+  const [alts, setAlts] = useState<string[]>([]);
   const [index, setIndex] = useState<number | null>(null);
+  // Fokus nach dem Schließen der Lightbox zurückgeben.
+  useReturnFocus(index !== null);
 
   const close = useCallback(() => setIndex(null), []);
   const prev = useCallback(
@@ -66,17 +76,24 @@ export default function ContentBody({
     if (!container) return;
     // Bildliste im Moment des Klicks aus dem DOM lesen — dieselben aufgelösten
     // src-Werte, die auch target.src liefert (so matcht indexOf zuverlässig).
-    const list = Array.from(container.querySelectorAll("img")).map(
-      (img) => img.src,
-    );
+    const imgs = Array.from(container.querySelectorAll("img"));
+    const list = imgs.map((img) => img.src);
     const i = list.indexOf((target as HTMLImageElement).src);
     if (i !== -1) {
       setImages(list);
+      setAlts(imgs.map((img) => img.alt));
       setIndex(i);
     }
   }
 
   const current = index !== null ? images[index] : null;
+  // Alt-Text der Lightbox: der im Text hinterlegte Alt-Text des Bildes, sofern
+  // aussagekräftig (nicht leer/nicht das generische "Bild"), sonst der vom
+  // Aufrufer gelieferte Fallback (imageAlt).
+  const currentAlt =
+    index !== null && alts[index] && alts[index] !== "Bild"
+      ? alts[index]
+      : imageAlt;
 
   return (
     <>
@@ -138,7 +155,7 @@ export default function ContentBody({
             <Image
               key={current}
               src={current}
-              alt="Bild"
+              alt={currentAlt}
               width={1200}
               height={1600}
               unoptimized
