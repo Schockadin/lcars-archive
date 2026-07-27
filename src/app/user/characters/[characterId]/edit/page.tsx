@@ -2,7 +2,7 @@ import { userCan } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
-import { verifySession } from "@/lib/dal";
+import { verifySession, getRoleMap } from "@/lib/dal";
 import { getOwnCharacterForEdit } from "@/lib/characters";
 import { getUserById } from "@/lib/users";
 import EditCharacterForm from "./EditCharacterForm";
@@ -20,9 +20,10 @@ export default async function EditCharacterPage({
   const { characterId } = await params;
   const session = await verifySession();
 
-  const [character, viewer] = await Promise.all([
+  const [character, viewer, roleMap] = await Promise.all([
     getOwnCharacterForEdit(session.userId, Number(characterId)),
     getUserById(session.userId),
+    getRoleMap(),
   ]);
   if (!character) {
     redirect("/user/content");
@@ -37,7 +38,7 @@ export default async function EditCharacterPage({
         <EditCharacterForm
           userId={session.userId}
           character={character}
-          isAdminOrGM={!!viewer && userCan(viewer, "content.autolink_tools")}
+          isAdminOrGM={!!viewer && userCan(viewer, "content.autolink_tools", roleMap)}
         />
       </article>
     </>

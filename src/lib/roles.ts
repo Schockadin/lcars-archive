@@ -7,7 +7,6 @@ import {
   PERMISSIONS,
   ROLE_LABELS,
   SYSTEM_ROLES,
-  setActiveRolePresets,
   type Permission,
   type RoleMap,
 } from "@/lib/permissions";
@@ -66,9 +65,9 @@ const getRoleRows = unstable_cache(
 // Effektive Rollen-Map (Schlüssel → Rechte). Merged die DB-Zeilen ÜBER die
 // eingebauten Defaults: eine bearbeitete System-Rolle ersetzt ihren Default,
 // fehlende System-Rollen bleiben über den Default abgedeckt, eigene Rollen
-// kommen hinzu. Setzt zusätzlich die prozessweite aktive Map (permissions.ts),
-// damit die vielen synchronen userCan/…-Aufrufstellen ohne DB-Abfrage korrekt
-// auflösen. React-cache-dedupliziert pro Anfrage.
+// kommen hinzu. React-cache-dedupliziert pro Anfrage — Server-Aufrufer holen
+// die Map hierüber und reichen sie explizit an userCan/userPermissions durch
+// (kein Modul-Global mehr, siehe permissions.ts).
 function mapFromRows(rows: RoleRow[]): RoleMap {
   const map: RoleMap = { ...DEFAULT_ROLE_PRESETS };
   for (const r of rows) {
@@ -84,15 +83,13 @@ export const getRoleMap = cache(async (): Promise<RoleMap> => {
   } catch {
     rows = [];
   }
-  const map = mapFromRows(rows);
-  setActiveRolePresets(map);
-  return map;
+  return mapFromRows(rows);
 });
 
 // Uncached, seiteneffektfreie Variante für Kontexte OHNE Next-Request — z.B.
 // Standalone-Cron-Skripte (scripts/*.ts), in denen unstable_cache/React cache
-// bzw. setActiveRolePresets nicht greifen. Fragt die roles-Tabelle direkt ab und
-// merged wie getRoleMap über die Code-Defaults (Fallback bei DB-Fehler).
+// nicht greifen. Fragt die roles-Tabelle direkt ab und merged wie getRoleMap
+// über die Code-Defaults (Fallback bei DB-Fehler).
 export async function buildRoleMap(): Promise<RoleMap> {
   let rows: RoleRow[] = [];
   try {

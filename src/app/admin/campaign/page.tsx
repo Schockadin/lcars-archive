@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { userCan } from "@/lib/permissions";
 import PageMeta from "@/components/PageMeta";
-import { requireGM } from "@/lib/dal";
+import { requireGM, getRoleMap } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
 import { getAllCharactersForAdmin } from "@/lib/characters";
 import { getAllMissionsForGmOverview } from "@/lib/missions";
@@ -33,8 +33,9 @@ export default async function AdminCampaignPage() {
 
   // Gäste dürfen keinen Charakter zugewiesen bekommen (siehe
   // assignCharacterAction) — sie fehlen deshalb schon hier in der Auswahl.
+  const roleMap = await getRoleMap();
   const characterUserOptions = users
-    .filter((u) => userCan(u, "characters.assignable"))
+    .filter((u) => userCan(u, "characters.assignable", roleMap))
     .map((u) => ({ id: u.id, name: u.name }));
   const missionUserOptions = users.map((u) => ({ id: u.id, name: u.name }));
 

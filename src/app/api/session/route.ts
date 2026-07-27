@@ -39,10 +39,11 @@ export async function GET() {
   if (session) {
     await touchLastVisit(session.userId);
   }
-  // Rollen-Map laden, damit userPermissions gegen die aktuellen (evtl.
-  // bearbeiteten/eigenen) Rollen auflöst.
-  if (user) await getRoleMap();
-  const permissions = user ? [...userPermissions(user)] : [];
+  // Rollen-Map laden und explizit durchreichen, damit userPermissions gegen die
+  // aktuellen (evtl. bearbeiteten/eigenen) Rollen auflöst.
+  const permissions = user
+    ? [...userPermissions(user, await getRoleMap())]
+    : [];
   // Explizite No-Store-Header statt uns allein auf force-dynamic zu
   // verlassen: dieser Endpunkt liefert userId/role, personalisierte Daten,
   // die niemals von einem zwischengeschalteten Cache (Netlifys CDN/Edge,

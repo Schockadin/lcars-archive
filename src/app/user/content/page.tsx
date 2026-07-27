@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { userCan } from "@/lib/permissions";
+import { getRoleMap } from "@/lib/roles";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnCharacters } from "../dal";
@@ -16,7 +17,8 @@ export const metadata: Metadata = {
 
 export default async function UserContentPage() {
   const { user, characters } = await requireOwnCharacters();
-  const isGM = userCan(user, "missions.manage");
+  const roleMap = await getRoleMap();
+  const isGM = userCan(user, "missions.manage", roleMap);
 
   const [logs, dialogues, archiveEntries, missions] = await Promise.all([
     getLogsForUser(user.id),
@@ -63,7 +65,7 @@ export default async function UserContentPage() {
                 (bewusst NICHT hinter characters.length > 0 versteckt — genau
                 damit legt man seinen ERSTEN eigenen Charakter an) — außer
                 Gast-Accounts, siehe requireOwnCharacters/new/actions.ts. */}
-            {userCan(user, "content.create") && (
+            {userCan(user, "content.create", roleMap) && (
               <Link
                 href="/user/characters/new"
                 className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"

@@ -23,7 +23,6 @@ import {
   userCan,
   effectiveRolesOf,
   resolvePermissions,
-  getActiveRolePresets,
   type Permission,
 } from "@/lib/permissions";
 
@@ -104,7 +103,7 @@ export async function updateRoleAction(
   // hypothetischen Rollen-Map mit den neuen Rechten dieser Rolle.
   const adminRoles = effectiveRolesOf(admin);
   if (adminRoles.includes(key)) {
-    const hypotheticalMap = { ...getActiveRolePresets(), [key]: permissions };
+    const hypotheticalMap = { ...(await getRoleMap()), [key]: permissions };
     const adminPerms = resolvePermissions(
       adminRoles,
       admin.permission_overrides,
@@ -186,7 +185,7 @@ export async function updateRoleMembersAction(
 
   // Aktuelle Rollen-Map laden, damit die characters.assignable-Prüfung unten
   // gegen die tatsächlichen Rollendefinitionen auflöst.
-  await getRoleMap();
+  const roleMap = await getRoleMap();
 
   const desired = new Set(
     formData.getAll("members").map((v) => Number(v)),
@@ -210,7 +209,7 @@ export async function updateRoleMembersAction(
       : user.additional_roles.filter((r) => r !== key);
 
     const updated = await updateUserRoles(user.id, user.role, nextAdditional);
-    if (!userCan(updated, "characters.assignable")) {
+    if (!userCan(updated, "characters.assignable", roleMap)) {
       await unassignCharactersFromUser(user.id);
     }
     await logAdminAction(

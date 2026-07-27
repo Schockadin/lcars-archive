@@ -2,7 +2,7 @@ import { userCan } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
-import { verifySession } from "@/lib/dal";
+import { verifySession, getRoleMap } from "@/lib/dal";
 import { getOwnMissionLogForEdit } from "@/lib/missions";
 import { getUserById } from "@/lib/users";
 import EditMissionLogForm from "./EditMissionLogForm";
@@ -20,9 +20,10 @@ export default async function EditMissionLogPage({
   const { logId } = await params;
   const session = await verifySession();
 
-  const [log, viewer] = await Promise.all([
+  const [log, viewer, roleMap] = await Promise.all([
     getOwnMissionLogForEdit(session.userId, Number(logId)),
     getUserById(session.userId),
+    getRoleMap(),
   ]);
   if (!log) {
     redirect("/user/content");
@@ -41,7 +42,7 @@ export default async function EditMissionLogPage({
         <EditMissionLogForm
           userId={session.userId}
           log={log}
-          isAdminOrGM={!!viewer && userCan(viewer, "content.autolink_tools")}
+          isAdminOrGM={!!viewer && userCan(viewer, "content.autolink_tools", roleMap)}
         />
       </article>
     </>

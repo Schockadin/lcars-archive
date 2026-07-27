@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { userCan } from "@/lib/permissions";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
-import { requireGM } from "@/lib/dal";
+import { requireGM, getRoleMap } from "@/lib/dal";
 import { getAllOpenDialoguesForGM } from "@/lib/dialogues";
 import { formatDateTime } from "@/utils/formateISODate";
 
@@ -20,7 +20,8 @@ export const metadata: Metadata = {
 // read-only-Modus nötig.
 export default async function AdminDialoguesPage() {
   const viewer = await requireGM();
-  const canModerate = userCan(viewer, "dialogues.moderate");
+  const roleMap = await getRoleMap();
+  const canModerate = userCan(viewer, "dialogues.moderate", roleMap);
 
   const dialogues = await getAllOpenDialoguesForGM();
 

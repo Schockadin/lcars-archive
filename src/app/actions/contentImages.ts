@@ -1,6 +1,7 @@
 "use server";
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
+import { getRoleMap } from "@/lib/roles";
 import { getViewer, canView, resolveViewer } from "@/lib/visibility";
 import { revalidateCharacter } from "@/lib/revalidate";
 import {
@@ -41,7 +42,14 @@ async function requireContentImageAccess(
   const access = await getContentAccessContext(contentTypeRaw, contentId);
   if (!access) return { error: "Inhalt nicht gefunden." };
 
-  if (!canManageContentImages(contentTypeRaw, access.ownerId, resolveViewer(user))) {
+  const roleMap = await getRoleMap();
+  if (
+    !canManageContentImages(
+      contentTypeRaw,
+      access.ownerId,
+      resolveViewer(user, roleMap),
+    )
+  ) {
     return { error: "Keine Berechtigung." };
   }
   return { contentType: contentTypeRaw };

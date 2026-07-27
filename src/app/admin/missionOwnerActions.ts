@@ -1,5 +1,5 @@
 "use server";
-import { requireAdmin } from "@/lib/dal";
+import { requireAdmin, getRoleMap } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { userCan } from "@/lib/permissions";
 import {
@@ -33,7 +33,7 @@ export async function assignOwnerlessMissionsBatchAction(
   if (!owner) {
     return { error: "Ungültiger User." };
   }
-  if (!userCan(owner, "missions.manage")) {
+  if (!userCan(owner, "missions.manage", await getRoleMap())) {
     return { error: "Nur Spielleitung/Administration kann zugeordnet werden." };
   }
 

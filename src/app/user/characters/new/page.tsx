@@ -1,4 +1,5 @@
 import { userCan } from "@/lib/permissions";
+import { getRoleMap } from "@/lib/roles";
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "../../dal";
@@ -17,8 +18,9 @@ export const metadata: Metadata = {
 // in der Tiefe zusammen mit dem erneuten Check in actions.ts).
 export default async function NewCharacterPage() {
   const user = await requireOwnUser();
+  const roleMap = await getRoleMap();
 
-  if (!userCan(user, "content.create")) {
+  if (!userCan(user, "content.create", roleMap)) {
     return (
       <>
         <PageMeta title="Neuer Charakter" section="users" />
@@ -39,7 +41,7 @@ export default async function NewCharacterPage() {
         <h1>Neuen Charakter anlegen</h1>
         <NewCharacterForm
           userId={user.id}
-          isAdminOrGM={userCan(user, "content.autolink_tools")}
+          isAdminOrGM={userCan(user, "content.autolink_tools", roleMap)}
         />
       </article>
     </>

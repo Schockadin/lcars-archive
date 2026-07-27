@@ -82,6 +82,7 @@ export async function updateUserDetailsAction(
         permission_overrides: admin.permission_overrides,
       },
       "admin.access",
+      roleMap,
     )
   ) {
     return { error: "Du kannst dir nicht selbst das Admin-Recht entziehen." };
@@ -128,7 +129,7 @@ export async function updateUserDetailsAction(
     // darf (characters.assignable), verliert bestehende Zuweisungen — statt
     // einen inkonsistenten Zustand stehen zu lassen (früher: Herabstufung auf
     // "guest").
-    if (!userCan(updated, "characters.assignable")) {
+    if (!userCan(updated, "characters.assignable", roleMap)) {
       await unassignCharactersFromUser(userId);
     }
   }
@@ -152,10 +153,11 @@ export async function updateUserPermissionsAction(
   const target = await getUserById(userId);
   if (!target) return { error: "User nicht gefunden." };
 
+  const roleMap = await getRoleMap();
   const roles = Array.from(
     new Set<Role>([target.role, ...target.additional_roles]),
   );
-  const roleDefaults = rolePermissions(roles);
+  const roleDefaults = rolePermissions(roles, roleMap);
   const desired = new Set(
     formData.getAll("permissions").map(String),
   );
@@ -171,7 +173,9 @@ export async function updateUserPermissionsAction(
   // Admin-Recht zu entziehen, würde einen aussperren.
   if (
     userId === admin.id &&
-    !resolvePermissions(effectiveRolesOf(target), overrides).has("admin.access")
+    !resolvePermissions(effectiveRolesOf(target), overrides, roleMap).has(
+      "admin.access",
+    )
   ) {
     return { error: "Du kannst dir nicht selbst das Admin-Recht entziehen." };
   }

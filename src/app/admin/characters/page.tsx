@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { userCan } from "@/lib/permissions";
 import PageMeta from "@/components/PageMeta";
-import { requireGM } from "@/lib/dal";
+import { requireGM, getRoleMap } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
 import { getAllCharactersForAdmin } from "@/lib/characters";
 import CharacterAssignmentTable from "../CharacterAssignmentTable";
@@ -23,8 +23,9 @@ export default async function AdminCharactersPage() {
   // Gäste dürfen keinen Charakter zugewiesen bekommen (siehe
   // assignCharacterAction in ../actions.ts, das dieselbe Regel serverseitig
   // durchsetzt) — sie fehlen deshalb schon hier in der Auswahl.
+  const roleMap = await getRoleMap();
   const userOptions = users
-    .filter((u) => userCan(u, "characters.assignable"))
+    .filter((u) => userCan(u, "characters.assignable", roleMap))
     .map((u) => ({ id: u.id, name: u.name }));
 
   return (

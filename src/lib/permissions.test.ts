@@ -4,8 +4,6 @@ import {
   rolePermissions,
   hasPermission,
   userCan,
-  setActiveRolePresets,
-  getActiveRolePresets,
   roleLabel,
   isSystemRole,
   DEFAULT_ROLE_PRESETS,
@@ -127,23 +125,20 @@ describe("DB-gestützte Rollen (RoleMap-Parameter)", () => {
   });
 });
 
-describe("aktive Rollen-Map (Registry)", () => {
-  it("setActiveRolePresets wirkt auf Aufrufe ohne expliziten roleMap-Parameter", () => {
-    const before = getActiveRolePresets();
-    try {
-      setActiveRolePresets({
-        ...DEFAULT_ROLE_PRESETS,
-        gm: [...DEFAULT_ROLE_PRESETS.gm, "content.create"],
-        wächter: ["content.follow", "content.moderate"],
-      });
-      // Ohne Parameter zieht jetzt die aktive Map.
-      expect(rolePermissions(["gm"]).has("content.create")).toBe(true);
-      expect(rolePermissions(["wächter"]).has("content.moderate")).toBe(true);
-    } finally {
-      // Registry für die übrigen Tests zurücksetzen.
-      setActiveRolePresets(before);
-    }
+describe("explizite roleMap (DB-gestützte Rollen)", () => {
+  it("rolePermissions löst eigene Rollen über die übergebene Map auf", () => {
+    const roleMap: RoleMap = {
+      ...DEFAULT_ROLE_PRESETS,
+      gm: [...DEFAULT_ROLE_PRESETS.gm, "content.create"],
+      wächter: ["content.follow", "content.moderate"],
+    };
+    expect(rolePermissions(["gm"], roleMap).has("content.create")).toBe(true);
+    expect(rolePermissions(["wächter"], roleMap).has("content.moderate")).toBe(
+      true,
+    );
+    // Ohne Map gelten die eingebauten Defaults.
     expect(rolePermissions(["gm"]).has("content.create")).toBe(false);
+    expect(rolePermissions(["wächter"]).has("content.moderate")).toBe(false);
   });
 });
 

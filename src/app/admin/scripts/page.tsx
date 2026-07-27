@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { userCan } from "@/lib/permissions";
 import PageMeta from "@/components/PageMeta";
-import { requireAdmin } from "@/lib/dal";
+import { requireAdmin, getRoleMap } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
 import RevalidateCachePanel from "../RevalidateCachePanel";
 import TimelineRegeneratePanel from "../TimelineRegeneratePanel";
@@ -23,8 +23,9 @@ export const maxDuration = 60;
 export default async function AdminScriptsPage() {
   await requireAdmin();
   const users = await listAllUsers();
+  const roleMap = await getRoleMap();
   const gmOptions = users
-    .filter((u) => userCan(u, "missions.manage"))
+    .filter((u) => userCan(u, "missions.manage", roleMap))
     .map((u) => ({ id: u.id, name: u.name }));
 
   return (

@@ -47,13 +47,13 @@ export const getCurrentUser = cache(async (): Promise<User> => {
   if (session.sessionVersion !== user.session_version) {
     redirect("/login");
   }
-  // Aktive Rollen-Map (permissions.ts) einmal pro Anfrage aus der DB laden —
-  // so lösen auch die vielen synchronen userCan(...)-Aufrufstellen in Server-
-  // Komponenten/Actions gegen die aktuellen (evtl. bearbeiteten/eigenen) Rollen
-  // auf, ohne selbst eine DB-Abfrage einbauen zu müssen. Cache-dedupliziert.
-  await getRoleMap();
   return user;
 });
+
+// Aktuelle Rollen-Map einmal pro Anfrage (React-cache-dedupliziert) — Server-
+// Aufrufer, die selbst userCan/userPermissions aufrufen, holen sie hierüber und
+// reichen sie explizit durch. Re-Export als bequemer Chokepoint.
+export { getRoleMap } from "@/lib/roles";
 
 // Gate für /admin (Nutzerverwaltung): darf betreten, wer gm ODER admin ist —
 // die Seite selbst zeigt je nach Rolle unterschiedliche Abschnitte (siehe
@@ -73,7 +73,12 @@ export function effectiveRoles(user: User): Role[] {
 export const getCurrentUserPermissions = cache(
   async (): Promise<Set<Permission>> => {
     const user = await getCurrentUser();
-    return resolvePermissions(effectiveRoles(user), user.permission_overrides);
+    const roleMap = await getRoleMap();
+    return resolvePermissions(
+      effectiveRoles(user),
+      user.permission_overrides,
+      roleMap,
+    );
   },
 );
 

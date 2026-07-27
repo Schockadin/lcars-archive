@@ -1,6 +1,7 @@
 "use server";
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
+import { getRoleMap } from "@/lib/roles";
 import { userCan } from "@/lib/permissions";
 import { assignCharacterToUser } from "@/lib/characters";
 import { setMissionOwner, setMissionLogOwner } from "@/lib/missions";
@@ -38,10 +39,11 @@ export async function setOwnerAction(
   if (!session) return { error: "Nicht angemeldet." };
 
   const user = await getUserById(session.userId);
+  const roleMap = await getRoleMap();
   const allowed =
     !!user &&
-    (userCan(user, "content.moderate") ||
-      (userCan(user, "missions.manage") && contentType === "mission"));
+    (userCan(user, "content.moderate", roleMap) ||
+      (userCan(user, "missions.manage", roleMap) && contentType === "mission"));
   if (!allowed) return { error: "Nur für Admins." };
 
   if (ownerId != null && !(await getUserById(ownerId))) {

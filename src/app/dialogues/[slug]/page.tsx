@@ -1,7 +1,7 @@
 // src/app/dialogues/[slug]/page.tsx
 import { userCan } from "@/lib/permissions";
 import { notFound, redirect, forbidden } from "next/navigation";
-import { verifySession } from "@/lib/dal";
+import { verifySession, getRoleMap } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import {
   getDialogueForPlay,
@@ -48,8 +48,11 @@ export default async function DialoguePlayPage({ params }: Props) {
     session.userId,
   );
   const isParticipant = myParticipantCharacters.length > 0;
-  const viewer = await getUserById(session.userId);
-  if (!isParticipant && !(viewer && userCan(viewer, "gm.access"))) {
+  const [viewer, roleMap] = await Promise.all([
+    getUserById(session.userId),
+    getRoleMap(),
+  ]);
+  if (!isParticipant && !(viewer && userCan(viewer, "gm.access", roleMap))) {
     forbidden();
   }
   // Schlanke {id,name}-Liste für die Antwort-Charakter-Auswahl im Client.
@@ -104,7 +107,7 @@ export default async function DialoguePlayPage({ params }: Props) {
         title={entry.title}
         participants={entry.participants}
         currentUserId={session.userId}
-        canModerate={!!viewer && userCan(viewer, "dialogues.moderate")}
+        canModerate={!!viewer && userCan(viewer, "dialogues.moderate", roleMap)}
         isParticipant={isParticipant}
         myCharacters={myCharacters}
         isOwner={isOwner}

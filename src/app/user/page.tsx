@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { userCan } from "@/lib/permissions";
+import { getRoleMap } from "@/lib/roles";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "./dal";
@@ -44,6 +45,7 @@ const ROLE_LABELS: Record<User["role"], string> = {
 // nicht mehr hier.
 export default async function UserPage() {
   const target = await requireOwnUser();
+  const roleMap = await getRoleMap();
 
   const hasPasswordSet = await hasPassword(target.id);
   const needsPassword = !hasPasswordSet;
@@ -207,7 +209,7 @@ export default async function UserPage() {
                     pushEnabled: target.push_notifications_enabled,
                     notifyContentTypes: target.notify_content_types,
                   }}
-                  isAdmin={userCan(target, "admin.access")}
+                  isAdmin={userCan(target, "admin.access", roleMap)}
                 />
               </section>
 

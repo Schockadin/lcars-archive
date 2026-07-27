@@ -1,7 +1,11 @@
 "use server";
 import { redirect } from "next/navigation";
 import { userCan } from "@/lib/permissions";
-import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
+import {
+  verifySession,
+  requireMatchingFormUserId,
+  getRoleMap,
+} from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import {
   missionSlugExists,
@@ -197,7 +201,7 @@ export async function missionAction(
   if (!user) {
     redirect("/login");
   }
-  if (!userCan(user, "missions.manage")) {
+  if (!userCan(user, "missions.manage", await getRoleMap())) {
     redirect("/user");
   }
 
