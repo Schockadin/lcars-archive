@@ -21,6 +21,9 @@ import {
   PERMISSIONS,
   isSystemRole,
   userCan,
+  effectiveRolesOf,
+  resolvePermissions,
+  getActiveRolePresets,
   type Permission,
 } from "@/lib/permissions";
 
@@ -94,6 +97,26 @@ export async function updateRoleAction(
   if (!existing) return { error: "Rolle nicht gefunden." };
 
   const permissions = parsePermissions(formData);
+
+  // Selbstschutz: hält die bearbeitende Person diese Rolle selbst, darf die
+  // Änderung ihr nicht das eigene Admin-Recht entziehen (sonst Aussperrung —
+  // z.B. admin.access aus der „admin"-Rolle entfernen). Geprüft an einer
+  // hypothetischen Rollen-Map mit den neuen Rechten dieser Rolle.
+  const adminRoles = effectiveRolesOf(admin);
+  if (adminRoles.includes(key)) {
+    const hypotheticalMap = { ...getActiveRolePresets(), [key]: permissions };
+    const adminPerms = resolvePermissions(
+      adminRoles,
+      admin.permission_overrides,
+      hypotheticalMap,
+    );
+    if (!adminPerms.has("admin.access")) {
+      return {
+        error:
+          "Diese Änderung würde dir selbst das Admin-Recht entziehen — abgebrochen.",
+      };
+    }
+  }
 
   await updateRole(key, { label, description, permissions });
   await logAdminAction(

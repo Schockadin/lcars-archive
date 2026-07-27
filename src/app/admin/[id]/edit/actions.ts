@@ -18,6 +18,8 @@ import { getRoleMap } from "@/lib/roles";
 import {
   PERMISSIONS,
   rolePermissions,
+  resolvePermissions,
+  effectiveRolesOf,
   userCan,
   type Role,
   type Permission,
@@ -163,6 +165,15 @@ export async function updateUserPermissionsAction(
     const want = desired.has(perm);
     const inherited = roleDefaults.has(perm);
     if (want !== inherited) overrides[perm] = want;
+  }
+
+  // Selbstschutz (analog zur Rollen-Änderung): sich selbst per Override das
+  // Admin-Recht zu entziehen, würde einen aussperren.
+  if (
+    userId === admin.id &&
+    !resolvePermissions(effectiveRolesOf(target), overrides).has("admin.access")
+  ) {
+    return { error: "Du kannst dir nicht selbst das Admin-Recht entziehen." };
   }
 
   await updateUserPermissionOverrides(userId, overrides);
