@@ -319,9 +319,8 @@ export function CharactersNavIcon() {
 export function MissionsNavIcon() {
   return (
     <svg {...ICON_PROPS}>
-      <path d="M12 3c3 1.5 5 4.5 5 8 0 2.4-1 4.3-2 5.5H9c-1-1.2-2-3.1-2-5.5 0-3.5 2-6.5 5-8Z" />
-      <circle cx="12" cy="10" r="1.8" />
-      <path d="M9 16.5 6.5 20M15 16.5 17.5 20" />
+      <path d="M4 19.5V6a2 2 0 0 1 2-2h13a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H6.5A2.5 2.5 0 0 0 4 19.5Z" />
+      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
     </svg>
   );
 }
