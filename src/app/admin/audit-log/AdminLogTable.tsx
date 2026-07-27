@@ -51,6 +51,9 @@ export default function AdminLogTable<T>({
   const [sortKey, setSortKey] = useState(defaultSortKey);
   const [sortDir, setSortDir] = useState<SortDir>(defaultSortDir);
   const [selectedRow, setSelectedRow] = useState<T | null>(null);
+  // Paginierung: Standard 20 pro Seite, umschaltbar auf 10/50/alle.
+  const [pageSize, setPageSize] = useState<number | "all">(20);
+  const [page, setPage] = useState(1);
 
   function handleSort(key: string) {
     if (key === sortKey) {
@@ -86,6 +89,23 @@ export default function AdminLogTable<T>({
     });
   }, [rows, columns, filters, sortKey, sortDir]);
 
+  // Aktuelle Seite ableiten (geklemmt, falls Filter die Trefferzahl verkleinern
+  // — vermeidet einen Aufräum-Effekt) und die sichtbaren Zeilen zuschneiden.
+  const totalPages =
+    pageSize === "all"
+      ? 1
+      : Math.max(1, Math.ceil(visibleRows.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pageRows =
+    pageSize === "all"
+      ? visibleRows
+      : visibleRows.slice(
+          (currentPage - 1) * pageSize,
+          currentPage * pageSize,
+        );
+
+  const PAGE_SIZE_OPTIONS: (number | "all")[] = [10, 20, 50, "all"];
+
   return (
     <div className="flex flex-col gap-[12px]">
       {rows.length === 0 ? (
@@ -120,12 +140,11 @@ export default function AdminLogTable<T>({
                         <input
                           type="search"
                           value={filters[c.key] ?? ""}
-                          onChange={(e) =>
-                            setFilters((prev) => ({
-                              ...prev,
-                              [c.key]: e.target.value,
-                            }))
-                          }
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            setFilters((prev) => ({ ...prev, [c.key]: v }));
+                            setPage(1);
+                          }}
                           placeholder="Filtern…"
                           aria-label={`Nach ${c.label} filtern`}
                           className="lcars-input rounded-full w-full text-[12px]"
@@ -146,7 +165,7 @@ export default function AdminLogTable<T>({
                   </td>
                 </tr>
               ) : (
-                visibleRows.map((row) => (
+                pageRows.map((row) => (
                   <tr
                     key={rowKey(row)}
                     className="border-t border-lcars-border cursor-pointer hover:bg-lcars-surface"
@@ -170,6 +189,57 @@ export default function AdminLogTable<T>({
               )}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {rows.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-[10px] text-[12px]">
+          <div className="flex items-center gap-[6px]">
+            <span className="text-lcars-text-dim">Pro Seite:</span>
+            {PAGE_SIZE_OPTIONS.map((opt) => (
+              <button
+                key={String(opt)}
+                type="button"
+                onClick={() => {
+                  setPageSize(opt);
+                  setPage(1);
+                }}
+                className={`rounded-full px-[12px] py-[3px] ${
+                  pageSize === opt
+                    ? "bg-lcars-amber text-black font-bold"
+                    : "lcars-pill-btn--outline"
+                }`}
+              >
+                {opt === "all" ? "Alle" : opt}
+              </button>
+            ))}
+          </div>
+          {pageSize !== "all" && totalPages > 1 && (
+            <div className="flex items-center gap-[10px]">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className="lcars-pill-btn--outline px-[12px] py-[3px] disabled:opacity-40"
+                aria-label="Vorherige Seite"
+              >
+                ‹
+              </button>
+              <span className="text-lcars-text-dim whitespace-nowrap">
+                Seite {currentPage} / {totalPages} · {visibleRows.length}{" "}
+                Einträge
+              </span>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className="lcars-pill-btn--outline px-[12px] py-[3px] disabled:opacity-40"
+                aria-label="Nächste Seite"
+              >
+                ›
+              </button>
+            </div>
+          )}
         </div>
       )}
 

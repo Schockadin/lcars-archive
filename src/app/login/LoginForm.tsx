@@ -2,6 +2,8 @@
 
 import { useActionState } from "react";
 import { login, type LoginState } from "./actions";
+import PasswordInput from "@/app/_shared/PasswordInput";
+import { FormError } from "@/app/_shared/FormPrimitives";
 
 const initialState: LoginState = {};
 
@@ -31,10 +33,9 @@ export default function LoginForm() {
         <label htmlFor="password" className="lcars-eyebrow">
           Passwort
         </label>
-        <input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           required
           autoComplete="current-password"
           className="rounded-lcars-pill lcars-input"
@@ -47,11 +48,7 @@ export default function LoginForm() {
         </a>
       </div>
 
-      {state?.error && (
-        <p className="text-lcars-red" role="alert">
-          {state.error}
-        </p>
-      )}
+      <FormError message={state?.error} />
 
       <button
         type="submit"

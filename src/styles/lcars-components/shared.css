@@ -707,49 +707,90 @@
   pointer-events: none;
 }
 
+/* Passwort-Feld mit Sichtbarkeits-Umschalter (PasswordInput.tsx). Das Feld
+   selbst behält seine bestehenden Klassen (lcars-input/rounded-lcars-pill);
+   der Wrapper positioniert nur den Auge-Button rechts im Feld und schafft
+   rechts Innen-Platz, damit der eingegebene Text den Button nicht überlappt. */
+.password-input-wrap {
+  position: relative;
+  display: block;
+}
+.password-input-wrap > input {
+  width: 100%;
+  padding-right: 44px;
+}
+.password-input-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: none;
+  color: var(--lcars-amber);
+  cursor: pointer;
+  transition: color 150ms;
+}
+.password-input-toggle:hover {
+  color: var(--lcars-amber-light);
+}
+.password-input-toggle svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Pillenförmiger Toast, einheitlich amber (Erfolg/Fehler/Info gleich
+   gestaltet), Text dunkel für Kontrast; der Schließen-Button rechts, vertikal
+   zentriert, rotes X. */
 .lcars-toast {
   pointer-events: auto;
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: 8px;
-  border-left: 6px solid var(--lcars-amber);
-  background: var(--lcars-surface-2);
-  color: var(--lcars-text-contrast);
+  align-items: center;
+  gap: 12px;
+  padding: 8px 8px 8px 18px;
+  border-radius: 100vmax;
+  background: var(--lcars-amber);
+  color: black;
   box-shadow: 0 6px 20px rgb(0 0 0 / 45%);
   animation: lcars-toast-in 0.18s ease-out;
 }
 
-.lcars-toast--success {
-  border-left-color: var(--lcars-green);
-}
-
-.lcars-toast--error {
-  border-left-color: var(--lcars-red);
-}
-
-.lcars-toast--info {
-  border-left-color: var(--lcars-blue);
-}
-
 .lcars-toast-message {
   flex: 1;
+  min-width: 0;
   font-size: 14px;
-  line-height: 1.35;
+  line-height: 1.3;
+  font-weight: 600;
 }
 
+/* Rechts ausgerichteter, rot gefüllter, zentrierter X-Button. */
 .lcars-toast-dismiss {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 20px;
-  height: 20px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
   color: var(--lcars-red);
   background: none;
   border: none;
   cursor: pointer;
+  transition: background 150ms;
+}
+.lcars-toast-dismiss:hover {
+  background: rgb(0 0 0 / 12%);
+}
+.lcars-toast-dismiss svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2.4;
 }
 
 @keyframes lcars-toast-in {

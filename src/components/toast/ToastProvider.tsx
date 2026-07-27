@@ -27,12 +27,12 @@ export interface ToastOptions {
 
 interface ToastItem {
   id: number;
-  message: string;
+  message: React.ReactNode;
   kind: ToastKind;
 }
 
 interface ToastApi {
-  showToast: (message: string, options?: ToastOptions) => void;
+  showToast: (message: React.ReactNode, options?: ToastOptions) => void;
 }
 
 const ToastContext = createContext<ToastApi | null>(null);
@@ -72,7 +72,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const showToast = useCallback(
-    (message: string, options: ToastOptions = {}) => {
+    (message: React.ReactNode, options: ToastOptions = {}) => {
       const id = (nextId.current += 1);
       const kind = options.kind ?? "info";
       const duration = options.duration ?? 4000;

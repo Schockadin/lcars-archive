@@ -61,10 +61,13 @@ export default function AdminMissionsBrowser({
       ) : (
         <div className="flex flex-col gap-[6px]">
           {filtered.map((mission) => (
-            <div key={mission.id} className="flex items-center gap-[8px]">
+            <div
+              key={mission.id}
+              className="flex flex-wrap items-center gap-[8px]"
+            >
               <Link
                 href={`/missions/${mission.slug}`}
-                className="mission-akte flex-1"
+                className="mission-akte flex-1 min-w-[240px]"
                 style={
                   { "--mission-color": "var(--lcars-green)" } as React.CSSProperties
                 }

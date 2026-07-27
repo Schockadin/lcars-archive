@@ -1,8 +1,17 @@
+"use client";
+import { useEffect, useRef } from "react";
+import { useToast } from "@/components/toast/ToastProvider";
+
 // Wiederverwendete Bausteine für die Formulare im User-Bereich (Profil,
 // Settings, Missionen, Mission-Logs, Dialoge, Adminpanel) — vorher in jedem
 // Formular identisch dupliziert (Label+Feld-Wrapper, Fehler-/Erfolgstext,
 // Submit-Button). Rein präsentational, kein eigener State — jedes Formular
 // bleibt für seine Felder/Action selbst verantwortlich.
+//
+// FormError/FormSuccess rendern KEINEN Inline-Text mehr, sondern lösen einen
+// app-weiten Toast aus (siehe ToastProvider) — so werden alle Formular-
+// Rückmeldungen einheitlich als Toast angezeigt, ohne jedes Formular einzeln
+// umzubauen. Beide rendern selbst null.
 
 // Label + Abstand + optionaler Hinweistext unter dem Feld, gleiche Struktur
 // wie bisher in jedem Formular (`<div className="flex flex-col gap-[6px]">`).
@@ -30,29 +39,45 @@ export function FormField({
   );
 }
 
-// `{state?.error && <FormError message={state.error} />}` statt der
-// wiederholten <p className="text-lcars-red" role="alert"> überall.
+// Zeigt eine Fehlermeldung als Toast (statt Inline-Text). Effekt reagiert auf
+// eine geänderte, nicht-leere message — so löst jede neue Fehlermeldung aus
+// einer Server-Action einen Toast aus. `className` bleibt aus Kompatibilität in
+// der Signatur, wird aber nicht mehr genutzt.
 export function FormError({
   message,
-  className = "",
 }: {
   message?: string;
   className?: string;
 }) {
-  if (!message) return null;
-  return (
-    <p className={`text-lcars-red ${className}`} role="alert">
-      {message}
-    </p>
-  );
+  const { showToast } = useToast();
+  const lastRef = useRef<string | undefined>(undefined);
+  // Die Fehlermeldung kommt aus dem Rückgabewert einer Server-Action
+  // (useActionState) — es gibt keinen synchronen Event-Handler, in dem sie
+  // vorläge, daher ist ein Effekt hier der richtige Ort, um die Action-
+  // Rückmeldung mit dem externen Toast-System zu synchronisieren. showToast ist
+  // stabil (useCallback im Provider).
+  useEffect(() => {
+    // eslint-disable-next-line react-you-might-not-need-an-effect/no-event-handler -- Action-Ergebnis, kein UI-Event
+    if (message && message !== lastRef.current) {
+      showToast(message, { kind: "error" });
+    }
+    lastRef.current = message;
+  }, [message, showToast]);
+  return null;
 }
 
+// Zeigt eine Erfolgsmeldung als Toast. Wird typischerweise bedingt gerendert
+// (`{state?.success && <FormSuccess>…</FormSuccess>}`) und mountet damit bei
+// jedem Erfolg neu — der Effekt feuert deshalb einmal pro Mount.
 export function FormSuccess({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="text-lcars-green" role="status">
-      {children}
-    </p>
-  );
+  const { showToast } = useToast();
+  const shownRef = useRef(false);
+  useEffect(() => {
+    if (shownRef.current) return;
+    shownRef.current = true;
+    showToast(children, { kind: "success" });
+  }, [children, showToast]);
+  return null;
 }
 
 // Submit-Button mit Pending-Text-Wechsel — className bleibt überschreibbar,
