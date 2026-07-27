@@ -237,10 +237,9 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     version: "1.17",
-    title: "Schnellere Auslieferung: Cache Components & PWA-Asset-Caching",
+    title: "Schnellere Wiederbesuche: PWA-Asset-Caching",
     items: [
-      "Umstellung auf das neue Caching-Modell von Next.js (Cache Components): Seiten erscheinen dank einer sofort ausgelieferten statischen Hülle schneller, während persönliche bzw. rechteabhängige Teile nahtlos nachladen.",
-      "Statische Dateien (Skripte, Styles, Schriften, Symbole) hält der Browser jetzt vor, sodass wiederholte Seitenaufrufe spürbar schneller laden — weiterhin ohne Offline-Modus.",
+      "Statische Dateien (Skripte, Styles, Schriften, Symbole) hält der Browser (Service Worker) jetzt vor, sodass wiederholte Seitenaufrufe spürbar schneller laden — Inhalte bleiben weiterhin ohne Offline-Modus immer frisch aus dem Netz.",
     ],
   },
 ];
