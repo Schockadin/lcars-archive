@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { Viewer } from "@/lib/visibility";
+import type { Viewer } from "@/lib/visibility";
 import { Character } from "@/types/character";
 import OwnerSelect from "./OwnerSelect";
 import AdminVisibilitySelect from "./AdminVisibilitySelect";
@@ -14,7 +14,7 @@ import FollowButtons from "./FollowButtons";
 import ShareMenu from "./ShareMenu";
 import { MissionDetail, MissionLogDetail } from "@/types/missions";
 import { ArchiveEntryDetail } from "@/types/archive";
-import { FollowTargetType } from "@/lib/follows";
+import type { FollowTargetType } from "@/lib/follows";
 import type { OwnerContentType } from "@/app/actions/owner";
 import type { TrashContentType } from "@/lib/adminContent";
 import type { AdminVisibilityContentType } from "@/app/actions/visibility";

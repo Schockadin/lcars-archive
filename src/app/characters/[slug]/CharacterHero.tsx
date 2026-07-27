@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
 import CharacterBioEditor from "./CharacterBioEditor";
-import { Viewer } from "@/lib/visibility";
+import type { Viewer } from "@/lib/visibility";
 import ActionsMenu from "@/components/ActionsMenu";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──

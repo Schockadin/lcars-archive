@@ -3,7 +3,7 @@ import { usePageMeta } from "@/hooks/usePageMeta";
 import { Character } from "@/types/character";
 import { MissionLogPreview } from "@/types/missionLog";
 import CharacterHero from "./CharacterHero";
-import { Viewer } from "@/lib/visibility";
+import type { Viewer } from "@/lib/visibility";
 
 export default function CharakterDetailPage({
   character,

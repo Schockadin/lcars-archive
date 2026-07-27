@@ -3,7 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { MissionDetail } from "@/types/missions";
 import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
-import { Viewer } from "@/lib/visibility";
+import type { Viewer } from "@/lib/visibility";
 import MissionSynopsisEditor from "./MissionSynopsisEditor";
 import ActionsMenu from "@/components/ActionsMenu";
 import ContentBody from "@/components/ContentBody";
