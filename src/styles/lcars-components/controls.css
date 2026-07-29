@@ -191,6 +191,16 @@
   flex-direction: column;
 }
 
+/* Freitext-Filterfeld der Übersichtsseiten (ListFilterInput, /characters,
+   /archive, /missions) — neben den Sortier-Optionen. min-width:0 verhindert
+   Überlauf in flex-Toolbars auf schmalen Screens; flex:1 lässt es den freien
+   Platz füllen. */
+.lcars-list-filter {
+  min-width: 160px;
+  flex: 1;
+  font-size: 13px;
+}
+
 @media (min-width: 640px) {
   .lcars-filters {
     flex-direction: row;

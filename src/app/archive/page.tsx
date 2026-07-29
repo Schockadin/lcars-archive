@@ -1,7 +1,7 @@
 import { getAllArchiveEntries } from "@/lib/archive";
 import { CATEGORY_CONFIG, isArchiveCategory } from "@/lib/archiveFormat";
 import PageMeta from "@/components/PageMeta";
-import ArchiveEntryCard from "./ArchiveEntryCard";
+import ArchiveEntryList from "./ArchiveEntryList";
 import DialogueList from "./DialogueList";
 
 export const metadata = {
@@ -46,11 +46,7 @@ export default async function ArchivePage({
               initialParticipant={participant ?? null}
             />
           ) : (
-            <div className="archive-entry-list">
-              {list.map((entry) => (
-                <ArchiveEntryCard key={entry.id} entry={entry} />
-              ))}
-            </div>
+            <ArchiveEntryList entries={list} />
           )}
         </div>
       ) : (

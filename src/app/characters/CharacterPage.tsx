@@ -2,7 +2,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePageMeta } from "@/hooks/usePageMeta";
-import { LcarsDataRow, LcarsSwitch } from "@/components/lcars";
+import {
+  LcarsDataRow,
+  LcarsSwitch,
+  LcarsListFilterInput,
+} from "@/components/lcars";
 import { Character } from "@/types/character";
 
 // ─── Konfiguration ──────────────────────────────────────────
@@ -50,20 +54,31 @@ export default function CharacterPage({
 }) {
   usePageMeta("Charaktere", "characters");
   const [mode, setMode] = useState<SortMode>("status");
+  // Freitext-Filter über Name (und Rang) — grenzt vor der Gruppierung ein.
+  const [query, setQuery] = useState("");
+
+  const q = query.trim().toLowerCase();
+  const filteredCharacters = q
+    ? characters.filter(
+        (c) =>
+          c.name.toLowerCase().includes(q) ||
+          (c.metadata.rank ?? "").toLowerCase().includes(q),
+      )
+    : characters;
 
   const groups =
     mode === "status"
       ? STATUS_GROUPS.map((g) => ({
           label: g.label,
           color: g.color,
-          items: characters.filter((c) => c.status === g.key),
+          items: filteredCharacters.filter((c) => c.status === g.key),
         }))
       : GENERATIONS.map((g) => ({
           label: g.label,
           color: g.color,
           // Ein Charakter kann in mehreren Generationen auftauchen
           // er erscheint in jeder zutreffenden Gruppe.
-          items: characters.filter((c) =>
+          items: filteredCharacters.filter((c) =>
             (c.metadata.generation ?? []).includes(g.num),
           ),
         }));
@@ -81,22 +96,32 @@ export default function CharacterPage({
           active={mode}
           onChange={setMode}
         />
+        <LcarsListFilterInput
+          value={query}
+          onChange={setQuery}
+          ariaLabel="Charaktere filtern"
+          className="mt-[8px] w-full"
+        />
       </div>
 
-      {groups.map(
-        (group) =>
-          group.items.length > 0 && (
-            <section key={group.label} className="mb-[20px]">
-              <LcarsDataRow
-                value={group.items.length}
-                label={group.label}
-                accentColor={group.color}
-                color={group.color}
-                className="ml-[12px]"
-              />
-              <CharacterRows characters={group.items} color={group.color} />
-            </section>
-          ),
+      {filteredCharacters.length === 0 ? (
+        <p className="lcars-empty-state">Keine Charaktere für diesen Filter.</p>
+      ) : (
+        groups.map(
+          (group) =>
+            group.items.length > 0 && (
+              <section key={group.label} className="mb-[20px]">
+                <LcarsDataRow
+                  value={group.items.length}
+                  label={group.label}
+                  accentColor={group.color}
+                  color={group.color}
+                  className="ml-[12px]"
+                />
+                <CharacterRows characters={group.items} color={group.color} />
+              </section>
+            ),
+        )
       )}
     </div>
   );

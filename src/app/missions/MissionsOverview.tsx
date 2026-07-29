@@ -8,7 +8,12 @@ import {
   synopsisExcerpt,
   yearOf,
 } from "@/lib/missionFormat";
-import { LcarsAkteCard, LcarsSortSwitch, type SortDir } from "@/components/lcars";
+import {
+  LcarsAkteCard,
+  LcarsSortSwitch,
+  LcarsListFilterInput,
+  type SortDir,
+} from "@/components/lcars";
 
 // Übersicht aller Missionen als LCARS-Chronik (Zeitstrahl mit dekorativer
 // Jahres-Schiene). Sortierbar nach Datum (auf-/absteigend) und filterbar
@@ -21,6 +26,8 @@ export default function MissionsOverview({
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   // Filter-Schlüssel = author.slug (Fallback: name), null = alle Autoren.
   const [authorKey, setAuthorKey] = useState<string | null>(null);
+  // Freitext-Filter über den Missionstitel.
+  const [query, setQuery] = useState("");
 
   const years = missions
     .map((m) => yearOf(m.started_at))
@@ -43,13 +50,16 @@ export default function MissionsOverview({
   }, [missions]);
 
   const visible = useMemo(() => {
-    const filtered = authorKey
-      ? missions.filter((m) =>
-          m.authors.some((a) => authorKeyOf(a) === authorKey),
-        )
-      : missions;
+    const q = query.trim().toLowerCase();
+    const filtered = missions.filter((m) => {
+      if (authorKey && !m.authors.some((a) => authorKeyOf(a) === authorKey)) {
+        return false;
+      }
+      if (q && !m.title.toLowerCase().includes(q)) return false;
+      return true;
+    });
     return [...filtered].sort((a, b) => cmpStart(a, b, sortDir));
-  }, [missions, authorKey, sortDir]);
+  }, [missions, authorKey, sortDir, query]);
 
   // Rail-Kappen folgen der Sortierrichtung (oben = erste Akte der Liste).
   const topCap = sortDir === "desc" ? latestYear : earliestYear;
@@ -85,6 +95,12 @@ export default function MissionsOverview({
               onChange={(_key, dir) => setSortDir(dir)}
             />
 
+            <LcarsListFilterInput
+              value={query}
+              onChange={setQuery}
+              ariaLabel="Missionen filtern"
+            />
+
             {authors.length > 0 && (
               <select
                 className="mission-author-filter"
@@ -104,7 +120,7 @@ export default function MissionsOverview({
 
           {visible.length === 0 ? (
             <p className="lcars-empty-state">
-              Keine Missionen für diesen Autor.
+              Keine Missionen für diese Filter.
             </p>
           ) : (
             <div className="mission-chronik">
