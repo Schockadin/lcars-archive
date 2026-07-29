@@ -69,13 +69,17 @@ function escapeHtml(value: string): string {
 }
 
 function berlinHour(): number {
-  return Number(
-    new Intl.DateTimeFormat("de-DE", {
-      timeZone: "Europe/Berlin",
-      hour: "2-digit",
-      hour12: false,
-    }).format(new Date()),
-  );
+  // WICHTIG: NICHT .format() parsen — de-DE liefert bei hour-only-Formaten
+  // "08 Uhr" (mit " Uhr"-Literal), Number("08 Uhr") ist NaN, wodurch das
+  // Zeitfenster nie traf und der Digest NIE verschickt wurde. Stattdessen die
+  // reine Stundenziffer über formatToParts holen (en-US-Locale ist überall
+  // verfügbar; hourCycle "h23" erzwingt 0–23 ohne AM/PM).
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Europe/Berlin",
+    hour: "numeric",
+    hourCycle: "h23",
+  }).formatToParts(new Date());
+  return Number(parts.find((p) => p.type === "hour")?.value);
 }
 
 function fmt(ts: string): string {
