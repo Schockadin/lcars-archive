@@ -29,7 +29,11 @@ jobs:
       #   DATABASE_URL       — produktive DB
       #   RESEND_API_KEY     — Resend-API-Key für den Mailversand
       #   RESEND_FROM_EMAIL  — Absenderadresse (optional, sonst Resend-Default)
-      - run: npm run admin:log-digest
+      # Manuelle Auslösung (workflow_dispatch) hängt --force an und überspringt
+      # damit das 6-Uhr-Zeitfenster — praktisch zum Testen des Versands. Die
+      # geplanten Cron-Läufe (04:00/05:00 UTC) laufen ohne Flag und gaten sich
+      # weiterhin selbst auf 6 Uhr Berliner Zeit.
+      - run: npm run admin:log-digest -- ${{ github.event_name == 'workflow_dispatch' && '--force' || '' }}
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
