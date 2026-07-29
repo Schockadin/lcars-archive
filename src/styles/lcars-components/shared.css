@@ -693,16 +693,19 @@
   transition: width 0.2s ease;
 }
 
-/* App-weite Toast-Benachrichtigungen (ToastProvider.tsx). Fest unten rechts,
+/* App-weite Toast-Benachrichtigungen (ToastProvider.tsx). Fest unten zentriert,
    gestapelt; auf schmalen Screens über die volle Breite. */
 .lcars-toast-region {
   position: fixed;
-  right: 16px;
+  left: 50%;
   bottom: 16px;
+  transform: translateX(-50%);
   z-index: 1200;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 8px;
+  width: max-content;
   max-width: min(360px, calc(100vw - 32px));
   pointer-events: none;
 }

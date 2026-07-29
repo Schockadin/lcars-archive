@@ -241,7 +241,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     items: [
       "Statische Dateien (Skripte, Styles, Schriften, Symbole) hält der Browser (Service Worker) jetzt vor, sodass wiederholte Seitenaufrufe spürbar schneller laden — Inhalte bleiben weiterhin ohne Offline-Modus immer frisch aus dem Netz.",
       "Passwort-Felder haben jetzt einen Anzeigen/Verbergen-Umschalter (Auge-Symbol).",
-      "Rückmeldungen aus Formularen (Erfolg wie Fehler) erscheinen jetzt einheitlich als kurze, pillenförmige Toast-Meldung unten rechts (stapeln sich, blenden sich nach ein paar Sekunden selbst aus) statt als Inline-Text.",
+      "Rückmeldungen aus Formularen (Erfolg wie Fehler) erscheinen jetzt einheitlich als kurze, pillenförmige Toast-Meldung zentriert am unteren Bildschirmrand (stapeln sich, blenden sich nach ein paar Sekunden selbst aus) statt als Inline-Text.",
       "Das Audit-Log und das Fehler-Log lassen sich jetzt seitenweise durchblättern (10, 20, 50 oder alle Einträge pro Seite).",
       "Behoben: In der Kampagnen-Übersicht wurden bei schmaler Zeile nur die Aktions-Knöpfe einer Mission angezeigt, der eigentliche Missions-Eintrag daneben war zusammengequetscht/unsichtbar.",
       "Behoben: Der tägliche Admin-Log-Digest (6-Uhr-Mail) wurde nie verschickt, weil die interne Uhrzeitprüfung fehlschlug und den Versand jedes Mal übersprang.",
