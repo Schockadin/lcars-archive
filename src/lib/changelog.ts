@@ -248,6 +248,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "In der Kampagnen-Übersicht sind die Missionen jetzt chronologisch von neu nach alt sortiert, und jede Missions-Akte ist nach Status farbcodiert (grün = aktiv, blau = abgeschlossen, rot = gescheitert, amber = abgebrochen).",
       "Das Ingame-Jahr der Kampagne wird jetzt automatisch aus dem spätesten Missionslog abgeleitet und folgt neuen Logs von selbst; es lässt sich weiterhin manuell überschreiben (nur mit Rückfrage) und per „Automatisch“-Knopf wieder auf die automatische Ableitung zurückstellen.",
       "Die Seite „Rollen & Rechte“ zeigt die Rechte jetzt als übersichtliche Matrix (Rechte als Zeilen, Rollen als Spalten): Haken pro Rolle setzen und spaltenweise speichern. Name, Beschreibung und Mitglieder einer Rolle werden weiterhin darunter je Rolle gepflegt.",
+      "Im Admin-Bereich „Scripts“ werden Wartungs-Aktionen jetzt ausgeblendet, wenn dir die nötige Berechtigung fehlt; wird eine Aktion doch ohne Recht ausgelöst, erscheint eine klare Meldung („Dir fehlt die Berechtigung …“) statt eines nichtssagenden Fehlers.",
     ],
   },
 ];

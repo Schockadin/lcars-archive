@@ -1,5 +1,5 @@
 "use server";
-import { requirePermission } from "@/lib/dal";
+import { checkPermission } from "@/lib/dal";
 import {
   applyAutolinks,
   getAutolinkTargets,
@@ -65,7 +65,8 @@ export async function linkAllContentBatchAction(
   offset: number,
   batchSize: number,
 ): Promise<LinkAllBatchResult> {
-  await requirePermission("content.autolink_tools");
+  const check = await checkPermission("content.autolink_tools");
+  if ("error" in check) return { error: check.error };
 
   const safeOffset = Number.isInteger(offset) && offset >= 0 ? offset : 0;
   const safeBatch =

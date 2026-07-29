@@ -1,5 +1,5 @@
 "use server";
-import { requireAdmin, getRoleMap } from "@/lib/dal";
+import { checkPermission, getRoleMap } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { userCan } from "@/lib/permissions";
 import {
@@ -27,7 +27,8 @@ export async function assignOwnerlessMissionsBatchAction(
   ownerId: number,
   batchSize: number,
 ): Promise<AssignOwnerlessMissionsBatchResult> {
-  await requireAdmin();
+  const check = await checkPermission("admin.access");
+  if ("error" in check) return { error: check.error };
 
   const owner = await getUserById(ownerId);
   if (!owner) {

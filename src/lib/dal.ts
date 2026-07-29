@@ -7,6 +7,7 @@ import { getRoleMap } from "@/lib/roles";
 import type { User, Role } from "@/types/db";
 import {
   resolvePermissions,
+  PERMISSION_LABELS,
   type Permission,
 } from "@/lib/permissions";
 
@@ -91,6 +92,27 @@ export async function requirePermission(
   const perms = await getCurrentUserPermissions();
   if (!perms.has(permission)) forbidden();
   return user;
+}
+
+// Soft-Variante von requirePermission für Server-Actions, die dem Client eine
+// klare Meldung zeigen wollen. requirePermission ruft bei fehlendem Recht
+// forbidden() auf — ein Auth-Interrupt (authInterrupts), der beim
+// PROGRAMMATISCHEN Aufruf einer Action (kein <form action>) nur als generischer,
+// NICHT über onRequestError protokollierter Fehler beim Client ankommt (leerer
+// catch → nichtssagende Meldung). checkPermission wirft stattdessen nicht,
+// sondern liefert bei fehlendem Recht eine beschreibende Fehlermeldung, die die
+// Action als { error } zurückgeben kann; bei vorhandenem Recht kommt der User
+// zurück. Für die (admin-only) Skript-Aktionen unter /admin/scripts.
+export async function checkPermission(
+  permission: Permission,
+): Promise<{ user: User } | { error: string }> {
+  const user = await getCurrentUser();
+  const perms = await getCurrentUserPermissions();
+  if (!perms.has(permission)) {
+    const label = PERMISSION_LABELS[permission]?.label ?? permission;
+    return { error: `Dir fehlt die Berechtigung „${label}“ für diese Aktion.` };
+  }
+  return { user };
 }
 
 // Gate: fordert mindestens EINES der Rechte.

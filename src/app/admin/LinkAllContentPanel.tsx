@@ -55,7 +55,10 @@ export default function LinkAllContentPanel() {
         }
         offset = processed;
       }
-    } catch {
+    } catch (err) {
+      // Unerwarteter Fehler (Netzwerk/Abbruch) — die eigentliche
+      // Berechtigungsprüfung kommt jetzt als res.error oben an, nicht mehr hier.
+      console.error("Autolink fehlgeschlagen:", err);
       setError("Beim Verlinken ist ein Fehler aufgetreten.");
     } finally {
       setRunning(false);
