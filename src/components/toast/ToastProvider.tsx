@@ -17,7 +17,7 @@ import { XIcon } from "@/lib/icons";
 // aria-live-Region rendert die aktuellen Toasts. Toasts blenden sich nach
 // `duration` ms selbst aus (0 = bleibt bis zum manuellen Schließen).
 
-export type ToastKind = "success" | "error" | "info";
+export type ToastKind = "success" | "warning" | "error" | "info";
 
 export interface ToastOptions {
   kind?: ToastKind;
@@ -27,12 +27,12 @@ export interface ToastOptions {
 
 interface ToastItem {
   id: number;
-  message: string;
+  message: React.ReactNode;
   kind: ToastKind;
 }
 
 interface ToastApi {
-  showToast: (message: string, options?: ToastOptions) => void;
+  showToast: (message: React.ReactNode, options?: ToastOptions) => void;
 }
 
 const ToastContext = createContext<ToastApi | null>(null);
@@ -48,6 +48,7 @@ export function useToast(): ToastApi {
 
 const KIND_CLASS: Record<ToastKind, string> = {
   success: "lcars-toast--success",
+  warning: "lcars-toast--warning",
   error: "lcars-toast--error",
   info: "lcars-toast--info",
 };
@@ -72,7 +73,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const showToast = useCallback(
-    (message: string, options: ToastOptions = {}) => {
+    (message: React.ReactNode, options: ToastOptions = {}) => {
       const id = (nextId.current += 1);
       const kind = options.kind ?? "info";
       const duration = options.duration ?? 4000;

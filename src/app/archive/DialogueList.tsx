@@ -1,7 +1,11 @@
 "use client";
 import { useMemo, useState } from "react";
 import { ArchiveEntryPreview } from "@/types/archive";
-import { LcarsSortSwitch, type SortDir } from "@/components/lcars";
+import {
+  LcarsSortSwitch,
+  LcarsListFilterInput,
+  type SortDir,
+} from "@/components/lcars";
 import ArchiveEntryCard from "./ArchiveEntryCard";
 
 // Gesprächs-Liste mit Teilnehmer-Filter. Sortierung nach id, Richtung per
@@ -18,6 +22,8 @@ export default function DialogueList({
     initialParticipant,
   );
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  // Freitext-Filter über den Gesprächstitel.
+  const [query, setQuery] = useState("");
 
   // Distinkte Teilnehmer über alle Gespräche (für die Auswahl).
   const participants = useMemo(() => {
@@ -33,15 +39,21 @@ export default function DialogueList({
   }, [entries]);
 
   const list = useMemo(() => {
-    const filtered = participant
-      ? entries.filter((e) =>
-          e.metadata.participants.some((p) => p.slug === participant),
-        )
-      : entries;
+    const q = query.trim().toLowerCase();
+    const filtered = entries.filter((e) => {
+      if (
+        participant &&
+        !e.metadata.participants.some((p) => p.slug === participant)
+      ) {
+        return false;
+      }
+      if (q && !e.title.toLowerCase().includes(q)) return false;
+      return true;
+    });
     return [...filtered].sort((a, b) =>
       sortDir === "asc" ? a.id - b.id : b.id - a.id,
     );
-  }, [entries, participant, sortDir]);
+  }, [entries, participant, sortDir, query]);
 
   return (
     <div>
@@ -69,11 +81,18 @@ export default function DialogueList({
           sortDir={sortDir}
           onChange={(_key, dir) => setSortDir(dir)}
         />
+
+        <LcarsListFilterInput
+          value={query}
+          onChange={setQuery}
+          ariaLabel="Gespräche filtern"
+          className="mb-[16px]"
+        />
       </div>
 
       {list.length === 0 ? (
         <p className="lcars-empty-state">
-          Keine Gespräche mit diesem Teilnehmer.
+          Keine Gespräche für diese Filter.
         </p>
       ) : (
         <div className="archive-entry-list">

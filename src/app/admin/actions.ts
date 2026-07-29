@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { requirePermission } from "@/lib/dal";
+import { requirePermission, getRoleMap } from "@/lib/dal";
 import { userCan } from "@/lib/permissions";
 import {
   EmailTakenError,
@@ -220,7 +220,7 @@ export async function assignCharacterAction(
     // scripts/schema.sql-Kommentar zur Gast-Rolle) — die Auswahl blendet sie
     // zwar bereits aus (siehe page.tsx), ein direkter POST muss aber ebenso
     // abgewiesen werden.
-    if (!userCan(targetUser, "characters.assignable")) {
+    if (!userCan(targetUser, "characters.assignable", await getRoleMap())) {
       return {
         error: "Gast-Accounts können keine Charaktere zugewiesen bekommen.",
       };

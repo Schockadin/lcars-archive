@@ -1,6 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { userCan } from "@/lib/permissions";
+import { getRoleMap } from "@/lib/roles";
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
 import { setCharacterVisibility, deleteOwnCharacter } from "@/lib/characters";
@@ -175,7 +176,7 @@ export async function deleteOwnContentAction(
     revalidateArchiveEntry(deleted.slug);
   } else if (contentType === "mission") {
     const user = await getUserById(session.userId);
-    if (!user || !userCan(user, "missions.manage")) {
+    if (!user || !userCan(user, "missions.manage", await getRoleMap())) {
       return { error: "Keine Berechtigung." };
     }
     const deleted = await deleteMission(id, session.userId);

@@ -4,15 +4,8 @@ import Link from "next/link";
 import OwnerSelect from "@/components/OwnerSelect";
 import DeleteOwnContentButton from "@/app/user/content/DeleteOwnContentButton";
 import { PencilIcon } from "@/lib/icons";
+import { STATUS_CONFIG } from "@/lib/missionFormat";
 import type { GmMissionOverviewItem } from "@/lib/missions";
-import type { MissionStatus } from "@/types/missions";
-
-const STATUS_LABELS: Record<MissionStatus, string> = {
-  active: "Aktiv",
-  completed: "Abgeschlossen",
-  failed: "Gescheitert",
-  abandoned: "Abgebrochen",
-};
 
 // GM-Missionsübersicht (/admin/missions) — Edit/Löschen/Owner-Zuweisung pro
 // Zeile in einer durchsuchbaren Liste, analog zu AdminContentBrowser.tsx
@@ -61,12 +54,17 @@ export default function AdminMissionsBrowser({
       ) : (
         <div className="flex flex-col gap-[6px]">
           {filtered.map((mission) => (
-            <div key={mission.id} className="flex items-center gap-[8px]">
+            <div
+              key={mission.id}
+              className="flex flex-wrap items-center gap-[8px]"
+            >
               <Link
                 href={`/missions/${mission.slug}`}
-                className="mission-akte flex-1"
+                className="mission-akte flex-1 min-w-[240px]"
                 style={
-                  { "--mission-color": "var(--lcars-green)" } as React.CSSProperties
+                  {
+                    "--mission-color": STATUS_CONFIG[mission.status].color,
+                  } as React.CSSProperties
                 }
               >
                 <span className="mission-akte-rail" />
@@ -79,7 +77,7 @@ export default function AdminMissionsBrowser({
                   </span>
                   <span className="mission-akte-meta">
                     <span>
-                      <b>Status</b> {STATUS_LABELS[mission.status]}
+                      <b>Status</b> {STATUS_CONFIG[mission.status].label}
                     </span>
                   </span>
                 </span>

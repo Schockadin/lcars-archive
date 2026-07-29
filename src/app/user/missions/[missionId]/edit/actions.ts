@@ -1,7 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
 import { userCan } from "@/lib/permissions";
-import { verifySession } from "@/lib/dal";
+import { verifySession, getRoleMap } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { deleteMission } from "@/lib/missions";
 import { revalidateMission, revalidateLog } from "@/lib/revalidate";
@@ -29,7 +29,7 @@ export async function deleteMissionAction(
   if (!user) {
     redirect("/login");
   }
-  if (!userCan(user, "missions.manage")) {
+  if (!userCan(user, "missions.manage", await getRoleMap())) {
     redirect("/user");
   }
 

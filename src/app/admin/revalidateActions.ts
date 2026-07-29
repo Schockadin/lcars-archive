@@ -1,5 +1,5 @@
 "use server";
-import { requireAdmin } from "@/lib/dal";
+import { checkPermission } from "@/lib/dal";
 import { revalidateAllContent } from "@/lib/revalidate";
 
 export interface RevalidateActionState {
@@ -20,7 +20,8 @@ export interface RevalidateActionState {
 export async function runRevalidateAction(
   _state: RevalidateActionState,
 ): Promise<RevalidateActionState> {
-  await requireAdmin();
+  const check = await checkPermission("admin.access");
+  if ("error" in check) return { error: check.error };
 
   try {
     const tags = revalidateAllContent();

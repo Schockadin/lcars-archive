@@ -51,7 +51,8 @@ export default function TypographyFixPanel() {
         }
         offset = processed;
       }
-    } catch {
+    } catch (err) {
+      console.error("Typografie-Korrektur fehlgeschlagen:", err);
       setError("Bei der Typografie-Korrektur ist ein Fehler aufgetreten.");
     } finally {
       setRunning(false);

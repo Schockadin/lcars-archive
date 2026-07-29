@@ -59,6 +59,10 @@ export function revalidateLog(missionId: number, logSlug: string): string[] {
     cacheTags.missionLogsOf(missionId),
     cacheTags.log(logSlug),
     cacheTags.stats,
+    // Das automatisch abgeleitete Ingame-Jahr hängt am spätesten log_date —
+    // bei jeder Log-Änderung (create/edit/delete/restore, alle über diesen
+    // Helfer) also mit-invalidieren.
+    cacheTags.campaign,
   ]);
 }
 

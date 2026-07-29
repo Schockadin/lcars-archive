@@ -7,6 +7,7 @@ import { getRoleMap } from "@/lib/roles";
 import type { User, Role } from "@/types/db";
 import {
   resolvePermissions,
+  PERMISSION_LABELS,
   type Permission,
 } from "@/lib/permissions";
 
@@ -47,13 +48,13 @@ export const getCurrentUser = cache(async (): Promise<User> => {
   if (session.sessionVersion !== user.session_version) {
     redirect("/login");
   }
-  // Aktive Rollen-Map (permissions.ts) einmal pro Anfrage aus der DB laden —
-  // so lösen auch die vielen synchronen userCan(...)-Aufrufstellen in Server-
-  // Komponenten/Actions gegen die aktuellen (evtl. bearbeiteten/eigenen) Rollen
-  // auf, ohne selbst eine DB-Abfrage einbauen zu müssen. Cache-dedupliziert.
-  await getRoleMap();
   return user;
 });
+
+// Aktuelle Rollen-Map einmal pro Anfrage (React-cache-dedupliziert) — Server-
+// Aufrufer, die selbst userCan/userPermissions aufrufen, holen sie hierüber und
+// reichen sie explizit durch. Re-Export als bequemer Chokepoint.
+export { getRoleMap } from "@/lib/roles";
 
 // Gate für /admin (Nutzerverwaltung): darf betreten, wer gm ODER admin ist —
 // die Seite selbst zeigt je nach Rolle unterschiedliche Abschnitte (siehe
@@ -73,7 +74,12 @@ export function effectiveRoles(user: User): Role[] {
 export const getCurrentUserPermissions = cache(
   async (): Promise<Set<Permission>> => {
     const user = await getCurrentUser();
-    return resolvePermissions(effectiveRoles(user), user.permission_overrides);
+    const roleMap = await getRoleMap();
+    return resolvePermissions(
+      effectiveRoles(user),
+      user.permission_overrides,
+      roleMap,
+    );
   },
 );
 
@@ -86,6 +92,27 @@ export async function requirePermission(
   const perms = await getCurrentUserPermissions();
   if (!perms.has(permission)) forbidden();
   return user;
+}
+
+// Soft-Variante von requirePermission für Server-Actions, die dem Client eine
+// klare Meldung zeigen wollen. requirePermission ruft bei fehlendem Recht
+// forbidden() auf — ein Auth-Interrupt (authInterrupts), der beim
+// PROGRAMMATISCHEN Aufruf einer Action (kein <form action>) nur als generischer,
+// NICHT über onRequestError protokollierter Fehler beim Client ankommt (leerer
+// catch → nichtssagende Meldung). checkPermission wirft stattdessen nicht,
+// sondern liefert bei fehlendem Recht eine beschreibende Fehlermeldung, die die
+// Action als { error } zurückgeben kann; bei vorhandenem Recht kommt der User
+// zurück. Für die (admin-only) Skript-Aktionen unter /admin/scripts.
+export async function checkPermission(
+  permission: Permission,
+): Promise<{ user: User } | { error: string }> {
+  const user = await getCurrentUser();
+  const perms = await getCurrentUserPermissions();
+  if (!perms.has(permission)) {
+    const label = PERMISSION_LABELS[permission]?.label ?? permission;
+    return { error: `Dir fehlt die Berechtigung „${label}“ für diese Aktion.` };
+  }
+  return { user };
 }
 
 // Gate: fordert mindestens EINES der Rechte.

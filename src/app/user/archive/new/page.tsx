@@ -1,4 +1,5 @@
 import { userCan } from "@/lib/permissions";
+import { getRoleMap } from "@/lib/roles";
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "../../dal";
@@ -15,6 +16,7 @@ export const metadata: Metadata = {
 // Charakter-Voraussetzung).
 export default async function NewArchiveEntryPage() {
   const user = await requireOwnUser();
+  const roleMap = await getRoleMap();
 
   return (
     <>
@@ -23,7 +25,7 @@ export default async function NewArchiveEntryPage() {
         <h1>Neuen Archiv-Eintrag anlegen</h1>
         <NewArchiveEntryForm
           userId={user.id}
-          isAdminOrGM={userCan(user, "content.autolink_tools")}
+          isAdminOrGM={userCan(user, "content.autolink_tools", roleMap)}
         />
       </article>
     </>

@@ -6,6 +6,7 @@ import type { User } from "@/types/db";
 import {
   resolvePermissions,
   type Permission,
+  type RoleMap,
 } from "@/lib/permissions";
 
 export type Visibility = "private" | "gm" | "public";
@@ -37,27 +38,32 @@ export function viewerHasPermission(
 }
 
 // Baut einen Viewer aus Rollen (+ optionalen Overrides) — praktisch für Tests
-// und für Stellen, die keinen vollen User-Datensatz haben.
+// und für Stellen, die keinen vollen User-Datensatz haben. Ohne roleMap gelten
+// die eingebauten DEFAULT_ROLE_PRESETS.
 export function makeViewer(
   userId: number,
   roles: User["role"][],
   overrides: Record<string, boolean> = {},
+  roleMap?: RoleMap,
 ): Viewer {
   return {
     userId,
     role: roles[0] ?? "guest",
-    permissions: [...resolvePermissions(roles, overrides)],
+    permissions: [...resolvePermissions(roles, overrides, roleMap)],
   };
 }
 
 // Baut einen Viewer (inkl. effektiver Rechte) aus einem vollen User-Objekt —
-// zentral, damit jede Stelle die Rechte identisch auflöst.
-export function resolveViewer(user: User): Viewer {
+// zentral, damit jede Stelle die Rechte identisch auflöst. roleMap ist PFLICHT
+// (frisch aus der DB, getRoleMap) — kein Modul-Global mehr.
+export function resolveViewer(user: User, roleMap: RoleMap): Viewer {
   const roles = Array.from(new Set([user.role, ...user.additional_roles]));
   return {
     userId: user.id,
     role: user.role,
-    permissions: [...resolvePermissions(roles, user.permission_overrides)],
+    permissions: [
+      ...resolvePermissions(roles, user.permission_overrides, roleMap),
+    ],
   };
 }
 
@@ -71,10 +77,10 @@ export async function getViewer(): Promise<Viewer | null> {
   if (!session) return null;
   const user = await getUserById(session.userId);
   if (!user) return null;
-  // Aktive Rollen-Map laden, bevor die Rechte des Betrachters aufgelöst werden
+  // Rollen-Map laden und explizit an die Rechte-Auflösung durchreichen
   // (öffentliche Seiten gehen über getViewer, nicht über getCurrentUser).
-  await getRoleMap();
-  return resolveViewer(user);
+  const roleMap = await getRoleMap();
+  return resolveViewer(user, roleMap);
 }
 
 // „GM-Sicht“ heißt jetzt: darf gm-sichtbare Inhalte sehen (content.view_gm).

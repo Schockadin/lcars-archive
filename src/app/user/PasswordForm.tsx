@@ -8,6 +8,7 @@ import {
   FormSuccess,
   SubmitButton,
 } from "@/app/_shared/FormPrimitives";
+import PasswordInput from "@/app/_shared/PasswordInput";
 
 const initialState: PasswordState = {};
 
@@ -25,10 +26,9 @@ export default function PasswordForm({
     <form action={formAction} className="flex flex-col gap-[16px]">
       {hasPassword && (
         <FormField label="Aktuelles Passwort" htmlFor="currentPassword">
-          <input
+          <PasswordInput
             id="currentPassword"
             name="currentPassword"
-            type="password"
             required
             autoComplete="current-password"
             className="rounded-lcars-pill lcars-input"
@@ -40,10 +40,9 @@ export default function PasswordForm({
         label={hasPassword ? "Neues Passwort" : "Passwort festlegen"}
         htmlFor="newPassword"
       >
-        <input
+        <PasswordInput
           id="newPassword"
           name="newPassword"
-          type="password"
           required
           minLength={10}
           autoComplete="new-password"
@@ -52,10 +51,9 @@ export default function PasswordForm({
       </FormField>
 
       <FormField label="Passwort wiederholen" htmlFor="confirmPassword">
-        <input
+        <PasswordInput
           id="confirmPassword"
           name="confirmPassword"
-          type="password"
           required
           minLength={10}
           autoComplete="new-password"

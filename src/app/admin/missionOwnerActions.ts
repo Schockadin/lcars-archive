@@ -1,5 +1,5 @@
 "use server";
-import { requireAdmin } from "@/lib/dal";
+import { checkPermission, getRoleMap } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { userCan } from "@/lib/permissions";
 import {
@@ -27,13 +27,14 @@ export async function assignOwnerlessMissionsBatchAction(
   ownerId: number,
   batchSize: number,
 ): Promise<AssignOwnerlessMissionsBatchResult> {
-  await requireAdmin();
+  const check = await checkPermission("admin.access");
+  if ("error" in check) return { error: check.error };
 
   const owner = await getUserById(ownerId);
   if (!owner) {
     return { error: "Ungültiger User." };
   }
-  if (!userCan(owner, "missions.manage")) {
+  if (!userCan(owner, "missions.manage", await getRoleMap())) {
     return { error: "Nur Spielleitung/Administration kann zugeordnet werden." };
   }
 

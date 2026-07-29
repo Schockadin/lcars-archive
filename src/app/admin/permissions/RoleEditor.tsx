@@ -3,12 +3,11 @@
 import { useActionState, useState } from "react";
 import Link from "next/link";
 import {
-  updateRoleAction,
+  updateRoleMetaAction,
   deleteRoleAction,
   updateRoleMembersAction,
   type RolesState,
 } from "./actions";
-import PermissionCheckboxList from "./PermissionCheckboxList";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import {
   FormError,
@@ -34,8 +33,10 @@ export interface EditableRole {
   is_system: boolean;
 }
 
-// Ein aufklappbarer Editor pro Rolle: Name/Beschreibung/Rechte bearbeiten,
-// Mitglieder verwalten und (nur eigene Rollen) löschen.
+// Ein aufklappbarer Editor pro Rolle: Name/Beschreibung bearbeiten, Mitglieder
+// verwalten und (nur eigene Rollen) löschen. Die RECHTE einer Rolle werden nicht
+// mehr hier gesetzt, sondern zentral in der Rechte-Matrix oben (PermissionsMatrix
+// → updateRolePermissionsAction).
 export default function RoleEditor({
   role,
   members,
@@ -44,7 +45,7 @@ export default function RoleEditor({
   members: RoleMember[];
 }) {
   const [editState, editAction, editing] = useActionState(
-    updateRoleAction,
+    updateRoleMetaAction,
     initialState,
   );
   const [deleteState, deleteFormAction, deleting] = useActionState(
@@ -73,7 +74,7 @@ export default function RoleEditor({
       </summary>
 
       <div className="flex flex-col gap-[24px] mt-[12px]">
-        {/* Name/Beschreibung/Rechte */}
+        {/* Name/Beschreibung (Rechte → Rechte-Matrix oben) */}
         <form action={editAction} className="flex flex-col gap-[12px]">
           <input type="hidden" name="key" value={role.key} />
 
@@ -104,14 +105,6 @@ export default function RoleEditor({
             />
           </div>
 
-          <fieldset className="flex flex-col gap-[8px]">
-            <legend className="lcars-eyebrow">Rechte</legend>
-            <PermissionCheckboxList
-              selected={role.permissions}
-              idPrefix={`role-${role.key}`}
-            />
-          </fieldset>
-
           <FormError message={editState?.error} />
           {editState?.success && <FormSuccess>Gespeichert.</FormSuccess>}
 
@@ -120,7 +113,7 @@ export default function RoleEditor({
             pendingLabel="Speichern…"
             className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%]"
           >
-            Rolle speichern
+            Name speichern
           </SubmitButton>
         </form>
 

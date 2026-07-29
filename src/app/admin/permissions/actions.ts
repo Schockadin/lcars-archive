@@ -23,7 +23,6 @@ import {
   userCan,
   effectiveRolesOf,
   resolvePermissions,
-  getActiveRolePresets,
   type Permission,
 } from "@/lib/permissions";
 
@@ -80,9 +79,10 @@ export async function createRoleAction(
   return { success: true };
 }
 
-// Bearbeitet Name/Beschreibung/Rechte einer Rolle (auch System-Rollen —
-// Schlüssel bleibt unverändert).
-export async function updateRoleAction(
+// Bearbeitet NUR Name/Beschreibung einer Rolle (die Rechte bleiben, wie sie
+// sind — die werden über die Rechte-Matrix gesetzt, updateRolePermissionsAction
+// unten). Schlüssel/is_system bleiben unverändert.
+export async function updateRoleMetaAction(
   _state: RolesState,
   formData: FormData,
 ): Promise<RolesState> {
@@ -96,6 +96,34 @@ export async function updateRoleAction(
   const existing = await getRoleByKey(key);
   if (!existing) return { error: "Rolle nicht gefunden." };
 
+  await updateRole(key, {
+    label,
+    description,
+    permissions: existing.permissions as Permission[],
+  });
+  await logAdminAction(
+    admin.id,
+    "edit_role",
+    null,
+    `${label} (${key}): Name/Beschreibung`,
+    await getClientIp(),
+  );
+  revalidatePath("/admin/permissions");
+  return { success: true };
+}
+
+// Setzt NUR die Rechte einer Rolle (Name/Beschreibung bleiben) — genutzt von der
+// Rechte-Matrix. Auch für System-Rollen erlaubt; Schlüssel bleibt unverändert.
+export async function updateRolePermissionsAction(
+  _state: RolesState,
+  formData: FormData,
+): Promise<RolesState> {
+  const admin = await requirePermission("users.manage");
+
+  const key = String(formData.get("key") ?? "");
+  const existing = await getRoleByKey(key);
+  if (!existing) return { error: "Rolle nicht gefunden." };
+
   const permissions = parsePermissions(formData);
 
   // Selbstschutz: hält die bearbeitende Person diese Rolle selbst, darf die
@@ -104,7 +132,7 @@ export async function updateRoleAction(
   // hypothetischen Rollen-Map mit den neuen Rechten dieser Rolle.
   const adminRoles = effectiveRolesOf(admin);
   if (adminRoles.includes(key)) {
-    const hypotheticalMap = { ...getActiveRolePresets(), [key]: permissions };
+    const hypotheticalMap = { ...(await getRoleMap()), [key]: permissions };
     const adminPerms = resolvePermissions(
       adminRoles,
       admin.permission_overrides,
@@ -118,12 +146,16 @@ export async function updateRoleAction(
     }
   }
 
-  await updateRole(key, { label, description, permissions });
+  await updateRole(key, {
+    label: existing.label,
+    description: existing.description,
+    permissions,
+  });
   await logAdminAction(
     admin.id,
     "edit_role",
     null,
-    `${label} (${key}): [${permissions.join(", ")}]`,
+    `${existing.label} (${key}): [${permissions.join(", ")}]`,
     await getClientIp(),
   );
   revalidatePath("/admin/permissions");
@@ -186,7 +218,7 @@ export async function updateRoleMembersAction(
 
   // Aktuelle Rollen-Map laden, damit die characters.assignable-Prüfung unten
   // gegen die tatsächlichen Rollendefinitionen auflöst.
-  await getRoleMap();
+  const roleMap = await getRoleMap();
 
   const desired = new Set(
     formData.getAll("members").map((v) => Number(v)),
@@ -210,7 +242,7 @@ export async function updateRoleMembersAction(
       : user.additional_roles.filter((r) => r !== key);
 
     const updated = await updateUserRoles(user.id, user.role, nextAdditional);
-    if (!userCan(updated, "characters.assignable")) {
+    if (!userCan(updated, "characters.assignable", roleMap)) {
       await unassignCharactersFromUser(user.id);
     }
     await logAdminAction(

@@ -294,6 +294,25 @@ export function CopyIcon() {
   );
 }
 
+// Passwort-Sichtbarkeits-Umschalter (PasswordInput.tsx).
+export function EyeIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+export function EyeOffIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M10.6 6.2A9.9 9.9 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-2.6 3.4M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a9.9 9.9 0 0 0 4-.8" />
+      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+      <path d="M3 3l18 18" />
+    </svg>
+  );
+}
+
 // Haupt-Navigation (SidebarMenu.tsx) — auf schmalen Screens wird der
 // Menütext ausgeblendet, sodass sonst nur die kryptische Nummer (00–04)
 // bliebe. Diese Icons machen die Ziele dort wiedererkennbar.

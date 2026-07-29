@@ -1,5 +1,5 @@
 "use server";
-import { requireAdmin } from "@/lib/dal";
+import { checkPermission } from "@/lib/dal";
 import {
   getAllAutolinkableContent,
   renderContentHtml,
@@ -43,7 +43,8 @@ export async function typographyFixBatchAction(
   offset: number,
   batchSize: number,
 ): Promise<TypographyFixBatchResult> {
-  await requireAdmin();
+  const check = await checkPermission("admin.access");
+  if ("error" in check) return { error: check.error };
 
   const safeOffset = Number.isInteger(offset) && offset >= 0 ? offset : 0;
   const safeBatch =

@@ -4,7 +4,11 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useActionState } from "react";
 import { createUserAction, type AdminActionState } from "./actions";
-import { FormField, FormError, SubmitButton } from "@/app/_shared/FormPrimitives";
+import {
+  FormField,
+  FormError,
+  SubmitButton,
+} from "@/app/_shared/FormPrimitives";
 
 const initialState: AdminActionState = {};
 
@@ -28,7 +32,7 @@ export default function CreateUserForm() {
   return (
     <form
       action={formAction}
-      className="flex flex-wrap gap-[12px] justify-between"
+      className="flex flex-wrap items-end gap-[12px] justify-between"
     >
       <FormField label="Name" htmlFor="new-user-name" className="flex-1">
         <input
@@ -67,7 +71,7 @@ export default function CreateUserForm() {
       <SubmitButton
         pending={pending}
         pendingLabel="Anlegen…"
-        className="lcars-pill-btn--outline disabled:opacity-50 w-[100%]"
+        className="lcars-pill-btn--outline disabled:opacity-50 mb-[8px]"
       >
         User anlegen
       </SubmitButton>

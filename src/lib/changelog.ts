@@ -235,4 +235,21 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Die Menüpunkte im Seitenmenü färben sich jetzt sofort beim Antippen ein (statt erst, wenn die Zielseite geladen ist) und springen bei einem Navigationsfehler wieder auf die tatsächliche Seite zurück; im Archiv erscheint beim Kategorienwechsel kein Platzhalter-Skelett mehr.",
     ],
   },
+  {
+    version: "1.17",
+    title: "Schnellere Wiederbesuche: PWA-Asset-Caching",
+    items: [
+      "Statische Dateien (Skripte, Styles, Schriften, Symbole) hält der Browser (Service Worker) jetzt vor, sodass wiederholte Seitenaufrufe spürbar schneller laden — Inhalte bleiben weiterhin ohne Offline-Modus immer frisch aus dem Netz.",
+      "Passwort-Felder haben jetzt einen Anzeigen/Verbergen-Umschalter (Auge-Symbol).",
+      "Rückmeldungen aus Formularen (Erfolg wie Fehler) erscheinen jetzt einheitlich als kurze, pillenförmige Toast-Meldung zentriert am unteren Bildschirmrand — je nach Status farblich markiert (Erfolg grün, Warnung amber, Fehler rot); sie stapeln sich und blenden sich nach ein paar Sekunden selbst aus, statt als Inline-Text zu erscheinen.",
+      "Das Audit-Log und das Fehler-Log lassen sich jetzt seitenweise durchblättern (10, 20, 50 oder alle Einträge pro Seite).",
+      "Behoben: In der Kampagnen-Übersicht wurden bei schmaler Zeile nur die Aktions-Knöpfe einer Mission angezeigt, der eigentliche Missions-Eintrag daneben war zusammengequetscht/unsichtbar.",
+      "Behoben: Der tägliche Admin-Log-Digest (6-Uhr-Mail) wurde nie verschickt, weil die interne Uhrzeitprüfung fehlschlug und den Versand jedes Mal übersprang.",
+      "In der Kampagnen-Übersicht sind die Missionen jetzt chronologisch von neu nach alt sortiert, und jede Missions-Akte ist nach Status farbcodiert (grün = aktiv, blau = abgeschlossen, rot = gescheitert, amber = abgebrochen).",
+      "Das Ingame-Jahr der Kampagne wird jetzt automatisch aus dem spätesten Missionslog abgeleitet und folgt neuen Logs von selbst; es lässt sich weiterhin manuell überschreiben (nur mit Rückfrage) und per „Automatisch“-Knopf wieder auf die automatische Ableitung zurückstellen.",
+      "Die Seite „Rollen & Rechte“ zeigt die Rechte jetzt als übersichtliche Matrix (Rechte als Zeilen, Rollen als Spalten): Haken pro Rolle setzen und spaltenweise speichern. Name, Beschreibung und Mitglieder einer Rolle werden weiterhin darunter je Rolle gepflegt.",
+      "Im Admin-Bereich „Scripts“ werden Wartungs-Aktionen jetzt ausgeblendet, wenn dir die nötige Berechtigung fehlt; wird eine Aktion doch ohne Recht ausgelöst, erscheint eine klare Meldung („Dir fehlt die Berechtigung …“) statt eines nichtssagenden Fehlers.",
+      "Die Übersichten Charaktere, Archiv und Missionen haben jetzt neben den Sortier-/Ansichts-Optionen ein Freitext-Filterfeld, mit dem sich die Liste schnell nach Name bzw. Titel eingrenzen lässt.",
+    ],
+  },
 ];

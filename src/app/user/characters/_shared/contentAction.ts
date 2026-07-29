@@ -1,6 +1,10 @@
 "use server";
 import { redirect } from "next/navigation";
-import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
+import {
+  verifySession,
+  requireMatchingFormUserId,
+  getRoleMap,
+} from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import {
   createCharacter,
@@ -48,7 +52,10 @@ export async function characterAction(
   let currentUser = null;
   if (!isEdit) {
     currentUser = await getUserById(session.userId);
-    if (!currentUser || !userCan(currentUser, "content.create")) {
+    if (
+      !currentUser ||
+      !userCan(currentUser, "content.create", await getRoleMap())
+    ) {
       return { error: "Gast-Accounts können keine Charaktere anlegen." };
     }
   }

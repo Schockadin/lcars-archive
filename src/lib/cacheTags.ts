@@ -24,4 +24,9 @@ export const cacheTags = {
   timeline: "timeline",
 
   stats: "stats",
+
+  // Kampagnen-Einstellungen (Ingame-Jahr). Wird u.a. von Mission-Log-Änderungen
+  // mit-invalidiert, da das automatische Ingame-Jahr aus dem spätesten Log
+  // abgeleitet wird (siehe src/lib/campaign.ts).
+  campaign: "campaign-settings",
 } as const;

@@ -2,6 +2,8 @@
 
 import { useActionState } from "react";
 import { activateAccount, type ActivateState } from "./actions";
+import PasswordInput from "@/app/_shared/PasswordInput";
+import { FormError } from "@/app/_shared/FormPrimitives";
 
 const initialState: ActivateState = {};
 
@@ -22,10 +24,9 @@ export default function ActivateForm({ token }: { token: string }) {
         <label htmlFor="password" className="lcars-eyebrow">
           Neues Passwort
         </label>
-        <input
+        <PasswordInput
           id="password"
           name="password"
-          type="password"
           required
           autoFocus
           autoComplete="new-password"
@@ -38,10 +39,9 @@ export default function ActivateForm({ token }: { token: string }) {
         <label htmlFor="confirmPassword" className="lcars-eyebrow">
           Passwort wiederholen
         </label>
-        <input
+        <PasswordInput
           id="confirmPassword"
           name="confirmPassword"
-          type="password"
           required
           autoComplete="new-password"
           minLength={10}
@@ -49,11 +49,7 @@ export default function ActivateForm({ token }: { token: string }) {
         />
       </div>
 
-      {state?.error && (
-        <p className="text-lcars-red" role="alert">
-          {state.error}
-        </p>
-      )}
+      <FormError message={state?.error} />
 
       <button
         type="submit"

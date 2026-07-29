@@ -1,6 +1,7 @@
 "use server";
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
+import { getRoleMap } from "@/lib/roles";
 import { userCan } from "@/lib/permissions";
 import { setCharacterVisibilityAdmin } from "@/lib/characters";
 import { setMissionLogVisibilityAdmin } from "@/lib/missions";
@@ -39,7 +40,8 @@ export async function setVisibilityAdminAction(
   if (!session) return { error: "Nicht angemeldet." };
 
   const user = await getUserById(session.userId);
-  if (!user || !userCan(user, "content.moderate")) {
+  const roleMap = await getRoleMap();
+  if (!user || !userCan(user, "content.moderate", roleMap)) {
     return { error: "Nur für Admins." };
   }
 

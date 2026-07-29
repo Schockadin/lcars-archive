@@ -1,5 +1,5 @@
 "use server";
-import { requireAdmin } from "@/lib/dal";
+import { checkPermission } from "@/lib/dal";
 import {
   regenerateTimeline,
   type RegenerateTimelineResult,
@@ -12,7 +12,8 @@ export interface RegenerateTimelineActionResult {
 }
 
 export async function regenerateTimelineAction(): Promise<RegenerateTimelineActionResult> {
-  await requireAdmin();
+  const check = await checkPermission("admin.access");
+  if ("error" in check) return { error: check.error };
 
   try {
     const result = await regenerateTimeline();

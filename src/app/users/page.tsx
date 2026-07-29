@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { userCan } from "@/lib/permissions";
 import PageMeta from "@/components/PageMeta";
-import { requireNonGuest } from "@/lib/dal";
+import { requireNonGuest, getRoleMap } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
 import { getFollowStatuses } from "@/lib/follows";
 import UsersTable from "./UsersTable";
@@ -25,6 +25,7 @@ export const metadata: Metadata = {
 // sollen nicht unnötig ins Client-Bundle dieser Seite wandern).
 export default async function UsersOverviewPage() {
   const viewer = await requireNonGuest();
+  const roleMap = await getRoleMap();
   const users = await listAllUsers();
   const rows = users.map((u) => ({
     id: u.id,
@@ -48,7 +49,7 @@ export default async function UsersOverviewPage() {
         <UsersTable
           users={rows}
           viewerId={viewer.id}
-          isAdmin={userCan(viewer, "users.manage")}
+          isAdmin={userCan(viewer, "users.manage", roleMap)}
           followStatuses={followStatuses}
         />
       </article>
