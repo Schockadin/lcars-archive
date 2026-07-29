@@ -867,3 +867,55 @@
   border-radius: 5px;
   margin: 16px 0px;
 }
+
+/* ─── Rechte-Matrix (PermissionsMatrix.tsx) ────────────────────────────
+   Rollen als Spalten, Rechte als Zeilen. Der Container scrollt horizontal
+   (overflow-x-auto am Wrapper), damit viele Rollen auf schmalen Screens die
+   Seite nicht sprengen; die erste Spalte (Recht) bleibt beim Scrollen sticky
+   stehen, damit man die Zeilen zuordnen kann. */
+.lcars-perm-matrix {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+  font-size: 13px;
+}
+.lcars-perm-matrix th,
+.lcars-perm-matrix td {
+  border-bottom: 1px solid rgb(255 255 255 / 10%);
+  padding: 8px 12px;
+  vertical-align: middle;
+}
+/* Kopfzeile (Rollen) — hebt sich vom Body ab und bleibt oben beim Scrollen. */
+.lcars-perm-matrix thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--lcars-bg);
+  border-bottom: 2px solid var(--lcars-amber);
+  text-align: center;
+  min-width: 120px;
+}
+/* Erste Spalte (Recht-Bezeichnung) bleibt beim horizontalen Scrollen stehen. */
+.lcars-perm-matrix-corner,
+.lcars-perm-matrix-row {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--lcars-bg);
+  text-align: left;
+  max-width: 320px;
+  min-width: 200px;
+}
+/* Eck-Zelle liegt über beiden sticky-Achsen. */
+.lcars-perm-matrix-corner {
+  z-index: 3;
+  border-bottom: 2px solid var(--lcars-amber);
+}
+.lcars-perm-matrix-row {
+  font-weight: 600;
+}
+.lcars-perm-matrix tbody tr:hover td,
+.lcars-perm-matrix tbody tr:hover .lcars-perm-matrix-row {
+  background: rgb(255 255 255 / 4%);
+}

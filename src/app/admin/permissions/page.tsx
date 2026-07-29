@@ -5,6 +5,7 @@ import { listRolesForAdmin } from "@/lib/roles";
 import { listAllUsers } from "@/lib/users";
 import CreateRoleForm from "./CreateRoleForm";
 import RoleEditor, { type RoleMember } from "./RoleEditor";
+import PermissionsMatrix, { type MatrixRole } from "./PermissionsMatrix";
 
 export const metadata: Metadata = {
   title: "Rollen & Rechte",
@@ -21,6 +22,40 @@ export default async function PermissionsAdminPage() {
     listRolesForAdmin(),
     listAllUsers(),
   ]);
+
+  // Mitglieder je Rolle einmal vorbereiten — von Matrix (Mitgliederzahl in der
+  // Spaltenüberschrift) und RoleEditor (Mitgliederverwaltung) gemeinsam genutzt.
+  const membersByRole = new Map<string, RoleMember[]>(
+    roles.map((role) => [
+      role.key,
+      users.map((u) => {
+        const isPrimary = u.role === role.key;
+        return {
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          isPrimary,
+          isMember: isPrimary || u.additional_roles.includes(role.key),
+        };
+      }),
+    ]),
+  );
+
+  const matrixRoles: MatrixRole[] = roles.map((role) => ({
+    key: role.key,
+    label: role.label,
+    is_system: role.is_system,
+    permissions: role.permissions,
+    memberCount: (membersByRole.get(role.key) ?? []).filter((m) => m.isMember)
+      .length,
+  }));
+
+  // key hängt an der Rollen-Signatur (Schlüssel + Rechte), damit die Matrix nach
+  // dem Anlegen/Löschen einer Rolle oder gespeicherten Rechten frisch mit dem
+  // Server-Stand remountet statt lokal veralteten State zu behalten.
+  const matrixKey = matrixRoles
+    .map((r) => `${r.key}:${r.permissions.length}`)
+    .join("|");
 
   return (
     <>
@@ -40,34 +75,32 @@ export default async function PermissionsAdminPage() {
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Rollen</h2>
+            <h2 className="text-lcars-amber">Rechte-Matrix</h2>
+            <p className="text-lcars-text-dim text-[13px]">
+              Zeilen = Rechte, Spalten = Rollen. Haken setzen/entfernen und pro
+              Spalte mit <b>Speichern</b> übernehmen (nur bei ungespeicherten
+              Änderungen aktiv). Name, Beschreibung und Mitglieder einer Rolle
+              werden darunter je Rolle bearbeitet.
+            </p>
+            <PermissionsMatrix key={matrixKey} roles={matrixRoles} />
+          </section>
+
+          <section className="flex flex-col gap-[12px]">
+            <h2 className="text-lcars-amber">Name, Beschreibung &amp; Mitglieder</h2>
             <div className="flex flex-col gap-[12px]">
-              {roles.map((role) => {
-                const members: RoleMember[] = users.map((u) => {
-                  const isPrimary = u.role === role.key;
-                  return {
-                    id: u.id,
-                    name: u.name,
-                    email: u.email,
-                    isPrimary,
-                    isMember:
-                      isPrimary || u.additional_roles.includes(role.key),
-                  };
-                });
-                return (
-                  <RoleEditor
-                    key={role.key}
-                    role={{
-                      key: role.key,
-                      label: role.label,
-                      description: role.description,
-                      permissions: role.permissions,
-                      is_system: role.is_system,
-                    }}
-                    members={members}
-                  />
-                );
-              })}
+              {roles.map((role) => (
+                <RoleEditor
+                  key={role.key}
+                  role={{
+                    key: role.key,
+                    label: role.label,
+                    description: role.description,
+                    permissions: role.permissions,
+                    is_system: role.is_system,
+                  }}
+                  members={membersByRole.get(role.key) ?? []}
+                />
+              ))}
             </div>
           </section>
 

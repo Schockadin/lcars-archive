@@ -79,9 +79,10 @@ export async function createRoleAction(
   return { success: true };
 }
 
-// Bearbeitet Name/Beschreibung/Rechte einer Rolle (auch System-Rollen —
-// Schlüssel bleibt unverändert).
-export async function updateRoleAction(
+// Bearbeitet NUR Name/Beschreibung einer Rolle (die Rechte bleiben, wie sie
+// sind — die werden über die Rechte-Matrix gesetzt, updateRolePermissionsAction
+// unten). Schlüssel/is_system bleiben unverändert.
+export async function updateRoleMetaAction(
   _state: RolesState,
   formData: FormData,
 ): Promise<RolesState> {
@@ -92,6 +93,34 @@ export async function updateRoleAction(
   const description = String(formData.get("description") ?? "").trim();
   if (!label) return { error: "Bitte einen Namen für die Rolle angeben." };
 
+  const existing = await getRoleByKey(key);
+  if (!existing) return { error: "Rolle nicht gefunden." };
+
+  await updateRole(key, {
+    label,
+    description,
+    permissions: existing.permissions as Permission[],
+  });
+  await logAdminAction(
+    admin.id,
+    "edit_role",
+    null,
+    `${label} (${key}): Name/Beschreibung`,
+    await getClientIp(),
+  );
+  revalidatePath("/admin/permissions");
+  return { success: true };
+}
+
+// Setzt NUR die Rechte einer Rolle (Name/Beschreibung bleiben) — genutzt von der
+// Rechte-Matrix. Auch für System-Rollen erlaubt; Schlüssel bleibt unverändert.
+export async function updateRolePermissionsAction(
+  _state: RolesState,
+  formData: FormData,
+): Promise<RolesState> {
+  const admin = await requirePermission("users.manage");
+
+  const key = String(formData.get("key") ?? "");
   const existing = await getRoleByKey(key);
   if (!existing) return { error: "Rolle nicht gefunden." };
 
@@ -117,12 +146,16 @@ export async function updateRoleAction(
     }
   }
 
-  await updateRole(key, { label, description, permissions });
+  await updateRole(key, {
+    label: existing.label,
+    description: existing.description,
+    permissions,
+  });
   await logAdminAction(
     admin.id,
     "edit_role",
     null,
-    `${label} (${key}): [${permissions.join(", ")}]`,
+    `${existing.label} (${key}): [${permissions.join(", ")}]`,
     await getClientIp(),
   );
   revalidatePath("/admin/permissions");

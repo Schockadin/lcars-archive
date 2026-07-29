@@ -247,6 +247,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Behoben: Der tägliche Admin-Log-Digest (6-Uhr-Mail) wurde nie verschickt, weil die interne Uhrzeitprüfung fehlschlug und den Versand jedes Mal übersprang.",
       "In der Kampagnen-Übersicht sind die Missionen jetzt chronologisch von neu nach alt sortiert, und jede Missions-Akte ist nach Status farbcodiert (grün = aktiv, blau = abgeschlossen, rot = gescheitert, amber = abgebrochen).",
       "Das Ingame-Jahr der Kampagne wird jetzt automatisch aus dem spätesten Missionslog abgeleitet und folgt neuen Logs von selbst; es lässt sich weiterhin manuell überschreiben (nur mit Rückfrage) und per „Automatisch“-Knopf wieder auf die automatische Ableitung zurückstellen.",
+      "Die Seite „Rollen & Rechte“ zeigt die Rechte jetzt als übersichtliche Matrix (Rechte als Zeilen, Rollen als Spalten): Haken pro Rolle setzen und spaltenweise speichern. Name, Beschreibung und Mitglieder einer Rolle werden weiterhin darunter je Rolle gepflegt.",
     ],
   },
 ];
