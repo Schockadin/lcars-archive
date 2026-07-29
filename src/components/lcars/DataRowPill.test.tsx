@@ -9,15 +9,15 @@ describe("DataRowPill", () => {
     expect(screen.getByText("Alter")).toBeInTheDocument();
   });
 
-  it("caps numeric values over 99 to \"99+\"", () => {
-    render(<DataRowPill value={150} label="Viele" />);
-    expect(screen.getByText("99+")).toBeInTheDocument();
-    expect(screen.queryByText("150")).toBeNull();
+  it("caps numeric values over 999 to \"999+\"", () => {
+    render(<DataRowPill value={1500} label="Viele" />);
+    expect(screen.getByText("999+")).toBeInTheDocument();
+    expect(screen.queryByText("1500")).toBeNull();
   });
 
-  it("shows exact numeric values up to 99", () => {
-    render(<DataRowPill value={99} label="Genau" />);
-    expect(screen.getByText("99")).toBeInTheDocument();
+  it("shows exact numeric values up to 999", () => {
+    render(<DataRowPill value={999} label="Genau" />);
+    expect(screen.getByText("999")).toBeInTheDocument();
   });
 
   it("renders no chevron when expanded is undefined", () => {

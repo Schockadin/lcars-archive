@@ -17,7 +17,7 @@ import { XIcon } from "@/lib/icons";
 // aria-live-Region rendert die aktuellen Toasts. Toasts blenden sich nach
 // `duration` ms selbst aus (0 = bleibt bis zum manuellen Schließen).
 
-export type ToastKind = "success" | "error" | "info";
+export type ToastKind = "success" | "warning" | "error" | "info";
 
 export interface ToastOptions {
   kind?: ToastKind;
@@ -48,6 +48,7 @@ export function useToast(): ToastApi {
 
 const KIND_CLASS: Record<ToastKind, string> = {
   success: "lcars-toast--success",
+  warning: "lcars-toast--warning",
   error: "lcars-toast--error",
   info: "lcars-toast--info",
 };

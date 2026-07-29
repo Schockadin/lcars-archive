@@ -9,6 +9,7 @@ import AssignOwnerlessMissionsPanel from "../AssignOwnerlessMissionsPanel";
 import DialogueContentRegeneratePanel from "../DialogueContentRegeneratePanel";
 import LinkAllContentPanel from "../LinkAllContentPanel";
 import TypographyFixPanel from "../TypographyFixPanel";
+import ToastTestPanel from "../ToastTestPanel";
 
 export const metadata: Metadata = {
   title: "Scripts",
@@ -64,6 +65,11 @@ export default async function AdminScriptsPage() {
           <section className="flex flex-col gap-[12px]">
             <h2 className="text-lcars-amber">Typografie korrigieren</h2>
             <TypographyFixPanel />
+          </section>
+
+          <section className="flex flex-col gap-[12px]">
+            <h2 className="text-lcars-amber">Toast-Test</h2>
+            <ToastTestPanel />
           </section>
         </div>
       </article>

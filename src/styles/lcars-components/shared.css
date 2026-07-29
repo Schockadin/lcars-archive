@@ -778,9 +778,10 @@
   height: 20px;
 }
 
-/* Pillenförmiger Toast, einheitlich amber (Erfolg/Fehler/Info gleich
-   gestaltet), Text dunkel für Kontrast; der Schließen-Button rechts, vertikal
-   zentriert, rotes X. */
+/* Pillenförmiger Toast, farblich nach Status markiert (success = grün,
+   warning = amber, error = rot; info fällt auf amber zurück), Text dunkel für
+   Kontrast auf allen drei Füllfarben; der Schließen-Button rechts, vertikal
+   zentriert, dunkles X (auf jeder Füllfarbe lesbar). */
 .lcars-toast {
   pointer-events: auto;
   display: flex;
@@ -793,6 +794,18 @@
   box-shadow: 0 6px 20px rgb(0 0 0 / 45%);
   animation: lcars-toast-in 0.18s ease-out;
 }
+.lcars-toast--success {
+  background: var(--lcars-green);
+}
+.lcars-toast--warning {
+  background: var(--lcars-amber);
+}
+.lcars-toast--error {
+  background: var(--lcars-red);
+}
+.lcars-toast--info {
+  background: var(--lcars-amber);
+}
 
 .lcars-toast-message {
   flex: 1;
@@ -802,7 +815,8 @@
   font-weight: 600;
 }
 
-/* Rechts ausgerichteter, rot gefüllter, zentrierter X-Button. */
+/* Rechts ausgerichteter, zentrierter X-Button — dunkel, damit er auf grün/
+   amber/rot gleichermaßen lesbar bleibt. */
 .lcars-toast-dismiss {
   flex-shrink: 0;
   display: inline-flex;
@@ -811,7 +825,7 @@
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  color: var(--lcars-red);
+  color: black;
   background: none;
   border: none;
   cursor: pointer;

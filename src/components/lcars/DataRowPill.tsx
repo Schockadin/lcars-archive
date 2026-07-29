@@ -26,7 +26,7 @@ export function DataRowPill({
   className,
   expanded,
 }: DataRowPillProps) {
-  // Zähler über 99 werden als "99+" angezeigt, damit die Wert-Spalte der
+  // Zähler über 999 werden als "999+" angezeigt, damit die Wert-Spalte der
   // DataRow bei vielen Inhalten nicht überläuft.
   const displayValue =
     typeof value === "number" && value > 999 ? "999+" : value;
