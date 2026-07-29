@@ -5,7 +5,7 @@ import { requireGM, getRoleMap } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
 import { getAllCharactersForAdmin } from "@/lib/characters";
 import { getAllMissionsForGmOverview } from "@/lib/missions";
-import { getIngameYear } from "@/lib/campaign";
+import { getIngameYearInfo } from "@/lib/campaign";
 import CharacterAssignmentTable from "../CharacterAssignmentTable";
 import AdminMissionsBrowser from "../missions/AdminMissionsBrowser";
 import IngameYearForm from "./IngameYearForm";
@@ -24,11 +24,11 @@ export const metadata: Metadata = {
 export default async function AdminCampaignPage() {
   await requireGM();
 
-  const [users, characters, missions, ingameYear] = await Promise.all([
+  const [users, characters, missions, ingameYearInfo] = await Promise.all([
     listAllUsers(),
     getAllCharactersForAdmin(),
     getAllMissionsForGmOverview(),
-    getIngameYear(),
+    getIngameYearInfo(),
   ]);
 
   // Gäste dürfen keinen Charakter zugewiesen bekommen (siehe
@@ -49,7 +49,7 @@ export default async function AdminCampaignPage() {
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[12px]">
             <h2 className="text-lcars-amber">Ingame-Jahr</h2>
-            <IngameYearForm currentYear={ingameYear} />
+            <IngameYearForm info={ingameYearInfo} />
           </section>
 
           <section className="flex flex-col gap-[12px]">

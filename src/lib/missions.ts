@@ -148,7 +148,9 @@ export async function getAllMissionsForGmOverview(): Promise<
     FROM missions m
     LEFT JOIN users u ON u.id = m.owner_user_id
     WHERE m.deleted_at IS NULL
-    ORDER BY m.title ASC
+    -- Chronologisch absteigend (neueste zuerst): nach Missions-Startdatum,
+    -- Missionen ohne Datum ans Ende, dann nach Anlagezeitpunkt.
+    ORDER BY m.started_at DESC NULLS LAST, m.created_at DESC
   `;
   return rows.map((row) => ({
     id: row.id,
