@@ -252,4 +252,12 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Die Übersichten Charaktere, Archiv und Missionen haben jetzt neben den Sortier-/Ansichts-Optionen ein Freitext-Filterfeld, mit dem sich die Liste schnell nach Name bzw. Titel eingrenzen lässt.",
     ],
   },
+  {
+    version: "1.18",
+    title: "Code-Review: News-Feed-Sichtbarkeit und Anriss-Kürzung korrigiert",
+    items: [
+      "Behoben: Wer mehrere Rollen hat (z.B. gleichzeitig Spieler und Spielleitung/Admin), sah auf dem Dashboard unter „Neuigkeiten“ nicht alle Inhalte, die er eigentlich sehen darf — GM- bzw. private Einträge fehlten dort, obwohl sie überall sonst sichtbar waren. Der News-Feed richtet sich jetzt nach denselben effektiven Rechten wie der Rest der Seite.",
+      "Behoben: Anriss-/Vorschautexte (in Listen sowie in Benachrichtigungs-Mails/Push) wurden bei langem Text ohne Leerzeichen — etwa einer eingefügten URL — kaum gekürzt und blieben fast vollständig stehen; sie werden jetzt zuverlässig auf die vorgesehene Länge gekappt.",
+    ],
+  },
 ];

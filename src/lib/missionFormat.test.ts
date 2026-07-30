@@ -150,4 +150,21 @@ describe("synopsisExcerpt", () => {
     const text = "abc def ghij klmno";
     expect(synopsisExcerpt(text, 8)).toBe("abc def…");
   });
+
+  it("hard-cuts at maxLen when there is no word boundary in range", () => {
+    // Ein einziger langer „Wort"-Block ohne Leerzeichen (URL/Token): früher gab
+    // lastIndexOf(" ", maxLen) hier -1 zurück und slice(0, -1) lieferte fast den
+    // gesamten Text statt zu kürzen.
+    const long = "x".repeat(300);
+    const result = synopsisExcerpt(long, 200);
+    expect(result).toBe("x".repeat(200) + "…");
+    expect(result.length).toBe(201);
+  });
+
+  it("hard-cuts at maxLen when the only space sits at index 0", () => {
+    // Führendes Leerzeichen wird zwar getrimmt; ein Wort ohne weitere Grenzen
+    // darf trotzdem nicht in einen (fast) leeren Anriss kollabieren.
+    const text = "a" + "b".repeat(50);
+    expect(synopsisExcerpt(text, 10)).toBe("a" + "b".repeat(9) + "…");
+  });
 });

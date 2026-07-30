@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
   computeNewsItems,
+  newsVisibility,
   toHref,
   type NewsContentRow,
   type NewsDeletionRow,
 } from "./recentActivityFormat";
+import { resolvePermissions } from "./permissions";
 
 const SINCE = new Date("2026-01-01T00:00:00Z");
 
@@ -222,5 +224,30 @@ describe("computeNewsItems", () => {
       since: SINCE,
     });
     expect(items.map((i) => i.targetKey)).toEqual(["b", "a"]);
+  });
+});
+
+describe("newsVisibility", () => {
+  it("leitet die gm-Sichtbarkeit aus einer ZUSATZrolle ab, nicht aus der Primärrolle", () => {
+    // Dokumentierter Multi-Rollen-Fall: Primärrolle „player", Zusatzrolle „gm".
+    // Der frühere role-String-Check (viewerRole === "gm") war hier false und
+    // hätte gm-Inhalte im News-Feed fälschlich ausgeblendet.
+    const perms = resolvePermissions(["player", "gm"], null);
+    expect(newsVisibility(perms)).toEqual({ canViewGm: true, canViewAll: false });
+  });
+
+  it("berücksichtigt einen Override, der content.view_all gewährt", () => {
+    const perms = resolvePermissions(["player"], { "content.view_all": true });
+    expect(newsVisibility(perms).canViewAll).toBe(true);
+  });
+
+  it("berücksichtigt einen Override, der content.view_gm entzieht", () => {
+    const perms = resolvePermissions(["gm"], { "content.view_gm": false });
+    expect(newsVisibility(perms).canViewGm).toBe(false);
+  });
+
+  it("ein reiner Spieler sieht weder gm- noch alle Inhalte", () => {
+    const perms = resolvePermissions(["player"], null);
+    expect(newsVisibility(perms)).toEqual({ canViewGm: false, canViewAll: false });
   });
 });

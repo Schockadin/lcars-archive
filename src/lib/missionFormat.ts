@@ -83,9 +83,15 @@ export function stripHtml(html: string): string {
 }
 
 // Kurzer Anrisstext aus Fließtext für Listen/Karten — Absatzumbrüche
-// geglättet, hart bei maxLen gekappt (Wortgrenze).
+// geglättet, hart bei maxLen gekappt (Wortgrenze). Fehlt im ersten maxLen-
+// Fenster eine Wortgrenze (langer Text ohne Leerzeichen, z.B. eine URL oder
+// ein Token), wird bei maxLen hart abgeschnitten — sonst würde
+// lastIndexOf(" ", maxLen) mit -1 antworten und slice(0, -1) fast den ganzen
+// Text zurückgeben statt zu kürzen.
 export function synopsisExcerpt(synopsis: string, maxLen = 200): string {
   const flat = synopsis.replace(/\s+/g, " ").trim();
   if (flat.length <= maxLen) return flat;
-  return flat.slice(0, flat.lastIndexOf(" ", maxLen)) + "…";
+  const lastSpace = flat.lastIndexOf(" ", maxLen);
+  const cut = lastSpace > 0 ? lastSpace : maxLen;
+  return flat.slice(0, cut) + "…";
 }

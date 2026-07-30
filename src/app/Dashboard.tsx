@@ -3,6 +3,8 @@ import PageMeta from "@/components/PageMeta";
 import { hasPassword } from "@/lib/users";
 import { getBookmarkedContent } from "@/lib/follows";
 import { getNewsItems } from "@/lib/recentActivity";
+import { newsVisibility } from "@/lib/recentActivityFormat";
+import { getCurrentUserPermissions } from "@/lib/dal";
 import { getDialoguesForUser } from "@/lib/dialogues";
 import FollowedContentSection from "./FollowedContentSection";
 import OpenDialoguesSection from "./OpenDialoguesSection";
@@ -28,11 +30,16 @@ export default async function Dashboard({ user }: { user: User }) {
   // Besuch"), gefiltert nach den im Profil gewählten News-Arten
   // (user.news_kinds) und dem "gesehen"-Status (news_seen) — daher hier auch
   // kein touchDashboardVisit mehr, das die Grenze früher fortschrieb.
+  // Effektive Rechte (aus allen Rollen + Overrides) — der News-Feed muss
+  // dieselbe Sichtbarkeit wie canView im Rest der App anwenden, nicht die
+  // Primärrolle. getCurrentUserPermissions ist React-cache-dedupliziert
+  // (siehe dal.ts), der Aufruf ist damit praktisch gratis.
+  const permissions = await getCurrentUserPermissions();
   const [hasPasswordSet, bookmarks, newsItems, openDialogues] =
     await Promise.all([
       hasPassword(user.id),
       getBookmarkedContent(user.id),
-      getNewsItems(user.id, user.news_kinds, user.role),
+      getNewsItems(user.id, user.news_kinds, newsVisibility(permissions)),
       getDialoguesForUser(user.id, "open"),
     ]);
   const needsPassword = !hasPasswordSet;
