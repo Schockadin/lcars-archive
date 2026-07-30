@@ -31,6 +31,17 @@
 -- Struktur-Anlage.
 
 -- ---------------------------------------------------------------------------
+-- Erweiterungen
+-- ---------------------------------------------------------------------------
+-- pg_trgm: Trigramm-Ähnlichkeit + GIN-Operatorklasse gin_trgm_ops. Grundlage
+-- für die Suche (src/lib/search.ts), die mit ILIKE '%q%' arbeitet: ein solches
+-- Muster mit führendem Platzhalter kann KEINEN B-Tree-Index nutzen (nur ein
+-- seq scan), ein GIN-Trigramm-Index dagegen schon. IF NOT EXISTS hält die
+-- Anlage idempotent wie den Rest dieser Datei. (Auf verwalteten Postgres-
+-- Diensten wie Neon/Supabase ist pg_trgm vorhanden.)
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- ---------------------------------------------------------------------------
 -- users
 -- ---------------------------------------------------------------------------
 -- Rollen: admin (volle Useraccount-Verwaltung + Charakter-Zuweisung), gm
@@ -168,6 +179,8 @@ CREATE INDEX IF NOT EXISTS idx_characters_status     ON characters(status);
 CREATE INDEX IF NOT EXISTS idx_characters_player     ON characters(player_id);
 CREATE INDEX IF NOT EXISTS idx_characters_deleted_at ON characters(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_characters_is_draft   ON characters(is_draft);
+-- Namenssuche (ILIKE '%q%', src/lib/search.ts) über Trigramm-GIN.
+CREATE INDEX IF NOT EXISTS idx_characters_name_trgm  ON characters USING GIN (name gin_trgm_ops);
 -- Der partielle UNIQUE-Index auf character_color (macht jede belegte Farbe
 -- exklusiv) steht bewusst NICHT hier, sondern erst im Migrationen-Abschnitt
 -- unten: character_color ist neu genug, dass er auf einer bereits
@@ -206,6 +219,8 @@ CREATE INDEX IF NOT EXISTS idx_missions_status     ON missions(status);
 CREATE INDEX IF NOT EXISTS idx_missions_owner      ON missions(owner_user_id);
 CREATE INDEX IF NOT EXISTS idx_missions_deleted_at ON missions(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_missions_is_draft   ON missions(is_draft);
+-- Titelsuche (ILIKE '%q%', src/lib/search.ts) über Trigramm-GIN.
+CREATE INDEX IF NOT EXISTS idx_missions_title_trgm ON missions USING GIN (title gin_trgm_ops);
 
 -- ---------------------------------------------------------------------------
 -- mission_logs
@@ -238,6 +253,9 @@ CREATE INDEX IF NOT EXISTS idx_mission_logs_author     ON mission_logs(author_id
 CREATE INDEX IF NOT EXISTS idx_mission_logs_owner      ON mission_logs(owner_user_id);
 CREATE INDEX IF NOT EXISTS idx_mission_logs_deleted_at ON mission_logs(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_mission_logs_is_draft   ON mission_logs(is_draft);
+-- Titel- UND Volltextsuche (ILIKE '%q%', src/lib/search.ts) über Trigramm-GIN.
+CREATE INDEX IF NOT EXISTS idx_mission_logs_title_trgm   ON mission_logs USING GIN (title gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_mission_logs_content_trgm ON mission_logs USING GIN (content gin_trgm_ops);
 
 -- ---------------------------------------------------------------------------
 -- archive_entries
@@ -275,6 +293,9 @@ CREATE INDEX IF NOT EXISTS idx_archive_tags              ON archive_entries USIN
 CREATE INDEX IF NOT EXISTS idx_archive_entries_owner     ON archive_entries(owner_user_id);
 CREATE INDEX IF NOT EXISTS idx_archive_entries_deleted_at ON archive_entries(deleted_at);
 CREATE INDEX IF NOT EXISTS idx_archive_entries_is_draft  ON archive_entries(is_draft);
+-- Titel- UND Volltextsuche (ILIKE '%q%', src/lib/search.ts) über Trigramm-GIN.
+CREATE INDEX IF NOT EXISTS idx_archive_title_trgm        ON archive_entries USING GIN (title gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_archive_content_trgm      ON archive_entries USING GIN (content gin_trgm_ops);
 
 -- ---------------------------------------------------------------------------
 -- archive_links

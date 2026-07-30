@@ -2,6 +2,7 @@
 // Abhängigkeit auf DB/Remark), damit sie sowohl in der Render-Pipeline
 // (src/lib/markdown.ts) als auch im Bulk-Skript (/admin/scripts) und in Tests
 // nutzbar ist.
+import { isIndexProtected, type ProtectedRange } from "@/lib/protectedRanges";
 
 // Deutsche typografische Anführungszeichen: „unten am Anfang", „oben am Ende".
 export const GERMAN_QUOTE_OPEN = "„"; // „
@@ -38,14 +39,15 @@ const PROTECTED_RE =
 export function applyGermanTypography(input: string): string {
   if (!input.includes('"')) return input;
 
-  const protectedRanges: [number, number][] = [];
+  const protectedRanges: ProtectedRange[] = [];
   PROTECTED_RE.lastIndex = 0;
   let pm: RegExpExecArray | null;
   while ((pm = PROTECTED_RE.exec(input))) {
     protectedRanges.push([pm.index, pm.index + pm[0].length]);
   }
-  const isProtected = (i: number) =>
-    protectedRanges.some(([s, e]) => i >= s && i < e);
+  // Bereiche sind durch den links→rechts-RegExp-Durchlauf aufsteigend/nicht
+  // überlappend — Binärsuche statt linearer .some()-Prüfung je Zeichen.
+  const isProtected = (i: number) => isIndexProtected(protectedRanges, i);
 
   let out = "";
   for (let i = 0; i < input.length; i++) {

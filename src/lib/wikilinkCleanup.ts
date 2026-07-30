@@ -1,4 +1,5 @@
 import { WIKILINK_RE } from "@/lib/markdown";
+import { isRangeProtected, type ProtectedRange } from "@/lib/protectedRanges";
 
 export interface WikilinkRemoval {
   original: string;
@@ -24,14 +25,16 @@ const PROTECTED_RE = /```[\s\S]*?```|`[^`\n]*`|!\[[^\]]*\]\([^)]*\)/g;
 // Vault-Ingest aufgelöste [[...]]-Syntax dadurch überflüssig bzw.
 // fehleranfällig (dauerhaft "missing", falls das Ziel fehlt) wird.
 export function stripWikilinks(sourceMd: string): WikilinkCleanupResult {
-  const protectedRanges: [number, number][] = [];
+  const protectedRanges: ProtectedRange[] = [];
   PROTECTED_RE.lastIndex = 0;
   let pm: RegExpExecArray | null;
   while ((pm = PROTECTED_RE.exec(sourceMd))) {
     protectedRanges.push([pm.index, pm.index + pm[0].length]);
   }
+  // Bereiche aufsteigend/nicht überlappend (links→rechts-RegExp) — Binärsuche
+  // statt linearer .some()-Prüfung je Wikilink-Treffer.
   const isProtected = (start: number, end: number) =>
-    protectedRanges.some(([s, e]) => start < e && end > s);
+    isRangeProtected(protectedRanges, start, end);
 
   const removed: WikilinkRemoval[] = [];
   const parts: string[] = [];
