@@ -164,7 +164,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 | Content    | Markdown + YAML-Frontmatter (`gray-matter`, `remark`, `rehype`)     |
 | Schriften  | Antonio & Share Tech Mono (`next/font`)                             |
 | Sprache    | TypeScript                                                          |
-| Deployment | Netlify (`@netlify/plugin-nextjs`)                                  |
+| Deployment | Docker Compose auf eigenem vServer (Netcup) — siehe [`deploy/DEPLOY.md`](deploy/DEPLOY.md); Netlify weiterhin möglich |
 
 ---
 
@@ -172,7 +172,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 
 ### Voraussetzungen
 
-- Node.js 20+
+- Node.js 24+ (siehe [`.nvmrc`](.nvmrc))
 - Zugriff auf eine PostgreSQL-Datenbank
 - Ein Markdown-Vault mit den Inhalten (Ordner `Charaktere/`, `Missionen/` …)
 
@@ -448,8 +448,21 @@ tags: [planet, klasse-m]
 
 ## 🚢 Deployment
 
-Das Projekt ist für **Netlify** vorkonfiguriert (`@netlify/plugin-nextjs`).
-`DATABASE_URL` als Environment-Variable im Netlify-Dashboard hinterlegen; die Ingestion
+### Self-Hosting (Docker Compose, empfohlen)
+
+Produktiv läuft das Projekt als **Docker-Compose-Stack auf einem eigenen
+EU-vServer (Netcup)** — **App + PostgreSQL + pgBouncer + Caddy (Auto-TLS)**
+gemeinsam auf einem Host, R2/Resend/Web-Push bleiben extern. Vollständiges
+Runbook (Server-Setup, Datenmigration, Auto-Deploy per GitHub Actions,
+Server-Cron, DNS-/TLS-Cutover): **[`deploy/DEPLOY.md`](deploy/DEPLOY.md)**.
+Relevante Dateien: [`Dockerfile`](Dockerfile), [`compose.yml`](compose.yml),
+[`deploy/`](deploy/), `output: "standalone"` in
+[`next.config.ts`](next.config.ts).
+
+### Netlify (Alt-Setup)
+
+Weiterhin möglich (`@netlify/plugin-nextjs`): `DATABASE_URL` als
+Environment-Variable im Netlify-Dashboard hinterlegen; die Ingestion
 (`db:setup` / `db:ingest`) wird gegen die produktive Datenbank ausgeführt.
 
 ### Tägliches DB-Backup

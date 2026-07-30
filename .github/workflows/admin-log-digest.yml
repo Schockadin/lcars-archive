@@ -17,9 +17,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Hinweis: Nach dem Umzug auf den eigenen Server (deploy/DEPLOY.md) läuft
+      # der Log-Digest per Server-Cron im Container. Bis zum Cutover bleibt
+      # dieser GitHub-Actions-Cron aktiv.
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24.18.1
           cache: npm
 
       - run: npm ci

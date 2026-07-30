@@ -45,6 +45,12 @@ function buildCspHeader(): string {
 }
 
 const nextConfig: NextConfig = {
+  // Self-Hosting per Docker (siehe Dockerfile / compose.yml): "standalone"
+  // erzeugt .next/standalone mit eigenem server.js und nur den wirklich
+  // benötigten node_modules (Dependency-Tracing) — Grundlage für ein schlankes
+  // Runtime-Image ohne devDependencies. Für den bisherigen Netlify-Build
+  // (@netlify/plugin-nextjs) ist die Option ein No-op; sie schadet dort nicht.
+  output: "standalone",
   // Schaltet forbidden()/app/forbidden.tsx frei (next/navigation) — genutzt
   // von den Zugriffs-Guards in src/lib/dal.ts, src/app/user/dal.ts und
   // src/app/admin/[id]/dal.ts für rollen-/identitätsbasierte

@@ -1,0 +1,18 @@
+# Server-Cron als Ersatz für die bisherigen GitHub-Actions-Cronjobs
+# (daily-db-backup.yml, admin-log-digest.yml) — nach dem Cutover, weil Postgres
+# dann nur noch im internen Docker-Netz erreichbar ist.
+#
+# Installation (als Deploy-User):
+#   crontab deploy/cron/lcars.crontab
+# Voraussetzung: Repo liegt unter /opt/lcars-archive, Server-Zeitzone auf
+# Europe/Berlin (timedatectl set-timezone Europe/Berlin) — dann passt 06:00 für
+# den Log-Digest (das Skript gated zusätzlich selbst auf 6 Uhr Berliner Zeit).
+#
+# Ausgaben landen in /var/log/lcars-cron.log (Datei vorab anlegen und dem
+# Deploy-User schreibbar machen).
+
+# Täglich 03:00: Voll-Backup → R2, alte R2-Backups aufräumen, Soft-Deletes purgen.
+0 3 * * * cd /opt/lcars-archive && docker compose --profile ops run --rm ops sh -c 'npm run db:backup && npm run db:backup:cleanup && npm run db:purge-deleted' >> /var/log/lcars-cron.log 2>&1
+
+# Täglich 06:00 (Europe/Berlin): Admin-Log-Digest.
+0 6 * * * cd /opt/lcars-archive && docker compose --profile ops run --rm ops npm run admin:log-digest >> /var/log/lcars-cron.log 2>&1

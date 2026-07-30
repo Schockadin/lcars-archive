@@ -252,4 +252,11 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Die Übersichten Charaktere, Archiv und Missionen haben jetzt neben den Sortier-/Ansichts-Optionen ein Freitext-Filterfeld, mit dem sich die Liste schnell nach Name bzw. Titel eingrenzen lässt.",
     ],
   },
+  {
+    version: "1.18",
+    title: "Umzug auf einen eigenen Server in Deutschland (EU)",
+    items: [
+      "Die Anwendung und die komplette Datenbank laufen jetzt auf einem eigenen Server in Deutschland (EU) statt bei verteilten Anbietern — ein Pluspunkt für Datenschutz und Datenhoheit; für dich ändert sich an der Bedienung nichts.",
+    ],
+  },
 ];

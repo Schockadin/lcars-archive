@@ -1,0 +1,20 @@
+# Reverse-Proxy mit automatischem Let's-Encrypt-TLS. Domain und ACME-Kontakt
+# kommen aus der .env (DOMAIN, ACME_EMAIL) und werden von Caddy zur Laufzeit
+# eingesetzt.
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Server-Actions/Bild-Uploads gehen bis 10 MB (siehe
+	# next.config.ts serverActions.bodySizeLimit) — Request-Body entsprechend
+	# großzügig erlauben.
+	request_body {
+		max_size 12MB
+	}
+
+	reverse_proxy app:3000
+}

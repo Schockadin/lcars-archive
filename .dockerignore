@@ -1,0 +1,24 @@
+# Build-Kontext schlank halten (und Secrets/Artefakte nie ins Image kopieren).
+node_modules
+.next
+.git
+.github
+.env
+.env.*
+!.env.example
+npm-debug.log*
+*.log
+.DS_Store
+coverage
+playwright-report
+test-results
+e2e
+tests
+**/*.test.ts
+**/*.test.tsx
+.vscode
+.idea
+deploy
+README.md
+AGENTS.md
+CLAUDE.md

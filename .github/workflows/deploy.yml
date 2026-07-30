@@ -1,0 +1,38 @@
+name: Deploy
+
+# Läuft NACH erfolgreichem CI auf master und rollt per SSH auf den Server aus
+# (git pull + Rebuild + Neustart via deploy/deploy.sh). Siehe deploy/DEPLOY.md.
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [master]
+
+# Nie zwei Deploys parallel.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    # Nur deployen, wenn das CI wirklich grün war.
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      # Erwartet folgende Repository-Secrets (Settings → Secrets and variables
+      # → Actions):
+      #   DEPLOY_SSH_HOST — Host/IP des Netcup-Servers
+      #   DEPLOY_SSH_USER — SSH-User (sudo-fähiger Non-Root-User)
+      #   DEPLOY_SSH_KEY  — privater SSH-Key (passend zum public key auf dem Server)
+      - name: SSH-Key einrichten
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh-keyscan -H "${{ secrets.DEPLOY_SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Deploy ausführen
+        run: |
+          ssh -i ~/.ssh/id_deploy \
+            "${{ secrets.DEPLOY_SSH_USER }}@${{ secrets.DEPLOY_SSH_HOST }}" \
+            'set -e; cd /opt/lcars-archive && git pull --ff-only && ./deploy/deploy.sh'

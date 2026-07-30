@@ -1,0 +1,101 @@
+# Self-Hosting-Stack: App + PostgreSQL + pgBouncer + Caddy auf EINEM Server
+# (siehe deploy/DEPLOY.md). Nach außen ist nur Caddy (80/443) erreichbar;
+# Postgres und pgBouncer bleiben im internen Docker-Netz und werden NICHT
+# gepublished.
+#
+# Das App-Image wird bewusst NICHT hier über `build:` erzeugt, sondern in
+# deploy/deploy.sh per `docker build --network` gebaut (der Build braucht die
+# laufende DB, s. Dockerfile-Kommentar) und hier nur als fertiges `image:`
+# referenziert.
+
+name: lcars
+
+networks:
+  lcars_net:
+    name: lcars_net
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
+
+services:
+  postgres:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Greenfield-Erstinit: legt bei leerem Volume das Schema an. Bei einer
+      # Migration aus der bestehenden DB wird stattdessen ein pg_dump
+      # eingespielt (siehe deploy/DEPLOY.md) — das idempotente Schema stört
+      # dabei nicht.
+      - ./scripts/schema.sql:/docker-entrypoint-initdb.d/00-schema.sql:ro
+    networks: [lcars_net]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    restart: unless-stopped
+    environment:
+      DB_HOST: postgres
+      DB_NAME: ${POSTGRES_DB}
+      DB_USER: ${POSTGRES_USER}
+      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      AUTH_TYPE: scram-sha-256
+      POOL_MODE: transaction
+      LISTEN_PORT: "6432"
+      MAX_CLIENT_CONN: "200"
+      DEFAULT_POOL_SIZE: "20"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks: [lcars_net]
+
+  app:
+    image: ${APP_IMAGE:-lcars-archive-app:latest}
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - pgbouncer
+    networks: [lcars_net]
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - app
+    networks: [lcars_net]
+
+  # Nur auf Abruf (docker compose run --rm ops <cmd>) — für die Cron-Skripte.
+  # Startet NICHT mit `docker compose up` (Profil "ops").
+  ops:
+    build:
+      context: .
+      target: ops
+    image: lcars-archive-ops:latest
+    profiles: ["ops"]
+    env_file: .env
+    depends_on:
+      - postgres
+    networks: [lcars_net]
+    command: ["node", "--version"]
