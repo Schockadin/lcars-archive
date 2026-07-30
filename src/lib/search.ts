@@ -50,12 +50,25 @@ interface RawRows {
 // WHERE-Klausel (Volltext-Treffer ja/nein) als auch, ob content/source_md
 // überhaupt mitselektiert werden — die Live-Suche (Dropdown, pro Tastendruck)
 // braucht sie nie, da sie nur Titel vergleicht.
+// Maskiert die LIKE/ILIKE-Sonderzeichen (%, _ und der Standard-Escape-
+// Backslash selbst) im FREITEXT des Users, damit sie als literale Zeichen
+// gesucht werden statt als Platzhalter. Ohne das würde z.B. die Suche nach
+// „50%" jeden Text mit „50" gefolgt von Beliebigem treffen und „_" jedes
+// einzelne Zeichen. Die umschließenden %…%-Platzhalter (siehe unten) sind
+// bewusst NICHT Teil des maskierten Strings. Der Wert wird ohnehin als
+// gebundener Parameter übergeben (kein SQL-Injection-Thema) — hier geht es
+// rein um die Muster-Semantik.
+export function escapeLikePattern(value: string): string {
+  return value.replace(/[\\%_]/g, "\\$&");
+}
+
 async function runSearchQueries(
   q: string,
   opts: { includeContent: boolean; limit: number },
 ): Promise<RawRows> {
-  const like = `%${q}%`;
-  const prefix = `${q}%`;
+  const escaped = escapeLikePattern(q);
+  const like = `%${escaped}%`;
+  const prefix = `${escaped}%`;
   const { includeContent, limit } = opts;
 
   const [chars, missions, logs, archive] = await Promise.all([

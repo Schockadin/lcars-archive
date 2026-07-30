@@ -9,7 +9,12 @@ import "server-only";
 import crypto from "node:crypto";
 import sql from "@/lib/db";
 import { uploadObjectToR2, getObjectBytesFromR2, deleteObjectFromR2 } from "@/lib/r2Backup";
-import { canView, type Viewer, type Visibility } from "@/lib/visibility";
+import {
+  canView,
+  viewerHasPermission,
+  type Viewer,
+  type Visibility,
+} from "@/lib/visibility";
 
 export const CONTENT_IMAGE_PREFIX = "content-images/";
 
@@ -118,9 +123,14 @@ export async function getContentAccessContext(
 
 // Wer darf Bilder für diesen Inhalt hochladen/löschen? Spiegelt exakt die
 // Bearbeiten-Button-Freigabe in ActionsMenu.tsx: bei Charakter/Missionslog
-// nur der Owner selbst (kein Admin-Bypass, gleiche Owner-only-Logik wie
+// nur der Owner selbst (kein Moderations-Bypass, gleiche Owner-only-Logik wie
 // updateOwnCharacterBio/updateOwnMissionLogAction), bei Mission/Archiv-
-// Eintrag zusätzlich jeder Admin.
+// Eintrag zusätzlich, wer fremde Inhalte moderieren darf (content.moderate —
+// dasselbe Recht, das auch die Bild-Actions serverseitig fordern, siehe
+// requirePermission("content.moderate") in admin/content/images/actions.ts).
+// Bewusst rechte- statt rollenbasiert, damit ein Multi-Rollen-User bzw. ein
+// per Override/eigener Rolle Berechtigter dieselbe Freigabe bekommt wie über
+// das Server-Gate (früher hart auf role === "admin" geprüft).
 export function canManageContentImages(
   contentType: ContentImageType,
   ownerId: number | null,
@@ -129,7 +139,8 @@ export function canManageContentImages(
   if (!viewer) return false;
   if (ownerId != null && viewer.userId === ownerId) return true;
   return (
-    viewer.role === "admin" && (contentType === "mission" || contentType === "archive_entry")
+    viewerHasPermission(viewer, "content.moderate") &&
+    (contentType === "mission" || contentType === "archive_entry")
   );
 }
 

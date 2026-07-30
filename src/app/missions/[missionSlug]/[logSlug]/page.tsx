@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation";
 import { getAuthorLogNav, getLogBySlug } from "@/lib/missions";
 import { stripHtml } from "@/lib/missionFormat";
-import { getViewer, canView, canViewDraft } from "@/lib/visibility";
+import {
+  getViewer,
+  canView,
+  canViewDraft,
+  viewerHasPermission,
+} from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import LogDetail from "../../LogDetail";
 import ActionsMenu from "@/components/ActionsMenu";
@@ -43,8 +48,8 @@ export default async function LogPage({ params }: Props) {
   if (!log || log.mission_slug !== missionSlug) notFound();
 
   // Betrachter jetzt immer auflösen (nicht mehr nur bei nicht-public) — der
-  // Admin-Owner-Block unten braucht die Rolle unabhängig von der
-  // Sichtbarkeit dieses Logs.
+  // Owner-Block unten braucht die Rechte unabhängig von der Sichtbarkeit
+  // dieses Logs.
   const viewer = await getViewer();
   if (
     log.visibility !== "public" &&
@@ -58,7 +63,12 @@ export default async function LogPage({ params }: Props) {
   const nav = log.author_slug
     ? await getAuthorLogNav(log.author_slug, log.slug)
     : { prev: null, next: null };
-  const allUsers = viewer?.role === "admin" ? await listAllUsers() : [];
+  // Owner-Auswahl nur laden, wenn der Betrachter den Log umtragen darf —
+  // exakt das Server-Gate von setOwnerAction für Mission-Logs
+  // (content.moderate), rechte- statt rollenbasiert (früher role === "admin").
+  const allUsers = viewerHasPermission(viewer, "content.moderate")
+    ? await listAllUsers()
+    : [];
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
   return (

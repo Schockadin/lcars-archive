@@ -11,6 +11,15 @@ export interface HeaderStats {
 // Kennzahlen für den Header/die Landing-Page. Zwei COUNT-lastige Queries —
 // daher persistent gecacht und an stats + characters + mission-logs getaggt
 // (zählt Charaktere und Sessions), damit die Werte bei Mutationen frisch werden.
+//
+// Nur ÖFFENTLICHE, nicht-Entwurf-Inhalte werden gezählt: die Kennzahlen stehen
+// auf der öffentlichen Landing-Page („Aktueller Datenbestand") und verlinken
+// auf /characters, /missions, /archive, die anonymen Besuchern ebenfalls nur
+// public-Inhalte zeigen. Ein cache-weiter Einzelwert kann ohnehin nicht
+// betrachterabhängig sein — die öffentliche Zahl ist der einzige, der zur
+// verlinkten Liste passt und nicht verrät, wie viele nicht-öffentliche
+// Inhalte existieren (dieselbe visibility-Grenze wie die Suche in
+// src/lib/search.ts).
 export const getDBStats = unstable_cache(
   async (): Promise<HeaderStats> => {
     const [counts] = await sql<
@@ -23,11 +32,13 @@ export const getDBStats = unstable_cache(
       ]
     >`
       SELECT
-        (SELECT COUNT(*) FROM characters WHERE deleted_at IS NULL AND is_draft = false)   AS character_count,
-        (SELECT COUNT(*) FROM mission_logs WHERE deleted_at IS NULL AND is_draft = false) AS session_count,
+        (SELECT COUNT(*) FROM characters
+          WHERE visibility = 'public' AND deleted_at IS NULL AND is_draft = false)   AS character_count,
+        (SELECT COUNT(*) FROM mission_logs
+          WHERE visibility = 'public' AND deleted_at IS NULL AND is_draft = false)   AS session_count,
         (SELECT COUNT(*) FROM archive_entries
-          WHERE NOT (category = 'dialogue' AND dialogue_open) AND deleted_at IS NULL
-            AND is_draft = false) AS entry_count
+          WHERE visibility = 'public' AND NOT (category = 'dialogue' AND dialogue_open)
+            AND deleted_at IS NULL AND is_draft = false)                             AS entry_count
     `;
 
     return {
@@ -36,6 +47,6 @@ export const getDBStats = unstable_cache(
       entryCount: parseInt(counts.entry_count),
     };
   },
-  ["getDBStats", "v4"],
+  ["getDBStats", "v5"],
   { tags: [cacheTags.stats, cacheTags.characters, cacheTags.missionLogs] },
 );
