@@ -237,9 +237,8 @@ function mapResults(
       type: "archive" as const,
       label:
         a.category === "dialogue"
-          ? a.setting
-            ? `Gespräch auf ${a.setting}`
-            : "Gespräch"
+          ? a.title?.trim() ||
+            (a.setting ? `Gespräch auf ${a.setting}` : "Gespräch")
           : a.title,
       sublabel: CATEGORY_CONFIG[a.category]?.label ?? "Archiv",
       href: `/archive/${a.slug}${snippet ? `#:~:text=${toTextFragment(q)}` : ""}`,

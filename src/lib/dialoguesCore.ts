@@ -8,6 +8,10 @@ import { markdownToSafeHtml } from "@/lib/markdown";
 import { getCharactersForUser } from "@/lib/characters";
 import { generateUniqueArchiveEntrySlug } from "@/lib/archive";
 import { resolveCharacterColor } from "@/lib/characterColor";
+import {
+  parseDialogueLogDate,
+  byDialogueLogDateDesc,
+} from "@/lib/dialogueSort";
 import type { ArchiveParticipant, ArchiveLocationRef } from "@/types/archive";
 
 // Optionaler Client-Parameter für Aufrufe innerhalb einer bestehenden
@@ -1543,6 +1547,8 @@ export interface DialogueSummary {
   title: string;
   partnerName: string;
   updatedAt: string;
+  // Ingame-Datum (metadata.logDate, ISO) — Sortierschlüssel der Dialog-Listen.
+  logDate: string | null;
   open: boolean;
   characterSlug: string;
   characterName: string;
@@ -1608,6 +1614,7 @@ export async function getDialoguesForUser(
         title: row.title,
         partnerName: partner?.name ?? "Unbekannt",
         updatedAt: row.updated_at,
+        logDate: parseDialogueLogDate(row.metadata),
         open: row.dialogue_open,
         characterSlug: character.slug,
         characterName: character.name,
@@ -1617,9 +1624,7 @@ export async function getDialoguesForUser(
     }
   }
 
-  return [...results.values()].sort((a, b) =>
-    b.updatedAt.localeCompare(a.updatedAt),
-  );
+  return [...results.values()].sort(byDialogueLogDateDesc);
 }
 
 export interface GmDialogueOverviewItem {
@@ -1655,7 +1660,7 @@ export async function getAllOpenDialoguesForGM(): Promise<
     FROM archive_entries ae
     LEFT JOIN users u ON u.id = ae.owner_user_id
     WHERE ae.category = 'dialogue' AND ae.dialogue_open AND ae.deleted_at IS NULL
-    ORDER BY ae.updated_at DESC
+    ORDER BY ae.metadata->>'logDate' DESC NULLS LAST, ae.updated_at DESC
   `;
   return rows.map((row) => ({
     id: row.id,
@@ -1689,7 +1694,7 @@ export async function getPublicDialoguesForUser(
     FROM archive_entries
     WHERE category = 'dialogue' AND owner_user_id = ${userId} AND visibility = 'public'
       AND deleted_at IS NULL
-    ORDER BY title ASC
+    ORDER BY metadata->>'logDate' DESC NULLS LAST, title ASC
   `;
   return rows.map((row) => ({
     slug: row.slug,

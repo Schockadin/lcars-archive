@@ -51,21 +51,31 @@ describe("archiveTitle", () => {
     ).toBe("Deep Space 9");
   });
 
-  it("builds a 'Gespräch auf <setting>' title for dialogues with a setting", () => {
+  it("uses the dialogue's own title", () => {
     expect(
       archiveTitle({
         category: "dialogue",
-        title: "irrelevant",
+        title: "Streit in der Messe",
+        metadata: { setting: "Ops" },
+      }),
+    ).toBe("Streit in der Messe");
+  });
+
+  it("falls back to 'Gespräch auf <setting>' for dialogues without an own title", () => {
+    expect(
+      archiveTitle({
+        category: "dialogue",
+        title: "   ",
         metadata: { setting: "Ops" },
       }),
     ).toBe("Gespräch auf Ops");
   });
 
-  it("falls back to plain 'Gespräch' for dialogues without a setting", () => {
+  it("falls back to plain 'Gespräch' for dialogues without title or setting", () => {
     expect(
       archiveTitle({
         category: "dialogue",
-        title: "irrelevant",
+        title: "",
         metadata: { setting: null },
       }),
     ).toBe("Gespräch");
