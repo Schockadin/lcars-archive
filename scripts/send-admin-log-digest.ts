@@ -1,21 +1,16 @@
 // scripts/send-admin-log-digest.ts
 //
 // Täglicher Log-Digest an alle aktiven Admins (siehe
-// .github/workflows/admin-log-digest.yml): fasst alle Error-Log- und
-// Admin-Audit-Log-Einträge der letzten 24 Stunden in einer Mail zusammen und
-// verschickt sie um 6 Uhr Berliner Zeit.
+// .github/workflows/admin-log-digest.yml): fasst alle Error-Log-,
+// Admin-Audit-Log- und Inhalts-Aktivitäts-Einträge der letzten 24 Stunden in
+// einer Mail zusammen. Der Workflow feuert einmal täglich um 05:00 UTC; das
+// Skript sendet bei jedem Lauf (kein eigener Uhrzeit-/Zeitzonen-Check mehr).
 //
 // Läuft per `tsx` außerhalb von Next, braucht daher `--conditions=react-server`
 // (siehe backup-db.ts). Rohes SQL über @/lib/db statt der server-only-Helfer
-// auditLog.ts/errorLog.ts, damit keine "server-only"-Importkette gezogen wird.
-// Der Mailversand nutzt mailCore.ts (bewusst nicht "server-only").
-//
-// Zeitzone: GitHub-Actions-Cron kennt nur UTC. Der Workflow feuert deshalb um
-// 04:00 UND 05:00 UTC; dieses Skript sendet nur, wenn es in Europe/Berlin
-// gerade 6 Uhr ist (04:00 UTC = 06:00 im Sommer, 05:00 UTC = 06:00 im Winter)
-// — so bleibt der Versand über Sommer-/Winterzeit hinweg zuverlässig um 6 Uhr
-// Berliner Zeit. Mit dem Argument `--force` (workflow_dispatch/Test) wird das
-// Zeitfenster übersprungen.
+// auditLog.ts/errorLog.ts/contentActivityLog.ts, damit keine
+// "server-only"-Importkette gezogen wird. Der Mailversand nutzt mailCore.ts
+// (bewusst nicht "server-only").
 import sql from "@/lib/db";
 import { sendEmail } from "@/lib/mailCore";
 import {
@@ -24,8 +19,6 @@ import {
   type RoleMap,
   type Permission,
 } from "@/lib/permissions";
-
-const FORCE = process.argv.includes("--force");
 
 // „Admin" = hat das Recht admin.access (granulares RBAC), nicht mehr nur die
 // Primärrolle role='admin'. Bewusst rohes SQL + die REINE permissions.ts-Logik
@@ -68,20 +61,6 @@ function escapeHtml(value: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function berlinHour(): number {
-  // WICHTIG: NICHT .format() parsen — de-DE liefert bei hour-only-Formaten
-  // "08 Uhr" (mit " Uhr"-Literal), Number("08 Uhr") ist NaN, wodurch das
-  // Zeitfenster nie traf und der Digest NIE verschickt wurde. Stattdessen die
-  // reine Stundenziffer über formatToParts holen (en-US-Locale ist überall
-  // verfügbar; hourCycle "h23" erzwingt 0–23 ohne AM/PM).
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Europe/Berlin",
-    hour: "numeric",
-    hourCycle: "h23",
-  }).formatToParts(new Date());
-  return Number(parts.find((p) => p.type === "hour")?.value);
-}
-
 function fmt(ts: string): string {
   return new Intl.DateTimeFormat("de-DE", {
     timeZone: "Europe/Berlin",
@@ -109,22 +88,47 @@ interface AuditRow {
   target_name: string | null;
 }
 
-async function main() {
-  if (!FORCE && berlinHour() !== 6) {
-    console.log(
-      `⏭  Nicht 6 Uhr Berliner Zeit (aktuell ${berlinHour()} Uhr) — übersprungen.`,
-    );
-    return;
-  }
+// Rohzeile der vier Inhaltstabellen, vereinheitlicht per UNION — dieselbe
+// Struktur wie getRecentContentActivity in src/lib/contentActivityLog.ts, hier
+// aber inline (ohne server-only-Import, siehe Datei-Kopf) und fest auf 24h.
+interface ContentRow {
+  target_type: "character" | "mission" | "mission_log" | "archive_entry";
+  title: string;
+  actor_name: string | null;
+  created_at: string;
+  updated_at: string;
+}
 
-  const [errors, audits, admins] = await Promise.all([
-    sql<ErrorRow[]>`
+interface ContentDeletionRow {
+  target_type: string;
+  title: string;
+  deleted_at: string;
+  deleted_by_name: string | null;
+}
+
+const CONTENT_TYPE_LABELS: Record<string, string> = {
+  character: "Charakter",
+  mission: "Mission",
+  mission_log: "Mission-Log",
+  archive_entry: "Archiv-Eintrag",
+};
+
+const CONTENT_KIND_LABELS: Record<string, string> = {
+  created: "neu",
+  updated: "bearbeitet",
+  deleted: "gelöscht",
+};
+
+async function main() {
+  const [errors, audits, contentRows, contentDeletions, admins] =
+    await Promise.all([
+      sql<ErrorRow[]>`
       SELECT id, message, route_path, route_type, method, created_at::text AS created_at
       FROM error_logs
       WHERE created_at > NOW() - INTERVAL '24 hours'
       ORDER BY created_at DESC
     `,
-    sql<AuditRow[]>`
+      sql<AuditRow[]>`
       SELECT al.id, al.action, al.details, al.ip, al.created_at::text AS created_at,
              actor.name AS actor_name, target.name AS target_name
       FROM admin_audit_log al
@@ -133,8 +137,69 @@ async function main() {
       WHERE al.created_at > NOW() - INTERVAL '24 hours'
       ORDER BY al.created_at DESC
     `,
-    listAdminRecipients(),
-  ]);
+      sql<ContentRow[]>`
+      SELECT 'character'::text AS target_type, c.name AS title, pu.name AS actor_name,
+             c.created_at::text AS created_at, c.updated_at::text AS updated_at
+      FROM characters c
+      LEFT JOIN users pu ON pu.id = c.player_id
+      WHERE (c.created_at > NOW() - INTERVAL '24 hours' OR c.updated_at > NOW() - INTERVAL '24 hours')
+        AND c.is_draft = false AND c.deleted_at IS NULL
+      UNION ALL
+      SELECT 'mission'::text, m.title, ou.name,
+             m.created_at::text, m.updated_at::text
+      FROM missions m
+      LEFT JOIN users ou ON ou.id = m.owner_user_id
+      WHERE (m.created_at > NOW() - INTERVAL '24 hours' OR m.updated_at > NOW() - INTERVAL '24 hours')
+        AND m.is_draft = false AND m.deleted_at IS NULL
+      UNION ALL
+      SELECT 'mission_log'::text, ml.title, ou.name,
+             ml.created_at::text, ml.updated_at::text
+      FROM mission_logs ml
+      LEFT JOIN users ou ON ou.id = ml.owner_user_id
+      WHERE (ml.created_at > NOW() - INTERVAL '24 hours' OR ml.updated_at > NOW() - INTERVAL '24 hours')
+        AND ml.is_draft = false AND ml.deleted_at IS NULL
+      UNION ALL
+      SELECT 'archive_entry'::text, a.title, au.name,
+             a.created_at::text, a.updated_at::text
+      FROM archive_entries a
+      LEFT JOIN users au ON au.id = a.owner_user_id
+      WHERE (a.created_at > NOW() - INTERVAL '24 hours' OR a.updated_at > NOW() - INTERVAL '24 hours')
+        AND (a.category != 'dialogue' OR a.dialogue_open = FALSE)
+        AND a.is_draft = false AND a.deleted_at IS NULL
+    `,
+      sql<ContentDeletionRow[]>`
+      SELECT cd.target_type, cd.title, cd.deleted_at::text AS deleted_at,
+             du.name AS deleted_by_name
+      FROM content_deletions cd
+      LEFT JOIN users du ON du.id = cd.deleted_by
+      WHERE cd.deleted_at > NOW() - INTERVAL '24 hours'
+    `,
+      listAdminRecipients(),
+    ]);
+
+  // Content-Rohzeilen zu neu/bearbeitet/gelöscht-Einträgen verdichten (analog
+  // getRecentContentActivity): created_at innerhalb 24h ⇒ „neu", sonst
+  // „bearbeitet"; Löschungen kommen aus content_deletions.
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+  const contentItems = [
+    ...contentRows.map((r) => {
+      const isNew = new Date(r.created_at).getTime() > cutoff;
+      return {
+        kind: isNew ? "created" : "updated",
+        target_type: r.target_type as string,
+        title: r.title,
+        actor_name: r.actor_name,
+        timestamp: isNew ? r.created_at : r.updated_at,
+      };
+    }),
+    ...contentDeletions.map((d) => ({
+      kind: "deleted",
+      target_type: d.target_type,
+      title: d.title,
+      actor_name: d.deleted_by_name,
+      timestamp: d.deleted_at,
+    })),
+  ].sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1));
 
   if (admins.length === 0) {
     console.log("⚠️  Keine aktiven Admins — nichts zu versenden.");
@@ -163,6 +228,19 @@ async function main() {
     )
     .join("\n");
 
+  const contentRowsHtml = contentItems
+    .map(
+      (c) =>
+        `<tr><td>${fmt(c.timestamp)}</td><td>${escapeHtml(
+          CONTENT_TYPE_LABELS[c.target_type] ?? c.target_type,
+        )}</td><td>${escapeHtml(
+          CONTENT_KIND_LABELS[c.kind] ?? c.kind,
+        )}</td><td>${escapeHtml(c.title)}</td><td>${escapeHtml(
+          c.actor_name ?? "—",
+        )}</td></tr>`,
+    )
+    .join("\n");
+
   const html = `
     <p>Hallo,</p>
     <p>Log-Übersicht der letzten 24 Stunden (Neo Archive):</p>
@@ -184,10 +262,19 @@ async function main() {
             <tbody>${auditRows}</tbody>
           </table>`
     }
+    <h3>Inhalts-Aktivität (${contentItems.length})</h3>
+    ${
+      contentItems.length === 0
+        ? "<p>Keine Inhalts-Änderungen in den letzten 24 Stunden.</p>"
+        : `<table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;font-size:13px;">
+            <thead><tr><th>Zeit</th><th>Typ</th><th>Änderung</th><th>Titel</th><th>Person</th></tr></thead>
+            <tbody>${contentRowsHtml}</tbody>
+          </table>`
+    }
     <p>— Neo Archive</p>
   `;
 
-  const subject = `Neo Archive · Log-Digest (${errors.length} Fehler, ${audits.length} Audit-Einträge)`;
+  const subject = `Neo Archive · Log-Digest (${errors.length} Fehler, ${audits.length} Audit-Einträge, ${contentItems.length} Inhalts-Änderungen)`;
 
   let sent = 0;
   for (const admin of admins) {
