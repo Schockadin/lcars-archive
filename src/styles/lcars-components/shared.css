@@ -936,3 +936,37 @@
 .lcars-perm-matrix tbody tr:hover .lcars-perm-matrix-row {
   background: rgb(255 255 255 / 4%);
 }
+
+/* Scroll-Box der Rechte-Matrix: scrollt in BEIDEN Achsen und ist damit der
+   gemeinsame Scrollport für die sticky Kopfzeile (top:0) und die sticky erste
+   Spalte (left:0). Vorher scrollte nur ein overflow-x-Div — die sticky
+   Kopfzeile hing dann am Seiten-Scrollcontainer und lief beim horizontalen
+   Wischen gegenüber dem Body auseinander (nur die Header bewegten sich). Die
+   gebundene Höhe hält Kopf und Body synchron in derselben Box. */
+.lcars-perm-matrix-scroll {
+  overflow: auto;
+  max-height: min(72vh, 640px);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Auf schmalen Screens die erste Spalte (Rechte-Bezeichnung) schlanker und die
+   Rollen-Spalten kompakter, damit neben dem sticky Namen noch Rollen-Spalten
+   sichtbar bleiben statt fast der ganzen Breite. */
+@media (max-width: 640px) {
+  .lcars-perm-matrix {
+    font-size: 12px;
+  }
+  .lcars-perm-matrix-corner,
+  .lcars-perm-matrix-row {
+    min-width: 132px;
+    max-width: 168px;
+  }
+  .lcars-perm-matrix thead th {
+    min-width: 92px;
+  }
+  .lcars-perm-matrix th,
+  .lcars-perm-matrix td {
+    padding: 6px 8px;
+  }
+}
