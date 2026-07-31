@@ -33,7 +33,7 @@ export default function Loading() {
                   className="w-[60px] flex-shrink-0 rounded-l-[100vmax] rounded-r-none"
                   style={{ background: group.color, opacity: 0.5 }}
                 />
-                <LcarsSkeleton className="ml-[3px] w-[400px] rounded-none" />
+                <LcarsSkeleton className="ml-[3px] flex-1 rounded-none" />
               </div>
             ))}
           </div>

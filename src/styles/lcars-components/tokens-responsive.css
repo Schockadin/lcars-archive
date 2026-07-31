@@ -12,18 +12,6 @@
   }
 }
 
-@media (max-width: 640px) {
-  :root {
-    --lcars-charpage-w: 350px;
-  }
-}
-
-@media (max-width: 520px) {
-  :root {
-    --lcars-charpage-w: 250px;
-  }
-}
-
 /* Extra-Small (≤ 480px): Sidebar auf 64px */
 @media (max-width: 480px) {
   :root {
