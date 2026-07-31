@@ -970,3 +970,42 @@
     padding: 6px 8px;
   }
 }
+
+/* ── ER-Diagramm (/admin/db, ErDiagram.tsx / cytoscape) ─────────────────
+   Zwei-Spalten-Layout: links die Graph-Fläche (braucht eine explizite Höhe,
+   cytoscape misst ihren Container), rechts ein Detail-Panel mit den Spalten
+   der angeklickten Tabelle. Stapelt auf schmalen Screens. */
+.er-diagram {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  width: 100%;
+}
+.er-diagram-canvas {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 600px;
+  background: var(--lcars-surface);
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+}
+.er-diagram-detail {
+  flex: 0 0 220px;
+  max-height: 600px;
+  overflow-y: auto;
+  background: var(--lcars-surface);
+  border-radius: 8px;
+  padding: 12px;
+}
+@media (max-width: 640px) {
+  .er-diagram {
+    flex-direction: column;
+  }
+  .er-diagram-canvas {
+    height: 420px;
+  }
+  .er-diagram-detail {
+    flex: none;
+    max-height: 240px;
+  }
+}

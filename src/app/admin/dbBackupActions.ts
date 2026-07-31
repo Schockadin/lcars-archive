@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { requireAdmin } from "@/lib/dal";
+import { requirePermission } from "@/lib/dal";
 import { revalidateAllContent } from "@/lib/revalidate";
 import {
   exportDatabaseBackup,
@@ -23,7 +23,7 @@ export interface ExportDbBackupResult {
 }
 
 export async function exportDbBackupAction(): Promise<ExportDbBackupResult> {
-  await requireAdmin();
+  await requirePermission("db_backup");
 
   try {
     const backup = await exportDatabaseBackup();
@@ -87,7 +87,7 @@ async function parseAndImportDbBackup(json: string): Promise<ImportDbBackupResul
 export async function importDbBackupAction(
   json: string,
 ): Promise<ImportDbBackupResult> {
-  await requireAdmin();
+  await requirePermission("db_backup");
   return parseAndImportDbBackup(json);
 }
 
@@ -101,7 +101,7 @@ export interface ExportDbBackupToR2Result {
 // Datei an den Browser auszuliefern. Eigener, vom täglichen Cronjob
 // unterscheidbarer Key, siehe buildManualDbBackupKey in r2Backup.ts.
 export async function exportDbBackupToR2Action(): Promise<ExportDbBackupToR2Result> {
-  await requireAdmin();
+  await requirePermission("db_backup");
 
   try {
     const backup = await exportDatabaseBackup();
@@ -128,7 +128,7 @@ export interface ListR2BackupsResult {
 // Auswahl beim "Aus R2-Bucket importieren" — reiner Lesezugriff, keine
 // Schreibaktion.
 export async function listR2BackupsAction(): Promise<ListR2BackupsResult> {
-  await requireAdmin();
+  await requirePermission("db_backup");
 
   try {
     const backups = await listDbBackupsInR2();
@@ -149,7 +149,7 @@ export async function listR2BackupsAction(): Promise<ListR2BackupsResult> {
 export async function importDbBackupFromR2Action(
   key: string,
 ): Promise<ImportDbBackupResult> {
-  await requireAdmin();
+  await requirePermission("db_backup");
 
   let json: string;
   try {

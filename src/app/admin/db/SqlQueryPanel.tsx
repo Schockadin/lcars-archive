@@ -5,29 +5,51 @@ import DbTableRows from "./DbTableRows";
 import { runAdminSqlQueryAction, type SqlQueryState } from "./sqlQueryActions";
 
 const initialState: SqlQueryState = {};
-const PLACEHOLDER = "SELECT * FROM characters ORDER BY name LIMIT 20";
 
-// Freies, schreibgeschütztes SQL-Query-Feld für Admins — Ausführung läuft
-// server-seitig über runAdminSqlQueryAction/runReadOnlyQuery (READ ONLY-
-// Transaktion, siehe dbInspect.ts). Editor + Syntaxhighlighting kommen von
-// CodeEditor.tsx (CodeMirror) — die vorherige, selbstgebaute "transparente
-// Textarea über farbigem <pre>"-Technik driftete je nach Font-Vererbung
-// zwischen sichtbarem Text und Cursor auseinander.
-export default function SqlQueryPanel() {
+export interface SqlPanelCapabilities {
+  canRead: boolean;
+  canWrite: boolean;
+  canDelete: boolean;
+}
+
+// Freies SQL-Query-Feld — die serverseitige Ausführung (runAdminSqlQueryAction
+// → runAdminQuery) gestattet je nach DB-Recht des Users SELECT/WITH (sql_read),
+// INSERT/UPDATE (sql_write) und DELETE (sql_delete). caps steuert nur die
+// Anzeige (Hinweistext/Placeholder); die tatsächliche Durchsetzung passiert
+// serverseitig. Editor + Syntaxhighlighting kommen von CodeEditor.tsx
+// (CodeMirror).
+export default function SqlQueryPanel({ caps }: { caps: SqlPanelCapabilities }) {
   const [query, setQuery] = useState("");
   const [state, formAction, pending] = useActionState(
     runAdminSqlQueryAction,
     initialState,
   );
 
+  const allowed = [
+    caps.canRead ? "lesen (SELECT)" : null,
+    caps.canWrite ? "schreiben (INSERT/UPDATE)" : null,
+    caps.canDelete ? "löschen (DELETE)" : null,
+  ].filter(Boolean);
+
+  const placeholder = caps.canRead
+    ? "SELECT * FROM characters ORDER BY name LIMIT 20"
+    : caps.canWrite
+      ? "UPDATE characters SET status = 'active' WHERE id = 1"
+      : "DELETE FROM content_follows WHERE user_id = 0";
+
   return (
     <div className="flex flex-col gap-[12px]">
+      <p className="text-lcars-text-dim text-[13px]">
+        Erlaubt für dich: {allowed.join(", ") || "—"}. Einzelne Anweisung, max.
+        500 Zeilen, 5 Sekunden Timeout. SELECT/WITH laufen schreibgeschützt;
+        Fremdschlüssel werden hier NICHT zu Slugs aufgelöst (rohe id).
+      </p>
       <form action={formAction} className="flex flex-col gap-[12px]">
         <LcarsCodeEditor
           value={query}
           onChange={setQuery}
           language="sql"
-          placeholder={PLACEHOLDER}
+          placeholder={placeholder}
           name="query"
         />
         <button
@@ -45,7 +67,7 @@ export default function SqlQueryPanel() {
         </p>
       )}
 
-      {state.rows && state.columns && (
+      {state.rows && state.columns && state.columns.length > 0 && (
         <div className="flex flex-col gap-[8px]">
           <p className="text-lcars-text-dim text-[13px]">
             {state.rows.length} Zeile(n)
@@ -69,6 +91,17 @@ export default function SqlQueryPanel() {
           </div>
         </div>
       )}
+
+      {/* write/delete ohne RETURNING: kein Spalten-Ergebnis, nur Kommando +
+          betroffene Zeilenzahl. */}
+      {state.rows &&
+        state.columns &&
+        state.columns.length === 0 &&
+        !state.error && (
+          <p className="text-lcars-green text-[13px]">
+            {state.command ?? "OK"} — {state.rowCount ?? 0} Zeile(n) betroffen.
+          </p>
+        )}
     </div>
   );
 }

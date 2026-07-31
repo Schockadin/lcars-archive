@@ -271,7 +271,7 @@ export async function listTableRows(
 export class UnsafeQueryError extends Error {}
 
 // Funktionen mit Seiteneffekten, die eine READ ONLY-Transaktion NICHT
-// verhindert (siehe Kommentar bei runReadOnlyQuery unten) — nextval/setval
+// verhindert (siehe Kommentar bei runAdminQuery unten) — nextval/setval
 // verschieben eine Sequenz dauerhaft, die pg_advisory_*-Familie hält Locks
 // (session-gebunden bei pg_advisory_lock, gefährlich unter pgBouncers
 // Transaction-Mode-Pooling, siehe src/lib/db.ts), pg_sleep/pg_terminate_
@@ -283,16 +283,40 @@ export class UnsafeQueryError extends Error {}
 const FORBIDDEN_FUNCTION_CALL =
   /\b(nextval|setval|pg_advisory_(?:xact_)?lock(?:_shared)?|pg_try_advisory_(?:xact_)?lock(?:_shared)?|pg_advisory_unlock(?:_all|_shared)?|lo_(?:import|export|creat|create|write|put|unlink)|dblink(?:_exec)?|pg_sleep(?:_for|_until)?|pg_terminate_backend|pg_cancel_backend|set_config|pg_reload_conf)\s*\(/i;
 
-// Nur früher, freundlicher Fehler für die offensichtlichen Fälle (mehrere
-// Anweisungen, kein SELECT/WITH, bekannte Funktionen mit Seiteneffekten) —
-// KEIN vollständiger Sicherheitsmechanismus für sich allein (siehe
-// runReadOnlyQuery unten, das die eigentliche Durchsetzung über eine READ
-// ONLY-Transaktion übernimmt). Ein einfacher Text-Check könnte z.B. eine
-// schreibende CTE wie
-// "WITH x AS (DELETE FROM t RETURNING *) SELECT * FROM x" nicht zuverlässig
-// erkennen — die fängt erst die READ ONLY-Transaktion ab. Exportiert nur für
-// dbInspect.test.ts (reine String-Logik, keine DB-Verbindung nötig).
-export function assertReadOnlyQuery(query: string): void {
+// Aktion einer Query anhand ihres Leitworts. read = SELECT/WITH (wird in einer
+// READ ONLY-Transaktion ausgeführt, die auch schreibende CTEs wie
+// "WITH x AS (DELETE …) SELECT …" blockiert — eine solche mit WITH beginnende
+// Query gilt deshalb bewusst als read und scheitert dann an der READ
+// ONLY-Transaktion statt fälschlich als delete durchzugehen); write =
+// INSERT/UPDATE; delete = DELETE. Alles andere (DDL, TRUNCATE, GRANT, …) ist
+// nicht erlaubt. Reine String-Logik — exportiert für dbInspect.test.ts.
+export type SqlQueryAction = "read" | "write" | "delete";
+
+export function classifySqlStatement(
+  query: string,
+): SqlQueryAction | "forbidden" {
+  const trimmed = query.trim().replace(/;\s*$/, "");
+  const withoutLeadingComments = trimmed.replace(/^(\s*--[^\n]*\n)+/, "");
+  const firstWord = withoutLeadingComments
+    .match(/^\s*(\w+)/)?.[1]
+    ?.toLowerCase();
+  switch (firstWord) {
+    case "select":
+    case "with":
+      return "read";
+    case "insert":
+    case "update":
+      return "write";
+    case "delete":
+      return "delete";
+    default:
+      return "forbidden";
+  }
+}
+
+// Grundform-Prüfung, unabhängig vom Recht: nicht leer, genau EINE Anweisung
+// (kein eingebettetes ; außer als Abschluss), keine verbotene Funktion.
+export function assertQueryShape(query: string): void {
   const trimmed = query.trim();
   if (!trimmed) {
     throw new UnsafeQueryError("Bitte eine Query eingeben.");
@@ -301,21 +325,45 @@ export function assertReadOnlyQuery(query: string): void {
   if (withoutTrailingSemicolon.includes(";")) {
     throw new UnsafeQueryError("Nur eine einzelne Anweisung ist erlaubt.");
   }
-  const withoutLeadingComments = withoutTrailingSemicolon.replace(
-    /^(\s*--[^\n]*\n)+/,
-    "",
-  );
-  const firstWord = withoutLeadingComments
-    .match(/^\s*(\w+)/)?.[1]
-    ?.toLowerCase();
-  if (firstWord !== "select" && firstWord !== "with") {
-    throw new UnsafeQueryError("Nur SELECT-Anweisungen sind erlaubt.");
-  }
   if (FORBIDDEN_FUNCTION_CALL.test(withoutTrailingSemicolon)) {
     throw new UnsafeQueryError(
       "Diese Query enthält eine nicht erlaubte Funktion (Sequenzen, Locks, Sleep/Backend-Kontrolle, dblink/Large Objects).",
     );
   }
+}
+
+export interface AdminQueryCapabilities {
+  canRead: boolean;
+  canWrite: boolean;
+  canDelete: boolean;
+}
+
+// Prüft Grundform + Klassifikation gegen die Rechte des Aufrufers und liefert
+// die Aktion zurück. Die eigentliche Rechte-Auflösung (welche DB-Rechte der
+// User hat) passiert im Aufrufer (sqlQueryActions.ts) und wird hier als caps
+// hereingereicht + erzwungen — Defense in Depth zusätzlich zum Seiten-Gate.
+// Reine String-Logik (keine DB), exportiert für dbInspect.test.ts.
+export function assertAdminQuery(
+  query: string,
+  caps: AdminQueryCapabilities,
+): SqlQueryAction {
+  assertQueryShape(query);
+  const action = classifySqlStatement(query);
+  if (action === "forbidden") {
+    throw new UnsafeQueryError(
+      "Nur SELECT/WITH, INSERT, UPDATE oder DELETE sind erlaubt.",
+    );
+  }
+  if (action === "read" && !caps.canRead) {
+    throw new UnsafeQueryError("Dir fehlt das Recht „SQL lesen“.");
+  }
+  if (action === "write" && !caps.canWrite) {
+    throw new UnsafeQueryError("Dir fehlt das Recht „SQL schreiben“.");
+  }
+  if (action === "delete" && !caps.canDelete) {
+    throw new UnsafeQueryError("Dir fehlt das Recht „SQL löschen“.");
+  }
+  return action;
 }
 
 const FREE_QUERY_ROW_LIMIT = 500;
@@ -324,39 +372,159 @@ const FREE_QUERY_TIMEOUT_MS = 5000;
 export interface FreeQueryResult {
   columns: string[];
   rows: Record<string, unknown>[];
+  // Bei write/delete ohne RETURNING: das SQL-Kommando (z.B. "UPDATE") und die
+  // Zahl betroffener Zeilen — die Ergebnistabelle bleibt dann leer.
+  command?: string;
+  rowCount?: number;
 }
 
-// Freie, schreibgeschützte SQL-Query für Admins (/admin/db) — anders als
-// listTableRows/countTableRows oben NICHT auf die TABLE_COLUMNS-Whitelist
-// beschränkt (ein Admin kann über den DB-Backup-Export ohnehin schon die
-// komplette DB einsehen, siehe dbBackup.ts). Die Sicherheit kommt vor allem
-// aus "SET TRANSACTION READ ONLY": das verhindert INSERT/UPDATE/DELETE/
-// TRUNCATE/DDL auf normalen Tabellen, auch versteckt in einer schreibenden
-// CTE (siehe assertReadOnlyQuery oben) — ABER laut Postgres-Dokumentation
-// ausdrücklich NICHT Schreibzugriffe auf temporäre Tabellen, Sequenz-
-// Vorschub (nextval/setval) oder Advisory-Locks. Diese Lücke wird zusätzlich
-// über einen Funktions-Denylist in assertReadOnlyQuery geschlossen (siehe
-// dort) — beide Mechanismen zusammen, nicht die Transaktion allein, bilden
-// die tatsächliche Absicherung. Die Query wird außerdem in eine Subquery mit
-// fester LIMIT gewrappt, damit auch ein "SELECT * FROM riesige_tabelle" ohne
-// eigenes LIMIT nicht den ganzen Request-Speicher sprengt — ein bereits
-// vorhandenes ORDER BY in der Subquery bleibt dabei zwar meist, aber nicht
-// garantiert erhalten (kein Problem für dieses Debug-Werkzeug).
-export async function runReadOnlyQuery(query: string): Promise<FreeQueryResult> {
-  assertReadOnlyQuery(query);
+// Freie Admin-SQL-Query für /admin/db, gegated durch die übergebenen Rechte
+// (caps). Nicht auf die TABLE_COLUMNS-Whitelist beschränkt (ein db_backup-
+// Export sieht ohnehin die komplette DB, siehe dbBackup.ts).
+//
+// - read (SELECT/WITH): läuft in einer "SET TRANSACTION READ ONLY"-Transaktion,
+//   die INSERT/UPDATE/DELETE/TRUNCATE/DDL blockiert — auch versteckt in einer
+//   schreibenden CTE. Ergebnis in eine Subquery mit fester LIMIT gewrappt,
+//   damit ein "SELECT * FROM riesige_tabelle" ohne eigenes LIMIT nicht den
+//   Request-Speicher sprengt.
+// - write (INSERT/UPDATE) / delete (DELETE): laufen in einer NORMALEN
+//   Transaktion und werden direkt ausgeführt. Mit RETURNING kommen Zeilen
+//   zurück, sonst command + betroffene Zeilenzahl. Kein READ ONLY (das ist ja
+//   gerade der Zweck) — die Absicherung ist hier die Rechte-Prüfung (caps) plus
+//   die Grundform-/Funktions-Denylist (assertAdminQuery). Ein DELETE ohne WHERE
+//   liegt bewusst in der Verantwortung der berechtigten Person.
+//
+// statement_timeout begrenzt in beiden Fällen die Laufzeit. hashtext/advisory-
+// Locks etc. sind über FORBIDDEN_FUNCTION_CALL ausgeschlossen.
+export async function runAdminQuery(
+  query: string,
+  caps: AdminQueryCapabilities,
+): Promise<FreeQueryResult> {
+  const action = assertAdminQuery(query, caps);
   const inner = query.trim().replace(/;\s*$/, "");
 
   return sql.begin(async (tx) => {
-    await tx.unsafe("SET TRANSACTION READ ONLY");
+    if (action === "read") {
+      await tx.unsafe("SET TRANSACTION READ ONLY");
+    }
     await tx.unsafe(`SET LOCAL statement_timeout = ${FREE_QUERY_TIMEOUT_MS}`);
-    const rows = await tx.unsafe<Record<string, unknown>[]>(
-      `SELECT * FROM (${inner}) AS _admin_query LIMIT ${FREE_QUERY_ROW_LIMIT}`,
-    );
+
+    const sqlText =
+      action === "read"
+        ? `SELECT * FROM (${inner}) AS _admin_query LIMIT ${FREE_QUERY_ROW_LIMIT}`
+        : inner;
+    const rows = await tx.unsafe<Record<string, unknown>[]>(sqlText);
     const columns = rows.columns
       ? rows.columns.map((c) => c.name)
       : rows[0]
         ? Object.keys(rows[0])
         : [];
-    return { columns, rows: [...rows] };
+    return {
+      columns,
+      rows: [...rows],
+      command: rows.command,
+      rowCount: rows.count,
+    };
   });
+}
+
+// ---------------------------------------------------------------------------
+// Schema-Graph (ER-Diagramm)
+// ---------------------------------------------------------------------------
+// Liest die Struktur des public-Schemas LIVE aus dem Informationsschema für die
+// interaktive ER-Diagramm-Ansicht in /admin/db (ErDiagram.tsx, cytoscape.js) —
+// bewusst nicht aus der statischen TABLE_COLUMNS-Whitelist, damit das Diagramm
+// den echten DB-Stand (inkl. neuer Tabellen/Spalten) zeigt. Nur Struktur
+// (Tabellen, Spalten, Fremdschlüssel-Kanten), keine Zeilendaten.
+
+export interface ErColumn {
+  name: string;
+  type: string;
+  nullable: boolean;
+}
+
+export interface ErTable {
+  name: string;
+  columns: ErColumn[];
+}
+
+export interface ErEdge {
+  // Quelltabelle.column → Zieltabelle (Fremdschlüssel).
+  source: string;
+  column: string;
+  target: string;
+}
+
+export interface SchemaGraph {
+  tables: ErTable[];
+  edges: ErEdge[];
+}
+
+export async function getSchemaGraph(): Promise<SchemaGraph> {
+  const [columnRows, fkRows] = await Promise.all([
+    sql<
+      {
+        table_name: string;
+        column_name: string;
+        data_type: string;
+        is_nullable: string;
+      }[]
+    >`
+      SELECT c.table_name, c.column_name, c.data_type, c.is_nullable
+      FROM information_schema.columns c
+      JOIN information_schema.tables t
+        ON t.table_schema = c.table_schema AND t.table_name = c.table_name
+      WHERE c.table_schema = 'public' AND t.table_type = 'BASE TABLE'
+      ORDER BY c.table_name, c.ordinal_position
+    `,
+    sql<
+      {
+        source_table: string;
+        source_column: string;
+        target_table: string;
+      }[]
+    >`
+      SELECT
+        tc.table_name        AS source_table,
+        kcu.column_name      AS source_column,
+        ccu.table_name       AS target_table
+      FROM information_schema.table_constraints tc
+      JOIN information_schema.key_column_usage kcu
+        ON kcu.constraint_name = tc.constraint_name
+       AND kcu.table_schema = tc.table_schema
+      JOIN information_schema.constraint_column_usage ccu
+        ON ccu.constraint_name = tc.constraint_name
+       AND ccu.table_schema = tc.table_schema
+      WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = 'public'
+    `,
+  ]);
+
+  const byTable = new Map<string, ErTable>();
+  for (const row of columnRows) {
+    let table = byTable.get(row.table_name);
+    if (!table) {
+      table = { name: row.table_name, columns: [] };
+      byTable.set(row.table_name, table);
+    }
+    table.columns.push({
+      name: row.column_name,
+      type: row.data_type,
+      nullable: row.is_nullable === "YES",
+    });
+  }
+
+  const edges: ErEdge[] = fkRows
+    // Selbstreferenzen (z.B. archive_links.source_id → archive_entries) bleiben
+    // erhalten; nur Kanten auf nicht als BASE TABLE geladene Ziele filtern.
+    .filter((fk) => byTable.has(fk.source_table) && byTable.has(fk.target_table))
+    .map((fk) => ({
+      source: fk.source_table,
+      column: fk.source_column,
+      target: fk.target_table,
+    }));
+
+  return {
+    tables: [...byTable.values()].sort((a, b) => a.name.localeCompare(b.name)),
+    edges,
+  };
 }
