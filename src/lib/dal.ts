@@ -8,6 +8,7 @@ import type { User, Role } from "@/types/db";
 import {
   resolvePermissions,
   PERMISSION_LABELS,
+  DB_PERMISSIONS,
   type Permission,
 } from "@/lib/permissions";
 
@@ -142,11 +143,24 @@ export async function requireNonGuest(): Promise<User> {
   return requirePermission("users.browse");
 }
 
-// Baseline für den /admin-Bereich (Layout): sowohl reine Admins als auch reine
-// GMs dürfen den Staff-Bereich betreten; die Unterseiten gaten anschließend
-// spezifisch (requireAdmin/requireGM bzw. feinere Rechte).
+// Baseline für den /admin-Bereich (Layout): reine Admins, reine GMs UND reine
+// DB-Admins (mind. eines der DB_PERMISSIONS) dürfen den Staff-Bereich betreten;
+// die Unterseiten gaten anschließend spezifisch (requireAdmin/requireGM/
+// requireDbAccess bzw. feinere Rechte). Ohne die DB-Rechte hier käme ein reiner
+// db-admin gar nicht erst durch das Layout-Gate zu /admin/db.
 export async function requireStaff(): Promise<User> {
-  return requireAnyPermission(["admin.access", "gm.access"]);
+  return requireAnyPermission([
+    "admin.access",
+    "gm.access",
+    ...DB_PERMISSIONS,
+  ]);
+}
+
+// Gate für /admin/db: Zugang, wer mindestens EINES der DB-Rechte hat (SQL
+// lesen/schreiben/löschen oder Backups). Die Seite selbst blendet die einzelnen
+// Panels je nach konkretem Recht ein/aus (siehe /admin/db/page.tsx).
+export async function requireDbAccess(): Promise<User> {
+  return requireAnyPermission([...DB_PERMISSIONS]);
 }
 
 // Gemeinsamer Guard in den Content-Actions (Charakter/Mission/Mission-Log/

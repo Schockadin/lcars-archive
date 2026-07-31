@@ -4,13 +4,15 @@ import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { logout } from "@/app/login/actions";
+import { DB_PERMISSIONS } from "@/lib/permissions";
 import { useAnchoredDropdown } from "./useAnchoredDropdown";
 
 interface AdminMenuItem {
   href: string;
   label: string;
-  // Recht, das den Eintrag freischaltet (granulares RBAC, siehe permissions.ts).
-  permission: string;
+  // Recht(e), die den Eintrag freischalten (granulares RBAC, siehe
+  // permissions.ts). Ein Array = „mindestens eines davon genügt".
+  permission: string | readonly string[];
 }
 
 // Ein einziges Staff-Dropdown, dessen Einträge NACH RECHTEN gefiltert werden
@@ -23,7 +25,7 @@ const STAFF_ITEMS: AdminMenuItem[] = [
   { href: "/admin/dialogues", label: "Gespräche", permission: "gm.access" },
   { href: "/admin/users", label: "User", permission: "users.manage" },
   { href: "/admin/permissions", label: "Rollen", permission: "users.manage" },
-  { href: "/admin/db", label: "DB", permission: "admin.access" },
+  { href: "/admin/db", label: "DB", permission: DB_PERMISSIONS },
   { href: "/admin/scripts", label: "Scripts", permission: "admin.access" },
   { href: "/admin/content", label: "Inhalte", permission: "content.moderate" },
   { href: "/admin/content/trash", label: "Papierkorb", permission: "content.moderate" },
@@ -78,12 +80,18 @@ export default function HeaderUserNav({
   // nach Rolle). Label „Admin“, sobald Admin-Rechte vorhanden sind, sonst
   // „Leitung“. Kein Eintrag berechtigt → kein Dropdown.
   const visibleStaffItems = STAFF_ITEMS.filter((item) =>
-    permissions.includes(item.permission),
+    Array.isArray(item.permission)
+      ? item.permission.some((p) => permissions.includes(p))
+      : permissions.includes(item.permission as string),
   );
   const dropdownItems = visibleStaffItems.length > 0 ? visibleStaffItems : null;
+  // „Admin" bei Admin-Rechten, sonst „Leitung" bei GM-Rechten, sonst „DB" (ein
+  // reiner db-admin hat weder admin.access noch gm.access).
   const dropdownLabel = permissions.includes("admin.access")
     ? "Admin"
-    : "Leitung";
+    : permissions.includes("gm.access")
+      ? "Leitung"
+      : "DB";
 
   return (
     <nav

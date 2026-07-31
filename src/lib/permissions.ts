@@ -48,6 +48,14 @@ export const PERMISSIONS = [
   "dialogues.moderate", // fremde Dialog-Nachrichten/Metadaten/Owner bearbeiten, Dialoge löschen
   "content.autolink_tools", // Autolink/Delink/Format auf fremde Inhalte + „Alle verlinken“
   "content.follow", // bookmarken/abonnieren (Basis für alle eingeloggten User)
+  // Datenbank-Bereich (/admin/db) — feingranular getrennt (siehe db-admin-Rolle
+  // und DB_PERMISSIONS unten). sql_read = SELECT-Abfragen im SQL-Panel;
+  // sql_write = INSERT/UPDATE; sql_delete = DELETE; db_backup = DB-/User-Backup-
+  // Panels (Export/Import R2).
+  "sql_read", // freie SELECT-Abfragen im SQL-Panel
+  "sql_write", // INSERT/UPDATE im SQL-Panel
+  "sql_delete", // DELETE im SQL-Panel
+  "db_backup", // DB-/User-Backup-Panels (Export/Import)
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -69,7 +77,21 @@ export const PERMISSION_LABELS: Record<Permission, { label: string; description:
   "dialogues.moderate": { label: "Gespräche moderieren", description: "Fremde Nachrichten/Metadaten bearbeiten, Gespräche löschen." },
   "content.autolink_tools": { label: "Verlinkungs-Werkzeuge", description: "Autolinking/Entlinken auf fremde Inhalte, „Alle verlinken“." },
   "content.follow": { label: "Folgen/Bookmarken", description: "Inhalte abonnieren und mit Lesezeichen versehen." },
+  "sql_read": { label: "SQL lesen", description: "Freie SELECT-Abfragen im DB-Bereich ausführen." },
+  "sql_write": { label: "SQL schreiben", description: "Daten per INSERT/UPDATE im DB-Bereich ändern." },
+  "sql_delete": { label: "SQL löschen", description: "Daten per DELETE im DB-Bereich entfernen." },
+  "db_backup": { label: "DB-Backups", description: "Datenbank- und Nutzer-Backups exportieren/importieren." },
 };
+
+// Rechte des DB-Bereichs (/admin/db) — gebündelt für Gates (Zugang zum Bereich)
+// und die db-admin-Rolle. Wer mindestens EINES dieser Rechte hat, darf den
+// DB-Bereich betreten (siehe requireStaff/Seiten-Gate in src/lib/dal.ts).
+export const DB_PERMISSIONS = [
+  "sql_read",
+  "sql_write",
+  "sql_delete",
+  "db_backup",
+] as const satisfies readonly Permission[];
 
 // System-Rollen (fest verdrahtete Schlüssel) → ADDITIVE, minimal überlappende
 // Rechte-Sets. Diese Defaults dienen dreifach: (a) Seed für die roles-Tabelle,
@@ -100,6 +122,18 @@ export const DEFAULT_ROLE_PRESETS: RoleMap = {
     "content.moderate",
     "dialogues.moderate",
   ],
+  // Datenbank-Administration — orthogonal zu admin/gm (siehe additive
+  // Preset-Philosophie oben): bündelt ausschließlich die DB-Rechte. Wer beides
+  // braucht, bekommt db-admin ZUSÄTZLICH zu admin. content.follow als
+  // gemeinsamer Nenner für eingeloggte User.
+  "db-admin": [
+    "content.follow",
+    "users.browse",
+    "sql_read",
+    "sql_write",
+    "sql_delete",
+    "db_backup",
+  ],
 };
 
 // Rückwärtskompatibler Alias (Tests/ältere Importe). Zeigt bewusst auf die
@@ -108,7 +142,14 @@ export const ROLE_PRESETS: RoleMap = DEFAULT_ROLE_PRESETS;
 
 // System-Rollen (Schlüssel + Anzeige-Labels). Eigene Rollen holen Label/Rechte
 // aus der DB; hier stehen nur die eingebauten.
-export const SYSTEM_ROLES: Role[] = ["admin", "gm", "player", "viewer", "guest"];
+export const SYSTEM_ROLES: Role[] = [
+  "admin",
+  "gm",
+  "player",
+  "viewer",
+  "guest",
+  "db-admin",
+];
 
 export const ROLE_LABELS: Record<string, string> = {
   admin: "Administration",
@@ -116,6 +157,7 @@ export const ROLE_LABELS: Record<string, string> = {
   player: "Spieler",
   viewer: "Beobachter",
   guest: "Gast",
+  "db-admin": "Datenbank-Admin",
 };
 
 // Rückwärtskompatibler Alias (nur System-Rollen).

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
-import { requireAdmin } from "@/lib/dal";
+import { requireDbAccess } from "@/lib/dal";
 import {
   VIEWABLE_TABLES,
   isViewableTable,
@@ -52,7 +52,7 @@ export default async function AdminDbPage({
     [key: string]: string | undefined;
   }>;
 }) {
-  await requireAdmin();
+  await requireDbAccess();
   const params = await searchParams;
   const table =
     params.table && isViewableTable(params.table) ? params.table : null;
