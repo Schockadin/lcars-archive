@@ -38,7 +38,8 @@
     "db:backup": "tsx --conditions=react-server scripts/backup-db.ts",
     "db:backup:cleanup": "tsx --conditions=react-server scripts/cleanup-db-backups.ts",
     "db:purge-deleted": "tsx --conditions=react-server scripts/purge-soft-deleted.ts",
-    "admin:log-digest": "tsx --conditions=react-server scripts/send-admin-log-digest.ts"
+    "admin:log-digest": "tsx --conditions=react-server scripts/send-admin-log-digest.ts",
+    "assets:migrate-content-images": "tsx --conditions=react-server scripts/migrate-content-images-to-asset-bucket.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1085.0",

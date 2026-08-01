@@ -24,9 +24,17 @@ import { makeViewer } from "@/lib/visibility";
 const fakeBucket = vi.hoisted(
   () => new Map<string, { body: Buffer; contentType: string }>(),
 );
+// Content-Bilder liegen jetzt im Asset-Bucket (uploadAssetObjectToR2 &
+// Freunde); der Backup-Bucket-Fallback (getObjectBytesFromR2/
+// deleteObjectFromR2) teilt sich hier dieselbe In-Memory-Map, damit die
+// Fallback-Lesepfade ebenfalls funktionieren.
 vi.mock("@/lib/r2Backup", () => ({
-  uploadObjectToR2: vi.fn(async (key: string, body: Buffer, contentType: string) => {
+  uploadAssetObjectToR2: vi.fn(async (key: string, body: Buffer, contentType: string) => {
     fakeBucket.set(key, { body, contentType });
+  }),
+  getAssetObjectBytesFromR2: vi.fn(async (key: string) => fakeBucket.get(key) ?? null),
+  deleteAssetObjectFromR2: vi.fn(async (key: string) => {
+    fakeBucket.delete(key);
   }),
   getObjectBytesFromR2: vi.fn(async (key: string) => fakeBucket.get(key) ?? null),
   deleteObjectFromR2: vi.fn(async (key: string) => {

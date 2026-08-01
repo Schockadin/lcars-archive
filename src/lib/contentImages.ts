@@ -1,14 +1,23 @@
 // Bild-Uploads für Charaktere/Missionen/Missionslogs/Archiv-Einträge (nicht
 // Dialoge, siehe Kommentar über content_images in scripts/schema.sql). DB
 // (content_images) hält nur Metadaten, die eigentlichen Bytes liegen im
-// selben R2-Bucket wie die DB-Backups unter dem Präfix CONTENT_IMAGE_PREFIX
-// (src/lib/r2Backup.ts) — beide Seiten werden hier zusammen orchestriert,
-// damit ein DB-Eintrag nie ohne zugehöriges R2-Objekt existiert (oder
-// umgekehrt).
+// öffentlichen Asset-Bucket (R2_ASSET_BUCKET_NAME, src/lib/r2Backup.ts) unter
+// dem Präfix CONTENT_IMAGE_PREFIX — beide Seiten werden hier zusammen
+// orchestriert, damit ein DB-Eintrag nie ohne zugehöriges R2-Objekt existiert
+// (oder umgekehrt). Gelesen/gelöscht wird mit Fallback auf den früheren
+// Backup-Bucket (R2_BUCKET_NAME), damit Objekte, die noch nicht per
+// scripts/migrate-content-images-to-asset-bucket.ts umgezogen sind, weiter
+// funktionieren.
 import "server-only";
 import crypto from "node:crypto";
 import sql from "@/lib/db";
-import { uploadObjectToR2, getObjectBytesFromR2, deleteObjectFromR2 } from "@/lib/r2Backup";
+import {
+  getObjectBytesFromR2,
+  deleteObjectFromR2,
+  uploadAssetObjectToR2,
+  getAssetObjectBytesFromR2,
+  deleteAssetObjectFromR2,
+} from "@/lib/r2Backup";
 import {
   canView,
   viewerHasPermission,
@@ -152,6 +161,14 @@ function buildContentImageKey(
   return `${CONTENT_IMAGE_PREFIX}${contentType}/${contentId}/${crypto.randomUUID()}.${extension}`;
 }
 
+// Löscht das Objekt aus beiden Buckets — Asset-Bucket (neu) und Backup-Bucket
+// (alt, für noch nicht migrierte Objekte). DeleteObject ist idempotent (kein
+// Fehler bei fehlendem Key), deshalb ist der Doppelaufruf unbedenklich.
+async function deleteContentImageObject(key: string): Promise<void> {
+  await deleteAssetObjectFromR2(key);
+  await deleteObjectFromR2(key);
+}
+
 export async function listContentImages(
   contentType: ContentImageType,
   contentId: number,
@@ -183,7 +200,11 @@ export async function getContentImageBytes(
     SELECT r2_key, content_mime FROM content_images WHERE id = ${id}
   `;
   if (!row) return null;
-  const object = await getObjectBytesFromR2(row.r2_key);
+  // Asset-Bucket zuerst, dann Fallback auf den Backup-Bucket (Objekte, die
+  // noch nicht migriert wurden, siehe Datei-Kommentar oben).
+  const object =
+    (await getAssetObjectBytesFromR2(row.r2_key)) ??
+    (await getObjectBytesFromR2(row.r2_key));
   if (!object) return null;
   return { body: object.body, contentType: row.content_mime };
 }
@@ -208,7 +229,7 @@ export async function uploadContentImage(
   }
 
   const key = buildContentImageKey(contentType, contentId, extension);
-  await uploadObjectToR2(key, file.buffer, file.mimeType);
+  await uploadAssetObjectToR2(key, file.buffer, file.mimeType);
 
   const [row] = await sql<ContentImageRow[]>`
     INSERT INTO content_images
@@ -237,7 +258,7 @@ export async function deleteContentImage(
     RETURNING r2_key
   `;
   if (!row) return false;
-  await deleteObjectFromR2(row.r2_key);
+  await deleteContentImageObject(row.r2_key);
   return true;
 }
 
@@ -257,7 +278,7 @@ export async function purgeContentImagesFor(
     RETURNING r2_key
   `;
   for (const row of rows) {
-    await deleteObjectFromR2(row.r2_key);
+    await deleteContentImageObject(row.r2_key);
   }
 }
 
@@ -272,7 +293,7 @@ export async function deleteContentImageAsAdmin(id: number): Promise<boolean> {
     DELETE FROM content_images WHERE id = ${id} RETURNING r2_key
   `;
   if (!row) return false;
-  await deleteObjectFromR2(row.r2_key);
+  await deleteContentImageObject(row.r2_key);
   return true;
 }
 

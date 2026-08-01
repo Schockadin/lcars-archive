@@ -21,6 +21,7 @@ import {
   buildManualDbBackupKey,
   buildManualUserBackupKey,
 } from "@/lib/backupRetention";
+import { buildAssetPublicUrl } from "@/lib/assetStorage";
 
 export { buildManualDbBackupKey, buildManualUserBackupKey };
 
@@ -32,11 +33,16 @@ export function requireEnv(name: string): string {
   return value;
 }
 
-export function createR2Client(): { client: S3Client; bucket: string } {
+// R2-Client ist unabhängig vom Bucket (dieselben Account-Credentials bedienen
+// Backup- und Asset-Bucket) — der Bucketname wird separat aufgelöst.
+function createR2ClientFor(bucketEnvName: string): {
+  client: S3Client;
+  bucket: string;
+} {
   const accountId = requireEnv("R2_ACCOUNT_ID");
   const accessKeyId = requireEnv("R2_ACCESS_KEY_ID");
   const secretAccessKey = requireEnv("R2_SECRET_ACCESS_KEY");
-  const bucket = requireEnv("R2_BUCKET_NAME");
+  const bucket = requireEnv(bucketEnvName);
 
   const client = new S3Client({
     region: "auto",
@@ -45,6 +51,26 @@ export function createR2Client(): { client: S3Client; bucket: string } {
   });
 
   return { client, bucket };
+}
+
+// Backup-Bucket (DB-/User-Backups). Für hochgeladene Assets (Content-Bilder,
+// Portraits, Charakterbögen) den öffentlichen Asset-Bucket unten nutzen.
+export function createR2Client(): { client: S3Client; bucket: string } {
+  return createR2ClientFor("R2_BUCKET_NAME");
+}
+
+// Öffentlicher Asset-Bucket (R2_ASSET_BUCKET_NAME) — getrennt vom Backup-
+// Bucket, damit hochgeladene Nutzer-Assets nicht zwischen den Backups liegen.
+export function createAssetR2Client(): { client: S3Client; bucket: string } {
+  return createR2ClientFor("R2_ASSET_BUCKET_NAME");
+}
+
+// Öffentliche Auslieferungs-URL eines Asset-Objekts (der Bucket wird über eine
+// eigene Domain/Public-URL, R2_ASSET_PUBLIC_BASE_URL, direkt ausgeliefert —
+// kein App-Proxy). Der Key wird nie zurück an den Client gegeben, nur diese
+// fertige URL.
+export function assetPublicUrl(key: string): string {
+  return buildAssetPublicUrl(requireEnv("R2_ASSET_PUBLIC_BASE_URL"), key);
 }
 
 // Lädt einen fertigen Backup-JSON-Export nach R2 hoch — der Aufrufer baut
@@ -167,5 +193,41 @@ export async function getObjectBytesFromR2(key: string): Promise<R2ObjectBytes |
 
 export async function deleteObjectFromR2(key: string): Promise<void> {
   const { client, bucket } = createR2Client();
+  await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+}
+
+// ── Öffentlicher Asset-Bucket ──────────────────────────────────────────────
+// Gleiche Objekt-Operationen wie oben, aber gegen den Asset-Bucket
+// (createAssetR2Client). Genutzt von src/lib/contentImages.ts und
+// src/lib/characterSheets.ts für Content-Bilder/Portraits/Charakterbögen.
+
+export async function uploadAssetObjectToR2(
+  key: string,
+  body: Buffer,
+  contentType: string,
+): Promise<void> {
+  const { client, bucket } = createAssetR2Client();
+  await client.send(
+    new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: contentType }),
+  );
+}
+
+export async function getAssetObjectBytesFromR2(
+  key: string,
+): Promise<R2ObjectBytes | null> {
+  const { client, bucket } = createAssetR2Client();
+  try {
+    const result = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    const bytes = await result.Body?.transformToByteArray();
+    if (bytes == null) return null;
+    return { body: Buffer.from(bytes), contentType: result.ContentType ?? null };
+  } catch (err) {
+    if (err instanceof Error && err.name === "NoSuchKey") return null;
+    throw err;
+  }
+}
+
+export async function deleteAssetObjectFromR2(key: string): Promise<void> {
+  const { client, bucket } = createAssetR2Client();
   await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
 }
