@@ -19,9 +19,11 @@
 import { ListObjectsV2Command } from "@aws-sdk/client-s3";
 import { createR2Client } from "./r2Client";
 import {
+  requireEnv,
   getObjectBytesFromR2,
   getAssetObjectBytesFromR2,
   uploadAssetObjectToR2,
+  deleteAssetObjectFromR2,
   deleteObjectFromR2,
 } from "@/lib/r2Backup";
 
@@ -54,6 +56,15 @@ async function listBackupContentImageKeys(): Promise<string[]> {
   return keys;
 }
 
+// Schreibt+löscht ein winziges Probe-Objekt im Asset-Bucket, BEVOR echte
+// Objekte angefasst werden — so scheitert ein fehlendes Schreibrecht sofort und
+// eindeutig (statt erst mitten in der Migration beim ersten PutObject).
+async function preflightAssetBucketWrite(): Promise<void> {
+  const probeKey = `${CONTENT_IMAGE_PREFIX}.migration-write-probe-${Date.now()}`;
+  await uploadAssetObjectToR2(probeKey, Buffer.from("probe"), "text/plain");
+  await deleteAssetObjectFromR2(probeKey);
+}
+
 async function main() {
   const keys = await listBackupContentImageKeys();
   if (keys.length === 0) {
@@ -66,6 +77,14 @@ async function main() {
       DRY_RUN ? " (Dry-Run, es wird nichts verändert)" : ""
     }.`,
   );
+
+  if (!DRY_RUN) {
+    console.log(
+      `🔐 Prüfe Schreibrecht auf Asset-Bucket "${requireEnv("R2_ASSET_BUCKET_NAME")}"…`,
+    );
+    await preflightAssetBucketWrite();
+    console.log("   ✓ Schreibrecht vorhanden.");
+  }
 
   let moved = 0;
   let skipped = 0;
@@ -112,7 +131,32 @@ async function main() {
   }
 }
 
+function isAccessDenied(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    ("Code" in error
+      ? (error as { Code?: string }).Code === "AccessDenied"
+      : (error as { name?: string }).name === "AccessDenied")
+  );
+}
+
 main().catch((error) => {
   console.error("✗ Migration fehlgeschlagen:", error);
+  if (isAccessDenied(error)) {
+    console.error(
+      [
+        "",
+        "→ Access Denied (403) kommt fast immer vom Asset-Bucket-Schreibrecht:",
+        "  • Das R2-API-Token (R2_ACCESS_KEY_ID) braucht Object Read & Write auf",
+        `    den Asset-Bucket "${process.env.R2_ASSET_BUCKET_NAME ?? "(R2_ASSET_BUCKET_NAME nicht gesetzt)"}".`,
+        "  • Ist das Token in Cloudflare auf bestimmte Buckets eingeschränkt,",
+        "    muss der Asset-Bucket dort mit aufgenommen werden (oder ein Token mit",
+        "    kontoweitem Object-Read-&-Write nutzen).",
+        "  • Prüfe außerdem, ob R2_ASSET_BUCKET_NAME exakt dem Bucketnamen entspricht.",
+        "  Der Dry-Run funktioniert trotzdem, weil er nur den Backup-Bucket liest.",
+      ].join("\n"),
+    );
+  }
   process.exitCode = 1;
 });
