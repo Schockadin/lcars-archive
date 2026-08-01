@@ -1009,3 +1009,70 @@
     max-height: 240px;
   }
 }
+
+/* ── Story-Graph (/timeline, StoryGraph.tsx / cytoscape) ────────────────
+   Jahr-Regler-Leiste oben, darunter die Graph-Fläche (feste Höhe, cytoscape
+   misst ihren Container) plus optionales Detail-Panel. Stapelt auf schmalen
+   Screens. */
+.story-graph {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.story-graph-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 12px;
+  background: var(--lcars-surface);
+  border-radius: 8px;
+}
+.story-graph-slider {
+  flex: 1 1 160px;
+  min-width: 120px;
+  accent-color: var(--lcars-amber);
+  cursor: pointer;
+}
+.story-graph-year-input {
+  width: 96px;
+  text-align: center;
+}
+.story-graph-body {
+  display: flex;
+  gap: 12px;
+  align-items: stretch;
+  width: 100%;
+}
+.story-graph-canvas {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 640px;
+  background: var(--lcars-surface);
+  border: 1px solid rgb(255 255 255 / 10%);
+  border-radius: 8px;
+}
+.story-graph-detail {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 640px;
+  overflow-y: auto;
+  background: var(--lcars-surface);
+  border-radius: 8px;
+  padding: 12px;
+}
+@media (max-width: 640px) {
+  .story-graph-body {
+    flex-direction: column;
+  }
+  .story-graph-canvas {
+    height: 460px;
+  }
+  .story-graph-detail {
+    flex: none;
+    max-height: 220px;
+  }
+}

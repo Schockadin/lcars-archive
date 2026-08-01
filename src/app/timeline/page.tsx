@@ -1,6 +1,6 @@
-import { getAllTimelineEvents } from "@/lib/timeline";
+import { getStoryGraph } from "@/lib/storyGraph";
 import PageMeta from "@/components/PageMeta";
-import TimelineView from "./TimelineView";
+import StoryGraph from "./StoryGraph";
 
 export const metadata = {
   title: {
@@ -8,12 +8,24 @@ export const metadata = {
   },
 };
 
+// Timeline als interaktiver Story-Graph: Charaktere, Missionen und
+// Archiv-Einträge als Knoten, ihre internen Verlinkungen als Kanten. Der
+// Jahr-Regler oben blendet die Geschichte kumulativ ein (siehe StoryGraph.tsx /
+// storyGraph.ts).
 export default async function TimelinePage() {
-  const events = await getAllTimelineEvents();
+  const graph = await getStoryGraph();
   return (
     <>
       <PageMeta title="Timeline" section="timeline" />
-      <TimelineView events={events} />
+      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+        <div className="mb-[12px]">
+          <h1 className="lcars-data-row-heading">Timeline</h1>
+          <p className="lcars-eyebrow">
+            Story-Graph · interne Verlinkungen · kumulativ nach Jahr
+          </p>
+        </div>
+        <StoryGraph graph={graph} />
+      </article>
     </>
   );
 }
