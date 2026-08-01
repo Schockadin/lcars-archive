@@ -35,6 +35,18 @@ export default function HeadFieldRenderer({
             </option>
           ))}
         </select>
+      ) : field.kind === "file" ? (
+        // File-Inputs sind immer uncontrolled (kein defaultValue); accept
+        // begrenzt nur die Auswahl im Dialog, die echte Prüfung passiert
+        // serverseitig.
+        <input
+          id={id}
+          name={field.name}
+          type="file"
+          required={field.required}
+          accept={field.accept}
+          className={`${inputClass} lcars-file-input`}
+        />
       ) : (
         <input
           id={id}

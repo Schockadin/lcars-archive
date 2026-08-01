@@ -19,6 +19,8 @@ import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { parseList, parseNumberList } from "@/lib/formParsing";
 import { userCan } from "@/lib/permissions";
+import { uploadCharacterPortraitImage } from "@/lib/characterAssets";
+import { InvalidAssetError } from "@/lib/assetStorage";
 import type { Character } from "@/types/character";
 
 export interface CharacterFormState {
@@ -68,7 +70,23 @@ export async function characterAction(
     return { error: "Ungültiger Status." };
   }
 
-  const portrait = String(formData.get("portrait") ?? "").trim() || null;
+  // Portrait: entweder eine eingegebene URL oder eine hochgeladene Datei —
+  // die Datei hat Vorrang und landet direkt im öffentlichen Asset-Bucket, ihre
+  // URL wird als portrait übernommen (Nutzerwunsch: Link direkt übernommen).
+  let portrait = String(formData.get("portrait") ?? "").trim() || null;
+  const portraitFile = formData.get("portraitFile");
+  if (portraitFile instanceof File && portraitFile.size > 0) {
+    try {
+      const buffer = Buffer.from(await portraitFile.arrayBuffer());
+      portrait = await uploadCharacterPortraitImage({
+        buffer,
+        mimeType: portraitFile.type,
+      });
+    } catch (err) {
+      if (err instanceof InvalidAssetError) return { error: err.message };
+      throw err;
+    }
+  }
   const rank = String(formData.get("rank") ?? "").trim() || null;
   const homeworld = String(formData.get("homeworld") ?? "").trim() || null;
   const species = parseList(formData.get("species"));

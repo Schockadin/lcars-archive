@@ -271,6 +271,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Verwaltungs-Funktionen (Owner umtragen, Bilder verwalten, Gespräch-Metadaten bearbeiten, Fehlerdetails abrufen) richten sich jetzt durchgehend nach den tatsächlichen Rechten statt nach der Primärrolle — wer eine Funktion über eine Zusatzrolle oder ein Einzelrecht bekommt, sieht die zugehörigen Schaltflächen jetzt auch dort, wo bisher stur nur „Administration“ als Primärrolle zählte.",
       "Die Suche behandelt die Sonderzeichen % und _ jetzt als normale Zeichen; eine Suche nach z.B. „50%“ findet den Text „50%“ statt wahllos alles mit „50“.",
       "Die Datenbestands-Zahlen auf der Startseite zählen jetzt nur noch öffentliche Inhalte — passend zu den verlinkten Übersichten, die Besucher:innen ohnehin nur öffentlich sehen.",
+      "Beim Anlegen oder Bearbeiten eines Charakters lässt sich das Portrait jetzt direkt hochladen (statt nur eine Bild-URL einzutragen) — das Bild wird gespeichert und sofort als Profilbild übernommen.",
     ],
   },
 ];

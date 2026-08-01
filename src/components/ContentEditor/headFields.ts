@@ -21,4 +21,8 @@ export type HeadField =
   | (HeadFieldBase & { kind: "text"; placeholder?: string })
   | (HeadFieldBase & { kind: "select"; options: HeadFieldOption[] })
   | (HeadFieldBase & { kind: "date" })
-  | (HeadFieldBase & { kind: "number"; min?: number });
+  | (HeadFieldBase & { kind: "number"; min?: number })
+  // Datei-Upload (z.B. Portrait-Bild bei der Charakter-Anlage). Kein
+  // defaultValue (File-Inputs sind immer uncontrolled); accept begrenzt die
+  // im Dateidialog auswählbaren Typen (serverseitige Prüfung bleibt maßgeblich).
+  | (HeadFieldBase & { kind: "file"; accept?: string });
