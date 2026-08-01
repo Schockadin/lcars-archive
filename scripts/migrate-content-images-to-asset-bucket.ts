@@ -24,7 +24,13 @@ import {
   uploadAssetObjectToR2,
   deleteObjectFromR2,
 } from "@/lib/r2Backup";
-import { CONTENT_IMAGE_PREFIX } from "@/lib/contentImages";
+
+// Bewusst hier dupliziert statt aus @/lib/contentImages importiert: jener
+// Import zöge über sql aus @/lib/db die komplette DB-Kette herein (und würde
+// ohne gesetztes DATABASE_URL schon beim Modul-Laden werfen). Die Migration
+// arbeitet aber rein auf R2 und braucht die DB nicht — Wert muss mit
+// CONTENT_IMAGE_PREFIX in src/lib/contentImages.ts übereinstimmen.
+const CONTENT_IMAGE_PREFIX = "content-images/";
 
 const DRY_RUN = process.argv.includes("--dry-run");
 
