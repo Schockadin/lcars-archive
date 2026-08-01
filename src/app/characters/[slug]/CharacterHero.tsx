@@ -10,6 +10,7 @@ import {
 import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
 import CharacterBioEditor from "./CharacterBioEditor";
+import CharacterSheets from "./CharacterSheets";
 import type { Viewer } from "@/lib/visibility";
 import ActionsMenu from "@/components/ActionsMenu";
 
@@ -278,6 +279,17 @@ export default function CharacterHero({
             <div className="mt-3">
               <StatusBadge status={character.status} />
             </div>
+
+            {/* Charakterbögen (PDFs) — sichtbar für alle, die den Charakter
+                sehen dürfen; Hochladen/Löschen nur für den Owner (wie die
+                Bild-Verwaltung, canManageContentImages("character") = owner-
+                only). */}
+            <CharacterSheets
+              characterId={character.id}
+              canManage={
+                viewer != null && viewer.userId === character.player_id
+              }
+            />
 
             {/* Inhaltsverzeichnis der Biografie (sticky, Scrollspy) */}
             {bio && (

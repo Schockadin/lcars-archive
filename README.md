@@ -543,6 +543,23 @@ weiterhin in der Admin-Übersicht `/admin/content/images` (Adminbereich →
 Vorschau zeigt und pro Bild einen Admin-Löschen-Button unabhängig vom
 jeweiligen Owner bietet.
 
+### Charakterbögen (PDFs)
+
+Charaktere können zusätzlich beliebig viele **Charakterbögen** als PDF haben
+(Tabelle `character_sheets`, siehe `src/lib/characterSheets.ts`). Die Bytes
+liegen im selben öffentlichen Asset-Bucket wie die Bilder, unter dem Präfix
+`character-sheets/<CharakterID>/<UUID>.pdf`; ausgeliefert werden sie – anders
+als die Galerie-Bilder – über ihre direkte öffentliche URL
+(`R2_ASSET_PUBLIC_BASE_URL`). Die Bögen erscheinen als Download-Liste auf der
+Charakterseite und folgen dabei der **Sichtbarkeit des Charakters**: die
+Serverliste wird nach denselben Regeln wie die Seite selbst gefiltert
+(`getCharacterSheetsAction` → `canView`). Hochladen und Löschen darf nur der
+Owner des Charakters (dieselbe Owner-only-Regel wie bei den Charakter-Bildern,
+kein Admin-Bypass); erlaubt sind nur PDFs bis 20 MB. Wird der Charakter
+endgültig gelöscht, entfernt `purgeCharacterSheetsFor()`
+(`src/lib/purgeContent.ts`) die Bögen samt R2-Objekten, bevor der
+`ON DELETE CASCADE` die DB-Zeilen wegräumt.
+
 ### Dev-/Preview-Umgebung
 
 Netlify Deploy-Previews (ein Build pro PR) laufen standardmäßig gegen

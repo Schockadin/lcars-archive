@@ -272,6 +272,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Die Suche behandelt die Sonderzeichen % und _ jetzt als normale Zeichen; eine Suche nach z.B. „50%“ findet den Text „50%“ statt wahllos alles mit „50“.",
       "Die Datenbestands-Zahlen auf der Startseite zählen jetzt nur noch öffentliche Inhalte — passend zu den verlinkten Übersichten, die Besucher:innen ohnehin nur öffentlich sehen.",
       "Beim Anlegen oder Bearbeiten eines Charakters lässt sich das Portrait jetzt direkt hochladen (statt nur eine Bild-URL einzutragen) — das Bild wird gespeichert und sofort als Profilbild übernommen.",
+      "Charaktere können jetzt Charakterbögen als PDF hinterlegen: Der Owner lädt beliebig viele Bögen auf der Charakterseite hoch, alle, die den Charakter sehen dürfen, können sie dort herunterladen.",
     ],
   },
 ];

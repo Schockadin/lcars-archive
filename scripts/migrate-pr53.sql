@@ -2,11 +2,13 @@
 -- Gegen die Produktions-DB (centerbeam) ausführen, nachdem der PR gemergt wurde.
 -- Alle Statements sind idempotent (IF NOT EXISTS / ON CONFLICT DO NOTHING).
 --
--- Dieser PR bringt nur ZWEI datenbankseitige Änderungen mit; alles andere
+-- Dieser PR bringt DREI datenbankseitige Änderungen mit; alles andere
 -- (feinere DB-Rechte als String-Werte, Dialog-Sortierung, UI/Mobile-Fixes, der
--- neue SQL-Executor, das ER-Diagramm) kommt ohne Schema-Änderung aus:
+-- neue SQL-Executor, das ER-Diagramm, der Asset-Bucket, der Portrait-Upload)
+-- kommt ohne Schema-Änderung aus:
 --   1) pg_trgm-Extension + GIN-Trigramm-Indizes für die Suche (v1.18.3).
 --   2) Seed der neuen System-Rolle „db-admin" in der roles-Tabelle (v1.18.9).
+--   3) Neue Tabelle character_sheets für Charakterbögen (PDFs) (v1.18.19).
 
 -- ---------------------------------------------------------------------------
 -- 1) Suche: pg_trgm + Trigramm-GIN-Indizes
@@ -45,6 +47,25 @@ INSERT INTO roles (key, label, description, permissions, is_system, sort_order) 
   ('db-admin', 'Datenbank-Admin', 'Datenbank-Bereich: SQL-Abfragen und Backups.',
    '{content.follow,users.browse,sql_read,sql_write,sql_delete,db_backup}', TRUE, 15)
 ON CONFLICT (key) DO NOTHING;
+
+-- ---------------------------------------------------------------------------
+-- 3) Charakterbögen: neue Tabelle character_sheets
+-- ---------------------------------------------------------------------------
+-- Metadaten je hochgeladenem Charakterbogen (PDF); die Bytes liegen im
+-- öffentlichen Asset-Bucket (Präfix character-sheets/, siehe
+-- src/lib/characterSheets.ts). ON DELETE CASCADE: ein Bogen gehört genau einem
+-- Charakter und verschwindet mit ihm (die R2-Objekte räumt purgeContent.ts vor
+-- dem endgültigen Löschen ab). Identisch zu scripts/schema.sql, idempotent.
+CREATE TABLE IF NOT EXISTS character_sheets (
+  id           SERIAL PRIMARY KEY,
+  character_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  r2_key       TEXT UNIQUE NOT NULL,
+  file_name    TEXT NOT NULL,
+  size_bytes   INT NOT NULL,
+  uploaded_by  INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_character_sheets_character ON character_sheets(character_id);
 
 -- ---------------------------------------------------------------------------
 -- OPTIONAL: Bestehenden Admins den Zugang zu /admin/db erhalten
