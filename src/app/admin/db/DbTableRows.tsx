@@ -3,6 +3,8 @@ import { useState } from "react";
 import { formatDateTime } from "@/utils/formateISODate";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import RowDetailModal from "@/components/RowDetailModal";
+import { updateDbRowAction, deleteDbRowAction } from "./rowEditActions";
+import type { RowEditContext } from "./sqlQueryActions";
 
 const TRUNCATE_LENGTH = 140;
 
@@ -20,18 +22,22 @@ function formatValue(value: unknown, truncate: boolean): string {
   return truncate ? synopsisExcerpt(text, TRUNCATE_LENGTH) : text;
 }
 
-// Tabellenkörper des DB-Viewers (/admin/db) — jede Zelle wird auf eine
-// Vorschau gekürzt (sonst sprengt z.B. eine lange bio/content-Spalte die
-// ganze Tabelle), ein Klick auf eine Zeile öffnet ein Modal mit den
-// vollständigen, ungekürzten Werten aller Spalten dieser Zeile. Gleiches
-// Overlay-Muster (createPortal, Escape schließt, Klick außerhalb schließt,
-// Scroll-Sperre während offen) wie CharacterPortrait.tsx.
+// Tabellenkörper des DB-Bereichs (/admin/db, SQL-Ergebnisse) — jede Zelle wird
+// auf eine Vorschau gekürzt; ein Klick auf eine Zeile öffnet ein Modal mit den
+// vollständigen Werten. Mit editContext (Einzel-Tabellen-SELECT mit id) und den
+// passenden Rechten bietet das Modal zusätzlich Bearbeiten/Löschen der Zeile.
 export default function DbTableRows({
   columns,
   rows,
+  editContext,
+  canEdit = false,
+  canDelete = false,
 }: {
   columns: readonly string[];
   rows: Record<string, unknown>[];
+  editContext?: RowEditContext;
+  canEdit?: boolean;
+  canDelete?: boolean;
 }) {
   const [selected, setSelected] = useState<number | null>(null);
   const selectedRow = selected !== null ? rows[selected] : null;
@@ -65,6 +71,30 @@ export default function DbTableRows({
             value: formatValue(selectedRow[c], false),
           }))}
           onClose={() => setSelected(null)}
+          edit={
+            editContext && (canEdit || canDelete)
+              ? {
+                  pkColumn: editContext.pkColumn,
+                  columns: [...columns],
+                  rawByColumn: selectedRow,
+                  canEdit,
+                  canDelete,
+                  onSave: (updates) =>
+                    updateDbRowAction({
+                      table: editContext.table,
+                      pkColumn: editContext.pkColumn,
+                      pkValue: String(selectedRow[editContext.pkColumn]),
+                      updates,
+                    }),
+                  onDelete: () =>
+                    deleteDbRowAction({
+                      table: editContext.table,
+                      pkColumn: editContext.pkColumn,
+                      pkValue: String(selectedRow[editContext.pkColumn]),
+                    }),
+                }
+              : undefined
+          }
         />
       )}
     </>

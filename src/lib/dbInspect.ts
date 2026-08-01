@@ -314,6 +314,23 @@ export function classifySqlStatement(
   }
 }
 
+// Erkennt eine Einzel-Tabellen-SELECT-Query und liefert den Tabellennamen —
+// Grundlage für Edit/Delete im Zeilen-Overlay (nur dann eindeutig auf eine
+// Tabelle+Zeile abbildbar). null bei JOINs, Subqueries im FROM oder wenn kein
+// schlichter Bezeichner nach FROM steht. Reine String-Logik (der Name wird
+// serverseitig zusätzlich gegen information_schema validiert, bevor er je in
+// SQL landet) — exportiert für dbInspect.test.ts.
+export function parseSingleSelectTable(query: string): string | null {
+  const withoutComments = query.replace(/--[^\n]*(\n|$)/g, " ");
+  if (/\bjoin\b/i.test(withoutComments)) return null;
+  // FROM <identifier> — optional schema-qualifiziert ("public".)"tabelle" bzw.
+  // public.tabelle; nur ein einfacher Bezeichner, kein "(" (Subquery).
+  const m = withoutComments.match(
+    /\bfrom\s+(?:"?public"?\s*\.\s*)?"?([a-zA-Z_][a-zA-Z0-9_]*)"?/i,
+  );
+  return m ? m[1] : null;
+}
+
 // Grundform-Prüfung, unabhängig vom Recht: nicht leer, genau EINE Anweisung
 // (kein eingebettetes ; außer als Abschluss), keine verbotene Funktion.
 export function assertQueryShape(query: string): void {
@@ -527,4 +544,24 @@ export async function getSchemaGraph(): Promise<SchemaGraph> {
     tables: [...byTable.values()].sort((a, b) => a.name.localeCompare(b.name)),
     edges,
   };
+}
+
+// Reale Spaltennamen einer öffentlichen Basis-Tabelle (in Definitionsreihen-
+// folge). Leeres Array, wenn es die Tabelle nicht als BASE TABLE gibt — dient
+// zugleich als Existenz-/Identifier-Whitelist für das Zeilen-Edit/-Delete
+// (rowEditActions.ts): nur hier zurückgegebene Namen dürfen serverseitig als
+// (gequotete) Identifier in UPDATE/DELETE landen. Tabellenname als gebundener
+// Parameter, nie interpoliert.
+export async function getTableColumns(table: string): Promise<string[]> {
+  const rows = await sql<{ column_name: string }[]>`
+    SELECT c.column_name
+    FROM information_schema.columns c
+    JOIN information_schema.tables t
+      ON t.table_schema = c.table_schema AND t.table_name = c.table_name
+    WHERE c.table_schema = 'public'
+      AND t.table_type = 'BASE TABLE'
+      AND c.table_name = ${table}
+    ORDER BY c.ordinal_position
+  `;
+  return rows.map((r) => r.column_name);
 }

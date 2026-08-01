@@ -86,7 +86,13 @@ export default function SqlQueryPanel({ caps }: { caps: SqlPanelCapabilities }) 
                   ))}
                 </tr>
               </thead>
-              <DbTableRows columns={state.columns} rows={state.rows} />
+              <DbTableRows
+                columns={state.columns}
+                rows={state.rows}
+                editContext={state.editContext}
+                canEdit={caps.canWrite}
+                canDelete={caps.canDelete}
+              />
             </table>
           </div>
         </div>

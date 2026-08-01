@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   assertAdminQuery,
   classifySqlStatement,
+  parseSingleSelectTable,
   buildFilterClause,
   isForeignKeyColumn,
   UnsafeQueryError,
@@ -114,6 +115,32 @@ describe("assertAdminQuery", () => {
     expect(assertAdminQuery('SELECT "pg_sleep_log" FROM archive_entries', ALL)).toBe(
       "read",
     );
+  });
+});
+
+describe("parseSingleSelectTable", () => {
+  it("liefert die Tabelle einer einfachen SELECT-Query", () => {
+    expect(parseSingleSelectTable("SELECT * FROM characters")).toBe("characters");
+    expect(
+      parseSingleSelectTable("select id, name from characters where id = 1"),
+    ).toBe("characters");
+    expect(parseSingleSelectTable('SELECT * FROM "mission_logs"')).toBe(
+      "mission_logs",
+    );
+    expect(parseSingleSelectTable("SELECT * FROM public.users")).toBe("users");
+  });
+
+  it("ignoriert Queries mit JOIN (keine eindeutige Zeile)", () => {
+    expect(
+      parseSingleSelectTable(
+        "SELECT * FROM mission_logs ml JOIN missions m ON m.id = ml.mission_id",
+      ),
+    ).toBeNull();
+  });
+
+  it("liefert null bei fehlendem/komplexem FROM", () => {
+    expect(parseSingleSelectTable("SELECT 1")).toBeNull();
+    expect(parseSingleSelectTable("SELECT * FROM (SELECT 1) x")).toBeNull();
   });
 });
 
