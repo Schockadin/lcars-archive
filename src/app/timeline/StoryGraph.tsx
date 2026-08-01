@@ -128,6 +128,15 @@ export default function StoryGraph({ graph }: { graph: StoryGraph }) {
 
       cyRef.current = cy;
       applyYear(cy, minYearById, range ? range.max : 0);
+
+      // Defensiv: falls der Container beim Init (v.a. mobil, während der
+      // Hydration) noch nicht final vermessen war, im nächsten Frame neu
+      // messen und einpassen.
+      requestAnimationFrame(() => {
+        if (cancelled || !cyRef.current) return;
+        cyRef.current.resize();
+        cyRef.current.fit(undefined, 24);
+      });
     });
 
     return () => {

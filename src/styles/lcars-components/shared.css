@@ -1002,6 +1002,11 @@
     flex-direction: column;
   }
   .er-diagram-canvas {
+    /* In der Spalten-Anordnung würde flex: 1 1 0 die HÖHE auf flex-basis 0
+       setzen und das explizite height überschreiben → die Fläche kollabiert
+       auf 0px und cytoscape rendert nichts. flex: none lässt das height
+       greifen (Breite bleibt über align-items: stretch voll). */
+    flex: none;
     height: 420px;
   }
   .er-diagram-detail {
@@ -1069,6 +1074,9 @@
     flex-direction: column;
   }
   .story-graph-canvas {
+    /* Siehe .er-diagram-canvas: in der Spalten-Anordnung muss flex: none das
+       explizite height greifen lassen, sonst kollabiert die Fläche auf 0px. */
+    flex: none;
     height: 460px;
   }
   .story-graph-detail {

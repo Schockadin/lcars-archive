@@ -96,6 +96,15 @@ export default function ErDiagram({ graph }: { graph: SchemaGraph }) {
       cy.on("tap", (evt) => {
         if (evt.target === cy) setSelected(null);
       });
+
+      // Defensiv: falls der Container beim Init (v.a. mobil, während der
+      // Hydration) noch nicht final vermessen war, im nächsten Frame neu
+      // messen und einpassen.
+      requestAnimationFrame(() => {
+        if (cancelled || !cy) return;
+        cy.resize();
+        cy.fit(undefined, 24);
+      });
     });
 
     return () => {
