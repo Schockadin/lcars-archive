@@ -1,7 +1,14 @@
 "use client";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { CopyIcon, CheckIcon, XIcon } from "@/lib/icons";
+import {
+  CopyIcon,
+  CheckIcon,
+  XIcon,
+  PencilIcon,
+  TrashIcon,
+  RestoreIcon,
+} from "@/lib/icons";
 import { useReturnFocus } from "@/hooks/useReturnFocus";
 import { useToast } from "@/components/toast/ToastProvider";
 
@@ -165,6 +172,58 @@ export default function RowDetailModal({
         <div className="flex items-start justify-between gap-[16px]">
           <h2 className="text-lcars-amber">{title}</h2>
           <div className="flex gap-[8px]">
+            {edit &&
+              (editing ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={handleSave}
+                    disabled={pending}
+                    className="lcars-icon-btn disabled:opacity-50"
+                    aria-label="Speichern"
+                    title="Speichern"
+                  >
+                    <CheckIcon />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditing(false)}
+                    disabled={pending}
+                    className="lcars-icon-btn disabled:opacity-50"
+                    aria-label="Bearbeiten abbrechen"
+                    title="Bearbeiten abbrechen"
+                  >
+                    <RestoreIcon />
+                  </button>
+                </>
+              ) : (
+                <>
+                  {edit.canEdit && (
+                    <button
+                      type="button"
+                      onClick={startEditing}
+                      className="lcars-icon-btn"
+                      aria-label="Bearbeiten"
+                      title="Bearbeiten"
+                    >
+                      <PencilIcon />
+                    </button>
+                  )}
+                  {edit.canDelete && (
+                    <button
+                      type="button"
+                      onClick={handleDelete}
+                      disabled={pending}
+                      className="lcars-icon-btn disabled:opacity-50"
+                      style={{ color: "var(--lcars-red)" }}
+                      aria-label="Löschen"
+                      title="Löschen"
+                    >
+                      <TrashIcon />
+                    </button>
+                  )}
+                </>
+              ))}
             <button
               type="button"
               onClick={handleCopy}
@@ -217,53 +276,6 @@ export default function RowDetailModal({
           <p className="text-lcars-red text-[13px]" role="alert">
             {error}
           </p>
-        )}
-
-        {edit && (edit.canEdit || edit.canDelete) && (
-          <div className="flex flex-wrap gap-[8px] border-t border-lcars-border pt-[16px]">
-            {editing ? (
-              <>
-                <button
-                  type="button"
-                  onClick={handleSave}
-                  disabled={pending}
-                  className="lcars-pill-btn--outline disabled:opacity-50"
-                >
-                  {pending ? "Speichere…" : "Speichern"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setEditing(false)}
-                  disabled={pending}
-                  className="lcars-pill-btn--outline disabled:opacity-50"
-                >
-                  Abbrechen
-                </button>
-              </>
-            ) : (
-              <>
-                {edit.canEdit && (
-                  <button
-                    type="button"
-                    onClick={startEditing}
-                    className="lcars-pill-btn--outline"
-                  >
-                    Bearbeiten
-                  </button>
-                )}
-                {edit.canDelete && (
-                  <button
-                    type="button"
-                    onClick={handleDelete}
-                    disabled={pending}
-                    className="rounded-full border border-lcars-red px-[14px] py-[4px] text-[13px] text-lcars-red disabled:opacity-50"
-                  >
-                    {pending ? "…" : "Löschen"}
-                  </button>
-                )}
-              </>
-            )}
-          </div>
         )}
       </div>
     </div>,
