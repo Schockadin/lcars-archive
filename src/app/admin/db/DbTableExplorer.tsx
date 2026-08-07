@@ -66,24 +66,25 @@ export default function DbTableExplorer({
   const loadPage = useCallback(
     async (table: string, p: number) => {
       setLoading(true);
+      let result: TablePageResult;
       try {
-        const result = await loadTablePageAction(table, p);
-        // Wurde die letzte Zeile einer Seite gelöscht, kann die aktuelle
-        // Seite hinter das (geschrumpfte) Ende rutschen — dann eine Seite
-        // zurück, statt eine leere Ansicht mit "2/1"-Pager zu zeigen. Die
-        // veraltete (die gelöschte Zeile enthaltende) Ansicht vorher leeren,
-        // damit sie nicht bis zum Nachladen der Vorseite sichtbar bleibt.
-        if (!result.error && result.rows.length === 0 && p > 1) {
-          setData(null);
-          setPage(p - 1);
-          return;
-        }
-        setData(result);
+        result = await loadTablePageAction(table, p);
       } catch {
         setData({ columns: [], rows: [], total: 0, error: "Laden fehlgeschlagen." });
-      } finally {
         setLoading(false);
+        return;
       }
+      // Wurde die letzte Zeile einer Seite gelöscht, kann die aktuelle Seite
+      // hinter das (geschrumpfte) Ende rutschen — dann eine Seite zurück,
+      // statt eine leere Ansicht mit "2/1"-Pager zu zeigen. loading bleibt
+      // dabei bewusst an (kein finally), damit bis zum Nachladen der Vorseite
+      // "Lade…" steht und nicht die veraltete (gelöschte) Zeile aufblitzt.
+      if (!result.error && result.rows.length === 0 && p > 1) {
+        setPage(p - 1);
+        return;
+      }
+      setData(result);
+      setLoading(false);
     },
     [],
   );

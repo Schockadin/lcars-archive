@@ -70,11 +70,10 @@ export async function countTableRows(table: TableName): Promise<number> {
 // Spaltennamen (SELECT-Liste, Sortierspalte) kommen wie beim Backup-Export
 // nie aus User-Input, sondern immer aus der TABLE_COLUMNS-Whitelist — nur
 // table/limit/offset sind veränderlich, table ist über isViewableTable()
-// bereits geprüft, bevor diese Funktion aufgerufen wird. Feste Sortierung
-// nach der ersten Spalte (stabile Paginierung); der Tabellen-Explorer bietet
-// bewusst keine Sortier-/Filter-UI. Liefert die ROHEN Spaltenwerte (inkl.
-// numerischer Fremdschlüssel-ids) — der Explorer zeigt und bearbeitet den
-// echten DB-Inhalt, deshalb keine id→slug-Auflösung (die würde das
+// bereits geprüft, bevor diese Funktion aufgerufen wird. Der Tabellen-Explorer
+// bietet bewusst keine Sortier-/Filter-UI. Liefert die ROHEN Spaltenwerte
+// (inkl. numerischer Fremdschlüssel-ids) — der Explorer zeigt und bearbeitet
+// den echten DB-Inhalt, deshalb keine id→slug-Auflösung (die würde das
 // Zurückschreiben einer FK-Spalte brechen).
 export async function listTableRows(
   table: TableName,
@@ -83,10 +82,18 @@ export async function listTableRows(
 ): Promise<Record<string, unknown>[]> {
   const validColumns = TABLE_COLUMNS[table] as readonly string[];
   const columns = validColumns.map((c) => quoteIdent(c)).join(", ");
-  const sortColumn = validColumns[0];
+
+  // Stabile GESAMT-Ordnung für LIMIT/OFFSET: nach dem eindeutigen "id" (PK),
+  // sonst nach allen Spalten (deterministisch bis auf vollständig identische
+  // Zeilen, die ohnehin austauschbar sind). Die erste Spalte allein reicht
+  // nicht — Join-Tabellen wie archive_links haben dort keinen eindeutigen
+  // Wert, was Zeilen zwischen Seiten überspringen/doppeln würde.
+  const orderBy = validColumns.includes("id")
+    ? quoteIdent("id")
+    : validColumns.map((c) => quoteIdent(c)).join(", ");
 
   return sql.unsafe<Record<string, unknown>[]>(
-    `SELECT ${columns} FROM ${quoteIdent(table)} ORDER BY ${quoteIdent(sortColumn)} ASC LIMIT $1 OFFSET $2`,
+    `SELECT ${columns} FROM ${quoteIdent(table)} ORDER BY ${orderBy} LIMIT $1 OFFSET $2`,
     [limit, offset],
   );
 }
