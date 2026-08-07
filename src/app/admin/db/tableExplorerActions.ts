@@ -8,6 +8,7 @@ import {
   countTableRows,
   viewableColumns,
   getTableColumns,
+  quoteIdent,
   type ListTableRowsOptions,
 } from "@/lib/dbInspect";
 import type { TableName } from "@/lib/dbBackup";
@@ -98,12 +99,12 @@ export async function insertDbRowAction(input: {
     return { error: "Keine gültigen Spalten angegeben." };
   }
 
-  const colsSql = insertColumns.map((c) => `"${c}"`).join(", ");
+  const colsSql = insertColumns.map((c) => quoteIdent(c)).join(", ");
   const valsSql = insertColumns.map((_, i) => `$${i + 1}`).join(", ");
   const params = insertColumns.map((c) => input.values[c]);
 
   const hasId = columns.includes("id");
-  const query = `INSERT INTO "${input.table}" (${colsSql}) VALUES (${valsSql})${hasId ? " RETURNING id" : ""}`;
+  const query = `INSERT INTO ${quoteIdent(input.table)} (${colsSql}) VALUES (${valsSql})${hasId ? " RETURNING id" : ""}`;
 
   try {
     const result = await sql.begin(async (tx) => {

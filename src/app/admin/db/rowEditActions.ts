@@ -1,7 +1,7 @@
 "use server";
 import sql from "@/lib/db";
 import { requireDbAccess, getCurrentUserPermissions } from "@/lib/dal";
-import { getTableColumns } from "@/lib/dbInspect";
+import { getTableColumns, quoteIdent } from "@/lib/dbInspect";
 
 export interface RowMutationResult {
   error?: string;
@@ -46,13 +46,13 @@ export async function updateDbRowAction(input: {
   }
 
   const setSql = setColumns
-    .map((c, i) => `"${c}" = $${i + 1}`)
+    .map((c, i) => `${quoteIdent(c)} = $${i + 1}`)
     .join(", ");
   const params: (string | null)[] = setColumns.map((c) => input.updates[c]);
   const pkIndex = setColumns.length + 1;
   params.push(input.pkValue);
 
-  const query = `UPDATE "${input.table}" SET ${setSql} WHERE "${input.pkColumn}"::text = $${pkIndex}`;
+  const query = `UPDATE ${quoteIdent(input.table)} SET ${setSql} WHERE ${quoteIdent(input.pkColumn)}::text = $${pkIndex}`;
 
   try {
     const rowCount = await sql.begin(async (tx) => {
@@ -88,7 +88,7 @@ export async function deleteDbRowAction(input: {
     return { error: "Unbekannte Schlüsselspalte." };
   }
 
-  const query = `DELETE FROM "${input.table}" WHERE "${input.pkColumn}"::text = $1`;
+  const query = `DELETE FROM ${quoteIdent(input.table)} WHERE ${quoteIdent(input.pkColumn)}::text = $1`;
 
   try {
     const rowCount = await sql.begin(async (tx) => {

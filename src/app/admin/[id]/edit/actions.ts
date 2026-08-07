@@ -73,19 +73,21 @@ export async function updateUserDetailsAction(
   // sperrt man sich selbst aus). Geprüft am RECHT (admin.access), nicht am
   // Rollen-Namen — mit eigenen Rollen kann admin.access auch anders erteilt
   // sein. Die eigenen Overrides bleiben in dieser Action unverändert.
-  if (
-    userId === admin.id &&
-    !userCan(
-      {
-        role,
-        additional_roles: additionalRoles,
-        permission_overrides: admin.permission_overrides,
-      },
-      "admin.access",
-      roleMap,
-    )
-  ) {
-    return { error: "Du kannst dir nicht selbst das Admin-Recht entziehen." };
+  if (userId === admin.id) {
+    const self = {
+      role,
+      additional_roles: additionalRoles,
+      permission_overrides: admin.permission_overrides,
+    };
+    if (
+      !userCan(self, "admin.access", roleMap) ||
+      !userCan(self, "users.manage", roleMap)
+    ) {
+      return {
+        error:
+          "Du kannst dir nicht selbst den Admin-/Verwaltungs-Zugang entziehen.",
+      };
+    }
   }
 
   const before = await getUserById(userId);
@@ -171,13 +173,18 @@ export async function updateUserPermissionsAction(
 
   // Selbstschutz (analog zur Rollen-Änderung): sich selbst per Override das
   // Admin-Recht zu entziehen, würde einen aussperren.
-  if (
-    userId === admin.id &&
-    !resolvePermissions(effectiveRolesOf(target), overrides, roleMap).has(
-      "admin.access",
-    )
-  ) {
-    return { error: "Du kannst dir nicht selbst das Admin-Recht entziehen." };
+  if (userId === admin.id) {
+    const selfPerms = resolvePermissions(
+      effectiveRolesOf(target),
+      overrides,
+      roleMap,
+    );
+    if (!selfPerms.has("admin.access") || !selfPerms.has("users.manage")) {
+      return {
+        error:
+          "Du kannst dir nicht selbst den Admin-/Verwaltungs-Zugang entziehen.",
+      };
+    }
   }
 
   await updateUserPermissionOverrides(userId, overrides);

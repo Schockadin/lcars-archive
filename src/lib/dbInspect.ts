@@ -1,6 +1,16 @@
 import "server-only";
 import sql from "@/lib/db";
 import { TABLE_COLUMNS, type TableName } from "./dbBackup";
+import { escapeLikePattern } from "./search";
+
+// Quotet einen SQL-Identifier (Tabelle/Spalte) als delimited identifier und
+// verdoppelt interne Anführungszeichen (SQL-Standard). Alle Aufrufer prüfen
+// den Namen zusätzlich gegen die echten Spalten/Whitelist — dies ist die
+// Defense-in-Depth-Schicht für den (theoretischen) Fall eines Namens mit
+// eingebettetem `"`, damit der Identifier nicht vorzeitig endet.
+export function quoteIdent(name: string): string {
+  return `"${name.replace(/"/g, '""')}"`;
+}
 
 // Read-only Tabellen-Viewer für /admin/db — nutzt dieselbe Spalten-Whitelist
 // wie der DB-Backup-Export (dbBackup.ts), aber OHNE password_setup_tokens
@@ -161,7 +171,7 @@ async function resolveReferences(
   const slugsByTarget = new Map<ReferenceTarget, Map<number, string>>();
   for (const [target, ids] of idsByTarget) {
     const slugRows = await sql.unsafe<{ id: number; slug: string }[]>(
-      `SELECT id, slug FROM "${target}" WHERE id = ANY($1)`,
+      `SELECT id, slug FROM ${quoteIdent(target)} WHERE id = ANY($1)`,
       [[...ids]],
     );
     slugsByTarget.set(target, new Map(slugRows.map((r) => [r.id, r.slug])));
@@ -212,11 +222,11 @@ export function buildFilterClause(
       // zeigen).
       const normalized = value.trim().toLowerCase();
       if (normalized !== "true" && normalized !== "false") continue;
-      clauses.push(`"${col}" = $${i}::boolean`);
+      clauses.push(`${quoteIdent(col)} = $${i}::boolean`);
       params.push(normalized);
     } else {
-      clauses.push(`"${col}"::text ILIKE $${i}`);
-      params.push(`%${value.trim()}%`);
+      clauses.push(`${quoteIdent(col)}::text ILIKE $${i}`);
+      params.push(`%${escapeLikePattern(value.trim())}%`);
     }
     i++;
   }
@@ -232,7 +242,7 @@ export async function countTableRows(
 ): Promise<number> {
   const { whereSql, params } = buildFilterClause(table, filters, 1);
   const [row] = await sql.unsafe<{ count: string }[]>(
-    `SELECT COUNT(*) AS count FROM "${table}" ${whereSql}`,
+    `SELECT COUNT(*) AS count FROM ${quoteIdent(table)} ${whereSql}`,
     params,
   );
   return Number(row.count);
@@ -255,7 +265,7 @@ export async function listTableRows(
   options: ListTableRowsOptions = {},
 ): Promise<Record<string, unknown>[]> {
   const validColumns = TABLE_COLUMNS[table] as readonly string[];
-  const columns = validColumns.map((c) => `"${c}"`).join(", ");
+  const columns = validColumns.map((c) => quoteIdent(c)).join(", ");
 
   const { whereSql, params } = buildFilterClause(
     table,
@@ -273,7 +283,7 @@ export async function listTableRows(
   const offsetIndex = params.length + 2;
 
   const rows = await sql.unsafe<Record<string, unknown>[]>(
-    `SELECT ${columns} FROM "${table}" ${whereSql} ORDER BY "${sortColumn}" ${sortDir} LIMIT $${limitIndex} OFFSET $${offsetIndex}`,
+    `SELECT ${columns} FROM ${quoteIdent(table)} ${whereSql} ORDER BY ${quoteIdent(sortColumn)} ${sortDir} LIMIT $${limitIndex} OFFSET $${offsetIndex}`,
     [...params, limit, offset],
   );
   return resolveReferences(table, rows);
