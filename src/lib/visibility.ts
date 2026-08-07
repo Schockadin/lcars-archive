@@ -77,6 +77,15 @@ export async function getViewer(): Promise<Viewer | null> {
   if (!session) return null;
   const user = await getUserById(session.userId);
   if (!user) return null;
+  // Deaktivierte Person bzw. veraltete session_version wie in getCurrentUser
+  // (dal.ts) behandeln — sonst behielte ein bereits ausgestelltes Cookie die
+  // erhöhte Lese-Sichtbarkeit (content.view_gm/content.view_all) auf den
+  // öffentlichen Inhaltsseiten und dem Bild-Endpoint bis zum natürlichen
+  // Cookie-Ablauf (30 Tage), obwohl das Konto deaktiviert oder das Passwort
+  // (session_version) seither geändert wurde. Rückgabe null = anonymer
+  // Betrachter (nur public), der sichere Fallback dieser Funktion.
+  if (!user.is_active) return null;
+  if (session.sessionVersion !== user.session_version) return null;
   // Rollen-Map laden und explizit an die Rechte-Auflösung durchreichen
   // (öffentliche Seiten gehen über getViewer, nicht über getCurrentUser).
   const roleMap = await getRoleMap();

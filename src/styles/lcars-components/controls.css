@@ -248,6 +248,30 @@
   border-color: var(--lcars-amber);
 }
 
+/* File-Inputs (z.B. Portrait-Upload im Charakterformular): feste 40px-Höhe des
+   Textfelds passt nicht zum nativen Datei-Button — Höhe/Padding lockern und
+   den nativen Button leserlich stylen. */
+.lcars-file-input {
+  height: auto;
+  padding: 6px 10px;
+  font-size: 14px;
+  line-height: 1.4;
+  cursor: pointer;
+}
+.lcars-file-input::file-selector-button {
+  margin-right: 12px;
+  padding: 6px 12px;
+  border: solid 1px var(--lcars-text-data);
+  border-radius: 999px;
+  background: var(--lcars-surface);
+  color: var(--lcars-text-contrast);
+  font: inherit;
+  cursor: pointer;
+}
+.lcars-file-input::file-selector-button:hover {
+  border-color: var(--lcars-amber);
+}
+
 /* ── Cookie-Hinweis ───────────────────────────────────────────────────
    Bewusst als kompakte, unten rechts angedockte Karte statt einer über die
    volle Breite laufenden Leiste — eine breite Leiste am unteren Rand

@@ -42,7 +42,11 @@
   --lcars-sidebar-header-h: calc(var(--lcars-header-h) + var(--lcars-bar-h));
   --lcars-sidebar-main-h: calc(100% - var(--lcars-bar-h));
   --lcars-sidebar-w: calc(var(--lcars-bar-width) + var(--lcars-elbow-size));
-  --lcars-charpage-w: 465px;
+  /* Charakterlisten-Spalte: füllt die verfügbare Breite, gedeckelt auf die
+     Design-Maximalbreite. So bleibt sie auf Desktop schlank (465px), nutzt auf
+     schmalen Screens aber die volle Breite statt fest 350/250px (früher per
+     Media-Query-Overrides, siehe tokens-responsive.css). */
+  --lcars-charpage-w: min(100%, 465px);
   --lcars-content-w: 700px;
 
   /* Typografie-Größen */

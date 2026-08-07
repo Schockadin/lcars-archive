@@ -1,7 +1,11 @@
 import { notFound, redirect } from "next/navigation";
 import { getAllMissions, getMissionBySlug } from "@/lib/missions";
 import { stripHtml } from "@/lib/missionFormat";
-import { getViewer, canViewMissionDraft } from "@/lib/visibility";
+import {
+  getViewer,
+  canViewMissionDraft,
+  viewerHasPermission,
+} from "@/lib/visibility";
 import { setSubscription } from "@/lib/follows";
 import { listAllUsers } from "@/lib/users";
 import MissionSynopsis from "../MissionSynopsis";
@@ -62,7 +66,15 @@ export default async function MissionPage({ params, searchParams }: Props) {
     redirect(`/missions/${missionSlug}`);
   }
 
-  const allUsers = viewer?.role === "admin" ? await listAllUsers() : [];
+  // Owner-Auswahl nur laden, wenn der Betrachter die Mission tatsächlich
+  // umtragen darf — exakt das Server-Gate von setOwnerAction für Missionen
+  // (content.moderate ODER missions.manage), rechte- statt rollenbasiert
+  // (früher hart role === "admin", was Multi-Rollen-/Override-Berechtigte und
+  // GMs mit missions.manage fälschlich ausschloss).
+  const canReassignOwner =
+    viewerHasPermission(viewer, "content.moderate") ||
+    viewerHasPermission(viewer, "missions.manage");
+  const allUsers = canReassignOwner ? await listAllUsers() : [];
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
   return (

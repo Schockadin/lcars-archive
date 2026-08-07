@@ -39,6 +39,10 @@ const SYSTEM_ROLE_META: Record<
   player: { description: "Eigene Inhalte anlegen und einen Charakter führen.", sort: 30 },
   viewer: { description: "Inhalte ansehen und Personen/Inhalten folgen.", sort: 40 },
   guest: { description: "Basiszugang (nur Folgen/Bookmarken).", sort: 50 },
+  "db-admin": {
+    description: "Datenbank-Bereich: SQL-Abfragen, Backups und Tabellen-Explorer.",
+    sort: 15,
+  },
 };
 
 function onlyKnownPermissions(values: string[]): Permission[] {

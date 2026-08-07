@@ -2,6 +2,7 @@ import "server-only";
 import sql from "@/lib/db";
 import type { TrashContentType } from "@/lib/adminContent";
 import { purgeContentImagesFor } from "@/lib/contentImages";
+import { purgeCharacterSheetsFor } from "@/lib/characterSheets";
 
 // Endgültiges Löschen bereits weich gelöschter Inhalte (deleted_at gesetzt,
 // siehe deleteCharacter/deleteMission/deleteMissionLogAsAdmin/
@@ -37,6 +38,17 @@ export async function purgeExpiredSoftDeletedContent(
   archiveEntries: number;
 }> {
   const cutoff = sql`NOW() - (${retentionDays} * INTERVAL '1 day')`;
+
+  // Charakterbögen (character_sheets) hängen per ON DELETE CASCADE am
+  // Charakter — die R2-Objekte müssen VOR dem CASCADE-Löschen der Zeilen weg,
+  // sonst blieben sie verwaist. Deshalb erst die betroffenen IDs bestimmen,
+  // deren Bögen purgen, dann die Charaktere löschen.
+  const expiringCharacters = await sql<{ id: number }[]>`
+    SELECT id FROM characters WHERE deleted_at IS NOT NULL AND deleted_at < ${cutoff}
+  `;
+  for (const c of expiringCharacters) {
+    await purgeCharacterSheetsFor(c.id);
+  }
 
   const characterRows = await sql<{ id: number; slug: string }[]>`
     DELETE FROM characters WHERE deleted_at IS NOT NULL AND deleted_at < ${cutoff}
@@ -96,10 +108,15 @@ export async function purgeContentById(
   id: number,
 ): Promise<boolean> {
   if (contentType === "character") {
-    const rows = await sql<{ id: number }[]>`
-      DELETE FROM characters WHERE id = ${id} AND deleted_at IS NOT NULL RETURNING id
+    // Erst prüfen, ob der Charakter wirklich (weich-gelöscht) purgebar ist —
+    // dann die Bögen (character_sheets, ON DELETE CASCADE) samt R2-Objekten
+    // entfernen, BEVOR der CASCADE beim Charakter-Löschen die Zeilen wegräumt.
+    const [target] = await sql<{ id: number }[]>`
+      SELECT id FROM characters WHERE id = ${id} AND deleted_at IS NOT NULL
     `;
-    if (rows.length === 0) return false;
+    if (!target) return false;
+    await purgeCharacterSheetsFor(id);
+    await sql`DELETE FROM characters WHERE id = ${id}`;
     await purgeContentImagesFor("character", id);
     return true;
   }

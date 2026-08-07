@@ -10,6 +10,13 @@ export const characterHeadFields: HeadField[] = [
   { kind: "text", name: "name", label: "Name", required: true, fullWidth: true },
   { kind: "select", name: "status", label: "Status", options: STATUS_OPTIONS },
   { kind: "text", name: "portrait", label: "Portrait-URL (optional)" },
+  {
+    kind: "file",
+    name: "portraitFile",
+    label: "Portrait hochladen (optional)",
+    accept: "image/jpeg,image/png,image/webp,image/gif",
+    hint: "JPEG/PNG/WebP/GIF bis 5 MB. Wird hochgeladen und als Portrait übernommen (hat Vorrang vor der Portrait-URL oben).",
+  },
   { kind: "text", name: "species", label: "Spezies (kommagetrennt)" },
   { kind: "text", name: "rank", label: "Rang (optional)" },
   { kind: "text", name: "homeworld", label: "Heimatwelt (optional)" },

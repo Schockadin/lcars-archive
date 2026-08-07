@@ -101,7 +101,13 @@ export default function PermissionsMatrix({ roles }: { roles: MatrixRole[] }) {
   }
 
   return (
-    <div className="overflow-x-auto">
+    // Eigenständige Scroll-Box (beide Achsen) — so ist der Scrollport für die
+    // sticky Kopfzeile (top:0) UND die sticky erste Spalte (left:0) exakt dieser
+    // Container. Ohne die gebundene Höhe stickt die Kopfzeile am (vertikal
+    // scrollenden) Seiten-Container, während der horizontale Scroll im inneren
+    // overflow-Div passiert — beide liefen auf Mobilgeräten auseinander (nur die
+    // Kopfzeile bewegte sich beim horizontalen Wischen).
+    <div className="lcars-perm-matrix-scroll">
       <table className="lcars-perm-matrix">
         <thead>
           <tr>

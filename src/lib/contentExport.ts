@@ -13,7 +13,7 @@
 // Lesepfad offenzulegen.
 import "server-only";
 import sql from "@/lib/db";
-import { getViewer, canView } from "@/lib/visibility";
+import { getViewer, canView, viewerHasPermission } from "@/lib/visibility";
 import { getArchiveEntryBySlug } from "@/lib/archive";
 import { getMissionBySlug, getLogBySlug } from "@/lib/missions";
 import { getCharacterBySlug, getCharacterSourceBySlug } from "@/lib/characters";
@@ -52,7 +52,12 @@ async function loadArchiveEntryExport(slug: string): Promise<ExportableContent |
     // rein teilnehmerbasiert, exakt wie in /dialogues/[slug]/page.tsx.
     const participant =
       viewer && (await getDialogueParticipant(entry.id, viewer.userId));
-    if (!participant && viewer?.role !== "gm" && viewer?.role !== "admin") {
+    // Exakt wie /dialogues/[slug]/page.tsx: Nicht-Teilnehmende dürfen einen
+    // offenen Dialog nur mit gm.access (Dialog-Oversight) sehen/exportieren
+    // — rechte- statt rollenbasiert, damit die Freigabe mit der Seite
+    // übereinstimmt (früher role gm ODER admin; ein reiner Admin hat aber
+    // gar kein gm.access und sieht den Dialog auch auf der Seite nicht).
+    if (!participant && !viewerHasPermission(viewer, "gm.access")) {
       return null;
     }
   } else if (!canView(entry.visibility, entry.ownerUserId, viewer)) {

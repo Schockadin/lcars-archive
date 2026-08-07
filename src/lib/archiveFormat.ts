@@ -59,14 +59,19 @@ export function isArchiveCategory(value: string): value is ArchiveCategory {
   return (CATEGORY_ORDER as string[]).includes(value);
 }
 
-// Anzeige-Titel. Gespräche tragen keinen eigenen Titel, sondern werden über
-// ihren Schauplatz benannt: "Gespräch auf [setting]".
+// Anzeige-Titel. Gespräche werden über ihren eigenen, beim Anlegen vergebenen
+// Titel benannt (Pflichtfeld, siehe user/dialogues/new/actions.ts). Nur wenn
+// der Titel ausnahmsweise leer ist (Alt-Datensätze), wird auf den früheren
+// Schauplatz-basierten Namen „Gespräch auf [setting]" bzw. „Gespräch"
+// zurückgefallen.
 export function archiveTitle(entry: {
   category: ArchiveCategory;
   title: string;
   metadata: Pick<ArchiveMetadata, "setting">;
 }): string {
   if (entry.category === "dialogue") {
+    const ownTitle = entry.title?.trim();
+    if (ownTitle) return ownTitle;
     return entry.metadata.setting
       ? `Gespräch auf ${entry.metadata.setting}`
       : "Gespräch";

@@ -484,7 +484,9 @@ secret"):
 | `DATABASE_URL` | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. Nötig für den Backup- UND den Purge-Schritt, nicht für das R2-Cleanup. |
 | `R2_ACCOUNT_ID` | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). Nötig für den Backup- UND den Purge-Schritt (Bild-Cleanup), nicht für das R2-Cleanup. |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens"). |
-| `R2_BUCKET_NAME` | Name des Ziel-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag) sowie für die Bilder (`content-images/...`). |
+| `R2_BUCKET_NAME` | Name des **Backup**-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). Hochgeladene Assets liegen seit dem Asset-Bucket-Release nicht mehr hier, sondern in `R2_ASSET_BUCKET_NAME` (siehe unten). |
+| `R2_ASSET_BUCKET_NAME` | Name des **öffentlichen** Asset-Buckets für hochgeladene Assets — Content-Bilder (`content-images/...`), Charakter-Portraits (`character-portraits/...`) und Charakterbögen (`character-sheets/...`). Muss in Cloudflare als öffentlicher Bucket eingerichtet sein (eigene Domain oder r2.dev-URL). Für den App-Betrieb (Netlify) und die Migration nötig, **nicht** für den Backup-Cronjob. |
+| `R2_ASSET_PUBLIC_BASE_URL` | Öffentliche Basis-URL des Asset-Buckets ohne Trailing-Slash (z.B. `https://assets.neo-archiv.de` oder die von Cloudflare vergebene `https://pub-….r2.dev`). Daraus baut die App die direkten Asset-Links. |
 
 **Wichtig für das manuelle R2-Backup im Adminpanel** (`/admin/db` — "Im
 R2-Bucket speichern" / "Aus R2-Bucket importieren", genauso für das
@@ -512,19 +514,24 @@ weich gelöschte Inhalte automatisch nach 7 Tagen.
 
 Charaktere, Missionen, Missionslogs und Archiv-Einträge (nicht Gespräche —
 siehe `src/lib/contentImages.ts`) können beliebig viele Bilder haben. Die
-Bytes landen im selben R2-Bucket wie die DB-Backups, unter dem eigenen
-Präfix `content-images/<Typ>/<ID>/<UUID>.<Endung>` — dieselben vier
-`R2_*`-Variablen aus dem Backup-Abschnitt oben genügen, es ist **keine**
-weitere Konfiguration nötig. Der Bucket bleibt dabei privat: Bilder werden
-nicht direkt aus R2, sondern über eine eigene, sichtbarkeitsgeprüfte Route
-(`/api/content-images/[id]`) ausgeliefert — wer den Inhalt selbst nicht sehen
-darf (private/GM-only-Sichtbarkeit), sieht auch seine Bilder nicht. Erlaubt
-sind JPEG/PNG/WebP/GIF bis 5 MB pro Datei; Hochladen/Löschen darf, wer den
-jeweiligen Inhalt auch sonst bearbeiten darf (bei Charakteren/Missionslogs
-nur der Owner, bei Missionen/Archiv-Einträgen zusätzlich jeder Admin). Bei
-Charakteren lässt sich eines der hochgeladenen Bilder als Profilbild
-festlegen (`characters.portrait`); das Portrait öffnet per Klick ein
-Karussell über alle hochgeladenen Bilder. Bei Missionen, Missionslogs und
+Bytes landen im **öffentlichen Asset-Bucket** (`R2_ASSET_BUCKET_NAME`, siehe
+Backup-Abschnitt oben), unter dem eigenen Präfix
+`content-images/<Typ>/<ID>/<UUID>.<Endung>` — getrennt vom Backup-Bucket,
+damit hochgeladene Assets nicht mehr zwischen den Backups liegen. Bestehende
+Bilder werden mit `npm run assets:migrate-content-images` einmalig aus dem
+Backup- in den Asset-Bucket umgezogen (idempotent, `--dry-run` zeigt vorab,
+was käme); bis dahin liest die App sie weiterhin per Fallback aus dem
+Backup-Bucket. Erlaubt sind JPEG/PNG/WebP/GIF bis 5 MB pro Datei;
+Hochladen/Löschen darf, wer den jeweiligen Inhalt auch sonst bearbeiten darf
+(bei Charakteren/Missionslogs nur der Owner, bei Missionen/Archiv-Einträgen
+zusätzlich jeder Admin). Die vorhandenen Galerie-Bilder werden weiterhin über
+die sichtbarkeitsgeprüfte Route `/api/content-images/[id]` ausgeliefert (die
+jetzt aus dem Asset-Bucket liest); neu am Asset-Bucket hängende Assets
+(hochgeladenes Charakter-Portrait bei der Anlage, Charakterbögen) nutzen die
+direkte öffentliche URL (`R2_ASSET_PUBLIC_BASE_URL`). Bei Charakteren lässt
+sich eines der hochgeladenen Bilder als Profilbild festlegen
+(`characters.portrait`); das Portrait öffnet per Klick ein Karussell über
+alle hochgeladenen Bilder. Bei Missionen, Missionslogs und
 Archiv-Einträgen lässt sich stattdessen ein bereits hochgeladenes Bild direkt
 aus der Markdown-Editor-Toolbar heraus als `![Bild](...)` in den Text
 einfügen. Wird der zugehörige Inhalt endgültig gelöscht (Papierkorb-Purge
@@ -535,6 +542,23 @@ weiterhin in der Admin-Übersicht `/admin/content/images` (Adminbereich →
 "Bilder") auf, die alle hochgeladenen Bilder über alle Inhalte hinweg mit
 Vorschau zeigt und pro Bild einen Admin-Löschen-Button unabhängig vom
 jeweiligen Owner bietet.
+
+### Charakterbögen (PDFs)
+
+Charaktere können zusätzlich beliebig viele **Charakterbögen** als PDF haben
+(Tabelle `character_sheets`, siehe `src/lib/characterSheets.ts`). Die Bytes
+liegen im selben öffentlichen Asset-Bucket wie die Bilder, unter dem Präfix
+`character-sheets/<CharakterID>/<UUID>.pdf`; ausgeliefert werden sie – anders
+als die Galerie-Bilder – über ihre direkte öffentliche URL
+(`R2_ASSET_PUBLIC_BASE_URL`). Die Bögen erscheinen als Download-Liste auf der
+Charakterseite und folgen dabei der **Sichtbarkeit des Charakters**: die
+Serverliste wird nach denselben Regeln wie die Seite selbst gefiltert
+(`getCharacterSheetsAction` → `canView`). Hochladen und Löschen darf nur der
+Owner des Charakters (dieselbe Owner-only-Regel wie bei den Charakter-Bildern,
+kein Admin-Bypass); erlaubt sind nur PDFs bis 20 MB. Wird der Charakter
+endgültig gelöscht, entfernt `purgeCharacterSheetsFor()`
+(`src/lib/purgeContent.ts`) die Bögen samt R2-Objekten, bevor der
+`ON DELETE CASCADE` die DB-Zeilen wegräumt.
 
 ### Dev-/Preview-Umgebung
 

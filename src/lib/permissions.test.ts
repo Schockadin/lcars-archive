@@ -8,6 +8,7 @@ import {
   isSystemRole,
   DEFAULT_ROLE_PRESETS,
   ROLE_PRESETS,
+  DB_PERMISSIONS,
   type Role,
   type RoleMap,
 } from "./permissions";
@@ -158,5 +159,31 @@ describe("roleLabel / isSystemRole", () => {
 
   it("ROLE_PRESETS ist der Alias auf DEFAULT_ROLE_PRESETS", () => {
     expect(ROLE_PRESETS).toBe(DEFAULT_ROLE_PRESETS);
+  });
+});
+
+describe("db-admin-Rolle / DB_PERMISSIONS", () => {
+  it("db-admin ist eine System-Rolle mit genau den DB-Rechten (+ Basis)", () => {
+    expect(isSystemRole("db-admin")).toBe(true);
+    const perms = rolePermissions(["db-admin"]);
+    for (const p of DB_PERMISSIONS) expect(perms.has(p)).toBe(true);
+    expect(perms.has("db_view_system_tables")).toBe(true);
+    // Keine Admin-/GM-Spezialrechte (orthogonal zu admin/gm).
+    expect(perms.has("admin.access")).toBe(false);
+    expect(perms.has("gm.access")).toBe(false);
+  });
+
+  it("die DB-Rechte tauchen NUR in db-admin auf (nicht in admin/gm)", () => {
+    for (const role of ["admin", "gm", "player", "viewer", "guest"] as Role[]) {
+      const perms = rolePermissions([role]);
+      for (const p of DB_PERMISSIONS) expect(perms.has(p)).toBe(false);
+    }
+  });
+
+  it("ein User mit admin + db-admin hat beide Rechte-Sets", () => {
+    const perms = resolvePermissions(["admin", "db-admin"], {});
+    expect(perms.has("admin.access")).toBe(true);
+    expect(perms.has("sql_read")).toBe(true);
+    expect(perms.has("db_backup")).toBe(true);
   });
 });

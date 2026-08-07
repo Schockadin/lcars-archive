@@ -138,10 +138,10 @@ export async function updateRolePermissionsAction(
       admin.permission_overrides,
       hypotheticalMap,
     );
-    if (!adminPerms.has("admin.access")) {
+    if (!adminPerms.has("admin.access") || !adminPerms.has("users.manage")) {
       return {
         error:
-          "Diese Änderung würde dir selbst das Admin-Recht entziehen — abgebrochen.",
+          "Diese Änderung würde dir selbst den Admin-/Verwaltungs-Zugang entziehen — abgebrochen.",
       };
     }
   }

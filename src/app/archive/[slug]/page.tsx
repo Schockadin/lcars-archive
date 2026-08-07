@@ -9,7 +9,12 @@ import { LcarsReadingModeToggle } from "@/components/lcars";
 import DialogueHeader from "@/components/DialogueHeader";
 import DeleteDialogueButton from "@/components/DeleteDialogueButton";
 import { getDialogueMessages } from "@/lib/dialogues";
-import { getViewer, canView, canViewDraft } from "@/lib/visibility";
+import {
+  getViewer,
+  canView,
+  canViewDraft,
+  viewerHasPermission,
+} from "@/lib/visibility";
 import { listAllUsers, getDialogueViewPreference } from "@/lib/users";
 import ArchiveEntryBody from "./ArchiveEntryBody";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
@@ -78,7 +83,12 @@ export default async function ArchiveEntryPage({ params }: Props) {
     notFound();
   }
   if (!canViewDraft(entry.isDraft, entry.ownerUserId, viewer)) notFound();
-  const allUsers = viewer?.role === "admin" ? await listAllUsers() : [];
+  // Owner-Auswahl nur laden, wenn der Betrachter den Eintrag umtragen darf —
+  // exakt das Server-Gate von setOwnerAction für Archiv-Einträge
+  // (content.moderate), rechte- statt rollenbasiert (früher role === "admin").
+  const allUsers = viewerHasPermission(viewer, "content.moderate")
+    ? await listAllUsers()
+    : [];
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
   // Einfache, nicht gecachte Abfrage — Frische kommt über die Revalidation
@@ -138,7 +148,8 @@ export default async function ArchiveEntryPage({ params }: Props) {
         flowingTextPreferred={flowingTextPreferred}
       />
 
-      {viewer?.role === "admin" && entry.category === "dialogue" && (
+      {viewerHasPermission(viewer, "dialogues.moderate") &&
+        entry.category === "dialogue" && (
         <div className="flex flex-wrap items-center gap-[8px]">
           {/* Metadaten (Titel/Datum/Ort/Tags) bearbeiten — auch für
               abgeschlossene Gespräche, nicht der Gesprächsverlauf. */}

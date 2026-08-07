@@ -13,7 +13,7 @@ import {
 } from "@/lib/contentImages";
 
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const id = Number((await params).id);
@@ -36,6 +36,21 @@ export async function GET(
     return new Response("Kein Zugriff.", { status: 404 });
   }
 
+  // Die Bytes zu einer Bild-ID sind unveränderlich (ein neuer Upload bekommt
+  // eine neue Zeile/ID, siehe buildContentImageKey in contentImages.ts) — die
+  // ID taugt daher als stabiler, starker ETag. Die Sichtbarkeitsprüfung oben
+  // ist bereits erfolgt; passt der If-None-Match-Wert des Browsers, sparen wir
+  // uns den R2-Fetch komplett und antworten mit 304. `immutable` verhindert
+  // zusätzlich unnötige Revalidierungen innerhalb der max-age-Spanne.
+  const etag = `"content-image-${id}"`;
+  const cacheControl = "private, max-age=3600, immutable";
+  if (request.headers.get("if-none-match") === etag) {
+    return new Response(null, {
+      status: 304,
+      headers: { ETag: etag, "Cache-Control": cacheControl },
+    });
+  }
+
   const object = await getContentImageBytes(id);
   if (!object) {
     return new Response("Bild nicht gefunden.", { status: 404 });
@@ -44,7 +59,8 @@ export async function GET(
   return new Response(new Uint8Array(object.body), {
     headers: {
       "Content-Type": object.contentType,
-      "Cache-Control": "private, max-age=3600",
+      "Cache-Control": cacheControl,
+      ETag: etag,
     },
   });
 }

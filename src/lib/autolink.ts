@@ -2,6 +2,7 @@ import "server-only";
 import sql from "@/lib/db";
 import { markdownToHtml } from "@/lib/markdown";
 import { slugifyBase } from "@/lib/slug";
+import { isRangeProtected, type ProtectedRange } from "@/lib/protectedRanges";
 
 export type AutolinkTargetType = "character" | "mission" | "archive";
 
@@ -80,14 +81,16 @@ export function applyAutolinks(
     .join("|");
   const matchRe = new RegExp(alternation, "giu");
 
-  const protectedRanges: [number, number][] = [];
+  const protectedRanges: ProtectedRange[] = [];
   PROTECTED_RE.lastIndex = 0;
   let pm: RegExpExecArray | null;
   while ((pm = PROTECTED_RE.exec(sourceMd))) {
     protectedRanges.push([pm.index, pm.index + pm[0].length]);
   }
+  // Bereiche aufsteigend/nicht überlappend (links→rechts-RegExp) — Binärsuche
+  // statt linearer .some()-Prüfung je Kandidaten-Treffer.
   const isProtected = (start: number, end: number) =>
-    protectedRanges.some(([s, e]) => start < e && end > s);
+    isRangeProtected(protectedRanges, start, end);
 
   const matches: AutolinkMatch[] = [];
   const parts: string[] = [];

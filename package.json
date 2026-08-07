@@ -38,7 +38,8 @@
     "db:backup": "tsx --conditions=react-server scripts/backup-db.ts",
     "db:backup:cleanup": "tsx --conditions=react-server scripts/cleanup-db-backups.ts",
     "db:purge-deleted": "tsx --conditions=react-server scripts/purge-soft-deleted.ts",
-    "admin:log-digest": "tsx --conditions=react-server scripts/send-admin-log-digest.ts"
+    "admin:log-digest": "tsx --conditions=react-server scripts/send-admin-log-digest.ts",
+    "assets:migrate-content-images": "tsx --conditions=react-server --env-file=.env.local scripts/migrate-content-images-to-asset-bucket.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1085.0",
@@ -50,8 +51,10 @@
     "@codemirror/view": "^6.43.6",
     "@lezer/highlight": "^1.2.3",
     "@react-pdf/renderer": "^4.5.1",
+    "@types/cytoscape": "^3.21.9",
     "@uiw/react-codemirror": "^4.25.11",
     "codemirror": "^6.0.2",
+    "cytoscape": "^3.34.0",
     "gray-matter": "^4.0.3",
     "next": "^16.2.9",
     "next-mdx-remote": "^6.0.0",

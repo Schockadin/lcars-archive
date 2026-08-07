@@ -4,6 +4,28 @@
 // campaign.ts. Die eigentliche DB-Abfrage lebt in recentActivity.ts und ruft
 // computeNewsItems() mit den geladenen Zeilen auf.
 import type { TimelineSourceType } from "@/types/timeline";
+import type { Permission } from "@/lib/permissions";
+
+// Sichtbarkeits-Flags für den News-Feed, aus den EFFEKTIVEN Rechten eines
+// Betrachters abgeleitet (nicht aus seiner Primärrolle!). Muss dieselbe
+// Entscheidung wie canView in src/lib/visibility.ts treffen: content.view_all
+// sieht jede Sichtbarkeit, content.view_gm zusätzlich gm-Inhalte. Ein User mit
+// mehreren Rollen (z.B. Primärrolle „player" + Zusatzrolle „gm"/„admin", der
+// dokumentierte „Seiteninhaber"-Fall) oder mit einem Override, das eines dieser
+// Rechte gewährt/entzieht, muss im News-Feed dieselben Inhalte sehen wie
+// überall sonst — deshalb hier über die aufgelöste Rechte-Menge statt über
+// einen role-String.
+export interface NewsVisibility {
+  canViewGm: boolean;
+  canViewAll: boolean;
+}
+
+export function newsVisibility(permissions: Set<Permission>): NewsVisibility {
+  return {
+    canViewGm: permissions.has("content.view_gm"),
+    canViewAll: permissions.has("content.view_all"),
+  };
+}
 
 // News-Kind: neu erstellt / bearbeitet / gelöscht. Entspricht den drei
 // einstellbaren News-Arten im Profil (users.news_kinds).

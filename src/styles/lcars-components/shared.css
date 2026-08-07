@@ -936,3 +936,104 @@
 .lcars-perm-matrix tbody tr:hover .lcars-perm-matrix-row {
   background: rgb(255 255 255 / 4%);
 }
+
+/* Scroll-Box der Rechte-Matrix: scrollt in BEIDEN Achsen und ist damit der
+   gemeinsame Scrollport für die sticky Kopfzeile (top:0) und die sticky erste
+   Spalte (left:0). Vorher scrollte nur ein overflow-x-Div — die sticky
+   Kopfzeile hing dann am Seiten-Scrollcontainer und lief beim horizontalen
+   Wischen gegenüber dem Body auseinander (nur die Header bewegten sich). Die
+   gebundene Höhe hält Kopf und Body synchron in derselben Box. */
+.lcars-perm-matrix-scroll {
+  overflow: auto;
+  max-height: min(72vh, 640px);
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+/* Auf schmalen Screens die erste Spalte (Rechte-Bezeichnung) schlanker und die
+   Rollen-Spalten kompakter, damit neben dem sticky Namen noch Rollen-Spalten
+   sichtbar bleiben statt fast der ganzen Breite. */
+@media (max-width: 640px) {
+  .lcars-perm-matrix {
+    font-size: 12px;
+  }
+  .lcars-perm-matrix-corner,
+  .lcars-perm-matrix-row {
+    min-width: 132px;
+    max-width: 168px;
+  }
+  .lcars-perm-matrix thead th {
+    min-width: 92px;
+  }
+  .lcars-perm-matrix th,
+  .lcars-perm-matrix td {
+    padding: 6px 8px;
+  }
+}
+
+/* ── DB-Tabellen-Explorer (/admin/db, DbTableExplorer.tsx) ────────────── */
+.db-explorer-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.db-explorer-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+.db-explorer-item:hover {
+  background: var(--lcars-surface);
+}
+.db-explorer-item[aria-selected="true"] {
+  background: var(--lcars-surface);
+  border-left: 3px solid var(--lcars-amber);
+  padding-left: 7px;
+}
+.db-explorer-item-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--lcars-text-dim);
+}
+.db-explorer-item[aria-selected="true"] .db-explorer-item-icon {
+  color: var(--lcars-amber);
+}
+.db-explorer-item-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.db-explorer-item-count {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--lcars-text-dim);
+}
+.db-explorer-group-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lcars-text-dim);
+  padding: 12px 10px 4px;
+}
+.db-explorer-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.db-explorer-pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--lcars-text-dim);
+}

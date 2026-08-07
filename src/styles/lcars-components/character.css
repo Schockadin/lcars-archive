@@ -41,7 +41,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  width: 400px;
+  /* Füllt den Platz nach dem 60px-Stub statt fester 400px — so nutzt die
+     Charakterliste die verfügbare Breite (bis zur Container-Grenze
+     --lcars-charpage-w) und wird auf schmalen Screens nicht künstlich
+     eingeengt. */
+  flex: 1 1 auto;
+  min-width: 0;
   margin-left: 3px;
   padding: 0 16px;
   background: var(--lcars-surface);
@@ -91,16 +96,6 @@
 
   .character-entry-stub {
     display: none;
-  }
-
-  .character-entry {
-    width: 350px;
-  }
-}
-
-@media (max-width: 520px) {
-  .character-entry {
-    width: 250px;
   }
 }
 
