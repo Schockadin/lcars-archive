@@ -8,11 +8,11 @@ import { synopsisExcerpt } from "@/lib/missionFormat";
 import {
   loadTablePageAction,
   insertDbRowAction,
-  TABLE_PAGE_SIZE,
   type TableInfo,
   type TablePageResult,
 } from "./tableExplorerActions";
 
+const TABLE_PAGE_SIZE = 30;
 const TRUNCATE_LENGTH = 120;
 
 function formatValue(value: unknown, truncate: boolean): string {

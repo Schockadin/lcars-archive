@@ -70,8 +70,6 @@ export async function loadTablePageAction(
   return { columns, rows, total };
 }
 
-export { PAGE_SIZE as TABLE_PAGE_SIZE };
-
 export interface InsertRowResult {
   error?: string;
   id?: number;
