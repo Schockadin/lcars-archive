@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PlusIcon, ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
 import RowDetailModal from "@/components/RowDetailModal";
 import { updateDbRowAction, deleteDbRowAction } from "./rowEditActions";
@@ -59,21 +59,29 @@ export default function DbTableExplorer({
   const [loading, setLoading] = useState(false);
   const [modalRow, setModalRow] = useState<number | null>(null);
   const [inserting, setInserting] = useState(false);
+  // Laufende Nummer der jüngsten Ladeanfrage — verwirft veraltete Antworten
+  // (schneller Tabellen-/Seitenwechsel), damit eine langsamere frühere Anfrage
+  // nicht die Daten der aktuellen Auswahl überschreibt.
+  const reqIdRef = useRef(0);
 
   const contentTables = tables.filter((t) => t.isContent);
   const systemTables = tables.filter((t) => !t.isContent);
 
   const loadPage = useCallback(
     async (table: string, p: number) => {
+      const reqId = ++reqIdRef.current;
       setLoading(true);
       let result: TablePageResult;
       try {
         result = await loadTablePageAction(table, p);
       } catch {
+        if (reqId !== reqIdRef.current) return;
         setData({ columns: [], rows: [], total: 0, error: "Laden fehlgeschlagen." });
         setLoading(false);
         return;
       }
+      // Antwort einer inzwischen überholten Anfrage ignorieren.
+      if (reqId !== reqIdRef.current) return;
       // Wurde die letzte Zeile einer Seite gelöscht, kann die aktuelle Seite
       // hinter das (geschrumpfte) Ende rutschen — dann eine Seite zurück,
       // statt eine leere Ansicht mit "2/1"-Pager zu zeigen. loading bleibt

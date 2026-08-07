@@ -88,9 +88,7 @@ export async function listTableRows(
   // Zeilen, die ohnehin austauschbar sind). Die erste Spalte allein reicht
   // nicht — Join-Tabellen wie archive_links haben dort keinen eindeutigen
   // Wert, was Zeilen zwischen Seiten überspringen/doppeln würde.
-  const orderBy = validColumns.includes("id")
-    ? quoteIdent("id")
-    : validColumns.map((c) => quoteIdent(c)).join(", ");
+  const orderBy = validColumns.includes("id") ? quoteIdent("id") : columns;
 
   return sql.unsafe<Record<string, unknown>[]>(
     `SELECT ${columns} FROM ${quoteIdent(table)} ORDER BY ${orderBy} LIMIT $1 OFFSET $2`,
