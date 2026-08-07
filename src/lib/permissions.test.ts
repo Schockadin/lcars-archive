@@ -167,6 +167,7 @@ describe("db-admin-Rolle / DB_PERMISSIONS", () => {
     expect(isSystemRole("db-admin")).toBe(true);
     const perms = rolePermissions(["db-admin"]);
     for (const p of DB_PERMISSIONS) expect(perms.has(p)).toBe(true);
+    expect(perms.has("db_view_system_tables")).toBe(true);
     // Keine Admin-/GM-Spezialrechte (orthogonal zu admin/gm).
     expect(perms.has("admin.access")).toBe(false);
     expect(perms.has("gm.access")).toBe(false);

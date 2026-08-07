@@ -971,116 +971,69 @@
   }
 }
 
-/* ── ER-Diagramm (/admin/db, ErDiagram.tsx / cytoscape) ─────────────────
-   Zwei-Spalten-Layout: links die Graph-Fläche (braucht eine explizite Höhe,
-   cytoscape misst ihren Container), rechts ein Detail-Panel mit den Spalten
-   der angeklickten Tabelle. Stapelt auf schmalen Screens. */
-.er-diagram {
-  display: flex;
-  gap: 12px;
-  align-items: stretch;
-  width: 100%;
-}
-.er-diagram-canvas {
-  flex: 1 1 0;
-  min-width: 0;
-  height: 600px;
-  background: var(--lcars-surface);
-  border: 1px solid rgb(255 255 255 / 10%);
-  border-radius: 8px;
-}
-.er-diagram-detail {
-  flex: 0 0 220px;
-  max-height: 600px;
-  overflow-y: auto;
-  background: var(--lcars-surface);
-  border-radius: 8px;
-  padding: 12px;
-}
-@media (max-width: 640px) {
-  .er-diagram {
-    flex-direction: column;
-  }
-  .er-diagram-canvas {
-    /* In der Spalten-Anordnung würde flex: 1 1 0 die HÖHE auf flex-basis 0
-       setzen und das explizite height überschreiben → die Fläche kollabiert
-       auf 0px und cytoscape rendert nichts. flex: none lässt das height
-       greifen (Breite bleibt über align-items: stretch voll). */
-    flex: none;
-    height: 420px;
-  }
-  .er-diagram-detail {
-    flex: none;
-    max-height: 240px;
-  }
-}
-
-/* ── Story-Graph (/timeline, StoryGraph.tsx / cytoscape) ────────────────
-   Jahr-Regler-Leiste oben, darunter die Graph-Fläche (feste Höhe, cytoscape
-   misst ihren Container) plus optionales Detail-Panel. Stapelt auf schmalen
-   Screens. */
-.story-graph {
+/* ── DB-Tabellen-Explorer (/admin/db, DbTableExplorer.tsx) ────────────── */
+.db-explorer-tree {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 100%;
+  gap: 2px;
 }
-.story-graph-controls {
+.db-explorer-item {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  padding: 10px 12px;
-  background: var(--lcars-surface);
-  border-radius: 8px;
-}
-.story-graph-slider {
-  flex: 1 1 160px;
-  min-width: 120px;
-  accent-color: var(--lcars-amber);
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 6px;
   cursor: pointer;
+  font-size: 13px;
+  transition: background 0.15s;
 }
-.story-graph-year-input {
-  width: 96px;
-  text-align: center;
+.db-explorer-item:hover {
+  background: var(--lcars-surface);
 }
-.story-graph-body {
-  display: flex;
-  gap: 12px;
-  align-items: stretch;
-  width: 100%;
+.db-explorer-item[aria-selected="true"] {
+  background: var(--lcars-surface);
+  border-left: 3px solid var(--lcars-amber);
+  padding-left: 7px;
 }
-.story-graph-canvas {
-  flex: 1 1 0;
+.db-explorer-item-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--lcars-text-dim);
+}
+.db-explorer-item[aria-selected="true"] .db-explorer-item-icon {
+  color: var(--lcars-amber);
+}
+.db-explorer-item-name {
+  flex: 1;
   min-width: 0;
-  height: 640px;
-  background: var(--lcars-surface);
-  border: 1px solid rgb(255 255 255 / 10%);
-  border-radius: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-.story-graph-detail {
-  flex: 0 0 220px;
+.db-explorer-item-count {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--lcars-text-dim);
+}
+.db-explorer-group-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--lcars-text-dim);
+  padding: 12px 10px 4px;
+}
+.db-explorer-toolbar {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 640px;
-  overflow-y: auto;
-  background: var(--lcars-surface);
-  border-radius: 8px;
-  padding: 12px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
 }
-@media (max-width: 640px) {
-  .story-graph-body {
-    flex-direction: column;
-  }
-  .story-graph-canvas {
-    /* Siehe .er-diagram-canvas: in der Spalten-Anordnung muss flex: none das
-       explizite height greifen lassen, sonst kollabiert die Fläche auf 0px. */
-    flex: none;
-    height: 460px;
-  }
-  .story-graph-detail {
-    flex: none;
-    max-height: 220px;
-  }
+.db-explorer-pager {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--lcars-text-dim);
 }

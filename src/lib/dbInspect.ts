@@ -17,6 +17,17 @@ export const VIEWABLE_TABLES = (
   Object.keys(TABLE_COLUMNS) as TableName[]
 ).filter((t) => !(HIDDEN_FROM_VIEW as string[]).includes(t));
 
+export const CONTENT_TABLES: readonly TableName[] = [
+  "characters",
+  "missions",
+  "mission_logs",
+  "archive_entries",
+];
+
+export function isContentTable(table: string): boolean {
+  return (CONTENT_TABLES as readonly string[]).includes(table);
+}
+
 export function isViewableTable(value: string): value is TableName {
   return (VIEWABLE_TABLES as string[]).includes(value);
 }
@@ -443,107 +454,6 @@ export async function runAdminQuery(
       rowCount: rows.count,
     };
   });
-}
-
-// ---------------------------------------------------------------------------
-// Schema-Graph (ER-Diagramm)
-// ---------------------------------------------------------------------------
-// Liest die Struktur des public-Schemas LIVE aus dem Informationsschema für die
-// interaktive ER-Diagramm-Ansicht in /admin/db (ErDiagram.tsx, cytoscape.js) —
-// bewusst nicht aus der statischen TABLE_COLUMNS-Whitelist, damit das Diagramm
-// den echten DB-Stand (inkl. neuer Tabellen/Spalten) zeigt. Nur Struktur
-// (Tabellen, Spalten, Fremdschlüssel-Kanten), keine Zeilendaten.
-
-export interface ErColumn {
-  name: string;
-  type: string;
-  nullable: boolean;
-}
-
-export interface ErTable {
-  name: string;
-  columns: ErColumn[];
-}
-
-export interface ErEdge {
-  // Quelltabelle.column → Zieltabelle (Fremdschlüssel).
-  source: string;
-  column: string;
-  target: string;
-}
-
-export interface SchemaGraph {
-  tables: ErTable[];
-  edges: ErEdge[];
-}
-
-export async function getSchemaGraph(): Promise<SchemaGraph> {
-  const [columnRows, fkRows] = await Promise.all([
-    sql<
-      {
-        table_name: string;
-        column_name: string;
-        data_type: string;
-        is_nullable: string;
-      }[]
-    >`
-      SELECT c.table_name, c.column_name, c.data_type, c.is_nullable
-      FROM information_schema.columns c
-      JOIN information_schema.tables t
-        ON t.table_schema = c.table_schema AND t.table_name = c.table_name
-      WHERE c.table_schema = 'public' AND t.table_type = 'BASE TABLE'
-      ORDER BY c.table_name, c.ordinal_position
-    `,
-    sql<
-      {
-        source_table: string;
-        source_column: string;
-        target_table: string;
-      }[]
-    >`
-      SELECT
-        tc.table_name        AS source_table,
-        kcu.column_name      AS source_column,
-        ccu.table_name       AS target_table
-      FROM information_schema.table_constraints tc
-      JOIN information_schema.key_column_usage kcu
-        ON kcu.constraint_name = tc.constraint_name
-       AND kcu.table_schema = tc.table_schema
-      JOIN information_schema.constraint_column_usage ccu
-        ON ccu.constraint_name = tc.constraint_name
-       AND ccu.table_schema = tc.table_schema
-      WHERE tc.constraint_type = 'FOREIGN KEY' AND tc.table_schema = 'public'
-    `,
-  ]);
-
-  const byTable = new Map<string, ErTable>();
-  for (const row of columnRows) {
-    let table = byTable.get(row.table_name);
-    if (!table) {
-      table = { name: row.table_name, columns: [] };
-      byTable.set(row.table_name, table);
-    }
-    table.columns.push({
-      name: row.column_name,
-      type: row.data_type,
-      nullable: row.is_nullable === "YES",
-    });
-  }
-
-  const edges: ErEdge[] = fkRows
-    // Selbstreferenzen (z.B. archive_links.source_id → archive_entries) bleiben
-    // erhalten; nur Kanten auf nicht als BASE TABLE geladene Ziele filtern.
-    .filter((fk) => byTable.has(fk.source_table) && byTable.has(fk.target_table))
-    .map((fk) => ({
-      source: fk.source_table,
-      column: fk.source_column,
-      target: fk.target_table,
-    }));
-
-  return {
-    tables: [...byTable.values()].sort((a, b) => a.name.localeCompare(b.name)),
-    edges,
-  };
 }
 
 // Reale Spaltennamen einer öffentlichen Basis-Tabelle (in Definitionsreihen-

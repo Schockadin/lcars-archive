@@ -56,6 +56,7 @@ export const PERMISSIONS = [
   "sql_write", // INSERT/UPDATE im SQL-Panel
   "sql_delete", // DELETE im SQL-Panel
   "db_backup", // DB-/User-Backup-Panels (Export/Import)
+  "db_view_system_tables", // System-Tabellen im Tabellen-Explorer sehen
 ] as const;
 
 export type Permission = (typeof PERMISSIONS)[number];
@@ -81,6 +82,7 @@ export const PERMISSION_LABELS: Record<Permission, { label: string; description:
   "sql_write": { label: "SQL schreiben", description: "Daten per INSERT/UPDATE im DB-Bereich ändern." },
   "sql_delete": { label: "SQL löschen", description: "Daten per DELETE im DB-Bereich entfernen." },
   "db_backup": { label: "DB-Backups", description: "Datenbank- und Nutzer-Backups exportieren/importieren." },
+  "db_view_system_tables": { label: "System-Tabellen", description: "Alle Tabellen im DB-Explorer sehen (ohne: nur Inhaltstabellen)." },
 };
 
 // Rechte des DB-Bereichs (/admin/db) — gebündelt für Gates (Zugang zum Bereich)
@@ -91,6 +93,7 @@ export const DB_PERMISSIONS = [
   "sql_write",
   "sql_delete",
   "db_backup",
+  "db_view_system_tables",
 ] as const satisfies readonly Permission[];
 
 // System-Rollen (fest verdrahtete Schlüssel) → ADDITIVE, minimal überlappende
@@ -133,6 +136,7 @@ export const DEFAULT_ROLE_PRESETS: RoleMap = {
     "sql_write",
     "sql_delete",
     "db_backup",
+    "db_view_system_tables",
   ],
 };
 

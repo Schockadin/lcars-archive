@@ -44,9 +44,12 @@ CREATE INDEX IF NOT EXISTS idx_archive_content_trgm       ON archive_entries USI
 -- wiederholbar. (Die Anwendung seedet die Rolle beim nächsten Lauf ohnehin über
 -- ensureSystemRoles(); dieser INSERT nimmt das nur vorweg.)
 INSERT INTO roles (key, label, description, permissions, is_system, sort_order) VALUES
-  ('db-admin', 'Datenbank-Admin', 'Datenbank-Bereich: SQL-Abfragen und Backups.',
-   '{content.follow,users.browse,sql_read,sql_write,sql_delete,db_backup}', TRUE, 15)
-ON CONFLICT (key) DO NOTHING;
+  ('db-admin', 'Datenbank-Admin', 'Datenbank-Bereich: SQL-Abfragen, Backups und Tabellen-Explorer.',
+   '{content.follow,users.browse,sql_read,sql_write,sql_delete,db_backup,db_view_system_tables}', TRUE, 15)
+ON CONFLICT (key) DO UPDATE SET
+  permissions = '{content.follow,users.browse,sql_read,sql_write,sql_delete,db_backup,db_view_system_tables}',
+  description = 'Datenbank-Bereich: SQL-Abfragen, Backups und Tabellen-Explorer.'
+WHERE roles.key = 'db-admin';
 
 -- ---------------------------------------------------------------------------
 -- 3) Charakterbögen: neue Tabelle character_sheets
