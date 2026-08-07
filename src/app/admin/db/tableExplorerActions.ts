@@ -3,7 +3,7 @@ import { requireDbAccess, getCurrentUserPermissions } from "@/lib/dal";
 import {
   VIEWABLE_TABLES,
   isContentTable,
-  isViewableTable,
+  tableAccessError,
   listTableRows,
   countTableRows,
   viewableColumns,
@@ -22,6 +22,10 @@ export interface TableInfo {
 export async function getVisibleTablesAction(): Promise<TableInfo[]> {
   await requireDbAccess();
   const perms = await getCurrentUserPermissions();
+  // Gleiche Lese-Schranke wie loadTablePageAction — ohne sql_read sind auch
+  // die Tabellennamen nicht einsehbar (die Sektion wird ohnehin nur mit
+  // Lese-Recht gerendert; hier zusätzlich die Action selbst absichern).
+  if (!perms.has("sql_read")) return [];
   const canViewSystem = perms.has("db_view_system_tables");
 
   return VIEWABLE_TABLES.filter(
@@ -52,12 +56,12 @@ export async function loadTablePageAction(
     return { columns: [], rows: [], total: 0, error: "Dir fehlt das Recht „SQL lesen“." };
   }
 
-  if (!isViewableTable(table)) {
-    return { columns: [], rows: [], total: 0, error: "Unbekannte Tabelle." };
-  }
-
-  if (!perms.has("db_view_system_tables") && !isContentTable(table)) {
-    return { columns: [], rows: [], total: 0, error: "Keine Berechtigung." };
+  const accessError = tableAccessError(
+    table,
+    perms.has("db_view_system_tables"),
+  );
+  if (accessError) {
+    return { columns: [], rows: [], total: 0, error: accessError };
   }
 
   const offset = Math.max(0, (page - 1) * TABLE_PAGE_SIZE);
@@ -90,12 +94,11 @@ export async function insertDbRowAction(input: {
   // Gleiche Tabellen-Schranke wie beim Lesen: nur einsehbare Tabellen, und
   // System-Tabellen nur mit db_view_system_tables — sonst könnte man über
   // diese Action in ausgeblendete Tabellen schreiben, die man nicht sieht.
-  if (!isViewableTable(input.table)) {
-    return { error: "Unbekannte Tabelle." };
-  }
-  if (!perms.has("db_view_system_tables") && !isContentTable(input.table)) {
-    return { error: "Keine Berechtigung." };
-  }
+  const accessError = tableAccessError(
+    input.table,
+    perms.has("db_view_system_tables"),
+  );
+  if (accessError) return { error: accessError };
 
   const columns = await getTableColumns(input.table);
   if (columns.length === 0) return { error: "Unbekannte Tabelle." };

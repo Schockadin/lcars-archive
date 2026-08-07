@@ -3,7 +3,6 @@ import {
   assertAdminQuery,
   classifySqlStatement,
   parseSingleSelectTable,
-  buildFilterClause,
   quoteIdent,
   UnsafeQueryError,
 } from "@/lib/dbInspect";
@@ -141,81 +140,6 @@ describe("parseSingleSelectTable", () => {
   it("liefert null bei fehlendem/komplexem FROM", () => {
     expect(parseSingleSelectTable("SELECT 1")).toBeNull();
     expect(parseSingleSelectTable("SELECT * FROM (SELECT 1) x")).toBeNull();
-  });
-});
-
-describe("buildFilterClause", () => {
-  it("builds an ILIKE clause for a normal text column", () => {
-    const { whereSql, params } = buildFilterClause(
-      "characters",
-      { name: "Kira" },
-      1,
-    );
-    expect(whereSql).toBe('WHERE "name"::text ILIKE $1');
-    expect(params).toEqual(["%Kira%"]);
-  });
-
-  it("ignores columns that aren't in the table's whitelist", () => {
-    const { whereSql, params } = buildFilterClause(
-      "characters",
-      { not_a_real_column: "x" },
-      1,
-    );
-    expect(whereSql).toBe("");
-    expect(params).toEqual([]);
-  });
-
-  it("ignores blank filter values", () => {
-    const { whereSql, params } = buildFilterClause(
-      "characters",
-      { name: "   " },
-      1,
-    );
-    expect(whereSql).toBe("");
-    expect(params).toEqual([]);
-  });
-
-  it("builds an exact ::boolean comparison for a boolean column with a valid value", () => {
-    const { whereSql, params } = buildFilterClause(
-      "archive_entries",
-      { dialogue_open: "true" },
-      1,
-    );
-    expect(whereSql).toBe('WHERE "dialogue_open" = $1::boolean');
-    expect(params).toEqual(["true"]);
-  });
-
-  it("normalizes boolean filter casing", () => {
-    const { params } = buildFilterClause(
-      "archive_entries",
-      { dialogue_open: "FALSE" },
-      1,
-    );
-    expect(params).toEqual(["false"]);
-  });
-
-  it("silently drops an invalid boolean filter value instead of building a broken clause", () => {
-    // Regression: ein manipulierter f_dialogue_open=xyz-Query-Param sollte
-    // die Query nicht mehr mit einem ungefangenen Postgres-Fehler abstürzen
-    // lassen (invalid input syntax for type boolean) — buildFilterClause
-    // ignoriert den Filter jetzt einfach.
-    const { whereSql, params } = buildFilterClause(
-      "archive_entries",
-      { dialogue_open: "xyz" },
-      1,
-    );
-    expect(whereSql).toBe("");
-    expect(params).toEqual([]);
-  });
-
-  it("numbers multiple clauses sequentially starting at startIndex", () => {
-    const { whereSql, params } = buildFilterClause(
-      "archive_entries",
-      { title: "Log", dialogue_open: "true" },
-      3,
-    );
-    expect(whereSql).toBe('WHERE "title"::text ILIKE $3 AND "dialogue_open" = $4::boolean');
-    expect(params).toEqual(["%Log%", "true"]);
   });
 });
 

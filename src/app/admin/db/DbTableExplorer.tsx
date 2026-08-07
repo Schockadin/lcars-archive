@@ -70,8 +70,11 @@ export default function DbTableExplorer({
         const result = await loadTablePageAction(table, p);
         // Wurde die letzte Zeile einer Seite gelöscht, kann die aktuelle
         // Seite hinter das (geschrumpfte) Ende rutschen — dann eine Seite
-        // zurück, statt eine leere Ansicht mit "2/1"-Pager zu zeigen.
+        // zurück, statt eine leere Ansicht mit "2/1"-Pager zu zeigen. Die
+        // veraltete (die gelöschte Zeile enthaltende) Ansicht vorher leeren,
+        // damit sie nicht bis zum Nachladen der Vorseite sichtbar bleibt.
         if (!result.error && result.rows.length === 0 && p > 1) {
+          setData(null);
           setPage(p - 1);
           return;
         }

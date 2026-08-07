@@ -1,7 +1,6 @@
 import "server-only";
 import sql from "@/lib/db";
 import { TABLE_COLUMNS, type TableName } from "./dbBackup";
-import { escapeLikePattern } from "./search";
 
 // Quotet einen SQL-Identifier (Tabelle/Spalte) als delimited identifier und
 // verdoppelt interne Anführungszeichen (SQL-Standard). Alle Aufrufer prüfen
@@ -42,117 +41,53 @@ export function isViewableTable(value: string): value is TableName {
   return (VIEWABLE_TABLES as string[]).includes(value);
 }
 
+// Einheitliche Tabellen-Schranke für ALLE Explorer-Aktionen (lesen, einfügen,
+// bearbeiten, löschen): nur einsehbare Tabellen, System-Tabellen nur mit
+// db_view_system_tables. Liefert die passende Fehlermeldung oder null, wenn
+// der Zugriff erlaubt ist. Zentral, damit keine Aktion die Schranke vergisst
+// (getTableColumns/information_schema würde sonst beliebige Basistabellen
+// akzeptieren).
+export function tableAccessError(
+  table: string,
+  canViewSystem: boolean,
+): string | null {
+  if (!isViewableTable(table)) return "Unbekannte Tabelle.";
+  if (!canViewSystem && !isContentTable(table)) return "Keine Berechtigung.";
+  return null;
+}
+
 export function viewableColumns(table: TableName): readonly string[] {
   return TABLE_COLUMNS[table];
 }
 
-// Echte Boolean-Spalten — Postgres' ::text-Cast eines boolean liefert
-// "t"/"f", nicht "true"/"false", ein ILIKE-Substring-Filter (wie für alle
-// anderen Spalten unten) würde deshalb nie treffen. Der Filter vergleicht
-// hier stattdessen exakt gegen den echten Boolean-Wert.
-const BOOLEAN_COLUMNS: Partial<Record<TableName, readonly string[]>> = {
-  archive_entries: ["dialogue_open"],
-};
-
-// Baut eine WHERE-Klausel pro Spalte — nur für Spalten aus der
-// TABLE_COLUMNS-Whitelist (nie aus rohem User-Input als Identifier),
-// Filterwerte werden dagegen IMMER als gebundener $n-Parameter übergeben,
-// nie in den SQL-String interpoliert (gleiches Prinzip wie beim
-// Backup-Export in dbBackup.ts). Für die meisten Spalten ein
-// ::text-ILIKE-Substring-Filter (einheitlich über beliebige Spaltentypen
-// hinweg, ohne für jeden Typ eine eigene Filter-UI zu bauen — für dieses
-// admin-only Debug-Werkzeug ausreichend, kein Anspruch auf Index-Nutzung/
-// Performance bei sehr großen Tabellen), für BOOLEAN_COLUMNS ein exakter
-// Vergleich gegen den echten Boolean-Wert (siehe Kommentar dort).
-// exportiert nur für dbInspect.test.ts (reine String-/Wert-Logik, keine
-// DB-Verbindung nötig) — kein weiterer Aufrufer außerhalb dieser Datei.
-export function buildFilterClause(
-  table: TableName,
-  filters: Record<string, string>,
-  startIndex: number,
-): { whereSql: string; params: string[] } {
-  const validColumns = new Set<string>(TABLE_COLUMNS[table]);
-  const booleanColumns = new Set<string>(BOOLEAN_COLUMNS[table] ?? []);
-  const clauses: string[] = [];
-  const params: string[] = [];
-  let i = startIndex;
-  for (const [col, value] of Object.entries(filters)) {
-    if (!validColumns.has(col) || !value.trim()) continue;
-    if (booleanColumns.has(col)) {
-      // Nur "true"/"false" (die einzigen Werte, die das <select> im UI
-      // anbietet) werden tatsächlich als Filter angewandt — ein
-      // manipulierter f_<spalte>-Query-Param mit einem anderen Wert würde
-      // sonst als ungültiges ::boolean-Literal einen ungefangenen
-      // Postgres-Fehler auslösen (statt die Seite einfach ungefiltert zu
-      // zeigen).
-      const normalized = value.trim().toLowerCase();
-      if (normalized !== "true" && normalized !== "false") continue;
-      clauses.push(`${quoteIdent(col)} = $${i}::boolean`);
-      params.push(normalized);
-    } else {
-      clauses.push(`${quoteIdent(col)}::text ILIKE $${i}`);
-      params.push(`%${escapeLikePattern(value.trim())}%`);
-    }
-    i++;
-  }
-  return {
-    whereSql: clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "",
-    params,
-  };
-}
-
-export async function countTableRows(
-  table: TableName,
-  filters: Record<string, string> = {},
-): Promise<number> {
-  const { whereSql, params } = buildFilterClause(table, filters, 1);
+export async function countTableRows(table: TableName): Promise<number> {
   const [row] = await sql.unsafe<{ count: string }[]>(
-    `SELECT COUNT(*) AS count FROM ${quoteIdent(table)} ${whereSql}`,
-    params,
+    `SELECT COUNT(*) AS count FROM ${quoteIdent(table)}`,
   );
   return Number(row.count);
 }
 
-export interface ListTableRowsOptions {
-  sortColumn?: string;
-  sortDir?: "asc" | "desc";
-  filters?: Record<string, string>;
-}
-
-// Spaltennamen (SELECT-Liste, sortColumn) kommen wie beim Backup-Export nie
-// aus User-Input, sondern immer aus der TABLE_COLUMNS-Whitelist — nur
-// table/limit/offset/Filterwerte sind veränderlich, table ist über
-// isViewableTable() bereits geprüft, bevor diese Funktion aufgerufen wird.
-// Liefert die ROHEN Spaltenwerte (inkl. numerischer Fremdschlüssel-ids) — der
-// Tabellen-Explorer zeigt und bearbeitet den echten DB-Inhalt, deshalb keine
-// id→slug-Auflösung (die würde das Zurückschreiben einer FK-Spalte brechen).
+// Spaltennamen (SELECT-Liste, Sortierspalte) kommen wie beim Backup-Export
+// nie aus User-Input, sondern immer aus der TABLE_COLUMNS-Whitelist — nur
+// table/limit/offset sind veränderlich, table ist über isViewableTable()
+// bereits geprüft, bevor diese Funktion aufgerufen wird. Feste Sortierung
+// nach der ersten Spalte (stabile Paginierung); der Tabellen-Explorer bietet
+// bewusst keine Sortier-/Filter-UI. Liefert die ROHEN Spaltenwerte (inkl.
+// numerischer Fremdschlüssel-ids) — der Explorer zeigt und bearbeitet den
+// echten DB-Inhalt, deshalb keine id→slug-Auflösung (die würde das
+// Zurückschreiben einer FK-Spalte brechen).
 export async function listTableRows(
   table: TableName,
   limit: number,
   offset: number,
-  options: ListTableRowsOptions = {},
 ): Promise<Record<string, unknown>[]> {
   const validColumns = TABLE_COLUMNS[table] as readonly string[];
   const columns = validColumns.map((c) => quoteIdent(c)).join(", ");
-
-  const { whereSql, params } = buildFilterClause(
-    table,
-    options.filters ?? {},
-    1,
-  );
-
-  const sortColumn =
-    options.sortColumn && validColumns.includes(options.sortColumn)
-      ? options.sortColumn
-      : validColumns[0];
-  const sortDir = options.sortDir === "desc" ? "DESC" : "ASC";
-
-  const limitIndex = params.length + 1;
-  const offsetIndex = params.length + 2;
+  const sortColumn = validColumns[0];
 
   return sql.unsafe<Record<string, unknown>[]>(
-    `SELECT ${columns} FROM ${quoteIdent(table)} ${whereSql} ORDER BY ${quoteIdent(sortColumn)} ${sortDir} LIMIT $${limitIndex} OFFSET $${offsetIndex}`,
-    [...params, limit, offset],
+    `SELECT ${columns} FROM ${quoteIdent(table)} ORDER BY ${quoteIdent(sortColumn)} ASC LIMIT $1 OFFSET $2`,
+    [limit, offset],
   );
 }
 

@@ -1,7 +1,7 @@
 "use server";
 import sql from "@/lib/db";
 import { requireDbAccess, getCurrentUserPermissions } from "@/lib/dal";
-import { getTableColumns, quoteIdent } from "@/lib/dbInspect";
+import { getTableColumns, quoteIdent, tableAccessError } from "@/lib/dbInspect";
 
 export interface RowMutationResult {
   error?: string;
@@ -29,6 +29,12 @@ export async function updateDbRowAction(input: {
   if (!perms.has("sql_write")) {
     return { error: "Dir fehlt das Recht „SQL schreiben“." };
   }
+
+  const accessError = tableAccessError(
+    input.table,
+    perms.has("db_view_system_tables"),
+  );
+  if (accessError) return { error: accessError };
 
   const columns = await getTableColumns(input.table);
   if (columns.length === 0) return { error: "Unbekannte Tabelle." };
@@ -81,6 +87,12 @@ export async function deleteDbRowAction(input: {
   if (!perms.has("sql_delete")) {
     return { error: "Dir fehlt das Recht „SQL löschen“." };
   }
+
+  const accessError = tableAccessError(
+    input.table,
+    perms.has("db_view_system_tables"),
+  );
+  if (accessError) return { error: accessError };
 
   const columns = await getTableColumns(input.table);
   if (columns.length === 0) return { error: "Unbekannte Tabelle." };
