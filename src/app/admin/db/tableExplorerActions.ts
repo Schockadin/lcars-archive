@@ -2,16 +2,16 @@
 import { requireDbAccess, getCurrentUserPermissions } from "@/lib/dal";
 import {
   VIEWABLE_TABLES,
-  CONTENT_TABLES,
+  isContentTable,
   isViewableTable,
   listTableRows,
   countTableRows,
   viewableColumns,
   getTableColumns,
   quoteIdent,
-  type ListTableRowsOptions,
 } from "@/lib/dbInspect";
 import type { TableName } from "@/lib/dbBackup";
+import { TABLE_PAGE_SIZE } from "./tableExplorerConfig";
 import sql from "@/lib/db";
 
 export interface TableInfo {
@@ -25,10 +25,10 @@ export async function getVisibleTablesAction(): Promise<TableInfo[]> {
   const canViewSystem = perms.has("db_view_system_tables");
 
   return VIEWABLE_TABLES.filter(
-    (t) => canViewSystem || (CONTENT_TABLES as readonly string[]).includes(t),
+    (t) => canViewSystem || isContentTable(t),
   ).map((t) => ({
     name: t,
-    isContent: (CONTENT_TABLES as readonly string[]).includes(t),
+    isContent: isContentTable(t),
   }));
 }
 
@@ -39,32 +39,31 @@ export interface TablePageResult {
   error?: string;
 }
 
-const PAGE_SIZE = 30;
-
 export async function loadTablePageAction(
   table: string,
   page: number,
-  options?: ListTableRowsOptions,
 ): Promise<TablePageResult> {
   await requireDbAccess();
   const perms = await getCurrentUserPermissions();
+
+  // Zeilen lesen erfordert das Lese-Recht (gleiche Schranke wie das freie
+  // SQL-Panel für SELECTs) — reiner DB-Zugang (z.B. nur Backup) reicht nicht.
+  if (!perms.has("sql_read")) {
+    return { columns: [], rows: [], total: 0, error: "Dir fehlt das Recht „SQL lesen“." };
+  }
 
   if (!isViewableTable(table)) {
     return { columns: [], rows: [], total: 0, error: "Unbekannte Tabelle." };
   }
 
-  const canViewSystem = perms.has("db_view_system_tables");
-  if (
-    !canViewSystem &&
-    !(CONTENT_TABLES as readonly string[]).includes(table)
-  ) {
+  if (!perms.has("db_view_system_tables") && !isContentTable(table)) {
     return { columns: [], rows: [], total: 0, error: "Keine Berechtigung." };
   }
 
-  const offset = Math.max(0, (page - 1) * PAGE_SIZE);
+  const offset = Math.max(0, (page - 1) * TABLE_PAGE_SIZE);
   const [rows, total] = await Promise.all([
-    listTableRows(table as TableName, PAGE_SIZE, offset, options),
-    countTableRows(table as TableName, options?.filters),
+    listTableRows(table as TableName, TABLE_PAGE_SIZE, offset),
+    countTableRows(table as TableName),
   ]);
   const columns = viewableColumns(table as TableName);
 
@@ -86,6 +85,16 @@ export async function insertDbRowAction(input: {
   const perms = await getCurrentUserPermissions();
   if (!perms.has("sql_write")) {
     return { error: "Dir fehlt das Recht „SQL schreiben“." };
+  }
+
+  // Gleiche Tabellen-Schranke wie beim Lesen: nur einsehbare Tabellen, und
+  // System-Tabellen nur mit db_view_system_tables — sonst könnte man über
+  // diese Action in ausgeblendete Tabellen schreiben, die man nicht sieht.
+  if (!isViewableTable(input.table)) {
+    return { error: "Unbekannte Tabelle." };
+  }
+  if (!perms.has("db_view_system_tables") && !isContentTable(input.table)) {
+    return { error: "Keine Berechtigung." };
   }
 
   const columns = await getTableColumns(input.table);

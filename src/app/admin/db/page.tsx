@@ -23,7 +23,9 @@ export default async function AdminDbPage() {
   const canDelete = perms.has("sql_delete");
   const hasAnySql = canRead || canWrite || canDelete;
 
-  const tables = await getVisibleTablesAction();
+  // Der Tabellen-Explorer liest Zeilen — nur mit Lese-Recht anzeigen (die
+  // Server-Action erzwingt sql_read ohnehin; hier zusätzlich das UI ausblenden).
+  const tables = canRead ? await getVisibleTablesAction() : [];
 
   return (
     <>
@@ -40,14 +42,16 @@ export default async function AdminDbPage() {
             </section>
           )}
 
-          <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Tabellen</h2>
-            <DbTableExplorer
-              tables={tables}
-              canEdit={canWrite}
-              canDelete={canDelete}
-            />
-          </section>
+          {canRead && (
+            <section className="flex flex-col gap-[12px]">
+              <h2 className="text-lcars-amber">Tabellen</h2>
+              <DbTableExplorer
+                tables={tables}
+                canEdit={canWrite}
+                canDelete={canDelete}
+              />
+            </section>
+          )}
 
           {hasAnySql && (
             <section className="flex flex-col gap-[12px]">

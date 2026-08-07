@@ -46,148 +46,13 @@ export function viewableColumns(table: TableName): readonly string[] {
   return TABLE_COLUMNS[table];
 }
 
-// Spalten mit fest begrenztem Wertebereich (DB-CHECK-Constraints bzw. — bei
-// content_deletions.target_type — die in der Praxis tatsächlich verwendeten
-// Werte, siehe scripts/schema.sql) — der Filter für diese Spalten wird im
-// UI als <select> statt Freitext angeboten (siehe admin/db/page.tsx).
-const ENUM_COLUMNS: Partial<Record<TableName, Record<string, readonly string[]>>> = {
-  characters: {
-    status: ["active", "retired", "deceased"],
-    visibility: ["private", "gm", "public"],
-  },
-  missions: {
-    status: ["active", "completed", "failed", "abandoned"],
-  },
-  mission_logs: {
-    visibility: ["private", "gm", "public"],
-  },
-  archive_entries: {
-    category: [
-      "person", "location", "item", "faction", "theory", "event",
-      "species", "npc", "dialogue", "other",
-    ],
-    visibility: ["private", "gm", "public"],
-    dialogue_open: ["true", "false"],
-  },
-  timeline_events: {
-    source_type: ["character", "mission", "mission_log", "archive_entry"],
-  },
-  content_follows: {
-    target_type: ["mission", "archive_entry", "character", "user"],
-  },
-  content_deletions: {
-    target_type: ["mission", "mission_log", "archive_entry"],
-    visibility: ["private", "gm", "public"],
-  },
-};
-
-export function enumOptionsFor(
-  table: TableName,
-  column: string,
-): readonly string[] | null {
-  return ENUM_COLUMNS[table]?.[column] ?? null;
-}
-
-// Fremdschlüssel-Spalten werden in der Anzeige (siehe resolveReferences
-// unten) durch den Slug der referenzierten Zeile ersetzt, die SQL-Sortierung
-// läuft aber immer über den rohen numerischen Wert (Sortierung passiert VOR
-// der Auflösung). Sortieren nach einer FK-Spalte würde deshalb nach interner
-// id statt nach dem angezeigten Slug ordnen — für den Admin nicht
-// nachvollziehbar. admin/db/page.tsx nutzt das, um für diese Spalten keinen
-// Sortier-Link anzubieten (reine Anzeige-Spalte im Header statt Link).
-export function isForeignKeyColumn(table: TableName, column: string): boolean {
-  return column in (FK_COLUMNS[table] ?? {});
-}
-
-// Echte Boolean-Spalten unter den ENUM_COLUMNS oben — Postgres' ::text-Cast
-// eines boolean liefert "t"/"f", nicht "true"/"false", ein ILIKE-Substring-
-// Filter (wie für alle anderen Spalten unten) würde deshalb nie treffen.
-// Der Filter vergleicht hier stattdessen exakt gegen den echten Boolean-Wert.
+// Echte Boolean-Spalten — Postgres' ::text-Cast eines boolean liefert
+// "t"/"f", nicht "true"/"false", ein ILIKE-Substring-Filter (wie für alle
+// anderen Spalten unten) würde deshalb nie treffen. Der Filter vergleicht
+// hier stattdessen exakt gegen den echten Boolean-Wert.
 const BOOLEAN_COLUMNS: Partial<Record<TableName, readonly string[]>> = {
   archive_entries: ["dialogue_open"],
 };
-
-// Fremdschlüssel-Spalten (siehe REFERENCES-Constraints in schema.sql) —
-// ihr numerischer Wert wird in der Anzeige durch den Slug der referenzierten
-// Zeile ersetzt (siehe resolveReferences unten), reine Lesbarkeits-Hilfe,
-// keine Verlinkung. "users" ist zwar selbst keine VIEWABLE_TABLE, aber als
-// Ziel einer Fremdschlüssel-Auflösung trotzdem erlaubt (nur die id→slug-
-// Zuordnung wird gelesen, keine weiteren User-Spalten).
-type ReferenceTarget = "users" | "characters" | "missions" | "archive_entries";
-const FK_COLUMNS: Partial<Record<TableName, Record<string, ReferenceTarget>>> = {
-  characters: { player_id: "users" },
-  missions: { owner_user_id: "users" },
-  mission_logs: {
-    mission_id: "missions",
-    author_id: "characters",
-    owner_user_id: "users",
-  },
-  archive_entries: { owner_user_id: "users" },
-  archive_links: { source_id: "archive_entries", target_id: "archive_entries" },
-  dialogue_messages: {
-    archive_entry_id: "archive_entries",
-    character_id: "characters",
-    author_user_id: "users",
-  },
-  content_follows: { user_id: "users" },
-  push_subscriptions: { user_id: "users" },
-  content_deletions: { owner_user_id: "users", deleted_by: "users" },
-  dialogue_reservations: {
-    archive_entry_id: "archive_entries",
-    held_by_user_id: "users",
-  },
-  dialogue_reservation_notify_requests: {
-    archive_entry_id: "archive_entries",
-    user_id: "users",
-  },
-};
-
-// Ersetzt Fremdschlüssel-Werte (numerische id) durch den Slug der
-// referenzierten Zeile — eine Lookup-Query pro Zieltabelle (dedupliziert
-// über alle FK-Spalten der aktuellen Seite hinweg), nicht pro Zeile (N+1).
-// Ein Wert ohne Treffer (z.B. eine per ON DELETE SET NULL bereits entfernte
-// Referenz sollte hier nie auftreten, da dann NULL statt einer id steht —
-// defensiv trotzdem mit "#<id>" statt eines stillen Datenverlusts) fällt auf
-// die rohe id zurück.
-async function resolveReferences(
-  table: TableName,
-  rows: Record<string, unknown>[],
-): Promise<Record<string, unknown>[]> {
-  const fkColumns = FK_COLUMNS[table];
-  if (!fkColumns || rows.length === 0) return rows;
-
-  const idsByTarget = new Map<ReferenceTarget, Set<number>>();
-  for (const [col, target] of Object.entries(fkColumns)) {
-    for (const row of rows) {
-      const value = row[col];
-      if (typeof value === "number") {
-        if (!idsByTarget.has(target)) idsByTarget.set(target, new Set());
-        idsByTarget.get(target)!.add(value);
-      }
-    }
-  }
-  if (idsByTarget.size === 0) return rows;
-
-  const slugsByTarget = new Map<ReferenceTarget, Map<number, string>>();
-  for (const [target, ids] of idsByTarget) {
-    const slugRows = await sql.unsafe<{ id: number; slug: string }[]>(
-      `SELECT id, slug FROM ${quoteIdent(target)} WHERE id = ANY($1)`,
-      [[...ids]],
-    );
-    slugsByTarget.set(target, new Map(slugRows.map((r) => [r.id, r.slug])));
-  }
-
-  return rows.map((row) => {
-    const resolved = { ...row };
-    for (const [col, target] of Object.entries(fkColumns)) {
-      const value = row[col];
-      if (typeof value === "number") {
-        resolved[col] = slugsByTarget.get(target)?.get(value) ?? `#${value}`;
-      }
-    }
-    return resolved;
-  });
-}
 
 // Baut eine WHERE-Klausel pro Spalte — nur für Spalten aus der
 // TABLE_COLUMNS-Whitelist (nie aus rohem User-Input als Identifier),
@@ -258,6 +123,9 @@ export interface ListTableRowsOptions {
 // aus User-Input, sondern immer aus der TABLE_COLUMNS-Whitelist — nur
 // table/limit/offset/Filterwerte sind veränderlich, table ist über
 // isViewableTable() bereits geprüft, bevor diese Funktion aufgerufen wird.
+// Liefert die ROHEN Spaltenwerte (inkl. numerischer Fremdschlüssel-ids) — der
+// Tabellen-Explorer zeigt und bearbeitet den echten DB-Inhalt, deshalb keine
+// id→slug-Auflösung (die würde das Zurückschreiben einer FK-Spalte brechen).
 export async function listTableRows(
   table: TableName,
   limit: number,
@@ -282,11 +150,10 @@ export async function listTableRows(
   const limitIndex = params.length + 1;
   const offsetIndex = params.length + 2;
 
-  const rows = await sql.unsafe<Record<string, unknown>[]>(
+  return sql.unsafe<Record<string, unknown>[]>(
     `SELECT ${columns} FROM ${quoteIdent(table)} ${whereSql} ORDER BY ${quoteIdent(sortColumn)} ${sortDir} LIMIT $${limitIndex} OFFSET $${offsetIndex}`,
     [...params, limit, offset],
   );
-  return resolveReferences(table, rows);
 }
 
 export class UnsafeQueryError extends Error {}

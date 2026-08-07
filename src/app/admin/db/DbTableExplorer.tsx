@@ -11,8 +11,8 @@ import {
   type TableInfo,
   type TablePageResult,
 } from "./tableExplorerActions";
+import { TABLE_PAGE_SIZE } from "./tableExplorerConfig";
 
-const TABLE_PAGE_SIZE = 30;
 const TRUNCATE_LENGTH = 120;
 
 function formatValue(value: unknown, truncate: boolean): string {
@@ -68,11 +68,19 @@ export default function DbTableExplorer({
       setLoading(true);
       try {
         const result = await loadTablePageAction(table, p);
+        // Wurde die letzte Zeile einer Seite gelöscht, kann die aktuelle
+        // Seite hinter das (geschrumpfte) Ende rutschen — dann eine Seite
+        // zurück, statt eine leere Ansicht mit "2/1"-Pager zu zeigen.
+        if (!result.error && result.rows.length === 0 && p > 1) {
+          setPage(p - 1);
+          return;
+        }
         setData(result);
       } catch {
         setData({ columns: [], rows: [], total: 0, error: "Laden fehlgeschlagen." });
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     },
     [],
   );

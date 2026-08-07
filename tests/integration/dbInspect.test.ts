@@ -4,7 +4,7 @@ import {
   classifySqlStatement,
   parseSingleSelectTable,
   buildFilterClause,
-  isForeignKeyColumn,
+  quoteIdent,
   UnsafeQueryError,
 } from "@/lib/dbInspect";
 
@@ -219,17 +219,18 @@ describe("buildFilterClause", () => {
   });
 });
 
-describe("isForeignKeyColumn", () => {
-  it("returns true for a known foreign-key column", () => {
-    expect(isForeignKeyColumn("characters", "player_id")).toBe(true);
-    expect(isForeignKeyColumn("archive_entries", "owner_user_id")).toBe(true);
+describe("quoteIdent", () => {
+  it("wraps a plain identifier in double quotes", () => {
+    expect(quoteIdent("characters")).toBe('"characters"');
+    expect(quoteIdent("owner_user_id")).toBe('"owner_user_id"');
   });
 
-  it("returns false for a non-foreign-key column on the same table", () => {
-    expect(isForeignKeyColumn("characters", "name")).toBe(false);
-  });
-
-  it("returns false for a table with no foreign-key columns at all", () => {
-    expect(isForeignKeyColumn("timeline_events", "title")).toBe(false);
+  it("doubles embedded double quotes (SQL-standard delimited identifier)", () => {
+    // Verhindert, dass ein Name mit " den Identifier vorzeitig beendet und
+    // der Rest als SQL ausgeführt wird.
+    expect(quoteIdent('a"b')).toBe('"a""b"');
+    expect(quoteIdent('x"; DROP TABLE users; --')).toBe(
+      '"x""; DROP TABLE users; --"',
+    );
   });
 });
