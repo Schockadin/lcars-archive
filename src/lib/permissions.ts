@@ -48,6 +48,10 @@ export const PERMISSIONS = [
   "dialogues.moderate", // fremde Dialog-Nachrichten/Metadaten/Owner bearbeiten, Dialoge löschen
   "content.autolink_tools", // Autolink/Delink/Format auf fremde Inhalte + „Alle verlinken“
   "content.follow", // bookmarken/abonnieren (Basis für alle eingeloggten User)
+  "rag.use", // Archiv-KI (RAG) nutzen — Fragen an den Kampagnen-Datenbestand
+              // stellen (/rag). Basis für eingeloggte User oberhalb der
+              // Gast-Rolle; die Retrieval-Query filtert den Kontext ohnehin
+              // nach der Sichtbarkeit des Betrachters (siehe src/lib/rag.ts).
   // Datenbank-Bereich (/admin/db) — feingranular getrennt (siehe db-admin-Rolle
   // und DB_PERMISSIONS unten). sql_read = SELECT-Abfragen im SQL-Panel;
   // sql_write = INSERT/UPDATE; sql_delete = DELETE; db_backup = DB-/User-Backup-
@@ -78,6 +82,7 @@ export const PERMISSION_LABELS: Record<Permission, { label: string; description:
   "dialogues.moderate": { label: "Gespräche moderieren", description: "Fremde Nachrichten/Metadaten bearbeiten, Gespräche löschen." },
   "content.autolink_tools": { label: "Verlinkungs-Werkzeuge", description: "Autolinking/Entlinken auf fremde Inhalte, „Alle verlinken“." },
   "content.follow": { label: "Folgen/Bookmarken", description: "Inhalte abonnieren und mit Lesezeichen versehen." },
+  "rag.use": { label: "Archiv-KI", description: "Fragen an den Kampagnen-Datenbestand stellen (RAG-Assistent)." },
   "sql_read": { label: "SQL lesen", description: "Freie SELECT-Abfragen im DB-Bereich ausführen." },
   "sql_write": { label: "SQL schreiben", description: "Daten per INSERT/UPDATE im DB-Bereich ändern." },
   "sql_delete": { label: "SQL löschen", description: "Daten per DELETE im DB-Bereich entfernen." },
@@ -104,11 +109,12 @@ export const DB_PERMISSIONS = [
 // eingeloggten User; users.browse für alle Nicht-Gast-Rollen.
 export const DEFAULT_ROLE_PRESETS: RoleMap = {
   guest: ["content.follow"],
-  viewer: ["content.follow", "users.browse"],
-  player: ["content.follow", "users.browse", "content.create", "characters.assignable"],
+  viewer: ["content.follow", "users.browse", "rag.use"],
+  player: ["content.follow", "users.browse", "rag.use", "content.create", "characters.assignable"],
   gm: [
     "content.follow",
     "users.browse",
+    "rag.use",
     "gm.access",
     "characters.assign",
     "campaign.manage",
@@ -119,6 +125,7 @@ export const DEFAULT_ROLE_PRESETS: RoleMap = {
   admin: [
     "content.follow",
     "users.browse",
+    "rag.use",
     "admin.access",
     "users.manage",
     "content.view_all",
@@ -132,6 +139,7 @@ export const DEFAULT_ROLE_PRESETS: RoleMap = {
   "db-admin": [
     "content.follow",
     "users.browse",
+    "rag.use",
     "sql_read",
     "sql_write",
     "sql_delete",

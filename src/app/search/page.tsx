@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { searchFull } from "@/lib/search";
-import { getViewer } from "@/lib/visibility";
+import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import PageMeta from "@/components/PageMeta";
 import SearchResultsView from "./SearchResultsView";
 
@@ -55,6 +56,17 @@ export default async function SearchPage({
             Suchen
           </button>
         </form>
+
+        {/* Einstieg zum RAG-Assistenten — nur für Berechtigte (rag.use); die
+            /rag-Seite selbst gated zusätzlich (forbidden). */}
+        {viewerHasPermission(viewer, "rag.use") ? (
+          <p className="lcars-eyebrow mb-[16px]">
+            Lieber eine Frage stellen?{" "}
+            <Link href="/rag" className="lcars-text-data">
+              Zum Archiv-Assistenten
+            </Link>
+          </p>
+        ) : null}
 
         {q.length === 0 ? (
           <p className="lcars-empty-state">Suchbegriff eingeben.</p>

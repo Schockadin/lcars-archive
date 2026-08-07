@@ -9,6 +9,14 @@ import { sendMissionUpdatedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { logCaughtError } from "@/lib/errorLog";
+// Fire-and-forget-Re-Embedding (RAG-Index) — siehe src/lib/embeddingSync.ts.
+import {
+  syncEmbeddings,
+  syncEmbeddingVisibility,
+  syncEmbeddingActive,
+  syncEmbeddingOwner,
+  syncMissionLogsActiveByMission,
+} from "@/lib/embeddingSync";
 import {
   LogNavItem,
   LogNavNeighbors,
@@ -369,6 +377,7 @@ export async function createMission(input: {
     )
     RETURNING id, slug
   `;
+  if (rows[0]) syncEmbeddings("mission", rows[0].id);
   return rows[0];
 }
 
@@ -422,6 +431,7 @@ export async function updateMissionContent(
       (SELECT slug FROM users WHERE id = m.owner_user_id) AS "ownerSlug",
       old.is_draft AS "wasDraft"
   `;
+  if (rows[0]) syncEmbeddings("mission", missionId);
   return rows[0] ?? null;
 }
 
@@ -514,6 +524,7 @@ export async function updateMissionSynopsis(
   `;
   const row = rows[0];
   if (!row) return null;
+  syncEmbeddings("mission", missionId);
   return {
     ...row,
     metadata:
@@ -541,6 +552,7 @@ export async function updateMissionSynopsisWithHtml(
       updated_at = NOW()
     WHERE m.id = ${missionId}
   `;
+  syncEmbeddings("mission", missionId);
 }
 
 // Aktuellstes log_date über alle Mission-Logs hinweg — Vorschlagswert für
@@ -611,6 +623,7 @@ export async function createMissionLog(input: {
     )
     RETURNING id, slug
   `;
+  if (rows[0]) syncEmbeddings("mission_log", rows[0].id);
   return rows[0];
 }
 
@@ -791,6 +804,7 @@ export async function setMissionLogOwner(
     WHERE id = ${logId}
     RETURNING slug, mission_id AS "missionId"
   `;
+  if (rows[0]) syncEmbeddingOwner("mission_log", logId, ownerId);
   return rows[0] ?? null;
 }
 
@@ -822,6 +836,7 @@ export async function setMissionLogVisibility(
     RETURNING ml.slug, ml.mission_id AS "missionId", m.slug AS "missionSlug",
               ml.title, ml.source_md AS "sourceMarkdown"
   `;
+  if (rows[0]) syncEmbeddingVisibility("mission_log", logId, visibility);
   return rows[0] ?? null;
 }
 
@@ -839,6 +854,7 @@ export async function setMissionLogVisibilityAdmin(
     WHERE id = ${logId}
     RETURNING slug, mission_id AS "missionId"
   `;
+  if (rows[0]) syncEmbeddingVisibility("mission_log", logId, visibility);
   return rows[0] ?? null;
 }
 
@@ -951,6 +967,7 @@ export async function updateMissionLogContent(
               ml.visibility, old.is_draft AS "wasDraft",
               c.slug AS "authorSlug", c.name AS "authorName"
   `;
+  if (rows[0]) syncEmbeddings("mission_log", logId);
   return rows[0] ?? null;
 }
 
@@ -986,6 +1003,7 @@ export async function deleteMissionLog(
               ml.is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
+  if (row) syncEmbeddingActive("mission_log", logId, false);
   // Löschprotokoll fürs News-Feed (siehe getRecentDeletions in
   // recentActivity.ts) — aus Sicht aller Nicht-Admins ist der Log jetzt weg,
   // ohne dieses Protokoll gäbe es keine Datenquelle mehr für einen
@@ -1012,6 +1030,7 @@ export async function restoreMissionLog(
     WHERE id = ${logId} AND deleted_at IS NOT NULL
     RETURNING slug, mission_id AS "missionId"
   `;
+  if (rows[0]) syncEmbeddingActive("mission_log", logId, true);
   return rows[0] ?? null;
 }
 
@@ -1041,6 +1060,7 @@ export async function deleteMissionLogAsAdmin(
               title, visibility, owner_user_id AS "ownerUserId", is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
+  if (row) syncEmbeddingActive("mission_log", logId, false);
   if (row && !row.isDraft) {
     await sql`
       INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
@@ -1064,7 +1084,7 @@ export async function deleteMission(
   missionId: number,
   deletedByUserId: number,
 ): Promise<{ slug: string; logSlugs: string[] } | null> {
-  return sql.begin(async (tx) => {
+  const result = await sql.begin(async (tx) => {
     const logRows = await tx<{ slug: string }[]>`
       SELECT slug FROM mission_logs WHERE mission_id = ${missionId} AND deleted_at IS NULL
     `;
@@ -1099,6 +1119,14 @@ export async function deleteMission(
 
     return { slug: row.slug, logSlugs };
   });
+  // Nach dem Commit: Mission + kaskadierte Logs im Embedding-Index inaktiv
+  // setzen (die einzelnen Log-Ids liegen hier nicht vor, daher der Sammel-
+  // Helfer über mission_id).
+  if (result) {
+    syncEmbeddingActive("mission", missionId, false);
+    syncMissionLogsActiveByMission(missionId, false);
+  }
+  return result;
 }
 
 // Macht eine weich gelöschte Mission inkl. der zusammen mit ihr gelöschten
@@ -1110,7 +1138,7 @@ export async function deleteMission(
 export async function restoreMission(
   missionId: number,
 ): Promise<{ slug: string } | null> {
-  return sql.begin(async (tx) => {
+  const result = await sql.begin(async (tx) => {
     const rows = await tx<{ slug: string }[]>`
       UPDATE missions SET deleted_at = NULL
       WHERE id = ${missionId} AND deleted_at IS NOT NULL
@@ -1124,6 +1152,11 @@ export async function restoreMission(
     `;
     return row;
   });
+  if (result) {
+    syncEmbeddingActive("mission", missionId, true);
+    syncMissionLogsActiveByMission(missionId, true);
+  }
+  return result;
 }
 
 // Alle Mission-/Log-Pfade für die Sitemap und generateStaticParams. Nur
@@ -1184,4 +1217,5 @@ export async function updateMissionLogSourceMd(
     SET content = ${contentHtml}, source_md = ${bodyMarkdown}, updated_at = NOW()
     WHERE id = ${logId}
   `;
+  syncEmbeddings("mission_log", logId);
 }

@@ -273,4 +273,11 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Charaktere können jetzt Charakterbögen als PDF hinterlegen: Der Owner lädt beliebig viele Bögen auf der Charakterseite hoch, alle, die den Charakter sehen dürfen, können sie dort herunterladen.",
     ],
   },
+  {
+    version: "1.19",
+    title: "Archiv-Assistent: Fragen an den Kampagnen-Datenbestand stellen",
+    items: [
+      "Neu: Ein Archiv-Assistent (unter /rag) beantwortet Fragen zum Kampagneninhalt in natürlicher Sprache — z.B. „Was wissen wir über die Tholianer?“. Er stützt sich ausschließlich auf den vorhandenen Datenbestand (Charaktere, Missionen, Einsatzberichte, Archiv-Einträge und abgeschlossene Gespräche), zeigt die genutzten Quellen an und antwortet Wort für Wort im Stream. Was der Assistent dabei berücksichtigt, richtet sich nach den eigenen Leserechten — private oder GM-Inhalte fließen nur ein, wenn man sie ohnehin sehen darf.",
+    ],
+  },
 ];
