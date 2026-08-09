@@ -219,6 +219,55 @@ describe("chunkContent — Dialog", () => {
     expect(chunks[0].text).toContain("Teilnehmer: Kirk, Spock");
     expect(chunks[0].text).toContain("Faszinierend");
   });
+
+  it("langer Dialog wird gesplittet (OpenAI-8192-Token-Limit)", () => {
+    const chunks = chunkContent({
+      type: "dialogue",
+      record: {
+        title: "Endlos-Debatte",
+        participants: ["Kirk", "Spock"],
+        sourceMd: textOfTokens(6000), // weit über dem Ein-Chunk-Ziel
+      },
+    });
+    expect(chunks.length).toBeGreaterThan(1);
+    for (const c of chunks) {
+      expect(c.text).toContain("Gespräch: Endlos-Debatte");
+    }
+  });
+});
+
+// Absicherung gegen den 8192-Token-Fehler aus der Praxis: KEIN Chunk darf die
+// harte Zeichen-Obergrenze (8000, siehe HARD_MAX_CHARS) überschreiten — auch
+// nicht bei den „ein Chunk"-Typen mit sehr großem Inhalt.
+describe("chunkContent — harte Größen-Obergrenze", () => {
+  const HARD_MAX_CHARS = 8000;
+
+  it("kappt riesige Einzel-Chunk-Typen (Charakter/Mission/Dialog)", () => {
+    for (const type of ["character", "mission", "dialogue"] as const) {
+      const record =
+        type === "character"
+          ? { name: "Riese", sourceMd: textOfTokens(9000) }
+          : type === "mission"
+            ? { title: "Riese", sourceMd: textOfTokens(9000) }
+            : { title: "Riese", sourceMd: textOfTokens(9000) };
+      const chunks = chunkContent({ type, record } as Parameters<typeof chunkContent>[0]);
+      expect(chunks.length).toBeGreaterThan(1);
+      for (const c of chunks) {
+        expect(c.text.length).toBeLessThanOrEqual(HARD_MAX_CHARS);
+      }
+    }
+  });
+
+  it("kappt auch ein einzelnes, nicht zerlegbares Riesen-Segment", () => {
+    // Ein einziges „Wort" ohne Satz-/Absatzgrenzen (pathologisch).
+    const chunks = chunkContent({
+      type: "character",
+      record: { name: "X", sourceMd: "a".repeat(50000) },
+    });
+    for (const c of chunks) {
+      expect(c.text.length).toBeLessThanOrEqual(HARD_MAX_CHARS);
+    }
+  });
 });
 
 describe("toVectorLiteral", () => {

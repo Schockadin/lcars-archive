@@ -40,12 +40,20 @@ export interface RagSource {
   href: string | null;
 }
 
+// Cloudflare-Account-ID: bevorzugt CLOUDFLARE_ACCOUNT_ID, fällt aber auf die
+// bereits fürs R2-Storage gesetzte R2_ACCOUNT_ID zurück (dieselbe
+// Cloudflare-Account-ID, siehe src/lib/r2Backup.ts) — so muss keine doppelte
+// Variable gepflegt werden. Workers AI und R2 liegen im selben Account.
+function cloudflareAccountId(): string | undefined {
+  return process.env.CLOUDFLARE_ACCOUNT_ID || process.env.R2_ACCOUNT_ID;
+}
+
 // Ob das RAG konfiguriert ist: Embedding (OpenAI) für die Frage UND
 // Generierung (Cloudflare). Ohne eines von beiden ist die Route nicht nutzbar.
 export function hasRagConfig(): boolean {
   return Boolean(
     process.env.OPENAI_API_KEY &&
-      process.env.CLOUDFLARE_ACCOUNT_ID &&
+      cloudflareAccountId() &&
       process.env.CLOUDFLARE_AI_API_TOKEN,
   );
 }
@@ -219,11 +227,11 @@ export async function streamAnswer(
   messages: ChatMessage[],
   opts: { maxTokens?: number } = {},
 ): Promise<ReadableStream<string>> {
-  const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+  const accountId = cloudflareAccountId();
   const apiToken = process.env.CLOUDFLARE_AI_API_TOKEN;
   if (!accountId || !apiToken) {
     throw new Error(
-      "CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_AI_API_TOKEN ist nicht gesetzt.",
+      "CLOUDFLARE_ACCOUNT_ID/R2_ACCOUNT_ID / CLOUDFLARE_AI_API_TOKEN ist nicht gesetzt.",
     );
   }
 

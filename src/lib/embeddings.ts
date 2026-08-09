@@ -57,8 +57,41 @@ const LOG_CHUNK_OVERLAP_TOKENS = 100;
 const ARCHIVE_SINGLE_CHUNK_MAX_TOKENS = 1000;
 const ARCHIVE_CHUNK_TOKENS = 800;
 
+// Ziel-Obergrenze für die eigentlich „ein Chunk"-Typen (Character/Mission/
+// Dialog): ist der Inhalt größer, wird auch hier gesplittet. Vor allem für
+// lange, aggregierte Dialoge nötig — OpenAIs text-embedding-3-small nimmt pro
+// Eingabe MAXIMAL 8192 Tokens an, ein einzelner Riesen-Chunk lief sonst in
+// „maximum input length is 8192 tokens" (HTTP 400).
+const SINGLE_CHUNK_TARGET_TOKENS = 1500;
+
+// Harte Zeichen-Obergrenze pro Chunk als letzter Notausgang — greift, falls
+// ein einzelnes, nicht weiter zerlegbares Segment (z.B. eine sehr lange Zeile
+// ohne Satzzeichen) trotz Token-Splitting zu groß bleibt. Bewusst konservativ:
+// 8000 Zeichen liegen selbst bei dichter (deutscher) Tokenisierung deutlich
+// unter dem 8192-Token-Limit. Der Header (wenige Zeilen) kommt oben drauf,
+// deshalb liegen die Ziel-Grenzen oben klar darunter.
+const HARD_MAX_CHARS = 8000;
+
 export function estimateTokens(text: string): number {
   return Math.ceil(text.length / CHARS_PER_TOKEN);
+}
+
+// Letzter Notausgang gegen das 8192-Token-Limit: zerschneidet jeden Chunk, der
+// HARD_MAX_CHARS überschreitet, hart an Zeichengrenzen. Kommt bei normalem
+// Inhalt nie zum Tragen (die Token-Ziele liegen weit darunter), schützt aber
+// vor pathologischen Einzel-Segmenten ohne Satz-/Absatzgrenzen.
+function hardCapChars(texts: string[]): string[] {
+  const out: string[] = [];
+  for (const text of texts) {
+    if (text.length <= HARD_MAX_CHARS) {
+      out.push(text);
+      continue;
+    }
+    for (let i = 0; i < text.length; i += HARD_MAX_CHARS) {
+      out.push(text.slice(i, i + HARD_MAX_CHARS));
+    }
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -238,10 +271,27 @@ function narrativeMd(record: {
 // Unit-Tests. Gibt eine (evtl. leere) Liste indizierter Chunks zurück; ein
 // Inhalt ohne verwertbaren Text liefert [].
 export function chunkContent(input: ChunkInput): Chunk[] {
-  const texts = buildChunkTexts(input);
+  const texts = hardCapChars(buildChunkTexts(input));
   return texts
     .map((text, index) => ({ index, text: text.trim() }))
     .filter((c) => c.text !== "");
+}
+
+// Zerlegt den (bereits von Markdown befreiten) Fließtext eines „ein Chunk"-Typs
+// (Character/Mission/Dialog) in einen ODER — bei großem Inhalt — mehrere
+// Chunks, jeweils mit vorangestelltem Header. Kurzer Inhalt bleibt ein
+// einziger Chunk (splitByTokens gibt dann [text] zurück).
+function headeredBodyChunks(
+  header: string,
+  body: string,
+  fallback: string,
+): string[] {
+  if (!body) return [withHeader(header, fallback)];
+  return splitByTokens(
+    body,
+    SINGLE_CHUNK_TARGET_TOKENS,
+    LOG_CHUNK_OVERLAP_TOKENS,
+  ).map((c) => withHeader(header, c));
 }
 
 function buildChunkTexts(input: ChunkInput): string[] {
@@ -255,9 +305,10 @@ function buildChunkTexts(input: ChunkInput): string[] {
         ["Status", r.status],
       ]);
       const body = stripMarkdown(narrativeMd(r));
-      // 1 Chunk pro Charakter (Plan). Auch ohne Bio bleibt der Header als
-      // minimaler, durchsuchbarer Steckbrief erhalten.
-      return [withHeader(header, body || r.name)];
+      // 1 Chunk pro Charakter (Plan) — bei ungewöhnlich langer Bio zur
+      // Sicherheit gesplittet. Auch ohne Bio bleibt der Header als minimaler,
+      // durchsuchbarer Steckbrief erhalten.
+      return headeredBodyChunks(header, body, r.name);
     }
     case "mission": {
       const r = input.record;
@@ -268,8 +319,8 @@ function buildChunkTexts(input: ChunkInput): string[] {
         ["Ende", r.endedAt],
       ]);
       const body = stripMarkdown(narrativeMd(r));
-      // 1 Chunk pro Mission (Plan).
-      return [withHeader(header, body || r.title)];
+      // 1 Chunk pro Mission (Plan) — bei ungewöhnlich langer Synopsis gesplittet.
+      return headeredBodyChunks(header, body, r.title);
     }
     case "mission_log": {
       const r = input.record;
@@ -334,8 +385,10 @@ function buildChunkTexts(input: ChunkInput): string[] {
       ]);
       const body = stripMarkdown(narrativeMd(r));
       // Alle Messages sind (als abgeschlossener Dialog) bereits zu einem
-      // Fließtext aggregiert (archive_entries.source_md) → 1 Chunk.
-      return [withHeader(header, body || r.title || "Gespräch")];
+      // Fließtext aggregiert (archive_entries.source_md). Meist 1 Chunk, bei
+      // langen Gesprächen aber gesplittet — sonst überschreitet der aggregierte
+      // Text schnell das 8192-Token-Limit von OpenAI (der Fehler aus der Praxis).
+      return headeredBodyChunks(header, body, r.title || "Gespräch");
     }
   }
 }
