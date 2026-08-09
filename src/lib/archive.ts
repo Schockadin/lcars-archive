@@ -11,6 +11,13 @@ import { sendArchiveEntryUpdatedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { logCaughtError } from "@/lib/errorLog";
+// Fire-and-forget-Re-Embedding (RAG-Index) — siehe src/lib/embeddingSync.ts.
+import {
+  syncEmbeddings,
+  syncEmbeddingVisibility,
+  syncEmbeddingActive,
+  syncEmbeddingOwner,
+} from "@/lib/embeddingSync";
 import {
   getAttributeFields,
   getReferenceFields,
@@ -332,6 +339,7 @@ export async function setArchiveEntryVisibility(
     WHERE id = ${archiveEntryId} AND category != 'dialogue' AND owner_user_id = ${userId}
     RETURNING slug, title, source_md AS "sourceMarkdown"
   `;
+  if (rows[0]) syncEmbeddingVisibility("archive_entry", archiveEntryId, visibility);
   return rows[0] ?? null;
 }
 
@@ -353,6 +361,12 @@ export async function setArchiveEntryVisibilityAdmin(
     WHERE id = ${archiveEntryId}
     RETURNING slug
   `;
+  // Diese Admin-Funktion umfasst auch Dialoge (kein category-Filter) — beide
+  // möglichen content_type-Zeilen nachziehen (nur eine existiert je Id).
+  if (rows[0]) {
+    syncEmbeddingVisibility("archive_entry", archiveEntryId, visibility);
+    syncEmbeddingVisibility("dialogue", archiveEntryId, visibility);
+  }
   return rows[0] ?? null;
 }
 
@@ -371,6 +385,11 @@ export async function setArchiveEntryOwner(
     WHERE id = ${archiveEntryId}
     RETURNING slug
   `;
+  // Gilt auch für Dialoge — beide möglichen content_type-Zeilen nachziehen.
+  if (rows[0]) {
+    syncEmbeddingOwner("archive_entry", archiveEntryId, ownerId);
+    syncEmbeddingOwner("dialogue", archiveEntryId, ownerId);
+  }
   return rows[0] ?? null;
 }
 
@@ -418,6 +437,7 @@ export async function updateArchiveEntryContent(
     SET content = ${contentHtml}, source_md = ${bodyMarkdown}, updated_at = NOW()
     WHERE id = ${archiveEntryId}
   `;
+  syncEmbeddings("archive_entry", archiveEntryId);
 }
 
 // Probiert slugifyBase(title), "${base}-2", "${base}-3", … bis ein Slug in
@@ -510,6 +530,7 @@ export async function createArchiveEntry(input: {
     `;
   }
 
+  syncEmbeddings("archive_entry", row.id);
   return row;
 }
 
@@ -665,6 +686,7 @@ export async function updateOwnArchiveEntryContent(
     WHERE id = ${entryId}
   `;
 
+  syncEmbeddings("archive_entry", entryId);
   return result;
 }
 
@@ -689,6 +711,7 @@ export async function updateOwnArchiveEntryBody(
     RETURNING slug, title
   `;
   const row = rows[0];
+  if (row) syncEmbeddings("archive_entry", entryId);
   return row ? { slug: row.slug, title: row.title, contentHtml } : null;
 }
 
@@ -773,6 +796,7 @@ export async function deleteArchiveEntry(
     RETURNING slug, title, visibility, owner_user_id AS "ownerUserId", is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
+  if (row) syncEmbeddingActive("archive_entry", archiveEntryId, false);
   if (row && !row.isDraft) {
     await sql`
       INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
@@ -807,6 +831,7 @@ export async function deleteOwnArchiveEntry(
     RETURNING slug, title, visibility, is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
+  if (row) syncEmbeddingActive("archive_entry", archiveEntryId, false);
   if (row && !row.isDraft) {
     await sql`
       INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
@@ -825,5 +850,11 @@ export async function restoreArchiveEntry(
     WHERE id = ${archiveEntryId} AND deleted_at IS NOT NULL
     RETURNING slug
   `;
+  // Ohne category-Filter — deckt auch Dialoge ab; beide möglichen
+  // content_type-Zeilen reaktivieren (nur eine existiert je Id).
+  if (rows[0]) {
+    syncEmbeddingActive("archive_entry", archiveEntryId, true);
+    syncEmbeddingActive("dialogue", archiveEntryId, true);
+  }
   return rows[0] ?? null;
 }

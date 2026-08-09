@@ -8,6 +8,15 @@ import { markdownToSafeHtml } from "@/lib/markdown";
 import { getCharactersForUser } from "@/lib/characters";
 import { generateUniqueArchiveEntrySlug } from "@/lib/archive";
 import { resolveCharacterColor } from "@/lib/characterColor";
+// Fire-and-forget-Re-Embedding (RAG-Index) — nur ABGESCHLOSSENE Dialoge sind
+// embedbar (siehe embeddingSync.ts). Der Import ist tsx-sicher (kein
+// server-only); dialoguesCore selbst läuft ohnehin nur im react-server-
+// Kontext (siehe autolink-Kette über @/lib/characters).
+import {
+  syncEmbeddings,
+  syncEmbeddingVisibility,
+  syncEmbeddingActive,
+} from "@/lib/embeddingSync";
 import {
   parseDialogueLogDate,
   byDialogueLogDateDesc,
@@ -1208,6 +1217,8 @@ export async function completeDialogue(archiveEntryId: number): Promise<void> {
     `;
     await regenerateDialogueContent(tx, archiveEntryId);
   });
+  // Erst jetzt (abgeschlossen + Fließtext erzeugt) ist der Dialog embedbar.
+  syncEmbeddings("dialogue", archiveEntryId);
 }
 
 // Nur der Ersteller (owner_user_id, siehe createDialogue) darf die
@@ -1225,6 +1236,7 @@ export async function setDialogueVisibility(
     WHERE id = ${archiveEntryId} AND category = 'dialogue' AND owner_user_id = ${userId}
     RETURNING slug, title
   `;
+  if (rows[0]) syncEmbeddingVisibility("dialogue", archiveEntryId, visibility);
   return rows[0] ?? null;
 }
 
@@ -1269,6 +1281,7 @@ export async function deleteDialogue(
   `;
   const row = rows[0];
   if (!row) return null;
+  syncEmbeddingActive("dialogue", archiveEntryId, false);
 
   await sql`
     INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
@@ -1303,6 +1316,7 @@ export async function deleteOwnDialogue(
   `;
   const row = rows[0] ?? null;
   if (row) {
+    syncEmbeddingActive("dialogue", archiveEntryId, false);
     await sql`
       INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
       VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${userId}, ${userId})
@@ -1320,6 +1334,7 @@ export async function restoreDialogue(
     WHERE id = ${archiveEntryId} AND category = 'dialogue' AND deleted_at IS NOT NULL
     RETURNING slug
   `;
+  if (rows[0]) syncEmbeddingActive("dialogue", archiveEntryId, true);
   return rows[0] ?? null;
 }
 
@@ -1804,5 +1819,8 @@ export async function updateDialogueMetadata(
     WHERE id = ${id} AND category = 'dialogue' AND deleted_at IS NULL
     RETURNING slug
   `;
+  // Header (Titel/Schauplatz) hat sich geändert → bei abgeschlossenen
+  // Dialogen neu embedden (offene liefern in embedOne null → No-op).
+  if (rows[0]) syncEmbeddings("dialogue", id);
   return rows[0] ?? null;
 }

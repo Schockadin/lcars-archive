@@ -20,6 +20,15 @@ import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { logCaughtError } from "@/lib/errorLog";
 import { isUniqueViolation } from "@/lib/users";
+// Fire-and-forget-Re-Embedding (RAG-Index) nach Content-Mutationen — siehe
+// src/lib/embeddingSync.ts (überspringt still ohne OPENAI_API_KEY).
+import {
+  syncEmbeddings,
+  syncEmbeddingVisibility,
+  syncEmbeddingActive,
+  syncEmbeddingOwner,
+  syncCharacterEmbeddingsOwnerCleared,
+} from "@/lib/embeddingSync";
 
 // Hilfsfunktion: stellt sicher dass metadata ein Objekt ist
 function parseCharacter(row: Character): Character {
@@ -220,6 +229,7 @@ export async function assignCharacterToUser(
     WHERE id = ${characterId}
     RETURNING *
   `;
+  if (rows[0]) syncEmbeddingOwner("character", characterId, userId);
   return rows[0] ? parseCharacter(rows[0]) : null;
 }
 
@@ -233,6 +243,7 @@ export async function unassignCharactersFromUser(
   await sql`
     UPDATE characters SET player_id = NULL WHERE player_id = ${userId}
   `;
+  syncCharacterEmbeddingsOwnerCleared(userId);
 }
 
 // Nur der Owner (player_id) darf die Sichtbarkeit ändern — ein fremdes/
@@ -251,6 +262,7 @@ export async function setCharacterVisibility(
     WHERE id = ${characterId} AND player_id = ${userId}
     RETURNING slug, name, source_md AS "sourceMarkdown"
   `;
+  if (rows[0]) syncEmbeddingVisibility("character", characterId, visibility);
   return rows[0] ?? null;
 }
 
@@ -268,6 +280,7 @@ export async function setCharacterVisibilityAdmin(
     WHERE id = ${characterId}
     RETURNING slug
   `;
+  if (rows[0]) syncEmbeddingVisibility("character", characterId, visibility);
   return rows[0] ?? null;
 }
 
@@ -395,6 +408,7 @@ export async function updateCharacterBio(
     SET bio = ${bio}, source_md = ${bodyMarkdown}, updated_at = NOW()
     WHERE id = ${characterId}
   `;
+  syncEmbeddings("character", characterId);
 }
 
 // Probiert slugifyBase(name), "${base}-2", "${base}-3", … bis ein Slug in
@@ -499,6 +513,7 @@ export async function createCharacter(input: {
     )
     RETURNING id, slug
   `;
+  syncEmbeddings("character", row.id);
   return row;
 }
 
@@ -647,6 +662,7 @@ export async function updateOwnCharacterContent(
     WHERE id = ${characterId} AND player_id = ${userId}
     RETURNING slug, visibility, old.is_draft AS "wasDraft"
   `;
+  if (rows[0]) syncEmbeddings("character", characterId);
   return rows[0] ?? null;
 }
 
@@ -733,6 +749,7 @@ export async function updateOwnCharacterBio(
     RETURNING slug, name
   `;
   const row = rows[0];
+  if (row) syncEmbeddings("character", characterId);
   return row ? { slug: row.slug, name: row.name, bio } : null;
 }
 
@@ -823,6 +840,7 @@ export async function deleteCharacter(
     RETURNING slug, name, visibility, player_id AS "ownerUserId", is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
+  if (row) syncEmbeddingActive("character", characterId, false);
   // Ein Entwurf war für niemanden außer dem Owner sichtbar — sein Löschen
   // darf deshalb nicht im "gelöscht"-News-Feed auftauchen (der Titel wäre
   // sonst die erste Info, die überhaupt irgendjemand außer dem Owner von
@@ -859,6 +877,7 @@ export async function deleteOwnCharacter(
     RETURNING slug, name, visibility, is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
+  if (row) syncEmbeddingActive("character", characterId, false);
   if (row && !row.isDraft) {
     await sql`
       INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
@@ -877,5 +896,6 @@ export async function restoreCharacter(
     WHERE id = ${characterId} AND deleted_at IS NOT NULL
     RETURNING slug
   `;
+  if (rows[0]) syncEmbeddingActive("character", characterId, true);
   return rows[0] ?? null;
 }

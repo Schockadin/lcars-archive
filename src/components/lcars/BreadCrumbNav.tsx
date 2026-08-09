@@ -12,7 +12,6 @@ const BREADCRUMB_PREFIXES: string[] = [
   "/characters",
   "/missions",
   "/archive",
-  "/timeline",
 ];
 
 // Statische Label-Map für Sektions-Slugs die nicht automatisch

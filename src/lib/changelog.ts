@@ -273,4 +273,13 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Charaktere können jetzt Charakterbögen als PDF hinterlegen: Der Owner lädt beliebig viele Bögen auf der Charakterseite hoch, alle, die den Charakter sehen dürfen, können sie dort herunterladen.",
     ],
   },
+  {
+    version: "1.19",
+    title: "Archiv-Assistent: Fragen an den Kampagnen-Datenbestand stellen",
+    items: [
+      "Neu: Ein Archiv-Assistent (unter /rag) beantwortet Fragen zum Kampagneninhalt in natürlicher Sprache — z.B. „Was wissen wir über die Tholianer?“. Er stützt sich ausschließlich auf den vorhandenen Datenbestand (Charaktere, Missionen, Einsatzberichte, Archiv-Einträge und abgeschlossene Gespräche), zeigt die genutzten Quellen an und antwortet Wort für Wort im Stream. Was der Assistent dabei berücksichtigt, richtet sich nach den eigenen Leserechten — private oder GM-Inhalte fließen nur ein, wenn man sie ohnehin sehen darf.",
+      "Für die Administration gibt es unter Scripts eine neue Aktion „Archiv-Assistent · Embeddings“, die den Suchindex des Assistenten für alle Inhalte auf einmal aufbaut bzw. auffrischt (mit Fortschrittsanzeige) — nötig einmalig nach der Einrichtung und als Reparatur, falls automatische Aktualisierungen etwas verpasst haben.",
+      "Die Suche ist jetzt ein eigener Menüpunkt (Lupen-Symbol) im Hauptmenü und ersetzt dort die bisherige Timeline; die Timeline-Seite selbst wurde entfernt. Auf der Suchseite steht oben wie gewohnt die Volltextsuche und direkt darunter der Archiv-Assistent (für alle, die ihn nutzen dürfen); der separate Such-Knopf oben im Kopfbereich für angemeldete Nutzer:innen entfällt dadurch.",
+    ],
+  },
 ];

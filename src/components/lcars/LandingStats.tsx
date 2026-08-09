@@ -27,12 +27,13 @@ export default async function LandingStats() {
         color="var(--lcars-red)"
         href="/archive"
       />
+      {/* „Jahre" bleibt als reine Kennzahl — die frühere Verlinkung auf
+          /timeline entfällt (Timeline-Seite entfernt). */}
       <LcarsDataRow
         value={15}
         label="Jahre"
         color="var(--lcars-amber)"
         accentColor="var(--lcars-orange)"
-        href="/timeline"
       />
     </div>
   );

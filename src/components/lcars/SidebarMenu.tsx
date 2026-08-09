@@ -12,7 +12,7 @@ import {
   CharactersNavIcon,
   MissionsNavIcon,
   ArchiveNavIcon,
-  TimelineNavIcon,
+  SearchNavIcon,
 } from "@/lib/icons";
 import LcarsMenuItem from "./MenuItem";
 
@@ -23,7 +23,7 @@ const NAV_ICONS: Record<string, ReactNode> = {
   "/characters": <CharactersNavIcon />,
   "/missions": <MissionsNavIcon />,
   "/archive": <ArchiveNavIcon />,
-  "/timeline": <TimelineNavIcon />,
+  "/search": <SearchNavIcon />,
 };
 
 // Aktuelle Sektion aus dem Pfad ableiten — "/" ist die Startseite ("home"),

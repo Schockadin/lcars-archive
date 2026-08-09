@@ -65,9 +65,11 @@ export default function HeaderUserNav({
     onClose: () => setAdminOpen(false),
   });
 
+  // „Suche" ist bewusst NICHT mehr hier: die Suche hat einen eigenen Eintrag
+  // (Lupe) im Hauptmenü (MAIN_NAV/SidebarMenu.tsx), der Header-Button wäre
+  // doppelt.
   const tabs = [
     { href: "/user/content", label: "Inhalte" },
-    { href: "/search", label: "Suche" },
     ...(permissions.includes("users.browse")
       ? [{ href: "/users", label: "User" }]
       : []),

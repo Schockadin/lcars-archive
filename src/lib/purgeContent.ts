@@ -3,6 +3,10 @@ import sql from "@/lib/db";
 import type { TrashContentType } from "@/lib/adminContent";
 import { purgeContentImagesFor } from "@/lib/contentImages";
 import { purgeCharacterSheetsFor } from "@/lib/characterSheets";
+// RAG-Index endgültig mit aufräumen — content_embeddings hängt NICHT per FK am
+// Inhalt (eigene Tabelle), muss also hier beim harten Löschen mit entfernt
+// werden, sonst blieben verwaiste Vektorzeilen zurück.
+import { deleteEmbeddings } from "@/lib/embeddings";
 
 // Endgültiges Löschen bereits weich gelöschter Inhalte (deleted_at gesetzt,
 // siehe deleteCharacter/deleteMission/deleteMissionLogAsAdmin/
@@ -56,6 +60,7 @@ export async function purgeExpiredSoftDeletedContent(
   `;
   for (const c of characterRows) {
     await purgeContentImagesFor("character", c.id);
+    await deleteEmbeddings(sql, "character", c.id);
   }
 
   const missionRows = await sql<{ id: number; slug: string }[]>`
@@ -70,6 +75,7 @@ export async function purgeExpiredSoftDeletedContent(
       DELETE FROM content_follows WHERE target_type = 'mission' AND target_slug = ${m.slug}
     `;
     await purgeContentImagesFor("mission", m.id);
+    await deleteEmbeddings(sql, "mission", m.id);
     // Zugehörige, noch nicht individuell gelöschte Logs sind durch das
     // Mission-Löschen ebenfalls deleted_at gesetzt (siehe deleteMission in
     // lib/missions.ts) — werden gleich unten mit demselben Cutoff mitgepurgt.
@@ -84,6 +90,7 @@ export async function purgeExpiredSoftDeletedContent(
       DELETE FROM timeline_events WHERE source_type = 'mission_log' AND source_slug = ${log.slug}
     `;
     await purgeContentImagesFor("mission_log", log.id);
+    await deleteEmbeddings(sql, "mission_log", log.id);
   }
 
   const archiveRows = await sql<{ id: number; slug: string }[]>`
@@ -93,6 +100,10 @@ export async function purgeExpiredSoftDeletedContent(
   for (const entry of archiveRows) {
     await purgeArchiveLinksAndFollows(entry.slug);
     await purgeContentImagesFor("archive_entry", entry.id);
+    // Kategorie ist nach dem DELETE nicht mehr bekannt — beide möglichen
+    // content_type-Zeilen entfernen (nur eine existierte je Id).
+    await deleteEmbeddings(sql, "archive_entry", entry.id);
+    await deleteEmbeddings(sql, "dialogue", entry.id);
   }
 
   return {
@@ -118,9 +129,15 @@ export async function purgeContentById(
     await purgeCharacterSheetsFor(id);
     await sql`DELETE FROM characters WHERE id = ${id}`;
     await purgeContentImagesFor("character", id);
+    await deleteEmbeddings(sql, "character", id);
     return true;
   }
   if (contentType === "mission") {
+    // Log-Ids VOR dem Löschen erfassen, um deren Embeddings gezielt zu räumen
+    // (nach dem DELETE sind die Zeilen weg).
+    const logIds = await sql<{ id: number }[]>`
+      SELECT id FROM mission_logs WHERE mission_id = ${id} AND deleted_at IS NOT NULL
+    `;
     const rows = await sql<{ slug: string }[]>`
       DELETE FROM missions WHERE id = ${id} AND deleted_at IS NOT NULL RETURNING slug
     `;
@@ -130,6 +147,8 @@ export async function purgeContentById(
     await sql`DELETE FROM content_follows WHERE target_type = 'mission' AND target_slug = ${row.slug}`;
     await sql`DELETE FROM mission_logs WHERE mission_id = ${id} AND deleted_at IS NOT NULL`;
     await purgeContentImagesFor("mission", id);
+    await deleteEmbeddings(sql, "mission", id);
+    for (const log of logIds) await deleteEmbeddings(sql, "mission_log", log.id);
     return true;
   }
   if (contentType === "mission_log") {
@@ -140,6 +159,7 @@ export async function purgeContentById(
     if (!row) return false;
     await sql`DELETE FROM timeline_events WHERE source_type = 'mission_log' AND source_slug = ${row.slug}`;
     await purgeContentImagesFor("mission_log", id);
+    await deleteEmbeddings(sql, "mission_log", id);
     return true;
   }
   // archive_entry und dialogue teilen sich dieselbe Tabelle — Dialoge kennen
@@ -153,5 +173,9 @@ export async function purgeContentById(
   if (!row) return false;
   await purgeArchiveLinksAndFollows(row.slug);
   await purgeContentImagesFor("archive_entry", id);
+  // archive_entry ODER dialogue (gleiche Tabelle) — beide möglichen
+  // content_type-Zeilen entfernen (nur eine existierte je Id).
+  await deleteEmbeddings(sql, "archive_entry", id);
+  await deleteEmbeddings(sql, "dialogue", id);
   return true;
 }

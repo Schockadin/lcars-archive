@@ -41,6 +41,15 @@
 -- Diensten wie Neon/Supabase ist pg_trgm vorhanden.)
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
+-- vector (pgvector): Vektor-Datentyp + Ähnlichkeits-Operatoren (u.a. <=> für
+-- Cosine-Distance). Grundlage des RAG-Systems (src/lib/embeddings.ts,
+-- src/lib/rag.ts): Inhalte werden als Embedding-Vektoren in
+-- content_embeddings (siehe unten) abgelegt und per Vektorsuche abgefragt.
+-- IF NOT EXISTS hält die Anlage idempotent wie den Rest dieser Datei. Auf
+-- Railway (verwalteter Postgres) ist die Extension verfügbar und muss nur
+-- einmalig aktiviert werden.
+CREATE EXTENSION IF NOT EXISTS vector;
+
 -- ---------------------------------------------------------------------------
 -- users
 -- ---------------------------------------------------------------------------
@@ -642,6 +651,69 @@ CREATE TABLE IF NOT EXISTS news_seen (
   PRIMARY KEY (user_id, target_type, target_key)
 );
 CREATE INDEX IF NOT EXISTS idx_news_seen_user ON news_seen(user_id);
+
+-- ---------------------------------------------------------------------------
+-- content_embeddings
+-- ---------------------------------------------------------------------------
+-- Vektor-Index des RAG-Systems (src/lib/embeddings.ts erzeugt die Zeilen,
+-- src/lib/rag.ts fragt sie ab). Jede Zeile ist EIN Chunk eines Inhalts
+-- (content_type + content_id) mit seinem Embedding-Vektor (OpenAI
+-- text-embedding-3-small, auf 512 Dimensionen reduziert) und einer Kopie des
+-- Chunk-Textes für den Prompt-Kontext.
+--
+-- RBAC-Felder (visibility/owner_id/is_draft/is_active) sind BEWUSST vom
+-- Quell-Inhalt DENORMALISIERT: die Vektorsuche filtert direkt auf dieser
+-- Tabelle (kein JOIN auf characters/missions/… pro Query), mit derselben
+-- Logik wie canView() in src/lib/visibility.ts. Sie werden von den
+-- Content-Mutationen mitgeschrieben (Sichtbarkeits-Änderung → UPDATE
+-- visibility; Soft-Delete → is_active=false; siehe embeddings.ts).
+--   - owner_id: die für den Typ zuständige Owner-Spalte (player_id bei
+--     characters, owner_user_id bei mission_logs/archive_entries; missions
+--     sind immer public und haben keinen wirksamen Owner-Bypass).
+--   - is_active: false, sobald der Quell-Inhalt soft-deleted ist
+--     (deleted_at IS NOT NULL) — die Suche schließt inaktive Chunks aus,
+--     ohne die Zeile sofort löschen zu müssen (das erledigt der endgültige
+--     Purge über deleteEmbeddings()).
+--
+-- href/title/slug: für die Quellen-Angaben unter der RAG-Antwort, damit die
+-- Retrieval-Query keine weiteren Tabellen ansehen muss.
+--
+-- UNIQUE (content_type, content_id, chunk_index): Grundlage des Upserts
+-- (ON CONFLICT) in upsertEmbeddings() und zugleich der Lookup-Index für
+-- Update/Delete eines ganzen Inhalts (Prefix content_type, content_id).
+CREATE TABLE IF NOT EXISTS content_embeddings (
+  id           BIGSERIAL PRIMARY KEY,
+  content_type TEXT NOT NULL
+                 CHECK (content_type IN (
+                   'character', 'mission', 'mission_log',
+                   'archive_entry', 'dialogue'
+                 )),
+  content_id   INT NOT NULL,
+  chunk_index  INT NOT NULL,
+  chunk_text   TEXT NOT NULL,
+  embedding    vector(512) NOT NULL,
+  visibility   TEXT NOT NULL DEFAULT 'public'
+                 CHECK (visibility IN ('private', 'gm', 'public')),
+  owner_id     INT,
+  is_draft     BOOLEAN NOT NULL DEFAULT false,
+  is_active    BOOLEAN NOT NULL DEFAULT true,
+  title        TEXT,
+  slug         TEXT,
+  href         TEXT,
+  metadata     JSONB NOT NULL DEFAULT '{}',
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (content_type, content_id, chunk_index)
+);
+-- Cosine-Distance-Suche (<=>) über HNSW — für den kleinen Fan-Archiv-Korpus
+-- nicht zwingend (ein seq scan wäre schnell genug), aber ohne Kosten für die
+-- Zukunft angelegt. Falls die installierte pgvector-Version kein HNSW kann,
+-- kann dieser eine Index entfallen; die Query funktioniert (langsamer) auch
+-- ohne ihn.
+CREATE INDEX IF NOT EXISTS idx_content_embeddings_vec
+  ON content_embeddings USING hnsw (embedding vector_cosine_ops);
+-- Für den RBAC-Vorfilter der Vektorsuche (nur aktive, sichtbare Chunks).
+CREATE INDEX IF NOT EXISTS idx_content_embeddings_rbac
+  ON content_embeddings(is_active, visibility);
 
 -- ---------------------------------------------------------------------------
 -- Migrationen seit der letzten Schema-Konsolidierung
