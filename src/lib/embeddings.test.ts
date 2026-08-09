@@ -68,6 +68,17 @@ describe("splitByTokens", () => {
     const chunks = splitByTokens(longParagraph, 200, 20);
     expect(chunks.length).toBeGreaterThan(1);
   });
+
+  it("overlap=0 dupliziert den vorigen Chunk NICHT (slice(-0)-Falle)", () => {
+    const text = textOfTokens(2400);
+    const chunks = splitByTokens(text, 800, 0);
+    expect(chunks.length).toBeGreaterThan(1);
+    // Ohne Overlap darf die Summe der Chunk-Längen die Eingabe nur minimal
+    // überschreiten (Trenner). Mit der slice(-0)-Falle würde jeder Chunk den
+    // kompletten Vorgänger mitschleppen → ein Vielfaches der Eingabelänge.
+    const total = chunks.reduce((n, c) => n + c.length, 0);
+    expect(total).toBeLessThan(text.length * 1.2);
+  });
 });
 
 describe("splitMarkdownByHeadings", () => {

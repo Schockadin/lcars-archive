@@ -28,6 +28,17 @@ const recentRequests = new Map<number, number[]>();
 
 function isRateLimited(userId: number): boolean {
   const now = Date.now();
+  // Sicherheitsnetz gegen unbegrenztes Wachstum der Map: bei vielen Keys die
+  // Einträge entfernen, deren jüngster Zugriff außerhalb des Fensters liegt.
+  // Läuft praktisch nie (kleines Archiv), hält die Map aber theoretisch
+  // beschränkt.
+  if (recentRequests.size > 500) {
+    for (const [uid, ts] of recentRequests) {
+      if (ts.length === 0 || now - ts[ts.length - 1] >= RATE_LIMIT_WINDOW_MS) {
+        recentRequests.delete(uid);
+      }
+    }
+  }
   const hits = (recentRequests.get(userId) ?? []).filter(
     (t) => now - t < RATE_LIMIT_WINDOW_MS,
   );

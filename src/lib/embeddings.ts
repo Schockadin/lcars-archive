@@ -166,10 +166,14 @@ export function splitByTokens(
     if (estimateTokens(candidate) > targetTokens && current) {
       chunks.push(current);
       // Overlap: die letzten overlapTokens Zeichen des vorigen Chunks dem
-      // nächsten voranstellen, an einer Wortgrenze abgeschnitten.
+      // nächsten voranstellen, an einer Wortgrenze abgeschnitten. WICHTIG:
+      // bei overlapTokens=0 (Archiv-Heading-Split) wäre overlapChars=0 und
+      // current.slice(-0) === current.slice(0) === der GESAMTE vorige Chunk
+      // (die „-0"-Falle) — das würde jeden Folge-Chunk mit dem kompletten
+      // Vorgänger vollpacken. Deshalb bei 0 explizit kein Overlap.
       const overlapChars = overlapTokens * CHARS_PER_TOKEN;
-      const tail = current.slice(-overlapChars);
-      const wordSafeTail = tail.slice(tail.indexOf(" ") + 1).trim();
+      const tail = overlapChars > 0 ? current.slice(-overlapChars) : "";
+      const wordSafeTail = tail ? tail.slice(tail.indexOf(" ") + 1).trim() : "";
       current = wordSafeTail ? `${wordSafeTail}\n\n${seg}` : seg;
     } else {
       current = candidate;
