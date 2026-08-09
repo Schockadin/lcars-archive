@@ -3,13 +3,10 @@ export type NavKey =
   | "characters"
   | "missions"
   | "archive"
-  // /search hat einen eigenen Nav-Link (Lupe, siehe MAIN_NAV); /timeline hat
-  // keinen Nav-Link mehr, bleibt aber per URL erreichbar und braucht daher
-  // weiterhin einen gültigen section-Wert für <PageMeta>.
-  | "timeline"
+  // /search hat einen eigenen Nav-Link (Lupe, siehe MAIN_NAV). /rag, /login
+  // und /user haben keinen eigenen Nav-Link, brauchen aber einen gültigen
+  // section-Wert für <PageMeta>. (Die frühere /timeline-Seite ist entfernt.)
   | "search"
-  // /rag, /login und /user haben keinen eigenen Nav-Link, brauchen aber einen
-  // gültigen section-Wert für <PageMeta>.
   | "rag"
   | "login"
   | "users"
