@@ -362,3 +362,12 @@ export function TimelineNavIcon() {
     </svg>
   );
 }
+// Lupe — Menü-Icon für die Suche (siehe MAIN_NAV/SidebarMenu.tsx).
+export function SearchNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="11" cy="11" r="6" />
+      <path d="M20 20l-4.2-4.2" />
+    </svg>
+  );
+}

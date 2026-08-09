@@ -1,8 +1,9 @@
-import Link from "next/link";
 import { searchFull } from "@/lib/search";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
+import { hasRagConfig } from "@/lib/rag";
 import PageMeta from "@/components/PageMeta";
 import SearchResultsView from "./SearchResultsView";
+import RagChat from "@/app/rag/RagChat";
 
 export const metadata = {
   title: {
@@ -10,7 +11,8 @@ export const metadata = {
   },
 };
 
-// Hängt am ?q=-Parameter — wie /api/search immer frisch ausliefern.
+// Hängt am ?q=-Parameter (und am Betrachter für den Assistenten) — wie
+// /api/search immer frisch ausliefern.
 export const dynamic = "force-dynamic";
 
 export default async function SearchPage({
@@ -21,6 +23,10 @@ export default async function SearchPage({
   const q = (await searchParams).q?.trim() ?? "";
   const viewer = await getViewer();
   const results = q.length >= 2 ? await searchFull(q, viewer?.userId) : [];
+  // Der Archiv-Assistent (RAG) erscheint unter der Volltextsuche — nur für
+  // Berechtigte (rag.use). configured spiegelt, ob die API-Schlüssel gesetzt
+  // sind (sonst zeigt RagChat einen Hinweis statt des Eingabefelds).
+  const canUseRag = viewerHasPermission(viewer, "rag.use");
 
   return (
     <>
@@ -57,17 +63,6 @@ export default async function SearchPage({
           </button>
         </form>
 
-        {/* Einstieg zum RAG-Assistenten — nur für Berechtigte (rag.use); die
-            /rag-Seite selbst gated zusätzlich (forbidden). */}
-        {viewerHasPermission(viewer, "rag.use") ? (
-          <p className="lcars-eyebrow mb-[16px]">
-            Lieber eine Frage stellen?{" "}
-            <Link href="/rag" className="lcars-text-data">
-              Zum Archiv-Assistenten
-            </Link>
-          </p>
-        ) : null}
-
         {q.length === 0 ? (
           <p className="lcars-empty-state">Suchbegriff eingeben.</p>
         ) : q.length < 2 ? (
@@ -84,6 +79,21 @@ export default async function SearchPage({
             isLoggedIn={viewer != null}
           />
         )}
+
+        {/* Archiv-Assistent (RAG) unterhalb der Volltextsuche — nur für
+            Berechtigte. Die eigenständige Seite /rag bleibt zusätzlich
+            bestehen (gleiche Komponente). */}
+        {canUseRag ? (
+          <section className="mt-[32px] border-t border-lcars-border pt-[24px]">
+            <div className="mb-[16px]">
+              <h2 className="lcars-data-row-heading">Archiv-Assistent</h2>
+              <p className="lcars-eyebrow">
+                Fragen an den Kampagnen-Datenbestand stellen
+              </p>
+            </div>
+            <RagChat configured={hasRagConfig()} />
+          </section>
+        ) : null}
       </div>
     </>
   );
