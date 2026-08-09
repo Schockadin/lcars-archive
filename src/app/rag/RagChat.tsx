@@ -1,6 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import Link from "next/link";
+import MarkdownLite from "./MarkdownLite";
 
 // Eine Quelle unter einer Antwort (dedupliziert je Inhalt, siehe
 // sourcesFromChunks in src/lib/rag.ts).
@@ -150,9 +151,12 @@ export default function RagChat({ configured }: { configured: boolean }) {
               <p className="lcars-eyebrow" style={{ margin: 0 }}>
                 {turn.question}
               </p>
-              <div className="lcars-text" style={{ whiteSpace: "pre-wrap" }}>
-                {turn.answer}
-                {turn.pending && !turn.answer ? "…" : null}
+              <div className="mission-body lcars-text">
+                {turn.answer ? (
+                  <MarkdownLite text={turn.answer} />
+                ) : turn.pending ? (
+                  <p>…</p>
+                ) : null}
               </div>
               {turn.error ? (
                 <p className="lcars-text" style={{ color: "var(--lcars-red)" }}>
