@@ -99,24 +99,40 @@ export async function listTableRows(
 export class UnsafeQueryError extends Error {}
 
 // Entfernt Secret-Schlüssel (password_hash/token_hash) rekursiv aus einem
-// Ergebniswert — greift, wenn ein JSON-Objekt (z.B. aus einer durchgerutschten
-// Row-Serialisierung) die Spalte nicht als Top-Level-Spalte, sondern als
-// verschachtelten Schlüssel trägt. Primitive Werte bleiben unverändert.
+// Ergebniswert — greift, wenn ein JSON/JSONB-Wert (z.B. aus to_jsonb(zeile) /
+// row_to_json(zeile)) die Spalte nicht als Top-Level-Ergebnis-Spalte, sondern
+// als verschachtelten Schlüssel trägt, sodass der spaltenweise Filter in
+// runAdminQuery nicht greift. Gibt bei unverändertem Wert DIESELBE Referenz
+// zurück (kein Alloc), damit der Normalfall „nichts zu bereinigen" auf großen
+// Ergebnissen keine Kopie erzeugt. Primitive Werte und Klasseninstanzen
+// (Date/Buffer/…) bleiben unangetastet — sonst würde z.B. ein Date (keine
+// enumerierbaren Eigenschaften) zu {} verstümmelt.
 function scrubSecrets(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(scrubSecrets);
-  // Nur schlichte JSON-Objekte (aus jsonb/json-Werten) rekursiv bereinigen —
-  // Date/Buffer/Typed-Arrays u.a. Klasseninstanzen unangetastet lassen, sonst
-  // würde z.B. ein Date (keine enumerierbaren Eigenschaften) zu {} verstümmelt.
+  if (Array.isArray(value)) {
+    let changed = false;
+    const mapped = value.map((v) => {
+      const s = scrubSecrets(v);
+      if (s !== v) changed = true;
+      return s;
+    });
+    return changed ? mapped : value;
+  }
   if (value !== null && typeof value === "object") {
     const proto = Object.getPrototypeOf(value);
     if (proto !== Object.prototype && proto !== null) return value;
     const obj = value as Record<string, unknown>;
+    let changed = false;
     const out: Record<string, unknown> = {};
     for (const [k, v] of Object.entries(obj)) {
-      if (SECRET_COLUMNS.includes(k)) continue;
-      out[k] = scrubSecrets(v);
+      if (SECRET_COLUMNS.includes(k)) {
+        changed = true;
+        continue;
+      }
+      const s = scrubSecrets(v);
+      if (s !== v) changed = true;
+      out[k] = s;
     }
-    return out;
+    return changed ? out : value;
   }
   return value;
 }
@@ -268,78 +284,6 @@ function identifierRegex(name: string): RegExp {
   return new RegExp(`\\b${name}\\b`, "i");
 }
 
-// Row-Serialisierer, die eine ganze Zeile in EINEN Ergebniswert packen
-// (to_jsonb(u), row_to_json(u), jsonb_agg(u), …). Damit läge eine Secret-Spalte
-// im zusammengesetzten Wert, ohne als eigene — namentlich gefilterte —
-// Ergebnis-Spalte aufzutauchen: der spaltenweise SECRET_COLUMNS-Filter griffe
-// nicht. Im reinen Inspektions-Panel gibt es keinen legitimen Bedarf dafür,
-// daher komplett gesperrt (zusätzlich scrubbt runAdminQuery Secret-Keys auch
-// aus verschachtelten JSON-Werten, falls doch einer durchkommt).
-const ROW_SERIALIZER_CALL =
-  /\b(?:to_jsonb|to_json|row_to_json|json_agg|jsonb_agg|array_agg|array_to_json|jsonb_object_agg|json_object_agg)\s*\(/i;
-
-// SQL-Schlüsselwörter, die nach "FROM <tabelle>" kein Alias sind (sonst würde
-// z.B. "FROM users WHERE …" das WHERE fälschlich als Alias lesen).
-const NON_ALIAS_KEYWORDS = new Set([
-  "where", "group", "order", "limit", "offset", "having", "window", "union",
-  "join", "inner", "left", "right", "full", "cross", "on", "using", "as",
-  "natural", "lateral", "fetch", "for",
-]);
-
-// Sammelt Tabellennamen UND Aliase aus FROM/JOIN — Basis für die Erkennung
-// einer „ganze Zeile als ein Wert"-Auswahl (SELECT <alias> …). Best effort für
-// die einfachen Einzel-/Join-Queries, die das Panel realistisch verarbeitet.
-function collectFromNames(query: string): Set<string> {
-  const q = query.replace(/--[^\n]*(\n|$)/g, " ");
-  const names = new Set<string>();
-  const re =
-    /\b(?:from|join)\s+(?:"?public"?\s*\.\s*)?"?([a-zA-Z_][a-zA-Z0-9_]*)"?(?:\s+(?:as\s+)?"?([a-zA-Z_][a-zA-Z0-9_]*)"?)?/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(q)) !== null) {
-    names.add(m[1].toLowerCase());
-    const alias = m[2]?.toLowerCase();
-    if (alias && !NON_ALIAS_KEYWORDS.has(alias)) names.add(alias);
-  }
-  return names;
-}
-
-// Wählt die Query eine ganze (Composite-)Zeile als einen Wert aus? Erkennt den
-// bloßen-Bezeichner-Fall „SELECT u FROM users u" bzw. „SELECT users FROM users":
-// ein SELECT-Listen-Element, das nur aus einem Tabellen-/Alias-Namen besteht
-// (keine qualifizierte Spalte u.name, kein Funktionsaufruf, kein *). Reine
-// String-Logik, exportiert für Tests.
-export function selectsWholeRow(query: string): boolean {
-  const q = query.replace(/--[^\n]*(\n|$)/g, " ");
-  // SELECT-Liste = Text zwischen dem ersten SELECT und dem zugehörigen FROM.
-  const m = q.match(/\bselect\b(.*?)\bfrom\b/is);
-  if (!m) return false;
-  const selectList = m[1];
-  const fromNames = collectFromNames(q);
-  if (fromNames.size === 0) return false;
-  // Auf oberster Ebene (Klammertiefe 0) an Kommas trennen, damit
-  // Funktionsargumente wie f(a, b) nicht fälschlich zerlegt werden.
-  const items: string[] = [];
-  let depth = 0;
-  let current = "";
-  for (const ch of selectList) {
-    if (ch === "(") depth++;
-    else if (ch === ")") depth = Math.max(0, depth - 1);
-    if (ch === "," && depth === 0) {
-      items.push(current);
-      current = "";
-    } else {
-      current += ch;
-    }
-  }
-  items.push(current);
-  for (const raw of items) {
-    const item = raw.trim().replace(/^\(\s*/, "").replace(/\s*\)$/, "").trim();
-    const bare = item.match(/^"?([a-zA-Z_][a-zA-Z0-9_]*)"?$/);
-    if (bare && fromNames.has(bare[1].toLowerCase())) return true;
-  }
-  return false;
-}
-
 export interface AdminQueryCapabilities {
   canRead: boolean;
   canWrite: boolean;
@@ -381,27 +325,24 @@ export function assertAdminQuery(
     }
   }
   // Credential-Spalten dürfen nicht explizit referenziert werden (auch nicht
-  // per Alias) — SELECT * wird zusätzlich im Ergebnis bereinigt (runAdminQuery).
+  // per Alias) — SELECT * wird zusätzlich im Ergebnis bereinigt (runAdminQuery),
+  // und JSON-serialisierte Zeilen (to_jsonb/row_to_json) werden dort rekursiv
+  // von Secret-Schlüsseln befreit (scrubSecrets).
+  //
+  // Grenze der Zusicherung: Ein db-admin mit „SQL lesen" hat bewusst rohen
+  // Lesezugriff auf die Datenbank. Der SECRET_COLUMNS-Filter ist ein Schutz vor
+  // versehentlicher Anzeige (SELECT *, SELECT password_hash, to_jsonb(zeile)),
+  // kein harter Boundary gegen absichtliche Exfiltration: eine ganze Zeile lässt
+  // sich per Composite-Cast (`SELECT zeile::text FROM users zeile`) in einen
+  // undurchsichtigen Textwert packen, den keine Query-Text-Analyse zuverlässig
+  // erkennt (Casts/Aliase/Subqueries umgehen jede Heuristik, während sie
+  // legitime Queries fälschlich blockiert). Eine echte harte Schranke wäre
+  // ausschließlich spalten-granulares REVOKE auf DB-Rollenebene — Infrastruktur
+  // außerhalb dieser Anwendungsschicht.
   for (const column of SECRET_COLUMNS) {
     if (identifierRegex(column).test(query)) {
       throw new UnsafeQueryError(
         `Die Spalte „${column}“ ist im SQL-Panel gesperrt.`,
-      );
-    }
-  }
-  // Row-Serialisierung / Ganze-Zeile-Auswahl sperren: beide würden eine
-  // Secret-Spalte in einen zusammengesetzten Ergebniswert packen, an dem der
-  // spaltenweise Filter oben vorbeiliefe (z.B. „SELECT to_jsonb(u) FROM users u"
-  // oder „SELECT u FROM users u"). Betrifft nur Lese-Queries.
-  if (action === "read") {
-    if (ROW_SERIALIZER_CALL.test(query)) {
-      throw new UnsafeQueryError(
-        "Row-Serialisierung (to_jsonb/row_to_json/…) ist im SQL-Panel gesperrt.",
-      );
-    }
-    if (selectsWholeRow(query)) {
-      throw new UnsafeQueryError(
-        "Das Auswählen einer ganzen Zeile als ein Wert ist im SQL-Panel gesperrt — bitte einzelne Spalten oder SELECT * verwenden.",
       );
     }
   }

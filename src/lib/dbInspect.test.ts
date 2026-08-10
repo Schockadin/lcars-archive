@@ -5,7 +5,6 @@ import {
   parseWriteTarget,
   assertAdminQuery,
   isProtectedWriteTable,
-  selectsWholeRow,
   UnsafeQueryError,
   type AdminQueryCapabilities,
 } from "./dbInspect";
@@ -125,42 +124,17 @@ describe("isProtectedWriteTable", () => {
   });
 });
 
-describe("selectsWholeRow", () => {
-  it("erkennt die Ganze-Zeile-Auswahl über Tabelle/Alias", () => {
-    expect(selectsWholeRow("SELECT u FROM users u")).toBe(true);
-    expect(selectsWholeRow("SELECT users FROM users")).toBe(true);
-    expect(selectsWholeRow("SELECT (u) FROM users AS u")).toBe(true);
-    expect(selectsWholeRow("SELECT id, u FROM users u")).toBe(true);
-  });
-  it("lässt normale Spalten-/Stern-Queries zu", () => {
-    expect(selectsWholeRow("SELECT * FROM users")).toBe(false);
-    expect(selectsWholeRow("SELECT id, name FROM users u")).toBe(false);
-    expect(selectsWholeRow("SELECT u.name FROM users u")).toBe(false);
-    expect(selectsWholeRow("SELECT count(*) FROM users")).toBe(false);
-  });
-});
-
-describe("assertAdminQuery — Ganze-Zeile-/Row-Serialisierungs-Leak", () => {
-  it("sperrt Row-Serialisierer, die eine Zeile in einen Wert packen", () => {
-    for (const q of [
-      "SELECT to_jsonb(u) FROM users u",
-      "SELECT row_to_json(u) FROM users u",
-      "SELECT jsonb_agg(u) FROM users u",
-      "SELECT to_json(u) FROM users u",
-    ]) {
-      expect(() => assertAdminQuery(q, ALL)).toThrow(UnsafeQueryError);
-    }
-  });
-  it("sperrt die bloße Ganze-Zeile-Auswahl", () => {
-    expect(() => assertAdminQuery("SELECT u FROM users u", ALL)).toThrow(
-      UnsafeQueryError,
-    );
-    expect(() => assertAdminQuery("SELECT users FROM users", ALL)).toThrow(
-      UnsafeQueryError,
-    );
-  });
-  it("lässt reguläre Lese-Queries unangetastet", () => {
-    expect(assertAdminQuery("SELECT id, name FROM users", ALL)).toBe("read");
-    expect(assertAdminQuery("SELECT * FROM characters c", ALL)).toBe("read");
+describe("assertAdminQuery — reguläre Lese-Queries bleiben zulässig", () => {
+  it("blockiert legitime Aggregationen/String-Literale NICHT", () => {
+    // Kein Row-Serialisierungs-Textfilter mehr: Skalar-Aggregationen und
+    // Queries mit funktionsähnlichen String-Literalen bleiben ausführbar
+    // (die Secret-Bereinigung passiert strukturell im Ergebnis, nicht per
+    // Query-Text-Heuristik).
+    expect(assertAdminQuery("SELECT array_agg(name) FROM users", ALL)).toBe("read");
+    expect(assertAdminQuery("SELECT json_agg(id) FROM characters", ALL)).toBe("read");
+    expect(
+      assertAdminQuery("SELECT id, label FROM archive_links WHERE label LIKE '%to_json(%'", ALL),
+    ).toBe("read");
+    expect(assertAdminQuery("SELECT id, name FROM users u", ALL)).toBe("read");
   });
 });
