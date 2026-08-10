@@ -32,14 +32,20 @@ export async function generateMetadata({ params }: Props) {
 export default async function CharacterLogsPage({ params }: Props) {
   const { slug } = await params;
 
-  const character = await getCharacterBySlug(slug);
+  // Charakter und Betrachter parallel laden (getViewer liest nur die Session,
+  // nicht den Charakter) — spart die Round-Trip-Latenz gegenüber dem früheren
+  // sequenziellen Nachladen des Betrachters.
+  const [character, viewer] = await Promise.all([
+    getCharacterBySlug(slug),
+    getViewer(),
+  ]);
   if (!character) notFound();
 
-  if (character.visibility !== "public") {
-    const viewer = await getViewer();
-    if (!canView(character.visibility, character.player_id, viewer)) {
-      notFound();
-    }
+  if (
+    character.visibility !== "public" &&
+    !canView(character.visibility, character.player_id, viewer)
+  ) {
+    notFound();
   }
 
   const logs = await getLogsByCharacter(character.id);

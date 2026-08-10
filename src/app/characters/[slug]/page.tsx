@@ -47,14 +47,18 @@ export async function generateMetadata({ params }: Props) {
 export default async function CharakterPage({ params }: Props) {
   const { slug } = await params;
 
-  // Erst Charakter laden, dann parallel Logs dazu
-  const character = await getCharacterBySlug(slug);
+  // Charakter und Betrachter sind voneinander unabhängig — parallel laden.
+  // getViewer() liest nur Cookies/Session, nicht den Charakter; früher lief es
+  // sequenziell hinter getCharacterBySlug und verlängerte so jede Anfrage um
+  // eine zusätzliche Round-Trip-Latenz. (Betrachter jetzt immer auflösen, nicht
+  // nur bei nicht-public — der Admin-Owner-Block unten braucht die Rolle
+  // unabhängig von der Sichtbarkeit dieses Charakters.)
+  const [character, viewer] = await Promise.all([
+    getCharacterBySlug(slug),
+    getViewer(),
+  ]);
   if (!character) notFound();
 
-  // Betrachter jetzt immer auflösen (nicht mehr nur bei nicht-public) — der
-  // Admin-Owner-Block unten braucht die Rolle unabhängig von der
-  // Sichtbarkeit dieses Charakters.
-  const viewer = await getViewer();
   if (
     character.visibility !== "public" &&
     !canView(character.visibility, character.player_id, viewer)

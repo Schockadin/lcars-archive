@@ -42,15 +42,13 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function LogPage({ params }: Props) {
   const { missionSlug, logSlug } = await params;
-  const log = await getLogBySlug(logSlug);
+  // Log und Betrachter parallel laden (getViewer liest nur die Session, nicht
+  // den Log). Betrachter immer auflösen — der Owner-Block unten braucht die
+  // Rechte unabhängig von der Sichtbarkeit dieses Logs.
+  const [log, viewer] = await Promise.all([getLogBySlug(logSlug), getViewer()]);
 
   // Log muss existieren UND zur Mission im Pfad gehören (sonst 404).
   if (!log || log.mission_slug !== missionSlug) notFound();
-
-  // Betrachter jetzt immer auflösen (nicht mehr nur bei nicht-public) — der
-  // Owner-Block unten braucht die Rechte unabhängig von der Sichtbarkeit
-  // dieses Logs.
-  const viewer = await getViewer();
   if (
     log.visibility !== "public" &&
     !canView(log.visibility, log.ownerUserId, viewer)
@@ -59,16 +57,19 @@ export default async function LogPage({ params }: Props) {
   }
   if (!canViewDraft(log.isDraft, log.ownerUserId, viewer)) notFound();
 
-  // Vor-/Zurück-Navigation zwischen Logs desselben Autors (sofern Autor bekannt).
-  const nav = log.author_slug
-    ? await getAuthorLogNav(log.author_slug, log.slug)
-    : { prev: null, next: null };
-  // Owner-Auswahl nur laden, wenn der Betrachter den Log umtragen darf —
-  // exakt das Server-Gate von setOwnerAction für Mission-Logs
+  // Autor-Navigation und Owner-Auswahl sind voneinander unabhängig — parallel
+  // laden statt nacheinander. nav: Vor-/Zurück zwischen Logs desselben Autors
+  // (sofern Autor bekannt). owners: nur laden, wenn der Betrachter den Log
+  // umtragen darf — exakt das Server-Gate von setOwnerAction für Mission-Logs
   // (content.moderate), rechte- statt rollenbasiert (früher role === "admin").
-  const allUsers = viewerHasPermission(viewer, "content.moderate")
-    ? await listAllUsers()
-    : [];
+  const [nav, allUsers] = await Promise.all([
+    log.author_slug
+      ? getAuthorLogNav(log.author_slug, log.slug)
+      : Promise.resolve({ prev: null, next: null }),
+    viewerHasPermission(viewer, "content.moderate")
+      ? listAllUsers()
+      : Promise.resolve([]),
+  ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
   return (
