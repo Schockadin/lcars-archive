@@ -149,16 +149,65 @@ export default function DSGVOClient() {
         Abs. 1 lit. f DSGVO); der Versand erfolgt ebenfalls über Resend.
       </p>
 
-      <h2>4. Datenübertragung in Drittländer</h2>
+      <h2>4. KI-gestützter Archiv-Assistent</h2>
       <p>
-        Netlify und Resend haben Serverstandorte in den USA. Die Übertragung
-        erfolgt auf Basis des EU-US Data Privacy Framework
+        Angemeldete Nutzer:innen können über den Archiv-Assistenten (
+        <code>/rag</code> bzw. unterhalb der Suche auf <code>/search</code>)
+        Fragen zum Archivinhalt in natürlicher Sprache stellen. Zur Beantwortung
+        werden die eingegebene <strong>Frage</strong> sowie – im Rahmen der
+        Indexierung – die betroffenen <strong>Archivinhalte</strong> (Texte zu
+        Charakteren, Missionen, Berichten, Archiv-Einträgen und abgeschlossenen
+        Gesprächen) an zwei Auftragsverarbeiter in den USA übermittelt:
+      </p>
+      <p>
+        <strong>OpenAI</strong> (OpenAI, L.L.C., San Francisco, USA) wandelt die
+        Frage und die Inhaltstexte über die OpenAI-API in numerische Vektoren
+        („Embeddings“) um, die die semantische Suche ermöglichen. Übermittelt
+        wird der jeweilige Text; nach Angaben von OpenAI werden über die API
+        gesendete Daten nicht zum Training der Modelle verwendet. Mehr
+        Informationen:{" "}
+        <a
+          href="https://openai.com/policies/privacy-policy"
+          target="_blank"
+          rel="noreferrer"
+        >
+          openai.com/policies/privacy-policy
+        </a>
+      </p>
+      <p>
+        <strong>Cloudflare</strong> (Cloudflare, Inc., San Francisco, USA)
+        erzeugt aus der Frage und den dazu passenden Inhaltsausschnitten über
+        „Workers AI“ die formulierte Antwort. Übermittelt werden die Frage und
+        die als Kontext genutzten Ausschnitte. Mehr Informationen:{" "}
+        <a
+          href="https://www.cloudflare.com/privacypolicy/"
+          target="_blank"
+          rel="noreferrer"
+        >
+          cloudflare.com/privacypolicy
+        </a>
+      </p>
+      <p>
+        Beide verarbeiten die Daten als Auftragsverarbeiter gemäß Art. 28 DSGVO,
+        ausschließlich zur Beantwortung der jeweiligen Anfrage (Rechtsgrundlage:
+        Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse an einer komfortablen
+        Recherche im eigenen Archiv). In den Kontext einer Antwort fließen nur
+        Inhalte ein, die die fragende Person nach ihren Leserechten ohnehin
+        einsehen darf. Der Assistent ist ein optionales Zusatzangebot für
+        angemeldete Nutzer:innen; wer ihn nicht verwendet, löst keine solche
+        Übermittlung aus.
+      </p>
+
+      <h2>5. Datenübertragung in Drittländer</h2>
+      <p>
+        Netlify, Resend, OpenAI und Cloudflare haben Serverstandorte in den USA.
+        Die Übertragung erfolgt auf Basis des EU-US Data Privacy Framework
         (Angemessenheitsbeschluss der EU-Kommission vom Juli 2023) bzw., soweit
         ein Anbieter diesem nicht angeschlossen ist, auf Basis der
         EU-Standardvertragsklauseln.
       </p>
 
-      <h2>5. Cookies</h2>
+      <h2>6. Cookies</h2>
       <p>
         Diese Website setzt ein einziges eigenes Cookie namens{" "}
         <code>neo_session</code>. Es hält dich für 30 Tage angemeldet und ist
@@ -186,7 +235,7 @@ export default function DSGVOClient() {
           herunterlädt und selbst ausliefert — es gibt keine Laufzeit-Anfrage
           an Google-Server mehr und damit keine Übertragung der IP-Adresse. */}
 
-      <h2>6. Deine Rechte</h2>
+      <h2>7. Deine Rechte</h2>
       <p>
         Du hast das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16),
         Löschung (Art. 17), Einschränkung der Verarbeitung (Art. 18),
@@ -198,7 +247,7 @@ export default function DSGVOClient() {
         </a>
       </p>
 
-      <h2>7. Aktualität</h2>
+      <h2>8. Aktualität</h2>
       <p>Stand: {currentYear}</p>
     </LegalPageLayout>
   );

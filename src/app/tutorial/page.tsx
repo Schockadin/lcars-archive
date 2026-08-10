@@ -45,10 +45,9 @@ export default function TutorialPage() {
                 <strong>Missionen</strong> (mit ihren Einsatzberichten), das
                 kategorisierte <strong>Archiv</strong> (Personen, Orte,
                 Fraktionen, Spezies, Objekte, Ereignisse, Theorien, NPCs,
-                abgeschlossene Gespräche und Sonstiges), die{" "}
-                <strong>Timeline</strong> (chronologische Übersicht aller
-                Ereignisse) sowie die <strong>Suche</strong> (Volltextsuche über
-                alle diese Inhalte).
+                abgeschlossene Gespräche und Sonstiges) sowie die{" "}
+                <strong>Suche</strong> (Volltextsuche über alle diese Inhalte,
+                erreichbar über das Lupen-Symbol im Menü).
               </p>
               <p>
                 Manche Inhalte sind nicht öffentlich: Jeder Eintrag hat eine
@@ -330,7 +329,42 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={6} label="Markdown" color="var(--lcars-amber)">
+          <LcarsDataRow
+            value={6}
+            label="Archiv-Assistent"
+            color="var(--lcars-blue)"
+          >
+            <div className="lcars-text flex flex-col gap-[12px]">
+              <p>
+                Angemeldete Nutzer:innen finden über das Lupen-Symbol im Menü
+                die <strong>Suche</strong> — und darunter den{" "}
+                <strong>Archiv-Assistenten</strong> (auch direkt unter{" "}
+                <code>/rag</code>). Statt nach Stichworten zu suchen, kannst du
+                ihm ganz normale Fragen zum Kampagneninhalt stellen, z. B.{" "}
+                <em>„Was wissen wir über die Tholianer?“</em> oder{" "}
+                <em>„Wer war an der Mission am Cardassianischen Grenzraum
+                beteiligt?“</em>
+              </p>
+              <p>
+                Der Assistent durchsucht dafür den Datenbestand (Charaktere,
+                Missionen, Einsatzberichte, Archiv-Einträge und abgeschlossene
+                Gespräche), formuliert eine zusammenhängende Antwort und zeigt
+                darunter die <strong>Quellen</strong> an, auf die er sich
+                stützt — ein Klick führt direkt zum jeweiligen Eintrag. Die
+                Antwort erscheint Wort für Wort im Stream.
+              </p>
+              <p>
+                Zwei Dinge sind wichtig: Der Assistent antwortet nur aus dem
+                vorhandenen Archiv — findet er nichts Passendes, sagt er das,
+                statt sich etwas auszudenken. Und er berücksichtigt nur Inhalte,
+                die <strong>du ohnehin sehen darfst</strong>: private oder
+                GM-Einträge fließen nur ein, wenn du sie auch sonst einsehen
+                könntest.
+              </p>
+            </div>
+          </LcarsDataRow>
+
+          <LcarsDataRow value={7} label="Markdown" color="var(--lcars-amber)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
@@ -415,13 +449,14 @@ export default function TutorialPage() {
                 Für Spielleitung/Admin gibt es in derselben Werkzeugleiste
                 zusätzlich einen Kalender-Knopf, der an der Cursor-Position
                 einen Zeitleisten-Marker einfügt (siehe „Verlinkung“ unten und
-                den Abschnitt für Spielleitung/Admins) — der markierte Zeitpunkt
-                taucht danach auf der Timeline-Seite auf.
+                den Abschnitt für Spielleitung/Admins) — er hält den zugehörigen
+                In-Story-Zeitpunkt des Ereignisses in der Chronik des Archivs
+                fest.
               </p>
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={7} label="Verlinkung" color="var(--lcars-blue)">
+          <LcarsDataRow value={8} label="Verlinkung" color="var(--lcars-blue)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Um im Fließtext auf einen Charakter, eine Mission oder einen
@@ -460,7 +495,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={8}
+            value={9}
             label="Spielleitung & Admins"
             color="var(--lcars-purple)"
           >
@@ -565,7 +600,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={9}
+            value={10}
             label="App installieren"
             color="var(--lcars-amber)"
           >
