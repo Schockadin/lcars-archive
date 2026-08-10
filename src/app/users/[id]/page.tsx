@@ -10,6 +10,7 @@ import {
 } from "@/lib/characters";
 import { getPublicDialoguesForUser } from "@/lib/dialogues";
 import { getPublicArchiveEntriesForUser } from "@/lib/archive";
+import { resolveFollowState } from "@/lib/follows";
 import { LcarsDataRow } from "@/components/lcars";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
 import { sessionLabel, fmtDate } from "@/lib/missionFormat";
@@ -39,9 +40,8 @@ export default async function UserPublicProfilePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const viewer = await requireNonGuest();
-
-  const { id } = await params;
+  // Betrachter (requireNonGuest) und Routen-Param sind unabhängig — parallel.
+  const [viewer, { id }] = await Promise.all([requireNonGuest(), params]);
   const targetId = Number(id);
   if (!Number.isInteger(targetId)) {
     redirect("/users");
@@ -52,12 +52,20 @@ export default async function UserPublicProfilePage({
     redirect("/users");
   }
 
-  const [characters, logs, dialogues, archiveEntries] = await Promise.all([
-    getPublicCharactersForUser(target.id),
-    getPublicLogsForUser(target.id),
-    getPublicDialoguesForUser(target.id),
-    getPublicArchiveEntriesForUser(target.id),
-  ]);
+  // Öffentliche Inhalte des Users + der eigene Follow-Stand parallel. Letzterer
+  // wird an FollowButtons als initialState durchgereicht (kein Client-Fetch
+  // nach der Hydration) — aber nur, wenn das Abo-Widget überhaupt erscheint
+  // (nicht auf dem eigenen Profil, viewer.id === target.id).
+  const [characters, logs, dialogues, archiveEntries, followInitialState] =
+    await Promise.all([
+      getPublicCharactersForUser(target.id),
+      getPublicLogsForUser(target.id),
+      getPublicDialoguesForUser(target.id),
+      getPublicArchiveEntriesForUser(target.id),
+      viewer.id !== target.id
+        ? resolveFollowState(viewer.id, "user", target.slug)
+        : Promise.resolve(undefined),
+    ]);
 
   const total =
     characters.length + logs.length + dialogues.length + archiveEntries.length;
@@ -73,6 +81,7 @@ export default async function UserPublicProfilePage({
               targetType="user"
               targetSlug={target.slug}
               showShare={false}
+              initialState={followInitialState}
             />
           )}
         </div>

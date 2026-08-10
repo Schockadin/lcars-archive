@@ -35,23 +35,27 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function DialoguePlayPage({ params }: Props) {
   const { slug } = await params;
-  const session = await verifySession();
-
-  const entry = await getDialogueForPlay(slug);
+  // Session und Dialog sind voneinander unabhängig — parallel laden.
+  const [session, entry] = await Promise.all([
+    verifySession(),
+    getDialogueForPlay(slug),
+  ]);
   if (!entry) notFound();
 
   // Abgeschlossene Dialoge leben unter /archive — kein doppeltes Ziel.
   if (!entry.open) redirect(`/archive/${slug}`);
 
-  const myParticipantCharacters = await getDialogueParticipantCharacters(
-    entry.id,
-    session.userId,
-  );
-  const isParticipant = myParticipantCharacters.length > 0;
-  const [viewer, roleMap] = await Promise.all([
+  // Teilnehmer-Charaktere, Viewer und Rollen-Map hängen alle nur an
+  // session.userId/entry.id, nicht voneinander — in einem Batch laden statt
+  // nacheinander. Muss VOR dem forbidden()-Gate stehen (der Gate braucht
+  // isParticipant + viewer + roleMap); die schwereren Inhalts-Queries
+  // (messages/lockStatus/invite) bleiben bewusst dahinter.
+  const [myParticipantCharacters, viewer, roleMap] = await Promise.all([
+    getDialogueParticipantCharacters(entry.id, session.userId),
     getUserById(session.userId),
     getRoleMap(),
   ]);
+  const isParticipant = myParticipantCharacters.length > 0;
   if (!isParticipant && !(viewer && userCan(viewer, "gm.access", roleMap))) {
     forbidden();
   }
@@ -61,13 +65,25 @@ export default async function DialoguePlayPage({ params }: Props) {
     name: c.characterName,
   }));
 
-  const messages = await getDialogueMessages(entry.id);
-
-  // Antwort-Reservierung nur bei mehr als zwei Teilnehmenden relevant (siehe
-  // DialogueLockPanel.tsx) — bei genau zwei bleibt das Selbstgespräch-Verbot
-  // in postDialogueMessage der einzige Schutzmechanismus.
+  // Ab hier ist der Zugriff bestätigt — Nachrichten, Sperr-Status und (nur für
+  // den Owner) die Einladungs-Kandidaten sind voneinander unabhängig und
+  // laufen parallel.
+  // - lockStatus: Antwort-Reservierung nur bei mehr als zwei Teilnehmenden
+  //   relevant (siehe DialogueLockPanel.tsx) — bei genau zwei bleibt das
+  //   Selbstgespräch-Verbot in postDialogueMessage der einzige Schutz.
   const multiParty = entry.participants.length > 2;
-  const lockStatus = multiParty ? await getDialogueLockStatus(entry.id) : null;
+  const isOwner = entry.ownerUserId === session.userId;
+  const [messages, lockStatus, inviteCandidatesRaw] = await Promise.all([
+    getDialogueMessages(entry.id),
+    multiParty ? getDialogueLockStatus(entry.id) : Promise.resolve(null),
+    isOwner ? getCharactersForParticipantPicker() : Promise.resolve([]),
+  ]);
+  const inviteCandidates = isOwner
+    ? inviteCandidatesRaw.filter(
+        (c) => !entry.participants.some((p) => p.slug === c.slug),
+      )
+    : [];
+
   const canReplyNow = canReplyToDialogue(
     entry.participants.length,
     lockStatus,
@@ -83,13 +99,6 @@ export default async function DialoguePlayPage({ params }: Props) {
           session.userId,
         )
       : false;
-
-  const isOwner = entry.ownerUserId === session.userId;
-  const inviteCandidates = isOwner
-    ? (await getCharactersForParticipantPicker()).filter(
-        (c) => !entry.participants.some((p) => p.slug === c.slug),
-      )
-    : [];
 
   return (
     <article className="archive-entry pb-[5px]">
