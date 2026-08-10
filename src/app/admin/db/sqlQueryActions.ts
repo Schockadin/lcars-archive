@@ -4,6 +4,7 @@ import {
   runAdminQuery,
   classifySqlStatement,
   parseSingleSelectTable,
+  isSelectStarQuery,
   getTableColumns,
 } from "@/lib/dbInspect";
 
@@ -50,10 +51,19 @@ export async function runAdminSqlQueryAction(
       canDelete: perms.has("sql_delete"),
     });
 
-    // Edit/Delete-Kontext nur für eine Einzel-Tabellen-SELECT-Query mit
-    // id-Spalte anbieten (nur dann ist eine Zeile eindeutig adressierbar).
+    // Edit/Delete-Kontext nur für eine Einzel-Tabellen-„SELECT *"-Query mit
+    // id-Spalte anbieten. Das SELECT-*-Erfordernis ist entscheidend: nur dann
+    // ist die Ergebnis-Spalte „id" garantiert die echte Primärschlüssel-Spalte
+    // der Tabelle — bei einer Projektion wie „SELECT mission_id AS id …" trüge
+    // „id" sonst Fremdschlüssel-Werte, und Bearbeiten/Löschen träfe die falsche
+    // Zeile. parseSingleSelectTable schließt zusätzlich JOINs und Komma-Joins
+    // aus (mehrdeutige id-Spalte).
     let editContext: RowEditContext | undefined;
-    if (classifySqlStatement(query) === "read" && result.columns.includes("id")) {
+    if (
+      classifySqlStatement(query) === "read" &&
+      isSelectStarQuery(query) &&
+      result.columns.includes("id")
+    ) {
       const table = parseSingleSelectTable(query);
       if (table) {
         const cols = await getTableColumns(table);

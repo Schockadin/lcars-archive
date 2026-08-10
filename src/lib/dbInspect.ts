@@ -151,12 +151,41 @@ export function classifySqlStatement(
 export function parseSingleSelectTable(query: string): string | null {
   const withoutComments = query.replace(/--[^\n]*(\n|$)/g, " ");
   if (/\bjoin\b/i.test(withoutComments)) return null;
+  // Komma-Join (FROM a, b) ebenfalls ausschließen — die FROM-Klausel bis zum
+  // nächsten Schlüsselwort isolieren und auf ein Komma prüfen. Sonst würde
+  // z.B. "SELECT * FROM characters, users" fälschlich auf characters
+  // abgebildet, obwohl die id-Spalte mehrdeutig ist.
+  const fromClause = withoutComments.match(
+    /\bfrom\b(.*?)(?:\bwhere\b|\bgroup\b|\bhaving\b|\bwindow\b|\border\b|\blimit\b|\boffset\b|$)/is,
+  )?.[1];
+  if (fromClause && fromClause.includes(",")) return null;
   // FROM <identifier> — optional schema-qualifiziert ("public".)"tabelle" bzw.
   // public.tabelle; nur ein einfacher Bezeichner, kein "(" (Subquery).
   const m = withoutComments.match(
     /\bfrom\s+(?:"?public"?\s*\.\s*)?"?([a-zA-Z_][a-zA-Z0-9_]*)"?/i,
   );
   return m ? m[1] : null;
+}
+
+// Ist die Query ein reines "SELECT * FROM …"? Nur dann ist garantiert, dass die
+// Ergebnis-Spalte "id" auch die echte Primärschlüssel-Spalte der Tabelle ist
+// (nicht eine per Alias auf "id" umbenannte Fremdschlüssel-Spalte wie
+// "SELECT mission_id AS id …"). Grundlage dafür, wann das Zeilen-Overlay
+// Bearbeiten/Löschen anbieten darf. Reine String-Logik, exportiert für Tests.
+export function isSelectStarQuery(query: string): boolean {
+  const withoutComments = query.replace(/--[^\n]*(\n|$)/g, " ").trim();
+  return /^select\s+\*\s+from\b/i.test(withoutComments);
+}
+
+// Ziel-Tabelle einer schreibenden Query (INSERT INTO / UPDATE / DELETE FROM) —
+// verankert am Anweisungsanfang, daher keine Fehltreffer aus String-Literalen.
+// Reine String-Logik, exportiert für Tests.
+export function parseWriteTarget(query: string): string | null {
+  const q = query.replace(/--[^\n]*(\n|$)/g, " ").trim();
+  const m = q.match(
+    /^(?:insert\s+into|update|delete\s+from)\s+(?:"?public"?\s*\.\s*)?"?([a-zA-Z_][a-zA-Z0-9_]*)"?/i,
+  );
+  return m ? m[1].toLowerCase() : null;
 }
 
 // Grundform-Prüfung, unabhängig vom Recht: nicht leer, genau EINE Anweisung
@@ -175,6 +204,36 @@ export function assertQueryShape(query: string): void {
       "Diese Query enthält eine nicht erlaubte Funktion (Sequenzen, Locks, Sleep/Backend-Kontrolle, dblink/Large Objects).",
     );
   }
+}
+
+// Credential-Spalten, die im freien SQL-Panel weder explizit selektiert noch
+// (über SELECT *) im Ergebnis ausgegeben werden dürfen — der Tabellen-Explorer
+// blendet sie über die TABLE_COLUMNS-Whitelist ohnehin aus, das freie Panel tat
+// das bisher nicht. runAdminQuery entfernt sie zusätzlich aus jedem Ergebnis
+// (fängt SELECT * ab, das die Spalte nicht namentlich nennt).
+export const SECRET_COLUMNS: readonly string[] = ["password_hash", "token_hash"];
+
+// Tabellen, die im freien Panel gar nicht referenziert werden dürfen (enthalten
+// ausschließlich Geheimnisse). Nur die wirklich sensiblen aus HIDDEN_FROM_VIEW
+// (mission_participants ist bloß eine Relationstabelle und bleibt erlaubt).
+export const SECRET_TABLES: readonly string[] = ["password_setup_tokens"];
+
+// Auth-/Sicherheits-Tabellen, auf die im freien Panel NICHT geschrieben werden
+// darf (INSERT/UPDATE/DELETE): verhindert Rechte-Eskalation (users/roles) und
+// Manipulation von Rate-Limits/Audit-Trail. Lesen (ohne Secret-Spalten) bleibt
+// erlaubt — die db-admin-Rolle ist bewusst orthogonal zu admin (siehe
+// DEFAULT_ROLE_PRESETS), ohne diese Schranke wäre sie ein Voll-Admin-Hebel.
+export const PROTECTED_WRITE_TABLES: readonly string[] = [
+  "users",
+  "roles",
+  "password_setup_tokens",
+  "password_reset_requests",
+  "login_attempts",
+  "admin_audit_log",
+];
+
+function identifierRegex(name: string): RegExp {
+  return new RegExp(`\\b${name}\\b`, "i");
 }
 
 export interface AdminQueryCapabilities {
@@ -208,6 +267,35 @@ export function assertAdminQuery(
   if (action === "delete" && !caps.canDelete) {
     throw new UnsafeQueryError("Dir fehlt das Recht „SQL löschen“.");
   }
+
+  // Geheimnis-Tabellen (nur Secrets) im freien Panel komplett sperren.
+  for (const table of SECRET_TABLES) {
+    if (identifierRegex(table).test(query)) {
+      throw new UnsafeQueryError(
+        `Die Tabelle „${table}“ ist im SQL-Panel gesperrt.`,
+      );
+    }
+  }
+  // Credential-Spalten dürfen nicht explizit referenziert werden (auch nicht
+  // per Alias) — SELECT * wird zusätzlich im Ergebnis bereinigt (runAdminQuery).
+  for (const column of SECRET_COLUMNS) {
+    if (identifierRegex(column).test(query)) {
+      throw new UnsafeQueryError(
+        `Die Spalte „${column}“ ist im SQL-Panel gesperrt.`,
+      );
+    }
+  }
+  // Schreibzugriff auf Auth-/Sicherheits-Tabellen verhindern (Eskalations-/
+  // Audit-Manipulations-Schutz). Ziel-Tabelle am Statement-Anfang geparst.
+  if (action === "write" || action === "delete") {
+    const target = parseWriteTarget(query);
+    if (target && PROTECTED_WRITE_TABLES.includes(target)) {
+      throw new UnsafeQueryError(
+        `Schreibzugriff auf „${target}“ ist im SQL-Panel gesperrt.`,
+      );
+    }
+  }
+
   return action;
 }
 
@@ -259,14 +347,27 @@ export async function runAdminQuery(
         ? `SELECT * FROM (${inner}) AS _admin_query LIMIT ${FREE_QUERY_ROW_LIMIT}`
         : inner;
     const rows = await tx.unsafe<Record<string, unknown>[]>(sqlText);
-    const columns = rows.columns
+    const rawColumns = rows.columns
       ? rows.columns.map((c) => c.name)
       : rows[0]
         ? Object.keys(rows[0])
         : [];
+    // Credential-Spalten aus dem Ergebnis entfernen — fängt SELECT * ab, das
+    // die Spalte nicht namentlich nennt und die Text-Sperre in assertAdminQuery
+    // daher nicht greift. Bei explizitem Bezug wäre die Query schon dort
+    // abgewiesen worden.
+    const columns = rawColumns.filter((c) => !SECRET_COLUMNS.includes(c));
+    const cleanRows =
+      columns.length === rawColumns.length
+        ? [...rows]
+        : rows.map((row) => {
+            const copy = { ...row };
+            for (const c of SECRET_COLUMNS) delete copy[c];
+            return copy;
+          });
     return {
       columns,
-      rows: [...rows],
+      rows: cleanRows,
       command: rows.command,
       rowCount: rows.count,
     };
