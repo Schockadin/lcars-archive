@@ -4,6 +4,8 @@ import {
   isSelectStarQuery,
   parseWriteTarget,
   assertAdminQuery,
+  isProtectedWriteTable,
+  selectsWholeRow,
   UnsafeQueryError,
   type AdminQueryCapabilities,
 } from "./dbInspect";
@@ -108,5 +110,57 @@ describe("assertAdminQuery — Härtung (PR#53-Findings)", () => {
     // Lesen bleibt erlaubt — die Secret-Spalte wird separat im Ergebnis
     // entfernt (runAdminQuery), die Query selbst ist zulässig.
     expect(assertAdminQuery("SELECT * FROM users", ALL)).toBe("read");
+  });
+});
+
+describe("isProtectedWriteTable", () => {
+  it("erkennt Auth-/Sicherheits-Tabellen (case-insensitiv)", () => {
+    expect(isProtectedWriteTable("users")).toBe(true);
+    expect(isProtectedWriteTable("ROLES")).toBe(true);
+    expect(isProtectedWriteTable("admin_audit_log")).toBe(true);
+  });
+  it("lässt Inhalts-Tabellen zu", () => {
+    expect(isProtectedWriteTable("characters")).toBe(false);
+    expect(isProtectedWriteTable("mission_logs")).toBe(false);
+  });
+});
+
+describe("selectsWholeRow", () => {
+  it("erkennt die Ganze-Zeile-Auswahl über Tabelle/Alias", () => {
+    expect(selectsWholeRow("SELECT u FROM users u")).toBe(true);
+    expect(selectsWholeRow("SELECT users FROM users")).toBe(true);
+    expect(selectsWholeRow("SELECT (u) FROM users AS u")).toBe(true);
+    expect(selectsWholeRow("SELECT id, u FROM users u")).toBe(true);
+  });
+  it("lässt normale Spalten-/Stern-Queries zu", () => {
+    expect(selectsWholeRow("SELECT * FROM users")).toBe(false);
+    expect(selectsWholeRow("SELECT id, name FROM users u")).toBe(false);
+    expect(selectsWholeRow("SELECT u.name FROM users u")).toBe(false);
+    expect(selectsWholeRow("SELECT count(*) FROM users")).toBe(false);
+  });
+});
+
+describe("assertAdminQuery — Ganze-Zeile-/Row-Serialisierungs-Leak", () => {
+  it("sperrt Row-Serialisierer, die eine Zeile in einen Wert packen", () => {
+    for (const q of [
+      "SELECT to_jsonb(u) FROM users u",
+      "SELECT row_to_json(u) FROM users u",
+      "SELECT jsonb_agg(u) FROM users u",
+      "SELECT to_json(u) FROM users u",
+    ]) {
+      expect(() => assertAdminQuery(q, ALL)).toThrow(UnsafeQueryError);
+    }
+  });
+  it("sperrt die bloße Ganze-Zeile-Auswahl", () => {
+    expect(() => assertAdminQuery("SELECT u FROM users u", ALL)).toThrow(
+      UnsafeQueryError,
+    );
+    expect(() => assertAdminQuery("SELECT users FROM users", ALL)).toThrow(
+      UnsafeQueryError,
+    );
+  });
+  it("lässt reguläre Lese-Queries unangetastet", () => {
+    expect(assertAdminQuery("SELECT id, name FROM users", ALL)).toBe("read");
+    expect(assertAdminQuery("SELECT * FROM characters c", ALL)).toBe("read");
   });
 });

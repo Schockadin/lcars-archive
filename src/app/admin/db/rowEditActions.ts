@@ -1,7 +1,12 @@
 "use server";
 import sql from "@/lib/db";
 import { requireDbAccess, getCurrentUserPermissions } from "@/lib/dal";
-import { getTableColumns, quoteIdent, tableAccessError } from "@/lib/dbInspect";
+import {
+  getTableColumns,
+  quoteIdent,
+  tableAccessError,
+  isProtectedWriteTable,
+} from "@/lib/dbInspect";
 
 export interface RowMutationResult {
   error?: string;
@@ -35,6 +40,15 @@ export async function updateDbRowAction(input: {
     perms.has("db_view_system_tables"),
   );
   if (accessError) return { error: accessError };
+
+  // Gleiche Schranke wie im freien SQL-Panel (assertAdminQuery): Auth-/
+  // Sicherheits-Tabellen (users/roles/audit/…) dürfen auch über das Zeilen-
+  // Overlay nicht geändert werden — sonst könnte ein db-admin (sql_write ist
+  // bewusst orthogonal zu admin) sich über users/roles zum Voll-Admin machen
+  // oder den Audit-Trail manipulieren.
+  if (isProtectedWriteTable(input.table)) {
+    return { error: `Schreibzugriff auf „${input.table}“ ist gesperrt.` };
+  }
 
   const columns = await getTableColumns(input.table);
   if (columns.length === 0) return { error: "Unbekannte Tabelle." };
@@ -93,6 +107,12 @@ export async function deleteDbRowAction(input: {
     perms.has("db_view_system_tables"),
   );
   if (accessError) return { error: accessError };
+
+  // Wie updateDbRowAction: Auth-/Sicherheits-Tabellen sind auch fürs Löschen
+  // über das Overlay gesperrt (Eskalations-/Audit-Manipulations-Schutz).
+  if (isProtectedWriteTable(input.table)) {
+    return { error: `Löschen in „${input.table}“ ist gesperrt.` };
+  }
 
   const columns = await getTableColumns(input.table);
   if (columns.length === 0) return { error: "Unbekannte Tabelle." };

@@ -1,11 +1,11 @@
 // Charakterbögen (PDFs) für Charaktere. Wie content_images liegen die Bytes im
-// öffentlichen Asset-Bucket (Präfix character-sheets/<CharakterID>/<UUID>.pdf),
-// die DB-Tabelle character_sheets hält nur Metadaten (Original-Dateiname für
-// die Anzeige, Größe, Uploader). Anders als Content-Bilder werden Bögen NICHT
-// über den Proxy, sondern über ihre direkte öffentliche URL ausgeliefert
-// (assetPublicUrl) — sie erscheinen aber nur auf der Charakterseite selbst, die
-// bereits nach der Charakter-Sichtbarkeit gated ist ("Sichtbarkeit = Charakter",
-// Nutzerentscheidung). Ein Charakter kann beliebig viele Bögen haben.
+// Asset-Bucket (Präfix character-sheets/<CharakterID>/<UUID>.pdf), die DB-Tabelle
+// character_sheets hält nur Metadaten (Original-Dateiname für die Anzeige,
+// Größe, Uploader). Genau wie Content-Bilder werden die Bögen über eine eigene
+// Proxy-Route (/api/character-sheets/<id>) ausgeliefert — der Bucket bleibt
+// privat, der r2_key verlässt nie den Server, und die Route prüft die
+// Charakter-Sichtbarkeit (canView/canViewDraft) serverseitig, bevor sie die
+// Bytes streamt. Ein Charakter kann beliebig viele Bögen haben.
 import "server-only";
 import crypto from "node:crypto";
 import sql from "@/lib/db";
