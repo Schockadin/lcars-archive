@@ -1,12 +1,83 @@
 "use client";
 import { useEffect, useRef, useState, useTransition } from "react";
+import { createPortal } from "react-dom";
 import {
   getCharacterSheetsAction,
   uploadCharacterSheetsAction,
   deleteCharacterSheetAction,
 } from "@/app/actions/characterSheets";
 import type { CharacterSheet } from "@/lib/characterSheets";
-import { DownloadIcon, UploadIcon, TrashIcon, EyeIcon } from "@/lib/icons";
+import { DownloadIcon, UploadIcon, TrashIcon, EyeIcon, XIcon } from "@/lib/icons";
+
+// Vollbild-Modal mit eingebettetem PDF (Proxy-Route, inline). <iframe> statt
+// <object>/<embed> (CSP object-src 'none'; frame-ancestors 'self' erlaubt das
+// same-origin-Framing, siehe next.config.ts). Escape/Klick außerhalb schließt,
+// Body-Scroll wird gesperrt — gleiches Overlay-Muster wie RowDetailModal.
+function PdfModal({
+  sheet,
+  onClose,
+}: {
+  sheet: CharacterSheet;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  return createPortal(
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Charakterbogen: ${sheet.fileName}`}
+      onClick={onClose}
+      className="fixed inset-0 flex flex-col gap-[8px] bg-black/80 p-[12px] sm:p-[20px]"
+      style={{ zIndex: 1000 }}
+    >
+      <div
+        className="flex items-center gap-[8px]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span className="lcars-text-data flex-1 min-w-0 truncate" title={sheet.fileName}>
+          {sheet.fileName}
+        </span>
+        <a
+          href={`${sheet.url}?download=1`}
+          download={sheet.fileName}
+          className="lcars-icon-btn size-[32px]"
+          aria-label="Herunterladen"
+          title="Herunterladen"
+        >
+          <DownloadIcon />
+        </a>
+        <button
+          type="button"
+          onClick={onClose}
+          className="lcars-icon-btn size-[32px]"
+          aria-label="Schließen"
+          title="Schließen (Esc)"
+        >
+          <XIcon />
+        </button>
+      </div>
+      <iframe
+        src={sheet.url}
+        title={`Vorschau: ${sheet.fileName}`}
+        onClick={(e) => e.stopPropagation()}
+        className="flex-1 w-full rounded-lcars bg-white"
+      />
+    </div>,
+    document.body,
+  );
+}
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -76,6 +147,7 @@ export default function CharacterSheets({
 
   // Für Nicht-Owner ohne Bögen die Sektion ganz ausblenden (kein leerer Block).
   const hasSheets = sheets != null && sheets.length > 0;
+  const openSheet = sheets?.find((s) => s.id === openId) ?? null;
   if (!canManage && (sheets == null || !hasSheets)) return null;
 
   return (
@@ -92,63 +164,45 @@ export default function CharacterSheets({
 
       {hasSheets && (
         <ul className="char-file-sheets-list">
-          {sheets!.map((sheet) => {
-            const isOpen = openId === sheet.id;
-            return (
-              <li key={sheet.id} className="flex flex-col gap-[6px]">
-                <div className="char-file-sheets-item">
-                  {/* Name/Größe schaltet den eingebetteten Viewer um. */}
-                  <button
-                    type="button"
-                    onClick={() => setOpenId(isOpen ? null : sheet.id)}
-                    className="char-file-sheets-link cursor-pointer bg-transparent border-0 text-left"
-                    aria-expanded={isOpen}
-                    title={isOpen ? "Vorschau schließen" : "Vorschau anzeigen"}
-                  >
-                    <EyeIcon />
-                    <span className="char-file-sheets-name">{sheet.fileName}</span>
-                    <span className="char-file-sheets-size">
-                      {formatSize(sheet.sizeBytes)}
-                    </span>
-                  </button>
-                  {/* Getrennter Download (Content-Disposition attachment). */}
-                  <a
-                    href={`${sheet.url}?download=1`}
-                    download={sheet.fileName}
-                    className="lcars-icon-btn size-[28px]"
-                    aria-label={`Bogen „${sheet.fileName}“ herunterladen`}
-                    title="Herunterladen"
-                  >
-                    <DownloadIcon />
-                  </a>
-                  {canManage && (
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(sheet.id)}
-                      disabled={pending}
-                      className="lcars-icon-btn lcars-icon-btn--danger size-[28px] disabled:opacity-50"
-                      aria-label={`Bogen „${sheet.fileName}“ löschen`}
-                      title="Bogen löschen"
-                    >
-                      <TrashIcon />
-                    </button>
-                  )}
-                </div>
-
-                {isOpen && (
-                  // Eingebetteter PDF-Viewer über die Proxy-Route (inline).
-                  // <iframe> statt <object>/<embed>, da die CSP object-src
-                  // 'none' setzt, frame-src aber 'self' erlaubt.
-                  <iframe
-                    src={sheet.url}
-                    title={`Vorschau: ${sheet.fileName}`}
-                    className="w-full rounded-lcars border border-lcars-border"
-                    style={{ height: "70vh", minHeight: 360 }}
-                  />
-                )}
-              </li>
-            );
-          })}
+          {sheets!.map((sheet) => (
+            <li key={sheet.id} className="char-file-sheets-item">
+              {/* Name/Größe öffnet die PDF-Vorschau im Modal. */}
+              <button
+                type="button"
+                onClick={() => setOpenId(sheet.id)}
+                className="char-file-sheets-link cursor-pointer bg-transparent border-0 text-left"
+                title="Vorschau anzeigen"
+              >
+                <EyeIcon />
+                <span className="char-file-sheets-name">{sheet.fileName}</span>
+                <span className="char-file-sheets-size">
+                  {formatSize(sheet.sizeBytes)}
+                </span>
+              </button>
+              {/* Getrennter Download (Content-Disposition attachment). */}
+              <a
+                href={`${sheet.url}?download=1`}
+                download={sheet.fileName}
+                className="lcars-icon-btn size-[28px]"
+                aria-label={`Bogen „${sheet.fileName}“ herunterladen`}
+                title="Herunterladen"
+              >
+                <DownloadIcon />
+              </a>
+              {canManage && (
+                <button
+                  type="button"
+                  onClick={() => handleDelete(sheet.id)}
+                  disabled={pending}
+                  className="lcars-icon-btn lcars-icon-btn--danger size-[28px] disabled:opacity-50"
+                  aria-label={`Bogen „${sheet.fileName}“ löschen`}
+                  title="Bogen löschen"
+                >
+                  <TrashIcon />
+                </button>
+              )}
+            </li>
+          ))}
         </ul>
       )}
 
@@ -181,6 +235,10 @@ export default function CharacterSheets({
         <p className="text-lcars-red text-[13px]" role="alert">
           {error}
         </p>
+      )}
+
+      {openSheet && (
+        <PdfModal sheet={openSheet} onClose={() => setOpenId(null)} />
       )}
     </div>
   );

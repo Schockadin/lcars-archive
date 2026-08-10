@@ -34,12 +34,17 @@ function buildCspHeader(): string {
     // ohne explizites frame-src fällt das auf default-src 'self' zurück und
     // blockiert das Overlay (Konsole: "Refused to frame ... default-src").
     // frame-ancestors weiter unten ist die Gegenrichtung (wer darf UNS
-    // einbetten) und bleibt unverändert 'none'.
+    // einbetten).
     "frame-src 'self' https://app.netlify.com",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",
-    "frame-ancestors 'none'",
+    // 'self' statt 'none': erlaubt der App, EIGENE Ressourcen gleicher Origin
+    // einzubetten — konkret die PDF-Auslieferung /api/character-sheets/<id> im
+    // Charakterbogen-Viewer (<iframe>, siehe CharacterSheets.tsx). Cross-Origin-
+    // Framing (der eigentliche Clickjacking-Vektor) bleibt weiterhin geblockt;
+    // nur unsere eigenen Seiten dürfen unsere eigenen Seiten rahmen.
+    "frame-ancestors 'self'",
     "upgrade-insecure-requests",
   ].join("; ");
 }
