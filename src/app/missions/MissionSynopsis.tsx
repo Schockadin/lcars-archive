@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MissionDetail } from "@/types/missions";
 import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import type { Viewer } from "@/lib/visibility";
+import type { FollowState } from "@/app/actions/follows";
 import MissionSynopsisEditor from "./MissionSynopsisEditor";
 import ActionsMenu from "@/components/ActionsMenu";
 import ContentBody from "@/components/ContentBody";
@@ -13,10 +14,12 @@ export default function MissionSynopsis({
   mission,
   viewer,
   owners,
+  followInitialState,
 }: {
   mission: MissionDetail;
   viewer: Viewer | null;
   owners: { id: number; name: string }[];
+  followInitialState?: FollowState;
 }) {
   const cfg = STATUS_CONFIG[mission.status];
   const [editMode, setEditMode] = useState(false);
@@ -49,6 +52,7 @@ export default function MissionSynopsis({
         owners={owners}
         contentType="mission"
         followType="mission"
+        followInitialState={followInitialState}
         content={mission}
         playerId={mission.ownerUserId}
         onEdit={() => setEditMode(true)}

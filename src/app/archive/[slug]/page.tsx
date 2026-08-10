@@ -16,6 +16,7 @@ import {
   viewerHasPermission,
 } from "@/lib/visibility";
 import { listAllUsers, getDialogueViewPreference } from "@/lib/users";
+import { resolveFollowState } from "@/lib/follows";
 import ArchiveEntryBody from "./ArchiveEntryBody";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 
@@ -95,17 +96,22 @@ export default async function ArchiveEntryPage({ params }: Props) {
   // - flowingTextPreferred: globale Präferenz (DialogueViewToggle.tsx), nur für
   //   eingeloggte Betrachter eines (hier immer bereits geschlossenen) Dialogs
   //   relevant; sonst Default true ohne extra DB-Zugriff.
-  const [allUsers, messages, flowingTextPreferred] = await Promise.all([
-    viewerHasPermission(viewer, "content.moderate")
-      ? listAllUsers()
-      : Promise.resolve([]),
-    entry.category === "dialogue"
-      ? getDialogueMessages(entry.id)
-      : Promise.resolve([]),
-    entry.category === "dialogue" && viewer
-      ? getDialogueViewPreference(viewer.userId)
-      : Promise.resolve(true),
-  ]);
+  const [allUsers, messages, flowingTextPreferred, followInitialState] =
+    await Promise.all([
+      viewerHasPermission(viewer, "content.moderate")
+        ? listAllUsers()
+        : Promise.resolve([]),
+      entry.category === "dialogue"
+        ? getDialogueMessages(entry.id)
+        : Promise.resolve([]),
+      entry.category === "dialogue" && viewer
+        ? getDialogueViewPreference(viewer.userId)
+        : Promise.resolve(true),
+      // Bookmark/Abo-Stand serverseitig vorlösen — an ArchiveEntryBody →
+      // ActionsMenu → FollowButtons als initialState durchgereicht, damit die
+      // Buttons sofort mitgerendert werden statt per Client-Fetch nachzuladen.
+      resolveFollowState(viewer?.userId ?? null, "archive_entry", slug),
+    ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
   const cfg = CATEGORY_CONFIG[entry.category];
@@ -146,6 +152,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
         owners={owners}
         messages={messages}
         flowingTextPreferred={flowingTextPreferred}
+        followInitialState={followInitialState}
       />
 
       {viewerHasPermission(viewer, "dialogues.moderate") &&

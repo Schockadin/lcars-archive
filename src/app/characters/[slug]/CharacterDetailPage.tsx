@@ -4,6 +4,7 @@ import { Character } from "@/types/character";
 import { MissionLogPreview } from "@/types/missionLog";
 import CharacterHero from "./CharacterHero";
 import type { Viewer } from "@/lib/visibility";
+import type { FollowState } from "@/app/actions/follows";
 
 export default function CharakterDetailPage({
   character,
@@ -13,6 +14,7 @@ export default function CharakterDetailPage({
   owners,
   displayAge,
   sourceMarkdown,
+  followInitialState,
 }: {
   character: Character;
   logs: MissionLogPreview[];
@@ -26,6 +28,7 @@ export default function CharakterDetailPage({
   // Nur gesetzt, wenn viewer === Owner (siehe page.tsx) — Grundlage für den
   // Inline-Bio-Editor in CharacterHero.tsx.
   sourceMarkdown: string | null;
+  followInitialState?: FollowState;
 }) {
   usePageMeta(character.name, "characters");
 
@@ -39,6 +42,7 @@ export default function CharakterDetailPage({
         owners={owners}
         displayAge={displayAge}
         sourceMarkdown={sourceMarkdown}
+        followInitialState={followInitialState}
       />
     </div>
   );

@@ -7,6 +7,7 @@ import DialogueViewToggle from "@/components/DialogueViewToggle";
 import ArchiveEntryEditor from "./ArchiveEntryEditor";
 import { ArchiveEntryDetail } from "@/types/archive";
 import type { Viewer } from "@/lib/visibility";
+import type { FollowState } from "@/app/actions/follows";
 import type { DialogueMessage } from "@/lib/dialoguesCore";
 
 // Hält den editMode lokal (statt über einen globalen Context) — ActionsMenu
@@ -20,6 +21,7 @@ export default function ArchiveEntryBody({
   owners,
   messages,
   flowingTextPreferred,
+  followInitialState,
 }: {
   entry: ArchiveEntryDetail;
   viewer: Viewer | null;
@@ -28,6 +30,7 @@ export default function ArchiveEntryBody({
   // Globale User-Präferenz (siehe DialogueViewToggle.tsx) — nur relevant,
   // wenn dieser Eintrag ein Dialog MIT strukturierten Nachrichten ist.
   flowingTextPreferred: boolean;
+  followInitialState?: FollowState;
 }) {
   const [editMode, setEditMode] = useState(false);
   const isAdminOrGM =
@@ -42,6 +45,7 @@ export default function ArchiveEntryBody({
         owners={owners}
         contentType="archiveEntry"
         followType="archive_entry"
+        followInitialState={followInitialState}
         playerId={entry.ownerUserId}
         content={entry}
         onEdit={() => setEditMode(true)}

@@ -12,6 +12,7 @@ import CharacterPortrait from "./CharacterPortrait";
 import CharacterBioEditor from "./CharacterBioEditor";
 import CharacterSheets from "./CharacterSheets";
 import type { Viewer } from "@/lib/visibility";
+import type { FollowState } from "@/app/actions/follows";
 import ActionsMenu from "@/components/ActionsMenu";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
@@ -141,6 +142,7 @@ export default function CharacterHero({
   owners,
   displayAge = null,
   sourceMarkdown,
+  followInitialState,
 }: {
   character: Character;
   logCount?: number;
@@ -152,6 +154,7 @@ export default function CharacterHero({
   displayAge?: number | null;
   // Nur gesetzt, wenn viewer === Owner (player_id) — siehe page.tsx.
   sourceMarkdown: string | null;
+  followInitialState?: FollowState;
 }) {
   const { metadata } = character;
   const [editMode, setEditMode] = useState(false);
@@ -314,6 +317,7 @@ export default function CharacterHero({
               content={character}
               contentType="character"
               followType="character"
+              followInitialState={followInitialState}
               playerId={character.player_id}
               onEdit={() => setEditMode(true)}
             />

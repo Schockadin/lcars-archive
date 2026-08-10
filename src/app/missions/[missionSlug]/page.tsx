@@ -6,7 +6,7 @@ import {
   canViewMissionDraft,
   viewerHasPermission,
 } from "@/lib/visibility";
-import { setSubscription } from "@/lib/follows";
+import { setSubscription, resolveFollowState } from "@/lib/follows";
 import { listAllUsers } from "@/lib/users";
 import MissionSynopsis from "../MissionSynopsis";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
@@ -71,13 +71,24 @@ export default async function MissionPage({ params, searchParams }: Props) {
   const canReassignOwner =
     viewerHasPermission(viewer, "content.moderate") ||
     viewerHasPermission(viewer, "missions.manage");
-  const allUsers = canReassignOwner ? await listAllUsers() : [];
+  // Owner-Liste (optional) und Follow-Stand parallel. followInitialState wird
+  // an FollowButtons durchgereicht, damit Bookmark/Abo sofort mitgerendert
+  // werden statt sie nach der Hydration per Client-Fetch nachzuladen.
+  const [allUsers, followInitialState] = await Promise.all([
+    canReassignOwner ? listAllUsers() : Promise.resolve([]),
+    resolveFollowState(viewer?.userId ?? null, "mission", missionSlug),
+  ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
   return (
     <>
       <MarkNewsSeen type="mission" slug={mission.slug} />
-      <MissionSynopsis mission={mission} owners={owners} viewer={viewer} />
+      <MissionSynopsis
+        mission={mission}
+        owners={owners}
+        viewer={viewer}
+        followInitialState={followInitialState}
+      />
     </>
   );
 }

@@ -5,6 +5,7 @@ import {
   getCharacterSourceBySlug,
 } from "@/lib/characters";
 import { getDialogueCountByParticipant } from "@/lib/archive";
+import { resolveFollowState } from "@/lib/follows";
 import { getIngameYear, inferAgeFromDateOfBirth } from "@/lib/campaign";
 import { getViewer, canView, canViewDraft, viewerHasPermission } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
@@ -74,13 +75,16 @@ export default async function CharakterPage({ params }: Props) {
   // CharacterHero.tsx) — spart die Extra-Query für alle anderen Aufrufe.
   const isOwner = viewer != null && viewer.userId === character.player_id;
 
-  const [logs, conversationCount, allUsers, source, ingameYear] =
+  const [logs, conversationCount, allUsers, source, ingameYear, followInitialState] =
     await Promise.all([
       getLogsByCharacter(character.id),
       getDialogueCountByParticipant(character.slug),
       viewerHasPermission(viewer, "content.moderate") ? listAllUsers() : Promise.resolve([]),
       isOwner ? getCharacterSourceBySlug(character.slug) : Promise.resolve(null),
       getIngameYear(),
+      // Bookmark/Abo-Stand serverseitig vorlösen → an FollowButtons als
+      // initialState durchgereicht (kein Client-Fetch nach der Hydration).
+      resolveFollowState(viewer?.userId ?? null, "character", character.slug),
     ]);
   // Angezeigtes Alter: aus Geburtsdatum + Ingame-Jahr abgeleitet, sonst das
   // manuell gepflegte metadata.age als Fallback (siehe campaign.ts).
@@ -104,6 +108,7 @@ export default async function CharakterPage({ params }: Props) {
         owners={owners}
         displayAge={displayAge}
         sourceMarkdown={isOwner ? (source?.sourceMarkdown ?? "") : null}
+        followInitialState={followInitialState}
       />
     </div>
   );
