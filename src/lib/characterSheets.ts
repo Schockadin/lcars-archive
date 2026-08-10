@@ -112,6 +112,32 @@ export async function getCharacterSheetBytes(r2Key: string) {
   return getAssetObjectBytesFromR2(r2Key);
 }
 
+// Sichtbarkeits-/Owner-/Draft-Felder des Charakters für die Bogen-LISTE
+// (getCharacterSheetsAction) — inkl. is_draft, damit die Liste dieselbe
+// canView + canViewDraft-Prüfung wie die Charakterseite fahren kann (die
+// Bytes-Route prüft canViewDraft ebenfalls; sonst leckten Dateinamen/Größen
+// eines Entwurf-Charakters). deleted_at IS NULL entspricht dem isActive-Gate.
+export async function getCharacterSheetListAccess(
+  characterId: number,
+): Promise<{
+  visibility: Visibility;
+  ownerId: number | null;
+  isDraft: boolean;
+} | null> {
+  const [row] = await sql<
+    { visibility: Visibility; player_id: number | null; is_draft: boolean }[]
+  >`
+    SELECT visibility, player_id, is_draft FROM characters
+    WHERE id = ${characterId} AND deleted_at IS NULL
+  `;
+  if (!row) return null;
+  return {
+    visibility: row.visibility,
+    ownerId: row.player_id,
+    isDraft: row.is_draft,
+  };
+}
+
 export async function listCharacterSheets(
   characterId: number,
 ): Promise<CharacterSheet[]> {

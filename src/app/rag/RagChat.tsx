@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import MarkdownLite from "./MarkdownLite";
 import {
@@ -78,13 +78,10 @@ export default function RagChat({ configured }: { configured: boolean }) {
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
-  // Index des aktuell streamenden Turns (für die token-Updates).
-  const activeIndex = useRef<number>(-1);
 
   async function ask(question: string) {
     setBusy(true);
     const index = turns.length;
-    activeIndex.current = index;
     setTurns((prev) => [
       ...prev,
       { question, answer: "", sources: [], pending: true },
@@ -140,7 +137,6 @@ export default function RagChat({ configured }: { configured: boolean }) {
       }));
     } finally {
       setBusy(false);
-      activeIndex.current = -1;
     }
   }
 

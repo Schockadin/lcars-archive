@@ -2,7 +2,12 @@
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
-import { getViewer, canView, resolveViewer } from "@/lib/visibility";
+import {
+  getViewer,
+  canView,
+  canViewDraft,
+  resolveViewer,
+} from "@/lib/visibility";
 import {
   getContentAccessContext,
   canManageContentImages,
@@ -11,6 +16,7 @@ import {
   listCharacterSheets,
   uploadCharacterSheet,
   deleteCharacterSheet,
+  getCharacterSheetListAccess,
   type CharacterSheet,
 } from "@/lib/characterSheets";
 import { InvalidAssetError } from "@/lib/assetStorage";
@@ -97,17 +103,21 @@ export async function deleteCharacterSheetAction(
 }
 
 // Vom Client beim Mounten aufgerufen (gleiches Muster wie
-// getContentImagesAction) — gleiche Sichtbarkeitsprüfung wie die
-// Charakterseite selbst (canView): wer den Charakter nicht sehen darf, sieht
-// auch seine Bögen nicht.
+// getContentImagesAction) — dieselbe Sichtbarkeitsprüfung wie die
+// Charakterseite selbst: canView UND canViewDraft. Ohne den Draft-Check
+// leckten Dateiname/Größe/Anzahl der Bögen eines noch unveröffentlichten
+// (is_draft) Charakters an jede eingeloggte Person, die die Action direkt
+// aufruft — obwohl der Entwurf nur dem Owner sichtbar sein darf (die
+// Bytes-Route /api/character-sheets/[id] prüft canViewDraft bereits).
 export async function getCharacterSheetsAction(
   characterId: number,
 ): Promise<CharacterSheet[]> {
-  const access = await getContentAccessContext("character", characterId);
+  const access = await getCharacterSheetListAccess(characterId);
   if (!access) return [];
 
   const viewer = await getViewer();
   if (!canView(access.visibility, access.ownerId, viewer)) return [];
+  if (!canViewDraft(access.isDraft, access.ownerId, viewer)) return [];
 
   return listCharacterSheets(characterId);
 }

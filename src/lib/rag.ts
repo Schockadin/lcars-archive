@@ -334,6 +334,24 @@ export async function streamAnswer(
   return parseCloudflareSse(res.body);
 }
 
+// Verarbeitet eine einzelne SSE-Zeile (`data: {"response":"…"}`) und gibt das
+// `response`-Feld weiter. [DONE]/leere/kaputte Zeilen werden übersprungen.
+function emitSseLine(
+  line: string,
+  controller: ReadableStreamDefaultController<string>,
+): void {
+  const trimmed = line.trim();
+  if (!trimmed.startsWith("data:")) return;
+  const payload = trimmed.slice("data:".length).trim();
+  if (payload === "" || payload === "[DONE]") return;
+  try {
+    const json = JSON.parse(payload) as { response?: string };
+    if (json.response) controller.enqueue(json.response);
+  } catch {
+    // Unvollständiges/fehlerhaftes JSON-Event überspringen.
+  }
+}
+
 // Cloudflares Streaming-Antwort ist ein text/event-stream: Zeilen der Form
 // `data: {"response":"…"}` und abschließend `data: [DONE]`. Wir extrahieren
 // je Event das `response`-Feld und geben nur diesen Text weiter.
@@ -348,6 +366,11 @@ function parseCloudflareSse(
     async pull(controller) {
       const { done, value } = await reader.read();
       if (done) {
+        // Residualen Buffer als letztes Event verarbeiten — endet der Stream
+        // mit einer nicht per \n abgeschlossenen data:-Zeile, ginge sonst das
+        // letzte Token der Antwort verloren.
+        emitSseLine(buffer, controller);
+        buffer = "";
         controller.close();
         return;
       }
@@ -356,18 +379,7 @@ function parseCloudflareSse(
       // evtl. unvollständigen Rest im Buffer belassen.
       const lines = buffer.split("\n");
       buffer = lines.pop() ?? "";
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith("data:")) continue;
-        const payload = trimmed.slice("data:".length).trim();
-        if (payload === "" || payload === "[DONE]") continue;
-        try {
-          const json = JSON.parse(payload) as { response?: string };
-          if (json.response) controller.enqueue(json.response);
-        } catch {
-          // Unvollständiges/fehlerhaftes JSON-Event überspringen.
-        }
-      }
+      for (const line of lines) emitSseLine(line, controller);
     },
     cancel() {
       void reader.cancel();
