@@ -12,13 +12,14 @@ import sql from "@/lib/db";
 import {
   uploadAssetObjectToR2,
   deleteAssetObjectFromR2,
-  assetPublicUrl,
+  getAssetObjectBytesFromR2,
 } from "@/lib/r2Backup";
 import {
   assertCharacterSheetAsset,
   sanitizeFileName,
   CHARACTER_SHEET_MIME,
 } from "@/lib/assetStorage";
+import type { Visibility } from "@/lib/visibility";
 
 const CHARACTER_SHEET_PREFIX = "character-sheets/";
 
@@ -49,10 +50,66 @@ function mapRow(row: CharacterSheetRow): CharacterSheet {
     characterId: row.character_id,
     fileName: row.file_name,
     sizeBytes: row.size_bytes,
-    url: assetPublicUrl(row.r2_key),
+    // Auslieferung über die eigene Proxy-Route (/api/character-sheets/<id>)
+    // statt einer direkten öffentlichen Bucket-URL: so bleibt der Bucket
+    // privat (der r2_key wird nie an den Client gegeben), die Sichtbarkeit
+    // wird serverseitig geprüft, und es hängt nicht an einer korrekt
+    // konfigurierten öffentlichen Asset-Domain (R2_ASSET_PUBLIC_BASE_URL) —
+    // gleiches Muster wie /api/content-images/<id>.
+    url: `/api/character-sheets/${row.id}`,
     uploadedBy: row.uploaded_by,
     createdAt: row.created_at,
   };
+}
+
+export interface CharacterSheetAccess {
+  r2Key: string;
+  fileName: string;
+  visibility: Visibility;
+  ownerId: number | null;
+  isDraft: boolean;
+  isActive: boolean;
+}
+
+// Für die Auslieferungs-Route (/api/character-sheets/[id]): den r2_key des
+// Bogens plus die Sichtbarkeits-/Owner-/Draft-Felder des zugehörigen
+// Charakters, damit die Route dieselbe canView/canViewDraft-Prüfung wie die
+// Charakterseite fahren kann (der r2_key selbst verlässt den Server nie).
+export async function getCharacterSheetAccess(
+  id: number,
+): Promise<CharacterSheetAccess | null> {
+  const [row] = await sql<
+    {
+      r2_key: string;
+      file_name: string;
+      visibility: Visibility;
+      player_id: number | null;
+      is_draft: boolean;
+      deleted_at: Date | null;
+    }[]
+  >`
+    SELECT cs.r2_key, cs.file_name, c.visibility, c.player_id, c.is_draft,
+           c.deleted_at
+    FROM character_sheets cs
+    JOIN characters c ON c.id = cs.character_id
+    WHERE cs.id = ${id}
+  `;
+  if (!row) return null;
+  return {
+    r2Key: row.r2_key,
+    fileName: row.file_name,
+    visibility: row.visibility,
+    ownerId: row.player_id,
+    isDraft: row.is_draft,
+    isActive: row.deleted_at == null,
+  };
+}
+
+// Bytes eines Bogens (PDF) aus dem Asset-Bucket. Getrennt von getCharacterSheet
+// Access, damit die Route erst die Berechtigung prüfen und dann die Bytes
+// laden kann.
+export async function getCharacterSheetBytes(r2Key: string) {
+  return getAssetObjectBytesFromR2(r2Key);
 }
 
 export async function listCharacterSheets(

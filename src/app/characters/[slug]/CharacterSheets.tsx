@@ -6,7 +6,7 @@ import {
   deleteCharacterSheetAction,
 } from "@/app/actions/characterSheets";
 import type { CharacterSheet } from "@/lib/characterSheets";
-import { DownloadIcon, UploadIcon, TrashIcon } from "@/lib/icons";
+import { DownloadIcon, UploadIcon, TrashIcon, EyeIcon } from "@/lib/icons";
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -30,6 +30,8 @@ export default function CharacterSheets({
   const [sheets, setSheets] = useState<CharacterSheet[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  // Welcher Bogen ist gerade im eingebetteten Viewer geöffnet (null = keiner).
+  const [openId, setOpenId] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -90,35 +92,63 @@ export default function CharacterSheets({
 
       {hasSheets && (
         <ul className="char-file-sheets-list">
-          {sheets!.map((sheet) => (
-            <li key={sheet.id} className="char-file-sheets-item">
-              <a
-                href={sheet.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="char-file-sheets-link"
-                title={sheet.fileName}
-              >
-                <DownloadIcon />
-                <span className="char-file-sheets-name">{sheet.fileName}</span>
-                <span className="char-file-sheets-size">
-                  {formatSize(sheet.sizeBytes)}
-                </span>
-              </a>
-              {canManage && (
-                <button
-                  type="button"
-                  onClick={() => handleDelete(sheet.id)}
-                  disabled={pending}
-                  className="lcars-icon-btn lcars-icon-btn--danger size-[28px] disabled:opacity-50"
-                  aria-label={`Bogen „${sheet.fileName}“ löschen`}
-                  title="Bogen löschen"
-                >
-                  <TrashIcon />
-                </button>
-              )}
-            </li>
-          ))}
+          {sheets!.map((sheet) => {
+            const isOpen = openId === sheet.id;
+            return (
+              <li key={sheet.id} className="flex flex-col gap-[6px]">
+                <div className="char-file-sheets-item">
+                  {/* Name/Größe schaltet den eingebetteten Viewer um. */}
+                  <button
+                    type="button"
+                    onClick={() => setOpenId(isOpen ? null : sheet.id)}
+                    className="char-file-sheets-link cursor-pointer bg-transparent border-0 text-left"
+                    aria-expanded={isOpen}
+                    title={isOpen ? "Vorschau schließen" : "Vorschau anzeigen"}
+                  >
+                    <EyeIcon />
+                    <span className="char-file-sheets-name">{sheet.fileName}</span>
+                    <span className="char-file-sheets-size">
+                      {formatSize(sheet.sizeBytes)}
+                    </span>
+                  </button>
+                  {/* Getrennter Download (Content-Disposition attachment). */}
+                  <a
+                    href={`${sheet.url}?download=1`}
+                    download={sheet.fileName}
+                    className="lcars-icon-btn size-[28px]"
+                    aria-label={`Bogen „${sheet.fileName}“ herunterladen`}
+                    title="Herunterladen"
+                  >
+                    <DownloadIcon />
+                  </a>
+                  {canManage && (
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(sheet.id)}
+                      disabled={pending}
+                      className="lcars-icon-btn lcars-icon-btn--danger size-[28px] disabled:opacity-50"
+                      aria-label={`Bogen „${sheet.fileName}“ löschen`}
+                      title="Bogen löschen"
+                    >
+                      <TrashIcon />
+                    </button>
+                  )}
+                </div>
+
+                {isOpen && (
+                  // Eingebetteter PDF-Viewer über die Proxy-Route (inline).
+                  // <iframe> statt <object>/<embed>, da die CSP object-src
+                  // 'none' setzt, frame-src aber 'self' erlaubt.
+                  <iframe
+                    src={sheet.url}
+                    title={`Vorschau: ${sheet.fileName}`}
+                    className="w-full rounded-lcars border border-lcars-border"
+                    style={{ height: "70vh", minHeight: 360 }}
+                  />
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
 

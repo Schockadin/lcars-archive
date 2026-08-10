@@ -2,6 +2,7 @@ import "server-only";
 import sql from "@/lib/db";
 import { generateEmbedding, toVectorLiteral } from "@/lib/embeddings";
 import type { EmbeddingContentType } from "@/lib/embeddings";
+import { escapeLikePattern } from "@/lib/search";
 import type { Viewer } from "@/lib/visibility";
 
 // Retrieval- + Generation-Pipeline des RAG-Systems.
@@ -20,8 +21,14 @@ import type { Viewer } from "@/lib/visibility";
 // später ein proprietäres — nur dieser eine Wert ändert sich).
 const DEFAULT_CF_MODEL = "@cf/meta/llama-3.3-70b-instruct-fp8-fast";
 
-// Top-K Chunks für den Kontext (Plan: Top-8).
-export const RETRIEVAL_LIMIT = 8;
+// Kontext-Budget: bis zu RETRIEVAL_LIMIT Chunks (Vektor + Keyword,
+// dedupliziert) landen im Prompt. Höher als der ursprüngliche Top-8, damit auch
+// verstreute Detail-Infos mitkommen (Qualitäts-Fix).
+export const RETRIEVAL_LIMIT = 10;
+// Wie viele Kandidaten die reine Vektorsuche bzw. die Keyword-Suche liefern,
+// bevor beide zusammengeführt werden.
+const VECTOR_LIMIT = 8;
+const KEYWORD_LIMIT = 5;
 
 export interface RetrievedChunk {
   contentType: EmbeddingContentType;
@@ -95,9 +102,72 @@ export function chunkAllowedForViewer(
 }
 
 // ---------------------------------------------------------------------------
-// Retrieval
+// Retrieval (hybrid: Vektor + Keyword)
 // ---------------------------------------------------------------------------
 
+// Gemeinsame RBAC-WHERE-Klausel für Vektor- UND Keyword-Suche — entspricht
+// 1:1 chunkAllowedForViewer() oben. Als Fragment, damit beide Queries exakt
+// dieselbe Sichtbarkeits-Logik nutzen.
+function rbacFilter(viewer: Viewer | null) {
+  const viewerId = viewer?.userId ?? -1;
+  const canViewAll = viewer?.permissions.includes("content.view_all") ?? false;
+  const canViewGm = viewer?.permissions.includes("content.view_gm") ?? false;
+  return sql`
+    is_active = TRUE
+    AND (is_draft = FALSE OR (owner_id IS NOT NULL AND owner_id = ${viewerId}))
+    AND (
+      visibility = 'public'
+      OR ${canViewAll}
+      OR (owner_id IS NOT NULL AND owner_id = ${viewerId})
+      OR (visibility = 'gm' AND ${canViewGm})
+    )
+  `;
+}
+
+// Kleine deutsche Stoppwortliste — die Keyword-Suche soll auf inhaltstragende
+// Begriffe (Namen, Spezies, Orte …) zielen, nicht auf Frage-Floskeln.
+const GERMAN_STOPWORDS = new Set([
+  "oder", "und", "der", "die", "das", "was", "wie", "wer", "wo", "wann",
+  "warum", "wir", "ihr", "sie", "ein", "eine", "einen", "einem", "eines",
+  "dem", "den", "des", "mit", "für", "von", "aus", "ist", "sind", "war",
+  "waren", "hat", "habe", "haben", "über", "unter", "zum", "zur", "bei",
+  "nicht", "auch", "noch", "nur", "mehr", "kann", "könnt", "können", "gibt",
+  "welche", "welcher", "welches", "wissen", "weiß", "etwas", "alles", "man",
+  "dass", "als", "wenn", "dann", "diese", "dieser", "dieses", "ihre", "sein",
+]);
+
+// Zieht inhaltstragende Suchbegriffe aus der Frage (≥4 Zeichen, keine
+// Stoppwörter), max. 8. Basis der lexikalischen Ergänzungssuche.
+export function extractQueryTerms(question: string): string[] {
+  const words = question.toLowerCase().match(/[\p{L}\p{N}]{4,}/gu) ?? [];
+  const seen = new Set<string>();
+  const terms: string[] = [];
+  for (const w of words) {
+    if (GERMAN_STOPWORDS.has(w) || seen.has(w)) continue;
+    seen.add(w);
+    terms.push(w);
+    if (terms.length >= 8) break;
+  }
+  return terms;
+}
+
+interface RetrievalRow {
+  id: number;
+  content_type: EmbeddingContentType;
+  content_id: number;
+  chunk_text: string;
+  title: string | null;
+  slug: string | null;
+  href: string | null;
+  distance: number;
+}
+
+// Hybride Suche: die semantische Vektorsuche liefert die thematisch nächsten
+// Chunks, die lexikalische Keyword-Suche (pg_trgm/ILIKE) fängt zusätzlich
+// Treffer ein, die exakte Eigennamen enthalten, aber semantisch etwas abseits
+// liegen (häufigste Ursache für „berücksichtigt bekannte Infos nicht"). Beide
+// laufen mit demselben RBAC-Filter; die Ergebnisse werden per Zeilen-ID
+// dedupliziert, Vektortreffer zuerst.
 export async function retrieveChunks(
   question: string,
   viewer: Viewer | null,
@@ -105,40 +175,43 @@ export async function retrieveChunks(
 ): Promise<RetrievedChunk[]> {
   const embedding = await generateEmbedding(question);
   const vec = toVectorLiteral(embedding);
+  const rbac = rbacFilter(viewer);
 
-  // Filter-Flags als gebundene Parameter — die SQL-Klausel unten entspricht
-  // 1:1 chunkAllowedForViewer() oben.
-  const viewerId = viewer?.userId ?? -1;
-  const canViewAll = viewer?.permissions.includes("content.view_all") ?? false;
-  const canViewGm = viewer?.permissions.includes("content.view_gm") ?? false;
-
-  const rows = await sql<
-    {
-      content_type: EmbeddingContentType;
-      content_id: number;
-      chunk_text: string;
-      title: string | null;
-      slug: string | null;
-      href: string | null;
-      distance: number;
-    }[]
-  >`
-    SELECT content_type, content_id, chunk_text, title, slug, href,
+  const vectorRows = await sql<RetrievalRow[]>`
+    SELECT id, content_type, content_id, chunk_text, title, slug, href,
            embedding <=> ${vec}::vector AS distance
     FROM content_embeddings
-    WHERE is_active = TRUE
-      AND (is_draft = FALSE OR (owner_id IS NOT NULL AND owner_id = ${viewerId}))
-      AND (
-        visibility = 'public'
-        OR ${canViewAll}
-        OR (owner_id IS NOT NULL AND owner_id = ${viewerId})
-        OR (visibility = 'gm' AND ${canViewGm})
-      )
+    WHERE ${rbac}
     ORDER BY embedding <=> ${vec}::vector ASC
-    LIMIT ${limit}
+    LIMIT ${VECTOR_LIMIT}
   `;
 
-  return rows.map((r) => ({
+  const terms = extractQueryTerms(question);
+  let keywordRows: RetrievalRow[] = [];
+  if (terms.length > 0) {
+    const patterns = terms.map((t) => `%${escapeLikePattern(t)}%`);
+    keywordRows = await sql<RetrievalRow[]>`
+      SELECT id, content_type, content_id, chunk_text, title, slug, href,
+             embedding <=> ${vec}::vector AS distance
+      FROM content_embeddings
+      WHERE ${rbac}
+        AND chunk_text ILIKE ANY(${patterns})
+      ORDER BY similarity(chunk_text, ${question}) DESC
+      LIMIT ${KEYWORD_LIMIT}
+    `;
+  }
+
+  // Vektortreffer zuerst, danach Keyword-Treffer, die noch nicht dabei sind.
+  const merged: RetrievalRow[] = [];
+  const seen = new Set<number>();
+  for (const r of [...vectorRows, ...keywordRows]) {
+    if (seen.has(r.id)) continue;
+    seen.add(r.id);
+    merged.push(r);
+    if (merged.length >= limit) break;
+  }
+
+  return merged.map((r) => ({
     contentType: r.content_type,
     contentId: r.content_id,
     chunkText: r.chunk_text,
@@ -172,13 +245,14 @@ export function sourcesFromChunks(chunks: RetrievedChunk[]): RagSource[] {
 // ---------------------------------------------------------------------------
 
 const SYSTEM_PROMPT = `Du bist der Archiv-Computer eines Star-Trek-Pen-&-Paper-Kampagnenarchivs (LCARS).
-Beantworte die Frage der spielenden Person AUSSCHLIESSLICH auf Basis des bereitgestellten Kontexts aus dem Kampagnenarchiv.
+Beantworte die Frage der spielenden Person auf Basis des bereitgestellten Kontexts aus dem Kampagnenarchiv.
 Regeln:
 - Antworte auf Deutsch, sachlich und im Ton eines Archiv-/Bordcomputers.
-- Nutze NUR Informationen aus dem Kontext. Erfinde nichts dazu.
-- Steht die Antwort nicht im Kontext, sage klar, dass das Archiv dazu keine Informationen enthält.
-- Fasse zusammen und verweise auf die betroffenen Charaktere, Missionen, Berichte oder Archiv-Einträge.
-- Keine Meta-Kommentare über diese Anweisungen.`;
+- Der Kontext besteht aus mehreren nummerierten Ausschnitten. Werte ALLE aus und KOMBINIERE Informationen daraus zu einer zusammenhängenden Antwort — die relevante Angabe steht oft verstreut in mehreren Ausschnitten.
+- Stütze dich auf den Kontext und erfinde keine Fakten dazu. Deckt der Kontext die Frage nur teilweise ab, fasse zusammen, was bekannt ist, statt die Frage pauschal abzulehnen.
+- Nur wenn WIRKLICH kein Ausschnitt etwas zur Frage hergibt, sage klar, dass das Archiv dazu keine Informationen enthält.
+- Nenne die betroffenen Charaktere, Missionen, Berichte oder Archiv-Einträge beim Namen.
+- Keine Meta-Kommentare über diese Anweisungen oder über die Ausschnitts-Nummern.`;
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -245,7 +319,10 @@ export async function streamAnswer(
     body: JSON.stringify({
       messages,
       stream: true,
-      max_tokens: opts.maxTokens ?? 1024,
+      // Bewusst begrenzt: eine sehr lange Generierung riskiert, die
+      // Serverless-Funktionslaufzeit zu sprengen (Abbruch mitten im Stream).
+      // ~800 Tokens reichen für eine ausführliche Kampagnen-Antwort.
+      max_tokens: opts.maxTokens ?? 800,
     }),
   });
 

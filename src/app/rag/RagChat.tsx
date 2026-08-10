@@ -108,10 +108,15 @@ export default function RagChat({ configured }: { configured: boolean }) {
       });
       patch((t) => ({ ...t, pending: false }));
     } catch {
+      // Bricht die Verbindung mitten im Stream ab, ist die bis dahin
+      // empfangene Teil-Antwort trotzdem nützlich — sie bleibt stehen, der
+      // Hinweis fällt je nachdem weicher aus.
       patch((t) => ({
         ...t,
         pending: false,
-        error: "Verbindung zum Assistenten verloren.",
+        error: t.answer
+          ? "Verbindung unterbrochen — die Antwort ist womöglich unvollständig."
+          : "Verbindung zum Assistenten verloren.",
       }));
     } finally {
       setBusy(false);
