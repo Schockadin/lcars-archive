@@ -540,9 +540,10 @@ export default function TutorialPage() {
                   <code>
                     &lt;!-- timeline: JJJJ-MM-TT | Titel | Kategorie --&gt;
                   </code>
-                  ) über den Kalender-Knopf in der Textwerkzeugleiste einfügen
-                  und die komplette Timeline aus den aktuellen Datenbank-
-                  Inhalten neu erzeugen lassen.
+                  ) über den Kalender-Knopf in der Textwerkzeugleiste einfügen.
+                  Sie setzen eine unsichtbare Sprungmarke an der Textstelle und
+                  halten die Datengrundlage für eine mögliche künftige
+                  Zeitleisten-Funktion vor.
                 </li>
               </ul>
               <p>
@@ -565,7 +566,7 @@ export default function TutorialPage() {
                 <li>
                   Unter <strong>„Scripts“</strong> alle Missionen ohne
                   Besitzer:in auf einen Schlag einer Spielleitung zuordnen,
-                  Cache/Timeline neu aufbauen, mit{" "}
+                  den Cache neu aufbauen, mit{" "}
                   <strong>„Alle Inhalte verlinken“</strong> das Autolinking auf
                   einen Rutsch über alle bestehenden Inhalte laufen lassen sowie
                   mit <strong>„Typografie korrigieren“</strong> gerade
@@ -620,11 +621,17 @@ export default function TutorialPage() {
               </p>
               <InstallPwaPrompt />
               <p>
-                Wichtig zu wissen: Die installierte App speichert Inhalte{" "}
-                <strong>nicht</strong> für den Offline-Zugriff — du brauchst
-                weiterhin eine Internetverbindung. Der einzige Zweck der
-                App-Installation ist ein bequemerer Zugriff (eigenes Icon, kein
-                Adressleisten-Umweg) sowie die Grundlage für{" "}
+                Die installierte App funktioniert eingeschränkt auch{" "}
+                <strong>offline</strong>: Bereits besuchte Seiten bleiben ohne
+                Internetverbindung abrufbar, und statt einer Browser-Fehlerseite
+                erscheint ein eigener Offline-Hinweis mit „Erneut
+                versuchen“-Knopf. Sobald du wieder online bist, lädt die App
+                automatisch die aktuellen Daten nach.{" "}
+                <strong>Neue Inhalte, die Anmeldung und das Speichern von
+                Änderungen</strong>{" "}
+                brauchen weiterhin eine Verbindung. Darüber hinaus bietet die
+                Installation einen bequemeren Zugriff (eigenes Icon, kein
+                Adressleisten-Umweg) und die Grundlage für{" "}
                 <strong>Push-Benachrichtigungen</strong>, die du wie oben
                 beschrieben in deinem Profil ein-/ausschaltest.
               </p>

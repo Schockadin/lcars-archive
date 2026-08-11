@@ -181,7 +181,19 @@ export function isSelectStarQuery(query: string): boolean {
 // verankert am Anweisungsanfang, daher keine Fehltreffer aus String-Literalen.
 // Reine String-Logik, exportiert für Tests.
 export function parseWriteTarget(query: string): string | null {
-  const q = query.replace(/--[^\n]*(\n|$)/g, " ").trim();
+  // Block- UND Zeilenkommentare vor dem Positions-Parse entfernen: Postgres
+  // behandelt einen Block-Kommentar wie Whitespace, `UPDATE/**/users` schreibt
+  // also nach users. Ohne dieses Entfernen scheiterte der am Schlüsselwort
+  // verankerte Match (kein `\s` nach dem Keyword) und lieferte null — womit die
+  // PROTECTED_WRITE_TABLES-Prüfung im Aufrufer übersprungen worden wäre
+  // (Rechte-Eskalation eines db-admin auf users/roles). Ein unvollständig
+  // entfernter (verschachtelter) Kommentar lässt den Match ebenfalls scheitern
+  // → der Aufrufer lehnt schreibende Statements mit nicht eindeutig
+  // bestimmbarer Ziel-Tabelle fail-closed ab (siehe assertAdminQuery).
+  const q = query
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/--[^\n]*(\n|$)/g, " ")
+    .trim();
   const m = q.match(
     /^(?:insert\s+into|update|delete\s+from)\s+(?:"?public"?\s*\.\s*)?"?([a-zA-Z_][a-zA-Z0-9_]*)"?/i,
   );
@@ -327,7 +339,17 @@ export function assertAdminQuery(
   // Audit-Manipulations-Schutz). Ziel-Tabelle am Statement-Anfang geparst.
   if (action === "write" || action === "delete") {
     const target = parseWriteTarget(query);
-    if (target && isProtectedWriteTable(target)) {
+    // Fail-closed: lässt sich die Ziel-Tabelle NICHT eindeutig bestimmen (z.B.
+    // durch Kommentar-/Quoting-Tricks zwischen Schlüsselwort und Tabellenname),
+    // wird das schreibende Statement abgelehnt, statt die Schutztabellen-
+    // Prüfung stillschweigend zu überspringen. Ein reguläres Write
+    // (INSERT INTO/UPDATE/DELETE FROM <tabelle>) liefert immer ein Ziel.
+    if (!target) {
+      throw new UnsafeQueryError(
+        "Die Ziel-Tabelle muss unmittelbar (ohne Kommentar) hinter INSERT INTO / UPDATE / DELETE FROM stehen.",
+      );
+    }
+    if (isProtectedWriteTable(target)) {
       throw new UnsafeQueryError(
         `Schreibzugriff auf „${target}“ ist im SQL-Panel gesperrt.`,
       );
