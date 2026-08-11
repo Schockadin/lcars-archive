@@ -1,15 +1,30 @@
+import { Suspense } from "react";
 import { requireNonGuest } from "@/lib/dal";
+import PageSkeleton from "@/app/_shared/PageSkeleton";
 
 // Gilt für /users (Userübersicht) und /users/[id] (öffentliches Profil).
 // requireNonGuest() sperrt Gast-Accounts komplett aus (siehe dal.ts) —
 // admin/gm sehen auf /users zusätzlich Admin-Aktionen (siehe page.tsx),
 // player/viewer bekommen dort nur die Subscribe-Aktion.
-export default async function UsersLayout({
+//
+// Das Gate (requireNonGuest → cookies()) liegt unter cacheComponents in einer
+// Suspense-Grenze, damit die statische Shell sofort erscheint und der
+// rechtegeprüfte Inhalt nachstreamt.
+export default function UsersLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  await requireNonGuest();
+  return (
+    <div className="flex flex-col gap-[16px]">
+      <Suspense fallback={<PageSkeleton />}>
+        <NonGuestGate>{children}</NonGuestGate>
+      </Suspense>
+    </div>
+  );
+}
 
-  return <div className="flex flex-col gap-[16px]">{children}</div>;
+async function NonGuestGate({ children }: { children: React.ReactNode }) {
+  await requireNonGuest();
+  return <>{children}</>;
 }

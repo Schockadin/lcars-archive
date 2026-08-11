@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { logout } from "@/app/login/actions";
+import { clearServiceWorkerPageCache } from "@/lib/swCache";
 import { DB_PERMISSIONS } from "@/lib/permissions";
 import { useAnchoredDropdown } from "./useAnchoredDropdown";
 
@@ -174,7 +175,14 @@ export default function HeaderUserNav({
         </>
       )}
 
-      <form action={logout} className="lcars-usernav-form">
+      <form
+        action={logout}
+        className="lcars-usernav-form"
+        // Vor dem Abmelden den Offline-Seiten-Cache des Service Workers leeren,
+        // damit personalisierte Seiten nach dem Logout nicht offline abrufbar
+        // bleiben (siehe public/sw.js).
+        onSubmit={() => clearServiceWorkerPageCache()}
+      >
         <button type="submit" className="lcars-usernav-pill bg-lcars-red">
           Logout
         </button>

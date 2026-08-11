@@ -1,31 +1,56 @@
-// Service Worker: (1) Web Push (Zustellung/Klick) und (2) Laufzeit-Caching
-// statischer Assets für schnellere Wiederbesuche. BEWUSST KEIN Offline-Modus:
-// HTML-Navigationen, RSC-Payloads, /api-Requests und Server-Actions werden vom
-// fetch-Handler NICHT angefasst und gehen immer direkt ans Netz — nur
-// unveränderliche/statische Dateien werden gecacht (siehe unten).
+// Service Worker: (1) Web Push (Zustellung/Klick), (2) Laufzeit-Caching
+// statischer Assets für schnelle Wiederbesuche und (3) OFFLINE-BETRIEB
+// (soweit möglich) für eine installierte PWA.
+//
+// Offline-Strategie (bewusst konservativ, da die App authentifiziert und
+// personalisiert ist):
+//   - Navigationen (HTML) und RSC-Payloads: network-first. Online kommt immer
+//     der frische Server-Stand; die Antwort wird zusätzlich in einen Runtime-
+//     Cache gelegt. Offline wird die zuletzt gesehene Version derselben URL
+//     ausgeliefert; fehlt sie, die statische Offline-Ausweichseite (/offline).
+//   - Content-gehashte Build-Assets (/_next/static/): cache-first, unveränder-
+//     lich.
+//   - Icons/Fonts/Manifest/Bilder: stale-while-revalidate.
+//   - /api, Server-Actions und alle Mutationen: NICHT angefasst → immer Netz
+//     (personalisierte/schreibende Endpunkte lassen sich nicht sinnvoll
+//     offline bedienen; sie schlagen offline erwartungsgemäß fehl).
 
-// Cache-Name mit Versions-Suffix: Ein Bump entfernt beim nächsten activate alle
-// älteren neo-archive-asset-Caches. Muss nicht pro Deploy erhöht werden — die
+// Versionssuffix: Ein Bump entfernt beim nächsten activate ältere Caches.
 // Build-Assets unter /_next/static/ sind content-gehasht (neuer Deploy = neue
-// Dateinamen = automatischer Cache-Miss); die Version dient nur dem gelegent-
-// lichen Aufräumen verwaister Einträge.
-const ASSET_CACHE = "neo-archive-assets-v1";
+// Dateinamen = automatischer Cache-Miss); die Version räumt verwaiste Einträge
+// auf und erneuert das Precache (u.a. die Offline-Seite).
+const CACHE_VERSION = "v3";
+const ASSET_CACHE = `neo-archive-assets-${CACHE_VERSION}`;
+const PAGE_CACHE = `neo-archive-pages-${CACHE_VERSION}`;
+const PRECACHE = `neo-archive-precache-${CACHE_VERSION}`;
 
-self.addEventListener("install", () => {
-  // Kein Precaching — rein laufzeitbasiert. Sofort aktiv werden.
-  self.skipWaiting();
+// Beim Install vorgeladene, netz-unabhängige Ausweichressourcen.
+const OFFLINE_URL = "/offline";
+const PRECACHE_URLS = [OFFLINE_URL, "/manifest.webmanifest"];
+
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+    (async () => {
+      // Offline-Ausweichseite + Manifest vorladen, damit die App auch beim
+      // allerersten Offline-Aufruf eine gestylte Seite zeigen kann.
+      const cache = await caches.open(PRECACHE);
+      await cache.addAll(PRECACHE_URLS);
+      // Sofort aktiv werden (kein Warten auf Schließen aller Tabs).
+      await self.skipWaiting();
+    })(),
+  );
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      // Alte Asset-Cache-Versionen entfernen.
+      // Alte Cache-Versionen entfernen (alles, was nicht zur aktuellen
+      // Version gehört).
       const keys = await caches.keys();
+      const current = new Set([ASSET_CACHE, PAGE_CACHE, PRECACHE]);
       await Promise.all(
         keys
-          .filter(
-            (k) => k.startsWith("neo-archive-assets-") && k !== ASSET_CACHE,
-          )
+          .filter((k) => k.startsWith("neo-archive-") && !current.has(k))
           .map((k) => caches.delete(k)),
       );
       await self.clients.claim();
@@ -33,12 +58,12 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// ── Laufzeit-Caching (nur GET, nur same-origin, nur statische Assets) ──────
+// ── Fetch-Routing ──────────────────────────────────────────────────────────
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
-  // Range-Requests (Teilinhalte) nicht cachen — Cache-API liefert dafür keine
-  // gültigen 206-Antworten.
+  // Range-Requests (Teilinhalte) nicht cachen — die Cache-API liefert dafür
+  // keine gültigen 206-Antworten.
   if (req.headers.has("range")) return;
 
   let url;
@@ -49,15 +74,37 @@ self.addEventListener("fetch", (event) => {
   }
   if (url.origin !== self.location.origin) return;
 
-  // Content-gehashte Build-Assets (JS/CSS/Fonts unter /_next/static/) sind
-  // unveränderlich → cache-first, ohne Ablauf.
+  // /api NIE anfassen → immer direkt ans Netz, NICHT cachen. Wichtig auch für
+  // die Sicherheit: personalisierte/private Endpunkte (z.B. der eingebettete
+  // Charakterbogen /api/character-sheets/<id>, ausgeliefert als
+  // "Cache-Control: private") werden als <iframe>-Quelle mit request.mode
+  // "navigate" geladen und lägen sonst in der Navigations-Zweig-Logik unten im
+  // Page-Cache — private Bytes dürfen dort nicht landen. Der Cache-API sind die
+  // Cache-Control-Header egal, deshalb hier explizit ausschließen.
+  if (url.pathname.startsWith("/api/")) return;
+
+  // RSC-Payloads (React Server Components) der clientseitigen Navigation:
+  // dieselbe URL wie die HTML-Seite, aber mit RSC-Header/_rsc-Query. Wie eine
+  // Navigation behandeln (network-first mit Cache-Fallback), damit auch das
+  // Weiterklicken zwischen bereits besuchten Seiten offline funktioniert.
+  const isRsc = req.headers.get("RSC") === "1" || url.searchParams.has("_rsc");
+
+  // Echte Seiten-Navigationen (Adressleiste, Reload, Link ohne JS).
+  const isNavigation = req.mode === "navigate";
+
+  if (isNavigation || isRsc) {
+    event.respondWith(networkFirstPage(req, isNavigation));
+    return;
+  }
+
+  // Content-gehashte Build-Assets → cache-first, ohne Ablauf.
   if (url.pathname.startsWith("/_next/static/")) {
     event.respondWith(cacheFirst(req));
     return;
   }
 
-  // Statische Icons, Web-App-Manifest und lokale Schriften → stale-while-
-  // revalidate: sofort aus dem Cache, im Hintergrund aktualisieren.
+  // Statische Icons, Web-App-Manifest und lokale Schriften/Bilder →
+  // stale-while-revalidate: sofort aus dem Cache, im Hintergrund aktualisieren.
   if (
     url.pathname.startsWith("/icons/") ||
     url.pathname === "/manifest.webmanifest" ||
@@ -67,8 +114,37 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Alles andere (HTML, RSC, /api, Server-Actions) NICHT anfassen → Netz.
+  // Alles andere (Server-Actions, sonstige dynamische GETs) NICHT anfassen →
+  // direkt ans Netz. (/api ist bereits oben ausgeschlossen.)
 });
+
+// Network-first für Navigationen und RSC-Payloads: online frisch (und in den
+// Page-Cache gelegt), offline aus dem Page-Cache, sonst die Offline-Seite.
+async function networkFirstPage(req, isNavigation) {
+  const cache = await caches.open(PAGE_CACHE);
+  try {
+    const res = await fetch(req);
+    // Nur erfolgreiche, „basic"/„default"-Antworten cachen (keine Redirects/
+    // Opaques). Eine Kopie ablegen, das Original ausliefern.
+    if (res && res.ok && (res.type === "basic" || res.type === "default")) {
+      cache.put(req, res.clone());
+    }
+    return res;
+  } catch {
+    // Offline: zuerst die exakt passende gecachte Version dieser URL.
+    const cached = await cache.match(req);
+    if (cached) return cached;
+    // Für echte Navigationen die Offline-Ausweichseite; für RSC-Payloads
+    // ohne Cache gibt es keinen sinnvollen Fallback → Fehler durchreichen,
+    // damit der Router-Fetch scheitert (die bereits sichtbare Seite bleibt).
+    if (isNavigation) {
+      const precache = await caches.open(PRECACHE);
+      const offline = await precache.match(OFFLINE_URL);
+      if (offline) return offline;
+    }
+    throw new Error("Offline und keine gecachte Version verfügbar.");
+  }
+}
 
 async function cacheFirst(req) {
   const cache = await caches.open(ASSET_CACHE);
@@ -90,6 +166,20 @@ async function staleWhileRevalidate(req) {
     .catch(() => hit);
   return hit || fetching;
 }
+
+// ── Logout: personalisierten Seiten-Cache leeren ───────────────────────────
+// Vom Client (Logout-/Login-Form, siehe HeaderUserNav.tsx / LoginForm.tsx) per
+// postMessage getriggert: der Laufzeit-Seiten-Cache kann authentifizierte,
+// personalisierte Seiten/RSC-Payloads enthalten, die nach einem Abmelden nicht
+// mehr offline abrufbar sein dürfen — besonders auf geteilten Geräten. Online
+// ist das unkritisch (network-first liefert stets frisch); dies schließt die
+// Offline-Lücke. Precache (/offline, Manifest) und Asset-Cache bleiben, da rein
+// öffentlich/statisch.
+self.addEventListener("message", (event) => {
+  if (event.data === "neo-archive:clear-page-cache") {
+    event.waitUntil(caches.delete(PAGE_CACHE));
+  }
+});
 
 // ── Web Push (unverändert) ─────────────────────────────────────────────────
 self.addEventListener("push", (event) => {

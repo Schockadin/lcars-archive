@@ -4,7 +4,6 @@ import PageMeta from "@/components/PageMeta";
 import { requireAdmin, getRoleMap } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
 import RevalidateCachePanel from "../RevalidateCachePanel";
-import TimelineRegeneratePanel from "../TimelineRegeneratePanel";
 import AssignOwnerlessMissionsPanel from "../AssignOwnerlessMissionsPanel";
 import DialogueContentRegeneratePanel from "../DialogueContentRegeneratePanel";
 import LinkAllContentPanel from "../LinkAllContentPanel";
@@ -19,8 +18,8 @@ export const metadata: Metadata = {
 
 export const maxDuration = 60;
 
-// Admin-only: einmalige/seltene Wartungs-Aktionen (Cache, Timeline,
-// Missionen ohne Owner) — bewusst getrennt von den regelmäßigen
+// Admin-only: einmalige/seltene Wartungs-Aktionen (Cache, Missionen ohne
+// Owner) — bewusst getrennt von den regelmäßigen
 // User-/Charakter-/DB-Bereichen. Jede Aktion wird nur angezeigt, wenn der/die
 // Angemeldete das zugehörige Recht hat (dasselbe Recht, das die jeweilige
 // Server-Action prüft) — sonst wäre der Knopf da, die Aktion würde aber mit
@@ -49,13 +48,6 @@ export default async function AdminScriptsPage() {
             <section className="flex flex-col gap-[12px]">
               <h2 className="text-lcars-amber">Cache</h2>
               <RevalidateCachePanel />
-            </section>
-          )}
-
-          {can("admin.access") && (
-            <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Timeline</h2>
-              <TimelineRegeneratePanel />
             </section>
           )}
 

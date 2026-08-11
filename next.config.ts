@@ -50,6 +50,16 @@ function buildCspHeader(): string {
 }
 
 const nextConfig: NextConfig = {
+  // Cache Components (Next 16, ehem. dynamicIO/ppr/useCache als ein Flag):
+  // Alle Seiten sind per Default dynamisch; statisch cachebare Teile werden
+  // per "use cache"-Direktive markiert (siehe src/lib/*.ts, in denen die
+  // früheren unstable_cache-Wrapper auf "use cache" + cacheTag/cacheLife
+  // umgestellt sind). Next prerendert daraus eine statische Shell und streamt
+  // die dynamischen (betrachter-/cookie-abhängigen) Teile per <Suspense>
+  // nach. Ersetzt zugleich die frühere force-dynamic-Route-Segment-Config auf
+  // den personalisierten Seiten — Laufzeit-Datenzugriff (cookies()/
+  // searchParams) muss dafür in eine Suspense-Grenze gekapselt sein.
+  cacheComponents: true,
   // Schaltet forbidden()/app/forbidden.tsx frei (next/navigation) — genutzt
   // von den Zugriffs-Guards in src/lib/dal.ts, src/app/user/dal.ts und
   // src/app/admin/[id]/dal.ts für rollen-/identitätsbasierte

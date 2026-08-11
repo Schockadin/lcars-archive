@@ -16,7 +16,6 @@ import { ingestArchive } from "./archive";
 import { ingestCharacters } from "./characters";
 import { ingestMissionLogs } from "./missionLogs";
 import { ingestMissions } from "./missions";
-import { ingestTimeline } from "./timeline";
 import { resolveWikiLinks } from "./wikilinks";
 import { notifySubscribers } from "./notify";
 
@@ -97,9 +96,6 @@ async function main() {
     // Läuft immer über den kompletten Datenbestand, nicht nur die gerade neu
     // importierten Dateien — funktioniert unverändert wie beim Vollimport.
     await resolveWikiLinks(sql);
-    // Timeline ebenfalls immer komplett neu aufbauen — liest source_md/
-    // metadata aller vier Tabellen, nicht nur der gerade importierten.
-    await ingestTimeline(sql);
     console.log("\n✅ Ingestion abgeschlossen");
     await notifySubscribers(
       sql,

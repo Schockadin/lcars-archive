@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
@@ -9,7 +9,7 @@ import { MissionLogPreview } from "@/types/missionLog";
 // Dialog-Abschluss gebraucht, siehe dort) und wird hier für die
 // Charakter-Update-Benachrichtigung wiederverwendet — Import über den
 // "server-only"-Wrapper @/lib/dialogues statt @/lib/dialoguesCore direkt, da
-// characters.ts (unstable_cache-Import oben) ohnehin nur innerhalb von
+// characters.ts ("use cache"-Direktiven unten) ohnehin nur innerhalb von
 // Next.js läuft, nie per tsx (anders als dialoguesCore.ts selbst, das
 // deshalb bewusst nicht umgekehrt aus @/lib/follows importieren darf, siehe
 // dessen Kommentar in createDialogue).
@@ -44,9 +44,11 @@ function parseCharacter(row: Character): Character {
 // Nur public-Charaktere — speist die öffentliche Übersicht, die Detail-
 // generateStaticParams und die öffentliche API-Route. private/gm-Charaktere
 // bleiben trotzdem über ihre Detailseite erreichbar (Laufzeit-Guard dort).
-export const getAllCharacters = unstable_cache(
-  async (): Promise<Character[]> => {
-    const rows = await sql<Character[]>`
+export async function getAllCharacters(): Promise<Character[]> {
+  "use cache";
+  cacheTag(cacheTags.characters);
+  cacheLife("max");
+  const rows = await sql<Character[]>`
         SELECT *
         FROM characters
         WHERE visibility = 'public' AND deleted_at IS NULL AND is_draft = false
@@ -58,17 +60,16 @@ export const getAllCharacters = unstable_cache(
           END,
           name ASC
       `;
-    return rows.map(parseCharacter);
-  },
-  ["getAllCharacters", "v4"],
-  { tags: [cacheTags.characters] },
-);
+  return rows.map(parseCharacter);
+}
 
 // Ungefiltert — nur für die GM/Admin-Charakterzuweisung (/users), die auch
 // private/gm-Charaktere zuordnen können muss.
-export const getAllCharactersForAdmin = unstable_cache(
-  async (): Promise<Character[]> => {
-    const rows = await sql<Character[]>`
+export async function getAllCharactersForAdmin(): Promise<Character[]> {
+  "use cache";
+  cacheTag(cacheTags.characters);
+  cacheLife("max");
+  const rows = await sql<Character[]>`
       SELECT *
       FROM characters
       WHERE deleted_at IS NULL AND is_draft = false
@@ -80,44 +81,23 @@ export const getAllCharactersForAdmin = unstable_cache(
         END,
         name ASC
     `;
-    return rows.map(parseCharacter);
-  },
-  ["getAllCharactersForAdmin", "v3"],
-  { tags: [cacheTags.characters] },
-);
+  return rows.map(parseCharacter);
+}
 
 export async function getCharacterBySlug(
   slug: string,
 ): Promise<Character | null> {
-  return unstable_cache(
-    async (): Promise<Character | null> => {
-      const rows = await sql<Character[]>`
+  "use cache";
+  cacheTag(cacheTags.characters, cacheTags.character(slug));
+  cacheLife("max");
+  const rows = await sql<Character[]>`
         SELECT *
         FROM characters
         WHERE slug = ${slug} AND deleted_at IS NULL
         LIMIT 1
       `;
-      return rows[0] ? parseCharacter(rows[0]) : null;
-    },
-    ["getCharacterBySlug", "v2", slug],
-    { tags: [cacheTags.characters, cacheTags.character(slug)] },
-  )();
+  return rows[0] ? parseCharacter(rows[0]) : null;
 }
-
-export const getActiveCharacters = unstable_cache(
-  async (): Promise<Character[]> => {
-    const rows = await sql<Character[]>`
-      SELECT id, slug, name, metadata
-      FROM characters
-      WHERE status = 'active' AND visibility = 'public' AND deleted_at IS NULL
-        AND is_draft = false
-      ORDER BY name ASC
-    `;
-    return rows.map(parseCharacter);
-  },
-  ["getActiveCharacters", "v4"],
-  { tags: [cacheTags.characters] },
-);
 
 // Charaktere eines Users (siehe assignCharacterToUser). Kein Cache — die
 // Dashboard-Route ist durch den Session-Zugriff ohnehin dynamisch, analog
@@ -362,9 +342,10 @@ export async function getPublicLogsForUser(
 export async function getLogsByCharacter(
   characterId: number,
 ): Promise<MissionLogPreview[]> {
-  return unstable_cache(
-    async (): Promise<MissionLogPreview[]> => {
-      const rows = await sql<MissionLogPreview[]>`
+  "use cache";
+  cacheTag(cacheTags.missionLogs);
+  cacheLife("max");
+  const rows = await sql<MissionLogPreview[]>`
         SELECT
           ml.id,
           ml.slug,
@@ -379,11 +360,7 @@ export async function getLogsByCharacter(
           AND ml.is_draft = false
         ORDER BY ml.session_nr DESC NULLS LAST
       `;
-      return rows;
-    },
-    ["getLogsByCharacter", "v4", String(characterId)],
-    { tags: [cacheTags.missionLogs] },
-  )();
+  return rows;
 }
 
 // Für die Admin-Action "Autolinking" (src/app/actions/autolink.ts) — braucht
@@ -751,22 +728,6 @@ export async function updateOwnCharacterBio(
   const row = rows[0];
   if (row) syncEmbeddings("character", characterId);
   return row ? { slug: row.slug, name: row.name, bio } : null;
-}
-
-// Charakter-Farbe (siehe src/lib/characterColor.ts) — PRO CHARAKTER statt pro
-// User: eine spielende Person mit mehreren Charakteren ("Multis") bekommt so
-// für jeden Charakter eine eigene, unterscheidbare Farbe statt einer
-// einzigen für alle. Eigene schlanke Lese-/Schreibfunktion statt Teil des
-// vollen Character-Fetches (SELECT * in getCharacterBySlug liefert die Spalte
-// zwar mit, aber die Auflösung auf einen effektiven Hex braucht
-// resolveCharacterColor, nicht diese Rohfunktionen).
-export async function getCharacterColorPreference(
-  characterId: number,
-): Promise<string | null> {
-  const [row] = await sql<{ character_color: string | null }[]>`
-    SELECT character_color FROM characters WHERE id = ${characterId}
-  `;
-  return row?.character_color ?? null;
 }
 
 // Alle von ANDEREN Charakteren belegten Farben (character_color IS NOT NULL,

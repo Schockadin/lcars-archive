@@ -11,9 +11,6 @@ export const metadata = {
   },
 };
 
-// Hängt am ?q=-Parameter (und am Betrachter für den Assistenten) — wie
-// /api/search immer frisch ausliefern.
-export const dynamic = "force-dynamic";
 
 export default async function SearchPage({
   searchParams,

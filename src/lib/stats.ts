@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
 
@@ -20,17 +20,19 @@ export interface HeaderStats {
 // verlinkten Liste passt und nicht verrät, wie viele nicht-öffentliche
 // Inhalte existieren (dieselbe visibility-Grenze wie die Suche in
 // src/lib/search.ts).
-export const getDBStats = unstable_cache(
-  async (): Promise<HeaderStats> => {
-    const [counts] = await sql<
-      [
-        {
-          character_count: string;
-          session_count: string;
-          entry_count: string;
-        },
-      ]
-    >`
+export async function getDBStats(): Promise<HeaderStats> {
+  "use cache";
+  cacheTag(cacheTags.stats, cacheTags.characters, cacheTags.missionLogs);
+  cacheLife("max");
+  const [counts] = await sql<
+    [
+      {
+        character_count: string;
+        session_count: string;
+        entry_count: string;
+      },
+    ]
+  >`
       SELECT
         (SELECT COUNT(*) FROM characters
           WHERE visibility = 'public' AND deleted_at IS NULL AND is_draft = false)   AS character_count,
@@ -41,12 +43,9 @@ export const getDBStats = unstable_cache(
             AND deleted_at IS NULL AND is_draft = false)                             AS entry_count
     `;
 
-    return {
-      characterCount: parseInt(counts.character_count),
-      sessionCount: parseInt(counts.session_count),
-      entryCount: parseInt(counts.entry_count),
-    };
-  },
-  ["getDBStats", "v5"],
-  { tags: [cacheTags.stats, cacheTags.characters, cacheTags.missionLogs] },
-);
+  return {
+    characterCount: parseInt(counts.character_count),
+    sessionCount: parseInt(counts.session_count),
+    entryCount: parseInt(counts.entry_count),
+  };
+}

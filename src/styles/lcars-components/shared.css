@@ -188,20 +188,6 @@
 .follow-share-menu-item:hover {
   background: rgba(205, 154, 205, 0.18);
 }
-.follow-share-toast {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  z-index: 50;
-  padding: 8px 12px;
-  background: var(--lcars-surface);
-  border: 2px solid var(--lcars-amber);
-  border-radius: 12px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
-  color: var(--lcars-text-light);
-  font-size: 14px;
-  white-space: nowrap;
-}
 
 /* Admin-Content-Tools (ContentLinkToolButton, Autolink- wie Delink-Modus) —
    gemeinsames Vorschau-Overlay auf den vier Inhalts-Detailseiten (Mission,
@@ -493,10 +479,6 @@
 }
 
 /* ── Animationen ─────────────────────────────────────────────────── */
-
-.animate-lcars-pulse {
-  animation: lcars-pulse 1.5s infinite;
-}
 
 @keyframes lcars-pulse {
   0%,
@@ -1010,11 +992,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-.db-explorer-item-count {
-  flex-shrink: 0;
-  font-size: 11px;
-  color: var(--lcars-text-dim);
 }
 .db-explorer-group-label {
   font-size: 11px;

@@ -1,7 +1,15 @@
 import type { MetadataRoute } from "next";
+import { cacheLife } from "next/cache";
 import { getCampaignYears } from "@/lib/constants";
 
-export default function manifest(): MetadataRoute.Manifest {
+// Das Web-App-Manifest hängt nur an getCampaignYears() (aktuelles Jahr −
+// Startjahr). Unter cacheComponents würde der `new Date()`-Aufruf die Route
+// sonst dynamisch machen; als "use cache"-Scope wird sie stattdessen statisch
+// prerendert (Jahr zur Cache-Zeit) und ist damit für die Offline-PWA
+// zuverlässig cachebar (siehe public/sw.js, stale-while-revalidate).
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  "use cache";
+  cacheLife("max");
   return {
     name: "Neo Archive",
     short_name: "Neo Archive",

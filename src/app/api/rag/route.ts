@@ -10,8 +10,8 @@ import {
 import { logCaughtError } from "@/lib/errorLog";
 
 // Streaming-Endpoint des RAG-Assistenten (/rag). Immer frisch — hängt an der
-// Frage im POST-Body und am eingeloggten Betrachter.
-export const dynamic = "force-dynamic";
+// Frage im POST-Body und am eingeloggten Betrachter (per-Request, nie
+// statisch prerendert).
 // Streaming-Antworten des LLM können mehrere Sekunden dauern; die Default-
 // Funktionslaufzeit ist zu knapp und schneidet lange Antworten ab
 // („Verbindung zum Anbieter verloren"). So lang wie möglich anfordern (die

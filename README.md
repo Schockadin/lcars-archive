@@ -88,8 +88,11 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   auch nicht für Spielleitung/Administration (Ausnahme: Missionen, die jede
   Spielleitung sehen kann, da Missionen kein Einzel-Owner-Modell haben), und
   erscheint bis zur Veröffentlichung nur unter „Meine Inhalte“.
-- **PWA mit Push-Benachrichtigungen** — installierbar auf Mobilgeräten (inkl. maskable
-  Icon), Web-Push für neue Dialog-Nachrichten und abonnierte Inhalte.
+- **PWA mit Push-Benachrichtigungen und Offline-Betrieb** — installierbar auf
+  Mobilgeräten (inkl. maskable Icon), Web-Push für neue Dialog-Nachrichten und
+  abonnierte Inhalte. Ein Service Worker macht bereits besuchte Seiten offline
+  abrufbar und zeigt sonst eine eigene Offline-Ausweichseite (`/offline`);
+  Anmeldung, neue Inhalte und Änderungen brauchen weiterhin eine Verbindung.
 - **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und Spielleitung.
 - **Markdown-Vault als Ursprungsimport** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
@@ -373,7 +376,7 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     │   │   ├── characters/     #   Charakter-Zuweisung
     │   │   ├── dialogues/      #   Alle offenen Gespräche, auch ohne eigene Teilnahme
     │   │   ├── db/             #   DB-Backup, Tabellenbrowser, freies SQL-Abfragefeld
-    │   │   ├── scripts/        #   Bulk-Autolinking, Gespräche-Fließtext, Timeline, u.a.
+    │   │   ├── scripts/        #   Bulk-Autolinking, Gespräche-Fließtext, Cache-Rebuild, u.a.
     │   │   ├── audit-log/      #   Sicherheits-Audit-Log + Content-Aktivitätsfeed
     │   │   ├── error-log/      #   Protokollierte Serverfehler (Zeitpunkt, Route, Meldung)
     │   │   ├── content/        #   Owner-/Sichtbarkeits-Übersteuerung fremder Inhalte
@@ -527,7 +530,7 @@ der lokale Download/Upload-Weg funktioniert davon unabhängig immer.
 Charaktere, Missionen, Missionslogs, Archiv-Einträge und Dialoge werden beim
 Löschen nicht mehr sofort aus der Datenbank entfernt, sondern nur mit einem
 `deleted_at`-Zeitstempel markiert (siehe `scripts/schema.sql`). Für alle
-außer Admins verschwinden sie damit sofort aus Suche, Timeline und allen
+außer Admins verschwinden sie damit sofort aus Suche und allen
 Übersichten — Admins sehen sie weiterhin im Papierkorb unter
 `/admin/content/trash` (Adminbereich → "Papierkorb") und können sie dort
 wiederherstellen oder sofort endgültig löschen. Ohne manuelles Eingreifen

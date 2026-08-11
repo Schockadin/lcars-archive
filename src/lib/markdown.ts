@@ -123,9 +123,9 @@ function remarkGermanQuotes() {
   };
 }
 
-// <!-- timeline: ... -->-Marker. Geteilt mit scripts/ingest/timeline.ts, damit
-// Ingest (Ereignis-Reihenfolge dort) und Renderer (Sprungmarken-Reihenfolge
-// hier) beim Durchzählen der Marker in einer Datei niemals auseinanderlaufen.
+// <!-- timeline: ... -->-Marker. Der Renderer unten zählt sie beim Erzeugen
+// der Sprungmarken durch; die Nummerierung muss deterministisch bleiben, damit
+// gespeicherte #timeline-N-Anker stabil auf dieselbe Stelle zeigen.
 export const TIMELINE_MARKER_RE = /<!--\s*timeline\s*:(.*?)-->/gs;
 
 interface TimelineAnchorNode {
@@ -135,12 +135,11 @@ interface TimelineAnchorNode {
 
 // Ersetzt jeden <!-- timeline: ... -->-Kommentar durch eine unsichtbare
 // Sprungmarke (<span id="timeline-N">) an genau der Stelle im gerenderten
-// HTML, an der der Kommentar im Markdown steht — so kann die Timeline-Seite
-// per Anker direkt dorthin verlinken. Die Nummerierung folgt der
-// Dokumentreihenfolge (1-basiert, jeder Marker zählt, auch ungültige) und
-// muss 1:1 mit parseTimelineMarkers() in scripts/ingest/timeline.ts
-// übereinstimmen, das dieselbe RegExp in derselben Reihenfolge über denselben
-// splitPrivate()-Text auswertet.
+// HTML, an der der Kommentar im Markdown steht — Anker für eine mögliche
+// künftige Timeline-/Verweis-Funktion (die frühere Timeline-Seite ist
+// entfernt). Die Nummerierung folgt der Dokumentreihenfolge (1-basiert, jeder
+// Marker zählt, auch ungültige) und ist deterministisch, damit gespeicherte
+// #timeline-N-Anker stabil bleiben.
 function remarkTimelineAnchors() {
   return (tree: MdastRoot) => {
     let counter = 0;

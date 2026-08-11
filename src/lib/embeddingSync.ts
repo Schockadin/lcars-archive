@@ -388,17 +388,6 @@ export function syncEmbeddings(
   );
 }
 
-// Endgültige Löschung (Purge) → Embeddings entfernen. Braucht keinen OpenAI-
-// Key (reines DELETE).
-export function purgeEmbeddings(
-  contentType: EmbeddingContentType,
-  contentId: number,
-): void {
-  void deleteEmbeddings(sql, contentType, contentId).catch((err) =>
-    logEmbeddingError(`purge:${contentType}:${contentId}`, err),
-  );
-}
-
 // Sichtbarkeits-Änderung → nur das denormalisierte Feld nachziehen (kein
 // Re-Embedding, kein OpenAI-Key nötig).
 export function syncEmbeddingVisibility(

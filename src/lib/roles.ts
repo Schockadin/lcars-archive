@@ -1,6 +1,6 @@
 import "server-only";
 import { cache } from "react";
-import { unstable_cache, revalidateTag } from "next/cache";
+import { cacheTag, cacheLife, revalidateTag } from "next/cache";
 import sql from "@/lib/db";
 import {
   DEFAULT_ROLE_PRESETS,
@@ -53,18 +53,17 @@ function onlyKnownPermissions(values: string[]): Permission[] {
 // Roh-Zeilen der roles-Tabelle, quer über Anfragen gecacht (kampagnen-weit
 // identisch für alle), invalidiert von jeder Rollen-Mutation. Fällt bei
 // DB-Fehler NICHT hart aus — der Aufrufer (getRoleMap) hat einen Code-Fallback.
-const getRoleRows = unstable_cache(
-  async (): Promise<RoleRow[]> => {
-    const rows = await sql<RoleRow[]>`
+async function getRoleRows(): Promise<RoleRow[]> {
+  "use cache";
+  cacheTag(ROLES_TAG);
+  cacheLife("max");
+  const rows = await sql<RoleRow[]>`
       SELECT key, label, description, permissions, is_system, sort_order
       FROM roles
       ORDER BY sort_order ASC, key ASC
     `;
-    return rows;
-  },
-  ["getRoleRows", "v1"],
-  { tags: [ROLES_TAG] },
-);
+  return rows;
+}
 
 // Effektive Rollen-Map (Schlüssel → Rechte). Merged die DB-Zeilen ÜBER die
 // eingebauten Defaults: eine bearbeitete System-Rolle ersetzt ihren Default,

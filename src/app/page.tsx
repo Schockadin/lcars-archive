@@ -3,6 +3,7 @@ import LandingPage from "./LandingPage";
 import Dashboard from "./Dashboard";
 import LandingStats from "@/components/lcars/LandingStats";
 import { LcarsSkeleton } from "@/components/lcars";
+import PageSkeleton from "@/app/_shared/PageSkeleton";
 import { APP_VERSION } from "@/lib/version";
 import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
@@ -30,7 +31,19 @@ function StatsSkeleton() {
 // ungültiger Session-Cookie (User zwischenzeitlich gelöscht) fällt bewusst
 // auf die Landingpage zurück statt auf /login zu redirecten — "/" selbst
 // verlangt kein Login.
-export default async function Page() {
+export default function Page() {
+  // Der Login-Status kommt aus dem Session-Cookie (Laufzeit-Daten) — unter
+  // cacheComponents muss dieser Zugriff in einer Suspense-Grenze liegen, damit
+  // die statische Shell (LCARS-Chrome) sofort ausgeliefert werden kann und die
+  // login-abhängige Startseite nachgestreamt wird.
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <HomeContent />
+    </Suspense>
+  );
+}
+
+async function HomeContent() {
   const session = await getSession();
   const user = session ? await getUserById(session.userId) : null;
 
