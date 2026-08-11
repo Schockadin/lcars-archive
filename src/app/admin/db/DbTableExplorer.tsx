@@ -71,37 +71,37 @@ export default function DbTableExplorer({
     async (table: string, p: number) => {
       const reqId = ++reqIdRef.current;
       setLoading(true);
-      let result: TablePageResult;
-      try {
-        result = await loadTablePageAction(table, p);
-      } catch {
+      // Als Schleife statt rekursivem Selbstaufruf: Wurde die letzte Zeile
+      // einer Seite gelöscht, rutscht die aktuelle Seite hinter das
+      // (geschrumpfte) Ende — dann eine Seite zurück und im selben Aufruf
+      // erneut laden (kein Effect, keine Rekursion). loading bleibt dabei
+      // bewusst an (kein finally), damit bis zum Nachladen der Vorseite
+      // "Lade…" steht und nicht die veraltete (gelöschte) Zeile aufblitzt.
+      let currentPage = p;
+      for (;;) {
+        let result: TablePageResult;
+        try {
+          result = await loadTablePageAction(table, currentPage);
+        } catch {
+          if (reqId !== reqIdRef.current) return;
+          setData({ columns: [], rows: [], total: 0, error: "Laden fehlgeschlagen." });
+          setLoading(false);
+          return;
+        }
+        // Antwort einer inzwischen überholten Anfrage ignorieren.
         if (reqId !== reqIdRef.current) return;
-        setData({ columns: [], rows: [], total: 0, error: "Laden fehlgeschlagen." });
+        if (!result.error && result.rows.length === 0 && currentPage > 1) {
+          currentPage -= 1;
+          setPage(currentPage);
+          continue;
+        }
+        setData(result);
         setLoading(false);
         return;
       }
-      // Antwort einer inzwischen überholten Anfrage ignorieren.
-      if (reqId !== reqIdRef.current) return;
-      // Wurde die letzte Zeile einer Seite gelöscht, kann die aktuelle Seite
-      // hinter das (geschrumpfte) Ende rutschen — dann eine Seite zurück,
-      // statt eine leere Ansicht mit "2/1"-Pager zu zeigen. loading bleibt
-      // dabei bewusst an (kein finally), damit bis zum Nachladen der Vorseite
-      // "Lade…" steht und nicht die veraltete (gelöschte) Zeile aufblitzt.
-      if (!result.error && result.rows.length === 0 && p > 1) {
-        setPage(p - 1);
-        return;
-      }
-      setData(result);
-      setLoading(false);
     },
     [],
   );
-
-  useEffect(() => {
-    if (selected) {
-      loadPage(selected, page);
-    }
-  }, [selected, page, loadPage]);
 
   function selectTable(name: string) {
     if (name === selected) return;
@@ -110,6 +110,12 @@ export default function DbTableExplorer({
     setData(null);
     setModalRow(null);
     setInserting(false);
+    void loadPage(name, 1);
+  }
+
+  function goToPage(p: number) {
+    setPage(p);
+    if (selected) void loadPage(selected, p);
   }
 
   const totalPages = data ? Math.max(1, Math.ceil(data.total / TABLE_PAGE_SIZE)) : 1;
@@ -126,7 +132,7 @@ export default function DbTableExplorer({
             key={t.name}
             type="button"
             className="db-explorer-item"
-            aria-selected={t.name === selected}
+            aria-current={t.name === selected ? "true" : undefined}
             onClick={() => selectTable(t.name)}
           >
             <TableIcon />
@@ -141,7 +147,7 @@ export default function DbTableExplorer({
                 key={t.name}
                 type="button"
                 className="db-explorer-item"
-                aria-selected={t.name === selected}
+                aria-current={t.name === selected ? "true" : undefined}
                 onClick={() => selectTable(t.name)}
               >
                 <TableIcon />
@@ -192,7 +198,7 @@ export default function DbTableExplorer({
                     type="button"
                     className="lcars-icon-btn disabled:opacity-30"
                     disabled={page <= 1 || loading}
-                    onClick={() => setPage((p) => p - 1)}
+                    onClick={() => goToPage(page - 1)}
                     aria-label="Vorherige Seite"
                   >
                     <ChevronLeftIcon />
@@ -204,7 +210,7 @@ export default function DbTableExplorer({
                     type="button"
                     className="lcars-icon-btn disabled:opacity-30"
                     disabled={page >= totalPages || loading}
-                    onClick={() => setPage((p) => p + 1)}
+                    onClick={() => goToPage(page + 1)}
                     aria-label="Nächste Seite"
                   >
                     <ChevronRightIcon />

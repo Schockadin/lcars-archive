@@ -282,4 +282,15 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Die Suche ist jetzt ein eigener Menüpunkt (Lupen-Symbol) im Hauptmenü und ersetzt dort die bisherige Timeline; die Timeline-Seite selbst wurde entfernt. Auf der Suchseite steht oben wie gewohnt die Volltextsuche und direkt darunter der Archiv-Assistent (für alle, die ihn nutzen dürfen); der separate Such-Knopf oben im Kopfbereich für angemeldete Nutzer:innen entfällt dadurch.",
     ],
   },
+  {
+    version: "1.20",
+    title: "Charakterbögen mit Vorschau, besserer Archiv-Assistent",
+    items: [
+      "Charakterbögen (PDFs) lassen sich jetzt direkt auf der Charakterseite ansehen: Ein Klick auf den Bogen öffnet eine Vollbild-Vorschau (Overlay), daneben gibt es einen eigenen Herunterladen-Knopf. Der Download funktioniert jetzt zuverlässig — die Bögen werden über das Archiv selbst ausgeliefert statt über eine separate Datei-Adresse.",
+      "Der Archiv-Assistent findet und berücksichtigt jetzt deutlich mehr passende Informationen: Zusätzlich zur inhaltlichen Ähnlichkeitssuche wird gezielt nach genannten Namen und Begriffen gesucht, es fließen mehr Fundstellen in die Antwort ein, und der Assistent fasst Bekanntes zusammen, statt Fragen vorschnell als unbeantwortbar abzulehnen.",
+      "Längere Antworten des Archiv-Assistenten brechen seltener mittendrin ab; bricht eine Verbindung doch einmal, bleibt die bereits erhaltene Teil-Antwort stehen (mit dezentem Hinweis) statt komplett zu verschwinden.",
+      "Die App reagiert beim Navigieren spürbar flotter: Beim Öffnen von Charakter-, Missions-, Archiv-, Profil- und Gesprächsseiten erscheint sofort ein Seitengerüst, während die Inhalte im Hintergrund laden — statt einer kurz „hängenden“ leeren Seite. Serverseitig werden die nötigen Daten jetzt parallel geladen, und die Speichern-/Folgen-Knöpfe stehen sofort bereit statt kurz nachzuladen.",
+      "Sicherheit im Admin-Bereich: Weder das freie SQL-Feld noch der zeilenweise Editor geben Passwort-/Token-Spalten aus oder lassen Schreib-/Löschzugriffe auf sicherheitsrelevante Tabellen (Konten, Rollen, Anmelde-Protokolle, Audit-Log) zu; das zeilenweise Bearbeiten trifft zuverlässig die richtige Zeile.",
+    ],
+  },
 ];

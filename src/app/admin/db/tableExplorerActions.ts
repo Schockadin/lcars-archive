@@ -4,6 +4,7 @@ import {
   VIEWABLE_TABLES,
   isContentTable,
   tableAccessError,
+  isProtectedWriteTable,
   listTableRows,
   countTableRows,
   viewableColumns,
@@ -99,6 +100,15 @@ export async function insertDbRowAction(input: {
     perms.has("db_view_system_tables"),
   );
   if (accessError) return { error: accessError };
+
+  // Defense in Depth wie in rowEditActions (update/delete): auch INSERT in
+  // Auth-/Sicherheits-Tabellen ist gesperrt. Heute redundant zur VIEWABLE_TABLES-
+  // Whitelist, aber INSERT wäre bei einem späteren Aufnehmen einer Auth-Tabelle
+  // in die Whitelist der direkteste Eskalationsweg (z.B. einen Admin-User/eine
+  // Rolle anlegen) — deshalb an dieselbe PROTECTED_WRITE_TABLES-Liste gekoppelt.
+  if (isProtectedWriteTable(input.table)) {
+    return { error: `Schreibzugriff auf „${input.table}“ ist gesperrt.` };
+  }
 
   const columns = await getTableColumns(input.table);
   if (columns.length === 0) return { error: "Unbekannte Tabelle." };

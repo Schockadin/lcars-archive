@@ -114,8 +114,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   sortierbare Tabelle, Detailseite pro User für Rollen/Einzelrechte/Aktivierung/
   Löschen/Passwort-Reset), den Rollen-Editor `/admin/permissions` (Rollen anlegen/
   bearbeiten, Rechte je Rolle setzen, Mitglieder zuweisen), Charakter-Zuweisung,
-  Wartungs-Skripte sowie einen read-only Datenbank-Tabellenbrowser inkl. freiem,
-  schreibgeschütztem SQL-Abfragefeld (Syntaxhervorhebung via CodeMirror). Ein
+  Wartungs-Skripte sowie einen Datenbank-Tabellenbrowser inkl. freiem
+  SQL-Abfragefeld (Syntaxhervorhebung via CodeMirror, on-demand geladen):
+  SELECT läuft schreibgeschützt, INSERT/UPDATE/DELETE nur mit den jeweiligen
+  DB-Rechten (`sql_read`/`sql_write`/`sql_delete`). Passwort-/Token-Spalten
+  werden dabei nie ausgegeben und Auth-/Sicherheits-Tabellen (Konten, Rollen,
+  Anmelde-Protokolle, Audit-Log) sind gegen Schreibzugriff gesperrt — über das
+  freie Feld wie über den zeilenweisen Editor. Ein
   Audit-Log protokolliert sicherheitsrelevante Useraccount- sowie Rollen-/
   Rechteänderungen (inkl. IP-Adresse) sowie, separat, eine 3-Tage-Übersicht aller
   neu angelegten, bearbeiteten und gelöschten Inhalte. Zwei Wartungs-Skripte
@@ -146,6 +151,14 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `src/instrumentation.ts` bzw. `logCaughtError()` in der Tabelle
   `error_logs` protokolliert und ist im Adminbereich unter „Fehler-Log“
   einsehbar.
+- **Archiv-Assistent (RAG)** — ein KI-Assistent (unter `/rag` sowie unterhalb der
+  Volltextsuche auf `/search`) beantwortet Fragen zum Kampagneninhalt in
+  natürlicher Sprache. Die Frage wird per OpenAI-Embedding vektorisiert, **hybrid**
+  (semantische Vektorsuche + lexikalische Keyword-/Trigramm-Suche) gegen die
+  vektorisierten Inhalte (`content_embeddings`, pgvector) gematcht, und Cloudflare
+  Workers AI formuliert daraus streamend eine Antwort mit Quellen-Angabe —
+  gefiltert nach den Leserechten des Betrachters (private/GM-Inhalte fließen nur
+  ein, wenn erlaubt). Details siehe „Archiv-Assistent (RAG)" unter Deployment.
 - **Custom-Markdown-Pipeline** — `remark`/`rehype` wandeln Markdown in HTML um und rendern
   `h2`-Überschriften als LCARS-Data-Rows.
 - **SEO-fertig** — `robots.ts`, `sitemap.ts`, dynamische Metadaten und 404-Seite.
@@ -196,6 +209,14 @@ VAULT_PATH="/pfad/zum/vault"
 # Cache-Revalidation nach dem Ingest (siehe Hinweis unten)
 SITE_URL="http://localhost:3000"
 REVALIDATE_SECRET="ein-langes-zufaelliges-secret"
+
+# Archiv-Assistent (RAG) — optional; fehlen die Schlüssel, ist /rag deaktiviert
+# (die App überspringt Embeddings still, wie bei RESEND/VAPID)
+OPENAI_API_KEY=""           # Embeddings (text-embedding-3-small, 512 Dim.)
+CLOUDFLARE_AI_API_TOKEN=""  # Workers AI (Antwort-Generierung); Account-ID
+                            # wird aus R2_ACCOUNT_ID wiederverwendet
+# CLOUDFLARE_AI_MODEL=""    # optional: Modell überschreiben (Default:
+                            # @cf/meta/llama-3.3-70b-instruct-fp8-fast)
 ```
 
 > **Cache-Hinweis (wichtig für die lokale Entwicklung):** Die Datenabfragen
@@ -254,9 +275,10 @@ Liest die Markdown-Dateien aus `VAULT_PATH` ein und schreibt sie per Upsert in d
 > „DB-Backup“) auf „Backup herunterladen“ klicken; über „Backup einspielen“
 > lässt sich eine solche Datei auch wieder vollständig zurückspielen — siehe
 > `docs/content-creation-strategy.md`. Derselbe Bereich bietet außerdem einen
-> read-only Tabellenbrowser und ein freies, schreibgeschütztes SQL-Abfragefeld
-> für einzelne Tabellen, ohne dafür erst ein komplettes Backup exportieren zu
-> müssen.
+> Tabellenbrowser und ein freies SQL-Abfragefeld für einzelne Tabellen (SELECT
+> schreibgeschützt, INSERT/UPDATE/DELETE nur mit den passenden DB-Rechten;
+> Credential-Spalten und Auth-Tabellen sind geschützt), ohne dafür erst ein
+> komplettes Backup exportieren zu müssen.
 
 ### 6. Entwicklungsserver starten
 
@@ -292,6 +314,7 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:missions`   | Importiert nur Missionen + Mission-Logs                  |
 | `npm run db:archive`    | Importiert nur die Archiv-Einträge                       |
 | `npm run db:revalidate` | Invalidiert nur die Caches (siehe `SITE_URL`)            |
+| `npm run embed:all`     | Baut den Vektor-Index des Archiv-Assistenten für alle Inhalte (neu) auf — Backfill, idempotent (siehe „Archiv-Assistent (RAG)") |
 | `npm run db:reset`      | Setzt die Datenbank zurück                                |
 | `npm run db:backup`     | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup") |
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind             |
@@ -337,7 +360,8 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     │   ├── missions/
     │   ├── archive/
     │   ├── dialogues/         # Öffentliche Ansicht abgeschlossener Gespräche
-    │   ├── timeline/
+    │   ├── rag/               # Archiv-Assistent (RAG-Chat)
+    │   ├── search/            # Volltextsuche + eingebetteter Archiv-Assistent
     │   ├── tutorial/          # Anleitung für Besucher/User/Spielleitung
     │   ├── login/, activate/, forgot-password/
     │   ├── users/             # Öffentliche Nutzerübersicht + Profilseiten anderer User
@@ -547,18 +571,73 @@ jeweiligen Owner bietet.
 
 Charaktere können zusätzlich beliebig viele **Charakterbögen** als PDF haben
 (Tabelle `character_sheets`, siehe `src/lib/characterSheets.ts`). Die Bytes
-liegen im selben öffentlichen Asset-Bucket wie die Bilder, unter dem Präfix
-`character-sheets/<CharakterID>/<UUID>.pdf`; ausgeliefert werden sie – anders
-als die Galerie-Bilder – über ihre direkte öffentliche URL
-(`R2_ASSET_PUBLIC_BASE_URL`). Die Bögen erscheinen als Download-Liste auf der
-Charakterseite und folgen dabei der **Sichtbarkeit des Charakters**: die
-Serverliste wird nach denselben Regeln wie die Seite selbst gefiltert
-(`getCharacterSheetsAction` → `canView`). Hochladen und Löschen darf nur der
-Owner des Charakters (dieselbe Owner-only-Regel wie bei den Charakter-Bildern,
-kein Admin-Bypass); erlaubt sind nur PDFs bis 20 MB. Wird der Charakter
-endgültig gelöscht, entfernt `purgeCharacterSheetsFor()`
+liegen im Asset-Bucket unter dem Präfix
+`character-sheets/<CharakterID>/<UUID>.pdf`; ausgeliefert werden sie – wie die
+Galerie-Bilder – über eine **eigene Proxy-Route** `GET /api/character-sheets/<id>`
+(nicht über die öffentliche Bucket-URL). Dadurch bleibt der Bucket privat (der
+`r2_key` verlässt den Server nie), die Auslieferung hängt nicht an einer korrekt
+konfigurierten öffentlichen Asset-Domain, und die Route prüft die Sichtbarkeit
+serverseitig (`canView` **und** `canViewDraft` auf dem Charakter). Auf der
+Charakterseite erscheinen die Bögen als Liste: ein Klick öffnet eine
+**Vollbild-PDF-Vorschau** (Modal, eingebettetes `<iframe>` — dafür erlaubt die
+CSP `frame-ancestors 'self'`), daneben gibt es einen **Herunterladen**-Knopf
+(`?download=1`, `Content-Disposition: attachment`). Auch die Bogen-*Liste*
+(Dateinamen/Größen) folgt der Charakter-Sichtbarkeit inkl. Entwurf-Gate
+(`getCharacterSheetsAction` → `canView` + `canViewDraft`). Hochladen und Löschen
+darf nur der Owner des Charakters (dieselbe Owner-only-Regel wie bei den
+Charakter-Bildern, kein Admin-Bypass); erlaubt sind nur PDFs bis 20 MB. Wird der
+Charakter endgültig gelöscht, entfernt `purgeCharacterSheetsFor()`
 (`src/lib/purgeContent.ts`) die Bögen samt R2-Objekten, bevor der
 `ON DELETE CASCADE` die DB-Zeilen wegräumt.
+
+### Archiv-Assistent (RAG)
+
+Der Archiv-Assistent (`/rag` sowie eingebettet unter der Volltextsuche auf
+`/search`) beantwortet Fragen zum Kampagneninhalt auf Basis des vorhandenen
+Datenbestands — ein klassisches **RAG** (Retrieval-Augmented Generation):
+
+1. **Embeddings & Index.** Jeder Inhalt (Charaktere, Missionen, Mission-Logs,
+   Archiv-Einträge und abgeschlossene Gespräche) wird typabhängig in Chunks
+   zerlegt (`src/lib/embeddings.ts`), per **OpenAI** `text-embedding-3-small`
+   (auf 512 Dimensionen reduziert) eingebettet und in der Tabelle
+   **`content_embeddings`** (Extension **pgvector**) abgelegt. RBAC-Felder
+   (`visibility`/`owner_id`/`is_draft`/`is_active`) sind auf der Embedding-Zeile
+   **denormalisiert**, damit die Suche ohne Join filtern kann (gleiche Logik wie
+   `canView()`). Die Vektoren werden als `'[…]'::vector`-Literal inline gecastet
+   (kein pgvector-npm-Paket, `prepare:false`-kompatibel).
+2. **Aktualisierung.** Content-Mutationen (Anlegen/Bearbeiten/Sichtbarkeit/
+   Owner/Soft-Delete/Restore) stoßen ein **Fire-and-forget**-Re-Embedding an
+   (`src/lib/embeddingSync.ts`) — ohne `OPENAI_API_KEY` still übersprungen. Der
+   endgültige Purge räumt `content_embeddings` mit ab.
+3. **Retrieval.** Die Frage wird eingebettet und **hybrid** gesucht
+   (`src/lib/rag.ts`): semantische Vektorsuche (Cosine-Distance `<=>`) **plus**
+   lexikalische Keyword-/Trigramm-Suche (`ILIKE`/`similarity()`, pg_trgm) — beide
+   mit demselben RBAC-Vorfilter, dedupliziert, Vektortreffer zuerst.
+4. **Generierung.** Aus System-Prompt + Kontext-Chunks + Frage streamt
+   **Cloudflare Workers AI** (Open-Weight-LLM, Default
+   `@cf/meta/llama-3.3-70b-instruct-fp8-fast`) die Antwort per SSE an den Client
+   (`src/app/api/rag/route.ts` → `src/app/rag/`), inklusive Quellen-Links.
+
+**Einrichtung:**
+
+- **Rechte:** Der Assistent ist an das Recht `rag.use` gebunden (standardmäßig
+  bei allen eingeloggten Rollen außer Gast). Anonyme werden auf `/login`
+  geleitet.
+- **Env-Variablen:** `OPENAI_API_KEY` (Embeddings) und `CLOUDFLARE_AI_API_TOKEN`
+  (Workers-AI-Token). Die Cloudflare-Account-ID wird aus dem bereits fürs R2
+  gesetzten **`R2_ACCOUNT_ID`** gelesen (Fallback), `CLOUDFLARE_ACCOUNT_ID` ist
+  optional. Optional `CLOUDFLARE_AI_MODEL` zum Modellwechsel. Fehlen die
+  Schlüssel, meldet `/rag` „nicht konfiguriert".
+- **Migration:** Einmalig `scripts/migrate-pr54.sql` gegen die Produktions-DB
+  ausführen (aktiviert `CREATE EXTENSION vector`, legt `content_embeddings` an
+  und zieht das Recht `rag.use` für die Bestands-Rollen nach).
+- **Backfill:** Einmalig `npm run embed:all` (oder der Admin-Knopf
+  „Archiv-Assistent · Embeddings" unter `/admin/scripts`) baut den Index für
+  alle Inhalte auf; idempotent und nach Inhalts-/Chunking-Änderungen
+  wiederholbar.
+
+**Kosten:** Initial-Embedding des kleinen Fan-Archivs < 0,10 $; Workers AI läuft
+für das erwartete Fragevolumen voraussichtlich im Free Tier.
 
 ### Dev-/Preview-Umgebung
 

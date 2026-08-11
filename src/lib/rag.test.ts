@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { chunkAllowedForViewer, sourcesFromChunks, buildContextText } from "./rag";
+import {
+  chunkAllowedForViewer,
+  sourcesFromChunks,
+  buildContextText,
+  extractQueryTerms,
+} from "./rag";
 import { makeViewer, type Viewer } from "./visibility";
 import type { RetrievedChunk } from "./rag";
 
@@ -127,6 +132,30 @@ describe("sourcesFromChunks", () => {
   it("fällt bei fehlendem Titel auf 'Unbenannt' zurück", () => {
     const sources = sourcesFromChunks([chunk({ title: null })]);
     expect(sources[0].title).toBe("Unbenannt");
+  });
+});
+
+describe("extractQueryTerms", () => {
+  it("zieht inhaltstragende Begriffe, ohne Stoppwörter/kurze Wörter", () => {
+    const terms = extractQueryTerms("Was wissen wir über die Tholianer und ihre Schiffe?");
+    expect(terms).toContain("tholianer");
+    expect(terms).toContain("schiffe");
+    // Stoppwörter/kurze Wörter fallen raus.
+    expect(terms).not.toContain("was");
+    expect(terms).not.toContain("wir");
+    expect(terms).not.toContain("die");
+  });
+
+  it("dedupliziert und begrenzt auf 8 Begriffe", () => {
+    const terms = extractQueryTerms(
+      "Alpha Alpha Beta Gamma Delta Epsilon Zeta Eta Theta Iota Kappa",
+    );
+    expect(terms.length).toBeLessThanOrEqual(8);
+    expect(new Set(terms).size).toBe(terms.length);
+  });
+
+  it("liefert für eine floskelhafte Frage ohne Inhaltswörter eine leere Liste", () => {
+    expect(extractQueryTerms("Wer war das?")).toEqual([]);
   });
 });
 

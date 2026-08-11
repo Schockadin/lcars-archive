@@ -1,8 +1,20 @@
 "use client";
 import { useActionState, useState } from "react";
-import { LcarsCodeEditor } from "@/components/lcars";
+import dynamic from "next/dynamic";
 import DbTableRows from "./DbTableRows";
 import { runAdminSqlQueryAction, type SqlQueryState } from "./sqlQueryActions";
+
+// CodeMirror ist ein schwerer Client-Bundle — nur bei Bedarf laden (dieses
+// admin-only Panel wird selten geöffnet). ssr:false, da CodeMirror den
+// DOM/Browser braucht.
+const LcarsCodeEditor = dynamic(() => import("@/components/lcars/CodeEditor"), {
+  ssr: false,
+  loading: () => (
+    <div className="lcars-input rounded-lcars min-h-[120px] px-[12px] py-[8px] text-lcars-text-dim text-[13px]">
+      Editor lädt…
+    </div>
+  ),
+});
 
 const initialState: SqlQueryState = {};
 

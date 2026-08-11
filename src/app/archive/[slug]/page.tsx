@@ -16,6 +16,7 @@ import {
   viewerHasPermission,
 } from "@/lib/visibility";
 import { listAllUsers, getDialogueViewPreference } from "@/lib/users";
+import { resolveFollowState } from "@/lib/follows";
 import ArchiveEntryBody from "./ArchiveEntryBody";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 
@@ -57,7 +58,13 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function ArchiveEntryPage({ params }: Props) {
   const { slug } = await params;
-  const entry = await getArchiveEntryBySlug(slug);
+  // Eintrag und Betrachter parallel laden (getViewer liest nur die Session,
+  // nicht den Eintrag). Betrachter immer auflösen — der Admin-Owner-Block
+  // unten braucht die Rolle unabhängig von der Sichtbarkeit dieses Eintrags.
+  const [entry, viewer] = await Promise.all([
+    getArchiveEntryBySlug(slug),
+    getViewer(),
+  ]);
   if (!entry) notFound();
 
   // Offene Dialoge leben unter /dialogues/<slug> (Formular, Abschluss-Button,
@@ -71,11 +78,6 @@ export default async function ArchiveEntryPage({ params }: Props) {
     redirect(`/dialogues/${entry.slug}`);
   }
 
-  // Betrachter jetzt immer auflösen (nicht mehr nur bei nicht-public) — der
-  // Admin-Owner-Block unten braucht die Rolle unabhängig von der
-  // Sichtbarkeit dieses Eintrags. Kein Effekt mehr auf statische
-  // Vorrenderung (siehe `dynamic = "force-dynamic"` oben).
-  const viewer = await getViewer();
   if (
     entry.visibility !== "public" &&
     !canView(entry.visibility, entry.ownerUserId, viewer)
@@ -83,30 +85,34 @@ export default async function ArchiveEntryPage({ params }: Props) {
     notFound();
   }
   if (!canViewDraft(entry.isDraft, entry.ownerUserId, viewer)) notFound();
-  // Owner-Auswahl nur laden, wenn der Betrachter den Eintrag umtragen darf —
-  // exakt das Server-Gate von setOwnerAction für Archiv-Einträge
-  // (content.moderate), rechte- statt rollenbasiert (früher role === "admin").
-  const allUsers = viewerHasPermission(viewer, "content.moderate")
-    ? await listAllUsers()
-    : [];
+
+  // Owner-Auswahl, Dialog-Nachrichten und Anzeige-Präferenz sind voneinander
+  // unabhängig — parallel laden statt nacheinander.
+  // - owners: nur laden, wenn der Betrachter den Eintrag umtragen darf — exakt
+  //   das Server-Gate von setOwnerAction (content.moderate), rechte- statt
+  //   rollenbasiert (früher role === "admin").
+  // - messages: nicht gecacht — Frische kommt über die Revalidation der ganzen
+  //   Seite nach jeder neuen Nachricht (src/app/actions/dialogues.ts).
+  // - flowingTextPreferred: globale Präferenz (DialogueViewToggle.tsx), nur für
+  //   eingeloggte Betrachter eines (hier immer bereits geschlossenen) Dialogs
+  //   relevant; sonst Default true ohne extra DB-Zugriff.
+  const [allUsers, messages, flowingTextPreferred, followInitialState] =
+    await Promise.all([
+      viewerHasPermission(viewer, "content.moderate")
+        ? listAllUsers()
+        : Promise.resolve([]),
+      entry.category === "dialogue"
+        ? getDialogueMessages(entry.id)
+        : Promise.resolve([]),
+      entry.category === "dialogue" && viewer
+        ? getDialogueViewPreference(viewer.userId)
+        : Promise.resolve(true),
+      // Bookmark/Abo-Stand serverseitig vorlösen — an ArchiveEntryBody →
+      // ActionsMenu → FollowButtons als initialState durchgereicht, damit die
+      // Buttons sofort mitgerendert werden statt per Client-Fetch nachzuladen.
+      resolveFollowState(viewer?.userId ?? null, "archive_entry", slug),
+    ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
-
-  // Einfache, nicht gecachte Abfrage — Frische kommt über die Revalidation
-  // der ganzen Seite nach jeder neuen Nachricht (siehe
-  // src/app/actions/dialogues.ts), nicht über Query-Caching. Kein
-  // cookies()/headers()-Zugriff hier — die statische Vorrenderung dieser
-  // Seite bleibt dadurch erhalten.
-  const messages =
-    entry.category === "dialogue" ? await getDialogueMessages(entry.id) : [];
-
-  // Globale Präferenz (siehe DialogueViewToggle.tsx) — nur für eingeloggte
-  // Betrachter eines (an dieser Stelle immer bereits geschlossenen, siehe
-  // Redirect oben) Dialogs relevant. Anonyme Betrachter/andere
-  // Inhaltstypen bekommen den Default true, ohne extra DB-Zugriff.
-  const flowingTextPreferred =
-    entry.category === "dialogue" && viewer
-      ? await getDialogueViewPreference(viewer.userId)
-      : true;
 
   const cfg = CATEGORY_CONFIG[entry.category];
   const title = archiveTitle(entry);
@@ -146,6 +152,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
         owners={owners}
         messages={messages}
         flowingTextPreferred={flowingTextPreferred}
+        followInitialState={followInitialState}
       />
 
       {viewerHasPermission(viewer, "dialogues.moderate") &&

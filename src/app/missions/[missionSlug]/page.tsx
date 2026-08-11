@@ -1,12 +1,12 @@
 import { notFound, redirect } from "next/navigation";
-import { getAllMissions, getMissionBySlug } from "@/lib/missions";
+import { getMissionBySlug } from "@/lib/missions";
 import { stripHtml } from "@/lib/missionFormat";
 import {
   getViewer,
   canViewMissionDraft,
   viewerHasPermission,
 } from "@/lib/visibility";
-import { setSubscription } from "@/lib/follows";
+import { setSubscription, resolveFollowState } from "@/lib/follows";
 import { listAllUsers } from "@/lib/users";
 import MissionSynopsis from "../MissionSynopsis";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
@@ -15,19 +15,13 @@ interface Props {
   searchParams: Promise<{ activateFollow?: string }>;
 }
 
-// Bekannte Missionen zur Build-Zeit vorrendern. Neue Slugs werden beim ersten
-// Aufruf on-demand erzeugt (dynamicParams = true ist der Default).
-export async function generateStaticParams() {
-  const missions = await getAllMissions();
-  return missions.map((mission) => ({ missionSlug: mission.slug }));
-}
-
 // Missionen haben keine eigene Sichtbarkeits-Sperre (immer öffentlich
-// lesbar), waren deshalb bisher die einzige der vier Inhalts-Detailseiten
-// mit echtem SSG. Der Admin-Owner-Block unten braucht aber getViewer()
-// (cookies()) auf JEDER Anfrage, um die Rolle zu kennen — das erzwingt
-// force-dynamic, exakt der bereits akzeptierte Trade-off bei
-// Charakteren/Logs/Archiv-Einträgen (siehe deren page.tsx-Kommentare).
+// lesbar). Der Admin-Owner-Block unten braucht aber getViewer() (cookies())
+// auf JEDER Anfrage, um die Rolle zu kennen — das erzwingt force-dynamic,
+// exakt der bereits akzeptierte Trade-off bei Charakteren/Logs/Archiv-
+// Einträgen (siehe deren page.tsx-Kommentare). Ein generateStaticParams wäre
+// unter force-dynamic ohnehin toter Code (nie zur Build-Zeit ausgeführt) —
+// deshalb bewusst weggelassen.
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props) {
@@ -47,10 +41,13 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function MissionPage({ params, searchParams }: Props) {
   const { missionSlug } = await params;
-  const mission = await getMissionBySlug(missionSlug);
+  // Mission und Betrachter sind voneinander unabhängig — parallel laden statt
+  // nacheinander (getViewer liest nur Cookies/Session, nicht die Mission).
+  const [mission, viewer] = await Promise.all([
+    getMissionBySlug(missionSlug),
+    getViewer(),
+  ]);
   if (!mission) notFound();
-
-  const viewer = await getViewer();
   if (!canViewMissionDraft(mission.isDraft, viewer)) notFound();
 
   // Aktivierungslink aus der Teilnehmer-Benachrichtigung (missionAction,
@@ -74,13 +71,24 @@ export default async function MissionPage({ params, searchParams }: Props) {
   const canReassignOwner =
     viewerHasPermission(viewer, "content.moderate") ||
     viewerHasPermission(viewer, "missions.manage");
-  const allUsers = canReassignOwner ? await listAllUsers() : [];
+  // Owner-Liste (optional) und Follow-Stand parallel. followInitialState wird
+  // an FollowButtons durchgereicht, damit Bookmark/Abo sofort mitgerendert
+  // werden statt sie nach der Hydration per Client-Fetch nachzuladen.
+  const [allUsers, followInitialState] = await Promise.all([
+    canReassignOwner ? listAllUsers() : Promise.resolve([]),
+    resolveFollowState(viewer?.userId ?? null, "mission", missionSlug),
+  ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
   return (
     <>
       <MarkNewsSeen type="mission" slug={mission.slug} />
-      <MissionSynopsis mission={mission} owners={owners} viewer={viewer} />
+      <MissionSynopsis
+        mission={mission}
+        owners={owners}
+        viewer={viewer}
+        followInitialState={followInitialState}
+      />
     </>
   );
 }

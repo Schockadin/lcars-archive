@@ -151,6 +151,14 @@ export function classifySqlStatement(
 export function parseSingleSelectTable(query: string): string | null {
   const withoutComments = query.replace(/--[^\n]*(\n|$)/g, " ");
   if (/\bjoin\b/i.test(withoutComments)) return null;
+  // Komma-Join (FROM a, b) ebenfalls ausschließen — die FROM-Klausel bis zum
+  // nächsten Schlüsselwort isolieren und auf ein Komma prüfen. Sonst würde
+  // z.B. "SELECT * FROM characters, users" fälschlich auf characters
+  // abgebildet, obwohl die id-Spalte mehrdeutig ist.
+  const fromClause = withoutComments.match(
+    /\bfrom\b(.*?)(?:\bwhere\b|\bgroup\b|\bhaving\b|\bwindow\b|\border\b|\blimit\b|\boffset\b|$)/is,
+  )?.[1];
+  if (fromClause && fromClause.includes(",")) return null;
   // FROM <identifier> — optional schema-qualifiziert ("public".)"tabelle" bzw.
   // public.tabelle; nur ein einfacher Bezeichner, kein "(" (Subquery).
   const m = withoutComments.match(
@@ -159,8 +167,43 @@ export function parseSingleSelectTable(query: string): string | null {
   return m ? m[1] : null;
 }
 
+// Ist die Query ein reines "SELECT * FROM …"? Nur dann ist garantiert, dass die
+// Ergebnis-Spalte "id" auch die echte Primärschlüssel-Spalte der Tabelle ist
+// (nicht eine per Alias auf "id" umbenannte Fremdschlüssel-Spalte wie
+// "SELECT mission_id AS id …"). Grundlage dafür, wann das Zeilen-Overlay
+// Bearbeiten/Löschen anbieten darf. Reine String-Logik, exportiert für Tests.
+export function isSelectStarQuery(query: string): boolean {
+  const withoutComments = query.replace(/--[^\n]*(\n|$)/g, " ").trim();
+  return /^select\s+\*\s+from\b/i.test(withoutComments);
+}
+
+// Ziel-Tabelle einer schreibenden Query (INSERT INTO / UPDATE / DELETE FROM) —
+// verankert am Anweisungsanfang, daher keine Fehltreffer aus String-Literalen.
+// Reine String-Logik, exportiert für Tests.
+export function parseWriteTarget(query: string): string | null {
+  const q = query.replace(/--[^\n]*(\n|$)/g, " ").trim();
+  const m = q.match(
+    /^(?:insert\s+into|update|delete\s+from)\s+(?:"?public"?\s*\.\s*)?"?([a-zA-Z_][a-zA-Z0-9_]*)"?/i,
+  );
+  return m ? m[1].toLowerCase() : null;
+}
+
 // Grundform-Prüfung, unabhängig vom Recht: nicht leer, genau EINE Anweisung
 // (kein eingebettetes ; außer als Abschluss), keine verbotene Funktion.
+//
+// Diese und die Secret-Namen-Prüfungen (assertAdminQuery) laufen BEWUSST gegen
+// den ROHEN Query-Text (inkl. String-Literale/Kommentare), nicht gegen eine
+// „bereinigte" Fassung. Grund: ein Präsenz-Check auf Rohtext kann nur ZU VIEL
+// ablehnen, nie zu wenig — er ist damit nicht umgehbar. Jeder Versuch, Literale/
+// Kommentare vorher auszublenden, verlangt einen exakt Postgres-konformen
+// Tokenizer (E''-Escape-Strings, verschachtelte Blockkommentare, Dollar-Quotes,
+// Quoted Identifiers …); jede Abweichung entfernt ein echtes „;"/einen echten
+// Secret-Namen und macht GENAU DIESE Sicherheitsprüfung umgehbar (verkettete
+// Statements → Umgehung von PROTECTED_WRITE_TABLES; aliasierte Secret-Spalte).
+// Der akzeptierte Preis ist konservativ: eine legitime Query, die ein „;", einen
+// Funktions- oder Secret-Namen als reinen Text INNERHALB eines Literals trägt
+// (z.B. `WHERE content LIKE '%password_hash%'`), wird abgelehnt — dann bitte
+// umformulieren. Sicherheit vor Bequemlichkeit.
 export function assertQueryShape(query: string): void {
   const trimmed = query.trim();
   if (!trimmed) {
@@ -175,6 +218,45 @@ export function assertQueryShape(query: string): void {
       "Diese Query enthält eine nicht erlaubte Funktion (Sequenzen, Locks, Sleep/Backend-Kontrolle, dblink/Large Objects).",
     );
   }
+}
+
+// Credential-Spalten, die im freien SQL-Panel weder explizit selektiert noch
+// (über SELECT *) im Ergebnis ausgegeben werden dürfen — der Tabellen-Explorer
+// blendet sie über die TABLE_COLUMNS-Whitelist ohnehin aus, das freie Panel tat
+// das bisher nicht. runAdminQuery entfernt sie zusätzlich aus jedem Ergebnis
+// (fängt SELECT * ab, das die Spalte nicht namentlich nennt).
+export const SECRET_COLUMNS: readonly string[] = ["password_hash", "token_hash"];
+
+// Tabellen, die im freien Panel gar nicht referenziert werden dürfen (enthalten
+// ausschließlich Geheimnisse). Nur die wirklich sensiblen aus HIDDEN_FROM_VIEW
+// (mission_participants ist bloß eine Relationstabelle und bleibt erlaubt).
+export const SECRET_TABLES: readonly string[] = ["password_setup_tokens"];
+
+// Auth-/Sicherheits-Tabellen, auf die im freien Panel NICHT geschrieben werden
+// darf (INSERT/UPDATE/DELETE): verhindert Rechte-Eskalation (users/roles) und
+// Manipulation von Rate-Limits/Audit-Trail. Lesen (ohne Secret-Spalten) bleibt
+// erlaubt — die db-admin-Rolle ist bewusst orthogonal zu admin (siehe
+// DEFAULT_ROLE_PRESETS), ohne diese Schranke wäre sie ein Voll-Admin-Hebel.
+export const PROTECTED_WRITE_TABLES: readonly string[] = [
+  "users",
+  "roles",
+  "password_setup_tokens",
+  "password_reset_requests",
+  "login_attempts",
+  "admin_audit_log",
+];
+
+// Ist die Tabelle gegen Schreibzugriff (INSERT/UPDATE/DELETE) gesperrt? Zentrale
+// Prüfung, damit BEIDE Schreibpfade — das freie SQL-Panel (assertAdminQuery) und
+// das Zeilen-Overlay (rowEditActions) — dieselbe Schranke nutzen und keiner sie
+// vergisst. Case-insensitiv, da parseWriteTarget bereits kleinschreibt, der
+// Overlay-Pfad den echten (kleingeschriebenen) Tabellennamen liefert.
+export function isProtectedWriteTable(table: string): boolean {
+  return PROTECTED_WRITE_TABLES.includes(table.toLowerCase());
+}
+
+function identifierRegex(name: string): RegExp {
+  return new RegExp(`\\b${name}\\b`, "i");
 }
 
 export interface AdminQueryCapabilities {
@@ -208,6 +290,50 @@ export function assertAdminQuery(
   if (action === "delete" && !caps.canDelete) {
     throw new UnsafeQueryError("Dir fehlt das Recht „SQL löschen“.");
   }
+
+  // Geheimnis-Tabellen (nur Secrets) im freien Panel komplett sperren. Prüfung
+  // gegen den ROHEN Query-Text (siehe assertQueryShape): ein Präsenz-Check auf
+  // Rohtext ist nicht umgehbar; der Preis ist die konservative Ablehnung einer
+  // Query, die den Namen nur als Literal-Text trägt.
+  for (const table of SECRET_TABLES) {
+    if (identifierRegex(table).test(query)) {
+      throw new UnsafeQueryError(
+        `Die Tabelle „${table}“ ist im SQL-Panel gesperrt.`,
+      );
+    }
+  }
+  // Credential-Spalten dürfen nicht explizit referenziert werden (auch nicht
+  // per Alias) — Rohtext-Präsenz-Check (siehe oben); SELECT * wird zusätzlich als
+  // Top-Level-Ergebnis-Spalte bereinigt (runAdminQuery).
+  //
+  // Grenze der Zusicherung: Ein db-admin mit „SQL lesen" hat bewusst rohen
+  // Lesezugriff auf die Datenbank. Der SECRET_COLUMNS-Filter (Namens-Sperre hier
+  // + Entfernen aus dem Ergebnis in runAdminQuery) schützt vor VERSEHENTLICHER
+  // Anzeige (SELECT *, SELECT password_hash), ist aber KEIN harter Boundary gegen
+  // absichtliche Exfiltration: eine ganze Zeile lässt sich per Composite-Cast
+  // (`SELECT zeile::text FROM users zeile`) oder Row-Serialisierung
+  // (`to_jsonb(zeile)`) in einen zusammengesetzten Wert unter beliebigem
+  // Spaltennamen packen — das erkennt keine Query-Text-Prüfung zuverlässig. Die
+  // einzige harte Schranke wäre spalten-granulares REVOKE auf DB-Rollenebene
+  // (Infrastruktur außerhalb dieser Schicht).
+  for (const column of SECRET_COLUMNS) {
+    if (identifierRegex(column).test(query)) {
+      throw new UnsafeQueryError(
+        `Die Spalte „${column}“ ist im SQL-Panel gesperrt.`,
+      );
+    }
+  }
+  // Schreibzugriff auf Auth-/Sicherheits-Tabellen verhindern (Eskalations-/
+  // Audit-Manipulations-Schutz). Ziel-Tabelle am Statement-Anfang geparst.
+  if (action === "write" || action === "delete") {
+    const target = parseWriteTarget(query);
+    if (target && isProtectedWriteTable(target)) {
+      throw new UnsafeQueryError(
+        `Schreibzugriff auf „${target}“ ist im SQL-Panel gesperrt.`,
+      );
+    }
+  }
+
   return action;
 }
 
@@ -259,14 +385,31 @@ export async function runAdminQuery(
         ? `SELECT * FROM (${inner}) AS _admin_query LIMIT ${FREE_QUERY_ROW_LIMIT}`
         : inner;
     const rows = await tx.unsafe<Record<string, unknown>[]>(sqlText);
-    const columns = rows.columns
+    const rawColumns = rows.columns
       ? rows.columns.map((c) => c.name)
       : rows[0]
         ? Object.keys(rows[0])
         : [];
+    // Credential-Spalten als Top-Level-Ergebnis-Spalte entfernen — fängt
+    // SELECT * ab, das die Spalte nicht namentlich nennt (die Text-Sperre in
+    // assertAdminQuery greift dort nicht). Fast path, wenn keine Secret-Spalte
+    // dabei ist (der Normalfall): flache Kopie ohne Pro-Zeile-Arbeit. Bewusst
+    // NUR die Top-Level-Spalte — verschachtelte/serialisierte Zeilen (to_jsonb,
+    // ::text) sind die dokumentierte, nicht app-seitig schließbare Grenze der
+    // db-admin-Rolle (siehe assertAdminQuery); ein rekursiver JSON-Scrub würde
+    // zudem legitime Inhaltsdaten mit einem gleichnamigen Schlüssel verstümmeln.
+    const columns = rawColumns.filter((c) => !SECRET_COLUMNS.includes(c));
+    const cleanRows =
+      columns.length === rawColumns.length
+        ? [...rows]
+        : rows.map((row) => {
+            const copy = { ...row };
+            for (const c of SECRET_COLUMNS) delete copy[c];
+            return copy;
+          });
     return {
       columns,
-      rows: [...rows],
+      rows: cleanRows,
       command: rows.command,
       rowCount: rows.count,
     };

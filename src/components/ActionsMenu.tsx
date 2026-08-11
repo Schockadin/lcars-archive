@@ -11,6 +11,7 @@ import { ContentToolType } from "@/app/actions/contentTools";
 import type { ContentImageType } from "@/lib/contentImages";
 import { PencilIcon } from "@/lib/icons";
 import FollowButtons from "./FollowButtons";
+import type { FollowState } from "@/app/actions/follows";
 import ShareMenu from "./ShareMenu";
 import { MissionDetail, MissionLogDetail } from "@/types/missions";
 import { ArchiveEntryDetail } from "@/types/archive";
@@ -63,6 +64,12 @@ interface ActionMenuProps {
   // lib/follows.ts) — die Mission-Log-Detailseite übergibt deshalb gar
   // keinen followType, statt ihn auf einen ungültigen Wert zu zwingen.
   followType?: FollowTargetType;
+  // Serverseitig vorgelöster Bookmark/Abo-Stand (resolveFollowState in
+  // lib/follows.ts). Wird an FollowButtons als initialState durchgereicht,
+  // damit die Buttons sofort mitgerendert werden statt sie nach der Hydration
+  // per Client-Fetch nachzuladen. Ohne Angabe fällt FollowButtons auf seinen
+  // eigenen Client-Fetch zurück (unverändertes Verhalten).
+  followInitialState?: FollowState;
   playerId: number | null;
   // Optional statt required: Server Components (z.B. der Dialog-Zweig in
   // archive/[slug]/page.tsx oder die Mission-Log-Detailseite) rendern
@@ -84,6 +91,7 @@ export default function ActionsMenu({
   content,
   contentType,
   followType,
+  followInitialState,
   playerId,
   onEdit = () => {},
   hideEdit = false,
@@ -166,6 +174,7 @@ export default function ActionsMenu({
             targetType={followType}
             targetSlug={content.slug}
             title={contentTitle}
+            initialState={followInitialState}
           />
         )}
         {/* Missionslogs sind nicht followbar (kein FollowTargetType dafür,

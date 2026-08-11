@@ -75,6 +75,25 @@ export async function getFollowStatuses(
   return result;
 }
 
+// Serverseitiges Gegenstück zum getFollowState-Client-Fetch in FollowButtons:
+// löst den Bookmark/Abo-Stand direkt beim SSR auf, wenn der aufrufende Server
+// Component den Viewer ohnehin schon hat. So kann FollowButtons den Stand als
+// initialState-Prop bekommen und rendert die Buttons sofort mit, statt sie
+// nach der Hydration per Client-Fetch nachzuladen (spart auf jeder Inhalts-
+// Detailseite eine sichtbare Nachlade-Runde). viewerUserId === null ⇒ anonym.
+// Der Rückgabewert ist strukturell die FollowState aus app/actions/follows.
+export async function resolveFollowState(
+  viewerUserId: number | null,
+  targetType: FollowTargetType,
+  targetSlug: string,
+): Promise<{ loggedIn: boolean; bookmarked: boolean; subscribed: boolean }> {
+  if (viewerUserId == null) {
+    return { loggedIn: false, bookmarked: false, subscribed: false };
+  }
+  const status = await getFollowStatus(viewerUserId, targetType, targetSlug);
+  return { loggedIn: true, ...status };
+}
+
 async function deleteIfEmpty(
   userId: number,
   targetType: FollowTargetType,

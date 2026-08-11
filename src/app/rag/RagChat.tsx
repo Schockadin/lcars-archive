@@ -1,7 +1,12 @@
 "use client";
-import { useRef, useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import MarkdownLite from "./MarkdownLite";
+import {
+  CharactersNavIcon,
+  MissionsNavIcon,
+  ArchiveNavIcon,
+} from "@/lib/icons";
 
 // Eine Quelle unter einer Antwort (dedupliziert je Inhalt, siehe
 // sourcesFromChunks in src/lib/rag.ts).
@@ -9,6 +14,21 @@ interface Source {
   contentType: string;
   title: string;
   href: string | null;
+}
+
+// Icon je Inhaltstyp für die Quellen-Liste — gibt den Links optischen Kontext
+// (Charakter/Mission/Archiv), analog zum Tabellen-Icon im DB-Explorer.
+function sourceIcon(contentType: string): ReactNode {
+  switch (contentType) {
+    case "character":
+      return <CharactersNavIcon />;
+    case "mission":
+    case "mission_log":
+      return <MissionsNavIcon />;
+    default:
+      // archive_entry, dialogue
+      return <ArchiveNavIcon />;
+  }
 }
 
 interface Turn {
@@ -58,13 +78,10 @@ export default function RagChat({ configured }: { configured: boolean }) {
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
-  // Index des aktuell streamenden Turns (für die token-Updates).
-  const activeIndex = useRef<number>(-1);
 
   async function ask(question: string) {
     setBusy(true);
     const index = turns.length;
-    activeIndex.current = index;
     setTurns((prev) => [
       ...prev,
       { question, answer: "", sources: [], pending: true },
@@ -108,14 +125,18 @@ export default function RagChat({ configured }: { configured: boolean }) {
       });
       patch((t) => ({ ...t, pending: false }));
     } catch {
+      // Bricht die Verbindung mitten im Stream ab, ist die bis dahin
+      // empfangene Teil-Antwort trotzdem nützlich — sie bleibt stehen, der
+      // Hinweis fällt je nachdem weicher aus.
       patch((t) => ({
         ...t,
         pending: false,
-        error: "Verbindung zum Assistenten verloren.",
+        error: t.answer
+          ? "Verbindung unterbrochen — die Antwort ist womöglich unvollständig."
+          : "Verbindung zum Assistenten verloren.",
       }));
     } finally {
       setBusy(false);
-      activeIndex.current = -1;
     }
   }
 
@@ -168,18 +189,29 @@ export default function RagChat({ configured }: { configured: boolean }) {
                   <p className="lcars-eyebrow" style={{ margin: 0 }}>
                     Quellen
                   </p>
-                  <ul className="flex flex-wrap gap-[8px] list-none p-0 m-0">
+                  {/* Als Link-Liste (Icon + Titel) im Stil der Tabellen-Links
+                      unter /admin/db (db-explorer-item), nicht als Pill-Buttons. */}
+                  <ul className="list-none p-0 m-0 flex flex-col gap-[2px]">
                     {turn.sources.map((s, j) => (
                       <li key={j}>
                         {s.href ? (
-                          <Link
-                            href={s.href}
-                            className="lcars-pill-btn--outline"
-                          >
-                            {s.title}
+                          <Link href={s.href} className="db-explorer-item">
+                            <span className="db-explorer-item-icon">
+                              {sourceIcon(s.contentType)}
+                            </span>
+                            <span className="db-explorer-item-name">
+                              {s.title}
+                            </span>
                           </Link>
                         ) : (
-                          <span className="lcars-text-light">{s.title}</span>
+                          <span className="db-explorer-item">
+                            <span className="db-explorer-item-icon">
+                              {sourceIcon(s.contentType)}
+                            </span>
+                            <span className="db-explorer-item-name">
+                              {s.title}
+                            </span>
+                          </span>
                         )}
                       </li>
                     ))}

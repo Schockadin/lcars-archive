@@ -12,6 +12,12 @@ import { logCaughtError } from "@/lib/errorLog";
 // Streaming-Endpoint des RAG-Assistenten (/rag). Immer frisch — hängt an der
 // Frage im POST-Body und am eingeloggten Betrachter.
 export const dynamic = "force-dynamic";
+// Streaming-Antworten des LLM können mehrere Sekunden dauern; die Default-
+// Funktionslaufzeit ist zu knapp und schneidet lange Antworten ab
+// („Verbindung zum Anbieter verloren"). So lang wie möglich anfordern (die
+// Plattform kappt ggf. auf ihr Maximum). Zusätzlich hält ein Heartbeat unten
+// die Verbindung während der Modell-Denkpausen offen.
+export const maxDuration = 60;
 
 const MAX_QUESTION_LENGTH = 1000;
 
@@ -114,21 +120,34 @@ export async function POST(req: Request): Promise<Response> {
   const encoder = new TextEncoder();
   const reader = tokenStream.getReader();
 
+  // Ein einziger Pump in start() (statt pull()) plus ein Heartbeat: solange das
+  // Modell noch „denkt" (keine Tokens), sendet der Heartbeat alle paar Sekunden
+  // einen SSE-Kommentar (`: ping`), damit Proxy/Plattform die vermeintlich
+  // untätige Verbindung nicht schließen. SSE-Kommentare ignoriert der Client
+  // (kein data:-Feld), sie erscheinen also nicht in der Antwort.
   const sse = new ReadableStream<Uint8Array>({
-    start(controller) {
+    async start(controller) {
       // Quellen zuerst — die UI kann sie schon anzeigen, während die Antwort
-      // noch streamt.
+      // noch streamt (flusht zugleich die Header früh).
       controller.enqueue(encoder.encode(sseEvent({ sources }, "sources")));
-    },
-    async pull(controller) {
-      try {
-        const { done, value } = await reader.read();
-        if (done) {
-          controller.enqueue(encoder.encode(sseEvent({}, "done")));
-          controller.close();
-          return;
+
+      let closed = false;
+      const heartbeat = setInterval(() => {
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(": ping\n\n"));
+        } catch {
+          // Controller bereits geschlossen — ignorieren.
         }
-        controller.enqueue(encoder.encode(sseEvent({ token: value })));
+      }, 10_000);
+
+      try {
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          controller.enqueue(encoder.encode(sseEvent({ token: value })));
+        }
+        controller.enqueue(encoder.encode(sseEvent({}, "done")));
       } catch (error) {
         await logCaughtError(error, "api/rag/route.ts:stream");
         controller.enqueue(
@@ -136,6 +155,9 @@ export async function POST(req: Request): Promise<Response> {
             sseEvent({ error: "Die Antwort wurde unterbrochen." }, "error"),
           ),
         );
+      } finally {
+        closed = true;
+        clearInterval(heartbeat);
         controller.close();
       }
     },

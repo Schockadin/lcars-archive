@@ -1,7 +1,12 @@
 "use server";
 import sql from "@/lib/db";
 import { requireDbAccess, getCurrentUserPermissions } from "@/lib/dal";
-import { getTableColumns, quoteIdent, tableAccessError } from "@/lib/dbInspect";
+import {
+  getTableColumns,
+  quoteIdent,
+  tableAccessError,
+  isProtectedWriteTable,
+} from "@/lib/dbInspect";
 
 export interface RowMutationResult {
   error?: string;
@@ -35,6 +40,19 @@ export async function updateDbRowAction(input: {
     perms.has("db_view_system_tables"),
   );
   if (accessError) return { error: accessError };
+
+  // Defense in Depth: Auth-/Sicherheits-Tabellen sind fürs Schreiben gesperrt.
+  // Heute redundant — tableAccessError begrenzt den Zeilen-Editor ohnehin auf
+  // VIEWABLE_TABLES (Backup-Whitelist minus HIDDEN_FROM_VIEW), die keine dieser
+  // Tabellen enthält. BEWUSST trotzdem hier: würde jemand später eine
+  // Auth-Tabelle (z.B. users) zu TABLE_COLUMNS/dbBackup hinzufügen, ohne sie in
+  // HIDDEN_FROM_VIEW zu ergänzen, wäre sie sonst schlagartig über das Overlay
+  // beschreibbar (Rechte-Eskalation). Die Sperre koppelt diese zweite Barriere
+  // an dieselbe PROTECTED_WRITE_TABLES-Liste wie das freie SQL-Panel. Nicht
+  // entfernen.
+  if (isProtectedWriteTable(input.table)) {
+    return { error: `Schreibzugriff auf „${input.table}“ ist gesperrt.` };
+  }
 
   const columns = await getTableColumns(input.table);
   if (columns.length === 0) return { error: "Unbekannte Tabelle." };
@@ -93,6 +111,11 @@ export async function deleteDbRowAction(input: {
     perms.has("db_view_system_tables"),
   );
   if (accessError) return { error: accessError };
+
+  // Defense in Depth wie in updateDbRowAction (siehe dortiger Kommentar).
+  if (isProtectedWriteTable(input.table)) {
+    return { error: `Löschen in „${input.table}“ ist gesperrt.` };
+  }
 
   const columns = await getTableColumns(input.table);
   if (columns.length === 0) return { error: "Unbekannte Tabelle." };

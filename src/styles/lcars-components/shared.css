@@ -990,7 +990,7 @@
 .db-explorer-item:hover {
   background: var(--lcars-surface);
 }
-.db-explorer-item[aria-selected="true"] {
+.db-explorer-item[aria-current="true"] {
   background: var(--lcars-surface);
   border-left: 3px solid var(--lcars-amber);
   padding-left: 7px;
@@ -1001,7 +1001,7 @@
   height: 16px;
   color: var(--lcars-text-dim);
 }
-.db-explorer-item[aria-selected="true"] .db-explorer-item-icon {
+.db-explorer-item[aria-current="true"] .db-explorer-item-icon {
   color: var(--lcars-amber);
 }
 .db-explorer-item-name {
