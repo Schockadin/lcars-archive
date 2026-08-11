@@ -156,14 +156,6 @@ export function PencilIcon() {
     </svg>
   );
 }
-export function BanIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <circle cx="12" cy="12" r="8" />
-      <path d="M6.5 6.5l11 11" />
-    </svg>
-  );
-}
 export function RestoreIcon() {
   return (
     <svg {...ICON_PROPS}>
@@ -186,25 +178,6 @@ export function ShareIcon() {
         clipRule="evenodd"
         d="M3.75 4.5H5.25V18.75H19.5V20.25H3.75V4.5ZM17.6515 8.25001L15.2196 5.81812L16.2803 4.75746L20.4851 8.96229L16.2803 13.1671L15.2196 12.1065L17.5761 9.75001L14.25 9.75C11.7647 9.75 9.75 11.7647 9.75 14.25V16.5H8.25V14.25C8.25 10.9363 10.9363 8.25 14.25 8.25L17.6515 8.25001Z"
       />
-    </svg>
-  );
-}
-export function KeyIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <circle cx="8" cy="15" r="4.5" />
-      <path d="M11.2 11.8 20 3" />
-      <path d="M15.5 7.5 18 10" />
-      <path d="M18 4.5 20.5 7" />
-    </svg>
-  );
-}
-export function LogOutIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M9 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3" />
-      <path d="M15 8l4 4-4 4" />
-      <path d="M19 12H9" />
     </svg>
   );
 }
@@ -349,16 +322,6 @@ export function ArchiveNavIcon() {
       <rect x="3" y="4" width="18" height="4" rx="1" />
       <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
       <path d="M10 12h4" />
-    </svg>
-  );
-}
-export function TimelineNavIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <path d="M5 4v16" />
-      <circle cx="5" cy="8" r="1.6" fill="currentColor" stroke="none" />
-      <circle cx="5" cy="16" r="1.6" fill="currentColor" stroke="none" />
-      <path d="M8 8h11M8 16h11" />
     </svg>
   );
 }

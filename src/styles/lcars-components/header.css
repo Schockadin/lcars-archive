@@ -392,9 +392,6 @@
   .lcars-menu-pill {
     width: 100%;
   }
-  .lcars-breadcrumbs {
-    font-size: 14px;
-  }
 }
 
 @media (max-width: 640px) {
@@ -438,9 +435,6 @@
   }
   .lcars-header-top .lcars-usernav-form {
     width: 100px;
-  }
-  .lcars-breadcrumbs {
-    font-size: 12px;
   }
   /* Icon trägt jetzt die Wiedererkennung; die Nummer bleibt kleiner Akzent. */
   .lcars-menu-id {

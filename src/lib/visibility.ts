@@ -11,12 +11,6 @@ import {
 
 export type Visibility = "private" | "gm" | "public";
 
-export const VISIBILITY_LABELS: Record<Visibility, string> = {
-  private: "Privat",
-  gm: "GM",
-  public: "Öffentlich",
-};
-
 export const VISIBILITY_OPTIONS: Visibility[] = ["private", "gm", "public"];
 
 export interface Viewer {

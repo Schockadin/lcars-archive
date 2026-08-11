@@ -158,21 +158,6 @@ export async function downloadDbBackupFromR2(
   return body;
 }
 
-// Generische Binärobjekt-Funktionen (Content-Bilder, siehe
-// src/lib/contentImages.ts) — anders als uploadDbBackupToR2/
-// downloadDbBackupFromR2 oben kein Text/JSON, sondern beliebige Bytes mit
-// eigenem Content-Type.
-export async function uploadObjectToR2(
-  key: string,
-  body: Buffer,
-  contentType: string,
-): Promise<void> {
-  const { client, bucket } = createR2Client();
-  await client.send(
-    new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: contentType }),
-  );
-}
-
 export interface R2ObjectBytes {
   body: Buffer;
   contentType: string | null;

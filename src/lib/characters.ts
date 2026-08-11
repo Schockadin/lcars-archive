@@ -99,20 +99,6 @@ export async function getCharacterBySlug(
   return rows[0] ? parseCharacter(rows[0]) : null;
 }
 
-export async function getActiveCharacters(): Promise<Character[]> {
-  "use cache";
-  cacheTag(cacheTags.characters);
-  cacheLife("max");
-  const rows = await sql<Character[]>`
-      SELECT id, slug, name, metadata
-      FROM characters
-      WHERE status = 'active' AND visibility = 'public' AND deleted_at IS NULL
-        AND is_draft = false
-      ORDER BY name ASC
-    `;
-  return rows.map(parseCharacter);
-}
-
 // Charaktere eines Users (siehe assignCharacterToUser). Kein Cache — die
 // Dashboard-Route ist durch den Session-Zugriff ohnehin dynamisch, analog
 // zu getUserById in src/lib/users.ts.
@@ -742,22 +728,6 @@ export async function updateOwnCharacterBio(
   const row = rows[0];
   if (row) syncEmbeddings("character", characterId);
   return row ? { slug: row.slug, name: row.name, bio } : null;
-}
-
-// Charakter-Farbe (siehe src/lib/characterColor.ts) — PRO CHARAKTER statt pro
-// User: eine spielende Person mit mehreren Charakteren ("Multis") bekommt so
-// für jeden Charakter eine eigene, unterscheidbare Farbe statt einer
-// einzigen für alle. Eigene schlanke Lese-/Schreibfunktion statt Teil des
-// vollen Character-Fetches (SELECT * in getCharacterBySlug liefert die Spalte
-// zwar mit, aber die Auflösung auf einen effektiven Hex braucht
-// resolveCharacterColor, nicht diese Rohfunktionen).
-export async function getCharacterColorPreference(
-  characterId: number,
-): Promise<string | null> {
-  const [row] = await sql<{ character_color: string | null }[]>`
-    SELECT character_color FROM characters WHERE id = ${characterId}
-  `;
-  return row?.character_color ?? null;
 }
 
 // Alle von ANDEREN Charakteren belegten Farben (character_color IS NOT NULL,

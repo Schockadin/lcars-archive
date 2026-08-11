@@ -172,8 +172,6 @@ export const ROLE_LABELS: Record<string, string> = {
   "db-admin": "Datenbank-Admin",
 };
 
-// Rückwärtskompatibler Alias (nur System-Rollen).
-export const ALL_ROLES: Role[] = SYSTEM_ROLES;
 
 export function isSystemRole(key: string): boolean {
   return (SYSTEM_ROLES as readonly string[]).includes(key);

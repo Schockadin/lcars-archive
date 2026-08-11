@@ -85,14 +85,6 @@ export async function touchLastVisit(userId: number): Promise<void> {
   `;
 }
 
-// Anders als touchLastVisit oben bewusst ungedrosselt: das Dashboard wird
-// weit seltener aufgerufen als irgendeine Seite, und Dashboard.tsx liest
-// last_dashboard_visit_at im selben Request als "seit wann?"-Grenze für die
-// News-Sektion, BEVOR dieser Aufruf ihn überschreibt.
-export async function touchDashboardVisit(userId: number): Promise<void> {
-  await sql`UPDATE users SET last_dashboard_visit_at = NOW() WHERE id = ${userId}`;
-}
-
 export interface UserWithCharacters extends User {
   characters: { id: number; slug: string; name: string }[];
 }
@@ -154,19 +146,6 @@ export async function createUser(input: CreateUserInput): Promise<User> {
     }
     throw err;
   }
-}
-
-export async function updateUserRole(
-  id: number,
-  role: User["role"],
-): Promise<User> {
-  const rows = await sql<User[]>`
-    UPDATE users
-    SET role = ${role}
-    WHERE id = ${id}
-    RETURNING ${USER_COLUMNS}
-  `;
-  return rows[0];
 }
 
 // Granulares RBAC: setzt Primärrolle + Zusatzrollen zusammen (ein User kann
