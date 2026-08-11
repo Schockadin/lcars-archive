@@ -299,6 +299,13 @@ export default function TutorialPage() {
                 Gesprächen fehlt er bewusst, da sich deren Inhalt noch ändert.
               </p>
               <p>
+                Charakterseiten können außerdem hochgeladene{" "}
+                <strong>Charakterbögen</strong> (PDFs) zeigen: ein Klick auf
+                einen Bogen öffnet eine <strong>Vollbild-Vorschau</strong>,
+                daneben gibt es einen eigenen Herunterladen-Knopf. Hochladen und
+                Entfernen darf nur die Person, der der Charakter gehört.
+              </p>
+              <p>
                 Eingeloggt zeigt dir die <strong>Startseite</strong> dein
                 persönliches Dashboard: offene Gespräche in einer eigenen
                 Sektion sowie einen farbcodierten <strong>News-Feed</strong> mit
