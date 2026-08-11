@@ -5,7 +5,6 @@ import {
   parseWriteTarget,
   assertAdminQuery,
   isProtectedWriteTable,
-  stripStringsAndComments,
   UnsafeQueryError,
   type AdminQueryCapabilities,
 } from "./dbInspect";
@@ -126,41 +125,17 @@ describe("isProtectedWriteTable", () => {
 });
 
 describe("assertAdminQuery — reguläre Lese-Queries bleiben zulässig", () => {
-  it("blockiert legitime Aggregationen/String-Literale NICHT", () => {
-    // Kein Row-Serialisierungs-Textfilter mehr: Skalar-Aggregationen und
-    // Queries mit funktionsähnlichen String-Literalen bleiben ausführbar
-    // (die Secret-Bereinigung passiert strukturell im Ergebnis, nicht per
-    // Query-Text-Heuristik).
+  it("blockiert legitime Queries ohne verdächtige Tokens NICHT", () => {
     expect(assertAdminQuery("SELECT array_agg(name) FROM users", ALL)).toBe("read");
     expect(assertAdminQuery("SELECT json_agg(id) FROM characters", ALL)).toBe("read");
-    expect(
-      assertAdminQuery("SELECT id, label FROM archive_links WHERE label LIKE '%to_json(%'", ALL),
-    ).toBe("read");
     expect(assertAdminQuery("SELECT id, name FROM users u", ALL)).toBe("read");
-  });
-
-  it("erlaubt Secret-Namen als bloßen Textinhalt in Literalen", () => {
-    // Secret-Spalten/-Tabellen nur als String-WERT (nicht als referenzierte
-    // Spalte/Tabelle) dürfen eine Lese-Query nicht sperren.
+    // to_json ist keine verbotene Funktion und kein Secret-Name.
     expect(
-      assertAdminQuery(
-        "SELECT id FROM archive_entries WHERE content LIKE '%password_hash%'",
-        ALL,
-      ),
-    ).toBe("read");
-    expect(
-      assertAdminQuery(
-        "SELECT id FROM archive_entries WHERE content = 'password_setup_tokens'",
-        ALL,
-      ),
-    ).toBe("read");
-    // Ein Semikolon INNERHALB eines Literals ist kein Statement-Trenner.
-    expect(
-      assertAdminQuery("SELECT id FROM characters WHERE name = 'a;b'", ALL),
+      assertAdminQuery("SELECT id, title FROM missions WHERE title <> 'x'", ALL),
     ).toBe("read");
   });
 
-  it("sperrt echte Referenzen weiterhin (außerhalb von Literalen)", () => {
+  it("sperrt echte Referenzen (außerhalb von Literalen)", () => {
     expect(() =>
       assertAdminQuery("SELECT password_hash FROM users", ALL),
     ).toThrow(/password_hash/);
@@ -170,52 +145,39 @@ describe("assertAdminQuery — reguläre Lese-Queries bleiben zulässig", () => 
   });
 });
 
-describe("assertAdminQuery — kein Bypass über String-/Kommentar-Maskierung", () => {
-  it("erkennt verkettete Statements trotz Kommentar-Markern in Literalen", () => {
-    // Ein `/*` in einem String-Literal darf nicht als Blockkommentar-Anfang
-    // gelesen werden, der das echte `;` verschluckt (statement chaining →
-    // Umgehung der PROTECTED_WRITE_TABLES-Sperre, die nur das 1. Statement liest).
-    expect(() =>
-      assertAdminQuery(
-        "UPDATE characters SET name='/*' WHERE id=1; UPDATE users SET x='y' WHERE id=1 AND '*/'=''",
-        ALL,
-      ),
-    ).toThrow(/einzelne Anweisung/);
-    // Ein `'` in einem Zeilenkommentar darf keinen String eröffnen, der über
-    // die Newline hinweg das echte `;` verschluckt.
-    expect(() =>
-      assertAdminQuery(
-        "UPDATE characters SET a=1 -- it's\n; DELETE FROM users WHERE b='x'",
-        ALL,
-      ),
-    ).toThrow(/einzelne Anweisung/);
+// Sicherheit vor Bequemlichkeit: die Prüfungen laufen bewusst gegen den ROHEN
+// Query-Text. Das kann nur konservativ ZU VIEL ablehnen (ein Secret-Name/;/
+// Funktionsname als reiner Literal-Text sperrt die Query), ist dafür aber nicht
+// per String-/Kommentar-Maskierung UMGEHBAR — anders als eine „bereinigte"
+// Fassung, die einen exakten Postgres-Tokenizer erfordern würde (E''-Escapes,
+// verschachtelte Kommentare, Dollar-Quotes …).
+describe("assertAdminQuery — nicht umgehbar (Rohtext-Prüfung)", () => {
+  it("erkennt verkettete Statements (statement chaining)", () => {
+    // Ohne diese Sperre würde das 2. Statement die PROTECTED_WRITE_TABLES-Prüfung
+    // umgehen (die nur das 1. Statement parst).
+    for (const q of [
+      "UPDATE characters SET name='/*' WHERE id=1; UPDATE users SET x='y' WHERE id=1 AND '*/'=''",
+      "UPDATE characters SET a=1 -- it's\n; DELETE FROM users WHERE b='x'",
+      // Postgres-E''-Escape-String — der Rohtext enthält trotzdem das echte `;`.
+      "UPDATE characters SET name=E'\\'';DELETE FROM users",
+    ]) {
+      expect(() => assertAdminQuery(q, ALL)).toThrow(/einzelne Anweisung/);
+    }
   });
-  it("erkennt verbotene Funktionen trotz Masken", () => {
+  it("erkennt verbotene Funktionen auch neben Masken-Literalen", () => {
     expect(() =>
       assertAdminQuery("SELECT '/*', pg_sleep(30), '*/'", ALL),
     ).toThrow(UnsafeQueryError);
   });
-  it("erkennt aliasierte Secret-Spalte trotz Masken", () => {
+  it("erkennt aliasierte Secret-Spalte (auch mit E''-Trick)", () => {
     expect(() =>
       assertAdminQuery(
         "SELECT '/*' AS a, password_hash AS h FROM users WHERE '*/'=''",
         ALL,
       ),
     ).toThrow(/password_hash/);
-  });
-});
-
-describe("stripStringsAndComments", () => {
-  it("entfernt String-/Kommentar-Inhalt, erhält echte Struktur", () => {
-    // Echtes Semikolon außerhalb von Literalen bleibt erhalten.
-    expect(stripStringsAndComments("SELECT 1; SELECT 2")).toContain(";");
-    // Semikolon INNERHALB eines Literals verschwindet mit dem Literal.
-    expect(stripStringsAndComments("SELECT 'a;b'")).not.toContain(";");
-    // Quoted Identifier bleibt inhaltlich erhalten (Namensprüfung).
-    expect(stripStringsAndComments('SELECT "password_hash" FROM users')).toContain(
-      "password_hash",
-    );
-    // Kommentar-Marker im Literal eröffnet keinen Kommentar.
-    expect(stripStringsAndComments("a='/*' ; b='*/'")).toContain(";");
+    expect(() =>
+      assertAdminQuery("SELECT E'\\'' AS x, password_hash AS pw FROM users", ALL),
+    ).toThrow(/password_hash/);
   });
 });

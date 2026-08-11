@@ -188,110 +188,32 @@ export function parseWriteTarget(query: string): string | null {
   return m ? m[1].toLowerCase() : null;
 }
 
-// Blendet String-Literale ('…' inkl. '' als Escape), Dollar-Quotes
-// ($tag$…$tag$), Block- und Zeilenkommentare durch Leerraum aus — mit einem
-// EINZIGEN Links-nach-Rechts-Scan, damit die Ausblendung mit dem echten
-// Postgres-Tokenizer übereinstimmt. Genutzt von den textbasierten Prüfungen
-// (Einzel-Statement-, Funktions-Denylist-, Secret-Namen-Checks), damit ein
-// Semikolon/Funktions-/Tabellen-/Spaltenname INNERHALB eines Literals (z.B.
-// `WHERE content LIKE '%password_hash%'`) eine legitime Query nicht fälschlich
-// ablehnt.
-//
-// WICHTIG — sicherheitsrelevant: Ein naiver Mehrfach-Regex-Ansatz (Kommentare,
-// dann Strings, dann Kommentare) weicht vom echten Tokenizer ab, sobald ein
-// Kommentar-Marker in einem String (oder ein Quote in einem Zeilenkommentar)
-// steht, und würde ein echtes „;" bzw. einen echten Secret-Namen fälschlich
-// ENTFERNEN → die Prüfung, die gegen das Ergebnis läuft (Einzel-Statement!),
-// wäre umgehbar. Der Einzelscan hier entfernt dagegen nur echten Literal-/
-// Kommentarinhalt; ein „;" außerhalb von Literalen bleibt erhalten. Quoted
-// Identifiers ("…" inkl. "" als Escape) bleiben INHALTLICH stehen (ein
-// gequoteter Tabellen-/Spaltenname muss für die Namensprüfung sichtbar
-// bleiben), triggern aber selbst keine String-/Kommentar-Erkennung. Ein
-// unterminiertes Literal wird bis zum Ende verschluckt — das ist safe, weil
-// eine solche Query ohnehin ein Postgres-Syntaxfehler ist und nie ausgeführt
-// wird.
-export function stripStringsAndComments(query: string): string {
-  let out = "";
-  const n = query.length;
-  let i = 0;
-  while (i < n) {
-    const ch = query[i];
-    const two = query.slice(i, i + 2);
-
-    if (two === "--") {
-      i += 2;
-      while (i < n && query[i] !== "\n") i++;
-      continue; // Newline bleibt erhalten
-    }
-    if (two === "/*") {
-      i += 2;
-      while (i < n && query.slice(i, i + 2) !== "*/") i++;
-      i += 2; // schließendes */ (oder Ende) überspringen
-      out += " ";
-      continue;
-    }
-    if (ch === "'") {
-      i++;
-      while (i < n) {
-        if (query[i] === "'") {
-          if (query[i + 1] === "'") {
-            i += 2; // '' = Escape, im String bleiben
-            continue;
-          }
-          i++; // schließendes '
-          break;
-        }
-        i++;
-      }
-      out += "''";
-      continue;
-    }
-    if (ch === '"') {
-      out += '"';
-      i++;
-      while (i < n) {
-        out += query[i];
-        if (query[i] === '"') {
-          if (query[i + 1] === '"') {
-            out += '"';
-            i += 2; // "" = Escape im Identifier
-            continue;
-          }
-          i++; // schließendes "
-          break;
-        }
-        i++;
-      }
-      continue;
-    }
-    if (ch === "$") {
-      const m = /^\$([A-Za-z_]\w*)?\$/.exec(query.slice(i));
-      if (m) {
-        const tag = m[0];
-        const close = query.indexOf(tag, i + tag.length);
-        i = close === -1 ? n : close + tag.length;
-        out += " ";
-        continue;
-      }
-    }
-    out += ch;
-    i++;
-  }
-  return out;
-}
-
 // Grundform-Prüfung, unabhängig vom Recht: nicht leer, genau EINE Anweisung
 // (kein eingebettetes ; außer als Abschluss), keine verbotene Funktion.
+//
+// Diese und die Secret-Namen-Prüfungen (assertAdminQuery) laufen BEWUSST gegen
+// den ROHEN Query-Text (inkl. String-Literale/Kommentare), nicht gegen eine
+// „bereinigte" Fassung. Grund: ein Präsenz-Check auf Rohtext kann nur ZU VIEL
+// ablehnen, nie zu wenig — er ist damit nicht umgehbar. Jeder Versuch, Literale/
+// Kommentare vorher auszublenden, verlangt einen exakt Postgres-konformen
+// Tokenizer (E''-Escape-Strings, verschachtelte Blockkommentare, Dollar-Quotes,
+// Quoted Identifiers …); jede Abweichung entfernt ein echtes „;"/einen echten
+// Secret-Namen und macht GENAU DIESE Sicherheitsprüfung umgehbar (verkettete
+// Statements → Umgehung von PROTECTED_WRITE_TABLES; aliasierte Secret-Spalte).
+// Der akzeptierte Preis ist konservativ: eine legitime Query, die ein „;", einen
+// Funktions- oder Secret-Namen als reinen Text INNERHALB eines Literals trägt
+// (z.B. `WHERE content LIKE '%password_hash%'`), wird abgelehnt — dann bitte
+// umformulieren. Sicherheit vor Bequemlichkeit.
 export function assertQueryShape(query: string): void {
   const trimmed = query.trim();
   if (!trimmed) {
     throw new UnsafeQueryError("Bitte eine Query eingeben.");
   }
-  const sanitized = stripStringsAndComments(trimmed).replace(/;\s*$/, "");
-  if (sanitized.includes(";")) {
+  const withoutTrailingSemicolon = trimmed.replace(/;\s*$/, "");
+  if (withoutTrailingSemicolon.includes(";")) {
     throw new UnsafeQueryError("Nur eine einzelne Anweisung ist erlaubt.");
   }
-  if (FORBIDDEN_FUNCTION_CALL.test(sanitized)) {
+  if (FORBIDDEN_FUNCTION_CALL.test(withoutTrailingSemicolon)) {
     throw new UnsafeQueryError(
       "Diese Query enthält eine nicht erlaubte Funktion (Sequenzen, Locks, Sleep/Backend-Kontrolle, dblink/Large Objects).",
     );
@@ -369,23 +291,20 @@ export function assertAdminQuery(
     throw new UnsafeQueryError("Dir fehlt das Recht „SQL löschen“.");
   }
 
-  // Namensprüfungen gegen die Query OHNE String-Literale/Kommentare, damit ein
-  // Secret-Name als bloßer Textinhalt (`WHERE content LIKE '%password_hash%'`,
-  // `… = 'password_setup_tokens'`) eine legitime Lese-Query nicht fälschlich
-  // sperrt. Ausgeführt wird weiterhin die Original-Query.
-  const sanitized = stripStringsAndComments(query);
-
-  // Geheimnis-Tabellen (nur Secrets) im freien Panel komplett sperren.
+  // Geheimnis-Tabellen (nur Secrets) im freien Panel komplett sperren. Prüfung
+  // gegen den ROHEN Query-Text (siehe assertQueryShape): ein Präsenz-Check auf
+  // Rohtext ist nicht umgehbar; der Preis ist die konservative Ablehnung einer
+  // Query, die den Namen nur als Literal-Text trägt.
   for (const table of SECRET_TABLES) {
-    if (identifierRegex(table).test(sanitized)) {
+    if (identifierRegex(table).test(query)) {
       throw new UnsafeQueryError(
         `Die Tabelle „${table}“ ist im SQL-Panel gesperrt.`,
       );
     }
   }
   // Credential-Spalten dürfen nicht explizit referenziert werden (auch nicht
-  // per Alias) — SELECT * wird zusätzlich als Top-Level-Ergebnis-Spalte
-  // bereinigt (runAdminQuery).
+  // per Alias) — Rohtext-Präsenz-Check (siehe oben); SELECT * wird zusätzlich als
+  // Top-Level-Ergebnis-Spalte bereinigt (runAdminQuery).
   //
   // Grenze der Zusicherung: Ein db-admin mit „SQL lesen" hat bewusst rohen
   // Lesezugriff auf die Datenbank. Der SECRET_COLUMNS-Filter (Namens-Sperre hier
@@ -394,12 +313,11 @@ export function assertAdminQuery(
   // absichtliche Exfiltration: eine ganze Zeile lässt sich per Composite-Cast
   // (`SELECT zeile::text FROM users zeile`) oder Row-Serialisierung
   // (`to_jsonb(zeile)`) in einen zusammengesetzten Wert unter beliebigem
-  // Spaltennamen packen. Eine Query-Text-Heuristik dagegen ist nachweislich
-  // umgehbar (Casts/Aliase/Subqueries) UND blockiert legitime Queries falsch —
-  // bewusst nicht versucht. Die einzige harte Schranke wäre spalten-granulares
-  // REVOKE auf DB-Rollenebene (Infrastruktur außerhalb dieser Schicht).
+  // Spaltennamen packen — das erkennt keine Query-Text-Prüfung zuverlässig. Die
+  // einzige harte Schranke wäre spalten-granulares REVOKE auf DB-Rollenebene
+  // (Infrastruktur außerhalb dieser Schicht).
   for (const column of SECRET_COLUMNS) {
-    if (identifierRegex(column).test(sanitized)) {
+    if (identifierRegex(column).test(query)) {
       throw new UnsafeQueryError(
         `Die Spalte „${column}“ ist im SQL-Panel gesperrt.`,
       );
