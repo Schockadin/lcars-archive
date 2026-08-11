@@ -137,4 +137,34 @@ describe("assertAdminQuery — reguläre Lese-Queries bleiben zulässig", () => 
     ).toBe("read");
     expect(assertAdminQuery("SELECT id, name FROM users u", ALL)).toBe("read");
   });
+
+  it("erlaubt Secret-Namen als bloßen Textinhalt in Literalen", () => {
+    // Secret-Spalten/-Tabellen nur als String-WERT (nicht als referenzierte
+    // Spalte/Tabelle) dürfen eine Lese-Query nicht sperren.
+    expect(
+      assertAdminQuery(
+        "SELECT id FROM archive_entries WHERE content LIKE '%password_hash%'",
+        ALL,
+      ),
+    ).toBe("read");
+    expect(
+      assertAdminQuery(
+        "SELECT id FROM archive_entries WHERE content = 'password_setup_tokens'",
+        ALL,
+      ),
+    ).toBe("read");
+    // Ein Semikolon INNERHALB eines Literals ist kein Statement-Trenner.
+    expect(
+      assertAdminQuery("SELECT id FROM characters WHERE name = 'a;b'", ALL),
+    ).toBe("read");
+  });
+
+  it("sperrt echte Referenzen weiterhin (außerhalb von Literalen)", () => {
+    expect(() =>
+      assertAdminQuery("SELECT password_hash FROM users", ALL),
+    ).toThrow(/password_hash/);
+    expect(() =>
+      assertAdminQuery("SELECT * FROM password_setup_tokens", ALL),
+    ).toThrow(/password_setup_tokens/);
+  });
 });

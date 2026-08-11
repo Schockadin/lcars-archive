@@ -188,6 +188,26 @@ export function parseWriteTarget(query: string): string | null {
   return m ? m[1].toLowerCase() : null;
 }
 
+// Blendet String-Literale ('…' inkl. '' als Escape), Block- und
+// Zeilenkommentare durch Leerraum aus — ausschließlich für die textbasierten
+// Sicherheits-/Namensprüfungen (Semikolon-, Funktions-, Secret-Tabellen-/
+// Spalten-Checks), damit ein Semikolon oder ein Funktions-/Tabellen-/
+// Spaltenname INNERHALB eines Literals (z.B. `WHERE content LIKE
+// '%password_hash%'`) eine legitime Lese-Query nicht fälschlich ablehnt.
+// Ausgeführt wird IMMER die Original-Query — dies ist keine Sicherheitsschicht
+// (die bilden READ ONLY-Transaktion + Rechte-Prüfung), sondern reine
+// False-Positive-Reduktion und bewusst konservativ (Dollar-Quoting o.Ä. bleibt
+// unberührt; imperfektes Ausblenden kann höchstens einen weiteren Check
+// auslösen, nie einen umgehen). Reihenfolge: Blockkommentare, dann Strings,
+// dann Zeilenkommentare (so werden `--`/`'` innerhalb schon entfernter Bereiche
+// nicht doppelt interpretiert).
+export function stripStringsAndComments(query: string): string {
+  return query
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/'(?:[^']|'')*'/g, "''")
+    .replace(/--[^\n]*/g, " ");
+}
+
 // Grundform-Prüfung, unabhängig vom Recht: nicht leer, genau EINE Anweisung
 // (kein eingebettetes ; außer als Abschluss), keine verbotene Funktion.
 export function assertQueryShape(query: string): void {
@@ -195,11 +215,11 @@ export function assertQueryShape(query: string): void {
   if (!trimmed) {
     throw new UnsafeQueryError("Bitte eine Query eingeben.");
   }
-  const withoutTrailingSemicolon = trimmed.replace(/;\s*$/, "");
-  if (withoutTrailingSemicolon.includes(";")) {
+  const sanitized = stripStringsAndComments(trimmed).replace(/;\s*$/, "");
+  if (sanitized.includes(";")) {
     throw new UnsafeQueryError("Nur eine einzelne Anweisung ist erlaubt.");
   }
-  if (FORBIDDEN_FUNCTION_CALL.test(withoutTrailingSemicolon)) {
+  if (FORBIDDEN_FUNCTION_CALL.test(sanitized)) {
     throw new UnsafeQueryError(
       "Diese Query enthält eine nicht erlaubte Funktion (Sequenzen, Locks, Sleep/Backend-Kontrolle, dblink/Large Objects).",
     );
@@ -277,9 +297,15 @@ export function assertAdminQuery(
     throw new UnsafeQueryError("Dir fehlt das Recht „SQL löschen“.");
   }
 
+  // Namensprüfungen gegen die Query OHNE String-Literale/Kommentare, damit ein
+  // Secret-Name als bloßer Textinhalt (`WHERE content LIKE '%password_hash%'`,
+  // `… = 'password_setup_tokens'`) eine legitime Lese-Query nicht fälschlich
+  // sperrt. Ausgeführt wird weiterhin die Original-Query.
+  const sanitized = stripStringsAndComments(query);
+
   // Geheimnis-Tabellen (nur Secrets) im freien Panel komplett sperren.
   for (const table of SECRET_TABLES) {
-    if (identifierRegex(table).test(query)) {
+    if (identifierRegex(table).test(sanitized)) {
       throw new UnsafeQueryError(
         `Die Tabelle „${table}“ ist im SQL-Panel gesperrt.`,
       );
@@ -301,7 +327,7 @@ export function assertAdminQuery(
   // bewusst nicht versucht. Die einzige harte Schranke wäre spalten-granulares
   // REVOKE auf DB-Rollenebene (Infrastruktur außerhalb dieser Schicht).
   for (const column of SECRET_COLUMNS) {
-    if (identifierRegex(column).test(query)) {
+    if (identifierRegex(column).test(sanitized)) {
       throw new UnsafeQueryError(
         `Die Spalte „${column}“ ist im SQL-Panel gesperrt.`,
       );
