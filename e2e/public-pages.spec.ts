@@ -11,6 +11,12 @@ const PAGES = [
   { path: "/impressum", heading: "Impressum" },
   { path: "/datenschutz", heading: "Datenschutzerklärung" },
   { path: "/search", heading: "Suche" },
+  { path: "/forgot-password", heading: "Passwort vergessen" },
+  // /activate ohne Token stellt keine DB-Anfrage (peekPasswordSetupToken läuft
+  // nur bei vorhandenem Token) — der Seitenkopf steht deshalb auch ohne DB.
+  { path: "/activate", heading: "Passwort festlegen" },
+  // Offline-Ausweichseite des Service Workers (statisch, DB-frei).
+  { path: "/offline", heading: "Offline" },
 ];
 
 for (const { path, heading } of PAGES) {
@@ -28,6 +34,30 @@ test("/tutorial shows the dedicated Gespräche section", async ({ page }) => {
   // ausgelagerte „Gespräche"-Abschnitt vorhanden ist.
   await expect(
     page.getByText("Gespräche", { exact: true }).first(),
+  ).toBeVisible();
+});
+
+test("/activate without a token shows the invalid-link hint", async ({
+  page,
+}) => {
+  // Der Suspense-gekapselte Inhalt (ActivateContent) rendert ohne gültigen
+  // Token die Hinweismeldung samt Link auf „Passwort vergessen" — DB-frei,
+  // da peekPasswordSetupToken nur bei vorhandenem Token aufgerufen wird.
+  await page.goto("/activate");
+  await expect(
+    page.getByText("Dieser Link ist ungültig oder abgelaufen.", {
+      exact: false,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "Passwort vergessen" }),
+  ).toBeVisible();
+});
+
+test("/offline shows a retry control", async ({ page }) => {
+  await page.goto("/offline");
+  await expect(
+    page.getByRole("button", { name: "Erneut versuchen" }),
   ).toBeVisible();
 });
 
