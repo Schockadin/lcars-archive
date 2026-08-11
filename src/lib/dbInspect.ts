@@ -98,45 +98,6 @@ export async function listTableRows(
 
 export class UnsafeQueryError extends Error {}
 
-// Entfernt Secret-Schlüssel (password_hash/token_hash) rekursiv aus einem
-// Ergebniswert — greift, wenn ein JSON/JSONB-Wert (z.B. aus to_jsonb(zeile) /
-// row_to_json(zeile)) die Spalte nicht als Top-Level-Ergebnis-Spalte, sondern
-// als verschachtelten Schlüssel trägt, sodass der spaltenweise Filter in
-// runAdminQuery nicht greift. Gibt bei unverändertem Wert DIESELBE Referenz
-// zurück (kein Alloc), damit der Normalfall „nichts zu bereinigen" auf großen
-// Ergebnissen keine Kopie erzeugt. Primitive Werte und Klasseninstanzen
-// (Date/Buffer/…) bleiben unangetastet — sonst würde z.B. ein Date (keine
-// enumerierbaren Eigenschaften) zu {} verstümmelt.
-function scrubSecrets(value: unknown): unknown {
-  if (Array.isArray(value)) {
-    let changed = false;
-    const mapped = value.map((v) => {
-      const s = scrubSecrets(v);
-      if (s !== v) changed = true;
-      return s;
-    });
-    return changed ? mapped : value;
-  }
-  if (value !== null && typeof value === "object") {
-    const proto = Object.getPrototypeOf(value);
-    if (proto !== Object.prototype && proto !== null) return value;
-    const obj = value as Record<string, unknown>;
-    let changed = false;
-    const out: Record<string, unknown> = {};
-    for (const [k, v] of Object.entries(obj)) {
-      if (SECRET_COLUMNS.includes(k)) {
-        changed = true;
-        continue;
-      }
-      const s = scrubSecrets(v);
-      if (s !== v) changed = true;
-      out[k] = s;
-    }
-    return changed ? out : value;
-  }
-  return value;
-}
-
 // Funktionen mit Seiteneffekten, die eine READ ONLY-Transaktion NICHT
 // verhindert (siehe Kommentar bei runAdminQuery unten) — nextval/setval
 // verschieben eine Sequenz dauerhaft, die pg_advisory_*-Familie hält Locks
@@ -325,20 +286,20 @@ export function assertAdminQuery(
     }
   }
   // Credential-Spalten dürfen nicht explizit referenziert werden (auch nicht
-  // per Alias) — SELECT * wird zusätzlich im Ergebnis bereinigt (runAdminQuery),
-  // und JSON-serialisierte Zeilen (to_jsonb/row_to_json) werden dort rekursiv
-  // von Secret-Schlüsseln befreit (scrubSecrets).
+  // per Alias) — SELECT * wird zusätzlich als Top-Level-Ergebnis-Spalte
+  // bereinigt (runAdminQuery).
   //
   // Grenze der Zusicherung: Ein db-admin mit „SQL lesen" hat bewusst rohen
-  // Lesezugriff auf die Datenbank. Der SECRET_COLUMNS-Filter ist ein Schutz vor
-  // versehentlicher Anzeige (SELECT *, SELECT password_hash, to_jsonb(zeile)),
-  // kein harter Boundary gegen absichtliche Exfiltration: eine ganze Zeile lässt
-  // sich per Composite-Cast (`SELECT zeile::text FROM users zeile`) in einen
-  // undurchsichtigen Textwert packen, den keine Query-Text-Analyse zuverlässig
-  // erkennt (Casts/Aliase/Subqueries umgehen jede Heuristik, während sie
-  // legitime Queries fälschlich blockiert). Eine echte harte Schranke wäre
-  // ausschließlich spalten-granulares REVOKE auf DB-Rollenebene — Infrastruktur
-  // außerhalb dieser Anwendungsschicht.
+  // Lesezugriff auf die Datenbank. Der SECRET_COLUMNS-Filter (Namens-Sperre hier
+  // + Entfernen aus dem Ergebnis in runAdminQuery) schützt vor VERSEHENTLICHER
+  // Anzeige (SELECT *, SELECT password_hash), ist aber KEIN harter Boundary gegen
+  // absichtliche Exfiltration: eine ganze Zeile lässt sich per Composite-Cast
+  // (`SELECT zeile::text FROM users zeile`) oder Row-Serialisierung
+  // (`to_jsonb(zeile)`) in einen zusammengesetzten Wert unter beliebigem
+  // Spaltennamen packen. Eine Query-Text-Heuristik dagegen ist nachweislich
+  // umgehbar (Casts/Aliase/Subqueries) UND blockiert legitime Queries falsch —
+  // bewusst nicht versucht. Die einzige harte Schranke wäre spalten-granulares
+  // REVOKE auf DB-Rollenebene (Infrastruktur außerhalb dieser Schicht).
   for (const column of SECRET_COLUMNS) {
     if (identifierRegex(column).test(query)) {
       throw new UnsafeQueryError(
@@ -413,24 +374,23 @@ export async function runAdminQuery(
       : rows[0]
         ? Object.keys(rows[0])
         : [];
-    // Credential-Spalten aus dem Ergebnis entfernen — fängt SELECT * ab, das
-    // die Spalte nicht namentlich nennt und die Text-Sperre in assertAdminQuery
-    // daher nicht greift. Bei explizitem Bezug wäre die Query schon dort
-    // abgewiesen worden.
+    // Credential-Spalten als Top-Level-Ergebnis-Spalte entfernen — fängt
+    // SELECT * ab, das die Spalte nicht namentlich nennt (die Text-Sperre in
+    // assertAdminQuery greift dort nicht). Fast path, wenn keine Secret-Spalte
+    // dabei ist (der Normalfall): flache Kopie ohne Pro-Zeile-Arbeit. Bewusst
+    // NUR die Top-Level-Spalte — verschachtelte/serialisierte Zeilen (to_jsonb,
+    // ::text) sind die dokumentierte, nicht app-seitig schließbare Grenze der
+    // db-admin-Rolle (siehe assertAdminQuery); ein rekursiver JSON-Scrub würde
+    // zudem legitime Inhaltsdaten mit einem gleichnamigen Schlüssel verstümmeln.
     const columns = rawColumns.filter((c) => !SECRET_COLUMNS.includes(c));
-    // Secret-Spalten sowohl als Top-Level-Spalte als auch verschachtelt in
-    // JSON-Werten entfernen. Letzteres ist die Verteidigung in der Tiefe zur
-    // Row-Serialisierungs-Sperre in assertAdminQuery: käme doch ein JSON-Objekt
-    // mit einem password_hash/token_hash-Schlüssel durch, wird der Schlüssel
-    // hier rekursiv gelöscht.
-    const cleanRows = rows.map((row) => {
-      const copy = { ...row };
-      for (const c of SECRET_COLUMNS) delete copy[c];
-      for (const key of Object.keys(copy)) {
-        copy[key] = scrubSecrets(copy[key]);
-      }
-      return copy;
-    });
+    const cleanRows =
+      columns.length === rawColumns.length
+        ? [...rows]
+        : rows.map((row) => {
+            const copy = { ...row };
+            for (const c of SECRET_COLUMNS) delete copy[c];
+            return copy;
+          });
     return {
       columns,
       rows: cleanRows,

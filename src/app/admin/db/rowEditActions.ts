@@ -1,12 +1,7 @@
 "use server";
 import sql from "@/lib/db";
 import { requireDbAccess, getCurrentUserPermissions } from "@/lib/dal";
-import {
-  getTableColumns,
-  quoteIdent,
-  tableAccessError,
-  isProtectedWriteTable,
-} from "@/lib/dbInspect";
+import { getTableColumns, quoteIdent, tableAccessError } from "@/lib/dbInspect";
 
 export interface RowMutationResult {
   error?: string;
@@ -35,20 +30,19 @@ export async function updateDbRowAction(input: {
     return { error: "Dir fehlt das Recht „SQL schreiben“." };
   }
 
+  // tableAccessError begrenzt den Zeilen-Editor auf VIEWABLE_TABLES (die
+  // Backup-Whitelist minus HIDDEN_FROM_VIEW). Diese enthält KEINE der Auth-/
+  // Sicherheits-Tabellen (users, roles, login_attempts, password_reset_requests,
+  // admin_audit_log stehen gar nicht in TABLE_COLUMNS; password_setup_tokens ist
+  // versteckt) — anders als das freie SQL-Panel (runAdminQuery), das bewusst
+  // NICHT auf die Whitelist beschränkt ist und deshalb die zusätzliche
+  // PROTECTED_WRITE_TABLES-Sperre in assertAdminQuery braucht. Hier ist der
+  // Schreibzugriff auf jene Tabellen also schon über die Whitelist ausgeschlossen.
   const accessError = tableAccessError(
     input.table,
     perms.has("db_view_system_tables"),
   );
   if (accessError) return { error: accessError };
-
-  // Gleiche Schranke wie im freien SQL-Panel (assertAdminQuery): Auth-/
-  // Sicherheits-Tabellen (users/roles/audit/…) dürfen auch über das Zeilen-
-  // Overlay nicht geändert werden — sonst könnte ein db-admin (sql_write ist
-  // bewusst orthogonal zu admin) sich über users/roles zum Voll-Admin machen
-  // oder den Audit-Trail manipulieren.
-  if (isProtectedWriteTable(input.table)) {
-    return { error: `Schreibzugriff auf „${input.table}“ ist gesperrt.` };
-  }
 
   const columns = await getTableColumns(input.table);
   if (columns.length === 0) return { error: "Unbekannte Tabelle." };
@@ -102,17 +96,14 @@ export async function deleteDbRowAction(input: {
     return { error: "Dir fehlt das Recht „SQL löschen“." };
   }
 
+  // Wie updateDbRowAction: die Whitelist (tableAccessError → VIEWABLE_TABLES)
+  // schließt alle Auth-/Sicherheits-Tabellen bereits aus, das Overlay kann sie
+  // also gar nicht erst ansprechen.
   const accessError = tableAccessError(
     input.table,
     perms.has("db_view_system_tables"),
   );
   if (accessError) return { error: accessError };
-
-  // Wie updateDbRowAction: Auth-/Sicherheits-Tabellen sind auch fürs Löschen
-  // über das Overlay gesperrt (Eskalations-/Audit-Manipulations-Schutz).
-  if (isProtectedWriteTable(input.table)) {
-    return { error: `Löschen in „${input.table}“ ist gesperrt.` };
-  }
 
   const columns = await getTableColumns(input.table);
   if (columns.length === 0) return { error: "Unbekannte Tabelle." };
