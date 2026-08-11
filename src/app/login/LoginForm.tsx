@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import { login, type LoginState } from "./actions";
+import { clearServiceWorkerPageCache } from "@/lib/swCache";
 import PasswordInput from "@/app/_shared/PasswordInput";
 import { FormError } from "@/app/_shared/FormPrimitives";
 
@@ -14,6 +15,10 @@ export default function LoginForm() {
     <form
       action={formAction}
       className="flex max-w-[420px] flex-col gap-[16px]"
+      // Vor dem Anmelden einen evtl. noch vorhandenen Offline-Seiten-Cache
+      // eines früheren Kontos leeren (Defense-in-Depth zum Logout-Clear, falls
+      // die vorherige Sitzung nie sauber abgemeldet wurde) — siehe public/sw.js.
+      onSubmit={() => clearServiceWorkerPageCache()}
     >
       <div className="flex flex-col gap-[6px]">
         <label htmlFor="email" className="lcars-eyebrow">

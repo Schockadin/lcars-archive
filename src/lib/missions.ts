@@ -1009,8 +1009,7 @@ export async function deleteMissionLog(
 
 // Macht ein weich gelöschtes Log wieder sichtbar (Admin-Trash-Ansicht) —
 // timeline_events/content_follows wurden beim Löschen nie entfernt, tauchen
-// also automatisch wieder auf (Timeline erst nach der nächsten manuellen
-// Regenerierung, siehe regenerateTimeline in timeline.ts).
+// also automatisch wieder auf.
 export async function restoreMissionLog(
   logId: number,
 ): Promise<{ slug: string; missionId: number } | null> {

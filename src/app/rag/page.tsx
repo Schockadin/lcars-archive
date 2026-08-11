@@ -16,7 +16,9 @@ export default function RagPage() {
   return (
     <>
       <PageMeta title="Archiv-Assistent" section="rag" />
-      <div className="w-full max-w-[720px]">
+      {/* Gleiche Content-Breite wie /search (das denselben Archiv-Assistenten
+          einbettet) und die übrigen Inhaltsseiten — 640px. */}
+      <div className="w-full max-w-[640px]">
         <div className="mb-[16px]">
           <h1 className="lcars-data-row-heading">Archiv-Assistent</h1>
           <p className="lcars-eyebrow">

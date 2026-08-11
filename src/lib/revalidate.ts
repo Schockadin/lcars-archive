@@ -74,9 +74,9 @@ export function revalidateArchiveEntry(slug: string): string[] {
   ]);
 }
 
-// Für die Admin-Action "Timeline (re-)generieren" (siehe regenerateTimeline
-// in src/lib/timeline.ts) — dort werden alle timeline_events komplett neu
-// aufgebaut, betrifft also nur den timeline-Tag selbst.
+// Invalidiert nur den timeline-Tag. Wird beim Löschen von Inhalten
+// (contentDeleteActions) mit-aufgerufen, da Timeline-Ereignisse aus
+// Content-Markern abgeleitet werden (Ingest, scripts/ingest/timeline.ts).
 export function revalidateTimeline(): string[] {
   return revalidate([cacheTags.timeline]);
 }

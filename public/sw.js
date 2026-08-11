@@ -19,7 +19,7 @@
 // Build-Assets unter /_next/static/ sind content-gehasht (neuer Deploy = neue
 // Dateinamen = automatischer Cache-Miss); die Version räumt verwaiste Einträge
 // auf und erneuert das Precache (u.a. die Offline-Seite).
-const CACHE_VERSION = "v2";
+const CACHE_VERSION = "v3";
 const ASSET_CACHE = `neo-archive-assets-${CACHE_VERSION}`;
 const PAGE_CACHE = `neo-archive-pages-${CACHE_VERSION}`;
 const PRECACHE = `neo-archive-precache-${CACHE_VERSION}`;
@@ -74,6 +74,15 @@ self.addEventListener("fetch", (event) => {
   }
   if (url.origin !== self.location.origin) return;
 
+  // /api NIE anfassen → immer direkt ans Netz, NICHT cachen. Wichtig auch für
+  // die Sicherheit: personalisierte/private Endpunkte (z.B. der eingebettete
+  // Charakterbogen /api/character-sheets/<id>, ausgeliefert als
+  // "Cache-Control: private") werden als <iframe>-Quelle mit request.mode
+  // "navigate" geladen und lägen sonst in der Navigations-Zweig-Logik unten im
+  // Page-Cache — private Bytes dürfen dort nicht landen. Der Cache-API sind die
+  // Cache-Control-Header egal, deshalb hier explizit ausschließen.
+  if (url.pathname.startsWith("/api/")) return;
+
   // RSC-Payloads (React Server Components) der clientseitigen Navigation:
   // dieselbe URL wie die HTML-Seite, aber mit RSC-Header/_rsc-Query. Wie eine
   // Navigation behandeln (network-first mit Cache-Fallback), damit auch das
@@ -105,8 +114,8 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Alles andere (/api, Server-Actions, sonstige dynamische GETs) NICHT
-  // anfassen → direkt ans Netz.
+  // Alles andere (Server-Actions, sonstige dynamische GETs) NICHT anfassen →
+  // direkt ans Netz. (/api ist bereits oben ausgeschlossen.)
 });
 
 // Network-first für Navigationen und RSC-Payloads: online frisch (und in den
@@ -157,6 +166,20 @@ async function staleWhileRevalidate(req) {
     .catch(() => hit);
   return hit || fetching;
 }
+
+// ── Logout: personalisierten Seiten-Cache leeren ───────────────────────────
+// Vom Client (Logout-/Login-Form, siehe HeaderUserNav.tsx / LoginForm.tsx) per
+// postMessage getriggert: der Laufzeit-Seiten-Cache kann authentifizierte,
+// personalisierte Seiten/RSC-Payloads enthalten, die nach einem Abmelden nicht
+// mehr offline abrufbar sein dürfen — besonders auf geteilten Geräten. Online
+// ist das unkritisch (network-first liefert stets frisch); dies schließt die
+// Offline-Lücke. Precache (/offline, Manifest) und Asset-Cache bleiben, da rein
+// öffentlich/statisch.
+self.addEventListener("message", (event) => {
+  if (event.data === "neo-archive:clear-page-cache") {
+    event.waitUntil(caches.delete(PAGE_CACHE));
+  }
+});
 
 // ── Web Push (unverändert) ─────────────────────────────────────────────────
 self.addEventListener("push", (event) => {
