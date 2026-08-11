@@ -188,24 +188,96 @@ export function parseWriteTarget(query: string): string | null {
   return m ? m[1].toLowerCase() : null;
 }
 
-// Blendet String-Literale ('…' inkl. '' als Escape), Block- und
-// Zeilenkommentare durch Leerraum aus — ausschließlich für die textbasierten
-// Sicherheits-/Namensprüfungen (Semikolon-, Funktions-, Secret-Tabellen-/
-// Spalten-Checks), damit ein Semikolon oder ein Funktions-/Tabellen-/
-// Spaltenname INNERHALB eines Literals (z.B. `WHERE content LIKE
-// '%password_hash%'`) eine legitime Lese-Query nicht fälschlich ablehnt.
-// Ausgeführt wird IMMER die Original-Query — dies ist keine Sicherheitsschicht
-// (die bilden READ ONLY-Transaktion + Rechte-Prüfung), sondern reine
-// False-Positive-Reduktion und bewusst konservativ (Dollar-Quoting o.Ä. bleibt
-// unberührt; imperfektes Ausblenden kann höchstens einen weiteren Check
-// auslösen, nie einen umgehen). Reihenfolge: Blockkommentare, dann Strings,
-// dann Zeilenkommentare (so werden `--`/`'` innerhalb schon entfernter Bereiche
-// nicht doppelt interpretiert).
+// Blendet String-Literale ('…' inkl. '' als Escape), Dollar-Quotes
+// ($tag$…$tag$), Block- und Zeilenkommentare durch Leerraum aus — mit einem
+// EINZIGEN Links-nach-Rechts-Scan, damit die Ausblendung mit dem echten
+// Postgres-Tokenizer übereinstimmt. Genutzt von den textbasierten Prüfungen
+// (Einzel-Statement-, Funktions-Denylist-, Secret-Namen-Checks), damit ein
+// Semikolon/Funktions-/Tabellen-/Spaltenname INNERHALB eines Literals (z.B.
+// `WHERE content LIKE '%password_hash%'`) eine legitime Query nicht fälschlich
+// ablehnt.
+//
+// WICHTIG — sicherheitsrelevant: Ein naiver Mehrfach-Regex-Ansatz (Kommentare,
+// dann Strings, dann Kommentare) weicht vom echten Tokenizer ab, sobald ein
+// Kommentar-Marker in einem String (oder ein Quote in einem Zeilenkommentar)
+// steht, und würde ein echtes „;" bzw. einen echten Secret-Namen fälschlich
+// ENTFERNEN → die Prüfung, die gegen das Ergebnis läuft (Einzel-Statement!),
+// wäre umgehbar. Der Einzelscan hier entfernt dagegen nur echten Literal-/
+// Kommentarinhalt; ein „;" außerhalb von Literalen bleibt erhalten. Quoted
+// Identifiers ("…" inkl. "" als Escape) bleiben INHALTLICH stehen (ein
+// gequoteter Tabellen-/Spaltenname muss für die Namensprüfung sichtbar
+// bleiben), triggern aber selbst keine String-/Kommentar-Erkennung. Ein
+// unterminiertes Literal wird bis zum Ende verschluckt — das ist safe, weil
+// eine solche Query ohnehin ein Postgres-Syntaxfehler ist und nie ausgeführt
+// wird.
 export function stripStringsAndComments(query: string): string {
-  return query
-    .replace(/\/\*[\s\S]*?\*\//g, " ")
-    .replace(/'(?:[^']|'')*'/g, "''")
-    .replace(/--[^\n]*/g, " ");
+  let out = "";
+  const n = query.length;
+  let i = 0;
+  while (i < n) {
+    const ch = query[i];
+    const two = query.slice(i, i + 2);
+
+    if (two === "--") {
+      i += 2;
+      while (i < n && query[i] !== "\n") i++;
+      continue; // Newline bleibt erhalten
+    }
+    if (two === "/*") {
+      i += 2;
+      while (i < n && query.slice(i, i + 2) !== "*/") i++;
+      i += 2; // schließendes */ (oder Ende) überspringen
+      out += " ";
+      continue;
+    }
+    if (ch === "'") {
+      i++;
+      while (i < n) {
+        if (query[i] === "'") {
+          if (query[i + 1] === "'") {
+            i += 2; // '' = Escape, im String bleiben
+            continue;
+          }
+          i++; // schließendes '
+          break;
+        }
+        i++;
+      }
+      out += "''";
+      continue;
+    }
+    if (ch === '"') {
+      out += '"';
+      i++;
+      while (i < n) {
+        out += query[i];
+        if (query[i] === '"') {
+          if (query[i + 1] === '"') {
+            out += '"';
+            i += 2; // "" = Escape im Identifier
+            continue;
+          }
+          i++; // schließendes "
+          break;
+        }
+        i++;
+      }
+      continue;
+    }
+    if (ch === "$") {
+      const m = /^\$([A-Za-z_]\w*)?\$/.exec(query.slice(i));
+      if (m) {
+        const tag = m[0];
+        const close = query.indexOf(tag, i + tag.length);
+        i = close === -1 ? n : close + tag.length;
+        out += " ";
+        continue;
+      }
+    }
+    out += ch;
+    i++;
+  }
+  return out;
 }
 
 // Grundform-Prüfung, unabhängig vom Recht: nicht leer, genau EINE Anweisung

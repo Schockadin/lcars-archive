@@ -5,6 +5,7 @@ import {
   parseWriteTarget,
   assertAdminQuery,
   isProtectedWriteTable,
+  stripStringsAndComments,
   UnsafeQueryError,
   type AdminQueryCapabilities,
 } from "./dbInspect";
@@ -166,5 +167,55 @@ describe("assertAdminQuery — reguläre Lese-Queries bleiben zulässig", () => 
     expect(() =>
       assertAdminQuery("SELECT * FROM password_setup_tokens", ALL),
     ).toThrow(/password_setup_tokens/);
+  });
+});
+
+describe("assertAdminQuery — kein Bypass über String-/Kommentar-Maskierung", () => {
+  it("erkennt verkettete Statements trotz Kommentar-Markern in Literalen", () => {
+    // Ein `/*` in einem String-Literal darf nicht als Blockkommentar-Anfang
+    // gelesen werden, der das echte `;` verschluckt (statement chaining →
+    // Umgehung der PROTECTED_WRITE_TABLES-Sperre, die nur das 1. Statement liest).
+    expect(() =>
+      assertAdminQuery(
+        "UPDATE characters SET name='/*' WHERE id=1; UPDATE users SET x='y' WHERE id=1 AND '*/'=''",
+        ALL,
+      ),
+    ).toThrow(/einzelne Anweisung/);
+    // Ein `'` in einem Zeilenkommentar darf keinen String eröffnen, der über
+    // die Newline hinweg das echte `;` verschluckt.
+    expect(() =>
+      assertAdminQuery(
+        "UPDATE characters SET a=1 -- it's\n; DELETE FROM users WHERE b='x'",
+        ALL,
+      ),
+    ).toThrow(/einzelne Anweisung/);
+  });
+  it("erkennt verbotene Funktionen trotz Masken", () => {
+    expect(() =>
+      assertAdminQuery("SELECT '/*', pg_sleep(30), '*/'", ALL),
+    ).toThrow(UnsafeQueryError);
+  });
+  it("erkennt aliasierte Secret-Spalte trotz Masken", () => {
+    expect(() =>
+      assertAdminQuery(
+        "SELECT '/*' AS a, password_hash AS h FROM users WHERE '*/'=''",
+        ALL,
+      ),
+    ).toThrow(/password_hash/);
+  });
+});
+
+describe("stripStringsAndComments", () => {
+  it("entfernt String-/Kommentar-Inhalt, erhält echte Struktur", () => {
+    // Echtes Semikolon außerhalb von Literalen bleibt erhalten.
+    expect(stripStringsAndComments("SELECT 1; SELECT 2")).toContain(";");
+    // Semikolon INNERHALB eines Literals verschwindet mit dem Literal.
+    expect(stripStringsAndComments("SELECT 'a;b'")).not.toContain(";");
+    // Quoted Identifier bleibt inhaltlich erhalten (Namensprüfung).
+    expect(stripStringsAndComments('SELECT "password_hash" FROM users')).toContain(
+      "password_hash",
+    );
+    // Kommentar-Marker im Literal eröffnet keinen Kommentar.
+    expect(stripStringsAndComments("a='/*' ; b='*/'")).toContain(";");
   });
 });
