@@ -155,7 +155,8 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     version: "1.14",
-    title: "Admin-Bereich neu strukturiert: eigene Unterseiten für User, DB, Scripts",
+    title:
+      "Admin-Bereich neu strukturiert: eigene Unterseiten für User, DB, Scripts",
     items: [
       "Der Adminbereich war bisher eine einzige lange Seite – jetzt führt ein Dropdown-Menü über „Admin“ im Header zu eigenen Unterseiten für User, Charaktere, DB, Scripts, Inhalte und Audit-Log.",
       "Die Nutzerübersicht zeigt jetzt eine durchsuchbare, sortier- und filterbare Tabelle inklusive der Zeitpunkte des letzten Logins und Seitenaufrufs, die eigentliche Kontoverwaltung findet sich gebündelt auf der Detailseite eines Users.",
@@ -291,6 +292,14 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Längere Antworten des Archiv-Assistenten brechen seltener mittendrin ab; bricht eine Verbindung doch einmal, bleibt die bereits erhaltene Teil-Antwort stehen (mit dezentem Hinweis) statt komplett zu verschwinden.",
       "Die App reagiert beim Navigieren spürbar flotter: Beim Öffnen von Charakter-, Missions-, Archiv-, Profil- und Gesprächsseiten erscheint sofort ein Seitengerüst, während die Inhalte im Hintergrund laden — statt einer kurz „hängenden“ leeren Seite. Serverseitig werden die nötigen Daten jetzt parallel geladen, und die Speichern-/Folgen-Knöpfe stehen sofort bereit statt kurz nachzuladen.",
       "Sicherheit im Admin-Bereich: Weder das freie SQL-Feld noch der zeilenweise Editor geben Passwort-/Token-Spalten aus oder lassen Schreib-/Löschzugriffe auf sicherheitsrelevante Tabellen (Konten, Rollen, Anmelde-Protokolle, Audit-Log) zu; das zeilenweise Bearbeiten trifft zuverlässig die richtige Zeile.",
+    ],
+  },
+  {
+    version: "1.21",
+    title: "Schnellerer Seitenaufbau (Cached Components) und Offline-Betrieb",
+    items: [
+      "Die App liefert das Grundgerüst (LCARS-Rahmen mit Navigation) jetzt sofort aus und lädt die eigentlichen Inhalte im Hintergrund nach — Seiten fühlen sich beim Öffnen und Navigieren spürbar direkter an, weil nicht mehr auf die komplette Seite gewartet wird, bevor überhaupt etwas erscheint.",
+      "Neu: Die installierte App (PWA) funktioniert jetzt eingeschränkt auch ohne Internet. Bereits besuchte Seiten bleiben offline abrufbar, und statt einer Browser-Fehlermeldung erscheint eine eigene Offline-Hinweisseite mit „Erneut versuchen“-Knopf. Sobald wieder Verbindung besteht, werden automatisch die aktuellen Daten geladen. Anmeldung, neue Inhalte und das Speichern von Änderungen brauchen weiterhin eine Verbindung.",
     ],
   },
 ];

@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
 import { splitPrivate, TIMELINE_MARKER_RE } from "@/lib/markdown";
@@ -10,9 +10,11 @@ import { TimelineEvent, TimelineSourceType } from "@/types/timeline";
 // source_type/source_slug, COALESCE fällt auf 'public' zurück, wenn kein
 // Join greift (Missionen haben keine visibility-Spalte, sind also immer
 // public; ein source_slug ohne (mehr) existierende Quellzeile ebenso).
-export const getAllTimelineEvents = unstable_cache(
-  async (): Promise<TimelineEvent[]> => {
-    const rows = await sql<TimelineEvent[]>`
+export async function getAllTimelineEvents(): Promise<TimelineEvent[]> {
+  "use cache";
+  cacheTag(cacheTags.timeline);
+  cacheLife("max");
+  const rows = await sql<TimelineEvent[]>`
       SELECT
         te.id,
         te.event_date::text AS event_date,
@@ -33,11 +35,8 @@ export const getAllTimelineEvents = unstable_cache(
         AND ae.is_draft IS NOT TRUE AND mi.is_draft IS NOT TRUE
       ORDER BY te.event_date DESC NULLS LAST, te.id DESC
     `;
-    return rows;
-  },
-  ["getAllTimelineEvents", "v4"],
-  { tags: [cacheTags.timeline] },
-);
+  return rows;
+}
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 

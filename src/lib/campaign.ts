@@ -1,5 +1,5 @@
 import "server-only";
-import { unstable_cache, revalidateTag } from "next/cache";
+import { cacheTag, cacheLife, revalidateTag } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
 
@@ -44,15 +44,14 @@ async function getInferredIngameYear(): Promise<number | null> {
 // das automatisch aus dem spätesten Mission-Log abgeleitete Jahr. Gecacht
 // (kampagnen-weit identisch), invalidiert von setIngameYear UND von
 // Mission-Log-Änderungen (revalidateCampaignYear).
-export const getIngameYear = unstable_cache(
-  async (): Promise<number | null> => {
-    const stored = await getStoredIngameYear();
-    if (stored != null) return stored;
-    return getInferredIngameYear();
-  },
-  ["getIngameYear", "v2"],
-  { tags: [CAMPAIGN_TAG] },
-);
+export async function getIngameYear(): Promise<number | null> {
+  "use cache";
+  cacheTag(CAMPAIGN_TAG);
+  cacheLife("max");
+  const stored = await getStoredIngameYear();
+  if (stored != null) return stored;
+  return getInferredIngameYear();
+}
 
 export interface IngameYearInfo {
   // Was tatsächlich gilt (Override oder abgeleitet).

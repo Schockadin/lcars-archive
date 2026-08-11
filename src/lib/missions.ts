@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
@@ -51,9 +51,11 @@ function parseMeta<T extends { metadata: MissionMetaData }>(row: T): T {
 // Suche/Timeline/Statistik. Für die GM/Admin-Ansicht unter /user/content
 // (die auch eigene Entwürfe zeigen soll) siehe getAllMissionsIncludingDrafts
 // unten.
-export const getAllMissions = unstable_cache(
-  async (): Promise<MissionPreview[]> => {
-    const rows = await sql<MissionPreview[]>`
+export async function getAllMissions(): Promise<MissionPreview[]> {
+  "use cache";
+  cacheTag(cacheTags.missions, cacheTags.missionLogs);
+  cacheLife("max");
+  const rows = await sql<MissionPreview[]>`
       SELECT
         m.id,
         m.slug,
@@ -76,11 +78,8 @@ export const getAllMissions = unstable_cache(
       GROUP BY m.id
       ORDER BY m.started_at DESC NULLS LAST, m.created_at DESC
     `;
-    return rows.map(parseMeta);
-  },
-  ["getAllMissions", "v2"],
-  { tags: [cacheTags.missions, cacheTags.missionLogs] },
-);
+  return rows.map(parseMeta);
+}
 
 // Wie getAllMissions, aber inklusive Entwürfe — für /user/content: anders
 // als Charaktere/Missionslogs/Archiv-Einträge haben Missionen kein
@@ -89,9 +88,13 @@ export const getAllMissions = unstable_cache(
 // jeden GM/Admin sichtbar statt nur für den ursprünglichen Ersteller (siehe
 // canViewDraft-Kommentar in missions/[missionSlug]/page.tsx für dieselbe
 // Abweichung auf der Detailseite).
-export const getAllMissionsIncludingDrafts = unstable_cache(
-  async (): Promise<MissionPreview[]> => {
-    const rows = await sql<MissionPreview[]>`
+export async function getAllMissionsIncludingDrafts(): Promise<
+  MissionPreview[]
+> {
+  "use cache";
+  cacheTag(cacheTags.missions, cacheTags.missionLogs);
+  cacheLife("max");
+  const rows = await sql<MissionPreview[]>`
       SELECT
         m.id,
         m.slug,
@@ -114,11 +117,8 @@ export const getAllMissionsIncludingDrafts = unstable_cache(
       GROUP BY m.id
       ORDER BY m.started_at DESC NULLS LAST, m.created_at DESC
     `;
-    return rows.map(parseMeta);
-  },
-  ["getAllMissionsIncludingDrafts"],
-  { tags: [cacheTags.missions, cacheTags.missionLogs] },
-);
+  return rows.map(parseMeta);
+}
 
 export interface GmMissionOverviewItem {
   id: number;
@@ -197,15 +197,17 @@ export async function getMissionParticipantIds(
   return rows.map((r) => r.character_id);
 }
 
-// Eine Mission per Slug. Persistenter Cache, getaggt mit missions + mission:<slug>.
-// unstable_cache dedupliziert auch innerhalb eines Requests (Layout + Page
-// fragen dieselbe Mission ab), ersetzt also das frühere React-cache().
+// Eine Mission per Slug. Persistenter "use cache"-Scope, getaggt mit
+// missions + mission:<slug>. "use cache" dedupliziert auch innerhalb eines
+// Requests (Layout + Page fragen dieselbe Mission ab), ersetzt also das
+// frühere React-cache().
 export async function getMissionBySlug(
   slug: string,
 ): Promise<MissionDetail | null> {
-  return unstable_cache(
-    async (): Promise<MissionDetail | null> => {
-      const rows = await sql<MissionRow[]>`
+  "use cache";
+  cacheTag(cacheTags.missions, cacheTags.mission(slug));
+  cacheLife("max");
+  const rows = await sql<MissionRow[]>`
         SELECT
           id,
           slug,
@@ -222,14 +224,10 @@ export async function getMissionBySlug(
         WHERE slug = ${slug} AND deleted_at IS NULL
         LIMIT 1
       `;
-      if (!rows[0]) return null;
-      const mission = parseMeta(rows[0]);
-      const participants = await getMissionParticipants(mission.id);
-      return { ...mission, participants };
-    },
-    ["getMissionBySlug", "v6", slug],
-    { tags: [cacheTags.missions, cacheTags.mission(slug)] },
-  )();
+  if (!rows[0]) return null;
+  const mission = parseMeta(rows[0]);
+  const participants = await getMissionParticipants(mission.id);
+  return { ...mission, participants };
 }
 
 // Eine Mission per numerischer ID — für den Admin/GM-Editier-Weg
@@ -645,9 +643,10 @@ export async function missionLogSlugExists(slug: string): Promise<boolean> {
 export async function getLogsByMissionId(
   missionId: number,
 ): Promise<MissionLogListItem[]> {
-  return unstable_cache(
-    async (): Promise<MissionLogListItem[]> => {
-      const rows = await sql<MissionLogListItem[]>`
+  "use cache";
+  cacheTag(cacheTags.missionLogs, cacheTags.missionLogsOf(missionId));
+  cacheLife("max");
+  const rows = await sql<MissionLogListItem[]>`
         SELECT
           ml.id,
           ml.slug,
@@ -662,20 +661,17 @@ export async function getLogsByMissionId(
           AND ml.is_draft = false
         ORDER BY ml.session_nr DESC NULLS LAST, ml.created_at DESC
       `;
-      return rows;
-    },
-    ["getLogsByMissionId", "v4", String(missionId)],
-    { tags: [cacheTags.missionLogs, cacheTags.missionLogsOf(missionId)] },
-  )();
+  return rows;
 }
 
 // Ein vollständiges Log per Slug (global eindeutig) inkl. Mission-Referenz.
 export async function getLogBySlug(
   slug: string,
 ): Promise<MissionLogDetail | null> {
-  return unstable_cache(
-    async (): Promise<MissionLogDetail | null> => {
-      const rows = await sql<MissionLogDetail[]>`
+  "use cache";
+  cacheTag(cacheTags.missionLogs, cacheTags.log(slug));
+  cacheLife("max");
+  const rows = await sql<MissionLogDetail[]>`
         SELECT
           ml.id,
           ml.slug,
@@ -697,11 +693,7 @@ export async function getLogBySlug(
         WHERE ml.slug = ${slug} AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
         LIMIT 1
       `;
-      return rows[0] ?? null;
-    },
-    ["getLogBySlug", "v4", slug],
-    { tags: [cacheTags.missionLogs, cacheTags.log(slug)] },
-  )();
+  return rows[0] ?? null;
 }
 
 // Vor-/Zurück-Navigation zwischen den Logs desselben Autors. Sortiert
@@ -712,9 +704,10 @@ export async function getAuthorLogNav(
   authorSlug: string,
   currentSlug: string,
 ): Promise<LogNavNeighbors> {
-  return unstable_cache(
-    async (): Promise<LogNavNeighbors> => {
-      const logs = await sql<LogNavItem[]>`
+  "use cache";
+  cacheTag(cacheTags.missionLogs, cacheTags.character(authorSlug));
+  cacheLife("max");
+  const logs = await sql<LogNavItem[]>`
         SELECT
           ml.slug,
           m.slug  AS mission_slug,
@@ -729,16 +722,12 @@ export async function getAuthorLogNav(
         ORDER BY ml.log_date ASC NULLS LAST, ml.session_nr ASC NULLS LAST, ml.id ASC
       `;
 
-      const i = logs.findIndex((l) => l.slug === currentSlug);
-      if (i === -1) return { prev: null, next: null };
-      return {
-        prev: logs[i - 1] ?? null,
-        next: logs[i + 1] ?? null,
-      };
-    },
-    ["getAuthorLogNav", "v2", authorSlug, currentSlug],
-    { tags: [cacheTags.missionLogs, cacheTags.character(authorSlug)] },
-  )();
+  const i = logs.findIndex((l) => l.slug === currentSlug);
+  if (i === -1) return { prev: null, next: null };
+  return {
+    prev: logs[i - 1] ?? null,
+    next: logs[i + 1] ?? null,
+  };
 }
 
 // Nur der Owner (Spieler des Autor-Charakters, via Join — Mission-Logs haben
@@ -1162,9 +1151,11 @@ export async function restoreMission(
 // Alle Mission-/Log-Pfade für die Sitemap und generateStaticParams. Nur
 // public, damit private/gm-Logs nicht statisch vorgerendert oder
 // gesitemappt werden (Laufzeit-Guard auf der Detailseite übernimmt sie).
-export const getAllLogPaths = unstable_cache(
-  async (): Promise<LogPath[]> => {
-    const rows = await sql<LogPath[]>`
+export async function getAllLogPaths(): Promise<LogPath[]> {
+  "use cache";
+  cacheTag(cacheTags.missionLogs);
+  cacheLife("max");
+  const rows = await sql<LogPath[]>`
       SELECT
         m.slug  AS mission_slug,
         ml.slug AS log_slug,
@@ -1174,11 +1165,8 @@ export const getAllLogPaths = unstable_cache(
       WHERE ml.visibility = 'public' AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
         AND ml.is_draft = false
     `;
-    return rows;
-  },
-  ["getAllLogPaths", "v4"],
-  { tags: [cacheTags.missionLogs] },
-);
+  return rows;
+}
 
 // Für die Admin-Action "Autolinking" (src/app/actions/autolink.ts) — braucht
 // id + rohen Markdown-Quelltext, unabhängig von Sichtbarkeit/Owner (Admins

@@ -4,7 +4,6 @@ import { touchLastVisit, getUserById } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
 import { userPermissions } from "@/lib/permissions";
 
-export const dynamic = "force-dynamic";
 
 // Winziger, für den Client selbst DB-freier Endpunkt (nur Cookie-Signatur-
 // Prüfung), damit die Sidebar client-seitig weiß, ob "Home" auf das eigene
@@ -44,8 +43,9 @@ export async function GET() {
   const permissions = user
     ? [...userPermissions(user, await getRoleMap())]
     : [];
-  // Explizite No-Store-Header statt uns allein auf force-dynamic zu
-  // verlassen: dieser Endpunkt liefert userId/role, personalisierte Daten,
+  // Explizite No-Store-Header (der Endpunkt ist ohnehin per-Request
+  // dynamisch, da er Cookies liest): dieser Endpunkt liefert userId/role,
+  // personalisierte Daten,
   // die niemals von einem zwischengeschalteten Cache (Netlifys CDN/Edge,
   // Browser-HTTP-Cache) für einen anderen User wiederverwendet werden
   // dürfen — genau das würde sonst wie ein fremder eingeloggter Account im

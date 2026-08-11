@@ -15,14 +15,6 @@ interface Props {
   searchParams: Promise<{ activateFollow?: string }>;
 }
 
-// Missionen haben keine eigene Sichtbarkeits-Sperre (immer öffentlich
-// lesbar). Der Admin-Owner-Block unten braucht aber getViewer() (cookies())
-// auf JEDER Anfrage, um die Rolle zu kennen — das erzwingt force-dynamic,
-// exakt der bereits akzeptierte Trade-off bei Charakteren/Logs/Archiv-
-// Einträgen (siehe deren page.tsx-Kommentare). Ein generateStaticParams wäre
-// unter force-dynamic ohnehin toter Code (nie zur Build-Zeit ausgeführt) —
-// deshalb bewusst weggelassen.
-export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props) {
   const { missionSlug } = await params;

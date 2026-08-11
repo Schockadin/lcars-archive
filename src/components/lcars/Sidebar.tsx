@@ -1,4 +1,6 @@
+import { Suspense } from "react";
 import SideBarMenu from "./SidebarMenu";
+import SidebarMenuFallback from "./SidebarMenuFallback";
 
 export default function Sidebar() {
   return (
@@ -11,8 +13,12 @@ export default function Sidebar() {
           <div className="lcars-elbow-top" />
         </div>
 
-        {/* Sidebar Main */}
-        <SideBarMenu />
+        {/* Sidebar Main — usePathname (Aktiv-Markierung) braucht unter
+            cacheComponents auf dynamischen Routen eine Suspense-Grenze; der
+            Fallback zeigt die Navigation ohne Highlight bis zur Hydration. */}
+        <Suspense fallback={<SidebarMenuFallback />}>
+          <SideBarMenu />
+        </Suspense>
 
         {/* Sidebar Footer */}
         <div

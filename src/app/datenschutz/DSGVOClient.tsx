@@ -2,9 +2,9 @@
 import { usePageMeta } from "@/hooks/usePageMeta";
 import LegalPageLayout from "@/components/lcars/LegalPageLayout";
 
-export default function DSGVOClient() {
+export default function DSGVOClient({ year }: { year: number }) {
   usePageMeta("Datenschutz", "dsgvo");
-  const currentYear = new Date().getFullYear();
+  const currentYear = year;
 
   return (
     <LegalPageLayout eyebrow="Art. 13 DSGVO" title="Datenschutzerklärung">
@@ -100,6 +100,19 @@ export default function DSGVOClient() {
         aktives Aktivieren). Die Subscription wird gelöscht, sobald sie in den
         Einstellungen deaktiviert wird, oder automatisch, sobald sie vom Browser
         für ungültig erklärt wird.
+      </p>
+      <p>
+        Für den Offline-Betrieb der installierbaren App (PWA) legt ein{" "}
+        <strong>Service Worker</strong> Kopien bereits aufgerufener Seiten sowie
+        statischer Dateien (Programmcode, Schriften, Symbole) im lokalen
+        Browser-Speicher (Cache Storage) des jeweiligen Geräts ab. Diese Kopien
+        verbleiben ausschließlich auf dem Gerät, werden nicht an den Server oder
+        Dritte übertragen und ermöglichen, dass bereits besuchte Seiten auch
+        ohne Internetverbindung angezeigt werden (Rechtsgrundlage: Art. 6 Abs. 1
+        lit. b DSGVO — Bereitstellung der Anwendung, sowie lit. f — berechtigtes
+        Interesse an schnellen Ladezeiten). Der Cache lässt sich jederzeit durch
+        Leeren der Websitedaten im Browser bzw. Deinstallieren der App
+        vollständig entfernen.
       </p>
       <p>
         Beim Aufruf der Website werden durch den Hosting-Anbieter

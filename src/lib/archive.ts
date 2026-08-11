@@ -1,4 +1,4 @@
-import { unstable_cache } from "next/cache";
+import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
@@ -169,12 +169,14 @@ function parseMeta<T extends { metadata: ArchiveMetadata }>(row: T): T {
 // Alle Archiv-Einträge für die Übersicht (ohne content). Alphabetisch nach
 // Titel; die Gruppierung nach Kategorie übernimmt die Darstellung.
 // Nur public-Einträge — diese Liste speist Übersicht/Nav/Sitemap und ist
-// nicht nach Betrachter personalisierbar (unstable_cache, kein Session-
+// nicht nach Betrachter personalisierbar ("use cache", kein Session-
 // Zugriff). private/gm-Einträge sind trotzdem über ihre Detailseite
 // erreichbar (Laufzeit-Guard dort, siehe getArchiveEntryBySlug-Aufrufer).
-export const getAllArchiveEntries = unstable_cache(
-  async (): Promise<ArchiveEntryPreview[]> => {
-    const rows = await sql<ArchiveEntryPreview[]>`
+export async function getAllArchiveEntries(): Promise<ArchiveEntryPreview[]> {
+  "use cache";
+  cacheTag(cacheTags.archive);
+  cacheLife("max");
+  const rows = await sql<ArchiveEntryPreview[]>`
       SELECT
         id,
         slug,
@@ -189,21 +191,17 @@ export const getAllArchiveEntries = unstable_cache(
         AND is_draft = false
       ORDER BY title ASC
     `;
-    return rows.map(parseMeta);
-  },
-  // Key-Version "5": + deleted_at-Filter — Bump verwirft alte Cache-Einträge
-  // deterministisch (auch poisoned-empty). "6": + is_draft-Filter.
-  ["getAllArchiveEntries", "v6"],
-  { tags: [cacheTags.archive] },
-);
+  return rows.map(parseMeta);
+}
 
 // Ein Archiv-Eintrag per Slug inkl. aufgelöster Verweise (ein-/ausgehend).
 export async function getArchiveEntryBySlug(
   slug: string,
 ): Promise<ArchiveEntryDetail | null> {
-  return unstable_cache(
-    async (): Promise<ArchiveEntryDetail | null> => {
-      const rows = await sql<Omit<ArchiveEntryDetail, "links" | "backlinks">[]>`
+  "use cache";
+  cacheTag(cacheTags.archive, cacheTags.archiveEntry(slug));
+  cacheLife("max");
+  const rows = await sql<Omit<ArchiveEntryDetail, "links" | "backlinks">[]>`
         SELECT
           id,
           slug,
@@ -222,11 +220,11 @@ export async function getArchiveEntryBySlug(
         WHERE slug = ${slug} AND deleted_at IS NULL
         LIMIT 1
       `;
-      const entry = rows[0];
-      if (!entry) return null;
+  const entry = rows[0];
+  if (!entry) return null;
 
-      // Ausgehende Verweise (dieser Eintrag → Ziel).
-      const links = await sql<ArchiveLink[]>`
+  // Ausgehende Verweise (dieser Eintrag → Ziel).
+  const links = await sql<ArchiveLink[]>`
         SELECT
           e.slug,
           e.title,
@@ -238,8 +236,8 @@ export async function getArchiveEntryBySlug(
         ORDER BY e.title ASC
       `;
 
-      // Eingehende Verweise (Quelle → dieser Eintrag).
-      const backlinks = await sql<ArchiveLink[]>`
+  // Eingehende Verweise (Quelle → dieser Eintrag).
+  const backlinks = await sql<ArchiveLink[]>`
         SELECT
           e.slug,
           e.title,
@@ -251,11 +249,7 @@ export async function getArchiveEntryBySlug(
         ORDER BY e.title ASC
       `;
 
-      return { ...parseMeta(entry), links, backlinks };
-    },
-    ["getArchiveEntryBySlug", "v6", slug],
-    { tags: [cacheTags.archive, cacheTags.archiveEntry(slug)] },
-  )();
+  return { ...parseMeta(entry), links, backlinks };
 }
 
 // Anzahl der Gespräche (Dialoge), an denen ein Teilnehmer (per slug — i.d.R.
@@ -263,9 +257,10 @@ export async function getArchiveEntryBySlug(
 export async function getDialogueCountByParticipant(
   slug: string,
 ): Promise<number> {
-  return unstable_cache(
-    async (): Promise<number> => {
-      const [row] = await sql<{ count: number }[]>`
+  "use cache";
+  cacheTag(cacheTags.archive);
+  cacheLife("max");
+  const [row] = await sql<{ count: number }[]>`
         SELECT COUNT(*)::int AS count
         FROM archive_entries
         WHERE category = 'dialogue'
@@ -274,11 +269,7 @@ export async function getDialogueCountByParticipant(
           AND deleted_at IS NULL
           AND metadata->'participants' @> ${sql.json([{ slug }])}
       `;
-      return row?.count ?? 0;
-    },
-    ["getDialogueCountByParticipant", "v4", slug],
-    { tags: [cacheTags.archive] },
-  )();
+  return row?.count ?? 0;
 }
 
 export interface UserContentArchiveEntry {
@@ -396,9 +387,11 @@ export async function setArchiveEntryOwner(
 // Alle Pfade für Sitemap und generateStaticParams — nur public, damit
 // private/gm-Einträge nicht statisch vorgerendert oder gesitemappt werden
 // (siehe getAllArchiveEntries).
-export const getAllArchivePaths = unstable_cache(
-  async (): Promise<ArchivePath[]> => {
-    const rows = await sql<ArchivePath[]>`
+export async function getAllArchivePaths(): Promise<ArchivePath[]> {
+  "use cache";
+  cacheTag(cacheTags.archive);
+  cacheLife("max");
+  const rows = await sql<ArchivePath[]>`
       SELECT slug, updated_at::text AS updated_at
       FROM archive_entries
       WHERE NOT (category = 'dialogue' AND dialogue_open)
@@ -406,11 +399,8 @@ export const getAllArchivePaths = unstable_cache(
         AND deleted_at IS NULL
         AND is_draft = false
     `;
-    return rows;
-  },
-  ["getAllArchivePaths", "v6"],
-  { tags: [cacheTags.archive] },
-);
+  return rows;
+}
 
 // Für die Admin-Action "Autolinking" (src/app/actions/autolink.ts) — braucht
 // id + rohen Markdown-Quelltext, unabhängig von Sichtbarkeit/Owner.
