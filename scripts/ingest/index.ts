@@ -3,7 +3,6 @@ import { ingestArchive } from "./archive";
 import { ingestCharacters } from "./characters";
 import { ingestMissionLogs } from "./missionLogs";
 import { ingestMissions } from "./missions";
-import { ingestTimeline } from "./timeline";
 import { resolveWikiLinks } from "./wikilinks";
 import { notifySubscribers } from "./notify";
 
@@ -112,9 +111,6 @@ async function runIngest(steps: Step[]) {
     // importierten Dateien), damit Wiki-Links auch dann aufgelöst werden,
     // wenn ihr Ziel in einem früheren/anderen Lauf importiert wurde.
     await resolveWikiLinks(sql);
-    // Timeline ebenfalls immer komplett neu aufbauen — liest source_md/
-    // metadata aller vier Tabellen, nicht nur der gerade importierten.
-    await ingestTimeline(sql);
     console.log("\n✅ Ingestion abgeschlossen");
     await notifySubscribers(
       sql,

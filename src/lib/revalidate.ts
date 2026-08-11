@@ -75,8 +75,9 @@ export function revalidateArchiveEntry(slug: string): string[] {
 }
 
 // Invalidiert nur den timeline-Tag. Wird beim Löschen von Inhalten
-// (contentDeleteActions) mit-aufgerufen, da Timeline-Ereignisse aus
-// Content-Markern abgeleitet werden (Ingest, scripts/ingest/timeline.ts).
+// (contentDeleteActions) weiterhin mit-aufgerufen; der Tag/die timeline_events-
+// Tabelle werden derzeit von nichts mehr gelesen (Timeline-Seite und -Ingest
+// entfernt), aber für eine mögliche künftige Timeline-Funktion beibehalten.
 export function revalidateTimeline(): string[] {
   return revalidate([cacheTags.timeline]);
 }

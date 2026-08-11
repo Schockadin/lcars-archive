@@ -322,13 +322,14 @@ CREATE INDEX IF NOT EXISTS idx_archive_links_target ON archive_links(target_id);
 -- ---------------------------------------------------------------------------
 -- timeline_events
 -- ---------------------------------------------------------------------------
--- Bei jedem Ingest komplett aus dem bereits importierten Datenbestand neu
--- aufgebaut (siehe scripts/ingest/timeline.ts) — kein LLM, kein eigener
--- Vault-Zugriff. Automatisch für Missionen (started_at/ended_at) und Archiv-
--- Einträge der Kategorie event/dialogue mit gesetztem log_date; alles andere
--- über den <!-- timeline: JJJJ-MM-TT | Titel | Kategorie -->-Marker im Body.
--- idx_..._created bedient getRecentActivitySince() (filtert nach created_at
--- statt nach dem In-Story-Datum event_date).
+-- Tabelle bleibt für eine mögliche künftige Timeline-/Chronik-Funktion
+-- erhalten, wird derzeit aber NICHT mehr befüllt: die frühere Timeline-Seite
+-- und der Ingest-Aufbau (ehem. scripts/ingest/timeline.ts) sind entfernt. Die
+-- <!-- timeline: JJJJ-MM-TT | Titel | Kategorie -->-Marker in Content-Bodys
+-- bleiben (erzeugen unsichtbare Sprungmarken, siehe remarkTimelineAnchors in
+-- src/lib/markdown.ts) und liefern die Datengrundlage, falls die Funktion
+-- später neu aufgebaut wird. idx_..._created bediente getRecentActivitySince()
+-- (filtert nach created_at statt nach dem In-Story-Datum event_date).
 CREATE TABLE IF NOT EXISTS timeline_events (
   id          SERIAL PRIMARY KEY,
   event_date  DATE NOT NULL,

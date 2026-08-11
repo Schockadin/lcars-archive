@@ -6,9 +6,8 @@ import { insertAtCursor } from "@/lib/textareaEdit";
 
 const inputClass = "rounded-lcars-pill lcars-input w-full";
 
-// Bekannte Marker-Kategorien (siehe scripts/ingest/timeline.ts) — bewusst
-// ohne mission_start/mission_end, die entstehen automatisch aus
-// started_at/ended_at und sind kein manueller Marker-Anwendungsfall.
+// Vorgeschlagene Marker-Kategorien — bewusst ohne mission_start/mission_end,
+// die einen automatischen (kein manueller Marker-) Anwendungsfall abdeckten.
 const CATEGORY_SUGGESTIONS = ["event", "dialogue", "sonstiges"];
 
 // Kalender-Icon für die iconOnly-Variante (Integration in MarkdownEditor.tsx'
@@ -34,10 +33,11 @@ function CalendarIcon() {
 
 // Admin/GM-Werkzeug oberhalb der Content-Textareas: fügt einen
 // <!-- timeline: JJJJ-MM-TT | Titel | Kategorie --> Marker an der aktuellen
-// Cursor-Position ein (Format wie in scripts/ingest/timeline.ts — Marker
-// werden beim Vault-Ingest zu Timeline-Ereignissen und erzeugen zusätzlich
-// eine unsichtbare Sprungmarke im gerenderten Inhalt, siehe
-// remarkTimelineAnchors in src/lib/markdown.ts). Manipuliert die
+// Cursor-Position ein. Der Marker erzeugt eine unsichtbare Sprungmarke im
+// gerenderten Inhalt (siehe remarkTimelineAnchors in src/lib/markdown.ts) und
+// hält die Datengrundlage für eine mögliche künftige Timeline-Funktion
+// vor (die frühere Timeline-Seite und ihr Ingest sind entfernt). Manipuliert
+// die
 // Ziel-Textarea direkt per DOM (textareaId), statt
 // über einen Callback/kontrollierten State zu gehen — alle Content-
 // Textareas in der App sind unkontrolliert (defaultValue), ein direkter
