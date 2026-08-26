@@ -93,6 +93,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   abonnierte Inhalte. Ein Service Worker macht bereits besuchte Seiten offline
   abrufbar und zeigt sonst eine eigene Offline-Ausweichseite (`/offline`);
   Anmeldung, neue Inhalte und Änderungen brauchen weiterhin eine Verbindung.
+- **Wählbare LCARS-Farbschemata** — angemeldete User wählen im Profil unter
+  „Darstellung“ ein Theme für die gesamte Oberfläche (Standard plus die echten
+  LCARS-Paletten Classic, Science, Nebula, Red Alert, Nemesis) und können jede
+  einzelne Akzentfarbe individuell überschreiben. Die Wahl gilt pro Konto, wird
+  ohne Flackern schon beim Seitenaufbau angewendet (Pre-Paint-Cookie) und bleibt
+  geräteübergreifend erhalten.
 - **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und Spielleitung.
 - **Markdown-Vault als Ursprungsimport** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte

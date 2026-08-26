@@ -637,6 +637,33 @@ export default function TutorialPage() {
               </p>
             </div>
           </LcarsDataRow>
+
+          <LcarsDataRow
+            value={11}
+            label="Farbschema"
+            color="var(--lcars-tertiary)"
+          >
+            <div className="lcars-text flex flex-col gap-[12px]">
+              <p>
+                Die Farbgebung der gesamten Oberfläche kannst du in deinem{" "}
+                <strong>Profil</strong> unter{" "}
+                <strong>„Darstellung“</strong> wählen. Neben dem{" "}
+                <strong>Standard</strong> stehen mehrere echte
+                LCARS-Farbschemata bereit (Classic, Science, Nebula, Red Alert,
+                Nemesis). Die Auswahl gilt nur für dich, wird sofort als Vorschau
+                angewendet und bleibt nach dem <strong>Speichern</strong> auf
+                allen deinen Geräten erhalten.
+              </p>
+              <p>
+                Darunter kannst du unter <strong>„Feineinstellung“</strong> jede
+                einzelne Akzentfarbe mit einer eigenen Farbe überschreiben. Mit{" "}
+                <strong>„Zurücksetzen“</strong> (pro Farbe) oder{" "}
+                <strong>„Alle zurücksetzen“</strong> kehrst du jederzeit zu den
+                Farben des gewählten Schemas zurück. Nicht vergessen,
+                anschließend zu speichern.
+              </p>
+            </div>
+          </LcarsDataRow>
         </div>
       </article>
     </>
