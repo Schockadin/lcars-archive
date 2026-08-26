@@ -53,6 +53,9 @@ export default function OpenAiUsagePanel() {
   }
 
   const currency = result?.currency ?? "usd";
+  // Guthaben-Werte kommen aus dem Legacy-Billing-Endpoint in USD — getrennt
+  // von der (evtl. abweichenden) Kosten-Währung formatieren.
+  const creditCurrency = result?.creditCurrency ?? "usd";
 
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
@@ -96,7 +99,7 @@ export default function OpenAiUsagePanel() {
               <div className="flex flex-wrap items-baseline gap-x-[10px]">
                 <dt className="text-lcars-ink-dim">Verfügbares Guthaben:</dt>
                 <dd className="text-lcars-ink-data font-[var(--font-mono)]">
-                  {formatCurrency(result.creditAvailable, currency)}
+                  {formatCurrency(result.creditAvailable, creditCurrency)}
                 </dd>
               </div>
               {typeof result.creditGranted === "number" &&
@@ -104,8 +107,8 @@ export default function OpenAiUsagePanel() {
                   <div className="flex flex-wrap items-baseline gap-x-[10px]">
                     <dt className="text-lcars-ink-dim">Guthaben genutzt:</dt>
                     <dd className="text-lcars-ink font-[var(--font-mono)]">
-                      {formatCurrency(result.creditUsed, currency)} /{" "}
-                      {formatCurrency(result.creditGranted, currency)}
+                      {formatCurrency(result.creditUsed, creditCurrency)} /{" "}
+                      {formatCurrency(result.creditGranted, creditCurrency)}
                     </dd>
                   </div>
                 )}

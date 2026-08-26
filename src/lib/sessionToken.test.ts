@@ -81,9 +81,12 @@ describe("sessionToken", () => {
     expect(decodeSessionToken("a.b.c")).toBeNull();
   });
 
-  it("returns null instead of throwing when SESSION_SECRET is missing", () => {
+  it("throws loudly (not silent null) when SESSION_SECRET is missing", () => {
+    // Ein fehlendes Secret ist eine Server-Fehlkonfiguration und soll sichtbar
+    // scheitern, statt jede Session still als ungültig zu behandeln (was alle
+    // Nutzer:innen app-weit unbemerkt abmelden würde).
     const token = encodeSessionToken(makePayload());
     delete process.env.SESSION_SECRET;
-    expect(decodeSessionToken(token)).toBeNull();
+    expect(() => decodeSessionToken(token)).toThrow();
   });
 });

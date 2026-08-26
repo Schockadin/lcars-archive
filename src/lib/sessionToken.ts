@@ -54,15 +54,21 @@ export function encodeSessionToken(payload: SessionPayload): string {
 }
 
 export function decodeSessionToken(token: string): SessionPayload | null {
-  // Ein einziger try/catch um die gesamte Prüfung: Neben kaputtem JSON kann
-  // auch getSecret() werfen (fehlendes SESSION_SECRET). Im Proxy soll ein
-  // solcher Fehler nie eine 500 auslösen, sondern schlicht als „keine gültige
-  // Session" gelten (→ Redirect auf /login).
-  try {
-    const [json, signature] = token.split(".");
-    if (!json || !signature) return null;
+  const [json, signature] = token.split(".");
+  if (!json || !signature) return null;
 
-    const expected = Buffer.from(sign(json));
+  // sign()/getSecret() bewusst AUSSERHALB des try: ein fehlendes SESSION_SECRET
+  // ist eine Server-Fehlkonfiguration und MUSS laut scheitern (wie zuvor in
+  // session.ts' decode()), nicht still als „ungültige Session" durchgehen —
+  // sonst erschienen bei fehlendem Secret plötzlich alle Nutzer:innen
+  // app-weit abgemeldet, ohne erkennbaren Fehler. Der Proxy ruft
+  // decodeSessionToken nur mit tatsächlich vorhandenem Cookie auf; ein hier
+  // geworfener Konfigurationsfehler soll auch dort sichtbar werden.
+  const expected = Buffer.from(sign(json));
+
+  // Nur die Token-INHALTS-Fehler (falsche Signatur-Länge, kaputtes base64/JSON)
+  // werden zu „ungültige Session" (null) — nicht die Fehlkonfiguration oben.
+  try {
     const actual = Buffer.from(signature);
     if (
       expected.length !== actual.length ||

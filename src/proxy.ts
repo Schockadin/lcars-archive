@@ -42,6 +42,11 @@ export function proxy(request: NextRequest): NextResponse {
   }
 
   const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+  // decodeSessionToken wirft NUR bei einer echten Server-Fehlkonfiguration
+  // (fehlendes SESSION_SECRET) — das ist beabsichtigt und soll laut scheitern
+  // (500), statt jede Session still als ungültig zu behandeln. Ungültige/
+  // manipulierte Cookies liefern dagegen null (→ Redirect auf /login). Ohne
+  // Cookie wird decode gar nicht erst aufgerufen.
   const session = token ? decodeSessionToken(token) : null;
 
   if (!session) {

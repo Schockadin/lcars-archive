@@ -29,6 +29,11 @@ export interface OpenAiUsageResult {
   creditAvailable?: number;
   creditGranted?: number;
   creditUsed?: number;
+  // Währung der Guthaben-Werte. Der Legacy-Endpoint /dashboard/billing/
+  // credit_grants rechnet in USD und liefert keine eigene Währung — deshalb
+  // getrennt von `currency` (Kosten-API, kann z.B. EUR sein), damit die
+  // Guthaben-Beträge nicht mit dem falschen Währungszeichen dargestellt werden.
+  creditCurrency?: string;
   // Hinweis, wenn das Guthaben nicht über die API abrufbar war.
   creditNote?: string;
   // Zeitpunkt der Abfrage (ISO), für die Anzeige „Stand: …".
@@ -138,6 +143,7 @@ export async function fetchOpenAiUsageAction(): Promise<OpenAiUsageResult> {
       creditGranted = json.total_granted;
       creditUsed = json.total_used;
     } else {
+      // (creditCurrency bleibt undefined, wenn keine Guthaben-Daten kamen.)
       creditNote =
         "Restguthaben ist über die API nicht abrufbar (nur im OpenAI-Dashboard einsehbar).";
     }
@@ -153,6 +159,8 @@ export async function fetchOpenAiUsageAction(): Promise<OpenAiUsageResult> {
     creditAvailable,
     creditGranted,
     creditUsed,
+    // Legacy-Billing rechnet in USD (siehe creditCurrency-Kommentar oben).
+    creditCurrency: creditAvailable != null ? "usd" : undefined,
     creditNote,
     fetchedAt: now.toISOString(),
   };
