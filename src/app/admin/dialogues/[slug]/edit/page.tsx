@@ -40,7 +40,7 @@ export default async function EditDialoguePage({
         <h1>Gespräch bearbeiten</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
-          <p className="text-lcars-text-dim text-[13px]">
+          <p className="text-lcars-ink-dim text-[13px]">
             Bearbeitet nur die Metadaten dieses Gesprächs — der eigentliche
             Gesprächsverlauf bleibt unverändert.
           </p>

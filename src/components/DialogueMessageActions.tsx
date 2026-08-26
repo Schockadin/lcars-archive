@@ -69,7 +69,7 @@ export default function DialogueMessageActions({
           name="bodyMarkdown"
           required
           defaultValue={sourceMd ?? ""}
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-primary min-h-[80px] resize-y font-mono"
+          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-ink-contrast outline-none focus:border-lcars-primary min-h-[80px] resize-y font-mono"
         />
         {/* Icon- statt Textbuttons (gleiches Muster wie
             PreviewConfirmFooter.tsx/die eigenen Icon-Buttons weiter unten in

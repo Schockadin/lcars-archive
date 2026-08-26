@@ -10,7 +10,7 @@ import { runAdminSqlQueryAction, type SqlQueryState } from "./sqlQueryActions";
 const LcarsCodeEditor = dynamic(() => import("@/components/lcars/CodeEditor"), {
   ssr: false,
   loading: () => (
-    <div className="lcars-input rounded-lcars min-h-[120px] px-[12px] py-[8px] text-lcars-text-dim text-[13px]">
+    <div className="lcars-input rounded-lcars min-h-[120px] px-[12px] py-[8px] text-lcars-ink-dim text-[13px]">
       Editor lädt…
     </div>
   ),
@@ -51,7 +51,7 @@ export default function SqlQueryPanel({ caps }: { caps: SqlPanelCapabilities }) 
 
   return (
     <div className="flex flex-col gap-[12px]">
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Erlaubt für dich: {allowed.join(", ") || "—"}. Einzelne Anweisung, max.
         500 Zeilen, 5 Sekunden Timeout. SELECT/WITH laufen schreibgeschützt;
         Fremdschlüssel werden hier NICHT zu Slugs aufgelöst (rohe id).
@@ -81,7 +81,7 @@ export default function SqlQueryPanel({ caps }: { caps: SqlPanelCapabilities }) 
 
       {state.rows && state.columns && state.columns.length > 0 && (
         <div className="flex flex-col gap-[8px]">
-          <p className="text-lcars-text-dim text-[13px]">
+          <p className="text-lcars-ink-dim text-[13px]">
             {state.rows.length} Zeile(n)
           </p>
           <div className="overflow-x-auto">

@@ -672,7 +672,7 @@ CREATE INDEX IF NOT EXISTS idx_news_seen_user ON news_seen(user_id);
 -- Vektor-Index des RAG-Systems (src/lib/embeddings.ts erzeugt die Zeilen,
 -- src/lib/rag.ts fragt sie ab). Jede Zeile ist EIN Chunk eines Inhalts
 -- (content_type + content_id) mit seinem Embedding-Vektor (OpenAI
--- text-embedding-3-small, auf 512 Dimensionen reduziert) und einer Kopie des
+-- text-embedding-3-small, volle 1536 Dimensionen) und einer Kopie des
 -- Chunk-Textes für den Prompt-Kontext.
 --
 -- RBAC-Felder (visibility/owner_id/is_draft/is_active) sind BEWUSST vom
@@ -705,7 +705,7 @@ CREATE TABLE IF NOT EXISTS content_embeddings (
   content_id   INT NOT NULL,
   chunk_index  INT NOT NULL,
   chunk_text   TEXT NOT NULL,
-  embedding    vector(512) NOT NULL,
+  embedding    vector(1536) NOT NULL,
   visibility   TEXT NOT NULL DEFAULT 'public'
                  CHECK (visibility IN ('private', 'gm', 'public')),
   owner_id     INT,

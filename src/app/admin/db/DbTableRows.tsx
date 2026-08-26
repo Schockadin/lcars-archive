@@ -54,7 +54,7 @@ export default function DbTableRows({
             {columns.map((c) => (
               <td
                 key={c}
-                className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text"
+                className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-ink"
               >
                 {formatValue(row[c], true)}
               </td>

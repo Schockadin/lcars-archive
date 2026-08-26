@@ -312,9 +312,13 @@ export const CHANGELOG: ChangelogEntry[] = [
   },
   {
     version: "1.23",
-    title: "Zugriffsschutz zentral über den Proxy",
+    title: "Proxy-Zugriffsschutz, besserer Archiv-Assistent & festes Textbild",
     items: [
       "Nicht angemeldete Besucher:innen werden beim Aufruf der geschützten Bereiche (eigenes Profil, Nutzerübersicht, Verwaltung) jetzt schon zentral auf die Anmeldeseite geleitet, bevor die Seite überhaupt zu laden beginnt — das fühlt sich unmittelbarer an als das bisherige Nachladen. An der eigentlichen Zugriffskontrolle und daran, wer was sehen darf, ändert sich nichts.",
+      "Der Archiv-Assistent findet Inhalte jetzt genauer: Die Vektor-Suche arbeitet mit der vollen Detailtiefe (1536 statt 512 Dimensionen). Nach dem Update müssen die Embeddings einmalig neu erzeugt werden (Verwaltung → RAG).",
+      "Neuer Verwaltungsbereich „RAG“: Hier lassen sich die Embeddings des Archiv-Assistenten neu erzeugen (vorher unter „Scripts“) und die OpenAI-Nutzung (Kosten des laufenden Monats, soweit verfügbar auch das Restguthaben) einsehen.",
+      "Die Schriftfarbe von Fließtext bleibt jetzt in jedem gewählten Farbthema gleich gut lesbar — die Farbthemen ändern weiterhin die Akzent- und Hintergrundfarben, aber nicht mehr die eigentliche Textfarbe.",
+      "Das Teilen-Menü (Teilen-Knopf) klappt jetzt linksbündig unter dem Knopf auf statt nach rechts — so bleibt es auch am linken Bildschirmrand vollständig sichtbar.",
     ],
   },
 ];

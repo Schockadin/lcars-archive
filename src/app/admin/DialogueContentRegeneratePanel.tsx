@@ -70,7 +70,7 @@ export default function DialogueContentRegeneratePanel() {
 
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Erzeugt für alle bereits abgeschlossenen Gespräche OHNE bestehenden
         Fließtext (Vorlesbare Zusammenfassung statt Karten-Ansicht) einen
         — nötig einmalig für Dialoge, die vor Einführung dieses Features

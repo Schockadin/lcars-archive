@@ -161,7 +161,7 @@ export default function DbTableExplorer({
       {/* Main content */}
       <div className="flex-1 min-w-0">
         {!selected && (
-          <p className="text-lcars-text-dim text-[13px]">
+          <p className="text-lcars-ink-dim text-[13px]">
             Tabelle aus der Liste auswählen.
           </p>
         )}
@@ -177,7 +177,7 @@ export default function DbTableExplorer({
                 <h3 className="text-lcars-primary font-bold text-[14px]">
                   {selected}
                 </h3>
-                <span className="text-lcars-text-dim text-[12px]">
+                <span className="text-lcars-ink-dim text-[12px]">
                   {data.total} Zeile(n)
                 </span>
               </div>
@@ -220,11 +220,11 @@ export default function DbTableExplorer({
             </div>
 
             {loading && (
-              <p className="text-lcars-text-dim text-[13px]">Lade…</p>
+              <p className="text-lcars-ink-dim text-[13px]">Lade…</p>
             )}
 
             {!loading && data.rows.length === 0 && (
-              <p className="text-lcars-text-dim text-[13px]">
+              <p className="text-lcars-ink-dim text-[13px]">
                 Keine Zeilen vorhanden.
               </p>
             )}
@@ -254,7 +254,7 @@ export default function DbTableExplorer({
                         {data.columns.map((c) => (
                           <td
                             key={c}
-                            className="py-[4px] pr-[12px] whitespace-nowrap text-lcars-text"
+                            className="py-[4px] pr-[12px] whitespace-nowrap text-lcars-ink"
                           >
                             {formatValue(row[c], true)}
                           </td>
@@ -390,7 +390,7 @@ function InsertRowModal({
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="text-lcars-primary">Neue Zeile — {table}</h2>
-        <p className="text-lcars-text-dim text-[12px]">
+        <p className="text-lcars-ink-dim text-[12px]">
           Leere Felder werden übersprungen (Postgres-Defaults greifen).
         </p>
 

@@ -33,7 +33,7 @@ export default async function AdminDialoguesPage() {
         <h1>Gespräche</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
-          <p className="text-lcars-text-dim text-[13px]">
+          <p className="text-lcars-ink-dim text-[13px]">
             Alle aktuell offenen Gespräche, unabhängig davon, ob du selbst
             daran teilnimmst. Ein Klick öffnet das Gespräch — ohne eigene
             Teilnahme rein lesend, ohne Antwortformular.

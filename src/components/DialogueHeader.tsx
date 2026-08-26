@@ -33,7 +33,7 @@ export default function DialogueHeader({
                     className="archive-chip archive-chip-static"
                     style={
                       {
-                        "--chip-color": "var(--lcars-text-dim)",
+                        "--chip-color": "var(--lcars-ink-dim)",
                       } as React.CSSProperties
                     }
                   >

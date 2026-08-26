@@ -45,7 +45,7 @@ export default function MissionParticipantsField({
       {characters.length === 0 ? (
         <p
           id={`${idPrefix}-participants`}
-          className="text-lcars-text-dim text-[13px] px-[12px]"
+          className="text-lcars-ink-dim text-[13px] px-[12px]"
         >
           Noch keine Charaktere vorhanden.
         </p>
@@ -70,7 +70,7 @@ export default function MissionParticipantsField({
               </option>
             ))}
           </select>
-          <label className="flex items-center gap-[6px] px-[12px] text-[13px] text-lcars-text-dim">
+          <label className="flex items-center gap-[6px] px-[12px] text-[13px] text-lcars-ink-dim">
             <input
               type="checkbox"
               checked={showAll}
@@ -78,7 +78,7 @@ export default function MissionParticipantsField({
             />
             Alle Charaktere anzeigen (auch inaktive)
           </label>
-          <p className="text-lcars-text-dim text-[13px] px-[12px]">
+          <p className="text-lcars-ink-dim text-[13px] px-[12px]">
             {selectedCount === 0
               ? "Keine Teilnehmer ausgewählt."
               : selectedCount === 1

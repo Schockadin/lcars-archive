@@ -66,7 +66,7 @@ export default function RoleEditor({
     <details className="lcars-panel p-[16px] flex flex-col gap-[12px]">
       <summary className="cursor-pointer flex items-center gap-[10px]">
         <span className="lcars-eyebrow text-lcars-primary">{role.label}</span>
-        <span className="text-lcars-text-dim text-[12px]">
+        <span className="text-lcars-ink-dim text-[12px]">
           {role.is_system ? "System-Rolle" : "Eigene Rolle"} · Schlüssel{" "}
           <code>{role.key}</code> · {role.permissions.length} Rechte ·{" "}
           {members.filter((m) => m.isMember).length} Mitglieder
@@ -121,7 +121,7 @@ export default function RoleEditor({
         <form action={membersAction} className="flex flex-col gap-[8px]">
           <input type="hidden" name="key" value={role.key} />
           <p className="lcars-eyebrow">Mitglieder</p>
-          <p className="text-lcars-text-dim text-[12px]">
+          <p className="text-lcars-ink-dim text-[12px]">
             Angehakt = User hat diese Rolle (als Zusatzrolle). Wer sie als
             Primärrolle hat, ist fest Mitglied — das ändert sich im{" "}
             <Link href="/admin/users" className="underline">
@@ -163,12 +163,12 @@ export default function RoleEditor({
                   <span
                     className={
                       m.isPrimary
-                        ? "text-lcars-text-dim"
-                        : "text-lcars-text-data"
+                        ? "text-lcars-ink-dim"
+                        : "text-lcars-ink-data"
                     }
                   >
                     {m.name}{" "}
-                    <span className="text-lcars-text-dim text-[12px]">
+                    <span className="text-lcars-ink-dim text-[12px]">
                       &lt;{m.email}&gt;{m.isPrimary ? " · Primärrolle" : ""}
                     </span>
                   </span>

@@ -72,7 +72,7 @@ export default function LinkAllContentPanel() {
 
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Erkennt in allen bestehenden Inhalten erwähnte Charaktere, Missionen und
         Archiv-Einträge und verlinkt sie automatisch. Läuft in Blöcken mit
         Fortschrittsanzeige, um Timeouts zu vermeiden. Nur Inhalte mit neuen

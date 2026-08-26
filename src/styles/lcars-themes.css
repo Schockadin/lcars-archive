@@ -2,8 +2,10 @@
    Nutzer-wählbare Farbschemata (Profil → /user). Die Farben stammen aus der
    kanonischen LCARS-Palette (thelcars.com/colors.php; Namen/Hex identisch zum
    trekcolors-Datensatz) und sind bewusst STARK unterschiedlich — jedes Theme
-   bringt eigene Akzente, Hintergründe und Textfarben, nicht bloß getönte
-   Varianten. Die IDs entsprechen exakt COLOR_THEMES in src/lib/themes.ts.
+   bringt eigene Akzente und Hintergründe, nicht bloß getönte Varianten. Die
+   Schriftfarbe des Fließtexts bleibt dagegen in jedem Theme konstant (feste
+   --lcars-ink-* Tokens in tokens.css). Die IDs entsprechen exakt COLOR_THEMES
+   in src/lib/themes.ts.
 
    Anwendung: src/app/layout.tsx setzt vor dem ersten Paint per Init-Skript
    `data-theme="…"` auf <html> (aus dem neo_theme-Cookie). Das Default-Theme
@@ -39,12 +41,9 @@ html[data-theme] {
   --color-lcars-surface: var(--lcars-surface);
   --color-lcars-surface-2: var(--lcars-surface-2);
   --color-lcars-border: var(--lcars-border);
-  --color-lcars-text: var(--lcars-text);
-  --color-lcars-text-dim: var(--lcars-text-dim);
-  --color-lcars-text-data: var(--lcars-text-data);
-  --color-lcars-text-contrast: var(--lcars-text-contrast);
-  --color-lcars-text-light: var(--lcars-text-light);
-  --color-lcars-text-dark: var(--lcars-text-dark);
+  /* Schriftfarben werden bewusst NICHT je Theme umgehängt: Der Fließtext nutzt
+     die festen --lcars-ink-* / text-lcars-ink-* Tokens (siehe tokens.css), die
+     in jedem Farbthema konstant bleiben. */
 }
 
 /* ── Classic — warmes TNG-Gold (Atomic Tangerine / Hopbush / Anakiwa) ── */
@@ -62,13 +61,6 @@ html[data-theme="classic"] {
   --lcars-surface: #201603;
   --lcars-surface-2: #2e2008;
   --lcars-border: #5c3f0e;
-
-  --lcars-text: #ffcc99; /* tanoi */
-  --lcars-text-dim: #b39670;
-  --lcars-text-data: #99ccff;
-  --lcars-text-contrast: #f7ecd6;
-  --lcars-text-light: #ffe4bf;
-  --lcars-text-dark: #120b00;
 }
 
 /* ── Science — kühle Blautöne (Anakiwa / Melrose / Dodger) ───────────── */
@@ -86,13 +78,6 @@ html[data-theme="science"] {
   --lcars-surface: #061426;
   --lcars-surface-2: #0c2038;
   --lcars-border: #1d3f6b;
-
-  --lcars-text: #ccddff; /* periwinkle */
-  --lcars-text-dim: #7f92b8;
-  --lcars-text-data: #99ccff;
-  --lcars-text-contrast: #e6eefb;
-  --lcars-text-light: #d6e4ff;
-  --lcars-text-dark: #00060f;
 }
 
 /* ── Nebula — Violett & Magenta (Lilac / Hopbush / Cosmic) ───────────── */
@@ -110,13 +95,6 @@ html[data-theme="nebula"] {
   --lcars-surface: #180a20;
   --lcars-surface-2: #241030;
   --lcars-border: #5c3a6e; /* eggplant-nah */
-
-  --lcars-text: #e6c7e6;
-  --lcars-text-dim: #a888b8;
-  --lcars-text-data: #cc99cc;
-  --lcars-text-contrast: #f2e6f5;
-  --lcars-text-light: #f0d9f5;
-  --lcars-text-dark: #0c0410;
 }
 
 /* ── Red Alert — Rot & Rost (Red Damask / Rust / Bourbon) ────────────── */
@@ -134,13 +112,6 @@ html[data-theme="redalert"] {
   --lcars-surface: #1e0808;
   --lcars-surface-2: #2c0c0c;
   --lcars-border: #5c1e18;
-
-  --lcars-text: #f0a090;
-  --lcars-text-dim: #b3766a;
-  --lcars-text-data: #ffcc66;
-  --lcars-text-contrast: #f7e0da;
-  --lcars-text-light: #ffd6c8;
-  --lcars-text-dark: #100303;
 }
 
 /* ── Nemesis — gedämpftes Stahlblau/Grau (Blue Bell / Lavender / Danub) ─ */
@@ -158,11 +129,4 @@ html[data-theme="nemesis"] {
   --lcars-surface: #0e1320;
   --lcars-surface-2: #171d30;
   --lcars-border: #2c3550;
-
-  --lcars-text: #c0c8e0;
-  --lcars-text-dim: #808aa8;
-  --lcars-text-data: #9fb8e0;
-  --lcars-text-contrast: #e6e9f2;
-  --lcars-text-light: #d8dcec;
-  --lcars-text-dark: #05070d;
 }

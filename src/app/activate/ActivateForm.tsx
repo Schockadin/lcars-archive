@@ -31,7 +31,7 @@ export default function ActivateForm({ token }: { token: string }) {
           autoFocus
           autoComplete="new-password"
           minLength={10}
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-primary"
+          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-ink-contrast outline-none focus:border-lcars-primary"
         />
       </div>
 
@@ -45,7 +45,7 @@ export default function ActivateForm({ token }: { token: string }) {
           required
           autoComplete="new-password"
           minLength={10}
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-primary"
+          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-ink-contrast outline-none focus:border-lcars-primary"
         />
       </div>
 

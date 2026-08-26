@@ -20,7 +20,7 @@ export default function ToastTestPanel() {
 
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Löst einen Toast mit der eingegebenen Nachricht und dem gewählten Status
         aus — zum Prüfen der farblichen Markierung und des Stapelverhaltens.
       </p>

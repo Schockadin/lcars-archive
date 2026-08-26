@@ -24,7 +24,7 @@
 
 .lcars-text > * > a {
   text-decoration: none;
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
   transition: color 250ms;
 }
 .lcars-text > * > a:hover {
@@ -37,7 +37,7 @@
    nur mit cursor: pointer zusätzlich. */
 .lcars-wikilink,
 .lcars-link-text {
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
   text-decoration: none;
   transition: 250ms;
 }
@@ -76,7 +76,7 @@
 /* Generischer Leerzustand-Hinweis ("Noch keine Einträge…") — domänenweit
    wiederverwendet (Charaktere, Missionen, Archiv, Suche, User-Bereich). */
 .lcars-empty-state {
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
   font-style: italic;
   font-size: 14px;
 }
@@ -113,15 +113,15 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   line-height: 1.25;
-  color: var(--lcars-text-contrast);
+  color: var(--lcars-ink-contrast);
   transition:
     color 150ms,
     background 150ms,
     border-color 150ms;
 }
 .lcars-toc-link:hover {
-  color: var(--lcars-text);
-  border-left-color: var(--lcars-text-dim);
+  color: var(--lcars-ink);
+  border-left-color: var(--lcars-ink-dim);
 }
 .lcars-toc-link[aria-current="true"] {
   color: var(--lcars-bg);
@@ -164,7 +164,9 @@
 .follow-share-menu {
   position: absolute;
   top: calc(100% + 6px);
-  right: 0;
+  /* Linksbündig zum Share-Button verankert (oben links statt oben rechts),
+     damit das Menü immer an der linken Kante des Buttons ausklappt. */
+  left: 0;
   z-index: 50;
   display: flex;
   flex-direction: column;
@@ -181,7 +183,7 @@
   border: none;
   border-radius: 8px;
   text-align: left;
-  color: var(--lcars-text-light);
+  color: var(--lcars-ink-light);
   font-size: 14px;
   cursor: pointer;
 }
@@ -227,7 +229,7 @@
   flex-direction: column;
   gap: 4px;
   font-size: 13px;
-  color: var(--lcars-text-light);
+  color: var(--lcars-ink-light);
   overflow-wrap: anywhere;
 }
 /* Vollbild-Lightbox mit optionalem Bild-Karussell — geteilt zwischen
@@ -357,7 +359,7 @@
   margin-left: auto;
 }
 .markdown-editor-preview {
-  border: solid 1px var(--lcars-text-data);
+  border: solid 1px var(--lcars-ink-data);
   border-radius: 12px;
   padding: 12px 16px;
   overflow-y: auto;
@@ -422,7 +424,7 @@
   white-space: nowrap;
 }
 .markdown-hint-popover-row span:last-child {
-  color: var(--lcars-text-light);
+  color: var(--lcars-ink-light);
 }
 
 /* /tutorial (TutorialPage) — Cheatsheet-Tabelle + Inline-Code, gemeinsamer
@@ -430,7 +432,7 @@
 .markdown-hint-popover-row code,
 .tutorial-content code {
   font-family: var(--font-share-tech-mono), monospace;
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
   background: var(--lcars-surface-2);
   padding: 1px 6px;
   border-radius: 4px;
@@ -584,7 +586,7 @@
 }
 
 .news-row--static .news-row-title {
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
   text-decoration: line-through;
 }
 
@@ -608,7 +610,7 @@
 .news-row-title {
   font-size: 14px;
   font-weight: 700;
-  color: var(--lcars-text-light);
+  color: var(--lcars-ink-light);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -618,7 +620,7 @@
   font-family: var(--font-share-tech-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.03em;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -649,7 +651,7 @@
   border: none;
   border-radius: 50%;
   background: var(--lcars-surface-2);
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
   font-size: 15px;
   line-height: 1;
   cursor: pointer;
@@ -657,7 +659,7 @@
 
 .news-row-dismiss:hover {
   background: var(--lcars-quinary);
-  color: var(--lcars-text-contrast);
+  color: var(--lcars-ink-contrast);
 }
 
 /* Fortschrittsbalken (z.B. Bulk-Autolinking, LinkAllContentPanel.tsx). */
@@ -858,11 +860,11 @@
   height: 5px;
   /* background: linear-gradient(
     to right,
-    var(--lcars-text-data),
+    var(--lcars-ink-data),
     80%,
     var(--lcars-bg)
   ); */
-  background-color: var(--lcars-text-data);
+  background-color: var(--lcars-ink-data);
   border-radius: 5px;
   margin: 16px 0px;
 }
@@ -981,7 +983,7 @@
   flex-shrink: 0;
   width: 16px;
   height: 16px;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
 }
 .db-explorer-item[aria-current="true"] .db-explorer-item-icon {
   color: var(--lcars-primary);
@@ -997,7 +999,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
   padding: 12px 10px 4px;
 }
 .db-explorer-toolbar {
@@ -1012,5 +1014,5 @@
   align-items: center;
   gap: 8px;
   font-size: 12px;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
 }

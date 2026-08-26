@@ -219,7 +219,7 @@ export default function NotificationSettingsForm({
             <span className="lcars-eyebrow">
               Über alle Inhalte benachrichtigen
             </span>
-            <p className="text-lcars-text-dim text-[13px]">
+            <p className="text-lcars-ink-dim text-[13px]">
               Zusätzlich zu eigenen Abos: Mail/Push bei jedem Anlegen/
               Bearbeiten der ausgewählten Inhaltstypen durch beliebige User.
             </p>
@@ -268,10 +268,10 @@ export default function NotificationSettingsForm({
         </p>
 
         {deviceStatus === "checking" && (
-          <p className="text-lcars-text-dim">Prüfe Status…</p>
+          <p className="text-lcars-ink-dim">Prüfe Status…</p>
         )}
         {deviceStatus === "unsupported" && (
-          <p className="text-lcars-text-dim">
+          <p className="text-lcars-ink-dim">
             Push-Benachrichtigungen werden von diesem Browser nicht unterstützt.
           </p>
         )}

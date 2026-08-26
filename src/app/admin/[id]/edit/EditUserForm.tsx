@@ -71,7 +71,7 @@ export default function EditUserForm({
           ))}
         </select>
         {isSelf && (
-          <p className="text-lcars-text-dim">
+          <p className="text-lcars-ink-dim">
             Du kannst dir nicht selbst die Admin-Rolle entziehen.
           </p>
         )}
@@ -79,7 +79,7 @@ export default function EditUserForm({
 
       <fieldset className="flex flex-col gap-[8px]">
         <legend className="lcars-eyebrow">Zusätzliche Rollen</legend>
-        <p className="text-lcars-text-dim text-[13px]">
+        <p className="text-lcars-ink-dim text-[13px]">
           Ein User kann mehrere Rollen haben — die effektiven Rechte sind die
           Vereinigung aller Rollen (die oben gewählte Primärrolle zählt immer
           dazu). Die einzelnen Rechte lassen sich darunter feinjustieren.

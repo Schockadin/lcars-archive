@@ -27,13 +27,30 @@
   --lcars-surface-2: #1a1838;
   --lcars-border: #2d2550;
 
-  /* Typografie-Farben */
+  /* Typografie-Farben (Akzent-abhängig — die Nutzer-Farbthemes in
+     lcars-themes.css dürfen diese NICHT mehr überschreiben; für den
+     tatsächlichen Fließtext werden stattdessen die festen --lcars-ink-*
+     Tokens unten verwendet). Bleiben als Basiswerte definiert, damit evtl.
+     verbliebene Alt-Referenzen weiterhin die Standard-Farbe erhalten. */
   --lcars-text: #c8b8ff;
   --lcars-text-dim: hsl(250, 30%, 70%);
   --lcars-text-data: #4fc3f7;
   --lcars-text-contrast: #ededed;
   --lcars-text-light: #edefd2;
   --lcars-text-dark: #08081a;
+
+  /* FESTE Schriftfarben-Tokens ("ink") — immer die Werte des Standard-Themes,
+     bewusst NICHT über data-theme oder theme_overrides veränderbar (in
+     lcars-themes.css gibt es KEINE --lcars-ink-* Overrides). So bleibt der
+     eigentliche Lesetext in jedem Farbthema gleich gut lesbar, während nur die
+     Akzentfarben (primary…senary) wechseln. Der gesamte Fließtext nutzt diese
+     Tokens (bzw. die daraus erzeugten Tailwind-Utilities text-lcars-ink*). */
+  --lcars-ink: #c8b8ff;
+  --lcars-ink-dim: hsl(250, 30%, 70%);
+  --lcars-ink-data: #4fc3f7;
+  --lcars-ink-contrast: #ededed;
+  --lcars-ink-light: #edefd2;
+  --lcars-ink-dark: #08081a;
 
   /* Strukturmaße */
   --lcars-radius-pill: 24px;
@@ -88,6 +105,18 @@
   --color-lcars-text-contrast: #ededed;
   --color-lcars-text-light: #edefd2;
   --color-lcars-text-dark: #08081a;
+
+  /* Feste Schriftfarben-Utilities: text-lcars-ink, text-lcars-ink-dim,
+     text-lcars-ink-data, text-lcars-ink-contrast, text-lcars-ink-light,
+     text-lcars-ink-dark. Werte = Standard-Theme, in lcars-themes.css bewusst
+     NICHT über data-theme umgehängt (anders als die --color-lcars-text*
+     oben) — damit bleiben sie in jedem Farbthema konstant. */
+  --color-lcars-ink: #c8b8ff;
+  --color-lcars-ink-dim: #6a5f9e;
+  --color-lcars-ink-data: #4fc3f7;
+  --color-lcars-ink-contrast: #ededed;
+  --color-lcars-ink-light: #edefd2;
+  --color-lcars-ink-dark: #08081a;
 
   /* ── Schriften ───────────────────────────────────────────────────
      Erzeugt: font-lcars, font-lcars-mono

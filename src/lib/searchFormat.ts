@@ -7,7 +7,7 @@ export const TYPE_COLOR: Record<SearchResultType, string> = {
   character: "var(--lcars-tertiary)",
   mission: "var(--lcars-primary)",
   log: "var(--lcars-secondary)",
-  archive: "var(--lcars-text-data)",
+  archive: "var(--lcars-ink-data)",
 };
 
 // Plural-Label für den Typ-Filter auf /search.

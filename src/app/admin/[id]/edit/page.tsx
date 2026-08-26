@@ -134,7 +134,7 @@ function DetailRow({
   return (
     <div className="flex flex-wrap gap-[8px]">
       <span className="lcars-eyebrow w-[160px] shrink-0">{label}</span>
-      <span className="text-lcars-text-data">{value}</span>
+      <span className="text-lcars-ink-data">{value}</span>
     </div>
   );
 }

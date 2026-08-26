@@ -66,7 +66,7 @@ export default function TypographyFixPanel() {
 
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Wandelt gerade Anführungszeichen ({'"'}) in allen bestehenden Inhalten
         in deutsche typografische Anführungszeichen („…“) um und rendert die
         Inhalte neu. Läuft in Blöcken mit Fortschrittsanzeige. Nur Inhalte mit

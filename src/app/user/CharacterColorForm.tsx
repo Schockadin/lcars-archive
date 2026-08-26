@@ -59,7 +59,7 @@ export default function CharacterColorForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-[16px]">
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Diese Farbe färbt die wörtliche Rede dieses Charakters im
         Fließtext-Modus abgeschlossener Gespräche sowie seine
         Nachrichten-Karten in Gesprächen ein. Bereits von anderen Charakteren

@@ -99,7 +99,7 @@ export default function InstallPwaPrompt() {
 
   if (status === "ios") {
     return (
-      <p className="text-lcars-text-dim">
+      <p className="text-lcars-ink-dim">
         Als App installieren: Teilen-Symbol antippen, dann „Zum
         Home-Bildschirm“.
       </p>
@@ -108,7 +108,7 @@ export default function InstallPwaPrompt() {
 
   if (status === "unsupported") {
     return (
-      <p className="text-lcars-text-dim">
+      <p className="text-lcars-ink-dim">
         Dieser Browser unterstützt die Installation als App nicht. Probiere z.B.
         Chrome, Edge oder Samsung Internet.
       </p>

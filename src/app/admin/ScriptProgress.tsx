@@ -38,7 +38,7 @@ export default function ScriptProgress({
         )}
       </div>
       {caption && (
-        <p className="text-lcars-text-dim text-[12px]">{caption}</p>
+        <p className="text-lcars-ink-dim text-[12px]">{caption}</p>
       )}
     </div>
   );

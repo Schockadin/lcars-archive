@@ -6,7 +6,7 @@ import { escapeLikePattern } from "@/lib/search";
 import type { Viewer } from "@/lib/visibility";
 
 // Retrieval- + Generation-Pipeline des RAG-Systems.
-//   1. Frage → OpenAI-Embedding (dieselben 512 Dimensionen wie der Index).
+//   1. Frage → OpenAI-Embedding (dieselben 1536 Dimensionen wie der Index).
 //   2. Vektorsuche in content_embeddings mit Cosine-Distance (<=>) + RBAC-
 //      Vorfilter (spiegelt canView() aus src/lib/visibility.ts auf den
 //      denormalisierten Feldern der Embedding-Zeile).

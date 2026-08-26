@@ -85,7 +85,7 @@ export default function DialogueReplyForm({
       {single ? (
         <p className="lcars-eyebrow">
           Antworten als{" "}
-          <span className="text-lcars-text-contrast">
+          <span className="text-lcars-ink-contrast">
             {replyCharacters[0].name}
           </span>
           <input type="hidden" name="characterId" value={replyCharacters[0].id} />
@@ -117,7 +117,7 @@ export default function DialogueReplyForm({
         required
         className="rounded-lcars-pill lcars-input min-h-[150px] resize-y font-mono"
       />
-      <p className="text-lcars-text text-[14px]">
+      <p className="text-lcars-ink text-[14px]">
         <MarkdownFormatHint />
       </p>
 

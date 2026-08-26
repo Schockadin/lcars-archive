@@ -167,7 +167,7 @@ export default async function UserPublicProfilePage({
               <LcarsDataRow
                 value={dialogues.length}
                 label="Gespräche"
-                color="var(--lcars-text-data)"
+                color="var(--lcars-ink-data)"
               >
                 <div className="flex flex-col gap-[6px]">
                   {dialogues.map((d) => (

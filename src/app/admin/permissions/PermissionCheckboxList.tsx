@@ -26,7 +26,7 @@ export default function PermissionCheckboxList({
           />
           <span className="flex flex-col">
             <span className="lcars-eyebrow">{PERMISSION_LABELS[perm].label}</span>
-            <span className="text-lcars-text-dim text-[12px]">
+            <span className="text-lcars-ink-dim text-[12px]">
               {PERMISSION_LABELS[perm].description}
             </span>
           </span>

@@ -157,7 +157,7 @@ export default function CharacterSheets({
       {sheets == null && <p className="text-[13px]">Lädt…</p>}
 
       {sheets != null && sheets.length === 0 && (
-        <p className="text-[13px] text-lcars-text-dim">
+        <p className="text-[13px] text-lcars-ink-dim">
           Noch keine Bögen hinterlegt.
         </p>
       )}
@@ -225,7 +225,7 @@ export default function CharacterSheets({
             <UploadIcon />
             {pending ? "Wird hochgeladen…" : "PDF hochladen"}
           </label>
-          <p className="text-[12px] text-lcars-text-dim">
+          <p className="text-[12px] text-lcars-ink-dim">
             Nur PDF, bis 20 MB pro Datei.
           </p>
         </div>

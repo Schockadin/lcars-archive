@@ -45,14 +45,14 @@
   left: 50%;
   width: 1px;
   transform: translateX(-50%);
-  background: var(--lcars-text-data);
+  background: var(--lcars-ink-data);
   z-index: 0;
 }
 
 /* Hervorhebung des Suchbegriffs im Snippet auf /search. */
 .search-snippet-mark {
   background: var(--lcars-surface-2);
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
   border-radius: 2px;
   padding: 0 2px;
   font-weight: bold;

@@ -28,7 +28,7 @@ export default async function AdminErrorLogPage() {
         <h1>Fehler-Log</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
-          <p className="text-lcars-text-dim text-[13px]">
+          <p className="text-lcars-ink-dim text-[13px]">
             Die letzten {entries.length} geloggten Serverfehler — sowohl nicht
             abgefangene Abstürze (Route/Render/Action, zeigen der betroffenen
             Person die 500-Seite) als auch bereits an Ort und Stelle

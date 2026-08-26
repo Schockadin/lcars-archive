@@ -142,7 +142,7 @@ export default function UserBackupPanel() {
 
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Exportiert alle registrierten User (inkl. Passwort-Hash) als JSON-Datei.
         Der Import legt anhand der E-Mail-Adresse fehlende User neu an bzw.
         überschreibt bestehende vollständig mit dem Stand der Datei. Die Datei
@@ -222,7 +222,7 @@ export default function UserBackupPanel() {
         {r2Backups !== null && (
           <div className="flex flex-wrap items-center gap-[12px]">
             {r2Backups.length === 0 ? (
-              <p className="text-lcars-text-dim text-[13px]">
+              <p className="text-lcars-ink-dim text-[13px]">
                 Keine Backups im Bucket gefunden.
               </p>
             ) : (
@@ -230,7 +230,7 @@ export default function UserBackupPanel() {
                 <select
                   value={selectedR2Key}
                   onChange={(e) => setSelectedR2Key(e.target.value)}
-                  className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-primary"
+                  className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-ink-contrast outline-none focus:border-lcars-primary"
                 >
                   {r2Backups.map((b) => (
                     <option key={b.key} value={b.key}>

@@ -43,7 +43,7 @@ export default async function AdminAuditLogPage() {
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[16px]">
             <h2 className="text-lcars-primary">Sicherheitsrelevante Aktionen</h2>
-            <p className="text-lcars-text-dim text-[13px]">
+            <p className="text-lcars-ink-dim text-[13px]">
               Die letzten {entries.length} sicherheitsrelevanten
               Useraccount-Actions (anlegen, Rolle ändern, (de)aktivieren,
               löschen, Passwort-Reset auslösen) — wer hat wann was gemacht.
@@ -55,7 +55,7 @@ export default async function AdminAuditLogPage() {
             <h2 className="text-lcars-primary">
               Content-Aktivität (letzte {CONTENT_ACTIVITY_DAYS} Tage)
             </h2>
-            <p className="text-lcars-text-dim text-[13px]">
+            <p className="text-lcars-ink-dim text-[13px]">
               Alle Charaktere, Missionen, Mission-Logs und Archiv-Einträge, die
               in den letzten {CONTENT_ACTIVITY_DAYS} Tagen hinzugefügt,
               bearbeitet oder gelöscht wurden. „Von“ zeigt den Owner (bzw. bei

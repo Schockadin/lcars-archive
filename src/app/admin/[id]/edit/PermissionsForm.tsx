@@ -44,7 +44,7 @@ export default function PermissionsForm({
   return (
     <form action={formAction} className="flex flex-col gap-[12px]">
       <input type="hidden" name="userId" value={userId} />
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Häkchen = Recht ist wirksam. Weicht es vom Rollen-Default ab, wird es als
         individuelles Override gespeichert; stimmt es wieder mit den Rollen
         überein, wird das Override entfernt.
@@ -67,7 +67,7 @@ export default function PermissionsForm({
               <span className="flex flex-col">
                 <span className="lcars-eyebrow">
                   {PERMISSION_LABELS[perm].label}{" "}
-                  <span className="text-lcars-text-dim">
+                  <span className="text-lcars-ink-dim">
                     ({isOverridden
                       ? isEffective
                         ? "überschrieben: gewährt"
@@ -78,7 +78,7 @@ export default function PermissionsForm({
                     )
                   </span>
                 </span>
-                <span className="text-lcars-text-dim text-[12px]">
+                <span className="text-lcars-ink-dim text-[12px]">
                   {PERMISSION_LABELS[perm].description}
                 </span>
               </span>

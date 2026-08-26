@@ -120,11 +120,11 @@ export default function UsersTable({
             <div key={u.id} className="users-table-row">
               <Link
                 href={`/users/${u.id}`}
-                className="users-table-name font-lcars text-lcars-text-data underline"
+                className="users-table-name font-lcars text-lcars-ink-data underline"
               >
                 {u.name}
               </Link>
-              <span className="users-table-role text-lcars-text-dim">
+              <span className="users-table-role text-lcars-ink-dim">
                 {ROLE_LABELS[u.role]}
               </span>
               <div className="users-table-actions">

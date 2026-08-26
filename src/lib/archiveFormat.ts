@@ -12,7 +12,7 @@ export const CATEGORY_CONFIG: Record<
   dialogue: {
     label: "Gespräch",
     plural: "Gespräche",
-    color: "var(--lcars-text-data)",
+    color: "var(--lcars-ink-data)",
   },
   person: { label: "Person", plural: "Personen", color: "var(--lcars-tertiary)" },
   location: { label: "Ort", plural: "Orte", color: "var(--lcars-senary)" },
@@ -45,7 +45,7 @@ export const CATEGORY_CONFIG: Record<
   other: {
     label: "Sonstiges",
     plural: "Sonstiges",
-    color: "var(--lcars-text-dim)",
+    color: "var(--lcars-ink-dim)",
   },
 };
 

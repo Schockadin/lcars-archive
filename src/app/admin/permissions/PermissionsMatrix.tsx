@@ -120,7 +120,7 @@ export default function PermissionsMatrix({ roles }: { roles: MatrixRole[] }) {
                   <span className="text-lcars-primary font-bold">
                     {role.label}
                   </span>
-                  <span className="text-lcars-text-dim text-[11px] font-normal normal-case">
+                  <span className="text-lcars-ink-dim text-[11px] font-normal normal-case">
                     {role.is_system ? "System" : "Eigen"} · {role.memberCount}{" "}
                     Mitgl.
                   </span>
@@ -154,11 +154,11 @@ export default function PermissionsMatrix({ roles }: { roles: MatrixRole[] }) {
           {(PERMISSIONS as readonly Permission[]).map((perm) => (
             <tr key={perm}>
               <th scope="row" className="lcars-perm-matrix-row">
-                <span className="block text-lcars-text-data">
+                <span className="block text-lcars-ink-data">
                   {PERMISSION_LABELS[perm].label}
                 </span>
                 <span
-                  className="block text-lcars-text-dim text-[11px] font-normal normal-case"
+                  className="block text-lcars-ink-dim text-[11px] font-normal normal-case"
                   title={PERMISSION_LABELS[perm].description}
                 >
                   {PERMISSION_LABELS[perm].description}

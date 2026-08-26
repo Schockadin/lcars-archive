@@ -99,7 +99,7 @@ export default function ServerErrorContent({
       </div>
 
       {/* Statuszeile wie ein LCARS-Systemmeldung */}
-      <div className="uppercase tracking-[0.2em] text-sm text-lcars-text-data">
+      <div className="uppercase tracking-[0.2em] text-sm text-lcars-ink-data">
         FEHLER // SYSTEMSTÖRUNG
       </div>
 
@@ -112,7 +112,7 @@ export default function ServerErrorContent({
 
       {/* Kurze Erklärung */}
       <p
-        className="max-w-[var(--lcars-content-w)] leading-relaxed text-lcars-text"
+        className="max-w-[var(--lcars-content-w)] leading-relaxed text-lcars-ink"
         style={{ fontSize: "16px" }}
       >
         Bei der Verarbeitung ist ein unerwarteter Fehler aufgetreten. Die
@@ -132,11 +132,11 @@ export default function ServerErrorContent({
           </summary>
           <div className="mt-[8px] flex flex-col gap-[6px] text-[12px]">
             {detail.routePath && (
-              <p className="text-lcars-text-data">
+              <p className="text-lcars-ink-data">
                 Route: {detail.routePath} ({detail.routeType})
               </p>
             )}
-            <pre className="overflow-x-auto rounded-[8px] border border-lcars-border bg-lcars-surface-2 p-[12px] font-mono text-lcars-text-contrast whitespace-pre-wrap">
+            <pre className="overflow-x-auto rounded-[8px] border border-lcars-border bg-lcars-surface-2 p-[12px] font-mono text-lcars-ink-contrast whitespace-pre-wrap">
               {detail.message}
               {detail.stack ? `\n\n${detail.stack}` : ""}
             </pre>

@@ -106,7 +106,7 @@ export default async function UserPage() {
               <DataRow
                 label="Charakterfarben"
                 value={characterColors.length}
-                accentColor="var(--lcars-text-data)"
+                accentColor="var(--lcars-ink-data)"
                 color="var(--lcars-primary)"
               >
                 <section

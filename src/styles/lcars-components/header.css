@@ -49,9 +49,9 @@
   max-height: 34px;
   padding: 0 12px;
   background: var(--lcars-surface);
-  border: 1px solid var(--lcars-text);
+  border: 1px solid var(--lcars-ink);
   border-radius: 100vmax;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
   max-width: 250px;
   margin-bottom: 5px;
 }
@@ -68,12 +68,12 @@
   background: transparent;
   border: none;
   outline: none;
-  color: var(--lcars-text-light);
+  color: var(--lcars-ink-light);
   font-family: var(--font-share-tech-mono), monospace;
   font-size: 14px;
 }
 .lcars-search-input::placeholder {
-  color: var(--lcars-text);
+  color: var(--lcars-ink);
 }
 .lcars-search-input::-webkit-search-cancel-button {
   -webkit-appearance: none;
@@ -122,7 +122,7 @@
 }
 .lcars-search-label {
   font-size: 14px;
-  color: var(--lcars-text-light);
+  color: var(--lcars-ink-light);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -132,13 +132,13 @@
   font-size: 11px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
 }
 .lcars-search-empty {
   padding: 10px 12px;
   font-family: var(--font-share-tech-mono), monospace;
   font-size: 13px;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
 }
 /* "Alle Ergebnisse anzeigen…"-Zeile am Ende des Dropdowns — kein Dot/Label,
    daher zentriert und optisch als eigene Aktion abgesetzt. */
@@ -360,7 +360,7 @@
   transition: color 150ms;
 }
 .lcars-footer-version:hover {
-  color: var(--lcars-text-contrast);
+  color: var(--lcars-ink-contrast);
 }
 
 /* ── Responsive Overrides ─────────────────────────────────────────── */

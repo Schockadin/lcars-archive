@@ -61,7 +61,7 @@
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--lcars-text-contrast);
+  color: var(--lcars-ink-contrast);
   line-height: 1;
 }
 
@@ -70,7 +70,7 @@
   font-size: 19px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
   justify-self: right;
 }
 

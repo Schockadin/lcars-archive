@@ -97,7 +97,7 @@ export default function ThemeSettingsForm({
       <input type="hidden" name="overrides" value={JSON.stringify(overrides)} />
 
       <div className="flex flex-col gap-[8px]">
-        <p className="text-lcars-text-dim text-[13px]">
+        <p className="text-lcars-ink-dim text-[13px]">
           Wähle ein Basis-Farbschema. Die Vorschau erscheint sofort; gespeichert
           wird sie erst mit „Speichern“ und bleibt dann bei jedem Login erhalten.
         </p>
@@ -138,12 +138,12 @@ export default function ThemeSettingsForm({
                 <span className="flex flex-col">
                   <span
                     className={`lcars-eyebrow ${
-                      isSelected ? "text-lcars-primary" : "text-lcars-text-light"
+                      isSelected ? "text-lcars-primary" : "text-lcars-ink-light"
                     }`}
                   >
                     {theme.label}
                   </span>
-                  <span className="text-lcars-text-dim text-[12px]">
+                  <span className="text-lcars-ink-dim text-[12px]">
                     {theme.description}
                   </span>
                 </span>
@@ -166,7 +166,7 @@ export default function ThemeSettingsForm({
             </button>
           )}
         </div>
-        <p className="text-lcars-text-dim text-[13px]">
+        <p className="text-lcars-ink-dim text-[13px]">
           Optional: einzelne Akzentfarben mit eigenen Farben überschreiben. Ohne
           Überschreibung gilt der Wert des Basis-Themes.
         </p>
@@ -185,10 +185,10 @@ export default function ThemeSettingsForm({
                   className="h-[32px] w-[44px] shrink-0 cursor-pointer rounded-[6px] border border-lcars-border bg-transparent p-[2px]"
                 />
                 <span className="flex flex-1 flex-col">
-                  <span className="lcars-eyebrow text-lcars-text-light">
+                  <span className="lcars-eyebrow text-lcars-ink-light">
                     {label}
                   </span>
-                  <span className="text-lcars-text-dim text-[12px] font-lcars-mono">
+                  <span className="text-lcars-ink-dim text-[12px] font-lcars-mono">
                     {value}
                     {overridden ? " · eigene Farbe" : " · Theme-Standard"}
                   </span>

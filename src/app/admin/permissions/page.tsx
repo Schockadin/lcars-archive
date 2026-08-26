@@ -66,7 +66,7 @@ export default async function PermissionsAdminPage() {
 
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[8px]">
-            <p className="text-lcars-text-dim">
+            <p className="text-lcars-ink-dim">
               Rollen bündeln Rechte. Ein User kann mehrere Rollen haben; die
               effektiven Rechte sind die Vereinigung aller Rollen und lassen sich
               pro User zusätzlich im User-Editor feinjustieren. System-Rollen sind
@@ -76,7 +76,7 @@ export default async function PermissionsAdminPage() {
 
           <section className="flex flex-col gap-[12px]">
             <h2 className="text-lcars-primary">Rechte-Matrix</h2>
-            <p className="text-lcars-text-dim text-[13px]">
+            <p className="text-lcars-ink-dim text-[13px]">
               Zeilen = Rechte, Spalten = Rollen. Haken setzen/entfernen und pro
               Spalte mit <b>Speichern</b> übernehmen (nur bei ungespeicherten
               Änderungen aktiv). Name, Beschreibung und Mitglieder einer Rolle

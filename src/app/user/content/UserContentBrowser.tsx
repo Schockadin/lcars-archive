@@ -535,7 +535,7 @@ export default function UserContentBrowser({
         <LcarsDataRow
           value={filteredDialogues.length}
           label="Gespräche"
-          color="var(--lcars-text-data)"
+          color="var(--lcars-ink-data)"
         >
           {filteredDialogues.length === 0 ? (
             <p className="lcars-empty-state">
