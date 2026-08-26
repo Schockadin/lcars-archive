@@ -75,7 +75,7 @@ export default async function PermissionsAdminPage() {
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Rechte-Matrix</h2>
+            <h2 className="text-lcars-primary">Rechte-Matrix</h2>
             <p className="text-lcars-text-dim text-[13px]">
               Zeilen = Rechte, Spalten = Rollen. Haken setzen/entfernen und pro
               Spalte mit <b>Speichern</b> übernehmen (nur bei ungespeicherten
@@ -86,7 +86,7 @@ export default async function PermissionsAdminPage() {
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Name, Beschreibung &amp; Mitglieder</h2>
+            <h2 className="text-lcars-primary">Name, Beschreibung &amp; Mitglieder</h2>
             <div className="flex flex-col gap-[12px]">
               {roles.map((role) => (
                 <RoleEditor
@@ -105,7 +105,7 @@ export default async function PermissionsAdminPage() {
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Neue Rolle anlegen</h2>
+            <h2 className="text-lcars-primary">Neue Rolle anlegen</h2>
             <CreateRoleForm />
           </section>
         </div>

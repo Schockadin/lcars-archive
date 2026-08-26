@@ -96,7 +96,7 @@ export default async function UserPublicProfilePage({
               <LcarsDataRow
                 value={characters.length}
                 label="Charaktere"
-                color="var(--lcars-amber)"
+                color="var(--lcars-primary)"
               >
                 <div className="flex flex-col gap-[6px]">
                   {characters.map((c) => (
@@ -106,7 +106,7 @@ export default async function UserPublicProfilePage({
                       className="mission-akte flex-1"
                       style={
                         {
-                          "--mission-color": "var(--lcars-amber)",
+                          "--mission-color": "var(--lcars-primary)",
                         } as React.CSSProperties
                       }
                     >
@@ -126,7 +126,7 @@ export default async function UserPublicProfilePage({
               <LcarsDataRow
                 value={logs.length}
                 label="Einsatzberichte"
-                color="var(--lcars-blue)"
+                color="var(--lcars-tertiary)"
               >
                 <div className="flex flex-col gap-[6px]">
                   {logs.map((log) => (
@@ -136,7 +136,7 @@ export default async function UserPublicProfilePage({
                       className="mission-akte flex-1"
                       style={
                         {
-                          "--mission-color": "var(--lcars-blue)",
+                          "--mission-color": "var(--lcars-tertiary)",
                         } as React.CSSProperties
                       }
                     >
@@ -177,7 +177,7 @@ export default async function UserPublicProfilePage({
                       className="mission-akte flex-1"
                       style={
                         {
-                          "--mission-color": "var(--lcars-red)",
+                          "--mission-color": "var(--lcars-quinary)",
                         } as React.CSSProperties
                       }
                     >
@@ -202,7 +202,7 @@ export default async function UserPublicProfilePage({
               <LcarsDataRow
                 value={archiveEntries.length}
                 label="Archiv-Einträge"
-                color="var(--lcars-purple)"
+                color="var(--lcars-secondary)"
               >
                 <div className="flex flex-col gap-[6px]">
                   {archiveEntries.map((entry) => (
@@ -212,7 +212,7 @@ export default async function UserPublicProfilePage({
                       className="mission-akte flex-1"
                       style={
                         {
-                          "--mission-color": "var(--lcars-purple)",
+                          "--mission-color": "var(--lcars-secondary)",
                         } as React.CSSProperties
                       }
                     >

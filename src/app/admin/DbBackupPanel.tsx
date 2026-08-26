@@ -187,7 +187,7 @@ export default function DbBackupPanel() {
             </button>
           </div>
           {r2SavedKey && (
-            <p className="text-lcars-amber text-[13px]">
+            <p className="text-lcars-primary text-[13px]">
               Im Bucket gespeichert als „{r2SavedKey}“.
             </p>
           )}
@@ -230,7 +230,7 @@ export default function DbBackupPanel() {
           </div>
 
           {r2ListError && (
-            <p className="text-lcars-red" role="alert">
+            <p className="text-lcars-quinary" role="alert">
               {r2ListError}
             </p>
           )}
@@ -246,7 +246,7 @@ export default function DbBackupPanel() {
                   <select
                     value={selectedR2Key}
                     onChange={(e) => setSelectedR2Key(e.target.value)}
-                    className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+                    className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-primary"
                   >
                     {r2Backups.map((b) => (
                       <option key={b.key} value={b.key}>
@@ -278,13 +278,13 @@ export default function DbBackupPanel() {
         </div>
 
         {error && (
-          <p className="text-lcars-red" role="alert">
+          <p className="text-lcars-quinary" role="alert">
             {error}
           </p>
         )}
 
         {summary && (
-          <p className="text-lcars-amber">
+          <p className="text-lcars-primary">
             Wiederhergestellt:{" "}
             {summary.tables.map((t) => `${t.name} (${t.rows})`).join(" · ")}
           </p>

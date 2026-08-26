@@ -12,9 +12,9 @@ const KIND_META: Record<
   NewsFeedItem["kind"],
   { color: string; verb: string }
 > = {
-  created: { color: "var(--lcars-green)", verb: "Neu" },
-  updated: { color: "var(--lcars-blue)", verb: "Bearbeitet" },
-  deleted: { color: "var(--lcars-red)", verb: "Gelöscht" },
+  created: { color: "var(--lcars-senary)", verb: "Neu" },
+  updated: { color: "var(--lcars-tertiary)", verb: "Bearbeitet" },
+  deleted: { color: "var(--lcars-quinary)", verb: "Gelöscht" },
 };
 
 function metaLine(item: NewsFeedItem): string {
@@ -129,7 +129,7 @@ export default function NewsSection({ items }: { items: NewsFeedItem[] }) {
     <LcarsDataRow
       value={visible.length}
       label="News"
-      color="var(--lcars-blue)"
+      color="var(--lcars-tertiary)"
       defaultOpen
     >
       <div className="flex flex-col gap-[8px]">

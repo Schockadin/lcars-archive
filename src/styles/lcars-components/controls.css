@@ -80,9 +80,9 @@
   height: 16px;
 }
 .lcars-icon-btn:hover:not(:disabled) {
-  background: var(--lcars-amber);
+  background: var(--lcars-primary);
   color: var(--lcars-bg);
-  border-color: var(--lcars-amber);
+  border-color: var(--lcars-primary);
 }
 .lcars-icon-btn:disabled {
   cursor: not-allowed;
@@ -90,13 +90,13 @@
 }
 /* Löschen: rot statt Standard-Blau, auch im Hover. */
 .lcars-icon-btn--danger {
-  border-color: var(--lcars-red);
-  color: var(--lcars-red);
+  border-color: var(--lcars-quinary);
+  color: var(--lcars-quinary);
 }
 .lcars-icon-btn--danger:hover:not(:disabled) {
-  background: var(--lcars-red);
+  background: var(--lcars-quinary);
   color: var(--lcars-bg);
-  border-color: var(--lcars-red);
+  border-color: var(--lcars-quinary);
 }
 
 /* Pill Buttons — Basis-Look (Größe/Form/Typografie) auch von
@@ -133,14 +133,14 @@
 }
 .lcars-pill-btn:hover,
 .lcars-pill-btn--outline:hover {
-  background-color: var(--lcars-amber-light);
+  background-color: var(--lcars-primary-light);
   color: var(--lcars-bg);
   border-color: var(--lcars-bg);
 }
 
 .lcars-pill-btn {
   color: var(--lcars-bg);
-  background-color: var(--lcars-amber);
+  background-color: var(--lcars-primary);
   align-items: flex-end;
   justify-content: flex-end;
   padding: 0 18px 8px;
@@ -229,7 +229,7 @@
 .lcars-checkbox {
   width: 20px;
   height: 20px;
-  accent-color: var(--lcars-amber);
+  accent-color: var(--lcars-primary);
   cursor: pointer;
 }
 
@@ -245,7 +245,7 @@
 }
 .lcars-input:hover,
 .lcars-input:focus {
-  border-color: var(--lcars-amber);
+  border-color: var(--lcars-primary);
 }
 
 /* File-Inputs (z.B. Portrait-Upload im Charakterformular): feste 40px-Höhe des
@@ -269,7 +269,7 @@
   cursor: pointer;
 }
 .lcars-file-input::file-selector-button:hover {
-  border-color: var(--lcars-amber);
+  border-color: var(--lcars-primary);
 }
 
 /* ── Cookie-Hinweis ───────────────────────────────────────────────────

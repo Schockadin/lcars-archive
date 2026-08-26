@@ -77,7 +77,7 @@ export default async function EditUserPage({
                       <Link
                         key={c.id}
                         href={`/characters/${c.slug}`}
-                        className="text-lcars-amber underline"
+                        className="text-lcars-primary underline"
                       >
                         {c.name}
                       </Link>
@@ -89,7 +89,7 @@ export default async function EditUserPage({
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Daten & Rollen bearbeiten</h2>
+            <h2 className="text-lcars-primary">Daten & Rollen bearbeiten</h2>
             <EditUserForm
               user={target}
               isSelf={isSelf}
@@ -98,7 +98,7 @@ export default async function EditUserPage({
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Individuelle Rechte</h2>
+            <h2 className="text-lcars-primary">Individuelle Rechte</h2>
             <PermissionsForm
               userId={target.id}
               roles={Array.from(

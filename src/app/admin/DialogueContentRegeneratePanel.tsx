@@ -93,7 +93,7 @@ export default function DialogueContentRegeneratePanel() {
           onDismiss={() => setDismissed(true)}
           caption={
             done ? (
-              <span className="text-lcars-amber">
+              <span className="text-lcars-primary">
                 Fertig: {progress.changed}{" "}
                 {progress.changed === 1 ? "Fließtext" : "Fließtexte"} erzeugt
                 {progress.total === 0 ? " (nichts zu tun)" : ""}.
@@ -109,7 +109,7 @@ export default function DialogueContentRegeneratePanel() {
       )}
 
       {error && (
-        <p className="text-lcars-red" role="alert">
+        <p className="text-lcars-quinary" role="alert">
           {error}
         </p>
       )}

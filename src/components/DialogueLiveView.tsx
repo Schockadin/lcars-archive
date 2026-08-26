@@ -160,7 +160,7 @@ export default function DialogueLiveView({
       )}
 
       {!open && (
-        <p className="text-lcars-amber text-[13px] mt-[8px]" role="status">
+        <p className="text-lcars-primary text-[13px] mt-[8px]" role="status">
           Dieses Gespräch ist nicht mehr verfügbar — es wurde inzwischen
           abgeschlossen oder gelöscht.
         </p>

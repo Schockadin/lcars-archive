@@ -54,7 +54,7 @@ export default function VisibilitySelect({
         ))}
       </select>
       {error && (
-        <p className="text-lcars-red text-[11px]" role="alert">
+        <p className="text-lcars-quinary text-[11px]" role="alert">
           {error}
         </p>
       )}

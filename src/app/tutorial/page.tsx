@@ -36,7 +36,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={1}
             label="Für Besucher"
-            color="var(--lcars-blue)"
+            color="var(--lcars-tertiary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
@@ -73,7 +73,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={2}
             label="Konto & Rollen"
-            color="var(--lcars-purple)"
+            color="var(--lcars-secondary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
@@ -139,7 +139,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={3}
             label="Eigene Inhalte"
-            color="var(--lcars-amber)"
+            color="var(--lcars-primary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
@@ -212,7 +212,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={4} label="Gespräche" color="var(--lcars-amber)">
+          <LcarsDataRow value={4} label="Gespräche" color="var(--lcars-primary)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Ein <strong>Gespräch</strong> startest du mit deinem Charakter
@@ -277,7 +277,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={5}
             label="Merken & Abonnieren"
-            color="var(--lcars-blue)"
+            color="var(--lcars-tertiary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
@@ -339,7 +339,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={6}
             label="Archiv-Assistent"
-            color="var(--lcars-blue)"
+            color="var(--lcars-tertiary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
@@ -371,7 +371,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={7} label="Markdown" color="var(--lcars-amber)">
+          <LcarsDataRow value={7} label="Markdown" color="var(--lcars-primary)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
@@ -463,7 +463,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={8} label="Verlinkung" color="var(--lcars-blue)">
+          <LcarsDataRow value={8} label="Verlinkung" color="var(--lcars-tertiary)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Um im Fließtext auf einen Charakter, eine Mission oder einen
@@ -504,7 +504,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={9}
             label="Spielleitung & Admins"
-            color="var(--lcars-purple)"
+            color="var(--lcars-secondary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>Zusätzlich zu allem oben Genannten kann die Spielleitung:</p>
@@ -610,7 +610,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={10}
             label="App installieren"
-            color="var(--lcars-amber)"
+            color="var(--lcars-primary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>

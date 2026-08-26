@@ -89,7 +89,7 @@ export default function HeaderContent() {
         <div className="lcars-header-title uppercase">Neo Archiv</div>
         <Link
           href="/login"
-          className="lcars-usernav-pill bg-lcars-green mr-[8px]"
+          className="lcars-usernav-pill bg-lcars-senary mr-[8px]"
         >
           Anmelden
         </Link>

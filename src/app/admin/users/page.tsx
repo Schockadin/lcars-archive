@@ -32,19 +32,19 @@ export default async function AdminUsersPage() {
 
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Neuen User anlegen</h2>
+            <h2 className="text-lcars-primary">Neuen User anlegen</h2>
             <CreateUserForm />
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">
+            <h2 className="text-lcars-primary">
               {users.length} registrierte User
             </h2>
             <AdminUsersTable users={users} />
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">User-Backup</h2>
+            <h2 className="text-lcars-primary">User-Backup</h2>
             <UserBackupPanel />
           </section>
         </div>

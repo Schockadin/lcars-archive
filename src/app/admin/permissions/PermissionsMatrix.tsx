@@ -117,7 +117,7 @@ export default function PermissionsMatrix({ roles }: { roles: MatrixRole[] }) {
             {roles.map((role) => (
               <th key={role.key} scope="col">
                 <div className="flex flex-col items-center gap-[4px]">
-                  <span className="text-lcars-amber font-bold">
+                  <span className="text-lcars-primary font-bold">
                     {role.label}
                   </span>
                   <span className="text-lcars-text-dim text-[11px] font-normal normal-case">
@@ -129,7 +129,7 @@ export default function PermissionsMatrix({ roles }: { roles: MatrixRole[] }) {
                       type="button"
                       onClick={() => save(role)}
                       disabled={!isDirty(role.key) || pendingKey === role.key}
-                      className="rounded-full px-[10px] py-[2px] text-[11px] bg-lcars-amber text-black font-bold disabled:opacity-40"
+                      className="rounded-full px-[10px] py-[2px] text-[11px] bg-lcars-primary text-black font-bold disabled:opacity-40"
                     >
                       {pendingKey === role.key ? "…" : "Speichern"}
                     </button>
@@ -138,7 +138,7 @@ export default function PermissionsMatrix({ roles }: { roles: MatrixRole[] }) {
                         type="button"
                         onClick={() => remove(role)}
                         disabled={pendingKey === role.key}
-                        className="rounded-full px-[10px] py-[2px] text-[11px] bg-lcars-red text-black font-bold disabled:opacity-40"
+                        className="rounded-full px-[10px] py-[2px] text-[11px] bg-lcars-quinary text-black font-bold disabled:opacity-40"
                         title="Rolle löschen"
                       >
                         ✕

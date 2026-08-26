@@ -1,38 +1,40 @@
 /* ─── LCARS Farbthemes ──────────────────────────────────────────────
-   Nutzer-wählbare Farbschemata (Profil → /user). Angelehnt an die
-   klassischen LCARS-Paletten (thelcars.com/colors.php). Die IDs
-   entsprechen exakt COLOR_THEMES in src/lib/themes.ts.
+   Nutzer-wählbare Farbschemata (Profil → /user). Die Farben stammen aus der
+   kanonischen LCARS-Palette (thelcars.com/colors.php; Namen/Hex identisch zum
+   trekcolors-Datensatz) und sind bewusst STARK unterschiedlich — jedes Theme
+   bringt eigene Akzente, Hintergründe und Textfarben, nicht bloß getönte
+   Varianten. Die IDs entsprechen exakt COLOR_THEMES in src/lib/themes.ts.
 
-   Anwendung: src/app/layout.tsx setzt serverseitig `data-theme="…"` auf
-   <html> (nur für angemeldete Nutzer mit gewähltem Theme; das
-   Default-Theme "standard" setzt bewusst KEIN Attribut und nutzt die
-   unveränderten :root-Werte aus tokens.css).
+   Anwendung: src/app/layout.tsx setzt vor dem ersten Paint per Init-Skript
+   `data-theme="…"` auf <html> (aus dem neo_theme-Cookie). Das Default-Theme
+   "standard" setzt bewusst KEIN Attribut und nutzt die unveränderten
+   :root-Werte aus tokens.css.
 
-   Zwei Variablensätze müssen umgestellt werden:
+   Rollenbasierte Tokens (primary…senary) statt Farbnamen — so darf jedes Theme
+   dieselben Slots mit ganz anderen Farben belegen. Zwei Variablensätze werden
+   umgestellt:
      • --lcars-*        → von den Komponenten-Styles per var() gelesen
-     • --color-lcars-*  → von den Tailwind-Utilities (bg-lcars-amber,
-                          text-lcars-blue …) gelesen; werden zur Build-Zeit
-                          aus @theme (tokens.css) als :root-Variablen
-                          erzeugt und lassen sich hier zur Laufzeit
-                          überschreiben.
+     • --color-lcars-*  → von den Tailwind-Utilities (bg-lcars-primary,
+                          text-lcars-secondary …) gelesen; aus @theme (tokens.css)
+                          als :root-Variablen erzeugt und hier zur Laufzeit
+                          überschreibbar.
 
-   Import erfolgt unlayered in globals.css (wie tokens.css), damit die
-   normale Kaskade greift: `html[data-theme="…"]` (Spezifität 0,1,1)
-   gewinnt gegen :root (0,1,0) unabhängig von der Import-Reihenfolge.
+   Import erfolgt unlayered in globals.css (wie tokens.css), damit die normale
+   Kaskade greift: `html[data-theme="…"]` (Spezifität 0,1,1) gewinnt gegen
+   :root (0,1,0) unabhängig von der Import-Reihenfolge.
 ──────────────────────────────────────────────────────────────────── */
 
-/* Für jedes aktive Theme die Tailwind-Utility-Variablen (--color-lcars-*)
-   auf die themed Basiswerte (--lcars-*) spiegeln. Einmal für „irgendein
-   gesetztes data-theme" — die konkreten Basiswerte kommen aus den
-   Theme-Blöcken darunter. */
+/* Für jedes aktive Theme die Tailwind-Utility-Variablen (--color-lcars-*) auf
+   die themed Basiswerte (--lcars-*) spiegeln — einmal für „irgendein gesetztes
+   data-theme". Die konkreten Basiswerte kommen aus den Theme-Blöcken darunter. */
 html[data-theme] {
-  --color-lcars-purple: var(--lcars-purple);
-  --color-lcars-blue: var(--lcars-blue);
-  --color-lcars-red: var(--lcars-red);
-  --color-lcars-amber: var(--lcars-amber);
-  --color-lcars-amber-light: var(--lcars-amber-light);
-  --color-lcars-orange: var(--lcars-orange);
-  --color-lcars-green: var(--lcars-green);
+  --color-lcars-primary: var(--lcars-primary);
+  --color-lcars-primary-light: var(--lcars-primary-light);
+  --color-lcars-secondary: var(--lcars-secondary);
+  --color-lcars-tertiary: var(--lcars-tertiary);
+  --color-lcars-quaternary: var(--lcars-quaternary);
+  --color-lcars-quinary: var(--lcars-quinary);
+  --color-lcars-senary: var(--lcars-senary);
   --color-lcars-bg: var(--lcars-bg);
   --color-lcars-surface: var(--lcars-surface);
   --color-lcars-surface-2: var(--lcars-surface-2);
@@ -42,119 +44,125 @@ html[data-theme] {
   --color-lcars-text-data: var(--lcars-text-data);
   --color-lcars-text-contrast: var(--lcars-text-contrast);
   --color-lcars-text-light: var(--lcars-text-light);
+  --color-lcars-text-dark: var(--lcars-text-dark);
 }
 
-/* ── Classic (TNG) — warmes Brückenpanel ────────────────────────── */
+/* ── Classic — warmes TNG-Gold (Atomic Tangerine / Hopbush / Anakiwa) ── */
 html[data-theme="classic"] {
-  --lcars-purple: #cc99cc;
-  --lcars-blue: #9999ff;
-  --lcars-red: #cc6666;
-  --lcars-amber: #ff9900;
-  --lcars-amber-light: #ffcc99;
-  --lcars-orange: #ff9966;
-  --lcars-green: #66cc99;
+  --lcars-primary: #ff9900; /* atomic-tangerine */
+  --lcars-primary-light: #ffcc66; /* golden-tanoi */
+  --lcars-secondary: #cc6699; /* hopbush */
+  --lcars-tertiary: #99ccff; /* anakiwa */
+  --lcars-quaternary: #ff9966; /* orange-peel */
+  --lcars-quinary: #cc6666; /* chestnut-rose */
+  --lcars-senary: #bbaa55; /* husk */
   --lcars-background: #000000;
 
-  --lcars-bg: #0a0704;
-  --lcars-surface: #17110a;
-  --lcars-surface-2: #241a10;
-  --lcars-border: #4a3620;
+  --lcars-bg: #120b00;
+  --lcars-surface: #201603;
+  --lcars-surface-2: #2e2008;
+  --lcars-border: #5c3f0e;
 
-  --lcars-text: #ffcc99;
-  --lcars-text-dim: #b39678;
+  --lcars-text: #ffcc99; /* tanoi */
+  --lcars-text-dim: #b39670;
   --lcars-text-data: #99ccff;
-  --lcars-text-contrast: #f5ede0;
-  --lcars-text-light: #ffe6cc;
+  --lcars-text-contrast: #f7ecd6;
+  --lcars-text-light: #ffe4bf;
+  --lcars-text-dark: #120b00;
 }
 
-/* ── Operations — Gold/Bernstein ────────────────────────────────── */
-html[data-theme="operations"] {
-  --lcars-purple: #cc99cc;
-  --lcars-blue: #99ccff;
-  --lcars-red: #cc6666;
-  --lcars-amber: #ffaa00;
-  --lcars-amber-light: #ffcc66;
-  --lcars-orange: #ff9933;
-  --lcars-green: #99cc66;
-  --lcars-background: #000000;
-
-  --lcars-bg: #0a0700;
-  --lcars-surface: #191200;
-  --lcars-surface-2: #261c08;
-  --lcars-border: #574010;
-
-  --lcars-text: #ffcc66;
-  --lcars-text-dim: #b39a5c;
-  --lcars-text-data: #ffdd99;
-  --lcars-text-contrast: #f5eddc;
-  --lcars-text-light: #ffe6b3;
-}
-
-/* ── Science — kühles Blau/Teal ─────────────────────────────────── */
+/* ── Science — kühle Blautöne (Anakiwa / Melrose / Dodger) ───────────── */
 html[data-theme="science"] {
-  --lcars-purple: #9999cc;
-  --lcars-blue: #6699ff;
-  --lcars-red: #cc6666;
-  --lcars-amber: #ffcc66;
-  --lcars-amber-light: #cce6ff;
-  --lcars-orange: #66cccc;
-  --lcars-green: #66cc99;
+  --lcars-primary: #99ccff; /* anakiwa */
+  --lcars-primary-light: #ccddff; /* periwinkle */
+  --lcars-secondary: #9999ff; /* melrose */
+  --lcars-tertiary: #5599ff; /* dodger-pale */
+  --lcars-quaternary: #6688cc; /* danub */
+  --lcars-quinary: #cc6699; /* hopbush (warmer Kontrast) */
+  --lcars-senary: #9999cc; /* blue-bell */
   --lcars-background: #000000;
 
-  --lcars-bg: #00060c;
-  --lcars-surface: #08131f;
-  --lcars-surface-2: #0f1f2e;
-  --lcars-border: #1d3f57;
+  --lcars-bg: #00060f;
+  --lcars-surface: #061426;
+  --lcars-surface-2: #0c2038;
+  --lcars-border: #1d3f6b;
 
-  --lcars-text: #99ccff;
-  --lcars-text-dim: #6f92b3;
-  --lcars-text-data: #66e0cc;
-  --lcars-text-contrast: #e0eef5;
-  --lcars-text-light: #cce6ff;
+  --lcars-text: #ccddff; /* periwinkle */
+  --lcars-text-dim: #7f92b8;
+  --lcars-text-data: #99ccff;
+  --lcars-text-contrast: #e6eefb;
+  --lcars-text-light: #d6e4ff;
+  --lcars-text-dark: #00060f;
 }
 
-/* ── Command — Rot/Orange ───────────────────────────────────────── */
-html[data-theme="command"] {
-  --lcars-purple: #cc99cc;
-  --lcars-blue: #9999ff;
-  --lcars-red: #ff5555;
-  --lcars-amber: #ff9900;
-  --lcars-amber-light: #ffb399;
-  --lcars-orange: #ff6644;
-  --lcars-green: #66cc99;
+/* ── Nebula — Violett & Magenta (Lilac / Hopbush / Cosmic) ───────────── */
+html[data-theme="nebula"] {
+  --lcars-primary: #cc99cc; /* lilac */
+  --lcars-primary-light: #e6c7e6;
+  --lcars-secondary: #cc6699; /* hopbush */
+  --lcars-tertiary: #9999ff; /* melrose */
+  --lcars-quaternary: #cc6666; /* chestnut-rose */
+  --lcars-quinary: #774466; /* cosmic */
+  --lcars-senary: #9977aa; /* lavender-purple */
   --lcars-background: #000000;
 
-  --lcars-bg: #0c0303;
-  --lcars-surface: #1c0a0a;
-  --lcars-surface-2: #2a0f0f;
-  --lcars-border: #5c2222;
+  --lcars-bg: #0c0410;
+  --lcars-surface: #180a20;
+  --lcars-surface-2: #241030;
+  --lcars-border: #5c3a6e; /* eggplant-nah */
 
-  --lcars-text: #ff9999;
-  --lcars-text-dim: #b37070;
-  --lcars-text-data: #ffaa88;
-  --lcars-text-contrast: #f5e0e0;
-  --lcars-text-light: #ffcccc;
+  --lcars-text: #e6c7e6;
+  --lcars-text-dim: #a888b8;
+  --lcars-text-data: #cc99cc;
+  --lcars-text-contrast: #f2e6f5;
+  --lcars-text-light: #f0d9f5;
+  --lcars-text-dark: #0c0410;
 }
 
-/* ── Nemesis — gedämpftes Stahlblau/Grau ────────────────────────── */
+/* ── Red Alert — Rot & Rost (Red Damask / Rust / Bourbon) ────────────── */
+html[data-theme="redalert"] {
+  --lcars-primary: #ee5544;
+  --lcars-primary-light: #ee9955; /* sandy-brown */
+  --lcars-secondary: #dd6644; /* red-damask */
+  --lcars-tertiary: #ffcc66; /* golden-tanoi (Kontrast) */
+  --lcars-quaternary: #bb6622; /* bourbon */
+  --lcars-quinary: #bb4411; /* rust */
+  --lcars-senary: #cc6699; /* hopbush */
+  --lcars-background: #000000;
+
+  --lcars-bg: #100303;
+  --lcars-surface: #1e0808;
+  --lcars-surface-2: #2c0c0c;
+  --lcars-border: #5c1e18;
+
+  --lcars-text: #f0a090;
+  --lcars-text-dim: #b3766a;
+  --lcars-text-data: #ffcc66;
+  --lcars-text-contrast: #f7e0da;
+  --lcars-text-light: #ffd6c8;
+  --lcars-text-dark: #100303;
+}
+
+/* ── Nemesis — gedämpftes Stahlblau/Grau (Blue Bell / Lavender / Danub) ─ */
 html[data-theme="nemesis"] {
-  --lcars-purple: #b0a8d0;
-  --lcars-blue: #8899cc;
-  --lcars-red: #cc7777;
-  --lcars-amber: #d0a860;
-  --lcars-amber-light: #c0c8d8;
-  --lcars-orange: #cc9966;
-  --lcars-green: #88bbaa;
+  --lcars-primary: #9999cc; /* blue-bell */
+  --lcars-primary-light: #c0c8e0;
+  --lcars-secondary: #9977aa; /* lavender-purple */
+  --lcars-tertiary: #6688cc; /* danub */
+  --lcars-quaternary: #99ccff; /* anakiwa */
+  --lcars-quinary: #cc6666; /* chestnut-rose (warmer Kontrast) */
+  --lcars-senary: #8fa0c0;
   --lcars-background: #000000;
 
-  --lcars-bg: #05070c;
-  --lcars-surface: #0e131f;
-  --lcars-surface-2: #171d2e;
-  --lcars-border: #2a3450;
+  --lcars-bg: #05070d;
+  --lcars-surface: #0e1320;
+  --lcars-surface-2: #171d30;
+  --lcars-border: #2c3550;
 
-  --lcars-text: #b8c0d8;
-  --lcars-text-dim: #7c85a0;
+  --lcars-text: #c0c8e0;
+  --lcars-text-dim: #808aa8;
   --lcars-text-data: #9fb8e0;
   --lcars-text-contrast: #e6e9f2;
   --lcars-text-light: #d8dcec;
+  --lcars-text-dark: #05070d;
 }

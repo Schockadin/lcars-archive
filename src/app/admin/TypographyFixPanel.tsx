@@ -88,7 +88,7 @@ export default function TypographyFixPanel() {
           onDismiss={() => setDismissed(true)}
           caption={
             done ? (
-              <span className="text-lcars-amber">
+              <span className="text-lcars-primary">
                 Fertig: {progress.changed} von {progress.total} Inhalten
                 korrigiert.
               </span>
@@ -103,7 +103,7 @@ export default function TypographyFixPanel() {
       )}
 
       {error && (
-        <p className="text-lcars-red" role="alert">
+        <p className="text-lcars-quinary" role="alert">
           {error}
         </p>
       )}

@@ -69,7 +69,7 @@ export default function ThemeSettingsForm({
               key={theme.id}
               className={`flex items-center gap-[12px] rounded-[var(--lcars-radius-pill)] border px-[16px] py-[10px] cursor-pointer transition-colors ${
                 isSelected
-                  ? "border-lcars-amber bg-lcars-surface-2"
+                  ? "border-lcars-primary bg-lcars-surface-2"
                   : "border-lcars-border bg-lcars-surface"
               }`}
             >
@@ -97,7 +97,7 @@ export default function ThemeSettingsForm({
               <span className="flex flex-col">
                 <span
                   className={`lcars-eyebrow ${
-                    isSelected ? "text-lcars-amber" : "text-lcars-text-light"
+                    isSelected ? "text-lcars-primary" : "text-lcars-text-light"
                   }`}
                 >
                   {theme.label}

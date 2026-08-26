@@ -87,7 +87,7 @@ export default async function UserPage() {
           </p>
 
           {needsPassword && (
-            <p className="text-lcars-amber">
+            <p className="text-lcars-primary">
               Du hast noch kein Passwort gesetzt.{" "}
               <Link href="#password" className="underline">
                 Jetzt festlegen
@@ -102,7 +102,7 @@ export default async function UserPage() {
                 label="Charakterfarben"
                 value={characterColors.length}
                 accentColor="var(--lcars-text-data)"
-                color="var(--lcars-amber)"
+                color="var(--lcars-primary)"
               >
                 <section
                   id="character-colors"
@@ -141,8 +141,8 @@ export default async function UserPage() {
             <DataRow
               label="Darstellung"
               value={COLOR_THEMES.length}
-              accentColor="var(--lcars-green)"
-              color="var(--lcars-blue)"
+              accentColor="var(--lcars-senary)"
+              color="var(--lcars-tertiary)"
             >
               <section id="theme" className="flex flex-col gap-[16px]">
                 <h2>Farbtheme</h2>
@@ -158,8 +158,8 @@ export default async function UserPage() {
             <DataRow
               label="Settings"
               value={9}
-              accentColor="var(--lcars-red)"
-              color="var(--lcars-amber-light)"
+              accentColor="var(--lcars-quinary)"
+              color="var(--lcars-primary-light)"
             >
               <h2>User-Daten</h2>
               <SettingsForm user={{ name: target.name, email: target.email }} />

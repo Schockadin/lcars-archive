@@ -49,7 +49,7 @@ export default async function EditDialoguePage({
 
           <Link
             href="/admin/dialogues"
-            className="text-lcars-amber underline self-start"
+            className="text-lcars-primary underline self-start"
           >
             ← Zurück zur Gesprächsübersicht
           </Link>

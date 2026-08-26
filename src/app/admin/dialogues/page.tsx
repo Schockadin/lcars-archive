@@ -50,7 +50,7 @@ export default async function AdminDialoguesPage() {
                     className="mission-akte"
                     style={
                       {
-                        "--mission-color": "var(--lcars-green)",
+                        "--mission-color": "var(--lcars-senary)",
                       } as React.CSSProperties
                     }
                   >
@@ -75,7 +75,7 @@ export default async function AdminDialoguesPage() {
                   {canModerate && (
                     <Link
                       href={`/admin/dialogues/${d.slug}/edit`}
-                      className="text-lcars-amber underline text-[13px] self-start"
+                      className="text-lcars-primary underline text-[13px] self-start"
                     >
                       Metadaten bearbeiten
                     </Link>

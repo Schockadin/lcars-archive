@@ -23,7 +23,7 @@ export default function LandingPage({
       </div>
 
       {/* Trennlinie */}
-      <LcarsHorSep startColor="var(--lcars-amber)" />
+      <LcarsHorSep startColor="var(--lcars-primary)" />
 
       <div className="flex">
         <div className="lcars-heading">Willkommen im Neo Archiv</div>

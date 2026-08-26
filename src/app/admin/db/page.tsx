@@ -37,14 +37,14 @@ export default async function AdminDbPage() {
         <div className="lcars-text flex flex-col gap-[32px]">
           {canBackup && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">DB-Backup</h2>
+              <h2 className="text-lcars-primary">DB-Backup</h2>
               <DbBackupPanel />
             </section>
           )}
 
           {canRead && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Tabellen</h2>
+              <h2 className="text-lcars-primary">Tabellen</h2>
               <DbTableExplorer
                 tables={tables}
                 canEdit={canWrite}
@@ -55,7 +55,7 @@ export default async function AdminDbPage() {
 
           {hasAnySql && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Freie SQL-Query</h2>
+              <h2 className="text-lcars-primary">Freie SQL-Query</h2>
               <SqlQueryPanel caps={{ canRead, canWrite, canDelete }} />
             </section>
           )}

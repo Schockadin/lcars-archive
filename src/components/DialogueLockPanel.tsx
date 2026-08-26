@@ -96,7 +96,7 @@ export default function DialogueLockPanel({
 
   if (lockStatus.heldByUserId === currentUserId) {
     return (
-      <p className="text-lcars-amber text-[13px] mt-[12px]">
+      <p className="text-lcars-primary text-[13px] mt-[12px]">
         🔒 Du hast dir das Antwortrecht reserviert (bis {until} Uhr).
       </p>
     );
@@ -104,7 +104,7 @@ export default function DialogueLockPanel({
 
   return (
     <div className="flex flex-col gap-[6px] mt-[12px]">
-      <p className="text-lcars-amber text-[13px]">
+      <p className="text-lcars-primary text-[13px]">
         🔒 {lockStatus.heldByName} antwortet gerade — gesperrt bis {until} Uhr.
       </p>
       {!requested && (

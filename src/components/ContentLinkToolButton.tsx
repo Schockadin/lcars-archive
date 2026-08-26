@@ -169,7 +169,7 @@ export default function ContentLinkToolButton({
         />
 
         {autolink.error && (
-          <p className="text-lcars-red text-[13px]" role="alert">
+          <p className="text-lcars-quinary text-[13px]" role="alert">
             {autolink.error}
           </p>
         )}
@@ -208,7 +208,7 @@ export default function ContentLinkToolButton({
         />
 
         {delink.error && (
-          <p className="text-lcars-red text-[13px]" role="alert">
+          <p className="text-lcars-quinary text-[13px]" role="alert">
             {delink.error}
           </p>
         )}
@@ -228,7 +228,7 @@ export default function ContentLinkToolButton({
       onClick={active.handlePreview}
       disabled={active.pending}
       className={`lcars-icon-btn size-[40px] disabled:opacity-50${
-        mode === "delink" ? " bg-lcars-red text-lcars-bg" : ""
+        mode === "delink" ? " bg-lcars-quinary text-lcars-bg" : ""
       }`}
       aria-label={
         mode === "autolink"

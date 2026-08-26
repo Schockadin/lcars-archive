@@ -306,7 +306,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "1.22",
     title: "Wählbare LCARS-Farbthemes",
     items: [
-      "Neu: Angemeldete Nutzer:innen können im Profil unter „Darstellung“ ein Farbthema für die gesamte Oberfläche wählen — angelehnt an die klassischen LCARS-Farbschemata (Classic/TNG, Operations, Science, Command, Nemesis) neben dem bisherigen Standard. Die Wahl gilt nur für dich, wird sofort als Vorschau angewandt und bleibt nach dem Speichern bei jedem Login erhalten.",
+      "Neu: Angemeldete Nutzer:innen können im Profil unter „Darstellung“ ein Farbthema für die gesamte Oberfläche wählen — mit den echten LCARS-Farbschemata (Classic, Science, Nebula, Red Alert, Nemesis) neben dem bisherigen Standard. Jedes Theme bringt eine deutlich eigene Palette samt Hintergrund; die Wahl gilt nur für dich, wird sofort als Vorschau angewandt und bleibt nach dem Speichern bei jedem Login erhalten.",
     ],
   },
 ];

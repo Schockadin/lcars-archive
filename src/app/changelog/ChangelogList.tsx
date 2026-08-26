@@ -13,20 +13,20 @@ import type { ChangelogEntry } from "@/lib/changelog";
 // aufeinanderfolgende Versionen sich sowohl in der Pill- als auch in der
 // Akzentfarbe unterscheiden.
 const LABEL_COLORS = [
-  "var(--lcars-purple)",
-  "var(--lcars-blue)",
-  "var(--lcars-green)",
-  "var(--lcars-orange)",
-  "var(--lcars-red)",
-  "var(--lcars-amber)",
+  "var(--lcars-secondary)",
+  "var(--lcars-tertiary)",
+  "var(--lcars-senary)",
+  "var(--lcars-quaternary)",
+  "var(--lcars-quinary)",
+  "var(--lcars-primary)",
 ];
 const ACCENT_COLORS = [
-  "var(--lcars-amber)",
-  "var(--lcars-red)",
-  "var(--lcars-purple)",
-  "var(--lcars-blue)",
-  "var(--lcars-orange)",
-  "var(--lcars-green)",
+  "var(--lcars-primary)",
+  "var(--lcars-quinary)",
+  "var(--lcars-secondary)",
+  "var(--lcars-tertiary)",
+  "var(--lcars-quaternary)",
+  "var(--lcars-senary)",
 ];
 
 // Vergleicht zwei "Major.Minor"-Versionsstrings numerisch statt

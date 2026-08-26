@@ -262,7 +262,7 @@ export default function MarkdownImportPanel({
             setRows([]);
             setCurrentIndex(0);
           }}
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-amber"
+          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-primary"
         >
           {Object.entries(CONTENT_TYPE_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
@@ -289,7 +289,7 @@ export default function MarkdownImportPanel({
       </div>
 
       {loadError && (
-        <p className="text-lcars-red" role="alert">
+        <p className="text-lcars-quinary" role="alert">
           {loadError}
         </p>
       )}
@@ -365,11 +365,11 @@ function ImportRowCard({
   return (
     <div className="rounded-lcars border border-lcars-border p-[16px] flex flex-col gap-[8px]">
       {!preview.ok ? (
-        <p className="text-lcars-red">{preview.error}</p>
+        <p className="text-lcars-quinary">{preview.error}</p>
       ) : (
         <>
           {preview.warnings.length > 0 && (
-            <ul className="text-lcars-amber text-[13px] list-disc pl-[20px]">
+            <ul className="text-lcars-primary text-[13px] list-disc pl-[20px]">
               {preview.warnings.map((w) => (
                 <li key={w}>{w}</li>
               ))}
@@ -418,9 +418,9 @@ function ImportRowCard({
       )}
       {row.status === "importing" && <p className="text-lcars-text-dim">Wird angelegt…</p>}
       {row.status === "imported" && (
-        <p className="text-lcars-amber">Angelegt als „{row.resultSlug}“.</p>
+        <p className="text-lcars-primary">Angelegt als „{row.resultSlug}“.</p>
       )}
-      {row.status === "error" && <p className="text-lcars-red">{row.resultError}</p>}
+      {row.status === "error" && <p className="text-lcars-quinary">{row.resultError}</p>}
       {row.status === "discarded" && (
         <p className="text-lcars-text-dim">Verworfen, nicht angelegt.</p>
       )}

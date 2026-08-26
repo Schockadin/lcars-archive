@@ -277,7 +277,7 @@ export default function NotificationSettingsForm({
         )}
         {deviceStatus === "subscribed" && (
           <>
-            <p className="text-lcars-green">Push ist für dieses Gerät aktiv.</p>
+            <p className="text-lcars-senary">Push ist für dieses Gerät aktiv.</p>
             <button
               type="button"
               disabled={devicePending}

@@ -65,7 +65,7 @@ export default function RoleEditor({
   return (
     <details className="lcars-panel p-[16px] flex flex-col gap-[12px]">
       <summary className="cursor-pointer flex items-center gap-[10px]">
-        <span className="lcars-eyebrow text-lcars-amber">{role.label}</span>
+        <span className="lcars-eyebrow text-lcars-primary">{role.label}</span>
         <span className="text-lcars-text-dim text-[12px]">
           {role.is_system ? "System-Rolle" : "Eigene Rolle"} · Schlüssel{" "}
           <code>{role.key}</code> · {role.permissions.length} Rechte ·{" "}
@@ -202,7 +202,7 @@ export default function RoleEditor({
               onClick={confirmSubmit(
                 `Rolle „${role.label}" wirklich löschen? Das lässt sich nicht rückgängig machen.`,
               )}
-              className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%] bg-lcars-red text-black"
+              className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%] bg-lcars-quinary text-black"
             >
               Rolle löschen
             </SubmitButton>

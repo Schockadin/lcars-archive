@@ -27,7 +27,7 @@ export default function DeleteContentButton({
       <button
         type="button"
         disabled={pending}
-        className="lcars-icon-btn self-start disabled:opacity-50 text-lcars-red border-lcars-red"
+        className="lcars-icon-btn self-start disabled:opacity-50 text-lcars-quinary border-lcars-quinary"
         aria-label="Löschen"
         title="Löschen"
         onClick={() => {
@@ -46,7 +46,7 @@ export default function DeleteContentButton({
         <TrashIcon />
       </button>
       {error && (
-        <p className="lcars-link-text text-lcars-red text-[11px]" role="alert">
+        <p className="lcars-link-text text-lcars-quinary text-[11px]" role="alert">
           {error}
         </p>
       )}

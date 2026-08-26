@@ -99,7 +99,7 @@ export default function MissionSynopsisEditor({
         </div>
 
         {state.error && (
-          <p className="text-lcars-red text-[13px]" role="alert">
+          <p className="text-lcars-quinary text-[13px]" role="alert">
             {state.error}
           </p>
         )}

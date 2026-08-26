@@ -87,17 +87,17 @@ function FileField({
 const STATUS_CONFIG = {
   active: {
     label: "Aktiv",
-    color: "var(--lcars-blue)",
+    color: "var(--lcars-tertiary)",
     bg: "rgba(154,154,255,.15)",
   },
   retired: {
     label: "Inaktiv",
-    color: "var(--lcars-amber)",
+    color: "var(--lcars-primary)",
     bg: "rgba(255,154,0,.15)",
   },
   deceased: {
     label: "Verstorben",
-    color: "var(--lcars-red)",
+    color: "var(--lcars-quinary)",
     bg: "rgba(205,102,102,.15)",
   },
 } as const;
@@ -121,17 +121,17 @@ function StatusBadge({ status }: { status: Character["status"] }) {
 }
 
 const PILL_COLORS = [
-  "var(--lcars-blue)",
-  "var(--lcars-purple)",
-  "var(--lcars-amber)",
-  "var(--lcars-red)",
+  "var(--lcars-tertiary)",
+  "var(--lcars-secondary)",
+  "var(--lcars-primary)",
+  "var(--lcars-quinary)",
 ];
 const BAR_SEGMENTS: { flex: number; color: string }[] = [
-  { flex: 2, color: "var(--lcars-orange)" },
-  { flex: 3, color: "var(--lcars-purple)" },
-  { flex: 1, color: "var(--lcars-blue)" },
-  { flex: 4, color: "var(--lcars-amber)" },
-  { flex: 1, color: "var(--lcars-red)" },
+  { flex: 2, color: "var(--lcars-quaternary)" },
+  { flex: 3, color: "var(--lcars-secondary)" },
+  { flex: 1, color: "var(--lcars-tertiary)" },
+  { flex: 4, color: "var(--lcars-primary)" },
+  { flex: 1, color: "var(--lcars-quinary)" },
 ];
 
 export default function CharacterHero({
@@ -240,13 +240,13 @@ export default function CharacterHero({
                 value={logCount}
                 label="Logs"
                 href={`/characters/${character.slug}/logs`}
-                color="var(--lcars-blue)"
+                color="var(--lcars-tertiary)"
               />
               <LcarsDataRow
                 value={conversationCount}
                 label="Gespräche"
                 href={`/archive?cat=dialogue&participant=${character.slug}`}
-                color="var(--lcars-purple)"
+                color="var(--lcars-secondary)"
               />
             </div>
 

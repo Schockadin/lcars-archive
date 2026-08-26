@@ -66,7 +66,7 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   line-height: 1.05;
-  color: var(--lcars-amber);
+  color: var(--lcars-primary);
 }
 
 /* Metadaten-Zeile (Zeitraum/Autor/…) — gemeinsam von Mission-Synopsis und
@@ -93,7 +93,7 @@
   text-decoration: none;
 }
 .lcars-meta-row a:hover {
-  color: var(--lcars-blue);
+  color: var(--lcars-tertiary);
   text-decoration: underline;
 }
 
@@ -123,7 +123,7 @@
     color 0.15s ease;
 }
 .log-nav-link:hover {
-  background: var(--lcars-purple);
+  background: var(--lcars-secondary);
 }
 .log-nav-next {
   flex-direction: row-reverse;
@@ -134,7 +134,7 @@
   font-family: var(--font-antonio), sans-serif;
   font-size: 28px;
   line-height: 1;
-  color: var(--lcars-amber);
+  color: var(--lcars-primary);
 }
 .log-nav-link:hover .log-nav-dir,
 .log-nav-link:hover .log-nav-title,

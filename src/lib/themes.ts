@@ -27,42 +27,47 @@ export interface ColorTheme {
 export const DEFAULT_THEME_ID = "standard";
 
 // Reihenfolge = Anzeigereihenfolge im Formular. "standard" zuerst (Default).
+// Die Farben stammen aus der kanonischen LCARS-Palette (thelcars.com/colors.php,
+// Namen/Hex identisch zum trekcolors-Datensatz) und sind bewusst stark
+// unterschiedlich — nicht nur getönte Akzente, sondern eigene Hintergründe und
+// Textfarben (siehe src/styles/lcars-themes.css). Der swatch zeigt
+// primary/secondary/tertiary des jeweiligen Themes.
 export const COLOR_THEMES: ColorTheme[] = [
   {
     id: "standard",
     label: "Standard",
-    description: "Violett & Blau — das klassische DS9/VOY-Interface.",
-    swatch: ["#cd9acd", "#9a9aff", "#ff9a00"],
+    description: "Bernstein, Flieder & Blau — das gewohnte DS9/VOY-Interface.",
+    swatch: ["#ff9a00", "#cd9acd", "#9a9aff"],
   },
   {
     id: "classic",
     label: "Classic",
-    description: "Warmes TNG-Brückenpanel in Pfirsich, Gold & Flieder.",
-    swatch: ["#ff9900", "#ffcc99", "#cc99cc"],
-  },
-  {
-    id: "operations",
-    label: "Operations",
-    description: "Gold- und Bernsteintöne der Betriebsabteilung.",
-    swatch: ["#ffaa00", "#ffcc66", "#ff9933"],
+    description: "Warmes TNG-Gold mit Pfirsich, Hopbush & Anakiwa-Blau.",
+    swatch: ["#ff9900", "#cc6699", "#99ccff"],
   },
   {
     id: "science",
     label: "Science",
-    description: "Kühles Blau & Teal der Wissenschaftsstation.",
-    swatch: ["#6699ff", "#66e0cc", "#99ccff"],
+    description: "Kühle Blautöne — Mariner, Melrose & Periwinkle.",
+    swatch: ["#99ccff", "#9999ff", "#5599ff"],
   },
   {
-    id: "command",
-    label: "Command",
-    description: "Rot & Orange der Kommandokonsole.",
-    swatch: ["#ff5555", "#ff6644", "#ff9900"],
+    id: "nebula",
+    label: "Nebula",
+    description: "Violett & Magenta — Lilac, Hopbush & Cosmic.",
+    swatch: ["#cc99cc", "#cc6699", "#9999ff"],
+  },
+  {
+    id: "redalert",
+    label: "Red Alert",
+    description: "Rot- und Rosttöne — Red Damask, Rust & Bourbon.",
+    swatch: ["#ee5544", "#dd6644", "#ffcc66"],
   },
   {
     id: "nemesis",
     label: "Nemesis",
-    description: "Gedämpftes Stahlblau & Grau, kühl und nüchtern.",
-    swatch: ["#8899cc", "#9fb8e0", "#d0a860"],
+    description: "Gedämpftes Stahlblau & Grau — Blue Bell & Lavender.",
+    swatch: ["#9999cc", "#9977aa", "#6688cc"],
   },
 ];
 

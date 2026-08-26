@@ -26,8 +26,8 @@ export default function FollowedContentSection({
     <LcarsDataRow
       value={items.length}
       label={heading}
-      color="var(--lcars-amber)"
-      accentColor="var(--lcars-blue)"
+      color="var(--lcars-primary)"
+      accentColor="var(--lcars-tertiary)"
     >
       <div className="flex flex-col gap-[6px]">
         {items.map((item) => (
@@ -36,7 +36,7 @@ export default function FollowedContentSection({
             href={item.href}
             className="mission-akte"
             style={
-              { "--mission-color": "var(--lcars-amber)" } as React.CSSProperties
+              { "--mission-color": "var(--lcars-primary)" } as React.CSSProperties
             }
           >
             <span className="mission-akte-rail" />

@@ -48,7 +48,7 @@ export default function CookieNotice() {
         Diese Website verwendet ein technisch notwendiges Cookie (
         <code>neo_session</code>), um den Login-Bereich bereitzustellen — keine
         Tracking- oder Analyse-Cookies. Details in der{" "}
-        <Link href="/datenschutz" className="text-lcars-amber underline">
+        <Link href="/datenschutz" className="text-lcars-primary underline">
           Datenschutzerklärung
         </Link>
         .

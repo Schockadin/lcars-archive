@@ -131,7 +131,7 @@ export default function TrashTable({ items }: { items: TrashItem[] }) {
   return (
     <div className="flex flex-col gap-[8px]">
       {error && (
-        <p className="text-lcars-red" role="alert">
+        <p className="text-lcars-quinary" role="alert">
           {error}
         </p>
       )}

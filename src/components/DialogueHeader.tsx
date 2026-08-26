@@ -50,7 +50,7 @@ export default function DialogueHeader({
                     className="archive-chip"
                     style={
                       {
-                        "--chip-color": "var(--lcars-blue)",
+                        "--chip-color": "var(--lcars-tertiary)",
                       } as React.CSSProperties
                     }
                   >
@@ -69,7 +69,7 @@ export default function DialogueHeader({
               href={`/archive/${location.slug}`}
               className="archive-chip"
               style={
-                { "--chip-color": "var(--lcars-green)" } as React.CSSProperties
+                { "--chip-color": "var(--lcars-senary)" } as React.CSSProperties
               }
             >
               <span className="archive-chip-title">{location.title}</span>
