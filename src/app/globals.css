@@ -16,6 +16,12 @@
    layer(components), würde die normale Kaskade gegen tokens.css (unlayered)
    verlieren und kein Theme je greifen. */
 @import "../styles/lcars-themes.css";
+/* Unlayered, aus demselben Grund wie lcars-themes.css oben: das
+   minimalistische UI (html[data-ui="minimal"]) überschreibt Basis- und
+   Komponenten-Styles per Attribut-Selektor (Spezifität 0,1,0+) und muss dafür
+   im selben unlayered Tier wie tokens.css liegen, sonst verliert es gegen
+   unlayered CSS. */
+@import "../styles/minimal-ui.css";
 /* Unlayered, aus demselben Grund wie tokens-responsive.css oben: der
    Lesemodus muss u.a. die Sidebar (<aside className="flex …">) per
    display:none ausblenden. Läge diese Regel (wie vorher) in

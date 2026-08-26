@@ -2,7 +2,9 @@ import Link from "next/link";
 
 export function HeaderBar() {
   return (
-    <div className="flex flex-col bg-[var(--lcars-bg)] gap-[5px]">
+    // lcars-header-deco: rein dekorative Farbbalken — im minimalistischen UI
+    // (data-ui="minimal") ausgeblendet (siehe src/styles/minimal-ui.css).
+    <div className="lcars-header-deco flex flex-col bg-[var(--lcars-bg)] gap-[5px]">
       <div className="lcars-elbow-bar gap-[5px]">
         <div className="w-[35%] h-[var(--lcars-bar-h)] bg-[var(--lcars-tertiary)]" />
         <div className="w-[5%] h-[var(--lcars-bar-h)] bg-[var(--lcars-primary)]" />
@@ -23,9 +25,12 @@ export function HeaderBar() {
 
 export function FooterBar({ appVersion }: { appVersion: string | null }) {
   return (
-    <div className="lcars-elbow-bar gap-[5px]">
-      <div className="w-[25%] h-[var(--lcars-bar-h)] bg-[var(--lcars-secondary)]" />
-      <div className="w-[15%] h-[var(--lcars-bar-h)] bg-[var(--lcars-tertiary)]" />
+    // lcars-footer-bar: im minimalistischen UI zu einer schlichten Textzeile
+    // umgestylt (siehe src/styles/minimal-ui.css); die reinen Farbblöcke
+    // (lcars-deco-block) werden dort ausgeblendet, die Links bleiben.
+    <div className="lcars-footer-bar lcars-elbow-bar gap-[5px]">
+      <div className="lcars-deco-block w-[25%] h-[var(--lcars-bar-h)] bg-[var(--lcars-secondary)]" />
+      <div className="lcars-deco-block w-[15%] h-[var(--lcars-bar-h)] bg-[var(--lcars-tertiary)]" />
       <div className="w-[30%] h-[var(--lcars-bar-h)] bg-[var(--lcars-quinary)] flex items-center justify-end px-[10px]">
         {appVersion && (
           <Link href="/changelog" className="lcars-footer-version">

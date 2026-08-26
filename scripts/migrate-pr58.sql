@@ -35,3 +35,14 @@ ALTER TABLE content_embeddings
 -- 4. Vektor-Index neu anlegen (identisch zu schema.sql).
 CREATE INDEX IF NOT EXISTS idx_content_embeddings_vec
   ON content_embeddings USING hnsw (embedding vector_cosine_ops);
+
+-- ---------------------------------------------------------------------------
+-- users.ui_mode
+-- ---------------------------------------------------------------------------
+-- UI-Modus der Oberfläche: 'lcars' (Default, volles LCARS-Design) oder
+-- 'minimal' (schlankes, minimalistisches UI). Angemeldete Personen wählen den
+-- Modus im Profil (/user). Bestandskonten erhalten per DEFAULT das unveränderte
+-- LCARS-Interface. Kein CHECK (analog color_theme); unbekannte Werte fallen
+-- App-seitig auf 'lcars' zurück.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS ui_mode TEXT NOT NULL
+  DEFAULT 'lcars';

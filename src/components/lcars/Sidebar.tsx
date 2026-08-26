@@ -4,11 +4,11 @@ import SidebarMenuFallback from "./SidebarMenuFallback";
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-[var(--lcars-sidebar-w)] h-[100svh]">
+    <aside className="lcars-sidebar flex w-[var(--lcars-sidebar-w)] h-[100svh]">
       {/* Linke Seite */}
-      <div className="flex flex-col h-full w-[var(--lcars-bar-width)] gap-[5px]">
-        {/* Sidebar Header */}
-        <div className="flex flex-col w-[var(--lcars-bar-width)] h-[var(--lcars-sidebar-header-h)] gap-[5px]">
+      <div className="lcars-sidebar-navcol flex flex-col h-full w-[var(--lcars-bar-width)] gap-[5px]">
+        {/* Sidebar Header (rein dekorativ) */}
+        <div className="lcars-sidebar-deco flex flex-col w-[var(--lcars-bar-width)] h-[var(--lcars-sidebar-header-h)] gap-[5px]">
           <div className="w-full h-[150px] bg-[var(--lcars-quaternary)]" />
           <div className="lcars-elbow-top" />
         </div>
@@ -20,9 +20,9 @@ export default function Sidebar() {
           <SideBarMenu />
         </Suspense>
 
-        {/* Sidebar Footer */}
+        {/* Sidebar Footer (rein dekorativ) */}
         <div
-          className="lcars-elbow-top"
+          className="lcars-sidebar-deco lcars-elbow-top"
           style={{
             width: "100%",
             backgroundColor: "var(--lcars-secondary)",
@@ -30,8 +30,8 @@ export default function Sidebar() {
         />
       </div>
 
-      {/* Rechte Seite */}
-      <div className="w-full h-full flex flex-col gap-[5px]">
+      {/* Rechte Seite (rein dekorativ) */}
+      <div className="lcars-sidebar-deco w-full h-full flex flex-col gap-[5px]">
         {/* Sidebar Header */}
         <div className="w-full h-[var(--lcars-sidebar-header-h)] bg-[var(--lcars-tertiary)]">
           <div className="w-full h-[var(--lcars-header-h)] bg-[var(--lcars-bg)] rounded-bl-[60px]" />

@@ -61,6 +61,10 @@ export interface User {
   // Hex-Farben überschreiben (Token→Hex). Default (DB) = {}. Wird beim Lesen
   // gegen gültige Token-IDs/Hex gefiltert (sanitizeThemeOverrides).
   theme_overrides: Record<string, string>;
+  // UI-Modus der Oberfläche: "lcars" (Default) oder "minimal" (schlankes UI
+  // ohne LCARS-Chrome, siehe src/lib/uiMode.ts). Freier String; die App
+  // normalisiert unbekannte Werte auf "lcars" (normalizeUiMode).
+  ui_mode: string;
   // Wird bei jeder Passwortänderung (setPassword) erhöht und im
   // Session-Cookie mitgeführt (siehe SessionPayload.sessionVersion) — ein
   // Cookie mit veraltetem Wert wird von getCurrentUser() als abgelaufen

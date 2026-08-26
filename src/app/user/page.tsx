@@ -23,6 +23,8 @@ import NewsSettingsForm from "./NewsSettingsForm";
 import EditorSpellcheckSettingsForm from "./EditorSpellcheckSettingsForm";
 import CharacterColorForm from "./CharacterColorForm";
 import ThemeSettingsForm from "./ThemeSettingsForm";
+import UiModeSettingsForm from "./UiModeSettingsForm";
+import { normalizeUiMode } from "@/lib/uiMode";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 import DataRow from "@/components/lcars/DataRow";
@@ -58,6 +60,7 @@ export default async function UserPage() {
   const spellcheckEnabled = await getEditorSpellcheckPreference(target.id);
   const colorTheme = normalizeThemeId(target.color_theme);
   const themeOverrides = sanitizeThemeOverrides(target.theme_overrides);
+  const uiMode = normalizeUiMode(target.ui_mode);
 
   // Charakter-Farben: eine Liste statt einer einzigen Wahl, seit die Farbe
   // pro Charakter statt pro User lebt (Multis sollen für jeden Charakter
@@ -160,6 +163,14 @@ export default async function UserPage() {
                   currentTheme={colorTheme}
                   currentOverrides={themeOverrides}
                 />
+
+                <h2 className="mt-[8px]">Oberfläche</h2>
+                <p>
+                  Bevorzugst du es schlicht? Deaktiviere das LCARS-Design und
+                  nutze stattdessen ein schlankes, minimalistisches Interface.
+                  Die Wahl gilt nur für dich und bleibt bei jedem Login erhalten.
+                </p>
+                <UiModeSettingsForm currentMode={uiMode} />
               </section>
             </DataRow>
 

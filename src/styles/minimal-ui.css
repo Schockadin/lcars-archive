@@ -1,0 +1,164 @@
+/* ─── Minimalistisches UI (data-ui="minimal") ──────────────────────────
+   Aktiviert über das Profil (/user → „Darstellung"), gespeichert als
+   users.ui_mode und per neo_ui-Cookie noch vor dem ersten Paint auf
+   <html data-ui="minimal"> gesetzt (src/app/layout.tsx / ThemeApplier).
+
+   Deaktiviert die dekorative LCARS-Chrome (Elbows, Farbbalken, Pillen,
+   Versalien, LCARS-Schrift) und ersetzt sie durch eine flache, schlichte
+   Oberfläche mit Systemschrift — die Struktur (Sidebar-Navigation, Header,
+   Inhalt) bleibt funktional erhalten, nur die Optik wird neutralisiert.
+
+   Rein CSS-basiert (wie die Farbthemes) und unlayered importiert, damit die
+   normale Kaskade greift und die statische Vorab-Renderung erhalten bleibt.
+   Die Fließtextfarbe kommt weiterhin aus den festen --lcars-ink-* Tokens
+   (tokens.css), sodass der Text auch hier gut lesbar bleibt.
+──────────────────────────────────────────────────────────────────── */
+
+html[data-ui="minimal"] {
+  /* Flache Radien statt Pillen/Elbows. */
+  --lcars-radius-pill: 6px;
+}
+
+/* ── Typografie: Systemschrift, normale Laufweite, keine Versalien ──── */
+html[data-ui="minimal"] body {
+  font-family:
+    system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  letter-spacing: normal;
+}
+html[data-ui="minimal"] h1,
+html[data-ui="minimal"] h2,
+html[data-ui="minimal"] h3,
+html[data-ui="minimal"] h4,
+html[data-ui="minimal"] h5,
+html[data-ui="minimal"] .lcars-heading,
+html[data-ui="minimal"] .lcars-header-title,
+html[data-ui="minimal"] .lcars-eyebrow,
+html[data-ui="minimal"] .lcars-back-link,
+html[data-ui="minimal"] .lcars-menu-text,
+html[data-ui="minimal"] .lcars-menu-id,
+html[data-ui="minimal"] .lcars-footer-menu,
+html[data-ui="minimal"] .lcars-toc-title,
+html[data-ui="minimal"] .lcars-toc-link {
+  font-family: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+}
+html[data-ui="minimal"] h1,
+html[data-ui="minimal"] .lcars-heading {
+  font-size: 30px;
+  font-weight: 600;
+}
+html[data-ui="minimal"] .lcars-eyebrow {
+  letter-spacing: 0.08em;
+}
+
+/* ── Sidebar → schlanke Navigationsspalte ──────────────────────────── */
+/* Rein dekorative Teile (Farbblöcke, Elbows, rechte Zierspalte) entfernen. */
+html[data-ui="minimal"] .lcars-sidebar-deco,
+html[data-ui="minimal"] .lcars-elbow-top,
+html[data-ui="minimal"] .lcars-elbow-bottom,
+html[data-ui="minimal"] .lcars-header-deco,
+html[data-ui="minimal"] .lcars-deco-block {
+  display: none !important;
+}
+
+html[data-ui="minimal"] .lcars-sidebar {
+  width: 200px;
+  background: var(--lcars-surface);
+  border-right: 1px solid var(--lcars-border);
+}
+html[data-ui="minimal"] .lcars-sidebar-navcol {
+  width: 100%;
+  padding: 8px;
+  gap: 2px;
+}
+
+/* Menüeinträge (waren farbige Elbow-Blöcke) → schlichte, linksbündige Links. */
+html[data-ui="minimal"] .lcars-menu-bar,
+html[data-ui="minimal"] .lcars-menu-pill {
+  width: 100%;
+  min-height: 0;
+  height: auto;
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: transparent;
+  justify-content: flex-start;
+  align-items: center;
+}
+html[data-ui="minimal"] .lcars-menu-bar:hover,
+html[data-ui="minimal"] .lcars-menu-pill:hover {
+  background: var(--lcars-surface-2);
+}
+html[data-ui="minimal"] .lcars-menu-active,
+html[data-ui="minimal"] .lcars-menu-active:hover {
+  background: var(--lcars-surface-2);
+  box-shadow: inset 3px 0 0 var(--lcars-primary);
+}
+html[data-ui="minimal"] .lcars-menu-text {
+  color: var(--lcars-ink);
+  font-size: 16px;
+  font-weight: 500;
+}
+/* Die reine Positionsnummer (LCARS-Deko) im schlanken UI weglassen. */
+html[data-ui="minimal"] .lcars-menu-id {
+  display: none;
+}
+/* Nav-Icon dauerhaft anzeigen (statt nur mobil) — trägt die Wiedererkennung. */
+html[data-ui="minimal"] .lcars-menu-icon {
+  display: flex;
+  margin-right: 8px;
+  color: var(--lcars-ink);
+}
+
+/* ── Header → schlichte Kopfzeile ohne Elbow-Balken ────────────────── */
+html[data-ui="minimal"] header {
+  height: auto;
+}
+html[data-ui="minimal"] .lcars-header-content {
+  height: auto;
+  border-bottom: 1px solid var(--lcars-border);
+}
+
+/* ── Footer → schlichte Textzeile ──────────────────────────────────── */
+html[data-ui="minimal"] .lcars-footer-bar {
+  height: auto;
+  background: transparent;
+  align-items: center;
+  gap: 14px;
+  padding: 6px 10px;
+  border-top: 1px solid var(--lcars-border);
+}
+html[data-ui="minimal"] .lcars-footer-bar > div {
+  width: auto !important;
+  height: auto !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+html[data-ui="minimal"] .lcars-footer-menu {
+  width: auto;
+  min-width: 0;
+  height: auto;
+  background: transparent;
+  color: var(--lcars-ink-dim);
+  font-weight: 500;
+  font-size: 13px;
+  padding: 0;
+}
+html[data-ui="minimal"] .lcars-footer-menu:hover {
+  background: transparent;
+  color: var(--lcars-ink);
+  text-decoration: underline;
+}
+html[data-ui="minimal"] .lcars-footer-version {
+  color: var(--lcars-ink-dim);
+}
+
+/* ── Pill-Buttons → flache Schaltflächen ───────────────────────────── */
+html[data-ui="minimal"] .lcars-pill-btn,
+html[data-ui="minimal"] .lcars-pill-btn--outline,
+html[data-ui="minimal"] .lcars-usernav-pill {
+  border-radius: 6px;
+  text-transform: none;
+  letter-spacing: normal;
+}

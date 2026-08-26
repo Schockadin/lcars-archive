@@ -129,6 +129,11 @@ CREATE TABLE IF NOT EXISTS users (
   -- eigenen Hex-Farben überschreiben, z.B. {"primary":"#ff0000"}. Wird beim
   -- Lesen gegen die gültigen Token-IDs/Hex-Werte gefiltert (sanitizeThemeOverrides).
   theme_overrides               JSONB NOT NULL DEFAULT '{}',
+  -- UI-Modus der Oberfläche: 'lcars' (Default, volles LCARS-Design) oder
+  -- 'minimal' (schlankes, minimalistisches UI, siehe src/lib/uiMode.ts /
+  -- src/styles/minimal-ui.css). Kein DB-CHECK (analog color_theme), unbekannte
+  -- Werte fallen App-seitig auf 'lcars' zurück.
+  ui_mode                       TEXT NOT NULL DEFAULT 'lcars',
   additional_roles              TEXT[] NOT NULL DEFAULT '{}',
   permission_overrides          JSONB NOT NULL DEFAULT '{}'
 );

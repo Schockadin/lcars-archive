@@ -17,6 +17,11 @@ import {
   THEME_CUSTOM_COOKIE_NAME,
   type ThemeOverrides,
 } from "@/lib/themes";
+import {
+  UI_MODE_COOKIE_NAME,
+  DEFAULT_UI_MODE,
+  normalizeUiMode,
+} from "@/lib/uiMode";
 
 // Re-Export für serverseitige Aufrufer (z.B. src/app/layout.tsx), die die
 // Namen bisher aus der Session bezogen haben. Definiert werden sie in themes.ts
@@ -41,6 +46,7 @@ export async function createSession(user: {
   // (FOUC-frei) greifen.
   color_theme?: string;
   theme_overrides?: Record<string, string>;
+  ui_mode?: string;
 }): Promise<void> {
   const expiresAt = Date.now() + SESSION_DURATION_MS;
   const token = encodeSessionToken({
@@ -65,6 +71,29 @@ export async function createSession(user: {
     sanitizeThemeOverrides(user.theme_overrides),
     expiresAt,
   );
+  await setUiModeCookie(normalizeUiMode(user.ui_mode), expiresAt);
+}
+
+// Schreibt (oder entfernt) das JS-lesbare UI-Modus-Cookie. Für "lcars" (Default)
+// wird das Cookie gelöscht statt gesetzt — das Init-Skript behandelt „kein
+// Cookie" und „lcars" identisch (volles LCARS-Design), so bleibt es aufgeräumt.
+export async function setUiModeCookie(
+  mode: string,
+  expiresAtMs: number = Date.now() + SESSION_DURATION_MS,
+): Promise<void> {
+  const cookieStore = await cookies();
+  const normalized = normalizeUiMode(mode);
+  if (normalized === DEFAULT_UI_MODE) {
+    cookieStore.delete(UI_MODE_COOKIE_NAME);
+    return;
+  }
+  cookieStore.set(UI_MODE_COOKIE_NAME, normalized, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    expires: new Date(expiresAtMs),
+    path: "/",
+  });
 }
 
 // Schreibt (oder entfernt) das JS-lesbare Theme-Cookie. Für "standard" wird das
@@ -121,8 +150,9 @@ export async function getSession(): Promise<SessionPayload | null> {
 export async function deleteSession(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
-  // Theme-Cookies beim Logout mit entfernen, damit die nächste (ausgeloggte)
-  // Ansicht wieder das Standard-Interface ohne Individualisierung zeigt.
+  // Theme-/UI-Cookies beim Logout mit entfernen, damit die nächste (ausgeloggte)
+  // Ansicht wieder das Standard-Interface (LCARS, ohne Individualisierung) zeigt.
   cookieStore.delete(THEME_COOKIE_NAME);
   cookieStore.delete(THEME_CUSTOM_COOKIE_NAME);
+  cookieStore.delete(UI_MODE_COOKIE_NAME);
 }
