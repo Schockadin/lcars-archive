@@ -364,6 +364,11 @@ export interface UserCredentials {
   password_hash: string | null;
   requires_activation: boolean;
   session_version: number;
+  // Für createSession beim Login mitgeladen, damit die Theme-Cookies direkt aus
+  // der gespeicherten Präferenz gesetzt werden (siehe src/lib/session.ts) —
+  // sonst greift das gewählte Farbtheme erst nach dem nächsten Speichern.
+  color_theme: string;
+  theme_overrides: Record<string, string>;
 }
 
 // client optional per Default der globale sql-Client, kann aber eine
@@ -376,7 +381,8 @@ export async function getUserCredentialsByEmail(
   client: SqlClient = sql,
 ): Promise<UserCredentials | null> {
   const rows = await client<UserCredentials[]>`
-    SELECT id, email, name, role, is_active, password_hash, requires_activation, session_version
+    SELECT id, email, name, role, is_active, password_hash, requires_activation,
+           session_version, color_theme, theme_overrides
     FROM users
     WHERE lower(email) = ${email}
     LIMIT 1
