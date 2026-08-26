@@ -5,7 +5,11 @@ import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "./dal";
 import { hasPassword, getEditorSpellcheckPreference } from "@/lib/users";
-import { COLOR_THEMES, normalizeThemeId } from "@/lib/themes";
+import {
+  COLOR_THEMES,
+  normalizeThemeId,
+  sanitizeThemeOverrides,
+} from "@/lib/themes";
 import { getCharactersForUser, getUsedCharacterColors } from "@/lib/characters";
 import {
   resolveCharacterDefaultColor,
@@ -53,6 +57,7 @@ export default async function UserPage() {
   const needsPassword = !hasPasswordSet;
   const spellcheckEnabled = await getEditorSpellcheckPreference(target.id);
   const colorTheme = normalizeThemeId(target.color_theme);
+  const themeOverrides = sanitizeThemeOverrides(target.theme_overrides);
 
   // Charakter-Farben: eine Liste statt einer einzigen Wahl, seit die Farbe
   // pro Charakter statt pro User lebt (Multis sollen für jeden Charakter
@@ -147,11 +152,14 @@ export default async function UserPage() {
               <section id="theme" className="flex flex-col gap-[16px]">
                 <h2>Farbtheme</h2>
                 <p>
-                  Färbe die gesamte Oberfläche in einem der LCARS-Farbschemata.
-                  Die Wahl gilt nur für dich und bleibt bei jedem Login
-                  erhalten.
+                  Färbe die gesamte Oberfläche in einem der LCARS-Farbschemata —
+                  wahlweise mit eigenen Akzentfarben feinjustiert. Die Wahl gilt
+                  nur für dich und bleibt bei jedem Login erhalten.
                 </p>
-                <ThemeSettingsForm currentTheme={colorTheme} />
+                <ThemeSettingsForm
+                  currentTheme={colorTheme}
+                  currentOverrides={themeOverrides}
+                />
               </section>
             </DataRow>
 

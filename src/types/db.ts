@@ -57,6 +57,10 @@ export interface User {
   // Default (DB) = "standard". Freier String; die App normalisiert unbekannte
   // Werte auf "standard" (normalizeThemeId).
   color_theme: string;
+  // Individualisierung: einzelne Akzent-Tokens (primary…senary) mit eigenen
+  // Hex-Farben überschreiben (Token→Hex). Default (DB) = {}. Wird beim Lesen
+  // gegen gültige Token-IDs/Hex gefiltert (sanitizeThemeOverrides).
+  theme_overrides: Record<string, string>;
   // Wird bei jeder Passwortänderung (setPassword) erhöht und im
   // Session-Cookie mitgeführt (siehe SessionPayload.sessionVersion) — ein
   // Cookie mit veraltetem Wert wird von getCurrentUser() als abgelaufen

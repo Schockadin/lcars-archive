@@ -89,6 +89,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 --    (Teilmenge von created/updated/deleted). Default = nur 'created' ("Neu").
 --  - color_theme: gewähltes LCARS-Farbtheme der Oberfläche (siehe
 --    src/lib/themes.ts). Default = 'standard' (unverändertes DS9/VOY-Interface).
+--  - theme_overrides: individuelle Akzent-Farben, die das gewählte Theme
+--    überschreiben (JSONB Token→Hex, Default = '{}' = keine).
 --  - additional_roles/permission_overrides: granulares RBAC (siehe
 --    src/lib/permissions.ts). role bleibt die Primär-/Anzeigerolle;
 --    additional_roles hält weitere Preset-Rollen (ein User kann mehrere haben).
@@ -123,6 +125,10 @@ CREATE TABLE IF NOT EXISTS users (
   -- fallen auf 'standard' zurück. Kein DB-CHECK, damit neue Themes ohne
   -- Migration hinzukommen können.
   color_theme                   TEXT NOT NULL DEFAULT 'standard',
+  -- Individualisierung des Themes: einzelne Akzent-Tokens (primary…senary) mit
+  -- eigenen Hex-Farben überschreiben, z.B. {"primary":"#ff0000"}. Wird beim
+  -- Lesen gegen die gültigen Token-IDs/Hex-Werte gefiltert (sanitizeThemeOverrides).
+  theme_overrides               JSONB NOT NULL DEFAULT '{}',
   additional_roles              TEXT[] NOT NULL DEFAULT '{}',
   permission_overrides          JSONB NOT NULL DEFAULT '{}'
 );
@@ -762,6 +768,11 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS news_kinds TEXT[] NOT NULL
 -- Themes kommen ohne Migration hinzu, die App validiert gegen COLOR_THEMES.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS color_theme TEXT NOT NULL
   DEFAULT 'standard';
+
+-- theme_overrides: individuelle Akzent-Farben, die das gewählte Theme
+-- überschreiben (JSONB Token→Hex). Default '{}' = keine Individualisierung.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_overrides JSONB NOT NULL
+  DEFAULT '{}';
 
 -- RBAC: weitere Rollen (ein User kann mehrere haben) + individuelle
 -- Rechte-Overrides (siehe src/lib/permissions.ts). Reine Struktur-Anlage; die

@@ -18,3 +18,9 @@
 -- DS9/VOY-Interface ('standard').
 ALTER TABLE users ADD COLUMN IF NOT EXISTS color_theme TEXT NOT NULL
   DEFAULT 'standard';
+
+-- Individualisierung: einzelne Akzent-Tokens (primary…senary) mit eigenen
+-- Hex-Farben überschreiben. JSONB Token→Hex, Default '{}' = keine. Wird beim
+-- Lesen App-seitig gegen gültige Token-IDs/Hex-Werte gefiltert.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_overrides JSONB NOT NULL
+  DEFAULT '{}';

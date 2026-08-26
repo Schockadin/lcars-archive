@@ -307,6 +307,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Wählbare LCARS-Farbthemes",
     items: [
       "Neu: Angemeldete Nutzer:innen können im Profil unter „Darstellung“ ein Farbthema für die gesamte Oberfläche wählen — mit den echten LCARS-Farbschemata (Classic, Science, Nebula, Red Alert, Nemesis) neben dem bisherigen Standard. Jedes Theme bringt eine deutlich eigene Palette samt Hintergrund; die Wahl gilt nur für dich, wird sofort als Vorschau angewandt und bleibt nach dem Speichern bei jedem Login erhalten.",
+      "Jedes Farbthema lässt sich zusätzlich individualisieren: einzelne Akzentfarben können mit einem Farbwähler überschrieben und jederzeit wieder auf den Theme-Standard zurückgesetzt werden.",
     ],
   },
 ];

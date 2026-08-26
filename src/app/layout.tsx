@@ -10,7 +10,8 @@ import { NeoProvider } from "@/context/NeoProvider";
 import { ToastProvider } from "@/components/toast/ToastProvider";
 import { getCampaignYears } from "@/lib/constants";
 import { APP_VERSION } from "@/lib/version";
-import { THEME_COOKIE_NAME } from "@/lib/session";
+import { THEME_COOKIE_NAME, THEME_CUSTOM_COOKIE_NAME } from "@/lib/session";
+import { TOKEN_IDS } from "@/lib/themes";
 
 // next/font/google lädt die Font-Dateien zur Build-Zeit herunter und liefert
 // sie selbst aus (self-hosted) — keine Laufzeit-Anfrage an Google-Server,
@@ -42,16 +43,22 @@ export const viewport: Viewport = {
   themeColor: "#08081a",
 };
 
-// Setzt das gewählte Farbtheme aus dem (JS-lesbaren) neo_theme-Cookie noch vor
-// dem ersten Paint auf <html data-theme="…"> — ohne serverseitigen Cookie-
-// Lesezugriff, damit das Root-Layout statisch prerenderbar bleibt (Cache
-// Components, siehe next.config.ts) und statische Seiten (/offline,
-// /_not-found) nicht dynamisch werden. Kein Cookie bzw. "standard" ⇒ kein
-// Attribut ⇒ unveränderte :root-Werte aus tokens.css. Ein ungültiger
-// Cookie-Wert matcht keinen Theme-Block und fällt damit optisch ebenfalls auf
-// Standard zurück. Das Cookie ist reine Anzeige-Vorschau; Quelle der Wahrheit
-// ist users.color_theme (wird beim Login/Speichern ins Cookie gespiegelt).
-const THEME_INIT_SCRIPT = `(function(){try{var m=document.cookie.match(/(?:^|; )${THEME_COOKIE_NAME}=([^;]+)/);var t=m?decodeURIComponent(m[1]):"";if(t&&t!=="standard"){document.documentElement.setAttribute("data-theme",t);}}catch(e){}})();`;
+// Setzt Farbtheme + Individualisierung noch vor dem ersten Paint auf <html> —
+// ohne serverseitigen Cookie-Lesezugriff, damit das Root-Layout statisch
+// prerenderbar bleibt (Cache Components, siehe next.config.ts) und statische
+// Seiten (/offline, /_not-found) nicht dynamisch werden.
+//   1) neo_theme-Cookie ⇒ data-theme-Attribut (kein Cookie/"standard" ⇒ kein
+//      Attribut ⇒ unveränderte :root-Werte aus tokens.css).
+//   2) neo_theme_custom-Cookie ("id:hex,id:hex") ⇒ Inline-Style-Overrides für
+//      einzelne Akzent-Tokens. Inline-Style auf <html> gewinnt gegen jede
+//      Stylesheet-Regel, liegt also über Basis-Theme UND :root — deshalb werden
+//      --lcars-<id> UND --color-lcars-<id> gesetzt (letzteres für die
+//      Tailwind-Utilities, das die [data-theme]-Spiegelung im Standard-Theme
+//      nicht abdeckt). Nur bekannte Token-IDs + gültige Hex werden angewandt.
+// Die Cookies sind reine Anzeige-Vorschau; Quelle der Wahrheit sind
+// users.color_theme / users.theme_overrides (bei Login/Speichern gespiegelt).
+const THEME_ALLOWED_TOKENS = `{${TOKEN_IDS.map((id) => `"${id}":1`).join(",")}}`;
+const THEME_INIT_SCRIPT = `(function(){try{var d=document.documentElement;var m=document.cookie.match(/(?:^|; )${THEME_COOKIE_NAME}=([^;]+)/);var t=m?decodeURIComponent(m[1]):"";if(t&&t!=="standard"){d.setAttribute("data-theme",t);}var a=${THEME_ALLOWED_TOKENS};var c=document.cookie.match(/(?:^|; )${THEME_CUSTOM_COOKIE_NAME}=([^;]+)/);if(c){var p=decodeURIComponent(c[1]).split(",");for(var i=0;i<p.length;i++){var kv=p[i].split(":");var id=kv[0],hx=kv[1];if(a[id]&&/^[0-9a-fA-F]{6}$/.test(hx)){d.style.setProperty("--lcars-"+id,"#"+hx);d.style.setProperty("--color-lcars-"+id,"#"+hx);}}}}catch(e){}})();`;
 
 export default function RootLayout({
   children,
@@ -66,10 +73,11 @@ export default function RootLayout({
     >
       <body>
         {/* Läuft als erstes Body-Element noch während des HTML-Parsings, also
-            vor dem Paint der App — setzt data-theme aus dem neo_theme-Cookie,
-            damit das gewählte Farbtheme ohne Flackern (FOUC) erscheint. In
-            App-Router-Root-Layouts gehören solche Pre-Paint-Skripte in den
-            Body, nicht in einen manuellen <head> (Metadata-API-Konflikt). */}
+            vor dem Paint der App — setzt Farbtheme + Individualisierung aus den
+            neo_theme(_custom)-Cookies, damit sie ohne Flackern (FOUC)
+            erscheinen. In App-Router-Root-Layouts gehören solche Pre-Paint-
+            Skripte in den Body, nicht in einen manuellen <head>
+            (Metadata-API-Konflikt). */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <NeoProvider>
           <ToastProvider>

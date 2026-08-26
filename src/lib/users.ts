@@ -18,7 +18,7 @@ const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
   last_visit_at, last_dashboard_visit_at,
   email_notifications_enabled, push_notifications_enabled, notify_content_types,
-  news_kinds, color_theme, additional_roles, permission_overrides,
+  news_kinds, color_theme, theme_overrides, additional_roles, permission_overrides,
   session_version
 `;
 
@@ -307,6 +307,19 @@ export async function updateColorThemePreference(
 ): Promise<void> {
   await sql`
     UPDATE users SET color_theme = ${theme}
+    WHERE id = ${userId}
+  `;
+}
+
+// Individualisierung des Themes (theme_overrides, Token→Hex). Der Aufrufer
+// filtert vorher mit sanitizeThemeOverrides — hier wird nur geschrieben. Als
+// JSONB serialisiert (postgres.js: sql.json).
+export async function updateThemeOverrides(
+  userId: number,
+  overrides: Record<string, string>,
+): Promise<void> {
+  await sql`
+    UPDATE users SET theme_overrides = ${sql.json(overrides)}
     WHERE id = ${userId}
   `;
 }
