@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { embedAllBatchAction } from "./embeddingActions";
-import ScriptProgress from "./ScriptProgress";
+import ScriptProgress from "../ScriptProgress";
 
 const BATCH_SIZE = 5;
 
@@ -71,7 +71,7 @@ export default function EmbeddingsBackfillPanel() {
 
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Erzeugt für ALLE Inhalte (Charaktere, Missionen, Berichte,
         Archiv-Einträge und abgeschlossene Gespräche) die Vektor-Embeddings
         für den Archiv-Assistenten. Einmalig nötig nach der Einrichtung

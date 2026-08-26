@@ -662,6 +662,16 @@ export default function TutorialPage() {
                 Farben des gewählten Schemas zurück. Nicht vergessen,
                 anschließend zu speichern.
               </p>
+              <p>
+                Wenn du es lieber schlicht magst, kannst du unter{" "}
+                <strong>„Oberfläche“</strong> das LCARS-Design ganz abschalten und
+                stattdessen ein <strong>minimalistisches Interface</strong>{" "}
+                wählen: schlichte Systemschrift, keine dekorativen Balken und
+                Rundungen, und die gesamte Navigation kompakt in der linken
+                Seitenleiste (auf dem Handy platzsparend als Symbole). Auch diese
+                Wahl gilt nur für dich, wird sofort als Vorschau angewendet und
+                bleibt nach dem Speichern erhalten.
+              </p>
             </div>
           </LcarsDataRow>
         </div>

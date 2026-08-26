@@ -8,6 +8,7 @@ import {
   THEME_TOKENS,
   decodeThemeOverrides,
 } from "@/lib/themes";
+import { UI_MODE_COOKIE_NAME, UI_MODE_MINIMAL } from "@/lib/uiMode";
 
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
@@ -43,6 +44,13 @@ function applyThemeFromCookies() {
       root.style.removeProperty(`--lcars-${id}`);
       root.style.removeProperty(`--color-lcars-${id}`);
     }
+  }
+
+  // UI-Modus (LCARS vs. minimal) analog zum Farbtheme aus dem Cookie ziehen.
+  if (readCookie(UI_MODE_COOKIE_NAME) === UI_MODE_MINIMAL) {
+    root.setAttribute("data-ui", UI_MODE_MINIMAL);
+  } else {
+    root.removeAttribute("data-ui");
   }
 }
 

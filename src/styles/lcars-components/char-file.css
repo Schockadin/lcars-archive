@@ -114,12 +114,12 @@
   letter-spacing: 0.02em;
 }
 .char-file-field-label {
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
   text-transform: uppercase;
   margin-right: 6px;
 }
 .char-file-field-value {
-  color: var(--lcars-text-contrast);
+  color: var(--lcars-ink-contrast);
   text-transform: uppercase;
 }
 
@@ -148,9 +148,9 @@
   flex: 1 1 auto;
   min-width: 0;
   padding: 6px 10px;
-  border: solid 1px var(--lcars-text-data);
+  border: solid 1px var(--lcars-ink-data);
   border-radius: 6px;
-  color: var(--lcars-text-contrast);
+  color: var(--lcars-ink-contrast);
   font-size: 13px;
 }
 .char-file-sheets-link:hover,
@@ -167,7 +167,7 @@
 }
 .char-file-sheets-size {
   flex: 0 0 auto;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
   font-variant-numeric: tabular-nums;
 }
 
@@ -197,7 +197,7 @@
 }
 .char-file-bio > h3 {
   font-size: 20px;
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
   scroll-margin-top: 16px;
 }
 .char-file-bio > * + * {

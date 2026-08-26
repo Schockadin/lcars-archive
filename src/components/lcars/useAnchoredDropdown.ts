@@ -21,6 +21,7 @@ export function useAnchoredDropdown({
   onClose,
   offset = 4,
   closeOnEscape = true,
+  placement = "bottom",
 }: {
   isOpen: boolean;
   triggerRef: RefObject<HTMLElement | null>;
@@ -28,6 +29,10 @@ export function useAnchoredDropdown({
   onClose: () => void;
   offset?: number;
   closeOnEscape?: boolean;
+  // "bottom": Panel unter dem Trigger, linksbündig (Default, Header/Suche).
+  // "right": Panel rechts neben dem Trigger, oberkantenbündig — für das
+  // vertikale Sidebar-Menü im minimalistischen UI (Flyout nach rechts).
+  placement?: "bottom" | "right";
 }): DropdownAnchor | null {
   const [anchor, setAnchor] = useState<DropdownAnchor | null>(null);
 
@@ -35,8 +40,12 @@ export function useAnchoredDropdown({
     const el = triggerRef.current;
     if (!el) return;
     const r = el.getBoundingClientRect();
-    setAnchor({ top: r.bottom + offset, left: r.left, width: r.width });
-  }, [triggerRef, offset]);
+    if (placement === "right") {
+      setAnchor({ top: r.top, left: r.right + offset, width: r.width });
+    } else {
+      setAnchor({ top: r.bottom + offset, left: r.left, width: r.width });
+    }
+  }, [triggerRef, offset, placement]);
 
   useEffect(() => {
     if (!isOpen) return;

@@ -26,7 +26,7 @@ export default function CharacterAssignRow({
         className="flex flex-wrap items-center gap-[8px]"
       >
         <input type="hidden" name="characterId" value={character.id} />
-        <span className="font-lcars text-lcars-text-data flex-1 min-w-0 whitespace-nowrap overflow-hidden text-ellipsis">
+        <span className="font-lcars text-lcars-ink-data flex-1 min-w-0 whitespace-nowrap overflow-hidden text-ellipsis">
           {character.name}
         </span>
         <select

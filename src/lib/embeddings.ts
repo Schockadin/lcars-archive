@@ -8,7 +8,7 @@
 //   - chunkContent(): typabhängiges Zerlegen eines Inhalts in Chunks
 //     (reine, DB-/netzfreie Logik → unit-testbar).
 //   - generateEmbedding()/embedTexts(): OpenAI-Embedding (text-embedding-3-
-//     small, auf 512 Dimensionen reduziert) per REST — analog zum Raw-HTTP-
+//     small, volle 1536 Dimensionen) per REST — analog zum Raw-HTTP-
 //     Stil von mailCore.ts (kein SDK-Zwang), hier über das schlanke openai-
 //     Paket, das genau diesen Call kapselt.
 //   - upsertEmbeddings()/deleteEmbeddings()/updateEmbedding*(): Schreibpfad in
@@ -37,12 +37,16 @@ export type EmbeddingContentType =
   | "archive_entry"
   | "dialogue";
 
-// text-embedding-3-small unterstützt die Matryoshka-Reduktion: dieselbe
-// Anfrage mit dimensions:512 liefert brauchbare, deutlich kompaktere Vektoren.
-// MUSS mit vector(512) in scripts/schema.sql und mit der Query-Seite
-// (src/lib/rag.ts) übereinstimmen.
+// text-embedding-3-small liefert Vektoren mit voller Dimension 1536 (die native
+// Ausgabegröße des Modells). Früher per Matryoshka-Reduktion auf 512 gekürzt —
+// jetzt volle 1536 Dimensionen für höhere Retrieval-Genauigkeit.
+// MUSS mit vector(1536) in scripts/schema.sql und mit der Query-Seite
+// (src/lib/rag.ts) übereinstimmen. Eine Änderung dieses Werts erfordert eine
+// Migration der content_embeddings-Spalte (siehe scripts/migrate-pr58.sql) und
+// einen vollständigen Re-Backfill (Admin → RAG → Embeddings erzeugen), da
+// Vektoren unterschiedlicher Dimension nicht kompatibel sind.
 export const EMBEDDING_MODEL = "text-embedding-3-small";
-export const EMBEDDING_DIMENSIONS = 512;
+export const EMBEDDING_DIMENSIONS = 1536;
 
 // Grobe Token-Schätzung ohne Tokenizer-Abhängigkeit: ~4 Zeichen/Token ist für
 // deutschen Fließtext eine brauchbare Näherung. Wird nur zur Chunk-Größen-

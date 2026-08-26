@@ -18,11 +18,11 @@ export default function AppShell({
 
   return (
     <div
-      className={`flex w-full h-[100svh]${readingMode ? " reading-mode" : ""}`}
+      className={`lcars-appshell flex w-full h-[100svh]${readingMode ? " reading-mode" : ""}`}
     >
       <LcarsSidebar />
       <div
-        className="flex flex-col flex-1 h-full overflow-clip"
+        className="lcars-appshell-main flex flex-col flex-1 h-full overflow-clip"
         style={{ minWidth: 0 }}
       >
         <LcarsHeader />

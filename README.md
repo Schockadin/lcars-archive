@@ -32,6 +32,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   aller Rollen) und pro Person lassen sich einzelne Rechte zusätzlich gezielt
   **gewähren oder entziehen** (Overrides). Konten entstehen weiterhin nur per
   Einladung (Aktivierungsmail mit Passwort-Setup-Link).
+- **Zentraler Zugriffsschutz (Proxy) + DAL als Source of Truth** — ein
+  Next-16-Proxy (`src/proxy.ts`, ehem. Middleware) leitet nicht angemeldete
+  Besucher:innen der geschützten Bereiche (`/user`, `/admin`, `/users`) **vor**
+  dem Rendern auf `/login` — eine schnelle, **optimistische** Vorfilterung, die
+  nur die Signatur/Ablauf des Session-Cookies prüft (kein DB-Zugriff, gemäß
+  Next.js-Empfehlung). Die **verbindliche** Zugriffskontrolle (Rollen/Rechte,
+  `is_active`, `session_version`) bleibt in der Data Access Layer
+  (`src/lib/dal.ts`) und in jeder Seite/Server-Action (Defense in Depth). Die
+  reine Krypto-/Token-Logik teilen sich Proxy und Session-Verwaltung über
+  `src/lib/sessionToken.ts`.
 - **Eigene Inhalte** — eingeloggte User legen eigene Charaktere, Einsatzberichte,
   Archiv-Einträge und Gespräche zwischen Charakteren an, mit Sichtbarkeitsstufen
   (privat/GM/öffentlich) und einem persönlichen Dashboard (farbcodierter News-Feed,
@@ -98,7 +108,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   LCARS-Paletten Classic, Science, Nebula, Red Alert, Nemesis) und können jede
   einzelne Akzentfarbe individuell überschreiben. Die Wahl gilt pro Konto, wird
   ohne Flackern schon beim Seitenaufbau angewendet (Pre-Paint-Cookie) und bleibt
-  geräteübergreifend erhalten.
+  geräteübergreifend erhalten. Die Farbe des eigentlichen Fließtexts bleibt dabei
+  bewusst konstant (feste `--lcars-ink-*`-Tokens), damit der Text in jedem Theme
+  gut lesbar bleibt.
+- **Abschaltbares LCARS-Design (minimalistisches UI)** — wer es lieber schlicht
+  mag, deaktiviert im Profil unter „Darstellung → Oberfläche“ das LCARS-Design
+  und bekommt stattdessen ein schlankes, minimalistisches Interface: System-
+  schrift, keine dekorativen Elbows/Balken/Versalien, kein Header — die gesamte
+  Navigation liegt links in der Sidebar (auf dem Handy als reine Symbole). Rein
+  CSS-basiert (`html[data-ui="minimal"]`, Pre-Paint-Cookie `neo_ui`), die
+  eigentliche Zugriffskontrolle bleibt unberührt.
 - **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und Spielleitung.
 - **Markdown-Vault als Ursprungsimport** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
@@ -221,7 +240,10 @@ REVALIDATE_SECRET="ein-langes-zufaelliges-secret"
 
 # Archiv-Assistent (RAG) — optional; fehlen die Schlüssel, ist /rag deaktiviert
 # (die App überspringt Embeddings still, wie bei RESEND/VAPID)
-OPENAI_API_KEY=""           # Embeddings (text-embedding-3-small, 512 Dim.)
+OPENAI_API_KEY=""           # Embeddings (text-embedding-3-small, 1536 Dim.)
+# OPENAI_ADMIN_API_KEY=""   # optional: Admin-Key (sk-admin-…) für das
+                            # OpenAI-Nutzungs-Panel unter /admin/rag (Costs-API);
+                            # ohne ihn wird OPENAI_API_KEY versucht
 CLOUDFLARE_AI_API_TOKEN=""  # Workers AI (Antwort-Generierung); Account-ID
                             # wird aus R2_ACCOUNT_ID wiederverwendet
 # CLOUDFLARE_AI_MODEL=""    # optional: Modell überschreiben (Default:
@@ -608,7 +630,7 @@ Datenbestands — ein klassisches **RAG** (Retrieval-Augmented Generation):
 1. **Embeddings & Index.** Jeder Inhalt (Charaktere, Missionen, Mission-Logs,
    Archiv-Einträge und abgeschlossene Gespräche) wird typabhängig in Chunks
    zerlegt (`src/lib/embeddings.ts`), per **OpenAI** `text-embedding-3-small`
-   (auf 512 Dimensionen reduziert) eingebettet und in der Tabelle
+   (volle 1536 Dimensionen) eingebettet und in der Tabelle
    **`content_embeddings`** (Extension **pgvector**) abgelegt. RBAC-Felder
    (`visibility`/`owner_id`/`is_draft`/`is_active`) sind auf der Embedding-Zeile
    **denormalisiert**, damit die Suche ohne Join filtern kann (gleiche Logik wie
@@ -639,11 +661,15 @@ Datenbestands — ein klassisches **RAG** (Retrieval-Augmented Generation):
   Schlüssel, meldet `/rag` „nicht konfiguriert".
 - **Migration:** Einmalig `scripts/migrate-pr54.sql` gegen die Produktions-DB
   ausführen (aktiviert `CREATE EXTENSION vector`, legt `content_embeddings` an
-  und zieht das Recht `rag.use` für die Bestands-Rollen nach).
+  und zieht das Recht `rag.use` für die Bestands-Rollen nach). Beim Umstieg auf
+  1536 Dimensionen zusätzlich `scripts/migrate-pr58.sql` ausführen (typisiert die
+  `embedding`-Spalte um; verwirft die alten 512er-Vektoren) und anschließend neu
+  backfillen.
 - **Backfill:** Einmalig `npm run embed:all` (oder der Admin-Knopf
-  „Archiv-Assistent · Embeddings" unter `/admin/scripts`) baut den Index für
-  alle Inhalte auf; idempotent und nach Inhalts-/Chunking-Änderungen
-  wiederholbar.
+  „Embeddings" unter `/admin/rag`) baut den Index für alle Inhalte auf;
+  idempotent und nach Inhalts-/Chunking-Änderungen wiederholbar. Unter
+  `/admin/rag` zeigt außerdem ein Panel die aktuelle OpenAI-Nutzung (Kosten des
+  laufenden Monats, best-effort das Restguthaben).
 
 **Kosten:** Initial-Embedding des kleinen Fan-Archivs < 0,10 $; Workers AI läuft
 für das erwartete Fragevolumen voraussichtlich im Free Tier.

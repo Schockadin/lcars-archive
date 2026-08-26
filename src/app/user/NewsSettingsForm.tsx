@@ -44,7 +44,7 @@ export default function NewsSettingsForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-[16px]">
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Lege fest, welche Neuigkeiten in der News-Sektion auf dem Dashboard
         erscheinen. Alle drei angehakt entspricht „alles“.
       </p>

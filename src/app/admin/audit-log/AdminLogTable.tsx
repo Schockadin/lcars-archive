@@ -107,7 +107,7 @@ export default function AdminLogTable<T>({
   return (
     <div className="flex flex-col gap-[12px]">
       {rows.length === 0 ? (
-        <p className="text-lcars-text-dim">{emptyMessage}</p>
+        <p className="text-lcars-ink-dim">{emptyMessage}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-[13px]">
@@ -157,7 +157,7 @@ export default function AdminLogTable<T>({
                 <tr>
                   <td
                     colSpan={columns.length}
-                    className="py-[6px] text-lcars-text-dim"
+                    className="py-[6px] text-lcars-ink-dim"
                   >
                     Keine Einträge für diese Filter.
                   </td>
@@ -193,7 +193,7 @@ export default function AdminLogTable<T>({
       {rows.length > 0 && (
         <div className="lcars-log-pagination">
           <label className="lcars-log-pagination-size">
-            <span className="text-lcars-text-dim">Pro Seite</span>
+            <span className="text-lcars-ink-dim">Pro Seite</span>
             <select
               value={String(pageSize)}
               onChange={(e) => {
@@ -222,7 +222,7 @@ export default function AdminLogTable<T>({
               >
                 ‹
               </button>
-              <span className="text-lcars-text-dim whitespace-nowrap tabular-nums">
+              <span className="text-lcars-ink-dim whitespace-nowrap tabular-nums">
                 {currentPage} / {totalPages}
               </span>
               <button

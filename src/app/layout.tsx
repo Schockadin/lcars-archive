@@ -14,6 +14,7 @@ import { getCampaignYears } from "@/lib/constants";
 import { APP_VERSION } from "@/lib/version";
 import { THEME_COOKIE_NAME, THEME_CUSTOM_COOKIE_NAME } from "@/lib/session";
 import { TOKEN_IDS } from "@/lib/themes";
+import { UI_MODE_COOKIE_NAME, UI_MODE_MINIMAL } from "@/lib/uiMode";
 
 // next/font/google lädt die Font-Dateien zur Build-Zeit herunter und liefert
 // sie selbst aus (self-hosted) — keine Laufzeit-Anfrage an Google-Server,
@@ -59,8 +60,11 @@ export const viewport: Viewport = {
 //      nicht abdeckt). Nur bekannte Token-IDs + gültige Hex werden angewandt.
 // Die Cookies sind reine Anzeige-Vorschau; Quelle der Wahrheit sind
 // users.color_theme / users.theme_overrides (bei Login/Speichern gespiegelt).
+// 3) neo_ui-Cookie ("minimal") ⇒ data-ui="minimal" (kein Cookie/"lcars" ⇒ kein
+//    Attribut ⇒ volles LCARS-Design). Aktiviert das schlanke UI (minimal-ui.css)
+//    noch vor dem ersten Paint, damit kein LCARS-Chrome aufblitzt.
 const THEME_ALLOWED_TOKENS = `{${TOKEN_IDS.map((id) => `"${id}":1`).join(",")}}`;
-const THEME_INIT_SCRIPT = `(function(){try{var d=document.documentElement;var m=document.cookie.match(/(?:^|; )${THEME_COOKIE_NAME}=([^;]+)/);var t=m?decodeURIComponent(m[1]):"";if(t&&t!=="standard"){d.setAttribute("data-theme",t);}var a=${THEME_ALLOWED_TOKENS};var c=document.cookie.match(/(?:^|; )${THEME_CUSTOM_COOKIE_NAME}=([^;]+)/);if(c){var p=decodeURIComponent(c[1]).split(",");for(var i=0;i<p.length;i++){var kv=p[i].split(":");var id=kv[0],hx=kv[1];if(a[id]&&/^[0-9a-fA-F]{6}$/.test(hx)){d.style.setProperty("--lcars-"+id,"#"+hx);d.style.setProperty("--color-lcars-"+id,"#"+hx);}}}}catch(e){}})();`;
+const THEME_INIT_SCRIPT = `(function(){try{var d=document.documentElement;var m=document.cookie.match(/(?:^|; )${THEME_COOKIE_NAME}=([^;]+)/);var t=m?decodeURIComponent(m[1]):"";if(t&&t!=="standard"){d.setAttribute("data-theme",t);}var a=${THEME_ALLOWED_TOKENS};var c=document.cookie.match(/(?:^|; )${THEME_CUSTOM_COOKIE_NAME}=([^;]+)/);if(c){var p=decodeURIComponent(c[1]).split(",");for(var i=0;i<p.length;i++){var kv=p[i].split(":");var id=kv[0],hx=kv[1];if(a[id]&&/^[0-9a-fA-F]{6}$/.test(hx)){d.style.setProperty("--lcars-"+id,"#"+hx);d.style.setProperty("--color-lcars-"+id,"#"+hx);}}}var u=document.cookie.match(/(?:^|; )${UI_MODE_COOKIE_NAME}=([^;]+)/);if(u&&decodeURIComponent(u[1])==="${UI_MODE_MINIMAL}"){d.setAttribute("data-ui","${UI_MODE_MINIMAL}");}}catch(e){}})();`;
 
 export default function RootLayout({
   children,

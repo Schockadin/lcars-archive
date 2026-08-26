@@ -16,6 +16,12 @@
    layer(components), würde die normale Kaskade gegen tokens.css (unlayered)
    verlieren und kein Theme je greifen. */
 @import "../styles/lcars-themes.css";
+/* Unlayered, aus demselben Grund wie lcars-themes.css oben: das
+   minimalistische UI (html[data-ui="minimal"]) überschreibt Basis- und
+   Komponenten-Styles per Attribut-Selektor (Spezifität 0,1,0+) und muss dafür
+   im selben unlayered Tier wie tokens.css liegen, sonst verliert es gegen
+   unlayered CSS. */
+@import "../styles/minimal-ui.css";
 /* Unlayered, aus demselben Grund wie tokens-responsive.css oben: der
    Lesemodus muss u.a. die Sidebar (<aside className="flex …">) per
    display:none ausblenden. Läge diese Regel (wie vorher) in
@@ -82,7 +88,7 @@
     width: 100%;
     overflow: clip;
     background: var(--lcars-bg);
-    color: var(--lcars-text);
+    color: var(--lcars-ink);
     font-family: var(--font-antonio), "Antonio", sans-serif;
     letter-spacing: 0.05em;
     -webkit-font-smoothing: antialiased;
@@ -108,7 +114,7 @@
     font-size: 20px;
     font-weight: 600;
     letter-spacing: 0.08em;
-    color: var(--lcars-text-data);
+    color: var(--lcars-ink-data);
     line-height: 1.1;
     margin-bottom: 5px;
     margin-top: 10px;
@@ -117,11 +123,11 @@
 
   h3,
   h4 {
-    color: var(--lcars-text-data);
+    color: var(--lcars-ink-data);
   }
 
   h5 {
-    color: var(--lcars-text);
+    color: var(--lcars-ink);
   }
 
   .lcars-eyebrow {
@@ -154,7 +160,7 @@
   .lcars-text {
     font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
     letter-spacing: 0.08em;
-    color: var(--lcars-text-light);
+    color: var(--lcars-ink-light);
     line-height: 1.75;
     margin-bottom: 10px;
     hyphens: auto;

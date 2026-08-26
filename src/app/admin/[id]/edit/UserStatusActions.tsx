@@ -77,7 +77,7 @@ export default function UserStatusActions({
           Passwort zurücksetzen
         </button>
         {resetState?.sent && (
-          <span className="text-lcars-text-data" role="status">
+          <span className="text-lcars-ink-data" role="status">
             Reset-Mail an {user.email} gesendet.
           </span>
         )}
@@ -93,7 +93,7 @@ export default function UserStatusActions({
               readOnly
               value={resetState.manualActivationUrl}
               onFocus={(e) => e.currentTarget.select()}
-              className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-data outline-none"
+              className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-ink-data outline-none"
             />
           )}
         </div>
@@ -114,7 +114,7 @@ export default function UserStatusActions({
           Überall abmelden
         </button>
         {logoutState?.loggedOut && (
-          <span className="text-lcars-text-data" role="status">
+          <span className="text-lcars-ink-data" role="status">
             {user.name} wurde auf allen Geräten abgemeldet.
           </span>
         )}

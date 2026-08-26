@@ -8,7 +8,6 @@ import AssignOwnerlessMissionsPanel from "../AssignOwnerlessMissionsPanel";
 import DialogueContentRegeneratePanel from "../DialogueContentRegeneratePanel";
 import LinkAllContentPanel from "../LinkAllContentPanel";
 import TypographyFixPanel from "../TypographyFixPanel";
-import EmbeddingsBackfillPanel from "../EmbeddingsBackfillPanel";
 import ToastTestPanel from "../ToastTestPanel";
 
 export const metadata: Metadata = {
@@ -76,13 +75,6 @@ export default async function AdminScriptsPage() {
             <section className="flex flex-col gap-[12px]">
               <h2 className="text-lcars-primary">Typografie korrigieren</h2>
               <TypographyFixPanel />
-            </section>
-          )}
-
-          {can("admin.access") && (
-            <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-primary">Archiv-Assistent · Embeddings</h2>
-              <EmbeddingsBackfillPanel />
             </section>
           )}
 

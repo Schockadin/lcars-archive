@@ -66,7 +66,7 @@ export default function AssignOwnerlessMissionsPanel({
 
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Weist alle Missionen ohne Owner (meist per Vault-Ingest entstanden) auf
         einen Schlag der ausgewählten Spielleitung zu. Bereits zugeordnete
         Missionen bleiben unangetastet. Läuft in Blöcken mit Fortschrittsanzeige.

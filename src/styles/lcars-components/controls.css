@@ -11,7 +11,7 @@
   display: flex;
   overflow: hidden;
   border-radius: var(--lcars-radius-pill);
-  border: solid 1px var(--lcars-text-data);
+  border: solid 1px var(--lcars-ink-data);
   max-width: 500px;
 }
 .lcars-switch-item {
@@ -34,9 +34,9 @@
   align-items: center;
   justify-content: center;
   border: none;
-  border-right: solid 1px var(--lcars-text-data);
+  border-right: solid 1px var(--lcars-ink-data);
   background: transparent;
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
 }
 .lcars-switch-item:last-child {
   border-right: none;
@@ -70,9 +70,9 @@
   flex-shrink: 0;
   cursor: pointer;
   border-radius: 100vmax;
-  border: solid 1px var(--lcars-text-data);
+  border: solid 1px var(--lcars-ink-data);
   background: var(--lcars-surface);
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
   transition: 200ms;
 }
 .lcars-icon-btn svg {
@@ -157,9 +157,9 @@
    nutzen an den Call-Sites bereits flex-wrap und profitieren automatisch
    von der neuen Auto-Breite ohne diese Regel. */
 .lcars-pill-btn--outline {
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
   background-color: var(--lcars-surface);
-  border: 1px solid var(--lcars-text-data);
+  border: 1px solid var(--lcars-ink-data);
   align-items: center;
   justify-content: center;
   min-width: 180px;
@@ -235,9 +235,9 @@
 
 /* Input-Felder */
 .lcars-input {
-  border: solid 1px var(--lcars-text-data);
+  border: solid 1px var(--lcars-ink-data);
   background: var(--lcars-surface-2);
-  color: var(--lcars-text-contrast);
+  color: var(--lcars-ink-contrast);
   padding: 8px 16px;
   outline: none;
   height: 40px;
@@ -261,10 +261,10 @@
 .lcars-file-input::file-selector-button {
   margin-right: 12px;
   padding: 6px 12px;
-  border: solid 1px var(--lcars-text-data);
+  border: solid 1px var(--lcars-ink-data);
   border-radius: 999px;
   background: var(--lcars-surface);
-  color: var(--lcars-text-contrast);
+  color: var(--lcars-ink-contrast);
   font: inherit;
   cursor: pointer;
 }
@@ -290,9 +290,9 @@
   margin-left: auto;
   padding: 16px 20px;
   background: var(--lcars-surface);
-  border: solid 1px var(--lcars-text-data);
+  border: solid 1px var(--lcars-ink-data);
   border-radius: var(--lcars-radius-card);
-  color: var(--lcars-text);
+  color: var(--lcars-ink);
   font-size: 14px;
 }
 .lcars-cookie-notice p {

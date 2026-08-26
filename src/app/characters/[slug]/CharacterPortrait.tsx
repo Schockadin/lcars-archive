@@ -186,7 +186,7 @@ export default function CharacterPortrait({
       ) : (
         <div
           className="w-full h-full flex flex-col items-center justify-center gap-2"
-          style={{ color: "var(--lcars-text-dim)" }}
+          style={{ color: "var(--lcars-ink-dim)" }}
         >
           <svg
             width="56"

@@ -18,7 +18,7 @@ export default function RevalidateCachePanel() {
 
   return (
     <form action={formAction} className="lcars-text flex flex-col gap-[12px]">
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Invalidiert die serverseitigen Inhalts-Caches, damit Änderungen sofort
         sichtbar werden, statt bis zur nächsten automatischen Ablaufzeit zu
         warten.

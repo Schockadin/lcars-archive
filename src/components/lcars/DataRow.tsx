@@ -22,7 +22,7 @@ export default function DataRow({
   label,
   color = "var(--lcars-secondary)",
   accentColor = "var(--lcars-primary)",
-  labelColor = "var(--lcars-text-contrast)",
+  labelColor = "var(--lcars-ink-contrast)",
   href,
   className = "",
   expanded,

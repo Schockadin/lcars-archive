@@ -152,7 +152,7 @@ export default function DbBackupPanel() {
 
   return (
     <div className="lcars-text flex flex-col gap-[12px]">
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Exportiert den kompletten Datenbankinhalt außer Useraccounts
         (Charaktere, Missionen, Mission-Logs, Archiv-Einträge, Follows,
         Dialog-Nachrichten, Timeline, …) als eine JSON-Datei. User laufen über
@@ -238,7 +238,7 @@ export default function DbBackupPanel() {
           {r2Backups !== null && (
             <div className="flex flex-wrap items-center gap-[12px]">
               {r2Backups.length === 0 ? (
-                <p className="text-lcars-text-dim text-[13px]">
+                <p className="text-lcars-ink-dim text-[13px]">
                   Keine Backups im Bucket gefunden.
                 </p>
               ) : (
@@ -246,7 +246,7 @@ export default function DbBackupPanel() {
                   <select
                     value={selectedR2Key}
                     onChange={(e) => setSelectedR2Key(e.target.value)}
-                    className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-primary"
+                    className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-ink-contrast outline-none focus:border-lcars-primary"
                   >
                     {r2Backups.map((b) => (
                       <option key={b.key} value={b.key}>

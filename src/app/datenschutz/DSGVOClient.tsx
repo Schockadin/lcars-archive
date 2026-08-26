@@ -248,6 +248,14 @@ export default function DSGVOClient({ year }: { year: number }) {
           dem ersten Rendern aus). Sie werden nur gesetzt, wenn du angemeldet
           bist bzw. ein Theme wählst, und beim Abmelden wieder entfernt.
         </li>
+        <li>
+          <code>neo_ui</code> speichert, ob du im Profil das LCARS-Design zugunsten
+          eines schlanken, minimalistischen Interfaces deaktiviert hast, damit
+          diese Wahl ohne Flackern schon beim Seitenaufbau angewendet wird. Es
+          enthält nur diese Anzeige-Einstellung, keine personenbezogenen Daten,
+          ist aus demselben Grund nicht <code>HttpOnly</code>, wird nur bei der
+          minimalistischen Ansicht gesetzt und beim Abmelden wieder entfernt.
+        </li>
       </ul>
       <p>
         Da es sich ausschließlich um unbedingt erforderliche bzw. für die von

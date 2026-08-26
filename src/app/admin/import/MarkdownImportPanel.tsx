@@ -243,7 +243,7 @@ export default function MarkdownImportPanel({
 
   return (
     <div className="lcars-text flex flex-col gap-[16px]">
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Lädt eine oder mehrere Markdown-Dateien im Vault-Frontmatter-Format
         (wie beim CLI-Ingest) hoch. Jede Datei wird zunächst nur geparst und
         als durchblätterbare, editierbare Vorschau angezeigt — erst nach
@@ -262,7 +262,7 @@ export default function MarkdownImportPanel({
             setRows([]);
             setCurrentIndex(0);
           }}
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-contrast outline-none focus:border-lcars-primary"
+          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-ink-contrast outline-none focus:border-lcars-primary"
         >
           {Object.entries(CONTENT_TYPE_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
@@ -416,13 +416,13 @@ function ImportRowCard({
           className="flex gap-[12px] items-center justify-end mt-[4px]"
         />
       )}
-      {row.status === "importing" && <p className="text-lcars-text-dim">Wird angelegt…</p>}
+      {row.status === "importing" && <p className="text-lcars-ink-dim">Wird angelegt…</p>}
       {row.status === "imported" && (
         <p className="text-lcars-primary">Angelegt als „{row.resultSlug}“.</p>
       )}
       {row.status === "error" && <p className="text-lcars-quinary">{row.resultError}</p>}
       {row.status === "discarded" && (
-        <p className="text-lcars-text-dim">Verworfen, nicht angelegt.</p>
+        <p className="text-lcars-ink-dim">Verworfen, nicht angelegt.</p>
       )}
     </div>
   );

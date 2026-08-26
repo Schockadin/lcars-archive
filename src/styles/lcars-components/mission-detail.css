@@ -82,14 +82,14 @@
   font-size: 12px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
 }
 .lcars-meta-row b {
   font-weight: 400;
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
 }
 .lcars-meta-row a {
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
   text-decoration: none;
 }
 .lcars-meta-row a:hover {
@@ -150,7 +150,7 @@
 .log-nav-title {
   font-size: 15px;
   font-weight: 600;
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -159,7 +159,7 @@
   font-family: var(--font-share-tech-mono), monospace;
   font-size: 11px;
   letter-spacing: 0.05em;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
 }
 
 /* gestapelt auf schmalen Screens — kein Sticky, Liste oben */

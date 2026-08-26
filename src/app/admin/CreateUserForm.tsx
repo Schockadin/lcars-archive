@@ -88,7 +88,7 @@ export default function CreateUserForm() {
               readOnly
               value={state.manualActivationUrl}
               onFocus={(e) => e.currentTarget.select()}
-              className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-text-data outline-none"
+              className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-ink-data outline-none"
             />
           )}
         </div>

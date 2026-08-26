@@ -17,7 +17,7 @@ export default function NotFound() {
       </div>
 
       {/* Statuszeile wie ein LCARS-Systemmeldung */}
-      <div className="uppercase tracking-[0.2em] text-sm text-lcars-text-data">
+      <div className="uppercase tracking-[0.2em] text-sm text-lcars-ink-data">
         FEHLER // DATENSATZ NICHT GEFUNDEN
       </div>
 
@@ -30,7 +30,7 @@ export default function NotFound() {
 
       {/* Kurze Erklärung */}
       <p
-        className="max-w-[var(--lcars-content-w)] leading-relaxed text-lcars-text"
+        className="max-w-[var(--lcars-content-w)] leading-relaxed text-lcars-ink"
         style={{ fontSize: "16px" }}
       >
         Der angeforderte Datensatz existiert nicht im Neo-Archiv oder wurde aus

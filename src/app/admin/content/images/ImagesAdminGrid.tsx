@@ -74,7 +74,7 @@ export default function ImagesAdminGrid({
               unoptimized
               className="size-[140px] object-cover rounded-[4px]"
             />
-            <p className="text-[11px] uppercase tracking-[.1em] text-lcars-text">
+            <p className="text-[11px] uppercase tracking-[.1em] text-lcars-ink">
               {CONTENT_TYPE_LABEL[image.contentType]}
             </p>
             {image.contentTitle && image.contentHref ? (
@@ -85,15 +85,15 @@ export default function ImagesAdminGrid({
                 {image.contentTitle}
               </Link>
             ) : (
-              <p className="text-[13px] text-lcars-text">
+              <p className="text-[13px] text-lcars-ink">
                 Verwaist (Inhalt gelöscht)
               </p>
             )}
-            <p className="text-[11px] text-lcars-text">
+            <p className="text-[11px] text-lcars-ink">
               {image.uploadedByName ?? "Unbekannt"} ·{" "}
               {formatDateTime(image.createdAt)}
             </p>
-            <p className="text-[11px] text-lcars-text">
+            <p className="text-[11px] text-lcars-ink">
               {formatSize(image.sizeBytes)}
             </p>
             <button

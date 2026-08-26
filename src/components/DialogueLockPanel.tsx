@@ -79,7 +79,7 @@ export default function DialogueLockPanel({
           {pending ? "Wird reserviert…" : "Antwortrecht reservieren"}
         </button>
         {!canReserve && (
-          <p className="text-lcars-text-dim text-[12px]">
+          <p className="text-lcars-ink-dim text-[12px]">
             Dein Charakter war zuletzt am Zug — warte, bis jemand anderes
             geantwortet hat, bevor du reservieren kannst.
           </p>
@@ -119,7 +119,7 @@ export default function DialogueLockPanel({
         </button>
       )}
       {requested && (
-        <p className="text-lcars-text-dim text-[12px]">
+        <p className="text-lcars-ink-dim text-[12px]">
           Du wirst benachrichtigt, sobald die Sperre endet.
         </p>
       )}

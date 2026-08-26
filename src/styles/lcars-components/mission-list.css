@@ -27,8 +27,8 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
   background-color: var(--lcars-surface);
-  color: var(--lcars-text-data);
-  border: solid 1px var(--lcars-text-data);
+  color: var(--lcars-ink-data);
+  border: solid 1px var(--lcars-ink-data);
   cursor: pointer;
 }
 .mission-author-filter:focus {
@@ -154,7 +154,7 @@
   margin-top: 6px;
   font-size: 13.5px;
   line-height: 1.5;
-  color: var(--lcars-text-light);
+  color: var(--lcars-ink-light);
   opacity: 0.85;
 }
 .mission-akte-meta {
@@ -166,11 +166,11 @@
   font-size: 14px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--lcars-text-contrast);
+  color: var(--lcars-ink-contrast);
 }
 .mission-akte-meta b {
   font-weight: 400;
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
 }
 
 /* ── Log-Liste ───────────────────────────────────────────────────── */
@@ -180,7 +180,7 @@
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
 }
 
 /* einzelne Log-Zeile (Stub + Balken) */
@@ -240,7 +240,7 @@
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--lcars-text-contrast);
+  color: var(--lcars-ink-contrast);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -262,7 +262,7 @@
   font-size: 12px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
   white-space: nowrap;
   /* Ohne Deckel bleibt .mission-log-meta (flex-shrink: 0) so breit wie ein
      sehr langer Autorenname und verdrängt .mission-log-name vollständig
@@ -277,10 +277,10 @@
   font-family: var(--font-share-tech-mono), monospace;
   font-size: 12px;
   letter-spacing: 0.05em;
-  color: var(--lcars-text);
+  color: var(--lcars-ink);
 }
 .mission-log-empty {
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
   font-style: italic;
   font-size: 14px;
 }

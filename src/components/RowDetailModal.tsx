@@ -263,7 +263,7 @@ export default function RowDetailModal({
                     aria-label={`${f.label} bearbeiten`}
                   />
                 ) : (
-                  <dd className="text-lcars-text text-[13px] whitespace-pre-wrap break-words">
+                  <dd className="text-lcars-ink text-[13px] whitespace-pre-wrap break-words">
                     {f.value}
                   </dd>
                 )}

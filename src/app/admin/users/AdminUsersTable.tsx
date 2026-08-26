@@ -187,13 +187,13 @@ export default function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
             <tbody>
               {rows.map((u) => (
                 <tr key={u.id} className="border-t border-lcars-border">
-                  <td className="py-[6px] pr-[16px] whitespace-nowrap font-lcars text-lcars-text-data">
+                  <td className="py-[6px] pr-[16px] whitespace-nowrap font-lcars text-lcars-ink-data">
                     {u.name}
                   </td>
                   <td className="py-[6px] pr-[16px] whitespace-nowrap">
                     {u.email}
                   </td>
-                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text">
+                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-ink">
                     {ROLE_LABELS[u.role]}
                   </td>
                   <td className="py-[6px] pr-[16px] whitespace-nowrap">
@@ -203,13 +203,13 @@ export default function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
                       <span className="text-lcars-quinary">Deaktiviert</span>
                     )}
                   </td>
-                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text">
+                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-ink">
                     {formatDateTime(u.created_at)}
                   </td>
-                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text">
+                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-ink">
                     {formatDateTime(u.last_login_at)}
                   </td>
-                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-text">
+                  <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-ink">
                     {formatDateTime(u.last_visit_at)}
                   </td>
                   <td className="py-[6px] whitespace-nowrap">

@@ -34,7 +34,7 @@ export function FormField({
         {label}
       </label>
       {children}
-      {hint && <p className="text-lcars-text-dim text-[12px]">{hint}</p>}
+      {hint && <p className="text-lcars-ink-dim text-[12px]">{hint}</p>}
     </div>
   );
 }

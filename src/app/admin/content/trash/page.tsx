@@ -29,7 +29,7 @@ export default async function AdminTrashPage() {
         <h1>Papierkorb</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
-          <p className="text-lcars-text-dim text-[13px]">
+          <p className="text-lcars-ink-dim text-[13px]">
             Gelöschte Inhalte bleiben hier 7 Tage lang sichtbar und
             wiederherstellbar, bevor sie automatisch endgültig entfernt werden.
             Nur für Admins sichtbar — in Suche, Timeline und allen übrigen

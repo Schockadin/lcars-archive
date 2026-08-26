@@ -20,7 +20,7 @@ const lcarsHighlightStyle = HighlightStyle.define([
   { tag: tags.keyword, color: "var(--lcars-tertiary)", fontWeight: "600" },
   { tag: [tags.string, tags.special(tags.string)], color: "var(--lcars-primary)" },
   { tag: [tags.number, tags.bool, tags.null], color: "var(--lcars-secondary)" },
-  { tag: [tags.comment, tags.lineComment], color: "var(--lcars-text-dim)", fontStyle: "italic" },
+  { tag: [tags.comment, tags.lineComment], color: "var(--lcars-ink-dim)", fontStyle: "italic" },
   { tag: tags.heading, color: "var(--lcars-primary)", fontWeight: "700" },
   { tag: tags.link, color: "var(--lcars-tertiary)", textDecoration: "underline" },
   { tag: tags.emphasis, fontStyle: "italic" },
@@ -30,7 +30,7 @@ const lcarsHighlightStyle = HighlightStyle.define([
 
 const lcarsEditorTheme = EditorView.theme({
   "&": {
-    color: "var(--lcars-text)",
+    color: "var(--lcars-ink)",
     backgroundColor: "var(--lcars-surface)",
     border: "1px solid var(--lcars-border)",
     borderRadius: "8px",
@@ -43,16 +43,16 @@ const lcarsEditorTheme = EditorView.theme({
   ".cm-content": {
     fontFamily: "var(--font-share-tech-mono), monospace",
     padding: "12px 16px",
-    caretColor: "var(--lcars-text-data)",
+    caretColor: "var(--lcars-ink-data)",
   },
   ".cm-cursor": {
-    borderLeftColor: "var(--lcars-text-data)",
+    borderLeftColor: "var(--lcars-ink-data)",
   },
   ".cm-selectionBackground, &.cm-focused .cm-selectionBackground": {
     backgroundColor: "rgba(154, 154, 255, 0.35)",
   },
   ".cm-placeholder": {
-    color: "var(--lcars-text-dim)",
+    color: "var(--lcars-ink-dim)",
   },
 });
 

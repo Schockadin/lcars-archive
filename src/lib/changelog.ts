@@ -310,4 +310,16 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Jedes Farbthema lässt sich zusätzlich individualisieren: einzelne Akzentfarben können mit einem Farbwähler überschrieben und jederzeit wieder auf den Theme-Standard zurückgesetzt werden.",
     ],
   },
+  {
+    version: "1.23",
+    title: "Proxy-Zugriffsschutz, besserer Archiv-Assistent & festes Textbild",
+    items: [
+      "Nicht angemeldete Besucher:innen werden beim Aufruf der geschützten Bereiche (eigenes Profil, Nutzerübersicht, Verwaltung) jetzt schon zentral auf die Anmeldeseite geleitet, bevor die Seite überhaupt zu laden beginnt — das fühlt sich unmittelbarer an als das bisherige Nachladen. An der eigentlichen Zugriffskontrolle und daran, wer was sehen darf, ändert sich nichts.",
+      "Der Archiv-Assistent findet Inhalte jetzt genauer: Die Vektor-Suche arbeitet mit der vollen Detailtiefe (1536 statt 512 Dimensionen). Nach dem Update müssen die Embeddings einmalig neu erzeugt werden (Verwaltung → RAG).",
+      "Neuer Verwaltungsbereich „RAG“: Hier lassen sich die Embeddings des Archiv-Assistenten neu erzeugen (vorher unter „Scripts“) und die OpenAI-Nutzung (Kosten des laufenden Monats, soweit verfügbar auch das Restguthaben) einsehen.",
+      "Die Schriftfarbe von Fließtext bleibt jetzt in jedem gewählten Farbthema gleich gut lesbar — die Farbthemen ändern weiterhin die Akzent- und Hintergrundfarben, aber nicht mehr die eigentliche Textfarbe.",
+      "Das Teilen-Menü (Teilen-Knopf) klappt jetzt linksbündig unter dem Knopf auf statt nach rechts — so bleibt es auch am linken Bildschirmrand vollständig sichtbar.",
+      "Neu im Profil (Darstellung → Oberfläche): Das LCARS-Design lässt sich komplett abschalten. Stattdessen erscheint ein schlankes, minimalistisches Interface mit Systemschrift, ohne die dekorativen Elbows, Farbbalken und Versalien. Es kommt ganz ohne Kopfzeile aus — die gesamte Navigation (inklusive Profil, Verwaltung und Abmelden) liegt links in der Seitenleiste, auf dem Handy platzsparend als reine Icons. Die Wahl gilt nur für dich und bleibt bei jedem Login erhalten.",
+    ],
+  },
 ];

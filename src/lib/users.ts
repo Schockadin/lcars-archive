@@ -18,7 +18,7 @@ const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
   last_visit_at, last_dashboard_visit_at,
   email_notifications_enabled, push_notifications_enabled, notify_content_types,
-  news_kinds, color_theme, theme_overrides, additional_roles, permission_overrides,
+  news_kinds, color_theme, theme_overrides, ui_mode, additional_roles, permission_overrides,
   session_version
 `;
 
@@ -324,6 +324,19 @@ export async function updateThemeOverrides(
   `;
 }
 
+// UI-Modus der Oberfläche ('lcars' | 'minimal', siehe src/lib/uiMode.ts). Wie
+// color_theme lebt der Wert im vollen User-Objekt (USER_COLUMNS) — hier nur der
+// Schreibpfad. Die Normalisierung (normalizeUiMode) passiert beim Aufrufer.
+export async function updateUiModePreference(
+  userId: number,
+  mode: string,
+): Promise<void> {
+  await sql`
+    UPDATE users SET ui_mode = ${mode}
+    WHERE id = ${userId}
+  `;
+}
+
 // Charakter-Farbe: lebt jetzt auf characters.character_color statt hier (ein
 // User mit mehreren Charakteren — „Multis" — kann so für jeden Charakter eine
 // eigene Farbe wählen statt einer einzigen für alle). Siehe
@@ -369,6 +382,7 @@ export interface UserCredentials {
   // sonst greift das gewählte Farbtheme erst nach dem nächsten Speichern.
   color_theme: string;
   theme_overrides: Record<string, string>;
+  ui_mode: string;
 }
 
 // client optional per Default der globale sql-Client, kann aber eine
@@ -382,7 +396,7 @@ export async function getUserCredentialsByEmail(
 ): Promise<UserCredentials | null> {
   const rows = await client<UserCredentials[]>`
     SELECT id, email, name, role, is_active, password_hash, requires_activation,
-           session_version, color_theme, theme_overrides
+           session_version, color_theme, theme_overrides, ui_mode
     FROM users
     WHERE lower(email) = ${email}
     LIMIT 1

@@ -47,7 +47,7 @@ export default function LoginForm() {
         />
         <a
           href="/forgot-password"
-          className="self-end text-lcars-text-dim text-[13px] underline"
+          className="self-end text-lcars-ink-dim text-[13px] underline"
         >
           Passwort vergessen?
         </a>

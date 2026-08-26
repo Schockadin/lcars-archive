@@ -38,14 +38,14 @@ export default function IngameYearForm({ info }: { info: IngameYearInfo }) {
             <b className="text-lcars-primary text-[22px] align-middle">
               {info.effectiveYear}
             </b>{" "}
-            <span className="text-lcars-text-dim">
+            <span className="text-lcars-ink-dim">
               {info.isAuto
                 ? "— abgeleitet aus dem spätesten Missionslog"
                 : "— manuell gesetzt (fix)"}
             </span>
           </>
         ) : (
-          <span className="text-lcars-text-dim">
+          <span className="text-lcars-ink-dim">
             Noch kein Jahr — es gibt keinen Missionslog mit Datum, aus dem sich
             eins ableiten ließe.
           </span>
@@ -64,7 +64,7 @@ export default function IngameYearForm({ info }: { info: IngameYearInfo }) {
         placeholder="z.B. 2402"
         className="rounded-lcars-pill lcars-input w-full"
       />
-      <p className="text-lcars-text-dim text-[13px]">
+      <p className="text-lcars-ink-dim text-[13px]">
         Ein manuell gesetztes Jahr bleibt fix und wird <b>nicht</b> mehr
         automatisch aus neuen Missionslogs aktualisiert, bis du auf
         „Automatisch“ zurückschaltest. Das angezeigte Charakter-Alter ergibt

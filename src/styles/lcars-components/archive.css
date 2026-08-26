@@ -90,7 +90,7 @@
   font-size: 16px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--lcars-text-contrast);
+  color: var(--lcars-ink-contrast);
 }
 /* Gemeinsame Mono-Schriftfamilie für kleine Metadaten-Labels — Größe/Farbe
    bleiben je Kontext unterschiedlich (Chip-Label/Dialog-Wert/Nachrichten-
@@ -103,7 +103,7 @@
 .archive-chip-label {
   font-size: 11px;
   text-transform: uppercase;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
 }
 
 /* Dialog-Header: Teilnehmer / Ort / Datum */
@@ -125,14 +125,14 @@
   font-size: 14px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--lcars-text);
+  color: var(--lcars-ink);
 }
 .archive-dialogue-row .archive-related-grid {
   margin-top: 0;
 }
 .archive-dialogue-value {
   font-size: 14px;
-  color: var(--lcars-text-data);
+  color: var(--lcars-ink-data);
 }
 
 /* Einzelne Dialog-Nachricht: farbige Randleiste wie .mission-akte, aber
@@ -167,13 +167,13 @@
 .dialogue-message-meta {
   margin-left: 8px;
   font-size: 12px;
-  color: var(--lcars-text-dim);
+  color: var(--lcars-ink-dim);
 }
 .dialogue-message-text {
   margin-top: 6px;
   font-size: 14.5px;
   line-height: 1.6;
-  color: var(--lcars-text-light);
+  color: var(--lcars-ink-light);
 }
 .dialogue-message-actions {
   display: flex;
