@@ -52,6 +52,12 @@ export interface ColorTheme {
 
 export const DEFAULT_THEME_ID = "standard";
 
+// Namen der JS-lesbaren Theme-Cookies. Hier (nicht in session.ts) definiert,
+// damit sowohl der Server (session.ts, layout.tsx) als auch der clientseitige
+// ThemeApplier sie importieren können — session.ts ist "server-only".
+export const THEME_COOKIE_NAME = "neo_theme";
+export const THEME_CUSTOM_COOKIE_NAME = "neo_theme_custom";
+
 // Reihenfolge = Anzeigereihenfolge im Formular. "standard" zuerst (Default).
 export const COLOR_THEMES: ColorTheme[] = [
   {

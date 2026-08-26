@@ -7,18 +7,17 @@ import {
   normalizeThemeId,
   encodeThemeOverrides,
   sanitizeThemeOverrides,
+  THEME_COOKIE_NAME,
+  THEME_CUSTOM_COOKIE_NAME,
   type ThemeOverrides,
 } from "@/lib/themes";
 
+// Re-Export für serverseitige Aufrufer (z.B. src/app/layout.tsx), die die
+// Namen bisher aus der Session bezogen haben. Definiert werden sie in themes.ts
+// (nicht server-only), damit auch der clientseitige ThemeApplier sie nutzen kann.
+export { THEME_COOKIE_NAME, THEME_CUSTOM_COOKIE_NAME };
+
 const COOKIE_NAME = "neo_session";
-// Bewusst NICHT httpOnly: das Root-Layout-Init-Skript (src/app/layout.tsx)
-// liest diese Cookies clientseitig aus, um Farbtheme + Individualisierung vor
-// dem ersten Paint zu setzen. Sie enthalten nur (öffentliche) Theme-ID bzw.
-// Token→Hex-Paare, keine sensiblen Daten. Quelle der Wahrheit bleiben
-// users.color_theme / users.theme_overrides; die Cookies sind nur der
-// FOUC-freie Transport für die Anzeige und werden bei Login/Speichern gespiegelt.
-export const THEME_COOKIE_NAME = "neo_theme";
-export const THEME_CUSTOM_COOKIE_NAME = "neo_theme_custom";
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 Tage
 
 export interface SessionPayload {

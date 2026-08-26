@@ -1,4 +1,5 @@
 import type { Viewport } from "next";
+import { Suspense } from "react";
 import { Antonio, Share_Tech_Mono } from "next/font/google";
 import "./globals.css";
 import {
@@ -6,6 +7,7 @@ import {
   LcarsCookieNotice,
   LcarsServiceWorkerRegister,
 } from "@/components/lcars";
+import ThemeApplier from "@/components/lcars/ThemeApplier";
 import { NeoProvider } from "@/context/NeoProvider";
 import { ToastProvider } from "@/components/toast/ToastProvider";
 import { getCampaignYears } from "@/lib/constants";
@@ -79,6 +81,13 @@ export default function RootLayout({
             Skripte in den Body, nicht in einen manuellen <head>
             (Metadata-API-Konflikt). */}
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+        {/* Hält das Theme über clientseitige Navigationen synchron mit den
+            Cookies (v.a. nach Login/Logout, die per redirect() nur soft
+            navigieren und das Init-Skript oben nicht erneut auslösen). Nutzt
+            usePathname → unter cacheComponents in einer Suspense-Grenze. */}
+        <Suspense fallback={null}>
+          <ThemeApplier />
+        </Suspense>
         <NeoProvider>
           <ToastProvider>
             <LcarsAppShell appVersion={APP_VERSION}>{children}</LcarsAppShell>

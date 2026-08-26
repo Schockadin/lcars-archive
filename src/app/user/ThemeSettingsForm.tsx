@@ -112,7 +112,7 @@ export default function ThemeSettingsForm({
             return (
               <label
                 key={theme.id}
-                className={`flex items-center gap-[12px] rounded-[var(--lcars-radius-pill)] border px-[16px] py-[10px] cursor-pointer transition-colors ${
+                className={`relative flex items-center gap-[12px] rounded-[var(--lcars-radius-pill)] border px-[16px] py-[10px] cursor-pointer transition-colors ${
                   isSelected
                     ? "border-lcars-primary bg-lcars-surface-2"
                     : "border-lcars-border bg-lcars-surface"
