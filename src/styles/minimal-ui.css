@@ -120,6 +120,15 @@ html[data-ui="minimal"] .lcars-appshell-main > header {
 }
 
 /* ── Footer → schlichte Textzeile ──────────────────────────────────── */
+/* Das <footer>-Element selbst hat eine feste Höhe (h-[var(--lcars-bar-h)] =
+   20px) und sticky top:100%. Im minimalen UI ist die Footer-Zeile höher
+   (Padding + Links), wurde deshalb vom overflow-clip der Spalte nur halb
+   angezeigt. Höhe auf auto und statisch positionieren, damit sie komplett
+   unter dem Inhalt sitzt. */
+html[data-ui="minimal"] .lcars-appshell-main > footer {
+  height: auto;
+  position: static;
+}
 html[data-ui="minimal"] .lcars-footer-bar {
   height: auto;
   background: transparent;
