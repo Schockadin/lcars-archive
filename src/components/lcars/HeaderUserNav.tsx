@@ -1,11 +1,18 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useRef, useState } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { logout } from "@/app/login/actions";
 import { clearServiceWorkerPageCache } from "@/lib/swCache";
 import { DB_PERMISSIONS } from "@/lib/permissions";
+import {
+  ContentNavIcon,
+  UsersNavIcon,
+  ProfileNavIcon,
+  AdminNavIcon,
+  LogoutNavIcon,
+} from "@/lib/icons";
 import { useAnchoredDropdown } from "./useAnchoredDropdown";
 
 interface AdminMenuItem {
@@ -37,12 +44,31 @@ const STAFF_ITEMS: AdminMenuItem[] = [
   { href: "/admin/import", label: "Import", permission: "admin.access" },
 ];
 
+// Kleines Icon vor dem Label — im Header/Desktop per CSS ausgeblendet, im
+// minimalistischen UI auf Mobile das einzige sichtbare Element (siehe
+// minimal-ui.css). aria-hidden, da das Label die Bedeutung trägt.
+function NavPillContent({ icon, label }: { icon: ReactNode; label: string }) {
+  return (
+    <>
+      <span className="lcars-usernav-icon" aria-hidden="true">
+        {icon}
+      </span>
+      <span className="lcars-usernav-label">{label}</span>
+    </>
+  );
+}
+
 export default function HeaderUserNav({
   permissions,
   columns = 3,
+  variant = "header",
 }: {
   permissions: string[];
   columns?: number;
+  // "header": horizontales Pill-Grid im Header (LCARS). "sidebar": vertikale
+  // Liste in der Sidebar (minimalistisches UI) — das Admin-Dropdown klappt
+  // dann nach rechts auf.
+  variant?: "header" | "sidebar";
 }) {
   const pathname = usePathname();
   const [adminOpen, setAdminOpen] = useState(false);
@@ -65,17 +91,19 @@ export default function HeaderUserNav({
     triggerRef,
     panelRef,
     onClose: () => setAdminOpen(false),
+    // Sidebar (minimalistisches UI): Flyout nach rechts statt nach unten.
+    placement: variant === "sidebar" ? "right" : "bottom",
   });
 
   // „Suche" ist bewusst NICHT mehr hier: die Suche hat einen eigenen Eintrag
   // (Lupe) im Hauptmenü (MAIN_NAV/SidebarMenu.tsx), der Header-Button wäre
   // doppelt.
   const tabs = [
-    { href: "/user/content", label: "Inhalte" },
+    { href: "/user/content", label: "Inhalte", icon: <ContentNavIcon /> },
     ...(permissions.includes("users.browse")
-      ? [{ href: "/users", label: "User" }]
+      ? [{ href: "/users", label: "User", icon: <UsersNavIcon /> }]
       : []),
-    { href: "/user", label: "Profil" },
+    { href: "/user", label: "Profil", icon: <ProfileNavIcon /> },
   ];
 
   const isAdminSection = pathname.startsWith("/admin");
@@ -99,7 +127,7 @@ export default function HeaderUserNav({
 
   return (
     <nav
-      className="lcars-usernav"
+      className={`lcars-usernav lcars-usernav--${variant}`}
       style={{ "--usernav-cols": columns } as React.CSSProperties}
     >
       {tabs.map((tab) => {
@@ -114,7 +142,7 @@ export default function HeaderUserNav({
                 : "lcars-usernav-pill"
             }
           >
-            {tab.label}
+            <NavPillContent icon={tab.icon} label={tab.label} />
           </Link>
         );
       })}
@@ -138,7 +166,7 @@ export default function HeaderUserNav({
                 : "lcars-usernav-pill"
             }
           >
-            {dropdownLabel}
+            <NavPillContent icon={<AdminNavIcon />} label={dropdownLabel} />
           </button>
 
           {adminOpen &&
@@ -185,7 +213,7 @@ export default function HeaderUserNav({
         onSubmit={() => clearServiceWorkerPageCache()}
       >
         <button type="submit" className="lcars-usernav-pill bg-lcars-quinary">
-          Logout
+          <NavPillContent icon={<LogoutNavIcon />} label="Logout" />
         </button>
       </form>
     </nav>

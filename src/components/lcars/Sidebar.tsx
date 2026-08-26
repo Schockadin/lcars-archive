@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import SideBarMenu from "./SidebarMenu";
 import SidebarMenuFallback from "./SidebarMenuFallback";
+import SidebarNav from "./SidebarNav";
 
 export default function Sidebar() {
   return (
@@ -18,6 +19,16 @@ export default function Sidebar() {
             Fallback zeigt die Navigation ohne Highlight bis zur Hydration. */}
         <Suspense fallback={<SidebarMenuFallback />}>
           <SideBarMenu />
+        </Suspense>
+
+        {/* Nur im minimalistischen UI sichtbar (per CSS): die ehemaligen
+            Header-Menüpunkte (Inhalte/Profil/Admin/Logout bzw. Anmelden),
+            damit dort alle Menüpunkte in der Sidebar liegen. SidebarNav liest
+            usePathname (über useSessionInfo) — unter cacheComponents braucht das
+            eine eigene Suspense-Grenze; Fallback null (der Block ist ohnehin nur
+            im minimalen UI sichtbar und sekundär). */}
+        <Suspense fallback={null}>
+          <SidebarNav />
         </Suspense>
 
         {/* Sidebar Footer (rein dekorativ) */}

@@ -319,7 +319,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Neuer Verwaltungsbereich „RAG“: Hier lassen sich die Embeddings des Archiv-Assistenten neu erzeugen (vorher unter „Scripts“) und die OpenAI-Nutzung (Kosten des laufenden Monats, soweit verfügbar auch das Restguthaben) einsehen.",
       "Die Schriftfarbe von Fließtext bleibt jetzt in jedem gewählten Farbthema gleich gut lesbar — die Farbthemen ändern weiterhin die Akzent- und Hintergrundfarben, aber nicht mehr die eigentliche Textfarbe.",
       "Das Teilen-Menü (Teilen-Knopf) klappt jetzt linksbündig unter dem Knopf auf statt nach rechts — so bleibt es auch am linken Bildschirmrand vollständig sichtbar.",
-      "Neu im Profil (Darstellung → Oberfläche): Das LCARS-Design lässt sich komplett abschalten. Stattdessen erscheint ein schlankes, minimalistisches Interface mit Systemschrift, ohne die dekorativen Elbows, Farbbalken und Versalien — die Wahl gilt nur für dich und bleibt bei jedem Login erhalten.",
+      "Neu im Profil (Darstellung → Oberfläche): Das LCARS-Design lässt sich komplett abschalten. Stattdessen erscheint ein schlankes, minimalistisches Interface mit Systemschrift, ohne die dekorativen Elbows, Farbbalken und Versalien. Es kommt ganz ohne Kopfzeile aus — die gesamte Navigation (inklusive Profil, Verwaltung und Abmelden) liegt links in der Seitenleiste, auf dem Handy platzsparend als reine Icons. Die Wahl gilt nur für dich und bleibt bei jedem Login erhalten.",
     ],
   },
 ];

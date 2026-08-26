@@ -104,20 +104,19 @@ html[data-ui="minimal"] .lcars-menu-text {
 html[data-ui="minimal"] .lcars-menu-id {
   display: none;
 }
-/* Nav-Icon dauerhaft anzeigen (statt nur mobil) — trägt die Wiedererkennung. */
+/* Auf Desktop KEINE Icons im Menü (nur Text). Das Icon wird erst auf Mobile
+   eingeblendet (Media-Query unten), wo der Text weicht. */
 html[data-ui="minimal"] .lcars-menu-icon {
-  display: flex;
+  display: none;
   margin-right: 8px;
   color: var(--lcars-ink);
 }
 
-/* ── Header → schlichte Kopfzeile ohne Elbow-Balken ────────────────── */
-html[data-ui="minimal"] header {
-  height: auto;
-}
-html[data-ui="minimal"] .lcars-header-content {
-  height: auto;
-  border-bottom: 1px solid var(--lcars-border);
+/* ── Header komplett entfernen ─────────────────────────────────────── */
+/* Im minimalistischen UI gibt es keinen Header — alle Menüpunkte liegen in der
+   Sidebar (siehe .lcars-sidebar-usernav unten). */
+html[data-ui="minimal"] .lcars-appshell-main > header {
+  display: none;
 }
 
 /* ── Footer → schlichte Textzeile ──────────────────────────────────── */
@@ -161,4 +160,108 @@ html[data-ui="minimal"] .lcars-usernav-pill {
   border-radius: 6px;
   text-transform: none;
   letter-spacing: normal;
+}
+
+/* ── Sekundär-Navigation in der Sidebar (ehem. Header-Menüpunkte) ───── */
+/* Standardmäßig (LCARS) ausgeblendet — dort lebt diese Navigation im Header.
+   Das Icon-Element ist im Header ebenfalls unsichtbar (nur Text). */
+.lcars-sidebar-usernav {
+  display: none;
+}
+.lcars-usernav-icon {
+  display: none;
+}
+.lcars-usernav-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+/* Hauptnavigation im minimalen UI nicht auf volle Höhe strecken, sondern
+   kompakt oben stapeln (Menüpunkte behalten ihre Eigenhöhe). */
+html[data-ui="minimal"] .lcars-sidebar-navcol {
+  overflow-y: auto;
+}
+html[data-ui="minimal"] .lcars-sidebar-navcol > div {
+  flex: 0 0 auto;
+}
+html[data-ui="minimal"] .lcars-sidebar-navcol a {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+/* Sekundär-Navigation einblenden und vertikal, schlicht darstellen. */
+html[data-ui="minimal"] .lcars-sidebar-usernav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--lcars-border);
+}
+html[data-ui="minimal"] .lcars-usernav--sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+}
+html[data-ui="minimal"] .lcars-sidebar-usernav .lcars-usernav-pill {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 10px 12px;
+  background: transparent;
+  color: var(--lcars-ink);
+  font-size: 16px;
+  font-weight: 500;
+}
+html[data-ui="minimal"] .lcars-sidebar-usernav .lcars-usernav-pill:hover {
+  background: var(--lcars-surface-2);
+}
+html[data-ui="minimal"] .lcars-sidebar-usernav .lcars-menu-active {
+  background: var(--lcars-surface-2);
+  box-shadow: inset 3px 0 0 var(--lcars-primary);
+}
+html[data-ui="minimal"] .lcars-sidebar-usernav .lcars-usernav-form {
+  width: 100%;
+}
+
+/* ── Content-Bereich: linkes Padding (16px) ────────────────────────── */
+html[data-ui="minimal"] .lcars-main-content {
+  padding-left: 16px;
+}
+
+/* ── Mobile: nur Icons, schmalere Sidebar ──────────────────────────── */
+@media (max-width: 768px) {
+  html[data-ui="minimal"] .lcars-sidebar {
+    width: 64px;
+  }
+  html[data-ui="minimal"] .lcars-sidebar-navcol {
+    padding: 6px;
+  }
+  /* Icons zeigen, Text/Beschriftung ausblenden. */
+  html[data-ui="minimal"] .lcars-menu-icon,
+  html[data-ui="minimal"] .lcars-usernav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 0;
+  }
+  html[data-ui="minimal"] .lcars-menu-text,
+  html[data-ui="minimal"] .lcars-usernav-label {
+    display: none;
+  }
+  /* Menüpunkte als zentrierte Icon-Buttons. */
+  html[data-ui="minimal"] .lcars-menu-bar,
+  html[data-ui="minimal"] .lcars-sidebar-usernav .lcars-usernav-pill {
+    justify-content: center;
+    padding: 12px 0;
+  }
+  /* Etwas engeres Content-Padding auf schmalen Screens. */
+  html[data-ui="minimal"] .lcars-main-content {
+    padding-left: 10px;
+  }
 }

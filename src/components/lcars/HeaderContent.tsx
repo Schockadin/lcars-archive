@@ -1,17 +1,9 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
 import Link from "next/link";
 import HeaderSearch from "./HeaderSearch";
 import HeaderUserNav from "./HeaderUserNav";
 import HeaderSkeleton from "./HeaderSkeleton";
-import type { User } from "@/types/db";
-
-interface SessionInfo {
-  userId: number | null;
-  role: User["role"] | null;
-  permissions?: string[];
-}
+import { useSessionInfo } from "@/hooks/useSessionInfo";
 
 // Eingeloggte User sehen die UserNav (Pill-Grid, siehe HeaderUserNav) jetzt
 // auf JEDER Seite, nicht mehr nur im früheren User-Bereich (/user/**,
@@ -33,37 +25,7 @@ interface SessionInfo {
 // Missions-Logs klicken) braucht keinen erneuten Fetch, die Session ändert
 // sich dabei nicht.
 export default function HeaderContent() {
-  const pathname = usePathname();
-  const [session, setSession] = useState<SessionInfo | null>(null);
-  const prevPathnameRef = useRef<string | null>(null);
-  const hasFetchedRef = useRef(false);
-
-  useEffect(() => {
-    const prevPathname = prevPathnameRef.current;
-    prevPathnameRef.current = pathname;
-
-    const mightHaveChanged =
-      !hasFetchedRef.current || pathname === "/login" || prevPathname === "/login";
-    if (!mightHaveChanged) return;
-
-    let cancelled = false;
-    hasFetchedRef.current = true;
-    // cache: "no-store" — zusätzlich zu den No-Store-Response-Headern in
-    // /api/session/route.ts: verhindert, dass der Browser selbst diese
-    // personalisierte Antwort (userId/role) aus seinem HTTP-Cache
-    // wiederverwendet, statt jedes Mal frisch nachzufragen.
-    fetch("/api/session", { cache: "no-store" })
-      .then((res) => res.json())
-      .then((data: SessionInfo) => {
-        if (!cancelled) setSession(data);
-      })
-      .catch(() => {
-        if (!cancelled) setSession({ userId: null, role: null });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [pathname]);
+  const session = useSessionInfo();
 
   // Solange die Session noch lädt: Skeleton-Platzhalter im UserNav-Layout
   // (statt eines leeren Kastens), damit der Header nicht „leer" wirkt.

@@ -334,3 +334,66 @@ export function SearchNavIcon() {
     </svg>
   );
 }
+
+// --- Nav-Icons für die Header-Menüpunkte (im minimalistischen UI in der
+// Sidebar; nur auf Mobile als reine Icons sichtbar, siehe minimal-ui.css). ---
+
+export function ContentNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M5 4h9l5 5v11H5z" />
+      <path d="M14 4v5h5" />
+      <path d="M8 13h7" />
+      <path d="M8 16h7" />
+    </svg>
+  );
+}
+
+export function ProfileNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="12" cy="8" r="4" />
+      <path d="M5 20c0-3.5 3-6 7-6s7 2.5 7 6" />
+    </svg>
+  );
+}
+
+export function UsersNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="9" cy="8" r="3.2" />
+      <path d="M3 19c0-3 2.7-5 6-5s6 2 6 5" />
+      <path d="M16 5.2a3 3 0 010 5.6" />
+      <path d="M17 14c2.3.5 4 2.2 4 5" />
+    </svg>
+  );
+}
+
+export function AdminNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="12" cy="12" r="3" />
+      <path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8" />
+    </svg>
+  );
+}
+
+export function LogoutNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M14 4h4v16h-4" />
+      <path d="M10 8l-4 4 4 4" />
+      <path d="M6 12h9" />
+    </svg>
+  );
+}
+
+export function LoginNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M10 4H6v16h4" />
+      <path d="M14 8l4 4-4 4" />
+      <path d="M18 12H9" />
+    </svg>
+  );
+}
