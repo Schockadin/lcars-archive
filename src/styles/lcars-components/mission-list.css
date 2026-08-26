@@ -33,7 +33,7 @@
 }
 .mission-author-filter:focus {
   outline: none;
-  border-color: var(--lcars-amber);
+  border-color: var(--lcars-primary);
 }
 
 /* ── Missions-Chronik ────────────────────────────────────────────── */
@@ -69,18 +69,18 @@
 .mission-rail-cap {
   align-items: flex-end;
   border-radius: 14px 0 0 0;
-  background: var(--lcars-orange);
+  background: var(--lcars-quaternary);
 }
 .mission-rail-foot {
   align-items: flex-start;
   padding: 7px 8px 0;
   border-radius: 0 0 0 14px;
-  background: var(--lcars-red);
+  background: var(--lcars-quinary);
 }
 .mission-rail-fill {
   flex: 1;
   min-height: 80px;
-  background: var(--lcars-purple);
+  background: var(--lcars-secondary);
 }
 
 /* gestapelte Akten + Spine */
@@ -142,7 +142,7 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   line-height: 1;
-  color: var(--lcars-amber);
+  color: var(--lcars-primary);
   /* Einzeilig mit Ellipsis statt Umbruch — ein einzelner sehr langer Titel
      (v.a. Mission-Logs) soll die Karte nicht in die Breite treiben, siehe
      .mission-log-name/.log-nav-title für dasselbe Muster andernorts. */
@@ -209,7 +209,7 @@
   width: 52px;
   flex-shrink: 0;
   border-radius: 100vmax 0 0 100vmax;
-  background: var(--mission-color, var(--lcars-amber));
+  background: var(--mission-color, var(--lcars-primary));
   display: flex;
   align-items: center;
   justify-content: flex-end;

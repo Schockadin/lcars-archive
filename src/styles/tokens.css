@@ -1,19 +1,24 @@
 /* ─── LCARS Design Tokens ────────────────────────────────────────────
    :root  → CSS Custom Properties für var() in Klassen & Inline-Styles
-   @theme → Tailwind 4 Utility-Klassen (bg-lcars-amber, text-lcars-blue …)
+   @theme → Tailwind 4 Utility-Klassen (bg-lcars-primary, text-lcars-tertiary …)
             Hex-Werte notwendig — @theme wird zur Build-Zeit ausgewertet,
             var() kann erst zur Runtime vom Browser aufgelöst werden.
 ──────────────────────────────────────────────────────────────────── */
 
 :root {
-  /* Primärpalette DS9/VOY */
-  --lcars-purple: #cd9acd;
-  --lcars-blue: #9a9aff;
-  --lcars-red: #cd6666;
-  --lcars-amber: #ff9a00;
-  --lcars-amber-light: #ffcd9a;
-  --lcars-orange: #ff9a66;
-  --lcars-green: #6bcb8b;
+  /* Primärpalette (Standard-Theme, DS9/VOY). Rollenbasierte Namen statt
+     Farbnamen (früher amber/purple/blue/…), damit die Nutzer-Farbthemes
+     (src/styles/lcars-themes.css) dieselben Tokens mit ganz anderen Farben
+     belegen können, ohne dass der Name („purple") in die Irre führt.
+     primary = dominanter Akzent (Titel/Headings), primary-light dessen heller
+     Begleitton; secondary…senary die weiteren Akzente in Verwendungsreihenfolge. */
+  --lcars-primary: #ff9a00; /* vormals amber */
+  --lcars-primary-light: #ffcd9a; /* vormals amber-light */
+  --lcars-secondary: #cd9acd; /* vormals purple */
+  --lcars-tertiary: #9a9aff; /* vormals blue */
+  --lcars-quaternary: #ff9a66; /* vormals orange */
+  --lcars-quinary: #cd6666; /* vormals red */
+  --lcars-senary: #6bcb8b; /* vormals green */
   --lcars-background: #000000;
 
   /* Interface-Flächen */
@@ -62,17 +67,17 @@
 
 @theme {
   /* ── Farben ──────────────────────────────────────────────────────
-     Erzeugt u.a.: bg-lcars-amber, text-lcars-purple, border-lcars-blue,
-     fill-lcars-red, ring-lcars-green … sowie Opacity-Modifier wie
-     bg-lcars-amber/50, text-lcars-blue/75 etc.
+     Erzeugt u.a.: bg-lcars-primary, text-lcars-secondary, border-lcars-tertiary,
+     fill-lcars-quinary, ring-lcars-senary … sowie Opacity-Modifier wie
+     bg-lcars-primary/50, text-lcars-tertiary/75 etc.
   ─────────────────────────────────────────────────────────────────── */
-  --color-lcars-purple: #cd9acd;
-  --color-lcars-blue: #9a9aff;
-  --color-lcars-red: #cd6666;
-  --color-lcars-amber: #ff9a00;
-  --color-lcars-amber-light: #ffcd9a;
-  --color-lcars-orange: #ff9a66;
-  --color-lcars-green: #6bcb8b;
+  --color-lcars-primary: #ff9a00;
+  --color-lcars-primary-light: #ffcd9a;
+  --color-lcars-secondary: #cd9acd;
+  --color-lcars-tertiary: #9a9aff;
+  --color-lcars-quaternary: #ff9a66;
+  --color-lcars-quinary: #cd6666;
+  --color-lcars-senary: #6bcb8b;
   --color-lcars-bg: #08081a;
   --color-lcars-surface: #10102a;
   --color-lcars-surface-2: #1a1838;

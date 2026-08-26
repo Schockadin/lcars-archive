@@ -97,7 +97,7 @@ export default function EmbeddingsBackfillPanel() {
           onDismiss={() => setDismissed(true)}
           caption={
             done ? (
-              <span className="text-lcars-amber">
+              <span className="text-lcars-primary">
                 Fertig: {progress.embedded}{" "}
                 {progress.embedded === 1 ? "Inhalt" : "Inhalte"} embedded
                 {progress.removed > 0
@@ -116,7 +116,7 @@ export default function EmbeddingsBackfillPanel() {
       )}
 
       {error && (
-        <p className="text-lcars-red" role="alert">
+        <p className="text-lcars-quinary" role="alert">
           {error}
         </p>
       )}

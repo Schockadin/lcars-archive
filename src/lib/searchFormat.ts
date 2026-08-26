@@ -4,9 +4,9 @@ import type { SearchResultType } from "@/types/search";
 
 // Akzentfarbe je Treffertyp (Dropdown-Punkt, Karten-Schiene auf /search).
 export const TYPE_COLOR: Record<SearchResultType, string> = {
-  character: "var(--lcars-blue)",
-  mission: "var(--lcars-amber)",
-  log: "var(--lcars-purple)",
+  character: "var(--lcars-tertiary)",
+  mission: "var(--lcars-primary)",
+  log: "var(--lcars-secondary)",
   archive: "var(--lcars-text-data)",
 };
 

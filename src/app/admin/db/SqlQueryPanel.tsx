@@ -74,7 +74,7 @@ export default function SqlQueryPanel({ caps }: { caps: SqlPanelCapabilities }) 
       </form>
 
       {state.error && (
-        <p className="text-lcars-red" role="alert">
+        <p className="text-lcars-quinary" role="alert">
           {state.error}
         </p>
       )}
@@ -87,7 +87,7 @@ export default function SqlQueryPanel({ caps }: { caps: SqlPanelCapabilities }) 
           <div className="overflow-x-auto">
             <table className="w-full text-left text-[13px]">
               <thead>
-                <tr className="text-lcars-amber">
+                <tr className="text-lcars-primary">
                   {state.columns.map((c) => (
                     <th
                       key={c}
@@ -116,7 +116,7 @@ export default function SqlQueryPanel({ caps }: { caps: SqlPanelCapabilities }) 
         state.columns &&
         state.columns.length === 0 &&
         !state.error && (
-          <p className="text-lcars-green text-[13px]">
+          <p className="text-lcars-senary text-[13px]">
             {state.command ?? "OK"} — {state.rowCount ?? 0} Zeile(n) betroffen.
           </p>
         )}

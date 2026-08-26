@@ -36,7 +36,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={1}
             label="Für Besucher"
-            color="var(--lcars-blue)"
+            color="var(--lcars-tertiary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
@@ -73,7 +73,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={2}
             label="Konto & Rollen"
-            color="var(--lcars-purple)"
+            color="var(--lcars-secondary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
@@ -139,7 +139,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={3}
             label="Eigene Inhalte"
-            color="var(--lcars-amber)"
+            color="var(--lcars-primary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
@@ -212,7 +212,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={4} label="Gespräche" color="var(--lcars-amber)">
+          <LcarsDataRow value={4} label="Gespräche" color="var(--lcars-primary)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Ein <strong>Gespräch</strong> startest du mit deinem Charakter
@@ -277,7 +277,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={5}
             label="Merken & Abonnieren"
-            color="var(--lcars-blue)"
+            color="var(--lcars-tertiary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
@@ -339,7 +339,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={6}
             label="Archiv-Assistent"
-            color="var(--lcars-blue)"
+            color="var(--lcars-tertiary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
@@ -371,7 +371,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={7} label="Markdown" color="var(--lcars-amber)">
+          <LcarsDataRow value={7} label="Markdown" color="var(--lcars-primary)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
@@ -463,7 +463,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={8} label="Verlinkung" color="var(--lcars-blue)">
+          <LcarsDataRow value={8} label="Verlinkung" color="var(--lcars-tertiary)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Um im Fließtext auf einen Charakter, eine Mission oder einen
@@ -504,7 +504,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={9}
             label="Spielleitung & Admins"
-            color="var(--lcars-purple)"
+            color="var(--lcars-secondary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>Zusätzlich zu allem oben Genannten kann die Spielleitung:</p>
@@ -610,7 +610,7 @@ export default function TutorialPage() {
           <LcarsDataRow
             value={10}
             label="App installieren"
-            color="var(--lcars-amber)"
+            color="var(--lcars-primary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
@@ -634,6 +634,33 @@ export default function TutorialPage() {
                 Adressleisten-Umweg) und die Grundlage für{" "}
                 <strong>Push-Benachrichtigungen</strong>, die du wie oben
                 beschrieben in deinem Profil ein-/ausschaltest.
+              </p>
+            </div>
+          </LcarsDataRow>
+
+          <LcarsDataRow
+            value={11}
+            label="Farbschema"
+            color="var(--lcars-tertiary)"
+          >
+            <div className="lcars-text flex flex-col gap-[12px]">
+              <p>
+                Die Farbgebung der gesamten Oberfläche kannst du in deinem{" "}
+                <strong>Profil</strong> unter{" "}
+                <strong>„Darstellung“</strong> wählen. Neben dem{" "}
+                <strong>Standard</strong> stehen mehrere echte
+                LCARS-Farbschemata bereit (Classic, Science, Nebula, Red Alert,
+                Nemesis). Die Auswahl gilt nur für dich, wird sofort als Vorschau
+                angewendet und bleibt nach dem <strong>Speichern</strong> auf
+                allen deinen Geräten erhalten.
+              </p>
+              <p>
+                Darunter kannst du unter <strong>„Feineinstellung“</strong> jede
+                einzelne Akzentfarbe mit einer eigenen Farbe überschreiben. Mit{" "}
+                <strong>„Zurücksetzen“</strong> (pro Farbe) oder{" "}
+                <strong>„Alle zurücksetzen“</strong> kehrst du jederzeit zu den
+                Farben des gewählten Schemas zurück. Nicht vergessen,
+                anschließend zu speichern.
               </p>
             </div>
           </LcarsDataRow>

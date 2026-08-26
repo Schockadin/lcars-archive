@@ -96,7 +96,7 @@ export default function FollowButtons({
       {state?.loggedIn && !subscribeOnly && (
         <button
           type="button"
-          className={`lcars-icon-btn size-[40px] ${state.bookmarked ? "bg-lcars-amber text-lcars-bg" : ""}`}
+          className={`lcars-icon-btn size-[40px] ${state.bookmarked ? "bg-lcars-primary text-lcars-bg" : ""}`}
           disabled={pending === "bookmark"}
           onClick={handleBookmark}
           aria-label={state.bookmarked ? "Nicht mehr speichern" : "Speichern"}
@@ -108,7 +108,7 @@ export default function FollowButtons({
       {state?.loggedIn && (
         <button
           type="button"
-          className={`lcars-icon-btn size-[40px] ${state.subscribed ? "bg-lcars-amber text-lcars-bg" : ""}`}
+          className={`lcars-icon-btn size-[40px] ${state.subscribed ? "bg-lcars-primary text-lcars-bg" : ""}`}
           disabled={pending === "subscribe"}
           onClick={handleSubscribe}
           aria-label={state.subscribed ? "Nicht mehr folgen" : "Folgen"}

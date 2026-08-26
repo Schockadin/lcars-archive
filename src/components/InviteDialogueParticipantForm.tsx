@@ -83,7 +83,7 @@ export default function InviteDialogueParticipantForm({
 
       <FormError message={error} />
       {success && (
-        <p className="text-lcars-green" role="status">
+        <p className="text-lcars-senary" role="status">
           Eingeladen.
         </p>
       )}

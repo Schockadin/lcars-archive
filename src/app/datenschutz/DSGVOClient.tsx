@@ -35,7 +35,12 @@ export default function DSGVOClient({ year }: { year: number }) {
         Funktionen der Kampagnen-Anwendung der Person zur Verfügung stehen
         (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse an
         einer geordneten Zugriffsverwaltung). Das Passwort selbst wird nicht im
-        Klartext gespeichert, sondern nur als Hash.
+        Klartext gespeichert, sondern nur als Hash. Zusätzlich werden pro Konto
+        persönliche Anzeige-Einstellungen gespeichert (u. a. das gewählte
+        Farbschema der Oberfläche samt individuell überschriebener Akzentfarben),
+        damit sie geräteübergreifend erhalten bleiben — reine
+        Komfort-Einstellungen ohne Rückschluss auf weitere personenbezogene
+        Daten (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO).
       </p>
       <p>
         Zum Festlegen eines ersten Passworts (Einladung durch die Spielleitung)
@@ -222,20 +227,36 @@ export default function DSGVOClient({ year }: { year: number }) {
 
       <h2>6. Cookies</h2>
       <p>
-        Diese Website setzt ein einziges eigenes Cookie namens{" "}
-        <code>neo_session</code>. Es hält dich für 30 Tage angemeldet und ist
-        technisch notwendig, um den Login-Bereich (<code>/login</code>,{" "}
-        <code>/user/…</code>) bereitzustellen — ohne dieses Cookie ist kein
-        Login möglich. Es ist <code>HttpOnly</code> gesetzt (kein Zugriff durch
-        JavaScript) und wird nicht an Dritte übertragen.
+        Diese Website setzt ausschließlich eigene, technisch notwendige Cookies
+        und keine Cookies von Dritten:
       </p>
+      <ul>
+        <li>
+          <code>neo_session</code> hält dich für 30 Tage angemeldet und ist
+          notwendig, um den Login-Bereich (<code>/login</code>,{" "}
+          <code>/user/…</code>) bereitzustellen — ohne dieses Cookie ist kein
+          Login möglich. Es ist <code>HttpOnly</code> gesetzt (kein Zugriff
+          durch JavaScript).
+        </li>
+        <li>
+          <code>neo_theme</code> und <code>neo_theme_custom</code> speichern das
+          von dir im Profil gewählte Farbschema der Oberfläche (Theme-Name bzw.
+          deine individuell überschriebenen Akzentfarben), damit es ohne
+          Flackern schon beim Seitenaufbau angewendet wird. Sie enthalten nur
+          diese Anzeige-Einstellung, keine personenbezogenen Daten, und sind
+          bewusst nicht <code>HttpOnly</code> (das Anzeige-Skript liest sie vor
+          dem ersten Rendern aus). Sie werden nur gesetzt, wenn du angemeldet
+          bist bzw. ein Theme wählst, und beim Abmelden wieder entfernt.
+        </li>
+      </ul>
       <p>
-        Da es sich um ein unbedingt erforderliches Cookie handelt, ist gemäß §
-        25 Abs. 2 Nr. 2 TTDSG keine Einwilligung erforderlich (Rechtsgrundlage:
-        Art. 6 Abs. 1 lit. b DSGVO). Der Cookie-Hinweis beim ersten Besuch
-        informiert lediglich darüber, ohne eine Wahlmöglichkeit anzubieten, da
-        es keine optionalen Cookies (Tracking, Analyse, Marketing) gibt, die man
-        ablehnen könnte.
+        Da es sich ausschließlich um unbedingt erforderliche bzw. für die von
+        dir ausdrücklich gewünschte Anzeige-Einstellung nötige Cookies handelt,
+        ist gemäß § 25 Abs. 2 TTDSG keine Einwilligung erforderlich
+        (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO). Der Cookie-Hinweis beim
+        ersten Besuch informiert lediglich darüber, ohne eine Wahlmöglichkeit
+        anzubieten, da es keine optionalen Cookies (Tracking, Analyse,
+        Marketing) gibt, die man ablehnen könnte.
       </p>
       <p>
         Netlify kann darüber hinaus technische Cookies für den sicheren Betrieb

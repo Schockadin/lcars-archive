@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 const TRIGGER_DISTANCE = 110;
 const MAX_PULL = 140;
 
-// Blass (--lcars-text-dim) -> Amber (--lcars-amber), siehe tokens.css.
+// Blass (--lcars-text-dim) -> Amber (--lcars-primary), siehe tokens.css.
 // Feste RGB-Werte statt CSS-Variablen, weil die Zwischenfarbe während des
 // Ziehens per JS interpoliert wird (keine reine CSS-Transition zwischen zwei
 // benannten Farben, da der Fortschritt kontinuierlich aus dem Touch-Move

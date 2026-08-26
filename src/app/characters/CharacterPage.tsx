@@ -18,16 +18,16 @@ const STATUS_GROUPS: {
   label: string;
   color: string;
 }[] = [
-  { key: "active", label: "Aktiv", color: "var(--lcars-green)" },
-  { key: "retired", label: "Ehemalig", color: "var(--lcars-amber)" },
-  { key: "deceased", label: "Verstorben", color: "var(--lcars-red)" },
+  { key: "active", label: "Aktiv", color: "var(--lcars-senary)" },
+  { key: "retired", label: "Ehemalig", color: "var(--lcars-primary)" },
+  { key: "deceased", label: "Verstorben", color: "var(--lcars-quinary)" },
 ];
 
 // Generationen — Labels/Farben anpassen, sobald echte Phasennamen feststehen.
 const GENERATIONS: { num: number; label: string; color: string }[] = [
-  { num: 1, label: "Erste Generation", color: "var(--lcars-blue)" },
-  { num: 2, label: "Zweite Generation", color: "var(--lcars-purple)" },
-  { num: 3, label: "Dritte Generation", color: "var(--lcars-orange)" },
+  { num: 1, label: "Erste Generation", color: "var(--lcars-tertiary)" },
+  { num: 2, label: "Zweite Generation", color: "var(--lcars-secondary)" },
+  { num: 3, label: "Dritte Generation", color: "var(--lcars-quaternary)" },
 ];
 
 // Lookup Map für Rank-Mapping

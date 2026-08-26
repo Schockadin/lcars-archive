@@ -18,7 +18,7 @@ export default function OpenDialoguesSection({
     <LcarsDataRow
       value={items.length}
       label="Offene Gespräche"
-      color="var(--lcars-green)"
+      color="var(--lcars-senary)"
       defaultOpen
     >
       <div className="flex flex-col gap-[6px]">
@@ -28,7 +28,7 @@ export default function OpenDialoguesSection({
             href={`/dialogues/${d.slug}`}
             className="mission-akte"
             style={
-              { "--mission-color": "var(--lcars-green)" } as React.CSSProperties
+              { "--mission-color": "var(--lcars-senary)" } as React.CSSProperties
             }
           >
             <span className="mission-akte-rail" />

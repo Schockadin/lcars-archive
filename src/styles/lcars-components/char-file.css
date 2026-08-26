@@ -25,7 +25,7 @@
   text-transform: uppercase;
   letter-spacing: 0.05em;
   line-height: 1;
-  color: var(--lcars-amber);
+  color: var(--lcars-primary);
 }
 .char-file-pills {
   display: flex;
@@ -57,7 +57,7 @@
   font-size: 11px;
   line-height: 1.5;
   letter-spacing: 0.05em;
-  color: var(--lcars-amber);
+  color: var(--lcars-primary);
   opacity: 0.45;
 }
 
@@ -155,8 +155,8 @@
 }
 .char-file-sheets-link:hover,
 .char-file-sheets-link:focus {
-  border-color: var(--lcars-amber);
-  color: var(--lcars-amber);
+  border-color: var(--lcars-primary);
+  color: var(--lcars-primary);
 }
 .char-file-sheets-name {
   flex: 1 1 auto;
@@ -186,7 +186,7 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   line-height: 1.05;
-  color: var(--lcars-amber);
+  color: var(--lcars-primary);
   text-align: right;
 }
 .char-file-bio {

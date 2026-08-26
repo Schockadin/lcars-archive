@@ -4,9 +4,9 @@ import { LcarsSkeleton } from "@/components/lcars";
 // Sortier-Umschalter und gruppierte Charakter-Zeilen nach.
 export default function Loading() {
   const groups = [
-    { color: "var(--lcars-green)", rows: 4 },
-    { color: "var(--lcars-amber)", rows: 3 },
-    { color: "var(--lcars-red)", rows: 2 },
+    { color: "var(--lcars-senary)", rows: 4 },
+    { color: "var(--lcars-primary)", rows: 3 },
+    { color: "var(--lcars-quinary)", rows: 2 },
   ];
 
   return (

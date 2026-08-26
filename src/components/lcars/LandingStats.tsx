@@ -10,21 +10,21 @@ export default async function LandingStats() {
       <LcarsDataRow
         value={characterCount}
         label="Charaktere"
-        accentColor="var(--lcars-amber-light)"
-        color="var(--lcars-blue)"
+        accentColor="var(--lcars-primary-light)"
+        color="var(--lcars-tertiary)"
         href="/characters"
       />
       <LcarsDataRow
         value={sessionCount}
         label="Logs"
-        color="var(--lcars-purple)"
+        color="var(--lcars-secondary)"
         href="/missions"
       />
       <LcarsDataRow
         value={entryCount}
         label="Archiv-Einträge"
-        accentColor="var(--lcars-blue)"
-        color="var(--lcars-red)"
+        accentColor="var(--lcars-tertiary)"
+        color="var(--lcars-quinary)"
         href="/archive"
       />
       {/* „Jahre" bleibt als reine Kennzahl — die frühere Verlinkung auf
@@ -32,8 +32,8 @@ export default async function LandingStats() {
       <LcarsDataRow
         value={15}
         label="Jahre"
-        color="var(--lcars-amber)"
-        accentColor="var(--lcars-orange)"
+        color="var(--lcars-primary)"
+        accentColor="var(--lcars-quaternary)"
       />
     </div>
   );

@@ -72,7 +72,7 @@ export default function AdminMissionsBrowser({
                   <span className="mission-akte-title block">
                     {mission.title}
                     {mission.isDraft && (
-                      <span className="text-lcars-amber"> · Entwurf</span>
+                      <span className="text-lcars-primary"> · Entwurf</span>
                     )}
                   </span>
                   <span className="mission-akte-meta">

@@ -167,14 +167,14 @@ export default function DbTableExplorer({
         )}
 
         {selected && data?.error && (
-          <p className="text-lcars-red text-[13px]">{data.error}</p>
+          <p className="text-lcars-quinary text-[13px]">{data.error}</p>
         )}
 
         {selected && data && !data.error && (
           <>
             <div className="db-explorer-toolbar mb-[8px]">
               <div className="flex items-center gap-[8px]">
-                <h3 className="text-lcars-amber font-bold text-[14px]">
+                <h3 className="text-lcars-primary font-bold text-[14px]">
                   {selected}
                 </h3>
                 <span className="text-lcars-text-dim text-[12px]">
@@ -233,7 +233,7 @@ export default function DbTableExplorer({
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-[13px]">
                   <thead>
-                    <tr className="text-lcars-amber">
+                    <tr className="text-lcars-primary">
                       {data.columns.map((c) => (
                         <th
                           key={c}
@@ -389,7 +389,7 @@ function InsertRowModal({
         className="flex max-h-[80vh] w-full max-w-[720px] flex-col gap-[16px] overflow-y-auto rounded-[8px] border border-lcars-border bg-lcars-surface p-[24px]"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lcars-amber">Neue Zeile — {table}</h2>
+        <h2 className="text-lcars-primary">Neue Zeile — {table}</h2>
         <p className="text-lcars-text-dim text-[12px]">
           Leere Felder werden übersprungen (Postgres-Defaults greifen).
         </p>
@@ -412,7 +412,7 @@ function InsertRowModal({
         </dl>
 
         {error && (
-          <p className="text-lcars-red text-[13px]" role="alert">
+          <p className="text-lcars-quinary text-[13px]" role="alert">
             {error}
           </p>
         )}

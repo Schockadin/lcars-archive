@@ -23,17 +23,17 @@
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--lcars-bg);
-    background: var(--lcars-amber);
+    background: var(--lcars-primary);
     border: none;
     border-radius: 100vmax;
     cursor: pointer;
     transition: background-color 0.15s ease;
   }
   .reading-mode-toggle[aria-pressed="true"] {
-    background: var(--lcars-purple);
+    background: var(--lcars-secondary);
   }
   .reading-mode-toggle:hover {
-    background: var(--lcars-blue);
+    background: var(--lcars-tertiary);
   }
 
   /* Aktiver Lesemodus: LCARS-Chrome ausblenden … */

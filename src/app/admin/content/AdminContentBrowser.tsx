@@ -20,10 +20,10 @@ const CATEGORY_LABELS: Record<CategoryFilter, string> = {
 };
 
 const CATEGORY_COLORS: Record<OwnerContentType, string> = {
-  character: "var(--lcars-amber)",
-  mission: "var(--lcars-green)",
-  mission_log: "var(--lcars-blue)",
-  archive_entry: "var(--lcars-purple)",
+  character: "var(--lcars-primary)",
+  mission: "var(--lcars-senary)",
+  mission_log: "var(--lcars-tertiary)",
+  archive_entry: "var(--lcars-secondary)",
 };
 
 const NO_OWNER = "__none__";
@@ -202,12 +202,12 @@ export default function AdminContentBrowser({
         </button>
 
         {error && (
-          <p className="text-lcars-red" role="alert">
+          <p className="text-lcars-quinary" role="alert">
             {error}
           </p>
         )}
         {result !== null && (
-          <p className="text-lcars-amber">
+          <p className="text-lcars-primary">
             {result === 0
               ? "Keine Inhalte zugeordnet."
               : `${result} ${result === 1 ? "Inhalt" : "Inhalte"} zugeordnet.`}

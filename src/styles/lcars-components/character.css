@@ -6,11 +6,11 @@
 ──────────────────────────────────────────────────────────────────── */
 
 .character-portrait {
-  border-top: 3px solid var(--lcars-purple);
-  border-left: 3px solid var(--lcars-purple);
-  border-bottom: 3px solid var(--lcars-purple);
+  border-top: 3px solid var(--lcars-secondary);
+  border-left: 3px solid var(--lcars-secondary);
+  border-bottom: 3px solid var(--lcars-secondary);
   border-right: none;
-  border: 3px solid var(--lcars-purple);
+  border: 3px solid var(--lcars-secondary);
 }
 
 .character-entry {
@@ -102,6 +102,6 @@
 /* Unter sm-Breakpoint (≤ 639px) */
 @media (max-width: 639px) {
   .character-portrait {
-    border-right: 3px solid var(--lcars-purple);
+    border-right: 3px solid var(--lcars-secondary);
   }
 }

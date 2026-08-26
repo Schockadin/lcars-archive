@@ -44,13 +44,13 @@ export default function UserStatusActions({
 
   return (
     <section className="flex flex-col gap-[12px]">
-      <h2 className="text-lcars-amber">Status</h2>
+      <h2 className="text-lcars-primary">Status</h2>
 
       <form action={statusAction} className="flex flex-wrap items-center gap-[12px]">
         <input type="hidden" name="userId" value={user.id} />
         <input type="hidden" name="active" value={String(!user.is_active)} />
         <span
-          className={user.is_active ? "text-lcars-green" : "text-lcars-red"}
+          className={user.is_active ? "text-lcars-senary" : "text-lcars-quinary"}
         >
           {user.is_active ? "Aktiv" : "Deaktiviert"}
         </span>
@@ -85,7 +85,7 @@ export default function UserStatusActions({
       <FormError message={resetState?.error} />
       {resetState?.warning && (
         <div className="flex flex-col gap-[4px]">
-          <p className="text-lcars-amber" role="alert">
+          <p className="text-lcars-primary" role="alert">
             {resetState.warning}
           </p>
           {resetState.manualActivationUrl && (
@@ -121,7 +121,7 @@ export default function UserStatusActions({
       </form>
       <FormError message={logoutState?.error} />
 
-      <h2 className="text-lcars-red">Gefahrenzone</h2>
+      <h2 className="text-lcars-quinary">Gefahrenzone</h2>
       <DangerZoneButton
         formAction={deleteAction}
         hiddenFields={{ userId: user.id }}

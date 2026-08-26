@@ -241,7 +241,7 @@ export default function UserContentBrowser({
         </select>
       </div>
 
-      <LcarsDataRow value={totalDrafts} label="Entwürfe" color="var(--lcars-red)">
+      <LcarsDataRow value={totalDrafts} label="Entwürfe" color="var(--lcars-quinary)">
         {totalDrafts === 0 ? (
           <p className="lcars-empty-state">Keine Entwürfe vorhanden.</p>
         ) : (
@@ -254,7 +254,7 @@ export default function UserContentBrowser({
                 <Link
                   href={`/characters/${c.slug}`}
                   className="mission-akte flex-1"
-                  style={{ "--mission-color": "var(--lcars-red)" } as React.CSSProperties}
+                  style={{ "--mission-color": "var(--lcars-quinary)" } as React.CSSProperties}
                 >
                   <span className="mission-akte-rail" />
                   <span className="mission-akte-body text-left">
@@ -294,7 +294,7 @@ export default function UserContentBrowser({
                   <Link
                     href={`/missions/${m.slug}`}
                     className="mission-akte flex-1"
-                    style={{ "--mission-color": "var(--lcars-red)" } as React.CSSProperties}
+                    style={{ "--mission-color": "var(--lcars-quinary)" } as React.CSSProperties}
                   >
                     <span className="mission-akte-rail" />
                     <span className="mission-akte-body text-left">
@@ -326,7 +326,7 @@ export default function UserContentBrowser({
                 <Link
                   href={`/missions/${log.mission_slug}/${log.slug}`}
                   className="mission-akte flex-1"
-                  style={{ "--mission-color": "var(--lcars-red)" } as React.CSSProperties}
+                  style={{ "--mission-color": "var(--lcars-quinary)" } as React.CSSProperties}
                 >
                   <span className="mission-akte-rail" />
                   <span className="mission-akte-body text-left">
@@ -368,7 +368,7 @@ export default function UserContentBrowser({
                 <Link
                   href={`/archive/${entry.slug}`}
                   className="mission-akte flex-1"
-                  style={{ "--mission-color": "var(--lcars-red)" } as React.CSSProperties}
+                  style={{ "--mission-color": "var(--lcars-quinary)" } as React.CSSProperties}
                 >
                   <span className="mission-akte-rail" />
                   <span className="mission-akte-body text-left">
@@ -412,7 +412,7 @@ export default function UserContentBrowser({
         <LcarsDataRow
           value={publishedCharacters.length}
           label="Charaktere"
-          color="var(--lcars-amber)"
+          color="var(--lcars-primary)"
         >
           {publishedCharacters.length === 0 ? (
             <p className="lcars-empty-state">
@@ -430,7 +430,7 @@ export default function UserContentBrowser({
                     className="mission-akte flex-1"
                     style={
                       {
-                        "--mission-color": "var(--lcars-amber)",
+                        "--mission-color": "var(--lcars-primary)",
                       } as React.CSSProperties
                     }
                   >
@@ -467,7 +467,7 @@ export default function UserContentBrowser({
         <LcarsDataRow
           value={publishedLogs.length}
           label="Einsatzberichte"
-          color="var(--lcars-blue)"
+          color="var(--lcars-tertiary)"
         >
           {publishedLogs.length === 0 ? (
             <p className="lcars-empty-state">
@@ -485,7 +485,7 @@ export default function UserContentBrowser({
                     className="mission-akte flex-1"
                     style={
                       {
-                        "--mission-color": "var(--lcars-blue)",
+                        "--mission-color": "var(--lcars-tertiary)",
                       } as React.CSSProperties
                     }
                   >
@@ -556,8 +556,8 @@ export default function UserContentBrowser({
                     style={
                       {
                         "--mission-color": d.open
-                          ? "var(--lcars-green)"
-                          : "var(--lcars-red)",
+                          ? "var(--lcars-senary)"
+                          : "var(--lcars-quinary)",
                       } as React.CSSProperties
                     }
                   >
@@ -609,7 +609,7 @@ export default function UserContentBrowser({
         <LcarsDataRow
           value={publishedArchiveEntries.length}
           label="Archiv-Einträge"
-          color="var(--lcars-purple)"
+          color="var(--lcars-secondary)"
         >
           {publishedArchiveEntries.length === 0 ? (
             <p className="lcars-empty-state">
@@ -627,7 +627,7 @@ export default function UserContentBrowser({
                     className="mission-akte flex-1"
                     style={
                       {
-                        "--mission-color": "var(--lcars-purple)",
+                        "--mission-color": "var(--lcars-secondary)",
                       } as React.CSSProperties
                     }
                   >
@@ -674,7 +674,7 @@ export default function UserContentBrowser({
         <LcarsDataRow
           value={publishedMissions.length}
           label="Missionen"
-          color="var(--lcars-green)"
+          color="var(--lcars-senary)"
         >
           {publishedMissions.length === 0 ? (
             <p className="lcars-empty-state">Noch keine Missionen vorhanden.</p>
@@ -690,7 +690,7 @@ export default function UserContentBrowser({
                     className="mission-akte flex-1"
                     style={
                       {
-                        "--mission-color": "var(--lcars-green)",
+                        "--mission-color": "var(--lcars-senary)",
                       } as React.CSSProperties
                     }
                   >

@@ -56,7 +56,7 @@
   margin-bottom: 5px;
 }
 .lcars-search:focus-within {
-  border-color: var(--lcars-blue);
+  border-color: var(--lcars-tertiary);
 }
 .lcars-search-icon {
   flex: 0 0 auto;
@@ -90,7 +90,7 @@
   overflow-y: auto;
   padding: 6px;
   background: var(--lcars-surface);
-  border: 2px solid var(--lcars-purple);
+  border: 2px solid var(--lcars-secondary);
   border-radius: 12px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
 }
@@ -147,7 +147,7 @@
   margin-top: 4px;
   padding-top: 10px;
   border-top: 1px solid var(--lcars-border);
-  color: var(--lcars-amber);
+  color: var(--lcars-primary);
   font-family: var(--font-share-tech-mono), monospace;
   font-size: 12.5px;
   letter-spacing: 0.04em;
@@ -167,7 +167,7 @@
   width: var(--lcars-bar-width);
   min-height: calc(var(--lcars-bar-h) + var(--lcars-elbow-size));
   border-radius: 0 0 0 100px;
-  background-color: var(--lcars-blue);
+  background-color: var(--lcars-tertiary);
 }
 
 .lcars-elbow-bottom {
@@ -176,7 +176,7 @@
   max-height: 160px;
   flex: 1;
   border-radius: 100px 0 0 0;
-  background-color: var(--lcars-red);
+  background-color: var(--lcars-quinary);
 }
 
 /* ── Navigation ──────────────────────────────────────────────────── */
@@ -191,12 +191,12 @@
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  background-color: var(--lcars-amber);
+  background-color: var(--lcars-primary);
   transition: background 250ms;
 }
 .lcars-menu-bar:hover,
 .lcars-menu-pill:hover {
-  background-color: var(--lcars-amber-light);
+  background-color: var(--lcars-primary-light);
 }
 
 .lcars-menu-bar {
@@ -213,10 +213,10 @@
 }
 
 .lcars-menu-active {
-  background-color: var(--lcars-blue);
+  background-color: var(--lcars-tertiary);
 }
 .lcars-menu-active:hover {
-  background-color: var(--lcars-blue);
+  background-color: var(--lcars-tertiary);
 }
 
 /* Nav-Icon: auf Desktop ausgeblendet (dort tragen Nummer + Text die
@@ -268,18 +268,18 @@
   align-items: flex-end;
   justify-content: flex-end;
   padding: 0 18px 8px;
-  background-color: var(--lcars-amber);
+  background-color: var(--lcars-primary);
   color: black;
   font-size: 20px;
   width: 200px;
   height: var(--usernav-pill-h, 48px);
 }
 .lcars-usernav-pill:hover {
-  background-color: var(--lcars-amber-light);
+  background-color: var(--lcars-primary-light);
 }
 .lcars-usernav-pill.lcars-menu-active,
 .lcars-usernav-pill.lcars-menu-active:hover {
-  background-color: var(--lcars-blue);
+  background-color: var(--lcars-tertiary);
 }
 
 @media (max-width: 920px) {
@@ -336,7 +336,7 @@
   width: 10%;
   min-width: 100px;
   height: var(--lcars-bar-h);
-  background: var(--lcars-amber);
+  background: var(--lcars-primary);
   font-size: calc(var(--lcars-bar-h) - 4px);
   padding-right: 4px;
   color: black;
@@ -347,7 +347,7 @@
   transition: background 250ms;
 }
 .lcars-footer-menu:hover {
-  background: var(--lcars-amber-light);
+  background: var(--lcars-primary-light);
 }
 
 .lcars-footer-version {

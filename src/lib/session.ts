@@ -2,6 +2,20 @@ import "server-only";
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import type { User } from "@/types/db";
+import {
+  DEFAULT_THEME_ID,
+  normalizeThemeId,
+  encodeThemeOverrides,
+  sanitizeThemeOverrides,
+  THEME_COOKIE_NAME,
+  THEME_CUSTOM_COOKIE_NAME,
+  type ThemeOverrides,
+} from "@/lib/themes";
+
+// Re-Export für serverseitige Aufrufer (z.B. src/app/layout.tsx), die die
+// Namen bisher aus der Session bezogen haben. Definiert werden sie in themes.ts
+// (nicht server-only), damit auch der clientseitige ThemeApplier sie nutzen kann.
+export { THEME_COOKIE_NAME, THEME_CUSTOM_COOKIE_NAME };
 
 const COOKIE_NAME = "neo_session";
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 Tage
@@ -64,6 +78,11 @@ export async function createSession(user: {
   email: string;
   role: User["role"];
   session_version: number;
+  // Optional: werden — falls vorhanden — in die JS-lesbaren Theme-Cookies
+  // gespiegelt, damit Farbtheme + Individualisierung nach Login/Reissue sofort
+  // (FOUC-frei) greifen.
+  color_theme?: string;
+  theme_overrides?: Record<string, string>;
 }): Promise<void> {
   const expiresAt = Date.now() + SESSION_DURATION_MS;
   const token = encode({
@@ -82,6 +101,56 @@ export async function createSession(user: {
     expires: new Date(expiresAt),
     path: "/",
   });
+
+  await setThemeCookie(normalizeThemeId(user.color_theme), expiresAt);
+  await setThemeCustomCookie(
+    sanitizeThemeOverrides(user.theme_overrides),
+    expiresAt,
+  );
+}
+
+// Schreibt (oder entfernt) das JS-lesbare Theme-Cookie. Für "standard" wird das
+// Cookie gelöscht statt gesetzt — das Init-Skript behandelt „kein Cookie" und
+// „standard" identisch (unverändertes Interface), so bleibt es aufgeräumt.
+export async function setThemeCookie(
+  theme: string,
+  expiresAtMs: number = Date.now() + SESSION_DURATION_MS,
+): Promise<void> {
+  const cookieStore = await cookies();
+  const normalized = normalizeThemeId(theme);
+  if (normalized === DEFAULT_THEME_ID) {
+    cookieStore.delete(THEME_COOKIE_NAME);
+    return;
+  }
+  cookieStore.set(THEME_COOKIE_NAME, normalized, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    expires: new Date(expiresAtMs),
+    path: "/",
+  });
+}
+
+// Schreibt (oder entfernt) das JS-lesbare Cookie mit den Token-Overrides.
+// Leere Overrides ⇒ Cookie löschen (das Init-Skript behandelt „kein Cookie"
+// als „keine Individualisierung").
+export async function setThemeCustomCookie(
+  overrides: ThemeOverrides,
+  expiresAtMs: number = Date.now() + SESSION_DURATION_MS,
+): Promise<void> {
+  const cookieStore = await cookies();
+  const encoded = encodeThemeOverrides(overrides);
+  if (!encoded) {
+    cookieStore.delete(THEME_CUSTOM_COOKIE_NAME);
+    return;
+  }
+  cookieStore.set(THEME_CUSTOM_COOKIE_NAME, encoded, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    expires: new Date(expiresAtMs),
+    path: "/",
+  });
 }
 
 export async function getSession(): Promise<SessionPayload | null> {
@@ -94,4 +163,8 @@ export async function getSession(): Promise<SessionPayload | null> {
 export async function deleteSession(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
+  // Theme-Cookies beim Logout mit entfernen, damit die nächste (ausgeloggte)
+  // Ansicht wieder das Standard-Interface ohne Individualisierung zeigt.
+  cookieStore.delete(THEME_COOKIE_NAME);
+  cookieStore.delete(THEME_CUSTOM_COOKIE_NAME);
 }

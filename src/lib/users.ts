@@ -18,7 +18,7 @@ const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
   last_visit_at, last_dashboard_visit_at,
   email_notifications_enabled, push_notifications_enabled, notify_content_types,
-  news_kinds, additional_roles, permission_overrides,
+  news_kinds, color_theme, theme_overrides, additional_roles, permission_overrides,
   session_version
 `;
 
@@ -295,6 +295,35 @@ export async function updateEditorSpellcheckPreference(
   `;
 }
 
+// Farbtheme der Oberfläche (siehe src/lib/themes.ts). Der Wert lebt als
+// color_theme im vollen User-Objekt (USER_COLUMNS) — Lesen läuft daher über
+// getUserById/getCurrentUser, hier braucht es nur den Schreibpfad. Die
+// Validierung/Normalisierung gegen COLOR_THEMES passiert beim Aufrufer
+// (isValidThemeId/normalizeThemeId), damit ein veraltetes Theme still auf
+// 'standard' fällt.
+export async function updateColorThemePreference(
+  userId: number,
+  theme: string,
+): Promise<void> {
+  await sql`
+    UPDATE users SET color_theme = ${theme}
+    WHERE id = ${userId}
+  `;
+}
+
+// Individualisierung des Themes (theme_overrides, Token→Hex). Der Aufrufer
+// filtert vorher mit sanitizeThemeOverrides — hier wird nur geschrieben. Als
+// JSONB serialisiert (postgres.js: sql.json).
+export async function updateThemeOverrides(
+  userId: number,
+  overrides: Record<string, string>,
+): Promise<void> {
+  await sql`
+    UPDATE users SET theme_overrides = ${sql.json(overrides)}
+    WHERE id = ${userId}
+  `;
+}
+
 // Charakter-Farbe: lebt jetzt auf characters.character_color statt hier (ein
 // User mit mehreren Charakteren — „Multis" — kann so für jeden Charakter eine
 // eigene Farbe wählen statt einer einzigen für alle). Siehe
@@ -335,6 +364,11 @@ export interface UserCredentials {
   password_hash: string | null;
   requires_activation: boolean;
   session_version: number;
+  // Für createSession beim Login mitgeladen, damit die Theme-Cookies direkt aus
+  // der gespeicherten Präferenz gesetzt werden (siehe src/lib/session.ts) —
+  // sonst greift das gewählte Farbtheme erst nach dem nächsten Speichern.
+  color_theme: string;
+  theme_overrides: Record<string, string>;
 }
 
 // client optional per Default der globale sql-Client, kann aber eine
@@ -347,7 +381,8 @@ export async function getUserCredentialsByEmail(
   client: SqlClient = sql,
 ): Promise<UserCredentials | null> {
   const rows = await client<UserCredentials[]>`
-    SELECT id, email, name, role, is_active, password_hash, requires_activation, session_version
+    SELECT id, email, name, role, is_active, password_hash, requires_activation,
+           session_version, color_theme, theme_overrides
     FROM users
     WHERE lower(email) = ${email}
     LIMIT 1

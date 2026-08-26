@@ -28,7 +28,7 @@
   transition: color 250ms;
 }
 .lcars-text > * > a:hover {
-  color: var(--lcars-blue);
+  color: var(--lcars-tertiary);
   text-decoration: underline;
 }
 
@@ -43,7 +43,7 @@
 }
 .lcars-wikilink:hover,
 .lcars-link-text:hover {
-  color: var(--lcars-blue);
+  color: var(--lcars-tertiary);
   text-decoration: underline;
 }
 .lcars-link-text {
@@ -51,14 +51,14 @@
 }
 
 .lcars-wikilink--missing {
-  color: var(--lcars-red);
-  border-bottom: 1px dashed var(--lcars-red);
+  color: var(--lcars-quinary);
+  border-bottom: 1px dashed var(--lcars-quinary);
   cursor: help;
 }
 .lcars-wikilink--missing:hover {
-  color: var(--lcars-red);
+  color: var(--lcars-quinary);
   text-decoration: none;
-  border-bottom: 1px dashed var(--lcars-red);
+  border-bottom: 1px dashed var(--lcars-quinary);
 }
 
 /* Gemeinsame Typografie für .char-file-pill (char-file.css, Personalakte)
@@ -89,7 +89,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  color: var(--lcars-blue);
+  color: var(--lcars-tertiary);
 }
 .lcars-toc-list {
   list-style: none;
@@ -125,8 +125,8 @@
 }
 .lcars-toc-link[aria-current="true"] {
   color: var(--lcars-bg);
-  background: var(--lcars-amber);
-  border-left-color: var(--lcars-amber);
+  background: var(--lcars-primary);
+  border-left-color: var(--lcars-primary);
 }
 
 /* "Zurück"-Link (Charakter- und Log-Detailseiten) — vormals zwei
@@ -140,12 +140,12 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   line-height: 1.05;
-  color: var(--lcars-amber);
+  color: var(--lcars-primary);
   text-decoration: none;
   transition: color 150ms;
 }
 .lcars-back-link:hover {
-  color: var(--lcars-amber-light);
+  color: var(--lcars-primary-light);
 }
 
 .follow-buttons {
@@ -171,7 +171,7 @@
   min-width: 160px;
   padding: 6px;
   background: var(--lcars-surface);
-  border: 2px solid var(--lcars-purple);
+  border: 2px solid var(--lcars-secondary);
   border-radius: 12px;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
 }
@@ -254,7 +254,7 @@
   width: auto;
   height: auto;
   object-fit: contain;
-  border: 3px solid var(--lcars-purple);
+  border: 3px solid var(--lcars-secondary);
   cursor: default;
 }
 
@@ -269,7 +269,7 @@
   width: 44px;
   height: 44px;
   color: var(--lcars-bg);
-  background: var(--lcars-purple);
+  background: var(--lcars-secondary);
   border: none;
   border-radius: 22px;
   cursor: pointer;
@@ -277,7 +277,7 @@
 }
 
 .portrait-overlay-close:hover {
-  background: var(--lcars-amber);
+  background: var(--lcars-primary);
 }
 
 .portrait-overlay-close svg,
@@ -299,7 +299,7 @@
   width: 44px;
   height: 44px;
   color: var(--lcars-bg);
-  background: var(--lcars-purple);
+  background: var(--lcars-secondary);
   border: none;
   border-radius: 22px;
   cursor: pointer;
@@ -308,7 +308,7 @@
 }
 
 .portrait-overlay-nav:hover {
-  background: var(--lcars-amber);
+  background: var(--lcars-primary);
 }
 
 .portrait-overlay-nav--prev {
@@ -375,13 +375,13 @@
 }
 .markdown-hint-trigger {
   cursor: help;
-  color: var(--lcars-blue);
+  color: var(--lcars-tertiary);
   text-decoration: underline dotted;
   text-underline-offset: 3px;
 }
 .markdown-hint-trigger:hover,
 .markdown-hint-trigger:focus-visible {
-  color: var(--lcars-amber);
+  color: var(--lcars-primary);
 }
 .markdown-hint-popover {
   position: absolute;
@@ -404,7 +404,7 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 13px;
-  color: var(--lcars-amber);
+  color: var(--lcars-primary);
 }
 .markdown-hint-popover-list {
   display: flex;
@@ -448,7 +448,7 @@
   white-space: nowrap;
 }
 .tutorial-table th {
-  color: var(--lcars-amber);
+  color: var(--lcars-primary);
   font-family: var(--font-antonio), sans-serif;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -465,17 +465,17 @@
   width: 6px;
 }
 .lcars-scroll::-webkit-scrollbar-track {
-  background: var(--lcars-blue);
+  background: var(--lcars-tertiary);
 }
 .lcars-scroll::-webkit-scrollbar-thumb {
-  background: var(--lcars-red);
+  background: var(--lcars-quinary);
 }
 .lcars-scroll::-webkit-scrollbar-thumb:hover {
-  background: var(--lcars-purple);
+  background: var(--lcars-secondary);
 }
 .lcars-scroll {
   scrollbar-width: thin;
-  scrollbar-color: var(--lcars-blue) var(--lcars-surface);
+  scrollbar-color: var(--lcars-tertiary) var(--lcars-surface);
 }
 
 /* ── Animationen ─────────────────────────────────────────────────── */
@@ -656,7 +656,7 @@
 }
 
 .news-row-dismiss:hover {
-  background: var(--lcars-red);
+  background: var(--lcars-quinary);
   color: var(--lcars-text-contrast);
 }
 
@@ -671,7 +671,7 @@
 
 .lcars-progress-bar {
   height: 100%;
-  background: var(--lcars-amber);
+  background: var(--lcars-primary);
   transition: width 0.2s ease;
 }
 
@@ -748,12 +748,12 @@
   border: none;
   border-radius: 50%;
   background: none;
-  color: var(--lcars-amber);
+  color: var(--lcars-primary);
   cursor: pointer;
   transition: color 150ms;
 }
 .password-input-toggle:hover {
-  color: var(--lcars-amber-light);
+  color: var(--lcars-primary-light);
 }
 .password-input-toggle svg {
   width: 20px;
@@ -771,22 +771,22 @@
   gap: 12px;
   padding: 8px 8px 8px 18px;
   border-radius: 100vmax;
-  background: var(--lcars-amber);
+  background: var(--lcars-primary);
   color: black;
   box-shadow: 0 6px 20px rgb(0 0 0 / 45%);
   animation: lcars-toast-in 0.18s ease-out;
 }
 .lcars-toast--success {
-  background: var(--lcars-green);
+  background: var(--lcars-senary);
 }
 .lcars-toast--warning {
-  background: var(--lcars-amber);
+  background: var(--lcars-primary);
 }
 .lcars-toast--error {
-  background: var(--lcars-red);
+  background: var(--lcars-quinary);
 }
 .lcars-toast--info {
-  background: var(--lcars-amber);
+  background: var(--lcars-primary);
 }
 
 .lcars-toast-message {
@@ -891,7 +891,7 @@
   top: 0;
   z-index: 2;
   background: var(--lcars-bg);
-  border-bottom: 2px solid var(--lcars-amber);
+  border-bottom: 2px solid var(--lcars-primary);
   text-align: center;
   min-width: 120px;
 }
@@ -909,7 +909,7 @@
 /* Eck-Zelle liegt über beiden sticky-Achsen. */
 .lcars-perm-matrix-corner {
   z-index: 3;
-  border-bottom: 2px solid var(--lcars-amber);
+  border-bottom: 2px solid var(--lcars-primary);
 }
 .lcars-perm-matrix-row {
   font-weight: 600;
@@ -974,7 +974,7 @@
 }
 .db-explorer-item[aria-current="true"] {
   background: var(--lcars-surface);
-  border-left: 3px solid var(--lcars-amber);
+  border-left: 3px solid var(--lcars-primary);
   padding-left: 7px;
 }
 .db-explorer-item-icon {
@@ -984,7 +984,7 @@
   color: var(--lcars-text-dim);
 }
 .db-explorer-item[aria-current="true"] .db-explorer-item-icon {
-  color: var(--lcars-amber);
+  color: var(--lcars-primary);
 }
 .db-explorer-item-name {
   flex: 1;

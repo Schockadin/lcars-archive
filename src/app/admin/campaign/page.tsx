@@ -48,12 +48,12 @@ export default async function AdminCampaignPage() {
 
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Ingame-Jahr</h2>
+            <h2 className="text-lcars-primary">Ingame-Jahr</h2>
             <IngameYearForm info={ingameYearInfo} />
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Charaktere</h2>
+            <h2 className="text-lcars-primary">Charaktere</h2>
             <CharacterAssignmentTable
               characters={characters}
               users={characterUserOptions}
@@ -61,7 +61,7 @@ export default async function AdminCampaignPage() {
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-amber">Missionen</h2>
+            <h2 className="text-lcars-primary">Missionen</h2>
             <AdminMissionsBrowser
               missions={missions}
               users={missionUserOptions}

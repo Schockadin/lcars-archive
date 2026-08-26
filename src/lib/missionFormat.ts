@@ -6,20 +6,20 @@ export const STATUS_CONFIG: Record<
   MissionStatus,
   { label: string; color: string }
 > = {
-  active: { label: "Aktiv", color: "var(--lcars-green)" },
-  completed: { label: "Abgeschlossen", color: "var(--lcars-blue)" },
-  failed: { label: "Gescheitert", color: "var(--lcars-red)" },
-  abandoned: { label: "Abgebrochen", color: "var(--lcars-amber)" },
+  active: { label: "Aktiv", color: "var(--lcars-senary)" },
+  completed: { label: "Abgeschlossen", color: "var(--lcars-tertiary)" },
+  failed: { label: "Gescheitert", color: "var(--lcars-quinary)" },
+  abandoned: { label: "Abgebrochen", color: "var(--lcars-primary)" },
 };
 
 // Farbzyklus für die Autor-Gruppen-Header in der Log-Liste.
 export const AUTHOR_COLORS = [
-  "var(--lcars-amber-light)",
-  "var(--lcars-purple)",
-  "var(--lcars-orange)",
-  "var(--lcars-blue)",
-  "var(--lcars-amber)",
-  "var(--lcars-red)",
+  "var(--lcars-primary-light)",
+  "var(--lcars-secondary)",
+  "var(--lcars-quaternary)",
+  "var(--lcars-tertiary)",
+  "var(--lcars-primary)",
+  "var(--lcars-quinary)",
 ];
 
 // ISO-Datum (2400-09-15) → DD.MM.YYYY (15.09.2400)

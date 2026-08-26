@@ -180,7 +180,7 @@ export default function RagChat({ configured }: { configured: boolean }) {
                 ) : null}
               </div>
               {turn.error ? (
-                <p className="lcars-text" style={{ color: "var(--lcars-red)" }}>
+                <p className="lcars-text" style={{ color: "var(--lcars-quinary)" }}>
                   {turn.error}
                 </p>
               ) : null}

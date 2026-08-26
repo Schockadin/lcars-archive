@@ -46,7 +46,7 @@ export default function ArchiveCategoryNav({
             href={`/archive?cat=${c.cat}`}
             data-active={activeCategory === c.cat ? "true" : "false"}
             color={c.color}
-            accentColor="var(--lcars-amber-light)"
+            accentColor="var(--lcars-primary-light)"
             key={c.cat}
           />
         ))}

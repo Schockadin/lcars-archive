@@ -20,8 +20,8 @@ interface DataRowProps extends DataRowPillProps {
 export default function DataRow({
   value,
   label,
-  color = "var(--lcars-purple)",
-  accentColor = "var(--lcars-amber)",
+  color = "var(--lcars-secondary)",
+  accentColor = "var(--lcars-primary)",
   labelColor = "var(--lcars-text-contrast)",
   href,
   className = "",

@@ -46,49 +46,49 @@ export default async function AdminScriptsPage() {
         <div className="lcars-text flex flex-col gap-[32px]">
           {can("admin.access") && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Cache</h2>
+              <h2 className="text-lcars-primary">Cache</h2>
               <RevalidateCachePanel />
             </section>
           )}
 
           {can("admin.access") && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Missionen ohne Owner</h2>
+              <h2 className="text-lcars-primary">Missionen ohne Owner</h2>
               <AssignOwnerlessMissionsPanel gms={gmOptions} />
             </section>
           )}
 
           {can("admin.access") && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Gespräche</h2>
+              <h2 className="text-lcars-primary">Gespräche</h2>
               <DialogueContentRegeneratePanel />
             </section>
           )}
 
           {can("content.autolink_tools") && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Alle Inhalte verlinken</h2>
+              <h2 className="text-lcars-primary">Alle Inhalte verlinken</h2>
               <LinkAllContentPanel />
             </section>
           )}
 
           {can("admin.access") && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Typografie korrigieren</h2>
+              <h2 className="text-lcars-primary">Typografie korrigieren</h2>
               <TypographyFixPanel />
             </section>
           )}
 
           {can("admin.access") && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Archiv-Assistent · Embeddings</h2>
+              <h2 className="text-lcars-primary">Archiv-Assistent · Embeddings</h2>
               <EmbeddingsBackfillPanel />
             </section>
           )}
 
           {can("admin.access") && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-amber">Toast-Test</h2>
+              <h2 className="text-lcars-primary">Toast-Test</h2>
               <ToastTestPanel />
             </section>
           )}

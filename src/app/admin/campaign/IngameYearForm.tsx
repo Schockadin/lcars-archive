@@ -24,8 +24,8 @@ export default function IngameYearForm({ info }: { info: IngameYearInfo }) {
         <span
           className={`rounded-full px-[10px] py-[1px] text-[11px] font-bold uppercase ${
             info.isAuto
-              ? "bg-lcars-green text-black"
-              : "bg-lcars-amber text-black"
+              ? "bg-lcars-senary text-black"
+              : "bg-lcars-primary text-black"
           }`}
         >
           {info.isAuto ? "Automatisch" : "Manuell"}
@@ -35,7 +35,7 @@ export default function IngameYearForm({ info }: { info: IngameYearInfo }) {
       <p className="text-[15px]">
         {info.effectiveYear != null ? (
           <>
-            <b className="text-lcars-amber text-[22px] align-middle">
+            <b className="text-lcars-primary text-[22px] align-middle">
               {info.effectiveYear}
             </b>{" "}
             <span className="text-lcars-text-dim">

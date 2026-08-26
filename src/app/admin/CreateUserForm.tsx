@@ -80,7 +80,7 @@ export default function CreateUserForm() {
 
       {state?.warning && (
         <div className="w-full flex flex-col gap-[4px]">
-          <p className="text-lcars-amber" role="alert">
+          <p className="text-lcars-primary" role="alert">
             {state.warning}
           </p>
           {state.manualActivationUrl && (

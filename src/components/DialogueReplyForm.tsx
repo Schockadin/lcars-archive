@@ -62,7 +62,7 @@ export default function DialogueReplyForm({
 
   if (hasOnlyBlockedCharacter || replyCharacters.length === 0) {
     return (
-      <p className="text-lcars-amber text-[13px] mt-[16px]" role="status">
+      <p className="text-lcars-primary text-[13px] mt-[16px]" role="status">
         Dein Charakter war zuletzt am Zug — warte, bis jemand anderes
         geantwortet hat.
       </p>

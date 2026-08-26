@@ -169,7 +169,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
       {entry.category !== "dialogue" && (
         <RefSection
           title="Charaktere"
-          color="var(--lcars-blue)"
+          color="var(--lcars-tertiary)"
           refs={entry.metadata.characters.map((c) => ({
             href: `/characters/${c.slug}`,
             label: c.name,
@@ -179,7 +179,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
 
       <RefSection
         title="Missionen"
-        color="var(--lcars-amber)"
+        color="var(--lcars-primary)"
         refs={entry.metadata.missions.map((m) => ({
           href: `/missions/${m.slug}`,
           label: m.title,

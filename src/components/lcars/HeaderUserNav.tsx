@@ -183,7 +183,7 @@ export default function HeaderUserNav({
         // bleiben (siehe public/sw.js).
         onSubmit={() => clearServiceWorkerPageCache()}
       >
-        <button type="submit" className="lcars-usernav-pill bg-lcars-red">
+        <button type="submit" className="lcars-usernav-pill bg-lcars-quinary">
           Logout
         </button>
       </form>

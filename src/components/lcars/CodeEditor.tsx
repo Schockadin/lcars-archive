@@ -17,15 +17,15 @@ const LANGUAGE_EXTENSIONS: Record<CodeEditorLanguage, () => Extension> = {
 // CSS-Variablen wie überall sonst in der App (tokens.css), damit der Editor
 // sich einfügt statt wie ein Fremdkörper zu wirken.
 const lcarsHighlightStyle = HighlightStyle.define([
-  { tag: tags.keyword, color: "var(--lcars-blue)", fontWeight: "600" },
-  { tag: [tags.string, tags.special(tags.string)], color: "var(--lcars-amber)" },
-  { tag: [tags.number, tags.bool, tags.null], color: "var(--lcars-purple)" },
+  { tag: tags.keyword, color: "var(--lcars-tertiary)", fontWeight: "600" },
+  { tag: [tags.string, tags.special(tags.string)], color: "var(--lcars-primary)" },
+  { tag: [tags.number, tags.bool, tags.null], color: "var(--lcars-secondary)" },
   { tag: [tags.comment, tags.lineComment], color: "var(--lcars-text-dim)", fontStyle: "italic" },
-  { tag: tags.heading, color: "var(--lcars-amber)", fontWeight: "700" },
-  { tag: tags.link, color: "var(--lcars-blue)", textDecoration: "underline" },
+  { tag: tags.heading, color: "var(--lcars-primary)", fontWeight: "700" },
+  { tag: tags.link, color: "var(--lcars-tertiary)", textDecoration: "underline" },
   { tag: tags.emphasis, fontStyle: "italic" },
   { tag: tags.strong, fontWeight: "700" },
-  { tag: tags.monospace, color: "var(--lcars-purple)" },
+  { tag: tags.monospace, color: "var(--lcars-secondary)" },
 ]);
 
 const lcarsEditorTheme = EditorView.theme({
@@ -38,7 +38,7 @@ const lcarsEditorTheme = EditorView.theme({
   },
   "&.cm-focused": {
     outline: "none",
-    borderColor: "var(--lcars-blue)",
+    borderColor: "var(--lcars-tertiary)",
   },
   ".cm-content": {
     fontFamily: "var(--font-share-tech-mono), monospace",

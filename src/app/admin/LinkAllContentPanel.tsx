@@ -94,7 +94,7 @@ export default function LinkAllContentPanel() {
           onDismiss={() => setDismissed(true)}
           caption={
             done ? (
-              <span className="text-lcars-amber">
+              <span className="text-lcars-primary">
                 Fertig: {progress.changed} von {progress.total} Inhalten verlinkt
                 ({progress.links} Verknüpfungen gesetzt).
               </span>
@@ -109,7 +109,7 @@ export default function LinkAllContentPanel() {
       )}
 
       {error && (
-        <p className="text-lcars-red" role="alert">
+        <p className="text-lcars-quinary" role="alert">
           {error}
         </p>
       )}

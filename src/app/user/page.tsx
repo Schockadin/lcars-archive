@@ -5,6 +5,11 @@ import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "./dal";
 import { hasPassword, getEditorSpellcheckPreference } from "@/lib/users";
+import {
+  COLOR_THEMES,
+  normalizeThemeId,
+  sanitizeThemeOverrides,
+} from "@/lib/themes";
 import { getCharactersForUser, getUsedCharacterColors } from "@/lib/characters";
 import {
   resolveCharacterDefaultColor,
@@ -17,6 +22,7 @@ import NotificationSettingsForm from "./NotificationSettingsForm";
 import NewsSettingsForm from "./NewsSettingsForm";
 import EditorSpellcheckSettingsForm from "./EditorSpellcheckSettingsForm";
 import CharacterColorForm from "./CharacterColorForm";
+import ThemeSettingsForm from "./ThemeSettingsForm";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 import DataRow from "@/components/lcars/DataRow";
@@ -50,6 +56,8 @@ export default async function UserPage() {
   const hasPasswordSet = await hasPassword(target.id);
   const needsPassword = !hasPasswordSet;
   const spellcheckEnabled = await getEditorSpellcheckPreference(target.id);
+  const colorTheme = normalizeThemeId(target.color_theme);
+  const themeOverrides = sanitizeThemeOverrides(target.theme_overrides);
 
   // Charakter-Farben: eine Liste statt einer einzigen Wahl, seit die Farbe
   // pro Charakter statt pro User lebt (Multis sollen für jeden Charakter
@@ -84,7 +92,7 @@ export default async function UserPage() {
           </p>
 
           {needsPassword && (
-            <p className="text-lcars-amber">
+            <p className="text-lcars-primary">
               Du hast noch kein Passwort gesetzt.{" "}
               <Link href="#password" className="underline">
                 Jetzt festlegen
@@ -99,7 +107,7 @@ export default async function UserPage() {
                 label="Charakterfarben"
                 value={characterColors.length}
                 accentColor="var(--lcars-text-data)"
-                color="var(--lcars-amber)"
+                color="var(--lcars-primary)"
               >
                 <section
                   id="character-colors"
@@ -136,10 +144,30 @@ export default async function UserPage() {
             )}
 
             <DataRow
+              label="Darstellung"
+              value={COLOR_THEMES.length}
+              accentColor="var(--lcars-senary)"
+              color="var(--lcars-tertiary)"
+            >
+              <section id="theme" className="flex flex-col gap-[16px]">
+                <h2>Farbtheme</h2>
+                <p>
+                  Färbe die gesamte Oberfläche in einem der LCARS-Farbschemata —
+                  wahlweise mit eigenen Akzentfarben feinjustiert. Die Wahl gilt
+                  nur für dich und bleibt bei jedem Login erhalten.
+                </p>
+                <ThemeSettingsForm
+                  currentTheme={colorTheme}
+                  currentOverrides={themeOverrides}
+                />
+              </section>
+            </DataRow>
+
+            <DataRow
               label="Settings"
               value={9}
-              accentColor="var(--lcars-red)"
-              color="var(--lcars-amber-light)"
+              accentColor="var(--lcars-quinary)"
+              color="var(--lcars-primary-light)"
             >
               <h2>User-Daten</h2>
               <SettingsForm user={{ name: target.name, email: target.email }} />
