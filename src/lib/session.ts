@@ -1,7 +1,13 @@
 import "server-only";
-import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import type { User } from "@/types/db";
+import {
+  SESSION_COOKIE_NAME,
+  SESSION_DURATION_MS,
+  encodeSessionToken,
+  decodeSessionToken,
+  type SessionPayload,
+} from "@/lib/sessionToken";
 import {
   DEFAULT_THEME_ID,
   normalizeThemeId,
@@ -17,61 +23,13 @@ import {
 // (nicht server-only), damit auch der clientseitige ThemeApplier sie nutzen kann.
 export { THEME_COOKIE_NAME, THEME_CUSTOM_COOKIE_NAME };
 
-const COOKIE_NAME = "neo_session";
-const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 Tage
+// Signatur/Kodierung des Session-Cookies liegen jetzt in sessionToken.ts
+// (ohne server-only/next/headers), damit der Proxy (src/proxy.ts) dieselbe
+// Verifikation nutzen kann. SessionPayload wird re-exportiert, damit die
+// vielen bestehenden Importe aus @/lib/session unverändert bleiben.
+export type { SessionPayload } from "@/lib/sessionToken";
 
-export interface SessionPayload {
-  userId: number;
-  email: string;
-  role: User["role"];
-  expiresAt: number;
-  // Muss mit users.session_version übereinstimmen (siehe getCurrentUser in
-  // dal.ts) — erhöht sich bei jeder Passwortänderung (setPassword), damit
-  // ein zu diesem Zeitpunkt bereits ausgestelltes Cookie danach verworfen
-  // wird statt bis zum natürlichen Ablauf (30 Tage) gültig zu bleiben.
-  sessionVersion: number;
-}
-
-function getSecret(): string {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret) {
-    throw new Error("SESSION_SECRET ist nicht gesetzt");
-  }
-  return secret;
-}
-
-function sign(value: string): string {
-  return crypto.createHmac("sha256", getSecret()).update(value).digest("base64url");
-}
-
-// Signierter (nicht verschlüsselter) Cookie-Wert: Payload enthält keine
-// sensiblen Daten (siehe SessionPayload), die Signatur verhindert nur
-// Manipulation durch den Client.
-function encode(payload: SessionPayload): string {
-  const json = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  return `${json}.${sign(json)}`;
-}
-
-function decode(token: string): SessionPayload | null {
-  const [json, signature] = token.split(".");
-  if (!json || !signature) return null;
-
-  const expected = Buffer.from(sign(json));
-  const actual = Buffer.from(signature);
-  if (expected.length !== actual.length || !crypto.timingSafeEqual(expected, actual)) {
-    return null;
-  }
-
-  try {
-    const payload = JSON.parse(Buffer.from(json, "base64url").toString()) as SessionPayload;
-    if (typeof payload.expiresAt !== "number" || payload.expiresAt < Date.now()) {
-      return null;
-    }
-    return payload;
-  } catch {
-    return null;
-  }
-}
+const COOKIE_NAME = SESSION_COOKIE_NAME;
 
 export async function createSession(user: {
   id: number;
@@ -85,7 +43,7 @@ export async function createSession(user: {
   theme_overrides?: Record<string, string>;
 }): Promise<void> {
   const expiresAt = Date.now() + SESSION_DURATION_MS;
-  const token = encode({
+  const token = encodeSessionToken({
     userId: user.id,
     email: user.email,
     role: user.role,
@@ -157,7 +115,7 @@ export async function getSession(): Promise<SessionPayload | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get(COOKIE_NAME)?.value;
   if (!token) return null;
-  return decode(token);
+  return decodeSessionToken(token);
 }
 
 export async function deleteSession(): Promise<void> {

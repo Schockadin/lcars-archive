@@ -12,6 +12,13 @@ import PageSkeleton from "@/app/_shared/PageSkeleton";
 // zwischen den Unterseiten läuft über das Admin-Dropdown im Header
 // (HeaderUserNav.tsx), nicht mehr über eine eigene Subnav hier.
 //
+// Anonyme Besucher fängt bereits der Proxy (src/proxy.ts) ab und leitet sie
+// auf /login um. Dieses Gate bleibt trotzdem: Es prüft ROLLEN/RECHTE
+// (admin.access/gm.access/DB-Rechte), was der optimistische Proxy bewusst
+// nicht tut (bräuchte DB-Zugriff). requireStaff ist damit die verbindliche
+// Rechteprüfung (Source of Truth), der Proxy nur die vorgelagerte
+// Session-Filterung.
+//
 // Das Session-Gate (requireStaff → cookies()) liegt unter cacheComponents in
 // einer Suspense-Grenze: die statische Shell (LCARS-Chrome) wird sofort
 // ausgeliefert, das rollenabhängige Gate und der gesamte darin gerenderte

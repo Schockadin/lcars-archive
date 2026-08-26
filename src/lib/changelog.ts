@@ -310,4 +310,11 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Jedes Farbthema lässt sich zusätzlich individualisieren: einzelne Akzentfarben können mit einem Farbwähler überschrieben und jederzeit wieder auf den Theme-Standard zurückgesetzt werden.",
     ],
   },
+  {
+    version: "1.23",
+    title: "Zugriffsschutz zentral über den Proxy",
+    items: [
+      "Nicht angemeldete Besucher:innen werden beim Aufruf der geschützten Bereiche (eigenes Profil, Nutzerübersicht, Verwaltung) jetzt schon zentral auf die Anmeldeseite geleitet, bevor die Seite überhaupt zu laden beginnt — das fühlt sich unmittelbarer an als das bisherige Nachladen. An der eigentlichen Zugriffskontrolle und daran, wer was sehen darf, ändert sich nichts.",
+    ],
+  },
 ];

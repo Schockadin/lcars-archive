@@ -7,6 +7,12 @@ import PageSkeleton from "@/app/_shared/PageSkeleton";
 // admin/gm sehen auf /users zusätzlich Admin-Aktionen (siehe page.tsx),
 // player/viewer bekommen dort nur die Subscribe-Aktion.
 //
+// Anonyme Besucher fängt bereits der Proxy (src/proxy.ts) ab und leitet sie
+// auf /login um. Dieses Gate bleibt trotzdem: Es prüft ein RECHT
+// (users.browse), was der optimistische Proxy bewusst nicht tut (bräuchte
+// DB-Zugriff). requireNonGuest ist damit die verbindliche Rechteprüfung
+// (Source of Truth), der Proxy nur die vorgelagerte Session-Filterung.
+//
 // Das Gate (requireNonGuest → cookies()) liegt unter cacheComponents in einer
 // Suspense-Grenze, damit die statische Shell sofort erscheint und der
 // rechtegeprüfte Inhalt nachstreamt.
