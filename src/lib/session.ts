@@ -2,8 +2,15 @@ import "server-only";
 import crypto from "node:crypto";
 import { cookies } from "next/headers";
 import type { User } from "@/types/db";
+import { DEFAULT_THEME_ID, normalizeThemeId } from "@/lib/themes";
 
 const COOKIE_NAME = "neo_session";
+// Bewusst NICHT httpOnly: das Root-Layout-Init-Skript (src/app/layout.tsx)
+// liest dieses Cookie clientseitig aus, um das Farbtheme vor dem ersten Paint
+// zu setzen. Es enthält nur die (öffentliche) Theme-ID, keine sensiblen Daten.
+// Quelle der Wahrheit bleibt users.color_theme; dieses Cookie ist nur der
+// FOUC-freie Transport für die Anzeige und wird bei Login/Speichern gespiegelt.
+export const THEME_COOKIE_NAME = "neo_theme";
 const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 Tage
 
 export interface SessionPayload {
@@ -64,6 +71,9 @@ export async function createSession(user: {
   email: string;
   role: User["role"];
   session_version: number;
+  // Optional: wird — falls vorhanden — ins JS-lesbare Theme-Cookie gespiegelt,
+  // damit das gewählte Farbtheme nach Login/Reissue sofort (FOUC-frei) greift.
+  color_theme?: string;
 }): Promise<void> {
   const expiresAt = Date.now() + SESSION_DURATION_MS;
   const token = encode({
@@ -82,6 +92,30 @@ export async function createSession(user: {
     expires: new Date(expiresAt),
     path: "/",
   });
+
+  await setThemeCookie(normalizeThemeId(user.color_theme), expiresAt);
+}
+
+// Schreibt (oder entfernt) das JS-lesbare Theme-Cookie. Für "standard" wird das
+// Cookie gelöscht statt gesetzt — das Init-Skript behandelt „kein Cookie" und
+// „standard" identisch (unverändertes Interface), so bleibt es aufgeräumt.
+export async function setThemeCookie(
+  theme: string,
+  expiresAtMs: number = Date.now() + SESSION_DURATION_MS,
+): Promise<void> {
+  const cookieStore = await cookies();
+  const normalized = normalizeThemeId(theme);
+  if (normalized === DEFAULT_THEME_ID) {
+    cookieStore.delete(THEME_COOKIE_NAME);
+    return;
+  }
+  cookieStore.set(THEME_COOKIE_NAME, normalized, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    expires: new Date(expiresAtMs),
+    path: "/",
+  });
 }
 
 export async function getSession(): Promise<SessionPayload | null> {
@@ -94,4 +128,7 @@ export async function getSession(): Promise<SessionPayload | null> {
 export async function deleteSession(): Promise<void> {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
+  // Theme-Cookie beim Logout mit entfernen, damit die nächste (ausgeloggte)
+  // Ansicht wieder das Standard-Interface zeigt.
+  cookieStore.delete(THEME_COOKIE_NAME);
 }

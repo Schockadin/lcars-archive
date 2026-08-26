@@ -87,6 +87,8 @@ CREATE EXTENSION IF NOT EXISTS vector;
 --    Markdown-Editor-Feldern (im Profil abschaltbar).
 --  - news_kinds: welche News-Arten der User auf dem Dashboard sehen will
 --    (Teilmenge von created/updated/deleted). Default = nur 'created' ("Neu").
+--  - color_theme: gewähltes LCARS-Farbtheme der Oberfläche (siehe
+--    src/lib/themes.ts). Default = 'standard' (unverändertes DS9/VOY-Interface).
 --  - additional_roles/permission_overrides: granulares RBAC (siehe
 --    src/lib/permissions.ts). role bleibt die Primär-/Anzeigerolle;
 --    additional_roles hält weitere Preset-Rollen (ein User kann mehrere haben).
@@ -116,6 +118,11 @@ CREATE TABLE IF NOT EXISTS users (
   dialogue_flowing_text_enabled BOOLEAN NOT NULL DEFAULT true,
   editor_spellcheck_enabled     BOOLEAN NOT NULL DEFAULT true,
   news_kinds                    TEXT[] NOT NULL DEFAULT '{created}',
+  -- Gewähltes Farbtheme der Oberfläche (siehe src/lib/themes.ts). Freier
+  -- String, von der Anwendung gegen COLOR_THEMES validiert; unbekannte Werte
+  -- fallen auf 'standard' zurück. Kein DB-CHECK, damit neue Themes ohne
+  -- Migration hinzukommen können.
+  color_theme                   TEXT NOT NULL DEFAULT 'standard',
   additional_roles              TEXT[] NOT NULL DEFAULT '{}',
   permission_overrides          JSONB NOT NULL DEFAULT '{}'
 );
@@ -749,6 +756,12 @@ ALTER TABLE users DROP COLUMN IF EXISTS character_color;
 -- news_kinds: welche News-Arten der User sehen will (Default = nur 'created').
 ALTER TABLE users ADD COLUMN IF NOT EXISTS news_kinds TEXT[] NOT NULL
   DEFAULT '{created}';
+
+-- color_theme: gewähltes LCARS-Farbtheme (siehe src/lib/themes.ts). Default
+-- 'standard' = unverändertes DS9/VOY-Interface. Bewusst ohne CHECK — neue
+-- Themes kommen ohne Migration hinzu, die App validiert gegen COLOR_THEMES.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS color_theme TEXT NOT NULL
+  DEFAULT 'standard';
 
 -- RBAC: weitere Rollen (ein User kann mehrere haben) + individuelle
 -- Rechte-Overrides (siehe src/lib/permissions.ts). Reine Struktur-Anlage; die

@@ -18,7 +18,7 @@ const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
   last_visit_at, last_dashboard_visit_at,
   email_notifications_enabled, push_notifications_enabled, notify_content_types,
-  news_kinds, additional_roles, permission_overrides,
+  news_kinds, color_theme, additional_roles, permission_overrides,
   session_version
 `;
 
@@ -291,6 +291,22 @@ export async function updateEditorSpellcheckPreference(
 ): Promise<void> {
   await sql`
     UPDATE users SET editor_spellcheck_enabled = ${enabled}
+    WHERE id = ${userId}
+  `;
+}
+
+// Farbtheme der Oberfläche (siehe src/lib/themes.ts). Der Wert lebt als
+// color_theme im vollen User-Objekt (USER_COLUMNS) — Lesen läuft daher über
+// getUserById/getCurrentUser, hier braucht es nur den Schreibpfad. Die
+// Validierung/Normalisierung gegen COLOR_THEMES passiert beim Aufrufer
+// (isValidThemeId/normalizeThemeId), damit ein veraltetes Theme still auf
+// 'standard' fällt.
+export async function updateColorThemePreference(
+  userId: number,
+  theme: string,
+): Promise<void> {
+  await sql`
+    UPDATE users SET color_theme = ${theme}
     WHERE id = ${userId}
   `;
 }

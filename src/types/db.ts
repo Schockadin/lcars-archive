@@ -53,6 +53,10 @@ export interface User {
   // "created"|"updated"|"deleted" (siehe NewsSection.tsx / recentActivity.ts).
   // Leeres Array = keine News. Default (DB) = nur "created" ("Neu").
   news_kinds: string[];
+  // Gewähltes LCARS-Farbtheme der Oberfläche (siehe src/lib/themes.ts).
+  // Default (DB) = "standard". Freier String; die App normalisiert unbekannte
+  // Werte auf "standard" (normalizeThemeId).
+  color_theme: string;
   // Wird bei jeder Passwortänderung (setPassword) erhöht und im
   // Session-Cookie mitgeführt (siehe SessionPayload.sessionVersion) — ein
   // Cookie mit veraltetem Wert wird von getCurrentUser() als abgelaufen

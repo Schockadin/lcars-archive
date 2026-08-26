@@ -10,6 +10,12 @@
    selben (unlayered) Cascade-Tier liegen, damit die normale
    Media-Query-Kaskade zwischen ihnen entscheidet. */
 @import "../styles/lcars-components/tokens-responsive.css";
+/* Unlayered, aus demselben Grund wie tokens-responsive.css oben: die
+   Nutzer-Farbthemes überschreiben die :root-Farbvariablen aus tokens.css
+   per `html[data-theme="…"]` (Spezifität 0,1,1 > :root). Läge das in
+   layer(components), würde die normale Kaskade gegen tokens.css (unlayered)
+   verlieren und kein Theme je greifen. */
+@import "../styles/lcars-themes.css";
 /* Unlayered, aus demselben Grund wie tokens-responsive.css oben: der
    Lesemodus muss u.a. die Sidebar (<aside className="flex …">) per
    display:none ausblenden. Läge diese Regel (wie vorher) in

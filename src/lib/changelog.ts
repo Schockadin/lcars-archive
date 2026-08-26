@@ -302,4 +302,11 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Neu: Die installierte App (PWA) funktioniert jetzt eingeschränkt auch ohne Internet. Bereits besuchte Seiten bleiben offline abrufbar, und statt einer Browser-Fehlermeldung erscheint eine eigene Offline-Hinweisseite mit „Erneut versuchen“-Knopf. Sobald wieder Verbindung besteht, werden automatisch die aktuellen Daten geladen. Anmeldung, neue Inhalte und das Speichern von Änderungen brauchen weiterhin eine Verbindung.",
     ],
   },
+  {
+    version: "1.22",
+    title: "Wählbare LCARS-Farbthemes",
+    items: [
+      "Neu: Angemeldete Nutzer:innen können im Profil unter „Darstellung“ ein Farbthema für die gesamte Oberfläche wählen — angelehnt an die klassischen LCARS-Farbschemata (Classic/TNG, Operations, Science, Command, Nemesis) neben dem bisherigen Standard. Die Wahl gilt nur für dich, wird sofort als Vorschau angewandt und bleibt nach dem Speichern bei jedem Login erhalten.",
+    ],
+  },
 ];

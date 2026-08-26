@@ -5,6 +5,7 @@ import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "./dal";
 import { hasPassword, getEditorSpellcheckPreference } from "@/lib/users";
+import { COLOR_THEMES, normalizeThemeId } from "@/lib/themes";
 import { getCharactersForUser, getUsedCharacterColors } from "@/lib/characters";
 import {
   resolveCharacterDefaultColor,
@@ -17,6 +18,7 @@ import NotificationSettingsForm from "./NotificationSettingsForm";
 import NewsSettingsForm from "./NewsSettingsForm";
 import EditorSpellcheckSettingsForm from "./EditorSpellcheckSettingsForm";
 import CharacterColorForm from "./CharacterColorForm";
+import ThemeSettingsForm from "./ThemeSettingsForm";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 import DataRow from "@/components/lcars/DataRow";
@@ -50,6 +52,7 @@ export default async function UserPage() {
   const hasPasswordSet = await hasPassword(target.id);
   const needsPassword = !hasPasswordSet;
   const spellcheckEnabled = await getEditorSpellcheckPreference(target.id);
+  const colorTheme = normalizeThemeId(target.color_theme);
 
   // Charakter-Farben: eine Liste statt einer einzigen Wahl, seit die Farbe
   // pro Charakter statt pro User lebt (Multis sollen für jeden Charakter
@@ -134,6 +137,23 @@ export default async function UserPage() {
                 </section>
               </DataRow>
             )}
+
+            <DataRow
+              label="Darstellung"
+              value={COLOR_THEMES.length}
+              accentColor="var(--lcars-green)"
+              color="var(--lcars-blue)"
+            >
+              <section id="theme" className="flex flex-col gap-[16px]">
+                <h2>Farbtheme</h2>
+                <p>
+                  Färbe die gesamte Oberfläche in einem der LCARS-Farbschemata.
+                  Die Wahl gilt nur für dich und bleibt bei jedem Login
+                  erhalten.
+                </p>
+                <ThemeSettingsForm currentTheme={colorTheme} />
+              </section>
+            </DataRow>
 
             <DataRow
               label="Settings"
