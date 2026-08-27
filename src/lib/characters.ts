@@ -41,9 +41,51 @@ function parseCharacter(row: Character): Character {
   };
 }
 
-// Nur public-Charaktere — speist die öffentliche Übersicht, die Detail-
-// generateStaticParams und die öffentliche API-Route. private/gm-Charaktere
-// bleiben trotzdem über ihre Detailseite erreichbar (Laufzeit-Guard dort).
+// Schlanke Zeilen-Variante von getAllCharacters für Aufrufer, die nur die
+// Eckdaten brauchen: die Charakterliste (/characters) und die Sitemap.
+//
+// Bewusst nur die Felder, die dort wirklich gebraucht werden — die Liste ist
+// eine Client-Komponente, jedes mitgelieferte Feld landet also zusätzlich zur
+// DB-Übertragung auch noch serialisiert im RSC-Payload des Browsers. Mit
+// SELECT * kamen dort bislang bio (gerendertes HTML), source_md (Rohtext) und
+// frontmatter JEDES Charakters mit, obwohl die Übersicht nur Name/Rang/Status
+// anzeigt. updated_at trägt die Sitemap als lastModified, kostet aber nur
+// einen Zeitstempel pro Zeile.
+export type CharacterListItem = Pick<
+  Character,
+  "id" | "slug" | "name" | "status" | "metadata" | "updated_at"
+>;
+
+export async function getCharacterListItems(): Promise<CharacterListItem[]> {
+  "use cache";
+  cacheTag(cacheTags.characters);
+  cacheLife("max");
+  const rows = await sql<CharacterListItem[]>`
+        SELECT id, slug, name, status, metadata, updated_at
+        FROM characters
+        WHERE visibility = 'public' AND deleted_at IS NULL AND is_draft = false
+        ORDER BY
+          CASE status
+            WHEN 'active'   THEN 1
+            WHEN 'retired'  THEN 2
+            WHEN 'deceased' THEN 3
+          END,
+          name ASC
+      `;
+  return rows.map((row) => ({
+    ...row,
+    metadata:
+      typeof row.metadata === "string"
+        ? (JSON.parse(row.metadata) as CharacterMetadata)
+        : row.metadata,
+  }));
+}
+
+// Nur public-Charaktere — speist die Detail-generateStaticParams, die
+// Sitemap und die öffentliche API-Route (die bewusst den vollen Datensatz
+// ausliefert). private/gm-Charaktere bleiben trotzdem über ihre Detailseite
+// erreichbar (Laufzeit-Guard dort). Für die Übersichtsliste stattdessen
+// getCharacterListItems() nutzen.
 export async function getAllCharacters(): Promise<Character[]> {
   "use cache";
   cacheTag(cacheTags.characters);
@@ -233,7 +275,11 @@ export async function setCharacterVisibility(
   userId: number,
   characterId: number,
   visibility: "private" | "gm" | "public",
-): Promise<{ slug: string; name: string; sourceMarkdown: string | null } | null> {
+): Promise<{
+  slug: string;
+  name: string;
+  sourceMarkdown: string | null;
+} | null> {
   const rows = await sql<
     { slug: string; name: string; sourceMarkdown: string | null }[]
   >`
@@ -601,9 +647,11 @@ export async function updateOwnCharacterContent(
     // Siehe createCharacter oben — Opt-in "Automatisch verlinken".
     bioHtml?: string;
   },
-): Promise<
-  { slug: string; visibility: "private" | "gm" | "public"; wasDraft: boolean } | null
-> {
+): Promise<{
+  slug: string;
+  visibility: "private" | "gm" | "public";
+  wasDraft: boolean;
+} | null> {
   const trimmedBody = input.bodyMarkdown.trim();
   const bio = trimmedBody
     ? (input.bioHtml ?? (await renderContentHtml(trimmedBody)))
@@ -627,7 +675,11 @@ export async function updateOwnCharacterContent(
   // Übergang von einer normalen Bearbeitung zu unterscheiden (siehe
   // canViewDraft-Kommentar).
   const rows = await sql<
-    { slug: string; visibility: "private" | "gm" | "public"; wasDraft: boolean }[]
+    {
+      slug: string;
+      visibility: "private" | "gm" | "public";
+      wasDraft: boolean;
+    }[]
   >`
     WITH old AS (SELECT is_draft FROM characters WHERE id = ${characterId})
     UPDATE characters
@@ -686,7 +738,10 @@ export async function notifyCharacterSubscribers(input: {
         if (!result.sent) {
           const message = `Charakter-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`;
           console.error(message);
-          void logCaughtError(new Error(message), "characters.ts:notifyCharacterSubscribers");
+          void logCaughtError(
+            new Error(message),
+            "characters.ts:notifyCharacterSubscribers",
+          );
         }
       }
       if (subscriber.pushNotificationsEnabled) {
@@ -730,18 +785,25 @@ export async function updateOwnCharacterBio(
   return row ? { slug: row.slug, name: row.name, bio } : null;
 }
 
-// Alle von ANDEREN Charakteren belegten Farben (character_color IS NOT NULL,
-// ohne den eigenen) — Grundlage für die „in Benutzung"-Sperre im Farbwähler
-// auf der Charakter-Detailseite. Der partielle UNIQUE-Index
-// (scripts/schema.sql) erzwingt die Eindeutigkeit zusätzlich auf DB-Ebene.
-export async function getUsedCharacterColors(
-  excludeCharacterId: number,
-): Promise<string[]> {
-  const rows = await sql<{ character_color: string }[]>`
-    SELECT character_color FROM characters
-    WHERE character_color IS NOT NULL AND id != ${excludeCharacterId}
+// Alle belegten Farben (character_color IS NOT NULL) samt zugehöriger
+// Charakter-ID — Grundlage für die „in Benutzung"-Sperre im Farbwähler. Der
+// Aufrufer filtert je Charakter dessen eigene Farbe heraus (siehe
+// takenColorsForCharacter in src/lib/characterColor.ts); der partielle
+// UNIQUE-Index (scripts/schema.sql) erzwingt die Eindeutigkeit zusätzlich auf
+// DB-Ebene.
+//
+// Liefert bewusst die GESAMTE Liste statt einer Variante mit
+// `WHERE id != <einer>`: Das Profil braucht sie einmal pro eigenem Charakter,
+// was mit der früheren Ein-Charakter-Variante N vollständige Scans der
+// characters-Tabelle für praktisch dieselben Daten bedeutete.
+export async function getUsedCharacterColorsWithIds(): Promise<
+  { id: number; color: string }[]
+> {
+  const rows = await sql<{ id: number; character_color: string }[]>`
+    SELECT id, character_color FROM characters
+    WHERE character_color IS NOT NULL
   `;
-  return rows.map((r) => r.character_color);
+  return rows.map((r) => ({ id: r.id, color: r.character_color }));
 }
 
 // Wirft ColorTakenError, wenn die Farbe bereits von einem anderen Charakter

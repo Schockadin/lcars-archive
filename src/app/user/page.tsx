@@ -10,10 +10,13 @@ import {
   normalizeThemeId,
   sanitizeThemeOverrides,
 } from "@/lib/themes";
-import { getCharactersForUser, getUsedCharacterColors } from "@/lib/characters";
+import {
+  getCharactersForUser,
+  getUsedCharacterColorsWithIds,
+} from "@/lib/characters";
 import {
   resolveCharacterDefaultColor,
-  normalizeHex,
+  takenColorsForCharacter,
 } from "@/lib/characterColor";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
@@ -53,11 +56,20 @@ const ROLE_LABELS: Record<User["role"], string> = {
 // nicht mehr hier.
 export default async function UserPage() {
   const target = await requireOwnUser();
-  const roleMap = await getRoleMap();
 
-  const hasPasswordSet = await hasPassword(target.id);
+  // Voneinander unabhängig — parallel statt nacheinander abfragen (gleiches
+  // Muster wie in Dashboard.tsx), sonst addieren sich die Roundtrips zur
+  // entfernten DB bei jedem Aufruf des Profils auf.
+  const [roleMap, hasPasswordSet, spellcheckEnabled, characters, usedColors] =
+    await Promise.all([
+      getRoleMap(),
+      hasPassword(target.id),
+      getEditorSpellcheckPreference(target.id),
+      getCharactersForUser(target.id),
+      getUsedCharacterColorsWithIds(),
+    ]);
+
   const needsPassword = !hasPasswordSet;
-  const spellcheckEnabled = await getEditorSpellcheckPreference(target.id);
   const colorTheme = normalizeThemeId(target.color_theme);
   const themeOverrides = sanitizeThemeOverrides(target.theme_overrides);
   const uiMode = normalizeUiMode(target.ui_mode);
@@ -68,19 +80,17 @@ export default async function UserPage() {
   // pro Charakter einzeln ermitteln (schließt jeweils nur den eigenen
   // Charakter aus, nicht die übrigen eigenen — der partielle UNIQUE-Index
   // macht jede Farbe global exklusiv, auch zwischen den eigenen Charakteren).
-  const characters = await getCharactersForUser(target.id);
-  const characterColors = await Promise.all(
-    characters.map(async (c) => {
-      const usedColors = await getUsedCharacterColors(c.id);
-      const takenColors = usedColors.map(normalizeHex);
-      const ownColor = resolveCharacterDefaultColor(
-        c.character_color,
-        c.id,
-        new Set(takenColors),
-      );
-      return { character: c, ownColor, takenColors };
-    }),
-  );
+  // Das Ausschließen passiert hier in JS über die EINE oben geladene Liste
+  // aller belegten Farben, statt sie pro Charakter erneut abzufragen.
+  const characterColors = characters.map((c) => {
+    const takenColors = takenColorsForCharacter(c.id, usedColors);
+    const ownColor = resolveCharacterDefaultColor(
+      c.character_color,
+      c.id,
+      new Set(takenColors),
+    );
+    return { character: c, ownColor, takenColors };
+  });
 
   return (
     <>
@@ -168,7 +178,8 @@ export default async function UserPage() {
                 <p>
                   Bevorzugst du es schlicht? Deaktiviere das LCARS-Design und
                   nutze stattdessen ein schlankes, minimalistisches Interface.
-                  Die Wahl gilt nur für dich und bleibt bei jedem Login erhalten.
+                  Die Wahl gilt nur für dich und bleibt bei jedem Login
+                  erhalten.
                 </p>
                 <UiModeSettingsForm currentMode={uiMode} />
               </section>

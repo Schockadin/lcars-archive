@@ -7,6 +7,7 @@ import {
   LcarsSwitch,
   LcarsListFilterInput,
 } from "@/components/lcars";
+import type { CharacterListItem } from "@/lib/characters";
 import { Character } from "@/types/character";
 
 // ─── Konfiguration ──────────────────────────────────────────
@@ -50,7 +51,7 @@ type SortMode = "status" | "generation";
 export default function CharacterPage({
   characters,
 }: {
-  characters: Character[];
+  characters: CharacterListItem[];
 }) {
   usePageMeta("Charaktere", "characters");
   const [mode, setMode] = useState<SortMode>("status");
@@ -135,7 +136,7 @@ function CharacterRows({
   characters,
   color,
 }: {
-  characters: Character[];
+  characters: CharacterListItem[];
   color: string;
 }) {
   return (

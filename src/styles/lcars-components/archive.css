@@ -43,9 +43,11 @@
 }
 
 /* ── Archiv-Eintrag (Detailseite) ────────────────────────────────── */
+/* Nimmt auf Desktop die volle Breite der Inhaltsspalte ein (kein Lese-Cap);
+   die schmalere, zentrierte Lesebreite bleibt dem mobilen Lesemodus
+   vorbehalten (reading-mode.css). */
 .archive-entry {
   width: 100%;
-  max-width: 720px;
   margin-bottom: 16px;
   margin-top: 32px;
 }

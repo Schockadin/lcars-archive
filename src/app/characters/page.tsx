@@ -1,4 +1,4 @@
-import { getAllCharacters } from "@/lib/characters";
+import { getCharacterListItems } from "@/lib/characters";
 import CharacterPage from "./CharacterPage";
 
 export const metadata = {
@@ -8,6 +8,6 @@ export const metadata = {
 };
 
 export default async function CharakterePage() {
-  const characters = await getAllCharacters();
+  const characters = await getCharacterListItems();
   return <CharacterPage characters={characters} />;
 }

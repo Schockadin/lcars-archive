@@ -17,10 +17,12 @@ const antonio = Antonio({
   variable: "--font-antonio",
 });
 
+// Variablenname wie in layout.tsx — die CSS-Regeln referenzieren
+// var(--font-share-tech-mono).
 const shareTechMono = Share_Tech_Mono({
   subsets: ["latin"],
   weight: "400",
-  variable: "--font-mono-lcars",
+  variable: "--font-share-tech-mono",
 });
 
 export default function GlobalError({
@@ -31,10 +33,7 @@ export default function GlobalError({
   unstable_retry: () => void;
 }) {
   return (
-    <html
-      lang="de"
-      className={`${antonio.variable} ${shareTechMono.variable}`}
-    >
+    <html lang="de" className={`${antonio.variable} ${shareTechMono.variable}`}>
       <body>
         <ServerErrorContent error={error} onRetry={unstable_retry} />
       </body>

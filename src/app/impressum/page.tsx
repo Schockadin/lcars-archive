@@ -1,6 +1,6 @@
 // src/app/impressum/page.tsx
 import { Metadata } from "next";
-import ImpressumClient from "./ImpressumClient";
+import ImpressumContent from "./ImpressumContent";
 
 export const metadata: Metadata = {
   title: "Impressum",
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function ImpressumPage() {
-  return <ImpressumClient />;
+  return <ImpressumContent />;
 }

@@ -12,6 +12,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.24",
+    title: "Inhaltstexte nutzen die volle Breite am Desktop",
+    items: [
+      "Auf großen Bildschirmen füllen die Texte auf Inhaltsseiten (Missions-Synopsen und Logs, Archiv-Einträge und Gespräche) jetzt die gesamte Breite des Inhaltsbereichs, statt in einer schmalen Spalte zu enden. Auf dem Handy bleibt der Lesemodus mit seiner komfortablen, zentrierten Lesebreite unverändert.",
+      "Die LCARS-Schreibmaschinenschrift ist zurück: Metadaten-Zeilen, Akten-Felder, Log-Kürzel und die Kopfzeile wurden versehentlich in der normalen Fließtextschrift dargestellt und zeigen jetzt wieder das vorgesehene Schriftbild.",
+      "Die Charakterübersicht und die Seiten Impressum und Datenschutz laden spürbar schneller — sie übertragen nur noch die Daten, die sie tatsächlich anzeigen. Auch das eigene Profil und das Aufklappen der Kopfzeilen-Menüs reagieren flotter.",
+    ],
+  },
+  {
     version: "1.0",
     title: "Datenbank als neue Datenquelle, automatisches Vault-Backup",
     items: [
