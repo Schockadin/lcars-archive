@@ -50,7 +50,7 @@ export function resolveCharacterColor(
 ): string {
   if (isHexColor(stored)) return normalizeHex(stored);
   const len = PRESET_HEXES.length;
-  const i = (((seed % len) + len) % len) || 0;
+  const i = ((seed % len) + len) % len || 0;
   return PRESET_HEXES[i];
 }
 
@@ -58,7 +58,8 @@ export function resolveCharacterColor(
 // (eine Instanz pro Charakter): überspringt bei abgeleitetem Default bereits
 // von ANDEREN Charakteren belegte Preset-Farben, damit der vorgeschlagene
 // Default auch speicherbar ist (nicht schon gesperrt). Belegte Farben kommen
-// aus getUsedCharacterColors. Sind alle Presets belegt, fällt es auf den
+// aus getUsedCharacterColorsWithIds, je Charakter gefiltert durch
+// takenColorsForCharacter. Sind alle Presets belegt, fällt es auf den
 // einfachen deterministischen Wert zurück.
 export function resolveCharacterDefaultColor(
   stored: string | null | undefined,
@@ -73,6 +74,26 @@ export function resolveCharacterDefaultColor(
     if (!taken.has(hex)) return hex;
   }
   return resolveCharacterColor(stored, seed);
+}
+
+// Die für EINEN Charakter gesperrten Farben aus der Gesamtliste aller
+// belegten Farben (getUsedCharacterColorsWithIds) — also alle außer seiner
+// eigenen. Der partielle UNIQUE-Index macht jede Farbe global exklusiv, auch
+// zwischen den Charakteren desselben Users; ausgeschlossen wird deshalb
+// ausschließlich der Charakter selbst, nicht etwa seine „Geschwister".
+//
+// Steht bewusst hier als reine Funktion statt inline in src/app/user/page.tsx:
+// die Auswahl lief früher pro Charakter über eine eigene SQL-Abfrage
+// (WHERE id != …) und wird jetzt in JS aus einer einzigen Abfrage abgeleitet
+// — genau die Art Umbau, bei dem ein vergessener Selbst-Ausschluss unbemerkt
+// bliebe, weil er nur eine Farbe zu viel sperrt.
+export function takenColorsForCharacter(
+  characterId: number,
+  usedColors: readonly { id: number; color: string }[],
+): string[] {
+  return usedColors
+    .filter((u) => u.id !== characterId)
+    .map((u) => normalizeHex(u.color));
 }
 
 // Öffnendes/schließendes deutsches Anführungszeichen (siehe remarkGermanQuotes

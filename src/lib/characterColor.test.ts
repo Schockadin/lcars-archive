@@ -6,6 +6,7 @@ import {
   normalizeHex,
   resolveCharacterColor,
   resolveCharacterDefaultColor,
+  takenColorsForCharacter,
   colorizeDirectSpeech,
 } from "./characterColor";
 
@@ -41,7 +42,9 @@ describe("resolveCharacterColor", () => {
 
   it("maps the seed cyclically over the presets", () => {
     expect(resolveCharacterColor(null, 0)).toBe(PRESET_HEXES[0]);
-    expect(resolveCharacterColor(null, PRESET_HEXES.length)).toBe(PRESET_HEXES[0]);
+    expect(resolveCharacterColor(null, PRESET_HEXES.length)).toBe(
+      PRESET_HEXES[0],
+    );
     expect(resolveCharacterColor(null, 1)).toBe(PRESET_HEXES[1]);
   });
 
@@ -69,6 +72,49 @@ describe("resolveCharacterDefaultColor", () => {
     const taken = new Set(PRESET_HEXES);
     const out = resolveCharacterDefaultColor(null, 2, taken);
     expect(out).toBe(PRESET_HEXES[2]);
+  });
+});
+
+describe("takenColorsForCharacter", () => {
+  const used = [
+    { id: 1, color: "#ff9a00" },
+    { id: 2, color: "#CD9ACD" },
+    { id: 3, color: "#9a9aff" },
+  ];
+
+  it("excludes only the character's own color", () => {
+    expect(takenColorsForCharacter(2, used)).toEqual(["#ff9a00", "#9a9aff"]);
+  });
+
+  it("keeps the colors of the same user's other characters", () => {
+    // Der partielle UNIQUE-Index sperrt global — die Farbe eines zweiten
+    // eigenen Charakters bleibt für den ersten also belegt.
+    expect(takenColorsForCharacter(1, used)).toContain("#cd9acd");
+  });
+
+  it("normalizes to lowercase for comparison with the presets", () => {
+    expect(takenColorsForCharacter(1, used)).toEqual(["#cd9acd", "#9a9aff"]);
+  });
+
+  it("returns every color when the character has none itself", () => {
+    expect(takenColorsForCharacter(99, used)).toHaveLength(3);
+  });
+
+  it("returns an empty list when no color is in use at all", () => {
+    expect(takenColorsForCharacter(1, [])).toEqual([]);
+  });
+
+  it("feeds resolveCharacterDefaultColor a set that skips taken presets", () => {
+    // Zusammenspiel wie in src/app/user/page.tsx: der vorgeschlagene Default
+    // darf keine bereits belegte Preset-Farbe sein, sonst ist er nicht
+    // speicherbar.
+    const takenAll = PRESET_HEXES.slice(0, 2).map((hex, i) => ({
+      id: i + 10,
+      color: hex,
+    }));
+    const taken = new Set(takenColorsForCharacter(1, takenAll));
+    const suggested = resolveCharacterDefaultColor(null, 0, taken);
+    expect(taken.has(suggested)).toBe(false);
   });
 });
 

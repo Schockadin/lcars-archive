@@ -223,9 +223,7 @@ export default function DialogueLiveView({
         )}
         <div className="flex items-center gap-[8px]">
           <CompleteDialogueButton entrySlug={entrySlug} />
-          {canModerate && (
-            <DeleteDialogueButton entrySlug={entrySlug} />
-          )}
+          {canModerate && <DeleteDialogueButton entrySlug={entrySlug} />}
         </div>
       </div>
     </>

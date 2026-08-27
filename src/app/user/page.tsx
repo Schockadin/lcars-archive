@@ -16,7 +16,7 @@ import {
 } from "@/lib/characters";
 import {
   resolveCharacterDefaultColor,
-  normalizeHex,
+  takenColorsForCharacter,
 } from "@/lib/characterColor";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
@@ -83,9 +83,7 @@ export default async function UserPage() {
   // Das Ausschließen passiert hier in JS über die EINE oben geladene Liste
   // aller belegten Farben, statt sie pro Charakter erneut abzufragen.
   const characterColors = characters.map((c) => {
-    const takenColors = usedColors
-      .filter((u) => u.id !== c.id)
-      .map((u) => normalizeHex(u.color));
+    const takenColors = takenColorsForCharacter(c.id, usedColors);
     const ownColor = resolveCharacterDefaultColor(
       c.character_color,
       c.id,
@@ -180,7 +178,8 @@ export default async function UserPage() {
                 <p>
                   Bevorzugst du es schlicht? Deaktiviere das LCARS-Design und
                   nutze stattdessen ein schlankes, minimalistisches Interface.
-                  Die Wahl gilt nur für dich und bleibt bei jedem Login erhalten.
+                  Die Wahl gilt nur für dich und bleibt bei jedem Login
+                  erhalten.
                 </p>
                 <UiModeSettingsForm currentMode={uiMode} />
               </section>

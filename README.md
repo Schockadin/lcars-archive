@@ -331,28 +331,28 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 
 ## 📜 NPM-Skripte
 
-| Skript              | Beschreibung                                       |
-| ------------------- | -------------------------------------------------- |
-| `npm run dev`       | Startet den Entwicklungsserver (gegen `.env.dev`)  |
-| `npm run build`     | Erstellt den Produktions-Build                     |
-| `npm run start`     | Startet den Produktionsserver                      |
-| `npm run lint`      | Führt ESLint aus                                   |
-| `npm run db:setup`      | Legt das Datenbankschema an (`scripts/schema.sql`)        |
-| `npm run db:create-admin` | Legt einen Admin-User an, nur wenn `users` leer ist      |
-| `npm run db:ingest`     | Importiert den kompletten Markdown-Vault                  |
-| `npm run db:ingest:new` | Importiert nur Dateien mit noch unbekanntem `slug`        |
-| `npm run db:characters` | Importiert nur die Charaktere                            |
-| `npm run db:missions`   | Importiert nur Missionen + Mission-Logs                  |
-| `npm run db:archive`    | Importiert nur die Archiv-Einträge                       |
-| `npm run db:revalidate` | Invalidiert nur die Caches (siehe `SITE_URL`)            |
-| `npm run embed:all`     | Baut den Vektor-Index des Archiv-Assistenten für alle Inhalte (neu) auf — Backfill, idempotent (siehe „Archiv-Assistent (RAG)") |
-| `npm run db:reset`      | Setzt die Datenbank zurück                                |
-| `npm run db:backup`     | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup") |
-| `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind             |
-| `npm run db:purge-deleted` | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist |
-| `npm run test`          | Führt die Unit-Tests aus (`src/**/*.test.ts`)             |
-| `npm run test:e2e`      | Führt die Playwright-E2E-Tests aus (öffentliche Seiten)   |
-| `npm run test:integration` | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz) |
+| Skript                      | Beschreibung                                                                                                                                     |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run dev`               | Startet den Entwicklungsserver (gegen `.env.dev`)                                                                                                |
+| `npm run build`             | Erstellt den Produktions-Build                                                                                                                   |
+| `npm run start`             | Startet den Produktionsserver                                                                                                                    |
+| `npm run lint`              | Führt ESLint aus                                                                                                                                 |
+| `npm run db:setup`          | Legt das Datenbankschema an (`scripts/schema.sql`)                                                                                               |
+| `npm run db:create-admin`   | Legt einen Admin-User an, nur wenn `users` leer ist                                                                                              |
+| `npm run db:ingest`         | Importiert den kompletten Markdown-Vault                                                                                                         |
+| `npm run db:ingest:new`     | Importiert nur Dateien mit noch unbekanntem `slug`                                                                                               |
+| `npm run db:characters`     | Importiert nur die Charaktere                                                                                                                    |
+| `npm run db:missions`       | Importiert nur Missionen + Mission-Logs                                                                                                          |
+| `npm run db:archive`        | Importiert nur die Archiv-Einträge                                                                                                               |
+| `npm run db:revalidate`     | Invalidiert nur die Caches (siehe `SITE_URL`)                                                                                                    |
+| `npm run embed:all`         | Baut den Vektor-Index des Archiv-Assistenten für alle Inhalte (neu) auf — Backfill, idempotent (siehe „Archiv-Assistent (RAG)")                  |
+| `npm run db:reset`          | Setzt die Datenbank zurück                                                                                                                       |
+| `npm run db:backup`         | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup")                                                            |
+| `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind                                                                                                    |
+| `npm run db:purge-deleted`  | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist                                                              |
+| `npm run test`              | Führt die Unit-Tests aus (`src/**/*.test.ts`)                                                                                                    |
+| `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Komponenten-Galerie sowie Layout-/Schrift-Regressionen an beiden Viewports) |
+| `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz)                                             |
 
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
 (z.B. `db:setup:dev`, `db:ingest:dev`, `db:reset:dev`) — identisch, nur mit
@@ -534,14 +534,14 @@ die vier `R2_*`-Secrets. Dafür müssen folgende Repository-Secrets gesetzt
 sein (GitHub → Settings → Secrets and variables → Actions → "New repository
 secret"):
 
-| Secret | Wert |
-|---|---|
-| `DATABASE_URL` | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. Nötig für den Backup- UND den Purge-Schritt, nicht für das R2-Cleanup. |
-| `R2_ACCOUNT_ID` | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). Nötig für den Backup- UND den Purge-Schritt (Bild-Cleanup), nicht für das R2-Cleanup. |
-| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens"). |
-| `R2_BUCKET_NAME` | Name des **Backup**-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). Hochgeladene Assets liegen seit dem Asset-Bucket-Release nicht mehr hier, sondern in `R2_ASSET_BUCKET_NAME` (siehe unten). |
-| `R2_ASSET_BUCKET_NAME` | Name des **öffentlichen** Asset-Buckets für hochgeladene Assets — Content-Bilder (`content-images/...`), Charakter-Portraits (`character-portraits/...`) und Charakterbögen (`character-sheets/...`). Muss in Cloudflare als öffentlicher Bucket eingerichtet sein (eigene Domain oder r2.dev-URL). Für den App-Betrieb (Netlify) und die Migration nötig, **nicht** für den Backup-Cronjob. |
-| `R2_ASSET_PUBLIC_BASE_URL` | Öffentliche Basis-URL des Asset-Buckets ohne Trailing-Slash (z.B. `https://assets.neo-archiv.de` oder die von Cloudflare vergebene `https://pub-….r2.dev`). Daraus baut die App die direkten Asset-Links. |
+| Secret                                      | Wert                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`                              | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. Nötig für den Backup- UND den Purge-Schritt, nicht für das R2-Cleanup.                                                                                                                |
+| `R2_ACCOUNT_ID`                             | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). Nötig für den Backup- UND den Purge-Schritt (Bild-Cleanup), nicht für das R2-Cleanup.                                                                                                                                                                                                                                   |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens").                                                                                                                                                                                                                                                                                                                |
+| `R2_BUCKET_NAME`                            | Name des **Backup**-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). Hochgeladene Assets liegen seit dem Asset-Bucket-Release nicht mehr hier, sondern in `R2_ASSET_BUCKET_NAME` (siehe unten).                                                                                                                                                          |
+| `R2_ASSET_BUCKET_NAME`                      | Name des **öffentlichen** Asset-Buckets für hochgeladene Assets — Content-Bilder (`content-images/...`), Charakter-Portraits (`character-portraits/...`) und Charakterbögen (`character-sheets/...`). Muss in Cloudflare als öffentlicher Bucket eingerichtet sein (eigene Domain oder r2.dev-URL). Für den App-Betrieb (Netlify) und die Migration nötig, **nicht** für den Backup-Cronjob. |
+| `R2_ASSET_PUBLIC_BASE_URL`                  | Öffentliche Basis-URL des Asset-Buckets ohne Trailing-Slash (z.B. `https://assets.neo-archiv.de` oder die von Cloudflare vergebene `https://pub-….r2.dev`). Daraus baut die App die direkten Asset-Links.                                                                                                                                                                                    |
 
 **Wichtig für das manuelle R2-Backup im Adminpanel** (`/admin/db` — "Im
 R2-Bucket speichern" / "Aus R2-Bucket importieren", genauso für das
@@ -612,7 +612,7 @@ serverseitig (`canView` **und** `canViewDraft` auf dem Charakter). Auf der
 Charakterseite erscheinen die Bögen als Liste: ein Klick öffnet eine
 **Vollbild-PDF-Vorschau** (Modal, eingebettetes `<iframe>` — dafür erlaubt die
 CSP `frame-ancestors 'self'`), daneben gibt es einen **Herunterladen**-Knopf
-(`?download=1`, `Content-Disposition: attachment`). Auch die Bogen-*Liste*
+(`?download=1`, `Content-Disposition: attachment`). Auch die Bogen-_Liste_
 (Dateinamen/Größen) folgt der Charakter-Sichtbarkeit inkl. Entwurf-Gate
 (`getCharacterSheetsAction` → `canView` + `canViewDraft`). Hochladen und Löschen
 darf nur der Owner des Charakters (dieselbe Owner-only-Regel wie bei den
@@ -695,6 +695,7 @@ von Netlifys Build-Runnern.
 
 **2. Netlify auf zwei DBs aufteilen** (Netlify-Dashboard, nicht
 `netlify.toml` — dort dürfen keine Secrets landen):
+
 - Bestehende `DATABASE_URL` auf Scope **„Production"** einschränken
   (vermutlich aktuell „All contexts").
 - Neue `DATABASE_URL` mit Scope **„Deploy previews"** hinzufügen, Wert =

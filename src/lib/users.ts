@@ -254,7 +254,9 @@ export async function updateNewsKinds(
 // Lese-/Schreibfunktionen statt Teil von USER_COLUMNS/dem vollen User-Objekt
 // — wird gezielt nur dort gebraucht, wo ein geschlossener Dialog gerendert
 // wird (archive/[slug]/page.tsx), nicht bei jedem User-Fetch.
-export async function getDialogueViewPreference(userId: number): Promise<boolean> {
+export async function getDialogueViewPreference(
+  userId: number,
+): Promise<boolean> {
   const [row] = await sql<{ dialogue_flowing_text_enabled: boolean }[]>`
     SELECT dialogue_flowing_text_enabled FROM users WHERE id = ${userId}
   `;
@@ -278,7 +280,9 @@ export async function updateDialogueViewPreference(
 // in app/actions/editorPreferences.ts, siehe getFollowState/FollowButtons.tsx
 // für dasselbe Muster) statt durch alle sechs Aufrufstellen durchgereicht zu
 // werden.
-export async function getEditorSpellcheckPreference(userId: number): Promise<boolean> {
+export async function getEditorSpellcheckPreference(
+  userId: number,
+): Promise<boolean> {
   const [row] = await sql<{ editor_spellcheck_enabled: boolean }[]>`
     SELECT editor_spellcheck_enabled FROM users WHERE id = ${userId}
   `;
@@ -340,7 +344,7 @@ export async function updateUiModePreference(
 // Charakter-Farbe: lebt jetzt auf characters.character_color statt hier (ein
 // User mit mehreren Charakteren — „Multis" — kann so für jeden Charakter eine
 // eigene Farbe wählen statt einer einzigen für alle). Siehe
-// getCharacterColorPreference/getUsedCharacterColors/
+// getCharacterColorPreference/getUsedCharacterColorsWithIds/
 // updateCharacterColorPreference/ColorTakenError in src/lib/characters.ts.
 
 export async function updateUser(
@@ -555,9 +559,7 @@ export async function setPassword(
 // ein frisches Cookie mit der aktuellen session_version für die eigene,
 // gerade laufende Sitzung ausstellen kann — sonst würde der nächste Request
 // dieser Sitzung sich selbst mit aussperren.
-export async function invalidateOtherSessions(
-  userId: number,
-): Promise<number> {
+export async function invalidateOtherSessions(userId: number): Promise<number> {
   const [row] = await sql<{ session_version: number }[]>`
     UPDATE users
     SET session_version = session_version + 1

@@ -33,10 +33,7 @@ export default function GlobalError({
   unstable_retry: () => void;
 }) {
   return (
-    <html
-      lang="de"
-      className={`${antonio.variable} ${shareTechMono.variable}`}
-    >
+    <html lang="de" className={`${antonio.variable} ${shareTechMono.variable}`}>
       <body>
         <ServerErrorContent error={error} onRetry={unstable_retry} />
       </body>

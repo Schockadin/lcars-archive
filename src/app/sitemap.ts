@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getAllCharacters } from "@/lib/characters";
+import { getCharacterListItems } from "@/lib/characters";
 import { getAllLogPaths, getAllMissions } from "@/lib/missions";
 import { getAllArchivePaths } from "@/lib/archive";
 
@@ -37,7 +37,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Dynamische Charakter-Routen
   let characterRoutes: MetadataRoute.Sitemap = [];
   try {
-    const characters = await getAllCharacters();
+    const characters = await getCharacterListItems();
     characterRoutes = characters.map((c) => ({
       url: `${BASE_URL}/characters/${c.slug}`,
       lastModified: new Date(c.updated_at),
