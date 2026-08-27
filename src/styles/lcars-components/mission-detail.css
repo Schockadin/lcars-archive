@@ -52,9 +52,11 @@
   opacity: 0.75;
 }
 
-/* rechte Spalte: Synopsis / Log-Text */
+/* rechte Spalte: Synopsis / Log-Text — nimmt auf Desktop die volle Breite
+   der Inhaltsspalte ein (kein Lese-Cap). Die schmalere, zentrierte Lesebreite
+   bleibt dem mobilen Lesemodus vorbehalten (reading-mode.css). */
 .mission-detail-article {
-  max-width: 760px;
+  width: 100%;
 }
 .mission-detail-header {
   margin-bottom: 16px;

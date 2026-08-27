@@ -12,6 +12,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.24",
+    title: "Inhaltstexte nutzen die volle Breite am Desktop",
+    items: [
+      "Auf großen Bildschirmen füllen die Texte auf Inhaltsseiten (Missions-Synopsen und Logs, Archiv-Einträge und Gespräche) jetzt die gesamte Breite des Inhaltsbereichs, statt in einer schmalen Spalte zu enden. Auf dem Handy bleibt der Lesemodus mit seiner komfortablen, zentrierten Lesebreite unverändert.",
+    ],
+  },
+  {
     version: "1.0",
     title: "Datenbank als neue Datenquelle, automatisches Vault-Backup",
     items: [
