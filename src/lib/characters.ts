@@ -41,9 +41,48 @@ function parseCharacter(row: Character): Character {
   };
 }
 
-// Nur public-Charaktere — speist die öffentliche Übersicht, die Detail-
-// generateStaticParams und die öffentliche API-Route. private/gm-Charaktere
-// bleiben trotzdem über ihre Detailseite erreichbar (Laufzeit-Guard dort).
+// Schlanke Zeilen-Variante von getAllCharacters für die Charakterliste
+// (/characters). Bewusst nur die fünf Felder, die CharacterPage.tsx wirklich
+// rendert bzw. filtert — die Liste ist eine Client-Komponente, jedes
+// mitgelieferte Feld landet also zusätzlich zur DB-Übertragung auch noch
+// serialisiert im RSC-Payload des Browsers. Mit SELECT * kamen dort bislang
+// bio (gerendertes HTML), source_md (Rohtext) und frontmatter JEDES
+// Charakters mit, obwohl die Übersicht nur Name/Rang/Status anzeigt.
+export type CharacterListItem = Pick<
+  Character,
+  "id" | "slug" | "name" | "status" | "metadata"
+>;
+
+export async function getCharacterListItems(): Promise<CharacterListItem[]> {
+  "use cache";
+  cacheTag(cacheTags.characters);
+  cacheLife("max");
+  const rows = await sql<CharacterListItem[]>`
+        SELECT id, slug, name, status, metadata
+        FROM characters
+        WHERE visibility = 'public' AND deleted_at IS NULL AND is_draft = false
+        ORDER BY
+          CASE status
+            WHEN 'active'   THEN 1
+            WHEN 'retired'  THEN 2
+            WHEN 'deceased' THEN 3
+          END,
+          name ASC
+      `;
+  return rows.map((row) => ({
+    ...row,
+    metadata:
+      typeof row.metadata === "string"
+        ? (JSON.parse(row.metadata) as CharacterMetadata)
+        : row.metadata,
+  }));
+}
+
+// Nur public-Charaktere — speist die Detail-generateStaticParams, die
+// Sitemap und die öffentliche API-Route (die bewusst den vollen Datensatz
+// ausliefert). private/gm-Charaktere bleiben trotzdem über ihre Detailseite
+// erreichbar (Laufzeit-Guard dort). Für die Übersichtsliste stattdessen
+// getCharacterListItems() nutzen.
 export async function getAllCharacters(): Promise<Character[]> {
   "use cache";
   cacheTag(cacheTags.characters);
@@ -742,6 +781,22 @@ export async function getUsedCharacterColors(
     WHERE character_color IS NOT NULL AND id != ${excludeCharacterId}
   `;
   return rows.map((r) => r.character_color);
+}
+
+// Wie getUsedCharacterColors, aber für MEHRERE Charaktere in EINER Abfrage:
+// liefert alle belegten Farben samt zugehöriger Charakter-ID, sodass der
+// Aufrufer je Charakter selbst dessen eigene Farbe herausfiltern kann. Das
+// Profil (/user) braucht die Liste einmal pro eigenem Charakter — mit
+// getUsedCharacterColors() waren das N vollständige Scans der characters-
+// Tabelle für praktisch dieselben Daten.
+export async function getUsedCharacterColorsWithIds(): Promise<
+  { id: number; color: string }[]
+> {
+  const rows = await sql<{ id: number; character_color: string }[]>`
+    SELECT id, character_color FROM characters
+    WHERE character_color IS NOT NULL
+  `;
+  return rows.map((r) => ({ id: r.id, color: r.character_color }));
 }
 
 // Wirft ColorTakenError, wenn die Farbe bereits von einem anderen Charakter

@@ -50,11 +50,33 @@ export function useAnchoredDropdown({
   useEffect(() => {
     if (!isOpen) return;
     measure();
-    window.addEventListener("resize", measure);
-    window.addEventListener("scroll", measure, true);
+    // Der scroll-Listener läuft in der Capture-Phase, feuert also für JEDEN
+    // scrollbaren Container der Seite (v.a. .lcars-main-content, den
+    // Haupt-Scroller). Zwei Vorkehrungen, damit das offene Dropdown das
+    // Scrollen nicht ausbremst:
+    //   passive: true → der Browser muss nicht erst abwarten, ob der Handler
+    //     preventDefault() aufruft, und kann sofort scrollen.
+    //   requestAnimationFrame → getBoundingClientRect() (erzwingt Layout) und
+    //     das nachfolgende setState laufen höchstens einmal pro Frame statt
+    //     einmal pro Scroll-Event.
+    let frame = 0;
+    const onScrollOrResize = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        measure();
+      });
+    };
+    const opts = { passive: true } as const;
+    window.addEventListener("resize", onScrollOrResize, opts);
+    window.addEventListener("scroll", onScrollOrResize, {
+      ...opts,
+      capture: true,
+    });
     return () => {
-      window.removeEventListener("resize", measure);
-      window.removeEventListener("scroll", measure, true);
+      if (frame) cancelAnimationFrame(frame);
+      window.removeEventListener("resize", onScrollOrResize);
+      window.removeEventListener("scroll", onScrollOrResize, true);
     };
   }, [isOpen, measure]);
 

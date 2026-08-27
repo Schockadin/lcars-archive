@@ -127,8 +127,11 @@ export default function DialogueLiveView({
   // aktuellen Nachrichten) — die nächste Nachricht darf nicht von ihm kommen
   // (Selbstgespräch-Verbot). Daraus leiten sich die für DIESE Person aktuell
   // antwortberechtigten Charaktere ab.
+  // findLast statt [...messages].reverse().find(...) — letzteres kopierte den
+  // gesamten Nachrichtenverlauf bei jedem Render, und diese Komponente
+  // rendert durch den 8-Sekunden-Poll dauerhaft neu.
   const lastSpeakerCharacterId =
-    [...messages].reverse().find((m) => !m.deletedAt)?.characterId ?? null;
+    messages.findLast((m) => !m.deletedAt)?.characterId ?? null;
   const eligibleReplyCharacters = myCharacters.filter(
     (c) => c.id !== lastSpeakerCharacterId,
   );

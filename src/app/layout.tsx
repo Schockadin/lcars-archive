@@ -19,17 +19,25 @@ import { UI_MODE_COOKIE_NAME, UI_MODE_MINIMAL } from "@/lib/uiMode";
 // next/font/google lädt die Font-Dateien zur Build-Zeit herunter und liefert
 // sie selbst aus (self-hosted) — keine Laufzeit-Anfrage an Google-Server,
 // siehe dazu den entfernten Font-Abschnitt in der Datenschutzerklärung
-// (DSGVOClient.tsx).
+// (DSGVOContent.tsx).
 const antonio = Antonio({
   subsets: ["latin"],
   weight: ["400", "700"],
   variable: "--font-antonio",
 });
 
+// Variablenname MUSS --font-share-tech-mono lauten: genau diesen Namen
+// referenzieren die ~25 `font-family: var(--font-share-tech-mono)`-Regeln in
+// src/styles/lcars-components/*.css. Hieß hier früher --font-mono-lcars —
+// dadurch war die referenzierte Variable nirgends definiert, und da ein
+// var() ohne Fallback die gesamte Deklaration ungültig macht ("invalid at
+// computed-value time", der `, monospace`-Teil greift dann NICHT), erbten
+// alle Mono-Elemente (Metadaten-Zeilen, Akten-Felder, Header, Log-Stubs)
+// still die Fließtextschrift statt Share Tech Mono.
 const shareTechMono = Share_Tech_Mono({
   subsets: ["latin"],
   weight: "400",
-  variable: "--font-mono-lcars",
+  variable: "--font-share-tech-mono",
 });
 
 const campaignYears = getCampaignYears();

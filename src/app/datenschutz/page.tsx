@@ -1,6 +1,6 @@
 // src/app/datenschutz/page.tsx
 import { Metadata } from "next";
-import DSGVOClient from "./DSGVOClient";
+import DSGVOContent from "./DSGVOContent";
 
 export const metadata: Metadata = {
   title: "Datenschutz",
@@ -16,5 +16,5 @@ export const metadata: Metadata = {
 const CURRENT_YEAR = new Date().getFullYear();
 
 export default function DatenschutzPage() {
-  return <DSGVOClient year={CURRENT_YEAR} />;
+  return <DSGVOContent year={CURRENT_YEAR} />;
 }
