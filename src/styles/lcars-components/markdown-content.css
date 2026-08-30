@@ -1,0 +1,162 @@
+/* ─── Gerenderte Markdown-Inhalte ──────────────────────────────────────
+   Alle Fließtexte der Anwendung (Missions-Synopsen, Logs, Archiv-Einträge,
+   Charakter-Biografien, Dialog-Nachrichten, Editor-Vorschau, Antworten des
+   Archiv-Assistenten) entstehen aus Markdown (src/lib/markdown.ts bzw.
+   MarkdownLite.tsx) und landen in einem Container mit .mission-body oder
+   .char-file-bio.
+
+   Tailwinds Preflight (@layer base) setzt für ALLE Elemente `margin: 0;
+   padding: 0`, nimmt `ol, ul, menu` die `list-style` und stellt Überschriften
+   auf `font-size/font-weight: inherit`. Für UI-Markup ist das gewollt, für
+   aus Markdown erzeugtes HTML zerstört es die Darstellung: Absätze standen
+   ohne sichtbaren Abstand direkt untereinander (die „verschwundenen
+   Leerzeilen"), Listen erschienen ohne Aufzählungszeichen und ohne Einzug
+   (wirkten also gar nicht als Liste), Überschriften unterhalb der ersten
+   Ebene waren nicht von Fließtext zu unterscheiden.
+
+   Die bisherigen `.mission-body > * + *` / `.char-file-bio > * + *`-Regeln
+   fingen nur die oberste Ebene ab — Absätze innerhalb von Listenpunkten,
+   Zitaten oder Tabellenzellen blieben ohne Abstand. Diese Datei stellt die
+   Blocktypografie deshalb für den gesamten Teilbaum wieder her, ausdrücklich
+   nur innerhalb der Markdown-Container.
+──────────────────────────────────────────────────────────────────── */
+
+/* ── Absätze & Blockabstände (auch verschachtelt) ─────────────────── */
+
+/* Abstand zwischen zwei Blöcken. Bisher 0.7em (.mission-body) bzw. 0.75em
+   (.char-file-bio) und nur auf oberster Ebene — jetzt einheitlich, deutlich
+   als Leerzeile lesbar und auch innerhalb von Listenpunkten, Zitaten und
+   Tabellenzellen. Bewusst als Kind-Selektor (Spezifität 0,1,0), damit der
+   Lesemodus (.reading-mode .lcars-text > * + *) ihn weiterhin überschreibt. */
+:is(.mission-body, .char-file-bio) > * + * {
+  margin-top: 1em;
+}
+:is(.mission-body, .char-file-bio) :is(li, blockquote, td, th) > * + * {
+  margin-top: 0.6em;
+}
+
+/* ── Listen ──────────────────────────────────────────────────────── */
+
+:is(.mission-body, .char-file-bio) ul,
+:is(.mission-body, .char-file-bio) ol {
+  padding-left: 1.6em;
+}
+:is(.mission-body, .char-file-bio) ul {
+  list-style: disc;
+}
+:is(.mission-body, .char-file-bio) ol {
+  list-style: decimal;
+}
+/* Verschachtelte Ebenen optisch unterscheidbar halten. */
+:is(.mission-body, .char-file-bio) ul ul {
+  list-style: circle;
+}
+:is(.mission-body, .char-file-bio) ul ul ul {
+  list-style: square;
+}
+:is(.mission-body, .char-file-bio) ol ol {
+  list-style: lower-alpha;
+}
+:is(.mission-body, .char-file-bio) ol ol ol {
+  list-style: lower-roman;
+}
+:is(.mission-body, .char-file-bio) li + li,
+:is(.mission-body, .char-file-bio) li > ul,
+:is(.mission-body, .char-file-bio) li > ol {
+  margin-top: 0.3em;
+}
+/* GFM-Aufgabenlisten (- [ ] / - [x]): die Checkbox ersetzt das
+   Aufzählungszeichen, sonst steht beides nebeneinander. */
+:is(.mission-body, .char-file-bio) li:has(> input[type="checkbox"]) {
+  list-style: none;
+}
+:is(.mission-body, .char-file-bio) li > input[type="checkbox"] {
+  margin-right: 0.5em;
+}
+
+/* ── Überschriften ───────────────────────────────────────────────── */
+
+:is(.mission-body, .char-file-bio) :is(h1, h2, h3, h4, h5, h6) {
+  font-family: var(--font-antonio), sans-serif;
+  font-weight: 600;
+  line-height: 1.25;
+  scroll-margin-top: 16px;
+}
+:is(.mission-body, .char-file-bio) h1 {
+  font-size: 28px;
+}
+:is(.mission-body, .char-file-bio) h2 {
+  font-size: 24px;
+}
+:is(.mission-body, .char-file-bio) h3 {
+  font-size: 20px;
+  color: var(--lcars-ink-data);
+}
+:is(.mission-body, .char-file-bio) :is(h4, h5, h6) {
+  font-size: 17px;
+  color: var(--lcars-ink-data);
+}
+/* Überschriften brauchen mehr Luft nach oben als der Standardabstand
+   zwischen zwei Absätzen — außer als erstes Element des Inhalts. */
+:is(.mission-body, .char-file-bio) * + :is(h1, h2, h3, h4, h5, h6) {
+  margin-top: 1.2em;
+}
+
+/* ── Zitate & Trennlinien ────────────────────────────────────────── */
+
+:is(.mission-body, .char-file-bio) blockquote {
+  border-left: 3px solid var(--lcars-tertiary);
+  padding-left: 12px;
+  color: var(--lcars-ink-dim);
+  font-style: italic;
+}
+:is(.mission-body, .char-file-bio) hr {
+  border: 0;
+  border-top: 1px solid var(--lcars-border);
+  margin-block: 1.2em;
+}
+
+/* ── Code ────────────────────────────────────────────────────────── */
+
+:is(.mission-body, .char-file-bio) code {
+  font-family: var(--font-share-tech-mono), monospace;
+  color: var(--lcars-ink-data);
+  background: var(--lcars-surface-2);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+:is(.mission-body, .char-file-bio) pre {
+  background: var(--lcars-surface-2);
+  border-radius: 6px;
+  padding: 10px 12px;
+  /* Lange Code-Zeilen dürfen die Spalte nicht sprengen. */
+  overflow-x: auto;
+}
+:is(.mission-body, .char-file-bio) pre code {
+  padding: 0;
+  background: none;
+  white-space: pre;
+}
+
+/* ── Tabellen (GFM) ──────────────────────────────────────────────── */
+
+:is(.mission-body, .char-file-bio) table {
+  border-collapse: collapse;
+  /* Breite Tabellen scrollen innerhalb ihres Blocks statt die Seite
+     horizontal scrollen zu lassen. */
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+}
+:is(.mission-body, .char-file-bio) :is(th, td) {
+  text-align: left;
+  padding: 6px 14px 6px 0;
+  border-bottom: 1px solid var(--lcars-border);
+}
+:is(.mission-body, .char-file-bio) th {
+  color: var(--lcars-primary);
+  font-family: var(--font-antonio), sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+}

@@ -23,3 +23,7 @@
 @import "./lcars-components/search.css";
 @import "./lcars-components/users.css";
 @import "./lcars-components/shared.css";
+/* Zuletzt: stellt die Blocktypografie gerenderter Markdown-Inhalte
+   (Listen, Absatzabstände, Überschriften, Zitate, Tabellen) nach Tailwinds
+   Preflight wieder her und darf dafür nach den Domänen-Dateien greifen. */
+@import "./lcars-components/markdown-content.css";
