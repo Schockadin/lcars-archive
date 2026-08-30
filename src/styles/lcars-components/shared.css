@@ -22,12 +22,19 @@
 
 /* ── Typografie mit komplexen Selektoren ─────────────────────────── */
 
-.lcars-text > * > a {
+/* Links im Fließtext. Bewusst nicht `.lcars-text a` (das träfe auch
+   UI-Links in Containern, die zufällig .lcars-text tragen), sondern jedes
+   <a> direkt in einem Textblock — inklusive der verschachtelten Blöcke aus
+   gerendertem Markdown (Listenpunkte, Tabellenzellen, Zitate), die die
+   frühere Regel `.lcars-text > * > a` nicht erreichte: ein Link in einem
+   Listenpunkt (ul > li > a) liegt eine Ebene tiefer und blieb dadurch
+   unformatiert. */
+.lcars-text :is(p, li, td, th, blockquote, h1, h2, h3, h4, h5, h6) > a {
   text-decoration: none;
   color: var(--lcars-ink-data);
   transition: color 250ms;
 }
-.lcars-text > * > a:hover {
+.lcars-text :is(p, li, td, th, blockquote, h1, h2, h3, h4, h5, h6) > a:hover {
   color: var(--lcars-tertiary);
   text-decoration: underline;
 }

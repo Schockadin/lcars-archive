@@ -192,17 +192,6 @@
 .char-file-bio {
   font-size: 16px;
 }
-.char-file-bio > h2 {
-  font-size: 24px;
-}
-.char-file-bio > h3 {
-  font-size: 20px;
-  color: var(--lcars-ink-data);
-  scroll-margin-top: 16px;
-}
-.char-file-bio > * + * {
-  margin-top: 0.75em;
-}
 
 /* mittlere Spalte auf volle Zeilenhöhe strecken, damit das sticky TOC
    über die gesamte Biografie mitwandern kann */

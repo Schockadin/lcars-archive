@@ -293,16 +293,6 @@
   line-height: 1.6;
 }
 
-.mission-body > h2 {
-  font-size: 24px;
-}
-.mission-body > ul > li > ul {
-  margin-left: 20px;
-}
-.mission-body > * + * {
-  margin-top: 0.7em;
-}
-
 /* Per InsertImageButton.tsx eingebettete Bilder (ContentBody.tsx macht sie
    per Klick als Vollbild-Karussell aufrufbar) — ohne max-width würden sie in
    ihrer vollen Originalgröße gerendert und die Spaltenbreite sprengen. */

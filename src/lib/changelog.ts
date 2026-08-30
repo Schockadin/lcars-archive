@@ -12,6 +12,15 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.25",
+    title: "Markdown-Texte werden wieder richtig dargestellt",
+    items: [
+      "Aufzählungen und nummerierte Listen in Texten (Missionen, Einsatzberichte, Archiv-Einträge, Biografien, Gespräche, Assistenten-Antworten) erscheinen wieder mit Aufzählungszeichen, Nummerierung und Einzug – auch verschachtelt – statt als Folge schmuckloser Zeilen.",
+      "Leerzeilen zwischen Absätzen sind wieder als Absatzabstand sichtbar, ebenfalls innerhalb von Listenpunkten, Zitaten und Tabellenzellen.",
+      "Zwischenüberschriften, Zitate, Tabellen und Code-Abschnitte heben sich wieder vom Fließtext ab, und Links innerhalb von Listen oder Tabellen sind wieder als Links erkennbar.",
+    ],
+  },
+  {
     version: "1.24",
     title: "Inhaltstexte nutzen die volle Breite am Desktop",
     items: [
