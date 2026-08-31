@@ -12,11 +12,19 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.27",
+    title: "Eigener Charaktere-Bereich mit Charakterwerten",
+    items: [
+      "Wer eigene Charaktere hat, findet im Kopfmenü den neuen Punkt „Charaktere“: eine Übersicht aller mit dem Konto verknüpften Charaktere (auch Entwürfe) samt Sichtbarkeit, Bearbeiten, Löschen und dem Anlegen weiterer Charaktere.",
+      "Pro Charakter lassen sich dort unter „Werte“ die Charakterwerte nach dem Charakterbogen pflegen — Personalakte (Pronomen, Rolle, Zuweisung, Herkunft, Erziehung, Laufbahn, Erfahrung, Merkmale), die sechs Attribute und sechs Disziplinen, Stress, Widerstand, Entschlossenheit und Ansehen sowie die Listen für Werte, Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln, Angriffe, Ausrüstung, Hobbys und Karriere-Ereignisse.",
+      "In „Meine Inhalte“ erscheinen Charaktere dafür nicht mehr; der Charakter-Filter für Einsatzberichte und Gespräche bleibt dort erhalten, ebenso der Knopf zum Anlegen des ersten Charakters.",
+    ],
+  },
+  {
     version: "1.26",
     title: "Gespräche sind jetzt bei den Charakteren zu finden",
     items: [
       "Die Gesprächs-Übersicht ist aus dem Archiv in den Charaktere-Bereich umgezogen, weiterhin mit Teilnehmer-Filter. Auf großen Bildschirmen steht sie direkt neben der Charakterliste, auf dem Handy per Umschalter oben zwischen beiden Listen wechselbar. Alte Links auf die Archiv-Ansicht führen automatisch zur neuen Übersicht.",
-      "Wer eigene Charaktere hat, findet im Kopfmenü den neuen Punkt „Charaktere“: eine Übersicht aller mit dem Konto verknüpften Charaktere (auch Entwürfe) samt Sichtbarkeit, Bearbeiten, Löschen und dem Anlegen weiterer Charaktere. Pro Charakter lassen sich dort unter „Werte“ die Charakterwerte nach dem Bogen pflegen — Personalakte, Attribute, Disziplinen, Stress/Widerstand/Entschlossenheit/Ansehen sowie Werte, Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln, Angriffe, Ausrüstung, Hobbys und Karriere-Ereignisse. In „Meine Inhalte“ erscheinen Charaktere dafür nicht mehr; der Charakter-Filter für Einsatzberichte und Gespräche bleibt dort erhalten.",
       "Im minimalistischen Design (Profil → „Darstellung“) zeigen die LCARS-Datenzeilen (z.B. die Kategorien im Archiv oder die Schnellzugriffe auf der Charakterseite) ihre Beschriftung jetzt wieder in derselben Schrift wie im normalen LCARS-Design, statt versehentlich in der Systemschrift.",
     ],
   },
