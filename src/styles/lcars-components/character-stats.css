@@ -352,6 +352,9 @@
   --stat-line-h: 28px;
   display: block;
   width: 100%;
+  /* Acht Zeilen sichtbar, auch wenn das rows-Attribut von der Schriftgröße
+     abweichend gerechnet wird. */
+  min-height: calc(var(--stat-line-h) * 8);
   border: none;
   border-top: 1px solid var(--lcars-border);
   padding: 0 14px;

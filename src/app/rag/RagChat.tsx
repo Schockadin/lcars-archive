@@ -5,7 +5,7 @@ import MarkdownLite from "./MarkdownLite";
 import {
   CharactersNavIcon,
   MissionsNavIcon,
-  ArchiveNavIcon,
+  DatabaseNavIcon,
 } from "@/lib/icons";
 
 // Eine Quelle unter einer Antwort (dedupliziert je Inhalt, siehe
@@ -27,7 +27,7 @@ function sourceIcon(contentType: string): ReactNode {
       return <MissionsNavIcon />;
     default:
       // archive_entry, dialogue
-      return <ArchiveNavIcon />;
+      return <DatabaseNavIcon />;
   }
 }
 

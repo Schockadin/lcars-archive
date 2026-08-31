@@ -26,7 +26,9 @@ export const MAIN_NAV: NavItem[] = [
   { id: "00", label: "Home", href: "/" },
   { id: "01", label: "Charaktere", href: "/characters" },
   { id: "02", label: "Missionen", href: "/missions" },
-  { id: "03", label: "Archiv", href: "/archive" },
+  // Label „Datenbank" statt „Archiv" — die Route bleibt /archive (und damit
+  // auch der NavKey "archive" sowie alle bestehenden Links/Lesezeichen).
+  { id: "03", label: "Datenbank", href: "/archive" },
   // Suche ersetzt den früheren Timeline-Eintrag im Hauptmenü (Lupe-Icon, siehe
   // SidebarMenu.tsx). Die Suchseite zeigt oben die Volltextsuche und darunter
   // den Archiv-Assistenten (für Berechtigte).

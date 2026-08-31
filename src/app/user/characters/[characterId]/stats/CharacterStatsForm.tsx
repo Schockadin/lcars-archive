@@ -460,7 +460,10 @@ export default function CharacterStatsForm({
             <textarea
               id={`stats-${field.key}`}
               name={field.key}
-              rows={4}
+              // Mindestens acht Zeilen ohne Scrollen — die Listen des Bogens
+              // (Werte, Schwerpunkte, Talente, …) haben dort ebenfalls
+              // reichlich Platz.
+              rows={8}
               defaultValue={stats[field.key].join("\n")}
               aria-label={field.label}
               className="stat-list-input"

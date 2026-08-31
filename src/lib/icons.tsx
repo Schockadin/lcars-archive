@@ -316,12 +316,16 @@ export function MissionsNavIcon() {
     </svg>
   );
 }
-export function ArchiveNavIcon() {
+// Datenbank-Zylinder (Menüpunkt „Datenbank", früher „Archiv" mit Kisten-Icon).
+// Bewusst in der Strichführung der übrigen Nav-Icons gezeichnet (24er-Raster,
+// currentColor, siehe ICON_PROPS) statt ein fremdes SVG einzusetzen — so
+// bleibt das Menü einheitlich und ohne Fremdlizenz im Repo.
+export function DatabaseNavIcon() {
   return (
     <svg {...ICON_PROPS}>
-      <rect x="3" y="4" width="18" height="4" rx="1" />
-      <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
-      <path d="M10 12h4" />
+      <ellipse cx="12" cy="6" rx="7" ry="3" />
+      <path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6" />
+      <path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" />
     </svg>
   );
 }
@@ -363,13 +367,32 @@ export function ProfileNavIcon() {
   );
 }
 
+// Nutzerkonten (/users) — Dreiergruppe. Vorher war das Icon fast
+// deckungsgleich mit CharactersNavIcon (Person + halbe Person) und dadurch im
+// Menü nicht auseinanderzuhalten.
 export function UsersNavIcon() {
   return (
     <svg {...ICON_PROPS}>
-      <circle cx="9" cy="8" r="3.2" />
-      <path d="M3 19c0-3 2.7-5 6-5s6 2 6 5" />
-      <path d="M16 5.2a3 3 0 010 5.6" />
-      <path d="M17 14c2.3.5 4 2.2 4 5" />
+      <circle cx="12" cy="7.5" r="2.6" />
+      <circle cx="5" cy="10" r="2" />
+      <circle cx="19" cy="10" r="2" />
+      <path d="M7.5 18.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" />
+      <path d="M2 17.5c0-1.9 1.3-3.1 3-3.1" />
+      <path d="M22 17.5c0-1.9-1.3-3.1-3-3.1" />
+    </svg>
+  );
+}
+
+// Eigene Charaktere (/user/characters) — Personalakte statt Personengruppe:
+// unterscheidet den User-Menüpunkt eindeutig vom allgemeinen „Charaktere"
+// (CharactersNavIcon), das alle Charaktere des Archivs meint.
+export function MyCharactersNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <path d="M9.5 3h5" />
+      <circle cx="12" cy="10" r="2.4" />
+      <path d="M8 17.5c0-2.2 1.8-3.4 4-3.4s4 1.2 4 3.4" />
     </svg>
   );
 }

@@ -24,6 +24,31 @@ describe("buildAssetPublicUrl", () => {
       buildAssetPublicUrl("https://assets.example.com///", "a.jpg"),
     ).toBe("https://assets.example.com/a.jpg");
   });
+
+  // Regressionsschutz für eine reale Fehlkonfiguration: stand in
+  // R2_ASSET_PUBLIC_BASE_URL der Bucketname statt der Auslieferungs-Domain,
+  // entstand daraus eine gültige, aber nirgends auflösbare URL, die still als
+  // Portrait gespeichert wurde ("https://neo-archive-assets/…").
+  it("verweigert einen Hostnamen ohne Punkt (Bucketname statt Domain)", () => {
+    expect(() =>
+      buildAssetPublicUrl("https://neo-archive-assets", "character-portraits/a.jpg"),
+    ).toThrow(InvalidAssetError);
+    expect(() =>
+      buildAssetPublicUrl("https://neo-archive-assets", "a.jpg"),
+    ).toThrow(/Bucketnamen/);
+  });
+
+  it("verweigert Werte, die gar keine http(s)-URL sind", () => {
+    for (const base of ["", "neo-archive-assets", "ftp://assets.example.com"]) {
+      expect(() => buildAssetPublicUrl(base, "a.jpg")).toThrow(InvalidAssetError);
+    }
+  });
+
+  it("lässt localhost für die lokale Entwicklung zu", () => {
+    expect(buildAssetPublicUrl("http://localhost:9000", "a.jpg")).toBe(
+      "http://localhost:9000/a.jpg",
+    );
+  });
 });
 
 describe("assertImageAsset", () => {

@@ -30,8 +30,40 @@ export const MAX_CHARACTER_SHEET_BYTES = 20 * 1024 * 1024;
 // normalisiert, damit genau ein Trennzeichen entsteht.
 export function buildAssetPublicUrl(baseUrl: string, key: string): string {
   const trimmedBase = baseUrl.replace(/\/+$/, "");
+  assertAssetBaseUrl(trimmedBase);
   const cleanKey = key.replace(/^\/+/, "");
   return `${trimmedBase}/${cleanKey}`;
+}
+
+// Fängt die häufigste Fehlkonfiguration ab: in R2_ASSET_PUBLIC_BASE_URL steht
+// der BUCKETNAME statt der Auslieferungs-Domain (z.B.
+// "https://neo-archive-assets" statt "https://assets.neo-archiv.de"). Ohne
+// diese Prüfung entsteht daraus eine syntaktisch gültige, aber nicht
+// auflösbare URL, die still in der Datenbank landet — der Fehler fällt erst
+// auf, wenn das Bild nirgends mehr angezeigt wird. Lieber der Upload schlägt
+// laut fehl, als dass ein toter Link gespeichert wird.
+function assertAssetBaseUrl(baseUrl: string): void {
+  let host: string;
+  try {
+    const parsed = new URL(baseUrl);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      throw new Error("kein http(s)");
+    }
+    host = parsed.hostname;
+  } catch {
+    throw new InvalidAssetError(
+      `R2_ASSET_PUBLIC_BASE_URL ist keine gültige URL: "${baseUrl}"`,
+    );
+  }
+  // Ein Hostname ohne Punkt ist keine öffentliche Domain (localhost
+  // ausgenommen, für die lokale Entwicklung).
+  if (!host.includes(".") && host !== "localhost") {
+    throw new InvalidAssetError(
+      `R2_ASSET_PUBLIC_BASE_URL zeigt auf "${host}" — das sieht nach dem ` +
+        `Bucketnamen statt der Auslieferungs-Domain aus (erwartet z.B. ` +
+        `https://assets.neo-archiv.de).`,
+    );
+  }
 }
 
 // Prüft eine Bild-Datei (Portrait/Content-Bild) und liefert die zum MIME-Type

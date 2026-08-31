@@ -45,7 +45,7 @@ export default function TutorialPage() {
                 darunter auch die Übersicht abgeschlossener{" "}
                 <strong>Gespräche</strong>), <strong>Missionen</strong> (mit
                 ihren Einsatzberichten), das kategorisierte{" "}
-                <strong>Archiv</strong> (Personen, Orte, Fraktionen, Spezies,
+                <strong>Datenbank</strong> (Personen, Orte, Fraktionen, Spezies,
                 Objekte, Ereignisse, Theorien, NPCs und Sonstiges) sowie die{" "}
                 <strong>Suche</strong> (Volltextsuche über alle diese Inhalte,
                 erreichbar über das Lupen-Symbol im Menü).

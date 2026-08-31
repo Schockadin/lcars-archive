@@ -7,7 +7,7 @@ import { logout } from "@/app/login/actions";
 import { clearServiceWorkerPageCache } from "@/lib/swCache";
 import { DB_PERMISSIONS } from "@/lib/permissions";
 import {
-  CharactersNavIcon,
+  MyCharactersNavIcon,
   ContentNavIcon,
   UsersNavIcon,
   ProfileNavIcon,
@@ -110,7 +110,7 @@ export default function HeaderUserNav({
           {
             href: "/user/characters",
             label: "Charaktere",
-            icon: <CharactersNavIcon />,
+            icon: <MyCharactersNavIcon />,
           },
         ]
       : []),
