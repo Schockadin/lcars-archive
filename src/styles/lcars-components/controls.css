@@ -12,7 +12,7 @@
   overflow: hidden;
   border-radius: var(--lcars-radius-pill);
   border: solid 1px var(--lcars-ink-data);
-  /* max-width: 500px; */
+  height: 38px;
 }
 .lcars-switch-item {
   cursor: pointer;
