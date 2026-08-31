@@ -15,6 +15,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "1.27",
     title: "Eigener Charaktere-Bereich mit Charakterwerten",
     items: [
+      "Hochgeladene Charakter-Portraits wurden unter einer nicht erreichbaren Adresse gespeichert und blieben dadurch unsichtbar. Neue Uploads landen wieder auf der richtigen Bild-Adresse; bereits betroffene Portraits lassen sich mit einem Wartungslauf nachziehen.",
       "Der Menüpunkt „Archiv“ heißt jetzt „Datenbank“ und hat ein passendes Symbol bekommen (die Adresse der Seite bleibt unverändert, alte Links funktionieren weiter). Auch die Symbole im eingeloggten Menü sind jetzt unterscheidbar: „Charaktere“ zeigt eine Personalakte, „User“ eine Personengruppe — vorher sahen beide dem allgemeinen Charaktere-Symbol zum Verwechseln ähnlich.",
       "Wer eigene Charaktere hat, findet im Kopfmenü den neuen Punkt „Charaktere“: eine Übersicht aller mit dem Konto verknüpften Charaktere (auch Entwürfe) samt Sichtbarkeit, Bearbeiten, Löschen und dem Anlegen weiterer Charaktere.",
       "Pro Charakter lassen sich dort unter „Werte“ die Charakterwerte nach dem Charakterbogen pflegen — Personalakte (Pronomen, Rolle, Zuweisung, Herkunft, Erziehung, Laufbahn, Erfahrung, Merkmale), die sechs Attribute und sechs Disziplinen, Stress, Widerstand, Entschlossenheit und Ansehen sowie die Listen für Werte, Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln, Angriffe, Ausrüstung, Hobbys und Karriere-Ereignisse.",
