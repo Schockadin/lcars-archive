@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   buildAssetPublicUrl,
+  repairedPortraitUrl,
   assertImageAsset,
   assertCharacterSheetAsset,
   sanitizeFileName,
@@ -48,6 +49,65 @@ describe("buildAssetPublicUrl", () => {
     expect(buildAssetPublicUrl("http://localhost:9000", "a.jpg")).toBe(
       "http://localhost:9000/a.jpg",
     );
+  });
+});
+
+// Die Reparatur (scripts/fix-portrait-asset-urls.ts) läuft über die produktive
+// Datenbank — entscheidend ist, dass sie AUSSCHLIESSLICH die eigenen, falsch
+// gespeicherten Upload-URLs anfasst und alles andere in Ruhe lässt.
+describe("repairedPortraitUrl", () => {
+  const BASE = "https://assets.neo-archiv.de";
+
+  it("schreibt eine Upload-URL mit falscher Basis auf die konfigurierte Domain um", () => {
+    expect(
+      repairedPortraitUrl(
+        "https://neo-archive-assets/character-portraits/abc-123.jpg",
+        BASE,
+      ),
+    ).toBe("https://assets.neo-archiv.de/character-portraits/abc-123.jpg");
+  });
+
+  it("lässt bereits korrekte URLs unangetastet", () => {
+    expect(
+      repairedPortraitUrl(
+        "https://assets.neo-archiv.de/character-portraits/abc-123.jpg",
+        BASE,
+      ),
+    ).toBeNull();
+  });
+
+  it("fasst von Hand eingetragene fremde Portrait-URLs nicht an", () => {
+    // Kein /character-portraits/-Pfad ⇒ kein eigener Upload ⇒ nichts zu tun,
+    // auch wenn der Host von der Asset-Domain abweicht.
+    expect(
+      repairedPortraitUrl("https://memory-alpha.fandom.com/bild.jpg", BASE),
+    ).toBeNull();
+    expect(
+      repairedPortraitUrl("https://example.com/portraits/pic.png", BASE),
+    ).toBeNull();
+  });
+
+  it("ignoriert relative Pfade (Galeriebild als Portrait) und Leerwerte", () => {
+    expect(repairedPortraitUrl("/api/content-images/42", BASE)).toBeNull();
+    expect(repairedPortraitUrl("", BASE)).toBeNull();
+  });
+
+  it("behält den vollständigen Objekt-Key inklusive Unterordner", () => {
+    expect(
+      repairedPortraitUrl(
+        "https://neo-archive-assets/character-portraits/2026/abc.webp",
+        BASE,
+      ),
+    ).toBe("https://assets.neo-archiv.de/character-portraits/2026/abc.webp");
+  });
+
+  it("ist idempotent — ein zweiter Lauf findet nichts mehr", () => {
+    const once = repairedPortraitUrl(
+      "https://neo-archive-assets/character-portraits/abc.jpg",
+      BASE,
+    );
+    expect(once).not.toBeNull();
+    expect(repairedPortraitUrl(once as string, BASE)).toBeNull();
   });
 });
 

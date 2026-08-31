@@ -66,6 +66,35 @@ function assertAssetBaseUrl(baseUrl: string): void {
   }
 }
 
+// Repariert eine Portrait-URL, die mit einer falschen Basis gespeichert wurde
+// (siehe scripts/fix-portrait-asset-urls.ts) — liefert null, wenn der Wert
+// nichts angeht. Angefasst werden nur eigene Uploads, erkennbar am Pfad
+// /character-portraits/: von Hand eingetragene fremde Portrait-URLs und die
+// relativen /api/content-images/…-Pfade (Galeriebild als Portrait) bleiben
+// unberührt. Hier statt im Skript, damit die Logik testbar ist.
+export function repairedPortraitUrl(
+  portrait: string,
+  baseUrl: string,
+): string | null {
+  let current: URL;
+  let base: URL;
+  try {
+    current = new URL(portrait);
+    base = new URL(baseUrl);
+  } catch {
+    return null;
+  }
+
+  if (!current.pathname.startsWith(PORTRAIT_URL_PATH)) return null;
+  if (current.host === base.host) return null;
+
+  return buildAssetPublicUrl(baseUrl, current.pathname.replace(/^\/+/, ""));
+}
+
+// Muss mit PORTRAIT_PREFIX in src/lib/characterAssets.ts übereinstimmen (dort
+// als Objekt-Präfix ohne führenden Slash).
+const PORTRAIT_URL_PATH = "/character-portraits/";
+
 // Prüft eine Bild-Datei (Portrait/Content-Bild) und liefert die zum MIME-Type
 // gehörende Dateiendung. Wirft InvalidAssetError bei unbekanntem Typ, leerer
 // oder zu großer Datei — gemeinsame Vorprüfung für alle Bild-Uploads in den
