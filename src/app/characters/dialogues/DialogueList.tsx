@@ -6,7 +6,7 @@ import {
   LcarsListFilterInput,
   type SortDir,
 } from "@/components/lcars";
-import ArchiveEntryCard from "./ArchiveEntryCard";
+import ArchiveEntryCard from "@/app/archive/ArchiveEntryCard";
 
 // Gesprächs-Liste mit Teilnehmer-Filter. Sortierung nach id, Richtung per
 // Switch umschaltbar. initialParticipant (z.B. aus ?participant=<slug>) belegt
@@ -57,10 +57,10 @@ export default function DialogueList({
 
   return (
     <div>
-      <div className="flex lcars-filters">
+      <div className="lcars-filters mb-[16px] gap-[5px]">
         {participants.length > 0 && (
           <select
-            className="mission-author-filter mb-[16px] mr-[5px]"
+            className="lcars-input rounded-full text-right"
             value={participant ?? ""}
             onChange={(e) => setParticipant(e.target.value || null)}
             aria-label="Nach Teilnehmer filtern"
@@ -75,7 +75,7 @@ export default function DialogueList({
         )}
 
         <LcarsSortSwitch
-          className="flex w-full sm:w-[50%] mb-[16px]"
+          className="flex"
           options={[{ key: "date", label: "Datum" }]}
           sortKey="date"
           sortDir={sortDir}
@@ -86,14 +86,11 @@ export default function DialogueList({
           value={query}
           onChange={setQuery}
           ariaLabel="Gespräche filtern"
-          className="mb-[16px]"
         />
       </div>
 
       {list.length === 0 ? (
-        <p className="lcars-empty-state">
-          Keine Gespräche für diese Filter.
-        </p>
+        <p className="lcars-empty-state">Keine Gespräche für diese Filter.</p>
       ) : (
         <div className="archive-entry-list">
           {list.map((entry) => (

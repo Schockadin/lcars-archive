@@ -12,6 +12,7 @@ import type { Character } from "@/types/character";
 import type { MissionPreview } from "@/types/missions";
 import VisibilitySelect from "./VisibilitySelect";
 import DeleteOwnContentButton from "./DeleteOwnContentButton";
+import { LcarsListFilterInput } from "@/components/lcars";
 
 type CategoryFilter =
   | "all"
@@ -196,6 +197,49 @@ export default function UserContentBrowser({
     archiveEntries.length +
     (canManageMissions ? missions.length : 0);
 
+  const [query, setQuery] = useState("");
+  const entries = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return {
+      publishedCharacters: publishedCharacters.filter((e) =>
+        e.name.toLowerCase().includes(q),
+      ),
+      draftCharacters: draftCharacters.filter((e) =>
+        e.name.toLowerCase().includes(q),
+      ),
+      dialogues: filteredDialogues.filter((e) =>
+        e.title.toLowerCase().includes(q),
+      ),
+      publishedArchiveEntries: publishedArchiveEntries.filter((e) =>
+        e.title.toLowerCase().includes(q),
+      ),
+      draftArchiveEntries: draftArchiveEntries.filter((e) =>
+        e.title.toLowerCase().includes(q),
+      ),
+      publishedLogs: publishedLogs.filter((e) =>
+        e.title.toLowerCase().includes(q),
+      ),
+      draftLogs: draftLogs.filter((e) => e.title.toLowerCase().includes(q)),
+      publishedMissions: publishedMissions.filter((e) =>
+        e.title.toLowerCase().includes(q),
+      ),
+      draftMissions: draftMissions.filter((e) =>
+        e.title.toLowerCase().includes(q),
+      ),
+    };
+  }, [
+    publishedCharacters,
+    draftCharacters,
+    filteredDialogues,
+    publishedArchiveEntries,
+    draftArchiveEntries,
+    publishedLogs,
+    draftLogs,
+    publishedMissions,
+    draftMissions,
+    query,
+  ]);
+
   if (total === 0) {
     return <p className="lcars-empty-state">Noch keine Inhalte vorhanden.</p>;
   }
@@ -240,13 +284,25 @@ export default function UserContentBrowser({
           ))}
         </select>
       </div>
+      <div className="flex lcars-filters">
+        <LcarsListFilterInput
+          value={query}
+          onChange={setQuery}
+          ariaLabel="Einträge filtern"
+          className="mb-[16px]"
+        />
+      </div>
 
-      <LcarsDataRow value={totalDrafts} label="Entwürfe" color="var(--lcars-quinary)">
+      <LcarsDataRow
+        value={totalDrafts}
+        label="Entwürfe"
+        color="var(--lcars-quinary)"
+      >
         {totalDrafts === 0 ? (
           <p className="lcars-empty-state">Keine Entwürfe vorhanden.</p>
         ) : (
           <div className="flex flex-col gap-[6px]">
-            {draftCharacters.map((c) => (
+            {entries.draftCharacters.map((c) => (
               <div
                 key={`character-${c.id}`}
                 className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
@@ -254,7 +310,11 @@ export default function UserContentBrowser({
                 <Link
                   href={`/characters/${c.slug}`}
                   className="mission-akte flex-1"
-                  style={{ "--mission-color": "var(--lcars-quinary)" } as React.CSSProperties}
+                  style={
+                    {
+                      "--mission-color": "var(--lcars-quinary)",
+                    } as React.CSSProperties
+                  }
                 >
                   <span className="mission-akte-rail" />
                   <span className="mission-akte-body text-left">
@@ -286,7 +346,7 @@ export default function UserContentBrowser({
               </div>
             ))}
             {canManageMissions &&
-              draftMissions.map((m) => (
+              entries.draftMissions.map((m) => (
                 <div
                   key={`mission-${m.id}`}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
@@ -294,11 +354,17 @@ export default function UserContentBrowser({
                   <Link
                     href={`/missions/${m.slug}`}
                     className="mission-akte flex-1"
-                    style={{ "--mission-color": "var(--lcars-quinary)" } as React.CSSProperties}
+                    style={
+                      {
+                        "--mission-color": "var(--lcars-quinary)",
+                      } as React.CSSProperties
+                    }
                   >
                     <span className="mission-akte-rail" />
                     <span className="mission-akte-body text-left">
-                      <span className="mission-akte-title block">{m.title}</span>
+                      <span className="mission-akte-title block">
+                        {m.title}
+                      </span>
                       <span className="mission-akte-meta">
                         <span>
                           <b>Typ</b> Mission
@@ -318,7 +384,7 @@ export default function UserContentBrowser({
                   />
                 </div>
               ))}
-            {draftLogs.map((log) => (
+            {entries.draftLogs.map((log) => (
               <div
                 key={`log-${log.id}`}
                 className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
@@ -326,11 +392,17 @@ export default function UserContentBrowser({
                 <Link
                   href={`/missions/${log.mission_slug}/${log.slug}`}
                   className="mission-akte flex-1"
-                  style={{ "--mission-color": "var(--lcars-quinary)" } as React.CSSProperties}
+                  style={
+                    {
+                      "--mission-color": "var(--lcars-quinary)",
+                    } as React.CSSProperties
+                  }
                 >
                   <span className="mission-akte-rail" />
                   <span className="mission-akte-body text-left">
-                    <span className="mission-akte-title block">{log.title}</span>
+                    <span className="mission-akte-title block">
+                      {log.title}
+                    </span>
                     <span className="mission-akte-meta">
                       <span>
                         <b>Typ</b> Einsatzbericht
@@ -360,7 +432,7 @@ export default function UserContentBrowser({
                 />
               </div>
             ))}
-            {draftArchiveEntries.map((entry) => (
+            {entries.draftArchiveEntries.map((entry) => (
               <div
                 key={`archive-${entry.id}`}
                 className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
@@ -368,11 +440,17 @@ export default function UserContentBrowser({
                 <Link
                   href={`/archive/${entry.slug}`}
                   className="mission-akte flex-1"
-                  style={{ "--mission-color": "var(--lcars-quinary)" } as React.CSSProperties}
+                  style={
+                    {
+                      "--mission-color": "var(--lcars-quinary)",
+                    } as React.CSSProperties
+                  }
                 >
                   <span className="mission-akte-rail" />
                   <span className="mission-akte-body text-left">
-                    <span className="mission-akte-title block">{entry.title}</span>
+                    <span className="mission-akte-title block">
+                      {entry.title}
+                    </span>
                     <span className="mission-akte-meta">
                       <span>
                         <b>Typ</b> Archiv-Eintrag
@@ -410,17 +488,17 @@ export default function UserContentBrowser({
 
       {showCharacters && (
         <LcarsDataRow
-          value={publishedCharacters.length}
+          value={entries.publishedCharacters.length}
           label="Charaktere"
           color="var(--lcars-primary)"
         >
-          {publishedCharacters.length === 0 ? (
+          {entries.publishedCharacters.length === 0 ? (
             <p className="lcars-empty-state">
               Keine Charaktere für diese Auswahl.
             </p>
           ) : (
             <div className="flex flex-col gap-[6px]">
-              {publishedCharacters.map((c) => (
+              {entries.publishedCharacters.map((c) => (
                 <div
                   key={c.id}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
@@ -452,7 +530,9 @@ export default function UserContentBrowser({
                       <DeleteOwnContentButton
                         contentType="character"
                         id={c.id}
-                        onOptimisticDelete={() => removeOptimisticCharacter(c.id)}
+                        onOptimisticDelete={() =>
+                          removeOptimisticCharacter(c.id)
+                        }
                       />
                     }
                   />
@@ -465,17 +545,17 @@ export default function UserContentBrowser({
 
       {showLogs && (
         <LcarsDataRow
-          value={publishedLogs.length}
+          value={entries.publishedLogs.length}
           label="Einsatzberichte"
           color="var(--lcars-tertiary)"
         >
-          {publishedLogs.length === 0 ? (
+          {entries.publishedLogs.length === 0 ? (
             <p className="lcars-empty-state">
               Keine Einsatzberichte für diese Auswahl.
             </p>
           ) : (
             <div className="flex flex-col gap-[6px]">
-              {publishedLogs.map((log) => (
+              {entries.publishedLogs.map((log) => (
                 <div
                   key={log.id}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
@@ -533,17 +613,17 @@ export default function UserContentBrowser({
 
       {showDialogues && (
         <LcarsDataRow
-          value={filteredDialogues.length}
+          value={entries.dialogues.length}
           label="Gespräche"
           color="var(--lcars-ink-data)"
         >
-          {filteredDialogues.length === 0 ? (
+          {entries.dialogues.length === 0 ? (
             <p className="lcars-empty-state">
               Keine Gespräche für diese Auswahl.
             </p>
           ) : (
             <div className="flex flex-col gap-[6px]">
-              {filteredDialogues.map((d) => (
+              {entries.dialogues.map((d) => (
                 <div
                   key={d.slug}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
@@ -607,17 +687,17 @@ export default function UserContentBrowser({
 
       {showArchive && (
         <LcarsDataRow
-          value={publishedArchiveEntries.length}
+          value={entries.publishedArchiveEntries.length}
           label="Archiv-Einträge"
           color="var(--lcars-secondary)"
         >
-          {publishedArchiveEntries.length === 0 ? (
+          {entries.publishedArchiveEntries.length === 0 ? (
             <p className="lcars-empty-state">
               Noch keine eigenen Archiv-Einträge vorhanden.
             </p>
           ) : (
             <div className="flex flex-col gap-[6px]">
-              {publishedArchiveEntries.map((entry) => (
+              {entries.publishedArchiveEntries.map((entry) => (
                 <div
                   key={entry.id}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
@@ -672,15 +752,15 @@ export default function UserContentBrowser({
 
       {showMissions && (
         <LcarsDataRow
-          value={publishedMissions.length}
+          value={entries.publishedMissions.length}
           label="Missionen"
           color="var(--lcars-senary)"
         >
-          {publishedMissions.length === 0 ? (
+          {entries.publishedMissions.length === 0 ? (
             <p className="lcars-empty-state">Noch keine Missionen vorhanden.</p>
           ) : (
             <div className="flex flex-col gap-[6px]">
-              {publishedMissions.map((m) => (
+              {entries.publishedMissions.map((m) => (
                 <div
                   key={m.id}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"

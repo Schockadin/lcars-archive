@@ -47,3 +47,24 @@ test("Inline-Code auf /tutorial wird in der Mono-Schrift gesetzt", async ({
   );
   expect(fontFamily).toContain("Share Tech Mono");
 });
+
+test("DataRow-Pillen behalten die LCARS-Schrift auch im minimalistischen UI", async ({
+  page,
+  baseURL,
+}) => {
+  // neo_ui=minimal aktiviert data-ui="minimal" bereits vorm ersten Paint
+  // (siehe layout.tsx) — ohne Login, da rein CSS-basiert.
+  await page.context().addCookies([
+    { name: "neo_ui", value: "minimal", url: baseURL },
+  ]);
+  // /archive listet seine Kategorien über LcarsDataRow-Zeilen
+  // (ArchiveCategoryNav.tsx, Teil des Layouts auf jeder Archiv-Seite) —
+  // öffentlich einsehbar, kein Login nötig.
+  await page.goto("/archive");
+  const pill = page.locator(".lcars-data-row-text").first();
+  await pill.waitFor();
+  const fontFamily = await pill.evaluate(
+    (el) => getComputedStyle(el).fontFamily,
+  );
+  expect(fontFamily).toContain("Antonio");
+});

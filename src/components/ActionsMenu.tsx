@@ -132,7 +132,7 @@ export default function ActionsMenu({
     ? "dialogue"
     : OWNER_CONTENT_TYPE[contentType];
   const deleteRedirectTo = isDialogue
-    ? "/archive?cat=dialogue"
+    ? "/characters/dialogues"
     : contentType === "character"
       ? "/characters"
       : contentType === "mission"

@@ -28,11 +28,16 @@ export default function ArchiveCategoryNav({
     entries.find((e) => e.slug === activeSlug)?.category ??
     null;
 
-  const cats = CATEGORY_ORDER.map((cat) => ({
-    cat,
-    ...CATEGORY_CONFIG[cat],
-    count: entries.filter((e) => e.category === cat).length,
-  })).filter((c) => c.count > 0);
+  // "dialogue" wird hier ausgeblendet — Gespräche sind in den
+  // Charaktere-Bereich umgezogen (/characters/dialogues) und über das Archiv
+  // nicht mehr als eigene Kategorie durchsuchbar.
+  const cats = CATEGORY_ORDER.filter((cat) => cat !== "dialogue")
+    .map((cat) => ({
+      cat,
+      ...CATEGORY_CONFIG[cat],
+      count: entries.filter((e) => e.category === cat).length,
+    }))
+    .filter((c) => c.count > 0);
 
   return (
     <nav className="h-full">
