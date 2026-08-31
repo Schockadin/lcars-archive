@@ -41,11 +41,12 @@ export default function TutorialPage() {
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Ohne Konto lässt sich der Großteil des Archivs lesen:{" "}
-                <strong>Charaktere</strong> (Personalakten mit Biografie),{" "}
-                <strong>Missionen</strong> (mit ihren Einsatzberichten), das
-                kategorisierte <strong>Archiv</strong> (Personen, Orte,
-                Fraktionen, Spezies, Objekte, Ereignisse, Theorien, NPCs,
-                abgeschlossene Gespräche und Sonstiges) sowie die{" "}
+                <strong>Charaktere</strong> (Personalakten mit Biografie,
+                darunter auch die Übersicht abgeschlossener{" "}
+                <strong>Gespräche</strong>), <strong>Missionen</strong> (mit
+                ihren Einsatzberichten), das kategorisierte{" "}
+                <strong>Archiv</strong> (Personen, Orte, Fraktionen, Spezies,
+                Objekte, Ereignisse, Theorien, NPCs und Sonstiges) sowie die{" "}
                 <strong>Suche</strong> (Volltextsuche über alle diese Inhalte,
                 erreichbar über das Lupen-Symbol im Menü).
               </p>
@@ -240,8 +241,8 @@ export default function TutorialPage() {
               </p>
               <p>
                 Sobald eine teilnehmende Person es abschließt, wird es{" "}
-                <strong>unwiderruflich geschlossen</strong> und taucht danach als
-                gewöhnlicher Archiv-Eintrag in der Kategorie „Gespräche“ auf —
+                <strong>unwiderruflich geschlossen</strong> und taucht danach in
+                der Gespräche-Übersicht bei den Charakteren auf —
                 standardmäßig als zusammenhängender Lesetext, per Umschalter oben
                 auf der Seite aber auch wie ein offenes Gespräch mit einzelnen
                 Nachrichtenkarten anzeigbar. Diese Einstellung gilt für alle

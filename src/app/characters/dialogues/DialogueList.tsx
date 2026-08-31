@@ -6,7 +6,7 @@ import {
   LcarsListFilterInput,
   type SortDir,
 } from "@/components/lcars";
-import ArchiveEntryCard from "./ArchiveEntryCard";
+import ArchiveEntryCard from "@/app/archive/ArchiveEntryCard";
 
 // Gesprächs-Liste mit Teilnehmer-Filter. Sortierung nach id, Richtung per
 // Switch umschaltbar. initialParticipant (z.B. aus ?participant=<slug>) belegt

@@ -522,7 +522,7 @@ export async function deleteDialogueAction(
     }
   }
 
-  redirect("/archive?cat=dialogue");
+  redirect("/characters/dialogues");
 }
 
 // Globale Präferenz (nicht pro Dialog, siehe DialogueViewToggle.tsx) —

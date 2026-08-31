@@ -12,6 +12,13 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.26",
+    title: "Gespräche sind jetzt bei den Charakteren zu finden",
+    items: [
+      "Die Gesprächs-Übersicht ist aus dem Archiv in den Charaktere-Bereich umgezogen (neu: „Gespräche“-Knopf auf der Charakterliste, weiterhin mit Teilnehmer-Filter). Alte Links auf die Archiv-Ansicht führen automatisch zur neuen Übersicht.",
+    ],
+  },
+  {
     version: "1.25",
     title: "Markdown-Texte werden wieder richtig dargestellt",
     items: [
