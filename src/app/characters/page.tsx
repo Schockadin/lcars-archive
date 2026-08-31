@@ -1,5 +1,6 @@
 import { getCharacterListItems } from "@/lib/characters";
-import CharacterPage from "./CharacterPage";
+import { getAllArchiveEntries } from "@/lib/archive";
+import CharactersAndDialogues from "./CharactersAndDialogues";
 
 export const metadata = {
   title: {
@@ -8,6 +9,18 @@ export const metadata = {
 };
 
 export default async function CharakterePage() {
-  const characters = await getCharacterListItems();
-  return <CharacterPage characters={characters} />;
+  const [characters, entries] = await Promise.all([
+    getCharacterListItems(),
+    getAllArchiveEntries(),
+  ]);
+  const dialogueEntries = entries.filter((e) => e.category === "dialogue");
+
+  return (
+    <CharactersAndDialogues
+      pageTitle="Charaktere"
+      characters={characters}
+      dialogueEntries={dialogueEntries}
+      initialTab="characters"
+    />
+  );
 }

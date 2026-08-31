@@ -5,6 +5,47 @@
    Missions-/Log-/Archiv-Texten) teilt.
 ──────────────────────────────────────────────────────────────────── */
 
+/* Charakterliste + Gespräche-Übersicht nebeneinander (/characters,
+   /characters/dialogues — siehe CharactersAndDialogues.tsx). Auf breiten
+   Screens beide Spalten sichtbar, der Umschalter bleibt versteckt. Unter dem
+   Breakpoint zeigt der Umschalter nur die per data-active-tab gewählte
+   Spalte — analog zum Kategorien/Inhalt-Umbruch von .archive-browser, aber
+   mit echtem Tab-Wechsel statt Stapeln, da hier zwei eigenständige Listen
+   (nicht Navigation + Inhalt) um denselben Platz konkurrieren. */
+.chars-dialogues-layout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+}
+.chars-dialogues-col {
+  flex: 1 1 0;
+  min-width: 0;
+}
+.chars-dialogues-col[data-tab="dialogues"] {
+  max-width: 640px;
+}
+.chars-dialogues-switch {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  .chars-dialogues-layout {
+    flex-direction: column;
+  }
+  .chars-dialogues-switch {
+    display: flex;
+    width: 100%;
+    margin-bottom: 16px;
+  }
+  .chars-dialogues-layout[data-active-tab="characters"]
+    .chars-dialogues-col[data-tab="dialogues"],
+  .chars-dialogues-layout[data-active-tab="dialogues"]
+    .chars-dialogues-col[data-tab="characters"] {
+    display: none;
+  }
+}
+
 .character-portrait {
   border-top: 3px solid var(--lcars-secondary);
   border-left: 3px solid var(--lcars-secondary);

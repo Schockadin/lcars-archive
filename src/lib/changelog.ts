@@ -15,7 +15,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "1.26",
     title: "Gespräche sind jetzt bei den Charakteren zu finden",
     items: [
-      "Die Gesprächs-Übersicht ist aus dem Archiv in den Charaktere-Bereich umgezogen (neu: „Gespräche“-Knopf auf der Charakterliste, weiterhin mit Teilnehmer-Filter). Alte Links auf die Archiv-Ansicht führen automatisch zur neuen Übersicht.",
+      "Die Gesprächs-Übersicht ist aus dem Archiv in den Charaktere-Bereich umgezogen, weiterhin mit Teilnehmer-Filter. Auf großen Bildschirmen steht sie direkt neben der Charakterliste, auf dem Handy per Umschalter oben zwischen beiden Listen wechselbar. Alte Links auf die Archiv-Ansicht führen automatisch zur neuen Übersicht.",
     ],
   },
   {

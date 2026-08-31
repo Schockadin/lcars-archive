@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { usePageMeta } from "@/hooks/usePageMeta";
 import {
   LcarsDataRow,
   LcarsSwitch,
@@ -53,7 +52,6 @@ export default function CharacterPage({
 }: {
   characters: CharacterListItem[];
 }) {
-  usePageMeta("Charaktere", "characters");
   const [mode, setMode] = useState<SortMode>("status");
   // Freitext-Filter über Name (und Rang) — grenzt vor der Gruppierung ein.
   const [query, setQuery] = useState("");
@@ -87,12 +85,7 @@ export default function CharacterPage({
   return (
     <div className="flex flex-col items-start w-[var(--lcars-charpage-w)]">
       <div className="mb-[16px] flex flex-col items-start w-full">
-        <div className="flex items-center justify-between w-full">
-          <h1 className="lcars-data-row-heading">Charaktere</h1>
-          <Link href="/characters/dialogues" className="lcars-pill-btn--outline">
-            Gespräche
-          </Link>
-        </div>
+        <h1 className="lcars-data-row-heading">Charaktere</h1>
         <LcarsSwitch
           className="flex w-full"
           options={[
