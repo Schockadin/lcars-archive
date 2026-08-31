@@ -16,14 +16,12 @@
   display: flex;
   gap: 24px;
   align-items: flex-start;
+  justify-content: space-evenly;
   width: 100%;
 }
 .chars-dialogues-col {
-  flex: 1 1 0;
+  /* flex: 1 1 0; */
   min-width: 0;
-}
-.chars-dialogues-col[data-tab="dialogues"] {
-  max-width: 640px;
 }
 .chars-dialogues-switch {
   display: none;
@@ -36,7 +34,7 @@
   .chars-dialogues-switch {
     display: flex;
     width: 100%;
-    margin-bottom: 16px;
+    margin-top: 16px;
   }
   .chars-dialogues-layout[data-active-tab="characters"]
     .chars-dialogues-col[data-tab="dialogues"],

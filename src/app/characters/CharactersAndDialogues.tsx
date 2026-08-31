@@ -34,7 +34,7 @@ export default function CharactersAndDialogues({
   return (
     <div className="chars-dialogues-layout" data-active-tab={tab}>
       <LcarsSwitch
-        className="chars-dialogues-switch"
+        className="chars-dialogues-switch md:hidden"
         options={[
           { key: "characters" as Tab, label: "Charaktere" },
           { key: "dialogues" as Tab, label: "Gespräche" },
@@ -43,7 +43,10 @@ export default function CharactersAndDialogues({
         onChange={setTab}
       />
 
-      <div className="chars-dialogues-col" data-tab="characters">
+      <div
+        className="chars-dialogues-col w-full max-w-[640px]"
+        data-tab="characters"
+      >
         <CharacterPage characters={characters} />
       </div>
 
