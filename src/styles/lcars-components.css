@@ -16,6 +16,7 @@
 @import "./lcars-components/accordion.css";
 @import "./lcars-components/character.css";
 @import "./lcars-components/char-file.css";
+@import "./lcars-components/character-stats.css";
 @import "./lcars-components/controls.css";
 @import "./lcars-components/mission-list.css";
 @import "./lcars-components/mission-detail.css";

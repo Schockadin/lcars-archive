@@ -3,13 +3,18 @@ import {
   parseCharacterStats,
   isCharacterStatsEmpty,
   isCharacterExperience,
+  validateCharacterStats,
+  validateDistribution,
+  computeStress,
   EMPTY_CHARACTER_STATS,
+  ATTRIBUTE_RULE,
   ATTRIBUTE_FIELDS,
   DEPARTMENT_FIELDS,
   SCALAR_NUMBER_FIELDS,
   TEXT_FIELDS,
   LIST_FIELDS,
 } from "./characterStats";
+import type { CharacterStats } from "@/types/characterStats";
 import { parseLines } from "./formParsing";
 
 // parseCharacterStats bekommt rohes jsonb aus characters.metadata.stats — also
@@ -30,7 +35,7 @@ describe("parseCharacterStats", () => {
       experience: "experienced",
       attributes: { control: 12, daring: 8 },
       departments: { security: 4 },
-      stress: 11,
+      stressBonus: 3,
       determination: 2,
       values: ["Technomage-Kodex", "Verantwortung bedeutet Schutz"],
       focuses: ["Cybernetics"],
@@ -42,7 +47,7 @@ describe("parseCharacterStats", () => {
     expect(stats.attributes.control).toBe(12);
     expect(stats.attributes.daring).toBe(8);
     expect(stats.departments.security).toBe(4);
-    expect(stats.stress).toBe(11);
+    expect(stats.stressBonus).toBe(3);
     expect(stats.determination).toBe(2);
     expect(stats.values).toEqual([
       "Technomage-Kodex",
@@ -56,10 +61,11 @@ describe("parseCharacterStats", () => {
 
   it("verwirft Zahlen außerhalb des erlaubten Bereichs und Nicht-Ganzzahlen", () => {
     const stats = parseCharacterStats({
-      attributes: { control: 99, daring: 2.5, fitness: -1, insight: "10" },
+      // Attribute liegen zwischen 7 und 12, Disziplinen zwischen 1 und 5.
+      attributes: { control: 13, daring: 10.5, fitness: 6, insight: "10" },
       // Der Bogen hat genau drei Determinationskästchen.
       determination: 4,
-      departments: { command: 3 },
+      departments: { command: 3, conn: 0, security: 6 },
     });
 
     expect(stats.attributes.control).toBeNull();
@@ -69,6 +75,8 @@ describe("parseCharacterStats", () => {
     expect(stats.attributes.insight).toBe(10);
     expect(stats.determination).toBeNull();
     expect(stats.departments.command).toBe(3);
+    expect(stats.departments.conn).toBeNull();
+    expect(stats.departments.security).toBeNull();
   });
 
   it("säubert Listen und Freitexte", () => {
@@ -105,7 +113,7 @@ describe("isCharacterStatsEmpty", () => {
     const cases: unknown[] = [
       { attributes: { control: 10 } },
       { departments: { conn: 1 } },
-      { stress: 0 },
+      { stressBonus: 0 },
       { experience: "novice" },
       { pronouns: "she/her" },
       { values: ["Ein Wert"] },
@@ -113,6 +121,87 @@ describe("isCharacterStatsEmpty", () => {
     for (const raw of cases) {
       expect(isCharacterStatsEmpty(parseCharacterStats(raw))).toBe(false);
     }
+  });
+});
+
+// Verteilungsregeln der Runde: Attribute 7–12 (max. 1× 12, max. 2× 11),
+// Disziplinen 1–5 (max. 1× 5, max. 2× 4).
+describe("validateCharacterStats", () => {
+  function withValues(
+    attributes: number[],
+    departments: number[] = [],
+  ): CharacterStats {
+    return parseCharacterStats({
+      attributes: Object.fromEntries(
+        ATTRIBUTE_FIELDS.map((f, i) => [f.key, attributes[i]]),
+      ),
+      departments: Object.fromEntries(
+        DEPARTMENT_FIELDS.map((f, i) => [f.key, departments[i]]),
+      ),
+    });
+  }
+
+  it("akzeptiert eine regelkonforme Verteilung", () => {
+    expect(
+      validateCharacterStats(withValues([12, 11, 11, 10, 9, 8], [5, 4, 4, 3, 2, 1])),
+    ).toEqual([]);
+  });
+
+  it("akzeptiert einen halb ausgefüllten Bogen", () => {
+    // Nicht gepflegte Felder dürfen kein Regelverstoß sein.
+    expect(validateCharacterStats(parseCharacterStats({}))).toEqual([]);
+    expect(
+      validateCharacterStats(parseCharacterStats({ attributes: { control: 12 } })),
+    ).toEqual([]);
+  });
+
+  it("beanstandet zwei Attribute auf dem Maximum", () => {
+    const errors = validateCharacterStats(withValues([12, 12, 10, 10, 9, 8]));
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain("höchstens 1 Wert auf 12");
+  });
+
+  it("beanstandet drei Attribute auf 11", () => {
+    const errors = validateCharacterStats(withValues([12, 11, 11, 11, 9, 8]));
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain("höchstens 2 Werte auf 11");
+  });
+
+  it("beanstandet Disziplinen genauso", () => {
+    const errors = validateCharacterStats(
+      withValues([12, 11, 10, 10, 9, 8], [5, 5, 4, 4, 4, 1]),
+    );
+    expect(errors).toHaveLength(2);
+    expect(errors.every((e) => e.startsWith("Disziplinen"))).toBe(true);
+  });
+
+  it("meldet Werte außerhalb des Bereichs (aus Alt-/Fremddaten)", () => {
+    // parseCharacterStats verwirft solche Werte bereits; validateDistribution
+    // muss sie trotzdem erkennen, wenn es direkt auf Eingaben angewandt wird
+    // (Live-Prüfung im Formular).
+    const errors = validateDistribution([6, 9, 13], ATTRIBUTE_RULE, "Attribute");
+    expect(errors[0]).toContain("zwischen 7 und 12");
+  });
+});
+
+// Stress ist kein Eingabefeld, sondern ergibt sich aus Fitness + Talent-Bonus.
+describe("computeStress", () => {
+  it("addiert den Talent-Bonus zur Fitness", () => {
+    expect(
+      computeStress(
+        parseCharacterStats({ attributes: { fitness: 9 }, stressBonus: 3 }),
+      ),
+    ).toBe(12);
+  });
+
+  it("kommt ohne Bonus aus", () => {
+    expect(
+      computeStress(parseCharacterStats({ attributes: { fitness: 10 } })),
+    ).toBe(10);
+  });
+
+  it("liefert ohne Fitness keinen Wert", () => {
+    expect(computeStress(parseCharacterStats({ stressBonus: 3 }))).toBeNull();
   });
 });
 

@@ -50,7 +50,12 @@ export interface CharacterStats {
   reputation: number | null;
   attributes: CharacterAttributes;
   departments: CharacterDepartments;
-  stress: number | null;
+  // Stress selbst wird NICHT gespeichert, sondern aus Fitness + Talent-Bonus
+  // berechnet (computeStress in src/lib/characterStats.ts). Gespeichert wird
+  // nur der Bonus, den Talente auf den maximalen Stress geben (z.B. „Resolut:
+  // +3 max. Stress") — der lässt sich aus dem Freitext der Talente nicht
+  // verlässlich herauslesen und wird deshalb separat gepflegt.
+  stressBonus: number | null;
   resistance: number | null;
   // 0–3 gefüllte Determinationskästchen des Bogens.
   determination: number | null;

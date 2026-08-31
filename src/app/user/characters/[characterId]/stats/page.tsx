@@ -40,7 +40,9 @@ export default async function CharacterStatsPage({ params }: Props) {
         <Link href={`/user/characters/${character.id}/edit`}>
           Charakter bearbeiten
         </Link>{" "}
-        gepflegt. Leere Felder gelten als „nicht angegeben&ldquo;.
+        gepflegt. Leere Felder gelten als „nicht angegeben&ldquo;. Der maximale
+        Stress wird aus Fitness und dem Bonus aus Talenten berechnet und ist
+        deshalb kein Eingabefeld.
       </p>
 
       <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">

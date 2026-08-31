@@ -60,11 +60,20 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Sichtbarkeit,
   Bearbeiten, Löschen und dem Anlegen weiterer Charaktere. Pro Charakter lassen
   sich dort unter „Werte" die Charakterwerte nach dem Bogen von Star Trek
-  Adventures 2e pflegen: Personalakte (Pronomen, Rolle, Zuweisung, Herkunft,
-  Erziehung, Laufbahn, Erfahrung, Merkmale), sechs Attribute, sechs Disziplinen,
-  Stress/Widerstand/Entschlossenheit/Ansehen sowie die Listenfelder (Werte,
+  Adventures 2e pflegen — das Formular ist dem Bogen nachempfunden
+  (Abschnitte mit farbiger Kopfleiste, Wertekästen, Kästchenreihen, linierte
+  Listenfelder, siehe `src/styles/lcars-components/character-stats.css`):
+  Personalakte (Pronomen, Rolle, Zuweisung, Herkunft, Erziehung, Laufbahn,
+  Erfahrung, Merkmale), sechs Attribute, sechs Disziplinen,
+  Widerstand/Entschlossenheit/Ansehen sowie die Listenfelder (Werte,
   Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln, Angriffe,
-  Ausrüstung, Hobbys, Karriere-Ereignisse). Gespeichert werden sie als
+  Ausrüstung, Hobbys, Karriere-Ereignisse). Für die Zahlenwerte gelten die
+  Regeln der Runde: Attribute 7–12 mit höchstens einem Wert auf 12 und zwei auf
+  11, Disziplinen 1–5 mit höchstens einem auf 5 und zwei auf 4 (zentral in
+  `src/lib/characterStats.ts`, im Formular als Live-Hinweis, verbindlich in der
+  Server-Action). Der maximale Stress ist kein Eingabefeld, sondern ergibt sich
+  aus Fitness + Bonus aus Talenten (der Bonus wird gepflegt, da er sich aus dem
+  Freitext der Talente nicht verlässlich ableiten lässt). Gespeichert werden sie als
   `characters.metadata.stats` (jsonb, keine eigene Tabelle) — Name, Rang und
   Spezies bleiben Teil der Akte selbst. Charaktere erscheinen deshalb nicht mehr
   in „Meine Inhalte" (`/user/content`); der Charakter-Filter für

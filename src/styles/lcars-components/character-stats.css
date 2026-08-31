@@ -1,0 +1,315 @@
+/* ─── Charakterwerte-Bogen (/user/characters/[id]/stats) ──────────────
+   Nachempfunden dem offiziellen „personnel file" von Star Trek Adventures 2e:
+   Abschnitte mit farbiger Kopfleiste, Attribute/Disziplinen als Wertekästen
+   mit großer Zahl, abgeleitete Werte als Kästchenreihen und linierte
+   Listenfelder.
+
+   Farben kommen ausschließlich aus den LCARS-Tokens (tokens.css), damit der
+   Bogen jedes Farbthema und das minimalistische UI mitmacht.
+──────────────────────────────────────────────────────────────────── */
+
+.stat-sheet {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+}
+
+/* ── Abschnitt mit farbiger Kopfleiste ─────────────────────────────── */
+.stat-sheet-section {
+  border: 2px solid var(--lcars-border);
+  border-radius: 10px;
+  background: var(--lcars-surface);
+  padding: 0 0 14px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.stat-sheet-section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+  padding: 6px 14px;
+  background: var(--lcars-primary);
+  color: var(--lcars-bg);
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+/* Regel-Hinweis unter der Kopfleiste (z.B. „7–12, höchstens 1× 12"). */
+.stat-sheet-rule {
+  margin: -6px 14px 12px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  color: var(--lcars-ink-dim);
+}
+
+/* Zweisprachige Beschriftung wie auf dem Bogen. */
+.stat-label-de {
+  display: block;
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.stat-label-en {
+  display: block;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  opacity: 0.75;
+  font-weight: 400;
+}
+
+/* Innerhalb der farbigen Kopfleiste steht der englische Begriff daneben. */
+.stat-sheet-section-title .stat-label-en {
+  display: inline;
+}
+
+/* ── Kopfdaten-Raster ──────────────────────────────────────────────── */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+  padding: 0 14px;
+}
+
+.stat-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.stat-field-label {
+  color: var(--lcars-ink-data);
+}
+
+.stat-field-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 4px;
+  background: var(--lcars-bg);
+  color: var(--lcars-ink);
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.05em;
+}
+
+.stat-field-input:focus-visible {
+  outline: 2px solid var(--lcars-tertiary);
+  outline-offset: 1px;
+}
+
+/* ── Wertekästen (Attribute/Disziplinen) ───────────────────────────── */
+.stat-box-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 10px;
+  padding: 0 14px;
+}
+
+.stat-box {
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--lcars-tertiary);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--lcars-bg);
+  min-width: 0;
+}
+
+.stat-box-label {
+  display: block;
+  padding: 4px 8px;
+  background: var(--lcars-tertiary);
+  color: var(--lcars-bg);
+  text-align: center;
+  cursor: pointer;
+}
+
+/* Große Zahl im Kasten — der Kern der Bogen-Optik. Spinner ausgeblendet,
+   damit die Zahl auch auf schmalen Kästen mittig bleibt. */
+.stat-box-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  color: var(--lcars-ink-data);
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  padding: 10px 4px;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.stat-box-input::-webkit-outer-spin-button,
+.stat-box-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.stat-box-input:focus-visible {
+  outline: 2px solid var(--lcars-tertiary);
+  outline-offset: -2px;
+}
+
+/* Regelverstoß: Kasten und Zahl rot absetzen (zusätzlich zur Klartext-
+   Meldung darunter — Farbe allein trägt die Information nicht). */
+.stat-box--invalid {
+  border-color: var(--lcars-quinary);
+}
+.stat-box--invalid .stat-box-label {
+  background: var(--lcars-quinary);
+}
+.stat-box--invalid .stat-box-input {
+  color: var(--lcars-quinary);
+}
+
+.stat-sheet-errors {
+  margin: 0;
+  padding: 10px 14px 10px 32px;
+  border: 2px solid var(--lcars-quinary);
+  border-radius: 8px;
+  background: var(--lcars-surface);
+  color: var(--lcars-quinary);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+  list-style: square;
+}
+
+/* ── Abgeleitete Werte ─────────────────────────────────────────────── */
+.stat-derived {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 14px;
+  padding: 0 14px;
+  align-items: start;
+}
+
+.stat-derived-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.stat-stress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.stat-stress-value {
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--lcars-ink-data);
+}
+
+/* Kästchenreihe wie auf dem Bogen (ein Kästchen je Stresspunkt). */
+.stat-stress-boxes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+
+.stat-stress-box {
+  width: 12px;
+  height: 16px;
+  border: 1px solid var(--lcars-ink-dim);
+  border-radius: 2px;
+}
+
+/* Drei Determinationskästchen, anklickbar. */
+.stat-determination {
+  display: flex;
+  gap: 8px;
+}
+
+.stat-det-box {
+  width: 34px;
+  height: 34px;
+  border: 2px solid var(--lcars-quaternary);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.stat-det-box--filled {
+  background: var(--lcars-quaternary);
+}
+
+.stat-det-box:focus-visible {
+  outline: 2px solid var(--lcars-tertiary);
+  outline-offset: 2px;
+}
+
+/* ── Listenfelder ──────────────────────────────────────────────────── */
+.stat-list-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.stat-list-field {
+  padding-bottom: 0;
+}
+
+/* Linierter Kasten wie auf dem Bogen: die Hintergrundlinien liegen exakt auf
+   der Zeilenhöhe, damit der Text auf den Linien sitzt. */
+.stat-list-input {
+  --stat-line-h: 28px;
+  display: block;
+  width: 100%;
+  border: none;
+  border-top: 1px solid var(--lcars-border);
+  padding: 0 14px;
+  background-color: var(--lcars-bg);
+  background-image: repeating-linear-gradient(
+    var(--lcars-bg) 0,
+    var(--lcars-bg) calc(var(--stat-line-h) - 1px),
+    var(--lcars-border) calc(var(--stat-line-h) - 1px),
+    var(--lcars-border) var(--stat-line-h)
+  );
+  background-attachment: local;
+  color: var(--lcars-ink);
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 16px;
+  line-height: var(--stat-line-h);
+  letter-spacing: 0.04em;
+  resize: vertical;
+}
+
+.stat-list-input:focus-visible {
+  outline: 2px solid var(--lcars-tertiary);
+  outline-offset: -2px;
+}
+
+@media (max-width: 520px) {
+  .stat-sheet-section-title {
+    font-size: 16px;
+  }
+  .stat-box-row {
+    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  }
+  .stat-box-input {
+    font-size: 28px;
+  }
+}

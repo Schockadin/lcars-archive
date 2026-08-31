@@ -190,7 +190,7 @@ export default function TutorialPage() {
                 und über <strong>„Werte“</strong> je Charakter den
                 Charakterbogen pflegen: Personalakte (Pronomen, Rolle,
                 Zuweisung, Herkunft, Erziehung, Laufbahn, Erfahrung, Merkmale),
-                die sechs Attribute und sechs Disziplinen, Stress, Widerstand,
+                die sechs Attribute und sechs Disziplinen, Widerstand,
                 Entschlossenheit und Ansehen sowie die Listen für Werte,
                 Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln,
                 Angriffe, Ausrüstung, Hobbys und Karriere-Ereignisse (dort je
@@ -199,6 +199,17 @@ export default function TutorialPage() {
                 „Bearbeiten“ gepflegt. In „Meine Inhalte“ tauchen Charaktere
                 deshalb nicht mehr auf — der Charakter-Filter für
                 Einsatzberichte und Gespräche bleibt dort aber erhalten.
+              </p>
+              <p>
+                Für die Zahlen gelten die <strong>Regeln der Runde</strong>:
+                Attribute liegen zwischen 7 und 12, davon darf höchstens eines
+                auf 12 und zwei dürfen auf 11 stehen; Disziplinen liegen
+                zwischen 1 und 5, höchstens eine auf 5 und zwei auf 4. Verstöße
+                markiert das Formular sofort und verhindert das Speichern. Der
+                maximale <strong>Stress</strong> ist kein Eingabefeld: er
+                ergibt sich aus deiner Fitness plus dem Bonus, den Talente
+                darauf geben (z.B. „Resolut: +3 max. Stress“) — diesen Bonus
+                trägst du einmal ein, den Rest rechnet die Seite.
               </p>
               <p>
                 Eigene Entwürfe (siehe unten) erscheinen in „Meine Inhalte“

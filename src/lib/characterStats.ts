@@ -13,11 +13,14 @@ import type {
   CharacterStats,
 } from "@/types/characterStats";
 
-// Labels: deutsches Label mit dem englischen Begriff des offiziellen Bogens in
-// Klammern — die Spielrunde nutzt beides gemischt (siehe Beispielbogen).
+// Labels: deutsches Label plus der englische Begriff des offiziellen Bogens —
+// die Spielrunde nutzt beides gemischt (siehe Beispielbogen). Das Formular
+// zeigt beide untereinander, wie die zweisprachige Beschriftung auf dem Bogen.
 export interface StatFieldSpec<K> {
   key: K;
   label: string;
+  // Begriff auf dem englischen Originalbogen (fehlt, wo er identisch ist).
+  original?: string;
 }
 
 export interface NumberFieldSpec<K> extends StatFieldSpec<K> {
@@ -25,34 +28,77 @@ export interface NumberFieldSpec<K> extends StatFieldSpec<K> {
   max: number;
 }
 
+// Wertebereiche + Verteilungsregeln der Runde: Attribute liegen zwischen 7 und
+// 12, dabei darf höchstens EIN Attribut auf 12 und höchstens ZWEI dürfen auf 11
+// stehen. Für Disziplinen gilt dasselbe Muster mit 1–5, einer auf 5 und
+// höchstens zwei auf 4. Zentral hier definiert, damit Formular (Eingabe-
+// Grenzen + Hinweis), Server-Action (verbindliche Prüfung) und Tests dieselbe
+// Quelle nutzen.
+export interface DistributionRule {
+  min: number;
+  max: number;
+  // Höchstens so viele Werte dürfen auf dem Maximum stehen.
+  maxAtMax: number;
+  // … und höchstens so viele auf dem Wert direkt darunter.
+  maxAtSecond: number;
+}
+
+export const ATTRIBUTE_RULE: DistributionRule = {
+  min: 7,
+  max: 12,
+  maxAtMax: 1,
+  maxAtSecond: 2,
+};
+
+export const DEPARTMENT_RULE: DistributionRule = {
+  min: 1,
+  max: 5,
+  maxAtMax: 1,
+  maxAtSecond: 2,
+};
+
 export const ATTRIBUTE_FIELDS: NumberFieldSpec<keyof CharacterAttributes>[] = [
-  { key: "control", label: "Kontrolle (Control)", min: 0, max: 20 },
-  { key: "daring", label: "Wagemut (Daring)", min: 0, max: 20 },
-  { key: "fitness", label: "Fitness", min: 0, max: 20 },
-  { key: "insight", label: "Einsicht (Insight)", min: 0, max: 20 },
-  { key: "presence", label: "Präsenz (Presence)", min: 0, max: 20 },
-  { key: "reason", label: "Verstand (Reason)", min: 0, max: 20 },
+  { key: "control", label: "Kontrolle", original: "Control", ...ATTRIBUTE_RULE },
+  { key: "daring", label: "Wagemut", original: "Daring", ...ATTRIBUTE_RULE },
+  { key: "fitness", label: "Fitness", ...ATTRIBUTE_RULE },
+  { key: "insight", label: "Einsicht", original: "Insight", ...ATTRIBUTE_RULE },
+  { key: "presence", label: "Präsenz", original: "Presence", ...ATTRIBUTE_RULE },
+  { key: "reason", label: "Verstand", original: "Reason", ...ATTRIBUTE_RULE },
 ];
 
 export const DEPARTMENT_FIELDS: NumberFieldSpec<keyof CharacterDepartments>[] = [
-  { key: "command", label: "Kommando (Command)", min: 0, max: 10 },
-  { key: "conn", label: "Steuerung (Conn)", min: 0, max: 10 },
-  { key: "engineering", label: "Technik (Engineering)", min: 0, max: 10 },
-  { key: "security", label: "Sicherheit (Security)", min: 0, max: 10 },
-  { key: "medicine", label: "Medizin (Medicine)", min: 0, max: 10 },
-  { key: "science", label: "Wissenschaft (Science)", min: 0, max: 10 },
+  { key: "command", label: "Kommando", original: "Command", ...DEPARTMENT_RULE },
+  { key: "conn", label: "Steuerung", original: "Conn", ...DEPARTMENT_RULE },
+  { key: "engineering", label: "Technik", original: "Engineering", ...DEPARTMENT_RULE },
+  { key: "security", label: "Sicherheit", original: "Security", ...DEPARTMENT_RULE },
+  { key: "medicine", label: "Medizin", original: "Medicine", ...DEPARTMENT_RULE },
+  { key: "science", label: "Wissenschaft", original: "Science", ...DEPARTMENT_RULE },
 ];
 
-// Einzelne Zahlenwerte außerhalb von Attributen/Disziplinen.
-type ScalarNumberKey = "reputation" | "stress" | "resistance" | "determination";
+// Einzelne Zahlenwerte außerhalb von Attributen/Disziplinen. „stress" fehlt
+// hier bewusst: der Wert wird aus Fitness + Talent-Bonus berechnet (siehe
+// computeStress) und ist deshalb kein Eingabefeld.
+type ScalarNumberKey =
+  | "reputation"
+  | "stressBonus"
+  | "resistance"
+  | "determination";
 
 export const SCALAR_NUMBER_FIELDS: NumberFieldSpec<ScalarNumberKey>[] = [
-  { key: "stress", label: "Stress", min: 0, max: 50 },
-  { key: "resistance", label: "Widerstand (Resistance)", min: 0, max: 20 },
+  { key: "stressBonus", label: "Stress-Bonus aus Talenten", original: "Talent bonus", min: 0, max: 20 },
+  { key: "resistance", label: "Widerstand", original: "Resistance", min: 0, max: 20 },
   // Der Bogen hat genau drei Determinationskästchen.
-  { key: "determination", label: "Entschlossenheit (Determination)", min: 0, max: 3 },
-  { key: "reputation", label: "Ansehen (Reputation)", min: 0, max: 50 },
+  { key: "determination", label: "Entschlossenheit", original: "Determination", min: 0, max: 3 },
+  { key: "reputation", label: "Ansehen", original: "Reputation", min: 0, max: 50 },
 ];
+
+// Maximaler Stress = Fitness + Bonus aus Talenten (z.B. „Resolut: +3 max.
+// Stress"). Ohne gepflegte Fitness gibt es keinen sinnvollen Wert — dann null.
+export function computeStress(stats: CharacterStats): number | null {
+  const fitness = stats.attributes.fitness;
+  if (fitness === null) return null;
+  return fitness + (stats.stressBonus ?? 0);
+}
 
 // Freitext-Kopffelder. Name/Rang/Spezies fehlen hier bewusst — die stehen
 // bereits am Charakter selbst (siehe characterHeadFields.ts).
@@ -66,13 +112,13 @@ type TextKey =
   | "traits";
 
 export const TEXT_FIELDS: StatFieldSpec<TextKey>[] = [
-  { key: "pronouns", label: "Pronomen" },
-  { key: "characterRole", label: "Rolle (Character Role)" },
-  { key: "assignment", label: "Zuweisung (Assignment)" },
-  { key: "environment", label: "Herkunft (Environment)" },
-  { key: "upbringing", label: "Erziehung (Upbringing)" },
-  { key: "careerPath", label: "Laufbahn (Career Path)" },
-  { key: "traits", label: "Merkmale (Traits)" },
+  { key: "pronouns", label: "Pronomen", original: "Pronouns" },
+  { key: "characterRole", label: "Rolle", original: "Character Role" },
+  { key: "assignment", label: "Zuweisung", original: "Assignment" },
+  { key: "environment", label: "Herkunft", original: "Environment" },
+  { key: "upbringing", label: "Erziehung", original: "Upbringing" },
+  { key: "careerPath", label: "Laufbahn", original: "Career Path" },
+  { key: "traits", label: "Merkmale", original: "Species & Traits" },
 ];
 
 export const EXPERIENCE_OPTIONS: { value: CharacterExperience; label: string }[] =
@@ -103,15 +149,15 @@ type ListKey =
   | "equipment";
 
 export const LIST_FIELDS: StatFieldSpec<ListKey>[] = [
-  { key: "careerEvents", label: "Karriere-Ereignisse (Career Events)" },
-  { key: "values", label: "Werte (Values)" },
-  { key: "focuses", label: "Schwerpunkte (Focuses)" },
-  { key: "talents", label: "Talente (Talents)" },
-  { key: "speciesAbilities", label: "Spezies-Fähigkeiten (Species Ability)" },
-  { key: "specialRules", label: "Sonderregeln (Special Rules)" },
-  { key: "attacks", label: "Angriffe (Attacks)" },
-  { key: "equipment", label: "Ausrüstung (Other Equipment)" },
-  { key: "pastimes", label: "Hobbys (Pastimes)" },
+  { key: "values", label: "Werte", original: "Values" },
+  { key: "focuses", label: "Schwerpunkte", original: "Focuses" },
+  { key: "talents", label: "Talente", original: "Talents" },
+  { key: "speciesAbilities", label: "Spezies-Fähigkeiten", original: "Species Ability" },
+  { key: "specialRules", label: "Sonderregeln", original: "Special Rules" },
+  { key: "attacks", label: "Angriffe", original: "Attacks" },
+  { key: "equipment", label: "Ausrüstung", original: "Other Equipment" },
+  { key: "careerEvents", label: "Karriere-Ereignisse", original: "Career Events" },
+  { key: "pastimes", label: "Hobbys", original: "Pastimes" },
 ];
 
 export const EMPTY_CHARACTER_STATS: CharacterStats = {
@@ -141,7 +187,7 @@ export const EMPTY_CHARACTER_STATS: CharacterStats = {
     medicine: null,
     science: null,
   },
-  stress: null,
+  stressBonus: null,
   resistance: null,
   determination: null,
   values: [],
@@ -237,6 +283,58 @@ export function parseCharacterStats(raw: unknown): CharacterStats {
   }
 
   return stats;
+}
+
+// Prüft die Verteilungsregeln einer Wertegruppe (siehe DistributionRule) und
+// liefert deutsche Fehlermeldungen. Nur GEPFLEGTE Werte zählen — ein halb
+// ausgefüllter Bogen soll sich speichern lassen, ohne dass fehlende Felder als
+// Regelverstoß gelten. Wird vom Formular (Live-Hinweis) und von der
+// Server-Action (verbindlich) genutzt.
+export function validateDistribution(
+  values: (number | null)[],
+  rule: DistributionRule,
+  groupLabel: string,
+): string[] {
+  const filled = values.filter((value): value is number => value !== null);
+  const errors: string[] = [];
+
+  if (filled.some((value) => value < rule.min || value > rule.max)) {
+    errors.push(
+      `${groupLabel}: Werte müssen zwischen ${rule.min} und ${rule.max} liegen.`,
+    );
+  }
+
+  const atMax = filled.filter((value) => value === rule.max).length;
+  if (atMax > rule.maxAtMax) {
+    errors.push(
+      `${groupLabel}: höchstens ${rule.maxAtMax} Wert${rule.maxAtMax === 1 ? "" : "e"} auf ${rule.max} (aktuell ${atMax}).`,
+    );
+  }
+
+  const atSecond = filled.filter((value) => value === rule.max - 1).length;
+  if (atSecond > rule.maxAtSecond) {
+    errors.push(
+      `${groupLabel}: höchstens ${rule.maxAtSecond} Werte auf ${rule.max - 1} (aktuell ${atSecond}).`,
+    );
+  }
+
+  return errors;
+}
+
+// Alle Regelverstöße eines Bogens auf einmal — Attribute und Disziplinen.
+export function validateCharacterStats(stats: CharacterStats): string[] {
+  return [
+    ...validateDistribution(
+      ATTRIBUTE_FIELDS.map((field) => stats.attributes[field.key]),
+      ATTRIBUTE_RULE,
+      "Attribute",
+    ),
+    ...validateDistribution(
+      DEPARTMENT_FIELDS.map((field) => stats.departments[field.key]),
+      DEPARTMENT_RULE,
+      "Disziplinen",
+    ),
+  ];
 }
 
 // Für die Übersicht: unterscheidet „noch gar keine Werte hinterlegt" von

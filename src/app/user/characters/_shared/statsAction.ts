@@ -12,6 +12,7 @@ import {
   LIST_FIELDS,
   EMPTY_CHARACTER_STATS,
   isCharacterExperience,
+  validateCharacterStats,
   type NumberFieldSpec,
 } from "@/lib/characterStats";
 import type { CharacterStats } from "@/types/characterStats";
@@ -99,6 +100,14 @@ export async function characterStatsAction(
     return { error: "Ungültige Erfahrungsstufe." };
   }
   stats.experience = isCharacterExperience(experience) ? experience : null;
+
+  // Verteilungsregeln (nur ein Attribut auf 12, zwei auf 11, analog bei den
+  // Disziplinen) — hier verbindlich geprüft, nicht nur im Formular: die
+  // Eingabegrenzen im Browser sind Komfort, maßgeblich ist der Server.
+  const ruleErrors = validateCharacterStats(stats);
+  if (ruleErrors.length > 0) {
+    return { error: ruleErrors.join(" ") };
+  }
 
   const result = await updateOwnCharacterStats(
     session.userId,
