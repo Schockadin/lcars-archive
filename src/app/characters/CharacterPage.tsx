@@ -83,7 +83,7 @@ export default function CharacterPage({
         }));
 
   return (
-    <div className="flex flex-col items-start w-[var(--lcars-charpage-w)]">
+    <div className="flex flex-col items-start">
       <div className="mb-[16px] flex flex-col items-start w-full">
         <h1 className="lcars-data-row-heading">Charaktere</h1>
         <LcarsSwitch
@@ -99,7 +99,7 @@ export default function CharacterPage({
           value={query}
           onChange={setQuery}
           ariaLabel="Charaktere filtern"
-          className="mt-[8px] w-full"
+          className="mt-[8px] w-full max-w-[640px]"
         />
       </div>
 
@@ -109,13 +109,13 @@ export default function CharacterPage({
         groups.map(
           (group) =>
             group.items.length > 0 && (
-              <section key={group.label} className="mb-[20px]">
+              <section key={group.label} className="mb-[20px] w-full">
                 <LcarsDataRow
                   value={group.items.length}
                   label={group.label}
                   accentColor={group.color}
                   color={group.color}
-                  className="ml-[12px]"
+                  className="ml-auto"
                 />
                 <CharacterRows characters={group.items} color={group.color} />
               </section>
