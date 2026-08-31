@@ -133,6 +133,10 @@ export async function setVisibilityAction(
   }
 
   revalidatePath("/user/content");
+  // Charaktere leben seit dem Umzug unter /user/characters — beide Seiten
+  // nutzen dieselben Aktionen (VisibilitySelect/DeleteOwnContentButton), also
+  // auch beide revalidieren.
+  revalidatePath("/user/characters");
   return ok ? {} : { error: "Änderung fehlgeschlagen (keine Berechtigung?)." };
 }
 
@@ -190,5 +194,6 @@ export async function deleteOwnContentAction(
   }
 
   revalidatePath("/user/content");
+  revalidatePath("/user/characters");
   return {};
 }

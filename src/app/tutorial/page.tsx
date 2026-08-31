@@ -182,9 +182,29 @@ export default function TutorialPage() {
                 begonnen hat).
               </p>
               <p>
+                <strong>Deine Charaktere</strong> haben einen eigenen Menüpunkt:
+                Sobald mindestens ein Charakter mit deinem Konto verknüpft ist,
+                erscheint oben <strong>„Charaktere“</strong>. Dort stehen alle
+                deine Charaktere (auch Entwürfe) mit denselben Knöpfen für
+                Sichtbarkeit, Bearbeiten und Löschen, du kannst weitere anlegen —
+                und über <strong>„Werte“</strong> je Charakter den
+                Charakterbogen pflegen: Personalakte (Pronomen, Rolle,
+                Zuweisung, Herkunft, Erziehung, Laufbahn, Erfahrung, Merkmale),
+                die sechs Attribute und sechs Disziplinen, Stress, Widerstand,
+                Entschlossenheit und Ansehen sowie die Listen für Werte,
+                Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln,
+                Angriffe, Ausrüstung, Hobbys und Karriere-Ereignisse (dort je
+                Zeile ein Eintrag). Leere Felder gelten als „nicht angegeben“;
+                Name, Rang und Spezies gehören zur Akte selbst und werden über
+                „Bearbeiten“ gepflegt. In „Meine Inhalte“ tauchen Charaktere
+                deshalb nicht mehr auf — der Charakter-Filter für
+                Einsatzberichte und Gespräche bleibt dort aber erhalten.
+              </p>
+              <p>
                 Eigene Entwürfe (siehe unten) erscheinen in „Meine Inhalte“
                 gesammelt ganz oben in einer eigenen Übersicht, unabhängig vom
-                Kategorie-Filter.
+                Kategorie-Filter — Charakter-Entwürfe stattdessen in der
+                Charakter-Übersicht, dort ebenfalls markiert.
               </p>
               <p>
                 Beim Anlegen oder Bearbeiten eines Charakters, einer Mission,
@@ -196,7 +216,7 @@ export default function TutorialPage() {
                 sichtbar, nicht einmal für Spielleitung oder Administration
                 (Ausnahme: Missionen sehen alle aus der Spielleitung, da sie
                 kein Einzel-Owner-Modell haben), erscheint aber bereits unter
-                „Meine Inhalte“, dort deutlich markiert.
+                „Meine Inhalte“ bzw. „Charaktere“, dort deutlich markiert.
               </p>
               <p>
                 Mission-Synopsen, Archiv-Einträge und Charakter-Biografien

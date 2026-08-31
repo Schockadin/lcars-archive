@@ -55,6 +55,20 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Offene Gespräche aktualisieren sich dabei automatisch per Polling (alle
   8 Sekunden, pausiert bei nicht sichtbarem Tab) — neue Nachrichten und
   Sperr-Status-Änderungen erscheinen ohne manuelles Neuladen der Seite.
+- **Eigene Charaktere & Charakterwerte** — wer mindestens einen verknüpften
+  Charakter hat, bekommt im Kopfmenü den Punkt „Charaktere" (`/user/characters`):
+  Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Sichtbarkeit,
+  Bearbeiten, Löschen und dem Anlegen weiterer Charaktere. Pro Charakter lassen
+  sich dort unter „Werte" die Charakterwerte nach dem Bogen von Star Trek
+  Adventures 2e pflegen: Personalakte (Pronomen, Rolle, Zuweisung, Herkunft,
+  Erziehung, Laufbahn, Erfahrung, Merkmale), sechs Attribute, sechs Disziplinen,
+  Stress/Widerstand/Entschlossenheit/Ansehen sowie die Listenfelder (Werte,
+  Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln, Angriffe,
+  Ausrüstung, Hobbys, Karriere-Ereignisse). Gespeichert werden sie als
+  `characters.metadata.stats` (jsonb, keine eigene Tabelle) — Name, Rang und
+  Spezies bleiben Teil der Akte selbst. Charaktere erscheinen deshalb nicht mehr
+  in „Meine Inhalte" (`/user/content`); der Charakter-Filter für
+  Einsatzberichte/Gespräche bleibt dort erhalten.
 - **Persönliche News** — der News-Feed auf dem Dashboard bleibt persistent
   sichtbar (nicht mehr nur bis zum nächsten Besuch): jede Meldung lässt sich
   einzeln per X ausblenden (gilt danach als gelesen) und verschwindet automatisch,
@@ -397,6 +411,7 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     │   ├── login/, activate/, forgot-password/
     │   ├── users/             # Öffentliche Nutzerübersicht + Profilseiten anderer User
     │   ├── user/              # Eigenes Profil, Settings, eigene Inhalte anlegen/verwalten
+    │   │   └── characters/     #   Eigene Charaktere: Übersicht, anlegen, bearbeiten, Werte ([id]/stats)
     │   ├── admin/             # Admin-Bereich (staff-baseline, feiner je Unterseite):
     │   │   ├── users/          #   Nutzerverwaltung (Tabelle + Detailseite [id]/edit/)
     │   │   ├── permissions/    #   Rollen-Editor: Rollen anlegen/bearbeiten + zuweisen

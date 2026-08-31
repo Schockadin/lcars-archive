@@ -3,6 +3,7 @@ import { getSession } from "@/lib/session";
 import { touchLastVisit, getUserById } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
 import { userPermissions } from "@/lib/permissions";
+import { userHasCharacters } from "@/lib/characters";
 
 
 // Winziger, für den Client selbst DB-freier Endpunkt (nur Cookie-Signatur-
@@ -43,6 +44,10 @@ export async function GET() {
   const permissions = user
     ? [...userPermissions(user, await getRoleMap())]
     : [];
+  // Steuert den „Charaktere"-Menüpunkt (HeaderUserNav): nur User mit
+  // mindestens einem verknüpften Charakter bekommen ihn. Bewusst eine eigene
+  // EXISTS-Abfrage statt der vollen Charakterliste — hier zählt nur ja/nein.
+  const hasCharacters = user ? await userHasCharacters(user.id) : false;
   // Explizite No-Store-Header (der Endpunkt ist ohnehin per-Request
   // dynamisch, da er Cookies liest): dieser Endpunkt liefert userId/role,
   // personalisierte Daten,
@@ -55,6 +60,7 @@ export async function GET() {
       userId: session?.userId ?? null,
       role: user?.role ?? session?.role ?? null,
       permissions,
+      hasCharacters,
     },
     {
       headers: {

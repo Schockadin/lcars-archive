@@ -7,6 +7,7 @@ import { logout } from "@/app/login/actions";
 import { clearServiceWorkerPageCache } from "@/lib/swCache";
 import { DB_PERMISSIONS } from "@/lib/permissions";
 import {
+  CharactersNavIcon,
   ContentNavIcon,
   UsersNavIcon,
   ProfileNavIcon,
@@ -60,10 +61,15 @@ function NavPillContent({ icon, label }: { icon: ReactNode; label: string }) {
 
 export default function HeaderUserNav({
   permissions,
+  hasCharacters = false,
   columns = 3,
   variant = "header",
 }: {
   permissions: string[];
+  // Nur User mit mindestens einem verknüpften Charakter sehen „Charaktere"
+  // (/user/characters) — für alle anderen wäre die Seite leer. Ihren ERSTEN
+  // Charakter legen sie weiterhin über „Inhalte" an (siehe /user/content).
+  hasCharacters?: boolean;
   columns?: number;
   // "header": horizontales Pill-Grid im Header (LCARS). "sidebar": vertikale
   // Liste in der Sidebar (minimalistisches UI) — das Admin-Dropdown klappt
@@ -99,6 +105,15 @@ export default function HeaderUserNav({
   // (Lupe) im Hauptmenü (MAIN_NAV/SidebarMenu.tsx), der Header-Button wäre
   // doppelt.
   const tabs = [
+    ...(hasCharacters
+      ? [
+          {
+            href: "/user/characters",
+            label: "Charaktere",
+            icon: <CharactersNavIcon />,
+          },
+        ]
+      : []),
     { href: "/user/content", label: "Inhalte", icon: <ContentNavIcon /> },
     ...(permissions.includes("users.browse")
       ? [{ href: "/users", label: "User", icon: <UsersNavIcon /> }]
@@ -131,7 +146,13 @@ export default function HeaderUserNav({
       style={{ "--usernav-cols": columns } as React.CSSProperties}
     >
       {tabs.map((tab) => {
-        const isActive = pathname === tab.href;
+        // Unterseiten färben ihren Menüpunkt mit ein (z.B.
+        // /user/characters/12/stats → „Charaktere"). Ausgenommen ist „Profil"
+        // (/user), dessen Pfad Präfix ALLER User-Seiten ist — dort bleibt es
+        // beim exakten Vergleich.
+        const isActive =
+          pathname === tab.href ||
+          (tab.href !== "/user" && pathname.startsWith(`${tab.href}/`));
         return (
           <Link
             key={tab.href}

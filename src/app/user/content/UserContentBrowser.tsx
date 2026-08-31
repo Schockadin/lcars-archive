@@ -7,59 +7,25 @@ import type { DialogueSummary } from "@/lib/dialoguesCore";
 import type { UserContentArchiveEntry } from "@/lib/archive";
 import { fmtDate, sessionLabel, periodLabel } from "@/lib/missionFormat";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
-import { PencilIcon } from "@/lib/icons";
 import type { Character } from "@/types/character";
 import type { MissionPreview } from "@/types/missions";
 import VisibilitySelect from "./VisibilitySelect";
 import DeleteOwnContentButton from "./DeleteOwnContentButton";
+import ContentActionRow from "./ContentActionRow";
 
-type CategoryFilter =
-  | "all"
-  | "characters"
-  | "logs"
-  | "dialogues"
-  | "archive"
-  | "missions";
+// Charaktere sind bewusst KEINE Kategorie mehr: sie haben mit
+// /user/characters eine eigene Übersicht (inkl. Werte-Formular). Die
+// Charakter-LISTE kommt trotzdem weiterhin herein — sie speist den
+// Charakter-Filter für Einsatzberichte/Gespräche unten.
+type CategoryFilter = "all" | "logs" | "dialogues" | "archive" | "missions";
 
 const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   all: "Alle Kategorien",
-  characters: "Charaktere",
   logs: "Einsatzberichte",
   dialogues: "Gespräche",
   archive: "Archiv-Einträge",
   missions: "Missionen",
 };
-
-// Eine Zeile mit allen drei möglichen Aktionen (Sichtbarkeit/Bearbeiten/
-// Löschen) statt gestapelter Einzelelemente — jede Aktion ist optional, da
-// nicht jeder Inhaltstyp alle drei kennt (Missionen z.B. keine Sichtbarkeit,
-// Gespräche kein Bearbeiten-Formular).
-function ContentActionRow({
-  visibility,
-  editHref,
-  deleteButton,
-}: {
-  visibility?: React.ReactNode;
-  editHref?: string;
-  deleteButton?: React.ReactNode;
-}) {
-  return (
-    <div className="flex items-center gap-[8px]">
-      {visibility}
-      {editHref && (
-        <Link
-          href={editHref}
-          className="lcars-icon-btn"
-          aria-label="Bearbeiten"
-          title="Bearbeiten"
-        >
-          <PencilIcon />
-        </Link>
-      )}
-      {deleteButton}
-    </div>
-  );
-}
 
 // "Meine Inhalte": fünf feste Kategorien (Charaktere, Einsatzberichte,
 // Gespräche, Archiv-Einträge, Missionen), jede ein Akkordeon mit
@@ -105,10 +71,6 @@ export default function UserContentBrowser({
   // echten Props zurück, sobald die Transition abgeschlossen ist — bei
   // Erfolg über revalidatePath eine kürzere Liste, bei Fehlschlag dieselbe
   // wie vorher (der Eintrag erscheint dann wieder).
-  const [optimisticCharacters, removeOptimisticCharacter] = useOptimistic(
-    characters,
-    (state, id: number) => state.filter((c) => c.id !== id),
-  );
   const [optimisticLogs, removeOptimisticLog] = useOptimistic(
     logs,
     (state, id: number) => state.filter((l) => l.id !== id),
@@ -126,13 +88,6 @@ export default function UserContentBrowser({
     (state, id: number) => state.filter((m) => m.id !== id),
   );
 
-  const filteredCharacters = useMemo(
-    () =>
-      optimisticCharacters.filter(
-        (c) => !characterFilter || c.slug === characterFilter,
-      ),
-    [optimisticCharacters, characterFilter],
-  );
   const filteredLogs = useMemo(
     () =>
       optimisticLogs.filter(
@@ -150,14 +105,6 @@ export default function UserContentBrowser({
 
   // Entwürfe aus den jeweiligen Listen herausgetrennt — publishedX rendert
   // im normalen Akkordeon, draftX in der gemeinsamen Entwürfe-DataRow unten.
-  const publishedCharacters = useMemo(
-    () => filteredCharacters.filter((c) => !c.is_draft),
-    [filteredCharacters],
-  );
-  const draftCharacters = useMemo(
-    () => filteredCharacters.filter((c) => c.is_draft),
-    [filteredCharacters],
-  );
   const publishedLogs = useMemo(
     () => filteredLogs.filter((l) => !l.is_draft),
     [filteredLogs],
@@ -184,13 +131,11 @@ export default function UserContentBrowser({
   );
 
   const totalDrafts =
-    draftCharacters.length +
     draftLogs.length +
     draftArchiveEntries.length +
     (canManageMissions ? draftMissions.length : 0);
 
   const total =
-    characters.length +
     logs.length +
     dialogues.length +
     archiveEntries.length +
@@ -200,8 +145,6 @@ export default function UserContentBrowser({
     return <p className="lcars-empty-state">Noch keine Inhalte vorhanden.</p>;
   }
 
-  const showCharacters =
-    categoryFilter === "all" || categoryFilter === "characters";
   const showLogs = categoryFilter === "all" || categoryFilter === "logs";
   const showDialogues =
     categoryFilter === "all" || categoryFilter === "dialogues";
@@ -246,45 +189,6 @@ export default function UserContentBrowser({
           <p className="lcars-empty-state">Keine Entwürfe vorhanden.</p>
         ) : (
           <div className="flex flex-col gap-[6px]">
-            {draftCharacters.map((c) => (
-              <div
-                key={`character-${c.id}`}
-                className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
-              >
-                <Link
-                  href={`/characters/${c.slug}`}
-                  className="mission-akte flex-1"
-                  style={{ "--mission-color": "var(--lcars-quinary)" } as React.CSSProperties}
-                >
-                  <span className="mission-akte-rail" />
-                  <span className="mission-akte-body text-left">
-                    <span className="mission-akte-title block">{c.name}</span>
-                    <span className="mission-akte-meta">
-                      <span>
-                        <b>Typ</b> Charakter
-                      </span>
-                    </span>
-                  </span>
-                </Link>
-                <ContentActionRow
-                  visibility={
-                    <VisibilitySelect
-                      contentType="character"
-                      id={c.id}
-                      initialValue={c.visibility}
-                    />
-                  }
-                  editHref={`/user/characters/${c.id}/edit`}
-                  deleteButton={
-                    <DeleteOwnContentButton
-                      contentType="character"
-                      id={c.id}
-                      onOptimisticDelete={() => removeOptimisticCharacter(c.id)}
-                    />
-                  }
-                />
-              </div>
-            ))}
             {canManageMissions &&
               draftMissions.map((m) => (
                 <div
@@ -407,61 +311,6 @@ export default function UserContentBrowser({
           </div>
         )}
       </LcarsDataRow>
-
-      {showCharacters && (
-        <LcarsDataRow
-          value={publishedCharacters.length}
-          label="Charaktere"
-          color="var(--lcars-primary)"
-        >
-          {publishedCharacters.length === 0 ? (
-            <p className="lcars-empty-state">
-              Keine Charaktere für diese Auswahl.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-[6px]">
-              {publishedCharacters.map((c) => (
-                <div
-                  key={c.id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
-                >
-                  <Link
-                    href={`/characters/${c.slug}`}
-                    className="mission-akte flex-1"
-                    style={
-                      {
-                        "--mission-color": "var(--lcars-primary)",
-                      } as React.CSSProperties
-                    }
-                  >
-                    <span className="mission-akte-rail" />
-                    <span className="mission-akte-body text-left">
-                      <span className="mission-akte-title block">{c.name}</span>
-                    </span>
-                  </Link>
-                  <ContentActionRow
-                    visibility={
-                      <VisibilitySelect
-                        contentType="character"
-                        id={c.id}
-                        initialValue={c.visibility}
-                      />
-                    }
-                    editHref={`/user/characters/${c.id}/edit`}
-                    deleteButton={
-                      <DeleteOwnContentButton
-                        contentType="character"
-                        id={c.id}
-                        onOptimisticDelete={() => removeOptimisticCharacter(c.id)}
-                      />
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </LcarsDataRow>
-      )}
 
       {showLogs && (
         <LcarsDataRow

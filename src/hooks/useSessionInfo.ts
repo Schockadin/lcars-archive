@@ -7,6 +7,9 @@ export interface SessionInfo {
   userId: number | null;
   role: User["role"] | null;
   permissions?: string[];
+  // Ob mit dem Konto mindestens ein Charakter verknüpft ist — schaltet den
+  // „Charaktere"-Menüpunkt frei (siehe HeaderUserNav).
+  hasCharacters?: boolean;
 }
 
 // Client-seitiges Laden der aktuellen Session (userId/role/permissions) über

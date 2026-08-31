@@ -4,6 +4,8 @@ import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
 import { Character, CharacterMetadata } from "@/types/character";
+import type { CharacterStats } from "@/types/characterStats";
+import { parseCharacterStats } from "@/lib/characterStats";
 import { MissionLogPreview } from "@/types/missionLog";
 // getCharacterSubscribers lebt in dialoguesCore.ts (ursprünglich für den
 // Dialog-Abschluss gebraucht, siehe dort) und wird hier für die
@@ -30,15 +32,34 @@ import {
   syncCharacterEmbeddingsOwnerCleared,
 } from "@/lib/embeddingSync";
 
-// Hilfsfunktion: stellt sicher dass metadata ein Objekt ist
-function parseCharacter(row: Character): Character {
+// Hilfsfunktion: stellt sicher dass metadata ein Objekt ist.
+//
+// Entfernt dabei standardmäßig metadata.stats (die Charakterwerte, siehe
+// characterStats.ts): die Charakterliste und die Charakter-Detailseite sind
+// Client-Komponenten — alles, was hier drinsteckt, landet zusätzlich zur
+// DB-Übertragung serialisiert im RSC-Payload des Browsers (gleiche Überlegung
+// wie bei CharacterListItem unten). Die Werte zeigt dort nichts an, sie haben
+// im öffentlichen Payload also nichts verloren. Wer sie WIRKLICH braucht
+// (eigene Charakterübersicht), fordert sie mit keepStats explizit an.
+function parseCharacter(
+  row: Character,
+  options?: { keepStats?: boolean },
+): Character {
+  const metadata =
+    typeof row.metadata === "string"
+      ? (JSON.parse(row.metadata) as CharacterMetadata)
+      : row.metadata;
+
   return {
     ...row,
-    metadata:
-      typeof row.metadata === "string"
-        ? (JSON.parse(row.metadata) as CharacterMetadata)
-        : row.metadata,
+    metadata: options?.keepStats ? metadata : stripStats(metadata),
   };
+}
+
+function stripStats(metadata: CharacterMetadata): CharacterMetadata {
+  if (metadata?.stats === undefined) return metadata;
+  const { stats: _stats, ...rest } = metadata;
+  return rest;
 }
 
 // Schlanke Zeilen-Variante von getAllCharacters für Aufrufer, die nur die
@@ -74,10 +95,13 @@ export async function getCharacterListItems(): Promise<CharacterListItem[]> {
       `;
   return rows.map((row) => ({
     ...row,
-    metadata:
+    // stats bleiben draußen, siehe parseCharacter oben — die Liste ist eine
+    // Client-Komponente und zeigt keine Werte an.
+    metadata: stripStats(
       typeof row.metadata === "string"
         ? (JSON.parse(row.metadata) as CharacterMetadata)
         : row.metadata,
+    ),
   }));
 }
 
@@ -102,7 +126,7 @@ export async function getAllCharacters(): Promise<Character[]> {
           END,
           name ASC
       `;
-  return rows.map(parseCharacter);
+  return rows.map((row) => parseCharacter(row));
 }
 
 // Ungefiltert — nur für die GM/Admin-Charakterzuweisung (/users), die auch
@@ -123,7 +147,7 @@ export async function getAllCharactersForAdmin(): Promise<Character[]> {
         END,
         name ASC
     `;
-  return rows.map(parseCharacter);
+  return rows.map((row) => parseCharacter(row));
 }
 
 export async function getCharacterBySlug(
@@ -153,7 +177,9 @@ export async function getCharactersForUser(
     WHERE player_id = ${userId} AND deleted_at IS NULL
     ORDER BY name ASC
   `;
-  return rows.map(parseCharacter);
+  // keepStats: die eigene Charakterübersicht (/user/characters) leitet daraus
+  // ab, ob für einen Charakter schon Werte gepflegt sind.
+  return rows.map((row) => parseCharacter(row, { keepStats: true }));
 }
 
 export interface CharacterWithOwner {
@@ -358,7 +384,7 @@ export async function getPublicCharactersForUser(
       AND is_draft = false
     ORDER BY name ASC
   `;
-  return rows.map(parseCharacter);
+  return rows.map((row) => parseCharacter(row));
 }
 
 // Nur public-Mission-Logs eines Users für die öffentliche Profilseite
@@ -693,6 +719,83 @@ export async function updateOwnCharacterContent(
   `;
   if (rows[0]) syncEmbeddings("character", characterId);
   return rows[0] ?? null;
+}
+
+// ── Charakterwerte (metadata.stats, siehe src/lib/characterStats.ts) ──────
+//
+// Eigene Lese-/Schreibfunktionen statt einer Erweiterung von
+// getOwnCharacterForEdit/updateOwnCharacterContent: die Werte werden in einem
+// eigenen Formular (/user/characters/[id]/stats) gepflegt, und beide Wege
+// schreiben per jsonb-||-Merge nur ihren eigenen Teilbaum — das Kopf-Formular
+// kann die Werte damit nicht überschreiben und umgekehrt.
+
+export interface OwnCharacterStats {
+  id: number;
+  slug: string;
+  name: string;
+  stats: CharacterStats;
+}
+
+// Owner-gescoped wie getOwnCharacterForEdit — eine fremde/gefälschte id
+// trifft 0 Zeilen und liefert null.
+export async function getOwnCharacterStats(
+  userId: number,
+  characterId: number,
+): Promise<OwnCharacterStats | null> {
+  const rows = await sql<
+    { id: number; slug: string; name: string; stats: unknown }[]
+  >`
+    SELECT id, slug, name, metadata -> 'stats' AS stats
+    FROM characters
+    WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
+    LIMIT 1
+  `;
+  const row = rows[0];
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    // metadata->'stats' kommt je nach Treiber als Objekt ODER als JSON-String
+    // an (wie metadata selbst, siehe parseCharacter oben).
+    stats: parseCharacterStats(
+      typeof row.stats === "string" ? JSON.parse(row.stats) : row.stats,
+    ),
+  };
+}
+
+// Schreibt ausschließlich metadata.stats (jsonb-Merge auf oberster Ebene) —
+// Rang/Spezies/Alter & Co. im selben metadata-Objekt bleiben unangetastet.
+// Owner-gescoped im WHERE wie updateOwnCharacterContent.
+export async function updateOwnCharacterStats(
+  userId: number,
+  characterId: number,
+  stats: CharacterStats,
+): Promise<{ slug: string; name: string } | null> {
+  const rows = await sql<{ slug: string; name: string }[]>`
+    UPDATE characters
+    SET metadata = metadata || ${sql.json({ stats } as ReturnType<typeof JSON.parse>)},
+        updated_at = NOW()
+    WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
+    RETURNING slug, name
+  `;
+  return rows[0] ?? null;
+}
+
+// Für die Header-Navigation (/api/session → HeaderUserNav): zeigt den
+// „Charaktere"-Menüpunkt nur Usern mit mindestens einem verknüpften
+// Charakter. Bewusst EXISTS statt getCharactersForUser — der Endpunkt läuft
+// bei jedem Seitenaufruf und braucht nur ja/nein, keine Datensätze. Nicht
+// gecacht (session-abhängig, muss sofort nach dem Anlegen/Zuweisen greifen).
+export async function userHasCharacters(userId: number): Promise<boolean> {
+  const [row] = await sql<{ exists: boolean }[]>`
+    SELECT EXISTS (
+      SELECT 1 FROM characters
+      WHERE player_id = ${userId} AND deleted_at IS NULL
+    ) AS exists
+  `;
+  return row?.exists ?? false;
 }
 
 // Benachrichtigt alle Abonnenten eines Charakters (content_follows,

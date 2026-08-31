@@ -40,7 +40,11 @@ export default function HeaderContent() {
   if (session.userId) {
     return (
       <div className="lcars-header-content">
-        <HeaderUserNav permissions={session.permissions ?? []} columns={3} />
+        <HeaderUserNav
+          permissions={session.permissions ?? []}
+          hasCharacters={session.hasCharacters ?? false}
+          columns={3}
+        />
       </div>
     );
   }
