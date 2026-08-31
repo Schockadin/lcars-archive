@@ -165,6 +165,7 @@ export const LIST_FIELDS: StatFieldSpec<ListKey>[] = [
 ];
 
 export const EMPTY_CHARACTER_STATS: CharacterStats = {
+  creationLocked: false,
   pronouns: null,
   characterRole: null,
   assignment: null,
@@ -269,6 +270,7 @@ export function parseCharacterStats(raw: unknown): CharacterStats {
     ...EMPTY_CHARACTER_STATS,
     attributes,
     departments,
+    creationLocked: source.creationLocked === true,
     experience:
       typeof source.experience === "string" &&
       isCharacterExperience(source.experience)

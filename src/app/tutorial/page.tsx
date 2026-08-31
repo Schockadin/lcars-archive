@@ -203,6 +203,24 @@ export default function TutorialPage() {
                 Einsatzberichte und Gespräche bleibt dort aber erhalten.
               </p>
               <p>
+                <strong>Erfahrungspunkte (AP)</strong>: Für die Ersterschaffung
+                hast du je 320 AP für Attribute und Disziplinen (statt der 56
+                bzw. 16 Verteilpunkte) sowie 4 Werte, 4 Talente und 6
+                Schwerpunkte frei — die Werte trägst du dabei direkt ein, der
+                Bogen zeigt dir laufend an, was deine Verteilung kostet und wie
+                viel Budget übrig ist. Bist du zufrieden, schließt du die
+                Erschaffung ab. Danach sind Attribute, Disziplinen, Talente und
+                Schwerpunkte gesperrt und wachsen nur noch über AP:{" "}
+                <strong>Attribut steigern</strong> kostet (neuer Wert − 7) × 10
+                AP, <strong>Disziplin steigern</strong> (neuer Wert) × 10 AP,
+                ein <strong>Talent</strong> oder <strong>Schwerpunkt</strong>{" "}
+                je 20 AP. AP bekommst du von der Spielleitung: je 1 AP für eine
+                gespielte Session und ein geschriebenes Logbuch, dazu etwas für
+                abgeschlossene Missionen und Story-Arcs. Auf dem Bogen siehst du
+                dein Konto, die Kosten jeder möglichen Steigerung und alle
+                bisherigen Buchungen.
+              </p>
+              <p>
                 Für die Zahlen gelten die <strong>Regeln der Runde</strong>:
                 Attribute liegen zwischen 7 und 12, davon darf höchstens eines
                 auf 12 und zwei dürfen auf 11 stehen; Disziplinen liegen

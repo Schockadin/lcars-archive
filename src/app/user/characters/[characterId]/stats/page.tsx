@@ -4,7 +4,9 @@ import { redirect } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
 import { verifySession } from "@/lib/dal";
 import { getOwnCharacterStats } from "@/lib/characters";
+import { getApAccount } from "@/lib/characterAp";
 import CharacterStatsForm from "./CharacterStatsForm";
+import AdvancementPanel from "./AdvancementPanel";
 
 export const metadata: Metadata = {
   title: "Charakterwerte",
@@ -30,6 +32,10 @@ export default async function CharacterStatsPage({ params }: Props) {
   const character = await getOwnCharacterStats(session.userId, id);
   if (!character) redirect("/user/characters");
 
+  // AP-Konto erst NACH dem Owner-Check laden — vorher ist nicht klar, ob der
+  // Charakter überhaupt zum Konto gehört.
+  const account = await getApAccount(character.id);
+
   return (
     <>
       <PageMeta title={character.name} section="users" />
@@ -46,6 +52,12 @@ export default async function CharacterStatsPage({ params }: Props) {
       </p>
 
       <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+        <AdvancementPanel
+          characterId={character.id}
+          stats={character.stats}
+          account={account}
+        />
+
         <CharacterStatsForm
           userId={session.userId}
           characterId={character.id}

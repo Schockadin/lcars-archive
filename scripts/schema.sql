@@ -639,6 +639,31 @@ CREATE TABLE IF NOT EXISTS character_sheets (
 CREATE INDEX IF NOT EXISTS idx_character_sheets_character ON character_sheets(character_id);
 
 -- ---------------------------------------------------------------------------
+-- character_ap_entries
+-- ---------------------------------------------------------------------------
+-- Erfahrungspunkte-Konto (AP = Advancement Points) je Charakter als
+-- Buchungsjournal statt eines einzelnen Saldo-Felds: jede Vergabe (Session,
+-- Logbuch, Missions-/Story-Abschluss) und jede Ausgabe (Steigerung) ist eine
+-- eigene Zeile, der Kontostand ist ihre Summe. Das hält nachvollziehbar, WOFÜR
+-- AP kamen und gingen, und lässt sich einzeln korrigieren.
+--
+-- amount: positiv = vergeben, negativ = ausgegeben. reason klassifiziert die
+-- Buchung (siehe AP_REASONS in src/lib/characterAp.ts), note trägt den
+-- Klartext ("Session 42", "Kontrolle 9 → 10").
+CREATE TABLE IF NOT EXISTS character_ap_entries (
+  id           SERIAL PRIMARY KEY,
+  character_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  amount       INT NOT NULL CHECK (amount <> 0),
+  reason       TEXT NOT NULL
+                 CHECK (reason IN ('session', 'logbook', 'mission', 'manual', 'advancement')),
+  note         TEXT,
+  created_by   INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_character_ap_entries_character
+  ON character_ap_entries(character_id);
+
+-- ---------------------------------------------------------------------------
 -- campaign_settings
 -- ---------------------------------------------------------------------------
 -- Kampagnen-weite Einstellungen der Spielleitung (Einzeilen-Tabelle) — hält

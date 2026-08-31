@@ -1,0 +1,138 @@
+"use client";
+import { useActionState, useState } from "react";
+import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
+import { AP_REASON_LABELS, type ApReason } from "@/lib/characterAp";
+import { awardApAction, type ApAwardState } from "../apActions";
+
+const initialState: ApAwardState = {};
+
+// Gründe, die die Spielleitung vergibt — "advancement" fehlt bewusst, das
+// buchen die Spieler:innen beim Steigern selbst (siehe apActions.ts).
+const AWARD_REASONS: ApReason[] = ["session", "logbook", "mission", "manual"];
+
+// Schnellvergabe nach den Regeln der Runde: eine gespielte Session und ein
+// geschriebenes Logbuch geben je 1 AP, ein Missions-/Story-Abschluss einen
+// frei wählbaren Betrag.
+const QUICK_AWARDS: { reason: ApReason; amount: number; label: string }[] = [
+  { reason: "session", amount: 1, label: "+1 Session" },
+  { reason: "logbook", amount: 1, label: "+1 Logbuch" },
+];
+
+export interface ApCharacterRow {
+  id: number;
+  name: string;
+  available: number;
+}
+
+// AP-Vergabe der Spielleitung: je Charakter eine Zeile mit Kontostand, den
+// beiden Schnellknöpfen und einer freien Buchung (Betrag, Grund, Notiz).
+export default function ApAwardPanel({
+  characters,
+}: {
+  characters: ApCharacterRow[];
+}) {
+  const [state, formAction, pending] = useActionState(
+    awardApAction,
+    initialState,
+  );
+  // Freie Buchung nur für die aufgeklappte Zeile — sonst würde die Tabelle bei
+  // vielen Charakteren zur Formularwüste.
+  const [openId, setOpenId] = useState<number | null>(null);
+
+  if (characters.length === 0) {
+    return <p className="lcars-empty-state">Keine Charaktere vorhanden.</p>;
+  }
+
+  return (
+    <div className="flex flex-col gap-[6px]">
+      {characters.map((character) => (
+        <div key={character.id} className="flex flex-col gap-[6px]">
+          <div className="flex flex-wrap items-center gap-[8px]">
+            <span className="min-w-[180px] flex-1">{character.name}</span>
+            <span className="stat-ap-amount">{character.available} AP</span>
+
+            {QUICK_AWARDS.map((quick) => (
+              <form key={quick.reason} action={formAction}>
+                <input type="hidden" name="characterId" value={character.id} />
+                <input type="hidden" name="amount" value={quick.amount} />
+                <input type="hidden" name="reason" value={quick.reason} />
+                <button
+                  type="submit"
+                  disabled={pending}
+                  className="lcars-pill-btn--outline disabled:opacity-50"
+                >
+                  {quick.label}
+                </button>
+              </form>
+            ))}
+
+            <button
+              type="button"
+              className="lcars-pill-btn--outline"
+              aria-expanded={openId === character.id}
+              onClick={() =>
+                setOpenId(openId === character.id ? null : character.id)
+              }
+            >
+              Freie Buchung
+            </button>
+          </div>
+
+          {openId === character.id && (
+            <form
+              action={formAction}
+              className="flex flex-wrap items-end gap-[8px] pb-[8px]"
+            >
+              <input type="hidden" name="characterId" value={character.id} />
+              <label className="flex flex-col gap-[4px]">
+                <span className="lcars-eyebrow">AP</span>
+                <input
+                  name="amount"
+                  type="number"
+                  defaultValue={1}
+                  className="lcars-input rounded-full w-[90px] text-right"
+                  aria-label={`AP-Betrag für ${character.name}`}
+                />
+              </label>
+              <label className="flex flex-col gap-[4px]">
+                <span className="lcars-eyebrow">Grund</span>
+                <select
+                  name="reason"
+                  defaultValue="mission"
+                  className="lcars-input rounded-full"
+                  aria-label={`Grund für ${character.name}`}
+                >
+                  {AWARD_REASONS.map((reason) => (
+                    <option key={reason} value={reason}>
+                      {AP_REASON_LABELS[reason]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="flex flex-col gap-[4px] flex-1 min-w-[180px]">
+                <span className="lcars-eyebrow">Notiz (optional)</span>
+                <input
+                  name="note"
+                  type="text"
+                  placeholder="z.B. Session 42"
+                  className="lcars-input rounded-full w-full"
+                  aria-label={`Notiz für ${character.name}`}
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={pending}
+                className="lcars-pill-btn--outline disabled:opacity-50"
+              >
+                Buchen
+              </button>
+            </form>
+          )}
+        </div>
+      ))}
+
+      <FormError message={state?.error} />
+      {state?.success && <FormSuccess>{state.success}</FormSuccess>}
+    </div>
+  );
+}

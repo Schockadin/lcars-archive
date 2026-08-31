@@ -34,6 +34,12 @@ export interface CharacterDepartments {
 export type CharacterExperience = "novice" | "experienced" | "veteran";
 
 export interface CharacterStats {
+  // Ersterschaffung abgeschlossen? Solange false, sind Attribute und
+  // Disziplinen frei editierbar und laufen gegen die Erschaffungsbudgets
+  // (320/320 AP, siehe src/lib/advancement.ts). Danach lassen sie sich nur
+  // noch über AP-Steigerungen erhöhen.
+  creationLocked: boolean;
+
   // ── Kopf der Personalakte ────────────────────────────────────────
   pronouns: string | null;
   characterRole: string | null;

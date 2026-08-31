@@ -79,6 +79,23 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Spezies bleiben Teil der Akte selbst. Charaktere erscheinen deshalb nicht mehr
   in „Meine Inhalte" (`/user/content`); der Charakter-Filter für
   Einsatzberichte/Gespräche bleibt dort erhalten.
+- **Erfahrungspunkte (AP)** — jeder Charakter hat ein AP-Konto als
+  Buchungsjournal (`character_ap_entries`): die Spielleitung vergibt unter
+  „Kampagne" AP (je 1 AP für gespielte Session und geschriebenes Logbuch, ein
+  freier Betrag für Missions-/Story-Abschlüsse, dazu Korrekturen), die
+  Spieler:innen geben sie auf ihrem Charakterbogen beim Steigern aus. Der
+  Kontostand ist immer die Summe der Buchungen — kein separates Saldo-Feld, das
+  auseinanderlaufen könnte. Das Regelwerk (Kosten, Budgets, Grenzen) liegt in
+  `src/lib/advancement.ts`: Attribut steigern kostet (neuer Wert − 7) × 10 AP,
+  Disziplin (neuer Wert) × 10 AP, ein Talent oder Schwerpunkt je 20 AP; für die
+  Ersterschaffung stehen je 320 AP für Attribute und Disziplinen bereit (statt
+  der 56 bzw. 16 Verteilpunkte) plus 4 Werte, 4 Talente und 6 Schwerpunkte
+  frei. Solange die Erschaffung läuft, sind die Werte frei editierbar und
+  laufen gegen die Budget-Anzeige; nach dem Festschreiben
+  (`metadata.stats.creationLocked`) sind Attribute, Disziplinen, Talente und
+  Schwerpunkte schreibgeschützt und nur noch über AP-Steigerungen erhöhbar —
+  serverseitig erzwungen, nicht nur im Formular. Steigerung und Abbuchung
+  laufen in einer Transaktion, damit nie das eine ohne das andere passiert.
 - **Persönliche News** — der News-Feed auf dem Dashboard bleibt persistent
   sichtbar (nicht mehr nur bis zum nächsten Besuch): jede Meldung lässt sich
   einzeln per X ausblenden (gilt danach als gelesen) und verschwindet automatisch,

@@ -335,6 +335,134 @@
   outline-offset: 2px;
 }
 
+/* ── AP-Bereich (Konto, Erschaffungsbudget, Steigern, Journal) ─────── */
+.stat-ap-account,
+.stat-ap-block {
+  padding: 0 14px 14px;
+}
+
+.stat-ap-balance {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.stat-ap-value {
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--lcars-ink-data);
+}
+
+.stat-ap-heading {
+  margin: 0 0 6px;
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-data);
+}
+
+.stat-ap-budget {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.stat-ap-warning {
+  margin-bottom: 10px;
+  color: var(--lcars-quinary);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+}
+
+.stat-ap-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.stat-ap-step-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-ap-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.stat-ap-step-label {
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 15px;
+}
+
+.stat-ap-adds {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.stat-ap-add {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Buchungsjournal — je Zeile Betrag, Grund und Zeitpunkt. */
+.stat-ap-ledger {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stat-ap-ledger-row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--lcars-border);
+}
+
+.stat-ap-amount {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 15px;
+  text-align: right;
+  color: var(--lcars-quinary);
+}
+
+.stat-ap-amount--plus {
+  color: var(--lcars-senary);
+}
+
+.stat-ap-ledger-text {
+  min-width: 0;
+}
+
+.stat-ap-ledger-meta {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  color: var(--lcars-ink-dim);
+  white-space: nowrap;
+}
+
 /* ── Listenfelder ──────────────────────────────────────────────────── */
 .stat-list-grid {
   display: grid;

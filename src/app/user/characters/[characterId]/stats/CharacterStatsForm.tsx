@@ -70,12 +70,16 @@ function StatBox({
   group,
   value,
   invalid,
+  readOnly,
   onChange,
 }: {
   spec: NumberFieldSpec<string>;
   group: "attributes" | "departments";
   value: string;
   invalid: boolean;
+  // Nach dem Festschreiben der Erschaffung nur noch über AP steigerbar
+  // (siehe AdvancementPanel.tsx) — das Feld wird dann schreibgeschützt.
+  readOnly: boolean;
   onChange: (value: string) => void;
 }) {
   const id = `stats-${group}-${spec.key}`;
@@ -95,6 +99,8 @@ function StatBox({
         onChange={(e) => onChange(e.target.value)}
         className="stat-box-input"
         aria-invalid={invalid || undefined}
+        readOnly={readOnly}
+        title={readOnly ? "Nur noch über AP steigerbar" : undefined}
       />
     </div>
   );
@@ -304,6 +310,7 @@ export default function CharacterStatsForm({
                 isOutOfRange(attributes[field.key] ?? "", ATTRIBUTE_RULE) ||
                 attributeOverfilled.has(attributeValues[index] ?? -1)
               }
+              readOnly={stats.creationLocked}
               onChange={(value) =>
                 setAttributes((prev) => ({ ...prev, [field.key]: value }))
               }
@@ -330,6 +337,7 @@ export default function CharacterStatsForm({
                 isOutOfRange(departments[field.key] ?? "", DEPARTMENT_RULE) ||
                 departmentOverfilled.has(departmentValues[index] ?? -1)
               }
+              readOnly={stats.creationLocked}
               onChange={(value) =>
                 setDepartments((prev) => ({ ...prev, [field.key]: value }))
               }
@@ -460,6 +468,12 @@ export default function CharacterStatsForm({
             <textarea
               id={`stats-${field.key}`}
               name={field.key}
+              // Talente und Schwerpunkte kosten nach der Erschaffung AP und
+              // werden dann nur noch über das Advancement-Panel ergänzt.
+              readOnly={
+                stats.creationLocked &&
+                (field.key === "talents" || field.key === "focuses")
+              }
               // Mindestens acht Zeilen ohne Scrollen — die Listen des Bogens
               // (Werte, Schwerpunkte, Talente, …) haben dort ebenfalls
               // reichlich Platz.

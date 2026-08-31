@@ -6,9 +6,11 @@ import { listAllUsers } from "@/lib/users";
 import { getAllCharactersForAdmin } from "@/lib/characters";
 import { getAllMissionsForGmOverview } from "@/lib/missions";
 import { getIngameYearInfo } from "@/lib/campaign";
+import { listApBalances } from "@/lib/characterAp";
 import CharacterAssignmentTable from "../CharacterAssignmentTable";
 import AdminMissionsBrowser from "../missions/AdminMissionsBrowser";
 import IngameYearForm from "./IngameYearForm";
+import ApAwardPanel from "./ApAwardPanel";
 
 export const metadata: Metadata = {
   title: "Kampagne",
@@ -24,12 +26,25 @@ export const metadata: Metadata = {
 export default async function AdminCampaignPage() {
   await requireGM();
 
-  const [users, characters, missions, ingameYearInfo] = await Promise.all([
-    listAllUsers(),
-    getAllCharactersForAdmin(),
-    getAllMissionsForGmOverview(),
-    getIngameYearInfo(),
-  ]);
+  const [users, characters, missions, ingameYearInfo, apBalances] =
+    await Promise.all([
+      listAllUsers(),
+      getAllCharactersForAdmin(),
+      getAllMissionsForGmOverview(),
+      getIngameYearInfo(),
+      listApBalances(),
+    ]);
+
+  // Kontostände in EINER Abfrage geholt und hier zugeordnet — sonst wäre es
+  // eine Abfrage je Charakter.
+  const balanceByCharacter = new Map(
+    apBalances.map((row) => [row.characterId, row.available]),
+  );
+  const apCharacters = characters.map((c) => ({
+    id: c.id,
+    name: c.name,
+    available: balanceByCharacter.get(c.id) ?? 0,
+  }));
 
   // Gäste dürfen keinen Charakter zugewiesen bekommen (siehe
   // assignCharacterAction) — sie fehlen deshalb schon hier in der Auswahl.
@@ -50,6 +65,17 @@ export default async function AdminCampaignPage() {
           <section className="flex flex-col gap-[12px]">
             <h2 className="text-lcars-primary">Ingame-Jahr</h2>
             <IngameYearForm info={ingameYearInfo} />
+          </section>
+
+          <section className="flex flex-col gap-[12px]">
+            <h2 className="text-lcars-primary">Erfahrungspunkte (AP)</h2>
+            <p className="text-lcars-ink-dim text-[13px]">
+              Je 1 AP für eine gespielte Session und ein geschriebenes Logbuch,
+              für einen Missions- oder Story-Abschluss ein frei gewählter
+              Betrag. Steigerungen buchen die Spieler:innen selbst auf ihrem
+              Charakterbogen ab.
+            </p>
+            <ApAwardPanel characters={apCharacters} />
           </section>
 
           <section className="flex flex-col gap-[12px]">

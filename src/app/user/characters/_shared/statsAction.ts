@@ -3,6 +3,7 @@ import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
 import {
   updateOwnCharacterStats,
   updateOwnCharacterPortrait,
+  getOwnCharacterStats,
 } from "@/lib/characters";
 import { uploadCharacterPortraitImage } from "@/lib/characterAssets";
 import { InvalidAssetError } from "@/lib/assetStorage";
@@ -105,6 +106,23 @@ export async function characterStatsAction(
     return { error: "Ungültige Erfahrungsstufe." };
   }
   stats.experience = isCharacterExperience(experience) ? experience : null;
+
+  // Ist die Erschaffung abgeschlossen, sind Attribute, Disziplinen, Talente
+  // und Schwerpunkte nur noch per AP-Steigerung veränderbar (siehe
+  // advancementAction.ts). Das Formular zeigt sie dann schreibgeschützt an —
+  // maßgeblich ist aber diese Prüfung: die gespeicherten Werte gewinnen,
+  // egal was im Formular stand.
+  const current = await getOwnCharacterStats(session.userId, characterId);
+  if (!current) {
+    return { error: "Charakter nicht gefunden oder keine Berechtigung." };
+  }
+  stats.creationLocked = current.stats.creationLocked;
+  if (current.stats.creationLocked) {
+    stats.attributes = current.stats.attributes;
+    stats.departments = current.stats.departments;
+    stats.talents = current.stats.talents;
+    stats.focuses = current.stats.focuses;
+  }
 
   // Verteilungsregeln (nur ein Attribut auf 12, zwei auf 11, analog bei den
   // Disziplinen) — hier verbindlich geprüft, nicht nur im Formular: die
