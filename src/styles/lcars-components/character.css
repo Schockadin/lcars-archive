@@ -16,11 +16,10 @@
   display: flex;
   gap: 24px;
   align-items: flex-start;
-  justify-content: space-evenly;
+  justify-content: space-between;
   width: 100%;
 }
 .chars-dialogues-col {
-  /* flex: 1 1 0; */
   min-width: 0;
 }
 .chars-dialogues-switch {
