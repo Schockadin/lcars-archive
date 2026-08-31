@@ -41,16 +41,25 @@ function toNumbers(
   });
 }
 
-// Beschriftung wie auf dem Bogen: deutsches Label groß, englischer Originalbegriff
-// klein darunter.
+// Beschriftung wie auf dem Bogen: der englische Originalbegriff groß, die
+// deutsche Entsprechung klein darunter.
 function StatLabel({ spec }: { spec: StatFieldSpec<string> }) {
   return (
     <>
-      <span className="stat-label-de">{spec.label}</span>
+      <span className="stat-label-primary">{spec.original ?? spec.label}</span>
       {spec.original && (
-        <span className="stat-label-en">{spec.original}</span>
+        <span className="stat-label-secondary">{spec.label}</span>
       )}
     </>
+  );
+}
+
+// Abschnittsüberschrift im Stil der Kopfleisten des Bogens.
+function SectionTitle({ en, de }: { en: string; de: string }) {
+  return (
+    <h2 className="stat-sheet-section-title">
+      {en} <span className="stat-label-secondary">{de}</span>
+    </h2>
   );
 }
 
@@ -102,10 +111,15 @@ function StatBox({
 export default function CharacterStatsForm({
   userId,
   characterId,
+  characterName,
+  portrait,
   stats,
 }: {
   userId: number;
   characterId: number;
+  characterName: string;
+  // Portrait des Charakters = „Photo" des Bogens (siehe OwnCharacterStats).
+  portrait: string | null;
   stats: CharacterStats;
 }) {
   const [state, formAction, pending] = useActionState(
@@ -194,12 +208,44 @@ export default function CharacterStatsForm({
       <input type="hidden" name="characterId" value={characterId} />
       <input type="hidden" name="determination" value={determination} />
 
-      {/* ── Kopfdaten ─────────────────────────────────────────────── */}
+      {/* ── Kopfdaten mit Foto ────────────────────────────────────── */}
       <section className="stat-sheet-section">
-        <h2 className="stat-sheet-section-title">
-          Personalakte <span className="stat-label-en">personnel file</span>
-        </h2>
-        <div className="stat-grid">
+        <SectionTitle en="Personnel File" de="Personalakte" />
+
+        <div className="stat-photo-row">
+          {/* Foto-Kasten wie oben links auf dem Bogen. Gepflegt wird das
+              Portrait des Charakters — dasselbe Bild wie im Kopf-Formular,
+              kein zweites daneben. */}
+          <div className="stat-photo">
+            {portrait ? (
+              // Bewusst <img> statt next/image: die Portraits liegen im
+              // öffentlichen Asset-Bucket unter beliebigen Hosts, für die
+              // next/image eine Domain-Freigabe bräuchte.
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={portrait}
+                alt={`Portrait von ${characterName}`}
+                className="stat-photo-image"
+              />
+            ) : (
+              <span className="stat-photo-empty">Photo</span>
+            )}
+            <label className="stat-photo-upload" htmlFor="stats-portraitFile">
+              <span className="stat-label-primary">Photo</span>
+              <span className="stat-label-secondary">
+                {portrait ? "Bild ersetzen" : "Bild hochladen"}
+              </span>
+              <input
+                id="stats-portraitFile"
+                name="portraitFile"
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="stat-photo-input"
+              />
+            </label>
+          </div>
+
+          <div className="stat-grid stat-grid--head">
           {TEXT_FIELDS.map((field) => (
             <div key={field.key} className="stat-field">
               <label className="stat-field-label" htmlFor={`stats-${field.key}`}>
@@ -217,8 +263,8 @@ export default function CharacterStatsForm({
 
           <div className="stat-field">
             <label className="stat-field-label" htmlFor="stats-experience">
-              <span className="stat-label-de">Erfahrung</span>
-              <span className="stat-label-en">Experience</span>
+              <span className="stat-label-primary">Experience</span>
+              <span className="stat-label-secondary">Erfahrung</span>
             </label>
             <select
               id="stats-experience"
@@ -234,14 +280,14 @@ export default function CharacterStatsForm({
               ))}
             </select>
           </div>
+          </div>
         </div>
       </section>
 
-      {/* ── Attribute ─────────────────────────────────────────────── */}
+      {/* ── Attribute + Disziplinen nebeneinander, wie auf dem Bogen ── */}
+      <div className="stat-columns">
       <section className="stat-sheet-section">
-        <h2 className="stat-sheet-section-title">
-          Attribute <span className="stat-label-en">attributes</span>
-        </h2>
+        <SectionTitle en="Attributes" de="Attribute" />
         <p className="stat-sheet-rule">
           {ATTRIBUTE_RULE.min}–{ATTRIBUTE_RULE.max}, davon höchstens{" "}
           {ATTRIBUTE_RULE.maxAtMax}× {ATTRIBUTE_RULE.max} und{" "}
@@ -266,11 +312,8 @@ export default function CharacterStatsForm({
         </div>
       </section>
 
-      {/* ── Disziplinen ───────────────────────────────────────────── */}
       <section className="stat-sheet-section">
-        <h2 className="stat-sheet-section-title">
-          Disziplinen <span className="stat-label-en">departments</span>
-        </h2>
+        <SectionTitle en="Departments" de="Disziplinen" />
         <p className="stat-sheet-rule">
           {DEPARTMENT_RULE.min}–{DEPARTMENT_RULE.max}, davon höchstens{" "}
           {DEPARTMENT_RULE.maxAtMax}× {DEPARTMENT_RULE.max} und{" "}
@@ -294,6 +337,7 @@ export default function CharacterStatsForm({
           ))}
         </div>
       </section>
+      </div>
 
       {ruleErrors.length > 0 && (
         <ul className="stat-sheet-errors">
@@ -305,14 +349,12 @@ export default function CharacterStatsForm({
 
       {/* ── Abgeleitete Werte ─────────────────────────────────────── */}
       <section className="stat-sheet-section">
-        <h2 className="stat-sheet-section-title">
-          Werte im Spiel <span className="stat-label-en">stress &amp; more</span>
-        </h2>
+        <SectionTitle en="Stress, Determination &amp; Reputation" de="Werte im Spiel" />
         <div className="stat-derived">
           <div className="stat-derived-block">
             <span className="stat-field-label">
-              <span className="stat-label-de">Stress</span>
-              <span className="stat-label-en">Fitness + Talente</span>
+              <span className="stat-label-primary">Stress</span>
+              <span className="stat-label-secondary">Fitness + Talente</span>
             </span>
             <div className="stat-stress">
               <span className="stat-stress-value">{stress ?? "—"}</span>
@@ -330,8 +372,8 @@ export default function CharacterStatsForm({
 
           <div className="stat-derived-block">
             <label className="stat-field-label" htmlFor="stats-stressBonus">
-              <span className="stat-label-de">Bonus aus Talenten</span>
-              <span className="stat-label-en">z.B. „Resolut: +3 max. Stress“</span>
+              <span className="stat-label-primary">Talent bonus</span>
+              <span className="stat-label-secondary">Bonus aus Talenten, z.B. „Resolut: +3 max. Stress“</span>
             </label>
             <input
               id="stats-stressBonus"
@@ -348,8 +390,8 @@ export default function CharacterStatsForm({
 
           <div className="stat-derived-block">
             <span className="stat-field-label">
-              <span className="stat-label-de">Entschlossenheit</span>
-              <span className="stat-label-en">Determination</span>
+              <span className="stat-label-primary">Determination</span>
+              <span className="stat-label-secondary">Entschlossenheit</span>
             </span>
             {/* Drei Kästchen wie auf dem Bogen: Klick füllt bis dahin auf,
                 erneuter Klick aufs letzte gefüllte leert es wieder. */}
@@ -371,8 +413,8 @@ export default function CharacterStatsForm({
 
           <div className="stat-derived-block">
             <label className="stat-field-label" htmlFor="stats-resistance">
-              <span className="stat-label-de">Widerstand</span>
-              <span className="stat-label-en">Resistance</span>
+              <span className="stat-label-primary">Protection</span>
+              <span className="stat-label-secondary">Schutz</span>
             </label>
             <input
               id="stats-resistance"
@@ -388,8 +430,8 @@ export default function CharacterStatsForm({
 
           <div className="stat-derived-block">
             <label className="stat-field-label" htmlFor="stats-reputation">
-              <span className="stat-label-de">Ansehen</span>
-              <span className="stat-label-en">Reputation</span>
+              <span className="stat-label-primary">Reputation</span>
+              <span className="stat-label-secondary">Ansehen</span>
             </label>
             <input
               id="stats-reputation"
@@ -410,9 +452,9 @@ export default function CharacterStatsForm({
         {LIST_FIELDS.map((field) => (
           <section key={field.key} className="stat-sheet-section stat-list-field">
             <h2 className="stat-sheet-section-title">
-              {field.label}{" "}
+              {field.original ?? field.label}{" "}
               {field.original && (
-                <span className="stat-label-en">{field.original}</span>
+                <span className="stat-label-secondary">{field.label}</span>
               )}
             </h2>
             <textarea

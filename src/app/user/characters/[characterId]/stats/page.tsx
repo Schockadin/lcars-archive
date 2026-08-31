@@ -49,6 +49,8 @@ export default async function CharacterStatsPage({ params }: Props) {
         <CharacterStatsForm
           userId={session.userId}
           characterId={character.id}
+          characterName={character.name}
+          portrait={character.portrait}
           stats={character.stats}
         />
       </article>

@@ -64,8 +64,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (Abschnitte mit farbiger Kopfleiste, Wertekästen, Kästchenreihen, linierte
   Listenfelder, siehe `src/styles/lcars-components/character-stats.css`):
   Personalakte (Pronomen, Rolle, Zuweisung, Herkunft, Erziehung, Laufbahn,
-  Erfahrung, Merkmale), sechs Attribute, sechs Disziplinen,
-  Widerstand/Entschlossenheit/Ansehen sowie die Listenfelder (Werte,
+  Erfahrung, Merkmale) samt Foto-Kasten (pflegt dasselbe Bild wie das
+  Portrait der Akte), sechs Attribute und sechs Disziplinen nebeneinander,
+  Protection/Determination/Reputation sowie die Listenfelder (Werte,
   Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln, Angriffe,
   Ausrüstung, Hobbys, Karriere-Ereignisse). Für die Zahlenwerte gelten die
   Regeln der Runde: Attribute 7–12 mit höchstens einem Wert auf 12 und zwei auf

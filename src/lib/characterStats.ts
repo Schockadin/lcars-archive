@@ -60,7 +60,9 @@ export const DEPARTMENT_RULE: DistributionRule = {
 export const ATTRIBUTE_FIELDS: NumberFieldSpec<keyof CharacterAttributes>[] = [
   { key: "control", label: "Kontrolle", original: "Control", ...ATTRIBUTE_RULE },
   { key: "daring", label: "Wagemut", original: "Daring", ...ATTRIBUTE_RULE },
-  { key: "fitness", label: "Fitness", ...ATTRIBUTE_RULE },
+  // Englisch und Deutsch identisch — trotzdem beide gesetzt, damit jeder
+  // Wertekasten zweizeilig beschriftet ist und die Reihe gleichmäßig bleibt.
+  { key: "fitness", label: "Fitness", original: "Fitness", ...ATTRIBUTE_RULE },
   { key: "insight", label: "Einsicht", original: "Insight", ...ATTRIBUTE_RULE },
   { key: "presence", label: "Präsenz", original: "Presence", ...ATTRIBUTE_RULE },
   { key: "reason", label: "Verstand", original: "Reason", ...ATTRIBUTE_RULE },
@@ -86,7 +88,9 @@ type ScalarNumberKey =
 
 export const SCALAR_NUMBER_FIELDS: NumberFieldSpec<ScalarNumberKey>[] = [
   { key: "stressBonus", label: "Stress-Bonus aus Talenten", original: "Talent bonus", min: 0, max: 20 },
-  { key: "resistance", label: "Widerstand", original: "Resistance", min: 0, max: 20 },
+  // Der Bogen nennt den Wert „Protection"; der Speicher-Schlüssel bleibt
+  // bewusst „resistance", damit bereits gepflegte Werte erhalten bleiben.
+  { key: "resistance", label: "Schutz", original: "Protection", min: 0, max: 20 },
   // Der Bogen hat genau drei Determinationskästchen.
   { key: "determination", label: "Entschlossenheit", original: "Determination", min: 0, max: 3 },
   { key: "reputation", label: "Ansehen", original: "Reputation", min: 0, max: 50 },

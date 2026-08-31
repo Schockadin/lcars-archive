@@ -190,8 +190,10 @@ export default function TutorialPage() {
                 und über <strong>„Werte“</strong> je Charakter den
                 Charakterbogen pflegen: Personalakte (Pronomen, Rolle,
                 Zuweisung, Herkunft, Erziehung, Laufbahn, Erfahrung, Merkmale),
-                die sechs Attribute und sechs Disziplinen, Widerstand,
-                Entschlossenheit und Ansehen sowie die Listen für Werte,
+                die sechs Attribute und sechs Disziplinen (nebeneinander wie
+                auf dem Bogen), Schutz, Entschlossenheit und Ansehen sowie ein
+                Foto-Kasten, über den du das Bild des Charakters hochlädst.
+                Dazu die Listen für Werte,
                 Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln,
                 Angriffe, Ausrüstung, Hobbys und Karriere-Ereignisse (dort je
                 Zeile ein Eintrag). Leere Felder gelten als „nicht angegeben“;

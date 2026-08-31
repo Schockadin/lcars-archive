@@ -733,6 +733,10 @@ export interface OwnCharacterStats {
   id: number;
   slug: string;
   name: string;
+  // Das Portrait ist zugleich das „Photo" des Charakterbogens — der Bogen
+  // zeigt es an und lädt es hoch (siehe updateOwnCharacterPortrait unten),
+  // statt ein zweites Bild neben dem Portrait zu führen.
+  portrait: string | null;
   stats: CharacterStats;
 }
 
@@ -743,9 +747,15 @@ export async function getOwnCharacterStats(
   characterId: number,
 ): Promise<OwnCharacterStats | null> {
   const rows = await sql<
-    { id: number; slug: string; name: string; stats: unknown }[]
+    {
+      id: number;
+      slug: string;
+      name: string;
+      portrait: string | null;
+      stats: unknown;
+    }[]
   >`
-    SELECT id, slug, name, metadata -> 'stats' AS stats
+    SELECT id, slug, name, portrait, metadata -> 'stats' AS stats
     FROM characters
     WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
     LIMIT 1
@@ -757,6 +767,7 @@ export async function getOwnCharacterStats(
     id: row.id,
     slug: row.slug,
     name: row.name,
+    portrait: row.portrait,
     // metadata->'stats' kommt je nach Treiber als Objekt ODER als JSON-String
     // an (wie metadata selbst, siehe parseCharacter oben).
     stats: parseCharacterStats(
@@ -779,6 +790,23 @@ export async function updateOwnCharacterStats(
         updated_at = NOW()
     WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
     RETURNING slug, name
+  `;
+  return rows[0] ?? null;
+}
+
+// Setzt nur das Portrait eines eigenen Charakters — für den Foto-Kasten des
+// Charakterbogens (/user/characters/[id]/stats), der dasselbe Bild pflegt wie
+// das Kopf-Formular. Owner-gescoped wie die übrigen updateOwnX-Funktionen.
+export async function updateOwnCharacterPortrait(
+  userId: number,
+  characterId: number,
+  portrait: string,
+): Promise<{ slug: string } | null> {
+  const rows = await sql<{ slug: string }[]>`
+    UPDATE characters
+    SET portrait = ${portrait}, updated_at = NOW()
+    WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
+    RETURNING slug
   `;
   return rows[0] ?? null;
 }

@@ -1,6 +1,11 @@
 "use server";
 import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
-import { updateOwnCharacterStats } from "@/lib/characters";
+import {
+  updateOwnCharacterStats,
+  updateOwnCharacterPortrait,
+} from "@/lib/characters";
+import { uploadCharacterPortraitImage } from "@/lib/characterAssets";
+import { InvalidAssetError } from "@/lib/assetStorage";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { revalidatePath } from "next/cache";
 import { parseLines } from "@/lib/formParsing";
@@ -107,6 +112,32 @@ export async function characterStatsAction(
   const ruleErrors = validateCharacterStats(stats);
   if (ruleErrors.length > 0) {
     return { error: ruleErrors.join(" ") };
+  }
+
+  // Foto-Kasten des Bogens: pflegt dasselbe Bild wie das Kopf-Formular
+  // (characters.portrait), inkl. derselben Typ-/Größenprüfung. Vor dem
+  // Speichern der Werte hochladen — schlägt der Upload fehl, bricht die Action
+  // ab, statt halb gespeicherte Daten zu hinterlassen.
+  const photoFile = formData.get("portraitFile");
+  if (photoFile instanceof File && photoFile.size > 0) {
+    let portraitUrl: string;
+    try {
+      portraitUrl = await uploadCharacterPortraitImage({
+        buffer: Buffer.from(await photoFile.arrayBuffer()),
+        mimeType: photoFile.type,
+      });
+    } catch (err) {
+      if (err instanceof InvalidAssetError) return { error: err.message };
+      throw err;
+    }
+    const updated = await updateOwnCharacterPortrait(
+      session.userId,
+      characterId,
+      portraitUrl,
+    );
+    if (!updated) {
+      return { error: "Charakter nicht gefunden oder keine Berechtigung." };
+    }
   }
 
   const result = await updateOwnCharacterStats(
