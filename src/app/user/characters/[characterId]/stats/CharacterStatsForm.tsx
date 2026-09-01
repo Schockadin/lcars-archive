@@ -118,11 +118,17 @@ function StatBox({
 // bleibt die Wahrheit — abgesendet wird immer sein Inhalt.
 function TalentListField({
   talents,
+  stats,
+  species,
   initial,
   readOnly,
   label,
 }: {
   talents: Talent[];
+  // Live-Werte des Bogens — die Auswahl blendet damit Talente aus, deren
+  // Voraussetzungen (noch) nicht erfüllt sind.
+  stats: CharacterStats;
+  species: string | null;
   initial: string[];
   readOnly: boolean;
   label: string;
@@ -159,6 +165,8 @@ function TalentListField({
         <div className="flex flex-col gap-[6px]">
           <TalentPicker
             talents={talents}
+            stats={stats}
+            species={species}
             value={picked}
             onChange={setPicked}
             label="Aus dem Katalog übernehmen"
@@ -184,7 +192,9 @@ export default function CharacterStatsForm({
   characterName,
   portrait,
   stats,
+  savedStats,
   talents,
+  species,
   attributes,
   setAttributes,
   departments,
@@ -195,9 +205,16 @@ export default function CharacterStatsForm({
   characterName: string;
   // Portrait des Charakters = „Photo" des Bogens (siehe OwnCharacterStats).
   portrait: string | null;
+  // Die LIVE mitgeführten Werte (siehe CharacterSheet) — Grundlage der
+  // Talent-Auswahl, die Voraussetzungen gegen die aktuellen Zahlen prüft.
   stats: CharacterStats;
+  // Der zuletzt GESPEICHERTE Stand — er füllt die Felder vor, die dieses
+  // Formular selbst hält (Listen, Freitexte).
+  savedStats: CharacterStats;
   // Talent-Katalog für die Auswahlliste (gepflegt unter /gm/talents).
   talents: Talent[];
+  // Spezies der Akte — für Voraussetzungen wie „Vulcan".
+  species: string | null;
   // Attribute und Disziplinen liegen als State eine Ebene höher
   // (CharacterSheet.tsx): der AP-Bereich rechnet damit live mit, während hier
   // getippt wird. Beide Blöcke bleiben Strings — ein leeres Feld ist „nicht
@@ -532,7 +549,9 @@ export default function CharacterStatsForm({
               // Sonderfälle von Hand eintragen.
               <TalentListField
                 talents={talents}
-                initial={stats.talents}
+                stats={stats}
+                species={species}
+                initial={savedStats.talents}
                 readOnly={stats.creationLocked}
                 label={field.label}
               />

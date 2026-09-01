@@ -234,14 +234,29 @@ export default function TutorialPage() {
               </p>
               <p>
                 <strong>Talente</strong> tippst du nicht ab, sondern wählst sie
-                aus einem Katalog: nach Kategorien sortiert (Allgemein, Spezies
-                &amp; Kultur, Kommando, Steuerung, Technik, Sicherheit,
-                Wissenschaft, Medizin und weitere), mit Voraussetzung und
-                vollem Regeltext direkt unter der Auswahl. Was schon auf deinem
-                Bogen steht, lässt sich nicht versehentlich ein zweites Mal
-                wählen. Fehlt ein Talent im Katalog — etwa eines, das ihr im
-                Spiel vereinbart habt — kannst du auf Freitext umschalten; die
-                Spielleitung kann es zusätzlich in den Katalog aufnehmen.
+                aus einem Katalog. Ein Klick auf „Talent wählen“ öffnet ein
+                Fenster mit <strong>Suchfeld</strong> (Name, Voraussetzung oder
+                Regeltext) und Kategorie-Filter; ein Klick auf ein Talent
+                klappt seine <strong>Beschreibung</strong> auf. Angezeigt
+                werden dabei nur Talente, deren{" "}
+                <strong>Voraussetzungen du erfüllst</strong> — gemessen an
+                deinen aktuellen Attributen, Disziplinen, deiner Spezies und
+                den Talenten, die du schon hast. Voraussetzungen, die sich
+                nicht automatisch prüfen lassen (Merkmale, Rollen oder „nach
+                Entscheidung der Spielleitung“), blenden nichts aus; über den
+                Schalter „Nur erfüllbare“ siehst du bei Bedarf auch den Rest.
+                Was schon auf deinem Bogen steht, taucht gar nicht erst auf.
+              </p>
+              <p>
+                Beim Übernehmen kannst du einem Talent einen{" "}
+                <strong>eigenen Namen</strong> geben — auf dem Bogen steht dann
+                „Eigener Name (Originalname)“. Der Originalname bleibt so
+                erhalten: dasselbe Talent lässt sich nicht versehentlich ein
+                zweites Mal kaufen, und Voraussetzungen anderer Talente
+                erkennen es weiterhin. Fehlt ein Talent im Katalog — etwa
+                eines, das ihr im Spiel vereinbart habt — kannst du auf
+                Freitext umschalten; die Spielleitung kann es zusätzlich in den
+                Katalog aufnehmen.
               </p>
               <p>
                 Für die Zahlen gelten die <strong>Regeln der Runde</strong>:

@@ -63,6 +63,7 @@ export default async function CharacterStatsPage({ params }: Props) {
           characterId={character.id}
           characterName={character.name}
           portrait={character.portrait}
+          species={character.species}
           stats={character.stats}
           account={account}
           rules={rules}

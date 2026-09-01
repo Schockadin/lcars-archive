@@ -22,6 +22,7 @@ export default function CharacterSheet({
   characterId,
   characterName,
   portrait,
+  species,
   stats,
   account,
   rules,
@@ -31,6 +32,7 @@ export default function CharacterSheet({
   characterId: number;
   characterName: string;
   portrait: string | null;
+  species: string | null;
   stats: CharacterStats;
   account: ApAccount;
   rules: AdvancementRules;
@@ -74,6 +76,7 @@ export default function CharacterSheet({
         account={account}
         rules={rules}
         talents={talents}
+        species={species}
       />
 
       <CharacterStatsForm
@@ -81,8 +84,10 @@ export default function CharacterSheet({
         characterId={characterId}
         characterName={characterName}
         portrait={portrait}
-        stats={stats}
+        stats={liveStats}
+        savedStats={stats}
         talents={talents}
+        species={species}
         attributes={attributes}
         setAttributes={setAttributes}
         departments={departments}

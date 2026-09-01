@@ -371,3 +371,40 @@ describe("creationCarryOver", () => {
     ).toBe(0);
   });
 });
+
+describe("Talent-Dubletten mit eigenem Namen", () => {
+  // Ein umbenanntes Talent steht als „Neuer Name (Originalname)" auf dem Bogen
+  // (siehe talentCatalog.ts) — verglichen wird trotzdem der Katalogname.
+  const stats = parseCharacterStats({
+    creationLocked: true,
+    talents: ["Hypothesenschmiede (Testing a Theory)"],
+  });
+
+  it("lehnt dasselbe Talent unter seinem Originalnamen ab", () => {
+    const result = checkAdvancement(
+      stats,
+      { kind: "talent", entry: "Testing a Theory" },
+      999,
+    );
+    expect(result.ok).toBe(false);
+  });
+
+  it("lehnt es auch unter einem anderen eigenen Namen ab", () => {
+    const result = checkAdvancement(
+      stats,
+      { kind: "talent", entry: "Tüftelei (Testing a Theory)" },
+      999,
+    );
+    expect(result.ok).toBe(false);
+  });
+
+  it("erlaubt ein anderes Talent mit eigenem Namen", () => {
+    const result = checkAdvancement(
+      stats,
+      { kind: "talent", entry: "Draufgänger (Bold Command)" },
+      999,
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.plan.label).toBe("Draufgänger (Bold Command)");
+  });
+});

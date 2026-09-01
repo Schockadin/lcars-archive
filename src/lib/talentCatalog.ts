@@ -122,6 +122,36 @@ export function validateTalentInput(raw: {
   };
 }
 
+// ── Eigene Namen für Talente ───────────────────────────────────────────
+// Ein Talent darf auf dem Bogen anders heißen als im Regeltext (die Runde
+// benennt sie gern passend zum Charakter um). Gespeichert wird das im
+// Listenfeld characters.metadata.stats.talents als „Neuer Name (Originalname)"
+// — dieselbe Form, in der es auch angezeigt wird, und ohne neues Datenfeld.
+// Katalognamen enthalten selbst keine Klammern, die Form ist damit eindeutig.
+
+export interface TalentEntry {
+  // Was auf dem Bogen steht (bei unbenanntem Talent gleich original).
+  name: string;
+  // Der Katalogname — daran hängen Voraussetzungs-Prüfung und Dublettencheck.
+  original: string;
+}
+
+export function formatTalentEntry(original: string, customName: string): string {
+  const custom = customName.trim();
+  if (!custom || custom === original.trim()) return original.trim();
+  return `${custom} (${original.trim()})`;
+}
+
+export function parseTalentEntry(entry: string): TalentEntry {
+  const text = entry.trim();
+  const match = /^(.*?)\s*\(([^()]+)\)$/.exec(text);
+  if (!match) return { name: text, original: text };
+  const name = match[1].trim();
+  const original = match[2].trim();
+  if (!name || !original) return { name: text, original: text };
+  return { name: text, original };
+}
+
 // Anzeigename in Auswahllisten und auf dem Charakterbogen. Die Voraussetzung
 // gehört mit dazu, weil erst sie ein Talent eindeutig einordnet („Bold X"
 // gibt es je Disziplin) — gespeichert wird trotzdem nur der reine Name.

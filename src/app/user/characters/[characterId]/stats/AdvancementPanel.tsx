@@ -36,6 +36,7 @@ export default function AdvancementPanel({
   account,
   rules,
   talents,
+  species,
 }: {
   characterId: number;
   stats: CharacterStats;
@@ -45,6 +46,8 @@ export default function AdvancementPanel({
   rules: AdvancementRules;
   // Katalog für die Talent-Auswahlliste (gepflegt unter /gm/talents).
   talents: Talent[];
+  // Spezies der Akte — für Voraussetzungen wie „Vulcan".
+  species: string | null;
 }) {
   const [state, formAction, pending] = useActionState(
     advanceCharacterAction,
@@ -242,6 +245,8 @@ export default function AdvancementPanel({
                   <input type="hidden" name="entry" value={talent} />
                   <TalentPicker
                     talents={talents}
+                    stats={stats}
+                    species={species}
                     value={talent}
                     onChange={setTalent}
                     label="Aus dem Katalog wählen"

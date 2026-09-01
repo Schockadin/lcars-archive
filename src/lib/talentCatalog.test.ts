@@ -9,6 +9,8 @@ import {
   talentOptionLabel,
   byTalentOrder,
   TALENT_NAME_MAX,
+  formatTalentEntry,
+  parseTalentEntry,
   type Talent,
 } from "@/lib/talentCatalog";
 
@@ -132,5 +134,43 @@ describe("scripts/seed/talents.json", () => {
       expect(entry.name, entry.name).not.toContain("*");
       expect(entry.requirement ?? "", entry.name).not.toContain("*");
     }
+  });
+});
+
+// Eigene Namen: gespeichert wird „Neuer Name (Originalname)" — dieselbe Form,
+// in der es auch angezeigt wird (siehe TalentPicker).
+describe("Eigene Talent-Namen", () => {
+  it("setzt Name und Original zusammen", () => {
+    expect(formatTalentEntry("Bold Command", "Draufgänger")).toBe(
+      "Draufgänger (Bold Command)",
+    );
+  });
+
+  it("lässt den Originalnamen stehen, wenn nicht umbenannt wurde", () => {
+    expect(formatTalentEntry("Bold Command", "")).toBe("Bold Command");
+    expect(formatTalentEntry("Bold Command", "   ")).toBe("Bold Command");
+    expect(formatTalentEntry("Bold Command", "Bold Command")).toBe("Bold Command");
+  });
+
+  it("liest den Originalnamen wieder heraus", () => {
+    expect(parseTalentEntry("Draufgänger (Bold Command)")).toEqual({
+      name: "Draufgänger (Bold Command)",
+      original: "Bold Command",
+    });
+  });
+
+  it("behandelt einen Eintrag ohne Klammer als seinen eigenen Originalnamen", () => {
+    expect(parseTalentEntry("Bold Command")).toEqual({
+      name: "Bold Command",
+      original: "Bold Command",
+    });
+  });
+
+  it("verträgt kaputte Klammern, ohne den Eintrag zu verstümmeln", () => {
+    expect(parseTalentEntry("Nur ein ( Text")).toEqual({
+      name: "Nur ein ( Text",
+      original: "Nur ein ( Text",
+    });
+    expect(parseTalentEntry("()")).toEqual({ name: "()", original: "()" });
   });
 });

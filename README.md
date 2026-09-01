@@ -112,9 +112,23 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `scripts/seed/talents.json`, eingespielt mit `npm run db:seed-talents`
   (idempotent). Auf dem Charakterbogen ersetzt eine nach Kategorien gruppierte
   Auswahlliste das freie Tippen — mit Voraussetzung und Regeltext des
-  gewählten Talents direkt darunter und ausgegrauten, bereits geführten
-  Talenten (`src/app/user/characters/_shared/TalentPicker.tsx`); für
-  Sonderfälle bleibt der Freitext erreichbar. Die reine Hälfte (Kategorien,
+  gewählten Talents (`src/app/user/characters/_shared/TalentPicker.tsx`); für
+  Sonderfälle bleibt der Freitext erreichbar. Die Auswahl liegt in einem
+  **Modal-Overlay** (gleiches Muster wie `RowDetailModal`: Portal, Escape,
+  Klick daneben, Scroll-Sperre) mit Volltextsuche, Kategorie-Filter und
+  Klapp-Beschreibung je Talent. Angezeigt werden standardmäßig nur Talente,
+  deren **Voraussetzungen erfüllt** sind: `src/lib/talentRequirements.ts`
+  parst den Regeltext (`Control 9+`, `A and/und/&/, B`, `A or B`, Spezies,
+  vorausgesetzte Talente) und wertet ihn gegen die live mitgeführten Werte
+  und die Spezies der Akte aus. Was sich nicht entscheiden lässt (Merkmale,
+  Rollen, „GM's discretion", noch ungepflegte Werte) gilt bewusst als
+  *unbekannt* und bleibt sichtbar — ein Talent zu verstecken, dessen
+  Voraussetzung die App nur nicht versteht, wäre der schlimmere Fehler; ein
+  Schalter zeigt zusätzlich die nicht erfüllten. Talente lassen sich beim
+  Übernehmen **umbenennen**: gespeichert und angezeigt wird dann
+  `Neuer Name (Originalname)` (`formatTalentEntry`/`parseTalentEntry`), womit
+  der Katalogname erhalten bleibt — Dublettenprüfung und
+  Voraussetzungs-Abgleich arbeiten weiterhin mit ihm. Die reine Hälfte (Kategorien,
   Labels, Validierung) liegt in `src/lib/talentCatalog.ts`, der Datenzugriff in
   `src/lib/talents.ts`.
 - **Spielleitungs-Bereich (`/gm`)** — eigener, über `requireGM` (`gm.access`)
