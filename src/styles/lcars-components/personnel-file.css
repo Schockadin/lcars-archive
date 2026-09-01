@@ -133,6 +133,40 @@ select.pf-field {
   cursor: default;
 }
 
+/* Reine ANSICHT des Bogens (PersonnelFileView): dieselben Kästen, aber als
+   Text statt als Eingabefeld. Maße, Innenabstände und Schrift entsprechen
+   exakt .pf-field, damit ein gelesener Bogen Zeichen für Zeichen dort steht,
+   wo er im Formular stünde. Überlanger Text wird abgeschnitten statt aus dem
+   Kasten zu laufen — wie auf Papier. */
+.pf-static {
+  position: absolute;
+  z-index: 2;
+  overflow: hidden;
+  color: #555;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: calc(10 * var(--pf-unit));
+  line-height: 1.25;
+  padding: calc(13 * var(--pf-unit)) calc(7 * var(--pf-unit))
+    calc(4 * var(--pf-unit));
+  white-space: pre-wrap;
+}
+
+/* Zahlenkästen (Attribute, Disziplinen, Schutz): rechtsbündig wie im
+   Formular, weil links im selben Rahmen die gedruckte Beschriftung steht. */
+.pf-static--stat {
+  z-index: 3;
+  text-align: right;
+  padding-right: calc(10 * var(--pf-unit));
+  font-size: calc(11 * var(--pf-unit));
+}
+
+/* Der maximale Stress steht in einem eigenen, schmalen Kasten ohne
+   gedruckte Beschriftung — dort ist mittig richtig. */
+.pf-static--stress {
+  text-align: center;
+  padding-right: calc(7 * var(--pf-unit));
+}
+
 /* Ein Kasten, der sich einen festen Teil (aus der Akte) und ein Eingabefeld
    teilt — siehe „Species & Traits". */
 .pf-combo {

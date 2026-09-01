@@ -3,11 +3,9 @@ import {
   buildAssetPublicUrl,
   repairedPortraitUrl,
   assertImageAsset,
-  assertCharacterSheetAsset,
   sanitizeFileName,
   InvalidAssetError,
   MAX_ASSET_IMAGE_BYTES,
-  MAX_CHARACTER_SHEET_BYTES,
 } from "./assetStorage";
 
 describe("buildAssetPublicUrl", () => {
@@ -127,24 +125,6 @@ describe("assertImageAsset", () => {
     expect(() => assertImageAsset("image/png", MAX_ASSET_IMAGE_BYTES + 1)).toThrow(
       InvalidAssetError,
     );
-  });
-});
-
-describe("assertCharacterSheetAsset", () => {
-  it("akzeptiert ein PDF innerhalb des Limits", () => {
-    expect(() => assertCharacterSheetAsset("application/pdf", 1000)).not.toThrow();
-  });
-
-  it("verweigert Nicht-PDF, leere und zu große Dateien", () => {
-    expect(() => assertCharacterSheetAsset("image/png", 1000)).toThrow(
-      InvalidAssetError,
-    );
-    expect(() => assertCharacterSheetAsset("application/pdf", 0)).toThrow(
-      InvalidAssetError,
-    );
-    expect(() =>
-      assertCharacterSheetAsset("application/pdf", MAX_CHARACTER_SHEET_BYTES + 1),
-    ).toThrow(InvalidAssetError);
   });
 });
 

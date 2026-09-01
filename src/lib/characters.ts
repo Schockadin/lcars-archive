@@ -785,6 +785,46 @@ export async function getOwnCharacterStats(
   };
 }
 
+// Dieselben Werte ohne Owner-Bindung — ausschließlich für die Spielleitung
+// (der Aufrufer MUSS gm.access geprüft haben, siehe /characters/[slug]/sheet
+// und die PDF-Route). Getrennt von getOwnCharacterStats, damit an jeder
+// Aufrufstelle sichtbar bleibt, welche der beiden Abfragen die Berechtigung
+// selbst mitbringt und welche sie voraussetzt.
+export async function getCharacterStatsForGm(
+  characterId: number,
+): Promise<OwnCharacterStats | null> {
+  const rows = await sql<
+    {
+      id: number;
+      slug: string;
+      name: string;
+      portrait: string | null;
+      species: string | null;
+      rank: string | null;
+      stats: unknown;
+    }[]
+  >`
+    SELECT id, slug, name, portrait, species, rank, metadata -> 'stats' AS stats
+    FROM characters
+    WHERE id = ${characterId} AND deleted_at IS NULL
+    LIMIT 1
+  `;
+  const row = rows[0];
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    slug: row.slug,
+    name: row.name,
+    portrait: row.portrait,
+    species: row.species,
+    rank: row.rank,
+    stats: parseCharacterStats(
+      typeof row.stats === "string" ? JSON.parse(row.stats) : row.stats,
+    ),
+  };
+}
+
 // Schreibt ausschließlich metadata.stats (jsonb-Merge auf oberster Ebene) —
 // Rang/Spezies/Alter & Co. im selben metadata-Objekt bleiben unangetastet.
 // Owner-gescoped im WHERE wie updateOwnCharacterContent.

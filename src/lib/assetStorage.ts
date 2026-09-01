@@ -19,11 +19,6 @@ export const ASSET_IMAGE_MIME_TO_EXT: Record<string, string> = {
 };
 export const MAX_ASSET_IMAGE_BYTES = 5 * 1024 * 1024;
 
-// Charakterbögen: nur PDF, großzügigeres Limit als bei Bildern (mehrseitige
-// Bögen mit eingebetteten Grafiken werden schnell größer).
-export const CHARACTER_SHEET_MIME = "application/pdf";
-export const MAX_CHARACTER_SHEET_BYTES = 20 * 1024 * 1024;
-
 // Baut die öffentliche Auslieferungs-URL eines Objekts aus der konfigurierten
 // Basis-URL (z.B. https://assets.neo-archiv.de oder die r2.dev-URL) und dem
 // Objekt-Key. Trailing Slash der Basis und führende Slashes des Keys werden
@@ -115,27 +110,8 @@ export function assertImageAsset(mimeType: string, sizeBytes: number): string {
   return extension;
 }
 
-// Prüft eine Charakterbogen-Datei (PDF). Wirft InvalidAssetError bei falschem
-// Typ, leerer oder zu großer Datei.
-export function assertCharacterSheetAsset(
-  mimeType: string,
-  sizeBytes: number,
-): void {
-  if (mimeType !== CHARACTER_SHEET_MIME) {
-    throw new InvalidAssetError("Nur PDF-Dateien sind als Charakterbogen erlaubt.");
-  }
-  if (sizeBytes === 0) {
-    throw new InvalidAssetError("Die Datei ist leer.");
-  }
-  if (sizeBytes > MAX_CHARACTER_SHEET_BYTES) {
-    throw new InvalidAssetError(
-      `Die Datei ist zu groß (max. ${MAX_CHARACTER_SHEET_BYTES / (1024 * 1024)} MB).`,
-    );
-  }
-}
-
 // Kürzt/normalisiert einen vom Client mitgeschickten Dateinamen für die
-// Anzeige (Charakterbögen behalten ihren Originalnamen als Label). Entfernt
+// Anzeige. Entfernt
 // Pfadanteile und Steuerzeichen und begrenzt die Länge; nie als Objekt-Key
 // oder Identifier verwendet (der Key wird serverseitig aus einer UUID gebaut).
 export function sanitizeFileName(name: string, fallback = "datei.pdf"): string {

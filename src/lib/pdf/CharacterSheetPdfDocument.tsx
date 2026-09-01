@@ -32,7 +32,7 @@ import {
   RESISTANCE_BOX,
   STRESS_VALUE_BOX,
   type Box,
-} from "@/app/user/characters/[characterId]/stats/personnelFileLayout";
+} from "@/lib/personnelFileLayout";
 import {
   ATTRIBUTE_FIELDS,
   DEPARTMENT_FIELDS,

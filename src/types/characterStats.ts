@@ -2,10 +2,6 @@
 // Charakters — Attribute, Disziplinen, abgeleitete Werte und die
 // Listenfelder des offiziellen Charakterbogens.
 //
-// Bewusst NICHT zu verwechseln mit src/lib/characterSheets.ts: das sind die
-// hochgeladenen PDF-Charakterbögen (reine Dateiablage). Hier geht es um die
-// strukturierten Werte, die unter /user/characters gepflegt werden.
-//
 // Gespeichert werden sie als characters.metadata.stats (jsonb) — dieselbe
 // Spalte wie Rang/Spezies/Alter, daher ohne eigene Tabelle bzw. Migration.
 // Name, Rang und Spezies stehen bereits am Charakter selbst und werden hier

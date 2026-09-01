@@ -619,24 +619,6 @@ CREATE TABLE IF NOT EXISTS content_images (
 );
 CREATE INDEX IF NOT EXISTS idx_content_images_content ON content_images(content_type, content_id);
 
--- ---------------------------------------------------------------------------
--- character_sheets
--- ---------------------------------------------------------------------------
--- Charakterbögen (PDFs) je Charakter. Wie content_images liegen die Bytes im
--- öffentlichen Asset-Bucket (Präfix character-sheets/<CharakterID>/<UUID>.pdf,
--- siehe src/lib/characterSheets.ts), die Zeile hält nur Metadaten. Anders als
--- content_images mit echtem Fremdschlüssel + ON DELETE CASCADE (ein Bogen
--- gehört immer genau einem Charakter). Beliebig viele Bögen pro Charakter.
-CREATE TABLE IF NOT EXISTS character_sheets (
-  id           SERIAL PRIMARY KEY,
-  character_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-  r2_key       TEXT UNIQUE NOT NULL,
-  file_name    TEXT NOT NULL,
-  size_bytes   INT NOT NULL,
-  uploaded_by  INT REFERENCES users(id) ON DELETE SET NULL,
-  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_character_sheets_character ON character_sheets(character_id);
 
 -- ---------------------------------------------------------------------------
 -- character_ap_entries

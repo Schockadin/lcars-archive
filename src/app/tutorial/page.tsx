@@ -434,11 +434,12 @@ export default function TutorialPage() {
                 Gesprächen fehlt er bewusst, da sich deren Inhalt noch ändert.
               </p>
               <p>
-                Charakterseiten können außerdem hochgeladene{" "}
-                <strong>Charakterbögen</strong> (PDFs) zeigen: ein Klick auf
-                einen Bogen öffnet eine <strong>Vollbild-Vorschau</strong>,
-                daneben gibt es einen eigenen Herunterladen-Knopf. Hochladen und
-                Entfernen darf nur die Person, der der Charakter gehört.
+                Auf der Seite deines eigenen Charakters (und für die
+                Spielleitung auf jeder Charakterseite) steht außerdem der Knopf{" "}
+                <strong>„Charakterbogen“</strong>: er zeigt den gepflegten Bogen
+                als reine Ansicht — mit Vollbild und dem gleichen
+                PDF-Download wie unter „Meine Charaktere“. Bearbeitet wird der
+                Bogen weiterhin nur von der Person, der der Charakter gehört.
               </p>
               <p>
                 Eingeloggt zeigt dir die <strong>Startseite</strong> dein

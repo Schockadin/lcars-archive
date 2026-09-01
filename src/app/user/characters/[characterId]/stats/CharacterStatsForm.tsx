@@ -32,7 +32,7 @@ import {
   offsetStyle,
   pointStyle,
   type Box,
-} from "./personnelFileLayout";
+} from "@/lib/personnelFileLayout";
 
 const initialState: CharacterStatsFormState = {};
 

@@ -41,7 +41,8 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Zwischen Charakterbogen und Stammdaten deines Charakters wechselst du jetzt mit einem Umschalter über der Seite, statt zwei getrennte Menüwege zu gehen.",
       "Neu: Du kannst deinen Charakterbogen als PDF herunterladen und ausdrucken — Seite 1 ist der ausgefüllte Bogen, dahinter folgt der Talent-Spickzettel im selben Look.",
       "Rang und Spezies stehen jetzt auf dem Bogen, wo sie hingehören — beide kommen aus den Stammdaten deines Charakters und werden dort gepflegt; im Kasten „Species & Traits“ steht die Spezies vorne, deine weiteren Merkmale trägst du dahinter ein.",
-      "Über dem Bogen gibt es einen Knopf, der ihn im Vollbild zeigt — praktisch am Spieltisch. Bearbeiten kannst du ihn dort genauso, Escape schließt die Ansicht wieder."
+      "Über dem Bogen gibt es einen Knopf, der ihn im Vollbild zeigt — praktisch am Spieltisch. Bearbeiten kannst du ihn dort genauso, Escape schließt die Ansicht wieder.",
+      "PDF-Charakterbögen lassen sich nicht mehr hochladen. Stattdessen führt auf der Charakterseite der Knopf „Charakterbogen“ direkt zum gepflegten Bogen — als reine Ansicht mit Vollbild und PDF-Download. Du siehst ihn bei deinen eigenen Charakteren, die Spielleitung bei allen. Bereits hochgeladene PDFs werden beim Einspielen dieser Version entfernt."
     ],
   },
   {

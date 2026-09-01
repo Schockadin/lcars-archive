@@ -123,52 +123,11 @@
   text-transform: uppercase;
 }
 
-/* Charakterbögen (PDFs) — Liste von Download-Links unter dem Portrait-Block,
-   plus Upload-Steuerung für den Owner (siehe CharacterSheets.tsx). */
-.char-file-sheets {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+/* Knopf „Charakterbogen" unter dem Portrait-Block: führt auf die Ansicht des
+   Bogens (/characters/[slug]/sheet). Nur für den Owner und die Spielleitung
+   sichtbar, siehe CharacterHero.tsx. */
+.char-file-sheet-link {
   margin-top: 16px;
-}
-.char-file-sheets-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-.char-file-sheets-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.char-file-sheets-link {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex: 1 1 auto;
-  min-width: 0;
-  padding: 6px 10px;
-  border: solid 1px var(--lcars-ink-data);
-  border-radius: 6px;
-  color: var(--lcars-ink-contrast);
-  font-size: 13px;
-}
-.char-file-sheets-link:hover,
-.char-file-sheets-link:focus {
-  border-color: var(--lcars-primary);
-  color: var(--lcars-primary);
-}
-.char-file-sheets-name {
-  flex: 1 1 auto;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.char-file-sheets-size {
-  flex: 0 0 auto;
-  color: var(--lcars-ink-dim);
-  font-variant-numeric: tabular-nums;
 }
 
 /* rechts: Name + Biografie — braucht min-width:0 als Grid-Item, sonst

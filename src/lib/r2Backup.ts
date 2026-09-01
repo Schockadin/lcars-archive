@@ -183,8 +183,8 @@ export async function deleteObjectFromR2(key: string): Promise<void> {
 
 // ── Öffentlicher Asset-Bucket ──────────────────────────────────────────────
 // Gleiche Objekt-Operationen wie oben, aber gegen den Asset-Bucket
-// (createAssetR2Client). Genutzt von src/lib/contentImages.ts und
-// src/lib/characterSheets.ts für Content-Bilder/Portraits/Charakterbögen.
+// (createAssetR2Client). Genutzt von src/lib/contentImages.ts für
+// Content-Bilder und Portraits.
 
 export async function uploadAssetObjectToR2(
   key: string,

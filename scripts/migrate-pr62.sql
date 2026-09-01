@@ -136,3 +136,14 @@ CREATE INDEX IF NOT EXISTS idx_mission_logs_session ON mission_logs(session_id);
 -- Erschaffungsbudgets, AP je Session/Logbuch). NULL = die eingebauten
 -- Standardwerte aus src/lib/advancement.ts gelten (DEFAULT_ADVANCEMENT_RULES).
 ALTER TABLE campaign_settings ADD COLUMN IF NOT EXISTS advancement_rules JSONB;
+
+-- character_sheets: entfällt (v1.27.23). Das Hochladen von PDF-Charakterbögen
+-- gibt es nicht mehr — an seine Stelle tritt die Ansicht des im Archiv
+-- gepflegten Bogens (/characters/[slug]/sheet, für Owner und Spielleitung).
+--
+-- WICHTIG: VOR dieser Migration einmal
+--   npx tsx --conditions=react-server scripts/purge-character-sheet-uploads.ts
+-- laufen lassen. Das Skript löscht die zugehörigen Objekte im Asset-Bucket;
+-- ohne die r2_keys dieser Tabelle wären sie danach nicht mehr auffindbar und
+-- blieben dauerhaft verwaist liegen.
+DROP TABLE IF EXISTS character_sheets;

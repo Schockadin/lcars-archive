@@ -699,7 +699,7 @@ secret"):
 | `R2_ACCOUNT_ID`                             | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). Nötig für den Backup- UND den Purge-Schritt (Bild-Cleanup), nicht für das R2-Cleanup.                                                                                                                                                                                                                                   |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens").                                                                                                                                                                                                                                                                                                                |
 | `R2_BUCKET_NAME`                            | Name des **Backup**-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). Hochgeladene Assets liegen seit dem Asset-Bucket-Release nicht mehr hier, sondern in `R2_ASSET_BUCKET_NAME` (siehe unten).                                                                                                                                                          |
-| `R2_ASSET_BUCKET_NAME`                      | Name des **öffentlichen** Asset-Buckets für hochgeladene Assets — Content-Bilder (`content-images/...`), Charakter-Portraits (`character-portraits/...`) und Charakterbögen (`character-sheets/...`). Muss in Cloudflare als öffentlicher Bucket eingerichtet sein (eigene Domain oder r2.dev-URL). Für den App-Betrieb (Netlify) und die Migration nötig, **nicht** für den Backup-Cronjob. |
+| `R2_ASSET_BUCKET_NAME`                      | Name des **öffentlichen** Asset-Buckets für hochgeladene Assets — Content-Bilder (`content-images/...`), Charakter-Portraits (`character-portraits/...`). Muss in Cloudflare als öffentlicher Bucket eingerichtet sein (eigene Domain oder r2.dev-URL). Für den App-Betrieb (Netlify) und die Migration nötig, **nicht** für den Backup-Cronjob. |
 | `R2_ASSET_PUBLIC_BASE_URL`                  | Öffentliche Basis-URL des Asset-Buckets ohne Trailing-Slash (z.B. `https://assets.neo-archiv.de` oder die von Cloudflare vergebene `https://pub-….r2.dev`). Daraus baut die App die direkten Asset-Links.                                                                                                                                                                                    |
 
 **Wichtig für das manuelle R2-Backup im Adminpanel** (`/admin/db` — "Im
@@ -741,7 +741,7 @@ Hochladen/Löschen darf, wer den jeweiligen Inhalt auch sonst bearbeiten darf
 zusätzlich jeder Admin). Die vorhandenen Galerie-Bilder werden weiterhin über
 die sichtbarkeitsgeprüfte Route `/api/content-images/[id]` ausgeliefert (die
 jetzt aus dem Asset-Bucket liest); neu am Asset-Bucket hängende Assets
-(hochgeladenes Charakter-Portrait bei der Anlage, Charakterbögen) nutzen die
+(hochgeladenes Charakter-Portrait bei der Anlage) nutzen die
 direkte öffentliche URL (`R2_ASSET_PUBLIC_BASE_URL`). Bei Charakteren lässt
 sich eines der hochgeladenen Bilder als Profilbild festlegen
 (`characters.portrait`); das Portrait öffnet per Klick ein Karussell über
@@ -757,28 +757,27 @@ weiterhin in der Admin-Übersicht `/admin/content/images` (Adminbereich →
 Vorschau zeigt und pro Bild einen Admin-Löschen-Button unabhängig vom
 jeweiligen Owner bietet.
 
-### Charakterbögen (PDFs)
+### Charakterbogen auf der Charakterseite
 
-Charaktere können zusätzlich beliebig viele **Charakterbögen** als PDF haben
-(Tabelle `character_sheets`, siehe `src/lib/characterSheets.ts`). Die Bytes
-liegen im Asset-Bucket unter dem Präfix
-`character-sheets/<CharakterID>/<UUID>.pdf`; ausgeliefert werden sie – wie die
-Galerie-Bilder – über eine **eigene Proxy-Route** `GET /api/character-sheets/<id>`
-(nicht über die öffentliche Bucket-URL). Dadurch bleibt der Bucket privat (der
-`r2_key` verlässt den Server nie), die Auslieferung hängt nicht an einer korrekt
-konfigurierten öffentlichen Asset-Domain, und die Route prüft die Sichtbarkeit
-serverseitig (`canView` **und** `canViewDraft` auf dem Charakter). Auf der
-Charakterseite erscheinen die Bögen als Liste: ein Klick öffnet eine
-**Vollbild-PDF-Vorschau** (Modal, eingebettetes `<iframe>` — dafür erlaubt die
-CSP `frame-ancestors 'self'`), daneben gibt es einen **Herunterladen**-Knopf
-(`?download=1`, `Content-Disposition: attachment`). Auch die Bogen-_Liste_
-(Dateinamen/Größen) folgt der Charakter-Sichtbarkeit inkl. Entwurf-Gate
-(`getCharacterSheetsAction` → `canView` + `canViewDraft`). Hochladen und Löschen
-darf nur der Owner des Charakters (dieselbe Owner-only-Regel wie bei den
-Charakter-Bildern, kein Admin-Bypass); erlaubt sind nur PDFs bis 20 MB. Wird der
-Charakter endgültig gelöscht, entfernt `purgeCharacterSheetsFor()`
-(`src/lib/purgeContent.ts`) die Bögen samt R2-Objekten, bevor der
-`ON DELETE CASCADE` die DB-Zeilen wegräumt.
+Das Hochladen von PDF-Charakterbögen gibt es nicht mehr (Tabelle
+`character_sheets` und die Route `/api/character-sheets/<id>` sind mit v1.27.23
+entfallen). An seine Stelle tritt der im Archiv gepflegte Bogen selbst: auf der
+Charakterseite führt der Knopf **„Charakterbogen"** auf
+`/characters/<slug>/sheet` — dieselbe Vorlage wie das Formular unter
+`/user/characters/<id>/stats`, aber als reine Ansicht
+(`src/components/character/PersonnelFileView.tsx`, Maße aus
+`src/lib/personnelFileLayout.ts`). Sichtbar ist die Seite für die
+Spieler:in/den Spieler des Charakters (`player_id`) und für die Spielleitung
+(`gm.access`); für alle anderen gibt es sie nicht (`notFound()` statt 403, damit
+nicht durchscheint, dass es sie gäbe). Bearbeitet wird der Bogen weiterhin
+ausschließlich vom Owner unter `/user/characters/<id>/stats`. Der PDF-Export
+`/api/export/character-sheet?characterId=…` folgt derselben Regel: owner-
+gescopte Abfrage, für `gm.access` zusätzlich jeder Charakter.
+
+Beim Ausrollen: **vor** `scripts/migrate-pr62.sql` einmal
+`npx tsx --conditions=react-server scripts/purge-character-sheet-uploads.ts`
+laufen lassen — das Skript löscht die bereits hochgeladenen PDFs im
+Asset-Bucket, deren `r2_key` die anschließend gelöschte Tabelle hält.
 
 ### Archiv-Assistent (RAG)
 
