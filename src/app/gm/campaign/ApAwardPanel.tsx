@@ -7,9 +7,12 @@ import { awardApAction, type ApAwardState } from "./apActions";
 
 const initialState: ApAwardState = {};
 
-// Gründe, die die Spielleitung vergibt — "advancement" fehlt bewusst, das
-// buchen die Spieler:innen beim Steigern selbst (siehe apActions.ts).
-const AWARD_REASONS: ApReason[] = ["session", "logbook", "bonus", "mission", "manual"];
+// Gründe, die die Spielleitung frei bucht. "advancement" und "creation" fehlen
+// bewusst — die bucht der Charakterbogen selbst (Steigern bzw. Festschreiben
+// der Erschaffung). "mission" fehlt ebenfalls: Missions-AP gibt es nur über den
+// Missionsabschluss, damit die Mission dabei zwingend ausgewählt und auf
+// „abgeschlossen" gesetzt wird (siehe MissionApPanel.tsx).
+const AWARD_REASONS: ApReason[] = ["session", "logbook", "bonus", "manual"];
 
 // Schnellvergabe nach den Regeln der Runde: eine gespielte Session und ein
 // geschriebenes Logbuch geben je einen eingestellten Betrag (Standard 1 AP),
@@ -108,7 +111,7 @@ export default function ApAwardPanel({
                 <span className="lcars-eyebrow">Grund</span>
                 <select
                   name="reason"
-                  defaultValue="mission"
+                  defaultValue="manual"
                   className="lcars-input rounded-full"
                   aria-label={`Grund für ${character.name}`}
                 >

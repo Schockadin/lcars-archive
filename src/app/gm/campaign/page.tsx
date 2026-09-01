@@ -8,10 +8,15 @@ import { getAllMissionsForGmOverview } from "@/lib/missions";
 import { getIngameYearInfo } from "@/lib/campaign";
 import { listApBalances } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
+import {
+  listCompletableMissions,
+  listActiveCharactersForAp,
+} from "@/lib/gameSessions";
 import CharacterAssignmentTable from "../CharacterAssignmentTable";
 import AdminMissionsBrowser from "../missions/AdminMissionsBrowser";
 import IngameYearForm from "./IngameYearForm";
 import ApAwardPanel from "./ApAwardPanel";
+import MissionApPanel from "./MissionApPanel";
 
 export const metadata: Metadata = {
   title: "Kampagne",
@@ -27,7 +32,16 @@ export const metadata: Metadata = {
 export default async function AdminCampaignPage() {
   await requireGM();
 
-  const [users, characters, missions, ingameYearInfo, apBalances, rules] =
+  const [
+    users,
+    characters,
+    missions,
+    ingameYearInfo,
+    apBalances,
+    rules,
+    completableMissions,
+    apCharacterOptions,
+  ] =
     await Promise.all([
       listAllUsers(),
       getAllCharactersForAdmin(),
@@ -35,6 +49,8 @@ export default async function AdminCampaignPage() {
       getIngameYearInfo(),
       listApBalances(),
       getAdvancementRules(),
+      listCompletableMissions(),
+      listActiveCharactersForAp(),
     ]);
 
   // Kontostände in EINER Abfrage geholt und hier zugeordnet — sonst wäre es
@@ -73,14 +89,28 @@ export default async function AdminCampaignPage() {
             <h2 className="text-lcars-primary">Erfahrungspunkte (AP)</h2>
             <p className="text-lcars-ink-dim text-[13px]">
               Je {rules.apPerSession} AP für eine gespielte Session und{" "}
-              {rules.apPerLogbook} AP für ein geschriebenes Logbuch, für einen
-              Missions- oder Story-Abschluss ein frei gewählter Betrag. Die
-              Beträge stellt die Spielleitung unter „AP“ ein. Eine ganze
-              Session schreibt man am besten unter „Sessions“ auf einmal gut;
-              Steigerungen buchen die Spieler:innen selbst auf ihrem
-              Charakterbogen ab.
+              {rules.apPerLogbook} AP für ein geschriebenes Logbuch; die Beträge
+              stellt die Spielleitung unter „AP“ ein. Eine ganze Session
+              schreibt man am besten unter „Sessions“ auf einmal gut — mit
+              verknüpftem Logbuch kommt die Logbuch-AP dort automatisch dazu.
+              AP für einen Missionsabschluss gibt es nur über „Mission
+              abschließen“ weiter unten; Steigerungen buchen die Spieler:innen
+              selbst auf ihrem Charakterbogen ab. Hier bleibt die freie Buchung
+              für alles andere und für Korrekturen.
             </p>
             <ApAwardPanel characters={apCharacters} rules={rules} />
+          </section>
+
+          <section className="flex flex-col gap-[12px]">
+            <h2 className="text-lcars-primary">Mission abschließen</h2>
+            <p className="text-lcars-ink-dim text-[13px]">
+              AP für einen Missionsabschluss gibt es nur hier: die Mission wird
+              dabei ausgewählt und auf „abgeschlossen“ gesetzt.
+            </p>
+            <MissionApPanel
+              missions={completableMissions}
+              characters={apCharacterOptions}
+            />
           </section>
 
           <section className="flex flex-col gap-[12px]">

@@ -36,10 +36,20 @@ export async function awardApAction(
   if (!isApReason(reason)) {
     return { error: "Unbekannter Grund." };
   }
-  // "advancement" ist den Steigerungen der Spieler:innen vorbehalten — die
-  // Spielleitung vergibt/korrigiert, sie bucht keine Steigerung.
-  if (reason === "advancement") {
-    return { error: "Steigerungen werden von den Spieler:innen selbst gebucht." };
+  // "advancement" und "creation" bucht der Charakterbogen selbst (Steigern bzw.
+  // Festschreiben der Erschaffung) — die Spielleitung vergibt und korrigiert.
+  if (reason === "advancement" || reason === "creation") {
+    return {
+      error: "Steigerungen und Erschaffungsreste bucht der Charakterbogen selbst.",
+    };
+  }
+  // Missions-AP gibt es nur über den Missionsabschluss, damit die Mission dabei
+  // ausgewählt und auf „abgeschlossen" gesetzt wird (siehe missionApActions.ts).
+  if (reason === "mission") {
+    return {
+      error:
+        "Missions-AP werden über „Mission abschließen“ vergeben — dort wird die Mission mit ausgewählt.",
+    };
   }
 
   const note = String(formData.get("note") ?? "").trim() || null;

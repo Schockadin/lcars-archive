@@ -223,6 +223,16 @@ export default function TutorialPage() {
                 der Bogen rechnet dann mit ihren Werten.
               </p>
               <p>
+                Der AP-Bereich rechnet dabei <strong>live</strong> mit: Während
+                du in der Erschaffung Attribute und Disziplinen einträgst,
+                siehst du sofort, was deine Verteilung kostet, wie viel Budget
+                noch übrig ist und mit wie vielen AP du nach dem Abschließen
+                startest. Denn was du nicht verbrauchst, ist nicht verloren —
+                bis zu 10 übrige AP (von der Spielleitung einstellbar) werden
+                dir beim Abschließen gutgeschrieben. Nach der Erschaffung zeigt
+                dir jeder Steigern-Knopf, wie viele AP dir danach bleiben.
+              </p>
+              <p>
                 <strong>Talente</strong> tippst du nicht ab, sondern wählst sie
                 aus einem Katalog: nach Kategorien sortiert (Allgemein, Spezies
                 &amp; Kultur, Kommando, Steuerung, Technik, Sicherheit,
@@ -598,6 +608,20 @@ export default function TutorialPage() {
                   Konto — wer gefehlt hat, wird einfach abgewählt. Eine
                   versehentlich eingetragene Session lässt sich zurücknehmen,
                   die Gutschriften werden dann mit storniert.
+                </li>
+                <li>
+                  Einer eingetragenen Session <strong>Logbücher</strong>{" "}
+                  zuordnen: Sobald mindestens eines daran hängt, bekommen alle
+                  Teilnehmenden automatisch die Logbuch-AP extra — einmal je
+                  Session, egal wie viele Logbücher geschrieben werden. Wird die
+                  Zuordnung wieder gelöst oder das letzte Logbuch entfernt,
+                  verschwindet die Gutschrift ebenso automatisch.
+                </li>
+                <li>
+                  AP für einen <strong>Missionsabschluss</strong> gibt es nur
+                  über den Abschnitt „Mission abschließen“ auf der
+                  Kampagnen-Seite: Dort wird die Mission ausgewählt, die AP
+                  vergeben — und die Mission dabei auf „abgeschlossen“ gesetzt.
                 </li>
                 <li>
                   Unter <strong>„AP“</strong> alle Kontostände und das gesamte

@@ -99,7 +99,14 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Alle Zahlen des Regelwerks sind Standardwerte: die Spielleitung stellt sie
   unter `/gm/ap` ein, gespeichert in `campaign_settings.advancement_rules`
   (`src/lib/advancementSettings.ts`); die Funktionen in `advancement.ts` nehmen
-  den geltenden Satz als Argument entgegen.
+  den geltenden Satz als Argument entgegen. Der AP-Bereich des Charakterbogens
+  rechnet **live** mit: der State der Attribut-/Disziplin-Eingaben liegt in der
+  Klammer-Komponente `CharacterSheet.tsx`, sodass Budget, Rest und
+  Übertrags-Vorschau schon beim Tippen mitlaufen; nach der Erschaffung zeigt
+  jeder Steigern-Knopf, wie viele AP danach bleiben. Nicht verbrauchtes
+  Erschaffungsbudget wird beim Festschreiben als AP gutgeschrieben, gedeckelt
+  durch `creationCarryOverMax` (Standard 10) — Gutschrift und Sperre in einer
+  Transaktion.
 - **Talent-Katalog** — die Talente der Runde liegen in der Tabelle `talents`
   (Name eindeutig, Kategorie, Voraussetzung, Regeltext). Startdaten:
   `scripts/seed/talents.json`, eingespielt mit `npm run db:seed-talents`
@@ -124,9 +131,20 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   - `/gm/sessions` — gespielte Sessions eintragen (Datum, Titel, Session-AP,
     Bonus-AP, Notizen) und allen ausgewählten Charakteren in einem Rutsch
     gutschreiben. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
-    Konto; Session und Gutschriften entstehen in einer Transaktion
-    (`game_sessions` + `character_ap_entries.session_id`), das Zurücknehmen
-    storniert sie per `ON DELETE CASCADE` mit.
+    Konto; Session, Teilnehmerliste (`game_session_characters`) und
+    Gutschriften entstehen in einer Transaktion (`game_sessions` +
+    `character_ap_entries.session_id`), das Zurücknehmen storniert sie per
+    `ON DELETE CASCADE` mit. Einer Session lassen sich **Logbücher**
+    zuordnen (`mission_logs.session_id`): ab dem ersten bucht
+    `syncSessionLogbookAp` allen Teilnehmenden automatisch die Logbuch-AP —
+    genau einmal je Session und Charakter, idempotent, und beim Wegfallen des
+    letzten Logbuchs wieder zurück (auch beim Löschen/Wiederherstellen eines
+    Logbuchs).
+  - **Missionsabschluss** (auf `/gm/campaign`) — AP für einen Missionsabschluss
+    gibt es ausschließlich über die Missionsauswahl: die gewählte Mission wird
+    dabei auf `completed` gesetzt und die Buchungen tragen
+    `character_ap_entries.mission_id`. Der Grund „Mission" ist deshalb aus der
+    freien Buchung entfernt (die Server-Action weist ihn ab).
   - `/gm/ap` — Kontostände aller Charaktere, das Gesamtjournal aller Buchungen
     (nach Charakter und Grund filterbar, serverseitig auf die letzten 500
     begrenzt) und der Editor des AP-Regelwerks.

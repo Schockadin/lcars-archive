@@ -749,6 +749,16 @@ ALTER TABLE character_ap_entries ADD COLUMN IF NOT EXISTS session_id INT
 CREATE INDEX IF NOT EXISTS idx_character_ap_entries_session
   ON character_ap_entries(session_id);
 
+-- character_ap_entries: Rückverweis auf die Mission, für deren Abschluss eine
+-- Gutschrift vergeben wurde (NULL bei allen anderen Buchungen). AP für einen
+-- Missionsabschluss gibt es nur über die Mission selbst (siehe
+-- completeMissionWithAp) — der Verweis hält fest, wofür. ON DELETE SET NULL:
+-- eine gelöschte Mission soll die Gutschrift nicht mitnehmen.
+ALTER TABLE character_ap_entries ADD COLUMN IF NOT EXISTS mission_id INT
+  REFERENCES missions(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_character_ap_entries_mission
+  ON character_ap_entries(mission_id);
+
 -- mission_logs: optionale Zuordnung zu einer Session (/gm/sessions). Sobald
 -- mindestens ein Logbuch an einer Session hängt, bekommen die dort
 -- gutgeschriebenen Charaktere automatisch die Logbuch-AP (siehe

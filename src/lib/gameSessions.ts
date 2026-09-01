@@ -288,3 +288,80 @@ export async function resyncSessionLogbookApForLog(
   `;
   if (row?.sessionId) await syncSessionLogbookAp(row.sessionId, actingUserId);
 }
+
+// ── Missionsabschluss ──────────────────────────────────────────────────
+// AP für einen Missionsabschluss gibt es nur über die Mission selbst: sie wird
+// dabei auf 'completed' gesetzt. Das hält den Status der Mission und die
+// Gutschrift zusammen — vorher war der Grund „Mission" eine freie Buchung, bei
+// der die Mission selbst offen stehen bleiben konnte.
+
+export interface CompletableMission {
+  id: number;
+  slug: string;
+  title: string;
+  status: string;
+  // Wurde für diese Mission schon einmal AP vergeben? Dann warnt die
+  // Oberfläche vor der zweiten Gutschrift.
+  apAwarded: number;
+}
+
+export async function listCompletableMissions(): Promise<CompletableMission[]> {
+  return sql<CompletableMission[]>`
+    SELECT m.id, m.slug, m.title, m.status,
+           COALESCE(a.ap, 0)::int AS "apAwarded"
+    FROM missions m
+    LEFT JOIN (
+      SELECT mission_id, SUM(amount) AS ap
+      FROM character_ap_entries
+      WHERE mission_id IS NOT NULL
+      GROUP BY mission_id
+    ) a ON a.mission_id = m.id
+    WHERE m.deleted_at IS NULL AND m.is_draft = false
+    ORDER BY m.status = 'completed', m.started_at DESC NULLS LAST, m.id DESC
+  `;
+}
+
+export type CompleteMissionResult =
+  | { ok: true; slug: string; title: string; characterCount: number }
+  | { ok: false; error: string };
+
+// Mission abschließen und dafür AP vergeben — Statuswechsel und Buchungen in
+// EINER Transaktion, damit nicht die eine Hälfte ohne die andere stehen bleibt.
+export async function completeMissionWithAp(input: {
+  missionId: number;
+  amount: number;
+  characterIds: number[];
+  note: string | null;
+  createdByUserId: number;
+}): Promise<CompleteMissionResult> {
+  return sql.begin(async (tx) => {
+    const rows = await tx<{ slug: string; title: string }[]>`
+      UPDATE missions
+      SET status = 'completed', ended_at = COALESCE(ended_at, CURRENT_DATE),
+          updated_at = NOW()
+      WHERE id = ${input.missionId} AND deleted_at IS NULL
+      RETURNING slug, title
+    `;
+    const mission = rows[0];
+    if (!mission) return { ok: false as const, error: "Mission nicht gefunden." };
+
+    if (input.amount > 0) {
+      for (const characterId of input.characterIds) {
+        await tx`
+          INSERT INTO character_ap_entries
+            (character_id, amount, reason, note, created_by, mission_id)
+          VALUES (${characterId}, ${input.amount}, 'mission',
+                  ${input.note ?? mission.title}, ${input.createdByUserId},
+                  ${input.missionId})
+        `;
+      }
+    }
+
+    return {
+      ok: true as const,
+      slug: mission.slug,
+      title: mission.title,
+      characterCount: input.amount > 0 ? input.characterIds.length : 0,
+    };
+  });
+}
