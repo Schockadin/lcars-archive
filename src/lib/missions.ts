@@ -131,7 +131,7 @@ export interface GmMissionOverviewItem {
 }
 
 // GM/Admin-Übersicht ALLER Missionen (inkl. Entwürfe, ohne Owner-Filter) für
-// die neue /admin/missions-Seite (GM-Menüpunkt "Missionen") — anders als
+// die neue /gm/missions-Seite (GM-Menüpunkt "Missionen") — anders als
 // getAllMissionsIncludingDrafts oben (MissionPreview mit Log-Zählung/Autoren
 // fürs Karten-Layout in /user/content) hier nur die schlanken Felder für
 // eine Tabelle inkl. Owner-Name, uncached wie getAllContentForAdmin

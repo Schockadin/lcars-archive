@@ -3,7 +3,7 @@ import { useActionState, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import { AP_REASON_LABELS, type ApReason } from "@/lib/apReasons";
 import type { AdvancementRules } from "@/lib/advancement";
-import { awardApAction, type ApAwardState } from "../apActions";
+import { awardApAction, type ApAwardState } from "./apActions";
 
 const initialState: ApAwardState = {};
 

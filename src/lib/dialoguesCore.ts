@@ -1653,7 +1653,7 @@ export interface GmDialogueOverviewItem {
 
 // ALLE offenen Dialoge, unabhängig von eigener Teilnahme — anders als
 // getDialoguesForUser oben (nur Dialoge EIGENER Charaktere) Grundlage für
-// die neue GM-Übersicht "Gespräche" (/admin/dialogues), damit GM/Admin auch
+// die neue GM-Übersicht "Gespräche" (/gm/dialogues), damit GM/Admin auch
 // Dialoge sehen, an denen sie selbst nicht beteiligt sind. Verlinkt von dort
 // auf /dialogues/[slug], das Nicht-Teilnehmenden mit GM/Admin-Rolle bereits
 // Lesezugriff ohne Antwortformular gewährt (siehe dort).

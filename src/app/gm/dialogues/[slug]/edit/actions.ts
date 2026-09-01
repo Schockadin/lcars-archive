@@ -51,5 +51,5 @@ export async function updateDialogueMetadataAction(
   if (!result) return { error: "Gespräch nicht gefunden." };
 
   revalidateArchiveEntry(result.slug);
-  redirect("/admin/dialogues");
+  redirect("/gm/dialogues");
 }

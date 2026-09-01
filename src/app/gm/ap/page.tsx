@@ -70,7 +70,7 @@ export default async function GmApPage() {
               Vergeben wird unter{" "}
               <Link href="/gm/sessions">Sessions</Link> (an alle Beteiligten
               auf einmal) oder unter{" "}
-              <Link href="/admin/campaign">Kampagne</Link> (einzeln, auch als
+              <Link href="/gm/campaign">Kampagne</Link> (einzeln, auch als
               Korrektur).
             </p>
           </section>

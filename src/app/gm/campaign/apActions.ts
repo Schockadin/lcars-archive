@@ -58,7 +58,7 @@ export async function awardApAction(
   // würde dort nicht sauber abgebildet. Wer wann wie viel gebucht hat, steht
   // ohnehin in character_ap_entries (created_by/created_at/note).
 
-  revalidatePath("/admin/campaign");
+  revalidatePath("/gm/campaign");
   revalidatePath(`/user/characters/${characterId}/stats`);
 
   return {

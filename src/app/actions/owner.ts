@@ -24,7 +24,7 @@ export type OwnerContentType =
 // selbst) darf hier bewusst jeder Admin JEDEN Inhalt umverteilen. Ausnahme
 // "mission": Missionen haben ohnehin kein Einzel-Owner-Bearbeitungsmodell
 // (jede Spielleitung darf jede Mission bearbeiten/löschen, siehe
-// deleteOwnContentAction), die neue GM-Missionsübersicht (/admin/missions)
+// deleteOwnContentAction), die neue GM-Missionsübersicht (/gm/missions)
 // braucht deshalb auch für GM eine funktionierende Owner-Zuweisung —
 // character/mission_log/archive_entry bleiben admin-only. Stiller Return
 // statt Redirect (Aufruf kommt aus einem useTransition-Dropdown, kein

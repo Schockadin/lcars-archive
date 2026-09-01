@@ -22,7 +22,7 @@ export const metadata: Metadata = {
 // "Missionen" + "Charaktere"): Ingame-Jahr einstellen, Charaktere zuordnen
 // und alle Missionen verwalten an einem Ort. Neuer GM-Menüpunkt "Kampagne"
 // (siehe HeaderUserNav.tsx), der den bisherigen "Missionen"-Punkt ablöst; die
-// alten Routen /admin/missions und /admin/characters bleiben per Direktlink
+// alten Routen /gm/missions und /gm/characters bleiben per Direktlink
 // weiter erreichbar.
 export default async function AdminCampaignPage() {
   await requireGM();

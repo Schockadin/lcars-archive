@@ -57,7 +57,7 @@ export async function createSessionAction(
 
   revalidatePath("/gm/sessions");
   revalidatePath("/gm/ap");
-  revalidatePath("/admin/campaign");
+  revalidatePath("/gm/campaign");
 
   const perCharacter = parsed.value.sessionAp + parsed.value.bonusAp;
   return {
@@ -85,7 +85,7 @@ export async function deleteSessionAction(
 
   revalidatePath("/gm/sessions");
   revalidatePath("/gm/ap");
-  revalidatePath("/admin/campaign");
+  revalidatePath("/gm/campaign");
   return { success: "Session zurückgenommen, die Gutschriften wurden storniert." };
 }
 

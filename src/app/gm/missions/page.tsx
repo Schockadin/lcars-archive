@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// GM-oder-admin (wie /admin/characters) — Übersicht ALLER Missionen (inkl.
+// GM-oder-admin (wie /gm/characters) — Übersicht ALLER Missionen (inkl.
 // Entwürfe) mit Bearbeiten/Löschen/Owner-Zuweisung pro Zeile, neuer
 // GM-Menüpunkt "Missionen" (siehe HeaderUserNav.tsx). Kein
 // Sichtbarkeits-Feld: Missionen haben (anders als Charaktere/Mission-Logs/

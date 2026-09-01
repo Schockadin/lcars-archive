@@ -7,7 +7,7 @@ import { PencilIcon } from "@/lib/icons";
 import { STATUS_CONFIG } from "@/lib/missionFormat";
 import type { GmMissionOverviewItem } from "@/lib/missions";
 
-// GM-Missionsübersicht (/admin/missions) — Edit/Löschen/Owner-Zuweisung pro
+// GM-Missionsübersicht (/gm/missions) — Edit/Löschen/Owner-Zuweisung pro
 // Zeile in einer durchsuchbaren Liste, analog zu AdminContentBrowser.tsx
 // (/admin/content), aber GM-zugänglich (nicht nur Admin) und auf Missionen
 // beschränkt. Kein Sichtbarkeits-Feld (siehe page.tsx-Kommentar). Löschen

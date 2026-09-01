@@ -12,11 +12,12 @@ import {
   UsersNavIcon,
   ProfileNavIcon,
   AdminNavIcon,
+  GmNavIcon,
   LogoutNavIcon,
 } from "@/lib/icons";
 import { useAnchoredDropdown } from "./useAnchoredDropdown";
 
-interface AdminMenuItem {
+interface StaffMenuItem {
   href: string;
   label: string;
   // Recht(e), die den Eintrag freischalten (granulares RBAC, siehe
@@ -24,17 +25,20 @@ interface AdminMenuItem {
   permission: string | readonly string[];
 }
 
-// Ein einziges Staff-Dropdown, dessen Einträge NACH RECHTEN gefiltert werden
-// (nicht mehr nach Rolle). Ein User mit mehreren Rollen sieht so genau die
-// Einträge, für die er berechtigt ist — GM-Werkzeuge (gm.access) und/oder
-// Admin-Werkzeuge (admin.access/…), auch beides gleichzeitig. "Kampagne"
-// bündelt Ingame-Jahr, Charakter-Zuordnung und Missions-Übersicht.
-const STAFF_ITEMS: AdminMenuItem[] = [
-  { href: "/admin/campaign", label: "Kampagne", permission: "gm.access" },
+// ZWEI getrennte Staff-Dropdowns statt eines gemischten: „Leitung" führt die
+// Werkzeuge der Spielleitung (/gm), „Admin" die der Verwaltung (/admin). Wer
+// beide Rollen hat, sieht beide Menüs nebeneinander — die Aufgaben bleiben
+// damit auch dann sauber getrennt. Innerhalb eines Menüs werden die Einträge
+// weiterhin NACH RECHTEN gefiltert (nicht nach Rolle).
+const GM_ITEMS: StaffMenuItem[] = [
+  { href: "/gm/campaign", label: "Kampagne", permission: "gm.access" },
   { href: "/gm/sessions", label: "Sessions", permission: "gm.access" },
   { href: "/gm/ap", label: "AP", permission: "gm.access" },
   { href: "/gm/talents", label: "Talente", permission: "gm.access" },
-  { href: "/admin/dialogues", label: "Gespräche", permission: "gm.access" },
+  { href: "/gm/dialogues", label: "Gespräche", permission: "gm.access" },
+];
+
+const ADMIN_ITEMS: StaffMenuItem[] = [
   { href: "/admin/users", label: "User", permission: "users.manage" },
   { href: "/admin/permissions", label: "Rollen", permission: "users.manage" },
   { href: "/admin/db", label: "DB", permission: DB_PERMISSIONS },
@@ -48,6 +52,17 @@ const STAFF_ITEMS: AdminMenuItem[] = [
   { href: "/admin/import", label: "Import", permission: "admin.access" },
 ];
 
+function visibleItems(
+  items: StaffMenuItem[],
+  permissions: string[],
+): StaffMenuItem[] {
+  return items.filter((item) =>
+    Array.isArray(item.permission)
+      ? item.permission.some((p) => permissions.includes(p))
+      : permissions.includes(item.permission as string),
+  );
+}
+
 // Kleines Icon vor dem Label — im Header/Desktop per CSS ausgeblendet, im
 // minimalistischen UI auf Mobile das einzige sichtbare Element (siehe
 // minimal-ui.css). aria-hidden, da das Label die Bedeutung trägt.
@@ -58,6 +73,102 @@ function NavPillContent({ icon, label }: { icon: ReactNode; label: string }) {
         {icon}
       </span>
       <span className="lcars-usernav-label">{label}</span>
+    </>
+  );
+}
+
+// Ein Dropdown-Pill mit seinen Einträgen. Eigene Komponente, weil es davon
+// jetzt zwei gibt (Leitung/Admin) und jedes seinen eigenen Öffnungs-Zustand
+// und seine eigene Verankerung braucht.
+function StaffDropdown({
+  label,
+  icon,
+  items,
+  active,
+  placement,
+}: {
+  label: string;
+  icon: ReactNode;
+  items: StaffMenuItem[];
+  // true = der aktuelle Pfad liegt im Bereich dieses Menüs.
+  active: boolean;
+  placement: "bottom" | "right";
+}) {
+  const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Navigation (auch per Browser-Zurück) schließt ein offen gebliebenes
+  // Dropdown — State-Anpassung während des Renders statt in einem Effect
+  // (siehe React-Doku "Adjusting state when a prop changes"), sonst würde
+  // ein setState direkt im Effect-Body einen unnötigen Zusatz-Render
+  // auslösen.
+  const [prevPathname, setPrevPathname] = useState(pathname);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setOpen(false);
+  }
+
+  const anchor = useAnchoredDropdown({
+    isOpen: open,
+    triggerRef,
+    panelRef,
+    onClose: () => setOpen(false),
+    placement,
+  });
+
+  return (
+    <>
+      {/* Das Pill selbst verlinkt bewusst nirgends hin, nur die Einträge im
+          Dropdown tun das. */}
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="true"
+        aria-expanded={open}
+        className={
+          active
+            ? "lcars-usernav-pill lcars-menu-active"
+            : "lcars-usernav-pill"
+        }
+      >
+        <NavPillContent icon={icon} label={label} />
+      </button>
+
+      {open &&
+        anchor &&
+        createPortal(
+          <div
+            ref={panelRef}
+            role="menu"
+            aria-label={label}
+            className="lcars-search-dropdown"
+            style={{
+              top: anchor.top,
+              left: anchor.left,
+              minWidth: anchor.width,
+            }}
+          >
+            {items.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                role="menuitem"
+                onClick={() => setOpen(false)}
+                className={
+                  pathname === item.href
+                    ? "lcars-search-item lcars-menu-active"
+                    : "lcars-search-item"
+                }
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>,
+          document.body,
+        )}
     </>
   );
 }
@@ -75,34 +186,11 @@ export default function HeaderUserNav({
   hasCharacters?: boolean;
   columns?: number;
   // "header": horizontales Pill-Grid im Header (LCARS). "sidebar": vertikale
-  // Liste in der Sidebar (minimalistisches UI) — das Admin-Dropdown klappt
-  // dann nach rechts auf.
+  // Liste in der Sidebar (minimalistisches UI) — die Dropdowns klappen dann
+  // nach rechts auf.
   variant?: "header" | "sidebar";
 }) {
   const pathname = usePathname();
-  const [adminOpen, setAdminOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  // Navigation (auch per Browser-Zurück) schließt ein offen gebliebenes
-  // Dropdown — State-Anpassung während des Renders statt in einem Effect
-  // (siehe React-Doku "Adjusting state when a prop changes"), sonst würde
-  // ein setState direkt im Effect-Body einen unnötigen Zusatz-Render
-  // auslösen.
-  const [prevPathname, setPrevPathname] = useState(pathname);
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname);
-    setAdminOpen(false);
-  }
-
-  const anchor = useAnchoredDropdown({
-    isOpen: adminOpen,
-    triggerRef,
-    panelRef,
-    onClose: () => setAdminOpen(false),
-    // Sidebar (minimalistisches UI): Flyout nach rechts statt nach unten.
-    placement: variant === "sidebar" ? "right" : "bottom",
-  });
 
   // „Suche" ist bewusst NICHT mehr hier: die Suche hat einen eigenen Eintrag
   // (Lupe) im Hauptmenü (MAIN_NAV/SidebarMenu.tsx), der Header-Button wäre
@@ -124,27 +212,9 @@ export default function HeaderUserNav({
     { href: "/user", label: "Profil", icon: <ProfileNavIcon /> },
   ];
 
-  // Auch der Spielleitungs-Bereich (/gm/sessions, /gm/ap, /gm/talents) hängt
-  // an diesem Dropdown und färbt es deshalb mit ein.
-  const isAdminSection =
-    pathname.startsWith("/admin") || pathname.startsWith("/gm");
-
-  // Ein Staff-Dropdown, dessen Einträge nach Rechten gefiltert werden (statt
-  // nach Rolle). Label „Admin“, sobald Admin-Rechte vorhanden sind, sonst
-  // „Leitung“. Kein Eintrag berechtigt → kein Dropdown.
-  const visibleStaffItems = STAFF_ITEMS.filter((item) =>
-    Array.isArray(item.permission)
-      ? item.permission.some((p) => permissions.includes(p))
-      : permissions.includes(item.permission as string),
-  );
-  const dropdownItems = visibleStaffItems.length > 0 ? visibleStaffItems : null;
-  // „Admin" bei Admin-Rechten, sonst „Leitung" bei GM-Rechten, sonst „DB" (ein
-  // reiner db-admin hat weder admin.access noch gm.access).
-  const dropdownLabel = permissions.includes("admin.access")
-    ? "Admin"
-    : permissions.includes("gm.access")
-      ? "Leitung"
-      : "DB";
+  const gmItems = visibleItems(GM_ITEMS, permissions);
+  const adminItems = visibleItems(ADMIN_ITEMS, permissions);
+  const placement = variant === "sidebar" ? "right" : "bottom";
 
   return (
     <nav
@@ -174,61 +244,24 @@ export default function HeaderUserNav({
         );
       })}
 
-      {/* GM/Admin: Dropdown statt Direktlink — das Pill selbst verlinkt
-          bewusst nirgends hin, nur die Einträge im Dropdown tun das. GM
-          bekam bis vor Kurzem ein einzelnes Direkt-Pill (nur
-          Charakterzuordnung) — jetzt analog zum Admin-Dropdown, seit GM auch
-          Missionen/Gespräche über eigene Übersichten erreicht. */}
-      {dropdownItems && (
-        <>
-          <button
-            ref={triggerRef}
-            type="button"
-            onClick={() => setAdminOpen((v) => !v)}
-            aria-haspopup="true"
-            aria-expanded={adminOpen}
-            className={
-              isAdminSection
-                ? "lcars-usernav-pill lcars-menu-active"
-                : "lcars-usernav-pill"
-            }
-          >
-            <NavPillContent icon={<AdminNavIcon />} label={dropdownLabel} />
-          </button>
+      {gmItems.length > 0 && (
+        <StaffDropdown
+          label="Leitung"
+          icon={<GmNavIcon />}
+          items={gmItems}
+          active={pathname.startsWith("/gm")}
+          placement={placement}
+        />
+      )}
 
-          {adminOpen &&
-            anchor &&
-            createPortal(
-              <div
-                ref={panelRef}
-                role="menu"
-                aria-label={dropdownLabel}
-                className="lcars-search-dropdown"
-                style={{
-                  top: anchor.top,
-                  left: anchor.left,
-                  minWidth: anchor.width,
-                }}
-              >
-                {dropdownItems.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    role="menuitem"
-                    onClick={() => setAdminOpen(false)}
-                    className={
-                      pathname === item.href
-                        ? "lcars-search-item lcars-menu-active"
-                        : "lcars-search-item"
-                    }
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </div>,
-              document.body,
-            )}
-        </>
+      {adminItems.length > 0 && (
+        <StaffDropdown
+          label="Admin"
+          icon={<AdminNavIcon />}
+          items={adminItems}
+          active={pathname.startsWith("/admin")}
+          placement={placement}
+        />
       )}
 
       <form

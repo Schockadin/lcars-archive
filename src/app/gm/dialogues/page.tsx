@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// GM-oder-admin (wie /admin/characters, /admin/missions) — Übersicht ALLER
+// GM-oder-admin (wie /gm/characters, /gm/missions) — Übersicht ALLER
 // offenen Dialoge, unabhängig von eigener Teilnahme (siehe
 // getAllOpenDialoguesForGM in lib/dialoguesCore.ts). Neuer GM-Menüpunkt
 // "Gespräche" (siehe HeaderUserNav.tsx). Rein lesend: verlinkt auf
@@ -74,7 +74,7 @@ export default async function AdminDialoguesPage() {
                   </Link>
                   {canModerate && (
                     <Link
-                      href={`/admin/dialogues/${d.slug}/edit`}
+                      href={`/gm/dialogues/${d.slug}/edit`}
                       className="text-lcars-primary underline text-[13px] self-start"
                     >
                       Metadaten bearbeiten

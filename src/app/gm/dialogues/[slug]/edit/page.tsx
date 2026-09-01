@@ -48,7 +48,7 @@ export default async function EditDialoguePage({
           <EditDialogueMetadataForm dialogue={dialogue} locations={locations} />
 
           <Link
-            href="/admin/dialogues"
+            href="/gm/dialogues"
             className="text-lcars-primary underline self-start"
           >
             ← Zurück zur Gesprächsübersicht

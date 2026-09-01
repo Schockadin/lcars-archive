@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { assignCharacterAction, type AdminActionState } from "./actions";
+import { assignCharacterAction, type AdminActionState } from "@/app/admin/actions";
 import type { Character } from "@/types/character";
 import { PlusIcon } from "@/lib/icons";
 

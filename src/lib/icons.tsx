@@ -409,6 +409,19 @@ export function AdminNavIcon() {
   );
 }
 
+// Spielleitungs-Menü: Würfel mit drei Augen — das Werkzeug der Runde, klar
+// unterscheidbar vom Schraubenschlüssel des Admin-Menüs.
+export function GmNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="3.5" />
+      <circle cx="8" cy="8" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="16" r="1.3" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 export function LogoutNavIcon() {
   return (
     <svg {...ICON_PROPS}>

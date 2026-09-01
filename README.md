@@ -112,7 +112,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `src/lib/talents.ts`.
 - **Spielleitungs-Bereich (`/gm`)** — eigener, über `requireGM` (`gm.access`)
   gegateter Bereich neben `/admin`, erreichbar über das Leitungs-Dropdown im
-  Header:
+  Header. Er hält ALLE Werkzeuge der Spielleitung: die früher unter `/admin`
+  liegenden Seiten `campaign`, `dialogues`, `characters` und `missions` sind
+  hierher umgezogen, `/admin` ist dadurch reine Verwaltung (`requireStaff`
+  verlangt dort kein `gm.access` mehr).
+  - `/gm/campaign` — Ingame-Jahr, AP-Vergabe, Charakter-Zuweisung und
+    Missions-Übersicht an einem Ort (`/gm/characters` und `/gm/missions`
+    bleiben als Direktlinks auf die Einzelansichten erhalten).
+  - `/gm/dialogues` — alle offenen Gespräche, unabhängig von eigener
+    Teilnahme; darunter `[slug]/edit` für die Metadaten (`dialogues.moderate`).
   - `/gm/sessions` — gespielte Sessions eintragen (Datum, Titel, Session-AP,
     Bonus-AP, Notizen) und allen ausgewählten Charakteren in einem Rutsch
     gutschreiben. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
@@ -132,7 +140,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   News auf einmal als gelesen. Im Profil lässt sich einstellen, welche News-Arten
   (neu/bearbeitet/gelöscht) überhaupt angezeigt werden (Standard: nur neue).
   Persistenz über die Tabelle `news_seen`.
-- **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/admin/campaign`
+- **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/gm/campaign`
   („Kampagne", ersetzt das frühere reine „Missionen") an einem Ort das aktuelle
   Ingame-Jahr, die Charakter-Zuweisung und die Missions-Übersicht. Charaktere
   haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen
@@ -234,11 +242,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   alle unerwarteten Serverfehler (Zeitpunkt, Route, Meldung, Digest); zusätzlich
   erhält die Administration jeden Morgen um 6 Uhr (Berliner Zeit) automatisch eine
   Mail mit allen Fehler- und Audit-Log-Einträgen der letzten 24 Stunden.
-  Spielleitung bekommt über ein eigenes „Leitung“-/„Kampagne“-Dropdown im Header
-  (analog zum Admin-Menü) Zugriff auf die Kampagnen-Seite (Ingame-Jahr,
+  Die Spielleitung hat ein eigenes „Leitung“-Dropdown im Header, das getrennt
+  neben dem Admin-Menü steht (wer beide Rollen hat, sieht beide Menüs
+  nebeneinander) und in den Bereich `/gm` führt: Kampagnen-Seite (Ingame-Jahr,
   Charakter-Zuweisung, Missions-Übersicht mit Bearbeiten/Löschen/Besitzer:in-
-  Zuordnung) sowie alle aktuell offenen Gespräche — auch ohne eigene Teilnahme,
-  verlinkt auf die read-only-Ansicht des jeweiligen Gesprächs. Über jedes neu
+  Zuordnung), Sessions, AP, Talente sowie alle aktuell offenen Gespräche — auch
+  ohne eigene Teilnahme, verlinkt auf die read-only-Ansicht des jeweiligen
+  Gesprächs. Über jedes neu
   begonnene Gespräch wird jeder aktive GM-Account zusätzlich automatisch per
   Mail/Push informiert.
 - **Custom-404/500-Seiten** — unerwartete Serverfehler zeigen eine

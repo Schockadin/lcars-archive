@@ -153,7 +153,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
           {/* Metadaten (Titel/Datum/Ort/Tags) bearbeiten — auch für
               abgeschlossene Gespräche, nicht der Gesprächsverlauf. */}
           <Link
-            href={`/admin/dialogues/${entry.slug}/edit`}
+            href={`/gm/dialogues/${entry.slug}/edit`}
             className="lcars-pill-btn--outline"
           >
             Metadaten bearbeiten

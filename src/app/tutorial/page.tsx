@@ -580,7 +580,9 @@ export default function TutorialPage() {
                 </li>
                 <li>
                   Über das eigene <strong>„Leitung“</strong>-Menü im Header
-                  (analog zum Admin-Menü) unter <strong>„Kampagne“</strong> an
+                  (es steht getrennt neben dem Admin-Menü — wer beide Rollen
+                  hat, sieht beide Menüs nebeneinander) unter{" "}
+                  <strong>„Kampagne“</strong> an
                   einer Stelle das aktuelle <strong>Ingame-Jahr</strong>{" "}
                   einstellen, Charaktere Spieler:innen zuweisen (Gast-Accounts
                   ausgenommen) und alle Missionen mit Bearbeiten-, Löschen- und

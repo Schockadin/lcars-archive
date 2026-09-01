@@ -13,7 +13,7 @@ export { inferAgeFromDateOfBirth } from "@/lib/campaignFormat";
 // dem Geburtsdatum eines Charakters (characters.metadata.dateOfBirth) dessen
 // angezeigtes Alter abgeleitet wird (inferAgeFromDateOfBirth in
 // campaignFormat.ts, genutzt in CharacterHero.tsx). Die Spielleitung setzt das
-// Jahr über /admin/campaign.
+// Jahr über /gm/campaign.
 
 // Auch von der Log-Inferenz abhängig: Der Tag wird deshalb ZUSÄTZLICH
 // invalidiert, sobald sich Mission-Log-Daten ändern (revalidateLog schließt
