@@ -96,6 +96,35 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Schwerpunkte schreibgeschützt und nur noch über AP-Steigerungen erhöhbar —
   serverseitig erzwungen, nicht nur im Formular. Steigerung und Abbuchung
   laufen in einer Transaktion, damit nie das eine ohne das andere passiert.
+  Alle Zahlen des Regelwerks sind Standardwerte: die Spielleitung stellt sie
+  unter `/gm/ap` ein, gespeichert in `campaign_settings.advancement_rules`
+  (`src/lib/advancementSettings.ts`); die Funktionen in `advancement.ts` nehmen
+  den geltenden Satz als Argument entgegen.
+- **Talent-Katalog** — die Talente der Runde liegen in der Tabelle `talents`
+  (Name eindeutig, Kategorie, Voraussetzung, Regeltext). Startdaten:
+  `scripts/seed/talents.json`, eingespielt mit `npm run db:seed-talents`
+  (idempotent). Auf dem Charakterbogen ersetzt eine nach Kategorien gruppierte
+  Auswahlliste das freie Tippen — mit Voraussetzung und Regeltext des
+  gewählten Talents direkt darunter und ausgegrauten, bereits geführten
+  Talenten (`src/app/user/characters/_shared/TalentPicker.tsx`); für
+  Sonderfälle bleibt der Freitext erreichbar. Die reine Hälfte (Kategorien,
+  Labels, Validierung) liegt in `src/lib/talentCatalog.ts`, der Datenzugriff in
+  `src/lib/talents.ts`.
+- **Spielleitungs-Bereich (`/gm`)** — eigener, über `requireGM` (`gm.access`)
+  gegateter Bereich neben `/admin`, erreichbar über das Leitungs-Dropdown im
+  Header:
+  - `/gm/sessions` — gespielte Sessions eintragen (Datum, Titel, Session-AP,
+    Bonus-AP, Notizen) und allen ausgewählten Charakteren in einem Rutsch
+    gutschreiben. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
+    Konto; Session und Gutschriften entstehen in einer Transaktion
+    (`game_sessions` + `character_ap_entries.session_id`), das Zurücknehmen
+    storniert sie per `ON DELETE CASCADE` mit.
+  - `/gm/ap` — Kontostände aller Charaktere, das Gesamtjournal aller Buchungen
+    (nach Charakter und Grund filterbar, serverseitig auf die letzten 500
+    begrenzt) und der Editor des AP-Regelwerks.
+  - `/gm/talents` — Talent-Katalog durchsuchen, filtern und bearbeiten sowie
+    eigene Talente ergänzen. Löschbar sind nur selbst ergänzte Talente, damit
+    keine Einträge unter bereits gepflegten Charakterbögen verschwinden.
 - **Persönliche News** — der News-Feed auf dem Dashboard bleibt persistent
   sichtbar (nicht mehr nur bis zum nächsten Besuch): jede Meldung lässt sich
   einzeln per X ausblenden (gilt danach als gelesen) und verschwindet automatisch,
@@ -386,6 +415,7 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:missions`       | Importiert nur Missionen + Mission-Logs                                                                                                          |
 | `npm run db:archive`        | Importiert nur die Archiv-Einträge                                                                                                               |
 | `npm run db:revalidate`     | Invalidiert nur die Caches (siehe `SITE_URL`)                                                                                                    |
+| `npm run db:seed-talents`   | Spielt den Talent-Katalog aus `scripts/seed/talents.json` ein (idempotent)                                                                        |
 | `npm run embed:all`         | Baut den Vektor-Index des Archiv-Assistenten für alle Inhalte (neu) auf — Backfill, idempotent (siehe „Archiv-Assistent (RAG)")                  |
 | `npm run db:reset`          | Setzt die Datenbank zurück                                                                                                                       |
 | `npm run db:backup`         | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup")                                                            |
@@ -776,6 +806,10 @@ Rollen-Hochstufungs-Bug verursacht). Datenverändernde bzw. einmalige Schritte
 (Backfills, Seeds, Constraint-Wechsel) liegen pro Pull Request in einer eigenen
 `scripts/migrate-pr<NN>.sql`, die nach dem Merge einmalig gegen die Produktions-
 DB ausgeführt wird.
+
+Nach `scripts/migrate-pr62.sql` einmalig `npm run db:seed-talents` ausführen —
+das füllt den neuen Talent-Katalog; ein zweiter Lauf ändert nichts und
+überschreibt keine Anpassungen der Spielleitung.
 
 ---
 

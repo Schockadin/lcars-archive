@@ -218,7 +218,20 @@ export default function TutorialPage() {
                 gespielte Session und ein geschriebenes Logbuch, dazu etwas für
                 abgeschlossene Missionen und Story-Arcs. Auf dem Bogen siehst du
                 dein Konto, die Kosten jeder möglichen Steigerung und alle
-                bisherigen Buchungen.
+                bisherigen Buchungen. Alle genannten Zahlen sind die
+                Voreinstellung — die Spielleitung kann das Regelwerk anpassen,
+                der Bogen rechnet dann mit ihren Werten.
+              </p>
+              <p>
+                <strong>Talente</strong> tippst du nicht ab, sondern wählst sie
+                aus einem Katalog: nach Kategorien sortiert (Allgemein, Spezies
+                &amp; Kultur, Kommando, Steuerung, Technik, Sicherheit,
+                Wissenschaft, Medizin und weitere), mit Voraussetzung und
+                vollem Regeltext direkt unter der Auswahl. Was schon auf deinem
+                Bogen steht, lässt sich nicht versehentlich ein zweites Mal
+                wählen. Fehlt ein Talent im Katalog — etwa eines, das ihr im
+                Spiel vereinbart habt — kannst du auf Freitext umschalten; die
+                Spielleitung kann es zusätzlich in den Katalog aufnehmen.
               </p>
               <p>
                 Für die Zahlen gelten die <strong>Regeln der Runde</strong>:
@@ -574,6 +587,33 @@ export default function TutorialPage() {
                   Besitzer:in-Zuordnung pro Zeile verwalten. (Der ebenfalls dort
                   liegende Eintrag <strong>„Gespräche“</strong> ist in der
                   eigenen Gespräche-Sektion oben beschrieben.)
+                </li>
+                <li>
+                  Unter <strong>„Sessions“</strong> gespielte Sessions eintragen
+                  (Datum, Titel, Session-AP, Bonus-AP, Notizen) und damit allen
+                  Beteiligten die AP in einem Rutsch gutschreiben.
+                  Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
+                  Konto — wer gefehlt hat, wird einfach abgewählt. Eine
+                  versehentlich eingetragene Session lässt sich zurücknehmen,
+                  die Gutschriften werden dann mit storniert.
+                </li>
+                <li>
+                  Unter <strong>„AP“</strong> alle Kontostände und das gesamte
+                  Buchungsjournal einsehen (nach Charakter und Grund filterbar)
+                  sowie das <strong>AP-Regelwerk</strong> einstellen: Kosten je
+                  Steigerungsschritt, Kosten für Talente und Schwerpunkte, die
+                  Budgets und Freikontingente der Ersterschaffung und die AP je
+                  Session und Logbuch — jederzeit auf die Standardwerte
+                  zurücksetzbar. Bereits gebuchte AP bleiben unberührt; nur was
+                  künftig gesteigert wird, rechnet mit den neuen Zahlen.
+                </li>
+                <li>
+                  Unter <strong>„Talente“</strong> den Talent-Katalog pflegen,
+                  aus dem die Charakterbögen ihre Auswahlliste speisen:
+                  durchsuchen, filtern, bestehende Talente bearbeiten und
+                  eigene ergänzen. Löschen lassen sich nur selbst ergänzte
+                  Talente — sonst verschwänden Einträge unter bereits
+                  gepflegten Bögen.
                 </li>
                 <li>
                   Das <strong>Ingame-Jahr</strong> (unter „Kampagne“) bestimmt
