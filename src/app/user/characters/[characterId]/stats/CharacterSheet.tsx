@@ -33,6 +33,7 @@ export default function CharacterSheet({
   userId,
   characterId,
   characterName,
+  rank,
   portrait,
   species,
   stats,
@@ -43,6 +44,7 @@ export default function CharacterSheet({
   userId: number;
   characterId: number;
   characterName: string;
+  rank: string | null;
   portrait: string | null;
   species: string | null;
   stats: CharacterStats;
@@ -110,6 +112,7 @@ export default function CharacterSheet({
         userId={userId}
         characterId={characterId}
         characterName={characterName}
+        rank={rank}
         portrait={portrait}
         stats={liveStats}
         talents={talents}

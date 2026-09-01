@@ -188,19 +188,30 @@ export default function TutorialPage() {
                 deine Charaktere (auch Entwürfe) mit denselben Knöpfen für
                 Sichtbarkeit, Bearbeiten und Löschen, du kannst weitere anlegen —
                 und über <strong>„Werte“</strong> je Charakter den
-                Charakterbogen pflegen: Personalakte (Pronomen, Rolle,
-                Zuweisung, Herkunft, Erziehung, Laufbahn, Erfahrung, Merkmale),
-                die sechs Attribute und sechs Disziplinen (nebeneinander wie
-                auf dem Bogen), Schutz, Entschlossenheit und Ansehen sowie ein
-                Foto-Kasten, über den du das Bild des Charakters hochlädst.
-                Dazu die Listen für Werte,
-                Schwerpunkte, Talente, Angriffe, Ausrüstung, Hobbys und
-                Karriere-Ereignisse: Ein Klick auf „Hinzufügen“ öffnet ein
-                kleines Fenster mit Eingabefeld, jeder Eintrag hat rechts ein
-                rotes Minus zum Entfernen. Bei Werten und Schwerpunkten steht
+                Charakterbogen pflegen — und zwar auf dem{" "}
+                <strong>Original-Bogen selbst</strong>: Die Seite zeigt das
+                gedruckte „Personnel File“, und du schreibst direkt in seine
+                Kästen. Personalakte (Pronomen, Rolle, Zuweisung, Herkunft,
+                Erziehung, Laufbahn, Erfahrung, Merkmale), die sechs Attribute
+                und sechs Disziplinen in ihren Zellen, Schutz,
+                Entschlossenheit und Ansehen; das Portrait steht im Bildrahmen
+                oben links. Auf schmalen Bildschirmen wird das ganze Blatt
+                kleiner, statt umzubrechen. Bild hochladen, Stress-Bonus und
+                Speichern findest du unter dem Bogen — dafür hat das Papier
+                keine Felder.
+              </p>
+              <p>
+                Die Listen auf dem Bogen — Werte, Schwerpunkte, Talente,
+                Angriffe, Ausrüstung, Hobbys — stehen als Zeilen in ihrem
+                Kasten. Das kleine <strong>Plus</strong> in der unteren Ecke
+                eines Kastens öffnet ein Fenster zum Hinzufügen, und fährst du
+                über eine Zeile, erscheint rechts ein rotes Minus zum
+                Entfernen. Karriere-Ereignisse haben wie auf dem Papier zwei
+                feste Kästen. Bei Werten und Schwerpunkten steht
                 dabei, wie viele der freien Plätze aus der Ersterschaffung du
                 schon vergeben hast. Spezies-Fähigkeiten und Sonderregeln
-                bleiben Textfelder — dort stehen meist ganze Regelsätze. Leere Felder gelten als „nicht angegeben“;
+                bleiben Textfelder — dort stehen meist ganze Regelsätze. Leere
+                Felder gelten als „nicht angegeben“;
                 Name, Rang und Spezies gehören zur Akte selbst und werden über
                 „Bearbeiten“ gepflegt. In „Meine Inhalte“ tauchen Charaktere
                 deshalb nicht mehr auf — der Charakter-Filter für

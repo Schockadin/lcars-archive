@@ -60,15 +60,21 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Sichtbarkeit,
   Bearbeiten, Löschen und dem Anlegen weiterer Charaktere. Pro Charakter lassen
   sich dort unter „Werte" die Charakterwerte nach dem Bogen von Star Trek
-  Adventures 2e pflegen — das Formular ist dem Bogen nachempfunden
-  (Abschnitte mit farbiger Kopfleiste, Wertekästen, Kästchenreihen, linierte
-  Listenfelder, siehe `src/styles/lcars-components/character-stats.css`):
+  Adventures 2e pflegen — und zwar auf dem **Original-Bogen selbst**: die
+  Seite zeigt das gedruckte „Personnel File" als 816×1056-Blatt
+  (`public/character-sheet/personnel-file.svg`), darüber liegen die
+  Eingabefelder exakt in ihren gedruckten Kästen. Die Maße stehen als Tabelle
+  in `personnelFileLayout.ts`, die Optik in
+  `src/styles/lcars-components/personnel-file.css`; jedes Maß ist ein
+  Vielfaches von `--pf-unit` (= 1px der Vorlage), sodass der Bogen in einer
+  schmaleren Spalte als Ganzes schrumpft statt umzubrechen. Gepflegt werden:
   Personalakte (Pronomen, Rolle, Zuweisung, Herkunft, Erziehung, Laufbahn,
   Erfahrung, Merkmale) samt Foto-Kasten (pflegt dasselbe Bild wie das
-  Portrait der Akte), sechs Attribute und sechs Disziplinen nebeneinander,
-  Protection/Determination/Reputation sowie die Listenfelder (Werte,
-  Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln, Angriffe,
-  Ausrüstung, Hobbys, Karriere-Ereignisse). Für die Zahlenwerte gelten die
+  Portrait der Akte, im Bildkasten oben links), sechs Attribute und sechs
+  Disziplinen, Protection/Determination/Reputation sowie die Listenfelder
+  (Werte, Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln, Angriffe,
+  Ausrüstung, Hobbys, Karriere-Ereignisse). Bild-Upload, Stress-Bonus und
+  Speichern stehen unter dem Blatt — der Papierbogen hat dafür keine Felder. Für die Zahlenwerte gelten die
   Regeln der Runde: Attribute 7–12 mit höchstens einem Wert auf 12 und zwei auf
   11, Disziplinen 1–5 mit höchstens einem auf 5 und zwei auf 4 (zentral in
   `src/lib/characterStats.ts`, im Formular als Live-Hinweis, verbindlich in der

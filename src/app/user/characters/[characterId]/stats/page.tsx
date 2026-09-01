@@ -47,14 +47,16 @@ export default async function CharacterStatsPage({ params }: Props) {
       <PageMeta title={character.name} section="users" />
       <h1>Werte: {character.name}</h1>
       <p className="lcars-text">
-        Werte nach dem Charakterbogen. Name, Rang und Spezies gehören zur Akte
-        selbst und werden über{" "}
+        Der Original-Charakterbogen zum Ausfüllen. Name, Rang und Spezies
+        stehen darauf, gehören aber zur Akte und werden über{" "}
         <Link href={`/user/characters/${character.id}/edit`}>
           Charakter bearbeiten
         </Link>{" "}
         gepflegt. Leere Felder gelten als „nicht angegeben&ldquo;. Der maximale
-        Stress wird aus Fitness und dem Bonus aus Talenten berechnet und ist
-        deshalb kein Eingabefeld.
+        Stress ergibt sich aus Fitness und dem Bonus aus Talenten und ist
+        deshalb kein Eingabefeld; die Stress-Kästchen zeigen nur, wie viele der
+        Charakter hat — abgestrichen wird am Spieltisch. Bild, Stress-Bonus und
+        Speichern stehen unter dem Bogen, dafür hat das Papier keine Felder.
       </p>
 
       <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
@@ -62,6 +64,7 @@ export default async function CharacterStatsPage({ params }: Props) {
           userId={session.userId}
           characterId={character.id}
           characterName={character.name}
+          rank={character.rank}
           portrait={character.portrait}
           species={character.species}
           stats={character.stats}

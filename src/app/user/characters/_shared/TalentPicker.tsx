@@ -44,7 +44,7 @@ function statusLabel(check: RequirementCheck): string | null {
   return `Nicht automatisch prüfbar: ${check.unchecked.join(", ")}`;
 }
 
-function TalentModal({
+export function TalentModal({
   talents,
   stats,
   species,

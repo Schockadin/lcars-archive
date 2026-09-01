@@ -740,6 +740,8 @@ export interface OwnCharacterStats {
   // Spezies der Akte — die Talent-Auswahl prüft damit Voraussetzungen wie
   // „Vulcan" (siehe talentRequirements.ts).
   species: string | null;
+  // Rang der Akte — steht auf dem Bogen, wird aber dort nicht bearbeitet.
+  rank: string | null;
   stats: CharacterStats;
 }
 
@@ -756,10 +758,11 @@ export async function getOwnCharacterStats(
       name: string;
       portrait: string | null;
       species: string | null;
+      rank: string | null;
       stats: unknown;
     }[]
   >`
-    SELECT id, slug, name, portrait, species, metadata -> 'stats' AS stats
+    SELECT id, slug, name, portrait, species, rank, metadata -> 'stats' AS stats
     FROM characters
     WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
     LIMIT 1
@@ -773,6 +776,7 @@ export async function getOwnCharacterStats(
     name: row.name,
     portrait: row.portrait,
     species: row.species,
+    rank: row.rank,
     // metadata->'stats' kommt je nach Treiber als Objekt ODER als JSON-String
     // an (wie metadata selbst, siehe parseCharacter oben).
     stats: parseCharacterStats(
