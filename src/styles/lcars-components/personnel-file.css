@@ -342,10 +342,18 @@ select.pf-field {
   background: var(--lcars-bg);
 }
 
+/* Im Vollbild soll das Blatt in BEIDE Richtungen passen. Deshalb wird nur die
+   Breite gesetzt — die kleinere aus „so breit wie der Platz" und „so breit,
+   wie es die Höhe zulässt" — und die Höhe kommt wie sonst aus dem
+   Seitenverhältnis.
+   Vorher standen hier height:100% und max-width:100%: auf einem hochkant
+   stehenden Fenster (Handy) griff die Breitenbegrenzung, die volle Höhe blieb
+   aber stehen — das Blatt wurde in die Länge gezogen, die Grafik zog mit, die
+   Felder (die an der BREITE hängen) jedoch nicht. Sie saßen dadurch zu weit
+   oben. */
 .pf-page--expanded .pf-sheet {
-  width: auto;
-  height: 100%;
-  max-width: 100%;
+  width: min(100%, calc((100dvh - 16px) * 816 / 1056));
+  height: auto;
 }
 
 /* Knopf zum Öffnen/Schließen — im Vollbild oben rechts über dem Blatt. */
