@@ -8,7 +8,7 @@ const initialState: ApAwardState = {};
 
 // Gründe, die die Spielleitung vergibt — "advancement" fehlt bewusst, das
 // buchen die Spieler:innen beim Steigern selbst (siehe apActions.ts).
-const AWARD_REASONS: ApReason[] = ["session", "logbook", "mission", "manual"];
+const AWARD_REASONS: ApReason[] = ["session", "logbook", "bonus", "mission", "manual"];
 
 // Schnellvergabe nach den Regeln der Runde: eine gespielte Session und ein
 // geschriebenes Logbuch geben je 1 AP, ein Missions-/Story-Abschluss einen

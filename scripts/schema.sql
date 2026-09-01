@@ -655,7 +655,7 @@ CREATE TABLE IF NOT EXISTS character_ap_entries (
   character_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
   amount       INT NOT NULL CHECK (amount <> 0),
   reason       TEXT NOT NULL
-                 CHECK (reason IN ('session', 'logbook', 'mission', 'manual', 'advancement')),
+                 CHECK (reason IN ('session', 'logbook', 'bonus', 'mission', 'manual', 'advancement')),
   note         TEXT,
   created_by   INT REFERENCES users(id) ON DELETE SET NULL,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()

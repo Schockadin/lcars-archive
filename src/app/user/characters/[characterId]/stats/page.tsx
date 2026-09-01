@@ -5,6 +5,7 @@ import PageMeta from "@/components/PageMeta";
 import { verifySession } from "@/lib/dal";
 import { getOwnCharacterStats } from "@/lib/characters";
 import { getApAccount } from "@/lib/characterAp";
+import { getAdvancementRules } from "@/lib/advancementSettings";
 import CharacterStatsForm from "./CharacterStatsForm";
 import AdvancementPanel from "./AdvancementPanel";
 
@@ -35,6 +36,9 @@ export default async function CharacterStatsPage({ params }: Props) {
   // AP-Konto erst NACH dem Owner-Check laden — vorher ist nicht klar, ob der
   // Charakter überhaupt zum Konto gehört.
   const account = await getApAccount(character.id);
+  // Das geltende Regelwerk (Kosten, Erschaffungsbudgets) — von der
+  // Spielleitung unter /gm/ap einstellbar.
+  const rules = await getAdvancementRules();
 
   return (
     <>
@@ -56,6 +60,7 @@ export default async function CharacterStatsPage({ params }: Props) {
           characterId={character.id}
           stats={character.stats}
           account={account}
+          rules={rules}
         />
 
         <CharacterStatsForm

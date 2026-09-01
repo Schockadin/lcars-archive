@@ -5,7 +5,9 @@ import {
   checkAdvancement,
   applyAdvancement,
   type AdvancementRequest,
+  type AdvancementRules,
 } from "@/lib/advancement";
+import { getAdvancementRules } from "@/lib/advancementSettings";
 import type { CharacterStats } from "@/types/characterStats";
 
 // Buchungen des AP-Kontos (siehe character_ap_entries in scripts/schema.sql).
@@ -14,6 +16,7 @@ import type { CharacterStats } from "@/types/characterStats";
 export const AP_REASONS = [
   "session", // Es wurde eine Session gespielt (+1)
   "logbook", // Es wurde ein Logbuch zur Session geschrieben (+1)
+  "bonus", // Bonus-AP einer Session (siehe /gm/sessions)
   "mission", // Abschluss einer Mission / eines Story-Arcs (+X)
   "manual", // Freie Korrektur durch die Spielleitung
   "advancement", // Ausgabe beim Steigern (negativ)
@@ -24,6 +27,7 @@ export type ApReason = (typeof AP_REASONS)[number];
 export const AP_REASON_LABELS: Record<ApReason, string> = {
   session: "Session gespielt",
   logbook: "Logbuch geschrieben",
+  bonus: "Bonus",
   mission: "Mission / Story-Arc abgeschlossen",
   manual: "Korrektur",
   advancement: "Steigerung",
@@ -138,6 +142,11 @@ export async function advanceOwnCharacter(
   characterId: number,
   request: AdvancementRequest,
 ): Promise<AdvanceResult> {
+  // Regelwerk VOR der Transaktion laden: src/lib/db.ts erlaubt nur EINE
+  // Connection pro Prozess, eine zweite Abfrage innerhalb der offenen
+  // Transaktion würde auf eine nie freiwerdende Connection warten.
+  const rules: AdvancementRules = await getAdvancementRules();
+
   return sql.begin(async (tx) => {
     const rows = await tx<{ slug: string; stats: unknown }[]>`
       SELECT slug, metadata -> 'stats' AS stats
@@ -169,7 +178,7 @@ export async function advanceOwnCharacter(
     `;
     const available = balance?.available ?? 0;
 
-    const check = checkAdvancement(stats, request, available);
+    const check = checkAdvancement(stats, request, available, rules);
     if (!check.ok) return { ok: false as const, error: check.error };
 
     const nextStats: CharacterStats = applyAdvancement(stats, request, check.plan);

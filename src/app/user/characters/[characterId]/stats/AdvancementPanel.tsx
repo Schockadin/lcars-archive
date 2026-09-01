@@ -8,13 +8,7 @@ import {
 import {
   checkAdvancement,
   creationBudget,
-  CREATION_ATTRIBUTE_BUDGET,
-  CREATION_DEPARTMENT_BUDGET,
-  CREATION_FREE_VALUES,
-  CREATION_FREE_TALENTS,
-  CREATION_FREE_FOCUSES,
-  TALENT_COST,
-  FOCUS_COST,
+  type AdvancementRules,
 } from "@/lib/advancement";
 import {
   advanceCharacterAction,
@@ -38,10 +32,14 @@ export default function AdvancementPanel({
   characterId,
   stats,
   account,
+  rules,
 }: {
   characterId: number;
   stats: CharacterStats;
   account: ApAccount;
+  // Das geltende AP-Regelwerk (Kosten, Erschaffungsbudgets) — von der
+  // Spielleitung unter /gm/ap einstellbar, deshalb als Prop statt als Konstante.
+  rules: AdvancementRules;
 }) {
   const [state, formAction, pending] = useActionState(
     advanceCharacterAction,
@@ -54,13 +52,13 @@ export default function AdvancementPanel({
   const [talent, setTalent] = useState("");
   const [focus, setFocus] = useState("");
 
-  const budget = creationBudget(stats);
+  const budget = creationBudget(stats, rules);
   const locked = stats.creationLocked;
 
   // Eine Zeile je steigerbarem Wert: Kosten des nächsten Schritts, oder der
   // Grund, warum es (noch) nicht geht — dieselbe Prüfung wie auf dem Server.
   function stepInfo(kind: "attribute" | "department", key: string) {
-    return checkAdvancement(stats, { kind, key }, account.available);
+    return checkAdvancement(stats, { kind, key }, account.available, rules);
   }
 
   return (
@@ -88,16 +86,16 @@ export default function AdvancementPanel({
             <span className="stat-label-secondary">Ersterschaffung</span>
           </h3>
           <p className="stat-sheet-rule">
-            Je {CREATION_ATTRIBUTE_BUDGET} AP für Attribute und Disziplinen,
-            dazu {CREATION_FREE_VALUES} Werte, {CREATION_FREE_TALENTS} Talente
-            und {CREATION_FREE_FOCUSES} Schwerpunkte frei. Attribute und
+            Je {rules.creationAttributeBudget} AP für Attribute und Disziplinen,
+            dazu {rules.creationFreeValues} Werte, {rules.creationFreeTalents} Talente
+            und {rules.creationFreeFocuses} Schwerpunkte frei. Attribute und
             Disziplinen trägst du oben direkt ein, solange die Erschaffung läuft.
           </p>
           <div className="stat-ap-budget">
             <div>
               <span className="stat-label-primary">Attributes</span>
               <span className="stat-label-secondary">
-                {budget.attributeCost} / {CREATION_ATTRIBUTE_BUDGET} AP
+                {budget.attributeCost} / {rules.creationAttributeBudget} AP
                 {budget.attributeRemaining >= 0
                   ? ` · ${budget.attributeRemaining} übrig`
                   : ` · ${-budget.attributeRemaining} zu viel`}
@@ -106,7 +104,7 @@ export default function AdvancementPanel({
             <div>
               <span className="stat-label-primary">Departments</span>
               <span className="stat-label-secondary">
-                {budget.departmentCost} / {CREATION_DEPARTMENT_BUDGET} AP
+                {budget.departmentCost} / {rules.creationDepartmentBudget} AP
                 {budget.departmentRemaining >= 0
                   ? ` · ${budget.departmentRemaining} übrig`
                   : ` · ${-budget.departmentRemaining} zu viel`}
@@ -190,7 +188,7 @@ export default function AdvancementPanel({
               <input type="hidden" name="kind" value="talent" />
               <label className="stat-field-label" htmlFor="advance-talent">
                 <span className="stat-label-primary">Talent</span>
-                <span className="stat-label-secondary">{TALENT_COST} AP</span>
+                <span className="stat-label-secondary">{rules.talentCost} AP</span>
               </label>
               <input
                 id="advance-talent"
@@ -202,7 +200,7 @@ export default function AdvancementPanel({
               />
               <button
                 type="submit"
-                disabled={pending || talent.trim() === "" || account.available < TALENT_COST}
+                disabled={pending || talent.trim() === "" || account.available < rules.talentCost}
                 className="lcars-pill-btn--outline disabled:opacity-50"
               >
                 Hinzufügen
@@ -214,7 +212,7 @@ export default function AdvancementPanel({
               <input type="hidden" name="kind" value="focus" />
               <label className="stat-field-label" htmlFor="advance-focus">
                 <span className="stat-label-primary">Focus</span>
-                <span className="stat-label-secondary">{FOCUS_COST} AP</span>
+                <span className="stat-label-secondary">{rules.focusCost} AP</span>
               </label>
               <input
                 id="advance-focus"
@@ -226,7 +224,7 @@ export default function AdvancementPanel({
               />
               <button
                 type="submit"
-                disabled={pending || focus.trim() === "" || account.available < FOCUS_COST}
+                disabled={pending || focus.trim() === "" || account.available < rules.focusCost}
                 className="lcars-pill-btn--outline disabled:opacity-50"
               >
                 Hinzufügen

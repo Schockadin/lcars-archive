@@ -7,10 +7,10 @@ import {
   creationBudget,
   checkAdvancement,
   applyAdvancement,
-  CREATION_ATTRIBUTE_BUDGET,
-  CREATION_DEPARTMENT_BUDGET,
-  TALENT_COST,
-  FOCUS_COST,
+  DEFAULT_ADVANCEMENT_RULES,
+  ADVANCEMENT_RULE_FIELDS,
+  parseAdvancementRules,
+  validateAdvancementRules,
 } from "./advancement";
 import { parseCharacterStats, ATTRIBUTE_FIELDS, DEPARTMENT_FIELDS } from "./characterStats";
 import type { CharacterStats } from "@/types/characterStats";
@@ -77,7 +77,7 @@ describe("Erschaffungsbudget", () => {
   it("meldet eine Überziehung", () => {
     // 12,11,11,10,9,8 kostet 450 AP und sprengt die 320.
     const budget = creationBudget(statsWith([12, 11, 11, 10, 9, 8]));
-    expect(budget.attributeCost).toBeGreaterThan(CREATION_ATTRIBUTE_BUDGET);
+    expect(budget.attributeCost).toBeGreaterThan(DEFAULT_ADVANCEMENT_RULES.creationAttributeBudget);
     expect(budget.attributeRemaining).toBeLessThan(0);
     expect(budget.overBudget).toBe(true);
   });
@@ -86,7 +86,7 @@ describe("Erschaffungsbudget", () => {
     const budget = creationBudget(statsWith([12, 7, 7, 7, 7, 7], [5, 1, 1, 1, 1, 1]));
     expect(budget.attributeCost).toBe(150);
     expect(budget.departmentCost).toBe(140);
-    expect(CREATION_DEPARTMENT_BUDGET).toBe(320);
+    expect(DEFAULT_ADVANCEMENT_RULES.creationDepartmentBudget).toBe(320);
   });
 });
 
@@ -190,11 +190,11 @@ describe("checkAdvancement", () => {
       20,
     );
     expect(talent.ok).toBe(true);
-    if (talent.ok) expect(talent.plan.cost).toBe(TALENT_COST);
+    if (talent.ok) expect(talent.plan.cost).toBe(DEFAULT_ADVANCEMENT_RULES.talentCost);
 
     const focus = checkAdvancement(stats, { kind: "focus", entry: "Warp" }, 20);
     expect(focus.ok).toBe(true);
-    if (focus.ok) expect(focus.plan.cost).toBe(FOCUS_COST);
+    if (focus.ok) expect(focus.plan.cost).toBe(DEFAULT_ADVANCEMENT_RULES.focusCost);
   });
 
   it("verweigert doppelte Talente/Schwerpunkte und leere Eingaben", () => {
@@ -237,5 +237,101 @@ describe("applyAdvancement", () => {
 
     const next = applyAdvancement(stats, { kind: "focus", entry: "Sensoren" }, check.plan);
     expect(next.focuses).toEqual(["Warp", "Sensoren"]);
+  });
+});
+
+// Die Spielleitung kann das Regelwerk unter /gm/ap verstellen — die Kosten- und
+// Budgetfunktionen müssen dann mit den GEÄNDERTEN Zahlen rechnen, nicht mit den
+// Standardwerten.
+describe("konfigurierbares Regelwerk", () => {
+  const doppelt = { ...DEFAULT_ADVANCEMENT_RULES, apPerStep: 20 };
+
+  it("rechnet Schrittkosten mit dem eingestellten Faktor", () => {
+    expect(attributeStepCost(10, doppelt)).toBe(60);
+    expect(departmentStepCost(3, doppelt)).toBe(60);
+  });
+
+  it("bezieht Erschaffungskosten und -budget auf die eingestellten Werte", () => {
+    const stats = statsWith([12, 7, 7, 7, 7, 7]);
+    expect(creationAttributeCost(stats, doppelt)).toBe(300);
+    const budget = creationBudget(stats, {
+      ...doppelt,
+      creationAttributeBudget: 250,
+    });
+    expect(budget.attributeRemaining).toBe(-50);
+    expect(budget.overBudget).toBe(true);
+  });
+
+  it("prüft Steigerungen gegen die eingestellten Kosten", () => {
+    const stats = statsWith([8, 7, 7, 7, 7, 7]);
+    // Kontrolle 8 → 9 kostet mit Faktor 20 genau 40 AP.
+    expect(
+      checkAdvancement(stats, { kind: "attribute", key: "control" }, 39, doppelt).ok,
+    ).toBe(false);
+    const result = checkAdvancement(
+      stats,
+      { kind: "attribute", key: "control" },
+      40,
+      doppelt,
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.plan.cost).toBe(40);
+  });
+
+  it("nutzt ohne übergebene Regeln weiterhin die Standardwerte", () => {
+    expect(attributeStepCost(10)).toBe(attributeStepCost(10, DEFAULT_ADVANCEMENT_RULES));
+  });
+});
+
+describe("parseAdvancementRules", () => {
+  it("ergänzt fehlende Felder aus den Standardwerten", () => {
+    expect(parseAdvancementRules({ apPerStep: 15 })).toEqual({
+      ...DEFAULT_ADVANCEMENT_RULES,
+      apPerStep: 15,
+    });
+  });
+
+  it("ignoriert unbrauchbare Werte und unbekannte Schlüssel", () => {
+    const parsed = parseAdvancementRules({
+      apPerStep: 0, // unter dem Minimum
+      talentCost: "keine Zahl",
+      focusCost: 12.5, // keine ganze Zahl
+      warpfaktor: 9, // unbekannt
+    });
+    expect(parsed).toEqual(DEFAULT_ADVANCEMENT_RULES);
+  });
+
+  it("verträgt null und Unsinn statt eines Objekts", () => {
+    expect(parseAdvancementRules(null)).toEqual(DEFAULT_ADVANCEMENT_RULES);
+    expect(parseAdvancementRules("kaputt")).toEqual(DEFAULT_ADVANCEMENT_RULES);
+  });
+});
+
+describe("validateAdvancementRules", () => {
+  function formValues(overrides: Record<string, string> = {}) {
+    const values: Record<string, string> = {};
+    for (const field of ADVANCEMENT_RULE_FIELDS) {
+      values[field.key] = String(DEFAULT_ADVANCEMENT_RULES[field.key]);
+    }
+    return { ...values, ...overrides };
+  }
+
+  it("nimmt vollständige, gültige Eingaben an", () => {
+    const result = validateAdvancementRules(formValues({ apPerStep: "15" }));
+    expect(result).toEqual({
+      ok: true,
+      value: { ...DEFAULT_ADVANCEMENT_RULES, apPerStep: 15 },
+    });
+  });
+
+  it("lehnt ab statt still auf den Standard zurückzufallen", () => {
+    expect(validateAdvancementRules(formValues({ apPerStep: "0" })).ok).toBe(false);
+    expect(validateAdvancementRules(formValues({ talentCost: "abc" })).ok).toBe(false);
+    expect(validateAdvancementRules(formValues({ focusCost: "" })).ok).toBe(false);
+  });
+
+  it("deckt jedes Feld des Regelwerks ab", () => {
+    const keys = ADVANCEMENT_RULE_FIELDS.map((f) => f.key).sort();
+    expect(keys).toEqual(Object.keys(DEFAULT_ADVANCEMENT_RULES).sort());
   });
 });

@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS character_ap_entries (
   character_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
   amount       INT NOT NULL CHECK (amount <> 0),
   reason       TEXT NOT NULL
-                 CHECK (reason IN ('session', 'logbook', 'mission', 'manual', 'advancement')),
+                 CHECK (reason IN ('session', 'logbook', 'bonus', 'mission', 'manual', 'advancement')),
   note         TEXT,
   created_by   INT REFERENCES users(id) ON DELETE SET NULL,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -91,6 +91,12 @@ ALTER TABLE character_ap_entries ADD COLUMN IF NOT EXISTS session_id INT
   REFERENCES game_sessions(id) ON DELETE CASCADE;
 CREATE INDEX IF NOT EXISTS idx_character_ap_entries_session
   ON character_ap_entries(session_id);
+
+-- character_ap_entries: neuer Buchungsgrund 'bonus' (Bonus-AP einer Session).
+-- DROP/ADD des CHECK, damit auch eine bereits angelegte Tabelle ihn bekommt.
+ALTER TABLE character_ap_entries DROP CONSTRAINT IF EXISTS character_ap_entries_reason_check;
+ALTER TABLE character_ap_entries ADD CONSTRAINT character_ap_entries_reason_check
+  CHECK (reason IN ('session', 'logbook', 'bonus', 'mission', 'manual', 'advancement'));
 
 -- campaign_settings: konfigurierbares AP-Regelwerk (Kosten fürs Steigern,
 -- Erschaffungsbudgets, AP je Session/Logbuch). NULL = die eingebauten
