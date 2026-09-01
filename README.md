@@ -151,6 +151,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   den Bogen weiter; ein Umschalter im gemeinsamen Layout
   (`[characterId]/layout.tsx` + `CharacterTabs.tsx`) wechselt zwischen
   Charakterbogen (`/stats`) und Stammdaten der Akte (`/edit`).
+- **Vollbild und Stammdaten auf dem Bogen** — ein Icon-Knopf über dem Blatt
+  zeigt den Bogen im Vollbild (`.pf-page--expanded`: `position: fixed` statt
+  Portal oder Fullscreen-API, damit das Element im umgebenden `<form>` bleibt
+  und die Felder weiter mitgespeichert werden; Escape schließt). Rang und
+  Spezies kommen aus der Akte: der Rang steht schreibgeschützt in seinem
+  Kasten, die Spezies teilt sich den Kasten „Species & Traits" mit dem
+  Merkmals-Feld (`.pf-combo`).
 - **PDF-Export des Bogens** — `/api/export/character-sheet?characterId=…`
   liefert den ausgefüllten Bogen als PDF (Seite 1) samt Talent-Spickzettel im
   selben Look (Seite 2+). Wie der Content-Export mit `@react-pdf/renderer`

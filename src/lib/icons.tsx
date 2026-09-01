@@ -434,6 +434,15 @@ export function GmNavIcon() {
   );
 }
 
+// Vergrößern/Vollbild — vier nach außen zeigende Ecken (Charakterbogen).
+export function ExpandIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5" />
+    </svg>
+  );
+}
+
 export function LogoutNavIcon() {
   return (
     <svg {...ICON_PROPS}>

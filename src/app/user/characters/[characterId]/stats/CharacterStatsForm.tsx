@@ -1,7 +1,7 @@
 "use client";
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useEffect, useMemo, useState } from "react";
 import { SubmitButton, FormError } from "@/app/_shared/FormPrimitives";
-import { MinusCircleIcon } from "@/lib/icons";
+import { ExpandIcon, MinusCircleIcon, XIcon } from "@/lib/icons";
 import {
   ATTRIBUTE_FIELDS,
   DEPARTMENT_FIELDS,
@@ -235,6 +235,23 @@ export default function CharacterStatsForm({
   // Welches Hinzufügen-Fenster gerade offen ist (Schlüssel der Liste bzw.
   // "talents"); null = keines.
   const [adding, setAdding] = useState<string | null>(null);
+  // Bogen im Vollbild (siehe .pf-page--expanded): der Bogen bleibt dabei im
+  // Formular, nur seine Darstellung ändert sich.
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpanded(false);
+    };
+    document.addEventListener("keydown", onKey);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [expanded]);
 
   // Liefert der Server neue Werte (nach dem Speichern oder einer Steigerung —
   // Schwerpunkte lassen sich mit AP kaufen), zieht der lokale State nach.
@@ -320,7 +337,18 @@ export default function CharacterStatsForm({
         />
       ))}
 
-      <div className="pf-page">
+      <div className={expanded ? "pf-page pf-page--expanded" : "pf-page"}>
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="pf-expand-btn lcars-icon-btn"
+          aria-label={expanded ? "Vollbild verlassen" : "Bogen im Vollbild"}
+          title={expanded ? "Vollbild verlassen" : "Bogen im Vollbild"}
+          aria-pressed={expanded}
+        >
+          {expanded ? <XIcon /> : <ExpandIcon />}
+        </button>
+
         <div className="pf-sheet">
           {/* Der Bogen selbst als Grafik — reine Deko, alle Eingaben liegen
               darüber. Bewusst <img> statt inline-SVG: 400 KB Vektorgrafik
@@ -400,13 +428,21 @@ export default function CharacterStatsForm({
               defaultValue={stats.reputation ?? ""}
               aria-label="Ansehen"
             />
-            <input
-              className="pf-field"
-              style={boxStyle(HEAD_BOXES.traits)}
-              name="traits"
-              defaultValue={stats.traits ?? ""}
-              aria-label="Spezies & Merkmale"
-            />
+            {/* „Species & Traits" ist auf dem Bogen EIN Kasten, in den
+                Daten aber zwei Dinge: die Spezies gehört zur Akte (dort
+                gepflegt, hier nur gezeigt), die weiteren Merkmale zum Bogen.
+                Beide teilen sich deshalb den Kasten — die Spezies fest davor,
+                das Eingabefeld füllt den Rest. */}
+            <div className="pf-combo" style={boxStyle(HEAD_BOXES.traits)}>
+              {species && <span className="pf-combo-fixed">{species} ·</span>}
+              <input
+                className="pf-field pf-combo-input"
+                name="traits"
+                defaultValue={stats.traits ?? ""}
+                aria-label="Merkmale"
+                placeholder={species ? "weitere Merkmale" : "Merkmale"}
+              />
+            </div>
             <textarea
               className="pf-field"
               style={boxStyle(HEAD_BOXES.environment)}

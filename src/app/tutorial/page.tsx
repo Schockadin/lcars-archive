@@ -203,7 +203,12 @@ export default function TutorialPage() {
                 <strong>Stammdaten</strong> deines Charakters um. Und mit{" "}
                 <strong>„Bogen als PDF“</strong> lädst du den ausgefüllten
                 Bogen zum Ausdrucken herunter — mit dem Talent-Spickzettel auf
-                der zweiten Seite.
+                der zweiten Seite. Der Knopf oben rechts über dem Blatt zeigt
+                den Bogen im <strong>Vollbild</strong>; bearbeiten kannst du
+                ihn dort genauso, Escape schließt die Ansicht wieder. Rang und
+                Spezies stehen auf dem Bogen, kommen aber aus den Stammdaten —
+                im Kasten „Species &amp; Traits“ steht die Spezies vorne,
+                deine weiteren Merkmale trägst du dahinter ein.
               </p>
               <p>
                 Die Listen auf dem Bogen — Werte, Schwerpunkte, Talente,

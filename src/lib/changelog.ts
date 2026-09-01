@@ -39,7 +39,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Die Werte-Seite ist jetzt der echte Charakterbogen: Du füllst das gedruckte „Personnel File“ direkt aus — jedes Feld sitzt in seinem Kasten, Foto im Bildrahmen, Attribute und Disziplinen in ihren Zellen. Auf schmalen Bildschirmen schrumpft das ganze Blatt, statt umzubrechen. Bild hochladen, Stress-Bonus und Speichern stehen unter dem Bogen, weil das Papier dafür keine Felder hat.",
       "Der Charakterbogen füllt jetzt die ganze Breite aus und liegt auf dem gewohnten LCARS-Hintergrund statt auf einem grauen Schreibtisch.",
       "Zwischen Charakterbogen und Stammdaten deines Charakters wechselst du jetzt mit einem Umschalter über der Seite, statt zwei getrennte Menüwege zu gehen.",
-      "Neu: Du kannst deinen Charakterbogen als PDF herunterladen und ausdrucken — Seite 1 ist der ausgefüllte Bogen, dahinter folgt der Talent-Spickzettel im selben Look."
+      "Neu: Du kannst deinen Charakterbogen als PDF herunterladen und ausdrucken — Seite 1 ist der ausgefüllte Bogen, dahinter folgt der Talent-Spickzettel im selben Look.",
+      "Rang und Spezies stehen jetzt auf dem Bogen, wo sie hingehören — beide kommen aus den Stammdaten deines Charakters und werden dort gepflegt; im Kasten „Species & Traits“ steht die Spezies vorne, deine weiteren Merkmale trägst du dahinter ein.",
+      "Über dem Bogen gibt es einen Knopf, der ihn im Vollbild zeigt — praktisch am Spieltisch. Bearbeiten kannst du ihn dort genauso, Escape schließt die Ansicht wieder."
     ],
   },
   {

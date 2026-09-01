@@ -13,10 +13,13 @@
    der Bogen hier auf dem LCARS-Hintergrund — er ist Teil der Anwendung, kein
    Blatt auf einem Tisch. */
 .pf-page {
+  position: relative;
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 12px 0;
+  /* Oben ein Streifen für den Vollbild-Knopf, damit er nicht auf der Grafik
+     des Bogens sitzt. */
+  padding: 44px 0 12px;
   background: var(--lcars-bg);
   font-family: Arial, sans-serif;
 }
@@ -42,6 +45,13 @@
   background: #fff;
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.22);
   overflow: hidden;
+}
+
+/* Wie in der Vorlage (die ein globales * { box-sizing: border-box } setzt):
+   die Maße der Kästen sind Außenmaße, Innenabstände zählen hinein. */
+.pf-sheet,
+.pf-sheet * {
+  box-sizing: border-box;
 }
 
 .pf-art {
@@ -121,6 +131,38 @@ select.pf-field {
    dort gepflegt, stehen auf dem Bogen aber an ihrem Platz. */
 .pf-field[readonly] {
   cursor: default;
+}
+
+/* Ein Kasten, der sich einen festen Teil (aus der Akte) und ein Eingabefeld
+   teilt — siehe „Species & Traits". */
+.pf-combo {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: stretch;
+}
+
+/* Derselbe Innenabstand wie im Eingabefeld daneben, damit beide Texte auf
+   einer Linie sitzen (ein <input> zentriert seinen Text in der Inhaltsbox —
+   deshalb hier ebenfalls zentriert statt an der Grundlinie). */
+.pf-combo-fixed {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: calc(13 * var(--pf-unit)) calc(3 * var(--pf-unit))
+    calc(4 * var(--pf-unit)) calc(7 * var(--pf-unit));
+  color: #555;
+  font-family: "Segoe UI", Arial, sans-serif;
+  font-size: calc(10 * var(--pf-unit));
+  line-height: 1.25;
+}
+
+.pf-combo-input {
+  position: static;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding-left: 0;
 }
 
 .pf-stat,
@@ -283,6 +325,35 @@ select.pf-field {
   font-family: "Segoe UI", Arial, sans-serif;
   font-size: calc(9 * var(--pf-unit));
   pointer-events: none;
+}
+
+/* ── Vollbild ──────────────────────────────────────────────────────────
+   Der Bogen füllt den Bildschirm. Bewusst position:fixed statt eines Portals
+   oder der Fullscreen-API: das Element bleibt an derselben Stelle im DOM und
+   damit im umgebenden <form> — die Felder werden weiterhin mitgespeichert.
+   Im Vollbild bestimmt die HÖHE die Größe, sonst ragte das hochformatige
+   Blatt auf einem breiten Bildschirm unten heraus. */
+.pf-page--expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  align-items: center;
+  padding: 8px;
+  background: var(--lcars-bg);
+}
+
+.pf-page--expanded .pf-sheet {
+  width: auto;
+  height: 100%;
+  max-width: 100%;
+}
+
+/* Knopf zum Öffnen/Schließen — im Vollbild oben rechts über dem Blatt. */
+.pf-expand-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1201;
 }
 
 /* Auf schmalen Bildschirmen rückt das Blatt ganz an den Rand. Die
