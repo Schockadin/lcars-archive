@@ -83,8 +83,12 @@ export async function lockCreationAction(
   revalidateCharacter(result.slug);
   revalidatePath(`/user/characters/${characterId}/stats`);
 
+  const base =
+    "Erschaffung abgeschlossen — Attribute und Disziplinen lassen sich jetzt nur noch mit AP steigern.";
   return {
     success:
-      "Erschaffung abgeschlossen — Attribute und Disziplinen lassen sich jetzt nur noch mit AP steigern.",
+      result.carryOver > 0
+        ? `${base} ${result.carryOver} nicht verbrauchte AP wurden gutgeschrieben.`
+        : base,
   };
 }

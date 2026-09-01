@@ -5,6 +5,7 @@ import {
   creationAttributeCost,
   creationDepartmentCost,
   creationBudget,
+  creationCarryOver,
   checkAdvancement,
   applyAdvancement,
   DEFAULT_ADVANCEMENT_RULES,
@@ -333,5 +334,40 @@ describe("validateAdvancementRules", () => {
   it("deckt jedes Feld des Regelwerks ab", () => {
     const keys = ADVANCEMENT_RULE_FIELDS.map((f) => f.key).sort();
     expect(keys).toEqual(Object.keys(DEFAULT_ADVANCEMENT_RULES).sort());
+  });
+});
+
+describe("creationCarryOver", () => {
+  it("überträgt die Reste beider Budgets, gedeckelt auf das Maximum", () => {
+    // 12/7/7/7/7/7 kostet 150 AP von 320 → 170 übrig, Disziplinen unberührt
+    // (0 von 320 verbraucht) → zusammen weit über dem Deckel von 10.
+    expect(creationCarryOver(statsWith([12, 7, 7, 7, 7, 7]))).toBe(10);
+  });
+
+  it("überträgt weniger als das Maximum, wenn weniger übrig ist", () => {
+    // Attribute: 310 von 320 → 10 übrig. Disziplinen: 5/4/3/2/1/1 = 300 von
+    // 320 → 20 übrig. Zusammen 30, gedeckelt auf 4.
+    const stats = statsWith([12, 10, 10, 9, 8, 7], [5, 4, 3, 2, 1, 1]);
+    expect(creationCarryOver(stats, { ...DEFAULT_ADVANCEMENT_RULES, creationCarryOverMax: 4 })).toBe(4);
+    expect(creationCarryOver(stats, { ...DEFAULT_ADVANCEMENT_RULES, creationCarryOverMax: 100 })).toBe(30);
+  });
+
+  it("zählt ein überzogenes Budget als 0 statt negativ", () => {
+    // Attribute überzogen (12/11/11/10/9/8), Disziplinen unberührt: der
+    // Attributs-Rest darf den Disziplinen-Rest nicht schmälern.
+    const stats = statsWith([12, 11, 11, 10, 9, 8]);
+    expect(creationBudget(stats).attributeRemaining).toBeLessThan(0);
+    expect(
+      creationCarryOver(stats, { ...DEFAULT_ADVANCEMENT_RULES, creationCarryOverMax: 1000 }),
+    ).toBe(320);
+  });
+
+  it("überträgt nichts, wenn das Maximum 0 ist", () => {
+    expect(
+      creationCarryOver(statsWith([7, 7, 7, 7, 7, 7]), {
+        ...DEFAULT_ADVANCEMENT_RULES,
+        creationCarryOverMax: 0,
+      }),
+    ).toBe(0);
   });
 });

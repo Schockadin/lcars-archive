@@ -7,8 +7,7 @@ import { getOwnCharacterStats } from "@/lib/characters";
 import { getApAccount } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
-import CharacterStatsForm from "./CharacterStatsForm";
-import AdvancementPanel from "./AdvancementPanel";
+import CharacterSheet from "./CharacterSheet";
 
 export const metadata: Metadata = {
   title: "Charakterwerte",
@@ -59,20 +58,14 @@ export default async function CharacterStatsPage({ params }: Props) {
       </p>
 
       <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
-        <AdvancementPanel
-          characterId={character.id}
-          stats={character.stats}
-          account={account}
-          rules={rules}
-          talents={talents}
-        />
-
-        <CharacterStatsForm
+        <CharacterSheet
           userId={session.userId}
           characterId={character.id}
           characterName={character.name}
           portrait={character.portrait}
           stats={character.stats}
+          account={account}
+          rules={rules}
           talents={talents}
         />
       </article>

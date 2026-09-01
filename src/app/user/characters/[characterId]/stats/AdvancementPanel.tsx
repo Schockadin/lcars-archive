@@ -8,6 +8,7 @@ import {
 import {
   checkAdvancement,
   creationBudget,
+  creationCarryOver,
   type AdvancementRules,
 } from "@/lib/advancement";
 import {
@@ -61,6 +62,9 @@ export default function AdvancementPanel({
 
   const budget = creationBudget(stats, rules);
   const locked = stats.creationLocked;
+  // Was beim Festschreiben aufs Konto wandert — rechnet live mit, während unten
+  // die Werte getippt werden (der State dafür liegt in CharacterSheet.tsx).
+  const carryOver = creationCarryOver(stats, rules);
 
   // Eine Zeile je steigerbarem Wert: Kosten des nächsten Schritts, oder der
   // Grund, warum es (noch) nicht geht — dieselbe Prüfung wie auf dem Server.
@@ -80,6 +84,14 @@ export default function AdvancementPanel({
           <span className="stat-ap-value">{account.available}</span>
           <span className="stat-label-secondary">AP verfügbar</span>
         </div>
+        {!locked && (
+          <div className="stat-ap-balance">
+            <span className="stat-ap-value">{account.available + carryOver}</span>
+            <span className="stat-label-secondary">
+              nach der Erschaffung
+            </span>
+          </div>
+        )}
         <p className="stat-sheet-rule">
           {account.earned} AP vergeben · {account.spent} AP ausgegeben
         </p>
@@ -121,6 +133,13 @@ export default function AdvancementPanel({
           {budget.overBudget && (
             <p className="stat-ap-warning">
               Das Erschaffungsbudget ist überzogen — bitte Werte anpassen.
+            </p>
+          )}
+          {!budget.overBudget && rules.creationCarryOverMax > 0 && (
+            <p className="stat-sheet-rule">
+              Nicht verbrauchtes Budget wird beim Festschreiben gutgeschrieben —
+              höchstens {rules.creationCarryOverMax} AP. Aktuell wären das{" "}
+              <strong>{carryOver} AP</strong>.
             </p>
           )}
 
@@ -175,7 +194,11 @@ export default function AdvancementPanel({
                           <button
                             type="submit"
                             disabled={pending || !info.ok}
-                            title={info.ok ? undefined : info.error}
+                            title={
+                              info.ok
+                                ? `Danach bleiben ${account.available - info.plan.cost} AP`
+                                : info.error
+                            }
                             className="lcars-pill-btn--outline disabled:opacity-50"
                           >
                             {info.ok ? `+1 · ${info.plan.cost} AP` : "+1"}
@@ -195,7 +218,12 @@ export default function AdvancementPanel({
               <input type="hidden" name="kind" value="talent" />
               <label className="stat-field-label" htmlFor="advance-talent">
                 <span className="stat-label-primary">Talent</span>
-                <span className="stat-label-secondary">{rules.talentCost} AP</span>
+                <span className="stat-label-secondary">
+                  {rules.talentCost} AP
+                  {account.available >= rules.talentCost
+                    ? ` · danach ${account.available - rules.talentCost} AP`
+                    : " · nicht genug AP"}
+                </span>
               </label>
               {talentFreeText || talents.length === 0 ? (
                 <input
@@ -247,7 +275,12 @@ export default function AdvancementPanel({
               <input type="hidden" name="kind" value="focus" />
               <label className="stat-field-label" htmlFor="advance-focus">
                 <span className="stat-label-primary">Focus</span>
-                <span className="stat-label-secondary">{rules.focusCost} AP</span>
+                <span className="stat-label-secondary">
+                  {rules.focusCost} AP
+                  {account.available >= rules.focusCost
+                    ? ` · danach ${account.available - rules.focusCost} AP`
+                    : " · nicht genug AP"}
+                </span>
               </label>
               <input
                 id="advance-focus"

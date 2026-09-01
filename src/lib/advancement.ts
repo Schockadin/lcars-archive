@@ -36,6 +36,9 @@ export interface AdvancementRules {
   creationFreeValues: number;
   creationFreeTalents: number;
   creationFreeFocuses: number;
+  // Was von den ungenutzten Erschaffungsbudgets höchstens als AP auf das Konto
+  // übertragen wird (siehe creationCarryOver). 0 = nichts wird übertragen.
+  creationCarryOverMax: number;
   // Vergabe: was eine gespielte Session bzw. ein geschriebenes Logbuch bringt.
   apPerSession: number;
   apPerLogbook: number;
@@ -50,6 +53,7 @@ export const DEFAULT_ADVANCEMENT_RULES: AdvancementRules = {
   creationFreeValues: 4,
   creationFreeTalents: 4,
   creationFreeFocuses: 6,
+  creationCarryOverMax: 10,
   apPerSession: 1,
   apPerLogbook: 1,
 };
@@ -74,6 +78,7 @@ export const ADVANCEMENT_RULE_FIELDS: AdvancementRuleField[] = [
   { key: "creationFreeValues", label: "Erschaffung: freie Werte", hint: "Anzahl Werte, die die Erschaffung kostenlos mitbringt.", min: 0, max: 20 },
   { key: "creationFreeTalents", label: "Erschaffung: freie Talente", hint: "Anzahl Talente, die die Erschaffung kostenlos mitbringt.", min: 0, max: 20 },
   { key: "creationFreeFocuses", label: "Erschaffung: freie Schwerpunkte", hint: "Anzahl Schwerpunkte, die die Erschaffung kostenlos mitbringt.", min: 0, max: 20 },
+  { key: "creationCarryOverMax", label: "Erschaffung: übertragbare Rest-AP", hint: "So viele nicht verbrauchte AP der Erschaffung werden beim Festschreiben aufs Konto gutgeschrieben.", min: 0, max: 500 },
   { key: "apPerSession", label: "AP je gespielter Session", hint: "Vorbelegung beim Anlegen einer Session unter /gm/sessions.", min: 0, max: 100 },
   { key: "apPerLogbook", label: "AP je geschriebenem Logbuch", hint: "Betrag des Schnellknopfs „+Logbuch“ bei der AP-Vergabe.", min: 0, max: 100 },
 ];
@@ -202,6 +207,23 @@ export function creationBudget(
       attributeCost > rules.creationAttributeBudget ||
       departmentCost > rules.creationDepartmentBudget,
   };
+}
+
+// Rest-AP der Ersterschaffung: was von beiden Budgets übrig bleibt, wird beim
+// Festschreiben aufs AP-Konto übertragen — gedeckelt durch
+// rules.creationCarryOverMax (Standard 10), damit ein sparsam gebauter
+// Charakter nicht mit einem halben Steigerungspaket startet. Überzogene
+// Budgets zählen als 0, nicht negativ: eine Überziehung wird beim
+// Festschreiben ohnehin abgelehnt.
+export function creationCarryOver(
+  stats: CharacterStats,
+  rules: AdvancementRules = DEFAULT_ADVANCEMENT_RULES,
+): number {
+  const budget = creationBudget(stats, rules);
+  const left =
+    Math.max(0, budget.attributeRemaining) +
+    Math.max(0, budget.departmentRemaining);
+  return Math.min(left, rules.creationCarryOverMax);
 }
 
 // ── Steigern nach der Erschaffung ──────────────────────────────────────

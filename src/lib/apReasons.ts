@@ -10,6 +10,7 @@ export const AP_REASONS = [
   "session", // Es wurde eine Session gespielt (+1)
   "logbook", // Es wurde ein Logbuch zur Session geschrieben (+1)
   "bonus", // Bonus-AP einer Session (siehe /gm/sessions)
+  "creation", // Nicht verbrauchtes Erschaffungsbudget (siehe creationCarryOver)
   "mission", // Abschluss einer Mission / eines Story-Arcs (+X)
   "manual", // Freie Korrektur durch die Spielleitung
   "advancement", // Ausgabe beim Steigern (negativ)
@@ -21,6 +22,7 @@ export const AP_REASON_LABELS: Record<ApReason, string> = {
   session: "Session gespielt",
   logbook: "Logbuch geschrieben",
   bonus: "Bonus",
+  creation: "Rest aus der Erschaffung",
   mission: "Mission / Story-Arc abgeschlossen",
   manual: "Korrektur",
   advancement: "Steigerung",

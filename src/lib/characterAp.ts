@@ -4,6 +4,7 @@ import { parseCharacterStats } from "@/lib/characterStats";
 import {
   checkAdvancement,
   applyAdvancement,
+  creationCarryOver,
   type AdvancementRequest,
   type AdvancementRules,
 } from "@/lib/advancement";
@@ -234,14 +235,22 @@ export async function advanceOwnCharacter(
 }
 
 // Ersterschaffung abschließen: ab jetzt sind Attribute/Disziplinen nur noch
-// über AP-Steigerungen veränderbar (siehe advanceOwnCharacter oben).
+// über AP-Steigerungen veränderbar (siehe advanceOwnCharacter oben). Was von
+// den Erschaffungsbudgets übrig geblieben ist, wird dabei (gedeckelt, siehe
+// creationCarryOver) als AP gutgeschrieben — in DERSELBEN Transaktion wie das
+// Festschreiben, sonst könnte ein Abbruch dazwischen entweder die Gutschrift
+// ohne Sperre oder die Sperre ohne Gutschrift hinterlassen.
+//
 // Bewusst lesen-ändern-schreiben statt jsonb_set: hat ein Charakter noch gar
 // keinen stats-Teilbaum, könnte jsonb_set den verschachtelten Pfad nicht
 // anlegen. So entsteht er beim Festschreiben einfach mit.
 export async function lockOwnCharacterCreation(
   userId: number,
   characterId: number,
-): Promise<{ slug: string } | null> {
+): Promise<{ slug: string; carryOver: number } | null> {
+  // Regelwerk VOR der Transaktion laden — siehe advanceOwnCharacter.
+  const rules = await getAdvancementRules();
+
   return sql.begin(async (tx) => {
     const rows = await tx<{ slug: string; stats: unknown }[]>`
       SELECT slug, metadata -> 'stats' AS stats
@@ -256,6 +265,12 @@ export async function lockOwnCharacterCreation(
       typeof row.stats === "string" ? JSON.parse(row.stats) : row.stats,
     );
 
+    // Bereits festgeschrieben? Dann nichts tun — ein zweiter Aufruf (Doppelklick,
+    // erneut abgeschickt) darf die Rest-AP nicht ein zweites Mal gutschreiben.
+    if (stats.creationLocked) return { slug: row.slug, carryOver: 0 };
+
+    const carryOver = creationCarryOver(stats, rules);
+
     await tx`
       UPDATE characters
       SET metadata = metadata || ${tx.json({ stats: { ...stats, creationLocked: true } } as ReturnType<typeof JSON.parse>)},
@@ -263,6 +278,14 @@ export async function lockOwnCharacterCreation(
       WHERE id = ${characterId} AND player_id = ${userId}
     `;
 
-    return { slug: row.slug };
+    if (carryOver > 0) {
+      await tx`
+        INSERT INTO character_ap_entries (character_id, amount, reason, note, created_by)
+        VALUES (${characterId}, ${carryOver}, 'creation',
+                'Nicht verbrauchtes Erschaffungsbudget', ${userId})
+      `;
+    }
+
+    return { slug: row.slug, carryOver };
   });
 }

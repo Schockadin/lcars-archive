@@ -19,17 +19,13 @@ import {
 } from "../../_shared/statsAction";
 import type { Talent } from "@/lib/talentCatalog";
 import TalentPicker from "../../_shared/TalentPicker";
-import type {
-  CharacterAttributes,
-  CharacterDepartments,
-  CharacterStats,
-} from "@/types/characterStats";
+import type { CharacterStats } from "@/types/characterStats";
 
 const initialState: CharacterStatsFormState = {};
 
 // Zahlen-Eingaben werden als Strings gehalten (ein leeres Feld ist "nicht
 // gepflegt", nicht 0) und nur zum Rechnen/Prüfen umgewandelt.
-type NumberInputs = Record<string, string>;
+export type NumberInputs = Record<string, string>;
 
 function toNumbers(
   fields: { key: string }[],
@@ -189,6 +185,10 @@ export default function CharacterStatsForm({
   portrait,
   stats,
   talents,
+  attributes,
+  setAttributes,
+  departments,
+  setDepartments,
 }: {
   userId: number;
   characterId: number;
@@ -198,31 +198,20 @@ export default function CharacterStatsForm({
   stats: CharacterStats;
   // Talent-Katalog für die Auswahlliste (gepflegt unter /gm/talents).
   talents: Talent[];
+  // Attribute und Disziplinen liegen als State eine Ebene höher
+  // (CharacterSheet.tsx): der AP-Bereich rechnet damit live mit, während hier
+  // getippt wird. Beide Blöcke bleiben Strings — ein leeres Feld ist „nicht
+  // gepflegt", nicht 0.
+  attributes: NumberInputs;
+  setAttributes: React.Dispatch<React.SetStateAction<NumberInputs>>;
+  departments: NumberInputs;
+  setDepartments: React.Dispatch<React.SetStateAction<NumberInputs>>;
 }) {
   const [state, formAction, pending] = useActionState(
     characterStatsAction,
     initialState,
   );
 
-  const [attributes, setAttributes] = useState<NumberInputs>(() =>
-    Object.fromEntries(
-      ATTRIBUTE_FIELDS.map((field) => [
-        field.key,
-        stats.attributes[field.key as keyof CharacterAttributes]?.toString() ??
-          "",
-      ]),
-    ),
-  );
-  const [departments, setDepartments] = useState<NumberInputs>(() =>
-    Object.fromEntries(
-      DEPARTMENT_FIELDS.map((field) => [
-        field.key,
-        stats.departments[
-          field.key as keyof CharacterDepartments
-        ]?.toString() ?? "",
-      ]),
-    ),
-  );
   const [stressBonus, setStressBonus] = useState(
     stats.stressBonus?.toString() ?? "",
   );
