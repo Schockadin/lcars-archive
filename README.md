@@ -146,7 +146,19 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Katalog stehen — bereits gespeicherte Alt-Einträge aus der Freitext-Zeit
   bleiben erlaubt, sonst ließe sich ein solcher Bogen nie wieder speichern.
   Ganz unten am Bogen listet ein **Spickzettel** (`TalentCheatSheet.tsx`) die
-  Talente des Charakters mit vollem Regeltext. Dasselbe Listen-Muster (Einträge
+  Talente des Charakters mit vollem Regeltext.
+- **Charakter-Ansichten mit Umschalter** — `/user/characters/[id]` leitet auf
+  den Bogen weiter; ein Umschalter im gemeinsamen Layout
+  (`[characterId]/layout.tsx` + `CharacterTabs.tsx`) wechselt zwischen
+  Charakterbogen (`/stats`) und Stammdaten der Akte (`/edit`).
+- **PDF-Export des Bogens** — `/api/export/character-sheet?characterId=…`
+  liefert den ausgefüllten Bogen als PDF (Seite 1) samt Talent-Spickzettel im
+  selben Look (Seite 2+). Wie der Content-Export mit `@react-pdf/renderer`
+  (reines Node, kein Chromium — läuft auf Netlify Functions). Der Bogen ist
+  816×1056 CSS-Pixel = 8,5×11 Zoll = das PDF-Format „Letter", die Maße aus
+  `personnelFileLayout.ts` gelten deshalb unverändert mit Faktor 0,75 (px→pt).
+  Die Grafik liegt als eingebettetes PNG bei (`personnelFileArt.ts`, aus dem
+  SVG erzeugt), damit der Export weder Datei- noch Netzzugriff braucht. Dasselbe Listen-Muster (Einträge
   mit rotem Minus, „Hinzufügen" öffnet ein Fenster mit freiem Eingabefeld)
   nutzen über `EntryListField.tsx` auch Werte, Schwerpunkte, Angriffe,
   Ausrüstung, Karriere-Ereignisse und Hobbys; Spezies-Fähigkeiten und

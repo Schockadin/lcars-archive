@@ -59,6 +59,18 @@ export default async function CharacterStatsPage({ params }: Props) {
         Speichern stehen unter dem Bogen, dafür hat das Papier keine Felder.
       </p>
 
+      <p className="lcars-text">
+        {/* Download über einen Link statt einer Action: der Browser lädt die
+            Datei dann direkt über Content-Disposition herunter. */}
+        <a
+          href={`/api/export/character-sheet?characterId=${character.id}`}
+          className="lcars-pill-btn--outline inline-flex"
+          download
+        >
+          Bogen als PDF
+        </a>
+      </p>
+
       <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <CharacterSheet
           userId={session.userId}

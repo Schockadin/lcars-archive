@@ -198,7 +198,12 @@ export default function TutorialPage() {
                 oben links. Auf schmalen Bildschirmen wird das ganze Blatt
                 kleiner, statt umzubrechen. Bild hochladen, Stress-Bonus und
                 Speichern findest du unter dem Bogen — dafür hat das Papier
-                keine Felder.
+                keine Felder. Über der Seite schaltest du zwischen{" "}
+                <strong>Charakterbogen</strong> und den{" "}
+                <strong>Stammdaten</strong> deines Charakters um. Und mit{" "}
+                <strong>„Bogen als PDF“</strong> lädst du den ausgefüllten
+                Bogen zum Ausdrucken herunter — mit dem Talent-Spickzettel auf
+                der zweiten Seite.
               </p>
               <p>
                 Die Listen auf dem Bogen — Werte, Schwerpunkte, Talente,

@@ -36,7 +36,10 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Die Talent-Liste auf dem Bogen ist kein Textfeld mehr: Talente kommen ausschließlich aus dem Katalog, jeder Eintrag hat ein kleines rotes Minus zum Entfernen, und ein Klick auf „Übernehmen“ im Auswahlfenster setzt das Talent direkt — beim Steigern samt Abbuchung der AP, die neben dem Knopf stehen. Während der Erschaffung zählt der Bogen die Talente mit (4 sind frei), danach kommen weitere nur noch über AP hinzu.",
       "Ganz unten am Charakterbogen steht neu ein Spickzettel mit dem vollen Regeltext aller Talente deines Charakters — kein Nachschlagen im Regelwerk mehr am Spieltisch.",
       "Auch Werte, Schwerpunkte, Angriffe, Ausrüstung, Karriere-Ereignisse und Hobbys werden jetzt als Liste gepflegt statt in einem Textfeld: „Hinzufügen“ öffnet ein kleines Fenster mit Eingabefeld, jeder Eintrag hat sein rotes Minus zum Entfernen. Bei Werten und Schwerpunkten steht dabei, wie viele der freien Plätze aus der Ersterschaffung schon vergeben sind.",
-      "Die Werte-Seite ist jetzt der echte Charakterbogen: Du füllst das gedruckte „Personnel File“ direkt aus — jedes Feld sitzt in seinem Kasten, Foto im Bildrahmen, Attribute und Disziplinen in ihren Zellen. Auf schmalen Bildschirmen schrumpft das ganze Blatt, statt umzubrechen. Bild hochladen, Stress-Bonus und Speichern stehen unter dem Bogen, weil das Papier dafür keine Felder hat."
+      "Die Werte-Seite ist jetzt der echte Charakterbogen: Du füllst das gedruckte „Personnel File“ direkt aus — jedes Feld sitzt in seinem Kasten, Foto im Bildrahmen, Attribute und Disziplinen in ihren Zellen. Auf schmalen Bildschirmen schrumpft das ganze Blatt, statt umzubrechen. Bild hochladen, Stress-Bonus und Speichern stehen unter dem Bogen, weil das Papier dafür keine Felder hat.",
+      "Der Charakterbogen füllt jetzt die ganze Breite aus und liegt auf dem gewohnten LCARS-Hintergrund statt auf einem grauen Schreibtisch.",
+      "Zwischen Charakterbogen und Stammdaten deines Charakters wechselst du jetzt mit einem Umschalter über der Seite, statt zwei getrennte Menüwege zu gehen.",
+      "Neu: Du kannst deinen Charakterbogen als PDF herunterladen und ausdrucken — Seite 1 ist der ausgefüllte Bogen, dahinter folgt der Talent-Spickzettel im selben Look."
     ],
   },
   {

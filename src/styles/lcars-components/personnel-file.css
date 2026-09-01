@@ -9,13 +9,15 @@
    Charakterbogens (weißes Papier, graue Schrift) und soll in jedem Farbtheme
    gleich aussehen — wie ein eingelegtes Blatt Papier. */
 
-/* Rahmen um das Blatt, entspricht dem <body> der Vorlage. */
+/* Rahmen um das Blatt. Anders als in der Vorlage (grauer Schreibtisch) liegt
+   der Bogen hier auf dem LCARS-Hintergrund — er ist Teil der Anwendung, kein
+   Blatt auf einem Tisch. */
 .pf-page {
   display: flex;
   justify-content: center;
   align-items: flex-start;
-  padding: 24px;
-  background: #dcdcdc;
+  padding: 12px 0;
+  background: var(--lcars-bg);
   font-family: Arial, sans-serif;
 }
 
@@ -32,7 +34,10 @@
   container-type: inline-size;
   --pf-unit: calc(100cqw / 816);
   position: relative;
-  width: min(816px, 100%);
+  /* Volle Breite statt der 816px der Vorlage: alle Maße darin hängen an
+     --pf-unit, der Bogen wächst und schrumpft also als Ganzes und bleibt in
+     jeder Größe maßstabsgetreu. */
+  width: 100%;
   aspect-ratio: 816 / 1056;
   background: #fff;
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.22);
@@ -280,9 +285,8 @@ select.pf-field {
   pointer-events: none;
 }
 
-/* Wie in der Vorlage: auf schmalen Bildschirmen rückt das Blatt an den Rand,
-   der Platz gehört dann ganz ihm. Die Verkleinerung selbst besorgt
-   --pf-unit (siehe .pf-sheet). */
+/* Auf schmalen Bildschirmen rückt das Blatt ganz an den Rand. Die
+   Größenanpassung selbst besorgt --pf-unit (siehe .pf-sheet). */
 @media (max-width: 850px) {
   .pf-page {
     padding: 0;
