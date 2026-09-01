@@ -2,6 +2,7 @@
 import { useActionState, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import { AP_REASON_LABELS, type ApReason } from "@/lib/characterAp";
+import type { AdvancementRules } from "@/lib/advancement";
 import { awardApAction, type ApAwardState } from "../apActions";
 
 const initialState: ApAwardState = {};
@@ -11,12 +12,18 @@ const initialState: ApAwardState = {};
 const AWARD_REASONS: ApReason[] = ["session", "logbook", "bonus", "mission", "manual"];
 
 // Schnellvergabe nach den Regeln der Runde: eine gespielte Session und ein
-// geschriebenes Logbuch geben je 1 AP, ein Missions-/Story-Abschluss einen
-// frei wählbaren Betrag.
-const QUICK_AWARDS: { reason: ApReason; amount: number; label: string }[] = [
-  { reason: "session", amount: 1, label: "+1 Session" },
-  { reason: "logbook", amount: 1, label: "+1 Logbuch" },
-];
+// geschriebenes Logbuch geben je einen eingestellten Betrag (Standard 1 AP),
+// ein Missions-/Story-Abschluss einen frei wählbaren. Die Beträge kommen aus
+// dem konfigurierbaren Regelwerk (/gm/ap), nicht aus fest verdrahteten Zahlen.
+function quickAwards(
+  rules: AdvancementRules,
+): { reason: ApReason; amount: number; label: string }[] {
+  const awards: { reason: ApReason; amount: number; label: string }[] = [
+    { reason: "session", amount: rules.apPerSession, label: `+${rules.apPerSession} Session` },
+    { reason: "logbook", amount: rules.apPerLogbook, label: `+${rules.apPerLogbook} Logbuch` },
+  ];
+  return awards.filter((quick) => quick.amount > 0);
+}
 
 export interface ApCharacterRow {
   id: number;
@@ -28,8 +35,10 @@ export interface ApCharacterRow {
 // beiden Schnellknöpfen und einer freien Buchung (Betrag, Grund, Notiz).
 export default function ApAwardPanel({
   characters,
+  rules,
 }: {
   characters: ApCharacterRow[];
+  rules: AdvancementRules;
 }) {
   const [state, formAction, pending] = useActionState(
     awardApAction,
@@ -38,6 +47,7 @@ export default function ApAwardPanel({
   // Freie Buchung nur für die aufgeklappte Zeile — sonst würde die Tabelle bei
   // vielen Charakteren zur Formularwüste.
   const [openId, setOpenId] = useState<number | null>(null);
+  const quick = quickAwards(rules);
 
   if (characters.length === 0) {
     return <p className="lcars-empty-state">Keine Charaktere vorhanden.</p>;
@@ -51,7 +61,7 @@ export default function ApAwardPanel({
             <span className="min-w-[180px] flex-1">{character.name}</span>
             <span className="stat-ap-amount">{character.available} AP</span>
 
-            {QUICK_AWARDS.map((quick) => (
+            {quick.map((quick) => (
               <form key={quick.reason} action={formAction}>
                 <input type="hidden" name="characterId" value={character.id} />
                 <input type="hidden" name="amount" value={quick.amount} />

@@ -7,6 +7,7 @@ import { getAllCharactersForAdmin } from "@/lib/characters";
 import { getAllMissionsForGmOverview } from "@/lib/missions";
 import { getIngameYearInfo } from "@/lib/campaign";
 import { listApBalances } from "@/lib/characterAp";
+import { getAdvancementRules } from "@/lib/advancementSettings";
 import CharacterAssignmentTable from "../CharacterAssignmentTable";
 import AdminMissionsBrowser from "../missions/AdminMissionsBrowser";
 import IngameYearForm from "./IngameYearForm";
@@ -26,13 +27,14 @@ export const metadata: Metadata = {
 export default async function AdminCampaignPage() {
   await requireGM();
 
-  const [users, characters, missions, ingameYearInfo, apBalances] =
+  const [users, characters, missions, ingameYearInfo, apBalances, rules] =
     await Promise.all([
       listAllUsers(),
       getAllCharactersForAdmin(),
       getAllMissionsForGmOverview(),
       getIngameYearInfo(),
       listApBalances(),
+      getAdvancementRules(),
     ]);
 
   // Kontostände in EINER Abfrage geholt und hier zugeordnet — sonst wäre es
@@ -70,12 +72,15 @@ export default async function AdminCampaignPage() {
           <section className="flex flex-col gap-[12px]">
             <h2 className="text-lcars-primary">Erfahrungspunkte (AP)</h2>
             <p className="text-lcars-ink-dim text-[13px]">
-              Je 1 AP für eine gespielte Session und ein geschriebenes Logbuch,
-              für einen Missions- oder Story-Abschluss ein frei gewählter
-              Betrag. Steigerungen buchen die Spieler:innen selbst auf ihrem
+              Je {rules.apPerSession} AP für eine gespielte Session und{" "}
+              {rules.apPerLogbook} AP für ein geschriebenes Logbuch, für einen
+              Missions- oder Story-Abschluss ein frei gewählter Betrag. Die
+              Beträge stellt die Spielleitung unter „AP“ ein. Eine ganze
+              Session schreibt man am besten unter „Sessions“ auf einmal gut;
+              Steigerungen buchen die Spieler:innen selbst auf ihrem
               Charakterbogen ab.
             </p>
-            <ApAwardPanel characters={apCharacters} />
+            <ApAwardPanel characters={apCharacters} rules={rules} />
           </section>
 
           <section className="flex flex-col gap-[12px]">

@@ -108,6 +108,64 @@ export async function listApBalances(): Promise<
   `;
 }
 
+// ── Gesamtübersicht der Spielleitung (/gm/ap) ──────────────────────────
+
+export interface ApLedgerEntry extends ApEntry {
+  characterId: number;
+  characterName: string;
+  // Gesetzt, wenn die Buchung aus einer eingetragenen Session stammt.
+  sessionId: number | null;
+}
+
+// Alle Buchungen aller Charaktere, neueste zuerst. Bewusst mit Obergrenze:
+// das Journal wächst mit jeder Session, die Seite soll aber nicht irgendwann
+// Tausende Zeilen ausliefern.
+export const AP_LEDGER_LIMIT = 500;
+
+export async function listApLedger(
+  limit: number = AP_LEDGER_LIMIT,
+): Promise<ApLedgerEntry[]> {
+  return sql<ApLedgerEntry[]>`
+    SELECT e.id, e.amount, e.reason, e.note,
+           e.created_at::text AS "createdAt",
+           e.session_id AS "sessionId",
+           c.id AS "characterId", c.name AS "characterName",
+           u.name AS "createdByName"
+    FROM character_ap_entries e
+    JOIN characters c ON c.id = e.character_id
+    LEFT JOIN users u ON u.id = e.created_by
+    ORDER BY e.created_at DESC, e.id DESC
+    LIMIT ${limit}
+  `;
+}
+
+export interface ApAccountSummary {
+  characterId: number;
+  characterName: string;
+  playerName: string | null;
+  earned: number;
+  spent: number;
+  available: number;
+}
+
+// Kontostände aller Charaktere, die überhaupt Buchungen haben — in EINER
+// Abfrage statt je Charakter einzeln.
+export async function listApAccountSummaries(): Promise<ApAccountSummary[]> {
+  return sql<ApAccountSummary[]>`
+    SELECT c.id AS "characterId", c.name AS "characterName",
+           u.name AS "playerName",
+           COALESCE(SUM(e.amount) FILTER (WHERE e.amount > 0), 0)::int AS earned,
+           COALESCE(-SUM(e.amount) FILTER (WHERE e.amount < 0), 0)::int AS spent,
+           COALESCE(SUM(e.amount), 0)::int AS available
+    FROM characters c
+    JOIN character_ap_entries e ON e.character_id = c.id
+    LEFT JOIN users u ON u.id = c.player_id
+    WHERE c.deleted_at IS NULL
+    GROUP BY c.id, c.name, u.name
+    ORDER BY c.name
+  `;
+}
+
 // AP vergeben (Spielleitung). Der Aufrufer prüft die Rechte; hier wird nur
 // gebucht. amount darf negativ sein (Korrektur), aber nicht 0 — das verbietet
 // bereits der CHECK der Tabelle.
