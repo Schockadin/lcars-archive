@@ -83,6 +83,21 @@ CREATE TABLE IF NOT EXISTS game_sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_game_sessions_date ON game_sessions(session_date DESC);
 
+-- ---------------------------------------------------------------------------
+-- game_session_characters
+-- ---------------------------------------------------------------------------
+-- Wer bei einer Session dabei war. Eigene Tabelle statt „wer eine Buchung mit
+-- dieser session_id hat": eine Session kann mit 0 AP eingetragen werden (reiner
+-- Notizeintrag), und die automatische Logbuch-AP muss trotzdem wissen, wem sie
+-- gutzuschreiben ist.
+CREATE TABLE IF NOT EXISTS game_session_characters (
+  session_id   INT NOT NULL REFERENCES game_sessions(id) ON DELETE CASCADE,
+  character_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  PRIMARY KEY (session_id, character_id)
+);
+CREATE INDEX IF NOT EXISTS idx_game_session_characters_character
+  ON game_session_characters(character_id);
+
 -- character_ap_entries: Rückverweis auf die Session, aus der eine Gutschrift
 -- stammt (NULL bei Einzelbuchungen der Spielleitung und bei Steigerungen).
 -- ON DELETE CASCADE: wird eine Session zurückgenommen, verschwinden auch ihre
@@ -97,6 +112,15 @@ CREATE INDEX IF NOT EXISTS idx_character_ap_entries_session
 ALTER TABLE character_ap_entries DROP CONSTRAINT IF EXISTS character_ap_entries_reason_check;
 ALTER TABLE character_ap_entries ADD CONSTRAINT character_ap_entries_reason_check
   CHECK (reason IN ('session', 'logbook', 'bonus', 'mission', 'manual', 'advancement', 'creation'));
+
+-- mission_logs: optionale Zuordnung zu einer Session (/gm/sessions). Sobald
+-- mindestens ein Logbuch an einer Session hängt, bekommen die dort
+-- gutgeschriebenen Charaktere automatisch die Logbuch-AP (siehe
+-- syncSessionLogbookAp in src/lib/gameSessions.ts). ON DELETE SET NULL: wird
+-- eine Session zurückgenommen, verliert das Logbuch nur seine Zuordnung.
+ALTER TABLE mission_logs ADD COLUMN IF NOT EXISTS session_id INT
+  REFERENCES game_sessions(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_mission_logs_session ON mission_logs(session_id);
 
 -- campaign_settings: konfigurierbares AP-Regelwerk (Kosten fürs Steigern,
 -- Erschaffungsbudgets, AP je Session/Logbuch). NULL = die eingebauten

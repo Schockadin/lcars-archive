@@ -1,5 +1,8 @@
 import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
+// Logbücher können an einer Session hängen; verschwindet/kehrt eines zurück,
+// muss die automatische Logbuch-AP dieser Session nachgezogen werden.
+import { resyncSessionLogbookApForLog } from "@/lib/gameSessions";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
 // getMissionSubscribers lebt in dialoguesCore.ts, siehe Kommentar bei
@@ -992,7 +995,10 @@ export async function deleteMissionLog(
               ml.is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
-  if (row) syncEmbeddingActive("mission_log", logId, false);
+  if (row) {
+    syncEmbeddingActive("mission_log", logId, false);
+    await resyncSessionLogbookApForLog(logId, userId);
+  }
   // Löschprotokoll fürs News-Feed (siehe getRecentDeletions in
   // recentActivity.ts) — aus Sicht aller Nicht-Admins ist der Log jetzt weg,
   // ohne dieses Protokoll gäbe es keine Datenquelle mehr für einen
@@ -1012,13 +1018,17 @@ export async function deleteMissionLog(
 // also automatisch wieder auf.
 export async function restoreMissionLog(
   logId: number,
+  restoredByUserId: number,
 ): Promise<{ slug: string; missionId: number } | null> {
   const rows = await sql<{ slug: string; missionId: number }[]>`
     UPDATE mission_logs SET deleted_at = NULL
     WHERE id = ${logId} AND deleted_at IS NOT NULL
     RETURNING slug, mission_id AS "missionId"
   `;
-  if (rows[0]) syncEmbeddingActive("mission_log", logId, true);
+  if (rows[0]) {
+    syncEmbeddingActive("mission_log", logId, true);
+    await resyncSessionLogbookApForLog(logId, restoredByUserId);
+  }
   return rows[0] ?? null;
 }
 
@@ -1048,7 +1058,10 @@ export async function deleteMissionLogAsAdmin(
               title, visibility, owner_user_id AS "ownerUserId", is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
-  if (row) syncEmbeddingActive("mission_log", logId, false);
+  if (row) {
+    syncEmbeddingActive("mission_log", logId, false);
+    await resyncSessionLogbookApForLog(logId, deletedByUserId);
+  }
   if (row && !row.isDraft) {
     await sql`
       INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)

@@ -6,6 +6,7 @@ import {
   deleteGameSession,
   updateGameSessionNotes,
   listActiveCharactersForAp,
+  setSessionLogbooks,
 } from "@/lib/gameSessions";
 import {
   validateGameSessionInput,
@@ -115,4 +116,35 @@ export async function updateSessionAction(
 
   revalidatePath("/gm/sessions");
   return { success: "Session gespeichert." };
+}
+
+// Logbücher einer Session zuordnen. Sobald mindestens eines daran hängt,
+// schreibt setSessionLogbooks den Teilnehmenden automatisch die Logbuch-AP gut
+// (einmal je Session und Charakter); fällt das letzte wieder weg, wird die
+// Gutschrift zurückgenommen.
+export async function setSessionLogbooksAction(
+  state: SessionFormState,
+  formData: FormData,
+): Promise<SessionFormState> {
+  const user = await requireGM();
+
+  const id = Number(formData.get("id"));
+  if (!Number.isInteger(id)) return { error: "Ungültige Session." };
+
+  const logIds = formData.getAll("logIds").map(Number);
+  if (logIds.some((logId) => !Number.isInteger(logId))) {
+    return { error: "Ungültige Logbuch-Auswahl." };
+  }
+
+  await setSessionLogbooks(id, logIds, user.id);
+
+  revalidatePath("/gm/sessions");
+  revalidatePath("/gm/ap");
+
+  return {
+    success:
+      logIds.length > 0
+        ? `${logIds.length} Logbuch/Logbücher verknüpft — die Logbuch-AP sind gebucht.`
+        : "Keine Logbücher mehr verknüpft — die Logbuch-AP wurden zurückgenommen.",
+  };
 }

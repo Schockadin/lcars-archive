@@ -1,7 +1,11 @@
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
-import { listGameSessions, listActiveCharactersForAp } from "@/lib/gameSessions";
+import {
+  listGameSessions,
+  listActiveCharactersForAp,
+  listAssignableLogbooks,
+} from "@/lib/gameSessions";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import SessionManager from "./SessionManager";
 
@@ -15,9 +19,10 @@ export const metadata: Metadata = {
 export default async function GmSessionsPage() {
   await requireGM();
 
-  const [sessions, characters, rules] = await Promise.all([
+  const [sessions, characters, logbooks, rules] = await Promise.all([
     listGameSessions(),
     listActiveCharactersForAp(),
+    listAssignableLogbooks(),
     getAdvancementRules(),
   ]);
 
@@ -40,12 +45,16 @@ export default async function GmSessionsPage() {
             Eine eingetragene Session schreibt allen ausgewählten Charakteren
             die Session-AP und die Bonus-AP gut. Vorausgewählt sind alle
             aktiven Charaktere mit verknüpftem Konto — wer gefehlt hat, wird
-            einfach abgewählt.
+            einfach abgewählt. Zu einer eingetragenen Session lassen sich
+            Logbücher verknüpfen; ab dem ersten gibt es dafür automatisch die
+            Logbuch-AP.
           </p>
           <SessionManager
             sessions={sessions}
             characters={characters}
+            logbooks={logbooks}
             defaultSessionAp={rules.apPerSession}
+            apPerLogbook={rules.apPerLogbook}
             today={today}
           />
         </div>

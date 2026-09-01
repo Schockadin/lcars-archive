@@ -83,7 +83,7 @@ export async function restoreContentAction(
   contentType: TrashContentType,
   id: number,
 ): Promise<{ error?: string }> {
-  await requirePermission("content.moderate");
+  const moderator = await requirePermission("content.moderate");
 
   if (contentType === "character") {
     const result = await restoreCharacter(id);
@@ -94,7 +94,7 @@ export async function restoreContentAction(
     if (!result) return { error: "Mission nicht gefunden." };
     revalidateMission(result.slug);
   } else if (contentType === "mission_log") {
-    const result = await restoreMissionLog(id);
+    const result = await restoreMissionLog(id, moderator.id);
     if (!result) return { error: "Missionslog nicht gefunden." };
     revalidateLog(result.missionId, result.slug);
   } else if (contentType === "archive_entry") {

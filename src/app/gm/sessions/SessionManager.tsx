@@ -3,11 +3,16 @@ import { useActionState, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { formatISODate } from "@/utils/formateISODate";
-import type { GameSession, ActiveCharacter } from "@/lib/gameSessions";
+import type {
+  GameSession,
+  ActiveCharacter,
+  SessionLogbook,
+} from "@/lib/gameSessions";
 import {
   createSessionAction,
   deleteSessionAction,
   updateSessionAction,
+  setSessionLogbooksAction,
   type SessionFormState,
 } from "./actions";
 
@@ -130,7 +135,84 @@ function NewSessionForm({
   );
 }
 
-function SessionRow({ session }: { session: GameSession }) {
+// Logbücher einer Session zuordnen. Angeboten werden die bereits zugeordneten
+// und alle noch freien — ein Logbuch gehört zu höchstens einer Session.
+function SessionLogbookForm({
+  session,
+  logbooks,
+  apPerLogbook,
+}: {
+  session: GameSession;
+  logbooks: SessionLogbook[];
+  apPerLogbook: number;
+}) {
+  const [state, formAction, pending] = useActionState(
+    setSessionLogbooksAction,
+    initialState,
+  );
+
+  const own = logbooks.filter((log) => log.sessionId === session.id);
+  const free = logbooks.filter((log) => log.sessionId === null);
+
+  return (
+    <form action={formAction} className="flex flex-col gap-[8px]">
+      <input type="hidden" name="id" value={session.id} />
+      <fieldset className="flex flex-col gap-[6px]">
+        <legend className="lcars-eyebrow">Logbücher zu dieser Session</legend>
+        <p className="text-lcars-ink-dim text-[12px]">
+          Sobald mindestens ein Logbuch verknüpft ist, bekommen alle
+          Teilnehmenden automatisch {apPerLogbook} AP extra — einmal je
+          Session, egal wie viele Logbücher geschrieben werden.
+        </p>
+        {own.length + free.length === 0 ? (
+          <p className="lcars-empty-state">Keine Logbücher zur Auswahl.</p>
+        ) : (
+          <div className="flex flex-col gap-[4px]">
+            {[...own, ...free].map((log) => (
+              <label key={log.id} className="flex items-center gap-[6px]">
+                <input
+                  type="checkbox"
+                  name="logIds"
+                  value={log.id}
+                  defaultChecked={log.sessionId === session.id}
+                />
+                <span>
+                  {log.title}
+                  <span className="text-lcars-ink-dim text-[12px]">
+                    {" "}
+                    · {log.missionTitle}
+                    {log.authorName && ` · ${log.authorName}`}
+                    {log.logDate && ` · ${formatISODate(log.logDate)}`}
+                  </span>
+                </span>
+              </label>
+            ))}
+          </div>
+        )}
+      </fieldset>
+      <button
+        type="submit"
+        disabled={pending}
+        className="lcars-pill-btn--outline self-start disabled:opacity-50"
+      >
+        Logbücher übernehmen
+      </button>
+
+      <FormError message={state.error} />
+      {state.success && <FormSuccess>{state.success}</FormSuccess>}
+    </form>
+  );
+}
+
+function SessionRow({
+  session,
+  logbooks,
+  apPerLogbook,
+}: {
+  session: GameSession;
+  logbooks: SessionLogbook[];
+  apPerLogbook: number;
+}) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(
     updateSessionAction,
@@ -158,7 +240,8 @@ function SessionRow({ session }: { session: GameSession }) {
           {session.bonusAp > 0 && ` + ${session.bonusAp}`} AP
         </span>
         <span className="text-lcars-ink-dim text-[13px]">
-          {session.characterCount} Charaktere · {session.totalAp} AP gesamt
+          {session.characterCount} Charaktere · {session.totalAp} AP gesamt ·{" "}
+          {session.logbookCount} Logbücher
         </span>
       </button>
 
@@ -201,6 +284,12 @@ function SessionRow({ session }: { session: GameSession }) {
             </div>
           </form>
 
+          <SessionLogbookForm
+            session={session}
+            logbooks={logbooks}
+            apPerLogbook={apPerLogbook}
+          />
+
           <form action={deleteAction}>
             <input type="hidden" name="id" value={session.id} />
             <button
@@ -236,12 +325,17 @@ function SessionRow({ session }: { session: GameSession }) {
 export default function SessionManager({
   sessions,
   characters,
+  logbooks,
   defaultSessionAp,
+  apPerLogbook,
   today,
 }: {
   sessions: GameSession[];
   characters: ActiveCharacter[];
+  // Logbücher zur Zuordnung: die bereits zugeordneten plus alle noch freien.
+  logbooks: SessionLogbook[];
   defaultSessionAp: number;
+  apPerLogbook: number;
   // Vom Server vorgegeben, damit Server- und Client-Render dasselbe Datum
   // vorbelegen (ein `new Date()` im Client wiche sonst ab und würde
   // hydrieren-Warnungen erzeugen).
@@ -265,7 +359,12 @@ export default function SessionManager({
         ) : (
           <div className="flex flex-col gap-[8px]">
             {sessions.map((session) => (
-              <SessionRow key={session.id} session={session} />
+              <SessionRow
+                key={session.id}
+                session={session}
+                logbooks={logbooks}
+                apPerLogbook={apPerLogbook}
+              />
             ))}
           </div>
         )}
