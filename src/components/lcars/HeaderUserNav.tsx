@@ -31,6 +31,9 @@ interface AdminMenuItem {
 // bündelt Ingame-Jahr, Charakter-Zuordnung und Missions-Übersicht.
 const STAFF_ITEMS: AdminMenuItem[] = [
   { href: "/admin/campaign", label: "Kampagne", permission: "gm.access" },
+  { href: "/gm/sessions", label: "Sessions", permission: "gm.access" },
+  { href: "/gm/ap", label: "AP", permission: "gm.access" },
+  { href: "/gm/talents", label: "Talente", permission: "gm.access" },
   { href: "/admin/dialogues", label: "Gespräche", permission: "gm.access" },
   { href: "/admin/users", label: "User", permission: "users.manage" },
   { href: "/admin/permissions", label: "Rollen", permission: "users.manage" },
@@ -121,7 +124,10 @@ export default function HeaderUserNav({
     { href: "/user", label: "Profil", icon: <ProfileNavIcon /> },
   ];
 
-  const isAdminSection = pathname.startsWith("/admin");
+  // Auch der Spielleitungs-Bereich (/gm/sessions, /gm/ap, /gm/talents) hängt
+  // an diesem Dropdown und färbt es deshalb mit ein.
+  const isAdminSection =
+    pathname.startsWith("/admin") || pathname.startsWith("/gm");
 
   // Ein Staff-Dropdown, dessen Einträge nach Rechten gefiltert werden (statt
   // nach Rolle). Label „Admin“, sobald Admin-Rechte vorhanden sind, sonst
