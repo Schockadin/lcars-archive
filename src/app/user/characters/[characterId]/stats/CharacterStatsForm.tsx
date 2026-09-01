@@ -19,7 +19,7 @@ import {
 } from "../../_shared/statsAction";
 import type { Talent } from "@/lib/talentCatalog";
 import TalentPicker from "../../_shared/TalentPicker";
-import { MinusCircleIcon } from "@/lib/icons";
+import EntryListField, { EntryList } from "../../_shared/EntryListField";
 import type { CharacterStats } from "@/types/characterStats";
 
 const initialState: CharacterStatsFormState = {};
@@ -105,6 +105,50 @@ function StatBox({
   );
 }
 
+// Listenfelder, die als gepflegte Liste (Einträge mit Entfernen-Knopf, Fenster
+// zum Hinzufügen) statt als Textfeld erscheinen — siehe EntryListField.
+// Talente laufen über den Katalog und haben deshalb eine eigene Komponente;
+// Spezies-Fähigkeiten und Sonderregeln bleiben bewusst Fließtext-Blöcke, dort
+// stehen in der Runde ganze Regelsätze, keine Aufzählungen.
+//
+// max: Freikontingent der Ersterschaffung aus dem AP-Regelwerk. enforceMax
+// sperrt das Hinzufügen, sobald es ausgeschöpft ist — das gilt nur für
+// Schwerpunkte, die danach AP kosten. Bei den Werten ist die Zahl eine
+// Orientierung: sie lassen sich später nicht kaufen, ein hartes Limit würde
+// eine Vergabe durch die Spielleitung blockieren.
+interface ManagedListSpec {
+  singular: string;
+  placeholder: string;
+  max?: (free: CreationFreeCounts) => number;
+  enforceMax?: boolean;
+}
+
+interface CreationFreeCounts {
+  values: number;
+  focuses: number;
+}
+
+const MANAGED_LIST_FIELDS: Record<string, ManagedListSpec> = {
+  values: {
+    singular: "Wert",
+    placeholder: "z.B. „Ich diene der Flotte, nicht dem Ruhm“",
+    max: (free) => free.values,
+  },
+  focuses: {
+    singular: "Schwerpunkt",
+    placeholder: "z.B. Warpfeldtheorie",
+    max: (free) => free.focuses,
+    enforceMax: true,
+  },
+  attacks: { singular: "Angriff", placeholder: "z.B. Phaser Typ 2 (Strahl)" },
+  equipment: { singular: "Ausrüstung", placeholder: "z.B. Tricorder" },
+  careerEvents: {
+    singular: "Karriere-Ereignis",
+    placeholder: "z.B. Erstkontakt mit einer neuen Spezies",
+  },
+  pastimes: { singular: "Hobby", placeholder: "z.B. Jazz-Klarinette" },
+};
+
 // Charakterwerte-Formular, angelehnt an den offiziellen Bogen (STA 2e
 // „personnel file"): Kopfdaten links, Attribute und Disziplinen als
 // Wertekästen, die abgeleiteten Werte als Kästchenreihen und die Listenfelder
@@ -146,33 +190,15 @@ function TalentListField({
 
   return (
     <div className="flex flex-col gap-[8px]">
-      {/* Der abgesendete Wert — die Anzeige darüber ist die Bedienoberfläche. */}
-      <input type="hidden" name="talents" value={entries.join("\n")} />
-
-      {entries.length === 0 ? (
-        <p className="lcars-empty-state">Noch keine Talente.</p>
-      ) : (
-        <ul className="stat-entry-list">
-          {entries.map((entry, index) => (
-            <li key={`${entry}-${index}`} className="stat-entry">
-              <span className="stat-entry-text">{entry}</span>
-              {!readOnly && (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setEntries((prev) => prev.filter((_, i) => i !== index))
-                  }
-                  className="stat-entry-remove"
-                  aria-label={`${entry} entfernen`}
-                  title={`${entry} entfernen`}
-                >
-                  <MinusCircleIcon />
-                </button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      <EntryList
+        name="talents"
+        entries={entries}
+        onRemove={(index) =>
+          setEntries((prev) => prev.filter((_, i) => i !== index))
+        }
+        emptyText="Noch keine Talente."
+        readOnly={readOnly}
+      />
 
       {!readOnly && (
         <>
@@ -210,6 +236,8 @@ export default function CharacterStatsForm({
   talents,
   species,
   creationFreeTalents,
+  creationFreeValues,
+  creationFreeFocuses,
   talentEntries,
   setTalentEntries,
   attributes,
@@ -232,8 +260,10 @@ export default function CharacterStatsForm({
   talents: Talent[];
   // Spezies der Akte — für Voraussetzungen wie „Vulcan".
   species: string | null;
-  // Freikontingent der Ersterschaffung für Talente (aus dem AP-Regelwerk).
+  // Freikontingente der Ersterschaffung (aus dem AP-Regelwerk).
   creationFreeTalents: number;
+  creationFreeValues: number;
+  creationFreeFocuses: number;
   // Talent-Liste als State der Klammer-Komponente (siehe TalentListField).
   talentEntries: string[];
   setTalentEntries: React.Dispatch<React.SetStateAction<string[]>>;
@@ -251,10 +281,61 @@ export default function CharacterStatsForm({
     initialState,
   );
 
+  // Die verwalteten Listen (siehe MANAGED_LIST_FIELDS) als ein State-Objekt —
+  // ein useState je Feld wären sechs fast gleiche Zeilen.
+  const [lists, setLists] = useState<Record<string, string[]>>(() =>
+    Object.fromEntries(
+      Object.keys(MANAGED_LIST_FIELDS).map((key) => [
+        key,
+        stats[key as keyof CharacterStats] as string[],
+      ]),
+    ),
+  );
+
+  function setListEntries(
+    key: string,
+    update: React.SetStateAction<string[]>,
+  ) {
+    setLists((prev) => ({
+      ...prev,
+      [key]:
+        typeof update === "function"
+          ? (update as (p: string[]) => string[])(prev[key] ?? [])
+          : update,
+    }));
+  }
+
+  const creationFree: CreationFreeCounts = {
+    values: creationFreeValues,
+    focuses: creationFreeFocuses,
+  };
+
   const [stressBonus, setStressBonus] = useState(
     stats.stressBonus?.toString() ?? "",
   );
   const [determination, setDetermination] = useState(stats.determination ?? 0);
+
+  // Wie in CharacterSheet: liefert der Server neue Werte (nach dem Speichern
+  // oder einer Steigerung — Schwerpunkte lassen sich mit AP kaufen), zieht der
+  // lokale State nach. Anpassung während des Renders, siehe React-Doku
+  // „Adjusting state when a prop changes".
+  const listSnapshot = JSON.stringify(
+    Object.keys(MANAGED_LIST_FIELDS).map(
+      (key) => stats[key as keyof CharacterStats],
+    ),
+  );
+  const [previousListSnapshot, setPreviousListSnapshot] = useState(listSnapshot);
+  if (listSnapshot !== previousListSnapshot) {
+    setPreviousListSnapshot(listSnapshot);
+    setLists(
+      Object.fromEntries(
+        Object.keys(MANAGED_LIST_FIELDS).map((key) => [
+          key,
+          stats[key as keyof CharacterStats] as string[],
+        ]),
+      ),
+    );
+  }
 
   const attributeValues = toNumbers(ATTRIBUTE_FIELDS, attributes);
   const departmentValues = toNumbers(DEPARTMENT_FIELDS, departments);
@@ -565,10 +646,6 @@ export default function CharacterStatsForm({
               )}
             </h2>
             {field.key === "talents" ? (
-              // Talente kommen aus dem Katalog (/gm/talents): das Auswahlfeld
-              // hängt den Namen an die Liste an, die Liste selbst bleibt ein
-              // Textfeld — so lassen sich Einträge auch wieder streichen und
-              // Sonderfälle von Hand eintragen.
               <TalentListField
                 talents={talents}
                 stats={stats}
@@ -578,16 +655,30 @@ export default function CharacterStatsForm({
                 readOnly={stats.creationLocked}
                 maxDuringCreation={creationFreeTalents}
               />
+            ) : MANAGED_LIST_FIELDS[field.key] ? (
+              <EntryListField
+                name={field.key}
+                entries={lists[field.key] ?? []}
+                setEntries={(update) => setListEntries(field.key, update)}
+                singular={MANAGED_LIST_FIELDS[field.key].singular}
+                placeholder={MANAGED_LIST_FIELDS[field.key].placeholder}
+                // Schwerpunkte kosten nach der Erschaffung AP und kommen dann
+                // nur noch über den AP-Bereich hinzu.
+                readOnly={stats.creationLocked && field.key === "focuses"}
+                readOnlyHint="Weitere Schwerpunkte kosten AP und kommen über den Bereich oben hinzu."
+                max={
+                  stats.creationLocked
+                    ? null
+                    : (MANAGED_LIST_FIELDS[field.key].max?.(creationFree) ?? null)
+                }
+                enforceMax={MANAGED_LIST_FIELDS[field.key].enforceMax ?? false}
+              />
             ) : (
               <textarea
                 id={`stats-${field.key}`}
                 name={field.key}
-                // Schwerpunkte kosten nach der Erschaffung AP und werden dann
-                // nur noch über das Advancement-Panel ergänzt.
-                readOnly={stats.creationLocked && field.key === "focuses"}
                 // Mindestens acht Zeilen ohne Scrollen — die Listen des Bogens
-                // (Werte, Schwerpunkte, Talente, …) haben dort ebenfalls
-                // reichlich Platz.
+                // haben auf dem Papierbogen ebenfalls reichlich Platz.
                 rows={8}
                 defaultValue={stats[field.key].join("\n")}
                 aria-label={field.label}

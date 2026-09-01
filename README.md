@@ -140,7 +140,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Katalog stehen — bereits gespeicherte Alt-Einträge aus der Freitext-Zeit
   bleiben erlaubt, sonst ließe sich ein solcher Bogen nie wieder speichern.
   Ganz unten am Bogen listet ein **Spickzettel** (`TalentCheatSheet.tsx`) die
-  Talente des Charakters mit vollem Regeltext. Die reine Hälfte (Kategorien,
+  Talente des Charakters mit vollem Regeltext. Dasselbe Listen-Muster (Einträge
+  mit rotem Minus, „Hinzufügen" öffnet ein Fenster mit freiem Eingabefeld)
+  nutzen über `EntryListField.tsx` auch Werte, Schwerpunkte, Angriffe,
+  Ausrüstung, Karriere-Ereignisse und Hobbys; Spezies-Fähigkeiten und
+  Sonderregeln bleiben bewusst Fließtext-Blöcke, dort stehen ganze Regelsätze
+  statt Aufzählungen. Werte und Schwerpunkte zeigen dabei ihr Freikontingent
+  aus der Ersterschaffung an — bei den Schwerpunkten als harte Grenze (sie
+  kosten danach AP, serverseitig geprüft), bei den Werten nur als Orientierung,
+  da sie sich später nicht kaufen lassen. Die reine Hälfte (Kategorien,
   Labels, Validierung) liegt in `src/lib/talentCatalog.ts`, der Datenzugriff in
   `src/lib/talents.ts`.
 - **Spielleitungs-Bereich (`/gm`)** — eigener, über `requireGM` (`gm.access`)

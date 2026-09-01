@@ -156,6 +156,15 @@ export async function characterStatsAction(
         error: `Die Ersterschaffung erlaubt ${rules.creationFreeTalents} Talente — ${stats.talents.length} sind eingetragen. Weitere kosten AP.`,
       };
     }
+    // Schwerpunkte kosten nach der Erschaffung ebenfalls AP, also gilt ihr
+    // Freikontingent hier genauso. Werte (values) bleiben ungedeckelt: sie
+    // lassen sich später nicht kaufen, ein hartes Limit würde eine Vergabe
+    // durch die Spielleitung blockieren.
+    if (stats.focuses.length > rules.creationFreeFocuses) {
+      return {
+        error: `Die Ersterschaffung erlaubt ${rules.creationFreeFocuses} Schwerpunkte — ${stats.focuses.length} sind eingetragen. Weitere kosten AP.`,
+      };
+    }
   }
 
   // Verteilungsregeln (nur ein Attribut auf 12, zwei auf 11, analog bei den

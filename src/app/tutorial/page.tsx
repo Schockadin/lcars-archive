@@ -194,9 +194,13 @@ export default function TutorialPage() {
                 auf dem Bogen), Schutz, Entschlossenheit und Ansehen sowie ein
                 Foto-Kasten, über den du das Bild des Charakters hochlädst.
                 Dazu die Listen für Werte,
-                Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln,
-                Angriffe, Ausrüstung, Hobbys und Karriere-Ereignisse (dort je
-                Zeile ein Eintrag). Leere Felder gelten als „nicht angegeben“;
+                Schwerpunkte, Talente, Angriffe, Ausrüstung, Hobbys und
+                Karriere-Ereignisse: Ein Klick auf „Hinzufügen“ öffnet ein
+                kleines Fenster mit Eingabefeld, jeder Eintrag hat rechts ein
+                rotes Minus zum Entfernen. Bei Werten und Schwerpunkten steht
+                dabei, wie viele der freien Plätze aus der Ersterschaffung du
+                schon vergeben hast. Spezies-Fähigkeiten und Sonderregeln
+                bleiben Textfelder — dort stehen meist ganze Regelsätze. Leere Felder gelten als „nicht angegeben“;
                 Name, Rang und Spezies gehören zur Akte selbst und werden über
                 „Bearbeiten“ gepflegt. In „Meine Inhalte“ tauchen Charaktere
                 deshalb nicht mehr auf — der Charakter-Filter für

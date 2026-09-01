@@ -115,6 +115,8 @@ export default function CharacterSheet({
         talents={talents}
         species={species}
         creationFreeTalents={rules.creationFreeTalents}
+        creationFreeValues={rules.creationFreeValues}
+        creationFreeFocuses={rules.creationFreeFocuses}
         talentEntries={talentEntries}
         setTalentEntries={setTalentEntries}
         attributes={attributes}
