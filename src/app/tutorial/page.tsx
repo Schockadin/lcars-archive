@@ -246,6 +246,20 @@ export default function TutorialPage() {
                 Entscheidung der Spielleitung“), blenden nichts aus; über den
                 Schalter „Nur erfüllbare“ siehst du bei Bedarf auch den Rest.
                 Was schon auf deinem Bogen steht, taucht gar nicht erst auf.
+                Ein Klick auf <strong>„Übernehmen“</strong> setzt das Talent
+                direkt — beim Steigern werden die AP dabei gleich abgebucht
+                (der Betrag steht auf dem Knopf).
+              </p>
+              <p>
+                Die Talent-Liste auf dem Bogen ist deshalb kein Textfeld mehr:
+                Talente kommen ausschließlich aus dem Katalog, und jeder
+                Eintrag hat ein kleines rotes Minus zum Entfernen. Während der
+                Erschaffung zählt der Bogen mit, wie viele deiner{" "}
+                <strong>vier freien Talente</strong> du schon vergeben hast;
+                ist das Kontingent voll, kommen weitere erst nach dem
+                Abschließen der Erschaffung über AP hinzu. Danach ist die Liste
+                schreibgeschützt — Talente ändern sich dann nur noch über den
+                AP-Bereich.
               </p>
               <p>
                 Beim Übernehmen kannst du einem Talent einen{" "}
@@ -254,9 +268,15 @@ export default function TutorialPage() {
                 erhalten: dasselbe Talent lässt sich nicht versehentlich ein
                 zweites Mal kaufen, und Voraussetzungen anderer Talente
                 erkennen es weiterhin. Fehlt ein Talent im Katalog — etwa
-                eines, das ihr im Spiel vereinbart habt — kannst du auf
-                Freitext umschalten; die Spielleitung kann es zusätzlich in den
-                Katalog aufnehmen.
+                eines, das ihr im Spiel vereinbart habt — nimmt die
+                Spielleitung es unter „Talente“ auf; frei eintippen lässt es
+                sich bewusst nicht mehr, sonst ließen sich Voraussetzungen und
+                Regeltexte nicht mehr zuordnen.
+              </p>
+              <p>
+                Ganz unten am Bogen findest du einen{" "}
+                <strong>Spickzettel</strong>: alle Talente deines Charakters
+                mit ihrem vollen Regeltext, zum Nachschlagen am Spieltisch.
               </p>
               <p>
                 Für die Zahlen gelten die <strong>Regeln der Runde</strong>:

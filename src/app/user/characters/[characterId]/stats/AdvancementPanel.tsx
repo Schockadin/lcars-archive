@@ -57,10 +57,6 @@ export default function AdvancementPanel({
     lockCreationAction,
     initialState,
   );
-  const [talent, setTalent] = useState("");
-  // Der Katalog deckt das Regelwerk der Runde ab; für Sonderfälle (ein von der
-  // Spielleitung im Spiel vergebenes Talent) bleibt der Freitext erreichbar.
-  const [talentFreeText, setTalentFreeText] = useState(false);
   const [focus, setFocus] = useState("");
 
   const budget = creationBudget(stats, rules);
@@ -216,10 +212,13 @@ export default function AdvancementPanel({
           </div>
 
           <div className="stat-ap-adds">
-            <form action={formAction} className="stat-ap-add">
-              <input type="hidden" name="characterId" value={characterId} />
-              <input type="hidden" name="kind" value="talent" />
-              <label className="stat-field-label" htmlFor="advance-talent">
+            {/* Talente kommen ausschließlich aus dem Katalog — kein Freitext
+                mehr. Das Fenster bucht direkt: ein Klick auf „Übernehmen"
+                ruft die Action mit dem gewählten Eintrag auf, ein zweiter
+                Knopf daneben entfällt. Deshalb hier auch kein <form>, sondern
+                der programmatische Aufruf der Action (React 19). */}
+            <div className="stat-ap-add">
+              <span className="stat-field-label">
                 <span className="stat-label-primary">Talent</span>
                 <span className="stat-label-secondary">
                   {rules.talentCost} AP
@@ -227,53 +226,31 @@ export default function AdvancementPanel({
                     ? ` · danach ${account.available - rules.talentCost} AP`
                     : " · nicht genug AP"}
                 </span>
-              </label>
-              {talentFreeText || talents.length === 0 ? (
-                <input
-                  id="advance-talent"
-                  name="entry"
-                  type="text"
-                  value={talent}
-                  onChange={(e) => setTalent(e.target.value)}
-                  className="stat-field-input"
-                />
-              ) : (
-                <>
-                  {/* Der Katalog liefert die Anzeige, gebucht wird der reine
-                      Name — deshalb ein verstecktes Feld statt eines
-                      benannten <select>. */}
-                  <input type="hidden" name="entry" value={talent} />
-                  <TalentPicker
-                    talents={talents}
-                    stats={stats}
-                    species={species}
-                    value={talent}
-                    onChange={setTalent}
-                    label="Aus dem Katalog wählen"
-                    taken={stats.talents}
-                  />
-                </>
+              </span>
+              <TalentPicker
+                talents={talents}
+                stats={stats}
+                species={species}
+                taken={stats.talents}
+                cost={rules.talentCost}
+                availableAp={account.available}
+                disabled={pending || talents.length === 0}
+                buttonLabel="Talent wählen …"
+                onPick={(entry) => {
+                  const payload = new FormData();
+                  payload.set("characterId", String(characterId));
+                  payload.set("kind", "talent");
+                  payload.set("entry", entry);
+                  formAction(payload);
+                }}
+              />
+              {talents.length === 0 && (
+                <span className="stat-label-secondary">
+                  Der Talent-Katalog ist leer — die Spielleitung pflegt ihn
+                  unter &bdquo;Talente&ldquo;.
+                </span>
               )}
-              {talents.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setTalentFreeText((v) => !v);
-                    setTalent("");
-                  }}
-                  className="stat-label-secondary self-start underline"
-                >
-                  {talentFreeText ? "Katalog nutzen" : "Eigenes Talent eintragen"}
-                </button>
-              )}
-              <button
-                type="submit"
-                disabled={pending || talent.trim() === "" || account.available < rules.talentCost}
-                className="lcars-pill-btn--outline disabled:opacity-50"
-              >
-                Hinzufügen
-              </button>
-            </form>
+            </div>
 
             <form action={formAction} className="stat-ap-add">
               <input type="hidden" name="characterId" value={characterId} />

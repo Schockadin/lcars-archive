@@ -507,6 +507,95 @@
   outline-offset: -2px;
 }
 
+/* Talent-Liste des Bogens (TalentListField): je Eintrag eine Zeile auf der
+   Linie des linierten Blocks, rechts das Entfernen-Icon. Kein Textfeld mehr —
+   Talente kommen ausschließlich aus dem Katalog. */
+.stat-entry-list {
+  --stat-line-h: 28px;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--lcars-border);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.stat-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--stat-line-h);
+  padding: 0 14px;
+  border-bottom: 1px solid var(--lcars-border);
+}
+
+.stat-entry-text {
+  flex: 1;
+  min-width: 0;
+  color: var(--lcars-ink);
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 16px;
+  line-height: var(--stat-line-h);
+  letter-spacing: 0.04em;
+}
+
+/* Kleines rotes Minus — entfernt genau diesen Eintrag. Rot (quinary) wie die
+   übrigen destruktiven Aktionen der Oberfläche. */
+.stat-entry-remove {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--lcars-quinary);
+  cursor: pointer;
+  transition: 150ms;
+}
+
+.stat-entry-remove:hover {
+  opacity: 0.7;
+}
+
+.stat-entry-remove svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Spickzettel am Fuß des Bogens (TalentCheatSheet.tsx): je Talent Kopfzeile
+   und Regeltext. Der Text in der Datenschrift, damit er sich klar von den
+   Beschriftungen des Bogens absetzt. */
+.stat-cheat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 8px 0 0;
+}
+
+.stat-cheat-item {
+  border-left: 3px solid var(--lcars-border);
+  padding: 2px 0 2px 10px;
+}
+
+.stat-cheat-term {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.stat-cheat-text {
+  margin: 2px 0 0;
+  color: var(--lcars-ink-dim);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 /* Regeltext des im Talent-Auswahlfeld gewählten Talents (TalentPicker.tsx).
    Bewusst schmal gehalten und in der Datenschrift gesetzt — er steht unter
    dem Auswahlfeld und soll den Bogen nicht dominieren. Die Höhe ist

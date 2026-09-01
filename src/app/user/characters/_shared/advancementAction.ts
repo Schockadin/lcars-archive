@@ -7,6 +7,8 @@ import {
 } from "@/lib/characterAp";
 import { revalidateCharacter } from "@/lib/revalidate";
 import type { AdvancementKind } from "@/lib/advancement";
+import { listTalents } from "@/lib/talents";
+import { parseTalentEntry } from "@/lib/talentCatalog";
 
 export interface AdvancementActionResult {
   error?: string;
@@ -48,10 +50,25 @@ export async function advanceCharacterAction(
     return { error: "Unbekannte Steigerung." };
   }
 
+  const entry = String(formData.get("entry") ?? "");
+
+  // Talente kommen ausschließlich aus dem Katalog (siehe TalentPicker) — das
+  // Fenster bietet nichts anderes an, verbindlich ist aber diese Prüfung. Ein
+  // eigener Name ist erlaubt, der Katalogname in Klammern muss es geben.
+  if (kind === "talent") {
+    const catalog = await listTalents();
+    const known = new Set(catalog.map((talent) => talent.name.toLowerCase()));
+    if (!known.has(parseTalentEntry(entry).original.toLowerCase())) {
+      return {
+        error: "Unbekanntes Talent — bitte aus dem Katalog wählen.",
+      };
+    }
+  }
+
   const result = await advanceOwnCharacter(session.userId, characterId, {
     kind,
     key: String(formData.get("key") ?? "") || undefined,
-    entry: String(formData.get("entry") ?? "") || undefined,
+    entry: entry || undefined,
   });
 
   if (!result.ok) return { error: result.error };

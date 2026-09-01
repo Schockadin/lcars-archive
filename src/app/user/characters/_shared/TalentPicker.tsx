@@ -49,6 +49,8 @@ function TalentModal({
   stats,
   species,
   taken,
+  cost,
+  affordable,
   onPick,
   onClose,
 }: {
@@ -56,6 +58,11 @@ function TalentModal({
   stats: CharacterStats;
   species: string | null;
   taken: string[];
+  // Was das Talent kostet (Steigern) — null während der Ersterschaffung, wo
+  // Talente aus dem Freikontingent kommen.
+  cost: number | null;
+  // false = die Kosten sind nicht gedeckt; das Übernehmen ist dann gesperrt.
+  affordable: boolean;
   onPick: (entry: string) => void;
   onClose: () => void;
 }) {
@@ -230,6 +237,11 @@ function TalentModal({
                       {note && (
                         <p className="text-lcars-ink-dim text-[12px]">{note}</p>
                       )}
+                      {!affordable && (
+                        <p className="text-lcars-ink-dim text-[12px]">
+                          Dafür fehlen AP — {cost} AP nötig.
+                        </p>
+                      )}
                       <div className="flex flex-wrap items-end gap-[8px]">
                         <label className="flex flex-col gap-[4px] flex-1 min-w-[200px]">
                           <span className="lcars-eyebrow">
@@ -243,14 +255,21 @@ function TalentModal({
                             className="lcars-input rounded-full w-full"
                           />
                         </label>
+                        {/* Ein Klick übernimmt das Talent direkt — beim
+                            Steigern samt Abbuchung, in der Erschaffung als
+                            neuer Listeneintrag. Kein zweiter Schritt außerhalb
+                            des Fensters. */}
                         <button
                           type="button"
+                          disabled={!affordable}
                           onClick={() =>
                             onPick(formatTalentEntry(talent.name, customName))
                           }
-                          className="lcars-pill-btn--outline"
+                          className="lcars-pill-btn--outline disabled:opacity-50"
                         >
-                          Übernehmen
+                          {cost === null
+                            ? "Übernehmen"
+                            : `Übernehmen · ${cost} AP`}
                         </button>
                       </div>
                       {customName.trim() && customName.trim() !== talent.name && (
@@ -276,11 +295,12 @@ export default function TalentPicker({
   talents,
   stats,
   species = null,
-  value,
-  onChange,
-  disabled = false,
-  label = "Talent",
   taken = [],
+  cost = null,
+  availableAp = null,
+  disabled = false,
+  buttonLabel = "Talent hinzufügen",
+  onPick,
 }: {
   talents: Talent[];
   // Die (live mitgeführten) Werte des Charakters — Grundlage der
@@ -288,29 +308,34 @@ export default function TalentPicker({
   stats: CharacterStats;
   // Spezies der Akte, für Voraussetzungen wie „Vulcan".
   species?: string | null;
-  value: string;
-  onChange: (entry: string) => void;
-  disabled?: boolean;
-  label?: string;
   // Einträge, die schon auf dem Bogen stehen — sie fehlen in der Auswahl.
   taken?: string[];
+  // Kosten eines Talents (Steigern) bzw. null in der Ersterschaffung.
+  cost?: number | null;
+  // Verfügbare AP; zusammen mit cost sperrt das die Übernahme, wenn sie nicht
+  // reichen. null = keine AP-Prüfung.
+  availableAp?: number | null;
+  disabled?: boolean;
+  buttonLabel?: string;
+  // Wird mit dem fertigen Eintrag aufgerufen (Katalogname oder „Neuer Name
+  // (Originalname)"); das Fenster schließt sich dabei.
+  onPick: (entry: string) => void;
 }) {
   const [open, setOpen] = useState(false);
 
+  const affordable =
+    cost === null || availableAp === null || availableAp >= cost;
+
   return (
-    <div className="flex flex-col gap-[4px]">
-      <span className="stat-label-secondary">{label}</span>
-      <div className="flex flex-wrap items-center gap-[8px]">
-        <button
-          type="button"
-          disabled={disabled}
-          onClick={() => setOpen(true)}
-          className="lcars-pill-btn--outline disabled:opacity-50"
-        >
-          {value ? "Anderes Talent wählen" : "Talent wählen …"}
-        </button>
-        {value && <span className="stat-label-primary">{value}</span>}
-      </div>
+    <>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setOpen(true)}
+        className="lcars-pill-btn--outline self-start disabled:opacity-50"
+      >
+        {buttonLabel}
+      </button>
 
       {open && (
         <TalentModal
@@ -318,13 +343,15 @@ export default function TalentPicker({
           stats={stats}
           species={species}
           taken={taken}
+          cost={cost}
+          affordable={affordable}
           onPick={(entry) => {
-            onChange(entry);
             setOpen(false);
+            onPick(entry);
           }}
           onClose={() => setOpen(false)}
         />
       )}
-    </div>
+    </>
   );
 }

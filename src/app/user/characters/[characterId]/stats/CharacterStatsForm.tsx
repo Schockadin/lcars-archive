@@ -19,6 +19,7 @@ import {
 } from "../../_shared/statsAction";
 import type { Talent } from "@/lib/talentCatalog";
 import TalentPicker from "../../_shared/TalentPicker";
+import { MinusCircleIcon } from "@/lib/icons";
 import type { CharacterStats } from "@/types/characterStats";
 
 const initialState: CharacterStatsFormState = {};
@@ -112,75 +113,89 @@ function StatBox({
 // Bewusst KEIN ContentEditor: der ist auf Markdown-Text + Entwurf +
 // Autolinking zugeschnitten, was hier alles nicht zutrifft — die
 // Action-Konventionen (useActionState, FormError als Toast) sind dieselben.
-// Talent-Liste des Bogens: Auswahlfeld aus dem Katalog plus das gewohnte
-// Textfeld mit einem Eintrag je Zeile. Der Katalog macht das Nachschlagen
-// unnötig (Voraussetzung und Regeltext stehen direkt darunter), das Textfeld
-// bleibt die Wahrheit — abgesendet wird immer sein Inhalt.
+// Talent-Liste des Bogens. Anders als die übrigen Listenfelder KEIN freies
+// Textfeld mehr: Talente kommen ausschließlich aus dem Katalog (siehe
+// TalentPicker) — nur so lassen sich Voraussetzungen prüfen, Beschreibungen
+// anzeigen und Dubletten erkennen. Abgesendet wird ein verstecktes Feld mit
+// einem Eintrag je Zeile, wie bei den anderen Listen.
 function TalentListField({
   talents,
   stats,
   species,
-  initial,
+  entries,
+  setEntries,
   readOnly,
-  label,
+  maxDuringCreation,
 }: {
   talents: Talent[];
   // Live-Werte des Bogens — die Auswahl blendet damit Talente aus, deren
   // Voraussetzungen (noch) nicht erfüllt sind.
   stats: CharacterStats;
   species: string | null;
-  initial: string[];
+  // Der State liegt eine Ebene höher (CharacterSheet), damit der Spickzettel
+  // am Fuß des Bogens sofort mitzieht.
+  entries: string[];
+  setEntries: React.Dispatch<React.SetStateAction<string[]>>;
+  // Nach dem Festschreiben der Erschaffung nur noch lesbar: Talente kosten
+  // dann AP und kommen über den AP-Bereich hinzu.
   readOnly: boolean;
-  label: string;
+  // Freikontingent der Ersterschaffung (rules.creationFreeTalents).
+  maxDuringCreation: number;
 }) {
-  const [text, setText] = useState(initial.join("\n"));
-  const [picked, setPicked] = useState("");
-
-  const lines = text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  function addPicked() {
-    if (!picked) return;
-    setText(lines.length > 0 ? `${lines.join("\n")}\n${picked}` : picked);
-    setPicked("");
-  }
+  const full = !readOnly && entries.length >= maxDuringCreation;
 
   return (
     <div className="flex flex-col gap-[8px]">
-      <textarea
-        id="stats-talents"
-        name="talents"
-        // Nach der Ersterschaffung kosten Talente AP und kommen nur noch über
-        // das Advancement-Panel hinzu.
-        readOnly={readOnly}
-        rows={8}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        aria-label={label}
-        className="stat-list-input"
-      />
-      {!readOnly && talents.length > 0 && (
-        <div className="flex flex-col gap-[6px]">
+      {/* Der abgesendete Wert — die Anzeige darüber ist die Bedienoberfläche. */}
+      <input type="hidden" name="talents" value={entries.join("\n")} />
+
+      {entries.length === 0 ? (
+        <p className="lcars-empty-state">Noch keine Talente.</p>
+      ) : (
+        <ul className="stat-entry-list">
+          {entries.map((entry, index) => (
+            <li key={`${entry}-${index}`} className="stat-entry">
+              <span className="stat-entry-text">{entry}</span>
+              {!readOnly && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEntries((prev) => prev.filter((_, i) => i !== index))
+                  }
+                  className="stat-entry-remove"
+                  aria-label={`${entry} entfernen`}
+                  title={`${entry} entfernen`}
+                >
+                  <MinusCircleIcon />
+                </button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {!readOnly && (
+        <>
+          <p className="stat-sheet-rule">
+            {entries.length} / {maxDuringCreation} Talente der Ersterschaffung
+            {full ? " — Kontingent ausgeschöpft" : ""}
+          </p>
           <TalentPicker
             talents={talents}
             stats={stats}
             species={species}
-            value={picked}
-            onChange={setPicked}
-            label="Aus dem Katalog übernehmen"
-            taken={lines}
+            taken={entries}
+            disabled={full}
+            buttonLabel="Talent hinzufügen"
+            onPick={(entry) => setEntries((prev) => [...prev, entry])}
           />
-          <button
-            type="button"
-            onClick={addPicked}
-            disabled={!picked}
-            className="lcars-pill-btn--outline self-start disabled:opacity-50"
-          >
-            Übernehmen
-          </button>
-        </div>
+        </>
+      )}
+      {readOnly && (
+        <p className="stat-sheet-rule">
+          Weitere Talente kosten AP und kommen über den Bereich
+          &bdquo;Advancement&ldquo; oben hinzu.
+        </p>
       )}
     </div>
   );
@@ -192,9 +207,11 @@ export default function CharacterStatsForm({
   characterName,
   portrait,
   stats,
-  savedStats,
   talents,
   species,
+  creationFreeTalents,
+  talentEntries,
+  setTalentEntries,
   attributes,
   setAttributes,
   departments,
@@ -205,16 +222,21 @@ export default function CharacterStatsForm({
   characterName: string;
   // Portrait des Charakters = „Photo" des Bogens (siehe OwnCharacterStats).
   portrait: string | null;
-  // Die LIVE mitgeführten Werte (siehe CharacterSheet) — Grundlage der
-  // Talent-Auswahl, die Voraussetzungen gegen die aktuellen Zahlen prüft.
+  // Die LIVE mitgeführten Werte (siehe CharacterSheet): Grundlage der
+  // Talent-Auswahl, die Voraussetzungen gegen die aktuellen Zahlen prüft. Für
+  // alle Felder, die dieses Formular selbst hält (Freitexte, übrige Listen),
+  // ist der Live-Stand identisch mit dem gespeicherten — nur Attribute,
+  // Disziplinen und Talente liegen als State eine Ebene höher.
   stats: CharacterStats;
-  // Der zuletzt GESPEICHERTE Stand — er füllt die Felder vor, die dieses
-  // Formular selbst hält (Listen, Freitexte).
-  savedStats: CharacterStats;
   // Talent-Katalog für die Auswahlliste (gepflegt unter /gm/talents).
   talents: Talent[];
   // Spezies der Akte — für Voraussetzungen wie „Vulcan".
   species: string | null;
+  // Freikontingent der Ersterschaffung für Talente (aus dem AP-Regelwerk).
+  creationFreeTalents: number;
+  // Talent-Liste als State der Klammer-Komponente (siehe TalentListField).
+  talentEntries: string[];
+  setTalentEntries: React.Dispatch<React.SetStateAction<string[]>>;
   // Attribute und Disziplinen liegen als State eine Ebene höher
   // (CharacterSheet.tsx): der AP-Bereich rechnet damit live mit, während hier
   // getippt wird. Beide Blöcke bleiben Strings — ein leeres Feld ist „nicht
@@ -551,9 +573,10 @@ export default function CharacterStatsForm({
                 talents={talents}
                 stats={stats}
                 species={species}
-                initial={savedStats.talents}
+                entries={talentEntries}
+                setEntries={setTalentEntries}
                 readOnly={stats.creationLocked}
-                label={field.label}
+                maxDuringCreation={creationFreeTalents}
               />
             ) : (
               <textarea

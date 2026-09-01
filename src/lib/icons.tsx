@@ -181,6 +181,18 @@ export function ShareIcon() {
     </svg>
   );
 }
+// Kleines Minus im Kreis — Entfernen einer einzelnen Zeile (Talent-Liste des
+// Charakterbogens). Bewusst kein Papierkorb: es wird kein Inhalt gelöscht,
+// sondern nur ein Eintrag aus einer Liste genommen.
+export function MinusCircleIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M8.5 12h7" />
+    </svg>
+  );
+}
+
 export function TrashIcon() {
   return (
     <svg {...ICON_PROPS}>

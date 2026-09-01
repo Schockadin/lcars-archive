@@ -22,6 +22,9 @@ import {
   type NumberFieldSpec,
 } from "@/lib/characterStats";
 import type { CharacterStats } from "@/types/characterStats";
+import { listTalents } from "@/lib/talents";
+import { parseTalentEntry } from "@/lib/talentCatalog";
+import { getAdvancementRules } from "@/lib/advancementSettings";
 
 export interface CharacterStatsFormState {
   error?: string;
@@ -122,6 +125,37 @@ export async function characterStatsAction(
     stats.departments = current.stats.departments;
     stats.talents = current.stats.talents;
     stats.focuses = current.stats.focuses;
+  }
+
+  // Talente kommen ausschließlich aus dem Katalog (siehe TalentPicker) — das
+  // Formular bietet gar nichts anderes mehr an, verbindlich ist aber diese
+  // Prüfung. Bereits gespeicherte Einträge bleiben erlaubt, auch wenn sie
+  // nicht (mehr) im Katalog stehen: sonst ließe sich ein Bogen mit Alt-Bestand
+  // aus der Freitext-Zeit überhaupt nicht mehr speichern.
+  if (!current.stats.creationLocked) {
+    const [catalog, rules] = await Promise.all([
+      listTalents(),
+      getAdvancementRules(),
+    ]);
+    const known = new Set(catalog.map((talent) => talent.name.toLowerCase()));
+    const alreadyStored = new Set(
+      current.stats.talents.map((entry) => entry.toLowerCase()),
+    );
+    const unknown = stats.talents.filter(
+      (entry) =>
+        !known.has(parseTalentEntry(entry).original.toLowerCase()) &&
+        !alreadyStored.has(entry.toLowerCase()),
+    );
+    if (unknown.length > 0) {
+      return {
+        error: `Unbekanntes Talent: ${unknown.join(", ")}. Talente werden aus dem Katalog gewählt.`,
+      };
+    }
+    if (stats.talents.length > rules.creationFreeTalents) {
+      return {
+        error: `Die Ersterschaffung erlaubt ${rules.creationFreeTalents} Talente — ${stats.talents.length} sind eingetragen. Weitere kosten AP.`,
+      };
+    }
   }
 
   // Verteilungsregeln (nur ein Attribut auf 12, zwei auf 11, analog bei den

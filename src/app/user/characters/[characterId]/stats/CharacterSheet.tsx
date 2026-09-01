@@ -11,6 +11,18 @@ import type { Talent } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
 import CharacterStatsForm, { type NumberInputs } from "./CharacterStatsForm";
 import AdvancementPanel from "./AdvancementPanel";
+import TalentCheatSheet from "./TalentCheatSheet";
+
+// Zahlenwerte als Eingabe-Strings: ein leeres Feld bedeutet „nicht gepflegt",
+// nicht 0.
+function toInputs<K extends string>(
+  fields: readonly { key: K }[],
+  values: Record<K, number | null>,
+): NumberInputs {
+  return Object.fromEntries(
+    fields.map((field) => [field.key, values[field.key]?.toString() ?? ""]),
+  );
+}
 
 // Klammer um AP-Bereich und Werte-Formular. Sie hält als einzige den State der
 // Attribut- und Disziplin-Eingaben — nur so kann der AP-Bereich LIVE mitrechnen,
@@ -39,21 +51,35 @@ export default function CharacterSheet({
   talents: Talent[];
 }) {
   const [attributes, setAttributes] = useState<NumberInputs>(() =>
-    Object.fromEntries(
-      ATTRIBUTE_FIELDS.map((field) => [
-        field.key,
-        stats.attributes[field.key]?.toString() ?? "",
-      ]),
-    ),
+    toInputs(ATTRIBUTE_FIELDS, stats.attributes),
   );
+  // Die Talente liegen aus demselben Grund hier: der Spickzettel am Fuß des
+  // Bogens und die Auswahl (Dubletten, Voraussetzungen anderer Talente) sollen
+  // sofort mitziehen, wenn oben eines hinzukommt oder entfernt wird.
+  const [talentEntries, setTalentEntries] = useState<string[]>(stats.talents);
+
   const [departments, setDepartments] = useState<NumberInputs>(() =>
-    Object.fromEntries(
-      DEPARTMENT_FIELDS.map((field) => [
-        field.key,
-        stats.departments[field.key]?.toString() ?? "",
-      ]),
-    ),
+    toInputs(DEPARTMENT_FIELDS, stats.departments),
   );
+
+  // Nach einer Steigerung (AP-Bereich) oder dem Speichern liefert der Server
+  // neue Werte — der lokale State muss dann nachziehen, sonst zeigte der Bogen
+  // weiter den Stand von vor der Buchung (die Komponente bleibt dabei
+  // montiert, React behielte ihren State also). Anpassung WÄHREND des Renders
+  // statt in einem Effect, siehe React-Doku „Adjusting state when a prop
+  // changes" — ein setState im Effect-Body löste einen zusätzlichen Render aus.
+  const serverSnapshot = JSON.stringify([
+    stats.attributes,
+    stats.departments,
+    stats.talents,
+  ]);
+  const [previousSnapshot, setPreviousSnapshot] = useState(serverSnapshot);
+  if (serverSnapshot !== previousSnapshot) {
+    setPreviousSnapshot(serverSnapshot);
+    setAttributes(toInputs(ATTRIBUTE_FIELDS, stats.attributes));
+    setDepartments(toInputs(DEPARTMENT_FIELDS, stats.departments));
+    setTalentEntries(stats.talents);
+  }
 
   // Der gespeicherte Stand mit den gerade eingetippten Zahlen. parseCharacterStats
   // normalisiert dabei wie überall sonst (leeres Feld → null, Unsinn → null), so
@@ -66,6 +92,7 @@ export default function CharacterSheet({
     ...stats,
     attributes: { ...stats.attributes, ...attributes },
     departments: { ...stats.departments, ...departments },
+    talents: talentEntries,
   });
 
   return (
@@ -85,14 +112,19 @@ export default function CharacterSheet({
         characterName={characterName}
         portrait={portrait}
         stats={liveStats}
-        savedStats={stats}
         talents={talents}
         species={species}
+        creationFreeTalents={rules.creationFreeTalents}
+        talentEntries={talentEntries}
+        setTalentEntries={setTalentEntries}
         attributes={attributes}
         setAttributes={setAttributes}
         departments={departments}
         setDepartments={setDepartments}
       />
+
+      {/* Ganz unten, nach dem Bogen: der Regeltext der eigenen Talente. */}
+      <TalentCheatSheet entries={talentEntries} talents={talents} />
     </>
   );
 }

@@ -112,8 +112,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `scripts/seed/talents.json`, eingespielt mit `npm run db:seed-talents`
   (idempotent). Auf dem Charakterbogen ersetzt eine nach Kategorien gruppierte
   Auswahlliste das freie Tippen — mit Voraussetzung und Regeltext des
-  gewählten Talents (`src/app/user/characters/_shared/TalentPicker.tsx`); für
-  Sonderfälle bleibt der Freitext erreichbar. Die Auswahl liegt in einem
+  gewählten Talents (`src/app/user/characters/_shared/TalentPicker.tsx`). Die
+  Auswahl liegt in einem
   **Modal-Overlay** (gleiches Muster wie `RowDetailModal`: Portal, Escape,
   Klick daneben, Scroll-Sperre) mit Volltextsuche, Kategorie-Filter und
   Klapp-Beschreibung je Talent. Angezeigt werden standardmäßig nur Talente,
@@ -128,7 +128,19 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Übernehmen **umbenennen**: gespeichert und angezeigt wird dann
   `Neuer Name (Originalname)` (`formatTalentEntry`/`parseTalentEntry`), womit
   der Katalogname erhalten bleibt — Dublettenprüfung und
-  Voraussetzungs-Abgleich arbeiten weiterhin mit ihm. Die reine Hälfte (Kategorien,
+  Voraussetzungs-Abgleich arbeiten weiterhin mit ihm. Ein Klick auf
+  „Übernehmen" im Fenster **setzt das Talent direkt**: in der Erschaffung als
+  Listeneintrag, beim Steigern samt Abbuchung (die Action wird programmatisch
+  mit einer `FormData` aufgerufen, es gibt kein zweites Formular daneben). Die
+  Talent-Liste des Bogens ist deshalb **kein Freitextfeld** mehr, sondern eine
+  Liste mit rotem Minus je Eintrag; abgesendet wird ein verstecktes Feld.
+  Während der Erschaffung zählt sie gegen `creationFreeTalents` (Anzeige
+  „x / 4"), danach ist sie schreibgeschützt. Beides ist serverseitig
+  durchgesetzt (`statsAction.ts`, `advancementAction.ts`): ein Eintrag muss im
+  Katalog stehen — bereits gespeicherte Alt-Einträge aus der Freitext-Zeit
+  bleiben erlaubt, sonst ließe sich ein solcher Bogen nie wieder speichern.
+  Ganz unten am Bogen listet ein **Spickzettel** (`TalentCheatSheet.tsx`) die
+  Talente des Charakters mit vollem Regeltext. Die reine Hälfte (Kategorien,
   Labels, Validierung) liegt in `src/lib/talentCatalog.ts`, der Datenzugriff in
   `src/lib/talents.ts`.
 - **Spielleitungs-Bereich (`/gm`)** — eigener, über `requireGM` (`gm.access`)
