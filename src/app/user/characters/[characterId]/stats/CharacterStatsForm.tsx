@@ -17,6 +17,8 @@ import {
   characterStatsAction,
   type CharacterStatsFormState,
 } from "../../_shared/statsAction";
+import type { Talent } from "@/lib/talentCatalog";
+import TalentPicker from "../../_shared/TalentPicker";
 import type {
   CharacterAttributes,
   CharacterDepartments,
@@ -114,12 +116,79 @@ function StatBox({
 // Bewusst KEIN ContentEditor: der ist auf Markdown-Text + Entwurf +
 // Autolinking zugeschnitten, was hier alles nicht zutrifft — die
 // Action-Konventionen (useActionState, FormError als Toast) sind dieselben.
+// Talent-Liste des Bogens: Auswahlfeld aus dem Katalog plus das gewohnte
+// Textfeld mit einem Eintrag je Zeile. Der Katalog macht das Nachschlagen
+// unnötig (Voraussetzung und Regeltext stehen direkt darunter), das Textfeld
+// bleibt die Wahrheit — abgesendet wird immer sein Inhalt.
+function TalentListField({
+  talents,
+  initial,
+  readOnly,
+  label,
+}: {
+  talents: Talent[];
+  initial: string[];
+  readOnly: boolean;
+  label: string;
+}) {
+  const [text, setText] = useState(initial.join("\n"));
+  const [picked, setPicked] = useState("");
+
+  const lines = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  function addPicked() {
+    if (!picked) return;
+    setText(lines.length > 0 ? `${lines.join("\n")}\n${picked}` : picked);
+    setPicked("");
+  }
+
+  return (
+    <div className="flex flex-col gap-[8px]">
+      <textarea
+        id="stats-talents"
+        name="talents"
+        // Nach der Ersterschaffung kosten Talente AP und kommen nur noch über
+        // das Advancement-Panel hinzu.
+        readOnly={readOnly}
+        rows={8}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        aria-label={label}
+        className="stat-list-input"
+      />
+      {!readOnly && talents.length > 0 && (
+        <div className="flex flex-col gap-[6px]">
+          <TalentPicker
+            talents={talents}
+            value={picked}
+            onChange={setPicked}
+            label="Aus dem Katalog übernehmen"
+            taken={lines}
+          />
+          <button
+            type="button"
+            onClick={addPicked}
+            disabled={!picked}
+            className="lcars-pill-btn--outline self-start disabled:opacity-50"
+          >
+            Übernehmen
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CharacterStatsForm({
   userId,
   characterId,
   characterName,
   portrait,
   stats,
+  talents,
 }: {
   userId: number;
   characterId: number;
@@ -127,6 +196,8 @@ export default function CharacterStatsForm({
   // Portrait des Charakters = „Photo" des Bogens (siehe OwnCharacterStats).
   portrait: string | null;
   stats: CharacterStats;
+  // Talent-Katalog für die Auswahlliste (gepflegt unter /gm/talents).
+  talents: Talent[];
 }) {
   const [state, formAction, pending] = useActionState(
     characterStatsAction,
@@ -465,23 +536,33 @@ export default function CharacterStatsForm({
                 <span className="stat-label-secondary">{field.label}</span>
               )}
             </h2>
-            <textarea
-              id={`stats-${field.key}`}
-              name={field.key}
-              // Talente und Schwerpunkte kosten nach der Erschaffung AP und
-              // werden dann nur noch über das Advancement-Panel ergänzt.
-              readOnly={
-                stats.creationLocked &&
-                (field.key === "talents" || field.key === "focuses")
-              }
-              // Mindestens acht Zeilen ohne Scrollen — die Listen des Bogens
-              // (Werte, Schwerpunkte, Talente, …) haben dort ebenfalls
-              // reichlich Platz.
-              rows={8}
-              defaultValue={stats[field.key].join("\n")}
-              aria-label={field.label}
-              className="stat-list-input"
-            />
+            {field.key === "talents" ? (
+              // Talente kommen aus dem Katalog (/gm/talents): das Auswahlfeld
+              // hängt den Namen an die Liste an, die Liste selbst bleibt ein
+              // Textfeld — so lassen sich Einträge auch wieder streichen und
+              // Sonderfälle von Hand eintragen.
+              <TalentListField
+                talents={talents}
+                initial={stats.talents}
+                readOnly={stats.creationLocked}
+                label={field.label}
+              />
+            ) : (
+              <textarea
+                id={`stats-${field.key}`}
+                name={field.key}
+                // Schwerpunkte kosten nach der Erschaffung AP und werden dann
+                // nur noch über das Advancement-Panel ergänzt.
+                readOnly={stats.creationLocked && field.key === "focuses"}
+                // Mindestens acht Zeilen ohne Scrollen — die Listen des Bogens
+                // (Werte, Schwerpunkte, Talente, …) haben dort ebenfalls
+                // reichlich Platz.
+                rows={8}
+                defaultValue={stats[field.key].join("\n")}
+                aria-label={field.label}
+                className="stat-list-input"
+              />
+            )}
           </section>
         ))}
       </div>

@@ -15,9 +15,10 @@ import {
   lockCreationAction,
   type AdvancementActionResult,
 } from "../../_shared/advancementAction";
-import type { ApAccount } from "@/lib/characterAp";
-import { AP_REASON_LABELS } from "@/lib/characterAp";
+import { AP_REASON_LABELS, type ApAccount } from "@/lib/apReasons";
 import type { CharacterStats } from "@/types/characterStats";
+import type { Talent } from "@/lib/talentCatalog";
+import TalentPicker from "../../_shared/TalentPicker";
 
 const initialState: AdvancementActionResult = {};
 
@@ -33,6 +34,7 @@ export default function AdvancementPanel({
   stats,
   account,
   rules,
+  talents,
 }: {
   characterId: number;
   stats: CharacterStats;
@@ -40,6 +42,8 @@ export default function AdvancementPanel({
   // Das geltende AP-Regelwerk (Kosten, Erschaffungsbudgets) — von der
   // Spielleitung unter /gm/ap einstellbar, deshalb als Prop statt als Konstante.
   rules: AdvancementRules;
+  // Katalog für die Talent-Auswahlliste (gepflegt unter /gm/talents).
+  talents: Talent[];
 }) {
   const [state, formAction, pending] = useActionState(
     advanceCharacterAction,
@@ -50,6 +54,9 @@ export default function AdvancementPanel({
     initialState,
   );
   const [talent, setTalent] = useState("");
+  // Der Katalog deckt das Regelwerk der Runde ab; für Sonderfälle (ein von der
+  // Spielleitung im Spiel vergebenes Talent) bleibt der Freitext erreichbar.
+  const [talentFreeText, setTalentFreeText] = useState(false);
   const [focus, setFocus] = useState("");
 
   const budget = creationBudget(stats, rules);
@@ -190,14 +197,42 @@ export default function AdvancementPanel({
                 <span className="stat-label-primary">Talent</span>
                 <span className="stat-label-secondary">{rules.talentCost} AP</span>
               </label>
-              <input
-                id="advance-talent"
-                name="entry"
-                type="text"
-                value={talent}
-                onChange={(e) => setTalent(e.target.value)}
-                className="stat-field-input"
-              />
+              {talentFreeText || talents.length === 0 ? (
+                <input
+                  id="advance-talent"
+                  name="entry"
+                  type="text"
+                  value={talent}
+                  onChange={(e) => setTalent(e.target.value)}
+                  className="stat-field-input"
+                />
+              ) : (
+                <>
+                  {/* Der Katalog liefert die Anzeige, gebucht wird der reine
+                      Name — deshalb ein verstecktes Feld statt eines
+                      benannten <select>. */}
+                  <input type="hidden" name="entry" value={talent} />
+                  <TalentPicker
+                    talents={talents}
+                    value={talent}
+                    onChange={setTalent}
+                    label="Aus dem Katalog wählen"
+                    taken={stats.talents}
+                  />
+                </>
+              )}
+              {talents.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTalentFreeText((v) => !v);
+                    setTalent("");
+                  }}
+                  className="stat-label-secondary self-start underline"
+                >
+                  {talentFreeText ? "Katalog nutzen" : "Eigenes Talent eintragen"}
+                </button>
+              )}
               <button
                 type="submit"
                 disabled={pending || talent.trim() === "" || account.available < rules.talentCost}

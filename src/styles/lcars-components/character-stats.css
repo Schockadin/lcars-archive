@@ -507,6 +507,23 @@
   outline-offset: -2px;
 }
 
+/* Regeltext des im Talent-Auswahlfeld gewählten Talents (TalentPicker.tsx).
+   Bewusst schmal gehalten und in der Datenschrift gesetzt — er steht unter
+   dem Auswahlfeld und soll den Bogen nicht dominieren. Die Höhe ist
+   begrenzt, damit ein langer Regeltext das Formular nicht auseinanderzieht;
+   längere Texte scrollen in ihrem eigenen Kasten. */
+.stat-talent-description {
+  max-height: 8.5em;
+  overflow-y: auto;
+  padding: 6px 10px;
+  border-left: 3px solid var(--lcars-border);
+  background-color: var(--lcars-surface);
+  color: var(--lcars-ink-dim);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 @media (max-width: 520px) {
   .stat-sheet-section-title {
     font-size: 16px;

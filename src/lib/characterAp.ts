@@ -10,48 +10,18 @@ import {
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import type { CharacterStats } from "@/types/characterStats";
 
-// Buchungen des AP-Kontos (siehe character_ap_entries in scripts/schema.sql).
-// Der Kontostand ist immer die Summe der Buchungen — es gibt bewusst kein
-// zusätzliches Saldo-Feld, das mit dem Journal auseinanderlaufen könnte.
-export const AP_REASONS = [
-  "session", // Es wurde eine Session gespielt (+1)
-  "logbook", // Es wurde ein Logbuch zur Session geschrieben (+1)
-  "bonus", // Bonus-AP einer Session (siehe /gm/sessions)
-  "mission", // Abschluss einer Mission / eines Story-Arcs (+X)
-  "manual", // Freie Korrektur durch die Spielleitung
-  "advancement", // Ausgabe beim Steigern (negativ)
-] as const;
-
-export type ApReason = (typeof AP_REASONS)[number];
-
-export const AP_REASON_LABELS: Record<ApReason, string> = {
-  session: "Session gespielt",
-  logbook: "Logbuch geschrieben",
-  bonus: "Bonus",
-  mission: "Mission / Story-Arc abgeschlossen",
-  manual: "Korrektur",
-  advancement: "Steigerung",
-};
-
-export function isApReason(value: string): value is ApReason {
-  return (AP_REASONS as readonly string[]).includes(value);
-}
-
-export interface ApEntry {
-  id: number;
-  amount: number;
-  reason: ApReason;
-  note: string | null;
-  createdAt: string;
-  createdByName: string | null;
-}
-
-export interface ApAccount {
-  earned: number;
-  spent: number;
-  available: number;
-  entries: ApEntry[];
-}
+// Die Buchungsgründe und Kontotypen selbst liegen DB-frei in
+// src/lib/apReasons.ts (Client-Komponenten brauchen die Labels) und werden
+// hier der Bequemlichkeit halber mit re-exportiert.
+export {
+  AP_REASONS,
+  AP_REASON_LABELS,
+  isApReason,
+  type ApReason,
+  type ApEntry,
+  type ApAccount,
+} from "@/lib/apReasons";
+import type { ApReason, ApEntry, ApAccount } from "@/lib/apReasons";
 
 // Kontostand + Journal eines Charakters. Nicht gecacht: der Stand ändert sich
 // durch Vergabe und Steigern und muss sofort stimmen.

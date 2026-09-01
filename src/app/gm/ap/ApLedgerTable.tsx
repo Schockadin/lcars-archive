@@ -1,11 +1,10 @@
 "use client";
 import { useMemo, useState } from "react";
 import { formatDateTime } from "@/utils/formateISODate";
-import {
-  AP_REASONS,
-  AP_REASON_LABELS,
-  type ApLedgerEntry,
-} from "@/lib/characterAp";
+import { AP_REASONS, AP_REASON_LABELS } from "@/lib/apReasons";
+// Reiner Typ-Import: er wird beim Übersetzen entfernt und zieht die
+// Datenschicht deshalb nicht ins Browser-Bundle.
+import type { ApLedgerEntry } from "@/lib/characterAp";
 
 // Gesamtjournal aller AP-Bewegungen, nach Charakter und Grund filterbar. Die
 // Filterung läuft im Client — die Liste ist serverseitig bereits begrenzt

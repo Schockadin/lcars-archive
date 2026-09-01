@@ -6,6 +6,7 @@ import { verifySession } from "@/lib/dal";
 import { getOwnCharacterStats } from "@/lib/characters";
 import { getApAccount } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
+import { listTalents } from "@/lib/talents";
 import CharacterStatsForm from "./CharacterStatsForm";
 import AdvancementPanel from "./AdvancementPanel";
 
@@ -39,6 +40,8 @@ export default async function CharacterStatsPage({ params }: Props) {
   // Das geltende Regelwerk (Kosten, Erschaffungsbudgets) — von der
   // Spielleitung unter /gm/ap einstellbar.
   const rules = await getAdvancementRules();
+  // Talent-Katalog für die Auswahlliste (Steigern und Erschaffung).
+  const talents = await listTalents();
 
   return (
     <>
@@ -61,6 +64,7 @@ export default async function CharacterStatsPage({ params }: Props) {
           stats={character.stats}
           account={account}
           rules={rules}
+          talents={talents}
         />
 
         <CharacterStatsForm
@@ -69,6 +73,7 @@ export default async function CharacterStatsPage({ params }: Props) {
           characterName={character.name}
           portrait={character.portrait}
           stats={character.stats}
+          talents={talents}
         />
       </article>
     </>
