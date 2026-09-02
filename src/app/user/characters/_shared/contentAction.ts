@@ -19,7 +19,6 @@ import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { parseList, parseNumberList } from "@/lib/formParsing";
 import { userCan } from "@/lib/permissions";
-import { canPlayNpcs, resolveViewer } from "@/lib/visibility";
 import { uploadCharacterPortraitImage } from "@/lib/characterAssets";
 import { InvalidAssetError } from "@/lib/assetStorage";
 import type { Character } from "@/types/character";
@@ -53,22 +52,12 @@ export async function characterAction(
   // Der geladene User wird weiter unten für notifyContentChange
   // wiederverwendet (authorName), statt ihn dafür ein zweites Mal zu laden.
   let currentUser = null;
-  // NPC-Anlage (Häkchen bzw. eigener Einstieg über /user/content): der
-  // Charakter bekommt KEINEN Spieler und ist damit ein NPC, für den in
-  // Gesprächen die Spielleitung schreibt.
-  const asNpc = !isEdit && formData.get("asNpc") === "1";
   if (!isEdit) {
     currentUser = await getUserById(session.userId);
-    const roleMap = await getRoleMap();
-    if (asNpc) {
-      // Ein NPC ist kein eigener Charakter, sondern Kampagnen-Inventar —
-      // maßgeblich ist deshalb nicht content.create ("darf eigene Inhalte
-      // anlegen"), sondern ob diese Person NPCs überhaupt spielt. Sonst
-      // entstünden herrenlose Charaktere, für die niemand zuständig ist.
-      if (!currentUser || !canPlayNpcs(resolveViewer(currentUser, roleMap))) {
-        return { error: "NPCs kann nur die Spielleitung anlegen." };
-      }
-    } else if (!currentUser || !userCan(currentUser, "content.create", roleMap)) {
+    if (
+      !currentUser ||
+      !userCan(currentUser, "content.create", await getRoleMap())
+    ) {
       return { error: "Gast-Accounts können keine Charaktere anlegen." };
     }
   }
@@ -239,7 +228,7 @@ export async function characterAction(
     bodyMarkdown,
     isDraft,
     bioHtml,
-    ownerUserId: asNpc ? null : session.userId,
+    ownerUserId: session.userId,
   });
   revalidateCharacter(result.slug);
 
@@ -257,7 +246,7 @@ export async function characterAction(
       event: "created",
       authorUserId: session.userId,
       authorName: currentUser?.name ?? "Unbekannt",
-      contentTypeLabel: asNpc ? "einen neuen NPC" : "einen neuen Charakter",
+      contentTypeLabel: "einen neuen Charakter",
       contentTitle: name,
       contentUrl,
       preview,

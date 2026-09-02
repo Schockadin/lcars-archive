@@ -23,10 +23,10 @@ export default async function UserContentPage() {
   // Die Spielleitung kann ein Gespräch auch ohne eigenen Charakter beginnen —
   // aus Sicht eines NPC (siehe /user/dialogues/new).
   const canStartDialogue = characters.length > 0 || userCan(user, "gm.access", roleMap);
-  // NPCs (Charaktere ohne Spieler) legt an, wer sie auch spielt — siehe
-  // canPlayNpcs; sie stehen danach allen als Gesprächs-Gegenüber offen.
-  // Bewusst ohne content.create: ein NPC ist kein eigener Inhalt, sondern
-  // Kampagnen-Inventar — es zählt nur, ob diese Person NPCs spielt.
+  // NPCs sind Datenbank-Einträge der Kategorie „npc"; anlegen darf sie, wer
+  // sie auch spielt (canPlayNpcs). Bewusst ohne content.create: ein NPC ist
+  // kein eigener Inhalt, sondern Kampagnen-Inventar — es zählt nur, ob diese
+  // Person NPCs spielt.
   const canCreateNpc = canPlayNpcs(resolveViewer(user, roleMap));
 
   const [logs, dialogues, archiveEntries, missions] = await Promise.all([
@@ -82,11 +82,13 @@ export default async function UserContentPage() {
                 Neuer Charakter
               </Link>
             )}
-            {/* Derselbe Weg, nur ohne Spieler: ein NPC, den in Gesprächen die
-                Spielleitung übernimmt (siehe canPlayNpcs). */}
+            {/* Ein NPC ist kein eigener Charakter, sondern ein
+                Datenbank-Eintrag der Kategorie „NPC" — der Knopf öffnet
+                deshalb das Datenbank-Formular mit vorgewählter Kategorie.
+                Wer NPCs anlegen darf, spielt sie auch (siehe canPlayNpcs). */}
             {canCreateNpc && (
               <Link
-                href="/user/characters/new?npc=1"
+                href="/user/archive/new?category=npc"
                 className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
               >
                 Neuer NPC

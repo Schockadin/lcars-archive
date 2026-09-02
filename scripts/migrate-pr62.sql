@@ -148,14 +148,26 @@ ALTER TABLE campaign_settings ADD COLUMN IF NOT EXISTS advancement_rules JSONB;
 -- blieben dauerhaft verwaist liegen.
 DROP TABLE IF EXISTS character_sheets;
 
--- Gespräche mit NPCs: NPCs (Charaktere ohne Spieler) werden pro Gespräch
--- einem GM-Konto zugeordnet, das für sie schreibt. Siehe schema.sql für die
--- ausführliche Begründung.
-CREATE TABLE IF NOT EXISTS dialogue_npc_speakers (
+-- Gespräche mit NPCs: ein NPC ist ein Datenbank-Eintrag der Kategorie "npc"
+-- (archive_entries) und wird pro Gespräch einem Konto der Spielleitung
+-- zugeordnet, das für ihn schreibt. Siehe schema.sql für die ausführliche
+-- Begründung.
+--
+-- DROP davor: eine frühere Fassung dieser PR hielt NPCs für Charaktere ohne
+-- Spieler und referenzierte deshalb characters(id). Wer die Migration schon
+-- gefahren hat, bekommt die Tabelle hier in der endgültigen Form neu — sie
+-- ist noch nirgends released, Inhalte gehen also keine verloren.
+DROP TABLE IF EXISTS dialogue_npc_speakers;
+CREATE TABLE dialogue_npc_speakers (
   archive_entry_id INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
-  character_id     INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  npc_entry_id     INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
   user_id          INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  PRIMARY KEY (archive_entry_id, character_id)
+  PRIMARY KEY (archive_entry_id, npc_entry_id)
 );
 CREATE INDEX IF NOT EXISTS idx_dialogue_npc_speakers_user ON dialogue_npc_speakers(user_id);
+
+-- dialogue_messages: Sprecher kann jetzt auch ein NPC-Eintrag sein.
+ALTER TABLE dialogue_messages ADD COLUMN IF NOT EXISTS npc_entry_id INT
+  REFERENCES archive_entries(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_dialogue_messages_npc ON dialogue_messages(npc_entry_id);

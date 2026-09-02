@@ -420,7 +420,12 @@ CREATE INDEX IF NOT EXISTS idx_content_follows_target ON content_follows(target_
 CREATE TABLE IF NOT EXISTS dialogue_messages (
   id                SERIAL PRIMARY KEY,
   archive_entry_id  INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
+  -- Wer spricht? Entweder ein Charakter (character_id) ODER ein NPC, also ein
+  -- Datenbank-Eintrag der Kategorie "npc" (npc_entry_id) — siehe
+  -- src/lib/dialogueSpeaker.ts. Beide nullable und ON DELETE SET NULL: eine
+  -- Nachricht bleibt lesbar, auch wenn ihr Sprecher später verschwindet.
   character_id      INT REFERENCES characters(id) ON DELETE SET NULL,
+  npc_entry_id      INT REFERENCES archive_entries(id) ON DELETE SET NULL,
   author_user_id    INT REFERENCES users(id) ON DELETE SET NULL,
   content           TEXT NOT NULL,
   source_md         TEXT NOT NULL,
@@ -430,6 +435,7 @@ CREATE TABLE IF NOT EXISTS dialogue_messages (
 );
 CREATE INDEX IF NOT EXISTS idx_dialogue_messages_entry  ON dialogue_messages(archive_entry_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_dialogue_messages_author ON dialogue_messages(author_user_id);
+CREATE INDEX IF NOT EXISTS idx_dialogue_messages_npc    ON dialogue_messages(npc_entry_id);
 
 -- ---------------------------------------------------------------------------
 -- push_subscriptions
@@ -546,8 +552,8 @@ CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created_at ON admin_audit_log(cre
 -- ---------------------------------------------------------------------------
 -- dialogue_npc_speakers
 -- ---------------------------------------------------------------------------
--- Wer spricht in einem Gespräch für einen NPC? NPCs sind Charaktere ohne
--- Spieler (characters.player_id IS NULL) — an ihnen hängt keine Person, die
+-- Wer spricht in einem Gespräch für einen NPC? NPCs sind Datenbank-Einträge
+-- der Kategorie "npc" (archive_entries) — an ihnen hängt keine Person, die
 -- antworten könnte. Diese Tabelle ordnet sie deshalb PRO GESPRÄCH einem
 -- GM-Konto zu: für die Teilnahme-Prüfung (getDialogueParticipantCharacters)
 -- zählt dieser Charakter dann wie ein eigener, aber eben nur in diesem einen
@@ -556,10 +562,10 @@ CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created_at ON admin_audit_log(cre
 -- Gespräch, Charakter oder Konto ist die Zuordnung gegenstandslos.
 CREATE TABLE IF NOT EXISTS dialogue_npc_speakers (
   archive_entry_id INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
-  character_id     INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  npc_entry_id     INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
   user_id          INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  PRIMARY KEY (archive_entry_id, character_id)
+  PRIMARY KEY (archive_entry_id, npc_entry_id)
 );
 CREATE INDEX IF NOT EXISTS idx_dialogue_npc_speakers_user ON dialogue_npc_speakers(user_id);
 

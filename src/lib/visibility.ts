@@ -123,7 +123,8 @@ export function canSetVisibility(
 }
 
 // Darf dieser Betrachter im Gespräch für einen NPC schreiben (also einen
-// Charakter ohne Spieler übernehmen)? Die Spielleitung (gm.access) ist der
+// Datenbank-Eintrag der Kategorie "npc" sprechen)? Die Spielleitung
+// (gm.access) ist der
 // Normalfall; die Administration (admin.access) kommt dazu, weil in kleinen
 // Runden dasselbe Konto beides ist — und ein Admin, der ohnehin jedes
 // Gespräch moderieren darf, soll nicht ausgerechnet daran scheitern, eine

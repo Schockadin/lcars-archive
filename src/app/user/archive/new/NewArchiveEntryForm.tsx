@@ -7,15 +7,19 @@ import {
 import { archiveEntryHeadFields } from "../_shared/archiveEntryHeadFields";
 import ArchiveMetadataSlot from "../_shared/ArchiveMetadataSlot";
 import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
+import type { ArchiveCategory } from "@/types/archive";
 
 const initialState: ArchiveEntryFormState = {};
 
 export default function NewArchiveEntryForm({
   userId,
   isAdminOrGM,
+  // Vorgewählte Kategorie (siehe page.tsx) — änderbar wie jede andere.
+  initialCategory = "other",
 }: {
   userId: number;
   isAdminOrGM: boolean;
+  initialCategory?: Exclude<ArchiveCategory, "dialogue">;
 }) {
   return (
     <ContentEditor
@@ -24,12 +28,12 @@ export default function NewArchiveEntryForm({
       initialState={initialState}
       hiddenFields={{ userId }}
       headFields={archiveEntryHeadFields}
-      defaults={{ category: "other" }}
+      defaults={{ category: initialCategory }}
       metadataSlot={
         <ArchiveMetadataSlot
           idPrefix="archive-entry"
           categorySelectId="archive-entry-category"
-          initialCategory="other"
+          initialCategory={initialCategory}
         />
       }
       idPrefix="archive-entry"

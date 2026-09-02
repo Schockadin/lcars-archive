@@ -6,7 +6,7 @@ import {
 } from "@/app/actions/dialogues";
 import type { DialogueMessage, DialogueLockStatus } from "@/lib/dialogues";
 import type { ArchiveParticipant } from "@/types/archive";
-import type { CharacterParticipantOption } from "@/lib/characters";
+
 import DialogueThread from "./DialogueThread";
 import DialogueReplyForm from "./DialogueReplyForm";
 import DialogueLockPanel from "./DialogueLockPanel";
@@ -14,9 +14,13 @@ import InviteDialogueParticipantForm from "./InviteDialogueParticipantForm";
 import CompleteDialogueButton from "./CompleteDialogueButton";
 import DeleteDialogueButton from "./DeleteDialogueButton";
 import FollowButtons from "./FollowButtons";
+import type { InviteCandidate } from "./InviteDialogueParticipantForm";
+import { speakerKey } from "@/lib/dialogueSpeaker";
 
 export interface DialogueReplyCharacter {
-  id: number;
+  // Sprecher-Schlüssel ("c12"/"n7", siehe src/lib/dialogueSpeaker.ts) —
+  // eigener Charakter oder ein NPC, für den diese Person hier schreibt.
+  key: string;
   name: string;
 }
 
@@ -63,7 +67,7 @@ export default function DialogueLiveView({
   // leer, wenn Nicht-Teilnehmer (Admin/GM-Betrachter).
   myCharacters: DialogueReplyCharacter[];
   isOwner: boolean;
-  inviteCandidates: CharacterParticipantOption[];
+  inviteCandidates: InviteCandidate[];
   initialMessages: DialogueMessage[];
   initialLockStatus: DialogueLockStatus | null;
   initialCanReplyNow: boolean;
@@ -130,10 +134,10 @@ export default function DialogueLiveView({
   // findLast statt [...messages].reverse().find(...) — letzteres kopierte den
   // gesamten Nachrichtenverlauf bei jedem Render, und diese Komponente
   // rendert durch den 8-Sekunden-Poll dauerhaft neu.
-  const lastSpeakerCharacterId =
-    messages.findLast((m) => !m.deletedAt)?.characterId ?? null;
+  const lastSpeaker = messages.findLast((m) => !m.deletedAt)?.speaker ?? null;
+  const lastSpeakerKey = lastSpeaker ? speakerKey(lastSpeaker) : null;
   const eligibleReplyCharacters = myCharacters.filter(
-    (c) => c.id !== lastSpeakerCharacterId,
+    (c) => c.key !== lastSpeakerKey,
   );
   // Wer keinen antwortberechtigten Charakter hat, darf auch nicht reservieren
   // (der Reserve-Button wird gesperrt, Server-Guard zusätzlich).

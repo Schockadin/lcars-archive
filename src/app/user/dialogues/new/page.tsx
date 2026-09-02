@@ -2,13 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnCharacters } from "../../dal";
-import {
-  getCharactersWithPlayers,
-  getNpcCharacterOptions,
-} from "@/lib/characters";
+import { getCharactersWithPlayers } from "@/lib/characters";
 import { listGmUsers } from "@/lib/users";
 import { canPlayNpcs, canView, getViewer } from "@/lib/visibility";
-import { getAllArchiveEntries } from "@/lib/archive";
+import { getAllArchiveEntries, getNpcOptions } from "@/lib/archive";
 import { getMostRecentLogDate } from "@/lib/missions";
 import CreateDialogueForm from "./CreateDialogueForm";
 
@@ -29,7 +26,7 @@ export default async function NewDialoguePage() {
   // öffentliche NPCs allen, intern gehaltene nur mit den entsprechenden
   // Rechten (canView, wie überall sonst).
   const viewer = await getViewer();
-  const npcCharacters = (await getNpcCharacterOptions()).filter((npc) =>
+  const npcs = (await getNpcOptions()).filter((npc) =>
     canView(npc.visibility, null, viewer),
   );
   // Wer NPCs spielt, darf ein Gespräch auch AUS SICHT eines NPC beginnen —
@@ -37,7 +34,7 @@ export default async function NewDialoguePage() {
   // sinnvoll.
   const playsNpcs = canPlayNpcs(viewer);
   const canStart =
-    publishedCharacters.length > 0 || (playsNpcs && npcCharacters.length > 0);
+    publishedCharacters.length > 0 || (playsNpcs && npcs.length > 0);
 
   // Nur laden, wenn überhaupt ein Formular gerendert wird — kein
   // Charakter, keine Partner-/Ort-/Spielleitungs-Liste nötig.
@@ -48,9 +45,7 @@ export default async function NewDialoguePage() {
         getMostRecentLogDate(),
         // Wer kann für die NPCs schreiben? Nur nötig, wenn es überhaupt NPCs
         // zur Auswahl gibt und die anfragende Person sie nicht selbst spielt.
-        npcCharacters.length > 0 && !playsNpcs
-          ? listGmUsers()
-          : Promise.resolve([]),
+        npcs.length > 0 && !playsNpcs ? listGmUsers() : Promise.resolve([]),
       ])
     : [[], [], null, []];
   const locations = archiveEntries
@@ -80,7 +75,7 @@ export default async function NewDialoguePage() {
             userId={user.id}
             ownCharacters={publishedCharacters}
             partnerCharacters={partnerCharacters}
-            npcCharacters={npcCharacters}
+            npcs={npcs}
             canPlayNpcs={playsNpcs}
             gms={gms}
             locations={locations}

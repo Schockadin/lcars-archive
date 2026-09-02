@@ -6,7 +6,7 @@ function viewer(permissions: Viewer["permissions"]): Viewer {
   return { userId: 1, role: "player", permissions };
 }
 
-// NPCs (Charaktere ohne Spieler) hängen an zwei Regeln: wer sie im Gespräch
+// NPCs (Datenbank-Einträge der Kategorie "npc") hängen an zwei Regeln: wer sie im Gespräch
 // SPRICHT (canPlayNpcs) und wer sie überhaupt SIEHT (canView, mit ownerId
 // null — ein NPC gehört niemandem).
 describe("canPlayNpcs", () => {

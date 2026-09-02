@@ -1,5 +1,6 @@
 import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
+import type { Visibility } from "@/lib/visibility";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
@@ -172,6 +173,33 @@ function parseMeta<T extends { metadata: ArchiveMetadata }>(row: T): T {
 // nicht nach Betrachter personalisierbar ("use cache", kein Session-
 // Zugriff). private/gm-Einträge sind trotzdem über ihre Detailseite
 // erreichbar (Laufzeit-Guard dort, siehe getArchiveEntryBySlug-Aufrufer).
+export interface NpcOption {
+  id: number;
+  slug: string;
+  name: string;
+  // Für die Sichtbarkeitsprüfung beim Aufrufer (canView): ein NPC ist oft
+  // nicht öffentlich, sondern nur intern („gm") sichtbar.
+  visibility: Visibility;
+}
+
+// NPCs für die Gesprächs-Auswahl: Datenbank-Einträge der Kategorie "npc".
+// Sie gehören niemandem — für sie schreibt im Gespräch ein Konto der
+// Spielleitung (siehe dialogue_npc_speakers in scripts/schema.sql).
+// Entwürfe bleiben draußen (sieht außer dem Owner niemand, canViewDraft).
+//
+// Bewusst OHNE Sichtbarkeits-Filter in der Query: welche NPCs jemand sehen
+// darf, entscheidet dieselbe canView-Regel wie überall sonst (public für
+// alle, „gm"/„privat" nur mit den entsprechenden Rechten) — der Aufrufer
+// filtert damit, statt dass hier eine zweite, abweichende Regel entsteht.
+export async function getNpcOptions(): Promise<NpcOption[]> {
+  return sql<NpcOption[]>`
+    SELECT id, slug, title AS name, visibility
+    FROM archive_entries
+    WHERE category = 'npc' AND deleted_at IS NULL AND is_draft = false
+    ORDER BY title ASC
+  `;
+}
+
 export async function getAllArchiveEntries(): Promise<ArchiveEntryPreview[]> {
   "use cache";
   cacheTag(cacheTags.archive);

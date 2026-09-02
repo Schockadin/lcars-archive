@@ -16,7 +16,7 @@ import {
   getDialogueForPlay,
   getDialogueParticipant,
   getDialogueParticipantCharacters,
-  getLastDialogueSpeakerCharacterId,
+  getLastDialogueSpeaker,
   getDialogueSubscribers,
   getCharacterSubscribers,
   getDialogueParticipantPlayers,
@@ -39,6 +39,7 @@ import {
   type DialogueLockStatus,
 } from "@/lib/dialogues";
 import { canReplyToDialogue } from "@/lib/dialogueLock";
+import { parseSpeakerKey, sameSpeaker } from "@/lib/dialogueSpeaker";
 import {
   sendDialogueMessageEmail,
   sendCharacterDialogueClosedEmail,
@@ -94,12 +95,13 @@ export async function postDialogueMessageAction(
     };
   }
 
-  // characterId ist optional im Formular (Ein-Charakter-Fall braucht keine
-  // Auswahl) — dann der einzige eigene Teilnehmer-Charakter. Bei mehreren muss
-  // die mitgeschickte ID einer der eigenen sein.
-  const rawCharacterId = Number(formData.get("characterId"));
-  const chosen = Number.isInteger(rawCharacterId)
-    ? myCharacters.find((c) => c.characterId === rawCharacterId)
+  // speaker ist optional im Formular (Ein-Charakter-Fall braucht keine
+  // Auswahl) — dann der einzige eigene Teilnehmer. Bei mehreren muss der
+  // mitgeschickte Schlüssel ("c12"/"n7", siehe dialogueSpeaker.ts) einer der
+  // eigenen sein.
+  const rawSpeaker = parseSpeakerKey(String(formData.get("speaker") ?? ""));
+  const chosen = rawSpeaker
+    ? myCharacters.find((c) => sameSpeaker(c.speaker, rawSpeaker))
     : myCharacters.length === 1
       ? myCharacters[0]
       : undefined;
@@ -115,7 +117,7 @@ export async function postDialogueMessageAction(
   try {
     await postDialogueMessage({
       archiveEntryId: entry.id,
-      characterId: chosen.characterId,
+      speaker: chosen.speaker,
       authorUserId: session.userId,
       bodyMarkdown,
     });
@@ -600,7 +602,9 @@ export interface InviteParticipantState {
 // (useTransition), kein useActionState-Formular nötig.
 export async function inviteDialogueParticipantAction(
   entrySlug: string,
-  characterIds: number[],
+  // Sprecher-Schlüssel ("c12"/"n7", siehe dialogueSpeaker.ts) — Charaktere
+  // und NPC-Datenbank-Einträge gemischt.
+  speakerKeys: string[],
 ): Promise<InviteParticipantState> {
   const session = await getSession();
   if (!session) return { error: "Bitte melde dich an." };
@@ -610,9 +614,12 @@ export async function inviteDialogueParticipantAction(
   if (entry.ownerUserId !== session.userId) {
     return { error: "Nur der Ersteller kann weitere Personen einladen." };
   }
-  if (characterIds.length === 0) return {};
+  const speakers = speakerKeys
+    .map(parseSpeakerKey)
+    .filter((s): s is NonNullable<typeof s> => s != null);
+  if (speakers.length === 0) return {};
 
-  // NPCs (Charaktere ohne Spieler) darf nur einladen, wer sie auch spielt —
+  // NPCs darf nur einladen, wer sie auch spielt —
   // die einladende Person wird dann ihr Sprecher in diesem Gespräch.
   const inviter = await getUserById(session.userId);
   const roleMap = await getRoleMap();
@@ -623,7 +630,7 @@ export async function inviteDialogueParticipantAction(
   try {
     ({ title, invited } = await inviteDialogueParticipants(
       entry.id,
-      characterIds,
+      speakers,
       mayPlayNpcs ? session.userId : null,
     ));
   } catch (err) {
@@ -711,8 +718,8 @@ export async function reserveDialogueReplyAction(
   // reservieren (sonst blockiert die Reservierung nur alle anderen). „Kann
   // antworten" = mindestens ein eigener Teilnehmer-Charakter ist NICHT der
   // zuletzt am Zug gewesene (Selbstgespräch-Verbot, siehe postDialogueMessage).
-  const lastSpeaker = await getLastDialogueSpeakerCharacterId(entry.id);
-  const canReply = myCharacters.some((c) => c.characterId !== lastSpeaker);
+  const lastSpeaker = await getLastDialogueSpeaker(entry.id);
+  const canReply = myCharacters.some((c) => !sameSpeaker(c.speaker, lastSpeaker));
   if (!canReply) {
     return {
       error:

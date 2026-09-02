@@ -5,8 +5,9 @@ import { canPlayNpcs, canView, getViewer } from "@/lib/visibility";
 import {
   getCharactersForUser,
   getCharactersWithPlayers,
-  getNpcCharacterOptions,
 } from "@/lib/characters";
+import { getNpcOptions } from "@/lib/archive";
+import { parseSpeakerKey, sameSpeaker } from "@/lib/dialogueSpeaker";
 import { listGmUsers, getUserById } from "@/lib/users";
 import {
   DialogueNpcSpeakerRequiredError,
@@ -36,17 +37,23 @@ export async function createDialogueAction(
   const title = String(formData.get("title") ?? "").trim();
   if (!title) return { error: "Bitte einen Titel angeben." };
 
-  const ownCharacterId = Number(formData.get("ownCharacterId"));
-  const partnerCharacterIds = [
-    ...new Set(
-      formData.getAll("partnerCharacterIds").map((v) => Number(v)),
-    ),
+  // Sprechende kommen als Schlüssel ("c12" = Charakter, "n7" =
+  // NPC-Datenbank-Eintrag, siehe src/lib/dialogueSpeaker.ts) — Charaktere und
+  // NPCs stehen in derselben Auswahl, ohne dass ihre IDs kollidieren können.
+  const ownSpeaker = parseSpeakerKey(String(formData.get("ownSpeaker") ?? ""));
+  const partnerSpeakers = [
+    ...new Map(
+      formData
+        .getAll("partners")
+        .map((v) => parseSpeakerKey(String(v)))
+        .filter((sp): sp is NonNullable<typeof sp> => sp != null)
+        .map((sp) => [`${sp.kind}:${sp.id}`, sp] as const),
+    ).values(),
   ];
   if (
-    !Number.isInteger(ownCharacterId) ||
-    partnerCharacterIds.length === 0 ||
-    partnerCharacterIds.some((id) => !Number.isInteger(id)) ||
-    partnerCharacterIds.includes(ownCharacterId)
+    !ownSpeaker ||
+    partnerSpeakers.length === 0 ||
+    partnerSpeakers.some((sp) => sameSpeaker(sp, ownSpeaker))
   ) {
     return {
       error: "Bitte den eigenen und mindestens einen weiteren Charakter auswählen.",
@@ -57,26 +64,28 @@ export async function createDialogueAction(
   // assignCharacterAction in src/app/admin/actions.ts.
   const viewer = await getViewer();
   const playsNpcs = canPlayNpcs(viewer);
-  // NPCs (Charaktere ohne Spieler) stehen als Gesprächspartner offen, soweit
+  // NPCs (Datenbank-Einträge der Kategorie "npc") stehen als Gesprächspartner offen, soweit
   // diese Person sie überhaupt sehen darf; als EIGENER Sprecher-Charakter nur
   // denen, die NPCs spielen (Spielleitung/Administration).
-  const npcs = (await getNpcCharacterOptions()).filter((npc) =>
+  const npcs = (await getNpcOptions()).filter((npc) =>
     canView(npc.visibility, null, viewer),
   );
   const ownCharacters = await getCharactersForUser(session.userId);
-  const ownIsNpc = npcs.some((c) => c.id === ownCharacterId);
+  const ownIsNpc = ownSpeaker.kind === "npc";
+  const isKnownNpc = (id: number) => npcs.some((n) => n.id === id);
   if (
-    !ownCharacters.some((c) => c.id === ownCharacterId) &&
-    !(playsNpcs && ownIsNpc)
+    ownIsNpc
+      ? !(playsNpcs && isKnownNpc(ownSpeaker.id))
+      : !ownCharacters.some((c) => c.id === ownSpeaker.id)
   ) {
     return { error: "Ungültiger eigener Charakter." };
   }
   const partnerCharacters = await getCharactersWithPlayers(session.userId);
   if (
-    !partnerCharacterIds.every(
-      (id) =>
-        partnerCharacters.some((c) => c.id === id) ||
-        npcs.some((c) => c.id === id),
+    !partnerSpeakers.every((sp) =>
+      sp.kind === "npc"
+        ? isKnownNpc(sp.id)
+        : partnerCharacters.some((c) => c.id === sp.id),
     )
   ) {
     return { error: "Ungültiger Gesprächspartner." };
@@ -86,20 +95,22 @@ export async function createDialogueAction(
   // schreibt. Die Spielleitung spielt ihre NPCs selbst; wählt eine
   // Spieler:in einen NPC als Gegenüber, kommt die Auswahl aus dem Formular
   // (bzw. bei genau einer Spielleitung automatisch diese).
-  const npcInvolved =
-    ownIsNpc || partnerCharacterIds.some((id) => npcs.some((c) => c.id === id));
+  const npcInvolved = ownIsNpc || partnerSpeakers.some((sp) => sp.kind === "npc");
   let npcSpeakerUserId: number | null = null;
   if (npcInvolved) {
-    const gms = await listGmUsers();
-    if (gms.length === 0) {
-      return {
-        error:
-          "Für Gespräche mit NPCs muss es mindestens ein Konto mit Spielleitungs-Rechten geben.",
-      };
-    }
     if (playsNpcs) {
+      // Wer NPCs selbst spielt, schreibt auch selbst für sie — dafür braucht
+      // es keine weitere Spielleitung (canPlayNpcs schließt die
+      // Administration ein, die in kleinen Runden dieselbe Person ist).
       npcSpeakerUserId = session.userId;
     } else {
+      const gms = await listGmUsers();
+      if (gms.length === 0) {
+        return {
+          error:
+            "Für Gespräche mit NPCs muss es mindestens ein Konto mit Spielleitungs-Rechten geben.",
+        };
+      }
       const raw = Number(formData.get("npcSpeakerUserId"));
       const chosen = Number.isInteger(raw)
         ? gms.find((gm) => gm.id === raw)
@@ -138,8 +149,8 @@ export async function createDialogueAction(
   try {
     const result = await createDialogue({
       title,
-      ownCharacterId,
-      partnerCharacterIds,
+      ownSpeaker,
+      partners: partnerSpeakers,
       authorUserId: session.userId,
       setting,
       locationSlug,

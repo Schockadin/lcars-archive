@@ -21,6 +21,11 @@ import {
   parseDialogueLogDate,
   byDialogueLogDateDesc,
 } from "@/lib/dialogueSort";
+import {
+  sameSpeaker,
+  type DialogueSpeaker,
+  type SpeakerKind,
+} from "@/lib/dialogueSpeaker";
 import type { ArchiveParticipant, ArchiveLocationRef } from "@/types/archive";
 
 // Optionaler Client-Parameter für Aufrufe innerhalb einer bestehenden
@@ -50,7 +55,7 @@ export class DialogueLockActiveError extends Error {}
 // selbst.
 export class DialogueReservationRequiredError extends Error {}
 
-// Ein NPC (Charakter ohne Spieler) ist beteiligt, aber niemand wurde
+// Ein NPC (Datenbank-Eintrag der Kategorie "npc") ist beteiligt, aber niemand wurde
 // benannt, der für ihn schreibt (siehe dialogue_npc_speakers).
 export class DialogueNpcSpeakerRequiredError extends Error {}
 
@@ -78,7 +83,14 @@ function parseParticipants(metadata: unknown): ArchiveParticipant[] {
 
 export interface DialogueMessage {
   id: number;
+  // Wer spricht — ein Charakter oder ein NPC (Datenbank-Eintrag der
+  // Kategorie "npc"), siehe src/lib/dialogueSpeaker.ts. null nur bei einer
+  // gelöschten/verwaisten Nachricht.
+  speaker: DialogueSpeaker | null;
   characterId: number | null;
+  // Slug/Name/Farbe des Sprechers — unabhängig davon, ob dahinter ein
+  // Charakter oder ein NPC-Eintrag steht (die Anzeige unterscheidet sie
+  // nicht, nur das Ziel des Links weiß es über speaker.kind).
   characterSlug: string | null;
   characterName: string | null;
   authorUserId: number | null;
@@ -107,9 +119,12 @@ export async function getDialogueMessages(
     {
       id: number;
       character_id: number | null;
+      npc_entry_id: number | null;
       character_slug: string | null;
       character_name: string | null;
       character_color: string | null;
+      npc_slug: string | null;
+      npc_name: string | null;
       author_user_id: number | null;
       content: string;
       created_at: string;
@@ -118,75 +133,94 @@ export async function getDialogueMessages(
     }[]
   >`
     SELECT
-      dm.id, dm.character_id,
+      dm.id, dm.character_id, dm.npc_entry_id,
       c.slug AS character_slug, c.name AS character_name,
       c.character_color AS character_color,
+      n.slug AS npc_slug, n.title AS npc_name,
       dm.author_user_id, dm.content, dm.created_at::text AS created_at,
       dm.edited_at::text AS edited_at, dm.deleted_at::text AS deleted_at
     FROM dialogue_messages dm
     LEFT JOIN characters c ON c.id = dm.character_id
+    LEFT JOIN archive_entries n ON n.id = dm.npc_entry_id
     WHERE dm.archive_entry_id = ${archiveEntryId}
     ORDER BY dm.created_at ASC
   `;
 
   return rows.map((r) => ({
     id: r.id,
+    speaker: messageSpeaker(r.character_id, r.npc_entry_id),
     characterId: r.character_id,
-    characterSlug: r.character_slug,
-    characterName: r.character_name,
+    characterSlug: r.character_slug ?? r.npc_slug,
+    characterName: r.character_name ?? r.npc_name,
     authorUserId: r.author_user_id,
     content: r.deleted_at ? DELETED_MESSAGE_HTML : r.content,
     createdAt: r.created_at,
     editedAt: r.edited_at,
     deletedAt: r.deleted_at,
-    // Seed für den Default: die Charakter-ID selbst (Farbe ist pro Charakter,
-    // siehe characters.character_color) — kein Charakter (gelöscht) → keine
-    // Farbe.
+    // Seed für den Default: die ID des Sprechers (bei Charakteren zusätzlich
+    // deren eigene Farbwahl, siehe characters.character_color; NPC-Einträge
+    // haben keine, bekommen also die deterministische Preset-Farbe). Kein
+    // Sprecher (gelöscht) → keine Farbe.
     characterColor:
       r.character_id != null
         ? resolveCharacterColor(r.character_color, r.character_id)
-        : null,
+        : r.npc_entry_id != null
+          ? resolveCharacterColor(null, r.npc_entry_id)
+          : null,
   }));
 }
 
-// Charakter-ID der letzten NICHT gelöschten Nachricht (der zuletzt am Zug war)
+// Aus den beiden Spalten der Nachricht den Sprecher bilden.
+function messageSpeaker(
+  characterId: number | null,
+  npcEntryId: number | null,
+): DialogueSpeaker | null {
+  if (characterId != null) return { kind: "character", id: characterId };
+  if (npcEntryId != null) return { kind: "npc", id: npcEntryId };
+  return null;
+}
+
+// Sprecher der letzten NICHT gelöschten Nachricht (wer zuletzt am Zug war)
 // — Grundlage für die Antwort-Berechtigung: die nächste Nachricht darf nicht
 // vom selben Charakter kommen (Selbstgespräch-Verbot, siehe postDialogueMessage).
 // Genutzt vom Server-Guard in reserveDialogueReplyAction. null, wenn es noch
 // keine Nachricht gibt. Exakt dieselbe Sortierung wie der Self-Reply-Check.
-export async function getLastDialogueSpeakerCharacterId(
+export async function getLastDialogueSpeaker(
   archiveEntryId: number,
-): Promise<number | null> {
-  const [row] = await sql<{ character_id: number | null }[]>`
-    SELECT character_id FROM dialogue_messages
+): Promise<DialogueSpeaker | null> {
+  const [row] = await sql<
+    { character_id: number | null; npc_entry_id: number | null }[]
+  >`
+    SELECT character_id, npc_entry_id FROM dialogue_messages
     WHERE archive_entry_id = ${archiveEntryId} AND deleted_at IS NULL
     ORDER BY created_at DESC, id DESC
     LIMIT 1
   `;
-  return row?.character_id ?? null;
+  return row ? messageSpeaker(row.character_id, row.npc_entry_id) : null;
 }
 
 export interface CreateDialogueInput {
   title: string;
-  ownCharacterId: number;
+  // Wer das Gespräch beginnt — ein eigener Charakter oder (nur für die
+  // Spielleitung) ein NPC, also ein Datenbank-Eintrag der Kategorie "npc".
+  ownSpeaker: DialogueSpeaker;
   // Mindestens einer — Gespräche können bereits bei der Erstellung mehr als
   // zwei Teilnehmende haben (statt sie erst nachträglich per
   // inviteDialogueParticipants einzeln hinzuzufügen). Bei genau einem
-  // Element unverändertes Verhalten zu vorher.
-  partnerCharacterIds: number[];
+  // Element unverändertes Verhalten zu vorher. Charaktere und NPCs sind
+  // hier gleichwertig.
+  partners: DialogueSpeaker[];
   authorUserId: number;
   setting: string | null;
   locationSlug: string | null;
   logDate: string | null;
   tags: string[];
   bodyMarkdown: string;
-  // Wer schreibt in diesem Gespräch für die beteiligten NPCs (Charaktere
-  // ohne Spieler)? Ein GM-Konto, das für ALLE NPCs des Gesprächs zuständig
-  // ist (siehe dialogue_npc_speakers). null = es sind keine NPCs beteiligt.
-  // Welche der beteiligten Charaktere NPCs sind, stellt createDialogue selbst
-  // fest — der Aufrufer bestimmt nur, WER für sie spricht.
-  // Fehlt der Wert, gilt „niemand" — dann darf auch kein NPC beteiligt sein
-  // (createDialogue wirft sonst DialogueNpcSpeakerRequiredError).
+  // Wer schreibt in diesem Gespräch für die beteiligten NPCs? Ein GM-Konto,
+  // das für ALLE NPCs des Gesprächs zuständig ist (siehe
+  // dialogue_npc_speakers). Fehlt der Wert, gilt „niemand" — dann darf auch
+  // kein NPC beteiligt sein (createDialogue wirft sonst
+  // DialogueNpcSpeakerRequiredError).
   npcSpeakerUserId?: number | null;
   // Opt-Out des Erstellers vom Auto-Abo (siehe unten) — jeder
   // Gesprächspartner wird immer abonniert (kann selbst auf der
@@ -204,7 +238,7 @@ export interface CreateDialogueInput {
 export interface CreateDialogueResult {
   slug: string;
   // Ein Eintrag pro Partner-Charakter mit zugeordnetem Spieler — in der
-  // Praxis nie leerer als partnerCharacterIds, da getCharactersWithPlayers
+  // Praxis nie leerer als die Partner-Charaktere, da getCharactersWithPlayers
   // (Partner-Picker im Formular) nur Charaktere mit player_id anbietet;
   // defensiv trotzdem gefiltert, da die Action-Ebene die IDs nie blind
   // vertraut (siehe createDialogueAction).
@@ -216,40 +250,60 @@ export interface CreateDialogueResult {
   participantNames: string[];
 }
 
+// Charakter-Zeile samt Spieler-Kontakt — geteilt von createDialogue und
+// inviteDialogueParticipants, die beide dieselben Spalten brauchen.
+interface CharacterSpeakerRow {
+  id: number;
+  slug: string;
+  name: string;
+  player_id: number | null;
+  player_email: string | null;
+  player_name: string | null;
+  player_email_notifications_enabled: boolean | null;
+  player_push_notifications_enabled: boolean | null;
+}
+
 export async function createDialogue(
   input: CreateDialogueInput,
 ): Promise<CreateDialogueResult> {
   const slug = await generateUniqueArchiveEntrySlug(input.title);
 
   return sql.begin(async (tx) => {
-    const [ownChar] = await tx<
-      { slug: string; name: string; player_id: number | null }[]
-    >`
-      SELECT slug, name, player_id FROM characters WHERE id = ${input.ownCharacterId}
-    `;
-    const partnerChars = await tx<
-      {
-        id: number;
-        slug: string;
-        name: string;
-        player_id: number | null;
-        player_email: string | null;
-        player_name: string | null;
-        player_email_notifications_enabled: boolean | null;
-        player_push_notifications_enabled: boolean | null;
-      }[]
-    >`
+    // Sprechende auflösen: Charaktere aus characters, NPCs aus
+    // archive_entries (Kategorie "npc") — beide werden im Gespräch
+    // gleichwertig behandelt, nur die Herkunft unterscheidet sich.
+    const allSpeakers = [input.ownSpeaker, ...input.partners];
+    const charIds = allSpeakers.filter((s) => s.kind === "character").map((s) => s.id);
+    const npcIds = allSpeakers.filter((s) => s.kind === "npc").map((s) => s.id);
+
+    const charRows = await tx<CharacterSpeakerRow[]>`
       SELECT c.id, c.slug, c.name, c.player_id,
              u.email AS player_email, u.name AS player_name,
              u.email_notifications_enabled AS player_email_notifications_enabled,
              u.push_notifications_enabled AS player_push_notifications_enabled
       FROM characters c
       LEFT JOIN users u ON u.id = c.player_id
-      WHERE c.id = ANY(${input.partnerCharacterIds})
+      WHERE c.id = ANY(${charIds})
     `;
-    if (!ownChar || partnerChars.length !== input.partnerCharacterIds.length) {
-      throw new Error("Charakter nicht gefunden.");
-    }
+    const npcRows = await tx<{ id: number; slug: string; name: string }[]>`
+      SELECT id, slug, title AS name FROM archive_entries
+      WHERE id = ANY(${npcIds}) AND category = 'npc' AND deleted_at IS NULL
+    `;
+    const charById = new Map(charRows.map((c) => [c.id, c]));
+    const npcById = new Map(npcRows.map((n) => [n.id, n]));
+    const resolved = allSpeakers.map((speaker) => {
+      const row =
+        speaker.kind === "character"
+          ? charById.get(speaker.id)
+          : npcById.get(speaker.id);
+      if (!row) throw new Error("Charakter nicht gefunden.");
+      return { speaker, slug: row.slug, name: row.name };
+    });
+    const own = resolved[0];
+    const partnerChars = input.partners
+      .filter((s) => s.kind === "character")
+      .map((s) => charById.get(s.id))
+      .filter((c): c is CharacterSpeakerRow => c != null);
 
     let location: ArchiveLocationRef | null = null;
     if (input.locationSlug) {
@@ -260,12 +314,17 @@ export async function createDialogue(
       if (loc) location = { slug: input.locationSlug, title: loc.title };
     }
 
-    const participants: ArchiveParticipant[] = [
-      { slug: ownChar.slug, name: ownChar.name, kind: "character" },
-      ...partnerChars.map(
-        (p): ArchiveParticipant => ({ slug: p.slug, name: p.name, kind: "character" }),
-      ),
-    ];
+    // NPCs sind Datenbank-Einträge, also kind "archive" — dieselbe
+    // Unterscheidung, die ArchiveParticipant ohnehin schon kennt (das
+    // Teilnehmer-Rendering verlinkt sie darüber nach /archive statt
+    // /characters).
+    const participants: ArchiveParticipant[] = resolved.map(
+      (r): ArchiveParticipant => ({
+        slug: r.slug,
+        name: r.name,
+        kind: r.speaker.kind === "character" ? "character" : "archive",
+      }),
+    );
 
     const metadata = {
       summary: null,
@@ -294,10 +353,12 @@ export async function createDialogue(
       const content = await markdownToSafeHtml(input.bodyMarkdown);
       await tx`
         INSERT INTO dialogue_messages (
-          archive_entry_id, character_id, author_user_id, content, source_md
+          archive_entry_id, character_id, npc_entry_id, author_user_id, content, source_md
         ) VALUES (
-          ${entry.id}, ${input.ownCharacterId}, ${input.authorUserId},
-          ${content}, ${input.bodyMarkdown}
+          ${entry.id},
+          ${input.ownSpeaker.kind === "character" ? input.ownSpeaker.id : null},
+          ${input.ownSpeaker.kind === "npc" ? input.ownSpeaker.id : null},
+          ${input.authorUserId}, ${content}, ${input.bodyMarkdown}
         )
       `;
 
@@ -331,26 +392,20 @@ export async function createDialogue(
         `;
       }
 
-      // NPCs (Charaktere ohne Spieler) bekommen ihren Sprecher: ein
-      // GM-Konto, das in genau diesem Gespräch für sie schreibt. Welche der
-      // Beteiligten NPCs sind, entscheidet hier die DB (player_id IS NULL) —
-      // nicht der Aufrufer.
-      const npcCharacterIds = [
-        ...(ownChar.player_id == null ? [input.ownCharacterId] : []),
-        ...partnerChars.filter((p) => p.player_id == null).map((p) => p.id),
-      ];
-      if (npcCharacterIds.length > 0) {
+      // Beteiligte NPCs bekommen ihren Sprecher: ein GM-Konto, das in genau
+      // diesem Gespräch für sie schreibt.
+      if (npcIds.length > 0) {
         const speakerUserId = input.npcSpeakerUserId ?? null;
         if (speakerUserId == null) {
           throw new DialogueNpcSpeakerRequiredError(
             "Für die beteiligten NPCs muss eine Spielleitung ausgewählt sein.",
           );
         }
-        for (const characterId of npcCharacterIds) {
+        for (const npcEntryId of npcIds) {
           await tx`
-            INSERT INTO dialogue_npc_speakers (archive_entry_id, character_id, user_id)
-            VALUES (${entry.id}, ${characterId}, ${speakerUserId})
-            ON CONFLICT (archive_entry_id, character_id) DO NOTHING
+            INSERT INTO dialogue_npc_speakers (archive_entry_id, npc_entry_id, user_id)
+            VALUES (${entry.id}, ${npcEntryId}, ${speakerUserId})
+            ON CONFLICT (archive_entry_id, npc_entry_id) DO NOTHING
           `;
         }
         // Wer die NPCs spricht, ist Teilnehmer:in und wird wie ein
@@ -377,8 +432,8 @@ export async function createDialogue(
             emailNotificationsEnabled: p.player_email_notifications_enabled ?? false,
             pushNotificationsEnabled: p.player_push_notifications_enabled ?? false,
           })),
-        fromCharacterName: ownChar.name,
-        participantNames: [ownChar.name, ...partnerChars.map((p) => p.name)],
+        fromCharacterName: own.name,
+        participantNames: resolved.map((r) => r.name),
       };
     } catch (err) {
       if (isUniqueViolation(err)) {
@@ -412,10 +467,10 @@ export interface InviteParticipantsResult {
 // verschickt wie gewohnt die Action-Ebene, nicht diese Funktion.
 export async function inviteDialogueParticipants(
   archiveEntryId: number,
-  characterIds: number[],
-  // Wer für nachträglich eingeladene NPCs schreibt (Charaktere ohne
-  // Spieler). Fehlt der Wert, dürfen keine NPCs dabei sein — die
-  // Action-Ebene lässt sie dann gar nicht erst zur Auswahl zu.
+  speakers: DialogueSpeaker[],
+  // Wer für nachträglich eingeladene NPCs schreibt. Fehlt der Wert, dürfen
+  // keine NPCs dabei sein — die Action-Ebene lässt sie dann gar nicht erst
+  // zur Auswahl zu.
   npcSpeakerUserId?: number | null,
 ): Promise<InviteParticipantsResult> {
   return sql.begin(async (tx) => {
@@ -425,33 +480,30 @@ export async function inviteDialogueParticipants(
       FOR UPDATE
     `;
     if (!entry) throw new Error("Dialog nicht gefunden.");
-    if (characterIds.length === 0) return { title: entry.title, invited: [] };
+    if (speakers.length === 0) return { title: entry.title, invited: [] };
 
     const participants = parseParticipants(entry.metadata);
     const existingSlugs = new Set(participants.map((p) => p.slug));
 
-    const chars = await tx<
-      {
-        id: number;
-        slug: string;
-        name: string;
-        player_id: number | null;
-        player_email: string | null;
-        player_name: string | null;
-        player_email_notifications_enabled: boolean | null;
-        player_push_notifications_enabled: boolean | null;
-      }[]
-    >`
+    const chars = await tx<CharacterSpeakerRow[]>`
       SELECT c.id, c.slug, c.name, c.player_id,
              u.email AS player_email, u.name AS player_name,
              u.email_notifications_enabled AS player_email_notifications_enabled,
              u.push_notifications_enabled AS player_push_notifications_enabled
       FROM characters c
       LEFT JOIN users u ON u.id = c.player_id
-      WHERE c.id = ANY(${characterIds})
+      WHERE c.id = ANY(${speakers.filter((s) => s.kind === "character").map((s) => s.id)})
+    `;
+    const npcs = await tx<{ id: number; slug: string; name: string }[]>`
+      SELECT id, slug, title AS name FROM archive_entries
+      WHERE id = ANY(${speakers.filter((s) => s.kind === "npc").map((s) => s.id)})
+        AND category = 'npc' AND deleted_at IS NULL
     `;
     const newChars = chars.filter((c) => !existingSlugs.has(c.slug));
-    if (newChars.length === 0) return { title: entry.title, invited: [] };
+    const newNpcs = npcs.filter((n) => !existingSlugs.has(n.slug));
+    if (newChars.length === 0 && newNpcs.length === 0) {
+      return { title: entry.title, invited: [] };
+    }
 
     const metadata = {
       ...(typeof entry.metadata === "string"
@@ -464,6 +516,12 @@ export async function inviteDialogueParticipants(
           name: c.name,
           kind: "character" as const,
         })),
+        // NPCs sind Datenbank-Einträge (siehe createDialogue).
+        ...newNpcs.map((n) => ({
+          slug: n.slug,
+          name: n.name,
+          kind: "archive" as const,
+        })),
       ],
     };
 
@@ -475,19 +533,18 @@ export async function inviteDialogueParticipants(
 
     // NPCs unter den Neuen bekommen ihren Sprecher — dieselbe Zuordnung wie
     // beim Anlegen (siehe createDialogue), nur nachträglich.
-    const npcIds = newChars.filter((c) => c.player_id == null).map((c) => c.id);
-    if (npcIds.length > 0) {
+    if (newNpcs.length > 0) {
       const speakerUserId = npcSpeakerUserId ?? null;
       if (speakerUserId == null) {
         throw new DialogueNpcSpeakerRequiredError(
           "Für einen NPC muss eine Spielleitung benannt sein, die für ihn schreibt.",
         );
       }
-      for (const characterId of npcIds) {
+      for (const npc of newNpcs) {
         await tx`
-          INSERT INTO dialogue_npc_speakers (archive_entry_id, character_id, user_id)
-          VALUES (${archiveEntryId}, ${characterId}, ${speakerUserId})
-          ON CONFLICT (archive_entry_id, character_id) DO NOTHING
+          INSERT INTO dialogue_npc_speakers (archive_entry_id, npc_entry_id, user_id)
+          VALUES (${archiveEntryId}, ${npc.id}, ${speakerUserId})
+          ON CONFLICT (archive_entry_id, npc_entry_id) DO NOTHING
         `;
       }
       await tx`
@@ -524,7 +581,9 @@ export async function inviteDialogueParticipants(
 
 export interface PostMessageInput {
   archiveEntryId: number;
-  characterId: number;
+  // Charakter oder NPC — wer hier schreiben darf, prüft die Action-Ebene
+  // gegen getDialogueParticipantCharacters.
+  speaker: DialogueSpeaker;
   authorUserId: number;
   bodyMarkdown: string;
 }
@@ -553,13 +612,21 @@ export async function postDialogueMessage(
     // teilnimmt, darf nicht mit demselben Charakter zweimal hintereinander
     // antworten — die nächste Nachricht muss von einem anderen Charakter
     // kommen. Nur die letzte NICHT gelöschte Nachricht zählt.
-    const [lastMessage] = await tx<{ character_id: number | null }[]>`
-      SELECT character_id FROM dialogue_messages
+    const [lastMessage] = await tx<
+      { character_id: number | null; npc_entry_id: number | null }[]
+    >`
+      SELECT character_id, npc_entry_id FROM dialogue_messages
       WHERE archive_entry_id = ${input.archiveEntryId} AND deleted_at IS NULL
       ORDER BY created_at DESC, id DESC
       LIMIT 1
     `;
-    if (lastMessage && lastMessage.character_id === input.characterId) {
+    if (
+      lastMessage &&
+      sameSpeaker(
+        messageSpeaker(lastMessage.character_id, lastMessage.npc_entry_id),
+        input.speaker,
+      )
+    ) {
       throw new DialogueSelfReplyError(
         "Warte, bis jemand anderes geantwortet hat, bevor du erneut schreibst.",
       );
@@ -596,15 +663,22 @@ export async function postDialogueMessage(
     }
 
     const [row] = await tx<
-      { id: number; character_id: number | null; created_at: string }[]
+      {
+        id: number;
+        character_id: number | null;
+        npc_entry_id: number | null;
+        created_at: string;
+      }[]
     >`
       INSERT INTO dialogue_messages (
-        archive_entry_id, character_id, author_user_id, content, source_md
+        archive_entry_id, character_id, npc_entry_id, author_user_id, content, source_md
       ) VALUES (
-        ${input.archiveEntryId}, ${input.characterId}, ${input.authorUserId},
-        ${content}, ${input.bodyMarkdown}
+        ${input.archiveEntryId},
+        ${input.speaker.kind === "character" ? input.speaker.id : null},
+        ${input.speaker.kind === "npc" ? input.speaker.id : null},
+        ${input.authorUserId}, ${content}, ${input.bodyMarkdown}
       )
-      RETURNING id, character_id, created_at::text AS created_at
+      RETURNING id, character_id, npc_entry_id, created_at::text AS created_at
     `;
 
     // Hält getDialoguesForUser()s Sortierung nach Aktivität sinnvoll.
@@ -628,12 +702,18 @@ export async function postDialogueMessage(
       `;
     }
 
-    const [char] = await tx<{ slug: string; name: string }[]>`
-      SELECT slug, name FROM characters WHERE id = ${input.characterId}
-    `;
+    const [char] =
+      input.speaker.kind === "character"
+        ? await tx<{ slug: string; name: string }[]>`
+            SELECT slug, name FROM characters WHERE id = ${input.speaker.id}
+          `
+        : await tx<{ slug: string; name: string }[]>`
+            SELECT slug, title AS name FROM archive_entries WHERE id = ${input.speaker.id}
+          `;
 
     return {
       id: row.id,
+      speaker: input.speaker,
       characterId: row.character_id,
       characterSlug: char?.slug ?? null,
       characterName: char?.name ?? null,
@@ -715,13 +795,14 @@ export async function editDialogueMessage(
         id: number;
         archive_entry_id: number;
         character_id: number | null;
+        npc_entry_id: number | null;
         author_user_id: number | null;
         deleted_at: string | null;
         dialogue_open: boolean;
       }[]
     >`
-      SELECT dm.id, dm.archive_entry_id, dm.character_id, dm.author_user_id,
-             dm.deleted_at::text AS deleted_at, ae.dialogue_open
+      SELECT dm.id, dm.archive_entry_id, dm.character_id, dm.npc_entry_id,
+             dm.author_user_id, dm.deleted_at::text AS deleted_at, ae.dialogue_open
       FROM dialogue_messages dm
       JOIN archive_entries ae ON ae.id = dm.archive_entry_id
       WHERE dm.id = ${input.messageId}
@@ -761,10 +842,15 @@ export async function editDialogueMessage(
       ? await tx<{ slug: string; name: string }[]>`
           SELECT slug, name FROM characters WHERE id = ${row.character_id}
         `
-      : [undefined];
+      : row.npc_entry_id
+        ? await tx<{ slug: string; name: string }[]>`
+            SELECT slug, title AS name FROM archive_entries WHERE id = ${row.npc_entry_id}
+          `
+        : [undefined];
 
     return {
       id: updated.id,
+      speaker: messageSpeaker(row.character_id, row.npc_entry_id),
       characterId: row.character_id,
       characterSlug: char?.slug ?? null,
       characterName: char?.name ?? null,
@@ -1010,7 +1096,8 @@ export async function hasRequestedDialogueReservationNotification(
 }
 
 export interface DialogueParticipantInfo {
-  characterId: number;
+  // Charakter oder NPC-Eintrag — die Antwort-Auswahl behandelt beide gleich.
+  speaker: DialogueSpeaker;
   characterSlug: string;
   characterName: string;
 }
@@ -1031,25 +1118,40 @@ export async function getDialogueParticipant(
   const slugs = parseParticipants(entry.metadata).map((p) => p.slug);
   if (slugs.length === 0) return null;
 
-  const [row] = await sql<{ id: number; slug: string; name: string }[]>`
-    SELECT c.id, c.slug, c.name FROM characters c
-    WHERE c.slug = ANY(${slugs}) AND (
-      c.player_id = ${userId}
-      OR EXISTS (
-        SELECT 1 FROM dialogue_npc_speakers s
-        WHERE s.archive_entry_id = ${archiveEntryId}
-          AND s.character_id = c.id AND s.user_id = ${userId}
-      )
-    )
-    LIMIT 1
-  `;
+  const [row] = await participantSpeakerRows(archiveEntryId, userId, slugs, 1);
   if (!row) return null;
 
   return {
-    characterId: row.id,
+    speaker: { kind: row.kind, id: row.id },
     characterSlug: row.slug,
     characterName: row.name,
   };
+}
+
+// Eigene Teilnehmer-Charaktere UND die NPC-Einträge, für die userId in genau
+// diesem Gespräch schreibt (dialogue_npc_speakers) — beides in einer Abfrage,
+// da für alles Weitere (Antworten, Abschließen, Export) gleichwertig.
+// Beschränkt auf die Teilnehmenden des Dialogs (slugs aus
+// metadata.participants).
+async function participantSpeakerRows(
+  archiveEntryId: number,
+  userId: number,
+  slugs: string[],
+  limit: number | null,
+): Promise<{ kind: SpeakerKind; id: number; slug: string; name: string }[]> {
+  const rows = await sql<
+    { kind: SpeakerKind; id: number; slug: string; name: string }[]
+  >`
+    SELECT 'character' AS kind, c.id, c.slug, c.name FROM characters c
+    WHERE c.slug = ANY(${slugs}) AND c.player_id = ${userId}
+    UNION ALL
+    SELECT 'npc' AS kind, n.id, n.slug, n.title AS name FROM archive_entries n
+    JOIN dialogue_npc_speakers s
+      ON s.npc_entry_id = n.id AND s.archive_entry_id = ${archiveEntryId}
+    WHERE n.slug = ANY(${slugs}) AND n.category = 'npc' AND s.user_id = ${userId}
+    ${limit != null ? sql`LIMIT ${limit}` : sql``}
+  `;
+  return rows;
 }
 
 // ALLE Teilnehmer-Charaktere dieses Dialogs, die userId gehören (nicht nur der
@@ -1069,28 +1171,15 @@ export async function getDialogueParticipantCharacters(
   const slugs = parseParticipants(entry.metadata).map((p) => p.slug);
   if (slugs.length === 0) return [];
 
-  // Eigene Charaktere UND die NPCs, für die diese Person in genau diesem
-  // Gespräch spricht (dialogue_npc_speakers) — für alles Weitere
-  // (Antworten, Abschließen, Export) sind beide gleichwertig.
-  const rows = await sql<{ id: number; slug: string; name: string }[]>`
-    SELECT c.id, c.slug, c.name FROM characters c
-    WHERE c.slug = ANY(${slugs}) AND (
-      c.player_id = ${userId}
-      OR EXISTS (
-        SELECT 1 FROM dialogue_npc_speakers s
-        WHERE s.archive_entry_id = ${archiveEntryId}
-          AND s.character_id = c.id AND s.user_id = ${userId}
-      )
-    )
-  `;
+  const rows = await participantSpeakerRows(archiveEntryId, userId, slugs, null);
   const bySlug = new Map(rows.map((r) => [r.slug, r]));
   // In Teilnehmer-Reihenfolge zurückgeben (slugs behält die Reihenfolge aus
   // metadata.participants).
   return slugs
     .map((slug) => bySlug.get(slug))
-    .filter((r): r is { id: number; slug: string; name: string } => !!r)
+    .filter((r): r is NonNullable<typeof r> => !!r)
     .map((r) => ({
-      characterId: r.id,
+      speaker: { kind: r.kind, id: r.id },
       characterSlug: r.slug,
       characterName: r.name,
     }));
@@ -1781,10 +1870,10 @@ export async function getDialoguesForUser(
     SELECT ae.id, ae.slug, ae.title, ae.metadata,
            ae.updated_at::text AS updated_at, ae.dialogue_open,
            ae.visibility, ae.owner_user_id,
-           c.slug AS character_slug, c.name AS character_name
+           c.slug AS character_slug, c.title AS character_name
     FROM dialogue_npc_speakers s
     JOIN archive_entries ae ON ae.id = s.archive_entry_id
-    JOIN characters c ON c.id = s.character_id
+    JOIN archive_entries c ON c.id = s.npc_entry_id
     WHERE s.user_id = ${userId}
       AND ae.deleted_at IS NULL
       AND (${scope === "all"} OR ae.dialogue_open)

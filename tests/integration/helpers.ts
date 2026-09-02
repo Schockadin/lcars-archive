@@ -73,6 +73,29 @@ export async function insertCharacter(
   return row;
 }
 
+// Ein NPC ist ein Datenbank-Eintrag der Kategorie "npc" (kein Charakter) —
+// siehe src/lib/archive.ts:getNpcOptions.
+export async function insertNpcEntry(
+  overrides: Partial<{
+    slug: string;
+    title: string;
+    visibility: string;
+  }> = {},
+): Promise<{ id: number; slug: string; title: string }> {
+  const s = suffix();
+  const [row] = await sql<{ id: number; slug: string; title: string }[]>`
+    INSERT INTO archive_entries (slug, title, category, content, visibility, metadata, frontmatter)
+    VALUES (
+      ${overrides.slug ?? `npc-${s}`},
+      ${overrides.title ?? "Test NPC"},
+      'npc', '', ${overrides.visibility ?? "public"},
+      ${sql.json({})}, ${sql.json({})}
+    )
+    RETURNING id, slug, title
+  `;
+  return row;
+}
+
 // next/navigation's redirect() throws an Error with a NEXT_REDIRECT digest
 // instead of actually navigating — see node_modules/next/dist/client/
 // components/redirect.js. Resolves to the redirect target path, or rejects

@@ -31,7 +31,7 @@ function renderForm(props: Partial<Parameters<typeof CreateDialogueForm>[0]> = {
       userId={1}
       ownCharacters={OWN}
       partnerCharacters={PARTNERS}
-      npcCharacters={NPCS}
+      npcs={NPCS}
       canPlayNpcs={false}
       gms={GMS}
       locations={[]}
@@ -65,7 +65,7 @@ describe("CreateDialogueForm", () => {
     const partners = screen.getByLabelText(
       /Gesprächspartner/,
     ) as HTMLSelectElement;
-    fireEvent.change(partners, { target: { value: "3" } });
+    fireEvent.change(partners, { target: { value: "n3" } });
 
     const speaker = screen.getByLabelText(
       /Spielleitung für die NPCs/,
@@ -82,7 +82,7 @@ describe("CreateDialogueForm", () => {
     const partners = screen.getByLabelText(
       /Gesprächspartner/,
     ) as HTMLSelectElement;
-    fireEvent.change(partners, { target: { value: "3" } });
+    fireEvent.change(partners, { target: { value: "n3" } });
 
     const field = screen.getByLabelText(
       /Spielleitung für die NPCs/,
@@ -102,7 +102,7 @@ describe("CreateDialogueForm", () => {
     const own = screen.getByLabelText(/Dein Charakter/) as HTMLSelectElement;
     expect([...own.options].map((o) => o.textContent)).toContain("Barkeeper");
 
-    fireEvent.change(own, { target: { value: "3" } });
+    fireEvent.change(own, { target: { value: "n3" } });
     expect(screen.queryByLabelText(/Spielleitung für die NPCs/)).toBeNull();
   });
 });

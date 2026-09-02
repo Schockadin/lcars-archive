@@ -363,14 +363,16 @@ export default function TutorialPage() {
               </p>
               <p>
                 Als Gegenüber kannst du auch einen <strong>NPC</strong> wählen —
-                einen Charakter aus der Datenbank, der niemandem gehört. Für ihn
+                also einen Datenbank-Eintrag der Kategorie „NPC“. Für ihn
                 schreibt die Spielleitung; gibt es mehr als eine, wählst du beim
                 Anlegen aus, wer den NPC übernimmt. Umgekehrt kann die
                 Spielleitung ein Gespräch aus Sicht eines NPC mit euren
                 Charakteren beginnen. Danach läuft alles wie gewohnt: Der NPC
                 steht der Spielleitung beim Antworten wie ein eigener Charakter
                 zur Auswahl, und das Gespräch erscheint bei ihr unter „Deine
-                Gespräche“.
+                Gespräche“. Neue NPCs legt die Spielleitung unter „Meine
+                Inhalte“ über den Knopf „Neuer NPC“ an — das ist das normale
+                Datenbank-Formular mit vorgewählter Kategorie „NPC“.
               </p>
               <p>
                 Sobald ein Gespräch <strong>mehr als zwei Teilnehmende</strong>{" "}

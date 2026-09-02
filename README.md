@@ -55,33 +55,40 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Offene Gespräche aktualisieren sich dabei automatisch per Polling (alle
   8 Sekunden, pausiert bei nicht sichtbarem Tab) — neue Nachrichten und
   Sperr-Status-Änderungen erscheinen ohne manuelles Neuladen der Seite.
-- **Gespräche mit NPCs** — Gesprächspartner kann auch ein **NPC** sein, also ein
-  Charakter in der Datenbank ohne Spieler (`characters.player_id IS NULL`). Für ihn
-  schreibt in genau diesem Gespräch ein Konto, das NPCs spielen darf
-  (`canPlayNpcs` = `gm.access` **oder** `admin.access` — in kleinen Runden ist das
-  dasselbe Konto); wer das ist,
-  hält die Tabelle `dialogue_npc_speakers` fest (Gespräch + Charakter →
-  Konto). Beim Anlegen wählt die Spieler:in die Spielleitung aus, sofern es
-  mehr als eine gibt — bei genau einer entfällt die Wahl. Umgekehrt kann die
-  Spielleitung ein Gespräch **aus Sicht eines NPC** beginnen (der NPC steht
-  dann in „Dein Charakter") und spielt ihn selbst. Für alles Weitere —
-  Antworten, Charakterauswahl beim Antworten, Abschließen, Export,
-  Benachrichtigungen, „Deine Gespräche" — zählt ein so zugeordneter NPC wie
-  ein eigener Charakter: `getDialogueParticipantCharacters` und
-  `getDialogueParticipant` liefern ihn mit, aber nur in dem Gespräch, für das
-  die Zuordnung gilt. Welche NPCs jemand angeboten bekommt, entscheidet die
+- **Gespräche mit NPCs** — Gesprächspartner kann auch ein **NPC** sein. Ein NPC
+  ist **kein Charakter**, sondern ein **Datenbank-Eintrag der Kategorie `npc`**
+  (`archive_entries.category = 'npc'`, siehe `getNpcOptions`). Wer im Gespräch
+  spricht, hält deshalb überall ein `DialogueSpeaker`
+  (`src/lib/dialogueSpeaker.ts`) fest: `{ kind: "character" | "npc", id }`, in
+  Formularen als Schlüssel `c12`/`n7` kodiert, damit die IDs beider Quellen
+  nicht kollidieren. `dialogue_messages` hat entsprechend zwei
+  Sprecher-Spalten (`character_id` **oder** `npc_entry_id`, beide nullable).
+  Für einen NPC schreibt in genau diesem Gespräch ein Konto, das NPCs spielen
+  darf (`canPlayNpcs` = `gm.access` **oder** `admin.access` — in kleinen Runden
+  ist das dasselbe Konto); wer das ist, hält die Tabelle
+  `dialogue_npc_speakers` fest (Gespräch + NPC-Eintrag → Konto). Beim Anlegen
+  wählt die Spieler:in die Spielleitung aus, sofern es mehr als eine gibt —
+  bei genau einer entfällt die Wahl, und wer NPCs selbst spielt, wird ohne
+  Rückfrage ihr Sprecher. Umgekehrt kann die Spielleitung ein Gespräch **aus
+  Sicht eines NPC** beginnen (der NPC steht dann in „Dein Charakter") und
+  spielt ihn selbst. Für alles Weitere — Antworten, Auswahl beim Antworten,
+  Abschließen, Export, Benachrichtigungen, „Deine Gespräche" — zählt ein so
+  zugeordneter NPC wie ein eigener Charakter: `getDialogueParticipantCharacters`
+  und `getDialogueParticipant` liefern ihn mit, aber nur in dem Gespräch, für
+  das die Zuordnung gilt. In `metadata.participants` steht er als
+  `kind: "archive"` und verlinkt damit nach `/archive/<slug>` statt
+  `/characters/<slug>`. Welche NPCs jemand angeboten bekommt, entscheidet die
   normale Sichtbarkeitsregel (`canView` mit `ownerId = null`): öffentliche alle,
   intern gehaltene nur mit `content.view_gm`/`content.view_all`. Auch **nachträglich**
   lassen sich NPCs in ein laufendes Gespräch holen — das darf, wer sie spielt,
   und wird dabei ihr Sprecher.
 - **NPCs anlegen** — unter „Meine Inhalte" gibt es für alle, die NPCs spielen,
-  den Knopf **„Neuer NPC"** (`/user/characters/new?npc=1`). Es ist dasselbe
-  Charakter-Formular; der Datensatz bekommt nur keinen Spieler
-  (`ownerUserId: null` in `createCharacter`). Bewusst NICHT an `content.create`
-  gehängt: ein NPC ist kein eigener Inhalt, sondern Kampagnen-Inventar — ein
-  reines Admin-Konto ohne `content.create` soll ihn trotzdem anlegen können.
-  Zuordnen (und damit bearbeitbar machen) lässt sich ein NPC später jederzeit
-  unter „Leitung → Charaktere".
+  den Knopf **„Neuer NPC"** (`/user/archive/new?category=npc`). Das ist das
+  normale Datenbank-Formular mit vorgewählter Kategorie „NPC"; der Eintrag
+  lässt sich danach wie jeder andere Datenbank-Eintrag bearbeiten. Bewusst
+  NICHT an `content.create` gehängt: ein NPC ist kein eigener Inhalt, sondern
+  Kampagnen-Inventar — ein reines Admin-Konto ohne `content.create` soll ihn
+  trotzdem anlegen können.
 - **Eigene Charaktere & Charakterwerte** — wer mindestens einen verknüpften
   Charakter hat, bekommt im Kopfmenü den Punkt „Charaktere" (`/user/characters`):
   Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Sichtbarkeit,

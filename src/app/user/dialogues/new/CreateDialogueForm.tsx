@@ -1,10 +1,9 @@
 "use client";
 import { useActionState, useState } from "react";
 import { createDialogueAction, type CreateDialogueState } from "./actions";
-import type {
-  CharacterWithOwner,
-  NpcCharacterOption,
-} from "@/lib/characters";
+import type { CharacterWithOwner } from "@/lib/characters";
+import type { NpcOption } from "@/lib/archive";
+import { speakerKey } from "@/lib/dialogueSpeaker";
 import type { GmContact } from "@/lib/users";
 import {
   FormField,
@@ -22,7 +21,7 @@ export default function CreateDialogueForm({
   userId,
   ownCharacters,
   partnerCharacters,
-  npcCharacters,
+  npcs,
   canPlayNpcs,
   gms,
   locations,
@@ -31,9 +30,9 @@ export default function CreateDialogueForm({
   userId: number;
   ownCharacters: { id: number; slug: string; name: string }[];
   partnerCharacters: CharacterWithOwner[];
-  // NPCs (Charaktere ohne Spieler) — als Gegenüber für alle, als eigener
-  // Sprecher-Charakter nur für die Spielleitung (canPlayNpcs).
-  npcCharacters: NpcCharacterOption[];
+  // NPCs sind Datenbank-Einträge der Kategorie "npc" — als Gegenüber für
+  // alle, als eigener Sprecher nur für die Spielleitung (canPlayNpcs).
+  npcs: NpcOption[];
   canPlayNpcs: boolean;
   // Auswahl „wer spielt die NPCs?" — nur befüllt, wenn die anfragende Person
   // die NPCs NICHT selbst spielt (sonst ist sie es selbst).
@@ -48,7 +47,6 @@ export default function CreateDialogueForm({
 
   // Ist ein NPC beteiligt? Entscheidet, ob nach der Spielleitung gefragt
   // wird. Verbindlich geprüft wird das ohnehin in der Action.
-  const npcIds = new Set(npcCharacters.map((c) => c.id));
   const [ownIsNpc, setOwnIsNpc] = useState(
     canPlayNpcs && ownCharacters.length === 0,
   );
@@ -70,28 +68,34 @@ export default function CreateDialogueForm({
         label="Dein Charakter"
         htmlFor="dlg-own-character"
         hint={
-          canPlayNpcs && npcCharacters.length > 0
+          canPlayNpcs && npcs.length > 0
             ? "Als Spielleitung kannst du das Gespräch auch aus Sicht eines NPC beginnen."
             : undefined
         }
       >
         <select
           id="dlg-own-character"
-          name="ownCharacterId"
+          name="ownSpeaker"
           required
           className={inputClass}
-          onChange={(e) => setOwnIsNpc(npcIds.has(Number(e.target.value)))}
+          onChange={(e) => setOwnIsNpc(e.target.value.startsWith("n"))}
         >
           {ownCharacters.map((c) => (
-            <option key={c.id} value={c.id}>
+            <option
+              key={c.id}
+              value={speakerKey({ kind: "character", id: c.id })}
+            >
               {c.name}
             </option>
           ))}
-          {canPlayNpcs && npcCharacters.length > 0 && (
+          {canPlayNpcs && npcs.length > 0 && (
             <optgroup label="NPCs (von dir gespielt)">
-              {npcCharacters.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
+              {npcs.map((n) => (
+                <option
+                  key={n.id}
+                  value={speakerKey({ kind: "npc", id: n.id })}
+                >
+                  {n.name}
                 </option>
               ))}
             </optgroup>
@@ -106,32 +110,35 @@ export default function CreateDialogueForm({
       >
         <select
           id="dlg-partner-character"
-          name="partnerCharacterIds"
+          name="partners"
           multiple
           required
-          size={Math.min(
-            6,
-            Math.max(partnerCharacters.length + npcCharacters.length, 2),
-          )}
+          size={Math.min(6, Math.max(partnerCharacters.length + npcs.length, 2))}
           className={`${inputClass} h-auto py-[8px]`}
           onChange={(e) =>
             setNpcPartnerCount(
               [...e.target.selectedOptions].filter((o) =>
-                npcIds.has(Number(o.value)),
+                o.value.startsWith("n"),
               ).length,
             )
           }
         >
           {partnerCharacters.map((c) => (
-            <option key={c.id} value={c.id}>
+            <option
+              key={c.id}
+              value={speakerKey({ kind: "character", id: c.id })}
+            >
               {c.name} (gespielt von {c.playerName})
             </option>
           ))}
-          {npcCharacters.length > 0 && (
+          {npcs.length > 0 && (
             <optgroup label="NPCs">
-              {npcCharacters.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
+              {npcs.map((n) => (
+                <option
+                  key={n.id}
+                  value={speakerKey({ kind: "npc", id: n.id })}
+                >
+                  {n.name}
                 </option>
               ))}
             </optgroup>

@@ -15,20 +15,16 @@ const initialState: CharacterFormState = {};
 export default function NewCharacterForm({
   userId,
   isAdminOrGM,
-  asNpc = false,
 }: {
   userId: number;
   isAdminOrGM: boolean;
-  // NPC statt eigenem Charakter: dasselbe Formular, der Datensatz bekommt
-  // nur keinen Spieler (siehe characterAction).
-  asNpc?: boolean;
 }) {
   return (
     <ContentEditor
       mode="create"
       action={characterAction}
       initialState={initialState}
-      hiddenFields={asNpc ? { userId, asNpc: "1" } : { userId }}
+      hiddenFields={{ userId }}
       headFields={characterHeadFields}
       metadataFields={characterMetadataFields}
       defaults={{ status: "active" }}
