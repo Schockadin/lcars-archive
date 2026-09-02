@@ -641,7 +641,7 @@ export async function inviteDialogueParticipantAction(
     }
     const visibleNpcIds = new Set(
       (await getNpcOptions())
-        .filter((npc) => canView(npc.visibility, null, viewer))
+        .filter((npc) => canView(npc.visibility, npc.ownerUserId, viewer))
         .map((npc) => npc.id),
     );
     if (

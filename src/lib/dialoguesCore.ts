@@ -1125,10 +1125,10 @@ export async function getDialogueParticipant(
   `;
   if (!entry) return null;
 
-  const slugs = parseParticipants(entry.metadata).map((p) => p.slug);
-  if (slugs.length === 0) return null;
+  const participants = parseParticipants(entry.metadata);
+  if (participants.length === 0) return null;
 
-  const [row] = await participantSpeakerRows(archiveEntryId, userId, slugs, 1);
+  const [row] = await participantSpeakerRows(archiveEntryId, userId, participants, 1);
   if (!row) return null;
 
   return {
@@ -1146,19 +1146,34 @@ export async function getDialogueParticipant(
 async function participantSpeakerRows(
   archiveEntryId: number,
   userId: number,
-  slugs: string[],
+  participants: ArchiveParticipant[],
   limit: number | null,
 ): Promise<{ kind: SpeakerKind; id: number; slug: string; name: string }[]> {
+  // characters und archive_entries haben GETRENNTE Slug-Namensräume: derselbe
+  // Slug kann in beiden Tabellen etwas anderes bezeichnen. Deshalb wird jeder
+  // Teilnehmer-Slug nur in der Tabelle gesucht, aus der er laut seinem kind
+  // stammt (NPCs stehen als "archive" drin, siehe createDialogue) — sonst
+  // machte ein gleichnamiger, völlig unbeteiligter Charakter dessen Spieler
+  // zum Teilnehmer des Gesprächs, mit Lese-, Antwort- und Abschlussrecht.
+  // Alt-Dialoge aus dem Vault, deren Teilnehmer als "unknown" gespeichert
+  // sind, zählen wie bisher als Charaktere.
+  const characterSlugs = participants
+    .filter((p) => p.kind !== "archive")
+    .map((p) => p.slug);
+  const npcSlugs = participants
+    .filter((p) => p.kind === "archive")
+    .map((p) => p.slug);
+
   const rows = await sql<
     { kind: SpeakerKind; id: number; slug: string; name: string }[]
   >`
     SELECT 'character' AS kind, c.id, c.slug, c.name FROM characters c
-    WHERE c.slug = ANY(${slugs}) AND c.player_id = ${userId}
+    WHERE c.slug = ANY(${characterSlugs}) AND c.player_id = ${userId}
     UNION ALL
     SELECT 'npc' AS kind, n.id, n.slug, n.title AS name FROM archive_entries n
     JOIN dialogue_npc_speakers s
       ON s.npc_entry_id = n.id AND s.archive_entry_id = ${archiveEntryId}
-    WHERE n.slug = ANY(${slugs}) AND n.category = 'npc'
+    WHERE n.slug = ANY(${npcSlugs}) AND n.category = 'npc'
       AND n.deleted_at IS NULL AND s.user_id = ${userId}
     ${limit != null ? sql`LIMIT ${limit}` : sql``}
   `;
@@ -1179,15 +1194,20 @@ export async function getDialogueParticipantCharacters(
   `;
   if (!entry) return [];
 
-  const slugs = parseParticipants(entry.metadata).map((p) => p.slug);
-  if (slugs.length === 0) return [];
+  const participants = parseParticipants(entry.metadata);
+  if (participants.length === 0) return [];
 
-  const rows = await participantSpeakerRows(archiveEntryId, userId, slugs, null);
+  const rows = await participantSpeakerRows(
+    archiveEntryId,
+    userId,
+    participants,
+    null,
+  );
   const bySlug = new Map(rows.map((r) => [r.slug, r]));
-  // In Teilnehmer-Reihenfolge zurückgeben (slugs behält die Reihenfolge aus
-  // metadata.participants).
-  return slugs
-    .map((slug) => bySlug.get(slug))
+  // In Teilnehmer-Reihenfolge zurückgeben (participants behält die Reihenfolge
+  // aus metadata.participants).
+  return participants
+    .map((p) => bySlug.get(p.slug))
     .filter((r): r is NonNullable<typeof r> => !!r)
     .map((r) => ({
       speaker: { kind: r.kind, id: r.id },

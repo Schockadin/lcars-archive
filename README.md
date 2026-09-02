@@ -78,7 +78,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   das die Zuordnung gilt. In `metadata.participants` steht er als
   `kind: "archive"` und verlinkt damit nach `/archive/<slug>` statt
   `/characters/<slug>`. Welche NPCs jemand angeboten bekommt, entscheidet die
-  normale Sichtbarkeitsregel (`canView` mit `ownerId = null`): öffentliche alle,
+  normale Sichtbarkeitsregel (`canView` mit dem `owner_user_id` des Eintrags):
+  öffentliche alle,
   intern gehaltene nur mit `content.view_gm`/`content.view_all`. Auch **nachträglich**
   lassen sich NPCs in ein laufendes Gespräch holen — das darf, wer sie spielt,
   und wird dabei ihr Sprecher.

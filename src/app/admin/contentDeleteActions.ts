@@ -90,7 +90,7 @@ export async function restoreContentAction(
     if (!result) return { error: "Charakter nicht gefunden." };
     revalidateCharacter(result.slug);
   } else if (contentType === "mission") {
-    const result = await restoreMission(id);
+    const result = await restoreMission(id, moderator.id);
     if (!result) return { error: "Mission nicht gefunden." };
     revalidateMission(result.slug);
   } else if (contentType === "mission_log") {

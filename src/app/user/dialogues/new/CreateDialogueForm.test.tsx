@@ -18,7 +18,13 @@ const PARTNERS = [
   { id: 2, slug: "partner", name: "Partnerin", playerId: 9, playerName: "Ada" },
 ];
 const NPCS = [
-  { id: 3, slug: "npc", name: "Barkeeper", visibility: "gm" as const },
+  {
+    id: 3,
+    slug: "npc",
+    name: "Barkeeper",
+    visibility: "gm" as const,
+    ownerUserId: null,
+  },
 ];
 const GMS = [
   { id: 10, name: "Erste Leitung" },

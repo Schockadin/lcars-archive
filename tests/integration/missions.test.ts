@@ -234,7 +234,7 @@ describe("deleteMission", () => {
     );
     await deleteMission(mission.id, admin.id);
 
-    const restored = await restoreMission(mission.id);
+    const restored = await restoreMission(mission.id, admin.id);
 
     expect(restored?.slug).toBe(mission.slug);
     const [[missionRow], [logRow]] = await Promise.all([

@@ -5,6 +5,7 @@ import {
   advanceOwnCharacter,
   lockOwnCharacterCreation,
   CreationOverBudgetError,
+  CreationIncompleteError,
 } from "@/lib/characterAp";
 import { revalidateCharacter } from "@/lib/revalidate";
 import type { AdvancementKind } from "@/lib/advancement";
@@ -99,7 +100,12 @@ export async function lockCreationAction(
   } catch (err) {
     // Überzogenes Budget: im Formular ist der Knopf deaktiviert, ein direkt
     // abgeschickter POST landet hier.
-    if (err instanceof CreationOverBudgetError) return { error: err.message };
+    if (
+      err instanceof CreationOverBudgetError ||
+      err instanceof CreationIncompleteError
+    ) {
+      return { error: err.message };
+    }
     throw err;
   }
   if (!result) {

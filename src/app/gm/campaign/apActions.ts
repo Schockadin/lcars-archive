@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { requireGM } from "@/lib/dal";
 import { awardAp, isApReason } from "@/lib/characterAp";
+import { listActiveCharactersForAp } from "@/lib/gameSessions";
 
 export interface ApAwardState {
   error?: string;
@@ -18,8 +19,13 @@ export async function awardApAction(
 ): Promise<ApAwardState> {
   const user = await requireGM();
 
+  // Gegen die tatsächliche Auswahlliste prüfen, nicht nur auf „ist eine Zahl":
+  // eine veraltete oder erfundene ID liefe sonst in den Fremdschlüssel und
+  // flöge als 500er aus der Action, statt als Formularfehler zurückzukommen —
+  // dasselbe Vorgehen wie in createSessionAction/completeMissionAction.
   const characterId = Number(formData.get("characterId"));
-  if (!Number.isInteger(characterId)) {
+  const known = await listActiveCharactersForAp();
+  if (!known.some((c) => c.id === characterId)) {
     return { error: "Ungültiger Charakter." };
   }
 

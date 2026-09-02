@@ -343,6 +343,18 @@ export function validateCharacterStats(stats: CharacterStats): string[] {
   ];
 }
 
+// Sind alle sechs Attribute UND alle sechs Disziplinen gesetzt? Das ist die
+// Voraussetzung fürs Festschreiben der Ersterschaffung: danach sind beide
+// Blöcke schreibgeschützt und nur noch über AP steigerbar — checkAdvancement
+// weigert sich aber, einen leeren (null) Wert zu steigern. Ein festgeschriebener
+// Bogen mit Lücken wäre also nicht mehr zu füllen.
+export function hasCompleteCreationValues(stats: CharacterStats): boolean {
+  return [
+    ...ATTRIBUTE_FIELDS.map((f) => stats.attributes[f.key]),
+    ...DEPARTMENT_FIELDS.map((f) => stats.departments[f.key]),
+  ].every((value) => value !== null);
+}
+
 // Für die Übersicht: unterscheidet „noch gar keine Werte hinterlegt" von
 // „Werte vorhanden", ohne dass die Aufrufer jedes Feld einzeln prüfen.
 export function isCharacterStatsEmpty(stats: CharacterStats): boolean {

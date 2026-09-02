@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   parseCharacterStats,
   isCharacterStatsEmpty,
+  hasCompleteCreationValues,
   isCharacterExperience,
   validateCharacterStats,
   validateDistribution,
@@ -100,6 +101,38 @@ describe("parseCharacterStats", () => {
     expect(parseCharacterStats({ experience: "Held" }).experience).toBeNull();
     expect(isCharacterExperience("novice")).toBe(true);
     expect(isCharacterExperience("erfahren")).toBe(false);
+  });
+});
+
+// Voraussetzung fürs Festschreiben der Ersterschaffung: danach sind beide
+// Blöcke schreibgeschützt, ein leerer Wert ließe sich auch per AP nicht mehr
+// füllen (siehe lockOwnCharacterCreation).
+describe("hasCompleteCreationValues", () => {
+  const full = parseCharacterStats({
+    attributes: Object.fromEntries(ATTRIBUTE_FIELDS.map((f) => [f.key, 9])),
+    departments: Object.fromEntries(DEPARTMENT_FIELDS.map((f) => [f.key, 2])),
+  });
+
+  it("erkennt einen vollständig ausgefüllten Bogen", () => {
+    expect(hasCompleteCreationValues(full)).toBe(true);
+  });
+
+  it("erkennt jede einzelne Lücke", () => {
+    expect(hasCompleteCreationValues(EMPTY_CHARACTER_STATS)).toBe(false);
+    for (const field of ATTRIBUTE_FIELDS) {
+      const stats = {
+        ...full,
+        attributes: { ...full.attributes, [field.key]: null },
+      };
+      expect(hasCompleteCreationValues(stats)).toBe(false);
+    }
+    for (const field of DEPARTMENT_FIELDS) {
+      const stats = {
+        ...full,
+        departments: { ...full.departments, [field.key]: null },
+      };
+      expect(hasCompleteCreationValues(stats)).toBe(false);
+    }
   });
 });
 

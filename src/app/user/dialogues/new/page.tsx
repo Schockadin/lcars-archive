@@ -27,7 +27,7 @@ export default async function NewDialoguePage() {
   // Rechten (canView, wie überall sonst).
   const viewer = await getViewer();
   const npcs = (await getNpcOptions()).filter((npc) =>
-    canView(npc.visibility, null, viewer),
+    canView(npc.visibility, npc.ownerUserId, viewer),
   );
   // Wer NPCs spielt, darf ein Gespräch auch AUS SICHT eines NPC beginnen —
   // für diese Person ist die Seite deshalb auch ohne eigenen Charakter

@@ -1,6 +1,9 @@
 import "server-only";
 import sql from "@/lib/db";
-import { parseCharacterStats } from "@/lib/characterStats";
+import {
+  parseCharacterStats,
+  hasCompleteCreationValues,
+} from "@/lib/characterStats";
 import {
   checkAdvancement,
   applyAdvancement,
@@ -247,6 +250,10 @@ export async function advanceOwnCharacter(
 // anlegen. So entsteht er beim Festschreiben einfach mit.
 export class CreationOverBudgetError extends Error {}
 
+// Festschreiben eines Bogens, dessen Attribute/Disziplinen noch gar nicht
+// gespeichert sind (siehe hasCompleteCreationValues).
+export class CreationIncompleteError extends Error {}
+
 export async function lockOwnCharacterCreation(
   userId: number,
   characterId: number,
@@ -280,6 +287,18 @@ export async function lockOwnCharacterCreation(
     if (creationBudget(stats, rules).overBudget) {
       throw new CreationOverBudgetError(
         "Das Erschaffungsbudget ist überzogen — bitte zuerst Werte zurücknehmen.",
+      );
+    }
+
+    // Maßgeblich ist der GESPEICHERTE Stand: das Formular rechnet Budget und
+    // Rest-AP live mit den gerade eingetippten Werten (liveStats in
+    // CharacterSheet.tsx), abgeschickt wird aber nur die Charakter-ID. Wer
+    // tippt und dann festschreibt, ohne vorher zu speichern, hätte sonst einen
+    // Bogen mit leeren Attributen — dauerhaft, denn danach sind beide Blöcke
+    // schreibgeschützt und checkAdvancement steigert keinen leeren Wert.
+    if (!hasCompleteCreationValues(stats)) {
+      throw new CreationIncompleteError(
+        "Bitte zuerst alle Attribute und Disziplinen speichern — festgeschrieben werden nur gespeicherte Werte.",
       );
     }
 

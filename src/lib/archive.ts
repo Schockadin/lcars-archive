@@ -180,6 +180,9 @@ export interface NpcOption {
   // Für die Sichtbarkeitsprüfung beim Aufrufer (canView): ein NPC ist oft
   // nicht öffentlich, sondern nur intern („gm") sichtbar.
   visibility: Visibility;
+  // Wer den Eintrag angelegt hat — gehört mit in canView, sonst sähe die
+  // Person ihren eigenen, als „privat" angelegten NPC selbst nicht.
+  ownerUserId: number | null;
 }
 
 // NPCs für die Gesprächs-Auswahl: Datenbank-Einträge der Kategorie "npc".
@@ -193,7 +196,8 @@ export interface NpcOption {
 // filtert damit, statt dass hier eine zweite, abweichende Regel entsteht.
 export async function getNpcOptions(): Promise<NpcOption[]> {
   return sql<NpcOption[]>`
-    SELECT id, slug, title AS name, visibility
+    SELECT id, slug, title AS name, visibility,
+           owner_user_id AS "ownerUserId"
     FROM archive_entries
     WHERE category = 'npc' AND deleted_at IS NULL AND is_draft = false
     ORDER BY title ASC
