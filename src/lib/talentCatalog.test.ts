@@ -81,6 +81,15 @@ describe("validateTalentInput", () => {
     const result = validateTalentInput({ ...valid, name: "x".repeat(TALENT_NAME_MAX + 1) });
     expect(result.ok).toBe(false);
   });
+
+  // Klammern im Katalognamen wären auf dem Bogen von einer Umbenennung
+  // („Neuer Name (Originalname)") nicht mehr zu unterscheiden — das Talent
+  // wäre danach nicht mehr auswählbar. Siehe parseTalentEntry.
+  it("lehnt Klammern im Namen ab", () => {
+    expect(validateTalentInput({ ...valid, name: "Bold (Command)" }).ok).toBe(false);
+    expect(validateTalentInput({ ...valid, name: "Bold )" }).ok).toBe(false);
+    expect(validateTalentInput({ ...valid, name: "Bold" }).ok).toBe(true);
+  });
 });
 
 describe("Anzeige und Sortierung", () => {

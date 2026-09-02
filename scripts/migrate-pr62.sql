@@ -9,7 +9,10 @@
 -- Die Charakterwerte selbst (Attribute, Disziplinen, Talente, …) liegen
 -- weiterhin in characters.metadata.stats (jsonb) und brauchen keine Migration.
 --
--- Idempotent: CREATE TABLE/INDEX IF NOT EXISTS, ein zweiter Lauf ändert nichts.
+-- Idempotent: CREATE TABLE/INDEX IF NOT EXISTS und ALTER ... IF NOT EXISTS,
+-- ein zweiter Lauf ändert nichts. Die eine Ausnahme (dialogue_npc_speakers,
+-- siehe unten) verwirft die Tabelle nur, solange sie noch die alte Form aus
+-- einer früheren Fassung dieser PR hat.
 
 -- ---------------------------------------------------------------------------
 -- character_ap_entries
@@ -153,12 +156,24 @@ DROP TABLE IF EXISTS character_sheets;
 -- zugeordnet, das für ihn schreibt. Siehe schema.sql für die ausführliche
 -- Begründung.
 --
--- DROP davor: eine frühere Fassung dieser PR hielt NPCs für Charaktere ohne
--- Spieler und referenzierte deshalb characters(id). Wer die Migration schon
--- gefahren hat, bekommt die Tabelle hier in der endgültigen Form neu — sie
--- ist noch nirgends released, Inhalte gehen also keine verloren.
-DROP TABLE IF EXISTS dialogue_npc_speakers;
-CREATE TABLE dialogue_npc_speakers (
+-- Eine frühere Fassung dieser PR hielt NPCs für Charaktere ohne Spieler und
+-- referenzierte deshalb characters(id). Wer die Migration in dieser Fassung
+-- schon gefahren hat, bekommt die Tabelle hier in der endgültigen Form neu.
+-- Verworfen wird sie NUR in genau diesem Fall (erkennbar an der Spalte
+-- character_id) — ein zweiter Lauf dieser Migration lässt die dann bereits
+-- richtige Tabelle samt ihrer Zuordnungen unangetastet. Sonst verlöre die
+-- Spielleitung bei jedem erneuten Lauf ihr Schreibrecht für alle NPCs in
+-- laufenden Gesprächen: die Tabelle ist die einzige Stelle, an der es steht.
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = 'dialogue_npc_speakers' AND column_name = 'character_id'
+  ) THEN
+    DROP TABLE dialogue_npc_speakers;
+  END IF;
+END $$;
+CREATE TABLE IF NOT EXISTS dialogue_npc_speakers (
   archive_entry_id INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
   npc_entry_id     INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
   user_id          INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,

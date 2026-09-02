@@ -1,7 +1,13 @@
 import "server-only";
+import postgres from "postgres";
 import sql from "@/lib/db";
 import type { ApReason } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
+import type { AdvancementRules } from "@/lib/advancement";
+
+// Client-Parameter für Aufrufe innerhalb einer bestehenden Transaktion —
+// dasselbe Muster wie in src/lib/users.ts und src/lib/dialoguesCore.ts.
+type SqlClient = postgres.ISql;
 
 // Gespielte Sessions (Tabelle game_sessions, siehe scripts/schema.sql). Beim
 // Anlegen schreibt die Spielleitung den beteiligten Charakteren die Session-AP
@@ -206,23 +212,52 @@ export async function listAssignableLogbooks(
 
 // Setzt die Logbuch-Zuordnung einer Session auf genau diese Liste und zieht
 // die automatische Logbuch-AP nach.
+//
+// Alles in EINER Transaktion: Lösen, Zuordnen und die AP-Buchungen gehören
+// zusammen — bricht etwas dazwischen ab, stünde sonst die Zuordnung ohne ihre
+// Gutschrift da (oder umgekehrt).
+//
+// Ein Logbuch kann nur an EINER Session hängen. Wird eines aus einer anderen
+// Session hierher gezogen, verliert jene es — ihre Logbuch-AP muss deshalb
+// mitgezogen werden, sonst behielte sie Buchungen für Logbücher, die sie gar
+// nicht mehr hat. Die Regelwerks-Abfrage läuft VOR der Transaktion (sonst
+// wartete sie auf die einzige Connection, siehe getAdvancementRules).
 export async function setSessionLogbooks(
   sessionId: number,
   logIds: number[],
   actingUserId: number,
 ): Promise<void> {
-  await sql`
-    UPDATE mission_logs SET session_id = NULL
-    WHERE session_id = ${sessionId}
-      AND NOT (id = ANY(${logIds.length > 0 ? logIds : [0]}::int[]))
-  `;
-  if (logIds.length > 0) {
-    await sql`
-      UPDATE mission_logs SET session_id = ${sessionId}
-      WHERE id = ANY(${logIds}::int[]) AND deleted_at IS NULL
+  const rules = await getAdvancementRules();
+
+  await sql.begin(async (tx) => {
+    // Welche anderen Sessions verlieren hier ein Logbuch? Vor dem UPDATE
+    // ermitteln — danach steht die alte Zuordnung nicht mehr in der Tabelle.
+    const affected =
+      logIds.length > 0
+        ? await tx<{ sessionId: number }[]>`
+            SELECT DISTINCT session_id AS "sessionId" FROM mission_logs
+            WHERE id = ANY(${logIds}::int[])
+              AND session_id IS NOT NULL AND session_id <> ${sessionId}
+          `
+        : [];
+
+    await tx`
+      UPDATE mission_logs SET session_id = NULL
+      WHERE session_id = ${sessionId}
+        AND NOT (id = ANY(${logIds.length > 0 ? logIds : [0]}::int[]))
     `;
-  }
-  await syncSessionLogbookAp(sessionId, actingUserId);
+    if (logIds.length > 0) {
+      await tx`
+        UPDATE mission_logs SET session_id = ${sessionId}
+        WHERE id = ANY(${logIds}::int[]) AND deleted_at IS NULL
+      `;
+    }
+
+    await syncSessionLogbookAp(sessionId, actingUserId, rules, tx);
+    for (const row of affected) {
+      await syncSessionLogbookAp(row.sessionId, actingUserId, rules, tx);
+    }
+  });
 }
 
 // Bringt die automatischen Logbuch-Buchungen einer Session in den Stand, den
@@ -236,10 +271,18 @@ export async function setSessionLogbooks(
 export async function syncSessionLogbookAp(
   sessionId: number,
   actingUserId: number,
+  // Vorgeladenes Regelwerk und Transaktions-Client für Aufrufe aus einer
+  // offenen Transaktion heraus (setSessionLogbooks) — src/lib/db.ts hält nur
+  // EINE Connection (max: 1), eine Abfrage über den globalen Client während
+  // einer laufenden sql.begin()-Transaktion würde auf eine nie freiwerdende
+  // Connection warten. Ohne beide Argumente unverändertes Verhalten.
+  presetRules?: AdvancementRules,
+  client?: SqlClient,
 ): Promise<{ added: number; removed: number }> {
-  const rules = await getAdvancementRules();
+  const db = client ?? sql;
+  const rules = presetRules ?? (await getAdvancementRules());
 
-  const [counts] = await sql<{ logbooks: number }[]>`
+  const [counts] = await db<{ logbooks: number }[]>`
     SELECT COUNT(*)::int AS logbooks
     FROM mission_logs
     WHERE session_id = ${sessionId} AND deleted_at IS NULL
@@ -247,7 +290,7 @@ export async function syncSessionLogbookAp(
   const hasLogbook = (counts?.logbooks ?? 0) > 0;
 
   if (!hasLogbook || rules.apPerLogbook <= 0) {
-    const removed = await sql`
+    const removed = await db`
       DELETE FROM character_ap_entries
       WHERE session_id = ${sessionId} AND reason = 'logbook'
       RETURNING id
@@ -257,7 +300,7 @@ export async function syncSessionLogbookAp(
 
   // Gutgeschrieben bekommt, wer bei der Session dabei war und noch keine
   // Logbuch-Buchung für sie hat.
-  const added = await sql`
+  const added = await db`
     INSERT INTO character_ap_entries
       (character_id, amount, reason, note, created_by, session_id)
     SELECT p.character_id, ${rules.apPerLogbook}, 'logbook',

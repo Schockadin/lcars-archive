@@ -4,6 +4,7 @@ import { verifySession } from "@/lib/dal";
 import {
   advanceOwnCharacter,
   lockOwnCharacterCreation,
+  CreationOverBudgetError,
 } from "@/lib/characterAp";
 import { revalidateCharacter } from "@/lib/revalidate";
 import type { AdvancementKind } from "@/lib/advancement";
@@ -92,7 +93,15 @@ export async function lockCreationAction(
     return { error: "Ungültiger Charakter." };
   }
 
-  const result = await lockOwnCharacterCreation(session.userId, characterId);
+  let result: Awaited<ReturnType<typeof lockOwnCharacterCreation>>;
+  try {
+    result = await lockOwnCharacterCreation(session.userId, characterId);
+  } catch (err) {
+    // Überzogenes Budget: im Formular ist der Knopf deaktiviert, ein direkt
+    // abgeschickter POST landet hier.
+    if (err instanceof CreationOverBudgetError) return { error: err.message };
+    throw err;
+  }
   if (!result) {
     return { error: "Charakter nicht gefunden oder keine Berechtigung." };
   }

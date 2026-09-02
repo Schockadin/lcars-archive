@@ -89,6 +89,20 @@ export function validateTalentInput(raw: {
   if (name.length > TALENT_NAME_MAX) {
     return { ok: false, error: `Name zu lang (max. ${TALENT_NAME_MAX} Zeichen).` };
   }
+  // Klammern sind im Katalognamen reserviert: auf dem Bogen steht ein
+  // umbenanntes Talent als „Neuer Name (Originalname)" (siehe
+  // formatTalentEntry/parseTalentEntry). Ein Katalogname MIT Klammern würde
+  // beim Zurücklesen als Umbenennung gedeutet und wäre danach für den
+  // Dublettencheck und die Voraussetzungs-Prüfung unauffindbar — das Talent
+  // ließe sich nicht mehr auswählen. Die Voraussetzung gehört ohnehin ins
+  // eigene Feld, aus dem talentOptionLabel die Klammer selbst baut.
+  if (/[()]/.test(name)) {
+    return {
+      ok: false,
+      error:
+        "Der Name darf keine Klammern enthalten — die Voraussetzung gehört ins Feld „Voraussetzung“.",
+    };
+  }
 
   if (!isTalentCategory(raw.category)) {
     return { ok: false, error: "Unbekannte Kategorie." };

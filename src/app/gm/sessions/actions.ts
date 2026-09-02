@@ -128,11 +128,13 @@ export async function setSessionLogbooksAction(
 ): Promise<SessionFormState> {
   const user = await requireGM();
 
+  // > 0 statt nur isInteger: Number("") ist 0 und damit eine ganze Zahl — ein
+  // leeres Feld käme sonst als gültige ID durch.
   const id = Number(formData.get("id"));
-  if (!Number.isInteger(id)) return { error: "Ungültige Session." };
+  if (!Number.isInteger(id) || id <= 0) return { error: "Ungültige Session." };
 
   const logIds = formData.getAll("logIds").map(Number);
-  if (logIds.some((logId) => !Number.isInteger(logId))) {
+  if (logIds.some((logId) => !Number.isInteger(logId) || logId <= 0)) {
     return { error: "Ungültige Logbuch-Auswahl." };
   }
 

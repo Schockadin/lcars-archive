@@ -4,6 +4,7 @@ import { parseCharacterStats } from "@/lib/characterStats";
 import {
   checkAdvancement,
   applyAdvancement,
+  creationBudget,
   creationCarryOver,
   type AdvancementRequest,
   type AdvancementRules,
@@ -244,6 +245,8 @@ export async function advanceOwnCharacter(
 // Bewusst lesen-ändern-schreiben statt jsonb_set: hat ein Charakter noch gar
 // keinen stats-Teilbaum, könnte jsonb_set den verschachtelten Pfad nicht
 // anlegen. So entsteht er beim Festschreiben einfach mit.
+export class CreationOverBudgetError extends Error {}
+
 export async function lockOwnCharacterCreation(
   userId: number,
   characterId: number,
@@ -268,6 +271,17 @@ export async function lockOwnCharacterCreation(
     // Bereits festgeschrieben? Dann nichts tun — ein zweiter Aufruf (Doppelklick,
     // erneut abgeschickt) darf die Rest-AP nicht ein zweites Mal gutschreiben.
     if (stats.creationLocked) return { slug: row.slug, carryOver: 0 };
+
+    // Überzogenes Erschaffungsbudget wird hier abgelehnt, nicht nur im
+    // Formular (dort ist der Knopf deaktiviert): ein direkt abgeschickter
+    // POST würde den Charakter sonst dauerhaft überzogen festschreiben — und
+    // dabei sogar noch Rest-AP gutschreiben, weil creationCarryOver
+    // Überziehungen als 0 zählt statt negativ.
+    if (creationBudget(stats, rules).overBudget) {
+      throw new CreationOverBudgetError(
+        "Das Erschaffungsbudget ist überzogen — bitte zuerst Werte zurücknehmen.",
+      );
+    }
 
     const carryOver = creationCarryOver(stats, rules);
 

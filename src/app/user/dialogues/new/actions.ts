@@ -111,12 +111,18 @@ export async function createDialogueAction(
             "Für Gespräche mit NPCs muss es mindestens ein Konto mit Spielleitungs-Rechten geben.",
         };
       }
+      // Nur eine echte ID (> 0) zählt als getroffene Wahl: fehlt das Feld,
+      // ist Number(null) gleich 0 und damit eine ganze Zahl — der Fallback
+      // „genau eine Spielleitung, also keine Wahl nötig" (siehe
+      // CreateDialogueForm) wäre sonst unerreichbar und das Formular liefe
+      // ohne Feld in eine Fehlermeldung.
       const raw = Number(formData.get("npcSpeakerUserId"));
-      const chosen = Number.isInteger(raw)
-        ? gms.find((gm) => gm.id === raw)
-        : gms.length === 1
-          ? gms[0]
-          : undefined;
+      const chosen =
+        Number.isInteger(raw) && raw > 0
+          ? gms.find((gm) => gm.id === raw)
+          : gms.length === 1
+            ? gms[0]
+            : undefined;
       if (!chosen) {
         return { error: "Bitte die Spielleitung für die NPCs auswählen." };
       }
