@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
+import { useOverlayDismiss } from "@/hooks/useOverlayDismiss";
 import { ExpandIcon, XIcon } from "@/lib/icons";
 import {
   ATTRIBUTE_FIELDS,
@@ -81,20 +82,8 @@ export default function PersonnelFileView({
   // Vollbild wie im Formular (siehe .pf-page--expanded): position:fixed,
   // Escape schließt, der Seitenhintergrund wird solange festgehalten.
   const [expanded, setExpanded] = useState(false);
-
-  useEffect(() => {
-    if (!expanded) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setExpanded(false);
-    };
-    document.addEventListener("keydown", onKey);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [expanded]);
+  const closeExpanded = useCallback(() => setExpanded(false), []);
+  useOverlayDismiss(closeExpanded, { active: expanded });
 
   const maxStress = computeStress(stats);
   const determination = stats.determination ?? 0;

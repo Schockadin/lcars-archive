@@ -3,11 +3,7 @@
 import { useActionState } from "react";
 import { updateUserDetailsAction, type EditUserState } from "./actions";
 import type { UserAdminDetail } from "@/lib/users";
-import {
-  FormField,
-  FormError,
-  SubmitButton,
-} from "@/app/_shared/FormPrimitives";
+import { FormField, SaveFooter } from "@/app/_shared/FormPrimitives";
 
 const initialState: EditUserState = {};
 
@@ -103,15 +99,7 @@ export default function EditUserForm({
         </div>
       </fieldset>
 
-      <FormError message={state?.error} />
-
-      <SubmitButton
-        pending={pending}
-        pendingLabel="Speichern…"
-        className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%]"
-      >
-        Speichern
-      </SubmitButton>
+      <SaveFooter state={state} pending={pending} />
     </form>
   );
 }

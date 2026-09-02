@@ -1,7 +1,6 @@
 "use client";
 import { useMemo, useOptimistic, useState } from "react";
-import Link from "next/link";
-import { LcarsDataRow } from "@/components/lcars";
+import { LcarsAkteCard, LcarsDataRow } from "@/components/lcars";
 import type { UserContentLog } from "@/lib/characters";
 import type { DialogueSummary } from "@/lib/dialoguesCore";
 import type { UserContentArchiveEntry } from "@/lib/archive";
@@ -243,27 +242,19 @@ export default function UserContentBrowser({
                   key={`mission-${m.id}`}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
                 >
-                  <Link
+                  <LcarsAkteCard
                     href={`/missions/${m.slug}`}
-                    className="mission-akte flex-1"
-                    style={
-                      {
-                        "--mission-color": "var(--lcars-quinary)",
-                      } as React.CSSProperties
-                    }
-                  >
-                    <span className="mission-akte-rail" />
-                    <span className="mission-akte-body text-left">
-                      <span className="mission-akte-title block">
-                        {m.title}
-                      </span>
-                      <span className="mission-akte-meta">
+                    color="var(--lcars-quinary)"
+                    className="flex-1"
+                    title={m.title}
+                    meta={
+                      <>
                         <span>
                           <b>Typ</b> Mission
                         </span>
-                      </span>
-                    </span>
-                  </Link>
+                      </>
+                    }
+                  />
                   <ContentActionRow
                     editHref={`/user/missions/${m.id}/edit`}
                     deleteButton={
@@ -281,30 +272,22 @@ export default function UserContentBrowser({
                 key={`log-${log.id}`}
                 className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
               >
-                <Link
+                <LcarsAkteCard
                   href={`/missions/${log.mission_slug}/${log.slug}`}
-                  className="mission-akte flex-1"
-                  style={
-                    {
-                      "--mission-color": "var(--lcars-quinary)",
-                    } as React.CSSProperties
-                  }
-                >
-                  <span className="mission-akte-rail" />
-                  <span className="mission-akte-body text-left">
-                    <span className="mission-akte-title block">
-                      {log.title}
-                    </span>
-                    <span className="mission-akte-meta">
+                  color="var(--lcars-quinary)"
+                  className="flex-1"
+                  title={log.title}
+                  meta={
+                    <>
                       <span>
                         <b>Typ</b> Einsatzbericht
                       </span>
                       <span>
                         <b>Mission</b> {log.mission_title}
                       </span>
-                    </span>
-                  </span>
-                </Link>
+                    </>
+                  }
+                />
                 <ContentActionRow
                   visibility={
                     <VisibilitySelect
@@ -329,30 +312,22 @@ export default function UserContentBrowser({
                 key={`archive-${entry.id}`}
                 className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
               >
-                <Link
+                <LcarsAkteCard
                   href={`/archive/${entry.slug}`}
-                  className="mission-akte flex-1"
-                  style={
-                    {
-                      "--mission-color": "var(--lcars-quinary)",
-                    } as React.CSSProperties
-                  }
-                >
-                  <span className="mission-akte-rail" />
-                  <span className="mission-akte-body text-left">
-                    <span className="mission-akte-title block">
-                      {entry.title}
-                    </span>
-                    <span className="mission-akte-meta">
+                  color="var(--lcars-quinary)"
+                  className="flex-1"
+                  title={entry.title}
+                  meta={
+                    <>
                       <span>
                         <b>Typ</b> Archiv-Eintrag
                       </span>
                       <span>
                         <b>Kategorie</b> {CATEGORY_CONFIG[entry.category].label}
                       </span>
-                    </span>
-                  </span>
-                </Link>
+                    </>
+                  }
+                />
                 <ContentActionRow
                   visibility={
                     <VisibilitySelect
@@ -395,21 +370,13 @@ export default function UserContentBrowser({
                   key={log.id}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
                 >
-                  <Link
+                  <LcarsAkteCard
                     href={`/missions/${log.mission_slug}/${log.slug}`}
-                    className="mission-akte flex-1"
-                    style={
-                      {
-                        "--mission-color": "var(--lcars-tertiary)",
-                      } as React.CSSProperties
-                    }
-                  >
-                    <span className="mission-akte-rail" />
-                    <span className="mission-akte-body text-left">
-                      <span className="mission-akte-title block">
-                        {log.title}
-                      </span>
-                      <span className="mission-akte-meta">
+                    color="var(--lcars-tertiary)"
+                    className="flex-1"
+                    title={log.title}
+                    meta={
+                      <>
                         <span>
                           <b>Session</b> {sessionLabel(log.session_nr)}
                         </span>
@@ -419,9 +386,9 @@ export default function UserContentBrowser({
                         <span>
                           <b>Mission</b> {log.mission_title}
                         </span>
-                      </span>
-                    </span>
-                  </Link>
+                      </>
+                    }
+                  />
                   <ContentActionRow
                     visibility={
                       <VisibilitySelect
@@ -463,34 +430,26 @@ export default function UserContentBrowser({
                   key={d.slug}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
                 >
-                  <Link
+                  <LcarsAkteCard
                     href={
                       d.open ? `/dialogues/${d.slug}` : `/archive/${d.slug}`
                     }
-                    className="mission-akte flex-1"
-                    style={
-                      {
-                        "--mission-color": d.open
-                          ? "var(--lcars-senary)"
-                          : "var(--lcars-quinary)",
-                      } as React.CSSProperties
+                    color={
+                      d.open ? "var(--lcars-senary)" : "var(--lcars-quinary)"
                     }
-                  >
-                    <span className="mission-akte-rail" />
-                    <span className="mission-akte-body text-left">
-                      <span className="mission-akte-title block">
-                        {d.title}
-                      </span>
-                      <span className="mission-akte-meta">
+                    className="flex-1"
+                    title={d.title}
+                    meta={
+                      <>
                         <span>
                           <b>Gesprächspartner</b> {d.partnerName}
                         </span>
                         <span>
                           <b>Status</b> {d.open ? "Offen" : "Abgeschlossen"}
                         </span>
-                      </span>
-                    </span>
-                  </Link>
+                      </>
+                    }
+                  />
                   {/* Sichtbarkeit/Löschen sind nur vom Ersteller (owner_user_id)
                       nutzbar — der Gesprächspartner sieht nur den Status. */}
                   {d.ownerUserId === ownUserId ? (
@@ -537,28 +496,20 @@ export default function UserContentBrowser({
                   key={entry.id}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
                 >
-                  <Link
+                  <LcarsAkteCard
                     href={`/archive/${entry.slug}`}
-                    className="mission-akte flex-1"
-                    style={
-                      {
-                        "--mission-color": "var(--lcars-secondary)",
-                      } as React.CSSProperties
-                    }
-                  >
-                    <span className="mission-akte-rail" />
-                    <span className="mission-akte-body text-left">
-                      <span className="mission-akte-title block">
-                        {entry.title}
-                      </span>
-                      <span className="mission-akte-meta">
+                    color="var(--lcars-secondary)"
+                    className="flex-1"
+                    title={entry.title}
+                    meta={
+                      <>
                         <span>
                           <b>Kategorie</b>{" "}
                           {CATEGORY_CONFIG[entry.category].label}
                         </span>
-                      </span>
-                    </span>
-                  </Link>
+                      </>
+                    }
+                  />
                   <ContentActionRow
                     visibility={
                       <VisibilitySelect
@@ -600,28 +551,20 @@ export default function UserContentBrowser({
                   key={m.id}
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
                 >
-                  <Link
+                  <LcarsAkteCard
                     href={`/missions/${m.slug}`}
-                    className="mission-akte flex-1"
-                    style={
-                      {
-                        "--mission-color": "var(--lcars-senary)",
-                      } as React.CSSProperties
-                    }
-                  >
-                    <span className="mission-akte-rail" />
-                    <span className="mission-akte-body text-left">
-                      <span className="mission-akte-title block">
-                        {m.title}
-                      </span>
-                      <span className="mission-akte-meta">
+                    color="var(--lcars-senary)"
+                    className="flex-1"
+                    title={m.title}
+                    meta={
+                      <>
                         <span>
                           <b>Zeitraum</b>{" "}
                           {periodLabel(m.started_at, m.ended_at)}
                         </span>
-                      </span>
-                    </span>
-                  </Link>
+                      </>
+                    }
+                  />
                   <ContentActionRow
                     editHref={`/user/missions/${m.id}/edit`}
                     deleteButton={

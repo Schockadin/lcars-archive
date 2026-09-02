@@ -1,7 +1,7 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { LcarsDataRow } from "@/components/lcars";
+import { LcarsAkteCard, LcarsDataRow } from "@/components/lcars";
 import OwnerSelect from "@/components/OwnerSelect";
 import DeleteContentButton from "@/components/DeleteContentButton";
 import { PencilIcon } from "@/lib/icons";
@@ -246,28 +246,20 @@ export default function AdminContentBrowser({
                           onChange={() => toggleSelected(key)}
                           aria-label={`${item.title} auswählen`}
                         />
-                        <Link
+                        <LcarsAkteCard
                           href={item.href}
-                          className="mission-akte flex-1"
-                          style={
-                            {
-                              "--mission-color": CATEGORY_COLORS[contentType],
-                            } as React.CSSProperties
-                          }
-                        >
-                          <span className="mission-akte-rail" />
-                          <span className="mission-akte-body text-left">
-                            <span className="mission-akte-title block">
-                              {item.title}
-                            </span>
-                            <span className="mission-akte-meta">
+                          color={CATEGORY_COLORS[contentType]}
+                          className="flex-1"
+                          title={item.title}
+                          meta={
+                            <>
                               <span>
                                 <b>Owner</b>{" "}
                                 {item.ownerName ?? "— kein Owner —"}
                               </span>
-                            </span>
-                          </span>
-                        </Link>
+                            </>
+                          }
+                        />
                       </div>
 
                       {/* Zeile 2 (unter dem Eintrag): Owner-Wechsel-Select +

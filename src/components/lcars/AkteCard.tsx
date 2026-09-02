@@ -11,6 +11,8 @@ export default function AkteCard({
   title,
   summary,
   meta,
+  className,
+  bodyClassName,
   hardNavigate = false,
 }: {
   href: string;
@@ -19,6 +21,12 @@ export default function AkteCard({
   title: React.ReactNode;
   summary?: React.ReactNode;
   meta?: React.ReactNode;
+  // Zusätzliche Klassen an der Karte selbst (z.B. flex-1, wenn die Karte in
+  // einer Zeile neben Aktions-Knöpfen steht).
+  className?: string;
+  // Zusätzliche Klassen am Textkörper — bisher nur die Follow-Liste, die
+  // rechts Platz für ihren Abmelden-Knopf freihält.
+  bodyClassName?: string;
   // Echte Browser-Navigation statt Next-Link-Client-Transition — nötig für
   // Ziele mit #:~:text=-Fragment (Suchtreffer mit Sprungmarke zur
   // Fundstelle): Browser werten diese Text-Fragment-Direktive nur bei
@@ -29,12 +37,18 @@ export default function AkteCard({
   return (
     <Tag
       href={href}
-      className="mission-akte"
+      className={className ? `mission-akte ${className}` : "mission-akte"}
       aria-label={ariaLabel}
       style={{ "--mission-color": color } as React.CSSProperties}
     >
       <span className="mission-akte-rail" />
-      <span className="mission-akte-body text-left">
+      <span
+        className={
+          bodyClassName
+            ? `mission-akte-body text-left ${bodyClassName}`
+            : "mission-akte-body text-left"
+        }
+      >
         <span className="mission-akte-title block">{title}</span>
         {summary && (
           <span className="mission-akte-summary block">{summary}</span>

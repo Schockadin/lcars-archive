@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useOverlayDismiss } from "@/hooks/useOverlayDismiss";
 import { createPortal } from "react-dom";
 import { XIcon } from "@/lib/icons";
 import { useReturnFocus } from "@/hooks/useReturnFocus";
@@ -28,18 +29,7 @@ export default function EntryAddModal({
   const [value, setValue] = useState("");
   useReturnFocus(true);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [onClose]);
+  useOverlayDismiss(onClose);
 
   function submit() {
     const entry = value.trim();

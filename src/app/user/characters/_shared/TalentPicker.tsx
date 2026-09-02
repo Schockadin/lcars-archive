@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { useOverlayDismiss } from "@/hooks/useOverlayDismiss";
 import { createPortal } from "react-dom";
 import { XIcon } from "@/lib/icons";
 import { useReturnFocus } from "@/hooks/useReturnFocus";
@@ -77,18 +78,7 @@ export function TalentModal({
 
   useReturnFocus(true);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [onClose]);
+  useOverlayDismiss(onClose);
 
   // Bereits geführte Talente werden über ihren ORIGINALNAMEN erkannt — ein
   // umgetauftes Talent soll nicht ein zweites Mal wählbar sein.

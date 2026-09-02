@@ -1,5 +1,6 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { useOverlayDismiss } from "@/hooks/useOverlayDismiss";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@/lib/icons";
@@ -49,22 +50,12 @@ export default function ContentBody({
   );
 
   // Escape schließt, Pfeiltasten blättern durchs Karussell; solange offen,
-  // Hintergrund-Scroll sperren — gleiches Muster wie CharacterPortrait.tsx.
-  useEffect(() => {
-    if (index === null) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
-    };
-    document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [index, close, prev, next]);
+  // sperrt der Hook den Hintergrund-Scroll.
+  useOverlayDismiss(close, {
+    active: index !== null,
+    onPrev: prev,
+    onNext: next,
+  });
 
   // Klick-Delegation statt eines Handlers pro Bild — der HTML-String kommt
   // aus dangerouslySetInnerHTML, React kennt die einzelnen <img>-Elemente

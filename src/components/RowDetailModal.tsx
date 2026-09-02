@@ -1,5 +1,6 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useOverlayDismiss } from "@/hooks/useOverlayDismiss";
 import { createPortal } from "react-dom";
 import {
   CopyIcon,
@@ -84,18 +85,7 @@ export default function RowDetailModal({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-    };
-    document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [close]);
+  useOverlayDismiss(close);
 
   async function handleCopy() {
     const text = fields.map((f) => `${f.label}: ${f.value}`).join("\n\n");

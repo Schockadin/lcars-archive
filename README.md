@@ -601,6 +601,23 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     ├── types/                # TypeScript-Typen
     └── utils/                # Stardate, Datumsformatierung …
 
+### Komponenten
+
+Wiederkehrende UI-Muster leben als geteilte Bausteine statt als Kopie je
+Seite: `LcarsAkteCard` (Karte mit farbiger Schiene, Titel, Meta-Zeile — die
+Listen in Archiv, Missionen, Suche, Profil, „Meine Inhalte“, Follows und
+GM-/Admin-Übersichten), `FormPrimitives` (`FormField`, `SaveFooter`,
+`SubmitButton`, Fehler-/Erfolgs-Toast), `ConfirmSubmitIconButton` und
+`DangerZoneButton` für bestätigungspflichtige Aktionen, `BackupPanel`
+(Export/Import für DB- und User-Backup) sowie `BatchScriptPanel` (die
+blockweise laufenden Admin-Skripte mit Fortschrittsbalken).
+
+Verhalten, das mehrere Komponenten teilen, steckt in Hooks: `useOverlayDismiss`
+(Escape schließt, Hintergrund-Scroll gesperrt, optional Pfeiltasten fürs
+Karussell — genutzt von allen Modals, Lightboxen und der Vollbild-Ansicht des
+Charakterbogens) und `useReturnFocus` (Tastatur-Fokus zurück zum auslösenden
+Element).
+
 ### Stylesheets
 
 Gestaltet wird primär mit Tailwind-Utilities direkt im JSX; eigenes CSS gibt es

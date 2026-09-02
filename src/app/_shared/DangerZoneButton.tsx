@@ -1,4 +1,5 @@
 "use client";
+import { confirmSubmit } from "@/lib/confirmSubmit";
 
 // Bestätigungsgeschützter, destruktiver Aktions-Button ("Gefahrenzone") —
 // vorher in UserStatusActions.tsx und EditMissionForm.tsx als identisches
@@ -37,11 +38,7 @@ export function DangerZoneButton({
         disabled={pending || disabled}
         className={className}
         title={title}
-        onClick={(e) => {
-          if (!confirm(confirmMessage)) {
-            e.preventDefault();
-          }
-        }}
+        onClick={confirmSubmit(confirmMessage)}
       >
         {pending && pendingLabel ? pendingLabel : label}
       </button>

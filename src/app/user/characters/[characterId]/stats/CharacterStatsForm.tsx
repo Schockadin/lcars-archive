@@ -1,5 +1,6 @@
 "use client";
-import { useActionState, useEffect, useMemo, useState } from "react";
+import { useActionState, useCallback, useMemo, useState } from "react";
+import { useOverlayDismiss } from "@/hooks/useOverlayDismiss";
 import { SubmitButton, FormError } from "@/app/_shared/FormPrimitives";
 import { ExpandIcon, MinusCircleIcon, XIcon } from "@/lib/icons";
 import {
@@ -239,19 +240,8 @@ export default function CharacterStatsForm({
   // Formular, nur seine Darstellung ändert sich.
   const [expanded, setExpanded] = useState(false);
 
-  useEffect(() => {
-    if (!expanded) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setExpanded(false);
-    };
-    document.addEventListener("keydown", onKey);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [expanded]);
+  const closeExpanded = useCallback(() => setExpanded(false), []);
+  useOverlayDismiss(closeExpanded, { active: expanded });
 
   // Liefert der Server neue Werte (nach dem Speichern oder einer Steigerung —
   // Schwerpunkte lassen sich mit AP kaufen), zieht der lokale State nach.

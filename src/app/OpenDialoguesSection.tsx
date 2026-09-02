@@ -1,5 +1,4 @@
-import Link from "next/link";
-import { LcarsDataRow } from "@/components/lcars";
+import { LcarsAkteCard, LcarsDataRow } from "@/components/lcars";
 import type { DialogueSummary } from "@/lib/dialogues";
 
 // Eigene Akkordeon-Sektion für offene Gespräche — standardmäßig
@@ -23,24 +22,17 @@ export default function OpenDialoguesSection({
     >
       <div className="flex flex-col gap-[6px]">
         {items.map((d) => (
-          <Link
+          <LcarsAkteCard
             key={d.slug}
             href={`/dialogues/${d.slug}`}
-            className="mission-akte"
-            style={
-              { "--mission-color": "var(--lcars-senary)" } as React.CSSProperties
-            }
-          >
-            <span className="mission-akte-rail" />
-            <span className="mission-akte-body text-left">
-              <span className="mission-akte-title block">{d.title}</span>
-              <span className="mission-akte-meta">
-                <span>
-                  <b>Gesprächspartner</b> {d.partnerName}
-                </span>
+            color="var(--lcars-senary)"
+            title={d.title}
+            meta={
+              <span>
+                <b>Gesprächspartner</b> {d.partnerName}
               </span>
-            </span>
-          </Link>
+            }
+          />
         ))}
       </div>
     </LcarsDataRow>

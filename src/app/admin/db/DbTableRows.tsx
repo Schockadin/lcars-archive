@@ -1,26 +1,12 @@
 "use client";
 import { useState } from "react";
-import { formatDateTime } from "@/utils/formateISODate";
-import { synopsisExcerpt } from "@/lib/missionFormat";
 import RowDetailModal from "@/components/RowDetailModal";
 import { updateDbRowAction, deleteDbRowAction } from "./rowEditActions";
 import type { RowEditContext } from "./sqlQueryActions";
+import { formatValue } from "./tableExplorerConfig";
 
+// Zeichen, ab denen eine Zelle in der Ergebnistabelle gekürzt wird.
 const TRUNCATE_LENGTH = 140;
-
-// Zellwert für die Tabelle (gekürzt) bzw. das Modal (vollständig, JSON
-// pretty-printed statt einzeilig) formatiert.
-function formatValue(value: unknown, truncate: boolean): string {
-  if (value === null || value === undefined) return "—";
-  if (value instanceof Date) return formatDateTime(value);
-  if (typeof value === "object") {
-    return truncate
-      ? synopsisExcerpt(JSON.stringify(value), TRUNCATE_LENGTH)
-      : JSON.stringify(value, null, 2);
-  }
-  const text = String(value);
-  return truncate ? synopsisExcerpt(text, TRUNCATE_LENGTH) : text;
-}
 
 // Tabellenkörper des DB-Bereichs (/admin/db, SQL-Ergebnisse) — jede Zelle wird
 // auf eine Vorschau gekürzt; ein Klick auf eine Zeile öffnet ein Modal mit den
@@ -56,7 +42,7 @@ export default function DbTableRows({
                 key={c}
                 className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-ink"
               >
-                {formatValue(row[c], true)}
+                {formatValue(row[c], true, TRUNCATE_LENGTH)}
               </td>
             ))}
           </tr>
@@ -68,7 +54,7 @@ export default function DbTableRows({
           title="Zeilendetails"
           fields={columns.map((c) => ({
             label: c,
-            value: formatValue(selectedRow[c], false),
+            value: formatValue(selectedRow[c], false, TRUNCATE_LENGTH),
           }))}
           onClose={() => setSelected(null)}
           edit={

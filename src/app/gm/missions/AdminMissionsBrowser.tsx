@@ -6,6 +6,7 @@ import DeleteOwnContentButton from "@/app/user/content/DeleteOwnContentButton";
 import { PencilIcon } from "@/lib/icons";
 import { STATUS_CONFIG } from "@/lib/missionFormat";
 import type { GmMissionOverviewItem } from "@/lib/missions";
+import { LcarsAkteCard } from "@/components/lcars";
 
 // GM-Missionsübersicht (/gm/missions) — Edit/Löschen/Owner-Zuweisung pro
 // Zeile in einer durchsuchbaren Liste, analog zu AdminContentBrowser.tsx
@@ -58,30 +59,26 @@ export default function AdminMissionsBrowser({
               key={mission.id}
               className="flex flex-wrap items-center gap-[8px]"
             >
-              <Link
+              <LcarsAkteCard
                 href={`/missions/${mission.slug}`}
-                className="mission-akte flex-1 min-w-[240px]"
-                style={
-                  {
-                    "--mission-color": STATUS_CONFIG[mission.status].color,
-                  } as React.CSSProperties
-                }
-              >
-                <span className="mission-akte-rail" />
-                <span className="mission-akte-body text-left">
-                  <span className="mission-akte-title block">
+                color={STATUS_CONFIG[mission.status].color}
+                className="flex-1 min-w-[240px]"
+                title={
+                  <>
                     {mission.title}
                     {mission.isDraft && (
                       <span className="text-lcars-primary"> · Entwurf</span>
                     )}
-                  </span>
-                  <span className="mission-akte-meta">
+                  </>
+                }
+                meta={
+                  <>
                     <span>
                       <b>Status</b> {STATUS_CONFIG[mission.status].label}
                     </span>
-                  </span>
-                </span>
-              </Link>
+                  </>
+                }
+              />
               <OwnerSelect
                 contentType="mission"
                 id={mission.id}

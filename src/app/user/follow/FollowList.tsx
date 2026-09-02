@@ -1,6 +1,6 @@
 "use client";
 import { useState, useTransition } from "react";
-import Link from "next/link";
+import { LcarsAkteCard } from "@/components/lcars";
 import type { FollowedContent, FollowTargetType } from "@/lib/follows";
 import { toggleSubscription } from "@/app/actions/follows";
 import { XIcon } from "@/lib/icons";
@@ -45,25 +45,17 @@ export default function FollowList({ items }: { items: FollowedContent[] }) {
         const key = itemKey(item);
         return (
           <div key={key} className="relative">
-            <Link
+            <LcarsAkteCard
               href={item.href}
-              className="mission-akte"
-              style={
-                {
-                  "--mission-color": TYPE_COLORS[item.targetType],
-                } as React.CSSProperties
-              }
-            >
-              <span className="mission-akte-rail" />
-              <span className="mission-akte-body text-left pr-[48px]">
-                <span className="mission-akte-title block">{item.title}</span>
-                <span className="mission-akte-meta">
-                  <span>
-                    <b>Typ</b> {TYPE_LABELS[item.targetType]}
-                  </span>
+              color={TYPE_COLORS[item.targetType]}
+              bodyClassName="pr-[48px]"
+              title={item.title}
+              meta={
+                <span>
+                  <b>Typ</b> {TYPE_LABELS[item.targetType]}
                 </span>
-              </span>
-            </Link>
+              }
+            />
             <button
               type="button"
               disabled={pendingKey === key}
@@ -74,7 +66,9 @@ export default function FollowList({ items }: { items: FollowedContent[] }) {
                 setPendingKey(key);
                 startTransition(async () => {
                   await toggleSubscription(item.targetType, item.slug, false);
-                  setList((current) => current.filter((i) => itemKey(i) !== key));
+                  setList((current) =>
+                    current.filter((i) => itemKey(i) !== key),
+                  );
                   setPendingKey(null);
                 });
               }}

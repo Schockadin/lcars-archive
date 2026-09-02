@@ -1,6 +1,7 @@
 "use client";
 import { useOptimistic } from "react";
 import Link from "next/link";
+import { LcarsAkteCard } from "@/components/lcars";
 import type { Character } from "@/types/character";
 import VisibilitySelect from "../content/VisibilitySelect";
 import DeleteOwnContentButton from "../content/DeleteOwnContentButton";
@@ -62,21 +63,13 @@ export default function OwnCharacterList({
           key={c.id}
           className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
         >
-          <Link
+          <LcarsAkteCard
             href={`/characters/${c.slug}`}
-            className="mission-akte flex-1"
-            style={
-              {
-                "--mission-color": c.isDraft
-                  ? "var(--lcars-quinary)"
-                  : "var(--lcars-primary)",
-              } as React.CSSProperties
-            }
-          >
-            <span className="mission-akte-rail" />
-            <span className="mission-akte-body text-left">
-              <span className="mission-akte-title block">{c.name}</span>
-              <span className="mission-akte-meta">
+            color={c.isDraft ? "var(--lcars-quinary)" : "var(--lcars-primary)"}
+            className="flex-1"
+            title={c.name}
+            meta={
+              <>
                 <span>
                   <b>Status</b> {STATUS_LABELS[c.status]}
                 </span>
@@ -93,9 +86,9 @@ export default function OwnCharacterList({
                     <b>Typ</b> Entwurf
                   </span>
                 )}
-              </span>
-            </span>
-          </Link>
+              </>
+            }
+          />
           <ContentActionRow
             visibility={
               <VisibilitySelect

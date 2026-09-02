@@ -5,6 +5,7 @@ import PageMeta from "@/components/PageMeta";
 import { requireGM, getRoleMap } from "@/lib/dal";
 import { getAllOpenDialoguesForGM } from "@/lib/dialogues";
 import { formatDateTime } from "@/utils/formateISODate";
+import { LcarsAkteCard } from "@/components/lcars";
 
 export const metadata: Metadata = {
   title: "Gespräche",
@@ -34,9 +35,9 @@ export default async function AdminDialoguesPage() {
 
         <div className="lcars-text flex flex-col gap-[16px]">
           <p className="text-lcars-ink-dim text-[13px]">
-            Alle aktuell offenen Gespräche, unabhängig davon, ob du selbst
-            daran teilnimmst. Ein Klick öffnet das Gespräch — ohne eigene
-            Teilnahme rein lesend, ohne Antwortformular.
+            Alle aktuell offenen Gespräche, unabhängig davon, ob du selbst daran
+            teilnimmst. Ein Klick öffnet das Gespräch — ohne eigene Teilnahme
+            rein lesend, ohne Antwortformular.
           </p>
 
           {dialogues.length === 0 ? (
@@ -45,21 +46,12 @@ export default async function AdminDialoguesPage() {
             <div className="flex flex-col gap-[12px]">
               {dialogues.map((d) => (
                 <div key={d.slug} className="flex flex-col gap-[4px]">
-                  <Link
+                  <LcarsAkteCard
                     href={`/dialogues/${d.slug}`}
-                    className="mission-akte"
-                    style={
-                      {
-                        "--mission-color": "var(--lcars-senary)",
-                      } as React.CSSProperties
-                    }
-                  >
-                    <span className="mission-akte-rail" />
-                    <span className="mission-akte-body text-left">
-                      <span className="mission-akte-title block">
-                        {d.title}
-                      </span>
-                      <span className="mission-akte-meta">
+                    color="var(--lcars-senary)"
+                    title={d.title}
+                    meta={
+                      <>
                         <span>
                           <b>Teilnehmer</b> {d.participantNames.join(", ")}
                         </span>
@@ -69,9 +61,9 @@ export default async function AdminDialoguesPage() {
                         <span>
                           <b>Zuletzt aktiv</b> {formatDateTime(d.updatedAt)}
                         </span>
-                      </span>
-                    </span>
-                  </Link>
+                      </>
+                    }
+                  />
                   {canModerate && (
                     <Link
                       href={`/gm/dialogues/${d.slug}/edit`}
