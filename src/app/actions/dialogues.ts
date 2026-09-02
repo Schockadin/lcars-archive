@@ -430,6 +430,8 @@ export async function completeDialogueAction(
   }
   for (const player of await getDialogueParticipantPlayers(
     entry.participants.map((p) => p.slug),
+    // entry.id: dazu die GM-Konten, die hier für NPCs sprechen.
+    entry.id,
   )) {
     recipients.set(player.id, player);
   }
@@ -506,7 +508,13 @@ export async function deleteDialogueAction(
   revalidatePath(`/archive/${entrySlug}`);
   revalidatePath(`/dialogues/${entrySlug}`);
 
-  const players = await getDialogueParticipantPlayers(deleted.participantSlugs);
+  // Mit Gesprächs-ID, damit auch die NPC-Sprecher informiert werden: das
+  // Löschen ist ein Soft-Delete (deleted_at), die Zeilen in
+  // dialogue_npc_speakers stehen also noch.
+  const players = await getDialogueParticipantPlayers(
+    deleted.participantSlugs,
+    entry.id,
+  );
   for (const player of players) {
     if (player.emailNotificationsEnabled) {
       const result = await sendDialogueDeletedEmail({

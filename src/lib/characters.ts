@@ -236,6 +236,36 @@ export async function getCharactersForParticipantPicker(): Promise<
   `;
 }
 
+export interface NpcCharacterOption {
+  id: number;
+  slug: string;
+  name: string;
+}
+
+// NPCs für die Gesprächs-Auswahl: Charaktere OHNE Spieler
+// (player_id IS NULL) — an ihnen hängt keine Person, für sie schreibt im
+// Gespräch ein GM-Konto (siehe dialogue_npc_speakers in scripts/schema.sql).
+// Entwürfe bleiben draußen (für niemand außer dem Owner sichtbar, siehe
+// canViewDraft); `includeHidden` unterscheidet die beiden Aufrufstellen:
+// Spieler:innen bekommen nur öffentliche NPCs angeboten, die Spielleitung
+// auch die nur intern sichtbaren (visibility 'gm'/'private').
+export async function getNpcCharacterOptions(
+  includeHidden = false,
+): Promise<NpcCharacterOption[]> {
+  return includeHidden
+    ? sql<NpcCharacterOption[]>`
+        SELECT id, slug, name FROM characters
+        WHERE player_id IS NULL AND deleted_at IS NULL AND is_draft = false
+        ORDER BY name ASC
+      `
+    : sql<NpcCharacterOption[]>`
+        SELECT id, slug, name FROM characters
+        WHERE player_id IS NULL AND deleted_at IS NULL AND is_draft = false
+          AND visibility = 'public'
+        ORDER BY name ASC
+      `;
+}
+
 export interface ParticipantCharacterForNotification {
   id: number;
   slug: string;

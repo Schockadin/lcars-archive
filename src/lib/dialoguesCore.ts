@@ -50,6 +50,10 @@ export class DialogueLockActiveError extends Error {}
 // selbst.
 export class DialogueReservationRequiredError extends Error {}
 
+// Ein NPC (Charakter ohne Spieler) ist beteiligt, aber niemand wurde
+// benannt, der für ihn schreibt (siehe dialogue_npc_speakers).
+export class DialogueNpcSpeakerRequiredError extends Error {}
+
 // Statischer Platzhalter für gelöschte Nachrichten — kein markdownToSafeHtml
 // nötig (kein User-Input), und der eigentliche Inhalt verlässt so nie die
 // Datenschicht.
@@ -176,6 +180,14 @@ export interface CreateDialogueInput {
   logDate: string | null;
   tags: string[];
   bodyMarkdown: string;
+  // Wer schreibt in diesem Gespräch für die beteiligten NPCs (Charaktere
+  // ohne Spieler)? Ein GM-Konto, das für ALLE NPCs des Gesprächs zuständig
+  // ist (siehe dialogue_npc_speakers). null = es sind keine NPCs beteiligt.
+  // Welche der beteiligten Charaktere NPCs sind, stellt createDialogue selbst
+  // fest — der Aufrufer bestimmt nur, WER für sie spricht.
+  // Fehlt der Wert, gilt „niemand" — dann darf auch kein NPC beteiligt sein
+  // (createDialogue wirft sonst DialogueNpcSpeakerRequiredError).
+  npcSpeakerUserId?: number | null;
   // Opt-Out des Erstellers vom Auto-Abo (siehe unten) — jeder
   // Gesprächspartner wird immer abonniert (kann selbst auf der
   // Dialog-Seite wieder abbestellen), da er dem Anlegen nicht zustimmen
@@ -210,8 +222,10 @@ export async function createDialogue(
   const slug = await generateUniqueArchiveEntrySlug(input.title);
 
   return sql.begin(async (tx) => {
-    const [ownChar] = await tx<{ slug: string; name: string }[]>`
-      SELECT slug, name FROM characters WHERE id = ${input.ownCharacterId}
+    const [ownChar] = await tx<
+      { slug: string; name: string; player_id: number | null }[]
+    >`
+      SELECT slug, name, player_id FROM characters WHERE id = ${input.ownCharacterId}
     `;
     const partnerChars = await tx<
       {
@@ -312,6 +326,38 @@ export async function createDialogue(
         await tx`
           INSERT INTO content_follows (user_id, target_type, target_slug, subscribed_at)
           VALUES (${playerId}, 'archive_entry', ${slug}, NOW())
+          ON CONFLICT (user_id, target_type, target_slug)
+          DO UPDATE SET subscribed_at = NOW()
+        `;
+      }
+
+      // NPCs (Charaktere ohne Spieler) bekommen ihren Sprecher: ein
+      // GM-Konto, das in genau diesem Gespräch für sie schreibt. Welche der
+      // Beteiligten NPCs sind, entscheidet hier die DB (player_id IS NULL) —
+      // nicht der Aufrufer.
+      const npcCharacterIds = [
+        ...(ownChar.player_id == null ? [input.ownCharacterId] : []),
+        ...partnerChars.filter((p) => p.player_id == null).map((p) => p.id),
+      ];
+      if (npcCharacterIds.length > 0) {
+        const speakerUserId = input.npcSpeakerUserId ?? null;
+        if (speakerUserId == null) {
+          throw new DialogueNpcSpeakerRequiredError(
+            "Für die beteiligten NPCs muss eine Spielleitung ausgewählt sein.",
+          );
+        }
+        for (const characterId of npcCharacterIds) {
+          await tx`
+            INSERT INTO dialogue_npc_speakers (archive_entry_id, character_id, user_id)
+            VALUES (${entry.id}, ${characterId}, ${speakerUserId})
+            ON CONFLICT (archive_entry_id, character_id) DO NOTHING
+          `;
+        }
+        // Wer die NPCs spricht, ist Teilnehmer:in und wird wie ein
+        // Partner-Spieler auf das Gespräch abonniert.
+        await tx`
+          INSERT INTO content_follows (user_id, target_type, target_slug, subscribed_at)
+          VALUES (${speakerUserId}, 'archive_entry', ${slug}, NOW())
           ON CONFLICT (user_id, target_type, target_slug)
           DO UPDATE SET subscribed_at = NOW()
         `;
@@ -939,9 +985,10 @@ export interface DialogueParticipantInfo {
   characterName: string;
 }
 
-// Ist userId Inhaber eines der beiden Teilnehmer-Charaktere dieses
-// Dialogs? Grundlage für den client-seitigen (nicht redirectenden) Check
-// UND die serverseitige Autorisierung vor jedem Insert.
+// Ist userId Inhaber eines der Teilnehmer-Charaktere dieses Dialogs — oder
+// spricht sie hier für einen beteiligten NPC (dialogue_npc_speakers)?
+// Grundlage für den client-seitigen (nicht redirectenden) Check UND die
+// serverseitige Autorisierung vor jedem Insert.
 export async function getDialogueParticipant(
   archiveEntryId: number,
   userId: number,
@@ -955,8 +1002,15 @@ export async function getDialogueParticipant(
   if (slugs.length === 0) return null;
 
   const [row] = await sql<{ id: number; slug: string; name: string }[]>`
-    SELECT id, slug, name FROM characters
-    WHERE slug = ANY(${slugs}) AND player_id = ${userId}
+    SELECT c.id, c.slug, c.name FROM characters c
+    WHERE c.slug = ANY(${slugs}) AND (
+      c.player_id = ${userId}
+      OR EXISTS (
+        SELECT 1 FROM dialogue_npc_speakers s
+        WHERE s.archive_entry_id = ${archiveEntryId}
+          AND s.character_id = c.id AND s.user_id = ${userId}
+      )
+    )
     LIMIT 1
   `;
   if (!row) return null;
@@ -985,9 +1039,19 @@ export async function getDialogueParticipantCharacters(
   const slugs = parseParticipants(entry.metadata).map((p) => p.slug);
   if (slugs.length === 0) return [];
 
+  // Eigene Charaktere UND die NPCs, für die diese Person in genau diesem
+  // Gespräch spricht (dialogue_npc_speakers) — für alles Weitere
+  // (Antworten, Abschließen, Export) sind beide gleichwertig.
   const rows = await sql<{ id: number; slug: string; name: string }[]>`
-    SELECT id, slug, name FROM characters
-    WHERE slug = ANY(${slugs}) AND player_id = ${userId}
+    SELECT c.id, c.slug, c.name FROM characters c
+    WHERE c.slug = ANY(${slugs}) AND (
+      c.player_id = ${userId}
+      OR EXISTS (
+        SELECT 1 FROM dialogue_npc_speakers s
+        WHERE s.archive_entry_id = ${archiveEntryId}
+          AND s.character_id = c.id AND s.user_id = ${userId}
+      )
+    )
   `;
   const bySlug = new Map(rows.map((r) => [r.slug, r]));
   // In Teilnehmer-Reihenfolge zurückgeben (slugs behält die Reihenfolge aus
@@ -1500,6 +1564,11 @@ export async function getCharacterSubscribersForSlugs(
 // falls jemand beide Teilnehmer-Charaktere spielt.
 export async function getDialogueParticipantPlayers(
   characterSlugs: string[],
+  // Optional: das Gespräch selbst. Damit kommen auch die GM-Konten dazu, die
+  // hier für beteiligte NPCs schreiben (dialogue_npc_speakers) — sie sind
+  // Teilnehmende wie jede andere Person, hängen aber an keinem
+  // characters.player_id.
+  archiveEntryId?: number,
 ): Promise<DialogueEmailTarget[]> {
   if (characterSlugs.length === 0) return [];
 
@@ -1517,13 +1586,37 @@ export async function getDialogueParticipantPlayers(
     JOIN users u ON u.id = c.player_id
     WHERE c.slug = ANY(${characterSlugs})
   `;
-  return rows.map((row) => ({
-    id: row.id,
-    email: row.email,
-    name: row.name,
-    emailNotificationsEnabled: row.email_notifications_enabled,
-    pushNotificationsEnabled: row.push_notifications_enabled,
-  }));
+  const npcRows =
+    archiveEntryId == null
+      ? []
+      : await sql<
+          {
+            id: number;
+            email: string;
+            name: string;
+            email_notifications_enabled: boolean;
+            push_notifications_enabled: boolean;
+          }[]
+        >`
+          SELECT DISTINCT u.id, u.email, u.name, u.email_notifications_enabled,
+                 u.push_notifications_enabled
+          FROM dialogue_npc_speakers s
+          JOIN users u ON u.id = s.user_id
+          WHERE s.archive_entry_id = ${archiveEntryId}
+        `;
+  // Map dedupliziert: wer zugleich mit einem eigenen Charakter teilnimmt und
+  // einen NPC spricht, steht nur einmal in der Liste.
+  const byId = new Map<number, DialogueEmailTarget>();
+  for (const row of [...rows, ...npcRows]) {
+    byId.set(row.id, {
+      id: row.id,
+      email: row.email,
+      name: row.name,
+      emailNotificationsEnabled: row.email_notifications_enabled,
+      pushNotificationsEnabled: row.push_notifications_enabled,
+    });
+  }
+  return [...byId.values()];
 }
 
 // Alle aktiven GM-Accounts — Grundlage für die automatische Benachrichtigung
@@ -1582,7 +1675,6 @@ export async function getDialoguesForUser(
   scope: "open" | "all" = "open",
 ): Promise<DialogueSummary[]> {
   const ownCharacters = await getCharactersForUser(userId);
-  if (ownCharacters.length === 0) return [];
   const ownSlugs = new Set(ownCharacters.map((c) => c.slug));
 
   const results = new Map<string, DialogueSummary>();
@@ -1637,6 +1729,54 @@ export async function getDialoguesForUser(
         ownerUserId: row.owner_user_id,
       });
     }
+  }
+
+  // Dazu die Gespräche, in denen diese Person für einen NPC spricht
+  // (dialogue_npc_speakers) — dort gibt es keinen eigenen Charakter, über den
+  // die Schleife oben laufen könnte, sie gehören aber genauso in „Deine
+  // Gespräche".
+  type NpcDialogueRow = {
+    id: number;
+    slug: string;
+    title: string;
+    metadata: unknown;
+    updated_at: string;
+    dialogue_open: boolean;
+    visibility: "private" | "gm" | "public";
+    owner_user_id: number | null;
+    character_slug: string;
+    character_name: string;
+  };
+  const npcRows = await sql<NpcDialogueRow[]>`
+    SELECT ae.id, ae.slug, ae.title, ae.metadata,
+           ae.updated_at::text AS updated_at, ae.dialogue_open,
+           ae.visibility, ae.owner_user_id,
+           c.slug AS character_slug, c.name AS character_name
+    FROM dialogue_npc_speakers s
+    JOIN archive_entries ae ON ae.id = s.archive_entry_id
+    JOIN characters c ON c.id = s.character_id
+    WHERE s.user_id = ${userId}
+      AND ae.deleted_at IS NULL
+      AND (${scope === "all"} OR ae.dialogue_open)
+  `;
+  for (const row of npcRows) {
+    if (results.has(row.slug)) continue;
+    const partner = parseParticipants(row.metadata).find(
+      (p) => p.slug !== row.character_slug && !ownSlugs.has(p.slug),
+    );
+    results.set(row.slug, {
+      id: row.id,
+      slug: row.slug,
+      title: row.title,
+      partnerName: partner?.name ?? "Unbekannt",
+      updatedAt: row.updated_at,
+      logDate: parseDialogueLogDate(row.metadata),
+      open: row.dialogue_open,
+      characterSlug: row.character_slug,
+      characterName: row.character_name,
+      visibility: row.visibility,
+      ownerUserId: row.owner_user_id,
+    });
   }
 
   return [...results.values()].sort(byDialogueLogDateDesc);

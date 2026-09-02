@@ -362,6 +362,17 @@ export default function TutorialPage() {
                 Charakter am Zug gewesen sein.
               </p>
               <p>
+                Als Gegenüber kannst du auch einen <strong>NPC</strong> wählen —
+                einen Charakter aus dem Archiv, der niemandem gehört. Für ihn
+                schreibt die Spielleitung; gibt es mehr als eine, wählst du beim
+                Anlegen aus, wer den NPC übernimmt. Umgekehrt kann die
+                Spielleitung ein Gespräch aus Sicht eines NPC mit euren
+                Charakteren beginnen. Danach läuft alles wie gewohnt: Der NPC
+                steht der Spielleitung beim Antworten wie ein eigener Charakter
+                zur Auswahl, und das Gespräch erscheint bei ihr unter „Deine
+                Gespräche“.
+              </p>
+              <p>
                 Sobald ein Gespräch <strong>mehr als zwei Teilnehmende</strong>{" "}
                 hat, muss man sich das Antwortrecht zusätzlich erst per Button
                 für zwei Stunden reservieren, bevor man schreiben kann — solange

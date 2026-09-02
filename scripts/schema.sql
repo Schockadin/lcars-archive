@@ -544,6 +544,26 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
 CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created_at ON admin_audit_log(created_at);
 
 -- ---------------------------------------------------------------------------
+-- dialogue_npc_speakers
+-- ---------------------------------------------------------------------------
+-- Wer spricht in einem Gespräch für einen NPC? NPCs sind Charaktere ohne
+-- Spieler (characters.player_id IS NULL) — an ihnen hängt keine Person, die
+-- antworten könnte. Diese Tabelle ordnet sie deshalb PRO GESPRÄCH einem
+-- GM-Konto zu: für die Teilnahme-Prüfung (getDialogueParticipantCharacters)
+-- zählt dieser Charakter dann wie ein eigener, aber eben nur in diesem einen
+-- Gespräch. Höchstens ein Sprecher je NPC und Gespräch (zusammengesetzter
+-- Primärschlüssel); ON DELETE CASCADE in alle drei Richtungen — ohne
+-- Gespräch, Charakter oder Konto ist die Zuordnung gegenstandslos.
+CREATE TABLE IF NOT EXISTS dialogue_npc_speakers (
+  archive_entry_id INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
+  character_id     INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  user_id          INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (archive_entry_id, character_id)
+);
+CREATE INDEX IF NOT EXISTS idx_dialogue_npc_speakers_user ON dialogue_npc_speakers(user_id);
+
+-- ---------------------------------------------------------------------------
 -- dialogue_reservations
 -- ---------------------------------------------------------------------------
 -- Antwort-Reservierung für Mehrparteien-Dialoge (>2 Teilnehmende): wer

@@ -19,6 +19,9 @@ export default async function UserContentPage() {
   const { user, characters } = await requireOwnCharacters();
   const roleMap = await getRoleMap();
   const isGM = userCan(user, "missions.manage", roleMap);
+  // Die Spielleitung kann ein Gespräch auch ohne eigenen Charakter beginnen —
+  // aus Sicht eines NPC (siehe /user/dialogues/new).
+  const canStartDialogue = characters.length > 0 || userCan(user, "gm.access", roleMap);
 
   const [logs, dialogues, archiveEntries, missions] = await Promise.all([
     getLogsForUser(user.id),
@@ -36,20 +39,20 @@ export default async function UserContentPage() {
           <h2>Neue Inhalte</h2>
           <div className="flex flex-col gap-[12px] max-sm:w-full">
             {characters.length > 0 && (
-              <>
-                <Link
-                  href="/user/mission-logs/new"
-                  className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
-                >
-                  Neuer Missionslog
-                </Link>
-                <Link
-                  href="/user/dialogues/new"
-                  className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
-                >
-                  Neues Gespräch
-                </Link>
-              </>
+              <Link
+                href="/user/mission-logs/new"
+                className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
+              >
+                Neuer Missionslog
+              </Link>
+            )}
+            {canStartDialogue && (
+              <Link
+                href="/user/dialogues/new"
+                className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
+              >
+                Neues Gespräch
+              </Link>
             )}
             {/* Anders als Missionslog/Gespräch (eigener Charakter) oder
                 Mission (gm/admin) sind Archiv-Einträge an keine

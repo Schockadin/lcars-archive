@@ -42,6 +42,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Neu: Du kannst deinen Charakterbogen als PDF herunterladen und ausdrucken — Seite 1 ist der ausgefüllte Bogen, dahinter folgt der Talent-Spickzettel im selben Look.",
       "Rang und Spezies stehen jetzt auf dem Bogen, wo sie hingehören — beide kommen aus den Stammdaten deines Charakters und werden dort gepflegt; im Kasten „Species & Traits“ steht die Spezies vorne, deine weiteren Merkmale trägst du dahinter ein.",
       "Über dem Bogen gibt es einen Knopf, der ihn im Vollbild zeigt — praktisch am Spieltisch. Bearbeiten kannst du ihn dort genauso, Escape schließt die Ansicht wieder.",
+      "Neu: Ihr könnt Gespräche mit NPCs führen — also mit Charakteren aus dem Archiv, die niemandem gehören. Für den NPC schreibt die Spielleitung; gibt es mehrere, wählst du beim Anlegen aus, wer ihn übernimmt. Umgekehrt kann die Spielleitung ein Gespräch aus Sicht eines NPC mit euren Charakteren beginnen. Danach verhält sich alles wie gewohnt: Antworten, Abschließen, Benachrichtigungen und die Liste „Deine Gespräche“.",
       "PDF-Charakterbögen lassen sich nicht mehr hochladen. Stattdessen führt auf der Charakterseite der Knopf „Charakterbogen“ direkt zum gepflegten Bogen — als reine Ansicht mit Vollbild und PDF-Download. Du siehst ihn bei deinen eigenen Charakteren, die Spielleitung bei allen. Bereits hochgeladene PDFs werden beim Einspielen dieser Version entfernt."
     ],
   },

@@ -18,6 +18,11 @@ import {
   getDialogueLockStatus,
   getActiveGMs,
   getAllOpenDialoguesForGM,
+  getDialogueParticipant,
+  getDialogueParticipantCharacters,
+  getDialogueParticipantPlayers,
+  getDialoguesForUser,
+  DialogueNpcSpeakerRequiredError,
   DialogueClosedError,
   DialogueMessageForbiddenError,
   DialogueSelfReplyError,
@@ -889,5 +894,124 @@ describe("getAllOpenDialoguesForGM", () => {
     const overview = await getAllOpenDialoguesForGM();
 
     expect(overview.some((d) => d.slug === dialogue.slug)).toBe(false);
+  });
+});
+
+// ── Gespräche mit NPCs ──────────────────────────────────────────────────
+// NPC = Charakter ohne Spieler (player_id IS NULL). Für ihn schreibt in
+// genau diesem Gespräch ein GM-Konto (dialogue_npc_speakers).
+async function setupNpcDialogue() {
+  const playerUser = await insertUser();
+  const gmUser = await insertUser();
+  const playerChar = await insertCharacter({
+    playerId: playerUser.id,
+    name: "Spielerin",
+  });
+  const npc = await insertCharacter({ playerId: null, name: "Barkeeper" });
+
+  const dialogue = await createDialogue({
+    title: "Ein Abend in der Bar",
+    ownCharacterId: playerChar.id,
+    partnerCharacterIds: [npc.id],
+    authorUserId: playerUser.id,
+    setting: null,
+    locationSlug: null,
+    logDate: null,
+    tags: [],
+    bodyMarkdown: "Einen Raktajino, bitte.",
+    npcSpeakerUserId: gmUser.id,
+    subscribeSelf: true,
+  });
+
+  const [entry] = await sql<{ id: number }[]>`
+    SELECT id FROM archive_entries WHERE slug = ${dialogue.slug}
+  `;
+  return { playerUser, gmUser, playerChar, npc, dialogue, entryId: entry.id };
+}
+
+describe("Gespräche mit NPCs", () => {
+  it("ordnet den NPC dem gewählten GM-Konto zu und abonniert es", async () => {
+    const { gmUser, npc, dialogue, entryId } = await setupNpcDialogue();
+
+    const rows = await sql<{ character_id: number; user_id: number }[]>`
+      SELECT character_id, user_id FROM dialogue_npc_speakers
+      WHERE archive_entry_id = ${entryId}
+    `;
+    expect(rows).toEqual([{ character_id: npc.id, user_id: gmUser.id }]);
+
+    const [follow] = await sql<{ user_id: number }[]>`
+      SELECT user_id FROM content_follows
+      WHERE user_id = ${gmUser.id} AND target_type = 'archive_entry'
+        AND target_slug = ${dialogue.slug}
+    `;
+    expect(follow).toBeDefined();
+  });
+
+  it("macht das GM-Konto zum Teilnehmer und lässt es als NPC antworten", async () => {
+    const { gmUser, npc, entryId } = await setupNpcDialogue();
+
+    const mine = await getDialogueParticipantCharacters(entryId, gmUser.id);
+    expect(mine.map((c) => c.characterId)).toEqual([npc.id]);
+    expect(await getDialogueParticipant(entryId, gmUser.id)).toMatchObject({
+      characterId: npc.id,
+    });
+
+    const message = await postDialogueMessage({
+      archiveEntryId: entryId,
+      characterId: npc.id,
+      authorUserId: gmUser.id,
+      bodyMarkdown: "Kommt sofort.",
+    });
+    expect(message.characterName).toBe("Barkeeper");
+  });
+
+  it("zählt das Gespräch zu den Gesprächen des GM-Kontos", async () => {
+    const { gmUser, dialogue } = await setupNpcDialogue();
+
+    const dialogues = await getDialoguesForUser(gmUser.id);
+    const own = dialogues.find((d) => d.slug === dialogue.slug);
+
+    expect(own).toBeDefined();
+    expect(own?.characterName).toBe("Barkeeper");
+    expect(own?.partnerName).toBe("Spielerin");
+  });
+
+  it("benachrichtigt den NPC-Sprecher wie einen Teilnehmer", async () => {
+    const { gmUser, playerChar, npc, entryId } = await setupNpcDialogue();
+
+    const [charRow] = await sql<{ slug: string }[]>`
+      SELECT slug FROM characters WHERE id = ${playerChar.id}
+    `;
+    const [npcRow] = await sql<{ slug: string }[]>`
+      SELECT slug FROM characters WHERE id = ${npc.id}
+    `;
+    const targets = await getDialogueParticipantPlayers(
+      [charRow.slug, npcRow.slug],
+      entryId,
+    );
+
+    expect(targets.map((t) => t.id)).toContain(gmUser.id);
+  });
+
+  it("lehnt einen NPC ohne benannte Spielleitung ab", async () => {
+    const playerUser = await insertUser();
+    const playerChar = await insertCharacter({ playerId: playerUser.id });
+    const npc = await insertCharacter({ playerId: null });
+
+    await expect(
+      createDialogue({
+        title: "Ohne Sprecher",
+        ownCharacterId: playerChar.id,
+        partnerCharacterIds: [npc.id],
+        authorUserId: playerUser.id,
+        setting: null,
+        locationSlug: null,
+        logDate: null,
+        tags: [],
+        bodyMarkdown: "Hallo?",
+        npcSpeakerUserId: null,
+        subscribeSelf: true,
+      }),
+    ).rejects.toBeInstanceOf(DialogueNpcSpeakerRequiredError);
   });
 });

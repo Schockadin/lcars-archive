@@ -55,6 +55,20 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Offene Gespräche aktualisieren sich dabei automatisch per Polling (alle
   8 Sekunden, pausiert bei nicht sichtbarem Tab) — neue Nachrichten und
   Sperr-Status-Änderungen erscheinen ohne manuelles Neuladen der Seite.
+- **Gespräche mit NPCs** — Gesprächspartner kann auch ein **NPC** sein, also ein
+  Charakter im Archiv ohne Spieler (`characters.player_id IS NULL`). Für ihn
+  schreibt in genau diesem Gespräch ein Konto mit `gm.access`; wer das ist,
+  hält die Tabelle `dialogue_npc_speakers` fest (Gespräch + Charakter →
+  Konto). Beim Anlegen wählt die Spieler:in die Spielleitung aus, sofern es
+  mehr als eine gibt — bei genau einer entfällt die Wahl. Umgekehrt kann die
+  Spielleitung ein Gespräch **aus Sicht eines NPC** beginnen (der NPC steht
+  dann in „Dein Charakter") und spielt ihn selbst. Für alles Weitere —
+  Antworten, Charakterauswahl beim Antworten, Abschließen, Export,
+  Benachrichtigungen, „Deine Gespräche" — zählt ein so zugeordneter NPC wie
+  ein eigener Charakter: `getDialogueParticipantCharacters` und
+  `getDialogueParticipant` liefern ihn mit, aber nur in dem Gespräch, für das
+  die Zuordnung gilt. Spieler:innen bekommen nur öffentliche NPCs zur Auswahl,
+  die Spielleitung auch die intern sichtbaren.
 - **Eigene Charaktere & Charakterwerte** — wer mindestens einen verknüpften
   Charakter hat, bekommt im Kopfmenü den Punkt „Charaktere" (`/user/characters`):
   Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Sichtbarkeit,
