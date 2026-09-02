@@ -174,7 +174,7 @@ export default async function UserPublicProfilePage({
             {archiveEntries.length > 0 && (
               <LcarsDataRow
                 value={archiveEntries.length}
-                label="Archiv-Einträge"
+                label="Datenbank-Einträge"
                 color="var(--lcars-secondary)"
               >
                 <div className="flex flex-col gap-[6px]">

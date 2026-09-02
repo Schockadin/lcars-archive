@@ -30,7 +30,7 @@ export default async function AdminImagesPage() {
         <div className="lcars-text flex flex-col gap-[16px]">
           <p className="text-lcars-ink-dim text-[13px]">
             Alle Bilder, die für Charaktere, Missionen, Missionslogs und
-            Archiv-Einträge hochgeladen wurden (nicht Gespräche). Bilder ohne
+            Datenbank-Einträge hochgeladen wurden (nicht Gespräche). Bilder ohne
             erkennbaren Inhalt gehören zu bereits gelöschten Einträgen.
           </p>
           <Link

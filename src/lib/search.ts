@@ -240,7 +240,7 @@ function mapResults(
           ? a.title?.trim() ||
             (a.setting ? `Gespräch auf ${a.setting}` : "Gespräch")
           : a.title,
-      sublabel: CATEGORY_CONFIG[a.category]?.label ?? "Archiv",
+      sublabel: CATEGORY_CONFIG[a.category]?.label ?? "Datenbank",
       href: `/archive/${a.slug}${snippet ? `#:~:text=${toTextFragment(q)}` : ""}`,
       slug: a.slug,
       snippet,

@@ -6,7 +6,7 @@ import ArchiveEntryList from "./ArchiveEntryList";
 
 export const metadata = {
   title: {
-    default: "Archiv",
+    default: "Datenbank",
   },
 };
 
@@ -36,7 +36,7 @@ export default async function ArchivePage({
 
   return (
     <>
-      <PageMeta title="Archiv" section="archive" />
+      <PageMeta title="Datenbank" section="archive" />
 
       {category ? (
         <div>
@@ -53,7 +53,7 @@ export default async function ArchivePage({
         </div>
       ) : (
         <div className="archive-placeholder">
-          {/* <h1 className="lcars-data-row-heading">Archiv</h1>
+          {/* <h1 className="lcars-data-row-heading">Datenbank</h1>
           <p className="lcars-eyebrow">Enzyklopädie der bekannten Welt</p> */}
         </div>
       )}

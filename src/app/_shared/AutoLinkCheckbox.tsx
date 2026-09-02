@@ -26,8 +26,8 @@ export default function AutoLinkCheckbox({
         className="h-[16px] w-[16px]"
       />
       <label htmlFor={id} className="lcars-text text-[14px]">
-        Automatisch verlinken (erkennt Charaktere, Missionen und Archiv-Einträge
-        im Text und verlinkt sie)
+        Automatisch verlinken (erkennt Charaktere, Missionen und
+        Datenbank-Einträge im Text und verlinkt sie)
       </label>
     </div>
   );

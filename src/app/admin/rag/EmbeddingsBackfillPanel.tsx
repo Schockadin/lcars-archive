@@ -17,8 +17,8 @@ export default function EmbeddingsBackfillPanel() {
       description={
         <>
           Erzeugt für ALLE Inhalte (Charaktere, Missionen, Berichte,
-          Archiv-Einträge und abgeschlossene Gespräche) die Vektor-Embeddings
-          für den Archiv-Assistenten. Einmalig nötig nach der Einrichtung
+          Datenbank-Einträge und abgeschlossene Gespräche) die Vektor-Embeddings
+          für den Datenbank-Assistenten. Einmalig nötig nach der Einrichtung
           (pgvector-Migration + OpenAI-Schlüssel) und als Reparatur, falls
           automatische Aktualisierungen verpasst wurden. Neu angelegte oder
           bearbeitete Inhalte werden ohnehin automatisch embedded. Erfordert

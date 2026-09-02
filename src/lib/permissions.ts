@@ -41,14 +41,14 @@ export const PERMISSIONS = [
   "characters.assignable", // darf selbst einen Charakter anlegen/zugewiesen bekommen
   "campaign.manage", // Ingame-Jahr / Kampagnen-Einstellungen setzen
   "missions.manage", // Missionen anlegen/bearbeiten/löschen (auch fremde)
-  "content.create", // eigene Charaktere/Mission-Logs/Gespräche/Archiv-Einträge anlegen
+  "content.create", // eigene Charaktere/Mission-Logs/Gespräche/Datenbank-Einträge anlegen
   "content.view_gm", // gm-sichtbare Inhalte sehen
   "content.view_all", // auch private Inhalte sehen (Admin-Bypass)
   "content.moderate", // fremde Inhalte löschen/Owner ändern/Papierkorb/Bilder verwalten
   "dialogues.moderate", // fremde Dialog-Nachrichten/Metadaten/Owner bearbeiten, Dialoge löschen
   "content.autolink_tools", // Autolink/Delink/Format auf fremde Inhalte + „Alle verlinken“
   "content.follow", // bookmarken/abonnieren (Basis für alle eingeloggten User)
-  "rag.use", // Archiv-KI (RAG) nutzen — Fragen an den Kampagnen-Datenbestand
+  "rag.use", // Datenbank-KI (RAG) nutzen — Fragen an den Kampagnen-Datenbestand
               // stellen (/rag). Basis für eingeloggte User oberhalb der
               // Gast-Rolle; die Retrieval-Query filtert den Kontext ohnehin
               // nach der Sichtbarkeit des Betrachters (siehe src/lib/rag.ts).
@@ -75,14 +75,14 @@ export const PERMISSION_LABELS: Record<Permission, { label: string; description:
   "characters.assignable": { label: "Eigener Charakter", description: "Darf einen Charakter anlegen/zugewiesen bekommen." },
   "campaign.manage": { label: "Kampagne verwalten", description: "Ingame-Jahr und Kampagnen-Einstellungen setzen." },
   "missions.manage": { label: "Missionen verwalten", description: "Missionen anlegen/bearbeiten/löschen (auch fremde)." },
-  "content.create": { label: "Inhalte anlegen", description: "Eigene Charaktere, Berichte, Gespräche, Archiv-Einträge." },
+  "content.create": { label: "Inhalte anlegen", description: "Eigene Charaktere, Berichte, Gespräche, Datenbank-Einträge." },
   "content.view_gm": { label: "GM-Inhalte sehen", description: "Als „GM“ markierte Inhalte einsehen." },
   "content.view_all": { label: "Alle Inhalte sehen", description: "Auch private Inhalte einsehen." },
   "content.moderate": { label: "Inhalte moderieren", description: "Fremde Inhalte löschen, Owner ändern, Papierkorb/Bilder." },
   "dialogues.moderate": { label: "Gespräche moderieren", description: "Fremde Nachrichten/Metadaten bearbeiten, Gespräche löschen." },
   "content.autolink_tools": { label: "Verlinkungs-Werkzeuge", description: "Autolinking/Entlinken auf fremde Inhalte, „Alle verlinken“." },
   "content.follow": { label: "Folgen/Bookmarken", description: "Inhalte abonnieren und mit Lesezeichen versehen." },
-  "rag.use": { label: "Archiv-KI", description: "Fragen an den Kampagnen-Datenbestand stellen (RAG-Assistent)." },
+  "rag.use": { label: "Datenbank-KI", description: "Fragen an den Kampagnen-Datenbestand stellen (RAG-Assistent)." },
   "sql_read": { label: "SQL lesen", description: "Freie SELECT-Abfragen im DB-Bereich ausführen." },
   "sql_write": { label: "SQL schreiben", description: "Daten per INSERT/UPDATE im DB-Bereich ändern." },
   "sql_delete": { label: "SQL löschen", description: "Daten per DELETE im DB-Bereich entfernen." },

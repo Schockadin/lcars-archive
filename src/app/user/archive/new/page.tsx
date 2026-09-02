@@ -6,7 +6,7 @@ import { requireOwnUser } from "../../dal";
 import NewArchiveEntryForm from "./NewArchiveEntryForm";
 
 export const metadata: Metadata = {
-  title: "Neuer Archiv-Eintrag",
+  title: "Neuer Datenbank-Eintrag",
   robots: { index: false, follow: false },
 };
 
@@ -20,9 +20,9 @@ export default async function NewArchiveEntryPage() {
 
   return (
     <>
-      <PageMeta title="Neuer Archiv-Eintrag" section="users" />
+      <PageMeta title="Neuer Datenbank-Eintrag" section="users" />
       <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
-        <h1>Neuen Archiv-Eintrag anlegen</h1>
+        <h1>Neuen Datenbank-Eintrag anlegen</h1>
         <NewArchiveEntryForm
           userId={user.id}
           isAdminOrGM={userCan(user, "content.autolink_tools", roleMap)}

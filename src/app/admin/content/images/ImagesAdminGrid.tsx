@@ -11,7 +11,7 @@ const CONTENT_TYPE_LABEL: Record<ContentImageType, string> = {
   character: "Charakter",
   mission: "Mission",
   mission_log: "Missionslog",
-  archive_entry: "Archiv-Eintrag",
+  archive_entry: "Datenbank-Eintrag",
 };
 
 function formatSize(bytes: number): string {

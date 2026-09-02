@@ -11,9 +11,9 @@ export default function LinkAllContentPanel() {
       description={
         <>
           Erkennt in allen bestehenden Inhalten erwähnte Charaktere, Missionen
-          und Archiv-Einträge und verlinkt sie automatisch. Läuft in Blöcken mit
-          Fortschrittsanzeige, um Timeouts zu vermeiden. Nur Inhalte mit neuen
-          Verknüpfungen werden geändert.
+          und Datenbank-Einträge und verlinkt sie automatisch. Läuft in Blöcken
+          mit Fortschrittsanzeige, um Timeouts zu vermeiden. Nur Inhalte mit
+          neuen Verknüpfungen werden geändert.
         </>
       }
       idleLabel="Alle Inhalte verlinken"

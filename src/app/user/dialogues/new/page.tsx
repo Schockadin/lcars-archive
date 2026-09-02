@@ -6,8 +6,8 @@ import {
   getCharactersWithPlayers,
   getNpcCharacterOptions,
 } from "@/lib/characters";
-import { getCurrentUserPermissions } from "@/lib/dal";
 import { listGmUsers } from "@/lib/users";
+import { canPlayNpcs, canView, getViewer } from "@/lib/visibility";
 import { getAllArchiveEntries } from "@/lib/archive";
 import { getMostRecentLogDate } from "@/lib/missions";
 import CreateDialogueForm from "./CreateDialogueForm";
@@ -25,12 +25,19 @@ export default async function NewDialoguePage() {
   // niemand außer dem Owner sichtbar (siehe canViewDraft in visibility.ts).
   const publishedCharacters = characters.filter((c) => !c.is_draft);
 
-  // Die Spielleitung darf ein Gespräch AUS SICHT eines NPC beginnen (sie
-  // spielt ihn) — für sie ist die Seite deshalb auch ohne eigenen Charakter
+  // NPCs als Gegenüber: angeboten wird, was diese Person sehen darf —
+  // öffentliche NPCs allen, intern gehaltene nur mit den entsprechenden
+  // Rechten (canView, wie überall sonst).
+  const viewer = await getViewer();
+  const npcCharacters = (await getNpcCharacterOptions()).filter((npc) =>
+    canView(npc.visibility, null, viewer),
+  );
+  // Wer NPCs spielt, darf ein Gespräch auch AUS SICHT eines NPC beginnen —
+  // für diese Person ist die Seite deshalb auch ohne eigenen Charakter
   // sinnvoll.
-  const isGm = (await getCurrentUserPermissions()).has("gm.access");
-  const npcCharacters = await getNpcCharacterOptions(isGm);
-  const canStart = publishedCharacters.length > 0 || (isGm && npcCharacters.length > 0);
+  const playsNpcs = canPlayNpcs(viewer);
+  const canStart =
+    publishedCharacters.length > 0 || (playsNpcs && npcCharacters.length > 0);
 
   // Nur laden, wenn überhaupt ein Formular gerendert wird — kein
   // Charakter, keine Partner-/Ort-/Spielleitungs-Liste nötig.
@@ -41,7 +48,9 @@ export default async function NewDialoguePage() {
         getMostRecentLogDate(),
         // Wer kann für die NPCs schreiben? Nur nötig, wenn es überhaupt NPCs
         // zur Auswahl gibt und die anfragende Person sie nicht selbst spielt.
-        npcCharacters.length > 0 && !isGm ? listGmUsers() : Promise.resolve([]),
+        npcCharacters.length > 0 && !playsNpcs
+          ? listGmUsers()
+          : Promise.resolve([]),
       ])
     : [[], [], null, []];
   const locations = archiveEntries
@@ -72,7 +81,7 @@ export default async function NewDialoguePage() {
             ownCharacters={publishedCharacters}
             partnerCharacters={partnerCharacters}
             npcCharacters={npcCharacters}
-            canPlayNpcs={isGm}
+            canPlayNpcs={playsNpcs}
             gms={gms}
             locations={locations}
             defaultLogDate={defaultLogDate}

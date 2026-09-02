@@ -13,7 +13,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   return {
     name: "Neo Archive",
     short_name: "Neo Archive",
-    description: `Kampagnen-Archiv der NeoVerse-Runde – Charaktere, Missionen und Logs aus ${getCampaignYears()} Jahren Pen & Paper.`,
+    description: `Kampagnen-Datenbank der NeoVerse-Runde – Charaktere, Missionen und Logs aus ${getCampaignYears()} Jahren Pen & Paper.`,
     start_url: "/",
     scope: "/",
     display: "standalone",

@@ -61,7 +61,7 @@ export default function OpenAiUsagePanel() {
     <div className="lcars-text flex flex-col gap-[12px]">
       <p className="text-lcars-ink-dim text-[13px]">
         Zeigt die Kosten des laufenden Kalendermonats für das OpenAI-Konto, das
-        die Embeddings des Archiv-Assistenten erzeugt. Die Costs-API benötigt
+        die Embeddings des Datenbank-Assistenten erzeugt. Die Costs-API benötigt
         einen Admin-API-Key (sk-admin-…, per{" "}
         <code>OPENAI_ADMIN_API_KEY</code>); ohne ihn wird der normale
         OpenAI-Schlüssel versucht. Das Restguthaben ist bei OpenAI nur

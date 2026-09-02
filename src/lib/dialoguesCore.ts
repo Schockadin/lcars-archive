@@ -413,6 +413,10 @@ export interface InviteParticipantsResult {
 export async function inviteDialogueParticipants(
   archiveEntryId: number,
   characterIds: number[],
+  // Wer für nachträglich eingeladene NPCs schreibt (Charaktere ohne
+  // Spieler). Fehlt der Wert, dürfen keine NPCs dabei sein — die
+  // Action-Ebene lässt sie dann gar nicht erst zur Auswahl zu.
+  npcSpeakerUserId?: number | null,
 ): Promise<InviteParticipantsResult> {
   return sql.begin(async (tx) => {
     const [entry] = await tx<{ slug: string; title: string; metadata: unknown }[]>`
@@ -428,6 +432,7 @@ export async function inviteDialogueParticipants(
 
     const chars = await tx<
       {
+        id: number;
         slug: string;
         name: string;
         player_id: number | null;
@@ -437,7 +442,7 @@ export async function inviteDialogueParticipants(
         player_push_notifications_enabled: boolean | null;
       }[]
     >`
-      SELECT c.slug, c.name, c.player_id,
+      SELECT c.id, c.slug, c.name, c.player_id,
              u.email AS player_email, u.name AS player_name,
              u.email_notifications_enabled AS player_email_notifications_enabled,
              u.push_notifications_enabled AS player_push_notifications_enabled
@@ -467,6 +472,31 @@ export async function inviteDialogueParticipants(
       SET metadata = ${tx.json(metadata as ReturnType<typeof JSON.parse>)}, updated_at = NOW()
       WHERE id = ${archiveEntryId}
     `;
+
+    // NPCs unter den Neuen bekommen ihren Sprecher — dieselbe Zuordnung wie
+    // beim Anlegen (siehe createDialogue), nur nachträglich.
+    const npcIds = newChars.filter((c) => c.player_id == null).map((c) => c.id);
+    if (npcIds.length > 0) {
+      const speakerUserId = npcSpeakerUserId ?? null;
+      if (speakerUserId == null) {
+        throw new DialogueNpcSpeakerRequiredError(
+          "Für einen NPC muss eine Spielleitung benannt sein, die für ihn schreibt.",
+        );
+      }
+      for (const characterId of npcIds) {
+        await tx`
+          INSERT INTO dialogue_npc_speakers (archive_entry_id, character_id, user_id)
+          VALUES (${archiveEntryId}, ${characterId}, ${speakerUserId})
+          ON CONFLICT (archive_entry_id, character_id) DO NOTHING
+        `;
+      }
+      await tx`
+        INSERT INTO content_follows (user_id, target_type, target_slug, subscribed_at)
+        VALUES (${speakerUserId}, 'archive_entry', ${entry.slug}, NOW())
+        ON CONFLICT (user_id, target_type, target_slug)
+        DO UPDATE SET subscribed_at = NOW()
+      `;
+    }
 
     const invited: DialogueEmailTarget[] = [];
     for (const c of newChars) {

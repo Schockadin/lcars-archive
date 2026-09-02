@@ -185,7 +185,7 @@ describe("chunkContent — Mission-Log", () => {
   });
 });
 
-describe("chunkContent — Archiv-Eintrag", () => {
+describe("chunkContent — Datenbank-Eintrag", () => {
   it("kurzer Eintrag = ein Chunk", () => {
     const chunks = chunkContent({
       type: "archive_entry",
@@ -197,7 +197,7 @@ describe("chunkContent — Archiv-Eintrag", () => {
       },
     });
     expect(chunks).toHaveLength(1);
-    expect(chunks[0].text).toContain("Archiv-Eintrag: Tholianer");
+    expect(chunks[0].text).toContain("Datenbank-Eintrag: Tholianer");
     expect(chunks[0].text).toContain("kristalline Spezies");
   });
 
@@ -210,7 +210,7 @@ describe("chunkContent — Archiv-Eintrag", () => {
     });
     expect(chunks.length).toBeGreaterThan(1);
     for (const c of chunks) {
-      expect(c.text).toContain("Archiv-Eintrag: Langer Eintrag");
+      expect(c.text).toContain("Datenbank-Eintrag: Langer Eintrag");
     }
   });
 });

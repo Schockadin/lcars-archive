@@ -10,7 +10,11 @@ import {
   getDialogueLockStatus,
   hasRequestedDialogueReservationNotification,
 } from "@/lib/dialogues";
-import { getCharactersForParticipantPicker } from "@/lib/characters";
+import {
+  getCharactersForParticipantPicker,
+  getNpcCharacterOptions,
+} from "@/lib/characters";
+import { canPlayNpcs, canView, resolveViewer } from "@/lib/visibility";
 import { canReplyToDialogue } from "@/lib/dialogueLock";
 import PageMeta from "@/components/PageMeta";
 import DialogueHeader from "@/components/DialogueHeader";
@@ -72,15 +76,35 @@ export default async function DialoguePlayPage({ params }: Props) {
   //   Selbstgespräch-Verbot in postDialogueMessage der einzige Schutz.
   const multiParty = entry.participants.length > 2;
   const isOwner = entry.ownerUserId === session.userId;
-  const [messages, lockStatus, inviteCandidatesRaw] = await Promise.all([
-    getDialogueMessages(entry.id),
-    multiParty ? getDialogueLockStatus(entry.id) : Promise.resolve(null),
-    isOwner ? getCharactersForParticipantPicker() : Promise.resolve([]),
-  ]);
+  // Der Owner kann nachträglich einladen: Charaktere mit Spieler immer,
+  // NPCs nur, wenn er sie selbst spielen darf (er wird dann ihr Sprecher,
+  // siehe inviteDialogueParticipantAction) und sie überhaupt sehen darf.
+  const viewerForNpcs = viewer ? resolveViewer(viewer, roleMap) : null;
+  const mayInviteNpcs = isOwner && canPlayNpcs(viewerForNpcs);
+  const [messages, lockStatus, inviteCandidatesRaw, npcCandidatesRaw] =
+    await Promise.all([
+      getDialogueMessages(entry.id),
+      multiParty ? getDialogueLockStatus(entry.id) : Promise.resolve(null),
+      isOwner ? getCharactersForParticipantPicker() : Promise.resolve([]),
+      mayInviteNpcs ? getNpcCharacterOptions() : Promise.resolve([]),
+    ]);
   const inviteCandidates = isOwner
-    ? inviteCandidatesRaw.filter(
-        (c) => !entry.participants.some((p) => p.slug === c.slug),
-      )
+    ? [
+        ...inviteCandidatesRaw,
+        ...npcCandidatesRaw
+          .filter((npc) => canView(npc.visibility, null, viewerForNpcs))
+          .map((npc) => ({
+            id: npc.id,
+            slug: npc.slug,
+            name: npc.name,
+            // Statt eines Spielernamens der Hinweis, dass hier die
+            // Spielleitung schreibt — die Auswahl zeigt beides in einer Liste.
+            playerName: "NPC",
+            status: "active" as const,
+          })),
+      ]
+        .filter((c) => !entry.participants.some((p) => p.slug === c.slug))
+        .sort((a, b) => a.name.localeCompare(b.name, "de"))
     : [];
 
   const canReplyNow = canReplyToDialogue(

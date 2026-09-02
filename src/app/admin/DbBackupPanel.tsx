@@ -34,7 +34,7 @@ export default function DbBackupPanel() {
       description={
         <>
           Exportiert den kompletten Datenbankinhalt außer Useraccounts
-          (Charaktere, Missionen, Mission-Logs, Archiv-Einträge, Follows,
+          (Charaktere, Missionen, Mission-Logs, Datenbank-Einträge, Follows,
           Dialog-Nachrichten, Timeline, …) als eine JSON-Datei. User laufen
           über ein eigenes, paralleles Backup (siehe „User-Backup“ oben). Der
           Import ERSETZT den gesamten aktuellen Inhalt (außer Usern) durch den

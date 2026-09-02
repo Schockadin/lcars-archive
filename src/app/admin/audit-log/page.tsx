@@ -56,7 +56,7 @@ export default async function AdminAuditLogPage() {
               Content-Aktivität (letzte {CONTENT_ACTIVITY_DAYS} Tage)
             </h2>
             <p className="text-lcars-ink-dim text-[13px]">
-              Alle Charaktere, Missionen, Mission-Logs und Archiv-Einträge, die
+              Alle Charaktere, Missionen, Mission-Logs und Datenbank-Einträge, die
               in den letzten {CONTENT_ACTIVITY_DAYS} Tagen hinzugefügt,
               bearbeitet oder gelöscht wurden. „Von“ zeigt den Owner (bzw. bei
               Löschungen die löschende Person) — bearbeitet ein Admin oder eine

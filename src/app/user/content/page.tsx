@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { userCan } from "@/lib/permissions";
 import { getRoleMap } from "@/lib/roles";
+import { canPlayNpcs, resolveViewer } from "@/lib/visibility";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnCharacters } from "../dal";
@@ -22,6 +23,11 @@ export default async function UserContentPage() {
   // Die Spielleitung kann ein Gespräch auch ohne eigenen Charakter beginnen —
   // aus Sicht eines NPC (siehe /user/dialogues/new).
   const canStartDialogue = characters.length > 0 || userCan(user, "gm.access", roleMap);
+  // NPCs (Charaktere ohne Spieler) legt an, wer sie auch spielt — siehe
+  // canPlayNpcs; sie stehen danach allen als Gesprächs-Gegenüber offen.
+  // Bewusst ohne content.create: ein NPC ist kein eigener Inhalt, sondern
+  // Kampagnen-Inventar — es zählt nur, ob diese Person NPCs spielt.
+  const canCreateNpc = canPlayNpcs(resolveViewer(user, roleMap));
 
   const [logs, dialogues, archiveEntries, missions] = await Promise.all([
     getLogsForUser(user.id),
@@ -55,16 +61,16 @@ export default async function UserContentPage() {
               </Link>
             )}
             {/* Anders als Missionslog/Gespräch (eigener Charakter) oder
-                Mission (gm/admin) sind Archiv-Einträge an keine
+                Mission (gm/admin) sind Datenbank-Einträge an keine
                 Voraussetzung geknüpft — jeder eingeloggte User darf welche
                 anlegen. */}
             <Link
               href="/user/archive/new"
               className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
             >
-              Neuer Archiv-Eintrag
+              Neuer Datenbank-Eintrag
             </Link>
-            {/* Genau wie Archiv-Einträge an keine Voraussetzung geknüpft
+            {/* Genau wie Datenbank-Einträge an keine Voraussetzung geknüpft
                 (bewusst NICHT hinter characters.length > 0 versteckt — genau
                 damit legt man seinen ERSTEN eigenen Charakter an) — außer
                 Gast-Accounts, siehe requireOwnCharacters/new/actions.ts. */}
@@ -74,6 +80,16 @@ export default async function UserContentPage() {
                 className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
               >
                 Neuer Charakter
+              </Link>
+            )}
+            {/* Derselbe Weg, nur ohne Spieler: ein NPC, den in Gesprächen die
+                Spielleitung übernimmt (siehe canPlayNpcs). */}
+            {canCreateNpc && (
+              <Link
+                href="/user/characters/new?npc=1"
+                className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
+              >
+                Neuer NPC
               </Link>
             )}
             {isGM && (

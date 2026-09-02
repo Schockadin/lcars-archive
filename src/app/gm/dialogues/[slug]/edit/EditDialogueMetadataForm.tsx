@@ -58,7 +58,7 @@ export default function EditDialogueMetadataForm({
         />
       </FormField>
 
-      <FormField label="Ort (verknüpfter Archiv-Eintrag)" htmlFor="dlg-location">
+      <FormField label="Ort (verknüpfter Datenbank-Eintrag)" htmlFor="dlg-location">
         <select
           id="dlg-location"
           name="locationSlug"

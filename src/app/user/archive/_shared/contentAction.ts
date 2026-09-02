@@ -58,7 +58,7 @@ export async function archiveEntryAction(
   const isEdit = entryIdRaw != null && entryIdRaw !== "";
   const entryId = isEdit ? Number(entryIdRaw) : null;
   if (isEdit && !Number.isInteger(entryId)) {
-    return { error: "Ungültiger Archiv-Eintrag." };
+    return { error: "Ungültiger Datenbank-Eintrag." };
   }
 
   const title = String(formData.get("title") ?? "").trim();
@@ -134,7 +134,7 @@ export async function archiveEntryAction(
           event: "created",
           authorUserId: session.userId,
           authorName: author?.name ?? "Unbekannt",
-          contentTypeLabel: "einen neuen Archiv-Eintrag",
+          contentTypeLabel: "einen neuen Datenbank-Eintrag",
           contentTitle: title,
           contentUrl,
           preview,
@@ -152,7 +152,7 @@ export async function archiveEntryAction(
           event: "updated",
           authorUserId: session.userId,
           authorName: author?.name ?? "Unbekannt",
-          contentTypeLabel: "einen Archiv-Eintrag",
+          contentTypeLabel: "einen Datenbank-Eintrag",
           contentTitle: title,
           contentUrl,
           preview,
@@ -191,7 +191,7 @@ export async function archiveEntryAction(
       event: "created",
       authorUserId: session.userId,
       authorName: author?.name ?? "Unbekannt",
-      contentTypeLabel: "einen neuen Archiv-Eintrag",
+      contentTypeLabel: "einen neuen Datenbank-Eintrag",
       contentTitle: title,
       contentUrl,
       preview,

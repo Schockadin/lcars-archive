@@ -47,7 +47,7 @@ export async function deleteContentAction(
     revalidateLog(result.missionId, result.slug);
   } else if (contentType === "archive_entry") {
     const result = await deleteArchiveEntry(id, admin.id);
-    if (!result) return { error: "Archiv-Eintrag nicht gefunden." };
+    if (!result) return { error: "Datenbank-Eintrag nicht gefunden." };
     revalidateArchiveEntry(result.slug);
   } else {
     const result = await deleteDialogue(id, admin.id);
@@ -99,7 +99,7 @@ export async function restoreContentAction(
     revalidateLog(result.missionId, result.slug);
   } else if (contentType === "archive_entry") {
     const result = await restoreArchiveEntry(id);
-    if (!result) return { error: "Archiv-Eintrag nicht gefunden." };
+    if (!result) return { error: "Datenbank-Eintrag nicht gefunden." };
     revalidateArchiveEntry(result.slug);
   } else {
     const result = await restoreDialogue(id);

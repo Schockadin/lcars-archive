@@ -430,7 +430,7 @@ export async function sendArchiveEntryUpdatedEmail(input: {
     subject: `Aktualisiert: ${input.entryTitle}`,
     html: `
       <p>Hallo ${escapeHtml(input.name)},</p>
-      <p>der Archiv-Eintrag "${escapeHtml(input.entryTitle)}", den du abonniert hast, wurde aktualisiert:</p>
+      <p>der Datenbank-Eintrag "${escapeHtml(input.entryTitle)}", den du abonniert hast, wurde aktualisiert:</p>
       ${previewBlock(input.preview)}
       <p><a href="${entryUrl}">${entryUrl}</a></p>
       <p>— Neo Archive</p>

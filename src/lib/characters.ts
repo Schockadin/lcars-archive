@@ -4,6 +4,7 @@ import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
 import { Character, CharacterMetadata } from "@/types/character";
+import type { Visibility } from "@/lib/visibility";
 import type { CharacterStats } from "@/types/characterStats";
 import { parseCharacterStats } from "@/lib/characterStats";
 import { MissionLogPreview } from "@/types/missionLog";
@@ -240,30 +241,29 @@ export interface NpcCharacterOption {
   id: number;
   slug: string;
   name: string;
+  // Für die Sichtbarkeitsprüfung beim Aufrufer (canView): ein NPC ist oft
+  // nicht öffentlich, sondern nur intern („gm") sichtbar.
+  visibility: Visibility;
 }
 
 // NPCs für die Gesprächs-Auswahl: Charaktere OHNE Spieler
 // (player_id IS NULL) — an ihnen hängt keine Person, für sie schreibt im
 // Gespräch ein GM-Konto (siehe dialogue_npc_speakers in scripts/schema.sql).
 // Entwürfe bleiben draußen (für niemand außer dem Owner sichtbar, siehe
-// canViewDraft); `includeHidden` unterscheidet die beiden Aufrufstellen:
-// Spieler:innen bekommen nur öffentliche NPCs angeboten, die Spielleitung
-// auch die nur intern sichtbaren (visibility 'gm'/'private').
-export async function getNpcCharacterOptions(
-  includeHidden = false,
-): Promise<NpcCharacterOption[]> {
-  return includeHidden
-    ? sql<NpcCharacterOption[]>`
-        SELECT id, slug, name FROM characters
-        WHERE player_id IS NULL AND deleted_at IS NULL AND is_draft = false
-        ORDER BY name ASC
-      `
-    : sql<NpcCharacterOption[]>`
-        SELECT id, slug, name FROM characters
-        WHERE player_id IS NULL AND deleted_at IS NULL AND is_draft = false
-          AND visibility = 'public'
-        ORDER BY name ASC
-      `;
+// canViewDraft).
+//
+// Bewusst OHNE Sichtbarkeits-Filter in der Query: welche NPCs jemand sehen
+// darf, entscheidet dieselbe canView-Regel wie überall sonst (public für
+// alle, „gm"/„privat" nur mit den entsprechenden Rechten) — der Aufrufer
+// filtert damit, statt dass hier eine zweite, abweichende Regel entsteht.
+// Vorher stand hier fest `visibility = 'public'`, wodurch die typischen
+// intern gehaltenen NPCs in keiner Auswahl auftauchten.
+export async function getNpcCharacterOptions(): Promise<NpcCharacterOption[]> {
+  return sql<NpcCharacterOption[]>`
+    SELECT id, slug, name, visibility FROM characters
+    WHERE player_id IS NULL AND deleted_at IS NULL AND is_draft = false
+    ORDER BY name ASC
+  `;
 }
 
 export interface ParticipantCharacterForNotification {
@@ -551,7 +551,10 @@ export async function createCharacter(input: {
   division: string | null;
   tags: string[];
   bodyMarkdown: string;
-  ownerUserId: number;
+  // Wem gehört der Charakter? null = NPC: ein Charakter ohne Spieler, den in
+  // Gesprächen die Spielleitung übernimmt (siehe dialogue_npc_speakers).
+  // Zuordnen lässt er sich später jederzeit unter /gm/characters.
+  ownerUserId: number | null;
   // Entwurf statt sofort veröffentlicht (siehe canViewDraft in
   // src/lib/visibility.ts) — bewusst kein Default hier, jeder Aufrufer muss
   // sich explizit entscheiden.

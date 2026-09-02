@@ -23,7 +23,7 @@ const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   all: "Alle Kategorien",
   logs: "Einsatzberichte",
   dialogues: "Gespräche",
-  archive: "Archiv-Einträge",
+  archive: "Datenbank-Einträge",
   missions: "Missionen",
 };
 
@@ -320,7 +320,7 @@ export default function UserContentBrowser({
                   meta={
                     <>
                       <span>
-                        <b>Typ</b> Archiv-Eintrag
+                        <b>Typ</b> Datenbank-Eintrag
                       </span>
                       <span>
                         <b>Kategorie</b> {CATEGORY_CONFIG[entry.category].label}
@@ -482,12 +482,12 @@ export default function UserContentBrowser({
       {showArchive && (
         <LcarsDataRow
           value={entries.publishedArchiveEntries.length}
-          label="Archiv-Einträge"
+          label="Datenbank-Einträge"
           color="var(--lcars-secondary)"
         >
           {entries.publishedArchiveEntries.length === 0 ? (
             <p className="lcars-empty-state">
-              Noch keine eigenen Archiv-Einträge vorhanden.
+              Noch keine eigenen Datenbank-Einträge vorhanden.
             </p>
           ) : (
             <div className="flex flex-col gap-[6px]">

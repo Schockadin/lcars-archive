@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
 import { getUserById, updateDialogueViewPreference } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
+import { canPlayNpcs, resolveViewer } from "@/lib/visibility";
 import { userCan } from "@/lib/permissions";
 import {
   DialogueClosedError,
@@ -28,6 +29,7 @@ import {
   completeDialogue,
   deleteDialogue,
   inviteDialogueParticipants,
+  DialogueNpcSpeakerRequiredError,
   reserveDialogueReply,
   forceReleaseDialogueReservation,
   requestDialogueReservationNotification,
@@ -610,15 +612,27 @@ export async function inviteDialogueParticipantAction(
   }
   if (characterIds.length === 0) return {};
 
+  // NPCs (Charaktere ohne Spieler) darf nur einladen, wer sie auch spielt —
+  // die einladende Person wird dann ihr Sprecher in diesem Gespräch.
   const inviter = await getUserById(session.userId);
+  const roleMap = await getRoleMap();
+  const mayPlayNpcs =
+    inviter != null && canPlayNpcs(resolveViewer(inviter, roleMap));
   let title: string;
   let invited: DialogueEmailTarget[];
   try {
     ({ title, invited } = await inviteDialogueParticipants(
       entry.id,
       characterIds,
+      mayPlayNpcs ? session.userId : null,
     ));
-  } catch {
+  } catch (err) {
+    if (err instanceof DialogueNpcSpeakerRequiredError) {
+      return {
+        error:
+          "NPCs kann nur die Spielleitung hinzufügen — sie schreibt dann für sie.",
+      };
+    }
     // TOCTOU: der Dialog wurde zwischen dem obigen getDialogueForPlay-Check
     // und diesem Aufruf gelöscht (siehe deleteDialogueAction) — kein
     // ungefangener 500er, sondern eine normale Formular-Fehlermeldung.

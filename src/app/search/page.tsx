@@ -32,7 +32,7 @@ export default async function SearchPage({
         <div className="mb-[16px]">
           <h1 className="lcars-data-row-heading">Suche</h1>
           <p className="lcars-eyebrow">
-            {q ? `Ergebnisse für „${q}“` : "Archiv durchsuchen"}
+            {q ? `Ergebnisse für „${q}“` : "Datenbank durchsuchen"}
           </p>
         </div>
 
@@ -48,7 +48,7 @@ export default async function SearchPage({
             type="search"
             name="q"
             defaultValue={q}
-            placeholder="Archiv durchsuchen…"
+            placeholder="Datenbank durchsuchen…"
             className="rounded-lcars-pill lcars-input flex-1"
             style={{ minWidth: 0 }}
           />
@@ -77,13 +77,13 @@ export default async function SearchPage({
           />
         )}
 
-        {/* Archiv-Assistent (RAG) unterhalb der Volltextsuche — nur für
+        {/* Datenbank-Assistent (RAG) unterhalb der Volltextsuche — nur für
             Berechtigte. Die eigenständige Seite /rag bleibt zusätzlich
             bestehen (gleiche Komponente). */}
         {canUseRag ? (
           <section className="mt-[32px] border-t border-lcars-border pt-[24px]">
             <div className="mb-[16px]">
-              <h2 className="lcars-data-row-heading">Archiv-Assistent</h2>
+              <h2 className="lcars-data-row-heading">Datenbank-Assistent</h2>
               <p className="lcars-eyebrow">
                 Fragen an den Kampagnen-Datenbestand stellen
               </p>

@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Props) {
 
   const desc = entry.metadata.summary ?? stripHtml(entry.content);
   return {
-    title: `${archiveTitle(entry)} · Archiv · Neo Archive`,
+    title: `${archiveTitle(entry)} · Datenbank · Neo Archive`,
     description: desc.slice(0, 160) || undefined,
   };
 }

@@ -20,7 +20,7 @@ export const archiveEntryHeadFields: HeadField[] = [
   {
     kind: "select",
     name: "category",
-    label: "Archiv-Kategorie",
+    label: "Datenbank-Kategorie",
     options: SELECTABLE_CATEGORIES.map((c) => ({
       value: c,
       label: CATEGORY_CONFIG[c].label,

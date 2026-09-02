@@ -15,5 +15,5 @@ export const TYPE_FILTER_LABEL: Record<SearchResultType, string> = {
   character: "Charaktere",
   mission: "Missionen",
   log: "Logs",
-  archive: "Archiv",
+  archive: "Datenbank",
 };

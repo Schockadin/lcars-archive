@@ -7,7 +7,7 @@ import { XIcon } from "@/lib/icons";
 
 const TYPE_LABELS: Record<FollowTargetType, string> = {
   mission: "Mission",
-  archive_entry: "Archiv-Eintrag",
+  archive_entry: "Datenbank-Eintrag",
   character: "Charakter",
   user: "User",
 };

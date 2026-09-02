@@ -740,7 +740,7 @@ export async function notifyArchiveEntrySubscribers(input: {
           preview: input.preview,
         });
         if (!result.sent) {
-          const message = `Archiv-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`;
+          const message = `Datenbank-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`;
           console.error(message);
           void logCaughtError(new Error(message), "archive.ts:notifyArchiveEntrySubscribers");
         }

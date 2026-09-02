@@ -1,10 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
-import {
-  verifySession,
-  requireMatchingFormUserId,
-  getCurrentUserPermissions,
-} from "@/lib/dal";
+import { verifySession, requireMatchingFormUserId } from "@/lib/dal";
+import { canPlayNpcs, canView, getViewer } from "@/lib/visibility";
 import {
   getCharactersForUser,
   getCharactersWithPlayers,
@@ -58,15 +55,19 @@ export async function createDialogueAction(
 
   // Nie den <select>-Werten aus dem Client blind vertrauen — wie
   // assignCharacterAction in src/app/admin/actions.ts.
-  const isGm = (await getCurrentUserPermissions()).has("gm.access");
-  // NPCs (Charaktere ohne Spieler) stehen als Gesprächspartner offen; als
-  // EIGENER Sprecher-Charakter nur der Spielleitung (sie spielt die NPCs).
-  const npcs = await getNpcCharacterOptions(isGm);
+  const viewer = await getViewer();
+  const playsNpcs = canPlayNpcs(viewer);
+  // NPCs (Charaktere ohne Spieler) stehen als Gesprächspartner offen, soweit
+  // diese Person sie überhaupt sehen darf; als EIGENER Sprecher-Charakter nur
+  // denen, die NPCs spielen (Spielleitung/Administration).
+  const npcs = (await getNpcCharacterOptions()).filter((npc) =>
+    canView(npc.visibility, null, viewer),
+  );
   const ownCharacters = await getCharactersForUser(session.userId);
   const ownIsNpc = npcs.some((c) => c.id === ownCharacterId);
   if (
     !ownCharacters.some((c) => c.id === ownCharacterId) &&
-    !(isGm && ownIsNpc)
+    !(playsNpcs && ownIsNpc)
   ) {
     return { error: "Ungültiger eigener Charakter." };
   }
@@ -96,7 +97,7 @@ export async function createDialogueAction(
           "Für Gespräche mit NPCs muss es mindestens ein Konto mit Spielleitungs-Rechten geben.",
       };
     }
-    if (isGm) {
+    if (playsNpcs) {
       npcSpeakerUserId = session.userId;
     } else {
       const raw = Number(formData.get("npcSpeakerUserId"));

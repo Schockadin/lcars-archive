@@ -26,7 +26,7 @@ export default async function AdminRagPage() {
       <PageMeta title="RAG" section="users" />
       <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <p className="lcars-eyebrow">Zugriff · Administration</p>
-        <h1>Archiv-Assistent</h1>
+        <h1>Datenbank-Assistent</h1>
 
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[12px]">

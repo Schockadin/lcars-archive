@@ -9,7 +9,7 @@ const TARGET_TYPE_LABELS: Record<TimelineSourceType, string> = {
   character: "Charakter",
   mission: "Mission",
   mission_log: "Mission-Log",
-  archive_entry: "Archiv-Eintrag",
+  archive_entry: "Datenbank-Eintrag",
 };
 
 const KIND_LABELS: Record<ContentActivityItem["kind"], string> = {

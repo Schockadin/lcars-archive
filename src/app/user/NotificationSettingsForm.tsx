@@ -28,7 +28,7 @@ const ADMIN_CONTENT_TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "character", label: "Charaktere" },
   { value: "mission", label: "Missionen" },
   { value: "mission_log", label: "Mission-Logs" },
-  { value: "archive_entry", label: "Archiv-Einträge" },
+  { value: "archive_entry", label: "Datenbank-Einträge" },
 ];
 
 // Zwei unabhängige Teile: oben die Präferenzen (globale Schalter, per

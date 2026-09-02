@@ -208,7 +208,7 @@ export default async function UserPage() {
               <section id="follows" className="flex flex-col gap-[8px]">
                 <h2>Follows</h2>
                 <p>
-                  Alle Missionen, Archiv-Einträge und Charaktere, die du
+                  Alle Missionen, Datenbank-Einträge und Charaktere, die du
                   abonniert hast, an einem Ort — inklusive der Möglichkeit,
                   einzelne Follows wieder zu beenden.
                 </p>
@@ -226,7 +226,7 @@ export default async function UserPage() {
                 <h2>Hilfe & Anleitung</h2>
                 <p>
                   Unsicher, wie etwas funktioniert? Das Tutorial erklärt alle
-                  Funktionen des Archivs — von der Suche bis zur
+                  Funktionen der Datenbank — von der Suche bis zur
                   Markdown-Formatierung.
                 </p>
                 <Link

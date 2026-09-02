@@ -346,7 +346,7 @@ export default function CharacterHero({
               />
             ) : (
               <p className="lcars-empty-state">
-                Keine biografischen Daten im Archiv hinterlegt.
+                Keine biografischen Daten in der Datenbank hinterlegt.
               </p>
             )}
           </div>

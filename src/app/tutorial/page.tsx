@@ -23,8 +23,8 @@ export default function TutorialPage() {
         <p className="lcars-eyebrow">Anleitung</p>
         <h1>Tutorial</h1>
         <p className="lcars-text">
-          Dieses Archiv dokumentiert eine laufende Pen-&-Paper-Kampagne —
-          Charaktere, Missionen, Einsatzberichte und Archiv-Einträge, die sich
+          Diese Datenbank dokumentiert eine laufende Pen-&-Paper-Kampagne —
+          Charaktere, Missionen, Einsatzberichte und Datenbank-Einträge, die sich
           mit jeder Session weiterentwickeln. Diese Seite erklärt alle
           Funktionen: was du auch ohne Konto sehen kannst, was du mit einem
           eigenen Konto selbst anlegen darfst, und was Spielleitung (GM) und
@@ -40,7 +40,7 @@ export default function TutorialPage() {
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
-                Ohne Konto lässt sich der Großteil des Archivs lesen:{" "}
+                Ohne Konto lässt sich der Großteil der Datenbank lesen:{" "}
                 <strong>Charaktere</strong> (Personalakten mit Biografie,
                 darunter auch die Übersicht abgeschlossener{" "}
                 <strong>Gespräche</strong>), <strong>Missionen</strong> (mit
@@ -101,7 +101,7 @@ export default function TutorialPage() {
                 </li>
                 <li>
                   <strong>Spieler:in</strong> — legt eigene Charaktere,
-                  Einsatzberichte, Gespräche und Archiv-Einträge an und
+                  Einsatzberichte, Gespräche und Datenbank-Einträge an und
                   verwaltet deren Sichtbarkeit.
                 </li>
                 <li>
@@ -114,7 +114,7 @@ export default function TutorialPage() {
                   abonnieren, aber keinen Charakter zugewiesen bekommen. Da
                   Einsatzberichte und Gespräche einen eigenen Charakter
                   voraussetzen, bleiben Gast-Accounts darauf beschränkt,
-                  Archiv-Einträge anzulegen.
+                  Datenbank-Einträge anzulegen.
                 </li>
               </ul>
               <p>
@@ -152,7 +152,7 @@ export default function TutorialPage() {
               </p>
               <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
                 <li>
-                  <strong>Archiv-Eintrag</strong> — darf jede:r anlegen, ganz
+                  <strong>Datenbank-Eintrag</strong> — darf jede:r anlegen, ganz
                   ohne Voraussetzung.
                 </li>
                 <li>
@@ -322,7 +322,7 @@ export default function TutorialPage() {
               </p>
               <p>
                 Beim Anlegen oder Bearbeiten eines Charakters, einer Mission,
-                eines Einsatzberichts oder eines Archiv-Eintrags kannst du das
+                eines Einsatzberichts oder eines Datenbank-Eintrags kannst du das
                 Formular statt zu veröffentlichen auch erst als{" "}
                 <strong>Entwurf</strong> speichern (Checkbox unter dem Textfeld)
                 — der Text ist dann nicht mehr Pflicht. Ein Entwurf bleibt
@@ -333,7 +333,7 @@ export default function TutorialPage() {
                 „Meine Inhalte“ bzw. „Charaktere“, dort deutlich markiert.
               </p>
               <p>
-                Mission-Synopsen, Archiv-Einträge und Charakter-Biografien
+                Mission-Synopsen, Datenbank-Einträge und Charakter-Biografien
                 lassen sich zusätzlich{" "}
                 <strong>direkt auf ihrer Detailseite</strong> bearbeiten
                 („Bearbeiten“-Knopf über dem Text) — ohne Umweg über ein
@@ -363,7 +363,7 @@ export default function TutorialPage() {
               </p>
               <p>
                 Als Gegenüber kannst du auch einen <strong>NPC</strong> wählen —
-                einen Charakter aus dem Archiv, der niemandem gehört. Für ihn
+                einen Charakter aus der Datenbank, der niemandem gehört. Für ihn
                 schreibt die Spielleitung; gibt es mehr als eine, wählst du beim
                 Anlegen aus, wer den NPC übernimmt. Umgekehrt kann die
                 Spielleitung ein Gespräch aus Sicht eines NPC mit euren
@@ -427,13 +427,13 @@ export default function TutorialPage() {
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
-                Auf Charakter-, Missions- und Archiv-Seiten findest du zwei
+                Auf Charakter-, Missions- und Datenbank-Seiten findest du zwei
                 Knöpfe: <strong>„Merken“</strong> speichert den Eintrag für dich
                 selbst (Filter „Gespeichert“ auf der Suchseite) — ohne jede
                 Benachrichtigung. <strong>„Abonnieren“</strong> meldet dich für
                 Update-Benachrichtigungen zu genau diesem Eintrag an — du
                 bekommst eine Nachricht, sobald der Charakter, die Mission oder
-                der Archiv-Eintrag bearbeitet wird (z.B. wenn ein abonniertes
+                der Datenbank-Eintrag bearbeitet wird (z.B. wenn ein abonniertes
                 Gespräch abgeschlossen wird).
               </p>
               <p>
@@ -485,14 +485,14 @@ export default function TutorialPage() {
 
           <LcarsDataRow
             value={6}
-            label="Archiv-Assistent"
+            label="Datenbank-Assistent"
             color="var(--lcars-tertiary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Angemeldete Nutzer:innen finden über das Lupen-Symbol im Menü
                 die <strong>Suche</strong> — und darunter den{" "}
-                <strong>Archiv-Assistenten</strong> (auch direkt unter{" "}
+                <strong>Datenbank-Assistenten</strong> (auch direkt unter{" "}
                 <code>/rag</code>). Statt nach Stichworten zu suchen, kannst du
                 ihm ganz normale Fragen zum Kampagneninhalt stellen, z. B.{" "}
                 <em>„Was wissen wir über die Tholianer?“</em> oder{" "}
@@ -501,15 +501,15 @@ export default function TutorialPage() {
               </p>
               <p>
                 Der Assistent durchsucht dafür den Datenbestand (Charaktere,
-                Missionen, Einsatzberichte, Archiv-Einträge und abgeschlossene
+                Missionen, Einsatzberichte, Datenbank-Einträge und abgeschlossene
                 Gespräche), formuliert eine zusammenhängende Antwort und zeigt
                 darunter die <strong>Quellen</strong> an, auf die er sich
                 stützt — ein Klick führt direkt zum jeweiligen Eintrag. Die
                 Antwort erscheint Wort für Wort im Stream.
               </p>
               <p>
-                Zwei Dinge sind wichtig: Der Assistent antwortet nur aus dem
-                vorhandenen Archiv — findet er nichts Passendes, sagt er das,
+                Zwei Dinge sind wichtig: Der Assistent antwortet nur aus der
+                vorhandenen Datenbank — findet er nichts Passendes, sagt er das,
                 statt sich etwas auszudenken. Und er berücksichtigt nur Inhalte,
                 die <strong>du ohnehin sehen darfst</strong>: private oder
                 GM-Einträge fließen nur ein, wenn du sie auch sonst einsehen
@@ -522,7 +522,7 @@ export default function TutorialPage() {
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
-                Archiv-Einträge, Gesprächsnachrichten) werden in{" "}
+                Datenbank-Einträge, Gesprächsnachrichten) werden in{" "}
                 <strong>Markdown</strong> geschrieben — einer einfachen
                 Auszeichnungssprache aus reinem Text. Über jedem Textfeld
                 findest du eine Werkzeugleiste, die die Syntax für dich einfügt,
@@ -604,7 +604,7 @@ export default function TutorialPage() {
                 zusätzlich einen Kalender-Knopf, der an der Cursor-Position
                 einen Zeitleisten-Marker einfügt (siehe „Verlinkung“ unten und
                 den Abschnitt für Spielleitung/Admins) — er hält den zugehörigen
-                In-Story-Zeitpunkt des Ereignisses in der Chronik des Archivs
+                In-Story-Zeitpunkt des Ereignisses in der Chronik der Datenbank
                 fest.
               </p>
             </div>
@@ -614,10 +614,10 @@ export default function TutorialPage() {
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Um im Fließtext auf einen Charakter, eine Mission oder einen
-                Archiv-Eintrag zu verweisen, schreibst du seinen Namen in
+                Datenbank-Eintrag zu verweisen, schreibst du seinen Namen in
                 doppelte eckige Klammern: <code>[[Name]]</code>. Willst du einen
                 abweichenden Anzeigetext, trennst du ihn mit einem senkrechten
-                Strich ab: <code>[[Name|Anzeigetext]]</code>. Das Archiv löst
+                Strich ab: <code>[[Name|Anzeigetext]]</code>. Die Datenbank löst
                 das automatisch zum passenden Link auf, sobald das Ziel
                 existiert.
               </p>
@@ -626,7 +626,7 @@ export default function TutorialPage() {
                 Speichern das Kästchen <strong>„Automatisch verlinken“</strong>{" "}
                 unter dem Textfeld: Es durchsucht deinen Text nach bekannten
                 Charakter-Namen (inkl. Aliasen), Missions- und
-                Archiv-Eintrag-Titeln und verlinkt <strong>jede</strong>{" "}
+                Datenbank-Eintrag-Titeln und verlinkt <strong>jede</strong>{" "}
                 Erwähnung automatisch. Bei <strong>neuen</strong> Inhalten ist
                 dieses Kästchen bereits vorausgewählt; beim Bearbeiten
                 bestehender Inhalte ist es standardmäßig aus. Codeblöcke,
@@ -782,7 +782,7 @@ export default function TutorialPage() {
                 <li>
                   Unter <strong>„Import“</strong> eine oder mehrere
                   Markdown-Dateien im Vault-Frontmatter-Format hochladen, um
-                  daraus neue Archiv-Einträge, Missionen, Charaktere oder
+                  daraus neue Datenbank-Einträge, Missionen, Charaktere oder
                   Missionslogs anzulegen. Jede Datei lässt sich einzeln
                   durchblättern, vor dem Anlegen noch bearbeiten und muss danach
                   einzeln bestätigt werden.
@@ -804,7 +804,7 @@ export default function TutorialPage() {
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
-                Das Archiv lässt sich als eigenständige App auf dein Gerät
+                Die Datenbank lässt sich als eigenständige App auf dein Gerät
                 installieren (Icon auf dem Home-Bildschirm, eigenes Fenster ohne
                 Browser-Leiste) — unter „App installieren“ in deinem Profil oder
                 direkt hier:

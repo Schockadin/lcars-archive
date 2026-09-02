@@ -20,7 +20,7 @@ export default function ChangelogPage() {
       <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
         <h1>Changelog</h1>
         <p className="lcars-text mb-[16px]">
-          Alle größeren Änderungen am Archiv, Version für Version.
+          Alle größeren Änderungen an der Datenbank, Version für Version.
         </p>
         <ChangelogList entries={CHANGELOG} />
       </article>

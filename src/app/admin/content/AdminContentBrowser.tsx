@@ -16,7 +16,7 @@ const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   character: "Charaktere",
   mission: "Missionen",
   mission_log: "Mission-Logs",
-  archive_entry: "Archiv-Einträge",
+  archive_entry: "Datenbank-Einträge",
 };
 
 const CATEGORY_COLORS: Record<OwnerContentType, string> = {
