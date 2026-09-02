@@ -293,7 +293,7 @@ export default function CharacterHero({
               viewer?.permissions.includes("gm.access")) && (
               <Link
                 href={`/characters/${character.slug}/sheet`}
-                className="char-file-sheet-link lcars-pill-btn--outline inline-flex items-center gap-[6px]"
+                className="lcars-pill-btn--outline mt-[16px] inline-flex items-center gap-[6px]"
               >
                 <FileTextIcon />
                 Charakterbogen

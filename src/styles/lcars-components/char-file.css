@@ -123,13 +123,6 @@
   text-transform: uppercase;
 }
 
-/* Knopf „Charakterbogen" unter dem Portrait-Block: führt auf die Ansicht des
-   Bogens (/characters/[slug]/sheet). Nur für den Owner und die Spielleitung
-   sichtbar, siehe CharacterHero.tsx. */
-.char-file-sheet-link {
-  margin-top: 16px;
-}
-
 /* rechts: Name + Biografie — braucht min-width:0 als Grid-Item, sonst
    verweigert es das Schrumpfen unter die intrinsische Breite seines
    Inhalts (Automatic Minimum Size), z.B. der Admin-Aktionen-Zeile. */

@@ -1,19 +1,15 @@
-/* ─── Charakterwerte-Bogen (/user/characters/[id]/stats) ──────────────
-   Nachempfunden dem offiziellen „personnel file" von Star Trek Adventures 2e:
-   Abschnitte mit farbiger Kopfleiste, Attribute/Disziplinen als Wertekästen
-   mit großer Zahl, abgeleitete Werte als Kästchenreihen und linierte
-   Listenfelder.
+/* ─── Rund um den Charakterbogen (/user/characters/[id]/stats) ────────
+   Das Blatt selbst liegt in personnel-file.css (Faksimile der Vorlage).
+   Hier stehen die Teile DRUMHERUM, die es auf dem Papier nicht gibt: der
+   AP-Bereich (Konto, Erschaffungsbudget, Steigern, Buchungsjournal), der
+   Talent-Spickzettel am Fuß der Seite und die Regelverstoß-Liste.
 
-   Farben kommen ausschließlich aus den LCARS-Tokens (tokens.css), damit der
-   Bogen jedes Farbthema und das minimalistische UI mitmacht.
+   Abschnitte mit farbiger Kopfleiste und zweisprachiger Beschriftung
+   (englischer Originalbegriff, deutsche Entsprechung darunter) nehmen die
+   Optik des Bogens auf. Farben kommen ausschließlich aus den LCARS-Tokens
+   (tokens.css), damit alles jedes Farbthema und das minimalistische UI
+   mitmacht.
 ──────────────────────────────────────────────────────────────────── */
-
-.stat-sheet {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  width: 100%;
-}
 
 /* ── Abschnitt mit farbiger Kopfleiste ─────────────────────────────── */
 .stat-sheet-section {
@@ -77,94 +73,6 @@
   display: inline;
 }
 
-/* ── Kopfbereich: Foto links, Datenfelder rechts (wie oben auf dem Bogen) ── */
-.stat-photo-row {
-  display: flex;
-  align-items: flex-start;
-  gap: 14px;
-  padding: 0 14px;
-}
-
-.stat-photo {
-  flex: 0 0 168px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.stat-photo-image,
-.stat-photo-empty {
-  width: 168px;
-  height: 200px;
-  border: 2px solid var(--lcars-tertiary);
-  border-radius: 8px;
-  background: var(--lcars-bg);
-  object-fit: cover;
-}
-
-.stat-photo-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-style: dashed;
-  color: var(--lcars-ink-dim);
-  font-family: var(--font-antonio), "Antonio", sans-serif;
-  font-size: 16px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-/* Die Beschriftung ist zugleich der Auslöser für den Dateidialog — der
-   Datei-Input selbst bleibt sichtbar darunter (kein verstecktes Bedienelement,
-   das per Tastatur unauffindbar wäre). */
-.stat-photo-upload {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  color: var(--lcars-ink-data);
-  cursor: pointer;
-}
-
-.stat-photo-input {
-  font-family: var(--font-share-tech-mono), monospace;
-  font-size: 11px;
-  color: var(--lcars-ink-dim);
-  max-width: 168px;
-}
-
-/* Attribute und Disziplinen nebeneinander, darunter (schmale Screens)
-   gestapelt. */
-.stat-columns {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
-  gap: 20px;
-  align-items: start;
-}
-
-/* ── Kopfdaten-Raster ──────────────────────────────────────────────── */
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 12px;
-  padding: 0 14px;
-}
-
-/* Innerhalb des Foto-Kopfbereichs bringt .stat-photo-row schon den Rand mit. */
-.stat-grid--head {
-  flex: 1 1 0;
-  padding: 0;
-  min-width: 0;
-  align-content: start;
-}
-
-.stat-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
 .stat-field-label {
   color: var(--lcars-ink-data);
 }
@@ -186,73 +94,6 @@
   outline-offset: 1px;
 }
 
-/* ── Wertekästen (Attribute/Disziplinen) ───────────────────────────── */
-.stat-box-row {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 10px;
-  padding: 0 14px;
-}
-
-.stat-box {
-  display: flex;
-  flex-direction: column;
-  border: 2px solid var(--lcars-tertiary);
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--lcars-bg);
-  min-width: 0;
-}
-
-.stat-box-label {
-  display: block;
-  padding: 4px 8px;
-  background: var(--lcars-tertiary);
-  color: var(--lcars-bg);
-  text-align: center;
-  cursor: pointer;
-}
-
-/* Große Zahl im Kasten — der Kern der Bogen-Optik. Spinner ausgeblendet,
-   damit die Zahl auch auf schmalen Kästen mittig bleibt. */
-.stat-box-input {
-  width: 100%;
-  border: none;
-  background: transparent;
-  color: var(--lcars-ink-data);
-  font-family: var(--font-antonio), "Antonio", sans-serif;
-  font-size: 34px;
-  font-weight: 700;
-  line-height: 1;
-  text-align: center;
-  padding: 10px 4px;
-  -moz-appearance: textfield;
-  appearance: textfield;
-}
-
-.stat-box-input::-webkit-outer-spin-button,
-.stat-box-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.stat-box-input:focus-visible {
-  outline: 2px solid var(--lcars-tertiary);
-  outline-offset: -2px;
-}
-
-/* Regelverstoß: Kasten und Zahl rot absetzen (zusätzlich zur Klartext-
-   Meldung darunter — Farbe allein trägt die Information nicht). */
-.stat-box--invalid {
-  border-color: var(--lcars-quinary);
-}
-.stat-box--invalid .stat-box-label {
-  background: var(--lcars-quinary);
-}
-.stat-box--invalid .stat-box-input {
-  color: var(--lcars-quinary);
-}
-
 .stat-sheet-errors {
   margin: 0;
   padding: 10px 14px 10px 32px;
@@ -263,76 +104,6 @@
   font-family: var(--font-share-tech-mono), monospace;
   font-size: 13px;
   list-style: square;
-}
-
-/* ── Abgeleitete Werte ─────────────────────────────────────────────── */
-.stat-derived {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 14px;
-  padding: 0 14px;
-  align-items: start;
-}
-
-.stat-derived-block {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  min-width: 0;
-}
-
-.stat-stress {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.stat-stress-value {
-  font-family: var(--font-antonio), "Antonio", sans-serif;
-  font-size: 34px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--lcars-ink-data);
-}
-
-/* Kästchenreihe wie auf dem Bogen (ein Kästchen je Stresspunkt). */
-.stat-stress-boxes {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 3px;
-}
-
-.stat-stress-box {
-  width: 12px;
-  height: 16px;
-  border: 1px solid var(--lcars-ink-dim);
-  border-radius: 2px;
-}
-
-/* Drei Determinationskästchen, anklickbar. */
-.stat-determination {
-  display: flex;
-  gap: 8px;
-}
-
-.stat-det-box {
-  width: 34px;
-  height: 34px;
-  border: 2px solid var(--lcars-quaternary);
-  border-radius: 6px;
-  background: transparent;
-  cursor: pointer;
-  transition: background 120ms;
-}
-
-.stat-det-box--filled {
-  background: var(--lcars-quaternary);
-}
-
-.stat-det-box:focus-visible {
-  outline: 2px solid var(--lcars-tertiary);
-  outline-offset: 2px;
 }
 
 /* ── AP-Bereich (Konto, Erschaffungsbudget, Steigern, Journal) ─────── */
@@ -463,108 +234,6 @@
   white-space: nowrap;
 }
 
-/* ── Listenfelder ──────────────────────────────────────────────────── */
-.stat-list-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-.stat-list-field {
-  padding-bottom: 0;
-}
-
-/* Linierter Kasten wie auf dem Bogen: die Hintergrundlinien liegen exakt auf
-   der Zeilenhöhe, damit der Text auf den Linien sitzt. */
-.stat-list-input {
-  --stat-line-h: 28px;
-  display: block;
-  width: 100%;
-  /* Acht Zeilen sichtbar, auch wenn das rows-Attribut von der Schriftgröße
-     abweichend gerechnet wird. */
-  min-height: calc(var(--stat-line-h) * 8);
-  border: none;
-  border-top: 1px solid var(--lcars-border);
-  padding: 0 14px;
-  background-color: var(--lcars-bg);
-  background-image: repeating-linear-gradient(
-    var(--lcars-bg) 0,
-    var(--lcars-bg) calc(var(--stat-line-h) - 1px),
-    var(--lcars-border) calc(var(--stat-line-h) - 1px),
-    var(--lcars-border) var(--stat-line-h)
-  );
-  background-attachment: local;
-  color: var(--lcars-ink);
-  font-family: var(--font-antonio), "Antonio", sans-serif;
-  font-size: 16px;
-  line-height: var(--stat-line-h);
-  letter-spacing: 0.04em;
-  resize: vertical;
-}
-
-.stat-list-input:focus-visible {
-  outline: 2px solid var(--lcars-tertiary);
-  outline-offset: -2px;
-}
-
-/* Talent-Liste des Bogens (TalentListField): je Eintrag eine Zeile auf der
-   Linie des linierten Blocks, rechts das Entfernen-Icon. Kein Textfeld mehr —
-   Talente kommen ausschließlich aus dem Katalog. */
-.stat-entry-list {
-  --stat-line-h: 28px;
-  display: flex;
-  flex-direction: column;
-  border-top: 1px solid var(--lcars-border);
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.stat-entry {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: var(--stat-line-h);
-  padding: 0 14px;
-  border-bottom: 1px solid var(--lcars-border);
-}
-
-.stat-entry-text {
-  flex: 1;
-  min-width: 0;
-  color: var(--lcars-ink);
-  font-family: var(--font-antonio), "Antonio", sans-serif;
-  font-size: 16px;
-  line-height: var(--stat-line-h);
-  letter-spacing: 0.04em;
-}
-
-/* Kleines rotes Minus — entfernt genau diesen Eintrag. Rot (quinary) wie die
-   übrigen destruktiven Aktionen der Oberfläche. */
-.stat-entry-remove {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: 22px;
-  height: 22px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--lcars-quinary);
-  cursor: pointer;
-  transition: 150ms;
-}
-
-.stat-entry-remove:hover {
-  opacity: 0.7;
-}
-
-.stat-entry-remove svg {
-  width: 18px;
-  height: 18px;
-}
-
 /* Spickzettel am Fuß des Bogens (TalentCheatSheet.tsx): je Talent Kopfzeile
    und Regeltext. Der Text in der Datenschrift, damit er sich klar von den
    Beschriftungen des Bogens absetzt. */
@@ -616,23 +285,5 @@
 @media (max-width: 520px) {
   .stat-sheet-section-title {
     font-size: 16px;
-  }
-  /* Foto über die Datenfelder statt daneben. */
-  .stat-photo-row {
-    flex-direction: column;
-  }
-  .stat-photo,
-  .stat-photo-image,
-  .stat-photo-empty,
-  .stat-photo-input {
-    width: 100%;
-    max-width: none;
-    flex-basis: auto;
-  }
-  .stat-box-row {
-    grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
-  }
-  .stat-box-input {
-    font-size: 28px;
   }
 }

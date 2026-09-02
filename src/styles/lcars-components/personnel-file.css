@@ -21,7 +21,13 @@
      des Bogens sitzt. */
   padding: 44px 0 12px;
   background: var(--lcars-bg);
-  font-family: Arial, sans-serif;
+  /* Die "Handschrift" auf dem Blatt: Farbe, Schriftart und das Blau der
+     Vorlage an einer Stelle, statt in jedem Feldtyp erneut. Bewusst feste
+     Werte statt LCARS-Tokens — der Bogen ist ein Faksimile und sieht in jedem
+     Theme gleich aus (siehe Dateikopf). */
+  --pf-ink: #555;
+  --pf-hand: "Segoe UI", Arial, sans-serif;
+  --pf-accent: #3f84b5;
 }
 
 /* Das Blatt. Die Vorlage ist fix 816×1056; damit der Bogen auch in einer
@@ -77,18 +83,41 @@
   pointer-events: none;
 }
 
-.pf-field {
+/* Alles, was auf dem Blatt "geschrieben" steht — Eingabefelder, Ansichts-
+   Texte, Zahlen, Listen und die Bedienelemente in den Kästen. Schriftart
+   einmal für alle; die Farbe setzen die abweichenden Elemente (Plus, Zähler)
+   selbst. */
+.pf-field,
+.pf-static,
+.pf-combo-fixed,
+.pf-stat,
+.pf-resistance,
+.pf-stress-value,
+.pf-list,
+.pf-list-add,
+.pf-list-count {
+  font-family: var(--pf-hand);
+}
+
+/* Die Textkästen des Bogens: als Eingabefeld (.pf-field) und als reine
+   Ansicht (.pf-static, siehe PersonnelFileView) mit identischen
+   Innenabständen — ein gelesener Bogen steht Zeichen für Zeichen dort, wo er
+   im Formular stünde. */
+.pf-field,
+.pf-static {
   position: absolute;
   z-index: 2;
-  border: 0;
-  outline: 0;
-  background: transparent;
-  color: #555;
-  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--pf-ink);
   font-size: calc(10 * var(--pf-unit));
   line-height: 1.25;
   padding: calc(13 * var(--pf-unit)) calc(7 * var(--pf-unit))
     calc(4 * var(--pf-unit));
+}
+
+.pf-field {
+  border: 0;
+  outline: 0;
+  background: transparent;
   resize: none;
 }
 
@@ -123,7 +152,7 @@ select.pf-field {
 
 .pf-field:focus {
   background: rgba(255, 255, 255, 0.62);
-  box-shadow: inset 0 0 0 1px rgba(63, 132, 181, 0.45);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pf-accent) 45%, transparent);
   border-radius: 4px;
 }
 
@@ -133,38 +162,18 @@ select.pf-field {
   cursor: default;
 }
 
-/* Reine ANSICHT des Bogens (PersonnelFileView): dieselben Kästen, aber als
-   Text statt als Eingabefeld. Maße, Innenabstände und Schrift entsprechen
-   exakt .pf-field, damit ein gelesener Bogen Zeichen für Zeichen dort steht,
-   wo er im Formular stünde. Überlanger Text wird abgeschnitten statt aus dem
-   Kasten zu laufen — wie auf Papier. */
+/* Überlanger Text in der Ansicht wird abgeschnitten statt aus dem Kasten zu
+   laufen — wie auf Papier. */
 .pf-static {
-  position: absolute;
-  z-index: 2;
   overflow: hidden;
-  color: #555;
-  font-family: "Segoe UI", Arial, sans-serif;
-  font-size: calc(10 * var(--pf-unit));
-  line-height: 1.25;
-  padding: calc(13 * var(--pf-unit)) calc(7 * var(--pf-unit))
-    calc(4 * var(--pf-unit));
   white-space: pre-wrap;
 }
 
-/* Zahlenkästen (Attribute, Disziplinen, Schutz): rechtsbündig wie im
-   Formular, weil links im selben Rahmen die gedruckte Beschriftung steht. */
+/* Zahlenkästen der Ansicht: gleiche Schriftgröße und Ausrichtung wie die
+   Eingabefelder (siehe .pf-stat weiter unten). */
 .pf-static--stat {
   z-index: 3;
-  text-align: right;
-  padding-right: calc(10 * var(--pf-unit));
   font-size: calc(11 * var(--pf-unit));
-}
-
-/* Der maximale Stress steht in einem eigenen, schmalen Kasten ohne
-   gedruckte Beschriftung — dort ist mittig richtig. */
-.pf-static--stress {
-  text-align: center;
-  padding-right: calc(7 * var(--pf-unit));
 }
 
 /* Ein Kasten, der sich einen festen Teil (aus der Akte) und ein Eingabefeld
@@ -185,8 +194,7 @@ select.pf-field {
   align-items: center;
   padding: calc(13 * var(--pf-unit)) calc(3 * var(--pf-unit))
     calc(4 * var(--pf-unit)) calc(7 * var(--pf-unit));
-  color: #555;
-  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--pf-ink);
   font-size: calc(10 * var(--pf-unit));
   line-height: 1.25;
 }
@@ -207,9 +215,7 @@ select.pf-field {
   border: 0;
   outline: 0;
   background: transparent;
-  text-align: center;
-  color: #555;
-  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--pf-ink);
   font-size: calc(11 * var(--pf-unit));
 }
 
@@ -219,15 +225,30 @@ select.pf-field {
   background: rgba(255, 255, 255, 0.7);
 }
 
-/* Attribute und Disziplinen teilen sich den Kasten mit ihrer gedruckten
-   Beschriftung („CONTROL" o.ä. steht links im selben Rahmen). Die Zahl steht
-   deshalb rechts statt mittig — mittig läge sie auf dem Wort. Das ist die
-   einzige Abweichung von der Vorlage, die dort mit leeren Feldern nicht
-   auffällt. */
+/* Attribute, Disziplinen und Schutz teilen sich den Kasten mit ihrer
+   gedruckten Beschriftung („CONTROL" o.ä. steht links im selben Rahmen). Die
+   Zahl steht deshalb rechts statt mittig — mittig läge sie auf dem Wort. Das
+   ist die einzige Abweichung von der Vorlage, die dort mit leeren Feldern
+   nicht auffällt. Die Ansicht (.pf-static--stat) macht es genauso. */
 .pf-stat,
-.pf-resistance {
+.pf-resistance,
+.pf-static--stat {
   text-align: right;
   padding-right: calc(10 * var(--pf-unit));
+}
+
+/* Der maximale Stress steht in einem eigenen, schmalen Kasten ohne gedruckte
+   Beschriftung — dort ist mittig richtig, im Formular (.pf-stress-value) wie
+   in der Ansicht (.pf-static--stress). Das Eingabefeld bringt keinen
+   Innenabstand mit, der Ansichts-Kasten erbt den der Textkästen und nimmt
+   ihn rechts auf den Normalwert zurück. */
+.pf-stress-value {
+  text-align: center;
+}
+
+.pf-static--stress {
+  text-align: center;
+  padding-right: calc(7 * var(--pf-unit));
 }
 
 /* Regelverstoß (z.B. drei Attribute auf 11) — der Bogen markiert ihn dezent
@@ -244,7 +265,7 @@ select.pf-field {
   width: calc(20 * var(--pf-unit));
   height: calc(20 * var(--pf-unit));
   margin: 0;
-  accent-color: #3f84b5;
+  accent-color: var(--pf-accent);
   cursor: pointer;
 }
 
@@ -278,8 +299,7 @@ select.pf-field {
      nicht touchieren. */
   padding: calc(17 * var(--pf-unit)) calc(7 * var(--pf-unit))
     calc(4 * var(--pf-unit));
-  color: #555;
-  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--pf-ink);
   font-size: calc(10 * var(--pf-unit));
   line-height: 1.35;
 }
@@ -329,8 +349,7 @@ select.pf-field {
   border: 1px solid #9b9b9b;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.9);
-  color: #3f84b5;
-  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--pf-accent);
   font-size: calc(12 * var(--pf-unit));
   line-height: 1;
   cursor: pointer;
@@ -356,7 +375,6 @@ select.pf-field {
   background: rgba(255, 255, 255, 0.9);
   transform: translateX(-100%);
   color: #8a8a8a;
-  font-family: "Segoe UI", Arial, sans-serif;
   font-size: calc(9 * var(--pf-unit));
   pointer-events: none;
 }
