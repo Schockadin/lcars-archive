@@ -279,11 +279,6 @@
   letter-spacing: 0.05em;
   color: var(--lcars-ink);
 }
-.mission-log-empty {
-  color: var(--lcars-ink-dim);
-  font-style: italic;
-  font-size: 14px;
-}
 
 /* Mission-Body (Synopsis / Log-Text) */
 .mission-body {

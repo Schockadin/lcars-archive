@@ -97,7 +97,7 @@ export default function MissionLogList({
       />
 
       {logs.length === 0 ? (
-        <p className="mission-log-empty">
+        <p className="lcars-empty-state">
           Keine Logs zu dieser Mission erfasst.
         </p>
       ) : (

@@ -592,8 +592,34 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     ├── context/              # React-Context (Neo)
     ├── hooks/                # useNeo, usePageMeta …
     ├── lib/                  # DB-Zugriff & Datenabfragen
+    ├── styles/               # CSS jenseits von Tailwind (siehe unten)
+    │   ├── tokens.css         # Design-Tokens (:root + @theme) inkl. Responsive-Overrides
+    │   ├── lcars-themes.css   # Nutzer-Farbthemes (html[data-theme="…"])
+    │   ├── minimal-ui.css     # Minimalistisches UI (html[data-ui="minimal"])
+    │   ├── lcars-components.css  # Sammel-Import der Domänen-Dateien
+    │   └── lcars-components/  # Je Domäne eine Datei (header, archive, shared, …)
     ├── types/                # TypeScript-Typen
     └── utils/                # Stardate, Datumsformatierung …
+
+### Stylesheets
+
+Gestaltet wird primär mit Tailwind-Utilities direkt im JSX; eigenes CSS gibt es
+nur für das, was Tailwind nicht abbilden kann (komplexe Selektoren,
+Container-Query-Einheiten, Keyframes, `:root`-Overrides, Pseudo-Elemente).
+Dieses CSS liegt nach Domäne getrennt in `src/styles/lcars-components/`, damit
+eine Regel und ihre Responsive-Overrides beieinander stehen; domänenübergreifend
+Geteiltes (Overlays, Popover, Leerzustände, Skeletons, Toasts …) steht in
+`shared.css`, das bewusst zuletzt importiert wird.
+
+Reihenfolge und Cascade-Tier sind in `src/app/globals.css` kommentiert und nicht
+beliebig: Tokens, Themes, minimales UI und Lesemodus müssen **unlayered**
+bleiben, die Komponenten-Dateien laufen als `layer(components)` — Tailwind v4
+lässt layered CSS immer gegen unlayered verlieren, unabhängig von Spezifität.
+
+Wiederkehrende Werte stehen als Token in `tokens.css` statt als Literal in den
+Regeln — neben Farben und Maßen auch die Flächen-Effekte `--lcars-scrim`,
+`--lcars-shadow-float`, `--lcars-shadow-drop` und `--lcars-hover-tint`
+(Letzteres aus `--lcars-secondary` abgeleitet und damit themefest).
 ```
 
 ---
