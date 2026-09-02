@@ -6,7 +6,6 @@ import type { DialogueSummary } from "@/lib/dialoguesCore";
 import type { UserContentArchiveEntry } from "@/lib/archive";
 import { fmtDate, sessionLabel, periodLabel } from "@/lib/missionFormat";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
-import type { Character } from "@/types/character";
 import type { MissionPreview } from "@/types/missions";
 import VisibilitySelect from "./VisibilitySelect";
 import DeleteOwnContentButton from "./DeleteOwnContentButton";
@@ -16,7 +15,15 @@ import { LcarsListFilterInput } from "@/components/lcars";
 // Charaktere sind bewusst KEINE Kategorie mehr: sie haben mit
 // /user/characters eine eigene Übersicht (inkl. Werte-Formular). Die
 // Charakter-LISTE kommt trotzdem weiterhin herein — sie speist den
-// Charakter-Filter für Einsatzberichte/Gespräche unten.
+// Charakter-Filter für Einsatzberichte/Gespräche unten. Bewusst nur
+// {slug,name} statt ganzer Character-Objekte: die tragen mit keepStats den
+// kompletten Werte-Teilbaum (siehe getCharactersForUser), der sonst
+// ungenutzt im RSC-Payload dieser Client-Komponente landete — genau das,
+// wogegen parseCharacter sein stripStats hat.
+export interface ContentFilterCharacter {
+  slug: string;
+  name: string;
+}
 type CategoryFilter = "all" | "logs" | "dialogues" | "archive" | "missions";
 
 const CATEGORY_LABELS: Record<CategoryFilter, string> = {
@@ -48,7 +55,7 @@ export default function UserContentBrowser({
   canManageMissions,
   ownUserId,
 }: {
-  characters: Character[];
+  characters: ContentFilterCharacter[];
   logs: UserContentLog[];
   dialogues: DialogueSummary[];
   archiveEntries: UserContentArchiveEntry[];

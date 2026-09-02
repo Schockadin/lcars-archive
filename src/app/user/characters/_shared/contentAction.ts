@@ -207,7 +207,10 @@ export async function characterAction(
         });
       }
     }
-    redirect("/user/content");
+    // Nach /user/characters, nicht nach /user/content: die Charakterliste ist
+    // aus „Meine Inhalte" ausgezogen (siehe UserContentBrowser), der gerade
+    // gespeicherte Charakter stünde dort also gar nicht mehr.
+    redirect("/user/characters");
   }
 
   const result = await createCharacter({

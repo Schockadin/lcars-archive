@@ -104,8 +104,9 @@ export default function AdvancementPanel({
             <span className="stat-label-secondary">Ersterschaffung</span>
           </h3>
           <p className="stat-sheet-rule">
-            Je {rules.creationAttributeBudget} AP für Attribute und Disziplinen,
-            dazu {rules.creationFreeValues} Werte, {rules.creationFreeTalents} Talente
+            {rules.creationAttributeBudget} AP für Attribute,{" "}
+            {rules.creationDepartmentBudget} AP für Disziplinen, dazu{" "}
+            {rules.creationFreeValues} Werte, {rules.creationFreeTalents} Talente
             und {rules.creationFreeFocuses} Schwerpunkte frei. Attribute und
             Disziplinen trägst du oben direkt ein, solange die Erschaffung läuft.
           </p>

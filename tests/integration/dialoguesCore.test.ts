@@ -1031,6 +1031,27 @@ describe("Gespräche mit NPCs", () => {
     expect(follow).toBeDefined();
   });
 
+  it("holt einen NPC-Entwurf nicht ins Gespräch", async () => {
+    const { gmUser, entryId } = await setupNpcDialogue();
+    const entwurf = await insertNpcEntry({ title: "Geheimer NPC", isDraft: true });
+
+    const { invited } = await inviteDialogueParticipants(
+      entryId,
+      [{ kind: "npc", id: entwurf.id }],
+      gmUser.id,
+    );
+    expect(invited).toEqual([]);
+
+    const [entry] = await sql<
+      { metadata: { participants: { slug: string }[] } }[]
+    >`
+      SELECT metadata FROM archive_entries WHERE id = ${entryId}
+    `;
+    expect(entry.metadata.participants.map((p) => p.slug)).not.toContain(
+      entwurf.slug,
+    );
+  });
+
   it("lässt einen nachträglich eingeladenen NPC ohne Spielleitung nicht zu", async () => {
     const { entryId } = await setupNpcDialogue();
     const zweiterNpc = await insertNpcEntry();

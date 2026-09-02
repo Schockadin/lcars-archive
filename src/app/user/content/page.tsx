@@ -21,13 +21,24 @@ export default async function UserContentPage() {
   const roleMap = await getRoleMap();
   const isGM = userCan(user, "missions.manage", roleMap);
   // Die Spielleitung kann ein Gespräch auch ohne eigenen Charakter beginnen —
-  // aus Sicht eines NPC (siehe /user/dialogues/new).
-  const canStartDialogue = characters.length > 0 || userCan(user, "gm.access", roleMap);
+  // aus Sicht eines NPC (siehe /user/dialogues/new). Maßgeblich ist deshalb
+  // dieselbe Regel wie dort (canPlayNpcs = gm.access ODER admin.access), sonst
+  // fehlte einem reinen Admin-Konto der Knopf für einen Weg, der für es
+  // funktioniert.
+  const viewer = resolveViewer(user, roleMap);
+  const canStartDialogue = characters.length > 0 || canPlayNpcs(viewer);
   // NPCs sind Datenbank-Einträge der Kategorie „npc"; anlegen darf sie, wer
   // sie auch spielt (canPlayNpcs). Bewusst ohne content.create: ein NPC ist
   // kein eigener Inhalt, sondern Kampagnen-Inventar — es zählt nur, ob diese
   // Person NPCs spielt.
-  const canCreateNpc = canPlayNpcs(resolveViewer(user, roleMap));
+  const canCreateNpc = canPlayNpcs(viewer);
+  // Nur Slug und Name an die Client-Komponente: die vollen Charakter-Objekte
+  // tragen den Werte-Teilbaum (keepStats in getCharactersForUser) und hätten
+  // ihn ungenutzt im RSC-Payload mitgeschickt.
+  const characterFilterOptions = characters.map((c) => ({
+    slug: c.slug,
+    name: c.name,
+  }));
 
   const [logs, dialogues, archiveEntries, missions] = await Promise.all([
     getLogsForUser(user.id),
@@ -109,7 +120,7 @@ export default async function UserContentPage() {
           <h2>Inhalte verwalten</h2>
           <div className="lcars-text w-full">
             <UserContentBrowser
-              characters={characters}
+              characters={characterFilterOptions}
               logs={logs}
               dialogues={dialogues}
               archiveEntries={archiveEntries}

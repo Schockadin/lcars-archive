@@ -80,15 +80,17 @@ export async function insertNpcEntry(
     slug: string;
     title: string;
     visibility: string;
+    isDraft: boolean;
   }> = {},
 ): Promise<{ id: number; slug: string; title: string }> {
   const s = suffix();
   const [row] = await sql<{ id: number; slug: string; title: string }[]>`
-    INSERT INTO archive_entries (slug, title, category, content, visibility, metadata, frontmatter)
+    INSERT INTO archive_entries (slug, title, category, content, visibility, is_draft, metadata, frontmatter)
     VALUES (
       ${overrides.slug ?? `npc-${s}`},
       ${overrides.title ?? "Test NPC"},
       'npc', '', ${overrides.visibility ?? "public"},
+      ${overrides.isDraft ?? false},
       ${sql.json({})}, ${sql.json({})}
     )
     RETURNING id, slug, title

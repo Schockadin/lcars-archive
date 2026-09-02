@@ -287,7 +287,8 @@ export async function createDialogue(
     `;
     const npcRows = await tx<{ id: number; slug: string; name: string }[]>`
       SELECT id, slug, title AS name FROM archive_entries
-      WHERE id = ANY(${npcIds}) AND category = 'npc' AND deleted_at IS NULL
+      WHERE id = ANY(${npcIds})
+        AND category = 'npc' AND deleted_at IS NULL AND is_draft = false
     `;
     const charById = new Map(charRows.map((c) => [c.id, c]));
     const npcById = new Map(npcRows.map((n) => [n.id, n]));
@@ -409,12 +410,14 @@ export async function createDialogue(
           `;
         }
         // Wer die NPCs spricht, ist Teilnehmer:in und wird wie ein
-        // Partner-Spieler auf das Gespräch abonniert.
+        // Partner-Spieler auf das Gespräch abonniert. DO NOTHING statt
+        // DO UPDATE: der einzige mögliche Konflikt ist die Zeile des
+        // Erstellers von weiter oben — spricht er die NPCs selbst und hat
+        // subscribeSelf abgewählt, bliebe seine Abwahl sonst nicht bestehen.
         await tx`
           INSERT INTO content_follows (user_id, target_type, target_slug, subscribed_at)
           VALUES (${speakerUserId}, 'archive_entry', ${slug}, NOW())
-          ON CONFLICT (user_id, target_type, target_slug)
-          DO UPDATE SET subscribed_at = NOW()
+          ON CONFLICT (user_id, target_type, target_slug) DO NOTHING
         `;
       }
 
@@ -494,10 +497,14 @@ export async function inviteDialogueParticipants(
       LEFT JOIN users u ON u.id = c.player_id
       WHERE c.id = ANY(${speakers.filter((s) => s.kind === "character").map((s) => s.id)})
     `;
+    // is_draft = false wie in getNpcOptions (der Quelle der Auswahlliste):
+    // ein Entwurf ist für niemanden außer seinem Owner sichtbar — auch nicht
+    // für die Spielleitung — und darf deshalb auch nicht über diesen Weg in
+    // die Teilnehmerliste eines Gesprächs geraten.
     const npcs = await tx<{ id: number; slug: string; name: string }[]>`
       SELECT id, slug, title AS name FROM archive_entries
       WHERE id = ANY(${speakers.filter((s) => s.kind === "npc").map((s) => s.id)})
-        AND category = 'npc' AND deleted_at IS NULL
+        AND category = 'npc' AND deleted_at IS NULL AND is_draft = false
     `;
     const newChars = chars.filter((c) => !existingSlugs.has(c.slug));
     const newNpcs = npcs.filter((n) => !existingSlugs.has(n.slug));
@@ -547,11 +554,14 @@ export async function inviteDialogueParticipants(
           ON CONFLICT (archive_entry_id, npc_entry_id) DO NOTHING
         `;
       }
+      // DO NOTHING: anders als bei den neu Eingeladenen (die dem Hinzufügen
+      // nicht zustimmen konnten) ist der Sprecher hier meist die einladende
+      // Person selbst — hat sie das Gespräch vorher bewusst abbestellt, darf
+      // ein weiterer NPC sie nicht wieder anmelden.
       await tx`
         INSERT INTO content_follows (user_id, target_type, target_slug, subscribed_at)
         VALUES (${speakerUserId}, 'archive_entry', ${entry.slug}, NOW())
-        ON CONFLICT (user_id, target_type, target_slug)
-        DO UPDATE SET subscribed_at = NOW()
+        ON CONFLICT (user_id, target_type, target_slug) DO NOTHING
       `;
     }
 
@@ -1148,7 +1158,8 @@ async function participantSpeakerRows(
     SELECT 'npc' AS kind, n.id, n.slug, n.title AS name FROM archive_entries n
     JOIN dialogue_npc_speakers s
       ON s.npc_entry_id = n.id AND s.archive_entry_id = ${archiveEntryId}
-    WHERE n.slug = ANY(${slugs}) AND n.category = 'npc' AND s.user_id = ${userId}
+    WHERE n.slug = ANY(${slugs}) AND n.category = 'npc'
+      AND n.deleted_at IS NULL AND s.user_id = ${userId}
     ${limit != null ? sql`LIMIT ${limit}` : sql``}
   `;
   return rows;

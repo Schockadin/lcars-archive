@@ -4,7 +4,8 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
 import { getUserById, updateDialogueViewPreference } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
-import { canPlayNpcs, resolveViewer } from "@/lib/visibility";
+import { canPlayNpcs, canView, resolveViewer } from "@/lib/visibility";
+import { getNpcOptions } from "@/lib/archive";
 import { userCan } from "@/lib/permissions";
 import {
   DialogueClosedError,
@@ -623,8 +624,33 @@ export async function inviteDialogueParticipantAction(
   // die einladende Person wird dann ihr Sprecher in diesem Gespräch.
   const inviter = await getUserById(session.userId);
   const roleMap = await getRoleMap();
-  const mayPlayNpcs =
-    inviter != null && canPlayNpcs(resolveViewer(inviter, roleMap));
+  const viewer = inviter ? resolveViewer(inviter, roleMap) : null;
+  const mayPlayNpcs = canPlayNpcs(viewer);
+
+  // Den mitgeschickten NPC-Schlüsseln nie blind vertrauen: sie kommen aus
+  // einem Client-Select, das nur die sichtbaren NPCs anbietet — geprüft wird
+  // die Sichtbarkeit aber hier, mit derselben canView-Regel wie beim Aufbau
+  // der Liste (siehe /dialogues/[slug]/page.tsx). Sonst ließe sich ein
+  // fremder, intern gehaltener NPC-Eintrag in die Teilnehmerliste schreiben.
+  if (speakers.some((sp) => sp.kind === "npc")) {
+    if (!mayPlayNpcs) {
+      return {
+        error:
+          "NPCs kann nur die Spielleitung hinzufügen — sie schreibt dann für sie.",
+      };
+    }
+    const visibleNpcIds = new Set(
+      (await getNpcOptions())
+        .filter((npc) => canView(npc.visibility, null, viewer))
+        .map((npc) => npc.id),
+    );
+    if (
+      speakers.some((sp) => sp.kind === "npc" && !visibleNpcIds.has(sp.id))
+    ) {
+      return { error: "Diesen NPC gibt es nicht oder du darfst ihn nicht sehen." };
+    }
+  }
+
   let title: string;
   let invited: DialogueEmailTarget[];
   try {
