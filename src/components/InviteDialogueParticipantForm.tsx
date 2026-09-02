@@ -2,7 +2,15 @@
 import { useState, useTransition } from "react";
 import { FormField, FormError } from "@/app/_shared/FormPrimitives";
 import { inviteDialogueParticipantAction } from "@/app/actions/dialogues";
-import type { CharacterParticipantOption } from "@/lib/characters";
+
+// Charaktere UND NPC-Datenbank-Einträge in einer Liste — identifiziert über
+// den Sprecher-Schlüssel ("c12"/"n7", siehe src/lib/dialogueSpeaker.ts),
+// damit die IDs beider Quellen nicht kollidieren.
+export interface InviteCandidate {
+  key: string;
+  name: string;
+  playerName: string;
+}
 
 // Nur für den Owner sichtbar (siehe /dialogues/[slug]/page.tsx — Owner ist,
 // wer den Dialog begonnen hat, siehe createDialogue). Direkt-Hinzufügen
@@ -16,29 +24,29 @@ export default function InviteDialogueParticipantForm({
   candidates,
 }: {
   entrySlug: string;
-  candidates: CharacterParticipantOption[];
+  candidates: InviteCandidate[];
 }) {
   const [pending, startTransition] = useTransition();
-  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState(false);
 
   if (candidates.length === 0) return null;
 
   function handleInvite() {
-    if (selectedIds.length === 0) return;
+    if (selectedKeys.length === 0) return;
     setError(undefined);
     setSuccess(false);
     startTransition(async () => {
       const result = await inviteDialogueParticipantAction(
         entrySlug,
-        selectedIds,
+        selectedKeys,
       );
       if (result.error) {
         setError(result.error);
       } else {
         setSuccess(true);
-        setSelectedIds([]);
+        setSelectedKeys([]);
       }
     });
   }
@@ -54,18 +62,16 @@ export default function InviteDialogueParticipantForm({
           id="dlg-invite-participants"
           multiple
           size={Math.min(6, candidates.length)}
-          value={selectedIds.map(String)}
+          value={selectedKeys}
           onChange={(e) =>
-            setSelectedIds(
-              Array.from(e.currentTarget.selectedOptions).map((o) =>
-                Number(o.value),
-              ),
+            setSelectedKeys(
+              Array.from(e.currentTarget.selectedOptions).map((o) => o.value),
             )
           }
           className="lcars-input rounded-lcars-pill w-full h-auto py-[8px]"
         >
           {candidates.map((c) => (
-            <option key={c.id} value={c.id}>
+            <option key={c.key} value={c.key}>
               {c.name} ({c.playerName})
             </option>
           ))}
@@ -75,7 +81,7 @@ export default function InviteDialogueParticipantForm({
       <button
         type="button"
         onClick={handleInvite}
-        disabled={pending || selectedIds.length === 0}
+        disabled={pending || selectedKeys.length === 0}
         className="lcars-pill-btn--outline self-start disabled:opacity-50"
       >
         {pending ? "Wird eingeladen…" : "Einladen"}

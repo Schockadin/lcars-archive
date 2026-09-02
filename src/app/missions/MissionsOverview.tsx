@@ -82,7 +82,7 @@ export default function MissionsOverview({
 
       {missions.length === 0 ? (
         <p className="lcars-empty-state">
-          Keine Missionen im Archiv hinterlegt.
+          Keine Missionen in der Datenbank hinterlegt.
         </p>
       ) : (
         <>

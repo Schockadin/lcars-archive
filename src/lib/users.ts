@@ -529,6 +529,37 @@ export async function listAdminEmails(): Promise<AdminContact[]> {
     .map((u) => ({ email: u.email, name: u.name }));
 }
 
+export interface GmContact {
+  id: number;
+  name: string;
+}
+
+// Aktive Konten mit dem Recht gm.access — die Auswahlliste „wer spielt die
+// NPCs?" beim Anlegen eines Gesprächs (siehe /user/dialogues/new). Wie
+// listAdminEmails über die Rechte aufgelöst, nicht über die Primärrolle:
+// gm.access kann auch aus einer Zusatzrolle, einer eigenen Rolle oder einem
+// Rechte-Override kommen.
+export async function listGmUsers(): Promise<GmContact[]> {
+  const roleMap = await buildRoleMap();
+  const rows = await sql<
+    {
+      id: number;
+      name: string;
+      role: string;
+      additional_roles: string[];
+      permission_overrides: Record<string, boolean>;
+    }[]
+  >`
+    SELECT id, name, role, additional_roles, permission_overrides
+    FROM users
+    WHERE is_active = true
+    ORDER BY name ASC
+  `;
+  return rows
+    .filter((u) => userPermissions(u, roleMap).has("gm.access"))
+    .map((u) => ({ id: u.id, name: u.name }));
+}
+
 export async function getPasswordHash(userId: number): Promise<string | null> {
   const rows = await sql<{ password_hash: string | null }[]>`
     SELECT password_hash FROM users WHERE id = ${userId}

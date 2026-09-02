@@ -351,7 +351,7 @@ function buildChunkTexts(input: ChunkInput): string[] {
     case "archive_entry": {
       const r = input.record;
       const header = buildHeader([
-        ["Archiv-Eintrag", r.title],
+        ["Datenbank-Eintrag", r.title],
         ["Kategorie", r.category],
         ["Schauplatz", r.setting],
       ]);

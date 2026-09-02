@@ -66,13 +66,13 @@ export async function POST(req: Request): Promise<Response> {
   }
   if (!viewerHasPermission(viewer, "rag.use")) {
     return Response.json(
-      { error: "Keine Berechtigung für den Archiv-Assistenten." },
+      { error: "Keine Berechtigung für den Datenbank-Assistenten." },
       { status: 403 },
     );
   }
   if (!hasRagConfig()) {
     return Response.json(
-      { error: "Der Archiv-Assistent ist derzeit nicht konfiguriert." },
+      { error: "Der Datenbank-Assistent ist derzeit nicht konfiguriert." },
       { status: 503 },
     );
   }

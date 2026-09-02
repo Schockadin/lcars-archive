@@ -3,7 +3,6 @@ import { getCharacterBySlug, getLogsByCharacter } from "@/lib/characters";
 import { notFound } from "next/navigation";
 import { getViewer, canView } from "@/lib/visibility";
 import PageMeta from "@/components/PageMeta";
-import CrumbLabel from "@/components/CrumbLabel";
 import CharacterLogList from "./CharacterLogList";
 
 interface Props {
@@ -49,9 +48,6 @@ export default async function CharacterLogsPage({ params }: Props) {
   return (
     <div className="w-full max-w-[640px]">
       <PageMeta title={character.name} section="characters" />
-      {/* Breadcrumb-Override für das Slug-Segment; "logs" wird automatisch
-          zu "Logs" formatiert. */}
-      <CrumbLabel slug={character.slug} label={character.name} />
       <CharacterLogList
         characterName={character.name}
         characterSlug={character.slug}

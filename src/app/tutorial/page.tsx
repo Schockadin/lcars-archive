@@ -23,8 +23,8 @@ export default function TutorialPage() {
         <p className="lcars-eyebrow">Anleitung</p>
         <h1>Tutorial</h1>
         <p className="lcars-text">
-          Dieses Archiv dokumentiert eine laufende Pen-&-Paper-Kampagne —
-          Charaktere, Missionen, Einsatzberichte und Archiv-Einträge, die sich
+          Diese Datenbank dokumentiert eine laufende Pen-&-Paper-Kampagne —
+          Charaktere, Missionen, Einsatzberichte und Datenbank-Einträge, die sich
           mit jeder Session weiterentwickeln. Diese Seite erklärt alle
           Funktionen: was du auch ohne Konto sehen kannst, was du mit einem
           eigenen Konto selbst anlegen darfst, und was Spielleitung (GM) und
@@ -40,12 +40,12 @@ export default function TutorialPage() {
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
-                Ohne Konto lässt sich der Großteil des Archivs lesen:{" "}
+                Ohne Konto lässt sich der Großteil der Datenbank lesen:{" "}
                 <strong>Charaktere</strong> (Personalakten mit Biografie,
                 darunter auch die Übersicht abgeschlossener{" "}
                 <strong>Gespräche</strong>), <strong>Missionen</strong> (mit
                 ihren Einsatzberichten), das kategorisierte{" "}
-                <strong>Archiv</strong> (Personen, Orte, Fraktionen, Spezies,
+                <strong>Datenbank</strong> (Personen, Orte, Fraktionen, Spezies,
                 Objekte, Ereignisse, Theorien, NPCs und Sonstiges) sowie die{" "}
                 <strong>Suche</strong> (Volltextsuche über alle diese Inhalte,
                 erreichbar über das Lupen-Symbol im Menü).
@@ -101,7 +101,7 @@ export default function TutorialPage() {
                 </li>
                 <li>
                   <strong>Spieler:in</strong> — legt eigene Charaktere,
-                  Einsatzberichte, Gespräche und Archiv-Einträge an und
+                  Einsatzberichte, Gespräche und Datenbank-Einträge an und
                   verwaltet deren Sichtbarkeit.
                 </li>
                 <li>
@@ -114,7 +114,7 @@ export default function TutorialPage() {
                   abonnieren, aber keinen Charakter zugewiesen bekommen. Da
                   Einsatzberichte und Gespräche einen eigenen Charakter
                   voraussetzen, bleiben Gast-Accounts darauf beschränkt,
-                  Archiv-Einträge anzulegen.
+                  Datenbank-Einträge anzulegen.
                 </li>
               </ul>
               <p>
@@ -152,7 +152,7 @@ export default function TutorialPage() {
               </p>
               <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
                 <li>
-                  <strong>Archiv-Eintrag</strong> — darf jede:r anlegen, ganz
+                  <strong>Datenbank-Eintrag</strong> — darf jede:r anlegen, ganz
                   ohne Voraussetzung.
                 </li>
                 <li>
@@ -182,13 +182,161 @@ export default function TutorialPage() {
                 begonnen hat).
               </p>
               <p>
+                <strong>Deine Charaktere</strong> haben einen eigenen Menüpunkt:
+                Sobald mindestens ein Charakter mit deinem Konto verknüpft ist,
+                erscheint oben <strong>„Charaktere“</strong>. Dort stehen alle
+                deine Charaktere (auch Entwürfe) mit denselben Knöpfen für
+                Sichtbarkeit, Bearbeiten und Löschen, du kannst weitere anlegen —
+                und über <strong>„Werte“</strong> je Charakter den
+                Charakterbogen pflegen — und zwar auf dem{" "}
+                <strong>Original-Bogen selbst</strong>: Die Seite zeigt das
+                gedruckte „Personnel File“, und du schreibst direkt in seine
+                Kästen. Personalakte (Pronomen, Rolle, Zuweisung, Herkunft,
+                Erziehung, Laufbahn, Erfahrung, Merkmale), die sechs Attribute
+                und sechs Disziplinen in ihren Zellen, Schutz,
+                Entschlossenheit und Ansehen; das Portrait steht im Bildrahmen
+                oben links. Auf schmalen Bildschirmen wird das ganze Blatt
+                kleiner, statt umzubrechen. Bild hochladen, Stress-Bonus und
+                Speichern findest du unter dem Bogen — dafür hat das Papier
+                keine Felder. Über der Seite schaltest du zwischen{" "}
+                <strong>Charakterbogen</strong> und den{" "}
+                <strong>Stammdaten</strong> deines Charakters um. Und mit{" "}
+                <strong>„Bogen als PDF“</strong> lädst du den ausgefüllten
+                Bogen zum Ausdrucken herunter — mit dem Talent-Spickzettel auf
+                der zweiten Seite. Der Knopf oben rechts über dem Blatt zeigt
+                den Bogen im <strong>Vollbild</strong>; bearbeiten kannst du
+                ihn dort genauso, Escape schließt die Ansicht wieder. Rang und
+                Spezies stehen auf dem Bogen, kommen aber aus den Stammdaten —
+                im Kasten „Species &amp; Traits“ steht die Spezies vorne,
+                deine weiteren Merkmale trägst du dahinter ein.
+              </p>
+              <p>
+                Die Listen auf dem Bogen — Werte, Schwerpunkte, Talente,
+                Angriffe, Ausrüstung, Hobbys — stehen als Zeilen in ihrem
+                Kasten. Das kleine <strong>Plus</strong> in der unteren Ecke
+                eines Kastens öffnet ein Fenster zum Hinzufügen, und fährst du
+                über eine Zeile, erscheint rechts ein rotes Minus zum
+                Entfernen. Karriere-Ereignisse haben wie auf dem Papier zwei
+                feste Kästen. Bei Werten und Schwerpunkten steht
+                dabei, wie viele der freien Plätze aus der Ersterschaffung du
+                schon vergeben hast. Spezies-Fähigkeiten und Sonderregeln
+                bleiben Textfelder — dort stehen meist ganze Regelsätze. Leere
+                Felder gelten als „nicht angegeben“;
+                Name, Rang und Spezies gehören zur Akte selbst und werden über
+                „Bearbeiten“ gepflegt. In „Meine Inhalte“ tauchen Charaktere
+                deshalb nicht mehr auf — der Charakter-Filter für
+                Einsatzberichte und Gespräche bleibt dort aber erhalten.
+              </p>
+              <p>
+                <strong>Erfahrungspunkte (AP)</strong>: Für die Ersterschaffung
+                hast du je 320 AP für Attribute und Disziplinen (statt der 56
+                bzw. 16 Verteilpunkte) sowie 4 Werte, 4 Talente und 6
+                Schwerpunkte frei — die Werte trägst du dabei direkt ein, der
+                Bogen zeigt dir laufend an, was deine Verteilung kostet und wie
+                viel Budget übrig ist. Bist du zufrieden, schließt du die
+                Erschaffung ab. Danach sind Attribute, Disziplinen, Talente und
+                Schwerpunkte gesperrt und wachsen nur noch über AP:{" "}
+                <strong>Attribut steigern</strong> kostet (neuer Wert − 7) × 10
+                AP, <strong>Disziplin steigern</strong> (neuer Wert) × 10 AP,
+                ein <strong>Talent</strong> oder <strong>Schwerpunkt</strong>{" "}
+                je 20 AP. AP bekommst du von der Spielleitung: je 1 AP für eine
+                gespielte Session und ein geschriebenes Logbuch, dazu etwas für
+                abgeschlossene Missionen und Story-Arcs. Auf dem Bogen siehst du
+                dein Konto, die Kosten jeder möglichen Steigerung und alle
+                bisherigen Buchungen. Alle genannten Zahlen sind die
+                Voreinstellung — die Spielleitung kann das Regelwerk anpassen,
+                der Bogen rechnet dann mit ihren Werten.
+              </p>
+              <p>
+                Der AP-Bereich rechnet dabei <strong>live</strong> mit: Während
+                du in der Erschaffung Attribute und Disziplinen einträgst,
+                siehst du sofort, was deine Verteilung kostet, wie viel Budget
+                noch übrig ist und mit wie vielen AP du nach dem Abschließen
+                startest. Denn was du nicht verbrauchst, ist nicht verloren —
+                bis zu 10 übrige AP (von der Spielleitung einstellbar) werden
+                dir beim Abschließen gutgeschrieben. Nach der Erschaffung zeigt
+                dir jeder Steigern-Knopf, wie viele AP dir danach bleiben.
+              </p>
+              <p>
+                Wichtig beim Abschließen: festgeschrieben wird der{" "}
+                <strong>gespeicherte</strong> Stand. Trage deshalb erst alle
+                Attribute und Disziplinen ein und speichere unten — solange
+                noch ein Feld leer ist oder das Budget überzogen ist, bleibt
+                der Knopf gesperrt. Sonst stünde dein Bogen dauerhaft mit
+                Lücken da: nach dem Abschließen lassen sich die Felder nur noch
+                über AP steigern, und ein leeres Feld hat keinen Wert, den man
+                steigern könnte.
+              </p>
+              <p>
+                <strong>Talente</strong> tippst du nicht ab, sondern wählst sie
+                aus einem Katalog. Ein Klick auf „Talent wählen“ öffnet ein
+                Fenster mit <strong>Suchfeld</strong> (Name, Voraussetzung oder
+                Regeltext) und Kategorie-Filter; ein Klick auf ein Talent
+                klappt seine <strong>Beschreibung</strong> auf. Angezeigt
+                werden dabei nur Talente, deren{" "}
+                <strong>Voraussetzungen du erfüllst</strong> — gemessen an
+                deinen aktuellen Attributen, Disziplinen, deiner Spezies und
+                den Talenten, die du schon hast. Voraussetzungen, die sich
+                nicht automatisch prüfen lassen (Merkmale, Rollen oder „nach
+                Entscheidung der Spielleitung“), blenden nichts aus; über den
+                Schalter „Nur erfüllbare“ siehst du bei Bedarf auch den Rest.
+                Was schon auf deinem Bogen steht, taucht gar nicht erst auf.
+                Ein Klick auf <strong>„Übernehmen“</strong> setzt das Talent
+                direkt — beim Steigern werden die AP dabei gleich abgebucht
+                (der Betrag steht auf dem Knopf).
+              </p>
+              <p>
+                Die Talent-Liste auf dem Bogen ist deshalb kein Textfeld mehr:
+                Talente kommen ausschließlich aus dem Katalog, und jeder
+                Eintrag hat ein kleines rotes Minus zum Entfernen. Während der
+                Erschaffung zählt der Bogen mit, wie viele deiner{" "}
+                <strong>vier freien Talente</strong> du schon vergeben hast;
+                ist das Kontingent voll, kommen weitere erst nach dem
+                Abschließen der Erschaffung über AP hinzu. Danach ist die Liste
+                schreibgeschützt — Talente ändern sich dann nur noch über den
+                AP-Bereich.
+              </p>
+              <p>
+                Beim Übernehmen kannst du einem Talent einen{" "}
+                <strong>eigenen Namen</strong> geben — auf dem Bogen steht dann
+                „Eigener Name (Originalname)“. Der Originalname bleibt so
+                erhalten: dasselbe Talent lässt sich nicht versehentlich ein
+                zweites Mal kaufen, und Voraussetzungen anderer Talente
+                erkennen es weiterhin. Fehlt ein Talent im Katalog — etwa
+                eines, das ihr im Spiel vereinbart habt — nimmt die
+                Spielleitung es unter „Talente“ auf; frei eintippen lässt es
+                sich bewusst nicht mehr, sonst ließen sich Voraussetzungen und
+                Regeltexte nicht mehr zuordnen. Für die Spielleitung heißt das
+                beim Anlegen: der Katalogname darf keine Klammern enthalten —
+                die sind für den eigenen Namen reserviert. Die Voraussetzung
+                („Conn 2+“ und dergleichen) gehört ins eigene Feld, der Bogen
+                setzt sie selbst in Klammern dahinter.
+              </p>
+              <p>
+                Ganz unten am Bogen findest du einen{" "}
+                <strong>Spickzettel</strong>: alle Talente deines Charakters
+                mit ihrem vollen Regeltext, zum Nachschlagen am Spieltisch.
+              </p>
+              <p>
+                Für die Zahlen gelten die <strong>Regeln der Runde</strong>:
+                Attribute liegen zwischen 7 und 12, davon darf höchstens eines
+                auf 12 und zwei dürfen auf 11 stehen; Disziplinen liegen
+                zwischen 1 und 5, höchstens eine auf 5 und zwei auf 4. Verstöße
+                markiert das Formular sofort und verhindert das Speichern. Der
+                maximale <strong>Stress</strong> ist kein Eingabefeld: er
+                ergibt sich aus deiner Fitness plus dem Bonus, den Talente
+                darauf geben (z.B. „Resolut: +3 max. Stress“) — diesen Bonus
+                trägst du einmal ein, den Rest rechnet die Seite.
+              </p>
+              <p>
                 Eigene Entwürfe (siehe unten) erscheinen in „Meine Inhalte“
                 gesammelt ganz oben in einer eigenen Übersicht, unabhängig vom
-                Kategorie-Filter.
+                Kategorie-Filter — Charakter-Entwürfe stattdessen in der
+                Charakter-Übersicht, dort ebenfalls markiert.
               </p>
               <p>
                 Beim Anlegen oder Bearbeiten eines Charakters, einer Mission,
-                eines Einsatzberichts oder eines Archiv-Eintrags kannst du das
+                eines Einsatzberichts oder eines Datenbank-Eintrags kannst du das
                 Formular statt zu veröffentlichen auch erst als{" "}
                 <strong>Entwurf</strong> speichern (Checkbox unter dem Textfeld)
                 — der Text ist dann nicht mehr Pflicht. Ein Entwurf bleibt
@@ -196,10 +344,10 @@ export default function TutorialPage() {
                 sichtbar, nicht einmal für Spielleitung oder Administration
                 (Ausnahme: Missionen sehen alle aus der Spielleitung, da sie
                 kein Einzel-Owner-Modell haben), erscheint aber bereits unter
-                „Meine Inhalte“, dort deutlich markiert.
+                „Meine Inhalte“ bzw. „Charaktere“, dort deutlich markiert.
               </p>
               <p>
-                Mission-Synopsen, Archiv-Einträge und Charakter-Biografien
+                Mission-Synopsen, Datenbank-Einträge und Charakter-Biografien
                 lassen sich zusätzlich{" "}
                 <strong>direkt auf ihrer Detailseite</strong> bearbeiten
                 („Bearbeiten“-Knopf über dem Text) — ohne Umweg über ein
@@ -226,6 +374,19 @@ export default function TutorialPage() {
                 Charakteren teilnimmt, kann nicht zweimal hintereinander mit
                 demselben Charakter antworten — dazwischen muss ein anderer
                 Charakter am Zug gewesen sein.
+              </p>
+              <p>
+                Als Gegenüber kannst du auch einen <strong>NPC</strong> wählen —
+                also einen Datenbank-Eintrag der Kategorie „NPC“. Für ihn
+                schreibt die Spielleitung; gibt es mehr als eine, wählst du beim
+                Anlegen aus, wer den NPC übernimmt. Umgekehrt kann die
+                Spielleitung ein Gespräch aus Sicht eines NPC mit euren
+                Charakteren beginnen. Danach läuft alles wie gewohnt: Der NPC
+                steht der Spielleitung beim Antworten wie ein eigener Charakter
+                zur Auswahl, und das Gespräch erscheint bei ihr unter „Deine
+                Gespräche“. Neue NPCs legt die Spielleitung unter „Meine
+                Inhalte“ über den Knopf „Neuer NPC“ an — das ist das normale
+                Datenbank-Formular mit vorgewählter Kategorie „NPC“.
               </p>
               <p>
                 Sobald ein Gespräch <strong>mehr als zwei Teilnehmende</strong>{" "}
@@ -282,13 +443,13 @@ export default function TutorialPage() {
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
-                Auf Charakter-, Missions- und Archiv-Seiten findest du zwei
+                Auf Charakter-, Missions- und Datenbank-Seiten findest du zwei
                 Knöpfe: <strong>„Merken“</strong> speichert den Eintrag für dich
                 selbst (Filter „Gespeichert“ auf der Suchseite) — ohne jede
                 Benachrichtigung. <strong>„Abonnieren“</strong> meldet dich für
                 Update-Benachrichtigungen zu genau diesem Eintrag an — du
                 bekommst eine Nachricht, sobald der Charakter, die Mission oder
-                der Archiv-Eintrag bearbeitet wird (z.B. wenn ein abonniertes
+                der Datenbank-Eintrag bearbeitet wird (z.B. wenn ein abonniertes
                 Gespräch abgeschlossen wird).
               </p>
               <p>
@@ -300,11 +461,12 @@ export default function TutorialPage() {
                 Gesprächen fehlt er bewusst, da sich deren Inhalt noch ändert.
               </p>
               <p>
-                Charakterseiten können außerdem hochgeladene{" "}
-                <strong>Charakterbögen</strong> (PDFs) zeigen: ein Klick auf
-                einen Bogen öffnet eine <strong>Vollbild-Vorschau</strong>,
-                daneben gibt es einen eigenen Herunterladen-Knopf. Hochladen und
-                Entfernen darf nur die Person, der der Charakter gehört.
+                Auf der Seite deines eigenen Charakters (und für die
+                Spielleitung auf jeder Charakterseite) steht außerdem der Knopf{" "}
+                <strong>„Charakterbogen“</strong>: er zeigt den gepflegten Bogen
+                als reine Ansicht — mit Vollbild und dem gleichen
+                PDF-Download wie unter „Meine Charaktere“. Bearbeitet wird der
+                Bogen weiterhin nur von der Person, der der Charakter gehört.
               </p>
               <p>
                 Eingeloggt zeigt dir die <strong>Startseite</strong> dein
@@ -339,14 +501,14 @@ export default function TutorialPage() {
 
           <LcarsDataRow
             value={6}
-            label="Archiv-Assistent"
+            label="Datenbank-Assistent"
             color="var(--lcars-tertiary)"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Angemeldete Nutzer:innen finden über das Lupen-Symbol im Menü
                 die <strong>Suche</strong> — und darunter den{" "}
-                <strong>Archiv-Assistenten</strong> (auch direkt unter{" "}
+                <strong>Datenbank-Assistenten</strong> (auch direkt unter{" "}
                 <code>/rag</code>). Statt nach Stichworten zu suchen, kannst du
                 ihm ganz normale Fragen zum Kampagneninhalt stellen, z. B.{" "}
                 <em>„Was wissen wir über die Tholianer?“</em> oder{" "}
@@ -355,15 +517,15 @@ export default function TutorialPage() {
               </p>
               <p>
                 Der Assistent durchsucht dafür den Datenbestand (Charaktere,
-                Missionen, Einsatzberichte, Archiv-Einträge und abgeschlossene
+                Missionen, Einsatzberichte, Datenbank-Einträge und abgeschlossene
                 Gespräche), formuliert eine zusammenhängende Antwort und zeigt
                 darunter die <strong>Quellen</strong> an, auf die er sich
                 stützt — ein Klick führt direkt zum jeweiligen Eintrag. Die
                 Antwort erscheint Wort für Wort im Stream.
               </p>
               <p>
-                Zwei Dinge sind wichtig: Der Assistent antwortet nur aus dem
-                vorhandenen Archiv — findet er nichts Passendes, sagt er das,
+                Zwei Dinge sind wichtig: Der Assistent antwortet nur aus der
+                vorhandenen Datenbank — findet er nichts Passendes, sagt er das,
                 statt sich etwas auszudenken. Und er berücksichtigt nur Inhalte,
                 die <strong>du ohnehin sehen darfst</strong>: private oder
                 GM-Einträge fließen nur ein, wenn du sie auch sonst einsehen
@@ -376,7 +538,7 @@ export default function TutorialPage() {
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
-                Archiv-Einträge, Gesprächsnachrichten) werden in{" "}
+                Datenbank-Einträge, Gesprächsnachrichten) werden in{" "}
                 <strong>Markdown</strong> geschrieben — einer einfachen
                 Auszeichnungssprache aus reinem Text. Über jedem Textfeld
                 findest du eine Werkzeugleiste, die die Syntax für dich einfügt,
@@ -458,7 +620,7 @@ export default function TutorialPage() {
                 zusätzlich einen Kalender-Knopf, der an der Cursor-Position
                 einen Zeitleisten-Marker einfügt (siehe „Verlinkung“ unten und
                 den Abschnitt für Spielleitung/Admins) — er hält den zugehörigen
-                In-Story-Zeitpunkt des Ereignisses in der Chronik des Archivs
+                In-Story-Zeitpunkt des Ereignisses in der Chronik der Datenbank
                 fest.
               </p>
             </div>
@@ -468,10 +630,10 @@ export default function TutorialPage() {
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Um im Fließtext auf einen Charakter, eine Mission oder einen
-                Archiv-Eintrag zu verweisen, schreibst du seinen Namen in
+                Datenbank-Eintrag zu verweisen, schreibst du seinen Namen in
                 doppelte eckige Klammern: <code>[[Name]]</code>. Willst du einen
                 abweichenden Anzeigetext, trennst du ihn mit einem senkrechten
-                Strich ab: <code>[[Name|Anzeigetext]]</code>. Das Archiv löst
+                Strich ab: <code>[[Name|Anzeigetext]]</code>. Die Datenbank löst
                 das automatisch zum passenden Link auf, sobald das Ziel
                 existiert.
               </p>
@@ -480,7 +642,7 @@ export default function TutorialPage() {
                 Speichern das Kästchen <strong>„Automatisch verlinken“</strong>{" "}
                 unter dem Textfeld: Es durchsucht deinen Text nach bekannten
                 Charakter-Namen (inkl. Aliasen), Missions- und
-                Archiv-Eintrag-Titeln und verlinkt <strong>jede</strong>{" "}
+                Datenbank-Eintrag-Titeln und verlinkt <strong>jede</strong>{" "}
                 Erwähnung automatisch. Bei <strong>neuen</strong> Inhalten ist
                 dieses Kästchen bereits vorausgewählt; beim Bearbeiten
                 bestehender Inhalte ist es standardmäßig aus. Codeblöcke,
@@ -516,13 +678,59 @@ export default function TutorialPage() {
                 </li>
                 <li>
                   Über das eigene <strong>„Leitung“</strong>-Menü im Header
-                  (analog zum Admin-Menü) unter <strong>„Kampagne“</strong> an
+                  (es steht getrennt neben dem Admin-Menü — wer beide Rollen
+                  hat, sieht beide Menüs nebeneinander) unter{" "}
+                  <strong>„Kampagne“</strong> an
                   einer Stelle das aktuelle <strong>Ingame-Jahr</strong>{" "}
                   einstellen, Charaktere Spieler:innen zuweisen (Gast-Accounts
                   ausgenommen) und alle Missionen mit Bearbeiten-, Löschen- und
                   Besitzer:in-Zuordnung pro Zeile verwalten. (Der ebenfalls dort
                   liegende Eintrag <strong>„Gespräche“</strong> ist in der
                   eigenen Gespräche-Sektion oben beschrieben.)
+                </li>
+                <li>
+                  Unter <strong>„Sessions“</strong> gespielte Sessions eintragen
+                  (Datum, Titel, Session-AP, Bonus-AP, Notizen) und damit allen
+                  Beteiligten die AP in einem Rutsch gutschreiben.
+                  Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
+                  Konto — wer gefehlt hat, wird einfach abgewählt. Eine
+                  versehentlich eingetragene Session lässt sich zurücknehmen,
+                  die Gutschriften werden dann mit storniert.
+                </li>
+                <li>
+                  Einer eingetragenen Session <strong>Logbücher</strong>{" "}
+                  zuordnen: Sobald mindestens eines daran hängt, bekommen alle
+                  Teilnehmenden automatisch die Logbuch-AP extra — einmal je
+                  Session, egal wie viele Logbücher geschrieben werden. Wird die
+                  Zuordnung wieder gelöst oder das letzte Logbuch entfernt,
+                  verschwindet die Gutschrift ebenso automatisch — auch dann,
+                  wenn das Logbuch mit seiner ganzen Mission gelöscht oder
+                  einer anderen Session zugeordnet wird (ein Logbuch hängt
+                  immer an genau einer Session).
+                </li>
+                <li>
+                  AP für einen <strong>Missionsabschluss</strong> gibt es nur
+                  über den Abschnitt „Mission abschließen“ auf der
+                  Kampagnen-Seite: Dort wird die Mission ausgewählt, die AP
+                  vergeben — und die Mission dabei auf „abgeschlossen“ gesetzt.
+                </li>
+                <li>
+                  Unter <strong>„AP“</strong> alle Kontostände und das gesamte
+                  Buchungsjournal einsehen (nach Charakter und Grund filterbar)
+                  sowie das <strong>AP-Regelwerk</strong> einstellen: Kosten je
+                  Steigerungsschritt, Kosten für Talente und Schwerpunkte, die
+                  Budgets und Freikontingente der Ersterschaffung und die AP je
+                  Session und Logbuch — jederzeit auf die Standardwerte
+                  zurücksetzbar. Bereits gebuchte AP bleiben unberührt; nur was
+                  künftig gesteigert wird, rechnet mit den neuen Zahlen.
+                </li>
+                <li>
+                  Unter <strong>„Talente“</strong> den Talent-Katalog pflegen,
+                  aus dem die Charakterbögen ihre Auswahlliste speisen:
+                  durchsuchen, filtern, bestehende Talente bearbeiten und
+                  eigene ergänzen. Löschen lassen sich nur selbst ergänzte
+                  Talente — sonst verschwänden Einträge unter bereits
+                  gepflegten Bögen.
                 </li>
                 <li>
                   Das <strong>Ingame-Jahr</strong> (unter „Kampagne“) bestimmt
@@ -593,7 +801,7 @@ export default function TutorialPage() {
                 <li>
                   Unter <strong>„Import“</strong> eine oder mehrere
                   Markdown-Dateien im Vault-Frontmatter-Format hochladen, um
-                  daraus neue Archiv-Einträge, Missionen, Charaktere oder
+                  daraus neue Datenbank-Einträge, Missionen, Charaktere oder
                   Missionslogs anzulegen. Jede Datei lässt sich einzeln
                   durchblättern, vor dem Anlegen noch bearbeiten und muss danach
                   einzeln bestätigt werden.
@@ -615,7 +823,7 @@ export default function TutorialPage() {
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
-                Das Archiv lässt sich als eigenständige App auf dein Gerät
+                Die Datenbank lässt sich als eigenständige App auf dein Gerät
                 installieren (Icon auf dem Home-Bildschirm, eigenes Fenster ohne
                 Browser-Leiste) — unter „App installieren“ in deinem Profil oder
                 direkt hier:

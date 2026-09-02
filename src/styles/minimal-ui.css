@@ -77,10 +77,21 @@ html[data-ui="minimal"] .lcars-sidebar {
   background: var(--lcars-surface);
   border-right: 1px solid var(--lcars-border);
 }
+/* Hauptnavigation: volle Breite, kompakt gestapelt (die Menüpunkte behalten
+   ihre Eigenhöhe, siehe die beiden Regeln direkt darunter) statt wie im
+   LCARS-UI auf volle Höhe gestreckt. */
 html[data-ui="minimal"] .lcars-sidebar-navcol {
   width: 100%;
   padding: 8px;
   gap: 2px;
+  overflow-y: auto;
+}
+html[data-ui="minimal"] .lcars-sidebar-navcol > div {
+  flex: 0 0 auto;
+}
+html[data-ui="minimal"] .lcars-sidebar-navcol a {
+  flex: 0 0 auto;
+  min-height: 0;
 }
 
 /* Menüeinträge (waren farbige Elbow-Blöcke) → schlichte, linksbündige Links. */
@@ -193,19 +204,6 @@ html[data-ui="minimal"] .lcars-usernav-pill {
 .lcars-usernav-icon svg {
   width: 22px;
   height: 22px;
-}
-
-/* Hauptnavigation im minimalen UI nicht auf volle Höhe strecken, sondern
-   kompakt oben stapeln (Menüpunkte behalten ihre Eigenhöhe). */
-html[data-ui="minimal"] .lcars-sidebar-navcol {
-  overflow-y: auto;
-}
-html[data-ui="minimal"] .lcars-sidebar-navcol > div {
-  flex: 0 0 auto;
-}
-html[data-ui="minimal"] .lcars-sidebar-navcol a {
-  flex: 0 0 auto;
-  min-height: 0;
 }
 
 /* Sekundär-Navigation einblenden und vertikal, schlicht darstellen. */

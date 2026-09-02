@@ -122,7 +122,7 @@ export async function setVisibilityAction(
       revalidateArchiveEntry(entry.slug);
       ok = true;
       await notifyIfPublic(visibility, session.userId, {
-        contentTypeLabel: "einen Archiv-Eintrag",
+        contentTypeLabel: "einen Datenbank-Eintrag",
         title: entry.title,
         url: `${baseUrl}/archive/${entry.slug}`,
         preview: entry.sourceMarkdown
@@ -133,6 +133,10 @@ export async function setVisibilityAction(
   }
 
   revalidatePath("/user/content");
+  // Charaktere leben seit dem Umzug unter /user/characters — beide Seiten
+  // nutzen dieselben Aktionen (VisibilitySelect/DeleteOwnContentButton), also
+  // auch beide revalidieren.
+  revalidatePath("/user/characters");
   return ok ? {} : { error: "Änderung fehlgeschlagen (keine Berechtigung?)." };
 }
 
@@ -167,7 +171,7 @@ export async function deleteOwnContentAction(
   } else if (contentType === "archive_entry") {
     const deleted = await deleteOwnArchiveEntry(session.userId, id);
     if (!deleted) {
-      return { error: "Archiv-Eintrag nicht gefunden oder keine Berechtigung." };
+      return { error: "Datenbank-Eintrag nicht gefunden oder keine Berechtigung." };
     }
     revalidateArchiveEntry(deleted.slug);
   } else if (contentType === "dialogue") {
@@ -190,5 +194,6 @@ export async function deleteOwnContentAction(
   }
 
   revalidatePath("/user/content");
+  revalidatePath("/user/characters");
   return {};
 }

@@ -14,7 +14,7 @@ const CONTENT_TYPE_LABELS: Record<TrashContentType, string> = {
   character: "Charakter",
   mission: "Mission",
   mission_log: "Missionslog",
-  archive_entry: "Archiv-Eintrag",
+  archive_entry: "Datenbank-Eintrag",
   dialogue: "Dialog",
 };
 

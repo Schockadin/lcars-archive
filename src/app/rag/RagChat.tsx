@@ -5,7 +5,7 @@ import MarkdownLite from "./MarkdownLite";
 import {
   CharactersNavIcon,
   MissionsNavIcon,
-  ArchiveNavIcon,
+  DatabaseNavIcon,
 } from "@/lib/icons";
 
 // Eine Quelle unter einer Antwort (dedupliziert je Inhalt, siehe
@@ -27,7 +27,7 @@ function sourceIcon(contentType: string): ReactNode {
       return <MissionsNavIcon />;
     default:
       // archive_entry, dialogue
-      return <ArchiveNavIcon />;
+      return <DatabaseNavIcon />;
   }
 }
 
@@ -151,7 +151,7 @@ export default function RagChat({ configured }: { configured: boolean }) {
   if (!configured) {
     return (
       <p className="lcars-empty-state">
-        Der Archiv-Assistent ist derzeit nicht konfiguriert (es fehlen die
+        Der Datenbank-Assistent ist derzeit nicht konfiguriert (es fehlen die
         API-Schlüssel). Bitte später erneut versuchen.
       </p>
     );
@@ -163,7 +163,7 @@ export default function RagChat({ configured }: { configured: boolean }) {
         <p className="lcars-empty-state">
           Stelle eine Frage zum Kampagneninhalt – z.B. „Was wissen wir über die
           Tholianer?“. Der Assistent antwortet ausschließlich auf Basis der
-          Archiv-Datenbank und zeigt die genutzten Quellen an.
+          Datenbank und zeigt die genutzten Quellen an.
         </p>
       ) : (
         <ol className="flex flex-col gap-[16px] list-none p-0 m-0">
@@ -231,7 +231,7 @@ export default function RagChat({ configured }: { configured: boolean }) {
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Frage an das Archiv…"
+          placeholder="Frage an die Datenbank…"
           maxLength={1000}
           disabled={busy}
           className="rounded-lcars-pill lcars-input flex-1"

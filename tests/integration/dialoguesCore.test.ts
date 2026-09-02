@@ -18,13 +18,18 @@ import {
   getDialogueLockStatus,
   getActiveGMs,
   getAllOpenDialoguesForGM,
+  getDialogueParticipant,
+  getDialogueParticipantCharacters,
+  getDialogueParticipantPlayers,
+  getDialoguesForUser,
+  DialogueNpcSpeakerRequiredError,
   DialogueClosedError,
   DialogueMessageForbiddenError,
   DialogueSelfReplyError,
   DialogueLockActiveError,
   DialogueReservationRequiredError,
 } from "@/lib/dialoguesCore";
-import { insertUser, insertCharacter } from "./helpers";
+import { insertUser, insertCharacter, insertNpcEntry } from "./helpers";
 
 async function setupDialogue() {
   const ownUser = await insertUser();
@@ -37,8 +42,8 @@ async function setupDialogue() {
 
   const dialogue = await createDialogue({
     title: "Ein Gespräch",
-    ownCharacterId: ownChar.id,
-    partnerCharacterIds: [partnerChar.id],
+    ownSpeaker: { kind: "character", id: ownChar.id },
+    partners: [{ kind: "character", id: partnerChar.id }],
     authorUserId: ownUser.id,
     setting: null,
     locationSlug: null,
@@ -84,8 +89,8 @@ describe("createDialogue", () => {
 
     const second = await createDialogue({
       title: "Ein Gespräch",
-      ownCharacterId: ownChar.id,
-      partnerCharacterIds: [partnerChar.id],
+      ownSpeaker: { kind: "character", id: ownChar.id },
+      partners: [{ kind: "character", id: partnerChar.id }],
       authorUserId: ownUser.id,
       setting: null,
       locationSlug: null,
@@ -114,8 +119,8 @@ describe("createDialogue", () => {
 
     const dialogue = await createDialogue({
       title: "Ein Gespräch zu dritt",
-      ownCharacterId: ownChar.id,
-      partnerCharacterIds: [partnerChar1.id, partnerChar2.id],
+      ownSpeaker: { kind: "character", id: ownChar.id },
+      partners: [{ kind: "character", id: partnerChar1.id }, { kind: "character", id: partnerChar2.id }],
       authorUserId: ownUser.id,
       setting: null,
       locationSlug: null,
@@ -154,8 +159,8 @@ describe("createDialogue", () => {
     await expect(
       createDialogue({
         title: "Ein Gespräch",
-        ownCharacterId: ownChar.id,
-        partnerCharacterIds: [partnerChar.id, 999999],
+        ownSpeaker: { kind: "character", id: ownChar.id },
+        partners: [{ kind: "character", id: partnerChar.id }, { kind: "character", id: 999999 }],
         authorUserId: ownUser.id,
         setting: null,
         locationSlug: null,
@@ -176,7 +181,7 @@ describe("postDialogueMessage", () => {
 
     const message = await postDialogueMessage({
       archiveEntryId: entryId,
-      characterId: partnerChar.id,
+      speaker: { kind: "character", id: partnerChar.id },
       authorUserId: partnerUser.id,
       bodyMarkdown: "Zweite Nachricht",
     });
@@ -193,7 +198,7 @@ describe("postDialogueMessage", () => {
     await expect(
       postDialogueMessage({
         archiveEntryId: entryId,
-        characterId: partnerChar.id,
+        speaker: { kind: "character", id: partnerChar.id },
         authorUserId: partnerUser.id,
         bodyMarkdown: "Zu spät",
       }),
@@ -206,7 +211,7 @@ describe("postDialogueMessage", () => {
     await expect(
       postDialogueMessage({
         archiveEntryId: entryId,
-        characterId: ownChar.id,
+        speaker: { kind: "character", id: ownChar.id },
         authorUserId: ownUser.id,
         bodyMarkdown: "Ich rede mit mir selbst",
       }),
@@ -218,7 +223,7 @@ describe("postDialogueMessage", () => {
 
     const message = await postDialogueMessage({
       archiveEntryId: entryId,
-      characterId: partnerChar.id,
+      speaker: { kind: "character", id: partnerChar.id },
       authorUserId: partnerUser.id,
       bodyMarkdown: "Antwort",
     });
@@ -229,7 +234,7 @@ describe("postDialogueMessage", () => {
     // desselben Charakters, nicht auf den Charakter generell.
     const followUp = await postDialogueMessage({
       archiveEntryId: entryId,
-      characterId: ownChar.id,
+      speaker: { kind: "character", id: ownChar.id },
       authorUserId: ownUser.id,
       bodyMarkdown: "Wieder ownChar",
     });
@@ -412,13 +417,13 @@ describe("completeDialogue (Fließtext-Generierung)", () => {
     const { ownChar, ownUser, partnerChar, partnerUser, entryId } = await setupDialogue();
     await postDialogueMessage({
       archiveEntryId: entryId,
-      characterId: partnerChar.id,
+      speaker: { kind: "character", id: partnerChar.id },
       authorUserId: partnerUser.id,
       bodyMarkdown: "Zweite Nachricht",
     });
     await postDialogueMessage({
       archiveEntryId: entryId,
-      characterId: ownChar.id,
+      speaker: { kind: "character", id: ownChar.id },
       authorUserId: ownUser.id,
       bodyMarkdown: "Dritte Nachricht",
     });
@@ -440,7 +445,7 @@ describe("completeDialogue (Fließtext-Generierung)", () => {
     const { partnerChar, partnerUser, entryId } = await setupDialogue();
     const second = await postDialogueMessage({
       archiveEntryId: entryId,
-      characterId: partnerChar.id,
+      speaker: { kind: "character", id: partnerChar.id },
       authorUserId: partnerUser.id,
       bodyMarkdown: "Wird gelöscht",
     });
@@ -487,7 +492,7 @@ describe("moderator edits on a closed dialogue never overwrite an existing flowi
     const { partnerChar, partnerUser, entryId } = await setupDialogue();
     const second = await postDialogueMessage({
       archiveEntryId: entryId,
-      characterId: partnerChar.id,
+      speaker: { kind: "character", id: partnerChar.id },
       authorUserId: partnerUser.id,
       bodyMarkdown: "Bleibt im gespeicherten Fließtext erhalten",
     });
@@ -601,7 +606,7 @@ async function setupTriDialogue() {
   });
 
   const { invited } = await inviteDialogueParticipants(base.entryId, [
-    thirdChar.id,
+    { kind: "character", id: thirdChar.id },
   ]);
 
   return { ...base, thirdUser, thirdChar, invited };
@@ -617,7 +622,7 @@ describe("inviteDialogueParticipants", () => {
     });
 
     const { invited } = await inviteDialogueParticipants(entryId, [
-      thirdChar.id,
+      { kind: "character", id: thirdChar.id },
     ]);
 
     expect(invited.map((i) => i.id)).toEqual([thirdUser.id]);
@@ -641,7 +646,7 @@ describe("inviteDialogueParticipants", () => {
     const { entryId, ownChar } = await setupDialogue();
 
     const { invited } = await inviteDialogueParticipants(entryId, [
-      ownChar.id,
+      { kind: "character", id: ownChar.id },
     ]);
 
     expect(invited).toEqual([]);
@@ -738,7 +743,7 @@ describe("postDialogueMessage with more than two participants", () => {
     await expect(
       postDialogueMessage({
         archiveEntryId: entryId,
-        characterId: partnerChar.id,
+        speaker: { kind: "character", id: partnerChar.id },
         authorUserId: partnerUser.id,
         bodyMarkdown: "Ich antworte einfach mal ungefragt",
       }),
@@ -752,7 +757,7 @@ describe("postDialogueMessage with more than two participants", () => {
     await expect(
       postDialogueMessage({
         archiveEntryId: entryId,
-        characterId: partnerChar.id,
+        speaker: { kind: "character", id: partnerChar.id },
         authorUserId: partnerUser.id,
         bodyMarkdown: "Ich war aber nicht dran",
       }),
@@ -765,7 +770,7 @@ describe("postDialogueMessage with more than two participants", () => {
 
     const msg = await postDialogueMessage({
       archiveEntryId: entryId,
-      characterId: partnerChar.id,
+      speaker: { kind: "character", id: partnerChar.id },
       authorUserId: partnerUser.id,
       bodyMarkdown: "Jetzt bin ich dran",
     });
@@ -794,7 +799,7 @@ describe("postDialogueMessage with more than two participants", () => {
     await expect(
       postDialogueMessage({
         archiveEntryId: entryId,
-        characterId: partnerChar.id,
+        speaker: { kind: "character", id: partnerChar.id },
         authorUserId: partnerUser.id,
         bodyMarkdown: "Reserviere zuerst",
       }),
@@ -818,7 +823,7 @@ describe("postDialogueMessage with more than two participants", () => {
 
     await postDialogueMessage({
       archiveEntryId: entryId,
-      characterId: partnerChar.id,
+      speaker: { kind: "character", id: partnerChar.id },
       authorUserId: partnerUser.id,
       bodyMarkdown: "So, jetzt bin ich dran",
     });
@@ -835,7 +840,7 @@ describe("postDialogueMessage with exactly two participants", () => {
 
     const msg = await postDialogueMessage({
       archiveEntryId: entryId,
-      characterId: partnerChar.id,
+      speaker: { kind: "character", id: partnerChar.id },
       authorUserId: partnerUser.id,
       bodyMarkdown: "Ganz normal, keine Reservierung nötig",
     });
@@ -889,5 +894,194 @@ describe("getAllOpenDialoguesForGM", () => {
     const overview = await getAllOpenDialoguesForGM();
 
     expect(overview.some((d) => d.slug === dialogue.slug)).toBe(false);
+  });
+});
+
+// ── Gespräche mit NPCs ──────────────────────────────────────────────────
+// NPC = Datenbank-Eintrag der Kategorie "npc" (kein Charakter). Für ihn
+// schreibt in genau diesem Gespräch ein GM-Konto (dialogue_npc_speakers).
+async function setupNpcDialogue() {
+  const playerUser = await insertUser();
+  const gmUser = await insertUser();
+  const playerChar = await insertCharacter({
+    playerId: playerUser.id,
+    name: "Spielerin",
+  });
+  const npc = await insertNpcEntry({ title: "Barkeeper" });
+
+  const dialogue = await createDialogue({
+    title: "Ein Abend in der Bar",
+    ownSpeaker: { kind: "character", id: playerChar.id },
+    partners: [{ kind: "npc", id: npc.id }],
+    authorUserId: playerUser.id,
+    setting: null,
+    locationSlug: null,
+    logDate: null,
+    tags: [],
+    bodyMarkdown: "Einen Raktajino, bitte.",
+    npcSpeakerUserId: gmUser.id,
+    subscribeSelf: true,
+  });
+
+  const [entry] = await sql<{ id: number }[]>`
+    SELECT id FROM archive_entries WHERE slug = ${dialogue.slug}
+  `;
+  return { playerUser, gmUser, playerChar, npc, dialogue, entryId: entry.id };
+}
+
+describe("Gespräche mit NPCs", () => {
+  it("ordnet den NPC dem gewählten GM-Konto zu und abonniert es", async () => {
+    const { gmUser, npc, dialogue, entryId } = await setupNpcDialogue();
+
+    const rows = await sql<{ npc_entry_id: number; user_id: number }[]>`
+      SELECT npc_entry_id, user_id FROM dialogue_npc_speakers
+      WHERE archive_entry_id = ${entryId}
+    `;
+    expect(rows).toEqual([{ npc_entry_id: npc.id, user_id: gmUser.id }]);
+
+    const [follow] = await sql<{ user_id: number }[]>`
+      SELECT user_id FROM content_follows
+      WHERE user_id = ${gmUser.id} AND target_type = 'archive_entry'
+        AND target_slug = ${dialogue.slug}
+    `;
+    expect(follow).toBeDefined();
+  });
+
+  it("macht das GM-Konto zum Teilnehmer und lässt es als NPC antworten", async () => {
+    const { gmUser, npc, entryId } = await setupNpcDialogue();
+
+    const mine = await getDialogueParticipantCharacters(entryId, gmUser.id);
+    expect(mine.map((c) => c.speaker)).toEqual([{ kind: "npc", id: npc.id }]);
+    expect(await getDialogueParticipant(entryId, gmUser.id)).toMatchObject({
+      speaker: { kind: "npc", id: npc.id },
+    });
+
+    const message = await postDialogueMessage({
+      archiveEntryId: entryId,
+      speaker: { kind: "npc", id: npc.id },
+      authorUserId: gmUser.id,
+      bodyMarkdown: "Kommt sofort.",
+    });
+    expect(message.characterName).toBe("Barkeeper");
+  });
+
+  it("zählt das Gespräch zu den Gesprächen des GM-Kontos", async () => {
+    const { gmUser, dialogue } = await setupNpcDialogue();
+
+    const dialogues = await getDialoguesForUser(gmUser.id);
+    const own = dialogues.find((d) => d.slug === dialogue.slug);
+
+    expect(own).toBeDefined();
+    expect(own?.characterName).toBe("Barkeeper");
+    expect(own?.partnerName).toBe("Spielerin");
+  });
+
+  it("benachrichtigt den NPC-Sprecher wie einen Teilnehmer", async () => {
+    const { gmUser, playerChar, npc, entryId } = await setupNpcDialogue();
+
+    const [charRow] = await sql<{ slug: string }[]>`
+      SELECT slug FROM characters WHERE id = ${playerChar.id}
+    `;
+    const targets = await getDialogueParticipantPlayers(
+      [charRow.slug, npc.slug],
+      entryId,
+    );
+
+    expect(targets.map((t) => t.id)).toContain(gmUser.id);
+  });
+
+  it("holt einen NPC auch nachträglich ins laufende Gespräch", async () => {
+    const { gmUser, entryId, dialogue } = await setupNpcDialogue();
+    const zweiterNpc = await insertNpcEntry({ title: "Wirtin" });
+
+    const { invited } = await inviteDialogueParticipants(
+      entryId,
+      [{ kind: "npc", id: zweiterNpc.id }],
+      gmUser.id,
+    );
+    // Ein NPC hat keinen Spieler, den man anschreiben könnte — die
+    // Einladungs-Mails gehen nur an Charakter-Spieler.
+    expect(invited).toEqual([]);
+
+    const [entry] = await sql<
+      { metadata: { participants: { slug: string; kind: string }[] } }[]
+    >`
+      SELECT metadata FROM archive_entries WHERE id = ${entryId}
+    `;
+    expect(entry.metadata.participants).toContainEqual({
+      slug: zweiterNpc.slug,
+      name: "Wirtin",
+      kind: "archive",
+    });
+
+    // Der Einladende spricht ihn ab jetzt in diesem Gespräch …
+    const speakers = await sql<{ npc_entry_id: number }[]>`
+      SELECT npc_entry_id FROM dialogue_npc_speakers
+      WHERE archive_entry_id = ${entryId} AND user_id = ${gmUser.id}
+      ORDER BY npc_entry_id
+    `;
+    expect(speakers.map((r) => r.npc_entry_id)).toContain(zweiterNpc.id);
+
+    // … und bleibt auf das Gespräch abonniert.
+    const [follow] = await sql<{ user_id: number }[]>`
+      SELECT user_id FROM content_follows
+      WHERE user_id = ${gmUser.id} AND target_type = 'archive_entry'
+        AND target_slug = ${dialogue.slug}
+    `;
+    expect(follow).toBeDefined();
+  });
+
+  it("holt einen NPC-Entwurf nicht ins Gespräch", async () => {
+    const { gmUser, entryId } = await setupNpcDialogue();
+    const entwurf = await insertNpcEntry({ title: "Geheimer NPC", isDraft: true });
+
+    const { invited } = await inviteDialogueParticipants(
+      entryId,
+      [{ kind: "npc", id: entwurf.id }],
+      gmUser.id,
+    );
+    expect(invited).toEqual([]);
+
+    const [entry] = await sql<
+      { metadata: { participants: { slug: string }[] } }[]
+    >`
+      SELECT metadata FROM archive_entries WHERE id = ${entryId}
+    `;
+    expect(entry.metadata.participants.map((p) => p.slug)).not.toContain(
+      entwurf.slug,
+    );
+  });
+
+  it("lässt einen nachträglich eingeladenen NPC ohne Spielleitung nicht zu", async () => {
+    const { entryId } = await setupNpcDialogue();
+    const zweiterNpc = await insertNpcEntry();
+
+    await expect(
+      inviteDialogueParticipants(entryId, [
+        { kind: "npc", id: zweiterNpc.id },
+      ]),
+    ).rejects.toBeInstanceOf(DialogueNpcSpeakerRequiredError);
+  });
+
+  it("lehnt einen NPC ohne benannte Spielleitung ab", async () => {
+    const playerUser = await insertUser();
+    const playerChar = await insertCharacter({ playerId: playerUser.id });
+    const npc = await insertNpcEntry();
+
+    await expect(
+      createDialogue({
+        title: "Ohne Sprecher",
+        ownSpeaker: { kind: "character", id: playerChar.id },
+        partners: [{ kind: "npc", id: npc.id }],
+        authorUserId: playerUser.id,
+        setting: null,
+        locationSlug: null,
+        logDate: null,
+        tags: [],
+        bodyMarkdown: "Hallo?",
+        npcSpeakerUserId: null,
+        subscribeSelf: true,
+      }),
+    ).rejects.toBeInstanceOf(DialogueNpcSpeakerRequiredError);
   });
 });

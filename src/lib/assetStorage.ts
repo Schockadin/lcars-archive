@@ -19,20 +19,76 @@ export const ASSET_IMAGE_MIME_TO_EXT: Record<string, string> = {
 };
 export const MAX_ASSET_IMAGE_BYTES = 5 * 1024 * 1024;
 
-// Charakterbögen: nur PDF, großzügigeres Limit als bei Bildern (mehrseitige
-// Bögen mit eingebetteten Grafiken werden schnell größer).
-export const CHARACTER_SHEET_MIME = "application/pdf";
-export const MAX_CHARACTER_SHEET_BYTES = 20 * 1024 * 1024;
-
 // Baut die öffentliche Auslieferungs-URL eines Objekts aus der konfigurierten
 // Basis-URL (z.B. https://assets.neo-archiv.de oder die r2.dev-URL) und dem
 // Objekt-Key. Trailing Slash der Basis und führende Slashes des Keys werden
 // normalisiert, damit genau ein Trennzeichen entsteht.
 export function buildAssetPublicUrl(baseUrl: string, key: string): string {
   const trimmedBase = baseUrl.replace(/\/+$/, "");
+  assertAssetBaseUrl(trimmedBase);
   const cleanKey = key.replace(/^\/+/, "");
   return `${trimmedBase}/${cleanKey}`;
 }
+
+// Fängt die häufigste Fehlkonfiguration ab: in R2_ASSET_PUBLIC_BASE_URL steht
+// der BUCKETNAME statt der Auslieferungs-Domain (z.B.
+// "https://neo-archive-assets" statt "https://assets.neo-archiv.de"). Ohne
+// diese Prüfung entsteht daraus eine syntaktisch gültige, aber nicht
+// auflösbare URL, die still in der Datenbank landet — der Fehler fällt erst
+// auf, wenn das Bild nirgends mehr angezeigt wird. Lieber der Upload schlägt
+// laut fehl, als dass ein toter Link gespeichert wird.
+function assertAssetBaseUrl(baseUrl: string): void {
+  let host: string;
+  try {
+    const parsed = new URL(baseUrl);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      throw new Error("kein http(s)");
+    }
+    host = parsed.hostname;
+  } catch {
+    throw new InvalidAssetError(
+      `R2_ASSET_PUBLIC_BASE_URL ist keine gültige URL: "${baseUrl}"`,
+    );
+  }
+  // Ein Hostname ohne Punkt ist keine öffentliche Domain (localhost
+  // ausgenommen, für die lokale Entwicklung).
+  if (!host.includes(".") && host !== "localhost") {
+    throw new InvalidAssetError(
+      `R2_ASSET_PUBLIC_BASE_URL zeigt auf "${host}" — das sieht nach dem ` +
+        `Bucketnamen statt der Auslieferungs-Domain aus (erwartet z.B. ` +
+        `https://assets.neo-archiv.de).`,
+    );
+  }
+}
+
+// Repariert eine Portrait-URL, die mit einer falschen Basis gespeichert wurde
+// (siehe scripts/fix-portrait-asset-urls.ts) — liefert null, wenn der Wert
+// nichts angeht. Angefasst werden nur eigene Uploads, erkennbar am Pfad
+// /character-portraits/: von Hand eingetragene fremde Portrait-URLs und die
+// relativen /api/content-images/…-Pfade (Galeriebild als Portrait) bleiben
+// unberührt. Hier statt im Skript, damit die Logik testbar ist.
+export function repairedPortraitUrl(
+  portrait: string,
+  baseUrl: string,
+): string | null {
+  let current: URL;
+  let base: URL;
+  try {
+    current = new URL(portrait);
+    base = new URL(baseUrl);
+  } catch {
+    return null;
+  }
+
+  if (!current.pathname.startsWith(PORTRAIT_URL_PATH)) return null;
+  if (current.host === base.host) return null;
+
+  return buildAssetPublicUrl(baseUrl, current.pathname.replace(/^\/+/, ""));
+}
+
+// Muss mit PORTRAIT_PREFIX in src/lib/characterAssets.ts übereinstimmen (dort
+// als Objekt-Präfix ohne führenden Slash).
+const PORTRAIT_URL_PATH = "/character-portraits/";
 
 // Prüft eine Bild-Datei (Portrait/Content-Bild) und liefert die zum MIME-Type
 // gehörende Dateiendung. Wirft InvalidAssetError bei unbekanntem Typ, leerer
@@ -54,27 +110,8 @@ export function assertImageAsset(mimeType: string, sizeBytes: number): string {
   return extension;
 }
 
-// Prüft eine Charakterbogen-Datei (PDF). Wirft InvalidAssetError bei falschem
-// Typ, leerer oder zu großer Datei.
-export function assertCharacterSheetAsset(
-  mimeType: string,
-  sizeBytes: number,
-): void {
-  if (mimeType !== CHARACTER_SHEET_MIME) {
-    throw new InvalidAssetError("Nur PDF-Dateien sind als Charakterbogen erlaubt.");
-  }
-  if (sizeBytes === 0) {
-    throw new InvalidAssetError("Die Datei ist leer.");
-  }
-  if (sizeBytes > MAX_CHARACTER_SHEET_BYTES) {
-    throw new InvalidAssetError(
-      `Die Datei ist zu groß (max. ${MAX_CHARACTER_SHEET_BYTES / (1024 * 1024)} MB).`,
-    );
-  }
-}
-
 // Kürzt/normalisiert einen vom Client mitgeschickten Dateinamen für die
-// Anzeige (Charakterbögen behalten ihren Originalnamen als Label). Entfernt
+// Anzeige. Entfernt
 // Pfadanteile und Steuerzeichen und begrenzt die Länge; nie als Objekt-Key
 // oder Identifier verwendet (der Key wird serverseitig aus einer UUID gebaut).
 export function sanitizeFileName(name: string, fallback = "datei.pdf"): string {

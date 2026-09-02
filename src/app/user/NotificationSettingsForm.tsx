@@ -5,11 +5,7 @@ import {
   updateNotificationSettingsAction,
   type NotificationSettingsState,
 } from "./notificationActions";
-import {
-  FormError,
-  FormSuccess,
-  SubmitButton,
-} from "@/app/_shared/FormPrimitives";
+import { FormError, SaveFooter } from "@/app/_shared/FormPrimitives";
 
 const initialState: NotificationSettingsState = {};
 
@@ -32,7 +28,7 @@ const ADMIN_CONTENT_TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: "character", label: "Charaktere" },
   { value: "mission", label: "Missionen" },
   { value: "mission_log", label: "Mission-Logs" },
-  { value: "archive_entry", label: "Archiv-Einträge" },
+  { value: "archive_entry", label: "Datenbank-Einträge" },
 ];
 
 // Zwei unabhängige Teile: oben die Präferenzen (globale Schalter, per
@@ -250,16 +246,7 @@ export default function NotificationSettingsForm({
           </div>
         )}
 
-        <FormError message={state?.error} />
-        {state?.success && <FormSuccess>Gespeichert.</FormSuccess>}
-
-        <SubmitButton
-          pending={pending}
-          pendingLabel="Speichern…"
-          className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%]"
-        >
-          Speichern
-        </SubmitButton>
+        <SaveFooter state={state} pending={pending} />
       </form>
 
       <div className="flex flex-col gap-[8px]">

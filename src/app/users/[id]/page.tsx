@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
 import { requireNonGuest } from "@/lib/dal";
@@ -11,7 +10,7 @@ import {
 import { getPublicDialoguesForUser } from "@/lib/dialogues";
 import { getPublicArchiveEntriesForUser } from "@/lib/archive";
 import { resolveFollowState } from "@/lib/follows";
-import { LcarsDataRow } from "@/components/lcars";
+import { LcarsAkteCard, LcarsDataRow } from "@/components/lcars";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
 import { sessionLabel, fmtDate } from "@/lib/missionFormat";
 import FollowButtons from "@/components/FollowButtons";
@@ -100,23 +99,13 @@ export default async function UserPublicProfilePage({
               >
                 <div className="flex flex-col gap-[6px]">
                   {characters.map((c) => (
-                    <Link
+                    <LcarsAkteCard
                       key={c.id}
                       href={`/characters/${c.slug}`}
-                      className="mission-akte flex-1"
-                      style={
-                        {
-                          "--mission-color": "var(--lcars-primary)",
-                        } as React.CSSProperties
-                      }
-                    >
-                      <span className="mission-akte-rail" />
-                      <span className="mission-akte-body text-left">
-                        <span className="mission-akte-title block">
-                          {c.name}
-                        </span>
-                      </span>
-                    </Link>
+                      color="var(--lcars-primary)"
+                      className="flex-1"
+                      title={c.name}
+                    />
                   ))}
                 </div>
               </LcarsDataRow>
@@ -130,22 +119,14 @@ export default async function UserPublicProfilePage({
               >
                 <div className="flex flex-col gap-[6px]">
                   {logs.map((log) => (
-                    <Link
+                    <LcarsAkteCard
                       key={log.id}
                       href={`/missions/${log.mission_slug}/${log.slug}`}
-                      className="mission-akte flex-1"
-                      style={
-                        {
-                          "--mission-color": "var(--lcars-tertiary)",
-                        } as React.CSSProperties
-                      }
-                    >
-                      <span className="mission-akte-rail" />
-                      <span className="mission-akte-body text-left">
-                        <span className="mission-akte-title block">
-                          {log.title}
-                        </span>
-                        <span className="mission-akte-meta">
+                      color="var(--lcars-tertiary)"
+                      className="flex-1"
+                      title={log.title}
+                      meta={
+                        <>
                           <span>
                             <b>Session</b> {sessionLabel(log.session_nr)}
                           </span>
@@ -155,9 +136,9 @@ export default async function UserPublicProfilePage({
                           <span>
                             <b>Mission</b> {log.mission_title}
                           </span>
-                        </span>
-                      </span>
-                    </Link>
+                        </>
+                      }
+                    />
                   ))}
                 </div>
               </LcarsDataRow>
@@ -171,28 +152,20 @@ export default async function UserPublicProfilePage({
               >
                 <div className="flex flex-col gap-[6px]">
                   {dialogues.map((d) => (
-                    <Link
+                    <LcarsAkteCard
                       key={d.slug}
                       href={`/archive/${d.slug}`}
-                      className="mission-akte flex-1"
-                      style={
-                        {
-                          "--mission-color": "var(--lcars-quinary)",
-                        } as React.CSSProperties
-                      }
-                    >
-                      <span className="mission-akte-rail" />
-                      <span className="mission-akte-body text-left">
-                        <span className="mission-akte-title block">
-                          {d.title}
-                        </span>
-                        <span className="mission-akte-meta">
+                      color="var(--lcars-quinary)"
+                      className="flex-1"
+                      title={d.title}
+                      meta={
+                        <>
                           <span>
                             <b>Teilnehmer</b> {d.participantNames.join(", ")}
                           </span>
-                        </span>
-                      </span>
-                    </Link>
+                        </>
+                      }
+                    />
                   ))}
                 </div>
               </LcarsDataRow>
@@ -201,34 +174,26 @@ export default async function UserPublicProfilePage({
             {archiveEntries.length > 0 && (
               <LcarsDataRow
                 value={archiveEntries.length}
-                label="Archiv-Einträge"
+                label="Datenbank-Einträge"
                 color="var(--lcars-secondary)"
               >
                 <div className="flex flex-col gap-[6px]">
                   {archiveEntries.map((entry) => (
-                    <Link
+                    <LcarsAkteCard
                       key={entry.id}
                       href={`/archive/${entry.slug}`}
-                      className="mission-akte flex-1"
-                      style={
-                        {
-                          "--mission-color": "var(--lcars-secondary)",
-                        } as React.CSSProperties
-                      }
-                    >
-                      <span className="mission-akte-rail" />
-                      <span className="mission-akte-body text-left">
-                        <span className="mission-akte-title block">
-                          {entry.title}
-                        </span>
-                        <span className="mission-akte-meta">
+                      color="var(--lcars-secondary)"
+                      className="flex-1"
+                      title={entry.title}
+                      meta={
+                        <>
                           <span>
                             <b>Kategorie</b>{" "}
                             {CATEGORY_CONFIG[entry.category].label}
                           </span>
-                        </span>
-                      </span>
-                    </Link>
+                        </>
+                      }
+                    />
                   ))}
                 </div>
               </LcarsDataRow>

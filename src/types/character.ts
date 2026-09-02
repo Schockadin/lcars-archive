@@ -19,6 +19,11 @@ export interface CharacterMetadata {
   tags: string[];
   aliases: string[];
   generation: number[];
+  // Charakterwerte des Bogens (/user/characters/[id]/stats). Bewusst unknown
+  // statt CharacterStats: ältere Datensätze haben das Feld gar nicht und der
+  // Inhalt kommt roh aus jsonb — immer über parseCharacterStats
+  // (src/lib/characterStats.ts) lesen, nie direkt zugreifen.
+  stats?: unknown;
 }
 
 export interface Character {

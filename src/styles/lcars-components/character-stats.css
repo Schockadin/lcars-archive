@@ -1,0 +1,289 @@
+/* ─── Rund um den Charakterbogen (/user/characters/[id]/stats) ────────
+   Das Blatt selbst liegt in personnel-file.css (Faksimile der Vorlage).
+   Hier stehen die Teile DRUMHERUM, die es auf dem Papier nicht gibt: der
+   AP-Bereich (Konto, Erschaffungsbudget, Steigern, Buchungsjournal), der
+   Talent-Spickzettel am Fuß der Seite und die Regelverstoß-Liste.
+
+   Abschnitte mit farbiger Kopfleiste und zweisprachiger Beschriftung
+   (englischer Originalbegriff, deutsche Entsprechung darunter) nehmen die
+   Optik des Bogens auf. Farben kommen ausschließlich aus den LCARS-Tokens
+   (tokens.css), damit alles jedes Farbthema und das minimalistische UI
+   mitmacht.
+──────────────────────────────────────────────────────────────────── */
+
+/* ── Abschnitt mit farbiger Kopfleiste ─────────────────────────────── */
+.stat-sheet-section {
+  border: 2px solid var(--lcars-border);
+  border-radius: 10px;
+  background: var(--lcars-surface);
+  padding: 0 0 14px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.stat-sheet-section-title {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0 0 14px;
+  padding: 6px 14px;
+  background: var(--lcars-primary);
+  color: var(--lcars-bg);
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  line-height: 1.3;
+}
+
+/* Regel-Hinweis unter der Kopfleiste (z.B. „7–12, höchstens 1× 12"). */
+.stat-sheet-rule {
+  margin: -6px 14px 12px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  color: var(--lcars-ink-dim);
+}
+
+/* Zweisprachige Beschriftung wie auf dem Bogen: englischer Originalbegriff
+   groß, deutsche Entsprechung klein darunter. */
+.stat-label-primary {
+  display: block;
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.stat-label-secondary {
+  display: block;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: lowercase;
+  opacity: 0.75;
+  font-weight: 400;
+}
+
+/* Innerhalb der farbigen Kopfleiste steht der englische Begriff daneben. */
+.stat-sheet-section-title .stat-label-secondary {
+  display: inline;
+}
+
+.stat-field-label {
+  color: var(--lcars-ink-data);
+}
+
+.stat-field-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 4px;
+  background: var(--lcars-bg);
+  color: var(--lcars-ink);
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.05em;
+}
+
+.stat-field-input:focus-visible {
+  outline: 2px solid var(--lcars-tertiary);
+  outline-offset: 1px;
+}
+
+.stat-sheet-errors {
+  margin: 0;
+  padding: 10px 14px 10px 32px;
+  border: 2px solid var(--lcars-quinary);
+  border-radius: 8px;
+  background: var(--lcars-surface);
+  color: var(--lcars-quinary);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+  list-style: square;
+}
+
+/* ── AP-Bereich (Konto, Erschaffungsbudget, Steigern, Journal) ─────── */
+.stat-ap-account,
+.stat-ap-block {
+  padding: 0 14px 14px;
+}
+
+.stat-ap-balance {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.stat-ap-value {
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 38px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--lcars-ink-data);
+}
+
+.stat-ap-heading {
+  margin: 0 0 6px;
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-data);
+}
+
+.stat-ap-budget {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.stat-ap-warning {
+  margin-bottom: 10px;
+  color: var(--lcars-quinary);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+}
+
+.stat-ap-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.stat-ap-step-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-ap-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.stat-ap-step-label {
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 15px;
+}
+
+.stat-ap-adds {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.stat-ap-add {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Buchungsjournal — je Zeile Betrag, Grund und Zeitpunkt. */
+.stat-ap-ledger {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.stat-ap-ledger-row {
+  display: grid;
+  grid-template-columns: 56px 1fr auto;
+  gap: 10px;
+  align-items: baseline;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--lcars-border);
+}
+
+.stat-ap-amount {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 15px;
+  text-align: right;
+  color: var(--lcars-quinary);
+}
+
+.stat-ap-amount--plus {
+  color: var(--lcars-senary);
+}
+
+.stat-ap-ledger-text {
+  min-width: 0;
+}
+
+.stat-ap-ledger-meta {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 11px;
+  color: var(--lcars-ink-dim);
+  white-space: nowrap;
+}
+
+/* Spickzettel am Fuß des Bogens (TalentCheatSheet.tsx): je Talent Kopfzeile
+   und Regeltext. Der Text in der Datenschrift, damit er sich klar von den
+   Beschriftungen des Bogens absetzt. */
+.stat-cheat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 8px 0 0;
+}
+
+.stat-cheat-item {
+  border-left: 3px solid var(--lcars-border);
+  padding: 2px 0 2px 10px;
+}
+
+.stat-cheat-term {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.stat-cheat-text {
+  margin: 2px 0 0;
+  color: var(--lcars-ink-dim);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* Regeltext des im Talent-Auswahlfeld gewählten Talents (TalentPicker.tsx).
+   Bewusst schmal gehalten und in der Datenschrift gesetzt — er steht unter
+   dem Auswahlfeld und soll den Bogen nicht dominieren. Die Höhe ist
+   begrenzt, damit ein langer Regeltext das Formular nicht auseinanderzieht;
+   längere Texte scrollen in ihrem eigenen Kasten. */
+.stat-talent-description {
+  max-height: 8.5em;
+  overflow-y: auto;
+  padding: 6px 10px;
+  border-left: 3px solid var(--lcars-border);
+  background-color: var(--lcars-surface);
+  color: var(--lcars-ink-dim);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+@media (max-width: 520px) {
+  .stat-sheet-section-title {
+    font-size: 16px;
+  }
+}

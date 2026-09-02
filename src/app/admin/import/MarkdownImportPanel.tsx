@@ -18,7 +18,7 @@ import {
 } from "@/lib/archiveMetadataFields";
 
 const CONTENT_TYPE_LABELS: Record<ImportContentType, string> = {
-  archive: "Archiv-Eintrag",
+  archive: "Datenbank-Eintrag",
   mission: "Mission",
   character: "Charakter",
   mission_log: "Missionslog",

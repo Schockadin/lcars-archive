@@ -1,5 +1,11 @@
 import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
+// Logbücher können an einer Session hängen; verschwindet/kehrt eines zurück,
+// muss die automatische Logbuch-AP dieser Session nachgezogen werden.
+import {
+  resyncSessionLogbookApForLog,
+  syncSessionLogbookAp,
+} from "@/lib/gameSessions";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
 // getMissionSubscribers lebt in dialoguesCore.ts, siehe Kommentar bei
@@ -131,7 +137,7 @@ export interface GmMissionOverviewItem {
 }
 
 // GM/Admin-Übersicht ALLER Missionen (inkl. Entwürfe, ohne Owner-Filter) für
-// die neue /admin/missions-Seite (GM-Menüpunkt "Missionen") — anders als
+// die neue /gm/missions-Seite (GM-Menüpunkt "Missionen") — anders als
 // getAllMissionsIncludingDrafts oben (MissionPreview mit Log-Zählung/Autoren
 // fürs Karten-Layout in /user/content) hier nur die schlanken Felder für
 // eine Tabelle inkl. Owner-Name, uncached wie getAllContentForAdmin
@@ -992,7 +998,10 @@ export async function deleteMissionLog(
               ml.is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
-  if (row) syncEmbeddingActive("mission_log", logId, false);
+  if (row) {
+    syncEmbeddingActive("mission_log", logId, false);
+    await resyncSessionLogbookApForLog(logId, userId);
+  }
   // Löschprotokoll fürs News-Feed (siehe getRecentDeletions in
   // recentActivity.ts) — aus Sicht aller Nicht-Admins ist der Log jetzt weg,
   // ohne dieses Protokoll gäbe es keine Datenquelle mehr für einen
@@ -1012,13 +1021,17 @@ export async function deleteMissionLog(
 // also automatisch wieder auf.
 export async function restoreMissionLog(
   logId: number,
+  restoredByUserId: number,
 ): Promise<{ slug: string; missionId: number } | null> {
   const rows = await sql<{ slug: string; missionId: number }[]>`
     UPDATE mission_logs SET deleted_at = NULL
     WHERE id = ${logId} AND deleted_at IS NOT NULL
     RETURNING slug, mission_id AS "missionId"
   `;
-  if (rows[0]) syncEmbeddingActive("mission_log", logId, true);
+  if (rows[0]) {
+    syncEmbeddingActive("mission_log", logId, true);
+    await resyncSessionLogbookApForLog(logId, restoredByUserId);
+  }
   return rows[0] ?? null;
 }
 
@@ -1048,7 +1061,10 @@ export async function deleteMissionLogAsAdmin(
               title, visibility, owner_user_id AS "ownerUserId", is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
-  if (row) syncEmbeddingActive("mission_log", logId, false);
+  if (row) {
+    syncEmbeddingActive("mission_log", logId, false);
+    await resyncSessionLogbookApForLog(logId, deletedByUserId);
+  }
   if (row && !row.isDraft) {
     await sql`
       INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
@@ -1073,8 +1089,13 @@ export async function deleteMission(
   deletedByUserId: number,
 ): Promise<{ slug: string; logSlugs: string[] } | null> {
   const result = await sql.begin(async (tx) => {
-    const logRows = await tx<{ slug: string }[]>`
-      SELECT slug FROM mission_logs WHERE mission_id = ${missionId} AND deleted_at IS NULL
+    // session_id mitlesen: verliert eine Session durch dieses Löschen ihr
+    // letztes Logbuch, muss ihre automatische Logbuch-AP mit weg (siehe
+    // syncSessionLogbookAp) — dasselbe, was deleteMissionLog beim einzelnen
+    // Log über resyncSessionLogbookApForLog tut.
+    const logRows = await tx<{ slug: string; sessionId: number | null }[]>`
+      SELECT slug, session_id AS "sessionId" FROM mission_logs
+      WHERE mission_id = ${missionId} AND deleted_at IS NULL
     `;
 
     const rows = await tx<
@@ -1105,7 +1126,17 @@ export async function deleteMission(
       `;
     }
 
-    return { slug: row.slug, logSlugs };
+    return {
+      slug: row.slug,
+      logSlugs,
+      sessionIds: [
+        ...new Set(
+          logRows
+            .map((l) => l.sessionId)
+            .filter((id): id is number => id != null),
+        ),
+      ],
+    };
   });
   // Nach dem Commit: Mission + kaskadierte Logs im Embedding-Index inaktiv
   // setzen (die einzelnen Log-Ids liegen hier nicht vor, daher der Sammel-
@@ -1113,6 +1144,11 @@ export async function deleteMission(
   if (result) {
     syncEmbeddingActive("mission", missionId, false);
     syncMissionLogsActiveByMission(missionId, false);
+    // Erst nach dem Commit: syncSessionLogbookAp läuft über den globalen
+    // sql-Client, und src/lib/db.ts hält nur EINE Connection (max: 1).
+    for (const sessionId of result.sessionIds) {
+      await syncSessionLogbookAp(sessionId, deletedByUserId);
+    }
   }
   return result;
 }
@@ -1125,6 +1161,9 @@ export async function deleteMission(
 // eigene "durch Kaskade gelöscht"-Markierung zu pflegen).
 export async function restoreMission(
   missionId: number,
+  // Für die wieder auflebende Logbuch-AP (created_by der Buchungen) — die
+  // aufrufende Admin-Person, wie bei deleteMission.
+  restoredByUserId: number,
 ): Promise<{ slug: string } | null> {
   const result = await sql.begin(async (tx) => {
     const rows = await tx<{ slug: string }[]>`
@@ -1135,14 +1174,33 @@ export async function restoreMission(
     const row = rows[0] ?? null;
     if (!row) return null;
 
+    const logRows = await tx<{ sessionId: number | null }[]>`
+      SELECT session_id AS "sessionId" FROM mission_logs
+      WHERE mission_id = ${missionId} AND deleted_at IS NOT NULL
+    `;
+
     await tx`
       UPDATE mission_logs SET deleted_at = NULL WHERE mission_id = ${missionId}
     `;
-    return row;
+    return {
+      ...row,
+      sessionIds: [
+        ...new Set(
+          logRows
+            .map((l) => l.sessionId)
+            .filter((id): id is number => id != null),
+        ),
+      ],
+    };
   });
   if (result) {
     syncEmbeddingActive("mission", missionId, true);
     syncMissionLogsActiveByMission(missionId, true);
+    // Kommen die Logbücher zurück, kommt auch ihre Gutschrift zurück —
+    // Gegenstück zu deleteMission. Nach dem Commit, siehe dort.
+    for (const sessionId of result.sessionIds) {
+      await syncSessionLogbookAp(sessionId, restoredByUserId);
+    }
   }
   return result;
 }

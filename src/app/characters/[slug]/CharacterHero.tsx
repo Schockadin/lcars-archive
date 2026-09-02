@@ -10,10 +10,10 @@ import {
 import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
 import CharacterBioEditor from "./CharacterBioEditor";
-import CharacterSheets from "./CharacterSheets";
 import type { Viewer } from "@/lib/visibility";
 import type { FollowState } from "@/app/actions/follows";
 import ActionsMenu from "@/components/ActionsMenu";
+import { FileTextIcon } from "@/lib/icons";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
 function slugify(text: string): string {
@@ -284,16 +284,21 @@ export default function CharacterHero({
               <StatusBadge status={character.status} />
             </div>
 
-            {/* Charakterbögen (PDFs) — sichtbar für alle, die den Charakter
-                sehen dürfen; Hochladen/Löschen nur für den Owner (wie die
-                Bild-Verwaltung, canManageContentImages("character") = owner-
-                only). */}
-            <CharacterSheets
-              characterId={character.id}
-              canManage={
-                viewer != null && viewer.userId === character.player_id
-              }
-            />
+            {/* Der Charakterbogen (Werte) zum Lesen — für die eigene
+                Spielerin/den eigenen Spieler und für die Spielleitung. Die
+                Seite selbst prüft dieselbe Bedingung noch einmal server-
+                seitig; hier entscheidet sie nur darüber, ob der Knopf
+                erscheint. */}
+            {(viewer?.userId === character.player_id ||
+              viewer?.permissions.includes("gm.access")) && (
+              <Link
+                href={`/characters/${character.slug}/sheet`}
+                className="lcars-pill-btn--outline mt-[16px] inline-flex items-center gap-[6px]"
+              >
+                <FileTextIcon />
+                Charakterbogen
+              </Link>
+            )}
 
             {/* Inhaltsverzeichnis der Biografie (sticky, Scrollspy) */}
             {bio && (
@@ -341,7 +346,7 @@ export default function CharacterHero({
               />
             ) : (
               <p className="lcars-empty-state">
-                Keine biografischen Daten im Archiv hinterlegt.
+                Keine biografischen Daten in der Datenbank hinterlegt.
               </p>
             )}
           </div>

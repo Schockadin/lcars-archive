@@ -122,6 +122,20 @@ export function canSetVisibility(
   return viewer != null && ownerId != null && viewer.userId === ownerId;
 }
 
+// Darf dieser Betrachter im Gespräch für einen NPC schreiben (also einen
+// Datenbank-Eintrag der Kategorie "npc" sprechen)? Die Spielleitung
+// (gm.access) ist der
+// Normalfall; die Administration (admin.access) kommt dazu, weil in kleinen
+// Runden dasselbe Konto beides ist — und ein Admin, der ohnehin jedes
+// Gespräch moderieren darf, soll nicht ausgerechnet daran scheitern, eine
+// Wirtin sprechen zu lassen.
+export function canPlayNpcs(viewer: Viewer | null): boolean {
+  return (
+    viewerHasPermission(viewer, "gm.access") ||
+    viewerHasPermission(viewer, "admin.access")
+  );
+}
+
 // Entwürfe (is_draft, siehe scripts/schema.sql) sind eine eigene, striktere
 // Sichtbarkeitsachse als canView oben: unabhängig von visibility sieht sie
 // NIEMAND außer dem Owner selbst — bewusst OHNE Admin-Bypass (anders als

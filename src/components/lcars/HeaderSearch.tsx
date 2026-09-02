@@ -132,7 +132,7 @@ export default function HeaderSearch() {
         ref={inputRef}
         type="search"
         className="lcars-search-input"
-        placeholder="Archiv durchsuchen…"
+        placeholder="Datenbank durchsuchen…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => setFocused(true)}

@@ -182,7 +182,7 @@
   background: var(--lcars-surface);
   border: 2px solid var(--lcars-secondary);
   border-radius: 12px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--lcars-shadow-drop);
 }
 .follow-share-menu-item {
   padding: 8px 10px;
@@ -195,7 +195,7 @@
   cursor: pointer;
 }
 .follow-share-menu-item:hover {
-  background: rgba(205, 154, 205, 0.18);
+  background: var(--lcars-hover-tint);
 }
 
 /* Admin-Content-Tools (ContentLinkToolButton, Autolink- wie Delink-Modus) —
@@ -207,7 +207,12 @@
    translate:15% aus dem schmalen Actions-Menü-Flex "herausgeschobenen" Box
    ohne Padding — auf schmalen Bildschirmen kaum lesbar und quetschte sich
    neben den Geschwister-Button. */
-.content-tool-preview-overlay {
+/* Gemeinsames Overlay-Muster: abgedunkelter Vollbild-Hintergrund, Inhalt
+   mittig. Alle drei Overlays der Anwendung teilen es sich — die Lightbox
+   ergänzt nur ihren eigenen Cursor. */
+.content-tool-preview-overlay,
+.portrait-overlay,
+.timeline-marker-overlay {
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -215,7 +220,7 @@
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(0, 0, 0, 0.85);
+  background: var(--lcars-scrim);
   backdrop-filter: blur(2px);
 }
 .content-tool-preview-modal {
@@ -229,7 +234,7 @@
   border: 1px solid var(--lcars-border);
   border-radius: 8px;
   background: var(--lcars-bg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--lcars-shadow-float);
 }
 .autolink-match-list {
   display: flex;
@@ -244,15 +249,6 @@
    Charakters) und ContentBody.tsx (Inline-Bilder in Missions-/Log-/
    Archiv-Texten, Karussell über alle Bilder desselben Inhalts). */
 .portrait-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(2px);
   cursor: zoom-out;
 }
 
@@ -329,19 +325,7 @@
 }
 
 /* TimelineMarkerButton.tsx — Modal zum Einfügen eines Zeitleisten-Markers
-   an der Cursor-Position, gleiches Overlay-Muster wie die Portrait-
-   Lightbox oben, nur als Formular-Karte statt Vollbild. */
-.timeline-marker-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(0, 0, 0, 0.85);
-  backdrop-filter: blur(2px);
-}
+   an der Cursor-Position (Overlay siehe oben, hier nur die Karte darin). */
 .timeline-marker-modal {
   display: flex;
   flex-direction: column;
@@ -353,7 +337,7 @@
   border: 1px solid var(--lcars-border);
   border-radius: 8px;
   background: var(--lcars-bg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--lcars-shadow-float);
 }
 
 /* MarkdownEditor.tsx — Formatierungs-Toolbar + Rohtext/Vorschau-Umschalter
@@ -406,7 +390,7 @@
   border: 1px solid var(--lcars-border);
   border-radius: 8px;
   background: var(--lcars-bg);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--lcars-shadow-float);
 }
 .markdown-hint-popover-title {
   font-family: var(--font-antonio), sans-serif;
@@ -434,16 +418,9 @@
   color: var(--lcars-ink-light);
 }
 
-/* /tutorial (TutorialPage) — Cheatsheet-Tabelle + Inline-Code, gemeinsamer
-   Code-Stil mit .markdown-hint-popover-row code oben. */
-.markdown-hint-popover-row code,
-.tutorial-content code {
-  font-family: var(--font-share-tech-mono), monospace;
-  color: var(--lcars-ink-data);
-  background: var(--lcars-surface-2);
-  padding: 1px 6px;
-  border-radius: 4px;
-}
+/* /tutorial (TutorialPage) — Cheatsheet-Tabelle. Inline-Code und
+   Tabellenkopf kommen aus markdown-content.css: dieselbe Optik wie in
+   gerendertem Markdown, dort an einer Stelle gepflegt. */
 .tutorial-table {
   border-collapse: collapse;
   width: 100%;
@@ -455,13 +432,6 @@
   border-bottom: 1px solid var(--lcars-border);
   font-size: 14px;
   white-space: nowrap;
-}
-.tutorial-table th {
-  color: var(--lcars-primary);
-  font-family: var(--font-antonio), sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 600;
 }
 .tutorial-table td:last-child,
 .tutorial-table th:last-child {

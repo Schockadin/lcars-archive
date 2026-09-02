@@ -43,7 +43,7 @@ export async function generateMetadata({ params }: Props) {
 
   const desc = entry.metadata.summary ?? stripHtml(entry.content);
   return {
-    title: `${archiveTitle(entry)} · Archiv · Neo Archive`,
+    title: `${archiveTitle(entry)} · Datenbank · Neo Archive`,
     description: desc.slice(0, 160) || undefined,
   };
 }
@@ -153,7 +153,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
           {/* Metadaten (Titel/Datum/Ort/Tags) bearbeiten — auch für
               abgeschlossene Gespräche, nicht der Gesprächsverlauf. */}
           <Link
-            href={`/admin/dialogues/${entry.slug}/edit`}
+            href={`/gm/dialogues/${entry.slug}/edit`}
             className="lcars-pill-btn--outline"
           >
             Metadaten bearbeiten

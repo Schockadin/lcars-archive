@@ -181,6 +181,18 @@ export function ShareIcon() {
     </svg>
   );
 }
+// Kleines Minus im Kreis — Entfernen einer einzelnen Zeile (Talent-Liste des
+// Charakterbogens). Bewusst kein Papierkorb: es wird kein Inhalt gelöscht,
+// sondern nur ein Eintrag aus einer Liste genommen.
+export function MinusCircleIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="12" cy="12" r="8" />
+      <path d="M8.5 12h7" />
+    </svg>
+  );
+}
+
 export function TrashIcon() {
   return (
     <svg {...ICON_PROPS}>
@@ -222,6 +234,16 @@ export function DownloadIcon() {
     <svg {...ICON_PROPS}>
       <path d="M12 3v12M7 10l5 5 5-5" />
       <path d="M4 19h16" />
+    </svg>
+  );
+}
+// Blatt mit Zeilen — der Charakterbogen (Werte) auf der Charakterseite.
+export function FileTextIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M6 3h8l4 4v14H6z" />
+      <path d="M14 3v4h4" />
+      <path d="M9 12h6M9 16h6" />
     </svg>
   );
 }
@@ -316,12 +338,16 @@ export function MissionsNavIcon() {
     </svg>
   );
 }
-export function ArchiveNavIcon() {
+// Datenbank-Zylinder (Menüpunkt „Datenbank", früher „Archiv" mit Kisten-Icon).
+// Bewusst in der Strichführung der übrigen Nav-Icons gezeichnet (24er-Raster,
+// currentColor, siehe ICON_PROPS) statt ein fremdes SVG einzusetzen — so
+// bleibt das Menü einheitlich und ohne Fremdlizenz im Repo.
+export function DatabaseNavIcon() {
   return (
     <svg {...ICON_PROPS}>
-      <rect x="3" y="4" width="18" height="4" rx="1" />
-      <path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8" />
-      <path d="M10 12h4" />
+      <ellipse cx="12" cy="6" rx="7" ry="3" />
+      <path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6" />
+      <path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" />
     </svg>
   );
 }
@@ -363,13 +389,32 @@ export function ProfileNavIcon() {
   );
 }
 
+// Nutzerkonten (/users) — Dreiergruppe. Vorher war das Icon fast
+// deckungsgleich mit CharactersNavIcon (Person + halbe Person) und dadurch im
+// Menü nicht auseinanderzuhalten.
 export function UsersNavIcon() {
   return (
     <svg {...ICON_PROPS}>
-      <circle cx="9" cy="8" r="3.2" />
-      <path d="M3 19c0-3 2.7-5 6-5s6 2 6 5" />
-      <path d="M16 5.2a3 3 0 010 5.6" />
-      <path d="M17 14c2.3.5 4 2.2 4 5" />
+      <circle cx="12" cy="7.5" r="2.6" />
+      <circle cx="5" cy="10" r="2" />
+      <circle cx="19" cy="10" r="2" />
+      <path d="M7.5 18.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" />
+      <path d="M2 17.5c0-1.9 1.3-3.1 3-3.1" />
+      <path d="M22 17.5c0-1.9-1.3-3.1-3-3.1" />
+    </svg>
+  );
+}
+
+// Eigene Charaktere (/user/characters) — Personalakte statt Personengruppe:
+// unterscheidet den User-Menüpunkt eindeutig vom allgemeinen „Charaktere"
+// (CharactersNavIcon), das alle Charaktere des Archivs meint.
+export function MyCharactersNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="4" y="3" width="16" height="18" rx="2" />
+      <path d="M9.5 3h5" />
+      <circle cx="12" cy="10" r="2.4" />
+      <path d="M8 17.5c0-2.2 1.8-3.4 4-3.4s4 1.2 4 3.4" />
     </svg>
   );
 }
@@ -382,6 +427,28 @@ export function AdminNavIcon() {
         fillRule="evenodd"
         d="m773.596 1069.654 711.086 711.085c39.632 39.632 104.336 39.632 144.078 0l138.276-138.385c19.268-19.269 29.888-44.778 29.888-71.93 0-27.26-10.62-52.77-29.888-72.039l-698.714-698.714 11.495-32.625c63.5-178.675 18.284-380.45-115.284-514.018-123.715-123.605-305.126-171.01-471.648-128.313l272.281 272.282c32.516 32.406 50.362 75.652 50.362 121.744 0 45.982-17.846 89.227-50.362 121.744L654.48 751.17c-67.222 67.003-176.375 67.003-243.488 0L138.711 478.889c-42.589 166.522 4.707 347.934 128.313 471.648 123.714 123.715 306.22 172.325 476.027 127.218l30.545-8.101ZM1556.611 1920c-54.084 0-108.168-20.692-149.333-61.857L740.095 1190.96c-198.162 41.712-406.725-19.269-550.475-163.019C14.449 852.771-35.256 582.788 65.796 356.27l32.406-72.696 390.194 390.193c24.414 24.305 64.266 24.305 88.68 0l110.687-110.686c11.824-11.934 18.283-27.59 18.283-44.34 0-16.751-6.46-32.516-18.283-44.34L297.569 84.207 370.265 51.8C596.893-49.252 866.875.453 1041.937 175.515c155.026 155.136 212.833 385.157 151.851 594.815l650.651 650.651c39.961 39.852 61.967 92.95 61.967 149.443 0 56.383-22.006 109.482-61.967 149.334l-138.275 138.385c-41.275 41.165-95.36 61.857-149.553 61.857Z"
       />
+    </svg>
+  );
+}
+
+// Spielleitungs-Menü: Würfel mit drei Augen — das Werkzeug der Runde, klar
+// unterscheidbar vom Schraubenschlüssel des Admin-Menüs.
+export function GmNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <rect x="3.5" y="3.5" width="17" height="17" rx="3.5" />
+      <circle cx="8" cy="8" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
+      <circle cx="16" cy="16" r="1.3" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
+// Vergrößern/Vollbild — vier nach außen zeigende Ecken (Charakterbogen).
+export function ExpandIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M9 4H4v5M15 4h5v5M15 20h5v-5M9 20H4v-5" />
     </svg>
   );
 }

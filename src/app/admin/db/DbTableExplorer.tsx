@@ -1,31 +1,21 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { useOverlayDismiss } from "@/hooks/useOverlayDismiss";
 import { PlusIcon, ChevronLeftIcon, ChevronRightIcon } from "@/lib/icons";
 import RowDetailModal from "@/components/RowDetailModal";
 import { updateDbRowAction, deleteDbRowAction } from "./rowEditActions";
-import { formatDateTime } from "@/utils/formateISODate";
-import { synopsisExcerpt } from "@/lib/missionFormat";
 import {
   loadTablePageAction,
   insertDbRowAction,
   type TableInfo,
   type TablePageResult,
 } from "./tableExplorerActions";
-import { TABLE_PAGE_SIZE } from "./tableExplorerConfig";
+import { TABLE_PAGE_SIZE, formatValue } from "./tableExplorerConfig";
 
+// Zeichen, ab denen eine Zelle in der Tabellen-Vorschau gekürzt wird.
 const TRUNCATE_LENGTH = 120;
 
-function formatValue(value: unknown, truncate: boolean): string {
-  if (value === null || value === undefined) return "—";
-  if (value instanceof Date) return formatDateTime(value);
-  if (typeof value === "object") {
-    return truncate
-      ? synopsisExcerpt(JSON.stringify(value), TRUNCATE_LENGTH)
-      : JSON.stringify(value, null, 2);
-  }
-  const text = String(value);
-  return truncate ? synopsisExcerpt(text, TRUNCATE_LENGTH) : text;
-}
+
 
 function TableIcon() {
   return (
@@ -256,7 +246,7 @@ export default function DbTableExplorer({
                             key={c}
                             className="py-[4px] pr-[12px] whitespace-nowrap text-lcars-ink"
                           >
-                            {formatValue(row[c], true)}
+                            {formatValue(row[c], true, TRUNCATE_LENGTH)}
                           </td>
                         ))}
                       </tr>
@@ -274,7 +264,7 @@ export default function DbTableExplorer({
             title={`${selected} — Zeile`}
             fields={data.columns.map((c) => ({
               label: c,
-              value: formatValue(selectedRow[c], false),
+              value: formatValue(selectedRow[c], false, TRUNCATE_LENGTH),
             }))}
             onClose={() => {
               setModalRow(null);
@@ -348,18 +338,7 @@ function InsertRowModal({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [onClose]);
+  useOverlayDismiss(onClose);
 
   async function handleInsert() {
     setPending(true);

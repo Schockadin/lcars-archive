@@ -92,7 +92,7 @@
   background: var(--lcars-surface);
   border: 2px solid var(--lcars-secondary);
   border-radius: 12px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--lcars-shadow-drop);
 }
 .lcars-search-item {
   display: flex;
@@ -107,7 +107,7 @@
   cursor: pointer;
 }
 .lcars-search-item[aria-selected="true"] {
-  background: rgba(205, 154, 205, 0.18);
+  background: var(--lcars-hover-tint);
 }
 .lcars-search-dot {
   flex: 0 0 auto;

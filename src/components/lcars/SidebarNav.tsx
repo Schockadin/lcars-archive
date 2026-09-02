@@ -27,6 +27,7 @@ export default function SidebarNav() {
       <div className="lcars-sidebar-usernav">
         <HeaderUserNav
           permissions={session.permissions ?? []}
+          hasCharacters={session.hasCharacters ?? false}
           variant="sidebar"
         />
       </div>

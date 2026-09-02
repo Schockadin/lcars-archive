@@ -233,5 +233,5 @@ export async function assignCharacterAction(
   }
   revalidateCharacter(character.slug);
 
-  redirect("/admin/characters");
+  redirect("/gm/characters");
 }

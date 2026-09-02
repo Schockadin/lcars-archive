@@ -54,8 +54,8 @@ async function main() {
 
   const { slug } = await createDialogue({
     title: DIALOGUE_TITLE,
-    ownCharacterId: desmond.id,
-    partnerCharacterIds: [lorzan.id],
+    ownSpeaker: { kind: "character", id: desmond.id },
+    partners: [{ kind: "character", id: lorzan.id }],
     authorUserId: OWNER_USER_ID,
     setting: null,
     locationSlug: null,
@@ -73,7 +73,7 @@ async function main() {
 
   await postDialogueMessage({
     archiveEntryId,
-    characterId: lorzan.id,
+    speaker: { kind: "character", id: lorzan.id },
     authorUserId: OWNER_USER_ID,
     bodyMarkdown:
       "Natürlich, Desmond. Was genau ist dir aufgefallen? Wenn es die " +
@@ -82,7 +82,7 @@ async function main() {
 
   await postDialogueMessage({
     archiveEntryId,
-    characterId: desmond.id,
+    speaker: { kind: "character", id: desmond.id },
     authorUserId: OWNER_USER_ID,
     bodyMarkdown:
       "Genau die. Die Abweichung ist klein, aber **konstant** — das sieht " +

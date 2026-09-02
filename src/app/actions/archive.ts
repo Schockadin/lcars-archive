@@ -31,7 +31,7 @@ export async function updateOwnArchiveEntryAction(
 
   const entryId = Number(formData.get("entryId"));
   if (!Number.isInteger(entryId)) {
-    return { error: "Ungültiger Archiv-Eintrag." };
+    return { error: "Ungültiger Datenbank-Eintrag." };
   }
 
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();

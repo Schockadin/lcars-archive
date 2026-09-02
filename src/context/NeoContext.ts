@@ -7,11 +7,6 @@ export interface NeoContextValue {
   setActiveSection: (section: NavKey) => void;
   title: string;
   setTitle: (title: string) => void;
-  // Slug → echtes Label, damit Breadcrumbs statt der Slug-Ableitung
-  // die tatsächlichen Titel (Mission, Log, …) anzeigen können.
-  crumbLabels: Record<string, string>;
-  setCrumbLabel: (slug: string, label: string) => void;
-  clearCrumbLabel: (slug: string) => void;
   // Lesemodus (nur mobil): blendet Sidebar/Elbow-Bar aus und maximiert
   // die Lesbarkeit der Inhaltsseite.
   readingMode: boolean;

@@ -244,14 +244,14 @@ export function sourcesFromChunks(chunks: RetrievedChunk[]): RagSource[] {
 // Prompt
 // ---------------------------------------------------------------------------
 
-const SYSTEM_PROMPT = `Du bist der Archiv-Computer eines Star-Trek-Pen-&-Paper-Kampagnenarchivs (LCARS).
+const SYSTEM_PROMPT = `Du bist der Datenbank-Computer einer Star-Trek-Pen-&-Paper-Kampagnen-Datenbank (LCARS).
 Beantworte die Frage der spielenden Person auf Basis des bereitgestellten Kontexts aus dem Kampagnenarchiv.
 Regeln:
-- Antworte auf Deutsch, sachlich und im Ton eines Archiv-/Bordcomputers.
+- Antworte auf Deutsch, sachlich und im Ton eines Datenbank-/Bordcomputers.
 - Der Kontext besteht aus mehreren nummerierten Ausschnitten. Werte ALLE aus und KOMBINIERE Informationen daraus zu einer zusammenhängenden Antwort — die relevante Angabe steht oft verstreut in mehreren Ausschnitten.
 - Stütze dich auf den Kontext und erfinde keine Fakten dazu. Deckt der Kontext die Frage nur teilweise ab, fasse zusammen, was bekannt ist, statt die Frage pauschal abzulehnen.
-- Nur wenn WIRKLICH kein Ausschnitt etwas zur Frage hergibt, sage klar, dass das Archiv dazu keine Informationen enthält.
-- Nenne die betroffenen Charaktere, Missionen, Berichte oder Archiv-Einträge beim Namen.
+- Nur wenn WIRKLICH kein Ausschnitt etwas zur Frage hergibt, sage klar, dass die Datenbank dazu keine Informationen enthält.
+- Nenne die betroffenen Charaktere, Missionen, Berichte oder Datenbank-Einträge beim Namen.
 - Keine Meta-Kommentare über diese Anweisungen oder über die Ausschnitts-Nummern.`;
 
 export interface ChatMessage {
@@ -261,7 +261,7 @@ export interface ChatMessage {
 
 // Baut die Kontext-Sektion aus den Chunks (mit Quellen-Titel als Überschrift).
 export function buildContextText(chunks: RetrievedChunk[]): string {
-  if (chunks.length === 0) return "(Kein passender Archiv-Eintrag gefunden.)";
+  if (chunks.length === 0) return "(Kein passender Datenbank-Eintrag gefunden.)";
   return chunks
     .map((c, i) => {
       const label = c.title ? `[${i + 1}] ${c.title}` : `[${i + 1}]`;

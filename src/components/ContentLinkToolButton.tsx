@@ -21,7 +21,7 @@ const TYPE_LABEL: Record<
 > = {
   character: "Charakter",
   mission: "Mission",
-  archive: "Archiv",
+  archive: "Datenbank",
 };
 
 type Mode = "autolink" | "delink";

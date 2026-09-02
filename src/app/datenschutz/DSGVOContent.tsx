@@ -92,6 +92,22 @@ export default function DSGVOContent({ year }: { year: number }) {
           fehlgeschlagenen Mail-Versands.
         </p>
         <p>
+          Zum Charakter einer Person gehören neben der Akte auch ihre{" "}
+          <strong>Charakterwerte</strong> (Attribute, Disziplinen, Talente,
+          Schwerpunkte und die weiteren Angaben des Bogens) sowie ein{" "}
+          <strong>Erfahrungspunkte-Konto</strong>. Dieses Konto ist ein
+          Buchungsjournal: Jede Gutschrift und jede Steigerung wird dauerhaft
+          mit Betrag, Grund, Zeitpunkt und dem Account festgehalten, der sie
+          gebucht hat (in der Regel die Spielleitung, bei Steigerungen die
+          spielende Person selbst). Ebenso werden gespielte{" "}
+          <strong>Sessions</strong> mit Datum, Titel, Notizen und
+          Teilnehmerliste gespeichert. Diese Angaben sind für Spielleitung und
+          die jeweilige Person einsehbar und dienen ausschließlich dem
+          Kampagnenbetrieb (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO —
+          Erfüllung des Nutzungsverhältnisses der Kampagne). Mit dem Charakter
+          werden sie gelöscht.
+        </p>
+        <p>
           Für die persönliche „News“-Übersicht auf dem Dashboard wird pro
           Login-Account gespeichert, welche Neuigkeiten bereits gesehen bzw.
           ausgeblendet wurden (Inhaltstyp, Kennung und Zeitpunkt), damit
@@ -172,15 +188,15 @@ export default function DSGVOContent({ year }: { year: number }) {
           Abs. 1 lit. f DSGVO); der Versand erfolgt ebenfalls über Resend.
         </p>
 
-        <h2>4. KI-gestützter Archiv-Assistent</h2>
+        <h2>4. KI-gestützter Datenbank-Assistent</h2>
         <p>
-          Angemeldete Nutzer:innen können über den Archiv-Assistenten (
+          Angemeldete Nutzer:innen können über den Datenbank-Assistenten (
           <code>/rag</code> bzw. unterhalb der Suche auf <code>/search</code>)
-          Fragen zum Archivinhalt in natürlicher Sprache stellen. Zur
+          Fragen zum Datenbank-Inhalt in natürlicher Sprache stellen. Zur
           Beantwortung werden die eingegebene <strong>Frage</strong> sowie – im
           Rahmen der Indexierung – die betroffenen{" "}
-          <strong>Archivinhalte</strong> (Texte zu Charakteren, Missionen,
-          Berichten, Archiv-Einträgen und abgeschlossenen Gesprächen) an zwei
+          <strong>Datenbank-Inhalte</strong> (Texte zu Charakteren, Missionen,
+          Berichten, Datenbank-Einträgen und abgeschlossenen Gesprächen) an zwei
           Auftragsverarbeiter in den USA übermittelt:
         </p>
         <p>
@@ -215,9 +231,9 @@ export default function DSGVOContent({ year }: { year: number }) {
           Beide verarbeiten die Daten als Auftragsverarbeiter gemäß Art. 28
           DSGVO, ausschließlich zur Beantwortung der jeweiligen Anfrage
           (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse
-          an einer komfortablen Recherche im eigenen Archiv). In den Kontext
-          einer Antwort fließen nur Inhalte ein, die die fragende Person nach
-          ihren Leserechten ohnehin einsehen darf. Der Assistent ist ein
+          an einer komfortablen Recherche in der eigenen Datenbank). In den
+          Kontext einer Antwort fließen nur Inhalte ein, die die fragende Person
+          nach ihren Leserechten ohnehin einsehen darf. Der Assistent ist ein
           optionales Zusatzangebot für angemeldete Nutzer:innen; wer ihn nicht
           verwendet, löst keine solche Übermittlung aus.
         </p>

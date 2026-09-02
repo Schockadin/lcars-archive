@@ -143,15 +143,20 @@ export async function requireNonGuest(): Promise<User> {
   return requirePermission("users.browse");
 }
 
-// Baseline für den /admin-Bereich (Layout): reine Admins, reine GMs UND reine
-// DB-Admins (mind. eines der DB_PERMISSIONS) dürfen den Staff-Bereich betreten;
-// die Unterseiten gaten anschließend spezifisch (requireAdmin/requireGM/
-// requireDbAccess bzw. feinere Rechte). Ohne die DB-Rechte hier käme ein reiner
-// db-admin gar nicht erst durch das Layout-Gate zu /admin/db.
+// Baseline für den /admin-Bereich (Layout): wer mindestens EIN Recht hat, das
+// dort eine Unterseite freischaltet — Verwaltung (admin.access), der
+// Rechte-Editor (users.manage) oder der DB-Bereich (DB_PERMISSIONS). Die
+// Unterseiten gaten anschließend spezifisch (requireAdmin/requirePermission/
+// requireDbAccess). Ohne die DB-Rechte hier käme ein reiner db-admin gar nicht
+// erst durch das Layout-Gate zu /admin/db.
+//
+// gm.access steht hier bewusst NICHT (mehr): die Spielleitungs-Werkzeuge sind
+// vollständig nach /gm umgezogen (eigenes Layout mit requireGM), unter /admin
+// liegt keine Seite mehr, die ein reiner GM sehen dürfte.
 export async function requireStaff(): Promise<User> {
   return requireAnyPermission([
     "admin.access",
-    "gm.access",
+    "users.manage",
     ...DB_PERMISSIONS,
   ]);
 }

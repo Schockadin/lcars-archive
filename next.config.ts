@@ -40,9 +40,8 @@ function buildCspHeader(): string {
     "base-uri 'self'",
     "form-action 'self'",
     // 'self' statt 'none': erlaubt der App, EIGENE Ressourcen gleicher Origin
-    // einzubetten — konkret die PDF-Auslieferung /api/character-sheets/<id> im
-    // Charakterbogen-Viewer (<iframe>, siehe CharacterSheets.tsx). Cross-Origin-
-    // Framing (der eigentliche Clickjacking-Vektor) bleibt weiterhin geblockt;
+    // einzubetten. Cross-Origin-Framing (der eigentliche Clickjacking-Vektor)
+    // bleibt weiterhin geblockt;
     // nur unsere eigenen Seiten dürfen unsere eigenen Seiten rahmen.
     "frame-ancestors 'self'",
     "upgrade-insecure-requests",

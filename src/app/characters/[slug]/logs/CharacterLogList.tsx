@@ -76,7 +76,7 @@ export default function CharacterLogList({
       <p className="lcars-eyebrow">Einsatzberichte von {characterName}</p>
 
       {logs.length === 0 ? (
-        <p className="mission-log-empty">
+        <p className="lcars-empty-state">
           Keine Logs von diesem Charakter verfasst.
         </p>
       ) : (

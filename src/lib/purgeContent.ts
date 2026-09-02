@@ -2,7 +2,6 @@ import "server-only";
 import sql from "@/lib/db";
 import type { TrashContentType } from "@/lib/adminContent";
 import { purgeContentImagesFor } from "@/lib/contentImages";
-import { purgeCharacterSheetsFor } from "@/lib/characterSheets";
 // RAG-Index endgültig mit aufräumen — content_embeddings hängt NICHT per FK am
 // Inhalt (eigene Tabelle), muss also hier beim harten Löschen mit entfernt
 // werden, sonst blieben verwaiste Vektorzeilen zurück.
@@ -42,17 +41,6 @@ export async function purgeExpiredSoftDeletedContent(
   archiveEntries: number;
 }> {
   const cutoff = sql`NOW() - (${retentionDays} * INTERVAL '1 day')`;
-
-  // Charakterbögen (character_sheets) hängen per ON DELETE CASCADE am
-  // Charakter — die R2-Objekte müssen VOR dem CASCADE-Löschen der Zeilen weg,
-  // sonst blieben sie verwaist. Deshalb erst die betroffenen IDs bestimmen,
-  // deren Bögen purgen, dann die Charaktere löschen.
-  const expiringCharacters = await sql<{ id: number }[]>`
-    SELECT id FROM characters WHERE deleted_at IS NOT NULL AND deleted_at < ${cutoff}
-  `;
-  for (const c of expiringCharacters) {
-    await purgeCharacterSheetsFor(c.id);
-  }
 
   const characterRows = await sql<{ id: number; slug: string }[]>`
     DELETE FROM characters WHERE deleted_at IS NOT NULL AND deleted_at < ${cutoff}
@@ -119,14 +107,11 @@ export async function purgeContentById(
   id: number,
 ): Promise<boolean> {
   if (contentType === "character") {
-    // Erst prüfen, ob der Charakter wirklich (weich-gelöscht) purgebar ist —
-    // dann die Bögen (character_sheets, ON DELETE CASCADE) samt R2-Objekten
-    // entfernen, BEVOR der CASCADE beim Charakter-Löschen die Zeilen wegräumt.
+    // Erst prüfen, ob der Charakter wirklich (weich-gelöscht) purgebar ist.
     const [target] = await sql<{ id: number }[]>`
       SELECT id FROM characters WHERE id = ${id} AND deleted_at IS NOT NULL
     `;
     if (!target) return false;
-    await purgeCharacterSheetsFor(id);
     await sql`DELETE FROM characters WHERE id = ${id}`;
     await purgeContentImagesFor("character", id);
     await deleteEmbeddings(sql, "character", id);

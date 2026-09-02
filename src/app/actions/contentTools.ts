@@ -98,7 +98,7 @@ async function getContentAccessor(
     }
     case "archiveEntry": {
       const entry = await getArchiveEntrySourceBySlug(slug);
-      if (!entry) return { error: "Archiv-Eintrag nicht gefunden." };
+      if (!entry) return { error: "Datenbank-Eintrag nicht gefunden." };
       if (!entry.sourceMarkdown) {
         return { error: "Kein Markdown-Quelltext vorhanden." };
       }

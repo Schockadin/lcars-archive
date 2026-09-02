@@ -2,12 +2,7 @@
 
 import { useActionState } from "react";
 import { updateSettings, type SettingsState } from "./settingsActions";
-import {
-  FormField,
-  FormError,
-  FormSuccess,
-  SubmitButton,
-} from "@/app/_shared/FormPrimitives";
+import { FormField, SaveFooter } from "@/app/_shared/FormPrimitives";
 
 const initialState: SettingsState = {};
 
@@ -45,16 +40,7 @@ export default function SettingsForm({
         />
       </FormField>
 
-      <FormError message={state?.error} />
-      {state?.success && <FormSuccess>Gespeichert.</FormSuccess>}
-
-      <SubmitButton
-        pending={pending}
-        pendingLabel="Speichern…"
-        className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%]"
-      >
-        Speichern
-      </SubmitButton>
+      <SaveFooter state={state} pending={pending} />
     </form>
   );
 }

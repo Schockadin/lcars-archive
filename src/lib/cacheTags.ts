@@ -29,4 +29,8 @@ export const cacheTags = {
   // mit-invalidiert, da das automatische Ingame-Jahr aus dem spätesten Log
   // abgeleitet wird (siehe src/lib/campaign.ts).
   campaign: "campaign-settings",
+
+  // Talent-Katalog (Tabelle talents). Ändert sich nur, wenn die Spielleitung
+  // unter /gm/talents etwas anlegt oder bearbeitet.
+  talents: "talents",
 } as const;

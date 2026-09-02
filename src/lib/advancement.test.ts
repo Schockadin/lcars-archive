@@ -1,0 +1,410 @@
+import { describe, it, expect } from "vitest";
+import {
+  attributeStepCost,
+  departmentStepCost,
+  creationAttributeCost,
+  creationDepartmentCost,
+  creationBudget,
+  creationCarryOver,
+  checkAdvancement,
+  applyAdvancement,
+  DEFAULT_ADVANCEMENT_RULES,
+  ADVANCEMENT_RULE_FIELDS,
+  parseAdvancementRules,
+  validateAdvancementRules,
+} from "./advancement";
+import { parseCharacterStats, ATTRIBUTE_FIELDS, DEPARTMENT_FIELDS } from "./characterStats";
+import type { CharacterStats } from "@/types/characterStats";
+
+function statsWith(
+  attributes: number[],
+  departments: number[] = [],
+): CharacterStats {
+  return parseCharacterStats({
+    attributes: Object.fromEntries(
+      ATTRIBUTE_FIELDS.map((f, i) => [f.key, attributes[i]]),
+    ),
+    departments: Object.fromEntries(
+      DEPARTMENT_FIELDS.map((f, i) => [f.key, departments[i]]),
+    ),
+  });
+}
+
+describe("Steigerungskosten", () => {
+  it("rechnet Attribute mit (neuer Wert − 7) × 10", () => {
+    expect(attributeStepCost(8)).toBe(10);
+    expect(attributeStepCost(10)).toBe(30);
+    expect(attributeStepCost(12)).toBe(50);
+  });
+
+  it("rechnet Disziplinen mit (neuer Wert) × 10", () => {
+    expect(departmentStepCost(2)).toBe(20);
+    expect(departmentStepCost(5)).toBe(50);
+  });
+});
+
+describe("Erschaffungsbudget", () => {
+  it("summiert die Einzelschritte bis zum gewählten Wert", () => {
+    // Ein Attribut von 7 auf 12: 10+20+30+40+50 = 150 AP.
+    expect(creationAttributeCost(statsWith([12, 7, 7, 7, 7, 7]))).toBe(150);
+    // Eine Disziplin von 1 auf 5: 20+30+40+50 = 140 AP.
+    expect(creationDepartmentCost(statsWith([], [5, 1, 1, 1, 1, 1]))).toBe(140);
+  });
+
+  it("zählt ungepflegte Werte als 0 AP", () => {
+    expect(creationAttributeCost(parseCharacterStats({}))).toBe(0);
+    expect(creationDepartmentCost(parseCharacterStats({}))).toBe(0);
+  });
+
+  // Gegenprobe zur Regelvorgabe: 320 AP sollen die bisherigen 56 Attributs-
+  // bzw. 16 Disziplin-Verteilpunkte ersetzen. Eine übliche Verteilung muss
+  // also knapp hineinpassen ("vielleicht habt ihr noch den ein- oder anderen
+  // Punkt frei").
+  it("lässt eine übliche 56er-Attributsverteilung ins Budget passen", () => {
+    // 12,10,10,9,8,7 = 56 Punkte
+    const budget = creationBudget(statsWith([12, 10, 10, 9, 8, 7]));
+    expect(budget.attributeCost).toBe(310);
+    expect(budget.attributeRemaining).toBe(10);
+    expect(budget.overBudget).toBe(false);
+  });
+
+  it("lässt eine übliche 16er-Disziplinverteilung ins Budget passen", () => {
+    // 5,4,3,2,1,1 = 16 Punkte
+    const budget = creationBudget(statsWith([], [5, 4, 3, 2, 1, 1]));
+    expect(budget.departmentCost).toBe(300);
+    expect(budget.departmentRemaining).toBe(20);
+  });
+
+  it("meldet eine Überziehung", () => {
+    // 12,11,11,10,9,8 kostet 450 AP und sprengt die 320.
+    const budget = creationBudget(statsWith([12, 11, 11, 10, 9, 8]));
+    expect(budget.attributeCost).toBeGreaterThan(DEFAULT_ADVANCEMENT_RULES.creationAttributeBudget);
+    expect(budget.attributeRemaining).toBeLessThan(0);
+    expect(budget.overBudget).toBe(true);
+  });
+
+  it("hält die Budgets für beide Gruppen getrennt", () => {
+    const budget = creationBudget(statsWith([12, 7, 7, 7, 7, 7], [5, 1, 1, 1, 1, 1]));
+    expect(budget.attributeCost).toBe(150);
+    expect(budget.departmentCost).toBe(140);
+    expect(DEFAULT_ADVANCEMENT_RULES.creationDepartmentBudget).toBe(320);
+  });
+});
+
+describe("checkAdvancement", () => {
+  it("berechnet Kosten und neuen Wert einer Attributssteigerung", () => {
+    const result = checkAdvancement(
+      statsWith([9, 8, 8, 8, 8, 7]),
+      { kind: "attribute", key: "control" },
+      100,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.plan.newValue).toBe(10);
+    expect(result.plan.cost).toBe(30);
+  });
+
+  it("berechnet Kosten einer Disziplinsteigerung", () => {
+    const result = checkAdvancement(
+      statsWith([], [3, 2, 1, 1, 1, 1]),
+      { kind: "department", key: "command" },
+      100,
+    );
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.plan.newValue).toBe(4);
+    expect(result.plan.cost).toBe(40);
+  });
+
+  it("verweigert eine Steigerung ohne AP-Deckung", () => {
+    const result = checkAdvancement(
+      statsWith([9, 8, 8, 8, 8, 7]),
+      { kind: "attribute", key: "control" },
+      20,
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toContain("30 AP nötig");
+  });
+
+  it("verweigert das Überschreiten des Höchstwerts", () => {
+    const result = checkAdvancement(
+      statsWith([12, 8, 8, 8, 8, 7]),
+      { kind: "attribute", key: "control" },
+      999,
+    );
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.error).toContain("Höchstwert 12");
+  });
+
+  it("hält die Häufungsgrenzen ein (nur ein 12er, zwei 11er)", () => {
+    // Ein 12er existiert bereits — ein zweiter darf nicht entstehen.
+    const zweiterZwoelfer = checkAdvancement(
+      statsWith([12, 11, 8, 8, 8, 7]),
+      { kind: "attribute", key: "daring" },
+      999,
+    );
+    expect(zweiterZwoelfer.ok).toBe(false);
+    if (!zweiterZwoelfer.ok) {
+      expect(zweiterZwoelfer.error).toContain("Nur 1× 12");
+    }
+
+    // Zwei 11er existieren bereits — der 10er darf nicht der dritte werden.
+    // (Reihenfolge der Werte: control, daring, fitness, insight, presence, reason)
+    const dritterElfer = checkAdvancement(
+      statsWith([11, 11, 10, 8, 8, 7]),
+      { kind: "attribute", key: "fitness" },
+      999,
+    );
+    expect(dritterElfer.ok).toBe(false);
+    if (!dritterElfer.ok) {
+      expect(dritterElfer.error).toContain("Nur 2× 11");
+    }
+  });
+
+  it("hält dieselben Grenzen bei Disziplinen ein", () => {
+    const zweiteFuenf = checkAdvancement(
+      statsWith([], [5, 4, 1, 1, 1, 1]),
+      { kind: "department", key: "conn" },
+      999,
+    );
+    expect(zweiteFuenf.ok).toBe(false);
+    if (!zweiteFuenf.ok) expect(zweiteFuenf.error).toContain("Nur 1× 5");
+  });
+
+  it("verlangt für ungepflegte Werte erst einen Startwert", () => {
+    const result = checkAdvancement(
+      parseCharacterStats({}),
+      { kind: "attribute", key: "control" },
+      999,
+    );
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toContain("noch nicht gepflegt");
+  });
+
+  it("kostet Talente und Schwerpunkte je 20 AP", () => {
+    const stats = parseCharacterStats({ talents: ["Resolut"] });
+    const talent = checkAdvancement(
+      stats,
+      { kind: "talent", entry: "Bold: Command" },
+      20,
+    );
+    expect(talent.ok).toBe(true);
+    if (talent.ok) expect(talent.plan.cost).toBe(DEFAULT_ADVANCEMENT_RULES.talentCost);
+
+    const focus = checkAdvancement(stats, { kind: "focus", entry: "Warp" }, 20);
+    expect(focus.ok).toBe(true);
+    if (focus.ok) expect(focus.plan.cost).toBe(DEFAULT_ADVANCEMENT_RULES.focusCost);
+  });
+
+  it("verweigert doppelte Talente/Schwerpunkte und leere Eingaben", () => {
+    const stats = parseCharacterStats({ talents: ["Resolut"] });
+    const doppelt = checkAdvancement(
+      stats,
+      { kind: "talent", entry: "  resolut " },
+      999,
+    );
+    expect(doppelt.ok).toBe(false);
+
+    const leer = checkAdvancement(stats, { kind: "talent", entry: "   " }, 999);
+    expect(leer.ok).toBe(false);
+  });
+});
+
+describe("applyAdvancement", () => {
+  it("erhöht den gesteigerten Wert und lässt die übrigen unberührt", () => {
+    const stats = statsWith([9, 8, 8, 8, 8, 7]);
+    const check = checkAdvancement(
+      stats,
+      { kind: "attribute", key: "control" },
+      999,
+    );
+    expect(check.ok).toBe(true);
+    if (!check.ok) return;
+
+    const next = applyAdvancement(stats, { kind: "attribute", key: "control" }, check.plan);
+    expect(next.attributes.control).toBe(10);
+    expect(next.attributes.daring).toBe(8);
+    // Die Ausgangsdaten bleiben unangetastet.
+    expect(stats.attributes.control).toBe(9);
+  });
+
+  it("hängt Talente und Schwerpunkte an", () => {
+    const stats = parseCharacterStats({ focuses: ["Warp"] });
+    const check = checkAdvancement(stats, { kind: "focus", entry: "Sensoren" }, 20);
+    expect(check.ok).toBe(true);
+    if (!check.ok) return;
+
+    const next = applyAdvancement(stats, { kind: "focus", entry: "Sensoren" }, check.plan);
+    expect(next.focuses).toEqual(["Warp", "Sensoren"]);
+  });
+});
+
+// Die Spielleitung kann das Regelwerk unter /gm/ap verstellen — die Kosten- und
+// Budgetfunktionen müssen dann mit den GEÄNDERTEN Zahlen rechnen, nicht mit den
+// Standardwerten.
+describe("konfigurierbares Regelwerk", () => {
+  const doppelt = { ...DEFAULT_ADVANCEMENT_RULES, apPerStep: 20 };
+
+  it("rechnet Schrittkosten mit dem eingestellten Faktor", () => {
+    expect(attributeStepCost(10, doppelt)).toBe(60);
+    expect(departmentStepCost(3, doppelt)).toBe(60);
+  });
+
+  it("bezieht Erschaffungskosten und -budget auf die eingestellten Werte", () => {
+    const stats = statsWith([12, 7, 7, 7, 7, 7]);
+    expect(creationAttributeCost(stats, doppelt)).toBe(300);
+    const budget = creationBudget(stats, {
+      ...doppelt,
+      creationAttributeBudget: 250,
+    });
+    expect(budget.attributeRemaining).toBe(-50);
+    expect(budget.overBudget).toBe(true);
+  });
+
+  it("prüft Steigerungen gegen die eingestellten Kosten", () => {
+    const stats = statsWith([8, 7, 7, 7, 7, 7]);
+    // Kontrolle 8 → 9 kostet mit Faktor 20 genau 40 AP.
+    expect(
+      checkAdvancement(stats, { kind: "attribute", key: "control" }, 39, doppelt).ok,
+    ).toBe(false);
+    const result = checkAdvancement(
+      stats,
+      { kind: "attribute", key: "control" },
+      40,
+      doppelt,
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.plan.cost).toBe(40);
+  });
+
+  it("nutzt ohne übergebene Regeln weiterhin die Standardwerte", () => {
+    expect(attributeStepCost(10)).toBe(attributeStepCost(10, DEFAULT_ADVANCEMENT_RULES));
+  });
+});
+
+describe("parseAdvancementRules", () => {
+  it("ergänzt fehlende Felder aus den Standardwerten", () => {
+    expect(parseAdvancementRules({ apPerStep: 15 })).toEqual({
+      ...DEFAULT_ADVANCEMENT_RULES,
+      apPerStep: 15,
+    });
+  });
+
+  it("ignoriert unbrauchbare Werte und unbekannte Schlüssel", () => {
+    const parsed = parseAdvancementRules({
+      apPerStep: 0, // unter dem Minimum
+      talentCost: "keine Zahl",
+      focusCost: 12.5, // keine ganze Zahl
+      warpfaktor: 9, // unbekannt
+    });
+    expect(parsed).toEqual(DEFAULT_ADVANCEMENT_RULES);
+  });
+
+  it("verträgt null und Unsinn statt eines Objekts", () => {
+    expect(parseAdvancementRules(null)).toEqual(DEFAULT_ADVANCEMENT_RULES);
+    expect(parseAdvancementRules("kaputt")).toEqual(DEFAULT_ADVANCEMENT_RULES);
+  });
+});
+
+describe("validateAdvancementRules", () => {
+  function formValues(overrides: Record<string, string> = {}) {
+    const values: Record<string, string> = {};
+    for (const field of ADVANCEMENT_RULE_FIELDS) {
+      values[field.key] = String(DEFAULT_ADVANCEMENT_RULES[field.key]);
+    }
+    return { ...values, ...overrides };
+  }
+
+  it("nimmt vollständige, gültige Eingaben an", () => {
+    const result = validateAdvancementRules(formValues({ apPerStep: "15" }));
+    expect(result).toEqual({
+      ok: true,
+      value: { ...DEFAULT_ADVANCEMENT_RULES, apPerStep: 15 },
+    });
+  });
+
+  it("lehnt ab statt still auf den Standard zurückzufallen", () => {
+    expect(validateAdvancementRules(formValues({ apPerStep: "0" })).ok).toBe(false);
+    expect(validateAdvancementRules(formValues({ talentCost: "abc" })).ok).toBe(false);
+    expect(validateAdvancementRules(formValues({ focusCost: "" })).ok).toBe(false);
+  });
+
+  it("deckt jedes Feld des Regelwerks ab", () => {
+    const keys = ADVANCEMENT_RULE_FIELDS.map((f) => f.key).sort();
+    expect(keys).toEqual(Object.keys(DEFAULT_ADVANCEMENT_RULES).sort());
+  });
+});
+
+describe("creationCarryOver", () => {
+  it("überträgt die Reste beider Budgets, gedeckelt auf das Maximum", () => {
+    // 12/7/7/7/7/7 kostet 150 AP von 320 → 170 übrig, Disziplinen unberührt
+    // (0 von 320 verbraucht) → zusammen weit über dem Deckel von 10.
+    expect(creationCarryOver(statsWith([12, 7, 7, 7, 7, 7]))).toBe(10);
+  });
+
+  it("überträgt weniger als das Maximum, wenn weniger übrig ist", () => {
+    // Attribute: 310 von 320 → 10 übrig. Disziplinen: 5/4/3/2/1/1 = 300 von
+    // 320 → 20 übrig. Zusammen 30, gedeckelt auf 4.
+    const stats = statsWith([12, 10, 10, 9, 8, 7], [5, 4, 3, 2, 1, 1]);
+    expect(creationCarryOver(stats, { ...DEFAULT_ADVANCEMENT_RULES, creationCarryOverMax: 4 })).toBe(4);
+    expect(creationCarryOver(stats, { ...DEFAULT_ADVANCEMENT_RULES, creationCarryOverMax: 100 })).toBe(30);
+  });
+
+  it("zählt ein überzogenes Budget als 0 statt negativ", () => {
+    // Attribute überzogen (12/11/11/10/9/8), Disziplinen unberührt: der
+    // Attributs-Rest darf den Disziplinen-Rest nicht schmälern.
+    const stats = statsWith([12, 11, 11, 10, 9, 8]);
+    expect(creationBudget(stats).attributeRemaining).toBeLessThan(0);
+    expect(
+      creationCarryOver(stats, { ...DEFAULT_ADVANCEMENT_RULES, creationCarryOverMax: 1000 }),
+    ).toBe(320);
+  });
+
+  it("überträgt nichts, wenn das Maximum 0 ist", () => {
+    expect(
+      creationCarryOver(statsWith([7, 7, 7, 7, 7, 7]), {
+        ...DEFAULT_ADVANCEMENT_RULES,
+        creationCarryOverMax: 0,
+      }),
+    ).toBe(0);
+  });
+});
+
+describe("Talent-Dubletten mit eigenem Namen", () => {
+  // Ein umbenanntes Talent steht als „Neuer Name (Originalname)" auf dem Bogen
+  // (siehe talentCatalog.ts) — verglichen wird trotzdem der Katalogname.
+  const stats = parseCharacterStats({
+    creationLocked: true,
+    talents: ["Hypothesenschmiede (Testing a Theory)"],
+  });
+
+  it("lehnt dasselbe Talent unter seinem Originalnamen ab", () => {
+    const result = checkAdvancement(
+      stats,
+      { kind: "talent", entry: "Testing a Theory" },
+      999,
+    );
+    expect(result.ok).toBe(false);
+  });
+
+  it("lehnt es auch unter einem anderen eigenen Namen ab", () => {
+    const result = checkAdvancement(
+      stats,
+      { kind: "talent", entry: "Tüftelei (Testing a Theory)" },
+      999,
+    );
+    expect(result.ok).toBe(false);
+  });
+
+  it("erlaubt ein anderes Talent mit eigenem Namen", () => {
+    const result = checkAdvancement(
+      stats,
+      { kind: "talent", entry: "Draufgänger (Bold Command)" },
+      999,
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.plan.label).toBe("Draufgänger (Bold Command)");
+  });
+});

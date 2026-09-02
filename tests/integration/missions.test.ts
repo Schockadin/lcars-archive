@@ -158,7 +158,7 @@ describe("deleteMissionLog", () => {
     );
     await deleteMissionLog(author.id, log.id);
 
-    const restored = await restoreMissionLog(log.id);
+    const restored = await restoreMissionLog(log.id, author.id);
 
     expect(restored?.slug).toBe(log.slug);
     const [row] = await sql<{ deleted_at: string | null }[]>`
@@ -234,7 +234,7 @@ describe("deleteMission", () => {
     );
     await deleteMission(mission.id, admin.id);
 
-    const restored = await restoreMission(mission.id);
+    const restored = await restoreMission(mission.id, admin.id);
 
     expect(restored?.slug).toBe(mission.slug);
     const [[missionRow], [logRow]] = await Promise.all([

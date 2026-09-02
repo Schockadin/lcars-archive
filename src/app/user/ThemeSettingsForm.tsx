@@ -4,7 +4,7 @@ import {
   updateColorThemeAction,
   type ColorThemeState,
 } from "./colorThemeActions";
-import { FormError, FormSuccess, SubmitButton } from "@/app/_shared/FormPrimitives";
+import { SaveFooter } from "@/app/_shared/FormPrimitives";
 import {
   COLOR_THEMES,
   DEFAULT_THEME_ID,
@@ -207,16 +207,7 @@ export default function ThemeSettingsForm({
         </div>
       </div>
 
-      <FormError message={state?.error} />
-      {state?.success && <FormSuccess>Gespeichert.</FormSuccess>}
-
-      <SubmitButton
-        pending={pending}
-        pendingLabel="Speichern…"
-        className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%]"
-      >
-        Speichern
-      </SubmitButton>
+      <SaveFooter state={state} pending={pending} />
     </form>
   );
 }

@@ -44,12 +44,12 @@ export default function DialogueReplyForm({
   // Gewählter Antwort-Charakter (kontrolliert). Bleibt gültig, auch wenn sich
   // die Auswahlliste durch neue Nachrichten (Poll) ändert — fällt sonst auf den
   // ersten verfügbaren zurück.
-  const [charId, setCharId] = useState<number | undefined>(
-    replyCharacters[0]?.id,
+  const [charKey, setCharKey] = useState<string | undefined>(
+    replyCharacters[0]?.key,
   );
-  const validCharId = replyCharacters.some((c) => c.id === charId)
-    ? charId
-    : replyCharacters[0]?.id;
+  const validCharKey = replyCharacters.some((c) => c.key === charKey)
+    ? charKey
+    : replyCharacters[0]?.key;
 
   useEffect(() => {
     if (state?.success) {
@@ -81,26 +81,26 @@ export default function DialogueReplyForm({
 
       {/* Immer sichtbar: mit welchem Charakter geantwortet wird. Bei mehreren
           eigenen Teilnehmer-Charakteren als Auswahl, sonst als reine Anzeige
-          (+ Hidden-Input für die characterId). */}
+          (+ Hidden-Input für den Sprecher-Schlüssel). */}
       {single ? (
         <p className="lcars-eyebrow">
           Antworten als{" "}
           <span className="text-lcars-ink-contrast">
             {replyCharacters[0].name}
           </span>
-          <input type="hidden" name="characterId" value={replyCharacters[0].id} />
+          <input type="hidden" name="speaker" value={replyCharacters[0].key} />
         </p>
       ) : (
         <label className="flex flex-col gap-[4px]">
           <span className="lcars-eyebrow">Antworten als</span>
           <select
-            name="characterId"
-            value={validCharId}
-            onChange={(e) => setCharId(Number(e.target.value))}
+            name="speaker"
+            value={validCharKey}
+            onChange={(e) => setCharKey(e.target.value)}
             className="lcars-input rounded-lcars-pill self-start"
           >
             {replyCharacters.map((c) => (
-              <option key={c.id} value={c.id}>
+              <option key={c.key} value={c.key}>
                 {c.name}
               </option>
             ))}

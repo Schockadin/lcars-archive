@@ -2,19 +2,22 @@ import { Suspense } from "react";
 import { requireStaff } from "@/lib/dal";
 import PageSkeleton from "@/app/_shared/PageSkeleton";
 
-// Gilt für /admin und alle Unterseiten (/admin/users, /admin/characters,
+// Gilt für /admin und alle Unterseiten (/admin/users, /admin/permissions,
 // /admin/db, /admin/scripts, /admin/content, /admin/audit-log,
-// /admin/[id]/edit). requireGM() ist hier das gemeinsame Baseline-Gate
-// (gm-oder-admin) für den ganzen Bereich und leitet Nicht-Privilegierte auf
-// /login um — die admin-only-Unterseiten verschärfen das in ihrer eigenen
-// Seite zusätzlich per requireAdmin() (Defense in Depth, gleiches Prinzip
-// wie schon bei /admin/content und /admin/audit-log). Die Navigation
-// zwischen den Unterseiten läuft über das Admin-Dropdown im Header
-// (HeaderUserNav.tsx), nicht mehr über eine eigene Subnav hier.
+// /admin/[id]/edit). requireStaff() ist hier das gemeinsame Baseline-Gate für
+// den ganzen Bereich und leitet Nicht-Privilegierte auf /login um — die
+// admin-only-Unterseiten verschärfen das in ihrer eigenen Seite zusätzlich
+// per requireAdmin() (Defense in Depth). Die Navigation zwischen den
+// Unterseiten läuft über das Admin-Dropdown im Header (HeaderUserNav.tsx),
+// nicht mehr über eine eigene Subnav hier.
+//
+// Die Werkzeuge der Spielleitung liegen NICHT mehr hier, sondern unter /gm
+// (eigenes Layout mit requireGM) — ein reiner GM kommt durch dieses Gate
+// deshalb bewusst nicht mehr durch.
 //
 // Anonyme Besucher fängt bereits der Proxy (src/proxy.ts) ab und leitet sie
 // auf /login um. Dieses Gate bleibt trotzdem: Es prüft ROLLEN/RECHTE
-// (admin.access/gm.access/DB-Rechte), was der optimistische Proxy bewusst
+// (admin.access/users.manage/DB-Rechte), was der optimistische Proxy bewusst
 // nicht tut (bräuchte DB-Zugriff). requireStaff ist damit die verbindliche
 // Rechteprüfung (Source of Truth), der Proxy nur die vorgelagerte
 // Session-Filterung.

@@ -8,19 +8,19 @@ import RagChat from "./RagChat";
 
 export const metadata = {
   title: {
-    default: "Archiv-Assistent",
+    default: "Datenbank-Assistent",
   },
 };
 
 export default function RagPage() {
   return (
     <>
-      <PageMeta title="Archiv-Assistent" section="rag" />
-      {/* Gleiche Content-Breite wie /search (das denselben Archiv-Assistenten
+      <PageMeta title="Datenbank-Assistent" section="rag" />
+      {/* Gleiche Content-Breite wie /search (das denselben Datenbank-Assistenten
           einbettet) und die übrigen Inhaltsseiten — 640px. */}
       <div className="w-full max-w-[640px]">
         <div className="mb-[16px]">
-          <h1 className="lcars-data-row-heading">Archiv-Assistent</h1>
+          <h1 className="lcars-data-row-heading">Datenbank-Assistent</h1>
           <p className="lcars-eyebrow">
             Fragen an den Kampagnen-Datenbestand stellen
           </p>

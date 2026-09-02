@@ -420,7 +420,12 @@ CREATE INDEX IF NOT EXISTS idx_content_follows_target ON content_follows(target_
 CREATE TABLE IF NOT EXISTS dialogue_messages (
   id                SERIAL PRIMARY KEY,
   archive_entry_id  INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
+  -- Wer spricht? Entweder ein Charakter (character_id) ODER ein NPC, also ein
+  -- Datenbank-Eintrag der Kategorie "npc" (npc_entry_id) — siehe
+  -- src/lib/dialogueSpeaker.ts. Beide nullable und ON DELETE SET NULL: eine
+  -- Nachricht bleibt lesbar, auch wenn ihr Sprecher später verschwindet.
   character_id      INT REFERENCES characters(id) ON DELETE SET NULL,
+  npc_entry_id      INT REFERENCES archive_entries(id) ON DELETE SET NULL,
   author_user_id    INT REFERENCES users(id) ON DELETE SET NULL,
   content           TEXT NOT NULL,
   source_md         TEXT NOT NULL,
@@ -430,6 +435,7 @@ CREATE TABLE IF NOT EXISTS dialogue_messages (
 );
 CREATE INDEX IF NOT EXISTS idx_dialogue_messages_entry  ON dialogue_messages(archive_entry_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_dialogue_messages_author ON dialogue_messages(author_user_id);
+CREATE INDEX IF NOT EXISTS idx_dialogue_messages_npc    ON dialogue_messages(npc_entry_id);
 
 -- ---------------------------------------------------------------------------
 -- push_subscriptions
@@ -544,6 +550,26 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
 CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created_at ON admin_audit_log(created_at);
 
 -- ---------------------------------------------------------------------------
+-- dialogue_npc_speakers
+-- ---------------------------------------------------------------------------
+-- Wer spricht in einem Gespräch für einen NPC? NPCs sind Datenbank-Einträge
+-- der Kategorie "npc" (archive_entries) — an ihnen hängt keine Person, die
+-- antworten könnte. Diese Tabelle ordnet sie deshalb PRO GESPRÄCH einem
+-- GM-Konto zu: für die Teilnahme-Prüfung (getDialogueParticipantCharacters)
+-- zählt dieser Charakter dann wie ein eigener, aber eben nur in diesem einen
+-- Gespräch. Höchstens ein Sprecher je NPC und Gespräch (zusammengesetzter
+-- Primärschlüssel); ON DELETE CASCADE in alle drei Richtungen — ohne
+-- Gespräch, Charakter oder Konto ist die Zuordnung gegenstandslos.
+CREATE TABLE IF NOT EXISTS dialogue_npc_speakers (
+  archive_entry_id INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
+  npc_entry_id     INT NOT NULL REFERENCES archive_entries(id) ON DELETE CASCADE,
+  user_id          INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (archive_entry_id, npc_entry_id)
+);
+CREATE INDEX IF NOT EXISTS idx_dialogue_npc_speakers_user ON dialogue_npc_speakers(user_id);
+
+-- ---------------------------------------------------------------------------
 -- dialogue_reservations
 -- ---------------------------------------------------------------------------
 -- Antwort-Reservierung für Mehrparteien-Dialoge (>2 Teilnehmende): wer
@@ -619,24 +645,31 @@ CREATE TABLE IF NOT EXISTS content_images (
 );
 CREATE INDEX IF NOT EXISTS idx_content_images_content ON content_images(content_type, content_id);
 
+
 -- ---------------------------------------------------------------------------
--- character_sheets
+-- character_ap_entries
 -- ---------------------------------------------------------------------------
--- Charakterbögen (PDFs) je Charakter. Wie content_images liegen die Bytes im
--- öffentlichen Asset-Bucket (Präfix character-sheets/<CharakterID>/<UUID>.pdf,
--- siehe src/lib/characterSheets.ts), die Zeile hält nur Metadaten. Anders als
--- content_images mit echtem Fremdschlüssel + ON DELETE CASCADE (ein Bogen
--- gehört immer genau einem Charakter). Beliebig viele Bögen pro Charakter.
-CREATE TABLE IF NOT EXISTS character_sheets (
+-- Erfahrungspunkte-Konto (AP = Advancement Points) je Charakter als
+-- Buchungsjournal statt eines einzelnen Saldo-Felds: jede Vergabe (Session,
+-- Logbuch, Missions-/Story-Abschluss) und jede Ausgabe (Steigerung) ist eine
+-- eigene Zeile, der Kontostand ist ihre Summe. Das hält nachvollziehbar, WOFÜR
+-- AP kamen und gingen, und lässt sich einzeln korrigieren.
+--
+-- amount: positiv = vergeben, negativ = ausgegeben. reason klassifiziert die
+-- Buchung (siehe AP_REASONS in src/lib/characterAp.ts), note trägt den
+-- Klartext ("Session 42", "Kontrolle 9 → 10").
+CREATE TABLE IF NOT EXISTS character_ap_entries (
   id           SERIAL PRIMARY KEY,
   character_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
-  r2_key       TEXT UNIQUE NOT NULL,
-  file_name    TEXT NOT NULL,
-  size_bytes   INT NOT NULL,
-  uploaded_by  INT REFERENCES users(id) ON DELETE SET NULL,
+  amount       INT NOT NULL CHECK (amount <> 0),
+  reason       TEXT NOT NULL
+                 CHECK (reason IN ('session', 'logbook', 'bonus', 'mission', 'manual', 'advancement', 'creation')),
+  note         TEXT,
+  created_by   INT REFERENCES users(id) ON DELETE SET NULL,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
-CREATE INDEX IF NOT EXISTS idx_character_sheets_character ON character_sheets(character_id);
+CREATE INDEX IF NOT EXISTS idx_character_ap_entries_character
+  ON character_ap_entries(character_id);
 
 -- ---------------------------------------------------------------------------
 -- campaign_settings
@@ -650,6 +683,103 @@ CREATE TABLE IF NOT EXISTS campaign_settings (
   ingame_year INT,
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- ---------------------------------------------------------------------------
+-- talents
+-- ---------------------------------------------------------------------------
+-- Talent-Katalog der Runde (src/lib/talents.ts + talentCatalog.ts). Die
+-- Startdaten stammen aus dem Regeltext und liegen als scripts/seed/talents.json
+-- im Repo; eingespielt werden sie mit `npm run db:seed-talents` (idempotent).
+-- Die Spielleitung pflegt den Katalog danach unter /gm/talents, die
+-- Charakterbögen nutzen ihn als Auswahlliste.
+--
+-- name ist eindeutig: die Auswahlliste speichert am Charakter den reinen
+-- Namen (characters.metadata.stats.talents), zwei gleichnamige Talente wären
+-- dort nicht unterscheidbar. is_custom trennt ergänzte von importierten
+-- Talenten — nur ergänzte lassen sich wieder löschen.
+CREATE TABLE IF NOT EXISTS talents (
+  id          SERIAL PRIMARY KEY,
+  name        TEXT NOT NULL UNIQUE,
+  category    TEXT NOT NULL
+                CHECK (category IN ('general', 'species', 'augment', 'esoteric',
+                                    'command', 'conn', 'engineering', 'security',
+                                    'science', 'medicine')),
+  requirement TEXT,
+  description TEXT NOT NULL,
+  is_custom   BOOLEAN NOT NULL DEFAULT FALSE,
+  created_by  INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_talents_category ON talents(category);
+
+-- ---------------------------------------------------------------------------
+-- game_sessions
+-- ---------------------------------------------------------------------------
+-- Gespielte Sessions (/gm/sessions). Beim Anlegen schreibt die Spielleitung
+-- allen aktiven Charakteren die Session-AP (und optionale Bonus-AP) gut — die
+-- Gutschriften selbst sind normale Buchungen in character_ap_entries und
+-- zeigen über deren session_id hierher zurück.
+CREATE TABLE IF NOT EXISTS game_sessions (
+  id           SERIAL PRIMARY KEY,
+  session_date DATE NOT NULL,
+  title        TEXT NOT NULL DEFAULT '',
+  session_ap   INT NOT NULL DEFAULT 0 CHECK (session_ap >= 0),
+  bonus_ap     INT NOT NULL DEFAULT 0 CHECK (bonus_ap >= 0),
+  notes        TEXT NOT NULL DEFAULT '',
+  created_by   INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_game_sessions_date ON game_sessions(session_date DESC);
+
+-- ---------------------------------------------------------------------------
+-- game_session_characters
+-- ---------------------------------------------------------------------------
+-- Wer bei einer Session dabei war. Eigene Tabelle statt „wer eine Buchung mit
+-- dieser session_id hat": eine Session kann mit 0 AP eingetragen werden (reiner
+-- Notizeintrag), und die automatische Logbuch-AP muss trotzdem wissen, wem sie
+-- gutzuschreiben ist.
+CREATE TABLE IF NOT EXISTS game_session_characters (
+  session_id   INT NOT NULL REFERENCES game_sessions(id) ON DELETE CASCADE,
+  character_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  PRIMARY KEY (session_id, character_id)
+);
+CREATE INDEX IF NOT EXISTS idx_game_session_characters_character
+  ON game_session_characters(character_id);
+
+-- character_ap_entries: Rückverweis auf die Session, aus der eine Gutschrift
+-- stammt (NULL bei Einzelbuchungen der Spielleitung und bei Steigerungen).
+-- ON DELETE CASCADE: wird eine Session zurückgenommen, verschwinden auch ihre
+-- Gutschriften — sonst bliebe AP-Guthaben aus einer nie gespielten Session.
+ALTER TABLE character_ap_entries ADD COLUMN IF NOT EXISTS session_id INT
+  REFERENCES game_sessions(id) ON DELETE CASCADE;
+CREATE INDEX IF NOT EXISTS idx_character_ap_entries_session
+  ON character_ap_entries(session_id);
+
+-- character_ap_entries: Rückverweis auf die Mission, für deren Abschluss eine
+-- Gutschrift vergeben wurde (NULL bei allen anderen Buchungen). AP für einen
+-- Missionsabschluss gibt es nur über die Mission selbst (siehe
+-- completeMissionWithAp) — der Verweis hält fest, wofür. ON DELETE SET NULL:
+-- eine gelöschte Mission soll die Gutschrift nicht mitnehmen.
+ALTER TABLE character_ap_entries ADD COLUMN IF NOT EXISTS mission_id INT
+  REFERENCES missions(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_character_ap_entries_mission
+  ON character_ap_entries(mission_id);
+
+-- mission_logs: optionale Zuordnung zu einer Session (/gm/sessions). Sobald
+-- mindestens ein Logbuch an einer Session hängt, bekommen die dort
+-- gutgeschriebenen Charaktere automatisch die Logbuch-AP (siehe
+-- syncSessionLogbookAp in src/lib/gameSessions.ts). ON DELETE SET NULL: wird
+-- eine Session zurückgenommen, verliert das Logbuch nur seine Zuordnung.
+ALTER TABLE mission_logs ADD COLUMN IF NOT EXISTS session_id INT
+  REFERENCES game_sessions(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_mission_logs_session ON mission_logs(session_id);
+
+-- campaign_settings: konfigurierbares AP-Regelwerk (Kosten fürs Steigern,
+-- Erschaffungsbudgets, AP je Session/Logbuch). NULL = die eingebauten
+-- Standardwerte aus src/lib/advancement.ts gelten (DEFAULT_ADVANCEMENT_RULES).
+ALTER TABLE campaign_settings ADD COLUMN IF NOT EXISTS advancement_rules JSONB;
 
 -- ---------------------------------------------------------------------------
 -- news_seen

@@ -1,0 +1,425 @@
+/* Charakterbogen „Personnel File" — 1:1 nach der Vorlage
+   (personnelfilesvgexactmockup.html): ein 816×1056-Blatt mit dem
+   Original-Bogen als SVG-Grafik und exakt darauf positionierten Eingabefeldern.
+   Maße, Farben, Schriftgrößen und der Skalierungs-Breakpoint sind aus der
+   Vorlage übernommen, nur die Klassennamen sind mit „pf-" präfixiert, damit
+   sie sich nicht mit dem übrigen LCARS-CSS beißen.
+
+   Bewusst OHNE LCARS-Tokens: der Bogen ist ein Faksimile des gedruckten
+   Charakterbogens (weißes Papier, graue Schrift) und soll in jedem Farbtheme
+   gleich aussehen — wie ein eingelegtes Blatt Papier. */
+
+/* Rahmen um das Blatt. Anders als in der Vorlage (grauer Schreibtisch) liegt
+   der Bogen hier auf dem LCARS-Hintergrund — er ist Teil der Anwendung, kein
+   Blatt auf einem Tisch. */
+.pf-page {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  /* Oben ein Streifen für den Vollbild-Knopf, damit er nicht auf der Grafik
+     des Bogens sitzt. */
+  padding: 44px 0 12px;
+  background: var(--lcars-bg);
+  /* Die "Handschrift" auf dem Blatt: Farbe, Schriftart und das Blau der
+     Vorlage an einer Stelle, statt in jedem Feldtyp erneut. Bewusst feste
+     Werte statt LCARS-Tokens — der Bogen ist ein Faksimile und sieht in jedem
+     Theme gleich aus (siehe Dateikopf). */
+  --pf-ink: #555;
+  --pf-hand: "Segoe UI", Arial, sans-serif;
+  --pf-accent: #3f84b5;
+}
+
+/* Das Blatt. Die Vorlage ist fix 816×1056; damit der Bogen auch in einer
+   schmaleren Spalte (LCARS-Rahmen, Handy) vollständig sichtbar bleibt, wird
+   er als Ganzes verkleinert statt umgebrochen — der Bogen bleibt ein Bogen.
+   Dafür sind ALLE Maße darin Vielfache von --pf-unit: das ist genau ein Pixel
+   der Vorlage, solange das Blatt 816px breit ist, und schrumpft proportional
+   mit. So bleibt die Anordnung 1:1, ohne transform-Skalierung (die die
+   Layout-Höhe nicht mitnimmt) und ohne Breakpoints.
+
+   container-type gilt für die KINDER: cqw darin bezieht sich auf das Blatt. */
+.pf-sheet {
+  container-type: inline-size;
+  --pf-unit: calc(100cqw / 816);
+  position: relative;
+  /* Volle Breite statt der 816px der Vorlage: alle Maße darin hängen an
+     --pf-unit, der Bogen wächst und schrumpft also als Ganzes und bleibt in
+     jeder Größe maßstabsgetreu. */
+  width: 100%;
+  aspect-ratio: 816 / 1056;
+  background: #fff;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.22);
+  overflow: hidden;
+}
+
+/* Wie in der Vorlage (die ein globales * { box-sizing: border-box } setzt):
+   die Maße der Kästen sind Außenmaße, Innenabstände zählen hinein. */
+.pf-sheet,
+.pf-sheet * {
+  box-sizing: border-box;
+}
+
+.pf-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  pointer-events: none;
+}
+
+.pf-form-layer {
+  position: absolute;
+  inset: 0;
+}
+
+/* Portrait im Bildkasten des Bogens — passt sich ein, ohne die gedruckte
+   Umrandung zu überdecken. */
+.pf-photo {
+  position: absolute;
+  z-index: 1;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+/* Alles, was auf dem Blatt "geschrieben" steht — Eingabefelder, Ansichts-
+   Texte, Zahlen, Listen und die Bedienelemente in den Kästen. Schriftart
+   einmal für alle; die Farbe setzen die abweichenden Elemente (Plus, Zähler)
+   selbst. */
+.pf-field,
+.pf-static,
+.pf-combo-fixed,
+.pf-stat,
+.pf-resistance,
+.pf-stress-value,
+.pf-list,
+.pf-list-add,
+.pf-list-count {
+  font-family: var(--pf-hand);
+}
+
+/* Die Textkästen des Bogens: als Eingabefeld (.pf-field) und als reine
+   Ansicht (.pf-static, siehe PersonnelFileView) mit identischen
+   Innenabständen — ein gelesener Bogen steht Zeichen für Zeichen dort, wo er
+   im Formular stünde. */
+.pf-field,
+.pf-static {
+  position: absolute;
+  z-index: 2;
+  color: var(--pf-ink);
+  font-size: calc(10 * var(--pf-unit));
+  line-height: 1.25;
+  padding: calc(13 * var(--pf-unit)) calc(7 * var(--pf-unit))
+    calc(4 * var(--pf-unit));
+}
+
+.pf-field {
+  border: 0;
+  outline: 0;
+  background: transparent;
+  resize: none;
+}
+
+textarea.pf-field {
+  padding-top: calc(14 * var(--pf-unit));
+}
+
+/* Das Auswahlfeld (Erfahrungsstufe) soll wie die übrigen Kästen aussehen —
+   ohne Rahmen und ohne native Pfeil-Grafik. */
+select.pf-field {
+  appearance: none;
+}
+
+/* Zahlenfelder ohne die kleinen Pfeilchen: auf dem Bogen stehen dort bloße
+   Zahlen (die Vorlage nutzt reine Textfelder). */
+.pf-field[type="number"],
+.pf-stat,
+.pf-resistance {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.pf-field[type="number"]::-webkit-outer-spin-button,
+.pf-field[type="number"]::-webkit-inner-spin-button,
+.pf-stat::-webkit-outer-spin-button,
+.pf-stat::-webkit-inner-spin-button,
+.pf-resistance::-webkit-outer-spin-button,
+.pf-resistance::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+
+.pf-field:focus {
+  background: rgba(255, 255, 255, 0.62);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pf-accent) 45%, transparent);
+  border-radius: 4px;
+}
+
+/* Schreibgeschützte Felder (Name, Rang) — sie gehören zur Akte und werden
+   dort gepflegt, stehen auf dem Bogen aber an ihrem Platz. */
+.pf-field[readonly] {
+  cursor: default;
+}
+
+/* Überlanger Text in der Ansicht wird abgeschnitten statt aus dem Kasten zu
+   laufen — wie auf Papier. */
+.pf-static {
+  overflow: hidden;
+  white-space: pre-wrap;
+}
+
+/* Zahlenkästen der Ansicht: gleiche Schriftgröße und Ausrichtung wie die
+   Eingabefelder (siehe .pf-stat weiter unten). */
+.pf-static--stat {
+  z-index: 3;
+  font-size: calc(11 * var(--pf-unit));
+}
+
+/* Ein Kasten, der sich einen festen Teil (aus der Akte) und ein Eingabefeld
+   teilt — siehe „Species & Traits". */
+.pf-combo {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: stretch;
+}
+
+/* Derselbe Innenabstand wie im Eingabefeld daneben, damit beide Texte auf
+   einer Linie sitzen (ein <input> zentriert seinen Text in der Inhaltsbox —
+   deshalb hier ebenfalls zentriert statt an der Grundlinie). */
+.pf-combo-fixed {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: calc(13 * var(--pf-unit)) calc(3 * var(--pf-unit))
+    calc(4 * var(--pf-unit)) calc(7 * var(--pf-unit));
+  color: var(--pf-ink);
+  font-size: calc(10 * var(--pf-unit));
+  line-height: 1.25;
+}
+
+.pf-combo-input {
+  position: static;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding-left: 0;
+}
+
+.pf-stat,
+.pf-resistance,
+.pf-stress-value {
+  position: absolute;
+  z-index: 3;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--pf-ink);
+  font-size: calc(11 * var(--pf-unit));
+}
+
+.pf-stat:focus,
+.pf-resistance:focus,
+.pf-stress-value:focus {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+/* Attribute, Disziplinen und Schutz teilen sich den Kasten mit ihrer
+   gedruckten Beschriftung („CONTROL" o.ä. steht links im selben Rahmen). Die
+   Zahl steht deshalb rechts statt mittig — mittig läge sie auf dem Wort. Das
+   ist die einzige Abweichung von der Vorlage, die dort mit leeren Feldern
+   nicht auffällt. Die Ansicht (.pf-static--stat) macht es genauso. */
+.pf-stat,
+.pf-resistance,
+.pf-static--stat {
+  text-align: right;
+  padding-right: calc(10 * var(--pf-unit));
+}
+
+/* Der maximale Stress steht in einem eigenen, schmalen Kasten ohne gedruckte
+   Beschriftung — dort ist mittig richtig, im Formular (.pf-stress-value) wie
+   in der Ansicht (.pf-static--stress). Das Eingabefeld bringt keinen
+   Innenabstand mit, der Ansichts-Kasten erbt den der Textkästen und nimmt
+   ihn rechts auf den Normalwert zurück. */
+.pf-stress-value {
+  text-align: center;
+}
+
+.pf-static--stress {
+  text-align: center;
+  padding-right: calc(7 * var(--pf-unit));
+}
+
+/* Regelverstoß (z.B. drei Attribute auf 11) — der Bogen markiert ihn dezent
+   rot, die verbindliche Prüfung macht die Server-Action. */
+.pf-stat[aria-invalid="true"] {
+  background: rgba(220, 60, 60, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(200, 40, 40, 0.6);
+  border-radius: 3px;
+}
+
+.pf-check {
+  position: absolute;
+  z-index: 4;
+  width: calc(20 * var(--pf-unit));
+  height: calc(20 * var(--pf-unit));
+  margin: 0;
+  accent-color: var(--pf-accent);
+  cursor: pointer;
+}
+
+.pf-check:disabled {
+  cursor: default;
+}
+
+/* Stress-Kästchen jenseits des maximalen Stresses: der Bogen hat 19, ein
+   Charakter nutzt davon nur so viele, wie sein Maximum hergibt. */
+.pf-check--out {
+  opacity: 0.2;
+}
+
+/* Determinations-Kästchen: kleiner als die Stress-Reihe (18px laut Vorlage). */
+.pf-check--determination {
+  width: calc(18 * var(--pf-unit));
+  height: calc(18 * var(--pf-unit));
+}
+
+/* ── Listenfelder auf dem Bogen ─────────────────────────────────────────
+   Werte, Schwerpunkte, Talente, … sind keine Textfelder, sondern gepflegte
+   Listen (Katalog bzw. Eingabe-Fenster, siehe EntryListField). Auf dem Bogen
+   erscheinen sie trotzdem als beschriebene Zeilen im jeweiligen Kasten —
+   das Bearbeiten läuft über das Plus unten rechts und das Minus je Zeile. */
+.pf-list {
+  position: absolute;
+  z-index: 2;
+  overflow-y: auto;
+  /* Etwas mehr Luft nach oben als bei den Textfeldern: die Einträge stehen
+     als fertiger Text da und sollen die gedruckte Beschriftung des Kastens
+     nicht touchieren. */
+  padding: calc(17 * var(--pf-unit)) calc(7 * var(--pf-unit))
+    calc(4 * var(--pf-unit));
+  color: var(--pf-ink);
+  font-size: calc(10 * var(--pf-unit));
+  line-height: 1.35;
+}
+
+.pf-list-line {
+  display: flex;
+  align-items: center;
+  gap: calc(4 * var(--pf-unit));
+}
+
+.pf-list-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pf-list-remove {
+  flex-shrink: 0;
+  width: calc(12 * var(--pf-unit));
+  height: calc(12 * var(--pf-unit));
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #c8322d;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms;
+}
+
+.pf-list-line:hover .pf-list-remove,
+.pf-list-remove:focus-visible {
+  opacity: 1;
+}
+
+.pf-list-remove svg {
+  width: calc(12 * var(--pf-unit));
+  height: calc(12 * var(--pf-unit));
+}
+
+/* Das Plus unten rechts im Kasten öffnet das Hinzufügen-Fenster. */
+.pf-list-add {
+  position: absolute;
+  z-index: 3;
+  width: calc(16 * var(--pf-unit));
+  height: calc(16 * var(--pf-unit));
+  padding: 0;
+  border: 1px solid #9b9b9b;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--pf-accent);
+  font-size: calc(12 * var(--pf-unit));
+  line-height: 1;
+  cursor: pointer;
+}
+
+.pf-list-add:hover:not(:disabled) {
+  background: #eef5fa;
+}
+
+.pf-list-add:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Zähler der Freikontingente (Werte, Schwerpunkte, Talente) — klein neben dem
+   Plus in der unteren Ecke des Kastens, auf hellem Grund, damit er nie
+   unleserlich auf einem Eintrag liegt. */
+.pf-list-count {
+  position: absolute;
+  z-index: 3;
+  padding: 0 calc(3 * var(--pf-unit));
+  border-radius: calc(6 * var(--pf-unit));
+  background: rgba(255, 255, 255, 0.9);
+  transform: translateX(-100%);
+  color: #8a8a8a;
+  font-size: calc(9 * var(--pf-unit));
+  pointer-events: none;
+}
+
+/* ── Vollbild ──────────────────────────────────────────────────────────
+   Der Bogen füllt den Bildschirm. Bewusst position:fixed statt eines Portals
+   oder der Fullscreen-API: das Element bleibt an derselben Stelle im DOM und
+   damit im umgebenden <form> — die Felder werden weiterhin mitgespeichert.
+   Im Vollbild bestimmt die HÖHE die Größe, sonst ragte das hochformatige
+   Blatt auf einem breiten Bildschirm unten heraus. */
+.pf-page--expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  align-items: center;
+  padding: 8px;
+  background: var(--lcars-bg);
+}
+
+/* Im Vollbild soll das Blatt in BEIDE Richtungen passen. Deshalb wird nur die
+   Breite gesetzt — die kleinere aus „so breit wie der Platz" und „so breit,
+   wie es die Höhe zulässt" — und die Höhe kommt wie sonst aus dem
+   Seitenverhältnis.
+   Vorher standen hier height:100% und max-width:100%: auf einem hochkant
+   stehenden Fenster (Handy) griff die Breitenbegrenzung, die volle Höhe blieb
+   aber stehen — das Blatt wurde in die Länge gezogen, die Grafik zog mit, die
+   Felder (die an der BREITE hängen) jedoch nicht. Sie saßen dadurch zu weit
+   oben. */
+.pf-page--expanded .pf-sheet {
+  width: min(100%, calc((100dvh - 16px) * 816 / 1056));
+  height: auto;
+}
+
+/* Knopf zum Öffnen/Schließen — im Vollbild oben rechts über dem Blatt. */
+.pf-expand-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 1201;
+}
+
+/* Auf schmalen Bildschirmen rückt das Blatt ganz an den Rand. Die
+   Größenanpassung selbst besorgt --pf-unit (siehe .pf-sheet). */
+@media (max-width: 850px) {
+  .pf-page {
+    padding: 0;
+  }
+}

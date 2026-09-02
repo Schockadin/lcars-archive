@@ -1,11 +1,7 @@
 "use client";
 import { useActionState, useEffect, useState } from "react";
 import { updateUiModeAction, type UiModeState } from "./uiModeActions";
-import {
-  FormError,
-  FormSuccess,
-  SubmitButton,
-} from "@/app/_shared/FormPrimitives";
+import { SaveFooter } from "@/app/_shared/FormPrimitives";
 import {
   UI_MODE_LCARS,
   UI_MODE_MINIMAL,
@@ -119,16 +115,7 @@ export default function UiModeSettingsForm({
         })}
       </div>
 
-      <FormError message={state?.error} />
-      {state?.success && <FormSuccess>Gespeichert.</FormSuccess>}
-
-      <SubmitButton
-        pending={pending}
-        pendingLabel="Speichern…"
-        className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%]"
-      >
-        Speichern
-      </SubmitButton>
+      <SaveFooter state={state} pending={pending} />
     </form>
   );
 }

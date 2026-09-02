@@ -5,7 +5,7 @@
 // (der Nutzerwunsch: "der Link wird direkt übernommen"). Bewusst kein
 // content_images-Eintrag — Portraits verhalten sich damit wie die schon immer
 // möglichen externen Portrait-URLs aus dem Vault-Frontmatter (freie URL, keine
-// Galerie-/Proxy-Bindung). Charakterbögen (PDFs) liegen in characterSheets.ts.
+// Galerie-/Proxy-Bindung).
 import "server-only";
 import crypto from "node:crypto";
 import { uploadAssetObjectToR2, assetPublicUrl } from "@/lib/r2Backup";

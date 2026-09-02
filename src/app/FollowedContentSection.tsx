@@ -1,10 +1,9 @@
-import Link from "next/link";
-import { LcarsDataRow } from "@/components/lcars";
+import { LcarsAkteCard, LcarsDataRow } from "@/components/lcars";
 import type { FollowedContent, FollowTargetType } from "@/lib/follows";
 
 const TYPE_LABELS: Record<FollowTargetType, string> = {
   mission: "Mission",
-  archive_entry: "Archiv-Eintrag",
+  archive_entry: "Datenbank-Eintrag",
   character: "Charakter",
   user: "User",
 };
@@ -31,24 +30,17 @@ export default function FollowedContentSection({
     >
       <div className="flex flex-col gap-[6px]">
         {items.map((item) => (
-          <Link
+          <LcarsAkteCard
             key={`${item.targetType}-${item.slug}`}
             href={item.href}
-            className="mission-akte"
-            style={
-              { "--mission-color": "var(--lcars-primary)" } as React.CSSProperties
-            }
-          >
-            <span className="mission-akte-rail" />
-            <span className="mission-akte-body text-left">
-              <span className="mission-akte-title block">{item.title}</span>
-              <span className="mission-akte-meta">
-                <span>
-                  <b>Typ</b> {TYPE_LABELS[item.targetType]}
-                </span>
+            color="var(--lcars-primary)"
+            title={item.title}
+            meta={
+              <span>
+                <b>Typ</b> {TYPE_LABELS[item.targetType]}
               </span>
-            </span>
-          </Link>
+            }
+          />
         ))}
       </div>
     </LcarsDataRow>

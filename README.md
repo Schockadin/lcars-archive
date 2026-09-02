@@ -1,6 +1,6 @@
 # 🖖 Neo Archive — LCARS Archive
 
-Ein webbasiertes Kampagnen-Archiv für eine Sci-Fi-Rollenspielrunde, gestaltet im
+Eine webbasierte Kampagnen-Datenbank für eine Sci-Fi-Rollenspielrunde, gestaltet im
 Look-and-Feel des **LCARS**-Computerinterfaces (Library Computer Access/Retrieval System).
 Charaktere, Missionen und Mission-Logs werden in einer PostgreSQL-Datenbank
 gepflegt (alleinige Source of Truth) und als responsives Next.js-Frontend
@@ -43,7 +43,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   reine Krypto-/Token-Logik teilen sich Proxy und Session-Verwaltung über
   `src/lib/sessionToken.ts`.
 - **Eigene Inhalte** — eingeloggte User legen eigene Charaktere, Einsatzberichte,
-  Archiv-Einträge und Gespräche zwischen Charakteren an, mit Sichtbarkeitsstufen
+  Datenbank-Einträge und Gespräche zwischen Charakteren an, mit Sichtbarkeitsstufen
   (privat/GM/öffentlich) und einem persönlichen Dashboard (farbcodierter News-Feed,
   offene Gespräche, Lesezeichen/Abos). Gespräche können bereits bei der
   Erstellung mehr als einen Gesprächspartner haben (Mehrfachauswahl) und
@@ -55,6 +55,209 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Offene Gespräche aktualisieren sich dabei automatisch per Polling (alle
   8 Sekunden, pausiert bei nicht sichtbarem Tab) — neue Nachrichten und
   Sperr-Status-Änderungen erscheinen ohne manuelles Neuladen der Seite.
+- **Gespräche mit NPCs** — Gesprächspartner kann auch ein **NPC** sein. Ein NPC
+  ist **kein Charakter**, sondern ein **Datenbank-Eintrag der Kategorie `npc`**
+  (`archive_entries.category = 'npc'`, siehe `getNpcOptions`). Wer im Gespräch
+  spricht, hält deshalb überall ein `DialogueSpeaker`
+  (`src/lib/dialogueSpeaker.ts`) fest: `{ kind: "character" | "npc", id }`, in
+  Formularen als Schlüssel `c12`/`n7` kodiert, damit die IDs beider Quellen
+  nicht kollidieren. `dialogue_messages` hat entsprechend zwei
+  Sprecher-Spalten (`character_id` **oder** `npc_entry_id`, beide nullable).
+  Für einen NPC schreibt in genau diesem Gespräch ein Konto, das NPCs spielen
+  darf (`canPlayNpcs` = `gm.access` **oder** `admin.access` — in kleinen Runden
+  ist das dasselbe Konto); wer das ist, hält die Tabelle
+  `dialogue_npc_speakers` fest (Gespräch + NPC-Eintrag → Konto). Beim Anlegen
+  wählt die Spieler:in die Spielleitung aus, sofern es mehr als eine gibt —
+  bei genau einer entfällt die Wahl, und wer NPCs selbst spielt, wird ohne
+  Rückfrage ihr Sprecher. Umgekehrt kann die Spielleitung ein Gespräch **aus
+  Sicht eines NPC** beginnen (der NPC steht dann in „Dein Charakter") und
+  spielt ihn selbst. Für alles Weitere — Antworten, Auswahl beim Antworten,
+  Abschließen, Export, Benachrichtigungen, „Deine Gespräche" — zählt ein so
+  zugeordneter NPC wie ein eigener Charakter: `getDialogueParticipantCharacters`
+  und `getDialogueParticipant` liefern ihn mit, aber nur in dem Gespräch, für
+  das die Zuordnung gilt. In `metadata.participants` steht er als
+  `kind: "archive"` und verlinkt damit nach `/archive/<slug>` statt
+  `/characters/<slug>`. Welche NPCs jemand angeboten bekommt, entscheidet die
+  normale Sichtbarkeitsregel (`canView` mit dem `owner_user_id` des Eintrags):
+  öffentliche alle,
+  intern gehaltene nur mit `content.view_gm`/`content.view_all`. Auch **nachträglich**
+  lassen sich NPCs in ein laufendes Gespräch holen — das darf, wer sie spielt,
+  und wird dabei ihr Sprecher.
+- **NPCs anlegen** — unter „Meine Inhalte" gibt es für alle, die NPCs spielen,
+  den Knopf **„Neuer NPC"** (`/user/archive/new?category=npc`). Das ist das
+  normale Datenbank-Formular mit vorgewählter Kategorie „NPC"; der Eintrag
+  lässt sich danach wie jeder andere Datenbank-Eintrag bearbeiten. Bewusst
+  NICHT an `content.create` gehängt: ein NPC ist kein eigener Inhalt, sondern
+  Kampagnen-Inventar — ein reines Admin-Konto ohne `content.create` soll ihn
+  trotzdem anlegen können.
+- **Eigene Charaktere & Charakterwerte** — wer mindestens einen verknüpften
+  Charakter hat, bekommt im Kopfmenü den Punkt „Charaktere" (`/user/characters`):
+  Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Sichtbarkeit,
+  Bearbeiten, Löschen und dem Anlegen weiterer Charaktere. Pro Charakter lassen
+  sich dort unter „Werte" die Charakterwerte nach dem Bogen von Star Trek
+  Adventures 2e pflegen — und zwar auf dem **Original-Bogen selbst**: die
+  Seite zeigt das gedruckte „Personnel File" als 816×1056-Blatt
+  (`public/character-sheet/personnel-file.svg`), darüber liegen die
+  Eingabefelder exakt in ihren gedruckten Kästen. Die Maße stehen als Tabelle
+  in `personnelFileLayout.ts`, die Optik in
+  `src/styles/lcars-components/personnel-file.css`; jedes Maß ist ein
+  Vielfaches von `--pf-unit` (= 1px der Vorlage), sodass der Bogen in einer
+  schmaleren Spalte als Ganzes schrumpft statt umzubrechen. Gepflegt werden:
+  Personalakte (Pronomen, Rolle, Zuweisung, Herkunft, Erziehung, Laufbahn,
+  Erfahrung, Merkmale) samt Foto-Kasten (pflegt dasselbe Bild wie das
+  Portrait der Akte, im Bildkasten oben links), sechs Attribute und sechs
+  Disziplinen, Protection/Determination/Reputation sowie die Listenfelder
+  (Werte, Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln, Angriffe,
+  Ausrüstung, Hobbys, Karriere-Ereignisse). Bild-Upload, Stress-Bonus und
+  Speichern stehen unter dem Blatt — der Papierbogen hat dafür keine Felder. Für die Zahlenwerte gelten die
+  Regeln der Runde: Attribute 7–12 mit höchstens einem Wert auf 12 und zwei auf
+  11, Disziplinen 1–5 mit höchstens einem auf 5 und zwei auf 4 (zentral in
+  `src/lib/characterStats.ts`, im Formular als Live-Hinweis, verbindlich in der
+  Server-Action). Der maximale Stress ist kein Eingabefeld, sondern ergibt sich
+  aus Fitness + Bonus aus Talenten (der Bonus wird gepflegt, da er sich aus dem
+  Freitext der Talente nicht verlässlich ableiten lässt). Gespeichert werden sie als
+  `characters.metadata.stats` (jsonb, keine eigene Tabelle) — Name, Rang und
+  Spezies bleiben Teil der Akte selbst. Charaktere erscheinen deshalb nicht mehr
+  in „Meine Inhalte" (`/user/content`); der Charakter-Filter für
+  Einsatzberichte/Gespräche bleibt dort erhalten.
+- **Erfahrungspunkte (AP)** — jeder Charakter hat ein AP-Konto als
+  Buchungsjournal (`character_ap_entries`): die Spielleitung vergibt unter
+  „Kampagne" AP (je 1 AP für gespielte Session und geschriebenes Logbuch, ein
+  freier Betrag für Missions-/Story-Abschlüsse, dazu Korrekturen), die
+  Spieler:innen geben sie auf ihrem Charakterbogen beim Steigern aus. Der
+  Kontostand ist immer die Summe der Buchungen — kein separates Saldo-Feld, das
+  auseinanderlaufen könnte. Das Regelwerk (Kosten, Budgets, Grenzen) liegt in
+  `src/lib/advancement.ts`: Attribut steigern kostet (neuer Wert − 7) × 10 AP,
+  Disziplin (neuer Wert) × 10 AP, ein Talent oder Schwerpunkt je 20 AP; für die
+  Ersterschaffung stehen je 320 AP für Attribute und Disziplinen bereit (statt
+  der 56 bzw. 16 Verteilpunkte) plus 4 Werte, 4 Talente und 6 Schwerpunkte
+  frei. Solange die Erschaffung läuft, sind die Werte frei editierbar und
+  laufen gegen die Budget-Anzeige; nach dem Festschreiben
+  (`metadata.stats.creationLocked`) sind Attribute, Disziplinen, Talente und
+  Schwerpunkte schreibgeschützt und nur noch über AP-Steigerungen erhöhbar —
+  serverseitig erzwungen, nicht nur im Formular. Steigerung und Abbuchung
+  laufen in einer Transaktion, damit nie das eine ohne das andere passiert.
+  Alle Zahlen des Regelwerks sind Standardwerte: die Spielleitung stellt sie
+  unter `/gm/ap` ein, gespeichert in `campaign_settings.advancement_rules`
+  (`src/lib/advancementSettings.ts`); die Funktionen in `advancement.ts` nehmen
+  den geltenden Satz als Argument entgegen. Der AP-Bereich des Charakterbogens
+  rechnet **live** mit: der State der Attribut-/Disziplin-Eingaben liegt in der
+  Klammer-Komponente `CharacterSheet.tsx`, sodass Budget, Rest und
+  Übertrags-Vorschau schon beim Tippen mitlaufen; nach der Erschaffung zeigt
+  jeder Steigern-Knopf, wie viele AP danach bleiben. Nicht verbrauchtes
+  Erschaffungsbudget wird beim Festschreiben als AP gutgeschrieben, gedeckelt
+  durch `creationCarryOverMax` (Standard 10) — Gutschrift und Sperre in einer
+  Transaktion. Festgeschrieben wird dabei ausschließlich der **gespeicherte**
+  Stand: `lockOwnCharacterCreation` lehnt ein überzogenes Budget
+  (`CreationOverBudgetError`) und einen noch lückenhaften Bogen
+  (`CreationIncompleteError`, siehe `hasCompleteCreationValues`) ab. Ohne
+  diese beiden Prüfungen hinterließe ein direkt abgeschickter POST einen
+  dauerhaft überzogenen bzw. leeren Bogen — nach dem Festschreiben sind die
+  Felder schreibgeschützt, und `checkAdvancement` steigert keinen leeren Wert.
+- **Talent-Katalog** — die Talente der Runde liegen in der Tabelle `talents`
+  (Name eindeutig, Kategorie, Voraussetzung, Regeltext). Klammern sind im
+  Namen nicht erlaubt: auf dem Bogen steht ein umbenanntes Talent als
+  `Neuer Name (Originalname)` (siehe `formatTalentEntry`/`parseTalentEntry`),
+  ein Katalogname mit Klammern wäre davon nicht zu unterscheiden und danach
+  nicht mehr auswählbar — die Voraussetzung gehört ins eigene Feld. Startdaten:
+  `scripts/seed/talents.json`, eingespielt mit `npm run db:seed-talents`
+  (idempotent). Auf dem Charakterbogen ersetzt eine nach Kategorien gruppierte
+  Auswahlliste das freie Tippen — mit Voraussetzung und Regeltext des
+  gewählten Talents (`src/app/user/characters/_shared/TalentPicker.tsx`). Die
+  Auswahl liegt in einem
+  **Modal-Overlay** (gleiches Muster wie `RowDetailModal`: Portal, Escape,
+  Klick daneben, Scroll-Sperre) mit Volltextsuche, Kategorie-Filter und
+  Klapp-Beschreibung je Talent. Angezeigt werden standardmäßig nur Talente,
+  deren **Voraussetzungen erfüllt** sind: `src/lib/talentRequirements.ts`
+  parst den Regeltext (`Control 9+`, `A and/und/&/, B`, `A or B`, Spezies,
+  vorausgesetzte Talente) und wertet ihn gegen die live mitgeführten Werte
+  und die Spezies der Akte aus. Was sich nicht entscheiden lässt (Merkmale,
+  Rollen, „GM's discretion", noch ungepflegte Werte) gilt bewusst als
+  *unbekannt* und bleibt sichtbar — ein Talent zu verstecken, dessen
+  Voraussetzung die App nur nicht versteht, wäre der schlimmere Fehler; ein
+  Schalter zeigt zusätzlich die nicht erfüllten. Talente lassen sich beim
+  Übernehmen **umbenennen**: gespeichert und angezeigt wird dann
+  `Neuer Name (Originalname)` (`formatTalentEntry`/`parseTalentEntry`), womit
+  der Katalogname erhalten bleibt — Dublettenprüfung und
+  Voraussetzungs-Abgleich arbeiten weiterhin mit ihm. Ein Klick auf
+  „Übernehmen" im Fenster **setzt das Talent direkt**: in der Erschaffung als
+  Listeneintrag, beim Steigern samt Abbuchung (die Action wird programmatisch
+  mit einer `FormData` aufgerufen, es gibt kein zweites Formular daneben). Die
+  Talent-Liste des Bogens ist deshalb **kein Freitextfeld** mehr, sondern eine
+  Liste mit rotem Minus je Eintrag; abgesendet wird ein verstecktes Feld.
+  Während der Erschaffung zählt sie gegen `creationFreeTalents` (Anzeige
+  „x / 4"), danach ist sie schreibgeschützt. Beides ist serverseitig
+  durchgesetzt (`statsAction.ts`, `advancementAction.ts`): ein Eintrag muss im
+  Katalog stehen — bereits gespeicherte Alt-Einträge aus der Freitext-Zeit
+  bleiben erlaubt, sonst ließe sich ein solcher Bogen nie wieder speichern.
+  Ganz unten am Bogen listet ein **Spickzettel** (`TalentCheatSheet.tsx`) die
+  Talente des Charakters mit vollem Regeltext.
+- **Charakter-Ansichten mit Umschalter** — `/user/characters/[id]` leitet auf
+  den Bogen weiter; ein Umschalter im gemeinsamen Layout
+  (`[characterId]/layout.tsx` + `CharacterTabs.tsx`) wechselt zwischen
+  Charakterbogen (`/stats`) und Stammdaten der Akte (`/edit`).
+- **Vollbild und Stammdaten auf dem Bogen** — ein Icon-Knopf über dem Blatt
+  zeigt den Bogen im Vollbild (`.pf-page--expanded`: `position: fixed` statt
+  Portal oder Fullscreen-API, damit das Element im umgebenden `<form>` bleibt
+  und die Felder weiter mitgespeichert werden; Escape schließt). Rang und
+  Spezies kommen aus der Akte: der Rang steht schreibgeschützt in seinem
+  Kasten, die Spezies teilt sich den Kasten „Species & Traits" mit dem
+  Merkmals-Feld (`.pf-combo`).
+- **PDF-Export des Bogens** — `/api/export/character-sheet?characterId=…`
+  liefert den ausgefüllten Bogen als PDF (Seite 1) samt Talent-Spickzettel im
+  selben Look (Seite 2+). Wie der Content-Export mit `@react-pdf/renderer`
+  (reines Node, kein Chromium — läuft auf Netlify Functions). Der Bogen ist
+  816×1056 CSS-Pixel = 8,5×11 Zoll = das PDF-Format „Letter", die Maße aus
+  `personnelFileLayout.ts` gelten deshalb unverändert mit Faktor 0,75 (px→pt).
+  Die Grafik liegt als eingebettetes PNG bei (`personnelFileArt.ts`, aus dem
+  SVG erzeugt), damit der Export weder Datei- noch Netzzugriff braucht. Dasselbe Listen-Muster (Einträge
+  mit rotem Minus, „Hinzufügen" öffnet ein Fenster mit freiem Eingabefeld)
+  nutzen über `EntryListField.tsx` auch Werte, Schwerpunkte, Angriffe,
+  Ausrüstung, Karriere-Ereignisse und Hobbys; Spezies-Fähigkeiten und
+  Sonderregeln bleiben bewusst Fließtext-Blöcke, dort stehen ganze Regelsätze
+  statt Aufzählungen. Werte und Schwerpunkte zeigen dabei ihr Freikontingent
+  aus der Ersterschaffung an — bei den Schwerpunkten als harte Grenze (sie
+  kosten danach AP, serverseitig geprüft), bei den Werten nur als Orientierung,
+  da sie sich später nicht kaufen lassen. Die reine Hälfte (Kategorien,
+  Labels, Validierung) liegt in `src/lib/talentCatalog.ts`, der Datenzugriff in
+  `src/lib/talents.ts`.
+- **Spielleitungs-Bereich (`/gm`)** — eigener, über `requireGM` (`gm.access`)
+  gegateter Bereich neben `/admin`, erreichbar über das Leitungs-Dropdown im
+  Header. Er hält ALLE Werkzeuge der Spielleitung: die früher unter `/admin`
+  liegenden Seiten `campaign`, `dialogues`, `characters` und `missions` sind
+  hierher umgezogen, `/admin` ist dadurch reine Verwaltung (`requireStaff`
+  verlangt dort kein `gm.access` mehr).
+  - `/gm/campaign` — Ingame-Jahr, AP-Vergabe, Charakter-Zuweisung und
+    Missions-Übersicht an einem Ort (`/gm/characters` und `/gm/missions`
+    bleiben als Direktlinks auf die Einzelansichten erhalten).
+  - `/gm/dialogues` — alle offenen Gespräche, unabhängig von eigener
+    Teilnahme; darunter `[slug]/edit` für die Metadaten (`dialogues.moderate`).
+  - `/gm/sessions` — gespielte Sessions eintragen (Datum, Titel, Session-AP,
+    Bonus-AP, Notizen) und allen ausgewählten Charakteren in einem Rutsch
+    gutschreiben. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
+    Konto; Session, Teilnehmerliste (`game_session_characters`) und
+    Gutschriften entstehen in einer Transaktion (`game_sessions` +
+    `character_ap_entries.session_id`), das Zurücknehmen storniert sie per
+    `ON DELETE CASCADE` mit. Einer Session lassen sich **Logbücher**
+    zuordnen (`mission_logs.session_id`): ab dem ersten bucht
+    `syncSessionLogbookAp` allen Teilnehmenden automatisch die Logbuch-AP —
+    genau einmal je Session und Charakter, idempotent, und beim Wegfallen des
+    letzten Logbuchs wieder zurück (auch beim Löschen/Wiederherstellen eines
+    Logbuchs oder seiner ganzen Mission). Ein Logbuch hängt an genau EINER
+    Session; zieht `setSessionLogbooks` eines aus einer anderen herüber, wird
+    auch deren Gutschrift nachgezogen — Lösen, Zuordnen und Buchen laufen
+    dafür in einer Transaktion.
+  - **Missionsabschluss** (auf `/gm/campaign`) — AP für einen Missionsabschluss
+    gibt es ausschließlich über die Missionsauswahl: die gewählte Mission wird
+    dabei auf `completed` gesetzt und die Buchungen tragen
+    `character_ap_entries.mission_id`. Der Grund „Mission" ist deshalb aus der
+    freien Buchung entfernt (die Server-Action weist ihn ab).
+  - `/gm/ap` — Kontostände aller Charaktere, das Gesamtjournal aller Buchungen
+    (nach Charakter und Grund filterbar, serverseitig auf die letzten 500
+    begrenzt) und der Editor des AP-Regelwerks.
+  - `/gm/talents` — Talent-Katalog durchsuchen, filtern und bearbeiten sowie
+    eigene Talente ergänzen. Löschbar sind nur selbst ergänzte Talente, damit
+    keine Einträge unter bereits gepflegten Charakterbögen verschwinden.
 - **Persönliche News** — der News-Feed auf dem Dashboard bleibt persistent
   sichtbar (nicht mehr nur bis zum nächsten Besuch): jede Meldung lässt sich
   einzeln per X ausblenden (gilt danach als gelesen) und verschwindet automatisch,
@@ -62,7 +265,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   News auf einmal als gelesen. Im Profil lässt sich einstellen, welche News-Arten
   (neu/bearbeitet/gelöscht) überhaupt angezeigt werden (Standard: nur neue).
   Persistenz über die Tabelle `news_seen`.
-- **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/admin/campaign`
+- **Kampagne & Ingame-Zeit** — die Spielleitung pflegt unter `/gm/campaign`
   („Kampagne", ersetzt das frühere reine „Missionen") an einem Ort das aktuelle
   Ingame-Jahr, die Charakter-Zuweisung und die Missions-Übersicht. Charaktere
   haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen
@@ -70,14 +273,14 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Öffentliches Changelog** — die Seite `/changelog` listet je Version die
   end-nutzerrelevanten Neuerungen (gepflegt in `src/lib/changelog.ts`).
 - **Teilen & Export** — der „Teilen“-Knopf auf Charakter-, Missions-,
-  Missionslog-, Archiv-Eintrag- und Gesprächsseiten bietet neben Link
+  Missionslog-, Datenbank-Eintrag- und Gesprächsseiten bietet neben Link
   kopieren/WhatsApp auch den Download des Inhalts als Markdown-Datei (mit
   YAML-Frontmatter) oder als PDF (serverseitig erzeugt, ohne Chromium/
   Puppeteer — läuft dadurch auf Netlify Functions). Berücksichtigt dieselbe
   Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst.
 - **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und
   automatische bzw. manuelle Verlinkung (`[[Wikilinks]]`) zwischen Inhalten.
-- **Bilder-Galerie** — Charaktere, Missionen, Missionslogs und Archiv-Einträge
+- **Bilder-Galerie** — Charaktere, Missionen, Missionslogs und Datenbank-Einträge
   (nicht Gespräche) können mehrere Bilder haben (JPEG/PNG/WebP/GIF, max. 5 MB
   pro Datei); Hochladen/Löschen ist auf dieselbe Person beschränkt, die den
   Inhalt auch sonst bearbeiten darf. Speicherung im selben R2-Bucket wie die
@@ -85,13 +288,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Charakteren lässt sich eines der hochgeladenen Bilder als Profilbild
   festlegen; ein Klick aufs Portrait öffnet ein Karussell über alle
   hochgeladenen Bilder statt nur des einzelnen Portraits. Bei Missionen,
-  Missionslogs und Archiv-Einträgen lässt sich außerdem ein bereits
+  Missionslogs und Datenbank-Einträgen lässt sich außerdem ein bereits
   hochgeladenes Bild direkt aus der Formatierungsleiste des Markdown-Editors
   in den Text einfügen. Admins sehen unter `/admin/content/images`
   ("Bilder") zusätzlich alle hochgeladenen Bilder über alle Inhalte hinweg
   mit Vorschau und können sie dort einzeln endgültig löschen, auch verwaiste
   Bilder, deren zugehöriger Inhalt bereits gelöscht wurde.
-- **Entwürfe** — Charaktere, Missionen, Missionslogs und Archiv-Einträge lassen
+- **Entwürfe** — Charaktere, Missionen, Missionslogs und Datenbank-Einträge lassen
   sich beim Anlegen/Bearbeiten statt zu veröffentlichen erst als Entwurf
   speichern (Text-Pflichtfeld entfällt dann); ein Entwurf ist unabhängig von
   seiner Sichtbarkeitsstufe für niemanden außer der eigenen Person sichtbar,
@@ -123,7 +326,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
   entstehen danach direkt in der App (Datenbank als alleinige Source of Truth).
   Admins können im selben Frontmatter-Format zusätzlich einzelne oder mehrere
-  `.md`-Dateien direkt im Adminbereich hochladen — Archiv-Einträge, Missionen,
+  `.md`-Dateien direkt im Adminbereich hochladen — Datenbank-Einträge, Missionen,
   Charaktere und Missionslogs —, ohne dafür das CLI-Ingest-Skript zu brauchen.
   Jede Datei wird zunächst nur geparst und als durchblätterbare Vorschau
   angezeigt (Datei 1 von N mit Vor-/Zurück-Navigation), in der sich alle
@@ -164,11 +367,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   alle unerwarteten Serverfehler (Zeitpunkt, Route, Meldung, Digest); zusätzlich
   erhält die Administration jeden Morgen um 6 Uhr (Berliner Zeit) automatisch eine
   Mail mit allen Fehler- und Audit-Log-Einträgen der letzten 24 Stunden.
-  Spielleitung bekommt über ein eigenes „Leitung“-/„Kampagne“-Dropdown im Header
-  (analog zum Admin-Menü) Zugriff auf die Kampagnen-Seite (Ingame-Jahr,
+  Die Spielleitung hat ein eigenes „Leitung“-Dropdown im Header, das getrennt
+  neben dem Admin-Menü steht (wer beide Rollen hat, sieht beide Menüs
+  nebeneinander) und in den Bereich `/gm` führt: Kampagnen-Seite (Ingame-Jahr,
   Charakter-Zuweisung, Missions-Übersicht mit Bearbeiten/Löschen/Besitzer:in-
-  Zuordnung) sowie alle aktuell offenen Gespräche — auch ohne eigene Teilnahme,
-  verlinkt auf die read-only-Ansicht des jeweiligen Gesprächs. Über jedes neu
+  Zuordnung), Sessions, AP, Talente sowie alle aktuell offenen Gespräche — auch
+  ohne eigene Teilnahme, verlinkt auf die read-only-Ansicht des jeweiligen
+  Gesprächs. Über jedes neu
   begonnene Gespräch wird jeder aktive GM-Account zusätzlich automatisch per
   Mail/Push informiert.
 - **Custom-404/500-Seiten** — unerwartete Serverfehler zeigen eine
@@ -179,14 +384,14 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `src/instrumentation.ts` bzw. `logCaughtError()` in der Tabelle
   `error_logs` protokolliert und ist im Adminbereich unter „Fehler-Log“
   einsehbar.
-- **Archiv-Assistent (RAG)** — ein KI-Assistent (unter `/rag` sowie unterhalb der
+- **Datenbank-Assistent (RAG)** — ein KI-Assistent (unter `/rag` sowie unterhalb der
   Volltextsuche auf `/search`) beantwortet Fragen zum Kampagneninhalt in
   natürlicher Sprache. Die Frage wird per OpenAI-Embedding vektorisiert, **hybrid**
   (semantische Vektorsuche + lexikalische Keyword-/Trigramm-Suche) gegen die
   vektorisierten Inhalte (`content_embeddings`, pgvector) gematcht, und Cloudflare
   Workers AI formuliert daraus streamend eine Antwort mit Quellen-Angabe —
   gefiltert nach den Leserechten des Betrachters (private/GM-Inhalte fließen nur
-  ein, wenn erlaubt). Details siehe „Archiv-Assistent (RAG)" unter Deployment.
+  ein, wenn erlaubt). Details siehe „Datenbank-Assistent (RAG)" unter Deployment.
 - **Custom-Markdown-Pipeline** — `remark`/`rehype` wandeln Markdown in HTML um und rendern
   `h2`-Überschriften als LCARS-Data-Rows.
 - **SEO-fertig** — `robots.ts`, `sitemap.ts`, dynamische Metadaten und 404-Seite.
@@ -238,7 +443,7 @@ VAULT_PATH="/pfad/zum/vault"
 SITE_URL="http://localhost:3000"
 REVALIDATE_SECRET="ein-langes-zufaelliges-secret"
 
-# Archiv-Assistent (RAG) — optional; fehlen die Schlüssel, ist /rag deaktiviert
+# Datenbank-Assistent (RAG) — optional; fehlen die Schlüssel, ist /rag deaktiviert
 # (die App überspringt Embeddings still, wie bei RESEND/VAPID)
 OPENAI_API_KEY=""           # Embeddings (text-embedding-3-small, 1536 Dim.)
 # OPENAI_ADMIN_API_KEY=""   # optional: Admin-Key (sk-admin-…) für das
@@ -343,9 +548,10 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:ingest:new`     | Importiert nur Dateien mit noch unbekanntem `slug`                                                                                               |
 | `npm run db:characters`     | Importiert nur die Charaktere                                                                                                                    |
 | `npm run db:missions`       | Importiert nur Missionen + Mission-Logs                                                                                                          |
-| `npm run db:archive`        | Importiert nur die Archiv-Einträge                                                                                                               |
+| `npm run db:archive`        | Importiert nur die Datenbank-Einträge                                                                                                               |
 | `npm run db:revalidate`     | Invalidiert nur die Caches (siehe `SITE_URL`)                                                                                                    |
-| `npm run embed:all`         | Baut den Vektor-Index des Archiv-Assistenten für alle Inhalte (neu) auf — Backfill, idempotent (siehe „Archiv-Assistent (RAG)")                  |
+| `npm run db:seed-talents`   | Spielt den Talent-Katalog aus `scripts/seed/talents.json` ein (idempotent)                                                                        |
+| `npm run embed:all`         | Baut den Vektor-Index des Datenbank-Assistenten für alle Inhalte (neu) auf — Backfill, idempotent (siehe „Datenbank-Assistent (RAG)")                  |
 | `npm run db:reset`          | Setzt die Datenbank zurück                                                                                                                       |
 | `npm run db:backup`         | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup")                                                            |
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind                                                                                                    |
@@ -381,7 +587,7 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
 │       ├── characters.ts
 │       ├── missions.ts
 │       ├── missionLogs.ts
-│       ├── archive.ts        # Archiv-Einträge + Querverweise
+│       ├── archive.ts        # Datenbank-Einträge + Querverweise
 │       └── shared.ts         # Markdown→HTML, Validierung
 └── src/
     ├── app/                  # Next.js App Router (Seiten & API-Routes)
@@ -391,12 +597,13 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     │   ├── missions/
     │   ├── archive/
     │   ├── dialogues/         # Öffentliche Ansicht abgeschlossener Gespräche
-    │   ├── rag/               # Archiv-Assistent (RAG-Chat)
-    │   ├── search/            # Volltextsuche + eingebetteter Archiv-Assistent
+    │   ├── rag/               # Datenbank-Assistent (RAG-Chat)
+    │   ├── search/            # Volltextsuche + eingebetteter Datenbank-Assistent
     │   ├── tutorial/          # Anleitung für Besucher/User/Spielleitung
     │   ├── login/, activate/, forgot-password/
     │   ├── users/             # Öffentliche Nutzerübersicht + Profilseiten anderer User
     │   ├── user/              # Eigenes Profil, Settings, eigene Inhalte anlegen/verwalten
+    │   │   └── characters/     #   Eigene Charaktere: Übersicht, anlegen, bearbeiten, Werte ([id]/stats)
     │   ├── admin/             # Admin-Bereich (staff-baseline, feiner je Unterseite):
     │   │   ├── users/          #   Nutzerverwaltung (Tabelle + Detailseite [id]/edit/)
     │   │   ├── permissions/    #   Rollen-Editor: Rollen anlegen/bearbeiten + zuweisen
@@ -419,8 +626,51 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     ├── context/              # React-Context (Neo)
     ├── hooks/                # useNeo, usePageMeta …
     ├── lib/                  # DB-Zugriff & Datenabfragen
+    ├── styles/               # CSS jenseits von Tailwind (siehe unten)
+    │   ├── tokens.css         # Design-Tokens (:root + @theme) inkl. Responsive-Overrides
+    │   ├── lcars-themes.css   # Nutzer-Farbthemes (html[data-theme="…"])
+    │   ├── minimal-ui.css     # Minimalistisches UI (html[data-ui="minimal"])
+    │   ├── lcars-components.css  # Sammel-Import der Domänen-Dateien
+    │   └── lcars-components/  # Je Domäne eine Datei (header, archive, shared, …)
     ├── types/                # TypeScript-Typen
     └── utils/                # Stardate, Datumsformatierung …
+
+### Komponenten
+
+Wiederkehrende UI-Muster leben als geteilte Bausteine statt als Kopie je
+Seite: `LcarsAkteCard` (Karte mit farbiger Schiene, Titel, Meta-Zeile — die
+Listen in Datenbank, Missionen, Suche, Profil, „Meine Inhalte“, Follows und
+GM-/Admin-Übersichten), `FormPrimitives` (`FormField`, `SaveFooter`,
+`SubmitButton`, Fehler-/Erfolgs-Toast), `ConfirmSubmitIconButton` und
+`DangerZoneButton` für bestätigungspflichtige Aktionen, `BackupPanel`
+(Export/Import für DB- und User-Backup) sowie `BatchScriptPanel` (die
+blockweise laufenden Admin-Skripte mit Fortschrittsbalken).
+
+Verhalten, das mehrere Komponenten teilen, steckt in Hooks: `useOverlayDismiss`
+(Escape schließt, Hintergrund-Scroll gesperrt, optional Pfeiltasten fürs
+Karussell — genutzt von allen Modals, Lightboxen und der Vollbild-Ansicht des
+Charakterbogens) und `useReturnFocus` (Tastatur-Fokus zurück zum auslösenden
+Element).
+
+### Stylesheets
+
+Gestaltet wird primär mit Tailwind-Utilities direkt im JSX; eigenes CSS gibt es
+nur für das, was Tailwind nicht abbilden kann (komplexe Selektoren,
+Container-Query-Einheiten, Keyframes, `:root`-Overrides, Pseudo-Elemente).
+Dieses CSS liegt nach Domäne getrennt in `src/styles/lcars-components/`, damit
+eine Regel und ihre Responsive-Overrides beieinander stehen; domänenübergreifend
+Geteiltes (Overlays, Popover, Leerzustände, Skeletons, Toasts …) steht in
+`shared.css`, das bewusst zuletzt importiert wird.
+
+Reihenfolge und Cascade-Tier sind in `src/app/globals.css` kommentiert und nicht
+beliebig: Tokens, Themes, minimales UI und Lesemodus müssen **unlayered**
+bleiben, die Komponenten-Dateien laufen als `layer(components)` — Tailwind v4
+lässt layered CSS immer gegen unlayered verlieren, unabhängig von Spezifität.
+
+Wiederkehrende Werte stehen als Token in `tokens.css` statt als Literal in den
+Regeln — neben Farben und Maßen auch die Flächen-Effekte `--lcars-scrim`,
+`--lcars-shadow-float`, `--lcars-shadow-drop` und `--lcars-hover-tint`
+(Letzteres aus `--lcars-secondary` abgeleitet und damit themefest).
 ```
 
 ---
@@ -465,7 +715,7 @@ Dieser Abschnitt ist nur für die GM-Sicht und wird nicht veröffentlicht.
   des `author`-Charakters zurück.
 - Alles nach `<!-- private -->` wird beim Import abgeschnitten.
 
-Archiv-Einträge (`type: archive`) liegen im Ordner `Archiv/`, organisiert nach
+Datenbank-Einträge (`type: archive`) liegen im Ordner `Archiv/`, organisiert nach
 Kategorie-Unterordnern (`Dialoge/`, `Fraktionen/`, `Items/`, `Lore/`, `NPCs/`,
 `Orte/`, `Schiffe/`, `Spezies/`):
 
@@ -495,7 +745,7 @@ tags: [planet, klasse-m]
 - Typ-spezifische Skalar-Felder (`status`, `system`, `class`, …) erscheinen als
   Datenfelder auf der Detailseite.
 - **Referenz-Felder** (`related_*`, `controlled_by`, `leader`, `participants`,
-  …) enthalten Ziel-`slugs`. Verweise auf andere Archiv-Einträge landen in
+  …) enthalten Ziel-`slugs`. Verweise auf andere Datenbank-Einträge landen in
   `archive_links` (Detailseite: „Verweise“ + Rückverweise „Erwähnt in“);
   Verweise auf Charaktere bzw. Missionen werden als verlinkte Chips angezeigt.
 
@@ -523,7 +773,7 @@ Backups bekommen einen davon unterscheidbaren Key
 automatische Aufräumen — sie bleiben bis zur manuellen Löschung erhalten.
 Als dritter Schritt im selben Job entfernt `scripts/purge-soft-deleted.ts`
 (`npm run db:purge-deleted`) anschließend alle weich gelöschten Inhalte
-(Charaktere/Missionen/Missionslogs/Archiv-Einträge/Dialoge, siehe „Soft-Delete
+(Charaktere/Missionen/Missionslogs/Datenbank-Einträge/Dialoge, siehe „Soft-Delete
 für Inhalte" weiter unten), deren `deleted_at` mehr als 7 Tage zurückliegt,
 endgültig aus der DB — bewusst NACH dem Backup-Upload, damit ein zu
 purgender Inhalt notfalls noch aus dem frischen Backup wiederhergestellt
@@ -540,7 +790,7 @@ secret"):
 | `R2_ACCOUNT_ID`                             | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). Nötig für den Backup- UND den Purge-Schritt (Bild-Cleanup), nicht für das R2-Cleanup.                                                                                                                                                                                                                                   |
 | `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens").                                                                                                                                                                                                                                                                                                                |
 | `R2_BUCKET_NAME`                            | Name des **Backup**-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). Hochgeladene Assets liegen seit dem Asset-Bucket-Release nicht mehr hier, sondern in `R2_ASSET_BUCKET_NAME` (siehe unten).                                                                                                                                                          |
-| `R2_ASSET_BUCKET_NAME`                      | Name des **öffentlichen** Asset-Buckets für hochgeladene Assets — Content-Bilder (`content-images/...`), Charakter-Portraits (`character-portraits/...`) und Charakterbögen (`character-sheets/...`). Muss in Cloudflare als öffentlicher Bucket eingerichtet sein (eigene Domain oder r2.dev-URL). Für den App-Betrieb (Netlify) und die Migration nötig, **nicht** für den Backup-Cronjob. |
+| `R2_ASSET_BUCKET_NAME`                      | Name des **öffentlichen** Asset-Buckets für hochgeladene Assets — Content-Bilder (`content-images/...`), Charakter-Portraits (`character-portraits/...`). Muss in Cloudflare als öffentlicher Bucket eingerichtet sein (eigene Domain oder r2.dev-URL). Für den App-Betrieb (Netlify) und die Migration nötig, **nicht** für den Backup-Cronjob. |
 | `R2_ASSET_PUBLIC_BASE_URL`                  | Öffentliche Basis-URL des Asset-Buckets ohne Trailing-Slash (z.B. `https://assets.neo-archiv.de` oder die von Cloudflare vergebene `https://pub-….r2.dev`). Daraus baut die App die direkten Asset-Links.                                                                                                                                                                                    |
 
 **Wichtig für das manuelle R2-Backup im Adminpanel** (`/admin/db` — "Im
@@ -555,7 +805,7 @@ der lokale Download/Upload-Weg funktioniert davon unabhängig immer.
 
 ### Soft-Delete für Inhalte
 
-Charaktere, Missionen, Missionslogs, Archiv-Einträge und Dialoge werden beim
+Charaktere, Missionen, Missionslogs, Datenbank-Einträge und Dialoge werden beim
 Löschen nicht mehr sofort aus der Datenbank entfernt, sondern nur mit einem
 `deleted_at`-Zeitstempel markiert (siehe `scripts/schema.sql`). Für alle
 außer Admins verschwinden sie damit sofort aus Suche und allen
@@ -567,7 +817,7 @@ weich gelöschte Inhalte automatisch nach 7 Tagen.
 
 ### Bilder für Inhalte
 
-Charaktere, Missionen, Missionslogs und Archiv-Einträge (nicht Gespräche —
+Charaktere, Missionen, Missionslogs und Datenbank-Einträge (nicht Gespräche —
 siehe `src/lib/contentImages.ts`) können beliebig viele Bilder haben. Die
 Bytes landen im **öffentlichen Asset-Bucket** (`R2_ASSET_BUCKET_NAME`, siehe
 Backup-Abschnitt oben), unter dem eigenen Präfix
@@ -578,16 +828,16 @@ Backup- in den Asset-Bucket umgezogen (idempotent, `--dry-run` zeigt vorab,
 was käme); bis dahin liest die App sie weiterhin per Fallback aus dem
 Backup-Bucket. Erlaubt sind JPEG/PNG/WebP/GIF bis 5 MB pro Datei;
 Hochladen/Löschen darf, wer den jeweiligen Inhalt auch sonst bearbeiten darf
-(bei Charakteren/Missionslogs nur der Owner, bei Missionen/Archiv-Einträgen
+(bei Charakteren/Missionslogs nur der Owner, bei Missionen/Datenbank-Einträgen
 zusätzlich jeder Admin). Die vorhandenen Galerie-Bilder werden weiterhin über
 die sichtbarkeitsgeprüfte Route `/api/content-images/[id]` ausgeliefert (die
 jetzt aus dem Asset-Bucket liest); neu am Asset-Bucket hängende Assets
-(hochgeladenes Charakter-Portrait bei der Anlage, Charakterbögen) nutzen die
+(hochgeladenes Charakter-Portrait bei der Anlage) nutzen die
 direkte öffentliche URL (`R2_ASSET_PUBLIC_BASE_URL`). Bei Charakteren lässt
 sich eines der hochgeladenen Bilder als Profilbild festlegen
 (`characters.portrait`); das Portrait öffnet per Klick ein Karussell über
 alle hochgeladenen Bilder. Bei Missionen, Missionslogs und
-Archiv-Einträgen lässt sich stattdessen ein bereits hochgeladenes Bild direkt
+Datenbank-Einträgen lässt sich stattdessen ein bereits hochgeladenes Bild direkt
 aus der Markdown-Editor-Toolbar heraus als `![Bild](...)` in den Text
 einfügen. Wird der zugehörige Inhalt endgültig gelöscht (Papierkorb-Purge
 oder Admin-Direktlöschung), räumt `purgeContentImagesFor()`
@@ -598,37 +848,36 @@ weiterhin in der Admin-Übersicht `/admin/content/images` (Adminbereich →
 Vorschau zeigt und pro Bild einen Admin-Löschen-Button unabhängig vom
 jeweiligen Owner bietet.
 
-### Charakterbögen (PDFs)
+### Charakterbogen auf der Charakterseite
 
-Charaktere können zusätzlich beliebig viele **Charakterbögen** als PDF haben
-(Tabelle `character_sheets`, siehe `src/lib/characterSheets.ts`). Die Bytes
-liegen im Asset-Bucket unter dem Präfix
-`character-sheets/<CharakterID>/<UUID>.pdf`; ausgeliefert werden sie – wie die
-Galerie-Bilder – über eine **eigene Proxy-Route** `GET /api/character-sheets/<id>`
-(nicht über die öffentliche Bucket-URL). Dadurch bleibt der Bucket privat (der
-`r2_key` verlässt den Server nie), die Auslieferung hängt nicht an einer korrekt
-konfigurierten öffentlichen Asset-Domain, und die Route prüft die Sichtbarkeit
-serverseitig (`canView` **und** `canViewDraft` auf dem Charakter). Auf der
-Charakterseite erscheinen die Bögen als Liste: ein Klick öffnet eine
-**Vollbild-PDF-Vorschau** (Modal, eingebettetes `<iframe>` — dafür erlaubt die
-CSP `frame-ancestors 'self'`), daneben gibt es einen **Herunterladen**-Knopf
-(`?download=1`, `Content-Disposition: attachment`). Auch die Bogen-_Liste_
-(Dateinamen/Größen) folgt der Charakter-Sichtbarkeit inkl. Entwurf-Gate
-(`getCharacterSheetsAction` → `canView` + `canViewDraft`). Hochladen und Löschen
-darf nur der Owner des Charakters (dieselbe Owner-only-Regel wie bei den
-Charakter-Bildern, kein Admin-Bypass); erlaubt sind nur PDFs bis 20 MB. Wird der
-Charakter endgültig gelöscht, entfernt `purgeCharacterSheetsFor()`
-(`src/lib/purgeContent.ts`) die Bögen samt R2-Objekten, bevor der
-`ON DELETE CASCADE` die DB-Zeilen wegräumt.
+Das Hochladen von PDF-Charakterbögen gibt es nicht mehr (Tabelle
+`character_sheets` und die Route `/api/character-sheets/<id>` sind mit v1.27.23
+entfallen). An seine Stelle tritt der in der Datenbank gepflegte Bogen selbst: auf der
+Charakterseite führt der Knopf **„Charakterbogen"** auf
+`/characters/<slug>/sheet` — dieselbe Vorlage wie das Formular unter
+`/user/characters/<id>/stats`, aber als reine Ansicht
+(`src/components/character/PersonnelFileView.tsx`, Maße aus
+`src/lib/personnelFileLayout.ts`). Sichtbar ist die Seite für die
+Spieler:in/den Spieler des Charakters (`player_id`) und für die Spielleitung
+(`gm.access`); für alle anderen gibt es sie nicht (`notFound()` statt 403, damit
+nicht durchscheint, dass es sie gäbe). Bearbeitet wird der Bogen weiterhin
+ausschließlich vom Owner unter `/user/characters/<id>/stats`. Der PDF-Export
+`/api/export/character-sheet?characterId=…` folgt derselben Regel: owner-
+gescopte Abfrage, für `gm.access` zusätzlich jeder Charakter.
 
-### Archiv-Assistent (RAG)
+Beim Ausrollen: **vor** `scripts/migrate-pr62.sql` einmal
+`npx tsx --conditions=react-server scripts/purge-character-sheet-uploads.ts`
+laufen lassen — das Skript löscht die bereits hochgeladenen PDFs im
+Asset-Bucket, deren `r2_key` die anschließend gelöschte Tabelle hält.
 
-Der Archiv-Assistent (`/rag` sowie eingebettet unter der Volltextsuche auf
+### Datenbank-Assistent (RAG)
+
+Der Datenbank-Assistent (`/rag` sowie eingebettet unter der Volltextsuche auf
 `/search`) beantwortet Fragen zum Kampagneninhalt auf Basis des vorhandenen
 Datenbestands — ein klassisches **RAG** (Retrieval-Augmented Generation):
 
 1. **Embeddings & Index.** Jeder Inhalt (Charaktere, Missionen, Mission-Logs,
-   Archiv-Einträge und abgeschlossene Gespräche) wird typabhängig in Chunks
+   Datenbank-Einträge und abgeschlossene Gespräche) wird typabhängig in Chunks
    zerlegt (`src/lib/embeddings.ts`), per **OpenAI** `text-embedding-3-small`
    (volle 1536 Dimensionen) eingebettet und in der Tabelle
    **`content_embeddings`** (Extension **pgvector**) abgelegt. RBAC-Felder
@@ -671,7 +920,7 @@ Datenbestands — ein klassisches **RAG** (Retrieval-Augmented Generation):
   `/admin/rag` zeigt außerdem ein Panel die aktuelle OpenAI-Nutzung (Kosten des
   laufenden Monats, best-effort das Restguthaben).
 
-**Kosten:** Initial-Embedding des kleinen Fan-Archivs < 0,10 $; Workers AI läuft
+**Kosten:** Initial-Embedding der kleinen Fan-Datenbank < 0,10 $; Workers AI läuft
 für das erwartete Fragevolumen voraussichtlich im Free Tier.
 
 ### Dev-/Preview-Umgebung
@@ -734,6 +983,17 @@ Rollen-Hochstufungs-Bug verursacht). Datenverändernde bzw. einmalige Schritte
 (Backfills, Seeds, Constraint-Wechsel) liegen pro Pull Request in einer eigenen
 `scripts/migrate-pr<NN>.sql`, die nach dem Merge einmalig gegen die Produktions-
 DB ausgeführt wird.
+
+Nach `scripts/migrate-pr62.sql` einmalig `npm run db:seed-talents` ausführen —
+das füllt den neuen Talent-Katalog; ein zweiter Lauf ändert nichts und
+überschreibt keine Anpassungen der Spielleitung.
+
+`scripts/migrate-pr62.sql` ist selbst wiederholbar. Die eine Ausnahme ist
+`dialogue_npc_speakers`: die Tabelle wird verworfen und neu angelegt, aber nur
+solange sie noch die Form einer früheren Fassung desselben PR hat (erkennbar
+an der Spalte `character_id`). Sie ist die einzige Stelle, an der steht, wer
+in einem laufenden Gespräch für einen NPC schreiben darf — ein
+bedingungsloses `DROP` würde dieses Recht bei jedem erneuten Lauf löschen.
 
 ---
 

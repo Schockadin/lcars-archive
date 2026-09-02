@@ -1,7 +1,10 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { createDialogueAction, type CreateDialogueState } from "./actions";
 import type { CharacterWithOwner } from "@/lib/characters";
+import type { NpcOption } from "@/lib/archive";
+import { speakerKey } from "@/lib/dialogueSpeaker";
+import type { GmContact } from "@/lib/users";
 import {
   FormField,
   SubmitButton,
@@ -18,12 +21,22 @@ export default function CreateDialogueForm({
   userId,
   ownCharacters,
   partnerCharacters,
+  npcs,
+  canPlayNpcs,
+  gms,
   locations,
   defaultLogDate,
 }: {
   userId: number;
   ownCharacters: { id: number; slug: string; name: string }[];
   partnerCharacters: CharacterWithOwner[];
+  // NPCs sind Datenbank-Einträge der Kategorie "npc" — als Gegenüber für
+  // alle, als eigener Sprecher nur für die Spielleitung (canPlayNpcs).
+  npcs: NpcOption[];
+  canPlayNpcs: boolean;
+  // Auswahl „wer spielt die NPCs?" — nur befüllt, wenn die anfragende Person
+  // die NPCs NICHT selbst spielt (sonst ist sie es selbst).
+  gms: GmContact[];
   locations: { slug: string; title: string }[];
   defaultLogDate: string | null;
 }) {
@@ -32,6 +45,18 @@ export default function CreateDialogueForm({
     initialState,
   );
 
+  // Ist ein NPC beteiligt? Entscheidet, ob nach der Spielleitung gefragt
+  // wird. Verbindlich geprüft wird das ohnehin in der Action.
+  const [ownIsNpc, setOwnIsNpc] = useState(
+    canPlayNpcs && ownCharacters.length === 0,
+  );
+  const [npcPartnerCount, setNpcPartnerCount] = useState(0);
+  const npcInvolved = ownIsNpc || npcPartnerCount > 0;
+  // Bei genau einer Spielleitung gibt es nichts zu wählen — sie wird still
+  // mitgeschickt (die Action setzt sie auch ohne Feld, das Feld hält die
+  // Anzeige nur ehrlich).
+  const needsGmChoice = npcInvolved && !canPlayNpcs && gms.length > 1;
+
   return (
     <form
       action={formAction}
@@ -39,41 +64,132 @@ export default function CreateDialogueForm({
     >
       <input type="hidden" name="userId" value={userId} />
 
-      <FormField label="Dein Charakter" htmlFor="dlg-own-character">
+      <FormField
+        label="Dein Charakter"
+        htmlFor="dlg-own-character"
+        hint={
+          canPlayNpcs && npcs.length > 0
+            ? "Als Spielleitung kannst du das Gespräch auch aus Sicht eines NPC beginnen."
+            : undefined
+        }
+      >
         <select
           id="dlg-own-character"
-          name="ownCharacterId"
+          name="ownSpeaker"
           required
           className={inputClass}
+          onChange={(e) => setOwnIsNpc(e.target.value.startsWith("n"))}
         >
           {ownCharacters.map((c) => (
-            <option key={c.id} value={c.id}>
+            <option
+              key={c.id}
+              value={speakerKey({ kind: "character", id: c.id })}
+            >
               {c.name}
             </option>
           ))}
+          {canPlayNpcs && npcs.length > 0 && (
+            <optgroup label="NPCs (von dir gespielt)">
+              {npcs.map((n) => (
+                <option
+                  key={n.id}
+                  value={speakerKey({ kind: "npc", id: n.id })}
+                >
+                  {n.name}
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
       </FormField>
 
       <FormField
         label="Gesprächspartner"
         htmlFor="dlg-partner-character"
-        hint="Mehrfachauswahl per Strg/Cmd- oder Shift-Klick möglich — ein Gespräch kann bereits bei der Erstellung mehr als zwei Teilnehmende haben."
+        hint="Mehrfachauswahl per Strg/Cmd- oder Shift-Klick möglich — ein Gespräch kann bereits bei der Erstellung mehr als zwei Teilnehmende haben. NPCs schreibt die Spielleitung."
       >
         <select
           id="dlg-partner-character"
-          name="partnerCharacterIds"
+          name="partners"
           multiple
           required
-          size={Math.min(6, partnerCharacters.length)}
+          size={Math.min(6, Math.max(partnerCharacters.length + npcs.length, 2))}
           className={`${inputClass} h-auto py-[8px]`}
+          onChange={(e) =>
+            setNpcPartnerCount(
+              [...e.target.selectedOptions].filter((o) =>
+                o.value.startsWith("n"),
+              ).length,
+            )
+          }
         >
           {partnerCharacters.map((c) => (
-            <option key={c.id} value={c.id}>
+            <option
+              key={c.id}
+              value={speakerKey({ kind: "character", id: c.id })}
+            >
               {c.name} (gespielt von {c.playerName})
             </option>
           ))}
+          {npcs.length > 0 && (
+            <optgroup label="NPCs">
+              {npcs.map((n) => (
+                <option
+                  key={n.id}
+                  value={speakerKey({ kind: "npc", id: n.id })}
+                >
+                  {n.name}
+                </option>
+              ))}
+            </optgroup>
+          )}
         </select>
       </FormField>
+
+      {/* Wer schreibt für die NPCs? Nur wenn welche beteiligt sind und die
+          anfragende Person sie nicht selbst spielt. Bei genau einer
+          Spielleitung entfällt die Wahl — dann steht nur, wer es sein wird. */}
+      {npcInvolved && !canPlayNpcs && (
+        <FormField
+          label="Spielleitung für die NPCs"
+          htmlFor="dlg-npc-speaker"
+          hint="Diese Person schreibt in diesem Gespräch für die beteiligten NPCs."
+        >
+          {needsGmChoice ? (
+            <select
+              id="dlg-npc-speaker"
+              name="npcSpeakerUserId"
+              required
+              className={inputClass}
+            >
+              {gms.map((gm) => (
+                <option key={gm.id} value={gm.id}>
+                  {gm.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            // Genau eine Spielleitung: nichts zu wählen. Das sichtbare Feld
+            // zeigt nur, wer es sein wird; mitgeschickt wird die ID.
+            <>
+              <input
+                id="dlg-npc-speaker"
+                type="text"
+                readOnly
+                value={gms[0]?.name ?? "Keine Spielleitung verfügbar"}
+                className={inputClass}
+              />
+              {gms[0] && (
+                <input
+                  type="hidden"
+                  name="npcSpeakerUserId"
+                  value={gms[0].id}
+                />
+              )}
+            </>
+          )}
+        </FormField>
+      )}
 
       <FormField label="Titel" htmlFor="dlg-title">
         <input

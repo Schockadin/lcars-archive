@@ -8,5 +8,5 @@ export const SOURCE_TYPE_LABELS: Record<TimelineSourceType, string> = {
   character: "Charakter",
   mission: "Mission",
   mission_log: "Mission-Log",
-  archive_entry: "Archiv",
+  archive_entry: "Datenbank",
 };

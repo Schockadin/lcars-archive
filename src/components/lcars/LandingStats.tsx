@@ -22,7 +22,7 @@ export default async function LandingStats() {
       />
       <LcarsDataRow
         value={entryCount}
-        label="Archiv-Einträge"
+        label="Datenbank-Einträge"
         accentColor="var(--lcars-tertiary)"
         color="var(--lcars-quinary)"
         href="/archive"

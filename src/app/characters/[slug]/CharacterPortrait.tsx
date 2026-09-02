@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useOverlayDismiss } from "@/hooks/useOverlayDismiss";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { getContentImagesAction } from "@/app/actions/contentImages";
@@ -67,21 +68,7 @@ export default function CharacterPortrait({
 
   // Escape schließt das Overlay, Pfeiltasten blättern durchs Karussell;
   // solange offen, Hintergrund-Scroll sperren.
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-      if (e.key === "ArrowLeft") prev();
-      if (e.key === "ArrowRight") next();
-    };
-    document.addEventListener("keydown", onKey);
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [open, close, prev, next]);
+  useOverlayDismiss(close, { active: open, onPrev: prev, onNext: next });
 
   return (
     <div

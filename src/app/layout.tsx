@@ -47,7 +47,7 @@ export const metadata = {
     default: "Neo Archive",
     template: "%s · Neo Archive", // %s wird durch den Seiten-Titel ersetzt
   },
-  description: `Kampagnen-Archiv der NeoVerse-Runde – Charaktere, Missionen und Logs aus ${campaignYears} Jahren Pen & Paper.`,
+  description: `Kampagnen-Datenbank der NeoVerse-Runde – Charaktere, Missionen und Logs aus ${campaignYears} Jahren Pen & Paper.`,
 };
 
 export const viewport: Viewport = {

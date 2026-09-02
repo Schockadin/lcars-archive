@@ -16,7 +16,7 @@ describe("canManageContentImages", () => {
     }
   });
 
-  it("erlaubt content.moderate bei Missionen und Archiv-Einträgen (fremder Inhalt)", () => {
+  it("erlaubt content.moderate bei Missionen und Datenbank-Einträgen (fremder Inhalt)", () => {
     const mod = viewer(1, ["content.moderate"]);
     expect(canManageContentImages("mission", 999, mod)).toBe(true);
     expect(canManageContentImages("archive_entry", 999, mod)).toBe(true);

@@ -1,16 +1,11 @@
 @import "tailwindcss";
+/* Unlayered (kein layer(...)): Layered CSS verliert in Tailwind v4 IMMER
+   gegen unlayered CSS, unabhängig von Media-Query und Spezifität. Die
+   Design-Tokens samt ihrer Responsive-Overrides (beides in tokens.css)
+   müssen deshalb im selben unlayered Tier liegen, damit die normale
+   Media-Query-Kaskade zwischen Basiswert und Override entscheidet. */
 @import "../styles/tokens.css";
-/* Unlayered, wie tokens.css oben — bewusst NICHT Teil des
-   layer(components)-Imports unten (siehe dessen Kommentar). Layered CSS
-   verliert in Tailwind v4 IMMER gegen unlayered CSS, unabhängig von
-   Media-Query/Spezifität — läge dieser Import stattdessen in
-   lcars-components.css (wie vor diesem Fix), würden die :root-Overrides
-   hier (Sidebar-Breite, Elbow-Bar-Höhe/-Breite, …) nie greifen, weil
-   tokens.css' Basiswerte unlayered immer gewinnen. Beide Dateien müssen im
-   selben (unlayered) Cascade-Tier liegen, damit die normale
-   Media-Query-Kaskade zwischen ihnen entscheidet. */
-@import "../styles/lcars-components/tokens-responsive.css";
-/* Unlayered, aus demselben Grund wie tokens-responsive.css oben: die
+/* Unlayered, aus demselben Grund wie tokens.css oben: die
    Nutzer-Farbthemes überschreiben die :root-Farbvariablen aus tokens.css
    per `html[data-theme="…"]` (Spezifität 0,1,1 > :root). Läge das in
    layer(components), würde die normale Kaskade gegen tokens.css (unlayered)
@@ -22,7 +17,7 @@
    im selben unlayered Tier wie tokens.css liegen, sonst verliert es gegen
    unlayered CSS. */
 @import "../styles/minimal-ui.css";
-/* Unlayered, aus demselben Grund wie tokens-responsive.css oben: der
+/* Unlayered, aus demselben Grund wie tokens.css oben: der
    Lesemodus muss u.a. die Sidebar (<aside className="flex …">) per
    display:none ausblenden. Läge diese Regel (wie vorher) in
    lcars-components.css unter layer(components), würde sie gegen
@@ -164,16 +159,6 @@
     line-height: 1.75;
     margin-bottom: 10px;
     hyphens: auto;
-  }
-
-  .lcars-breadcrumbs {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-family: "Share Tech Mono", monospace;
-    font-size: 16px;
-    /* letter-spacing: 0.2em; */
-    text-transform: uppercase;
   }
 
   /* ─── Sonstiges ──────────────────────────────────────────────────── */

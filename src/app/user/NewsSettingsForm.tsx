@@ -5,11 +5,7 @@ import {
   updateNewsSettingsAction,
   type NewsSettingsState,
 } from "./newsSettingsActions";
-import {
-  FormError,
-  FormSuccess,
-  SubmitButton,
-} from "@/app/_shared/FormPrimitives";
+import { SaveFooter } from "@/app/_shared/FormPrimitives";
 
 const initialState: NewsSettingsState = {};
 
@@ -68,16 +64,7 @@ export default function NewsSettingsForm({
         ))}
       </div>
 
-      <FormError message={state?.error} />
-      {state?.success && <FormSuccess>Gespeichert.</FormSuccess>}
-
-      <SubmitButton
-        pending={pending}
-        pendingLabel="Speichern…"
-        className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%]"
-      >
-        Speichern
-      </SubmitButton>
+      <SaveFooter state={state} pending={pending} />
     </form>
   );
 }

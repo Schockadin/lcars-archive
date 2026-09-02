@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/session";
 import { getUserById, updateDialogueViewPreference } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
+import { canPlayNpcs, canView, resolveViewer } from "@/lib/visibility";
+import { getNpcOptions } from "@/lib/archive";
 import { userCan } from "@/lib/permissions";
 import {
   DialogueClosedError,
@@ -15,7 +17,7 @@ import {
   getDialogueForPlay,
   getDialogueParticipant,
   getDialogueParticipantCharacters,
-  getLastDialogueSpeakerCharacterId,
+  getLastDialogueSpeaker,
   getDialogueSubscribers,
   getCharacterSubscribers,
   getDialogueParticipantPlayers,
@@ -28,6 +30,7 @@ import {
   completeDialogue,
   deleteDialogue,
   inviteDialogueParticipants,
+  DialogueNpcSpeakerRequiredError,
   reserveDialogueReply,
   forceReleaseDialogueReservation,
   requestDialogueReservationNotification,
@@ -37,6 +40,7 @@ import {
   type DialogueLockStatus,
 } from "@/lib/dialogues";
 import { canReplyToDialogue } from "@/lib/dialogueLock";
+import { parseSpeakerKey, sameSpeaker } from "@/lib/dialogueSpeaker";
 import {
   sendDialogueMessageEmail,
   sendCharacterDialogueClosedEmail,
@@ -92,12 +96,13 @@ export async function postDialogueMessageAction(
     };
   }
 
-  // characterId ist optional im Formular (Ein-Charakter-Fall braucht keine
-  // Auswahl) — dann der einzige eigene Teilnehmer-Charakter. Bei mehreren muss
-  // die mitgeschickte ID einer der eigenen sein.
-  const rawCharacterId = Number(formData.get("characterId"));
-  const chosen = Number.isInteger(rawCharacterId)
-    ? myCharacters.find((c) => c.characterId === rawCharacterId)
+  // speaker ist optional im Formular (Ein-Charakter-Fall braucht keine
+  // Auswahl) — dann der einzige eigene Teilnehmer. Bei mehreren muss der
+  // mitgeschickte Schlüssel ("c12"/"n7", siehe dialogueSpeaker.ts) einer der
+  // eigenen sein.
+  const rawSpeaker = parseSpeakerKey(String(formData.get("speaker") ?? ""));
+  const chosen = rawSpeaker
+    ? myCharacters.find((c) => sameSpeaker(c.speaker, rawSpeaker))
     : myCharacters.length === 1
       ? myCharacters[0]
       : undefined;
@@ -113,7 +118,7 @@ export async function postDialogueMessageAction(
   try {
     await postDialogueMessage({
       archiveEntryId: entry.id,
-      characterId: chosen.characterId,
+      speaker: chosen.speaker,
       authorUserId: session.userId,
       bodyMarkdown,
     });
@@ -430,6 +435,8 @@ export async function completeDialogueAction(
   }
   for (const player of await getDialogueParticipantPlayers(
     entry.participants.map((p) => p.slug),
+    // entry.id: dazu die GM-Konten, die hier für NPCs sprechen.
+    entry.id,
   )) {
     recipients.set(player.id, player);
   }
@@ -506,7 +513,13 @@ export async function deleteDialogueAction(
   revalidatePath(`/archive/${entrySlug}`);
   revalidatePath(`/dialogues/${entrySlug}`);
 
-  const players = await getDialogueParticipantPlayers(deleted.participantSlugs);
+  // Mit Gesprächs-ID, damit auch die NPC-Sprecher informiert werden: das
+  // Löschen ist ein Soft-Delete (deleted_at), die Zeilen in
+  // dialogue_npc_speakers stehen also noch.
+  const players = await getDialogueParticipantPlayers(
+    deleted.participantSlugs,
+    entry.id,
+  );
   for (const player of players) {
     if (player.emailNotificationsEnabled) {
       const result = await sendDialogueDeletedEmail({
@@ -590,7 +603,9 @@ export interface InviteParticipantState {
 // (useTransition), kein useActionState-Formular nötig.
 export async function inviteDialogueParticipantAction(
   entrySlug: string,
-  characterIds: number[],
+  // Sprecher-Schlüssel ("c12"/"n7", siehe dialogueSpeaker.ts) — Charaktere
+  // und NPC-Datenbank-Einträge gemischt.
+  speakerKeys: string[],
 ): Promise<InviteParticipantState> {
   const session = await getSession();
   if (!session) return { error: "Bitte melde dich an." };
@@ -600,17 +615,57 @@ export async function inviteDialogueParticipantAction(
   if (entry.ownerUserId !== session.userId) {
     return { error: "Nur der Ersteller kann weitere Personen einladen." };
   }
-  if (characterIds.length === 0) return {};
+  const speakers = speakerKeys
+    .map(parseSpeakerKey)
+    .filter((s): s is NonNullable<typeof s> => s != null);
+  if (speakers.length === 0) return {};
 
+  // NPCs darf nur einladen, wer sie auch spielt —
+  // die einladende Person wird dann ihr Sprecher in diesem Gespräch.
   const inviter = await getUserById(session.userId);
+  const roleMap = await getRoleMap();
+  const viewer = inviter ? resolveViewer(inviter, roleMap) : null;
+  const mayPlayNpcs = canPlayNpcs(viewer);
+
+  // Den mitgeschickten NPC-Schlüsseln nie blind vertrauen: sie kommen aus
+  // einem Client-Select, das nur die sichtbaren NPCs anbietet — geprüft wird
+  // die Sichtbarkeit aber hier, mit derselben canView-Regel wie beim Aufbau
+  // der Liste (siehe /dialogues/[slug]/page.tsx). Sonst ließe sich ein
+  // fremder, intern gehaltener NPC-Eintrag in die Teilnehmerliste schreiben.
+  if (speakers.some((sp) => sp.kind === "npc")) {
+    if (!mayPlayNpcs) {
+      return {
+        error:
+          "NPCs kann nur die Spielleitung hinzufügen — sie schreibt dann für sie.",
+      };
+    }
+    const visibleNpcIds = new Set(
+      (await getNpcOptions())
+        .filter((npc) => canView(npc.visibility, npc.ownerUserId, viewer))
+        .map((npc) => npc.id),
+    );
+    if (
+      speakers.some((sp) => sp.kind === "npc" && !visibleNpcIds.has(sp.id))
+    ) {
+      return { error: "Diesen NPC gibt es nicht oder du darfst ihn nicht sehen." };
+    }
+  }
+
   let title: string;
   let invited: DialogueEmailTarget[];
   try {
     ({ title, invited } = await inviteDialogueParticipants(
       entry.id,
-      characterIds,
+      speakers,
+      mayPlayNpcs ? session.userId : null,
     ));
-  } catch {
+  } catch (err) {
+    if (err instanceof DialogueNpcSpeakerRequiredError) {
+      return {
+        error:
+          "NPCs kann nur die Spielleitung hinzufügen — sie schreibt dann für sie.",
+      };
+    }
     // TOCTOU: der Dialog wurde zwischen dem obigen getDialogueForPlay-Check
     // und diesem Aufruf gelöscht (siehe deleteDialogueAction) — kein
     // ungefangener 500er, sondern eine normale Formular-Fehlermeldung.
@@ -689,8 +744,8 @@ export async function reserveDialogueReplyAction(
   // reservieren (sonst blockiert die Reservierung nur alle anderen). „Kann
   // antworten" = mindestens ein eigener Teilnehmer-Charakter ist NICHT der
   // zuletzt am Zug gewesene (Selbstgespräch-Verbot, siehe postDialogueMessage).
-  const lastSpeaker = await getLastDialogueSpeakerCharacterId(entry.id);
-  const canReply = myCharacters.some((c) => c.characterId !== lastSpeaker);
+  const lastSpeaker = await getLastDialogueSpeaker(entry.id);
+  const canReply = myCharacters.some((c) => !sameSpeaker(c.speaker, lastSpeaker));
   if (!canReply) {
     return {
       error:

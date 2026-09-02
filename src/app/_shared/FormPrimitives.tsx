@@ -109,3 +109,34 @@ export function SubmitButton({
     </button>
   );
 }
+
+// Abschluss eines Einstellungs-Formulars: Fehler- und Erfolgs-Toast plus der
+// „Speichern"-Knopf. Stand in den Formularen des Profils (Konto, Benachrichti-
+// gungen, News, Theme, UI-Modus, Rechtschreibprüfung) und in der User-
+// Verwaltung siebenmal wortgleich da.
+//
+// `state` ist der Rückgabewert der jeweiligen Server-Action (useActionState);
+// erwartet werden nur die beiden üblichen Felder — ohne success-Feld bleibt
+// die Erfolgsmeldung schlicht aus (so wie beim Bearbeiten eines Users).
+export function SaveFooter({
+  state,
+  pending,
+}: {
+  state?: { error?: string; success?: boolean };
+  pending: boolean;
+}) {
+  return (
+    <>
+      <FormError message={state?.error} />
+      {state?.success && <FormSuccess>Gespeichert.</FormSuccess>}
+
+      <SubmitButton
+        pending={pending}
+        pendingLabel="Speichern…"
+        className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%]"
+      >
+        Speichern
+      </SubmitButton>
+    </>
+  );
+}

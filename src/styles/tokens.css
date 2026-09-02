@@ -67,9 +67,22 @@
   /* Charakterlisten-Spalte: füllt die verfügbare Breite, gedeckelt auf die
      Design-Maximalbreite. So bleibt sie auf Desktop schlank (465px), nutzt auf
      schmalen Screens aber die volle Breite statt fest 350/250px (früher per
-     Media-Query-Overrides, siehe tokens-responsive.css). */
+     Media-Query-Overrides, siehe die Responsive-Overrides am Ende von tokens.css). */
   --lcars-charpage-w: min(100%, 465px);
   --lcars-content-w: 700px;
+
+  /* Schwebende Flächen (Overlays, Dropdowns, Popover) — vorher als
+     rgba-Literale in header.css/shared.css mehrfach ausgeschrieben. Ein
+     Wert je Rolle, damit „Modal", „Dropdown" und „Popover" überall gleich
+     aussehen und sich an einer Stelle nachjustieren lassen.
+     hover-tint leitet sich aus --lcars-secondary ab (dieselbe Farbe, die
+     die Dropdowns umrandet) und wandert damit korrekt durch die
+     Nutzer-Farbthemes mit; im Standard-Theme ist der Wert identisch mit dem
+     früheren Literal rgba(205, 154, 205, 0.18). */
+  --lcars-scrim: rgba(0, 0, 0, 0.85);
+  --lcars-shadow-float: 0 8px 24px rgba(0, 0, 0, 0.4);
+  --lcars-shadow-drop: 0 12px 30px rgba(0, 0, 0, 0.5);
+  --lcars-hover-tint: color-mix(in srgb, var(--lcars-secondary) 18%, transparent);
 
   /* Typografie-Größen */
   --lcars-title-size: 48px;
@@ -134,7 +147,7 @@
      Nutzbar als: h-*, w-*, p-*, m-*, gap-* etc.
 
      WICHTIG: --lcars-bar-h und --lcars-charpage-w (oben in :root) haben
-     Responsive-Overrides in tokens-responsive.css — dafür bewusst KEIN
+     Responsive-Overrides am Ende von tokens.css — dafür bewusst KEIN
      @theme-Pendant, da @theme-Tokens statisch zur Build-Zeit ausgewertet
      werden und Media-Query-Overrides des :root-Werts nicht mitbekommen.
      Für diese beiden bleibt h-[var(--lcars-bar-h)]/w-[var(--lcars-charpage-w)]
@@ -142,4 +155,34 @@
   ─────────────────────────────────────────────────────────────────── */
   --spacing-lcars-footer: 40px;
   --spacing-lcars-datarow: 40px;
+}
+
+/* ─── Responsive Token-Overrides ─────────────────────────────────────
+   Dieselben Tokens, gestaffelt nach Viewport-Breite. Bewusst hier statt in
+   einer eigenen Datei unter lcars-components/: sie überschreiben die
+   :root-Werte oben und müssen dafür im selben (unlayered) Cascade-Tier
+   liegen — lcars-components.css wird als layer(components) eingebunden und
+   verlöre gegen unlayered CSS unabhängig von der Media Query.
+   Die Komponentenregeln zu denselben Breakpoints leben weiterhin in den
+   jeweiligen Komponenten-Dateien (header.css, character.css, …).
+──────────────────────────────────────────────────────────────────── */
+
+/* Small (≤ 768px): Sidebar auf 100px */
+@media (max-width: 768px) {
+  :root {
+    --lcars-bar-width: 100px;
+  }
+}
+
+/* Extra-Small (≤ 480px): Sidebar auf 64px */
+@media (max-width: 480px) {
+  :root {
+    --lcars-header-h: 120px;
+    --lcars-bar-width: 40px;
+    --lcars-elbow-size: 20px;
+    --lcars-bar-h: 10px;
+    --lcars-title-size: 24px;
+    --lcars-text-size: 16px;
+    --lcars-eyebrow-size: 12px;
+  }
 }

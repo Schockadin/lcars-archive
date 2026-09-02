@@ -7,6 +7,9 @@ export interface SessionInfo {
   userId: number | null;
   role: User["role"] | null;
   permissions?: string[];
+  // Ob mit dem Konto mindestens ein Charakter verknüpft ist — schaltet den
+  // „Charaktere"-Menüpunkt frei (siehe HeaderUserNav).
+  hasCharacters?: boolean;
 }
 
 // Client-seitiges Laden der aktuellen Session (userId/role/permissions) über
@@ -121,9 +124,17 @@ export function useSessionInfo(): SessionInfo | null {
     // Erster Mount irgendeines Consumers → einmal laden (dedupliziert).
     // Login/Logout-Wechsel (aktueller oder vorheriger Pfad ist /login) →
     // erzwungener Refetch (über inflightPath zu EINER Anfrage zusammengefasst).
+    //
+    // Dazu der Weg vom Anlegen eines Charakters weg: hasCharacters entscheidet
+    // über den Menüpunkt „Charaktere" (siehe HeaderNav), und wer gerade seinen
+    // ERSTEN Charakter angelegt hat, sähe ihn sonst bis zum nächsten harten
+    // Neuladen nicht — die Action leitet auf /characters/<slug> weiter, was
+    // ohne diesen Zweig kein Neuladen der Session auslöst.
     const isAuthTransition =
       prevPathname !== null &&
-      (pathname === "/login" || prevPathname === "/login");
+      (pathname === "/login" ||
+        prevPathname === "/login" ||
+        prevPathname === "/user/characters/new");
     fetchSession(pathname, isAuthTransition);
   }, [pathname]);
 

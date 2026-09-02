@@ -56,7 +56,16 @@ describe("proxy (auth guard)", () => {
     expect(res.headers.get("location")).toBeNull();
   });
 
-  it.each(["/user", "/user/content", "/admin", "/admin/db", "/users", "/users/5"])(
+  it.each([
+    "/user",
+    "/user/content",
+    "/admin",
+    "/admin/db",
+    "/gm",
+    "/gm/sessions",
+    "/users",
+    "/users/5",
+  ])(
     "redirects anonymous visitors from %s to /login",
     (path) => {
       const res = proxy(request(path));
@@ -96,10 +105,11 @@ describe("proxy (auth guard)", () => {
     },
   );
 
-  it("only matches the three protected areas", () => {
+  it("only matches the four protected areas", () => {
     expect(config.matcher).toEqual([
       "/user/:path*",
       "/admin/:path*",
+      "/gm/:path*",
       "/users/:path*",
     ]);
   });

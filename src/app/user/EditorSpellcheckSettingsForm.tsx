@@ -5,7 +5,7 @@ import {
   updateEditorSpellcheckSettingsAction,
   type EditorSpellcheckSettingsState,
 } from "@/app/actions/editorPreferences";
-import { FormSuccess, SubmitButton } from "@/app/_shared/FormPrimitives";
+import { SaveFooter } from "@/app/_shared/FormPrimitives";
 
 const initialState: EditorSpellcheckSettingsState = {};
 
@@ -48,15 +48,7 @@ export default function EditorSpellcheckSettingsForm({
         </label>
       </div>
 
-      {state?.success && <FormSuccess>Gespeichert.</FormSuccess>}
-
-      <SubmitButton
-        pending={pending}
-        pendingLabel="Speichern…"
-        className="lcars-pill-btn--outline self-end disabled:opacity-50 w-[100%]"
-      >
-        Speichern
-      </SubmitButton>
+      <SaveFooter state={state} pending={pending} />
     </form>
   );
 }

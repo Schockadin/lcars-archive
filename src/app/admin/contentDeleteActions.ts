@@ -47,7 +47,7 @@ export async function deleteContentAction(
     revalidateLog(result.missionId, result.slug);
   } else if (contentType === "archive_entry") {
     const result = await deleteArchiveEntry(id, admin.id);
-    if (!result) return { error: "Archiv-Eintrag nicht gefunden." };
+    if (!result) return { error: "Datenbank-Eintrag nicht gefunden." };
     revalidateArchiveEntry(result.slug);
   } else {
     const result = await deleteDialogue(id, admin.id);
@@ -83,23 +83,23 @@ export async function restoreContentAction(
   contentType: TrashContentType,
   id: number,
 ): Promise<{ error?: string }> {
-  await requirePermission("content.moderate");
+  const moderator = await requirePermission("content.moderate");
 
   if (contentType === "character") {
     const result = await restoreCharacter(id);
     if (!result) return { error: "Charakter nicht gefunden." };
     revalidateCharacter(result.slug);
   } else if (contentType === "mission") {
-    const result = await restoreMission(id);
+    const result = await restoreMission(id, moderator.id);
     if (!result) return { error: "Mission nicht gefunden." };
     revalidateMission(result.slug);
   } else if (contentType === "mission_log") {
-    const result = await restoreMissionLog(id);
+    const result = await restoreMissionLog(id, moderator.id);
     if (!result) return { error: "Missionslog nicht gefunden." };
     revalidateLog(result.missionId, result.slug);
   } else if (contentType === "archive_entry") {
     const result = await restoreArchiveEntry(id);
-    if (!result) return { error: "Archiv-Eintrag nicht gefunden." };
+    if (!result) return { error: "Datenbank-Eintrag nicht gefunden." };
     revalidateArchiveEntry(result.slug);
   } else {
     const result = await restoreDialogue(id);
