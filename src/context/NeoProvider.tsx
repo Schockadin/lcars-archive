@@ -11,7 +11,6 @@ interface NeoProviderProps {
 export function NeoProvider({ children }: NeoProviderProps) {
   const [activeSection, setActiveSection] = useState<NavKey>("home");
   const [title, setTitle] = useState<string>("Home");
-  const [crumbLabels, setCrumbLabels] = useState<Record<string, string>>({});
   const [readingMode, setReadingMode] = useState<boolean>(false);
   const preserveReadingModeRef = useRef(false);
 
@@ -33,24 +32,8 @@ export function NeoProvider({ children }: NeoProviderProps) {
     setReadingMode(false);
   }, []);
 
-  // Stabil gehalten (useCallback), damit Effekte in den Setzer-Komponenten
-  // nicht bei jedem Render neu laufen.
-  const setCrumbLabel = useCallback((slug: string, label: string) => {
-    setCrumbLabels((prev) =>
-      prev[slug] === label ? prev : { ...prev, [slug]: label },
-    );
-  }, []);
-  const clearCrumbLabel = useCallback((slug: string) => {
-    setCrumbLabels((prev) => {
-      if (!(slug in prev)) return prev;
-      const next = { ...prev };
-      delete next[slug];
-      return next;
-    });
-  }, []);
-
   // Memoisiert: ohne useMemo wäre value bei jedem Render ein neues Objekt,
-  // wodurch ALLE Consumer (BreadCrumbNav, SidebarMenu, ReadingModeToggle, …)
+  // wodurch ALLE Consumer (SidebarMenu, ReadingModeToggle, …)
   // bei jeder Zustandsänderung neu rendern würden, unabhängig davon, welchen
   // Ausschnitt sie tatsächlich lesen. Setter/Callbacks sind bereits stabil
   // (useState-Setter bzw. useCallback), nur die Primitiv-/Objektwerte lösen
@@ -61,9 +44,6 @@ export function NeoProvider({ children }: NeoProviderProps) {
       setActiveSection,
       title,
       setTitle,
-      crumbLabels,
-      setCrumbLabel,
-      clearCrumbLabel,
       readingMode,
       setReadingMode,
       toggleReadingMode,
@@ -73,9 +53,6 @@ export function NeoProvider({ children }: NeoProviderProps) {
     [
       activeSection,
       title,
-      crumbLabels,
-      setCrumbLabel,
-      clearCrumbLabel,
       readingMode,
       toggleReadingMode,
       preserveReadingModeOnce,

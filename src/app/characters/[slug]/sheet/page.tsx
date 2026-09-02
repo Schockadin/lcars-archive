@@ -17,7 +17,6 @@ import {
 } from "@/lib/characters";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import PageMeta from "@/components/PageMeta";
-import CrumbLabel from "@/components/CrumbLabel";
 import PersonnelFileView from "@/components/character/PersonnelFileView";
 
 interface Props {
@@ -61,9 +60,6 @@ export default async function CharacterSheetPage({ params }: Props) {
   return (
     <div className="w-full">
       <PageMeta title={character.name} section="characters" />
-      {/* Breadcrumb-Override für das Slug-Segment; "sheet" wird automatisch
-          formatiert. */}
-      <CrumbLabel slug={character.slug} label={character.name} />
 
       <h1>Charakterbogen: {sheet.name}</h1>
       <p className="lcars-text">
