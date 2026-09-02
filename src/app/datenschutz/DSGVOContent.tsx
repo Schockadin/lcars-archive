@@ -92,6 +92,22 @@ export default function DSGVOContent({ year }: { year: number }) {
           fehlgeschlagenen Mail-Versands.
         </p>
         <p>
+          Zum Charakter einer Person gehören neben der Akte auch ihre{" "}
+          <strong>Charakterwerte</strong> (Attribute, Disziplinen, Talente,
+          Schwerpunkte und die weiteren Angaben des Bogens) sowie ein{" "}
+          <strong>Erfahrungspunkte-Konto</strong>. Dieses Konto ist ein
+          Buchungsjournal: Jede Gutschrift und jede Steigerung wird dauerhaft
+          mit Betrag, Grund, Zeitpunkt und dem Account festgehalten, der sie
+          gebucht hat (in der Regel die Spielleitung, bei Steigerungen die
+          spielende Person selbst). Ebenso werden gespielte{" "}
+          <strong>Sessions</strong> mit Datum, Titel, Notizen und
+          Teilnehmerliste gespeichert. Diese Angaben sind für Spielleitung und
+          die jeweilige Person einsehbar und dienen ausschließlich dem
+          Kampagnenbetrieb (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO —
+          Erfüllung des Nutzungsverhältnisses der Kampagne). Mit dem Charakter
+          werden sie gelöscht.
+        </p>
+        <p>
           Für die persönliche „News“-Übersicht auf dem Dashboard wird pro
           Login-Account gespeichert, welche Neuigkeiten bereits gesehen bzw.
           ausgeblendet wurden (Inhaltstyp, Kennung und Zeitpunkt), damit

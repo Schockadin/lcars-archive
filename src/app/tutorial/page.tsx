@@ -258,6 +258,16 @@ export default function TutorialPage() {
                 dir jeder Steigern-Knopf, wie viele AP dir danach bleiben.
               </p>
               <p>
+                Wichtig beim Abschließen: festgeschrieben wird der{" "}
+                <strong>gespeicherte</strong> Stand. Trage deshalb erst alle
+                Attribute und Disziplinen ein und speichere unten — solange
+                noch ein Feld leer ist oder das Budget überzogen ist, bleibt
+                der Knopf gesperrt. Sonst stünde dein Bogen dauerhaft mit
+                Lücken da: nach dem Abschließen lassen sich die Felder nur noch
+                über AP steigern, und ein leeres Feld hat keinen Wert, den man
+                steigern könnte.
+              </p>
+              <p>
                 <strong>Talente</strong> tippst du nicht ab, sondern wählst sie
                 aus einem Katalog. Ein Klick auf „Talent wählen“ öffnet ein
                 Fenster mit <strong>Suchfeld</strong> (Name, Voraussetzung oder
@@ -296,7 +306,11 @@ export default function TutorialPage() {
                 eines, das ihr im Spiel vereinbart habt — nimmt die
                 Spielleitung es unter „Talente“ auf; frei eintippen lässt es
                 sich bewusst nicht mehr, sonst ließen sich Voraussetzungen und
-                Regeltexte nicht mehr zuordnen.
+                Regeltexte nicht mehr zuordnen. Für die Spielleitung heißt das
+                beim Anlegen: der Katalogname darf keine Klammern enthalten —
+                die sind für den eigenen Namen reserviert. Die Voraussetzung
+                („Conn 2+“ und dergleichen) gehört ins eigene Feld, der Bogen
+                setzt sie selbst in Klammern dahinter.
               </p>
               <p>
                 Ganz unten am Bogen findest du einen{" "}
@@ -689,7 +703,10 @@ export default function TutorialPage() {
                   Teilnehmenden automatisch die Logbuch-AP extra — einmal je
                   Session, egal wie viele Logbücher geschrieben werden. Wird die
                   Zuordnung wieder gelöst oder das letzte Logbuch entfernt,
-                  verschwindet die Gutschrift ebenso automatisch.
+                  verschwindet die Gutschrift ebenso automatisch — auch dann,
+                  wenn das Logbuch mit seiner ganzen Mission gelöscht oder
+                  einer anderen Session zugeordnet wird (ein Logbuch hängt
+                  immer an genau einer Session).
                 </li>
                 <li>
                   AP für einen <strong>Missionsabschluss</strong> gibt es nur

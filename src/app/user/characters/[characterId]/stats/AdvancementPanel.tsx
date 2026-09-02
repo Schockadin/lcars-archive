@@ -37,6 +37,7 @@ export default function AdvancementPanel({
   rules,
   talents,
   species,
+  savedComplete,
 }: {
   characterId: number;
   stats: CharacterStats;
@@ -48,6 +49,11 @@ export default function AdvancementPanel({
   talents: Talent[];
   // Spezies der Akte — für Voraussetzungen wie „Vulcan".
   species: string | null;
+  // Sind im GESPEICHERTEN Stand alle Attribute und Disziplinen gesetzt? stats
+  // oben sind die live mitgetippten Werte — festgeschrieben wird aber der
+  // gespeicherte Stand (siehe lockOwnCharacterCreation), deshalb hier eine
+  // eigene Angabe statt einer Rechnung auf stats.
+  savedComplete: boolean;
 }) {
   const [state, formAction, pending] = useActionState(
     advanceCharacterAction,
@@ -143,11 +149,19 @@ export default function AdvancementPanel({
             </p>
           )}
 
+          {!savedComplete && (
+            <p className="stat-sheet-rule">
+              Festgeschrieben wird der <strong>gespeicherte</strong> Stand —
+              trage zuerst alle Attribute und Disziplinen ein und speichere
+              unten, sonst bliebe der Bogen mit Lücken stehen.
+            </p>
+          )}
+
           <form action={lockAction}>
             <input type="hidden" name="characterId" value={characterId} />
             <button
               type="submit"
-              disabled={lockPending || budget.overBudget}
+              disabled={lockPending || budget.overBudget || !savedComplete}
               className="lcars-pill-btn--outline disabled:opacity-50"
               onClick={(e) => {
                 if (

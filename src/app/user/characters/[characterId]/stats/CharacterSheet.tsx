@@ -4,6 +4,7 @@ import {
   ATTRIBUTE_FIELDS,
   DEPARTMENT_FIELDS,
   parseCharacterStats,
+  hasCompleteCreationValues,
 } from "@/lib/characterStats";
 import type { AdvancementRules } from "@/lib/advancement";
 import type { ApAccount } from "@/lib/apReasons";
@@ -106,6 +107,9 @@ export default function CharacterSheet({
         rules={rules}
         talents={talents}
         species={species}
+        // Bewusst der GESPEICHERTE Stand (stats), nicht liveStats: das
+        // Festschreiben wirkt auf das, was in der Datenbank steht.
+        savedComplete={hasCompleteCreationValues(stats)}
       />
 
       <CharacterStatsForm

@@ -43,6 +43,8 @@ export default function ImpressumContent() {
           <br />
           Warhammer 40.000: Games Workshop Limited
           <br />
+          Star Trek Adventures: Modiphius Entertainment Ltd.
+          <br />
           Diese Seite steht in keiner Verbindung zu diesen Unternehmen.
         </p>
 
@@ -67,6 +69,16 @@ export default function ImpressumContent() {
           Seitenbetreiber stellt lediglich die Plattform zur gemeinsamen
           Dokumentation der Kampagne bereit und beansprucht keine darüber
           hinausgehenden Rechte an diesen nutzergenerierten Beiträgen.
+        </p>
+        <p>
+          Der Charakterbogen bildet den Personnel-File-Bogen aus{" "}
+          <em>Star Trek Adventures</em> (2. Edition) nach; die Vorlagengrafik
+          sowie die Namen, Kategorien, Voraussetzungen und Regeltexte der
+          Talente stammen aus diesem Regelwerk. Die Rechte daran liegen bei
+          Modiphius Entertainment Ltd. bzw. den jeweiligen Rechteinhabern. Sie
+          werden hier ausschließlich für den privaten Spielbetrieb dieser
+          Kampagne verwendet, nicht öffentlich zugänglich gemacht und nicht
+          kommerziell verwertet.
         </p>
       </LegalPageLayout>
     </>

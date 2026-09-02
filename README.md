@@ -147,9 +147,19 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   jeder Steigern-Knopf, wie viele AP danach bleiben. Nicht verbrauchtes
   Erschaffungsbudget wird beim Festschreiben als AP gutgeschrieben, gedeckelt
   durch `creationCarryOverMax` (Standard 10) — Gutschrift und Sperre in einer
-  Transaktion.
+  Transaktion. Festgeschrieben wird dabei ausschließlich der **gespeicherte**
+  Stand: `lockOwnCharacterCreation` lehnt ein überzogenes Budget
+  (`CreationOverBudgetError`) und einen noch lückenhaften Bogen
+  (`CreationIncompleteError`, siehe `hasCompleteCreationValues`) ab. Ohne
+  diese beiden Prüfungen hinterließe ein direkt abgeschickter POST einen
+  dauerhaft überzogenen bzw. leeren Bogen — nach dem Festschreiben sind die
+  Felder schreibgeschützt, und `checkAdvancement` steigert keinen leeren Wert.
 - **Talent-Katalog** — die Talente der Runde liegen in der Tabelle `talents`
-  (Name eindeutig, Kategorie, Voraussetzung, Regeltext). Startdaten:
+  (Name eindeutig, Kategorie, Voraussetzung, Regeltext). Klammern sind im
+  Namen nicht erlaubt: auf dem Bogen steht ein umbenanntes Talent als
+  `Neuer Name (Originalname)` (siehe `formatTalentEntry`/`parseTalentEntry`),
+  ein Katalogname mit Klammern wäre davon nicht zu unterscheiden und danach
+  nicht mehr auswählbar — die Voraussetzung gehört ins eigene Feld. Startdaten:
   `scripts/seed/talents.json`, eingespielt mit `npm run db:seed-talents`
   (idempotent). Auf dem Charakterbogen ersetzt eine nach Kategorien gruppierte
   Auswahlliste das freie Tippen — mit Voraussetzung und Regeltext des
@@ -233,7 +243,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     `syncSessionLogbookAp` allen Teilnehmenden automatisch die Logbuch-AP —
     genau einmal je Session und Charakter, idempotent, und beim Wegfallen des
     letzten Logbuchs wieder zurück (auch beim Löschen/Wiederherstellen eines
-    Logbuchs).
+    Logbuchs oder seiner ganzen Mission). Ein Logbuch hängt an genau EINER
+    Session; zieht `setSessionLogbooks` eines aus einer anderen herüber, wird
+    auch deren Gutschrift nachgezogen — Lösen, Zuordnen und Buchen laufen
+    dafür in einer Transaktion.
   - **Missionsabschluss** (auf `/gm/campaign`) — AP für einen Missionsabschluss
     gibt es ausschließlich über die Missionsauswahl: die gewählte Mission wird
     dabei auf `completed` gesetzt und die Buchungen tragen
@@ -974,6 +987,13 @@ DB ausgeführt wird.
 Nach `scripts/migrate-pr62.sql` einmalig `npm run db:seed-talents` ausführen —
 das füllt den neuen Talent-Katalog; ein zweiter Lauf ändert nichts und
 überschreibt keine Anpassungen der Spielleitung.
+
+`scripts/migrate-pr62.sql` ist selbst wiederholbar. Die eine Ausnahme ist
+`dialogue_npc_speakers`: die Tabelle wird verworfen und neu angelegt, aber nur
+solange sie noch die Form einer früheren Fassung desselben PR hat (erkennbar
+an der Spalte `character_id`). Sie ist die einzige Stelle, an der steht, wer
+in einem laufenden Gespräch für einen NPC schreiben darf — ein
+bedingungsloses `DROP` würde dieses Recht bei jedem erneuten Lauf löschen.
 
 ---
 
