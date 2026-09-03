@@ -610,7 +610,7 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind                                                                                                    |
 | `npm run db:purge-deleted`  | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist                                                              |
 | `npm run test`              | Führt die Unit-Tests aus (`src/**/*.test.ts`)                                                                                                    |
-| `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Komponenten-Galerie sowie Layout-/Schrift-Regressionen an beiden Viewports) |
+| `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Komponenten-Galerie inkl. Charakter-Assistent und Bogen-Vorschau sowie Layout-/Schrift-Regressionen an beiden Viewports) |
 | `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz **mit pgvector**, siehe unten)               |
 
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
