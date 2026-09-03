@@ -26,7 +26,7 @@ export default async function NewCharacterPage() {
     return (
       <>
         <PageMeta title="Neuer Charakter" section="users" />
-        <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+        <article className="mb-[10px]">
           <h1>Neuen Charakter anlegen</h1>
           <p className="lcars-empty-state">
             Gast-Accounts können keine Charaktere anlegen.
@@ -47,7 +47,7 @@ export default async function NewCharacterPage() {
   return (
     <>
       <PageMeta title="Neuer Charakter" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px]">
         <h1>Neuen Charakter anlegen</h1>
         <p className="lcars-text">
           In vier Schritten: Stammdaten, Werte, Biografie und zum Schluss eine

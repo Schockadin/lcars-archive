@@ -45,8 +45,33 @@ test.describe("Charakter-Assistent", () => {
     await expect(page.locator("#wizard-stats-attr-control")).toBeHidden();
   });
 
+  test("zeigt die Blätter-Knöpfe oben neben der Schrittleiste und unten", async ({
+    page,
+  }) => {
+    // Auf den langen Schritten (Werte, Biografie) liegt der untere Knopf weit
+    // unterhalb des Bildschirms — deshalb steht dieselbe Gruppe zusätzlich
+    // oben in der Kopfzeile.
+    const navs = page.locator("#character-wizard .wizard-nav");
+    await expect(navs).toHaveCount(2);
+    await expect(
+      page.locator("#character-wizard .wizard-bar .wizard-nav"),
+    ).toHaveCount(1);
+
+    // Beide Kopien blättern dieselbe Form: der obere „Weiter"-Knopf bringt
+    // den Assistenten genauso auf Schritt 2 wie der untere.
+    await page.locator("#wizard-name").fill("T'Rel");
+    await page
+      .locator("#character-wizard .wizard-bar button[aria-label='Weiter']")
+      .click();
+    await expect(page.locator("#wizard-stats-attr-control")).toBeVisible();
+    await navs.last().locator("button[aria-label='Zurück']").click();
+    await expect(page.locator("#wizard-name")).toBeVisible();
+  });
+
   test("blättert erst mit Namen weiter", async ({ page }) => {
-    await page.locator("#character-wizard button[aria-label='Weiter']").click();
+    await page
+      .locator("#character-wizard .wizard-bar button[aria-label='Weiter']")
+      .click();
     await expect(
       page.getByText("Bitte zuerst einen Namen angeben."),
     ).toBeVisible();
@@ -55,14 +80,18 @@ test.describe("Charakter-Assistent", () => {
 
   test("behält Eingaben beim Vor- und Zurückblättern", async ({ page }) => {
     await page.locator("#wizard-name").fill("T'Rel");
-    await page.locator("#character-wizard button[aria-label='Weiter']").click();
+    await page
+      .locator("#character-wizard .wizard-bar button[aria-label='Weiter']")
+      .click();
 
     const control = page.locator("#wizard-stats-attr-control");
     await expect(control).toBeVisible();
     await control.fill("11");
 
     // Zurück zu den Stammdaten …
-    await page.locator("#character-wizard button[aria-label='Zurück']").click();
+    await page
+      .locator("#character-wizard .wizard-bar button[aria-label='Zurück']")
+      .click();
     await expect(page.locator("#wizard-name")).toHaveValue("T'Rel");
 
     // … und wieder vor: der Wert im zweiten Schritt steht noch.
@@ -138,7 +167,7 @@ test.describe("Charakter-Assistent", () => {
     ]);
     await expect(preview.getByText("T'Rel").first()).toBeVisible();
     await expect(
-      page.locator("#character-wizard button[type='submit']"),
+      page.locator("#character-wizard .wizard-bar button[type='submit']"),
     ).toBeVisible();
   });
 });

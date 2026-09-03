@@ -23,6 +23,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Rang und Spezies standen auf dem Charakterbogen selbst angelegter Charaktere nicht, obwohl sie in der Akte gepflegt waren. Jetzt erscheinen sie dort, wo sie hingehören.",
       "Der Anlege-Assistent führt jetzt über Icon-Knöpfe durch seine vier Schritte und passt auf Telefon-Bildschirmen in die Breite: Schrittleiste und Blätter-Knöpfe bleiben in einer Zeile, die Wertekästen stehen zu zweit nebeneinander.",
       "Wie viele AP für Attribute und Disziplinen noch übrig sind, steht jetzt groß über den Wertekästen — mit Verbrauchsbalken, und in Warnfarbe, sobald das Budget überzogen ist.",
+      "Die Blätter-Knöpfe des Anlege-Assistenten stehen jetzt zusätzlich oben neben der Schrittleiste — auf den langen Schritten musstest du vorher erst ans Seitenende scrollen, um weiterzukommen.",
+      "Auf den Charakter-Seiten reicht der Inhalt jetzt rechts genauso weit wie links, statt einen breiten leeren Streifen am rechten Rand zu lassen.",
+      '„Meine Charaktere" passt auf Telefon-Bildschirmen: die Aktionszeile lief vorher seitlich aus dem Bild. Der Knopf „Öffnen" ist entfallen — der Stift daneben führte ohnehin auf dieselbe Seite.',
     ],
   },
   {

@@ -1,6 +1,5 @@
 "use client";
 import { useOptimistic } from "react";
-import Link from "next/link";
 import { LcarsAkteCard } from "@/components/lcars";
 import type { Character } from "@/types/character";
 import VisibilitySelect from "../content/VisibilitySelect";
@@ -97,18 +96,13 @@ export default function OwnCharacterList({
                 initialValue={c.visibility}
               />
             }
-            extraAction={
-              <Link
-                href={`/user/characters/${c.id}`}
-                className="lcars-pill-btn--outline"
-                title="Charakterbogen, Werte und Stammdaten"
-              >
-                Öffnen
-              </Link>
-            }
-            // Stammdaten, Werte und Biografie liegen als Panels auf EINER
-            // Seite — der frühere eigene /edit-Weg entfällt.
+            // Kein zusätzlicher „Öffnen"-Knopf mehr: Stammdaten, Werte und
+            // Biografie liegen als Panels auf EINER Seite, der Stift führte
+            // also ohnehin an dieselbe Adresse. Die doppelte Pille war mit
+            // 180px zudem der Grund, warum die Aktionszeile auf einem
+            // Telefon (410px) über den Rand hinauslief.
             editHref={`/user/characters/${c.id}`}
+            editLabel="Öffnen und bearbeiten"
             deleteButton={
               <DeleteOwnContentButton
                 contentType="character"

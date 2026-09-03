@@ -39,7 +39,7 @@ export default async function UserCharactersPage() {
       <PageMeta title="Meine Charaktere" section="users" />
       <h1>Meine Charaktere</h1>
 
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)] gap-[20px] lcars-flex-switch">
+      <article className="mb-[10px] gap-[20px] lcars-flex-switch">
         <section className="flex flex-col gap-[12px] justify-center items-end">
           <h2>Neuer Charakter</h2>
           <div className="flex flex-col gap-[12px] max-sm:w-full">

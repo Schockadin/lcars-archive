@@ -167,6 +167,50 @@ export default function CharacterWizard({
 
   const isLast = step === STEPS.length - 1;
 
+  // Blättern und Abschluss: Icon plus Beschriftung, letztere auf schmalen
+  // Geräten ausgeblendet wie in der Schrittleiste. Dasselbe Element steht
+  // oben neben der Schrittleiste UND unten unter dem Schritt — auf den
+  // langen Schritten (Werte, Biografie) liegt der untere Knopf sonst weit
+  // unterhalb des Bildschirms, auf den kurzen der obere weit oberhalb des
+  // Formularendes.
+  const navButtons = (
+    <div className="wizard-nav">
+      <button
+        type="button"
+        onClick={() => goToStep(step - 1)}
+        disabled={step === 0}
+        aria-label="Zurück"
+        title="Zurück"
+        className="wizard-nav-btn wizard-nav-btn--outline"
+      >
+        <ChevronLeftIcon />
+        <span className="wizard-step-label">Zurück</span>
+      </button>
+      {!isLast && (
+        <button
+          type="button"
+          onClick={() => goToStep(step + 1)}
+          aria-label="Weiter"
+          title="Weiter"
+          className="wizard-nav-btn"
+        >
+          <span className="wizard-step-label">Weiter</span>
+          <ChevronRightIcon />
+        </button>
+      )}
+      {isLast && (
+        <SubmitButton
+          pending={pending}
+          pendingLabel="Wird angelegt…"
+          className="wizard-nav-btn"
+        >
+          <CheckIcon />
+          <span className="wizard-step-label">Fertig</span>
+        </SubmitButton>
+      )}
+    </div>
+  );
+
   return (
     <form
       ref={formRef}
@@ -186,30 +230,33 @@ export default function CharacterWizard({
           zusammenhängenden Zustand (siehe characterStatsPayload.ts). */}
       <input type="hidden" name="statsJson" value={JSON.stringify(stats)} />
 
-      {/* ── Schrittleiste ─────────────────────────────────────────── */}
-      <ol className="wizard-steps" aria-label="Schritte">
-        {STEPS.map((entry, index) => (
-          <li key={entry.key}>
-            <button
-              type="button"
-              onClick={() => goToStep(index)}
-              aria-current={index === step ? "step" : undefined}
-              aria-label={`Schritt ${index + 1}: ${entry.label}`}
-              title={`Schritt ${index + 1}: ${entry.label}`}
-              className={
-                index === step
-                  ? "wizard-step wizard-step--active"
-                  : "wizard-step"
-              }
-            >
-              <entry.Icon />
-              <span className="wizard-step-label">
-                {index + 1}. {entry.label}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ol>
+      {/* ── Kopfzeile: Schrittleiste und Blätter-Knöpfe ───────────── */}
+      <div className="wizard-bar">
+        <ol className="wizard-steps" aria-label="Schritte">
+          {STEPS.map((entry, index) => (
+            <li key={entry.key}>
+              <button
+                type="button"
+                onClick={() => goToStep(index)}
+                aria-current={index === step ? "step" : undefined}
+                aria-label={`Schritt ${index + 1}: ${entry.label}`}
+                title={`Schritt ${index + 1}: ${entry.label}`}
+                className={
+                  index === step
+                    ? "wizard-step wizard-step--active"
+                    : "wizard-step"
+                }
+              >
+                <entry.Icon />
+                <span className="wizard-step-label">
+                  {index + 1}. {entry.label}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ol>
+        {navButtons}
+      </div>
 
       {/* ── 1. Stammdaten ─────────────────────────────────────────── */}
       <fieldset hidden={step !== 0} className="border-0 p-0 m-0">
@@ -302,43 +349,7 @@ export default function CharacterWizard({
         </label>
       </div>
 
-      {/* Blättern und Abschluss: Icon plus Beschriftung, letztere auf
-          schmalen Geräten ausgeblendet wie in der Schrittleiste. */}
-      <div className="wizard-nav">
-        <button
-          type="button"
-          onClick={() => goToStep(step - 1)}
-          disabled={step === 0}
-          aria-label="Zurück"
-          title="Zurück"
-          className="wizard-nav-btn wizard-nav-btn--outline"
-        >
-          <ChevronLeftIcon />
-          <span className="wizard-step-label">Zurück</span>
-        </button>
-        {!isLast && (
-          <button
-            type="button"
-            onClick={() => goToStep(step + 1)}
-            aria-label="Weiter"
-            title="Weiter"
-            className="wizard-nav-btn"
-          >
-            <span className="wizard-step-label">Weiter</span>
-            <ChevronRightIcon />
-          </button>
-        )}
-        {isLast && (
-          <SubmitButton
-            pending={pending}
-            pendingLabel="Wird angelegt…"
-            className="wizard-nav-btn"
-          >
-            <CheckIcon />
-            <span className="wizard-step-label">Fertig</span>
-          </SubmitButton>
-        )}
-      </div>
+      {navButtons}
 
       <FormError message={stepError ?? state?.error} />
     </form>

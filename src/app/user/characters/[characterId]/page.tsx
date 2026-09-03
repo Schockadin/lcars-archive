@@ -58,7 +58,7 @@ export default async function OwnCharacterPage({ params }: Props) {
   return (
     <>
       <PageMeta title={character.name} section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)] flex flex-col gap-[16px]">
+      <article className="mb-[10px] flex flex-col gap-[16px]">
         <h1>{character.name}</h1>
 
         <CharacterSheetButton

@@ -429,6 +429,18 @@
    Geräten nur noch das Icon (die Beschriftung steht dort weiterhin im
    aria-label/title). Ohne das brachen vier beschriftete Pillen auf einem
    Telefon in vier Zeilen um und schoben das Formular nach unten. */
+/* Kopfzeile des Assistenten: links die Schrittleiste, rechts dieselben
+   Blätter-Knöpfe, die auch unter dem Schritt stehen. Auf den langen
+   Schritten (Werte, Biografie) liegt der untere Knopf sonst weit unterhalb
+   des sichtbaren Bereichs. */
+.wizard-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .wizard-steps {
   display: flex;
   flex-wrap: wrap;
@@ -622,6 +634,12 @@
      statt auf einem Telefon umzubrechen. */
   .wizard-steps,
   .wizard-nav {
+    flex-wrap: nowrap;
+  }
+
+  /* Als Icon-Knöpfe passen Schrittleiste UND Blätter-Knöpfe zusammen in
+     die Kopfzeile (4 × 44 + 2 × 44 plus Abstände). */
+  .wizard-bar {
     flex-wrap: nowrap;
   }
 
