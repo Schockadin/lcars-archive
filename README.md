@@ -517,6 +517,21 @@ npm run db:setup
 Liest `scripts/schema.sql` ein und erstellt alle Tabellen
 (`characters`, `missions`, `mission_logs`, `archive_entries`, …).
 
+Die Datenbank braucht dafür die Extensions **`pg_trgm`** (Volltextsuche) und
+**`vector`** (pgvector, Grundlage des Datenbank-Assistenten): ohne pgvector
+scheitert die Anlage von `content_embeddings`, und alles, was Inhalte
+endgültig löscht, läuft danach in eine fehlende Tabelle. Auf verwalteten
+Diensten (Railway, Neon, Supabase) sind beide vorhanden und müssen nur
+aktiviert werden; lokal genügt unter Debian/Ubuntu
+`apt-get install postgresql-16-pgvector`.
+
+**Für die DB-Integrationstests** (`npm run test:integration`) gilt dasselbe —
+sie laufen gegen eine eigene, leere Datenbank mit demselben Schema. In CI
+übernimmt das der Service-Container `pgvector/pgvector:pg16` (siehe
+`.github/workflows/ci.yml`); das Schema wird dort direkt mit `psql` eingespielt,
+nicht über `npm run db:setup` — das Skript fragt interaktiv nach der
+Schema-Datei und würde in einem Runner hängen.
+
 ### 4. Ersten Admin-User anlegen
 
 ```bash
@@ -596,7 +611,7 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:purge-deleted`  | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist                                                              |
 | `npm run test`              | Führt die Unit-Tests aus (`src/**/*.test.ts`)                                                                                                    |
 | `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Komponenten-Galerie sowie Layout-/Schrift-Regressionen an beiden Viewports) |
-| `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz)                                             |
+| `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz **mit pgvector**, siehe unten)               |
 
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
 (z.B. `db:setup:dev`, `db:ingest:dev`, `db:reset:dev`) — identisch, nur mit

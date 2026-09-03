@@ -80,7 +80,7 @@ describe("updateUserDetailsAction", () => {
     });
   });
 
-  it("changes the role, logs update_role with old → new, and does not log update_profile when name/email are unchanged", async () => {
+  it("changes the role, logs update_roles with old → new, and does not log update_profile when name/email are unchanged", async () => {
     const admin = await loginAsAdmin();
     const target = await insertUser({ name: "Same Name", email: "same@example.test", role: "player" });
 
@@ -102,8 +102,12 @@ describe("updateUserDetailsAction", () => {
     const entries = await listRecentAdminActions();
     expect(entries).toHaveLength(1);
     expect(entries[0].actorId).toBe(admin.id);
-    expect(entries[0].action).toBe("update_role");
-    expect(entries[0].details).toContain("player → gm");
+    // "update_roles" (Plural): seit der RBAC-Umstellung hat ein Konto eine
+    // Haupt- und beliebig viele Zusatzrollen, protokolliert wird deshalb die
+    // ganze Menge. "update_role" (Singular) bleibt nur als Typ bestehen, damit
+    // Alt-Einträge im Protokoll weiterhin ihre Beschriftung finden.
+    expect(entries[0].action).toBe("update_roles");
+    expect(entries[0].details).toContain("[player] → [gm]");
   });
 
   it("logs nothing when neither the profile nor the role actually changed", async () => {

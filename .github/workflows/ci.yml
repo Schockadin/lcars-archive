@@ -19,7 +19,10 @@ jobs:
       # DATABASE_URL pro Step auf diesen Container gesetzt (s.u.), der obige
       # Dummy-Wert bleibt für Lint/Unit-Tests/E2E unverändert.
       postgres:
-        image: postgres:16
+        # pgvector statt des nackten postgres-Images: scripts/schema.sql legt
+        # content_embeddings mit einer vector-Spalte an (RAG-Index) und
+        # scheitert ohne die Extension. Ansonsten ist das Postgres 16 wie zuvor.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: lcars_test
@@ -48,12 +51,17 @@ jobs:
 
       - run: npm run test:e2e
 
-      # - name: Apply schema to integration test DB
-      #   run: npx tsx scripts/setup-db.ts
-      #   env:
-      #     DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/lcars_test"
+      # DB-Integrationstests (tests/integration/). Sie liefen lange gar nicht
+      # mit — und genau deshalb blieb eine veraltete Erwartung über zehn
+      # Versionen unbemerkt stehen (update_role/update_roles). Das Schema wird
+      # direkt mit psql eingespielt, nicht mit scripts/setup-db.ts: das Skript
+      # fragt interaktiv nach der Schema-Datei und würde hier hängen.
+      - name: Apply schema to integration test DB
+        run: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/schema.sql
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/lcars_test"
 
-      # - name: Run DB integration tests
-      #   run: npm run test:integration
-      #   env:
-      #     DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/lcars_test"
+      - name: Run DB integration tests
+        run: npm run test:integration
+        env:
+          DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/lcars_test"
