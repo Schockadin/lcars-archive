@@ -234,7 +234,7 @@ function SessionRow({
     <div className="flex flex-col gap-[6px] border-b border-[var(--lcars-ink-dim)]/30 pb-[8px]">
       <button
         type="button"
-        className="flex flex-wrap items-baseline gap-[8px] text-left"
+        className="flex flex-wrap items-center gap-[8px] text-left"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
@@ -252,6 +252,16 @@ function SessionRow({
           {session.characterCount} Charaktere · {session.totalAp} AP gesamt ·{" "}
           {session.logbookCount} Logbücher
         </span>
+        {/* Auf-/Zuklapp-Anzeige wie bei den DataRow-Akkordeons — dreht sich,
+            wenn die Session-Details offen sind. */}
+        <span
+          className={
+            open
+              ? "lcars-data-row-chevron lcars-data-row-chevron--open"
+              : "lcars-data-row-chevron"
+          }
+          aria-hidden="true"
+        />
       </button>
 
       {open && (

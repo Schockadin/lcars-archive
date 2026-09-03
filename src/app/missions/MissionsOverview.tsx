@@ -103,7 +103,7 @@ export default function MissionsOverview({
 
             {authors.length > 0 && (
               <select
-                className="mission-author-filter"
+                className="mission-author-filter rounded-full"
                 value={authorKey ?? ""}
                 onChange={(e) => setAuthorKey(e.target.value || null)}
                 aria-label="Nach Autor filtern"

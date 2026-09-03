@@ -663,10 +663,10 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     ├── app/                  # Next.js App Router (Seiten & API-Routes)
     │   ├── page.tsx           # "/" — Landingpage (anonym) / Dashboard (eingeloggt)
     │   ├── Dashboard.tsx       # Persönliches Dashboard: News-Feed, offene Gespräche, Abos
-    │   ├── characters/        # Charakterübersicht & -detailseiten
+    │   ├── characters/        # Charakterübersicht, -detailseiten & abgeschlossene Gespräche (dialogues/[slug])
     │   ├── missions/
     │   ├── archive/
-    │   ├── dialogues/         # Öffentliche Ansicht abgeschlossener Gespräche
+    │   ├── dialogues/         # Spielansicht OFFENER Gespräche (Formular, Abschluss); abgeschlossene → /characters/dialogues/[slug]
     │   ├── rag/               # Datenbank-Assistent (RAG-Chat)
     │   ├── search/            # Volltextsuche + eingebetteter Datenbank-Assistent
     │   ├── tutorial/          # Anleitung für Besucher/User/Spielleitung

@@ -35,6 +35,8 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Das Buchungsjournal unter „Erfahrungspunkte" ist jetzt eingeklappt und lässt sich bei Bedarf aufklappen — Kontostände und Regelwerk stehen dadurch wieder ohne langes Scrollen da.',
       "NPCs sprechen in Gesprächen jetzt einheitlich in hellem Grau statt in bunten Charakterfarben — so ist auf einen Blick klar, wer von einer Spielerin/einem Spieler geführt wird.",
       "Was in der aktuellen Version neu ist, steht jetzt direkt auf dem Dashboard über den Neuigkeiten (mit Link auf die vollständige Änderungsliste) statt im Profil.",
+      "Abgeschlossene Gespräche haben ein eigenes Zuhause im Charaktere-Bereich (/characters/dialogues/…) und werden dort als eigenständiger Inhalt gezeigt, statt in der allgemeinen Datenbank-Detailseite. Alte Links funktionieren weiter.",
+      "Dashboard, Profil und „Meine Inhalte“ nutzen jetzt dieselbe breite, zentrierte Spalte wie Missionen und Suche; unter „Meine Charaktere“ steht „Charaktere verwalten“ links. Der Autoren-Filter der Missionen und das Sichtbarkeits-Dropdown haben runde Enden wie die übrigen Auswahlfelder, und eine aufgeklappte Session unter „Sessions“ zeigt das mit einem Pfeil an.",
     ],
   },
   {

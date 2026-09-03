@@ -154,7 +154,7 @@ export default async function UserPublicProfilePage({
                   {dialogues.map((d) => (
                     <LcarsAkteCard
                       key={d.slug}
-                      href={`/archive/${d.slug}`}
+                      href={`/characters/dialogues/${d.slug}`}
                       color="var(--lcars-quinary)"
                       className="flex-1"
                       title={d.title}

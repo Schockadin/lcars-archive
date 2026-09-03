@@ -95,7 +95,7 @@ export default async function UserPage() {
   return (
     <>
       <PageMeta title="Profil" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <h1>Profil</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">

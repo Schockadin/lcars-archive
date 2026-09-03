@@ -439,7 +439,9 @@ export default function UserContentBrowser({
                 >
                   <LcarsAkteCard
                     href={
-                      d.open ? `/dialogues/${d.slug}` : `/archive/${d.slug}`
+                      d.open
+                        ? `/dialogues/${d.slug}`
+                        : `/characters/dialogues/${d.slug}`
                     }
                     color={
                       d.open ? "var(--lcars-senary)" : "var(--lcars-quinary)"
