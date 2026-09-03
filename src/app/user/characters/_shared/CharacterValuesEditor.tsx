@@ -1,6 +1,6 @@
 "use client";
 import { useMemo, useState } from "react";
-import { MinusCircleIcon } from "@/lib/icons";
+import { MinusCircleIcon, PlusIcon } from "@/lib/icons";
 import {
   ATTRIBUTE_FIELDS,
   ATTRIBUTE_RULE,
@@ -54,6 +54,54 @@ function freeCount(key: string, rules: AdvancementRules): number | null {
   if (key === "focuses") return rules.creationFreeFocuses;
   if (key === CATALOG_LIST) return rules.creationFreeTalents;
   return null;
+}
+
+// Verbleibendes Erschaffungsbudget eines Bereichs — die wichtigste Zahl
+// dieses Schritts und deshalb bewusst gross gesetzt, mit Balken statt einer
+// Textzeile am Fuss des Abschnitts (dort ging sie zwischen den Wertekaesten
+// unter). Der Balken zeigt den verbrauchten Anteil; ist das Budget
+// ueberzogen, laeuft er voll und wechselt in die Warnfarbe.
+function BudgetMeter({
+  label,
+  cost,
+  total,
+  remaining,
+}: {
+  label: string;
+  cost: number;
+  total: number;
+  remaining: number;
+}) {
+  const over = remaining < 0;
+  // Ohne Budget (0 AP eingestellt) gibt es nichts zu füllen — sonst führte
+  // die Division zu NaN und der Balken verschwände.
+  const filled =
+    total > 0 ? Math.min(100, Math.round((cost / total) * 100)) : 0;
+
+  return (
+    <div className={over ? "stat-budget stat-budget--over" : "stat-budget"}>
+      <div className="stat-budget-head">
+        <span className="stat-budget-label">{label}</span>
+        <span className="stat-budget-spent">
+          {cost} / {total} AP verbraucht
+        </span>
+      </div>
+      <div className="stat-budget-figure">
+        <strong>{over ? -remaining : remaining}</strong>
+        <span>{over ? "AP zu viel" : "AP übrig"}</span>
+      </div>
+      <div
+        className="stat-budget-meter"
+        role="meter"
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-valuenow={cost}
+        aria-label={`${label}: ${cost} von ${total} AP verbraucht`}
+      >
+        <span style={{ width: `${over ? 100 : filled}%` }} />
+      </div>
+    </div>
+  );
 }
 
 function SectionTitle({ en, de }: { en: string; de: string }) {
@@ -270,6 +318,14 @@ export default function CharacterValuesEditor({
       {/* ── Attribute ─────────────────────────────────────────────── */}
       <section className="stat-sheet-section">
         <SectionTitle en="Attributes" de="Attribute" />
+        {!locked && (
+          <BudgetMeter
+            label="Attribute"
+            cost={budget.attributeCost}
+            total={rules.creationAttributeBudget}
+            remaining={budget.attributeRemaining}
+          />
+        )}
         <p className="stat-sheet-rule">
           Werte von {ATTRIBUTE_RULE.min} bis {ATTRIBUTE_RULE.max}; höchstens{" "}
           {ATTRIBUTE_RULE.maxAtMax} Attribut auf {ATTRIBUTE_RULE.max} und{" "}
@@ -298,6 +354,14 @@ export default function CharacterValuesEditor({
       {/* ── Disziplinen ───────────────────────────────────────────── */}
       <section className="stat-sheet-section">
         <SectionTitle en="Departments" de="Disziplinen" />
+        {!locked && (
+          <BudgetMeter
+            label="Disziplinen"
+            cost={budget.departmentCost}
+            total={rules.creationDepartmentBudget}
+            remaining={budget.departmentRemaining}
+          />
+        )}
         <p className="stat-sheet-rule">
           Werte von {DEPARTMENT_RULE.min} bis {DEPARTMENT_RULE.max}; höchstens{" "}
           {DEPARTMENT_RULE.maxAtMax} Disziplin auf {DEPARTMENT_RULE.max} und{" "}
@@ -327,27 +391,6 @@ export default function CharacterValuesEditor({
                 <li key={error}>{error}</li>
               ))}
             </ul>
-          )}
-
-          {/* Budget-Anzeige nur, solange die Erschaffung läuft — danach
-              wachsen die Werte über AP (siehe AdvancementPanel). */}
-          {!locked && (
-            <div className="stat-editor-derived">
-              <span>
-                Attribute: {budget.attributeCost} /{" "}
-                {rules.creationAttributeBudget} AP
-                {budget.attributeRemaining >= 0
-                  ? ` · ${budget.attributeRemaining} übrig`
-                  : ` · ${-budget.attributeRemaining} zu viel`}
-              </span>
-              <span>
-                Disziplinen: {budget.departmentCost} /{" "}
-                {rules.creationDepartmentBudget} AP
-                {budget.departmentRemaining >= 0
-                  ? ` · ${budget.departmentRemaining} übrig`
-                  : ` · ${-budget.departmentRemaining} zu viel`}
-              </span>
-            </div>
           )}
         </div>
       </section>
@@ -425,12 +468,24 @@ export default function CharacterValuesEditor({
                       </span>
                     )}
                     {!listLocked && (
+                      // Icon statt Beschriftung: die Pille „Hinzufügen" war
+                      // 180px breit und schob die Listenkopfzeile auf einem
+                      // Telefon über den Bildschirmrand hinaus. Was sie tut,
+                      // steht im aria-label/title.
                       <button
                         type="button"
                         onClick={() => setAdding(field.key)}
-                        className="lcars-pill-btn--outline"
+                        className="lcars-icon-btn"
+                        aria-label={
+                          isCatalog
+                            ? `Talent wählen (${field.label})`
+                            : `${field.label}: Eintrag hinzufügen`
+                        }
+                        title={
+                          isCatalog ? "Talent wählen" : "Eintrag hinzufügen"
+                        }
                       >
-                        {isCatalog ? "Talent wählen" : "Hinzufügen"}
+                        <PlusIcon />
                       </button>
                     )}
                   </span>

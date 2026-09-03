@@ -21,6 +21,8 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Deine Charakterseite ist neu aufgebaut: Stammdaten, Werte und Biografie stehen als Panels untereinander statt auf getrennten Seiten mit Umschalter. Stammdaten und Biografie haben je einen Stift-Knopf zum Bearbeiten an Ort und Stelle; die Werte steigerst du wie gewohnt mit AP. Alte Lesezeichen auf die frühere Werte- oder Bearbeiten-Seite führen automatisch dorthin.",
       "Ganz oben auf der Charakterseite öffnet ein Knopf den Charakterbogen als Vorschau — mit Knöpfen zum Drucken und zum Speichern als PDF.",
       "Rang und Spezies standen auf dem Charakterbogen selbst angelegter Charaktere nicht, obwohl sie in der Akte gepflegt waren. Jetzt erscheinen sie dort, wo sie hingehören.",
+      "Der Anlege-Assistent führt jetzt über Icon-Knöpfe durch seine vier Schritte und passt auf Telefon-Bildschirmen in die Breite: Schrittleiste und Blätter-Knöpfe bleiben in einer Zeile, die Wertekästen stehen zu zweit nebeneinander.",
+      "Wie viele AP für Attribute und Disziplinen noch übrig sind, steht jetzt groß über den Wertekästen — mit Verbrauchsbalken, und in Warnfarbe, sobald das Budget überzogen ist.",
     ],
   },
   {
@@ -60,7 +62,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "NPCs standen in der Gesprächs-Auswahl bisher nur, wenn sie öffentlich sichtbar waren — die üblichen, intern gehaltenen NPCs fehlten damit. Jetzt gilt auch hier die normale Sichtbarkeit: Wer einen NPC sehen darf, kann ihn auch ansprechen. Wer NPCs spielt, kann sie außerdem nachträglich in ein laufendes Gespräch holen und ein Gespräch aus ihrer Sicht beginnen — das klappt jetzt auch mit einem reinen Admin-Konto.",
       "„Erschaffung abschließen“ ist jetzt erst möglich, wenn alle Attribute und Disziplinen eingetragen UND gespeichert sind — festgeschrieben wird der gespeicherte Stand. Vorher konnte ein Bogen mit Lücken festgeschrieben werden, und die leeren Felder ließen sich danach nicht mehr füllen, weil sich nur vorhandene Werte steigern lassen.",
       "Nach dem Bearbeiten eines Charakters landest du wieder in der Charakter-Übersicht statt in „Meine Inhalte“, wo Charaktere gar nicht mehr stehen. Und der Menüpunkt „Charaktere“ erscheint direkt nach dem Anlegen deines ersten Charakters, statt erst nach dem nächsten Neuladen.",
-      "PDF-Charakterbögen lassen sich nicht mehr hochladen. Stattdessen führt auf der Charakterseite der Knopf „Charakterbogen“ direkt zum gepflegten Bogen — als reine Ansicht mit Vollbild und PDF-Download. Du siehst ihn bei deinen eigenen Charakteren, die Spielleitung bei allen. Bereits hochgeladene PDFs werden beim Einspielen dieser Version entfernt."
+      "PDF-Charakterbögen lassen sich nicht mehr hochladen. Stattdessen führt auf der Charakterseite der Knopf „Charakterbogen“ direkt zum gepflegten Bogen — als reine Ansicht mit Vollbild und PDF-Download. Du siehst ihn bei deinen eigenen Charakteren, die Spielleitung bei allen. Bereits hochgeladene PDFs werden beim Einspielen dieser Version entfernt.",
     ],
   },
   {

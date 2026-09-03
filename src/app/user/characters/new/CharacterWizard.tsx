@@ -17,17 +17,31 @@ import {
   characterMetadataFields,
 } from "../_shared/characterHeadFields";
 import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  EyeIcon,
+  FileTextIcon,
+  MyCharactersNavIcon,
+  StatsIcon,
+} from "@/lib/icons";
 import type { CharacterStats } from "@/types/characterStats";
 import type { AdvancementRules } from "@/lib/advancement";
 import type { Talent } from "@/lib/talentCatalog";
 
 const initialState: CharacterWizardState = {};
 
+// Jeder Schritt hat ein eigenes Icon: auf schmalen Geräten steht die
+// Schrittleiste ohne Beschriftung da (siehe .wizard-step-label in
+// character-stats.css), und vier gleich aussehende Nummern wären dort nicht
+// zu unterscheiden. Beschriftung und Position bleiben als aria-label bzw.
+// title erhalten, die Leiste ist also auch ohne sichtbaren Text bedienbar.
 const STEPS = [
-  { key: "head", label: "Stammdaten" },
-  { key: "stats", label: "Werte" },
-  { key: "bio", label: "Biografie" },
-  { key: "preview", label: "Vorschau" },
+  { key: "head", label: "Stammdaten", Icon: MyCharactersNavIcon },
+  { key: "stats", label: "Werte", Icon: StatsIcon },
+  { key: "bio", label: "Biografie", Icon: FileTextIcon },
+  { key: "preview", label: "Vorschau", Icon: EyeIcon },
 ] as const;
 
 // Pflichtfelder werden hier NICHT über das required-Attribut erzwungen: die
@@ -157,7 +171,7 @@ export default function CharacterWizard({
     <form
       ref={formRef}
       action={formAction}
-      className="flex flex-col gap-[16px]"
+      className="character-wizard flex flex-col gap-[16px]"
       // Enter in einem Textfeld soll blättern, nicht den halb ausgefüllten
       // Assistenten abschicken.
       onKeyDown={(e) => {
@@ -173,20 +187,25 @@ export default function CharacterWizard({
       <input type="hidden" name="statsJson" value={JSON.stringify(stats)} />
 
       {/* ── Schrittleiste ─────────────────────────────────────────── */}
-      <ol className="flex flex-wrap gap-[8px]" aria-label="Schritte">
+      <ol className="wizard-steps" aria-label="Schritte">
         {STEPS.map((entry, index) => (
           <li key={entry.key}>
             <button
               type="button"
               onClick={() => goToStep(index)}
               aria-current={index === step ? "step" : undefined}
+              aria-label={`Schritt ${index + 1}: ${entry.label}`}
+              title={`Schritt ${index + 1}: ${entry.label}`}
               className={
                 index === step
-                  ? "lcars-pill-btn"
-                  : "lcars-pill-btn--outline opacity-80"
+                  ? "wizard-step wizard-step--active"
+                  : "wizard-step"
               }
             >
-              {index + 1}. {entry.label}
+              <entry.Icon />
+              <span className="wizard-step-label">
+                {index + 1}. {entry.label}
+              </span>
             </button>
           </li>
         ))}
@@ -283,31 +302,40 @@ export default function CharacterWizard({
         </label>
       </div>
 
-      <div className="flex flex-wrap items-center gap-[8px]">
+      {/* Blättern und Abschluss: Icon plus Beschriftung, letztere auf
+          schmalen Geräten ausgeblendet wie in der Schrittleiste. */}
+      <div className="wizard-nav">
         <button
           type="button"
           onClick={() => goToStep(step - 1)}
           disabled={step === 0}
-          className="lcars-pill-btn--outline disabled:opacity-50"
+          aria-label="Zurück"
+          title="Zurück"
+          className="wizard-nav-btn wizard-nav-btn--outline"
         >
-          Zurück
+          <ChevronLeftIcon />
+          <span className="wizard-step-label">Zurück</span>
         </button>
         {!isLast && (
           <button
             type="button"
             onClick={() => goToStep(step + 1)}
-            className="lcars-pill-btn"
+            aria-label="Weiter"
+            title="Weiter"
+            className="wizard-nav-btn"
           >
-            Weiter
+            <span className="wizard-step-label">Weiter</span>
+            <ChevronRightIcon />
           </button>
         )}
         {isLast && (
           <SubmitButton
             pending={pending}
             pendingLabel="Wird angelegt…"
-            className="lcars-pill-btn disabled:opacity-50"
+            className="wizard-nav-btn"
           >
-            Fertig
+            <CheckIcon />
+            <span className="wizard-step-label">Fertig</span>
           </SubmitButton>
         )}
       </div>

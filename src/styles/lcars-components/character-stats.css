@@ -423,3 +423,242 @@
     font-size: 16px;
   }
 }
+
+/* ── Anlege-Assistent (/user/characters/new) ──────────────────────────
+   Schrittleiste und Blätter-Knöpfe: Icon plus Beschriftung, auf schmalen
+   Geräten nur noch das Icon (die Beschriftung steht dort weiterhin im
+   aria-label/title). Ohne das brachen vier beschriftete Pillen auf einem
+   Telefon in vier Zeilen um und schoben das Formular nach unten. */
+.wizard-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.wizard-step,
+.wizard-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--lcars-ink-data);
+  border-radius: 100vmax;
+  background: var(--lcars-surface);
+  color: var(--lcars-ink-data);
+  cursor: pointer;
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: 200ms;
+}
+
+.wizard-step svg,
+.wizard-nav-btn svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.wizard-step:hover,
+.wizard-nav-btn:hover:not(:disabled) {
+  background: var(--lcars-primary-light);
+  border-color: var(--lcars-primary-light);
+  color: var(--lcars-bg);
+}
+
+/* Der Schritt, auf dem der Assistent gerade steht — gefüllt statt
+   umrandet, damit die Position auch ohne Beschriftung ablesbar bleibt. */
+.wizard-step--active,
+.wizard-nav-btn:not(.wizard-nav-btn--outline) {
+  background: var(--lcars-primary);
+  border-color: var(--lcars-primary);
+  color: var(--lcars-bg);
+}
+
+.wizard-nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.wizard-nav-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* Das Formular darf nie breiter werden als seine Spalte: die Vorschau
+   (drei Blätter) und die Wertekästen haben eigene Mindestbreiten, ohne
+   min-width: 0 schiebt eine davon die ganze Seite seitlich auf. */
+.character-wizard {
+  min-width: 0;
+}
+
+.character-wizard fieldset {
+  min-width: 0;
+}
+
+/* ── Erschaffungsbudget (Attribute/Disziplinen) ───────────────────────
+   Die zentrale Zahl des Werte-Schritts: wie viele AP noch übrig sind.
+   Steht direkt unter der Abschnitts-Kopfleiste — also über den Kästen,
+   die sie verbraucht — statt als Textzeile am Fuß des Abschnitts. */
+.stat-budget {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 16px;
+  margin: -6px 14px 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--lcars-ink-data);
+  border-left: 6px solid var(--lcars-ink-data);
+  border-radius: 8px;
+  background: var(--lcars-bg);
+}
+
+.stat-budget-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 160px;
+}
+
+.stat-budget-label {
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lcars-ink);
+}
+
+.stat-budget-spent {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  color: var(--lcars-ink-dim);
+}
+
+.stat-budget-figure {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.stat-budget-figure strong {
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 40px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--lcars-ink-data);
+}
+
+.stat-budget-figure span {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  color: var(--lcars-ink-dim);
+}
+
+/* Verbrauchsbalken: volle Breite unter den beiden Zeilen. */
+.stat-budget-meter {
+  flex: 1 0 100%;
+  height: 8px;
+  border-radius: 100vmax;
+  background: var(--lcars-surface);
+  overflow: hidden;
+}
+
+.stat-budget-meter > span {
+  display: block;
+  height: 100%;
+  background: var(--lcars-ink-data);
+  transition: width 200ms;
+}
+
+/* Budget überzogen — verbindlich abgelehnt wird das ohnehin erst beim
+   Abschicken, hier geht es nur um die Sichtbarkeit. */
+.stat-budget--over {
+  border-color: var(--lcars-quinary);
+}
+
+.stat-budget--over .stat-budget-figure strong,
+.stat-budget--over .stat-budget-spent {
+  color: var(--lcars-quinary);
+}
+
+.stat-budget--over .stat-budget-meter > span {
+  background: var(--lcars-quinary);
+}
+
+@media (max-width: 520px) {
+  /* Nur noch die Icons: die Beschriftung steht im aria-label/title. */
+  .wizard-step-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .wizard-step,
+  .wizard-nav-btn {
+    justify-content: center;
+    padding: 0;
+    width: 44px;
+    gap: 0;
+  }
+
+  /* Die vier Schritte und die Blätter-Knöpfe teilen sich eine Zeile,
+     statt auf einem Telefon umzubrechen. */
+  .wizard-steps,
+  .wizard-nav {
+    flex-wrap: nowrap;
+  }
+
+  /* Wertekästen: zwei je Zeile statt einer — 110px Mindestbreite plus
+     Innenabstand passten auf 375px nur einmal nebeneinander. */
+  .stat-editor-values {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .stat-editor-value {
+    padding: 8px 4px;
+  }
+
+  .stat-editor-value-input {
+    width: 100%;
+    max-width: 72px;
+  }
+
+  /* Ein Freitextfeld je Zeile — 190px Mindestbreite erzwangen sonst eine
+     zweite Spalte, die über den Bildschirmrand hinauslief. */
+  .stat-editor-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .stat-editor-body,
+  .stat-budget {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .stat-budget {
+    margin-left: 10px;
+    margin-right: 10px;
+  }
+
+  .stat-budget-figure strong {
+    font-size: 32px;
+  }
+}

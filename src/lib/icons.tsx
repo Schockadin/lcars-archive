@@ -301,6 +301,18 @@ export function CopyIcon() {
   );
 }
 
+// Charakterwerte (Schritt „Werte" des Anlege-Assistenten) — Balken
+// unterschiedlicher Höhe, wie die Wertekästen von Attributen und
+// Disziplinen.
+export function StatsIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M5 20V11M12 20V4M19 20v-6" />
+      <path d="M3 20h18" />
+    </svg>
+  );
+}
+
 // Passwort-Sichtbarkeits-Umschalter (PasswordInput.tsx).
 export function EyeIcon() {
   return (
