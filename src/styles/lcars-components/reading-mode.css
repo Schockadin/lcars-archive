@@ -15,13 +15,12 @@
   .reading-mode-toggle {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
+    /* Reiner Icon-Button: quadratisch, kein Text (siehe ReadingModeToggle). */
+    width: 40px;
+    height: 40px;
+    padding: 0;
     margin-bottom: 14px;
-    padding: 8px 16px;
-    font-family: var(--font-share-tech-mono), monospace;
-    font-size: 12px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
     color: var(--lcars-bg);
     background: var(--lcars-primary);
     border: none;

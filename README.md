@@ -373,9 +373,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   mag, deaktiviert im Profil unter „Darstellung → Oberfläche“ das LCARS-Design
   und bekommt stattdessen ein schlankes, minimalistisches Interface: System-
   schrift, keine dekorativen Elbows/Balken/Versalien, kein Header — die gesamte
-  Navigation liegt links in der Sidebar (auf dem Handy als reine Symbole). Rein
-  CSS-basiert (`html[data-ui="minimal"]`, Pre-Paint-Cookie `neo_ui`), die
-  eigentliche Zugriffskontrolle bleibt unberührt.
+  Navigation liegt links in der Sidebar (auf dem Handy als reine Symbole). Es
+  gibt es in zwei Ausführungen — **dunkel** (`data-ui="minimal"`) und **hell**
+  (`data-ui="minimal-light"`, überschreibt zusätzlich Hintergrund-/Textfarben
+  auf ein helles Schema). Rein CSS-basiert (gemeinsamer Selektor
+  `html[data-ui^="minimal"]`, Pre-Paint-Cookie `neo_ui`), die eigentliche
+  Zugriffskontrolle bleibt unberührt.
 - **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und Spielleitung.
 - **Markdown-Vault als Ursprungsimport** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte

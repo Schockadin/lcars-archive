@@ -29,6 +29,14 @@
   .chars-dialogues-layout {
     flex-direction: column;
   }
+  /* Gestapelt füllt die sichtbare Spalte die ganze Breite: das Layout nutzt
+     align-items: flex-start (damit die beiden Spalten nebeneinander auf ihre
+     Inhaltsbreite schrumpfen); ohne diese Regel schrumpfte die aktive Spalte
+     auch mobil auf ihre Inhaltsbreite — lange Karteninhalte (z.B. viele
+     Teilnehmer) liefen dann über den Bildschirmrand statt umzubrechen. */
+  .chars-dialogues-col {
+    width: 100%;
+  }
   .chars-dialogues-switch {
     display: flex;
     width: 100%;

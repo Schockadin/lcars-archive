@@ -1,7 +1,7 @@
-/* ─── Minimalistisches UI (data-ui="minimal") ──────────────────────────
+/* ─── Minimalistisches UI (data-ui^="minimal") ──────────────────────────
    Aktiviert über das Profil (/user → „Darstellung"), gespeichert als
    users.ui_mode und per neo_ui-Cookie noch vor dem ersten Paint auf
-   <html data-ui="minimal"> gesetzt (src/app/layout.tsx / ThemeApplier).
+   <html data-ui^="minimal"> gesetzt (src/app/layout.tsx / ThemeApplier).
 
    Deaktiviert die dekorative LCARS-Chrome (Elbows, Farbbalken, Pillen,
    Versalien, LCARS-Schrift) und ersetzt sie durch eine flache, schlichte
@@ -14,41 +14,84 @@
    (tokens.css), sodass der Text auch hier gut lesbar bleibt.
 ──────────────────────────────────────────────────────────────────── */
 
-html[data-ui="minimal"] {
+html[data-ui^="minimal"] {
   /* Flache Radien statt Pillen/Elbows. */
   --lcars-radius-pill: 6px;
 }
 
+/* ── Helle Variante (data-ui="minimal-light") ──────────────────────────
+   Dieselbe schlanke Optik wie das dunkle minimalistische UI (alle Regeln
+   hier greifen über data-ui^="minimal" für beide), nur mit hellem Hintergrund
+   und dunklem Text. Überschrieben werden sowohl die --lcars-* Tokens (rohe
+   CSS-Regeln) als auch die --color-lcars-* Tokens (Tailwind-Utilities wie
+   text-lcars-ink, bg-lcars-surface). Die Akzentfarben (primary…senary) bleiben
+   die des gewählten Farbthemas — auf hellem Grund weiterhin gut sichtbar. */
+html[data-ui="minimal-light"] {
+  --lcars-bg: #f4f4f8;
+  --lcars-surface: #ffffff;
+  --lcars-surface-2: #e9e9f1;
+  --lcars-border: #d3d3df;
+  --lcars-ink: #1b1b2c;
+  --lcars-ink-dim: #55556b;
+  --lcars-ink-data: #12539e;
+  --lcars-ink-contrast: #0e0e18;
+  --lcars-ink-light: #0e0e18;
+
+  --color-lcars-bg: #f4f4f8;
+  --color-lcars-surface: #ffffff;
+  --color-lcars-surface-2: #e9e9f1;
+  --color-lcars-border: #d3d3df;
+  --color-lcars-ink: #1b1b2c;
+  --color-lcars-ink-dim: #55556b;
+  --color-lcars-ink-data: #12539e;
+  --color-lcars-ink-contrast: #0e0e18;
+  --color-lcars-ink-light: #0e0e18;
+}
+
+/* Gefüllte Akzent-Flächen (Amber & Co.) behalten dunklen Text — heller Text
+   auf einer hellen Akzentfarbe wäre kontrastarm. */
+html[data-ui="minimal-light"] .lcars-pill-btn,
+html[data-ui="minimal-light"] .lcars-data-row-text,
+html[data-ui="minimal-light"] .reading-mode-toggle {
+  color: #08081a;
+}
+
 /* ── Typografie: Systemschrift, normale Laufweite, keine Versalien ──── */
-html[data-ui="minimal"] body {
+html[data-ui^="minimal"] body {
   font-family:
-    system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
   letter-spacing: normal;
 }
-html[data-ui="minimal"] h1,
-html[data-ui="minimal"] h2,
-html[data-ui="minimal"] h3,
-html[data-ui="minimal"] h4,
-html[data-ui="minimal"] h5,
-html[data-ui="minimal"] .lcars-heading,
-html[data-ui="minimal"] .lcars-header-title,
-html[data-ui="minimal"] .lcars-eyebrow,
-html[data-ui="minimal"] .lcars-back-link,
-html[data-ui="minimal"] .lcars-menu-text,
-html[data-ui="minimal"] .lcars-menu-id,
-html[data-ui="minimal"] .lcars-footer-menu,
-html[data-ui="minimal"] .lcars-toc-title,
-html[data-ui="minimal"] .lcars-toc-link {
+html[data-ui^="minimal"] h1,
+html[data-ui^="minimal"] h2,
+html[data-ui^="minimal"] h3,
+html[data-ui^="minimal"] h4,
+html[data-ui^="minimal"] h5,
+html[data-ui^="minimal"] .lcars-heading,
+html[data-ui^="minimal"] .lcars-header-title,
+html[data-ui^="minimal"] .lcars-eyebrow,
+html[data-ui^="minimal"] .lcars-back-link,
+html[data-ui^="minimal"] .lcars-menu-text,
+html[data-ui^="minimal"] .lcars-menu-id,
+html[data-ui^="minimal"] .lcars-footer-menu,
+html[data-ui^="minimal"] .lcars-toc-title,
+html[data-ui^="minimal"] .lcars-toc-link {
   font-family: inherit;
   text-transform: none;
   letter-spacing: normal;
 }
-html[data-ui="minimal"] h1,
-html[data-ui="minimal"] .lcars-heading {
+html[data-ui^="minimal"] h1,
+html[data-ui^="minimal"] .lcars-heading {
   font-size: 30px;
   font-weight: 600;
 }
-html[data-ui="minimal"] .lcars-eyebrow {
+html[data-ui^="minimal"] .lcars-eyebrow {
   letter-spacing: 0.08em;
 }
 
@@ -58,21 +101,21 @@ html[data-ui="minimal"] .lcars-eyebrow {
    Der Zahlen-/Wert-Teil links (.lcars-data-row-label) nutzt bereits direkt
    die Tailwind-Utility font-lcars-mono und ist von der body-Schrift
    unabhängig, braucht also keine eigene Regel hier. */
-html[data-ui="minimal"] .lcars-data-row-text {
+html[data-ui^="minimal"] .lcars-data-row-text {
   font-family: var(--font-antonio), "Antonio", sans-serif;
 }
 
 /* ── Sidebar → schlanke Navigationsspalte ──────────────────────────── */
 /* Rein dekorative Teile (Farbblöcke, Elbows, rechte Zierspalte) entfernen. */
-html[data-ui="minimal"] .lcars-sidebar-deco,
-html[data-ui="minimal"] .lcars-elbow-top,
-html[data-ui="minimal"] .lcars-elbow-bottom,
-html[data-ui="minimal"] .lcars-header-deco,
-html[data-ui="minimal"] .lcars-deco-block {
+html[data-ui^="minimal"] .lcars-sidebar-deco,
+html[data-ui^="minimal"] .lcars-elbow-top,
+html[data-ui^="minimal"] .lcars-elbow-bottom,
+html[data-ui^="minimal"] .lcars-header-deco,
+html[data-ui^="minimal"] .lcars-deco-block {
   display: none !important;
 }
 
-html[data-ui="minimal"] .lcars-sidebar {
+html[data-ui^="minimal"] .lcars-sidebar {
   width: 200px;
   background: var(--lcars-surface);
   border-right: 1px solid var(--lcars-border);
@@ -80,23 +123,23 @@ html[data-ui="minimal"] .lcars-sidebar {
 /* Hauptnavigation: volle Breite, kompakt gestapelt (die Menüpunkte behalten
    ihre Eigenhöhe, siehe die beiden Regeln direkt darunter) statt wie im
    LCARS-UI auf volle Höhe gestreckt. */
-html[data-ui="minimal"] .lcars-sidebar-navcol {
+html[data-ui^="minimal"] .lcars-sidebar-navcol {
   width: 100%;
   padding: 8px;
   gap: 2px;
   overflow-y: auto;
 }
-html[data-ui="minimal"] .lcars-sidebar-navcol > div {
+html[data-ui^="minimal"] .lcars-sidebar-navcol > div {
   flex: 0 0 auto;
 }
-html[data-ui="minimal"] .lcars-sidebar-navcol a {
+html[data-ui^="minimal"] .lcars-sidebar-navcol a {
   flex: 0 0 auto;
   min-height: 0;
 }
 
 /* Menüeinträge (waren farbige Elbow-Blöcke) → schlichte, linksbündige Links. */
-html[data-ui="minimal"] .lcars-menu-bar,
-html[data-ui="minimal"] .lcars-menu-pill {
+html[data-ui^="minimal"] .lcars-menu-bar,
+html[data-ui^="minimal"] .lcars-menu-pill {
   width: 100%;
   min-height: 0;
   height: auto;
@@ -107,27 +150,27 @@ html[data-ui="minimal"] .lcars-menu-pill {
   justify-content: flex-start;
   align-items: center;
 }
-html[data-ui="minimal"] .lcars-menu-bar:hover,
-html[data-ui="minimal"] .lcars-menu-pill:hover {
+html[data-ui^="minimal"] .lcars-menu-bar:hover,
+html[data-ui^="minimal"] .lcars-menu-pill:hover {
   background: var(--lcars-surface-2);
 }
-html[data-ui="minimal"] .lcars-menu-active,
-html[data-ui="minimal"] .lcars-menu-active:hover {
+html[data-ui^="minimal"] .lcars-menu-active,
+html[data-ui^="minimal"] .lcars-menu-active:hover {
   background: var(--lcars-surface-2);
   box-shadow: inset 3px 0 0 var(--lcars-primary);
 }
-html[data-ui="minimal"] .lcars-menu-text {
+html[data-ui^="minimal"] .lcars-menu-text {
   color: var(--lcars-ink);
   font-size: 16px;
   font-weight: 500;
 }
 /* Die reine Positionsnummer (LCARS-Deko) im schlanken UI weglassen. */
-html[data-ui="minimal"] .lcars-menu-id {
+html[data-ui^="minimal"] .lcars-menu-id {
   display: none;
 }
 /* Auf Desktop KEINE Icons im Menü (nur Text). Das Icon wird erst auf Mobile
    eingeblendet (Media-Query unten), wo der Text weicht. */
-html[data-ui="minimal"] .lcars-menu-icon {
+html[data-ui^="minimal"] .lcars-menu-icon {
   display: none;
   margin-right: 8px;
   color: var(--lcars-ink);
@@ -136,7 +179,7 @@ html[data-ui="minimal"] .lcars-menu-icon {
 /* ── Header komplett entfernen ─────────────────────────────────────── */
 /* Im minimalistischen UI gibt es keinen Header — alle Menüpunkte liegen in der
    Sidebar (siehe .lcars-sidebar-usernav unten). */
-html[data-ui="minimal"] .lcars-appshell-main > header {
+html[data-ui^="minimal"] .lcars-appshell-main > header {
   display: none;
 }
 
@@ -146,11 +189,11 @@ html[data-ui="minimal"] .lcars-appshell-main > header {
    (Padding + Links), wurde deshalb vom overflow-clip der Spalte nur halb
    angezeigt. Höhe auf auto und statisch positionieren, damit sie komplett
    unter dem Inhalt sitzt. */
-html[data-ui="minimal"] .lcars-appshell-main > footer {
+html[data-ui^="minimal"] .lcars-appshell-main > footer {
   height: auto;
   position: static;
 }
-html[data-ui="minimal"] .lcars-footer-bar {
+html[data-ui^="minimal"] .lcars-footer-bar {
   height: auto;
   background: transparent;
   align-items: center;
@@ -158,13 +201,13 @@ html[data-ui="minimal"] .lcars-footer-bar {
   padding: 6px 10px;
   border-top: 1px solid var(--lcars-border);
 }
-html[data-ui="minimal"] .lcars-footer-bar > div {
+html[data-ui^="minimal"] .lcars-footer-bar > div {
   width: auto !important;
   height: auto !important;
   background: transparent !important;
   padding: 0 !important;
 }
-html[data-ui="minimal"] .lcars-footer-menu {
+html[data-ui^="minimal"] .lcars-footer-menu {
   width: auto;
   min-width: 0;
   height: auto;
@@ -174,19 +217,19 @@ html[data-ui="minimal"] .lcars-footer-menu {
   font-size: 13px;
   padding: 0;
 }
-html[data-ui="minimal"] .lcars-footer-menu:hover {
+html[data-ui^="minimal"] .lcars-footer-menu:hover {
   background: transparent;
   color: var(--lcars-ink);
   text-decoration: underline;
 }
-html[data-ui="minimal"] .lcars-footer-version {
+html[data-ui^="minimal"] .lcars-footer-version {
   color: var(--lcars-ink-dim);
 }
 
 /* ── Pill-Buttons → flache Schaltflächen ───────────────────────────── */
-html[data-ui="minimal"] .lcars-pill-btn,
-html[data-ui="minimal"] .lcars-pill-btn--outline,
-html[data-ui="minimal"] .lcars-usernav-pill {
+html[data-ui^="minimal"] .lcars-pill-btn,
+html[data-ui^="minimal"] .lcars-pill-btn--outline,
+html[data-ui^="minimal"] .lcars-usernav-pill {
   border-radius: 6px;
   text-transform: none;
   letter-spacing: normal;
@@ -207,7 +250,7 @@ html[data-ui="minimal"] .lcars-usernav-pill {
 }
 
 /* Sekundär-Navigation einblenden und vertikal, schlicht darstellen. */
-html[data-ui="minimal"] .lcars-sidebar-usernav {
+html[data-ui^="minimal"] .lcars-sidebar-usernav {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -215,13 +258,13 @@ html[data-ui="minimal"] .lcars-sidebar-usernav {
   padding-top: 8px;
   border-top: 1px solid var(--lcars-border);
 }
-html[data-ui="minimal"] .lcars-usernav--sidebar {
+html[data-ui^="minimal"] .lcars-usernav--sidebar {
   display: flex;
   flex-direction: column;
   gap: 2px;
   width: 100%;
 }
-html[data-ui="minimal"] .lcars-sidebar-usernav .lcars-usernav-pill {
+html[data-ui^="minimal"] .lcars-sidebar-usernav .lcars-usernav-pill {
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -235,50 +278,50 @@ html[data-ui="minimal"] .lcars-sidebar-usernav .lcars-usernav-pill {
   font-size: 16px;
   font-weight: 500;
 }
-html[data-ui="minimal"] .lcars-sidebar-usernav .lcars-usernav-pill:hover {
+html[data-ui^="minimal"] .lcars-sidebar-usernav .lcars-usernav-pill:hover {
   background: var(--lcars-surface-2);
 }
-html[data-ui="minimal"] .lcars-sidebar-usernav .lcars-menu-active {
+html[data-ui^="minimal"] .lcars-sidebar-usernav .lcars-menu-active {
   background: var(--lcars-surface-2);
   box-shadow: inset 3px 0 0 var(--lcars-primary);
 }
-html[data-ui="minimal"] .lcars-sidebar-usernav .lcars-usernav-form {
+html[data-ui^="minimal"] .lcars-sidebar-usernav .lcars-usernav-form {
   width: 100%;
 }
 
 /* ── Content-Bereich: linkes Padding (16px) ────────────────────────── */
-html[data-ui="minimal"] .lcars-main-content {
+html[data-ui^="minimal"] .lcars-main-content {
   padding-left: 16px;
 }
 
 /* ── Mobile: nur Icons, schmalere Sidebar ──────────────────────────── */
 @media (max-width: 768px) {
-  html[data-ui="minimal"] .lcars-sidebar {
+  html[data-ui^="minimal"] .lcars-sidebar {
     width: 64px;
   }
-  html[data-ui="minimal"] .lcars-sidebar-navcol {
+  html[data-ui^="minimal"] .lcars-sidebar-navcol {
     padding: 6px;
   }
   /* Icons zeigen, Text/Beschriftung ausblenden. */
-  html[data-ui="minimal"] .lcars-menu-icon,
-  html[data-ui="minimal"] .lcars-usernav-icon {
+  html[data-ui^="minimal"] .lcars-menu-icon,
+  html[data-ui^="minimal"] .lcars-usernav-icon {
     display: flex;
     align-items: center;
     justify-content: center;
     margin-right: 0;
   }
-  html[data-ui="minimal"] .lcars-menu-text,
-  html[data-ui="minimal"] .lcars-usernav-label {
+  html[data-ui^="minimal"] .lcars-menu-text,
+  html[data-ui^="minimal"] .lcars-usernav-label {
     display: none;
   }
   /* Menüpunkte als zentrierte Icon-Buttons. */
-  html[data-ui="minimal"] .lcars-menu-bar,
-  html[data-ui="minimal"] .lcars-sidebar-usernav .lcars-usernav-pill {
+  html[data-ui^="minimal"] .lcars-menu-bar,
+  html[data-ui^="minimal"] .lcars-sidebar-usernav .lcars-usernav-pill {
     justify-content: center;
     padding: 12px 0;
   }
   /* Etwas engeres Content-Padding auf schmalen Screens. */
-  html[data-ui="minimal"] .lcars-main-content {
+  html[data-ui^="minimal"] .lcars-main-content {
     padding-left: 10px;
   }
 }

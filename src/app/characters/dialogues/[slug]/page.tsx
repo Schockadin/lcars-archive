@@ -84,12 +84,15 @@ export default async function CharacterDialoguePage({ params }: Props) {
     <article className="archive-entry">
       <PageMeta title={title} section="archive" />
       <MarkNewsSeen type="archive_entry" slug={entry.slug} />
-      <LcarsReadingModeToggle />
 
-      {/* Zurück zur Gesprächs-Übersicht im Charaktere-Bereich. */}
-      <Link href="/characters/dialogues" className="lcars-back-link">
-        ‹ Gespräche
-      </Link>
+      {/* Zurück-Knopf oben links, der Lesemodus-Icon darunter (nur mobil
+          sichtbar) — beide linksbündig gestapelt. */}
+      <div className="flex flex-col items-start gap-[8px]">
+        <Link href="/characters/dialogues" className="lcars-back-link">
+          ‹ Gespräche
+        </Link>
+        <LcarsReadingModeToggle />
+      </div>
 
       <DialogueHeader
         title={title}
