@@ -128,11 +128,8 @@
   white-space: nowrap;
 }
 .lcars-search-sub {
-  font-family: var(--lcars-font-mono);
-  font-size: 11px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--lcars-ink-dim);
 }
 .lcars-search-empty {
   padding: 10px 12px;

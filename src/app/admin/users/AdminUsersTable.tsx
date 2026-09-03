@@ -101,7 +101,7 @@ export default function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
 
   return (
     <div className="flex flex-col gap-[16px]">
-      <div className="users-table-toolbar">
+      <div className="lcars-toolbar">
         <input
           type="search"
           value={query}

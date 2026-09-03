@@ -8,16 +8,16 @@ import { PencilIcon } from "@/lib/icons";
 import { bulkSetContentOwnerAction } from "../contentOwnerActions";
 import type { AdminContentItem } from "@/lib/adminContent";
 import type { OwnerContentType } from "@/app/actions/owner";
-import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
+import {
+  CONTENT_TYPE_COLOR,
+  CONTENT_TYPE_LABEL_PLURAL,
+} from "@/lib/contentTypeFormat";
 
 type CategoryFilter = "all" | OwnerContentType;
 
 const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   all: "Alle Kategorien",
-  character: "Charaktere",
-  mission: "Missionen",
-  mission_log: "Mission-Logs",
-  archive_entry: "Datenbank-Einträge",
+  ...CONTENT_TYPE_LABEL_PLURAL,
 };
 
 const NO_OWNER = "__none__";

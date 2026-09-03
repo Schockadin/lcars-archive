@@ -68,7 +68,7 @@ async function MissionDetailShell({
 
   return (
     <div
-      className="mission-detail"
+      className="mission-detail lcars-split"
       style={{ "--mission-color": color } as React.CSSProperties}
     >
       <PageMeta title={mission.title} section="missions" />
@@ -90,7 +90,7 @@ async function MissionDetailShell({
 // Zwei-Spalten-Gerüst mit Skeleton-Log-Liste, damit die Spalte nicht springt.
 function MissionDetailFallback({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mission-detail">
+    <div className="mission-detail lcars-split">
       <aside className="mission-detail-logs lcars-scroll">
         <div className="flex flex-col gap-[8px]">
           {Array.from({ length: 6 }).map((_, i) => (

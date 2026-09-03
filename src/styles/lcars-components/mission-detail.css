@@ -3,12 +3,7 @@
    rechts) samt Vor/Zurück-Navigation zwischen Logs desselben Autors.
 ──────────────────────────────────────────────────────────────────── */
 
-.mission-detail {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  width: 100%;
-}
+/* Container-Layout: siehe .lcars-split (shared.css). */
 .mission-detail-logs {
   flex: 0 0 320px;
   min-width: 0;
@@ -80,11 +75,8 @@
   align-items: center;
   gap: 16px;
   margin-top: 8px;
-  font-family: var(--lcars-font-mono);
-  font-size: 12px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--lcars-ink-dim);
 }
 .lcars-meta-row b {
   font-weight: 400;
@@ -158,10 +150,7 @@
   white-space: nowrap;
 }
 .log-nav-meta {
-  font-family: var(--lcars-font-mono);
-  font-size: 11px;
   letter-spacing: 0.05em;
-  color: var(--lcars-ink-dim);
 }
 
 /* gestapelt auf schmalen Screens — kein Sticky, Liste oben */

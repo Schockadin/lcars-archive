@@ -4,12 +4,7 @@
    zwischen zwei Charakteren.
 ──────────────────────────────────────────────────────────────────── */
 
-.archive-browser {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  width: 100%;
-}
+/* Container-Layout: siehe .lcars-split (shared.css). */
 .archive-browser-nav {
   flex: 0 0 260px;
   min-width: 0;

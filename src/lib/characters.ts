@@ -713,7 +713,7 @@ export interface OwnCharacterStats {
   slug: string;
   name: string;
   // Das Portrait ist zugleich das „Photo" des Charakterbogens — der Bogen
-  // zeigt es an und lädt es hoch (siehe updateOwnCharacterPortrait unten),
+  // zeigt es an und lädt es hoch,
   // statt ein zweites Bild neben dem Portrait zu führen.
   portrait: string | null;
   // Spezies der Akte — die Talent-Auswahl prüft damit Voraussetzungen wie
@@ -871,23 +871,6 @@ export async function getCharacterBioMarkdown(
     LIMIT 1
   `;
   return rows[0]?.sourceMd ?? null;
-}
-
-// Setzt nur das Portrait eines eigenen Charakters — für den Foto-Kasten des
-// Charakterbogens (/user/characters/[id]/stats), der dasselbe Bild pflegt wie
-// das Kopf-Formular. Owner-gescoped wie die übrigen updateOwnX-Funktionen.
-export async function updateOwnCharacterPortrait(
-  userId: number,
-  characterId: number,
-  portrait: string,
-): Promise<{ slug: string } | null> {
-  const rows = await sql<{ slug: string }[]>`
-    UPDATE characters
-    SET portrait = ${portrait}, updated_at = NOW()
-    WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
-    RETURNING slug
-  `;
-  return rows[0] ?? null;
 }
 
 // Für die Header-Navigation (/api/session → HeaderUserNav): zeigt den

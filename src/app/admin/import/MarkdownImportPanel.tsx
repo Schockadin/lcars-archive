@@ -16,12 +16,15 @@ import {
   getAttributeFields,
   getReferenceFields,
 } from "@/lib/archiveMetadataFields";
+import { CONTENT_TYPE_LABEL } from "@/lib/contentTypeFormat";
 
+// Der Import kennt den Datenbank-Eintrag als "archive"; die Beschriftungen
+// selbst kommen aus der geteilten Quelle (contentTypeFormat.ts).
 const CONTENT_TYPE_LABELS: Record<ImportContentType, string> = {
-  archive: "Datenbank-Eintrag",
-  mission: "Mission",
-  character: "Charakter",
-  mission_log: "Missionslog",
+  archive: CONTENT_TYPE_LABEL.archive_entry,
+  mission: CONTENT_TYPE_LABEL.mission,
+  character: CONTENT_TYPE_LABEL.character,
+  mission_log: CONTENT_TYPE_LABEL.mission_log,
 };
 
 const MISSION_STATUSES = ["active", "completed", "failed", "abandoned"];

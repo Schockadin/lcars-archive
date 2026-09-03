@@ -9,16 +9,22 @@
 // nach Seite eine andere Farbe bzw. Schreibweise. Diese Datei ist die EINE
 // Quelle dafür.
 
-// Die Inhaltstypen, die überall als eigenständiger Inhalt auftauchen.
+// Die vier Typen mit eigenem Datensatz und Owner. Sie sind die kanonische
+// Union hinter OwnerContentType (app/actions/owner.ts) und TimelineSourceType
+// (types/timeline.ts) — vorher stand dieselbe Aufzählung dreimal im Code.
+export const OWNER_CONTENT_TYPES = [
+  "character",
+  "mission",
+  "mission_log",
+  "archive_entry",
+] as const;
+
+export type OwnerContentTypeKey = (typeof OWNER_CONTENT_TYPES)[number];
+
 // "dialogue" ist kein Owner-Inhaltstyp (Gespräche liegen als archive_entry der
 // Kategorie "dialogue"), wird aber in Papierkorb/„Meine Inhalte" getrennt
 // ausgewiesen und braucht darum eine eigene Farbe/Beschriftung.
-export type ContentTypeKey =
-  | "character"
-  | "mission"
-  | "mission_log"
-  | "archive_entry"
-  | "dialogue";
+export type ContentTypeKey = OwnerContentTypeKey | "dialogue";
 
 // Farbe der DataRow-Pille je Inhaltstyp. Bewusst NUR für Inhaltstypen —
 // dekorative Farbrotationen (z.B. je Autor oder je Version) gibt es nicht mehr,

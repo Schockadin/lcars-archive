@@ -3,16 +3,12 @@ import { useState, useTransition } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { deleteContentImageAdminAction } from "./actions";
-import type { AdminContentImage, ContentImageType } from "@/lib/contentImages";
+import type { AdminContentImage } from "@/lib/contentImages";
 import { formatDateTime } from "@/utils/formateISODate";
 import { TrashIcon } from "@/lib/icons";
+import { CONTENT_TYPE_LABEL } from "@/lib/contentTypeFormat";
 
-const CONTENT_TYPE_LABEL: Record<ContentImageType, string> = {
-  character: "Charakter",
-  mission: "Mission",
-  mission_log: "Missionslog",
-  archive_entry: "Datenbank-Eintrag",
-};
+// Beschriftungen kommen aus der geteilten Quelle (contentTypeFormat.ts).
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;

@@ -41,9 +41,6 @@
 /* Regel-Hinweis unter der Kopfleiste (z.B. „7–12, höchstens 1× 12"). */
 .stat-sheet-rule {
   margin: -6px 14px 12px;
-  font-family: var(--lcars-font-mono);
-  font-size: 12px;
-  color: var(--lcars-ink-dim);
 }
 
 /* Zweisprachige Beschriftung wie auf dem Bogen: englischer Originalbegriff
@@ -197,11 +194,6 @@
   gap: 10px;
 }
 
-.stat-editor-list-count {
-  font-family: var(--lcars-font-mono);
-  font-size: 12px;
-  color: var(--lcars-ink-dim);
-}
 
 .stat-editor-list-line {
   display: flex;
@@ -219,11 +211,6 @@
   border-bottom: none;
 }
 
-.stat-editor-list-empty {
-  font-family: var(--lcars-font-mono);
-  font-size: 12px;
-  color: var(--lcars-ink-dim);
-}
 
 /* Abgeleiteter Wert (max. Stress) — steht neben seinen Eingabefeldern und ist
    selbst keines. */
@@ -329,15 +316,8 @@
   gap: 6px;
 }
 
-/* Buchungsjournal — je Zeile Betrag, Grund und Zeitpunkt. */
-.stat-ap-ledger {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
+/* Buchungsjournal — je Zeile Betrag, Grund und Zeitpunkt.
+   Listen-Grundlayout: siehe .lcars-plain-list (shared.css). */
 
 .stat-ap-ledger-row {
   display: grid;
@@ -364,41 +344,7 @@
 }
 
 .stat-ap-ledger-meta {
-  font-family: var(--lcars-font-mono);
-  font-size: 11px;
-  color: var(--lcars-ink-dim);
   white-space: nowrap;
-}
-
-/* Spickzettel am Fuß des Bogens (TalentCheatSheet.tsx): je Talent Kopfzeile
-   und Regeltext. Der Text in der Datenschrift, damit er sich klar von den
-   Beschriftungen des Bogens absetzt. */
-.stat-cheat-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin: 0;
-  padding: 8px 0 0;
-}
-
-.stat-cheat-item {
-  border-left: 3px solid var(--lcars-border);
-  padding: 2px 0 2px 10px;
-}
-
-.stat-cheat-term {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.stat-cheat-text {
-  margin: 2px 0 0;
-  color: var(--lcars-ink-dim);
-  font-family: var(--lcars-font-mono);
-  font-size: 13px;
-  line-height: 1.45;
 }
 
 /* Regeltext des im Talent-Auswahlfeld gewählten Talents (TalentPicker.tsx).
@@ -469,13 +415,6 @@
   text-transform: uppercase;
   white-space: nowrap;
   transition: 200ms;
-}
-
-.wizard-step svg,
-.wizard-nav-btn svg {
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
 }
 
 .wizard-step:hover,
@@ -551,11 +490,6 @@
   color: var(--lcars-ink);
 }
 
-.stat-budget-spent {
-  font-family: var(--lcars-font-mono);
-  font-size: 12px;
-  color: var(--lcars-ink-dim);
-}
 
 .stat-budget-figure {
   display: flex;
@@ -571,11 +505,6 @@
   color: var(--lcars-ink-data);
 }
 
-.stat-budget-figure span {
-  font-family: var(--lcars-font-mono);
-  font-size: 12px;
-  color: var(--lcars-ink-dim);
-}
 
 /* Verbrauchsbalken: volle Breite unter den beiden Zeilen. */
 .stat-budget-meter {

@@ -4,13 +4,9 @@ import { formatDateTime } from "@/utils/formateISODate";
 import AdminLogTable, { type LogColumn } from "./AdminLogTable";
 import type { ContentActivityItem } from "@/lib/contentActivityLog";
 import type { TimelineSourceType } from "@/types/timeline";
+import { CONTENT_TYPE_LABEL } from "@/lib/contentTypeFormat";
 
-const TARGET_TYPE_LABELS: Record<TimelineSourceType, string> = {
-  character: "Charakter",
-  mission: "Mission",
-  mission_log: "Mission-Log",
-  archive_entry: "Datenbank-Eintrag",
-};
+const TARGET_TYPE_LABELS: Record<TimelineSourceType, string> = CONTENT_TYPE_LABEL;
 
 const KIND_LABELS: Record<ContentActivityItem["kind"], string> = {
   created: "Hinzugefügt",

@@ -86,7 +86,7 @@ export default function MissionsOverview({
         </p>
       ) : (
         <>
-          <div className="mission-toolbar">
+          <div className="lcars-toolbar">
             <LcarsSortSwitch
               className="mission-sort"
               options={[{ key: "date", label: "Datum" }]}

@@ -87,23 +87,15 @@
    Texte, Zahlen, Listen und die Bedienelemente in den Kästen. Schriftart
    einmal für alle; die Farbe setzen die abweichenden Elemente (Plus, Zähler)
    selbst. */
-.pf-field,
 .pf-static,
-.pf-combo-fixed,
 .pf-stat,
-.pf-resistance,
-.pf-stress-value,
-.pf-list,
-.pf-list-add,
-.pf-list-count {
+.pf-list {
   font-family: var(--pf-hand);
 }
 
-/* Die Textkästen des Bogens: als Eingabefeld (.pf-field) und als reine
-   Ansicht (.pf-static, siehe PersonnelFileView) mit identischen
-   Innenabständen — ein gelesener Bogen steht Zeichen für Zeichen dort, wo er
-   im Formular stünde. */
-.pf-field,
+/* Die Textkästen des Bogens (.pf-static, siehe PersonnelFileView). Der Bogen
+   ist reine Ansicht — gepflegt werden die Werte im Assistenten bzw. in den
+   Panels der Charakterseite, nicht mehr direkt auf dem Blatt. */
 .pf-static {
   position: absolute;
   z-index: 2;
@@ -116,56 +108,24 @@
     calc(4 * var(--pf-unit));
 }
 
-.pf-field {
-  border: 0;
-  outline: 0;
-  background: transparent;
-  resize: none;
-}
-
-textarea.pf-field {
-  /* Behält seinen Vorsprung von einem Pixel gegenüber den einzeiligen
-     Kästen (siehe deren Innenabstand oben). */
-  padding-top: calc(16 * var(--pf-unit));
-}
-
 /* Das Auswahlfeld (Erfahrungsstufe) soll wie die übrigen Kästen aussehen —
    ohne Rahmen und ohne native Pfeil-Grafik. */
-select.pf-field {
-  appearance: none;
-}
 
 /* Zahlenfelder ohne die kleinen Pfeilchen: auf dem Bogen stehen dort bloße
    Zahlen (die Vorlage nutzt reine Textfelder). */
-.pf-field[type="number"],
-.pf-stat,
-.pf-resistance {
+.pf-stat {
   appearance: textfield;
   -moz-appearance: textfield;
 }
 
-.pf-field[type="number"]::-webkit-outer-spin-button,
-.pf-field[type="number"]::-webkit-inner-spin-button,
 .pf-stat::-webkit-outer-spin-button,
-.pf-stat::-webkit-inner-spin-button,
-.pf-resistance::-webkit-outer-spin-button,
-.pf-resistance::-webkit-inner-spin-button {
+.pf-stat::-webkit-inner-spin-button {
   appearance: none;
   margin: 0;
 }
 
-.pf-field:focus {
-  background: rgba(255, 255, 255, 0.62);
-  box-shadow: inset 0 0 0 1px
-    color-mix(in srgb, var(--pf-accent) 45%, transparent);
-  border-radius: 4px;
-}
-
 /* Schreibgeschützte Felder (Name, Rang) — sie gehören zur Akte und werden
    dort gepflegt, stehen auf dem Bogen aber an ihrem Platz. */
-.pf-field[readonly] {
-  cursor: default;
-}
 
 /* Überlanger Text in der Ansicht wird abgeschnitten statt aus dem Kasten zu
    laufen — wie auf Papier. */
@@ -187,38 +147,12 @@ select.pf-field {
 
 /* Ein Kasten, der sich einen festen Teil (aus der Akte) und ein Eingabefeld
    teilt — siehe „Species & Traits". */
-.pf-combo {
-  position: absolute;
-  z-index: 2;
-  display: flex;
-  align-items: stretch;
-}
 
 /* Derselbe Innenabstand wie im Eingabefeld daneben, damit beide Texte auf
    einer Linie sitzen (ein <input> zentriert seinen Text in der Inhaltsbox —
    deshalb hier ebenfalls zentriert statt an der Grundlinie). */
-.pf-combo-fixed {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  padding: calc(15 * var(--pf-unit)) calc(3 * var(--pf-unit))
-    calc(4 * var(--pf-unit)) calc(7 * var(--pf-unit));
-  color: var(--pf-ink);
-  font-size: calc(10 * var(--pf-unit));
-  line-height: 1.25;
-}
 
-.pf-combo-input {
-  position: static;
-  flex: 1;
-  min-width: 0;
-  height: 100%;
-  padding-left: 0;
-}
-
-.pf-stat,
-.pf-resistance,
-.pf-stress-value {
+.pf-stat {
   position: absolute;
   z-index: 3;
   border: 0;
@@ -228,9 +162,7 @@ select.pf-field {
   font-size: calc(11 * var(--pf-unit));
 }
 
-.pf-stat:focus,
-.pf-resistance:focus,
-.pf-stress-value:focus {
+.pf-stat:focus {
   background: rgba(255, 255, 255, 0.7);
 }
 
@@ -240,20 +172,14 @@ select.pf-field {
    ist die einzige Abweichung von der Vorlage, die dort mit leeren Feldern
    nicht auffällt. Die Ansicht (.pf-static--stat) macht es genauso. */
 .pf-stat,
-.pf-resistance,
 .pf-static--stat {
   text-align: right;
   padding-right: calc(10 * var(--pf-unit));
 }
 
 /* Der maximale Stress steht in einem eigenen, schmalen Kasten ohne gedruckte
-   Beschriftung — dort ist mittig richtig, im Formular (.pf-stress-value) wie
-   in der Ansicht (.pf-static--stress). Das Eingabefeld bringt keinen
-   Innenabstand mit, der Ansichts-Kasten erbt den der Textkästen und nimmt
-   ihn rechts auf den Normalwert zurück. */
-.pf-stress-value {
-  text-align: center;
-}
+   Beschriftung — dort ist mittig richtig. Der Kasten erbt den Innenabstand
+   der Textkästen und nimmt ihn rechts auf den Normalwert zurück. */
 
 .pf-static--stress {
   text-align: center;
@@ -325,68 +251,10 @@ select.pf-field {
   overflow-wrap: anywhere;
 }
 
-.pf-list-remove {
-  flex-shrink: 0;
-  width: calc(12 * var(--pf-unit));
-  height: calc(12 * var(--pf-unit));
-  padding: 0;
-  border: 0;
-  background: none;
-  color: #c8322d;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 120ms;
-}
-
-.pf-list-line:hover .pf-list-remove,
-.pf-list-remove:focus-visible {
-  opacity: 1;
-}
-
-.pf-list-remove svg {
-  width: calc(12 * var(--pf-unit));
-  height: calc(12 * var(--pf-unit));
-}
-
-/* Das Plus unten rechts im Kasten öffnet das Hinzufügen-Fenster. */
-.pf-list-add {
-  position: absolute;
-  z-index: 3;
-  width: calc(16 * var(--pf-unit));
-  height: calc(16 * var(--pf-unit));
-  padding: 0;
-  border: 1px solid #9b9b9b;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--pf-accent);
-  font-size: calc(12 * var(--pf-unit));
-  line-height: 1;
-  cursor: pointer;
-}
-
-.pf-list-add:hover:not(:disabled) {
-  background: #eef5fa;
-}
-
-.pf-list-add:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
 
 /* Zähler der Freikontingente (Werte, Schwerpunkte, Talente) — klein neben dem
    Plus in der unteren Ecke des Kastens, auf hellem Grund, damit er nie
    unleserlich auf einem Eintrag liegt. */
-.pf-list-count {
-  position: absolute;
-  z-index: 3;
-  padding: 0 calc(3 * var(--pf-unit));
-  border-radius: calc(6 * var(--pf-unit));
-  background: rgba(255, 255, 255, 0.9);
-  transform: translateX(-100%);
-  color: #8a8a8a;
-  font-size: calc(9 * var(--pf-unit));
-  pointer-events: none;
-}
 
 /* ── Vollbild ──────────────────────────────────────────────────────────
    Der Bogen füllt den Bildschirm. Bewusst position:fixed statt eines Portals
@@ -485,7 +353,10 @@ select.pf-field {
   line-height: 1.55;
 }
 
-.pf-doc-body :is(h1, h2, h3, h4) {
+.pf-doc-body :is(h1,
+h2,
+h3,
+h4) {
   margin: calc(var(--pf-unit) * 20) 0 calc(var(--pf-unit) * 8);
   font-size: calc(var(--pf-unit) * 18);
   font-weight: 700;
@@ -499,7 +370,8 @@ select.pf-field {
   margin: 0 0 calc(var(--pf-unit) * 12);
 }
 
-.pf-doc-body :is(ul, ol) {
+.pf-doc-body :is(ul,
+ol) {
   padding-left: calc(var(--pf-unit) * 22);
 }
 

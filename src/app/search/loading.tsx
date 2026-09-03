@@ -5,7 +5,7 @@ export default function Loading() {
   return (
     <div className="lcars-wide-column">
       <LcarsSkeleton className="mb-[16px] h-[34px] w-[220px]" />
-      <div className="mission-toolbar">
+      <div className="lcars-toolbar">
         <LcarsSkeleton className="h-[30px] w-[380px]" />
       </div>
       <div className="archive-entry-list">

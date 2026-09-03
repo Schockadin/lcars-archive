@@ -12,12 +12,7 @@
    Spalte — analog zum Kategorien/Inhalt-Umbruch von .archive-browser, aber
    mit echtem Tab-Wechsel statt Stapeln, da hier zwei eigenständige Listen
    (nicht Navigation + Inhalt) um denselben Platz konkurrieren. */
-.chars-dialogues-layout {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  width: 100%;
-}
+/* Container-Layout: siehe .lcars-split (shared.css). */
 .chars-dialogues-col {
   min-width: 0;
 }

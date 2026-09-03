@@ -12,12 +12,11 @@ import {
   revalidateLog,
   revalidateArchiveEntry,
 } from "@/lib/revalidate";
+import type { OwnerContentTypeKey } from "@/lib/contentTypeFormat";
 
-export type OwnerContentType =
-  | "character"
-  | "mission"
-  | "mission_log"
-  | "archive_entry";
+// Alias auf die kanonische Aufzählung (src/lib/contentTypeFormat.ts) — dort
+// liegen auch Farben und Beschriftungen dieser Typen.
+export type OwnerContentType = OwnerContentTypeKey;
 
 // Owner sehen/ändern auf den vier Inhalts-Detailseiten (OwnerSelect.tsx)
 // ist admin-only — anders als die Sichtbarkeits-Änderung (nur der Owner

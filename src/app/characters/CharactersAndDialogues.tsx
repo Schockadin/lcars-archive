@@ -33,7 +33,7 @@ export default function CharactersAndDialogues({
 
   return (
     <div
-      className="chars-dialogues-layout lcars-wide-column"
+      className="chars-dialogues-layout lcars-split lcars-wide-column"
       data-active-tab={tab}
     >
       <LcarsSwitch
