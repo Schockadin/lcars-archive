@@ -86,6 +86,11 @@ export default async function CharacterDialoguePage({ params }: Props) {
       <MarkNewsSeen type="archive_entry" slug={entry.slug} />
       <LcarsReadingModeToggle />
 
+      {/* Zurück zur Gesprächs-Übersicht im Charaktere-Bereich. */}
+      <Link href="/characters/dialogues" className="lcars-back-link">
+        ‹ Gespräche
+      </Link>
+
       <DialogueHeader
         title={title}
         participants={entry.metadata.participants}

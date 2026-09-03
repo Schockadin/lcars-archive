@@ -27,7 +27,7 @@ export default function ActivatePage({
   return (
     <>
       <PageMeta title="Passwort festlegen" section="login" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff</p>
         <h1>Passwort festlegen</h1>
 

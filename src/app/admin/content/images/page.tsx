@@ -23,7 +23,7 @@ export default async function AdminImagesPage() {
   return (
     <>
       <PageMeta title="Bilder" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff · Administration</p>
         <h1>Bilder</h1>
 

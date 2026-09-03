@@ -72,7 +72,7 @@ export default async function UserPublicProfilePage({
   return (
     <>
       <PageMeta title={target.name} section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <div className="flex flex-wrap items-start justify-between gap-[16px]">
           <h1>{target.name}</h1>
           {viewer.id !== target.id && (

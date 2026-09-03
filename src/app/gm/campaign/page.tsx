@@ -75,7 +75,7 @@ export default async function AdminCampaignPage() {
   return (
     <>
       <PageMeta title="Kampagne" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
         <h1>Kampagne</h1>
 

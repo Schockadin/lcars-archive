@@ -32,7 +32,10 @@ export default function CharactersAndDialogues({
   const [tab, setTab] = useState<Tab>(initialTab);
 
   return (
-    <div className="chars-dialogues-layout" data-active-tab={tab}>
+    <div
+      className="chars-dialogues-layout lcars-wide-column"
+      data-active-tab={tab}
+    >
       <LcarsSwitch
         className="chars-dialogues-switch md:hidden"
         options={[

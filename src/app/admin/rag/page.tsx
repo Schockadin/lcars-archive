@@ -24,7 +24,7 @@ export default async function AdminRagPage() {
   return (
     <>
       <PageMeta title="RAG" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff · Administration</p>
         <h1>Datenbank-Assistent</h1>
 
@@ -35,7 +35,9 @@ export default async function AdminRagPage() {
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">OpenAI · Nutzung &amp; Guthaben</h2>
+            <h2 className="text-lcars-primary">
+              OpenAI · Nutzung &amp; Guthaben
+            </h2>
             <OpenAiUsagePanel />
           </section>
         </div>

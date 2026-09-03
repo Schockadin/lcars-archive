@@ -27,7 +27,7 @@ export default async function AdminMissionsPage() {
   return (
     <>
       <PageMeta title="Missionen" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
         <h1>Missionen</h1>
 

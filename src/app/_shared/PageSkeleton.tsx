@@ -7,7 +7,7 @@ import { LcarsSkeleton } from "@/components/lcars";
 // die Navigation nicht „leer" wirkt.
 export default function PageSkeleton({ rows = 4 }: { rows?: number }) {
   return (
-    <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+    <article className="mb-[10px] lcars-wide-column">
       <div className="flex flex-col gap-[12px]">
         <LcarsSkeleton className="h-[16px] w-[160px]" />
         <LcarsSkeleton className="h-[40px] w-[280px]" />

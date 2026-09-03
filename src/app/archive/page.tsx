@@ -39,7 +39,7 @@ export default async function ArchivePage({
       <PageMeta title="Datenbank" section="archive" />
 
       {category ? (
-        <div>
+        <div className="lcars-wide-column">
           <h1 className="lcars-data-row-heading">
             {`${CATEGORY_CONFIG[category].plural}`}
           </h1>

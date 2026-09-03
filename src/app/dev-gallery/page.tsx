@@ -21,7 +21,8 @@ const DEMO_TALENTS: Talent[] = [
     name: "Bold: Command",
     category: "general",
     requirement: null,
-    description: "Beim Einsatz von Command darfst du einen zusätzlichen Würfel neu werfen.",
+    description:
+      "Beim Einsatz von Command darfst du einen zusätzlichen Würfel neu werfen.",
   },
   {
     id: 2,
@@ -48,7 +49,7 @@ export default function DevGalleryPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
 
   return (
-    <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+    <article className="mb-[10px] lcars-wide-column">
       <h1>Dev Gallery</h1>
 
       <section id="switch-two" className="flex flex-col gap-[8px] mb-[24px]">
@@ -94,7 +95,10 @@ export default function DevGalleryPage() {
       {/* Der Anlege-Assistent (/user/characters/new) mit Attrappen-Daten:
           Die echte Seite braucht Login und Datenbank, die Schritt-Navigation
           und der Werte-Editor sind aber reine Client-Logik. */}
-      <section id="character-wizard" className="flex flex-col gap-[8px] mb-[24px]">
+      <section
+        id="character-wizard"
+        className="flex flex-col gap-[8px] mb-[24px]"
+      >
         <h2 className="lcars-text">Charakter-Assistent</h2>
         <CharacterWizard
           userId={1}
@@ -104,7 +108,10 @@ export default function DevGalleryPage() {
         />
       </section>
 
-      <section id="character-sheet-preview" className="flex flex-col gap-[8px] mb-[24px]">
+      <section
+        id="character-sheet-preview"
+        className="flex flex-col gap-[8px] mb-[24px]"
+      >
         <h2 className="lcars-text">Bogen-Vorschau</h2>
         <button
           type="button"

@@ -30,7 +30,7 @@ export default async function AdminDbPage() {
   return (
     <>
       <PageMeta title="Datenbank" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff · Datenbank</p>
         <h1>Datenbank</h1>
 

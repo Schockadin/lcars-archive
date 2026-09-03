@@ -20,7 +20,7 @@ export default async function NewMissionPage() {
   return (
     <>
       <PageMeta title="Neue Mission" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <h1>Neue Mission anlegen</h1>
         <NewMissionForm
           userId={user.id}

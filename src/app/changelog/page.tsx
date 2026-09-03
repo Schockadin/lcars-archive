@@ -17,7 +17,7 @@ export default function ChangelogPage() {
   return (
     <>
       <PageMeta title="Changelog" section="changelog" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <h1>Changelog</h1>
         <p className="lcars-text mb-[16px]">
           Alle größeren Änderungen an der Datenbank, Version für Version.

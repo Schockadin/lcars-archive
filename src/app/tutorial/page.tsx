@@ -19,7 +19,7 @@ export default function TutorialPage() {
   return (
     <>
       <PageMeta title="Tutorial" section="tutorial" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)] tutorial-content">
+      <article className="mb-[10px] lcars-wide-column tutorial-content">
         <p className="lcars-eyebrow">Anleitung</p>
         <h1>Tutorial</h1>
         <p className="lcars-text">

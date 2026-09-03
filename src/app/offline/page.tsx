@@ -16,7 +16,7 @@ export default function OfflinePage() {
   return (
     <>
       <PageMeta title="Offline" section="home" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Verbindung</p>
         <h1>Offline</h1>
 

@@ -19,7 +19,7 @@ export default async function GmTalentsPage() {
   return (
     <>
       <PageMeta title="Talente" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
         <h1>Talente</h1>
 
