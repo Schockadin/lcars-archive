@@ -1,9 +1,20 @@
 name: CI
 
 on:
+  # Jeder Push auf jeden Branch — und zusaetzlich jeder Pull Request, damit
+  # auch PRs aus Forks (deren Pushes dieses Repo nicht sieht) geprueft werden.
+  # Fuer einen PR aus diesem Repo laufen dadurch zwei Runs je Push (push +
+  # pull_request); das ist der Preis dafuer, dass ein Branch auch ohne
+  # offenen PR geprueft wird.
   push:
-    branches:
-      - master
+  pull_request:
+
+# Ein laufender Run wird abgebrochen, sobald derselbe Branch bzw. PR erneut
+# gepusht wird — sonst stauen sich bei mehreren Commits hintereinander die
+# Runner-Minuten fuer laengst ueberholte Staende.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
