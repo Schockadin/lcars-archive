@@ -37,6 +37,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Was in der aktuellen Version neu ist, steht jetzt direkt auf dem Dashboard über den Neuigkeiten (mit Link auf die vollständige Änderungsliste) statt im Profil.",
       "Abgeschlossene Gespräche haben ein eigenes Zuhause im Charaktere-Bereich (/characters/dialogues/…) und werden dort als eigenständiger Inhalt gezeigt, statt in der allgemeinen Datenbank-Detailseite. Alte Links funktionieren weiter.",
       "Dashboard, Profil und „Meine Inhalte“ nutzen jetzt dieselbe breite, zentrierte Spalte wie Missionen und Suche; unter „Meine Charaktere“ steht „Charaktere verwalten“ links. Der Autoren-Filter der Missionen und das Sichtbarkeits-Dropdown haben runde Enden wie die übrigen Auswahlfelder, und eine aufgeklappte Session unter „Sessions“ zeigt das mit einem Pfeil an.",
+      "Auch „Meine Charaktere“ liegt jetzt in der zentrierten breiten Spalte. Die Aktions-Buttons („Neuer Missionslog“, „Neues Gespräch“, „Neuer NPC“ …) sind überall gleich breit, der Autoren-Filter der Missionen ist so hoch wie Suchfeld und Sortier-Schalter daneben, und das Aufklapp-Pfeilchen der Sessions bzw. der Buchungsliste steht links und dreht sich beim Öffnen. Abgeschlossene Gespräche haben beim Laden jetzt einen passenden Platzhalter statt des Charakter-Listen-Ladebalkens.",
     ],
   },
   {

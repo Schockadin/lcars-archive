@@ -238,6 +238,17 @@ function SessionRow({
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
+        {/* Auf-/Zuklapp-Anzeige links wie bei den DataRow-Akkordeons — dreht
+            sich, wenn die Session-Details offen sind. */}
+        <span
+          className={
+            open
+              ? "lcars-data-row-chevron lcars-data-row-chevron--open"
+              : "lcars-data-row-chevron"
+          }
+          style={{ margin: "0 4px 0 2px" }}
+          aria-hidden="true"
+        />
         <span className="lcars-eyebrow">
           {formatISODate(session.sessionDate)}
         </span>
@@ -252,16 +263,6 @@ function SessionRow({
           {session.characterCount} Charaktere · {session.totalAp} AP gesamt ·{" "}
           {session.logbookCount} Logbücher
         </span>
-        {/* Auf-/Zuklapp-Anzeige wie bei den DataRow-Akkordeons — dreht sich,
-            wenn die Session-Details offen sind. */}
-        <span
-          className={
-            open
-              ? "lcars-data-row-chevron lcars-data-row-chevron--open"
-              : "lcars-data-row-chevron"
-          }
-          aria-hidden="true"
-        />
       </button>
 
       {open && (

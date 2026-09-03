@@ -79,8 +79,15 @@ export default async function GmApPage() {
               <details> statt eines eigenen Zustands — kein Client-Bundle
               nötig, und der Browser merkt sich nichts, was der Server nicht
               weiß (gleiches Muster wie der Rollen-Editor unter /admin). */}
-          <details className="flex flex-col gap-[12px]">
-            <summary className="cursor-pointer">
+          <details className="lcars-details flex flex-col gap-[12px]">
+            <summary className="lcars-details-summary">
+              {/* Chevron links wie bei den Sessions (/gm/sessions) — dreht
+                  sich über details[open] (siehe shared.css). */}
+              <span
+                className="lcars-data-row-chevron"
+                style={{ margin: "0 4px 0 2px" }}
+                aria-hidden="true"
+              />
               <h2 className="inline text-lcars-primary">Alle Buchungen</h2>
               <span className="text-lcars-ink-dim text-[13px]">
                 {" "}

@@ -18,6 +18,44 @@
   margin-inline: auto;
 }
 
+/* Gestapelte Aktions-Buttons (Text-Pillen) mit EINHEITLICHER Breite: die
+   Spalte hat eine feste Breite, jeder Button füllt sie — so sind alle Buttons
+   einer Gruppe gleich breit, unabhängig von der Länge ihrer Beschriftung
+   (z.B. „Neuer NPC" vs. „Neuer Datenbank-Eintrag"), und über alle Seiten
+   hinweg gleich (dieselbe feste Breite überall). Ausrichtung/Optik der Pille
+   selbst (Text unten rechts) bleiben unangetastet — nur die Breite wird
+   vereinheitlicht. Auf schmalen Geräten füllt die Spalte die volle Breite. */
+.lcars-btn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 260px;
+  max-width: 100%;
+}
+.lcars-btn-stack > .lcars-pill-btn,
+.lcars-btn-stack > .lcars-pill-btn--outline {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Aufklappbare <details>-Sektion mit einem Chevron links wie die
+   DataRow-Akkordeons (z.B. „Alle Buchungen" unter /gm/ap) — passt zum
+   Session-Aufklapper unter /gm/sessions. Der native Aufklapp-Marker wird
+   ausgeblendet, das Chevron dreht sich über den offen/zu-Zustand. */
+.lcars-details-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+}
+.lcars-details-summary::-webkit-details-marker {
+  display: none;
+}
+.lcars-details[open] > .lcars-details-summary .lcars-data-row-chevron {
+  transform: rotate(-135deg);
+}
+
 .lcars-main-content {
   display: flex;
   /* Ohne explizite Richtung defaultet Flex auf row — fiel bisher nicht auf,

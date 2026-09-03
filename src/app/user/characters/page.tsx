@@ -40,39 +40,43 @@ export default async function UserCharactersPage() {
   return (
     <>
       <PageMeta title="Meine Charaktere" section="users" />
-      <h1>Meine Charaktere</h1>
+      {/* Zentrierte breite Spalte wie /missions, /search und „Meine Inhalte" —
+          Überschrift und Inhalt teilen sie sich. */}
+      <div className="lcars-wide-column">
+        <h1>Meine Charaktere</h1>
 
-      <article className="mb-[10px] gap-[20px] lcars-flex-switch">
-        <section className="flex flex-col gap-[12px] justify-center items-end">
-          <h2>Neuer Charakter</h2>
-          <div className="flex flex-col gap-[12px] max-sm:w-full">
-            {/* Gast-Accounts dürfen keine Charaktere anlegen — dieselbe
-                Prüfung wie in /user/content und (serverseitig maßgeblich) in
-                characters/_shared/contentAction.ts. */}
-            {userCan(user, "content.create", roleMap) ? (
-              <Link
-                href="/user/characters/new"
-                className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
-              >
-                Neuer Charakter
-              </Link>
-            ) : (
-              <p className="lcars-empty-state">
-                Gast-Accounts können keine Charaktere anlegen.
-              </p>
-            )}
-          </div>
-        </section>
+        <article className="mb-[10px] gap-[20px] lcars-flex-switch">
+          <section className="flex flex-col gap-[12px] justify-center items-end">
+            <h2>Neuer Charakter</h2>
+            <div className="lcars-btn-stack max-sm:w-full">
+              {/* Gast-Accounts dürfen keine Charaktere anlegen — dieselbe
+                  Prüfung wie in /user/content und (serverseitig maßgeblich) in
+                  characters/_shared/contentAction.ts. */}
+              {userCan(user, "content.create", roleMap) ? (
+                <Link
+                  href="/user/characters/new"
+                  className="lcars-pill-btn max-sm:self-stretch"
+                >
+                  Neuer Charakter
+                </Link>
+              ) : (
+                <p className="lcars-empty-state">
+                  Gast-Accounts können keine Charaktere anlegen.
+                </p>
+              )}
+            </div>
+          </section>
 
-        {/* Linksbündig: Überschrift und Liste sitzen am linken Rand ihrer
-            Spalte statt rechts. */}
-        <section className="flex w-full flex-col items-start gap-[12px]">
-          <h2 className="self-start">Charaktere verwalten</h2>
-          <div className="lcars-text w-full">
-            <OwnCharacterList characters={items} />
-          </div>
-        </section>
-      </article>
+          {/* Linksbündig: Überschrift und Liste sitzen am linken Rand ihrer
+              Spalte statt rechts. */}
+          <section className="flex w-full flex-col items-start gap-[12px]">
+            <h2 className="self-start">Charaktere verwalten</h2>
+            <div className="lcars-text w-full">
+              <OwnCharacterList characters={items} />
+            </div>
+          </section>
+        </article>
+      </div>
     </>
   );
 }
