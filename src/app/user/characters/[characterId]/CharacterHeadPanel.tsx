@@ -12,14 +12,11 @@ import {
   characterMetadataFields,
 } from "../_shared/characterHeadFields";
 import type { OwnCharacterForEdit } from "@/lib/characters";
+import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
 
 const initialState: CharacterPanelState = {};
 
-const STATUS_LABELS: Record<string, string> = {
-  active: "Aktiv",
-  retired: "Inaktiv",
-  deceased: "Verstorben",
-};
+const STATUS_LABELS: Record<string, string> = CHARACTER_STATUS_LABEL;
 
 function Row({ label, value }: { label: string; value: string | null }) {
   if (!value) return null;

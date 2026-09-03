@@ -5,12 +5,9 @@ import type { Character } from "@/types/character";
 import VisibilitySelect from "../content/VisibilitySelect";
 import DeleteOwnContentButton from "../content/DeleteOwnContentButton";
 import ContentActionRow from "../content/ContentActionRow";
+import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
 
-const STATUS_LABELS: Record<Character["status"], string> = {
-  active: "Aktiv",
-  retired: "Ehemalig",
-  deceased: "Verstorben",
-};
+const STATUS_LABELS = CHARACTER_STATUS_LABEL;
 
 // Nur die Felder, die die Liste wirklich anzeigt — der volle Character-
 // Datensatz (bio als gerendertes HTML, source_md, frontmatter) würde sonst

@@ -13,28 +13,6 @@ import {
 } from "@/lib/changelog";
 import { tutorialSectionHref, tutorialSectionLabel } from "@/lib/tutorialSections";
 
-// Zyklische Farbpaare pro Akkordeon-Zeile (Label-Pill-Hintergrund +
-// Trenner-Akzent) — zwei unabhängige Paletten statt derselben Farbe für
-// beides (anders als die Autor-Gruppen in MissionLogList.tsx), damit
-// aufeinanderfolgende Versionen sich sowohl in der Pill- als auch in der
-// Akzentfarbe unterscheiden.
-const LABEL_COLORS = [
-  "var(--lcars-secondary)",
-  "var(--lcars-tertiary)",
-  "var(--lcars-senary)",
-  "var(--lcars-quaternary)",
-  "var(--lcars-quinary)",
-  "var(--lcars-primary)",
-];
-const ACCENT_COLORS = [
-  "var(--lcars-primary)",
-  "var(--lcars-quinary)",
-  "var(--lcars-secondary)",
-  "var(--lcars-tertiary)",
-  "var(--lcars-quaternary)",
-  "var(--lcars-senary)",
-];
-
 // Vergleicht zwei "Major.Minor"-Versionsstrings numerisch statt
 // lexikografisch — ein reiner String-Vergleich würde "1.10" fälschlich vor
 // "1.9" einsortieren.
@@ -85,13 +63,11 @@ export default function ChangelogList({
       />
 
       <div className="flex flex-col gap-[10px]">
-        {sorted.map((entry, i) => (
+        {sorted.map((entry) => (
           <LcarsDataRow
             key={entry.version}
             value={entry.version}
             label="Version"
-            color={LABEL_COLORS[i % LABEL_COLORS.length]}
-            accentColor={ACCENT_COLORS[i % ACCENT_COLORS.length]}
             defaultOpen={entry.version === newestVersion}
             className="lcars-data-row--full"
           >

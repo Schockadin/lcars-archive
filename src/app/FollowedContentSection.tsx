@@ -25,8 +25,6 @@ export default function FollowedContentSection({
     <LcarsDataRow
       value={items.length}
       label={heading}
-      color="var(--lcars-primary)"
-      accentColor="var(--lcars-tertiary)"
     >
       <div className="flex flex-col gap-[6px]">
         {items.map((item) => (

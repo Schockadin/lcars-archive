@@ -129,7 +129,6 @@ export default function NewsSection({ items }: { items: NewsFeedItem[] }) {
     <LcarsDataRow
       value={visible.length}
       label="News"
-      color="var(--lcars-tertiary)"
       defaultOpen
     >
       <div className="flex flex-col gap-[8px]">

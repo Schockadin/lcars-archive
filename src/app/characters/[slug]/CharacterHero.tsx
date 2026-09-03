@@ -14,6 +14,12 @@ import type { Viewer } from "@/lib/visibility";
 import type { FollowState } from "@/app/actions/follows";
 import ActionsMenu from "@/components/ActionsMenu";
 import { FileTextIcon } from "@/lib/icons";
+import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
+import {
+  CHARACTER_STATUS_BG,
+  CHARACTER_STATUS_COLOR,
+  CHARACTER_STATUS_LABEL,
+} from "@/lib/characterFormat";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
 function slugify(text: string): string {
@@ -84,38 +90,20 @@ function FileField({
   );
 }
 
-const STATUS_CONFIG = {
-  active: {
-    label: "Aktiv",
-    color: "var(--lcars-tertiary)",
-    bg: "rgba(154,154,255,.15)",
-  },
-  retired: {
-    label: "Inaktiv",
-    color: "var(--lcars-primary)",
-    bg: "rgba(255,154,0,.15)",
-  },
-  deceased: {
-    label: "Verstorben",
-    color: "var(--lcars-quinary)",
-    bg: "rgba(205,102,102,.15)",
-  },
-} as const;
-
 function StatusBadge({ status }: { status: Character["status"] }) {
-  const cfg = STATUS_CONFIG[status];
+  const color = CHARACTER_STATUS_COLOR[status];
   return (
     <span
       className="inline-flex items-center gap-1.5 px-3 py-0.5
                  text-[12px] uppercase tracking-[.2em]"
-      style={{ color: cfg.color, backgroundColor: cfg.bg }}
+      style={{ color, backgroundColor: CHARACTER_STATUS_BG[status] }}
     >
       <span
         className="w-1.5 h-1.5 rounded-full shrink-0"
-        style={{ backgroundColor: cfg.color }}
+        style={{ backgroundColor: color }}
         aria-hidden="true"
       />
-      {cfg.label}
+      {CHARACTER_STATUS_LABEL[status]}
     </span>
   );
 }
@@ -241,13 +229,13 @@ export default function CharacterHero({
                 value={logCount}
                 label="Logs"
                 href={`/characters/${character.slug}/logs`}
-                color="var(--lcars-tertiary)"
+                color={CONTENT_TYPE_COLOR.mission_log}
               />
               <LcarsDataRow
                 value={conversationCount}
                 label="Gespräche"
                 href={`/characters/dialogues?participant=${character.slug}`}
-                color="var(--lcars-secondary)"
+                color={CONTENT_TYPE_COLOR.dialogue}
               />
             </div>
 

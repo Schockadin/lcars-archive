@@ -7,21 +7,26 @@ import {
   LcarsListFilterInput,
 } from "@/components/lcars";
 import type { CharacterListItem } from "@/lib/characters";
-import { Character } from "@/types/character";
+import {
+  CHARACTER_STATUS_COLOR,
+  CHARACTER_STATUS_LABEL,
+  CHARACTER_STATUS_ORDER,
+  type CharacterStatus,
+} from "@/lib/characterFormat";
 
 // ─── Konfiguration ──────────────────────────────────────────
 // Zentrale Definition der Status-Gruppen: Reihenfolge, Label, Farbe.
 // Beide Sortiermodi greifen auf dasselbe Farbschema zurück, damit
 // die Optik konsistent bleibt.
 const STATUS_GROUPS: {
-  key: Character["status"];
+  key: CharacterStatus;
   label: string;
   color: string;
-}[] = [
-  { key: "active", label: "Aktiv", color: "var(--lcars-senary)" },
-  { key: "retired", label: "Ehemalig", color: "var(--lcars-primary)" },
-  { key: "deceased", label: "Verstorben", color: "var(--lcars-quinary)" },
-];
+}[] = CHARACTER_STATUS_ORDER.map((key) => ({
+  key,
+  label: CHARACTER_STATUS_LABEL[key],
+  color: CHARACTER_STATUS_COLOR[key],
+}));
 
 // Generationen — Labels/Farben anpassen, sobald echte Phasennamen feststehen.
 const GENERATIONS: { num: number; label: string; color: string }[] = [

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getArchiveEntryBySlug } from "@/lib/archive";
 import { CATEGORY_CONFIG, archiveTitle } from "@/lib/archiveFormat";
+import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import { stripHtml } from "@/lib/missionFormat";
 import { ArchiveEntryDetail, ArchiveLink } from "@/types/archive";
 import PageMeta from "@/components/PageMeta";
@@ -123,7 +124,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
 
       <RefSection
         title="Charaktere"
-        color="var(--lcars-tertiary)"
+        color={CONTENT_TYPE_COLOR.character}
         refs={entry.metadata.characters.map((c) => ({
           href: `/characters/${c.slug}`,
           label: c.name,
@@ -132,7 +133,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
 
       <RefSection
         title="Missionen"
-        color="var(--lcars-primary)"
+        color={CONTENT_TYPE_COLOR.mission}
         refs={entry.metadata.missions.map((m) => ({
           href: `/missions/${m.slug}`,
           label: m.title,

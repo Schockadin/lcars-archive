@@ -19,7 +19,6 @@ export default function ChangelogSection() {
     <LcarsDataRow
       value={latest.items.length}
       label={`Neu in Version ${latest.version}`}
-      color="var(--lcars-tertiary)"
     >
       <div id="changelog" className="lcars-text flex flex-col gap-[12px]">
         <h2>{latest.title}</h2>
