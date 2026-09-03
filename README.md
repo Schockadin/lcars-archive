@@ -34,7 +34,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Einladung (Aktivierungsmail mit Passwort-Setup-Link).
 - **Zentraler Zugriffsschutz (Proxy) + DAL als Source of Truth** — ein
   Next-16-Proxy (`src/proxy.ts`, ehem. Middleware) leitet nicht angemeldete
-  Besucher:innen der geschützten Bereiche (`/user`, `/admin`, `/users`) **vor**
+  Besucher:innen der geschützten Bereiche (`/user`, `/admin`, `/gm`) **vor**
   dem Rendern auf `/login` — eine schnelle, **optimistische** Vorfilterung, die
   nur die Signatur/Ablauf des Session-Cookies prüft (kein DB-Zugriff, gemäß
   Next.js-Empfehlung). Die **verbindliche** Zugriffskontrolle (Rollen/Rechte,
@@ -674,7 +674,6 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     │   ├── search/            # Volltextsuche + eingebetteter Datenbank-Assistent
     │   ├── tutorial/          # Anleitung für Besucher/User/Spielleitung
     │   ├── login/, activate/, forgot-password/
-    │   ├── users/             # Öffentliche Nutzerübersicht + Profilseiten anderer User
     │   ├── user/              # Eigenes Profil, Settings, eigene Inhalte anlegen/verwalten
     │   │   └── characters/     #   Eigene Charaktere: Übersicht, anlegen, bearbeiten, Werte ([id]/stats)
     │   ├── admin/             # Admin-Bereich (staff-baseline, feiner je Unterseite):

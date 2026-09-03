@@ -78,6 +78,31 @@ test("DataRow-Pillen behalten die LCARS-Schrift auch im minimalistischen UI", as
   expect(fontFamily).toContain("Antonio");
 });
 
+// Harmonisierung: die Tailwind-Utilities font-lcars / font-lcars-mono müssen
+// über dieselben kanonischen Stacks (var(--lcars-font-sans/-mono)) laufen wie
+// die CSS-Klassen — sonst rendern Utility-gestylte Texte (z.B. DataRow-Pillen,
+// Fehlerseiten, Admin-Tabellen) in einer System-Ersatzschrift statt in der
+// geladenen LCARS-Schrift. Geprüft am computed style eingehängter Elemente.
+for (const { cls, expected } of [
+  { cls: "font-lcars", expected: "Antonio" },
+  { cls: "font-lcars-mono", expected: "Share Tech Mono" },
+]) {
+  test(`${cls} trägt die geladene LCARS-Schrift (${expected})`, async ({
+    page,
+  }) => {
+    await page.goto("/tutorial");
+    const fontFamily = await page.evaluate((className) => {
+      const el = document.createElement("div");
+      el.className = className;
+      document.body.appendChild(el);
+      const value = getComputedStyle(el).fontFamily;
+      el.remove();
+      return value;
+    }, cls);
+    expect(fontFamily).toContain(expected);
+  });
+}
+
 test("ohne minimalistisches UI bleibt die Pillen-Schrift die LCARS-Vorgabe", async ({
   page,
 }) => {

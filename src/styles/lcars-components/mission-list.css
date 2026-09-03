@@ -62,7 +62,7 @@
   display: flex;
   justify-content: flex-end;
   padding: 0 8px 5px;
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -138,7 +138,7 @@
   padding: 11px 16px 13px;
 }
 .mission-akte-title {
-  font-family: var(--font-antonio), sans-serif;
+  font-family: var(--lcars-font-sans);
   font-size: 21px;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -164,7 +164,7 @@
   flex-wrap: wrap;
   gap: 16px;
   margin-top: 9px;
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 14px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -178,7 +178,7 @@
 /* ── Log-Liste ───────────────────────────────────────────────────── */
 .mission-logs-sub {
   margin: 0 0 14px;
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 11px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -216,7 +216,7 @@
   align-items: center;
   justify-content: flex-end;
   padding-right: 9px;
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 11px;
   font-weight: 700;
   color: var(--lcars-bg);
@@ -237,7 +237,7 @@
   background: var(--mission-color);
 }
 .mission-log-name {
-  font-family: var(--font-antonio), sans-serif;
+  font-family: var(--lcars-font-sans);
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.06em;
@@ -260,7 +260,7 @@
   flex-shrink: 0;
 }
 .mission-log-author {
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 12px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -276,7 +276,7 @@
 }
 .mission-log-date {
   flex-shrink: 0;
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 12px;
   letter-spacing: 0.05em;
   color: var(--lcars-ink);

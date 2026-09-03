@@ -92,7 +92,7 @@
   background: var(--lcars-surface);
 }
 .archive-chip-title {
-  font-family: var(--font-antonio), sans-serif;
+  font-family: var(--lcars-font-sans);
   font-size: 16px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -104,7 +104,7 @@
 .archive-chip-label,
 .archive-dialogue-value,
 .dialogue-message-meta {
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
 }
 .archive-chip-label {
   font-size: 11px;
@@ -127,7 +127,7 @@
 }
 .archive-dialogue-label {
   flex: 0 0 92px;
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 14px;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -163,7 +163,7 @@
   padding: 11px 16px 13px;
 }
 .dialogue-message-author {
-  font-family: var(--font-antonio), sans-serif;
+  font-family: var(--lcars-font-sans);
   font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.05em;

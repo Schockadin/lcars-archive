@@ -93,6 +93,15 @@
   /* Schriftfamilien */
   --font-antonio: "Antonio", sans-serif;
   --font-mono: "Share Tech Mono", monospace;
+
+  /* Kanonische Schrift-Stacks — überall verwenden, damit gleiche Textrollen
+     dieselbe Schrift bekommen (statt dreier leicht abweichender Antonio-
+     Stacks). --font-antonio kommt von next/font (echte, gehashte Familie);
+     die weiteren Namen sind reine System-Fallbacks. Wer eine Textrolle
+     stylt, setzt font-family: var(--lcars-font-sans) bzw. -mono. */
+  --lcars-font-sans: var(--font-antonio), "Antonio", "Helvetica Neue", Arial,
+    sans-serif;
+  --lcars-font-mono: var(--font-share-tech-mono), "Share Tech Mono", monospace;
 }
 
 @theme {
@@ -133,9 +142,16 @@
 
   /* ── Schriften ───────────────────────────────────────────────────
      Erzeugt: font-lcars, font-lcars-mono
-  ─────────────────────────────────────────────────────────────────── */
-  --font-lcars: "Antonio", sans-serif;
-  --font-lcars-mono: "Share Tech Mono", monospace;
+     Referenzieren dieselben kanonischen Stacks wie die CSS-Klassen
+     (var(--lcars-font-sans/-mono), oben im :root-Block) — inklusive der
+     next/font-Familie (var(--font-antonio)/var(--font-share-tech-mono)).
+     So rendern Tailwind-Utility-Texte (z.B. font-lcars auf DataRow-Pillen)
+     in DERSELBEN geladenen Schrift wie klassen-gestylte Texte, statt in
+     einer System-Ersatzschrift. Die var()-Auflösung passiert zur Laufzeit,
+     nicht zur @theme-Build-Zeit — für Schriften unkritisch (anders als bei
+     Farben, siehe Kopf dieser Datei). */
+  --font-lcars: var(--lcars-font-sans);
+  --font-lcars-mono: var(--lcars-font-mono);
 
   /* ── Border Radius ───────────────────────────────────────────────
      Erzeugt: rounded-lcars-pill

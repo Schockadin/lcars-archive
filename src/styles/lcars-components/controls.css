@@ -115,7 +115,7 @@
   text-decoration: none;
   overflow: hidden;
   white-space: nowrap;
-  font-family: var(--font-antonio), sans-serif;
+  font-family: var(--lcars-font-sans);
   font-weight: 600;
   letter-spacing: 1px;
   line-height: 1.175;

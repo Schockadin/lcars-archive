@@ -62,7 +62,7 @@
   margin-bottom: 16px;
 }
 .mission-detail-title {
-  font-family: var(--font-antonio), sans-serif;
+  font-family: var(--lcars-font-sans);
   font-size: clamp(24px, 4vw, 40px);
   font-weight: 700;
   text-transform: uppercase;
@@ -80,7 +80,7 @@
   align-items: center;
   gap: 16px;
   margin-top: 8px;
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 12px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -133,7 +133,7 @@
 }
 .log-nav-dir {
   flex: 0 0 auto;
-  font-family: var(--font-antonio), sans-serif;
+  font-family: var(--lcars-font-sans);
   font-size: 28px;
   line-height: 1;
   color: var(--lcars-primary);
@@ -158,7 +158,7 @@
   white-space: nowrap;
 }
 .log-nav-meta {
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 11px;
   letter-spacing: 0.05em;
   color: var(--lcars-ink-dim);

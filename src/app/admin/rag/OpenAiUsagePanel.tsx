@@ -87,7 +87,7 @@ export default function OpenAiUsagePanel() {
         <dl className="flex flex-col gap-[8px] text-[14px]">
           <div className="flex flex-wrap items-baseline gap-x-[10px]">
             <dt className="text-lcars-ink-dim">Kosten (laufender Monat):</dt>
-            <dd className="text-lcars-ink-data font-[var(--font-mono)]">
+            <dd className="text-lcars-ink-data font-lcars-mono">
               {typeof result.monthCostAmount === "number"
                 ? formatCurrency(result.monthCostAmount, currency)
                 : "—"}
@@ -98,7 +98,7 @@ export default function OpenAiUsagePanel() {
             <>
               <div className="flex flex-wrap items-baseline gap-x-[10px]">
                 <dt className="text-lcars-ink-dim">Verfügbares Guthaben:</dt>
-                <dd className="text-lcars-ink-data font-[var(--font-mono)]">
+                <dd className="text-lcars-ink-data font-lcars-mono">
                   {formatCurrency(result.creditAvailable, creditCurrency)}
                 </dd>
               </div>
@@ -106,7 +106,7 @@ export default function OpenAiUsagePanel() {
                 typeof result.creditUsed === "number" && (
                   <div className="flex flex-wrap items-baseline gap-x-[10px]">
                     <dt className="text-lcars-ink-dim">Guthaben genutzt:</dt>
-                    <dd className="text-lcars-ink font-[var(--font-mono)]">
+                    <dd className="text-lcars-ink font-lcars-mono">
                       {formatCurrency(result.creditUsed, creditCurrency)} /{" "}
                       {formatCurrency(result.creditGranted, creditCurrency)}
                     </dd>

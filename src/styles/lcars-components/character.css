@@ -101,7 +101,7 @@
 }
 
 .character-entry-name {
-  font-family: var(--font-antonio), sans-serif;
+  font-family: var(--lcars-font-sans);
   font-size: 19px;
   font-weight: 600;
   letter-spacing: 0.1em;

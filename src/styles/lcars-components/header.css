@@ -69,7 +69,7 @@
   border: none;
   outline: none;
   color: var(--lcars-ink-light);
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 14px;
 }
 .lcars-search-input::placeholder {
@@ -128,7 +128,7 @@
   white-space: nowrap;
 }
 .lcars-search-sub {
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 11px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -136,7 +136,7 @@
 }
 .lcars-search-empty {
   padding: 10px 12px;
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 13px;
   color: var(--lcars-ink-dim);
 }
@@ -148,7 +148,7 @@
   padding-top: 10px;
   border-top: 1px solid var(--lcars-border);
   color: var(--lcars-primary);
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 12.5px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -343,7 +343,7 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 1px;
-  font-family: var(--font-antonio), sans-serif;
+  font-family: var(--lcars-font-sans);
   transition: background 250ms;
 }
 .lcars-footer-menu:hover {
@@ -351,7 +351,7 @@
 }
 
 .lcars-footer-version {
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: calc(var(--lcars-bar-h) - 2px);
   letter-spacing: 0.03em;
   color: var(--lcars-surface-2);

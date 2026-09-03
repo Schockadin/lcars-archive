@@ -84,7 +84,7 @@
     overflow: clip;
     background: var(--lcars-bg);
     color: var(--lcars-ink);
-    font-family: var(--font-antonio), "Antonio", sans-serif;
+    font-family: var(--lcars-font-sans);
     letter-spacing: 0.05em;
     -webkit-font-smoothing: antialiased;
   }
@@ -93,7 +93,7 @@
 
   h1,
   .lcars-heading {
-    font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--lcars-font-sans);
     font-size: var(--lcars-title-size);
     font-weight: 700;
     letter-spacing: 0.08em;
@@ -105,7 +105,7 @@
   }
 
   h2 {
-    font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--lcars-font-sans);
     font-size: 20px;
     font-weight: 600;
     letter-spacing: 0.08em;
@@ -126,14 +126,14 @@
   }
 
   .lcars-eyebrow {
-    font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--lcars-font-sans);
     font-size: var(--lcars-eyebrow-size);
     letter-spacing: 0.3em;
     color: var(--lcars-quaternary);
   }
 
   .lcars-header-title {
-    font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--lcars-font-sans);
     font-weight: 700;
     letter-spacing: 0.08em;
     color: var(--lcars-primary);
@@ -148,12 +148,12 @@
     line-height: 1.175;
     letter-spacing: 1px;
     font-size: 22px;
-    font-family: var(--font-antonio), sans-serif;
+    font-family: var(--lcars-font-sans);
     text-decoration: none;
   }
 
   .lcars-text {
-    font-family: "Antonio", "Helvetica Neue", Arial, sans-serif;
+    font-family: var(--lcars-font-sans);
     letter-spacing: 0.08em;
     color: var(--lcars-ink-light);
     line-height: 1.75;
