@@ -50,7 +50,7 @@ export default function CreateUserForm() {
           name="email"
           type="email"
           required
-          className="rounded-lcars-pill lcars-input"
+          className="lcars-input rounded-full"
         />
       </FormField>
 

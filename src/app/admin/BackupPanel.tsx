@@ -268,7 +268,7 @@ export default function BackupPanel<S>({
                   <select
                     value={selectedR2Key}
                     onChange={(e) => setSelectedR2Key(e.target.value)}
-                    className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-ink-contrast outline-none focus:border-lcars-primary"
+                    className="lcars-input rounded-full"
                   >
                     {r2Backups.map((b) => (
                       <option key={b.key} value={b.key}>

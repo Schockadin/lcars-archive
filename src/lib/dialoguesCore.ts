@@ -7,7 +7,7 @@ import sql from "@/lib/db";
 import { markdownToSafeHtml } from "@/lib/markdown";
 import { getCharactersForUser } from "@/lib/characters";
 import { generateUniqueArchiveEntrySlug } from "@/lib/archive";
-import { resolveCharacterColor } from "@/lib/characterColor";
+import { NPC_COLOR, resolveCharacterColor } from "@/lib/characterColor";
 // Fire-and-forget-Re-Embedding (RAG-Index) — nur ABGESCHLOSSENE Dialoge sind
 // embedbar (siehe embeddingSync.ts). Der Import ist tsx-sicher (kein
 // server-only); dialoguesCore selbst läuft ohnehin nur im react-server-
@@ -157,15 +157,16 @@ export async function getDialogueMessages(
     createdAt: r.created_at,
     editedAt: r.edited_at,
     deletedAt: r.deleted_at,
-    // Seed für den Default: die ID des Sprechers (bei Charakteren zusätzlich
-    // deren eigene Farbwahl, siehe characters.character_color; NPC-Einträge
-    // haben keine, bekommen also die deterministische Preset-Farbe). Kein
-    // Sprecher (gelöscht) → keine Farbe.
+    // Charaktere: die eigene Farbwahl (characters.character_color), sonst eine
+    // aus ihrer ID abgeleitete Preset-Farbe. NPCs: einheitlich NPC_COLOR —
+    // sie sind Kampagnen-Inventar und sollen sich als Gruppe von den
+    // Spielercharakteren abheben, statt mit ihnen um Farben zu konkurrieren.
+    // Kein Sprecher (gelöscht) → keine Farbe.
     characterColor:
       r.character_id != null
         ? resolveCharacterColor(r.character_color, r.character_id)
         : r.npc_entry_id != null
-          ? resolveCharacterColor(null, r.npc_entry_id)
+          ? NPC_COLOR
           : null,
   }));
 }

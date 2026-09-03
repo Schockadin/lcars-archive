@@ -6,6 +6,18 @@
 
 /* ── Layout ──────────────────────────────────────────────────────── */
 
+/* Breite, zentrierte Inhaltsspalte — Missions-Übersicht, Suche und der
+   Assistent für ein neues Gespräch. Vorher standen diese Seiten in einer
+   linksbündigen 640px-Spalte, die auf einem Desktop-Bildschirm zwei Drittel
+   der Fläche leer ließ. Der Deckel bleibt (endlos lange Zeilen liest
+   niemand gern), fällt mit 1100px aber deutlich großzügiger aus, und die
+   Spalte sitzt mittig in der Content-Fläche. */
+.lcars-wide-column {
+  width: 100%;
+  max-width: 1100px;
+  margin-inline: auto;
+}
+
 .lcars-main-content {
   display: flex;
   /* Ohne explizite Richtung defaultet Flex auf row — fiel bisher nicht auf,

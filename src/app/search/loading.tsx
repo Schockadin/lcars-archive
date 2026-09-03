@@ -3,7 +3,7 @@ import { LcarsSkeleton } from "@/components/lcars";
 // Skeleton-Fallback der Suchseite (Toolbar + Ergebnisliste).
 export default function Loading() {
   return (
-    <div className="w-full max-w-[640px]">
+    <div className="lcars-wide-column">
       <LcarsSkeleton className="mb-[16px] h-[34px] w-[220px]" />
       <div className="mission-toolbar">
         <LcarsSkeleton className="h-[30px] w-[380px]" />

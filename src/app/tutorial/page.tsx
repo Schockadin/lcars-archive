@@ -427,7 +427,9 @@ export default function TutorialPage() {
                 Nachrichten-Karten in offenen wie geschlossenen Gesprächen —
                 diese Farbe legst du im Profil unter „Charakter-Farben“ fest,
                 für jeden deiner Charaktere einzeln (ohne eigene Wahl bekommt er
-                automatisch eine der LCARS-Farben).
+                automatisch eine der LCARS-Farben). NPCs sprechen einheitlich in
+                einem hellen Grau — daran erkennst du auf einen Blick, wer von
+                einer Spielerin/einem Spieler geführt wird.
               </p>
               <p>
                 <strong>Spielleitung:</strong> Über das „Leitung“-Menü im Header

@@ -70,7 +70,7 @@ export default function MissionsOverview({
     : null;
 
   return (
-    <div className="w-full max-w-[640px]">
+    <div className="lcars-wide-column">
       <div className="mb-[16px]">
         <h1 className="lcars-data-row-heading">Missionen</h1>
         <p className="lcars-eyebrow">

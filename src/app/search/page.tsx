@@ -28,7 +28,7 @@ export default async function SearchPage({
   return (
     <>
       <PageMeta title="Suche" section="search" />
-      <div className="w-full max-w-[640px]">
+      <div className="lcars-wide-column">
         <div className="mb-[16px]">
           <h1 className="lcars-data-row-heading">Suche</h1>
           <p className="lcars-eyebrow">

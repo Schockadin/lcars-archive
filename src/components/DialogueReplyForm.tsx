@@ -97,7 +97,7 @@ export default function DialogueReplyForm({
             name="speaker"
             value={validCharKey}
             onChange={(e) => setCharKey(e.target.value)}
-            className="lcars-input rounded-lcars-pill self-start"
+            className="lcars-input rounded-full self-start"
           >
             {replyCharacters.map((c) => (
               <option key={c.key} value={c.key}>

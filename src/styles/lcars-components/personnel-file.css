@@ -110,7 +110,9 @@
   color: var(--pf-ink);
   font-size: calc(10 * var(--pf-unit));
   line-height: 1.25;
-  padding: calc(13 * var(--pf-unit)) calc(7 * var(--pf-unit))
+  /* Oben 15 statt 13 Vorlagen-Pixel: der Text saß in den Kopfkästen (Name,
+     Rang, Spezies …) 2px zu hoch an der gedruckten Linie. */
+  padding: calc(15 * var(--pf-unit)) calc(7 * var(--pf-unit))
     calc(4 * var(--pf-unit));
 }
 
@@ -122,7 +124,9 @@
 }
 
 textarea.pf-field {
-  padding-top: calc(14 * var(--pf-unit));
+  /* Behält seinen Vorsprung von einem Pixel gegenüber den einzeiligen
+     Kästen (siehe deren Innenabstand oben). */
+  padding-top: calc(16 * var(--pf-unit));
 }
 
 /* Das Auswahlfeld (Erfahrungsstufe) soll wie die übrigen Kästen aussehen —
@@ -152,7 +156,8 @@ select.pf-field {
 
 .pf-field:focus {
   background: rgba(255, 255, 255, 0.62);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--pf-accent) 45%, transparent);
+  box-shadow: inset 0 0 0 1px
+    color-mix(in srgb, var(--pf-accent) 45%, transparent);
   border-radius: 4px;
 }
 
@@ -174,6 +179,10 @@ select.pf-field {
 .pf-static--stat {
   z-index: 3;
   font-size: calc(11 * var(--pf-unit));
+  /* 8 statt der 15 Vorlagen-Pixel der Textkästen: die Zahlen der Attribute,
+     Disziplinen, des Schutzes und des Stress-Kastens saßen 5px zu tief im
+     gedruckten Rahmen (die Kästen sind niedriger als die Textkästen). */
+  padding-top: calc(8 * var(--pf-unit));
 }
 
 /* Ein Kasten, der sich einen festen Teil (aus der Akte) und ein Eingabefeld
@@ -192,7 +201,7 @@ select.pf-field {
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  padding: calc(13 * var(--pf-unit)) calc(3 * var(--pf-unit))
+  padding: calc(15 * var(--pf-unit)) calc(3 * var(--pf-unit))
     calc(4 * var(--pf-unit)) calc(7 * var(--pf-unit));
   color: var(--pf-ink);
   font-size: calc(10 * var(--pf-unit));

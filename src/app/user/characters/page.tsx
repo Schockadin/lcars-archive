@@ -61,8 +61,11 @@ export default async function UserCharactersPage() {
           </div>
         </section>
 
-        <section className="flex flex-col items-end gap-[12px]">
-          <h2>Charaktere verwalten</h2>
+        {/* items-end hielt die Liste rechtsbündig, solange sie die ganze
+            Spalte füllte; mit dem Breiten-Deckel der Liste (siehe
+            OwnCharacterList) säße sie sonst am rechten Rand. */}
+        <section className="flex w-full flex-col items-stretch gap-[12px]">
+          <h2 className="self-end">Charaktere verwalten</h2>
           <div className="lcars-text w-full">
             <OwnCharacterList characters={items} />
           </div>

@@ -67,18 +67,30 @@ export default async function GmApPage() {
               </div>
             )}
             <p className="text-lcars-ink-dim text-[13px]">
-              Vergeben wird unter{" "}
-              <Link href="/gm/sessions">Sessions</Link> (an alle Beteiligten
-              auf einmal) oder unter{" "}
+              Vergeben wird unter <Link href="/gm/sessions">Sessions</Link> (an
+              alle Beteiligten auf einmal) oder unter{" "}
               <Link href="/gm/campaign">Kampagne</Link> (einzeln, auch als
               Korrektur).
             </p>
           </section>
 
-          <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">Alle Buchungen</h2>
-            <ApLedgerTable entries={ledger} limit={AP_LEDGER_LIMIT} />
-          </section>
+          {/* Eingeklappt als Vorgabe: das Journal ist die längste Sektion der
+              Seite und schob Regelwerk und Konten-Übersicht weit nach unten.
+              <details> statt eines eigenen Zustands — kein Client-Bundle
+              nötig, und der Browser merkt sich nichts, was der Server nicht
+              weiß (gleiches Muster wie der Rollen-Editor unter /admin). */}
+          <details className="flex flex-col gap-[12px]">
+            <summary className="cursor-pointer">
+              <h2 className="inline text-lcars-primary">Alle Buchungen</h2>
+              <span className="text-lcars-ink-dim text-[13px]">
+                {" "}
+                · {ledger.length} Einträge
+              </span>
+            </summary>
+            <div className="mt-[12px]">
+              <ApLedgerTable entries={ledger} limit={AP_LEDGER_LIMIT} />
+            </div>
+          </details>
 
           <section className="flex flex-col gap-[12px]">
             <h2 className="text-lcars-primary">Regelwerk</h2>

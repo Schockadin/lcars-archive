@@ -43,6 +43,8 @@ export interface AdvancementRules {
   // Vergabe: was eine gespielte Session bzw. ein geschriebenes Logbuch bringt.
   apPerSession: number;
   apPerLogbook: number;
+  // Vorbelegung beim Missionsabschluss unter /gm/campaign.
+  apPerMission: number;
 }
 
 export const DEFAULT_ADVANCEMENT_RULES: AdvancementRules = {
@@ -57,6 +59,7 @@ export const DEFAULT_ADVANCEMENT_RULES: AdvancementRules = {
   creationCarryOverMax: 10,
   apPerSession: 1,
   apPerLogbook: 1,
+  apPerMission: 5,
 };
 
 // Feldkatalog für den Regel-Editor unter /gm/ap — eine deklarative Liste, aus
@@ -71,24 +74,100 @@ export interface AdvancementRuleField {
 }
 
 export const ADVANCEMENT_RULE_FIELDS: AdvancementRuleField[] = [
-  { key: "apPerStep", label: "AP je Steigerungsschritt", hint: "Attribut: (neuer Wert − 7) × diesem Faktor. Disziplin: (neuer Wert) × diesem Faktor.", min: 1, max: 100 },
-  { key: "talentCost", label: "AP je Talent", hint: "Kosten eines zusätzlichen Talents nach der Erschaffung.", min: 1, max: 500 },
-  { key: "focusCost", label: "AP je Schwerpunkt", hint: "Kosten eines zusätzlichen Schwerpunkts nach der Erschaffung.", min: 1, max: 500 },
-  { key: "creationAttributeBudget", label: "Erschaffung: AP für Attribute", hint: "Gesamtbudget für die Attributsverteilung.", min: 0, max: 5000 },
-  { key: "creationDepartmentBudget", label: "Erschaffung: AP für Disziplinen", hint: "Gesamtbudget für die Disziplinenverteilung.", min: 0, max: 5000 },
-  { key: "creationFreeValues", label: "Erschaffung: freie Werte", hint: "Anzahl Werte, die die Erschaffung kostenlos mitbringt.", min: 0, max: 20 },
-  { key: "creationFreeTalents", label: "Erschaffung: freie Talente", hint: "Anzahl Talente, die die Erschaffung kostenlos mitbringt.", min: 0, max: 20 },
-  { key: "creationFreeFocuses", label: "Erschaffung: freie Schwerpunkte", hint: "Anzahl Schwerpunkte, die die Erschaffung kostenlos mitbringt.", min: 0, max: 20 },
-  { key: "creationCarryOverMax", label: "Erschaffung: übertragbare Rest-AP", hint: "So viele nicht verbrauchte AP der Erschaffung werden beim Festschreiben aufs Konto gutgeschrieben.", min: 0, max: 500 },
-  { key: "apPerSession", label: "AP je gespielter Session", hint: "Vorbelegung beim Anlegen einer Session unter /gm/sessions.", min: 0, max: 100 },
-  { key: "apPerLogbook", label: "AP je geschriebenem Logbuch", hint: "Betrag des Schnellknopfs „+Logbuch“ bei der AP-Vergabe.", min: 0, max: 100 },
+  {
+    key: "apPerStep",
+    label: "AP je Steigerungsschritt",
+    hint: "Attribut: (neuer Wert − 7) × diesem Faktor. Disziplin: (neuer Wert) × diesem Faktor.",
+    min: 1,
+    max: 100,
+  },
+  {
+    key: "talentCost",
+    label: "AP je Talent",
+    hint: "Kosten eines zusätzlichen Talents nach der Erschaffung.",
+    min: 1,
+    max: 500,
+  },
+  {
+    key: "focusCost",
+    label: "AP je Schwerpunkt",
+    hint: "Kosten eines zusätzlichen Schwerpunkts nach der Erschaffung.",
+    min: 1,
+    max: 500,
+  },
+  {
+    key: "creationAttributeBudget",
+    label: "Erschaffung: AP für Attribute",
+    hint: "Gesamtbudget für die Attributsverteilung.",
+    min: 0,
+    max: 5000,
+  },
+  {
+    key: "creationDepartmentBudget",
+    label: "Erschaffung: AP für Disziplinen",
+    hint: "Gesamtbudget für die Disziplinenverteilung.",
+    min: 0,
+    max: 5000,
+  },
+  {
+    key: "creationFreeValues",
+    label: "Erschaffung: freie Werte",
+    hint: "Anzahl Werte, die die Erschaffung kostenlos mitbringt.",
+    min: 0,
+    max: 20,
+  },
+  {
+    key: "creationFreeTalents",
+    label: "Erschaffung: freie Talente",
+    hint: "Anzahl Talente, die die Erschaffung kostenlos mitbringt.",
+    min: 0,
+    max: 20,
+  },
+  {
+    key: "creationFreeFocuses",
+    label: "Erschaffung: freie Schwerpunkte",
+    hint: "Anzahl Schwerpunkte, die die Erschaffung kostenlos mitbringt.",
+    min: 0,
+    max: 20,
+  },
+  {
+    key: "creationCarryOverMax",
+    label: "Erschaffung: übertragbare Rest-AP",
+    hint: "So viele nicht verbrauchte AP der Erschaffung werden beim Festschreiben aufs Konto gutgeschrieben.",
+    min: 0,
+    max: 500,
+  },
+  {
+    key: "apPerSession",
+    label: "AP je gespielter Session",
+    hint: "Vorbelegung beim Anlegen einer Session unter /gm/sessions.",
+    min: 0,
+    max: 100,
+  },
+  {
+    key: "apPerLogbook",
+    label: "AP je geschriebenem Logbuch",
+    hint: "Betrag des Schnellknopfs „+Logbuch“ bei der AP-Vergabe.",
+    min: 0,
+    max: 100,
+  },
+  {
+    key: "apPerMission",
+    label: "AP pro beendeter Mission",
+    hint: "Vorbelegung beim Missionsabschluss unter „Kampagne“ (dort je Charakter änderbar).",
+    min: 0,
+    max: 500,
+  },
 ];
 
 // Tolerantes Einlesen der gespeicherten Regeln (jsonb): unbekannte Schlüssel
 // werden ignoriert, fehlende oder unbrauchbare Werte fallen auf den Standard
 // zurück. So bleibt ein alter Datenstand nach einer Regel-Erweiterung lesbar.
 export function parseAdvancementRules(raw: unknown): AdvancementRules {
-  const source = (raw && typeof raw === "object" ? raw : {}) as Record<string, unknown>;
+  const source = (raw && typeof raw === "object" ? raw : {}) as Record<
+    string,
+    unknown
+  >;
   const rules = { ...DEFAULT_ADVANCEMENT_RULES };
   for (const field of ADVANCEMENT_RULE_FIELDS) {
     const value = source[field.key];
@@ -275,7 +354,9 @@ export function checkAdvancement(
     // nicht ein zweites Mal kaufen lassen, nur weil es anders heißt.
     const isTalent = request.kind === "talent";
     const key = (value: string) =>
-      (isTalent ? parseTalentEntry(value).original : value).trim().toLowerCase();
+      (isTalent ? parseTalentEntry(value).original : value)
+        .trim()
+        .toLowerCase();
     const existing = isTalent ? stats.talents : stats.focuses;
     if (existing.some((e) => key(e) === key(entry))) {
       return { ok: false, error: `„${entry}" ist bereits eingetragen.` };
@@ -305,10 +386,9 @@ export function checkAdvancement(
   // Attribute und Disziplinen haben feste Schlüssel; für den generischen
   // Zugriff hier einmal als Record lesen (über unknown, da die beiden Typen
   // keine Index-Signatur haben).
-  const values = (isAttribute ? stats.attributes : stats.departments) as unknown as Record<
-    string,
-    number | null
-  >;
+  const values = (isAttribute
+    ? stats.attributes
+    : stats.departments) as unknown as Record<string, number | null>;
   const current = values[field.key];
   if (current === null || current === undefined) {
     return {

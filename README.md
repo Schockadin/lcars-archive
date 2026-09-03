@@ -287,11 +287,19 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     Logbuchs oder seiner ganzen Mission). Ein Logbuch hängt an genau EINER
     Session; zieht `setSessionLogbooks` eines aus einer anderen herüber, wird
     auch deren Gutschrift nachgezogen — Lösen, Zuordnen und Buchen laufen
-    dafür in einer Transaktion.
+    dafür in einer Transaktion. Eine eingetragene Session lässt sich
+    **vollständig korrigieren** (Datum, Titel, AP-Beträge, Notizen,
+    Teilnehmende): `updateGameSession` schreibt dabei die `session`- und
+    `bonus`-Buchungen der Session neu statt sie fortzuschreiben und zieht die
+    Logbuch-AP nach — alles in einer Transaktion, damit Session und Konten
+    nie auseinanderlaufen. Bereits ausgegebene AP holt das nicht zurück, ein
+    Konto kann dadurch rechnerisch ins Minus laufen.
   - **Missionsabschluss** (auf `/gm/campaign`) — AP für einen Missionsabschluss
     gibt es ausschließlich über die Missionsauswahl: die gewählte Mission wird
     dabei auf `completed` gesetzt und die Buchungen tragen
-    `character_ap_entries.mission_id`. Der Grund „Mission" ist deshalb aus der
+    `character_ap_entries.mission_id`. Vorbelegt ist der Betrag mit der Regel
+    **„AP pro beendeter Mission"** (`apPerMission`, Standard 5) aus dem
+    Regelwerk unter `/gm/ap`; im Einzelfall bleibt er überschreibbar. Der Grund „Mission" ist deshalb aus der
     freien Buchung entfernt (die Server-Action weist ihn ab).
   - `/gm/ap` — Kontostände aller Charaktere, das Gesamtjournal aller Buchungen
     (nach Charakter und Grund filterbar, serverseitig auf die letzten 500
@@ -347,6 +355,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   abonnierte Inhalte. Ein Service Worker macht bereits besuchte Seiten offline
   abrufbar und zeigt sonst eine eigene Offline-Ausweichseite (`/offline`);
   Anmeldung, neue Inhalte und Änderungen brauchen weiterhin eine Verbindung.
+- **Sprecherfarben in Gesprächen** — jeder Charakter hat eine eigene Farbe
+  (`characters.character_color`, im Profil wählbar), die seine Nachrichten-Karten
+  und im Fließtext-Modus seine wörtliche Rede einfärbt. **NPCs bekommen
+  einheitlich ein helles Grau** (`NPC_COLOR` in `src/lib/characterColor.ts`) —
+  so trennt die Farbe auf einen Blick, wer von einer Spielerin/einem Spieler
+  geführt wird und wer Kampagnen-Inventar ist.
 - **Wählbare LCARS-Farbschemata** — angemeldete User wählen im Profil unter
   „Darstellung“ ein Theme für die gesamte Oberfläche (Standard plus die echten
   LCARS-Paletten Classic, Science, Nebula, Red Alert, Nemesis) und können jede

@@ -46,7 +46,7 @@ export default function ToastTestPanel() {
           id="toast-test-kind"
           value={kind}
           onChange={(e) => setKind(e.target.value as ToastKind)}
-          className="rounded-lcars-pill lcars-input self-start"
+          className="lcars-input rounded-full self-start"
         >
           {KIND_OPTIONS.map((o) => (
             <option key={o.value} value={o.value}>

@@ -26,6 +26,13 @@ export const PRESET_HEXES: readonly string[] = LCARS_COLOR_PRESETS.map(
   (p) => p.hex,
 );
 
+// Farbe ALLER NPCs in Gesprächen: ein helles Grau. NPCs bekamen bisher — wie
+// Charaktere — eine der Preset-Farben aus ihrer ID abgeleitet und standen
+// damit optisch gleichwertig neben den Spielercharakteren. Ein einheitliches,
+// zurückhaltendes Grau trennt beide Gruppen auf einen Blick: bunt ist, wer
+// von einer Spielerin/einem Spieler geführt wird.
+export const NPC_COLOR = "#c9c9d4";
+
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
 export function isHexColor(value: unknown): value is string {

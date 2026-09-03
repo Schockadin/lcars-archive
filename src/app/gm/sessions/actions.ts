@@ -4,15 +4,11 @@ import { requireGM } from "@/lib/dal";
 import {
   createGameSession,
   deleteGameSession,
-  updateGameSessionNotes,
+  updateGameSession,
   listActiveCharactersForAp,
   setSessionLogbooks,
 } from "@/lib/gameSessions";
-import {
-  validateGameSessionInput,
-  SESSION_TITLE_MAX,
-  SESSION_NOTES_MAX,
-} from "@/lib/gameSessionFormat";
+import { validateGameSessionInput } from "@/lib/gameSessionFormat";
 
 export interface SessionFormState {
   error?: string;
@@ -45,9 +41,13 @@ export async function createSessionAction(
   const allowed = new Set(
     (await listActiveCharactersForAp()).map((character) => character.id),
   );
-  const characterIds = parsed.value.characterIds.filter((id) => allowed.has(id));
+  const characterIds = parsed.value.characterIds.filter((id) =>
+    allowed.has(id),
+  );
   if (characterIds.length !== parsed.value.characterIds.length) {
-    return { error: "Mindestens ein ausgewählter Charakter ist nicht (mehr) aktiv." };
+    return {
+      error: "Mindestens ein ausgewählter Charakter ist nicht (mehr) aktiv.",
+    };
   }
 
   await createGameSession({
@@ -87,35 +87,62 @@ export async function deleteSessionAction(
   revalidatePath("/gm/sessions");
   revalidatePath("/gm/ap");
   revalidatePath("/gm/campaign");
-  return { success: "Session zurückgenommen, die Gutschriften wurden storniert." };
+  return {
+    success: "Session zurückgenommen, die Gutschriften wurden storniert.",
+  };
 }
 
-// Nur Titel und Notizen — die AP-Beträge sind bereits als Buchungen unterwegs
-// und werden hier bewusst nicht nachträglich verändert (siehe
-// updateGameSessionNotes).
+// Eine eingetragene Session korrigieren — Datum, Titel, AP-Beträge, Notizen
+// und Teilnehmende. Die Gutschriften werden dabei mitgezogen (siehe
+// updateGameSession): eine Korrektur, die die Konten nicht mitnimmt, wäre
+// keine.
 export async function updateSessionAction(
   state: SessionFormState,
   formData: FormData,
 ): Promise<SessionFormState> {
-  await requireGM();
+  const user = await requireGM();
 
   const id = Number(formData.get("id"));
-  if (!Number.isInteger(id)) return { error: "Ungültige Session." };
+  if (!Number.isInteger(id) || id <= 0) return { error: "Ungültige Session." };
 
-  const title = String(formData.get("title") ?? "").trim();
-  if (title.length > SESSION_TITLE_MAX) {
-    return { error: `Titel zu lang (max. ${SESSION_TITLE_MAX} Zeichen).` };
-  }
-  const notes = String(formData.get("notes") ?? "").trim();
-  if (notes.length > SESSION_NOTES_MAX) {
-    return { error: `Notizen zu lang (max. ${SESSION_NOTES_MAX} Zeichen).` };
+  // Dieselbe Prüfung wie beim Anlegen — Titel-/Notizlängen, Datum, Beträge.
+  const parsed = validateGameSessionInput({
+    sessionDate: String(formData.get("sessionDate") ?? ""),
+    title: String(formData.get("title") ?? ""),
+    sessionAp: String(formData.get("sessionAp") ?? ""),
+    bonusAp: String(formData.get("bonusAp") ?? ""),
+    notes: String(formData.get("notes") ?? ""),
+    characterIds: formData.getAll("characterIds").map(String),
+  });
+  if (!parsed.ok) return { error: parsed.error };
+
+  // Wie beim Anlegen: nur aktive, gutschreibbare Akten kommen aufs Konto.
+  const allowed = new Set(
+    (await listActiveCharactersForAp()).map((character) => character.id),
+  );
+  const characterIds = parsed.value.characterIds.filter((cid) =>
+    allowed.has(cid),
+  );
+  if (characterIds.length !== parsed.value.characterIds.length) {
+    return {
+      error: "Mindestens ein ausgewählter Charakter ist nicht (mehr) aktiv.",
+    };
   }
 
-  const updated = await updateGameSessionNotes(id, title, notes);
+  const updated = await updateGameSession({
+    id,
+    ...parsed.value,
+    characterIds,
+    actingUserId: user.id,
+  });
   if (!updated) return { error: "Session nicht gefunden." };
 
   revalidatePath("/gm/sessions");
-  return { success: "Session gespeichert." };
+  revalidatePath("/gm/ap");
+  revalidatePath("/gm/campaign");
+  return {
+    success: "Session gespeichert — die Gutschriften wurden neu gebucht.",
+  };
 }
 
 // Logbücher einer Session zuordnen. Sobald mindestens eines daran hängt,

@@ -9,6 +9,9 @@ import type { DialogueMetadataForEdit } from "@/lib/dialogues";
 
 const initialState: DialogueMetaFormState = {};
 const inputClass = "rounded-lcars-pill lcars-input w-full";
+// Selects tragen durchgängig lcars-input + rounded-full (siehe die übrigen
+// Auswahlfelder der App); die Textfelder daneben behalten ihren Pillen-Radius.
+const selectClass = "lcars-input rounded-full w-full";
 
 // Admin-only Formular zum Bearbeiten der Gesprächs-Metadaten (Titel, Datum,
 // Schauplatz, Ort, Tags) — der Gesprächsverlauf (Nachrichten) wird hier nicht
@@ -63,7 +66,7 @@ export default function EditDialogueMetadataForm({
           id="dlg-location"
           name="locationSlug"
           defaultValue={dialogue.locationSlug ?? ""}
-          className={inputClass}
+          className={selectClass}
         >
           <option value="">— kein Ort —</option>
           {locations.map((loc) => (

@@ -32,7 +32,7 @@ export default function CharacterAssignRow({
         <select
           name="userId"
           defaultValue={character.player_id ? String(character.player_id) : ""}
-          className="rounded-lcars-pill lcars-input flex-1"
+          className="lcars-input rounded-full flex-1"
         >
           <option value="">— kein Spieler —</option>
           {users.map((u) => (

@@ -179,7 +179,7 @@ export default function AdminContentBrowser({
         <select
           value={bulkOwnerId}
           onChange={(e) => setBulkOwnerId(e.target.value)}
-          className="lcars-input"
+          className="lcars-input rounded-full"
           disabled={pending}
           aria-label="Owner für Mass-Edit"
         >

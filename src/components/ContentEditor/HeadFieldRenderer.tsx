@@ -2,6 +2,9 @@ import { FormField } from "@/app/_shared/FormPrimitives";
 import type { HeadField } from "./headFields";
 
 const inputClass = "rounded-lcars-pill lcars-input w-full";
+// Selects tragen durchgängig lcars-input + rounded-full (siehe die übrigen
+// Auswahlfelder der App); die Textfelder daneben behalten ihren Pillen-Radius.
+const selectClass = "lcars-input rounded-full w-full";
 
 export default function HeadFieldRenderer({
   field,
@@ -27,7 +30,7 @@ export default function HeadFieldRenderer({
           name={field.name}
           required={field.required}
           defaultValue={(defaultValue as string | undefined) ?? ""}
-          className={inputClass}
+          className={selectClass}
         >
           {field.options.map((option) => (
             <option key={option.value} value={option.value}>

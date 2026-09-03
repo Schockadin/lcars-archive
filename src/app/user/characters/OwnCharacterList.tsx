@@ -55,8 +55,11 @@ export default function OwnCharacterList({
     );
   }
 
+  // Volle Breite der Spalte, aber gedeckelt: über ~900px zerreißt die Zeile
+  // aus Akte und Aktionen optisch (die Akte wächst, die Knöpfe bleiben
+  // rechts stehen).
   return (
-    <div className="flex flex-col gap-[6px]">
+    <div className="flex w-full max-w-[900px] flex-col gap-[6px]">
       {optimisticCharacters.map((c) => (
         <div
           key={c.id}

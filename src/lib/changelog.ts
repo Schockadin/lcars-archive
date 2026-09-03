@@ -27,6 +27,14 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Auf den Charakter-Seiten reicht der Inhalt jetzt rechts genauso weit wie links, statt einen breiten leeren Streifen am rechten Rand zu lassen.",
       '„Meine Charaktere" passt auf Telefon-Bildschirmen: die Aktionszeile lief vorher seitlich aus dem Bild. Der Knopf „Öffnen" ist entfallen — der Stift daneben führte ohnehin auf dieselbe Seite.',
       'Unter „Meine Inhalte" ist der Knopf „Neuer Charakter" entfallen — eigene Charaktere legst du unter „Meine Charaktere" an. Dafür steht der Knopf „Neuer NPC" dort jetzt jedem Konto offen, nicht mehr nur der Spielleitung; wer einen NPC im Gespräch spricht, ändert sich dadurch nicht.',
+      "Auf dem Charakterbogen sitzen die Einträge jetzt sauber auf ihren Linien: Name, Rang und Spezies zwei Pixel tiefer, die Zahlen der Attribute und Disziplinen fünf Pixel höher.",
+      'Missions-Übersicht, Suche und der Assistent für ein neues Gespräch nutzen auf großen Bildschirmen deutlich mehr Breite und stehen mittig statt links angeschlagen. Gesprächsseiten haben rechts wieder Luft, und die Charakter-Akten unter „Meine Charaktere" laufen nicht mehr über die ganze Bildschirmbreite.',
+      "Alle Auswahlfelder der App sehen jetzt gleich aus (LCARS-Feld mit runden Enden) — vorher fielen einzelne mit eckigen Kanten oder abweichenden Farben heraus.",
+      'Eingetragene Sessions lassen sich unter „Sessions" jetzt vollständig korrigieren: Datum, Titel, AP-Beträge, Notizen und Teilnehmende. Die Gutschriften werden dabei mitgezogen — geänderte Beträge landen sofort auf den Konten. Das Notizfeld ist außerdem deutlich höher.',
+      'Das AP-Regelwerk kennt eine neue Regel „AP pro beendeter Mission": Ihr Wert belegt den Betrag beim Missionsabschluss unter „Kampagne" vor (Standard 5).',
+      'Das Buchungsjournal unter „Erfahrungspunkte" ist jetzt eingeklappt und lässt sich bei Bedarf aufklappen — Kontostände und Regelwerk stehen dadurch wieder ohne langes Scrollen da.',
+      "NPCs sprechen in Gesprächen jetzt einheitlich in hellem Grau statt in bunten Charakterfarben — so ist auf einen Blick klar, wer von einer Spielerin/einem Spieler geführt wird.",
+      "Im Profil steht jetzt ganz oben, was in der aktuellen Version neu ist — mit Link auf die vollständige Änderungsliste.",
     ],
   },
   {
@@ -407,3 +415,29 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
 ];
+
+// Jüngster Eintrag — das Profil zeigt ihn als „Neu in dieser Version"
+// (siehe /user). Verglichen wird numerisch je Stelle statt lexikografisch:
+// ein String-Vergleich sortierte "1.9" hinter "1.10". Die Reihenfolge des
+// Arrays bleibt damit egal.
+export function latestChangelogEntry(
+  entries: ChangelogEntry[] = CHANGELOG,
+): ChangelogEntry | null {
+  let latest: ChangelogEntry | null = null;
+  for (const entry of entries) {
+    if (latest === null || compareVersions(entry.version, latest.version) > 0) {
+      latest = entry;
+    }
+  }
+  return latest;
+}
+
+function compareVersions(a: string, b: string): number {
+  const partsA = a.split(".").map(Number);
+  const partsB = b.split(".").map(Number);
+  for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+    const diff = (partsA[i] ?? 0) - (partsB[i] ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
