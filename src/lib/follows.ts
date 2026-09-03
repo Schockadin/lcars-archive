@@ -10,11 +10,14 @@ import { logCaughtError } from "@/lib/errorLog";
 // das Follow — ein zusätzliches Follow pro einzelnem Log wäre Rauschen ohne
 // echten Zusatznutzen (siehe ActionsMenu.tsx, das für contentType
 // "missionLog" deshalb gar kein followType übergibt).
-// "user" (target_slug = users.slug) ist zusätzlich ein Sammel-Abo:
-// benachrichtigt bei jedem neuen/geänderten öffentlichen Inhalt des
-// abonnierten Users (siehe notifyUserSubscribers unten). Auf /users nur
-// subscribeOnly in FollowButtons (kompakte Zeile), auf /users/[id] zusätzlich
-// bookmarkbar wie jeder andere Inhaltstyp.
+// "user" (target_slug = users.slug) ist ein Sammel-Abo: benachrichtigt bei
+// jedem neuen/geänderten öffentlichen Inhalt des abonnierten Users (siehe
+// notifyUserSubscribers unten). Es gibt seit dem Entfernen der /users-Route
+// keine UI mehr, um solche Abos NEU anzulegen oder in den Bookmark-/Abo-Listen
+// (getBookmarkedContent/getSubscribedContent) anzuzeigen; der
+// Benachrichtigungs-Pfad bleibt aber bestehen, weil getUserSubscribers auch
+// für Missions-Benachrichtigungen (missions/_shared/contentAction.ts) genutzt
+// wird.
 export type FollowTargetType =
   | "mission"
   | "archive_entry"
@@ -43,36 +46,6 @@ export async function getFollowStatus(
     bookmarked: row?.bookmarked_at != null,
     subscribed: row?.subscribed_at != null,
   };
-}
-
-// Batch-Variante von getFollowStatus für Listen mit vielen FollowButtons-
-// Instanzen (z.B. /users) — eine Anfrage für alle targetSlugs statt einer
-// pro Zeile (N+1). Slugs ohne content_follows-Zeile fehlen im Ergebnis-
-// Record; der Aufrufer behandelt das wie {bookmarked:false,subscribed:false}.
-export async function getFollowStatuses(
-  userId: number,
-  targetType: FollowTargetType,
-  targetSlugs: string[],
-): Promise<Record<string, FollowStatus>> {
-  if (targetSlugs.length === 0) return {};
-
-  const rows = await sql<
-    { target_slug: string; bookmarked_at: Date | null; subscribed_at: Date | null }[]
-  >`
-    SELECT target_slug, bookmarked_at, subscribed_at
-    FROM content_follows
-    WHERE user_id = ${userId} AND target_type = ${targetType}
-      AND target_slug = ANY(${targetSlugs})
-  `;
-
-  const result: Record<string, FollowStatus> = {};
-  for (const row of rows) {
-    result[row.target_slug] = {
-      bookmarked: row.bookmarked_at != null,
-      subscribed: row.subscribed_at != null,
-    };
-  }
-  return result;
 }
 
 // Serverseitiges Gegenstück zum getFollowState-Client-Fetch in FollowButtons:
@@ -176,13 +149,11 @@ function toFollowedContent(row: {
         ? `/missions/${row.slug}`
         : row.target_type === "character"
           ? `/characters/${row.slug}`
-          : row.target_type === "user"
-            ? `/users/${row.slug}`
-            : // Offene Dialoge leben unter /dialogues, nicht /archive (siehe
-              // src/app/user/content/page.tsx für dasselbe Muster).
-              row.dialogue_open
-              ? `/dialogues/${row.slug}`
-              : `/archive/${row.slug}`,
+          : // Offene Dialoge leben unter /dialogues, nicht /archive (siehe
+            // src/app/user/content/page.tsx für dasselbe Muster).
+            row.dialogue_open
+            ? `/dialogues/${row.slug}`
+            : `/archive/${row.slug}`,
   };
 }
 
@@ -213,11 +184,6 @@ export async function getBookmarkedContent(
     JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
     WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
       AND (c.visibility = 'public' OR c.player_id = ${userId}) AND c.deleted_at IS NULL
-    UNION ALL
-    SELECT 'user'::text AS target_type, u.slug, u.name AS title, NULL::boolean AS dialogue_open
-    FROM content_follows cf
-    JOIN users u ON u.slug = cf.target_slug AND cf.target_type = 'user'
-    WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
     ORDER BY title ASC
   `;
   return rows.map(toFollowedContent);
@@ -250,11 +216,6 @@ export async function getSubscribedContent(
     JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
     WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
       AND (c.visibility = 'public' OR c.player_id = ${userId}) AND c.deleted_at IS NULL
-    UNION ALL
-    SELECT 'user'::text AS target_type, u.slug, u.name AS title, NULL::boolean AS dialogue_open
-    FROM content_follows cf
-    JOIN users u ON u.slug = cf.target_slug AND cf.target_type = 'user'
-    WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
     ORDER BY title ASC
   `;
   return rows.map(toFollowedContent);

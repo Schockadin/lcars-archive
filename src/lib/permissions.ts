@@ -35,7 +35,7 @@ export type RoleMap = Record<string, Permission[]>;
 export const PERMISSIONS = [
   "admin.access", // Zugang zum Admin-Bereich (DB, Scripts, Logs, Import)
   "users.manage", // Nutzerkonten anlegen/bearbeiten/Rollen+Rechte/deaktivieren/löschen
-  "users.browse", // /users-Übersicht ansehen + User abonnieren
+  "users.browse", // Basisrecht für eingeloggte Nicht-Gäste (requireNonGuest)
   "gm.access", // Spielleitungs-Bereich (Leitung-Menü, Dialog-Oversight)
   "characters.assign", // Charaktere Spieler:innen zuweisen
   "characters.assignable", // darf selbst einen Charakter anlegen/zugewiesen bekommen
@@ -69,7 +69,7 @@ export type Permission = (typeof PERMISSIONS)[number];
 export const PERMISSION_LABELS: Record<Permission, { label: string; description: string }> = {
   "admin.access": { label: "Admin-Bereich", description: "Zugang zu DB, Scripts, Logs, Import." },
   "users.manage": { label: "Nutzerverwaltung", description: "Konten, Rollen und Rechte verwalten." },
-  "users.browse": { label: "User-Übersicht", description: "User-Liste ansehen und abonnieren." },
+  "users.browse": { label: "Nicht-Gast", description: "Basisrecht für eingeloggte Nutzer:innen oberhalb der Gast-Rolle." },
   "gm.access": { label: "Spielleitung", description: "Leitungs-Bereich und Gesprächs-Übersicht." },
   "characters.assign": { label: "Charaktere zuweisen", description: "Charaktere Spieler:innen zuordnen." },
   "characters.assignable": { label: "Eigener Charakter", description: "Darf einen Charakter anlegen/zugewiesen bekommen." },

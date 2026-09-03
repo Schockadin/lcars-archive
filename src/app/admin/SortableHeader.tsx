@@ -7,7 +7,7 @@ import { SortArrowIcon } from "@/lib/icons";
 // Klick auf eine inaktive Spalte sortiert aufsteigend, jeder weitere Klick
 // auf dieselbe Spalte togglet die Richtung. Admin-weiter Shared-Baustein
 // (siehe AdminUsersTable.tsx, AdminLogTable.tsx) statt Toolbar-Switch, das
-// Muster ist aktuell admin-exklusiv (die generischere /users-Tabelle nutzt
+// Muster ist aktuell admin-exklusiv (die übrigen Inhaltslisten nutzen
 // weiterhin LcarsSortSwitch).
 export default function SortableHeader<T extends string>({
   label,

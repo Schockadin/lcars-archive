@@ -1,8 +1,8 @@
 // Reine, DB-/React-freie Sortier-Helfer für die Dialog-Listen (Dashboard,
-// GM-Übersicht, öffentliches Profil) — ausgelagert aus dialoguesCore.ts, damit
-// sie ohne die dortige DB-/Markdown-Importkette unit-testbar sind (gleiches
-// Muster wie dialogueLock.ts). Die SQL-basierten Listen (getAllOpenDialoguesForGM,
-// getPublicDialoguesForUser) sortieren äquivalent direkt in der Query
+// GM-Übersicht) — ausgelagert aus dialoguesCore.ts, damit sie ohne die dortige
+// DB-/Markdown-Importkette unit-testbar sind (gleiches Muster wie
+// dialogueLock.ts). Die SQL-basierten Listen (z.B. getAllOpenDialoguesForGM)
+// sortieren äquivalent direkt in der Query
 // (ORDER BY metadata->>'logDate' DESC NULLS LAST).
 
 // Ingame-Datum eines Gesprächs aus metadata.logDate (ISO YYYY-MM-DD). null,

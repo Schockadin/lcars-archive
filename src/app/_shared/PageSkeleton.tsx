@@ -1,7 +1,7 @@
 import { LcarsSkeleton } from "@/components/lcars";
 
 // Generisches LCARS-Seiten-Skelett für die dynamischen Bereiche (/user, /admin,
-// /users, /dialogues, /login), die — anders als die statisch gerenderten
+// /dialogues, /login), die — anders als die statisch gerenderten
 // Inhaltsseiten — kein eigenes, spezifisches loading.tsx hatten. Zeigt während
 // des Server-Roundtrips Eyebrow + Titel + ein paar Platzhalter-Zeilen, damit
 // die Navigation nicht „leer" wirkt.

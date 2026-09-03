@@ -1978,37 +1978,6 @@ export async function getAllOpenDialoguesForGM(): Promise<
   }));
 }
 
-export interface PublicDialogue {
-  slug: string;
-  title: string;
-  participantNames: string[];
-}
-
-// Öffentliche Gespräche eines Users (owner_user_id, wie bei Missionen/
-// Mission-Logs/Archiv-Einträgen — siehe scripts/schema.sql) für die
-// öffentliche Profilseite /users/[id] — anders als getDialoguesForUser oben
-// (Session-User, gefiltert auf "eigene Charaktere als Teilnehmer") reine
-// Owner-Abfrage ohne Partner-Ausschluss, da hier beide Teilnehmer angezeigt
-// werden.
-export async function getPublicDialoguesForUser(
-  userId: number,
-): Promise<PublicDialogue[]> {
-  const rows = await sql<
-    { slug: string; title: string; metadata: unknown }[]
-  >`
-    SELECT slug, title, metadata
-    FROM archive_entries
-    WHERE category = 'dialogue' AND owner_user_id = ${userId} AND visibility = 'public'
-      AND deleted_at IS NULL
-    ORDER BY metadata->>'logDate' DESC NULLS LAST, title ASC
-  `;
-  return rows.map((row) => ({
-    slug: row.slug,
-    title: row.title,
-    participantNames: parseParticipants(row.metadata).map((p) => p.name),
-  }));
-}
-
 // ---------------------------------------------------------------------------
 // Admin-Bearbeitung der Dialog-Metadaten
 // ---------------------------------------------------------------------------

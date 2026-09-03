@@ -40,6 +40,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Auch „Meine Charaktere“ liegt jetzt in der zentrierten breiten Spalte. Die Aktions-Buttons („Neuer Missionslog“, „Neues Gespräch“, „Neuer NPC“ …) sind überall gleich breit, der Autoren-Filter der Missionen ist so hoch wie Suchfeld und Sortier-Schalter daneben, und das Aufklapp-Pfeilchen der Sessions bzw. der Buchungsliste steht links und dreht sich beim Öffnen. Abgeschlossene Gespräche haben beim Laden jetzt einen passenden Platzhalter statt des Charakter-Listen-Ladebalkens.",
       "Alle Seiten nutzen jetzt dieselbe zentrierte Inhaltsspalte — Charaktere, Datenbank, Spielleitungs- und Admin-Seiten, Formulare und Anleitung stehen mittig in gleicher Breite statt links angeschlagen über die volle Breite. Abgeschlossene Gespräche haben oben einen „‹ Gespräche“-Zurück-Knopf.",
       "Das minimalistische Interface gibt es jetzt in zwei Ausführungen — dunkel und hell. Du wählst sie im Profil unter „Darstellung → Oberfläche“. Außerdem ist der Lesemodus-Knopf ein kompaktes Icon geworden (bei Gesprächen sitzt er unter dem Zurück-Knopf), und die Gespräche-Übersicht passt auf schmalen Handy-Bildschirmen wieder in die Breite.",
+      "Die öffentliche Nutzerübersicht und die öffentlichen Fremdprofile (bisher unter /users) sind entfallen. Dein eigenes Profil (/user) und die Nutzerverwaltung der Administration bleiben unverändert.",
     ],
   },
   {

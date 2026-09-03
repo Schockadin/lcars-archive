@@ -413,22 +413,6 @@ export function ProfileNavIcon() {
   );
 }
 
-// Nutzerkonten (/users) — Dreiergruppe. Vorher war das Icon fast
-// deckungsgleich mit CharactersNavIcon (Person + halbe Person) und dadurch im
-// Menü nicht auseinanderzuhalten.
-export function UsersNavIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <circle cx="12" cy="7.5" r="2.6" />
-      <circle cx="5" cy="10" r="2" />
-      <circle cx="19" cy="10" r="2" />
-      <path d="M7.5 18.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" />
-      <path d="M2 17.5c0-1.9 1.3-3.1 3-3.1" />
-      <path d="M22 17.5c0-1.9-1.3-3.1-3-3.1" />
-    </svg>
-  );
-}
-
 // Eigene Charaktere (/user/characters) — Personalakte statt Personengruppe:
 // unterscheidet den User-Menüpunkt eindeutig vom allgemeinen „Charaktere"
 // (CharactersNavIcon), das alle Charaktere des Archivs meint.

@@ -33,7 +33,7 @@ export interface EditUserState {
 
 // Eigene Actions statt der in ../../actions.ts (Nutzerverwaltungsliste) —
 // gleiche Berechtigungs-/Validierungslogik, aber Redirect zurück auf diese
-// Bearbeitungsseite statt auf /users, damit man nach dem Speichern die
+// Bearbeitungsseite statt auf /admin/users, damit man nach dem Speichern die
 // aktualisierten Daten direkt sieht statt zur Liste zu springen. Jede
 // Action prüft ihre Berechtigung trotzdem eigenständig (requireAdmin), nie
 // nur auf ausgeblendete UI verlassen.

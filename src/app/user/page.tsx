@@ -51,9 +51,9 @@ const ROLE_LABELS: Record<User["role"], string> = {
 // User) — hier bleibt nur noch die Konto-Verwaltung (Name/E-Mail, Passwort,
 // Benachrichtigungen, PWA-Installation) plus die Follow-Verwaltung (Abos,
 // siehe /user/follow). Reine Selbstbedienung (requireOwnUser, ID kommt aus
-// der Session, kein :id-Segment in der URL) — das Ansehen FREMDER User
-// (Übersicht + deren öffentliche Inhalte) lebt unter /users/[id] (Plural),
-// nicht mehr hier.
+// der Session, kein :id-Segment in der URL). Eine öffentliche Übersicht
+// FREMDER User gibt es nicht mehr — die frühere /users-Route wurde restlos
+// entfernt.
 export default async function UserPage() {
   const target = await requireOwnUser();
 

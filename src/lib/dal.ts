@@ -129,8 +129,8 @@ export async function requireAnyPermission(
 // Rückwärtskompatible Guards, jetzt über das RBAC ausgedrückt (Signaturen
 // unverändert, damit die vielen bestehenden Aufrufstellen unangetastet
 // bleiben). requireGM = „darf Spielleitungs-Werkzeuge nutzen“ (gm.access),
-// requireAdmin = „Verwaltung“ (admin.access), requireNonGuest = „darf die
-// User-Liste sehen/abonnieren“ (users.browse).
+// requireAdmin = „Verwaltung“ (admin.access), requireNonGuest = „eingeloggter
+// Nicht-Gast“ (users.browse).
 export async function requireGM(): Promise<User> {
   return requirePermission("gm.access");
 }

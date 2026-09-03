@@ -34,8 +34,8 @@ export interface AdminActionState {
   warning?: string;
   manualActivationUrl?: string;
   // Nur von resetUserPasswordAction gesetzt — zeigt eine Erfolgsmeldung
-  // inline in der Zeile statt (wie die übrigen Actions hier) auf /users
-  // umzuleiten, was den Erfolg gar nicht sichtbar machen würde.
+  // inline in der Zeile statt (wie die übrigen Actions hier) auf
+  // /admin/users umzuleiten, was den Erfolg gar nicht sichtbar machen würde.
   sent?: boolean;
   // Nur von forceLogoutUserAction gesetzt — gleiches Prinzip wie sent oben.
   loggedOut?: boolean;

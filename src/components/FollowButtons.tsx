@@ -39,9 +39,8 @@ export default function FollowButtons({
   subscribeOnly?: boolean;
   showShare?: boolean;
   // Überspringt den eigenen Client-Fetch, wenn der Aufrufer den Stand schon
-  // hat (z.B. UsersTable.tsx: ein gebündelter Batch-Fetch für alle Zeilen
-  // statt eines Fetches pro FollowButtons-Instanz, siehe getFollowStatuses
-  // in lib/follows.ts).
+  // hat (z.B. Inhalts-Detailseiten, die den Stand direkt beim SSR über
+  // resolveFollowState in lib/follows.ts auflösen und als Prop mitgeben).
   initialState?: FollowState;
   // Für den WhatsApp-Teilen-Text im ShareMenu — ohne Angabe wird nur die URL
   // geteilt (kein Fehler, nur ein weniger sprechender Text).

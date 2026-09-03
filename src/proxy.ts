@@ -6,7 +6,7 @@ import {
 
 // Next-16-Proxy (ehem. middleware.ts). Zentraler, OPTIMISTISCHER Zugriffs-
 // Guard: leitet anonyme Besucher von den angemeldeten Bereichen (/user,
-// /admin, /gm, /users) auf /login um, BEVOR überhaupt eine Seite gerendert wird.
+// /admin, /gm) auf /login um, BEVOR überhaupt eine Seite gerendert wird.
 //
 // Bewusst nur ein optimistischer Check (siehe Next.js-Doku „Optimistic checks
 // with Proxy"): Es wird ausschließlich das Session-Cookie gelesen und dessen
@@ -22,12 +22,11 @@ import {
 // Source of Truth" (Defense in Depth) — der Proxy fängt nur den Großteil der
 // nicht angemeldeten Zugriffe früh ab.
 //
-// Rollen-/Rechte-Prüfungen (Staff für /admin, Spielleitung für /gm, Nicht-Gast
-// für /users) macht der
+// Rollen-/Rechte-Prüfungen (Staff für /admin, Spielleitung für /gm) macht der
 // Proxy bewusst NICHT — die bräuchten einen DB-Lookup. Sie bleiben in den
 // jeweiligen Layouts/Seiten (requireStaff/requireNonGuest) bzw. Actions.
 
-const PROTECTED_PREFIXES = ["/user", "/admin", "/gm", "/users"] as const;
+const PROTECTED_PREFIXES = ["/user", "/admin", "/gm"] as const;
 
 function isProtectedPath(pathname: string): boolean {
   return PROTECTED_PREFIXES.some(
@@ -65,5 +64,5 @@ export function proxy(request: NextRequest): NextResponse {
 // spiegeln PROTECTED_PREFIXES. `/:path*` deckt sowohl den Basispfad (z.B.
 // /user) als auch alle Unterpfade (/user/...) ab.
 export const config = {
-  matcher: ["/user/:path*", "/admin/:path*", "/gm/:path*", "/users/:path*"],
+  matcher: ["/user/:path*", "/admin/:path*", "/gm/:path*"],
 };

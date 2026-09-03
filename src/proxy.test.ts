@@ -63,8 +63,6 @@ describe("proxy (auth guard)", () => {
     "/admin/db",
     "/gm",
     "/gm/sessions",
-    "/users",
-    "/users/5",
   ])(
     "redirects anonymous visitors from %s to /login",
     (path) => {
@@ -105,12 +103,11 @@ describe("proxy (auth guard)", () => {
     },
   );
 
-  it("only matches the four protected areas", () => {
+  it("only matches the three protected areas", () => {
     expect(config.matcher).toEqual([
       "/user/:path*",
       "/admin/:path*",
       "/gm/:path*",
-      "/users/:path*",
     ]);
   });
 });
