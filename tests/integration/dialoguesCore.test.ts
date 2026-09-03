@@ -976,6 +976,53 @@ describe("Gespräche mit NPCs", () => {
     expect(own?.partnerName).toBe("Spielerin");
   });
 
+  // getDialoguesForUser holt seit dem Performance-Umbau ALLE eigenen
+  // Charaktere in EINER Abfrage (vorher eine pro Charakter, sequentiell).
+  // Dieser Test sichert genau das ab: mit zwei Charakteren in zwei
+  // verschiedenen Gesprächen müssen beide auftauchen — und jedes mit dem
+  // Charakter benannt sein, über den es zum Konto gehört. Ein früherer
+  // Umbau-Versuch verlor hier still ein Gespräch.
+  it("findet Gespräche über MEHRERE eigene Charaktere hinweg", async () => {
+    const ownUser = await insertUser();
+    const partnerUser = await insertUser();
+    const charA = await insertCharacter({ playerId: ownUser.id, name: "Alpha" });
+    const charB = await insertCharacter({ playerId: ownUser.id, name: "Beta" });
+    const partnerChar = await insertCharacter({
+      playerId: partnerUser.id,
+      name: "Gegenüber",
+    });
+
+    const base = {
+      partners: [{ kind: "character" as const, id: partnerChar.id }],
+      authorUserId: ownUser.id,
+      setting: null,
+      locationSlug: null,
+      logDate: null,
+      tags: [],
+      bodyMarkdown: "Hallo!",
+      subscribeSelf: false,
+    };
+    const dialogA = await createDialogue({
+      ...base,
+      title: "Gespräch von Alpha",
+      ownSpeaker: { kind: "character", id: charA.id },
+    });
+    const dialogB = await createDialogue({
+      ...base,
+      title: "Gespräch von Beta",
+      ownSpeaker: { kind: "character", id: charB.id },
+    });
+
+    const dialogues = await getDialoguesForUser(ownUser.id);
+    const bySlug = new Map(dialogues.map((d) => [d.slug, d]));
+
+    expect(bySlug.has(dialogA.slug)).toBe(true);
+    expect(bySlug.has(dialogB.slug)).toBe(true);
+    expect(bySlug.get(dialogA.slug)?.characterName).toBe("Alpha");
+    expect(bySlug.get(dialogB.slug)?.characterName).toBe("Beta");
+    expect(bySlug.get(dialogA.slug)?.partnerName).toBe("Gegenüber");
+  });
+
   it("benachrichtigt den NPC-Sprecher wie einen Teilnehmer", async () => {
     const { gmUser, playerChar, npc, entryId } = await setupNpcDialogue();
 
