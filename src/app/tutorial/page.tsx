@@ -24,8 +24,8 @@ export default function TutorialPage() {
         <h1>Tutorial</h1>
         <p className="lcars-text">
           Diese Datenbank dokumentiert eine laufende Pen-&-Paper-Kampagne —
-          Charaktere, Missionen, Einsatzberichte und Datenbank-Einträge, die sich
-          mit jeder Session weiterentwickeln. Diese Seite erklärt alle
+          Charaktere, Missionen, Einsatzberichte und Datenbank-Einträge, die
+          sich mit jeder Session weiterentwickeln. Diese Seite erklärt alle
           Funktionen: was du auch ohne Konto sehen kannst, was du mit einem
           eigenen Konto selbst anlegen darfst, und was Spielleitung (GM) und
           Administration zusätzlich können. Klicke einen Abschnitt an, um ihn
@@ -121,18 +121,18 @@ export default function TutorialPage() {
                 Die Rollen sind nur <strong>Vorlagen</strong>: Ein Konto kann{" "}
                 <strong>mehrere Rollen</strong> gleichzeitig haben (die Rechte
                 addieren sich), und die Administration kann darüber hinaus{" "}
-                <strong>einzelne Rechte</strong> pro Person gezielt gewähren oder
-                entziehen (im User-Editor unter „Individuelle Rechte“). So lässt
-                sich z.B. jemandem nur das Verwalten von Missionen erlauben, ohne
-                gleich die ganze Spielleitungs-Rolle zu vergeben.
+                <strong>einzelne Rechte</strong> pro Person gezielt gewähren
+                oder entziehen (im User-Editor unter „Individuelle Rechte“). So
+                lässt sich z.B. jemandem nur das Verwalten von Missionen
+                erlauben, ohne gleich die ganze Spielleitungs-Rolle zu vergeben.
               </p>
               <p>
                 Über die Admin-Seite <strong>„Rollen“</strong> (Rollen &amp;
-                Rechte) kann die Administration außerdem <strong>eigene
-                Rollen</strong> anlegen, die Rechte jeder Rolle (auch der fünf
-                System-Rollen) anpassen und Rollen dort direkt den Usern
-                zuweisen. Die fünf System-Rollen bleiben dabei immer erhalten und
-                können nicht gelöscht werden.
+                Rechte) kann die Administration außerdem{" "}
+                <strong>eigene Rollen</strong> anlegen, die Rechte jeder Rolle
+                (auch der fünf System-Rollen) anpassen und Rollen dort direkt
+                den Usern zuweisen. Die fünf System-Rollen bleiben dabei immer
+                erhalten und können nicht gelöscht werden.
               </p>
             </div>
           </LcarsDataRow>
@@ -203,21 +203,20 @@ export default function TutorialPage() {
               <p>
                 Im Schritt <strong>Werte</strong> trägst du die sechs Attribute
                 und sechs Disziplinen in Zahlenkästen ein; daneben läuft mit,
-                was deine Verteilung kostet und wie viel Budget übrig ist.
-                Dazu kommen die Personalakte (Pronomen, Rolle, Zuweisung,
-                Herkunft, Erziehung, Laufbahn, Erfahrung, Merkmale), Schutz,
+                was deine Verteilung kostet und wie viel Budget übrig ist. Dazu
+                kommen die Personalakte (Pronomen, Rolle, Zuweisung, Herkunft,
+                Erziehung, Laufbahn, Erfahrung, Merkmale), Schutz,
                 Entschlossenheit, Ansehen und der Stress-Bonus. Die Listen —
                 Werte, Schwerpunkte, Talente, Angriffe, Ausrüstung, Hobbys,
                 Karriere-Ereignisse — füllst du über{" "}
-                <strong>„Hinzufügen“</strong>; jeder Eintrag hat ein rotes
-                Minus zum Entfernen. Talente kommen aus dem Katalog (siehe
-                unten). Bei Werten, Schwerpunkten und Talenten steht dabei, wie
-                viele der freien Plätze aus der Ersterschaffung du schon
-                vergeben hast. Spezies-Fähigkeiten und Sonderregeln bleiben
-                Textfelder — dort stehen meist ganze Regelsätze. Leere Felder
-                gelten als „nicht angegeben“; der maximale Stress ist kein
-                Eingabefeld, sondern ergibt sich aus Fitness und dem Bonus aus
-                Talenten.
+                <strong>„Hinzufügen“</strong>; jeder Eintrag hat ein rotes Minus
+                zum Entfernen. Talente kommen aus dem Katalog (siehe unten). Bei
+                Werten, Schwerpunkten und Talenten steht dabei, wie viele der
+                freien Plätze aus der Ersterschaffung du schon vergeben hast.
+                Spezies-Fähigkeiten und Sonderregeln bleiben Textfelder — dort
+                stehen meist ganze Regelsätze. Leere Felder gelten als „nicht
+                angegeben“; der maximale Stress ist kein Eingabefeld, sondern
+                ergibt sich aus Fitness und dem Bonus aus Talenten.
               </p>
               <p>
                 <strong>Deine Charakterseite</strong> zeigt danach Stammdaten,
@@ -231,11 +230,11 @@ export default function TutorialPage() {
                 stehen auch die Knöpfe zum <strong>Drucken</strong> und zum{" "}
                 <strong>Speichern als PDF</strong> — die PDF-Datei enthält
                 dieselben drei Blätter. Rang und Spezies stehen auf dem Bogen,
-                kommen aber aus den Stammdaten; im Kasten „Species &amp;
-                Traits“ steht die Spezies vorne, deine weiteren Merkmale
-                trägst du dahinter ein. In „Meine Inhalte“ tauchen Charaktere
-                nicht auf — der Charakter-Filter für Einsatzberichte und
-                Gespräche bleibt dort aber erhalten.
+                kommen aber aus den Stammdaten; im Kasten „Species &amp; Traits“
+                steht die Spezies vorne, deine weiteren Merkmale trägst du
+                dahinter ein. In „Meine Inhalte“ tauchen Charaktere nicht auf —
+                der Charakter-Filter für Einsatzberichte und Gespräche bleibt
+                dort aber erhalten.
               </p>
               <p>
                 <strong>Erfahrungspunkte (AP)</strong>: Für die Ersterschaffung
@@ -248,8 +247,8 @@ export default function TutorialPage() {
                 Schwerpunkte gesperrt und wachsen nur noch über AP:{" "}
                 <strong>Attribut steigern</strong> kostet (neuer Wert − 7) × 10
                 AP, <strong>Disziplin steigern</strong> (neuer Wert) × 10 AP,
-                ein <strong>Talent</strong> oder <strong>Schwerpunkt</strong>{" "}
-                je 20 AP. AP bekommst du von der Spielleitung: je 1 AP für eine
+                ein <strong>Talent</strong> oder <strong>Schwerpunkt</strong> je
+                20 AP. AP bekommst du von der Spielleitung: je 1 AP für eine
                 gespielte Session und ein geschriebenes Logbuch, dazu etwas für
                 abgeschlossene Missionen und Story-Arcs. Auf dem Bogen siehst du
                 dein Konto, die Kosten jeder möglichen Steigerung und alle
@@ -270,39 +269,38 @@ export default function TutorialPage() {
               <p>
                 Wichtig beim Abschließen: festgeschrieben wird der{" "}
                 <strong>gespeicherte</strong> Stand. Trage deshalb erst alle
-                Attribute und Disziplinen ein und speichere unten — solange
-                noch ein Feld leer ist oder das Budget überzogen ist, bleibt
-                der Knopf gesperrt. Sonst stünde dein Bogen dauerhaft mit
-                Lücken da: nach dem Abschließen lassen sich die Felder nur noch
-                über AP steigern, und ein leeres Feld hat keinen Wert, den man
-                steigern könnte.
+                Attribute und Disziplinen ein und speichere unten — solange noch
+                ein Feld leer ist oder das Budget überzogen ist, bleibt der
+                Knopf gesperrt. Sonst stünde dein Bogen dauerhaft mit Lücken da:
+                nach dem Abschließen lassen sich die Felder nur noch über AP
+                steigern, und ein leeres Feld hat keinen Wert, den man steigern
+                könnte.
               </p>
               <p>
                 <strong>Talente</strong> tippst du nicht ab, sondern wählst sie
                 aus einem Katalog. Ein Klick auf „Talent wählen“ öffnet ein
                 Fenster mit <strong>Suchfeld</strong> (Name, Voraussetzung oder
-                Regeltext) und Kategorie-Filter; ein Klick auf ein Talent
-                klappt seine <strong>Beschreibung</strong> auf. Angezeigt
-                werden dabei nur Talente, deren{" "}
-                <strong>Voraussetzungen du erfüllst</strong> — gemessen an
-                deinen aktuellen Attributen, Disziplinen, deiner Spezies und
-                den Talenten, die du schon hast. Voraussetzungen, die sich
-                nicht automatisch prüfen lassen (Merkmale, Rollen oder „nach
-                Entscheidung der Spielleitung“), blenden nichts aus; über den
-                Schalter „Nur erfüllbare“ siehst du bei Bedarf auch den Rest.
-                Was schon auf deinem Bogen steht, taucht gar nicht erst auf.
-                Ein Klick auf <strong>„Übernehmen“</strong> setzt das Talent
-                direkt — beim Steigern werden die AP dabei gleich abgebucht
-                (der Betrag steht auf dem Knopf).
+                Regeltext) und Kategorie-Filter; ein Klick auf ein Talent klappt
+                seine <strong>Beschreibung</strong> auf. Angezeigt werden dabei
+                nur Talente, deren <strong>Voraussetzungen du erfüllst</strong>{" "}
+                — gemessen an deinen aktuellen Attributen, Disziplinen, deiner
+                Spezies und den Talenten, die du schon hast. Voraussetzungen,
+                die sich nicht automatisch prüfen lassen (Merkmale, Rollen oder
+                „nach Entscheidung der Spielleitung“), blenden nichts aus; über
+                den Schalter „Nur erfüllbare“ siehst du bei Bedarf auch den
+                Rest. Was schon auf deinem Bogen steht, taucht gar nicht erst
+                auf. Ein Klick auf <strong>„Übernehmen“</strong> setzt das
+                Talent direkt — beim Steigern werden die AP dabei gleich
+                abgebucht (der Betrag steht auf dem Knopf).
               </p>
               <p>
                 Die Talent-Liste auf dem Bogen ist deshalb kein Textfeld mehr:
-                Talente kommen ausschließlich aus dem Katalog, und jeder
-                Eintrag hat ein kleines rotes Minus zum Entfernen. Während der
+                Talente kommen ausschließlich aus dem Katalog, und jeder Eintrag
+                hat ein kleines rotes Minus zum Entfernen. Während der
                 Erschaffung zählt der Bogen mit, wie viele deiner{" "}
-                <strong>vier freien Talente</strong> du schon vergeben hast;
-                ist das Kontingent voll, kommen weitere erst nach dem
-                Abschließen der Erschaffung über AP hinzu. Danach ist die Liste
+                <strong>vier freien Talente</strong> du schon vergeben hast; ist
+                das Kontingent voll, kommen weitere erst nach dem Abschließen
+                der Erschaffung über AP hinzu. Danach ist die Liste
                 schreibgeschützt — Talente ändern sich dann nur noch über den
                 AP-Bereich.
               </p>
@@ -311,21 +309,21 @@ export default function TutorialPage() {
                 <strong>eigenen Namen</strong> geben — auf dem Bogen steht dann
                 „Eigener Name (Originalname)“. Der Originalname bleibt so
                 erhalten: dasselbe Talent lässt sich nicht versehentlich ein
-                zweites Mal kaufen, und Voraussetzungen anderer Talente
-                erkennen es weiterhin. Fehlt ein Talent im Katalog — etwa
-                eines, das ihr im Spiel vereinbart habt — nimmt die
-                Spielleitung es unter „Talente“ auf; frei eintippen lässt es
-                sich bewusst nicht mehr, sonst ließen sich Voraussetzungen und
-                Regeltexte nicht mehr zuordnen. Für die Spielleitung heißt das
-                beim Anlegen: der Katalogname darf keine Klammern enthalten —
-                die sind für den eigenen Namen reserviert. Die Voraussetzung
-                („Conn 2+“ und dergleichen) gehört ins eigene Feld, der Bogen
-                setzt sie selbst in Klammern dahinter.
+                zweites Mal kaufen, und Voraussetzungen anderer Talente erkennen
+                es weiterhin. Fehlt ein Talent im Katalog — etwa eines, das ihr
+                im Spiel vereinbart habt — nimmt die Spielleitung es unter
+                „Talente“ auf; frei eintippen lässt es sich bewusst nicht mehr,
+                sonst ließen sich Voraussetzungen und Regeltexte nicht mehr
+                zuordnen. Für die Spielleitung heißt das beim Anlegen: der
+                Katalogname darf keine Klammern enthalten — die sind für den
+                eigenen Namen reserviert. Die Voraussetzung („Conn 2+“ und
+                dergleichen) gehört ins eigene Feld, der Bogen setzt sie selbst
+                in Klammern dahinter.
               </p>
               <p>
                 Ganz unten am Bogen findest du einen{" "}
-                <strong>Spickzettel</strong>: alle Talente deines Charakters
-                mit ihrem vollen Regeltext, zum Nachschlagen am Spieltisch.
+                <strong>Spickzettel</strong>: alle Talente deines Charakters mit
+                ihrem vollen Regeltext, zum Nachschlagen am Spieltisch.
               </p>
               <p>
                 Für die Zahlen gelten die <strong>Regeln der Runde</strong>:
@@ -333,10 +331,10 @@ export default function TutorialPage() {
                 auf 12 und zwei dürfen auf 11 stehen; Disziplinen liegen
                 zwischen 1 und 5, höchstens eine auf 5 und zwei auf 4. Verstöße
                 markiert das Formular sofort und verhindert das Speichern. Der
-                maximale <strong>Stress</strong> ist kein Eingabefeld: er
-                ergibt sich aus deiner Fitness plus dem Bonus, den Talente
-                darauf geben (z.B. „Resolut: +3 max. Stress“) — diesen Bonus
-                trägst du einmal ein, den Rest rechnet die Seite.
+                maximale <strong>Stress</strong> ist kein Eingabefeld: er ergibt
+                sich aus deiner Fitness plus dem Bonus, den Talente darauf geben
+                (z.B. „Resolut: +3 max. Stress“) — diesen Bonus trägst du einmal
+                ein, den Rest rechnet die Seite.
               </p>
               <p>
                 Eigene Entwürfe (siehe unten) erscheinen in „Meine Inhalte“
@@ -346,8 +344,8 @@ export default function TutorialPage() {
               </p>
               <p>
                 Beim Anlegen oder Bearbeiten eines Charakters, einer Mission,
-                eines Einsatzberichts oder eines Datenbank-Eintrags kannst du das
-                Formular statt zu veröffentlichen auch erst als{" "}
+                eines Einsatzberichts oder eines Datenbank-Eintrags kannst du
+                das Formular statt zu veröffentlichen auch erst als{" "}
                 <strong>Entwurf</strong> speichern (Checkbox unter dem Textfeld)
                 — der Text ist dann nicht mehr Pflicht. Ein Entwurf bleibt
                 unabhängig von seiner Sichtbarkeitsstufe für niemanden außer dir
@@ -371,7 +369,11 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={4} label="Gespräche" color="var(--lcars-primary)">
+          <LcarsDataRow
+            value={4}
+            label="Gespräche"
+            color="var(--lcars-primary)"
+          >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Ein <strong>Gespräch</strong> startest du mit deinem Charakter
@@ -394,9 +396,11 @@ export default function TutorialPage() {
                 Charakteren beginnen. Danach läuft alles wie gewohnt: Der NPC
                 steht der Spielleitung beim Antworten wie ein eigener Charakter
                 zur Auswahl, und das Gespräch erscheint bei ihr unter „Deine
-                Gespräche“. Neue NPCs legt die Spielleitung unter „Meine
-                Inhalte“ über den Knopf „Neuer NPC“ an — das ist das normale
-                Datenbank-Formular mit vorgewählter Kategorie „NPC“.
+                Gespräche“. Neue NPCs legt ihr unter „Meine Inhalte“ über den
+                Knopf „Neuer NPC“ an — das ist das normale Datenbank-Formular
+                mit vorgewählter Kategorie „NPC“, und der Knopf steht jedem
+                Konto offen. Wer einen NPC im Gespräch spricht, bleibt davon
+                unberührt: das ist weiterhin die Spielleitung.
               </p>
               <p>
                 Sobald ein Gespräch <strong>mehr als zwei Teilnehmende</strong>{" "}
@@ -413,35 +417,35 @@ export default function TutorialPage() {
               <p>
                 Sobald eine teilnehmende Person es abschließt, wird es{" "}
                 <strong>unwiderruflich geschlossen</strong> und taucht danach in
-                der Gespräche-Übersicht bei den Charakteren auf —
-                standardmäßig als zusammenhängender Lesetext, per Umschalter oben
-                auf der Seite aber auch wie ein offenes Gespräch mit einzelnen
+                der Gespräche-Übersicht bei den Charakteren auf — standardmäßig
+                als zusammenhängender Lesetext, per Umschalter oben auf der
+                Seite aber auch wie ein offenes Gespräch mit einzelnen
                 Nachrichtenkarten anzeigbar. Diese Einstellung gilt für alle
                 abgeschlossenen Gespräche, die du dir ansiehst. Im Lesetext wird
                 die wörtliche Rede jedes Charakters in dessen{" "}
                 <strong>Charakter-Farbe</strong> dargestellt, ebenso die
                 Nachrichten-Karten in offenen wie geschlossenen Gesprächen —
-                diese Farbe legst du im Profil unter „Charakter-Farben“ fest, für
-                jeden deiner Charaktere einzeln (ohne eigene Wahl bekommt er
+                diese Farbe legst du im Profil unter „Charakter-Farben“ fest,
+                für jeden deiner Charaktere einzeln (ohne eigene Wahl bekommt er
                 automatisch eine der LCARS-Farben).
               </p>
               <p>
                 <strong>Spielleitung:</strong> Über das „Leitung“-Menü im Header
-                (Eintrag „Gespräche“) sieht die Spielleitung alle aktuell offenen
-                Gespräche, auch ohne eigene Teilnahme — ein Klick öffnet das
-                Gespräch lesend, ohne Antwortformular. Über jedes neu begonnene
-                Gespräch wird die Spielleitung außerdem automatisch per Mail/Push
-                informiert.
+                (Eintrag „Gespräche“) sieht die Spielleitung alle aktuell
+                offenen Gespräche, auch ohne eigene Teilnahme — ein Klick öffnet
+                das Gespräch lesend, ohne Antwortformular. Über jedes neu
+                begonnene Gespräch wird die Spielleitung außerdem automatisch
+                per Mail/Push informiert.
               </p>
               <p>
                 <strong>Moderation (Administration):</strong> Wer das Recht zur
-                Gesprächs-Moderation hat (standardmäßig die Administration), darf
-                in jedem Gespräch jede Nachricht bearbeiten oder löschen (auch
-                fremde und auch in bereits abgeschlossenen Gesprächen), dessen
-                Besitzer:in ändern sowie die <strong>Metadaten</strong> (Titel,
-                Datum, Schauplatz, Ort, Tags) über „Metadaten bearbeiten“
-                anpassen — auch bei abgeschlossenen Gesprächen; der eigentliche
-                Gesprächsverlauf bleibt dabei unangetastet.
+                Gesprächs-Moderation hat (standardmäßig die Administration),
+                darf in jedem Gespräch jede Nachricht bearbeiten oder löschen
+                (auch fremde und auch in bereits abgeschlossenen Gesprächen),
+                dessen Besitzer:in ändern sowie die <strong>Metadaten</strong>{" "}
+                (Titel, Datum, Schauplatz, Ort, Tags) über „Metadaten
+                bearbeiten“ anpassen — auch bei abgeschlossenen Gesprächen; der
+                eigentliche Gesprächsverlauf bleibt dabei unangetastet.
               </p>
             </div>
           </LcarsDataRow>
@@ -488,10 +492,10 @@ export default function TutorialPage() {
               <p>
                 Der News-Feed bleibt <strong>dauerhaft</strong> sichtbar (nicht
                 nur bis zum nächsten Besuch): Jede News blendest du über das
-                kleine <strong>×</strong> rechts einzeln aus — sie gilt damit als
-                gelesen und kommt nicht wieder. Eine News verschwindet außerdem
-                automatisch, sobald du den zugehörigen Inhalt aufrufst. Mit{" "}
-                <strong>„Alles als gelesen markieren“</strong> räumst du den
+                kleine <strong>×</strong> rechts einzeln aus — sie gilt damit
+                als gelesen und kommt nicht wieder. Eine News verschwindet
+                außerdem automatisch, sobald du den zugehörigen Inhalt aufrufst.
+                Mit <strong>„Alles als gelesen markieren“</strong> räumst du den
                 ganzen Feed auf einmal ab. Welche News-Arten überhaupt
                 erscheinen (Neu, Editiert und/oder Gelöscht), legst du im{" "}
                 <strong>Profil</strong> unter „News“ fest — standardmäßig nur
@@ -522,16 +526,18 @@ export default function TutorialPage() {
                 <code>/rag</code>). Statt nach Stichworten zu suchen, kannst du
                 ihm ganz normale Fragen zum Kampagneninhalt stellen, z. B.{" "}
                 <em>„Was wissen wir über die Tholianer?“</em> oder{" "}
-                <em>„Wer war an der Mission am Cardassianischen Grenzraum
-                beteiligt?“</em>
+                <em>
+                  „Wer war an der Mission am Cardassianischen Grenzraum
+                  beteiligt?“
+                </em>
               </p>
               <p>
                 Der Assistent durchsucht dafür den Datenbestand (Charaktere,
-                Missionen, Einsatzberichte, Datenbank-Einträge und abgeschlossene
-                Gespräche), formuliert eine zusammenhängende Antwort und zeigt
-                darunter die <strong>Quellen</strong> an, auf die er sich
-                stützt — ein Klick führt direkt zum jeweiligen Eintrag. Die
-                Antwort erscheint Wort für Wort im Stream.
+                Missionen, Einsatzberichte, Datenbank-Einträge und
+                abgeschlossene Gespräche), formuliert eine zusammenhängende
+                Antwort und zeigt darunter die <strong>Quellen</strong> an, auf
+                die er sich stützt — ein Klick führt direkt zum jeweiligen
+                Eintrag. Die Antwort erscheint Wort für Wort im Stream.
               </p>
               <p>
                 Zwei Dinge sind wichtig: Der Assistent antwortet nur aus der
@@ -636,7 +642,11 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={8} label="Verlinkung" color="var(--lcars-tertiary)">
+          <LcarsDataRow
+            value={8}
+            label="Verlinkung"
+            color="var(--lcars-tertiary)"
+          >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Um im Fließtext auf einen Charakter, eine Mission oder einen
@@ -687,25 +697,25 @@ export default function TutorialPage() {
                   einsehen.
                 </li>
                 <li>
-                  Über das eigene <strong>„Leitung“</strong>-Menü im Header
-                  (es steht getrennt neben dem Admin-Menü — wer beide Rollen
-                  hat, sieht beide Menüs nebeneinander) unter{" "}
-                  <strong>„Kampagne“</strong> an
-                  einer Stelle das aktuelle <strong>Ingame-Jahr</strong>{" "}
-                  einstellen, Charaktere Spieler:innen zuweisen (Gast-Accounts
-                  ausgenommen) und alle Missionen mit Bearbeiten-, Löschen- und
-                  Besitzer:in-Zuordnung pro Zeile verwalten. (Der ebenfalls dort
-                  liegende Eintrag <strong>„Gespräche“</strong> ist in der
-                  eigenen Gespräche-Sektion oben beschrieben.)
+                  Über das eigene <strong>„Leitung“</strong>-Menü im Header (es
+                  steht getrennt neben dem Admin-Menü — wer beide Rollen hat,
+                  sieht beide Menüs nebeneinander) unter{" "}
+                  <strong>„Kampagne“</strong> an einer Stelle das aktuelle{" "}
+                  <strong>Ingame-Jahr</strong> einstellen, Charaktere
+                  Spieler:innen zuweisen (Gast-Accounts ausgenommen) und alle
+                  Missionen mit Bearbeiten-, Löschen- und Besitzer:in-Zuordnung
+                  pro Zeile verwalten. (Der ebenfalls dort liegende Eintrag{" "}
+                  <strong>„Gespräche“</strong> ist in der eigenen
+                  Gespräche-Sektion oben beschrieben.)
                 </li>
                 <li>
                   Unter <strong>„Sessions“</strong> gespielte Sessions eintragen
                   (Datum, Titel, Session-AP, Bonus-AP, Notizen) und damit allen
-                  Beteiligten die AP in einem Rutsch gutschreiben.
-                  Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
-                  Konto — wer gefehlt hat, wird einfach abgewählt. Eine
-                  versehentlich eingetragene Session lässt sich zurücknehmen,
-                  die Gutschriften werden dann mit storniert.
+                  Beteiligten die AP in einem Rutsch gutschreiben. Vorausgewählt
+                  sind alle aktiven Charaktere mit verknüpftem Konto — wer
+                  gefehlt hat, wird einfach abgewählt. Eine versehentlich
+                  eingetragene Session lässt sich zurücknehmen, die Gutschriften
+                  werden dann mit storniert.
                 </li>
                 <li>
                   Einer eingetragenen Session <strong>Logbücher</strong>{" "}
@@ -714,9 +724,9 @@ export default function TutorialPage() {
                   Session, egal wie viele Logbücher geschrieben werden. Wird die
                   Zuordnung wieder gelöst oder das letzte Logbuch entfernt,
                   verschwindet die Gutschrift ebenso automatisch — auch dann,
-                  wenn das Logbuch mit seiner ganzen Mission gelöscht oder
-                  einer anderen Session zugeordnet wird (ein Logbuch hängt
-                  immer an genau einer Session).
+                  wenn das Logbuch mit seiner ganzen Mission gelöscht oder einer
+                  anderen Session zugeordnet wird (ein Logbuch hängt immer an
+                  genau einer Session).
                 </li>
                 <li>
                   AP für einen <strong>Missionsabschluss</strong> gibt es nur
@@ -737,16 +747,15 @@ export default function TutorialPage() {
                 <li>
                   Unter <strong>„Talente“</strong> den Talent-Katalog pflegen,
                   aus dem die Charakterbögen ihre Auswahlliste speisen:
-                  durchsuchen, filtern, bestehende Talente bearbeiten und
-                  eigene ergänzen. Löschen lassen sich nur selbst ergänzte
-                  Talente — sonst verschwänden Einträge unter bereits
-                  gepflegten Bögen.
+                  durchsuchen, filtern, bestehende Talente bearbeiten und eigene
+                  ergänzen. Löschen lassen sich nur selbst ergänzte Talente —
+                  sonst verschwänden Einträge unter bereits gepflegten Bögen.
                 </li>
                 <li>
                   Das <strong>Ingame-Jahr</strong> (unter „Kampagne“) bestimmt
                   das angezeigte <strong>Alter</strong> von Charakteren: Trägt
-                  ein Charakter ein Geburtsdatum, wird sein Alter automatisch aus
-                  Ingame-Jahr minus Geburtsjahr berechnet (sonst gilt das
+                  ein Charakter ein Geburtsdatum, wird sein Alter automatisch
+                  aus Ingame-Jahr minus Geburtsjahr berechnet (sonst gilt das
                   manuell eingetragene Alter).
                 </li>
                 <li>
@@ -784,8 +793,8 @@ export default function TutorialPage() {
                 </li>
                 <li>
                   Unter <strong>„Scripts“</strong> alle Missionen ohne
-                  Besitzer:in auf einen Schlag einer Spielleitung zuordnen,
-                  den Cache neu aufbauen, mit{" "}
+                  Besitzer:in auf einen Schlag einer Spielleitung zuordnen, den
+                  Cache neu aufbauen, mit{" "}
                   <strong>„Alle Inhalte verlinken“</strong> das Autolinking auf
                   einen Rutsch über alle bestehenden Inhalte laufen lassen sowie
                   mit <strong>„Typografie korrigieren“</strong> gerade
@@ -846,8 +855,9 @@ export default function TutorialPage() {
                 erscheint ein eigener Offline-Hinweis mit „Erneut
                 versuchen“-Knopf. Sobald du wieder online bist, lädt die App
                 automatisch die aktuellen Daten nach.{" "}
-                <strong>Neue Inhalte, die Anmeldung und das Speichern von
-                Änderungen</strong>{" "}
+                <strong>
+                  Neue Inhalte, die Anmeldung und das Speichern von Änderungen
+                </strong>{" "}
                 brauchen weiterhin eine Verbindung. Darüber hinaus bietet die
                 Installation einen bequemeren Zugriff (eigenes Icon, kein
                 Adressleisten-Umweg) und die Grundlage für{" "}
@@ -865,13 +875,12 @@ export default function TutorialPage() {
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Die Farbgebung der gesamten Oberfläche kannst du in deinem{" "}
-                <strong>Profil</strong> unter{" "}
-                <strong>„Darstellung“</strong> wählen. Neben dem{" "}
-                <strong>Standard</strong> stehen mehrere echte
+                <strong>Profil</strong> unter <strong>„Darstellung“</strong>{" "}
+                wählen. Neben dem <strong>Standard</strong> stehen mehrere echte
                 LCARS-Farbschemata bereit (Classic, Science, Nebula, Red Alert,
-                Nemesis). Die Auswahl gilt nur für dich, wird sofort als Vorschau
-                angewendet und bleibt nach dem <strong>Speichern</strong> auf
-                allen deinen Geräten erhalten.
+                Nemesis). Die Auswahl gilt nur für dich, wird sofort als
+                Vorschau angewendet und bleibt nach dem{" "}
+                <strong>Speichern</strong> auf allen deinen Geräten erhalten.
               </p>
               <p>
                 Darunter kannst du unter <strong>„Feineinstellung“</strong> jede
@@ -883,13 +892,13 @@ export default function TutorialPage() {
               </p>
               <p>
                 Wenn du es lieber schlicht magst, kannst du unter{" "}
-                <strong>„Oberfläche“</strong> das LCARS-Design ganz abschalten und
-                stattdessen ein <strong>minimalistisches Interface</strong>{" "}
+                <strong>„Oberfläche“</strong> das LCARS-Design ganz abschalten
+                und stattdessen ein <strong>minimalistisches Interface</strong>{" "}
                 wählen: schlichte Systemschrift, keine dekorativen Balken und
                 Rundungen, und die gesamte Navigation kompakt in der linken
-                Seitenleiste (auf dem Handy platzsparend als Symbole). Auch diese
-                Wahl gilt nur für dich, wird sofort als Vorschau angewendet und
-                bleibt nach dem Speichern erhalten.
+                Seitenleiste (auf dem Handy platzsparend als Symbole). Auch
+                diese Wahl gilt nur für dich, wird sofort als Vorschau
+                angewendet und bleibt nach dem Speichern erhalten.
               </p>
             </div>
           </LcarsDataRow>

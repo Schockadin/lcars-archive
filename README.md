@@ -83,13 +83,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   intern gehaltene nur mit `content.view_gm`/`content.view_all`. Auch **nachträglich**
   lassen sich NPCs in ein laufendes Gespräch holen — das darf, wer sie spielt,
   und wird dabei ihr Sprecher.
-- **NPCs anlegen** — unter „Meine Inhalte" gibt es für alle, die NPCs spielen,
-  den Knopf **„Neuer NPC"** (`/user/archive/new?category=npc`). Das ist das
-  normale Datenbank-Formular mit vorgewählter Kategorie „NPC"; der Eintrag
-  lässt sich danach wie jeder andere Datenbank-Eintrag bearbeiten. Bewusst
-  NICHT an `content.create` gehängt: ein NPC ist kein eigener Inhalt, sondern
-  Kampagnen-Inventar — ein reines Admin-Konto ohne `content.create` soll ihn
-  trotzdem anlegen können.
+- **NPCs anlegen** — unter „Meine Inhalte" gibt es für **jedes eingeloggte
+  Konto** den Knopf **„Neuer NPC"** (`/user/archive/new?category=npc`). Das ist
+  das normale Datenbank-Formular mit vorgewählter Kategorie „NPC"; der Eintrag
+  lässt sich danach wie jeder andere Datenbank-Eintrag bearbeiten. An keine
+  Rolle geknüpft, genau wie das Formular selbst (`requireOwnUser`, keine
+  Kategorie-Prüfung in `contentAction.ts`) — ein NPC ist kein eigener Inhalt,
+  sondern Kampagnen-Inventar. Wer einen NPC im Gespräch **spielen** darf, ist
+  davon unabhängig und richtet sich weiterhin nach `canPlayNpcs`.
+  Der Knopf **„Neuer Charakter"** steht dort nicht mehr: eigene Charaktere
+  haben mit `/user/characters` ihren eigenen Bereich, und dort legt man sie an.
 - **Eigene Charaktere & Charakterwerte** — wer mindestens einen verknüpften
   Charakter hat, bekommt im Kopfmenü den Punkt „Charaktere" (`/user/characters`):
   Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Sichtbarkeit, Öffnen,

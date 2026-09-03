@@ -27,11 +27,6 @@ export default async function UserContentPage() {
   // funktioniert.
   const viewer = resolveViewer(user, roleMap);
   const canStartDialogue = characters.length > 0 || canPlayNpcs(viewer);
-  // NPCs sind Datenbank-Einträge der Kategorie „npc"; anlegen darf sie, wer
-  // sie auch spielt (canPlayNpcs). Bewusst ohne content.create: ein NPC ist
-  // kein eigener Inhalt, sondern Kampagnen-Inventar — es zählt nur, ob diese
-  // Person NPCs spielt.
-  const canCreateNpc = canPlayNpcs(viewer);
   // Nur Slug und Name an die Client-Komponente: die vollen Charakter-Objekte
   // tragen den Werte-Teilbaum (keepStats in getCharactersForUser) und hätten
   // ihn ungenutzt im RSC-Payload mitgeschickt.
@@ -81,30 +76,20 @@ export default async function UserContentPage() {
             >
               Neuer Datenbank-Eintrag
             </Link>
-            {/* Genau wie Datenbank-Einträge an keine Voraussetzung geknüpft
-                (bewusst NICHT hinter characters.length > 0 versteckt — genau
-                damit legt man seinen ERSTEN eigenen Charakter an) — außer
-                Gast-Accounts, siehe requireOwnCharacters/new/actions.ts. */}
-            {userCan(user, "content.create", roleMap) && (
-              <Link
-                href="/user/characters/new"
-                className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
-              >
-                Neuer Charakter
-              </Link>
-            )}
             {/* Ein NPC ist kein eigener Charakter, sondern ein
                 Datenbank-Eintrag der Kategorie „NPC" — der Knopf öffnet
-                deshalb das Datenbank-Formular mit vorgewählter Kategorie.
-                Wer NPCs anlegen darf, spielt sie auch (siehe canPlayNpcs). */}
-            {canCreateNpc && (
-              <Link
-                href="/user/archive/new?category=npc"
-                className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
-              >
-                Neuer NPC
-              </Link>
-            )}
+                deshalb das Datenbank-Formular mit vorgewählter Kategorie und
+                steht wie dieses jedem eingeloggten User offen (siehe
+                /user/archive/new: dort gibt es keine Rollen-Voraussetzung).
+                Der frühere Knopf „Neuer Charakter" steht hier nicht mehr —
+                eigene Charaktere haben mit /user/characters ihren eigenen
+                Bereich, und dort steht er weiterhin. */}
+            <Link
+              href="/user/archive/new?category=npc"
+              className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
+            >
+              Neuer NPC
+            </Link>
             {isGM && (
               <Link
                 href="/user/missions/new"

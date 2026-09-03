@@ -26,6 +26,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "Die Blätter-Knöpfe des Anlege-Assistenten stehen jetzt zusätzlich oben neben der Schrittleiste — auf den langen Schritten musstest du vorher erst ans Seitenende scrollen, um weiterzukommen.",
       "Auf den Charakter-Seiten reicht der Inhalt jetzt rechts genauso weit wie links, statt einen breiten leeren Streifen am rechten Rand zu lassen.",
       '„Meine Charaktere" passt auf Telefon-Bildschirmen: die Aktionszeile lief vorher seitlich aus dem Bild. Der Knopf „Öffnen" ist entfallen — der Stift daneben führte ohnehin auf dieselbe Seite.',
+      'Unter „Meine Inhalte" ist der Knopf „Neuer Charakter" entfallen — eigene Charaktere legst du unter „Meine Charaktere" an. Dafür steht der Knopf „Neuer NPC" dort jetzt jedem Konto offen, nicht mehr nur der Spielleitung; wer einen NPC im Gespräch spricht, ändert sich dadurch nicht.',
     ],
   },
   {
