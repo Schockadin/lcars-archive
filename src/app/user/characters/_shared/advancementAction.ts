@@ -76,7 +76,7 @@ export async function advanceCharacterAction(
   if (!result.ok) return { error: result.error };
 
   revalidateCharacter(result.slug);
-  revalidatePath(`/user/characters/${characterId}/stats`);
+  revalidatePath(`/user/characters/${characterId}`);
 
   return { success: `${result.label} für ${result.cost} AP gesteigert.` };
 }
@@ -113,7 +113,7 @@ export async function lockCreationAction(
   }
 
   revalidateCharacter(result.slug);
-  revalidatePath(`/user/characters/${characterId}/stats`);
+  revalidatePath(`/user/characters/${characterId}`);
 
   const base =
     "Erschaffung abgeschlossen — Attribute und Disziplinen lassen sich jetzt nur noch mit AP steigern.";

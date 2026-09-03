@@ -12,6 +12,18 @@ export interface ChangelogEntry {
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.28",
+    title: "Charaktere anlegen und pflegen in neuem Ablauf",
+    items: [
+      "Einen neuen Charakter legst du jetzt in vier Schritten an: Stammdaten, Werte, Biografie und zum Schluss eine Vorschau des fertigen Charakterbogens. Zwischen den Schritten kannst du jederzeit hin und her springen, Eingaben bleiben dabei erhalten — angelegt wird der Charakter erst mit „Fertig“. Wer den Assistenten vorher verlässt, hinterlässt keinen halben Charakter.",
+      "Die Werte trägst du im Assistenten über normale Eingabefelder ein statt direkt auf dem Bogen: Attribute und Disziplinen als Zahlenkästen mit laufender Budget-Anzeige, Talente aus dem Katalog, alles Weitere als gepflegte Listen. Verstöße gegen die Verteilungsregeln werden dabei sofort markiert.",
+      "Die Vorschau zeigt drei Blätter: den Personalbogen mit Stammdaten und Werten, den Talent-Spickzettel und — neu — die Biografie im selben Papier-Look. Genau diese drei Blätter enthält jetzt auch der PDF-Download.",
+      "Deine Charakterseite ist neu aufgebaut: Stammdaten, Werte und Biografie stehen als Panels untereinander statt auf getrennten Seiten mit Umschalter. Stammdaten und Biografie haben je einen Stift-Knopf zum Bearbeiten an Ort und Stelle; die Werte steigerst du wie gewohnt mit AP. Alte Lesezeichen auf die frühere Werte- oder Bearbeiten-Seite führen automatisch dorthin.",
+      "Ganz oben auf der Charakterseite öffnet ein Knopf den Charakterbogen als Vorschau — mit Knöpfen zum Drucken und zum Speichern als PDF.",
+      "Rang und Spezies standen auf dem Charakterbogen selbst angelegter Charaktere nicht, obwohl sie in der Akte gepflegt waren. Jetzt erscheinen sie dort, wo sie hingehören.",
+    ],
+  },
+  {
     version: "1.27",
     title: "Eigener Charaktere-Bereich mit Charakterwerten",
     items: [

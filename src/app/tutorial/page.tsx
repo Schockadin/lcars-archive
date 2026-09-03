@@ -185,47 +185,57 @@ export default function TutorialPage() {
                 <strong>Deine Charaktere</strong> haben einen eigenen Menüpunkt:
                 Sobald mindestens ein Charakter mit deinem Konto verknüpft ist,
                 erscheint oben <strong>„Charaktere“</strong>. Dort stehen alle
-                deine Charaktere (auch Entwürfe) mit denselben Knöpfen für
-                Sichtbarkeit, Bearbeiten und Löschen, du kannst weitere anlegen —
-                und über <strong>„Werte“</strong> je Charakter den
-                Charakterbogen pflegen — und zwar auf dem{" "}
-                <strong>Original-Bogen selbst</strong>: Die Seite zeigt das
-                gedruckte „Personnel File“, und du schreibst direkt in seine
-                Kästen. Personalakte (Pronomen, Rolle, Zuweisung, Herkunft,
-                Erziehung, Laufbahn, Erfahrung, Merkmale), die sechs Attribute
-                und sechs Disziplinen in ihren Zellen, Schutz,
-                Entschlossenheit und Ansehen; das Portrait steht im Bildrahmen
-                oben links. Auf schmalen Bildschirmen wird das ganze Blatt
-                kleiner, statt umzubrechen. Bild hochladen, Stress-Bonus und
-                Speichern findest du unter dem Bogen — dafür hat das Papier
-                keine Felder. Über der Seite schaltest du zwischen{" "}
-                <strong>Charakterbogen</strong> und den{" "}
-                <strong>Stammdaten</strong> deines Charakters um. Und mit{" "}
-                <strong>„Bogen als PDF“</strong> lädst du den ausgefüllten
-                Bogen zum Ausdrucken herunter — mit dem Talent-Spickzettel auf
-                der zweiten Seite. Der Knopf oben rechts über dem Blatt zeigt
-                den Bogen im <strong>Vollbild</strong>; bearbeiten kannst du
-                ihn dort genauso, Escape schließt die Ansicht wieder. Rang und
-                Spezies stehen auf dem Bogen, kommen aber aus den Stammdaten —
-                im Kasten „Species &amp; Traits“ steht die Spezies vorne,
-                deine weiteren Merkmale trägst du dahinter ein.
+                deine Charaktere (auch Entwürfe) mit Knöpfen für Sichtbarkeit,
+                Öffnen und Löschen — und du kannst weitere anlegen.
               </p>
               <p>
-                Die Listen auf dem Bogen — Werte, Schwerpunkte, Talente,
-                Angriffe, Ausrüstung, Hobbys — stehen als Zeilen in ihrem
-                Kasten. Das kleine <strong>Plus</strong> in der unteren Ecke
-                eines Kastens öffnet ein Fenster zum Hinzufügen, und fährst du
-                über eine Zeile, erscheint rechts ein rotes Minus zum
-                Entfernen. Karriere-Ereignisse haben wie auf dem Papier zwei
-                feste Kästen. Bei Werten und Schwerpunkten steht
-                dabei, wie viele der freien Plätze aus der Ersterschaffung du
-                schon vergeben hast. Spezies-Fähigkeiten und Sonderregeln
-                bleiben Textfelder — dort stehen meist ganze Regelsätze. Leere
-                Felder gelten als „nicht angegeben“;
-                Name, Rang und Spezies gehören zur Akte selbst und werden über
-                „Bearbeiten“ gepflegt. In „Meine Inhalte“ tauchen Charaktere
-                deshalb nicht mehr auf — der Charakter-Filter für
-                Einsatzberichte und Gespräche bleibt dort aber erhalten.
+                <strong>Einen neuen Charakter</strong> legst du in vier
+                Schritten an: zuerst die <strong>Stammdaten</strong> (Name,
+                Rang, Spezies und was sonst zur Akte gehört), dann die{" "}
+                <strong>Werte</strong>, dann die <strong>Biografie</strong> und
+                zuletzt eine <strong>Vorschau</strong> des fertigen
+                Charakterbogens. Über die Schaltflächen ganz oben springst du
+                jederzeit zwischen den Schritten hin und her; was du schon
+                eingetragen hast, bleibt dabei stehen. Gespeichert wird alles
+                erst mit <strong>„Fertig“</strong> — brichst du vorher ab, ist
+                nichts angelegt.
+              </p>
+              <p>
+                Im Schritt <strong>Werte</strong> trägst du die sechs Attribute
+                und sechs Disziplinen in Zahlenkästen ein; daneben läuft mit,
+                was deine Verteilung kostet und wie viel Budget übrig ist.
+                Dazu kommen die Personalakte (Pronomen, Rolle, Zuweisung,
+                Herkunft, Erziehung, Laufbahn, Erfahrung, Merkmale), Schutz,
+                Entschlossenheit, Ansehen und der Stress-Bonus. Die Listen —
+                Werte, Schwerpunkte, Talente, Angriffe, Ausrüstung, Hobbys,
+                Karriere-Ereignisse — füllst du über{" "}
+                <strong>„Hinzufügen“</strong>; jeder Eintrag hat ein rotes
+                Minus zum Entfernen. Talente kommen aus dem Katalog (siehe
+                unten). Bei Werten, Schwerpunkten und Talenten steht dabei, wie
+                viele der freien Plätze aus der Ersterschaffung du schon
+                vergeben hast. Spezies-Fähigkeiten und Sonderregeln bleiben
+                Textfelder — dort stehen meist ganze Regelsätze. Leere Felder
+                gelten als „nicht angegeben“; der maximale Stress ist kein
+                Eingabefeld, sondern ergibt sich aus Fitness und dem Bonus aus
+                Talenten.
+              </p>
+              <p>
+                <strong>Deine Charakterseite</strong> zeigt danach Stammdaten,
+                Werte und Biografie als drei Abschnitte untereinander. Bei
+                Stammdaten und Biografie öffnet der <strong>Stift</strong> in
+                der Titelzeile das Formular an Ort und Stelle; die Werte
+                steigerst du mit AP (siehe unten). Ganz oben öffnet{" "}
+                <strong>„Charakterbogen“</strong> die Vorschau: Blatt 1 der
+                Personalbogen mit Stammdaten und Werten, Blatt 2 der
+                Talent-Spickzettel, Blatt 3 die Biografie im selben Look. Dort
+                stehen auch die Knöpfe zum <strong>Drucken</strong> und zum{" "}
+                <strong>Speichern als PDF</strong> — die PDF-Datei enthält
+                dieselben drei Blätter. Rang und Spezies stehen auf dem Bogen,
+                kommen aber aus den Stammdaten; im Kasten „Species &amp;
+                Traits“ steht die Spezies vorne, deine weiteren Merkmale
+                trägst du dahinter ein. In „Meine Inhalte“ tauchen Charaktere
+                nicht auf — der Charakter-Filter für Einsatzberichte und
+                Gespräche bleibt dort aber erhalten.
               </p>
               <p>
                 <strong>Erfahrungspunkte (AP)</strong>: Für die Ersterschaffung
@@ -464,9 +474,9 @@ export default function TutorialPage() {
                 Auf der Seite deines eigenen Charakters (und für die
                 Spielleitung auf jeder Charakterseite) steht außerdem der Knopf{" "}
                 <strong>„Charakterbogen“</strong>: er zeigt den gepflegten Bogen
-                als reine Ansicht — mit Vollbild und dem gleichen
-                PDF-Download wie unter „Meine Charaktere“. Bearbeitet wird der
-                Bogen weiterhin nur von der Person, der der Charakter gehört.
+                als reine Ansicht — mit Vollbild und demselben PDF-Download wie
+                in deiner eigenen Charakterseite. Gepflegt werden die Werte
+                weiterhin nur von der Person, der der Charakter gehört.
               </p>
               <p>
                 Eingeloggt zeigt dir die <strong>Startseite</strong> dein

@@ -99,14 +99,16 @@ export default function OwnCharacterList({
             }
             extraAction={
               <Link
-                href={`/user/characters/${c.id}/stats`}
+                href={`/user/characters/${c.id}`}
                 className="lcars-pill-btn--outline"
-                title="Charakterwerte ansehen und bearbeiten"
+                title="Charakterbogen, Werte und Stammdaten"
               >
-                Werte
+                Öffnen
               </Link>
             }
-            editHref={`/user/characters/${c.id}/edit`}
+            // Stammdaten, Werte und Biografie liegen als Panels auf EINER
+            // Seite — der frühere eigene /edit-Weg entfällt.
+            editHref={`/user/characters/${c.id}`}
             deleteButton={
               <DeleteOwnContentButton
                 contentType="character"

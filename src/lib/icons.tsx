@@ -237,6 +237,18 @@ export function DownloadIcon() {
     </svg>
   );
 }
+// Drucker — „Drucken" im Vorschau-Fenster des Charakterbogens.
+export function PrinterIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M7 9V3h10v6" />
+      <path d="M5 9h14a2 2 0 0 1 2 2v5h-4" />
+      <path d="M3 16v-5a2 2 0 0 1 2-2" />
+      <path d="M7 14h10v7H7z" />
+    </svg>
+  );
+}
+
 // Blatt mit Zeilen — der Charakterbogen (Werte) auf der Charakterseite.
 export function FileTextIcon() {
   return (

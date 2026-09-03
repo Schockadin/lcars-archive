@@ -287,7 +287,7 @@ select.pf-field {
 
 /* ── Listenfelder auf dem Bogen ─────────────────────────────────────────
    Werte, Schwerpunkte, Talente, … sind keine Textfelder, sondern gepflegte
-   Listen (Katalog bzw. Eingabe-Fenster, siehe EntryListField). Auf dem Bogen
+   Listen (Katalog bzw. Eingabe-Fenster, siehe CharacterValuesEditor). Auf dem Bogen
    erscheinen sie trotzdem als beschriebene Zeilen im jeweiligen Kasten —
    das Bearbeiten läuft über das Plus unten rechts und das Minus je Zeile. */
 .pf-list {
@@ -421,5 +421,151 @@ select.pf-field {
 @media (max-width: 850px) {
   .pf-page {
     padding: 0;
+  }
+}
+
+/* ── Dreiblättrige Vorschau ────────────────────────────────────────────
+   Der Bogen (Blatt 1) plus zwei weitere Blätter im selben Papier-Look:
+   Talent-Spickzettel und Biografie. Genutzt vom Anlege-Assistenten (Schritt
+   „Vorschau") und vom Vorschau-Fenster der Charakterseite; dasselbe, was der
+   PDF-Export erzeugt. */
+.pf-preview {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Ein Blatt mit fließendem Inhalt. Wie .pf-sheet ein Papier von 816×1056,
+   aber als MINDEST-Höhe: eine lange Biografie schiebt das Blatt auseinander,
+   statt ihren Text abzuschneiden. Die echte Seitenaufteilung macht der
+   PDF-Export. */
+.pf-doc {
+  container-type: inline-size;
+  --pf-unit: calc(100cqw / 816);
+  position: relative;
+  width: 100%;
+  min-height: calc(var(--pf-unit) * 1056);
+  padding: calc(var(--pf-unit) * 56) calc(var(--pf-unit) * 64);
+  background: #fff;
+  color: var(--pf-ink);
+  font-family: var(--pf-hand);
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.22);
+  box-sizing: border-box;
+}
+
+.pf-doc-title {
+  margin: 0 0 calc(var(--pf-unit) * 8);
+  font-size: calc(var(--pf-unit) * 26);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pf-accent);
+}
+
+.pf-doc-subtitle {
+  margin: 0 0 calc(var(--pf-unit) * 26);
+  padding-bottom: calc(var(--pf-unit) * 10);
+  border-bottom: calc(var(--pf-unit) * 2) solid var(--pf-accent);
+  font-size: calc(var(--pf-unit) * 14);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.pf-doc-body {
+  font-size: calc(var(--pf-unit) * 15);
+  line-height: 1.55;
+}
+
+.pf-doc-body :is(h1, h2, h3, h4) {
+  margin: calc(var(--pf-unit) * 20) 0 calc(var(--pf-unit) * 8);
+  font-size: calc(var(--pf-unit) * 18);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--pf-accent);
+}
+
+.pf-doc-body p,
+.pf-doc-body ul,
+.pf-doc-body ol {
+  margin: 0 0 calc(var(--pf-unit) * 12);
+}
+
+.pf-doc-body :is(ul, ol) {
+  padding-left: calc(var(--pf-unit) * 22);
+}
+
+.pf-doc-body a {
+  color: var(--pf-accent);
+  text-decoration: underline;
+}
+
+.pf-doc-body img {
+  max-width: 100%;
+}
+
+.pf-doc-empty {
+  font-style: italic;
+  opacity: 0.7;
+}
+
+/* Ein Eintrag des Spickzettels auf dem Papier-Blatt. */
+.pf-doc-entry {
+  margin-bottom: calc(var(--pf-unit) * 16);
+}
+
+.pf-doc-term {
+  font-size: calc(var(--pf-unit) * 16);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.pf-doc-meta {
+  font-size: calc(var(--pf-unit) * 12);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.7;
+}
+
+.pf-doc-text {
+  margin: calc(var(--pf-unit) * 4) 0 0;
+  font-size: calc(var(--pf-unit) * 14);
+  line-height: 1.5;
+}
+
+/* ── Drucken ───────────────────────────────────────────────────────────
+   „Drucken" im Vorschau-Fenster druckt die drei Blätter, nicht die
+   Anwendung drumherum: alles andere wird ausgeblendet, jedes Blatt beginnt
+   auf einer neuen Seite. */
+@media print {
+  body:has(.pf-preview-overlay) > *:not(:has(.pf-preview-overlay)) {
+    display: none !important;
+  }
+
+  .pf-preview-overlay {
+    position: static !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  .pf-preview-overlay .pf-preview-bar {
+    display: none !important;
+  }
+
+  .pf-preview {
+    gap: 0;
+  }
+
+  .pf-preview > * {
+    break-after: page;
+    box-shadow: none !important;
+  }
+
+  .pf-preview > *:last-child {
+    break-after: auto;
+  }
+
+  .pf-page {
+    padding: 0 !important;
+    background: #fff !important;
   }
 }

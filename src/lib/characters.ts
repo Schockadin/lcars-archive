@@ -533,6 +533,11 @@ export async function createCharacter(input: {
   // vom Opt-in "Automatisch verlinken", siehe createArchiveEntry in
   // src/lib/archive.ts für dieselbe Begründung.
   bioHtml?: string;
+  // Charakterwerte direkt beim Anlegen (Anlege-Assistent, Schritt „Werte") —
+  // sie landen im selben INSERT wie die Akte. Getrennt zu speichern hieße,
+  // dass ein Fehler dazwischen einen Charakter ohne seine gerade erst
+  // eingetragenen Werte hinterlässt.
+  stats?: CharacterStats;
 }): Promise<{ id: number; slug: string }> {
   const slug = await generateUniqueCharacterSlug(input.name);
   const trimmedBody = input.bodyMarkdown.trim();
@@ -552,6 +557,7 @@ export async function createCharacter(input: {
     tags: input.tags,
     aliases: input.aliases,
     generation: input.generation,
+    ...(input.stats ? { stats: input.stats } : {}),
   };
 
   const [row] = await sql<{ id: number; slug: string }[]>`
@@ -587,6 +593,10 @@ export interface OwnCharacterForEdit {
   division: string | null;
   tags: string[];
   sourceMarkdown: string;
+  // Die bereits gerenderte Biografie (bio) — die eigene Charakterseite zeigt
+  // sie im Lesemodus ihres Biografie-Panels an, ohne dafür ein zweites Mal
+  // durch die Markdown-Pipeline zu gehen.
+  bioHtml: string | null;
   isDraft: boolean;
 }
 
@@ -610,10 +620,12 @@ export async function getOwnCharacterForEdit(
       portrait: string | null;
       metadata: CharacterMetadata | string;
       sourceMarkdown: string;
+      bioHtml: string | null;
       isDraft: boolean;
     }[]
   >`
     SELECT id, slug, name, status, portrait, metadata, is_draft AS "isDraft",
+           bio AS "bioHtml",
            COALESCE(source_md, '') AS "sourceMarkdown"
     FROM characters
     WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
@@ -632,6 +644,7 @@ export async function getOwnCharacterForEdit(
     status: row.status,
     portrait: row.portrait,
     sourceMarkdown: row.sourceMarkdown,
+    bioHtml: row.bioHtml,
     isDraft: row.isDraft,
     rank: metadata.rank,
     species: metadata.species,
@@ -765,7 +778,25 @@ export async function getOwnCharacterStats(
       stats: unknown;
     }[]
   >`
-    SELECT id, slug, name, portrait, species, rank, metadata -> 'stats' AS stats
+    SELECT id, slug, name, portrait,
+           -- Rang und Spezies pflegt die App in metadata (siehe
+           -- createCharacter/updateOwnCharacterContent); die gleichnamigen
+           -- Spalten stammen aus dem Vault-Ingest und bleiben bei einem in der
+           -- App angelegten Charakter leer. Erst metadata, dann die Spalte:
+           -- sonst stünde auf dem Bogen nichts, obwohl beides gepflegt ist.
+           COALESCE(NULLIF(metadata ->> 'rank', ''), rank) AS rank,
+           COALESCE(
+             NULLIF(
+               (SELECT string_agg(value, ', ')
+                FROM jsonb_array_elements_text(
+                  CASE WHEN jsonb_typeof(metadata -> 'species') = 'array'
+                       THEN metadata -> 'species' ELSE '[]'::jsonb END
+                ) AS value),
+               ''
+             ),
+             species
+           ) AS species,
+           metadata -> 'stats' AS stats
     FROM characters
     WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
     LIMIT 1
@@ -807,7 +838,25 @@ export async function getCharacterStatsForGm(
       stats: unknown;
     }[]
   >`
-    SELECT id, slug, name, portrait, species, rank, metadata -> 'stats' AS stats
+    SELECT id, slug, name, portrait,
+           -- Rang und Spezies pflegt die App in metadata (siehe
+           -- createCharacter/updateOwnCharacterContent); die gleichnamigen
+           -- Spalten stammen aus dem Vault-Ingest und bleiben bei einem in der
+           -- App angelegten Charakter leer. Erst metadata, dann die Spalte:
+           -- sonst stünde auf dem Bogen nichts, obwohl beides gepflegt ist.
+           COALESCE(NULLIF(metadata ->> 'rank', ''), rank) AS rank,
+           COALESCE(
+             NULLIF(
+               (SELECT string_agg(value, ', ')
+                FROM jsonb_array_elements_text(
+                  CASE WHEN jsonb_typeof(metadata -> 'species') = 'array'
+                       THEN metadata -> 'species' ELSE '[]'::jsonb END
+                ) AS value),
+               ''
+             ),
+             species
+           ) AS species,
+           metadata -> 'stats' AS stats
     FROM characters
     WHERE id = ${characterId} AND deleted_at IS NULL
     LIMIT 1
@@ -844,6 +893,21 @@ export async function updateOwnCharacterStats(
     RETURNING slug, name
   `;
   return rows[0] ?? null;
+}
+
+// Der Markdown-Quelltext der Biografie — für das dritte Blatt des
+// PDF-Exports. Bewusst OHNE Owner-Scoping wie getCharacterStatsForGm: die
+// Route prüft die Berechtigung bereits (Owner oder gm.access), und die
+// Spielleitung zieht den Bogen jedes Charakters.
+export async function getCharacterBioMarkdown(
+  characterId: number,
+): Promise<string | null> {
+  const rows = await sql<{ sourceMd: string | null }[]>`
+    SELECT source_md AS "sourceMd" FROM characters
+    WHERE id = ${characterId} AND deleted_at IS NULL
+    LIMIT 1
+  `;
+  return rows[0]?.sourceMd ?? null;
 }
 
 // Setzt nur das Portrait eines eigenen Charakters — für den Foto-Kasten des

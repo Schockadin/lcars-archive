@@ -11,8 +11,8 @@ import { useReturnFocus } from "@/hooks/useReturnFocus";
 // TalentPicker/RowDetailModal (Portal, Escape schließt, Klick daneben
 // schließt, Scroll-Sperre).
 //
-// Die Liste selbst rendert der Bogen (CharacterStatsForm): dort stehen die
-// Einträge als beschriebene Zeilen im jeweiligen Kasten.
+// Die Liste selbst rendert der Werte-Editor (CharacterValuesEditor): dort
+// stehen die Einträge als Zeilen unter ihrer Überschrift.
 export default function EntryAddModal({
   title,
   placeholder,
@@ -67,8 +67,8 @@ export default function EntryAddModal({
             type="text"
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            // Enter im Fenster übernimmt — das umgebende Formular des
-            // Charakterbogens darf dabei nicht abgeschickt werden.
+            // Enter im Fenster übernimmt — das umgebende Formular darf dabei
+            // nicht abgeschickt werden.
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();

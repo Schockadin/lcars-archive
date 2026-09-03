@@ -1,5 +1,5 @@
 // Lädt den Charakterbogen eines eigenen Charakters als PDF herunter (Knopf
-// „Als PDF" auf /user/characters/[id]/stats) — gleiches Muster wie der
+// „Speichern" in der Bogen-Vorschau) — gleiches Muster wie der
 // Content-Export im Nachbarordner: eine Route statt einer Server Action, damit
 // der Browser den Download über Content-Disposition direkt anstößt.
 //
@@ -11,6 +11,7 @@
 // /characters/[slug]/sheet.
 import { verifySession } from "@/lib/dal";
 import {
+  getCharacterBioMarkdown,
   getCharacterStatsForGm,
   getOwnCharacterStats,
 } from "@/lib/characters";
@@ -40,7 +41,13 @@ export async function GET(request: Request) {
     });
   }
 
-  const talents = await listTalents();
+  // Die Biografie steht nicht an den Werten, sondern als Markdown an der
+  // Akte — für das dritte Blatt eigens geladen (ungescopt, die Berechtigung
+  // ist oben bereits geklärt).
+  const [talents, bio] = await Promise.all([
+    listTalents(),
+    getCharacterBioMarkdown(characterId),
+  ]);
   const pdfBuffer = await renderCharacterSheetPdf({
     name: character.name,
     rank: character.rank,
@@ -48,6 +55,7 @@ export async function GET(request: Request) {
     portrait: character.portrait,
     stats: character.stats,
     talents,
+    bioMarkdown: bio,
   });
 
   return new Response(new Uint8Array(pdfBuffer), {

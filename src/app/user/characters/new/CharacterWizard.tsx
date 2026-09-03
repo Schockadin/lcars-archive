@@ -1,0 +1,318 @@
+"use client";
+import { useActionState, useRef, useState } from "react";
+import HeadFieldRenderer from "@/components/ContentEditor/HeadFieldRenderer";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
+import AutoLinkCheckbox from "@/app/_shared/AutoLinkCheckbox";
+import { SubmitButton, FormError } from "@/app/_shared/FormPrimitives";
+import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
+import { renderMarkdownPreview } from "@/app/actions/markdownPreview";
+import CharacterSheetPreview from "@/components/character/CharacterSheetPreview";
+import CharacterValuesEditor from "../_shared/CharacterValuesEditor";
+import {
+  createCharacterWizardAction,
+  type CharacterWizardState,
+} from "../_shared/wizardAction";
+import {
+  characterHeadFields,
+  characterMetadataFields,
+} from "../_shared/characterHeadFields";
+import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
+import type { CharacterStats } from "@/types/characterStats";
+import type { AdvancementRules } from "@/lib/advancement";
+import type { Talent } from "@/lib/talentCatalog";
+
+const initialState: CharacterWizardState = {};
+
+const STEPS = [
+  { key: "head", label: "Stammdaten" },
+  { key: "stats", label: "Werte" },
+  { key: "bio", label: "Biografie" },
+  { key: "preview", label: "Vorschau" },
+] as const;
+
+// Pflichtfelder werden hier NICHT über das required-Attribut erzwungen: die
+// Schritte bleiben alle im DOM (nur ausgeblendet), und ein Browser kann ein
+// verstecktes Pflichtfeld nicht anspringen — er bricht das Abschicken dann
+// wortlos ab. Geprüft wird stattdessen beim Weiterblättern (unten) und
+// verbindlich in der Server-Action.
+const headFields = characterHeadFields.map((field) => ({
+  ...field,
+  required: false,
+}));
+
+// Was die Vorschau über die Akte wissen muss. Kommt nicht aus einem State,
+// sondern beim Wechsel auf den letzten Schritt frisch aus dem Formular — dort
+// steht ohnehin genau das, was gleich abgeschickt wird.
+interface HeadSnapshot {
+  name: string;
+  rank: string | null;
+  species: string | null;
+  portrait: string | null;
+}
+
+// Anlege-Assistent für einen neuen Charakter: vier Schritte, jederzeit vor und
+// zurück. Alle Schritte liegen in EINEM Formular und bleiben im DOM —
+// Eingaben gehen beim Blättern deshalb nicht verloren, und am Ende schickt ein
+// einziger Submit alles zusammen ab (siehe createCharacterWizardAction).
+// Angelegt wird also erst mit „Fertig"; wer den Assistenten verlässt, lässt
+// keinen halben Charakter zurück.
+export default function CharacterWizard({
+  userId,
+  isAdminOrGM,
+  rules,
+  talents,
+}: {
+  userId: number;
+  isAdminOrGM: boolean;
+  // Regelwerk und Katalog für den Werte-Schritt (Budgets, Freikontingente,
+  // Talent-Auswahl).
+  rules: AdvancementRules;
+  talents: Talent[];
+}) {
+  const [state, formAction, pending] = useActionState(
+    createCharacterWizardAction,
+    initialState,
+  );
+  const formRef = useRef<HTMLFormElement>(null);
+
+  const [step, setStep] = useState(0);
+  const [stats, setStats] = useState<CharacterStats>(EMPTY_CHARACTER_STATS);
+  const [isDraft, setIsDraft] = useState(false);
+  const [stepError, setStepError] = useState<string | undefined>();
+
+  // Nur für den Vorschau-Schritt, beim Betreten gefüllt.
+  const [head, setHead] = useState<HeadSnapshot | null>(null);
+  const [bioHtml, setBioHtml] = useState<string | null>(null);
+  // Die Spezies steht im ersten Schritt, gebraucht wird sie im zweiten (die
+  // Talent-Auswahl prüft Voraussetzungen wie „Vulcan" dagegen). Beim
+  // Blättern übernommen statt beim Rendern aus dem Formular gelesen — ein
+  // ref darf im Render nicht angefasst werden.
+  const [species, setSpecies] = useState<string | null>(null);
+
+  function readHeadSnapshot(): HeadSnapshot | null {
+    const form = formRef.current;
+    if (!form) return null;
+    const data = new FormData(form);
+    const text = (key: string) => String(data.get(key) ?? "").trim() || null;
+
+    // Portrait: eine hochgeladene Datei wird für die Vorschau lokal
+    // angezeigt (ins Netz geht sie erst beim Abschicken), sonst gilt die
+    // eingetragene URL.
+    const file = data.get("portraitFile");
+    const portrait =
+      file instanceof File && file.size > 0
+        ? URL.createObjectURL(file)
+        : text("portrait");
+
+    return {
+      name: String(data.get("name") ?? "").trim(),
+      rank: text("rank"),
+      species: text("species"),
+      portrait,
+    };
+  }
+
+  async function goToStep(next: number) {
+    setStepError(undefined);
+
+    const currentForm = formRef.current;
+    if (currentForm) {
+      setSpecies(
+        String(new FormData(currentForm).get("species") ?? "").trim() || null,
+      );
+    }
+
+    // Vorwärts nur mit Namen: er wird für Slug und Anzeige gebraucht und ist
+    // das einzige echte Pflichtfeld der Akte.
+    if (next > 0) {
+      const form = formRef.current;
+      const name = form
+        ? String(new FormData(form).get("name") ?? "").trim()
+        : "";
+      if (!name) {
+        setStep(0);
+        setStepError("Bitte zuerst einen Namen angeben.");
+        return;
+      }
+    }
+
+    if (next === STEPS.length - 1) {
+      setHead(readHeadSnapshot());
+      const form = formRef.current;
+      const markdown = form
+        ? String(new FormData(form).get("bodyMarkdown") ?? "").trim()
+        : "";
+      // Markdown wird serverseitig gerendert (dieselbe Pipeline wie die
+      // Vorschau im Editor) — die remark/rehype-Kette gehört nicht ins
+      // Browser-Bundle.
+      setBioHtml(markdown ? await renderMarkdownPreview(markdown) : null);
+    }
+
+    setStep(next);
+  }
+
+  const isLast = step === STEPS.length - 1;
+
+  return (
+    <form
+      ref={formRef}
+      action={formAction}
+      className="flex flex-col gap-[16px]"
+      // Enter in einem Textfeld soll blättern, nicht den halb ausgefüllten
+      // Assistenten abschicken.
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !isLast) {
+          const target = e.target as HTMLElement;
+          if (target.tagName === "INPUT") e.preventDefault();
+        }
+      }}
+    >
+      <input type="hidden" name="userId" value={userId} />
+      {/* Die Werte reisen als ein JSON-Feld; der Editor führt sie ohnehin als
+          zusammenhängenden Zustand (siehe characterStatsPayload.ts). */}
+      <input type="hidden" name="statsJson" value={JSON.stringify(stats)} />
+
+      {/* ── Schrittleiste ─────────────────────────────────────────── */}
+      <ol className="flex flex-wrap gap-[8px]" aria-label="Schritte">
+        {STEPS.map((entry, index) => (
+          <li key={entry.key}>
+            <button
+              type="button"
+              onClick={() => goToStep(index)}
+              aria-current={index === step ? "step" : undefined}
+              className={
+                index === step
+                  ? "lcars-pill-btn"
+                  : "lcars-pill-btn--outline opacity-80"
+              }
+            >
+              {index + 1}. {entry.label}
+            </button>
+          </li>
+        ))}
+      </ol>
+
+      {/* ── 1. Stammdaten ─────────────────────────────────────────── */}
+      <fieldset hidden={step !== 0} className="border-0 p-0 m-0">
+        <legend className="sr-only">Stammdaten</legend>
+        <div className="content-editor-head-grid">
+          {headFields.map((field) => (
+            <HeadFieldRenderer
+              key={field.name}
+              field={field}
+              idPrefix="wizard"
+              defaultValue={field.name === "status" ? "active" : undefined}
+            />
+          ))}
+          {characterMetadataFields.map((field) => (
+            <HeadFieldRenderer
+              key={field.name}
+              field={field}
+              idPrefix="wizard"
+              defaultValue={undefined}
+            />
+          ))}
+        </div>
+      </fieldset>
+
+      {/* ── 2. Werte ──────────────────────────────────────────────── */}
+      <fieldset hidden={step !== 1} className="border-0 p-0 m-0">
+        <legend className="sr-only">Charakterwerte</legend>
+        <CharacterValuesEditor
+          stats={stats}
+          onChange={setStats}
+          rules={rules}
+          talents={talents}
+          species={species}
+          idPrefix="wizard-stats"
+        />
+      </fieldset>
+
+      {/* ── 3. Biografie ──────────────────────────────────────────── */}
+      <fieldset hidden={step !== 2} className="border-0 p-0 m-0">
+        <legend className="sr-only">Biografie</legend>
+        <div className="flex flex-col gap-[8px]">
+          <label htmlFor="wizard-body" className="lcars-eyebrow">
+            Biografie (optional)
+          </label>
+          <MarkdownEditor id="wizard-body" isAdminOrGM={isAdminOrGM} large />
+          <p className="lcars-text text-[14px]">
+            <MarkdownFormatHint />
+          </p>
+          <AutoLinkCheckbox idPrefix="wizard" defaultChecked />
+        </div>
+      </fieldset>
+
+      {/* ── 4. Vorschau ───────────────────────────────────────────── */}
+      <fieldset hidden={!isLast} className="border-0 p-0 m-0">
+        <legend className="sr-only">Vorschau</legend>
+        <p className="lcars-text">
+          So sieht der Charakterbogen aus: Blatt 1 die Personalakte mit
+          Stammdaten und Werten, Blatt 2 der Talent-Spickzettel, Blatt 3 die
+          Biografie. Mit <strong>Fertig</strong> wird der Charakter angelegt —
+          vorher ist nichts gespeichert.
+        </p>
+        {head && (
+          <CharacterSheetPreview
+            input={{
+              characterName: head.name,
+              rank: head.rank,
+              species: head.species,
+              portrait: head.portrait,
+              stats,
+              bioHtml,
+              talents,
+            }}
+          />
+        )}
+      </fieldset>
+
+      {/* ── Entwurf, Navigation, Abschluss ────────────────────────── */}
+      <div className="flex items-center gap-[8px]">
+        <input
+          id="wizard-is-draft"
+          name="isDraft"
+          type="checkbox"
+          checked={isDraft}
+          onChange={(e) => setIsDraft(e.target.checked)}
+          className="h-[16px] w-[16px]"
+        />
+        <label htmlFor="wizard-is-draft" className="lcars-text text-[14px]">
+          Als Entwurf anlegen (sichtbar nur für dich, bis du ihn
+          veröffentlichst)
+        </label>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-[8px]">
+        <button
+          type="button"
+          onClick={() => goToStep(step - 1)}
+          disabled={step === 0}
+          className="lcars-pill-btn--outline disabled:opacity-50"
+        >
+          Zurück
+        </button>
+        {!isLast && (
+          <button
+            type="button"
+            onClick={() => goToStep(step + 1)}
+            className="lcars-pill-btn"
+          >
+            Weiter
+          </button>
+        )}
+        {isLast && (
+          <SubmitButton
+            pending={pending}
+            pendingLabel="Wird angelegt…"
+            className="lcars-pill-btn disabled:opacity-50"
+          >
+            Fertig
+          </SubmitButton>
+        )}
+      </div>
+
+      <FormError message={stepError ?? state?.error} />
+    </form>
+  );
+}

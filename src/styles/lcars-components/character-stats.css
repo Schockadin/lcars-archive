@@ -106,6 +106,142 @@
   list-style: square;
 }
 
+/* ── Werte-Editor (UI-Elemente, kein Bogen-Faksimile) ─────────────────
+   Genutzt vom Anlege-Assistenten (Schritt „Werte") und vom Werte-Panel der
+   Charakterseite, solange die Erschaffung noch offen ist. Der Bogen selbst
+   ist seither reine Vorschau (PersonnelFileView). */
+.stat-editor-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 0 14px;
+}
+
+/* Freitext-/Auswahlfelder nebeneinander, ab schmalen Breiten untereinander. */
+.stat-editor-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.stat-editor-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Die Zahlenkästen der Attribute und Disziplinen: Beschriftung über einem
+   kurzen, zentrierten Eingabefeld — dieselbe Anmutung wie die Wertekästen
+   des Bogens, nur als normales Formularfeld. */
+.stat-editor-values {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px;
+}
+
+.stat-editor-value {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 8px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 8px;
+  background: var(--lcars-bg);
+  text-align: center;
+}
+
+.stat-editor-value-input {
+  width: 72px;
+  padding: 6px 4px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 4px;
+  background: var(--lcars-surface);
+  color: var(--lcars-ink-data);
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+}
+
+.stat-editor-value-input:focus-visible {
+  outline: 2px solid var(--lcars-tertiary);
+  outline-offset: 1px;
+}
+
+/* Wert verletzt eine Verteilungs- oder Bereichsregel — verbindlich geprüft
+   wird trotzdem auf dem Server. */
+.stat-editor-value-input--bad {
+  border-color: var(--lcars-quinary);
+  color: var(--lcars-quinary);
+}
+
+/* Eine gepflegte Liste (Werte, Schwerpunkte, Talente, …): Kopfzeile mit
+   Zählung und Plus, darunter die Einträge als Zeilen. */
+.stat-editor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 8px;
+  background: var(--lcars-bg);
+}
+
+.stat-editor-list-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stat-editor-list-count {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  color: var(--lcars-ink-dim);
+}
+
+.stat-editor-list-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 0;
+  border-bottom: 1px dashed var(--lcars-border);
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+  color: var(--lcars-ink);
+}
+
+.stat-editor-list-line:last-child {
+  border-bottom: none;
+}
+
+.stat-editor-list-empty {
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 12px;
+  color: var(--lcars-ink-dim);
+}
+
+/* Abgeleiteter Wert (max. Stress) — steht neben seinen Eingabefeldern und ist
+   selbst keines. */
+.stat-editor-derived {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-family: var(--font-share-tech-mono), monospace;
+  font-size: 13px;
+  color: var(--lcars-ink-dim);
+}
+
+.stat-editor-derived strong {
+  font-family: var(--font-antonio), "Antonio", sans-serif;
+  font-size: 22px;
+  color: var(--lcars-ink-data);
+}
+
 /* ── AP-Bereich (Konto, Erschaffungsbudget, Steigern, Journal) ─────── */
 .stat-ap-account,
 .stat-ap-block {
