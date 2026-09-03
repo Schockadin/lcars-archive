@@ -34,7 +34,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       'Das AP-Regelwerk kennt eine neue Regel „AP pro beendeter Mission": Ihr Wert belegt den Betrag beim Missionsabschluss unter „Kampagne" vor (Standard 5).',
       'Das Buchungsjournal unter „Erfahrungspunkte" ist jetzt eingeklappt und lässt sich bei Bedarf aufklappen — Kontostände und Regelwerk stehen dadurch wieder ohne langes Scrollen da.',
       "NPCs sprechen in Gesprächen jetzt einheitlich in hellem Grau statt in bunten Charakterfarben — so ist auf einen Blick klar, wer von einer Spielerin/einem Spieler geführt wird.",
-      "Im Profil steht jetzt ganz oben, was in der aktuellen Version neu ist — mit Link auf die vollständige Änderungsliste.",
+      "Was in der aktuellen Version neu ist, steht jetzt direkt auf dem Dashboard über den Neuigkeiten (mit Link auf die vollständige Änderungsliste) statt im Profil.",
     ],
   },
   {

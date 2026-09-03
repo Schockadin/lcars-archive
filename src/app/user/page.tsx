@@ -31,7 +31,6 @@ import { normalizeUiMode } from "@/lib/uiMode";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 import DataRow from "@/components/lcars/DataRow";
-import { latestChangelogEntry } from "@/lib/changelog";
 
 export const metadata: Metadata = {
   title: "Profil",
@@ -83,9 +82,6 @@ export default async function UserPage() {
   // macht jede Farbe global exklusiv, auch zwischen den eigenen Charakteren).
   // Das Ausschließen passiert hier in JS über die EINE oben geladene Liste
   // aller belegten Farben, statt sie pro Charakter erneut abzufragen.
-  // Jüngster Changelog-Eintrag für die Sektion „Neu in Version …".
-  const latestChanges = latestChangelogEntry();
-
   const characterColors = characters.map((c) => {
     const takenColors = takenColorsForCharacter(c.id, usedColors);
     const ownColor = resolveCharacterDefaultColor(
@@ -119,32 +115,6 @@ export default async function UserPage() {
           )}
 
           <div className="flex flex-col gap-[16px]">
-            {/* Was zuletzt dazugekommen ist — dieselbe Liste wie auf
-                /changelog, aber nur die jüngste Version, damit der Blick ins
-                Profil reicht, um Neuerungen mitzubekommen. */}
-            {latestChanges && (
-              <DataRow
-                label={`Neu in Version ${latestChanges.version}`}
-                value={latestChanges.items.length}
-                accentColor="var(--lcars-primary)"
-                color="var(--lcars-senary)"
-              >
-                <section id="changelog" className="flex flex-col gap-[12px]">
-                  <h2>{latestChanges.title}</h2>
-                  <ul className="flex list-disc flex-col gap-[4px] pl-[20px]">
-                    {latestChanges.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                  <p>
-                    <Link href="/changelog" className="underline">
-                      Alle Änderungen ansehen
-                    </Link>
-                  </p>
-                </section>
-              </DataRow>
-            )}
-
             {characterColors.length > 0 && (
               <DataRow
                 label="Charakterfarben"

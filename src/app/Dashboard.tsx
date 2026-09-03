@@ -9,6 +9,7 @@ import { getDialoguesForUser } from "@/lib/dialogues";
 import FollowedContentSection from "./FollowedContentSection";
 import OpenDialoguesSection from "./OpenDialoguesSection";
 import NewsSection from "./NewsSection";
+import ChangelogSection from "./ChangelogSection";
 import type { User } from "@/types/db";
 
 const ROLE_LABELS: Record<User["role"], string> = {
@@ -74,6 +75,8 @@ export default async function Dashboard({ user }: { user: User }) {
           )}
 
           <OpenDialoguesSection items={openDialogues} />
+
+          <ChangelogSection />
 
           <NewsSection items={newsItems} />
 

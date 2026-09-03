@@ -148,7 +148,7 @@ function TalentRow({ talent }: { talent: Talent }) {
         <span className="flex-1 min-w-[180px]">{talent.name}</span>
         <span className="lcars-eyebrow">{talentCategoryLabel(talent.category)}</span>
         {talent.requirement && (
-          <span className="text-lcars-ink-dim text-[13px]">
+          <span className="text-lcars-ink text-[13px]">
             {talent.requirement}
           </span>
         )}
@@ -156,7 +156,7 @@ function TalentRow({ talent }: { talent: Talent }) {
       </button>
 
       {!open && (
-        <p className="text-lcars-ink-dim text-[13px] line-clamp-2">
+        <p className="text-lcars-ink text-[13px] line-clamp-2">
           {talent.description}
         </p>
       )}
