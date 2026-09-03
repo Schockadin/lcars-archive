@@ -1,11 +1,17 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import {
   LcarsDataRow,
   LcarsSortSwitch,
   type SortDir,
 } from "@/components/lcars";
-import type { ChangelogEntry } from "@/lib/changelog";
+import {
+  changelogItemText,
+  changelogItemTutorial,
+  type ChangelogEntry,
+} from "@/lib/changelog";
+import { tutorialSectionHref, tutorialSectionLabel } from "@/lib/tutorialSections";
 
 // Zyklische Farbpaare pro Akkordeon-Zeile (Label-Pill-Hintergrund +
 // Trenner-Akzent) — zwei unabhängige Paletten statt derselben Farbe für
@@ -92,9 +98,25 @@ export default function ChangelogList({
             <div className="lcars-text flex flex-col gap-[8px]">
               <h3>{entry.title}</h3>
               <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
-                {entry.items.map((item, itemIndex) => (
-                  <li key={itemIndex}>{item}</li>
-                ))}
+                {entry.items.map((item, itemIndex) => {
+                  const tutorial = changelogItemTutorial(item);
+                  return (
+                    <li key={itemIndex}>
+                      {changelogItemText(item)}
+                      {tutorial && (
+                        <>
+                          {" "}
+                          <Link
+                            href={tutorialSectionHref(tutorial)}
+                            className="lcars-changelog-tutorial-link"
+                          >
+                            Im Tutorial: {tutorialSectionLabel(tutorial)}
+                          </Link>
+                        </>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </LcarsDataRow>

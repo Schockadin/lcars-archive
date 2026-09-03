@@ -37,6 +37,29 @@ test("/tutorial shows the dedicated Gespräche section", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("/tutorial#<abschnitt> klappt den Ziel-Abschnitt automatisch auf", async ({
+  page,
+}) => {
+  // Changelog-Deep-Links zeigen auf /tutorial#<id>; DataRowAccordion muss den
+  // passenden Abschnitt beim Laden aufklappen, sonst landet man nur auf der
+  // eingeklappten Kopfzeile. Der Inhalt des „Eigene Inhalte"-Abschnitts ist
+  // erst nach dem Aufklappen sichtbar.
+  await page.goto("/tutorial#eigene-inhalte");
+  const trigger = page
+    .locator("#eigene-inhalte .lcars-accordion-trigger")
+    .first();
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+});
+
+test("der Changelog verlinkt in die Anleitung", async ({ page }) => {
+  await page.goto("/changelog");
+  const link = page
+    .getByRole("link", { name: /Im Tutorial:/ })
+    .first();
+  await expect(link).toBeVisible();
+  await expect(link).toHaveAttribute("href", /^\/tutorial#/);
+});
+
 test("/activate without a token shows the invalid-link hint", async ({
   page,
 }) => {

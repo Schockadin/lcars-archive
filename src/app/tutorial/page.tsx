@@ -35,6 +35,7 @@ export default function TutorialPage() {
         <div className="flex flex-col gap-[10px] mt-[16px]">
           <LcarsDataRow
             value={1}
+            htmlId="fuer-besucher"
             label="Für Besucher"
             color="var(--lcars-tertiary)"
           >
@@ -73,6 +74,7 @@ export default function TutorialPage() {
 
           <LcarsDataRow
             value={2}
+            htmlId="konto-rollen"
             label="Konto & Rollen"
             color="var(--lcars-secondary)"
           >
@@ -139,6 +141,7 @@ export default function TutorialPage() {
 
           <LcarsDataRow
             value={3}
+            htmlId="eigene-inhalte"
             label="Eigene Inhalte"
             color="var(--lcars-primary)"
           >
@@ -371,6 +374,7 @@ export default function TutorialPage() {
 
           <LcarsDataRow
             value={4}
+            htmlId="gespraeche"
             label="Gespräche"
             color="var(--lcars-primary)"
           >
@@ -454,6 +458,7 @@ export default function TutorialPage() {
 
           <LcarsDataRow
             value={5}
+            htmlId="merken-abonnieren"
             label="Merken & Abonnieren"
             color="var(--lcars-tertiary)"
           >
@@ -517,6 +522,7 @@ export default function TutorialPage() {
 
           <LcarsDataRow
             value={6}
+            htmlId="datenbank-assistent"
             label="Datenbank-Assistent"
             color="var(--lcars-tertiary)"
           >
@@ -552,7 +558,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={7} label="Markdown" color="var(--lcars-primary)">
+          <LcarsDataRow value={7} htmlId="markdown" label="Markdown" color="var(--lcars-primary)">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
@@ -646,6 +652,7 @@ export default function TutorialPage() {
 
           <LcarsDataRow
             value={8}
+            htmlId="verlinkung"
             label="Verlinkung"
             color="var(--lcars-tertiary)"
           >
@@ -688,6 +695,7 @@ export default function TutorialPage() {
 
           <LcarsDataRow
             value={9}
+            htmlId="spielleitung-admins"
             label="Spielleitung & Admins"
             color="var(--lcars-secondary)"
           >
@@ -839,6 +847,7 @@ export default function TutorialPage() {
 
           <LcarsDataRow
             value={10}
+            htmlId="app-installieren"
             label="App installieren"
             color="var(--lcars-primary)"
           >
@@ -871,6 +880,7 @@ export default function TutorialPage() {
 
           <LcarsDataRow
             value={11}
+            htmlId="farbschema"
             label="Farbschema"
             color="var(--lcars-tertiary)"
           >

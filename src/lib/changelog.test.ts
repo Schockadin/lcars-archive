@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { CHANGELOG, latestChangelogEntry } from "./changelog";
+import {
+  CHANGELOG,
+  latestChangelogEntry,
+  changelogItemText,
+  changelogItemTutorial,
+} from "./changelog";
+import { TUTORIAL_SECTIONS, tutorialSectionHref } from "./tutorialSections";
 
 describe("latestChangelogEntry", () => {
   it("liefert den Eintrag mit der höchsten Version", () => {
@@ -30,5 +36,39 @@ describe("latestChangelogEntry", () => {
     expect(entry).not.toBeNull();
     expect(CHANGELOG.map((e) => e.version)).toContain(entry?.version);
     expect(entry?.items.length).toBeGreaterThan(0);
+  });
+});
+
+describe("changelog item helpers", () => {
+  it("liest den Text aus String- und Objekt-Items", () => {
+    expect(changelogItemText("nur Text")).toBe("nur Text");
+    expect(changelogItemText({ text: "mit Objekt" })).toBe("mit Objekt");
+  });
+
+  it("liest den optionalen Tutorial-Link aus", () => {
+    expect(changelogItemTutorial("nur Text")).toBeUndefined();
+    expect(changelogItemTutorial({ text: "x" })).toBeUndefined();
+    expect(
+      changelogItemTutorial({ text: "x", tutorial: "eigene-inhalte" }),
+    ).toBe("eigene-inhalte");
+  });
+});
+
+describe("Changelog-Tutorial-Verlinkung", () => {
+  const validIds = new Set(TUTORIAL_SECTIONS.map((s) => s.id));
+
+  it("verlinkt nur auf existierende Tutorial-Abschnitte", () => {
+    for (const entry of CHANGELOG) {
+      for (const item of entry.items) {
+        const tutorial = changelogItemTutorial(item);
+        if (tutorial !== undefined) {
+          expect(validIds.has(tutorial)).toBe(true);
+        }
+      }
+    }
+  });
+
+  it("baut den Deep-Link als /tutorial#<id>", () => {
+    expect(tutorialSectionHref("gespraeche")).toBe("/tutorial#gespraeche");
   });
 });

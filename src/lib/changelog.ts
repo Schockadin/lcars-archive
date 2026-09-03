@@ -1,13 +1,40 @@
+import type { TutorialSectionId } from "./tutorialSections";
+
 // Statische Daten für die öffentliche Changelog-Seite (/changelog) — ein
 // Eintrag pro Major.Minor-Version (siehe src/lib/version.ts), nicht pro
 // Commit/Sub-Version. Jeder Eintrag wird bei jedem neuen Pull Request von
 // Hand ergänzt, siehe AGENTS.md ("Der öffentliche Changelog"). items ist
-// eine Liste kurzer, endnutzer-gerichteter Stichpunkte (ein Punkt pro
-// changelog-würdigem Commit dieser Version), keine zusammenhängende Prosa.
+// eine Liste kurzer, endnutzer-gerichteter Stichpunkte — es werden NUR neue
+// Features genannt (keine reinen Design-/Layout-Änderungen, technische
+// Details oder Bugfixes ohne Feature-Charakter).
+//
+// Ein Item ist entweder ein einfacher String oder ein Objekt mit optionalem
+// Deep-Link auf den passenden Abschnitt der Anleitung (tutorial-id, siehe
+// src/lib/tutorialSections.ts) — die Renderer (ChangelogSection auf dem
+// Dashboard, ChangelogList unter /changelog) hängen dann einen
+// „Im Tutorial: …"-Link an den Stichpunkt. Beide Formen sind erlaubt, damit
+// ältere Einträge unverändert als Strings bestehen bleiben können.
+export interface ChangelogItem {
+  text: string;
+  tutorial?: TutorialSectionId;
+}
+
 export interface ChangelogEntry {
   version: string;
   title: string;
-  items: string[];
+  items: (string | ChangelogItem)[];
+}
+
+// Vereinheitlichter Zugriff für die Renderer, egal ob das Item als String oder
+// als Objekt vorliegt.
+export function changelogItemText(item: string | ChangelogItem): string {
+  return typeof item === "string" ? item : item.text;
+}
+
+export function changelogItemTutorial(
+  item: string | ChangelogItem,
+): TutorialSectionId | undefined {
+  return typeof item === "string" ? undefined : item.tutorial;
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
@@ -15,32 +42,42 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "1.28",
     title: "Charaktere anlegen und pflegen in neuem Ablauf",
     items: [
-      "Einen neuen Charakter legst du jetzt in vier Schritten an: Stammdaten, Werte, Biografie und zum Schluss eine Vorschau des fertigen Charakterbogens. Zwischen den Schritten kannst du jederzeit hin und her springen, Eingaben bleiben dabei erhalten — angelegt wird der Charakter erst mit „Fertig“. Wer den Assistenten vorher verlässt, hinterlässt keinen halben Charakter.",
-      "Die Werte trägst du im Assistenten über normale Eingabefelder ein statt direkt auf dem Bogen: Attribute und Disziplinen als Zahlenkästen mit laufender Budget-Anzeige, Talente aus dem Katalog, alles Weitere als gepflegte Listen. Verstöße gegen die Verteilungsregeln werden dabei sofort markiert.",
-      "Die Vorschau zeigt drei Blätter: den Personalbogen mit Stammdaten und Werten, den Talent-Spickzettel und — neu — die Biografie im selben Papier-Look. Genau diese drei Blätter enthält jetzt auch der PDF-Download.",
-      "Deine Charakterseite ist neu aufgebaut: Stammdaten, Werte und Biografie stehen als Panels untereinander statt auf getrennten Seiten mit Umschalter. Stammdaten und Biografie haben je einen Stift-Knopf zum Bearbeiten an Ort und Stelle; die Werte steigerst du wie gewohnt mit AP. Alte Lesezeichen auf die frühere Werte- oder Bearbeiten-Seite führen automatisch dorthin.",
-      "Ganz oben auf der Charakterseite öffnet ein Knopf den Charakterbogen als Vorschau — mit Knöpfen zum Drucken und zum Speichern als PDF.",
-      "Rang und Spezies standen auf dem Charakterbogen selbst angelegter Charaktere nicht, obwohl sie in der Akte gepflegt waren. Jetzt erscheinen sie dort, wo sie hingehören.",
-      "Der Anlege-Assistent führt jetzt über Icon-Knöpfe durch seine vier Schritte und passt auf Telefon-Bildschirmen in die Breite: Schrittleiste und Blätter-Knöpfe bleiben in einer Zeile, die Wertekästen stehen zu zweit nebeneinander.",
-      "Wie viele AP für Attribute und Disziplinen noch übrig sind, steht jetzt groß über den Wertekästen — mit Verbrauchsbalken, und in Warnfarbe, sobald das Budget überzogen ist.",
-      "Die Blätter-Knöpfe des Anlege-Assistenten stehen jetzt zusätzlich oben neben der Schrittleiste — auf den langen Schritten musstest du vorher erst ans Seitenende scrollen, um weiterzukommen.",
-      "Auf den Charakter-Seiten reicht der Inhalt jetzt rechts genauso weit wie links, statt einen breiten leeren Streifen am rechten Rand zu lassen.",
-      '„Meine Charaktere" passt auf Telefon-Bildschirmen: die Aktionszeile lief vorher seitlich aus dem Bild. Der Knopf „Öffnen" ist entfallen — der Stift daneben führte ohnehin auf dieselbe Seite.',
-      'Unter „Meine Inhalte" ist der Knopf „Neuer Charakter" entfallen — eigene Charaktere legst du unter „Meine Charaktere" an. Dafür steht der Knopf „Neuer NPC" dort jetzt jedem Konto offen, nicht mehr nur der Spielleitung; wer einen NPC im Gespräch spricht, ändert sich dadurch nicht.',
-      "Auf dem Charakterbogen sitzen die Einträge jetzt sauber auf ihren Linien: Name, Rang und Spezies zwei Pixel tiefer, die Zahlen der Attribute und Disziplinen fünf Pixel höher.",
-      'Missions-Übersicht, Suche und der Assistent für ein neues Gespräch nutzen auf großen Bildschirmen deutlich mehr Breite und stehen mittig statt links angeschlagen. Gesprächsseiten haben rechts wieder Luft, und die Charakter-Akten unter „Meine Charaktere" laufen nicht mehr über die ganze Bildschirmbreite.',
-      "Alle Auswahlfelder der App sehen jetzt gleich aus (LCARS-Feld mit runden Enden) — vorher fielen einzelne mit eckigen Kanten oder abweichenden Farben heraus.",
-      'Eingetragene Sessions lassen sich unter „Sessions" jetzt vollständig korrigieren: Datum, Titel, AP-Beträge, Notizen und Teilnehmende. Die Gutschriften werden dabei mitgezogen — geänderte Beträge landen sofort auf den Konten. Das Notizfeld ist außerdem deutlich höher.',
-      'Das AP-Regelwerk kennt eine neue Regel „AP pro beendeter Mission": Ihr Wert belegt den Betrag beim Missionsabschluss unter „Kampagne" vor (Standard 5).',
-      'Das Buchungsjournal unter „Erfahrungspunkte" ist jetzt eingeklappt und lässt sich bei Bedarf aufklappen — Kontostände und Regelwerk stehen dadurch wieder ohne langes Scrollen da.',
-      "NPCs sprechen in Gesprächen jetzt einheitlich in hellem Grau statt in bunten Charakterfarben — so ist auf einen Blick klar, wer von einer Spielerin/einem Spieler geführt wird.",
-      "Was in der aktuellen Version neu ist, steht jetzt direkt auf dem Dashboard über den Neuigkeiten (mit Link auf die vollständige Änderungsliste) statt im Profil.",
-      "Abgeschlossene Gespräche haben ein eigenes Zuhause im Charaktere-Bereich (/characters/dialogues/…) und werden dort als eigenständiger Inhalt gezeigt, statt in der allgemeinen Datenbank-Detailseite. Alte Links funktionieren weiter.",
-      "Dashboard, Profil und „Meine Inhalte“ nutzen jetzt dieselbe breite, zentrierte Spalte wie Missionen und Suche; unter „Meine Charaktere“ steht „Charaktere verwalten“ links. Der Autoren-Filter der Missionen und das Sichtbarkeits-Dropdown haben runde Enden wie die übrigen Auswahlfelder, und eine aufgeklappte Session unter „Sessions“ zeigt das mit einem Pfeil an.",
-      "Auch „Meine Charaktere“ liegt jetzt in der zentrierten breiten Spalte. Die Aktions-Buttons („Neuer Missionslog“, „Neues Gespräch“, „Neuer NPC“ …) sind überall gleich breit, der Autoren-Filter der Missionen ist so hoch wie Suchfeld und Sortier-Schalter daneben, und das Aufklapp-Pfeilchen der Sessions bzw. der Buchungsliste steht links und dreht sich beim Öffnen. Abgeschlossene Gespräche haben beim Laden jetzt einen passenden Platzhalter statt des Charakter-Listen-Ladebalkens.",
-      "Alle Seiten nutzen jetzt dieselbe zentrierte Inhaltsspalte — Charaktere, Datenbank, Spielleitungs- und Admin-Seiten, Formulare und Anleitung stehen mittig in gleicher Breite statt links angeschlagen über die volle Breite. Abgeschlossene Gespräche haben oben einen „‹ Gespräche“-Zurück-Knopf.",
-      "Das minimalistische Interface gibt es jetzt in zwei Ausführungen — dunkel und hell. Du wählst sie im Profil unter „Darstellung → Oberfläche“. Außerdem ist der Lesemodus-Knopf ein kompaktes Icon geworden (bei Gesprächen sitzt er unter dem Zurück-Knopf), und die Gespräche-Übersicht passt auf schmalen Handy-Bildschirmen wieder in die Breite.",
-      "Die öffentliche Nutzerübersicht und die öffentlichen Fremdprofile (bisher unter /users) sind entfallen. Dein eigenes Profil (/user) und die Nutzerverwaltung der Administration bleiben unverändert.",
+      {
+        text: "Einen neuen Charakter legst du jetzt in vier Schritten an: Stammdaten, Werte, Biografie und zum Schluss eine Vorschau des fertigen Charakterbogens. Zwischen den Schritten kannst du jederzeit hin und her springen, Eingaben bleiben dabei erhalten — angelegt wird der Charakter erst mit „Fertig“.",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Die Werte trägst du im Assistenten über normale Eingabefelder ein: Attribute und Disziplinen als Zahlenkästen mit laufender Budget-Anzeige, Talente aus dem Katalog, alles Weitere als gepflegte Listen. Verstöße gegen die Verteilungsregeln werden sofort markiert.",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Stammdaten und Biografie bearbeitest du jetzt direkt auf deiner Charakterseite: Stammdaten, Werte und Biografie stehen dort als Panels untereinander, ein Stift-Knopf öffnet den jeweiligen Abschnitt zum Bearbeiten an Ort und Stelle.",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Der Charakterbogen ist eine Vorschau aus drei Blättern — Personalbogen, Talent-Spickzettel und neu die Biografie im selben Papier-Look. Über einen Knopf auf der Charakterseite öffnest du ihn und kannst ihn drucken oder als PDF speichern; genau diese drei Blätter enthält auch das PDF.",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Den Knopf „Neuer NPC“ (unter „Meine Inhalte“) kann jetzt jedes Konto nutzen, nicht mehr nur die Spielleitung.",
+        tutorial: "gespraeche",
+      },
+      {
+        text: "Abgeschlossene Gespräche haben ein eigenes Zuhause im Charaktere-Bereich und werden dort als eigenständiger Inhalt gezeigt. Alte Links funktionieren weiter.",
+        tutorial: "gespraeche",
+      },
+      {
+        text: "Eingetragene Sessions lassen sich unter „Sessions“ jetzt vollständig korrigieren: Datum, Titel, AP-Beträge, Notizen und Teilnehmende. Die Gutschriften werden dabei mitgezogen — geänderte Beträge landen sofort auf den Konten.",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Das AP-Regelwerk kennt eine neue Regel „AP pro beendeter Mission“: Ihr Wert belegt den Betrag beim Missionsabschluss unter „Kampagne“ vor (Standard 5).",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Das minimalistische Interface gibt es jetzt in zwei Ausführungen — dunkel und hell. Du wählst sie im Profil unter „Darstellung → Oberfläche“.",
+        tutorial: "farbschema",
+      },
     ],
   },
   {

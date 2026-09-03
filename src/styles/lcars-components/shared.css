@@ -118,6 +118,20 @@
   border-bottom: 1px dashed var(--lcars-quinary);
 }
 
+/* Deep-Link vom Changelog in den passenden Anleitungsabschnitt (Dashboard-
+   „Neu in Version …“ UND /changelog). Immer als Link erkennbar (unterstrichen)
+   und in beiden Renderern identisch — dieselbe Akzentfarbe/Hover-Logik wie die
+   übrigen Fließtext-Links (siehe .lcars-link-text oben). */
+.lcars-changelog-tutorial-link {
+  color: var(--lcars-ink-data);
+  text-decoration: underline;
+  white-space: nowrap;
+  transition: color 250ms;
+}
+.lcars-changelog-tutorial-link:hover {
+  color: var(--lcars-tertiary);
+}
+
 /* Gemeinsame Typografie für .char-file-pill (char-file.css, Personalakte)
    und .character-entry-stub (character.css, Charakterliste) — beide sind
    kleine, dunkel eingefärbte Mono-Label-Chips, nur letter-spacing
