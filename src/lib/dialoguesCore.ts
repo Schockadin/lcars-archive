@@ -1850,7 +1850,10 @@ export async function getDialoguesForUser(
       visibility: "private" | "gm" | "public";
       owner_user_id: number | null;
     };
-    const ownSlugList = ownCharacters.map((c) => c.slug);
+    // Ein einfaches text[] für den ANY(...)-Vergleich unten — abgeleitet aus
+    // demselben Set wie die Partner-Erkennung, damit beide nicht auseinander
+    // laufen können.
+    const ownSlugList = [...ownSlugs];
     const rows =
       scope === "open"
         ? await sql<DialogueRow[]>`
@@ -1859,7 +1862,17 @@ export async function getDialoguesForUser(
             FROM archive_entries
             WHERE category = 'dialogue'
               AND EXISTS (
-                SELECT 1 FROM jsonb_array_elements(metadata->'participants') AS p
+                -- CASE-Guard: jsonb_array_elements wirft, wenn participants
+                -- kein Array ist (Objekt/Skalar/JSON-null) — dann als leeres
+                -- Array behandeln (kein Treffer), wie es der frühere
+                -- @>-Containment-Operator still tat.
+                SELECT 1 FROM jsonb_array_elements(
+                  CASE
+                    WHEN jsonb_typeof(metadata->'participants') = 'array'
+                      THEN metadata->'participants'
+                    ELSE '[]'::jsonb
+                  END
+                ) AS p
                 WHERE p->>'slug' = ANY(${ownSlugList})
               )
               AND dialogue_open
@@ -1871,7 +1884,17 @@ export async function getDialoguesForUser(
             FROM archive_entries
             WHERE category = 'dialogue'
               AND EXISTS (
-                SELECT 1 FROM jsonb_array_elements(metadata->'participants') AS p
+                -- CASE-Guard: jsonb_array_elements wirft, wenn participants
+                -- kein Array ist (Objekt/Skalar/JSON-null) — dann als leeres
+                -- Array behandeln (kein Treffer), wie es der frühere
+                -- @>-Containment-Operator still tat.
+                SELECT 1 FROM jsonb_array_elements(
+                  CASE
+                    WHEN jsonb_typeof(metadata->'participants') = 'array'
+                      THEN metadata->'participants'
+                    ELSE '[]'::jsonb
+                  END
+                ) AS p
                 WHERE p->>'slug' = ANY(${ownSlugList})
               )
               AND deleted_at IS NULL
