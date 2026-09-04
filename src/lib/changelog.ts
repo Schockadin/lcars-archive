@@ -51,6 +51,9 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "farbschema",
       },
       {
+        text: "Die Suche findet jetzt auch andere Wortformen — „Missionen“ findet „Erste Mission“ — und versteht mehrere Suchwörter unabhängig von ihrer Reihenfolge sowie Wortgruppen in Anführungszeichen. Die Treffer sind nach Relevanz sortiert statt alphabetisch, und der angezeigte Textausschnitt trifft auch dann die richtige Stelle, wenn im Text eine andere Wortform steht.",
+      },
+      {
         text: "Beim Einstellen der Farben zeigt das Profil jetzt zu jeder Farbe an, wie gut sie sich vor ihrem Hintergrund liest, und warnt, wenn eine Kombination zu blass wird. Im hellen Erscheinungsbild werden Überschriften und Beschriftungen automatisch so weit abgedunkelt, dass sie gut lesbar bleiben — die farbigen Balken und Pillen behalten dabei ihre volle Leuchtkraft.",
         tutorial: "farbschema",
       },

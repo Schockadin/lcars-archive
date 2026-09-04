@@ -795,6 +795,74 @@ ALTER TABLE campaign_settings
   ADD COLUMN IF NOT EXISTS changelog_featured_versions JSONB;
 
 -- ---------------------------------------------------------------------------
+-- Volltextsuche (FTS): tsvector-Spalten + GIN-Indizes
+-- ---------------------------------------------------------------------------
+-- Die Suche verglich bisher nur per ILIKE '%wort%'. Das findet keine
+-- Wortformen („Mission" fand „Missionen" nicht), kennt keine Mehrwort-Logik
+-- („Tuvok Vulkan" suchte den wörtlichen String) und kann nicht nach Relevanz
+-- sortieren. Die tsvector-Spalten liefern beides; die vorhandenen
+-- Trigramm-Indizes bleiben als Ergänzung für Teilwort-/Tippfehler-Treffer
+-- bestehen (die Suche fragt beides ab, siehe src/lib/search.ts).
+--
+-- GENERATED ALWAYS … STORED: Postgres hält die Spalte selbst aktuell, es
+-- braucht keinen Trigger und keinen Anwendungscode. Alle benutzten Funktionen
+-- (to_tsvector mit KONSTANTER Konfiguration, setweight, coalesce) sind
+-- immutable — Voraussetzung für generierte Spalten.
+--
+-- Gewichte: A = Titel/Name (ein Treffer dort zählt am meisten),
+--           B = Fließtext, C = Nebenfelder (Spezies, Rang).
+
+ALTER TABLE characters ADD COLUMN IF NOT EXISTS search_vector tsvector
+  GENERATED ALWAYS AS (
+    setweight(to_tsvector('german', coalesce(name, '')), 'A') ||
+    setweight(to_tsvector('german', coalesce(source_md, bio, '')), 'B') ||
+    setweight(to_tsvector('german', coalesce(species, '') || ' ' || coalesce(rank, '')), 'C')
+  ) STORED;
+CREATE INDEX IF NOT EXISTS idx_characters_fts ON characters USING GIN (search_vector);
+
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS search_vector tsvector
+  GENERATED ALWAYS AS (
+    setweight(to_tsvector('german', coalesce(title, '')), 'A') ||
+    setweight(to_tsvector('german', coalesce(source_md, '')), 'B')
+  ) STORED;
+CREATE INDEX IF NOT EXISTS idx_missions_fts ON missions USING GIN (search_vector);
+
+ALTER TABLE mission_logs ADD COLUMN IF NOT EXISTS search_vector tsvector
+  GENERATED ALWAYS AS (
+    setweight(to_tsvector('german', coalesce(title, '')), 'A') ||
+    setweight(to_tsvector('german', coalesce(source_md, content, '')), 'B')
+  ) STORED;
+CREATE INDEX IF NOT EXISTS idx_mission_logs_fts ON mission_logs USING GIN (search_vector);
+
+ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS search_vector tsvector
+  GENERATED ALWAYS AS (
+    setweight(to_tsvector('german', coalesce(title, '')), 'A') ||
+    setweight(to_tsvector('german', coalesce(source_md, content, '')), 'B')
+  ) STORED;
+CREATE INDEX IF NOT EXISTS idx_archive_fts ON archive_entries USING GIN (search_vector);
+
+-- Titel-only-Vektor: die Live-Suche (Header-Dropdown) vergleicht bewusst NUR
+-- Titel/Namen — mit dem vollen search_vector würde sie plötzlich auch
+-- Fließtext treffen und ein anderes Verhalten zeigen als bisher. Eigene
+-- Spalte statt einer Berechnung zur Laufzeit, damit auch die Live-Suche über
+-- einen Index läuft.
+ALTER TABLE characters ADD COLUMN IF NOT EXISTS title_vector tsvector
+  GENERATED ALWAYS AS (to_tsvector('german', coalesce(name, ''))) STORED;
+CREATE INDEX IF NOT EXISTS idx_characters_title_fts ON characters USING GIN (title_vector);
+
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS title_vector tsvector
+  GENERATED ALWAYS AS (to_tsvector('german', coalesce(title, ''))) STORED;
+CREATE INDEX IF NOT EXISTS idx_missions_title_fts ON missions USING GIN (title_vector);
+
+ALTER TABLE mission_logs ADD COLUMN IF NOT EXISTS title_vector tsvector
+  GENERATED ALWAYS AS (to_tsvector('german', coalesce(title, ''))) STORED;
+CREATE INDEX IF NOT EXISTS idx_mission_logs_title_fts ON mission_logs USING GIN (title_vector);
+
+ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS title_vector tsvector
+  GENERATED ALWAYS AS (to_tsvector('german', coalesce(title, ''))) STORED;
+CREATE INDEX IF NOT EXISTS idx_archive_title_fts ON archive_entries USING GIN (title_vector);
+
+-- ---------------------------------------------------------------------------
 -- news_seen
 -- ---------------------------------------------------------------------------
 -- Persistente News-Anzeige auf dem Dashboard (NewsSection.tsx): eine News
