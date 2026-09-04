@@ -20,6 +20,13 @@ export default function AppShell({
     <div
       className={`lcars-appshell flex w-full h-[100svh]${readingMode ? " reading-mode" : ""}`}
     >
+      {/* Sprungmarke für Tastatur- und Screenreader-Nutzung: erstes
+          fokussierbares Element der Seite, sichtbar nur solange es den Fokus
+          hat (siehe .lcars-skip-link). Ohne sie muss man sich vor jedem Inhalt
+          erst durch die komplette Seitenleiste tabben. */}
+      <a href="#lcars-main" className="lcars-skip-link">
+        Zum Inhalt springen
+      </a>
       <LcarsSidebar />
       <div
         className="lcars-appshell-main flex flex-col flex-1 h-full overflow-clip"

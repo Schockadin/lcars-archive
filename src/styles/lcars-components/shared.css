@@ -1112,3 +1112,36 @@
   font-size: 12px;
   color: var(--lcars-ink-dim);
 }
+
+/* ─── Sprungmarke zum Hauptinhalt ──────────────────────────────────────
+   Erstes fokussierbares Element im Shell (AppShell.tsx). Liegt außerhalb des
+   sichtbaren Bereichs und rutscht bei Tastaturfokus ein — Mausnutzer sehen
+   sie nie, Tastaturnutzer überspringen damit die Seitenleiste. Bewusst NICHT
+   display:none/visibility:hidden: das nähme dem Link die Fokussierbarkeit. */
+.lcars-skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 2000;
+  padding: 10px 18px;
+  border-radius: var(--lcars-radius-pill);
+  background: var(--lcars-primary);
+  color: var(--lcars-ink-dark);
+  font-family: var(--lcars-font-sans);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  /* Aus dem Bild geschoben statt versteckt. */
+  transform: translateY(-200%);
+  transition: transform 150ms;
+}
+.lcars-skip-link:focus-visible,
+.lcars-skip-link:focus {
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lcars-skip-link {
+    transition: none;
+  }
+}

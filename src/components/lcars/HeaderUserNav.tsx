@@ -19,6 +19,9 @@ import { useAnchoredDropdown } from "./useAnchoredDropdown";
 interface StaffMenuItem {
   href: string;
   label: string;
+  // Überschrift, unter der der Eintrag im Dropdown einsortiert wird. Elf
+  // Admin-Einträge in einer flachen Liste sind nicht mehr überblickbar.
+  group?: string;
   // Recht(e), die den Eintrag freischalten (granulares RBAC, siehe
   // permissions.ts). Ein Array = „mindestens eines davon genügt".
   permission: string | readonly string[];
@@ -38,19 +41,34 @@ const GM_ITEMS: StaffMenuItem[] = [
 ];
 
 const ADMIN_ITEMS: StaffMenuItem[] = [
-  { href: "/admin/users", label: "User", permission: "users.manage" },
-  { href: "/admin/permissions", label: "Rollen", permission: "users.manage" },
-  { href: "/admin/db", label: "DB", permission: DB_PERMISSIONS },
-  { href: "/admin/scripts", label: "Scripts", permission: "admin.access" },
-  { href: "/admin/rag", label: "RAG", permission: "admin.access" },
-  { href: "/admin/content", label: "Inhalte", permission: "content.moderate" },
-  { href: "/admin/content/trash", label: "Papierkorb", permission: "content.moderate" },
-  { href: "/admin/content/images", label: "Bilder", permission: "content.moderate" },
-  { href: "/admin/changelog", label: "Changelog", permission: "admin.access" },
-  { href: "/admin/audit-log", label: "Audit-Log", permission: "admin.access" },
-  { href: "/admin/error-log", label: "Fehler-Log", permission: "admin.access" },
-  { href: "/admin/import", label: "Import", permission: "admin.access" },
+  { href: "/admin/users", label: "User", permission: "users.manage", group: "Konten" },
+  { href: "/admin/permissions", label: "Rollen", permission: "users.manage", group: "Konten" },
+  { href: "/admin/content", label: "Inhalte", permission: "content.moderate", group: "Inhalte" },
+  { href: "/admin/content/trash", label: "Papierkorb", permission: "content.moderate", group: "Inhalte" },
+  { href: "/admin/content/images", label: "Bilder", permission: "content.moderate", group: "Inhalte" },
+  { href: "/admin/changelog", label: "Changelog", permission: "admin.access", group: "Inhalte" },
+  { href: "/admin/db", label: "DB", permission: DB_PERMISSIONS, group: "System" },
+  { href: "/admin/scripts", label: "Scripts", permission: "admin.access", group: "System" },
+  { href: "/admin/rag", label: "RAG", permission: "admin.access", group: "System" },
+  { href: "/admin/import", label: "Import", permission: "admin.access", group: "System" },
+  { href: "/admin/audit-log", label: "Audit-Log", permission: "admin.access", group: "Protokolle" },
+  { href: "/admin/error-log", label: "Fehler-Log", permission: "admin.access", group: "Protokolle" },
 ];
+
+// Bündelt die (bereits nach Rechten gefilterten) Einträge in der Reihenfolge
+// ihres ersten Auftretens zu Gruppen. Einträge ohne Gruppe landen in einem
+// Block ohne Überschrift — so bleibt das Leitungs-Menü unverändert flach.
+function groupItems(
+  items: StaffMenuItem[],
+): { group?: string; entries: StaffMenuItem[] }[] {
+  const out: { group?: string; entries: StaffMenuItem[] }[] = [];
+  for (const item of items) {
+    const last = out[out.length - 1];
+    if (last && last.group === item.group) last.entries.push(item);
+    else out.push({ group: item.group, entries: [item] });
+  }
+  return out;
+}
 
 function visibleItems(
   items: StaffMenuItem[],
@@ -155,20 +173,27 @@ function StaffDropdown({
               maxHeight: anchor.maxHeight,
             }}
           >
-            {items.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                role="menuitem"
-                onClick={() => setOpen(false)}
-                className={
-                  pathname === item.href
-                    ? "lcars-search-item lcars-menu-active"
-                    : "lcars-search-item"
-                }
-              >
-                {item.label}
-              </Link>
+            {groupItems(items).map(({ group, entries }) => (
+              <div key={group ?? "_"} role="group" aria-label={group}>
+                {group && (
+                  <div className="lcars-search-group-label">{group}</div>
+                )}
+                {entries.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    role="menuitem"
+                    onClick={() => setOpen(false)}
+                    className={
+                      pathname === item.href
+                        ? "lcars-search-item lcars-menu-active"
+                        : "lcars-search-item"
+                    }
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
             ))}
           </div>,
           document.body,
