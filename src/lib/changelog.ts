@@ -51,6 +51,9 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "farbschema",
       },
       {
+        text: "Charaktere, Missionen und Logbücher zeigen jetzt ebenfalls, wo sie erwähnt werden — bisher gab es diese Rückverweise nur bei Datenbank-Einträgen. Gezählt wird beides: die gepflegten Verweisfelder und echte [[Wikilinks]] im Fließtext.",
+      },
+      {
         text: "Die Suche findet jetzt auch andere Wortformen — „Missionen“ findet „Erste Mission“ — und versteht mehrere Suchwörter unabhängig von ihrer Reihenfolge sowie Wortgruppen in Anführungszeichen. Die Treffer sind nach Relevanz sortiert statt alphabetisch, und der angezeigte Textausschnitt trifft auch dann die richtige Stelle, wenn im Text eine andere Wortform steht.",
       },
       {

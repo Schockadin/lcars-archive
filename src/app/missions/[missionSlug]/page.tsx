@@ -9,6 +9,8 @@ import {
 import { setSubscription, resolveFollowState } from "@/lib/follows";
 import { listAllUsers } from "@/lib/users";
 import MissionSynopsis from "../MissionSynopsis";
+import { getMentionsOf } from "@/lib/mentions";
+import MentionsSection from "@/app/_shared/MentionsSection";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 interface Props {
   params: Promise<{ missionSlug: string }>;
@@ -66,9 +68,11 @@ export default async function MissionPage({ params, searchParams }: Props) {
   // Owner-Liste (optional) und Follow-Stand parallel. followInitialState wird
   // an FollowButtons durchgereicht, damit Bookmark/Abo sofort mitgerendert
   // werden statt sie nach der Hydration per Client-Fetch nachzuladen.
-  const [allUsers, followInitialState] = await Promise.all([
+  const [allUsers, followInitialState, mentions] = await Promise.all([
     canReassignOwner ? listAllUsers() : Promise.resolve([]),
     resolveFollowState(viewer?.userId ?? null, "mission", missionSlug),
+    // Wer verweist auf diese Mission? (Archiv-Verweisfelder + Wikilinks)
+    getMentionsOf({ slug: mission.slug, name: mission.title }, viewer),
   ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
@@ -81,6 +85,9 @@ export default async function MissionPage({ params, searchParams }: Props) {
         viewer={viewer}
         followInitialState={followInitialState}
       />
+      <div className="lcars-text lcars-wide-column mt-[16px]">
+        <MentionsSection mentions={mentions} />
+      </div>
     </>
   );
 }
