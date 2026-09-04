@@ -92,7 +92,7 @@ function StaffDropdown({
   items: StaffMenuItem[];
   // true = der aktuelle Pfad liegt im Bereich dieses Menüs.
   active: boolean;
-  placement: "bottom" | "right";
+  placement: "bottom" | "right" | "right-bottom";
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -146,9 +146,13 @@ function StaffDropdown({
             aria-label={label}
             className="lcars-search-dropdown"
             style={{
+              // Je nach placement ist top ODER bottom gesetzt; der jeweils
+              // andere Wert ist undefined und wird von React ausgelassen.
               top: anchor.top,
+              bottom: anchor.bottom,
               left: anchor.left,
               minWidth: anchor.width,
+              maxHeight: anchor.maxHeight,
             }}
           >
             {items.map((item) => (
@@ -187,7 +191,7 @@ export default function HeaderUserNav({
   columns?: number;
   // "header": horizontales Pill-Grid im Header (LCARS). "sidebar": vertikale
   // Liste in der Sidebar (minimalistisches UI) — die Dropdowns klappen dann
-  // nach rechts auf.
+  // nach rechts auf, an der Unterkante des Pills verankert (siehe placement).
   variant?: "header" | "sidebar";
 }) {
   const pathname = usePathname();
@@ -211,7 +215,10 @@ export default function HeaderUserNav({
 
   const gmItems = visibleItems(GM_ITEMS, permissions);
   const adminItems = visibleItems(ADMIN_ITEMS, permissions);
-  const placement = variant === "sidebar" ? "right" : "bottom";
+  // In der Sidebar (minimalistisches UI) sitzen Leitung/Admin weit unten —
+  // das Flyout wird deshalb an der UNTERkante des Pills verankert und wächst
+  // nach oben, statt am oberen Rand zu kleben und unten aus dem Bild zu laufen.
+  const placement = variant === "sidebar" ? "right-bottom" : "bottom";
 
   return (
     <nav

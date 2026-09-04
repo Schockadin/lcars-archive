@@ -52,11 +52,17 @@ export default function ChangelogVisibilityForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-[16px]">
-      <div className="flex items-center justify-between gap-[12px]">
+      {/* Auf schmalen Screens untereinander statt nebeneinander: Zähler und
+          die Alle/Keine-Knöpfe drängeln sich sonst in einer Zeile. */}
+      <div className="flex items-center justify-between gap-[12px] max-sm:flex-col max-sm:items-start">
         <p className="text-lcars-ink-dim text-[13px]">
           {checked.size} von {options.length} Versionen ausgewählt.
         </p>
-        <div className="flex gap-[8px]">
+        {/* flex-wrap + volle Breite auf Mobile: .lcars-pill-btn--outline hat
+            min-width 180px und unter 480px width:100% (controls.css) — zwei
+            davon passen dort nicht nebeneinander und liefen sonst rechts aus
+            dem Bild. */}
+        <div className="flex flex-wrap gap-[8px] max-sm:w-full">
           <button
             type="button"
             onClick={selectAll}
