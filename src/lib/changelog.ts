@@ -498,3 +498,31 @@ function compareVersions(a: string, b: string): number {
   }
   return 0;
 }
+
+// Gibt es einen Changelog-Eintrag mit dieser „Major.Minor"-Version?
+export function changelogVersionExists(
+  version: string,
+  entries: ChangelogEntry[] = CHANGELOG,
+): boolean {
+  return entries.some((entry) => entry.version === version);
+}
+
+// Die Einträge für die „Neue Funktionen"-Box auf dem Dashboard, aus der vom
+// Admin gewählten Versionsliste (siehe src/lib/changelogSettings.ts):
+//   - selected === null  ⇒  nicht konfiguriert: nur die jüngste Version.
+//   - selected === []    ⇒  bewusst nichts (die Box verschwindet).
+//   - sonst              ⇒  genau die gewählten, existierenden Versionen,
+//                           neueste zuerst.
+export function featuredChangelogEntries(
+  selected: string[] | null,
+  entries: ChangelogEntry[] = CHANGELOG,
+): ChangelogEntry[] {
+  if (selected === null) {
+    const latest = latestChangelogEntry(entries);
+    return latest ? [latest] : [];
+  }
+  const wanted = new Set(selected);
+  return entries
+    .filter((entry) => wanted.has(entry.version))
+    .sort((a, b) => compareVersions(b.version, a.version));
+}

@@ -33,4 +33,9 @@ export const cacheTags = {
   // Talent-Katalog (Tabelle talents). Ändert sich nur, wenn die Spielleitung
   // unter /gm/talents etwas anlegt oder bearbeitet.
   talents: "talents",
+
+  // Vom Admin gewählte Changelog-Versionen für die „Neue Funktionen"-Box auf
+  // dem Dashboard (campaign_settings.changelog_featured_versions). Ändert sich
+  // nur, wenn ein Admin die Auswahl unter /admin/changelog speichert.
+  changelog: "changelog-settings",
 } as const;

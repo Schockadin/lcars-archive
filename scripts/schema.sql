@@ -786,6 +786,14 @@ CREATE INDEX IF NOT EXISTS idx_mission_logs_session ON mission_logs(session_id);
 -- Standardwerte aus src/lib/advancement.ts gelten (DEFAULT_ADVANCEMENT_RULES).
 ALTER TABLE campaign_settings ADD COLUMN IF NOT EXISTS advancement_rules JSONB;
 
+-- campaign_settings: vom Admin unter /admin/changelog gewählte Changelog-
+-- Versionen, deren Neuerungen auf dem Dashboard in der „Neue Funktionen"-Box
+-- gesammelt erscheinen (src/lib/changelogSettings.ts). JSONB-Array von
+-- „Major.Minor"-Strings; NULL = nicht konfiguriert ⇒ es gilt der Default (nur
+-- die jüngste Version).
+ALTER TABLE campaign_settings
+  ADD COLUMN IF NOT EXISTS changelog_featured_versions JSONB;
+
 -- ---------------------------------------------------------------------------
 -- news_seen
 -- ---------------------------------------------------------------------------

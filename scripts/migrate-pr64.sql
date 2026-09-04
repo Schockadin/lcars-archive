@@ -26,3 +26,11 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS color_mode TEXT NOT NULL
 -- ---------------------------------------------------------------------------
 UPDATE users SET color_mode = 'light' WHERE ui_mode = 'minimal-light';
 UPDATE users SET ui_mode = 'minimal' WHERE ui_mode = 'minimal-light';
+
+-- ---------------------------------------------------------------------------
+-- 3) Admin-kuratierte „Neue Funktionen": vom Admin unter /admin/changelog
+--    gewählte Changelog-Versionen, die auf dem Dashboard gesammelt erscheinen.
+--    JSONB-Array von „Major.Minor"-Strings; NULL = Default (nur jüngste).
+-- ---------------------------------------------------------------------------
+ALTER TABLE campaign_settings
+  ADD COLUMN IF NOT EXISTS changelog_featured_versions JSONB;

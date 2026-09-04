@@ -46,6 +46,7 @@ const ADMIN_ITEMS: StaffMenuItem[] = [
   { href: "/admin/content", label: "Inhalte", permission: "content.moderate" },
   { href: "/admin/content/trash", label: "Papierkorb", permission: "content.moderate" },
   { href: "/admin/content/images", label: "Bilder", permission: "content.moderate" },
+  { href: "/admin/changelog", label: "Changelog", permission: "admin.access" },
   { href: "/admin/audit-log", label: "Audit-Log", permission: "admin.access" },
   { href: "/admin/error-log", label: "Fehler-Log", permission: "admin.access" },
   { href: "/admin/import", label: "Import", permission: "admin.access" },

@@ -63,11 +63,13 @@ export default function ChangelogList({
       />
 
       <div className="flex flex-col gap-[10px]">
-        {sorted.map((entry) => (
+        {sorted.map((entry, index) => (
           <LcarsDataRow
             key={entry.version}
-            value={entry.version}
-            label="Version"
+            // Wert links = laufende Zeilennummer (1-basiert in der aktuellen
+            // Sortierrichtung), Pille = „Version <Major.Minor>".
+            value={index + 1}
+            label={`Version ${entry.version}`}
             defaultOpen={entry.version === newestVersion}
             className="lcars-data-row--full"
           >
