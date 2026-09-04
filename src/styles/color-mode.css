@@ -45,5 +45,5 @@ html[data-mode="light"] {
 html[data-mode="light"] .lcars-pill-btn,
 html[data-mode="light"] .lcars-data-row-text,
 html[data-mode="light"] .reading-mode-toggle {
-  color: #08081a;
+  color: var(--lcars-ink-dark);
 }

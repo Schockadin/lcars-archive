@@ -70,10 +70,7 @@ export default function ColorModeSettingsForm({
       <input type="hidden" name="colorMode" value={selected} />
 
       <p className="text-lcars-ink-dim text-[13px]">
-        Wähle zwischen hellem und dunklem Erscheinungsbild — unabhängig davon,
-        ob du LCARS oder das minimalistische Interface nutzt. Die Vorschau
-        erscheint sofort; gespeichert wird sie erst mit „Speichern“ und bleibt
-        dann bei jedem Login erhalten.
+        Die Vorschau erscheint sofort; gespeichert wird sie erst mit „Speichern“.
       </p>
 
       <div

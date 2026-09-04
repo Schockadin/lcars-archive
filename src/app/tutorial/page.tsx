@@ -885,18 +885,22 @@ export default function TutorialPage() {
                 <strong>Speichern</strong> auf allen deinen Geräten erhalten.
               </p>
               <p>
-                Direkt darüber wählst du unter{" "}
-                <strong>„Hintergrund &amp; Schrift“</strong> optional eine eigene
-                Hintergrund- und Schriftfarbe für die gesamte Oberfläche. Ohne
-                eigene Wahl gilt der Standard des jeweiligen Hell/Dunkel-Modus.
+                Die Farbauswahl ist in aufklappbare Bereiche gegliedert. Unter{" "}
+                <strong>„Hintergrund &amp; Flächen“</strong> stellst du den
+                Seitenhintergrund, die Flächen (Panels und Karten — im
+                minimalistischen Interface auch die Seitenleiste) und die Rahmen
+                ein. Unter <strong>„Schriftfarben“</strong> lässt sich{" "}
+                <em>jede Textrolle einzeln</em> festlegen: Fließtext, Lesetext,
+                Nebentext, Links &amp; Daten, Kontrasttext und die Beschriftung
+                auf farbigen Flächen. Ohne eigene Wahl gilt jeweils der Standard
+                des Hell/Dunkel-Modus.
               </p>
               <p>
-                Darunter kannst du unter <strong>„Feineinstellung“</strong> jede
-                einzelne Akzentfarbe mit einer eigenen Farbe überschreiben. Mit{" "}
+                Im Bereich <strong>„Akzentfarben“</strong> überschreibst du jede
+                einzelne Farbe des Basis-Schemas. Mit{" "}
                 <strong>„Zurücksetzen“</strong> (pro Farbe) oder{" "}
                 <strong>„Alle zurücksetzen“</strong> kehrst du jederzeit zu den
-                Farben des gewählten Schemas zurück. Nicht vergessen,
-                anschließend zu speichern.
+                Vorgaben zurück. Nicht vergessen, anschließend zu speichern.
               </p>
               <p>
                 Ob die Oberfläche <strong>hell</strong> oder{" "}

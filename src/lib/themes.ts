@@ -36,17 +36,89 @@ export const TOKEN_IDS: TokenId[] = THEME_TOKENS.map((t) => t.id);
 
 export type ThemeTokens = Record<TokenId, string>;
 
-// ─── Frei wählbare Basis-Farben (Hintergrund + Schriftfarbe) ────────────────
+// ─── Frei wählbare Basis-Farben (Flächen + Schriftfarben) ───────────────────
 // Anders als die Akzent-Tokens (THEME_TOKENS) hängen diese NICHT am Farbthema,
 // sondern haben je Hell-/Dunkel-Modus (src/lib/colorMode.ts) einen eigenen
-// Default. Wer will, überschreibt sie im Profil mit einer eigenen Farbe —
-// dieselbe Mechanik wie die Akzent-Feineinstellung (theme_overrides).
-export const BASE_TOKENS = [
-  { id: "bg", label: "Hintergrund" },
-  { id: "ink", label: "Schriftfarbe" },
+// Default. Wer will, überschreibt jede Rolle EINZELN im Profil — dieselbe
+// Mechanik wie die Akzent-Feineinstellung (theme_overrides).
+
+// Schriftfarben: jede Textrolle ist unabhängig überschreibbar, damit sich
+// Fließtext, Lesetext, Nebentext, Links usw. getrennt einstellen lassen.
+export const INK_TOKENS = [
+  {
+    id: "ink",
+    label: "Fließtext",
+    hint: "Grundfarbe für Text auf der Seite",
+  },
+  {
+    id: "ink-light",
+    label: "Lesetext",
+    hint: "Artikel-, Beschreibungs- und Logbuchtexte",
+  },
+  {
+    id: "ink-dim",
+    label: "Nebentext",
+    hint: "Metazeilen, Hinweise, Platzhalter",
+  },
+  {
+    id: "ink-data",
+    label: "Links & Daten",
+    hint: "Verlinkungen, Überschriften und Datenwerte",
+  },
+  {
+    id: "ink-contrast",
+    label: "Kontrasttext",
+    hint: "Text, der sich besonders klar abheben soll",
+  },
+  {
+    id: "ink-dark",
+    label: "Text auf Akzentflächen",
+    hint: "Beschriftung auf farbigen Pillen und Balken",
+  },
 ] as const;
 
-export type BaseTokenId = (typeof BASE_TOKENS)[number]["id"];
+// Flächen: Seitenhintergrund und die davon abgesetzten Flächen. Im
+// minimalistischen UI trägt „surface" auch den Hintergrund der Seitenleiste
+// (siehe .lcars-sidebar in src/styles/minimal-ui.css) — die Leiste ändert sich
+// dadurch mit, statt auf dem Vorgabewert stehen zu bleiben.
+export const SURFACE_TOKENS = [
+  {
+    id: "bg",
+    label: "Seitenhintergrund",
+    hint: "Grundfläche der gesamten Seite",
+  },
+  {
+    id: "surface",
+    label: "Flächen",
+    hint: "Panels und Karten — im minimalen UI auch die Seitenleiste",
+  },
+  {
+    id: "surface-2",
+    label: "Flächen (hervorgehoben)",
+    hint: "Aktive und betonte Flächen",
+  },
+  {
+    id: "border",
+    label: "Rahmen",
+    hint: "Trennlinien und Umrandungen",
+  },
+] as const;
+
+export type InkTokenId = (typeof INK_TOKENS)[number]["id"];
+export type SurfaceTokenId = (typeof SURFACE_TOKENS)[number]["id"];
+export type BaseTokenId = SurfaceTokenId | InkTokenId;
+
+export interface BaseTokenDef {
+  id: BaseTokenId;
+  label: string;
+  hint: string;
+}
+
+// Flächen zuerst, dann Schrift — dieselbe Reihenfolge wie im Profil-Formular.
+export const BASE_TOKENS: readonly BaseTokenDef[] = [
+  ...SURFACE_TOKENS,
+  ...INK_TOKENS,
+];
 
 export const BASE_TOKEN_IDS: BaseTokenId[] = BASE_TOKENS.map((t) => t.id);
 
@@ -57,24 +129,42 @@ export const BASE_TOKEN_DEFAULTS: Record<
   "dark" | "light",
   Record<BaseTokenId, string>
 > = {
-  dark: { bg: "#08081a", ink: "#c8b8ff" },
-  light: { bg: "#f4f4f8", ink: "#1b1b2c" },
+  dark: {
+    bg: "#08081a",
+    surface: "#10102a",
+    "surface-2": "#1a1838",
+    border: "#2d2550",
+    ink: "#c8b8ff",
+    "ink-light": "#edefd2",
+    "ink-dim": "#6a5f9e",
+    "ink-data": "#4fc3f7",
+    "ink-contrast": "#ededed",
+    "ink-dark": "#08081a",
+  },
+  light: {
+    bg: "#f4f4f8",
+    surface: "#ffffff",
+    "surface-2": "#e9e9f1",
+    border: "#d3d3df",
+    ink: "#1b1b2c",
+    "ink-light": "#0e0e18",
+    "ink-dim": "#55556b",
+    "ink-data": "#12539e",
+    "ink-contrast": "#0e0e18",
+    "ink-dark": "#08081a",
+  },
 };
 
 // Jede überschreibbare Token-ID (Akzent + Basis) → die CSS-Variablen-Suffixe,
-// die sie setzt. Akzent-Tokens 1:1; "bg" den Seitenhintergrund; "ink" BEIDE
-// Fließtext-Tokens (--lcars-ink für <body>, --lcars-ink-light für .lcars-text),
-// damit die frei gewählte Schriftfarbe den gesamten Lesetext trägt. Die
-// funktionalen Ink-Rollen (ink-data für Links/Überschriften, ink-dim für
-// Nebentext) bleiben absichtlich unberührt. Für jedes Suffix werden sowohl
-// --lcars-<suffix> (rohes CSS) als auch --color-lcars-<suffix> (Tailwind)
-// gesetzt. EINE Quelle für Client-Vorschau (ThemeSettingsForm/ThemeApplier)
-// UND das Pre-Paint-Init-Skript (src/app/layout.tsx).
-export const OVERRIDE_TOKEN_VARS: Record<string, string[]> = {
-  ...Object.fromEntries(TOKEN_IDS.map((id) => [id, [id]])),
-  bg: ["bg"],
-  ink: ["ink", "ink-light"],
-};
+// die sie setzt. Durchgehend 1:1: jede Rolle steht für genau eine Variable und
+// ist damit unabhängig von den übrigen einstellbar. Für jedes Suffix werden
+// sowohl --lcars-<suffix> (rohes CSS) als auch --color-lcars-<suffix>
+// (Tailwind) gesetzt. EINE Quelle für die Client-Vorschau
+// (ThemeSettingsForm/ThemeApplier) UND das Pre-Paint-Init-Skript
+// (src/app/layout.tsx).
+export const OVERRIDE_TOKEN_VARS: Record<string, string[]> = Object.fromEntries(
+  [...TOKEN_IDS, ...BASE_TOKEN_IDS].map((id) => [id, [id]]),
+);
 
 export type OverrideTokenId = TokenId | BaseTokenId;
 

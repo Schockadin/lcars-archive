@@ -8,6 +8,8 @@ import {
   BASE_TOKENS,
   BASE_TOKEN_IDS,
   BASE_TOKEN_DEFAULTS,
+  INK_TOKENS,
+  SURFACE_TOKENS,
   OVERRIDE_TOKEN_VARS,
   isValidThemeId,
   normalizeThemeId,
@@ -79,12 +81,31 @@ describe("token overrides", () => {
     expect(isValidTokenId("ink")).toBe(false);
   });
 
-  it("kennt die frei wählbaren Basis-Tokens (Hintergrund + Schrift)", () => {
-    expect(BASE_TOKEN_IDS).toEqual(["bg", "ink"]);
-    expect(BASE_TOKENS.map((t) => t.label)).toEqual([
-      "Hintergrund",
-      "Schriftfarbe",
+  it("kennt die Flächen- und Schriftfarben-Tokens einzeln", () => {
+    // Flächen zuerst, dann jede Textrolle — Reihenfolge wie im Formular.
+    expect(SURFACE_TOKENS.map((t) => t.id)).toEqual([
+      "bg",
+      "surface",
+      "surface-2",
+      "border",
     ]);
+    expect(INK_TOKENS.map((t) => t.id)).toEqual([
+      "ink",
+      "ink-light",
+      "ink-dim",
+      "ink-data",
+      "ink-contrast",
+      "ink-dark",
+    ]);
+    expect(BASE_TOKEN_IDS).toEqual([
+      ...SURFACE_TOKENS.map((t) => t.id),
+      ...INK_TOKENS.map((t) => t.id),
+    ]);
+    // Jedes Token trägt Label und Erklärung fürs Formular.
+    for (const token of BASE_TOKENS) {
+      expect(token.label.length, token.id).toBeGreaterThan(0);
+      expect(token.hint.length, token.id).toBeGreaterThan(0);
+    }
     // Für beide Modi liegen gültige Hex-Defaults vor.
     for (const mode of ["dark", "light"] as const) {
       for (const id of BASE_TOKEN_IDS) {
@@ -102,14 +123,16 @@ describe("token overrides", () => {
     expect(isOverridableToken("nope")).toBe(false);
   });
 
-  it("OVERRIDE_TOKEN_VARS bildet Akzente 1:1 ab, ink auf zwei Suffixe", () => {
-    for (const id of TOKEN_IDS) {
-      expect(OVERRIDE_TOKEN_VARS[id]).toEqual([id]);
+  it("OVERRIDE_TOKEN_VARS bildet jede Rolle 1:1 auf ihre Variable ab", () => {
+    // Durchgehend 1:1 — jede Rolle (Akzent, Fläche, Schrift) ist damit
+    // unabhängig von den übrigen einstellbar.
+    for (const id of [...TOKEN_IDS, ...BASE_TOKEN_IDS]) {
+      expect(OVERRIDE_TOKEN_VARS[id], id).toEqual([id]);
     }
-    expect(OVERRIDE_TOKEN_VARS.bg).toEqual(["bg"]);
-    // ink färbt sowohl den Body (--lcars-ink) als auch den Lesetext
-    // (--lcars-ink-light).
-    expect(OVERRIDE_TOKEN_VARS.ink).toEqual(["ink", "ink-light"]);
+    // Und es gibt keine weiteren (verwaisten) Einträge.
+    expect(Object.keys(OVERRIDE_TOKEN_VARS).sort()).toEqual(
+      [...TOKEN_IDS, ...BASE_TOKEN_IDS].sort(),
+    );
   });
 
   it("validiert und normalisiert Hex-Farben", () => {

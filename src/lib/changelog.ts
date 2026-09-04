@@ -47,7 +47,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "farbschema",
       },
       {
-        text: "Hintergrund- und Schriftfarbe lassen sich jetzt frei wählen — wie bei den Akzentfarben mit einem eigenen Farbwähler im Profil. Ohne eigene Wahl gilt weiterhin der Standard des jeweiligen Hell/Dunkel-Modus.",
+        text: "Hintergrund und Schrift lassen sich jetzt bis ins Detail einstellen: Seitenhintergrund, Flächen und Rahmen ebenso wie jede Schriftfarbe einzeln — Fließtext, Lesetext, Nebentext, Links, Kontrasttext und die Beschriftung auf farbigen Flächen. Im minimalistischen Interface färbt sich die Seitenleiste mit. Die Farbauswahl im Profil ist dafür in aufklappbare Bereiche gegliedert; ohne eigene Wahl gilt weiterhin der Standard des jeweiligen Hell/Dunkel-Modus.",
         tutorial: "farbschema",
       },
     ],

@@ -28,8 +28,9 @@ import CharacterColorForm from "./CharacterColorForm";
 import ThemeSettingsForm from "./ThemeSettingsForm";
 import UiModeSettingsForm from "./UiModeSettingsForm";
 import ColorModeSettingsForm from "./ColorModeSettingsForm";
-import { normalizeUiMode } from "@/lib/uiMode";
-import { normalizeColorMode } from "@/lib/colorMode";
+import SettingsPanel from "@/app/_shared/SettingsPanel";
+import { isMinimalUiMode, normalizeUiMode } from "@/lib/uiMode";
+import { COLOR_MODE_LIGHT, normalizeColorMode } from "@/lib/colorMode";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 import DataRow from "@/components/lcars/DataRow";
@@ -161,36 +162,39 @@ export default async function UserPage() {
               label="Darstellung"
               value={COLOR_THEMES.length}
             >
-              <section id="theme" className="flex flex-col gap-[16px]">
-                <h2>Farbtheme</h2>
+              {/* Alle Darstellungs-Einstellungen als aufklappbare Panels
+                  (SettingsPanel): Farben, Hell/Dunkel und Oberfläche stehen
+                  sonst als eine sehr lange Liste untereinander. Jedes Panel
+                  bleibt ein eigenes Formular mit eigenem „Speichern". */}
+              <section id="theme" className="flex flex-col gap-[12px]">
                 <p>
-                  Färbe die gesamte Oberfläche in einem der LCARS-Farbschemata —
-                  wahlweise mit eigenen Akzentfarben feinjustiert. Die Wahl gilt
-                  nur für dich und bleibt bei jedem Login erhalten.
+                  Färbe die Oberfläche nach deinem Geschmack: Basis-Schema,
+                  Hintergrund, Schriftfarben und Akzente lassen sich einzeln
+                  einstellen. Alle Angaben gelten nur für dich und bleiben bei
+                  jedem Login erhalten.
                 </p>
+
                 <ThemeSettingsForm
                   currentTheme={colorTheme}
                   currentOverrides={themeOverrides}
                   currentMode={colorMode}
                 />
 
-                <h2 className="mt-[8px]">Hell/Dunkel</h2>
-                <p>
-                  Wähle zwischen hellem und dunklem Erscheinungsbild —
-                  unabhängig davon, ob du LCARS oder das minimalistische
-                  Interface nutzt. Die Wahl gilt nur für dich und bleibt bei
-                  jedem Login erhalten.
-                </p>
-                <ColorModeSettingsForm currentMode={colorMode} />
+                <SettingsPanel
+                  title="Hell/Dunkel"
+                  hint="Helles oder dunkles Erscheinungsbild — unabhängig vom Interface"
+                  badge={colorMode === COLOR_MODE_LIGHT ? "Hell" : "Dunkel"}
+                >
+                  <ColorModeSettingsForm currentMode={colorMode} />
+                </SettingsPanel>
 
-                <h2 className="mt-[8px]">Oberfläche</h2>
-                <p>
-                  Bevorzugst du es schlicht? Deaktiviere das LCARS-Design und
-                  nutze stattdessen ein schlankes, minimalistisches Interface.
-                  Die Wahl gilt nur für dich und bleibt bei jedem Login
-                  erhalten.
-                </p>
-                <UiModeSettingsForm currentMode={uiMode} />
+                <SettingsPanel
+                  title="Oberfläche"
+                  hint="Volles LCARS-Design oder schlankes, minimalistisches Interface"
+                  badge={isMinimalUiMode(uiMode) ? "Minimalistisch" : "LCARS"}
+                >
+                  <UiModeSettingsForm currentMode={uiMode} />
+                </SettingsPanel>
               </section>
             </DataRow>
 

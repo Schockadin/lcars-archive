@@ -5,17 +5,20 @@ import {
   type ColorThemeState,
 } from "./colorThemeActions";
 import { SaveFooter } from "@/app/_shared/FormPrimitives";
+import SettingsPanel from "@/app/_shared/SettingsPanel";
 import {
-  BASE_TOKENS,
   BASE_TOKEN_DEFAULTS,
   COLOR_THEMES,
   DEFAULT_THEME_ID,
+  INK_TOKENS,
   OVERRIDE_TOKEN_VARS,
+  SURFACE_TOKENS,
   THEME_TOKENS,
   getTheme,
   themeSwatch,
   normalizeThemeId,
   sanitizeThemeOverrides,
+  type BaseTokenId,
   type OverrideTokenId,
   type ThemeOverrides,
 } from "@/lib/themes";
@@ -28,8 +31,7 @@ const initialState: ColorThemeState = {};
 // überschriebene Tokens werden etwaige Inline-Overrides wieder entfernt, damit
 // der Basis-Theme-Wert durchscheint. Inline-Style auf <html> gewinnt gegen jede
 // Stylesheet-Regel — deshalb --lcars-<suffix> UND --color-lcars-<suffix>
-// (Tailwind). Eine Override-ID kann mehrere CSS-Variablen setzen (siehe
-// OVERRIDE_TOKEN_VARS: "ink" → ink + ink-light), daher pro ID über alle Suffixe.
+// (Tailwind). Die Suffixe je Token liefert OVERRIDE_TOKEN_VARS.
 function applyPreview(themeId: string, overrides: ThemeOverrides) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
@@ -52,9 +54,60 @@ function applyPreview(themeId: string, overrides: ThemeOverrides) {
   }
 }
 
-// Theme-Auswahl + Individualisierung im Profil (/user). Radio-Karten fürs
-// Basis-Theme, darunter je Akzent-Token ein Farbwähler mit „Zurücksetzen"
-// sowie die frei wählbaren Basisfarben (Hintergrund + Schrift).
+// Eine Farbwähler-Zeile: Farbfeld, Beschriftung samt Erklärung, aktueller Wert
+// und „Zurücksetzen" (nur aktiv, solange eine eigene Farbe gesetzt ist).
+function ColorRow({
+  id,
+  label,
+  hint,
+  value,
+  overridden,
+  onChange,
+  onReset,
+}: {
+  id: OverrideTokenId;
+  label: string;
+  hint?: string;
+  value: string;
+  overridden: boolean;
+  onChange: (id: OverrideTokenId, value: string) => void;
+  onReset: (id: OverrideTokenId) => void;
+}) {
+  return (
+    <div className="flex items-center gap-[12px]">
+      <input
+        type="color"
+        aria-label={`${label} – Farbe wählen`}
+        value={value}
+        onChange={(e) => onChange(id, e.target.value)}
+        className="h-[32px] w-[44px] shrink-0 cursor-pointer rounded-[6px] border border-lcars-border bg-transparent p-[2px]"
+      />
+      <span className="flex flex-1 flex-col">
+        <span className="lcars-eyebrow text-lcars-ink-light">{label}</span>
+        {hint && (
+          <span className="text-lcars-ink-dim text-[12px]">{hint}</span>
+        )}
+        <span className="text-lcars-ink-dim text-[12px] font-lcars-mono">
+          {value}
+          {overridden ? " · eigene Farbe" : " · Standard"}
+        </span>
+      </span>
+      <button
+        type="button"
+        onClick={() => onReset(id)}
+        disabled={!overridden}
+        className="lcars-pill-btn--outline text-[12px] px-[12px] py-[4px] disabled:opacity-40"
+      >
+        Zurücksetzen
+      </button>
+    </div>
+  );
+}
+
+// Theme-Auswahl + Individualisierung im Profil (/user). Vier aufklappbare
+// Panels (SettingsPanel): Basis-Farbschema, Flächen, Schriftfarben und
+// Akzentfarben — alles in EINEM Formular mit einem gemeinsamen „Speichern".
+// Ohne die Panels stünden hier über zwanzig Farbwähler untereinander.
 export default function ThemeSettingsForm({
   currentTheme,
   currentOverrides,
@@ -79,16 +132,15 @@ export default function ThemeSettingsForm({
     applyPreview(selected, overrides);
   }, [selected, overrides]);
 
-  const baseTokens = getTheme(selected).tokens;
-  // Default-Anzeige der Basisfarben-Wähler richtet sich nach dem Hell/Dunkel-
-  // Modus (dunkler bzw. heller Grund), solange kein eigener Wert gesetzt ist.
+  const accentDefaults = getTheme(selected).tokens;
+  // Default-Anzeige der Basisfarben richtet sich nach dem Hell/Dunkel-Modus,
+  // solange kein eigener Wert gesetzt ist.
   const baseDefaults =
-    BASE_TOKEN_DEFAULTS[isLightMode(normalizeColorMode(currentMode)) ? "light" : "dark"];
-  const hasOverrides = Object.keys(overrides).length > 0;
+    BASE_TOKEN_DEFAULTS[
+      isLightMode(normalizeColorMode(currentMode)) ? "light" : "dark"
+    ];
 
-  function handleSelectTheme(themeId: string) {
-    setSelected(themeId);
-  }
+  const overrideCount = Object.keys(overrides).length;
 
   function handleColor(id: OverrideTokenId, value: string) {
     setOverrides((prev) => ({ ...prev, [id]: value.toLowerCase() }));
@@ -106,17 +158,49 @@ export default function ThemeSettingsForm({
     setOverrides({});
   }
 
+  // Anzahl eigener Farben innerhalb einer Gruppe — steht als Kurzinfo rechts
+  // in der Panel-Kopfzeile, damit man zugeklappt sieht, wo etwas gesetzt ist.
+  function countIn(ids: readonly string[]): number {
+    return ids.filter((id) => overrides[id as OverrideTokenId] !== undefined)
+      .length;
+  }
+
+  function groupBadge(ids: readonly string[]): string {
+    const n = countIn(ids);
+    return n === 0 ? "Standard" : `${n} eigene`;
+  }
+
+  const surfaceIds = SURFACE_TOKENS.map((t) => t.id);
+  const inkIds = INK_TOKENS.map((t) => t.id);
+  const accentIds = THEME_TOKENS.map((t) => t.id);
+
   return (
-    <form action={formAction} className="flex flex-col gap-[20px]">
+    <form action={formAction} className="flex flex-col gap-[12px]">
       <input type="hidden" name="theme" value={selected} />
       <input type="hidden" name="overrides" value={JSON.stringify(overrides)} />
 
-      <div className="flex flex-col gap-[8px]">
+      <div className="flex items-center justify-between gap-[12px]">
         <p className="text-lcars-ink-dim text-[13px]">
-          Wähle ein Basis-Farbschema. Die Vorschau erscheint sofort; gespeichert
-          wird sie erst mit „Speichern“ und bleibt dann bei jedem Login erhalten.
+          Die Vorschau erscheint sofort; gespeichert wird sie erst mit
+          „Speichern“ und bleibt dann bei jedem Login erhalten.
         </p>
+        {overrideCount > 0 && (
+          <button
+            type="button"
+            onClick={resetAll}
+            className="lcars-pill-btn--outline shrink-0 text-[12px] px-[12px] py-[4px]"
+          >
+            Alle zurücksetzen
+          </button>
+        )}
+      </div>
 
+      <SettingsPanel
+        title="Farbschema"
+        hint="Basis-Palette der Akzentfarben"
+        badge={getTheme(selected).label}
+        defaultOpen
+      >
         <div
           role="radiogroup"
           aria-label="Basis-Farbschema"
@@ -138,7 +222,7 @@ export default function ThemeSettingsForm({
                   name="theme-choice"
                   value={theme.id}
                   checked={isSelected}
-                  onChange={() => handleSelectTheme(theme.id)}
+                  onChange={() => setSelected(theme.id)}
                   className="sr-only"
                 />
                 <span aria-hidden className="flex shrink-0 gap-[3px]">
@@ -166,104 +250,63 @@ export default function ThemeSettingsForm({
             );
           })}
         </div>
-      </div>
+      </SettingsPanel>
 
-      <div className="flex flex-col gap-[10px]">
-        <h3 className="!mt-0">Hintergrund &amp; Schrift</h3>
-        <p className="text-lcars-ink-dim text-[13px]">
-          Optional: Seitenhintergrund und Schriftfarbe frei wählen. Ohne
-          Überschreibung gilt der Standard des gewählten Hell/Dunkel-Modus.
-        </p>
+      <SettingsPanel
+        title="Hintergrund & Flächen"
+        hint="Seitenhintergrund, Panels und Rahmen"
+        badge={groupBadge(surfaceIds)}
+      >
+        {SURFACE_TOKENS.map(({ id, label, hint }) => (
+          <ColorRow
+            key={id}
+            id={id}
+            label={label}
+            hint={hint}
+            value={overrides[id] ?? baseDefaults[id as BaseTokenId]}
+            overridden={overrides[id] !== undefined}
+            onChange={handleColor}
+            onReset={resetToken}
+          />
+        ))}
+      </SettingsPanel>
 
-        <div className="flex flex-col gap-[8px]">
-          {BASE_TOKENS.map(({ id, label }) => {
-            const overridden = overrides[id] !== undefined;
-            const value = overrides[id] ?? baseDefaults[id];
-            return (
-              <div key={id} className="flex items-center gap-[12px]">
-                <input
-                  type="color"
-                  aria-label={`${label} – Farbe wählen`}
-                  value={value}
-                  onChange={(e) => handleColor(id, e.target.value)}
-                  className="h-[32px] w-[44px] shrink-0 cursor-pointer rounded-[6px] border border-lcars-border bg-transparent p-[2px]"
-                />
-                <span className="flex flex-1 flex-col">
-                  <span className="lcars-eyebrow text-lcars-ink-light">
-                    {label}
-                  </span>
-                  <span className="text-lcars-ink-dim text-[12px] font-lcars-mono">
-                    {value}
-                    {overridden ? " · eigene Farbe" : " · Modus-Standard"}
-                  </span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => resetToken(id)}
-                  disabled={!overridden}
-                  className="lcars-pill-btn--outline text-[12px] px-[12px] py-[4px] disabled:opacity-40"
-                >
-                  Zurücksetzen
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <SettingsPanel
+        title="Schriftfarben"
+        hint="Jede Textrolle einzeln einstellbar"
+        badge={groupBadge(inkIds)}
+      >
+        {INK_TOKENS.map(({ id, label, hint }) => (
+          <ColorRow
+            key={id}
+            id={id}
+            label={label}
+            hint={hint}
+            value={overrides[id] ?? baseDefaults[id as BaseTokenId]}
+            overridden={overrides[id] !== undefined}
+            onChange={handleColor}
+            onReset={resetToken}
+          />
+        ))}
+      </SettingsPanel>
 
-      <div className="flex flex-col gap-[10px]">
-        <div className="flex items-center justify-between gap-[12px]">
-          <h3 className="!mt-0">Feineinstellung</h3>
-          {hasOverrides && (
-            <button
-              type="button"
-              onClick={resetAll}
-              className="lcars-pill-btn--outline text-[12px] px-[12px] py-[4px]"
-            >
-              Alle zurücksetzen
-            </button>
-          )}
-        </div>
-        <p className="text-lcars-ink-dim text-[13px]">
-          Optional: einzelne Akzentfarben mit eigenen Farben überschreiben. Ohne
-          Überschreibung gilt der Wert des Basis-Themes.
-        </p>
-
-        <div className="flex flex-col gap-[8px]">
-          {THEME_TOKENS.map(({ id, label }) => {
-            const overridden = overrides[id] !== undefined;
-            const value = overrides[id] ?? baseTokens[id];
-            return (
-              <div key={id} className="flex items-center gap-[12px]">
-                <input
-                  type="color"
-                  aria-label={`${label} – Farbe wählen`}
-                  value={value}
-                  onChange={(e) => handleColor(id, e.target.value)}
-                  className="h-[32px] w-[44px] shrink-0 cursor-pointer rounded-[6px] border border-lcars-border bg-transparent p-[2px]"
-                />
-                <span className="flex flex-1 flex-col">
-                  <span className="lcars-eyebrow text-lcars-ink-light">
-                    {label}
-                  </span>
-                  <span className="text-lcars-ink-dim text-[12px] font-lcars-mono">
-                    {value}
-                    {overridden ? " · eigene Farbe" : " · Theme-Standard"}
-                  </span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => resetToken(id)}
-                  disabled={!overridden}
-                  className="lcars-pill-btn--outline text-[12px] px-[12px] py-[4px] disabled:opacity-40"
-                >
-                  Zurücksetzen
-                </button>
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      <SettingsPanel
+        title="Akzentfarben"
+        hint="Feineinstellung der Farben des Basis-Schemas"
+        badge={groupBadge(accentIds)}
+      >
+        {THEME_TOKENS.map(({ id, label }) => (
+          <ColorRow
+            key={id}
+            id={id}
+            label={label}
+            value={overrides[id] ?? accentDefaults[id]}
+            overridden={overrides[id] !== undefined}
+            onChange={handleColor}
+            onReset={resetToken}
+          />
+        ))}
+      </SettingsPanel>
 
       <SaveFooter state={state} pending={pending} />
     </form>

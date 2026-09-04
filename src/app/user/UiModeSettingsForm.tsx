@@ -70,9 +70,7 @@ export default function UiModeSettingsForm({
       <input type="hidden" name="uiMode" value={selected} />
 
       <p className="text-lcars-ink-dim text-[13px]">
-        Wähle, wie die Oberfläche aussehen soll. Die Vorschau erscheint sofort;
-        gespeichert wird sie erst mit „Speichern“ und bleibt dann bei jedem
-        Login erhalten.
+        Die Vorschau erscheint sofort; gespeichert wird sie erst mit „Speichern“.
       </p>
 
       <div

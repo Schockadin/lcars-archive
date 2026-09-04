@@ -160,11 +160,14 @@ test.describe("Charakter-Assistent", () => {
 
     const preview = page.locator("#character-wizard .pf-preview");
     await expect(preview).toBeVisible();
-    // Blatt 1 Personalakte, Blatt 2 Spickzettel, Blatt 3 Biografie.
-    await expect(preview.locator(".pf-doc-title")).toHaveText([
+    // Blatt 1 Personalakte, Blatt 2 Spickzettel, Blatt 3 Biografie. Die
+    // Blattnamen stehen im Titelreiter der STA-Kopfzeile (.pf-doc-tab).
+    await expect(preview.locator(".pf-doc-tab")).toHaveText([
       "Talents",
       "Biography",
     ]);
+    // Beide Zusatzblätter tragen die Aufmachung des Hauptblatts.
+    await expect(preview.locator(".pf-doc-wordmark")).toHaveCount(2);
     await expect(preview.getByText("T'Rel").first()).toBeVisible();
     await expect(
       page.locator("#character-wizard .wizard-bar button[type='submit']"),
@@ -263,11 +266,13 @@ test.describe("Bogen-Vorschau", () => {
       "download",
       "",
     );
-    // Alle drei Blätter stehen im Fenster.
-    await expect(overlay.locator(".pf-doc-title")).toHaveText([
+    // Alle drei Blätter stehen im Fenster — die Blattnamen im Titelreiter
+    // der STA-Kopfzeile (.pf-doc-tab).
+    await expect(overlay.locator(".pf-doc-tab")).toHaveText([
       "Talents",
       "Biography",
     ]);
+    await expect(overlay.locator(".pf-doc-wordmark")).toHaveCount(2);
 
     // Escape schließt (useOverlayDismiss) — gleiches Muster wie die übrigen
     // Overlays der Anwendung.
