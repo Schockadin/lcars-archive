@@ -20,6 +20,16 @@
   display: none;
 }
 
+/* Auf breiten Screens teilen sich beide Spalten (Charaktere/Gespräche) den
+   Platz zu gleichen Teilen: gleiche flex-basis (0) und gleiches Wachstum, so
+   sind sie exakt gleich breit — vorher war die Charakter-Spalte auf 640px
+   gedeckelt, die Gespräche-Spalte nahm den Rest und war dadurch breiter. */
+@media (min-width: 901px) {
+  .chars-dialogues-col {
+    flex: 1 1 0;
+  }
+}
+
 @media (max-width: 900px) {
   .chars-dialogues-layout {
     flex-direction: column;
