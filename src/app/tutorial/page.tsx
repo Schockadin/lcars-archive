@@ -885,6 +885,12 @@ export default function TutorialPage() {
                 <strong>Speichern</strong> auf allen deinen Geräten erhalten.
               </p>
               <p>
+                Direkt darüber wählst du unter{" "}
+                <strong>„Hintergrund &amp; Schrift“</strong> optional eine eigene
+                Hintergrund- und Schriftfarbe für die gesamte Oberfläche. Ohne
+                eigene Wahl gilt der Standard des jeweiligen Hell/Dunkel-Modus.
+              </p>
+              <p>
                 Darunter kannst du unter <strong>„Feineinstellung“</strong> jede
                 einzelne Akzentfarbe mit einer eigenen Farbe überschreiben. Mit{" "}
                 <strong>„Zurücksetzen“</strong> (pro Farbe) oder{" "}
@@ -893,15 +899,21 @@ export default function TutorialPage() {
                 anschließend zu speichern.
               </p>
               <p>
+                Ob die Oberfläche <strong>hell</strong> oder{" "}
+                <strong>dunkel</strong> erscheint, stellst du unter{" "}
+                <strong>„Hell/Dunkel“</strong> ein — <em>unabhängig</em> davon,
+                ob du LCARS oder das minimalistische Interface nutzt. Jede
+                Kombination ist möglich (LCARS hell, minimal dunkel, …).
+              </p>
+              <p>
                 Wenn du es lieber schlicht magst, kannst du unter{" "}
                 <strong>„Oberfläche“</strong> das LCARS-Design ganz abschalten
                 und stattdessen ein <strong>minimalistisches Interface</strong>{" "}
-                wählen — wahlweise <strong>dunkel</strong> oder{" "}
-                <strong>hell</strong>: schlichte Systemschrift, keine dekorativen
-                Balken und Rundungen, und die gesamte Navigation kompakt in der
-                linken Seitenleiste (auf dem Handy platzsparend als Symbole).
-                Auch diese Wahl gilt nur für dich, wird sofort als Vorschau
-                angewendet und bleibt nach dem Speichern erhalten.
+                wählen: schlichte Systemschrift, keine dekorativen Balken und
+                Rundungen, und die gesamte Navigation kompakt in der linken
+                Seitenleiste (auf dem Handy platzsparend als Symbole). Auch diese
+                Wahl gilt nur für dich, wird sofort als Vorschau angewendet und
+                bleibt nach dem Speichern erhalten.
               </p>
             </div>
           </LcarsDataRow>

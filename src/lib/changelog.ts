@@ -39,6 +39,20 @@ export function changelogItemTutorial(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.29",
+    title: "Hell/Dunkel frei wählbar — plus eigene Grundfarben",
+    items: [
+      {
+        text: "Hell oder dunkel ist jetzt eine eigene Einstellung, unabhängig vom Interface: Du kannst LCARS und das minimalistische UI jeweils in hell oder dunkel nutzen — jede Kombination ist möglich. Die Wahl triffst du im Profil unter „Darstellung“ und sie bleibt bei jedem Login erhalten.",
+        tutorial: "farbschema",
+      },
+      {
+        text: "Hintergrund- und Schriftfarbe lassen sich jetzt frei wählen — wie bei den Akzentfarben mit einem eigenen Farbwähler im Profil. Ohne eigene Wahl gilt weiterhin der Standard des jeweiligen Hell/Dunkel-Modus.",
+        tutorial: "farbschema",
+      },
+    ],
+  },
+  {
     version: "1.28",
     title: "Charaktere anlegen und pflegen in neuem Ablauf",
     items: [

@@ -1,64 +1,64 @@
 "use client";
 import { useActionState, useEffect, useState } from "react";
-import { updateUiModeAction, type UiModeState } from "./uiModeActions";
+import { updateColorModeAction, type ColorModeState } from "./colorModeActions";
 import { SaveFooter } from "@/app/_shared/FormPrimitives";
 import {
-  UI_MODE_LCARS,
-  UI_MODE_MINIMAL,
-  isMinimalUiMode,
-  normalizeUiMode,
-  type UiMode,
-} from "@/lib/uiMode";
+  COLOR_MODE_DARK,
+  COLOR_MODE_LIGHT,
+  isLightMode,
+  normalizeColorMode,
+  type ColorMode,
+} from "@/lib/colorMode";
 
-const initialState: UiModeState = {};
+const initialState: ColorModeState = {};
 
-interface UiModeOption {
-  id: UiMode;
+interface ColorModeOption {
+  id: ColorMode;
   label: string;
   description: string;
 }
 
-const UI_MODE_OPTIONS: UiModeOption[] = [
+const COLOR_MODE_OPTIONS: ColorModeOption[] = [
   {
-    id: UI_MODE_LCARS,
-    label: "LCARS",
-    description:
-      "Das gewohnte Star-Trek-Interface mit Elbows, Farbbalken und Versalien.",
+    id: COLOR_MODE_DARK,
+    label: "Dunkel",
+    description: "Heller Text auf dunklem Grund — der gewohnte Look.",
   },
   {
-    id: UI_MODE_MINIMAL,
-    label: "Minimalistisch",
-    description:
-      "Schlanke, flache Oberfläche mit Systemschrift — ganz ohne LCARS-Chrome. Hell oder dunkel stellst du separat unter „Hell/Dunkel“ ein.",
+    id: COLOR_MODE_LIGHT,
+    label: "Hell",
+    description: "Dunkler Text auf hellem Grund. Gilt für LCARS wie minimal.",
   },
 ];
 
-// Wendet den UI-Modus sofort clientseitig an (Live-Vorschau): data-ui="minimal"
-// aktiviert minimal-ui.css, das Entfernen zeigt wieder das volle LCARS-Design.
-function applyPreview(mode: UiMode) {
+// Wendet den Hell/Dunkel-Modus sofort clientseitig an (Live-Vorschau):
+// data-mode="light" aktiviert das helle Schema (color-mode.css), das Entfernen
+// zeigt wieder das dunkle. Unabhängig vom UI-Modus (data-ui) und Farbthema
+// (data-theme).
+function applyPreview(mode: ColorMode) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
-  if (isMinimalUiMode(mode)) {
-    root.setAttribute("data-ui", UI_MODE_MINIMAL);
+  if (isLightMode(mode)) {
+    root.setAttribute("data-mode", COLOR_MODE_LIGHT);
   } else {
-    root.removeAttribute("data-ui");
+    root.removeAttribute("data-mode");
   }
 }
 
-// UI-Modus-Auswahl im Profil (/user). Radio-Karten wie bei der Theme-Auswahl;
-// die Vorschau greift sofort, gespeichert wird erst mit „Speichern".
-export default function UiModeSettingsForm({
+// Hell/Dunkel-Auswahl im Profil (/user). Radio-Karten wie bei der Theme-/
+// UI-Auswahl; die Vorschau greift sofort, gespeichert wird erst mit „Speichern".
+export default function ColorModeSettingsForm({
   currentMode,
 }: {
   currentMode: string;
 }) {
   const [state, formAction, pending] = useActionState(
-    updateUiModeAction,
+    updateColorModeAction,
     initialState,
   );
 
-  const [selected, setSelected] = useState<UiMode>(() =>
-    normalizeUiMode(currentMode),
+  const [selected, setSelected] = useState<ColorMode>(() =>
+    normalizeColorMode(currentMode),
   );
 
   useEffect(() => {
@@ -67,20 +67,21 @@ export default function UiModeSettingsForm({
 
   return (
     <form action={formAction} className="flex flex-col gap-[20px]">
-      <input type="hidden" name="uiMode" value={selected} />
+      <input type="hidden" name="colorMode" value={selected} />
 
       <p className="text-lcars-ink-dim text-[13px]">
-        Wähle, wie die Oberfläche aussehen soll. Die Vorschau erscheint sofort;
-        gespeichert wird sie erst mit „Speichern“ und bleibt dann bei jedem
-        Login erhalten.
+        Wähle zwischen hellem und dunklem Erscheinungsbild — unabhängig davon,
+        ob du LCARS oder das minimalistische Interface nutzt. Die Vorschau
+        erscheint sofort; gespeichert wird sie erst mit „Speichern“ und bleibt
+        dann bei jedem Login erhalten.
       </p>
 
       <div
         role="radiogroup"
-        aria-label="Oberfläche"
+        aria-label="Hell/Dunkel"
         className="flex flex-col gap-[8px]"
       >
-        {UI_MODE_OPTIONS.map((option) => {
+        {COLOR_MODE_OPTIONS.map((option) => {
           const isSelected = selected === option.id;
           return (
             <label
@@ -93,7 +94,7 @@ export default function UiModeSettingsForm({
             >
               <input
                 type="radio"
-                name="ui-mode-choice"
+                name="color-mode-choice"
                 value={option.id}
                 checked={isSelected}
                 onChange={() => setSelected(option.id)}

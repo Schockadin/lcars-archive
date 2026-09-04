@@ -6,16 +6,20 @@ import {
 } from "./colorThemeActions";
 import { SaveFooter } from "@/app/_shared/FormPrimitives";
 import {
+  BASE_TOKENS,
+  BASE_TOKEN_DEFAULTS,
   COLOR_THEMES,
   DEFAULT_THEME_ID,
+  OVERRIDE_TOKEN_VARS,
   THEME_TOKENS,
   getTheme,
   themeSwatch,
   normalizeThemeId,
   sanitizeThemeOverrides,
+  type OverrideTokenId,
   type ThemeOverrides,
-  type TokenId,
 } from "@/lib/themes";
+import { isLightMode, normalizeColorMode } from "@/lib/colorMode";
 
 const initialState: ColorThemeState = {};
 
@@ -23,7 +27,9 @@ const initialState: ColorThemeState = {};
 // Vorschau). "standard" = kein data-theme (unveränderte :root-Werte). Für nicht
 // überschriebene Tokens werden etwaige Inline-Overrides wieder entfernt, damit
 // der Basis-Theme-Wert durchscheint. Inline-Style auf <html> gewinnt gegen jede
-// Stylesheet-Regel — deshalb --lcars-<id> UND --color-lcars-<id> (Tailwind).
+// Stylesheet-Regel — deshalb --lcars-<suffix> UND --color-lcars-<suffix>
+// (Tailwind). Eine Override-ID kann mehrere CSS-Variablen setzen (siehe
+// OVERRIDE_TOKEN_VARS: "ink" → ink + ink-light), daher pro ID über alle Suffixe.
 function applyPreview(themeId: string, overrides: ThemeOverrides) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
@@ -32,26 +38,31 @@ function applyPreview(themeId: string, overrides: ThemeOverrides) {
   } else {
     root.setAttribute("data-theme", themeId);
   }
-  for (const { id } of THEME_TOKENS) {
-    const v = overrides[id];
-    if (v) {
-      root.style.setProperty(`--lcars-${id}`, v);
-      root.style.setProperty(`--color-lcars-${id}`, v);
-    } else {
-      root.style.removeProperty(`--lcars-${id}`);
-      root.style.removeProperty(`--color-lcars-${id}`);
+  for (const [id, suffixes] of Object.entries(OVERRIDE_TOKEN_VARS)) {
+    const v = overrides[id as OverrideTokenId];
+    for (const suffix of suffixes) {
+      if (v) {
+        root.style.setProperty(`--lcars-${suffix}`, v);
+        root.style.setProperty(`--color-lcars-${suffix}`, v);
+      } else {
+        root.style.removeProperty(`--lcars-${suffix}`);
+        root.style.removeProperty(`--color-lcars-${suffix}`);
+      }
     }
   }
 }
 
 // Theme-Auswahl + Individualisierung im Profil (/user). Radio-Karten fürs
-// Basis-Theme, darunter je Akzent-Token ein Farbwähler mit „Zurücksetzen".
+// Basis-Theme, darunter je Akzent-Token ein Farbwähler mit „Zurücksetzen"
+// sowie die frei wählbaren Basisfarben (Hintergrund + Schrift).
 export default function ThemeSettingsForm({
   currentTheme,
   currentOverrides,
+  currentMode,
 }: {
   currentTheme: string;
   currentOverrides: ThemeOverrides;
+  currentMode: string;
 }) {
   const [state, formAction, pending] = useActionState(
     updateColorThemeAction,
@@ -69,17 +80,21 @@ export default function ThemeSettingsForm({
   }, [selected, overrides]);
 
   const baseTokens = getTheme(selected).tokens;
+  // Default-Anzeige der Basisfarben-Wähler richtet sich nach dem Hell/Dunkel-
+  // Modus (dunkler bzw. heller Grund), solange kein eigener Wert gesetzt ist.
+  const baseDefaults =
+    BASE_TOKEN_DEFAULTS[isLightMode(normalizeColorMode(currentMode)) ? "light" : "dark"];
   const hasOverrides = Object.keys(overrides).length > 0;
 
   function handleSelectTheme(themeId: string) {
     setSelected(themeId);
   }
 
-  function handleColor(id: TokenId, value: string) {
+  function handleColor(id: OverrideTokenId, value: string) {
     setOverrides((prev) => ({ ...prev, [id]: value.toLowerCase() }));
   }
 
-  function resetToken(id: TokenId) {
+  function resetToken(id: OverrideTokenId) {
     setOverrides((prev) => {
       const next = { ...prev };
       delete next[id];
@@ -148,6 +163,49 @@ export default function ThemeSettingsForm({
                   </span>
                 </span>
               </label>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-[10px]">
+        <h3 className="!mt-0">Hintergrund &amp; Schrift</h3>
+        <p className="text-lcars-ink-dim text-[13px]">
+          Optional: Seitenhintergrund und Schriftfarbe frei wählen. Ohne
+          Überschreibung gilt der Standard des gewählten Hell/Dunkel-Modus.
+        </p>
+
+        <div className="flex flex-col gap-[8px]">
+          {BASE_TOKENS.map(({ id, label }) => {
+            const overridden = overrides[id] !== undefined;
+            const value = overrides[id] ?? baseDefaults[id];
+            return (
+              <div key={id} className="flex items-center gap-[12px]">
+                <input
+                  type="color"
+                  aria-label={`${label} – Farbe wählen`}
+                  value={value}
+                  onChange={(e) => handleColor(id, e.target.value)}
+                  className="h-[32px] w-[44px] shrink-0 cursor-pointer rounded-[6px] border border-lcars-border bg-transparent p-[2px]"
+                />
+                <span className="flex flex-1 flex-col">
+                  <span className="lcars-eyebrow text-lcars-ink-light">
+                    {label}
+                  </span>
+                  <span className="text-lcars-ink-dim text-[12px] font-lcars-mono">
+                    {value}
+                    {overridden ? " · eigene Farbe" : " · Modus-Standard"}
+                  </span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => resetToken(id)}
+                  disabled={!overridden}
+                  className="lcars-pill-btn--outline text-[12px] px-[12px] py-[4px] disabled:opacity-40"
+                >
+                  Zurücksetzen
+                </button>
+              </div>
             );
           })}
         </div>

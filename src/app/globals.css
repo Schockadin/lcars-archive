@@ -17,6 +17,12 @@
    im selben unlayered Tier wie tokens.css liegen, sonst verliert es gegen
    unlayered CSS. */
 @import "../styles/minimal-ui.css";
+/* Unlayered, aus demselben Grund wie lcars-themes.css oben: der Hell-Modus
+   (html[data-mode="light"], Spezifität 0,1,1 > :root) überschreibt die
+   Basis-Flächen-/Schrift-Tokens aus tokens.css und muss dafür im selben
+   unlayered Tier liegen. Orthogonal zu Farbthema (data-theme) und UI-Modus
+   (data-ui) — jede Kombination ist erlaubt. */
+@import "../styles/color-mode.css";
 /* Unlayered, aus demselben Grund wie tokens.css oben: der
    Lesemodus muss u.a. die Sidebar (<aside className="flex …">) per
    display:none ausblenden. Läge diese Regel (wie vorher) in

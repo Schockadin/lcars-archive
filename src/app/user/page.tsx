@@ -27,7 +27,9 @@ import EditorSpellcheckSettingsForm from "./EditorSpellcheckSettingsForm";
 import CharacterColorForm from "./CharacterColorForm";
 import ThemeSettingsForm from "./ThemeSettingsForm";
 import UiModeSettingsForm from "./UiModeSettingsForm";
+import ColorModeSettingsForm from "./ColorModeSettingsForm";
 import { normalizeUiMode } from "@/lib/uiMode";
+import { normalizeColorMode } from "@/lib/colorMode";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 import DataRow from "@/components/lcars/DataRow";
@@ -73,6 +75,7 @@ export default async function UserPage() {
   const colorTheme = normalizeThemeId(target.color_theme);
   const themeOverrides = sanitizeThemeOverrides(target.theme_overrides);
   const uiMode = normalizeUiMode(target.ui_mode);
+  const colorMode = normalizeColorMode(target.color_mode);
 
   // Charakter-Farben: eine Liste statt einer einzigen Wahl, seit die Farbe
   // pro Charakter statt pro User lebt (Multis sollen für jeden Charakter
@@ -168,7 +171,17 @@ export default async function UserPage() {
                 <ThemeSettingsForm
                   currentTheme={colorTheme}
                   currentOverrides={themeOverrides}
+                  currentMode={colorMode}
                 />
+
+                <h2 className="mt-[8px]">Hell/Dunkel</h2>
+                <p>
+                  Wähle zwischen hellem und dunklem Erscheinungsbild —
+                  unabhängig davon, ob du LCARS oder das minimalistische
+                  Interface nutzt. Die Wahl gilt nur für dich und bleibt bei
+                  jedem Login erhalten.
+                </p>
+                <ColorModeSettingsForm currentMode={colorMode} />
 
                 <h2 className="mt-[8px]">Oberfläche</h2>
                 <p>

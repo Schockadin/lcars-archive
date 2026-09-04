@@ -35,9 +35,57 @@ export type TokenId = (typeof THEME_TOKENS)[number]["id"];
 export const TOKEN_IDS: TokenId[] = THEME_TOKENS.map((t) => t.id);
 
 export type ThemeTokens = Record<TokenId, string>;
-// Nur die überschriebenen Tokens (Teilmenge) — leeres Objekt = keine
-// Individualisierung.
-export type ThemeOverrides = Partial<ThemeTokens>;
+
+// ─── Frei wählbare Basis-Farben (Hintergrund + Schriftfarbe) ────────────────
+// Anders als die Akzent-Tokens (THEME_TOKENS) hängen diese NICHT am Farbthema,
+// sondern haben je Hell-/Dunkel-Modus (src/lib/colorMode.ts) einen eigenen
+// Default. Wer will, überschreibt sie im Profil mit einer eigenen Farbe —
+// dieselbe Mechanik wie die Akzent-Feineinstellung (theme_overrides).
+export const BASE_TOKENS = [
+  { id: "bg", label: "Hintergrund" },
+  { id: "ink", label: "Schriftfarbe" },
+] as const;
+
+export type BaseTokenId = (typeof BASE_TOKENS)[number]["id"];
+
+export const BASE_TOKEN_IDS: BaseTokenId[] = BASE_TOKENS.map((t) => t.id);
+
+// Mode-abhängige Defaults der Basis-Tokens — nur für die Anzeige der Farbwähler
+// im Profil, wenn (noch) kein eigener Wert gesetzt ist. Spiegeln tokens.css
+// (:root = dunkel) bzw. color-mode.css (html[data-mode="light"]).
+export const BASE_TOKEN_DEFAULTS: Record<
+  "dark" | "light",
+  Record<BaseTokenId, string>
+> = {
+  dark: { bg: "#08081a", ink: "#c8b8ff" },
+  light: { bg: "#f4f4f8", ink: "#1b1b2c" },
+};
+
+// Jede überschreibbare Token-ID (Akzent + Basis) → die CSS-Variablen-Suffixe,
+// die sie setzt. Akzent-Tokens 1:1; "bg" den Seitenhintergrund; "ink" BEIDE
+// Fließtext-Tokens (--lcars-ink für <body>, --lcars-ink-light für .lcars-text),
+// damit die frei gewählte Schriftfarbe den gesamten Lesetext trägt. Die
+// funktionalen Ink-Rollen (ink-data für Links/Überschriften, ink-dim für
+// Nebentext) bleiben absichtlich unberührt. Für jedes Suffix werden sowohl
+// --lcars-<suffix> (rohes CSS) als auch --color-lcars-<suffix> (Tailwind)
+// gesetzt. EINE Quelle für Client-Vorschau (ThemeSettingsForm/ThemeApplier)
+// UND das Pre-Paint-Init-Skript (src/app/layout.tsx).
+export const OVERRIDE_TOKEN_VARS: Record<string, string[]> = {
+  ...Object.fromEntries(TOKEN_IDS.map((id) => [id, [id]])),
+  bg: ["bg"],
+  ink: ["ink", "ink-light"],
+};
+
+export type OverrideTokenId = TokenId | BaseTokenId;
+
+// Nur die überschriebenen Tokens (Teilmenge aus Akzent- UND Basis-Tokens) —
+// leeres Objekt = keine Individualisierung.
+export type ThemeOverrides = Partial<Record<OverrideTokenId, string>>;
+
+// Gültig als Override-Ziel ist jede Akzent- ODER Basis-Token-ID.
+export function isOverridableToken(id: string): id is OverrideTokenId {
+  return Object.prototype.hasOwnProperty.call(OVERRIDE_TOKEN_VARS, id);
+}
 
 export interface ColorTheme {
   id: string;
@@ -196,7 +244,7 @@ export function sanitizeThemeOverrides(raw: unknown): ThemeOverrides {
   if (!raw || typeof raw !== "object") return {};
   const out: ThemeOverrides = {};
   for (const [key, val] of Object.entries(raw as Record<string, unknown>)) {
-    if (!isValidTokenId(key)) continue;
+    if (!isOverridableToken(key)) continue;
     if (typeof val !== "string") continue;
     const hex = normalizeHexColor(val);
     if (hex) out[key] = hex;
@@ -208,7 +256,7 @@ export function sanitizeThemeOverrides(raw: unknown): ThemeOverrides {
 // "primary:ff9900,secondary:cc6699" (ohne #). Leeres Objekt → "".
 export function encodeThemeOverrides(overrides: ThemeOverrides): string {
   return Object.entries(overrides)
-    .filter(([id, hex]) => isValidTokenId(id) && hex && isValidHexColor(hex))
+    .filter(([id, hex]) => isOverridableToken(id) && hex && isValidHexColor(hex))
     .map(([id, hex]) => `${id}:${hex.slice(1)}`)
     .join(",");
 }
@@ -219,7 +267,7 @@ export function decodeThemeOverrides(encoded: string | null | undefined): ThemeO
   for (const pair of encoded.split(",")) {
     const [id, rawHex] = pair.split(":");
     if (!id || !rawHex) continue;
-    if (!isValidTokenId(id)) continue;
+    if (!isOverridableToken(id)) continue;
     const hex = normalizeHexColor(`#${rawHex}`);
     if (hex) out[id] = hex;
   }

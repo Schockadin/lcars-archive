@@ -134,6 +134,11 @@ CREATE TABLE IF NOT EXISTS users (
   -- src/styles/minimal-ui.css). Kein DB-CHECK (analog color_theme), unbekannte
   -- Werte fallen App-seitig auf 'lcars' zurück.
   ui_mode                       TEXT NOT NULL DEFAULT 'lcars',
+  -- Hell/Dunkel-Modus, unabhängig von ui_mode und color_theme: 'dark'
+  -- (Default) oder 'light' (siehe src/lib/colorMode.ts /
+  -- src/styles/color-mode.css). Kein DB-CHECK (analog ui_mode), unbekannte
+  -- Werte fallen App-seitig auf 'dark' zurück.
+  color_mode                    TEXT NOT NULL DEFAULT 'dark',
   additional_roles              TEXT[] NOT NULL DEFAULT '{}',
   permission_overrides          JSONB NOT NULL DEFAULT '{}'
 );
@@ -908,6 +913,13 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS color_theme TEXT NOT NULL
 -- überschreiben (JSONB Token→Hex). Default '{}' = keine Individualisierung.
 ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_overrides JSONB NOT NULL
   DEFAULT '{}';
+
+-- color_mode: Hell/Dunkel-Modus, unabhängig von ui_mode/color_theme (siehe
+-- src/lib/colorMode.ts). Default 'dark'. Die Datenmigration alter
+-- ui_mode='minimal-light'-Konten nach ui_mode='minimal' + color_mode='light'
+-- lebt bewusst nur in migrate-pr64.sql (kein datenveränderndes UPDATE hier).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS color_mode TEXT NOT NULL
+  DEFAULT 'dark';
 
 -- RBAC: weitere Rollen (ein User kann mehrere haben) + individuelle
 -- Rechte-Overrides (siehe src/lib/permissions.ts). Reine Struktur-Anlage; die
