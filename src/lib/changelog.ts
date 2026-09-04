@@ -51,6 +51,9 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "farbschema",
       },
       {
+        text: "Jede Charakterseite zeigt jetzt „Wer kennt wen“: mit welchen Figuren und NPCs die Person zu tun hatte, abgeleitet aus gemeinsamen Missionen und Gesprächen — samt Angabe, woher die Verbindung stammt.",
+      },
+      {
         text: "Der Datenbank-Assistent hat jetzt Einstiegs-Vorlagen: „Was bisher geschah“ liefert eine Rückschau über die jüngsten Einsatzberichte, weitere Knöpfe fragen eine Mission, ein Stichwort, eine Person oder die Beziehungen einer Figur ab. Bei den Vorlagen mit Lücke springt der Cursor gleich an die Stelle, die du ausfüllst.",
         tutorial: "datenbank-assistent",
       },

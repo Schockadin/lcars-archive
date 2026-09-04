@@ -7,6 +7,8 @@ import type { Viewer } from "@/lib/visibility";
 import type { FollowState } from "@/app/actions/follows";
 import MentionsSection from "@/app/_shared/MentionsSection";
 import type { Mention } from "@/lib/mentions";
+import RelationsSection from "@/app/_shared/RelationsSection";
+import type { Relation } from "@/lib/relations";
 
 export default function CharakterDetailPage({
   character,
@@ -18,6 +20,7 @@ export default function CharakterDetailPage({
   sourceMarkdown,
   followInitialState,
   mentions,
+  relations,
 }: {
   character: Character;
   logs: MissionLogPreview[];
@@ -34,6 +37,8 @@ export default function CharakterDetailPage({
   followInitialState?: FollowState;
   // Eingehende Verweise (siehe src/lib/mentions.ts).
   mentions: Mention[];
+  // Verbindungen zu anderen Figuren (siehe src/lib/relations.ts).
+  relations: Relation[];
 }) {
   usePageMeta(character.name, "characters");
 
@@ -49,7 +54,8 @@ export default function CharakterDetailPage({
         sourceMarkdown={sourceMarkdown}
         followInitialState={followInitialState}
       />
-      <div className="lcars-text lcars-wide-column mt-[16px]">
+      <div className="lcars-text lcars-wide-column mt-[16px] flex flex-col gap-[16px]">
+        <RelationsSection relations={relations} />
         <MentionsSection mentions={mentions} />
       </div>
     </div>

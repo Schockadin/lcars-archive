@@ -9,6 +9,7 @@ import { resolveFollowState } from "@/lib/follows";
 import { getIngameYear, inferAgeFromDateOfBirth } from "@/lib/campaign";
 import { getViewer, canView, canViewDraft, viewerHasPermission } from "@/lib/visibility";
 import { getMentionsOf } from "@/lib/mentions";
+import { getRelationsOf } from "@/lib/relations";
 import { listAllUsers } from "@/lib/users";
 import { notFound } from "next/navigation";
 import CharakterDetailPage from "./CharacterDetailPage";
@@ -68,7 +69,7 @@ export default async function CharakterPage({ params }: Props) {
   // CharacterHero.tsx) — spart die Extra-Query für alle anderen Aufrufe.
   const isOwner = viewer != null && viewer.userId === character.player_id;
 
-  const [logs, conversationCount, allUsers, source, ingameYear, followInitialState, mentions] =
+  const [logs, conversationCount, allUsers, source, ingameYear, followInitialState, mentions, relations] =
     await Promise.all([
       getLogsByCharacter(character.id),
       getDialogueCountByParticipant(character.slug),
@@ -80,6 +81,8 @@ export default async function CharakterPage({ params }: Props) {
       resolveFollowState(viewer?.userId ?? null, "character", character.slug),
       // Wer verweist auf diesen Charakter? (Archiv-Verweisfelder + Wikilinks)
       getMentionsOf({ slug: character.slug, name: character.name }, viewer),
+      // „Wer kennt wen" — aus gemeinsamen Missionen und Gesprächen abgeleitet.
+      getRelationsOf(character.slug, viewer),
     ]);
   // Angezeigtes Alter: aus Geburtsdatum + Ingame-Jahr abgeleitet, sonst das
   // manuell gepflegte metadata.age als Fallback (siehe campaign.ts).
@@ -105,6 +108,7 @@ export default async function CharakterPage({ params }: Props) {
         sourceMarkdown={isOwner ? (source?.sourceMarkdown ?? "") : null}
         followInitialState={followInitialState}
         mentions={mentions}
+        relations={relations}
       />
     </div>
   );
