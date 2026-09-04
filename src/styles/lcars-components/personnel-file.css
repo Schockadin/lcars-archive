@@ -315,14 +315,27 @@
 /* Ein Blatt mit fließendem Inhalt. Wie .pf-sheet ein Papier von 816×1056,
    aber als MINDEST-Höhe: eine lange Biografie schiebt das Blatt auseinander,
    statt ihren Text abzuschneiden. Die echte Seitenaufteilung macht der
-   PDF-Export. */
+   PDF-Export.
+
+   WICHTIG: Die --pf-*-Tokens (Tinte, Schrift, Blau der Vorlage) sind auf
+   .pf-page definiert — das ist ein GESCHWISTER von .pf-doc, kein Vorfahre, die
+   Variablen erben also nicht herüber. Deshalb hier eigenständig gesetzt, sonst
+   fiele der Text auf die geerbte LCARS-Farbe/-Schrift zurück (z.B. helles Lila
+   im Dunkelmodus) statt auf das Grau/Blau des Bogens. */
 .pf-doc {
   container-type: inline-size;
   --pf-unit: calc(100cqw / 816);
+  --pf-ink: #555;
+  --pf-hand: "Segoe UI", Arial, sans-serif;
+  --pf-accent: #3f84b5;
+  /* Gedämpftes Blau für Rahmen/Trennlinien — dasselbe wie im PDF-Export
+     (SHEET_BLUE_DIM in CharacterSheetPdfDocument.tsx). */
+  --pf-accent-dim: #8fb4d0;
   position: relative;
+  display: flex;
   width: 100%;
   min-height: calc(var(--pf-unit) * 1056);
-  padding: calc(var(--pf-unit) * 56) calc(var(--pf-unit) * 64);
+  padding: calc(var(--pf-unit) * 20);
   background: #fff;
   color: var(--pf-ink);
   font-family: var(--pf-hand);
@@ -330,22 +343,92 @@
   box-sizing: border-box;
 }
 
-.pf-doc-title {
-  margin: 0 0 calc(var(--pf-unit) * 8);
-  font-size: calc(var(--pf-unit) * 26);
+.pf-doc * {
+  box-sizing: border-box;
+}
+
+/* Der STA-Rahmen wie auf dem gedruckten Bogen (Blatt 1): eine abgerundete
+   blaue Umrandung, in der Kopf, Inhalt und Fußzeile untereinander sitzen. Als
+   Flex-Spalte, damit die Fußzeile per margin-top:auto immer am Blattfuß klebt,
+   egal wie kurz der Inhalt ist. */
+.pf-doc-frame {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: calc(var(--pf-unit) * 2) solid var(--pf-accent);
+  border-radius: calc(var(--pf-unit) * 20);
+  padding: calc(var(--pf-unit) * 30) calc(var(--pf-unit) * 34)
+    calc(var(--pf-unit) * 18);
+}
+
+/* Kopfzeile: „STAR TREK ADVENTURES" links, eine Trennlinie, der Titelreiter
+   rechts — dieselbe Anordnung wie Logo + „PERSONNEL FILE" auf dem Bogen. */
+.pf-doc-masthead {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--pf-unit) * 14);
+  margin-bottom: calc(var(--pf-unit) * 10);
+}
+
+.pf-doc-wordmark {
+  flex-shrink: 0;
+  font-style: italic;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: calc(var(--pf-unit) * 25);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--pf-accent);
+  white-space: nowrap;
+}
+
+.pf-doc-mast-rule {
+  flex: 1;
+  height: calc(var(--pf-unit) * 2);
+  background: var(--pf-accent-dim);
+  border-radius: 999px;
+}
+
+/* Der Titelreiter (Talents/Biography) im Look des „PERSONNEL FILE"-Reiters:
+   weiße Versalien auf dem Blau der Vorlage, die zum Logo zeigende Ecke
+   angeschrägt. */
+.pf-doc-tab {
+  flex-shrink: 0;
+  background: var(--pf-accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: calc(var(--pf-unit) * 17);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: calc(var(--pf-unit) * 6) calc(var(--pf-unit) * 18)
+    calc(var(--pf-unit) * 6) calc(var(--pf-unit) * 26);
+  border-radius: calc(var(--pf-unit) * 6);
+  clip-path: polygon(calc(var(--pf-unit) * 14) 0, 100% 0, 100% 100%, 0 100%);
+  white-space: nowrap;
+}
+
+.pf-doc-subtitle {
+  margin: 0 0 calc(var(--pf-unit) * 22);
+  font-size: calc(var(--pf-unit) * 13);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--pf-accent);
 }
 
-.pf-doc-subtitle {
-  margin: 0 0 calc(var(--pf-unit) * 26);
-  padding-bottom: calc(var(--pf-unit) * 10);
-  border-bottom: calc(var(--pf-unit) * 2) solid var(--pf-accent);
-  font-size: calc(var(--pf-unit) * 14);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+/* Der eigentliche Blattinhalt wächst, die Fußzeile bleibt unten. */
+.pf-doc-content {
+  flex: 1;
+}
+
+/* Markenzeile am Blattfuß — dieselbe wie auf dem gedruckten Bogen, damit die
+   Zusatzblätter erkennbar zum selben Dokument gehören. */
+.pf-doc-footer {
+  margin: calc(var(--pf-unit) * 20) 0 0;
+  padding-top: calc(var(--pf-unit) * 8);
+  border-top: calc(var(--pf-unit) * 1) solid var(--pf-accent-dim);
+  font-size: calc(var(--pf-unit) * 8);
+  line-height: 1.4;
+  text-align: center;
+  color: #9a9aa2;
 }
 
 .pf-doc-body {
@@ -389,15 +472,27 @@ ol) {
   opacity: 0.7;
 }
 
-/* Ein Eintrag des Spickzettels auf dem Papier-Blatt. */
+/* Ein Eintrag des Spickzettels als Kasten wie auf dem Bogen: dünne blaue
+   Umrandung mit runden Ecken, die Beschriftung oben in gesperrten Versalien —
+   dasselbe Motiv wie die Wert-Kästen des Hauptblatts (und wie cheatItem im
+   PDF-Export). */
 .pf-doc-entry {
-  margin-bottom: calc(var(--pf-unit) * 16);
+  margin-bottom: calc(var(--pf-unit) * 12);
+  padding: calc(var(--pf-unit) * 12) calc(var(--pf-unit) * 14);
+  border: calc(var(--pf-unit) * 1) solid var(--pf-accent-dim);
+  border-radius: calc(var(--pf-unit) * 8);
+}
+
+.pf-doc-entry:last-child {
+  margin-bottom: 0;
 }
 
 .pf-doc-term {
   font-size: calc(var(--pf-unit) * 16);
   font-weight: 700;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pf-accent);
 }
 
 .pf-doc-meta {

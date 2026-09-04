@@ -1,4 +1,5 @@
 "use client";
+import type { ReactNode } from "react";
 import PersonnelFileView from "./PersonnelFileView";
 import {
   parseTalentEntry,
@@ -16,6 +17,44 @@ import type { CharacterStats } from "@/types/characterStats";
 // Reine Darstellung ohne eigenen Zustand: der Anlege-Assistent zeigt damit
 // die noch nicht gespeicherten Eingaben, die Charakterseite den gespeicherten
 // Stand. Beide Male dieselben Blätter.
+//
+// Blatt 2 und 3 tragen dieselbe Star-Trek-Adventures-Aufmachung wie Blatt 1
+// (der gedruckte Bogen): der Rahmen, das „STAR TREK ADVENTURES"-Logo oben links
+// und der farbige Titelreiter oben rechts (wie „PERSONNEL FILE" auf dem Bogen)
+// stecken im gemeinsamen DocSheet-Gerüst (siehe .pf-doc* in personnel-file.css).
+
+// Fußzeile wie auf dem gedruckten Bogen (Blatt 1) — dieselbe Markenzeile, damit
+// die Zusatzblätter erkennbar zum selben Dokument gehören.
+const SHEET_FOOTER =
+  "TM & © 2024 CBS Studios Inc. STAR TREK and related marks and logos " +
+  "are trademarks of CBS Studios, Inc. All Rights Reserved.";
+
+// Gemeinsames Blatt-Gerüst für Spickzettel und Biografie: Papier-Look plus die
+// STA-Chrome (Rahmen, Logo, Titelreiter, Fußzeile) des Hauptblatts.
+function DocSheet({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="pf-doc">
+      <div className="pf-doc-frame">
+        <div className="pf-doc-masthead">
+          <span className="pf-doc-wordmark">Star Trek Adventures</span>
+          <span className="pf-doc-mast-rule" aria-hidden="true" />
+          <span className="pf-doc-tab">{title}</span>
+        </div>
+        <p className="pf-doc-subtitle">{subtitle}</p>
+        <div className="pf-doc-content">{children}</div>
+        <p className="pf-doc-footer">{SHEET_FOOTER}</p>
+      </div>
+    </div>
+  );
+}
 
 export interface CharacterSheetPreviewInput {
   characterName: string;
@@ -46,10 +85,7 @@ function TalentSheet({
   );
 
   return (
-    <div className="pf-doc">
-      <h2 className="pf-doc-title">Talents</h2>
-      <p className="pf-doc-subtitle">Spickzettel · {characterName}</p>
-
+    <DocSheet title="Talents" subtitle={`Spickzettel · ${characterName}`}>
       {entries.length === 0 ? (
         <p className="pf-doc-empty">Noch keine Talente eingetragen.</p>
       ) : (
@@ -74,7 +110,7 @@ function TalentSheet({
           );
         })
       )}
-    </div>
+    </DocSheet>
   );
 }
 
@@ -86,10 +122,7 @@ function BioSheet({
   bioHtml: string | null;
 }) {
   return (
-    <div className="pf-doc">
-      <h2 className="pf-doc-title">Biography</h2>
-      <p className="pf-doc-subtitle">Biografie · {characterName}</p>
-
+    <DocSheet title="Biography" subtitle={`Biografie · ${characterName}`}>
       {bioHtml ? (
         // Das HTML stammt aus markdownToHtml und ist dort bereits bereinigt
         // (rehype-sanitize) — dieselbe Quelle wie die Charakterseite.
@@ -100,7 +133,7 @@ function BioSheet({
       ) : (
         <p className="pf-doc-empty">Noch keine Biografie geschrieben.</p>
       )}
-    </div>
+    </DocSheet>
   );
 }
 

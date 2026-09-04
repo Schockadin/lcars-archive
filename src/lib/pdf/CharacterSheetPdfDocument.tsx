@@ -58,6 +58,12 @@ const INK = "#555555";
 const SHEET_BLUE = "#3b7fb0";
 const SHEET_BLUE_DIM = "#8fb4d0";
 
+// Markenzeile am Blattfuß — dieselbe wie auf dem gedruckten Bogen (Blatt 1),
+// damit Spickzettel und Biografie erkennbar zum selben Dokument gehören.
+const SHEET_FOOTER =
+  "TM & © 2024 CBS Studios Inc. STAR TREK and related marks and logos " +
+  "are trademarks of CBS Studios, Inc. All Rights Reserved.";
+
 function pt(px: number): number {
   return px * PT_PER_PX;
 }
@@ -107,20 +113,34 @@ const styles = StyleSheet.create({
     fontFamily: "Helvetica",
     color: INK,
     paddingTop: pt(48),
-    paddingBottom: pt(48),
+    // Platz für die auf jeder Seite wiederholte Markenzeile am Blattfuß.
+    paddingBottom: pt(56),
     paddingHorizontal: pt(56),
   },
-  // Kopfbanner wie das „PERSONNEL FILE" des Bogens: weiße Versalien mit
-  // Sperrung auf dem Blau der Vorlage.
-  cheatBanner: {
+  // Kopfzeile wie auf dem Bogen: „STAR TREK ADVENTURES" links, der Titelreiter
+  // rechts (wie „PERSONNEL FILE").
+  cheatMast: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: pt(4),
+  },
+  cheatWordmark: {
+    fontFamily: "Helvetica-BoldOblique",
+    fontSize: pt(15),
+    letterSpacing: pt(1),
+    color: SHEET_BLUE,
+  },
+  // Der Titelreiter: weiße Versalien mit Sperrung auf dem Blau der Vorlage.
+  cheatTab: {
     backgroundColor: SHEET_BLUE,
     color: "#ffffff",
     fontFamily: "Helvetica-Bold",
-    fontSize: pt(15),
+    fontSize: pt(13),
     letterSpacing: pt(3),
     paddingVertical: pt(5),
-    paddingHorizontal: pt(12),
-    textAlign: "right",
+    paddingHorizontal: pt(14),
+    borderRadius: pt(4),
   },
   cheatBannerRule: {
     height: pt(2),
@@ -132,6 +152,18 @@ const styles = StyleSheet.create({
     fontSize: pt(9),
     color: SHEET_BLUE,
     marginBottom: pt(12),
+  },
+  // Markenzeile am Blattfuß — dieselbe wie auf dem gedruckten Bogen. Als
+  // fixed-Element auf jeder Seite des Zusatzblatts wiederholt.
+  cheatFooter: {
+    position: "absolute",
+    bottom: pt(24),
+    left: pt(56),
+    right: pt(56),
+    textAlign: "center",
+    fontSize: pt(6),
+    lineHeight: 1.4,
+    color: "#9a9aa2",
   },
   // Biografie-Blatt: Fließtext im selben Grau wie der Bogen, Überschriften im
   // Blau der Vorlage.
@@ -356,11 +388,17 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
 
   return (
     <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.cheatPage}>
-      <Text style={styles.cheatBanner}>TALENTS</Text>
+      <View style={styles.cheatMast}>
+        <Text style={styles.cheatWordmark}>STAR TREK ADVENTURES</Text>
+        <Text style={styles.cheatTab}>TALENTS</Text>
+      </View>
       <View style={styles.cheatBannerRule} />
       <Text style={styles.cheatSubline}>
         {input.name}
         {input.rank ? ` · ${input.rank}` : ""} — Spickzettel
+      </Text>
+      <Text style={styles.cheatFooter} fixed>
+        {SHEET_FOOTER}
       </Text>
 
       {input.stats.talents.map((entry, index) => {
@@ -395,11 +433,17 @@ function BiographyPage({ input }: { input: CharacterSheetPdfInput }) {
 
   return (
     <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.cheatPage}>
-      <Text style={styles.cheatBanner}>BIOGRAPHY</Text>
+      <View style={styles.cheatMast}>
+        <Text style={styles.cheatWordmark}>STAR TREK ADVENTURES</Text>
+        <Text style={styles.cheatTab}>BIOGRAPHY</Text>
+      </View>
       <View style={styles.cheatBannerRule} />
       <Text style={styles.cheatSubline}>
         {input.name}
         {input.rank ? ` · ${input.rank}` : ""} — Biografie
+      </Text>
+      <Text style={styles.cheatFooter} fixed>
+        {SHEET_FOOTER}
       </Text>
 
       {blocks.map((block, index) => {
