@@ -136,7 +136,7 @@ export const BASE_TOKEN_DEFAULTS: Record<
     border: "#2d2550",
     ink: "#c8b8ff",
     "ink-light": "#edefd2",
-    "ink-dim": "#6a5f9e",
+    "ink-dim": "#a39cc9",
     "ink-data": "#4fc3f7",
     "ink-contrast": "#ededed",
     "ink-dark": "#08081a",

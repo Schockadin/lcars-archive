@@ -50,6 +50,10 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "Hintergrund und Schrift lassen sich jetzt bis ins Detail einstellen: Seitenhintergrund, Flächen und Rahmen ebenso wie jede Schriftfarbe einzeln — Fließtext, Lesetext, Nebentext, Links, Kontrasttext und die Beschriftung auf farbigen Flächen. Im minimalistischen Interface färbt sich die Seitenleiste mit. Die Farbauswahl im Profil ist dafür in aufklappbare Bereiche gegliedert; ohne eigene Wahl gilt weiterhin der Standard des jeweiligen Hell/Dunkel-Modus.",
         tutorial: "farbschema",
       },
+      {
+        text: "Beim Einstellen der Farben zeigt das Profil jetzt zu jeder Farbe an, wie gut sie sich vor ihrem Hintergrund liest, und warnt, wenn eine Kombination zu blass wird. Im hellen Erscheinungsbild werden Überschriften und Beschriftungen automatisch so weit abgedunkelt, dass sie gut lesbar bleiben — die farbigen Balken und Pillen behalten dabei ihre volle Leuchtkraft.",
+        tutorial: "farbschema",
+      },
     ],
   },
   {

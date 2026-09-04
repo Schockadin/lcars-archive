@@ -78,7 +78,7 @@ export default function OpenAiUsagePanel() {
       </button>
 
       {result?.error && (
-        <p className="text-lcars-quinary" role="alert">
+        <p className="text-lcars-quinary-ink" role="alert">
           {result.error}
         </p>
       )}

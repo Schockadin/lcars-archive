@@ -22,7 +22,7 @@ export default function ForgotPasswordForm() {
           gerade einen Link zum Festlegen eines neuen Passworts verschickt.
         </p>
         <p>
-          <a href="/login" className="text-lcars-primary underline">
+          <a href="/login" className="text-lcars-primary-ink underline">
             ← Zurück zum Login
           </a>
         </p>
@@ -50,7 +50,7 @@ export default function ForgotPasswordForm() {
       </div>
 
       {state?.error && (
-        <p className="text-lcars-quinary" role="alert">
+        <p className="text-lcars-quinary-ink" role="alert">
           {state.error}
         </p>
       )}

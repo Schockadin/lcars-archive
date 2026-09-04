@@ -91,7 +91,7 @@
 /* Löschen: rot statt Standard-Blau, auch im Hover. */
 .lcars-icon-btn--danger {
   border-color: var(--lcars-quinary);
-  color: var(--lcars-quinary);
+  color: var(--lcars-quinary-ink);
 }
 .lcars-icon-btn--danger:hover:not(:disabled) {
   background: var(--lcars-quinary);

@@ -130,7 +130,7 @@ export default function BatchScriptPanel<
       )}
 
       {error && (
-        <p className="text-lcars-quinary" role="alert">
+        <p className="text-lcars-quinary-ink" role="alert">
           {error}
         </p>
       )}

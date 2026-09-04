@@ -59,7 +59,7 @@ export default async function Dashboard({ user }: { user: User }) {
           </p>
 
           {needsPassword && (
-            <p className="text-lcars-primary">
+            <p className="text-lcars-primary-ink">
               Du hast noch kein Passwort gesetzt.{" "}
               <Link href="/user#password" className="underline">
                 Jetzt festlegen

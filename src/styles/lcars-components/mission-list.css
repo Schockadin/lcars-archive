@@ -139,7 +139,7 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   line-height: 1;
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
   /* Einzeilig mit Ellipsis statt Umbruch — ein einzelner sehr langer Titel
      (v.a. Mission-Logs) soll die Karte nicht in die Breite treiben, siehe
      .mission-log-name/.log-nav-title für dasselbe Muster andernorts. */

@@ -36,6 +36,32 @@ html[data-mode="light"] {
   --color-lcars-ink-data: #12539e;
   --color-lcars-ink-contrast: #0e0e18;
   --color-lcars-ink-light: #0e0e18;
+
+  /* Akzent-als-TEXT im Hellmodus abdunkeln. Die LCARS-Pastelltöne sind für
+     dunklen Grund gemacht und liefern auf hellem nur ~2:1 Kontrast — als
+     Überschrift oder Beschriftung sind sie damit unlesbar (WCAG AA verlangt
+     4.5:1). color-mix statt fester Werte, weil die Rechnung so für ALLE
+     Farbthemen UND für eigene Akzentfarben gilt, ohne dass irgendwo eine
+     zweite Farbtabelle gepflegt werden muss. 45% ist der gemessene Wert, ab
+     dem alle 47 Akzentwerte der sechs Themen 4.5:1 auf #ffffff erreichen
+     (schlechtester Fall: Text auf --lcars-surface).
+     Die FLÄCHEN behalten bewusst die volle Sättigung — das LCARS-Chrome
+     (Balken, Elbows, Pillen) sieht im Hellmodus deshalb unverändert aus. */
+  --lcars-primary-ink: color-mix(in srgb, var(--lcars-primary) 45%, #000);
+  --lcars-primary-light-ink: color-mix(in srgb, var(--lcars-primary-light) 45%, #000);
+  --lcars-secondary-ink: color-mix(in srgb, var(--lcars-secondary) 45%, #000);
+  --lcars-tertiary-ink: color-mix(in srgb, var(--lcars-tertiary) 45%, #000);
+  --lcars-quaternary-ink: color-mix(in srgb, var(--lcars-quaternary) 45%, #000);
+  --lcars-quinary-ink: color-mix(in srgb, var(--lcars-quinary) 45%, #000);
+  --lcars-senary-ink: color-mix(in srgb, var(--lcars-senary) 45%, #000);
+
+  --color-lcars-primary-ink: color-mix(in srgb, var(--color-lcars-primary) 45%, #000);
+  --color-lcars-primary-light-ink: color-mix(in srgb, var(--color-lcars-primary-light) 45%, #000);
+  --color-lcars-secondary-ink: color-mix(in srgb, var(--color-lcars-secondary) 45%, #000);
+  --color-lcars-tertiary-ink: color-mix(in srgb, var(--color-lcars-tertiary) 45%, #000);
+  --color-lcars-quaternary-ink: color-mix(in srgb, var(--color-lcars-quaternary) 45%, #000);
+  --color-lcars-quinary-ink: color-mix(in srgb, var(--color-lcars-quinary) 45%, #000);
+  --color-lcars-senary-ink: color-mix(in srgb, var(--color-lcars-senary) 45%, #000);
 }
 
 /* Gefüllte Akzent-Flächen (Amber & Co.) behalten dunklen Text — heller Text auf

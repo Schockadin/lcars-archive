@@ -1,6 +1,6 @@
 /* ─── LCARS Design Tokens ────────────────────────────────────────────
    :root  → CSS Custom Properties für var() in Klassen & Inline-Styles
-   @theme → Tailwind 4 Utility-Klassen (bg-lcars-primary, text-lcars-tertiary …)
+   @theme → Tailwind 4 Utility-Klassen (bg-lcars-primary, text-lcars-tertiary-ink …)
             Hex-Werte notwendig — @theme wird zur Build-Zeit ausgewertet,
             var() kann erst zur Runtime vom Browser aufgelöst werden.
 ──────────────────────────────────────────────────────────────────── */
@@ -33,7 +33,7 @@
      Tokens unten verwendet). Bleiben als Basiswerte definiert, damit evtl.
      verbliebene Alt-Referenzen weiterhin die Standard-Farbe erhalten. */
   --lcars-text: #c8b8ff;
-  --lcars-text-dim: hsl(250, 30%, 70%);
+  --lcars-text-dim: #a39cc9;
   --lcars-text-data: #4fc3f7;
   --lcars-text-contrast: #ededed;
   --lcars-text-light: #edefd2;
@@ -46,7 +46,7 @@
      Akzentfarben (primary…senary) wechseln. Der gesamte Fließtext nutzt diese
      Tokens (bzw. die daraus erzeugten Tailwind-Utilities text-lcars-ink*). */
   --lcars-ink: #c8b8ff;
-  --lcars-ink-dim: hsl(250, 30%, 70%);
+  --lcars-ink-dim: #a39cc9;
   --lcars-ink-data: #4fc3f7;
   --lcars-ink-contrast: #ededed;
   --lcars-ink-light: #edefd2;
@@ -106,9 +106,9 @@
 
 @theme {
   /* ── Farben ──────────────────────────────────────────────────────
-     Erzeugt u.a.: bg-lcars-primary, text-lcars-secondary, border-lcars-tertiary,
+     Erzeugt u.a.: bg-lcars-primary, text-lcars-secondary-ink, border-lcars-tertiary,
      fill-lcars-quinary, ring-lcars-senary … sowie Opacity-Modifier wie
-     bg-lcars-primary/50, text-lcars-tertiary/75 etc.
+     bg-lcars-primary/50, text-lcars-tertiary-ink/75 etc.
   ─────────────────────────────────────────────────────────────────── */
   --color-lcars-primary: #ff9a00;
   --color-lcars-primary-light: #ffcd9a;
@@ -117,12 +117,25 @@
   --color-lcars-quaternary: #ff9a66;
   --color-lcars-quinary: #cd6666;
   --color-lcars-senary: #6bcb8b;
+
+  /* Akzent-als-TEXT. Konkrete Werte, damit Tailwind die Utilities erzeugt
+     (text-lcars-primary-ink …); der :root-Block am Dateiende hängt sie danach
+     an die jeweils aktive Akzentfarbe. Im Hellmodus werden sie abgedunkelt
+     (color-mode.css) — die LCARS-Pastelltöne liefern auf hellem Grund nur
+     ~2:1 Kontrast und sind als Text unlesbar. */
+  --color-lcars-primary-ink: #ff9a00;
+  --color-lcars-primary-light-ink: #ffcd9a;
+  --color-lcars-secondary-ink: #cd9acd;
+  --color-lcars-tertiary-ink: #9a9aff;
+  --color-lcars-quaternary-ink: #ff9a66;
+  --color-lcars-quinary-ink: #cd6666;
+  --color-lcars-senary-ink: #6bcb8b;
   --color-lcars-bg: #08081a;
   --color-lcars-surface: #10102a;
   --color-lcars-surface-2: #1a1838;
   --color-lcars-border: #2d2550;
   --color-lcars-text: #c8b8ff;
-  --color-lcars-text-dim: #6a5f9e;
+  --color-lcars-text-dim: #a39cc9;
   --color-lcars-text-data: #4fc3f7;
   --color-lcars-text-contrast: #ededed;
   --color-lcars-text-light: #edefd2;
@@ -134,7 +147,7 @@
      NICHT über data-theme umgehängt (anders als die --color-lcars-text*
      oben) — damit bleiben sie in jedem Farbthema konstant. */
   --color-lcars-ink: #c8b8ff;
-  --color-lcars-ink-dim: #6a5f9e;
+  --color-lcars-ink-dim: #a39cc9;
   --color-lcars-ink-data: #4fc3f7;
   --color-lcars-ink-contrast: #ededed;
   --color-lcars-ink-light: #edefd2;
@@ -201,4 +214,29 @@
     --lcars-text-size: 16px;
     --lcars-eyebrow-size: 12px;
   }
+}
+
+/* ─── Akzent-als-Text: Bindung an die aktive Akzentfarbe ────────────────
+   Bewusst NACH dem @theme-Block: dessen konkrete Werte erzeugen die
+   Tailwind-Utilities, diese var()-Referenzen hängen sie anschließend an den
+   tatsächlich aktiven Akzent. Dadurch folgen die *-ink-Tokens automatisch
+     • dem gewählten Farbthema (data-theme, lcars-themes.css) UND
+     • eigenen Akzentfarben (theme_overrides als Inline-Style auf <html>),
+   ohne dass Theme- oder Override-Code sie einzeln pflegen müsste. */
+:root {
+  --lcars-primary-ink: var(--lcars-primary);
+  --lcars-primary-light-ink: var(--lcars-primary-light);
+  --lcars-secondary-ink: var(--lcars-secondary);
+  --lcars-tertiary-ink: var(--lcars-tertiary);
+  --lcars-quaternary-ink: var(--lcars-quaternary);
+  --lcars-quinary-ink: var(--lcars-quinary);
+  --lcars-senary-ink: var(--lcars-senary);
+
+  --color-lcars-primary-ink: var(--color-lcars-primary);
+  --color-lcars-primary-light-ink: var(--color-lcars-primary-light);
+  --color-lcars-secondary-ink: var(--color-lcars-secondary);
+  --color-lcars-tertiary-ink: var(--color-lcars-tertiary);
+  --color-lcars-quaternary-ink: var(--color-lcars-quaternary);
+  --color-lcars-quinary-ink: var(--color-lcars-quinary);
+  --color-lcars-senary-ink: var(--color-lcars-senary);
 }

@@ -139,7 +139,7 @@
   transition: color 250ms;
 }
 .lcars-text :is(p, li, td, th, blockquote, h1, h2, h3, h4, h5, h6) > a:hover {
-  color: var(--lcars-tertiary);
+  color: var(--lcars-tertiary-ink);
   text-decoration: underline;
 }
 
@@ -154,7 +154,7 @@
 }
 .lcars-wikilink:hover,
 .lcars-link-text:hover {
-  color: var(--lcars-tertiary);
+  color: var(--lcars-tertiary-ink);
   text-decoration: underline;
 }
 .lcars-link-text {
@@ -162,12 +162,12 @@
 }
 
 .lcars-wikilink--missing {
-  color: var(--lcars-quinary);
+  color: var(--lcars-quinary-ink);
   border-bottom: 1px dashed var(--lcars-quinary);
   cursor: help;
 }
 .lcars-wikilink--missing:hover {
-  color: var(--lcars-quinary);
+  color: var(--lcars-quinary-ink);
   text-decoration: none;
   border-bottom: 1px dashed var(--lcars-quinary);
 }
@@ -183,7 +183,7 @@
   transition: color 250ms;
 }
 .lcars-changelog-tutorial-link:hover {
-  color: var(--lcars-tertiary);
+  color: var(--lcars-tertiary-ink);
 }
 
 /* Gemeinsame Typografie für .char-file-pill (char-file.css, Personalakte)
@@ -214,7 +214,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  color: var(--lcars-tertiary);
+  color: var(--lcars-tertiary-ink);
 }
 /* Schlichte, gestapelte Liste ohne Aufzählungszeichen — Inhaltsverzeichnis
    und Buchungsjournal teilen sich dasselbe Grundlayout. */
@@ -269,12 +269,12 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   line-height: 1.05;
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
   text-decoration: none;
   transition: color 150ms;
 }
 .lcars-back-link:hover {
-  color: var(--lcars-primary-light);
+  color: var(--lcars-primary-light-ink);
 }
 
 .follow-buttons {
@@ -490,13 +490,13 @@
 }
 .markdown-hint-trigger {
   cursor: help;
-  color: var(--lcars-tertiary);
+  color: var(--lcars-tertiary-ink);
   text-decoration: underline dotted;
   text-underline-offset: 3px;
 }
 .markdown-hint-trigger:hover,
 .markdown-hint-trigger:focus-visible {
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
 }
 .markdown-hint-popover {
   position: absolute;
@@ -519,7 +519,7 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 13px;
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
 }
 .markdown-hint-popover-list {
   display: flex;
@@ -846,12 +846,12 @@
   border: none;
   border-radius: 50%;
   background: none;
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
   cursor: pointer;
   transition: color 150ms;
 }
 .password-input-toggle:hover {
-  color: var(--lcars-primary-light);
+  color: var(--lcars-primary-light-ink);
 }
 .password-input-toggle svg {
   width: 20px;
@@ -1082,7 +1082,7 @@
   color: var(--lcars-ink-dim);
 }
 .db-explorer-item[aria-current="true"] .db-explorer-item-icon {
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
 }
 .db-explorer-item-name {
   flex: 1;

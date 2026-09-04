@@ -130,7 +130,7 @@ export function TalentModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-[16px]">
-          <h2 className="text-lcars-primary">Talent wählen</h2>
+          <h2 className="text-lcars-primary-ink">Talent wählen</h2>
           <button
             type="button"
             onClick={onClose}

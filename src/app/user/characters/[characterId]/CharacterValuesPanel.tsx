@@ -99,7 +99,7 @@ export default function CharacterValuesPanel({
 
         <FormError message={state?.error} />
         {state?.success && (
-          <p className="text-lcars-senary" role="status">
+          <p className="text-lcars-senary-ink" role="status">
             {state.success}
           </p>
         )}

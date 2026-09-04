@@ -48,7 +48,7 @@ export default function CharacterSheetPreviewOverlay({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="pf-preview-bar flex items-center justify-between gap-[12px]">
-          <h2 className="text-lcars-primary">{input.characterName}</h2>
+          <h2 className="text-lcars-primary-ink">{input.characterName}</h2>
           <div className="flex items-center gap-[8px]">
             <button
               type="button"

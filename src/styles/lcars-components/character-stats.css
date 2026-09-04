@@ -97,7 +97,7 @@
   border: 2px solid var(--lcars-quinary);
   border-radius: 8px;
   background: var(--lcars-surface);
-  color: var(--lcars-quinary);
+  color: var(--lcars-quinary-ink);
   font-family: var(--lcars-font-mono);
   font-size: 13px;
   list-style: square;
@@ -172,7 +172,7 @@
    wird trotzdem auf dem Server. */
 .stat-editor-value-input--bad {
   border-color: var(--lcars-quinary);
-  color: var(--lcars-quinary);
+  color: var(--lcars-quinary-ink);
 }
 
 /* Eine gepflegte Liste (Werte, Schwerpunkte, Talente, …): Kopfzeile mit
@@ -268,7 +268,7 @@
 
 .stat-ap-warning {
   margin-bottom: 10px;
-  color: var(--lcars-quinary);
+  color: var(--lcars-quinary-ink);
   font-family: var(--lcars-font-mono);
   font-size: 13px;
 }
@@ -332,11 +332,11 @@
   font-family: var(--lcars-font-mono);
   font-size: 15px;
   text-align: right;
-  color: var(--lcars-quinary);
+  color: var(--lcars-quinary-ink);
 }
 
 .stat-ap-amount--plus {
-  color: var(--lcars-senary);
+  color: var(--lcars-senary-ink);
 }
 
 .stat-ap-ledger-text {
@@ -530,7 +530,7 @@
 
 .stat-budget--over .stat-budget-figure strong,
 .stat-budget--over .stat-budget-spent {
-  color: var(--lcars-quinary);
+  color: var(--lcars-quinary-ink);
 }
 
 .stat-budget--over .stat-budget-meter > span {

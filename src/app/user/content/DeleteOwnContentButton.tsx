@@ -45,7 +45,7 @@ export default function DeleteOwnContentButton({
         <TrashIcon />
       </button>
       {error && (
-        <p className="lcars-link-text text-lcars-quinary text-[11px]" role="alert">
+        <p className="lcars-link-text text-lcars-quinary-ink text-[11px]" role="alert">
           {error}
         </p>
       )}

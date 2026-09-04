@@ -23,6 +23,15 @@ import {
   type ThemeOverrides,
 } from "@/lib/themes";
 import { isLightMode, normalizeColorMode } from "@/lib/colorMode";
+import {
+  contrastRatio,
+  contrastLevel,
+  formatContrast,
+  mixWithBlack,
+  LIGHT_ACCENT_INK_MIX,
+  type ContrastLevel,
+  type ContrastPurpose,
+} from "@/lib/contrast";
 
 const initialState: ColorThemeState = {};
 
@@ -54,6 +63,42 @@ function applyPreview(themeId: string, overrides: ThemeOverrides) {
   }
 }
 
+// Ergebnis der Kontrastprüfung einer Farbwähler-Zeile.
+interface ContrastInfo {
+  ratio: number;
+  level: ContrastLevel;
+  // Wogegen gemessen wurde — als Klartext für die Anzeige („auf Hintergrund").
+  against: string;
+}
+
+// Kontrastwert unter dem Farbwert. Warnt, wenn die Kombination unter der
+// WCAG-Schwelle liegt — ohne die Wahl zu blockieren: es ist die eigene
+// Oberfläche, und manche Rollen (Rahmen) dürfen bewusst zurückhaltend sein.
+function ContrastBadge({ contrast }: { contrast: ContrastInfo }) {
+  const { ratio, level, against } = contrast;
+  const tone =
+    level === "fail"
+      ? "text-lcars-quinary-ink"
+      : level === "warn"
+        ? "text-lcars-primary-ink"
+        : "text-lcars-ink-dim";
+  const note =
+    level === "fail"
+      ? " · zu wenig Kontrast"
+      : level === "warn"
+        ? " · knapp"
+        : " · gut lesbar";
+  return (
+    <span className={`text-[12px] font-lcars-mono ${tone}`}>
+      {level === "fail" && (
+        <span aria-hidden="true">! </span>
+      )}
+      {formatContrast(ratio)} {against}
+      {note}
+    </span>
+  );
+}
+
 // Eine Farbwähler-Zeile: Farbfeld, Beschriftung samt Erklärung, aktueller Wert
 // und „Zurücksetzen" (nur aktiv, solange eine eigene Farbe gesetzt ist).
 function ColorRow({
@@ -62,6 +107,7 @@ function ColorRow({
   hint,
   value,
   overridden,
+  contrast,
   onChange,
   onReset,
 }: {
@@ -70,6 +116,7 @@ function ColorRow({
   hint?: string;
   value: string;
   overridden: boolean;
+  contrast: ContrastInfo;
   onChange: (id: OverrideTokenId, value: string) => void;
   onReset: (id: OverrideTokenId) => void;
 }) {
@@ -91,6 +138,7 @@ function ColorRow({
           {value}
           {overridden ? " · eigene Farbe" : " · Standard"}
         </span>
+        <ContrastBadge contrast={contrast} />
       </span>
       <button
         type="button"
@@ -133,6 +181,9 @@ export default function ThemeSettingsForm({
   }, [selected, overrides]);
 
   const accentDefaults = getTheme(selected).tokens;
+  // Für die Kontrastprüfung: welche IDs sind Akzente (werden im Hellmodus
+  // abgedunkelt gerendert)?
+  const accentIdSet = new Set<string>(THEME_TOKENS.map((t) => t.id));
   // Default-Anzeige der Basisfarben richtet sich nach dem Hell/Dunkel-Modus,
   // solange kein eigener Wert gesetzt ist.
   const baseDefaults =
@@ -141,6 +192,48 @@ export default function ThemeSettingsForm({
     ];
 
   const overrideCount = Object.keys(overrides).length;
+  const light = isLightMode(normalizeColorMode(currentMode));
+
+  // Effektive Flächen-/Schriftfarbe: eigener Wert, sonst der Modus-Standard.
+  // Gegen diese beiden wird gemessen, damit die Anzeige die TATSÄCHLICH
+  // eingestellte Kombination bewertet und nicht die Werkseinstellung.
+  const effectiveBg = overrides.bg ?? baseDefaults.bg;
+  const effectiveInk = overrides.ink ?? baseDefaults.ink;
+
+  // Kontrast einer Zeile. Drei Fälle:
+  //   Flächen (bg/surface/surface-2) → wie gut liest sich der Fließtext DARAUF
+  //   Rahmen                          → nur UI-Schwelle (3:1), kein Text
+  //   Schrift & Akzente               → wie gut lesen sie sich auf der Fläche
+  // Akzente werden im Hellmodus vor der Messung abgedunkelt, weil sie dort
+  // genau so gerendert werden (color-mix in color-mode.css).
+  function contrastFor(id: OverrideTokenId, value: string): ContrastInfo {
+    let fg = value;
+    let bg = effectiveBg;
+    let purpose: ContrastPurpose = "text";
+    let against = "auf Hintergrund";
+
+    if (id === "bg" || id === "surface" || id === "surface-2") {
+      fg = effectiveInk;
+      bg = value;
+      against = "mit Fließtext";
+    } else if (id === "border") {
+      purpose = "ui";
+      against = "auf Hintergrund";
+    } else if (id === "ink-dark") {
+      // Diese Rolle steht per Definition auf GEFÜLLTEN Akzentflächen (Pillen,
+      // Balken) und nie auf dem Seitenhintergrund — dagegen gemessen wäre sie
+      // immer „unlesbar", obwohl sie genau richtig ist. Referenz ist deshalb
+      // die Primärfarbe als häufigste dieser Flächen.
+      bg = overrides.primary ?? accentDefaults.primary;
+      against = "auf Akzentfläche";
+    } else if (accentIdSet.has(id)) {
+      if (light) fg = mixWithBlack(value, LIGHT_ACCENT_INK_MIX);
+      against = "als Text";
+    }
+
+    const ratio = contrastRatio(fg, bg);
+    return { ratio, level: contrastLevel(ratio, purpose), against };
+  }
 
   function handleColor(id: OverrideTokenId, value: string) {
     setOverrides((prev) => ({ ...prev, [id]: value.toLowerCase() }));
@@ -237,7 +330,7 @@ export default function ThemeSettingsForm({
                 <span className="flex flex-col">
                   <span
                     className={`lcars-eyebrow ${
-                      isSelected ? "text-lcars-primary" : "text-lcars-ink-light"
+                      isSelected ? "text-lcars-primary-ink" : "text-lcars-ink-light"
                     }`}
                   >
                     {theme.label}
@@ -265,6 +358,7 @@ export default function ThemeSettingsForm({
             hint={hint}
             value={overrides[id] ?? baseDefaults[id as BaseTokenId]}
             overridden={overrides[id] !== undefined}
+            contrast={contrastFor(id, overrides[id] ?? baseDefaults[id as BaseTokenId])}
             onChange={handleColor}
             onReset={resetToken}
           />
@@ -284,6 +378,7 @@ export default function ThemeSettingsForm({
             hint={hint}
             value={overrides[id] ?? baseDefaults[id as BaseTokenId]}
             overridden={overrides[id] !== undefined}
+            contrast={contrastFor(id, overrides[id] ?? baseDefaults[id as BaseTokenId])}
             onChange={handleColor}
             onReset={resetToken}
           />
@@ -302,6 +397,7 @@ export default function ThemeSettingsForm({
             label={label}
             value={overrides[id] ?? accentDefaults[id]}
             overridden={overrides[id] !== undefined}
+            contrast={contrastFor(id, overrides[id] ?? accentDefaults[id])}
             onChange={handleColor}
             onReset={resetToken}
           />

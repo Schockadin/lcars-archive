@@ -105,7 +105,7 @@ export default function AssignOwnerlessMissionsPanel({
           onDismiss={() => setDismissed(true)}
           caption={
             done ? (
-              <span className="text-lcars-primary">
+              <span className="text-lcars-primary-ink">
                 {progress.total === 0
                   ? "Keine Missionen ohne Owner gefunden."
                   : `${progress.total} ${
@@ -122,7 +122,7 @@ export default function AssignOwnerlessMissionsPanel({
       )}
 
       {error && (
-        <p className="text-lcars-quinary" role="alert">
+        <p className="text-lcars-quinary-ink" role="alert">
           {error}
         </p>
       )}

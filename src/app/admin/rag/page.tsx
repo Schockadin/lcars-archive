@@ -30,12 +30,12 @@ export default async function AdminRagPage() {
 
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">Embeddings</h2>
+            <h2 className="text-lcars-primary-ink">Embeddings</h2>
             <EmbeddingsBackfillPanel />
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">
+            <h2 className="text-lcars-primary-ink">
               OpenAI · Nutzung &amp; Guthaben
             </h2>
             <OpenAiUsagePanel />

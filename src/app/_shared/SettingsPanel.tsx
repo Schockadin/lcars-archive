@@ -34,7 +34,7 @@ export default function SettingsPanel({
           aria-hidden="true"
         />
         <span className="flex flex-1 flex-col">
-          <span className="lcars-eyebrow text-lcars-primary">{title}</span>
+          <span className="lcars-eyebrow text-lcars-primary-ink">{title}</span>
           {hint && (
             <span className="text-lcars-ink-dim text-[12px]">{hint}</span>
           )}

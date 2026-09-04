@@ -109,7 +109,7 @@ export default async function UserPage() {
           </p>
 
           {needsPassword && (
-            <p className="text-lcars-primary">
+            <p className="text-lcars-primary-ink">
               Du hast noch kein Passwort gesetzt.{" "}
               <Link href="#password" className="underline">
                 Jetzt festlegen

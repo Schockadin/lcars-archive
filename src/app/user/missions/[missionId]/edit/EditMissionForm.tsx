@@ -70,7 +70,7 @@ export default function EditMissionForm({
       />
 
       <section className="flex flex-col gap-[12px] mt-[32px]">
-        <h2 className="text-lcars-quinary">Gefahrenzone</h2>
+        <h2 className="text-lcars-quinary-ink">Gefahrenzone</h2>
         <DangerZoneButton
           formAction={deleteAction}
           hiddenFields={{ missionId: mission.id }}

@@ -27,7 +27,7 @@ export default function LinkAllContentPanel() {
       })}
       renderCaption={({ processed, total, totals, done }) =>
         done ? (
-          <span className="text-lcars-primary">
+          <span className="text-lcars-primary-ink">
             Fertig: {totals.changed} von {total} Inhalten verlinkt (
             {totals.links} Verknüpfungen gesetzt).
           </span>

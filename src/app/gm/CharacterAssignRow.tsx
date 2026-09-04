@@ -53,7 +53,7 @@ export default function CharacterAssignRow({
       </form>
 
       {state?.error && (
-        <p className="text-lcars-quinary" role="alert">
+        <p className="text-lcars-quinary-ink" role="alert">
           {state.error}
         </p>
       )}

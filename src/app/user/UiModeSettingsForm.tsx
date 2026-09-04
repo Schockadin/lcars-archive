@@ -100,7 +100,7 @@ export default function UiModeSettingsForm({
               <span className="flex flex-col">
                 <span
                   className={`lcars-eyebrow ${
-                    isSelected ? "text-lcars-primary" : "text-lcars-ink-light"
+                    isSelected ? "text-lcars-primary-ink" : "text-lcars-ink-light"
                   }`}
                 >
                   {option.label}

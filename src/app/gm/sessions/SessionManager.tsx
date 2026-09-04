@@ -435,7 +435,7 @@ export default function SessionManager({
   return (
     <div className="flex flex-col gap-[24px]">
       <section className="flex flex-col gap-[12px]">
-        <h2 className="text-lcars-primary">Session eintragen</h2>
+        <h2 className="text-lcars-primary-ink">Session eintragen</h2>
         <NewSessionForm
           characters={characters}
           defaultSessionAp={defaultSessionAp}
@@ -444,7 +444,7 @@ export default function SessionManager({
       </section>
 
       <section className="flex flex-col gap-[12px]">
-        <h2 className="text-lcars-primary">Bisherige Sessions</h2>
+        <h2 className="text-lcars-primary-ink">Bisherige Sessions</h2>
         {sessions.length === 0 ? (
           <p className="lcars-empty-state">Noch keine Session eingetragen.</p>
         ) : (

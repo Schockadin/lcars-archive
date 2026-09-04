@@ -67,7 +67,7 @@ export default function AdminMissionsBrowser({
                   <>
                     {mission.title}
                     {mission.isDraft && (
-                      <span className="text-lcars-primary"> · Entwurf</span>
+                      <span className="text-lcars-primary-ink"> · Entwurf</span>
                     )}
                   </>
                 }
