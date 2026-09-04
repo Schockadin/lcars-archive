@@ -1,5 +1,12 @@
 "use client";
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
+import {
+  RAG_PROMPTS,
+  fillPrompt,
+  promptCaret,
+  promptNeedsInput,
+  type RagPromptTemplate,
+} from "@/lib/ragPrompts";
 import Link from "next/link";
 import MarkdownLite from "./MarkdownLite";
 import {
@@ -78,6 +85,7 @@ export default function RagChat({ configured }: { configured: boolean }) {
   const [input, setInput] = useState("");
   const [turns, setTurns] = useState<Turn[]>([]);
   const [busy, setBusy] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   async function ask(question: string) {
     setBusy(true);
@@ -138,6 +146,27 @@ export default function RagChat({ configured }: { configured: boolean }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  // Vorlage anklicken: Braucht sie keine Eingabe, geht die Frage sofort raus.
+  // Sonst landet der Text im Eingabefeld und der Cursor springt an die Stelle,
+  // die noch auszufüllen ist — die Vorlage ist dann ein Satzanfang, kein
+  // fertiges Formular.
+  function applyPrompt(t: RagPromptTemplate) {
+    if (busy) return;
+    if (!promptNeedsInput(t)) {
+      void ask(t.template);
+      return;
+    }
+    const text = fillPrompt(t);
+    const caret = promptCaret(t) ?? text.length;
+    setInput(text);
+    requestAnimationFrame(() => {
+      const el = inputRef.current;
+      if (!el) return;
+      el.focus();
+      el.setSelectionRange(caret, caret);
+    });
   }
 
   function onSubmit(e: React.FormEvent) {
@@ -223,11 +252,30 @@ export default function RagChat({ configured }: { configured: boolean }) {
         </ol>
       )}
 
+      {/* Einstiegs-Vorlagen. Ein leeres Eingabefeld verrät nicht, dass der
+          Assistent auch Rückschauen über mehrere Berichte oder Kurzprofile
+          liefern kann. */}
+      <div className="flex flex-wrap gap-[8px]">
+        {RAG_PROMPTS.map((t) => (
+          <button
+            key={t.id}
+            type="button"
+            title={t.hint}
+            disabled={busy}
+            onClick={() => applyPrompt(t)}
+            className="lcars-pill-btn--outline text-[12px] px-[12px] py-[4px] disabled:opacity-40"
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
+
       <form
         onSubmit={onSubmit}
         className="flex flex-col sm:flex-row gap-[8px]"
       >
         <input
+          ref={inputRef}
           type="text"
           value={input}
           onChange={(e) => setInput(e.target.value)}

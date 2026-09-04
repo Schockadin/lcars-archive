@@ -51,6 +51,10 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "farbschema",
       },
       {
+        text: "Der Datenbank-Assistent hat jetzt Einstiegs-Vorlagen: „Was bisher geschah“ liefert eine Rückschau über die jüngsten Einsatzberichte, weitere Knöpfe fragen eine Mission, ein Stichwort, eine Person oder die Beziehungen einer Figur ab. Bei den Vorlagen mit Lücke springt der Cursor gleich an die Stelle, die du ausfüllst.",
+        tutorial: "datenbank-assistent",
+      },
+      {
         text: "Charaktere, Missionen und Logbücher zeigen jetzt ebenfalls, wo sie erwähnt werden — bisher gab es diese Rückverweise nur bei Datenbank-Einträgen. Gezählt wird beides: die gepflegten Verweisfelder und echte [[Wikilinks]] im Fließtext.",
       },
       {
