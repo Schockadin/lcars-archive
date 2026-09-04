@@ -19,12 +19,12 @@ export default async function GmTalentsPage() {
   return (
     <>
       <PageMeta title="Talente" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
         <h1>Talente</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
-          <p className="text-lcars-ink-dim text-[13px]">
+          <p className="text-lcars-ink-contrast text-[13px]">
             Der Katalog speist die Auswahlliste auf den Charakterbögen. Die
             importierten Talente stammen aus dem Regeltext und lassen sich
             anpassen; löschen lassen sich nur selbst ergänzte, damit keine

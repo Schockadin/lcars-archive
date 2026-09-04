@@ -4,6 +4,11 @@ import { DataRowAccordion } from "./DataRowAccordion";
 interface DataRowProps extends DataRowPillProps {
   // Nur relevant mit children (Akkordeon-Modus) — Startzustand, siehe unten.
   defaultOpen?: boolean;
+  // Anker-id (nur Akkordeon-Modus): wird auf den Wrapper gesetzt, sodass
+  // /pfad#<id> auf diesen Abschnitt springt UND ihn beim Laden aufklappt
+  // (siehe DataRowAccordion). Genutzt von der Anleitung für die
+  // Changelog-Deep-Links (src/lib/tutorialSections.ts).
+  htmlId?: string;
   // Undefined = normale (ggf. verlinkte) DataRow. Gesetzt = Akkordeon: die
   // Zeile wird zum Auf-/Zuklapp-Trigger, children erscheinen darunter.
   children?: React.ReactNode;
@@ -27,6 +32,7 @@ export default function DataRow({
   className = "",
   expanded,
   defaultOpen,
+  htmlId,
   children,
 }: DataRowProps) {
   if (children === undefined) {
@@ -53,6 +59,7 @@ export default function DataRow({
       labelColor={labelColor}
       className={className}
       defaultOpen={defaultOpen}
+      htmlId={htmlId}
     >
       {children}
     </DataRowAccordion>

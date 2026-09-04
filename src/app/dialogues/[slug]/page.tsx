@@ -44,8 +44,9 @@ export default async function DialoguePlayPage({ params }: Props) {
   ]);
   if (!entry) notFound();
 
-  // Abgeschlossene Dialoge leben unter /archive — kein doppeltes Ziel.
-  if (!entry.open) redirect(`/archive/${slug}`);
+  // Abgeschlossene Gespräche leben unter /characters/dialogues/<slug>
+  // (Single-Content-Ansicht) — kein doppeltes Ziel.
+  if (!entry.open) redirect(`/characters/dialogues/${slug}`);
 
   // Teilnehmer-Charaktere, Viewer und Rollen-Map hängen alle nur an
   // session.userId/entry.id, nicht voneinander — in einem Batch laden statt

@@ -60,7 +60,7 @@ export default async function PermissionsAdminPage() {
   return (
     <>
       <PageMeta title="Rollen & Rechte" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff · Administration</p>
         <h1>Rollen &amp; Rechte</h1>
 
@@ -68,9 +68,9 @@ export default async function PermissionsAdminPage() {
           <section className="flex flex-col gap-[8px]">
             <p className="text-lcars-ink-dim">
               Rollen bündeln Rechte. Ein User kann mehrere Rollen haben; die
-              effektiven Rechte sind die Vereinigung aller Rollen und lassen sich
-              pro User zusätzlich im User-Editor feinjustieren. System-Rollen sind
-              inhaltlich bearbeitbar, aber nicht löschbar.
+              effektiven Rechte sind die Vereinigung aller Rollen und lassen
+              sich pro User zusätzlich im User-Editor feinjustieren.
+              System-Rollen sind inhaltlich bearbeitbar, aber nicht löschbar.
             </p>
           </section>
 
@@ -86,7 +86,9 @@ export default async function PermissionsAdminPage() {
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">Name, Beschreibung &amp; Mitglieder</h2>
+            <h2 className="text-lcars-primary">
+              Name, Beschreibung &amp; Mitglieder
+            </h2>
             <div className="flex flex-col gap-[12px]">
               {roles.map((role) => (
                 <RoleEditor

@@ -33,7 +33,7 @@ export default async function EditArchiveEntryPage({
   return (
     <>
       <PageMeta title="Datenbank-Eintrag bearbeiten" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <h1>Datenbank-Eintrag bearbeiten</h1>
         <p className="lcars-text text-[13px] opacity-80">
           {CATEGORY_CONFIG[entry.category].label}
@@ -42,7 +42,9 @@ export default async function EditArchiveEntryPage({
         <EditArchiveEntryForm
           userId={session.userId}
           entry={entry}
-          isAdminOrGM={!!viewer && userCan(viewer, "content.autolink_tools", roleMap)}
+          isAdminOrGM={
+            !!viewer && userCan(viewer, "content.autolink_tools", roleMap)
+          }
         />
       </article>
     </>

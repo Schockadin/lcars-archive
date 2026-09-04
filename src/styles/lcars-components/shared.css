@@ -6,6 +6,110 @@
 
 /* ── Layout ──────────────────────────────────────────────────────── */
 
+/* Breite, zentrierte Inhaltsspalte — Missions-Übersicht, Suche und der
+   Assistent für ein neues Gespräch. Vorher standen diese Seiten in einer
+   linksbündigen 640px-Spalte, die auf einem Desktop-Bildschirm zwei Drittel
+   der Fläche leer ließ. Der Deckel bleibt (endlos lange Zeilen liest
+   niemand gern), fällt mit 1100px aber deutlich großzügiger aus, und die
+   Spalte sitzt mittig in der Content-Fläche. */
+.lcars-wide-column {
+  width: 100%;
+  max-width: 1100px;
+  margin-inline: auto;
+}
+
+/* Gestapelte Aktions-Buttons (Text-Pillen) mit EINHEITLICHER Breite: die
+   Spalte hat eine feste Breite, jeder Button füllt sie — so sind alle Buttons
+   einer Gruppe gleich breit, unabhängig von der Länge ihrer Beschriftung
+   (z.B. „Neuer NPC" vs. „Neuer Datenbank-Eintrag"), und über alle Seiten
+   hinweg gleich (dieselbe feste Breite überall). Ausrichtung/Optik der Pille
+   selbst (Text unten rechts) bleiben unangetastet — nur die Breite wird
+   vereinheitlicht. Auf schmalen Geräten füllt die Spalte die volle Breite. */
+.lcars-btn-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 260px;
+  max-width: 100%;
+}
+.lcars-btn-stack > .lcars-pill-btn,
+.lcars-btn-stack > .lcars-pill-btn--outline {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Meta-/Nebentext („2 Einträge", „Bearbeitet von …", Zähler, Leerhinweise):
+   klein, in der Datenschrift und gedimmt. Domänenübergreifend dieselbe Rolle,
+   deshalb EINE Regel statt bislang elf gleichlautender Deklarationen in fünf
+   Dateien — dabei auch auf eine Größe vereinheitlicht (vorher teils 11px,
+   teils 12px). Die Selektoren behalten ihre sprechenden Namen; die jeweils
+   eigene Regel ergänzt nur noch das Domänenspezifische (Abstände, Laufweite,
+   Versalien, abweichende Farbe). */
+.lcars-meta-text,
+.mission-logs-sub,
+.stat-sheet-rule,
+.stat-editor-list-count,
+.stat-editor-list-empty,
+.stat-ap-ledger-meta,
+.stat-budget-spent,
+.stat-budget-figure span,
+.lcars-search-sub,
+.lcars-meta-row,
+.log-nav-meta,
+.news-row-meta {
+  font-family: var(--lcars-font-mono);
+  font-size: 12px;
+  color: var(--lcars-ink-dim);
+}
+
+/* Zwei-Spalten-Layout „Navigation/Liste links, Inhalt rechts" — gemeinsame
+   Grundlage von Missions-Detailseite, Datenbank-Browser und der Charaktere-/
+   Gespräche-Ansicht. Nur der Container: die Spaltenbreiten und das Verhalten
+   unter dem Breakpoint bleiben in der jeweiligen Datei, da sie sich je Seite
+   unterscheiden (feste 320px/260px vs. zwei gleichberechtigte Listen). */
+.lcars-split {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* Toolbar über einer Liste: Suchfeld, Filter und Sortier-Switch nebeneinander,
+   auf schmalen Geräten umbrechend. Domänenübergreifend genutzt (Missions-
+   Übersicht, Suche, Admin-Nutzertabelle) — vorher lag dieselbe Regel doppelt
+   als .mission-toolbar und .users-table-toolbar vor. Die fachlichen Teile
+   (z.B. .mission-author-filter) bleiben in ihrer jeweiligen Datei. */
+.lcars-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+/* Das Suchfeld füllt die Restbreite, gibt sie aber unter 200px wieder frei. */
+.lcars-toolbar input[type="search"] {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+/* Aufklappbare <details>-Sektion mit einem Chevron links wie die
+   DataRow-Akkordeons (z.B. „Alle Buchungen" unter /gm/ap) — passt zum
+   Session-Aufklapper unter /gm/sessions. Der native Aufklapp-Marker wird
+   ausgeblendet, das Chevron dreht sich über den offen/zu-Zustand. */
+.lcars-details-summary {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  list-style: none;
+}
+.lcars-details-summary::-webkit-details-marker {
+  display: none;
+}
+.lcars-details[open] > .lcars-details-summary .lcars-data-row-chevron {
+  transform: rotate(-135deg);
+}
+
 .lcars-main-content {
   display: flex;
   /* Ohne explizite Richtung defaultet Flex auf row — fiel bisher nicht auf,
@@ -68,13 +172,27 @@
   border-bottom: 1px dashed var(--lcars-quinary);
 }
 
+/* Deep-Link vom Changelog in den passenden Anleitungsabschnitt (Dashboard-
+   „Neu in Version …“ UND /changelog). Immer als Link erkennbar (unterstrichen)
+   und in beiden Renderern identisch — dieselbe Akzentfarbe/Hover-Logik wie die
+   übrigen Fließtext-Links (siehe .lcars-link-text oben). */
+.lcars-changelog-tutorial-link {
+  color: var(--lcars-ink-data);
+  text-decoration: underline;
+  white-space: nowrap;
+  transition: color 250ms;
+}
+.lcars-changelog-tutorial-link:hover {
+  color: var(--lcars-tertiary);
+}
+
 /* Gemeinsame Typografie für .char-file-pill (char-file.css, Personalakte)
    und .character-entry-stub (character.css, Charakterliste) — beide sind
    kleine, dunkel eingefärbte Mono-Label-Chips, nur letter-spacing
    unterscheidet sich je Kontext (bleibt in der jeweiligen eigenen Regel). */
 .char-file-pill,
 .character-entry-stub {
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 12px;
   font-weight: 700;
   color: var(--lcars-bg);
@@ -91,14 +209,18 @@
 /* Inhaltsverzeichnis (wiederverwendbar) */
 .lcars-toc-title {
   margin-bottom: 6px;
-  font-family: var(--font-antonio), sans-serif;
+  font-family: var(--lcars-font-sans);
   font-size: 16px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.18em;
   color: var(--lcars-tertiary);
 }
-.lcars-toc-list {
+/* Schlichte, gestapelte Liste ohne Aufzählungszeichen — Inhaltsverzeichnis
+   und Buchungsjournal teilen sich dasselbe Grundlayout. */
+.lcars-plain-list,
+.lcars-toc-list,
+.stat-ap-ledger {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -115,7 +237,7 @@
   border: none;
   border-left: 3px solid transparent;
   padding: 4px 8px;
-  font-family: var(--font-share-tech-mono), monospace;
+  font-family: var(--lcars-font-mono);
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -141,7 +263,7 @@
    gemeinsamem Selektor, jetzt eine geteilte Klasse. */
 .lcars-back-link {
   display: inline-block;
-  font-family: var(--font-antonio), sans-serif;
+  font-family: var(--lcars-font-sans);
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -393,7 +515,7 @@
   box-shadow: var(--lcars-shadow-float);
 }
 .markdown-hint-popover-title {
-  font-family: var(--font-antonio), sans-serif;
+  font-family: var(--lcars-font-sans);
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 13px;
@@ -594,10 +716,7 @@
 }
 
 .news-row-meta {
-  font-family: var(--font-share-tech-mono), monospace;
-  font-size: 11px;
   letter-spacing: 0.03em;
-  color: var(--lcars-ink-dim);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

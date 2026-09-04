@@ -4,7 +4,8 @@ import Link from "next/link";
 import { LcarsDataRow } from "@/components/lcars";
 import type { NewsFeedItem } from "@/lib/recentActivity";
 import { dismissNewsAction, markAllNewsSeenAction } from "@/app/actions/news";
-import { SOURCE_TYPE_LABELS, fmtDate } from "@/lib/timelineFormat";
+import { fmtDate } from "@/lib/missionFormat";
+import { CONTENT_TYPE_LABEL } from "@/lib/contentTypeFormat";
 
 // Farbe + Verb je News-Art (neu/bearbeitet/gelöscht) — Vorgabe: grün = neu,
 // blau = bearbeitet, rot = gelöscht.
@@ -19,12 +20,12 @@ const KIND_META: Record<
 
 function metaLine(item: NewsFeedItem): string {
   const { verb } = KIND_META[item.kind];
-  // Für Löschungen steht in SOURCE_TYPE_LABELS kein 'deletion'-Eintrag; der
-  // Typ ist dort ohnehin nicht mehr auflösbar (Ziel existiert nicht mehr).
+  // Für Löschungen gibt es keinen Inhaltstyp mehr (das Ziel existiert nicht
+  // mehr) — dort steht deshalb das neutrale „Inhalt".
   const typeLabel =
     item.targetType === "deletion"
       ? "Inhalt"
-      : SOURCE_TYPE_LABELS[item.targetType];
+      : CONTENT_TYPE_LABEL[item.targetType];
   const by = item.authorName ?? "Spielleitung";
   return `${typeLabel} · ${verb} von ${by}`;
 }
@@ -129,7 +130,6 @@ export default function NewsSection({ items }: { items: NewsFeedItem[] }) {
     <LcarsDataRow
       value={visible.length}
       label="News"
-      color="var(--lcars-tertiary)"
       defaultOpen
     >
       <div className="flex flex-col gap-[8px]">

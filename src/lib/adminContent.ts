@@ -1,8 +1,11 @@
 import "server-only";
 import sql from "@/lib/db";
 import type { OwnerContentType } from "@/app/actions/owner";
+import type { ContentTypeKey } from "@/lib/contentTypeFormat";
 
-export type TrashContentType = OwnerContentType | "dialogue";
+// Identisch mit ContentTypeKey (die vier Owner-Typen + Gespräch) — siehe
+// src/lib/contentTypeFormat.ts.
+export type TrashContentType = ContentTypeKey;
 
 export interface AdminContentItem {
   contentType: OwnerContentType;

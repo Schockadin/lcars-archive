@@ -12,12 +12,7 @@
    Spalte — analog zum Kategorien/Inhalt-Umbruch von .archive-browser, aber
    mit echtem Tab-Wechsel statt Stapeln, da hier zwei eigenständige Listen
    (nicht Navigation + Inhalt) um denselben Platz konkurrieren. */
-.chars-dialogues-layout {
-  display: flex;
-  gap: 24px;
-  align-items: flex-start;
-  width: 100%;
-}
+/* Container-Layout: siehe .lcars-split (shared.css). */
 .chars-dialogues-col {
   min-width: 0;
 }
@@ -28,6 +23,14 @@
 @media (max-width: 900px) {
   .chars-dialogues-layout {
     flex-direction: column;
+  }
+  /* Gestapelt füllt die sichtbare Spalte die ganze Breite: das Layout nutzt
+     align-items: flex-start (damit die beiden Spalten nebeneinander auf ihre
+     Inhaltsbreite schrumpfen); ohne diese Regel schrumpfte die aktive Spalte
+     auch mobil auf ihre Inhaltsbreite — lange Karteninhalte (z.B. viele
+     Teilnehmer) liefen dann über den Bildschirmrand statt umzubrechen. */
+  .chars-dialogues-col {
+    width: 100%;
   }
   .chars-dialogues-switch {
     display: flex;
@@ -93,7 +96,7 @@
 }
 
 .character-entry-name {
-  font-family: var(--font-antonio), sans-serif;
+  font-family: var(--lcars-font-sans);
   font-size: 19px;
   font-weight: 600;
   letter-spacing: 0.1em;

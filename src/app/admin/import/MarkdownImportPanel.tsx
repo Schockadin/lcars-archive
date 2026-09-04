@@ -16,17 +16,23 @@ import {
   getAttributeFields,
   getReferenceFields,
 } from "@/lib/archiveMetadataFields";
+import { CONTENT_TYPE_LABEL } from "@/lib/contentTypeFormat";
 
+// Der Import kennt den Datenbank-Eintrag als "archive"; die Beschriftungen
+// selbst kommen aus der geteilten Quelle (contentTypeFormat.ts).
 const CONTENT_TYPE_LABELS: Record<ImportContentType, string> = {
-  archive: "Datenbank-Eintrag",
-  mission: "Mission",
-  character: "Charakter",
-  mission_log: "Missionslog",
+  archive: CONTENT_TYPE_LABEL.archive_entry,
+  mission: CONTENT_TYPE_LABEL.mission,
+  character: CONTENT_TYPE_LABEL.character,
+  mission_log: CONTENT_TYPE_LABEL.mission_log,
 };
 
 const MISSION_STATUSES = ["active", "completed", "failed", "abandoned"];
 const CHARACTER_STATUSES = ["active", "retired", "deceased"];
 const inputClass = "rounded-lcars-pill lcars-input w-full";
+// Selects tragen durchgängig lcars-input + rounded-full (siehe die übrigen
+// Auswahlfelder der App); die Textfelder daneben behalten ihren Pillen-Radius.
+const selectClass = "lcars-input rounded-full w-full";
 
 type RowStatus = "ready" | "importing" | "imported" | "discarded" | "error";
 
@@ -529,7 +535,7 @@ function ImportEditFields({
           <input id={`${idPrefix}-slug`} name="slug" defaultValue={preview.slug} className={inputClass} />
         </FormField>
         <FormField label="Status" htmlFor={`${idPrefix}-status`}>
-          <select id={`${idPrefix}-status`} name="status" defaultValue={preview.status} className={inputClass}>
+          <select id={`${idPrefix}-status`} name="status" defaultValue={preview.status} className={selectClass}>
             {MISSION_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -592,7 +598,7 @@ function ImportEditFields({
           <input id={`${idPrefix}-slug`} name="slug" defaultValue={preview.slug} className={inputClass} />
         </FormField>
         <FormField label="Status" htmlFor={`${idPrefix}-status`}>
-          <select id={`${idPrefix}-status`} name="status" defaultValue={preview.status} className={inputClass}>
+          <select id={`${idPrefix}-status`} name="status" defaultValue={preview.status} className={selectClass}>
             {CHARACTER_STATUSES.map((s) => (
               <option key={s} value={s}>
                 {s}
@@ -711,7 +717,7 @@ function ImportEditFields({
           id={`${idPrefix}-mission`}
           name="missionSlug"
           defaultValue={preview.missionTitle ? preview.missionSlug : ""}
-          className={inputClass}
+          className={selectClass}
         >
           <option value="" disabled>
             — auswählen —
@@ -728,7 +734,7 @@ function ImportEditFields({
           id={`${idPrefix}-author`}
           name="authorSlug"
           defaultValue={preview.authorName ? preview.authorSlug : ""}
-          className={inputClass}
+          className={selectClass}
         >
           <option value="" disabled>
             — auswählen —

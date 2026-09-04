@@ -30,7 +30,7 @@ export default async function EditMissionPage({
   return (
     <>
       <PageMeta title="Mission bearbeiten" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <h1>Mission bearbeiten</h1>
         <EditMissionForm
           userId={user.id}

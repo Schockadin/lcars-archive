@@ -36,18 +36,17 @@ export default async function GmSessionsPage() {
   return (
     <>
       <PageMeta title="Sessions" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
         <h1>Sessions</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
           <p className="text-lcars-ink-dim text-[13px]">
             Eine eingetragene Session schreibt allen ausgewählten Charakteren
-            die Session-AP und die Bonus-AP gut. Vorausgewählt sind alle
-            aktiven Charaktere mit verknüpftem Konto — wer gefehlt hat, wird
-            einfach abgewählt. Zu einer eingetragenen Session lassen sich
-            Logbücher verknüpfen; ab dem ersten gibt es dafür automatisch die
-            Logbuch-AP.
+            die Session-AP und die Bonus-AP gut. Vorausgewählt sind alle aktiven
+            Charaktere mit verknüpftem Konto — wer gefehlt hat, wird einfach
+            abgewählt. Zu einer eingetragenen Session lassen sich Logbücher
+            verknüpfen; ab dem ersten gibt es dafür automatisch die Logbuch-AP.
           </p>
           <SessionManager
             sessions={sessions}

@@ -1,5 +1,6 @@
 import { getDBStats } from "@/lib/stats";
 import LcarsDataRow from "@/components/lcars/DataRow";
+import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 
 export default async function LandingStats() {
   const { characterCount, sessionCount, entryCount } = await getDBStats();
@@ -10,21 +11,19 @@ export default async function LandingStats() {
       <LcarsDataRow
         value={characterCount}
         label="Charaktere"
-        accentColor="var(--lcars-primary-light)"
-        color="var(--lcars-tertiary)"
+        color={CONTENT_TYPE_COLOR.character}
         href="/characters"
       />
       <LcarsDataRow
         value={sessionCount}
         label="Logs"
-        color="var(--lcars-secondary)"
+        color={CONTENT_TYPE_COLOR.mission_log}
         href="/missions"
       />
       <LcarsDataRow
         value={entryCount}
         label="Datenbank-Einträge"
-        accentColor="var(--lcars-tertiary)"
-        color="var(--lcars-quinary)"
+        color={CONTENT_TYPE_COLOR.archive_entry}
         href="/archive"
       />
       {/* „Jahre" bleibt als reine Kennzahl — die frühere Verlinkung auf
@@ -32,8 +31,6 @@ export default async function LandingStats() {
       <LcarsDataRow
         value={15}
         label="Jahre"
-        color="var(--lcars-primary)"
-        accentColor="var(--lcars-quaternary)"
       />
     </div>
   );

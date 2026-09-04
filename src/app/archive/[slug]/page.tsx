@@ -2,20 +2,18 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { getArchiveEntryBySlug } from "@/lib/archive";
 import { CATEGORY_CONFIG, archiveTitle } from "@/lib/archiveFormat";
+import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import { stripHtml } from "@/lib/missionFormat";
 import { ArchiveEntryDetail, ArchiveLink } from "@/types/archive";
 import PageMeta from "@/components/PageMeta";
 import { LcarsReadingModeToggle } from "@/components/lcars";
-import DialogueHeader from "@/components/DialogueHeader";
-import DeleteDialogueButton from "@/components/DeleteDialogueButton";
-import { getDialogueMessages } from "@/lib/dialogues";
 import {
   getViewer,
   canView,
   canViewDraft,
   viewerHasPermission,
 } from "@/lib/visibility";
-import { listAllUsers, getDialogueViewPreference } from "@/lib/users";
+import { listAllUsers } from "@/lib/users";
 import { resolveFollowState } from "@/lib/follows";
 import ArchiveEntryBody from "./ArchiveEntryBody";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
@@ -23,7 +21,6 @@ import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 interface Props {
   params: Promise<{ slug: string }>;
 }
-
 
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
@@ -59,15 +56,17 @@ export default async function ArchiveEntryPage({ params }: Props) {
   ]);
   if (!entry) notFound();
 
-  // Offene Dialoge leben unter /dialogues/<slug> (Formular, Abschluss-Button,
-  // eigener Teilnehmer-Gate). Muss VOR dem Sichtbarkeits-Guard unten
-  // passieren: der Teilnehmer-Check auf /dialogues/<slug> ist die richtige
-  // Zugriffsprüfung für einen offenen Dialog (jeder Teilnehmer, nicht nur der
-  // Ersteller/owner_user_id) — der Sichtbarkeits-Guard hier würde einen
-  // Partner sonst schon hier aussperren, bevor er dorthin überhaupt
-  // umgeleitet wird.
-  if (entry.category === "dialogue" && entry.dialogue_open) {
-    redirect(`/dialogues/${entry.slug}`);
+  // Gespräche leben im Charaktere-Bereich, nicht in der generischen Datenbank-
+  // Detailseite: abgeschlossene unter /characters/dialogues/<slug>
+  // (Single-Content-Ansicht), offene unter /dialogues/<slug> (Formular,
+  // Abschluss-Button, Teilnehmer-Gate). Muss VOR dem Sichtbarkeits-Guard
+  // unten passieren — der Teilnehmer-Check auf /dialogues/<slug> ist die
+  // richtige Zugriffsprüfung für ein offenes Gespräch (jeder Teilnehmer, nicht
+  // nur der Ersteller); ein alter /archive/<slug>-Link bleibt so gültig und
+  // leitet auf das neue Ziel weiter (das offene Gespräche selbst nach
+  // /dialogues weiterreicht).
+  if (entry.category === "dialogue") {
+    redirect(`/characters/dialogues/${entry.slug}`);
   }
 
   if (
@@ -78,43 +77,25 @@ export default async function ArchiveEntryPage({ params }: Props) {
   }
   if (!canViewDraft(entry.isDraft, entry.ownerUserId, viewer)) notFound();
 
-  // Owner-Auswahl, Dialog-Nachrichten und Anzeige-Präferenz sind voneinander
-  // unabhängig — parallel laden statt nacheinander.
+  // Owner-Auswahl und Bookmark/Abo-Stand sind voneinander unabhängig —
+  // parallel laden. Gespräche werden hier nicht mehr gerendert (sie leiten
+  // oben nach /characters/dialogues um), daher keine Dialog-Nachrichten/
+  // -Präferenz mehr.
   // - owners: nur laden, wenn der Betrachter den Eintrag umtragen darf — exakt
-  //   das Server-Gate von setOwnerAction (content.moderate), rechte- statt
-  //   rollenbasiert (früher role === "admin").
-  // - messages: nicht gecacht — Frische kommt über die Revalidation der ganzen
-  //   Seite nach jeder neuen Nachricht (src/app/actions/dialogues.ts).
-  // - flowingTextPreferred: globale Präferenz (DialogueViewToggle.tsx), nur für
-  //   eingeloggte Betrachter eines (hier immer bereits geschlossenen) Dialogs
-  //   relevant; sonst Default true ohne extra DB-Zugriff.
-  const [allUsers, messages, flowingTextPreferred, followInitialState] =
-    await Promise.all([
-      viewerHasPermission(viewer, "content.moderate")
-        ? listAllUsers()
-        : Promise.resolve([]),
-      entry.category === "dialogue"
-        ? getDialogueMessages(entry.id)
-        : Promise.resolve([]),
-      entry.category === "dialogue" && viewer
-        ? getDialogueViewPreference(viewer.userId)
-        : Promise.resolve(true),
-      // Bookmark/Abo-Stand serverseitig vorlösen — an ArchiveEntryBody →
-      // ActionsMenu → FollowButtons als initialState durchgereicht, damit die
-      // Buttons sofort mitgerendert werden statt per Client-Fetch nachzuladen.
-      resolveFollowState(viewer?.userId ?? null, "archive_entry", slug),
-    ]);
+  //   das Server-Gate von setOwnerAction (content.moderate).
+  const [allUsers, followInitialState] = await Promise.all([
+    viewerHasPermission(viewer, "content.moderate")
+      ? listAllUsers()
+      : Promise.resolve([]),
+    // Bookmark/Abo-Stand serverseitig vorlösen — an ArchiveEntryBody →
+    // ActionsMenu → FollowButtons als initialState durchgereicht, damit die
+    // Buttons sofort mitgerendert werden statt per Client-Fetch nachzuladen.
+    resolveFollowState(viewer?.userId ?? null, "archive_entry", slug),
+  ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
   const cfg = CATEGORY_CONFIG[entry.category];
   const title = archiveTitle(entry);
-
-  // Bei Dialogen erscheinen Teilnehmer + Ort schon im Header — aus den
-  // "Verweisen" herausfiltern, übrige Referenzen (Fraktion, Objekt, …) bleiben.
-  const outgoingLinks =
-    entry.category === "dialogue"
-      ? entry.links.filter((l) => l.label !== "Teilnehmer" && l.label !== "Ort")
-      : entry.links;
 
   return (
     <article
@@ -126,60 +107,33 @@ export default async function ArchiveEntryPage({ params }: Props) {
       <LcarsReadingModeToggle />
 
       <div className="flex items-start">
-        {entry.category !== "dialogue" ? (
-          <StandardHeader entry={entry} title={title} label={cfg.label} />
-        ) : (
-          <DialogueHeader
-            title={title}
-            participants={entry.metadata.participants}
-            location={entry.metadata.location}
-            logDate={entry.metadata.logDate}
-          />
-        )}
+        <StandardHeader entry={entry} title={title} label={cfg.label} />
       </div>
 
       <ArchiveEntryBody
         entry={entry}
         viewer={viewer}
         owners={owners}
-        messages={messages}
-        flowingTextPreferred={flowingTextPreferred}
+        messages={[]}
+        flowingTextPreferred={true}
         followInitialState={followInitialState}
       />
 
-      {viewerHasPermission(viewer, "dialogues.moderate") &&
-        entry.category === "dialogue" && (
-        <div className="flex flex-wrap items-center gap-[8px]">
-          {/* Metadaten (Titel/Datum/Ort/Tags) bearbeiten — auch für
-              abgeschlossene Gespräche, nicht der Gesprächsverlauf. */}
-          <Link
-            href={`/gm/dialogues/${entry.slug}/edit`}
-            className="lcars-pill-btn--outline"
-          >
-            Metadaten bearbeiten
-          </Link>
-          <DeleteDialogueButton entrySlug={entry.slug} />
-        </div>
-      )}
-
-      <RelatedSection title="Verweise" links={outgoingLinks} />
+      <RelatedSection title="Verweise" links={entry.links} />
       <RelatedSection title="Erwähnt in" links={entry.backlinks} />
 
-      {/* Bei Dialogen erscheinen die Charaktere bereits als Teilnehmer. */}
-      {entry.category !== "dialogue" && (
-        <RefSection
-          title="Charaktere"
-          color="var(--lcars-tertiary)"
-          refs={entry.metadata.characters.map((c) => ({
-            href: `/characters/${c.slug}`,
-            label: c.name,
-          }))}
-        />
-      )}
+      <RefSection
+        title="Charaktere"
+        color={CONTENT_TYPE_COLOR.character}
+        refs={entry.metadata.characters.map((c) => ({
+          href: `/characters/${c.slug}`,
+          label: c.name,
+        }))}
+      />
 
       <RefSection
         title="Missionen"
-        color="var(--lcars-primary)"
+        color={CONTENT_TYPE_COLOR.mission}
         refs={entry.metadata.missions.map((m) => ({
           href: `/missions/${m.slug}`,
           label: m.title,

@@ -57,14 +57,69 @@ test("DataRow-Pillen behalten die LCARS-Schrift auch im minimalistischen UI", as
   await page.context().addCookies([
     { name: "neo_ui", value: "minimal", url: baseURL },
   ]);
-  // /archive listet seine Kategorien über LcarsDataRow-Zeilen
-  // (ArchiveCategoryNav.tsx, Teil des Layouts auf jeder Archiv-Seite) —
-  // öffentlich einsehbar, kein Login nötig.
-  await page.goto("/archive");
-  const pill = page.locator(".lcars-data-row-text").first();
-  await pill.waitFor();
-  const fontFamily = await pill.evaluate(
-    (el) => getComputedStyle(el).fontFamily,
-  );
+  // Geprüft wird — wie in content-width.spec.ts — an einem eingehängten
+  // Element auf einer DB-freien Seite: die echten Pillen stehen auf
+  // /archive (ArchiveCategoryNav.tsx), und /archive braucht eine Datenbank,
+  // die in der E2E-Umgebung bewusst nicht existiert (siehe DATABASE_URL-
+  // Dummy in .github/workflows/ci.yml). Die Regel selbst (minimal-ui.css)
+  // war die Ursache und wird hier direkt am computed style geprüft.
+  await page.goto("/tutorial");
+  await expect(page.locator("html")).toHaveAttribute("data-ui", "minimal");
+
+  const fontFamily = await page.evaluate(() => {
+    const el = document.createElement("div");
+    el.className = "lcars-data-row-text";
+    document.body.appendChild(el);
+    const value = getComputedStyle(el).fontFamily;
+    el.remove();
+    return value;
+  });
+
+  expect(fontFamily).toContain("Antonio");
+});
+
+// Harmonisierung: die Tailwind-Utilities font-lcars / font-lcars-mono müssen
+// über dieselben kanonischen Stacks (var(--lcars-font-sans/-mono)) laufen wie
+// die CSS-Klassen — sonst rendern Utility-gestylte Texte (z.B. DataRow-Pillen,
+// Fehlerseiten, Admin-Tabellen) in einer System-Ersatzschrift statt in der
+// geladenen LCARS-Schrift. Geprüft am computed style eingehängter Elemente.
+for (const { cls, expected } of [
+  { cls: "font-lcars", expected: "Antonio" },
+  { cls: "font-lcars-mono", expected: "Share Tech Mono" },
+]) {
+  test(`${cls} trägt die geladene LCARS-Schrift (${expected})`, async ({
+    page,
+  }) => {
+    await page.goto("/tutorial");
+    const fontFamily = await page.evaluate((className) => {
+      const el = document.createElement("div");
+      el.className = className;
+      document.body.appendChild(el);
+      const value = getComputedStyle(el).fontFamily;
+      el.remove();
+      return value;
+    }, cls);
+    expect(fontFamily).toContain(expected);
+  });
+}
+
+test("ohne minimalistisches UI bleibt die Pillen-Schrift die LCARS-Vorgabe", async ({
+  page,
+}) => {
+  // Gegenprobe: Die Regel aus minimal-ui.css darf nicht die einzige Quelle
+  // der Antonio-Schrift sein — im Standard-LCARS-UI trägt die Pille sie
+  // ebenfalls, dort über die Vererbung vom body.
+  await page.goto("/tutorial");
+  await expect(page.locator("html")).not.toHaveAttribute("data-ui", "minimal");
+
+  const fontFamily = await page.evaluate(() => {
+    const el = document.createElement("div");
+    el.className = "lcars-data-row-text";
+    document.body.appendChild(el);
+    const value = getComputedStyle(el).fontFamily;
+    el.remove();
+    return value;
+  });
+
   expect(fontFamily).toContain("Antonio");
 });

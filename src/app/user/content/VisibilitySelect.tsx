@@ -44,7 +44,7 @@ export default function VisibilitySelect({
             if (result.error) setError(result.error);
           });
         }}
-        className="lcars-input"
+        className="lcars-input rounded-full"
         aria-label="Sichtbarkeit"
       >
         {OPTIONS.map((o) => (

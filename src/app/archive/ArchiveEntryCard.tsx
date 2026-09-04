@@ -18,7 +18,13 @@ export default function ArchiveEntryCard({
 
   return (
     <LcarsAkteCard
-      href={`/archive/${entry.slug}`}
+      // Gespräche haben ihr Zuhause im Charaktere-Bereich; die Zielseite
+      // reicht ein noch offenes Gespräch selbst an /dialogues weiter.
+      href={
+        isDialogue
+          ? `/characters/dialogues/${entry.slug}`
+          : `/archive/${entry.slug}`
+      }
       color={cfg.color}
       title={archiveTitle(entry)}
       summary={m.summary}

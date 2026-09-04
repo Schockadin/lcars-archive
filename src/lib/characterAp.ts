@@ -60,17 +60,6 @@ export async function getApAccount(characterId: number): Promise<ApAccount> {
   return { earned, spent, available: earned - spent, entries: rows };
 }
 
-// Nur der Kontostand (ohne Journal) — für Übersichten und die Prüfung in der
-// Steigerungs-Action.
-export async function getAvailableAp(characterId: number): Promise<number> {
-  const [row] = await sql<{ available: number }[]>`
-    SELECT COALESCE(SUM(amount), 0)::int AS available
-    FROM character_ap_entries
-    WHERE character_id = ${characterId}
-  `;
-  return row?.available ?? 0;
-}
-
 // Kontostände aller Charaktere auf einmal — für die Vergabe-Übersicht der
 // Spielleitung, damit dort nicht pro Charakter einzeln abgefragt wird.
 export async function listApBalances(): Promise<

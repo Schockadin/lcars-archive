@@ -5,6 +5,8 @@ import { SaveFooter } from "@/app/_shared/FormPrimitives";
 import {
   UI_MODE_LCARS,
   UI_MODE_MINIMAL,
+  UI_MODE_MINIMAL_LIGHT,
+  isMinimalUiMode,
   normalizeUiMode,
   type UiMode,
 } from "@/lib/uiMode";
@@ -26,9 +28,15 @@ const UI_MODE_OPTIONS: UiModeOption[] = [
   },
   {
     id: UI_MODE_MINIMAL,
-    label: "Minimalistisch",
+    label: "Minimalistisch (dunkel)",
     description:
-      "Schlanke, flache Oberfläche mit Systemschrift — ganz ohne LCARS-Chrome.",
+      "Schlanke, flache Oberfläche mit Systemschrift auf dunklem Grund — ganz ohne LCARS-Chrome.",
+  },
+  {
+    id: UI_MODE_MINIMAL_LIGHT,
+    label: "Minimalistisch (hell)",
+    description:
+      "Dieselbe schlanke Oberfläche, aber mit hellem Hintergrund und dunklem Text.",
   },
 ];
 
@@ -37,8 +45,10 @@ const UI_MODE_OPTIONS: UiModeOption[] = [
 function applyPreview(mode: UiMode) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
-  if (mode === UI_MODE_MINIMAL) {
-    root.setAttribute("data-ui", UI_MODE_MINIMAL);
+  if (isMinimalUiMode(mode)) {
+    // data-ui trägt die konkrete Variante ("minimal" oder "minimal-light"),
+    // damit die Live-Vorschau auch das helle Schema zeigt.
+    root.setAttribute("data-ui", mode);
   } else {
     root.removeAttribute("data-ui");
   }

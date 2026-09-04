@@ -9,6 +9,7 @@ import { getDialoguesForUser } from "@/lib/dialogues";
 import FollowedContentSection from "./FollowedContentSection";
 import OpenDialoguesSection from "./OpenDialoguesSection";
 import NewsSection from "./NewsSection";
+import ChangelogSection from "./ChangelogSection";
 import type { User } from "@/types/db";
 
 const ROLE_LABELS: Record<User["role"], string> = {
@@ -48,7 +49,7 @@ export default async function Dashboard({ user }: { user: User }) {
   return (
     <>
       <PageMeta title="Home" section="home" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <h1>Willkommen, {user.name}</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
@@ -74,6 +75,8 @@ export default async function Dashboard({ user }: { user: User }) {
           )}
 
           <OpenDialoguesSection items={openDialogues} />
+
+          <ChangelogSection />
 
           <NewsSection items={newsItems} />
 

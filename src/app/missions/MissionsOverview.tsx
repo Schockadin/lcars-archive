@@ -70,7 +70,7 @@ export default function MissionsOverview({
     : null;
 
   return (
-    <div className="w-full max-w-[640px]">
+    <div className="lcars-wide-column">
       <div className="mb-[16px]">
         <h1 className="lcars-data-row-heading">Missionen</h1>
         <p className="lcars-eyebrow">
@@ -86,7 +86,7 @@ export default function MissionsOverview({
         </p>
       ) : (
         <>
-          <div className="mission-toolbar">
+          <div className="lcars-toolbar">
             <LcarsSortSwitch
               className="mission-sort"
               options={[{ key: "date", label: "Datum" }]}
@@ -103,7 +103,7 @@ export default function MissionsOverview({
 
             {authors.length > 0 && (
               <select
-                className="mission-author-filter"
+                className="mission-author-filter rounded-full"
                 value={authorKey ?? ""}
                 onChange={(e) => setAuthorKey(e.target.value || null)}
                 aria-label="Nach Autor filtern"

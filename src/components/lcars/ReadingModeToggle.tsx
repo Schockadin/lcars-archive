@@ -15,16 +15,22 @@ export default function ReadingModeToggle() {
     return () => resetReadingModeOnUnmount();
   }, [resetReadingModeOnUnmount]);
 
+  // Reiner Icon-Button (kein Text) — der Zweck steht im aria-label/title, damit
+  // er auf jeder Seite kompakt bleibt und sich (bei Gesprächen) unter den
+  // Zurück-Knopf setzen lässt, ohne eine Textzeile zu belegen.
+  const label = readingMode ? "Lesemodus beenden" : "Lesemodus";
   return (
     <button
       type="button"
       onClick={toggleReadingMode}
       className="reading-mode-toggle"
       aria-pressed={readingMode}
+      aria-label={label}
+      title={label}
     >
       <svg
-        width="16"
-        height="16"
+        width="18"
+        height="18"
         viewBox="0 0 24 24"
         fill="none"
         aria-hidden="true"
@@ -42,7 +48,6 @@ export default function ReadingModeToggle() {
           strokeLinecap="round"
         />
       </svg>
-      {readingMode ? "Lesemodus beenden" : "Lesemodus"}
     </button>
   );
 }

@@ -9,14 +9,9 @@ import {
 import { formatDateTime } from "@/utils/formateISODate";
 import { RestoreIcon, TrashIcon } from "@/lib/icons";
 import type { TrashItem, TrashContentType } from "@/lib/adminContent";
+import { CONTENT_TYPE_LABEL } from "@/lib/contentTypeFormat";
 
-const CONTENT_TYPE_LABELS: Record<TrashContentType, string> = {
-  character: "Charakter",
-  mission: "Mission",
-  mission_log: "Missionslog",
-  archive_entry: "Datenbank-Eintrag",
-  dialogue: "Dialog",
-};
+const CONTENT_TYPE_LABELS: Record<TrashContentType, string> = CONTENT_TYPE_LABEL;
 
 // Admin-Trash-Ansicht (/admin/content/trash) — alle weich gelöschten
 // Inhalte (deleted_at gesetzt), mit Wiederherstellen- und "Endgültig

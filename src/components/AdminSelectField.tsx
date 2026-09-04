@@ -31,7 +31,7 @@ export default function AdminSelectField({
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="lcars-input"
+        className="lcars-input rounded-full"
         aria-label={ariaLabel}
       >
         {options.map((o) => (

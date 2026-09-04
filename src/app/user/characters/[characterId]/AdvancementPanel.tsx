@@ -1,10 +1,7 @@
 "use client";
 import { useActionState, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
-import {
-  ATTRIBUTE_FIELDS,
-  DEPARTMENT_FIELDS,
-} from "@/lib/characterStats";
+import { ATTRIBUTE_FIELDS, DEPARTMENT_FIELDS } from "@/lib/characterStats";
 import {
   checkAdvancement,
   creationBudget,
@@ -15,11 +12,11 @@ import {
   advanceCharacterAction,
   lockCreationAction,
   type AdvancementActionResult,
-} from "../../_shared/advancementAction";
+} from "../_shared/advancementAction";
 import { AP_REASON_LABELS, type ApAccount } from "@/lib/apReasons";
 import type { CharacterStats } from "@/types/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
-import TalentPicker from "../../_shared/TalentPicker";
+import TalentPicker from "../_shared/TalentPicker";
 
 const initialState: AdvancementActionResult = {};
 
@@ -80,7 +77,8 @@ export default function AdvancementPanel({
   return (
     <section className="stat-sheet-section">
       <h2 className="stat-sheet-section-title">
-        Advancement <span className="stat-label-secondary">Erfahrungspunkte</span>
+        Advancement{" "}
+        <span className="stat-label-secondary">Erfahrungspunkte</span>
       </h2>
 
       {/* ── Kontostand ─────────────────────────────────────────────── */}
@@ -91,10 +89,10 @@ export default function AdvancementPanel({
         </div>
         {!locked && (
           <div className="stat-ap-balance">
-            <span className="stat-ap-value">{account.available + carryOver}</span>
-            <span className="stat-label-secondary">
-              nach der Erschaffung
+            <span className="stat-ap-value">
+              {account.available + carryOver}
             </span>
+            <span className="stat-label-secondary">nach der Erschaffung</span>
           </div>
         )}
         <p className="stat-sheet-rule">
@@ -112,9 +110,10 @@ export default function AdvancementPanel({
           <p className="stat-sheet-rule">
             {rules.creationAttributeBudget} AP für Attribute,{" "}
             {rules.creationDepartmentBudget} AP für Disziplinen, dazu{" "}
-            {rules.creationFreeValues} Werte, {rules.creationFreeTalents} Talente
-            und {rules.creationFreeFocuses} Schwerpunkte frei. Attribute und
-            Disziplinen trägst du oben direkt ein, solange die Erschaffung läuft.
+            {rules.creationFreeValues} Werte, {rules.creationFreeTalents}{" "}
+            Talente und {rules.creationFreeFocuses} Schwerpunkte frei. Attribute
+            und Disziplinen trägst du oben direkt ein, solange die Erschaffung
+            läuft.
           </p>
           <div className="stat-ap-budget">
             <div>
@@ -188,8 +187,16 @@ export default function AdvancementPanel({
 
           <div className="stat-ap-steps">
             {[
-              { title: "Attributes", kind: "attribute" as const, fields: ATTRIBUTE_FIELDS },
-              { title: "Departments", kind: "department" as const, fields: DEPARTMENT_FIELDS },
+              {
+                title: "Attributes",
+                kind: "attribute" as const,
+                fields: ATTRIBUTE_FIELDS,
+              },
+              {
+                title: "Departments",
+                kind: "department" as const,
+                fields: DEPARTMENT_FIELDS,
+              },
             ].map((group) => (
               <div key={group.kind}>
                 <span className="stat-label-primary">{group.title}</span>
@@ -202,7 +209,11 @@ export default function AdvancementPanel({
                           {field.original ?? field.label}
                         </span>
                         <form action={formAction}>
-                          <input type="hidden" name="characterId" value={characterId} />
+                          <input
+                            type="hidden"
+                            name="characterId"
+                            value={characterId}
+                          />
                           <input type="hidden" name="kind" value={group.kind} />
                           <input type="hidden" name="key" value={field.key} />
                           <button
@@ -289,7 +300,11 @@ export default function AdvancementPanel({
               />
               <button
                 type="submit"
-                disabled={pending || focus.trim() === "" || account.available < rules.focusCost}
+                disabled={
+                  pending ||
+                  focus.trim() === "" ||
+                  account.available < rules.focusCost
+                }
                 className="lcars-pill-btn--outline disabled:opacity-50"
               >
                 Hinzufügen

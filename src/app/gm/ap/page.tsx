@@ -31,7 +31,7 @@ export default async function GmApPage() {
   return (
     <>
       <PageMeta title="AP" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
         <h1>Erfahrungspunkte</h1>
 
@@ -67,18 +67,37 @@ export default async function GmApPage() {
               </div>
             )}
             <p className="text-lcars-ink-dim text-[13px]">
-              Vergeben wird unter{" "}
-              <Link href="/gm/sessions">Sessions</Link> (an alle Beteiligten
-              auf einmal) oder unter{" "}
+              Vergeben wird unter <Link href="/gm/sessions">Sessions</Link> (an
+              alle Beteiligten auf einmal) oder unter{" "}
               <Link href="/gm/campaign">Kampagne</Link> (einzeln, auch als
               Korrektur).
             </p>
           </section>
 
-          <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">Alle Buchungen</h2>
-            <ApLedgerTable entries={ledger} limit={AP_LEDGER_LIMIT} />
-          </section>
+          {/* Eingeklappt als Vorgabe: das Journal ist die längste Sektion der
+              Seite und schob Regelwerk und Konten-Übersicht weit nach unten.
+              <details> statt eines eigenen Zustands — kein Client-Bundle
+              nötig, und der Browser merkt sich nichts, was der Server nicht
+              weiß (gleiches Muster wie der Rollen-Editor unter /admin). */}
+          <details className="lcars-details flex flex-col gap-[12px]">
+            <summary className="lcars-details-summary">
+              {/* Chevron links wie bei den Sessions (/gm/sessions) — dreht
+                  sich über details[open] (siehe shared.css). */}
+              <span
+                className="lcars-data-row-chevron"
+                style={{ margin: "0 4px 0 2px" }}
+                aria-hidden="true"
+              />
+              <h2 className="inline text-lcars-primary">Alle Buchungen</h2>
+              <span className="text-lcars-ink-dim text-[13px]">
+                {" "}
+                · {ledger.length} Einträge
+              </span>
+            </summary>
+            <div className="mt-[12px]">
+              <ApLedgerTable entries={ledger} limit={AP_LEDGER_LIMIT} />
+            </div>
+          </details>
 
           <section className="flex flex-col gap-[12px]">
             <h2 className="text-lcars-primary">Regelwerk</h2>

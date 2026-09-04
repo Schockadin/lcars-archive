@@ -1,16 +1,85 @@
+import type { TutorialSectionId } from "./tutorialSections";
+
 // Statische Daten für die öffentliche Changelog-Seite (/changelog) — ein
 // Eintrag pro Major.Minor-Version (siehe src/lib/version.ts), nicht pro
 // Commit/Sub-Version. Jeder Eintrag wird bei jedem neuen Pull Request von
 // Hand ergänzt, siehe AGENTS.md ("Der öffentliche Changelog"). items ist
-// eine Liste kurzer, endnutzer-gerichteter Stichpunkte (ein Punkt pro
-// changelog-würdigem Commit dieser Version), keine zusammenhängende Prosa.
+// eine Liste kurzer, endnutzer-gerichteter Stichpunkte — es werden NUR neue
+// Features genannt (keine reinen Design-/Layout-Änderungen, technische
+// Details oder Bugfixes ohne Feature-Charakter).
+//
+// Ein Item ist entweder ein einfacher String oder ein Objekt mit optionalem
+// Deep-Link auf den passenden Abschnitt der Anleitung (tutorial-id, siehe
+// src/lib/tutorialSections.ts) — die Renderer (ChangelogSection auf dem
+// Dashboard, ChangelogList unter /changelog) hängen dann einen
+// „Im Tutorial: …"-Link an den Stichpunkt. Beide Formen sind erlaubt, damit
+// ältere Einträge unverändert als Strings bestehen bleiben können.
+export interface ChangelogItem {
+  text: string;
+  tutorial?: TutorialSectionId;
+}
+
 export interface ChangelogEntry {
   version: string;
   title: string;
-  items: string[];
+  items: (string | ChangelogItem)[];
+}
+
+// Vereinheitlichter Zugriff für die Renderer, egal ob das Item als String oder
+// als Objekt vorliegt.
+export function changelogItemText(item: string | ChangelogItem): string {
+  return typeof item === "string" ? item : item.text;
+}
+
+export function changelogItemTutorial(
+  item: string | ChangelogItem,
+): TutorialSectionId | undefined {
+  return typeof item === "string" ? undefined : item.tutorial;
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.28",
+    title: "Charaktere anlegen und pflegen in neuem Ablauf",
+    items: [
+      {
+        text: "Einen neuen Charakter legst du jetzt in vier Schritten an: Stammdaten, Werte, Biografie und zum Schluss eine Vorschau des fertigen Charakterbogens. Zwischen den Schritten kannst du jederzeit hin und her springen, Eingaben bleiben dabei erhalten — angelegt wird der Charakter erst mit „Fertig“.",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Die Werte trägst du im Assistenten über normale Eingabefelder ein: Attribute und Disziplinen als Zahlenkästen mit laufender Budget-Anzeige, Talente aus dem Katalog, alles Weitere als gepflegte Listen. Verstöße gegen die Verteilungsregeln werden sofort markiert.",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Stammdaten und Biografie bearbeitest du jetzt direkt auf deiner Charakterseite: Stammdaten, Werte und Biografie stehen dort als Panels untereinander, ein Stift-Knopf öffnet den jeweiligen Abschnitt zum Bearbeiten an Ort und Stelle.",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Der Charakterbogen ist eine Vorschau aus drei Blättern — Personalbogen, Talent-Spickzettel und neu die Biografie im selben Papier-Look. Über einen Knopf auf der Charakterseite öffnest du ihn und kannst ihn drucken oder als PDF speichern; genau diese drei Blätter enthält auch das PDF.",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Den Knopf „Neuer NPC“ (unter „Meine Inhalte“) kann jetzt jedes Konto nutzen, nicht mehr nur die Spielleitung.",
+        tutorial: "gespraeche",
+      },
+      {
+        text: "Abgeschlossene Gespräche haben ein eigenes Zuhause im Charaktere-Bereich und werden dort als eigenständiger Inhalt gezeigt. Alte Links funktionieren weiter.",
+        tutorial: "gespraeche",
+      },
+      {
+        text: "Eingetragene Sessions lassen sich unter „Sessions“ jetzt vollständig korrigieren: Datum, Titel, AP-Beträge, Notizen und Teilnehmende. Die Gutschriften werden dabei mitgezogen — geänderte Beträge landen sofort auf den Konten.",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Das AP-Regelwerk kennt eine neue Regel „AP pro beendeter Mission“: Ihr Wert belegt den Betrag beim Missionsabschluss unter „Kampagne“ vor (Standard 5).",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Das minimalistische Interface gibt es jetzt in zwei Ausführungen — dunkel und hell. Du wählst sie im Profil unter „Darstellung → Oberfläche“.",
+        tutorial: "farbschema",
+      },
+    ],
+  },
   {
     version: "1.27",
     title: "Eigener Charaktere-Bereich mit Charakterwerten",
@@ -48,7 +117,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       "NPCs standen in der Gesprächs-Auswahl bisher nur, wenn sie öffentlich sichtbar waren — die üblichen, intern gehaltenen NPCs fehlten damit. Jetzt gilt auch hier die normale Sichtbarkeit: Wer einen NPC sehen darf, kann ihn auch ansprechen. Wer NPCs spielt, kann sie außerdem nachträglich in ein laufendes Gespräch holen und ein Gespräch aus ihrer Sicht beginnen — das klappt jetzt auch mit einem reinen Admin-Konto.",
       "„Erschaffung abschließen“ ist jetzt erst möglich, wenn alle Attribute und Disziplinen eingetragen UND gespeichert sind — festgeschrieben wird der gespeicherte Stand. Vorher konnte ein Bogen mit Lücken festgeschrieben werden, und die leeren Felder ließen sich danach nicht mehr füllen, weil sich nur vorhandene Werte steigern lassen.",
       "Nach dem Bearbeiten eines Charakters landest du wieder in der Charakter-Übersicht statt in „Meine Inhalte“, wo Charaktere gar nicht mehr stehen. Und der Menüpunkt „Charaktere“ erscheint direkt nach dem Anlegen deines ersten Charakters, statt erst nach dem nächsten Neuladen.",
-      "PDF-Charakterbögen lassen sich nicht mehr hochladen. Stattdessen führt auf der Charakterseite der Knopf „Charakterbogen“ direkt zum gepflegten Bogen — als reine Ansicht mit Vollbild und PDF-Download. Du siehst ihn bei deinen eigenen Charakteren, die Spielleitung bei allen. Bereits hochgeladene PDFs werden beim Einspielen dieser Version entfernt."
+      "PDF-Charakterbögen lassen sich nicht mehr hochladen. Stattdessen führt auf der Charakterseite der Knopf „Charakterbogen“ direkt zum gepflegten Bogen — als reine Ansicht mit Vollbild und PDF-Download. Du siehst ihn bei deinen eigenen Charakteren, die Spielleitung bei allen. Bereits hochgeladene PDFs werden beim Einspielen dieser Version entfernt.",
     ],
   },
   {
@@ -389,3 +458,29 @@ export const CHANGELOG: ChangelogEntry[] = [
     ],
   },
 ];
+
+// Jüngster Eintrag — das Profil zeigt ihn als „Neu in dieser Version"
+// (siehe /user). Verglichen wird numerisch je Stelle statt lexikografisch:
+// ein String-Vergleich sortierte "1.9" hinter "1.10". Die Reihenfolge des
+// Arrays bleibt damit egal.
+export function latestChangelogEntry(
+  entries: ChangelogEntry[] = CHANGELOG,
+): ChangelogEntry | null {
+  let latest: ChangelogEntry | null = null;
+  for (const entry of entries) {
+    if (latest === null || compareVersions(entry.version, latest.version) > 0) {
+      latest = entry;
+    }
+  }
+  return latest;
+}
+
+function compareVersions(a: string, b: string): number {
+  const partsA = a.split(".").map(Number);
+  const partsB = b.split(".").map(Number);
+  for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
+    const diff = (partsA[i] ?? 0) - (partsB[i] ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}

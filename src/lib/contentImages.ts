@@ -24,16 +24,17 @@ import {
   type Viewer,
   type Visibility,
 } from "@/lib/visibility";
+import {
+  OWNER_CONTENT_TYPES,
+  type OwnerContentTypeKey,
+} from "@/lib/contentTypeFormat";
 
 export const CONTENT_IMAGE_PREFIX = "content-images/";
 
-export const CONTENT_IMAGE_TYPES = [
-  "character",
-  "mission",
-  "mission_log",
-  "archive_entry",
-] as const;
-export type ContentImageType = (typeof CONTENT_IMAGE_TYPES)[number];
+// Bildbare Inhaltstypen = die vier Owner-Inhaltstypen (kanonische Liste in
+// src/lib/contentTypeFormat.ts).
+export const CONTENT_IMAGE_TYPES = OWNER_CONTENT_TYPES;
+export type ContentImageType = OwnerContentTypeKey;
 
 export function isContentImageType(value: string): value is ContentImageType {
   return (CONTENT_IMAGE_TYPES as readonly string[]).includes(value);

@@ -55,7 +55,7 @@ export default async function NewDialoguePage() {
   return (
     <>
       <PageMeta title="Neues Gespräch" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <h1>Neues Gespräch beginnen</h1>
 
         {!canStart ? (

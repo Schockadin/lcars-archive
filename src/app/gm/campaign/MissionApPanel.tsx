@@ -12,9 +12,13 @@ const initialState: MissionApState = {};
 export default function MissionApPanel({
   missions,
   characters,
+  defaultMissionAp,
 }: {
   missions: CompletableMission[];
   characters: ActiveCharacter[];
+  // Regel „AP pro beendeter Mission" aus dem Regelwerk (/gm/ap) — hier nur
+  // die Vorbelegung, im Einzelfall überschreibbar.
+  defaultMissionAp: number;
 }) {
   const [state, formAction, pending] = useActionState(
     completeMissionAction,
@@ -58,7 +62,7 @@ export default function MissionApPanel({
             name="amount"
             type="number"
             min={0}
-            defaultValue={5}
+            defaultValue={defaultMissionAp}
             className="lcars-input rounded-full w-[110px] text-right"
           />
         </label>
@@ -75,8 +79,8 @@ export default function MissionApPanel({
 
       {selected && selected.apAwarded > 0 && (
         <p className="text-lcars-ink-dim text-[13px]">
-          Für diese Mission wurden bereits {selected.apAwarded} AP vergeben — ein
-          erneutes Buchen kommt obendrauf.
+          Für diese Mission wurden bereits {selected.apAwarded} AP vergeben —
+          ein erneutes Buchen kommt obendrauf.
         </p>
       )}
 

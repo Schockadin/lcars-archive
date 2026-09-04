@@ -19,14 +19,27 @@
 export const UI_MODE_COOKIE_NAME = "neo_ui";
 
 export const UI_MODE_LCARS = "lcars";
+// Das minimalistische UI gibt es in zwei Ausführungen: dunkel (der bisherige
+// Wert "minimal", aus Kompatibilität unverändert) und hell ("minimal-light").
+// Beide teilen sich dieselbe schlanke Optik (minimal-ui.css, Selektor
+// data-ui^="minimal"); "minimal-light" überschreibt zusätzlich die
+// Hintergrund-/Textfarben auf ein helles Schema.
 export const UI_MODE_MINIMAL = "minimal";
+export const UI_MODE_MINIMAL_LIGHT = "minimal-light";
 
 export const DEFAULT_UI_MODE = UI_MODE_LCARS;
 
-export type UiMode = typeof UI_MODE_LCARS | typeof UI_MODE_MINIMAL;
+export type UiMode =
+  | typeof UI_MODE_LCARS
+  | typeof UI_MODE_MINIMAL
+  | typeof UI_MODE_MINIMAL_LIGHT;
 
 export function isValidUiMode(mode: string): mode is UiMode {
-  return mode === UI_MODE_LCARS || mode === UI_MODE_MINIMAL;
+  return (
+    mode === UI_MODE_LCARS ||
+    mode === UI_MODE_MINIMAL ||
+    mode === UI_MODE_MINIMAL_LIGHT
+  );
 }
 
 // Unbekannte/veraltete Werte still auf den Default (LCARS) normalisieren.
@@ -34,6 +47,8 @@ export function normalizeUiMode(mode: string | null | undefined): UiMode {
   return mode && isValidUiMode(mode) ? mode : DEFAULT_UI_MODE;
 }
 
+// Beide Minimal-Varianten (hell wie dunkel) zählen als „minimalistisches UI".
 export function isMinimalUiMode(mode: string | null | undefined): boolean {
-  return normalizeUiMode(mode) === UI_MODE_MINIMAL;
+  const m = normalizeUiMode(mode);
+  return m === UI_MODE_MINIMAL || m === UI_MODE_MINIMAL_LIGHT;
 }

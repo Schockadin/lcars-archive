@@ -27,11 +27,6 @@ export default async function UserContentPage() {
   // funktioniert.
   const viewer = resolveViewer(user, roleMap);
   const canStartDialogue = characters.length > 0 || canPlayNpcs(viewer);
-  // NPCs sind Datenbank-Einträge der Kategorie „npc"; anlegen darf sie, wer
-  // sie auch spielt (canPlayNpcs). Bewusst ohne content.create: ein NPC ist
-  // kein eigener Inhalt, sondern Kampagnen-Inventar — es zählt nur, ob diese
-  // Person NPCs spielt.
-  const canCreateNpc = canPlayNpcs(viewer);
   // Nur Slug und Name an die Client-Komponente: die vollen Charakter-Objekte
   // tragen den Werte-Teilbaum (keepStats in getCharactersForUser) und hätten
   // ihn ungenutzt im RSC-Payload mitgeschickt.
@@ -50,87 +45,82 @@ export default async function UserContentPage() {
   return (
     <>
       <PageMeta title="Meine Inhalte" section="users" />
-      <h1>Meine Inhalte</h1>
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)] gap-[20px] lcars-flex-switch">
-        <section className="flex flex-col gap-[12px] justify-center items-end">
-          <h2>Neue Inhalte</h2>
-          <div className="flex flex-col gap-[12px] max-sm:w-full">
-            {characters.length > 0 && (
-              <Link
-                href="/user/mission-logs/new"
-                className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
-              >
-                Neuer Missionslog
-              </Link>
-            )}
-            {canStartDialogue && (
-              <Link
-                href="/user/dialogues/new"
-                className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
-              >
-                Neues Gespräch
-              </Link>
-            )}
-            {/* Anders als Missionslog/Gespräch (eigener Charakter) oder
+      {/* Überschrift und Inhalt teilen sich die zentrierte Spalte, damit der
+          Titel über dem Inhalt sitzt und nicht am linken Rand (Breite wie
+          /missions, /search). */}
+      <div className="lcars-wide-column">
+        <h1>Meine Inhalte</h1>
+        <article className="mb-[10px] gap-[20px] lcars-flex-switch">
+          <section className="flex flex-col gap-[12px] justify-center items-end">
+            <h2>Neue Inhalte</h2>
+            <div className="lcars-btn-stack max-sm:w-full">
+              {characters.length > 0 && (
+                <Link
+                  href="/user/mission-logs/new"
+                  className="lcars-pill-btn max-sm:self-stretch"
+                >
+                  Neuer Missionslog
+                </Link>
+              )}
+              {canStartDialogue && (
+                <Link
+                  href="/user/dialogues/new"
+                  className="lcars-pill-btn max-sm:self-stretch"
+                >
+                  Neues Gespräch
+                </Link>
+              )}
+              {/* Anders als Missionslog/Gespräch (eigener Charakter) oder
                 Mission (gm/admin) sind Datenbank-Einträge an keine
                 Voraussetzung geknüpft — jeder eingeloggte User darf welche
                 anlegen. */}
-            <Link
-              href="/user/archive/new"
-              className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
-            >
-              Neuer Datenbank-Eintrag
-            </Link>
-            {/* Genau wie Datenbank-Einträge an keine Voraussetzung geknüpft
-                (bewusst NICHT hinter characters.length > 0 versteckt — genau
-                damit legt man seinen ERSTEN eigenen Charakter an) — außer
-                Gast-Accounts, siehe requireOwnCharacters/new/actions.ts. */}
-            {userCan(user, "content.create", roleMap) && (
               <Link
-                href="/user/characters/new"
-                className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
+                href="/user/archive/new"
+                className="lcars-pill-btn max-sm:self-stretch"
               >
-                Neuer Charakter
+                Neuer Datenbank-Eintrag
               </Link>
-            )}
-            {/* Ein NPC ist kein eigener Charakter, sondern ein
+              {/* Ein NPC ist kein eigener Charakter, sondern ein
                 Datenbank-Eintrag der Kategorie „NPC" — der Knopf öffnet
-                deshalb das Datenbank-Formular mit vorgewählter Kategorie.
-                Wer NPCs anlegen darf, spielt sie auch (siehe canPlayNpcs). */}
-            {canCreateNpc && (
+                deshalb das Datenbank-Formular mit vorgewählter Kategorie und
+                steht wie dieses jedem eingeloggten User offen (siehe
+                /user/archive/new: dort gibt es keine Rollen-Voraussetzung).
+                Der frühere Knopf „Neuer Charakter" steht hier nicht mehr —
+                eigene Charaktere haben mit /user/characters ihren eigenen
+                Bereich, und dort steht er weiterhin. */}
               <Link
                 href="/user/archive/new?category=npc"
-                className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
+                className="lcars-pill-btn max-sm:self-stretch"
               >
                 Neuer NPC
               </Link>
-            )}
-            {isGM && (
-              <Link
-                href="/user/missions/new"
-                className="min-w-[250px] lcars-pill-btn max-sm:w-full max-sm:self-stretch"
-              >
-                Neue Mission
-              </Link>
-            )}
-          </div>
-        </section>
+              {isGM && (
+                <Link
+                  href="/user/missions/new"
+                  className="lcars-pill-btn max-sm:self-stretch"
+                >
+                  Neue Mission
+                </Link>
+              )}
+            </div>
+          </section>
 
-        <section className="flex flex-col items-end gap-[12px]">
-          <h2>Inhalte verwalten</h2>
-          <div className="lcars-text w-full">
-            <UserContentBrowser
-              characters={characterFilterOptions}
-              logs={logs}
-              dialogues={dialogues}
-              archiveEntries={archiveEntries}
-              missions={missions}
-              canManageMissions={isGM}
-              ownUserId={user.id}
-            />
-          </div>
-        </section>
-      </article>
+          <section className="flex flex-col items-end gap-[12px]">
+            <h2>Inhalte verwalten</h2>
+            <div className="lcars-text w-full">
+              <UserContentBrowser
+                characters={characterFilterOptions}
+                logs={logs}
+                dialogues={dialogues}
+                archiveEntries={archiveEntries}
+                missions={missions}
+                canManageMissions={isGM}
+                ownUserId={user.id}
+              />
+            </div>
+          </section>
+        </article>
+      </div>
     </>
   );
 }

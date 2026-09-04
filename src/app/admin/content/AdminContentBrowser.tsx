@@ -8,22 +8,16 @@ import { PencilIcon } from "@/lib/icons";
 import { bulkSetContentOwnerAction } from "../contentOwnerActions";
 import type { AdminContentItem } from "@/lib/adminContent";
 import type { OwnerContentType } from "@/app/actions/owner";
+import {
+  CONTENT_TYPE_COLOR,
+  CONTENT_TYPE_LABEL_PLURAL,
+} from "@/lib/contentTypeFormat";
 
 type CategoryFilter = "all" | OwnerContentType;
 
 const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   all: "Alle Kategorien",
-  character: "Charaktere",
-  mission: "Missionen",
-  mission_log: "Mission-Logs",
-  archive_entry: "Datenbank-Einträge",
-};
-
-const CATEGORY_COLORS: Record<OwnerContentType, string> = {
-  character: "var(--lcars-primary)",
-  mission: "var(--lcars-senary)",
-  mission_log: "var(--lcars-tertiary)",
-  archive_entry: "var(--lcars-secondary)",
+  ...CONTENT_TYPE_LABEL_PLURAL,
 };
 
 const NO_OWNER = "__none__";
@@ -179,7 +173,7 @@ export default function AdminContentBrowser({
         <select
           value={bulkOwnerId}
           onChange={(e) => setBulkOwnerId(e.target.value)}
-          className="lcars-input"
+          className="lcars-input rounded-full"
           disabled={pending}
           aria-label="Owner für Mass-Edit"
         >
@@ -225,7 +219,7 @@ export default function AdminContentBrowser({
             key={contentType}
             value={groupItems.length}
             label={CATEGORY_LABELS[contentType]}
-            color={CATEGORY_COLORS[contentType]}
+            color={CONTENT_TYPE_COLOR[contentType]}
           >
             {groupItems.length === 0 ? (
               <p className="lcars-empty-state">
@@ -248,7 +242,7 @@ export default function AdminContentBrowser({
                         />
                         <LcarsAkteCard
                           href={item.href}
-                          color={CATEGORY_COLORS[contentType]}
+                          color={CONTENT_TYPE_COLOR[contentType]}
                           className="flex-1"
                           title={item.title}
                           meta={

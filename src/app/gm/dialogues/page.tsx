@@ -29,7 +29,7 @@ export default async function AdminDialoguesPage() {
   return (
     <>
       <PageMeta title="Gespräche" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
         <h1>Gespräche</h1>
 

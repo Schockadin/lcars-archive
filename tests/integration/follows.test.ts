@@ -4,7 +4,6 @@ import {
   setBookmark,
   setSubscription,
   getBookmarkedContent,
-  getFollowStatuses,
   getUserSubscribers,
 } from "@/lib/follows";
 import { insertUser, insertCharacter, insertMission } from "./helpers";
@@ -97,35 +96,6 @@ describe("getBookmarkedContent", () => {
     expect(result.map((r) => r.slug).sort()).toEqual(
       [ownPrivate.slug, publicChar.slug].sort(),
     );
-  });
-});
-
-describe("getFollowStatuses", () => {
-  it("batches lookups for multiple slugs at once", async () => {
-    const user = await insertUser();
-    const missionA = await insertMission();
-    const missionB = await insertMission();
-    const missionC = await insertMission();
-    await setBookmark(user.id, "mission", missionA.slug, true);
-    await setSubscription(user.id, "mission", missionB.slug, true);
-
-    const result = await getFollowStatuses(user.id, "mission", [
-      missionA.slug,
-      missionB.slug,
-      missionC.slug,
-    ]);
-
-    expect(result[missionA.slug]).toEqual({ bookmarked: true, subscribed: false });
-    expect(result[missionB.slug]).toEqual({ bookmarked: false, subscribed: true });
-    expect(result[missionC.slug]).toBeUndefined();
-  });
-
-  it("returns an empty object for an empty slug list", async () => {
-    const user = await insertUser();
-
-    const result = await getFollowStatuses(user.id, "mission", []);
-
-    expect(result).toEqual({});
   });
 });
 

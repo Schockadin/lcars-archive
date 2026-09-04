@@ -976,6 +976,107 @@ describe("Gespräche mit NPCs", () => {
     expect(own?.partnerName).toBe("Spielerin");
   });
 
+  // getDialoguesForUser holt seit dem Performance-Umbau ALLE eigenen
+  // Charaktere in EINER Abfrage (vorher eine pro Charakter, sequentiell).
+  // Dieser Test sichert genau das ab: mit zwei Charakteren in zwei
+  // verschiedenen Gesprächen müssen beide auftauchen — und jedes mit dem
+  // Charakter benannt sein, über den es zum Konto gehört. Ein früherer
+  // Umbau-Versuch verlor hier still ein Gespräch.
+  it("findet Gespräche über MEHRERE eigene Charaktere hinweg", async () => {
+    const ownUser = await insertUser();
+    const partnerUser = await insertUser();
+    const charA = await insertCharacter({ playerId: ownUser.id, name: "Alpha" });
+    const charB = await insertCharacter({ playerId: ownUser.id, name: "Beta" });
+    const partnerChar = await insertCharacter({
+      playerId: partnerUser.id,
+      name: "Gegenüber",
+    });
+
+    const base = {
+      partners: [{ kind: "character" as const, id: partnerChar.id }],
+      authorUserId: ownUser.id,
+      setting: null,
+      locationSlug: null,
+      logDate: null,
+      tags: [],
+      bodyMarkdown: "Hallo!",
+      subscribeSelf: false,
+    };
+    const dialogA = await createDialogue({
+      ...base,
+      title: "Gespräch von Alpha",
+      ownSpeaker: { kind: "character", id: charA.id },
+    });
+    const dialogB = await createDialogue({
+      ...base,
+      title: "Gespräch von Beta",
+      ownSpeaker: { kind: "character", id: charB.id },
+    });
+
+    const dialogues = await getDialoguesForUser(ownUser.id);
+    const bySlug = new Map(dialogues.map((d) => [d.slug, d]));
+
+    expect(bySlug.has(dialogA.slug)).toBe(true);
+    expect(bySlug.has(dialogB.slug)).toBe(true);
+    expect(bySlug.get(dialogA.slug)?.characterName).toBe("Alpha");
+    expect(bySlug.get(dialogB.slug)?.characterName).toBe("Beta");
+    expect(bySlug.get(dialogA.slug)?.partnerName).toBe("Gegenüber");
+  });
+
+  // Robustheit: eine Dialog-Zeile, deren metadata.participants KEIN Array ist
+  // (Objekt/Skalar), darf die gesamte Liste nicht zum Absturz bringen. Der
+  // frühere @>-Containment-Operator übersprang solche Zeilen still; die
+  // gebündelte Query nutzt dafür einen CASE-Guard um jsonb_array_elements
+  // (das sonst „cannot extract elements from an object" wirft).
+  it("überspringt Gespräche mit kaputtem participants-Feld statt zu werfen", async () => {
+    const ownUser = await insertUser();
+    const partnerUser = await insertUser();
+    const ownChar = await insertCharacter({
+      playerId: ownUser.id,
+      name: "Heil",
+    });
+    const partnerChar = await insertCharacter({
+      playerId: partnerUser.id,
+      name: "Partner",
+    });
+
+    const good = await createDialogue({
+      title: "Heiles Gespräch",
+      ownSpeaker: { kind: "character", id: ownChar.id },
+      partners: [{ kind: "character", id: partnerChar.id }],
+      authorUserId: ownUser.id,
+      setting: null,
+      locationSlug: null,
+      logDate: null,
+      tags: [],
+      bodyMarkdown: "Hallo!",
+      subscribeSelf: false,
+    });
+
+    // Eine bewusst fehlgeformte Dialog-Zeile direkt einschleusen (participants
+    // als Objekt statt Array) — das kann createDialogue selbst nicht erzeugen.
+    // dialogue_open = true, damit die Zeile den offen-Filter passiert und
+    // tatsächlich in die EXISTS-Auswertung (jsonb_array_elements) gerät — sonst
+    // liefe der Test am kritischen Pfad vorbei.
+    await sql`
+      INSERT INTO archive_entries (slug, title, category, visibility, content, dialogue_open, metadata)
+      VALUES (
+        'kaputt-participants',
+        'Kaputt',
+        'dialogue',
+        'public',
+        '',
+        true,
+        ${sql.json({ participants: {} })}
+      )
+    `;
+
+    const dialogues = await getDialoguesForUser(ownUser.id);
+    // Wirft nicht, und das gesunde Gespräch ist weiterhin dabei.
+    expect(dialogues.map((d) => d.slug)).toContain(good.slug);
+    expect(dialogues.map((d) => d.slug)).not.toContain("kaputt-participants");
+  });
+
   it("benachrichtigt den NPC-Sprecher wie einen Teilnehmer", async () => {
     const { gmUser, playerChar, npc, entryId } = await setupNpcDialogue();
 

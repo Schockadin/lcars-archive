@@ -5,7 +5,6 @@ import {
   updateOwnCharacterContent,
   setCharacterVisibility,
   assignCharacterToUser,
-  getPublicCharactersForUser,
   getCharactersForParticipantPicker,
 } from "@/lib/characters";
 import { insertUser, insertCharacter } from "./helpers";
@@ -171,28 +170,6 @@ describe("assignCharacterToUser", () => {
     const result = await assignCharacterToUser(character.id, null);
 
     expect(result?.player_id).toBeNull();
-  });
-});
-
-describe("getPublicCharactersForUser", () => {
-  it("only returns the user's public characters, not their private/gm ones", async () => {
-    const user = await insertUser();
-    const pub = await insertCharacter({ playerId: user.id, visibility: "public" });
-    await insertCharacter({ playerId: user.id, visibility: "private" });
-    await insertCharacter({ playerId: user.id, visibility: "gm" });
-
-    const result = await getPublicCharactersForUser(user.id);
-
-    expect(result.map((c) => c.slug)).toEqual([pub.slug]);
-  });
-
-  it("returns an empty array for a user with no public characters", async () => {
-    const user = await insertUser();
-    await insertCharacter({ playerId: user.id, visibility: "private" });
-
-    const result = await getPublicCharactersForUser(user.id);
-
-    expect(result).toEqual([]);
   });
 });
 

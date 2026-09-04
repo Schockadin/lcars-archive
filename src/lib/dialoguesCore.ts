@@ -7,7 +7,7 @@ import sql from "@/lib/db";
 import { markdownToSafeHtml } from "@/lib/markdown";
 import { getCharactersForUser } from "@/lib/characters";
 import { generateUniqueArchiveEntrySlug } from "@/lib/archive";
-import { resolveCharacterColor } from "@/lib/characterColor";
+import { NPC_COLOR, resolveCharacterColor } from "@/lib/characterColor";
 // Fire-and-forget-Re-Embedding (RAG-Index) — nur ABGESCHLOSSENE Dialoge sind
 // embedbar (siehe embeddingSync.ts). Der Import ist tsx-sicher (kein
 // server-only); dialoguesCore selbst läuft ohnehin nur im react-server-
@@ -157,15 +157,16 @@ export async function getDialogueMessages(
     createdAt: r.created_at,
     editedAt: r.edited_at,
     deletedAt: r.deleted_at,
-    // Seed für den Default: die ID des Sprechers (bei Charakteren zusätzlich
-    // deren eigene Farbwahl, siehe characters.character_color; NPC-Einträge
-    // haben keine, bekommen also die deterministische Preset-Farbe). Kein
-    // Sprecher (gelöscht) → keine Farbe.
+    // Charaktere: die eigene Farbwahl (characters.character_color), sonst eine
+    // aus ihrer ID abgeleitete Preset-Farbe. NPCs: einheitlich NPC_COLOR —
+    // sie sind Kampagnen-Inventar und sollen sich als Gruppe von den
+    // Spielercharakteren abheben, statt mit ihnen um Farben zu konkurrieren.
+    // Kein Sprecher (gelöscht) → keine Farbe.
     characterColor:
       r.character_id != null
         ? resolveCharacterColor(r.character_color, r.character_id)
         : r.npc_entry_id != null
-          ? resolveCharacterColor(null, r.npc_entry_id)
+          ? NPC_COLOR
           : null,
   }));
 }
@@ -1815,11 +1816,20 @@ export interface DialogueSummary {
 }
 
 // "Deine Gespräche" fürs Dashboard (scope "open", Default) bzw. "Meine
-// Inhalte" (scope "all"). Fragt pro eigenem Charakter einzeln ab (gleiches
-// jsonb-Containment-Muster wie getDialogueCountByParticipant in
-// src/lib/archive.ts) statt eines komplexeren Multi-Charakter-JOINs — bei
-// der üblichen Anzahl Charaktere pro Spieler unproblematisch, und deutlich
-// weniger fehleranfällig als jsonb_build_object direkt in SQL zu bauen.
+// Inhalte" (scope "all").
+//
+// EINE Abfrage für ALLE eigenen Charaktere statt einer pro Charakter: der
+// EXISTS-Teilausdruck klappt metadata->'participants' auf und vergleicht die
+// Teilnehmer-Slugs gegen ein einfaches text[]. Vorher lief hier eine Schleife
+// mit je einem sequentiellen await — auf dem Dashboard (bei jedem Aufruf, da
+// nicht cachebar) also so viele DB-Rundreisen, wie der Spieler Charaktere hat.
+// Der Plan ist unverändert ein Index Scan über idx_archive_category mit
+// nachgelagertem Filter; gebündelt fällt er nur noch einmal statt N-mal an.
+//
+// Bewusst NICHT `@> ANY(...::jsonb[])`: ein als Array gebundenes
+// Containment-Fragment kommt in Postgres nicht als jsonb[] an, die Bedingung
+// trifft dann gar nichts — still, ohne Fehler (genau so ist bei diesem Umbau
+// zuerst „Gespräch Eins" aus der Dashboard-Liste verschwunden).
 export async function getDialoguesForUser(
   userId: number,
   scope: "open" | "all" = "open",
@@ -1828,8 +1838,8 @@ export async function getDialoguesForUser(
   const ownSlugs = new Set(ownCharacters.map((c) => c.slug));
 
   const results = new Map<string, DialogueSummary>();
-  for (const character of ownCharacters) {
-    const slug = character.slug;
+
+  if (ownCharacters.length > 0) {
     type DialogueRow = {
       id: number;
       slug: string;
@@ -1840,6 +1850,10 @@ export async function getDialoguesForUser(
       visibility: "private" | "gm" | "public";
       owner_user_id: number | null;
     };
+    // Ein einfaches text[] für den ANY(...)-Vergleich unten — abgeleitet aus
+    // demselben Set wie die Partner-Erkennung, damit beide nicht auseinander
+    // laufen können.
+    const ownSlugList = [...ownSlugs];
     const rows =
       scope === "open"
         ? await sql<DialogueRow[]>`
@@ -1847,7 +1861,20 @@ export async function getDialoguesForUser(
                    dialogue_open, visibility, owner_user_id
             FROM archive_entries
             WHERE category = 'dialogue'
-              AND metadata->'participants' @> ${sql.json([{ slug }])}
+              AND EXISTS (
+                -- CASE-Guard: jsonb_array_elements wirft, wenn participants
+                -- kein Array ist (Objekt/Skalar/JSON-null) — dann als leeres
+                -- Array behandeln (kein Treffer), wie es der frühere
+                -- @>-Containment-Operator still tat.
+                SELECT 1 FROM jsonb_array_elements(
+                  CASE
+                    WHEN jsonb_typeof(metadata->'participants') = 'array'
+                      THEN metadata->'participants'
+                    ELSE '[]'::jsonb
+                  END
+                ) AS p
+                WHERE p->>'slug' = ANY(${ownSlugList})
+              )
               AND dialogue_open
               AND deleted_at IS NULL
           `
@@ -1856,15 +1883,32 @@ export async function getDialoguesForUser(
                    dialogue_open, visibility, owner_user_id
             FROM archive_entries
             WHERE category = 'dialogue'
-              AND metadata->'participants' @> ${sql.json([{ slug }])}
+              AND EXISTS (
+                -- CASE-Guard: jsonb_array_elements wirft, wenn participants
+                -- kein Array ist (Objekt/Skalar/JSON-null) — dann als leeres
+                -- Array behandeln (kein Treffer), wie es der frühere
+                -- @>-Containment-Operator still tat.
+                SELECT 1 FROM jsonb_array_elements(
+                  CASE
+                    WHEN jsonb_typeof(metadata->'participants') = 'array'
+                      THEN metadata->'participants'
+                    ELSE '[]'::jsonb
+                  END
+                ) AS p
+                WHERE p->>'slug' = ANY(${ownSlugList})
+              )
               AND deleted_at IS NULL
           `;
 
     for (const row of rows) {
       if (results.has(row.slug)) continue;
-      const partner = parseParticipants(row.metadata).find(
-        (p) => !ownSlugs.has(p.slug),
-      );
+      const participants = parseParticipants(row.metadata);
+      const participantSlugs = new Set(participants.map((p) => p.slug));
+      // Wie zuvor die Schleife: der ERSTE eigene Charakter (in derselben
+      // Reihenfolge), der an diesem Gespräch teilnimmt, benennt die Zeile.
+      const own = ownCharacters.find((c) => participantSlugs.has(c.slug));
+      if (!own) continue;
+      const partner = participants.find((p) => !ownSlugs.has(p.slug));
       results.set(row.slug, {
         id: row.id,
         slug: row.slug,
@@ -1873,8 +1917,8 @@ export async function getDialoguesForUser(
         updatedAt: row.updated_at,
         logDate: parseDialogueLogDate(row.metadata),
         open: row.dialogue_open,
-        characterSlug: character.slug,
-        characterName: character.name,
+        characterSlug: own.slug,
+        characterName: own.name,
         visibility: row.visibility,
         ownerUserId: row.owner_user_id,
       });
@@ -1974,37 +2018,6 @@ export async function getAllOpenDialoguesForGM(): Promise<
     participantNames: parseParticipants(row.metadata).map((p) => p.name),
     updatedAt: row.updated_at,
     ownerName: row.owner_name,
-  }));
-}
-
-export interface PublicDialogue {
-  slug: string;
-  title: string;
-  participantNames: string[];
-}
-
-// Öffentliche Gespräche eines Users (owner_user_id, wie bei Missionen/
-// Mission-Logs/Archiv-Einträgen — siehe scripts/schema.sql) für die
-// öffentliche Profilseite /users/[id] — anders als getDialoguesForUser oben
-// (Session-User, gefiltert auf "eigene Charaktere als Teilnehmer") reine
-// Owner-Abfrage ohne Partner-Ausschluss, da hier beide Teilnehmer angezeigt
-// werden.
-export async function getPublicDialoguesForUser(
-  userId: number,
-): Promise<PublicDialogue[]> {
-  const rows = await sql<
-    { slug: string; title: string; metadata: unknown }[]
-  >`
-    SELECT slug, title, metadata
-    FROM archive_entries
-    WHERE category = 'dialogue' AND owner_user_id = ${userId} AND visibility = 'public'
-      AND deleted_at IS NULL
-    ORDER BY metadata->>'logDate' DESC NULLS LAST, title ASC
-  `;
-  return rows.map((row) => ({
-    slug: row.slug,
-    title: row.title,
-    participantNames: parseParticipants(row.metadata).map((p) => p.name),
   }));
 }
 

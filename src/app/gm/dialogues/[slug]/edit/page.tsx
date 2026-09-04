@@ -35,7 +35,7 @@ export default async function EditDialoguePage({
   return (
     <>
       <PageMeta title="Gespräch bearbeiten" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff · Administration</p>
         <h1>Gespräch bearbeiten</h1>
 

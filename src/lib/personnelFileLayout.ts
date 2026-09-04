@@ -39,16 +39,6 @@ export function pointStyle(point: Point): React.CSSProperties {
   return { left: unit(point.left), top: unit(point.top) };
 }
 
-// Für die Bedienelemente, die die Vorlage nicht kennt (Plus zum Hinzufügen,
-// Zähler der Freikontingente): eine Position relativ zu einem Kasten.
-export function offsetStyle(
-  box: Box,
-  dx: number,
-  dy: number,
-): React.CSSProperties {
-  return { left: unit(box.left + dx), top: unit(box.top + dy) };
-}
-
 // Der Bildkasten oben links. Die Vorlage lässt ihn leer (sie kennt kein
 // Bildfeld); die Maße stammen aus der Grafik selbst — die gedruckte Umrandung
 // liegt bei x 60…263 und y 76…301, das Bild sitzt mit etwas Luft darin.

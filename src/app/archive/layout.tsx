@@ -17,7 +17,7 @@ export default function ArchiveLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="archive-browser">
+    <div className="archive-browser lcars-split">
       <aside className="archive-browser-nav lcars-scroll">
         <Suspense fallback={<ArchiveCategoryNavSkeleton />}>
           <ArchiveCategoryNavLoader />

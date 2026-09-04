@@ -118,7 +118,11 @@ function NewSessionForm({
 
       <label className="flex flex-col gap-[4px]">
         <span className="lcars-eyebrow">Notizen (optional)</span>
-        <textarea name="notes" rows={4} className="lcars-input w-full" />
+        <textarea
+          name="notes"
+          rows={10}
+          className="lcars-input h-auto w-full"
+        />
       </label>
 
       <button
@@ -161,8 +165,8 @@ function SessionLogbookForm({
         <legend className="lcars-eyebrow">Logbücher zu dieser Session</legend>
         <p className="text-lcars-ink-dim text-[12px]">
           Sobald mindestens ein Logbuch verknüpft ist, bekommen alle
-          Teilnehmenden automatisch {apPerLogbook} AP extra — einmal je
-          Session, egal wie viele Logbücher geschrieben werden.
+          Teilnehmenden automatisch {apPerLogbook} AP extra — einmal je Session,
+          egal wie viele Logbücher geschrieben werden.
         </p>
         {own.length + free.length === 0 ? (
           <p className="lcars-empty-state">Keine Logbücher zur Auswahl.</p>
@@ -206,10 +210,13 @@ function SessionLogbookForm({
 
 function SessionRow({
   session,
+  characters,
   logbooks,
   apPerLogbook,
 }: {
   session: GameSession;
+  // Auswahl für „Gutschreiben an" — dieselbe Liste wie beim Anlegen.
+  characters: ActiveCharacter[];
   logbooks: SessionLogbook[];
   apPerLogbook: number;
 }) {
@@ -227,11 +234,24 @@ function SessionRow({
     <div className="flex flex-col gap-[6px] border-b border-[var(--lcars-ink-dim)]/30 pb-[8px]">
       <button
         type="button"
-        className="flex flex-wrap items-baseline gap-[8px] text-left"
+        className="flex flex-wrap items-center gap-[8px] text-left"
         aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className="lcars-eyebrow">{formatISODate(session.sessionDate)}</span>
+        {/* Auf-/Zuklapp-Anzeige links wie bei den DataRow-Akkordeons — dreht
+            sich, wenn die Session-Details offen sind. */}
+        <span
+          className={
+            open
+              ? "lcars-data-row-chevron lcars-data-row-chevron--open"
+              : "lcars-data-row-chevron"
+          }
+          style={{ margin: "0 4px 0 2px" }}
+          aria-hidden="true"
+        />
+        <span className="lcars-eyebrow">
+          {formatISODate(session.sessionDate)}
+        </span>
         <span className="flex-1 min-w-[180px]">
           {session.title || "Ohne Titel"}
         </span>
@@ -249,29 +269,100 @@ function SessionRow({
         <>
           <form action={formAction} className="flex flex-col gap-[8px]">
             <input type="hidden" name="id" value={session.id} />
-            <label className="flex flex-col gap-[4px]">
-              <span className="lcars-eyebrow">Titel</span>
-              <input
-                name="title"
-                type="text"
-                defaultValue={session.title}
-                className="lcars-input rounded-full w-full"
-              />
-            </label>
+            <div className="flex flex-wrap items-end gap-[8px]">
+              <label className="flex flex-col gap-[4px]">
+                <span className="lcars-eyebrow">Datum</span>
+                <input
+                  name="sessionDate"
+                  type="date"
+                  required
+                  defaultValue={session.sessionDate.slice(0, 10)}
+                  className="lcars-input rounded-full"
+                />
+              </label>
+              <label className="flex min-w-[200px] flex-1 flex-col gap-[4px]">
+                <span className="lcars-eyebrow">Titel</span>
+                <input
+                  name="title"
+                  type="text"
+                  defaultValue={session.title}
+                  className="lcars-input rounded-full w-full"
+                />
+              </label>
+              <label className="flex flex-col gap-[4px]">
+                <span className="lcars-eyebrow">Session-AP</span>
+                <input
+                  name="sessionAp"
+                  type="number"
+                  min={0}
+                  defaultValue={session.sessionAp}
+                  className="lcars-input rounded-full w-[100px] text-right"
+                />
+              </label>
+              <label className="flex flex-col gap-[4px]">
+                <span className="lcars-eyebrow">Bonus-AP</span>
+                <input
+                  name="bonusAp"
+                  type="number"
+                  min={0}
+                  defaultValue={session.bonusAp}
+                  className="lcars-input rounded-full w-[100px] text-right"
+                />
+              </label>
+            </div>
+
+            <fieldset className="flex flex-col gap-[6px]">
+              <legend className="lcars-eyebrow">Gutschreiben an</legend>
+              {characters.length === 0 ? (
+                <p className="lcars-empty-state">
+                  Keine aktiven Charaktere mit verknüpftem Konto.
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-[12px]">
+                  {characters.map((character) => (
+                    <label
+                      key={character.id}
+                      className="flex items-center gap-[6px]"
+                    >
+                      <input
+                        type="checkbox"
+                        name="characterIds"
+                        value={character.id}
+                        defaultChecked={session.characterIds.includes(
+                          character.id,
+                        )}
+                      />
+                      <span>
+                        {character.name}
+                        {character.playerName && (
+                          <span className="text-lcars-ink-dim text-[12px]">
+                            {" "}
+                            · {character.playerName}
+                          </span>
+                        )}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </fieldset>
+
             <label className="flex flex-col gap-[4px]">
               <span className="lcars-eyebrow">Notizen</span>
               <textarea
                 name="notes"
-                rows={6}
+                rows={10}
                 defaultValue={session.notes}
-                className="lcars-input w-full"
+                className="lcars-input h-auto w-full"
               />
             </label>
             <p className="text-lcars-ink-dim text-[12px]">
-              Eingetragen von {session.createdByName ?? "unbekannt"}. Die
-              AP-Beträge lassen sich nachträglich nicht ändern — sie sind
-              bereits als Buchungen auf den Konten. Für eine Korrektur die
-              Session zurücknehmen oder unter „Kampagne“ einzeln nachbuchen.
+              Eingetragen von {session.createdByName ?? "unbekannt"}. Beim
+              Speichern werden die Gutschriften dieser Session neu gebucht:
+              geänderte Beträge und Teilnehmende schlagen also unmittelbar auf
+              die Konten durch. Bereits ausgegebene AP holt das nicht zurück —
+              ein Konto kann dadurch rechnerisch ins Minus laufen und ist dann
+              unter „Kampagne“ mit einer Korrekturbuchung geradezuziehen.
             </p>
             <div className="flex flex-wrap gap-[8px]">
               <button
@@ -362,6 +453,7 @@ export default function SessionManager({
               <SessionRow
                 key={session.id}
                 session={session}
+                characters={characters}
                 logbooks={logbooks}
                 apPerLogbook={apPerLogbook}
               />

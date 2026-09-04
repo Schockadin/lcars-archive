@@ -16,7 +16,7 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <PageMeta title="Passwort vergessen" section="login" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff</p>
         <h1>Passwort vergessen</h1>
         <div className="lcars-text">

@@ -10,7 +10,6 @@ import {
 } from "@/components/lcars";
 import { MissionLogListItem } from "@/types/missions";
 import {
-  AUTHOR_COLORS,
   byDateAsc,
   byDateDesc,
   sessionLabel,
@@ -52,7 +51,7 @@ export default function MissionLogList({
   const authorGroups = useMemo(() => {
     const map = new Map<
       string,
-      { name: string; color: string; logs: MissionLogListItem[] }
+      { name: string; logs: MissionLogListItem[] }
     >();
     for (const log of sortedByDate) {
       const key = log.author_slug ?? log.author_name ?? "none";
@@ -60,7 +59,6 @@ export default function MissionLogList({
       if (!group) {
         group = {
           name: log.author_name ?? "Unbekannt",
-          color: AUTHOR_COLORS[map.size % AUTHOR_COLORS.length],
           logs: [],
         };
         map.set(key, group);
@@ -136,8 +134,6 @@ export default function MissionLogList({
                 <LcarsDataRow
                   value={group.logs.length}
                   label={group.name}
-                  accentColor={group.color}
-                  color={group.color}
                   className="lcars-data-row--full"
                 />
                 <div className="mission-log-list mt-[8px]">

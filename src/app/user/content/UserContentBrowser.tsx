@@ -6,6 +6,10 @@ import type { DialogueSummary } from "@/lib/dialoguesCore";
 import type { UserContentArchiveEntry } from "@/lib/archive";
 import { fmtDate, sessionLabel, periodLabel } from "@/lib/missionFormat";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
+import {
+  CONTENT_TYPE_COLOR,
+  CONTENT_DRAFT_COLOR,
+} from "@/lib/contentTypeFormat";
 import type { MissionPreview } from "@/types/missions";
 import VisibilitySelect from "./VisibilitySelect";
 import DeleteOwnContentButton from "./DeleteOwnContentButton";
@@ -237,7 +241,7 @@ export default function UserContentBrowser({
       <LcarsDataRow
         value={totalDrafts}
         label="Entwürfe"
-        color="var(--lcars-quinary)"
+        color={CONTENT_DRAFT_COLOR}
       >
         {totalDrafts === 0 ? (
           <p className="lcars-empty-state">Keine Entwürfe vorhanden.</p>
@@ -251,7 +255,7 @@ export default function UserContentBrowser({
                 >
                   <LcarsAkteCard
                     href={`/missions/${m.slug}`}
-                    color="var(--lcars-quinary)"
+                    color={CONTENT_DRAFT_COLOR}
                     className="flex-1"
                     title={m.title}
                     meta={
@@ -281,7 +285,7 @@ export default function UserContentBrowser({
               >
                 <LcarsAkteCard
                   href={`/missions/${log.mission_slug}/${log.slug}`}
-                  color="var(--lcars-quinary)"
+                  color={CONTENT_DRAFT_COLOR}
                   className="flex-1"
                   title={log.title}
                   meta={
@@ -321,7 +325,7 @@ export default function UserContentBrowser({
               >
                 <LcarsAkteCard
                   href={`/archive/${entry.slug}`}
-                  color="var(--lcars-quinary)"
+                  color={CONTENT_DRAFT_COLOR}
                   className="flex-1"
                   title={entry.title}
                   meta={
@@ -364,7 +368,7 @@ export default function UserContentBrowser({
         <LcarsDataRow
           value={entries.publishedLogs.length}
           label="Einsatzberichte"
-          color="var(--lcars-tertiary)"
+          color={CONTENT_TYPE_COLOR.mission_log}
         >
           {entries.publishedLogs.length === 0 ? (
             <p className="lcars-empty-state">
@@ -379,7 +383,7 @@ export default function UserContentBrowser({
                 >
                   <LcarsAkteCard
                     href={`/missions/${log.mission_slug}/${log.slug}`}
-                    color="var(--lcars-tertiary)"
+                    color={CONTENT_TYPE_COLOR.mission_log}
                     className="flex-1"
                     title={log.title}
                     meta={
@@ -424,7 +428,7 @@ export default function UserContentBrowser({
         <LcarsDataRow
           value={entries.dialogues.length}
           label="Gespräche"
-          color="var(--lcars-ink-data)"
+          color={CONTENT_TYPE_COLOR.dialogue}
         >
           {entries.dialogues.length === 0 ? (
             <p className="lcars-empty-state">
@@ -439,7 +443,9 @@ export default function UserContentBrowser({
                 >
                   <LcarsAkteCard
                     href={
-                      d.open ? `/dialogues/${d.slug}` : `/archive/${d.slug}`
+                      d.open
+                        ? `/dialogues/${d.slug}`
+                        : `/characters/dialogues/${d.slug}`
                     }
                     color={
                       d.open ? "var(--lcars-senary)" : "var(--lcars-quinary)"
@@ -490,7 +496,7 @@ export default function UserContentBrowser({
         <LcarsDataRow
           value={entries.publishedArchiveEntries.length}
           label="Datenbank-Einträge"
-          color="var(--lcars-secondary)"
+          color={CONTENT_TYPE_COLOR.archive_entry}
         >
           {entries.publishedArchiveEntries.length === 0 ? (
             <p className="lcars-empty-state">
@@ -505,7 +511,7 @@ export default function UserContentBrowser({
                 >
                   <LcarsAkteCard
                     href={`/archive/${entry.slug}`}
-                    color="var(--lcars-secondary)"
+                    color={CONTENT_TYPE_COLOR.archive_entry}
                     className="flex-1"
                     title={entry.title}
                     meta={
@@ -547,7 +553,7 @@ export default function UserContentBrowser({
         <LcarsDataRow
           value={entries.publishedMissions.length}
           label="Missionen"
-          color="var(--lcars-senary)"
+          color={CONTENT_TYPE_COLOR.mission}
         >
           {entries.publishedMissions.length === 0 ? (
             <p className="lcars-empty-state">Noch keine Missionen vorhanden.</p>
@@ -560,7 +566,7 @@ export default function UserContentBrowser({
                 >
                   <LcarsAkteCard
                     href={`/missions/${m.slug}`}
-                    color="var(--lcars-senary)"
+                    color={CONTENT_TYPE_COLOR.mission}
                     className="flex-1"
                     title={m.title}
                     meta={

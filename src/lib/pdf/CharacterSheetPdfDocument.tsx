@@ -1,6 +1,7 @@
-// PDF-Fassung des Charakterbogens zum Ausdrucken: Seite 1 ist der gedruckte
-// Bogen mit den eingesetzten Werten, Seite 2 (und ggf. weitere) der
-// Talent-Spickzettel im selben Look.
+// PDF-Fassung des Charakterbogens zum Ausdrucken: Blatt 1 ist der gedruckte
+// Bogen mit den eingesetzten Werten, Blatt 2 (und ggf. weitere) der
+// Talent-Spickzettel, Blatt 3 die Biografie — dieselben drei Blätter, die die
+// Vorschau auf der Charakterseite zeigt (CharacterSheetPreview.tsx).
 //
 // Wie beim Content-Export (ContentPdfDocument.tsx) mit @react-pdf/renderer —
 // eine reine Node-Bibliothek ohne Chromium, läuft dadurch auf Netlify
@@ -22,6 +23,7 @@ import {
   StyleSheet,
   renderToBuffer,
 } from "@react-pdf/renderer";
+import { toPdfBlocks } from "./markdownBlocks";
 import {
   ATTRIBUTE_BOXES,
   DEPARTMENT_BOXES,
@@ -131,6 +133,38 @@ const styles = StyleSheet.create({
     color: SHEET_BLUE,
     marginBottom: pt(12),
   },
+  // Biografie-Blatt: Fließtext im selben Grau wie der Bogen, Überschriften im
+  // Blau der Vorlage.
+  bioHeading: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: pt(11),
+    letterSpacing: pt(1),
+    color: SHEET_BLUE,
+    marginTop: pt(10),
+    marginBottom: pt(4),
+  },
+  bioParagraph: {
+    fontSize: pt(10),
+    lineHeight: 1.5,
+    marginBottom: pt(7),
+  },
+  bioListItem: {
+    fontSize: pt(10),
+    lineHeight: 1.5,
+    marginBottom: pt(3),
+    marginLeft: pt(10),
+  },
+  bioQuote: {
+    fontSize: pt(10),
+    lineHeight: 1.5,
+    marginBottom: pt(7),
+    marginLeft: pt(10),
+    paddingLeft: pt(8),
+    borderLeftWidth: pt(2),
+    borderLeftColor: SHEET_BLUE_DIM,
+    borderLeftStyle: "solid",
+    color: SHEET_BLUE,
+  },
   // Ein Talent wie ein Kasten des Bogens: dünne blaue Umrandung mit runden
   // Ecken, die Beschriftung oben links in gesperrten Versalien.
   cheatItem: {
@@ -197,6 +231,10 @@ export interface CharacterSheetPdfInput {
   stats: CharacterStats;
   // Katalog für den Spickzettel — der Regeltext steht nicht am Charakter.
   talents: Talent[];
+  // Biografie als Markdown-Quelltext (characters.source_md). @react-pdf kennt
+  // kein HTML, das gerenderte bio-Feld nützt hier also nichts — die einfachen
+  // Blöcke daraus baut toPdfBlocks.
+  bioMarkdown?: string | null;
 }
 
 function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
@@ -349,6 +387,53 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
   );
 }
 
+// Drittes Blatt: die Biografie im Look der beiden anderen. Fehlt sie, fällt
+// das Blatt weg — ein leeres Blatt im Ausdruck wäre nur Papierverschwendung.
+function BiographyPage({ input }: { input: CharacterSheetPdfInput }) {
+  const blocks = toPdfBlocks(input.bioMarkdown ?? "");
+  if (blocks.length === 0) return null;
+
+  return (
+    <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.cheatPage}>
+      <Text style={styles.cheatBanner}>BIOGRAPHY</Text>
+      <View style={styles.cheatBannerRule} />
+      <Text style={styles.cheatSubline}>
+        {input.name}
+        {input.rank ? ` · ${input.rank}` : ""} — Biografie
+      </Text>
+
+      {blocks.map((block, index) => {
+        if (block.kind === "heading") {
+          return (
+            <Text key={index} style={styles.bioHeading}>
+              {block.text.toUpperCase()}
+            </Text>
+          );
+        }
+        if (block.kind === "listItem") {
+          return (
+            <Text key={index} style={styles.bioListItem}>
+              • {block.text}
+            </Text>
+          );
+        }
+        if (block.kind === "quote") {
+          return (
+            <Text key={index} style={styles.bioQuote}>
+              {block.text}
+            </Text>
+          );
+        }
+        return (
+          <Text key={index} style={styles.bioParagraph}>
+            {block.text}
+          </Text>
+        );
+      })}
+    </Page>
+  );
+}
+
 export async function renderCharacterSheetPdf(
   input: CharacterSheetPdfInput,
 ): Promise<Buffer> {
@@ -360,6 +445,7 @@ export async function renderCharacterSheetPdf(
     >
       <SheetPage input={input} />
       {input.stats.talents.length > 0 && <CheatSheetPage input={input} />}
+      <BiographyPage input={input} />
     </Document>
   );
 
@@ -373,6 +459,7 @@ export async function renderCharacterSheetPdf(
       <Document title={`Charakterbogen ${input.name}`}>
         <SheetPage input={{ ...input, portrait: null }} />
         {input.stats.talents.length > 0 && <CheatSheetPage input={input} />}
+        <BiographyPage input={input} />
       </Document>,
     );
   }

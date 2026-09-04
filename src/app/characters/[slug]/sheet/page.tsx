@@ -58,7 +58,7 @@ export default async function CharacterSheetPage({ params }: Props) {
   if (!sheet) notFound();
 
   return (
-    <div className="w-full">
+    <div className="lcars-wide-column">
       <PageMeta title={character.name} section="characters" />
 
       <h1>Charakterbogen: {sheet.name}</h1>
@@ -79,7 +79,7 @@ export default async function CharacterSheetPage({ params }: Props) {
         </a>
       </p>
 
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px]">
         <PersonnelFileView
           characterName={sheet.name}
           rank={sheet.rank}

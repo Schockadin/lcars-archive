@@ -11,7 +11,9 @@ import {
 import { FormField } from "@/app/_shared/FormPrimitives";
 import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
 
-const missionLogInputClass = "rounded-lcars-pill lcars-input w-full";
+// Die beiden Auswahlfelder dieses Formulars — lcars-input + rounded-full wie
+// alle Selects der App.
+const missionLogSelectClass = "lcars-input rounded-full w-full";
 
 const initialState: MissionLogFormState = {};
 
@@ -56,7 +58,7 @@ export default function NewMissionLogForm({
               id="log-author"
               name="authorCharacterId"
               required
-              className={missionLogInputClass}
+              className={missionLogSelectClass}
             >
               {ownCharacters.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -72,7 +74,7 @@ export default function NewMissionLogForm({
               name="missionSlug"
               required
               defaultValue={defaultMissionSlug}
-              className={missionLogInputClass}
+              className={missionLogSelectClass}
             >
               {missions.map((m) => (
                 <option key={m.slug} value={m.slug}>

@@ -16,6 +16,9 @@ import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
 const initialState: CreateDialogueState = {};
 
 const inputClass = "rounded-lcars-pill lcars-input";
+// Selects tragen durchgängig lcars-input + rounded-full (siehe die übrigen
+// Auswahlfelder der App); die Textfelder daneben behalten ihren Pillen-Radius.
+const selectClass = "lcars-input rounded-full";
 
 export default function CreateDialogueForm({
   userId,
@@ -60,7 +63,7 @@ export default function CreateDialogueForm({
   return (
     <form
       action={formAction}
-      className="flex flex-col gap-[16px] max-w-[var(--lcars-content-w)]"
+      className="lcars-wide-column flex flex-col gap-[16px]"
     >
       <input type="hidden" name="userId" value={userId} />
 
@@ -77,7 +80,7 @@ export default function CreateDialogueForm({
           id="dlg-own-character"
           name="ownSpeaker"
           required
-          className={inputClass}
+          className={selectClass}
           onChange={(e) => setOwnIsNpc(e.target.value.startsWith("n"))}
         >
           {ownCharacters.map((c) => (
@@ -114,7 +117,7 @@ export default function CreateDialogueForm({
           multiple
           required
           size={Math.min(6, Math.max(partnerCharacters.length + npcs.length, 2))}
-          className={`${inputClass} h-auto py-[8px]`}
+          className={`${selectClass} h-auto py-[8px]`}
           onChange={(e) =>
             setNpcPartnerCount(
               [...e.target.selectedOptions].filter((o) =>
@@ -160,7 +163,7 @@ export default function CreateDialogueForm({
               id="dlg-npc-speaker"
               name="npcSpeakerUserId"
               required
-              className={inputClass}
+              className={selectClass}
             >
               {gms.map((gm) => (
                 <option key={gm.id} value={gm.id}>
@@ -215,7 +218,7 @@ export default function CreateDialogueForm({
           id="dlg-location"
           name="locationSlug"
           defaultValue=""
-          className={inputClass}
+          className={selectClass}
         >
           <option value="">Kein Ort</option>
           {locations.map((l) => (

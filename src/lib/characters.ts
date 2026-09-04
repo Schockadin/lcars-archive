@@ -129,8 +129,8 @@ export async function getAllCharacters(): Promise<Character[]> {
   return rows.map((row) => parseCharacter(row));
 }
 
-// Ungefiltert — nur für die GM/Admin-Charakterzuweisung (/users), die auch
-// private/gm-Charaktere zuordnen können muss.
+// Ungefiltert — nur für die GM/Admin-Charakterzuweisung (/gm/characters), die
+// auch private/gm-Charaktere zuordnen können muss.
 export async function getAllCharactersForAdmin(): Promise<Character[]> {
   "use cache";
   cacheTag(cacheTags.characters);
@@ -370,43 +370,6 @@ export async function getLogsForUser(
   `;
 }
 
-// Nur public-Charaktere eines Users für die öffentliche Profilseite
-// /users/[id] — Gegenstück zu getCharactersForUser (dort ALLE eigenen
-// Charaktere für "Meine Inhalte", hier nur was auch fremde Besucher sehen
-// dürfen).
-export async function getPublicCharactersForUser(
-  userId: number,
-): Promise<Character[]> {
-  const rows = await sql<Character[]>`
-    SELECT *
-    FROM characters
-    WHERE player_id = ${userId} AND visibility = 'public' AND deleted_at IS NULL
-      AND is_draft = false
-    ORDER BY name ASC
-  `;
-  return rows.map((row) => parseCharacter(row));
-}
-
-// Nur public-Mission-Logs eines Users für die öffentliche Profilseite
-// /users/[id] — Gegenstück zu getLogsForUser (dort ALLE eigenen Logs für
-// "Meine Inhalte", hier nur was auch fremde Besucher sehen dürfen).
-export async function getPublicLogsForUser(
-  userId: number,
-): Promise<UserContentLog[]> {
-  return sql<UserContentLog[]>`
-    SELECT
-      ml.id, ml.slug, ml.title, ml.session_nr, ml.log_date::text AS log_date,
-      m.slug AS mission_slug, m.title AS mission_title, ml.visibility,
-      c.slug AS character_slug, c.name AS character_name
-    FROM mission_logs ml
-    JOIN characters c ON c.id = ml.author_id
-    JOIN missions m ON m.id = ml.mission_id
-    WHERE c.player_id = ${userId} AND ml.visibility = 'public' AND ml.deleted_at IS NULL
-      AND ml.is_draft = false
-    ORDER BY ml.session_nr DESC NULLS LAST
-  `;
-}
-
 // Nur public-Logs — rendert auf der öffentlichen Charakterseite. Eigene
 // private/gm-Logs sieht der Owner weiterhin über "Meine Inhalte"
 // (getLogsForUser, unten) bzw. direkt über die (laufzeitgeprüfte)
@@ -533,6 +496,11 @@ export async function createCharacter(input: {
   // vom Opt-in "Automatisch verlinken", siehe createArchiveEntry in
   // src/lib/archive.ts für dieselbe Begründung.
   bioHtml?: string;
+  // Charakterwerte direkt beim Anlegen (Anlege-Assistent, Schritt „Werte") —
+  // sie landen im selben INSERT wie die Akte. Getrennt zu speichern hieße,
+  // dass ein Fehler dazwischen einen Charakter ohne seine gerade erst
+  // eingetragenen Werte hinterlässt.
+  stats?: CharacterStats;
 }): Promise<{ id: number; slug: string }> {
   const slug = await generateUniqueCharacterSlug(input.name);
   const trimmedBody = input.bodyMarkdown.trim();
@@ -552,6 +520,7 @@ export async function createCharacter(input: {
     tags: input.tags,
     aliases: input.aliases,
     generation: input.generation,
+    ...(input.stats ? { stats: input.stats } : {}),
   };
 
   const [row] = await sql<{ id: number; slug: string }[]>`
@@ -587,6 +556,10 @@ export interface OwnCharacterForEdit {
   division: string | null;
   tags: string[];
   sourceMarkdown: string;
+  // Die bereits gerenderte Biografie (bio) — die eigene Charakterseite zeigt
+  // sie im Lesemodus ihres Biografie-Panels an, ohne dafür ein zweites Mal
+  // durch die Markdown-Pipeline zu gehen.
+  bioHtml: string | null;
   isDraft: boolean;
 }
 
@@ -610,10 +583,12 @@ export async function getOwnCharacterForEdit(
       portrait: string | null;
       metadata: CharacterMetadata | string;
       sourceMarkdown: string;
+      bioHtml: string | null;
       isDraft: boolean;
     }[]
   >`
     SELECT id, slug, name, status, portrait, metadata, is_draft AS "isDraft",
+           bio AS "bioHtml",
            COALESCE(source_md, '') AS "sourceMarkdown"
     FROM characters
     WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
@@ -632,6 +607,7 @@ export async function getOwnCharacterForEdit(
     status: row.status,
     portrait: row.portrait,
     sourceMarkdown: row.sourceMarkdown,
+    bioHtml: row.bioHtml,
     isDraft: row.isDraft,
     rank: metadata.rank,
     species: metadata.species,
@@ -737,7 +713,7 @@ export interface OwnCharacterStats {
   slug: string;
   name: string;
   // Das Portrait ist zugleich das „Photo" des Charakterbogens — der Bogen
-  // zeigt es an und lädt es hoch (siehe updateOwnCharacterPortrait unten),
+  // zeigt es an und lädt es hoch,
   // statt ein zweites Bild neben dem Portrait zu führen.
   portrait: string | null;
   // Spezies der Akte — die Talent-Auswahl prüft damit Voraussetzungen wie
@@ -765,7 +741,25 @@ export async function getOwnCharacterStats(
       stats: unknown;
     }[]
   >`
-    SELECT id, slug, name, portrait, species, rank, metadata -> 'stats' AS stats
+    SELECT id, slug, name, portrait,
+           -- Rang und Spezies pflegt die App in metadata (siehe
+           -- createCharacter/updateOwnCharacterContent); die gleichnamigen
+           -- Spalten stammen aus dem Vault-Ingest und bleiben bei einem in der
+           -- App angelegten Charakter leer. Erst metadata, dann die Spalte:
+           -- sonst stünde auf dem Bogen nichts, obwohl beides gepflegt ist.
+           COALESCE(NULLIF(metadata ->> 'rank', ''), rank) AS rank,
+           COALESCE(
+             NULLIF(
+               (SELECT string_agg(value, ', ')
+                FROM jsonb_array_elements_text(
+                  CASE WHEN jsonb_typeof(metadata -> 'species') = 'array'
+                       THEN metadata -> 'species' ELSE '[]'::jsonb END
+                ) AS value),
+               ''
+             ),
+             species
+           ) AS species,
+           metadata -> 'stats' AS stats
     FROM characters
     WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
     LIMIT 1
@@ -807,7 +801,25 @@ export async function getCharacterStatsForGm(
       stats: unknown;
     }[]
   >`
-    SELECT id, slug, name, portrait, species, rank, metadata -> 'stats' AS stats
+    SELECT id, slug, name, portrait,
+           -- Rang und Spezies pflegt die App in metadata (siehe
+           -- createCharacter/updateOwnCharacterContent); die gleichnamigen
+           -- Spalten stammen aus dem Vault-Ingest und bleiben bei einem in der
+           -- App angelegten Charakter leer. Erst metadata, dann die Spalte:
+           -- sonst stünde auf dem Bogen nichts, obwohl beides gepflegt ist.
+           COALESCE(NULLIF(metadata ->> 'rank', ''), rank) AS rank,
+           COALESCE(
+             NULLIF(
+               (SELECT string_agg(value, ', ')
+                FROM jsonb_array_elements_text(
+                  CASE WHEN jsonb_typeof(metadata -> 'species') = 'array'
+                       THEN metadata -> 'species' ELSE '[]'::jsonb END
+                ) AS value),
+               ''
+             ),
+             species
+           ) AS species,
+           metadata -> 'stats' AS stats
     FROM characters
     WHERE id = ${characterId} AND deleted_at IS NULL
     LIMIT 1
@@ -846,21 +858,19 @@ export async function updateOwnCharacterStats(
   return rows[0] ?? null;
 }
 
-// Setzt nur das Portrait eines eigenen Charakters — für den Foto-Kasten des
-// Charakterbogens (/user/characters/[id]/stats), der dasselbe Bild pflegt wie
-// das Kopf-Formular. Owner-gescoped wie die übrigen updateOwnX-Funktionen.
-export async function updateOwnCharacterPortrait(
-  userId: number,
+// Der Markdown-Quelltext der Biografie — für das dritte Blatt des
+// PDF-Exports. Bewusst OHNE Owner-Scoping wie getCharacterStatsForGm: die
+// Route prüft die Berechtigung bereits (Owner oder gm.access), und die
+// Spielleitung zieht den Bogen jedes Charakters.
+export async function getCharacterBioMarkdown(
   characterId: number,
-  portrait: string,
-): Promise<{ slug: string } | null> {
-  const rows = await sql<{ slug: string }[]>`
-    UPDATE characters
-    SET portrait = ${portrait}, updated_at = NOW()
-    WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
-    RETURNING slug
+): Promise<string | null> {
+  const rows = await sql<{ sourceMd: string | null }[]>`
+    SELECT source_md AS "sourceMd" FROM characters
+    WHERE id = ${characterId} AND deleted_at IS NULL
+    LIMIT 1
   `;
-  return rows[0] ?? null;
+  return rows[0]?.sourceMd ?? null;
 }
 
 // Für die Header-Navigation (/api/session → HeaderUserNav): zeigt den

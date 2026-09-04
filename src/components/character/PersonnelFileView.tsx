@@ -72,12 +72,17 @@ export default function PersonnelFileView({
   species,
   portrait,
   stats,
+  expandable = true,
 }: {
   characterName: string;
   rank: string | null;
   species: string | null;
   portrait: string | null;
   stats: CharacterStats;
+  // Der Vollbild-Knopf gehört zur Einzelansicht des Bogens. In der
+  // dreiblättrigen Vorschau (CharacterSheetPreview) ist das Fenster selbst
+  // schon die Vollansicht — dort säße er nur im Weg.
+  expandable?: boolean;
 }) {
   // Vollbild wie im Formular (siehe .pf-page--expanded): position:fixed,
   // Escape schließt, der Seitenhintergrund wird solange festgehalten.
@@ -94,16 +99,18 @@ export default function PersonnelFileView({
 
   return (
     <div className={expanded ? "pf-page pf-page--expanded" : "pf-page"}>
-      <button
-        type="button"
-        onClick={() => setExpanded((v) => !v)}
-        className="pf-expand-btn lcars-icon-btn"
-        aria-label={expanded ? "Vollbild verlassen" : "Bogen im Vollbild"}
-        title={expanded ? "Vollbild verlassen" : "Bogen im Vollbild"}
-        aria-pressed={expanded}
-      >
-        {expanded ? <XIcon /> : <ExpandIcon />}
-      </button>
+      {expandable && (
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="pf-expand-btn lcars-icon-btn"
+          aria-label={expanded ? "Vollbild verlassen" : "Bogen im Vollbild"}
+          title={expanded ? "Vollbild verlassen" : "Bogen im Vollbild"}
+          aria-pressed={expanded}
+        >
+          {expanded ? <XIcon /> : <ExpandIcon />}
+        </button>
+      )}
 
       <div className="pf-sheet">
         {/* Der Bogen selbst als Grafik — reine Deko, alle Werte liegen

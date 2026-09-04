@@ -1,9 +1,8 @@
 import type { HeadField } from "@/components/ContentEditor/headFields";
+import { CHARACTER_STATUS_OPTIONS } from "@/lib/characterFormat";
 
 const STATUS_OPTIONS = [
-  { value: "active", label: "Aktiv" },
-  { value: "retired", label: "Inaktiv" },
-  { value: "deceased", label: "Verstorben" },
+  ...CHARACTER_STATUS_OPTIONS,
 ];
 
 export const characterHeadFields: HeadField[] = [

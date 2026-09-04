@@ -329,22 +329,6 @@ export async function getArchiveEntriesForUser(
   `;
 }
 
-// Nur public Archiv-Einträge eines Users für die öffentliche Profilseite
-// /users/[id] — Gegenstück zu getArchiveEntriesForUser (dort ALLE eigenen
-// Einträge für "Meine Inhalte", hier nur was auch fremde Besucher sehen
-// dürfen).
-export async function getPublicArchiveEntriesForUser(
-  userId: number,
-): Promise<UserContentArchiveEntry[]> {
-  return sql<UserContentArchiveEntry[]>`
-    SELECT id, slug, title, category, visibility, is_draft AS "isDraft"
-    FROM archive_entries
-    WHERE owner_user_id = ${userId} AND category != 'dialogue' AND visibility = 'public'
-      AND deleted_at IS NULL AND is_draft = false
-    ORDER BY title ASC
-  `;
-}
-
 // Nur der Owner (owner_user_id) darf die Sichtbarkeit ändern — ein
 // fremdes/gefälschtes id trifft dann einfach 0 Zeilen (gleiches Prinzip wie
 // setDialogueVisibility in src/lib/dialoguesCore.ts, nur ohne die

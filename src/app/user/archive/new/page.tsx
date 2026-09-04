@@ -38,7 +38,7 @@ export default async function NewArchiveEntryPage({ searchParams }: Props) {
   return (
     <>
       <PageMeta title="Neuer Datenbank-Eintrag" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <h1>Neuen Datenbank-Eintrag anlegen</h1>
         <NewArchiveEntryForm
           userId={user.id}

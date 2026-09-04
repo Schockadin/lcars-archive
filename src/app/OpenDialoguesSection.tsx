@@ -17,7 +17,6 @@ export default function OpenDialoguesSection({
     <LcarsDataRow
       value={items.length}
       label="Offene Gespräche"
-      color="var(--lcars-senary)"
       defaultOpen
     >
       <div className="flex flex-col gap-[6px]">

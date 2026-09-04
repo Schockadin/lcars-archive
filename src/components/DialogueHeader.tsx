@@ -3,8 +3,9 @@ import { fmtDate } from "@/lib/missionFormat";
 import type { ArchiveParticipant, ArchiveLocationRef } from "@/types/archive";
 
 // Dialog-Header: Titel, verlinkte Teilnehmer + Ort + Datum. Genutzt sowohl
-// von /archive/[slug] (abgeschlossene Dialoge) als auch /dialogues/[slug]
-// (offene Dialoge) — identisches Markup für beide Zustände.
+// von /characters/dialogues/[slug] (abgeschlossene Gespräche) als auch
+// /dialogues/[slug] (offene Gespräche) — identisches Markup für beide
+// Zustände.
 export default function DialogueHeader({
   title,
   participants,

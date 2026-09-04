@@ -32,6 +32,9 @@ export interface GameSession {
   // Wie viele Logbücher an dieser Session hängen (siehe
   // syncSessionLogbookAp): ab dem ersten gibt es die Logbuch-AP automatisch.
   logbookCount: number;
+  // Wem sie gutgeschrieben wurde — das Bearbeiten-Formular hakt daraus seine
+  // Teilnehmer-Auswahl vor.
+  characterIds: number[];
 }
 
 export async function listGameSessions(): Promise<GameSession[]> {
@@ -43,6 +46,7 @@ export async function listGameSessions(): Promise<GameSession[]> {
            u.name AS "createdByName",
            s.created_at::text AS "createdAt",
            COALESCE(p.character_count, 0)::int AS "characterCount",
+           COALESCE(p.character_ids, ARRAY[]::int[]) AS "characterIds",
            COALESCE(e.total_ap, 0)::int AS "totalAp",
            COALESCE(l.logbook_count, 0)::int AS "logbookCount"
     FROM game_sessions s
@@ -54,7 +58,8 @@ export async function listGameSessions(): Promise<GameSession[]> {
       GROUP BY session_id
     ) e ON e.session_id = s.id
     LEFT JOIN (
-      SELECT session_id, COUNT(*) AS character_count
+      SELECT session_id, COUNT(*) AS character_count,
+             ARRAY_AGG(character_id) AS character_ids
       FROM game_session_characters
       GROUP BY session_id
     ) p ON p.session_id = s.id
@@ -127,8 +132,10 @@ export async function createGameSession(
 
     const note = input.title.trim() || `Session vom ${input.sessionDate}`;
     const bookings: { amount: number; reason: ApReason }[] = [];
-    if (input.sessionAp > 0) bookings.push({ amount: input.sessionAp, reason: "session" });
-    if (input.bonusAp > 0) bookings.push({ amount: input.bonusAp, reason: "bonus" });
+    if (input.sessionAp > 0)
+      bookings.push({ amount: input.sessionAp, reason: "session" });
+    if (input.bonusAp > 0)
+      bookings.push({ amount: input.bonusAp, reason: "bonus" });
 
     for (const characterId of input.characterIds) {
       for (const booking of bookings) {
@@ -151,23 +158,98 @@ export async function createGameSession(
 // rechnerisch negativ werden, was die Spielleitung im Journal sieht und mit
 // einer Korrekturbuchung geradeziehen kann.
 export async function deleteGameSession(id: number): Promise<boolean> {
-  const rows = await sql`DELETE FROM game_sessions WHERE id = ${id} RETURNING id`;
+  const rows =
+    await sql`DELETE FROM game_sessions WHERE id = ${id} RETURNING id`;
   return rows.length > 0;
 }
 
-// Nachträglich Notizen/Titel korrigieren. Die AP-Beträge bleiben bewusst
-// unangetastet: sie sind bereits als Buchungen unterwegs, ein stilles
-// Nachziehen wäre nicht nachvollziehbar.
-export async function updateGameSessionNotes(
-  id: number,
-  title: string,
-  notes: string,
+// Eine eingetragene Session vollständig korrigieren: Datum, Titel, AP-Beträge,
+// Notizen und Teilnehmende. Die Gutschriften der Session werden dabei neu
+// geschrieben statt fortgeschrieben — die alten `session`- und `bonus`-
+// Buchungen dieser Session fallen weg, die neuen entstehen aus den frischen
+// Beträgen und der frischen Teilnehmerliste. Das ist der einzige Weg, der
+// Session und Konten garantiert deckungsgleich hält; eine Differenzrechnung
+// müsste raten, welche Buchung zu welchem Betrag gehörte.
+//
+// Buchungen mit anderem Grund bleiben unangetastet: die automatischen
+// Logbuch-AP zieht syncSessionLogbookAp am Ende nach (ein Charakter, der neu
+// dazukommt, bekommt sie; wer herausfällt, verliert sie), und freie
+// Korrekturbuchungen der Spielleitung gehören ohnehin nicht zur Session.
+//
+// Alles in EINER Transaktion — eine halb umgebuchte Session wäre schlimmer
+// als eine unveränderte.
+export interface UpdateGameSessionInput {
+  id: number;
+  sessionDate: string;
+  title: string;
+  sessionAp: number;
+  bonusAp: number;
+  notes: string;
+  characterIds: number[];
+  actingUserId: number;
+}
+
+export async function updateGameSession(
+  input: UpdateGameSessionInput,
 ): Promise<boolean> {
-  const rows = await sql`
-    UPDATE game_sessions SET title = ${title}, notes = ${notes}, updated_at = NOW()
-    WHERE id = ${id} RETURNING id
-  `;
-  return rows.length > 0;
+  // Vor der Transaktion laden: src/lib/db.ts hält nur EINE Connection, eine
+  // Abfrage über den globalen Client währenddessen würde blockieren.
+  const rules = await getAdvancementRules();
+
+  return sql.begin(async (tx) => {
+    const rows = await tx<{ id: number }[]>`
+      UPDATE game_sessions
+      SET session_date = ${input.sessionDate}, title = ${input.title},
+          session_ap = ${input.sessionAp}, bonus_ap = ${input.bonusAp},
+          notes = ${input.notes}, updated_at = NOW()
+      WHERE id = ${input.id}
+      RETURNING id
+    `;
+    if (rows.length === 0) return false;
+
+    // Teilnehmerliste neu setzen.
+    await tx`
+      DELETE FROM game_session_characters
+      WHERE session_id = ${input.id}
+        AND NOT (character_id = ANY(${input.characterIds.length > 0 ? input.characterIds : [0]}::int[]))
+    `;
+    for (const characterId of input.characterIds) {
+      await tx`
+        INSERT INTO game_session_characters (session_id, character_id)
+        VALUES (${input.id}, ${characterId})
+        ON CONFLICT DO NOTHING
+      `;
+    }
+
+    // Gutschriften der Session neu schreiben.
+    await tx`
+      DELETE FROM character_ap_entries
+      WHERE session_id = ${input.id} AND reason IN ('session', 'bonus')
+    `;
+
+    const note = input.title.trim() || `Session vom ${input.sessionDate}`;
+    const bookings: { amount: number; reason: ApReason }[] = [];
+    if (input.sessionAp > 0)
+      bookings.push({ amount: input.sessionAp, reason: "session" });
+    if (input.bonusAp > 0)
+      bookings.push({ amount: input.bonusAp, reason: "bonus" });
+
+    for (const characterId of input.characterIds) {
+      for (const booking of bookings) {
+        await tx`
+          INSERT INTO character_ap_entries
+            (character_id, amount, reason, note, created_by, session_id)
+          VALUES (${characterId}, ${booking.amount}, ${booking.reason},
+                  ${note}, ${input.actingUserId}, ${input.id})
+        `;
+      }
+    }
+
+    // Logbuch-AP an die neue Teilnehmerliste angleichen (idempotent).
+    await syncSessionLogbookAp(input.id, input.actingUserId, rules, tx);
+
+    return true;
+  });
 }
 
 // ── Logbücher an Sessions ──────────────────────────────────────────────
@@ -386,7 +468,8 @@ export async function completeMissionWithAp(input: {
       RETURNING slug, title
     `;
     const mission = rows[0];
-    if (!mission) return { ok: false as const, error: "Mission nicht gefunden." };
+    if (!mission)
+      return { ok: false as const, error: "Mission nicht gefunden." };
 
     if (input.amount > 0) {
       for (const characterId of input.characterIds) {

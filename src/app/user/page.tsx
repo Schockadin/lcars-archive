@@ -51,9 +51,9 @@ const ROLE_LABELS: Record<User["role"], string> = {
 // User) — hier bleibt nur noch die Konto-Verwaltung (Name/E-Mail, Passwort,
 // Benachrichtigungen, PWA-Installation) plus die Follow-Verwaltung (Abos,
 // siehe /user/follow). Reine Selbstbedienung (requireOwnUser, ID kommt aus
-// der Session, kein :id-Segment in der URL) — das Ansehen FREMDER User
-// (Übersicht + deren öffentliche Inhalte) lebt unter /users/[id] (Plural),
-// nicht mehr hier.
+// der Session, kein :id-Segment in der URL). Eine öffentliche Übersicht
+// FREMDER User gibt es nicht mehr — die frühere /users-Route wurde restlos
+// entfernt.
 export default async function UserPage() {
   const target = await requireOwnUser();
 
@@ -95,7 +95,7 @@ export default async function UserPage() {
   return (
     <>
       <PageMeta title="Profil" section="users" />
-      <article className="mb-[10px] max-w-[var(--lcars-content-w)] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <h1>Profil</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
@@ -119,8 +119,6 @@ export default async function UserPage() {
               <DataRow
                 label="Charakterfarben"
                 value={characterColors.length}
-                accentColor="var(--lcars-ink-data)"
-                color="var(--lcars-primary)"
               >
                 <section
                   id="character-colors"
@@ -159,8 +157,6 @@ export default async function UserPage() {
             <DataRow
               label="Darstellung"
               value={COLOR_THEMES.length}
-              accentColor="var(--lcars-senary)"
-              color="var(--lcars-tertiary)"
             >
               <section id="theme" className="flex flex-col gap-[16px]">
                 <h2>Farbtheme</h2>
@@ -188,8 +184,6 @@ export default async function UserPage() {
             <DataRow
               label="Settings"
               value={9}
-              accentColor="var(--lcars-quinary)"
-              color="var(--lcars-primary-light)"
             >
               <h2>User-Daten</h2>
               <SettingsForm user={{ name: target.name, email: target.email }} />

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { userCan } from "@/lib/permissions";
 import PageMeta from "@/components/PageMeta";
@@ -41,17 +42,16 @@ export default async function AdminCampaignPage() {
     rules,
     completableMissions,
     apCharacterOptions,
-  ] =
-    await Promise.all([
-      listAllUsers(),
-      getAllCharactersForAdmin(),
-      getAllMissionsForGmOverview(),
-      getIngameYearInfo(),
-      listApBalances(),
-      getAdvancementRules(),
-      listCompletableMissions(),
-      listActiveCharactersForAp(),
-    ]);
+  ] = await Promise.all([
+    listAllUsers(),
+    getAllCharactersForAdmin(),
+    getAllMissionsForGmOverview(),
+    getIngameYearInfo(),
+    listApBalances(),
+    getAdvancementRules(),
+    listCompletableMissions(),
+    listActiveCharactersForAp(),
+  ]);
 
   // Kontostände in EINER Abfrage geholt und hier zugeordnet — sonst wäre es
   // eine Abfrage je Charakter.
@@ -75,7 +75,7 @@ export default async function AdminCampaignPage() {
   return (
     <>
       <PageMeta title="Kampagne" section="users" />
-      <article className="mb-[10px] pr-[var(--lcars-elbow-size)]">
+      <article className="mb-[10px] lcars-wide-column">
         <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
         <h1>Kampagne</h1>
 
@@ -92,11 +92,11 @@ export default async function AdminCampaignPage() {
               {rules.apPerLogbook} AP für ein geschriebenes Logbuch; die Beträge
               stellt die Spielleitung unter „AP“ ein. Eine ganze Session
               schreibt man am besten unter „Sessions“ auf einmal gut — mit
-              verknüpftem Logbuch kommt die Logbuch-AP dort automatisch dazu.
-              AP für einen Missionsabschluss gibt es nur über „Mission
-              abschließen“ weiter unten; Steigerungen buchen die Spieler:innen
-              selbst auf ihrem Charakterbogen ab. Hier bleibt die freie Buchung
-              für alles andere und für Korrekturen.
+              verknüpftem Logbuch kommt die Logbuch-AP dort automatisch dazu. AP
+              für einen Missionsabschluss gibt es nur über „Mission abschließen“
+              weiter unten; Steigerungen buchen die Spieler:innen selbst auf
+              ihrem Charakterbogen ab. Hier bleibt die freie Buchung für alles
+              andere und für Korrekturen.
             </p>
             <ApAwardPanel characters={apCharacters} rules={rules} />
           </section>
@@ -105,11 +105,14 @@ export default async function AdminCampaignPage() {
             <h2 className="text-lcars-primary">Mission abschließen</h2>
             <p className="text-lcars-ink-dim text-[13px]">
               AP für einen Missionsabschluss gibt es nur hier: die Mission wird
-              dabei ausgewählt und auf „abgeschlossen“ gesetzt.
+              dabei ausgewählt und auf „abgeschlossen“ gesetzt. Vorbelegt sind{" "}
+              {rules.apPerMission} AP je Charakter (Regel „AP pro beendeter
+              Mission“ unter <Link href="/gm/ap">Erfahrungspunkte</Link>).
             </p>
             <MissionApPanel
               missions={completableMissions}
               characters={apCharacterOptions}
+              defaultMissionAp={rules.apPerMission}
             />
           </section>
 

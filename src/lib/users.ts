@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import postgres from "postgres";
 import sql from "@/lib/db";
 import { slugifyBase } from "@/lib/slug";
@@ -42,7 +43,14 @@ async function generateUniqueUserSlug(name: string): Promise<string> {
 
 export class EmailTakenError extends Error {}
 
-export async function getUserById(id: number): Promise<User | null> {
+// React-cache-dedupliziert pro Anfrage: derselbe User wird innerhalb EINES
+// Requests aus mehreren Richtungen geholt (getCurrentUser in lib/dal.ts,
+// getViewer in lib/visibility.ts, dazu Seiten wie app/page.tsx, die die
+// Session-ID direkt auflösen). Ohne cache() schickte jede dieser Stellen ihre
+// eigene identische Abfrage — auf dem Dashboard waren das nachweislich zwei
+// gleiche users-Queries pro Aufruf. cache() gilt nur innerhalb einer Anfrage,
+// ändert also nichts an der Frische über Requests hinweg.
+export const getUserById = cache(async (id: number): Promise<User | null> => {
   const rows = await sql<User[]>`
     SELECT ${USER_COLUMNS}
     FROM users
@@ -50,7 +58,7 @@ export async function getUserById(id: number): Promise<User | null> {
     LIMIT 1
   `;
   return rows[0] ?? null;
-}
+});
 
 // Vorheriges last_login_at wird nach previous_login_at verschoben, bevor
 // last_login_at auf NOW() gesetzt wird — so bleibt der Zeitpunkt des

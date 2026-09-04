@@ -13,6 +13,7 @@ export default function ContentActionRow({
   visibility,
   extraAction,
   editHref,
+  editLabel = "Bearbeiten",
   deleteButton,
 }: {
   visibility?: React.ReactNode;
@@ -20,18 +21,23 @@ export default function ContentActionRow({
   // Charakter-Übersicht).
   extraAction?: React.ReactNode;
   editHref?: string;
+  // Beschriftung des Stifts, wo „Bearbeiten" die Seite nicht trifft (die
+  // Charakter-Übersicht führt damit auf die ganze Akte).
+  editLabel?: string;
   deleteButton?: React.ReactNode;
 }) {
+  // flex-wrap + justify-end: passt die Zeile nicht in die Breite (Telefon),
+  // rutscht sie in eine zweite Zeile, statt links aus dem Bild zu laufen.
   return (
-    <div className="flex items-center gap-[8px]">
+    <div className="flex flex-wrap items-center justify-end gap-[8px]">
       {visibility}
       {extraAction}
       {editHref && (
         <Link
           href={editHref}
           className="lcars-icon-btn"
-          aria-label="Bearbeiten"
-          title="Bearbeiten"
+          aria-label={editLabel}
+          title={editLabel}
         >
           <PencilIcon />
         </Link>

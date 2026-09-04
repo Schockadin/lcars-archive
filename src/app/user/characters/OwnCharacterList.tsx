@@ -1,17 +1,13 @@
 "use client";
 import { useOptimistic } from "react";
-import Link from "next/link";
 import { LcarsAkteCard } from "@/components/lcars";
 import type { Character } from "@/types/character";
 import VisibilitySelect from "../content/VisibilitySelect";
 import DeleteOwnContentButton from "../content/DeleteOwnContentButton";
 import ContentActionRow from "../content/ContentActionRow";
+import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
 
-const STATUS_LABELS: Record<Character["status"], string> = {
-  active: "Aktiv",
-  retired: "Ehemalig",
-  deceased: "Verstorben",
-};
+const STATUS_LABELS = CHARACTER_STATUS_LABEL;
 
 // Nur die Felder, die die Liste wirklich anzeigt — der volle Character-
 // Datensatz (bio als gerendertes HTML, source_md, frontmatter) würde sonst
@@ -56,8 +52,11 @@ export default function OwnCharacterList({
     );
   }
 
+  // Volle Breite der Spalte, aber gedeckelt: über ~900px zerreißt die Zeile
+  // aus Akte und Aktionen optisch (die Akte wächst, die Knöpfe bleiben
+  // rechts stehen).
   return (
-    <div className="flex flex-col gap-[6px]">
+    <div className="flex w-full max-w-[900px] flex-col gap-[6px]">
       {optimisticCharacters.map((c) => (
         <div
           key={c.id}
@@ -97,16 +96,13 @@ export default function OwnCharacterList({
                 initialValue={c.visibility}
               />
             }
-            extraAction={
-              <Link
-                href={`/user/characters/${c.id}/stats`}
-                className="lcars-pill-btn--outline"
-                title="Charakterwerte ansehen und bearbeiten"
-              >
-                Werte
-              </Link>
-            }
-            editHref={`/user/characters/${c.id}/edit`}
+            // Kein zusätzlicher „Öffnen"-Knopf mehr: Stammdaten, Werte und
+            // Biografie liegen als Panels auf EINER Seite, der Stift führte
+            // also ohnehin an dieselbe Adresse. Die doppelte Pille war mit
+            // 180px zudem der Grund, warum die Aktionszeile auf einem
+            // Telefon (410px) über den Rand hinauslief.
+            editHref={`/user/characters/${c.id}`}
+            editLabel="Öffnen und bearbeiten"
             deleteButton={
               <DeleteOwnContentButton
                 contentType="character"

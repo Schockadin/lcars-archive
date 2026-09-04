@@ -75,7 +75,7 @@ export async function awardApAction(
   // ohnehin in character_ap_entries (created_by/created_at/note).
 
   revalidatePath("/gm/campaign");
-  revalidatePath(`/user/characters/${characterId}/stats`);
+  revalidatePath(`/user/characters/${characterId}`);
 
   return {
     success: `${amount > 0 ? "+" : ""}${amount} AP gebucht.`,

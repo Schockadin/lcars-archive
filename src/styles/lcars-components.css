@@ -11,6 +11,15 @@
    gemeinsam finden lassen.
 ──────────────────────────────────────────────────────────────────── */
 
+/* Zuerst die geteilten Bausteine (.lcars-split, .lcars-toolbar,
+   .lcars-wide-column, Fließtext-Links, Skeletons …): sie bilden die
+   generische Grundlage, die die Domänen-Dateien danach für ihren Fall
+   verfeinern dürfen (z.B. .archive-browser, das unter dem Breakpoint das
+   Spalten-Layout von .lcars-split umstellt). Käme shared.css zuletzt,
+   gewönne bei gleicher Spezifität die generische statt der spezielleren
+   Regel. */
+@import "./lcars-components/shared.css";
+
 @import "./lcars-components/header.css";
 @import "./lcars-components/data-row.css";
 @import "./lcars-components/accordion.css";
@@ -23,8 +32,6 @@
 @import "./lcars-components/mission-detail.css";
 @import "./lcars-components/archive.css";
 @import "./lcars-components/search.css";
-@import "./lcars-components/users.css";
-@import "./lcars-components/shared.css";
 /* Zuletzt: stellt die Blocktypografie gerenderter Markdown-Inhalte
    (Listen, Absatzabstände, Überschriften, Zitate, Tabellen) nach Tailwinds
    Preflight wieder her und darf dafür nach den Domänen-Dateien greifen. */

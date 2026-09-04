@@ -8,13 +8,15 @@ import {
   THEME_TOKENS,
   decodeThemeOverrides,
 } from "@/lib/themes";
-import { UI_MODE_COOKIE_NAME, UI_MODE_MINIMAL } from "@/lib/uiMode";
+import {
+  UI_MODE_COOKIE_NAME,
+  UI_MODE_MINIMAL,
+  UI_MODE_MINIMAL_LIGHT,
+} from "@/lib/uiMode";
 
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
-  const m = document.cookie.match(
-    new RegExp("(?:^|; )" + name + "=([^;]+)"),
-  );
+  const m = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]+)"));
   return m ? decodeURIComponent(m[1]) : null;
 }
 
@@ -46,9 +48,11 @@ function applyThemeFromCookies() {
     }
   }
 
-  // UI-Modus (LCARS vs. minimal) analog zum Farbtheme aus dem Cookie ziehen.
-  if (readCookie(UI_MODE_COOKIE_NAME) === UI_MODE_MINIMAL) {
-    root.setAttribute("data-ui", UI_MODE_MINIMAL);
+  // UI-Modus (LCARS vs. minimal dunkel/hell) analog zum Farbtheme aus dem
+  // Cookie ziehen.
+  const uiMode = readCookie(UI_MODE_COOKIE_NAME);
+  if (uiMode === UI_MODE_MINIMAL || uiMode === UI_MODE_MINIMAL_LIGHT) {
+    root.setAttribute("data-ui", uiMode);
   } else {
     root.removeAttribute("data-ui");
   }

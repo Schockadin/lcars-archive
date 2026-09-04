@@ -9,7 +9,6 @@ import { DB_PERMISSIONS } from "@/lib/permissions";
 import {
   MyCharactersNavIcon,
   ContentNavIcon,
-  UsersNavIcon,
   ProfileNavIcon,
   AdminNavIcon,
   GmNavIcon,
@@ -206,9 +205,6 @@ export default function HeaderUserNav({
         ]
       : []),
     { href: "/user/content", label: "Inhalte", icon: <ContentNavIcon /> },
-    ...(permissions.includes("users.browse")
-      ? [{ href: "/users", label: "User", icon: <UsersNavIcon /> }]
-      : []),
     { href: "/user", label: "Profil", icon: <ProfileNavIcon /> },
   ];
 

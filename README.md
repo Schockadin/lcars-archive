@@ -34,7 +34,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Einladung (Aktivierungsmail mit Passwort-Setup-Link).
 - **Zentraler Zugriffsschutz (Proxy) + DAL als Source of Truth** — ein
   Next-16-Proxy (`src/proxy.ts`, ehem. Middleware) leitet nicht angemeldete
-  Besucher:innen der geschützten Bereiche (`/user`, `/admin`, `/users`) **vor**
+  Besucher:innen der geschützten Bereiche (`/user`, `/admin`, `/gm`) **vor**
   dem Rendern auf `/login` — eine schnelle, **optimistische** Vorfilterung, die
   nur die Signatur/Ablauf des Session-Cookies prüft (kein DB-Zugriff, gemäß
   Next.js-Empfehlung). Die **verbindliche** Zugriffskontrolle (Rollen/Rechte,
@@ -83,42 +83,76 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   intern gehaltene nur mit `content.view_gm`/`content.view_all`. Auch **nachträglich**
   lassen sich NPCs in ein laufendes Gespräch holen — das darf, wer sie spielt,
   und wird dabei ihr Sprecher.
-- **NPCs anlegen** — unter „Meine Inhalte" gibt es für alle, die NPCs spielen,
-  den Knopf **„Neuer NPC"** (`/user/archive/new?category=npc`). Das ist das
-  normale Datenbank-Formular mit vorgewählter Kategorie „NPC"; der Eintrag
-  lässt sich danach wie jeder andere Datenbank-Eintrag bearbeiten. Bewusst
-  NICHT an `content.create` gehängt: ein NPC ist kein eigener Inhalt, sondern
-  Kampagnen-Inventar — ein reines Admin-Konto ohne `content.create` soll ihn
-  trotzdem anlegen können.
+- **NPCs anlegen** — unter „Meine Inhalte" gibt es für **jedes eingeloggte
+  Konto** den Knopf **„Neuer NPC"** (`/user/archive/new?category=npc`). Das ist
+  das normale Datenbank-Formular mit vorgewählter Kategorie „NPC"; der Eintrag
+  lässt sich danach wie jeder andere Datenbank-Eintrag bearbeiten. An keine
+  Rolle geknüpft, genau wie das Formular selbst (`requireOwnUser`, keine
+  Kategorie-Prüfung in `contentAction.ts`) — ein NPC ist kein eigener Inhalt,
+  sondern Kampagnen-Inventar. Wer einen NPC im Gespräch **spielen** darf, ist
+  davon unabhängig und richtet sich weiterhin nach `canPlayNpcs`.
+  Der Knopf **„Neuer Charakter"** steht dort nicht mehr: eigene Charaktere
+  haben mit `/user/characters` ihren eigenen Bereich, und dort legt man sie an.
 - **Eigene Charaktere & Charakterwerte** — wer mindestens einen verknüpften
   Charakter hat, bekommt im Kopfmenü den Punkt „Charaktere" (`/user/characters`):
-  Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Sichtbarkeit,
-  Bearbeiten, Löschen und dem Anlegen weiterer Charaktere. Pro Charakter lassen
-  sich dort unter „Werte" die Charakterwerte nach dem Bogen von Star Trek
-  Adventures 2e pflegen — und zwar auf dem **Original-Bogen selbst**: die
-  Seite zeigt das gedruckte „Personnel File" als 816×1056-Blatt
-  (`public/character-sheet/personnel-file.svg`), darüber liegen die
-  Eingabefelder exakt in ihren gedruckten Kästen. Die Maße stehen als Tabelle
-  in `personnelFileLayout.ts`, die Optik in
-  `src/styles/lcars-components/personnel-file.css`; jedes Maß ist ein
-  Vielfaches von `--pf-unit` (= 1px der Vorlage), sodass der Bogen in einer
-  schmaleren Spalte als Ganzes schrumpft statt umzubrechen. Gepflegt werden:
-  Personalakte (Pronomen, Rolle, Zuweisung, Herkunft, Erziehung, Laufbahn,
-  Erfahrung, Merkmale) samt Foto-Kasten (pflegt dasselbe Bild wie das
-  Portrait der Akte, im Bildkasten oben links), sechs Attribute und sechs
-  Disziplinen, Protection/Determination/Reputation sowie die Listenfelder
-  (Werte, Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln, Angriffe,
-  Ausrüstung, Hobbys, Karriere-Ereignisse). Bild-Upload, Stress-Bonus und
-  Speichern stehen unter dem Blatt — der Papierbogen hat dafür keine Felder. Für die Zahlenwerte gelten die
-  Regeln der Runde: Attribute 7–12 mit höchstens einem Wert auf 12 und zwei auf
-  11, Disziplinen 1–5 mit höchstens einem auf 5 und zwei auf 4 (zentral in
-  `src/lib/characterStats.ts`, im Formular als Live-Hinweis, verbindlich in der
-  Server-Action). Der maximale Stress ist kein Eingabefeld, sondern ergibt sich
-  aus Fitness + Bonus aus Talenten (der Bonus wird gepflegt, da er sich aus dem
-  Freitext der Talente nicht verlässlich ableiten lässt). Gespeichert werden sie als
+  Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Sichtbarkeit, Öffnen,
+  Löschen und dem Anlegen weiterer Charaktere.
+- **Anlegen als Assistent** (`/user/characters/new`) — vier Schritte:
+  Stammdaten, Werte, Biografie, Vorschau. Alle vier liegen in **einem**
+  Formular und bleiben im DOM (nur ausgeblendet): das Blättern verliert keine
+  Eingabe, und am Ende schickt ein einziger Submit alles zusammen ab
+  (`createCharacterWizardAction` legt Akte und Werte in derselben `INSERT`).
+  Vor „Fertig" ist nichts gespeichert — ein abgebrochener Assistent
+  hinterlässt keinen halben Charakter. Pflichtfelder tragen bewusst **kein**
+  `required`: ein verstecktes Pflichtfeld kann der Browser nicht anspringen und
+  bricht das Abschicken wortlos ab; geprüft wird beim Blättern und verbindlich
+  in der Action.
+- **Werte-Editor aus normalen Bedienelementen**
+  (`_shared/CharacterValuesEditor.tsx`) — Attribute und Disziplinen als
+  Zahlenkästen mit laufender Budget-Anzeige, Talente über den Katalog, alles
+  Weitere als gepflegte Listen. Kontrolliert: der Wertestand liegt beim
+  Aufrufer, damit Budget-Anzeige, Vorschau und das abschickende Formular
+  denselben Stand sehen. Abgeschickt wird er als **ein** JSON-Feld
+  (`statsJson`) statt als vierzig Einzelfelder; `parseStatsPayload`
+  (`src/lib/characterStatsPayload.ts`) normalisiert ihn und meldet dabei jede
+  Zahl außerhalb ihres Bereichs mit Feldnamen, statt sie stillschweigend zu
+  verwerfen. Gepflegt werden: Personalakte (Pronomen, Rolle, Zuweisung,
+  Herkunft, Erziehung, Laufbahn, Erfahrung, Merkmale), sechs Attribute und
+  sechs Disziplinen, Protection/Determination/Reputation/Stress-Bonus sowie die
+  Listenfelder (Werte, Schwerpunkte, Talente, Spezies-Fähigkeiten,
+  Sonderregeln, Angriffe, Ausrüstung, Hobbys, Karriere-Ereignisse).
+- **Die eigene Charakterseite** (`/user/characters/[id]`) — Stammdaten, Werte
+  und Biografie als **Panels untereinander** statt getrennter Seiten mit
+  Umschalter. Stammdaten und Biografie haben je einen Stift-Knopf und werden an
+  Ort und Stelle bearbeitet; jedes Panel speichert nur seinen Teil
+  (`_shared/panelActions.ts`) und übernimmt den Rest aus dem gespeicherten
+  Stand — `updateOwnCharacterContent` schreibt die Akte immer vollständig, ein
+  weggelassenes Feld würde sonst geleert. Die alten Adressen
+  `/user/characters/[id]/stats` und `.../edit` leiten auf diese Seite um.
+- **Der Bogen ist Vorschau, kein Formular** — der Knopf „Charakterbogen" über
+  den Panels öffnet ihn als **drei Blätter**
+  (`src/components/character/CharacterSheetPreview.tsx`): das gedruckte
+  „Personnel File" als 816×1056-Blatt
+  (`public/character-sheet/personnel-file.svg`, Maße in
+  `personnelFileLayout.ts`, Optik in
+  `src/styles/lcars-components/personnel-file.css`; jedes Maß ein Vielfaches
+  von `--pf-unit` = 1px der Vorlage, sodass der Bogen in einer schmaleren
+  Spalte als Ganzes schrumpft statt umzubrechen), dahinter der
+  Talent-Spickzettel und die Biografie im selben Papier-Look. Im Fenster stehen
+  „Drucken" (Browser-Druck, das Druck-CSS blendet alles außer den Blättern aus
+  und beginnt jedes auf einer neuen Seite) und „Speichern" (derselbe
+  PDF-Export, damit die Datei unabhängig vom Browser gleich aussieht).
+- Für die Zahlenwerte gelten die Regeln der Runde: Attribute 7–12 mit höchstens
+  einem Wert auf 12 und zwei auf 11, Disziplinen 1–5 mit höchstens einem auf 5
+  und zwei auf 4 (zentral in `src/lib/characterStats.ts`, im Editor als
+  Live-Hinweis, verbindlich in der Server-Action; die gemeinsamen Prüfungen
+  beider Wege stehen DB-frei in `src/lib/characterStatsRules.ts`). Der maximale
+  Stress ist kein Eingabefeld, sondern ergibt sich aus Fitness + Bonus aus
+  Talenten (der Bonus wird gepflegt, da er sich aus dem Freitext der Talente
+  nicht verlässlich ableiten lässt). Gespeichert werden die Werte als
   `characters.metadata.stats` (jsonb, keine eigene Tabelle) — Name, Rang und
-  Spezies bleiben Teil der Akte selbst. Charaktere erscheinen deshalb nicht mehr
-  in „Meine Inhalte" (`/user/content`); der Charakter-Filter für
+  Spezies bleiben Teil der Akte selbst. Charaktere erscheinen deshalb nicht
+  mehr in „Meine Inhalte" (`/user/content`); der Charakter-Filter für
   Einsatzberichte/Gespräche bleibt dort erhalten.
 - **Erfahrungspunkte (AP)** — jeder Charakter hat ein AP-Konto als
   Buchungsjournal (`character_ap_entries`): die Spielleitung vergibt unter
@@ -204,18 +238,25 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Kasten, die Spezies teilt sich den Kasten „Species & Traits" mit dem
   Merkmals-Feld (`.pf-combo`).
 - **PDF-Export des Bogens** — `/api/export/character-sheet?characterId=…`
-  liefert den ausgefüllten Bogen als PDF (Seite 1) samt Talent-Spickzettel im
-  selben Look (Seite 2+). Wie der Content-Export mit `@react-pdf/renderer`
+  liefert dieselben drei Blätter wie die Vorschau: den ausgefüllten Bogen, den
+  Talent-Spickzettel und die Biografie. Für das dritte Blatt gibt es keine
+  HTML-Fassung (`@react-pdf` kennt kein HTML); `src/lib/pdf/markdownBlocks.ts`
+  zerlegt den Markdown-Quelltext deshalb in Überschriften, Absätze,
+  Aufzählungen und Zitate und führt Inline-Auszeichnungen auf ihren Text
+  zurück — für ein Textblatt genügt das, eine zweite Markdown-Pipeline im
+  PDF-Pfad wäre mehr Maschinerie als der Zweck trägt. Wie der Content-Export
+  mit `@react-pdf/renderer`
   (reines Node, kein Chromium — läuft auf Netlify Functions). Der Bogen ist
   816×1056 CSS-Pixel = 8,5×11 Zoll = das PDF-Format „Letter", die Maße aus
   `personnelFileLayout.ts` gelten deshalb unverändert mit Faktor 0,75 (px→pt).
   Die Grafik liegt als eingebettetes PNG bei (`personnelFileArt.ts`, aus dem
-  SVG erzeugt), damit der Export weder Datei- noch Netzzugriff braucht. Dasselbe Listen-Muster (Einträge
-  mit rotem Minus, „Hinzufügen" öffnet ein Fenster mit freiem Eingabefeld)
-  nutzen über `EntryListField.tsx` auch Werte, Schwerpunkte, Angriffe,
-  Ausrüstung, Karriere-Ereignisse und Hobbys; Spezies-Fähigkeiten und
-  Sonderregeln bleiben bewusst Fließtext-Blöcke, dort stehen ganze Regelsätze
-  statt Aufzählungen. Werte und Schwerpunkte zeigen dabei ihr Freikontingent
+  SVG erzeugt), damit der Export weder Datei- noch Netzzugriff braucht.
+- **Listen im Werte-Editor** — dasselbe Muster für alle: Einträge als Zeilen
+  mit rotem Minus, „Hinzufügen" öffnet ein Fenster mit freiem Eingabefeld
+  (`EntryAddModal.tsx`), Talente stattdessen den Katalog (`TalentPicker.tsx`).
+  Spezies-Fähigkeiten und Sonderregeln bleiben bewusst Fließtext-Felder, dort
+  stehen ganze Regelsätze statt Aufzählungen. Werte und Schwerpunkte zeigen ihr
+  Freikontingent
   aus der Ersterschaffung an — bei den Schwerpunkten als harte Grenze (sie
   kosten danach AP, serverseitig geprüft), bei den Werten nur als Orientierung,
   da sie sich später nicht kaufen lassen. Die reine Hälfte (Kategorien,
@@ -246,11 +287,19 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     Logbuchs oder seiner ganzen Mission). Ein Logbuch hängt an genau EINER
     Session; zieht `setSessionLogbooks` eines aus einer anderen herüber, wird
     auch deren Gutschrift nachgezogen — Lösen, Zuordnen und Buchen laufen
-    dafür in einer Transaktion.
+    dafür in einer Transaktion. Eine eingetragene Session lässt sich
+    **vollständig korrigieren** (Datum, Titel, AP-Beträge, Notizen,
+    Teilnehmende): `updateGameSession` schreibt dabei die `session`- und
+    `bonus`-Buchungen der Session neu statt sie fortzuschreiben und zieht die
+    Logbuch-AP nach — alles in einer Transaktion, damit Session und Konten
+    nie auseinanderlaufen. Bereits ausgegebene AP holt das nicht zurück, ein
+    Konto kann dadurch rechnerisch ins Minus laufen.
   - **Missionsabschluss** (auf `/gm/campaign`) — AP für einen Missionsabschluss
     gibt es ausschließlich über die Missionsauswahl: die gewählte Mission wird
     dabei auf `completed` gesetzt und die Buchungen tragen
-    `character_ap_entries.mission_id`. Der Grund „Mission" ist deshalb aus der
+    `character_ap_entries.mission_id`. Vorbelegt ist der Betrag mit der Regel
+    **„AP pro beendeter Mission"** (`apPerMission`, Standard 5) aus dem
+    Regelwerk unter `/gm/ap`; im Einzelfall bleibt er überschreibbar. Der Grund „Mission" ist deshalb aus der
     freien Buchung entfernt (die Server-Action weist ihn ab).
   - `/gm/ap` — Kontostände aller Charaktere, das Gesamtjournal aller Buchungen
     (nach Charakter und Grund filterbar, serverseitig auf die letzten 500
@@ -306,6 +355,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   abonnierte Inhalte. Ein Service Worker macht bereits besuchte Seiten offline
   abrufbar und zeigt sonst eine eigene Offline-Ausweichseite (`/offline`);
   Anmeldung, neue Inhalte und Änderungen brauchen weiterhin eine Verbindung.
+- **Sprecherfarben in Gesprächen** — jeder Charakter hat eine eigene Farbe
+  (`characters.character_color`, im Profil wählbar), die seine Nachrichten-Karten
+  und im Fließtext-Modus seine wörtliche Rede einfärbt. **NPCs bekommen
+  einheitlich ein helles Grau** (`NPC_COLOR` in `src/lib/characterColor.ts`) —
+  so trennt die Farbe auf einen Blick, wer von einer Spielerin/einem Spieler
+  geführt wird und wer Kampagnen-Inventar ist.
 - **Wählbare LCARS-Farbschemata** — angemeldete User wählen im Profil unter
   „Darstellung“ ein Theme für die gesamte Oberfläche (Standard plus die echten
   LCARS-Paletten Classic, Science, Nebula, Red Alert, Nemesis) und können jede
@@ -318,9 +373,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   mag, deaktiviert im Profil unter „Darstellung → Oberfläche“ das LCARS-Design
   und bekommt stattdessen ein schlankes, minimalistisches Interface: System-
   schrift, keine dekorativen Elbows/Balken/Versalien, kein Header — die gesamte
-  Navigation liegt links in der Sidebar (auf dem Handy als reine Symbole). Rein
-  CSS-basiert (`html[data-ui="minimal"]`, Pre-Paint-Cookie `neo_ui`), die
-  eigentliche Zugriffskontrolle bleibt unberührt.
+  Navigation liegt links in der Sidebar (auf dem Handy als reine Symbole). Es
+  gibt es in zwei Ausführungen — **dunkel** (`data-ui="minimal"`) und **hell**
+  (`data-ui="minimal-light"`, überschreibt zusätzlich Hintergrund-/Textfarben
+  auf ein helles Schema). Rein CSS-basiert (gemeinsamer Selektor
+  `html[data-ui^="minimal"]`, Pre-Paint-Cookie `neo_ui`), die eigentliche
+  Zugriffskontrolle bleibt unberührt.
 - **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und Spielleitung.
 - **Markdown-Vault als Ursprungsimport** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
@@ -479,6 +537,21 @@ npm run db:setup
 Liest `scripts/schema.sql` ein und erstellt alle Tabellen
 (`characters`, `missions`, `mission_logs`, `archive_entries`, …).
 
+Die Datenbank braucht dafür die Extensions **`pg_trgm`** (Volltextsuche) und
+**`vector`** (pgvector, Grundlage des Datenbank-Assistenten): ohne pgvector
+scheitert die Anlage von `content_embeddings`, und alles, was Inhalte
+endgültig löscht, läuft danach in eine fehlende Tabelle. Auf verwalteten
+Diensten (Railway, Neon, Supabase) sind beide vorhanden und müssen nur
+aktiviert werden; lokal genügt unter Debian/Ubuntu
+`apt-get install postgresql-16-pgvector`.
+
+**Für die DB-Integrationstests** (`npm run test:integration`) gilt dasselbe —
+sie laufen gegen eine eigene, leere Datenbank mit demselben Schema. In CI
+übernimmt das der Service-Container `pgvector/pgvector:pg16` (siehe
+`.github/workflows/ci.yml`); das Schema wird dort direkt mit `psql` eingespielt,
+nicht über `npm run db:setup` — das Skript fragt interaktiv nach der
+Schema-Datei und würde in einem Runner hängen.
+
 ### 4. Ersten Admin-User anlegen
 
 ```bash
@@ -557,8 +630,8 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind                                                                                                    |
 | `npm run db:purge-deleted`  | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist                                                              |
 | `npm run test`              | Führt die Unit-Tests aus (`src/**/*.test.ts`)                                                                                                    |
-| `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Komponenten-Galerie sowie Layout-/Schrift-Regressionen an beiden Viewports) |
-| `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz)                                             |
+| `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Komponenten-Galerie inkl. Charakter-Assistent und Bogen-Vorschau sowie Layout-/Schrift-Regressionen an beiden Viewports) |
+| `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz **mit pgvector**, siehe unten)               |
 
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
 (z.B. `db:setup:dev`, `db:ingest:dev`, `db:reset:dev`) — identisch, nur mit
@@ -593,15 +666,14 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     ├── app/                  # Next.js App Router (Seiten & API-Routes)
     │   ├── page.tsx           # "/" — Landingpage (anonym) / Dashboard (eingeloggt)
     │   ├── Dashboard.tsx       # Persönliches Dashboard: News-Feed, offene Gespräche, Abos
-    │   ├── characters/        # Charakterübersicht & -detailseiten
+    │   ├── characters/        # Charakterübersicht, -detailseiten & abgeschlossene Gespräche (dialogues/[slug])
     │   ├── missions/
     │   ├── archive/
-    │   ├── dialogues/         # Öffentliche Ansicht abgeschlossener Gespräche
+    │   ├── dialogues/         # Spielansicht OFFENER Gespräche (Formular, Abschluss); abgeschlossene → /characters/dialogues/[slug]
     │   ├── rag/               # Datenbank-Assistent (RAG-Chat)
     │   ├── search/            # Volltextsuche + eingebetteter Datenbank-Assistent
     │   ├── tutorial/          # Anleitung für Besucher/User/Spielleitung
     │   ├── login/, activate/, forgot-password/
-    │   ├── users/             # Öffentliche Nutzerübersicht + Profilseiten anderer User
     │   ├── user/              # Eigenes Profil, Settings, eigene Inhalte anlegen/verwalten
     │   │   └── characters/     #   Eigene Charaktere: Übersicht, anlegen, bearbeiten, Werte ([id]/stats)
     │   ├── admin/             # Admin-Bereich (staff-baseline, feiner je Unterseite):
@@ -854,14 +926,15 @@ Das Hochladen von PDF-Charakterbögen gibt es nicht mehr (Tabelle
 `character_sheets` und die Route `/api/character-sheets/<id>` sind mit v1.27.23
 entfallen). An seine Stelle tritt der in der Datenbank gepflegte Bogen selbst: auf der
 Charakterseite führt der Knopf **„Charakterbogen"** auf
-`/characters/<slug>/sheet` — dieselbe Vorlage wie das Formular unter
-`/user/characters/<id>/stats`, aber als reine Ansicht
+`/characters/<slug>/sheet` — dieselbe Vorlage wie die Vorschau auf der eigenen
+Charakterseite, als reine Ansicht
 (`src/components/character/PersonnelFileView.tsx`, Maße aus
 `src/lib/personnelFileLayout.ts`). Sichtbar ist die Seite für die
 Spieler:in/den Spieler des Charakters (`player_id`) und für die Spielleitung
 (`gm.access`); für alle anderen gibt es sie nicht (`notFound()` statt 403, damit
-nicht durchscheint, dass es sie gäbe). Bearbeitet wird der Bogen weiterhin
-ausschließlich vom Owner unter `/user/characters/<id>/stats`. Der PDF-Export
+nicht durchscheint, dass es sie gäbe). Gepflegt werden die Werte
+ausschließlich vom Owner auf seiner eigenen Charakterseite
+(`/user/characters/<id>`, Panel „Werte"). Der PDF-Export
 `/api/export/character-sheet?characterId=…` folgt derselben Regel: owner-
 gescopte Abfrage, für `gm.access` zusätzlich jeder Charakter.
 

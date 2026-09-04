@@ -38,7 +38,7 @@ export default function EditUserForm({
           type="text"
           required
           defaultValue={user.name}
-          className="rounded-lcars-pill lcars-input"
+          className="lcars-input rounded-full"
         />
       </FormField>
 

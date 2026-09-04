@@ -17,17 +17,12 @@ import { autoLinkMarkdown } from "@/lib/autolink";
 import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
-import { parseList, parseNumberList } from "@/lib/formParsing";
 import { userCan } from "@/lib/permissions";
-import { uploadCharacterPortraitImage } from "@/lib/characterAssets";
-import { InvalidAssetError } from "@/lib/assetStorage";
-import type { Character } from "@/types/character";
+import { readCharacterHead } from "./characterHead";
 
 export interface CharacterFormState {
   error?: string;
 }
-
-const VALID_STATUSES: Character["status"][] = ["active", "retired", "deceased"];
 
 // Vereint createCharacterAction + updateCharacterAction (vorher new/actions.ts
 // + [characterId]/edit/actions.ts) zu einer Action für ContentEditor — Branch
@@ -62,58 +57,12 @@ export async function characterAction(
     }
   }
 
-  const name = String(formData.get("name") ?? "").trim();
-  if (!name) return { error: "Bitte einen Namen angeben." };
-
-  const status = String(formData.get("status") ?? "");
-  if (!VALID_STATUSES.includes(status as Character["status"])) {
-    return { error: "Ungültiger Status." };
-  }
-
-  // Portrait: entweder eine eingegebene URL oder eine hochgeladene Datei —
-  // die Datei hat Vorrang und landet direkt im öffentlichen Asset-Bucket, ihre
-  // URL wird als portrait übernommen (Nutzerwunsch: Link direkt übernommen).
-  let portrait = String(formData.get("portrait") ?? "").trim() || null;
-  const portraitFile = formData.get("portraitFile");
-  if (portraitFile instanceof File && portraitFile.size > 0) {
-    try {
-      const buffer = Buffer.from(await portraitFile.arrayBuffer());
-      portrait = await uploadCharacterPortraitImage({
-        buffer,
-        mimeType: portraitFile.type,
-      });
-    } catch (err) {
-      if (err instanceof InvalidAssetError) return { error: err.message };
-      throw err;
-    }
-  }
-  const rank = String(formData.get("rank") ?? "").trim() || null;
-  const homeworld = String(formData.get("homeworld") ?? "").trim() || null;
-  const species = parseList(formData.get("species"));
-  const aliases = parseList(formData.get("aliases"));
-
-  const ageRaw = String(formData.get("age") ?? "").trim();
-  const age = ageRaw ? Number(ageRaw) : null;
-  if (ageRaw && !Number.isInteger(age)) {
-    return { error: "Ungültiges Alter." };
-  }
-  // Geburtsdatum (optional) — nur das Datum (YYYY-MM-DD), aus dem später
-  // zusammen mit dem Ingame-Jahr das Alter abgeleitet wird (siehe
-  // inferAgeFromDateOfBirth). Ein <input type="date"> liefert bereits das
-  // ISO-Format; wir validieren defensiv und schneiden auf 10 Zeichen.
-  const dobRaw = String(formData.get("dateOfBirth") ?? "").trim();
-  let dateOfBirth: string | null = null;
-  if (dobRaw) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(dobRaw)) {
-      return { error: "Ungültiges Geburtsdatum." };
-    }
-    dateOfBirth = dobRaw;
-  }
-  const generation = parseNumberList(formData.get("generation"));
-  const factions = parseList(formData.get("factions"));
-  const ships = parseList(formData.get("ships"));
-  const division = String(formData.get("division") ?? "").trim() || null;
-  const tags = parseList(formData.get("tags"));
+  // Stammdaten wie im Anlege-Assistenten lesen (siehe characterHead.ts) —
+  // eine Auswertung für beide Wege statt zweier, die auseinanderlaufen.
+  const headResult = await readCharacterHead(formData);
+  if ("error" in headResult) return { error: headResult.error };
+  const head = headResult.head;
+  const name = head.name;
 
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
 
@@ -132,7 +81,6 @@ export async function characterAction(
     bioHtml = linked.html;
   }
 
-  const statusValue = status as Character["status"];
   // Im Entwurf-Modus (ContentEditor.tsx-Checkbox) — Charaktere haben ohnehin
   // schon immer eine optionale Bio (siehe Kommentar an updateOwnCharacterBio
   // in characters.ts), hier geht es also nur um Sichtbarkeit/Benachrichtigung.
@@ -140,20 +88,7 @@ export async function characterAction(
 
   if (isEdit) {
     const result = await updateOwnCharacterContent(session.userId, characterId!, {
-      name,
-      status: statusValue,
-      portrait,
-      rank,
-      species,
-      homeworld,
-      aliases,
-      age,
-      dateOfBirth,
-      generation,
-      factions,
-      ships,
-      division,
-      tags,
+      ...head,
       bodyMarkdown,
       isDraft,
       bioHtml,
@@ -214,20 +149,7 @@ export async function characterAction(
   }
 
   const result = await createCharacter({
-    name,
-    status: statusValue,
-    portrait,
-    rank,
-    species,
-    homeworld,
-    aliases,
-    age,
-    dateOfBirth,
-    generation,
-    factions,
-    ships,
-    division,
-    tags,
+    ...head,
     bodyMarkdown,
     isDraft,
     bioHtml,

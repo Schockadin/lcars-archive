@@ -1,33 +1,17 @@
 "use client";
+import Link from "next/link";
 import { useState } from "react";
 import {
   LcarsDataRow,
   LcarsSortSwitch,
   type SortDir,
 } from "@/components/lcars";
-import type { ChangelogEntry } from "@/lib/changelog";
-
-// Zyklische Farbpaare pro Akkordeon-Zeile (Label-Pill-Hintergrund +
-// Trenner-Akzent) — zwei unabhängige Paletten statt derselben Farbe für
-// beides (anders als die Autor-Gruppen in MissionLogList.tsx), damit
-// aufeinanderfolgende Versionen sich sowohl in der Pill- als auch in der
-// Akzentfarbe unterscheiden.
-const LABEL_COLORS = [
-  "var(--lcars-secondary)",
-  "var(--lcars-tertiary)",
-  "var(--lcars-senary)",
-  "var(--lcars-quaternary)",
-  "var(--lcars-quinary)",
-  "var(--lcars-primary)",
-];
-const ACCENT_COLORS = [
-  "var(--lcars-primary)",
-  "var(--lcars-quinary)",
-  "var(--lcars-secondary)",
-  "var(--lcars-tertiary)",
-  "var(--lcars-quaternary)",
-  "var(--lcars-senary)",
-];
+import {
+  changelogItemText,
+  changelogItemTutorial,
+  type ChangelogEntry,
+} from "@/lib/changelog";
+import { tutorialSectionHref, tutorialSectionLabel } from "@/lib/tutorialSections";
 
 // Vergleicht zwei "Major.Minor"-Versionsstrings numerisch statt
 // lexikografisch — ein reiner String-Vergleich würde "1.10" fälschlich vor
@@ -79,22 +63,36 @@ export default function ChangelogList({
       />
 
       <div className="flex flex-col gap-[10px]">
-        {sorted.map((entry, i) => (
+        {sorted.map((entry) => (
           <LcarsDataRow
             key={entry.version}
             value={entry.version}
             label="Version"
-            color={LABEL_COLORS[i % LABEL_COLORS.length]}
-            accentColor={ACCENT_COLORS[i % ACCENT_COLORS.length]}
             defaultOpen={entry.version === newestVersion}
             className="lcars-data-row--full"
           >
             <div className="lcars-text flex flex-col gap-[8px]">
               <h3>{entry.title}</h3>
               <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
-                {entry.items.map((item, itemIndex) => (
-                  <li key={itemIndex}>{item}</li>
-                ))}
+                {entry.items.map((item, itemIndex) => {
+                  const tutorial = changelogItemTutorial(item);
+                  return (
+                    <li key={itemIndex}>
+                      {changelogItemText(item)}
+                      {tutorial && (
+                        <>
+                          {" "}
+                          <Link
+                            href={tutorialSectionHref(tutorial)}
+                            className="lcars-changelog-tutorial-link"
+                          >
+                            Im Tutorial: {tutorialSectionLabel(tutorial)}
+                          </Link>
+                        </>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           </LcarsDataRow>

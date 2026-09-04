@@ -16,9 +16,9 @@ import type { Character } from "@/types/character";
 // URL-ID entfällt damit ersatzlos. Der User-Datensatz (inkl. hasPassword, in
 // einer Query statt zwei) wird erst danach geholt, weil Name/E-Mail/
 // Passwort-Status fürs Formular gebraucht werden — hier ist ein DB-Zugriff
-// unvermeidbar. /user ist reine Selbstbedienung — das Betrachten FREMDER
-// User (Profil-Übersicht mit deren öffentlichen Inhalten) lebt unter
-// /users/[id] (Plural), nicht mehr hier.
+// unvermeidbar. /user ist reine Selbstbedienung — eine öffentliche
+// Profil-Übersicht FREMDER User gibt es nicht mehr (die frühere /users-Route
+// wurde restlos entfernt).
 export async function requireOwnUser(): Promise<UserWithPasswordStatus> {
   const session = await verifySession();
 
