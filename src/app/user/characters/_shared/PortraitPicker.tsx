@@ -51,9 +51,8 @@ export default function PortraitPicker({
   const [sourceUrl, setSourceUrl] = useState<string | null>(
     defaultSource || defaultUrl || null,
   );
-  // Ein frisch gewähltes Bild liegt lokal vor — daran kann die Leinwand immer
-  // arbeiten. Ein Bild vom Server kann sie „verunreinigen" (CORS), das merken
-  // wir erst beim Zuschneiden.
+  // Ob gerade eine Datei gewählt ist. Nur für die Vorschau: dann zeigt der
+  // Daumen die neue Datei, sonst das gespeicherte Portrait.
   const [hasPickedFile, setHasPickedFile] = useState(false);
   const [crop, setCrop] = useState<PortraitCrop>(defaultCrop);
   const [open, setOpen] = useState(false);
@@ -91,7 +90,11 @@ export default function PortraitPicker({
     setSourceUrl(url);
   }
 
-  const previewSrc = cropped || defaultUrl || sourceUrl || "";
+  // Reihenfolge der Vorschau: der frische Zuschnitt, sonst die eben gewählte
+  // Datei, sonst das gespeicherte Portrait. Ohne den mittleren Fall zeigte der
+  // Daumen nach dem Auswählen weiter das alte Bild.
+  const previewSrc =
+    cropped || (hasPickedFile ? sourceUrl : defaultUrl) || sourceUrl || "";
 
   return (
     <>
@@ -122,23 +125,6 @@ export default function PortraitPicker({
                 accept="image/jpeg,image/png,image/webp,image/gif"
                 className="lcars-input lcars-file-input rounded-full w-full"
                 onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
-              />
-            </label>
-
-            <label className="flex flex-col gap-[4px]">
-              <span className="lcars-eyebrow">oder Bild-Adresse</span>
-              <input
-                id={`${idPrefix}-portrait`}
-                name="portrait"
-                type="text"
-                defaultValue={defaultUrl}
-                className="lcars-input rounded-full w-full"
-                onChange={(e) => {
-                  // Eine neu getippte Adresse wird zur Vorlage für den
-                  // Ausschnitt — sonst schnitte der Editor weiter am alten Bild.
-                  if (!hasPickedFile) setSourceUrl(e.target.value.trim() || null);
-                  setCropped("");
-                }}
               />
             </label>
 
@@ -180,17 +166,15 @@ export default function PortraitPicker({
         </div>
 
         {/* Was das Formular sieht: das fertige Bild und die Einstellung, aus
-            der es entstanden ist. */}
+            der es entstanden ist. Adresse und Original stehen bewusst NICHT
+            dabei — der Server nimmt den bisherigen Stand aus der Datenbank
+            (siehe characterHead.ts), damit eine Adresse gar nicht erst aus
+            einem Formular kommen kann. */}
         <input type="hidden" name="portraitCropped" value={cropped} />
         <input
           type="hidden"
           name="portraitCrop"
           value={cropped ? JSON.stringify(crop) : ""}
-        />
-        <input
-          type="hidden"
-          name="portraitSource"
-          value={hasPickedFile ? "" : (sourceUrl ?? "")}
         />
       </div>
 

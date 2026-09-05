@@ -50,8 +50,17 @@ export type CharacterHeadResult =
   | { head: CharacterHeadInput }
   | { error: string };
 
+// Was am Charakter schon gespeichert ist. Wird beim Bearbeiten mitgegeben,
+// damit ein Speichern ohne neues Bild das vorhandene behält — das Formular
+// trägt das Portrait nicht mehr mit sich (siehe unten).
+export interface CurrentPortrait {
+  portrait: string | null;
+  portraitSource: string | null;
+}
+
 export async function readCharacterHead(
   formData: FormData,
+  current?: CurrentPortrait | null,
 ): Promise<CharacterHeadResult> {
   const name = String(formData.get("name") ?? "").trim();
   if (!name) return { error: "Bitte einen Namen angeben." };
@@ -61,16 +70,24 @@ export async function readCharacterHead(
     return { error: "Ungültiger Status." };
   }
 
-  // Portrait: eine eingegebene URL, eine hochgeladene Datei oder ein im
-  // Browser zugeschnittener Ausschnitt. Reihenfolge: der Zuschnitt gewinnt,
-  // dann die Datei, zuletzt die URL.
+  // Portrait: eine hochgeladene Datei oder ein im Browser zugeschnittener
+  // Ausschnitt — sonst bleibt stehen, was schon gespeichert ist.
+  //
+  // Eine Bild-ADRESSE gibt es nicht mehr: ein Portrait, das auf einem fremden
+  // Server liegt, verschwindet, wenn dort jemand aufräumt, lässt sich hier
+  // nicht zuschneiden (die Leinwand wird „verunreinigt", siehe
+  // PortraitPicker) und meldet jeden Aufruf des Bogens an diesen Server.
+  // Deshalb liest diese Funktion auch KEIN Adressfeld mehr aus dem Formular,
+  // sondern nimmt den bisherigen Stand vom Aufrufer entgegen — eine Adresse
+  // kann damit gar nicht mehr aus einem Formular kommen, auch nicht aus einem
+  // von Hand zusammengebauten.
   //
   // Der Zuschnitt kommt als Data-URL aus dem PortraitPicker — dort wird er
   // auf einer Leinwand im Seitenverhältnis des Bildkastens gezeichnet. Er wird
   // wie jedes andere Bild in den Asset-Bucket geladen; Bogen und PDF sehen
   // danach nur noch ein Bild, das ohnehin passt.
-  let portrait = String(formData.get("portrait") ?? "").trim() || null;
-  let portraitSource = String(formData.get("portraitSource") ?? "").trim() || null;
+  let portrait = current?.portrait ?? null;
+  let portraitSource = current?.portraitSource ?? null;
 
   const portraitFile = formData.get("portraitFile");
   if (portraitFile instanceof File && portraitFile.size > 0) {

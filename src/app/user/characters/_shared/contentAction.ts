@@ -57,9 +57,23 @@ export async function characterAction(
     }
   }
 
+  // Beim Bearbeiten den bisherigen Stand holen: das Portrait steht nicht mehr
+  // im Formular (siehe characterHead.ts), ein Speichern ohne neues Bild
+  // übernimmt deshalb das gespeicherte. Wird unten für den Selbstausschluss
+  // beim Autolinken wiederverwendet, statt ihn ein zweites Mal zu laden.
+  const currentCharacter = isEdit
+    ? await getOwnCharacterForEdit(session.userId, characterId!)
+    : null;
+
   // Stammdaten wie im Anlege-Assistenten lesen (siehe characterHead.ts) —
   // eine Auswertung für beide Wege statt zweier, die auseinanderlaufen.
-  const headResult = await readCharacterHead(formData);
+  const headResult = await readCharacterHead(
+    formData,
+    currentCharacter && {
+      portrait: currentCharacter.portrait,
+      portraitSource: currentCharacter.portraitSource,
+    },
+  );
   if ("error" in headResult) return { error: headResult.error };
   const head = headResult.head;
   const name = head.name;
@@ -70,12 +84,11 @@ export async function characterAction(
   // nötig (sonst könnte der eigene Name im Text auf sich selbst verlinken).
   let bioHtml: string | undefined;
   if (bodyMarkdown && formData.get("autoLink") === "on") {
-    const selfExclusion = isEdit
-      ? await getOwnCharacterForEdit(session.userId, characterId!)
-      : null;
     const linked = await autoLinkMarkdown(
       bodyMarkdown,
-      selfExclusion ? { type: "character", slug: selfExclusion.slug } : undefined,
+      currentCharacter
+        ? { type: "character", slug: currentCharacter.slug }
+        : undefined,
     );
     bodyMarkdown = linked.sourceMd;
     bioHtml = linked.html;

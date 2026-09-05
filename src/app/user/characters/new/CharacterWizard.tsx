@@ -117,18 +117,17 @@ export default function CharacterWizard({
     const data = new FormData(form);
     const text = (key: string) => String(data.get(key) ?? "").trim() || null;
 
-    // Portrait: eine hochgeladene Datei wird für die Vorschau lokal
-    // angezeigt (ins Netz geht sie erst beim Abschicken), sonst gilt die
-    // eingetragene URL.
     // Für die Vorschau zählt, was der Bogen später zeigt: der gewählte
-    // Ausschnitt, sonst die hochgeladene Datei, sonst die eingegebene Adresse.
+    // Ausschnitt, sonst die hochgeladene Datei (lokal angezeigt, ins Netz geht
+    // sie erst beim Abschicken). Ein neuer Charakter hat sonst nichts —
+    // Portraits kommen ausschließlich als Datei.
     const cropped = text("portraitCropped");
     const file = data.get("portraitFile");
     const portrait =
       cropped ||
       (file instanceof File && file.size > 0
         ? URL.createObjectURL(file)
-        : text("portrait"));
+        : null);
 
     return {
       name: String(data.get("name") ?? "").trim(),

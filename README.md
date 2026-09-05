@@ -1053,7 +1053,12 @@ jetzt aus dem Asset-Bucket liest); neu am Asset-Bucket hängende Assets
 direkte öffentliche URL (`R2_ASSET_PUBLIC_BASE_URL`). Bei Charakteren lässt
 sich eines der hochgeladenen Bilder als Profilbild festlegen
 (`characters.portrait`); das Portrait öffnet per Klick ein Karussell über
-alle hochgeladenen Bilder. Beim Anlegen und Bearbeiten der Stammdaten lässt
+alle hochgeladenen Bilder. Ein Portrait kommt ausschließlich als **hochgeladene Datei**: das frühere
+Feld „oder Bild-Adresse" ist weg, und `readCharacterHead` liest gar kein
+Adressfeld mehr aus dem Formular, sondern bekommt den bisherigen Stand vom
+Aufrufer gereicht — eine fremde Adresse kann damit auch aus einem von Hand
+gebauten Request nicht mehr gesetzt werden. Bereits gespeicherte Adressen
+bleiben stehen. Beim Anlegen und Bearbeiten der Stammdaten lässt
 sich der **Bildausschnitt** selbst wählen (`PortraitPicker.tsx`,
 Rechenweg in `src/lib/portraitCrop.ts`): ziehen verschiebt, ein Regler
 vergrößert bis 4×, der Rahmen zeigt den hochkant stehenden Bildkasten des

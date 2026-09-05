@@ -82,11 +82,12 @@ test.describe("Portrait-Zuschnitt", () => {
     // Quer verschoben wurde nicht.
     expect(setting.x).toBe(50);
 
-    // Eine hochgeladene Datei ist selbst das Original — es gibt keine
-    // Adresse, die der Server sich merken könnte.
-    await expect(section.locator('input[name="portraitSource"]')).toHaveValue(
-      "",
-    );
+    // Adresse und Original stehen nicht im Formular: ein Portrait kommt nur
+    // als Datei, den bisherigen Stand kennt der Server selbst.
+    await expect(section.locator('input[name="portrait"]')).toHaveCount(0);
+    await expect(
+      section.locator('input[name="portraitSource"]'),
+    ).toHaveCount(0);
 
     // Die Vorschau zeigt ab jetzt das Ergebnis.
     await expect(section.locator(".portrait-picker-thumb")).toHaveAttribute(

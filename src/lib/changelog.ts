@@ -107,7 +107,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "Spickzettel und Biografie sehen im PDF jetzt aus wie am Bildschirm: mit dem blauen Rahmen des Bogens, mit formatiertem Text (fett, kursiv, beides) statt roher Sternchen — und ohne die unsichtbaren Kommentare aus dem Quelltext, etwa die Marken für die Chronologie.",
       },
       {
-        text: "Portraits lassen sich jetzt selbst zuschneiden: „Ausschnitt wählen“ öffnet den Bildkasten des Charakterbogens samt seiner Schräge — ziehen verschiebt das Bild, ein Regler vergrößert es bis zum Vierfachen. Der gewählte Ausschnitt wird fertig zugeschnitten gespeichert, sodass Bildschirm und PDF dasselbe zeigen; das Original bleibt hinterlegt, sodass du den Ausschnitt später neu wählen kannst, ohne die Datei erneut zu suchen.",
+        text: "Portraits lassen sich jetzt selbst zuschneiden: „Ausschnitt wählen“ öffnet den Bildkasten des Charakterbogens samt seiner Schräge — ziehen verschiebt das Bild, ein Regler vergrößert es bis zum Vierfachen. Der gewählte Ausschnitt wird fertig zugeschnitten gespeichert, sodass Bildschirm und PDF dasselbe zeigen; das Original bleibt hinterlegt, sodass du den Ausschnitt später neu wählen kannst, ohne die Datei erneut zu suchen. Ein Portrait lädst du dafür als Bilddatei hoch — eine Bild-Adresse lässt sich nicht mehr eintragen (bereits eingetragene bleiben stehen).",
         tutorial: "eigene-inhalte",
       },
       {

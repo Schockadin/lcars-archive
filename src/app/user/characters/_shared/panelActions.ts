@@ -109,14 +109,19 @@ export async function updateCharacterHeadAction(
   const characterId = readCharacterId(formData);
   if (characterId === null) return { error: "Ungültiger Charakter." };
 
-  const headResult = await readCharacterHead(formData);
-  if ("error" in headResult) return { error: headResult.error };
-
-  // Biografie unverändert übernehmen — sie hat ihr eigenes Panel.
+  // Der bisherige Stand wird ZUERST gebraucht: das Portrait steht nicht mehr
+  // im Formular (siehe characterHead.ts), ein Speichern ohne neues Bild
+  // übernimmt deshalb das gespeicherte.
   const current = await getOwnCharacterForEdit(session.userId, characterId);
   if (!current) {
     return { error: "Charakter nicht gefunden oder keine Berechtigung." };
   }
+
+  const headResult = await readCharacterHead(formData, {
+    portrait: current.portrait,
+    portraitSource: current.portraitSource,
+  });
+  if ("error" in headResult) return { error: headResult.error };
 
   const isDraft = formData.get("isDraft") === "on";
   const result = await updateOwnCharacterContent(session.userId, characterId, {

@@ -28,14 +28,30 @@ beforeEach(() => {
 });
 
 describe("readCharacterHead — Portrait", () => {
-  it("nimmt eine Bild-Adresse unverändert", async () => {
+  // Eine Bild-ADRESSE kann nicht mehr aus dem Formular kommen: sie steht dort
+  // nicht mehr, und der Server liest auch keins mehr aus.
+  it("übergeht eine im Formular untergeschobene Bild-Adresse", async () => {
     const result = await readCharacterHead(
-      form({ portrait: "https://example.org/tuvok.png" }),
+      form({
+        portrait: "https://fremder-server.example/tuvok.png",
+        portraitSource: "https://fremder-server.example/original.png",
+      }),
     );
     expect(result).toMatchObject({
+      head: { portrait: null, portraitSource: null, portraitCrop: null },
+    });
+    expect(uploadCharacterPortraitImage).not.toHaveBeenCalled();
+  });
+
+  it("behält beim Bearbeiten ohne neues Bild das gespeicherte Portrait", async () => {
+    const result = await readCharacterHead(form({}), {
+      portrait: "https://assets.example/gespeichert.png",
+      portraitSource: "https://assets.example/original.png",
+    });
+    expect(result).toMatchObject({
       head: {
-        portrait: "https://example.org/tuvok.png",
-        portraitCrop: null,
+        portrait: "https://assets.example/gespeichert.png",
+        portraitSource: "https://assets.example/original.png",
       },
     });
     expect(uploadCharacterPortraitImage).not.toHaveBeenCalled();
@@ -44,17 +60,21 @@ describe("readCharacterHead — Portrait", () => {
   it("lädt einen zugeschnittenen Ausschnitt hoch und merkt sich die Einstellung", async () => {
     const result = await readCharacterHead(
       form({
-        portrait: "https://example.org/alt.png",
         portraitCropped: `data:image/png;base64,${PNG_BASE64}`,
         portraitCrop: JSON.stringify({ zoom: 2, x: 40, y: 60 }),
-        portraitSource: "https://example.org/original.png",
       }),
+      {
+        portrait: "https://assets.example/alt.png",
+        portraitSource: "https://assets.example/original.png",
+      },
     );
     expect(uploadCharacterPortraitImage).toHaveBeenCalledTimes(1);
     expect(result).toMatchObject({
       head: {
         portrait: expect.stringContaining("https://assets.example/"),
-        portraitSource: "https://example.org/original.png",
+        // Das Original bleibt stehen — aus ihm lässt sich später neu
+        // zuschneiden.
+        portraitSource: "https://assets.example/original.png",
         portraitCrop: { zoom: 2, x: 40, y: 60 },
       },
     });
