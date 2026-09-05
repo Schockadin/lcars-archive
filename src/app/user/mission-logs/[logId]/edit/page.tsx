@@ -6,6 +6,9 @@ import { verifySession, getRoleMap } from "@/lib/dal";
 import { getOwnMissionLogForEdit } from "@/lib/missions";
 import { getUserById } from "@/lib/users";
 import EditMissionLogForm from "./EditMissionLogForm";
+import RevisionsPanel from "@/app/_shared/RevisionsPanel";
+import { listRevisions } from "@/lib/contentRevisions";
+import { getViewer } from "@/lib/visibility";
 
 export const metadata: Metadata = {
   title: "Missionslog bearbeiten",
@@ -29,6 +32,8 @@ export default async function EditMissionLogPage({
     redirect("/user/content");
   }
 
+  const revisions = await listRevisions("mission_log", log.id, await getViewer());
+
   return (
     <>
       <PageMeta title="Missionslog bearbeiten" section="users" />
@@ -46,6 +51,15 @@ export default async function EditMissionLogPage({
             !!viewer && userCan(viewer, "content.autolink_tools", roleMap)
           }
         />
+
+        <div className="mt-[16px]">
+          <RevisionsPanel
+            contentType="mission_log"
+            contentId={log.id}
+            path={`/user/mission-logs/${log.id}/edit`}
+            revisions={revisions}
+          />
+        </div>
       </article>
     </>
   );

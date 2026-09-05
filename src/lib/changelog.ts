@@ -71,6 +71,10 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "An Charakteren, Missionen, Logbüchern und Datenbank-Einträgen kannst du jetzt Notizen hinterlegen: entweder „Nur ich“ als persönliche Merkzettel, die niemand sonst sieht, oder „Für die Runde“ als Kommentar, den alle Angemeldeten lesen und beantworten können. Die Notizen stehen aufklappbar direkt unter dem Eintrag.",
         tutorial: "notizen",
       },
+      {
+        text: "Beim Bearbeiten eines Charakters, einer Mission, eines Logbuchs oder eines Datenbank-Eintrags gibt es jetzt den Bereich „Versionen“: Er zeigt die letzten zwanzig Fassungen des Textes mit Datum, bearbeitender Person und einer Vorschau — jede davon lässt sich mit einem Klick zurückholen. Der aktuelle Stand geht dabei nicht verloren, er wandert selbst in die Historie.",
+        tutorial: "versionen",
+      },
     ],
   },
   {

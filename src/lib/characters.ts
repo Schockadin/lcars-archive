@@ -1,5 +1,6 @@
 import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
+import { recordRevision } from "@/lib/contentRevisions";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
@@ -414,7 +415,11 @@ export async function updateCharacterBio(
   characterId: number,
   bodyMarkdown: string,
   bio: string,
+  // Wer die Bearbeitung ausgelöst hat — nur für die Versionshistorie. Der
+  // Aufrufer (Autolink-Werkzeug) kennt ihn, die Funktion selbst nicht.
+  editorId: number | null = null,
 ): Promise<void> {
+  await recordRevision("character", characterId, editorId, bodyMarkdown);
   await sql`
     UPDATE characters
     SET bio = ${bio}, source_md = ${bodyMarkdown}, updated_at = NOW()
@@ -662,6 +667,13 @@ export async function updateOwnCharacterContent(
     ? (input.bioHtml ?? (await renderContentHtml(trimmedBody)))
     : null;
   const sourceMd = trimmedBody || null;
+
+  await recordRevision(
+    "character",
+    characterId,
+    userId,
+    input.bodyMarkdown.trim() || null,
+  );
 
   const metadataPatch = {
     rank: input.rank,
@@ -961,6 +973,13 @@ export async function updateOwnCharacterBio(
   // Siehe createCharacter oben — Opt-in "Automatisch verlinken".
   bioHtmlOverride?: string,
 ): Promise<{ slug: string; name: string; bio: string | null } | null> {
+  await recordRevision(
+    "character",
+    characterId,
+    userId,
+    bodyMarkdown.trim() || null,
+  );
+
   const trimmedBody = bodyMarkdown.trim();
   const bio = trimmedBody
     ? (bioHtmlOverride ?? (await renderContentHtml(trimmedBody)))

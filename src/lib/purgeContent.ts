@@ -34,6 +34,18 @@ async function purgeNotesFor(
   `;
 }
 
+// Dasselbe für die Versionshistorie (content_revisions) — die hängt an der
+// Id statt am Slug, ist aber ebenfalls nicht per Fremdschlüssel verknüpft.
+async function purgeRevisionsFor(
+  contentType: "character" | "mission" | "mission_log" | "archive",
+  id: number,
+): Promise<void> {
+  await sql`
+    DELETE FROM content_revisions
+    WHERE content_type = ${contentType} AND content_id = ${id}
+  `;
+}
+
 async function purgeArchiveLinksAndFollows(slug: string): Promise<void> {
   await sql`
     DELETE FROM timeline_events
@@ -62,6 +74,7 @@ export async function purgeExpiredSoftDeletedContent(
   `;
   for (const c of characterRows) {
     await purgeNotesFor("character", c.slug);
+    await purgeRevisionsFor("character", c.id);
     await purgeContentImagesFor("character", c.id);
     await deleteEmbeddings(sql, "character", c.id);
   }
@@ -78,6 +91,7 @@ export async function purgeExpiredSoftDeletedContent(
       DELETE FROM content_follows WHERE target_type = 'mission' AND target_slug = ${m.slug}
     `;
     await purgeNotesFor("mission", m.slug);
+    await purgeRevisionsFor("mission", m.id);
     await purgeContentImagesFor("mission", m.id);
     await deleteEmbeddings(sql, "mission", m.id);
     // Zugehörige, noch nicht individuell gelöschte Logs sind durch das
@@ -95,6 +109,8 @@ export async function purgeExpiredSoftDeletedContent(
     `;
     await purgeNotesFor("mission_log", log.slug);
     await purgeContentImagesFor("mission_log", log.id);
+    await purgeRevisionsFor("mission_log", log.id);
+    await purgeContentImagesFor("mission_log", log.id);
     await deleteEmbeddings(sql, "mission_log", log.id);
   }
 
@@ -104,6 +120,7 @@ export async function purgeExpiredSoftDeletedContent(
   `;
   for (const entry of archiveRows) {
     await purgeArchiveLinksAndFollows(entry.slug);
+    await purgeRevisionsFor("archive", entry.id);
     await purgeContentImagesFor("archive_entry", entry.id);
     // Kategorie ist nach dem DELETE nicht mehr bekannt — beide möglichen
     // content_type-Zeilen entfernen (nur eine existierte je Id).
@@ -131,6 +148,7 @@ export async function purgeContentById(
     if (!target) return false;
     await sql`DELETE FROM characters WHERE id = ${id}`;
     await purgeNotesFor("character", target.slug);
+    await purgeRevisionsFor("character", target.id);
     await purgeContentImagesFor("character", id);
     await deleteEmbeddings(sql, "character", id);
     return true;
@@ -150,10 +168,12 @@ export async function purgeContentById(
     await sql`DELETE FROM content_follows WHERE target_type = 'mission' AND target_slug = ${row.slug}`;
     await sql`DELETE FROM mission_logs WHERE mission_id = ${id} AND deleted_at IS NOT NULL`;
     await purgeNotesFor("mission", row.slug);
+    await purgeRevisionsFor("mission", id);
     await purgeContentImagesFor("mission", id);
     await deleteEmbeddings(sql, "mission", id);
     for (const log of logIds) {
       await purgeNotesFor("mission_log", log.slug);
+      await purgeRevisionsFor("mission_log", log.id);
       await deleteEmbeddings(sql, "mission_log", log.id);
     }
     return true;
@@ -166,6 +186,7 @@ export async function purgeContentById(
     if (!row) return false;
     await sql`DELETE FROM timeline_events WHERE source_type = 'mission_log' AND source_slug = ${row.slug}`;
     await purgeNotesFor("mission_log", row.slug);
+    await purgeRevisionsFor("mission_log", id);
     await purgeContentImagesFor("mission_log", id);
     await deleteEmbeddings(sql, "mission_log", id);
     return true;
@@ -180,6 +201,7 @@ export async function purgeContentById(
   const row = rows[0];
   if (!row) return false;
   await purgeArchiveLinksAndFollows(row.slug);
+  await purgeRevisionsFor("archive", id);
   await purgeContentImagesFor("archive_entry", id);
   // archive_entry ODER dialogue (gleiche Tabelle) — beide möglichen
   // content_type-Zeilen entfernen (nur eine existierte je Id).

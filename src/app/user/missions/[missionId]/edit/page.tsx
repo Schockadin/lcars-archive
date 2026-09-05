@@ -5,6 +5,9 @@ import { requireOwnGM } from "../../../dal";
 import { getMissionById, getMissionParticipantIds } from "@/lib/missions";
 import { getCharactersForParticipantPicker } from "@/lib/characters";
 import EditMissionForm from "./EditMissionForm";
+import RevisionsPanel from "@/app/_shared/RevisionsPanel";
+import { listRevisions } from "@/lib/contentRevisions";
+import { getViewer } from "@/lib/visibility";
 
 export const metadata: Metadata = {
   title: "Mission bearbeiten",
@@ -22,9 +25,10 @@ export default async function EditMissionPage({
   const mission = await getMissionById(Number(missionId));
   if (!mission) notFound();
 
-  const [characters, participantIds] = await Promise.all([
+  const [characters, participantIds, revisions] = await Promise.all([
     getCharactersForParticipantPicker(),
     getMissionParticipantIds(mission.id),
+    getViewer().then((viewer) => listRevisions("mission", mission.id, viewer)),
   ]);
 
   return (
@@ -38,6 +42,15 @@ export default async function EditMissionPage({
           characters={characters}
           participantIds={participantIds}
         />
+
+        <div className="mt-[16px]">
+          <RevisionsPanel
+            contentType="mission"
+            contentId={mission.id}
+            path={`/user/missions/${mission.id}/edit`}
+            revisions={revisions}
+          />
+        </div>
       </article>
     </>
   );

@@ -1,5 +1,6 @@
 import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
+import { recordRevision } from "@/lib/contentRevisions";
 // Logbücher können an einer Session hängen; verschwindet/kehrt eines zurück,
 // muss die automatische Logbuch-AP dieser Session nachgezogen werden.
 import {
@@ -413,7 +414,11 @@ export async function updateMissionContent(
     // Siehe createMission oben — Opt-in "Automatisch verlinken".
     bodyHtml?: string;
   },
+  // Nur für die Versionshistorie (siehe contentRevisions.ts).
+  editorId: number | null = null,
 ): Promise<UpdateMissionResult | null> {
+  await recordRevision("mission", missionId, editorId, input.bodyMarkdown);
+
   const bodyHtml = input.bodyHtml ?? (await renderContentHtml(input.bodyMarkdown));
 
   const rows = await sql<UpdateMissionResult[]>`
@@ -510,7 +515,11 @@ export interface UpdateMissionSynopsisResult {
 export async function updateMissionSynopsis(
   missionId: number,
   bodyMarkdown: string,
+  // Nur für die Versionshistorie (siehe contentRevisions.ts).
+  editorId: number | null = null,
 ): Promise<UpdateMissionSynopsisResult | null> {
+  await recordRevision("mission", missionId, editorId, bodyMarkdown);
+
   const bodyHtml = await renderContentHtml(bodyMarkdown);
 
   const rows = await sql<
@@ -547,7 +556,10 @@ export async function updateMissionSynopsisWithHtml(
   missionId: number,
   bodyMarkdown: string,
   bodyHtml: string,
+  // Nur für die Versionshistorie (siehe contentRevisions.ts).
+  editorId: number | null = null,
 ): Promise<void> {
+  await recordRevision("mission", missionId, editorId, bodyMarkdown);
   await sql`
     UPDATE missions m
     SET
@@ -931,6 +943,8 @@ export async function updateMissionLogContent(
   authorSlug: string;
   authorName: string;
 } | null> {
+  await recordRevision("mission_log", logId, userId, input.bodyMarkdown);
+
   const contentHtml =
     input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
 
@@ -1256,7 +1270,10 @@ export async function updateMissionLogSourceMd(
   logId: number,
   bodyMarkdown: string,
   contentHtml: string,
+  // Nur für die Versionshistorie (siehe contentRevisions.ts).
+  editorId: number | null = null,
 ): Promise<void> {
+  await recordRevision("mission_log", logId, editorId, bodyMarkdown);
   await sql`
     UPDATE mission_logs
     SET content = ${contentHtml}, source_md = ${bodyMarkdown}, updated_at = NOW()

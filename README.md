@@ -42,6 +42,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (`src/lib/dal.ts`) und in jeder Seite/Server-Action (Defense in Depth). Die
   reine Krypto-/Token-Logik teilen sich Proxy und Session-Verwaltung über
   `src/lib/sessionToken.ts`.
+- **Versionshistorie** — beim Bearbeiten von Charakteren, Missionen, Logbüchern
+  und Datenbank-Einträgen wird vor jedem Überschreiben der bisherige Text in
+  `content_revisions` abgelegt (Titel + `source_md`, die jüngsten
+  `REVISION_KEEP` je Inhalt). Der Bereich „Versionen“ auf der jeweiligen
+  Bearbeiten-Seite zeigt sie mit Datum, bearbeitender Person und Vorschau und
+  holt eine Fassung per Server Action zurück (`src/lib/contentRevisions.ts`,
+  `src/app/actions/revisions.ts`, `src/app/_shared/RevisionsPanel.tsx`).
+  Wiederhergestellt wird nur der Fließtext; der ersetzte Stand landet selbst
+  wieder in der Historie. Ein Speichern ohne Textänderung legt keine Fassung an.
 - **Notizen & Kommentare** — an Charakteren, Missionen, Logbüchern und
   Datenbank-Einträgen können eingeloggte Personen Notizen hinterlegen: mit
   Sichtbarkeit `private` (nur der Autor, auch für die Moderation unsichtbar)

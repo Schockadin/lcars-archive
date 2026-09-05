@@ -536,8 +536,30 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
+          <LcarsDataRow value={7} htmlId="versionen" label="Versionen">
+            <div className="lcars-text flex flex-col gap-[12px]">
+              <p>
+                Beim Bearbeiten eines Charakters, einer Mission, eines
+                Logbuchs oder eines Datenbank-Eintrags findest du unter dem
+                Formular den Bereich <strong>„Versionen“</strong>: Dort stehen
+                die letzten zwanzig Fassungen des Textes mit Datum,
+                bearbeitender Person, Länge und einer Vorschau. Ein Klick auf{" "}
+                <strong>„Wiederherstellen“</strong> holt die gewählte Fassung
+                zurück.
+              </p>
+              <p>
+                Zurückgeholt wird dabei nur der <strong>Fließtext</strong> —
+                Titel, Stammdaten und Sichtbarkeit bleiben unverändert. Der
+                Stand, den du gerade ersetzt, geht nicht verloren: Er wandert
+                selbst als neue Fassung in die Historie, du kannst ein
+                Wiederherstellen also wieder rückgängig machen. Eine neue
+                Fassung entsteht nur, wenn sich der Text wirklich geändert hat.
+              </p>
+            </div>
+          </LcarsDataRow>
+
           <LcarsDataRow
-            value={7}
+            value={8}
             htmlId="datenbank-assistent"
             label="Datenbank-Assistent"
           >
@@ -573,7 +595,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={8} htmlId="markdown" label="Markdown">
+          <LcarsDataRow value={9} htmlId="markdown" label="Markdown">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
@@ -666,7 +688,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={9}
+            value={10}
             htmlId="verlinkung"
             label="Verlinkung"
           >
@@ -708,7 +730,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={10}
+            value={11}
             htmlId="spielleitung-admins"
             label="Spielleitung & Admins"
           >
@@ -859,7 +881,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={11}
+            value={12}
             htmlId="app-installieren"
             label="App installieren"
           >
@@ -891,7 +913,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={12}
+            value={13}
             htmlId="farbschema"
             label="Farbschema"
           >

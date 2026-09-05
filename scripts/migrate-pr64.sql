@@ -125,3 +125,34 @@ CREATE TABLE IF NOT EXISTS content_notes (
 CREATE INDEX IF NOT EXISTS idx_content_notes_target
   ON content_notes(content_type, content_slug);
 CREATE INDEX IF NOT EXISTS idx_content_notes_author ON content_notes(author_id);
+
+-- ---------------------------------------------------------------------------
+-- 6) Versionshistorie der Inhaltstexte (identisch zu schema.sql).
+-- ---------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
+-- content_revisions
+-- ---------------------------------------------------------------------------
+-- Versionshistorie der Inhaltstexte (Charaktere, Missionen, Logbücher,
+-- Datenbank-Einträge). Vor jedem Überschreiben legt recordRevision() den
+-- BISHERIGEN Stand hier ab — eine Zeile ist damit „so sah es vor dieser
+-- Bearbeitung aus", genau das, was man zum Zurückholen braucht.
+--
+-- Nur Titel + Quelltext: das gerenderte HTML entsteht beim Wiederherstellen
+-- neu, und Stammdaten (Status, Tags, Sichtbarkeit) haben eigene Formulare.
+-- Verknüpfung wie content_notes ohne Fremdschlüssel auf die vier
+-- Inhaltstabellen; Aufräumen übernimmt purgeContent.ts. Je Inhalt werden die
+-- jüngsten REVISION_KEEP Fassungen aufgehoben (siehe contentRevisions.ts).
+CREATE TABLE IF NOT EXISTS content_revisions (
+  id           SERIAL PRIMARY KEY,
+  content_type TEXT NOT NULL
+                 CHECK (content_type IN ('character', 'mission', 'mission_log', 'archive')),
+  content_id   INT  NOT NULL,
+  title        TEXT,
+  source_md    TEXT NOT NULL,
+  -- Wer die ersetzende Bearbeitung ausgelöst hat. ON DELETE SET NULL: die
+  -- Fassung bleibt erhalten, auch wenn das Konto später gelöscht wird.
+  editor_id    INT  REFERENCES users(id) ON DELETE SET NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_content_revisions_target
+  ON content_revisions(content_type, content_id, created_at DESC);

@@ -122,6 +122,19 @@ export default function DSGVOContent({ year }: { year: number }) {
           Löschen des zugehörigen Inhalts werden sie mit entfernt.
         </p>
         <p>
+          Beim Bearbeiten von Charakteren, Missionen, Logbüchern und
+          Datenbank-Einträgen wird der <strong>bisherige Text</strong> als
+          frühere Fassung aufbewahrt, zusammen mit dem Zeitpunkt und dem
+          Account, der die Bearbeitung ausgelöst hat. Damit lässt sich ein
+          versehentliches Überschreiben rückgängig machen (Rechtsgrundlage:
+          Art. 6 Abs. 1 lit. b DSGVO — Erfüllung des Nutzungsverhältnisses der
+          Kampagne). Aufgehoben werden nur die letzten zwanzig Fassungen je
+          Inhalt; ältere fallen automatisch weg, und mit dem endgültigen
+          Löschen des Inhalts verschwinden auch seine Fassungen. Einsehbar sind
+          sie ausschließlich für die Personen, die den Inhalt auch bearbeiten
+          dürfen.
+        </p>
+        <p>
           Für die persönliche „News“-Übersicht auf dem Dashboard wird pro
           Login-Account gespeichert, welche Neuigkeiten bereits gesehen bzw.
           ausgeblendet wurden (Inhaltstyp, Kennung und Zeitpunkt), damit

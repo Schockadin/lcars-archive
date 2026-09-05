@@ -13,6 +13,7 @@ export const TUTORIAL_SECTIONS = [
   { id: "gespraeche", label: "Gespräche" },
   { id: "merken-abonnieren", label: "Merken & Abonnieren" },
   { id: "notizen", label: "Notizen" },
+  { id: "versionen", label: "Versionen" },
   { id: "datenbank-assistent", label: "Datenbank-Assistent" },
   { id: "markdown", label: "Markdown" },
   { id: "verlinkung", label: "Verlinkung" },
