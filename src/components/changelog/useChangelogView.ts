@@ -10,7 +10,7 @@ import {
 import type { ChangelogCategoryId } from "@/lib/changelogCategories";
 import type { ChangelogSortKey } from "./ChangelogControls";
 
-// Der gemeinsame Zustand beider Changelog-Ansichten: gewählte Kategorien,
+// Der gemeinsame Zustand beider Changelog-Ansichten: gewählte Kategorie,
 // Sortierschlüssel und -richtung — plus die daraus abgeleitete Liste.
 //
 // Als Hook statt als Komponente, weil die beiden Stellen ihr Ergebnis sehr
@@ -18,36 +18,31 @@ import type { ChangelogSortKey } from "./ChangelogControls";
 // gemeinsames Akkordeon auf dem Dashboard) — geteilt gehört die Rechnung,
 // nicht das Gerüst.
 export function useChangelogView(entries: ChangelogEntry[]) {
-  const [selected, setSelected] = useState<ChangelogCategoryId[]>([]);
+  // Eine Kategorie auf einmal (das Auswahlfeld gibt genau eine her); null =
+  // keine Einschränkung.
+  const [selected, setSelected] = useState<ChangelogCategoryId | null>(null);
   const [sortKey, setSortKey] = useState<ChangelogSortKey>("version");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
 
-  // Die Filterleiste zeigt die Kategorien des GESAMTEN Bestands, nicht die der
-  // gefilterten Auswahl — sonst verschwänden die übrigen Knöpfe nach dem
-  // ersten Klick und man käme nicht mehr zurück.
+  // Das Auswahlfeld führt die Kategorien des GESAMTEN Bestands, nicht die der
+  // gefilterten Auswahl — sonst stünde nach dem ersten Filtern nur noch die
+  // gewählte Kategorie darin und man käme nicht mehr zu einer anderen.
   const categories = useMemo(
     () => changelogCategoriesPresent(entries),
     [entries],
   );
 
   const visible = useMemo(() => {
-    const filtered = filterChangelogEntries(entries, selected);
+    const filtered = filterChangelogEntries(entries, selected ? [selected] : []);
     return sortKey === "category"
       ? sortChangelogItemsByCategory(filtered, sortDir === "asc" ? "asc" : "desc")
       : filtered;
   }, [entries, selected, sortKey, sortDir]);
 
-  function toggleCategory(id: ChangelogCategoryId) {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
-    );
-  }
-
   return {
     categories,
     selected,
-    toggleCategory,
-    clearCategories: () => setSelected([]),
+    selectCategory: setSelected,
     sortKey,
     sortDir,
     setSort: (key: ChangelogSortKey, dir: SortDir) => {

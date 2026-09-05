@@ -62,11 +62,11 @@ export default function ChangelogList({
       <ChangelogControls
         categories={view.categories}
         selected={view.selected}
-        onToggleCategory={view.toggleCategory}
-        onClearCategories={view.clearCategories}
+        onSelectCategory={view.selectCategory}
         sortKey={view.sortKey}
         sortDir={view.sortDir}
         onSortChange={view.setSort}
+        idPrefix="changelog"
       />
 
       {sorted.length === 0 ? (

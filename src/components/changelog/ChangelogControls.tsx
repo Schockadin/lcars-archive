@@ -1,7 +1,6 @@
 "use client";
 import { LcarsSortSwitch, type SortDir } from "@/components/lcars";
 import {
-  changelogCategoryColor,
   changelogCategoryLabel,
   type ChangelogCategoryId,
 } from "@/lib/changelogCategories";
@@ -14,36 +13,37 @@ import {
 // denselben Inhalt; zwei Fassungen der Bedienung würden sich unweigerlich
 // auseinanderentwickeln.
 //
-// Die Filter sind Knöpfe mit aria-pressed statt Checkboxen: sie schalten eine
-// Ansicht um, sie sind kein Formular (dieselbe Bauart wie die Jahresleiste der
-// Chronologie).
+// Der Filter ist ein Auswahlfeld, kein Knopf je Kategorie: acht Chips brauchen
+// eine Zeile, die auf schmalen Schirmen waagerecht scrollt und dann rechts
+// abgeschnitten aussieht. Dasselbe Muster wie der Autor-Filter der
+// Missions-Übersicht (.mission-author-filter) — eine Auswahl auf einmal, und
+// „Alle Kategorien" führt zurück.
 
 export type ChangelogSortKey = "version" | "category";
 
 export default function ChangelogControls({
   categories,
   selected,
-  onToggleCategory,
-  onClearCategories,
+  onSelectCategory,
   sortKey,
   sortDir,
   onSortChange,
-  className = "",
+  idPrefix,
 }: {
   // Nur die Kategorien, die in den Einträgen wirklich vorkommen.
   categories: ChangelogCategoryId[];
-  selected: readonly string[];
-  onToggleCategory: (id: ChangelogCategoryId) => void;
-  onClearCategories: () => void;
+  // null = keine Einschränkung.
+  selected: ChangelogCategoryId | null;
+  onSelectCategory: (id: ChangelogCategoryId | null) => void;
   sortKey: ChangelogSortKey;
   sortDir: SortDir;
   onSortChange: (key: ChangelogSortKey, dir: SortDir) => void;
-  className?: string;
+  // Die Leiste steht zweimal in der App (Dashboard und /changelog) — ohne
+  // eigenen Präfix trügen beide Auswahlfelder dieselbe id.
+  idPrefix: string;
 }) {
-  const active = new Set(selected);
-
   return (
-    <div className={`changelog-controls ${className}`}>
+    <div className="changelog-controls">
       <LcarsSortSwitch
         className="changelog-sort"
         options={[
@@ -55,37 +55,25 @@ export default function ChangelogControls({
         onChange={(key, dir) => onSortChange(key as ChangelogSortKey, dir)}
       />
 
-      {/* Bei nur einer vorkommenden Kategorie wäre der Filter eine Reihe mit
-          genau einem Knopf, der nichts einschränkt. */}
+      {/* Bei nur einer vorkommenden Kategorie wäre das Feld eine Auswahl mit
+          genau einem Eintrag, der nichts einschränkt. */}
       {categories.length > 1 && (
-        <div
-          className="changelog-filterbar"
-          role="group"
+        <select
+          id={`${idPrefix}-category`}
+          className="changelog-filter rounded-full"
+          value={selected ?? ""}
+          onChange={(e) =>
+            onSelectCategory((e.target.value || null) as ChangelogCategoryId | null)
+          }
           aria-label="Nach Kategorie filtern"
         >
-          <button
-            type="button"
-            className="changelog-chip"
-            aria-pressed={active.size === 0}
-            onClick={onClearCategories}
-          >
-            Alle
-          </button>
+          <option value="">Alle Kategorien</option>
           {categories.map((id) => (
-            <button
-              key={id}
-              type="button"
-              className="changelog-chip"
-              style={
-                { "--changelog-color": changelogCategoryColor(id) } as React.CSSProperties
-              }
-              aria-pressed={active.has(id)}
-              onClick={() => onToggleCategory(id)}
-            >
+            <option key={id} value={id}>
               {changelogCategoryLabel(id)}
-            </button>
+            </option>
           ))}
-        </div>
+        </select>
       )}
     </div>
   );

@@ -639,9 +639,9 @@ export default function TutorialPage() {
                 Darüber steht der Bereich <strong>„Neue Funktionen“</strong>:
                 die Neuerungen der letzten Versionen. Jede trägt eine{" "}
                 <strong>Kategorie</strong> (etwa „Charaktere &amp; Regeln“ oder
-                „Spielleitung“) — über die Knopfreihe darüber schränkst du die
-                Liste auf eine oder mehrere Kategorien ein, und der Umschalter
-                daneben sortiert wahlweise nach Version oder nach Kategorie.
+                „Spielleitung“) — über das Auswahlfeld darüber schränkst du die
+                Liste auf eine davon ein, und der Umschalter daneben sortiert
+                wahlweise nach Version oder nach Kategorie.
                 Dieselbe Bedienung findest du auf der vollständigen Liste unter{" "}
                 <strong>/changelog</strong> (erreichbar über die Versionsnummer
                 unten). Die Administration kann einzelne Kategorien für eine

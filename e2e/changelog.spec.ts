@@ -6,15 +6,16 @@ import { test, expect } from "@playwright/test";
 // und Sortierung.
 
 test.describe("Changelog", () => {
-  test("bietet je vorkommender Kategorie einen Filter, „Alle“ ist aktiv", async ({
+  test("führt jede vorkommende Kategorie im Auswahlfeld, „Alle“ ist gewählt", async ({
     page,
   }) => {
     await page.goto("/changelog");
-    const chips = page.locator(".changelog-chip");
-    // „Alle“ plus mindestens eine Kategorie.
-    expect(await chips.count()).toBeGreaterThan(2);
-    await expect(chips.first()).toHaveText("Alle");
-    await expect(chips.first()).toHaveAttribute("aria-pressed", "true");
+    const filter = page.locator(".changelog-filter");
+    const options = await filter.locator("option").allInnerTexts();
+    // „Alle Kategorien“ plus mindestens zwei Kategorien.
+    expect(options.length).toBeGreaterThan(2);
+    expect(options[0]).toBe("Alle Kategorien");
+    await expect(filter).toHaveValue("");
   });
 
   test("filtert auf eine Kategorie und kommt darüber wieder zurück", async ({
@@ -26,9 +27,8 @@ test.describe("Changelog", () => {
     const rows = page.locator("article .lcars-accordion");
     const before = await rows.count();
 
-    const chip = page.locator(".changelog-chip", { hasText: "Export & Druck" });
-    await chip.click();
-    await expect(chip).toHaveAttribute("aria-pressed", "true");
+    const filter = page.locator(".changelog-filter");
+    await filter.selectOption("export");
 
     // Weniger Versionen als vorher — und in den übrigen steht ausschließlich
     // die gewählte Kategorie.
@@ -39,7 +39,7 @@ test.describe("Changelog", () => {
       new Set(["EXPORT & DRUCK"]),
     );
 
-    await page.locator(".changelog-chip", { hasText: "Alle" }).click();
+    await filter.selectOption("");
     await expect.poll(() => rows.count()).toBe(before);
   });
 

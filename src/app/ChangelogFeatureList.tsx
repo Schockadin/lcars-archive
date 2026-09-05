@@ -24,11 +24,11 @@ export default function ChangelogFeatureList({
       <ChangelogControls
         categories={view.categories}
         selected={view.selected}
-        onToggleCategory={view.toggleCategory}
-        onClearCategories={view.clearCategories}
+        onSelectCategory={view.selectCategory}
         sortKey={view.sortKey}
         sortDir={view.sortDir}
         onSortChange={view.setSort}
+        idPrefix="dashboard"
       />
 
       {view.visible.length === 0 ? (

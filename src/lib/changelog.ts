@@ -229,7 +229,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "eigene-inhalte",
       },
       {
-        text: "Jede Neuerung im Changelog trägt jetzt eine Kategorie — etwa „Charaktere & Regeln“, „Spielleitung“ oder „Darstellung“. Unter /changelog und im Dashboard-Bereich „Neue Funktionen“ schränkst du die Liste damit auf die Kategorien ein, die dich interessieren, und sortierst wahlweise nach Version oder nach Kategorie.",
+        text: "Jede Neuerung im Changelog trägt jetzt eine Kategorie — etwa „Charaktere & Regeln“, „Spielleitung“ oder „Darstellung“. Unter /changelog und im Dashboard-Bereich „Neue Funktionen“ schränkst du die Liste über ein Auswahlfeld auf eine Kategorie ein und sortierst wahlweise nach Version oder nach Kategorie.",
         category: "darstellung",
       },
       {

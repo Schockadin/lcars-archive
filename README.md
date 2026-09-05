@@ -415,8 +415,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   danach lässt sich an beiden Anzeigestellen — der Liste unter `/changelog`
   und der Box „Neue Funktionen" auf dem Dashboard — filtern und sortieren.
   Beide rendern dieselbe Bedienleiste (`ChangelogControls.tsx`) und teilen
-  sich die Rechnung (`useChangelogView.ts`); gefiltert werden die
-  Stichpunkte, nicht die Versionen, und eine Version ohne Rest fällt weg.
+  sich die Rechnung (`useChangelogView.ts`): ein Auswahlfeld für die
+  Kategorie (eine auf einmal, „Alle Kategorien" führt zurück) und der
+  Sortier-Umschalter. Gefiltert werden die Stichpunkte, nicht die Versionen,
+  und eine Version ohne Rest fällt weg.
   Zusätzlich legt die Administration unter `/admin/changelog` je **Rolle**
   fest, welche Kategorien in der Dashboard-Box nicht erscheinen
   (`campaign_settings.changelog_hidden_categories`). Das greift auf dem
