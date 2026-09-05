@@ -113,11 +113,17 @@ function TalentSheet({
                   {talent.requirement ? ` · ${talent.requirement}` : ""}
                 </div>
               )}
-              <p className="pf-doc-text">
-                {talent
-                  ? talent.description
-                  : "Nicht im Katalog — kein Regeltext hinterlegt."}
-              </p>
+              {talent ? (
+                // Regeltext als Markdown (siehe listTalents).
+                <div
+                  className="pf-doc-text"
+                  dangerouslySetInnerHTML={{ __html: talent.descriptionHtml }}
+                />
+              ) : (
+                <p className="pf-doc-text">
+                  Nicht im Katalog — kein Regeltext hinterlegt.
+                </p>
+              )}
             </div>
           );
         })
@@ -171,7 +177,12 @@ function CampaignRulesSection({ rules }: { rules: CampaignRule[] }) {
       {rules.map((rule) => (
         <div key={rule.id} className="pf-doc-rule">
           <span className="pf-doc-rule-term">{rule.name}</span>
-          <p className="pf-doc-rule-text">{rule.body}</p>
+          {/* Der Regeltext ist Markdown; das HTML kommt bereits bereinigt aus
+              markdownToHtml (siehe listCampaignRules). */}
+          <div
+            className="pf-doc-rule-text"
+            dangerouslySetInnerHTML={{ __html: rule.bodyHtml }}
+          />
         </div>
       ))}
     </div>

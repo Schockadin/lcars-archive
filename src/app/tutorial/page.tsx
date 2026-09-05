@@ -562,6 +562,14 @@ export default function TutorialPage() {
                 können; so lässt sich direkt am Eintrag über ihn diskutieren.
               </p>
               <p>
+                Der Bereich klappt auf und zu — genau wie{" "}
+                <strong>„Erwähnt in“</strong> (wo der Eintrag überall verlinkt
+                ist) und <strong>„Wer kennt wen“</strong> auf den
+                Charakterseiten. In der Kopfzeile steht jeweils die Anzahl,
+                sodass sich alles überfliegen lässt, ohne die Seite länger zu
+                machen.
+              </p>
+              <p>
                 Deine eigenen Notizen kannst du jederzeit wieder löschen.
                 Kommentare für die Runde darf zusätzlich die Inhalts-Moderation
                 entfernen — private Notizen bleiben davon unberührt. Wird ein
@@ -717,6 +725,29 @@ export default function TutorialPage() {
                 den Abschnitt für Spielleitung/Admins) — er hält den zugehörigen
                 In-Story-Zeitpunkt des Ereignisses in der Chronik der Datenbank
                 fest.
+              </p>
+              <p>
+                Die <strong>Werkzeugleiste</strong> (Fett, Kursiv, Überschrift,
+                Link, Listen, Zitat, Code) und der Umschalter{" "}
+                <strong>Rohtext/Vorschau</strong> stehen nicht nur an den
+                großen Inhaltsformularen, sondern auch an den kleineren
+                Textfeldern: <strong>Notizen</strong> und Kommentare, eigenen{" "}
+                <strong>Regeln</strong>, Talent- und
+                Schwerpunkt-Beschreibungen, <strong>Session-Notizen</strong>{" "}
+                sowie Antworten und Nachrichten in Gesprächen. Überall dort
+                wird der Text beim Anzeigen auch als Markdown dargestellt — im
+                PDF-Spickzettel werden Auszeichnungen auf ihren Text
+                zurückgeführt, Listen bleiben Listen.
+              </p>
+              <p>
+                Nicht als Markdown gedacht sind drei Stellen, an denen der Text
+                eine andere Bedeutung hat: die <strong>Listenfelder</strong> des
+                Charakterbogens („Spezies-Fähigkeit“, „Sonderregeln“ — dort ist
+                jede Zeile ein eigener Eintrag), die Feldwerte im{" "}
+                <strong>Datenbank-Bereich</strong> der Administration (dort
+                steht der rohe Wert der Spalte) und die Zusammenfassung beim{" "}
+                <strong>Markdown-Import</strong> (sie wird als reiner Text
+                weiterverwendet).
               </p>
             </div>
           </LcarsDataRow>

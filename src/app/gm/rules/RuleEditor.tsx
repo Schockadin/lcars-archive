@@ -2,6 +2,7 @@
 import { useActionState, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import { confirmSubmit } from "@/lib/confirmSubmit";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import {
   RULE_BODY_MAX,
   RULE_NAME_MAX,
@@ -47,18 +48,24 @@ function RuleFields({ idPrefix, rule }: { idPrefix: string; rule?: CampaignRule 
           />
         </label>
       </div>
-      <label className="flex flex-col gap-[4px]">
-        <span className="lcars-eyebrow">Regeltext</span>
-        <textarea
+      <div className="flex flex-col gap-[4px]">
+        <label htmlFor={`${idPrefix}-body`} className="lcars-eyebrow">
+          Regeltext
+        </label>
+        {/* Markdown wie in den übrigen Textfeldern des Projekts — auf dem
+            Spickzettel wird der Text gerendert (Bildschirm) bzw. über
+            toPdfBlocks in Absätze zerlegt (PDF). */}
+        <MarkdownEditor
           id={`${idPrefix}-body`}
           name="body"
           required
-          rows={5}
-          maxLength={RULE_BODY_MAX}
+          rows={10}
           defaultValue={rule?.body ?? ""}
-          className="lcars-input w-full"
         />
-      </label>
+        <p className="text-lcars-ink-dim text-[12px]">
+          Markdown erlaubt · höchstens {RULE_BODY_MAX} Zeichen
+        </p>
+      </div>
     </>
   );
 }
@@ -132,7 +139,10 @@ function RuleRow({ rule }: { rule: CampaignRule }) {
       </button>
 
       {!open && (
-        <p className="text-lcars-ink text-[13px] line-clamp-2">{rule.body}</p>
+        <div
+          className="text-lcars-ink mission-body line-clamp-2 text-[13px]"
+          dangerouslySetInnerHTML={{ __html: rule.bodyHtml }}
+        />
       )}
 
       {open && (

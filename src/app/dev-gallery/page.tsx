@@ -48,6 +48,8 @@ const DEMO_RULES: CampaignRule[] = [
     id: 1,
     name: "Kritische Erfolge",
     body: "Eine gewürfelte 1 zählt als zwei Erfolge — auch ohne passenden Schwerpunkt.",
+    bodyHtml:
+      "<p>Eine gewürfelte 1 zählt als <strong>zwei Erfolge</strong> — auch ohne passenden Schwerpunkt.</p>",
     sortOrder: 0,
   },
 ];

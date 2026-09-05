@@ -1,4 +1,5 @@
 import "server-only";
+import { markdownToHtml } from "@/lib/markdown";
 import postgres from "postgres";
 import sql from "@/lib/db";
 import type { ApReason } from "@/lib/characterAp";
@@ -23,7 +24,10 @@ export interface GameSession {
   title: string;
   sessionAp: number;
   bonusAp: number;
+  // Rohtext (Markdown), wie er gespeichert ist — das Formular arbeitet damit.
   notes: string;
+  // Derselbe Text als bereinigtes HTML für die zusammengeklappte Vorschau.
+  notesHtml: string;
   createdByName: string | null;
   createdAt: string;
   // Wie vielen Charakteren wurde gutgeschrieben und wie viele AP insgesamt.
@@ -38,7 +42,7 @@ export interface GameSession {
 }
 
 export async function listGameSessions(): Promise<GameSession[]> {
-  return sql<GameSession[]>`
+  const rows = await sql<Omit<GameSession, "notesHtml">[]>`
     SELECT s.id,
            s.session_date::text AS "sessionDate",
            s.title, s.session_ap AS "sessionAp", s.bonus_ap AS "bonusAp",
@@ -71,6 +75,12 @@ export async function listGameSessions(): Promise<GameSession[]> {
     ) l ON l.session_id = s.id
     ORDER BY s.session_date DESC, s.id DESC
   `;
+
+  // Notizen sind Markdown; für die zusammengeklappte Vorschau in
+  // /gm/sessions wird daraus HTML. Die Liste ist kurz (eine Kampagne hat
+  // Dutzende Sessions, nicht Tausende).
+  const html = await Promise.all(rows.map((r) => markdownToHtml(r.notes)));
+  return rows.map((r, index) => ({ ...r, notesHtml: html[index] }));
 }
 
 // Charaktere, denen eine Session gutgeschrieben werden kann: aktive, nicht

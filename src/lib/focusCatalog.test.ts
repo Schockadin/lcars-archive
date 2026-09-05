@@ -16,6 +16,7 @@ function focus(overrides: Partial<Focus> = {}): Focus {
     name: "Astrophysics",
     discipline: "science",
     description: null,
+    descriptionHtml: null,
     isCustom: false,
     ...overrides,
   };

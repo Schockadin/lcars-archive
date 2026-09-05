@@ -8,7 +8,14 @@ import {
 } from "./campaignRuleTypes";
 
 function rule(overrides: Partial<CampaignRule> = {}): CampaignRule {
-  return { id: 1, name: "Regel", body: "Text", sortOrder: 0, ...overrides };
+  return {
+    id: 1,
+    name: "Regel",
+    body: "Text",
+    bodyHtml: "<p>Text</p>",
+    sortOrder: 0,
+    ...overrides,
+  };
 }
 
 describe("validateCampaignRuleInput", () => {

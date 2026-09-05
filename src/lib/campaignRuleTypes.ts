@@ -10,7 +10,12 @@ export const RULE_BODY_MAX = 4000;
 export interface CampaignRule {
   id: number;
   name: string;
+  // Rohtext (Markdown), wie er gespeichert ist — das Formular arbeitet damit.
   body: string;
+  // Derselbe Text als bereinigtes HTML für den Spickzettel auf dem
+  // Bildschirm. Im PDF wird stattdessen der Rohtext über toPdfBlocks
+  // zerlegt (@react-pdf kennt kein HTML).
+  bodyHtml: string;
   // Reihenfolge auf dem Spickzettel; bei Gleichstand entscheidet der Name.
   sortOrder: number;
 }
@@ -58,7 +63,12 @@ export function validateCampaignRuleInput(raw: {
 
 // Reihenfolge auf dem Spickzettel: erst sort_order, dann alphabetisch —
 // sprachbewusst über localeCompare mit „de", wie byTalentOrder/byFocusOrder.
-export function byRuleOrder(a: CampaignRule, b: CampaignRule): number {
+// Verlangt nur die beiden Felder, nach denen sortiert wird, damit auch die
+// noch nicht gerenderten Zeilen aus der Tabelle damit sortiert werden können.
+export function byRuleOrder(
+  a: Pick<CampaignRule, "name" | "sortOrder">,
+  b: Pick<CampaignRule, "name" | "sortOrder">,
+): number {
   if (a.sortOrder !== b.sortOrder) return a.sortOrder - b.sortOrder;
   return a.name.localeCompare(b.name, "de");
 }

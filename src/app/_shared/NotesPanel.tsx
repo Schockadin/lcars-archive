@@ -1,6 +1,7 @@
 "use client";
 import { useActionState, useState } from "react";
 import { FormError } from "@/app/_shared/FormPrimitives";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import SettingsPanel from "@/app/_shared/SettingsPanel";
 import {
   addNoteAction,
@@ -40,6 +41,14 @@ export default function NotesPanel({
     initialState,
   );
   const [visibility, setVisibility] = useState<"private" | "group">("private");
+  // Der Markdown-Editor ist unkontrolliert; nach einem erfolgreichen
+  // Speichern wird er über einen neuen key neu aufgebaut und ist damit leer.
+  const [submitCount, setSubmitCount] = useState(0);
+  const [seenSuccess, setSeenSuccess] = useState(state.success);
+  if (state.success !== seenSuccess) {
+    setSeenSuccess(state.success);
+    if (state.success) setSubmitCount((n) => n + 1);
+  }
 
   const own = notes.filter((n) => n.visibility === "private");
   const group = notes.filter((n) => n.visibility === "group");
@@ -63,14 +72,22 @@ export default function NotesPanel({
         <input type="hidden" name="path" value={path} />
         <input type="hidden" name="visibility" value={visibility} />
 
-        <textarea
+        {/* Markdown wie überall sonst im Projekt, samt Toolbar und Vorschau
+            — der gespeicherte Text wird beim Anzeigen gerendert (siehe
+            listNotes). key auf dem Erfolgszähler: nach dem Speichern soll das
+            Feld leer sein, und der Editor ist unkontrolliert. */}
+        <MarkdownEditor
+          key={submitCount}
+          id={`${contentType}-${contentSlug}-note`}
           name="body"
-          rows={3}
-          maxLength={NOTE_MAX_LENGTH}
-          placeholder="Notiz oder Kommentar…"
-          className="lcars-input w-full"
-          disabled={pending}
+          rows={10}
         />
+        {/* Der Markdown-Editor hat kein maxLength; die Grenze setzt
+            normalizeNoteBody serverseitig durch (es kürzt still). Der Hinweis
+            macht sie sichtbar, statt Getipptes wortlos abzuschneiden. */}
+        <p className="text-lcars-ink-dim text-[12px]">
+          Markdown erlaubt · höchstens {NOTE_MAX_LENGTH} Zeichen
+        </p>
 
         <div
           role="radiogroup"
@@ -151,7 +168,12 @@ function NoteItem({ note, path }: { note: ContentNote; path: string }) {
   );
   return (
     <li className="rounded-[8px] border border-lcars-border bg-lcars-surface px-[12px] py-[8px]">
-      <p className="whitespace-pre-wrap text-[13px]">{note.body}</p>
+      {/* Das HTML stammt aus markdownToHtml und ist dort bereits bereinigt
+          (rehype-sanitize) — dieselbe Quelle wie die Inhaltsseiten. */}
+      <div
+        className="mission-body lcars-text text-[13px]"
+        dangerouslySetInnerHTML={{ __html: note.bodyHtml }}
+      />
       <div className="mt-[6px] flex flex-wrap items-center justify-between gap-[8px]">
         <span className="text-lcars-ink-dim font-lcars-mono text-[11px]">
           {note.authorName ?? "Unbekannt"} ·{" "}

@@ -90,6 +90,13 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "Neu unter „Charaktere → Beziehungen“: ein Beziehungsgraph der ganzen Kampagne. Er zeigt auf einen Blick, wer mit wem im Einsatz war und wer mit wem geredet hat — dicke Linien für viele Berührungspunkte, große Punkte für gut vernetzte Figuren, ein Klick führt zur Figur. Zeigst du auf eine Figur, treten sie und ihre Verbindungen hervor.",
         tutorial: "fuer-besucher",
       },
+      {
+        text: "Markdown gibt es jetzt auch in den kleineren Textfeldern: Notizen und Kommentare, eigene Regeln, Talent- und Schwerpunkt-Beschreibungen, Session-Notizen sowie Antworten und Nachrichten in Gesprächen haben dieselbe Werkzeugleiste mit Vorschau wie die großen Formulare — und der Text wird beim Anzeigen auch als Markdown dargestellt, auf dem Bildschirm wie im PDF. Notiz- und Regelfelder sind dabei zehn Zeilen hoch statt drei.",
+        tutorial: "markdown",
+      },
+      {
+        text: "„Erwähnt in“ und „Wer kennt wen“ sind jetzt aufklappbare Bereiche wie die Notizen — mit der Anzahl in der Kopfzeile, sodass man sie überfliegen kann, ohne die Seite länger zu machen.",
+      },
     ],
   },
   {

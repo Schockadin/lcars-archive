@@ -51,6 +51,22 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `src/app/actions/revisions.ts`, `src/app/_shared/RevisionsPanel.tsx`).
   Wiederhergestellt wird nur der Fließtext; der ersetzte Stand landet selbst
   wieder in der Historie. Ein Speichern ohne Textänderung legt keine Fassung an.
+- **Markdown in allen Freitextfeldern** — der `MarkdownEditor` (Toolbar +
+  Rohtext/Vorschau) steht nicht nur an den Content-Formularen, sondern auch an
+  Notizen, eigenen Regeln, Talent- und Schwerpunkt-Beschreibungen,
+  Session-Notizen und den Gesprächs-Formularen; sein `rows`-Prop setzt die
+  Höhe in Zeilen statt in Pixeln (Notizen und Regeln: 10). Die zugehörigen
+  Datenzugriffe liefern neben dem Rohtext ein gerendertes `*Html`-Feld
+  (`listNotes`, `listCampaignRules`, `listTalents`, `listFocuses`,
+  `listGameSessions`) — das Formular arbeitet auf dem Rohtext, die Anzeige auf
+  dem HTML. Im PDF gibt es kein HTML, dort zerlegt `toPdfBlocks` denselben
+  Rohtext (wie beim Biografie-Blatt). Die Kataloge sind gecacht, das Rendern
+  passiert also einmal je Cache-Generation.
+  **Bewusst ohne Markdown** bleiben drei Stellen, an denen der Text eine
+  andere Bedeutung hat: die Listenfelder des Charakterbogens (`TEXTAREA_LISTS`
+  — eine Zeile je Eintrag), die Feldwerte in `RowDetailModal`/
+  `DbTableExplorer` (rohe Spaltenwerte) und die Zusammenfassung im
+  Markdown-Import (reiner Text).
 - **Notizen & Kommentare** — an Charakteren, Missionen, Logbüchern und
   Datenbank-Einträgen können eingeloggte Personen Notizen hinterlegen: mit
   Sichtbarkeit `private` (nur der Autor, auch für die Moderation unsichtbar)

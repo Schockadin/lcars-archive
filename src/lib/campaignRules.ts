@@ -3,6 +3,7 @@ import { cacheTag, cacheLife, revalidateTag } from "next/cache";
 import postgres from "postgres";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
+import { markdownToHtml } from "@/lib/markdown";
 import {
   byRuleOrder,
   type CampaignRule,
@@ -21,6 +22,18 @@ function isUniqueViolation(err: unknown): boolean {
 
 const SELECT_COLUMNS = sql`id, name, body, sort_order AS "sortOrder"`;
 
+// Rohe Zeile aus der Tabelle — ohne das gerenderte HTML, das erst withHtml()
+// ergänzt.
+type RuleRow = Omit<CampaignRule, "bodyHtml">;
+
+// Markdown je Regel rendern. Die Liste ist kurz (eine Handvoll Hausregeln)
+// und listCampaignRules ist gecacht — das Rendern passiert also einmal je
+// Cache-Generation, nicht bei jedem Bogen.
+async function withHtml(rows: RuleRow[]): Promise<CampaignRule[]> {
+  const html = await Promise.all(rows.map((r) => markdownToHtml(r.body)));
+  return rows.map((r, index) => ({ ...r, bodyHtml: html[index] }));
+}
+
 export {
   RULE_NAME_MAX,
   RULE_BODY_MAX,
@@ -38,19 +51,19 @@ export async function listCampaignRules(): Promise<CampaignRule[]> {
   "use cache";
   cacheTag(cacheTags.campaignRules);
   cacheLife("max");
-  const rows = await sql<CampaignRule[]>`
+  const rows = await sql<RuleRow[]>`
     SELECT ${SELECT_COLUMNS} FROM campaign_rules
   `;
-  return rows.sort(byRuleOrder);
+  return withHtml(rows.sort(byRuleOrder));
 }
 
 // Ungecachte Variante für die Bearbeitungsseite der Spielleitung — dort muss
 // eine gerade gespeicherte Änderung sofort dastehen (wie listFocusesFresh).
 export async function listCampaignRulesFresh(): Promise<CampaignRule[]> {
-  const rows = await sql<CampaignRule[]>`
+  const rows = await sql<RuleRow[]>`
     SELECT ${SELECT_COLUMNS} FROM campaign_rules
   `;
-  return rows.sort(byRuleOrder);
+  return withHtml(rows.sort(byRuleOrder));
 }
 
 export async function createCampaignRule(
@@ -58,13 +71,13 @@ export async function createCampaignRule(
   createdByUserId: number,
 ): Promise<CampaignRule> {
   try {
-    const [row] = await sql<CampaignRule[]>`
+    const [row] = await sql<RuleRow[]>`
       INSERT INTO campaign_rules (name, body, sort_order, created_by)
       VALUES (${input.name}, ${input.body}, ${input.sortOrder}, ${createdByUserId})
       RETURNING ${SELECT_COLUMNS}
     `;
     revalidateTag(cacheTags.campaignRules, { expire: 0 });
-    return row;
+    return (await withHtml([row]))[0];
   } catch (err) {
     if (isUniqueViolation(err)) throw new RuleNameTakenError(input.name);
     throw err;

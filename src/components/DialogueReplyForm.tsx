@@ -6,6 +6,7 @@ import {
 } from "@/app/actions/dialogues";
 import type { DialogueReplyCharacter } from "./DialogueLiveView";
 import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { FormError } from "@/app/_shared/FormPrimitives";
 
 const initialState: DialogueMessageState = {};
@@ -111,12 +112,10 @@ export default function DialogueReplyForm({
       <label htmlFor="dlg-reply-body" className="lcars-eyebrow">
         Antworten
       </label>
-      <textarea
-        id="dlg-reply-body"
-        name="bodyMarkdown"
-        required
-        className="rounded-lcars-pill lcars-input min-h-[150px] resize-y font-mono"
-      />
+      {/* Der Beitrag wird als Markdown gerendert — deshalb hier derselbe
+          Editor mit Toolbar und Vorschau wie in den Content-Formularen,
+          statt eines nackten Eingabefelds. */}
+      <MarkdownEditor id="dlg-reply-body" name="bodyMarkdown" required rows={10} />
       <p className="text-lcars-ink text-[14px]">
         <MarkdownFormatHint />
       </p>

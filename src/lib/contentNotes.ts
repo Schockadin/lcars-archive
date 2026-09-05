@@ -1,6 +1,7 @@
 import "server-only";
 import sql from "@/lib/db";
 import type { Viewer } from "@/lib/visibility";
+import { markdownToHtml } from "@/lib/markdown";
 import {
   normalizeNoteBody,
   type ContentNote,
@@ -73,9 +74,16 @@ export async function listNotes(
     ORDER BY n.created_at ASC
   `;
   const moderator = canModerate(viewer);
-  return rows.map((r) => ({
+  // Markdown je Notiz rendern. Bewusst hier und nicht beim Speichern: der
+  // Rohtext bleibt die Quelle (er wird beim Bearbeiten wieder gebraucht), und
+  // eine Notizliste ist kurz — an einem Inhalt stehen ein paar Einträge, nicht
+  // hunderte.
+  const html = await Promise.all(rows.map((r) => markdownToHtml(r.body)));
+
+  return rows.map((r, index) => ({
     id: r.id,
     body: r.body,
+    bodyHtml: html[index],
     visibility: r.visibility,
     authorId: r.author_id,
     authorName: r.author_name,

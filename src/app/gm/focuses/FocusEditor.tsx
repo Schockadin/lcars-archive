@@ -2,6 +2,7 @@
 import { useActionState, useMemo, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import { confirmSubmit } from "@/lib/confirmSubmit";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import {
   FOCUS_DISCIPLINES,
   FOCUS_DISCIPLINE_LABELS,
@@ -53,17 +54,19 @@ function FocusFields({ idPrefix, focus }: { idPrefix: string; focus?: Focus }) {
           </select>
         </label>
       </div>
-      <label className="flex flex-col gap-[4px]">
-        <span className="lcars-eyebrow">Erläuterung (optional)</span>
-        <textarea
+      <div className="flex flex-col gap-[4px]">
+        <label htmlFor={`${idPrefix}-description`} className="lcars-eyebrow">
+          Erläuterung (optional)
+        </label>
+        {/* Markdown wie in den übrigen Textfeldern; die Erläuterung wird in
+            der Auswahlliste gerendert. */}
+        <MarkdownEditor
           id={`${idPrefix}-description`}
           name="description"
-          rows={3}
-          placeholder="Wofür der Schwerpunkt in dieser Runde gilt"
+          rows={10}
           defaultValue={focus?.description ?? ""}
-          className="lcars-input w-full"
         />
-      </label>
+      </div>
     </>
   );
 }
@@ -137,10 +140,11 @@ function FocusRow({ focus }: { focus: Focus }) {
         {focus.isCustom && <span className="lcars-eyebrow">eigen</span>}
       </button>
 
-      {!open && focus.description && (
-        <p className="text-lcars-ink text-[13px] line-clamp-2">
-          {focus.description}
-        </p>
+      {!open && focus.descriptionHtml && (
+        <div
+          className="text-lcars-ink mission-body line-clamp-2 text-[13px]"
+          dangerouslySetInnerHTML={{ __html: focus.descriptionHtml }}
+        />
       )}
 
       {open && (

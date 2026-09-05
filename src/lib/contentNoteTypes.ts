@@ -20,7 +20,11 @@ export const NOTE_MAX_LENGTH = 4000;
 
 export interface ContentNote {
   id: number;
+  // Rohtext (Markdown), wie er gespeichert ist.
   body: string;
+  // Derselbe Text als bereinigtes HTML — die Anzeige rendert Markdown, das
+  // Eingabefeld arbeitet auf dem Rohtext (siehe listNotes).
+  bodyHtml: string;
   visibility: NoteVisibility;
   authorId: number;
   authorName: string | null;

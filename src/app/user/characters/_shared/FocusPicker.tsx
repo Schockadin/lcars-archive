@@ -25,6 +25,8 @@ import {
 interface PickerEntry {
   name: string;
   disciplines: string[];
+  // Erläuterungen als bereinigtes HTML (Markdown, siehe listFocuses). Steht
+  // derselbe Name in zwei Disziplinen, können es zwei sein.
   descriptions: string[];
 }
 
@@ -38,12 +40,19 @@ export function mergeByName(focuses: Focus[]): PickerEntry[] {
     const label = focusDisciplineLabel(focus.discipline);
     if (entry) {
       if (!entry.disciplines.includes(label)) entry.disciplines.push(label);
-      if (focus.description) entry.descriptions.push(focus.description);
+      // Steht derselbe Name in zwei Disziplinen, trägt oft BEIDE Zeilen
+      // dieselbe Erläuterung — dann soll sie einmal erscheinen, nicht zweimal.
+      if (
+        focus.descriptionHtml &&
+        !entry.descriptions.includes(focus.descriptionHtml)
+      ) {
+        entry.descriptions.push(focus.descriptionHtml);
+      }
     } else {
       byKey.set(key, {
         name: focus.name,
         disciplines: [label],
-        descriptions: focus.description ? [focus.description] : [],
+        descriptions: focus.descriptionHtml ? [focus.descriptionHtml] : [],
       });
     }
   }
@@ -94,10 +103,9 @@ export function FocusModal({
     return entries.filter((entry) => {
       if (takenKeys.has(focusKey(entry.name))) return false;
       if (!needle) return true;
-      return (
-        entry.name.toLowerCase().includes(needle) ||
-        entry.descriptions.some((d) => d.toLowerCase().includes(needle))
-      );
+      // Nur über den Namen suchen: die Erläuterungen liegen als HTML vor,
+      // eine Suche darin träfe auch Tag-Namen („p", „strong").
+      return entry.name.toLowerCase().includes(needle);
     });
   }, [entries, takenKeys, query]);
 
@@ -173,9 +181,12 @@ export function FocusModal({
                 <span className="flex-1 min-w-[160px]">
                   {entry.name}
                   {entry.descriptions.length > 0 && (
-                    <span className="text-lcars-ink-dim block text-[12px]">
-                      {entry.descriptions.join(" · ")}
-                    </span>
+                    <span
+                      className="text-lcars-ink-dim mission-body block text-[12px]"
+                      dangerouslySetInnerHTML={{
+                        __html: entry.descriptions.join(""),
+                      }}
+                    />
                   )}
                 </span>
                 <span className="lcars-eyebrow">

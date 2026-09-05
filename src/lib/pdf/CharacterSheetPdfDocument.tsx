@@ -465,11 +465,18 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
                 {talent.requirement ? ` · ${talent.requirement}` : ""}
               </Text>
             )}
-            <Text style={styles.cheatText}>
-              {talent
-                ? talent.description
-                : "Nicht im Katalog — kein Regeltext hinterlegt."}
-            </Text>
+            {talent ? (
+              // Markdown wie bei den Hausregeln über toPdfBlocks zerlegt.
+              toPdfBlocks(talent.description).map((block, i) => (
+                <Text key={i} style={styles.cheatText}>
+                  {block.kind === "listItem" ? `• ${block.text}` : block.text}
+                </Text>
+              ))
+            ) : (
+              <Text style={styles.cheatText}>
+                Nicht im Katalog — kein Regeltext hinterlegt.
+              </Text>
+            )}
           </View>
         );
       })}
@@ -512,7 +519,13 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
                   {rule.name.toUpperCase()}
                 </Text>
               </View>
-              <Text style={styles.cheatRuleText}>{rule.body}</Text>
+              {/* Markdown: @react-pdf kennt kein HTML, deshalb wie bei der
+                  Biografie über toPdfBlocks in einfache Blöcke zerlegt. */}
+              {toPdfBlocks(rule.body).map((block, i) => (
+                <Text key={i} style={styles.cheatRuleText}>
+                  {block.kind === "listItem" ? `• ${block.text}` : block.text}
+                </Text>
+              ))}
             </View>
           ))}
         </View>

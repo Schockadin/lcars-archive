@@ -4,12 +4,23 @@ import postgres from "postgres";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
 import { byTalentOrder, type Talent, type TalentInput } from "@/lib/talentCatalog";
+import { markdownToHtml } from "@/lib/markdown";
 
 // Datenzugriff auf den Talent-Katalog (Tabelle talents, siehe
 // scripts/schema.sql). Die reine Hälfte — Kategorien, Labels, Validierung —
 // liegt in src/lib/talentCatalog.ts.
 
 export class TalentNameTakenError extends Error {}
+
+// Rohe Zeile aus der Tabelle — ohne das gerenderte HTML, das withHtml ergänzt.
+type TalentRow = Omit<Talent, "descriptionHtml">;
+
+// Markdown je Talent rendern. Der Katalog ist gecacht (siehe listTalents), das
+// Rendern passiert also einmal je Cache-Generation und nicht bei jedem Bogen.
+async function withHtml(rows: TalentRow[]): Promise<Talent[]> {
+  const html = await Promise.all(rows.map((r) => markdownToHtml(r.description)));
+  return rows.map((r, index) => ({ ...r, descriptionHtml: html[index] }));
+}
 
 function isUniqueViolation(err: unknown): boolean {
   return err instanceof postgres.PostgresError && err.code === "23505";
@@ -26,20 +37,20 @@ export async function listTalents(): Promise<Talent[]> {
   "use cache";
   cacheTag(cacheTags.talents);
   cacheLife("max");
-  const rows = await sql<Talent[]>`
+  const rows = await sql<TalentRow[]>`
     SELECT ${SELECT_COLUMNS} FROM talents
   `;
-  return rows.sort(byTalentOrder);
+  return withHtml(rows.sort(byTalentOrder));
 }
 
 // Ungecachte Variante für die Bearbeitungsseite der Spielleitung: dort muss
 // eine gerade gespeicherte Änderung sofort sichtbar sein, auch wenn die
 // Revalidierung des Tags noch nicht überall durchgeschlagen ist.
 export async function listTalentsFresh(): Promise<Talent[]> {
-  const rows = await sql<Talent[]>`
+  const rows = await sql<TalentRow[]>`
     SELECT ${SELECT_COLUMNS} FROM talents
   `;
-  return rows.sort(byTalentOrder);
+  return withHtml(rows.sort(byTalentOrder));
 }
 
 export async function createTalent(
@@ -47,14 +58,14 @@ export async function createTalent(
   createdByUserId: number,
 ): Promise<Talent> {
   try {
-    const [row] = await sql<Talent[]>`
+    const [row] = await sql<TalentRow[]>`
       INSERT INTO talents (name, category, requirement, description, is_custom, created_by)
       VALUES (${input.name}, ${input.category}, ${input.requirement},
               ${input.description}, TRUE, ${createdByUserId})
       RETURNING ${SELECT_COLUMNS}
     `;
     revalidateTag(cacheTags.talents, { expire: 0 });
-    return row;
+    return (await withHtml([row]))[0];
   } catch (err) {
     if (isUniqueViolation(err)) {
       throw new TalentNameTakenError(input.name);

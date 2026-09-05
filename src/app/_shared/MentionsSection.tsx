@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SettingsPanel from "@/app/_shared/SettingsPanel";
 import type { Mention } from "@/lib/mentions";
 
 // „Erwähnt in" — eingehende Verweise auf den gezeigten Inhalt. Für
@@ -8,6 +9,10 @@ import type { Mention } from "@/lib/mentions";
 //
 // Rendert nichts, wenn es keine Erwähnungen gibt — eine leere Überschrift
 // wäre nur Rauschen auf jeder zweiten Seite.
+//
+// Aufklappbar wie die Notizen und die Versionshistorie (SettingsPanel,
+// natives <details>): der Abschnitt ist Beiwerk unter dem eigentlichen
+// Inhalt, die Anzahl in der Kopfzeile genügt zum Überfliegen.
 export default function MentionsSection({
   mentions,
   title = "Erwähnt in",
@@ -17,8 +22,11 @@ export default function MentionsSection({
 }) {
   if (mentions.length === 0) return null;
   return (
-    <section className="flex flex-col gap-[8px]">
-      <h2>{title}</h2>
+    <SettingsPanel
+      title={title}
+      hint="Inhalte, die auf diesen Eintrag verweisen"
+      badge={`${mentions.length} ${mentions.length === 1 ? "Erwähnung" : "Erwähnungen"}`}
+    >
       <ul className="flex flex-col gap-[4px]">
         {mentions.map((m) => (
           <li key={`${m.kind}:${m.slug}`} className="flex flex-wrap items-baseline gap-[8px]">
@@ -31,6 +39,6 @@ export default function MentionsSection({
           </li>
         ))}
       </ul>
-    </section>
+    </SettingsPanel>
   );
 }

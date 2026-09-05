@@ -1,4 +1,5 @@
 import Link from "next/link";
+import SettingsPanel from "@/app/_shared/SettingsPanel";
 import type { Relation } from "@/lib/relations";
 
 // „Wer kennt wen" auf der Charakterseite. Zeigt zu jeder Verbindung, WORAUS
@@ -28,10 +29,14 @@ export default function RelationsSection({
 }) {
   if (relations.length === 0) return null;
   return (
-    <section className="flex flex-col gap-[8px]">
-      <h2>{title}</h2>
+    // Aufklappbar wie Notizen, Versionen und „Erwähnt in" — der Abschnitt ist
+    // Beiwerk unter dem eigentlichen Inhalt.
+    <SettingsPanel
+      title={title}
+      hint="Abgeleitet aus gemeinsamen Missionen und Gesprächen"
+      badge={`${relations.length} ${relations.length === 1 ? "Verbindung" : "Verbindungen"}`}
+    >
       <p className="text-lcars-ink-dim text-[13px]">
-        Abgeleitet aus gemeinsamen Missionen und Gesprächen.{" "}
         <Link href="/characters/beziehungen" className="lcars-wikilink">
           Ganze Kampagne als Graph
         </Link>
@@ -52,6 +57,6 @@ export default function RelationsSection({
           </li>
         ))}
       </ul>
-    </section>
+    </SettingsPanel>
   );
 }

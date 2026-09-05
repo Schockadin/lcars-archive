@@ -51,8 +51,12 @@ export interface Focus {
   id: number;
   name: string;
   discipline: FocusDiscipline;
-  // Erläuterung — optional, der Regeltext führt Schwerpunkte nur als Liste.
+  // Erläuterung als Rohtext (Markdown) — optional, der Regeltext führt
+  // Schwerpunkte nur als Liste. Das Formular arbeitet damit.
   description: string | null;
+  // Dieselbe Erläuterung als bereinigtes HTML für die Auswahlliste; null,
+  // wenn es keine gibt.
+  descriptionHtml: string | null;
   // true = von der Spielleitung ergänzter Schwerpunkt (nicht aus dem
   // Regeltext).
   isCustom: boolean;
@@ -108,7 +112,10 @@ export function validateFocusInput(raw: {
 
 // Sortierung für Listen und Auswahlfelder: erst Disziplin in der Reihenfolge
 // des Regeltexts, dann alphabetisch — wie byTalentOrder.
-export function byFocusOrder(a: Focus, b: Focus): number {
+export function byFocusOrder(
+  a: Pick<Focus, "discipline" | "name">,
+  b: Pick<Focus, "discipline" | "name">,
+): number {
   const ai = FOCUS_DISCIPLINES.indexOf(a.discipline);
   const bi = FOCUS_DISCIPLINES.indexOf(b.discipline);
   if (ai !== bi) return ai - bi;
@@ -127,7 +134,10 @@ export function focusKey(name: string): string {
 
 // Alle Disziplinen, unter denen ein Name im Katalog geführt wird — für die
 // Anzeige in der Auswahlliste, wo derselbe Name sonst mehrfach erschiene.
-export function disciplinesOf(focuses: Focus[], name: string): FocusDiscipline[] {
+export function disciplinesOf(
+  focuses: Pick<Focus, "name" | "discipline">[],
+  name: string,
+): FocusDiscipline[] {
   const key = focusKey(name);
   const out: FocusDiscipline[] = [];
   for (const focus of focuses) {
