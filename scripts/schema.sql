@@ -345,14 +345,25 @@ CREATE INDEX IF NOT EXISTS idx_archive_links_target ON archive_links(target_id);
 -- ---------------------------------------------------------------------------
 -- timeline_events
 -- ---------------------------------------------------------------------------
--- Tabelle bleibt für eine mögliche künftige Timeline-/Chronik-Funktion
--- erhalten, wird derzeit aber NICHT mehr befüllt: die frühere Timeline-Seite
--- und der Ingest-Aufbau (ehem. scripts/ingest/timeline.ts) sind entfernt. Die
--- <!-- timeline: JJJJ-MM-TT | Titel | Kategorie -->-Marker in Content-Bodys
--- bleiben (erzeugen unsichtbare Sprungmarken, siehe remarkTimelineAnchors in
--- src/lib/markdown.ts) und liefern die Datengrundlage, falls die Funktion
--- später neu aufgebaut wird. idx_..._created bediente getRecentActivitySince()
--- (filtert nach created_at statt nach dem In-Story-Datum event_date).
+-- Die abgeleiteten Ereignisse der Chronologie (/chronologie) — und NUR die.
+--
+-- Was sich aus den Feldern eines Inhalts ergibt (Missionsdatum, Logbuch-Datum,
+-- Geburtsdatum …) oder aus einem <!-- timeline: JJJJ-MM-TT | Titel | Kategorie
+-- -->-Marker im Fließtext, wird beim Lesen aus den Inhalten selbst gebildet
+-- (src/lib/timeline.ts) und bewusst NICHT hier gespeichert: eine gespeicherte
+-- Kopie liefe bei jeder Bearbeitung auseinander, und die Sichtbarkeit müsste
+-- doppelt gepflegt werden. Hier steht deshalb nur, was das Sprachmodell aus
+-- einem Text gelesen hat und die Spielleitung übernommen hat
+-- (src/lib/timelineInference.ts) — das kostet einen Modellaufruf und darf
+-- nicht bei jedem Seitenaufruf neu entstehen.
+--
+-- Die Sichtbarkeit hängt weiterhin am Quell-Inhalt: getTimeline() verknüpft
+-- die Zeilen über source_type/source_slug zurück und wendet dasselbe canView
+-- an wie auf den Inhaltsseiten. Ein gelöschter Inhalt nimmt seine Ereignisse
+-- mit (purgeContent.ts).
+--
+-- idx_..._created bediente getRecentActivitySince() (filtert nach created_at
+-- statt nach dem In-Story-Datum event_date).
 CREATE TABLE IF NOT EXISTS timeline_events (
   id          SERIAL PRIMARY KEY,
   event_date  DATE NOT NULL,
@@ -363,12 +374,27 @@ CREATE TABLE IF NOT EXISTS timeline_events (
                   'character', 'mission', 'mission_log', 'archive_entry'
                 )),
   source_slug TEXT NOT NULL,
-  href        TEXT NOT NULL,
+  href        TEXT NOT NULL DEFAULT '',
+  -- Woher das Ereignis stammt. Faktisch immer 'inferred' (siehe oben); die
+  -- Spalte steht trotzdem da, damit die Herkunft am Datensatz ablesbar ist
+  -- und nicht nur aus dem Umstand folgt, in welcher Tabelle er liegt.
+  origin      TEXT NOT NULL DEFAULT 'inferred',
+  -- Ein bis zwei Sätze zum Ereignis, vom Modell formuliert.
+  detail      TEXT,
+  -- Wie sicher sich das Modell war (0…1) — nur zur Anzeige, nie als Filter:
+  -- ein Modell weiß seine eigene Verlässlichkeit nicht, der Wert ist ein
+  -- Hinweis für die Spielleitung, kein Maß.
+  confidence  REAL,
+  created_by  INT REFERENCES users(id) ON DELETE SET NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_timeline_events_date    ON timeline_events(event_date);
 CREATE INDEX IF NOT EXISTS idx_timeline_events_source  ON timeline_events(source_type, source_slug);
 CREATE INDEX IF NOT EXISTS idx_timeline_events_created ON timeline_events(created_at);
+-- Ein Inhalt bekommt dasselbe Ereignis nicht doppelt, wenn die Ableitung
+-- zweimal läuft.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_timeline_events_unique
+  ON timeline_events(source_type, source_slug, event_date, title);
 
 -- ---------------------------------------------------------------------------
 -- password_setup_tokens

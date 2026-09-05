@@ -114,6 +114,46 @@ export default function TutorialPage() {
 
           <LcarsDataRow
             value={3}
+            htmlId="chronologie"
+            label="Chronologie"
+          >
+            <div className="lcars-text flex flex-col gap-[12px]">
+              <p>
+                <strong>Chronologie</strong> zeigt dieselben Inhalte wie der
+                Rest des Archivs, aber nach der Zeit der Kampagne statt nach
+                dem Bearbeitungsdatum: ein Zeitstrahl von der ältesten bis zur
+                jüngsten bekannten Begebenheit. Sortierung, Suche, Ereignisart
+                und Jahr schränken die Liste ein; jede Karte führt zu dem
+                Eintrag, aus dem das Ereignis stammt. Was du dort siehst,
+                richtet sich nach deinen Leserechten — ein Logbuch, das du
+                nicht lesen darfst, taucht auch in der Chronologie nicht auf.
+              </p>
+              <p>
+                Die Ereignisse kommen aus <strong>drei Quellen</strong>. Erstens
+                aus dem, was ohnehin gepflegt ist: Beginn und Ende einer
+                Mission, das Datum eines Logbuchs oder Gesprächs, das
+                Geburtsdatum einer Figur. Zweitens aus <strong>Marken im
+                Text</strong> — der Kalender-Knopf in der Werkzeugleiste jedes
+                Textfeldes setzt an der Cursor-Stelle{" "}
+                <code>&lt;!-- timeline: JJJJ-MM-TT | Titel | Kategorie --&gt;</code>.
+                Die Marke ist im gerenderten Text unsichtbar, erzeugt dort aber
+                eine Sprungmarke: die Karte in der Chronologie führt genau an
+                diese Stelle im Bericht.
+              </p>
+              <p>
+                Drittens kann die <strong>Spielleitung Ereignisse ableiten
+                lassen</strong>: das Sprachmodell liest einen Bericht und nennt
+                die Begebenheiten, die darin stecken, aber in keinem Feld
+                stehen (&bdquo;drei Tage später …&ldquo;). Solche Einträge sind auf der
+                Karte als <em>aus dem Text abgeleitet</em> gekennzeichnet — sie
+                sind eine Lesehilfe, keine gepflegte Angabe. Was nicht stimmt,
+                entfernt die Spielleitung unter &bdquo;Leitung → Chronologie&ldquo;.
+              </p>
+            </div>
+          </LcarsDataRow>
+
+          <LcarsDataRow
+            value={4}
             htmlId="konto-rollen"
             label="Konto & Rollen"
           >
@@ -179,7 +219,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={4}
+            value={5}
             htmlId="eigene-inhalte"
             label="Eigene Inhalte"
           >
@@ -434,7 +474,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={5}
+            value={6}
             htmlId="gespraeche"
             label="Gespräche"
           >
@@ -517,7 +557,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={6}
+            value={7}
             htmlId="merken-abonnieren"
             label="Merken & Abonnieren"
           >
@@ -590,7 +630,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={7} htmlId="notizen" label="Notizen">
+          <LcarsDataRow value={8} htmlId="notizen" label="Notizen">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Unter Charakteren, Missionen, Logbüchern und
@@ -619,7 +659,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={8} htmlId="versionen" label="Versionen">
+          <LcarsDataRow value={9} htmlId="versionen" label="Versionen">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Beim Bearbeiten eines Charakters, einer Mission, eines
@@ -642,7 +682,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={9}
+            value={10}
             htmlId="datenbank-assistent"
             label="Datenbank-Assistent"
           >
@@ -678,7 +718,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={10} htmlId="markdown" label="Markdown">
+          <LcarsDataRow value={11} htmlId="markdown" label="Markdown">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
@@ -794,7 +834,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={11}
+            value={12}
             htmlId="verlinkung"
             label="Verlinkung"
           >
@@ -836,7 +876,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={12}
+            value={13}
             htmlId="spielleitung-admins"
             label="Spielleitung & Admins"
           >
@@ -1005,7 +1045,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={13}
+            value={14}
             htmlId="app-installieren"
             label="App installieren"
           >
@@ -1037,7 +1077,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={14}
+            value={15}
             htmlId="farbschema"
             label="Farbschema"
           >

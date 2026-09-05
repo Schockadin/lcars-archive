@@ -39,6 +39,7 @@ const GM_ITEMS: StaffMenuItem[] = [
   { href: "/gm/talents", label: "Talente", permission: "gm.access" },
   { href: "/gm/focuses", label: "Schwerpunkte", permission: "gm.access" },
   { href: "/gm/rules", label: "Regeln", permission: "gm.access" },
+  { href: "/gm/chronologie", label: "Chronologie", permission: "gm.access" },
   { href: "/gm/dialogues", label: "Gespräche", permission: "gm.access" },
 ];
 

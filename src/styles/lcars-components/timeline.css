@@ -1,0 +1,154 @@
+/* ─── Chronologie (/chronologie) ────────────────────────────────────────
+   Zeitstrahl der Kampagne: links eine schmale Schiene mit dem Datum und
+   einem Punkt je Ereignis, rechts die Ereigniskarte (.mission-akte, siehe
+   AkteCard). Der Aufbau folgt dem Entwurf (Datum · Schiene · Karte), die
+   Optik dem übrigen Archiv — die Karten sind dieselben wie in der
+   Missions-Übersicht, die Farben kommen aus den LCARS-Tokens.
+
+   Bewusst NICHT dieselbe Schiene wie .mission-chronik: dort markieren zwei
+   farbige Kappen Anfang und Ende eines durchgehenden Zeitraums. Hier
+   springt die Chronologie über Monate und Jahre, deshalb steht das Datum
+   an jeder Karte und die Zwischenüberschriften trennen die Monate.
+──────────────────────────────────────────────────────────────────── */
+
+/* Jahresleiste über der Liste — wie im Entwurf eine Reihe von Jahren, die
+   die Liste auf ein Jahr einschränken. Sie scrollt waagerecht, statt bei
+   vielen Jahren umzubrechen. */
+.timeline-yearbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+}
+.timeline-year {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--lcars-border);
+  background: var(--lcars-surface);
+  color: var(--lcars-ink-dim);
+  font-family: var(--lcars-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.timeline-year:hover {
+  color: var(--lcars-ink);
+}
+.timeline-year[aria-pressed="true"] {
+  border-color: var(--lcars-primary);
+  color: var(--lcars-ink-contrast);
+  background: var(--lcars-hover-tint);
+}
+.timeline-year:focus-visible {
+  outline: 2px solid var(--lcars-primary);
+  outline-offset: 2px;
+}
+
+/* Zwischenüberschrift über einer Monatsgruppe: Text links, danach eine
+   Linie bis zum rechten Rand. */
+.timeline-period {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 22px 0 10px;
+  font-family: var(--lcars-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-data);
+}
+.timeline-period:first-child {
+  margin-top: 0;
+}
+.timeline-period::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--lcars-border);
+}
+
+/* Eine Zeile: Datum · Schiene mit Punkt · Karte. */
+.timeline-event {
+  display: grid;
+  grid-template-columns: 74px 18px 1fr;
+  align-items: stretch;
+}
+.timeline-date {
+  padding: 6px 10px 0 0;
+  text-align: right;
+  font-family: var(--lcars-font-mono);
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--lcars-ink-dim);
+}
+/* Der Tag darüber, das Jahr darunter — im Entwurf steht das Jahr fett unter
+   dem Tagesdatum. */
+.timeline-date b {
+  display: block;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--lcars-ink-data);
+}
+
+.timeline-rail {
+  position: relative;
+}
+/* Die durchgehende Linie. Am letzten Ereignis endet sie auf Höhe des
+   Punktes, damit der Strahl nicht ins Leere läuft. */
+.timeline-rail::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--lcars-border);
+}
+.timeline-event:last-child .timeline-rail::before {
+  bottom: auto;
+  height: 14px;
+}
+.timeline-dot {
+  position: absolute;
+  left: 3px;
+  top: 9px;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--timeline-color, var(--lcars-primary));
+  background: var(--lcars-bg);
+}
+
+/* Platz zwischen zwei Karten — die Karte selbst bringt keinen Außenabstand
+   mit (sie steht sonst in einer Liste mit gap). */
+.timeline-event .mission-akte {
+  margin-bottom: 12px;
+}
+
+/* Herkunft und Kategorie unter dem Titel. Die Kategorie trägt die Farbe des
+   Ereignisses, die Herkunft bleibt Nebentext: „aus dem Text abgeleitet" ist
+   eine Einschränkung, kein Etikett, das sich vordrängen soll. */
+.timeline-tag {
+  padding: 1px 6px;
+  border: 1px solid var(--timeline-color, var(--lcars-border));
+  color: var(--timeline-color, var(--lcars-ink-data));
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Responsive Overrides ─────────────────────────────────────────── */
+
+@media (max-width: 520px) {
+  /* Schmal wird die Datumsspalte zu teuer: das Datum wandert in die
+     Meta-Zeile der Karte (dort steht es ohnehin), Schiene und Punkt
+     bleiben als Orientierung. */
+  .timeline-event {
+    grid-template-columns: 18px 1fr;
+  }
+  .timeline-date {
+    display: none;
+  }
+}

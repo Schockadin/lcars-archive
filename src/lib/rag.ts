@@ -334,6 +334,42 @@ export async function streamAnswer(
   return parseCloudflareSse(res.body);
 }
 
+// Ein einzelner Aufruf OHNE Streaming: fragt Workers AI und gibt die fertige
+// Antwort als Text zurück. Für alles, was kein Chat ist, sondern ein Ergebnis
+// — die Chronologie lässt sich so Ereignisse aus einem Text nennen
+// (src/lib/timelineInference.ts). Ein Stream nützt dort nichts: verwertbar
+// ist die Antwort erst, wenn sie vollständig ist und sich parsen lässt.
+export async function completeText(
+  messages: ChatMessage[],
+  opts: { maxTokens?: number } = {},
+): Promise<string> {
+  const accountId = cloudflareAccountId();
+  const apiToken = process.env.CLOUDFLARE_AI_API_TOKEN;
+  if (!accountId || !apiToken) {
+    throw new Error(
+      "CLOUDFLARE_ACCOUNT_ID/R2_ACCOUNT_ID / CLOUDFLARE_AI_API_TOKEN ist nicht gesetzt.",
+    );
+  }
+
+  const url = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/run/${cfModel()}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiToken}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ messages, max_tokens: opts.maxTokens ?? 900 }),
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Workers AI antwortete mit ${res.status}: ${body}`);
+  }
+
+  const json = (await res.json()) as { result?: { response?: string } };
+  return json.result?.response ?? "";
+}
+
 // Verarbeitet eine einzelne SSE-Zeile (`data: {"response":"…"}`) und gibt das
 // `response`-Feld weiter. [DONE]/leere/kaputte Zeilen werden übersprungen.
 function emitSseLine(

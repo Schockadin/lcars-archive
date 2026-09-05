@@ -104,6 +104,18 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "Das Portrait füllt jetzt das Bildfeld des Charakterbogens aus und ist oben links passend zur Vorlage schräg abgeschnitten — vorher stand ein hochformatiges Bild als schmaler Streifen mit weißen Rändern darin.",
       },
       {
+        text: "Die Chronologie ist zurück: „Chronologie“ im Hauptmenü zeigt die ganze Kampagne als Zeitstrahl — von der ältesten bis zur jüngsten Begebenheit, mit Sortierung, Suche, Filter nach Ereignisart und Jahresleiste. Jede Karte führt zu dem Eintrag, aus dem das Ereignis stammt; zu sehen ist nur, was du ohnehin lesen darfst.",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Die Ereignisse der Chronologie entstehen aus drei Quellen: aus den gepflegten Angaben (Missionsbeginn und -ende, Logbuch- und Gesprächsdatum, Geburtsdatum einer Figur), aus den Marken, die ihr mit dem Kalender-Knopf im Text setzt — die Karte springt dann genau an diese Stelle im Bericht —, und aus dem, was die Spielleitung aus einem Text ableiten lässt. Abgeleitete Ereignisse sind als solche gekennzeichnet.",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Neu für die Spielleitung unter „Leitung → Chronologie“: aus einem Bericht die Ereignisse ableiten lassen, die darin stecken, aber in keinem Feld stehen („drei Tage später …“). Das Ergebnis steht sofort in der Chronologie und lässt sich dort einzeln wieder entfernen; ein zweiter Durchlauf über denselben Text legt nichts doppelt an.",
+        tutorial: "chronologie",
+      },
+      {
         text: "Neu für den Einstieg: die Seite „Erste Schritte“ (/willkommen) erklärt in Kürze, was dieses Archiv ist, und führt durch die ersten Schritte — Passwort festlegen, Charakter anlegen, Erschaffung abschließen, erstes Logbuch schreiben, ein Gespräch beginnen. Zu jedem offenen Schritt gibt es einen Link direkt in den passenden Ablauf. Dieselbe Liste steht auf dem Dashboard und verschwindet dort, sobald alles erledigt ist.",
         tutorial: "erste-schritte",
       },

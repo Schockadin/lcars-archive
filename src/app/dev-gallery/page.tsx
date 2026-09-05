@@ -12,9 +12,11 @@ import CharacterSheetPreviewOverlay from "@/components/character/CharacterSheetP
 import PersonnelFileView from "@/components/character/PersonnelFileView";
 import RelationGraph from "@/components/character/RelationGraph";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
+import TimelineView from "@/components/timeline/TimelineView";
 import SettingsPanel from "@/app/_shared/SettingsPanel";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { buildOnboardingSteps } from "@/lib/onboardingSteps";
+import type { TimelineEvent } from "@/lib/timelineTypes";
 import { DEFAULT_ADVANCEMENT_RULES } from "@/lib/advancement";
 import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
@@ -84,6 +86,60 @@ const DEMO_ONBOARDING = buildOnboardingSteps({
   logCount: 0,
   dialogueCount: 0,
 });
+
+// Vier Ereignisse der Chronologie über zwei Jahre und drei Monate: genug für
+// die Jahresleiste, die Monats-Trenner und je ein Beispiel der drei Herkünfte
+// (gepflegte Angabe, Marke im Text, vom Modell abgeleitet).
+const DEMO_TIMELINE: TimelineEvent[] = [
+  {
+    id: "mission:erste:start",
+    date: "2401-03-05",
+    title: "Erste Mission",
+    detail: "Beginn des Einsatzes.",
+    category: "mission",
+    origin: "metadata",
+    sourceType: "mission",
+    sourceTitle: "Erste Mission",
+    href: "/missions/erste-mission",
+    people: ["Tuvok", "Kira"],
+  },
+  {
+    id: "mission_log:log-1:marker-1",
+    date: "2401-03-07",
+    title: "Erstkontakt mit der Sonde",
+    detail: null,
+    category: "discovery",
+    origin: "marker",
+    sourceType: "mission_log",
+    sourceTitle: "Log Eins",
+    href: "/missions/erste-mission/log-1#timeline-1",
+    people: ["Tuvok"],
+  },
+  {
+    id: "inferred:1",
+    date: "2401-03-09",
+    title: "Zwischenfall im Maschinenraum",
+    detail: "Zwei Tage später kam es zu einem Zwischenfall.",
+    category: "conflict",
+    origin: "inferred",
+    sourceType: "mission_log",
+    sourceTitle: "Log Eins",
+    href: "/missions/erste-mission/log-1",
+    people: [],
+  },
+  {
+    id: "character:tuvok:birth",
+    date: "2364-05-11",
+    title: "Tuvok geboren",
+    detail: null,
+    category: "character",
+    origin: "metadata",
+    sourceType: "character",
+    sourceTitle: "Tuvok",
+    href: "/characters/tuvok",
+    people: ["Tuvok"],
+  },
+];
 
 // Nur für lokale Playwright-E2E-Läufe (next dev) — testet Layout-Details
 // (Switch-Trenner/-Hintergrund, DataRow-Pillen-Breiten), die jsdom
@@ -251,6 +307,13 @@ export default function DevGalleryPage() {
       >
         <h2 className="lcars-text">Markdown-Editor (10 Zeilen)</h2>
         <MarkdownEditor id="demo-markdown" rows={10} defaultValue="**Text**" />
+      </section>
+
+      {/* Die Chronologie (/chronologie) mit Attrappen-Ereignissen: die echte
+          Seite braucht die Datenbank und die Sichtbarkeit des Betrachters. */}
+      <section id="timeline" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Chronologie</h2>
+        <TimelineView events={DEMO_TIMELINE} />
       </section>
 
       <section className="flex flex-col gap-[10px]">

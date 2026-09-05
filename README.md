@@ -417,6 +417,39 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   YAML-Frontmatter) oder als PDF (serverseitig erzeugt, ohne Chromium/
   Puppeteer — läuft dadurch auf Netlify Functions). Berücksichtigt dieselbe
   Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst.
+- **Chronologie (`/chronologie`)** — die Kampagne als Zeitstrahl nach ihrer
+  eigenen Zeitrechnung (In-Story-Datum), nicht nach Bearbeitungszeit. Die
+  Ereignisse kommen aus drei Quellen und werden in `src/lib/timeline.ts`
+  zusammengetragen:
+  1. **Gepflegte Angaben** der Inhalte (Missionsbeginn/-ende, `log_date` eines
+     Logbuchs, `metadata.logDate` eines Gesprächs, `metadata.dateOfBirth` einer
+     Figur, ein Datums-Attribut eines Datenbank-Eintrags).
+  2. **Marken im Fließtext** — `<!-- timeline: JJJJ-MM-TT | Titel | Kategorie -->`,
+     gesetzt über den Kalender-Knopf im MarkdownEditor (`TimelineMarkerButton`).
+     Sie erzeugen im gerenderten Text eine unsichtbare Sprungmarke
+     `#timeline-N` (`remarkTimelineAnchors` in `src/lib/markdown.ts`); die Karte
+     verlinkt genau dorthin. Die Zählung folgt der Dokumentreihenfolge ALLER
+     Marken — auch ungültiger —, sonst zeigten die Links hinter einer kaputten
+     Marke auf die falsche Stelle.
+  3. **Abgeleitete Ereignisse** aus dem Sprachmodell (siehe unten).
+  (1) und (2) entstehen beim Lesen und werden **nicht** gespeichert: eine
+  gespeicherte Kopie liefe bei jeder Bearbeitung auseinander und die
+  Sichtbarkeit müsste doppelt gepflegt werden. Fünf Abfragen für die ganze
+  Seite, ungecacht (der Inhalt hängt am Betrachter, wie beim Beziehungsgraph).
+  Filter (Sortierung, Suche, Ereignisart, Jahr) laufen als reine Funktionen in
+  `src/lib/timelineTypes.ts` und sind dort einzeln getestet.
+- **Ereignisse ableiten (`/gm/chronologie`)** — die Spielleitung lässt je Inhalt
+  das Sprachmodell die Begebenheiten nennen, die im Text stecken, aber in keinem
+  Feld stehen („drei Tage später …"). Verwendet dieselbe Retrieval-Pipeline wie
+  der Datenbank-Assistent (Zusammenhang aus dem Archiv, gleicher RBAC-Filter)
+  plus einen nicht-streamenden Aufruf (`completeText` in `src/lib/rag.ts`). Die
+  Antwort eines Modells ist Text, keine Datenstruktur: `parseInferredEvents`
+  schneidet das JSON-Array heraus und prüft jedes Feld einzeln (13 Tests).
+  Übernommene Ereignisse landen in `timeline_events` (die Tabelle hält
+  ausschließlich abgeleitete Ereignisse), sind in der Ansicht als „aus dem Text
+  abgeleitet" gekennzeichnet und hängen in ihrer Sichtbarkeit am Quell-Inhalt.
+  Bewusst nicht automatisch beim Speichern: ein Durchlauf kostet einen
+  Modellaufruf und gehört gelesen, bevor er in der Chronologie aller steht.
 - **Erste Schritte (`/willkommen`)** — Einstiegsseite für neue Konten: was das
   Archiv ist, plus eine Liste der ersten Schritte (Passwort, Charakter,
   Erschaffung, Logbuch, Gespräch) mit Link in den jeweiligen Ablauf. Bewusst
@@ -739,7 +772,7 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind                                                                                                    |
 | `npm run db:purge-deleted`  | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist                                                              |
 | `npm run test`              | Führt die Unit-Tests aus (`src/**/*.test.ts`)                                                                                                    |
-| `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Zugangs-Gates der kontogebundenen Routen, Komponenten-Galerie inkl. Charakter-Assistent, Bogen-Ansicht, Beziehungsgraph, Einstiegs-Liste und aufklappbaren Abschnitten sowie Layout-/Schrift-Regressionen an beiden Viewports) |
+| `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Zugangs-Gates der kontogebundenen Routen, Komponenten-Galerie inkl. Charakter-Assistent, Bogen-Ansicht, Beziehungsgraph, Chronologie, Einstiegs-Liste und aufklappbaren Abschnitten sowie Layout-/Schrift-Regressionen an beiden Viewports) |
 | `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz **mit pgvector**, siehe unten)               |
 
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante

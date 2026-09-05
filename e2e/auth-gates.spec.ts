@@ -17,6 +17,7 @@ const GESCHUETZT = [
   "/gm/talents",
   "/gm/focuses",
   "/gm/rules",
+  "/gm/chronologie",
   "/admin",
 ];
 

@@ -73,6 +73,13 @@ export async function purgeExpiredSoftDeletedContent(
     RETURNING id, slug
   `;
   for (const c of characterRows) {
+    // Auch Charaktere können abgeleitete Chronologie-Ereignisse tragen
+    // (source_type 'character', siehe timeline_events) — sie hängen an
+    // keinem FK und müssen deshalb hier mit weg.
+    await sql`
+      DELETE FROM timeline_events
+      WHERE source_type = 'character' AND source_slug = ${c.slug}
+    `;
     await purgeNotesFor("character", c.slug);
     await purgeRevisionsFor("character", c.id);
     await purgeContentImagesFor("character", c.id);
@@ -147,6 +154,10 @@ export async function purgeContentById(
     `;
     if (!target) return false;
     await sql`DELETE FROM characters WHERE id = ${id}`;
+    await sql`
+      DELETE FROM timeline_events
+      WHERE source_type = 'character' AND source_slug = ${target.slug}
+    `;
     await purgeNotesFor("character", target.slug);
     await purgeRevisionsFor("character", target.id);
     await purgeContentImagesFor("character", id);

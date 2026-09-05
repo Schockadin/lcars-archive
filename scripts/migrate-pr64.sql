@@ -213,3 +213,35 @@ CREATE TABLE IF NOT EXISTS campaign_rules (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- ---------------------------------------------------------------------------
+-- 9) Chronologie: abgeleitete Ereignisse (identisch zu schema.sql).
+-- ---------------------------------------------------------------------------
+-- Die Tabelle timeline_events gibt es seit PR #27; sie lag brach, seit die
+-- frühere Timeline-Seite entfernt wurde. Mit der Chronologie (/chronologie)
+-- ist sie wieder in Gebrauch — allerdings NUR noch für die vom Sprachmodell
+-- abgeleiteten Ereignisse (siehe src/lib/timelineInference.ts). Alles, was
+-- sich aus den Feldern eines Inhalts oder aus einem <!-- timeline: … -->-
+-- Marker ergibt, wird beim Lesen aus den Inhalten selbst gebildet und
+-- NICHT gespeichert: gespeicherte Kopien liefen bei jeder Bearbeitung
+-- auseinander.
+--
+-- Deshalb drei neue Spalten und eine gelockerte Altlast:
+--   origin      — woher das Ereignis stammt (hier immer 'inferred')
+--   detail      — ein bis zwei Sätze zum Ereignis, vom Modell formuliert
+--   confidence  — wie sicher sich das Modell war (0…1), nur zur Anzeige
+--   href        — bekommt eine Vorgabe, weil er sich jetzt aus source_type
+--                 und source_slug ergibt statt beim Schreiben mitgeliefert
+--                 zu werden.
+ALTER TABLE timeline_events
+  ADD COLUMN IF NOT EXISTS origin     TEXT NOT NULL DEFAULT 'inferred',
+  ADD COLUMN IF NOT EXISTS detail     TEXT,
+  ADD COLUMN IF NOT EXISTS confidence REAL,
+  ADD COLUMN IF NOT EXISTS created_by INT REFERENCES users(id) ON DELETE SET NULL;
+
+ALTER TABLE timeline_events ALTER COLUMN href SET DEFAULT '';
+
+-- Ein Inhalt soll dasselbe Ereignis nicht doppelt bekommen, wenn die
+-- Spielleitung die Ableitung zweimal laufen lässt.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_timeline_events_unique
+  ON timeline_events(source_type, source_slug, event_date, title);
