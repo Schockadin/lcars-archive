@@ -417,6 +417,14 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   YAML-Frontmatter) oder als PDF (serverseitig erzeugt, ohne Chromium/
   Puppeteer — läuft dadurch auf Netlify Functions). Berücksichtigt dieselbe
   Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst.
+- **Erste Schritte (`/willkommen`)** — Einstiegsseite für neue Konten: was das
+  Archiv ist, plus eine Liste der ersten Schritte (Passwort, Charakter,
+  Erschaffung, Logbuch, Gespräch) mit Link in den jeweiligen Ablauf. Bewusst
+  OHNE eigene Fortschritts-Tabelle: jeder Schritt wird an den vorhandenen Daten
+  abgelesen (`src/lib/onboardingSteps.ts` als reine, testbare Funktion,
+  `src/lib/onboarding.ts` holt die Tatsachen). Dieselbe Liste erscheint auf dem
+  Dashboard (`OnboardingSection`) und verschwindet dort, sobald alles erledigt
+  ist; `/willkommen` bleibt als Übersicht erreichbar.
 - **Kampagnenband als PDF** — `/api/export/campaign-book` (Knopf auf der
   Missions-Übersicht, nur für Angemeldete) bündelt den gesamten
   Kampagnenverlauf in einer Datei: Titelseite, Inhaltsverzeichnis, danach je

@@ -10,6 +10,7 @@ import FollowedContentSection from "./FollowedContentSection";
 import OpenDialoguesSection from "./OpenDialoguesSection";
 import NewsSection from "./NewsSection";
 import ChangelogSection from "./ChangelogSection";
+import OnboardingSection from "./OnboardingSection";
 import type { User } from "@/types/db";
 
 const ROLE_LABELS: Record<User["role"], string> = {
@@ -70,9 +71,17 @@ export default async function Dashboard({ user }: { user: User }) {
 
           {firstVisit && (
             <p className="lcars-text">
-              Das ist dein erster Besuch — willkommen an Bord.
+              Das ist dein erster Besuch — willkommen an Bord.{" "}
+              <Link href="/willkommen" className="underline">
+                Erste Schritte
+              </Link>
+              .
             </p>
           )}
+
+          {/* Verschwindet von selbst, sobald alle Schritte erledigt sind
+              (siehe OnboardingSection). */}
+          <OnboardingSection userId={user.id} />
 
           <OpenDialoguesSection items={openDialogues} />
 

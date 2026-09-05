@@ -104,6 +104,10 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "Das Portrait füllt jetzt das Bildfeld des Charakterbogens aus und ist oben links passend zur Vorlage schräg abgeschnitten — vorher stand ein hochformatiges Bild als schmaler Streifen mit weißen Rändern darin.",
       },
       {
+        text: "Neu für den Einstieg: die Seite „Erste Schritte“ (/willkommen) erklärt in Kürze, was dieses Archiv ist, und führt durch die ersten Schritte — Passwort festlegen, Charakter anlegen, Erschaffung abschließen, erstes Logbuch schreiben, ein Gespräch beginnen. Zu jedem offenen Schritt gibt es einen Link direkt in den passenden Ablauf. Dieselbe Liste steht auf dem Dashboard und verschwindet dort, sobald alles erledigt ist.",
+        tutorial: "erste-schritte",
+      },
+      {
         text: "Neu auf der Missions-Übersicht: „Kampagnenband (PDF)“ packt den ganzen Kampagnenverlauf in eine Datei — Titelseite, Inhaltsverzeichnis und danach jede Mission mit ihrer Beschreibung und allen Logbüchern, chronologisch von der ältesten an. Der Band enthält genau das, was du auch sonst lesen darfst; nicht öffentliche Logbücher sind darin gekennzeichnet.",
         tutorial: "merken-abonnieren",
       },

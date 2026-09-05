@@ -7,6 +7,7 @@
 // DB-frei (wie campaignFormat.ts / permissions.ts), damit sie überall
 // importierbar und unit-testbar sind.
 export const TUTORIAL_SECTIONS = [
+  { id: "erste-schritte", label: "Erste Schritte" },
   { id: "fuer-besucher", label: "Für Besucher" },
   { id: "konto-rollen", label: "Konto & Rollen" },
   { id: "eigene-inhalte", label: "Eigene Inhalte" },

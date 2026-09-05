@@ -35,6 +35,36 @@ export default function TutorialPage() {
         <div className="flex flex-col gap-[10px] mt-[16px]">
           <LcarsDataRow
             value={1}
+            htmlId="erste-schritte"
+            label="Erste Schritte"
+          >
+            <div className="lcars-text flex flex-col gap-[12px]">
+              <p>
+                Frisch dabei? Angemeldet führt dich{" "}
+                <strong>/willkommen</strong> durch den Einstieg: was dieses
+                Archiv ist und welche Schritte anstehen — Passwort festlegen,
+                Charakter anlegen, Erschaffung abschließen, erstes Logbuch
+                schreiben, ein Gespräch beginnen. Zu jedem offenen Schritt
+                steht dort ein Link, der direkt in den passenden Ablauf führt.
+              </p>
+              <p>
+                Der Fortschritt wird nirgends abgehakt, sondern an deinen
+                Daten abgelesen: sobald ein Charakter existiert, gilt der
+                Schritt als erledigt — und wenn du ihn wieder löschst, ist er
+                es auch wieder nicht. Die Liste steht zusätzlich auf deinem{" "}
+                <strong>Dashboard</strong> und verschwindet dort von selbst,
+                sobald alles erledigt ist. Die Seite <strong>/willkommen</strong>{" "}
+                bleibt danach als Übersicht erreichbar.
+              </p>
+              <p>
+                Nichts davon ist Pflicht: Wer nur mitlesen möchte, braucht
+                weder Charakter noch Logbuch.
+              </p>
+            </div>
+          </LcarsDataRow>
+
+          <LcarsDataRow
+            value={2}
             htmlId="fuer-besucher"
             label="Für Besucher"
           >
@@ -83,7 +113,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={2}
+            value={3}
             htmlId="konto-rollen"
             label="Konto & Rollen"
           >
@@ -149,7 +179,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={3}
+            value={4}
             htmlId="eigene-inhalte"
             label="Eigene Inhalte"
           >
@@ -404,7 +434,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={4}
+            value={5}
             htmlId="gespraeche"
             label="Gespräche"
           >
@@ -487,7 +517,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={5}
+            value={6}
             htmlId="merken-abonnieren"
             label="Merken & Abonnieren"
           >
@@ -560,7 +590,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={6} htmlId="notizen" label="Notizen">
+          <LcarsDataRow value={7} htmlId="notizen" label="Notizen">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Unter Charakteren, Missionen, Logbüchern und
@@ -589,7 +619,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={7} htmlId="versionen" label="Versionen">
+          <LcarsDataRow value={8} htmlId="versionen" label="Versionen">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Beim Bearbeiten eines Charakters, einer Mission, eines
@@ -612,7 +642,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={8}
+            value={9}
             htmlId="datenbank-assistent"
             label="Datenbank-Assistent"
           >
@@ -648,7 +678,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={9} htmlId="markdown" label="Markdown">
+          <LcarsDataRow value={10} htmlId="markdown" label="Markdown">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
@@ -764,7 +794,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={10}
+            value={11}
             htmlId="verlinkung"
             label="Verlinkung"
           >
@@ -806,7 +836,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={11}
+            value={12}
             htmlId="spielleitung-admins"
             label="Spielleitung & Admins"
           >
@@ -975,7 +1005,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={12}
+            value={13}
             htmlId="app-installieren"
             label="App installieren"
           >
@@ -1007,7 +1037,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={13}
+            value={14}
             htmlId="farbschema"
             label="Farbschema"
           >
