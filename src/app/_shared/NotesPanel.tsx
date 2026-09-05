@@ -56,6 +56,7 @@ export default function NotesPanel({
   return (
     <SettingsPanel
       title="Notizen"
+      stacked
       hint="Persönliche Notizen und Kommentare für die Runde"
       badge={
         notes.length === 0
@@ -92,7 +93,7 @@ export default function NotesPanel({
         <div
           role="radiogroup"
           aria-label="Sichtbarkeit der Notiz"
-          className="flex flex-wrap gap-[8px]"
+          className="flex flex-col items-start gap-[8px]"
         >
           {(
             [
@@ -174,7 +175,7 @@ function NoteItem({ note, path }: { note: ContentNote; path: string }) {
         className="mission-body lcars-text text-[13px]"
         dangerouslySetInnerHTML={{ __html: note.bodyHtml }}
       />
-      <div className="mt-[6px] flex flex-wrap items-center justify-between gap-[8px]">
+      <div className="mt-[6px] flex flex-col items-start gap-[4px]">
         <span className="text-lcars-ink-dim font-lcars-mono text-[11px]">
           {note.authorName ?? "Unbekannt"} ·{" "}
           {new Date(note.createdAt).toLocaleDateString("de-DE")}

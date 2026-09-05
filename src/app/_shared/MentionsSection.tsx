@@ -24,12 +24,16 @@ export default function MentionsSection({
   return (
     <SettingsPanel
       title={title}
+      stacked
       hint="Inhalte, die auf diesen Eintrag verweisen"
       badge={`${mentions.length} ${mentions.length === 1 ? "Erwähnung" : "Erwähnungen"}`}
     >
       <ul className="flex flex-col gap-[4px]">
         {mentions.map((m) => (
-          <li key={`${m.kind}:${m.slug}`} className="flex flex-wrap items-baseline gap-[8px]">
+          <li
+            key={`${m.kind}:${m.slug}`}
+            className="flex flex-col items-start gap-[2px]"
+          >
             <Link href={m.href} className="lcars-wikilink">
               {m.title}
             </Link>

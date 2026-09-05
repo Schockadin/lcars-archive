@@ -7,17 +7,25 @@
 // die Werte eines fremden Charakters sollen nicht einmal als „existiert, aber
 // verboten" durchscheinen).
 //
+// Gezeigt werden dieselben DREI Blätter wie im Vorschau-Fenster unter
+// /user/characters/[id] (CharacterSheetPreview) und dieselben, die der
+// PDF-Export erzeugt. Vorher stand hier nur Blatt 1 — die Seite zeigte also
+// etwas anderes als der Knopf daneben herunterlud.
+//
 // Bearbeitet wird der Bogen weiterhin ausschließlich unter
-// /user/characters/[id]/stats, also vom Owner selbst.
+// /user/characters/[id], also vom Owner selbst.
 import { notFound } from "next/navigation";
 import {
   getCharacterBySlug,
   getCharacterStatsForGm,
   getOwnCharacterStats,
 } from "@/lib/characters";
+import { listTalents } from "@/lib/talents";
+import { listCampaignRules } from "@/lib/campaignRules";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import PageMeta from "@/components/PageMeta";
-import PersonnelFileView from "@/components/character/PersonnelFileView";
+import CharacterSheetPreview from "@/components/character/CharacterSheetPreview";
+import PrintSheetButton from "@/components/character/PrintSheetButton";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -57,8 +65,16 @@ export default async function CharacterSheetPage({ params }: Props) {
     : await getCharacterStatsForGm(character.id);
   if (!sheet) notFound();
 
+  // Blatt 2 braucht den Talent-Katalog (der Regeltext steht nicht am
+  // Charakter) und die Hausregeln der Runde — dieselben Quellen wie im
+  // PDF-Export.
+  const [talents, campaignRules] = await Promise.all([
+    listTalents(),
+    listCampaignRules(),
+  ]);
+
   return (
-    <div className="lcars-wide-column">
+    <div className="lcars-wide-column pf-preview-page">
       <PageMeta title={character.name} section="characters" />
 
       <h1>Charakterbogen: {sheet.name}</h1>
@@ -67,9 +83,12 @@ export default async function CharacterSheetPage({ params }: Props) {
         selbst unter „Meine Charaktere &rarr; Werte&ldquo;.
       </p>
 
-      <p className="lcars-text">
-        {/* Download über einen Link statt einer Action: der Browser lädt die
-            Datei dann direkt über Content-Disposition herunter. */}
+      {/* Dieselben zwei Aktionen wie im Vorschau-Fenster: über den Browser
+          drucken oder die PDF-Fassung derselben Blätter speichern. Der
+          Download läuft über einen Link statt einer Action, damit der Browser
+          die Datei direkt über Content-Disposition entgegennimmt. */}
+      <p className="lcars-text flex flex-wrap items-center gap-[8px]">
+        <PrintSheetButton />
         <a
           href={`/api/export/character-sheet?characterId=${sheet.id}`}
           className="lcars-pill-btn--outline inline-flex"
@@ -80,12 +99,20 @@ export default async function CharacterSheetPage({ params }: Props) {
       </p>
 
       <article className="mb-[10px]">
-        <PersonnelFileView
-          characterName={sheet.name}
-          rank={sheet.rank}
-          species={sheet.species}
-          portrait={sheet.portrait}
-          stats={sheet.stats}
+        <CharacterSheetPreview
+          input={{
+            characterName: sheet.name,
+            rank: sheet.rank,
+            species: sheet.species,
+            portrait: sheet.portrait,
+            stats: sheet.stats,
+            // characters.bio hält bereits das gerenderte, bereinigte HTML
+            // (siehe updateOwnCharacterBio) — dieselbe Quelle wie die
+            // Charakterseite.
+            bioHtml: character.bio,
+            talents,
+            campaignRules,
+          }}
         />
       </article>
     </div>

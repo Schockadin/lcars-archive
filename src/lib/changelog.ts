@@ -97,6 +97,12 @@ export const CHANGELOG: ChangelogEntry[] = [
       {
         text: "„Erwähnt in“ und „Wer kennt wen“ sind jetzt aufklappbare Bereiche wie die Notizen — mit der Anzahl in der Kopfzeile, sodass man sie überfliegen kann, ohne die Seite länger zu machen.",
       },
+      {
+        text: "Der Knopf „Charakterbogen“ auf einer Charakterseite zeigt jetzt denselben Bogen wie unter „Meine Charaktere“: alle drei Blätter (Personalakte, Spickzettel, Biografie) mit Drucken und derselben PDF-Datei. Vorher stand dort nur das erste Blatt, obwohl das PDF daneben alle drei enthielt.",
+      },
+      {
+        text: "Das Portrait füllt jetzt das Bildfeld des Charakterbogens aus und ist oben links passend zur Vorlage schräg abgeschnitten — vorher stand ein hochformatiges Bild als schmaler Streifen mit weißen Rändern darin.",
+      },
     ],
   },
   {

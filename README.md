@@ -317,6 +317,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Spezies kommen aus der Akte: der Rang steht schreibgeschützt in seinem
   Kasten, die Spezies teilt sich den Kasten „Species & Traits" mit dem
   Merkmals-Feld (`.pf-combo`).
+- **Ein Bogen, zwei Wege** — `/user/characters/[id]` öffnet die drei Blätter
+  als Overlay, `/characters/[slug]/sheet` (Lese-Ansicht für Owner und
+  Spielleitung) zeigt dieselben drei Blätter als Seite; beide bieten Drucken
+  und denselben PDF-Download. Vorher stand auf der Seite nur Blatt 1, während
+  der Knopf daneben alle drei herunterlud. Das Druck-CSS greift für beide
+  (`.pf-preview-overlay` und `.pf-preview-page`).
 - **PDF-Export des Bogens** — `/api/export/character-sheet?characterId=…`
   liefert dieselben drei Blätter wie die Vorschau: den ausgefüllten Bogen, den
   Spickzettel (Talente plus Kernregeln) und die Biografie. Für das dritte Blatt gibt es keine

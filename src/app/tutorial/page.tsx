@@ -513,9 +513,10 @@ export default function TutorialPage() {
               <p>
                 Auf der Seite deines eigenen Charakters (und für die
                 Spielleitung auf jeder Charakterseite) steht außerdem der Knopf{" "}
-                <strong>„Charakterbogen“</strong>: er zeigt den gepflegten Bogen
-                als reine Ansicht — mit Vollbild und demselben PDF-Download wie
-                in deiner eigenen Charakterseite. Gepflegt werden die Werte
+                <strong>„Charakterbogen“</strong>: er zeigt dieselben drei
+                Blätter wie unter „Meine Charaktere“ — Personalakte, Spickzettel
+                und Biografie — als reine Ansicht, mit Drucken und demselben
+                PDF-Download. Gepflegt werden die Werte
                 weiterhin nur von der Person, der der Charakter gehört.
               </p>
               <p>

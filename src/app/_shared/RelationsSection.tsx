@@ -33,6 +33,7 @@ export default function RelationsSection({
     // Beiwerk unter dem eigentlichen Inhalt.
     <SettingsPanel
       title={title}
+      stacked
       hint="Abgeleitet aus gemeinsamen Missionen und Gesprächen"
       badge={`${relations.length} ${relations.length === 1 ? "Verbindung" : "Verbindungen"}`}
     >
@@ -45,7 +46,7 @@ export default function RelationsSection({
         {relations.map((r) => (
           <li
             key={`${r.kind}:${r.slug}`}
-            className="flex flex-wrap items-baseline gap-[8px]"
+            className="flex flex-col items-start gap-[2px]"
           >
             <Link href={r.href} className="lcars-wikilink">
               {r.name}

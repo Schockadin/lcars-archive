@@ -76,11 +76,30 @@
 
 /* Portrait im Bildkasten des Bogens — passt sich ein, ohne die gedruckte
    Umrandung zu überdecken. */
+/* Portrait im Photo-Kasten der Vorlage.
+
+   `cover` statt `contain`: das Feld soll gefüllt sein. Hochformatige Bilder
+   standen sonst als schmaler Streifen mit weißen Rändern darin.
+
+   Der Kasten der Vorlage hat oben links eine 45°-Fase — ohne Zuschnitt läge
+   das Bild dort über der gedruckten Linie. Gemessen an der Vorlage sind das
+   rund 65 Layout-Einheiten in beide Richtungen; als Prozentwerte je Achse
+   (65/195 ≈ 33 %, 65/217 ≈ 30 %) bleibt die Schräge bei jeder Skalierung
+   45°, weil beide aus demselben Maß stammen. */
 .pf-photo {
+  --pf-photo-bevel-x: 33%;
+  --pf-photo-bevel-y: 30%;
   position: absolute;
   z-index: 1;
-  object-fit: contain;
+  object-fit: cover;
   pointer-events: none;
+  clip-path: polygon(
+    var(--pf-photo-bevel-x) 0,
+    100% 0,
+    100% 100%,
+    0 100%,
+    0 var(--pf-photo-bevel-y)
+  );
 }
 
 /* Alles, was auf dem Blatt "geschrieben" steht — Eingabefelder, Ansichts-
@@ -578,11 +597,15 @@ ol) {
 }
 
 /* ── Drucken ───────────────────────────────────────────────────────────
-   „Drucken" im Vorschau-Fenster druckt die drei Blätter, nicht die
-   Anwendung drumherum: alles andere wird ausgeblendet, jedes Blatt beginnt
-   auf einer neuen Seite. */
+   „Drucken" druckt die drei Blätter, nicht die Anwendung drumherum: alles
+   andere wird ausgeblendet, jedes Blatt beginnt auf einer neuen Seite.
+
+   Zwei Orte zeigen dieselben Blätter und sollen sich beim Drucken gleich
+   verhalten: das Vorschau-Fenster (.pf-preview-overlay, /user/characters/[id])
+   und die Bogen-Seite (.pf-preview-page, /characters/[slug]/sheet). */
 @media print {
-  body:has(.pf-preview-overlay) > *:not(:has(.pf-preview-overlay)) {
+  body:has(.pf-preview-overlay) > *:not(:has(.pf-preview-overlay)),
+  body:has(.pf-preview-page) > *:not(:has(.pf-preview-page)) {
     display: none !important;
   }
 
@@ -594,6 +617,17 @@ ol) {
 
   .pf-preview-overlay .pf-preview-bar {
     display: none !important;
+  }
+
+  /* Auf der Bogen-Seite gehören Überschrift, Erklärung und die beiden
+     Aktionen nicht aufs Papier — nur die Blätter. */
+  .pf-preview-page > *:not(article) {
+    display: none !important;
+  }
+
+  .pf-preview-page {
+    max-width: none !important;
+    padding: 0 !important;
   }
 
   .pf-preview {

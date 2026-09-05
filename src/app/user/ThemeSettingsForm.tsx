@@ -121,16 +121,21 @@ function ColorRow({
   onReset: (id: OverrideTokenId) => void;
 }) {
   return (
-    <div className="flex items-center gap-[12px]">
-      <input
-        type="color"
-        aria-label={`${label} – Farbe wählen`}
-        value={value}
-        onChange={(e) => onChange(id, e.target.value)}
-        className="h-[32px] w-[44px] shrink-0 cursor-pointer rounded-[6px] border border-lcars-border bg-transparent p-[2px]"
-      />
-      <span className="flex flex-1 flex-col">
+    // Untereinander statt nebeneinander: in einem breiten Panel stand der
+    // Zurücksetzen-Knopf sonst am äußersten rechten Rand, hunderte Pixel von
+    // der Farbe entfernt, zu der er gehört.
+    <div className="flex flex-col items-start gap-[6px]">
+      <div className="flex items-center gap-[12px]">
+        <input
+          type="color"
+          aria-label={`${label} – Farbe wählen`}
+          value={value}
+          onChange={(e) => onChange(id, e.target.value)}
+          className="h-[32px] w-[44px] shrink-0 cursor-pointer rounded-[6px] border border-lcars-border bg-transparent p-[2px]"
+        />
         <span className="lcars-eyebrow text-lcars-ink-light">{label}</span>
+      </div>
+      <span className="flex flex-col">
         {hint && (
           <span className="text-lcars-ink-dim text-[12px]">{hint}</span>
         )}
@@ -289,6 +294,7 @@ export default function ThemeSettingsForm({
       </div>
 
       <SettingsPanel
+        stacked
         title="Farbschema"
         hint="Basis-Palette der Akzentfarben"
         badge={getTheme(selected).label}
@@ -346,6 +352,7 @@ export default function ThemeSettingsForm({
       </SettingsPanel>
 
       <SettingsPanel
+        stacked
         title="Hintergrund & Flächen"
         hint="Seitenhintergrund, Panels und Rahmen"
         badge={groupBadge(surfaceIds)}
@@ -366,6 +373,7 @@ export default function ThemeSettingsForm({
       </SettingsPanel>
 
       <SettingsPanel
+        stacked
         title="Schriftfarben"
         hint="Jede Textrolle einzeln einstellbar"
         badge={groupBadge(inkIds)}
@@ -386,6 +394,7 @@ export default function ThemeSettingsForm({
       </SettingsPanel>
 
       <SettingsPanel
+        stacked
         title="Akzentfarben"
         hint="Feineinstellung der Farben des Basis-Schemas"
         badge={groupBadge(accentIds)}
