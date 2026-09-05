@@ -18,6 +18,7 @@ import { parseStatsPayload } from "@/lib/characterStatsPayload";
 import { checkOpenCreationStats } from "@/lib/characterStatsRules";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
+import { listFocuses } from "@/lib/focuses";
 import { readCharacterHead } from "./characterHead";
 
 export interface CharacterWizardState {
@@ -62,14 +63,17 @@ export async function createCharacterWizardAction(
   // ausdrücklich (siehe lockCreationAction).
   stats.creationLocked = false;
 
-  const [rules, catalog] = await Promise.all([
+  const [rules, catalog, focusCatalog] = await Promise.all([
     getAdvancementRules(),
     listTalents(),
+    listFocuses(),
   ]);
   const statsError = checkOpenCreationStats(
     stats,
     rules,
     catalog.map((talent) => talent.name),
+    [],
+    focusCatalog.map((focus) => focus.name),
   );
   if (statsError) return { error: statsError };
 

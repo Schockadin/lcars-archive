@@ -29,6 +29,7 @@ import {
 import type { CharacterStats } from "@/types/characterStats";
 import type { AdvancementRules } from "@/lib/advancement";
 import type { Talent } from "@/lib/talentCatalog";
+import type { Focus } from "@/lib/focusCatalog";
 
 const initialState: CharacterWizardState = {};
 
@@ -75,13 +76,15 @@ export default function CharacterWizard({
   isAdminOrGM,
   rules,
   talents,
+  focuses,
 }: {
   userId: number;
   isAdminOrGM: boolean;
-  // Regelwerk und Katalog für den Werte-Schritt (Budgets, Freikontingente,
-  // Talent-Auswahl).
+  // Regelwerk und Kataloge für den Werte-Schritt (Budgets, Freikontingente,
+  // Talent- und Schwerpunkt-Auswahl).
   rules: AdvancementRules;
   talents: Talent[];
+  focuses: Focus[];
 }) {
   const [state, formAction, pending] = useActionState(
     createCharacterWizardAction,
@@ -289,6 +292,7 @@ export default function CharacterWizard({
           onChange={setStats}
           rules={rules}
           talents={talents}
+          focuses={focuses}
           species={species}
           idPrefix="wizard-stats"
         />

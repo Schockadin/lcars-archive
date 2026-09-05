@@ -75,6 +75,13 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "Beim Bearbeiten eines Charakters, einer Mission, eines Logbuchs oder eines Datenbank-Eintrags gibt es jetzt den Bereich „Versionen“: Er zeigt die letzten zwanzig Fassungen des Textes mit Datum, bearbeitender Person und einer Vorschau — jede davon lässt sich mit einem Klick zurückholen. Der aktuelle Stand geht dabei nicht verloren, er wandert selbst in die Historie.",
         tutorial: "versionen",
       },
+      {
+        text: "Schwerpunkte (Focuses) kommen jetzt wie Talente aus einem Katalog statt aus einem Freitextfeld: 170 Einträge aus dem Regelwerk, nach Disziplin gegliedert und durchsuchbar — beim Anlegen des Charakters ebenso wie beim Steigern mit AP. Die Spielleitung ergänzt eigene Schwerpunkte unter „Schwerpunkte“.",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Der Spickzettel des Charakterbogens (Blatt 2, auch im PDF) enthält jetzt neben den Talenten die wichtigsten Regeln für den Spieltisch: wofür man Momentum ausgibt und aufhebt, was die Spielleitung mit Bedrohung anstellt und wie Entschlossenheit funktioniert — auf Deutsch, mit den englischen Begriffen daneben.",
+      },
     ],
   },
   {

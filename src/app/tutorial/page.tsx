@@ -210,9 +210,10 @@ export default function TutorialPage() {
                 Werte, Schwerpunkte, Talente, Angriffe, Ausrüstung, Hobbys,
                 Karriere-Ereignisse — füllst du über{" "}
                 <strong>„Hinzufügen“</strong>; jeder Eintrag hat ein rotes Minus
-                zum Entfernen. Talente kommen aus dem Katalog (siehe unten). Bei
-                Werten, Schwerpunkten und Talenten steht dabei, wie viele der
-                freien Plätze aus der Ersterschaffung du schon vergeben hast.
+                zum Entfernen. Talente <em>und Schwerpunkte</em> kommen aus
+                ihrem Katalog (siehe unten). Bei Werten, Schwerpunkten und
+                Talenten steht dabei, wie viele der freien Plätze aus der
+                Ersterschaffung du schon vergeben hast.
                 Spezies-Fähigkeiten und Sonderregeln bleiben Textfelder — dort
                 stehen meist ganze Regelsätze. Leere Felder gelten als „nicht
                 angegeben“; der maximale Stress ist kein Eingabefeld, sondern
@@ -226,7 +227,7 @@ export default function TutorialPage() {
                 steigerst du mit AP (siehe unten). Ganz oben öffnet{" "}
                 <strong>„Charakterbogen“</strong> die Vorschau: Blatt 1 der
                 Personalbogen mit Stammdaten und Werten, Blatt 2 der
-                Talent-Spickzettel, Blatt 3 die Biografie im selben Look. Dort
+                Spickzettel, Blatt 3 die Biografie im selben Look. Dort
                 stehen auch die Knöpfe zum <strong>Drucken</strong> und zum{" "}
                 <strong>Speichern als PDF</strong> — die PDF-Datei enthält
                 dieselben drei Blätter. Rang und Spezies stehen auf dem Bogen,
@@ -321,9 +322,28 @@ export default function TutorialPage() {
                 in Klammern dahinter.
               </p>
               <p>
+                <strong>Schwerpunkte</strong> (Focuses) wählst du genauso aus
+                einem Katalog — 170 Einträge aus dem Regelwerk, nach Disziplin
+                gegliedert. Das Fenster hat ein Suchfeld und einen
+                Disziplin-Filter; was schon auf deinem Bogen steht, taucht nicht
+                mehr auf. Sechs Schwerpunkte führt das Regelwerk in{" "}
+                <em>zwei</em> Disziplinen („Astrophysics“ bei Steuerung und
+                Wissenschaft, „Survival“ bei Steuerung und Sicherheit, …); auf
+                dem Bogen sind das derselbe Eintrag, die Liste zeigt sie deshalb
+                als eine Zeile mit beiden Disziplinen daneben. Anders als bei
+                Talenten gibt es keinen eigenen Namen: auf dem Bogen steht der
+                Katalogname. Fehlt ein Schwerpunkt, nimmt ihn die Spielleitung
+                unter „Schwerpunkte“ auf.
+              </p>
+              <p>
                 Ganz unten am Bogen findest du einen{" "}
                 <strong>Spickzettel</strong>: alle Talente deines Charakters mit
-                ihrem vollen Regeltext, zum Nachschlagen am Spieltisch.
+                ihrem vollen Regeltext — und darunter die wichtigsten Regeln für
+                den Spieltisch: wofür du <strong>Momentum</strong> ausgibst und
+                aufhebst, was die Spielleitung mit <strong>Bedrohung</strong>{" "}
+                anstellt und wie <strong>Entschlossenheit</strong> funktioniert.
+                Auf Deutsch, mit den englischen Begriffen daneben, damit am
+                Tisch beides passt. Der Spickzettel steckt auch im PDF.
               </p>
               <p>
                 Für die Zahlen gelten die <strong>Regeln der Runde</strong>:
@@ -795,6 +815,15 @@ export default function TutorialPage() {
                   durchsuchen, filtern, bestehende Talente bearbeiten und eigene
                   ergänzen. Löschen lassen sich nur selbst ergänzte Talente —
                   sonst verschwänden Einträge unter bereits gepflegten Bögen.
+                </li>
+                <li>
+                  Genauso unter <strong>„Schwerpunkte“</strong> den
+                  Schwerpunkt-Katalog (Focuses): 170 Einträge aus dem Regelwerk,
+                  nach Disziplin gegliedert, durchsuchbar und filterbar. Neue
+                  Schwerpunkte bekommen einen Namen, eine Disziplin und
+                  wahlweise eine Erläuterung; auch hier lassen sich nur selbst
+                  ergänzte löschen. Ein Name darf in zwei Disziplinen stehen —
+                  auf dem Bogen ist es derselbe Schwerpunkt.
                 </li>
                 <li>
                   Das <strong>Ingame-Jahr</strong> (unter „Kampagne“) bestimmt

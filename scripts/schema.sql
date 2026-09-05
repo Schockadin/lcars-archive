@@ -1091,3 +1091,31 @@ CREATE TABLE IF NOT EXISTS content_revisions (
 );
 CREATE INDEX IF NOT EXISTS idx_content_revisions_target
   ON content_revisions(content_type, content_id, created_at DESC);
+
+-- ---------------------------------------------------------------------------
+-- focuses
+-- ---------------------------------------------------------------------------
+-- Schwerpunkt-Katalog (Focuses), gepflegt unter /gm/focuses. Aufgebaut wie
+-- talents: Startdaten aus dem Regeltext (scripts/seed/focuses.json), von der
+-- Spielleitung ergänzbar (is_custom).
+--
+-- UNIQUE über (name, discipline) statt nur über den Namen: der Regeltext
+-- führt sechs Schwerpunkte in ZWEI Disziplinen („Astrophysics" bei Conn und
+-- Science, „Survival" bei Conn und Security, …). Auf dem Bogen steht davon
+-- nur der Name — dort sind es dieselben, und alles, was „schon eingetragen"
+-- prüft, vergleicht deshalb über den Namen (siehe focusKey in
+-- focusCatalog.ts).
+CREATE TABLE IF NOT EXISTS focuses (
+  id          SERIAL PRIMARY KEY,
+  name        TEXT NOT NULL,
+  discipline  TEXT NOT NULL
+                CHECK (discipline IN ('command', 'conn', 'engineering',
+                                      'security', 'science', 'medicine')),
+  description TEXT,
+  is_custom   BOOLEAN NOT NULL DEFAULT FALSE,
+  created_by  INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (name, discipline)
+);
+CREATE INDEX IF NOT EXISTS idx_focuses_discipline ON focuses(discipline);

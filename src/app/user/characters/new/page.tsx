@@ -5,6 +5,7 @@ import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "../../dal";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
+import { listFocuses } from "@/lib/focuses";
 import CharacterWizard from "./CharacterWizard";
 
 export const metadata: Metadata = {
@@ -39,9 +40,10 @@ export default async function NewCharacterPage() {
   // Regelwerk und Talent-Katalog braucht erst der zweite Schritt — sie hängen
   // aber an nichts, was der Assistent unterwegs ändert, und werden deshalb
   // gleich mitgeladen statt nachträglich nachgereicht.
-  const [rules, talents] = await Promise.all([
+  const [rules, talents, focuses] = await Promise.all([
     getAdvancementRules(),
     listTalents(),
+    listFocuses(),
   ]);
 
   return (
@@ -60,6 +62,7 @@ export default async function NewCharacterPage() {
           isAdminOrGM={userCan(user, "content.autolink_tools", roleMap)}
           rules={rules}
           talents={talents}
+          focuses={focuses}
         />
       </article>
     </>

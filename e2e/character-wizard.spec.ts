@@ -163,7 +163,7 @@ test.describe("Charakter-Assistent", () => {
     // Blatt 1 Personalakte, Blatt 2 Spickzettel, Blatt 3 Biografie. Die
     // Blattnamen stehen im Titelreiter der STA-Kopfzeile (.pf-doc-tab).
     await expect(preview.locator(".pf-doc-tab")).toHaveText([
-      "Talents",
+      "Cheat Sheet",
       "Biography",
     ]);
     // Beide Zusatzblätter tragen die Aufmachung des Hauptblatts.
@@ -269,9 +269,15 @@ test.describe("Bogen-Vorschau", () => {
     // Alle drei Blätter stehen im Fenster — die Blattnamen im Titelreiter
     // der STA-Kopfzeile (.pf-doc-tab).
     await expect(overlay.locator(".pf-doc-tab")).toHaveText([
-      "Talents",
+      "Cheat Sheet",
       "Biography",
     ]);
+    // Der Spickzettel führt neben den Talenten die Kernregeln (Momentum,
+    // Bedrohung, Entschlossenheit) — siehe src/lib/coreRules.ts.
+    await expect(
+      overlay.locator(".pf-doc-heading", { hasText: "MOMENTUM AUSGEBEN" }),
+    ).toBeVisible();
+    await expect(overlay.locator(".pf-doc-rule")).toHaveCount(15);
     await expect(overlay.locator(".pf-doc-wordmark")).toHaveCount(2);
 
     // Escape schließt (useOverlayDismiss) — gleiches Muster wie die übrigen

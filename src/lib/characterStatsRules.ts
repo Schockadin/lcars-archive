@@ -30,6 +30,33 @@ export function checkTalentsFromCatalog(
   return `Unbekanntes Talent: ${unknown.join(", ")}. Talente werden aus dem Katalog gewählt.`;
 }
 
+// Schwerpunkte kommen ebenfalls ausschließlich aus dem Katalog (siehe
+// FocusPicker). Anders als bei Talenten gibt es keine Umbenennung — auf dem
+// Bogen steht der Katalogname selbst. Bereits gespeicherte Einträge bleiben
+// aus demselben Grund wie oben erlaubt: sonst ließe sich ein Bogen mit
+// Alt-Bestand aus der Freitext-Zeit überhaupt nicht mehr speichern.
+export function checkFocusesFromCatalog(
+  focuses: string[],
+  catalogNames: string[],
+  alreadyStored: string[] = [],
+): string | null {
+  // Leerer Katalog = der Seed lief noch nicht (siehe
+  // scripts/seed-focuses.ts). Dann JEDEN Schwerpunkt abzulehnen würde
+  // schlicht kein Speichern mehr zulassen — in dem Fall wird nicht geprüft.
+  if (catalogNames.length === 0) return null;
+  const known = new Set(catalogNames.map((name) => name.trim().toLowerCase()));
+  const stored = new Set(
+    alreadyStored.map((entry) => entry.trim().toLowerCase()),
+  );
+  const unknown = focuses.filter(
+    (entry) =>
+      !known.has(entry.trim().toLowerCase()) &&
+      !stored.has(entry.trim().toLowerCase()),
+  );
+  if (unknown.length === 0) return null;
+  return `Unbekannter Schwerpunkt: ${unknown.join(", ")}. Schwerpunkte werden aus dem Katalog gewählt.`;
+}
+
 // Freikontingente der Ersterschaffung. Talente und Schwerpunkte kosten danach
 // AP, ihr Kontingent ist deshalb eine harte Grenze. Werte (values) bleiben
 // ungedeckelt: sie lassen sich später nicht kaufen, ein hartes Limit würde
@@ -48,13 +75,15 @@ export function checkCreationFreeCounts(
 }
 
 // Alles zusammen für einen Bogen, dessen Erschaffung noch offen ist: Talente
-// aus dem Katalog, Freikontingente und die Verteilungsregeln (nur ein Attribut
-// auf 12, zwei auf 11 usw.).
+// und Schwerpunkte aus ihren Katalogen, Freikontingente und die
+// Verteilungsregeln (nur ein Attribut auf 12, zwei auf 11 usw.).
 export function checkOpenCreationStats(
   stats: CharacterStats,
   rules: AdvancementRules,
   catalogNames: string[],
   alreadyStored: string[] = [],
+  focusCatalogNames: string[] = [],
+  focusesAlreadyStored: string[] = [],
 ): string | null {
   const talentError = checkTalentsFromCatalog(
     stats.talents,
@@ -62,6 +91,13 @@ export function checkOpenCreationStats(
     alreadyStored,
   );
   if (talentError) return talentError;
+
+  const focusError = checkFocusesFromCatalog(
+    stats.focuses,
+    focusCatalogNames,
+    focusesAlreadyStored,
+  );
+  if (focusError) return focusError;
 
   const freeError = checkCreationFreeCounts(stats, rules);
   if (freeError) return freeError;

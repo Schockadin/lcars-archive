@@ -155,8 +155,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `personnelFileLayout.ts`, Optik in
   `src/styles/lcars-components/personnel-file.css`; jedes Maß ein Vielfaches
   von `--pf-unit` = 1px der Vorlage, sodass der Bogen in einer schmaleren
-  Spalte als Ganzes schrumpft statt umzubrechen), dahinter der
-  Talent-Spickzettel und die Biografie im selben Papier-Look. Im Fenster stehen
+  Spalte als Ganzes schrumpft statt umzubrechen), dahinter der Spickzettel und
+  die Biografie im selben Papier-Look. Im Fenster stehen
   „Drucken" (Browser-Druck, das Druck-CSS blendet alles außer den Blättern aus
   und beginnt jedes auf einer neuen Seite) und „Speichern" (derselbe
   PDF-Export, damit die Datei unabhängig vom Browser gleich aussieht).
@@ -206,6 +206,24 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   diese beiden Prüfungen hinterließe ein direkt abgeschickter POST einen
   dauerhaft überzogenen bzw. leeren Bogen — nach dem Festschreiben sind die
   Felder schreibgeschützt, und `checkAdvancement` steigert keinen leeren Wert.
+- **Schwerpunkt-Katalog** — Focuses liegen wie die Talente in einer eigenen
+  Tabelle (`focuses`: Name, Disziplin, optionale Erläuterung, `is_custom`),
+  gepflegt unter `/gm/focuses`. `UNIQUE (name, discipline)` statt nur über den
+  Namen: sechs Schwerpunkte führt der Regeltext in ZWEI Disziplinen
+  (`Astrophysics` bei Conn und Science, `Survival` bei Conn und Security, …).
+  Auf dem Bogen steht nur der Name — dort sind das dieselben, und alles, was
+  „schon eingetragen" prüft, vergleicht deshalb über den Namen (`focusKey` in
+  `src/lib/focusCatalog.ts`); die Auswahlliste fasst sie zu einer Zeile mit
+  beiden Disziplinen zusammen. Startdaten: `scripts/seed/focuses.json` (170
+  Einträge aus dem Regeltext), eingespielt mit `npm run db:seed-focuses`
+  (idempotent). Auf dem Charakterbogen ersetzt `FocusPicker.tsx` (dasselbe
+  Modal-Muster wie der `TalentPicker`, mit Suche und Disziplin-Filter) das
+  freie Tippen — in der Ersterschaffung wie beim Steigern mit AP. Serverseitig
+  prüfen `checkFocusesFromCatalog` (Speichern) und `advanceCharacterAction`
+  (Steigern), dass ein Eintrag aus dem Katalog stammt; bereits gespeicherte
+  Alt-Einträge aus der Freitext-Zeit bleiben erlaubt, und ein LEERER Katalog
+  (Seed noch nicht gelaufen) hebt die Prüfung auf, statt jedes Speichern zu
+  blockieren.
 - **Talent-Katalog** — die Talente der Runde liegen in der Tabelle `talents`
   (Name eindeutig, Kategorie, Voraussetzung, Regeltext). Klammern sind im
   Namen nicht erlaubt: auf dem Bogen steht ein umbenanntes Talent als
@@ -242,8 +260,14 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   durchgesetzt (`statsAction.ts`, `advancementAction.ts`): ein Eintrag muss im
   Katalog stehen — bereits gespeicherte Alt-Einträge aus der Freitext-Zeit
   bleiben erlaubt, sonst ließe sich ein solcher Bogen nie wieder speichern.
-  Ganz unten am Bogen listet ein **Spickzettel** (`TalentCheatSheet.tsx`) die
-  Talente des Charakters mit vollem Regeltext.
+  Ganz unten am Bogen listet ein **Spickzettel** die Talente des Charakters
+  mit vollem Regeltext und darunter die **Kernregeln** für den Spieltisch —
+  Momentum, Bedrohung und Entschlossenheit, übersetzt aus dem Regeltext der
+  Runde. Sie liegen als Daten in `src/lib/coreRules.ts` statt als fertiges
+  Markup, weil dieselbe Liste zweimal gerendert wird: als Blatt 2 der
+  Bildschirm-Vorschau und im PDF (`@react-pdf` kennt kein `<p>`, ein
+  gemeinsames Markup ist also nicht möglich). Sie hängen an keinem Charakter
+  und stehen deshalb nicht in der Datenbank.
 - **Charakter-Ansichten mit Umschalter** — `/user/characters/[id]` leitet auf
   den Bogen weiter; ein Umschalter im gemeinsamen Layout
   (`[characterId]/layout.tsx` + `CharacterTabs.tsx`) wechselt zwischen
@@ -257,7 +281,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Merkmals-Feld (`.pf-combo`).
 - **PDF-Export des Bogens** — `/api/export/character-sheet?characterId=…`
   liefert dieselben drei Blätter wie die Vorschau: den ausgefüllten Bogen, den
-  Talent-Spickzettel und die Biografie. Für das dritte Blatt gibt es keine
+  Spickzettel (Talente plus Kernregeln) und die Biografie. Für das dritte Blatt gibt es keine
   HTML-Fassung (`@react-pdf` kennt kein HTML); `src/lib/pdf/markdownBlocks.ts`
   zerlegt den Markdown-Quelltext deshalb in Überschriften, Absätze,
   Aufzählungen und Zitate und führt Inline-Auszeichnungen auf ihren Text
@@ -325,6 +349,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   - `/gm/talents` — Talent-Katalog durchsuchen, filtern und bearbeiten sowie
     eigene Talente ergänzen. Löschbar sind nur selbst ergänzte Talente, damit
     keine Einträge unter bereits gepflegten Charakterbögen verschwinden.
+  - `/gm/focuses` — dasselbe für den Schwerpunkt-Katalog (Suche,
+    Disziplin-Filter, bearbeiten, ergänzen; löschbar nur selbst ergänzte).
 - **Persönliche News** — der News-Feed auf dem Dashboard bleibt persistent
   sichtbar (nicht mehr nur bis zum nächsten Besuch): jede Meldung lässt sich
   einzeln per X ausblenden (gilt danach als gelesen) und verschwindet automatisch,
@@ -642,6 +668,7 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:archive`        | Importiert nur die Datenbank-Einträge                                                                                                               |
 | `npm run db:revalidate`     | Invalidiert nur die Caches (siehe `SITE_URL`)                                                                                                    |
 | `npm run db:seed-talents`   | Spielt den Talent-Katalog aus `scripts/seed/talents.json` ein (idempotent)                                                                        |
+| `npm run db:seed-focuses`   | Spielt den Schwerpunkt-Katalog aus `scripts/seed/focuses.json` ein (idempotent)                                                                   |
 | `npm run embed:all`         | Baut den Vektor-Index des Datenbank-Assistenten für alle Inhalte (neu) auf — Backfill, idempotent (siehe „Datenbank-Assistent (RAG)")                  |
 | `npm run db:reset`          | Setzt die Datenbank zurück                                                                                                                       |
 | `npm run db:backup`         | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup")                                                            |

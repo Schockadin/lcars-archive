@@ -19,6 +19,7 @@ import { checkOpenCreationStats } from "@/lib/characterStatsRules";
 import { validateCharacterStats } from "@/lib/characterStats";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
+import { listFocuses } from "@/lib/focuses";
 import { readCharacterHead } from "./characterHead";
 
 // Die drei Panels der eigenen Charakterseite speichern jeweils für sich:
@@ -248,15 +249,18 @@ export async function saveCharacterStatsAction(
     const ruleErrors = validateCharacterStats(stats);
     if (ruleErrors.length > 0) return { error: ruleErrors.join(" ") };
   } else {
-    const [rules, catalog] = await Promise.all([
+    const [rules, catalog, focusCatalog] = await Promise.all([
       getAdvancementRules(),
       listTalents(),
+      listFocuses(),
     ]);
     const error = checkOpenCreationStats(
       stats,
       rules,
       catalog.map((talent) => talent.name),
       current.stats.talents,
+      focusCatalog.map((focus) => focus.name),
+      current.stats.focuses,
     );
     if (error) return { error };
   }

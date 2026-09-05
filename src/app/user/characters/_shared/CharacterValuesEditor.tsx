@@ -19,7 +19,9 @@ import {
 import { creationBudget, type AdvancementRules } from "@/lib/advancement";
 import type { CharacterStats } from "@/types/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
+import type { Focus } from "@/lib/focusCatalog";
 import { TalentModal } from "./TalentPicker";
+import { FocusModal } from "./FocusPicker";
 import EntryAddModal from "./EntryAddModal";
 
 // Werte-Editor aus normalen Bedienelementen — Gegenstück zum Bogen-Faksimile,
@@ -36,12 +38,14 @@ import EntryAddModal from "./EntryAddModal";
 // Sonderregeln) — dort steht in der Runde ein Absatz, keine Aufzählung. Alle
 // übrigen Listen laufen über das Hinzufügen-Fenster.
 const TEXTAREA_LISTS = new Set(["speciesAbilities", "specialRules"]);
-// Talente kommen ausschließlich aus dem Katalog und haben ein eigenes Fenster.
+// Talente und Schwerpunkte kommen ausschließlich aus ihrem Katalog und haben
+// je ein eigenes Auswahlfenster (TalentPicker/FocusPicker) statt des freien
+// Eingabefelds.
 const CATALOG_LIST = "talents";
+const FOCUS_LIST = "focuses";
 
 const LIST_PLACEHOLDERS: Record<string, string> = {
   values: "z.B. „Ich diene der Flotte, nicht dem Ruhm“",
-  focuses: "z.B. Warpfeldtheorie",
   pastimes: "z.B. Jazz-Klarinette",
   attacks: "z.B. Phaser Typ 2 (Strahl)",
   equipment: "z.B. Tricorder",
@@ -51,7 +55,7 @@ const LIST_PLACEHOLDERS: Record<string, string> = {
 // Freikontingent der Ersterschaffung je Liste, soweit es eines gibt.
 function freeCount(key: string, rules: AdvancementRules): number | null {
   if (key === "values") return rules.creationFreeValues;
-  if (key === "focuses") return rules.creationFreeFocuses;
+  if (key === FOCUS_LIST) return rules.creationFreeFocuses;
   if (key === CATALOG_LIST) return rules.creationFreeTalents;
   return null;
 }
@@ -175,6 +179,7 @@ export default function CharacterValuesEditor({
   onChange,
   rules,
   talents,
+  focuses,
   species,
   idPrefix,
 }: {
@@ -184,6 +189,8 @@ export default function CharacterValuesEditor({
   rules: AdvancementRules;
   // Talent-Katalog für die Auswahl (gepflegt unter /gm/talents).
   talents: Talent[];
+  // Schwerpunkt-Katalog für die Auswahl (gepflegt unter /gm/focuses).
+  focuses: Focus[];
   // Spezies der Akte — für Voraussetzungen wie „Vulcan".
   species: string | null;
   // Präfix der Feld-IDs; auf einer Seite können zwei Editoren stehen.
@@ -449,9 +456,10 @@ export default function CharacterValuesEditor({
               (stats as unknown as Record<string, string[]>)[field.key] ?? [];
             const free = freeCount(field.key, rules);
             const isCatalog = field.key === CATALOG_LIST;
+            const isFocus = field.key === FOCUS_LIST;
             // Talente und Schwerpunkte sind nach dem Festschreiben nur noch
             // über AP zu haben; die übrigen Listen bleiben frei pflegbar.
-            const listLocked = locked && (isCatalog || field.key === "focuses");
+            const listLocked = locked && (isCatalog || isFocus);
             return (
               <div key={field.key} className="stat-editor-list">
                 <div className="stat-editor-list-head">
@@ -479,10 +487,16 @@ export default function CharacterValuesEditor({
                         aria-label={
                           isCatalog
                             ? `Talent wählen (${field.label})`
-                            : `${field.label}: Eintrag hinzufügen`
+                            : isFocus
+                              ? `Schwerpunkt wählen (${field.label})`
+                              : `${field.label}: Eintrag hinzufügen`
                         }
                         title={
-                          isCatalog ? "Talent wählen" : "Eintrag hinzufügen"
+                          isCatalog
+                            ? "Talent wählen"
+                            : isFocus
+                              ? "Schwerpunkt wählen"
+                              : "Eintrag hinzufügen"
                         }
                       >
                         <PlusIcon />
@@ -574,7 +588,23 @@ export default function CharacterValuesEditor({
           onClose={() => setAdding(null)}
         />
       )}
-      {adding !== null && adding !== CATALOG_LIST && (
+      {adding === FOCUS_LIST && (
+        <FocusModal
+          focuses={focuses}
+          taken={stats.focuses}
+          // Während der Erschaffung kommen Schwerpunkte aus dem
+          // Freikontingent — kosten also nichts. Gesteigert wird über das
+          // AP-Panel.
+          cost={null}
+          affordable
+          onPick={(name) => {
+            setList(FOCUS_LIST, (prev) => [...prev, name]);
+            setAdding(null);
+          }}
+          onClose={() => setAdding(null)}
+        />
+      )}
+      {adding !== null && adding !== CATALOG_LIST && adding !== FOCUS_LIST && (
         <EntryAddModal
           title={`${LIST_FIELDS.find((f) => f.key === adding)?.label ?? "Eintrag"} hinzufügen`}
           placeholder={LIST_PLACEHOLDERS[adding] ?? ""}

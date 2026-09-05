@@ -48,6 +48,7 @@ import {
 } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
 import { PERSONNEL_FILE_ART_PNG } from "./personnelFileArt";
+import { CORE_RULES } from "@/lib/coreRules";
 
 const PT_PER_PX = 0.75;
 const PAGE_WIDTH = 816 * PT_PER_PX;
@@ -223,6 +224,52 @@ const styles = StyleSheet.create({
     fontSize: pt(9),
     lineHeight: 1.4,
   },
+  // Abschnittsüberschrift des Spickzettels („TALENTE", „MOMENTUM AUSGEBEN",
+  // …) — gesperrte Versalien über einer dünnen Linie, wie .pf-doc-heading in
+  // der Bildschirm-Vorschau.
+  cheatSection: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: pt(10),
+    letterSpacing: pt(2),
+    color: SHEET_BLUE,
+    marginTop: pt(14),
+    marginBottom: pt(6),
+    paddingBottom: pt(3),
+    borderBottomWidth: pt(1),
+    borderBottomColor: SHEET_BLUE_DIM,
+    borderBottomStyle: "solid",
+  },
+  cheatIntro: {
+    fontSize: pt(8.5),
+    lineHeight: 1.4,
+    color: "#6a6a6a",
+    marginBottom: pt(6),
+  },
+  // Eine Regelzeile. Bewusst OHNE Kasten: fünfzehn davon als Kästen wären
+  // eine Kästchenwand (auf dem Bildschirm ebenso, siehe .pf-doc-rule).
+  cheatRule: {
+    marginBottom: pt(5),
+  },
+  cheatRuleHead: {
+    flexDirection: "row",
+    alignItems: "baseline",
+  },
+  cheatRuleTerm: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: pt(8.5),
+    letterSpacing: pt(0.8),
+  },
+  cheatRuleCost: {
+    fontSize: pt(8),
+    letterSpacing: pt(0.8),
+    color: SHEET_BLUE,
+    marginLeft: pt(5),
+  },
+  cheatRuleText: {
+    fontSize: pt(8.5),
+    lineHeight: 1.4,
+    marginTop: pt(1),
+  },
 });
 
 function experienceLabel(stats: CharacterStats): string {
@@ -390,7 +437,7 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
     <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.cheatPage}>
       <View style={styles.cheatMast}>
         <Text style={styles.cheatWordmark}>STAR TREK ADVENTURES</Text>
-        <Text style={styles.cheatTab}>TALENTS</Text>
+        <Text style={styles.cheatTab}>CHEAT SHEET</Text>
       </View>
       <View style={styles.cheatBannerRule} />
       <Text style={styles.cheatSubline}>
@@ -400,6 +447,8 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
       <Text style={styles.cheatFooter} fixed>
         {SHEET_FOOTER}
       </Text>
+
+      <Text style={styles.cheatSection}>TALENTE · TALENTS</Text>
 
       {input.stats.talents.map((entry, index) => {
         const { name, original } = parseTalentEntry(entry);
@@ -421,6 +470,32 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
           </View>
         );
       })}
+
+      {/* Momentum, Bedrohung und Entschlossenheit — dieselbe Liste wie in der
+          Bildschirm-Vorschau (siehe coreRules.ts). */}
+      {CORE_RULES.map((section) => (
+        <View key={section.title}>
+          <Text style={styles.cheatSection}>
+            {`${section.title.toUpperCase()} · ${section.original.toUpperCase()}`}
+          </Text>
+          {section.intro && (
+            <Text style={styles.cheatIntro}>{section.intro}</Text>
+          )}
+          {section.items.map((item) => (
+            <View key={item.term} style={styles.cheatRule} wrap={false}>
+              <View style={styles.cheatRuleHead}>
+                <Text style={styles.cheatRuleTerm}>
+                  {item.term.toUpperCase()}
+                </Text>
+                {item.cost && (
+                  <Text style={styles.cheatRuleCost}>{item.cost}</Text>
+                )}
+              </View>
+              <Text style={styles.cheatRuleText}>{item.text}</Text>
+            </View>
+          ))}
+        </View>
+      ))}
     </Page>
   );
 }

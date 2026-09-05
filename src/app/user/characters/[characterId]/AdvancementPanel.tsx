@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import { ATTRIBUTE_FIELDS, DEPARTMENT_FIELDS } from "@/lib/characterStats";
 import {
@@ -16,7 +16,9 @@ import {
 import { AP_REASON_LABELS, type ApAccount } from "@/lib/apReasons";
 import type { CharacterStats } from "@/types/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
+import type { Focus } from "@/lib/focusCatalog";
 import TalentPicker from "../_shared/TalentPicker";
+import FocusPicker from "../_shared/FocusPicker";
 
 const initialState: AdvancementActionResult = {};
 
@@ -33,6 +35,7 @@ export default function AdvancementPanel({
   account,
   rules,
   talents,
+  focuses,
   species,
   savedComplete,
 }: {
@@ -44,6 +47,8 @@ export default function AdvancementPanel({
   rules: AdvancementRules;
   // Katalog für die Talent-Auswahlliste (gepflegt unter /gm/talents).
   talents: Talent[];
+  // Katalog für die Schwerpunkt-Auswahlliste (gepflegt unter /gm/focuses).
+  focuses: Focus[];
   // Spezies der Akte — für Voraussetzungen wie „Vulcan".
   species: string | null;
   // Sind im GESPEICHERTEN Stand alle Attribute und Disziplinen gesetzt? stats
@@ -60,7 +65,6 @@ export default function AdvancementPanel({
     lockCreationAction,
     initialState,
   );
-  const [focus, setFocus] = useState("");
 
   const budget = creationBudget(stats, rules);
   const locked = stats.creationLocked;
@@ -278,10 +282,12 @@ export default function AdvancementPanel({
               )}
             </div>
 
-            <form action={formAction} className="stat-ap-add">
-              <input type="hidden" name="characterId" value={characterId} />
-              <input type="hidden" name="kind" value="focus" />
-              <label className="stat-field-label" htmlFor="advance-focus">
+            {/* Schwerpunkte kommen wie Talente ausschließlich aus dem
+                Katalog — kein Freitext mehr. Auch hier bucht das Fenster
+                direkt, deshalb kein <form>, sondern der programmatische
+                Aufruf der Action. */}
+            <div className="stat-ap-add">
+              <span className="stat-field-label">
                 <span className="stat-label-primary">Focus</span>
                 <span className="stat-label-secondary">
                   {rules.focusCost} AP
@@ -289,27 +295,28 @@ export default function AdvancementPanel({
                     ? ` · danach ${account.available - rules.focusCost} AP`
                     : " · nicht genug AP"}
                 </span>
-              </label>
-              <input
-                id="advance-focus"
-                name="entry"
-                type="text"
-                value={focus}
-                onChange={(e) => setFocus(e.target.value)}
-                className="stat-field-input"
+              </span>
+              <FocusPicker
+                focuses={focuses}
+                taken={stats.focuses}
+                cost={rules.focusCost}
+                availableAp={account.available}
+                disabled={pending || focuses.length === 0}
+                onPick={(name) => {
+                  const payload = new FormData();
+                  payload.set("characterId", String(characterId));
+                  payload.set("kind", "focus");
+                  payload.set("entry", name);
+                  formAction(payload);
+                }}
               />
-              <button
-                type="submit"
-                disabled={
-                  pending ||
-                  focus.trim() === "" ||
-                  account.available < rules.focusCost
-                }
-                className="lcars-pill-btn--outline disabled:opacity-50"
-              >
-                Hinzufügen
-              </button>
-            </form>
+              {focuses.length === 0 && (
+                <span className="stat-label-secondary">
+                  Der Schwerpunkt-Katalog ist leer — die Spielleitung pflegt ihn
+                  unter &bdquo;Schwerpunkte&ldquo;.
+                </span>
+              )}
+            </div>
           </div>
         </div>
       )}

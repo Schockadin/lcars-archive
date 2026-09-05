@@ -508,6 +508,75 @@ ol) {
   line-height: 1.5;
 }
 
+/* Abschnittsüberschrift auf einem Zusatzblatt („Talente", „Momentum
+   ausgeben", …). Wie der Titelreiter gesperrt und in Versalien, aber ohne
+   Fläche — sie gliedert nur die Einträge darunter. */
+.pf-doc-heading {
+  margin: calc(var(--pf-unit) * 18) 0 calc(var(--pf-unit) * 8);
+  font-size: calc(var(--pf-unit) * 14);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pf-accent);
+  border-bottom: calc(var(--pf-unit) * 1) solid var(--pf-accent-dim);
+  padding-bottom: calc(var(--pf-unit) * 4);
+}
+
+/* Nur die ALLERERSTE Überschrift des Blatts steht ohne Abstand oben an. Ein
+   schlichtes .pf-doc-heading:first-child griffe zu weit: jeder Regelabschnitt
+   liegt in einem eigenen <div>, seine Überschrift wäre dort ebenfalls
+   erstes Kind und klebte am Text des vorigen Abschnitts. */
+.pf-doc-content > .pf-doc-heading:first-child {
+  margin-top: 0;
+}
+
+/* Der englische Originalbegriff hinter der deutschen Überschrift — dieselbe
+   zweisprachige Beschriftung wie auf dem Hauptblatt. */
+.pf-doc-heading-original {
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+/* Einleitender Satz unter einer Abschnittsüberschrift. */
+.pf-doc-intro {
+  margin: 0 0 calc(var(--pf-unit) * 10);
+  font-size: calc(var(--pf-unit) * 13);
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
+/* Eine Regelzeile: Begriff, optionaler Preis, Erklärung. Kompakter als
+   .pf-doc-entry — davon stehen fünfzehn auf dem Blatt, jede als Kasten wäre
+   eine Kästchenwand. */
+.pf-doc-rule {
+  margin-bottom: calc(var(--pf-unit) * 8);
+}
+
+.pf-doc-rule:last-child {
+  margin-bottom: 0;
+}
+
+.pf-doc-rule-term {
+  font-size: calc(var(--pf-unit) * 13);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pf-doc-rule-cost {
+  margin-left: calc(var(--pf-unit) * 6);
+  font-size: calc(var(--pf-unit) * 12);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pf-accent);
+}
+
+.pf-doc-rule-text {
+  margin: calc(var(--pf-unit) * 2) 0 0;
+  font-size: calc(var(--pf-unit) * 13);
+  line-height: 1.5;
+}
+
 /* ── Drucken ───────────────────────────────────────────────────────────
    „Drucken" im Vorschau-Fenster druckt die drei Blätter, nicht die
    Anwendung drumherum: alles andere wird ausgeblendet, jedes Blatt beginnt

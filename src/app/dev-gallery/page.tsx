@@ -12,6 +12,7 @@ import CharacterSheetPreviewOverlay from "@/components/character/CharacterSheetP
 import { DEFAULT_ADVANCEMENT_RULES } from "@/lib/advancement";
 import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
+import type { Focus } from "@/lib/focusCatalog";
 
 // Zwei Katalog-Talente reichen für die Auswahl im Werte-Schritt und für den
 // Regeltext auf dem Spickzettel-Blatt — eines ohne, eines mit Voraussetzung.
@@ -32,6 +33,13 @@ const DEMO_TALENTS: Talent[] = [
     description: "Vulcanische Geistesdisziplin gegen Furcht und Beeinflussung.",
   },
 ].map((talent) => ({ ...talent, isCustom: false }) as Talent);
+
+// Dito für den Schwerpunkt-Katalog (siehe /gm/focuses).
+const DEMO_FOCUSES: Focus[] = [
+  { id: 1, name: "Astrophysics", discipline: "science", description: null },
+  { id: 2, name: "Helm Operations", discipline: "conn", description: null },
+  { id: 3, name: "Diplomacy", discipline: "command", description: null },
+].map((focus) => ({ ...focus, isCustom: false }) as Focus);
 
 // Nur für lokale Playwright-E2E-Läufe (next dev) — testet Layout-Details
 // (Switch-Trenner/-Hintergrund, DataRow-Pillen-Breiten), die jsdom
@@ -105,6 +113,7 @@ export default function DevGalleryPage() {
           isAdminOrGM={false}
           rules={DEFAULT_ADVANCEMENT_RULES}
           talents={DEMO_TALENTS}
+          focuses={DEMO_FOCUSES}
         />
       </section>
 

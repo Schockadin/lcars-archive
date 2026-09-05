@@ -7,11 +7,13 @@ import {
   type Talent,
 } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
+import { CORE_RULES } from "@/lib/coreRules";
 
 // Der Charakterbogen als dreiblättrige Vorschau — dasselbe, was der
 // PDF-Export erzeugt:
 //   Blatt 1  das Personnel File mit Stammdaten und Werten
-//   Blatt 2  der Talent-Spickzettel
+//   Blatt 2  der Spickzettel: Talente des Charakters plus die Kernregeln
+//            (Momentum, Bedrohung, Entschlossenheit)
 //   Blatt 3  die Biografie im selben Papier-Look
 //
 // Reine Darstellung ohne eigenen Zustand: der Anlege-Assistent zeigt damit
@@ -85,7 +87,10 @@ function TalentSheet({
   );
 
   return (
-    <DocSheet title="Talents" subtitle={`Spickzettel · ${characterName}`}>
+    <DocSheet title="Cheat Sheet" subtitle={`Spickzettel · ${characterName}`}>
+      <h3 className="pf-doc-heading">
+        Talente <span className="pf-doc-heading-original">Talents</span>
+      </h3>
       {entries.length === 0 ? (
         <p className="pf-doc-empty">Noch keine Talente eingetragen.</p>
       ) : (
@@ -110,7 +115,37 @@ function TalentSheet({
           );
         })
       )}
+
+      <CoreRulesSection />
     </DocSheet>
+  );
+}
+
+// Momentum, Bedrohung und Entschlossenheit — dieselben Regeln, die man am
+// Tisch dauernd nachschlägt, direkt hinter den Talenten. Sie hängen an keinem
+// Charakter, stehen also auf jedem Spickzettel gleich (siehe coreRules.ts).
+function CoreRulesSection() {
+  return (
+    <>
+      {CORE_RULES.map((section) => (
+        <div key={section.title}>
+          <h3 className="pf-doc-heading">
+            {section.title}{" "}
+            <span className="pf-doc-heading-original">{section.original}</span>
+          </h3>
+          {section.intro && <p className="pf-doc-intro">{section.intro}</p>}
+          {section.items.map((item) => (
+            <div key={item.term} className="pf-doc-rule">
+              <span className="pf-doc-rule-term">{item.term}</span>
+              {item.cost && (
+                <span className="pf-doc-rule-cost">{item.cost}</span>
+              )}
+              <p className="pf-doc-rule-text">{item.text}</p>
+            </div>
+          ))}
+        </div>
+      ))}
+    </>
   );
 }
 
