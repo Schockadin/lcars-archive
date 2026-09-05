@@ -606,7 +606,11 @@ function ImportEditFields({
             ))}
           </select>
         </FormField>
-        <FormField label="Portrait (Bild-URL)" htmlFor={`${idPrefix}-portrait`}>
+        <FormField
+          label="Portrait (Bildquelle)"
+          htmlFor={`${idPrefix}-portrait`}
+          hint="Wird beim Import einmal geladen und als eigenes Bild abgelegt — gespeichert wird nicht die Adresse. Klappt das nicht, entsteht der Charakter ohne Portrait und der Import meldet es."
+        >
           <input
             id={`${idPrefix}-portrait`}
             name="portrait"

@@ -39,6 +39,11 @@ import matter from "gray-matter";
 import type postgres from "postgres";
 import sql from "@/lib/db";
 import { markdownToHtml } from "@/lib/markdown";
+import { needsPortraitImport } from "@/lib/portraitSource";
+import {
+  importPortraitFromUrl,
+  PortraitImportError,
+} from "@/lib/portraitImport";
 import { createMissionLog, missionLogSlugExists } from "@/lib/missions";
 import { buildArchiveAttributes } from "@/lib/archive";
 import {
@@ -711,12 +716,32 @@ export async function commitCharacterMarkdown(
     generation: edits.generation,
   };
 
+  // Ein Portrait aus dem Frontmatter ist eine ADRESSE. Gespeichert wird
+  // stattdessen ein eigener Upload: das Bild wird einmal geholt und in den
+  // Asset-Bucket gelegt (siehe portraitImport.ts). Scheitert das, wird der
+  // Charakter trotzdem angelegt — nur ohne Portrait, mit einem Hinweis. Die
+  // Adresse steht weiterhin in der Datei, ein zweiter Anlauf ist also möglich.
+  const warnings: string[] = [];
+  let portrait = edits.portrait;
+  if (needsPortraitImport(portrait, process.env.R2_ASSET_PUBLIC_BASE_URL)) {
+    try {
+      portrait = await importPortraitFromUrl(portrait!);
+    } catch (err) {
+      warnings.push(
+        `Das Portrait "${edits.portrait}" konnte nicht übernommen werden ` +
+          `(${err instanceof PortraitImportError ? err.message : String(err)}) — ` +
+          "der Charakter wurde ohne Portrait angelegt.",
+      );
+      portrait = null;
+    }
+  }
+
   const [row] = await sql<{ id: number }[]>`
     INSERT INTO characters (
       slug, name, status, portrait, bio, metadata,
       source_md, frontmatter, updated_at
     ) VALUES (
-      ${slug}, ${name}, ${edits.status}, ${edits.portrait}, ${bio},
+      ${slug}, ${name}, ${edits.status}, ${portrait}, ${bio},
       ${sql.json(metadata as ReturnType<typeof JSON.parse>)}, ${edits.bodyMarkdown},
       ${sql.json(fm as ReturnType<typeof JSON.parse>)}, NOW()
     )
@@ -726,7 +751,7 @@ export async function commitCharacterMarkdown(
   if (!row) {
     return { ok: false, error: `Slug "${slug}" ist bereits vergeben.` };
   }
-  return { ok: true, slug, id: row.id, warnings: [] };
+  return { ok: true, slug, id: row.id, warnings };
 }
 
 // ── Missionslogs ─────────────────────────────────────────────────────────

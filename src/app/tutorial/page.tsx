@@ -305,8 +305,10 @@ export default function TutorialPage() {
                 Original bleibt hinterlegt: beim nächsten Bearbeiten kannst du
                 den Ausschnitt neu wählen, ohne die Datei erneut zu suchen.
                 Ohne eigenen Ausschnitt zeigt der Bogen die Bildmitte. Früher
-                eingetragene Adressen bleiben stehen und werden weiter
-                angezeigt.
+                eingetragene Adressen holt die Administration einmalig ins
+                Archiv, sodass am Ende jedes Portrait dem Archiv selbst
+                gehört — dein Bogen sieht danach aus wie vorher, nur hängt er
+                nicht mehr an einem fremden Server.
               </p>
               <p>
                 Im Schritt <strong>Werte</strong> trägst du die sechs Attribute

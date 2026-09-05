@@ -1057,8 +1057,20 @@ alle hochgeladenen Bilder. Ein Portrait kommt ausschließlich als **hochgeladene
 Feld „oder Bild-Adresse" ist weg, und `readCharacterHead` liest gar kein
 Adressfeld mehr aus dem Formular, sondern bekommt den bisherigen Stand vom
 Aufrufer gereicht — eine fremde Adresse kann damit auch aus einem von Hand
-gebauten Request nicht mehr gesetzt werden. Bereits gespeicherte Adressen
-bleiben stehen. Beim Anlegen und Bearbeiten der Stammdaten lässt
+gebauten Request nicht mehr gesetzt werden. Die beiden verbliebenen Wege, auf
+denen eine Adresse hereinkommt (Vault-Ingest und der Markdown-Import im
+Adminbereich), **laden das Bild beim Import einmal herunter und legen es als
+eigenen Upload ab** statt die Adresse zu speichern (`src/lib/portraitImport.ts`);
+klappt das nicht, entsteht der Eintrag ohne Portrait und der Lauf sagt es.
+Bestandsdaten zieht `npm run assets:import-portrait-links` nach: es überführt
+jede noch gespeicherte fremde Adresse und jede eingebettete `data:`-URL aus
+`characters.portrait` und `metadata.portraitSource` in einen Upload
+(idempotent, `--dry-run` zeigt vorab, was käme; eigene Uploads und die
+`/api/content-images/…`-Pfade bleiben unberührt, siehe
+`src/lib/portraitSource.ts`). Weil dieser Import serverseitig eine fremde
+Adresse abruft, prüft er jedes Ziel — auch über Umleitungen hinweg — gegen
+Schema und interne Adressbereiche, damit er nicht zum Werkzeug für Anfragen
+ins eigene Netz wird (SSRF), und deckelt Größe und Wartezeit. Beim Anlegen und Bearbeiten der Stammdaten lässt
 sich der **Bildausschnitt** selbst wählen (`PortraitPicker.tsx`,
 Rechenweg in `src/lib/portraitCrop.ts`): ziehen verschiebt, ein Regler
 vergrößert bis 4×, der Rahmen zeigt den hochkant stehenden Bildkasten des

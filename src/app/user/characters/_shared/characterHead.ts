@@ -7,6 +7,7 @@ import {
   parsePortraitCrop,
   type PortraitCrop,
 } from "@/lib/portraitCrop";
+import { parseImageDataUrl } from "@/lib/portraitSource";
 import type { Character } from "@/types/character";
 
 // Die Stammdaten der Charakter-Akte aus einem Formular lesen — geteilt vom
@@ -161,23 +162,15 @@ export async function readCharacterHead(
   };
 }
 
-// Eine Data-URL in Bytes zerlegen. Nur Bilder werden angenommen; welche
-// genau, entscheidet weiterhin assertImageAsset beim Hochladen.
+// Eine Data-URL in Bytes zerlegen. Das Zerlegen selbst steht in
+// portraitSource.ts — es wird auch beim Import einer Adresse gebraucht.
 function decodeDataUrl(
   value: string,
 ): { buffer: Buffer; mimeType: string } | null {
-  const match = /^data:([a-z]+\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=]+)$/i.exec(
-    value,
-  );
-  if (!match) return null;
-  const mimeType = match[1].toLowerCase();
-  if (!mimeType.startsWith("image/")) return null;
-  try {
-    const buffer = Buffer.from(match[2], "base64");
-    return buffer.byteLength > 0 ? { buffer, mimeType } : null;
-  } catch {
-    return null;
-  }
+  const parsed = parseImageDataUrl(value);
+  if (!parsed) return null;
+  const buffer = Buffer.from(parsed.base64, "base64");
+  return buffer.byteLength > 0 ? { buffer, mimeType: parsed.mimeType } : null;
 }
 
 // Das Formular liefert die Einstellung als JSON. Ein kaputter Wert darf das
