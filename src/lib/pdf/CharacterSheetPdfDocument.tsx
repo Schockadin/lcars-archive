@@ -49,6 +49,7 @@ import {
 import type { CharacterStats } from "@/types/characterStats";
 import { PERSONNEL_FILE_ART_PNG } from "./personnelFileArt";
 import { CORE_RULES } from "@/lib/coreRules";
+import type { CampaignRule } from "@/lib/campaignRuleTypes";
 
 const PT_PER_PX = 0.75;
 const PAGE_WIDTH = 816 * PT_PER_PX;
@@ -310,6 +311,8 @@ export interface CharacterSheetPdfInput {
   stats: CharacterStats;
   // Katalog für den Spickzettel — der Regeltext steht nicht am Charakter.
   talents: Talent[];
+  // Hausregeln der Runde (gepflegt unter /gm/rules); leer = kein Abschnitt.
+  campaignRules: CampaignRule[];
   // Biografie als Markdown-Quelltext (characters.source_md). @react-pdf kennt
   // kein HTML, das gerenderte bio-Feld nützt hier also nichts — die einfachen
   // Blöcke daraus baut toPdfBlocks.
@@ -496,6 +499,24 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
           ))}
         </View>
       ))}
+
+      {/* Hausregeln der Runde hinter den Regeln aus dem Regelwerk; gibt es
+          keine, fällt der Abschnitt weg. */}
+      {input.campaignRules.length > 0 && (
+        <View>
+          <Text style={styles.cheatSection}>EIGENE REGELN · HOUSE RULES</Text>
+          {input.campaignRules.map((rule) => (
+            <View key={rule.id} style={styles.cheatRule} wrap={false}>
+              <View style={styles.cheatRuleHead}>
+                <Text style={styles.cheatRuleTerm}>
+                  {rule.name.toUpperCase()}
+                </Text>
+              </View>
+              <Text style={styles.cheatRuleText}>{rule.body}</Text>
+            </View>
+          ))}
+        </View>
+      )}
     </Page>
   );
 }

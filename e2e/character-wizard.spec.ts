@@ -273,11 +273,17 @@ test.describe("Bogen-Vorschau", () => {
       "Biography",
     ]);
     // Der Spickzettel führt neben den Talenten die Kernregeln (Momentum,
-    // Bedrohung, Entschlossenheit) — siehe src/lib/coreRules.ts.
+    // Bedrohung, Entschlossenheit) — siehe src/lib/coreRules.ts — und dahinter
+    // die eigenen Regeln der Runde (DEMO_RULES in der Galerie, in der Anwendung
+    // aus campaign_rules).
     await expect(
       overlay.locator(".pf-doc-heading", { hasText: "MOMENTUM AUSGEBEN" }),
     ).toBeVisible();
-    await expect(overlay.locator(".pf-doc-rule")).toHaveCount(15);
+    await expect(
+      overlay.locator(".pf-doc-heading", { hasText: "EIGENE REGELN" }),
+    ).toBeVisible();
+    // 15 Kernregeln (coreRules.ts) + 1 Hausregel aus DEMO_RULES.
+    await expect(overlay.locator(".pf-doc-rule")).toHaveCount(16);
     await expect(overlay.locator(".pf-doc-wordmark")).toHaveCount(2);
 
     // Escape schließt (useOverlayDismiss) — gleiches Muster wie die übrigen

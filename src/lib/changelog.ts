@@ -82,6 +82,14 @@ export const CHANGELOG: ChangelogEntry[] = [
       {
         text: "Der Spickzettel des Charakterbogens (Blatt 2, auch im PDF) enthält jetzt neben den Talenten die wichtigsten Regeln für den Spieltisch: wofür man Momentum ausgibt und aufhebt, was die Spielleitung mit Bedrohung anstellt und wie Entschlossenheit funktioniert — auf Deutsch, mit den englischen Begriffen daneben.",
       },
+      {
+        text: "Die Spielleitung kann eigene Regeln der Runde hinterlegen (Name und Regeltext, in selbst gewählter Reihenfolge). Sie stehen auf dem Spickzettel jedes Charakterbogens hinter den Regeln aus dem Regelwerk — auf dem Bildschirm wie im PDF.",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Neu unter „Charaktere → Beziehungen“: ein Beziehungsgraph der ganzen Kampagne. Er zeigt auf einen Blick, wer mit wem im Einsatz war und wer mit wem geredet hat — dicke Linien für viele Berührungspunkte, große Punkte für gut vernetzte Figuren, ein Klick führt zur Figur. Zeigst du auf eine Figur, treten sie und ihre Verbindungen hervor.",
+        tutorial: "fuer-besucher",
+      },
     ],
   },
   {

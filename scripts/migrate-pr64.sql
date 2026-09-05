@@ -189,3 +189,27 @@ CREATE TABLE IF NOT EXISTS focuses (
   UNIQUE (name, discipline)
 );
 CREATE INDEX IF NOT EXISTS idx_focuses_discipline ON focuses(discipline);
+
+-- ---------------------------------------------------------------------------
+-- 8) Eigene Regeln der Runde für den Spickzettel (identisch zu schema.sql).
+-- ---------------------------------------------------------------------------
+-- ---------------------------------------------------------------------------
+-- campaign_rules
+-- ---------------------------------------------------------------------------
+-- Eigene Regeln der Runde (Hausregeln), gepflegt unter /gm/rules. Sie
+-- erscheinen auf jedem Spickzettel (Blatt 2 des Charakterbogens) hinter den
+-- Kernregeln aus dem Regelwerk.
+--
+-- Anders als Talente und Schwerpunkte hängen sie an keinem Charakter: sie
+-- gelten für die ganze Kampagne. Deshalb auch keine Kategorie — nur Name,
+-- Text und eine Reihenfolge, in der die Spielleitung sie sortiert
+-- (sort_order, bei Gleichstand nach Name).
+CREATE TABLE IF NOT EXISTS campaign_rules (
+  id          SERIAL PRIMARY KEY,
+  name        TEXT NOT NULL UNIQUE,
+  body        TEXT NOT NULL,
+  sort_order  INT  NOT NULL DEFAULT 0,
+  created_by  INT  REFERENCES users(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

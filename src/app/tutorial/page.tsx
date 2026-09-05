@@ -68,6 +68,17 @@ export default function TutorialPage() {
                 einen <strong>Lesemodus</strong>-Knopf, der die Navigation
                 ausblendet und den Text breiter/größer darstellt.
               </p>
+              <p>
+                Unter <strong>Charaktere → „Beziehungen“</strong> steht der{" "}
+                <strong>Beziehungsgraph</strong> der Kampagne: wer mit wem im
+                Einsatz war und wer mit wem geredet hat, abgeleitet aus
+                gemeinsamen Missionen und Gesprächen. Dicke Linien stehen für
+                viele Berührungspunkte, große Punkte für gut vernetzte Figuren;
+                Spielfiguren und NPCs sind farblich unterschieden. Zeigst du auf
+                eine Figur, treten sie und ihre Verbindungen hervor, ein Klick
+                führt zu ihr. Darunter stehen dieselben Figuren noch einmal als
+                Liste.
+              </p>
             </div>
           </LcarsDataRow>
 
@@ -343,7 +354,10 @@ export default function TutorialPage() {
                 aufhebst, was die Spielleitung mit <strong>Bedrohung</strong>{" "}
                 anstellt und wie <strong>Entschlossenheit</strong> funktioniert.
                 Auf Deutsch, mit den englischen Begriffen daneben, damit am
-                Tisch beides passt. Der Spickzettel steckt auch im PDF.
+                Tisch beides passt. Ganz unten stehen die{" "}
+                <strong>eigenen Regeln der Runde</strong>, sofern die
+                Spielleitung welche hinterlegt hat. Der Spickzettel steckt auch
+                im PDF.
               </p>
               <p>
                 Für die Zahlen gelten die <strong>Regeln der Runde</strong>:
@@ -815,6 +829,15 @@ export default function TutorialPage() {
                   durchsuchen, filtern, bestehende Talente bearbeiten und eigene
                   ergänzen. Löschen lassen sich nur selbst ergänzte Talente —
                   sonst verschwänden Einträge unter bereits gepflegten Bögen.
+                </li>
+                <li>
+                  Unter <strong>„Regeln“</strong> eigene Regeln der Runde
+                  hinterlegen: Name, Regeltext und eine Zahl für die
+                  Reihenfolge. Sie erscheinen auf dem Spickzettel jedes
+                  Charakterbogens (auch im PDF) hinter den Regeln aus dem
+                  Regelwerk und gelten dort für alle gleich. Anders als bei
+                  Talenten und Schwerpunkten lässt sich jede Regel wieder
+                  löschen — sie steht auf keinem Bogen als Eintrag.
                 </li>
                 <li>
                   Genauso unter <strong>„Schwerpunkte“</strong> den

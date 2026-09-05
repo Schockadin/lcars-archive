@@ -206,6 +206,26 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   diese beiden Prüfungen hinterließe ein direkt abgeschickter POST einen
   dauerhaft überzogenen bzw. leeren Bogen — nach dem Festschreiben sind die
   Felder schreibgeschützt, und `checkAdvancement` steigert keinen leeren Wert.
+- **Eigene Regeln der Runde** — Hausregeln (Name, Regeltext, `sort_order`)
+  liegen in `campaign_rules`, gepflegt unter `/gm/rules`, und erscheinen auf
+  dem Spickzettel jedes Charakterbogens hinter den Kernregeln — in der
+  Bildschirm-Vorschau wie im PDF. Anders als Talente und Schwerpunkte hängen
+  sie an keinem Charakter, deshalb ist auch jede Regel löschbar: sie steht auf
+  keinem Bogen als Eintrag. Validierung und Sortierung liegen in
+  `src/lib/campaignRuleTypes.ts` (ohne `server-only`, damit die Vorschau sie
+  nutzen kann), der DB-Zugriff mit eigenem Cache-Tag in
+  `src/lib/campaignRules.ts`.
+- **Beziehungsgraph** — `/characters/beziehungen` zeigt die ganze Kampagne als
+  Graph: Knoten sind Figuren und NPCs, Kanten ihre gemeinsamen Missionen und
+  Gespräche (`getRelationGraph` in `src/lib/relations.ts`, eine Abfrage je
+  Quelle statt `getRelationsOf` je Figur). Das Layout ist ein **Kreis** mit
+  Barycenter-Vorsortierung (`src/lib/relationGraphLayout.ts`): eine
+  Kräftesimulation bräuchte eine Bibliothek, liefe bei jedem Aufruf anders und
+  wäre nicht prüfbar — hier ist alles eine reine, getestete Funktion. Gezeichnet
+  wird als Inline-SVG (`RelationGraph.tsx`), der Rand ergibt sich aus dem
+  längsten Namen, damit keine Beschriftung aus dem Bild läuft. Die Seite ist
+  bewusst **nicht** gecacht: der Graph hängt an der Sichtbarkeit des
+  Betrachters.
 - **Schwerpunkt-Katalog** — Focuses liegen wie die Talente in einer eigenen
   Tabelle (`focuses`: Name, Disziplin, optionale Erläuterung, `is_custom`),
   gepflegt unter `/gm/focuses`. `UNIQUE (name, discipline)` statt nur über den
@@ -267,7 +287,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Markup, weil dieselbe Liste zweimal gerendert wird: als Blatt 2 der
   Bildschirm-Vorschau und im PDF (`@react-pdf` kennt kein `<p>`, ein
   gemeinsames Markup ist also nicht möglich). Sie hängen an keinem Charakter
-  und stehen deshalb nicht in der Datenbank.
+  und stehen deshalb nicht in der Datenbank. Dahinter folgen die **eigenen
+  Regeln der Runde** aus `campaign_rules` (siehe oben); gibt es keine, fällt
+  der Abschnitt weg.
 - **Charakter-Ansichten mit Umschalter** — `/user/characters/[id]` leitet auf
   den Bogen weiter; ein Umschalter im gemeinsamen Layout
   (`[characterId]/layout.tsx` + `CharacterTabs.tsx`) wechselt zwischen
@@ -351,6 +373,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     keine Einträge unter bereits gepflegten Charakterbögen verschwinden.
   - `/gm/focuses` — dasselbe für den Schwerpunkt-Katalog (Suche,
     Disziplin-Filter, bearbeiten, ergänzen; löschbar nur selbst ergänzte).
+  - `/gm/rules` — eigene Regeln der Runde für den Spickzettel (Name,
+    Regeltext, Reihenfolge). Hier ist jede Regel löschbar.
 - **Persönliche News** — der News-Feed auf dem Dashboard bleibt persistent
   sichtbar (nicht mehr nur bis zum nächsten Besuch): jede Meldung lässt sich
   einzeln per X ausblenden (gilt danach als gelesen) und verschwindet automatisch,

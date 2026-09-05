@@ -134,3 +134,183 @@ export async function getRelationsOf(
     (a, b) => relationWeight(b) - relationWeight(a) || a.name.localeCompare(b.name),
   );
 }
+
+
+// ── Beziehungsgraph der ganzen Kampagne ────────────────────────────────
+// Dieselben zwei Quellen wie oben, nur nicht von einer Figur aus, sondern für
+// alle auf einmal: Knoten sind Figuren und NPCs, Kanten ihre Berührungspunkte.
+// Bewusst EINE Abfrage je Quelle statt getRelationsOf() je Figur — bei 30
+// Figuren wären das 60 Abfragen für dasselbe Ergebnis.
+
+export interface GraphNode {
+  slug: string;
+  name: string;
+  kind: "character" | "npc";
+  href: string;
+}
+
+export interface GraphEdge {
+  // Slugs der beiden Enden, immer alphabetisch sortiert — so gibt es je Paar
+  // genau eine Kante, egal in welcher Reihenfolge die Quellen sie liefern.
+  source: string;
+  target: string;
+  sharedMissions: number;
+  sharedDialogues: number;
+}
+
+export interface RelationGraph {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+}
+
+// Kanten-Schlüssel: sortiertes Paar. Exportiert, weil die Zusammenführung der
+// beiden Quellen daran hängt und genau das getestet wird.
+export function edgeKey(a: string, b: string): string {
+  return a < b ? `${a}|${b}` : `${b}|${a}`;
+}
+
+// Baut aus den Gesprächszeilen alle Paare von Mitteilnehmenden auf. Wie
+// countDialoguePartners ausgelagert und exportiert, damit die JSON-Auswertung
+// ohne Datenbank testbar ist.
+export function collectDialogueEdges(
+  rows: { participants: DialogueRow["participants"] }[],
+): {
+  nodes: Map<string, GraphNode>;
+  pairs: Map<string, number>;
+} {
+  const nodes = new Map<string, GraphNode>();
+  const pairs = new Map<string, number>();
+
+  for (const row of rows) {
+    const parts = (row.participants ?? []).filter(
+      (p): p is { kind?: string; name?: string; slug: string } =>
+        typeof p?.slug === "string" && p.slug.length > 0,
+    );
+    // Doppelte Slugs innerhalb eines Gesprächs würden ein Paar mit sich
+    // selbst und eine doppelte Zählung ergeben.
+    const seen = new Set<string>();
+    const unique = parts.filter((p) => !seen.has(p.slug) && seen.add(p.slug));
+
+    for (const p of unique) {
+      if (!nodes.has(p.slug)) {
+        const kind = p.kind === "character" ? "character" : "npc";
+        nodes.set(p.slug, {
+          slug: p.slug,
+          name: p.name ?? p.slug,
+          kind,
+          href:
+            kind === "character" ? `/characters/${p.slug}` : `/archive/${p.slug}`,
+        });
+      }
+    }
+    for (let i = 0; i < unique.length; i++) {
+      for (let j = i + 1; j < unique.length; j++) {
+        const key = edgeKey(unique[i].slug, unique[j].slug);
+        pairs.set(key, (pairs.get(key) ?? 0) + 1);
+      }
+    }
+  }
+
+  return { nodes, pairs };
+}
+
+export async function getRelationGraph(
+  viewer: Viewer | null,
+): Promise<RelationGraph> {
+  const [missionRows, dialogueRows] = await Promise.all([
+    // Jedes Paar nur EINMAL: a.character_id < b.character_id statt <>, sonst
+    // käme jede Kante doppelt zurück.
+    sql<{
+      aSlug: string;
+      aName: string;
+      bSlug: string;
+      bName: string;
+      shared: number;
+    }[]>`
+      SELECT ca.slug AS "aSlug", ca.name AS "aName",
+             cb.slug AS "bSlug", cb.name AS "bName",
+             COUNT(*)::int AS shared
+      FROM mission_participants pa
+      JOIN mission_participants pb ON pb.mission_id = pa.mission_id
+                                  AND pb.character_id > pa.character_id
+      JOIN characters ca ON ca.id = pa.character_id
+      JOIN characters cb ON cb.id = pb.character_id
+      JOIN missions m ON m.id = pa.mission_id
+      WHERE ca.deleted_at IS NULL AND ca.is_draft = false AND ca.visibility = 'public'
+        AND cb.deleted_at IS NULL AND cb.is_draft = false AND cb.visibility = 'public'
+        AND m.deleted_at IS NULL AND m.is_draft = false
+      GROUP BY ca.slug, ca.name, cb.slug, cb.name
+    `,
+    sql<DialogueRow[]>`
+      SELECT visibility, owner_user_id, metadata->'participants' AS participants
+      FROM archive_entries
+      WHERE category = 'dialogue'
+        AND deleted_at IS NULL AND is_draft = false
+    `,
+  ]);
+
+  const nodes = new Map<string, GraphNode>();
+  const edges = new Map<string, GraphEdge>();
+
+  const putEdge = (a: string, b: string, patch: Partial<GraphEdge>) => {
+    const key = edgeKey(a, b);
+    const [source, target] = key.split("|");
+    const existing = edges.get(key) ?? {
+      source,
+      target,
+      sharedMissions: 0,
+      sharedDialogues: 0,
+    };
+    edges.set(key, {
+      ...existing,
+      sharedMissions: existing.sharedMissions + (patch.sharedMissions ?? 0),
+      sharedDialogues: existing.sharedDialogues + (patch.sharedDialogues ?? 0),
+    });
+  };
+
+  for (const row of missionRows) {
+    for (const [slug, name] of [
+      [row.aSlug, row.aName],
+      [row.bSlug, row.bName],
+    ] as const) {
+      if (!nodes.has(slug)) {
+        nodes.set(slug, {
+          slug,
+          name,
+          kind: "character",
+          href: `/characters/${slug}`,
+        });
+      }
+    }
+    putEdge(row.aSlug, row.bSlug, { sharedMissions: row.shared });
+  }
+
+  const visibleDialogues = dialogueRows.filter((r) =>
+    canView(r.visibility, r.owner_user_id, viewer),
+  );
+  const fromDialogues = collectDialogueEdges(visibleDialogues);
+  for (const [slug, node] of fromDialogues.nodes) {
+    // Ein bereits aus den Missionen bekannter Charakter behält seinen Namen
+    // aus der Tabelle — der im Gesprächs-JSON kann veraltet sein.
+    if (!nodes.has(slug)) nodes.set(slug, node);
+  }
+  for (const [key, count] of fromDialogues.pairs) {
+    const [a, b] = key.split("|");
+    putEdge(a, b, { sharedDialogues: count });
+  }
+
+  // Knoten ohne jede Kante fliegen raus: ein einzelner Punkt ohne Verbindung
+  // sagt im Beziehungsgraph nichts aus und macht ihn nur voller.
+  const connected = new Set<string>();
+  for (const edge of edges.values()) {
+    connected.add(edge.source);
+    connected.add(edge.target);
+  }
+
+  return {
+    nodes: [...nodes.values()]
+      .filter((n) => connected.has(n.slug))
+      .sort((a, b) => a.name.localeCompare(b.name, "de")),
+    edges: [...edges.values()],
+  };
+}

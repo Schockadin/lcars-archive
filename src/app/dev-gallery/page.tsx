@@ -13,6 +13,7 @@ import { DEFAULT_ADVANCEMENT_RULES } from "@/lib/advancement";
 import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
 import type { Focus } from "@/lib/focusCatalog";
+import type { CampaignRule } from "@/lib/campaignRuleTypes";
 
 // Zwei Katalog-Talente reichen für die Auswahl im Werte-Schritt und für den
 // Regeltext auf dem Spickzettel-Blatt — eines ohne, eines mit Voraussetzung.
@@ -40,6 +41,16 @@ const DEMO_FOCUSES: Focus[] = [
   { id: 2, name: "Helm Operations", discipline: "conn", description: null },
   { id: 3, name: "Diplomacy", discipline: "command", description: null },
 ].map((focus) => ({ ...focus, isCustom: false }) as Focus);
+
+// Und für die Hausregeln der Runde (siehe /gm/rules).
+const DEMO_RULES: CampaignRule[] = [
+  {
+    id: 1,
+    name: "Kritische Erfolge",
+    body: "Eine gewürfelte 1 zählt als zwei Erfolge — auch ohne passenden Schwerpunkt.",
+    sortOrder: 0,
+  },
+];
 
 // Nur für lokale Playwright-E2E-Läufe (next dev) — testet Layout-Details
 // (Switch-Trenner/-Hintergrund, DataRow-Pillen-Breiten), die jsdom
@@ -114,6 +125,7 @@ export default function DevGalleryPage() {
           rules={DEFAULT_ADVANCEMENT_RULES}
           talents={DEMO_TALENTS}
           focuses={DEMO_FOCUSES}
+          campaignRules={DEMO_RULES}
         />
       </section>
 
@@ -143,6 +155,7 @@ export default function DevGalleryPage() {
               },
               bioHtml: "<p>Geboren auf Vulkan.</p>",
               talents: DEMO_TALENTS,
+              campaignRules: DEMO_RULES,
             }}
             downloadUrl="/api/export/character-sheet?id=1"
             onClose={() => setPreviewOpen(false)}

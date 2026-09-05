@@ -9,6 +9,7 @@ import { getApAccount } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
+import { listCampaignRules } from "@/lib/campaignRules";
 import CharacterHeadPanel from "./CharacterHeadPanel";
 import CharacterValuesPanel from "./CharacterValuesPanel";
 import CharacterBioPanel from "./CharacterBioPanel";
@@ -49,11 +50,13 @@ export default async function OwnCharacterPage({ params }: Props) {
 
   // Erst NACH dem Owner-Check: vorher ist nicht klar, ob der Charakter
   // überhaupt zu diesem Konto gehört.
-  const [account, rules, talents, focuses, viewer, roleMap, revisions] = await Promise.all([
+  const [account, rules, talents, focuses, campaignRules, viewer, roleMap, revisions] =
+    await Promise.all([
     getApAccount(sheet.id),
     getAdvancementRules(),
     listTalents(),
     listFocuses(),
+    listCampaignRules(),
     getUserById(session.userId),
     getRoleMap(),
     // Versionshistorie der Biografie — der Owner-Check oben ist bereits
@@ -79,6 +82,7 @@ export default async function OwnCharacterPage({ params }: Props) {
             stats: sheet.stats,
             bioHtml: character.bioHtml,
             talents,
+            campaignRules,
           }}
         />
 

@@ -8,12 +8,14 @@ import {
 } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
 import { CORE_RULES } from "@/lib/coreRules";
+import type { CampaignRule } from "@/lib/campaignRuleTypes";
 
 // Der Charakterbogen als dreiblättrige Vorschau — dasselbe, was der
 // PDF-Export erzeugt:
 //   Blatt 1  das Personnel File mit Stammdaten und Werten
-//   Blatt 2  der Spickzettel: Talente des Charakters plus die Kernregeln
-//            (Momentum, Bedrohung, Entschlossenheit)
+//   Blatt 2  der Spickzettel: Talente des Charakters, die Kernregeln
+//            (Momentum, Bedrohung, Entschlossenheit) und die eigenen Regeln
+//            der Runde (/gm/rules)
 //   Blatt 3  die Biografie im selben Papier-Look
 //
 // Reine Darstellung ohne eigenen Zustand: der Anlege-Assistent zeigt damit
@@ -69,16 +71,21 @@ export interface CharacterSheetPreviewInput {
   // Charakterseite reicht das gespeicherte HTML durch.
   bioHtml: string | null;
   talents: Talent[];
+  // Hausregeln der Runde für den Spickzettel (gepflegt unter /gm/rules).
+  // Leer = es gibt keine, dann fällt der Abschnitt weg.
+  campaignRules: CampaignRule[];
 }
 
 function TalentSheet({
   characterName,
   entries,
   talents,
+  campaignRules,
 }: {
   characterName: string;
   entries: string[];
   talents: Talent[];
+  campaignRules: CampaignRule[];
 }) {
   // Zuordnung über den Katalognamen (siehe parseTalentEntry) — ein
   // umbenanntes Talent findet seinen Regeltext also weiterhin.
@@ -117,6 +124,7 @@ function TalentSheet({
       )}
 
       <CoreRulesSection />
+      <CampaignRulesSection rules={campaignRules} />
     </DocSheet>
   );
 }
@@ -146,6 +154,27 @@ function CoreRulesSection() {
         </div>
       ))}
     </>
+  );
+}
+
+// Die Hausregeln der Runde, hinter den Regeln aus dem Regelwerk. Gibt es
+// keine, fällt der Abschnitt ganz weg — eine leere Überschrift auf dem
+// gedruckten Bogen wäre nur Platzverschwendung.
+function CampaignRulesSection({ rules }: { rules: CampaignRule[] }) {
+  if (rules.length === 0) return null;
+  return (
+    <div>
+      <h3 className="pf-doc-heading">
+        Eigene Regeln{" "}
+        <span className="pf-doc-heading-original">House Rules</span>
+      </h3>
+      {rules.map((rule) => (
+        <div key={rule.id} className="pf-doc-rule">
+          <span className="pf-doc-rule-term">{rule.name}</span>
+          <p className="pf-doc-rule-text">{rule.body}</p>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -193,6 +222,7 @@ export default function CharacterSheetPreview({
         characterName={input.characterName}
         entries={input.stats.talents}
         talents={input.talents}
+        campaignRules={input.campaignRules}
       />
       <BioSheet characterName={input.characterName} bioHtml={input.bioHtml} />
     </div>

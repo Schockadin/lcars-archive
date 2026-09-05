@@ -30,6 +30,7 @@ import type { CharacterStats } from "@/types/characterStats";
 import type { AdvancementRules } from "@/lib/advancement";
 import type { Talent } from "@/lib/talentCatalog";
 import type { Focus } from "@/lib/focusCatalog";
+import type { CampaignRule } from "@/lib/campaignRuleTypes";
 
 const initialState: CharacterWizardState = {};
 
@@ -77,6 +78,7 @@ export default function CharacterWizard({
   rules,
   talents,
   focuses,
+  campaignRules,
 }: {
   userId: number;
   isAdminOrGM: boolean;
@@ -85,6 +87,8 @@ export default function CharacterWizard({
   rules: AdvancementRules;
   talents: Talent[];
   focuses: Focus[];
+  // Hausregeln der Runde für den Spickzettel in der Vorschau (Schritt 4).
+  campaignRules: CampaignRule[];
 }) {
   const [state, formAction, pending] = useActionState(
     createCharacterWizardAction,
@@ -332,6 +336,7 @@ export default function CharacterWizard({
               stats,
               bioHtml,
               talents,
+              campaignRules,
             }}
           />
         )}

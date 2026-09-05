@@ -6,6 +6,7 @@ import { requireOwnUser } from "../../dal";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
+import { listCampaignRules } from "@/lib/campaignRules";
 import CharacterWizard from "./CharacterWizard";
 
 export const metadata: Metadata = {
@@ -40,10 +41,11 @@ export default async function NewCharacterPage() {
   // Regelwerk und Talent-Katalog braucht erst der zweite Schritt — sie hängen
   // aber an nichts, was der Assistent unterwegs ändert, und werden deshalb
   // gleich mitgeladen statt nachträglich nachgereicht.
-  const [rules, talents, focuses] = await Promise.all([
+  const [rules, talents, focuses, campaignRules] = await Promise.all([
     getAdvancementRules(),
     listTalents(),
     listFocuses(),
+    listCampaignRules(),
   ]);
 
   return (
@@ -63,6 +65,7 @@ export default async function NewCharacterPage() {
           rules={rules}
           talents={talents}
           focuses={focuses}
+          campaignRules={campaignRules}
         />
       </article>
     </>

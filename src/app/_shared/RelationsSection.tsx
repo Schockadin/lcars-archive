@@ -31,7 +31,10 @@ export default function RelationsSection({
     <section className="flex flex-col gap-[8px]">
       <h2>{title}</h2>
       <p className="text-lcars-ink-dim text-[13px]">
-        Abgeleitet aus gemeinsamen Missionen und Gesprächen.
+        Abgeleitet aus gemeinsamen Missionen und Gesprächen.{" "}
+        <Link href="/characters/beziehungen" className="lcars-wikilink">
+          Ganze Kampagne als Graph
+        </Link>
       </p>
       <ul className="flex flex-col gap-[4px]">
         {relations.map((r) => (

@@ -90,7 +90,14 @@ export default function CharacterPage({
   return (
     <div className="flex flex-col items-start">
       <div className="mb-[16px] flex flex-col items-start w-full">
-        <h1 className="lcars-data-row-heading">Charaktere</h1>
+        <div className="flex w-full flex-wrap items-baseline justify-between gap-[8px]">
+          <h1 className="lcars-data-row-heading">Charaktere</h1>
+          {/* Einstieg in den Beziehungsgraph der Kampagne — er gehört zu den
+              Charakteren, hat aber zu viel Fläche für diese Spalte. */}
+          <Link href="/characters/beziehungen" className="lcars-wikilink">
+            Beziehungen
+          </Link>
+        </div>
         <LcarsSwitch
           className="flex w-full"
           options={[
