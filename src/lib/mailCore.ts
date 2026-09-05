@@ -362,7 +362,7 @@ export async function sendDialogueDeletedEmail(input: {
 // An alle Abonnenten eines Charakters (content_follows, target_type
 // 'character'), sobald dieser Charakter bearbeitet wird — sowohl übers volle
 // Bearbeiten-Formular als auch über den Inline-Bio-Editor auf der
-// Charakterseite (siehe characters/_shared/contentAction.ts bzw.
+// Charakterseite (siehe characters/_shared/panelActions.ts bzw.
 // updateOwnCharacterBioAction in app/actions/characters.ts). Der Bearbeitende
 // selbst (immer der Owner) wird vom Aufrufer ausgeschlossen.
 export async function sendCharacterUpdatedEmail(input: {

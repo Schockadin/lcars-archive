@@ -51,7 +51,7 @@ export default async function UserCharactersPage() {
             <div className="lcars-btn-stack max-sm:w-full">
               {/* Gast-Accounts dürfen keine Charaktere anlegen — dieselbe
                   Prüfung wie in /user/content und (serverseitig maßgeblich) in
-                  characters/_shared/contentAction.ts. */}
+                  characters/_shared/wizardAction.ts. */}
               {userCan(user, "content.create", roleMap) ? (
                 <Link
                   href="/user/characters/new"

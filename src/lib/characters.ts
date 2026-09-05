@@ -938,8 +938,8 @@ export async function userHasCharacters(userId: number): Promise<boolean> {
 
 // Benachrichtigt alle Abonnenten eines Charakters (content_follows,
 // target_type 'character'), dass sich etwas an der Akte geändert hat —
-// gerufen von beiden Bearbeiten-Wegen (volles Formular:
-// characters/_shared/contentAction.ts; Inline-Bio-Editor:
+// gerufen von beiden Bearbeiten-Wegen (Stammdaten-/Biografie-Panel:
+// characters/_shared/panelActions.ts; Inline-Bio-Editor:
 // app/actions/characters.ts#updateOwnCharacterBioAction), jeweils NACH dem
 // erfolgreichen Speichern. Best-effort wie die Dialog-Benachrichtigungen in
 // app/actions/dialogues.ts: einzelne fehlgeschlagene Mails werden geloggt,

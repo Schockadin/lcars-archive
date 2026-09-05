@@ -9,12 +9,10 @@ import {
 } from "@/lib/portraitCrop";
 import type { Character } from "@/types/character";
 
-// Die Stammdaten der Charakter-Akte aus einem Formular lesen — geteilt von
-// characterAction (Anlegen/Bearbeiten über den ContentEditor) und der Action
-// des Anlege-Assistenten, die dieselben Felder in ihrem ersten Schritt hat.
-// Vorher stand diese Auswertung nur in characterAction; der Assistent hätte
-// sie sonst Feld für Feld nachbauen müssen, mit dem üblichen Risiko, dass die
-// beiden Fassungen auseinanderlaufen.
+// Die Stammdaten der Charakter-Akte aus einem Formular lesen — geteilt vom
+// Anlege-Assistenten (wizardAction.ts) und dem Stammdaten-Panel der
+// Charakterseite (panelActions.ts), die dieselben Felder tragen. Eine
+// Auswertung für beide Wege statt zweier, die auseinanderlaufen.
 
 const VALID_STATUSES: Character["status"][] = ["active", "retired", "deceased"];
 

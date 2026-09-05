@@ -15,7 +15,7 @@ const PORTRAIT_PREFIX = "character-portraits/";
 
 // Lädt ein Portrait-Bild in den Asset-Bucket und liefert seine öffentliche
 // URL. Wirft InvalidAssetError (aus assetStorage.ts) bei ungültigem Typ,
-// leerer oder zu großer Datei — der Aufrufer (characterAction) fängt das ab
+// leerer oder zu großer Datei — der Aufrufer (readCharacterHead) fängt das ab
 // und gibt es als Formularfehler zurück. Der Key wird aus einer UUID gebaut
 // (kein vom Client stammender Dateiname), die Endung aus dem MIME-Type.
 export async function uploadCharacterPortraitImage(file: {

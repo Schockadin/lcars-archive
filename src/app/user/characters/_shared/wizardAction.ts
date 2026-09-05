@@ -81,7 +81,7 @@ export async function createCharacterWizardAction(
   let bioHtml: string | undefined;
   if (bodyMarkdown && formData.get("autoLink") === "on") {
     // Beim Anlegen gibt es noch keinen eigenen Slug, den man vom Autolinking
-    // ausnehmen müsste (siehe characterAction).
+    // ausnehmen müsste — anders als beim Bearbeiten (panelActions.ts).
     const linked = await autoLinkMarkdown(bodyMarkdown);
     bodyMarkdown = linked.sourceMd;
     bioHtml = linked.html;
