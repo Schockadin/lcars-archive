@@ -2,11 +2,36 @@ import { describe, it, expect } from "vitest";
 import {
   CHANGELOG,
   latestChangelogEntry,
+  changelogCategoriesPresent,
+  changelogItemCategory,
   changelogItemText,
   changelogItemTutorial,
   changelogVersionExists,
   featuredChangelogEntries,
+  filterChangelogEntries,
+  hideChangelogCategories,
+  sortChangelogItemsByCategory,
+  type ChangelogEntry,
 } from "./changelog";
+import { isChangelogCategory } from "./changelogCategories";
+
+// Zwei kleine Versionen für die Kategorie-Helfer — an echten Daten wären die
+// Erwartungen bei jedem neuen Eintrag hinfällig.
+const TEST_ENTRIES: ChangelogEntry[] = [
+  {
+    version: "2.0",
+    title: "Zwei",
+    items: [{ text: "A", category: "inhalte" }],
+  },
+  {
+    version: "2.1",
+    title: "Zwei-Eins",
+    items: [
+      { text: "B", category: "charaktere" },
+      { text: "C", category: "inhalte" },
+    ],
+  },
+];
 import { TUTORIAL_SECTIONS, tutorialSectionHref } from "./tutorialSections";
 
 describe("latestChangelogEntry", () => {
@@ -89,14 +114,22 @@ describe("featuredChangelogEntries", () => {
 describe("changelog item helpers", () => {
   it("liest den Text aus String- und Objekt-Items", () => {
     expect(changelogItemText("nur Text")).toBe("nur Text");
-    expect(changelogItemText({ text: "mit Objekt" })).toBe("mit Objekt");
+    expect(
+      changelogItemText({ text: "mit Objekt", category: "inhalte" }),
+    ).toBe("mit Objekt");
   });
 
   it("liest den optionalen Tutorial-Link aus", () => {
     expect(changelogItemTutorial("nur Text")).toBeUndefined();
-    expect(changelogItemTutorial({ text: "x" })).toBeUndefined();
     expect(
-      changelogItemTutorial({ text: "x", tutorial: "eigene-inhalte" }),
+      changelogItemTutorial({ text: "x", category: "inhalte" }),
+    ).toBeUndefined();
+    expect(
+      changelogItemTutorial({
+        text: "x",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      }),
     ).toBe("eigene-inhalte");
   });
 });
@@ -117,5 +150,62 @@ describe("Changelog-Tutorial-Verlinkung", () => {
 
   it("baut den Deep-Link als /tutorial#<id>", () => {
     expect(tutorialSectionHref("gespraeche")).toBe("/tutorial#gespraeche");
+  });
+});
+
+describe("Changelog-Kategorien", () => {
+  it("gibt jedem gepflegten Stichpunkt eine bekannte Kategorie", () => {
+    // Ohne diese Zusicherung fiele ein neuer Stichpunkt still in „Sonstiges"
+    // — und wäre damit weder sinnvoll filterbar noch je Rolle ausblendbar.
+    for (const entry of CHANGELOG) {
+      for (const item of entry.items) {
+        const category = changelogItemCategory(item);
+        expect(
+          isChangelogCategory(category),
+          `${entry.version}: ${changelogItemText(item).slice(0, 40)}`,
+        ).toBe(true);
+        expect(category, `${entry.version}: ohne Kategorie`).not.toBe(
+          "sonstiges",
+        );
+      }
+    }
+  });
+
+  it("nimmt einen String-Stichpunkt als Sonstiges", () => {
+    expect(changelogItemCategory("alter Stichpunkt")).toBe("sonstiges");
+  });
+
+  it("bietet nur Kategorien an, die auch vorkommen", () => {
+    expect(changelogCategoriesPresent(TEST_ENTRIES)).toEqual([
+      "inhalte",
+      "charaktere",
+    ]);
+    expect(changelogCategoriesPresent([])).toEqual([]);
+  });
+
+  it("filtert Stichpunkte statt ganzer Versionen", () => {
+    const filtered = filterChangelogEntries(TEST_ENTRIES, ["charaktere"]);
+    // Version 2.0 hatte nur „inhalte" und fällt deshalb ganz weg.
+    expect(filtered.map((e) => e.version)).toEqual(["2.1"]);
+    expect(filtered[0].items.map(changelogItemText)).toEqual(["B"]);
+  });
+
+  it("versteht eine leere Auswahl als alles, nicht als nichts", () => {
+    expect(filterChangelogEntries(TEST_ENTRIES, [])).toEqual(TEST_ENTRIES);
+  });
+
+  it("blendet die genannten Kategorien aus", () => {
+    const visible = hideChangelogCategories(TEST_ENTRIES, ["inhalte"]);
+    expect(visible.map((e) => e.version)).toEqual(["2.1"]);
+    expect(visible[0].items.map(changelogItemText)).toEqual(["B"]);
+    expect(hideChangelogCategories(TEST_ENTRIES, [])).toEqual(TEST_ENTRIES);
+  });
+
+  it("sortiert die Stichpunkte innerhalb einer Version nach Kategorie", () => {
+    const [, entry] = sortChangelogItemsByCategory(TEST_ENTRIES, "asc");
+    // Katalog-Reihenfolge: inhalte vor charaktere.
+    expect(entry.items.map(changelogItemText)).toEqual(["C", "B"]);
+    const [, reversed] = sortChangelogItemsByCategory(TEST_ENTRIES, "desc");
+    expect(reversed.items.map(changelogItemText)).toEqual(["B", "C"]);
   });
 });

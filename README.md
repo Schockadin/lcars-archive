@@ -410,7 +410,20 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen
   Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
 - **Öffentliches Changelog** — die Seite `/changelog` listet je Version die
-  end-nutzerrelevanten Neuerungen (gepflegt in `src/lib/changelog.ts`).
+  end-nutzerrelevanten Neuerungen (gepflegt in `src/lib/changelog.ts`). Jeder
+  Stichpunkt trägt eine **Kategorie** (`src/lib/changelogCategories.ts`);
+  danach lässt sich an beiden Anzeigestellen — der Liste unter `/changelog`
+  und der Box „Neue Funktionen" auf dem Dashboard — filtern und sortieren.
+  Beide rendern dieselbe Bedienleiste (`ChangelogControls.tsx`) und teilen
+  sich die Rechnung (`useChangelogView.ts`); gefiltert werden die
+  Stichpunkte, nicht die Versionen, und eine Version ohne Rest fällt weg.
+  Zusätzlich legt die Administration unter `/admin/changelog` je **Rolle**
+  fest, welche Kategorien in der Dashboard-Box nicht erscheinen
+  (`campaign_settings.changelog_hidden_categories`). Das greift auf dem
+  Server, nicht im Browser: was für diese Person nicht gedacht ist, wird gar
+  nicht erst ausgeliefert. Wer mehrere Rollen hat, sieht eine Kategorie,
+  sobald **eine** seiner Rollen sie zeigt — Sichtbarkeit gewinnt, wie bei den
+  Rechten. Die öffentliche Liste unter `/changelog` bleibt davon unberührt.
 - **Teilen & Export** — der „Teilen“-Knopf auf Charakter-, Missions-,
   Missionslog-, Datenbank-Eintrag- und Gesprächsseiten bietet neben Link
   kopieren/WhatsApp auch den Download des Inhalts als Markdown-Datei (mit

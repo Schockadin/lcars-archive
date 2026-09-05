@@ -1154,3 +1154,67 @@
     transition: none;
   }
 }
+
+/* ─── Changelog: Kategorie-Filter und Etiketten ─────────────────────────
+   Die Leiste über der Änderungsliste (/changelog) und über der Box „Neue
+   Funktionen" auf dem Dashboard — beide rendern dieselbe Komponente
+   (ChangelogControls.tsx), also steht die Optik hier einmal.
+
+   Die Chips sind bewusst dieselbe Bauart wie die Jahresleiste der
+   Chronologie (.timeline-year, timeline.css): flache Knöpfe mit
+   aria-pressed, waagerecht scrollend statt umbrechend. Die Kategoriefarbe
+   kommt als --changelog-color von der Komponente. */
+.changelog-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.changelog-sort {
+  display: flex;
+  width: 100%;
+}
+.changelog-filterbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.changelog-chip {
+  flex-shrink: 0;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--changelog-color, var(--lcars-border));
+  background: var(--lcars-surface);
+  color: var(--lcars-ink-dim);
+  font-family: var(--lcars-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.changelog-chip:hover {
+  color: var(--lcars-ink);
+}
+.changelog-chip[aria-pressed="true"] {
+  color: var(--lcars-ink-contrast);
+  background: var(--lcars-hover-tint);
+}
+.changelog-chip:focus-visible {
+  outline: 2px solid var(--lcars-primary);
+  outline-offset: 2px;
+}
+
+/* Das Etikett vor jedem Stichpunkt. Klein und in der Kategoriefarbe — es
+   ordnet ein, es soll den Satz nicht überschreien (dieselbe Rolle wie
+   .timeline-tag). */
+.changelog-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--changelog-color, var(--lcars-border));
+  color: var(--changelog-color, var(--lcars-ink-data));
+  font-family: var(--lcars-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}

@@ -817,8 +817,13 @@ ALTER TABLE campaign_settings ADD COLUMN IF NOT EXISTS advancement_rules JSONB;
 -- gesammelt erscheinen (src/lib/changelogSettings.ts). JSONB-Array von
 -- „Major.Minor"-Strings; NULL = nicht konfiguriert ⇒ es gilt der Default (nur
 -- die jüngste Version).
+-- changelog_hidden_categories: je Rolle die Kategorien, die in dieser Box NICHT
+-- erscheinen — JSONB-Objekt Rolle → Kategorie-Liste (siehe
+-- src/lib/changelogCategories.ts); NULL/leer = nichts ausgeblendet. Die
+-- vollständige Liste unter /changelog bleibt davon unberührt.
 ALTER TABLE campaign_settings
-  ADD COLUMN IF NOT EXISTS changelog_featured_versions JSONB;
+  ADD COLUMN IF NOT EXISTS changelog_featured_versions JSONB,
+  ADD COLUMN IF NOT EXISTS changelog_hidden_categories JSONB;
 
 -- ---------------------------------------------------------------------------
 -- Volltextsuche (FTS): tsvector-Spalten + GIN-Indizes

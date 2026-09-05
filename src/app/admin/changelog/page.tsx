@@ -3,10 +3,15 @@ import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireAdmin } from "@/lib/dal";
 import { CHANGELOG, featuredChangelogEntries } from "@/lib/changelog";
-import { getFeaturedChangelogVersions } from "@/lib/changelogSettings";
+import {
+  getFeaturedChangelogVersions,
+  getHiddenChangelogCategories,
+} from "@/lib/changelogSettings";
+import { listRolesForAdmin } from "@/lib/roles";
 import ChangelogVisibilityForm, {
   type ChangelogVersionOption,
 } from "./ChangelogVisibilityForm";
+import ChangelogCategoryForm from "./ChangelogCategoryForm";
 
 export const metadata: Metadata = {
   title: "Changelog",
@@ -33,7 +38,11 @@ function compareVersions(a: string, b: string): number {
 export default async function AdminChangelogPage() {
   await requireAdmin();
 
-  const stored = await getFeaturedChangelogVersions();
+  const [stored, hiddenByRole, roleRows] = await Promise.all([
+    getFeaturedChangelogVersions(),
+    getHiddenChangelogCategories(),
+    listRolesForAdmin(),
+  ]);
   // Effektiv angehakt: die gespeicherte Auswahl, sonst der Default (nur die
   // jüngste Version) — so spiegeln die Checkboxen, was aktuell wirklich
   // angezeigt wird.
@@ -72,6 +81,31 @@ export default async function AdminChangelogPage() {
           <ChangelogVisibilityForm
             options={options}
             selectedVersions={selectedVersions}
+          />
+
+          <h2 className="mt-[8px]">Kategorien je Rolle</h2>
+          <p>
+            Jede Neuerung trägt eine Kategorie. Hier legst du fest, welche
+            davon einer Rolle auf dem Dashboard <strong>nicht</strong> gezeigt
+            werden — etwa Spielleitungs-Werkzeuge für reine Spieler-Konten.
+            Angehakt heißt ausgeblendet.
+          </p>
+          <p className="text-lcars-ink-dim text-[13px]">
+            Wer mehrere Rollen hat, sieht eine Kategorie, sobald mindestens
+            eine seiner Rollen sie zeigt. Die vollständige Liste unter{" "}
+            <Link href="/changelog" className="underline">
+              /changelog
+            </Link>{" "}
+            bleibt unverändert sichtbar — dort wird nichts versteckt, nur
+            sortiert und gefiltert.
+          </p>
+
+          <ChangelogCategoryForm
+            roles={roleRows.map((role) => ({
+              key: role.key,
+              label: role.label,
+            }))}
+            hiddenByRole={hiddenByRole}
           />
         </div>
       </article>

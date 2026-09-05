@@ -85,7 +85,11 @@ export default async function Dashboard({ user }: { user: User }) {
 
           <OpenDialoguesSection items={openDialogues} />
 
-          <ChangelogSection />
+          {/* Welche Kategorien hier erscheinen, hängt an den Rollen dieser
+              Person — die Administration blendet sie je Rolle aus (siehe
+              ChangelogSection). Zusatzrollen zählen mit: wer auch
+              Spielleitung ist, sieht deren Neuerungen. */}
+          <ChangelogSection roles={[user.role, ...user.additional_roles]} />
 
           <NewsSection items={newsItems} />
 

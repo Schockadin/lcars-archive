@@ -31,9 +31,13 @@ UPDATE users SET ui_mode = 'minimal' WHERE ui_mode = 'minimal-light';
 -- 3) Admin-kuratierte „Neue Funktionen": vom Admin unter /admin/changelog
 --    gewählte Changelog-Versionen, die auf dem Dashboard gesammelt erscheinen.
 --    JSONB-Array von „Major.Minor"-Strings; NULL = Default (nur jüngste).
+--    changelog_hidden_categories: je Rolle die Kategorien, die in der
+--    Dashboard-Box NICHT erscheinen. JSONB-Objekt Rolle → Kategorie-Liste;
+--    NULL/leer = nichts ausgeblendet (siehe src/lib/changelogCategories.ts).
 -- ---------------------------------------------------------------------------
 ALTER TABLE campaign_settings
-  ADD COLUMN IF NOT EXISTS changelog_featured_versions JSONB;
+  ADD COLUMN IF NOT EXISTS changelog_featured_versions JSONB,
+  ADD COLUMN IF NOT EXISTS changelog_hidden_categories JSONB;
 
 -- ---------------------------------------------------------------------------
 -- 4) Volltextsuche: tsvector-Spalten + GIN-Indizes (identisch zu schema.sql).

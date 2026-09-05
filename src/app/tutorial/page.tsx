@@ -636,6 +636,19 @@ export default function TutorialPage() {
                 Inhalten — plus deine Lesezeichen und Abos.
               </p>
               <p>
+                Darüber steht der Bereich <strong>„Neue Funktionen“</strong>:
+                die Neuerungen der letzten Versionen. Jede trägt eine{" "}
+                <strong>Kategorie</strong> (etwa „Charaktere &amp; Regeln“ oder
+                „Spielleitung“) — über die Knopfreihe darüber schränkst du die
+                Liste auf eine oder mehrere Kategorien ein, und der Umschalter
+                daneben sortiert wahlweise nach Version oder nach Kategorie.
+                Dieselbe Bedienung findest du auf der vollständigen Liste unter{" "}
+                <strong>/changelog</strong> (erreichbar über die Versionsnummer
+                unten). Die Administration kann einzelne Kategorien für eine
+                Rolle aus dem Dashboard ausblenden — unter /changelog steht
+                immer alles.
+              </p>
+              <p>
                 Der News-Feed bleibt <strong>dauerhaft</strong> sichtbar (nicht
                 nur bis zum nächsten Besuch): Jede News blendest du über das
                 kleine <strong>×</strong> rechts einzeln aus — sie gilt damit
