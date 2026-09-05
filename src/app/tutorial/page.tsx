@@ -282,6 +282,23 @@ export default function TutorialPage() {
                 nichts angelegt.
               </p>
               <p>
+                Das <strong>Portrait</strong> gibst du in den Stammdaten
+                entweder als Bilddatei oder als Bild-Adresse an. Passt das Bild
+                nicht ins hochkant stehende Bildfeld des Bogens, wähl den
+                Ausschnitt selbst: <strong>„Ausschnitt wählen“</strong> öffnet
+                ein Fenster, das den Bildkasten samt seiner Schräge zeigt —
+                ziehen verschiebt das Bild, der Regler vergrößert es bis zum
+                Vierfachen. <strong>„Übernehmen“</strong> merkt den Ausschnitt
+                vor; gespeichert wird er mit dem Formular, und zwar fertig
+                zugeschnitten, sodass Bildschirm und PDF dasselbe zeigen. Das
+                Original bleibt hinterlegt: beim nächsten Bearbeiten kannst du
+                den Ausschnitt neu wählen, ohne die Datei erneut zu suchen.
+                Ohne eigenen Ausschnitt zeigt der Bogen wie bisher die
+                Bildmitte. Ein Bild von einer fremden Adresse lässt sich nur
+                zuschneiden, wenn dessen Server es erlaubt — sonst lade es als
+                Datei hoch.
+              </p>
+              <p>
                 Im Schritt <strong>Werte</strong> trägst du die sechs Attribute
                 und sechs Disziplinen in Zahlenkästen ein; daneben läuft mit,
                 was deine Verteilung kostet und wie viel Budget übrig ist. Dazu

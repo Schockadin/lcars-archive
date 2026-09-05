@@ -1050,7 +1050,16 @@ jetzt aus dem Asset-Bucket liest); neu am Asset-Bucket hängende Assets
 direkte öffentliche URL (`R2_ASSET_PUBLIC_BASE_URL`). Bei Charakteren lässt
 sich eines der hochgeladenen Bilder als Profilbild festlegen
 (`characters.portrait`); das Portrait öffnet per Klick ein Karussell über
-alle hochgeladenen Bilder. Bei Missionen, Missionslogs und
+alle hochgeladenen Bilder. Beim Anlegen und Bearbeiten der Stammdaten lässt
+sich der **Bildausschnitt** selbst wählen (`PortraitPicker.tsx`,
+Rechenweg in `src/lib/portraitCrop.ts`): ziehen verschiebt, ein Regler
+vergrößert bis 4×, der Rahmen zeigt den hochkant stehenden Bildkasten des
+Bogens samt Schräge. Der Ausschnitt wird im Browser auf eine Leinwand
+gezeichnet und **fertig zugeschnitten** hochgeladen — Bogen und PDF brauchen
+dadurch keine eigene Zuschnitt-Logik und zeigen zwangsläufig dasselbe.
+Original-URL und Einstellung wandern als `metadata.portraitSource` bzw.
+`metadata.portraitCrop` mit, damit sich der Ausschnitt später ohne erneutes
+Hochladen nachjustieren lässt. Bei Missionen, Missionslogs und
 Datenbank-Einträgen lässt sich stattdessen ein bereits hochgeladenes Bild direkt
 aus der Markdown-Editor-Toolbar heraus als `![Bild](...)` in den Text
 einfügen. Wird der zugehörige Inhalt endgültig gelöscht (Papierkorb-Purge

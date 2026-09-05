@@ -8,6 +8,7 @@ import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
 import { renderMarkdownPreview } from "@/app/actions/markdownPreview";
 import CharacterSheetPreview from "@/components/character/CharacterSheetPreview";
 import CharacterValuesEditor from "../_shared/CharacterValuesEditor";
+import PortraitPicker from "../_shared/PortraitPicker";
 import {
   createCharacterWizardAction,
   type CharacterWizardState,
@@ -119,11 +120,15 @@ export default function CharacterWizard({
     // Portrait: eine hochgeladene Datei wird für die Vorschau lokal
     // angezeigt (ins Netz geht sie erst beim Abschicken), sonst gilt die
     // eingetragene URL.
+    // Für die Vorschau zählt, was der Bogen später zeigt: der gewählte
+    // Ausschnitt, sonst die hochgeladene Datei, sonst die eingegebene Adresse.
+    const cropped = text("portraitCropped");
     const file = data.get("portraitFile");
     const portrait =
-      file instanceof File && file.size > 0
+      cropped ||
+      (file instanceof File && file.size > 0
         ? URL.createObjectURL(file)
-        : text("portrait");
+        : text("portrait"));
 
     return {
       name: String(data.get("name") ?? "").trim(),
@@ -269,6 +274,9 @@ export default function CharacterWizard({
       <fieldset hidden={step !== 0} className="border-0 p-0 m-0">
         <legend className="sr-only">Stammdaten</legend>
         <div className="content-editor-head-grid">
+          {/* Portrait mit eigenem Editor (Ausschnitt wählen), deshalb nicht
+              Teil der generischen Feldliste. */}
+          <PortraitPicker idPrefix="wizard" />
           {headFields.map((field) => (
             <HeadFieldRenderer
               key={field.name}

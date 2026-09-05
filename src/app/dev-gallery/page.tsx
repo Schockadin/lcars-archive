@@ -15,6 +15,7 @@ import OnboardingChecklist from "@/components/OnboardingChecklist";
 import TimelineView from "@/components/timeline/TimelineView";
 import SettingsPanel from "@/app/_shared/SettingsPanel";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
+import PortraitPicker from "@/app/user/characters/_shared/PortraitPicker";
 import { buildOnboardingSteps } from "@/lib/onboardingSteps";
 import type { TimelineEvent } from "@/lib/timelineTypes";
 import { DEFAULT_ADVANCEMENT_RULES } from "@/lib/advancement";
@@ -314,6 +315,14 @@ export default function DevGalleryPage() {
       <section id="timeline" className="flex flex-col gap-[8px] mb-[24px]">
         <h2 className="lcars-text">Chronologie</h2>
         <TimelineView events={DEMO_TIMELINE} />
+      </section>
+
+      {/* Portrait wählen und zuschneiden (Stammdaten der eigenen
+          Charakterseite). Die echte Seite braucht Login und Datenbank; die
+          Komponente selbst ist reine Client-Logik. */}
+      <section id="portrait-picker" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Portrait-Zuschnitt</h2>
+        <PortraitPicker idPrefix="gallery" />
       </section>
 
       <section className="flex flex-col gap-[10px]">
