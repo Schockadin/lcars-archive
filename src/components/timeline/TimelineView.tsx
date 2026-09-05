@@ -6,6 +6,7 @@ import {
   LcarsListFilterInput,
   type SortDir,
 } from "@/components/lcars";
+import ChronoRow from "@/components/timeline/ChronoRow";
 import {
   EVENT_CATEGORIES,
   ORIGIN_LABELS,
@@ -16,7 +17,6 @@ import {
   periodKey,
   periodLabel,
   sortEvents,
-  yearOf,
   yearsOf,
   type TimelineEvent,
 } from "@/lib/timelineTypes";
@@ -189,20 +189,9 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
 
 function EventRow({ event }: { event: TimelineEvent }) {
   const visual = categoryVisual(event.category);
-  const day = fmtDate(event.date).slice(0, 6);
 
   return (
-    <article
-      className="timeline-event"
-      style={{ "--timeline-color": visual.color } as React.CSSProperties}
-    >
-      <div className="timeline-date" aria-hidden="true">
-        {day}
-        <b>{yearOf(event.date)}</b>
-      </div>
-      <div className="timeline-rail" aria-hidden="true">
-        <span className="timeline-dot" />
-      </div>
+    <ChronoRow date={event.date} color={visual.color}>
       <LcarsAkteCard
         href={event.href}
         color={visual.color}
@@ -233,6 +222,6 @@ function EventRow({ event }: { event: TimelineEvent }) {
           </>
         }
       />
-    </article>
+    </ChronoRow>
   );
 }

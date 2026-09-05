@@ -1,14 +1,18 @@
-/* ─── Chronologie (/chronologie) ────────────────────────────────────────
-   Zeitstrahl der Kampagne: links eine schmale Schiene mit dem Datum und
-   einem Punkt je Ereignis, rechts die Ereigniskarte (.mission-akte, siehe
-   AkteCard). Der Aufbau folgt dem Entwurf (Datum · Schiene · Karte), die
-   Optik dem übrigen Archiv — die Karten sind dieselben wie in der
-   Missions-Übersicht, die Farben kommen aus den LCARS-Tokens.
+/* ─── Zeitstrahl (/chronologie und /missions) ───────────────────────────
+   Links eine schmale Schiene mit dem Datum und einem Punkt je Eintrag,
+   rechts die Karte (.mission-akte, siehe AkteCard). Der Aufbau folgt dem
+   Entwurf (Datum · Schiene · Karte), die Optik dem übrigen Archiv — die
+   Karten sind dieselben in beiden Listen, die Farben kommen aus den
+   LCARS-Tokens.
 
-   Bewusst NICHT dieselbe Schiene wie .mission-chronik: dort markieren zwei
-   farbige Kappen Anfang und Ende eines durchgehenden Zeitraums. Hier
-   springt die Chronologie über Monate und Jahre, deshalb steht das Datum
-   an jeder Karte und die Zwischenüberschriften trennen die Monate.
+   Die Missions-Übersicht trug ursprünglich eine eigene Schiene: zwei
+   farbige Kappen mit dem ersten und letzten Jahr, dazwischen ein Balken.
+   Das war Schmuck — das Datum der einzelnen Mission stand nur klein in der
+   Karte. Beide Listen sind dasselbe (datierte Einträge in ihrer Reihenfolge)
+   und tragen deshalb jetzt dieselbe Schiene; gerendert von ChronoRow.tsx.
+   Die Jahresleiste und die Monats-Trenner darunter gehören weiterhin nur
+   zur Chronologie: die Missions-Übersicht hat ihren eigenen Filter und ist
+   kurz genug, um ohne Zwischenüberschriften auszukommen.
 ──────────────────────────────────────────────────────────────────── */
 
 /* Jahresleiste über der Liste — wie im Entwurf eine Reihe von Jahren, die

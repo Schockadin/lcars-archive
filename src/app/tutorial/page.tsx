@@ -149,6 +149,14 @@ export default function TutorialPage() {
                 sind eine Lesehilfe, keine gepflegte Angabe. Was nicht stimmt,
                 entfernt die Spielleitung unter &bdquo;Leitung → Chronologie&ldquo;.
               </p>
+              <p>
+                Die <strong>Missions-Übersicht</strong> steht am selben
+                Zeitstrahl: Datum links, Schiene mit einem Punkt je Mission,
+                daneben die Einsatzakte. Die Farbe des Punktes ist dort der
+                Status der Mission. Jahresleiste und Monats-Trenner gibt es
+                nur in der Chronologie — die Missions-Übersicht hat ihren
+                eigenen Filter nach Autor.
+              </p>
             </div>
           </LcarsDataRow>
 

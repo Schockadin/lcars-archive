@@ -13,11 +13,13 @@ import PersonnelFileView from "@/components/character/PersonnelFileView";
 import RelationGraph from "@/components/character/RelationGraph";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import TimelineView from "@/components/timeline/TimelineView";
+import MissionsOverview from "@/app/missions/MissionsOverview";
 import SettingsPanel from "@/app/_shared/SettingsPanel";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import PortraitPicker from "@/app/user/characters/_shared/PortraitPicker";
 import { buildOnboardingSteps } from "@/lib/onboardingSteps";
 import type { TimelineEvent } from "@/lib/timelineTypes";
+import type { MissionPreview } from "@/types/missions";
 import { DEFAULT_ADVANCEMENT_RULES } from "@/lib/advancement";
 import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
@@ -139,6 +141,35 @@ const DEMO_TIMELINE: TimelineEvent[] = [
     sourceTitle: "Tuvok",
     href: "/characters/tuvok",
     people: ["Tuvok"],
+  },
+];
+
+// Zwei Missionen für die Übersicht: unterschiedlicher Status (Farbe des
+// Punktes) und ein offenes Ende („LAUFEND").
+const DEMO_MISSIONS: MissionPreview[] = [
+  {
+    id: 1,
+    slug: "erste-mission",
+    title: "Erste Mission",
+    status: "completed",
+    started_at: "2401-03-05",
+    ended_at: "2401-03-20",
+    metadata: { tags: [], body: "<p>Er sagte Hallo zu ihr.</p>", teaser: null },
+    log_count: 1,
+    authors: [{ name: "Tuvok", slug: "tuvok" }],
+    isDraft: false,
+  },
+  {
+    id: 3,
+    slug: "zweite-mission",
+    title: "Zweite Mission",
+    status: "active",
+    started_at: "2401-06-12",
+    ended_at: null,
+    metadata: { tags: [], body: null, teaser: null },
+    log_count: 2,
+    authors: [{ name: "Kira", slug: "kira" }],
+    isDraft: false,
   },
 ];
 
@@ -308,6 +339,14 @@ export default function DevGalleryPage() {
       >
         <h2 className="lcars-text">Markdown-Editor (10 Zeilen)</h2>
         <MarkdownEditor id="demo-markdown" rows={10} defaultValue="**Text**" />
+      </section>
+
+      {/* Die Missions-Übersicht (/missions) mit Attrappen-Missionen: sie
+          trägt dieselbe Zeitstrahl-Schiene wie die Chronologie darüber. Die
+          echte Seite braucht die Datenbank. */}
+      <section id="missions" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Missions-Übersicht</h2>
+        <MissionsOverview missions={DEMO_MISSIONS} />
       </section>
 
       {/* Die Chronologie (/chronologie) mit Attrappen-Ereignissen: die echte
