@@ -131,7 +131,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "erste-schritte",
       },
       {
-        text: "Neu auf der Missions-Übersicht: „Kampagnenband (PDF)“ packt den ganzen Kampagnenverlauf in eine Datei — Titelseite, Inhaltsverzeichnis und danach jede Mission mit ihrer Beschreibung und allen Logbüchern, chronologisch von der ältesten an. Der Band enthält genau das, was du auch sonst lesen darfst; nicht öffentliche Logbücher sind darin gekennzeichnet.",
+        text: "Neu auf der Seite jeder Mission: „Missionsakte (PDF)“ packt genau diese Mission in eine Datei — Titelseite mit Zeitraum, Status und Beteiligten, danach die Beschreibung und jedes Logbuch auf einer eigenen Seite, chronologisch. Die Akte enthält genau das, was du auch sonst lesen darfst; nicht öffentliche Logbücher sind darin gekennzeichnet.",
         tutorial: "merken-abonnieren",
       },
       {

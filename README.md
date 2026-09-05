@@ -458,16 +458,19 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `src/lib/onboarding.ts` holt die Tatsachen). Dieselbe Liste erscheint auf dem
   Dashboard (`OnboardingSection`) und verschwindet dort, sobald alles erledigt
   ist; `/willkommen` bleibt als Übersicht erreichbar.
-- **Kampagnenband als PDF** — `/api/export/campaign-book` (Knopf auf der
-  Missions-Übersicht, nur für Angemeldete) bündelt den gesamten
-  Kampagnenverlauf in einer Datei: Titelseite, Inhaltsverzeichnis, danach je
-  Mission ihre Beschreibung und alle Logbücher, chronologisch ab der ältesten
-  Mission. Der Inhalt richtet sich nach der Sichtbarkeit der anfordernden
-  Person — dieselbe `canView`-Regel wie auf den Inhaltsseiten, angewandt in
-  `src/lib/campaignBook.ts`; nicht öffentliche Logbücher sind im Band als
-  solche gekennzeichnet. Bewusst ungecacht: der Band hängt am Betrachter, ein
-  Cache wäre ein Cache je Konto. Layout: `src/lib/pdf/CampaignBookPdfDocument.tsx`
-  (Lesezeichen je Mission, Seitenzahlen in der Fußzeile).
+- **Missionsakte als PDF** — `/api/export/mission-book/[missionSlug]` (Knopf
+  auf der Mission-Detailseite, nur für Angemeldete) packt **eine** Mission in
+  eine Datei: Titelseite mit Zeitraum, Status und Beteiligten, danach die
+  Beschreibung und jedes Logbuch auf einer eigenen Seite, chronologisch. Der
+  Inhalt richtet sich nach der Sichtbarkeit der anfordernden Person —
+  dieselbe `canView`-Regel wie auf den Inhaltsseiten, angewandt in
+  `src/lib/missionBook.ts`; nicht öffentliche Logbücher sind in der Akte als
+  solche gekennzeichnet, und eine Entwurfs-Mission liefert dieselbe 404 wie
+  ihre Seite. Bewusst ungecacht: die Akte hängt am Betrachter, ein Cache wäre
+  ein Cache je Konto. Layout: `src/lib/pdf/MissionBookPdfDocument.tsx`
+  (Lesezeichen je Logbuch, Seitenzahlen in der Fußzeile). Vorgänger war ein
+  Kampagnenband über alle Missionen auf der Übersicht — gebraucht wird beim
+  Spielen die Akte der Mission, die gerade auf dem Tisch liegt.
 - **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und
   automatische bzw. manuelle Verlinkung (`[[Wikilinks]]`) zwischen Inhalten.
 - **Bilder-Galerie** — Charaktere, Missionen, Missionslogs und Datenbank-Einträge

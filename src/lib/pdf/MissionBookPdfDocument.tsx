@@ -1,5 +1,9 @@
-// Der Kampagnenband als PDF: Titelseite, Inhaltsverzeichnis, danach je
-// Mission ihre Beschreibung und alle Logbücher in zeitlicher Folge.
+// Die Missionsakte als PDF: Titelseite mit Zeitraum, Status und Beteiligten,
+// danach die Beschreibung der Mission und ihre Logbücher in zeitlicher Folge.
+//
+// Vorher war das ein Band über alle Missionen (mit Inhaltsverzeichnis). Eine
+// einzelne Akte braucht kein Verzeichnis — die Logbücher stehen auf der
+// Titelseite und sind über die Lesezeichen erreichbar.
 //
 // Wie die übrigen Exporte mit @react-pdf/renderer (reine Node-Bibliothek ohne
 // Chromium, läuft dadurch auf Netlify Functions). Markdown zerlegt
@@ -21,7 +25,7 @@ import {
 import { toPdfBlocks, type PdfSpan } from "./markdownBlocks";
 import { STATUS_CONFIG } from "@/lib/missionFormat";
 import type { MissionStatus } from "@/types/missions";
-import type { CampaignBook, CampaignBookLog } from "@/lib/campaignBook";
+import type { MissionBook, MissionBookLog } from "@/lib/missionBook";
 
 const ACCENT = "#3f84b5";
 const INK = "#1a1a1a";
@@ -42,47 +46,25 @@ const styles = StyleSheet.create({
     color: INK,
     justifyContent: "center",
   },
+  // Der Missionstitel trägt die Titelseite; darüber klein die Kampagne,
+  // damit ein einzeln ausgedrucktes Blatt zuzuordnen ist.
   bookTitle: {
     fontFamily: "Helvetica-Bold",
-    fontSize: 30,
-    letterSpacing: 2,
+    fontSize: 26,
+    letterSpacing: 1.5,
     color: ACCENT,
-    marginBottom: 10,
+    marginBottom: 28,
   },
   bookSubtitle: {
-    fontSize: 13,
+    fontSize: 11,
+    letterSpacing: 2,
     color: INK_DIM,
-    marginBottom: 28,
+    marginBottom: 8,
   },
   bookMeta: {
     fontSize: 10,
     color: INK_DIM,
     lineHeight: 1.6,
-  },
-  tocTitle: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 16,
-    letterSpacing: 1,
-    color: ACCENT,
-    marginBottom: 14,
-  },
-  tocEntry: {
-    marginBottom: 7,
-  },
-  tocMission: {
-    fontFamily: "Helvetica-Bold",
-    fontSize: 11,
-  },
-  tocMeta: {
-    fontSize: 9,
-    color: INK_DIM,
-    marginTop: 1,
-  },
-  tocLog: {
-    fontSize: 9,
-    color: INK_DIM,
-    marginLeft: 14,
-    marginTop: 1,
   },
   missionTitle: {
     fontFamily: "Helvetica-Bold",
@@ -202,7 +184,7 @@ export function missionMetaLine(mission: {
   return parts.join(" · ");
 }
 
-export function logMetaLine(log: CampaignBookLog): string {
+export function logMetaLine(log: MissionBookLog): string {
   const parts: string[] = [];
   if (log.sessionNr != null) parts.push(`Session ${log.sessionNr}`);
   const date = formatDate(log.logDate);
@@ -283,18 +265,20 @@ function Footer({ title }: { title: string }) {
   );
 }
 
-export interface CampaignBookPdfInput {
-  book: CampaignBook;
-  // Name der Kampagne (Einstellungen) — steht auf der Titelseite.
+export interface MissionBookPdfInput {
+  book: MissionBook;
+  // Name der Kampagne — steht klein über dem Missionstitel, damit ein
+  // ausgedrucktes Blatt zuzuordnen ist.
   campaignTitle: string;
-  // Wer den Band gezogen hat; im Ausdruck vermerkt, weil der Inhalt von der
+  // Wer die Akte gezogen hat; im Ausdruck vermerkt, weil der Inhalt von der
   // Sichtbarkeit dieser Person abhängt.
   requestedBy: string | null;
-  // Absolute Adresse der Instanz, damit die Verweise im Band anklickbar sind.
+  // Absolute Adresse der Instanz, damit die Verweise in der Akte anklickbar
+  // sind.
   baseUrl: string;
 }
 
-function CampaignBookDocument({ input }: { input: CampaignBookPdfInput }) {
+function MissionBookDocument({ input }: { input: MissionBookPdfInput }) {
   const { book, campaignTitle } = input;
   const generated = book.generatedAt.toLocaleDateString("de-DE", {
     day: "2-digit",
@@ -304,102 +288,81 @@ function CampaignBookDocument({ input }: { input: CampaignBookPdfInput }) {
 
   return (
     <Document
-      title={`Kampagnenband ${campaignTitle}`}
+      title={`Missionsakte ${book.title}`}
       author="Neo-Archiv"
       creator="Neo-Archiv"
     >
       <Page size="A4" style={styles.titlePage}>
-        <Text style={styles.bookTitle}>KAMPAGNENBAND</Text>
         <Text style={styles.bookSubtitle}>{campaignTitle}</Text>
+        <Text style={styles.bookTitle}>{book.title.toUpperCase()}</Text>
         <Text style={styles.bookMeta}>
-          {book.missions.length === 1
-            ? "1 Mission"
-            : `${book.missions.length} Missionen`}
-          {" · "}
-          {book.logCount === 1 ? "1 Logbuch" : `${book.logCount} Logbücher`}
+          {missionMetaLine(book)}
+          {book.participants.length > 0
+            ? `\nBeteiligt: ${book.participants.join(" · ")}`
+            : ""}
           {"\n"}
           Stand: {generated}
           {input.requestedBy ? `\nZusammengestellt für: ${input.requestedBy}` : ""}
           {"\n\n"}
-          Der Band enthält, was die anfordernde Person lesen darf — nicht
+          Die Akte enthält, was die anfordernde Person lesen darf — nicht
           öffentliche Logbücher sind im Text als solche gekennzeichnet.
         </Text>
       </Page>
 
-      <Page size="A4" style={styles.page} bookmark="Inhalt">
-        <Text style={styles.tocTitle}>INHALT</Text>
-        {book.missions.length === 0 && (
-          <Text style={styles.empty}>
-            Es gibt noch keine veröffentlichten Missionen.
-          </Text>
-        )}
-        {book.missions.map((mission) => (
-          <View key={mission.slug} style={styles.tocEntry} wrap={false}>
-            <Text style={styles.tocMission}>{mission.title}</Text>
-            <Text style={styles.tocMeta}>{missionMetaLine(mission)}</Text>
-            {mission.logs.map((log) => (
-              <Text key={log.slug} style={styles.tocLog}>
-                {log.title}
-                {logMetaLine(log) ? ` — ${logMetaLine(log)}` : ""}
-              </Text>
-            ))}
-          </View>
-        ))}
-        <Footer title={campaignTitle} />
+      <Page size="A4" style={styles.page} bookmark={book.title}>
+        <Text style={styles.missionTitle}>{book.title}</Text>
+        <Text style={styles.missionMeta}>{missionMetaLine(book)}</Text>
+        <Blocks markdown={book.sourceMarkdown} />
+        <Footer title={book.title} />
       </Page>
 
-      {book.missions.map((mission) => (
-        // Jede Mission beginnt auf einer neuen Seite — im Band soll man
-        // blättern können, ohne dass zwei Einsätze auf einer Seite kleben.
+      {/* Jedes Logbuch beginnt auf einer neuen Seite: die Akte wird am Tisch
+          durchgeblättert, und zwei Berichte auf einer Seite kleben aneinander.
+          Das Lesezeichen führt direkt zum jeweiligen Bericht. */}
+      {book.logs.map((log) => (
         <Page
-          key={mission.slug}
+          key={log.slug}
           size="A4"
           style={styles.page}
-          bookmark={mission.title}
+          bookmark={log.title}
         >
-          <Text style={styles.missionTitle}>{mission.title}</Text>
-          <Text style={styles.missionMeta}>{missionMetaLine(mission)}</Text>
-          <Blocks markdown={mission.sourceMarkdown} />
-
-          {mission.logs.map((log) => (
-            <View key={log.slug}>
-              <Text style={styles.logTitle}>{log.title}</Text>
-              {logMetaLine(log) !== "" && (
-                <Text style={styles.logMeta}>{logMetaLine(log)}</Text>
-              )}
-              {log.visibility !== "public" && (
-                <Text style={styles.logNotice}>
-                  {log.visibility === "gm"
-                    ? "Nur für die Spielleitung sichtbar"
-                    : "Nicht öffentlich sichtbar"}
-                </Text>
-              )}
-              <Blocks markdown={log.sourceMarkdown} />
-              <Link
-                src={`${input.baseUrl}/missions/${mission.slug}/${log.slug}`}
-                style={styles.logMeta}
-              >
-                Im Archiv lesen
-              </Link>
-            </View>
-          ))}
-
-          {mission.logs.length === 0 && (
-            <Text style={styles.empty}>
-              Zu dieser Mission ist (für dich) kein Logbuch hinterlegt.
+          <Text style={styles.logTitle}>{log.title}</Text>
+          {logMetaLine(log) !== "" && (
+            <Text style={styles.logMeta}>{logMetaLine(log)}</Text>
+          )}
+          {log.visibility !== "public" && (
+            <Text style={styles.logNotice}>
+              {log.visibility === "gm"
+                ? "Nur für die Spielleitung sichtbar"
+                : "Nicht öffentlich sichtbar"}
             </Text>
           )}
-
-          <Footer title={campaignTitle} />
+          <Blocks markdown={log.sourceMarkdown} />
+          <Link
+            src={`${input.baseUrl}/missions/${book.slug}/${log.slug}`}
+            style={styles.logMeta}
+          >
+            Im Archiv lesen
+          </Link>
+          <Footer title={book.title} />
         </Page>
       ))}
+
+      {book.logs.length === 0 && (
+        <Page size="A4" style={styles.page} bookmark="Logbücher">
+          <Text style={styles.empty}>
+            Zu dieser Mission ist (für dich) kein Logbuch hinterlegt.
+          </Text>
+          <Footer title={book.title} />
+        </Page>
+      )}
     </Document>
   );
 }
 
 // Einziger Einstiegspunkt für die Route (route.ts kennt kein JSX).
-export async function renderCampaignBookPdf(
-  input: CampaignBookPdfInput,
+export async function renderMissionBookPdf(
+  input: MissionBookPdfInput,
 ): Promise<Buffer> {
-  return renderToBuffer(<CampaignBookDocument input={input} />);
+  return renderToBuffer(<MissionBookDocument input={input} />);
 }

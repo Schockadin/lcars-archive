@@ -24,12 +24,8 @@ import ChronoRow from "@/components/timeline/ChronoRow";
 // ausgeblendet).
 export default function MissionsOverview({
   missions,
-  campaignBook,
 }: {
   missions: MissionPreview[];
-  // Vom Server gereichter Knopf „Kampagnenband (PDF)" — nur für Angemeldete
-  // (siehe CampaignBookLink.tsx), deshalb hier nur ein durchgereichter Knoten.
-  campaignBook?: React.ReactNode;
 }) {
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   // Filter-Schlüssel = author.slug (Fallback: name), null = alle Autoren.
@@ -114,8 +110,6 @@ export default function MissionsOverview({
                 ))}
               </select>
             )}
-
-            {campaignBook}
           </div>
 
           {visible.length === 0 ? (

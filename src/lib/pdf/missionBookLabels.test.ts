@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest";
-import {
-  logMetaLine,
-  missionMetaLine,
-} from "./CampaignBookPdfDocument";
-import type { CampaignBookLog } from "@/lib/campaignBook";
+import { logMetaLine, missionMetaLine } from "./MissionBookPdfDocument";
+import type { MissionBookLog } from "@/lib/missionBook";
 
-// Die Kopfzeilen des Kampagnenbands: sie setzen sich aus dem zusammen, was am
+// Die Kopfzeilen der Missionsakte: sie setzen sich aus dem zusammen, was am
 // Inhalt bekannt ist — fehlende Angaben dürfen keine leeren Trenner
 // hinterlassen.
 
-function log(partial: Partial<CampaignBookLog>): CampaignBookLog {
+function log(partial: Partial<MissionBookLog>): MissionBookLog {
   return {
     slug: "log",
     title: "Log",

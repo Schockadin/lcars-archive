@@ -32,7 +32,7 @@ import {
 //
 // Bewusst OHNE "use cache": die Chronologie hängt an der Sichtbarkeit der
 // betrachtenden Person (nicht-öffentliche Logbücher, Entwürfe) — dieselbe
-// Begründung wie beim Beziehungsgraph und beim Kampagnenband. Es sind fünf
+// Begründung wie beim Beziehungsgraph und bei der Missionsakte. Es sind fünf
 // Abfragen für die ganze Seite, nicht eine je Inhalt.
 
 interface MissionRow {

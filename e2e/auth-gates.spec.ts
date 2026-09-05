@@ -34,10 +34,10 @@ for (const pfad of GESCHUETZT) {
   });
 }
 
-// Der Kampagnenband bündelt den gesamten Verlauf in einer Datei und ist
-// deshalb ebenfalls kontogebunden.
-test("/api/export/campaign-book gibt Gästen kein PDF", async ({ page }) => {
-  const response = await page.goto("/api/export/campaign-book");
+// Die Missionsakte bündelt einen ganzen Missionsverlauf in einer
+// weiterreichbaren Datei und ist deshalb ebenfalls kontogebunden.
+test("/api/export/mission-book gibt Gästen kein PDF", async ({ page }) => {
+  const response = await page.goto("/api/export/mission-book/erste-mission");
   const type = response?.headers()["content-type"] ?? "";
   expect(type).not.toContain("application/pdf");
 });
