@@ -18,7 +18,7 @@ import {
   StyleSheet,
   renderToBuffer,
 } from "@react-pdf/renderer";
-import { toPdfBlocks } from "./markdownBlocks";
+import { toPdfBlocks, type PdfSpan } from "./markdownBlocks";
 import { STATUS_CONFIG } from "@/lib/missionFormat";
 import type { MissionStatus } from "@/types/missions";
 import type { CampaignBook, CampaignBookLog } from "@/lib/campaignBook";
@@ -211,6 +211,28 @@ export function logMetaLine(log: CampaignBookLog): string {
   return parts.join(" · ");
 }
 
+// Ein Textstück mit seiner Auszeichnung — dieselbe Zuordnung wie im
+// Charakterbogen-PDF: Helvetica bringt Fett, Kursiv und beides mit.
+function spanFamily(span: PdfSpan): string {
+  if (span.code) return "Courier";
+  if (span.bold && span.italic) return "Helvetica-BoldOblique";
+  if (span.bold) return "Helvetica-Bold";
+  if (span.italic) return "Helvetica-Oblique";
+  return "Helvetica";
+}
+
+function Spans({ spans }: { spans: PdfSpan[] }) {
+  return (
+    <>
+      {spans.map((span, index) => (
+        <Text key={index} style={{ fontFamily: spanFamily(span) }}>
+          {span.text}
+        </Text>
+      ))}
+    </>
+  );
+}
+
 function Blocks({ markdown }: { markdown: string }) {
   const blocks = toPdfBlocks(markdown);
   if (blocks.length === 0) {
@@ -229,20 +251,20 @@ function Blocks({ markdown }: { markdown: string }) {
         if (block.kind === "listItem") {
           return (
             <Text key={index} style={styles.listItem}>
-              • {block.text}
+              • <Spans spans={block.spans} />
             </Text>
           );
         }
         if (block.kind === "quote") {
           return (
             <Text key={index} style={styles.quote}>
-              {block.text}
+              <Spans spans={block.spans} />
             </Text>
           );
         }
         return (
           <Text key={index} style={styles.paragraph}>
-            {block.text}
+            <Spans spans={block.spans} />
           </Text>
         );
       })}

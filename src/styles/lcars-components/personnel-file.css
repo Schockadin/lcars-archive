@@ -172,6 +172,15 @@
   padding-top: calc(8 * var(--pf-unit));
 }
 
+/* Attribute und Disziplinen noch einmal 2px höher. Ihre gedruckten Kästen sind
+   mit 25 Vorlagen-Pixeln die niedrigsten des Bogens; gemessen am gerenderten
+   Blatt saß die Ziffer darin 2px unter der Kastenmitte (Kasten 535…560, Ziffer
+   546…553 statt 544…551). Schutz und Stress bleiben bei 8 — ihre Kästen sind
+   35 Einheiten hoch, dort stimmt die Lage. */
+.pf-static--attr {
+  padding-top: calc(6 * var(--pf-unit));
+}
+
 /* Ein Kasten, der sich einen festen Teil (aus der Akte) und ein Eingabefeld
    teilt — siehe „Species & Traits". */
 

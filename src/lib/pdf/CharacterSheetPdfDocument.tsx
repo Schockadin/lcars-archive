@@ -27,7 +27,7 @@ import {
   StyleSheet,
   renderToBuffer,
 } from "@react-pdf/renderer";
-import { toPdfBlocks } from "./markdownBlocks";
+import { toPdfBlocks, type PdfSpan } from "./markdownBlocks";
 import {
   ATTRIBUTE_BOXES,
   DEPARTMENT_BOXES,
@@ -119,6 +119,15 @@ const styles = StyleSheet.create({
     paddingTop: pt(8),
     paddingRight: pt(10),
   },
+  // Attribute und Disziplinen 2px höher als Schutz und Stress: ihre gedruckten
+  // Kästen sind mit 25 Einheiten die niedrigsten des Bogens (.pf-static--attr).
+  statAttr: {
+    fontSize: pt(11),
+    lineHeight: 1.25,
+    textAlign: "right",
+    paddingTop: pt(6),
+    paddingRight: pt(10),
+  },
   // Der maximale Stress steht in einem eigenen, schmalen Kasten ohne
   // gedruckte Beschriftung — dort ist mittig richtig (.pf-static--stress).
   stress: {
@@ -136,10 +145,29 @@ const styles = StyleSheet.create({
   cheatPage: {
     fontFamily: "Helvetica",
     color: INK,
-    paddingTop: pt(48),
+    // Innerhalb des Rahmens (siehe docFrame): 20 Einheiten Blattrand plus die
+    // Innenabstände des Rahmens, genau wie .pf-doc/.pf-doc-frame am
+    // Bildschirm (30 oben, 34 seitlich, 18 unten).
+    paddingTop: pt(50),
     // Platz für die auf jeder Seite wiederholte Markenzeile am Blattfuß.
     paddingBottom: pt(56),
-    paddingHorizontal: pt(56),
+    paddingHorizontal: pt(54),
+  },
+  // Der STA-Rahmen von Blatt 2 und 3: abgerundete blaue Umrandung wie auf dem
+  // gedruckten Bogen (.pf-doc-frame am Bildschirm). Als eigenes, absolut
+  // gesetztes und `fixed` wiederholtes Element — ein umschließender View mit
+  // Rahmen kann in @react-pdf nicht über Seiten hinweg fließen, der Rahmen
+  // risse am Seitenumbruch ab.
+  docFrame: {
+    position: "absolute",
+    top: pt(20),
+    left: pt(20),
+    right: pt(20),
+    bottom: pt(20),
+    borderWidth: pt(2),
+    borderStyle: "solid",
+    borderColor: SHEET_BLUE,
+    borderRadius: pt(20),
   },
   // Kopfzeile wie auf dem Bogen: „STAR TREK ADVENTURES" links, der Titelreiter
   // rechts (wie „PERSONNEL FILE").
@@ -467,7 +495,7 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
         if (value === null || value === undefined) return null;
         return (
           <View key={field.key} style={boxStyle(ATTRIBUTE_BOXES[field.key])}>
-            <Text style={styles.stat}>{value}</Text>
+            <Text style={styles.statAttr}>{value}</Text>
           </View>
         );
       })}
@@ -476,7 +504,7 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
         if (value === null || value === undefined) return null;
         return (
           <View key={field.key} style={boxStyle(DEPARTMENT_BOXES[field.key])}>
-            <Text style={styles.stat}>{value}</Text>
+            <Text style={styles.statAttr}>{value}</Text>
           </View>
         );
       })}
@@ -534,6 +562,7 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
 
   return (
     <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.cheatPage}>
+      <View style={styles.docFrame} fixed />
       <View style={styles.cheatMast}>
         <Text style={styles.cheatWordmark}>STAR TREK ADVENTURES</Text>
         <Text style={styles.cheatTab}>CHEAT SHEET</Text>
@@ -565,7 +594,8 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
               // Markdown wie bei den Hausregeln über toPdfBlocks zerlegt.
               toPdfBlocks(talent.description).map((block, i) => (
                 <Text key={i} style={styles.cheatText}>
-                  {block.kind === "listItem" ? `• ${block.text}` : block.text}
+                  {block.kind === "listItem" && "• "}
+                  <Spans spans={block.spans} />
                 </Text>
               ))
             ) : (
@@ -619,7 +649,8 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
                   Biografie über toPdfBlocks in einfache Blöcke zerlegt. */}
               {toPdfBlocks(rule.body).map((block, i) => (
                 <Text key={i} style={styles.cheatRuleText}>
-                  {block.kind === "listItem" ? `• ${block.text}` : block.text}
+                  {block.kind === "listItem" && "• "}
+                  <Spans spans={block.spans} />
                 </Text>
               ))}
             </View>
@@ -632,12 +663,36 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
 
 // Drittes Blatt: die Biografie im Look der beiden anderen. Fehlt sie, fällt
 // das Blatt weg — ein leeres Blatt im Ausdruck wäre nur Papierverschwendung.
+// Ein Textstück mit seiner Auszeichnung. @react-pdf kennt kein <strong>, wohl
+// aber verschachtelte <Text> mit eigener Schriftfamilie — Helvetica bringt
+// Fett, Kursiv und beides von Haus aus mit, es muss nichts eingebettet werden.
+function spanFamily(span: PdfSpan): string {
+  if (span.code) return "Courier";
+  if (span.bold && span.italic) return "Helvetica-BoldOblique";
+  if (span.bold) return "Helvetica-Bold";
+  if (span.italic) return "Helvetica-Oblique";
+  return "Helvetica";
+}
+
+function Spans({ spans }: { spans: PdfSpan[] }) {
+  return (
+    <>
+      {spans.map((span, index) => (
+        <Text key={index} style={{ fontFamily: spanFamily(span) }}>
+          {span.text}
+        </Text>
+      ))}
+    </>
+  );
+}
+
 function BiographyPage({ input }: { input: CharacterSheetPdfInput }) {
   const blocks = toPdfBlocks(input.bioMarkdown ?? "");
   if (blocks.length === 0) return null;
 
   return (
     <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.cheatPage}>
+      <View style={styles.docFrame} fixed />
       <View style={styles.cheatMast}>
         <Text style={styles.cheatWordmark}>STAR TREK ADVENTURES</Text>
         <Text style={styles.cheatTab}>BIOGRAPHY</Text>
@@ -653,6 +708,8 @@ function BiographyPage({ input }: { input: CharacterSheetPdfInput }) {
 
       {blocks.map((block, index) => {
         if (block.kind === "heading") {
+          // Überschriften stehen in Versalien — dort trägt eine zusätzliche
+          // Fett-Auszeichnung nichts bei, der reine Text genügt.
           return (
             <Text key={index} style={styles.bioHeading}>
               {block.text.toUpperCase()}
@@ -662,20 +719,20 @@ function BiographyPage({ input }: { input: CharacterSheetPdfInput }) {
         if (block.kind === "listItem") {
           return (
             <Text key={index} style={styles.bioListItem}>
-              • {block.text}
+              • <Spans spans={block.spans} />
             </Text>
           );
         }
         if (block.kind === "quote") {
           return (
             <Text key={index} style={styles.bioQuote}>
-              {block.text}
+              <Spans spans={block.spans} />
             </Text>
           );
         }
         return (
           <Text key={index} style={styles.bioParagraph}>
-            {block.text}
+            <Spans spans={block.spans} />
           </Text>
         );
       })}

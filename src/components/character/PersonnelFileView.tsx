@@ -253,7 +253,7 @@ export default function PersonnelFileView({
           {ATTRIBUTE_FIELDS.map((field) => (
             <div
               key={field.key}
-              className="pf-static pf-static--stat"
+              className="pf-static pf-static--stat pf-static--attr"
               style={boxStyle(ATTRIBUTE_BOXES[field.key])}
               aria-label={field.original ?? field.label}
             >
@@ -263,7 +263,7 @@ export default function PersonnelFileView({
           {DEPARTMENT_FIELDS.map((field) => (
             <div
               key={field.key}
-              className="pf-static pf-static--stat"
+              className="pf-static pf-static--stat pf-static--attr"
               style={boxStyle(DEPARTMENT_BOXES[field.key])}
               aria-label={field.original ?? field.label}
             >

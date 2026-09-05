@@ -104,6 +104,9 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "Das Portrait füllt jetzt das Bildfeld des Charakterbogens aus und ist oben links passend zur Vorlage schräg abgeschnitten — vorher stand ein hochformatiges Bild als schmaler Streifen mit weißen Rändern darin.",
       },
       {
+        text: "Spickzettel und Biografie sehen im PDF jetzt aus wie am Bildschirm: mit dem blauen Rahmen des Bogens, mit formatiertem Text (fett, kursiv, beides) statt roher Sternchen — und ohne die unsichtbaren Kommentare aus dem Quelltext, etwa die Marken für die Chronologie.",
+      },
+      {
         text: "In der Chronologie steht das neueste Jahr jetzt ganz links, und die Jahresleiste zeigt nur noch Jahre, in denen bei der aktuellen Auswahl auch etwas liegt. Was das Sprachmodell an einem Tag ableitet, den der Eintrag ohnehin schon führt (etwa den Missionsbeginn), erscheint nicht mehr doppelt.",
         tutorial: "chronologie",
       },
