@@ -14,6 +14,7 @@ import { listAllUsers } from "@/lib/users";
 import { notFound } from "next/navigation";
 import CharakterDetailPage from "./CharacterDetailPage";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
+import { listNotes } from "@/lib/contentNotes";
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -69,7 +70,7 @@ export default async function CharakterPage({ params }: Props) {
   // CharacterHero.tsx) — spart die Extra-Query für alle anderen Aufrufe.
   const isOwner = viewer != null && viewer.userId === character.player_id;
 
-  const [logs, conversationCount, allUsers, source, ingameYear, followInitialState, mentions, relations] =
+  const [logs, conversationCount, allUsers, source, ingameYear, followInitialState, mentions, relations, notes] =
     await Promise.all([
       getLogsByCharacter(character.id),
       getDialogueCountByParticipant(character.slug),
@@ -83,6 +84,7 @@ export default async function CharakterPage({ params }: Props) {
       getMentionsOf({ slug: character.slug, name: character.name }, viewer),
       // „Wer kennt wen" — aus gemeinsamen Missionen und Gesprächen abgeleitet.
       getRelationsOf(character.slug, viewer),
+      listNotes("character", character.slug, viewer),
     ]);
   // Angezeigtes Alter: aus Geburtsdatum + Ingame-Jahr abgeleitet, sonst das
   // manuell gepflegte metadata.age als Fallback (siehe campaign.ts).
@@ -109,6 +111,8 @@ export default async function CharakterPage({ params }: Props) {
         followInitialState={followInitialState}
         mentions={mentions}
         relations={relations}
+        notes={notes}
+        canWriteNotes={viewer != null}
       />
     </div>
   );

@@ -67,6 +67,10 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "Beim Einstellen der Farben zeigt das Profil jetzt zu jeder Farbe an, wie gut sie sich vor ihrem Hintergrund liest, und warnt, wenn eine Kombination zu blass wird. Im hellen Erscheinungsbild werden Überschriften und Beschriftungen automatisch so weit abgedunkelt, dass sie gut lesbar bleiben — die farbigen Balken und Pillen behalten dabei ihre volle Leuchtkraft.",
         tutorial: "farbschema",
       },
+      {
+        text: "An Charakteren, Missionen, Logbüchern und Datenbank-Einträgen kannst du jetzt Notizen hinterlegen: entweder „Nur ich“ als persönliche Merkzettel, die niemand sonst sieht, oder „Für die Runde“ als Kommentar, den alle Angemeldeten lesen und beantworten können. Die Notizen stehen aufklappbar direkt unter dem Eintrag.",
+        tutorial: "notizen",
+      },
     ],
   },
   {

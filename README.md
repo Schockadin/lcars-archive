@@ -42,6 +42,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (`src/lib/dal.ts`) und in jeder Seite/Server-Action (Defense in Depth). Die
   reine Krypto-/Token-Logik teilen sich Proxy und Session-Verwaltung über
   `src/lib/sessionToken.ts`.
+- **Notizen & Kommentare** — an Charakteren, Missionen, Logbüchern und
+  Datenbank-Einträgen können eingeloggte Personen Notizen hinterlegen: mit
+  Sichtbarkeit `private` (nur der Autor, auch für die Moderation unsichtbar)
+  oder `group` (alle Angemeldeten, als Diskussion am Eintrag). Beides liegt in
+  einer Tabelle `content_notes`, verknüpft über `(content_type, content_slug)`
+  wie `content_follows`; Datenzugriff in `src/lib/contentNotes.ts`, das
+  Client-Panel in `src/app/_shared/NotesPanel.tsx`. Gruppen-Notizen darf
+  zusätzlich `content.moderate` löschen, private nie; beim endgültigen Löschen
+  eines Inhalts räumt `purgeContent.ts` sie mit ab.
 - **Eigene Inhalte** — eingeloggte User legen eigene Charaktere, Einsatzberichte,
   Datenbank-Einträge und Gespräche zwischen Charakteren an, mit Sichtbarkeitsstufen
   (privat/GM/öffentlich) und einem persönlichen Dashboard (farbcodierter News-Feed,

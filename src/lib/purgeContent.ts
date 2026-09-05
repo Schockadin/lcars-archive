@@ -21,6 +21,19 @@ import { deleteEmbeddings } from "@/lib/embeddings";
 // Kommentare vor der Soft-Delete-Umstellung) — das war bisher Teil des
 // Lösch-Vorgangs selbst, passiert jetzt erst hier, beim endgültigen Purge.
 
+// Notizen/Kommentare hängen nicht per Fremdschlüssel am Inhalt (Verknüpfung
+// über content_type + content_slug, siehe content_notes in schema.sql) und
+// müssen deshalb beim endgültigen Löschen mit entfernt werden.
+async function purgeNotesFor(
+  contentType: "character" | "mission" | "mission_log" | "archive",
+  slug: string,
+): Promise<void> {
+  await sql`
+    DELETE FROM content_notes
+    WHERE content_type = ${contentType} AND content_slug = ${slug}
+  `;
+}
+
 async function purgeArchiveLinksAndFollows(slug: string): Promise<void> {
   await sql`
     DELETE FROM timeline_events
@@ -30,6 +43,7 @@ async function purgeArchiveLinksAndFollows(slug: string): Promise<void> {
     DELETE FROM content_follows
     WHERE target_type = 'archive_entry' AND target_slug = ${slug}
   `;
+  await purgeNotesFor("archive", slug);
 }
 
 export async function purgeExpiredSoftDeletedContent(
@@ -47,6 +61,7 @@ export async function purgeExpiredSoftDeletedContent(
     RETURNING id, slug
   `;
   for (const c of characterRows) {
+    await purgeNotesFor("character", c.slug);
     await purgeContentImagesFor("character", c.id);
     await deleteEmbeddings(sql, "character", c.id);
   }
@@ -62,6 +77,7 @@ export async function purgeExpiredSoftDeletedContent(
     await sql`
       DELETE FROM content_follows WHERE target_type = 'mission' AND target_slug = ${m.slug}
     `;
+    await purgeNotesFor("mission", m.slug);
     await purgeContentImagesFor("mission", m.id);
     await deleteEmbeddings(sql, "mission", m.id);
     // Zugehörige, noch nicht individuell gelöschte Logs sind durch das
@@ -77,6 +93,7 @@ export async function purgeExpiredSoftDeletedContent(
     await sql`
       DELETE FROM timeline_events WHERE source_type = 'mission_log' AND source_slug = ${log.slug}
     `;
+    await purgeNotesFor("mission_log", log.slug);
     await purgeContentImagesFor("mission_log", log.id);
     await deleteEmbeddings(sql, "mission_log", log.id);
   }
@@ -108,11 +125,12 @@ export async function purgeContentById(
 ): Promise<boolean> {
   if (contentType === "character") {
     // Erst prüfen, ob der Charakter wirklich (weich-gelöscht) purgebar ist.
-    const [target] = await sql<{ id: number }[]>`
-      SELECT id FROM characters WHERE id = ${id} AND deleted_at IS NOT NULL
+    const [target] = await sql<{ id: number; slug: string }[]>`
+      SELECT id, slug FROM characters WHERE id = ${id} AND deleted_at IS NOT NULL
     `;
     if (!target) return false;
     await sql`DELETE FROM characters WHERE id = ${id}`;
+    await purgeNotesFor("character", target.slug);
     await purgeContentImagesFor("character", id);
     await deleteEmbeddings(sql, "character", id);
     return true;
@@ -120,8 +138,8 @@ export async function purgeContentById(
   if (contentType === "mission") {
     // Log-Ids VOR dem Löschen erfassen, um deren Embeddings gezielt zu räumen
     // (nach dem DELETE sind die Zeilen weg).
-    const logIds = await sql<{ id: number }[]>`
-      SELECT id FROM mission_logs WHERE mission_id = ${id} AND deleted_at IS NOT NULL
+    const logIds = await sql<{ id: number; slug: string }[]>`
+      SELECT id, slug FROM mission_logs WHERE mission_id = ${id} AND deleted_at IS NOT NULL
     `;
     const rows = await sql<{ slug: string }[]>`
       DELETE FROM missions WHERE id = ${id} AND deleted_at IS NOT NULL RETURNING slug
@@ -131,9 +149,13 @@ export async function purgeContentById(
     await sql`DELETE FROM timeline_events WHERE source_type = 'mission' AND source_slug = ${row.slug}`;
     await sql`DELETE FROM content_follows WHERE target_type = 'mission' AND target_slug = ${row.slug}`;
     await sql`DELETE FROM mission_logs WHERE mission_id = ${id} AND deleted_at IS NOT NULL`;
+    await purgeNotesFor("mission", row.slug);
     await purgeContentImagesFor("mission", id);
     await deleteEmbeddings(sql, "mission", id);
-    for (const log of logIds) await deleteEmbeddings(sql, "mission_log", log.id);
+    for (const log of logIds) {
+      await purgeNotesFor("mission_log", log.slug);
+      await deleteEmbeddings(sql, "mission_log", log.id);
+    }
     return true;
   }
   if (contentType === "mission_log") {
@@ -143,6 +165,7 @@ export async function purgeContentById(
     const row = rows[0];
     if (!row) return false;
     await sql`DELETE FROM timeline_events WHERE source_type = 'mission_log' AND source_slug = ${row.slug}`;
+    await purgeNotesFor("mission_log", row.slug);
     await purgeContentImagesFor("mission_log", id);
     await deleteEmbeddings(sql, "mission_log", id);
     return true;

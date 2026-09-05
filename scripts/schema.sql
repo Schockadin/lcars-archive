@@ -863,6 +863,38 @@ ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS title_vector tsvector
 CREATE INDEX IF NOT EXISTS idx_archive_title_fts ON archive_entries USING GIN (title_vector);
 
 -- ---------------------------------------------------------------------------
+-- content_notes
+-- ---------------------------------------------------------------------------
+-- Notizen und Kommentare an Inhalten (Charaktere, Missionen, Logbücher,
+-- Datenbank-Einträge). EINE Tabelle für beide Anwendungsfälle, unterschieden
+-- über visibility:
+--   'private' → nur der Autor sieht sie (persönliche Notiz am Eintrag)
+--   'group'   → alle eingeloggten Personen sehen sie (Diskussion)
+-- Eine zweite Tabelle brächte nichts: Speicherung, Rechte und Anzeige sind
+-- identisch, nur der Sichtbarkeitsfilter unterscheidet sich.
+--
+-- Verknüpfung über (content_type, content_slug) statt per Fremdschlüssel: die
+-- vier Inhaltsarten liegen in vier Tabellen, und der Slug ist der Schlüssel,
+-- mit dem im Projekt ohnehin überall verlinkt wird (siehe content_follows,
+-- das genauso aufgebaut ist). Aufräumen beim Löschen von Inhalten übernimmt
+-- purgeContent.ts.
+CREATE TABLE IF NOT EXISTS content_notes (
+  id           SERIAL PRIMARY KEY,
+  content_type TEXT NOT NULL
+                 CHECK (content_type IN ('character', 'mission', 'mission_log', 'archive')),
+  content_slug TEXT NOT NULL,
+  author_id    INT  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body         TEXT NOT NULL,
+  visibility   TEXT NOT NULL DEFAULT 'private'
+                 CHECK (visibility IN ('private', 'group')),
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_content_notes_target
+  ON content_notes(content_type, content_slug);
+CREATE INDEX IF NOT EXISTS idx_content_notes_author ON content_notes(author_id);
+
+-- ---------------------------------------------------------------------------
 -- news_seen
 -- ---------------------------------------------------------------------------
 -- Persistente News-Anzeige auf dem Dashboard (NewsSection.tsx): eine News

@@ -12,6 +12,8 @@ import MissionSynopsis from "../MissionSynopsis";
 import { getMentionsOf } from "@/lib/mentions";
 import MentionsSection from "@/app/_shared/MentionsSection";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
+import { listNotes } from "@/lib/contentNotes";
+import NotesPanel from "@/app/_shared/NotesPanel";
 interface Props {
   params: Promise<{ missionSlug: string }>;
   searchParams: Promise<{ activateFollow?: string }>;
@@ -68,11 +70,12 @@ export default async function MissionPage({ params, searchParams }: Props) {
   // Owner-Liste (optional) und Follow-Stand parallel. followInitialState wird
   // an FollowButtons durchgereicht, damit Bookmark/Abo sofort mitgerendert
   // werden statt sie nach der Hydration per Client-Fetch nachzuladen.
-  const [allUsers, followInitialState, mentions] = await Promise.all([
+  const [allUsers, followInitialState, mentions, notes] = await Promise.all([
     canReassignOwner ? listAllUsers() : Promise.resolve([]),
     resolveFollowState(viewer?.userId ?? null, "mission", missionSlug),
     // Wer verweist auf diese Mission? (Archiv-Verweisfelder + Wikilinks)
     getMentionsOf({ slug: mission.slug, name: mission.title }, viewer),
+    listNotes("mission", mission.slug, viewer),
   ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
@@ -85,7 +88,15 @@ export default async function MissionPage({ params, searchParams }: Props) {
         viewer={viewer}
         followInitialState={followInitialState}
       />
-      <div className="lcars-text lcars-wide-column mt-[16px]">
+      <div className="lcars-text lcars-wide-column mt-[16px] flex flex-col gap-[16px]">
+        {viewer && (
+          <NotesPanel
+            contentType="mission"
+            contentSlug={mission.slug}
+            path={`/missions/${mission.slug}`}
+            notes={notes}
+          />
+        )}
         <MentionsSection mentions={mentions} />
       </div>
     </>

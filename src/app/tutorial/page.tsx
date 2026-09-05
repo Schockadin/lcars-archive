@@ -515,8 +515,29 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
+          <LcarsDataRow value={6} htmlId="notizen" label="Notizen">
+            <div className="lcars-text flex flex-col gap-[12px]">
+              <p>
+                Unter Charakteren, Missionen, Logbüchern und
+                Datenbank-Einträgen findest du eingeloggt den aufklappbaren
+                Bereich <strong>„Notizen“</strong>. Beim Schreiben wählst du,
+                wer die Notiz sieht: <strong>„Nur ich“</strong> legt einen
+                persönlichen Merkzettel an, den niemand sonst zu Gesicht bekommt
+                — auch die Spielleitung nicht. <strong>„Für die Runde“</strong>{" "}
+                schreibt einen Kommentar, den alle angemeldeten Personen lesen
+                können; so lässt sich direkt am Eintrag über ihn diskutieren.
+              </p>
+              <p>
+                Deine eigenen Notizen kannst du jederzeit wieder löschen.
+                Kommentare für die Runde darf zusätzlich die Inhalts-Moderation
+                entfernen — private Notizen bleiben davon unberührt. Wird ein
+                Inhalt endgültig gelöscht, verschwinden seine Notizen mit ihm.
+              </p>
+            </div>
+          </LcarsDataRow>
+
           <LcarsDataRow
-            value={6}
+            value={7}
             htmlId="datenbank-assistent"
             label="Datenbank-Assistent"
           >
@@ -552,7 +573,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={7} htmlId="markdown" label="Markdown">
+          <LcarsDataRow value={8} htmlId="markdown" label="Markdown">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
@@ -645,7 +666,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={8}
+            value={9}
             htmlId="verlinkung"
             label="Verlinkung"
           >
@@ -687,7 +708,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={9}
+            value={10}
             htmlId="spielleitung-admins"
             label="Spielleitung & Admins"
           >
@@ -838,7 +859,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={10}
+            value={11}
             htmlId="app-installieren"
             label="App installieren"
           >
@@ -870,7 +891,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={11}
+            value={12}
             htmlId="farbschema"
             label="Farbschema"
           >

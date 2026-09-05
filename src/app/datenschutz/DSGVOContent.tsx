@@ -108,6 +108,20 @@ export default function DSGVOContent({ year }: { year: number }) {
           werden sie gelöscht.
         </p>
         <p>
+          Angemeldete Personen können an Charakteren, Missionen, Logbüchern und
+          Datenbank-Einträgen <strong>Notizen</strong> hinterlegen. Gespeichert
+          werden der Text, der schreibende Account, der betroffene Eintrag, der
+          Zeitpunkt und die gewählte Sichtbarkeit. Eine Notiz mit der
+          Sichtbarkeit „Nur ich“ ist ausschließlich für den schreibenden Account
+          abrufbar — auch Spielleitung und Administration sehen sie nicht. Eine
+          Notiz „Für die Runde“ ist für alle angemeldeten Personen sichtbar und
+          kann zusätzlich von der Inhalts-Moderation entfernt werden
+          (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO — Erfüllung des
+          Nutzungsverhältnisses der Kampagne). Eigene Notizen lassen sich
+          jederzeit selbst löschen; mit dem Konto und mit dem endgültigen
+          Löschen des zugehörigen Inhalts werden sie mit entfernt.
+        </p>
+        <p>
           Für die persönliche „News“-Übersicht auf dem Dashboard wird pro
           Login-Account gespeichert, welche Neuigkeiten bereits gesehen bzw.
           ausgeblendet wurden (Inhaltstyp, Kennung und Zeitpunkt), damit
