@@ -19,6 +19,7 @@ import { checkOpenCreationStats } from "@/lib/characterStatsRules";
 import { validateCharacterStats } from "@/lib/characterStats";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
+import { listFocuses } from "@/lib/focuses";
 import { readCharacterHead } from "./characterHead";
 
 // Die drei Panels der eigenen Charakterseite speichern jeweils für sich:
@@ -108,14 +109,19 @@ export async function updateCharacterHeadAction(
   const characterId = readCharacterId(formData);
   if (characterId === null) return { error: "Ungültiger Charakter." };
 
-  const headResult = await readCharacterHead(formData);
-  if ("error" in headResult) return { error: headResult.error };
-
-  // Biografie unverändert übernehmen — sie hat ihr eigenes Panel.
+  // Der bisherige Stand wird ZUERST gebraucht: das Portrait steht nicht mehr
+  // im Formular (siehe characterHead.ts), ein Speichern ohne neues Bild
+  // übernimmt deshalb das gespeicherte.
   const current = await getOwnCharacterForEdit(session.userId, characterId);
   if (!current) {
     return { error: "Charakter nicht gefunden oder keine Berechtigung." };
   }
+
+  const headResult = await readCharacterHead(formData, {
+    portrait: current.portrait,
+    portraitSource: current.portraitSource,
+  });
+  if ("error" in headResult) return { error: headResult.error };
 
   const isDraft = formData.get("isDraft") === "on";
   const result = await updateOwnCharacterContent(session.userId, characterId, {
@@ -248,15 +254,18 @@ export async function saveCharacterStatsAction(
     const ruleErrors = validateCharacterStats(stats);
     if (ruleErrors.length > 0) return { error: ruleErrors.join(" ") };
   } else {
-    const [rules, catalog] = await Promise.all([
+    const [rules, catalog, focusCatalog] = await Promise.all([
       getAdvancementRules(),
       listTalents(),
+      listFocuses(),
     ]);
     const error = checkOpenCreationStats(
       stats,
       rules,
       catalog.map((talent) => talent.name),
       current.stats.talents,
+      focusCatalog.map((focus) => focus.name),
+      current.stats.focuses,
     );
     if (error) return { error };
   }

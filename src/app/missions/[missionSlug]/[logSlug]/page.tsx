@@ -10,7 +10,11 @@ import {
 import { listAllUsers } from "@/lib/users";
 import LogDetail from "../../LogDetail";
 import ActionsMenu from "@/components/ActionsMenu";
+import { getMentionsOf } from "@/lib/mentions";
+import MentionsSection from "@/app/_shared/MentionsSection";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
+import { listNotes } from "@/lib/contentNotes";
+import NotesPanel from "@/app/_shared/NotesPanel";
 
 interface Props {
   params: Promise<{ missionSlug: string; logSlug: string }>;
@@ -58,13 +62,16 @@ export default async function LogPage({ params }: Props) {
   // (sofern Autor bekannt). owners: nur laden, wenn der Betrachter den Log
   // umtragen darf — exakt das Server-Gate von setOwnerAction für Mission-Logs
   // (content.moderate), rechte- statt rollenbasiert (früher role === "admin").
-  const [nav, allUsers] = await Promise.all([
+  const [nav, allUsers, mentions, notes] = await Promise.all([
     log.author_slug
       ? getAuthorLogNav(log.author_slug, log.slug)
       : Promise.resolve({ prev: null, next: null }),
     viewerHasPermission(viewer, "content.moderate")
       ? listAllUsers()
       : Promise.resolve([]),
+    // Wer verweist auf dieses Logbuch? (Wikilinks in anderen Texten)
+    getMentionsOf({ slug: log.slug, name: log.title }, viewer),
+    listNotes("mission_log", log.slug, viewer),
   ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
@@ -79,6 +86,17 @@ export default async function LogPage({ params }: Props) {
         playerId={log.ownerUserId}
       />
       <LogDetail log={log} nav={nav} />
+      <div className="lcars-text lcars-wide-column mt-[16px] flex flex-col gap-[16px]">
+        {viewer && (
+          <NotesPanel
+            contentType="mission_log"
+            contentSlug={log.slug}
+            path={`/missions/${missionSlug}/${log.slug}`}
+            notes={notes}
+          />
+        )}
+        <MentionsSection mentions={mentions} />
+      </div>
     </>
   );
 }

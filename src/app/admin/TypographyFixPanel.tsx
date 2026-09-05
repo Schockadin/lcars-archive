@@ -30,7 +30,7 @@ export default function TypographyFixPanel() {
       })}
       renderCaption={({ processed, total, totals, done }) =>
         done ? (
-          <span className="text-lcars-primary">
+          <span className="text-lcars-primary-ink">
             Fertig: {totals.changed} von {total} Inhalten korrigiert.
           </span>
         ) : (

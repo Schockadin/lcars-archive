@@ -4,6 +4,8 @@ import {
   latestChangelogEntry,
   changelogItemText,
   changelogItemTutorial,
+  changelogVersionExists,
+  featuredChangelogEntries,
 } from "./changelog";
 import { TUTORIAL_SECTIONS, tutorialSectionHref } from "./tutorialSections";
 
@@ -36,6 +38,51 @@ describe("latestChangelogEntry", () => {
     expect(entry).not.toBeNull();
     expect(CHANGELOG.map((e) => e.version)).toContain(entry?.version);
     expect(entry?.items.length).toBeGreaterThan(0);
+  });
+});
+
+describe("changelogVersionExists", () => {
+  const entries = [
+    { version: "1.9", title: "a", items: [] },
+    { version: "1.10", title: "b", items: [] },
+  ];
+
+  it("erkennt vorhandene und unbekannte Versionen", () => {
+    expect(changelogVersionExists("1.10", entries)).toBe(true);
+    expect(changelogVersionExists("1.9", entries)).toBe(true);
+    expect(changelogVersionExists("2.0", entries)).toBe(false);
+    expect(changelogVersionExists("", entries)).toBe(false);
+  });
+
+  it("prüft gegen den echten Changelog", () => {
+    expect(changelogVersionExists(CHANGELOG[0].version)).toBe(true);
+    expect(changelogVersionExists("0.0")).toBe(false);
+  });
+});
+
+describe("featuredChangelogEntries", () => {
+  const entries = [
+    { version: "1.9", title: "alt", items: ["a"] },
+    { version: "1.10", title: "neu", items: ["b", "c"] },
+    { version: "1.2", title: "älter", items: ["d"] },
+  ];
+
+  it("null (nicht konfiguriert) ⇒ nur die jüngste Version", () => {
+    const result = featuredChangelogEntries(null, entries);
+    expect(result.map((e) => e.version)).toEqual(["1.10"]);
+  });
+
+  it("leeres Array ⇒ nichts (Box verschwindet)", () => {
+    expect(featuredChangelogEntries([], entries)).toEqual([]);
+  });
+
+  it("gewählte Versionen, neueste zuerst, Unbekanntes verworfen", () => {
+    const result = featuredChangelogEntries(["1.2", "1.10", "9.9"], entries);
+    expect(result.map((e) => e.version)).toEqual(["1.10", "1.2"]);
+  });
+
+  it("gibt für leeren Changelog auch bei null nichts zurück", () => {
+    expect(featuredChangelogEntries(null, [])).toEqual([]);
   });
 });
 

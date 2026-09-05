@@ -33,4 +33,14 @@ export const cacheTags = {
   // Talent-Katalog (Tabelle talents). Ändert sich nur, wenn die Spielleitung
   // unter /gm/talents etwas anlegt oder bearbeitet.
   talents: "talents",
+  // Schwerpunkt-Katalog (Tabelle focuses), gepflegt unter /gm/focuses.
+  focuses: "focuses",
+  // Eigene Regeln der Runde (Tabelle campaign_rules), gepflegt unter
+  // /gm/rules. Stehen auf jedem Spickzettel.
+  campaignRules: "campaign-rules",
+
+  // Vom Admin gewählte Changelog-Versionen für die „Neue Funktionen"-Box auf
+  // dem Dashboard (campaign_settings.changelog_featured_versions). Ändert sich
+  // nur, wenn ein Admin die Auswahl unter /admin/changelog speichert.
+  changelog: "changelog-settings",
 } as const;

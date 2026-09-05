@@ -35,6 +35,36 @@ export default function TutorialPage() {
         <div className="flex flex-col gap-[10px] mt-[16px]">
           <LcarsDataRow
             value={1}
+            htmlId="erste-schritte"
+            label="Erste Schritte"
+          >
+            <div className="lcars-text flex flex-col gap-[12px]">
+              <p>
+                Frisch dabei? Angemeldet führt dich{" "}
+                <strong>/willkommen</strong> durch den Einstieg: was dieses
+                Archiv ist und welche Schritte anstehen — Passwort festlegen,
+                Charakter anlegen, Erschaffung abschließen, erstes Logbuch
+                schreiben, ein Gespräch beginnen. Zu jedem offenen Schritt
+                steht dort ein Link, der direkt in den passenden Ablauf führt.
+              </p>
+              <p>
+                Der Fortschritt wird nirgends abgehakt, sondern an deinen
+                Daten abgelesen: sobald ein Charakter existiert, gilt der
+                Schritt als erledigt — und wenn du ihn wieder löschst, ist er
+                es auch wieder nicht. Die Liste steht zusätzlich auf deinem{" "}
+                <strong>Dashboard</strong> und verschwindet dort von selbst,
+                sobald alles erledigt ist. Die Seite <strong>/willkommen</strong>{" "}
+                bleibt danach als Übersicht erreichbar.
+              </p>
+              <p>
+                Nichts davon ist Pflicht: Wer nur mitlesen möchte, braucht
+                weder Charakter noch Logbuch.
+              </p>
+            </div>
+          </LcarsDataRow>
+
+          <LcarsDataRow
+            value={2}
             htmlId="fuer-besucher"
             label="Für Besucher"
           >
@@ -68,11 +98,70 @@ export default function TutorialPage() {
                 einen <strong>Lesemodus</strong>-Knopf, der die Navigation
                 ausblendet und den Text breiter/größer darstellt.
               </p>
+              <p>
+                Unter <strong>Charaktere → „Beziehungen“</strong> steht der{" "}
+                <strong>Beziehungsgraph</strong> der Kampagne: wer mit wem im
+                Einsatz war und wer mit wem geredet hat, abgeleitet aus
+                gemeinsamen Missionen und Gesprächen. Dicke Linien stehen für
+                viele Berührungspunkte, große Punkte für gut vernetzte Figuren;
+                Spielfiguren und NPCs sind farblich unterschieden. Zeigst du auf
+                eine Figur, treten sie und ihre Verbindungen hervor, ein Klick
+                führt zu ihr. Darunter stehen dieselben Figuren noch einmal als
+                Liste.
+              </p>
             </div>
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={2}
+            value={3}
+            htmlId="chronologie"
+            label="Chronologie"
+          >
+            <div className="lcars-text flex flex-col gap-[12px]">
+              <p>
+                <strong>Chronologie</strong> zeigt dieselben Inhalte wie der
+                Rest des Archivs, aber nach der Zeit der Kampagne statt nach
+                dem Bearbeitungsdatum: ein Zeitstrahl von der ältesten bis zur
+                jüngsten bekannten Begebenheit. Sortierung, Suche, Ereignisart
+                und Jahr schränken die Liste ein; jede Karte führt zu dem
+                Eintrag, aus dem das Ereignis stammt. Was du dort siehst,
+                richtet sich nach deinen Leserechten — ein Logbuch, das du
+                nicht lesen darfst, taucht auch in der Chronologie nicht auf.
+              </p>
+              <p>
+                Die Ereignisse kommen aus <strong>drei Quellen</strong>. Erstens
+                aus dem, was ohnehin gepflegt ist: Beginn und Ende einer
+                Mission, das Datum eines Logbuchs oder Gesprächs, das
+                Geburtsdatum einer Figur. Zweitens aus <strong>Marken im
+                Text</strong> — der Kalender-Knopf in der Werkzeugleiste jedes
+                Textfeldes setzt an der Cursor-Stelle{" "}
+                <code>&lt;!-- timeline: JJJJ-MM-TT | Titel | Kategorie --&gt;</code>.
+                Die Marke ist im gerenderten Text unsichtbar, erzeugt dort aber
+                eine Sprungmarke: die Karte in der Chronologie führt genau an
+                diese Stelle im Bericht.
+              </p>
+              <p>
+                Drittens kann die <strong>Spielleitung Ereignisse ableiten
+                lassen</strong>: das Sprachmodell liest einen Bericht und nennt
+                die Begebenheiten, die darin stecken, aber in keinem Feld
+                stehen (&bdquo;drei Tage später …&ldquo;). Solche Einträge sind auf der
+                Karte als <em>aus dem Text abgeleitet</em> gekennzeichnet — sie
+                sind eine Lesehilfe, keine gepflegte Angabe. Was nicht stimmt,
+                entfernt die Spielleitung unter &bdquo;Leitung → Chronologie&ldquo;.
+              </p>
+              <p>
+                Die <strong>Missions-Übersicht</strong> steht am selben
+                Zeitstrahl: Datum links, Schiene mit einem Punkt je Mission,
+                daneben die Einsatzakte. Die Farbe des Punktes ist dort der
+                Status der Mission. Jahresleiste und Monats-Trenner gibt es
+                nur in der Chronologie — die Missions-Übersicht hat ihren
+                eigenen Filter nach Autor.
+              </p>
+            </div>
+          </LcarsDataRow>
+
+          <LcarsDataRow
+            value={4}
             htmlId="konto-rollen"
             label="Konto & Rollen"
           >
@@ -138,7 +227,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={3}
+            value={5}
             htmlId="eigene-inhalte"
             label="Eigene Inhalte"
           >
@@ -201,6 +290,25 @@ export default function TutorialPage() {
                 nichts angelegt.
               </p>
               <p>
+                Das <strong>Portrait</strong> lädst du in den Stammdaten als
+                <strong> Bilddatei</strong> hoch — eine Bild-Adresse kannst du
+                nicht mehr angeben: ein Bild auf einem fremden Server
+                verschwindet, sobald dort jemand aufräumt, und lässt sich hier
+                nicht zuschneiden. Passt das Bild nicht ins hochkant stehende
+                Bildfeld des Bogens, wähl den Ausschnitt selbst:{" "}
+                <strong>„Ausschnitt wählen“</strong> öffnet ein Fenster, das
+                den Bildkasten samt seiner Schräge zeigt — ziehen verschiebt
+                das Bild, der Regler vergrößert es bis zum Vierfachen.{" "}
+                <strong>„Übernehmen“</strong> merkt den Ausschnitt vor;
+                gespeichert wird er mit dem Formular, und zwar fertig
+                zugeschnitten, sodass Bildschirm und PDF dasselbe zeigen. Das
+                Original bleibt hinterlegt: beim nächsten Bearbeiten kannst du
+                den Ausschnitt neu wählen, ohne die Datei erneut zu suchen.
+                Ohne eigenen Ausschnitt zeigt der Bogen die Bildmitte. Früher
+                eingetragene Adressen bleiben stehen und werden weiter
+                angezeigt.
+              </p>
+              <p>
                 Im Schritt <strong>Werte</strong> trägst du die sechs Attribute
                 und sechs Disziplinen in Zahlenkästen ein; daneben läuft mit,
                 was deine Verteilung kostet und wie viel Budget übrig ist. Dazu
@@ -210,9 +318,10 @@ export default function TutorialPage() {
                 Werte, Schwerpunkte, Talente, Angriffe, Ausrüstung, Hobbys,
                 Karriere-Ereignisse — füllst du über{" "}
                 <strong>„Hinzufügen“</strong>; jeder Eintrag hat ein rotes Minus
-                zum Entfernen. Talente kommen aus dem Katalog (siehe unten). Bei
-                Werten, Schwerpunkten und Talenten steht dabei, wie viele der
-                freien Plätze aus der Ersterschaffung du schon vergeben hast.
+                zum Entfernen. Talente <em>und Schwerpunkte</em> kommen aus
+                ihrem Katalog (siehe unten). Bei Werten, Schwerpunkten und
+                Talenten steht dabei, wie viele der freien Plätze aus der
+                Ersterschaffung du schon vergeben hast.
                 Spezies-Fähigkeiten und Sonderregeln bleiben Textfelder — dort
                 stehen meist ganze Regelsätze. Leere Felder gelten als „nicht
                 angegeben“; der maximale Stress ist kein Eingabefeld, sondern
@@ -226,7 +335,7 @@ export default function TutorialPage() {
                 steigerst du mit AP (siehe unten). Ganz oben öffnet{" "}
                 <strong>„Charakterbogen“</strong> die Vorschau: Blatt 1 der
                 Personalbogen mit Stammdaten und Werten, Blatt 2 der
-                Talent-Spickzettel, Blatt 3 die Biografie im selben Look. Dort
+                Spickzettel, Blatt 3 die Biografie im selben Look. Dort
                 stehen auch die Knöpfe zum <strong>Drucken</strong> und zum{" "}
                 <strong>Speichern als PDF</strong> — die PDF-Datei enthält
                 dieselben drei Blätter. Rang und Spezies stehen auf dem Bogen,
@@ -321,9 +430,31 @@ export default function TutorialPage() {
                 in Klammern dahinter.
               </p>
               <p>
+                <strong>Schwerpunkte</strong> (Focuses) wählst du genauso aus
+                einem Katalog — 170 Einträge aus dem Regelwerk, nach Disziplin
+                gegliedert. Das Fenster hat ein Suchfeld und einen
+                Disziplin-Filter; was schon auf deinem Bogen steht, taucht nicht
+                mehr auf. Sechs Schwerpunkte führt das Regelwerk in{" "}
+                <em>zwei</em> Disziplinen („Astrophysics“ bei Steuerung und
+                Wissenschaft, „Survival“ bei Steuerung und Sicherheit, …); auf
+                dem Bogen sind das derselbe Eintrag, die Liste zeigt sie deshalb
+                als eine Zeile mit beiden Disziplinen daneben. Anders als bei
+                Talenten gibt es keinen eigenen Namen: auf dem Bogen steht der
+                Katalogname. Fehlt ein Schwerpunkt, nimmt ihn die Spielleitung
+                unter „Schwerpunkte“ auf.
+              </p>
+              <p>
                 Ganz unten am Bogen findest du einen{" "}
                 <strong>Spickzettel</strong>: alle Talente deines Charakters mit
-                ihrem vollen Regeltext, zum Nachschlagen am Spieltisch.
+                ihrem vollen Regeltext — und darunter die wichtigsten Regeln für
+                den Spieltisch: wofür du <strong>Momentum</strong> ausgibst und
+                aufhebst, was die Spielleitung mit <strong>Bedrohung</strong>{" "}
+                anstellt und wie <strong>Entschlossenheit</strong> funktioniert.
+                Auf Deutsch, mit den englischen Begriffen daneben, damit am
+                Tisch beides passt. Ganz unten stehen die{" "}
+                <strong>eigenen Regeln der Runde</strong>, sofern die
+                Spielleitung welche hinterlegt hat. Der Spickzettel steckt auch
+                im PDF.
               </p>
               <p>
                 Für die Zahlen gelten die <strong>Regeln der Runde</strong>:
@@ -370,7 +501,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={4}
+            value={6}
             htmlId="gespraeche"
             label="Gespräche"
           >
@@ -453,7 +584,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={5}
+            value={7}
             htmlId="merken-abonnieren"
             label="Merken & Abonnieren"
           >
@@ -477,11 +608,22 @@ export default function TutorialPage() {
                 Gesprächen fehlt er bewusst, da sich deren Inhalt noch ändert.
               </p>
               <p>
+                Auf der <strong>Seite einer Mission</strong> steht angemeldet
+                der Knopf <strong>„Missionsakte (PDF)“</strong>: er packt
+                genau diese Mission in eine Datei — Titelseite mit Zeitraum,
+                Status und Beteiligten, danach die Beschreibung und jedes
+                Logbuch auf einer eigenen Seite, chronologisch. Die Akte
+                enthält genau das, was du auch sonst lesen darfst; nicht
+                öffentliche Logbücher stehen darin mit einem entsprechenden
+                Hinweis.
+              </p>
+              <p>
                 Auf der Seite deines eigenen Charakters (und für die
                 Spielleitung auf jeder Charakterseite) steht außerdem der Knopf{" "}
-                <strong>„Charakterbogen“</strong>: er zeigt den gepflegten Bogen
-                als reine Ansicht — mit Vollbild und demselben PDF-Download wie
-                in deiner eigenen Charakterseite. Gepflegt werden die Werte
+                <strong>„Charakterbogen“</strong>: er zeigt dieselben drei
+                Blätter wie unter „Meine Charaktere“ — Personalakte, Spickzettel
+                und Biografie — als reine Ansicht, mit Drucken und demselben
+                PDF-Download. Gepflegt werden die Werte
                 weiterhin nur von der Person, der der Charakter gehört.
               </p>
               <p>
@@ -515,8 +657,59 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
+          <LcarsDataRow value={8} htmlId="notizen" label="Notizen">
+            <div className="lcars-text flex flex-col gap-[12px]">
+              <p>
+                Unter Charakteren, Missionen, Logbüchern und
+                Datenbank-Einträgen findest du eingeloggt den aufklappbaren
+                Bereich <strong>„Notizen“</strong>. Beim Schreiben wählst du,
+                wer die Notiz sieht: <strong>„Nur ich“</strong> legt einen
+                persönlichen Merkzettel an, den niemand sonst zu Gesicht bekommt
+                — auch die Spielleitung nicht. <strong>„Für die Runde“</strong>{" "}
+                schreibt einen Kommentar, den alle angemeldeten Personen lesen
+                können; so lässt sich direkt am Eintrag über ihn diskutieren.
+              </p>
+              <p>
+                Der Bereich klappt auf und zu — genau wie{" "}
+                <strong>„Erwähnt in“</strong> (wo der Eintrag überall verlinkt
+                ist) und <strong>„Wer kennt wen“</strong> auf den
+                Charakterseiten. In der Kopfzeile steht jeweils die Anzahl,
+                sodass sich alles überfliegen lässt, ohne die Seite länger zu
+                machen.
+              </p>
+              <p>
+                Deine eigenen Notizen kannst du jederzeit wieder löschen.
+                Kommentare für die Runde darf zusätzlich die Inhalts-Moderation
+                entfernen — private Notizen bleiben davon unberührt. Wird ein
+                Inhalt endgültig gelöscht, verschwinden seine Notizen mit ihm.
+              </p>
+            </div>
+          </LcarsDataRow>
+
+          <LcarsDataRow value={9} htmlId="versionen" label="Versionen">
+            <div className="lcars-text flex flex-col gap-[12px]">
+              <p>
+                Beim Bearbeiten eines Charakters, einer Mission, eines
+                Logbuchs oder eines Datenbank-Eintrags findest du unter dem
+                Formular den Bereich <strong>„Versionen“</strong>: Dort stehen
+                die letzten zwanzig Fassungen des Textes mit Datum,
+                bearbeitender Person, Länge und einer Vorschau. Ein Klick auf{" "}
+                <strong>„Wiederherstellen“</strong> holt die gewählte Fassung
+                zurück.
+              </p>
+              <p>
+                Zurückgeholt wird dabei nur der <strong>Fließtext</strong> —
+                Titel, Stammdaten und Sichtbarkeit bleiben unverändert. Der
+                Stand, den du gerade ersetzt, geht nicht verloren: Er wandert
+                selbst als neue Fassung in die Historie, du kannst ein
+                Wiederherstellen also wieder rückgängig machen. Eine neue
+                Fassung entsteht nur, wenn sich der Text wirklich geändert hat.
+              </p>
+            </div>
+          </LcarsDataRow>
+
           <LcarsDataRow
-            value={6}
+            value={10}
             htmlId="datenbank-assistent"
             label="Datenbank-Assistent"
           >
@@ -552,7 +745,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={7} htmlId="markdown" label="Markdown">
+          <LcarsDataRow value={11} htmlId="markdown" label="Markdown">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
@@ -641,11 +834,34 @@ export default function TutorialPage() {
                 In-Story-Zeitpunkt des Ereignisses in der Chronik der Datenbank
                 fest.
               </p>
+              <p>
+                Die <strong>Werkzeugleiste</strong> (Fett, Kursiv, Überschrift,
+                Link, Listen, Zitat, Code) und der Umschalter{" "}
+                <strong>Rohtext/Vorschau</strong> stehen nicht nur an den
+                großen Inhaltsformularen, sondern auch an den kleineren
+                Textfeldern: <strong>Notizen</strong> und Kommentare, eigenen{" "}
+                <strong>Regeln</strong>, Talent- und
+                Schwerpunkt-Beschreibungen, <strong>Session-Notizen</strong>{" "}
+                sowie Antworten und Nachrichten in Gesprächen. Überall dort
+                wird der Text beim Anzeigen auch als Markdown dargestellt — im
+                PDF-Spickzettel werden Auszeichnungen auf ihren Text
+                zurückgeführt, Listen bleiben Listen.
+              </p>
+              <p>
+                Nicht als Markdown gedacht sind drei Stellen, an denen der Text
+                eine andere Bedeutung hat: die <strong>Listenfelder</strong> des
+                Charakterbogens („Spezies-Fähigkeit“, „Sonderregeln“ — dort ist
+                jede Zeile ein eigener Eintrag), die Feldwerte im{" "}
+                <strong>Datenbank-Bereich</strong> der Administration (dort
+                steht der rohe Wert der Spalte) und die Zusammenfassung beim{" "}
+                <strong>Markdown-Import</strong> (sie wird als reiner Text
+                weiterverwendet).
+              </p>
             </div>
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={8}
+            value={12}
             htmlId="verlinkung"
             label="Verlinkung"
           >
@@ -687,7 +903,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={9}
+            value={13}
             htmlId="spielleitung-admins"
             label="Spielleitung & Admins"
           >
@@ -752,6 +968,24 @@ export default function TutorialPage() {
                   durchsuchen, filtern, bestehende Talente bearbeiten und eigene
                   ergänzen. Löschen lassen sich nur selbst ergänzte Talente —
                   sonst verschwänden Einträge unter bereits gepflegten Bögen.
+                </li>
+                <li>
+                  Unter <strong>„Regeln“</strong> eigene Regeln der Runde
+                  hinterlegen: Name, Regeltext und eine Zahl für die
+                  Reihenfolge. Sie erscheinen auf dem Spickzettel jedes
+                  Charakterbogens (auch im PDF) hinter den Regeln aus dem
+                  Regelwerk und gelten dort für alle gleich. Anders als bei
+                  Talenten und Schwerpunkten lässt sich jede Regel wieder
+                  löschen — sie steht auf keinem Bogen als Eintrag.
+                </li>
+                <li>
+                  Genauso unter <strong>„Schwerpunkte“</strong> den
+                  Schwerpunkt-Katalog (Focuses): 170 Einträge aus dem Regelwerk,
+                  nach Disziplin gegliedert, durchsuchbar und filterbar. Neue
+                  Schwerpunkte bekommen einen Namen, eine Disziplin und
+                  wahlweise eine Erläuterung; auch hier lassen sich nur selbst
+                  ergänzte löschen. Ein Name darf in zwei Disziplinen stehen —
+                  auf dem Bogen ist es derselbe Schwerpunkt.
                 </li>
                 <li>
                   Das <strong>Ingame-Jahr</strong> (unter „Kampagne“) bestimmt
@@ -838,7 +1072,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={10}
+            value={14}
             htmlId="app-installieren"
             label="App installieren"
           >
@@ -870,7 +1104,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={11}
+            value={15}
             htmlId="farbschema"
             label="Farbschema"
           >
@@ -885,23 +1119,39 @@ export default function TutorialPage() {
                 <strong>Speichern</strong> auf allen deinen Geräten erhalten.
               </p>
               <p>
-                Darunter kannst du unter <strong>„Feineinstellung“</strong> jede
-                einzelne Akzentfarbe mit einer eigenen Farbe überschreiben. Mit{" "}
+                Die Farbauswahl ist in aufklappbare Bereiche gegliedert. Unter{" "}
+                <strong>„Hintergrund &amp; Flächen“</strong> stellst du den
+                Seitenhintergrund, die Flächen (Panels und Karten — im
+                minimalistischen Interface auch die Seitenleiste) und die Rahmen
+                ein. Unter <strong>„Schriftfarben“</strong> lässt sich{" "}
+                <em>jede Textrolle einzeln</em> festlegen: Fließtext, Lesetext,
+                Nebentext, Links &amp; Daten, Kontrasttext und die Beschriftung
+                auf farbigen Flächen. Ohne eigene Wahl gilt jeweils der Standard
+                des Hell/Dunkel-Modus.
+              </p>
+              <p>
+                Im Bereich <strong>„Akzentfarben“</strong> überschreibst du jede
+                einzelne Farbe des Basis-Schemas. Mit{" "}
                 <strong>„Zurücksetzen“</strong> (pro Farbe) oder{" "}
                 <strong>„Alle zurücksetzen“</strong> kehrst du jederzeit zu den
-                Farben des gewählten Schemas zurück. Nicht vergessen,
-                anschließend zu speichern.
+                Vorgaben zurück. Nicht vergessen, anschließend zu speichern.
+              </p>
+              <p>
+                Ob die Oberfläche <strong>hell</strong> oder{" "}
+                <strong>dunkel</strong> erscheint, stellst du unter{" "}
+                <strong>„Hell/Dunkel“</strong> ein — <em>unabhängig</em> davon,
+                ob du LCARS oder das minimalistische Interface nutzt. Jede
+                Kombination ist möglich (LCARS hell, minimal dunkel, …).
               </p>
               <p>
                 Wenn du es lieber schlicht magst, kannst du unter{" "}
                 <strong>„Oberfläche“</strong> das LCARS-Design ganz abschalten
                 und stattdessen ein <strong>minimalistisches Interface</strong>{" "}
-                wählen — wahlweise <strong>dunkel</strong> oder{" "}
-                <strong>hell</strong>: schlichte Systemschrift, keine dekorativen
-                Balken und Rundungen, und die gesamte Navigation kompakt in der
-                linken Seitenleiste (auf dem Handy platzsparend als Symbole).
-                Auch diese Wahl gilt nur für dich, wird sofort als Vorschau
-                angewendet und bleibt nach dem Speichern erhalten.
+                wählen: schlichte Systemschrift, keine dekorativen Balken und
+                Rundungen, und die gesamte Navigation kompakt in der linken
+                Seitenleiste (auf dem Handy platzsparend als Symbole). Auch diese
+                Wahl gilt nur für dich, wird sofort als Vorschau angewendet und
+                bleibt nach dem Speichern erhalten.
               </p>
             </div>
           </LcarsDataRow>

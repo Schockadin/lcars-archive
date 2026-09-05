@@ -10,6 +10,7 @@ import {
 import { revalidateCharacter } from "@/lib/revalidate";
 import type { AdvancementKind } from "@/lib/advancement";
 import { listTalents } from "@/lib/talents";
+import { listFocuses } from "@/lib/focuses";
 import { parseTalentEntry } from "@/lib/talentCatalog";
 
 export interface AdvancementActionResult {
@@ -63,6 +64,20 @@ export async function advanceCharacterAction(
     if (!known.has(parseTalentEntry(entry).original.toLowerCase())) {
       return {
         error: "Unbekanntes Talent — bitte aus dem Katalog wählen.",
+      };
+    }
+  }
+
+  // Dasselbe für Schwerpunkte (siehe FocusPicker): der Katalogname steht
+  // unverändert auf dem Bogen, eine Umbenennung gibt es dort nicht.
+  if (kind === "focus") {
+    const catalog = await listFocuses();
+    const known = new Set(
+      catalog.map((focus) => focus.name.trim().toLowerCase()),
+    );
+    if (!known.has(entry.trim().toLowerCase())) {
+      return {
+        error: "Unbekannter Schwerpunkt — bitte aus dem Katalog wählen.",
       };
     }
   }

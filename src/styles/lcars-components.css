@@ -27,9 +27,11 @@
 @import "./lcars-components/char-file.css";
 @import "./lcars-components/character-stats.css";
 @import "./lcars-components/personnel-file.css";
+@import "./lcars-components/relation-graph.css";
 @import "./lcars-components/controls.css";
 @import "./lcars-components/mission-list.css";
 @import "./lcars-components/mission-detail.css";
+@import "./lcars-components/timeline.css";
 @import "./lcars-components/archive.css";
 @import "./lcars-components/search.css";
 /* Zuletzt: stellt die Blocktypografie gerenderter Markdown-Inhalte

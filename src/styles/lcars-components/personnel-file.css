@@ -26,7 +26,11 @@
      Werte statt LCARS-Tokens — der Bogen ist ein Faksimile und sieht in jedem
      Theme gleich aus (siehe Dateikopf). */
   --pf-ink: #555;
-  --pf-hand: "Segoe UI", Arial, sans-serif;
+  /* Bewusst Arial/Helvetica und deren metrik-gleiche Geschwister (Liberation
+     Sans unter Linux) — und ausdrücklich NICHT Segoe UI: das PDF des Bogens
+     setzt Helvetica, und nur mit denselben Buchstabenbreiten steht auf dem
+     Ausdruck dasselbe wie am Bildschirm. */
+  --pf-hand: Arial, Helvetica, "Liberation Sans", sans-serif;
   --pf-accent: #3f84b5;
 }
 
@@ -51,6 +55,10 @@
   background: #fff;
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.22);
   overflow: hidden;
+  /* Ohne die Sperrung des LCARS-Fließtexts (body { letter-spacing: 0.05em }):
+     die erbt der Bogen sonst als feste 0,8px, die weder mitskalieren noch im
+     PDF vorkommen — der Ausdruck sähe anders aus als der Bildschirm. */
+  letter-spacing: normal;
 }
 
 /* Wie in der Vorlage (die ein globales * { box-sizing: border-box } setzt):
@@ -76,11 +84,30 @@
 
 /* Portrait im Bildkasten des Bogens — passt sich ein, ohne die gedruckte
    Umrandung zu überdecken. */
+/* Portrait im Photo-Kasten der Vorlage.
+
+   `cover` statt `contain`: das Feld soll gefüllt sein. Hochformatige Bilder
+   standen sonst als schmaler Streifen mit weißen Rändern darin.
+
+   Der Kasten der Vorlage hat oben links eine 45°-Fase — ohne Zuschnitt läge
+   das Bild dort über der gedruckten Linie. Gemessen an der Vorlage sind das
+   rund 65 Layout-Einheiten in beide Richtungen; als Prozentwerte je Achse
+   (65/195 ≈ 33 %, 65/217 ≈ 30 %) bleibt die Schräge bei jeder Skalierung
+   45°, weil beide aus demselben Maß stammen. */
 .pf-photo {
+  --pf-photo-bevel-x: 33%;
+  --pf-photo-bevel-y: 30%;
   position: absolute;
   z-index: 1;
-  object-fit: contain;
+  object-fit: cover;
   pointer-events: none;
+  clip-path: polygon(
+    var(--pf-photo-bevel-x) 0,
+    100% 0,
+    100% 100%,
+    0 100%,
+    0 var(--pf-photo-bevel-y)
+  );
 }
 
 /* Alles, was auf dem Blatt "geschrieben" steht — Eingabefelder, Ansichts-
@@ -145,6 +172,15 @@
   padding-top: calc(8 * var(--pf-unit));
 }
 
+/* Attribute und Disziplinen noch einmal 2px höher. Ihre gedruckten Kästen sind
+   mit 25 Vorlagen-Pixeln die niedrigsten des Bogens; gemessen am gerenderten
+   Blatt saß die Ziffer darin 2px unter der Kastenmitte (Kasten 535…560, Ziffer
+   546…553 statt 544…551). Schutz und Stress bleiben bei 8 — ihre Kästen sind
+   35 Einheiten hoch, dort stimmt die Lage. */
+.pf-static--attr {
+  padding-top: calc(6 * var(--pf-unit));
+}
+
 /* Ein Kasten, der sich einen festen Teil (aus der Akte) und ein Eingabefeld
    teilt — siehe „Species & Traits". */
 
@@ -194,18 +230,26 @@
   border-radius: 3px;
 }
 
+/* Die Kästchen für Entschlossenheit und Stress. Bewusst KEINE nativen
+   <input type=checkbox>: die zeichnet jeder Browser anders, und ein
+   deaktiviertes Kästchen malt Chromium grau statt in der Akzentfarbe — der
+   Bogen sähe dann anders aus als sein PDF (CharacterSheetPdfDocument.tsx
+   zeichnet exakt diese Kästen nach). Als eigene Kästchen ist die Optik auf
+   Bildschirm und Papier dieselbe. */
 .pf-check {
   position: absolute;
   z-index: 4;
+  box-sizing: border-box;
   width: calc(20 * var(--pf-unit));
   height: calc(20 * var(--pf-unit));
   margin: 0;
-  accent-color: var(--pf-accent);
-  cursor: pointer;
+  border: calc(1 * var(--pf-unit)) solid var(--pf-accent);
+  border-radius: calc(3 * var(--pf-unit));
+  background: #fff;
 }
 
-.pf-check:disabled {
-  cursor: default;
+.pf-check--on {
+  background: var(--pf-accent);
 }
 
 /* Stress-Kästchen jenseits des maximalen Stresses: der Bogen hat 19, ein
@@ -315,14 +359,27 @@
 /* Ein Blatt mit fließendem Inhalt. Wie .pf-sheet ein Papier von 816×1056,
    aber als MINDEST-Höhe: eine lange Biografie schiebt das Blatt auseinander,
    statt ihren Text abzuschneiden. Die echte Seitenaufteilung macht der
-   PDF-Export. */
+   PDF-Export.
+
+   WICHTIG: Die --pf-*-Tokens (Tinte, Schrift, Blau der Vorlage) sind auf
+   .pf-page definiert — das ist ein GESCHWISTER von .pf-doc, kein Vorfahre, die
+   Variablen erben also nicht herüber. Deshalb hier eigenständig gesetzt, sonst
+   fiele der Text auf die geerbte LCARS-Farbe/-Schrift zurück (z.B. helles Lila
+   im Dunkelmodus) statt auf das Grau/Blau des Bogens. */
 .pf-doc {
   container-type: inline-size;
   --pf-unit: calc(100cqw / 816);
+  --pf-ink: #555;
+  --pf-hand: Arial, Helvetica, "Liberation Sans", sans-serif;
+  --pf-accent: #3f84b5;
+  /* Gedämpftes Blau für Rahmen/Trennlinien — dasselbe wie im PDF-Export
+     (SHEET_BLUE_DIM in CharacterSheetPdfDocument.tsx). */
+  --pf-accent-dim: #8fb4d0;
   position: relative;
+  display: flex;
   width: 100%;
   min-height: calc(var(--pf-unit) * 1056);
-  padding: calc(var(--pf-unit) * 56) calc(var(--pf-unit) * 64);
+  padding: calc(var(--pf-unit) * 20);
   background: #fff;
   color: var(--pf-ink);
   font-family: var(--pf-hand);
@@ -330,22 +387,92 @@
   box-sizing: border-box;
 }
 
-.pf-doc-title {
-  margin: 0 0 calc(var(--pf-unit) * 8);
-  font-size: calc(var(--pf-unit) * 26);
+.pf-doc * {
+  box-sizing: border-box;
+}
+
+/* Der STA-Rahmen wie auf dem gedruckten Bogen (Blatt 1): eine abgerundete
+   blaue Umrandung, in der Kopf, Inhalt und Fußzeile untereinander sitzen. Als
+   Flex-Spalte, damit die Fußzeile per margin-top:auto immer am Blattfuß klebt,
+   egal wie kurz der Inhalt ist. */
+.pf-doc-frame {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: calc(var(--pf-unit) * 2) solid var(--pf-accent);
+  border-radius: calc(var(--pf-unit) * 20);
+  padding: calc(var(--pf-unit) * 30) calc(var(--pf-unit) * 34)
+    calc(var(--pf-unit) * 18);
+}
+
+/* Kopfzeile: „STAR TREK ADVENTURES" links, eine Trennlinie, der Titelreiter
+   rechts — dieselbe Anordnung wie Logo + „PERSONNEL FILE" auf dem Bogen. */
+.pf-doc-masthead {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--pf-unit) * 14);
+  margin-bottom: calc(var(--pf-unit) * 10);
+}
+
+.pf-doc-wordmark {
+  flex-shrink: 0;
+  font-style: italic;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  font-size: calc(var(--pf-unit) * 25);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--pf-accent);
+  white-space: nowrap;
+}
+
+.pf-doc-mast-rule {
+  flex: 1;
+  height: calc(var(--pf-unit) * 2);
+  background: var(--pf-accent-dim);
+  border-radius: 999px;
+}
+
+/* Der Titelreiter (Talents/Biography) im Look des „PERSONNEL FILE"-Reiters:
+   weiße Versalien auf dem Blau der Vorlage, die zum Logo zeigende Ecke
+   angeschrägt. */
+.pf-doc-tab {
+  flex-shrink: 0;
+  background: var(--pf-accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: calc(var(--pf-unit) * 17);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: calc(var(--pf-unit) * 6) calc(var(--pf-unit) * 18)
+    calc(var(--pf-unit) * 6) calc(var(--pf-unit) * 26);
+  border-radius: calc(var(--pf-unit) * 6);
+  clip-path: polygon(calc(var(--pf-unit) * 14) 0, 100% 0, 100% 100%, 0 100%);
+  white-space: nowrap;
+}
+
+.pf-doc-subtitle {
+  margin: 0 0 calc(var(--pf-unit) * 22);
+  font-size: calc(var(--pf-unit) * 13);
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--pf-accent);
 }
 
-.pf-doc-subtitle {
-  margin: 0 0 calc(var(--pf-unit) * 26);
-  padding-bottom: calc(var(--pf-unit) * 10);
-  border-bottom: calc(var(--pf-unit) * 2) solid var(--pf-accent);
-  font-size: calc(var(--pf-unit) * 14);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+/* Der eigentliche Blattinhalt wächst, die Fußzeile bleibt unten. */
+.pf-doc-content {
+  flex: 1;
+}
+
+/* Markenzeile am Blattfuß — dieselbe wie auf dem gedruckten Bogen, damit die
+   Zusatzblätter erkennbar zum selben Dokument gehören. */
+.pf-doc-footer {
+  margin: calc(var(--pf-unit) * 20) 0 0;
+  padding-top: calc(var(--pf-unit) * 8);
+  border-top: calc(var(--pf-unit) * 1) solid var(--pf-accent-dim);
+  font-size: calc(var(--pf-unit) * 8);
+  line-height: 1.4;
+  text-align: center;
+  color: #9a9aa2;
 }
 
 .pf-doc-body {
@@ -389,15 +516,27 @@ ol) {
   opacity: 0.7;
 }
 
-/* Ein Eintrag des Spickzettels auf dem Papier-Blatt. */
+/* Ein Eintrag des Spickzettels als Kasten wie auf dem Bogen: dünne blaue
+   Umrandung mit runden Ecken, die Beschriftung oben in gesperrten Versalien —
+   dasselbe Motiv wie die Wert-Kästen des Hauptblatts (und wie cheatItem im
+   PDF-Export). */
 .pf-doc-entry {
-  margin-bottom: calc(var(--pf-unit) * 16);
+  margin-bottom: calc(var(--pf-unit) * 12);
+  padding: calc(var(--pf-unit) * 12) calc(var(--pf-unit) * 14);
+  border: calc(var(--pf-unit) * 1) solid var(--pf-accent-dim);
+  border-radius: calc(var(--pf-unit) * 8);
+}
+
+.pf-doc-entry:last-child {
+  margin-bottom: 0;
 }
 
 .pf-doc-term {
   font-size: calc(var(--pf-unit) * 16);
   font-weight: 700;
   letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--pf-accent);
 }
 
 .pf-doc-meta {
@@ -413,12 +552,85 @@ ol) {
   line-height: 1.5;
 }
 
+/* Abschnittsüberschrift auf einem Zusatzblatt („Talente", „Momentum
+   ausgeben", …). Wie der Titelreiter gesperrt und in Versalien, aber ohne
+   Fläche — sie gliedert nur die Einträge darunter. */
+.pf-doc-heading {
+  margin: calc(var(--pf-unit) * 18) 0 calc(var(--pf-unit) * 8);
+  font-size: calc(var(--pf-unit) * 14);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pf-accent);
+  border-bottom: calc(var(--pf-unit) * 1) solid var(--pf-accent-dim);
+  padding-bottom: calc(var(--pf-unit) * 4);
+}
+
+/* Nur die ALLERERSTE Überschrift des Blatts steht ohne Abstand oben an. Ein
+   schlichtes .pf-doc-heading:first-child griffe zu weit: jeder Regelabschnitt
+   liegt in einem eigenen <div>, seine Überschrift wäre dort ebenfalls
+   erstes Kind und klebte am Text des vorigen Abschnitts. */
+.pf-doc-content > .pf-doc-heading:first-child {
+  margin-top: 0;
+}
+
+/* Der englische Originalbegriff hinter der deutschen Überschrift — dieselbe
+   zweisprachige Beschriftung wie auf dem Hauptblatt. */
+.pf-doc-heading-original {
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+/* Einleitender Satz unter einer Abschnittsüberschrift. */
+.pf-doc-intro {
+  margin: 0 0 calc(var(--pf-unit) * 10);
+  font-size: calc(var(--pf-unit) * 13);
+  line-height: 1.5;
+  opacity: 0.85;
+}
+
+/* Eine Regelzeile: Begriff, optionaler Preis, Erklärung. Kompakter als
+   .pf-doc-entry — davon stehen fünfzehn auf dem Blatt, jede als Kasten wäre
+   eine Kästchenwand. */
+.pf-doc-rule {
+  margin-bottom: calc(var(--pf-unit) * 8);
+}
+
+.pf-doc-rule:last-child {
+  margin-bottom: 0;
+}
+
+.pf-doc-rule-term {
+  font-size: calc(var(--pf-unit) * 13);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.pf-doc-rule-cost {
+  margin-left: calc(var(--pf-unit) * 6);
+  font-size: calc(var(--pf-unit) * 12);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--pf-accent);
+}
+
+.pf-doc-rule-text {
+  margin: calc(var(--pf-unit) * 2) 0 0;
+  font-size: calc(var(--pf-unit) * 13);
+  line-height: 1.5;
+}
+
 /* ── Drucken ───────────────────────────────────────────────────────────
-   „Drucken" im Vorschau-Fenster druckt die drei Blätter, nicht die
-   Anwendung drumherum: alles andere wird ausgeblendet, jedes Blatt beginnt
-   auf einer neuen Seite. */
+   „Drucken" druckt die drei Blätter, nicht die Anwendung drumherum: alles
+   andere wird ausgeblendet, jedes Blatt beginnt auf einer neuen Seite.
+
+   Zwei Orte zeigen dieselben Blätter und sollen sich beim Drucken gleich
+   verhalten: das Vorschau-Fenster (.pf-preview-overlay, /user/characters/[id])
+   und die Bogen-Seite (.pf-preview-page, /characters/[slug]/sheet). */
 @media print {
-  body:has(.pf-preview-overlay) > *:not(:has(.pf-preview-overlay)) {
+  body:has(.pf-preview-overlay) > *:not(:has(.pf-preview-overlay)),
+  body:has(.pf-preview-page) > *:not(:has(.pf-preview-page)) {
     display: none !important;
   }
 
@@ -430,6 +642,17 @@ ol) {
 
   .pf-preview-overlay .pf-preview-bar {
     display: none !important;
+  }
+
+  /* Auf der Bogen-Seite gehören Überschrift, Erklärung und die beiden
+     Aktionen nicht aufs Papier — nur die Blätter. */
+  .pf-preview-page > *:not(article) {
+    display: none !important;
+  }
+
+  .pf-preview-page {
+    max-width: none !important;
+    padding: 0 !important;
   }
 
   .pf-preview {

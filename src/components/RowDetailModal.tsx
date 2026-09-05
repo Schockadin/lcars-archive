@@ -160,7 +160,7 @@ export default function RowDetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-[16px]">
-          <h2 className="text-lcars-primary">{title}</h2>
+          <h2 className="text-lcars-primary-ink">{title}</h2>
           <div className="flex gap-[8px]">
             {edit &&
               (editing ? (
@@ -263,7 +263,7 @@ export default function RowDetailModal({
         </dl>
 
         {error && (
-          <p className="text-lcars-quinary text-[13px]" role="alert">
+          <p className="text-lcars-quinary-ink text-[13px]" role="alert">
             {error}
           </p>
         )}

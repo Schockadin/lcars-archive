@@ -31,7 +31,7 @@ export default function ScriptProgress({
             onClick={onDismiss}
             aria-label="Ausblenden"
             title="Ausblenden"
-            className="text-lcars-quinary leading-none text-[18px] shrink-0 px-[6px]"
+            className="text-lcars-quinary-ink leading-none text-[18px] shrink-0 px-[6px]"
           >
             ×
           </button>

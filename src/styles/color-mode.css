@@ -1,0 +1,75 @@
+/* ─── Hell-/Dunkel-Modus (data-mode) ───────────────────────────────────
+   Eine EIGENE Achse, unabhängig vom UI-Modus (LCARS vs. minimal, data-ui) und
+   vom Akzent-Farbthema (data-theme). Dunkel ist der Default (die :root-Werte in
+   tokens.css sind bereits dunkel, deshalb KEIN data-mode="dark"-Block). Der
+   Hell-Modus überschreibt nur die Basis-Flächen- und Schrift-Tokens auf ein
+   helles Schema — für BEIDE UIs (LCARS wie minimalistisch). Die Akzentfarben
+   (primary…senary) bleiben die des gewählten Farbthemas und sind auf hellem
+   Grund weiterhin gut sichtbar.
+
+   Gesetzt werden sowohl die --lcars-* Tokens (rohe CSS-Regeln) als auch die
+   --color-lcars-* Tokens (Tailwind-Utilities wie text-lcars-ink,
+   bg-lcars-surface). Unlayered eingebunden (siehe globals.css), damit der
+   Attribut-Selektor html[data-mode="light"] (Spezifität 0,1,1) die
+   :root-Basiswerte schlägt.
+
+   Frei gewählte Overrides (theme_overrides für bg/ink) liegen als Inline-Style
+   auf <html> und gewinnen bewusst gegen diesen Block — der Modus liefert die
+   Palette, die Feineinstellung justiert einzelne Farben darüber. */
+html[data-mode="light"] {
+  --lcars-bg: #f4f4f8;
+  --lcars-surface: #ffffff;
+  --lcars-surface-2: #e9e9f1;
+  --lcars-border: #d3d3df;
+  --lcars-ink: #1b1b2c;
+  --lcars-ink-dim: #55556b;
+  --lcars-ink-data: #12539e;
+  --lcars-ink-contrast: #0e0e18;
+  --lcars-ink-light: #0e0e18;
+
+  --color-lcars-bg: #f4f4f8;
+  --color-lcars-surface: #ffffff;
+  --color-lcars-surface-2: #e9e9f1;
+  --color-lcars-border: #d3d3df;
+  --color-lcars-ink: #1b1b2c;
+  --color-lcars-ink-dim: #55556b;
+  --color-lcars-ink-data: #12539e;
+  --color-lcars-ink-contrast: #0e0e18;
+  --color-lcars-ink-light: #0e0e18;
+
+  /* Akzent-als-TEXT im Hellmodus abdunkeln. Die LCARS-Pastelltöne sind für
+     dunklen Grund gemacht und liefern auf hellem nur ~2:1 Kontrast — als
+     Überschrift oder Beschriftung sind sie damit unlesbar (WCAG AA verlangt
+     4.5:1). color-mix statt fester Werte, weil die Rechnung so für ALLE
+     Farbthemen UND für eigene Akzentfarben gilt, ohne dass irgendwo eine
+     zweite Farbtabelle gepflegt werden muss. 45% ist der gemessene Wert, ab
+     dem alle 47 Akzentwerte der sechs Themen 4.5:1 auf #ffffff erreichen
+     (schlechtester Fall: Text auf --lcars-surface).
+     Die FLÄCHEN behalten bewusst die volle Sättigung — das LCARS-Chrome
+     (Balken, Elbows, Pillen) sieht im Hellmodus deshalb unverändert aus. */
+  --lcars-primary-ink: color-mix(in srgb, var(--lcars-primary) 45%, #000);
+  --lcars-primary-light-ink: color-mix(in srgb, var(--lcars-primary-light) 45%, #000);
+  --lcars-secondary-ink: color-mix(in srgb, var(--lcars-secondary) 45%, #000);
+  --lcars-tertiary-ink: color-mix(in srgb, var(--lcars-tertiary) 45%, #000);
+  --lcars-quaternary-ink: color-mix(in srgb, var(--lcars-quaternary) 45%, #000);
+  --lcars-quinary-ink: color-mix(in srgb, var(--lcars-quinary) 45%, #000);
+  --lcars-senary-ink: color-mix(in srgb, var(--lcars-senary) 45%, #000);
+
+  --color-lcars-primary-ink: color-mix(in srgb, var(--color-lcars-primary) 45%, #000);
+  --color-lcars-primary-light-ink: color-mix(in srgb, var(--color-lcars-primary-light) 45%, #000);
+  --color-lcars-secondary-ink: color-mix(in srgb, var(--color-lcars-secondary) 45%, #000);
+  --color-lcars-tertiary-ink: color-mix(in srgb, var(--color-lcars-tertiary) 45%, #000);
+  --color-lcars-quaternary-ink: color-mix(in srgb, var(--color-lcars-quaternary) 45%, #000);
+  --color-lcars-quinary-ink: color-mix(in srgb, var(--color-lcars-quinary) 45%, #000);
+  --color-lcars-senary-ink: color-mix(in srgb, var(--color-lcars-senary) 45%, #000);
+}
+
+/* Gefüllte Akzent-Flächen (Amber & Co.) behalten dunklen Text — heller Text auf
+   einer hellen Akzentfarbe wäre kontrastarm. Gilt in beiden UIs; im vollen
+   LCARS tragen diese Pillen ohnehin dunklen Text, im minimalistischen UI würden
+   sie sonst die helle Fließtextfarbe erben. */
+html[data-mode="light"] .lcars-pill-btn,
+html[data-mode="light"] .lcars-data-row-text,
+html[data-mode="light"] .reading-mode-toggle {
+  color: var(--lcars-ink-dark);
+}

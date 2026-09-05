@@ -267,7 +267,7 @@ export async function getAllAutolinkableContent(): Promise<
   ];
 }
 
-function normalizeWikilinkTarget(s: string): string {
+export function normalizeWikilinkTarget(s: string): string {
   return s.trim().toLowerCase();
 }
 

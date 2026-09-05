@@ -39,6 +39,107 @@ export function changelogItemTutorial(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.29",
+    title: "Hell/Dunkel frei wählbar — plus eigene Grundfarben",
+    items: [
+      {
+        text: "Hell oder dunkel ist jetzt eine eigene Einstellung, unabhängig vom Interface: Du kannst LCARS und das minimalistische UI jeweils in hell oder dunkel nutzen — jede Kombination ist möglich. Die Wahl triffst du im Profil unter „Darstellung“ und sie bleibt bei jedem Login erhalten.",
+        tutorial: "farbschema",
+      },
+      {
+        text: "Hintergrund und Schrift lassen sich jetzt bis ins Detail einstellen: Seitenhintergrund, Flächen und Rahmen ebenso wie jede Schriftfarbe einzeln — Fließtext, Lesetext, Nebentext, Links, Kontrasttext und die Beschriftung auf farbigen Flächen. Im minimalistischen Interface färbt sich die Seitenleiste mit. Die Farbauswahl im Profil ist dafür in aufklappbare Bereiche gegliedert; ohne eigene Wahl gilt weiterhin der Standard des jeweiligen Hell/Dunkel-Modus.",
+        tutorial: "farbschema",
+      },
+      {
+        text: "Jede Charakterseite zeigt jetzt „Wer kennt wen“: mit welchen Figuren und NPCs die Person zu tun hatte, abgeleitet aus gemeinsamen Missionen und Gesprächen — samt Angabe, woher die Verbindung stammt.",
+      },
+      {
+        text: "Der Datenbank-Assistent hat jetzt Einstiegs-Vorlagen: „Was bisher geschah“ liefert eine Rückschau über die jüngsten Einsatzberichte, weitere Knöpfe fragen eine Mission, ein Stichwort, eine Person oder die Beziehungen einer Figur ab. Bei den Vorlagen mit Lücke springt der Cursor gleich an die Stelle, die du ausfüllst.",
+        tutorial: "datenbank-assistent",
+      },
+      {
+        text: "Charaktere, Missionen und Logbücher zeigen jetzt ebenfalls, wo sie erwähnt werden — bisher gab es diese Rückverweise nur bei Datenbank-Einträgen. Gezählt wird beides: die gepflegten Verweisfelder und echte [[Wikilinks]] im Fließtext.",
+      },
+      {
+        text: "Die Suche findet jetzt auch andere Wortformen — „Missionen“ findet „Erste Mission“ — und versteht mehrere Suchwörter unabhängig von ihrer Reihenfolge sowie Wortgruppen in Anführungszeichen. Die Treffer sind nach Relevanz sortiert statt alphabetisch, und der angezeigte Textausschnitt trifft auch dann die richtige Stelle, wenn im Text eine andere Wortform steht.",
+      },
+      {
+        text: "Beim Einstellen der Farben zeigt das Profil jetzt zu jeder Farbe an, wie gut sie sich vor ihrem Hintergrund liest, und warnt, wenn eine Kombination zu blass wird. Im hellen Erscheinungsbild werden Überschriften und Beschriftungen automatisch so weit abgedunkelt, dass sie gut lesbar bleiben — die farbigen Balken und Pillen behalten dabei ihre volle Leuchtkraft.",
+        tutorial: "farbschema",
+      },
+      {
+        text: "An Charakteren, Missionen, Logbüchern und Datenbank-Einträgen kannst du jetzt Notizen hinterlegen: entweder „Nur ich“ als persönliche Merkzettel, die niemand sonst sieht, oder „Für die Runde“ als Kommentar, den alle Angemeldeten lesen und beantworten können. Die Notizen stehen aufklappbar direkt unter dem Eintrag.",
+        tutorial: "notizen",
+      },
+      {
+        text: "Beim Bearbeiten eines Charakters, einer Mission, eines Logbuchs oder eines Datenbank-Eintrags gibt es jetzt den Bereich „Versionen“: Er zeigt die letzten zwanzig Fassungen des Textes mit Datum, bearbeitender Person und einer Vorschau — jede davon lässt sich mit einem Klick zurückholen. Der aktuelle Stand geht dabei nicht verloren, er wandert selbst in die Historie.",
+        tutorial: "versionen",
+      },
+      {
+        text: "Schwerpunkte (Focuses) kommen jetzt wie Talente aus einem Katalog statt aus einem Freitextfeld: 170 Einträge aus dem Regelwerk, nach Disziplin gegliedert und durchsuchbar — beim Anlegen des Charakters ebenso wie beim Steigern mit AP. Die Spielleitung ergänzt eigene Schwerpunkte unter „Schwerpunkte“.",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Der Spickzettel des Charakterbogens (Blatt 2, auch im PDF) enthält jetzt neben den Talenten die wichtigsten Regeln für den Spieltisch: wofür man Momentum ausgibt und aufhebt, was die Spielleitung mit Bedrohung anstellt und wie Entschlossenheit funktioniert — auf Deutsch, mit den englischen Begriffen daneben.",
+      },
+      {
+        text: "Die Spielleitung kann eigene Regeln der Runde hinterlegen (Name und Regeltext, in selbst gewählter Reihenfolge). Sie stehen auf dem Spickzettel jedes Charakterbogens hinter den Regeln aus dem Regelwerk — auf dem Bildschirm wie im PDF.",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Neu unter „Charaktere → Beziehungen“: ein Beziehungsgraph der ganzen Kampagne. Er zeigt auf einen Blick, wer mit wem im Einsatz war und wer mit wem geredet hat — dicke Linien für viele Berührungspunkte, große Punkte für gut vernetzte Figuren, ein Klick führt zur Figur. Zeigst du auf eine Figur, treten sie und ihre Verbindungen hervor.",
+        tutorial: "fuer-besucher",
+      },
+      {
+        text: "Markdown gibt es jetzt auch in den kleineren Textfeldern: Notizen und Kommentare, eigene Regeln, Talent- und Schwerpunkt-Beschreibungen, Session-Notizen sowie Antworten und Nachrichten in Gesprächen haben dieselbe Werkzeugleiste mit Vorschau wie die großen Formulare — und der Text wird beim Anzeigen auch als Markdown dargestellt, auf dem Bildschirm wie im PDF. Notiz- und Regelfelder sind dabei zehn Zeilen hoch statt drei.",
+        tutorial: "markdown",
+      },
+      {
+        text: "„Erwähnt in“ und „Wer kennt wen“ sind jetzt aufklappbare Bereiche wie die Notizen — mit der Anzahl in der Kopfzeile, sodass man sie überfliegen kann, ohne die Seite länger zu machen.",
+      },
+      {
+        text: "Der Knopf „Charakterbogen“ auf einer Charakterseite zeigt jetzt denselben Bogen wie unter „Meine Charaktere“: alle drei Blätter (Personalakte, Spickzettel, Biografie) mit Drucken und derselben PDF-Datei. Vorher stand dort nur das erste Blatt, obwohl das PDF daneben alle drei enthielt.",
+      },
+      {
+        text: "Das Portrait füllt jetzt das Bildfeld des Charakterbogens aus und ist oben links passend zur Vorlage schräg abgeschnitten — vorher stand ein hochformatiges Bild als schmaler Streifen mit weißen Rändern darin.",
+      },
+      {
+        text: "Spickzettel und Biografie sehen im PDF jetzt aus wie am Bildschirm: mit dem blauen Rahmen des Bogens, mit formatiertem Text (fett, kursiv, beides) statt roher Sternchen — und ohne die unsichtbaren Kommentare aus dem Quelltext, etwa die Marken für die Chronologie.",
+      },
+      {
+        text: "Portraits lassen sich jetzt selbst zuschneiden: „Ausschnitt wählen“ öffnet den Bildkasten des Charakterbogens samt seiner Schräge — ziehen verschiebt das Bild, ein Regler vergrößert es bis zum Vierfachen. Der gewählte Ausschnitt wird fertig zugeschnitten gespeichert, sodass Bildschirm und PDF dasselbe zeigen; das Original bleibt hinterlegt, sodass du den Ausschnitt später neu wählen kannst, ohne die Datei erneut zu suchen. Ein Portrait lädst du dafür als Bilddatei hoch — eine Bild-Adresse lässt sich nicht mehr eintragen (bereits eingetragene bleiben stehen).",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "In der Chronologie steht das neueste Jahr jetzt ganz links, und die Jahresleiste zeigt nur noch Jahre, in denen bei der aktuellen Auswahl auch etwas liegt. Was das Sprachmodell an einem Tag ableitet, den der Eintrag ohnehin schon führt (etwa den Missionsbeginn), erscheint nicht mehr doppelt.",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Die Chronologie ist zurück: „Chronologie“ im Hauptmenü zeigt die ganze Kampagne als Zeitstrahl — von der ältesten bis zur jüngsten Begebenheit, mit Sortierung, Suche, Filter nach Ereignisart und Jahresleiste. Jede Karte führt zu dem Eintrag, aus dem das Ereignis stammt; zu sehen ist nur, was du ohnehin lesen darfst.",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Die Ereignisse der Chronologie entstehen aus drei Quellen: aus den gepflegten Angaben (Missionsbeginn und -ende, Logbuch- und Gesprächsdatum, Geburtsdatum einer Figur), aus den Marken, die ihr mit dem Kalender-Knopf im Text setzt — die Karte springt dann genau an diese Stelle im Bericht —, und aus dem, was die Spielleitung aus einem Text ableiten lässt. Abgeleitete Ereignisse sind als solche gekennzeichnet.",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Neu für die Spielleitung unter „Leitung → Chronologie“: aus einem Bericht die Ereignisse ableiten lassen, die darin stecken, aber in keinem Feld stehen („drei Tage später …“). Das Ergebnis steht sofort in der Chronologie und lässt sich dort einzeln wieder entfernen; ein zweiter Durchlauf über denselben Text legt nichts doppelt an.",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Neu für den Einstieg: die Seite „Erste Schritte“ (/willkommen) erklärt in Kürze, was dieses Archiv ist, und führt durch die ersten Schritte — Passwort festlegen, Charakter anlegen, Erschaffung abschließen, erstes Logbuch schreiben, ein Gespräch beginnen. Zu jedem offenen Schritt gibt es einen Link direkt in den passenden Ablauf. Dieselbe Liste steht auf dem Dashboard und verschwindet dort, sobald alles erledigt ist.",
+        tutorial: "erste-schritte",
+      },
+      {
+        text: "Neu auf der Seite jeder Mission: „Missionsakte (PDF)“ packt genau diese Mission in eine Datei — Titelseite mit Zeitraum, Status und Beteiligten, danach die Beschreibung und jedes Logbuch auf einer eigenen Seite, chronologisch. Die Akte enthält genau das, was du auch sonst lesen darfst; nicht öffentliche Logbücher sind darin gekennzeichnet.",
+        tutorial: "merken-abonnieren",
+      },
+      {
+        text: "Das PDF des Charakterbogens sieht jetzt aus wie der Bogen am Bildschirm — Zeile für Zeile an derselben Stelle: gleiche Schrift und Laufweite, dasselbe Portrait mit derselben Schräge, und die Kästchen für Entschlossenheit und Stress stehen auch auf dem Ausdruck da, wo sie hingehören (die ungenutzten Stress-Kästchen blass).",
+      },
+    ],
+  },
+  {
     version: "1.28",
     title: "Charaktere anlegen und pflegen in neuem Ablauf",
     items: [
@@ -483,4 +584,32 @@ function compareVersions(a: string, b: string): number {
     if (diff !== 0) return diff;
   }
   return 0;
+}
+
+// Gibt es einen Changelog-Eintrag mit dieser „Major.Minor"-Version?
+export function changelogVersionExists(
+  version: string,
+  entries: ChangelogEntry[] = CHANGELOG,
+): boolean {
+  return entries.some((entry) => entry.version === version);
+}
+
+// Die Einträge für die „Neue Funktionen"-Box auf dem Dashboard, aus der vom
+// Admin gewählten Versionsliste (siehe src/lib/changelogSettings.ts):
+//   - selected === null  ⇒  nicht konfiguriert: nur die jüngste Version.
+//   - selected === []    ⇒  bewusst nichts (die Box verschwindet).
+//   - sonst              ⇒  genau die gewählten, existierenden Versionen,
+//                           neueste zuerst.
+export function featuredChangelogEntries(
+  selected: string[] | null,
+  entries: ChangelogEntry[] = CHANGELOG,
+): ChangelogEntry[] {
+  if (selected === null) {
+    const latest = latestChangelogEntry(entries);
+    return latest ? [latest] : [];
+  }
+  const wanted = new Set(selected);
+  return entries
+    .filter((entry) => wanted.has(entry.version))
+    .sort((a, b) => compareVersions(b.version, a.version));
 }

@@ -42,6 +42,40 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (`src/lib/dal.ts`) und in jeder Seite/Server-Action (Defense in Depth). Die
   reine Krypto-/Token-Logik teilen sich Proxy und Session-Verwaltung über
   `src/lib/sessionToken.ts`.
+- **Versionshistorie** — beim Bearbeiten von Charakteren, Missionen, Logbüchern
+  und Datenbank-Einträgen wird vor jedem Überschreiben der bisherige Text in
+  `content_revisions` abgelegt (Titel + `source_md`, die jüngsten
+  `REVISION_KEEP` je Inhalt). Der Bereich „Versionen“ auf der jeweiligen
+  Bearbeiten-Seite zeigt sie mit Datum, bearbeitender Person und Vorschau und
+  holt eine Fassung per Server Action zurück (`src/lib/contentRevisions.ts`,
+  `src/app/actions/revisions.ts`, `src/app/_shared/RevisionsPanel.tsx`).
+  Wiederhergestellt wird nur der Fließtext; der ersetzte Stand landet selbst
+  wieder in der Historie. Ein Speichern ohne Textänderung legt keine Fassung an.
+- **Markdown in allen Freitextfeldern** — der `MarkdownEditor` (Toolbar +
+  Rohtext/Vorschau) steht nicht nur an den Content-Formularen, sondern auch an
+  Notizen, eigenen Regeln, Talent- und Schwerpunkt-Beschreibungen,
+  Session-Notizen und den Gesprächs-Formularen; sein `rows`-Prop setzt die
+  Höhe in Zeilen statt in Pixeln (Notizen und Regeln: 10). Die zugehörigen
+  Datenzugriffe liefern neben dem Rohtext ein gerendertes `*Html`-Feld
+  (`listNotes`, `listCampaignRules`, `listTalents`, `listFocuses`,
+  `listGameSessions`) — das Formular arbeitet auf dem Rohtext, die Anzeige auf
+  dem HTML. Im PDF gibt es kein HTML, dort zerlegt `toPdfBlocks` denselben
+  Rohtext (wie beim Biografie-Blatt). Die Kataloge sind gecacht, das Rendern
+  passiert also einmal je Cache-Generation.
+  **Bewusst ohne Markdown** bleiben drei Stellen, an denen der Text eine
+  andere Bedeutung hat: die Listenfelder des Charakterbogens (`TEXTAREA_LISTS`
+  — eine Zeile je Eintrag), die Feldwerte in `RowDetailModal`/
+  `DbTableExplorer` (rohe Spaltenwerte) und die Zusammenfassung im
+  Markdown-Import (reiner Text).
+- **Notizen & Kommentare** — an Charakteren, Missionen, Logbüchern und
+  Datenbank-Einträgen können eingeloggte Personen Notizen hinterlegen: mit
+  Sichtbarkeit `private` (nur der Autor, auch für die Moderation unsichtbar)
+  oder `group` (alle Angemeldeten, als Diskussion am Eintrag). Beides liegt in
+  einer Tabelle `content_notes`, verknüpft über `(content_type, content_slug)`
+  wie `content_follows`; Datenzugriff in `src/lib/contentNotes.ts`, das
+  Client-Panel in `src/app/_shared/NotesPanel.tsx`. Gruppen-Notizen darf
+  zusätzlich `content.moderate` löschen, private nie; beim endgültigen Löschen
+  eines Inhalts räumt `purgeContent.ts` sie mit ab.
 - **Eigene Inhalte** — eingeloggte User legen eigene Charaktere, Einsatzberichte,
   Datenbank-Einträge und Gespräche zwischen Charakteren an, mit Sichtbarkeitsstufen
   (privat/GM/öffentlich) und einem persönlichen Dashboard (farbcodierter News-Feed,
@@ -137,8 +171,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `personnelFileLayout.ts`, Optik in
   `src/styles/lcars-components/personnel-file.css`; jedes Maß ein Vielfaches
   von `--pf-unit` = 1px der Vorlage, sodass der Bogen in einer schmaleren
-  Spalte als Ganzes schrumpft statt umzubrechen), dahinter der
-  Talent-Spickzettel und die Biografie im selben Papier-Look. Im Fenster stehen
+  Spalte als Ganzes schrumpft statt umzubrechen), dahinter der Spickzettel und
+  die Biografie im selben Papier-Look. Im Fenster stehen
   „Drucken" (Browser-Druck, das Druck-CSS blendet alles außer den Blättern aus
   und beginnt jedes auf einer neuen Seite) und „Speichern" (derselbe
   PDF-Export, damit die Datei unabhängig vom Browser gleich aussieht).
@@ -188,6 +222,44 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   diese beiden Prüfungen hinterließe ein direkt abgeschickter POST einen
   dauerhaft überzogenen bzw. leeren Bogen — nach dem Festschreiben sind die
   Felder schreibgeschützt, und `checkAdvancement` steigert keinen leeren Wert.
+- **Eigene Regeln der Runde** — Hausregeln (Name, Regeltext, `sort_order`)
+  liegen in `campaign_rules`, gepflegt unter `/gm/rules`, und erscheinen auf
+  dem Spickzettel jedes Charakterbogens hinter den Kernregeln — in der
+  Bildschirm-Vorschau wie im PDF. Anders als Talente und Schwerpunkte hängen
+  sie an keinem Charakter, deshalb ist auch jede Regel löschbar: sie steht auf
+  keinem Bogen als Eintrag. Validierung und Sortierung liegen in
+  `src/lib/campaignRuleTypes.ts` (ohne `server-only`, damit die Vorschau sie
+  nutzen kann), der DB-Zugriff mit eigenem Cache-Tag in
+  `src/lib/campaignRules.ts`.
+- **Beziehungsgraph** — `/characters/beziehungen` zeigt die ganze Kampagne als
+  Graph: Knoten sind Figuren und NPCs, Kanten ihre gemeinsamen Missionen und
+  Gespräche (`getRelationGraph` in `src/lib/relations.ts`, eine Abfrage je
+  Quelle statt `getRelationsOf` je Figur). Das Layout ist ein **Kreis** mit
+  Barycenter-Vorsortierung (`src/lib/relationGraphLayout.ts`): eine
+  Kräftesimulation bräuchte eine Bibliothek, liefe bei jedem Aufruf anders und
+  wäre nicht prüfbar — hier ist alles eine reine, getestete Funktion. Gezeichnet
+  wird als Inline-SVG (`RelationGraph.tsx`), der Rand ergibt sich aus dem
+  längsten Namen, damit keine Beschriftung aus dem Bild läuft. Die Seite ist
+  bewusst **nicht** gecacht: der Graph hängt an der Sichtbarkeit des
+  Betrachters.
+- **Schwerpunkt-Katalog** — Focuses liegen wie die Talente in einer eigenen
+  Tabelle (`focuses`: Name, Disziplin, optionale Erläuterung, `is_custom`),
+  gepflegt unter `/gm/focuses`. `UNIQUE (name, discipline)` statt nur über den
+  Namen: sechs Schwerpunkte führt der Regeltext in ZWEI Disziplinen
+  (`Astrophysics` bei Conn und Science, `Survival` bei Conn und Security, …).
+  Auf dem Bogen steht nur der Name — dort sind das dieselben, und alles, was
+  „schon eingetragen" prüft, vergleicht deshalb über den Namen (`focusKey` in
+  `src/lib/focusCatalog.ts`); die Auswahlliste fasst sie zu einer Zeile mit
+  beiden Disziplinen zusammen. Startdaten: `scripts/seed/focuses.json` (170
+  Einträge aus dem Regeltext), eingespielt mit `npm run db:seed-focuses`
+  (idempotent). Auf dem Charakterbogen ersetzt `FocusPicker.tsx` (dasselbe
+  Modal-Muster wie der `TalentPicker`, mit Suche und Disziplin-Filter) das
+  freie Tippen — in der Ersterschaffung wie beim Steigern mit AP. Serverseitig
+  prüfen `checkFocusesFromCatalog` (Speichern) und `advanceCharacterAction`
+  (Steigern), dass ein Eintrag aus dem Katalog stammt; bereits gespeicherte
+  Alt-Einträge aus der Freitext-Zeit bleiben erlaubt, und ein LEERER Katalog
+  (Seed noch nicht gelaufen) hebt die Prüfung auf, statt jedes Speichern zu
+  blockieren.
 - **Talent-Katalog** — die Talente der Runde liegen in der Tabelle `talents`
   (Name eindeutig, Kategorie, Voraussetzung, Regeltext). Klammern sind im
   Namen nicht erlaubt: auf dem Bogen steht ein umbenanntes Talent als
@@ -224,8 +296,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   durchgesetzt (`statsAction.ts`, `advancementAction.ts`): ein Eintrag muss im
   Katalog stehen — bereits gespeicherte Alt-Einträge aus der Freitext-Zeit
   bleiben erlaubt, sonst ließe sich ein solcher Bogen nie wieder speichern.
-  Ganz unten am Bogen listet ein **Spickzettel** (`TalentCheatSheet.tsx`) die
-  Talente des Charakters mit vollem Regeltext.
+  Ganz unten am Bogen listet ein **Spickzettel** die Talente des Charakters
+  mit vollem Regeltext und darunter die **Kernregeln** für den Spieltisch —
+  Momentum, Bedrohung und Entschlossenheit, übersetzt aus dem Regeltext der
+  Runde. Sie liegen als Daten in `src/lib/coreRules.ts` statt als fertiges
+  Markup, weil dieselbe Liste zweimal gerendert wird: als Blatt 2 der
+  Bildschirm-Vorschau und im PDF (`@react-pdf` kennt kein `<p>`, ein
+  gemeinsames Markup ist also nicht möglich). Sie hängen an keinem Charakter
+  und stehen deshalb nicht in der Datenbank. Dahinter folgen die **eigenen
+  Regeln der Runde** aus `campaign_rules` (siehe oben); gibt es keine, fällt
+  der Abschnitt weg.
 - **Charakter-Ansichten mit Umschalter** — `/user/characters/[id]` leitet auf
   den Bogen weiter; ein Umschalter im gemeinsamen Layout
   (`[characterId]/layout.tsx` + `CharacterTabs.tsx`) wechselt zwischen
@@ -237,9 +317,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Spezies kommen aus der Akte: der Rang steht schreibgeschützt in seinem
   Kasten, die Spezies teilt sich den Kasten „Species & Traits" mit dem
   Merkmals-Feld (`.pf-combo`).
+- **Ein Bogen, zwei Wege** — `/user/characters/[id]` öffnet die drei Blätter
+  als Overlay, `/characters/[slug]/sheet` (Lese-Ansicht für Owner und
+  Spielleitung) zeigt dieselben drei Blätter als Seite; beide bieten Drucken
+  und denselben PDF-Download. Vorher stand auf der Seite nur Blatt 1, während
+  der Knopf daneben alle drei herunterlud. Das Druck-CSS greift für beide
+  (`.pf-preview-overlay` und `.pf-preview-page`).
 - **PDF-Export des Bogens** — `/api/export/character-sheet?characterId=…`
   liefert dieselben drei Blätter wie die Vorschau: den ausgefüllten Bogen, den
-  Talent-Spickzettel und die Biografie. Für das dritte Blatt gibt es keine
+  Spickzettel (Talente plus Kernregeln) und die Biografie. Für das dritte Blatt gibt es keine
   HTML-Fassung (`@react-pdf` kennt kein HTML); `src/lib/pdf/markdownBlocks.ts`
   zerlegt den Markdown-Quelltext deshalb in Überschriften, Absätze,
   Aufzählungen und Zitate und führt Inline-Auszeichnungen auf ihren Text
@@ -307,6 +393,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   - `/gm/talents` — Talent-Katalog durchsuchen, filtern und bearbeiten sowie
     eigene Talente ergänzen. Löschbar sind nur selbst ergänzte Talente, damit
     keine Einträge unter bereits gepflegten Charakterbögen verschwinden.
+  - `/gm/focuses` — dasselbe für den Schwerpunkt-Katalog (Suche,
+    Disziplin-Filter, bearbeiten, ergänzen; löschbar nur selbst ergänzte).
+  - `/gm/rules` — eigene Regeln der Runde für den Spickzettel (Name,
+    Regeltext, Reihenfolge). Hier ist jede Regel löschbar.
 - **Persönliche News** — der News-Feed auf dem Dashboard bleibt persistent
   sichtbar (nicht mehr nur bis zum nächsten Besuch): jede Meldung lässt sich
   einzeln per X ausblenden (gilt danach als gelesen) und verschwindet automatisch,
@@ -327,6 +417,60 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   YAML-Frontmatter) oder als PDF (serverseitig erzeugt, ohne Chromium/
   Puppeteer — läuft dadurch auf Netlify Functions). Berücksichtigt dieselbe
   Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst.
+- **Chronologie (`/chronologie`)** — die Kampagne als Zeitstrahl nach ihrer
+  eigenen Zeitrechnung (In-Story-Datum), nicht nach Bearbeitungszeit. Die
+  Ereignisse kommen aus drei Quellen und werden in `src/lib/timeline.ts`
+  zusammengetragen:
+  1. **Gepflegte Angaben** der Inhalte (Missionsbeginn/-ende, `log_date` eines
+     Logbuchs, `metadata.logDate` eines Gesprächs, `metadata.dateOfBirth` einer
+     Figur, ein Datums-Attribut eines Datenbank-Eintrags).
+  2. **Marken im Fließtext** — `<!-- timeline: JJJJ-MM-TT | Titel | Kategorie -->`,
+     gesetzt über den Kalender-Knopf im MarkdownEditor (`TimelineMarkerButton`).
+     Sie erzeugen im gerenderten Text eine unsichtbare Sprungmarke
+     `#timeline-N` (`remarkTimelineAnchors` in `src/lib/markdown.ts`); die Karte
+     verlinkt genau dorthin. Die Zählung folgt der Dokumentreihenfolge ALLER
+     Marken — auch ungültiger —, sonst zeigten die Links hinter einer kaputten
+     Marke auf die falsche Stelle.
+  3. **Abgeleitete Ereignisse** aus dem Sprachmodell (siehe unten).
+  (1) und (2) entstehen beim Lesen und werden **nicht** gespeichert: eine
+  gespeicherte Kopie liefe bei jeder Bearbeitung auseinander und die
+  Sichtbarkeit müsste doppelt gepflegt werden. Fünf Abfragen für die ganze
+  Seite, ungecacht (der Inhalt hängt am Betrachter, wie beim Beziehungsgraph).
+  Filter (Sortierung, Suche, Ereignisart, Jahr) laufen als reine Funktionen in
+  `src/lib/timelineTypes.ts` und sind dort einzeln getestet.
+- **Ereignisse ableiten (`/gm/chronologie`)** — die Spielleitung lässt je Inhalt
+  das Sprachmodell die Begebenheiten nennen, die im Text stecken, aber in keinem
+  Feld stehen („drei Tage später …"). Verwendet dieselbe Retrieval-Pipeline wie
+  der Datenbank-Assistent (Zusammenhang aus dem Archiv, gleicher RBAC-Filter)
+  plus einen nicht-streamenden Aufruf (`completeText` in `src/lib/rag.ts`). Die
+  Antwort eines Modells ist Text, keine Datenstruktur: `parseInferredEvents`
+  schneidet das JSON-Array heraus und prüft jedes Feld einzeln (13 Tests).
+  Übernommene Ereignisse landen in `timeline_events` (die Tabelle hält
+  ausschließlich abgeleitete Ereignisse), sind in der Ansicht als „aus dem Text
+  abgeleitet" gekennzeichnet und hängen in ihrer Sichtbarkeit am Quell-Inhalt.
+  Bewusst nicht automatisch beim Speichern: ein Durchlauf kostet einen
+  Modellaufruf und gehört gelesen, bevor er in der Chronologie aller steht.
+- **Erste Schritte (`/willkommen`)** — Einstiegsseite für neue Konten: was das
+  Archiv ist, plus eine Liste der ersten Schritte (Passwort, Charakter,
+  Erschaffung, Logbuch, Gespräch) mit Link in den jeweiligen Ablauf. Bewusst
+  OHNE eigene Fortschritts-Tabelle: jeder Schritt wird an den vorhandenen Daten
+  abgelesen (`src/lib/onboardingSteps.ts` als reine, testbare Funktion,
+  `src/lib/onboarding.ts` holt die Tatsachen). Dieselbe Liste erscheint auf dem
+  Dashboard (`OnboardingSection`) und verschwindet dort, sobald alles erledigt
+  ist; `/willkommen` bleibt als Übersicht erreichbar.
+- **Missionsakte als PDF** — `/api/export/mission-book/[missionSlug]` (Knopf
+  auf der Mission-Detailseite, nur für Angemeldete) packt **eine** Mission in
+  eine Datei: Titelseite mit Zeitraum, Status und Beteiligten, danach die
+  Beschreibung und jedes Logbuch auf einer eigenen Seite, chronologisch. Der
+  Inhalt richtet sich nach der Sichtbarkeit der anfordernden Person —
+  dieselbe `canView`-Regel wie auf den Inhaltsseiten, angewandt in
+  `src/lib/missionBook.ts`; nicht öffentliche Logbücher sind in der Akte als
+  solche gekennzeichnet, und eine Entwurfs-Mission liefert dieselbe 404 wie
+  ihre Seite. Bewusst ungecacht: die Akte hängt am Betrachter, ein Cache wäre
+  ein Cache je Konto. Layout: `src/lib/pdf/MissionBookPdfDocument.tsx`
+  (Lesezeichen je Logbuch, Seitenzahlen in der Fußzeile). Vorgänger war ein
+  Kampagnenband über alle Missionen auf der Übersicht — gebraucht wird beim
+  Spielen die Akte der Mission, die gerade auf dem Tisch liegt.
 - **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und
   automatische bzw. manuelle Verlinkung (`[[Wikilinks]]`) zwischen Inhalten.
 - **Bilder-Galerie** — Charaktere, Missionen, Missionslogs und Datenbank-Einträge
@@ -624,13 +768,14 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:archive`        | Importiert nur die Datenbank-Einträge                                                                                                               |
 | `npm run db:revalidate`     | Invalidiert nur die Caches (siehe `SITE_URL`)                                                                                                    |
 | `npm run db:seed-talents`   | Spielt den Talent-Katalog aus `scripts/seed/talents.json` ein (idempotent)                                                                        |
+| `npm run db:seed-focuses`   | Spielt den Schwerpunkt-Katalog aus `scripts/seed/focuses.json` ein (idempotent)                                                                   |
 | `npm run embed:all`         | Baut den Vektor-Index des Datenbank-Assistenten für alle Inhalte (neu) auf — Backfill, idempotent (siehe „Datenbank-Assistent (RAG)")                  |
 | `npm run db:reset`          | Setzt die Datenbank zurück                                                                                                                       |
 | `npm run db:backup`         | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup")                                                            |
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind                                                                                                    |
 | `npm run db:purge-deleted`  | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist                                                              |
 | `npm run test`              | Führt die Unit-Tests aus (`src/**/*.test.ts`)                                                                                                    |
-| `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Komponenten-Galerie inkl. Charakter-Assistent und Bogen-Vorschau sowie Layout-/Schrift-Regressionen an beiden Viewports) |
+| `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Zugangs-Gates der kontogebundenen Routen, Komponenten-Galerie inkl. Charakter-Assistent, Bogen-Ansicht, Beziehungsgraph, Chronologie, Einstiegs-Liste und aufklappbaren Abschnitten sowie Layout-/Schrift-Regressionen an beiden Viewports) |
 | `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz **mit pgvector**, siehe unten)               |
 
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
@@ -908,7 +1053,21 @@ jetzt aus dem Asset-Bucket liest); neu am Asset-Bucket hängende Assets
 direkte öffentliche URL (`R2_ASSET_PUBLIC_BASE_URL`). Bei Charakteren lässt
 sich eines der hochgeladenen Bilder als Profilbild festlegen
 (`characters.portrait`); das Portrait öffnet per Klick ein Karussell über
-alle hochgeladenen Bilder. Bei Missionen, Missionslogs und
+alle hochgeladenen Bilder. Ein Portrait kommt ausschließlich als **hochgeladene Datei**: das frühere
+Feld „oder Bild-Adresse" ist weg, und `readCharacterHead` liest gar kein
+Adressfeld mehr aus dem Formular, sondern bekommt den bisherigen Stand vom
+Aufrufer gereicht — eine fremde Adresse kann damit auch aus einem von Hand
+gebauten Request nicht mehr gesetzt werden. Bereits gespeicherte Adressen
+bleiben stehen. Beim Anlegen und Bearbeiten der Stammdaten lässt
+sich der **Bildausschnitt** selbst wählen (`PortraitPicker.tsx`,
+Rechenweg in `src/lib/portraitCrop.ts`): ziehen verschiebt, ein Regler
+vergrößert bis 4×, der Rahmen zeigt den hochkant stehenden Bildkasten des
+Bogens samt Schräge. Der Ausschnitt wird im Browser auf eine Leinwand
+gezeichnet und **fertig zugeschnitten** hochgeladen — Bogen und PDF brauchen
+dadurch keine eigene Zuschnitt-Logik und zeigen zwangsläufig dasselbe.
+Original-URL und Einstellung wandern als `metadata.portraitSource` bzw.
+`metadata.portraitCrop` mit, damit sich der Ausschnitt später ohne erneutes
+Hochladen nachjustieren lässt. Bei Missionen, Missionslogs und
 Datenbank-Einträgen lässt sich stattdessen ein bereits hochgeladenes Bild direkt
 aus der Markdown-Editor-Toolbar heraus als `![Bild](...)` in den Text
 einfügen. Wird der zugehörige Inhalt endgültig gelöscht (Papierkorb-Purge

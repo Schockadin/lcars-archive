@@ -67,7 +67,7 @@ export default async function AdminDialoguesPage() {
                   {canModerate && (
                     <Link
                       href={`/gm/dialogues/${d.slug}/edit`}
-                      className="text-lcars-primary underline text-[13px] self-start"
+                      className="text-lcars-primary-ink underline text-[13px] self-start"
                     >
                       Metadaten bearbeiten
                     </Link>

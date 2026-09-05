@@ -7,6 +7,9 @@ import { getOwnArchiveEntryForEdit } from "@/lib/archive";
 import { getUserById } from "@/lib/users";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
 import EditArchiveEntryForm from "./EditArchiveEntryForm";
+import RevisionsPanel from "@/app/_shared/RevisionsPanel";
+import { listRevisions } from "@/lib/contentRevisions";
+import { getViewer } from "@/lib/visibility";
 
 export const metadata: Metadata = {
   title: "Datenbank-Eintrag bearbeiten",
@@ -30,6 +33,11 @@ export default async function EditArchiveEntryPage({
     redirect("/user/content");
   }
 
+  // Versionshistorie: getOwnArchiveEntryForEdit oben hat die Eigentümerschaft
+  // bereits geprüft; listRevisions prüft sie über den Viewer noch einmal
+  // selbst (siehe canManageRevisions).
+  const revisions = await listRevisions("archive", entry.id, await getViewer());
+
   return (
     <>
       <PageMeta title="Datenbank-Eintrag bearbeiten" section="users" />
@@ -46,6 +54,15 @@ export default async function EditArchiveEntryPage({
             !!viewer && userCan(viewer, "content.autolink_tools", roleMap)
           }
         />
+
+        <div className="mt-[16px]">
+          <RevisionsPanel
+            contentType="archive"
+            contentId={entry.id}
+            path={`/user/archive/${entry.id}/edit`}
+            revisions={revisions}
+          />
+        </div>
       </article>
     </>
   );

@@ -71,20 +71,47 @@ async function runSearchQueries(
   const prefix = `${escaped}%`;
   const { includeContent, limit } = opts;
 
+  // Volltext-Anfrage aus der Nutzereingabe. websearch_to_tsquery versteht die
+  // von Suchmaschinen gewohnte Syntax (mehrere Wörter = UND, "in
+  // Anführungszeichen" = Phrase, -wort = Ausschluss) und wirft bei
+  // wirrer Eingabe KEINEN Fehler — anders als to_tsquery, das an einem
+  // einzelnen Sonderzeichen scheitern würde.
+  //
+  // FTS und ILIKE ergänzen sich bewusst, statt sich abzulösen:
+  //   FTS   findet Wortformen („Gespräche" → „Gespräch Eins") und mehrere
+  //         Wörter in beliebiger Reihenfolge; liefert außerdem die Relevanz.
+  //   ILIKE findet Teilwörter und Fragmente („espräch", „T'Le"), an denen die
+  //         Wort-Tokenisierung der FTS vorbeigeht — und trägt die Live-Suche,
+  //         die schon nach zwei Buchstaben etwas anzeigen soll.
+  const ts = sql`websearch_to_tsquery('german', ${q})`;
+
+  // Welcher Vektor befragt wird, hängt am Modus: Die Live-Suche (Dropdown)
+  // vergleicht wie bisher NUR Titel/Namen — sonst würde sie plötzlich auch
+  // Fließtext treffen. Die Volltextsuche nutzt den vollen Vektor (Titel +
+  // Inhalt). Beide sind eigene, indizierte Spalten (siehe schema.sql).
+  const vec = (col: string) =>
+    includeContent ? sql`${sql(col)}.search_vector` : sql`${sql(col)}.title_vector`;
+
   const [chars, missions, logs, archive] = await Promise.all([
     sql<CharacterRow[]>`
       SELECT name, slug
       FROM characters
-      WHERE name ILIKE ${like} AND visibility = 'public' AND deleted_at IS NULL
+      WHERE (name ILIKE ${like} OR ${vec("characters")} @@ ${ts})
+        AND visibility = 'public' AND deleted_at IS NULL
         AND is_draft = false
-      ORDER BY (name ILIKE ${prefix}) DESC, name ASC
+      ORDER BY (name ILIKE ${prefix}) DESC,
+               ts_rank_cd(${vec("characters")}, ${ts}) DESC,
+               name ASC
       LIMIT ${limit}
     `,
     sql<MissionRow[]>`
       SELECT title, slug
       FROM missions
-      WHERE title ILIKE ${like} AND deleted_at IS NULL AND is_draft = false
-      ORDER BY (title ILIKE ${prefix}) DESC, title ASC
+      WHERE (title ILIKE ${like} OR ${vec("missions")} @@ ${ts})
+        AND deleted_at IS NULL AND is_draft = false
+      ORDER BY (title ILIKE ${prefix}) DESC,
+               ts_rank_cd(${vec("missions")}, ${ts}) DESC,
+               title ASC
       LIMIT ${limit}
     `,
     sql<LogRow[]>`
@@ -95,10 +122,13 @@ async function runSearchQueries(
       WHERE (
           ml.title ILIKE ${like}
           ${includeContent ? sql`OR ml.content ILIKE ${like}` : sql``}
+          OR ${vec("ml")} @@ ${ts}
         )
         AND ml.visibility = 'public'
         AND ml.deleted_at IS NULL AND m.deleted_at IS NULL AND ml.is_draft = false
-      ORDER BY (ml.title ILIKE ${prefix}) DESC, ml.title ASC
+      ORDER BY (ml.title ILIKE ${prefix}) DESC,
+               ts_rank_cd(${vec("ml")}, ${ts}) DESC,
+               ml.title ASC
       LIMIT ${limit}
     `,
     sql<ArchiveRow[]>`
@@ -109,11 +139,14 @@ async function runSearchQueries(
           title ILIKE ${like}
           ${includeContent ? sql`OR content ILIKE ${like}` : sql``}
           OR (category = 'dialogue' AND metadata->>'setting' ILIKE ${like})
+          OR ${vec("archive_entries")} @@ ${ts}
         )
         AND NOT (category = 'dialogue' AND dialogue_open)
         AND visibility = 'public'
         AND deleted_at IS NULL AND is_draft = false
-      ORDER BY (title ILIKE ${prefix}) DESC, title ASC
+      ORDER BY (title ILIKE ${prefix}) DESC,
+               ts_rank_cd(${vec("archive_entries")}, ${ts}) DESC,
+               title ASC
       LIMIT ${limit}
     `,
   ]);
@@ -159,9 +192,65 @@ export function stripMarkdown(md: string): string {
     .trim();
 }
 
+// Zerlegt die Eingabe in Suchwörter. Anführungszeichen und die von
+// websearch_to_tsquery unterstützten Operatoren (-wort, or) werden entfernt —
+// hier geht es nur darum, welche WÖRTER im Text hervorgehoben werden sollen.
+export function searchTerms(q: string): string[] {
+  return q
+    .toLowerCase()
+    .replace(/["']/g, " ")
+    .split(/\s+/)
+    .map((t) => t.replace(/^-/, ""))
+    .filter((t) => t.length > 0 && t !== "or");
+}
+
+// Kürzeste Wortform, die noch als Treffer durchgeht. Verhindert, dass aus
+// „die" ein Präfix-Treffer auf jedes „di…" wird.
+const MIN_STEM_LENGTH = 4;
+
+// Sucht die Fundstelle, die im Ausschnitt hervorgehoben wird. Seit die Suche
+// über den Volltextindex läuft, kann ein Treffer auf einer WORTFORM beruhen
+// („Gespräche" findet „Gespräch Eins") — die wörtliche Eingabe steht dann gar
+// nicht im Text. Deshalb in drei Stufen:
+//   1. die vollständige Eingabe,
+//   2. jedes einzelne Suchwort,
+//   3. der Wortstamm-Präfix jedes Suchworts (schrittweise gekürzt).
+// Ohne Stufe 3 blieben genau die Treffer ohne Ausschnitt, die der neue Index
+// überhaupt erst gefunden hat.
+export function findSnippetMatch(
+  plainText: string,
+  q: string,
+): { index: number; text: string } | undefined {
+  const hay = plainText.toLowerCase();
+
+  const direct = hay.indexOf(q.toLowerCase().trim());
+  if (q.trim() && direct !== -1) {
+    return { index: direct, text: plainText.slice(direct, direct + q.trim().length) };
+  }
+
+  const terms = searchTerms(q);
+  for (const term of terms) {
+    const i = hay.indexOf(term);
+    if (i !== -1) return { index: i, text: plainText.slice(i, i + term.length) };
+  }
+  for (const term of terms) {
+    for (let len = term.length - 1; len >= MIN_STEM_LENGTH; len--) {
+      const stem = term.slice(0, len);
+      const i = hay.indexOf(stem);
+      if (i !== -1) {
+        // Bis zum Wortende ausdehnen, damit der Ausschnitt das ganze Wort
+        // zeigt („Gespräch") und nicht den abgeschnittenen Stamm.
+        const rest = /^[\p{L}\p{N}]*/u.exec(plainText.slice(i + len))?.[0] ?? "";
+        return { index: i, text: plainText.slice(i, i + len + rest.length) };
+      }
+    }
+  }
+  return undefined;
+}
+
 // Zentrierter Ausschnitt (~120 Zeichen) um den ersten Treffer, mit Ellipsen
-// an abgeschnittenen Rändern. undefined wenn q nach dem Stripping nicht
-// (mehr) vorkommt — die Zeile wird dann als reiner Titel-Treffer angezeigt.
+// an abgeschnittenen Rändern. undefined wenn im Text nichts gefunden wird —
+// die Zeile wird dann als reiner Titel-Treffer angezeigt.
 export function buildSnippet(
   plainText: string,
   q: string,
@@ -169,10 +258,10 @@ export function buildSnippet(
 ): string | undefined {
   const flat = plainText.replace(/\s+/g, " ").trim();
   if (!flat) return undefined;
-  const idx = flat.toLowerCase().indexOf(q.toLowerCase());
-  if (idx === -1) return undefined;
-  const start = Math.max(0, idx - radius);
-  const end = Math.min(flat.length, idx + q.length + radius);
+  const hit = findSnippetMatch(flat, q);
+  if (!hit) return undefined;
+  const start = Math.max(0, hit.index - radius);
+  const end = Math.min(flat.length, hit.index + hit.text.length + radius);
   const excerpt = flat.slice(start, end).trim();
   return (start > 0 ? "…" : "") + excerpt + (end < flat.length ? "…" : "");
 }
@@ -212,15 +301,20 @@ function mapResults(
   }));
 
   const logResults: SearchResult[] = logs.map((l) => {
+    const plain = opts.includeContent ? plainTextFor(l) : "";
     const snippet =
       opts.includeContent && !matchesQuery(l.title, q)
-        ? buildSnippet(plainTextFor(l), q)
+        ? buildSnippet(plain, q)
         : undefined;
+    // Sprungmarke auf die TATSÄCHLICH gefundene Stelle: bei einem Treffer über
+    // eine Wortform steht die wörtliche Eingabe nicht im Text, ein Fragment
+    // daraus würde ins Leere zeigen.
+    const hit = snippet ? findSnippetMatch(plain, q) : undefined;
     return {
       type: "log" as const,
       label: l.title,
       sublabel: `Log · ${l.mission_title}`,
-      href: `/missions/${l.mission_slug}/${l.slug}${snippet ? `#:~:text=${toTextFragment(q)}` : ""}`,
+      href: `/missions/${l.mission_slug}/${l.slug}${hit ? `#:~:text=${toTextFragment(hit.text)}` : ""}`,
       slug: l.slug,
       snippet,
     };
@@ -233,6 +327,9 @@ function mapResults(
       opts.includeContent && !matchesQuery(titleForMatch, q)
         ? buildSnippet(plainTextFor(a), q)
         : undefined;
+    const archiveHit = snippet
+      ? findSnippetMatch(plainTextFor(a), q)
+      : undefined;
     return {
       type: "archive" as const,
       label:
@@ -241,7 +338,7 @@ function mapResults(
             (a.setting ? `Gespräch auf ${a.setting}` : "Gespräch")
           : a.title,
       sublabel: CATEGORY_CONFIG[a.category]?.label ?? "Datenbank",
-      href: `/archive/${a.slug}${snippet ? `#:~:text=${toTextFragment(q)}` : ""}`,
+      href: `/archive/${a.slug}${archiveHit ? `#:~:text=${toTextFragment(archiveHit.text)}` : ""}`,
       slug: a.slug,
       snippet,
     };

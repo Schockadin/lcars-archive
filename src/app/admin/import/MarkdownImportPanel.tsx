@@ -295,7 +295,7 @@ export default function MarkdownImportPanel({
       </div>
 
       {loadError && (
-        <p className="text-lcars-quinary" role="alert">
+        <p className="text-lcars-quinary-ink" role="alert">
           {loadError}
         </p>
       )}
@@ -371,11 +371,11 @@ function ImportRowCard({
   return (
     <div className="rounded-lcars border border-lcars-border p-[16px] flex flex-col gap-[8px]">
       {!preview.ok ? (
-        <p className="text-lcars-quinary">{preview.error}</p>
+        <p className="text-lcars-quinary-ink">{preview.error}</p>
       ) : (
         <>
           {preview.warnings.length > 0 && (
-            <ul className="text-lcars-primary text-[13px] list-disc pl-[20px]">
+            <ul className="text-lcars-primary-ink text-[13px] list-disc pl-[20px]">
               {preview.warnings.map((w) => (
                 <li key={w}>{w}</li>
               ))}
@@ -424,9 +424,9 @@ function ImportRowCard({
       )}
       {row.status === "importing" && <p className="text-lcars-ink-dim">Wird angelegt…</p>}
       {row.status === "imported" && (
-        <p className="text-lcars-primary">Angelegt als „{row.resultSlug}“.</p>
+        <p className="text-lcars-primary-ink">Angelegt als „{row.resultSlug}“.</p>
       )}
-      {row.status === "error" && <p className="text-lcars-quinary">{row.resultError}</p>}
+      {row.status === "error" && <p className="text-lcars-quinary-ink">{row.resultError}</p>}
       {row.status === "discarded" && (
         <p className="text-lcars-ink-dim">Verworfen, nicht angelegt.</p>
       )}

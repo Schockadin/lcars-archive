@@ -30,7 +30,7 @@ export default function DialogueContentRegeneratePanel() {
       })}
       renderCaption={({ processed, total, totals, done }) =>
         done ? (
-          <span className="text-lcars-primary">
+          <span className="text-lcars-primary-ink">
             Fertig: {totals.changed}{" "}
             {totals.changed === 1 ? "Fließtext" : "Fließtexte"} erzeugt
             {total === 0 ? " (nichts zu tun)" : ""}.

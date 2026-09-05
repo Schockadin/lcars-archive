@@ -160,11 +160,14 @@ test.describe("Charakter-Assistent", () => {
 
     const preview = page.locator("#character-wizard .pf-preview");
     await expect(preview).toBeVisible();
-    // Blatt 1 Personalakte, Blatt 2 Spickzettel, Blatt 3 Biografie.
-    await expect(preview.locator(".pf-doc-title")).toHaveText([
-      "Talents",
+    // Blatt 1 Personalakte, Blatt 2 Spickzettel, Blatt 3 Biografie. Die
+    // Blattnamen stehen im Titelreiter der STA-Kopfzeile (.pf-doc-tab).
+    await expect(preview.locator(".pf-doc-tab")).toHaveText([
+      "Cheat Sheet",
       "Biography",
     ]);
+    // Beide Zusatzblätter tragen die Aufmachung des Hauptblatts.
+    await expect(preview.locator(".pf-doc-wordmark")).toHaveCount(2);
     await expect(preview.getByText("T'Rel").first()).toBeVisible();
     await expect(
       page.locator("#character-wizard .wizard-bar button[type='submit']"),
@@ -263,11 +266,25 @@ test.describe("Bogen-Vorschau", () => {
       "download",
       "",
     );
-    // Alle drei Blätter stehen im Fenster.
-    await expect(overlay.locator(".pf-doc-title")).toHaveText([
-      "Talents",
+    // Alle drei Blätter stehen im Fenster — die Blattnamen im Titelreiter
+    // der STA-Kopfzeile (.pf-doc-tab).
+    await expect(overlay.locator(".pf-doc-tab")).toHaveText([
+      "Cheat Sheet",
       "Biography",
     ]);
+    // Der Spickzettel führt neben den Talenten die Kernregeln (Momentum,
+    // Bedrohung, Entschlossenheit) — siehe src/lib/coreRules.ts — und dahinter
+    // die eigenen Regeln der Runde (DEMO_RULES in der Galerie, in der Anwendung
+    // aus campaign_rules).
+    await expect(
+      overlay.locator(".pf-doc-heading", { hasText: "MOMENTUM AUSGEBEN" }),
+    ).toBeVisible();
+    await expect(
+      overlay.locator(".pf-doc-heading", { hasText: "EIGENE REGELN" }),
+    ).toBeVisible();
+    // 15 Kernregeln (coreRules.ts) + 1 Hausregel aus DEMO_RULES.
+    await expect(overlay.locator(".pf-doc-rule")).toHaveCount(16);
+    await expect(overlay.locator(".pf-doc-wordmark")).toHaveCount(2);
 
     // Escape schließt (useOverlayDismiss) — gleiches Muster wie die übrigen
     // Overlays der Anwendung.

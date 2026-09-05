@@ -3,6 +3,7 @@ import {
   checkCreationFreeCounts,
   checkOpenCreationStats,
   checkTalentsFromCatalog,
+  checkFocusesFromCatalog,
 } from "./characterStatsRules";
 import { EMPTY_CHARACTER_STATS } from "./characterStats";
 import { DEFAULT_ADVANCEMENT_RULES } from "./advancement";
@@ -107,5 +108,36 @@ describe("checkOpenCreationStats", () => {
       talents: ["Bold"],
     });
     expect(checkOpenCreationStats(fine, RULES, CATALOG)).toBeNull();
+  });
+});
+
+describe("checkFocusesFromCatalog", () => {
+  const FOCUS_CATALOG = ["Astrophysics", "Helm Operations", "Diplomacy"];
+
+  it("lässt Katalog-Schwerpunkte durch, unabhängig von Groß-/Kleinschreibung", () => {
+    expect(checkFocusesFromCatalog(["Astrophysics"], FOCUS_CATALOG)).toBeNull();
+    expect(checkFocusesFromCatalog(["helm operations"], FOCUS_CATALOG)).toBeNull();
+  });
+
+  it("meldet einen Schwerpunkt, der nicht im Katalog steht", () => {
+    expect(checkFocusesFromCatalog(["Kaffeekochen"], FOCUS_CATALOG)).toMatch(
+      /Unbekannter Schwerpunkt: Kaffeekochen/,
+    );
+  });
+
+  // Alt-Bestand aus der Freitext-Zeit muss speicherbar bleiben, sonst ließe
+  // sich ein solcher Bogen überhaupt nicht mehr ändern.
+  it("erlaubt bereits gespeicherte Einträge außerhalb des Katalogs", () => {
+    expect(
+      checkFocusesFromCatalog(["Warpfeldtheorie"], FOCUS_CATALOG, [
+        "Warpfeldtheorie",
+      ]),
+    ).toBeNull();
+  });
+
+  // Ist der Katalog leer (Seed noch nicht gelaufen), würde eine harte Prüfung
+  // jedes Speichern blockieren.
+  it("prüft nicht gegen einen leeren Katalog", () => {
+    expect(checkFocusesFromCatalog(["Irgendwas"], [])).toBeNull();
   });
 });

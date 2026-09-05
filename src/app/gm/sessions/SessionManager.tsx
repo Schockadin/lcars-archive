@@ -1,6 +1,7 @@
 "use client";
 import { useActionState, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { formatISODate } from "@/utils/formateISODate";
 import type {
@@ -116,14 +117,13 @@ function NewSessionForm({
         )}
       </fieldset>
 
-      <label className="flex flex-col gap-[4px]">
-        <span className="lcars-eyebrow">Notizen (optional)</span>
-        <textarea
-          name="notes"
-          rows={10}
-          className="lcars-input h-auto w-full"
-        />
-      </label>
+      <div className="flex flex-col gap-[4px]">
+        <label htmlFor="new-session-notes" className="lcars-eyebrow">
+          Notizen (optional)
+        </label>
+        {/* Markdown wie in den übrigen Textfeldern des Projekts. */}
+        <MarkdownEditor id="new-session-notes" name="notes" rows={10} />
+      </div>
 
       <button
         type="submit"
@@ -347,15 +347,20 @@ function SessionRow({
               )}
             </fieldset>
 
-            <label className="flex flex-col gap-[4px]">
-              <span className="lcars-eyebrow">Notizen</span>
-              <textarea
+            <div className="flex flex-col gap-[4px]">
+              <label
+                htmlFor={`session-${session.id}-notes`}
+                className="lcars-eyebrow"
+              >
+                Notizen
+              </label>
+              <MarkdownEditor
+                id={`session-${session.id}-notes`}
                 name="notes"
                 rows={10}
                 defaultValue={session.notes}
-                className="lcars-input h-auto w-full"
               />
-            </label>
+            </div>
             <p className="text-lcars-ink-dim text-[12px]">
               Eingetragen von {session.createdByName ?? "unbekannt"}. Beim
               Speichern werden die Gutschriften dieser Session neu gebucht:
@@ -398,9 +403,11 @@ function SessionRow({
       )}
 
       {!open && session.notes && (
-        <p className="text-lcars-ink-dim text-[13px] line-clamp-2">
-          {session.notes}
-        </p>
+        // Zweizeilige Vorschau des Markdown-Textes (siehe listGameSessions).
+        <div
+          className="text-lcars-ink-dim mission-body line-clamp-2 text-[13px]"
+          dangerouslySetInnerHTML={{ __html: session.notesHtml }}
+        />
       )}
 
       <FormError message={state.error ?? deleteState.error} />
@@ -435,7 +442,7 @@ export default function SessionManager({
   return (
     <div className="flex flex-col gap-[24px]">
       <section className="flex flex-col gap-[12px]">
-        <h2 className="text-lcars-primary">Session eintragen</h2>
+        <h2 className="text-lcars-primary-ink">Session eintragen</h2>
         <NewSessionForm
           characters={characters}
           defaultSessionAp={defaultSessionAp}
@@ -444,7 +451,7 @@ export default function SessionManager({
       </section>
 
       <section className="flex flex-col gap-[12px]">
-        <h2 className="text-lcars-primary">Bisherige Sessions</h2>
+        <h2 className="text-lcars-primary-ink">Bisherige Sessions</h2>
         {sessions.length === 0 ? (
           <p className="lcars-empty-state">Noch keine Session eingetragen.</p>
         ) : (

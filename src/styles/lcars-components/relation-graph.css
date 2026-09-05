@@ -1,0 +1,84 @@
+/* ─── Beziehungsgraph ────────────────────────────────────────────────
+   Inline-SVG auf /characters/beziehungen (RelationGraph.tsx). Keine
+   Diagramm-Bibliothek: gebraucht werden Kreise, Linien und Text.
+
+   Farben kommen aus den Theme-Tokens, damit der Graph jedes Farbschema und
+   den Hellmodus mitmacht. Die Textrollen bewusst als *-ink (im Hellmodus
+   abgedunkelt, siehe tokens.css/color-mode.css) — die Flächen behalten die
+   volle Sättigung.
+──────────────────────────────────────────────────────────────────── */
+
+.relation-graph {
+  display: block;
+  width: 100%;
+  /* Quadratisch wie das Layout (siehe layoutRelationGraph): so bleiben die
+     Abstände auf dem Kreis gleichmäßig, statt in die Breite gezogen zu
+     werden. */
+  aspect-ratio: 1 / 1;
+  max-width: 720px;
+  margin-inline: auto;
+  overflow: visible;
+}
+
+.relation-graph-edge {
+  stroke: var(--lcars-tertiary);
+  stroke-opacity: 0.45;
+  stroke-linecap: round;
+  transition:
+    stroke-opacity 120ms ease,
+    stroke 120ms ease;
+}
+
+.relation-graph-edge.is-dim {
+  stroke-opacity: 0.08;
+}
+
+.relation-graph-node {
+  cursor: pointer;
+  transition: opacity 120ms ease;
+}
+
+.relation-graph-node.is-dim {
+  opacity: 0.25;
+}
+
+.relation-graph-dot {
+  fill: var(--lcars-primary);
+  stroke: var(--lcars-bg);
+  stroke-width: 2;
+}
+
+/* NPCs (Archiv-Einträge) heben sich von den Spielfiguren ab — dieselbe
+   Unterscheidung wie in der Namensliste („· NPC"). */
+.relation-graph-dot.is-npc {
+  fill: var(--lcars-quaternary);
+}
+
+.relation-graph-label {
+  fill: var(--lcars-ink-light);
+  font-family: var(--font-lcars-mono, monospace);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+}
+
+.relation-graph-node:hover .relation-graph-label,
+.relation-graph-node:focus-visible .relation-graph-label {
+  fill: var(--lcars-primary-ink);
+}
+
+/* Der Fokusring muss sichtbar bleiben: ein SVG-<a> bekommt vom Browser
+   keinen brauchbaren Standard-Umriss. */
+.relation-graph-node:focus-visible {
+  outline: 2px solid var(--lcars-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Auf schmalen Geräten sind zwei Dutzend Namen auf einem Kreis nicht mehr
+   lesbar — dort werden die Beschriftungen kleiner, der Graph bleibt als
+   Übersicht erhalten und die Namensliste darunter trägt die Details. */
+@media (max-width: 640px) {
+  .relation-graph-label {
+    font-size: 10px;
+  }
+}

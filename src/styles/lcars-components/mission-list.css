@@ -33,72 +33,13 @@
   border-color: var(--lcars-primary);
 }
 
-/* ── Missions-Chronik ────────────────────────────────────────────── */
-/* Zeitstrahl-Layout: dekorative Jahres-Schiene links, gestapelte
-   Einsatzakten rechts. Status wird ausschließlich über den farbigen
-   Schienen-Balken der Akte (--mission-color) kommuniziert. */
-
-.mission-chronik {
-  display: flex;
-  padding-bottom: 5px;
-}
-
-/* dekorative Jahres-Schiene (Elbow-Optik) */
-.mission-rail {
-  width: 58px;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.mission-rail-cap,
-.mission-rail-foot {
-  height: 36px;
-  display: flex;
-  justify-content: flex-end;
-  padding: 0 8px 5px;
-  font-family: var(--lcars-font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  color: var(--lcars-bg);
-}
-.mission-rail-cap {
-  align-items: flex-end;
-  border-radius: 14px 0 0 0;
-  background: var(--lcars-quaternary);
-}
-.mission-rail-foot {
-  align-items: flex-start;
-  padding: 7px 8px 0;
-  border-radius: 0 0 0 14px;
-  background: var(--lcars-quinary);
-}
-.mission-rail-fill {
-  flex: 1;
-  min-height: 80px;
-  background: var(--lcars-secondary);
-}
-
-/* gestapelte Akten + Spine */
-.mission-list {
-  flex: 1;
-  min-width: 0;
-  padding-left: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  position: relative;
-}
-.mission-list::before {
-  content: "";
-  position: absolute;
-  left: 7px;
-  top: 10px;
-  bottom: 10px;
-  width: 2px;
-  background: var(--lcars-border);
-}
+/* ── Missions-Übersicht ──────────────────────────────────────────── */
+/* Die Liste selbst trägt kein eigenes Layout mehr: die Missionen stehen im
+   Zeitstrahl der Chronologie (.timeline-event in timeline.css, gerendert von
+   ChronoRow.tsx). Vorher lag hier eine dekorative Jahres-Schiene mit zwei
+   farbigen Kappen plus ein zweiter Strich an der Liste — beides ist durch
+   die eine Schiene ersetzt. Status wird weiterhin ausschließlich über den
+   farbigen Balken der Akte (--mission-color) kommuniziert. */
 
 /* einzelne Einsatzakte (Button: öffnet die Log-Liste) */
 .mission-akte {
@@ -139,7 +80,7 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   line-height: 1;
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
   /* Einzeilig mit Ellipsis statt Umbruch — ein einzelner sehr langer Titel
      (v.a. Mission-Logs) soll die Karte nicht in die Breite treiben, siehe
      .mission-log-name/.log-nav-title für dasselbe Muster andernorts. */
@@ -295,19 +236,4 @@
 /* Autor-Gruppe (Sortierung nach Autor) */
 .mission-log-group + .mission-log-group {
   margin-top: 18px;
-}
-
-/* ── Responsive Overrides ─────────────────────────────────────────── */
-
-@media (max-width: 520px) {
-  /* schmal: dekorative Jahres-Schiene + Spine ausblenden */
-  .mission-rail {
-    display: none;
-  }
-  .mission-list {
-    padding-left: 0;
-  }
-  .mission-list::before {
-    display: none;
-  }
 }

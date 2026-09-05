@@ -3,9 +3,10 @@ export type NavKey =
   | "characters"
   | "missions"
   | "archive"
+  | "chronologie"
   // /search hat einen eigenen Nav-Link (Lupe, siehe MAIN_NAV). /rag, /login
   // und /user haben keinen eigenen Nav-Link, brauchen aber einen gültigen
-  // section-Wert für <PageMeta>. (Die frühere /timeline-Seite ist entfernt.)
+  // section-Wert für <PageMeta>.
   | "search"
   | "rag"
   | "login"
@@ -29,8 +30,10 @@ export const MAIN_NAV: NavItem[] = [
   // Label „Datenbank" statt „Archiv" — die Route bleibt /archive (und damit
   // auch der NavKey "archive" sowie alle bestehenden Links/Lesezeichen).
   { id: "03", label: "Datenbank", href: "/archive" },
-  // Suche ersetzt den früheren Timeline-Eintrag im Hauptmenü (Lupe-Icon, siehe
-  // SidebarMenu.tsx). Die Suchseite zeigt oben die Volltextsuche und darunter
-  // den Archiv-Assistenten (für Berechtigte).
-  { id: "04", label: "Suche", href: "/search" },
+  // Die Chronologie stellt dieselben Inhalte nach ihrer eigenen Zeitrechnung
+  // dar (In-Story-Datum), nicht nach Bearbeitungszeit.
+  { id: "04", label: "Chronologie", href: "/chronologie" },
+  // Die Suchseite zeigt oben die Volltextsuche und darunter den
+  // Archiv-Assistenten (für Berechtigte).
+  { id: "05", label: "Suche", href: "/search" },
 ];

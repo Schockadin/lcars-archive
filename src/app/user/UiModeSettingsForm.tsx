@@ -5,7 +5,6 @@ import { SaveFooter } from "@/app/_shared/FormPrimitives";
 import {
   UI_MODE_LCARS,
   UI_MODE_MINIMAL,
-  UI_MODE_MINIMAL_LIGHT,
   isMinimalUiMode,
   normalizeUiMode,
   type UiMode,
@@ -28,15 +27,9 @@ const UI_MODE_OPTIONS: UiModeOption[] = [
   },
   {
     id: UI_MODE_MINIMAL,
-    label: "Minimalistisch (dunkel)",
+    label: "Minimalistisch",
     description:
-      "Schlanke, flache Oberfläche mit Systemschrift auf dunklem Grund — ganz ohne LCARS-Chrome.",
-  },
-  {
-    id: UI_MODE_MINIMAL_LIGHT,
-    label: "Minimalistisch (hell)",
-    description:
-      "Dieselbe schlanke Oberfläche, aber mit hellem Hintergrund und dunklem Text.",
+      "Schlanke, flache Oberfläche mit Systemschrift — ganz ohne LCARS-Chrome. Hell oder dunkel stellst du separat unter „Hell/Dunkel“ ein.",
   },
 ];
 
@@ -46,9 +39,7 @@ function applyPreview(mode: UiMode) {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   if (isMinimalUiMode(mode)) {
-    // data-ui trägt die konkrete Variante ("minimal" oder "minimal-light"),
-    // damit die Live-Vorschau auch das helle Schema zeigt.
-    root.setAttribute("data-ui", mode);
+    root.setAttribute("data-ui", UI_MODE_MINIMAL);
   } else {
     root.removeAttribute("data-ui");
   }
@@ -79,9 +70,7 @@ export default function UiModeSettingsForm({
       <input type="hidden" name="uiMode" value={selected} />
 
       <p className="text-lcars-ink-dim text-[13px]">
-        Wähle, wie die Oberfläche aussehen soll. Die Vorschau erscheint sofort;
-        gespeichert wird sie erst mit „Speichern“ und bleibt dann bei jedem
-        Login erhalten.
+        Die Vorschau erscheint sofort; gespeichert wird sie erst mit „Speichern“.
       </p>
 
       <div
@@ -111,7 +100,7 @@ export default function UiModeSettingsForm({
               <span className="flex flex-col">
                 <span
                   className={`lcars-eyebrow ${
-                    isSelected ? "text-lcars-primary" : "text-lcars-ink-light"
+                    isSelected ? "text-lcars-primary-ink" : "text-lcars-ink-light"
                   }`}
                 >
                   {option.label}

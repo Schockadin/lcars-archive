@@ -169,7 +169,7 @@ export default function ContentLinkToolButton({
         />
 
         {autolink.error && (
-          <p className="text-lcars-quinary text-[13px]" role="alert">
+          <p className="text-lcars-quinary-ink text-[13px]" role="alert">
             {autolink.error}
           </p>
         )}
@@ -208,7 +208,7 @@ export default function ContentLinkToolButton({
         />
 
         {delink.error && (
-          <p className="text-lcars-quinary text-[13px]" role="alert">
+          <p className="text-lcars-quinary-ink text-[13px]" role="alert">
             {delink.error}
           </p>
         )}

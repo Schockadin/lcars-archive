@@ -144,7 +144,7 @@
   margin-top: 4px;
   padding-top: 10px;
   border-top: 1px solid var(--lcars-border);
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
   font-family: var(--lcars-font-mono);
   font-size: 12.5px;
   letter-spacing: 0.04em;
@@ -457,4 +457,20 @@
   .lcars-header-top .lcars-usernav-form {
     width: 84px;
   }
+}
+
+/* Gruppen-Überschrift im Staff-Dropdown (HeaderUserNav.tsx). Das Admin-Menü
+   hat zwölf Einträge — ohne Zwischenüberschriften ist das eine Liste, die man
+   von oben nach unten lesen muss. */
+.lcars-search-group-label {
+  padding: 8px 10px 2px;
+  font-family: var(--lcars-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-dim);
+}
+.lcars-search-dropdown > div + div .lcars-search-group-label {
+  border-top: 1px solid var(--lcars-border);
+  margin-top: 4px;
 }

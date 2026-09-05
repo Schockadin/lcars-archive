@@ -1,11 +1,13 @@
 import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
+import { recordRevision } from "@/lib/contentRevisions";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
 import { Character, CharacterMetadata } from "@/types/character";
 import type { CharacterStats } from "@/types/characterStats";
 import { parseCharacterStats } from "@/lib/characterStats";
+import type { PortraitCrop } from "@/lib/portraitCrop";
 import { MissionLogPreview } from "@/types/missionLog";
 // getCharacterSubscribers lebt in dialoguesCore.ts (ursprünglich für den
 // Dialog-Abschluss gebraucht, siehe dort) und wird hier für die
@@ -414,7 +416,11 @@ export async function updateCharacterBio(
   characterId: number,
   bodyMarkdown: string,
   bio: string,
+  // Wer die Bearbeitung ausgelöst hat — nur für die Versionshistorie. Der
+  // Aufrufer (Autolink-Werkzeug) kennt ihn, die Funktion selbst nicht.
+  editorId: number | null = null,
 ): Promise<void> {
+  await recordRevision("character", characterId, editorId, bodyMarkdown);
   await sql`
     UPDATE characters
     SET bio = ${bio}, source_md = ${bodyMarkdown}, updated_at = NOW()
@@ -441,6 +447,26 @@ export async function generateUniqueCharacterSlug(
     candidate = `${base}-${n}`;
     n += 1;
   }
+}
+
+// Original und Ausschnitt des Portraits für den metadata-Patch.
+//
+// Beide Felder sind optional: fehlen sie im Eingabeobjekt, taucht der
+// Schlüssel gar nicht im Patch auf und der jsonb-||-Merge lässt den
+// gespeicherten Wert stehen. Nur so kann ein Weg, der vom Portrait nichts
+// weiß, keinen bereits gewählten Ausschnitt löschen.
+function portraitMetadata(input: {
+  portraitSource?: string | null;
+  portraitCrop?: PortraitCrop | null;
+}): Record<string, unknown> {
+  const patch: Record<string, unknown> = {};
+  if (input.portraitSource !== undefined) {
+    patch.portraitSource = input.portraitSource;
+  }
+  if (input.portraitCrop !== undefined) {
+    patch.portraitCrop = input.portraitCrop;
+  }
+  return patch;
 }
 
 // Gemeinsame Ableitung für createCharacter/updateOwnCharacterContent: keine
@@ -472,6 +498,9 @@ export async function createCharacter(input: {
   name: string;
   status: Character["status"];
   portrait: string | null;
+  // Original und Ausschnitt des Portraits (siehe src/lib/portraitCrop.ts).
+  portraitSource?: string | null;
+  portraitCrop?: PortraitCrop | null;
   rank: string | null;
   species: string[];
   homeworld: string | null;
@@ -520,6 +549,7 @@ export async function createCharacter(input: {
     tags: input.tags,
     aliases: input.aliases,
     generation: input.generation,
+    ...portraitMetadata(input),
     ...(input.stats ? { stats: input.stats } : {}),
   };
 
@@ -544,6 +574,10 @@ export interface OwnCharacterForEdit {
   name: string;
   status: Character["status"];
   portrait: string | null;
+  // Original und Ausschnitt (siehe src/lib/portraitCrop.ts) — der Editor
+  // öffnet damit denselben Zuschnitt wieder, statt ihn neu erfinden zu lassen.
+  portraitSource: string | null;
+  portraitCrop: unknown;
   rank: string | null;
   species: string[];
   homeworld: string | null;
@@ -606,6 +640,8 @@ export async function getOwnCharacterForEdit(
     name: row.name,
     status: row.status,
     portrait: row.portrait,
+    portraitSource: metadata.portraitSource ?? null,
+    portraitCrop: metadata.portraitCrop ?? null,
     sourceMarkdown: row.sourceMarkdown,
     bioHtml: row.bioHtml,
     isDraft: row.isDraft,
@@ -636,6 +672,10 @@ export async function updateOwnCharacterContent(
     name: string;
     status: Character["status"];
     portrait: string | null;
+    // Original und Ausschnitt des Portraits (siehe src/lib/portraitCrop.ts).
+    // undefined = unverändert lassen; null = löschen.
+    portraitSource?: string | null;
+    portraitCrop?: PortraitCrop | null;
     rank: string | null;
     species: string[];
     homeworld: string | null;
@@ -663,6 +703,13 @@ export async function updateOwnCharacterContent(
     : null;
   const sourceMd = trimmedBody || null;
 
+  await recordRevision(
+    "character",
+    characterId,
+    userId,
+    input.bodyMarkdown.trim() || null,
+  );
+
   const metadataPatch = {
     rank: input.rank,
     species: input.species,
@@ -673,6 +720,7 @@ export async function updateOwnCharacterContent(
     generation: input.generation,
     affiliation: buildAffiliation(input),
     tags: input.tags,
+    ...portraitMetadata(input),
   };
 
   // "wasDraft" (Stand VOR diesem Update) per CTE mitgeliefert — der
@@ -961,6 +1009,13 @@ export async function updateOwnCharacterBio(
   // Siehe createCharacter oben — Opt-in "Automatisch verlinken".
   bioHtmlOverride?: string,
 ): Promise<{ slug: string; name: string; bio: string | null } | null> {
+  await recordRevision(
+    "character",
+    characterId,
+    userId,
+    bodyMarkdown.trim() || null,
+  );
+
   const trimmedBody = bodyMarkdown.trim();
   const bio = trimmedBody
     ? (bioHtmlOverride ?? (await renderContentHtml(trimmedBody)))

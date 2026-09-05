@@ -6,7 +6,7 @@ export default function NotFound() {
     <div className="flex flex-col items-center justify-center gap-[16px] pt-[80px] px-8 text-center">
       {/* Fehlercode – groß und in LCARS-Amber */}
       <div
-        className="font-lcars-mono uppercase tracking-widest text-lcars-primary"
+        className="font-lcars-mono uppercase tracking-widest text-lcars-primary-ink"
         style={{
           fontSize: "clamp(64px, 12vw, 160px)",
           lineHeight: 1,

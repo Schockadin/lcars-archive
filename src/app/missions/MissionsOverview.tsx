@@ -6,7 +6,6 @@ import {
   periodLabel,
   stripHtml,
   synopsisExcerpt,
-  yearOf,
 } from "@/lib/missionFormat";
 import {
   LcarsAkteCard,
@@ -14,10 +13,15 @@ import {
   LcarsListFilterInput,
   type SortDir,
 } from "@/components/lcars";
+import ChronoRow from "@/components/timeline/ChronoRow";
 
-// Übersicht aller Missionen als LCARS-Chronik (Zeitstrahl mit dekorativer
-// Jahres-Schiene). Sortierbar nach Datum (auf-/absteigend) und filterbar
-// nach Log-Autor (Missionen ohne Autor-Treffer werden ausgeblendet).
+// Übersicht aller Missionen als Zeitstrahl — dieselbe Schiene wie die
+// Chronologie (/chronologie): Datum, Linie mit Punkt je Mission, daneben die
+// Einsatzakte. Vorher standen dort zwei farbige Kappen mit dem ersten und
+// letzten Jahr; sie waren Schmuck, das Datum der einzelnen Mission stand
+// nur klein in der Karte. Sortierbar nach Datum (auf-/absteigend) und
+// filterbar nach Log-Autor (Missionen ohne Autor-Treffer werden
+// ausgeblendet).
 export default function MissionsOverview({
   missions,
 }: {
@@ -28,12 +32,6 @@ export default function MissionsOverview({
   const [authorKey, setAuthorKey] = useState<string | null>(null);
   // Freitext-Filter über den Missionstitel.
   const [query, setQuery] = useState("");
-
-  const years = missions
-    .map((m) => yearOf(m.started_at))
-    .filter((y): y is number => y != null);
-  const latestYear = years.length ? Math.max(...years) : null;
-  const earliestYear = years.length ? Math.min(...years) : null;
 
   // Distinkte Autoren über alle Missionen für die Filter-Auswahl.
   const authors = useMemo(() => {
@@ -60,10 +58,6 @@ export default function MissionsOverview({
     });
     return [...filtered].sort((a, b) => cmpStart(a, b, sortDir));
   }, [missions, authorKey, sortDir, query]);
-
-  // Rail-Kappen folgen der Sortierrichtung (oben = erste Akte der Liste).
-  const topCap = sortDir === "desc" ? latestYear : earliestYear;
-  const footCap = sortDir === "desc" ? earliestYear : latestYear;
 
   const activeAuthor = authorKey
     ? authors.find((a) => a.key === authorKey)?.author.name
@@ -123,20 +117,10 @@ export default function MissionsOverview({
               Keine Missionen für diese Filter.
             </p>
           ) : (
-            <div className="mission-chronik">
-              <div className="mission-rail" aria-hidden="true">
-                <div className="mission-rail-cap">{topCap ?? ""}</div>
-                <div className="mission-rail-fill" />
-                <div className="mission-rail-foot">
-                  {footCap && footCap !== topCap ? footCap : ""}
-                </div>
-              </div>
-
-              <div className="mission-list">
-                {visible.map((m) => (
-                  <MissionCard key={m.id} mission={m} />
-                ))}
-              </div>
+            <div>
+              {visible.map((m) => (
+                <MissionCard key={m.id} mission={m} />
+              ))}
             </div>
           )}
         </>
@@ -165,33 +149,36 @@ function MissionCard({ mission }: { mission: MissionPreview }) {
   const code = `M-${String(mission.id).padStart(2, "0")}`;
 
   return (
-    <LcarsAkteCard
-      href={`/missions/${mission.slug}`}
-      color={cfg.color}
-      ariaLabel={`${mission.title} — ${cfg.label}`}
-      title={mission.title}
-      summary={
-        mission.metadata.body ? (
-          synopsisExcerpt(stripHtml(mission.metadata.body))
-        ) : (
-          <span className="lcars-empty-state">
-            Keine Zusammenfassung vorhanden
-          </span>
-        )
-      }
-      meta={
-        <>
-          <span>
-            <b>Code</b> {code}
-          </span>
-          <span>
-            <b>Zeitraum</b> {periodLabel(mission.started_at, mission.ended_at)}
-          </span>
-          <span>
-            <b>Logs</b> {mission.log_count}
-          </span>
-        </>
-      }
-    />
+    <ChronoRow date={mission.started_at} color={cfg.color}>
+      <LcarsAkteCard
+        href={`/missions/${mission.slug}`}
+        color={cfg.color}
+        ariaLabel={`${mission.title} — ${cfg.label}`}
+        title={mission.title}
+        summary={
+          mission.metadata.body ? (
+            synopsisExcerpt(stripHtml(mission.metadata.body))
+          ) : (
+            <span className="lcars-empty-state">
+              Keine Zusammenfassung vorhanden
+            </span>
+          )
+        }
+        meta={
+          <>
+            <span>
+              <b>Code</b> {code}
+            </span>
+            <span>
+              <b>Zeitraum</b>{" "}
+              {periodLabel(mission.started_at, mission.ended_at)}
+            </span>
+            <span>
+              <b>Logs</b> {mission.log_count}
+            </span>
+          </>
+        }
+      />
+    </ChronoRow>
   );
 }

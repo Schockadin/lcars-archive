@@ -10,6 +10,7 @@ import {
 import { PencilIcon, TrashIcon, CheckIcon, XIcon } from "@/lib/icons";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { FormError } from "@/app/_shared/FormPrimitives";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 
 const initialEditState: EditMessageState = {};
 const initialDeleteState: DeleteMessageState = {};
@@ -65,11 +66,14 @@ export default function DialogueMessageActions({
       <form action={editAction} className="flex flex-col gap-[6px] mt-[6px]">
         <input type="hidden" name="messageId" value={messageId} />
         <input type="hidden" name="entrySlug" value={entrySlug} />
-        <textarea
+        {/* Wie im Antwortformular: der Beitrag ist Markdown, also derselbe
+            Editor mit Toolbar und Vorschau. */}
+        <MarkdownEditor
+          id={`dlg-msg-${messageId}-body`}
           name="bodyMarkdown"
           required
+          rows={10}
           defaultValue={sourceMd ?? ""}
-          className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-ink-contrast outline-none focus:border-lcars-primary min-h-[80px] resize-y font-mono"
         />
         {/* Icon- statt Textbuttons (gleiches Muster wie
             PreviewConfirmFooter.tsx/die eigenen Icon-Buttons weiter unten in

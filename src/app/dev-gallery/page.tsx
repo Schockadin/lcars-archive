@@ -9,9 +9,22 @@ import {
 } from "@/components/lcars";
 import CharacterWizard from "@/app/user/characters/new/CharacterWizard";
 import CharacterSheetPreviewOverlay from "@/components/character/CharacterSheetPreviewOverlay";
+import PersonnelFileView from "@/components/character/PersonnelFileView";
+import RelationGraph from "@/components/character/RelationGraph";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
+import TimelineView from "@/components/timeline/TimelineView";
+import MissionsOverview from "@/app/missions/MissionsOverview";
+import SettingsPanel from "@/app/_shared/SettingsPanel";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
+import PortraitPicker from "@/app/user/characters/_shared/PortraitPicker";
+import { buildOnboardingSteps } from "@/lib/onboardingSteps";
+import type { TimelineEvent } from "@/lib/timelineTypes";
+import type { MissionPreview } from "@/types/missions";
 import { DEFAULT_ADVANCEMENT_RULES } from "@/lib/advancement";
 import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
+import type { Focus } from "@/lib/focusCatalog";
+import type { CampaignRule } from "@/lib/campaignRuleTypes";
 
 // Zwei Katalog-Talente reichen für die Auswahl im Werte-Schritt und für den
 // Regeltext auf dem Spickzettel-Blatt — eines ohne, eines mit Voraussetzung.
@@ -32,6 +45,133 @@ const DEMO_TALENTS: Talent[] = [
     description: "Vulcanische Geistesdisziplin gegen Furcht und Beeinflussung.",
   },
 ].map((talent) => ({ ...talent, isCustom: false }) as Talent);
+
+// Dito für den Schwerpunkt-Katalog (siehe /gm/focuses).
+const DEMO_FOCUSES: Focus[] = [
+  { id: 1, name: "Astrophysics", discipline: "science", description: null },
+  { id: 2, name: "Helm Operations", discipline: "conn", description: null },
+  { id: 3, name: "Diplomacy", discipline: "command", description: null },
+].map((focus) => ({ ...focus, isCustom: false }) as Focus);
+
+// Und für die Hausregeln der Runde (siehe /gm/rules).
+const DEMO_RULES: CampaignRule[] = [
+  {
+    id: 1,
+    name: "Kritische Erfolge",
+    body: "Eine gewürfelte 1 zählt als zwei Erfolge — auch ohne passenden Schwerpunkt.",
+    bodyHtml:
+      "<p>Eine gewürfelte 1 zählt als <strong>zwei Erfolge</strong> — auch ohne passenden Schwerpunkt.</p>",
+    sortOrder: 0,
+  },
+];
+
+// Ein kleiner Beziehungsgraph: drei Figuren, zwei Kanten — genug, um Knoten,
+// Kantenstärke und das Hervorheben beim Zeigen zu prüfen (siehe
+// /characters/beziehungen).
+const DEMO_GRAPH = {
+  nodes: [
+    { slug: "tuvok", name: "Tuvok", kind: "character" as const, href: "/characters/tuvok" },
+    { slug: "quark", name: "Barkeeper Quark", kind: "npc" as const, href: "/archive/quark" },
+    { slug: "kira", name: "Kira", kind: "character" as const, href: "/characters/kira" },
+  ],
+  edges: [
+    { source: "kira", target: "tuvok", sharedMissions: 3, sharedDialogues: 1 },
+    { source: "quark", target: "tuvok", sharedMissions: 0, sharedDialogues: 2 },
+  ],
+};
+
+// Einstiegs-Schritte mit halbem Fortschritt (siehe /willkommen): Passwort und
+// Charakter erledigt, der Rest offen.
+const DEMO_ONBOARDING = buildOnboardingSteps({
+  hasPassword: true,
+  characterCount: 1,
+  lockedCharacterCount: 0,
+  logCount: 0,
+  dialogueCount: 0,
+});
+
+// Vier Ereignisse der Chronologie über zwei Jahre und drei Monate: genug für
+// die Jahresleiste, die Monats-Trenner und je ein Beispiel der drei Herkünfte
+// (gepflegte Angabe, Marke im Text, vom Modell abgeleitet).
+const DEMO_TIMELINE: TimelineEvent[] = [
+  {
+    id: "mission:erste:start",
+    date: "2401-03-05",
+    title: "Erste Mission",
+    detail: "Beginn des Einsatzes.",
+    category: "mission",
+    origin: "metadata",
+    sourceType: "mission",
+    sourceTitle: "Erste Mission",
+    href: "/missions/erste-mission",
+    people: ["Tuvok", "Kira"],
+  },
+  {
+    id: "mission_log:log-1:marker-1",
+    date: "2401-03-07",
+    title: "Erstkontakt mit der Sonde",
+    detail: null,
+    category: "discovery",
+    origin: "marker",
+    sourceType: "mission_log",
+    sourceTitle: "Log Eins",
+    href: "/missions/erste-mission/log-1#timeline-1",
+    people: ["Tuvok"],
+  },
+  {
+    id: "inferred:1",
+    date: "2401-03-09",
+    title: "Zwischenfall im Maschinenraum",
+    detail: "Zwei Tage später kam es zu einem Zwischenfall.",
+    category: "conflict",
+    origin: "inferred",
+    sourceType: "mission_log",
+    sourceTitle: "Log Eins",
+    href: "/missions/erste-mission/log-1",
+    people: [],
+  },
+  {
+    id: "character:tuvok:birth",
+    date: "2364-05-11",
+    title: "Tuvok geboren",
+    detail: null,
+    category: "character",
+    origin: "metadata",
+    sourceType: "character",
+    sourceTitle: "Tuvok",
+    href: "/characters/tuvok",
+    people: ["Tuvok"],
+  },
+];
+
+// Zwei Missionen für die Übersicht: unterschiedlicher Status (Farbe des
+// Punktes) und ein offenes Ende („LAUFEND").
+const DEMO_MISSIONS: MissionPreview[] = [
+  {
+    id: 1,
+    slug: "erste-mission",
+    title: "Erste Mission",
+    status: "completed",
+    started_at: "2401-03-05",
+    ended_at: "2401-03-20",
+    metadata: { tags: [], body: "<p>Er sagte Hallo zu ihr.</p>", teaser: null },
+    log_count: 1,
+    authors: [{ name: "Tuvok", slug: "tuvok" }],
+    isDraft: false,
+  },
+  {
+    id: 3,
+    slug: "zweite-mission",
+    title: "Zweite Mission",
+    status: "active",
+    started_at: "2401-06-12",
+    ended_at: null,
+    metadata: { tags: [], body: null, teaser: null },
+    log_count: 2,
+    authors: [{ name: "Kira", slug: "kira" }],
+    isDraft: false,
+  },
+];
 
 // Nur für lokale Playwright-E2E-Läufe (next dev) — testet Layout-Details
 // (Switch-Trenner/-Hintergrund, DataRow-Pillen-Breiten), die jsdom
@@ -105,6 +245,8 @@ export default function DevGalleryPage() {
           isAdminOrGM={false}
           rules={DEFAULT_ADVANCEMENT_RULES}
           talents={DEMO_TALENTS}
+          focuses={DEMO_FOCUSES}
+          campaignRules={DEMO_RULES}
         />
       </section>
 
@@ -134,11 +276,92 @@ export default function DevGalleryPage() {
               },
               bioHtml: "<p>Geboren auf Vulkan.</p>",
               talents: DEMO_TALENTS,
+              campaignRules: DEMO_RULES,
             }}
             downloadUrl="/api/export/character-sheet?id=1"
             onClose={() => setPreviewOpen(false)}
           />
         )}
+      </section>
+
+      {/* Der Bogen als reine Ansicht (siehe /characters/[slug]/sheet). Die
+          Kästchen für Entschlossenheit und Stress sind hier prüfbar, ohne
+          dass es einen Charakter in der Datenbank gäbe — und genau sie muss
+          das PDF nachzeichnen (CharacterSheetPdfDocument.tsx). */}
+      <section id="personnel-file" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Charakterbogen (Ansicht)</h2>
+        <PersonnelFileView
+          characterName="Demo Charakter"
+          rank="Lieutenant"
+          species="Vulkanier"
+          portrait={null}
+          expandable={false}
+          stats={{
+            ...EMPTY_CHARACTER_STATS,
+            determination: 2,
+            attributes: { ...EMPTY_CHARACTER_STATS.attributes, fitness: 9 },
+            values: ["Logik zuerst"],
+          }}
+        />
+      </section>
+
+      <section id="relation-graph" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Beziehungsgraph</h2>
+        <RelationGraph graph={DEMO_GRAPH} />
+      </section>
+
+      <section
+        id="onboarding-checklist"
+        className="flex flex-col gap-[8px] mb-[24px]"
+      >
+        <h2 className="lcars-text">Erste Schritte</h2>
+        <OnboardingChecklist steps={DEMO_ONBOARDING} />
+      </section>
+
+      <section id="settings-panel" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">SettingsPanel</h2>
+        <SettingsPanel title="Nebeneinander" hint="Kopfzeile als Zeile" badge="3">
+          <p className="lcars-text">Inhalt des Panels.</p>
+        </SettingsPanel>
+        <SettingsPanel
+          title="Gestapelt"
+          hint="Kopfzeile untereinander"
+          badge="3"
+          stacked
+        >
+          <p className="lcars-text">Inhalt des Panels.</p>
+        </SettingsPanel>
+      </section>
+
+      <section
+        id="markdown-editor"
+        className="flex flex-col gap-[8px] mb-[24px]"
+      >
+        <h2 className="lcars-text">Markdown-Editor (10 Zeilen)</h2>
+        <MarkdownEditor id="demo-markdown" rows={10} defaultValue="**Text**" />
+      </section>
+
+      {/* Die Missions-Übersicht (/missions) mit Attrappen-Missionen: sie
+          trägt dieselbe Zeitstrahl-Schiene wie die Chronologie darüber. Die
+          echte Seite braucht die Datenbank. */}
+      <section id="missions" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Missions-Übersicht</h2>
+        <MissionsOverview missions={DEMO_MISSIONS} />
+      </section>
+
+      {/* Die Chronologie (/chronologie) mit Attrappen-Ereignissen: die echte
+          Seite braucht die Datenbank und die Sichtbarkeit des Betrachters. */}
+      <section id="timeline" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Chronologie</h2>
+        <TimelineView events={DEMO_TIMELINE} />
+      </section>
+
+      {/* Portrait wählen und zuschneiden (Stammdaten der eigenen
+          Charakterseite). Die echte Seite braucht Login und Datenbank; die
+          Komponente selbst ist reine Client-Logik. */}
+      <section id="portrait-picker" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Portrait-Zuschnitt</h2>
+        <PortraitPicker idPrefix="gallery" />
       </section>
 
       <section className="flex flex-col gap-[10px]">

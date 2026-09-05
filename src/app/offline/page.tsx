@@ -27,7 +27,7 @@ export default function OfflinePage() {
             abrufbar — neue Inhalte, Anmeldung und das Speichern von Änderungen
             brauchen jedoch eine Verbindung.
           </p>
-          <p className="text-lcars-primary">
+          <p className="text-lcars-primary-ink">
             Sobald du wieder online bist, lädt die App automatisch die aktuellen
             Daten nach.
           </p>
