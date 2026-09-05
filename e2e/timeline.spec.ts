@@ -50,6 +50,44 @@ test.describe("Chronologie", () => {
     await expect(page.locator("#timeline .timeline-event")).toHaveCount(4);
   });
 
+  test("stellt das neueste Jahr nach links", async ({ page }) => {
+    const years = await page
+      .locator("#timeline .timeline-year")
+      .allTextContents();
+    expect(years).toEqual(["Alle", "2401", "2364"]);
+  });
+
+  test("bietet kein Jahr an, in dem die übrigen Filter nichts übrig lassen", async ({
+    page,
+  }) => {
+    // Alle Konflikte der Attrappe liegen in 2401 — 2364 hat dann nichts mehr
+    // beizutragen. Es bleibt ein einziges Jahr, also gibt es auch nichts mehr
+    // auszuwählen und die Leiste verschwindet.
+    await page.locator("#timeline select").selectOption({ label: "Konflikt" });
+    await expect(page.locator("#timeline .timeline-year")).toHaveCount(0);
+  });
+
+  test("lässt ein leer gefiltertes Jahr trotzdem abwählbar", async ({
+    page,
+  }) => {
+    // 2364 wählen, dann auf Konflikte einschränken: 2364 hat keinen Treffer
+    // mehr, muss aber sichtbar bleiben — sonst steht man vor einer leeren
+    // Liste, deren Ursache man nicht mehr anklicken kann.
+    await page
+      .locator("#timeline .timeline-year")
+      .filter({ hasText: "2364" })
+      .click();
+    await page.locator("#timeline select").selectOption({ label: "Konflikt" });
+    await expect(page.locator("#timeline .timeline-event")).toHaveCount(0);
+
+    const jahr2364 = page
+      .locator("#timeline .timeline-year")
+      .filter({ hasText: "2364" });
+    await expect(jahr2364).toHaveAttribute("aria-pressed", "true");
+    await jahr2364.click();
+    await expect(page.locator("#timeline .timeline-event")).toHaveCount(1);
+  });
+
   test("filtert über die Suche in Titel, Text und Beteiligten", async ({
     page,
   }) => {

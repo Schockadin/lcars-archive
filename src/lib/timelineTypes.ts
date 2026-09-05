@@ -210,10 +210,15 @@ export function periodKey(date: string): string {
   return date.slice(0, 7);
 }
 
-// Alle Jahre, in denen mindestens ein Ereignis liegt — aufsteigend, für die
-// Jahresleiste über der Liste.
+// Alle Jahre, in denen mindestens ein Ereignis liegt — NEUESTE ZUERST, wie die
+// Liste darunter in ihrer Voreinstellung.
+//
+// Die Jahresleiste wird bewusst aus den bereits nach Suche und Ereignisart
+// gefilterten Ereignissen gebaut (siehe TimelineView): ein Jahr anzubieten,
+// das mit den übrigen Filtern keinen einzigen Treffer hat, führt nur in eine
+// leere Liste.
 export function yearsOf(events: TimelineEvent[]): string[] {
-  return [...new Set(events.map((e) => yearOf(e.date)))].sort();
+  return [...new Set(events.map((e) => yearOf(e.date)))].sort().reverse();
 }
 
 // Filter der Ansicht. Als reine Funktion, damit die Kombination aus Suche,

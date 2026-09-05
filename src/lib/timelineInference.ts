@@ -5,6 +5,7 @@ import type { Viewer } from "@/lib/visibility";
 import {
   EVENT_CATEGORIES,
   isIsoDate,
+  parseTimelineMarkers,
   type TimelineSourceType,
 } from "@/lib/timelineTypes";
 import { cacheTags } from "@/lib/cacheTags";
@@ -54,6 +55,7 @@ Regeln:
 - Jedes Element: {"date":"JJJJ-MM-TT","title":"kurz","detail":"ein bis zwei Sätze","category":"…","confidence":0.0-1.0}
 - category ist einer von: ${CATEGORY_KEYS.join(", ")}.
 - Nimm nur Ereignisse auf, deren Datum im Text steht oder sich aus den genannten Ankerdaten eindeutig ausrechnen lässt ("drei Tage später"). Lässt sich ein Datum nicht bestimmen, lass das Ereignis weg.
+- Die unten genannten bekannten Datumsangaben stehen bereits in der Chronologie. Wiederhole sie NICHT — sie dienen nur als Rechenhilfe für relative Angaben. Nimm nur auf, was zusätzlich im Text steht.
 - Erfinde nichts. Was nicht im Text steht, kommt nicht ins Array.
 - Höchstens ${MAX_INFERRED_PER_RUN} Ereignisse, die wichtigsten zuerst.
 - Titel auf Deutsch, ohne Anführungszeichen, höchstens 80 Zeichen.
@@ -128,6 +130,30 @@ export function parseInferredEvents(raw: string): InferredEventCandidate[] {
   return out;
 }
 
+// Ereignisse an Tagen wegwerfen, die die Quelle ohnehin schon beisteuert.
+//
+// Eine Mission trägt ihr Start- und Enddatum als gepflegte Angabe, ein Logbuch
+// sein Datum, eine Marke im Text ihres. Das Modell liest denselben Text und
+// meldet diese Tage gern noch einmal — dann stünden zwei Karten desselben
+// Eintrags am selben Tag auf dem Zeitstrahl, eine davon mit dem schwächeren
+// Anspruch „abgeleitet". Abgeleitet wird also nur, was der Eintrag NICHT
+// bereits selbst hergibt.
+//
+// Bewusst über das Datum und nicht über den Titel: dass das Modell die Mission
+// „Erste Mission" als „Beginn des Einsatzes auf Deep Space Nine" betitelt, ist
+// der Normalfall — ein Titelvergleich würde die Dopplung durchlassen. Der Preis
+// ist, dass ein echtes zweites Ereignis am selben Tag derselben Quelle
+// wegfällt; der Tag steht dann trotzdem in der Chronologie, mit Link auf
+// denselben Eintrag.
+export function dropKnownDates(
+  candidates: InferredEventCandidate[],
+  knownDates: readonly string[],
+): InferredEventCandidate[] {
+  const known = new Set(knownDates.filter(Boolean));
+  if (known.size === 0) return candidates;
+  return candidates.filter((candidate) => !known.has(candidate.date));
+}
+
 // Die Ankerdaten eines Inhalts, damit das Modell relative Angaben auflösen
 // kann. Exportiert, weil die Zusammenstellung für sich prüfbar ist.
 export function anchorLines(anchors: Record<string, string | null>): string {
@@ -182,7 +208,14 @@ export async function inferEvents(
     },
   ]);
 
-  return parseInferredEvents(raw);
+  // Was der Eintrag selbst schon beisteuert, braucht es nicht abgeleitet:
+  // seine gepflegten Datumsangaben und die Tage seiner Marken im Text.
+  const knownDates = [
+    ...Object.values(input.anchors),
+    ...parseTimelineMarkers(body).map((marker) => marker.date),
+  ].filter((date): date is string => Boolean(date));
+
+  return dropKnownDates(parseInferredEvents(raw), knownDates);
 }
 
 // ---------------------------------------------------------------------------

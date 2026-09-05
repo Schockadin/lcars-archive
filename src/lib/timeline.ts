@@ -208,6 +208,26 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     string,
     { title: string; href: string; sourceType: TimelineSourceType }
   >();
+  // Quelle + Tag jedes Ereignisses, das der Eintrag selbst hergibt (gepflegte
+  // Angabe oder Marke). Ein abgeleitetes Ereignis auf demselben Tag derselben
+  // Quelle wäre eine Dopplung — siehe die Begründung weiter unten.
+  const deterministicDays = new Set<string>();
+  const dayKey = (
+    sourceType: TimelineSourceType,
+    slug: string,
+    date: string,
+  ) => `${sourceType}:${slug}|${date}`;
+  // Ereignisse einsammeln UND ihren Tag vermerken. Beides an einer Stelle,
+  // damit die Sammlung nicht vergessen wird, wenn eine Quelle dazukommt.
+  const addDeterministic = (
+    slug: string,
+    ...added: TimelineEvent[]
+  ): void => {
+    for (const event of added) {
+      events.push(event);
+      deterministicDays.add(dayKey(event.sourceType, slug, event.date));
+    }
+  };
 
   // ── Missionen ────────────────────────────────────────────────────────────
   // Missionen kennen keine Sichtbarkeit, nur Entwurfsstatus (siehe
@@ -223,7 +243,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     });
 
     if (mission.started_at) {
-      events.push({
+      addDeterministic(mission.slug, {
         id: eventId("mission", mission.slug, "start"),
         date: mission.started_at,
         title: mission.title,
@@ -239,7 +259,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     // Ein Ende am selben Tag wie der Beginn wäre auf dem Zeitstrahl eine
     // Dopplung — dann steht nur der Beginn da.
     if (mission.ended_at && mission.ended_at !== mission.started_at) {
-      events.push({
+      addDeterministic(mission.slug, {
         id: eventId("mission", mission.slug, "end"),
         date: mission.ended_at,
         title: mission.title,
@@ -252,7 +272,8 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
         people,
       });
     }
-    events.push(
+    addDeterministic(
+      mission.slug,
       ...markerEvents(mission.source_md, {
         sourceType: "mission",
         slug: mission.slug,
@@ -276,7 +297,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     });
 
     if (log.log_date) {
-      events.push({
+      addDeterministic(log.slug, {
         id: eventId("mission_log", log.slug, "date"),
         date: log.log_date,
         title: log.title,
@@ -289,7 +310,8 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
         people,
       });
     }
-    events.push(
+    addDeterministic(
+      log.slug,
       ...markerEvents(log.source_md, {
         sourceType: "mission_log",
         slug: log.slug,
@@ -329,7 +351,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
         : null;
     const date = logDate ?? dateFromAttributes(metadata);
     if (date) {
-      events.push({
+      addDeterministic(entry.slug, {
         id: eventId("archive_entry", entry.slug, "date"),
         date,
         title: entry.title,
@@ -345,7 +367,8 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
         people: participants,
       });
     }
-    events.push(
+    addDeterministic(
+      entry.slug,
       ...markerEvents(entry.source_md, {
         sourceType: "archive_entry",
         slug: entry.slug,
@@ -376,7 +399,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
         ? metadata.dateOfBirth.trim()
         : null;
     if (birth) {
-      events.push({
+      addDeterministic(character.slug, {
         id: eventId("character", character.slug, "birth"),
         date: birth,
         title: `${character.name} geboren`,
@@ -391,7 +414,8 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     }
     // Die Biografie liegt als source_md an der Akte; ältere Datensätze haben
     // nur bio (gerendertes HTML) — Marker stehen in beiden als Kommentar.
-    events.push(
+    addDeterministic(
+      character.slug,
       ...markerEvents(character.source_md ?? character.bio, {
         sourceType: "character",
         slug: character.slug,
@@ -405,9 +429,23 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
   // ── Abgeleitete Ereignisse ───────────────────────────────────────────────
   // Sie hängen an der Sichtbarkeit ihres Quell-Inhalts: ist der für diese
   // Person nicht sichtbar (oder inzwischen gelöscht), fällt das Ereignis weg.
+  //
+  // Und sie treten hinter das zurück, was der Eintrag selbst hergibt: steht an
+  // diesem Tag von derselben Quelle schon eine gepflegte Angabe oder eine
+  // Marke, ist das Abgeleitete eine Dopplung. Die Ableitung filtert das schon
+  // beim Speichern (dropKnownDates in timelineInference.ts) — hier steht das
+  // Netz für Zeilen, die vor dieser Regel entstanden sind oder deren Quelle
+  // ihr Datum seither bekommen hat.
   for (const row of inferred) {
     const source = visibleSources.get(`${row.source_type}:${row.source_slug}`);
     if (!source) continue;
+    if (
+      deterministicDays.has(
+        dayKey(row.source_type, row.source_slug, row.event_date),
+      )
+    ) {
+      continue;
+    }
     events.push({
       id: `inferred:${row.id}`,
       date: row.event_date,

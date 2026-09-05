@@ -37,14 +37,29 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
   const [category, setCategory] = useState<string | null>(null);
   const [year, setYear] = useState<string | null>(null);
 
-  const years = useMemo(() => yearsOf(events), [events]);
-
   // Nur die Kategorien anbieten, die auch vorkommen — eine Auswahl, die
   // garantiert null Treffer liefert, hilft niemandem.
   const categories = useMemo(() => {
     const present = new Set(events.map((e) => e.category));
     return EVENT_CATEGORIES.filter((c) => present.has(c.key));
   }, [events]);
+
+  // Die Jahresleiste zeigt nur Jahre, in denen unter den ÜBRIGEN Filtern noch
+  // etwas liegt: sie wird aus den nach Suche und Ereignisart gefilterten
+  // Ereignissen gebaut, aber ohne den Jahresfilter selbst — sonst bliebe nach
+  // dem ersten Klick nur noch das gewählte Jahr stehen.
+  const years = useMemo(() => {
+    const withMatches = yearsOf(
+      filterEvents(events, { query, category, year: null }),
+    );
+    // Das gewählte Jahr bleibt in der Leiste, auch wenn ein anderer Filter
+    // ihm alle Treffer genommen hat: sonst stünde man vor einer leeren Liste,
+    // deren Ursache man nicht mehr sieht und nicht mehr anklicken kann.
+    if (year && !withMatches.includes(year)) {
+      return [...withMatches, year].sort().reverse();
+    }
+    return withMatches;
+  }, [events, query, category, year]);
 
   const visible = useMemo(
     () => sortEvents(filterEvents(events, { query, category, year }), sortDir),
@@ -105,8 +120,13 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
             )}
           </div>
 
-          {years.length > 1 && (
+          {/* Bei nur einem Jahr gibt es nichts auszuwählen — außer der Filter
+              läuft gerade, dann muss er sich zurücknehmen lassen. */}
+          {(years.length > 1 || year !== null) && (
             <div className="timeline-yearbar" role="group" aria-label="Jahr">
+              {/* „Alle" bleibt immer stehen — auch dann, wenn das gewählte
+                  Jahr durch einen anderen Filter aus der Leiste gefallen ist,
+                  muss sich die Auswahl zurücknehmen lassen. */}
               <button
                 type="button"
                 className="timeline-year"

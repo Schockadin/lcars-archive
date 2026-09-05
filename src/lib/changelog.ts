@@ -104,6 +104,10 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "Das Portrait füllt jetzt das Bildfeld des Charakterbogens aus und ist oben links passend zur Vorlage schräg abgeschnitten — vorher stand ein hochformatiges Bild als schmaler Streifen mit weißen Rändern darin.",
       },
       {
+        text: "In der Chronologie steht das neueste Jahr jetzt ganz links, und die Jahresleiste zeigt nur noch Jahre, in denen bei der aktuellen Auswahl auch etwas liegt. Was das Sprachmodell an einem Tag ableitet, den der Eintrag ohnehin schon führt (etwa den Missionsbeginn), erscheint nicht mehr doppelt.",
+        tutorial: "chronologie",
+      },
+      {
         text: "Die Chronologie ist zurück: „Chronologie“ im Hauptmenü zeigt die ganze Kampagne als Zeitstrahl — von der ältesten bis zur jüngsten Begebenheit, mit Sortierung, Suche, Filter nach Ereignisart und Jahresleiste. Jede Karte führt zu dem Eintrag, aus dem das Ereignis stammt; zu sehen ist nur, was du ohnehin lesen darfst.",
         tutorial: "chronologie",
       },

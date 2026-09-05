@@ -137,14 +137,34 @@ describe("periodLabel", () => {
 });
 
 describe("yearsOf", () => {
-  it("nennt jedes Jahr genau einmal, aufsteigend", () => {
+  it("nennt jedes Jahr genau einmal, neueste zuerst", () => {
     expect(
       yearsOf([
-        event({ date: "2402-01-01" }),
         event({ date: "2401-06-12" }),
+        event({ date: "2402-01-01" }),
         event({ date: "2401-03-05" }),
       ]),
-    ).toEqual(["2401", "2402"]);
+    ).toEqual(["2402", "2401"]);
+  });
+
+  it("nennt nur Jahre, in denen tatsächlich etwas liegt", () => {
+    // Die Leiste entsteht aus den bereits gefilterten Ereignissen (siehe
+    // TimelineView): ein Jahr ohne Treffer darf gar nicht erst angeboten
+    // werden.
+    const events = [
+      event({ date: "2401-03-05", category: "mission" }),
+      event({ date: "2402-01-01", category: "conflict" }),
+    ];
+    const nurKonflikte = filterEvents(events, {
+      query: "",
+      category: "conflict",
+      year: null,
+    });
+    expect(yearsOf(nurKonflikte)).toEqual(["2402"]);
+  });
+
+  it("bleibt bei einer leeren Liste leer", () => {
+    expect(yearsOf([])).toEqual([]);
   });
 });
 

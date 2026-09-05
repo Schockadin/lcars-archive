@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   MAX_INFERRED_PER_RUN,
   anchorLines,
+  dropKnownDates,
   parseInferredEvents,
 } from "./timelineInference";
 
@@ -116,5 +117,46 @@ describe("anchorLines", () => {
 
   it("sagt es dem Modell, wenn es gar keine Anker gibt", () => {
     expect(anchorLines({ Missionsbeginn: null })).toContain("keine");
+  });
+});
+
+describe("dropKnownDates", () => {
+  const kandidat = (date: string, title = "X") => ({
+    date,
+    title,
+    detail: null,
+    category: "other",
+    confidence: null,
+  });
+
+  it("wirft weg, was der Eintrag schon selbst beisteuert", () => {
+    // Eine Mission trägt ihr Startdatum als gepflegte Angabe — das Modell
+    // meldet denselben Tag gern noch einmal.
+    expect(
+      dropKnownDates(
+        [kandidat("2401-03-05", "Beginn des Einsatzes"), kandidat("2401-03-09")],
+        ["2401-03-05"],
+      ).map((c) => c.date),
+    ).toEqual(["2401-03-09"]);
+  });
+
+  it("vergleicht über das Datum, nicht über den Titel", () => {
+    // Dass das Modell die Mission anders betitelt als die Übersicht, ist der
+    // Normalfall; ein Titelvergleich ließe die Dopplung durch.
+    expect(
+      dropKnownDates([kandidat("2401-03-05", "Ganz anderer Titel")], [
+        "2401-03-05",
+      ]),
+    ).toEqual([]);
+  });
+
+  it("lässt alles stehen, wenn der Eintrag kein Datum führt", () => {
+    const kandidaten = [kandidat("2401-03-05"), kandidat("2401-03-09")];
+    expect(dropKnownDates(kandidaten, [])).toEqual(kandidaten);
+  });
+
+  it("übergeht leere Einträge in der Liste der bekannten Daten", () => {
+    const kandidaten = [kandidat("2401-03-05")];
+    expect(dropKnownDates(kandidaten, ["", "2402-01-01"])).toEqual(kandidaten);
   });
 });
