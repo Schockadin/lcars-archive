@@ -417,6 +417,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   YAML-Frontmatter) oder als PDF (serverseitig erzeugt, ohne Chromium/
   Puppeteer — läuft dadurch auf Netlify Functions). Berücksichtigt dieselbe
   Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst.
+- **Kampagnenband als PDF** — `/api/export/campaign-book` (Knopf auf der
+  Missions-Übersicht, nur für Angemeldete) bündelt den gesamten
+  Kampagnenverlauf in einer Datei: Titelseite, Inhaltsverzeichnis, danach je
+  Mission ihre Beschreibung und alle Logbücher, chronologisch ab der ältesten
+  Mission. Der Inhalt richtet sich nach der Sichtbarkeit der anfordernden
+  Person — dieselbe `canView`-Regel wie auf den Inhaltsseiten, angewandt in
+  `src/lib/campaignBook.ts`; nicht öffentliche Logbücher sind im Band als
+  solche gekennzeichnet. Bewusst ungecacht: der Band hängt am Betrachter, ein
+  Cache wäre ein Cache je Konto. Layout: `src/lib/pdf/CampaignBookPdfDocument.tsx`
+  (Lesezeichen je Mission, Seitenzahlen in der Fußzeile).
 - **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und
   automatische bzw. manuelle Verlinkung (`[[Wikilinks]]`) zwischen Inhalten.
 - **Bilder-Galerie** — Charaktere, Missionen, Missionslogs und Datenbank-Einträge

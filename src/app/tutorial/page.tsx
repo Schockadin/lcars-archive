@@ -511,6 +511,16 @@ export default function TutorialPage() {
                 Gesprächen fehlt er bewusst, da sich deren Inhalt noch ändert.
               </p>
               <p>
+                Auf der <strong>Missions-Übersicht</strong> steht angemeldet
+                der Knopf <strong>„Kampagnenband (PDF)“</strong>: er packt den
+                ganzen Kampagnenverlauf in eine Datei — Titelseite,
+                Inhaltsverzeichnis und danach jede Mission mit ihrer
+                Beschreibung und allen Logbüchern, chronologisch von der
+                ältesten Mission an. Der Band enthält genau das, was du auch
+                sonst lesen darfst; nicht öffentliche Logbücher stehen darin
+                mit einem entsprechenden Hinweis.
+              </p>
+              <p>
                 Auf der Seite deines eigenen Charakters (und für die
                 Spielleitung auf jeder Charakterseite) steht außerdem der Knopf{" "}
                 <strong>„Charakterbogen“</strong>: er zeigt dieselben drei
