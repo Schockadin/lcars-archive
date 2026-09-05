@@ -20,6 +20,10 @@ import {
   Text,
   View,
   Image,
+  Svg,
+  Defs,
+  ClipPath,
+  Polygon,
   StyleSheet,
   renderToBuffer,
 } from "@react-pdf/renderer";
@@ -32,8 +36,10 @@ import {
   LIST_BOXES,
   PHOTO_BOX,
   RESISTANCE_BOX,
+  STRESS_POINTS,
   STRESS_VALUE_BOX,
   type Box,
+  type Point,
 } from "@/lib/personnelFileLayout";
 import {
   ATTRIBUTE_FIELDS,
@@ -57,8 +63,12 @@ const PAGE_HEIGHT = 1056 * PT_PER_PX;
 
 // Farben des gedruckten Bogens (aus der Grafik entnommen).
 const INK = "#555555";
-const SHEET_BLUE = "#3b7fb0";
+const SHEET_BLUE = "#3f84b5";
 const SHEET_BLUE_DIM = "#8fb4d0";
+// Die Akzentfarbe zu 20 % auf Weiß — dasselbe Ergebnis wie opacity: 0.2 am
+// Bildschirm (.pf-check--out). @react-pdf reicht opacity nicht in SVG durch,
+// deshalb die ausgerechnete Farbe.
+const SHEET_BLUE_FADED = "#d8e6f0";
 
 // Markenzeile am Blattfuß — dieselbe wie auf dem gedruckten Bogen (Blatt 1),
 // damit Spickzettel und Biografie erkennbar zum selben Dokument gehören.
@@ -96,16 +106,28 @@ const styles = StyleSheet.create({
   // damit der Wert unter seiner gedruckten Beschriftung sitzt.
   field: {
     fontSize: pt(10),
-    paddingTop: pt(13),
+    lineHeight: 1.25,
+    paddingTop: pt(15),
     paddingLeft: pt(7),
     paddingRight: pt(7),
   },
   // Attribute/Disziplinen: rechtsbündig neben der gedruckten Beschriftung.
   stat: {
     fontSize: pt(11),
+    lineHeight: 1.25,
     textAlign: "right",
-    paddingTop: pt(7),
+    paddingTop: pt(8),
     paddingRight: pt(10),
+  },
+  // Der maximale Stress steht in einem eigenen, schmalen Kasten ohne
+  // gedruckte Beschriftung — dort ist mittig richtig (.pf-static--stress).
+  stress: {
+    fontSize: pt(11),
+    lineHeight: 1.25,
+    textAlign: "center",
+    paddingTop: pt(8),
+    paddingLeft: pt(7),
+    paddingRight: pt(7),
   },
   listLine: {
     fontSize: pt(10),
@@ -319,6 +341,92 @@ export interface CharacterSheetPdfInput {
   bioMarkdown?: string | null;
 }
 
+// Das Portrait im Bildkasten oben links. Es füllt den Kasten (wie
+// object-fit: cover am Bildschirm) und ist oben links unter 45° angeschnitten,
+// damit es die gedruckte Schräge des Kastens aufnimmt — dieselben Anteile wie
+// .pf-photo (33 % der Breite, 30 % der Höhe). @react-pdf kennt kein clip-path;
+// der Zuschnitt läuft deshalb über eine SVG-Maske.
+// <Image> ist bei @react-pdf dieselbe Komponente für Seite und SVG, die Typen
+// kennen aber nur die Seiten-Variante (kein x/y/preserveAspectRatio/clipPath).
+const SvgImage = Image as unknown as React.ComponentType<{
+  src: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  clipPath?: string;
+}>;
+
+const PHOTO_BEVEL_X = PHOTO_BOX.width * 0.33;
+const PHOTO_BEVEL_Y = PHOTO_BOX.height * 0.3;
+
+function Portrait({ src }: { src: string }) {
+  const { width: w, height: h } = PHOTO_BOX;
+  return (
+    <>
+      {/* Das Bild füllt den Kasten. objectFit gibt es nur an der Seiten-Variante
+          von <Image> — die SVG-Variante ignoriert preserveAspectRatio und würde
+          das Bild verzerren. */}
+      <Image
+        style={{ ...boxStyle(PHOTO_BOX), objectFit: "cover" }}
+        src={src}
+      />
+      {/* Die Schräge oben links: statt das Bild zu beschneiden (clip-path kennt
+          @react-pdf nicht), wird die Ecke des Bogens noch einmal ÜBER das Bild
+          gelegt — dieselbe Grafik, auf das Dreieck beschnitten. So bleibt die
+          gedruckte Schräglinie sichtbar, genau wie am Bildschirm. */}
+      <Svg style={boxStyle(PHOTO_BOX)} viewBox={`0 0 ${w} ${h}`}>
+        <Defs>
+          <ClipPath id="pf-photo-bevel">
+            <Polygon points={`0,0 ${PHOTO_BEVEL_X},0 0,${PHOTO_BEVEL_Y}`} />
+          </ClipPath>
+        </Defs>
+        <SvgImage
+          src={PERSONNEL_FILE_ART_PNG}
+          x={-PHOTO_BOX.left}
+          y={-PHOTO_BOX.top}
+          width={816}
+          height={1056}
+          clipPath="url(#pf-photo-bevel)"
+        />
+      </Svg>
+    </>
+  );
+}
+
+// Ein Kästchen der Reihen „Entschlossenheit" und „Stress" — dieselbe Optik wie
+// .pf-check am Bildschirm: weißer Kasten mit dünnem Rand in der Akzentfarbe,
+// gefüllt wenn gesetzt, blass wenn der Charakter das Kästchen nicht nutzt.
+function CheckBox({
+  point,
+  size,
+  filled,
+  dim = false,
+}: {
+  point: Point;
+  size: number;
+  filled: boolean;
+  dim?: boolean;
+}) {
+  const color = dim ? SHEET_BLUE_FADED : SHEET_BLUE;
+  return (
+    <View
+      style={{
+        position: "absolute",
+        left: pt(point.left),
+        top: pt(point.top),
+        width: pt(size),
+        height: pt(size),
+        borderWidth: pt(1),
+        borderStyle: "solid",
+        borderColor: color,
+        borderRadius: pt(3),
+        backgroundColor: filled ? color : "#ffffff",
+      }}
+    />
+  );
+}
+
 function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
   const { stats } = input;
   const attributes = stats.attributes as unknown as Record<string, number | null>;
@@ -332,12 +440,7 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
       {/* Das Portrait im Bildkasten oben links. Fehlt es oder ist es nicht
           abrufbar, bleibt der Kasten leer — ein fehlgeschlagener Bild-Download
           darf den Export nicht scheitern lassen (siehe renderCharacterSheetPdf). */}
-      {input.portrait && (
-        <Image
-          style={{ ...boxStyle(PHOTO_BOX), objectFit: "contain" }}
-          src={input.portrait}
-        />
-      )}
+      {input.portrait && <Portrait src={input.portrait} />}
 
       <Field box={HEAD_BOXES.name} value={input.name} />
       <Field box={HEAD_BOXES.pronouns} value={stats.pronouns} />
@@ -380,42 +483,35 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
 
       {stats.resistance !== null && (
         <View style={boxStyle(RESISTANCE_BOX)}>
-          <Text style={{ ...styles.stat, paddingTop: pt(11) }}>
-            {stats.resistance}
-          </Text>
+          <Text style={styles.stat}>{stats.resistance}</Text>
         </View>
       )}
       {maxStress !== null && (
         <View style={boxStyle(STRESS_VALUE_BOX)}>
-          <Text
-            style={{
-              fontSize: pt(11),
-              textAlign: "center",
-              paddingTop: pt(11),
-            }}
-          >
-            {maxStress}
-          </Text>
+          <Text style={styles.stress}>{maxStress}</Text>
         </View>
       )}
 
-      {/* Entschlossenheit: gefüllte Kästchen. Die Stress-Reihe bleibt leer —
-          sie wird am Spieltisch abgestrichen. */}
-      {DETERMINATION_POINTS.slice(0, stats.determination ?? 0).map(
-        (point, index) => (
-          <View
-            key={index}
-            style={{
-              position: "absolute",
-              left: pt(point.left + 3),
-              top: pt(point.top + 3),
-              width: pt(12),
-              height: pt(12),
-              backgroundColor: SHEET_BLUE,
-            }}
-          />
-        ),
-      )}
+      {/* Entschlossenheit: gefüllte Kästchen, so viele wie der Charakter hat.
+          Die Stress-Reihe bleibt leer — sie wird am Spieltisch abgestrichen;
+          Kästchen jenseits des Maximums stehen blass da (wie .pf-check--out). */}
+      {DETERMINATION_POINTS.map((point, index) => (
+        <CheckBox
+          key={index}
+          point={point}
+          size={18}
+          filled={index < (stats.determination ?? 0)}
+        />
+      ))}
+      {STRESS_POINTS.map((point, index) => (
+        <CheckBox
+          key={index}
+          point={point}
+          size={20}
+          filled={false}
+          dim={maxStress === null || index >= maxStress}
+        />
+      ))}
 
       <ListBox box={LIST_BOXES.values} entries={stats.values} />
       <ListBox box={LIST_BOXES.focuses} entries={stats.focuses} />

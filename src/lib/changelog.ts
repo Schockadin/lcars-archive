@@ -103,6 +103,9 @@ export const CHANGELOG: ChangelogEntry[] = [
       {
         text: "Das Portrait füllt jetzt das Bildfeld des Charakterbogens aus und ist oben links passend zur Vorlage schräg abgeschnitten — vorher stand ein hochformatiges Bild als schmaler Streifen mit weißen Rändern darin.",
       },
+      {
+        text: "Das PDF des Charakterbogens sieht jetzt aus wie der Bogen am Bildschirm — Zeile für Zeile an derselben Stelle: gleiche Schrift und Laufweite, dasselbe Portrait mit derselben Schräge, und die Kästchen für Entschlossenheit und Stress stehen auch auf dem Ausdruck da, wo sie hingehören (die ungenutzten Stress-Kästchen blass).",
+      },
     ],
   },
   {

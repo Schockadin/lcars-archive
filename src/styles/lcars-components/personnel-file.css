@@ -26,7 +26,11 @@
      Werte statt LCARS-Tokens — der Bogen ist ein Faksimile und sieht in jedem
      Theme gleich aus (siehe Dateikopf). */
   --pf-ink: #555;
-  --pf-hand: "Segoe UI", Arial, sans-serif;
+  /* Bewusst Arial/Helvetica und deren metrik-gleiche Geschwister (Liberation
+     Sans unter Linux) — und ausdrücklich NICHT Segoe UI: das PDF des Bogens
+     setzt Helvetica, und nur mit denselben Buchstabenbreiten steht auf dem
+     Ausdruck dasselbe wie am Bildschirm. */
+  --pf-hand: Arial, Helvetica, "Liberation Sans", sans-serif;
   --pf-accent: #3f84b5;
 }
 
@@ -51,6 +55,10 @@
   background: #fff;
   box-shadow: 0 10px 35px rgba(0, 0, 0, 0.22);
   overflow: hidden;
+  /* Ohne die Sperrung des LCARS-Fließtexts (body { letter-spacing: 0.05em }):
+     die erbt der Bogen sonst als feste 0,8px, die weder mitskalieren noch im
+     PDF vorkommen — der Ausdruck sähe anders aus als der Bildschirm. */
+  letter-spacing: normal;
 }
 
 /* Wie in der Vorlage (die ein globales * { box-sizing: border-box } setzt):
@@ -213,18 +221,26 @@
   border-radius: 3px;
 }
 
+/* Die Kästchen für Entschlossenheit und Stress. Bewusst KEINE nativen
+   <input type=checkbox>: die zeichnet jeder Browser anders, und ein
+   deaktiviertes Kästchen malt Chromium grau statt in der Akzentfarbe — der
+   Bogen sähe dann anders aus als sein PDF (CharacterSheetPdfDocument.tsx
+   zeichnet exakt diese Kästen nach). Als eigene Kästchen ist die Optik auf
+   Bildschirm und Papier dieselbe. */
 .pf-check {
   position: absolute;
   z-index: 4;
+  box-sizing: border-box;
   width: calc(20 * var(--pf-unit));
   height: calc(20 * var(--pf-unit));
   margin: 0;
-  accent-color: var(--pf-accent);
-  cursor: pointer;
+  border: calc(1 * var(--pf-unit)) solid var(--pf-accent);
+  border-radius: calc(3 * var(--pf-unit));
+  background: #fff;
 }
 
-.pf-check:disabled {
-  cursor: default;
+.pf-check--on {
+  background: var(--pf-accent);
 }
 
 /* Stress-Kästchen jenseits des maximalen Stresses: der Bogen hat 19, ein
@@ -345,7 +361,7 @@
   container-type: inline-size;
   --pf-unit: calc(100cqw / 816);
   --pf-ink: #555;
-  --pf-hand: "Segoe UI", Arial, sans-serif;
+  --pf-hand: Arial, Helvetica, "Liberation Sans", sans-serif;
   --pf-accent: #3f84b5;
   /* Gedämpftes Blau für Rahmen/Trennlinien — dasselbe wie im PDF-Export
      (SHEET_BLUE_DIM in CharacterSheetPdfDocument.tsx). */

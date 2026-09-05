@@ -203,14 +203,17 @@ export default function PersonnelFileView({
 
           {/* ── Entschlossenheit, Schutz, Stress ──────────────────── */}
           {DETERMINATION_POINTS.map((point, index) => (
-            <input
+            <span
               key={index}
-              type="checkbox"
-              className="pf-check pf-check--determination"
+              className={
+                index < determination
+                  ? "pf-check pf-check--determination pf-check--on"
+                  : "pf-check pf-check--determination"
+              }
               style={pointStyle(point)}
-              checked={index < determination}
-              disabled
-              readOnly
+              role="checkbox"
+              aria-checked={index < determination}
+              aria-readonly
               aria-label={`Entschlossenheit ${index + 1}`}
             />
           ))}
@@ -231,18 +234,17 @@ export default function PersonnelFileView({
             {maxStress ?? ""}
           </div>
           {STRESS_POINTS.map((point, index) => (
-            <input
+            <span
               key={index}
-              type="checkbox"
               className={
                 maxStress !== null && index < maxStress
                   ? "pf-check"
                   : "pf-check pf-check--out"
               }
               style={pointStyle(point)}
-              checked={false}
-              disabled
-              readOnly
+              role="checkbox"
+              aria-checked={false}
+              aria-readonly
               aria-label={`Stress-Kästchen ${index + 1}`}
             />
           ))}
