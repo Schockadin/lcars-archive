@@ -9,6 +9,12 @@ import {
 } from "@/components/lcars";
 import CharacterWizard from "@/app/user/characters/new/CharacterWizard";
 import CharacterSheetPreviewOverlay from "@/components/character/CharacterSheetPreviewOverlay";
+import PersonnelFileView from "@/components/character/PersonnelFileView";
+import RelationGraph from "@/components/character/RelationGraph";
+import OnboardingChecklist from "@/components/OnboardingChecklist";
+import SettingsPanel from "@/app/_shared/SettingsPanel";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
+import { buildOnboardingSteps } from "@/lib/onboardingSteps";
 import { DEFAULT_ADVANCEMENT_RULES } from "@/lib/advancement";
 import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
@@ -53,6 +59,31 @@ const DEMO_RULES: CampaignRule[] = [
     sortOrder: 0,
   },
 ];
+
+// Ein kleiner Beziehungsgraph: drei Figuren, zwei Kanten — genug, um Knoten,
+// Kantenstärke und das Hervorheben beim Zeigen zu prüfen (siehe
+// /characters/beziehungen).
+const DEMO_GRAPH = {
+  nodes: [
+    { slug: "tuvok", name: "Tuvok", kind: "character" as const, href: "/characters/tuvok" },
+    { slug: "quark", name: "Barkeeper Quark", kind: "npc" as const, href: "/archive/quark" },
+    { slug: "kira", name: "Kira", kind: "character" as const, href: "/characters/kira" },
+  ],
+  edges: [
+    { source: "kira", target: "tuvok", sharedMissions: 3, sharedDialogues: 1 },
+    { source: "quark", target: "tuvok", sharedMissions: 0, sharedDialogues: 2 },
+  ],
+};
+
+// Einstiegs-Schritte mit halbem Fortschritt (siehe /willkommen): Passwort und
+// Charakter erledigt, der Rest offen.
+const DEMO_ONBOARDING = buildOnboardingSteps({
+  hasPassword: true,
+  characterCount: 1,
+  lockedCharacterCount: 0,
+  logCount: 0,
+  dialogueCount: 0,
+});
 
 // Nur für lokale Playwright-E2E-Läufe (next dev) — testet Layout-Details
 // (Switch-Trenner/-Hintergrund, DataRow-Pillen-Breiten), die jsdom
@@ -163,6 +194,63 @@ export default function DevGalleryPage() {
             onClose={() => setPreviewOpen(false)}
           />
         )}
+      </section>
+
+      {/* Der Bogen als reine Ansicht (siehe /characters/[slug]/sheet). Die
+          Kästchen für Entschlossenheit und Stress sind hier prüfbar, ohne
+          dass es einen Charakter in der Datenbank gäbe — und genau sie muss
+          das PDF nachzeichnen (CharacterSheetPdfDocument.tsx). */}
+      <section id="personnel-file" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Charakterbogen (Ansicht)</h2>
+        <PersonnelFileView
+          characterName="Demo Charakter"
+          rank="Lieutenant"
+          species="Vulkanier"
+          portrait={null}
+          expandable={false}
+          stats={{
+            ...EMPTY_CHARACTER_STATS,
+            determination: 2,
+            attributes: { ...EMPTY_CHARACTER_STATS.attributes, fitness: 9 },
+            values: ["Logik zuerst"],
+          }}
+        />
+      </section>
+
+      <section id="relation-graph" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Beziehungsgraph</h2>
+        <RelationGraph graph={DEMO_GRAPH} />
+      </section>
+
+      <section
+        id="onboarding-checklist"
+        className="flex flex-col gap-[8px] mb-[24px]"
+      >
+        <h2 className="lcars-text">Erste Schritte</h2>
+        <OnboardingChecklist steps={DEMO_ONBOARDING} />
+      </section>
+
+      <section id="settings-panel" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">SettingsPanel</h2>
+        <SettingsPanel title="Nebeneinander" hint="Kopfzeile als Zeile" badge="3">
+          <p className="lcars-text">Inhalt des Panels.</p>
+        </SettingsPanel>
+        <SettingsPanel
+          title="Gestapelt"
+          hint="Kopfzeile untereinander"
+          badge="3"
+          stacked
+        >
+          <p className="lcars-text">Inhalt des Panels.</p>
+        </SettingsPanel>
+      </section>
+
+      <section
+        id="markdown-editor"
+        className="flex flex-col gap-[8px] mb-[24px]"
+      >
+        <h2 className="lcars-text">Markdown-Editor (10 Zeilen)</h2>
+        <MarkdownEditor id="demo-markdown" rows={10} defaultValue="**Text**" />
       </section>
 
       <section className="flex flex-col gap-[10px]">
