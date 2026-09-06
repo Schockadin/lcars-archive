@@ -1,7 +1,13 @@
 // PDF-Fassung des Charakterbogens zum Ausdrucken: Blatt 1 ist der gedruckte
-// Bogen mit den eingesetzten Werten, Blatt 2 (und ggf. weitere) der
-// Talent-Spickzettel, Blatt 3 die Biografie — dieselben drei Blätter, die die
-// Vorschau auf der Charakterseite zeigt (CharacterSheetPreview.tsx).
+// Bogen mit den eingesetzten Werten, Blatt 2 der Talent-Spickzettel, Blatt 3
+// die Regeln (Kernregeln und Hausregeln der Runde), Blatt 4 die Biografie —
+// dieselben Blätter, die die Vorschau auf der Charakterseite zeigt
+// (CharacterSheetPreview.tsx).
+//
+// Talente und Regeln standen einmal auf einem Blatt. Getrennt, weil sie
+// Verschiedenes sind: die Talente gehören diesem Charakter, die Regeln gelten
+// für alle am Tisch — als eigenes Blatt lässt sich der Regelteil einmal
+// ausdrucken und in die Mitte legen.
 //
 // Wie beim Content-Export (ContentPdfDocument.tsx) mit @react-pdf/renderer —
 // eine reine Node-Bibliothek ohne Chromium, läuft dadurch auf Netlify
@@ -27,7 +33,14 @@ import {
   StyleSheet,
   renderToBuffer,
 } from "@react-pdf/renderer";
-import { toPdfBlocks, type PdfSpan } from "./markdownBlocks";
+import { toPdfBlocks } from "./markdownBlocks";
+import {
+  SHEET_BLUE,
+  SHEET_BLUE_DIM,
+  SHEET_BLUE_FADED,
+  SHEET_INK,
+  Spans,
+} from "./sheetTheme";
 import {
   ATTRIBUTE_BOXES,
   DEPARTMENT_BOXES,
@@ -61,14 +74,9 @@ const PT_PER_PX = 0.75;
 const PAGE_WIDTH = 816 * PT_PER_PX;
 const PAGE_HEIGHT = 1056 * PT_PER_PX;
 
-// Farben des gedruckten Bogens (aus der Grafik entnommen).
-const INK = "#555555";
-const SHEET_BLUE = "#3f84b5";
-const SHEET_BLUE_DIM = "#8fb4d0";
-// Die Akzentfarbe zu 20 % auf Weiß — dasselbe Ergebnis wie opacity: 0.2 am
-// Bildschirm (.pf-check--out). @react-pdf reicht opacity nicht in SVG durch,
-// deshalb die ausgerechnete Farbe.
-const SHEET_BLUE_FADED = "#d8e6f0";
+// Farben des gedruckten Bogens — sie stehen in sheetTheme.tsx, weil die
+// Missionsakte dieselbe Aufmachung trägt.
+const INK = SHEET_INK;
 
 // Markenzeile am Blattfuß — dieselbe wie auf dem gedruckten Bogen (Blatt 1),
 // damit Spickzettel und Biografie erkennbar zum selben Dokument gehören.
@@ -606,6 +614,29 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
           </View>
         );
       })}
+    </Page>
+  );
+}
+
+// Blatt 3: die Regeln. Eigenes Blatt statt hinter den Talenten, weil sie an
+// keinem Charakter hängen — wer sie am Tisch braucht, druckt genau dieses
+// eine Blatt.
+function RulesPage({ input }: { input: CharacterSheetPdfInput }) {
+  return (
+    <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.cheatPage}>
+      <View style={styles.docFrame} fixed />
+      <View style={styles.cheatMast}>
+        <Text style={styles.cheatWordmark}>STAR TREK ADVENTURES</Text>
+        <Text style={styles.cheatTab}>RULES</Text>
+      </View>
+      <View style={styles.cheatBannerRule} />
+      <Text style={styles.cheatSubline}>
+        {input.name}
+        {input.rank ? ` · ${input.rank}` : ""} — Regeln
+      </Text>
+      <Text style={styles.cheatFooter} fixed>
+        {SHEET_FOOTER}
+      </Text>
 
       {/* Momentum, Bedrohung und Entschlossenheit — dieselbe Liste wie in der
           Bildschirm-Vorschau (siehe coreRules.ts). */}
@@ -661,31 +692,8 @@ function CheatSheetPage({ input }: { input: CharacterSheetPdfInput }) {
   );
 }
 
-// Drittes Blatt: die Biografie im Look der beiden anderen. Fehlt sie, fällt
-// das Blatt weg — ein leeres Blatt im Ausdruck wäre nur Papierverschwendung.
-// Ein Textstück mit seiner Auszeichnung. @react-pdf kennt kein <strong>, wohl
-// aber verschachtelte <Text> mit eigener Schriftfamilie — Helvetica bringt
-// Fett, Kursiv und beides von Haus aus mit, es muss nichts eingebettet werden.
-function spanFamily(span: PdfSpan): string {
-  if (span.code) return "Courier";
-  if (span.bold && span.italic) return "Helvetica-BoldOblique";
-  if (span.bold) return "Helvetica-Bold";
-  if (span.italic) return "Helvetica-Oblique";
-  return "Helvetica";
-}
-
-function Spans({ spans }: { spans: PdfSpan[] }) {
-  return (
-    <>
-      {spans.map((span, index) => (
-        <Text key={index} style={{ fontFamily: spanFamily(span) }}>
-          {span.text}
-        </Text>
-      ))}
-    </>
-  );
-}
-
+// Letztes Blatt: die Biografie im Look der übrigen. Fehlt sie, fällt das
+// Blatt weg — ein leeres Blatt im Ausdruck wäre nur Papierverschwendung.
 function BiographyPage({ input }: { input: CharacterSheetPdfInput }) {
   const blocks = toPdfBlocks(input.bioMarkdown ?? "");
   if (blocks.length === 0) return null;
@@ -751,6 +759,7 @@ export async function renderCharacterSheetPdf(
     >
       <SheetPage input={input} />
       {input.stats.talents.length > 0 && <CheatSheetPage input={input} />}
+      <RulesPage input={input} />
       <BiographyPage input={input} />
     </Document>
   );
@@ -765,6 +774,7 @@ export async function renderCharacterSheetPdf(
       <Document title={`Charakterbogen ${input.name}`}>
         <SheetPage input={{ ...input, portrait: null }} />
         {input.stats.talents.length > 0 && <CheatSheetPage input={input} />}
+        <RulesPage input={input} />
         <BiographyPage input={input} />
       </Document>,
     );

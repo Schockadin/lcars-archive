@@ -35,7 +35,7 @@ test.describe("Chronologie", () => {
 
   test("führt jeden Missionsstart auf seine Missionsseite", async ({ page }) => {
     const hrefs = await page
-      .locator("#timeline .mission-akte")
+      .locator("#timeline .timeline-card-title")
       .evaluateAll((nodes) => nodes.map((n) => n.getAttribute("href")));
     expect(hrefs).toEqual([
       "/chronologie/mission/zweite-mission",
@@ -46,14 +46,14 @@ test.describe("Chronologie", () => {
   test("zeigt mit „Alle Ereignisse“ den vollen Zeitstrahl", async ({ page }) => {
     await alleEreignisse(page);
     const timeline = page.locator("#timeline");
-    await expect(timeline.locator(".mission-akte")).toHaveCount(6);
+    await expect(timeline.locator(".timeline-card-title")).toHaveCount(6);
     await expect(timeline).toContainText("6 Ereignisse");
   });
 
   test("sortiert absteigend und dreht auf Klick um", async ({ page }) => {
     await alleEreignisse(page);
     const titles = () =>
-      page.locator("#timeline .mission-akte-title").allTextContents();
+      page.locator("#timeline .timeline-card-title").allTextContents();
     const desc = await titles();
     expect(desc[0]).toContain("Zweite Mission");
     expect(desc[desc.length - 1]).toContain("Tuvok geboren");
@@ -153,7 +153,7 @@ test.describe("Chronologie", () => {
     const input = page.locator("#timeline input[type=search], #timeline input");
     await input.first().fill("erstkontakt");
     await expect(page.locator("#timeline .timeline-event")).toHaveCount(1);
-    await expect(page.locator("#timeline .mission-akte-title")).toContainText(
+    await expect(page.locator("#timeline .timeline-card-title")).toContainText(
       "Erstkontakt",
     );
   });
@@ -202,12 +202,49 @@ test.describe("Chronologie", () => {
     page,
   }) => {
     await alleEreignisse(page);
-    // Eine gepflegte Angabe ist der Normalfall und braucht keinen Hinweis;
+    // Eine gepflegte Angabe ist der Normalfall und braucht keine Marke;
     // „im Text markiert" und „aus dem Text abgeleitet" schränken ein und
-    // stehen deshalb an der Karte.
-    const timeline = page.locator("#timeline");
-    await expect(timeline).toContainText("im Text markiert");
-    await expect(timeline).toContainText("aus dem Text abgeleitet");
+    // stehen deshalb als Etikett in der Titelzeile.
+    const origins = page.locator("#timeline .timeline-origin");
+    await expect(origins).toHaveCount(2);
+    await expect(origins.filter({ hasText: "im Text markiert" })).toHaveCount(1);
+    await expect(
+      origins.filter({ hasText: "aus dem Text abgeleitet" }),
+    ).toHaveCount(1);
+  });
+
+  test("zeigt Art und Titel in der Kopfzeile, Datum darunter", async ({
+    page,
+  }) => {
+    const karte = page.locator("#timeline .timeline-card").first();
+    // Das Art-Etikett steht VOR dem Titel in derselben Zeile.
+    await expect(karte.locator(".timeline-card-head .timeline-tag")).toHaveText(
+      "Mission",
+    );
+    await expect(karte.locator(".timeline-card-title")).toContainText(
+      "Zweite Mission",
+    );
+    await expect(karte.locator(".timeline-card-date")).toContainText("Datum");
+  });
+
+  test("zeigt die Kurzfassung offen und die Beteiligten zugeklappt", async ({
+    page,
+  }) => {
+    const karte = page.locator("#timeline .timeline-card").first();
+    const panels = karte.locator(".timeline-panel");
+    await expect(panels.nth(0)).toContainText("Teaser");
+    await expect(panels.nth(0)).toHaveAttribute("open", "");
+    await expect(panels.nth(1)).toContainText("Beteiligt");
+    await expect(panels.nth(1)).not.toHaveAttribute("open", "");
+
+    // Beteiligte werden erst nach dem Aufklappen angezeigt. Geprüft auf
+    // Sichtbarkeit, nicht auf den Text: der Inhalt eines geschlossenen
+    // <details> steht im DOM und damit auch in textContent.
+    const beteiligte = panels.nth(1).locator(".timeline-panel-body");
+    await expect(beteiligte).toBeHidden();
+    await panels.nth(1).locator("summary").click();
+    await expect(beteiligte).toBeVisible();
+    await expect(beteiligte).toHaveText("Kira");
   });
 
   test("nennt die Zahl der angezeigten Ereignisse", async ({ page }) => {
@@ -227,7 +264,7 @@ test.describe("Chronologie", () => {
     // Der Marker erzeugt im gerenderten Text ein <span id="timeline-N">
     // (remarkTimelineAnchors) — die Karte muss genau dorthin führen.
     const link = page
-      .locator("#timeline .mission-akte")
+      .locator("#timeline .timeline-card-title")
       .filter({ hasText: "Erstkontakt" });
     await expect(link).toHaveAttribute("href", /#timeline-1$/);
   });

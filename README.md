@@ -164,15 +164,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   weggelassenes Feld würde sonst geleert. Die alten Adressen
   `/user/characters/[id]/stats` und `.../edit` leiten auf diese Seite um.
 - **Der Bogen ist Vorschau, kein Formular** — der Knopf „Charakterbogen" über
-  den Panels öffnet ihn als **drei Blätter**
+  den Panels öffnet ihn als **vier Blätter**
   (`src/components/character/CharacterSheetPreview.tsx`): das gedruckte
   „Personnel File" als 816×1056-Blatt
   (`public/character-sheet/personnel-file.svg`, Maße in
   `personnelFileLayout.ts`, Optik in
   `src/styles/lcars-components/personnel-file.css`; jedes Maß ein Vielfaches
   von `--pf-unit` = 1px der Vorlage, sodass der Bogen in einer schmaleren
-  Spalte als Ganzes schrumpft statt umzubrechen), dahinter der Spickzettel und
-  die Biografie im selben Papier-Look. Im Fenster stehen
+  Spalte als Ganzes schrumpft statt umzubrechen), dahinter der Spickzettel
+  (Talente), das Regelblatt und die Biografie im selben Papier-Look. Im Fenster stehen
   „Drucken" (Browser-Druck, das Druck-CSS blendet alles außer den Blättern aus
   und beginnt jedes auf einer neuen Seite) und „Speichern" (derselbe
   PDF-Export, damit die Datei unabhängig vom Browser gleich aussieht).
@@ -296,16 +296,19 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   durchgesetzt (`statsAction.ts`, `advancementAction.ts`): ein Eintrag muss im
   Katalog stehen — bereits gespeicherte Alt-Einträge aus der Freitext-Zeit
   bleiben erlaubt, sonst ließe sich ein solcher Bogen nie wieder speichern.
-  Ganz unten am Bogen listet ein **Spickzettel** die Talente des Charakters
-  mit vollem Regeltext und darunter die **Kernregeln** für den Spieltisch —
-  Momentum, Bedrohung und Entschlossenheit, übersetzt aus dem Regeltext der
-  Runde. Sie liegen als Daten in `src/lib/coreRules.ts` statt als fertiges
-  Markup, weil dieselbe Liste zweimal gerendert wird: als Blatt 2 der
-  Bildschirm-Vorschau und im PDF (`@react-pdf` kennt kein `<p>`, ein
-  gemeinsames Markup ist also nicht möglich). Sie hängen an keinem Charakter
-  und stehen deshalb nicht in der Datenbank. Dahinter folgen die **eigenen
-  Regeln der Runde** aus `campaign_rules` (siehe oben); gibt es keine, fällt
-  der Abschnitt weg.
+  Ein **Spickzettel** listet die Talente des Charakters mit vollem
+  Regeltext. Die **Kernregeln** für den Spieltisch — Momentum, Bedrohung und
+  Entschlossenheit, übersetzt aus dem Regeltext der Runde — stehen auf einem
+  **eigenen Blatt** dahinter, zusammen mit den **eigenen Regeln der Runde**
+  aus `campaign_rules` (siehe oben; gibt es keine, fällt der Abschnitt weg).
+  Getrennt, weil sie Verschiedenes sind: die Talente gehören diesem
+  Charakter, die Regeln gelten für alle am Tisch — als eigenes Blatt lässt
+  sich der Regelteil einmal ausdrucken und in die Mitte legen. Die Kernregeln
+  liegen als Daten in `src/lib/coreRules.ts` statt als fertiges Markup, weil
+  dieselbe Liste zweimal gerendert wird: in der Bildschirm-Vorschau und im
+  PDF (`@react-pdf` kennt kein `<p>`, ein gemeinsames Markup ist also nicht
+  möglich). Sie hängen an keinem Charakter und stehen deshalb nicht in der
+  Datenbank.
 - **Charakter-Ansichten mit Umschalter** — `/user/characters/[id]` leitet auf
   den Bogen weiter; ein Umschalter im gemeinsamen Layout
   (`[characterId]/layout.tsx` + `CharacterTabs.tsx`) wechselt zwischen
@@ -317,16 +320,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Spezies kommen aus der Akte: der Rang steht schreibgeschützt in seinem
   Kasten, die Spezies teilt sich den Kasten „Species & Traits" mit dem
   Merkmals-Feld (`.pf-combo`).
-- **Ein Bogen, zwei Wege** — `/user/characters/[id]` öffnet die drei Blätter
+- **Ein Bogen, zwei Wege** — `/user/characters/[id]` öffnet die Blätter
   als Overlay, `/characters/[slug]/sheet` (Lese-Ansicht für Owner und
-  Spielleitung) zeigt dieselben drei Blätter als Seite; beide bieten Drucken
+  Spielleitung) zeigt dieselben Blätter als Seite; beide bieten Drucken
   und denselben PDF-Download. Vorher stand auf der Seite nur Blatt 1, während
   der Knopf daneben alle drei herunterlud. Das Druck-CSS greift für beide
   (`.pf-preview-overlay` und `.pf-preview-page`).
 - **PDF-Export des Bogens** — `/api/export/character-sheet?characterId=…`
-  liefert dieselben drei Blätter wie die Vorschau: den ausgefüllten Bogen, den
-  Spickzettel (Talente plus Kernregeln) und die Biografie. Für das dritte Blatt gibt es keine
-  HTML-Fassung (`@react-pdf` kennt kein HTML); `src/lib/pdf/markdownBlocks.ts`
+  liefert dieselben vier Blätter wie die Vorschau: den ausgefüllten Bogen, den
+  Spickzettel (Talente), das Regelblatt und die Biografie. Für die
+  Textblätter gibt es keine HTML-Fassung (`@react-pdf` kennt kein HTML); `src/lib/pdf/markdownBlocks.ts`
   zerlegt den Markdown-Quelltext deshalb in Überschriften, Absätze,
   Aufzählungen und Zitate und führt Inline-Auszeichnungen auf ihren Text
   zurück — für ein Textblatt genügt das, eine zweite Markdown-Pipeline im
@@ -498,15 +501,22 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   ist; `/willkommen` bleibt als Übersicht erreichbar.
 - **Missionsakte als PDF** — `/api/export/mission-book/[missionSlug]` (Knopf
   auf der Mission-Detailseite, nur für Angemeldete) packt **eine** Mission in
-  eine Datei: Titelseite mit Zeitraum, Status und Beteiligten, danach die
-  Beschreibung und jedes Logbuch auf einer eigenen Seite, chronologisch. Der
+  eine Datei: Titelblatt mit Zeitraum, Status und Beteiligten, ein
+  **Inhaltsverzeichnis**, danach die Beschreibung und jedes Logbuch auf einer
+  eigenen Seite, chronologisch. Der
   Inhalt richtet sich nach der Sichtbarkeit der anfordernden Person —
   dieselbe `canView`-Regel wie auf den Inhaltsseiten, angewandt in
   `src/lib/missionBook.ts`; nicht öffentliche Logbücher sind in der Akte als
   solche gekennzeichnet, und eine Entwurfs-Mission liefert dieselbe 404 wie
   ihre Seite. Bewusst ungecacht: die Akte hängt am Betrachter, ein Cache wäre
-  ein Cache je Konto. Layout: `src/lib/pdf/MissionBookPdfDocument.tsx`
-  (Lesezeichen je Logbuch, Seitenzahlen in der Fußzeile). Vorgänger war ein
+  ein Cache je Konto. Layout: `src/lib/pdf/MissionBookPdfDocument.tsx` —
+  dieselbe Aufmachung wie der Charakterbogen (blauer Rahmen, Kopfzeile aus
+  Kampagne und Titelreiter, formatierter Markdown-Text), Farben und die
+  Auszeichnung der Textstücke gemeinsam in `src/lib/pdf/sheetTheme.tsx`.
+  Lesezeichen je Logbuch, Seitenzahlen in der Fußzeile; die Einträge des
+  Inhaltsverzeichnisses sind PDF-interne Sprungziele (`<Link src="#…">` auf
+  ein `id` am Titel) — **ohne Seitenzahlen**, weil erst beim Setzen feststeht,
+  wie viele Seiten ein Bericht braucht. Vorgänger war ein
   Kampagnenband über alle Missionen auf der Übersicht — gebraucht wird beim
   Spielen die Akte der Mission, die gerade auf dem Tisch liegt.
 - **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und

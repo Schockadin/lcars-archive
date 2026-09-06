@@ -1,7 +1,7 @@
 "use client";
 import { Fragment, useMemo, useState } from "react";
+import Link from "next/link";
 import {
-  LcarsAkteCard,
   LcarsSortSwitch,
   LcarsListFilterInput,
   type SortDir,
@@ -297,41 +297,68 @@ export default function TimelineView({
   );
 }
 
+// Eine Ereigniskarte: oben Art-Etikett und Titel, darunter das Datum, und
+// was Platz braucht in aufklappbaren Feldern — die Kurzfassung offen, die
+// Beteiligten zu. Vorher stand alles untereinander in der Aktenkarte des
+// übrigen Archivs; bei einigen hundert Ereignissen war das eine Wand aus
+// Text, durch die man das Datum suchen musste.
+//
+// <details> statt eigenem Zustand: der Auf-/Zu-Zustand gehört zur einzelnen
+// Karte, nicht in die Liste — und beim Filtern soll er nicht mitwandern.
 function EventRow({ event }: { event: TimelineEvent }) {
   const visual = categoryVisual(event.category);
 
   return (
     <ChronoRow date={event.date} color={visual.color}>
-      <LcarsAkteCard
-        href={event.href}
-        color={visual.color}
-        ariaLabel={`${event.title} — ${visual.label}, ${fmtDate(event.date)}`}
-        title={event.title}
-        summary={event.detail ?? undefined}
-        meta={
-          <>
-            <span>
-              <b>Datum</b> {fmtDate(event.date)}
-            </span>
+      <div
+        className="timeline-card"
+        style={{ "--timeline-color": visual.color } as React.CSSProperties}
+      >
+        <span className="timeline-card-rail" />
+        <div className="timeline-card-body">
+          <div className="timeline-card-head">
             <span className="timeline-tag">{visual.label}</span>
-            <span>
-              <b>Quelle</b> {SOURCE_TYPE_LABELS[event.sourceType]} ·{" "}
-              {event.sourceTitle}
-            </span>
-            {event.people.length > 0 && (
-              <span>
-                <b>Beteiligt</b> {event.people.join(" · ")}
+            <Link
+              href={event.href}
+              className="timeline-card-title"
+              aria-label={`${event.title} — ${visual.label}, ${fmtDate(event.date)}`}
+            >
+              {event.title}
+            </Link>
+            {/* Der Herkunftshinweis steht nur da, wo er etwas einschränkt:
+                dass ein Ereignis aus den gepflegten Angaben stammt, ist der
+                Normalfall und braucht keine Marke. */}
+            {event.origin !== "metadata" && (
+              <span className="timeline-origin">
+                {ORIGIN_LABELS[event.origin]}
               </span>
             )}
-            {/* Die Herkunft steht nur da, wo sie etwas einschränkt: dass ein
-                Ereignis aus den gepflegten Angaben stammt, ist der
-                Normalfall und braucht keinen Hinweis. */}
-            {event.origin !== "metadata" && (
-              <span>{ORIGIN_LABELS[event.origin]}</span>
-            )}
-          </>
-        }
-      />
+          </div>
+
+          <p className="timeline-card-date">
+            <b>Datum</b> {fmtDate(event.date)} · {SOURCE_TYPE_LABELS[event.sourceType]}{" "}
+            · {event.sourceTitle}
+          </p>
+
+          {event.detail && (
+            <details className="timeline-panel" open>
+              <summary className="timeline-panel-head">Teaser</summary>
+              <div className="timeline-panel-body">{event.detail}</div>
+            </details>
+          )}
+
+          {event.people.length > 0 && (
+            <details className="timeline-panel">
+              <summary className="timeline-panel-head">
+                Beteiligt ({event.people.length})
+              </summary>
+              <div className="timeline-panel-body">
+                {event.people.join(" · ")}
+              </div>
+            </details>
+          )}
+        </div>
+      </div>
     </ChronoRow>
   );
 }

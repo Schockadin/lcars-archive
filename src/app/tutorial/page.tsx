@@ -360,10 +360,15 @@ export default function TutorialPage() {
                 steigerst du mit AP (siehe unten). Ganz oben öffnet{" "}
                 <strong>„Charakterbogen“</strong> die Vorschau: Blatt 1 der
                 Personalbogen mit Stammdaten und Werten, Blatt 2 der
-                Spickzettel, Blatt 3 die Biografie im selben Look. Dort
+                Spickzettel mit deinen Talenten, Blatt 3 die Regeln
+                (Momentum, Bedrohung, Entschlossenheit und die eigenen Regeln
+                der Runde), Blatt 4 die Biografie im selben Look. Dort
                 stehen auch die Knöpfe zum <strong>Drucken</strong> und zum{" "}
                 <strong>Speichern als PDF</strong> — die PDF-Datei enthält
-                dieselben drei Blätter. Rang und Spezies stehen auf dem Bogen,
+                dieselben Blätter. Weil die Regeln für alle am Tisch gelten
+                und an keinem Charakter hängen, stehen sie auf einem eigenen
+                Blatt: so lässt sich genau dieses eine ausdrucken und in die
+                Mitte legen. Rang und Spezies stehen auf dem Bogen,
                 kommen aber aus den Stammdaten; im Kasten „Species &amp; Traits“
                 steht die Spezies vorne, deine weiteren Merkmale trägst du
                 dahinter ein. In „Meine Inhalte“ tauchen Charaktere nicht auf —
@@ -635,9 +640,13 @@ export default function TutorialPage() {
               <p>
                 Auf der <strong>Seite einer Mission</strong> steht angemeldet
                 der Knopf <strong>„Missionsakte (PDF)“</strong>: er packt
-                genau diese Mission in eine Datei — Titelseite mit Zeitraum,
-                Status und Beteiligten, danach die Beschreibung und jedes
-                Logbuch auf einer eigenen Seite, chronologisch. Die Akte
+                genau diese Mission in eine Datei — Titelblatt mit Zeitraum,
+                Status und Beteiligten, ein <strong>Inhaltsverzeichnis</strong>
+                (jeder Eintrag springt im PDF zu seinem Bericht), danach die
+                Beschreibung und jedes Logbuch auf einer eigenen Seite,
+                chronologisch. Aufgemacht ist die Akte wie der Charakterbogen:
+                derselbe blaue Rahmen, dieselbe Kopfzeile, formatierter Text
+                mit Überschriften, Aufzählungen und Zitaten. Die Akte
                 enthält genau das, was du auch sonst lesen darfst; nicht
                 öffentliche Logbücher stehen darin mit einem entsprechenden
                 Hinweis.
@@ -645,9 +654,9 @@ export default function TutorialPage() {
               <p>
                 Auf der Seite deines eigenen Charakters (und für die
                 Spielleitung auf jeder Charakterseite) steht außerdem der Knopf{" "}
-                <strong>„Charakterbogen“</strong>: er zeigt dieselben drei
-                Blätter wie unter „Meine Charaktere“ — Personalakte, Spickzettel
-                und Biografie — als reine Ansicht, mit Drucken und demselben
+                <strong>„Charakterbogen“</strong>: er zeigt dieselben
+                Blätter wie unter „Meine Charaktere“ — Personalakte,
+                Spickzettel, Regeln und Biografie — als reine Ansicht, mit Drucken und demselben
                 PDF-Download. Gepflegt werden die Werte
                 weiterhin nur von der Person, der der Charakter gehört.
               </p>

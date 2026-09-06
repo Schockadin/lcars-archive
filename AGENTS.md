@@ -28,6 +28,10 @@ Base the items on the current Pull Request's body (see "The Pull Request Body" a
 
 # Testing/Reviewing Behaviour
 
-Do local tests (unit, e2e, no integration) with each commit. Also do a full scope code review each time you are instrcuted to merge. Fix all problems found while reviewing and repeat unless no more problems occur. If no problems show up, always update the `README.md`, `/impressum`, `/datenschutz` und `/tutorial` to reflect the latest changes. Only then and if Netlify shows green merge the PR.
+**Do not run the test suite locally.** GitHub Actions runs it on every push (`.github/workflows/ci.yml`: `npm run lint`, `npm test`, `npm run test:e2e` and the DB integration tests). Running the same suite here only duplicates it and costs minutes — a local run is never a precondition for a commit.
+
+Still yours with each commit: **write and adjust the tests** for what you changed (unit and e2e, as before — the suite is only run elsewhere, not written elsewhere). After pushing, **watch the CI run for that commit** and fix whatever it reports; a red CI is your work, not something to hand over. Only reach for a local run when CI has failed and you need to reproduce that one failing test — then run that test alone, never the whole suite.
+
+Also do a full scope code review each time you are instrcuted to merge. Fix all problems found while reviewing and repeat unless no more problems occur. If no problems show up, always update the `README.md`, `/impressum`, `/datenschutz` und `/tutorial` to reflect the latest changes. Only then and if CI and Netlify show green merge the PR.
 
 <!-- END:nextjs-agent-rules -->

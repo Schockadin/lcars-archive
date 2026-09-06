@@ -234,6 +234,21 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "chronologie",
       },
       {
+        text: "Die Missionsakte als PDF ist jetzt aufgemacht wie der Charakterbogen — derselbe Rahmen, dieselbe Kopfzeile, und der Text erscheint formatiert mit Überschriften, Aufzählungen und Zitaten statt als Fließtext. Neu davor: ein Inhaltsverzeichnis, dessen Einträge im PDF direkt zum jeweiligen Einsatzbericht springen.",
+        category: "export",
+        tutorial: "merken-abonnieren",
+      },
+      {
+        text: "Der Charakterbogen hat jetzt vier Blätter statt drei: Die Regeln (Momentum, Bedrohung, Entschlossenheit und die eigenen Regeln der Runde) stehen auf einem eigenen Blatt hinter dem Talent-Spickzettel. So lässt sich genau dieses eine Blatt ausdrucken und in die Tischmitte legen — es gilt ja für alle. Vorschau und PDF zeigen beide die neue Aufteilung.",
+        category: "charaktere",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Die Einträge der Chronologie sind neu aufgebaut: oben eine Zeile aus Art-Etikett und Titel, darunter das Datum, und was Platz braucht steckt in aufklappbaren Feldern — der Teaser offen, die Beteiligten zugeklappt. Abgeleitete und im Text markierte Ereignisse tragen ihre Kennzeichnung als Etikett direkt neben dem Titel.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
         text: "Eine Ereignisart lässt sich jetzt verlinken: Die Chronologie hat für jede Art eine eigene Adresse — /chronologie/mission, /chronologie/conflict und so fort. Wer im Auswahlfeld eine Art wählt, bekommt sie in der Adresszeile und kann den Link so weitergeben; er öffnet die Chronologie mit genau dieser Auswahl. Die Missionsseiten liegen jetzt ebenfalls unter der Chronologie (/chronologie/mission/…), alte Missions-Links leiten dorthin weiter.",
         category: "inhalte",
         tutorial: "chronologie",

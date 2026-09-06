@@ -10,19 +10,24 @@ import type { CharacterStats } from "@/types/characterStats";
 import { CORE_RULES } from "@/lib/coreRules";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
 
-// Der Charakterbogen als dreiblättrige Vorschau — dasselbe, was der
+// Der Charakterbogen als vierblättrige Vorschau — dasselbe, was der
 // PDF-Export erzeugt:
 //   Blatt 1  das Personnel File mit Stammdaten und Werten
-//   Blatt 2  der Spickzettel: Talente des Charakters, die Kernregeln
-//            (Momentum, Bedrohung, Entschlossenheit) und die eigenen Regeln
-//            der Runde (/gm/rules)
-//   Blatt 3  die Biografie im selben Papier-Look
+//   Blatt 2  der Spickzettel: die Talente des Charakters
+//   Blatt 3  die Regeln: Kernregeln (Momentum, Bedrohung, Entschlossenheit)
+//            und die eigenen Regeln der Runde (/gm/rules)
+//   Blatt 4  die Biografie im selben Papier-Look
+//
+// Talente und Regeln standen einmal auf einem Blatt. Getrennt, weil sie
+// Verschiedenes sind: die Talente gehören diesem Charakter, die Regeln gelten
+// für alle am Tisch — als eigenes Blatt lässt sich der Regelteil einmal
+// ausdrucken und in die Mitte legen.
 //
 // Reine Darstellung ohne eigenen Zustand: der Anlege-Assistent zeigt damit
 // die noch nicht gespeicherten Eingaben, die Charakterseite den gespeicherten
 // Stand. Beide Male dieselben Blätter.
 //
-// Blatt 2 und 3 tragen dieselbe Star-Trek-Adventures-Aufmachung wie Blatt 1
+// Die Zusatzblätter tragen dieselbe Star-Trek-Adventures-Aufmachung wie Blatt 1
 // (der gedruckte Bogen): der Rahmen, das „STAR TREK ADVENTURES"-Logo oben links
 // und der farbige Titelreiter oben rechts (wie „PERSONNEL FILE" auf dem Bogen)
 // stecken im gemeinsamen DocSheet-Gerüst (siehe .pf-doc* in personnel-file.css).
@@ -80,12 +85,10 @@ function TalentSheet({
   characterName,
   entries,
   talents,
-  campaignRules,
 }: {
   characterName: string;
   entries: string[];
   talents: Talent[];
-  campaignRules: CampaignRule[];
 }) {
   // Zuordnung über den Katalognamen (siehe parseTalentEntry) — ein
   // umbenanntes Talent findet seinen Regeltext also weiterhin.
@@ -128,7 +131,21 @@ function TalentSheet({
           );
         })
       )}
+    </DocSheet>
+  );
+}
 
+// Blatt 3: die Regeln. Eigenes Blatt, weil sie an keinem Charakter hängen —
+// wer sie am Tisch braucht, druckt genau dieses eine Blatt.
+function RulesSheet({
+  characterName,
+  campaignRules,
+}: {
+  characterName: string;
+  campaignRules: CampaignRule[];
+}) {
+  return (
+    <DocSheet title="Rules" subtitle={`Regeln · ${characterName}`}>
       <CoreRulesSection />
       <CampaignRulesSection rules={campaignRules} />
     </DocSheet>
@@ -233,6 +250,9 @@ export default function CharacterSheetPreview({
         characterName={input.characterName}
         entries={input.stats.talents}
         talents={input.talents}
+      />
+      <RulesSheet
+        characterName={input.characterName}
         campaignRules={input.campaignRules}
       />
       <BioSheet characterName={input.characterName} bioHtml={input.bioHtml} />

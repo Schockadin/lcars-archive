@@ -8,7 +8,7 @@ import CharacterSheetPreview, {
   type CharacterSheetPreviewInput,
 } from "./CharacterSheetPreview";
 
-// Vorschau-Fenster des Charakterbogens: die drei Blätter im Vollbild, oben
+// Vorschau-Fenster des Charakterbogens: alle Blätter im Vollbild, oben
 // eine Leiste mit „Drucken" und „Speichern".
 //
 // Gedruckt wird über den Browser (window.print) — das Druck-CSS in

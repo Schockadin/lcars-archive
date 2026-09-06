@@ -1,18 +1,20 @@
-// Die Missionsakte als PDF: Titelseite mit Zeitraum, Status und Beteiligten,
-// danach die Beschreibung der Mission und ihre Logbücher in zeitlicher Folge.
+// Die Missionsakte als PDF: Titelblatt, Inhaltsverzeichnis, die Beschreibung
+// der Mission und ihre Logbücher in zeitlicher Folge.
 //
-// Vorher war das ein Band über alle Missionen (mit Inhaltsverzeichnis). Eine
-// einzelne Akte braucht kein Verzeichnis — die Logbücher stehen auf der
-// Titelseite und sind über die Lesezeichen erreichbar.
+// Aufmachung wie der Charakterbogen (blauer Rahmen mit runden Ecken,
+// Kopfzeile aus Kampagnenname und Titelreiter, gesperrte Versalien über einer
+// dünnen Linie) — Farben und die Auszeichnung der Textstücke kommen aus
+// sheetTheme.tsx, damit beide Ausdrucke nicht auseinanderlaufen. Vorher war
+// die Akte ein schlichtes Fließtext-Dokument; nebeneinander auf dem Tisch sah
+// das aus wie zwei verschiedene Archive.
+//
+// Maße bleiben in Punkten auf A4: die Akte wird gelesen und abgeheftet, der
+// Bogen ist ein Faksimile eines Letter-Formulars.
 //
 // Wie die übrigen Exporte mit @react-pdf/renderer (reine Node-Bibliothek ohne
 // Chromium, läuft dadurch auf Netlify Functions). Markdown zerlegt
 // toPdfBlocks — @react-pdf kennt kein HTML, das gerenderte content-Feld nützt
 // hier also nichts.
-//
-// Optik bewusst wie ContentPdfDocument (Helvetica, dunkles Grau auf Weiß) und
-// NICHT wie der Charakterbogen: der Bogen ist ein Faksimile eines gedruckten
-// Formulars, der Band ist ein Fließtext-Dokument zum Lesen.
 import {
   Document,
   Page,
@@ -22,126 +24,219 @@ import {
   StyleSheet,
   renderToBuffer,
 } from "@react-pdf/renderer";
-import { toPdfBlocks, type PdfSpan } from "./markdownBlocks";
+import { toPdfBlocks } from "./markdownBlocks";
+import {
+  SHEET_BLUE,
+  SHEET_BLUE_DIM,
+  SHEET_INK,
+  SHEET_MUTED,
+  Spans,
+} from "./sheetTheme";
 import { STATUS_CONFIG } from "@/lib/missionFormat";
 import type { MissionStatus } from "@/types/missions";
 import type { MissionBook, MissionBookLog } from "@/lib/missionBook";
 import { missionLogHref } from "@/lib/contentRoutes";
 
-const ACCENT = "#3f84b5";
-const INK = "#1a1a1a";
-const INK_DIM = "#666666";
-
 const styles = StyleSheet.create({
+  // Innerhalb des Rahmens (siehe docFrame), wie auf den Zusatzblättern des
+  // Charakterbogens: Blattrand plus die Innenabstände des Rahmens.
   page: {
-    paddingTop: 54,
-    paddingBottom: 56,
-    paddingHorizontal: 54,
-    fontSize: 11,
+    paddingTop: 50,
+    // Platz für die auf jeder Seite wiederholte Fußzeile.
+    paddingBottom: 54,
+    paddingHorizontal: 52,
     fontFamily: "Helvetica",
-    color: INK,
+    color: SHEET_INK,
   },
+  // Der Rahmen als eigenes, absolut gesetztes und `fixed` wiederholtes
+  // Element: ein umschließender View mit Rahmen kann in @react-pdf nicht über
+  // Seiten hinweg fließen, der Rahmen risse am Seitenumbruch ab.
+  docFrame: {
+    position: "absolute",
+    top: 18,
+    left: 18,
+    right: 18,
+    bottom: 18,
+    borderWidth: 2,
+    borderStyle: "solid",
+    borderColor: SHEET_BLUE,
+    borderRadius: 18,
+  },
+  // Kopfzeile wie auf dem Bogen: die Kampagne links (dort die Wortmarke), der
+  // Titelreiter rechts (dort „PERSONNEL FILE").
+  mast: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 4,
+  },
+  wordmark: {
+    fontFamily: "Helvetica-BoldOblique",
+    fontSize: 14,
+    letterSpacing: 1,
+    color: SHEET_BLUE,
+  },
+  tab: {
+    backgroundColor: SHEET_BLUE,
+    color: "#ffffff",
+    fontFamily: "Helvetica-Bold",
+    fontSize: 12,
+    letterSpacing: 3,
+    paddingVertical: 5,
+    paddingHorizontal: 13,
+    borderRadius: 4,
+  },
+  bannerRule: {
+    height: 2,
+    backgroundColor: SHEET_BLUE_DIM,
+    marginTop: 2,
+    marginBottom: 10,
+  },
+  subline: {
+    fontSize: 9,
+    color: SHEET_BLUE,
+    marginBottom: 12,
+  },
+  // Titelblatt: derselbe Rahmen, aber der Titel steht mittig auf dem Blatt.
   titlePage: {
-    padding: 54,
+    paddingTop: 50,
+    paddingBottom: 54,
+    paddingHorizontal: 52,
     fontFamily: "Helvetica",
-    color: INK,
+    color: SHEET_INK,
     justifyContent: "center",
   },
-  // Der Missionstitel trägt die Titelseite; darüber klein die Kampagne,
-  // damit ein einzeln ausgedrucktes Blatt zuzuordnen ist.
   bookTitle: {
     fontFamily: "Helvetica-Bold",
     fontSize: 26,
     letterSpacing: 1.5,
-    color: ACCENT,
-    marginBottom: 28,
+    color: SHEET_BLUE,
+    marginBottom: 22,
   },
   bookSubtitle: {
     fontSize: 11,
     letterSpacing: 2,
-    color: INK_DIM,
+    color: SHEET_MUTED,
     marginBottom: 8,
   },
   bookMeta: {
     fontSize: 10,
-    color: INK_DIM,
+    color: SHEET_MUTED,
     lineHeight: 1.6,
   },
-  missionTitle: {
+  // Abschnittsüberschrift: gesperrte Versalien über einer dünnen Linie, wie
+  // die des Spickzettels.
+  section: {
     fontFamily: "Helvetica-Bold",
-    fontSize: 18,
-    color: ACCENT,
-    marginBottom: 3,
-  },
-  missionMeta: {
-    fontSize: 9,
-    color: INK_DIM,
-    marginBottom: 10,
-    paddingBottom: 6,
+    fontSize: 10,
+    letterSpacing: 2,
+    color: SHEET_BLUE,
+    marginTop: 12,
+    marginBottom: 6,
+    paddingBottom: 3,
     borderBottomWidth: 1,
-    borderBottomColor: "#cccccc",
+    borderBottomColor: SHEET_BLUE_DIM,
     borderBottomStyle: "solid",
   },
-  logTitle: {
+  meta: {
+    fontSize: 9,
+    color: SHEET_MUTED,
+    marginBottom: 8,
+  },
+  // Ein Eintrag des Inhaltsverzeichnisses: Kasten mit runden Ecken wie ein
+  // Talent auf dem Spickzettel, damit die Verzeichnisseite nicht als lose
+  // Liste aus der Mappe fällt.
+  tocItem: {
+    marginBottom: 7,
+    padding: 8,
+    borderWidth: 1,
+    borderColor: SHEET_BLUE_DIM,
+    borderStyle: "solid",
+    borderRadius: 6,
+  },
+  tocTitle: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 9,
+    letterSpacing: 1,
+    color: SHEET_BLUE,
+  },
+  tocMeta: {
+    fontSize: 8,
+    color: SHEET_MUTED,
+    marginTop: 2,
+  },
+  tocHint: {
+    fontSize: 8.5,
+    lineHeight: 1.4,
+    color: SHEET_MUTED,
+    marginBottom: 8,
+  },
+  // Überschrift eines Berichts: wie der Name eines Talents, nur größer.
+  entryTitle: {
     fontFamily: "Helvetica-Bold",
     fontSize: 13,
-    marginTop: 16,
+    letterSpacing: 0.8,
+    color: SHEET_BLUE,
     marginBottom: 2,
-  },
-  logMeta: {
-    fontSize: 9,
-    color: INK_DIM,
-    marginBottom: 6,
   },
   // Nicht-öffentliche Logbücher werden gekennzeichnet, damit ein
   // weitergereichter Ausdruck nicht ungewollt Verborgenes verbreitet.
-  logNotice: {
+  notice: {
     fontSize: 8,
-    color: ACCENT,
+    color: SHEET_BLUE,
     marginBottom: 6,
   },
   heading: {
     fontFamily: "Helvetica-Bold",
-    fontSize: 12,
+    fontSize: 10.5,
+    letterSpacing: 0.8,
+    color: SHEET_BLUE,
     marginTop: 8,
     marginBottom: 4,
   },
   paragraph: {
-    fontSize: 10.5,
+    fontSize: 10,
     lineHeight: 1.5,
     marginBottom: 7,
   },
   listItem: {
-    fontSize: 10.5,
+    fontSize: 10,
     lineHeight: 1.5,
     marginBottom: 3,
-    marginLeft: 12,
+    marginLeft: 10,
   },
   quote: {
-    fontSize: 10.5,
+    fontSize: 10,
     lineHeight: 1.5,
     marginBottom: 7,
     marginLeft: 10,
     paddingLeft: 8,
     borderLeftWidth: 2,
-    borderLeftColor: ACCENT,
+    borderLeftColor: SHEET_BLUE_DIM,
     borderLeftStyle: "solid",
-    color: ACCENT,
+    color: SHEET_BLUE,
   },
   empty: {
     fontSize: 10,
-    color: INK_DIM,
-    fontStyle: "italic",
+    color: SHEET_MUTED,
+    fontFamily: "Helvetica-Oblique",
   },
+  link: {
+    fontSize: 8.5,
+    color: SHEET_BLUE,
+    marginTop: 10,
+  },
+  // Blattfuß wie auf dem Bogen: klein und grau, auf jeder Seite wiederholt —
+  // hier mit Seitenzahl, weil die Akte geblättert und abgeheftet wird.
   footer: {
     position: "absolute",
-    bottom: 26,
-    left: 54,
-    right: 54,
+    bottom: 24,
+    left: 52,
+    right: 52,
     flexDirection: "row",
     justifyContent: "space-between",
-    fontSize: 8,
-    color: INK_DIM,
+    fontSize: 7.5,
+    color: SHEET_MUTED,
   },
 });
 
@@ -194,27 +289,14 @@ export function logMetaLine(log: MissionBookLog): string {
   return parts.join(" · ");
 }
 
-// Ein Textstück mit seiner Auszeichnung — dieselbe Zuordnung wie im
-// Charakterbogen-PDF: Helvetica bringt Fett, Kursiv und beides mit.
-function spanFamily(span: PdfSpan): string {
-  if (span.code) return "Courier";
-  if (span.bold && span.italic) return "Helvetica-BoldOblique";
-  if (span.bold) return "Helvetica-Bold";
-  if (span.italic) return "Helvetica-Oblique";
-  return "Helvetica";
+// Sprungziel eines Berichts. Die Einträge des Inhaltsverzeichnisses verweisen
+// per <Link src="#…"> darauf (in @react-pdf ein PDF-„goTo", kein
+// Web-Link) — der Slug ist dafür eindeutig genug und schon da.
+export function logAnchor(slug: string): string {
+  return `log-${slug}`;
 }
 
-function Spans({ spans }: { spans: PdfSpan[] }) {
-  return (
-    <>
-      {spans.map((span, index) => (
-        <Text key={index} style={{ fontFamily: spanFamily(span) }}>
-          {span.text}
-        </Text>
-      ))}
-    </>
-  );
-}
+const MISSION_ANCHOR = "mission";
 
 function Blocks({ markdown }: { markdown: string }) {
   const blocks = toPdfBlocks(markdown);
@@ -227,7 +309,7 @@ function Blocks({ markdown }: { markdown: string }) {
         if (block.kind === "heading") {
           return (
             <Text key={index} style={styles.heading}>
-              {block.text}
+              {block.text.toUpperCase()}
             </Text>
           );
         }
@@ -251,6 +333,30 @@ function Blocks({ markdown }: { markdown: string }) {
           </Text>
         );
       })}
+    </>
+  );
+}
+
+// Die Kopfzeile jeder Seite außer dem Titelblatt: Rahmen, Kampagne,
+// Titelreiter, Linie und darunter der Missionstitel.
+function SheetHead({
+  campaignTitle,
+  tab,
+  subline,
+}: {
+  campaignTitle: string;
+  tab: string;
+  subline: string;
+}) {
+  return (
+    <>
+      <View style={styles.docFrame} fixed />
+      <View style={styles.mast}>
+        <Text style={styles.wordmark}>{campaignTitle.toUpperCase()}</Text>
+        <Text style={styles.tab}>{tab}</Text>
+      </View>
+      <View style={styles.bannerRule} />
+      <Text style={styles.subline}>{subline}</Text>
     </>
   );
 }
@@ -294,8 +400,10 @@ function MissionBookDocument({ input }: { input: MissionBookPdfInput }) {
       creator="Neo-Archiv"
     >
       <Page size="A4" style={styles.titlePage}>
-        <Text style={styles.bookSubtitle}>{campaignTitle}</Text>
+        <View style={styles.docFrame} />
+        <Text style={styles.bookSubtitle}>{campaignTitle.toUpperCase()}</Text>
         <Text style={styles.bookTitle}>{book.title.toUpperCase()}</Text>
+        <View style={styles.bannerRule} />
         <Text style={styles.bookMeta}>
           {missionMetaLine(book)}
           {book.participants.length > 0
@@ -310,9 +418,67 @@ function MissionBookDocument({ input }: { input: MissionBookPdfInput }) {
         </Text>
       </Page>
 
+      {/* Inhaltsverzeichnis. Ohne Seitenzahlen, dafür anklickbar: wie viele
+          Seiten ein Bericht braucht, steht erst beim Setzen fest — eine Zahl
+          hier wäre geraten. Die Einträge springen im PDF an ihren Bericht,
+          die Lesezeichen des Betrachters führen zu denselben Stellen. */}
+      <Page size="A4" style={styles.page} bookmark="Inhalt">
+        <SheetHead
+          campaignTitle={campaignTitle}
+          tab="INHALT"
+          subline={`${book.title} — Inhaltsverzeichnis`}
+        />
+        <Text style={styles.section}>MISSIONSAKTE</Text>
+        <Link src={`#${MISSION_ANCHOR}`} style={styles.tocItem}>
+          <Text style={styles.tocTitle}>{book.title.toUpperCase()}</Text>
+          <Text style={styles.tocMeta}>{missionMetaLine(book)}</Text>
+        </Link>
+
+        <Text style={styles.section}>LOGBÜCHER</Text>
+        {book.logs.length === 0 ? (
+          <Text style={styles.empty}>
+            Zu dieser Mission ist (für dich) kein Logbuch hinterlegt.
+          </Text>
+        ) : (
+          <>
+            <Text style={styles.tocHint}>
+              Jeder Bericht beginnt auf einer neuen Seite; ein Klick auf den
+              Eintrag springt dorthin.
+            </Text>
+            {book.logs.map((log) => (
+              <Link
+                key={log.slug}
+                src={`#${logAnchor(log.slug)}`}
+                style={styles.tocItem}
+              >
+                <Text style={styles.tocTitle}>{log.title.toUpperCase()}</Text>
+                {logMetaLine(log) !== "" && (
+                  <Text style={styles.tocMeta}>{logMetaLine(log)}</Text>
+                )}
+                {log.visibility !== "public" && (
+                  <Text style={styles.tocMeta}>
+                    {log.visibility === "gm"
+                      ? "Nur für die Spielleitung sichtbar"
+                      : "Nicht öffentlich sichtbar"}
+                  </Text>
+                )}
+              </Link>
+            ))}
+          </>
+        )}
+        <Footer title={book.title} />
+      </Page>
+
       <Page size="A4" style={styles.page} bookmark={book.title}>
-        <Text style={styles.missionTitle}>{book.title}</Text>
-        <Text style={styles.missionMeta}>{missionMetaLine(book)}</Text>
+        <SheetHead
+          campaignTitle={campaignTitle}
+          tab="MISSION"
+          subline={`${book.title} — Missionsakte`}
+        />
+        <Text id={MISSION_ANCHOR} style={styles.entryTitle}>
+          {book.title.toUpperCase()}
+        </Text>
+        <Text style={styles.meta}>{missionMetaLine(book)}</Text>
         <Blocks markdown={book.sourceMarkdown} />
         <Footer title={book.title} />
       </Page>
@@ -321,18 +487,20 @@ function MissionBookDocument({ input }: { input: MissionBookPdfInput }) {
           durchgeblättert, und zwei Berichte auf einer Seite kleben aneinander.
           Das Lesezeichen führt direkt zum jeweiligen Bericht. */}
       {book.logs.map((log) => (
-        <Page
-          key={log.slug}
-          size="A4"
-          style={styles.page}
-          bookmark={log.title}
-        >
-          <Text style={styles.logTitle}>{log.title}</Text>
+        <Page key={log.slug} size="A4" style={styles.page} bookmark={log.title}>
+          <SheetHead
+            campaignTitle={campaignTitle}
+            tab="LOGBUCH"
+            subline={`${book.title} — Einsatzbericht`}
+          />
+          <Text id={logAnchor(log.slug)} style={styles.entryTitle}>
+            {log.title.toUpperCase()}
+          </Text>
           {logMetaLine(log) !== "" && (
-            <Text style={styles.logMeta}>{logMetaLine(log)}</Text>
+            <Text style={styles.meta}>{logMetaLine(log)}</Text>
           )}
           {log.visibility !== "public" && (
-            <Text style={styles.logNotice}>
+            <Text style={styles.notice}>
               {log.visibility === "gm"
                 ? "Nur für die Spielleitung sichtbar"
                 : "Nicht öffentlich sichtbar"}
@@ -341,22 +509,13 @@ function MissionBookDocument({ input }: { input: MissionBookPdfInput }) {
           <Blocks markdown={log.sourceMarkdown} />
           <Link
             src={`${input.baseUrl}${missionLogHref(book.slug, log.slug)}`}
-            style={styles.logMeta}
+            style={styles.link}
           >
             Im Archiv lesen
           </Link>
           <Footer title={book.title} />
         </Page>
       ))}
-
-      {book.logs.length === 0 && (
-        <Page size="A4" style={styles.page} bookmark="Logbücher">
-          <Text style={styles.empty}>
-            Zu dieser Mission ist (für dich) kein Logbuch hinterlegt.
-          </Text>
-          <Footer title={book.title} />
-        </Page>
-      )}
     </Document>
   );
 }

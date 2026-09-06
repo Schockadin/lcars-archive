@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { logMetaLine, missionMetaLine } from "./MissionBookPdfDocument";
+import {
+  logAnchor,
+  logMetaLine,
+  missionMetaLine,
+} from "./MissionBookPdfDocument";
 import type { MissionBookLog } from "@/lib/missionBook";
 
 // Die Kopfzeilen der Missionsakte: sie setzen sich aus dem zusammen, was am
@@ -84,5 +88,14 @@ describe("logMetaLine", () => {
 
   it("nimmt auch Session 0 mit (0 ist eine Nummer, kein Fehlen)", () => {
     expect(logMetaLine(log({ sessionNr: 0 }))).toBe("Session 0");
+  });
+});
+
+describe("logAnchor", () => {
+  it("baut ein eindeutiges Sprungziel aus dem Slug", () => {
+    // Die Einträge des Inhaltsverzeichnisses verweisen darauf; ohne Präfix
+    // könnte ein Log-Slug mit dem Sprungziel der Mission kollidieren.
+    expect(logAnchor("erster-tag")).toBe("log-erster-tag");
+    expect(logAnchor("mission")).not.toBe("mission");
   });
 });

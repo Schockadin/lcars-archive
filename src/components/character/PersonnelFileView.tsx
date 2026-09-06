@@ -80,7 +80,7 @@ export default function PersonnelFileView({
   portrait: string | null;
   stats: CharacterStats;
   // Der Vollbild-Knopf gehört zur Einzelansicht des Bogens. In der
-  // dreiblättrigen Vorschau (CharacterSheetPreview) ist das Fenster selbst
+  // mehrblättrigen Vorschau (CharacterSheetPreview) ist das Fenster selbst
   // schon die Vollansicht — dort säße er nur im Weg.
   expandable?: boolean;
 }) {
