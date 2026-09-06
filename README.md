@@ -473,8 +473,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   gespeicherte Kopie liefe bei jeder Bearbeitung auseinander und die
   Sichtbarkeit müsste doppelt gepflegt werden. Fünf Abfragen für die ganze
   Seite, ungecacht (der Inhalt hängt am Betrachter, wie beim Beziehungsgraph).
-  Umfang, Sortierung (Datum oder Ereignisart), Suche, Ereignisart, Beteiligte
-  und Jahr laufen als reine Funktionen in `src/lib/timelineTypes.ts` und sind
+  Umfang, Sortierrichtung, Suche, Ereignisart, Beteiligte und Jahr laufen als
+  reine Funktionen in `src/lib/timelineTypes.ts` und sind
   dort einzeln getestet.
 - **Ereignisse ableiten (`/gm/chronologie`)** — die Spielleitung lässt je Inhalt
   das Sprachmodell die Begebenheiten nennen, die im Text stecken, aber in keinem

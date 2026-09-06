@@ -229,7 +229,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "eigene-inhalte",
       },
       {
-        text: "Die Chronologie ist jetzt zugleich die Missions-Übersicht: Sie zeigt in der Vorgabe je Einsatz seinen Beginn, und ein Klick führt auf die Missionsseite. Mit dem Umschalter „Alle Ereignisse“ kommen Logbücher, markierte Textstellen, Gespräche und Geburtstage dazu — dazu neue Filter nach beteiligter Person und eine Sortierung nach Ereignisart. Der Menüpunkt „Missionen“ ist entfallen, die alte Adresse führt in die Chronologie.",
+        text: "Die Chronologie ist jetzt zugleich die Missions-Übersicht: Sie zeigt in der Vorgabe je Einsatz seinen Beginn, und ein Klick führt auf die Missionsseite. Mit dem Umschalter „Alle Ereignisse“ kommen Logbücher, markierte Textstellen, Gespräche und Geburtstage dazu — dazu ein neuer Filter nach beteiligter Person. Der Menüpunkt „Missionen“ ist entfallen, die alte Adresse führt in die Chronologie.",
         category: "inhalte",
         tutorial: "chronologie",
       },

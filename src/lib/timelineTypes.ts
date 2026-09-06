@@ -172,35 +172,22 @@ export function parseTimelineMarkers(markdown: string): ParsedMarker[] {
 
 export type TimelineSortDir = "asc" | "desc";
 
-// Wonach die Liste geordnet wird. Das Datum ist der Sinn eines Zeitstrahls
-// und bleibt die Vorgabe; nach Ereignisart geordnet lässt sich überblicken,
-// was es überhaupt gibt — innerhalb einer Art bleibt es chronologisch.
-export type TimelineSortKey = "date" | "category";
-
+// Ein Zeitstrahl wird nach dem Datum geordnet, sonst ist er keiner — die
+// Richtung ist das Einzige, was hier zur Wahl steht. Eine zweite Ordnung nach
+// Ereignisart gab es kurzzeitig; sie stellte die Karten quer zu den
+// Monats-Trennern und ist wieder entfallen. Wer eine Art für sich sehen will,
+// filtert danach (/chronologie/[kategorie]).
 export function sortEvents(
   events: TimelineEvent[],
   dir: TimelineSortDir,
-  key: TimelineSortKey = "date",
 ): TimelineEvent[] {
   const factor = dir === "asc" ? 1 : -1;
   return [...events].sort((a, b) => {
-    if (key === "category" && a.category !== b.category) {
-      return (
-        factor * categoryRank(a.category) - factor * categoryRank(b.category)
-      );
-    }
     if (a.date !== b.date) return a.date < b.date ? -factor : factor;
     // Bei gleichem Datum immer dieselbe Reihenfolge, sonst springen die
     // Karten zwischen zwei Aufrufen — der Titel entscheidet.
     return a.title.localeCompare(b.title, "de");
   });
-}
-
-// Die Reihenfolge des Katalogs (EVENT_CATEGORIES), nicht das Alphabet:
-// „Mission" steht dort bewusst vorn. Unbekanntes ans Ende.
-function categoryRank(category: string): number {
-  const index = EVENT_CATEGORIES.findIndex((c) => c.key === category);
-  return index === -1 ? EVENT_CATEGORIES.length : index;
 }
 
 export function yearOf(date: string): string {

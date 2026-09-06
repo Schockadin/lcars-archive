@@ -135,9 +135,9 @@ export default function TutorialPage() {
                 Beginn, und ein Klick führt auf die Missionsseite mit ihren
                 Einsatzberichten. Mit <strong>„Alle Ereignisse“</strong>
                 kommen Logbücher, markierte Textstellen, Gespräche,
-                Geburtstage und abgeleitete Begebenheiten dazu. Daneben
-                sortierst du nach <strong>Datum</strong> oder{" "}
-                <strong>Art</strong> und filterst nach Suchbegriff,{" "}
+                Geburtstage und abgeleitete Begebenheiten dazu. Geordnet wird
+                immer nach <strong>Datum</strong> — der Knopf dreht die
+                Richtung um —, gefiltert nach Suchbegriff,{" "}
                 <strong>Ereignisart</strong>, <strong>beteiligter Person</strong>{" "}
                 und Jahr; wechselst du den Umschalter, setzen sich die übrigen
                 Filter zurück. Einen eigenen Menüpunkt „Missionen“ gibt es

@@ -63,15 +63,15 @@ test.describe("Chronologie", () => {
     expect(asc[0]).toContain("Tuvok geboren");
   });
 
-  test("sortiert wahlweise nach Ereignisart", async ({ page }) => {
+  test("bietet nur das Datum als Sortierung an", async ({ page }) => {
     await alleEreignisse(page);
-    // Die zweite Sortier-Option ordnet nach Art statt nach Datum: die
-    // Missionen stehen im Katalog vorn und rücken damit zusammen nach oben.
-    await page.locator("#timeline .mission-sort button").last().click();
-    const titles = await page
-      .locator("#timeline .mission-akte-title")
-      .allTextContents();
-    expect(titles.slice(0, 3).join(" ")).toContain("Mission");
+    // Ein Zeitstrahl wird nach dem Datum geordnet, sonst ist er keiner —
+    // die frühere zweite Option „Art" ist entfallen.
+    await expect(page.locator("#timeline .mission-sort button")).toHaveCount(1);
+    await expect(page.locator("#timeline .mission-sort")).toContainText("Datum");
+    await expect(page.locator("#timeline .mission-sort")).not.toContainText(
+      "Art",
+    );
   });
 
   test("trennt die Monate mit einer Zwischenüberschrift", async ({ page }) => {

@@ -23,7 +23,6 @@ import {
   yearsOf,
   type TimelineEvent,
   type TimelineScope,
-  type TimelineSortKey,
 } from "@/lib/timelineTypes";
 import { chronologyCategoryHref } from "@/lib/contentRoutes";
 
@@ -64,7 +63,6 @@ export default function TimelineView({
   const [scope, setScope] = useState<TimelineScope>(
     initialCategory ? "all" : DEFAULT_TIMELINE_SCOPE,
   );
-  const [sortKey, setSortKey] = useState<TimelineSortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(initialCategory);
@@ -109,9 +107,8 @@ export default function TimelineView({
       sortEvents(
         filterEvents(events, { query, category, person, year, scope }),
         sortDir,
-        sortKey,
       ),
-    [events, query, category, person, year, scope, sortDir, sortKey],
+    [events, query, category, person, year, scope, sortDir],
   );
 
   const activeCategory = category ? categoryVisual(category).label : null;
@@ -175,18 +172,14 @@ export default function TimelineView({
               ))}
             </select>
 
+            {/* Nur die Richtung: ein Zeitstrahl wird nach dem Datum
+                geordnet, sonst ist er keiner. */}
             <LcarsSortSwitch
               className="mission-sort"
-              options={[
-                { key: "date", label: "Datum" },
-                { key: "category", label: "Art" },
-              ]}
-              sortKey={sortKey}
+              options={[{ key: "date", label: "Datum" }]}
+              sortKey="date"
               sortDir={sortDir}
-              onChange={(key, dir) => {
-                setSortKey(key as TimelineSortKey);
-                setSortDir(dir);
-              }}
+              onChange={(_key, dir) => setSortDir(dir)}
             />
 
             <LcarsListFilterInput
