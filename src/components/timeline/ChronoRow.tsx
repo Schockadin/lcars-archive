@@ -2,14 +2,15 @@ import { fmtDate } from "@/lib/missionFormat";
 
 // Eine Zeile des Zeitstrahls: Datum · Schiene mit Punkt · Karte.
 //
-// Dieselbe Schiene tragen die Chronologie (/chronologie) und die
-// Missions-Übersicht (/missions) — es ist zweimal derselbe Gegenstand, eine
-// Liste datierter Einträge, und zwei Schienen nebeneinander wären zwei
-// Antworten auf dieselbe Frage. Die Optik steckt in timeline.css
-// (.timeline-event und Nachbarn).
+// Gebaut wurde sie für zwei Listen — die Chronologie und die frühere eigene
+// Missions-Übersicht. Beide sind inzwischen dieselbe Seite (/chronologie
+// zeigt in der Vorgabe die Missionsstarts), die Zeile bleibt trotzdem eine
+// eigene Komponente: sie ist das Gerüst des Zeitstrahls, nicht ein Detail
+// seiner Ansicht. Die Optik steckt in timeline.css (.timeline-event und
+// Nachbarn).
 //
-// Bewusst ohne "use client": die Zeile ist reines Markup und wird von
-// Client-Komponenten (TimelineView, MissionsOverview) mitgezogen.
+// Bewusst ohne "use client": die Zeile ist reines Markup und wird von der
+// Client-Komponente TimelineView mitgezogen.
 export default function ChronoRow({
   date,
   color,

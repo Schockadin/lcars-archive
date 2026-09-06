@@ -26,14 +26,15 @@ export interface NavItem {
 export const MAIN_NAV: NavItem[] = [
   { id: "00", label: "Home", href: "/" },
   { id: "01", label: "Charaktere", href: "/characters" },
-  { id: "02", label: "Missionen", href: "/missions" },
+  // Die Chronologie ist zugleich die Missions-Übersicht: in der Vorgabe zeigt
+  // sie je Einsatz seinen Beginn und führt von dort auf die Missionsseite,
+  // auf Wunsch den vollen Zeitstrahl. Der frühere eigene Punkt „Missionen"
+  // (/missions) ist deshalb entfallen; die Route leitet hierher um.
+  { id: "02", label: "Chronologie", href: "/chronologie" },
   // Label „Datenbank" statt „Archiv" — die Route bleibt /archive (und damit
   // auch der NavKey "archive" sowie alle bestehenden Links/Lesezeichen).
   { id: "03", label: "Datenbank", href: "/archive" },
-  // Die Chronologie stellt dieselben Inhalte nach ihrer eigenen Zeitrechnung
-  // dar (In-Story-Datum), nicht nach Bearbeitungszeit.
-  { id: "04", label: "Chronologie", href: "/chronologie" },
   // Die Suchseite zeigt oben die Volltextsuche und darunter den
   // Archiv-Assistenten (für Berechtigte).
-  { id: "05", label: "Suche", href: "/search" },
+  { id: "04", label: "Suche", href: "/search" },
 ];

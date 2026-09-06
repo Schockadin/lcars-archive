@@ -16,7 +16,7 @@ const TYPE_ORDER: SearchResultType[] = [
 // Ergebnisliste der /search-Seite: Filter nach Treffertyp. Reihenfolge
 // immer Relevanz (aus der DB-Query, bereits typgruppiert und je Gruppe
 // Präfix-Treffer zuerst). Lokaler useState statt URL-Params, analog zu
-// MissionsOverview.tsx/DialogueList.tsx.
+// TimelineView.tsx/DialogueList.tsx.
 export default function SearchResultsView({
   query,
   results,

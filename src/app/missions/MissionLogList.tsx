@@ -71,7 +71,7 @@ export default function MissionLogList({
   return (
     <div className="mission-loglist">
       <div className="mission-loglist-head">
-        <Link href="/missions" className="lcars-back-link">
+        <Link href="/chronologie" className="lcars-back-link">
           ‹ Missionen
         </Link>
       </div>

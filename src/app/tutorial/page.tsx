@@ -74,7 +74,8 @@ export default function TutorialPage() {
                 <strong>Charaktere</strong> (Personalakten mit Biografie,
                 darunter auch die Übersicht abgeschlossener{" "}
                 <strong>Gespräche</strong>), <strong>Missionen</strong> (mit
-                ihren Einsatzberichten), das kategorisierte{" "}
+                ihren Einsatzberichten, erreichbar über die{" "}
+                <strong>Chronologie</strong>), das kategorisierte{" "}
                 <strong>Datenbank</strong> (Personen, Orte, Fraktionen, Spezies,
                 Objekte, Ereignisse, Theorien, NPCs und Sonstiges) sowie die{" "}
                 <strong>Suche</strong> (Volltextsuche über alle diese Inhalte,
@@ -122,11 +123,25 @@ export default function TutorialPage() {
                 <strong>Chronologie</strong> zeigt dieselben Inhalte wie der
                 Rest des Archivs, aber nach der Zeit der Kampagne statt nach
                 dem Bearbeitungsdatum: ein Zeitstrahl von der ältesten bis zur
-                jüngsten bekannten Begebenheit. Sortierung, Suche, Ereignisart
-                und Jahr schränken die Liste ein; jede Karte führt zu dem
-                Eintrag, aus dem das Ereignis stammt. Was du dort siehst,
-                richtet sich nach deinen Leserechten — ein Logbuch, das du
-                nicht lesen darfst, taucht auch in der Chronologie nicht auf.
+                jüngsten bekannten Begebenheit. Was du dort siehst, richtet
+                sich nach deinen Leserechten — ein Logbuch, das du nicht lesen
+                darfst, taucht auch in der Chronologie nicht auf. Entwürfe
+                erscheinen dort grundsätzlich nicht, auch nicht die eigenen.
+              </p>
+              <p>
+                Sie ist zugleich die <strong>Missions-Übersicht</strong>: Ganz
+                links im Umschalter steht <strong>„Missionen“</strong> — dann
+                zeigt der Zeitstrahl je Einsatz genau einen Eintrag, seinen
+                Beginn, und ein Klick führt auf die Missionsseite mit ihren
+                Einsatzberichten. Mit <strong>„Alle Ereignisse“</strong>
+                kommen Logbücher, markierte Textstellen, Gespräche,
+                Geburtstage und abgeleitete Begebenheiten dazu. Daneben
+                sortierst du nach <strong>Datum</strong> oder{" "}
+                <strong>Art</strong> und filterst nach Suchbegriff,{" "}
+                <strong>Ereignisart</strong>, <strong>beteiligter Person</strong>{" "}
+                und Jahr; wechselst du den Umschalter, setzen sich die übrigen
+                Filter zurück. Einen eigenen Menüpunkt „Missionen“ gibt es
+                deshalb nicht mehr — die alte Adresse führt hierher.
               </p>
               <p>
                 Die Ereignisse kommen aus <strong>drei Quellen</strong>. Erstens

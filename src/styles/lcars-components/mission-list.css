@@ -1,13 +1,13 @@
-/* ─── Missions-Übersicht: Toolbar, Chronik & Log-Liste ─────────────────
-   Sortier-/Filter-Toolbar sowie die beiden Jahres-Chronik-Ansichten
-   (Missions-Rail und Timeline-Rail) samt den darin gestapelten
-   Einsatzakten und Log-Zeilen. Die Master-Detail-Seite selbst lebt in
+/* ─── Einsatzakten: Toolbar, Karte & Log-Liste ─────────────────────────
+   Die Sortier-/Filter-Toolbar (heute von der Chronologie und der Suche
+   benutzt — die eigene Missions-Übersicht ist darin aufgegangen), die
+   Einsatzakte selbst und die Log-Zeilen. Die Master-Detail-Seite lebt in
    mission-detail.css.
 ──────────────────────────────────────────────────────────────────── */
 
-/* ── Missions-Toolbar (Sortierung + Autor-Filter) ────────────────── */
+/* ── Toolbar (Sortierung + Auswahlfelder) ────────────────────────── */
 /* Das Toolbar-Layout selbst kommt aus .lcars-toolbar (shared.css); hier
-   stehen nur die missions-spezifischen Teile. */
+   stehen nur die Teile, die an den Listen datierter Einträge hängen. */
 .mission-sort {
   display: flex;
   gap: 10px;

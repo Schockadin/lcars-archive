@@ -136,7 +136,9 @@ export default function ActionsMenu({
     : contentType === "character"
       ? "/characters"
       : contentType === "mission"
-        ? "/missions"
+        ? // Nach dem Löschen einer Mission zurück in die Chronologie — dort
+          // steht seit dem Zusammenlegen die Missions-Übersicht.
+          "/chronologie"
         : contentType === "missionLog" && "mission_slug" in content
           ? `/missions/${content.mission_slug}`
           : "/archive";

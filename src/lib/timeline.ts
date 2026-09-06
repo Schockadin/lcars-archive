@@ -1,6 +1,6 @@
 import "server-only";
 import sql from "@/lib/db";
-import { canView, canViewDraft, type Viewer } from "@/lib/visibility";
+import { canView, type Viewer } from "@/lib/visibility";
 import type { Visibility } from "@/lib/visibility";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import {
@@ -31,7 +31,7 @@ import {
 // jedem Seitenaufruf neu entstehen.
 //
 // Bewusst OHNE "use cache": die Chronologie hängt an der Sichtbarkeit der
-// betrachtenden Person (nicht-öffentliche Logbücher, Entwürfe) — dieselbe
+// betrachtenden Person (nicht-öffentliche Logbücher) — dieselbe
 // Begründung wie beim Beziehungsgraph und bei der Missionsakte. Es sind fünf
 // Abfragen für die ganze Seite, nicht eine je Inhalt.
 
@@ -233,7 +233,13 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
   // Missionen kennen keine Sichtbarkeit, nur Entwurfsstatus (siehe
   // getAllMissions): ein Entwurf gehört nur seiner Autorin/seinem Autor.
   for (const mission of missions) {
-    if (!canViewDraft(mission.is_draft, mission.owner_user_id, viewer)) continue;
+    // Entwürfe erscheinen in der Chronologie GAR NICHT — auch nicht ihrem
+    // Owner. Die Chronologie ist seit dem Zusammenlegen die Missions-Übersicht,
+    // und die zeigte noch nie Entwürfe (getAllMissions filtert sie in der
+    // Abfrage weg). Ein Zeitstrahl, der für eine Person Ereignisse enthält,
+    // die für alle anderen nicht existieren, erzählt außerdem eine andere
+    // Kampagne als die, über die am Tisch geredet wird.
+    if (mission.is_draft) continue;
     const href = `/missions/${mission.slug}`;
     const people = mission.participants ?? [];
     visibleSources.set(`mission:${mission.slug}`, {
@@ -249,6 +255,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
         title: mission.title,
         detail: "Beginn des Einsatzes.",
         category: "mission",
+        phase: "start",
         origin: "metadata",
         sourceType: "mission",
         sourceTitle: mission.title,
@@ -265,6 +272,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
         title: mission.title,
         detail: "Abschluss des Einsatzes.",
         category: "mission",
+        phase: "end",
         origin: "metadata",
         sourceType: "mission",
         sourceTitle: mission.title,
@@ -287,7 +295,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
   // ── Logbücher ────────────────────────────────────────────────────────────
   for (const log of logs) {
     if (!canView(log.visibility, log.owner_user_id, viewer)) continue;
-    if (!canViewDraft(log.is_draft, log.owner_user_id, viewer)) continue;
+    if (log.is_draft) continue;
     const href = `/missions/${log.mission_slug}/${log.slug}`;
     const people = log.author_name ? [log.author_name] : [];
     visibleSources.set(`mission_log:${log.slug}`, {
@@ -325,7 +333,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
   // ── Datenbank-Einträge ───────────────────────────────────────────────────
   for (const entry of entries) {
     if (!canView(entry.visibility, entry.owner_user_id, viewer)) continue;
-    if (!canViewDraft(entry.is_draft, entry.owner_user_id, viewer)) continue;
+    if (entry.is_draft) continue;
     const href =
       entry.category === "dialogue"
         ? `/characters/dialogues/${entry.slug}`
@@ -382,9 +390,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
   // ── Charaktere ───────────────────────────────────────────────────────────
   for (const character of characters) {
     if (!canView(character.visibility, character.player_id, viewer)) continue;
-    if (!canViewDraft(character.is_draft, character.player_id, viewer)) {
-      continue;
-    }
+    if (character.is_draft) continue;
     const href = `/characters/${character.slug}`;
     const metadata = character.metadata ?? {};
     visibleSources.set(`character:${character.slug}`, {

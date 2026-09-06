@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAULT_TIMELINE_SCOPE,
   categoryVisual,
   filterEvents,
   isIsoDate,
+  isMissionStart,
   parseTimelineMarkers,
+  peopleOf,
   periodKey,
   periodLabel,
   sortEvents,
@@ -226,5 +229,120 @@ describe("filterEvents", () => {
     expect(
       filterEvents(events, { query: "  ", category: null, year: null }),
     ).toHaveLength(3);
+  });
+});
+
+// Die Chronologie ist zugleich die Missions-Übersicht: in der Vorgabe steht
+// dort je Einsatz GENAU ein Eintrag — sein Beginn. Ein Missionsende oder ein
+// Logbuch würde die Liste verdoppeln, ohne etwas hinzuzufügen.
+describe("Umfang der Chronologie", () => {
+  const events = [
+    event({ id: "start", phase: "start", people: ["Tuvok", "Kira"] }),
+    event({ id: "ende", phase: "end", date: "2401-03-20" }),
+    event({
+      id: "log",
+      sourceType: "mission_log",
+      category: "log",
+      date: "2401-03-07",
+      people: ["Tuvok"],
+    }),
+    event({
+      id: "marke",
+      origin: "marker",
+      category: "discovery",
+      date: "2401-03-09",
+    }),
+  ];
+
+  it("zeigt in der Vorgabe nur die Missionsstarts", () => {
+    expect(DEFAULT_TIMELINE_SCOPE).toBe("missions");
+    const visible = filterEvents(events, {
+      query: "",
+      category: null,
+      year: null,
+      scope: "missions",
+    });
+    expect(visible.map((e) => e.id)).toEqual(["start"]);
+  });
+
+  it("zeigt mit „Alle Ereignisse“ wieder alles", () => {
+    const visible = filterEvents(events, {
+      query: "",
+      category: null,
+      year: null,
+      scope: "all",
+    });
+    expect(visible).toHaveLength(4);
+  });
+
+  it("hält ein Ereignis ohne Umfang-Angabe für sichtbar", () => {
+    // Ältere Aufrufer (und die Jahresleiste) geben keinen Umfang mit — dann
+    // darf nichts stillschweigend verschwinden.
+    expect(
+      filterEvents(events, { query: "", category: null, year: null }),
+    ).toHaveLength(4);
+  });
+
+  it("erkennt einen Missionsstart nur an Quelle UND Phase", () => {
+    expect(isMissionStart(event({ phase: "start" }))).toBe(true);
+    expect(isMissionStart(event({ phase: "end" }))).toBe(false);
+    expect(isMissionStart(event({}))).toBe(false);
+    expect(
+      isMissionStart(event({ sourceType: "mission_log", phase: "start" })),
+    ).toBe(false);
+  });
+
+  it("filtert nach beteiligter Person", () => {
+    const visible = filterEvents(events, {
+      query: "",
+      category: null,
+      year: null,
+      scope: "all",
+      person: "Kira",
+    });
+    expect(visible.map((e) => e.id)).toEqual(["start"]);
+  });
+
+  it("sammelt die Beteiligten alphabetisch und ohne Dubletten", () => {
+    expect(peopleOf(events)).toEqual(["Kira", "Tuvok"]);
+    expect(peopleOf([])).toEqual([]);
+  });
+});
+
+describe("sortEvents nach Ereignisart", () => {
+  it("ordnet nach der Reihenfolge des Katalogs, innerhalb davon nach Datum", () => {
+    const events = [
+      event({ id: "konflikt", category: "conflict", date: "2401-01-01" }),
+      event({ id: "mission-spaet", category: "mission", date: "2402-01-01" }),
+      event({ id: "mission-frueh", category: "mission", date: "2401-01-01" }),
+    ];
+    // „mission" steht im Katalog vor „conflict" — aufsteigend also zuerst;
+    // innerhalb einer Art bleibt es chronologisch.
+    expect(sortEvents(events, "asc", "category").map((e) => e.id)).toEqual([
+      "mission-frueh",
+      "mission-spaet",
+      "konflikt",
+    ]);
+    // Die Richtung gilt für beides: umgedrehte Arten UND umgedrehte Daten.
+    expect(sortEvents(events, "desc", "category").map((e) => e.id)).toEqual([
+      "konflikt",
+      "mission-spaet",
+      "mission-frueh",
+    ]);
+  });
+
+  it("dreht die Reihenfolge der Arten um", () => {
+    const events = [
+      event({ id: "mission", category: "mission" }),
+      event({ id: "konflikt", category: "conflict" }),
+    ];
+    expect(sortEvents(events, "asc", "category").map((e) => e.id)).toEqual([
+      "mission",
+      "konflikt",
+    ]);
+    expect(sortEvents(events, "desc", "category").map((e) => e.id)).toEqual([
+      "konflikt",
+      "mission",
+    ]);
   });
 });

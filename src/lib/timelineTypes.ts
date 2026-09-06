@@ -92,6 +92,11 @@ export interface TimelineEvent {
   sourceType: TimelineSourceType;
   sourceTitle: string;
   href: string;
+  // Nur an den beiden gepflegten Missions-Ereignissen: ob dies der Beginn
+  // oder der Abschluss des Einsatzes ist. Die Standardansicht der Chronologie
+  // zeigt genau die Starts (siehe TIMELINE_SCOPES) — sie sind das, was die
+  // frühere Missions-Übersicht war.
+  phase?: "start" | "end";
   // Beteiligte Figuren/NPCs, soweit am Inhalt gepflegt — im Entwurf die Zeile
   // „PERSONEN: …".
   people: string[];
@@ -166,17 +171,35 @@ export function parseTimelineMarkers(markdown: string): ParsedMarker[] {
 
 export type TimelineSortDir = "asc" | "desc";
 
+// Wonach die Liste geordnet wird. Das Datum ist der Sinn eines Zeitstrahls
+// und bleibt die Vorgabe; nach Ereignisart geordnet lässt sich überblicken,
+// was es überhaupt gibt — innerhalb einer Art bleibt es chronologisch.
+export type TimelineSortKey = "date" | "category";
+
 export function sortEvents(
   events: TimelineEvent[],
   dir: TimelineSortDir,
+  key: TimelineSortKey = "date",
 ): TimelineEvent[] {
   const factor = dir === "asc" ? 1 : -1;
   return [...events].sort((a, b) => {
+    if (key === "category" && a.category !== b.category) {
+      return (
+        factor * categoryRank(a.category) - factor * categoryRank(b.category)
+      );
+    }
     if (a.date !== b.date) return a.date < b.date ? -factor : factor;
     // Bei gleichem Datum immer dieselbe Reihenfolge, sonst springen die
     // Karten zwischen zwei Aufrufen — der Titel entscheidet.
     return a.title.localeCompare(b.title, "de");
   });
+}
+
+// Die Reihenfolge des Katalogs (EVENT_CATEGORIES), nicht das Alphabet:
+// „Mission" steht dort bewusst vorn. Unbekanntes ans Ende.
+function categoryRank(category: string): number {
+  const index = EVENT_CATEGORIES.findIndex((c) => c.key === category);
+  return index === -1 ? EVENT_CATEGORIES.length : index;
 }
 
 export function yearOf(date: string): string {
@@ -221,12 +244,41 @@ export function yearsOf(events: TimelineEvent[]): string[] {
   return [...new Set(events.map((e) => yearOf(e.date)))].sort().reverse();
 }
 
-// Filter der Ansicht. Als reine Funktion, damit die Kombination aus Suche,
-// Kategorie und Jahr für sich prüfbar ist.
+// Der Umfang der Ansicht. Die Chronologie ist seit dem Zusammenlegen mit der
+// Missions-Übersicht beides: in der Vorgabe eine Liste der Einsätze (je ein
+// Eintrag, der auf die Missionsseite führt), auf Wunsch der volle Zeitstrahl
+// mit Logbüchern, Marken und abgeleiteten Ereignissen. Wer die Kampagne
+// überfliegen will, soll nicht erst filtern müssen.
+export const TIMELINE_SCOPES = [
+  { key: "missions", label: "Missionen" },
+  { key: "all", label: "Alle Ereignisse" },
+] as const;
+
+export type TimelineScope = (typeof TIMELINE_SCOPES)[number]["key"];
+
+export const DEFAULT_TIMELINE_SCOPE: TimelineScope = "missions";
+
+export function isMissionStart(event: TimelineEvent): boolean {
+  return event.sourceType === "mission" && event.phase === "start";
+}
+
+// Alle Beteiligten, die in diesen Ereignissen vorkommen — alphabetisch, für
+// die Auswahlliste. Ohne Datum gepflegte Figuren tauchen hier nicht auf, das
+// ist gewollt: die Liste soll nur zeigen, wonach sich filtern lässt.
+export function peopleOf(events: TimelineEvent[]): string[] {
+  const names = new Set<string>();
+  for (const event of events) for (const name of event.people) names.add(name);
+  return [...names].sort((a, b) => a.localeCompare(b, "de"));
+}
+
+// Filter der Ansicht. Als reine Funktion, damit die Kombination aus Umfang,
+// Suche, Kategorie, Beteiligten und Jahr für sich prüfbar ist.
 export interface TimelineFilter {
   query: string;
   category: string | null;
   year: string | null;
+  scope?: TimelineScope;
+  person?: string | null;
 }
 
 export function filterEvents(
@@ -234,7 +286,10 @@ export function filterEvents(
   filter: TimelineFilter,
 ): TimelineEvent[] {
   const q = filter.query.trim().toLowerCase();
+  const scope = filter.scope ?? "all";
   return events.filter((event) => {
+    if (scope === "missions" && !isMissionStart(event)) return false;
+    if (filter.person && !event.people.includes(filter.person)) return false;
     if (filter.category && event.category !== filter.category) return false;
     if (filter.year && yearOf(event.date) !== filter.year) return false;
     if (!q) return true;

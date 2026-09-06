@@ -10,7 +10,6 @@ import { MAIN_NAV } from "@/lib/nav";
 import {
   HomeNavIcon,
   CharactersNavIcon,
-  MissionsNavIcon,
   DatabaseNavIcon,
   SearchNavIcon,
   TimelineNavIcon,
@@ -22,7 +21,6 @@ import LcarsMenuItem from "./MenuItem";
 const NAV_ICONS: Record<string, ReactNode> = {
   "/": <HomeNavIcon />,
   "/characters": <CharactersNavIcon />,
-  "/missions": <MissionsNavIcon />,
   "/archive": <DatabaseNavIcon />,
   "/chronologie": <TimelineNavIcon />,
   "/search": <SearchNavIcon />,

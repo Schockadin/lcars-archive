@@ -229,6 +229,16 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "eigene-inhalte",
       },
       {
+        text: "Die Chronologie ist jetzt zugleich die Missions-Übersicht: Sie zeigt in der Vorgabe je Einsatz seinen Beginn, und ein Klick führt auf die Missionsseite. Mit dem Umschalter „Alle Ereignisse“ kommen Logbücher, markierte Textstellen, Gespräche und Geburtstage dazu — dazu neue Filter nach beteiligter Person und eine Sortierung nach Ereignisart. Der Menüpunkt „Missionen“ ist entfallen, die alte Adresse führt in die Chronologie.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Entwürfe tauchen in der Chronologie nicht mehr auf — auch nicht bei der Person, die sie angelegt hat. Ein Zeitstrahl soll für alle dieselbe Kampagne erzählen.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
         text: "Jede Neuerung im Changelog trägt jetzt eine Kategorie — etwa „Charaktere & Regeln“, „Spielleitung“ oder „Darstellung“. Unter /changelog und im Dashboard-Bereich „Neue Funktionen“ schränkst du die Liste über ein Auswahlfeld auf eine Kategorie ein und sortierst wahlweise nach Version oder nach Kategorie.",
         category: "darstellung",
       },

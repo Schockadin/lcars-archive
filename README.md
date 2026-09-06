@@ -433,8 +433,20 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Puppeteer — läuft dadurch auf Netlify Functions). Berücksichtigt dieselbe
   Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst.
 - **Chronologie (`/chronologie`)** — die Kampagne als Zeitstrahl nach ihrer
-  eigenen Zeitrechnung (In-Story-Datum), nicht nach Bearbeitungszeit. Die
-  Ereignisse kommen aus drei Quellen und werden in `src/lib/timeline.ts`
+  eigenen Zeitrechnung (In-Story-Datum), nicht nach Bearbeitungszeit. Sie ist
+  zugleich die **Missions-Übersicht**: in der Vorgabe (`TIMELINE_SCOPES`,
+  Umfang `missions`) zeigt sie genau die **Missionsstarts**, je einer führt auf
+  seine Missionsseite; der Umfang „Alle Ereignisse" schaltet den vollen
+  Zeitstrahl frei. Die frühere eigene Route `/missions` war dieselbe Liste
+  derselben Missionen nach demselben Datum und leitet deshalb hierher um
+  (`src/app/missions/page.tsx`); `/missions/[missionSlug]` ist unberührt.
+  Filter und Sortierung richten sich nach dem Umfang: Ereignisart und
+  Beteiligte werden aus den Ereignissen **im Umfang** gebildet, ein
+  Umfangwechsel setzt sie zurück. **Entwürfe erscheinen nirgends** — auch
+  nicht ihrem Owner (die Missions-Übersicht zeigte sie noch nie, und ein
+  Zeitstrahl, der für eine Person Ereignisse enthält, die für alle anderen
+  nicht existieren, erzählt eine andere Kampagne als die am Tisch).
+  Die Ereignisse kommen aus drei Quellen und werden in `src/lib/timeline.ts`
   zusammengetragen:
   1. **Gepflegte Angaben** der Inhalte (Missionsbeginn/-ende, `log_date` eines
      Logbuchs, `metadata.logDate` eines Gesprächs, `metadata.dateOfBirth` einer
@@ -451,8 +463,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   gespeicherte Kopie liefe bei jeder Bearbeitung auseinander und die
   Sichtbarkeit müsste doppelt gepflegt werden. Fünf Abfragen für die ganze
   Seite, ungecacht (der Inhalt hängt am Betrachter, wie beim Beziehungsgraph).
-  Filter (Sortierung, Suche, Ereignisart, Jahr) laufen als reine Funktionen in
-  `src/lib/timelineTypes.ts` und sind dort einzeln getestet.
+  Umfang, Sortierung (Datum oder Ereignisart), Suche, Ereignisart, Beteiligte
+  und Jahr laufen als reine Funktionen in `src/lib/timelineTypes.ts` und sind
+  dort einzeln getestet.
 - **Ereignisse ableiten (`/gm/chronologie`)** — die Spielleitung lässt je Inhalt
   das Sprachmodell die Begebenheiten nennen, die im Text stecken, aber in keinem
   Feld stehen („drei Tage später …"). Verwendet dieselbe Retrieval-Pipeline wie

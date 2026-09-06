@@ -21,22 +21,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${BASE_URL}/missions`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.8,
-    },
-    {
       url: `${BASE_URL}/archive`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.6,
     },
     {
+      // Die Chronologie ist zugleich die Missions-Übersicht — /missions
+      // leitet hierher um und steht deshalb nicht mehr eigens in der Sitemap.
       url: `${BASE_URL}/chronologie`,
       lastModified: new Date(),
       changeFrequency: "weekly",
-      priority: 0.6,
+      priority: 0.8,
     },
   ];
 

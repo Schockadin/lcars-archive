@@ -8,41 +8,63 @@ import {
 } from "@/components/lcars";
 import ChronoRow from "@/components/timeline/ChronoRow";
 import {
+  DEFAULT_TIMELINE_SCOPE,
   EVENT_CATEGORIES,
   ORIGIN_LABELS,
   SOURCE_TYPE_LABELS,
+  TIMELINE_SCOPES,
   categoryVisual,
   filterEvents,
   fmtDate,
+  peopleOf,
   periodKey,
   periodLabel,
   sortEvents,
   yearsOf,
   type TimelineEvent,
+  type TimelineScope,
+  type TimelineSortKey,
 } from "@/lib/timelineTypes";
 
 // Die Chronologie als Zeitstrahl: links Datum und Schiene, rechts die
 // Ereigniskarte. Aufbau nach dem Entwurf (Jahresleiste, Monats-Trenner,
 // Karten mit Kategorie-Etikett und Beteiligten), Optik nach dem übrigen
-// Archiv — dieselbe Toolbar wie die Missions-Übersicht und dieselbe
-// Aktenkarte.
+// Archiv — dieselbe Toolbar und dieselbe Aktenkarte wie überall.
+//
+// Die Chronologie ist zugleich die Missions-Übersicht: in der Vorgabe zeigt
+// sie GENAU die Missionsstarts, je einer führt auf seine Missionsseite. Wer
+// mehr will, schaltet den Umfang auf „Alle Ereignisse" — dann kommen
+// Logbücher, Marken im Text, Gespräche, Geburtstage und das vom Modell
+// Abgeleitete dazu, samt der Filter, die dafür nötig sind.
 //
 // Alle Filter laufen im Browser über die bereits geladene Liste: die
 // Chronologie ist die Kampagne, nicht ein Suchindex — sie umfasst ein paar
 // hundert Ereignisse, und ein Filter, der eine Server-Runde kostet, fühlt
 // sich bei dieser Größe falsch an.
 export default function TimelineView({ events }: { events: TimelineEvent[] }) {
+  const [scope, setScope] = useState<TimelineScope>(DEFAULT_TIMELINE_SCOPE);
+  const [sortKey, setSortKey] = useState<TimelineSortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(null);
+  const [person, setPerson] = useState<string | null>(null);
   const [year, setYear] = useState<string | null>(null);
 
-  // Nur die Kategorien anbieten, die auch vorkommen — eine Auswahl, die
-  // garantiert null Treffer liefert, hilft niemandem.
+  // Ereignisart und Beteiligte richten sich nach dem UMFANG, nicht nach dem
+  // ganzen Bestand: in der Missions-Ansicht gäbe es sonst Einträge, die
+  // garantiert nichts treffen. Innerhalb des Umfangs aber ungefiltert — sonst
+  // fiele die eigene Auswahl aus der Liste, sobald sie greift.
+  const inScope = useMemo(
+    () => filterEvents(events, { query: "", category: null, year: null, scope }),
+    [events, scope],
+  );
+
   const categories = useMemo(() => {
-    const present = new Set(events.map((e) => e.category));
+    const present = new Set(inScope.map((e) => e.category));
     return EVENT_CATEGORIES.filter((c) => present.has(c.key));
-  }, [events]);
+  }, [inScope]);
+
+  const people = useMemo(() => peopleOf(inScope), [inScope]);
 
   // Die Jahresleiste zeigt nur Jahre, in denen unter den ÜBRIGEN Filtern noch
   // etwas liegt: sie wird aus den nach Suche und Ereignisart gefilterten
@@ -50,7 +72,7 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
   // dem ersten Klick nur noch das gewählte Jahr stehen.
   const years = useMemo(() => {
     const withMatches = yearsOf(
-      filterEvents(events, { query, category, year: null }),
+      filterEvents(events, { query, category, person, year: null, scope }),
     );
     // Das gewählte Jahr bleibt in der Leiste, auch wenn ein anderer Filter
     // ihm alle Treffer genommen hat: sonst stünde man vor einer leeren Liste,
@@ -59,23 +81,41 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
       return [...withMatches, year].sort().reverse();
     }
     return withMatches;
-  }, [events, query, category, year]);
+  }, [events, query, category, person, year, scope]);
 
   const visible = useMemo(
-    () => sortEvents(filterEvents(events, { query, category, year }), sortDir),
-    [events, query, category, year, sortDir],
+    () =>
+      sortEvents(
+        filterEvents(events, { query, category, person, year, scope }),
+        sortDir,
+        sortKey,
+      ),
+    [events, query, category, person, year, scope, sortDir, sortKey],
   );
 
   const activeCategory = category ? categoryVisual(category).label : null;
+
+  // Der Umfang wechselt die Grundgesamtheit — eine Ereignisart oder eine
+  // Person, die es im neuen Umfang nicht gibt, bliebe sonst als unsichtbarer
+  // Filter stehen und die Liste wäre unerklärlich leer.
+  function changeScope(next: TimelineScope) {
+    setScope(next);
+    setCategory(null);
+    setPerson(null);
+    setYear(null);
+  }
 
   return (
     <div className="lcars-wide-column">
       <div className="mb-[16px]">
         <h1 className="lcars-data-row-heading">Chronologie</h1>
         <p className="lcars-eyebrow">
-          Ereignisse der Kampagne in ihrer eigenen Zeitrechnung ·{" "}
-          {sortDir === "desc" ? "neueste zuerst" : "älteste zuerst"}
+          {scope === "missions"
+            ? "Die Einsätze der Kampagne in ihrer eigenen Zeitrechnung"
+            : "Ereignisse der Kampagne in ihrer eigenen Zeitrechnung"}{" "}
+          · {sortDir === "desc" ? "neueste zuerst" : "älteste zuerst"}
           {activeCategory ? ` · ${activeCategory}` : ""}
+          {person ? ` · ${person}` : ""}
           {year ? ` · ${year}` : ""}
         </p>
       </div>
@@ -89,12 +129,33 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
       ) : (
         <>
           <div className="lcars-toolbar">
+            {/* Der Umfang steht zuerst: er entscheidet, was die übrigen
+                Filter überhaupt zu filtern haben. */}
+            <select
+              className="mission-author-filter rounded-full"
+              value={scope}
+              onChange={(e) => changeScope(e.target.value as TimelineScope)}
+              aria-label="Umfang der Chronologie"
+            >
+              {TIMELINE_SCOPES.map((s) => (
+                <option key={s.key} value={s.key}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+
             <LcarsSortSwitch
               className="mission-sort"
-              options={[{ key: "date", label: "Datum" }]}
-              sortKey="date"
+              options={[
+                { key: "date", label: "Datum" },
+                { key: "category", label: "Art" },
+              ]}
+              sortKey={sortKey}
               sortDir={sortDir}
-              onChange={(_key, dir) => setSortDir(dir)}
+              onChange={(key, dir) => {
+                setSortKey(key as TimelineSortKey);
+                setSortDir(dir);
+              }}
             />
 
             <LcarsListFilterInput
@@ -103,7 +164,9 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
               ariaLabel="Ereignisse filtern"
             />
 
-            {categories.length > 0 && (
+            {/* In der Missions-Ansicht ist jedes Ereignis eine Mission — eine
+                Auswahl mit einem Eintrag wäre nur Beiwerk. */}
+            {categories.length > 1 && (
               <select
                 className="mission-author-filter rounded-full"
                 value={category ?? ""}
@@ -114,6 +177,22 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
                 {categories.map((c) => (
                   <option key={c.key} value={c.key}>
                     {c.label}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {people.length > 0 && (
+              <select
+                className="mission-author-filter rounded-full"
+                value={person ?? ""}
+                onChange={(e) => setPerson(e.target.value || null)}
+                aria-label="Nach beteiligter Person filtern"
+              >
+                <option value="">Alle Beteiligten</option>
+                {people.map((name) => (
+                  <option key={name} value={name}>
+                    {name}
                   </option>
                 ))}
               </select>
@@ -176,10 +255,17 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
             </div>
           )}
 
+          {/* Gezählt wird gegen den UMFANG, nicht gegen den ganzen Bestand:
+              in der Missions-Ansicht wäre „12 von 480 Ereignissen" eine
+              Auskunft über etwas, das gerade niemand sehen will. */}
           <p className="lcars-eyebrow mt-[12px]">
-            {visible.length === events.length
-              ? `${events.length} Ereignisse`
-              : `${visible.length} von ${events.length} Ereignissen`}
+            {scope === "missions"
+              ? visible.length === inScope.length
+                ? `${inScope.length} ${inScope.length === 1 ? "Mission" : "Missionen"}`
+                : `${visible.length} von ${inScope.length} Missionen`
+              : visible.length === events.length
+                ? `${events.length} Ereignisse`
+                : `${visible.length} von ${events.length} Ereignissen`}
           </p>
         </>
       )}
