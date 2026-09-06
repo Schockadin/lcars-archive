@@ -25,6 +25,7 @@ import {
   type TimelineScope,
   type TimelineSortKey,
 } from "@/lib/timelineTypes";
+import { chronologyCategoryHref } from "@/lib/contentRoutes";
 
 // Die Chronologie als Zeitstrahl: links Datum und Schiene, rechts die
 // Ereigniskarte. Aufbau nach dem Entwurf (Jahresleiste, Monats-Trenner,
@@ -41,12 +42,32 @@ import {
 // Chronologie ist die Kampagne, nicht ein Suchindex — sie umfasst ein paar
 // hundert Ereignisse, und ein Filter, der eine Server-Runde kostet, fühlt
 // sich bei dieser Größe falsch an.
-export default function TimelineView({ events }: { events: TimelineEvent[] }) {
-  const [scope, setScope] = useState<TimelineScope>(DEFAULT_TIMELINE_SCOPE);
+// initialCategory kommt aus der Route (/chronologie/[kategorie], siehe
+// src/app/chronologie/[kategorie]/page.tsx). Eine vorgewählte Ereignisart
+// setzt den Umfang zwingend auf „Alle Ereignisse": in der Missions-Ansicht
+// gibt es nur Missionen, /chronologie/conflict wäre dort garantiert leer.
+//
+// syncUrl schreibt die gewählte Art in die Adresszeile zurück — per
+// history.replaceState statt router.push, damit der Zeitstrahl nicht neu
+// geladen wird und Suche, Beteiligte und Jahr stehen bleiben. Die
+// Attrappen-Ansicht auf /dev-gallery lässt es aus: sie hat keine Route, in
+// die sie schreiben dürfte.
+export default function TimelineView({
+  events,
+  initialCategory = null,
+  syncUrl = false,
+}: {
+  events: TimelineEvent[];
+  initialCategory?: string | null;
+  syncUrl?: boolean;
+}) {
+  const [scope, setScope] = useState<TimelineScope>(
+    initialCategory ? "all" : DEFAULT_TIMELINE_SCOPE,
+  );
   const [sortKey, setSortKey] = useState<TimelineSortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState<string | null>(null);
+  const [category, setCategory] = useState<string | null>(initialCategory);
   const [person, setPerson] = useState<string | null>(null);
   const [year, setYear] = useState<string | null>(null);
 
@@ -95,12 +116,22 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
 
   const activeCategory = category ? categoryVisual(category).label : null;
 
+  // Ereignisart wechseln = Adresse wechseln: /chronologie/conflict ist ein
+  // teilbarer Link auf genau diese Auswahl, „Alle Arten" führt zurück auf
+  // /chronologie.
+  function changeCategory(next: string | null) {
+    setCategory(next);
+    if (syncUrl) {
+      window.history.replaceState(null, "", chronologyCategoryHref(next));
+    }
+  }
+
   // Der Umfang wechselt die Grundgesamtheit — eine Ereignisart oder eine
   // Person, die es im neuen Umfang nicht gibt, bliebe sonst als unsichtbarer
   // Filter stehen und die Liste wäre unerklärlich leer.
   function changeScope(next: TimelineScope) {
     setScope(next);
-    setCategory(null);
+    changeCategory(null);
     setPerson(null);
     setYear(null);
   }
@@ -170,7 +201,7 @@ export default function TimelineView({ events }: { events: TimelineEvent[] }) {
               <select
                 className="mission-author-filter rounded-full"
                 value={category ?? ""}
-                onChange={(e) => setCategory(e.target.value || null)}
+                onChange={(e) => changeCategory(e.target.value || null)}
                 aria-label="Nach Ereignisart filtern"
               >
                 <option value="">Alle Arten</option>

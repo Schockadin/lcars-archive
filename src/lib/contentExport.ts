@@ -96,7 +96,7 @@ async function loadArchiveEntryExport(slug: string): Promise<ExportableContent |
 
 async function loadMissionExport(slug: string): Promise<ExportableContent | null> {
   // Missionen haben keine eigene Sichtbarkeits-Sperre (immer öffentlich
-  // lesbar, siehe src/app/missions/[missionSlug]/page.tsx).
+  // lesbar, siehe src/app/chronologie/mission/[missionSlug]/page.tsx).
   const mission = await getMissionBySlug(slug);
   if (!mission) return null;
 

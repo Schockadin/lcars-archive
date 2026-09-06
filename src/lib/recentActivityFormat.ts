@@ -5,6 +5,11 @@
 // computeNewsItems() mit den geladenen Zeilen auf.
 import type { TimelineSourceType } from "@/types/timeline";
 import type { Permission } from "@/lib/permissions";
+import {
+  CHRONOLOGY_PATH,
+  missionHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 
 // Sichtbarkeits-Flags für den News-Feed, aus den EFFEKTIVEN Rechten eines
 // Betrachters abgeleitet (nicht aus seiner Primärrolle!). Muss dieselbe
@@ -80,9 +85,14 @@ export function toHref(row: NewsContentRow): string {
     case "character":
       return `/characters/${row.slug}`;
     case "mission":
-      return `/missions/${row.slug}`;
+      return missionHref(row.slug);
     case "mission_log":
-      return `/missions/${row.mission_slug}/${row.slug}`;
+      // mission_slug ist in der Abfrage nullable typisiert, in den Daten aber
+      // immer gesetzt (Fremdschlüssel). Fehlt er doch, führt der Link in die
+      // Chronologie statt auf eine Adresse mit „null" darin.
+      return row.mission_slug
+        ? missionLogHref(row.mission_slug, row.slug)
+        : CHRONOLOGY_PATH;
     case "archive_entry":
       // Offene Dialoge leben unter /dialogues, nicht /archive (siehe
       // toFollowedContent in src/lib/follows.ts für dasselbe Muster).

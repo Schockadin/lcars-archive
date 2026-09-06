@@ -19,6 +19,7 @@ import ArchiveEntryBody from "./ArchiveEntryBody";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 import { listNotes } from "@/lib/contentNotes";
 import NotesPanel from "@/app/_shared/NotesPanel";
+import { missionHref } from "@/lib/contentRoutes";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -148,7 +149,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
         title="Missionen"
         color={CONTENT_TYPE_COLOR.mission}
         refs={entry.metadata.missions.map((m) => ({
-          href: `/missions/${m.slug}`,
+          href: missionHref(m.slug),
           label: m.title,
         }))}
       />

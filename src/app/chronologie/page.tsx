@@ -33,5 +33,5 @@ export default function ChronologiePage() {
 async function ChronologieContent() {
   const viewer = await getViewer();
   const events = await getTimeline(viewer);
-  return <TimelineView events={events} />;
+  return <TimelineView events={events} syncUrl />;
 }

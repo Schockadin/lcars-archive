@@ -14,6 +14,7 @@ import {
   byDateDesc,
   sessionLabel,
 } from "@/lib/missionFormat";
+import { missionHref, missionLogHref } from "@/lib/contentRoutes";
 
 type LogSortMode = "date" | "author";
 
@@ -33,11 +34,14 @@ export default function MissionLogList({
   const [dateDir, setDateDir] = useState<SortDir>("desc");
   const pathname = usePathname();
 
-  // Aktives Log = drittes Pfadsegment unter /missions/[mission]/[log]
+  // Aktives Log = letztes Pfadsegment unter
+  // /chronologie/mission/[mission]/[log]
+  // /chronologie/mission/[mission]/[log] → vier Segmente, das Log steht
+  // hinten.
   const segs = pathname.split("/").filter(Boolean);
   const activeLogSlug =
-    segs[0] === "missions" && segs.length >= 3
-      ? decodeURIComponent(segs[2])
+    segs[0] === "chronologie" && segs[1] === "mission" && segs.length >= 4
+      ? decodeURIComponent(segs[3])
       : null;
 
   // Autor-Gruppen sortieren intern immer absteigend; die Datum-Ansicht
@@ -87,7 +91,7 @@ export default function MissionLogList({
 
       {/* oberste Zeile: zurück zur Synopsis der Mission */}
       <LcarsLogEntry
-        href={`/missions/${missionSlug}`}
+        href={missionHref(missionSlug)}
         stub="SYN"
         title="Synopsis"
         active={activeLogSlug === null}
@@ -119,7 +123,7 @@ export default function MissionLogList({
               {dateView.map((log) => (
                 <LcarsLogEntry
                   key={log.id}
-                  href={`/missions/${missionSlug}/${log.slug}`}
+                  href={missionLogHref(missionSlug, log.slug)}
                   stub={sessionLabel(log.session_nr)}
                   title={log.title}
                   secondaryLabel={log.author_name}
@@ -140,7 +144,7 @@ export default function MissionLogList({
                   {group.logs.map((log) => (
                     <LcarsLogEntry
                       key={log.id}
-                      href={`/missions/${missionSlug}/${log.slug}`}
+                      href={missionLogHref(missionSlug, log.slug)}
                       stub={sessionLabel(log.session_nr)}
                       title={log.title}
                       date={log.log_date}

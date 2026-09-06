@@ -18,6 +18,7 @@ import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import PortraitPicker from "@/app/user/characters/_shared/PortraitPicker";
 import { buildOnboardingSteps } from "@/lib/onboardingSteps";
 import type { TimelineEvent } from "@/lib/timelineTypes";
+import { missionHref, missionLogHref } from "@/lib/contentRoutes";
 import { DEFAULT_ADVANCEMENT_RULES } from "@/lib/advancement";
 import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
@@ -103,7 +104,7 @@ const DEMO_TIMELINE: TimelineEvent[] = [
     origin: "metadata",
     sourceType: "mission",
     sourceTitle: "Erste Mission",
-    href: "/missions/erste-mission",
+    href: missionHref("erste-mission"),
     people: ["Tuvok", "Kira"],
     phase: "start",
   },
@@ -116,7 +117,7 @@ const DEMO_TIMELINE: TimelineEvent[] = [
     origin: "metadata",
     sourceType: "mission",
     sourceTitle: "Zweite Mission",
-    href: "/missions/zweite-mission",
+    href: missionHref("zweite-mission"),
     people: ["Kira"],
     phase: "start",
   },
@@ -129,7 +130,7 @@ const DEMO_TIMELINE: TimelineEvent[] = [
     origin: "metadata",
     sourceType: "mission",
     sourceTitle: "Erste Mission",
-    href: "/missions/erste-mission",
+    href: missionHref("erste-mission"),
     people: ["Tuvok", "Kira"],
     phase: "end",
   },
@@ -142,7 +143,7 @@ const DEMO_TIMELINE: TimelineEvent[] = [
     origin: "marker",
     sourceType: "mission_log",
     sourceTitle: "Log Eins",
-    href: "/missions/erste-mission/log-1#timeline-1",
+    href: `${missionLogHref("erste-mission", "log-1")}#timeline-1`,
     people: ["Tuvok"],
   },
   {
@@ -154,7 +155,7 @@ const DEMO_TIMELINE: TimelineEvent[] = [
     origin: "inferred",
     sourceType: "mission_log",
     sourceTitle: "Log Eins",
-    href: "/missions/erste-mission/log-1",
+    href: missionLogHref("erste-mission", "log-1"),
     people: [],
   },
   {

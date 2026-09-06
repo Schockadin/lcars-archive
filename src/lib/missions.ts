@@ -15,6 +15,7 @@ import { getMissionSubscribers } from "@/lib/dialogues";
 import { sendMissionUpdatedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
+import { missionHref } from "@/lib/contentRoutes";
 import { logCaughtError } from "@/lib/errorLog";
 // Fire-and-forget-Re-Embedding (RAG-Index) — siehe src/lib/embeddingSync.ts.
 import {
@@ -467,7 +468,7 @@ export async function notifyMissionSubscribers(input: {
   );
   if (subscribers.length === 0) return;
 
-  const missionUrl = `${await getBaseUrl()}/missions/${input.missionSlug}`;
+  const missionUrl = `${await getBaseUrl()}${missionHref(input.missionSlug)}`;
   // Parallel statt sequenziell: die Aktion, die diese Funktion aufruft
   // (Inline-Synopsis-Editor wie voller Formular-Speichern), wartet auf das
   // Ergebnis, bevor sie ihren Erfolg zurückmeldet — bei vielen Abonnenten
@@ -507,7 +508,8 @@ export interface UpdateMissionSynopsisResult {
   metadata: MissionMetaData;
 }
 
-// Nur-Synopsis-Bearbeitung (inline auf /missions/[slug], MissionSynopsisEditor)
+// Nur-Synopsis-Bearbeitung (inline auf /chronologie/mission/[slug],
+// MissionSynopsisEditor)
 // — Titel/Status/Zeitraum/Tags bleiben unangetastet, deshalb reicht slug +
 // die aktualisierte metadata als Rückgabe. title zusätzlich (nicht nur slug)
 // für notifyMissionSubscribers im Aufrufer (actions/missions.ts), der sonst

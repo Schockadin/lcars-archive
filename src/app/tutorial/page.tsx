@@ -165,12 +165,20 @@ export default function TutorialPage() {
                 entfernt die Spielleitung unter &bdquo;Leitung → Chronologie&ldquo;.
               </p>
               <p>
-                Die <strong>Missions-Übersicht</strong> steht am selben
-                Zeitstrahl: Datum links, Schiene mit einem Punkt je Mission,
-                daneben die Einsatzakte. Die Farbe des Punktes ist dort der
-                Status der Mission. Jahresleiste und Monats-Trenner gibt es
-                nur in der Chronologie — die Missions-Übersicht hat ihren
-                eigenen Filter nach Autor.
+                Jede <strong>Ereignisart hat eine eigene Adresse</strong>:
+                Wählst du im Auswahlfeld etwa &bdquo;Konflikt&ldquo;, steht in
+                der Adresszeile <code>/chronologie/conflict</code>; die
+                Missionen liegen unter <code>/chronologie/mission</code>. Diese
+                Adressen kannst du weitergeben oder als Lesezeichen ablegen —
+                sie öffnen die Chronologie mit genau dieser Auswahl.
+                &bdquo;Alle Arten&ldquo; führt zurück auf{" "}
+                <code>/chronologie</code>.
+              </p>
+              <p>
+                Auch die <strong>Missionsseiten</strong> liegen unter der
+                Chronologie: <code>/chronologie/mission/&lt;Mission&gt;</code>,
+                ein Einsatzbericht eine Ebene tiefer. Alte Lesezeichen auf{" "}
+                <code>/missions/…</code> leiten dorthin weiter.
               </p>
             </div>
           </LcarsDataRow>

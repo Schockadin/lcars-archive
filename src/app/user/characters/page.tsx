@@ -40,7 +40,7 @@ export default async function UserCharactersPage() {
   return (
     <>
       <PageMeta title="Meine Charaktere" section="users" />
-      {/* Zentrierte breite Spalte wie /missions, /search und „Meine Inhalte" —
+      {/* Zentrierte breite Spalte wie /chronologie, /search und „Meine Inhalte" —
           Überschrift und Inhalt teilen sie sich. */}
       <div className="lcars-wide-column">
         <h1>Meine Charaktere</h1>

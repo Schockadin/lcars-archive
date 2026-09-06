@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { getCharacterListItems } from "@/lib/characters";
 import { getAllLogPaths, getAllMissions } from "@/lib/missions";
 import { getAllArchivePaths } from "@/lib/archive";
+import { missionHref, missionLogHref } from "@/lib/contentRoutes";
 
 const BASE_URL = "https://neo-archiv.de";
 
@@ -28,7 +29,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       // Die Chronologie ist zugleich die Missions-Übersicht — /missions
-      // leitet hierher um und steht deshalb nicht mehr eigens in der Sitemap.
+      // leitet hierher um (next.config.ts) und steht deshalb nicht mehr
+      // eigens in der Sitemap.
       url: `${BASE_URL}/chronologie`,
       lastModified: new Date(),
       changeFrequency: "weekly",
@@ -55,7 +57,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const missions = await getAllMissions();
     missionRoutes = missions.map((m) => ({
-      url: `${BASE_URL}/missions/${m.slug}`,
+      url: `${BASE_URL}${missionHref(m.slug)}`,
       lastModified: new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.7,
@@ -69,7 +71,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     const logs = await getAllLogPaths();
     logRoutes = logs.map((l) => ({
-      url: `${BASE_URL}/missions/${l.mission_slug}/${l.log_slug}`,
+      url: `${BASE_URL}${missionLogHref(l.mission_slug, l.log_slug)}`,
       lastModified: new Date(l.updated_at),
       changeFrequency: "monthly" as const,
       priority: 0.6,

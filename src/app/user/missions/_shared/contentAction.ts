@@ -31,6 +31,7 @@ import {
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
+import { missionHref } from "@/lib/contentRoutes";
 import { parseList } from "@/lib/formParsing";
 
 export interface MissionFormState {
@@ -57,7 +58,7 @@ async function notifyMissionParticipants(
 ): Promise<void> {
   if (participantCharacterIds.length === 0) return;
 
-  const missionUrl = `${await getBaseUrl()}/missions/${missionSlug}`;
+  const missionUrl = `${await getBaseUrl()}${missionHref(missionSlug)}`;
   const activateUrl = `${missionUrl}?activateFollow=1`;
 
   // Teilnehmer-Spieler informieren — die Mission wird dabei bewusst NICHT
@@ -301,7 +302,7 @@ export async function missionAction(
           authorName: user.name,
           contentTypeLabel: "eine neue Mission",
           contentTitle: title,
-          contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
+          contentUrl: `${await getBaseUrl()}${missionHref(result.slug)}`,
           preview: updatePreview,
           notifyPublic: false,
         });
@@ -326,7 +327,7 @@ export async function missionAction(
           authorName: user.name,
           contentTypeLabel: "eine Mission",
           contentTitle: title,
-          contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
+          contentUrl: `${await getBaseUrl()}${missionHref(result.slug)}`,
           preview: updatePreview,
           notifyPublic: false,
         });
@@ -374,7 +375,7 @@ export async function missionAction(
       authorName: user.name,
       contentTypeLabel: "eine neue Mission",
       contentTitle: title,
-      contentUrl: `${await getBaseUrl()}/missions/${result.slug}`,
+      contentUrl: `${await getBaseUrl()}${missionHref(result.slug)}`,
       preview,
       notifyPublic: false,
     });
@@ -387,5 +388,5 @@ export async function missionAction(
     );
   }
 
-  redirect(`/missions/${result.slug}`);
+  redirect(missionHref(result.slug));
 }

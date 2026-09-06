@@ -26,6 +26,7 @@ import { toPdfBlocks, type PdfSpan } from "./markdownBlocks";
 import { STATUS_CONFIG } from "@/lib/missionFormat";
 import type { MissionStatus } from "@/types/missions";
 import type { MissionBook, MissionBookLog } from "@/lib/missionBook";
+import { missionLogHref } from "@/lib/contentRoutes";
 
 const ACCENT = "#3f84b5";
 const INK = "#1a1a1a";
@@ -339,7 +340,7 @@ function MissionBookDocument({ input }: { input: MissionBookPdfInput }) {
           )}
           <Blocks markdown={log.sourceMarkdown} />
           <Link
-            src={`${input.baseUrl}/missions/${book.slug}/${log.slug}`}
+            src={`${input.baseUrl}${missionLogHref(book.slug, log.slug)}`}
             style={styles.logMeta}
           >
             Im Archiv lesen

@@ -234,6 +234,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "chronologie",
       },
       {
+        text: "Eine Ereignisart lässt sich jetzt verlinken: Die Chronologie hat für jede Art eine eigene Adresse — /chronologie/mission, /chronologie/conflict und so fort. Wer im Auswahlfeld eine Art wählt, bekommt sie in der Adresszeile und kann den Link so weitergeben; er öffnet die Chronologie mit genau dieser Auswahl. Die Missionsseiten liegen jetzt ebenfalls unter der Chronologie (/chronologie/mission/…), alte Missions-Links leiten dorthin weiter.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
         text: "Entwürfe tauchen in der Chronologie nicht mehr auf — auch nicht bei der Person, die sie angelegt hat. Ein Zeitstrahl soll für alle dieselbe Kampagne erzählen.",
         category: "inhalte",
         tutorial: "chronologie",

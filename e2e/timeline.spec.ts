@@ -38,8 +38,8 @@ test.describe("Chronologie", () => {
       .locator("#timeline .mission-akte")
       .evaluateAll((nodes) => nodes.map((n) => n.getAttribute("href")));
     expect(hrefs).toEqual([
-      "/missions/zweite-mission",
-      "/missions/erste-mission",
+      "/chronologie/mission/zweite-mission",
+      "/chronologie/mission/erste-mission",
     ]);
   });
 

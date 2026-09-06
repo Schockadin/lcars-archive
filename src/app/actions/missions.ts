@@ -19,7 +19,7 @@ export interface MissionSynopsisEditState {
   updatedHtml?: string;
 }
 
-// Inline-Bearbeitung der Synopsis direkt auf /missions/[slug]
+// Inline-Bearbeitung der Synopsis direkt auf /chronologie/mission/[slug]
 // (MissionSynopsisEditor) — schlanker als das volle Mission-Formular unter
 // /user/missions/[missionId]/edit: nur der Fließtext ändert sich,
 // Titel/Status/Zeitraum/Tags bleiben unangetastet. Admin/GM-only, Rolle

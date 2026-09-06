@@ -15,6 +15,7 @@ import VisibilitySelect from "./VisibilitySelect";
 import DeleteOwnContentButton from "./DeleteOwnContentButton";
 import ContentActionRow from "./ContentActionRow";
 import { LcarsListFilterInput } from "@/components/lcars";
+import { missionHref, missionLogHref } from "@/lib/contentRoutes";
 
 // Charaktere sind bewusst KEINE Kategorie mehr: sie haben mit
 // /user/characters eine eigene Übersicht (inkl. Werte-Formular). Die
@@ -254,7 +255,7 @@ export default function UserContentBrowser({
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
                 >
                   <LcarsAkteCard
-                    href={`/missions/${m.slug}`}
+                    href={missionHref(m.slug)}
                     color={CONTENT_DRAFT_COLOR}
                     className="flex-1"
                     title={m.title}
@@ -284,7 +285,7 @@ export default function UserContentBrowser({
                 className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
               >
                 <LcarsAkteCard
-                  href={`/missions/${log.mission_slug}/${log.slug}`}
+                  href={missionLogHref(log.mission_slug, log.slug)}
                   color={CONTENT_DRAFT_COLOR}
                   className="flex-1"
                   title={log.title}
@@ -382,7 +383,7 @@ export default function UserContentBrowser({
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
                 >
                   <LcarsAkteCard
-                    href={`/missions/${log.mission_slug}/${log.slug}`}
+                    href={missionLogHref(log.mission_slug, log.slug)}
                     color={CONTENT_TYPE_COLOR.mission_log}
                     className="flex-1"
                     title={log.title}
@@ -565,7 +566,7 @@ export default function UserContentBrowser({
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
                 >
                   <LcarsAkteCard
-                    href={`/missions/${m.slug}`}
+                    href={missionHref(m.slug)}
                     color={CONTENT_TYPE_COLOR.mission}
                     className="flex-1"
                     title={m.title}

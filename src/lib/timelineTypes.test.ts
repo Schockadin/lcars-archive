@@ -24,7 +24,7 @@ function event(partial: Partial<TimelineEvent>): TimelineEvent {
     origin: "metadata",
     sourceType: "mission",
     sourceTitle: "Erste Mission",
-    href: "/missions/erste-mission",
+    href: "/chronologie/mission/erste-mission",
     people: [],
     ...partial,
   };

@@ -2,8 +2,8 @@ import type { NextConfig } from "next";
 
 // Statische CSP ohne Nonce (bewusste Entscheidung, siehe Rückfrage): eine
 // echte Nonce-CSP bräuchte proxy.ts (Next 16, ehem. middleware.ts) und würde
-// ALLE Seiten auf dynamic rendering zwingen — auch missions/[missionSlug]/
-// page.tsx, die einzige bewusst statische Seite (generateStaticParams). Ohne
+// ALLE Seiten auf dynamic rendering zwingen — auch chronologie/mission/
+// [missionSlug]/page.tsx, die einzige bewusst statische Seite (generateStaticParams). Ohne
 // Nonce bleibt script-src auf 'unsafe-inline' angewiesen: Next injiziert bei
 // Streaming-SSR (App-Router-Default) selbst Inline-<script>-Tags zur
 // progressiven Hydration, ein 'self'-only script-src bricht die Seite ohne
@@ -116,6 +116,21 @@ const nextConfig: NextConfig = {
       {
         source: "/users/:id/settings",
         destination: "/user",
+        permanent: true,
+      },
+      // Die Missionsseiten liegen unter der Chronologie (siehe
+      // src/lib/contentRoutes.ts) — /missions gibt es nicht mehr. Beide
+      // Regeln fangen alte Lesezeichen, Mail-Links und Suchmaschinen-
+      // Einträge ab; die Reihenfolge zählt, /missions allein trifft die
+      // Wildcard-Regel darunter nicht.
+      {
+        source: "/missions",
+        destination: "/chronologie",
+        permanent: true,
+      },
+      {
+        source: "/missions/:path*",
+        destination: "/chronologie/mission/:path*",
         permanent: true,
       },
     ];

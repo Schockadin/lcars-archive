@@ -5,6 +5,7 @@ import { WIKILINK_RE } from "@/lib/markdown";
 import type { ArchiveCategory } from "@/types/archive";
 import type { SearchResult, SearchResultType } from "@/types/search";
 import type { FollowTargetType } from "@/lib/follows";
+import { missionHref, missionLogHref } from "@/lib/contentRoutes";
 
 const LIVE_PER_TYPE_LIMIT = 6;
 // Großzügige Sicherheitsgrenze statt echter Pagination — im Repo gibt es
@@ -296,7 +297,7 @@ function mapResults(
     type: "mission" as const,
     label: m.title,
     sublabel: "Mission",
-    href: `/missions/${m.slug}`,
+    href: missionHref(m.slug),
     slug: m.slug,
   }));
 
@@ -314,7 +315,7 @@ function mapResults(
       type: "log" as const,
       label: l.title,
       sublabel: `Log · ${l.mission_title}`,
-      href: `/missions/${l.mission_slug}/${l.slug}${hit ? `#:~:text=${toTextFragment(hit.text)}` : ""}`,
+      href: `${missionLogHref(l.mission_slug, l.slug)}${hit ? `#:~:text=${toTextFragment(hit.text)}` : ""}`,
       slug: l.slug,
       snippet,
     };

@@ -10,6 +10,7 @@
 // Tabellen (nicht nur die gerade importierten Dateien), damit auch bereits
 // vorhandene Inhalte aufgelöst werden, sobald ihr Linkziel neu hinzukommt.
 import postgres from "postgres";
+import { missionHref } from "../../src/lib/contentRoutes";
 
 const WIKILINK_TAG_RE = /<a href="wikilink:\/\/([^"]*)">([\s\S]*?)<\/a>/g;
 
@@ -77,7 +78,7 @@ export async function resolveWikiLinks(sql: postgres.Sql): Promise<void> {
   const titleMap = new Map<string, TitleEntry>();
   const slugMap = new Map<string, TitleEntry>();
   for (const m of missions) {
-    const entry = { url: `/missions/${m.slug}` };
+    const entry = { url: missionHref(m.slug) };
     titleMap.set(norm(m.title), entry);
     slugMap.set(m.slug, entry);
   }

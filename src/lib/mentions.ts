@@ -4,6 +4,7 @@ import { WIKILINK_RE } from "@/lib/markdown";
 import { slugifyBase } from "@/lib/slug";
 import { normalizeWikilinkTarget } from "@/lib/autolink";
 import { canView, type Viewer, type Visibility } from "@/lib/visibility";
+import { missionHref, missionLogHref } from "@/lib/contentRoutes";
 
 // „Erwähnt in" für Charaktere, Missionen und Logbücher.
 //
@@ -168,7 +169,7 @@ export async function getMentionsOf(
       slug: row.slug,
       title: row.title,
       sublabel: "Mission",
-      href: `/missions/${row.slug}`,
+      href: missionHref(row.slug),
     });
   }
 
@@ -180,7 +181,7 @@ export async function getMentionsOf(
       slug: row.slug,
       title: row.title,
       sublabel: `Logbuch · ${row.mission_title}`,
-      href: `/missions/${row.mission_slug}/${row.slug}`,
+      href: missionLogHref(row.mission_slug, row.slug),
     });
   }
 

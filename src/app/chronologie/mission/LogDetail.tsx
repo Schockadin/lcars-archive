@@ -9,6 +9,7 @@ import { fmtDate, sessionLabel } from "@/lib/missionFormat";
 import { LcarsReadingModeToggle } from "@/components/lcars";
 import ContentBody from "@/components/ContentBody";
 import { useNeo } from "@/hooks/useNeo";
+import { missionLogHref } from "@/lib/contentRoutes";
 
 // Ein Sprung zum Nachbar-Log desselben Autors. `dir` steuert Pfeil + Ausrichtung.
 function LogNavLink({ item, dir }: { item: LogNavItem; dir: "prev" | "next" }) {
@@ -19,7 +20,7 @@ function LogNavLink({ item, dir }: { item: LogNavItem; dir: "prev" | "next" }) {
 
   return (
     <Link
-      href={`/missions/${item.mission_slug}/${item.slug}`}
+      href={missionLogHref(item.mission_slug, item.slug)}
       onClick={preserveReadingModeOnce}
       className={`log-nav-link log-nav-${dir}`}
     >

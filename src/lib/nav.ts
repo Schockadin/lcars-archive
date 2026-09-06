@@ -1,7 +1,6 @@
 export type NavKey =
   | "home"
   | "characters"
-  | "missions"
   | "archive"
   | "chronologie"
   // /search hat einen eigenen Nav-Link (Lupe, siehe MAIN_NAV). /rag, /login
@@ -29,7 +28,9 @@ export const MAIN_NAV: NavItem[] = [
   // Die Chronologie ist zugleich die Missions-Übersicht: in der Vorgabe zeigt
   // sie je Einsatz seinen Beginn und führt von dort auf die Missionsseite,
   // auf Wunsch den vollen Zeitstrahl. Der frühere eigene Punkt „Missionen"
-  // (/missions) ist deshalb entfallen; die Route leitet hierher um.
+  // (/missions) ist deshalb entfallen; die alte Adresse leitet hierher um
+  // (siehe next.config.ts), die Missionsseiten liegen unter
+  // /chronologie/mission/[slug] (siehe src/lib/contentRoutes.ts).
   { id: "02", label: "Chronologie", href: "/chronologie" },
   // Label „Datenbank" statt „Archiv" — die Route bleibt /archive (und damit
   // auch der NavKey "archive" sowie alle bestehenden Links/Lesezeichen).

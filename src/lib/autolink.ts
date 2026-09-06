@@ -3,6 +3,7 @@ import sql from "@/lib/db";
 import { markdownToHtml } from "@/lib/markdown";
 import { slugifyBase } from "@/lib/slug";
 import { isRangeProtected, type ProtectedRange } from "@/lib/protectedRanges";
+import { missionHref } from "@/lib/contentRoutes";
 
 export type AutolinkTargetType = "character" | "mission" | "archive";
 
@@ -170,7 +171,7 @@ export async function getAutolinkTargets(
     ...missions.map((m) => ({
       type: "mission" as const,
       slug: m.slug,
-      href: `/missions/${m.slug}`,
+      href: missionHref(m.slug),
       canonical: m.title,
       phrases: [m.title],
     })),
@@ -356,8 +357,8 @@ export async function resolveAllWikilinks(html: string): Promise<string> {
   const hrefByTitle = new Map<string, string>();
   const hrefBySlug = new Map<string, string>();
   for (const m of missions) {
-    hrefByTitle.set(normalizeWikilinkTarget(m.title), `/missions/${m.slug}`);
-    hrefBySlug.set(m.slug, `/missions/${m.slug}`);
+    hrefByTitle.set(normalizeWikilinkTarget(m.title), missionHref(m.slug));
+    hrefBySlug.set(m.slug, missionHref(m.slug));
   }
   for (const a of archiveEntries) {
     hrefByTitle.set(normalizeWikilinkTarget(a.title), `/archive/${a.slug}`);

@@ -3,6 +3,7 @@ import sql from "@/lib/db";
 import { sendUserContentEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { logCaughtError } from "@/lib/errorLog";
+import { missionHref } from "@/lib/contentRoutes";
 
 // ToDo: Granularer machen: "mission" | "dialogue" | "npc", etc.
 // mission_log ist bewusst NICHT Teil dieser Liste: Mission-Logs sind reine
@@ -146,7 +147,7 @@ function toFollowedContent(row: {
     title: row.title,
     href:
       row.target_type === "mission"
-        ? `/missions/${row.slug}`
+        ? missionHref(row.slug)
         : row.target_type === "character"
           ? `/characters/${row.slug}`
           : // Offene Dialoge leben unter /dialogues, nicht /archive (siehe

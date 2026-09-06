@@ -71,7 +71,7 @@ async function MissionDetailShell({
       className="mission-detail lcars-split"
       style={{ "--mission-color": color } as React.CSSProperties}
     >
-      <PageMeta title={mission.title} section="missions" />
+      <PageMeta title={mission.title} section="chronologie" />
 
       <aside className="mission-detail-logs lcars-scroll">
         <MissionLogList

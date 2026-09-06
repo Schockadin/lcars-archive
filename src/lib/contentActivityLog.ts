@@ -1,6 +1,11 @@
 import "server-only";
 import sql from "@/lib/db";
 import type { TimelineSourceType } from "@/types/timeline";
+import {
+  CHRONOLOGY_PATH,
+  missionHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 
 export interface ContentActivityItem {
   kind: "created" | "updated" | "deleted";
@@ -33,9 +38,14 @@ function toHref(row: ActivityRow): string {
     case "character":
       return `/characters/${row.slug}`;
     case "mission":
-      return `/missions/${row.slug}`;
+      return missionHref(row.slug);
     case "mission_log":
-      return `/missions/${row.mission_slug}/${row.slug}`;
+      // mission_slug ist in der Abfrage nullable typisiert, in den Daten aber
+      // immer gesetzt (Fremdschlüssel). Fehlt er doch, führt der Link in die
+      // Chronologie statt auf eine Adresse mit „null" darin.
+      return row.mission_slug
+        ? missionLogHref(row.mission_slug, row.slug)
+        : CHRONOLOGY_PATH;
     case "archive_entry":
       return row.dialogue_open
         ? `/dialogues/${row.slug}`

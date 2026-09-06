@@ -438,8 +438,18 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Umfang `missions`) zeigt sie genau die **Missionsstarts**, je einer führt auf
   seine Missionsseite; der Umfang „Alle Ereignisse" schaltet den vollen
   Zeitstrahl frei. Die frühere eigene Route `/missions` war dieselbe Liste
-  derselben Missionen nach demselben Datum und leitet deshalb hierher um
-  (`src/app/missions/page.tsx`); `/missions/[missionSlug]` ist unberührt.
+  derselben Missionen nach demselben Datum; sie ist entfallen. Auch die
+  Missionsseiten liegen jetzt unter der Chronologie
+  (`/chronologie/mission/[missionSlug]`, das Logbuch eine Ebene tiefer) —
+  alle Adressen kommen aus `src/lib/contentRoutes.ts`, `/missions` und
+  `/missions/…` leiten dauerhaft dorthin um (`next.config.ts`).
+  Jede Ereignisart hat zusätzlich eine eigene Adresse
+  (`/chronologie/[kategorie]`, z.B. `/chronologie/conflict`); die Auswahl im
+  Filterfeld schreibt sie per `history.replaceState` in die Adresszeile, ohne
+  den Zeitstrahl neu zu laden. `/chronologie/mission` ist dafür eine eigene
+  Seite, weil ein statisches Segment in Next das gleichnamige dynamische
+  schlägt — es ist zugleich das Präfix der Missionsseiten. Ein unbekanntes
+  Segment ist eine 404 (`isTimelineCategory`), keine leere Liste.
   Filter und Sortierung richten sich nach dem Umfang: Ereignisart und
   Beteiligte werden aus den Ereignissen **im Umfang** gebildet, ein
   Umfangwechsel setzt sie zurück. **Entwürfe erscheinen nirgends** — auch
@@ -976,7 +986,7 @@ system: Epetra
 controlled_by: sternenflotte # Slug → archive_links
 related_factions: [epetraner]
 related_characters: [lorzan-keen] # Slug → /characters/…
-related_missions: [erster-kontakt] # Slug → /missions/…
+related_missions: [erster-kontakt] # Slug → /chronologie/mission/…
 tags: [planet, klasse-m]
 ---
 

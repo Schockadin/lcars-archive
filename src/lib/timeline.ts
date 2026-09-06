@@ -11,6 +11,7 @@ import {
   type TimelineEvent,
   type TimelineSourceType,
 } from "@/lib/timelineTypes";
+import { missionHref, missionLogHref } from "@/lib/contentRoutes";
 
 // Die Chronologie (/chronologie): alle Ereignisse der Kampagne in zeitlicher
 // Folge, aus drei Quellen zusammengetragen.
@@ -240,7 +241,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     // die für alle anderen nicht existieren, erzählt außerdem eine andere
     // Kampagne als die, über die am Tisch geredet wird.
     if (mission.is_draft) continue;
-    const href = `/missions/${mission.slug}`;
+    const href = missionHref(mission.slug);
     const people = mission.participants ?? [];
     visibleSources.set(`mission:${mission.slug}`, {
       title: mission.title,
@@ -296,7 +297,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
   for (const log of logs) {
     if (!canView(log.visibility, log.owner_user_id, viewer)) continue;
     if (log.is_draft) continue;
-    const href = `/missions/${log.mission_slug}/${log.slug}`;
+    const href = missionLogHref(log.mission_slug, log.slug);
     const people = log.author_name ? [log.author_name] : [];
     visibleSources.set(`mission_log:${log.slug}`, {
       title: log.title,

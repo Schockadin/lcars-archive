@@ -123,7 +123,7 @@ describe("sourcesFromChunks", () => {
     const sources = sourcesFromChunks([
       chunk({ contentType: "character", contentId: 1, title: "Kirk", href: "/characters/kirk" }),
       chunk({ contentType: "character", contentId: 1, title: "Kirk", href: "/characters/kirk" }),
-      chunk({ contentType: "mission", contentId: 1, title: "Mission", href: "/missions/m" }),
+      chunk({ contentType: "mission", contentId: 1, title: "Mission", href: "/chronologie/mission/m" }),
     ]);
     expect(sources).toHaveLength(2);
     expect(sources[0]).toEqual({ contentType: "character", title: "Kirk", href: "/characters/kirk" });

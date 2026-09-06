@@ -1,7 +1,7 @@
 "use client";
 
 // Kleines, wiederverwendbares Freitext-Filterfeld für die Übersichtsseiten
-// (/characters, /archive, /missions) — neben den Sortier-Optionen platziert,
+// (/characters, /archive, /chronologie) — neben den Sortier-Optionen platziert,
 // grenzt die sichtbare Liste client-seitig ein. Bewusst rein präsentational
 // (kontrolliert über value/onChange), die Filterlogik lebt in der jeweiligen
 // Listen-Komponente.

@@ -15,6 +15,7 @@ import MentionsSection from "@/app/_shared/MentionsSection";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 import { listNotes } from "@/lib/contentNotes";
 import NotesPanel from "@/app/_shared/NotesPanel";
+import { missionLogHref } from "@/lib/contentRoutes";
 
 interface Props {
   params: Promise<{ missionSlug: string; logSlug: string }>;
@@ -91,7 +92,7 @@ export default async function LogPage({ params }: Props) {
           <NotesPanel
             contentType="mission_log"
             contentSlug={log.slug}
-            path={`/missions/${missionSlug}/${log.slug}`}
+            path={missionLogHref(missionSlug, log.slug)}
             notes={notes}
           />
         )}

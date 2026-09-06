@@ -21,6 +21,7 @@ import {
 } from "@/lib/revalidate";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
+import { missionLogHref } from "@/lib/contentRoutes";
 import { VISIBILITY_OPTIONS, type Visibility } from "@/lib/visibility";
 
 export type VisibilityContentType =
@@ -98,7 +99,7 @@ export async function setVisibilityAction(
       await notifyIfPublic(visibility, session.userId, {
         contentTypeLabel: "einen Mission-Log",
         title: log.title,
-        url: `${baseUrl}/missions/${log.missionSlug}/${log.slug}`,
+        url: `${baseUrl}${missionLogHref(log.missionSlug, log.slug)}`,
         preview: log.sourceMarkdown
           ? synopsisExcerpt(log.sourceMarkdown, 140)
           : "Der Log wurde veröffentlicht.",

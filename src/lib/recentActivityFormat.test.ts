@@ -32,7 +32,7 @@ describe("toHref", () => {
       "/characters/kirk",
     );
     expect(toHref(contentRow({ target_type: "mission", slug: "m1" }))).toBe(
-      "/missions/m1",
+      "/chronologie/mission/m1",
     );
     expect(
       toHref(
@@ -42,7 +42,7 @@ describe("toHref", () => {
           mission_slug: "m1",
         }),
       ),
-    ).toBe("/missions/m1/log1");
+    ).toBe("/chronologie/mission/m1/log1");
   });
 
   it("verlinkt offene Dialoge auf /dialogues, geschlossene auf /archive", () => {

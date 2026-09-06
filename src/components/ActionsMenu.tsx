@@ -19,6 +19,7 @@ import type { FollowTargetType } from "@/lib/follows";
 import type { OwnerContentType } from "@/app/actions/owner";
 import type { TrashContentType } from "@/lib/adminContent";
 import type { AdminVisibilityContentType } from "@/app/actions/visibility";
+import { missionHref } from "@/lib/contentRoutes";
 
 // ContentToolType (Autolink/Wikilinks/Format-Buttons) und OwnerContentType
 // (setOwnerAction) heißen für Mission-Log/Archiv-Eintrag unterschiedlich
@@ -140,7 +141,7 @@ export default function ActionsMenu({
           // steht seit dem Zusammenlegen die Missions-Übersicht.
           "/chronologie"
         : contentType === "missionLog" && "mission_slug" in content
-          ? `/missions/${content.mission_slug}`
+          ? missionHref(content.mission_slug)
           : "/archive";
 
   return (

@@ -15,6 +15,7 @@ import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 import { listNotes } from "@/lib/contentNotes";
 import NotesPanel from "@/app/_shared/NotesPanel";
 import MissionBookLink from "./MissionBookLink";
+import { missionHref } from "@/lib/contentRoutes";
 interface Props {
   params: Promise<{ missionSlug: string }>;
   searchParams: Promise<{ activateFollow?: string }>;
@@ -57,7 +58,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
   const { activateFollow } = await searchParams;
   if (activateFollow && viewer) {
     await setSubscription(viewer.userId, "mission", missionSlug, true);
-    redirect(`/missions/${missionSlug}`);
+    redirect(missionHref(missionSlug));
   }
 
   // Owner-Auswahl nur laden, wenn der Betrachter die Mission tatsächlich
@@ -103,7 +104,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
           <NotesPanel
             contentType="mission"
             contentSlug={mission.slug}
-            path={`/missions/${mission.slug}`}
+            path={missionHref(mission.slug)}
             notes={notes}
           />
         )}

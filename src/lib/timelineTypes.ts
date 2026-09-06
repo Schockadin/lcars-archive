@@ -6,6 +6,7 @@
 // contentNoteTypes.ts/contentNotes.ts.
 
 import { fmtDate } from "@/lib/missionFormat";
+import { RESERVED_CHRONOLOGY_SEGMENTS } from "@/lib/contentRoutes";
 
 export { fmtDate };
 
@@ -260,6 +261,18 @@ export const DEFAULT_TIMELINE_SCOPE: TimelineScope = "missions";
 
 export function isMissionStart(event: TimelineEvent): boolean {
   return event.sourceType === "mission" && event.phase === "start";
+}
+
+// Die Kategorie-Routen (/chronologie/[kategorie], siehe contentRoutes.ts)
+// nehmen genau die bekannten Ereignisarten an — ein unbekanntes Segment ist
+// eine 404 und keine leere Liste, sonst sähe jeder Tippfehler wie eine
+// Kampagne ohne Ereignisse aus. Die Umfänge sind gesperrt, weil sie in
+// derselben Ebene liegen (RESERVED_CHRONOLOGY_SEGMENTS).
+export function isTimelineCategory(value: string): value is TimelineCategory {
+  return (
+    !RESERVED_CHRONOLOGY_SEGMENTS.includes(value) &&
+    EVENT_CATEGORIES.some((c) => c.key === value)
+  );
 }
 
 // Alle Beteiligten, die in diesen Ereignissen vorkommen — alphabetisch, für
