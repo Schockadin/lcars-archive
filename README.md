@@ -453,6 +453,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Seite, weil ein statisches Segment in Next das gleichnamige dynamische
   schlägt — es ist zugleich das Präfix der Missionsseiten. Ein unbekanntes
   Segment ist eine 404 (`isTimelineCategory`), keine leere Liste.
+  Die **Ereigniskarte** (`.timeline-card`) trägt die Farbe ihrer Ereignisart
+  als ganze Fläche mit dunkler Schrift (`--lcars-ink-dark`, das Token für
+  „Text auf Akzentflächen" — es bleibt in beiden Helligkeitsmodi dunkel;
+  `--lcars-bg` wäre im Hellmodus hell und auf der Pastellfläche unlesbar).
+  Aufbau: Art-Etikett und verlinkter Titel in einer Zeile, ggf. das
+  Herkunfts-Etikett daneben, darunter nur das Datum — Ereignisart und Quelle
+  standen dort doppelt —, dann Teaser und Beteiligte als `<details>`-Felder
+  (Teaser offen, Beteiligte zu). Die Karte ist bewusst kein Link als Ganzes:
+  ein Knopf in einem Link ist weder gültiges HTML noch tastaturbedienbar,
+  verlinkt ist der Titel.
   Filter und Sortierung richten sich nach dem Umfang: Ereignisart und
   Beteiligte werden aus den Ereignissen **im Umfang** gebildet, ein
   Umfangwechsel setzt sie zurück. **Entwürfe erscheinen nirgends** — auch

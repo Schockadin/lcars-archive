@@ -11,7 +11,6 @@ import {
   DEFAULT_TIMELINE_SCOPE,
   EVENT_CATEGORIES,
   ORIGIN_LABELS,
-  SOURCE_TYPE_LABELS,
   TIMELINE_SCOPES,
   categoryVisual,
   filterEvents,
@@ -314,7 +313,6 @@ function EventRow({ event }: { event: TimelineEvent }) {
         className="timeline-card"
         style={{ "--timeline-color": visual.color } as React.CSSProperties}
       >
-        <span className="timeline-card-rail" />
         <div className="timeline-card-body">
           <div className="timeline-card-head">
             <span className="timeline-tag">{visual.label}</span>
@@ -335,9 +333,11 @@ function EventRow({ event }: { event: TimelineEvent }) {
             )}
           </div>
 
+          {/* Nur das Datum. Die Ereignisart steht schon als Etikett darüber,
+              und die Quelle wiederholte meist bloß den Titel — der Titel
+              führt ohnehin dorthin. */}
           <p className="timeline-card-date">
-            <b>Datum</b> {fmtDate(event.date)} · {SOURCE_TYPE_LABELS[event.sourceType]}{" "}
-            · {event.sourceTitle}
+            <b>Datum</b> {fmtDate(event.date)}
           </p>
 
           {event.detail && (

@@ -224,7 +224,26 @@ test.describe("Chronologie", () => {
     await expect(karte.locator(".timeline-card-title")).toContainText(
       "Zweite Mission",
     );
-    await expect(karte.locator(".timeline-card-date")).toContainText("Datum");
+    // Die Datumszeile trägt NUR das Datum: die Ereignisart steht schon als
+    // Etikett darüber, und die Quelle wiederholte meist bloß den Titel.
+    await expect(karte.locator(".timeline-card-date")).toHaveText(
+      "Datum 12.06.2401",
+    );
+  });
+
+  test("färbt die Karte in der Farbe ihrer Ereignisart", async ({ page }) => {
+    await alleEreignisse(page);
+    const farben = await page
+      .locator("#timeline .timeline-card")
+      .evaluateAll((nodes) =>
+        nodes.map((n) => getComputedStyle(n).backgroundColor),
+      );
+    // Missionen und Konflikt tragen verschiedene Farben, und keine Karte
+    // bleibt auf der Grundfläche stehen.
+    expect(new Set(farben).size).toBeGreaterThan(1);
+    for (const f of farben) {
+      expect(f).not.toBe("rgba(0, 0, 0, 0)");
+    }
   });
 
   test("zeigt die Kurzfassung offen und die Beteiligten zugeklappt", async ({

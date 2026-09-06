@@ -134,22 +134,26 @@
 
 /* ── Die Ereigniskarte ───────────────────────────────────────────── */
 
-/* Farbige Schiene links wie an der Aktenkarte, aber KEIN Link als Hülle:
-   die Karte enthält aufklappbare Felder, und ein Knopf in einem Link ist
-   weder gültiges HTML noch mit der Tastatur bedienbar. Verlinkt ist der
-   Titel. */
+/* Die ganze Karte trägt die Farbe ihrer Ereignisart — vorher tat das nur
+   eine 9px-Schiene an der linken Kante, und bei einer Liste aus einigen
+   hundert Einträgen war die Art damit kaum zu sehen. Als Fläche in voller
+   Sättigung mit dunkler Schrift: --lcars-ink-dark ist genau dafür da
+   („Text auf Akzentflächen", siehe themes.ts) und bleibt in BEIDEN
+   Helligkeitsmodi dunkel — --lcars-bg wäre im Hellmodus hell und damit auf
+   der pastellfarbenen Fläche unlesbar.
+   Die Schiene ist damit entfallen, sie wäre in der eigenen Farbe unsichtbar.
+
+   KEIN Link als Hülle: die Karte enthält aufklappbare Felder, und ein Knopf
+   in einem Link ist weder gültiges HTML noch mit der Tastatur bedienbar.
+   Verlinkt ist der Titel. */
 .timeline-card {
   display: flex;
   min-width: 0;
   margin-bottom: 12px;
-  background: var(--lcars-surface);
+  background: var(--timeline-color, var(--lcars-primary));
+  color: var(--lcars-ink-dark);
   border-radius: 4px 14px 14px 4px;
   overflow: hidden;
-}
-.timeline-card-rail {
-  width: 9px;
-  flex-shrink: 0;
-  background: var(--timeline-color, var(--lcars-primary));
 }
 .timeline-card-body {
   flex: 1;
@@ -172,7 +176,7 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   line-height: 1.15;
-  color: var(--lcars-primary-ink);
+  color: inherit;
   text-decoration: none;
   min-width: 0;
 }
@@ -185,11 +189,13 @@
   font-size: 13px;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--lcars-ink-contrast);
+  color: inherit;
 }
+/* Die Beschriftung „Datum" tritt gegenüber dem Wert zurück: auf der farbigen
+   Fläche geht das über Deckkraft statt über eine zweite Farbe. */
 .timeline-card-date b {
   font-weight: 400;
-  color: var(--lcars-ink-data);
+  opacity: 0.7;
 }
 
 /* Aufklappbares Feld (<details>): die Kurzfassung steht offen, die
@@ -197,7 +203,7 @@
    in den Zustand der Liste. */
 .timeline-panel {
   margin-top: 8px;
-  border-top: 1px solid var(--lcars-border);
+  border-top: 1px solid color-mix(in srgb, var(--lcars-ink-dark) 25%, transparent);
 }
 .timeline-panel-head {
   display: flex;
@@ -209,7 +215,8 @@
   font-size: 11px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--lcars-ink-dim);
+  color: inherit;
+  opacity: 0.75;
   list-style: none;
 }
 .timeline-panel-head::-webkit-details-marker {
@@ -221,26 +228,26 @@
   content: "\25B8";
   display: inline-block;
   transition: transform 120ms;
-  color: var(--timeline-color, var(--lcars-primary));
 }
 .timeline-panel[open] > .timeline-panel-head::before {
   transform: rotate(90deg);
 }
 .timeline-panel-head:hover {
-  color: var(--lcars-ink);
+  opacity: 1;
 }
 .timeline-panel-body {
   padding: 4px 0 6px;
   font-size: 13.5px;
   line-height: 1.5;
-  color: var(--lcars-ink-light);
+  color: inherit;
 }
 
-/* Das Art-Etikett in der Titelzeile — es trägt die Farbe des Ereignisses. */
+/* Das Art-Etikett in der Titelzeile. Auf der farbigen Karte ist es ein
+   Umriss in der Schriftfarbe — die Farbe selbst trägt ja schon die Fläche. */
 .timeline-tag {
   padding: 1px 6px;
-  border: 1px solid var(--timeline-color, var(--lcars-border));
-  color: var(--timeline-color, var(--lcars-ink-data));
+  border: 1px solid currentColor;
+  color: inherit;
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -252,8 +259,9 @@
    sagt: eine gepflegte Angabe ist der Normalfall. */
 .timeline-origin {
   padding: 1px 6px;
-  border: 1px solid var(--lcars-border);
-  color: var(--lcars-ink-dim);
+  border: 1px solid color-mix(in srgb, var(--lcars-ink-dark) 45%, transparent);
+  color: inherit;
+  opacity: 0.75;
   font-size: 10px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
