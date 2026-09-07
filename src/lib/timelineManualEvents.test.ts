@@ -21,6 +21,9 @@ describe("parseManualEvent", () => {
       title: "Vertrag von Algeron",
       detail: "Die Grenze steht.",
       category: "political",
+      // Ohne Auswahl bleibt die Besetzung leer — ein freies Ereignis
+      // betrifft in der Regel niemanden aus der Runde.
+      characterIds: [],
     });
   });
 
@@ -62,5 +65,26 @@ describe("parseManualEvent", () => {
     expect(() =>
       parseManualEvent(form({ detail: "x".repeat(2001) })),
     ).toThrow(/zu lang/);
+  });
+
+  it("liest die Beteiligten als Zahlen und wirft Doppelte weg", () => {
+    const input = parseManualEvent({
+      ...form(),
+      characterIds: ["4", "9", "4"],
+    });
+    expect(input.characterIds).toEqual([4, 9]);
+  });
+
+  it("weist eine unsinnige Auswahl der Beteiligten ab", () => {
+    expect(() =>
+      parseManualEvent({ ...form(), characterIds: ["abc"] }),
+    ).toThrow(ManualEventError);
+  });
+
+  it("nimmt die Alt-Ereignisart person als character an", () => {
+    // Beide Schreibweisen meinten dieselbe Art; seit v1.29.49 ist es eine.
+    expect(parseManualEvent(form({ category: "person" })).category).toBe(
+      "character",
+    );
   });
 });
