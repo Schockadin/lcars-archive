@@ -142,6 +142,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Hell/Dunkel frei wählbar — plus eigene Grundfarben",
     items: [
       {
+        text: "Zu- und Absagen zu einem Spieltermin scheiterten auf der Testumgebung mit einer nichtssagenden Server-Meldung — Ursache war eine Sicherheitsprüfung, die hinter dem Hosting-Proxy fälschlich zuschlug. Die Adressen der Testumgebung sind jetzt ausdrücklich erlaubt.",
+        category: "spielleitung",
+      },
+      {
         text: "„Charakter“ und „Person“ waren zwei Namen für dieselbe Ereignisart und standen beide in der Chronologie zur Auswahl — jetzt ist es eine: „Person“, in ihrer bisherigen Farbe. Ältere Einträge mit der anderen Schreibweise wandern automatisch mit.",
         category: "inhalte",
         tutorial: "chronologie",

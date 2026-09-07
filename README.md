@@ -451,6 +451,17 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   in einer über `/admin/permissions` angepassten Rechte-Tabelle schnell
   passiert —, der bekommt jetzt einen Satz am Knopf; im Dashboard werden ihm
   die Knöpfe gar nicht erst angeboten.
+
+  Bleibt es trotz gesetztem Recht bei einem **403**, kommt er nicht mehr aus
+  der App, sondern aus Next selbst: Bei jeder Server Action wird der
+  `Origin`-Header mit `Host` bzw. `X-Forwarded-Host` verglichen (CSRF-Schutz);
+  laufen die hinter Netlifys Proxy auseinander — vor allem auf
+  Deploy-Previews —, antwortet Next mit 403, im Browser als „An unexpected
+  response was received from the server". `next.config.ts` erlaubt deshalb
+  über `serverActions.allowedOrigins` genau die Hostnamen, unter denen das
+  Deployment wirklich läuft, gelesen aus Netlifys eigenen Variablen (`URL`,
+  `DEPLOY_PRIME_URL`, `DEPLOY_URL`) — keine Platzhalter, und lokal eine leere
+  Liste.
 - **Offen für dich** — der Dashboard-Abschnitt mit dem, was diese Person
   schuldet (`src/lib/pendingActions.ts`): Missionen, an denen eine eigene
   Figur teilnimmt und zu denen **kein eigenes Logbuch** existiert; Gespräche,
