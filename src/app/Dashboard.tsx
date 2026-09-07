@@ -101,6 +101,7 @@ export default async function Dashboard({ user }: { user: User }) {
           <UpcomingSessionsSection
             sessions={upcomingSessions}
             userId={user.id}
+            canRsvp={permissions.has("users.browse")}
           />
 
           {/* Was ICH noch zu tun habe — vor den Neuigkeiten, die zeigen,

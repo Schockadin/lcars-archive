@@ -164,7 +164,8 @@ export default function TutorialPage() {
                 der Knopf <strong>„Ereignis eintragen“</strong> und öffnet ein
                 Fenster — Datum, Titel, Ereignisart, auf Wunsch ein, zwei Sätze
                 dazu. Das Datumsfeld steht schon auf dem jüngsten Ereignis der
-                Chronologie; meist musst du nur den Tag ändern. Solche
+                Chronologie; meist musst du nur den Tag ändern. Die
+                Beschreibung nimmt <strong>Markdown</strong> wie überall sonst. Solche
                 Ereignisse tragen den Hinweis <em>von Hand eingetragen</em>,
                 sind nicht verlinkt (es gibt ja keinen Eintrag dahinter) und
                 lassen sich von dir oder der Spielleitung wieder entfernen.

@@ -17,7 +17,10 @@ export interface PlannedSession {
   scheduledAt: string;
   title: string;
   location: string;
+  // Rohtext (Markdown), wie er gespeichert ist — das Formular arbeitet damit.
   notes: string;
+  // Derselbe Text als bereinigtes HTML für die Anzeige auf der Startseite.
+  notesHtml: string;
   createdByName: string | null;
   // Die eingeplanten Figuren — beim Nachtragen der gespielten Session sind
   // genau sie vorausgewählt.

@@ -15,9 +15,15 @@ import type { PlannedSession } from "@/lib/plannedSessionTypes";
 export default function UpcomingSessionsSection({
   sessions,
   userId,
+  canRsvp,
 }: {
   sessions: PlannedSession[];
   userId: number;
+  // Zu- und absagen darf, wer kein Gast ist (users.browse). Ohne das Recht
+  // steht der Termin trotzdem da — nur ohne Knöpfe, die ohnehin abgewiesen
+  // würden: einen Knopf anbieten, der nicht funktioniert, ist schlimmer als
+  // keiner.
+  canRsvp: boolean;
 }) {
   if (sessions.length === 0) return null;
 
@@ -48,7 +54,12 @@ export default function UpcomingSessionsSection({
                   {counts.no > 0 ? ` · ${counts.no} abgesagt` : ""}
                 </span>
               </p>
-              {s.notes && <p className="session-card-notes">{s.notes}</p>}
+              {s.notes && (
+                <div
+                  className="session-card-notes mission-body"
+                  dangerouslySetInnerHTML={{ __html: s.notesHtml }}
+                />
+              )}
               {zusagen.length > 0 && (
                 <p className="session-card-meta">
                   <span>
@@ -56,7 +67,9 @@ export default function UpcomingSessionsSection({
                   </span>
                 </p>
               )}
-              <SessionRsvp sessionId={s.id} own={ownResponse(s, userId)} />
+              {canRsvp && (
+                <SessionRsvp sessionId={s.id} own={ownResponse(s, userId)} />
+              )}
             </div>
           );
         })}

@@ -1,6 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { requireGM, requireNonGuest } from "@/lib/dal";
+import { checkPermission, requireGM } from "@/lib/dal";
 import {
   createPlannedSession,
   deletePlannedSession,
@@ -102,7 +102,17 @@ export async function setRsvpAction(
   _state: PlannedSessionState,
   formData: FormData,
 ): Promise<PlannedSessionState> {
-  const user = await requireNonGuest();
+  // checkPermission statt requireNonGuest: das harte Gate ruft forbidden()
+  // auf, und ein Auth-Interrupt in einer über useActionState aufgerufenen
+  // Action wird zu einer 403-Antwort, mit der der Client nichts anfangen kann
+  // („An unexpected response was received from the server", nachgestellt).
+  // Fehlt der Rolle das Recht „Nicht-Gast" (users.browse) — in einer über
+  // /admin/permissions angepassten Rechte-Tabelle schnell passiert —, steht
+  // das jetzt als Satz am Knopf, statt die Seite abstürzen zu lassen.
+  const check = await checkPermission("users.browse");
+  if ("error" in check) return { error: check.error };
+  const user = check.user;
+
   const id = Number(formData.get("id"));
   if (!Number.isInteger(id)) return { error: "Unbekannter Termin." };
 

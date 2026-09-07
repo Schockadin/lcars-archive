@@ -89,6 +89,7 @@ function session(rsvps: PlannedSession["rsvps"]): PlannedSession {
     title: "",
     location: "",
     notes: "",
+    notesHtml: "",
     createdByName: null,
     characterIds: [],
     gameSessionId: null,

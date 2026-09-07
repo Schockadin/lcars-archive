@@ -1,6 +1,7 @@
 import "server-only";
 import type postgres from "postgres";
 import sql from "@/lib/db";
+import { markdownToHtml } from "@/lib/markdown";
 import type {
   PlannedSession,
   PlannedSessionRsvp,
@@ -86,8 +87,16 @@ async function withDetails(rows: Row[]): Promise<PlannedSession[]> {
     charactersBySession.set(row.sessionId, list);
   }
 
-  return rows.map((row) => ({
+  // Die Notiz ist Markdown (MarkdownEditor im Termin-Fenster); für die
+  // Anzeige auf der Startseite wird daraus HTML. Die Liste ist kurz — eine
+  // Runde plant Termine, keine Tausende.
+  const notesHtml = await Promise.all(
+    rows.map((row) => markdownToHtml(row.notes)),
+  );
+
+  return rows.map((row, index) => ({
     ...row,
+    notesHtml: notesHtml[index],
     characterIds: charactersBySession.get(row.id) ?? [],
     rsvps: bySession.get(row.id) ?? [],
   }));

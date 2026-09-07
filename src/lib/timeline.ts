@@ -3,6 +3,7 @@ import sql from "@/lib/db";
 import { canView, type Viewer } from "@/lib/visibility";
 import type { Visibility } from "@/lib/visibility";
 import { synopsisExcerpt } from "@/lib/missionFormat";
+import { markdownToHtml } from "@/lib/markdown";
 import {
   eventId,
   parseTimelineMarkers,
@@ -500,6 +501,18 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
       people: [],
     });
   }
+
+  // Die Beschreibung eines von Hand eingetragenen Ereignisses wird als
+  // Markdown erfasst (MarkdownEditor im Eintragen-Fenster) — also auch als
+  // Markdown angezeigt. Nur für diese wenigen gerendert: die übrigen
+  // Beschreibungen sind generierte Sätze oder Textausschnitte.
+  await Promise.all(
+    events.map(async (event) => {
+      if (event.origin === "manual" && event.detail) {
+        event.detailHtml = await markdownToHtml(event.detail);
+      }
+    }),
+  );
 
   return sortEvents(events, "desc");
 }

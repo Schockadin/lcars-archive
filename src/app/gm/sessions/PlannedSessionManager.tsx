@@ -132,13 +132,14 @@ function SessionFields({
         />
       </FormField>
       <FormField label="Notiz (optional)" htmlFor={`ps-notes-${id}`}>
-        <textarea
+        {/* Markdown wie in allen anderen Textfeldern des Projekts — die
+            Notiz steht auf der Startseite und darf Betontes, Listen und
+            Links tragen. */}
+        <MarkdownEditor
           id={`ps-notes-${id}`}
           name="notes"
-          rows={2}
+          rows={4}
           defaultValue={session?.notes ?? ""}
-          maxLength={2000}
-          className="lcars-input"
         />
       </FormField>
       <CharacterChecklist

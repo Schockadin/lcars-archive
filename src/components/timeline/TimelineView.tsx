@@ -415,7 +415,16 @@ function EventRow({
           {event.detail && (
             <details className="timeline-panel" open>
               <summary className="timeline-panel-head">Teaser</summary>
-              <div className="timeline-panel-body">{event.detail}</div>
+              {/* Von Hand eingetragene Beschreibungen sind Markdown (siehe
+                  getTimeline) — die übrigen sind schlichter Text. */}
+              {event.detailHtml ? (
+                <div
+                  className="timeline-panel-body mission-body"
+                  dangerouslySetInnerHTML={{ __html: event.detailHtml }}
+                />
+              ) : (
+                <div className="timeline-panel-body">{event.detail}</div>
+              )}
             </details>
           )}
 

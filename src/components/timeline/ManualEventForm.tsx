@@ -8,6 +8,7 @@ import {
   SubmitButton,
 } from "@/app/_shared/FormPrimitives";
 import ModalOverlay from "@/components/ModalOverlay";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import {
   createManualEventAction,
   type ManualEventState,
@@ -106,12 +107,11 @@ export default function ManualEventForm({
               label="Beschreibung (optional)"
               htmlFor="manual-event-detail"
             >
-              <textarea
+              {/* Markdown wie in allen anderen Textfeldern des Projekts. */}
+              <MarkdownEditor
                 id="manual-event-detail"
                 name="detail"
-                rows={2}
-                maxLength={2000}
-                className="lcars-input"
+                rows={4}
               />
             </FormField>
             <SubmitButton pending={pending} pendingLabel="Wird eingetragen…">

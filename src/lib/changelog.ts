@@ -142,6 +142,15 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Hell/Dunkel frei wählbar — plus eigene Grundfarben",
     items: [
       {
+        text: "Die Beschreibung eines von Hand eingetragenen Ereignisses und die Notiz zu einem Spieltermin haben jetzt denselben Markdown-Editor mit Werkzeugleiste und Vorschau wie die übrigen Textfelder — und werden auch als Markdown angezeigt.",
+        category: "inhalte",
+        tutorial: "markdown",
+      },
+      {
+        text: "Die Zu- und Absage zu einem Spieltermin lief für Konten ohne das Recht „Nicht-Gast“ in einen Serverfehler, statt zu sagen, was fehlt. Jetzt steht die Meldung am Knopf — und wem das Recht fehlt, dem werden die beiden Knöpfe gar nicht erst angeboten.",
+        category: "spielleitung",
+      },
+      {
         text: "Das Gruppenblatt zeigt jetzt auf Klick den ganzen Bogen: ein Klick auf den Namen öffnet den vollständigen Charakterbogen der Figur im Fenster — Personalakte, Spickzettel, Regeln und Biografie, samt Drucken und PDF. Die Tabelle nutzt dabei die volle Bildschirmbreite.",
         category: "spielleitung",
       },

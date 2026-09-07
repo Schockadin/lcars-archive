@@ -54,11 +54,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Markdown in allen Freitextfeldern** — der `MarkdownEditor` (Toolbar +
   Rohtext/Vorschau) steht nicht nur an den Content-Formularen, sondern auch an
   Notizen, eigenen Regeln, Talent- und Schwerpunkt-Beschreibungen,
-  Session-Notizen und den Gesprächs-Formularen; sein `rows`-Prop setzt die
+  Session-Notizen, der Notiz eines angekündigten Spieltermins, der
+  Beschreibung eines von Hand eingetragenen Chronologie-Ereignisses und den
+  Gesprächs-Formularen; sein `rows`-Prop setzt die
   Höhe in Zeilen statt in Pixeln (Notizen und Regeln: 10). Die zugehörigen
   Datenzugriffe liefern neben dem Rohtext ein gerendertes `*Html`-Feld
   (`listNotes`, `listCampaignRules`, `listTalents`, `listFocuses`,
-  `listGameSessions`) — das Formular arbeitet auf dem Rohtext, die Anzeige auf
+  `listGameSessions`, `listUpcomingSessions`; in der Chronologie trägt nur das
+  von Hand eingetragene Ereignis ein `detailHtml` — die übrigen
+  Beschreibungen sind generierte Sätze) — das Formular arbeitet auf dem Rohtext, die Anzeige auf
   dem HTML. Im PDF gibt es kein HTML, dort zerlegt `toPdfBlocks` denselben
   Rohtext (wie beim Biografie-Blatt). Die Kataloge sind gecacht, das Rendern
   passiert also einmal je Cache-Generation.
@@ -438,7 +442,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Antwort und kein Wert, der gepflegt werden müsste. Ein Termin verschwindet
   erst **sechs Stunden nach Beginn** aus der Liste — sonst fiele der Abend
   mitten im Spielen heraus. Eine zweite Antwort ersetzt die erste; eine
-  verschobene Uhrzeit lässt die Zusagen stehen.
+  verschobene Uhrzeit lässt die Zusagen stehen. Die Zusage-Action prüft ihr
+  Recht (`users.browse`, „Nicht-Gast") über **`checkPermission`**, nicht über
+  `requireNonGuest`: das harte Gate ruft `forbidden()` auf, und ein
+  Auth-Interrupt in einer über `useActionState` aufgerufenen Action wird zu
+  einer **403-Antwort**, mit der der Client nichts anfangen kann („An
+  unexpected response was received from the server"). Wem das Recht fehlt —
+  in einer über `/admin/permissions` angepassten Rechte-Tabelle schnell
+  passiert —, der bekommt jetzt einen Satz am Knopf; im Dashboard werden ihm
+  die Knöpfe gar nicht erst angeboten.
 - **Offen für dich** — der Dashboard-Abschnitt mit dem, was diese Person
   schuldet (`src/lib/pendingActions.ts`): Missionen, an denen eine eigene
   Figur teilnimmt und zu denen **kein eigenes Logbuch** existiert; Gespräche,

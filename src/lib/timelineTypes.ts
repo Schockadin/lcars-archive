@@ -91,6 +91,11 @@ export interface TimelineEvent {
   title: string;
   // Ein bis zwei Sätze zum Ereignis; leer, wo es nichts zu sagen gibt.
   detail: string | null;
+  // Nur bei von Hand eingetragenen Ereignissen gesetzt: deren Beschreibung
+  // wird als Markdown erfasst (MarkdownEditor) und deshalb auch als Markdown
+  // angezeigt. Die übrigen Beschreibungen sind generierte Sätze („Beginn des
+  // Einsatzes.") oder Textausschnitte — dafür lohnt kein HTML.
+  detailHtml?: string | null;
   category: string;
   origin: TimelineOrigin;
   sourceType: TimelineSourceType;
