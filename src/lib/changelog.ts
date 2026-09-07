@@ -142,6 +142,14 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Hell/Dunkel frei wählbar — plus eigene Grundfarben",
     items: [
       {
+        text: "Das Menü für angemeldete Konten ist aufgeräumt: „Charaktere“, „Meine Inhalte“ und „Einstellungen“ stehen jetzt zusammen unter einem Knopf „Profil“ mit Aufklapp-Menü — so wie „Leitung“ und „Admin“. Der Abmelden-Knopf steht immer allein in der unteren Reihe.",
+        category: "konto",
+      },
+      {
+        text: "Das Leitungs-Menü ist gegliedert wie das Admin-Menü: „Kampagne“ (Kampagne, Sessions), „Charaktere“ (Gruppenblatt, AP), „Regelwerk“ (Talente, Schwerpunkte, Regeln) und „Inhalte“ (Chronologie, Gespräche) — statt neun Einträgen in einer Reihe.",
+        category: "spielleitung",
+      },
+      {
         text: "Die Beschreibung eines von Hand eingetragenen Ereignisses und die Notiz zu einem Spieltermin haben jetzt denselben Markdown-Editor mit Werkzeugleiste und Vorschau wie die übrigen Textfelder — und werden auch als Markdown angezeigt.",
         category: "inhalte",
         tutorial: "markdown",

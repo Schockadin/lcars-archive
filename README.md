@@ -734,13 +734,27 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Mail mit allen Fehler- und Audit-Log-Einträgen der letzten 24 Stunden.
   Die Spielleitung hat ein eigenes „Leitung“-Dropdown im Header, das getrennt
   neben dem Admin-Menü steht (wer beide Rollen hat, sieht beide Menüs
-  nebeneinander) und in den Bereich `/gm` führt: Kampagnen-Seite (Ingame-Jahr,
+  nebeneinander), wie dieses **nach Aufgabe gegliedert** ist (Kampagne ·
+  Charaktere · Regelwerk · Inhalte) und in den Bereich `/gm` führt: Kampagnen-Seite (Ingame-Jahr,
   Charakter-Zuweisung, Missions-Übersicht mit Bearbeiten/Löschen/Besitzer:in-
   Zuordnung), Sessions, AP, Talente sowie alle aktuell offenen Gespräche — auch
   ohne eigene Teilnahme, verlinkt auf die read-only-Ansicht des jeweiligen
   Gesprächs. Über jedes neu
   begonnene Gespräch wird jeder aktive GM-Account zusätzlich automatisch per
   Mail/Push informiert.
+- **Menü für angemeldete Konten** (`HeaderUserNav.tsx`) — vier Pills:
+  **Profil** (Aufklapp-Menü mit „Charaktere" — nur mit eigenen Figuren —,
+  „Meine Inhalte" und „Einstellungen"), **Leitung**, **Admin** und
+  **Logout**. Alle drei Menüs teilen sich dieselbe Dropdown-Komponente
+  (`NavDropdown`), die Einträge werden nach Rechten gefiltert und nach
+  Gruppen überschrieben. Der Logout steht im LCARS-Header immer allein in
+  der zweiten Reihe (`grid-column: 1` auf `.lcars-usernav-form` — die erste
+  Spalte der laufenden Reihe ist belegt, also rutscht er in die nächste,
+  egal wie viele Pills davor stehen); im minimalistischen UI ist die Nav
+  eine Spalte, dort spielt es keine Rolle. Bis v1.29.47 standen Charaktere,
+  Inhalte und Profil als drei einzelne Pills daneben — zusammen mit den
+  Staff-Menüs und dem Logout sprengte das die Zeile, und drei der sechs
+  Pills führten in denselben Bereich (`/user`).
 - **Custom-404/500-Seiten** — unerwartete Serverfehler zeigen eine
   LCARS-gestaltete 500-Seite statt der Next.js-Standardfehlerseite; alle
   Besucher sehen eine freundliche Meldung mit Referenz-Code, eingeloggte

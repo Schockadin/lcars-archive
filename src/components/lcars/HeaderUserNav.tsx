@@ -7,8 +7,6 @@ import { logout } from "@/app/login/actions";
 import { clearServiceWorkerPageCache } from "@/lib/swCache";
 import { DB_PERMISSIONS } from "@/lib/permissions";
 import {
-  MyCharactersNavIcon,
-  ContentNavIcon,
   ProfileNavIcon,
   AdminNavIcon,
   GmNavIcon,
@@ -16,15 +14,17 @@ import {
 } from "@/lib/icons";
 import { useAnchoredDropdown } from "./useAnchoredDropdown";
 
-interface StaffMenuItem {
+interface NavMenuItem {
   href: string;
   label: string;
   // Überschrift, unter der der Eintrag im Dropdown einsortiert wird. Elf
-  // Admin-Einträge in einer flachen Liste sind nicht mehr überblickbar.
+  // Admin- bzw. neun Leitungs-Einträge in einer flachen Liste sind nicht mehr
+  // überblickbar.
   group?: string;
   // Recht(e), die den Eintrag freischalten (granulares RBAC, siehe
-  // permissions.ts). Ein Array = „mindestens eines davon genügt".
-  permission: string | readonly string[];
+  // permissions.ts). Ein Array = „mindestens eines davon genügt". Fehlt das
+  // Feld, ist der Eintrag für jede angemeldete Person da (Profil-Menü).
+  permission?: string | readonly string[];
 }
 
 // ZWEI getrennte Staff-Dropdowns statt eines gemischten: „Leitung" führt die
@@ -32,21 +32,24 @@ interface StaffMenuItem {
 // beide Rollen hat, sieht beide Menüs nebeneinander — die Aufgaben bleiben
 // damit auch dann sauber getrennt. Innerhalb eines Menüs werden die Einträge
 // weiterhin NACH RECHTEN gefiltert (nicht nach Rolle).
-const GM_ITEMS: StaffMenuItem[] = [
-  { href: "/gm/campaign", label: "Kampagne", permission: "gm.access" },
+// Gegliedert wie das Admin-Menü, nach Aufgabe statt nach Reihenfolge des
+// Entstehens: was die Runde als Ganzes betrifft, was an den Figuren hängt,
+// was aus dem Regelwerk kommt, was am Archiv gepflegt wird.
+const GM_ITEMS: NavMenuItem[] = [
+  { href: "/gm/campaign", label: "Kampagne", permission: "gm.access", group: "Kampagne" },
+  { href: "/gm/sessions", label: "Sessions", permission: "gm.access", group: "Kampagne" },
   // Das Blatt für den Tisch: alle Werte nebeneinander, wenn eine Probe
-  // angesagt wird.
-  { href: "/gm/gruppe", label: "Gruppenblatt", permission: "gm.access" },
-  { href: "/gm/sessions", label: "Sessions", permission: "gm.access" },
-  { href: "/gm/ap", label: "AP", permission: "gm.access" },
-  { href: "/gm/talents", label: "Talente", permission: "gm.access" },
-  { href: "/gm/focuses", label: "Schwerpunkte", permission: "gm.access" },
-  { href: "/gm/rules", label: "Regeln", permission: "gm.access" },
-  { href: "/gm/chronologie", label: "Chronologie", permission: "gm.access" },
-  { href: "/gm/dialogues", label: "Gespräche", permission: "gm.access" },
+  // angesagt wird — zusammen mit den AP-Konten das, was an den Figuren hängt.
+  { href: "/gm/gruppe", label: "Gruppenblatt", permission: "gm.access", group: "Charaktere" },
+  { href: "/gm/ap", label: "AP", permission: "gm.access", group: "Charaktere" },
+  { href: "/gm/talents", label: "Talente", permission: "gm.access", group: "Regelwerk" },
+  { href: "/gm/focuses", label: "Schwerpunkte", permission: "gm.access", group: "Regelwerk" },
+  { href: "/gm/rules", label: "Regeln", permission: "gm.access", group: "Regelwerk" },
+  { href: "/gm/chronologie", label: "Chronologie", permission: "gm.access", group: "Inhalte" },
+  { href: "/gm/dialogues", label: "Gespräche", permission: "gm.access", group: "Inhalte" },
 ];
 
-const ADMIN_ITEMS: StaffMenuItem[] = [
+const ADMIN_ITEMS: NavMenuItem[] = [
   { href: "/admin/users", label: "User", permission: "users.manage", group: "Konten" },
   { href: "/admin/permissions", label: "Rollen", permission: "users.manage", group: "Konten" },
   { href: "/admin/content", label: "Inhalte", permission: "content.moderate", group: "Inhalte" },
@@ -65,9 +68,9 @@ const ADMIN_ITEMS: StaffMenuItem[] = [
 // ihres ersten Auftretens zu Gruppen. Einträge ohne Gruppe landen in einem
 // Block ohne Überschrift — so bleibt das Leitungs-Menü unverändert flach.
 function groupItems(
-  items: StaffMenuItem[],
-): { group?: string; entries: StaffMenuItem[] }[] {
-  const out: { group?: string; entries: StaffMenuItem[] }[] = [];
+  items: NavMenuItem[],
+): { group?: string; entries: NavMenuItem[] }[] {
+  const out: { group?: string; entries: NavMenuItem[] }[] = [];
   for (const item of items) {
     const last = out[out.length - 1];
     if (last && last.group === item.group) last.entries.push(item);
@@ -77,14 +80,15 @@ function groupItems(
 }
 
 function visibleItems(
-  items: StaffMenuItem[],
+  items: NavMenuItem[],
   permissions: string[],
-): StaffMenuItem[] {
-  return items.filter((item) =>
-    Array.isArray(item.permission)
+): NavMenuItem[] {
+  return items.filter((item) => {
+    if (!item.permission) return true;
+    return Array.isArray(item.permission)
       ? item.permission.some((p) => permissions.includes(p))
-      : permissions.includes(item.permission as string),
-  );
+      : permissions.includes(item.permission as string);
+  });
 }
 
 // Kleines Icon vor dem Label — im Header/Desktop per CSS ausgeblendet, im
@@ -102,9 +106,9 @@ function NavPillContent({ icon, label }: { icon: ReactNode; label: string }) {
 }
 
 // Ein Dropdown-Pill mit seinen Einträgen. Eigene Komponente, weil es davon
-// jetzt zwei gibt (Leitung/Admin) und jedes seinen eigenen Öffnungs-Zustand
-// und seine eigene Verankerung braucht.
-function StaffDropdown({
+// jetzt drei gibt (Profil/Leitung/Admin) und jedes seinen eigenen
+// Öffnungs-Zustand und seine eigene Verankerung braucht.
+function NavDropdown({
   label,
   icon,
   items,
@@ -113,7 +117,7 @@ function StaffDropdown({
 }: {
   label: string;
   icon: ReactNode;
-  items: StaffMenuItem[];
+  items: NavMenuItem[];
   // true = der aktuelle Pfad liegt im Bereich dieses Menüs.
   active: boolean;
   placement: "bottom" | "right" | "right-bottom";
@@ -184,21 +188,31 @@ function StaffDropdown({
                 {group && (
                   <div className="lcars-search-group-label">{group}</div>
                 )}
-                {entries.map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    role="menuitem"
-                    onClick={() => setOpen(false)}
-                    className={
-                      pathname === item.href
-                        ? "lcars-search-item lcars-menu-active"
-                        : "lcars-search-item"
-                    }
-                  >
-                    {item.label}
-                  </Link>
-                ))}
+                {entries.map((item) => {
+                  // Unterseiten färben ihren Eintrag mit ein (z.B.
+                  // /user/characters/12/stats → „Charaktere"). Ausgenommen
+                  // ist „Einstellungen" (/user), dessen Pfad Präfix ALLER
+                  // User-Seiten ist — dort bleibt es beim exakten Vergleich.
+                  const active =
+                    pathname === item.href ||
+                    (item.href !== "/user" &&
+                      pathname.startsWith(`${item.href}/`));
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      role="menuitem"
+                      onClick={() => setOpen(false)}
+                      className={
+                        active
+                          ? "lcars-search-item lcars-menu-active"
+                          : "lcars-search-item"
+                      }
+                    >
+                      {item.label}
+                    </Link>
+                  );
+                })}
               </div>
             ))}
           </div>,
@@ -230,18 +244,20 @@ export default function HeaderUserNav({
   // „Suche" ist bewusst NICHT mehr hier: die Suche hat einen eigenen Eintrag
   // (Lupe) im Hauptmenü (MAIN_NAV/SidebarMenu.tsx), der Header-Button wäre
   // doppelt.
-  const tabs = [
+  //
+  // Charaktere, Inhalte und Einstellungen stehen seit v1.29.48 unter EINEM
+  // Pill „Profil" mit Dropdown — gebaut wie Leitung/Admin. Vorher lagen sie
+  // als drei einzelne Pills daneben; zusammen mit den beiden Staff-Menüs und
+  // dem Logout sprengte das die Zeile, und drei der sechs Pills führten in
+  // denselben Bereich (/user).
+  const profileItems: NavMenuItem[] = [
+    // Ohne verknüpften Charakter wäre die Seite leer — den ERSTEN Charakter
+    // legt man weiterhin über „Meine Inhalte" an.
     ...(hasCharacters
-      ? [
-          {
-            href: "/user/characters",
-            label: "Charaktere",
-            icon: <MyCharactersNavIcon />,
-          },
-        ]
+      ? [{ href: "/user/characters", label: "Charaktere" }]
       : []),
-    { href: "/user/content", label: "Inhalte", icon: <ContentNavIcon /> },
-    { href: "/user", label: "Profil", icon: <ProfileNavIcon /> },
+    { href: "/user/content", label: "Meine Inhalte" },
+    { href: "/user", label: "Einstellungen" },
   ];
 
   const gmItems = visibleItems(GM_ITEMS, permissions);
@@ -256,31 +272,16 @@ export default function HeaderUserNav({
       className={`lcars-usernav lcars-usernav--${variant}`}
       style={{ "--usernav-cols": columns } as React.CSSProperties}
     >
-      {tabs.map((tab) => {
-        // Unterseiten färben ihren Menüpunkt mit ein (z.B.
-        // /user/characters/12/stats → „Charaktere"). Ausgenommen ist „Profil"
-        // (/user), dessen Pfad Präfix ALLER User-Seiten ist — dort bleibt es
-        // beim exakten Vergleich.
-        const isActive =
-          pathname === tab.href ||
-          (tab.href !== "/user" && pathname.startsWith(`${tab.href}/`));
-        return (
-          <Link
-            key={tab.href}
-            href={tab.href}
-            className={
-              isActive
-                ? "lcars-usernav-pill lcars-menu-active"
-                : "lcars-usernav-pill"
-            }
-          >
-            <NavPillContent icon={tab.icon} label={tab.label} />
-          </Link>
-        );
-      })}
+      <NavDropdown
+        label="Profil"
+        icon={<ProfileNavIcon />}
+        items={profileItems}
+        active={pathname === "/user" || pathname.startsWith("/user/")}
+        placement={placement}
+      />
 
       {gmItems.length > 0 && (
-        <StaffDropdown
+        <NavDropdown
           label="Leitung"
           icon={<GmNavIcon />}
           items={gmItems}
@@ -290,7 +291,7 @@ export default function HeaderUserNav({
       )}
 
       {adminItems.length > 0 && (
-        <StaffDropdown
+        <NavDropdown
           label="Admin"
           icon={<AdminNavIcon />}
           items={adminItems}

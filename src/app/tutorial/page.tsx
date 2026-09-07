@@ -271,8 +271,11 @@ export default function TutorialPage() {
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
-                Unter <strong>„Inhalte“</strong> (Menü oben, sobald du
-                eingeloggt bist) findest du zwei klar getrennte Bereiche:{" "}
+                Unter <strong>„Profil → Meine Inhalte“</strong> (Menü oben,
+                sobald du eingeloggt bist — dort liegen auch{" "}
+                <strong>„Charaktere“</strong> und{" "}
+                <strong>„Einstellungen“</strong>) findest du zwei klar
+                getrennte Bereiche:{" "}
                 <strong>„Neue Inhalte“</strong> mit den Anlegen-Knöpfen und{" "}
                 <strong>„Inhalte verwalten“</strong>, wo alles auftaucht, was
                 dir bereits gehört:
@@ -989,7 +992,9 @@ export default function TutorialPage() {
                 <li>
                   Über das eigene <strong>„Leitung“</strong>-Menü im Header (es
                   steht getrennt neben dem Admin-Menü — wer beide Rollen hat,
-                  sieht beide Menüs nebeneinander) unter{" "}
+                  sieht beide Menüs nebeneinander — und ist wie dieses nach
+                  Aufgaben gegliedert: Kampagne, Charaktere, Regelwerk,
+                  Inhalte) unter{" "}
                   <strong>„Kampagne“</strong> an einer Stelle das aktuelle{" "}
                   <strong>Ingame-Jahr</strong> einstellen, Charaktere
                   Spieler:innen zuweisen (Gast-Accounts ausgenommen) und alle
