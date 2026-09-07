@@ -12,6 +12,7 @@ import type { CharacterStats } from "@/types/characterStats";
 import type { AdvancementRules } from "@/lib/advancement";
 import type { ApAccount } from "@/lib/apReasons";
 import type { Talent } from "@/lib/talentCatalog";
+import type { Focus } from "@/lib/focusCatalog";
 
 const initialState: CharacterPanelState = {};
 
@@ -33,6 +34,7 @@ export default function CharacterValuesPanel({
   account,
   rules,
   talents,
+  focuses,
 }: {
   userId: number;
   characterId: number;
@@ -41,6 +43,7 @@ export default function CharacterValuesPanel({
   account: ApAccount;
   rules: AdvancementRules;
   talents: Talent[];
+  focuses: Focus[];
 }) {
   const [stats, setStats] = useState<CharacterStats>(savedStats);
   const [state, formAction, pending] = useActionState(
@@ -67,6 +70,7 @@ export default function CharacterValuesPanel({
         account={account}
         rules={rules}
         talents={talents}
+        focuses={focuses}
         species={species}
         // Festgeschrieben wird der GESPEICHERTE Stand, nicht der gerade
         // getippte (siehe lockOwnCharacterCreation).
@@ -85,6 +89,7 @@ export default function CharacterValuesPanel({
           onChange={setStats}
           rules={rules}
           talents={talents}
+          focuses={focuses}
           species={species}
           idPrefix="values-panel"
         />
@@ -99,7 +104,7 @@ export default function CharacterValuesPanel({
 
         <FormError message={state?.error} />
         {state?.success && (
-          <p className="text-lcars-senary" role="status">
+          <p className="text-lcars-senary-ink" role="status">
             {state.success}
           </p>
         )}

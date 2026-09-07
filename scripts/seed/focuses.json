@@ -1,0 +1,682 @@
+[
+  {
+    "name": "Art",
+    "discipline": "command"
+  },
+  {
+    "name": "Bargain",
+    "discipline": "command"
+  },
+  {
+    "name": "Composure",
+    "discipline": "command"
+  },
+  {
+    "name": "Courting Rituals",
+    "discipline": "command"
+  },
+  {
+    "name": "Cultural Studies",
+    "discipline": "command"
+  },
+  {
+    "name": "Debate",
+    "discipline": "command"
+  },
+  {
+    "name": "Deception",
+    "discipline": "command"
+  },
+  {
+    "name": "Diplomacy",
+    "discipline": "command"
+  },
+  {
+    "name": "Emotional Intelligence",
+    "discipline": "command"
+  },
+  {
+    "name": "Empathy",
+    "discipline": "command"
+  },
+  {
+    "name": "Etiquette",
+    "discipline": "command"
+  },
+  {
+    "name": "Gambling",
+    "discipline": "command"
+  },
+  {
+    "name": "History",
+    "discipline": "command"
+  },
+  {
+    "name": "Inspiration",
+    "discipline": "command"
+  },
+  {
+    "name": "Intimidation",
+    "discipline": "command"
+  },
+  {
+    "name": "Journalism",
+    "discipline": "command"
+  },
+  {
+    "name": "Law",
+    "discipline": "command"
+  },
+  {
+    "name": "Linguistics",
+    "discipline": "command"
+  },
+  {
+    "name": "Mental Discipline",
+    "discipline": "command"
+  },
+  {
+    "name": "Multi-Discipline",
+    "discipline": "command"
+  },
+  {
+    "name": "Negotiation",
+    "discipline": "command"
+  },
+  {
+    "name": "Persuasion",
+    "discipline": "command"
+  },
+  {
+    "name": "Philosophy",
+    "discipline": "command"
+  },
+  {
+    "name": "Politics",
+    "discipline": "command"
+  },
+  {
+    "name": "Prime Directive",
+    "discipline": "command"
+  },
+  {
+    "name": "Rhetoric",
+    "discipline": "command"
+  },
+  {
+    "name": "Starfleet Protocols",
+    "discipline": "command"
+  },
+  {
+    "name": "Station Operations",
+    "discipline": "command"
+  },
+  {
+    "name": "Strategy/Tactics",
+    "discipline": "command"
+  },
+  {
+    "name": "Teaching",
+    "discipline": "command"
+  },
+  {
+    "name": "Team Dynamics",
+    "discipline": "command"
+  },
+  {
+    "name": "Time Management",
+    "discipline": "command"
+  },
+  {
+    "name": "Astronavigation",
+    "discipline": "conn"
+  },
+  {
+    "name": "Astrophysics",
+    "discipline": "conn"
+  },
+  {
+    "name": "Atmospheric Flight",
+    "discipline": "conn"
+  },
+  {
+    "name": "Boat Pilot/Submersibles",
+    "discipline": "conn"
+  },
+  {
+    "name": "Climbing",
+    "discipline": "conn"
+  },
+  {
+    "name": "Combat Maneuvers",
+    "discipline": "conn"
+  },
+  {
+    "name": "Communication Systems",
+    "discipline": "conn"
+  },
+  {
+    "name": "Evacuation Procedures",
+    "discipline": "conn"
+  },
+  {
+    "name": "Evasive Action",
+    "discipline": "conn"
+  },
+  {
+    "name": "Extra-Vehicular Activity",
+    "discipline": "conn"
+  },
+  {
+    "name": "Flight Controller",
+    "discipline": "conn"
+  },
+  {
+    "name": "Ground Vehicles",
+    "discipline": "conn"
+  },
+  {
+    "name": "Guidance Systems",
+    "discipline": "conn"
+  },
+  {
+    "name": "Helm Operations",
+    "discipline": "conn"
+  },
+  {
+    "name": "Impulse Engines",
+    "discipline": "conn"
+  },
+  {
+    "name": "Power Management",
+    "discipline": "conn"
+  },
+  {
+    "name": "Precision Maneuvering",
+    "discipline": "conn"
+  },
+  {
+    "name": "Repairs & Maintenance",
+    "discipline": "conn"
+  },
+  {
+    "name": "Ship Design and Construction",
+    "discipline": "conn"
+  },
+  {
+    "name": "Shuttlebay Management",
+    "discipline": "conn"
+  },
+  {
+    "name": "Small Craft",
+    "discipline": "conn"
+  },
+  {
+    "name": "Space Station Operations",
+    "discipline": "conn"
+  },
+  {
+    "name": "Starfleet Protocols",
+    "discipline": "conn"
+  },
+  {
+    "name": "Starship Expert (pick one)",
+    "discipline": "conn"
+  },
+  {
+    "name": "Starship Recognition",
+    "discipline": "conn"
+  },
+  {
+    "name": "Stellar Cartography",
+    "discipline": "conn"
+  },
+  {
+    "name": "Survival",
+    "discipline": "conn"
+  },
+  {
+    "name": "Tracking",
+    "discipline": "conn"
+  },
+  {
+    "name": "Warp Drive",
+    "discipline": "conn"
+  },
+  {
+    "name": "Zero-G Combat",
+    "discipline": "conn"
+  },
+  {
+    "name": "Advanced Holograms",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Computer",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Cybernetics",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Deflector Systems",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Diagnostics",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Electro-Plasma-Systems (EPS)",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Emergency Repairs",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Energy Weapons",
+    "discipline": "engineering"
+  },
+  {
+    "name": "EVA Suits",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Experimental Device (specify)",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Flight Control Systems",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Forcefields",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Imaging Equipment",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Impulse Fundamentals",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Jury-Rigging",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Locksmith",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Manufacturing",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Mining Operations",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Modeling & Design",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Percussive Maintenance",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Propulsion",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Reverse Engineering",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Saboteur",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Salvage",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Sensor Calibration",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Shuttlecraft Maintenance",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Structural Engineering",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Subspace Mechanics",
+    "discipline": "engineering"
+  },
+  {
+    "name": "System Maintenance",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Transporters/Replicators",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Troubleshooting",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Warp Core Mechanics",
+    "discipline": "engineering"
+  },
+  {
+    "name": "Ambush Tactics",
+    "discipline": "security"
+  },
+  {
+    "name": "Blade Weapons",
+    "discipline": "security"
+  },
+  {
+    "name": "Camouflage",
+    "discipline": "security"
+  },
+  {
+    "name": "Chemical & Biological Weapons",
+    "discipline": "security"
+  },
+  {
+    "name": "Combat Medic",
+    "discipline": "security"
+  },
+  {
+    "name": "Computer Security Systems",
+    "discipline": "security"
+  },
+  {
+    "name": "Criminal Organizations",
+    "discipline": "security"
+  },
+  {
+    "name": "Crisis Management",
+    "discipline": "security"
+  },
+  {
+    "name": "Deflector Operations",
+    "discipline": "security"
+  },
+  {
+    "name": "Demolitions",
+    "discipline": "security"
+  },
+  {
+    "name": "Espionage",
+    "discipline": "security"
+  },
+  {
+    "name": "Evacuation Procedure",
+    "discipline": "security"
+  },
+  {
+    "name": "Fleet Formations",
+    "discipline": "security"
+  },
+  {
+    "name": "Forensics",
+    "discipline": "security"
+  },
+  {
+    "name": "Hand Phasers",
+    "discipline": "security"
+  },
+  {
+    "name": "Hand-to-Hand Combat",
+    "discipline": "security"
+  },
+  {
+    "name": "Hazardous Environments",
+    "discipline": "security"
+  },
+  {
+    "name": "Infiltration",
+    "discipline": "security"
+  },
+  {
+    "name": "Interrogation",
+    "discipline": "security"
+  },
+  {
+    "name": "Intimidation",
+    "discipline": "security"
+  },
+  {
+    "name": "Lead Investigator",
+    "discipline": "security"
+  },
+  {
+    "name": "Martial Arts",
+    "discipline": "security"
+  },
+  {
+    "name": "Mental Resistance Techniques",
+    "discipline": "security"
+  },
+  {
+    "name": "Pickpocketing",
+    "discipline": "security"
+  },
+  {
+    "name": "Security Systems",
+    "discipline": "security"
+  },
+  {
+    "name": "Ship Engagement Tactics",
+    "discipline": "security"
+  },
+  {
+    "name": "Ship Lockdown Procedures",
+    "discipline": "security"
+  },
+  {
+    "name": "Shipboard Tactical Systems",
+    "discipline": "security"
+  },
+  {
+    "name": "Small Unit Tactics",
+    "discipline": "security"
+  },
+  {
+    "name": "Specific Species Weapon(s)",
+    "discipline": "security"
+  },
+  {
+    "name": "Strategy",
+    "discipline": "security"
+  },
+  {
+    "name": "Survival",
+    "discipline": "security"
+  },
+  {
+    "name": "Targeting Systems",
+    "discipline": "security"
+  },
+  {
+    "name": "Torpedoes",
+    "discipline": "security"
+  },
+  {
+    "name": "Anthropology",
+    "discipline": "science"
+  },
+  {
+    "name": "Archaeology",
+    "discipline": "science"
+  },
+  {
+    "name": "Astrometrics",
+    "discipline": "science"
+  },
+  {
+    "name": "Astrophysics",
+    "discipline": "science"
+  },
+  {
+    "name": "Biology/Xenobiology",
+    "discipline": "science"
+  },
+  {
+    "name": "Botany/Xenobotany",
+    "discipline": "science"
+  },
+  {
+    "name": "Chemistry",
+    "discipline": "science"
+  },
+  {
+    "name": "Deflector Operations",
+    "discipline": "science"
+  },
+  {
+    "name": "Exo-Tectonics",
+    "discipline": "science"
+  },
+  {
+    "name": "Galactic History",
+    "discipline": "science"
+  },
+  {
+    "name": "Genetics",
+    "discipline": "science"
+  },
+  {
+    "name": "Geology",
+    "discipline": "science"
+  },
+  {
+    "name": "Photonic Applications",
+    "discipline": "science"
+  },
+  {
+    "name": "Physics",
+    "discipline": "science"
+  },
+  {
+    "name": "Quantum Mechanics",
+    "discipline": "science"
+  },
+  {
+    "name": "Research",
+    "discipline": "science"
+  },
+  {
+    "name": "Sensor Operations",
+    "discipline": "science"
+  },
+  {
+    "name": "Spatial Phenomena",
+    "discipline": "science"
+  },
+  {
+    "name": "Subspace Theory",
+    "discipline": "science"
+  },
+  {
+    "name": "Temporal Mechanics",
+    "discipline": "science"
+  },
+  {
+    "name": "Unified Field Theory",
+    "discipline": "science"
+  },
+  {
+    "name": "Warp Field Dynamics",
+    "discipline": "science"
+  },
+  {
+    "name": "Warp Theory",
+    "discipline": "science"
+  },
+  {
+    "name": "Anesthesiology",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Biology/Xenobiology",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Dentistry",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Emergency Medicine",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Genetherapy",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Guided Therapy",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Imaging Systems",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Immunology",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Infectious Diseases",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Internal Medicine",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Medical Toxicology",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Neuropsychology/Psychiatry",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Pediatrics",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Psychiatry",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Psychosomatic Disorders",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Rheumatology",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Stress Disorders",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Surgery",
+    "discipline": "medicine"
+  },
+  {
+    "name": "Virology",
+    "discipline": "medicine"
+  }
+]

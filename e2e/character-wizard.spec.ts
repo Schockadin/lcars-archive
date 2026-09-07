@@ -151,7 +151,7 @@ test.describe("Charakter-Assistent", () => {
     await expect(departments).toContainText("AP zu viel");
   });
 
-  test("zeigt im letzten Schritt die drei Blätter mit den Eingaben", async ({
+  test("zeigt im letzten Schritt die vier Blätter mit den Eingaben", async ({
     page,
   }) => {
     await page.locator("#wizard-name").fill("T'Rel");
@@ -160,11 +160,16 @@ test.describe("Charakter-Assistent", () => {
 
     const preview = page.locator("#character-wizard .pf-preview");
     await expect(preview).toBeVisible();
-    // Blatt 1 Personalakte, Blatt 2 Spickzettel, Blatt 3 Biografie.
-    await expect(preview.locator(".pf-doc-title")).toHaveText([
-      "Talents",
+    // Blatt 1 Personalakte, Blatt 2 Spickzettel, Blatt 3 Regeln, Blatt 4
+    // Biografie. Die Blattnamen stehen im Titelreiter der STA-Kopfzeile
+    // (.pf-doc-tab); Blatt 1 trägt seinen Reiter in der gedruckten Grafik.
+    await expect(preview.locator(".pf-doc-tab")).toHaveText([
+      "Cheat Sheet",
+      "Rules",
       "Biography",
     ]);
+    // Alle Zusatzblätter tragen die Aufmachung des Hauptblatts.
+    await expect(preview.locator(".pf-doc-wordmark")).toHaveCount(3);
     await expect(preview.getByText("T'Rel").first()).toBeVisible();
     await expect(
       page.locator("#character-wizard .wizard-bar button[type='submit']"),
@@ -263,11 +268,32 @@ test.describe("Bogen-Vorschau", () => {
       "download",
       "",
     );
-    // Alle drei Blätter stehen im Fenster.
-    await expect(overlay.locator(".pf-doc-title")).toHaveText([
-      "Talents",
+    // Alle vier Blätter stehen im Fenster — die Blattnamen im Titelreiter
+    // der STA-Kopfzeile (.pf-doc-tab).
+    await expect(overlay.locator(".pf-doc-tab")).toHaveText([
+      "Cheat Sheet",
+      "Rules",
       "Biography",
     ]);
+    // Die Regeln stehen seit v1.29.36 auf einem eigenen Blatt, nicht mehr
+    // hinter den Talenten: die Kernregeln (Momentum, Bedrohung,
+    // Entschlossenheit, siehe src/lib/coreRules.ts) und dahinter die eigenen
+    // Regeln der Runde (DEMO_RULES in der Galerie, in der Anwendung aus
+    // campaign_rules).
+    const regelblatt = overlay
+      .locator(".pf-doc")
+      .filter({ has: overlay.page().locator(".pf-doc-tab", { hasText: "Rules" }) });
+    await expect(
+      regelblatt.locator(".pf-doc-heading", { hasText: "MOMENTUM AUSGEBEN" }),
+    ).toBeVisible();
+    await expect(
+      regelblatt.locator(".pf-doc-heading", { hasText: "EIGENE REGELN" }),
+    ).toBeVisible();
+    // 15 Kernregeln (coreRules.ts) + 1 Hausregel aus DEMO_RULES — alle auf
+    // dem Regelblatt, keine mehr beim Spickzettel.
+    await expect(overlay.locator(".pf-doc-rule")).toHaveCount(16);
+    await expect(regelblatt.locator(".pf-doc-rule")).toHaveCount(16);
+    await expect(overlay.locator(".pf-doc-wordmark")).toHaveCount(3);
 
     // Escape schließt (useOverlayDismiss) — gleiches Muster wie die übrigen
     // Overlays der Anwendung.

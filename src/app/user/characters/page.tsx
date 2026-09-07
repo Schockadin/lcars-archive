@@ -40,7 +40,7 @@ export default async function UserCharactersPage() {
   return (
     <>
       <PageMeta title="Meine Charaktere" section="users" />
-      {/* Zentrierte breite Spalte wie /missions, /search und „Meine Inhalte" —
+      {/* Zentrierte breite Spalte wie /chronologie, /search und „Meine Inhalte" —
           Überschrift und Inhalt teilen sie sich. */}
       <div className="lcars-wide-column">
         <h1>Meine Charaktere</h1>
@@ -51,7 +51,7 @@ export default async function UserCharactersPage() {
             <div className="lcars-btn-stack max-sm:w-full">
               {/* Gast-Accounts dürfen keine Charaktere anlegen — dieselbe
                   Prüfung wie in /user/content und (serverseitig maßgeblich) in
-                  characters/_shared/contentAction.ts. */}
+                  characters/_shared/wizardAction.ts. */}
               {userCan(user, "content.create", roleMap) ? (
                 <Link
                   href="/user/characters/new"

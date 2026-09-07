@@ -1,44 +1,29 @@
 "use client";
-import Link from "next/link";
-import { useState } from "react";
-import {
-  LcarsDataRow,
-  LcarsSortSwitch,
-  type SortDir,
-} from "@/components/lcars";
-import {
-  changelogItemText,
-  changelogItemTutorial,
-  type ChangelogEntry,
-} from "@/lib/changelog";
-import { tutorialSectionHref, tutorialSectionLabel } from "@/lib/tutorialSections";
+import { LcarsDataRow } from "@/components/lcars";
+import ChangelogControls from "@/components/changelog/ChangelogControls";
+import ChangelogItems from "@/components/changelog/ChangelogItems";
+import { useChangelogView } from "@/components/changelog/useChangelogView";
+import { compareVersions, type ChangelogEntry } from "@/lib/changelog";
 
-// Vergleicht zwei "Major.Minor"-Versionsstrings numerisch statt
-// lexikografisch — ein reiner String-Vergleich würde "1.10" fälschlich vor
-// "1.9" einsortieren.
-function compareVersions(a: string, b: string): number {
-  const partsA = a.split(".").map(Number);
-  const partsB = b.split(".").map(Number);
-  for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
-    const diff = (partsA[i] ?? 0) - (partsB[i] ?? 0);
-    if (diff !== 0) return diff;
-  }
-  return 0;
-}
-
-// Umschaltbare Sortierung (neueste/älteste zuerst) über dieselbe
-// Sortier-Switch-Komponente wie z.B. die Mission-Log-Liste — hier mit nur
-// einer sortierbaren "Option" (Version), da es nur ein Sortierkriterium
-// gibt. defaultOpen (nur das aktuellste Akkordeon offen) wird pro
-// Versions-Key einmalig beim Mount gesetzt (siehe DataRow.tsx) — ein
-// Wechsel der Sortierrichtung sortiert die Zeilen nur um, ohne die
-// Auf-/Zugeklappt-Zustände zurückzusetzen, da React sie per key erhält.
+// Die vollständige Änderungsliste: ein Akkordeon je Version, darüber die
+// gemeinsame Leiste aus Sortierung und Kategorie-Filter (siehe
+// ChangelogControls — dieselbe Bedienung wie in der Dashboard-Box).
+//
+// Sortiert wird nach Version (die Reihenfolge der Akkordeons) oder nach
+// Kategorie (die Reihenfolge der Stichpunkte INNERHALB jeder Version) — eine
+// Version enthält fast immer Verschiedenes, „nach Kategorie" kann die
+// Versionen also nicht ordnen.
+//
+// defaultOpen (nur das aktuellste Akkordeon offen) wird pro Versions-Key
+// einmalig beim Mount gesetzt (siehe DataRow.tsx) — Sortieren und Filtern
+// ordnen die Zeilen nur um, ohne die Auf-/Zugeklappt-Zustände
+// zurückzusetzen, da React sie per key erhält.
 export default function ChangelogList({
   entries,
 }: {
   entries: ChangelogEntry[];
 }) {
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const view = useChangelogView(entries);
 
   const newestVersion = entries.reduce(
     (newest, entry) =>
@@ -46,58 +31,53 @@ export default function ChangelogList({
     entries[0]?.version ?? "",
   );
 
-  const sorted = [...entries].sort((a, b) =>
-    sortDir === "desc"
-      ? compareVersions(b.version, a.version)
-      : compareVersions(a.version, b.version),
-  );
+  const sorted =
+    view.sortKey === "version"
+      ? [...view.visible].sort((a, b) =>
+          view.sortDir === "desc"
+            ? compareVersions(b.version, a.version)
+            : compareVersions(a.version, b.version),
+        )
+      : // Beim Sortieren nach Kategorie bleibt die Versionsfolge, wie sie ist
+        // (neueste zuerst) — sonst änderten sich zwei Dinge auf einmal.
+        [...view.visible].sort((a, b) =>
+          compareVersions(b.version, a.version),
+        );
 
   return (
     <div className="flex flex-col gap-[16px]">
-      <LcarsSortSwitch
-        className="flex w-full ml-auto mb-[4px]"
-        options={[{ key: "version", label: "Version" }]}
-        sortKey="version"
-        sortDir={sortDir}
-        onChange={(_key, dir) => setSortDir(dir)}
+      <ChangelogControls
+        categories={view.categories}
+        selected={view.selected}
+        onSelectCategory={view.selectCategory}
+        sortKey={view.sortKey}
+        sortDir={view.sortDir}
+        onSortChange={view.setSort}
+        idPrefix="changelog"
       />
 
-      <div className="flex flex-col gap-[10px]">
-        {sorted.map((entry) => (
-          <LcarsDataRow
-            key={entry.version}
-            value={entry.version}
-            label="Version"
-            defaultOpen={entry.version === newestVersion}
-            className="lcars-data-row--full"
-          >
-            <div className="lcars-text flex flex-col gap-[8px]">
-              <h3>{entry.title}</h3>
-              <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
-                {entry.items.map((item, itemIndex) => {
-                  const tutorial = changelogItemTutorial(item);
-                  return (
-                    <li key={itemIndex}>
-                      {changelogItemText(item)}
-                      {tutorial && (
-                        <>
-                          {" "}
-                          <Link
-                            href={tutorialSectionHref(tutorial)}
-                            className="lcars-changelog-tutorial-link"
-                          >
-                            Im Tutorial: {tutorialSectionLabel(tutorial)}
-                          </Link>
-                        </>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </LcarsDataRow>
-        ))}
-      </div>
+      {sorted.length === 0 ? (
+        <p className="lcars-empty-state">Keine Einträge für diese Auswahl.</p>
+      ) : (
+        <div className="flex flex-col gap-[10px]">
+          {sorted.map((entry, index) => (
+            <LcarsDataRow
+              key={entry.version}
+              // Wert links = laufende Zeilennummer (1-basiert in der aktuellen
+              // Sortierrichtung), Pille = „Version <Major.Minor>".
+              value={index + 1}
+              label={`Version ${entry.version}`}
+              defaultOpen={entry.version === newestVersion}
+              className="lcars-data-row--full"
+            >
+              <div className="lcars-text flex flex-col gap-[8px]">
+                <h3>{entry.title}</h3>
+                <ChangelogItems items={entry.items} />
+              </div>
+            </LcarsDataRow>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

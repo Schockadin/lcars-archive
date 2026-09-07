@@ -65,7 +65,7 @@ export default function RoleEditor({
   return (
     <details className="lcars-panel p-[16px] flex flex-col gap-[12px]">
       <summary className="cursor-pointer flex items-center gap-[10px]">
-        <span className="lcars-eyebrow text-lcars-primary">{role.label}</span>
+        <span className="lcars-eyebrow text-lcars-primary-ink">{role.label}</span>
         <span className="text-lcars-ink-dim text-[12px]">
           {role.is_system ? "System-Rolle" : "Eigene Rolle"} · Schlüssel{" "}
           <code>{role.key}</code> · {role.permissions.length} Rechte ·{" "}

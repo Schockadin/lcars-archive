@@ -10,7 +10,11 @@ import {
 import { revalidateCharacter } from "@/lib/revalidate";
 import type { AdvancementKind } from "@/lib/advancement";
 import { listTalents } from "@/lib/talents";
+import { listFocuses } from "@/lib/focuses";
 import { parseTalentEntry } from "@/lib/talentCatalog";
+import {
+  characterEditHref,
+} from "@/lib/contentRoutes";
 
 export interface AdvancementActionResult {
   error?: string;
@@ -67,6 +71,20 @@ export async function advanceCharacterAction(
     }
   }
 
+  // Dasselbe für Schwerpunkte (siehe FocusPicker): der Katalogname steht
+  // unverändert auf dem Bogen, eine Umbenennung gibt es dort nicht.
+  if (kind === "focus") {
+    const catalog = await listFocuses();
+    const known = new Set(
+      catalog.map((focus) => focus.name.trim().toLowerCase()),
+    );
+    if (!known.has(entry.trim().toLowerCase())) {
+      return {
+        error: "Unbekannter Schwerpunkt — bitte aus dem Katalog wählen.",
+      };
+    }
+  }
+
   const result = await advanceOwnCharacter(session.userId, characterId, {
     kind,
     key: String(formData.get("key") ?? "") || undefined,
@@ -76,7 +94,7 @@ export async function advanceCharacterAction(
   if (!result.ok) return { error: result.error };
 
   revalidateCharacter(result.slug);
-  revalidatePath(`/user/characters/${characterId}`);
+  revalidatePath(characterEditHref(characterId));
 
   return { success: `${result.label} für ${result.cost} AP gesteigert.` };
 }
@@ -113,7 +131,7 @@ export async function lockCreationAction(
   }
 
   revalidateCharacter(result.slug);
-  revalidatePath(`/user/characters/${characterId}`);
+  revalidatePath(characterEditHref(characterId));
 
   const base =
     "Erschaffung abgeschlossen — Attribute und Disziplinen lassen sich jetzt nur noch mit AP steigern.";

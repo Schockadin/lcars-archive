@@ -52,7 +52,7 @@ export default function ImagesAdminGrid({
   return (
     <div className="flex flex-col gap-[10px]">
       {error && (
-        <p className="text-lcars-quinary text-[13px]" role="alert">
+        <p className="text-lcars-quinary-ink text-[13px]" role="alert">
           {error}
         </p>
       )}

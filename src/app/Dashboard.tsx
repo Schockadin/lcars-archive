@@ -6,10 +6,15 @@ import { getNewsItems } from "@/lib/recentActivity";
 import { newsVisibility } from "@/lib/recentActivityFormat";
 import { getCurrentUserPermissions } from "@/lib/dal";
 import { getDialoguesForUser } from "@/lib/dialogues";
+import { getPendingActions } from "@/lib/pendingActions";
+import { listUpcomingSessions } from "@/lib/plannedSessions";
 import FollowedContentSection from "./FollowedContentSection";
 import OpenDialoguesSection from "./OpenDialoguesSection";
+import PendingActionsSection from "./PendingActionsSection";
+import UpcomingSessionsSection from "./UpcomingSessionsSection";
 import NewsSection from "./NewsSection";
 import ChangelogSection from "./ChangelogSection";
+import OnboardingSection from "./OnboardingSection";
 import type { User } from "@/types/db";
 
 const ROLE_LABELS: Record<User["role"], string> = {
@@ -36,12 +41,21 @@ export default async function Dashboard({ user }: { user: User }) {
   // Primärrolle. getCurrentUserPermissions ist React-cache-dedupliziert
   // (siehe dal.ts), der Aufruf ist damit praktisch gratis.
   const permissions = await getCurrentUserPermissions();
-  const [hasPasswordSet, bookmarks, newsItems, openDialogues] =
+  const [
+    hasPasswordSet,
+    bookmarks,
+    newsItems,
+    openDialogues,
+    pendingActions,
+    upcomingSessions,
+  ] =
     await Promise.all([
       hasPassword(user.id),
       getBookmarkedContent(user.id),
       getNewsItems(user.id, user.news_kinds, newsVisibility(permissions)),
       getDialoguesForUser(user.id, "open"),
+      getPendingActions(user.id),
+      listUpcomingSessions(),
     ]);
   const needsPassword = !hasPasswordSet;
   const firstVisit = user.previous_login_at === null;
@@ -59,7 +73,7 @@ export default async function Dashboard({ user }: { user: User }) {
           </p>
 
           {needsPassword && (
-            <p className="text-lcars-primary">
+            <p className="text-lcars-primary-ink">
               Du hast noch kein Passwort gesetzt.{" "}
               <Link href="/user#password" className="underline">
                 Jetzt festlegen
@@ -70,13 +84,37 @@ export default async function Dashboard({ user }: { user: User }) {
 
           {firstVisit && (
             <p className="lcars-text">
-              Das ist dein erster Besuch — willkommen an Bord.
+              Das ist dein erster Besuch — willkommen an Bord.{" "}
+              <Link href="/willkommen" className="underline">
+                Erste Schritte
+              </Link>
+              .
             </p>
           )}
 
+          {/* Verschwindet von selbst, sobald alle Schritte erledigt sind
+              (siehe OnboardingSection). */}
+          <OnboardingSection userId={user.id} />
+
+          {/* Der nächste Spielabend zuerst — er hat ein Datum, alles andere
+              wartet. */}
+          <UpcomingSessionsSection
+            sessions={upcomingSessions}
+            userId={user.id}
+            canRsvp={permissions.has("users.browse")}
+          />
+
+          {/* Was ICH noch zu tun habe — vor den Neuigkeiten, die zeigen,
+              was andere getan haben. */}
+          <PendingActionsSection items={pendingActions} />
+
           <OpenDialoguesSection items={openDialogues} />
 
-          <ChangelogSection />
+          {/* Welche Kategorien hier erscheinen, hängt an den Rollen dieser
+              Person — die Administration blendet sie je Rolle aus (siehe
+              ChangelogSection). Zusatzrollen zählen mit: wer auch
+              Spielleitung ist, sieht deren Neuerungen. */}
+          <ChangelogSection roles={[user.role, ...user.additional_roles]} />
 
           <NewsSection items={newsItems} />
 

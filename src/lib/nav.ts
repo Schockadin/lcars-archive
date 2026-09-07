@@ -1,11 +1,11 @@
 export type NavKey =
   | "home"
   | "characters"
-  | "missions"
   | "archive"
+  | "chronologie"
   // /search hat einen eigenen Nav-Link (Lupe, siehe MAIN_NAV). /rag, /login
   // und /user haben keinen eigenen Nav-Link, brauchen aber einen gültigen
-  // section-Wert für <PageMeta>. (Die frühere /timeline-Seite ist entfernt.)
+  // section-Wert für <PageMeta>.
   | "search"
   | "rag"
   | "login"
@@ -25,12 +25,17 @@ export interface NavItem {
 export const MAIN_NAV: NavItem[] = [
   { id: "00", label: "Home", href: "/" },
   { id: "01", label: "Charaktere", href: "/characters" },
-  { id: "02", label: "Missionen", href: "/missions" },
+  // Die Chronologie ist zugleich die Missions-Übersicht: in der Vorgabe zeigt
+  // sie je Einsatz seinen Beginn und führt von dort auf die Missionsseite,
+  // auf Wunsch den vollen Zeitstrahl. Der frühere eigene Punkt „Missionen"
+  // (/missions) ist deshalb entfallen; die alte Adresse leitet hierher um
+  // (siehe next.config.ts), die Missionsseiten liegen unter
+  // /chronologie/mission/[slug] (siehe src/lib/contentRoutes.ts).
+  { id: "02", label: "Chronologie", href: "/chronologie" },
   // Label „Datenbank" statt „Archiv" — die Route bleibt /archive (und damit
   // auch der NavKey "archive" sowie alle bestehenden Links/Lesezeichen).
   { id: "03", label: "Datenbank", href: "/archive" },
-  // Suche ersetzt den früheren Timeline-Eintrag im Hauptmenü (Lupe-Icon, siehe
-  // SidebarMenu.tsx). Die Suchseite zeigt oben die Volltextsuche und darunter
-  // den Archiv-Assistenten (für Berechtigte).
+  // Die Suchseite zeigt oben die Volltextsuche und darunter den
+  // Archiv-Assistenten (für Berechtigte).
   { id: "04", label: "Suche", href: "/search" },
 ];

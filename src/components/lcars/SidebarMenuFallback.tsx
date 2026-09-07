@@ -2,7 +2,6 @@ import { MAIN_NAV } from "@/lib/nav";
 import {
   HomeNavIcon,
   CharactersNavIcon,
-  MissionsNavIcon,
   DatabaseNavIcon,
   SearchNavIcon,
 } from "@/lib/icons";
@@ -19,7 +18,6 @@ import type { ReactNode } from "react";
 const NAV_ICONS: Record<string, ReactNode> = {
   "/": <HomeNavIcon />,
   "/characters": <CharactersNavIcon />,
-  "/missions": <MissionsNavIcon />,
   "/archive": <DatabaseNavIcon />,
   "/search": <SearchNavIcon />,
 };

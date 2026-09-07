@@ -160,7 +160,7 @@
 /* Tabellenkopf — gerendertes Markdown und die Tabellen auf /tutorial. */
 :is(.mission-body, .char-file-bio) th,
 .tutorial-table th {
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
   font-family: var(--lcars-font-sans);
   text-transform: uppercase;
   letter-spacing: 0.06em;

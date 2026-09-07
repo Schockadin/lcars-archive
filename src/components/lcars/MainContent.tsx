@@ -16,7 +16,7 @@ export default function MainContent({
       <Suspense fallback={null}>
         <HashScrollRestorer />
       </Suspense>
-      <main className="flex-1 w-full flex flex-col">
+      <main id="lcars-main" tabIndex={-1} className="flex-1 w-full flex flex-col">
         <div className="w-full h-full">{children}</div>
       </main>
     </div>

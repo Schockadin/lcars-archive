@@ -1,0 +1,336 @@
+/* ─── Zeitstrahl (/chronologie) ─────────────────────────────────────
+   Links eine schmale Schiene mit dem Datum und einem Punkt je Eintrag,
+   rechts die Karte (.timeline-card). Der Aufbau folgt dem Entwurf
+   (Datum · Schiene · Karte), die Optik dem übrigen Archiv — die Farben
+   kommen aus den LCARS-Tokens.
+
+   Die Karte war zunächst dieselbe Aktenkarte wie in den übrigen Listen
+   (.mission-akte). Sie trug alles untereinander: Titel, Kurzfassung und
+   eine Meta-Zeile aus Datum, Quelle und Beteiligten. Bei einem Zeitstrahl
+   aus einigen hundert Ereignissen war das eine Wand aus Text. Jetzt steht
+   oben eine Zeile aus Art-Etikett und Titel, darunter das Datum, und was
+   Platz braucht (Kurzfassung, Beteiligte) steckt in aufklappbaren Feldern:
+   die Kurzfassung offen, die Beteiligten zu.
+
+   Die Missions-Übersicht trug ursprünglich eine eigene Schiene: zwei
+   farbige Kappen mit dem ersten und letzten Jahr, dazwischen ein Balken.
+   Das war Schmuck — das Datum der einzelnen Mission stand nur klein in der
+   Karte. Beide Listen sind dasselbe (datierte Einträge in ihrer Reihenfolge)
+   und tragen deshalb jetzt dieselbe Schiene; gerendert von ChronoRow.tsx.
+   Die Jahresleiste und die Monats-Trenner darunter gehören weiterhin nur
+   zur Chronologie: die Missions-Übersicht hat ihren eigenen Filter und ist
+   kurz genug, um ohne Zwischenüberschriften auszukommen.
+──────────────────────────────────────────────────────────────────── */
+
+/* Jahresleiste über der Liste — wie im Entwurf eine Reihe von Jahren, die
+   die Liste auf ein Jahr einschränken. Sie scrollt waagerecht, statt bei
+   vielen Jahren umzubrechen. */
+.timeline-yearbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 16px;
+}
+.timeline-year {
+  flex-shrink: 0;
+  height: 32px;
+  padding: 0 14px;
+  border: 1px solid var(--lcars-border);
+  background: var(--lcars-surface);
+  color: var(--lcars-ink-dim);
+  font-family: var(--lcars-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+.timeline-year:hover {
+  color: var(--lcars-ink);
+}
+.timeline-year[aria-pressed="true"] {
+  border-color: var(--lcars-primary);
+  color: var(--lcars-ink-contrast);
+  background: var(--lcars-hover-tint);
+}
+.timeline-year:focus-visible {
+  outline: 2px solid var(--lcars-primary);
+  outline-offset: 2px;
+}
+
+/* Zwischenüberschrift über einer Monatsgruppe: Text links, danach eine
+   Linie bis zum rechten Rand. */
+.timeline-period {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 22px 0 10px;
+  font-family: var(--lcars-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-data);
+}
+.timeline-period:first-child {
+  margin-top: 0;
+}
+.timeline-period::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--lcars-border);
+}
+
+/* Eine Zeile: Datum · Schiene mit Punkt · Karte. */
+.timeline-event {
+  display: grid;
+  grid-template-columns: 74px 18px 1fr;
+  align-items: stretch;
+}
+.timeline-date {
+  padding: 6px 10px 0 0;
+  text-align: right;
+  font-family: var(--lcars-font-mono);
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--lcars-ink-dim);
+}
+/* Der Tag darüber, das Jahr darunter — im Entwurf steht das Jahr fett unter
+   dem Tagesdatum. */
+.timeline-date b {
+  display: block;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--lcars-ink-data);
+}
+
+.timeline-rail {
+  position: relative;
+}
+/* Die durchgehende Linie. Am letzten Ereignis endet sie auf Höhe des
+   Punktes, damit der Strahl nicht ins Leere läuft. */
+.timeline-rail::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--lcars-border);
+}
+.timeline-event:last-child .timeline-rail::before {
+  bottom: auto;
+  height: 14px;
+}
+.timeline-dot {
+  position: absolute;
+  left: 3px;
+  top: 9px;
+  width: 11px;
+  height: 11px;
+  border: 2px solid var(--timeline-color, var(--lcars-primary));
+  background: var(--lcars-bg);
+}
+
+/* ── Die Ereigniskarte ───────────────────────────────────────────── */
+
+/* Die ganze Karte trägt die Farbe ihrer Ereignisart — vorher tat das nur
+   eine 9px-Schiene an der linken Kante, und bei einer Liste aus einigen
+   hundert Einträgen war die Art damit kaum zu sehen. Als Fläche in voller
+   Sättigung mit dunkler Schrift: --lcars-ink-dark ist genau dafür da
+   („Text auf Akzentflächen", siehe themes.ts) und bleibt in BEIDEN
+   Helligkeitsmodi dunkel — --lcars-bg wäre im Hellmodus hell und damit auf
+   der pastellfarbenen Fläche unlesbar.
+   Die Schiene ist damit entfallen, sie wäre in der eigenen Farbe unsichtbar.
+
+   KEIN Link als Hülle: die Karte enthält aufklappbare Felder, und ein Knopf
+   in einem Link ist weder gültiges HTML noch mit der Tastatur bedienbar.
+   Verlinkt ist der Titel. */
+.timeline-card {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  margin-bottom: 12px;
+  background: var(--timeline-color, var(--lcars-primary));
+  color: var(--lcars-ink-dark);
+  border-radius: 4px 14px 14px 4px;
+  overflow: hidden;
+  transition: filter 120ms;
+}
+/* Die ganze Karte ist anklickbar, nicht nur der Titel — aber NICHT als
+   umschließender Link: die Karte enthält aufklappbare Felder, und ein Knopf
+   in einem Link ist weder gültiges HTML noch mit der Tastatur bedienbar.
+   Stattdessen legt der Titel-Link eine unsichtbare Fläche über die Karte
+   (::after), und die Felder liegen mit z-index darüber. So bleibt genau ein
+   Link im Markup, die Tastatur springt einmal pro Karte, und Text lässt sich
+   weiterhin markieren. */
+.timeline-card-title::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.timeline-card:has(.timeline-card-title[href]:hover),
+.timeline-card:has(.timeline-card-title[href]:focus-visible) {
+  filter: brightness(1.08);
+}
+.timeline-card:has(.timeline-card-title[href]:focus-visible) {
+  outline: 2px solid var(--lcars-ink-dark);
+  outline-offset: 2px;
+}
+.timeline-card-body {
+  flex: 1;
+  min-width: 0;
+  padding: 11px 16px 12px;
+}
+
+/* Titelzeile: Art-Etikett, Titel, ggf. der Herkunftshinweis. Sie umbricht,
+   damit ein langer Titel das Etikett nicht aus der Karte drückt. */
+.timeline-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.timeline-card-title {
+  font-family: var(--lcars-font-sans);
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.15;
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+/* Kein eigener Hover mehr am Titel: die ganze Karte hellt auf (siehe oben),
+   ein zusätzlich unterstrichener Titel wäre doppelt gemoppelt. */
+.timeline-card-title:focus-visible {
+  outline: none;
+}
+.timeline-card-date {
+  margin-top: 6px;
+  font-family: var(--lcars-font-mono);
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: inherit;
+}
+/* Die Beschriftung „Datum" tritt gegenüber dem Wert zurück: auf der farbigen
+   Fläche geht das über Deckkraft statt über eine zweite Farbe. */
+.timeline-card-date b {
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+/* Aufklappbares Feld (<details>): die Kurzfassung steht offen, die
+   Beteiligten zu. Ohne JavaScript — der Zustand gehört ins Element, nicht
+   in den Zustand der Liste. */
+.timeline-panel {
+  /* Über der Klickfläche der Karte (siehe .timeline-card-title::after):
+     ein Klick auf „Teaser"/„Beteiligt" soll auf- und zuklappen, nicht
+     navigieren. */
+  position: relative;
+  z-index: 1;
+  margin-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--lcars-ink-dark) 25%, transparent);
+}
+.timeline-panel-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0 0;
+  cursor: pointer;
+  font-family: var(--lcars-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: inherit;
+  opacity: 0.75;
+  list-style: none;
+}
+.timeline-panel-head::-webkit-details-marker {
+  display: none;
+}
+/* Eigenes Dreieck statt des Browser-Markers: er sitzt je nach Browser
+   anders und lässt sich nicht einfärben. */
+.timeline-panel-head::before {
+  content: "\25B8";
+  display: inline-block;
+  transition: transform 120ms;
+}
+.timeline-panel[open] > .timeline-panel-head::before {
+  transform: rotate(90deg);
+}
+.timeline-panel-head:hover {
+  opacity: 1;
+}
+.timeline-panel-body {
+  padding: 4px 0 6px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: inherit;
+}
+
+/* Das Art-Etikett in der Titelzeile. Auf der farbigen Karte ist es ein
+   Umriss in der Schriftfarbe — die Farbe selbst trägt ja schon die Fläche. */
+.timeline-tag {
+  padding: 1px 6px;
+  border: 1px solid currentColor;
+  color: inherit;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Der Herkunftshinweis („im Text markiert", „aus dem Text abgeleitet")
+   daneben: dieselbe Form, aber in Nebentextfarbe — er schränkt ein und ist
+   kein Etikett, das sich vordrängen soll. Er steht nur da, wo er etwas
+   sagt: eine gepflegte Angabe ist der Normalfall. */
+.timeline-origin {
+  padding: 1px 6px;
+  border: 1px solid color-mix(in srgb, var(--lcars-ink-dark) 45%, transparent);
+  color: inherit;
+  opacity: 0.75;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ── Responsive Overrides ─────────────────────────────────────────── */
+
+@media (max-width: 520px) {
+  /* Schmal wird die Datumsspalte zu teuer: das Datum wandert in die
+     Meta-Zeile der Karte (dort steht es ohnehin), Schiene und Punkt
+     bleiben als Orientierung. */
+  .timeline-event {
+    grid-template-columns: 18px 1fr;
+  }
+  .timeline-date {
+    display: none;
+  }
+}
+
+/* ── „Ereignis eintragen" ─────────────────────────────────────────────
+   Zugeklapptes Formular über dem Zeitstrahl (ManualEventForm.tsx). Für
+   Begebenheiten, die zu keinem Eintrag gehören — dieselbe Form wie das
+   Aktionen-Feld der Inhaltsseiten. */
+/* Die Zeile über dem Zeitstrahl mit dem Knopf „Ereignis eintragen" — das
+   Formular selbst steht seit v1.29.46 in einem Fenster (ModalOverlay), nicht
+   mehr in einem aufklappbaren Feld. */
+.timeline-newevent {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+/* Datum und Art nebeneinander, solange Platz ist. */
+.timeline-newevent-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.timeline-newevent-row > * {
+  flex: 1 1 180px;
+}

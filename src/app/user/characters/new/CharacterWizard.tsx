@@ -8,6 +8,7 @@ import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
 import { renderMarkdownPreview } from "@/app/actions/markdownPreview";
 import CharacterSheetPreview from "@/components/character/CharacterSheetPreview";
 import CharacterValuesEditor from "../_shared/CharacterValuesEditor";
+import PortraitPicker from "../_shared/PortraitPicker";
 import {
   createCharacterWizardAction,
   type CharacterWizardState,
@@ -29,6 +30,8 @@ import {
 import type { CharacterStats } from "@/types/characterStats";
 import type { AdvancementRules } from "@/lib/advancement";
 import type { Talent } from "@/lib/talentCatalog";
+import type { Focus } from "@/lib/focusCatalog";
+import type { CampaignRule } from "@/lib/campaignRuleTypes";
 
 const initialState: CharacterWizardState = {};
 
@@ -75,13 +78,18 @@ export default function CharacterWizard({
   isAdminOrGM,
   rules,
   talents,
+  focuses,
+  campaignRules,
 }: {
   userId: number;
   isAdminOrGM: boolean;
-  // Regelwerk und Katalog für den Werte-Schritt (Budgets, Freikontingente,
-  // Talent-Auswahl).
+  // Regelwerk und Kataloge für den Werte-Schritt (Budgets, Freikontingente,
+  // Talent- und Schwerpunkt-Auswahl).
   rules: AdvancementRules;
   talents: Talent[];
+  focuses: Focus[];
+  // Hausregeln der Runde für den Spickzettel in der Vorschau (Schritt 4).
+  campaignRules: CampaignRule[];
 }) {
   const [state, formAction, pending] = useActionState(
     createCharacterWizardAction,
@@ -109,14 +117,17 @@ export default function CharacterWizard({
     const data = new FormData(form);
     const text = (key: string) => String(data.get(key) ?? "").trim() || null;
 
-    // Portrait: eine hochgeladene Datei wird für die Vorschau lokal
-    // angezeigt (ins Netz geht sie erst beim Abschicken), sonst gilt die
-    // eingetragene URL.
+    // Für die Vorschau zählt, was der Bogen später zeigt: der gewählte
+    // Ausschnitt, sonst die hochgeladene Datei (lokal angezeigt, ins Netz geht
+    // sie erst beim Abschicken). Ein neuer Charakter hat sonst nichts —
+    // Portraits kommen ausschließlich als Datei.
+    const cropped = text("portraitCropped");
     const file = data.get("portraitFile");
     const portrait =
-      file instanceof File && file.size > 0
+      cropped ||
+      (file instanceof File && file.size > 0
         ? URL.createObjectURL(file)
-        : text("portrait");
+        : null);
 
     return {
       name: String(data.get("name") ?? "").trim(),
@@ -262,6 +273,9 @@ export default function CharacterWizard({
       <fieldset hidden={step !== 0} className="border-0 p-0 m-0">
         <legend className="sr-only">Stammdaten</legend>
         <div className="content-editor-head-grid">
+          {/* Portrait mit eigenem Editor (Ausschnitt wählen), deshalb nicht
+              Teil der generischen Feldliste. */}
+          <PortraitPicker idPrefix="wizard" />
           {headFields.map((field) => (
             <HeadFieldRenderer
               key={field.name}
@@ -289,6 +303,7 @@ export default function CharacterWizard({
           onChange={setStats}
           rules={rules}
           talents={talents}
+          focuses={focuses}
           species={species}
           idPrefix="wizard-stats"
         />
@@ -328,6 +343,7 @@ export default function CharacterWizard({
               stats,
               bioHtml,
               talents,
+              campaignRules,
             }}
           />
         )}

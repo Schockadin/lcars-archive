@@ -7,6 +7,10 @@ import { PencilIcon } from "@/lib/icons";
 import { STATUS_CONFIG } from "@/lib/missionFormat";
 import type { GmMissionOverviewItem } from "@/lib/missions";
 import { LcarsAkteCard } from "@/components/lcars";
+import {
+  missionEditHref,
+  missionHref,
+} from "@/lib/contentRoutes";
 
 // GM-Missionsübersicht (/gm/missions) — Edit/Löschen/Owner-Zuweisung pro
 // Zeile in einer durchsuchbaren Liste, analog zu AdminContentBrowser.tsx
@@ -60,14 +64,14 @@ export default function AdminMissionsBrowser({
               className="flex flex-wrap items-center gap-[8px]"
             >
               <LcarsAkteCard
-                href={`/missions/${mission.slug}`}
+                href={missionHref(mission.slug)}
                 color={STATUS_CONFIG[mission.status].color}
                 className="flex-1 min-w-[240px]"
                 title={
                   <>
                     {mission.title}
                     {mission.isDraft && (
-                      <span className="text-lcars-primary"> · Entwurf</span>
+                      <span className="text-lcars-primary-ink"> · Entwurf</span>
                     )}
                   </>
                 }
@@ -86,7 +90,7 @@ export default function AdminMissionsBrowser({
                 users={users}
               />
               <Link
-                href={`/user/missions/${mission.id}/edit`}
+                href={missionEditHref(mission.id)}
                 className="lcars-icon-btn"
                 aria-label="Bearbeiten"
                 title="Bearbeiten"

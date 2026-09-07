@@ -1,4 +1,7 @@
 import { redirect } from "next/navigation";
+import {
+  characterEditHref,
+} from "@/lib/contentRoutes";
 
 // Alte Adresse: Werte und Stammdaten haben keine eigenen Seiten mehr, sondern
 // sind Panels der Charakterseite. Bestehende Lesezeichen und Links landen
@@ -9,5 +12,5 @@ export default async function LegacyStatsPage({
   params: Promise<{ characterId: string }>;
 }) {
   const { characterId } = await params;
-  redirect(`/user/characters/${characterId}`);
+  redirect(characterEditHref(characterId));
 }

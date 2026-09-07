@@ -95,7 +95,7 @@ describe("proxy (auth guard)", () => {
     expect(new URL(loc as string).search).toBe("");
   });
 
-  it.each(["/", "/login", "/archive", "/missions", "/changelog", "/userxyz"])(
+  it.each(["/", "/login", "/archive", "/chronologie", "/changelog", "/userxyz"])(
     "does not touch public route %s",
     (path) => {
       const res = proxy(request(path));

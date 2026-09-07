@@ -27,6 +27,25 @@ for (const { path, heading } of PAGES) {
   });
 }
 
+test("/tutorial zeigt den Einstiegs-Abschnitt „Erste Schritte“ zuerst", async ({
+  page,
+}) => {
+  await page.goto("/tutorial");
+  // Der Einstieg gehört an den Anfang der Anleitung — der Changelog verlinkt
+  // ihn über die Abschnitts-id erste-schritte.
+  const first = page.locator(".lcars-accordion-trigger").first();
+  await expect(first).toContainText("Erste Schritte");
+});
+
+test("/tutorial#erste-schritte klappt den Einstieg auf", async ({ page }) => {
+  // Eigener Aufruf statt eines Hash-Wechsels auf derselben Seite: das
+  // Akkordeon liest den Hash beim Aufbau (siehe DataRowAccordion).
+  await page.goto("/tutorial#erste-schritte");
+  await expect(
+    page.locator("#erste-schritte .lcars-accordion-trigger").first(),
+  ).toHaveAttribute("aria-expanded", "true");
+});
+
 test("/tutorial shows the dedicated Gespräche section", async ({ page }) => {
   await page.goto("/tutorial");
   // Die Tutorial-Abschnitte sind Akkordeons (Inhalt eingeklappt), ihre

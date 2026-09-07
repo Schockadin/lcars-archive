@@ -1,4 +1,10 @@
 import type { TutorialSectionId } from "./tutorialSections";
+import {
+  CHANGELOG_CATEGORIES,
+  FALLBACK_CATEGORY,
+  changelogCategoryRank,
+  type ChangelogCategoryId,
+} from "./changelogCategories";
 
 // Statische Daten für die öffentliche Changelog-Seite (/changelog) — ein
 // Eintrag pro Major.Minor-Version (siehe src/lib/version.ts), nicht pro
@@ -8,14 +14,21 @@ import type { TutorialSectionId } from "./tutorialSections";
 // Features genannt (keine reinen Design-/Layout-Änderungen, technische
 // Details oder Bugfixes ohne Feature-Charakter).
 //
-// Ein Item ist entweder ein einfacher String oder ein Objekt mit optionalem
-// Deep-Link auf den passenden Abschnitt der Anleitung (tutorial-id, siehe
-// src/lib/tutorialSections.ts) — die Renderer (ChangelogSection auf dem
-// Dashboard, ChangelogList unter /changelog) hängen dann einen
-// „Im Tutorial: …"-Link an den Stichpunkt. Beide Formen sind erlaubt, damit
-// ältere Einträge unverändert als Strings bestehen bleiben können.
+// Ein Item ist entweder ein einfacher String oder ein Objekt mit
+//   category — in welchen Bereich der Stichpunkt fällt (siehe
+//              src/lib/changelogCategories.ts). Danach lässt sich an beiden
+//              Anzeigestellen filtern und sortieren, und die Administration
+//              kann Kategorien je Rolle aus der Dashboard-Box ausblenden.
+//   tutorial — optionaler Deep-Link auf den passenden Abschnitt der Anleitung
+//              (siehe src/lib/tutorialSections.ts); die Renderer hängen dann
+//              einen „Im Tutorial: …"-Link an den Stichpunkt.
+//
+// Die String-Form bleibt als Typ erlaubt, damit ein neuer Stichpunkt nicht am
+// fehlenden Feld scheitert — sie zählt dann als „Sonstiges". Im Bestand steht
+// sie nicht mehr: jeder Stichpunkt trägt seine Kategorie.
 export interface ChangelogItem {
   text: string;
+  category: ChangelogCategoryId;
   tutorial?: TutorialSectionId;
 }
 
@@ -37,45 +50,385 @@ export function changelogItemTutorial(
   return typeof item === "string" ? undefined : item.tutorial;
 }
 
+export function changelogItemCategory(
+  item: string | ChangelogItem,
+): ChangelogCategoryId {
+  return typeof item === "string" ? FALLBACK_CATEGORY : item.category;
+}
+
+// ── Filtern und Sortieren nach Kategorie ─────────────────────────────
+// Beide Anzeigestellen (die Liste unter /changelog und die Box „Neue
+// Funktionen" auf dem Dashboard) benutzen dieselben Funktionen — sonst
+// verhielten sich zwei Ansichten desselben Inhalts unterschiedlich.
+
+// Welche Kategorien in diesen Einträgen überhaupt vorkommen, in der
+// Reihenfolge des Katalogs. Eine Auswahl anzubieten, die garantiert nichts
+// liefert, hilft niemandem (dieselbe Regel wie bei der Chronologie).
+export function changelogCategoriesPresent(
+  entries: ChangelogEntry[],
+): ChangelogCategoryId[] {
+  const present = new Set<string>();
+  for (const entry of entries) {
+    for (const item of entry.items) present.add(changelogItemCategory(item));
+  }
+  return CHANGELOG_CATEGORIES.map((c) => c.id).filter((id) =>
+    present.has(id),
+  ) as ChangelogCategoryId[];
+}
+
+// Einträge auf die gewählten Kategorien einschränken. Gefiltert werden die
+// STICHPUNKTE, nicht die Versionen — eine Version enthält fast immer
+// Verschiedenes. Eine Version, von der nichts übrig bleibt, fällt weg, statt
+// als leere Überschrift stehen zu bleiben.
+//
+// Eine leere Auswahl heißt „alles" (kein Filter aktiv), nicht „nichts".
+export function filterChangelogEntries(
+  entries: ChangelogEntry[],
+  categories: readonly string[],
+): ChangelogEntry[] {
+  if (categories.length === 0) return entries;
+  const wanted = new Set(categories);
+  return entries
+    .map((entry) => ({
+      ...entry,
+      items: entry.items.filter((item) =>
+        wanted.has(changelogItemCategory(item)),
+      ),
+    }))
+    .filter((entry) => entry.items.length > 0);
+}
+
+// Dasselbe, aber zum Ausblenden: alles außer den genannten Kategorien bleibt
+// stehen. Für die Dashboard-Box, in der die Administration je Rolle
+// Kategorien abschaltet (siehe changelogSettings.ts).
+export function hideChangelogCategories(
+  entries: ChangelogEntry[],
+  hidden: readonly string[],
+): ChangelogEntry[] {
+  if (hidden.length === 0) return entries;
+  const blocked = new Set(hidden);
+  return entries
+    .map((entry) => ({
+      ...entry,
+      items: entry.items.filter(
+        (item) => !blocked.has(changelogItemCategory(item)),
+      ),
+    }))
+    .filter((entry) => entry.items.length > 0);
+}
+
+// Die Stichpunkte innerhalb jeder Version nach Kategorie ordnen (Reihenfolge
+// des Katalogs, umkehrbar). Bei gleicher Kategorie bleibt die gepflegte
+// Reihenfolge erhalten — Array.prototype.sort ist in modernen Engines stabil.
+export function sortChangelogItemsByCategory(
+  entries: ChangelogEntry[],
+  direction: "asc" | "desc",
+): ChangelogEntry[] {
+  const factor = direction === "asc" ? 1 : -1;
+  return entries.map((entry) => ({
+    ...entry,
+    items: [...entry.items].sort(
+      (a, b) =>
+        factor *
+        (changelogCategoryRank(changelogItemCategory(a)) -
+          changelogCategoryRank(changelogItemCategory(b))),
+    ),
+  }));
+}
+
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.29",
+    title: "Hell/Dunkel frei wählbar — plus eigene Grundfarben",
+    items: [
+      {
+        text: "Zu- und Absagen zu einem Spieltermin scheiterten mit einer nichtssagenden Server-Meldung — als einzige Aktion des Archivs, und nur auf dem Server, nicht lokal. Sie läuft jetzt über einen eigenen Weg zum Server und funktioniert wieder; die Antwort steht sofort am Knopf.",
+        category: "spielleitung",
+      },
+      {
+        text: "„Charakter“ und „Person“ waren zwei Namen für dieselbe Ereignisart und standen beide in der Chronologie zur Auswahl — jetzt ist es eine: „Person“, in ihrer bisherigen Farbe. Ältere Einträge mit der anderen Schreibweise wandern automatisch mit.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Beim Eintragen eines Ereignisses von Hand lassen sich jetzt Beteiligte auswählen — aus allen Figuren, ausdrücklich auch den zurückgezogenen, und keine ist vorausgewählt. Die Namen stehen danach an der Karte und der Filter „Beteiligte Person“ findet das Ereignis.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Das Menü für angemeldete Konten ist aufgeräumt: „Charaktere“, „Meine Inhalte“ und „Einstellungen“ stehen jetzt zusammen unter einem Knopf „Profil“ mit Aufklapp-Menü — so wie „Leitung“ und „Admin“. Der Abmelden-Knopf steht immer allein in der unteren Reihe.",
+        category: "konto",
+      },
+      {
+        text: "Das Leitungs-Menü ist gegliedert wie das Admin-Menü: „Kampagne“ (Kampagne, Sessions), „Charaktere“ (Gruppenblatt, AP), „Regelwerk“ (Talente, Schwerpunkte, Regeln) und „Inhalte“ (Chronologie, Gespräche) — statt neun Einträgen in einer Reihe.",
+        category: "spielleitung",
+      },
+      {
+        text: "Die Beschreibung eines von Hand eingetragenen Ereignisses und die Notiz zu einem Spieltermin haben jetzt denselben Markdown-Editor mit Werkzeugleiste und Vorschau wie die übrigen Textfelder — und werden auch als Markdown angezeigt.",
+        category: "inhalte",
+        tutorial: "markdown",
+      },
+      {
+        text: "Die Zu- und Absage zu einem Spieltermin lief für Konten ohne das Recht „Nicht-Gast“ in einen Serverfehler, statt zu sagen, was fehlt. Jetzt steht die Meldung am Knopf — und wem das Recht fehlt, dem werden die beiden Knöpfe gar nicht erst angeboten.",
+        category: "spielleitung",
+      },
+      {
+        text: "Das Gruppenblatt zeigt jetzt auf Klick den ganzen Bogen: ein Klick auf den Namen öffnet den vollständigen Charakterbogen der Figur im Fenster — Personalakte, Spickzettel, Regeln und Biografie, samt Drucken und PDF. Die Tabelle nutzt dabei die volle Bildschirmbreite.",
+        category: "spielleitung",
+      },
+      {
+        text: "Aus einem angekündigten Spieltermin wird die gespielte Session in einem Schritt: Der Knopf „Session eintragen“ am Termin öffnet ein Fenster für AP und Notizen, übernimmt Datum, Titel und die eingeplanten Figuren und bucht die AP. Zum Termin gehört jetzt auch eine Besetzung (alle aktiven Figuren vorausgewählt), der Zeitpunkt wird mit einem Datums- und Uhrzeitwähler gesetzt, und „Termin ankündigen“ ist ein Knopf, der das Formular als Fenster öffnet. Eingetragene Termine verschwinden von der Startseite — ihre Zusagen bleiben erhalten. Was ohne Ankündigung gespielt wurde, trägt man weiter von Hand nach („Session nachtragen“, zugeklappt).",
+        category: "spielleitung",
+      },
+      {
+        text: "„Ereignis eintragen“ in der Chronologie ist jetzt ein Knopf, der ein Fenster öffnet, und das Datum ist ein Kalenderfeld, das mit dem jüngsten Ereignis der Chronologie vorbelegt ist — man tippt nur noch, was sich geändert hat.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Neu für die Spielleitung unter „Leitung → Gruppenblatt“: alle Spieler-Charaktere in einer einzigen Tabelle — Attribute, Disziplinen, Schutz, Stress und Entschlossenheit nebeneinander, dazu je Figur die Talente, Schwerpunkte und Werte. So sieht man am Tisch auf einen Blick, wer die beste Probe hat, ohne jede Charakterseite einzeln zu öffnen.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Hell oder dunkel ist jetzt eine eigene Einstellung, unabhängig vom Interface: Du kannst LCARS und das minimalistische UI jeweils in hell oder dunkel nutzen — jede Kombination ist möglich. Die Wahl triffst du im Profil unter „Darstellung“ und sie bleibt bei jedem Login erhalten.",
+        category: "darstellung",
+        tutorial: "farbschema",
+      },
+      {
+        text: "Hintergrund und Schrift lassen sich jetzt bis ins Detail einstellen: Seitenhintergrund, Flächen und Rahmen ebenso wie jede Schriftfarbe einzeln — Fließtext, Lesetext, Nebentext, Links, Kontrasttext und die Beschriftung auf farbigen Flächen. Im minimalistischen Interface färbt sich die Seitenleiste mit. Die Farbauswahl im Profil ist dafür in aufklappbare Bereiche gegliedert; ohne eigene Wahl gilt weiterhin der Standard des jeweiligen Hell/Dunkel-Modus.",
+        category: "darstellung",
+        tutorial: "farbschema",
+      },
+      {
+        text: "Jede Charakterseite zeigt jetzt „Wer kennt wen“: mit welchen Figuren und NPCs die Person zu tun hatte, abgeleitet aus gemeinsamen Missionen und Gesprächen — samt Angabe, woher die Verbindung stammt.",
+        category: "charaktere",
+      },
+      {
+        text: "Der Datenbank-Assistent hat jetzt Einstiegs-Vorlagen: „Was bisher geschah“ liefert eine Rückschau über die jüngsten Einsatzberichte, weitere Knöpfe fragen eine Mission, ein Stichwort, eine Person oder die Beziehungen einer Figur ab. Bei den Vorlagen mit Lücke springt der Cursor gleich an die Stelle, die du ausfüllst.",
+        category: "inhalte",
+        tutorial: "datenbank-assistent",
+      },
+      {
+        text: "Charaktere, Missionen und Logbücher zeigen jetzt ebenfalls, wo sie erwähnt werden — bisher gab es diese Rückverweise nur bei Datenbank-Einträgen. Gezählt wird beides: die gepflegten Verweisfelder und echte [[Wikilinks]] im Fließtext.",
+        category: "inhalte",
+      },
+      {
+        text: "Die Suche findet jetzt auch andere Wortformen — „Missionen“ findet „Erste Mission“ — und versteht mehrere Suchwörter unabhängig von ihrer Reihenfolge sowie Wortgruppen in Anführungszeichen. Die Treffer sind nach Relevanz sortiert statt alphabetisch, und der angezeigte Textausschnitt trifft auch dann die richtige Stelle, wenn im Text eine andere Wortform steht.",
+        category: "inhalte",
+      },
+      {
+        text: "Beim Einstellen der Farben zeigt das Profil jetzt zu jeder Farbe an, wie gut sie sich vor ihrem Hintergrund liest, und warnt, wenn eine Kombination zu blass wird. Im hellen Erscheinungsbild werden Überschriften und Beschriftungen automatisch so weit abgedunkelt, dass sie gut lesbar bleiben — die farbigen Balken und Pillen behalten dabei ihre volle Leuchtkraft.",
+        category: "darstellung",
+        tutorial: "farbschema",
+      },
+      {
+        text: "An Charakteren, Missionen, Logbüchern und Datenbank-Einträgen kannst du jetzt Notizen hinterlegen: entweder „Nur ich“ als persönliche Merkzettel, die niemand sonst sieht, oder „Für die Runde“ als Kommentar, den alle Angemeldeten lesen und beantworten können. Die Notizen stehen aufklappbar direkt unter dem Eintrag.",
+        category: "inhalte",
+        tutorial: "notizen",
+      },
+      {
+        text: "Beim Bearbeiten eines Charakters, einer Mission, eines Logbuchs oder eines Datenbank-Eintrags gibt es jetzt den Bereich „Versionen“: Er zeigt die letzten zwanzig Fassungen des Textes mit Datum, bearbeitender Person und einer Vorschau — jede davon lässt sich mit einem Klick zurückholen. Der aktuelle Stand geht dabei nicht verloren, er wandert selbst in die Historie.",
+        category: "inhalte",
+        tutorial: "versionen",
+      },
+      {
+        text: "Schwerpunkte (Focuses) kommen jetzt wie Talente aus einem Katalog statt aus einem Freitextfeld: 170 Einträge aus dem Regelwerk, nach Disziplin gegliedert und durchsuchbar — beim Anlegen des Charakters ebenso wie beim Steigern mit AP. Die Spielleitung ergänzt eigene Schwerpunkte unter „Schwerpunkte“.",
+        category: "charaktere",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Der Spickzettel des Charakterbogens (Blatt 2, auch im PDF) enthält jetzt neben den Talenten die wichtigsten Regeln für den Spieltisch: wofür man Momentum ausgibt und aufhebt, was die Spielleitung mit Bedrohung anstellt und wie Entschlossenheit funktioniert — auf Deutsch, mit den englischen Begriffen daneben.",
+        category: "charaktere",
+      },
+      {
+        text: "Die Spielleitung kann eigene Regeln der Runde hinterlegen (Name und Regeltext, in selbst gewählter Reihenfolge). Sie stehen auf dem Spickzettel jedes Charakterbogens hinter den Regeln aus dem Regelwerk — auf dem Bildschirm wie im PDF.",
+        category: "spielleitung",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Neu unter „Charaktere → Beziehungen“: ein Beziehungsgraph der ganzen Kampagne. Er zeigt auf einen Blick, wer mit wem im Einsatz war und wer mit wem geredet hat — dicke Linien für viele Berührungspunkte, große Punkte für gut vernetzte Figuren, ein Klick führt zur Figur. Zeigst du auf eine Figur, treten sie und ihre Verbindungen hervor.",
+        category: "charaktere",
+        tutorial: "fuer-besucher",
+      },
+      {
+        text: "Markdown gibt es jetzt auch in den kleineren Textfeldern: Notizen und Kommentare, eigene Regeln, Talent- und Schwerpunkt-Beschreibungen, Session-Notizen sowie Antworten und Nachrichten in Gesprächen haben dieselbe Werkzeugleiste mit Vorschau wie die großen Formulare — und der Text wird beim Anzeigen auch als Markdown dargestellt, auf dem Bildschirm wie im PDF. Notiz- und Regelfelder sind dabei zehn Zeilen hoch statt drei.",
+        category: "inhalte",
+        tutorial: "markdown",
+      },
+      {
+        text: "„Erwähnt in“ und „Wer kennt wen“ sind jetzt aufklappbare Bereiche wie die Notizen — mit der Anzahl in der Kopfzeile, sodass man sie überfliegen kann, ohne die Seite länger zu machen.",
+        category: "inhalte",
+      },
+      {
+        text: "Der Knopf „Charakterbogen“ auf einer Charakterseite zeigt jetzt denselben Bogen wie unter „Meine Charaktere“: alle drei Blätter (Personalakte, Spickzettel, Biografie) mit Drucken und derselben PDF-Datei. Vorher stand dort nur das erste Blatt, obwohl das PDF daneben alle drei enthielt.",
+        category: "charaktere",
+      },
+      {
+        text: "Das Portrait füllt jetzt das Bildfeld des Charakterbogens aus und ist oben links passend zur Vorlage schräg abgeschnitten — vorher stand ein hochformatiges Bild als schmaler Streifen mit weißen Rändern darin.",
+        category: "charaktere",
+      },
+      {
+        text: "Spickzettel und Biografie sehen im PDF jetzt aus wie am Bildschirm: mit dem blauen Rahmen des Bogens, mit formatiertem Text (fett, kursiv, beides) statt roher Sternchen — und ohne die unsichtbaren Kommentare aus dem Quelltext, etwa die Marken für die Chronologie.",
+        category: "export",
+      },
+      {
+        text: "Portraits lassen sich jetzt selbst zuschneiden: „Ausschnitt wählen“ öffnet den Bildkasten des Charakterbogens samt seiner Schräge — ziehen verschiebt das Bild, ein Regler vergrößert es bis zum Vierfachen. Der gewählte Ausschnitt wird fertig zugeschnitten gespeichert, sodass Bildschirm und PDF dasselbe zeigen; das Original bleibt hinterlegt, sodass du den Ausschnitt später neu wählen kannst, ohne die Datei erneut zu suchen. Ein Portrait lädst du dafür als Bilddatei hoch — eine Bild-Adresse lässt sich nicht mehr eintragen, und früher eingetragene Adressen werden einmalig in ein eigenes Bild überführt, das dem Archiv gehört.",
+        category: "charaktere",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Die Chronologie ist jetzt zugleich die Missions-Übersicht: Sie zeigt in der Vorgabe je Einsatz seinen Beginn, und ein Klick führt auf die Missionsseite. Mit dem Umschalter „Alle Ereignisse“ kommen Logbücher, markierte Textstellen, Gespräche und Geburtstage dazu — dazu ein neuer Filter nach beteiligter Person. Der Menüpunkt „Missionen“ ist entfallen, die alte Adresse führt in die Chronologie.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Es gibt einen Session-Planer: Die Spielleitung kündigt unter „Leitung → Sessions“ den nächsten Spieltermin mit Datum, Uhrzeit, Ort und Notiz an; alle Angemeldeten sehen ihn auf der Startseite und sagen dort zu oder ab. Wer zugesagt hat, steht am Termin — und die Spielleitung sieht Zu- und Absagen auf einen Blick.",
+        category: "spielleitung",
+      },
+      {
+        text: "Das Dashboard zeigt jetzt „Offen für dich“ — was du noch zu tun hast: Missionen, an denen deine Figur teilnimmt und zu denen von dir noch kein Logbuch existiert, Gespräche, in denen du am Zug bist, und eigene Entwürfe, die seit über einer Woche liegen. Das Älteste steht oben; erledigte Punkte verschwinden von selbst.",
+        category: "inhalte",
+      },
+      {
+        text: "Ein Eintrag in der Chronologie lässt sich jetzt auf ganzer Fläche anklicken, nicht mehr nur am Titel — die aufklappbaren Felder für Teaser und Beteiligte bleiben davon unberührt.",
+        category: "darstellung",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Du kannst jetzt Ereignisse direkt in die Chronologie eintragen, auch wenn es dazu keinen Eintrag gibt — einen Vertragsschluss, einen Regierungswechsel, eine Naturkatastrophe. Über dem Zeitstrahl steht dafür „Ereignis eintragen“; nötig sind Datum, Titel und Ereignisart. Solche Ereignisse tragen den Hinweis „von Hand eingetragen“ und lassen sich von dir oder der Spielleitung wieder entfernen.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Die Suche findet jetzt auch, was in Gesprächen gesagt wurde. Bisher fand sie nur das Gespräch als Ganzes — der eigentliche Wortwechsel blieb außen vor. Ein Treffer nennt Sprecher und Gespräch, zeigt den Textausschnitt und springt beim Öffnen an die Stelle. Über den Filter „Gesagtes“ lässt sich die Trefferliste darauf einschränken.",
+        category: "inhalte",
+      },
+      {
+        text: "Die Aktionen einer Inhaltsseite (Folgen, Merken, Teilen, Bilder, Bearbeiten, Owner) stehen jetzt in einem zugeklappten Feld am Ende des Eintrags statt zwischen Titel und Text. Der Text beginnt damit oben; der Lesemodus-Schalter bleibt, wo er war.",
+        category: "darstellung",
+      },
+      {
+        text: "Der Zeitstrahl trennt jetzt sauber zwischen Einsätzen und Ereignissen: Der Umfang „Missionen“ zeigt je Einsatz eine Karte mit dem ganzen Zeitraum (Beginn bis Abschluss), die Ereignisart „Mission“ dagegen Beginn und Abschluss als eigene Marken. Und der Zurück-Knopf des Browsers führt jetzt zur vorigen Auswahl statt aus der Chronologie heraus.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Die Missionsakte als PDF ist jetzt aufgemacht wie der Charakterbogen — derselbe Rahmen, dieselbe Kopfzeile, und der Text erscheint formatiert mit Überschriften, Aufzählungen und Zitaten statt als Fließtext. Neu davor: ein Inhaltsverzeichnis, dessen Einträge im PDF direkt zum jeweiligen Einsatzbericht springen.",
+        category: "export",
+        tutorial: "merken-abonnieren",
+      },
+      {
+        text: "Der Charakterbogen hat jetzt vier Blätter statt drei: Die Regeln (Momentum, Bedrohung, Entschlossenheit und die eigenen Regeln der Runde) stehen auf einem eigenen Blatt hinter dem Talent-Spickzettel. So lässt sich genau dieses eine Blatt ausdrucken und in die Tischmitte legen — es gilt ja für alle. Vorschau und PDF zeigen beide die neue Aufteilung.",
+        category: "charaktere",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Die Einträge der Chronologie sind neu aufgebaut: oben eine Zeile aus Art-Etikett und Titel, darunter das Datum, und was Platz braucht steckt in aufklappbaren Feldern — der Teaser offen, die Beteiligten zugeklappt. Abgeleitete und im Text markierte Ereignisse tragen ihre Kennzeichnung als Etikett direkt neben dem Titel.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Eine Ereignisart lässt sich jetzt verlinken: Die Chronologie hat für jede Art eine eigene Adresse — /chronologie/mission, /chronologie/conflict und so fort. Wer im Auswahlfeld eine Art wählt, bekommt sie in der Adresszeile und kann den Link so weitergeben; er öffnet die Chronologie mit genau dieser Auswahl. Die Missionsseiten liegen jetzt ebenfalls unter der Chronologie (/chronologie/mission/…), alte Missions-Links leiten dorthin weiter.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Entwürfe tauchen in der Chronologie nicht mehr auf — auch nicht bei der Person, die sie angelegt hat. Ein Zeitstrahl soll für alle dieselbe Kampagne erzählen.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Jede Neuerung im Changelog trägt jetzt eine Kategorie — etwa „Charaktere & Regeln“, „Spielleitung“ oder „Darstellung“. Unter /changelog und im Dashboard-Bereich „Neue Funktionen“ schränkst du die Liste über ein Auswahlfeld auf eine Kategorie ein und sortierst wahlweise nach Version oder nach Kategorie.",
+        category: "darstellung",
+      },
+      {
+        text: "Die Administration kann unter „Admin → Changelog“ jetzt zusätzlich je Rolle festlegen, welche Kategorien im Dashboard-Bereich „Neue Funktionen“ nicht erscheinen — etwa Spielleitungs-Werkzeuge für reine Spieler-Konten. Die vollständige Liste unter /changelog bleibt für alle sichtbar.",
+        category: "spielleitung",
+      },
+      {
+        text: "In der Chronologie steht das neueste Jahr jetzt ganz links, und die Jahresleiste zeigt nur noch Jahre, in denen bei der aktuellen Auswahl auch etwas liegt. Was das Sprachmodell an einem Tag ableitet, den der Eintrag ohnehin schon führt (etwa den Missionsbeginn), erscheint nicht mehr doppelt.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Die Chronologie ist zurück: „Chronologie“ im Hauptmenü zeigt die ganze Kampagne als Zeitstrahl — von der ältesten bis zur jüngsten Begebenheit, mit Sortierung, Suche, Filter nach Ereignisart und Jahresleiste. Jede Karte führt zu dem Eintrag, aus dem das Ereignis stammt; zu sehen ist nur, was du ohnehin lesen darfst.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Die Ereignisse der Chronologie entstehen aus drei Quellen: aus den gepflegten Angaben (Missionsbeginn und -ende, Logbuch- und Gesprächsdatum, Geburtsdatum einer Figur), aus den Marken, die ihr mit dem Kalender-Knopf im Text setzt — die Karte springt dann genau an diese Stelle im Bericht —, und aus dem, was die Spielleitung aus einem Text ableiten lässt. Abgeleitete Ereignisse sind als solche gekennzeichnet.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Neu für die Spielleitung unter „Leitung → Chronologie“: aus einem Bericht die Ereignisse ableiten lassen, die darin stecken, aber in keinem Feld stehen („drei Tage später …“). Das Ergebnis steht sofort in der Chronologie und lässt sich dort einzeln wieder entfernen; ein zweiter Durchlauf über denselben Text legt nichts doppelt an.",
+        category: "spielleitung",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Neu für den Einstieg: die Seite „Erste Schritte“ (/willkommen) erklärt in Kürze, was dieses Archiv ist, und führt durch die ersten Schritte — Passwort festlegen, Charakter anlegen, Erschaffung abschließen, erstes Logbuch schreiben, ein Gespräch beginnen. Zu jedem offenen Schritt gibt es einen Link direkt in den passenden Ablauf. Dieselbe Liste steht auf dem Dashboard und verschwindet dort, sobald alles erledigt ist.",
+        category: "konto",
+        tutorial: "erste-schritte",
+      },
+      {
+        text: "Neu auf der Seite jeder Mission: „Missionsakte (PDF)“ packt genau diese Mission in eine Datei — Titelseite mit Zeitraum, Status und Beteiligten, danach die Beschreibung und jedes Logbuch auf einer eigenen Seite, chronologisch. Die Akte enthält genau das, was du auch sonst lesen darfst; nicht öffentliche Logbücher sind darin gekennzeichnet.",
+        category: "export",
+        tutorial: "merken-abonnieren",
+      },
+      {
+        text: "Das PDF des Charakterbogens sieht jetzt aus wie der Bogen am Bildschirm — Zeile für Zeile an derselben Stelle: gleiche Schrift und Laufweite, dasselbe Portrait mit derselben Schräge, und die Kästchen für Entschlossenheit und Stress stehen auch auf dem Ausdruck da, wo sie hingehören (die ungenutzten Stress-Kästchen blass).",
+        category: "export",
+      },
+    ],
+  },
   {
     version: "1.28",
     title: "Charaktere anlegen und pflegen in neuem Ablauf",
     items: [
       {
         text: "Einen neuen Charakter legst du jetzt in vier Schritten an: Stammdaten, Werte, Biografie und zum Schluss eine Vorschau des fertigen Charakterbogens. Zwischen den Schritten kannst du jederzeit hin und her springen, Eingaben bleiben dabei erhalten — angelegt wird der Charakter erst mit „Fertig“.",
+        category: "charaktere",
         tutorial: "eigene-inhalte",
       },
       {
         text: "Die Werte trägst du im Assistenten über normale Eingabefelder ein: Attribute und Disziplinen als Zahlenkästen mit laufender Budget-Anzeige, Talente aus dem Katalog, alles Weitere als gepflegte Listen. Verstöße gegen die Verteilungsregeln werden sofort markiert.",
+        category: "charaktere",
         tutorial: "eigene-inhalte",
       },
       {
         text: "Stammdaten und Biografie bearbeitest du jetzt direkt auf deiner Charakterseite: Stammdaten, Werte und Biografie stehen dort als Panels untereinander, ein Stift-Knopf öffnet den jeweiligen Abschnitt zum Bearbeiten an Ort und Stelle.",
+        category: "charaktere",
         tutorial: "eigene-inhalte",
       },
       {
         text: "Der Charakterbogen ist eine Vorschau aus drei Blättern — Personalbogen, Talent-Spickzettel und neu die Biografie im selben Papier-Look. Über einen Knopf auf der Charakterseite öffnest du ihn und kannst ihn drucken oder als PDF speichern; genau diese drei Blätter enthält auch das PDF.",
+        category: "charaktere",
         tutorial: "eigene-inhalte",
       },
       {
         text: "Den Knopf „Neuer NPC“ (unter „Meine Inhalte“) kann jetzt jedes Konto nutzen, nicht mehr nur die Spielleitung.",
+        category: "inhalte",
         tutorial: "gespraeche",
       },
       {
         text: "Abgeschlossene Gespräche haben ein eigenes Zuhause im Charaktere-Bereich und werden dort als eigenständiger Inhalt gezeigt. Alte Links funktionieren weiter.",
+        category: "inhalte",
         tutorial: "gespraeche",
       },
       {
         text: "Eingetragene Sessions lassen sich unter „Sessions“ jetzt vollständig korrigieren: Datum, Titel, AP-Beträge, Notizen und Teilnehmende. Die Gutschriften werden dabei mitgezogen — geänderte Beträge landen sofort auf den Konten.",
+        category: "spielleitung",
         tutorial: "spielleitung-admins",
       },
       {
         text: "Das AP-Regelwerk kennt eine neue Regel „AP pro beendeter Mission“: Ihr Wert belegt den Betrag beim Missionsabschluss unter „Kampagne“ vor (Standard 5).",
+        category: "spielleitung",
         tutorial: "spielleitung-admins",
       },
       {
         text: "Das minimalistische Interface gibt es jetzt in zwei Ausführungen — dunkel und hell. Du wählst sie im Profil unter „Darstellung → Oberfläche“.",
+        category: "darstellung",
         tutorial: "farbschema",
       },
     ],
@@ -84,101 +437,278 @@ export const CHANGELOG: ChangelogEntry[] = [
     version: "1.27",
     title: "Eigener Charaktere-Bereich mit Charakterwerten",
     items: [
-      "Erfahrungspunkte (AP) werden jetzt in der App nachgehalten: Die Spielleitung vergibt sie unter „Kampagne“ (je 1 AP für gespielte Session und geschriebenes Logbuch, freier Betrag für Missions- und Story-Abschlüsse), auf dem Charakterbogen siehst du dein Konto, alle Buchungen und die Kosten jeder möglichen Steigerung. Für die Ersterschaffung stehen je 320 AP für Attribute und Disziplinen bereit — der Bogen zeigt laufend, was deine Verteilung kostet und wie viel übrig ist. Nach dem Abschließen der Erschaffung wachsen Attribute, Disziplinen, Talente und Schwerpunkte nur noch über AP: Attribut (neuer Wert − 7) × 10, Disziplin (neuer Wert) × 10, Talent oder Schwerpunkt je 20 AP. Alle diese Zahlen sind Voreinstellungen und von der Spielleitung anpassbar.",
-      "Hochgeladene Charakter-Portraits wurden unter einer nicht erreichbaren Adresse gespeichert und blieben dadurch unsichtbar. Neue Uploads landen wieder auf der richtigen Bild-Adresse; bereits betroffene Portraits lassen sich mit einem Wartungslauf nachziehen.",
-      "Der Menüpunkt „Archiv“ heißt jetzt „Datenbank“ und hat ein passendes Symbol bekommen (die Adresse der Seite bleibt unverändert, alte Links funktionieren weiter). Auch die Symbole im eingeloggten Menü sind jetzt unterscheidbar: „Charaktere“ zeigt eine Personalakte, „User“ eine Personengruppe — vorher sahen beide dem allgemeinen Charaktere-Symbol zum Verwechseln ähnlich.",
-      "Wer eigene Charaktere hat, findet im Kopfmenü den neuen Punkt „Charaktere“: eine Übersicht aller mit dem Konto verknüpften Charaktere (auch Entwürfe) samt Sichtbarkeit, Bearbeiten, Löschen und dem Anlegen weiterer Charaktere.",
-      "Pro Charakter lassen sich dort unter „Werte“ die Charakterwerte nach dem Charakterbogen pflegen — Personalakte (Pronomen, Rolle, Zuweisung, Herkunft, Erziehung, Laufbahn, Erfahrung, Merkmale), die sechs Attribute und sechs Disziplinen, Stress, Widerstand, Entschlossenheit und Ansehen sowie die Listen für Werte, Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln, Angriffe, Ausrüstung, Hobbys und Karriere-Ereignisse.",
-      "In „Meine Inhalte“ erscheinen Charaktere dafür nicht mehr; der Charakter-Filter für Einsatzberichte und Gespräche bleibt dort erhalten, ebenso der Knopf zum Anlegen des ersten Charakters.",
-      "Das Werte-Formular ist dem Charakterbogen nachempfunden: Foto-Kasten und Kopfdaten oben, Attribute und Disziplinen nebeneinander als Wertekästen mit großer Zahl, anklickbare Entschlossenheits-Kästchen und linierte Listenfelder — beschriftet wie der Bogen mit dem englischen Begriff und der deutschen Entsprechung darunter. Über den Foto-Kasten lässt sich das Bild des Charakters direkt hochladen (dasselbe Portrait wie in der Akte). Die Listenfelder (Werte, Schwerpunkte, Talente, …) zeigen jetzt acht Zeilen, ohne dass man scrollen muss. Dabei gelten jetzt die Regeln der Runde — Attribute 7–12 (höchstens eines auf 12, zwei auf 11), Disziplinen 1–5 (höchstens eine auf 5, zwei auf 4); Verstöße werden sofort markiert. Der maximale Stress wird aus Fitness und dem Bonus aus Talenten berechnet, statt von Hand eingetragen zu werden.",
-      "Neu: Talente werden nicht mehr von Hand getippt, sondern aus einem Katalog gewählt — nach Kategorien sortiert (Allgemein, Spezies & Kultur, Kommando, Steuerung, Technik, Sicherheit, Wissenschaft, Medizin und weitere), mit Voraussetzung und vollem Regeltext direkt unter der Auswahl. Bereits eingetragene Talente lassen sich nicht versehentlich doppelt wählen; für Sonderfälle bleibt der Freitext erreichbar. Der Katalog gilt sowohl beim Erschaffen als auch beim Steigern.",
-      "Die Spielleitung hat einen eigenen Bereich bekommen. Unter „Talente“ lässt sich der Talent-Katalog durchsuchen, filtern und bearbeiten sowie um eigene Talente ergänzen.",
-      "Unter „Sessions“ trägt die Spielleitung gespielte Sessions ein (Datum, Titel, Session-AP, Bonus-AP, Notizen) und schreibt allen Beteiligten die AP in einem Rutsch gut — vorausgewählt sind alle aktiven Charaktere, wer gefehlt hat, wird einfach abgewählt. Eine versehentlich eingetragene Session lässt sich zurücknehmen, die Gutschriften werden dann mit storniert.",
-      "Unter „AP“ sieht die Spielleitung alle Kontostände auf einen Blick und das gesamte Buchungsjournal (nach Charakter und Grund filterbar). Dort lässt sich außerdem das ganze AP-Regelwerk einstellen: Kosten je Steigerungsschritt, Kosten für Talente und Schwerpunkte, die Budgets und Freikontingente der Ersterschaffung sowie die AP je Session und Logbuch — jederzeit auf die Standardwerte zurücksetzbar.",
-      "Spielleitung und Administration haben jetzt zwei getrennte Menüs im Kopfbereich: „Leitung“ führt alle Werkzeuge der Spielleitung (Kampagne, Sessions, AP, Talente, Gespräche), „Admin“ alle der Verwaltung. Wer beide Rollen hat, sieht beide Menüs nebeneinander, statt sie wie bisher in einer gemeinsamen Liste zu finden. Die Kampagnen- und Gesprächs-Übersicht sind dafür in den Leitungs-Bereich umgezogen — alte Lesezeichen auf die früheren Adressen führen ins Leere und müssen einmal neu gesetzt werden.",
-      "Der AP-Bereich auf dem Charakterbogen rechnet jetzt live mit: Während du in der Erschaffung Attribute und Disziplinen einträgst, siehst du sofort, was die Verteilung kostet, wie viel Budget übrig ist und wie viele AP dir nach dem Abschließen zur Verfügung stehen. Nach der Erschaffung zeigt jeder Steigern-Knopf, wie viele AP danach noch bleiben.",
-      "Neu: Nicht verbrauchte AP aus der Ersterschaffung gehen nicht mehr verloren — sie werden beim Abschließen aufs Konto gutgeschrieben, höchstens 10 (von der Spielleitung einstellbar).",
-      "Logbücher lassen sich einer Session zuordnen. Sobald mindestens ein Logbuch zu einer Session geschrieben wurde, bekommen alle Teilnehmenden automatisch die Logbuch-AP extra — einmal je Session, egal wie viele Logbücher es werden. Fällt das letzte Logbuch weg, verschwindet die Gutschrift wieder: auch dann, wenn das Logbuch einer anderen Session zugeordnet oder mit seiner ganzen Mission gelöscht wird.",
-      "AP für einen Missionsabschluss gibt es jetzt nur noch über die Mission selbst: Die Spielleitung wählt die Mission aus, vergibt die AP und die Mission wird dabei automatisch auf „abgeschlossen“ gesetzt. Als freie Buchung ohne Mission ist der Grund „Mission“ entfallen.",
-      "Die Talent-Auswahl auf dem Charakterbogen öffnet sich jetzt als Overlay mit Suchfeld: Du durchsuchst alle Talente nach Name, Voraussetzung oder Regeltext, filterst nach Kategorie und klappst mit einem Klick die Beschreibung auf. Angezeigt werden dabei nur Talente, deren Voraussetzungen dein Charakter erfüllt — Voraussetzungen, die sich nicht automatisch prüfen lassen (Merkmale, Rollen, Entscheidung der Spielleitung), bleiben weiterhin sichtbar, und ein Schalter zeigt bei Bedarf auch die übrigen.",
-      "Talente lassen sich beim Übernehmen umbenennen — auf dem Bogen steht dann „Eigener Name (Originalname)“. Der Originalname bleibt damit erhalten, sodass dasselbe Talent nicht versehentlich ein zweites Mal gekauft werden kann und Voraussetzungen anderer Talente es weiterhin erkennen.",
-      "Die Talent-Liste auf dem Bogen ist kein Textfeld mehr: Talente kommen ausschließlich aus dem Katalog, jeder Eintrag hat ein kleines rotes Minus zum Entfernen, und ein Klick auf „Übernehmen“ im Auswahlfenster setzt das Talent direkt — beim Steigern samt Abbuchung der AP, die neben dem Knopf stehen. Während der Erschaffung zählt der Bogen die Talente mit (4 sind frei), danach kommen weitere nur noch über AP hinzu.",
-      "Ganz unten am Charakterbogen steht neu ein Spickzettel mit dem vollen Regeltext aller Talente deines Charakters — kein Nachschlagen im Regelwerk mehr am Spieltisch.",
-      "Auch Werte, Schwerpunkte, Angriffe, Ausrüstung, Karriere-Ereignisse und Hobbys werden jetzt als Liste gepflegt statt in einem Textfeld: „Hinzufügen“ öffnet ein kleines Fenster mit Eingabefeld, jeder Eintrag hat sein rotes Minus zum Entfernen. Bei Werten und Schwerpunkten steht dabei, wie viele der freien Plätze aus der Ersterschaffung schon vergeben sind.",
-      "Die Werte-Seite ist jetzt der echte Charakterbogen: Du füllst das gedruckte „Personnel File“ direkt aus — jedes Feld sitzt in seinem Kasten, Foto im Bildrahmen, Attribute und Disziplinen in ihren Zellen. Auf schmalen Bildschirmen schrumpft das ganze Blatt, statt umzubrechen. Bild hochladen, Stress-Bonus und Speichern stehen unter dem Bogen, weil das Papier dafür keine Felder hat.",
-      "Der Charakterbogen füllt jetzt die ganze Breite aus und liegt auf dem gewohnten LCARS-Hintergrund statt auf einem grauen Schreibtisch.",
-      "Zwischen Charakterbogen und Stammdaten deines Charakters wechselst du jetzt mit einem Umschalter über der Seite, statt zwei getrennte Menüwege zu gehen.",
-      "Neu: Du kannst deinen Charakterbogen als PDF herunterladen und ausdrucken — Seite 1 ist der ausgefüllte Bogen, dahinter folgt der Talent-Spickzettel im selben Look.",
-      "Rang und Spezies stehen jetzt auf dem Bogen, wo sie hingehören — beide kommen aus den Stammdaten deines Charakters und werden dort gepflegt; im Kasten „Species & Traits“ steht die Spezies vorne, deine weiteren Merkmale trägst du dahinter ein.",
-      "Über dem Bogen gibt es einen Knopf, der ihn im Vollbild zeigt — praktisch am Spieltisch. Bearbeiten kannst du ihn dort genauso, Escape schließt die Ansicht wieder.",
-      "Neu: Ihr könnt Gespräche mit NPCs führen. Ein NPC ist dabei ein Datenbank-Eintrag der Kategorie „NPC“ — kein eigener Charakter. Für ihn schreibt die Spielleitung; gibt es mehrere, wählst du beim Anlegen aus, wer ihn übernimmt. Umgekehrt kann die Spielleitung ein Gespräch aus Sicht eines NPC mit euren Charakteren beginnen. Danach verhält sich alles wie gewohnt: Antworten, Abschließen, Benachrichtigungen und die Liste „Deine Gespräche“; im Teilnehmer-Kopf führt der NPC in die Datenbank.",
-      "„Archiv“ heißt jetzt überall „Datenbank“ — die Übersicht, die Einträge („Datenbank-Eintrag“ statt „Archiv-Eintrag“), der Assistent und alle Hinweistexte. Die Adressen der Seiten bleiben unverändert, alte Links funktionieren weiter.",
-      "NPCs lassen sich jetzt direkt anlegen: unter „Meine Inhalte“ gibt es für die Spielleitung den Knopf „Neuer NPC“ — er öffnet das gewohnte Datenbank-Formular mit vorgewählter Kategorie „NPC“.",
-      "NPCs standen in der Gesprächs-Auswahl bisher nur, wenn sie öffentlich sichtbar waren — die üblichen, intern gehaltenen NPCs fehlten damit. Jetzt gilt auch hier die normale Sichtbarkeit: Wer einen NPC sehen darf, kann ihn auch ansprechen. Wer NPCs spielt, kann sie außerdem nachträglich in ein laufendes Gespräch holen und ein Gespräch aus ihrer Sicht beginnen — das klappt jetzt auch mit einem reinen Admin-Konto.",
-      "„Erschaffung abschließen“ ist jetzt erst möglich, wenn alle Attribute und Disziplinen eingetragen UND gespeichert sind — festgeschrieben wird der gespeicherte Stand. Vorher konnte ein Bogen mit Lücken festgeschrieben werden, und die leeren Felder ließen sich danach nicht mehr füllen, weil sich nur vorhandene Werte steigern lassen.",
-      "Nach dem Bearbeiten eines Charakters landest du wieder in der Charakter-Übersicht statt in „Meine Inhalte“, wo Charaktere gar nicht mehr stehen. Und der Menüpunkt „Charaktere“ erscheint direkt nach dem Anlegen deines ersten Charakters, statt erst nach dem nächsten Neuladen.",
-      "PDF-Charakterbögen lassen sich nicht mehr hochladen. Stattdessen führt auf der Charakterseite der Knopf „Charakterbogen“ direkt zum gepflegten Bogen — als reine Ansicht mit Vollbild und PDF-Download. Du siehst ihn bei deinen eigenen Charakteren, die Spielleitung bei allen. Bereits hochgeladene PDFs werden beim Einspielen dieser Version entfernt.",
+      {
+        text: "Erfahrungspunkte (AP) werden jetzt in der App nachgehalten: Die Spielleitung vergibt sie unter „Kampagne“ (je 1 AP für gespielte Session und geschriebenes Logbuch, freier Betrag für Missions- und Story-Abschlüsse), auf dem Charakterbogen siehst du dein Konto, alle Buchungen und die Kosten jeder möglichen Steigerung. Für die Ersterschaffung stehen je 320 AP für Attribute und Disziplinen bereit — der Bogen zeigt laufend, was deine Verteilung kostet und wie viel übrig ist. Nach dem Abschließen der Erschaffung wachsen Attribute, Disziplinen, Talente und Schwerpunkte nur noch über AP: Attribut (neuer Wert − 7) × 10, Disziplin (neuer Wert) × 10, Talent oder Schwerpunkt je 20 AP. Alle diese Zahlen sind Voreinstellungen und von der Spielleitung anpassbar.",
+        category: "charaktere",
+      },
+      {
+        text: "Hochgeladene Charakter-Portraits wurden unter einer nicht erreichbaren Adresse gespeichert und blieben dadurch unsichtbar. Neue Uploads landen wieder auf der richtigen Bild-Adresse; bereits betroffene Portraits lassen sich mit einem Wartungslauf nachziehen.",
+        category: "charaktere",
+      },
+      {
+        text: "Der Menüpunkt „Archiv“ heißt jetzt „Datenbank“ und hat ein passendes Symbol bekommen (die Adresse der Seite bleibt unverändert, alte Links funktionieren weiter). Auch die Symbole im eingeloggten Menü sind jetzt unterscheidbar: „Charaktere“ zeigt eine Personalakte, „User“ eine Personengruppe — vorher sahen beide dem allgemeinen Charaktere-Symbol zum Verwechseln ähnlich.",
+        category: "darstellung",
+      },
+      {
+        text: "Wer eigene Charaktere hat, findet im Kopfmenü den neuen Punkt „Charaktere“: eine Übersicht aller mit dem Konto verknüpften Charaktere (auch Entwürfe) samt Sichtbarkeit, Bearbeiten, Löschen und dem Anlegen weiterer Charaktere.",
+        category: "charaktere",
+      },
+      {
+        text: "Pro Charakter lassen sich dort unter „Werte“ die Charakterwerte nach dem Charakterbogen pflegen — Personalakte (Pronomen, Rolle, Zuweisung, Herkunft, Erziehung, Laufbahn, Erfahrung, Merkmale), die sechs Attribute und sechs Disziplinen, Stress, Widerstand, Entschlossenheit und Ansehen sowie die Listen für Werte, Schwerpunkte, Talente, Spezies-Fähigkeiten, Sonderregeln, Angriffe, Ausrüstung, Hobbys und Karriere-Ereignisse.",
+        category: "charaktere",
+      },
+      {
+        text: "In „Meine Inhalte“ erscheinen Charaktere dafür nicht mehr; der Charakter-Filter für Einsatzberichte und Gespräche bleibt dort erhalten, ebenso der Knopf zum Anlegen des ersten Charakters.",
+        category: "inhalte",
+      },
+      {
+        text: "Das Werte-Formular ist dem Charakterbogen nachempfunden: Foto-Kasten und Kopfdaten oben, Attribute und Disziplinen nebeneinander als Wertekästen mit großer Zahl, anklickbare Entschlossenheits-Kästchen und linierte Listenfelder — beschriftet wie der Bogen mit dem englischen Begriff und der deutschen Entsprechung darunter. Über den Foto-Kasten lässt sich das Bild des Charakters direkt hochladen (dasselbe Portrait wie in der Akte). Die Listenfelder (Werte, Schwerpunkte, Talente, …) zeigen jetzt acht Zeilen, ohne dass man scrollen muss. Dabei gelten jetzt die Regeln der Runde — Attribute 7–12 (höchstens eines auf 12, zwei auf 11), Disziplinen 1–5 (höchstens eine auf 5, zwei auf 4); Verstöße werden sofort markiert. Der maximale Stress wird aus Fitness und dem Bonus aus Talenten berechnet, statt von Hand eingetragen zu werden.",
+        category: "charaktere",
+      },
+      {
+        text: "Neu: Talente werden nicht mehr von Hand getippt, sondern aus einem Katalog gewählt — nach Kategorien sortiert (Allgemein, Spezies & Kultur, Kommando, Steuerung, Technik, Sicherheit, Wissenschaft, Medizin und weitere), mit Voraussetzung und vollem Regeltext direkt unter der Auswahl. Bereits eingetragene Talente lassen sich nicht versehentlich doppelt wählen; für Sonderfälle bleibt der Freitext erreichbar. Der Katalog gilt sowohl beim Erschaffen als auch beim Steigern.",
+        category: "charaktere",
+      },
+      {
+        text: "Die Spielleitung hat einen eigenen Bereich bekommen. Unter „Talente“ lässt sich der Talent-Katalog durchsuchen, filtern und bearbeiten sowie um eigene Talente ergänzen.",
+        category: "spielleitung",
+      },
+      {
+        text: "Unter „Sessions“ trägt die Spielleitung gespielte Sessions ein (Datum, Titel, Session-AP, Bonus-AP, Notizen) und schreibt allen Beteiligten die AP in einem Rutsch gut — vorausgewählt sind alle aktiven Charaktere, wer gefehlt hat, wird einfach abgewählt. Eine versehentlich eingetragene Session lässt sich zurücknehmen, die Gutschriften werden dann mit storniert.",
+        category: "spielleitung",
+      },
+      {
+        text: "Unter „AP“ sieht die Spielleitung alle Kontostände auf einen Blick und das gesamte Buchungsjournal (nach Charakter und Grund filterbar). Dort lässt sich außerdem das ganze AP-Regelwerk einstellen: Kosten je Steigerungsschritt, Kosten für Talente und Schwerpunkte, die Budgets und Freikontingente der Ersterschaffung sowie die AP je Session und Logbuch — jederzeit auf die Standardwerte zurücksetzbar.",
+        category: "spielleitung",
+      },
+      {
+        text: "Spielleitung und Administration haben jetzt zwei getrennte Menüs im Kopfbereich: „Leitung“ führt alle Werkzeuge der Spielleitung (Kampagne, Sessions, AP, Talente, Gespräche), „Admin“ alle der Verwaltung. Wer beide Rollen hat, sieht beide Menüs nebeneinander, statt sie wie bisher in einer gemeinsamen Liste zu finden. Die Kampagnen- und Gesprächs-Übersicht sind dafür in den Leitungs-Bereich umgezogen — alte Lesezeichen auf die früheren Adressen führen ins Leere und müssen einmal neu gesetzt werden.",
+        category: "spielleitung",
+      },
+      {
+        text: "Der AP-Bereich auf dem Charakterbogen rechnet jetzt live mit: Während du in der Erschaffung Attribute und Disziplinen einträgst, siehst du sofort, was die Verteilung kostet, wie viel Budget übrig ist und wie viele AP dir nach dem Abschließen zur Verfügung stehen. Nach der Erschaffung zeigt jeder Steigern-Knopf, wie viele AP danach noch bleiben.",
+        category: "charaktere",
+      },
+      {
+        text: "Neu: Nicht verbrauchte AP aus der Ersterschaffung gehen nicht mehr verloren — sie werden beim Abschließen aufs Konto gutgeschrieben, höchstens 10 (von der Spielleitung einstellbar).",
+        category: "charaktere",
+      },
+      {
+        text: "Logbücher lassen sich einer Session zuordnen. Sobald mindestens ein Logbuch zu einer Session geschrieben wurde, bekommen alle Teilnehmenden automatisch die Logbuch-AP extra — einmal je Session, egal wie viele Logbücher es werden. Fällt das letzte Logbuch weg, verschwindet die Gutschrift wieder: auch dann, wenn das Logbuch einer anderen Session zugeordnet oder mit seiner ganzen Mission gelöscht wird.",
+        category: "charaktere",
+      },
+      {
+        text: "AP für einen Missionsabschluss gibt es jetzt nur noch über die Mission selbst: Die Spielleitung wählt die Mission aus, vergibt die AP und die Mission wird dabei automatisch auf „abgeschlossen“ gesetzt. Als freie Buchung ohne Mission ist der Grund „Mission“ entfallen.",
+        category: "charaktere",
+      },
+      {
+        text: "Die Talent-Auswahl auf dem Charakterbogen öffnet sich jetzt als Overlay mit Suchfeld: Du durchsuchst alle Talente nach Name, Voraussetzung oder Regeltext, filterst nach Kategorie und klappst mit einem Klick die Beschreibung auf. Angezeigt werden dabei nur Talente, deren Voraussetzungen dein Charakter erfüllt — Voraussetzungen, die sich nicht automatisch prüfen lassen (Merkmale, Rollen, Entscheidung der Spielleitung), bleiben weiterhin sichtbar, und ein Schalter zeigt bei Bedarf auch die übrigen.",
+        category: "charaktere",
+      },
+      {
+        text: "Talente lassen sich beim Übernehmen umbenennen — auf dem Bogen steht dann „Eigener Name (Originalname)“. Der Originalname bleibt damit erhalten, sodass dasselbe Talent nicht versehentlich ein zweites Mal gekauft werden kann und Voraussetzungen anderer Talente es weiterhin erkennen.",
+        category: "charaktere",
+      },
+      {
+        text: "Die Talent-Liste auf dem Bogen ist kein Textfeld mehr: Talente kommen ausschließlich aus dem Katalog, jeder Eintrag hat ein kleines rotes Minus zum Entfernen, und ein Klick auf „Übernehmen“ im Auswahlfenster setzt das Talent direkt — beim Steigern samt Abbuchung der AP, die neben dem Knopf stehen. Während der Erschaffung zählt der Bogen die Talente mit (4 sind frei), danach kommen weitere nur noch über AP hinzu.",
+        category: "charaktere",
+      },
+      {
+        text: "Ganz unten am Charakterbogen steht neu ein Spickzettel mit dem vollen Regeltext aller Talente deines Charakters — kein Nachschlagen im Regelwerk mehr am Spieltisch.",
+        category: "charaktere",
+      },
+      {
+        text: "Auch Werte, Schwerpunkte, Angriffe, Ausrüstung, Karriere-Ereignisse und Hobbys werden jetzt als Liste gepflegt statt in einem Textfeld: „Hinzufügen“ öffnet ein kleines Fenster mit Eingabefeld, jeder Eintrag hat sein rotes Minus zum Entfernen. Bei Werten und Schwerpunkten steht dabei, wie viele der freien Plätze aus der Ersterschaffung schon vergeben sind.",
+        category: "charaktere",
+      },
+      {
+        text: "Die Werte-Seite ist jetzt der echte Charakterbogen: Du füllst das gedruckte „Personnel File“ direkt aus — jedes Feld sitzt in seinem Kasten, Foto im Bildrahmen, Attribute und Disziplinen in ihren Zellen. Auf schmalen Bildschirmen schrumpft das ganze Blatt, statt umzubrechen. Bild hochladen, Stress-Bonus und Speichern stehen unter dem Bogen, weil das Papier dafür keine Felder hat.",
+        category: "charaktere",
+      },
+      {
+        text: "Der Charakterbogen füllt jetzt die ganze Breite aus und liegt auf dem gewohnten LCARS-Hintergrund statt auf einem grauen Schreibtisch.",
+        category: "darstellung",
+      },
+      {
+        text: "Zwischen Charakterbogen und Stammdaten deines Charakters wechselst du jetzt mit einem Umschalter über der Seite, statt zwei getrennte Menüwege zu gehen.",
+        category: "charaktere",
+      },
+      {
+        text: "Neu: Du kannst deinen Charakterbogen als PDF herunterladen und ausdrucken — Seite 1 ist der ausgefüllte Bogen, dahinter folgt der Talent-Spickzettel im selben Look.",
+        category: "export",
+      },
+      {
+        text: "Rang und Spezies stehen jetzt auf dem Bogen, wo sie hingehören — beide kommen aus den Stammdaten deines Charakters und werden dort gepflegt; im Kasten „Species & Traits“ steht die Spezies vorne, deine weiteren Merkmale trägst du dahinter ein.",
+        category: "charaktere",
+      },
+      {
+        text: "Über dem Bogen gibt es einen Knopf, der ihn im Vollbild zeigt — praktisch am Spieltisch. Bearbeiten kannst du ihn dort genauso, Escape schließt die Ansicht wieder.",
+        category: "charaktere",
+      },
+      {
+        text: "Neu: Ihr könnt Gespräche mit NPCs führen. Ein NPC ist dabei ein Datenbank-Eintrag der Kategorie „NPC“ — kein eigener Charakter. Für ihn schreibt die Spielleitung; gibt es mehrere, wählst du beim Anlegen aus, wer ihn übernimmt. Umgekehrt kann die Spielleitung ein Gespräch aus Sicht eines NPC mit euren Charakteren beginnen. Danach verhält sich alles wie gewohnt: Antworten, Abschließen, Benachrichtigungen und die Liste „Deine Gespräche“; im Teilnehmer-Kopf führt der NPC in die Datenbank.",
+        category: "inhalte",
+      },
+      {
+        text: "„Archiv“ heißt jetzt überall „Datenbank“ — die Übersicht, die Einträge („Datenbank-Eintrag“ statt „Archiv-Eintrag“), der Assistent und alle Hinweistexte. Die Adressen der Seiten bleiben unverändert, alte Links funktionieren weiter.",
+        category: "darstellung",
+      },
+      {
+        text: "NPCs lassen sich jetzt direkt anlegen: unter „Meine Inhalte“ gibt es für die Spielleitung den Knopf „Neuer NPC“ — er öffnet das gewohnte Datenbank-Formular mit vorgewählter Kategorie „NPC“.",
+        category: "spielleitung",
+      },
+      {
+        text: "NPCs standen in der Gesprächs-Auswahl bisher nur, wenn sie öffentlich sichtbar waren — die üblichen, intern gehaltenen NPCs fehlten damit. Jetzt gilt auch hier die normale Sichtbarkeit: Wer einen NPC sehen darf, kann ihn auch ansprechen. Wer NPCs spielt, kann sie außerdem nachträglich in ein laufendes Gespräch holen und ein Gespräch aus ihrer Sicht beginnen — das klappt jetzt auch mit einem reinen Admin-Konto.",
+        category: "inhalte",
+      },
+      {
+        text: "„Erschaffung abschließen“ ist jetzt erst möglich, wenn alle Attribute und Disziplinen eingetragen UND gespeichert sind — festgeschrieben wird der gespeicherte Stand. Vorher konnte ein Bogen mit Lücken festgeschrieben werden, und die leeren Felder ließen sich danach nicht mehr füllen, weil sich nur vorhandene Werte steigern lassen.",
+        category: "charaktere",
+      },
+      {
+        text: "Nach dem Bearbeiten eines Charakters landest du wieder in der Charakter-Übersicht statt in „Meine Inhalte“, wo Charaktere gar nicht mehr stehen. Und der Menüpunkt „Charaktere“ erscheint direkt nach dem Anlegen deines ersten Charakters, statt erst nach dem nächsten Neuladen.",
+        category: "charaktere",
+      },
+      {
+        text: "PDF-Charakterbögen lassen sich nicht mehr hochladen. Stattdessen führt auf der Charakterseite der Knopf „Charakterbogen“ direkt zum gepflegten Bogen — als reine Ansicht mit Vollbild und PDF-Download. Du siehst ihn bei deinen eigenen Charakteren, die Spielleitung bei allen. Bereits hochgeladene PDFs werden beim Einspielen dieser Version entfernt.",
+        category: "export",
+      },
     ],
   },
   {
     version: "1.26",
     title: "Gespräche sind jetzt bei den Charakteren zu finden",
     items: [
-      "Die Gesprächs-Übersicht ist aus dem Archiv in den Charaktere-Bereich umgezogen, weiterhin mit Teilnehmer-Filter. Auf großen Bildschirmen steht sie direkt neben der Charakterliste, auf dem Handy per Umschalter oben zwischen beiden Listen wechselbar. Alte Links auf die Archiv-Ansicht führen automatisch zur neuen Übersicht.",
-      "Im minimalistischen Design (Profil → „Darstellung“) zeigen die LCARS-Datenzeilen (z.B. die Kategorien im Archiv oder die Schnellzugriffe auf der Charakterseite) ihre Beschriftung jetzt wieder in derselben Schrift wie im normalen LCARS-Design, statt versehentlich in der Systemschrift.",
+      {
+        text: "Die Gesprächs-Übersicht ist aus dem Archiv in den Charaktere-Bereich umgezogen, weiterhin mit Teilnehmer-Filter. Auf großen Bildschirmen steht sie direkt neben der Charakterliste, auf dem Handy per Umschalter oben zwischen beiden Listen wechselbar. Alte Links auf die Archiv-Ansicht führen automatisch zur neuen Übersicht.",
+        category: "inhalte",
+      },
+      {
+        text: "Im minimalistischen Design (Profil → „Darstellung“) zeigen die LCARS-Datenzeilen (z.B. die Kategorien im Archiv oder die Schnellzugriffe auf der Charakterseite) ihre Beschriftung jetzt wieder in derselben Schrift wie im normalen LCARS-Design, statt versehentlich in der Systemschrift.",
+        category: "darstellung",
+      },
     ],
   },
   {
     version: "1.25",
     title: "Markdown-Texte werden wieder richtig dargestellt",
     items: [
-      "Aufzählungen und nummerierte Listen in Texten (Missionen, Einsatzberichte, Archiv-Einträge, Biografien, Gespräche, Assistenten-Antworten) erscheinen wieder mit Aufzählungszeichen, Nummerierung und Einzug – auch verschachtelt – statt als Folge schmuckloser Zeilen.",
-      "Leerzeilen zwischen Absätzen sind wieder als Absatzabstand sichtbar, ebenfalls innerhalb von Listenpunkten, Zitaten und Tabellenzellen.",
-      "Zwischenüberschriften, Zitate, Tabellen und Code-Abschnitte heben sich wieder vom Fließtext ab, und Links innerhalb von Listen oder Tabellen sind wieder als Links erkennbar.",
+      {
+        text: "Aufzählungen und nummerierte Listen in Texten (Missionen, Einsatzberichte, Archiv-Einträge, Biografien, Gespräche, Assistenten-Antworten) erscheinen wieder mit Aufzählungszeichen, Nummerierung und Einzug – auch verschachtelt – statt als Folge schmuckloser Zeilen.",
+        category: "inhalte",
+      },
+      {
+        text: "Leerzeilen zwischen Absätzen sind wieder als Absatzabstand sichtbar, ebenfalls innerhalb von Listenpunkten, Zitaten und Tabellenzellen.",
+        category: "inhalte",
+      },
+      {
+        text: "Zwischenüberschriften, Zitate, Tabellen und Code-Abschnitte heben sich wieder vom Fließtext ab, und Links innerhalb von Listen oder Tabellen sind wieder als Links erkennbar.",
+        category: "inhalte",
+      },
     ],
   },
   {
     version: "1.24",
     title: "Inhaltstexte nutzen die volle Breite am Desktop",
     items: [
-      "Auf großen Bildschirmen füllen die Texte auf Inhaltsseiten (Missions-Synopsen und Logs, Archiv-Einträge und Gespräche) jetzt die gesamte Breite des Inhaltsbereichs, statt in einer schmalen Spalte zu enden. Auf dem Handy bleibt der Lesemodus mit seiner komfortablen, zentrierten Lesebreite unverändert.",
-      "Die LCARS-Schreibmaschinenschrift ist zurück: Metadaten-Zeilen, Akten-Felder, Log-Kürzel und die Kopfzeile wurden versehentlich in der normalen Fließtextschrift dargestellt und zeigen jetzt wieder das vorgesehene Schriftbild.",
-      "Die Charakterübersicht und die Seiten Impressum und Datenschutz laden spürbar schneller — sie übertragen nur noch die Daten, die sie tatsächlich anzeigen. Auch das eigene Profil und das Aufklappen der Kopfzeilen-Menüs reagieren flotter.",
+      {
+        text: "Auf großen Bildschirmen füllen die Texte auf Inhaltsseiten (Missions-Synopsen und Logs, Archiv-Einträge und Gespräche) jetzt die gesamte Breite des Inhaltsbereichs, statt in einer schmalen Spalte zu enden. Auf dem Handy bleibt der Lesemodus mit seiner komfortablen, zentrierten Lesebreite unverändert.",
+        category: "darstellung",
+      },
+      {
+        text: "Die LCARS-Schreibmaschinenschrift ist zurück: Metadaten-Zeilen, Akten-Felder, Log-Kürzel und die Kopfzeile wurden versehentlich in der normalen Fließtextschrift dargestellt und zeigen jetzt wieder das vorgesehene Schriftbild.",
+        category: "darstellung",
+      },
+      {
+        text: "Die Charakterübersicht und die Seiten Impressum und Datenschutz laden spürbar schneller — sie übertragen nur noch die Daten, die sie tatsächlich anzeigen. Auch das eigene Profil und das Aufklappen der Kopfzeilen-Menüs reagieren flotter.",
+        category: "darstellung",
+      },
     ],
   },
   {
     version: "1.0",
     title: "Datenbank als neue Datenquelle, automatisches Vault-Backup",
     items: [
-      "Spieler:innen können ihre Einsatzberichte (Mission-Logs) erstmals direkt über ein Formular in der Web-App anlegen, statt sie manuell als Markdown-Datei einzureichen.",
-      "Die Datenbank ist jetzt die alleinige Quelle für alle Inhalte: Missionen und Logs werden direkt in der App erstellt und bearbeitet, während das Vault-Archiv nur noch als automatisch erzeugte Sicherungskopie dient – inklusive eines wöchentlichen automatischen Backup-Laufs und eines Admin-Knopfs zum manuellen Anstoßen.",
-      "Geschützte Bereiche zeigen bei fehlender Berechtigung jetzt eine eigene Hinweisseite statt eines stillen Redirects.",
-      "Wer sein Passwort vergessen hat, kann es über „Passwort vergessen“ selbst zurücksetzen.",
-      "Die Datenschutzerklärung wurde um die neuen Mail- und Backup-Verarbeitungen ergänzt.",
+      {
+        text: "Spieler:innen können ihre Einsatzberichte (Mission-Logs) erstmals direkt über ein Formular in der Web-App anlegen, statt sie manuell als Markdown-Datei einzureichen.",
+        category: "inhalte",
+      },
+      {
+        text: "Die Datenbank ist jetzt die alleinige Quelle für alle Inhalte: Missionen und Logs werden direkt in der App erstellt und bearbeitet, während das Vault-Archiv nur noch als automatisch erzeugte Sicherungskopie dient – inklusive eines wöchentlichen automatischen Backup-Laufs und eines Admin-Knopfs zum manuellen Anstoßen.",
+        category: "inhalte",
+      },
+      {
+        text: "Geschützte Bereiche zeigen bei fehlender Berechtigung jetzt eine eigene Hinweisseite statt eines stillen Redirects.",
+        category: "konto",
+      },
+      {
+        text: "Wer sein Passwort vergessen hat, kann es über „Passwort vergessen“ selbst zurücksetzen.",
+        category: "konto",
+      },
+      {
+        text: "Die Datenschutzerklärung wurde um die neuen Mail- und Backup-Verarbeitungen ergänzt.",
+        category: "konto",
+      },
     ],
   },
   {
     version: "1.1",
     title: "User-Backup, lokale Fonts, Akkordeon-DataRows, Mission-Delete",
     items: [
-      "Das Adminpanel bekommt eine Sicherungsfunktion für alle Nutzerkonten (Export und Import als Datei).",
-      "Schriftarten werden jetzt lokal statt von einem externen Anbieter geladen – ein Pluspunkt für den Datenschutz.",
-      "Auf dem Dashboard lassen sich lange Listen jetzt platzsparend als Akkordeons auf- und zuklappen.",
-      "Admins beziehungsweise Spielleitung können fehlerhaft angelegte Missionen wieder löschen.",
-      "Die neue Gast-Rolle darf zwar weiterhin stöbern, bookmarken und Inhalte abonnieren, aber keine eigenen Inhalte mehr anlegen oder einen Charakter zugewiesen bekommen.",
-      "Neue Missionslogs, Gespräche und Missionen übernehmen automatisch deutsche Anführungszeichen und schlagen ein sinnvolles Datum vor.",
-      "Admins können außerdem ganze Gespräche löschen, samt Infomail an die Beteiligten.",
-      "Eine eigene Such-Seite samt Such-Kachel in der Navigation macht das gezielte Suchen leichter.",
-      "Mehrere hartnäckige Darstellungsfehler auf schmalen Bildschirmen sind behoben.",
+      {
+        text: "Das Adminpanel bekommt eine Sicherungsfunktion für alle Nutzerkonten (Export und Import als Datei).",
+        category: "spielleitung",
+      },
+      {
+        text: "Schriftarten werden jetzt lokal statt von einem externen Anbieter geladen – ein Pluspunkt für den Datenschutz.",
+        category: "konto",
+      },
+      {
+        text: "Auf dem Dashboard lassen sich lange Listen jetzt platzsparend als Akkordeons auf- und zuklappen.",
+        category: "darstellung",
+      },
+      {
+        text: "Admins beziehungsweise Spielleitung können fehlerhaft angelegte Missionen wieder löschen.",
+        category: "spielleitung",
+      },
+      {
+        text: "Die neue Gast-Rolle darf zwar weiterhin stöbern, bookmarken und Inhalte abonnieren, aber keine eigenen Inhalte mehr anlegen oder einen Charakter zugewiesen bekommen.",
+        category: "spielleitung",
+      },
+      {
+        text: "Neue Missionslogs, Gespräche und Missionen übernehmen automatisch deutsche Anführungszeichen und schlagen ein sinnvolles Datum vor.",
+        category: "inhalte",
+      },
+      {
+        text: "Admins können außerdem ganze Gespräche löschen, samt Infomail an die Beteiligten.",
+        category: "spielleitung",
+      },
+      {
+        text: "Eine eigene Such-Seite samt Such-Kachel in der Navigation macht das gezielte Suchen leichter.",
+        category: "inhalte",
+      },
+      {
+        text: "Mehrere hartnäckige Darstellungsfehler auf schmalen Bildschirmen sind behoben.",
+        category: "darstellung",
+      },
     ],
   },
   {
     version: "1.2",
     title: "User-Bereich refactored + Mobile-Breiten-Fixes",
     items: [
-      "Der Typ-Filter (Charaktere, Missionen, Logs, Archiv) auf der Suche ist jetzt ein übersichtliches Button-Raster, Filter ohne Treffer sind deaktiviert, und eingeloggte Nutzer:innen bekommen einen zusätzlichen „Gespeichert“-Filter für ihre Lesezeichen.",
-      "Ein Klick auf einen Volltext-Treffer in Logs oder Archiv-Einträgen springt jetzt direkt zur passenden Textstelle und hebt sie hervor.",
-      "Ein hartnäckiger Layout-Fehler ist endgültig behoben, der auf schmalen Handy-Displays Missionslog-Zeilen und lange Charakternamen falsch darstellen ließ.",
+      {
+        text: "Der Typ-Filter (Charaktere, Missionen, Logs, Archiv) auf der Suche ist jetzt ein übersichtliches Button-Raster, Filter ohne Treffer sind deaktiviert, und eingeloggte Nutzer:innen bekommen einen zusätzlichen „Gespeichert“-Filter für ihre Lesezeichen.",
+        category: "inhalte",
+      },
+      {
+        text: "Ein Klick auf einen Volltext-Treffer in Logs oder Archiv-Einträgen springt jetzt direkt zur passenden Textstelle und hebt sie hervor.",
+        category: "inhalte",
+      },
+      {
+        text: "Ein hartnäckiger Layout-Fehler ist endgültig behoben, der auf schmalen Handy-Displays Missionslog-Zeilen und lange Charakternamen falsch darstellen ließ.",
+        category: "darstellung",
+      },
     ],
   },
   {
@@ -186,52 +716,136 @@ export const CHANGELOG: ChangelogEntry[] = [
     title:
       "Admin-Content-Tools: Autolinking, Wikilinks entfernen, Text formatieren",
     items: [
-      "Admins bekommen drei neue Werkzeuge für Missions-, Log-, Archiv- und Charakterseiten: automatisches Verlinken erkannter Charaktere, Missionen und Archiv-Einträge im Text, das rückstandslose Entfernen solcher Verlinkungen und eine automatische Korrektur von Anführungszeichen und Apostrophen auf deutsche Typografie – alle drei mit Vorschau vor dem endgültigen Übernehmen.",
-      "Aus Sicherheitsgründen können Admins ab sofort keinen Passwort-Reset mehr für fremde Konten auslösen, auch nicht für andere Admins; das bleibt Nutzer:innen über „Passwort vergessen“ für ihr eigenes Konto vorbehalten.",
-      "Das Dashboard zeigt jetzt eine „Neu“/„Aktualisiert“-Übersicht der seit dem letzten Besuch veränderten Inhalte.",
-      "Jede eingeloggte Person darf nun auch eigene Archiv-Einträge anlegen und bearbeiten – vorher ging das nur bei Missionen und Logs.",
-      "Alle Inhaltsformulare bekommen außerdem einen Zeitleisten-Marker-Button für Spielleitung und Admins sowie eine Auto-Verlinken-Option zum Ankreuzen.",
-      "Charakterportraits laden jetzt effizienter.",
-      "Mehrere Layout-Überlappungen auf schmalen Displays wurden behoben.",
+      {
+        text: "Admins bekommen drei neue Werkzeuge für Missions-, Log-, Archiv- und Charakterseiten: automatisches Verlinken erkannter Charaktere, Missionen und Archiv-Einträge im Text, das rückstandslose Entfernen solcher Verlinkungen und eine automatische Korrektur von Anführungszeichen und Apostrophen auf deutsche Typografie – alle drei mit Vorschau vor dem endgültigen Übernehmen.",
+        category: "spielleitung",
+      },
+      {
+        text: "Aus Sicherheitsgründen können Admins ab sofort keinen Passwort-Reset mehr für fremde Konten auslösen, auch nicht für andere Admins; das bleibt Nutzer:innen über „Passwort vergessen“ für ihr eigenes Konto vorbehalten.",
+        category: "konto",
+      },
+      {
+        text: "Das Dashboard zeigt jetzt eine „Neu“/„Aktualisiert“-Übersicht der seit dem letzten Besuch veränderten Inhalte.",
+        category: "inhalte",
+      },
+      {
+        text: "Jede eingeloggte Person darf nun auch eigene Archiv-Einträge anlegen und bearbeiten – vorher ging das nur bei Missionen und Logs.",
+        category: "inhalte",
+      },
+      {
+        text: "Alle Inhaltsformulare bekommen außerdem einen Zeitleisten-Marker-Button für Spielleitung und Admins sowie eine Auto-Verlinken-Option zum Ankreuzen.",
+        category: "inhalte",
+      },
+      {
+        text: "Charakterportraits laden jetzt effizienter.",
+        category: "charaktere",
+      },
+      {
+        text: "Mehrere Layout-Überlappungen auf schmalen Displays wurden behoben.",
+        category: "darstellung",
+      },
     ],
   },
   {
     version: "1.8",
     title: "Charaktere, Markdown-Editor, Tutorial & Dialog-Fixes",
     items: [
-      "Nutzer:innen können jetzt eigene Charaktere anlegen und bearbeiten, inklusive einer wieder direkt auf der Seite editierbaren Biografie.",
-      "Alle Inhalts-Formulare bekommen einen richtigen Markdown-Editor mit Formatierungs-Symbolleiste und einem Hover-Spickzettel für die wichtigsten Auszeichnungen.",
-      "Eine neue Tutorial-Seite erklärt alle Funktionen für Besucher:innen, Spieler:innen und Spielleitung.",
-      "Bei Gesprächen sind mehrere Mail-Benachrichtigungsfehler behoben: Antworten kamen bisher nicht zuverlässig bei allen Empfänger:innen an, der Beginn eines Gesprächs löste gar keine Mail aus, und beim Beenden wurden teils die falschen Personen benachrichtigt.",
-      "Manuell eingetippte Wikilinks funktionieren jetzt immer als echte Links, auch ohne das Auto-Verlinken-Häkchen zu setzen.",
-      "Das Profil zeigt jetzt einen gemeinsamen, farbcodierten News-Feed (neu, bearbeitet, gelöscht) statt getrennter Listen.",
-      "Mobile Geräte bekommen eine Pull-to-Refresh-Geste.",
-      "Die Navigation wurde neu geordnet: „Home“ wird zum echten Dashboard, Profil und Einstellungen sind zusammengelegt.",
+      {
+        text: "Nutzer:innen können jetzt eigene Charaktere anlegen und bearbeiten, inklusive einer wieder direkt auf der Seite editierbaren Biografie.",
+        category: "charaktere",
+      },
+      {
+        text: "Alle Inhalts-Formulare bekommen einen richtigen Markdown-Editor mit Formatierungs-Symbolleiste und einem Hover-Spickzettel für die wichtigsten Auszeichnungen.",
+        category: "inhalte",
+      },
+      {
+        text: "Eine neue Tutorial-Seite erklärt alle Funktionen für Besucher:innen, Spieler:innen und Spielleitung.",
+        category: "inhalte",
+      },
+      {
+        text: "Bei Gesprächen sind mehrere Mail-Benachrichtigungsfehler behoben: Antworten kamen bisher nicht zuverlässig bei allen Empfänger:innen an, der Beginn eines Gesprächs löste gar keine Mail aus, und beim Beenden wurden teils die falschen Personen benachrichtigt.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Manuell eingetippte Wikilinks funktionieren jetzt immer als echte Links, auch ohne das Auto-Verlinken-Häkchen zu setzen.",
+        category: "inhalte",
+      },
+      {
+        text: "Das Profil zeigt jetzt einen gemeinsamen, farbcodierten News-Feed (neu, bearbeitet, gelöscht) statt getrennter Listen.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Mobile Geräte bekommen eine Pull-to-Refresh-Geste.",
+        category: "darstellung",
+      },
+      {
+        text: "Die Navigation wurde neu geordnet: „Home“ wird zum echten Dashboard, Profil und Einstellungen sind zusammengelegt.",
+        category: "darstellung",
+      },
     ],
   },
   {
     version: "1.9",
     title: "Home als Dashboard, Profil und Settings zusammengeführt",
     items: [
-      "Das Dashboard zieht endgültig auf die eigentliche Startseite um: Eingeloggte Nutzer:innen sehen dort jetzt direkt ihre persönliche Übersicht mit Neuigkeiten, offenen Gesprächen, Lesezeichen und Abos, während anonyme Besucher:innen weiterhin die gewohnte Landingpage sehen – die alte Adresse bleibt als Weiterleitung für bestehende Lesezeichen erhalten.",
-      "Profil und Einstellungen sind endgültig zu einer einzigen Seite zusammengeführt.",
-      "Für Admins gibt es eine neue Sammel-Aktion, um alle Missionen ohne zugewiesene Spielleitung auf einen Schlag einer Person zuzuweisen, statt sie einzeln zu bearbeiten.",
-      "Das App-Icon wurde für Android als „maskable Icon“ nachgerüstet, damit es auf dem Homescreen nicht unschön beschnitten wird.",
-      "Ein Layout-Fehler im Archiv-Browser mit unpassendem Versatz am linken Rand ist behoben.",
-      "Die News-Sektion lässt sich jetzt ein- und ausklappen.",
-      "Die Pull-to-Refresh-Geste auf Mobilgeräten reagiert jetzt etwas weniger empfindlich.",
+      {
+        text: "Das Dashboard zieht endgültig auf die eigentliche Startseite um: Eingeloggte Nutzer:innen sehen dort jetzt direkt ihre persönliche Übersicht mit Neuigkeiten, offenen Gesprächen, Lesezeichen und Abos, während anonyme Besucher:innen weiterhin die gewohnte Landingpage sehen – die alte Adresse bleibt als Weiterleitung für bestehende Lesezeichen erhalten.",
+        category: "darstellung",
+      },
+      {
+        text: "Profil und Einstellungen sind endgültig zu einer einzigen Seite zusammengeführt.",
+        category: "darstellung",
+      },
+      {
+        text: "Für Admins gibt es eine neue Sammel-Aktion, um alle Missionen ohne zugewiesene Spielleitung auf einen Schlag einer Person zuzuweisen, statt sie einzeln zu bearbeiten.",
+        category: "spielleitung",
+      },
+      {
+        text: "Das App-Icon wurde für Android als „maskable Icon“ nachgerüstet, damit es auf dem Homescreen nicht unschön beschnitten wird.",
+        category: "darstellung",
+      },
+      {
+        text: "Ein Layout-Fehler im Archiv-Browser mit unpassendem Versatz am linken Rand ist behoben.",
+        category: "darstellung",
+      },
+      {
+        text: "Die News-Sektion lässt sich jetzt ein- und ausklappen.",
+        category: "darstellung",
+      },
+      {
+        text: "Die Pull-to-Refresh-Geste auf Mobilgeräten reagiert jetzt etwas weniger empfindlich.",
+        category: "darstellung",
+      },
     ],
   },
   {
     version: "1.10",
     title: "QoL-Bugfixes und PgBouncer-Anbindung",
     items: [
-      "Unter der Haube sorgt eine neue Datenbank-Verbindungsanbindung (PgBouncer) für zuverlässigere Verbindungen, ohne dass Nutzer:innen davon direkt etwas mitbekommen.",
-      "Ein CSS-Fehler ist behoben, der app-weit an vielen Stellen Abstände durcheinanderbrachte und unter anderem den Abmelden-Button in der falschen Farbe zeigte.",
-      "Bearbeitungsformulare für Missionen, Logs, Archiv-Einträge und Charaktere sind vereinheitlicht und bekommen eine neue, aufklappbare „Metadaten“-Sektion, in der bisher nicht editierbare Felder wie Alter, Fraktionen, Schiffe, Teaser-Texte oder Tags jetzt direkt bearbeitet werden können.",
-      "Ein Fehler, bei dem das Verlassen des Bearbeitungsmodus einer Seite den Bearbeitungsmodus fälschlich auf die nächste geöffnete Seite übertrug, ist behoben.",
-      "Schalter, etwa für die Sortierung, sind durch eine neu gestaltete, sanft gleitende Variante ersetzt, die auch bei mehrzeiligen Filtern sauber funktioniert.",
-      "Neu angelegte Inhalte führen nach dem Speichern direkt wieder zur Startseite zurück.",
+      {
+        text: "Unter der Haube sorgt eine neue Datenbank-Verbindungsanbindung (PgBouncer) für zuverlässigere Verbindungen, ohne dass Nutzer:innen davon direkt etwas mitbekommen.",
+        category: "darstellung",
+      },
+      {
+        text: "Ein CSS-Fehler ist behoben, der app-weit an vielen Stellen Abstände durcheinanderbrachte und unter anderem den Abmelden-Button in der falschen Farbe zeigte.",
+        category: "darstellung",
+      },
+      {
+        text: "Bearbeitungsformulare für Missionen, Logs, Archiv-Einträge und Charaktere sind vereinheitlicht und bekommen eine neue, aufklappbare „Metadaten“-Sektion, in der bisher nicht editierbare Felder wie Alter, Fraktionen, Schiffe, Teaser-Texte oder Tags jetzt direkt bearbeitet werden können.",
+        category: "inhalte",
+      },
+      {
+        text: "Ein Fehler, bei dem das Verlassen des Bearbeitungsmodus einer Seite den Bearbeitungsmodus fälschlich auf die nächste geöffnete Seite übertrug, ist behoben.",
+        category: "inhalte",
+      },
+      {
+        text: "Schalter, etwa für die Sortierung, sind durch eine neu gestaltete, sanft gleitende Variante ersetzt, die auch bei mehrzeiligen Filtern sauber funktioniert.",
+        category: "darstellung",
+      },
+      {
+        text: "Neu angelegte Inhalte führen nach dem Speichern direkt wieder zur Startseite zurück.",
+        category: "inhalte",
+      },
     ],
   },
   {
@@ -239,41 +853,128 @@ export const CHANGELOG: ChangelogEntry[] = [
     title:
       "Follows, Admin/User-Trennung, Missions-Teilnehmer & Benachrichtigungen",
     items: [
-      "Eine neue Follow-Verwaltung zeigt alle abonnierten Inhalte an einem Ort, Charaktere und User lassen sich jetzt ebenfalls abonnieren.",
-      "Abonnenten bekommen eine Mail/Push-Benachrichtigung mit Vorschau, sobald sich etwas am abonnierten Inhalt tut — etwa ein neuer Logbucheintrag oder eine neue Mission-Teilnahme.",
-      "Missionen können jetzt teilnehmende Charaktere per Mehrfachauswahl zugewiesen bekommen, inklusive automatischer Benachrichtigung der beteiligten Spieler und ihrer Abonnenten.",
-      "Die Nutzerverwaltung wurde neu aufgeteilt in eine schlanke Administration (/admin), das eigene Profil (/user, ganz ohne User-ID in der URL) und eine neue öffentliche Nutzerübersicht (/users).",
-      "Die frühere GitHub-Vault-Anbindung wurde vollständig durch ein waschechtes Datenbank-Backup ersetzt.",
-      "Auf der Mission-Seite gibt es jetzt einen „Neues Log“-Button für Teilnehmer.",
-      "Inhalte lassen sich über einen neuen Teilen-Button mit Link-Kopieren verschicken.",
-      "Dieses Changelog hier ist ebenfalls neu.",
-      "Die „Neu“/„Aktualisiert“-Übersicht auf dem Dashboard bezieht sich jetzt korrekt auf den letzten Dashboard-Besuch statt auf den letzten Login.",
-      "Admins sehen in der Nutzerverwaltung zusätzlich, wann eine Person zuletzt überhaupt eine Seite aufgerufen hat.",
-      "Admins können sich jetzt außerdem per Checkbox-Auswahl über jedes neu angelegte oder bearbeitete Charakter/Missionen/Mission-Logs/Archiv-Einträge benachrichtigen lassen, unabhängig von eigenen Abos.",
-      "Auf den Inhalts-Detailseiten können Admins nun auch die Sichtbarkeit (Privat/GM/Öffentlich) direkt umstellen, nicht mehr nur der Owner selbst.",
-      "Eine neue Inhaltsübersicht listet alle Inhalte über alle User hinweg, filter-/gruppierbar nach Owner und Kategorie, samt Mass-Edit-Owner-Zuordnung per Checkbox-Auswahl.",
-      "Die Buttons in offenen Gesprächen (Beenden/Löschen) sind außerdem zu platzsparenden Icon-Buttons geworden.",
-      "Behoben: der mobile Lesemodus blendete die Sidebar nicht mehr aus.",
-      "Behoben: der Bearbeiten-Button auf der Mission-Log-Seite tat nichts.",
-      "Ein ernsterer Fehler ist ebenfalls behoben: seit den letzten Änderungen konnten einzelne Seitenaufrufe (u.a. das Passwort-Setzen über den Mail-Link) auf unbestimmte Zeit hängen bleiben, weil ein Hintergrund-Datenbankschreibvorgang die einzige Datenbankverbindung einer Serverinstanz blockieren konnte.",
-      "Umschalter (z.B. bei Sortierung/Filtern) zeigen die aktive Option jetzt direkt eingefärbt statt über einen gleitenden Balken.",
-      "Die Vorschau beim Entfernen von Wikilinks fasst gleiche Verlinkungen jetzt gebündelt mit Anzahl zusammen (wie beim Autolinking).",
-      "Die Typografie-Korrektur-Funktion wurde komplett entfernt.",
-      "Nachrichten in Gesprächen erscheinen jetzt chronologisch (älteste zuerst) statt umgekehrt.",
+      {
+        text: "Eine neue Follow-Verwaltung zeigt alle abonnierten Inhalte an einem Ort, Charaktere und User lassen sich jetzt ebenfalls abonnieren.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Abonnenten bekommen eine Mail/Push-Benachrichtigung mit Vorschau, sobald sich etwas am abonnierten Inhalt tut — etwa ein neuer Logbucheintrag oder eine neue Mission-Teilnahme.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Missionen können jetzt teilnehmende Charaktere per Mehrfachauswahl zugewiesen bekommen, inklusive automatischer Benachrichtigung der beteiligten Spieler und ihrer Abonnenten.",
+        category: "inhalte",
+      },
+      {
+        text: "Die Nutzerverwaltung wurde neu aufgeteilt in eine schlanke Administration (/admin), das eigene Profil (/user, ganz ohne User-ID in der URL) und eine neue öffentliche Nutzerübersicht (/users).",
+        category: "spielleitung",
+      },
+      {
+        text: "Die frühere GitHub-Vault-Anbindung wurde vollständig durch ein waschechtes Datenbank-Backup ersetzt.",
+        category: "spielleitung",
+      },
+      {
+        text: "Auf der Mission-Seite gibt es jetzt einen „Neues Log“-Button für Teilnehmer.",
+        category: "inhalte",
+      },
+      {
+        text: "Inhalte lassen sich über einen neuen Teilen-Button mit Link-Kopieren verschicken.",
+        category: "export",
+      },
+      {
+        text: "Dieses Changelog hier ist ebenfalls neu.",
+        category: "darstellung",
+      },
+      {
+        text: "Die „Neu“/„Aktualisiert“-Übersicht auf dem Dashboard bezieht sich jetzt korrekt auf den letzten Dashboard-Besuch statt auf den letzten Login.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Admins sehen in der Nutzerverwaltung zusätzlich, wann eine Person zuletzt überhaupt eine Seite aufgerufen hat.",
+        category: "spielleitung",
+      },
+      {
+        text: "Admins können sich jetzt außerdem per Checkbox-Auswahl über jedes neu angelegte oder bearbeitete Charakter/Missionen/Mission-Logs/Archiv-Einträge benachrichtigen lassen, unabhängig von eigenen Abos.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Auf den Inhalts-Detailseiten können Admins nun auch die Sichtbarkeit (Privat/GM/Öffentlich) direkt umstellen, nicht mehr nur der Owner selbst.",
+        category: "spielleitung",
+      },
+      {
+        text: "Eine neue Inhaltsübersicht listet alle Inhalte über alle User hinweg, filter-/gruppierbar nach Owner und Kategorie, samt Mass-Edit-Owner-Zuordnung per Checkbox-Auswahl.",
+        category: "spielleitung",
+      },
+      {
+        text: "Die Buttons in offenen Gesprächen (Beenden/Löschen) sind außerdem zu platzsparenden Icon-Buttons geworden.",
+        category: "darstellung",
+      },
+      {
+        text: "Behoben: der mobile Lesemodus blendete die Sidebar nicht mehr aus.",
+        category: "darstellung",
+      },
+      {
+        text: "Behoben: der Bearbeiten-Button auf der Mission-Log-Seite tat nichts.",
+        category: "inhalte",
+      },
+      {
+        text: "Ein ernsterer Fehler ist ebenfalls behoben: seit den letzten Änderungen konnten einzelne Seitenaufrufe (u.a. das Passwort-Setzen über den Mail-Link) auf unbestimmte Zeit hängen bleiben, weil ein Hintergrund-Datenbankschreibvorgang die einzige Datenbankverbindung einer Serverinstanz blockieren konnte.",
+        category: "konto",
+      },
+      {
+        text: "Umschalter (z.B. bei Sortierung/Filtern) zeigen die aktive Option jetzt direkt eingefärbt statt über einen gleitenden Balken.",
+        category: "darstellung",
+      },
+      {
+        text: "Die Vorschau beim Entfernen von Wikilinks fasst gleiche Verlinkungen jetzt gebündelt mit Anzahl zusammen (wie beim Autolinking).",
+        category: "spielleitung",
+      },
+      {
+        text: "Die Typografie-Korrektur-Funktion wurde komplett entfernt.",
+        category: "inhalte",
+      },
+      {
+        text: "Nachrichten in Gesprächen erscheinen jetzt chronologisch (älteste zuerst) statt umgekehrt.",
+        category: "inhalte",
+      },
     ],
   },
   {
     version: "1.12",
     title: "Sortier-/filterbare Nutzerübersicht & mobile Darstellungsfixes",
     items: [
-      "Die Nutzerübersicht (/users) zeigt alle User jetzt in einer nach Name oder Rolle sortier- und filterbaren Tabelle statt einer schlichten Liste.",
-      "Einzelne User lassen sich dort wie andere Inhalte mit einem Lesezeichen versehen — der dort wenig sinnvolle Teilen-Button ist verschwunden, auf der einzelnen Profilseite wandert der Folgen-Button dafür sichtbar nach oben rechts.",
-      "Mehrere Darstellungsfehler auf schmalen Bildschirmen sind behoben: der Typ-Filter auf der Such-Seite hatte teils einen sichtbaren Versatz im farbigen Hintergrund, mehrere Umschalter (z.B. Datum/Autor auf Missions- und Charakterseiten) hatten eine unschöne Lücke zwischen der aktiven Einfärbung und der Trennlinie, der Navigationstext im eingeloggten Header-Menü skalierte nicht mehr mit der Fensterbreite, und mehrere Buttons/Formulare (Profil, Suche, „Meine Inhalte“) sprengten auf dem Handy noch die Zeile statt sich sauber untereinander anzuordnen.",
-      "Bearbeiten/Löschen einzelner Nachrichten in offenen Gesprächen sind jetzt platzsparende Icon-Buttons (wie das Beenden eines Follows).",
-      "Ein nicht funktionierender Bearbeiten-Button auf abgeschlossenen Gesprächsseiten im Archiv wurde entfernt.",
-      "Der Button zum Zuordnen owner-loser Missionen im Adminbereich heißt jetzt schlicht „Zuordnen“ statt einer redundanten, längeren Beschriftung.",
-      "Sicherheitsfix: ein deaktiviertes Konto wird jetzt sofort ausgeloggt, statt erst nach Ablauf der Sitzung (bis zu 30 Tage) tatsächlich gesperrt zu sein.",
-      "Sicherheitsfix: eine Passwortänderung meldet jetzt auch alle anderen angemeldeten Geräte/Browser ab statt nur das aktuelle.",
+      {
+        text: "Die Nutzerübersicht (/users) zeigt alle User jetzt in einer nach Name oder Rolle sortier- und filterbaren Tabelle statt einer schlichten Liste.",
+        category: "spielleitung",
+      },
+      {
+        text: "Einzelne User lassen sich dort wie andere Inhalte mit einem Lesezeichen versehen — der dort wenig sinnvolle Teilen-Button ist verschwunden, auf der einzelnen Profilseite wandert der Folgen-Button dafür sichtbar nach oben rechts.",
+        category: "inhalte",
+      },
+      {
+        text: "Mehrere Darstellungsfehler auf schmalen Bildschirmen sind behoben: der Typ-Filter auf der Such-Seite hatte teils einen sichtbaren Versatz im farbigen Hintergrund, mehrere Umschalter (z.B. Datum/Autor auf Missions- und Charakterseiten) hatten eine unschöne Lücke zwischen der aktiven Einfärbung und der Trennlinie, der Navigationstext im eingeloggten Header-Menü skalierte nicht mehr mit der Fensterbreite, und mehrere Buttons/Formulare (Profil, Suche, „Meine Inhalte“) sprengten auf dem Handy noch die Zeile statt sich sauber untereinander anzuordnen.",
+        category: "darstellung",
+      },
+      {
+        text: "Bearbeiten/Löschen einzelner Nachrichten in offenen Gesprächen sind jetzt platzsparende Icon-Buttons (wie das Beenden eines Follows).",
+        category: "darstellung",
+      },
+      {
+        text: "Ein nicht funktionierender Bearbeiten-Button auf abgeschlossenen Gesprächsseiten im Archiv wurde entfernt.",
+        category: "inhalte",
+      },
+      {
+        text: "Der Button zum Zuordnen owner-loser Missionen im Adminbereich heißt jetzt schlicht „Zuordnen“ statt einer redundanten, längeren Beschriftung.",
+        category: "spielleitung",
+      },
+      {
+        text: "Sicherheitsfix: ein deaktiviertes Konto wird jetzt sofort ausgeloggt, statt erst nach Ablauf der Sitzung (bis zu 30 Tage) tatsächlich gesperrt zu sein.",
+        category: "konto",
+      },
+      {
+        text: "Sicherheitsfix: eine Passwortänderung meldet jetzt auch alle anderen angemeldeten Geräte/Browser ab statt nur das aktuelle.",
+        category: "konto",
+      },
     ],
   },
   {
@@ -281,11 +982,26 @@ export const CHANGELOG: ChangelogEntry[] = [
     title:
       "Login-Sicherheit: Brute-Force-Sperre, Admin-Audit-Log, Sitzungen abmelden",
     items: [
-      "Zu viele fehlgeschlagene Anmeldeversuche in kurzer Zeit sperren jetzt vorübergehend, unabhängig davon, ob die eingegebene Adresse überhaupt existiert, und die Login-Fehlermeldung verrät nicht mehr, ob eine E-Mail-Adresse registriert ist.",
-      "„Passwort vergessen“ kann nicht mehr beliebig oft hintereinander eine Mail an die betroffene Person und alle Admins auslösen.",
-      "Ein neues Audit-Log im Adminbereich zeigt, wer wann welche Useraccount-Aktion (Anlegen, Rolle ändern, (De-)Aktivieren, Löschen, Passwort-Reset auslösen) durchgeführt hat.",
-      "Im eigenen Profil gibt es außerdem einen neuen „Auf allen anderen Geräten abmelden“-Knopf, mit dem sich bei Verdacht auf ein fremdes angemeldetes Gerät alle anderen Sitzungen sofort beenden lassen, ohne dafür das eigene Passwort ändern zu müssen.",
-      "Admins können jetzt außerdem jeden anderen Useraccount direkt aus der Nutzerverwaltung heraus auf allen Geräten abmelden, etwa bei einem Verdacht auf einen kompromittierten oder unbeaufsichtigten Account.",
+      {
+        text: "Zu viele fehlgeschlagene Anmeldeversuche in kurzer Zeit sperren jetzt vorübergehend, unabhängig davon, ob die eingegebene Adresse überhaupt existiert, und die Login-Fehlermeldung verrät nicht mehr, ob eine E-Mail-Adresse registriert ist.",
+        category: "konto",
+      },
+      {
+        text: "„Passwort vergessen“ kann nicht mehr beliebig oft hintereinander eine Mail an die betroffene Person und alle Admins auslösen.",
+        category: "konto",
+      },
+      {
+        text: "Ein neues Audit-Log im Adminbereich zeigt, wer wann welche Useraccount-Aktion (Anlegen, Rolle ändern, (De-)Aktivieren, Löschen, Passwort-Reset auslösen) durchgeführt hat.",
+        category: "spielleitung",
+      },
+      {
+        text: "Im eigenen Profil gibt es außerdem einen neuen „Auf allen anderen Geräten abmelden“-Knopf, mit dem sich bei Verdacht auf ein fremdes angemeldetes Gerät alle anderen Sitzungen sofort beenden lassen, ohne dafür das eigene Passwort ändern zu müssen.",
+        category: "konto",
+      },
+      {
+        text: "Admins können jetzt außerdem jeden anderen Useraccount direkt aus der Nutzerverwaltung heraus auf allen Geräten abmelden, etwa bei einem Verdacht auf einen kompromittierten oder unbeaufsichtigten Account.",
+        category: "spielleitung",
+      },
     ],
   },
   {
@@ -293,11 +1009,26 @@ export const CHANGELOG: ChangelogEntry[] = [
     title:
       "Admin-Bereich neu strukturiert: eigene Unterseiten für User, DB, Scripts",
     items: [
-      "Der Adminbereich war bisher eine einzige lange Seite – jetzt führt ein Dropdown-Menü über „Admin“ im Header zu eigenen Unterseiten für User, Charaktere, DB, Scripts, Inhalte und Audit-Log.",
-      "Die Nutzerübersicht zeigt jetzt eine durchsuchbare, sortier- und filterbare Tabelle inklusive der Zeitpunkte des letzten Logins und Seitenaufrufs, die eigentliche Kontoverwaltung findet sich gebündelt auf der Detailseite eines Users.",
-      "Neu auf der DB-Seite: Admins können sich Datenbank-Tabellen jetzt direkt und rein lesend ansehen (inklusive Sortierung, Filtern und einem freien SQL-Abfragefeld), ohne dafür erst ein Backup exportieren zu müssen.",
-      "Das Audit-Log zeigt zusätzlich, welche Inhalte in den letzten drei Tagen hinzugefügt, bearbeitet oder gelöscht wurden.",
-      "Wer eine Mission oder einen Archiv-Eintrag abonniert hat, bekommt jetzt außerdem eine Benachrichtigung, wenn genau dieser Inhalt bearbeitet wird – bisher gab es das nur bei abonnierten Charakteren.",
+      {
+        text: "Der Adminbereich war bisher eine einzige lange Seite – jetzt führt ein Dropdown-Menü über „Admin“ im Header zu eigenen Unterseiten für User, Charaktere, DB, Scripts, Inhalte und Audit-Log.",
+        category: "spielleitung",
+      },
+      {
+        text: "Die Nutzerübersicht zeigt jetzt eine durchsuchbare, sortier- und filterbare Tabelle inklusive der Zeitpunkte des letzten Logins und Seitenaufrufs, die eigentliche Kontoverwaltung findet sich gebündelt auf der Detailseite eines Users.",
+        category: "spielleitung",
+      },
+      {
+        text: "Neu auf der DB-Seite: Admins können sich Datenbank-Tabellen jetzt direkt und rein lesend ansehen (inklusive Sortierung, Filtern und einem freien SQL-Abfragefeld), ohne dafür erst ein Backup exportieren zu müssen.",
+        category: "spielleitung",
+      },
+      {
+        text: "Das Audit-Log zeigt zusätzlich, welche Inhalte in den letzten drei Tagen hinzugefügt, bearbeitet oder gelöscht wurden.",
+        category: "spielleitung",
+      },
+      {
+        text: "Wer eine Mission oder einen Archiv-Eintrag abonniert hat, bekommt jetzt außerdem eine Benachrichtigung, wenn genau dieser Inhalt bearbeitet wird – bisher gab es das nur bei abonnierten Charakteren.",
+        category: "benachrichtigungen",
+      },
     ],
   },
   {
@@ -305,156 +1036,462 @@ export const CHANGELOG: ChangelogEntry[] = [
     title:
       "Rollen-Hochstufung behoben, Markdown-Import für Admins, Dialoge überarbeitet",
     items: [
-      "Ein hartnäckiger Fehler ist behoben: bei jeder technischen Datenbank-Aktualisierung wurde die Rolle bestehender Spielleitungs-Accounts automatisch auf Administration hochgestuft, statt unverändert zu bleiben.",
-      "Die im Header angezeigten Anmeldedaten können jetzt nicht mehr über einen Zwischenspeicher an die falsche Person ausgeliefert werden.",
-      "Unter „Import“ (Adminbereich) lassen sich Markdown-Dateien im gewohnten Vault-Format hochladen — Archiv-Einträge, Missionen, Charaktere und Missionslogs entstehen daraus nach individueller, durchblätterbarer Vorschau mit vollständig editierbaren Feldern (inklusive aller Metadaten wie Attribute, Verweise und Eigentümer).",
-      "Nur noch die Administration darf fremde Nachrichten in jedem Gespräch bearbeiten/löschen und dessen Besitzer:in ändern, auch in bereits abgeschlossenen Gesprächen — nicht mehr die Spielleitung.",
-      "Wer mit mehreren eigenen Charakteren an einem Gespräch teilnimmt, kann nicht mehr zweimal hintereinander mit demselben Charakter antworten.",
-      "Abgeschlossene Gespräche zeigen standardmäßig einen zusammenhängenden, automatisch generierten Lesetext statt einzelner Nachrichtenkarten, per Umschalter aber weiterhin auch als Kartenansicht anzeigbar.",
-      "Gespräche können jetzt schon bei der Erstellung (per Mehrfachauswahl) oder jederzeit danach mehr als zwei Teilnehmende haben — sobald mehr als zwei mitspielen, muss man sich das Antwortrecht erst für zwei Stunden reservieren, mit Sperr-Anzeige und optionaler Mail/Push-Benachrichtigung, sobald die Sperre endet.",
-      "Offene Gespräche aktualisieren sich automatisch (neue Nachrichten, Antwortrecht) ohne manuelles Neuladen, inklusive sofortiger Aktualisierung nach dem eigenen Senden oder Reservieren.",
-      "Das manuelle DB-Backup (Export wie Import) fragt jetzt, ob lokal oder direkt im Cloud-Speicher gesichert bzw. von dort eingespielt werden soll; das separate User-Backup im Adminbereich bietet denselben Cloud-Weg.",
-      "Auf Charakter-, Missions-, Missionslog-, Archiv-Eintrag- und Gesprächsseiten gibt es jetzt einen erweiterten „Teilen“-Knopf (Link kopieren, WhatsApp, Markdown- oder PDF-Download) — bei noch offenen, laufenden Gesprächen bleibt er ausgeblendet, da sich deren Inhalt noch ändert.",
-      "Die Darstellung auf schmalen Bildschirmen wurde an vielen Stellen aufgeräumt: Editor-Buttons sind jetzt kompakte Icon-Buttons statt teils abgeschnittener Textknöpfe, mehrere lange Beschriftungen wurden gekürzt, und Buttons passen sich generell besser an die verfügbare Breite an.",
-      "Die meisten Seiten nutzen jetzt die volle verfügbare Bildschirmbreite statt einer festen, eher schmalen Höchstbreite.",
-      "Unerwartete Serverfehler zeigen jetzt eine gestaltete LCARS-Fehlerseite statt einer nackten Absturzmeldung: alle Besucher sehen eine freundliche Meldung mit Referenzcode, die Administration sieht zusätzlich die genaue Fehlermeldung samt Stacktrace, und jeder Serverfehler wird dauerhaft protokolliert und ist im Adminbereich unter „Fehler-Log“ einsehbar.",
-      "Behoben: Zeitstempel im Adminbereich (z. B. beim Bearbeiten eines Users) zeigten bisher die falsche Zeitzone statt der mitteleuropäischen Zeit.",
-      "Alle Markdown-Editor-Felder haben jetzt eine Rechtschreibprüfung des Browsers, die sich im Profil unter „Editor“ bei Bedarf abschalten lässt.",
-      "Gelöschte Inhalte (Charaktere, Missionen, Missionslogs, Archiv-Einträge, Gespräche) landen jetzt zunächst im neuen Papierkorb (Adminbereich) statt sofort unwiderruflich gelöscht zu werden — sie verschwinden dabei sofort aus Suche, Timeline und allen Übersichten, lassen sich dort aber 7 Tage lang wiederherstellen; außerdem können Admins jetzt auch Charaktere und Archiv-Einträge direkt löschen.",
-      "Charaktere, Missionen, Missionslogs und Archiv-Einträge können jetzt außerdem mehrere Bilder haben — ein neuer Bilder-Knopf auf der jeweiligen Detailseite lädt sie hoch und zeigt sie als Galerie an; Admins können im Adminbereich alle hochgeladenen Bilder an einem Ort durchsuchen und einzeln löschen.",
-      "Bei Charakteren lässt sich eines der hochgeladenen Bilder jetzt direkt als Profilbild festlegen, ein Klick auf das Portrait öffnet ein durchblätterbares Karussell mit allen hochgeladenen Bildern.",
-      "Bei Missionen, Missionslogs und Archiv-Einträgen lässt sich ein bereits hochgeladenes Bild direkt aus der Formatierungsleiste des Markdown-Editors in den Text einfügen, ein Klick darauf öffnet ebenfalls die Vollbild-Ansicht mit Karussell.",
-      "Beim Anlegen und Bearbeiten von Charakteren, Missionen, Missionslogs und Archiv-Einträgen lässt sich der Inhalt jetzt zunächst als Entwurf speichern — er bleibt bis zur Veröffentlichung für niemanden außer der eigenen Person sichtbar (Ausnahme: Missionen sehen alle aus der Spielleitung), erscheint aber bereits deutlich markiert unter „Meine Inhalte“.",
-      "„Meine Inhalte“ zeigt eigene Entwürfe jetzt gesammelt oben in einer eigenen Übersicht, Sichtbarkeit/Bearbeiten/Löschen stehen bei jedem Eintrag als kompakte Symbol-Knöpfe nebeneinander, und eigene Charaktere, Gespräche und Missionen lassen sich jetzt genau wie Einsatzberichte und Archiv-Einträge direkt dort löschen.",
-      "Im Adminbereich zeigen jetzt auch das Audit-Log und das Fehler-Log dasselbe Zeilendetails-Fenster wie die DB-Tabellenansicht, inklusive eines Knopfs, der den gesamten Zeileninhalt in die Zwischenablage kopiert.",
-      "Behoben: Das Bearbeiten eines eigenen Einsatzberichts schlug mit einem Serverfehler fehl.",
-      "In offenen Gesprächen erscheint die eigene gesendete Nachricht bzw. eine gerade reservierte Antwortrecht-Sperre jetzt sofort, statt bis zu 8 Sekunden auf die automatische Aktualisierung zu warten.",
-      "Die Spielleitung bekommt jetzt ein eigenes „Leitung“-Dropdown im Header (analog zum Admin-Menü) mit drei Übersichten: alle Missionen mit Bearbeiten/Löschen/Besitzer:in-Zuordnung direkt in der Liste, die bestehende Charakter-Zuweisung sowie alle aktuell offenen Gespräche — auch ohne eigene Teilnahme, mit lesendem Zugriff auf das jeweilige Gespräch.",
-      "Über jedes neu begonnene Gespräch wird jetzt außerdem jeder aktive GM-Account automatisch per Mail/Push informiert, unabhängig davon, ob er selbst daran teilnimmt.",
-      "Die Vollbild-Anzeige von Bildern (Charakter-Portrait-Karussell und eingebettete Bilder in Texten) hat jetzt Symbol- statt Textknöpfe zum Schließen und Durchblättern.",
-      "Behoben: Der Klick auf „Home“ in der Navigation führte gelegentlich zu einem kurzen Fehler und einer sichtbaren Vollseiten-Neuladung statt einer nahtlosen Navigation.",
-      "Die beiden Admin/Spielleitungs-Werkzeuge auf Inhaltsseiten zum automatischen Verlinken bzw. Entfernen von Verlinkungen sind jetzt ein einzelner Knopf statt zweier getrennter Knöpfe; er zeigt beim Öffnen der Seite automatisch den vermutlich sinnvolleren Modus (Verlinken, solange es noch etwas zu verknüpfen gibt, sonst Entfernen).",
-      "Das „Admin“-Menü im Header zeigt Charaktere, Missionen und Gespräche nicht mehr an — diese drei bleiben dem „Leitung“-Menü der Spielleitung vorbehalten.",
-      "Bei Gesprächen mit mehreren Teilnehmenden kann das Antwortrecht nur noch reserviert werden, wenn der eigene Charakter nicht zuletzt am Zug war; der antwortende Charakter wird immer angezeigt, bei mehreren eigenen Teilnehmer-Charakteren ist er wählbar; Admins können hängende Reservierungen sofort freigeben.",
-      "Behoben: Das Verlinken/Entfernen-Werkzeug auf Inhaltsseiten war für die Spielleitung zwar sichtbar, ein Klick scheiterte aber immer an einer Admin-only-Berechtigungsprüfung.",
-      "Im Profil gibt es jetzt eine Charakter-Farben-Liste mit einem Farbwähler (sechs LCARS-Töne oder eine frei per Color-Picker gewählte Hex-Farbe, mit Vorschau und Sperre bereits vergebener Farben) für jeden deiner Charaktere einzeln — spielst du mehrere, kann also jeder seine eigene Farbe haben statt einer gemeinsamen. Diese Farbe färbt sowohl die wörtliche Rede (inklusive Anführungszeichen) im Fließtext-Modus abgeschlossener Gespräche als auch die Nachrichten-Karten in offenen wie geschlossenen Gesprächen ein.",
+      {
+        text: "Ein hartnäckiger Fehler ist behoben: bei jeder technischen Datenbank-Aktualisierung wurde die Rolle bestehender Spielleitungs-Accounts automatisch auf Administration hochgestuft, statt unverändert zu bleiben.",
+        category: "konto",
+      },
+      {
+        text: "Die im Header angezeigten Anmeldedaten können jetzt nicht mehr über einen Zwischenspeicher an die falsche Person ausgeliefert werden.",
+        category: "konto",
+      },
+      {
+        text: "Unter „Import“ (Adminbereich) lassen sich Markdown-Dateien im gewohnten Vault-Format hochladen — Archiv-Einträge, Missionen, Charaktere und Missionslogs entstehen daraus nach individueller, durchblätterbarer Vorschau mit vollständig editierbaren Feldern (inklusive aller Metadaten wie Attribute, Verweise und Eigentümer).",
+        category: "spielleitung",
+      },
+      {
+        text: "Nur noch die Administration darf fremde Nachrichten in jedem Gespräch bearbeiten/löschen und dessen Besitzer:in ändern, auch in bereits abgeschlossenen Gesprächen — nicht mehr die Spielleitung.",
+        category: "spielleitung",
+      },
+      {
+        text: "Wer mit mehreren eigenen Charakteren an einem Gespräch teilnimmt, kann nicht mehr zweimal hintereinander mit demselben Charakter antworten.",
+        category: "inhalte",
+      },
+      {
+        text: "Abgeschlossene Gespräche zeigen standardmäßig einen zusammenhängenden, automatisch generierten Lesetext statt einzelner Nachrichtenkarten, per Umschalter aber weiterhin auch als Kartenansicht anzeigbar.",
+        category: "inhalte",
+      },
+      {
+        text: "Gespräche können jetzt schon bei der Erstellung (per Mehrfachauswahl) oder jederzeit danach mehr als zwei Teilnehmende haben — sobald mehr als zwei mitspielen, muss man sich das Antwortrecht erst für zwei Stunden reservieren, mit Sperr-Anzeige und optionaler Mail/Push-Benachrichtigung, sobald die Sperre endet.",
+        category: "inhalte",
+      },
+      {
+        text: "Offene Gespräche aktualisieren sich automatisch (neue Nachrichten, Antwortrecht) ohne manuelles Neuladen, inklusive sofortiger Aktualisierung nach dem eigenen Senden oder Reservieren.",
+        category: "inhalte",
+      },
+      {
+        text: "Das manuelle DB-Backup (Export wie Import) fragt jetzt, ob lokal oder direkt im Cloud-Speicher gesichert bzw. von dort eingespielt werden soll; das separate User-Backup im Adminbereich bietet denselben Cloud-Weg.",
+        category: "spielleitung",
+      },
+      {
+        text: "Auf Charakter-, Missions-, Missionslog-, Archiv-Eintrag- und Gesprächsseiten gibt es jetzt einen erweiterten „Teilen“-Knopf (Link kopieren, WhatsApp, Markdown- oder PDF-Download) — bei noch offenen, laufenden Gesprächen bleibt er ausgeblendet, da sich deren Inhalt noch ändert.",
+        category: "export",
+      },
+      {
+        text: "Die Darstellung auf schmalen Bildschirmen wurde an vielen Stellen aufgeräumt: Editor-Buttons sind jetzt kompakte Icon-Buttons statt teils abgeschnittener Textknöpfe, mehrere lange Beschriftungen wurden gekürzt, und Buttons passen sich generell besser an die verfügbare Breite an.",
+        category: "darstellung",
+      },
+      {
+        text: "Die meisten Seiten nutzen jetzt die volle verfügbare Bildschirmbreite statt einer festen, eher schmalen Höchstbreite.",
+        category: "darstellung",
+      },
+      {
+        text: "Unerwartete Serverfehler zeigen jetzt eine gestaltete LCARS-Fehlerseite statt einer nackten Absturzmeldung: alle Besucher sehen eine freundliche Meldung mit Referenzcode, die Administration sieht zusätzlich die genaue Fehlermeldung samt Stacktrace, und jeder Serverfehler wird dauerhaft protokolliert und ist im Adminbereich unter „Fehler-Log“ einsehbar.",
+        category: "darstellung",
+      },
+      {
+        text: "Behoben: Zeitstempel im Adminbereich (z. B. beim Bearbeiten eines Users) zeigten bisher die falsche Zeitzone statt der mitteleuropäischen Zeit.",
+        category: "spielleitung",
+      },
+      {
+        text: "Alle Markdown-Editor-Felder haben jetzt eine Rechtschreibprüfung des Browsers, die sich im Profil unter „Editor“ bei Bedarf abschalten lässt.",
+        category: "inhalte",
+      },
+      {
+        text: "Gelöschte Inhalte (Charaktere, Missionen, Missionslogs, Archiv-Einträge, Gespräche) landen jetzt zunächst im neuen Papierkorb (Adminbereich) statt sofort unwiderruflich gelöscht zu werden — sie verschwinden dabei sofort aus Suche, Timeline und allen Übersichten, lassen sich dort aber 7 Tage lang wiederherstellen; außerdem können Admins jetzt auch Charaktere und Archiv-Einträge direkt löschen.",
+        category: "inhalte",
+      },
+      {
+        text: "Charaktere, Missionen, Missionslogs und Archiv-Einträge können jetzt außerdem mehrere Bilder haben — ein neuer Bilder-Knopf auf der jeweiligen Detailseite lädt sie hoch und zeigt sie als Galerie an; Admins können im Adminbereich alle hochgeladenen Bilder an einem Ort durchsuchen und einzeln löschen.",
+        category: "inhalte",
+      },
+      {
+        text: "Bei Charakteren lässt sich eines der hochgeladenen Bilder jetzt direkt als Profilbild festlegen, ein Klick auf das Portrait öffnet ein durchblätterbares Karussell mit allen hochgeladenen Bildern.",
+        category: "charaktere",
+      },
+      {
+        text: "Bei Missionen, Missionslogs und Archiv-Einträgen lässt sich ein bereits hochgeladenes Bild direkt aus der Formatierungsleiste des Markdown-Editors in den Text einfügen, ein Klick darauf öffnet ebenfalls die Vollbild-Ansicht mit Karussell.",
+        category: "inhalte",
+      },
+      {
+        text: "Beim Anlegen und Bearbeiten von Charakteren, Missionen, Missionslogs und Archiv-Einträgen lässt sich der Inhalt jetzt zunächst als Entwurf speichern — er bleibt bis zur Veröffentlichung für niemanden außer der eigenen Person sichtbar (Ausnahme: Missionen sehen alle aus der Spielleitung), erscheint aber bereits deutlich markiert unter „Meine Inhalte“.",
+        category: "inhalte",
+      },
+      {
+        text: "„Meine Inhalte“ zeigt eigene Entwürfe jetzt gesammelt oben in einer eigenen Übersicht, Sichtbarkeit/Bearbeiten/Löschen stehen bei jedem Eintrag als kompakte Symbol-Knöpfe nebeneinander, und eigene Charaktere, Gespräche und Missionen lassen sich jetzt genau wie Einsatzberichte und Archiv-Einträge direkt dort löschen.",
+        category: "inhalte",
+      },
+      {
+        text: "Im Adminbereich zeigen jetzt auch das Audit-Log und das Fehler-Log dasselbe Zeilendetails-Fenster wie die DB-Tabellenansicht, inklusive eines Knopfs, der den gesamten Zeileninhalt in die Zwischenablage kopiert.",
+        category: "spielleitung",
+      },
+      {
+        text: "Behoben: Das Bearbeiten eines eigenen Einsatzberichts schlug mit einem Serverfehler fehl.",
+        category: "inhalte",
+      },
+      {
+        text: "In offenen Gesprächen erscheint die eigene gesendete Nachricht bzw. eine gerade reservierte Antwortrecht-Sperre jetzt sofort, statt bis zu 8 Sekunden auf die automatische Aktualisierung zu warten.",
+        category: "inhalte",
+      },
+      {
+        text: "Die Spielleitung bekommt jetzt ein eigenes „Leitung“-Dropdown im Header (analog zum Admin-Menü) mit drei Übersichten: alle Missionen mit Bearbeiten/Löschen/Besitzer:in-Zuordnung direkt in der Liste, die bestehende Charakter-Zuweisung sowie alle aktuell offenen Gespräche — auch ohne eigene Teilnahme, mit lesendem Zugriff auf das jeweilige Gespräch.",
+        category: "spielleitung",
+      },
+      {
+        text: "Über jedes neu begonnene Gespräch wird jetzt außerdem jeder aktive GM-Account automatisch per Mail/Push informiert, unabhängig davon, ob er selbst daran teilnimmt.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Die Vollbild-Anzeige von Bildern (Charakter-Portrait-Karussell und eingebettete Bilder in Texten) hat jetzt Symbol- statt Textknöpfe zum Schließen und Durchblättern.",
+        category: "darstellung",
+      },
+      {
+        text: "Behoben: Der Klick auf „Home“ in der Navigation führte gelegentlich zu einem kurzen Fehler und einer sichtbaren Vollseiten-Neuladung statt einer nahtlosen Navigation.",
+        category: "darstellung",
+      },
+      {
+        text: "Die beiden Admin/Spielleitungs-Werkzeuge auf Inhaltsseiten zum automatischen Verlinken bzw. Entfernen von Verlinkungen sind jetzt ein einzelner Knopf statt zweier getrennter Knöpfe; er zeigt beim Öffnen der Seite automatisch den vermutlich sinnvolleren Modus (Verlinken, solange es noch etwas zu verknüpfen gibt, sonst Entfernen).",
+        category: "spielleitung",
+      },
+      {
+        text: "Das „Admin“-Menü im Header zeigt Charaktere, Missionen und Gespräche nicht mehr an — diese drei bleiben dem „Leitung“-Menü der Spielleitung vorbehalten.",
+        category: "spielleitung",
+      },
+      {
+        text: "Bei Gesprächen mit mehreren Teilnehmenden kann das Antwortrecht nur noch reserviert werden, wenn der eigene Charakter nicht zuletzt am Zug war; der antwortende Charakter wird immer angezeigt, bei mehreren eigenen Teilnehmer-Charakteren ist er wählbar; Admins können hängende Reservierungen sofort freigeben.",
+        category: "inhalte",
+      },
+      {
+        text: "Behoben: Das Verlinken/Entfernen-Werkzeug auf Inhaltsseiten war für die Spielleitung zwar sichtbar, ein Klick scheiterte aber immer an einer Admin-only-Berechtigungsprüfung.",
+        category: "spielleitung",
+      },
+      {
+        text: "Im Profil gibt es jetzt eine Charakter-Farben-Liste mit einem Farbwähler (sechs LCARS-Töne oder eine frei per Color-Picker gewählte Hex-Farbe, mit Vorschau und Sperre bereits vergebener Farben) für jeden deiner Charaktere einzeln — spielst du mehrere, kann also jeder seine eigene Farbe haben statt einer gemeinsamen. Diese Farbe färbt sowohl die wörtliche Rede (inklusive Anführungszeichen) im Fließtext-Modus abgeschlossener Gespräche als auch die Nachrichten-Karten in offenen wie geschlossenen Gesprächen ein.",
+        category: "charaktere",
+      },
     ],
   },
   {
     version: "1.16",
     title: "Kampagne, Geburtsdatum, persistente News, Dialog-Metadaten",
     items: [
-      "Die Spielleitung hat jetzt einen neuen Menüpunkt „Kampagne“ (ersetzt „Missionen“) mit Charakter-Zuweisung, Missions-Übersicht und dem neuen, einstellbaren aktuellen Ingame-Jahr an einem Ort.",
-      "Charaktere haben jetzt ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen Ingame-Jahr automatisch berechnet.",
-      "Die News auf dem Dashboard bleiben jetzt dauerhaft sichtbar (statt nur bis zum nächsten Besuch): jede News lässt sich einzeln über ein kleines X ausblenden und verschwindet außerdem automatisch, sobald du den zugehörigen Inhalt aufrufst.",
-      "Im Profil lässt sich jetzt einstellen, welche News-Arten du überhaupt sehen willst — neue, bearbeitete und/oder gelöschte Inhalte.",
-      "Die Administration bekommt jetzt jeden Morgen um 6 Uhr (Berliner Zeit) automatisch eine Mail mit allen Fehler- und Audit-Log-Einträgen der letzten 24 Stunden.",
-      "Neu angelegte Inhalte werden jetzt standardmäßig automatisch verlinkt (die entsprechende Option ist beim Anlegen vorausgewählt).",
-      "Im Adminbereich unter „Scripts“ gibt es jetzt einen Knopf, der alle bestehenden Inhalte auf einmal automatisch verlinkt.",
-      "Die Administration kann jetzt die Metadaten von Gesprächen bearbeiten (Titel, Datum, Schauplatz, Ort, Tags) — sowohl bei offenen als auch bei bereits abgeschlossenen Gesprächen (direkt auf der Gesprächsseite), der eigentliche Gesprächsverlauf bleibt dabei unangetastet.",
-      "Die News zeigen jetzt standardmäßig nur neue Inhalte an (Editiert/Gelöscht lassen sich im Profil dazuschalten) und umfassen alle neuen Inhalte, die man sehen darf; das News-Feld auf dem Dashboard ist doppelt so hoch.",
-      "Zähler an den LCARS-Listenzeilen zeigen bei mehr als 99 Einträgen „99+“ an, statt die Anzeige zu sprengen.",
-      "In der Inhalts-Übersicht (Adminbereich) liegt die Owner-Zuordnung jetzt unter jedem Eintrag, zusammen mit Bearbeiten- und Löschen-Knopf in einer Reihe.",
-      "Das Admin-Werkzeug „Alle Inhalte verlinken“ arbeitet jetzt blockweise mit Fortschrittsbalken, damit es auch bei vielen Inhalten nicht mehr in eine Zeitüberschreitung läuft.",
-      "Eine weggeklickte News gilt jetzt dauerhaft als gelesen, und mit „Alles als gelesen markieren“ lassen sich alle News auf einmal als gelesen markieren — die News-Liste zeigt jetzt außerdem alle offenen News statt nur der letzten 50, sodass „Alles als gelesen markieren“ wirklich alles erfasst.",
-      "Tutorial und Datenschutzerklärung wurden um die neuen Funktionen ergänzt; das Impressum stellt jetzt klar, dass die Rechte an selbst verfassten Inhalten (Charaktere, Berichte, Gespräche, Archiv-Einträge) bei den jeweiligen Autor*innen liegen.",
-      "Die Rechteverwaltung wurde auf ein feingranulares System umgestellt: Neben den bekannten Rollen (Administration, Spielleitung, Spieler, Beobachter, Gast) kann die Administration einer Person jetzt mehrere Rollen gleichzeitig geben und einzelne Rechte gezielt gewähren oder entziehen. Für bestehende Konten ändert sich nichts — sie behalten exakt ihre bisherigen Möglichkeiten.",
-      "Neue Admin-Seite „Rollen“ (unter Rollen & Rechte): Hier lassen sich eigene Rollen anlegen und bearbeiten, die Rechte jeder Rolle (auch der System-Rollen) anpassen und Rollen direkt den Usern zuweisen.",
-      "Die Admin-Werkzeuge „Gespräche-Fließtext erzeugen“ und „Missionen ohne Owner zuordnen“ (unter Scripts) laufen jetzt in Blöcken mit Fortschrittsbalken (kein Timeout mehr bei vielen Einträgen); jeder Fortschrittsbalken lässt sich per kleinem X ausblenden.",
-      "Sicherheitsnetz bei der Rechteverwaltung: Man kann sich nicht mehr versehentlich selbst das Admin-Recht entziehen — weder über die individuellen Rechte einer Person noch durch Bearbeiten einer Rolle, die man selbst innehat.",
-      "Administrative Benachrichtigungen (Sicherheitsmail bei Passwort-Reset-Anfragen, täglicher Log-Digest) erreichen jetzt alle Konten mit Admin-Recht — auch wenn dieses über eine Zusatz- oder eigene Rolle bzw. eine Einzelrecht-Freigabe erteilt wurde, nicht nur die reine Primärrolle „Administration“.",
-      "UX-Feinschliff: Das Löschen einer Rolle fragt jetzt vorher nach (wie alle anderen Lösch-Aktionen), lange Mitgliederlisten im Rollen-Editor lassen sich durchsuchen, beim Anlegen einer Rolle wird der erzeugte Schlüssel live angezeigt; Ladeskelette auch in den eingeloggten Bereichen; nach dem Schließen von Bildansichten/Dialogen/Menüs kehrt der Tastatur-Fokus zum Auslöser zurück; Vollbild-Bilder tragen einen aussagekräftigeren Alternativtext.",
-      "Neue, dezente Kurzmeldungen (Toasts) unten rechts bestätigen kurze Aktionen wie „Link kopiert“ und blenden sich nach ein paar Sekunden von selbst wieder aus (oder per Klick auf das X).",
-      "Die automatische Umwandlung in deutsche Anführungszeichen („…“) wurde überarbeitet: Schluss-Anführungszeichen stehen jetzt zuverlässig oben, und wörtliche Rede über mehrere Absätze wird korrekt behandelt. Ein neues Admin-Werkzeug „Typografie korrigieren“ (unter Scripts) wendet die Korrektur blockweise auf alle bestehenden Inhalte an.",
-      "Der Kopfbereich zeigt beim Laden jetzt einen dezenten Platzhalter (Skeleton) statt eines leeren Kastens.",
-      "Auf schmalen Bildschirmen sind die Navigations-Pillen im Kopfbereich jetzt flacher, und das Seitenmenü zeigt statt der bloßen Nummern nun erkennbare Symbole (Home, Charaktere, Missionen, Archiv, Timeline) mit kleiner Nummer als Akzent.",
-      "Die Menüpunkte im Seitenmenü färben sich jetzt sofort beim Antippen ein (statt erst, wenn die Zielseite geladen ist) und springen bei einem Navigationsfehler wieder auf die tatsächliche Seite zurück; im Archiv erscheint beim Kategorienwechsel kein Platzhalter-Skelett mehr.",
+      {
+        text: "Die Spielleitung hat jetzt einen neuen Menüpunkt „Kampagne“ (ersetzt „Missionen“) mit Charakter-Zuweisung, Missions-Übersicht und dem neuen, einstellbaren aktuellen Ingame-Jahr an einem Ort.",
+        category: "spielleitung",
+      },
+      {
+        text: "Charaktere haben jetzt ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen Ingame-Jahr automatisch berechnet.",
+        category: "charaktere",
+      },
+      {
+        text: "Die News auf dem Dashboard bleiben jetzt dauerhaft sichtbar (statt nur bis zum nächsten Besuch): jede News lässt sich einzeln über ein kleines X ausblenden und verschwindet außerdem automatisch, sobald du den zugehörigen Inhalt aufrufst.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Im Profil lässt sich jetzt einstellen, welche News-Arten du überhaupt sehen willst — neue, bearbeitete und/oder gelöschte Inhalte.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Die Administration bekommt jetzt jeden Morgen um 6 Uhr (Berliner Zeit) automatisch eine Mail mit allen Fehler- und Audit-Log-Einträgen der letzten 24 Stunden.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Neu angelegte Inhalte werden jetzt standardmäßig automatisch verlinkt (die entsprechende Option ist beim Anlegen vorausgewählt).",
+        category: "inhalte",
+      },
+      {
+        text: "Im Adminbereich unter „Scripts“ gibt es jetzt einen Knopf, der alle bestehenden Inhalte auf einmal automatisch verlinkt.",
+        category: "spielleitung",
+      },
+      {
+        text: "Die Administration kann jetzt die Metadaten von Gesprächen bearbeiten (Titel, Datum, Schauplatz, Ort, Tags) — sowohl bei offenen als auch bei bereits abgeschlossenen Gesprächen (direkt auf der Gesprächsseite), der eigentliche Gesprächsverlauf bleibt dabei unangetastet.",
+        category: "spielleitung",
+      },
+      {
+        text: "Die News zeigen jetzt standardmäßig nur neue Inhalte an (Editiert/Gelöscht lassen sich im Profil dazuschalten) und umfassen alle neuen Inhalte, die man sehen darf; das News-Feld auf dem Dashboard ist doppelt so hoch.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Zähler an den LCARS-Listenzeilen zeigen bei mehr als 99 Einträgen „99+“ an, statt die Anzeige zu sprengen.",
+        category: "darstellung",
+      },
+      {
+        text: "In der Inhalts-Übersicht (Adminbereich) liegt die Owner-Zuordnung jetzt unter jedem Eintrag, zusammen mit Bearbeiten- und Löschen-Knopf in einer Reihe.",
+        category: "spielleitung",
+      },
+      {
+        text: "Das Admin-Werkzeug „Alle Inhalte verlinken“ arbeitet jetzt blockweise mit Fortschrittsbalken, damit es auch bei vielen Inhalten nicht mehr in eine Zeitüberschreitung läuft.",
+        category: "spielleitung",
+      },
+      {
+        text: "Eine weggeklickte News gilt jetzt dauerhaft als gelesen, und mit „Alles als gelesen markieren“ lassen sich alle News auf einmal als gelesen markieren — die News-Liste zeigt jetzt außerdem alle offenen News statt nur der letzten 50, sodass „Alles als gelesen markieren“ wirklich alles erfasst.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Tutorial und Datenschutzerklärung wurden um die neuen Funktionen ergänzt; das Impressum stellt jetzt klar, dass die Rechte an selbst verfassten Inhalten (Charaktere, Berichte, Gespräche, Archiv-Einträge) bei den jeweiligen Autor*innen liegen.",
+        category: "inhalte",
+      },
+      {
+        text: "Die Rechteverwaltung wurde auf ein feingranulares System umgestellt: Neben den bekannten Rollen (Administration, Spielleitung, Spieler, Beobachter, Gast) kann die Administration einer Person jetzt mehrere Rollen gleichzeitig geben und einzelne Rechte gezielt gewähren oder entziehen. Für bestehende Konten ändert sich nichts — sie behalten exakt ihre bisherigen Möglichkeiten.",
+        category: "spielleitung",
+      },
+      {
+        text: "Neue Admin-Seite „Rollen“ (unter Rollen & Rechte): Hier lassen sich eigene Rollen anlegen und bearbeiten, die Rechte jeder Rolle (auch der System-Rollen) anpassen und Rollen direkt den Usern zuweisen.",
+        category: "spielleitung",
+      },
+      {
+        text: "Die Admin-Werkzeuge „Gespräche-Fließtext erzeugen“ und „Missionen ohne Owner zuordnen“ (unter Scripts) laufen jetzt in Blöcken mit Fortschrittsbalken (kein Timeout mehr bei vielen Einträgen); jeder Fortschrittsbalken lässt sich per kleinem X ausblenden.",
+        category: "spielleitung",
+      },
+      {
+        text: "Sicherheitsnetz bei der Rechteverwaltung: Man kann sich nicht mehr versehentlich selbst das Admin-Recht entziehen — weder über die individuellen Rechte einer Person noch durch Bearbeiten einer Rolle, die man selbst innehat.",
+        category: "spielleitung",
+      },
+      {
+        text: "Administrative Benachrichtigungen (Sicherheitsmail bei Passwort-Reset-Anfragen, täglicher Log-Digest) erreichen jetzt alle Konten mit Admin-Recht — auch wenn dieses über eine Zusatz- oder eigene Rolle bzw. eine Einzelrecht-Freigabe erteilt wurde, nicht nur die reine Primärrolle „Administration“.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "UX-Feinschliff: Das Löschen einer Rolle fragt jetzt vorher nach (wie alle anderen Lösch-Aktionen), lange Mitgliederlisten im Rollen-Editor lassen sich durchsuchen, beim Anlegen einer Rolle wird der erzeugte Schlüssel live angezeigt; Ladeskelette auch in den eingeloggten Bereichen; nach dem Schließen von Bildansichten/Dialogen/Menüs kehrt der Tastatur-Fokus zum Auslöser zurück; Vollbild-Bilder tragen einen aussagekräftigeren Alternativtext.",
+        category: "spielleitung",
+      },
+      {
+        text: "Neue, dezente Kurzmeldungen (Toasts) unten rechts bestätigen kurze Aktionen wie „Link kopiert“ und blenden sich nach ein paar Sekunden von selbst wieder aus (oder per Klick auf das X).",
+        category: "darstellung",
+      },
+      {
+        text: "Die automatische Umwandlung in deutsche Anführungszeichen („…“) wurde überarbeitet: Schluss-Anführungszeichen stehen jetzt zuverlässig oben, und wörtliche Rede über mehrere Absätze wird korrekt behandelt. Ein neues Admin-Werkzeug „Typografie korrigieren“ (unter Scripts) wendet die Korrektur blockweise auf alle bestehenden Inhalte an.",
+        category: "inhalte",
+      },
+      {
+        text: "Der Kopfbereich zeigt beim Laden jetzt einen dezenten Platzhalter (Skeleton) statt eines leeren Kastens.",
+        category: "darstellung",
+      },
+      {
+        text: "Auf schmalen Bildschirmen sind die Navigations-Pillen im Kopfbereich jetzt flacher, und das Seitenmenü zeigt statt der bloßen Nummern nun erkennbare Symbole (Home, Charaktere, Missionen, Archiv, Timeline) mit kleiner Nummer als Akzent.",
+        category: "darstellung",
+      },
+      {
+        text: "Die Menüpunkte im Seitenmenü färben sich jetzt sofort beim Antippen ein (statt erst, wenn die Zielseite geladen ist) und springen bei einem Navigationsfehler wieder auf die tatsächliche Seite zurück; im Archiv erscheint beim Kategorienwechsel kein Platzhalter-Skelett mehr.",
+        category: "darstellung",
+      },
     ],
   },
   {
     version: "1.17",
     title: "Schnellere Wiederbesuche: PWA-Asset-Caching",
     items: [
-      "Statische Dateien (Skripte, Styles, Schriften, Symbole) hält der Browser (Service Worker) jetzt vor, sodass wiederholte Seitenaufrufe spürbar schneller laden — Inhalte bleiben weiterhin ohne Offline-Modus immer frisch aus dem Netz.",
-      "Passwort-Felder haben jetzt einen Anzeigen/Verbergen-Umschalter (Auge-Symbol).",
-      "Rückmeldungen aus Formularen (Erfolg wie Fehler) erscheinen jetzt einheitlich als kurze, pillenförmige Toast-Meldung zentriert am unteren Bildschirmrand — je nach Status farblich markiert (Erfolg grün, Warnung amber, Fehler rot); sie stapeln sich und blenden sich nach ein paar Sekunden selbst aus, statt als Inline-Text zu erscheinen.",
-      "Das Audit-Log und das Fehler-Log lassen sich jetzt seitenweise durchblättern (10, 20, 50 oder alle Einträge pro Seite).",
-      "Behoben: In der Kampagnen-Übersicht wurden bei schmaler Zeile nur die Aktions-Knöpfe einer Mission angezeigt, der eigentliche Missions-Eintrag daneben war zusammengequetscht/unsichtbar.",
-      "Behoben: Der tägliche Admin-Log-Digest (6-Uhr-Mail) wurde nie verschickt, weil die interne Uhrzeitprüfung fehlschlug und den Versand jedes Mal übersprang.",
-      "In der Kampagnen-Übersicht sind die Missionen jetzt chronologisch von neu nach alt sortiert, und jede Missions-Akte ist nach Status farbcodiert (grün = aktiv, blau = abgeschlossen, rot = gescheitert, amber = abgebrochen).",
-      "Das Ingame-Jahr der Kampagne wird jetzt automatisch aus dem spätesten Missionslog abgeleitet und folgt neuen Logs von selbst; es lässt sich weiterhin manuell überschreiben (nur mit Rückfrage) und per „Automatisch“-Knopf wieder auf die automatische Ableitung zurückstellen.",
-      "Die Seite „Rollen & Rechte“ zeigt die Rechte jetzt als übersichtliche Matrix (Rechte als Zeilen, Rollen als Spalten): Haken pro Rolle setzen und spaltenweise speichern. Name, Beschreibung und Mitglieder einer Rolle werden weiterhin darunter je Rolle gepflegt.",
-      "Im Admin-Bereich „Scripts“ werden Wartungs-Aktionen jetzt ausgeblendet, wenn dir die nötige Berechtigung fehlt; wird eine Aktion doch ohne Recht ausgelöst, erscheint eine klare Meldung („Dir fehlt die Berechtigung …“) statt eines nichtssagenden Fehlers.",
-      "Die Übersichten Charaktere, Archiv und Missionen haben jetzt neben den Sortier-/Ansichts-Optionen ein Freitext-Filterfeld, mit dem sich die Liste schnell nach Name bzw. Titel eingrenzen lässt.",
+      {
+        text: "Statische Dateien (Skripte, Styles, Schriften, Symbole) hält der Browser (Service Worker) jetzt vor, sodass wiederholte Seitenaufrufe spürbar schneller laden — Inhalte bleiben weiterhin ohne Offline-Modus immer frisch aus dem Netz.",
+        category: "darstellung",
+      },
+      {
+        text: "Passwort-Felder haben jetzt einen Anzeigen/Verbergen-Umschalter (Auge-Symbol).",
+        category: "konto",
+      },
+      {
+        text: "Rückmeldungen aus Formularen (Erfolg wie Fehler) erscheinen jetzt einheitlich als kurze, pillenförmige Toast-Meldung zentriert am unteren Bildschirmrand — je nach Status farblich markiert (Erfolg grün, Warnung amber, Fehler rot); sie stapeln sich und blenden sich nach ein paar Sekunden selbst aus, statt als Inline-Text zu erscheinen.",
+        category: "darstellung",
+      },
+      {
+        text: "Das Audit-Log und das Fehler-Log lassen sich jetzt seitenweise durchblättern (10, 20, 50 oder alle Einträge pro Seite).",
+        category: "spielleitung",
+      },
+      {
+        text: "Behoben: In der Kampagnen-Übersicht wurden bei schmaler Zeile nur die Aktions-Knöpfe einer Mission angezeigt, der eigentliche Missions-Eintrag daneben war zusammengequetscht/unsichtbar.",
+        category: "darstellung",
+      },
+      {
+        text: "Behoben: Der tägliche Admin-Log-Digest (6-Uhr-Mail) wurde nie verschickt, weil die interne Uhrzeitprüfung fehlschlug und den Versand jedes Mal übersprang.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "In der Kampagnen-Übersicht sind die Missionen jetzt chronologisch von neu nach alt sortiert, und jede Missions-Akte ist nach Status farbcodiert (grün = aktiv, blau = abgeschlossen, rot = gescheitert, amber = abgebrochen).",
+        category: "spielleitung",
+      },
+      {
+        text: "Das Ingame-Jahr der Kampagne wird jetzt automatisch aus dem spätesten Missionslog abgeleitet und folgt neuen Logs von selbst; es lässt sich weiterhin manuell überschreiben (nur mit Rückfrage) und per „Automatisch“-Knopf wieder auf die automatische Ableitung zurückstellen.",
+        category: "spielleitung",
+      },
+      {
+        text: "Die Seite „Rollen & Rechte“ zeigt die Rechte jetzt als übersichtliche Matrix (Rechte als Zeilen, Rollen als Spalten): Haken pro Rolle setzen und spaltenweise speichern. Name, Beschreibung und Mitglieder einer Rolle werden weiterhin darunter je Rolle gepflegt.",
+        category: "spielleitung",
+      },
+      {
+        text: "Im Admin-Bereich „Scripts“ werden Wartungs-Aktionen jetzt ausgeblendet, wenn dir die nötige Berechtigung fehlt; wird eine Aktion doch ohne Recht ausgelöst, erscheint eine klare Meldung („Dir fehlt die Berechtigung …“) statt eines nichtssagenden Fehlers.",
+        category: "spielleitung",
+      },
+      {
+        text: "Die Übersichten Charaktere, Archiv und Missionen haben jetzt neben den Sortier-/Ansichts-Optionen ein Freitext-Filterfeld, mit dem sich die Liste schnell nach Name bzw. Titel eingrenzen lässt.",
+        category: "inhalte",
+      },
     ],
   },
   {
     version: "1.18",
     title: "Code-Review: News-Feed-Sichtbarkeit und Anriss-Kürzung korrigiert",
     items: [
-      "Behoben: Wer mehrere Rollen hat (z.B. gleichzeitig Spieler und Spielleitung/Admin), sah auf dem Dashboard unter „Neuigkeiten“ nicht alle Inhalte, die er eigentlich sehen darf — GM- bzw. private Einträge fehlten dort, obwohl sie überall sonst sichtbar waren. Der News-Feed richtet sich jetzt nach denselben effektiven Rechten wie der Rest der Seite.",
-      "Behoben: Anriss-/Vorschautexte (in Listen sowie in Benachrichtigungs-Mails/Push) wurden bei langem Text ohne Leerzeichen — etwa einer eingefügten URL — kaum gekürzt und blieben fast vollständig stehen; sie werden jetzt zuverlässig auf die vorgesehene Länge gekappt.",
-      "Behoben: Ein deaktiviertes Konto behielt auf den öffentlichen Inhaltsseiten seine erhöhte Lese-Sichtbarkeit (z.B. GM-/private Inhalte), bis das Anmelde-Cookie von selbst ablief; die Deaktivierung (und ein Passwortwechsel) wirkt dort jetzt sofort.",
-      "Der tägliche Admin-Log-Digest (Mail um 5 Uhr UTC) listet jetzt zusätzlich die Inhalts-Aktivität der letzten 24 Stunden auf (neu/bearbeitet/gelöschte Charaktere, Missionen, Logs und Archiv-Einträge samt Person) und läuft zuverlässig einmal täglich, ohne interne Uhrzeitprüfung.",
-      "Gespräche werden jetzt mit ihrem eigenen Titel angezeigt (statt „Gespräch auf …“) und in allen Listen nach ihrem Ingame-Datum sortiert (neueste zuerst, Gespräche ohne Datum ans Ende).",
-      "Die Charakter- und Archiv-Übersicht nutzen auf Handys und kleinen Tablets jetzt die volle Bildschirmbreite, statt in einer schmalen Spalte zu stehen; die Kategorien-Übersicht im Archiv zeigt beim Laden zudem einen Platzhalter (Skeleton).",
-      "Die Rechte-Matrix (Rollen & Rechte) lässt sich auf dem Handy jetzt sauber scrollen — Kopfzeile und Inhalt bewegen sich wieder gemeinsam statt nur die Spaltenüberschriften.",
-      "Neuer Datenbank-Bereich mit feineren Rechten: vier neue Rechte (SQL lesen/schreiben/löschen, DB-Backups) und eine neue Rolle „Datenbank-Admin“. Der Bereich /admin/db ist jetzt nur noch mit mindestens einem dieser Rechte zugänglich (statt allgemein für Administration).",
-      "Der Datenbank-Bereich wurde überarbeitet: Das SQL-Feld erlaubt je nach Recht nicht mehr nur Lesen, sondern auch Schreiben und Löschen; das Backup-Panel ist an das DB-Backup-Recht gebunden. Statt eines ER-Diagramms gibt es jetzt einen Tabellen-Explorer im Datei-Browser-Stil: Tabelle auswählen, Zeilen blättern, Details anzeigen, bearbeiten, löschen oder neue Zeilen anlegen — alles rechteabhängig.",
-      "Neues Recht „System-Tabellen“: Ohne dieses Recht zeigt der Tabellen-Explorer nur die vier Inhaltstabellen (Charaktere, Missionen, Logs, Archiv); mit dem Recht werden auch Systemtabellen (User, Follows, Timeline-Events usw.) sichtbar. Die db-admin-Rolle hat das Recht standardmäßig.",
-      "Verwaltungs-Funktionen (Owner umtragen, Bilder verwalten, Gespräch-Metadaten bearbeiten, Fehlerdetails abrufen) richten sich jetzt durchgehend nach den tatsächlichen Rechten statt nach der Primärrolle — wer eine Funktion über eine Zusatzrolle oder ein Einzelrecht bekommt, sieht die zugehörigen Schaltflächen jetzt auch dort, wo bisher stur nur „Administration“ als Primärrolle zählte.",
-      "Die Suche behandelt die Sonderzeichen % und _ jetzt als normale Zeichen; eine Suche nach z.B. „50%“ findet den Text „50%“ statt wahllos alles mit „50“.",
-      "Die Datenbestands-Zahlen auf der Startseite zählen jetzt nur noch öffentliche Inhalte — passend zu den verlinkten Übersichten, die Besucher:innen ohnehin nur öffentlich sehen.",
-      "Beim Anlegen oder Bearbeiten eines Charakters lässt sich das Portrait jetzt direkt hochladen (statt nur eine Bild-URL einzutragen) — das Bild wird gespeichert und sofort als Profilbild übernommen.",
-      "Charaktere können jetzt Charakterbögen als PDF hinterlegen: Der Owner lädt beliebig viele Bögen auf der Charakterseite hoch, alle, die den Charakter sehen dürfen, können sie dort herunterladen.",
+      {
+        text: "Behoben: Wer mehrere Rollen hat (z.B. gleichzeitig Spieler und Spielleitung/Admin), sah auf dem Dashboard unter „Neuigkeiten“ nicht alle Inhalte, die er eigentlich sehen darf — GM- bzw. private Einträge fehlten dort, obwohl sie überall sonst sichtbar waren. Der News-Feed richtet sich jetzt nach denselben effektiven Rechten wie der Rest der Seite.",
+        category: "darstellung",
+      },
+      {
+        text: "Behoben: Anriss-/Vorschautexte (in Listen sowie in Benachrichtigungs-Mails/Push) wurden bei langem Text ohne Leerzeichen — etwa einer eingefügten URL — kaum gekürzt und blieben fast vollständig stehen; sie werden jetzt zuverlässig auf die vorgesehene Länge gekappt.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Behoben: Ein deaktiviertes Konto behielt auf den öffentlichen Inhaltsseiten seine erhöhte Lese-Sichtbarkeit (z.B. GM-/private Inhalte), bis das Anmelde-Cookie von selbst ablief; die Deaktivierung (und ein Passwortwechsel) wirkt dort jetzt sofort.",
+        category: "konto",
+      },
+      {
+        text: "Der tägliche Admin-Log-Digest (Mail um 5 Uhr UTC) listet jetzt zusätzlich die Inhalts-Aktivität der letzten 24 Stunden auf (neu/bearbeitet/gelöschte Charaktere, Missionen, Logs und Archiv-Einträge samt Person) und läuft zuverlässig einmal täglich, ohne interne Uhrzeitprüfung.",
+        category: "benachrichtigungen",
+      },
+      {
+        text: "Gespräche werden jetzt mit ihrem eigenen Titel angezeigt (statt „Gespräch auf …“) und in allen Listen nach ihrem Ingame-Datum sortiert (neueste zuerst, Gespräche ohne Datum ans Ende).",
+        category: "inhalte",
+      },
+      {
+        text: "Die Charakter- und Archiv-Übersicht nutzen auf Handys und kleinen Tablets jetzt die volle Bildschirmbreite, statt in einer schmalen Spalte zu stehen; die Kategorien-Übersicht im Archiv zeigt beim Laden zudem einen Platzhalter (Skeleton).",
+        category: "darstellung",
+      },
+      {
+        text: "Die Rechte-Matrix (Rollen & Rechte) lässt sich auf dem Handy jetzt sauber scrollen — Kopfzeile und Inhalt bewegen sich wieder gemeinsam statt nur die Spaltenüberschriften.",
+        category: "spielleitung",
+      },
+      {
+        text: "Neuer Datenbank-Bereich mit feineren Rechten: vier neue Rechte (SQL lesen/schreiben/löschen, DB-Backups) und eine neue Rolle „Datenbank-Admin“. Der Bereich /admin/db ist jetzt nur noch mit mindestens einem dieser Rechte zugänglich (statt allgemein für Administration).",
+        category: "spielleitung",
+      },
+      {
+        text: "Der Datenbank-Bereich wurde überarbeitet: Das SQL-Feld erlaubt je nach Recht nicht mehr nur Lesen, sondern auch Schreiben und Löschen; das Backup-Panel ist an das DB-Backup-Recht gebunden. Statt eines ER-Diagramms gibt es jetzt einen Tabellen-Explorer im Datei-Browser-Stil: Tabelle auswählen, Zeilen blättern, Details anzeigen, bearbeiten, löschen oder neue Zeilen anlegen — alles rechteabhängig.",
+        category: "spielleitung",
+      },
+      {
+        text: "Neues Recht „System-Tabellen“: Ohne dieses Recht zeigt der Tabellen-Explorer nur die vier Inhaltstabellen (Charaktere, Missionen, Logs, Archiv); mit dem Recht werden auch Systemtabellen (User, Follows, Timeline-Events usw.) sichtbar. Die db-admin-Rolle hat das Recht standardmäßig.",
+        category: "spielleitung",
+      },
+      {
+        text: "Verwaltungs-Funktionen (Owner umtragen, Bilder verwalten, Gespräch-Metadaten bearbeiten, Fehlerdetails abrufen) richten sich jetzt durchgehend nach den tatsächlichen Rechten statt nach der Primärrolle — wer eine Funktion über eine Zusatzrolle oder ein Einzelrecht bekommt, sieht die zugehörigen Schaltflächen jetzt auch dort, wo bisher stur nur „Administration“ als Primärrolle zählte.",
+        category: "spielleitung",
+      },
+      {
+        text: "Die Suche behandelt die Sonderzeichen % und _ jetzt als normale Zeichen; eine Suche nach z.B. „50%“ findet den Text „50%“ statt wahllos alles mit „50“.",
+        category: "inhalte",
+      },
+      {
+        text: "Die Datenbestands-Zahlen auf der Startseite zählen jetzt nur noch öffentliche Inhalte — passend zu den verlinkten Übersichten, die Besucher:innen ohnehin nur öffentlich sehen.",
+        category: "inhalte",
+      },
+      {
+        text: "Beim Anlegen oder Bearbeiten eines Charakters lässt sich das Portrait jetzt direkt hochladen (statt nur eine Bild-URL einzutragen) — das Bild wird gespeichert und sofort als Profilbild übernommen.",
+        category: "charaktere",
+      },
+      {
+        text: "Charaktere können jetzt Charakterbögen als PDF hinterlegen: Der Owner lädt beliebig viele Bögen auf der Charakterseite hoch, alle, die den Charakter sehen dürfen, können sie dort herunterladen.",
+        category: "charaktere",
+      },
     ],
   },
   {
     version: "1.19",
     title: "Archiv-Assistent: Fragen an den Kampagnen-Datenbestand stellen",
     items: [
-      "Neu: Ein Archiv-Assistent (unter /rag) beantwortet Fragen zum Kampagneninhalt in natürlicher Sprache — z.B. „Was wissen wir über die Tholianer?“. Er stützt sich ausschließlich auf den vorhandenen Datenbestand (Charaktere, Missionen, Einsatzberichte, Archiv-Einträge und abgeschlossene Gespräche), zeigt die genutzten Quellen an und antwortet Wort für Wort im Stream. Was der Assistent dabei berücksichtigt, richtet sich nach den eigenen Leserechten — private oder GM-Inhalte fließen nur ein, wenn man sie ohnehin sehen darf.",
-      "Für die Administration gibt es unter Scripts eine neue Aktion „Archiv-Assistent · Embeddings“, die den Suchindex des Assistenten für alle Inhalte auf einmal aufbaut bzw. auffrischt (mit Fortschrittsanzeige) — nötig einmalig nach der Einrichtung und als Reparatur, falls automatische Aktualisierungen etwas verpasst haben.",
-      "Die Suche ist jetzt ein eigener Menüpunkt (Lupen-Symbol) im Hauptmenü und ersetzt dort die bisherige Timeline; die Timeline-Seite selbst wurde entfernt. Auf der Suchseite steht oben wie gewohnt die Volltextsuche und direkt darunter der Archiv-Assistent (für alle, die ihn nutzen dürfen); der separate Such-Knopf oben im Kopfbereich für angemeldete Nutzer:innen entfällt dadurch.",
+      {
+        text: "Neu: Ein Archiv-Assistent (unter /rag) beantwortet Fragen zum Kampagneninhalt in natürlicher Sprache — z.B. „Was wissen wir über die Tholianer?“. Er stützt sich ausschließlich auf den vorhandenen Datenbestand (Charaktere, Missionen, Einsatzberichte, Archiv-Einträge und abgeschlossene Gespräche), zeigt die genutzten Quellen an und antwortet Wort für Wort im Stream. Was der Assistent dabei berücksichtigt, richtet sich nach den eigenen Leserechten — private oder GM-Inhalte fließen nur ein, wenn man sie ohnehin sehen darf.",
+        category: "inhalte",
+      },
+      {
+        text: "Für die Administration gibt es unter Scripts eine neue Aktion „Archiv-Assistent · Embeddings“, die den Suchindex des Assistenten für alle Inhalte auf einmal aufbaut bzw. auffrischt (mit Fortschrittsanzeige) — nötig einmalig nach der Einrichtung und als Reparatur, falls automatische Aktualisierungen etwas verpasst haben.",
+        category: "spielleitung",
+      },
+      {
+        text: "Die Suche ist jetzt ein eigener Menüpunkt (Lupen-Symbol) im Hauptmenü und ersetzt dort die bisherige Timeline; die Timeline-Seite selbst wurde entfernt. Auf der Suchseite steht oben wie gewohnt die Volltextsuche und direkt darunter der Archiv-Assistent (für alle, die ihn nutzen dürfen); der separate Such-Knopf oben im Kopfbereich für angemeldete Nutzer:innen entfällt dadurch.",
+        category: "inhalte",
+      },
     ],
   },
   {
     version: "1.20",
     title: "Charakterbögen mit Vorschau, besserer Archiv-Assistent",
     items: [
-      "Charakterbögen (PDFs) lassen sich jetzt direkt auf der Charakterseite ansehen: Ein Klick auf den Bogen öffnet eine Vollbild-Vorschau (Overlay), daneben gibt es einen eigenen Herunterladen-Knopf. Der Download funktioniert jetzt zuverlässig — die Bögen werden über das Archiv selbst ausgeliefert statt über eine separate Datei-Adresse.",
-      "Der Archiv-Assistent findet und berücksichtigt jetzt deutlich mehr passende Informationen: Zusätzlich zur inhaltlichen Ähnlichkeitssuche wird gezielt nach genannten Namen und Begriffen gesucht, es fließen mehr Fundstellen in die Antwort ein, und der Assistent fasst Bekanntes zusammen, statt Fragen vorschnell als unbeantwortbar abzulehnen.",
-      "Längere Antworten des Archiv-Assistenten brechen seltener mittendrin ab; bricht eine Verbindung doch einmal, bleibt die bereits erhaltene Teil-Antwort stehen (mit dezentem Hinweis) statt komplett zu verschwinden.",
-      "Die App reagiert beim Navigieren spürbar flotter: Beim Öffnen von Charakter-, Missions-, Archiv-, Profil- und Gesprächsseiten erscheint sofort ein Seitengerüst, während die Inhalte im Hintergrund laden — statt einer kurz „hängenden“ leeren Seite. Serverseitig werden die nötigen Daten jetzt parallel geladen, und die Speichern-/Folgen-Knöpfe stehen sofort bereit statt kurz nachzuladen.",
-      "Sicherheit im Admin-Bereich: Weder das freie SQL-Feld noch der zeilenweise Editor geben Passwort-/Token-Spalten aus oder lassen Schreib-/Löschzugriffe auf sicherheitsrelevante Tabellen (Konten, Rollen, Anmelde-Protokolle, Audit-Log) zu; das zeilenweise Bearbeiten trifft zuverlässig die richtige Zeile.",
+      {
+        text: "Charakterbögen (PDFs) lassen sich jetzt direkt auf der Charakterseite ansehen: Ein Klick auf den Bogen öffnet eine Vollbild-Vorschau (Overlay), daneben gibt es einen eigenen Herunterladen-Knopf. Der Download funktioniert jetzt zuverlässig — die Bögen werden über das Archiv selbst ausgeliefert statt über eine separate Datei-Adresse.",
+        category: "charaktere",
+      },
+      {
+        text: "Der Archiv-Assistent findet und berücksichtigt jetzt deutlich mehr passende Informationen: Zusätzlich zur inhaltlichen Ähnlichkeitssuche wird gezielt nach genannten Namen und Begriffen gesucht, es fließen mehr Fundstellen in die Antwort ein, und der Assistent fasst Bekanntes zusammen, statt Fragen vorschnell als unbeantwortbar abzulehnen.",
+        category: "inhalte",
+      },
+      {
+        text: "Längere Antworten des Archiv-Assistenten brechen seltener mittendrin ab; bricht eine Verbindung doch einmal, bleibt die bereits erhaltene Teil-Antwort stehen (mit dezentem Hinweis) statt komplett zu verschwinden.",
+        category: "inhalte",
+      },
+      {
+        text: "Die App reagiert beim Navigieren spürbar flotter: Beim Öffnen von Charakter-, Missions-, Archiv-, Profil- und Gesprächsseiten erscheint sofort ein Seitengerüst, während die Inhalte im Hintergrund laden — statt einer kurz „hängenden“ leeren Seite. Serverseitig werden die nötigen Daten jetzt parallel geladen, und die Speichern-/Folgen-Knöpfe stehen sofort bereit statt kurz nachzuladen.",
+        category: "darstellung",
+      },
+      {
+        text: "Sicherheit im Admin-Bereich: Weder das freie SQL-Feld noch der zeilenweise Editor geben Passwort-/Token-Spalten aus oder lassen Schreib-/Löschzugriffe auf sicherheitsrelevante Tabellen (Konten, Rollen, Anmelde-Protokolle, Audit-Log) zu; das zeilenweise Bearbeiten trifft zuverlässig die richtige Zeile.",
+        category: "konto",
+      },
     ],
   },
   {
     version: "1.21",
     title: "Schnellerer Seitenaufbau (Cached Components) und Offline-Betrieb",
     items: [
-      "Die App liefert das Grundgerüst (LCARS-Rahmen mit Navigation) jetzt sofort aus und lädt die eigentlichen Inhalte im Hintergrund nach — Seiten fühlen sich beim Öffnen und Navigieren spürbar direkter an, weil nicht mehr auf die komplette Seite gewartet wird, bevor überhaupt etwas erscheint.",
-      "Neu: Die installierte App (PWA) funktioniert jetzt eingeschränkt auch ohne Internet. Bereits besuchte Seiten bleiben offline abrufbar, und statt einer Browser-Fehlermeldung erscheint eine eigene Offline-Hinweisseite mit „Erneut versuchen“-Knopf. Sobald wieder Verbindung besteht, werden automatisch die aktuellen Daten geladen. Anmeldung, neue Inhalte und das Speichern von Änderungen brauchen weiterhin eine Verbindung.",
+      {
+        text: "Die App liefert das Grundgerüst (LCARS-Rahmen mit Navigation) jetzt sofort aus und lädt die eigentlichen Inhalte im Hintergrund nach — Seiten fühlen sich beim Öffnen und Navigieren spürbar direkter an, weil nicht mehr auf die komplette Seite gewartet wird, bevor überhaupt etwas erscheint.",
+        category: "darstellung",
+      },
+      {
+        text: "Neu: Die installierte App (PWA) funktioniert jetzt eingeschränkt auch ohne Internet. Bereits besuchte Seiten bleiben offline abrufbar, und statt einer Browser-Fehlermeldung erscheint eine eigene Offline-Hinweisseite mit „Erneut versuchen“-Knopf. Sobald wieder Verbindung besteht, werden automatisch die aktuellen Daten geladen. Anmeldung, neue Inhalte und das Speichern von Änderungen brauchen weiterhin eine Verbindung.",
+        category: "darstellung",
+      },
     ],
   },
   {
     version: "1.22",
     title: "Wählbare LCARS-Farbthemes",
     items: [
-      "Neu: Angemeldete Nutzer:innen können im Profil unter „Darstellung“ ein Farbthema für die gesamte Oberfläche wählen — mit den echten LCARS-Farbschemata (Classic, Science, Nebula, Red Alert, Nemesis) neben dem bisherigen Standard. Jedes Theme bringt eine deutlich eigene Palette samt Hintergrund; die Wahl gilt nur für dich, wird sofort als Vorschau angewandt und bleibt nach dem Speichern bei jedem Login erhalten.",
-      "Jedes Farbthema lässt sich zusätzlich individualisieren: einzelne Akzentfarben können mit einem Farbwähler überschrieben und jederzeit wieder auf den Theme-Standard zurückgesetzt werden.",
+      {
+        text: "Neu: Angemeldete Nutzer:innen können im Profil unter „Darstellung“ ein Farbthema für die gesamte Oberfläche wählen — mit den echten LCARS-Farbschemata (Classic, Science, Nebula, Red Alert, Nemesis) neben dem bisherigen Standard. Jedes Theme bringt eine deutlich eigene Palette samt Hintergrund; die Wahl gilt nur für dich, wird sofort als Vorschau angewandt und bleibt nach dem Speichern bei jedem Login erhalten.",
+        category: "darstellung",
+      },
+      {
+        text: "Jedes Farbthema lässt sich zusätzlich individualisieren: einzelne Akzentfarben können mit einem Farbwähler überschrieben und jederzeit wieder auf den Theme-Standard zurückgesetzt werden.",
+        category: "darstellung",
+      },
     ],
   },
   {
     version: "1.23",
     title: "Proxy-Zugriffsschutz, besserer Archiv-Assistent & festes Textbild",
     items: [
-      "Nicht angemeldete Besucher:innen werden beim Aufruf der geschützten Bereiche (eigenes Profil, Nutzerübersicht, Verwaltung) jetzt schon zentral auf die Anmeldeseite geleitet, bevor die Seite überhaupt zu laden beginnt — das fühlt sich unmittelbarer an als das bisherige Nachladen. An der eigentlichen Zugriffskontrolle und daran, wer was sehen darf, ändert sich nichts.",
-      "Der Archiv-Assistent findet Inhalte jetzt genauer: Die Vektor-Suche arbeitet mit der vollen Detailtiefe (1536 statt 512 Dimensionen). Nach dem Update müssen die Embeddings einmalig neu erzeugt werden (Verwaltung → RAG).",
-      "Neuer Verwaltungsbereich „RAG“: Hier lassen sich die Embeddings des Archiv-Assistenten neu erzeugen (vorher unter „Scripts“) und die OpenAI-Nutzung (Kosten des laufenden Monats, soweit verfügbar auch das Restguthaben) einsehen.",
-      "Die Schriftfarbe von Fließtext bleibt jetzt in jedem gewählten Farbthema gleich gut lesbar — die Farbthemen ändern weiterhin die Akzent- und Hintergrundfarben, aber nicht mehr die eigentliche Textfarbe.",
-      "Das Teilen-Menü (Teilen-Knopf) klappt jetzt linksbündig unter dem Knopf auf statt nach rechts — so bleibt es auch am linken Bildschirmrand vollständig sichtbar.",
-      "Neu im Profil (Darstellung → Oberfläche): Das LCARS-Design lässt sich komplett abschalten. Stattdessen erscheint ein schlankes, minimalistisches Interface mit Systemschrift, ohne die dekorativen Elbows, Farbbalken und Versalien. Es kommt ganz ohne Kopfzeile aus — die gesamte Navigation (inklusive Profil, Verwaltung und Abmelden) liegt links in der Seitenleiste, auf dem Handy platzsparend als reine Icons. Die Wahl gilt nur für dich und bleibt bei jedem Login erhalten.",
+      {
+        text: "Nicht angemeldete Besucher:innen werden beim Aufruf der geschützten Bereiche (eigenes Profil, Nutzerübersicht, Verwaltung) jetzt schon zentral auf die Anmeldeseite geleitet, bevor die Seite überhaupt zu laden beginnt — das fühlt sich unmittelbarer an als das bisherige Nachladen. An der eigentlichen Zugriffskontrolle und daran, wer was sehen darf, ändert sich nichts.",
+        category: "konto",
+      },
+      {
+        text: "Der Archiv-Assistent findet Inhalte jetzt genauer: Die Vektor-Suche arbeitet mit der vollen Detailtiefe (1536 statt 512 Dimensionen). Nach dem Update müssen die Embeddings einmalig neu erzeugt werden (Verwaltung → RAG).",
+        category: "inhalte",
+      },
+      {
+        text: "Neuer Verwaltungsbereich „RAG“: Hier lassen sich die Embeddings des Archiv-Assistenten neu erzeugen (vorher unter „Scripts“) und die OpenAI-Nutzung (Kosten des laufenden Monats, soweit verfügbar auch das Restguthaben) einsehen.",
+        category: "spielleitung",
+      },
+      {
+        text: "Die Schriftfarbe von Fließtext bleibt jetzt in jedem gewählten Farbthema gleich gut lesbar — die Farbthemen ändern weiterhin die Akzent- und Hintergrundfarben, aber nicht mehr die eigentliche Textfarbe.",
+        category: "darstellung",
+      },
+      {
+        text: "Das Teilen-Menü (Teilen-Knopf) klappt jetzt linksbündig unter dem Knopf auf statt nach rechts — so bleibt es auch am linken Bildschirmrand vollständig sichtbar.",
+        category: "darstellung",
+      },
+      {
+        text: "Neu im Profil (Darstellung → Oberfläche): Das LCARS-Design lässt sich komplett abschalten. Stattdessen erscheint ein schlankes, minimalistisches Interface mit Systemschrift, ohne die dekorativen Elbows, Farbbalken und Versalien. Es kommt ganz ohne Kopfzeile aus — die gesamte Navigation (inklusive Profil, Verwaltung und Abmelden) liegt links in der Seitenleiste, auf dem Handy platzsparend als reine Icons. Die Wahl gilt nur für dich und bleibt bei jedem Login erhalten.",
+        category: "darstellung",
+      },
     ],
   },
 ];
@@ -475,7 +1512,11 @@ export function latestChangelogEntry(
   return latest;
 }
 
-function compareVersions(a: string, b: string): number {
+// Numerischer „Major.Minor"-Vergleich: ein reiner String-Vergleich sortierte
+// „1.10" vor „1.9". Exportiert, weil dieselbe Rechnung auch die Anzeige
+// ordnet (/changelog und /admin/changelog) — sie stand dort zweimal als
+// Kopie, einmal sogar mit anderen Variablennamen.
+export function compareVersions(a: string, b: string): number {
   const partsA = a.split(".").map(Number);
   const partsB = b.split(".").map(Number);
   for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
@@ -483,4 +1524,32 @@ function compareVersions(a: string, b: string): number {
     if (diff !== 0) return diff;
   }
   return 0;
+}
+
+// Gibt es einen Changelog-Eintrag mit dieser „Major.Minor"-Version?
+export function changelogVersionExists(
+  version: string,
+  entries: ChangelogEntry[] = CHANGELOG,
+): boolean {
+  return entries.some((entry) => entry.version === version);
+}
+
+// Die Einträge für die „Neue Funktionen"-Box auf dem Dashboard, aus der vom
+// Admin gewählten Versionsliste (siehe src/lib/changelogSettings.ts):
+//   - selected === null  ⇒  nicht konfiguriert: nur die jüngste Version.
+//   - selected === []    ⇒  bewusst nichts (die Box verschwindet).
+//   - sonst              ⇒  genau die gewählten, existierenden Versionen,
+//                           neueste zuerst.
+export function featuredChangelogEntries(
+  selected: string[] | null,
+  entries: ChangelogEntry[] = CHANGELOG,
+): ChangelogEntry[] {
+  if (selected === null) {
+    const latest = latestChangelogEntry(entries);
+    return latest ? [latest] : [];
+  }
+  const wanted = new Set(selected);
+  return entries
+    .filter((entry) => wanted.has(entry.version))
+    .sort((a, b) => compareVersions(b.version, a.version));
 }

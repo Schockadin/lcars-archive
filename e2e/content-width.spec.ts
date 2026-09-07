@@ -6,7 +6,7 @@ import { test, expect } from "@playwright/test";
 // auf eine schmale Spalte.
 //
 // Geprüft wird direkt am computed style statt über eine echte Detailseite:
-// /missions/… und /archive/… brauchen eine Datenbank, die in der E2E-Umgebung
+// /chronologie/mission/… und /archive/… brauchen eine Datenbank, die in der E2E-Umgebung
 // bewusst nicht existiert (siehe DATABASE_URL-Dummy in .github/workflows/
 // ci.yml). Die Container werden deshalb in eine DB-freie Seite eingehängt,
 // die dieselben Stylesheets lädt — geprüft wird die CSS-Regel, und genau die

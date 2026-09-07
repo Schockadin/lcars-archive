@@ -65,6 +65,10 @@ export interface User {
   // ohne LCARS-Chrome, siehe src/lib/uiMode.ts). Freier String; die App
   // normalisiert unbekannte Werte auf "lcars" (normalizeUiMode).
   ui_mode: string;
+  // Hell/Dunkel-Modus, unabhängig von ui_mode und color_theme: "dark" (Default)
+  // oder "light" (siehe src/lib/colorMode.ts). Freier String; die App
+  // normalisiert unbekannte Werte auf "dark" (normalizeColorMode).
+  color_mode: string;
   // Wird bei jeder Passwortänderung (setPassword) erhöht und im
   // Session-Cookie mitgeführt (siehe SessionPayload.sessionVersion) — ein
   // Cookie mit veraltetem Wert wird von getCurrentUser() als abgelaufen

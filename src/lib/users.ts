@@ -19,7 +19,7 @@ const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
   last_visit_at, last_dashboard_visit_at,
   email_notifications_enabled, push_notifications_enabled, notify_content_types,
-  news_kinds, color_theme, theme_overrides, ui_mode, additional_roles, permission_overrides,
+  news_kinds, color_theme, theme_overrides, ui_mode, color_mode, additional_roles, permission_overrides,
   session_version
 `;
 
@@ -349,6 +349,18 @@ export async function updateUiModePreference(
   `;
 }
 
+// Hell/Dunkel-Modus (siehe src/lib/colorMode.ts) — eigene Achse neben ui_mode
+// und color_theme.
+export async function updateColorModePreference(
+  userId: number,
+  mode: string,
+): Promise<void> {
+  await sql`
+    UPDATE users SET color_mode = ${mode}
+    WHERE id = ${userId}
+  `;
+}
+
 // Charakter-Farbe: lebt jetzt auf characters.character_color statt hier (ein
 // User mit mehreren Charakteren — „Multis" — kann so für jeden Charakter eine
 // eigene Farbe wählen statt einer einzigen für alle). Siehe
@@ -395,6 +407,7 @@ export interface UserCredentials {
   color_theme: string;
   theme_overrides: Record<string, string>;
   ui_mode: string;
+  color_mode: string;
 }
 
 // client optional per Default der globale sql-Client, kann aber eine
@@ -408,7 +421,7 @@ export async function getUserCredentialsByEmail(
 ): Promise<UserCredentials | null> {
   const rows = await client<UserCredentials[]>`
     SELECT id, email, name, role, is_active, password_hash, requires_activation,
-           session_version, color_theme, theme_overrides, ui_mode
+           session_version, color_theme, theme_overrides, ui_mode, color_mode
     FROM users
     WHERE lower(email) = ${email}
     LIMIT 1

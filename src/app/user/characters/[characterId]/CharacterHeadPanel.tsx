@@ -3,6 +3,7 @@ import { useActionState, useState } from "react";
 import HeadFieldRenderer from "@/components/ContentEditor/HeadFieldRenderer";
 import { SubmitButton, FormError } from "@/app/_shared/FormPrimitives";
 import CharacterPanel from "./CharacterPanel";
+import PortraitPicker from "../_shared/PortraitPicker";
 import {
   updateCharacterHeadAction,
   type CharacterPanelState,
@@ -13,6 +14,7 @@ import {
 } from "../_shared/characterHeadFields";
 import type { OwnCharacterForEdit } from "@/lib/characters";
 import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
+import { parsePortraitCrop } from "@/lib/portraitCrop";
 
 const initialState: CharacterPanelState = {};
 
@@ -108,6 +110,15 @@ export default function CharacterHeadPanel({
             <input type="hidden" name="characterId" value={character.id} />
 
             <div className="content-editor-head-grid">
+              {/* Portrait mit eigenem Editor: dort lässt sich der
+                  Bildausschnitt wählen (Zoom + Verschieben), das Ergebnis
+                  geht als fertig zugeschnittenes Bild mit. */}
+              <PortraitPicker
+                idPrefix="head-panel"
+                defaultUrl={character.portrait ?? ""}
+                defaultSource={character.portraitSource ?? ""}
+                defaultCrop={parsePortraitCrop(character.portraitCrop)}
+              />
               {[...characterHeadFields, ...characterMetadataFields].map(
                 (field) => (
                   <HeadFieldRenderer
@@ -119,7 +130,6 @@ export default function CharacterHeadPanel({
                         {
                           name: character.name,
                           status: character.status,
-                          portrait: character.portrait ?? undefined,
                           rank: character.rank ?? undefined,
                           species: character.species.join(", "),
                           homeworld: character.homeworld ?? undefined,

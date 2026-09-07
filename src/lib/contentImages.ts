@@ -335,7 +335,7 @@ export async function getAllContentImagesForAdmin(): Promise<AdminContentImage[]
 
     SELECT ci.id, ci.content_type, ci.content_id, ci.r2_key, ci.content_mime,
            ci.size_bytes, ci.uploaded_by, ci.created_at,
-           m.title, ('/missions/' || m.slug),
+           m.title, ('/chronologie/mission/' || m.slug),
            u.name
     FROM content_images ci
     LEFT JOIN missions m ON m.id = ci.content_id AND ci.content_type = 'mission'
@@ -346,7 +346,7 @@ export async function getAllContentImagesForAdmin(): Promise<AdminContentImage[]
 
     SELECT ci.id, ci.content_type, ci.content_id, ci.r2_key, ci.content_mime,
            ci.size_bytes, ci.uploaded_by, ci.created_at,
-           ml.title, ('/missions/' || mi.slug || '/' || ml.slug),
+           ml.title, ('/chronologie/mission/' || mi.slug || '/' || ml.slug),
            u.name
     FROM content_images ci
     LEFT JOIN mission_logs ml ON ml.id = ci.content_id AND ci.content_type = 'mission_log'

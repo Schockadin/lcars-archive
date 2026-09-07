@@ -60,9 +60,15 @@ describe("PersonnelFileView", () => {
       />,
     );
 
-    const boxes = [1, 2, 3].map(
-      (i) => screen.getByLabelText(`Entschlossenheit ${i}`) as HTMLInputElement,
+    // Eigene Kästchen statt <input type=checkbox> (siehe .pf-check): der
+    // Zustand steht in aria-checked.
+    const boxes = [1, 2, 3].map((i) =>
+      screen.getByLabelText(`Entschlossenheit ${i}`),
     );
-    expect(boxes.map((b) => b.checked)).toEqual([true, true, false]);
+    expect(boxes.map((b) => b.getAttribute("aria-checked"))).toEqual([
+      "true",
+      "true",
+      "false",
+    ]);
   });
 });

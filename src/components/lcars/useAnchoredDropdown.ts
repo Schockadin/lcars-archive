@@ -1,10 +1,22 @@
 "use client";
 import { useCallback, useEffect, useState, type RefObject } from "react";
 
+// Sicherheitsabstand zum Fensterrand, wenn ein Panel nach oben wächst.
+const VIEWPORT_MARGIN = 8;
+
 export interface DropdownAnchor {
-  top: number;
+  // Genau EINES von top/bottom ist gesetzt (das jeweils andere bleibt
+  // undefined und wird von React im style-Objekt ausgelassen): mit top wächst
+  // das Panel nach unten, mit bottom nach oben. Beide Werte sind
+  // viewport-bezogen — das Panel liegt per position:fixed am <body>.
+  top?: number;
+  bottom?: number;
   left: number;
   width: number;
+  // Nur bei "right-bottom": Höhe auf den Platz OBERHALB der Unterkante
+  // begrenzt, damit ein langes Menü nach oben hin nicht aus dem Bild läuft
+  // (das Panel scrollt dann intern, siehe overflow-y in header.css).
+  maxHeight?: number;
 }
 
 // Gemeinsame Positionierungs-/Schließen-Logik für ein an ein Trigger-Element
@@ -30,9 +42,13 @@ export function useAnchoredDropdown({
   offset?: number;
   closeOnEscape?: boolean;
   // "bottom": Panel unter dem Trigger, linksbündig (Default, Header/Suche).
-  // "right": Panel rechts neben dem Trigger, oberkantenbündig — für das
-  // vertikale Sidebar-Menü im minimalistischen UI (Flyout nach rechts).
-  placement?: "bottom" | "right";
+  // "right": Panel rechts neben dem Trigger, oberkantenbündig — Flyout nach
+  //   rechts, wächst nach unten.
+  // "right-bottom": Panel rechts neben dem Trigger, UNTERkantenbündig — es
+  //   wächst nach oben. Für die Sidebar im minimalistischen UI: Admin- und
+  //   Leitungs-Menü sitzen dort weit unten, ein nach unten wachsendes Flyout
+  //   liefe auf niedrigen Fenstern aus dem Bild.
+  placement?: "bottom" | "right" | "right-bottom";
 }): DropdownAnchor | null {
   const [anchor, setAnchor] = useState<DropdownAnchor | null>(null);
 
@@ -42,6 +58,22 @@ export function useAnchoredDropdown({
     const r = el.getBoundingClientRect();
     if (placement === "right") {
       setAnchor({ top: r.top, left: r.right + offset, width: r.width });
+    } else if (placement === "right-bottom") {
+      // Unterkante des Panels auf Unterkante des Triggers. Über bottom statt
+      // top verankert, damit die Höhe des Panels nicht bekannt sein muss —
+      // es wächst von der Unterkante aus nach oben.
+      setAnchor({
+        bottom: window.innerHeight - r.bottom,
+        left: r.right + offset,
+        width: r.width,
+        // Nie über den oberen Fensterrand hinaus: höchstens der Platz über
+        // der Unterkante des Triggers (abzüglich eines kleinen Randes) und
+        // weiterhin höchstens die 60vh aus dem Stylesheet.
+        maxHeight: Math.min(
+          window.innerHeight * 0.6,
+          r.bottom - VIEWPORT_MARGIN,
+        ),
+      });
     } else {
       setAnchor({ top: r.bottom + offset, left: r.left, width: r.width });
     }

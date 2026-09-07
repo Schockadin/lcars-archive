@@ -22,6 +22,11 @@ import {
   DEFAULT_UI_MODE,
   normalizeUiMode,
 } from "@/lib/uiMode";
+import {
+  COLOR_MODE_COOKIE_NAME,
+  DEFAULT_COLOR_MODE,
+  normalizeColorMode,
+} from "@/lib/colorMode";
 
 // Re-Export für serverseitige Aufrufer (z.B. src/app/layout.tsx), die die
 // Namen bisher aus der Session bezogen haben. Definiert werden sie in themes.ts
@@ -47,6 +52,7 @@ export async function createSession(user: {
   color_theme?: string;
   theme_overrides?: Record<string, string>;
   ui_mode?: string;
+  color_mode?: string;
 }): Promise<void> {
   const expiresAt = Date.now() + SESSION_DURATION_MS;
   const token = encodeSessionToken({
@@ -72,6 +78,30 @@ export async function createSession(user: {
     expiresAt,
   );
   await setUiModeCookie(normalizeUiMode(user.ui_mode), expiresAt);
+  await setColorModeCookie(normalizeColorMode(user.color_mode), expiresAt);
+}
+
+// Schreibt (oder entfernt) das JS-lesbare Hell/Dunkel-Cookie. Für "dark"
+// (Default) wird das Cookie gelöscht statt gesetzt — das Init-Skript behandelt
+// „kein Cookie" und „dark" identisch (dunkle :root-Werte), so bleibt es
+// aufgeräumt.
+export async function setColorModeCookie(
+  mode: string,
+  expiresAtMs: number = Date.now() + SESSION_DURATION_MS,
+): Promise<void> {
+  const cookieStore = await cookies();
+  const normalized = normalizeColorMode(mode);
+  if (normalized === DEFAULT_COLOR_MODE) {
+    cookieStore.delete(COLOR_MODE_COOKIE_NAME);
+    return;
+  }
+  cookieStore.set(COLOR_MODE_COOKIE_NAME, normalized, {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    expires: new Date(expiresAtMs),
+    path: "/",
+  });
 }
 
 // Schreibt (oder entfernt) das JS-lesbare UI-Modus-Cookie. Für "lcars" (Default)
@@ -155,4 +185,5 @@ export async function deleteSession(): Promise<void> {
   cookieStore.delete(THEME_COOKIE_NAME);
   cookieStore.delete(THEME_CUSTOM_COOKIE_NAME);
   cookieStore.delete(UI_MODE_COOKIE_NAME);
+  cookieStore.delete(COLOR_MODE_COOKIE_NAME);
 }

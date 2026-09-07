@@ -92,6 +92,7 @@ export default function MarkdownEditor({
   required = false,
   isAdminOrGM = false,
   large = false,
+  rows,
   insertImage,
 }: {
   id: string;
@@ -106,6 +107,11 @@ export default function MarkdownEditor({
   // der kompakteren Inline-Editoren (300px) — zwei feste Tailwind-Klassen,
   // da sich Utility-Klassen nicht dynamisch aus Props zusammensetzen lassen.
   large?: boolean;
+  // Mindesthöhe in Zeilen statt in Pixeln — für Felder, die in ein Panel
+  // eingebettet sind (Notizen, Regeltexte) und nicht die 300/400px der
+  // Content-Formulare brauchen, aber trotzdem genug Platz zum Schreiben.
+  // Gesetzt, gewinnt es gegen `large`.
+  rows?: number;
   // Nur gesetzt, wenn der Inhalt bereits existiert (contentId bekannt) —
   // ohne das kann noch kein Bild dafür hochgeladen worden sein (siehe
   // InsertImageButton.tsx). Charaktere bewusst ausgenommen: dort gibt es
@@ -195,16 +201,21 @@ export default function MarkdownEditor({
         required={required}
         defaultValue={defaultValue}
         spellCheck={spellCheckEnabled}
+        rows={rows}
         className={`rounded-lcars-pill lcars-input w-full resize-y font-mono ${
-          large ? "min-h-[400px]" : "min-h-[300px]"
+          rows ? "h-auto" : large ? "min-h-[400px]" : "min-h-[300px]"
         } ${mode === "preview" ? "hidden" : ""}`}
       />
 
       {mode === "preview" && (
         <div
           className={`mission-body lcars-text markdown-editor-preview ${
-            large ? "min-h-[400px]" : "min-h-[300px]"
+            // Ohne feste Mindesthöhe würde die Vorschau eines kurzen Textes
+            // das Panel zusammenklappen lassen; mit rows richtet sie sich nach
+            // derselben Zeilenzahl wie das Eingabefeld.
+            rows ? "" : large ? "min-h-[400px]" : "min-h-[300px]"
           }`}
+          style={rows ? { minHeight: `${rows * 1.5}em` } : undefined}
           dangerouslySetInnerHTML={{ __html: previewHtml }}
         />
       )}

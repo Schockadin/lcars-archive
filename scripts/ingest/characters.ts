@@ -8,6 +8,11 @@ import {
   toStringArray,
   toNumberArray,
 } from "./shared";
+import { needsPortraitImport } from "@/lib/portraitSource";
+import {
+  importPortraitFromUrl,
+  PortraitImportError,
+} from "@/lib/portraitImport";
 
 // Typ für rohe Frontmatter-Daten
 interface CharacterFrontmatter {
@@ -78,6 +83,25 @@ export async function ingestCharacters(
       // Markdown-Body zu HTML
       const bio = await markdownToHtml(content);
 
+      // Ein Portrait aus dem Frontmatter ist eine ADRESSE. Gespeichert wird
+      // stattdessen ein eigener Upload — ein Bild auf einem fremden Server
+      // verschwindet, sobald dort jemand aufräumt, und lässt sich im Editor
+      // nicht zuschneiden. Schlägt das fehl, bleibt das Portrait leer und der
+      // Lauf sagt es: die Adresse steht weiterhin in der Datei, ein zweiter
+      // Anlauf holt sie nach.
+      let portrait = fm.portrait?.trim() || null;
+      if (needsPortraitImport(portrait, process.env.R2_ASSET_PUBLIC_BASE_URL)) {
+        try {
+          portrait = await importPortraitFromUrl(portrait!);
+        } catch (err) {
+          console.warn(
+            `  ⚠️  ${slug}: Portrait "${fm.portrait}" nicht übernommen ` +
+              `(${err instanceof PortraitImportError ? err.message : String(err)}) — bleibt leer.`,
+          );
+          portrait = null;
+        }
+      }
+
       // Metadata zusammenstellen – alles was keine eigene Spalte hat
       const metadata = {
         rank: fm.rank ?? null,
@@ -120,7 +144,7 @@ export async function ingestCharacters(
           ${slug},
           ${fm.name.trim()},
           ${status},
-          ${fm.portrait?.trim() || null},
+          ${portrait},
           ${bio},
           ${sql.json(metadata)},
           ${content},

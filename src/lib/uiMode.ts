@@ -7,6 +7,12 @@
 // im Root-Layout (src/app/layout.tsx) das Attribut data-ui="minimal" auf <html>
 // setzt, bevor überhaupt etwas gezeichnet wird (kein FOUC).
 //
+// Hell/Dunkel ist KEIN UI-Modus mehr, sondern eine eigene Achse (data-mode,
+// siehe src/lib/colorMode.ts): jede Kombination ist erlaubt (LCARS-hell,
+// minimal-dunkel, …). Der frühere Wert "minimal-light" wird deshalb nur noch
+// rückwärtskompatibel entgegengenommen und auf "minimal" abgebildet; die
+// Helligkeit trägt jetzt users.color_mode.
+//
 // Rein CSS-basiert (data-ui-Attribut, siehe src/styles/minimal-ui.css) statt
 // über bedingtes Rendern — so bleibt die statische Vorab-Renderung des
 // Root-Layouts (Cache Components) erhalten und es gibt keine Hydration-
@@ -19,36 +25,39 @@
 export const UI_MODE_COOKIE_NAME = "neo_ui";
 
 export const UI_MODE_LCARS = "lcars";
-// Das minimalistische UI gibt es in zwei Ausführungen: dunkel (der bisherige
-// Wert "minimal", aus Kompatibilität unverändert) und hell ("minimal-light").
-// Beide teilen sich dieselbe schlanke Optik (minimal-ui.css, Selektor
-// data-ui^="minimal"); "minimal-light" überschreibt zusätzlich die
-// Hintergrund-/Textfarben auf ein helles Schema.
 export const UI_MODE_MINIMAL = "minimal";
-export const UI_MODE_MINIMAL_LIGHT = "minimal-light";
+
+// Alt-Wert aus der Zeit, als das minimalistische UI die Helligkeit selbst trug
+// (data-ui="minimal-light"). Wird beim Einlesen auf "minimal" + color_mode
+// "light" abgebildet (siehe normalizeUiMode und migrate-pr64.sql). Nur noch für
+// die Migration alter Cookies/DB-Werte relevant.
+export const UI_MODE_MINIMAL_LIGHT_LEGACY = "minimal-light";
 
 export const DEFAULT_UI_MODE = UI_MODE_LCARS;
 
-export type UiMode =
-  | typeof UI_MODE_LCARS
-  | typeof UI_MODE_MINIMAL
-  | typeof UI_MODE_MINIMAL_LIGHT;
+export type UiMode = typeof UI_MODE_LCARS | typeof UI_MODE_MINIMAL;
 
 export function isValidUiMode(mode: string): mode is UiMode {
-  return (
-    mode === UI_MODE_LCARS ||
-    mode === UI_MODE_MINIMAL ||
-    mode === UI_MODE_MINIMAL_LIGHT
-  );
+  return mode === UI_MODE_LCARS || mode === UI_MODE_MINIMAL;
 }
 
-// Unbekannte/veraltete Werte still auf den Default (LCARS) normalisieren.
+// Unbekannte/veraltete Werte still auf den Default (LCARS) normalisieren; den
+// Alt-Wert "minimal-light" auf "minimal" abbilden (die Helligkeit lebt jetzt in
+// color_mode).
 export function normalizeUiMode(mode: string | null | undefined): UiMode {
+  if (mode === UI_MODE_MINIMAL_LIGHT_LEGACY) return UI_MODE_MINIMAL;
   return mode && isValidUiMode(mode) ? mode : DEFAULT_UI_MODE;
 }
 
-// Beide Minimal-Varianten (hell wie dunkel) zählen als „minimalistisches UI".
 export function isMinimalUiMode(mode: string | null | undefined): boolean {
-  const m = normalizeUiMode(mode);
-  return m === UI_MODE_MINIMAL || m === UI_MODE_MINIMAL_LIGHT;
+  return normalizeUiMode(mode) === UI_MODE_MINIMAL;
+}
+
+// Leitet aus einem Alt-Wert die Helligkeit ab: "minimal-light" ⇒ light, sonst
+// dark. Genutzt beim Spiegeln alter Cookies/DB-Werte, damit Bestandsnutzer:innen
+// mit hellem Minimal-UI nach dem Update weiterhin hell sehen.
+export function legacyColorModeFromUiMode(
+  mode: string | null | undefined,
+): "light" | "dark" {
+  return mode === UI_MODE_MINIMAL_LIGHT_LEGACY ? "light" : "dark";
 }

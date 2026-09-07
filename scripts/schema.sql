@@ -134,6 +134,11 @@ CREATE TABLE IF NOT EXISTS users (
   -- src/styles/minimal-ui.css). Kein DB-CHECK (analog color_theme), unbekannte
   -- Werte fallen App-seitig auf 'lcars' zurück.
   ui_mode                       TEXT NOT NULL DEFAULT 'lcars',
+  -- Hell/Dunkel-Modus, unabhängig von ui_mode und color_theme: 'dark'
+  -- (Default) oder 'light' (siehe src/lib/colorMode.ts /
+  -- src/styles/color-mode.css). Kein DB-CHECK (analog ui_mode), unbekannte
+  -- Werte fallen App-seitig auf 'dark' zurück.
+  color_mode                    TEXT NOT NULL DEFAULT 'dark',
   additional_roles              TEXT[] NOT NULL DEFAULT '{}',
   permission_overrides          JSONB NOT NULL DEFAULT '{}'
 );
@@ -340,14 +345,25 @@ CREATE INDEX IF NOT EXISTS idx_archive_links_target ON archive_links(target_id);
 -- ---------------------------------------------------------------------------
 -- timeline_events
 -- ---------------------------------------------------------------------------
--- Tabelle bleibt für eine mögliche künftige Timeline-/Chronik-Funktion
--- erhalten, wird derzeit aber NICHT mehr befüllt: die frühere Timeline-Seite
--- und der Ingest-Aufbau (ehem. scripts/ingest/timeline.ts) sind entfernt. Die
--- <!-- timeline: JJJJ-MM-TT | Titel | Kategorie -->-Marker in Content-Bodys
--- bleiben (erzeugen unsichtbare Sprungmarken, siehe remarkTimelineAnchors in
--- src/lib/markdown.ts) und liefern die Datengrundlage, falls die Funktion
--- später neu aufgebaut wird. idx_..._created bediente getRecentActivitySince()
--- (filtert nach created_at statt nach dem In-Story-Datum event_date).
+-- Die abgeleiteten Ereignisse der Chronologie (/chronologie) — und NUR die.
+--
+-- Was sich aus den Feldern eines Inhalts ergibt (Missionsdatum, Logbuch-Datum,
+-- Geburtsdatum …) oder aus einem <!-- timeline: JJJJ-MM-TT | Titel | Kategorie
+-- -->-Marker im Fließtext, wird beim Lesen aus den Inhalten selbst gebildet
+-- (src/lib/timeline.ts) und bewusst NICHT hier gespeichert: eine gespeicherte
+-- Kopie liefe bei jeder Bearbeitung auseinander, und die Sichtbarkeit müsste
+-- doppelt gepflegt werden. Hier steht deshalb nur, was das Sprachmodell aus
+-- einem Text gelesen hat und die Spielleitung übernommen hat
+-- (src/lib/timelineInference.ts) — das kostet einen Modellaufruf und darf
+-- nicht bei jedem Seitenaufruf neu entstehen.
+--
+-- Die Sichtbarkeit hängt weiterhin am Quell-Inhalt: getTimeline() verknüpft
+-- die Zeilen über source_type/source_slug zurück und wendet dasselbe canView
+-- an wie auf den Inhaltsseiten. Ein gelöschter Inhalt nimmt seine Ereignisse
+-- mit (purgeContent.ts).
+--
+-- idx_..._created bediente getRecentActivitySince() (filtert nach created_at
+-- statt nach dem In-Story-Datum event_date).
 CREATE TABLE IF NOT EXISTS timeline_events (
   id          SERIAL PRIMARY KEY,
   event_date  DATE NOT NULL,
@@ -358,12 +374,27 @@ CREATE TABLE IF NOT EXISTS timeline_events (
                   'character', 'mission', 'mission_log', 'archive_entry'
                 )),
   source_slug TEXT NOT NULL,
-  href        TEXT NOT NULL,
+  href        TEXT NOT NULL DEFAULT '',
+  -- Woher das Ereignis stammt. Faktisch immer 'inferred' (siehe oben); die
+  -- Spalte steht trotzdem da, damit die Herkunft am Datensatz ablesbar ist
+  -- und nicht nur aus dem Umstand folgt, in welcher Tabelle er liegt.
+  origin      TEXT NOT NULL DEFAULT 'inferred',
+  -- Ein bis zwei Sätze zum Ereignis, vom Modell formuliert.
+  detail      TEXT,
+  -- Wie sicher sich das Modell war (0…1) — nur zur Anzeige, nie als Filter:
+  -- ein Modell weiß seine eigene Verlässlichkeit nicht, der Wert ist ein
+  -- Hinweis für die Spielleitung, kein Maß.
+  confidence  REAL,
+  created_by  INT REFERENCES users(id) ON DELETE SET NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 CREATE INDEX IF NOT EXISTS idx_timeline_events_date    ON timeline_events(event_date);
 CREATE INDEX IF NOT EXISTS idx_timeline_events_source  ON timeline_events(source_type, source_slug);
 CREATE INDEX IF NOT EXISTS idx_timeline_events_created ON timeline_events(created_at);
+-- Ein Inhalt bekommt dasselbe Ereignis nicht doppelt, wenn die Ableitung
+-- zweimal läuft.
+CREATE UNIQUE INDEX IF NOT EXISTS idx_timeline_events_unique
+  ON timeline_events(source_type, source_slug, event_date, title);
 
 -- ---------------------------------------------------------------------------
 -- password_setup_tokens
@@ -781,6 +812,238 @@ CREATE INDEX IF NOT EXISTS idx_mission_logs_session ON mission_logs(session_id);
 -- Standardwerte aus src/lib/advancement.ts gelten (DEFAULT_ADVANCEMENT_RULES).
 ALTER TABLE campaign_settings ADD COLUMN IF NOT EXISTS advancement_rules JSONB;
 
+-- campaign_settings: vom Admin unter /admin/changelog gewählte Changelog-
+-- Versionen, deren Neuerungen auf dem Dashboard in der „Neue Funktionen"-Box
+-- gesammelt erscheinen (src/lib/changelogSettings.ts). JSONB-Array von
+-- „Major.Minor"-Strings; NULL = nicht konfiguriert ⇒ es gilt der Default (nur
+-- die jüngste Version).
+-- changelog_hidden_categories: je Rolle die Kategorien, die in dieser Box NICHT
+-- erscheinen — JSONB-Objekt Rolle → Kategorie-Liste (siehe
+-- src/lib/changelogCategories.ts); NULL/leer = nichts ausgeblendet. Die
+-- vollständige Liste unter /changelog bleibt davon unberührt.
+ALTER TABLE campaign_settings
+  ADD COLUMN IF NOT EXISTS changelog_featured_versions JSONB,
+  ADD COLUMN IF NOT EXISTS changelog_hidden_categories JSONB;
+
+-- ---------------------------------------------------------------------------
+-- Volltextsuche (FTS): tsvector-Spalten + GIN-Indizes
+-- ---------------------------------------------------------------------------
+-- Die Suche verglich bisher nur per ILIKE '%wort%'. Das findet keine
+-- Wortformen („Mission" fand „Missionen" nicht), kennt keine Mehrwort-Logik
+-- („Tuvok Vulkan" suchte den wörtlichen String) und kann nicht nach Relevanz
+-- sortieren. Die tsvector-Spalten liefern beides; die vorhandenen
+-- Trigramm-Indizes bleiben als Ergänzung für Teilwort-/Tippfehler-Treffer
+-- bestehen (die Suche fragt beides ab, siehe src/lib/search.ts).
+--
+-- GENERATED ALWAYS … STORED: Postgres hält die Spalte selbst aktuell, es
+-- braucht keinen Trigger und keinen Anwendungscode. Alle benutzten Funktionen
+-- (to_tsvector mit KONSTANTER Konfiguration, setweight, coalesce) sind
+-- immutable — Voraussetzung für generierte Spalten.
+--
+-- Gewichte: A = Titel/Name (ein Treffer dort zählt am meisten),
+--           B = Fließtext, C = Nebenfelder (Spezies, Rang).
+
+ALTER TABLE characters ADD COLUMN IF NOT EXISTS search_vector tsvector
+  GENERATED ALWAYS AS (
+    setweight(to_tsvector('german', coalesce(name, '')), 'A') ||
+    setweight(to_tsvector('german', coalesce(source_md, bio, '')), 'B') ||
+    setweight(to_tsvector('german', coalesce(species, '') || ' ' || coalesce(rank, '')), 'C')
+  ) STORED;
+CREATE INDEX IF NOT EXISTS idx_characters_fts ON characters USING GIN (search_vector);
+
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS search_vector tsvector
+  GENERATED ALWAYS AS (
+    setweight(to_tsvector('german', coalesce(title, '')), 'A') ||
+    setweight(to_tsvector('german', coalesce(source_md, '')), 'B')
+  ) STORED;
+CREATE INDEX IF NOT EXISTS idx_missions_fts ON missions USING GIN (search_vector);
+
+ALTER TABLE mission_logs ADD COLUMN IF NOT EXISTS search_vector tsvector
+  GENERATED ALWAYS AS (
+    setweight(to_tsvector('german', coalesce(title, '')), 'A') ||
+    setweight(to_tsvector('german', coalesce(source_md, content, '')), 'B')
+  ) STORED;
+CREATE INDEX IF NOT EXISTS idx_mission_logs_fts ON mission_logs USING GIN (search_vector);
+
+ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS search_vector tsvector
+  GENERATED ALWAYS AS (
+    setweight(to_tsvector('german', coalesce(title, '')), 'A') ||
+    setweight(to_tsvector('german', coalesce(source_md, content, '')), 'B')
+  ) STORED;
+CREATE INDEX IF NOT EXISTS idx_archive_fts ON archive_entries USING GIN (search_vector);
+
+-- ── Session-Planer ───────────────────────────────────────────────────────
+-- game_sessions (oben) ist die NACHbuchung: eine gespielte Session mit ihren
+-- AP. Was fehlte, war der Blick nach vorn — ein Termin, den die Spielleitung
+-- ankündigt und zu dem die Runde zu- oder absagt. Bewusst eine eigene
+-- Tabelle: eine geplante Session hat weder AP noch Teilnehmer-Gutschriften,
+-- und eine gespielte braucht keine Zusagen mehr.
+CREATE TABLE IF NOT EXISTS planned_sessions (
+  id            SERIAL PRIMARY KEY,
+  -- Zeitpunkt mit Uhrzeit: „Freitag" allein reicht nicht, um zuzusagen.
+  scheduled_at  TIMESTAMPTZ NOT NULL,
+  title         TEXT NOT NULL DEFAULT '',
+  -- Wo gespielt wird (Adresse, „bei Anna", ein Videolink).
+  location      TEXT NOT NULL DEFAULT '',
+  notes         TEXT NOT NULL DEFAULT '',
+  created_by    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_planned_sessions_date
+  ON planned_sessions (scheduled_at DESC);
+
+-- Zu- und Absagen. Eine Zeile je Person und Termin; wer nicht geantwortet
+-- hat, hat keine Zeile — „noch offen" ist damit die Abwesenheit einer
+-- Antwort und kein eigener Wert, der gepflegt werden müsste.
+CREATE TABLE IF NOT EXISTS planned_session_rsvps (
+  session_id  INTEGER NOT NULL REFERENCES planned_sessions(id) ON DELETE CASCADE,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  response    TEXT NOT NULL CHECK (response IN ('yes', 'no')),
+  note        TEXT NOT NULL DEFAULT '',
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (session_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_planned_session_rsvps_user
+  ON planned_session_rsvps (user_id);
+
+-- Sicherung gegen eine halb angelegte Tabelle: ohne den Primärschlüssel
+-- scheitert das ON CONFLICT (session_id, user_id) der Zusage mit
+-- „there is no unique or exclusion constraint matching the ON CONFLICT
+-- specification" — lesen ginge, zusagen nicht. CREATE TABLE IF NOT EXISTS
+-- repariert eine bereits vorhandene Tabelle nicht, deshalb hier eigens.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'planned_session_rsvps'::regclass AND contype = 'p'
+  ) THEN
+    ALTER TABLE planned_session_rsvps
+      ADD CONSTRAINT planned_session_rsvps_pkey PRIMARY KEY (session_id, user_id);
+  END IF;
+END $$;
+
+-- Wer zu einem Termin eingeplant ist. Bewusst CHARAKTERE statt Konten: die
+-- Zusage (planned_session_rsvps) gibt der Mensch ab, eingeplant wird die
+-- Figur — beim Nachtragen der gespielten Session sind es genau diese
+-- Charaktere, die AP bekommen. Beim Ankündigen sind alle aktiven Figuren
+-- vorausgewählt; wer nicht mitspielt, wird abgewählt.
+CREATE TABLE IF NOT EXISTS planned_session_characters (
+  session_id    INTEGER NOT NULL REFERENCES planned_sessions(id) ON DELETE CASCADE,
+  character_id  INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  PRIMARY KEY (session_id, character_id)
+);
+CREATE INDEX IF NOT EXISTS idx_planned_session_characters_character
+  ON planned_session_characters (character_id);
+
+-- Der Termin, aus dem eine gespielte Session geworden ist. Gesetzt vom Knopf
+-- „Session eintragen" am Termin: aus der Ankündigung wird die Nachbuchung mit
+-- AP (game_sessions). Der Termin bleibt stehen — er trägt die Zusagen, die
+-- eine gespielte Session nicht mehr kennt —, verschwindet aber aus der
+-- Startseite, weil er erledigt ist. ON DELETE SET NULL: wird die Session
+-- zurückgenommen, steht der Termin wieder als offen da.
+ALTER TABLE planned_sessions
+  ADD COLUMN IF NOT EXISTS game_session_id INTEGER
+  REFERENCES game_sessions(id) ON DELETE SET NULL;
+
+-- Ein Ereignis ohne eigenen Inhalt: source_type/source_slug dürfen leer sein.
+-- Bis v1.29.42 hing JEDES Ereignis an einer Mission, einem Logbuch, einem
+-- Eintrag oder einer Figur — ein reiner Kampagnen-Meilenstein („Der Vertrag
+-- von Algeron wird unterzeichnet") hatte damit kein Zuhause, außer man legte
+-- eigens einen Datenbank-Eintrag dafür an. origin unterscheidet die drei
+-- Herkünfte: 'inferred' (vom Modell abgeleitet), 'manual' (von Hand
+-- eingetragen).
+ALTER TABLE timeline_events ALTER COLUMN source_type DROP NOT NULL;
+ALTER TABLE timeline_events ALTER COLUMN source_slug DROP NOT NULL;
+
+-- Wer an einem von Hand eingetragenen Ereignis beteiligt ist. Die übrigen
+-- Ereignisse ziehen ihre Beteiligten aus ihrer Quelle (Missionsbesetzung,
+-- Logbuch-Autor, Gesprächsteilnehmer); ein freies Ereignis hat keine Quelle,
+-- also braucht es eine eigene Zuordnung. Bewusst OHNE Vorauswahl und über
+-- ALLE Figuren (auch zurückgezogene): ein historisches Ereignis betrifft oft
+-- gerade die, die nicht mehr aktiv sind.
+CREATE TABLE IF NOT EXISTS timeline_event_characters (
+  event_id      INTEGER NOT NULL REFERENCES timeline_events(id) ON DELETE CASCADE,
+  character_id  INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  PRIMARY KEY (event_id, character_id)
+);
+CREATE INDEX IF NOT EXISTS idx_timeline_event_characters_character
+  ON timeline_event_characters (character_id);
+
+-- „person" und „character" waren dieselbe Ereignisart mit zwei Schlüsseln:
+-- die gepflegte Art heißt 'character' (Beschriftung „Person"), aus Markern
+-- und aus dem Sprachmodell kam mitunter 'person' — das fiel als unbekannter
+-- Wert auf „Sonstiges" zurück und stand als zweite, gleichbedeutende Art in
+-- der Auswahl. Ab v1.29.49 normalisiert der Code beide auf 'character';
+-- bestehende Zeilen werden hier nachgezogen.
+UPDATE timeline_events SET category = 'character' WHERE category = 'person';
+
+
+-- Gesprochenes ist auch Inhalt: was in einem Gespräch gesagt wird, lag bis
+-- v1.29.41 außerhalb der Suche — gefunden wurde nur der Eintrag drumherum,
+-- dessen Text bei Gesprächen meist leer ist (der Inhalt lebt in
+-- dialogue_messages). Kein title_vector: eine Nachricht hat keinen Titel, sie
+-- taucht deshalb nur in der Volltextsuche auf, nicht im Header-Dropdown.
+ALTER TABLE dialogue_messages ADD COLUMN IF NOT EXISTS search_vector tsvector
+  GENERATED ALWAYS AS (
+    to_tsvector('german', coalesce(source_md, content, ''))
+  ) STORED;
+CREATE INDEX IF NOT EXISTS idx_dialogue_messages_fts
+  ON dialogue_messages USING GIN (search_vector);
+
+-- Titel-only-Vektor: die Live-Suche (Header-Dropdown) vergleicht bewusst NUR
+-- Titel/Namen — mit dem vollen search_vector würde sie plötzlich auch
+-- Fließtext treffen und ein anderes Verhalten zeigen als bisher. Eigene
+-- Spalte statt einer Berechnung zur Laufzeit, damit auch die Live-Suche über
+-- einen Index läuft.
+ALTER TABLE characters ADD COLUMN IF NOT EXISTS title_vector tsvector
+  GENERATED ALWAYS AS (to_tsvector('german', coalesce(name, ''))) STORED;
+CREATE INDEX IF NOT EXISTS idx_characters_title_fts ON characters USING GIN (title_vector);
+
+ALTER TABLE missions ADD COLUMN IF NOT EXISTS title_vector tsvector
+  GENERATED ALWAYS AS (to_tsvector('german', coalesce(title, ''))) STORED;
+CREATE INDEX IF NOT EXISTS idx_missions_title_fts ON missions USING GIN (title_vector);
+
+ALTER TABLE mission_logs ADD COLUMN IF NOT EXISTS title_vector tsvector
+  GENERATED ALWAYS AS (to_tsvector('german', coalesce(title, ''))) STORED;
+CREATE INDEX IF NOT EXISTS idx_mission_logs_title_fts ON mission_logs USING GIN (title_vector);
+
+ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS title_vector tsvector
+  GENERATED ALWAYS AS (to_tsvector('german', coalesce(title, ''))) STORED;
+CREATE INDEX IF NOT EXISTS idx_archive_title_fts ON archive_entries USING GIN (title_vector);
+
+-- ---------------------------------------------------------------------------
+-- content_notes
+-- ---------------------------------------------------------------------------
+-- Notizen und Kommentare an Inhalten (Charaktere, Missionen, Logbücher,
+-- Datenbank-Einträge). EINE Tabelle für beide Anwendungsfälle, unterschieden
+-- über visibility:
+--   'private' → nur der Autor sieht sie (persönliche Notiz am Eintrag)
+--   'group'   → alle eingeloggten Personen sehen sie (Diskussion)
+-- Eine zweite Tabelle brächte nichts: Speicherung, Rechte und Anzeige sind
+-- identisch, nur der Sichtbarkeitsfilter unterscheidet sich.
+--
+-- Verknüpfung über (content_type, content_slug) statt per Fremdschlüssel: die
+-- vier Inhaltsarten liegen in vier Tabellen, und der Slug ist der Schlüssel,
+-- mit dem im Projekt ohnehin überall verlinkt wird (siehe content_follows,
+-- das genauso aufgebaut ist). Aufräumen beim Löschen von Inhalten übernimmt
+-- purgeContent.ts.
+CREATE TABLE IF NOT EXISTS content_notes (
+  id           SERIAL PRIMARY KEY,
+  content_type TEXT NOT NULL
+                 CHECK (content_type IN ('character', 'mission', 'mission_log', 'archive')),
+  content_slug TEXT NOT NULL,
+  author_id    INT  NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  body         TEXT NOT NULL,
+  visibility   TEXT NOT NULL DEFAULT 'private'
+                 CHECK (visibility IN ('private', 'group')),
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_content_notes_target
+  ON content_notes(content_type, content_slug);
+CREATE INDEX IF NOT EXISTS idx_content_notes_author ON content_notes(author_id);
+
 -- ---------------------------------------------------------------------------
 -- news_seen
 -- ---------------------------------------------------------------------------
@@ -909,6 +1172,13 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS color_theme TEXT NOT NULL
 ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_overrides JSONB NOT NULL
   DEFAULT '{}';
 
+-- color_mode: Hell/Dunkel-Modus, unabhängig von ui_mode/color_theme (siehe
+-- src/lib/colorMode.ts). Default 'dark'. Die Datenmigration alter
+-- ui_mode='minimal-light'-Konten nach ui_mode='minimal' + color_mode='light'
+-- lebt bewusst nur in migrate-pr64.sql (kein datenveränderndes UPDATE hier).
+ALTER TABLE users ADD COLUMN IF NOT EXISTS color_mode TEXT NOT NULL
+  DEFAULT 'dark';
+
 -- RBAC: weitere Rollen (ein User kann mehrere haben) + individuelle
 -- Rechte-Overrides (siehe src/lib/permissions.ts). Reine Struktur-Anlage; die
 -- verhaltenswahrende Backfill-Zuweisung der Zusatzrollen für Bestandskonten
@@ -943,3 +1213,80 @@ ALTER TABLE admin_audit_log ADD CONSTRAINT admin_audit_log_action_check
     'update_roles', 'update_permissions',
     'create_role', 'edit_role', 'delete_role'
   ));
+
+-- ---------------------------------------------------------------------------
+-- content_revisions
+-- ---------------------------------------------------------------------------
+-- Versionshistorie der Inhaltstexte (Charaktere, Missionen, Logbücher,
+-- Datenbank-Einträge). Vor jedem Überschreiben legt recordRevision() den
+-- BISHERIGEN Stand hier ab — eine Zeile ist damit „so sah es vor dieser
+-- Bearbeitung aus", genau das, was man zum Zurückholen braucht.
+--
+-- Nur Titel + Quelltext: das gerenderte HTML entsteht beim Wiederherstellen
+-- neu, und Stammdaten (Status, Tags, Sichtbarkeit) haben eigene Formulare.
+-- Verknüpfung wie content_notes ohne Fremdschlüssel auf die vier
+-- Inhaltstabellen; Aufräumen übernimmt purgeContent.ts. Je Inhalt werden die
+-- jüngsten REVISION_KEEP Fassungen aufgehoben (siehe contentRevisions.ts).
+CREATE TABLE IF NOT EXISTS content_revisions (
+  id           SERIAL PRIMARY KEY,
+  content_type TEXT NOT NULL
+                 CHECK (content_type IN ('character', 'mission', 'mission_log', 'archive')),
+  content_id   INT  NOT NULL,
+  title        TEXT,
+  source_md    TEXT NOT NULL,
+  -- Wer die ersetzende Bearbeitung ausgelöst hat. ON DELETE SET NULL: die
+  -- Fassung bleibt erhalten, auch wenn das Konto später gelöscht wird.
+  editor_id    INT  REFERENCES users(id) ON DELETE SET NULL,
+  created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_content_revisions_target
+  ON content_revisions(content_type, content_id, created_at DESC);
+
+-- ---------------------------------------------------------------------------
+-- focuses
+-- ---------------------------------------------------------------------------
+-- Schwerpunkt-Katalog (Focuses), gepflegt unter /gm/focuses. Aufgebaut wie
+-- talents: Startdaten aus dem Regeltext (scripts/seed/focuses.json), von der
+-- Spielleitung ergänzbar (is_custom).
+--
+-- UNIQUE über (name, discipline) statt nur über den Namen: der Regeltext
+-- führt sechs Schwerpunkte in ZWEI Disziplinen („Astrophysics" bei Conn und
+-- Science, „Survival" bei Conn und Security, …). Auf dem Bogen steht davon
+-- nur der Name — dort sind es dieselben, und alles, was „schon eingetragen"
+-- prüft, vergleicht deshalb über den Namen (siehe focusKey in
+-- focusCatalog.ts).
+CREATE TABLE IF NOT EXISTS focuses (
+  id          SERIAL PRIMARY KEY,
+  name        TEXT NOT NULL,
+  discipline  TEXT NOT NULL
+                CHECK (discipline IN ('command', 'conn', 'engineering',
+                                      'security', 'science', 'medicine')),
+  description TEXT,
+  is_custom   BOOLEAN NOT NULL DEFAULT FALSE,
+  created_by  INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  UNIQUE (name, discipline)
+);
+CREATE INDEX IF NOT EXISTS idx_focuses_discipline ON focuses(discipline);
+
+-- ---------------------------------------------------------------------------
+-- campaign_rules
+-- ---------------------------------------------------------------------------
+-- Eigene Regeln der Runde (Hausregeln), gepflegt unter /gm/rules. Sie
+-- erscheinen auf jedem Spickzettel (Blatt 2 des Charakterbogens) hinter den
+-- Kernregeln aus dem Regelwerk.
+--
+-- Anders als Talente und Schwerpunkte hängen sie an keinem Charakter: sie
+-- gelten für die ganze Kampagne. Deshalb auch keine Kategorie — nur Name,
+-- Text und eine Reihenfolge, in der die Spielleitung sie sortiert
+-- (sort_order, bei Gleichstand nach Name).
+CREATE TABLE IF NOT EXISTS campaign_rules (
+  id          SERIAL PRIMARY KEY,
+  name        TEXT NOT NULL UNIQUE,
+  body        TEXT NOT NULL,
+  sort_order  INT  NOT NULL DEFAULT 0,
+  created_by  INT  REFERENCES users(id) ON DELETE SET NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

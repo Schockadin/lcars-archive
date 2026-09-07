@@ -50,7 +50,7 @@ export default function EntryAddModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-[16px]">
-          <h2 className="text-lcars-primary">{title}</h2>
+          <h2 className="text-lcars-primary-ink">{title}</h2>
           <button
             type="button"
             onClick={onClose}

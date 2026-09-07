@@ -65,7 +65,7 @@ export default async function NewDialoguePage() {
               beginnen. Wende dich dafür an die Spielleitung.
             </p>
             <p>
-              <Link href="/user" className="text-lcars-primary underline">
+              <Link href="/user" className="text-lcars-primary-ink underline">
                 ← Zurück zum Profil
               </Link>
             </p>

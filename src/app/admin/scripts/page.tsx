@@ -45,42 +45,42 @@ export default async function AdminScriptsPage() {
         <div className="lcars-text flex flex-col gap-[32px]">
           {can("admin.access") && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-primary">Cache</h2>
+              <h2 className="text-lcars-primary-ink">Cache</h2>
               <RevalidateCachePanel />
             </section>
           )}
 
           {can("admin.access") && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-primary">Missionen ohne Owner</h2>
+              <h2 className="text-lcars-primary-ink">Missionen ohne Owner</h2>
               <AssignOwnerlessMissionsPanel gms={gmOptions} />
             </section>
           )}
 
           {can("admin.access") && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-primary">Gespräche</h2>
+              <h2 className="text-lcars-primary-ink">Gespräche</h2>
               <DialogueContentRegeneratePanel />
             </section>
           )}
 
           {can("content.autolink_tools") && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-primary">Alle Inhalte verlinken</h2>
+              <h2 className="text-lcars-primary-ink">Alle Inhalte verlinken</h2>
               <LinkAllContentPanel />
             </section>
           )}
 
           {can("admin.access") && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-primary">Typografie korrigieren</h2>
+              <h2 className="text-lcars-primary-ink">Typografie korrigieren</h2>
               <TypographyFixPanel />
             </section>
           )}
 
           {can("admin.access") && (
             <section className="flex flex-col gap-[12px]">
-              <h2 className="text-lcars-primary">Toast-Test</h2>
+              <h2 className="text-lcars-primary-ink">Toast-Test</h2>
               <ToastTestPanel />
             </section>
           )}

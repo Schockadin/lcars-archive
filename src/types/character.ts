@@ -14,6 +14,12 @@ export interface CharacterMetadata {
   // angezeigte Alter daraus + dem aktuellen Ingame-Jahr abgeleitet
   // (inferAgeFromDateOfBirth in src/lib/campaign.ts) statt age zu verwenden.
   dateOfBirth: string | null;
+  // Portrait-Original und gewählter Bildausschnitt. characters.portrait hält
+  // das fertig zugeschnittene Bild; diese beiden erlauben, den Ausschnitt
+  // später aus demselben Original neu zu wählen (siehe src/lib/portraitCrop.ts
+  // und PortraitPicker.tsx). Fehlen sie, wurde nie zugeschnitten.
+  portraitSource?: string | null;
+  portraitCrop?: unknown;
   affiliation: CharacterAffiliation | null;
   player: string | null;
   tags: string[];

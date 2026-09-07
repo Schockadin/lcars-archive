@@ -117,7 +117,7 @@ export default function PermissionsMatrix({ roles }: { roles: MatrixRole[] }) {
             {roles.map((role) => (
               <th key={role.key} scope="col">
                 <div className="flex flex-col items-center gap-[4px]">
-                  <span className="text-lcars-primary font-bold">
+                  <span className="text-lcars-primary-ink font-bold">
                     {role.label}
                   </span>
                   <span className="text-lcars-ink-dim text-[11px] font-normal normal-case">

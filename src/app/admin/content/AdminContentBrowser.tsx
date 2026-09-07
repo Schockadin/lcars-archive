@@ -196,12 +196,12 @@ export default function AdminContentBrowser({
         </button>
 
         {error && (
-          <p className="text-lcars-quinary" role="alert">
+          <p className="text-lcars-quinary-ink" role="alert">
             {error}
           </p>
         )}
         {result !== null && (
-          <p className="text-lcars-primary">
+          <p className="text-lcars-primary-ink">
             {result === 0
               ? "Keine Inhalte zugeordnet."
               : `${result} ${result === 1 ? "Inhalt" : "Inhalte"} zugeordnet.`}

@@ -35,7 +35,7 @@ export default function IngameYearForm({ info }: { info: IngameYearInfo }) {
       <p className="text-[15px]">
         {info.effectiveYear != null ? (
           <>
-            <b className="text-lcars-primary text-[22px] align-middle">
+            <b className="text-lcars-primary-ink text-[22px] align-middle">
               {info.effectiveYear}
             </b>{" "}
             <span className="text-lcars-ink-dim">

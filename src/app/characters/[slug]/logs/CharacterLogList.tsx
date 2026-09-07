@@ -13,6 +13,11 @@ import {
   byDateDesc,
   sessionLabel,
 } from "@/lib/missionFormat";
+import {
+  characterHref,
+  missionHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 
 type LogSortMode = "date" | "mission";
 
@@ -63,7 +68,7 @@ export default function CharacterLogList({
     <div className="mission-loglist">
       <div className="mission-loglist-head">
         <Link
-          href={`/characters/${characterSlug}`}
+          href={characterHref(characterSlug)}
           className="lcars-back-link"
         >
           ‹ {characterName}
@@ -100,7 +105,7 @@ export default function CharacterLogList({
               {dateView.map((log) => (
                 <LcarsLogEntry
                   key={log.id}
-                  href={`/missions/${log.mission_slug}/${log.slug}`}
+                  href={missionLogHref(log.mission_slug, log.slug)}
                   stub={sessionLabel(log.session_nr)}
                   title={log.title}
                   secondaryLabel={log.mission_title}
@@ -114,14 +119,14 @@ export default function CharacterLogList({
                 <LcarsDataRow
                   value={group.logs.length}
                   label={group.title}
-                  href={`/missions/${group.slug}`}
+                  href={missionHref(group.slug)}
                   className="lcars-data-row--full"
                 />
                 <div className="mission-log-list mt-[8px]">
                   {group.logs.map((log) => (
                     <LcarsLogEntry
                       key={log.id}
-                      href={`/missions/${log.mission_slug}/${log.slug}`}
+                      href={missionLogHref(log.mission_slug, log.slug)}
                       stub={sessionLabel(log.session_nr)}
                       title={log.title}
                       date={log.log_date}

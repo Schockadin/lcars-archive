@@ -200,7 +200,7 @@ export default function AdminUsersTable({ users }: { users: AdminUserRow[] }) {
                     {u.is_active ? (
                       "Aktiv"
                     ) : (
-                      <span className="text-lcars-quinary">Deaktiviert</span>
+                      <span className="text-lcars-quinary-ink">Deaktiviert</span>
                     )}
                   </td>
                   <td className="py-[6px] pr-[16px] whitespace-nowrap text-lcars-ink">

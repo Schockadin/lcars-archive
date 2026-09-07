@@ -35,9 +35,147 @@ export type TokenId = (typeof THEME_TOKENS)[number]["id"];
 export const TOKEN_IDS: TokenId[] = THEME_TOKENS.map((t) => t.id);
 
 export type ThemeTokens = Record<TokenId, string>;
-// Nur die überschriebenen Tokens (Teilmenge) — leeres Objekt = keine
-// Individualisierung.
-export type ThemeOverrides = Partial<ThemeTokens>;
+
+// ─── Frei wählbare Basis-Farben (Flächen + Schriftfarben) ───────────────────
+// Anders als die Akzent-Tokens (THEME_TOKENS) hängen diese NICHT am Farbthema,
+// sondern haben je Hell-/Dunkel-Modus (src/lib/colorMode.ts) einen eigenen
+// Default. Wer will, überschreibt jede Rolle EINZELN im Profil — dieselbe
+// Mechanik wie die Akzent-Feineinstellung (theme_overrides).
+
+// Schriftfarben: jede Textrolle ist unabhängig überschreibbar, damit sich
+// Fließtext, Lesetext, Nebentext, Links usw. getrennt einstellen lassen.
+export const INK_TOKENS = [
+  {
+    id: "ink",
+    label: "Fließtext",
+    hint: "Grundfarbe für Text auf der Seite",
+  },
+  {
+    id: "ink-light",
+    label: "Lesetext",
+    hint: "Artikel-, Beschreibungs- und Logbuchtexte",
+  },
+  {
+    id: "ink-dim",
+    label: "Nebentext",
+    hint: "Metazeilen, Hinweise, Platzhalter",
+  },
+  {
+    id: "ink-data",
+    label: "Links & Daten",
+    hint: "Verlinkungen, Überschriften und Datenwerte",
+  },
+  {
+    id: "ink-contrast",
+    label: "Kontrasttext",
+    hint: "Text, der sich besonders klar abheben soll",
+  },
+  {
+    id: "ink-dark",
+    label: "Text auf Akzentflächen",
+    hint: "Beschriftung auf farbigen Pillen und Balken",
+  },
+] as const;
+
+// Flächen: Seitenhintergrund und die davon abgesetzten Flächen. Im
+// minimalistischen UI trägt „surface" auch den Hintergrund der Seitenleiste
+// (siehe .lcars-sidebar in src/styles/minimal-ui.css) — die Leiste ändert sich
+// dadurch mit, statt auf dem Vorgabewert stehen zu bleiben.
+export const SURFACE_TOKENS = [
+  {
+    id: "bg",
+    label: "Seitenhintergrund",
+    hint: "Grundfläche der gesamten Seite",
+  },
+  {
+    id: "surface",
+    label: "Flächen",
+    hint: "Panels und Karten — im minimalen UI auch die Seitenleiste",
+  },
+  {
+    id: "surface-2",
+    label: "Flächen (hervorgehoben)",
+    hint: "Aktive und betonte Flächen",
+  },
+  {
+    id: "border",
+    label: "Rahmen",
+    hint: "Trennlinien und Umrandungen",
+  },
+] as const;
+
+export type InkTokenId = (typeof INK_TOKENS)[number]["id"];
+export type SurfaceTokenId = (typeof SURFACE_TOKENS)[number]["id"];
+export type BaseTokenId = SurfaceTokenId | InkTokenId;
+
+export interface BaseTokenDef {
+  id: BaseTokenId;
+  label: string;
+  hint: string;
+}
+
+// Flächen zuerst, dann Schrift — dieselbe Reihenfolge wie im Profil-Formular.
+export const BASE_TOKENS: readonly BaseTokenDef[] = [
+  ...SURFACE_TOKENS,
+  ...INK_TOKENS,
+];
+
+export const BASE_TOKEN_IDS: BaseTokenId[] = BASE_TOKENS.map((t) => t.id);
+
+// Mode-abhängige Defaults der Basis-Tokens — nur für die Anzeige der Farbwähler
+// im Profil, wenn (noch) kein eigener Wert gesetzt ist. Spiegeln tokens.css
+// (:root = dunkel) bzw. color-mode.css (html[data-mode="light"]).
+export const BASE_TOKEN_DEFAULTS: Record<
+  "dark" | "light",
+  Record<BaseTokenId, string>
+> = {
+  dark: {
+    bg: "#08081a",
+    surface: "#10102a",
+    "surface-2": "#1a1838",
+    border: "#2d2550",
+    ink: "#c8b8ff",
+    "ink-light": "#edefd2",
+    "ink-dim": "#a39cc9",
+    "ink-data": "#4fc3f7",
+    "ink-contrast": "#ededed",
+    "ink-dark": "#08081a",
+  },
+  light: {
+    bg: "#f4f4f8",
+    surface: "#ffffff",
+    "surface-2": "#e9e9f1",
+    border: "#d3d3df",
+    ink: "#1b1b2c",
+    "ink-light": "#0e0e18",
+    "ink-dim": "#55556b",
+    "ink-data": "#12539e",
+    "ink-contrast": "#0e0e18",
+    "ink-dark": "#08081a",
+  },
+};
+
+// Jede überschreibbare Token-ID (Akzent + Basis) → die CSS-Variablen-Suffixe,
+// die sie setzt. Durchgehend 1:1: jede Rolle steht für genau eine Variable und
+// ist damit unabhängig von den übrigen einstellbar. Für jedes Suffix werden
+// sowohl --lcars-<suffix> (rohes CSS) als auch --color-lcars-<suffix>
+// (Tailwind) gesetzt. EINE Quelle für die Client-Vorschau
+// (ThemeSettingsForm/ThemeApplier) UND das Pre-Paint-Init-Skript
+// (src/app/layout.tsx).
+export const OVERRIDE_TOKEN_VARS: Record<string, string[]> = Object.fromEntries(
+  [...TOKEN_IDS, ...BASE_TOKEN_IDS].map((id) => [id, [id]]),
+);
+
+export type OverrideTokenId = TokenId | BaseTokenId;
+
+// Nur die überschriebenen Tokens (Teilmenge aus Akzent- UND Basis-Tokens) —
+// leeres Objekt = keine Individualisierung.
+export type ThemeOverrides = Partial<Record<OverrideTokenId, string>>;
+
+// Gültig als Override-Ziel ist jede Akzent- ODER Basis-Token-ID.
+export function isOverridableToken(id: string): id is OverrideTokenId {
+  return Object.prototype.hasOwnProperty.call(OVERRIDE_TOKEN_VARS, id);
+}
 
 export interface ColorTheme {
   id: string;
@@ -196,7 +334,7 @@ export function sanitizeThemeOverrides(raw: unknown): ThemeOverrides {
   if (!raw || typeof raw !== "object") return {};
   const out: ThemeOverrides = {};
   for (const [key, val] of Object.entries(raw as Record<string, unknown>)) {
-    if (!isValidTokenId(key)) continue;
+    if (!isOverridableToken(key)) continue;
     if (typeof val !== "string") continue;
     const hex = normalizeHexColor(val);
     if (hex) out[key] = hex;
@@ -208,7 +346,7 @@ export function sanitizeThemeOverrides(raw: unknown): ThemeOverrides {
 // "primary:ff9900,secondary:cc6699" (ohne #). Leeres Objekt → "".
 export function encodeThemeOverrides(overrides: ThemeOverrides): string {
   return Object.entries(overrides)
-    .filter(([id, hex]) => isValidTokenId(id) && hex && isValidHexColor(hex))
+    .filter(([id, hex]) => isOverridableToken(id) && hex && isValidHexColor(hex))
     .map(([id, hex]) => `${id}:${hex.slice(1)}`)
     .join(",");
 }
@@ -219,7 +357,7 @@ export function decodeThemeOverrides(encoded: string | null | undefined): ThemeO
   for (const pair of encoded.split(",")) {
     const [id, rawHex] = pair.split(":");
     if (!id || !rawHex) continue;
-    if (!isValidTokenId(id)) continue;
+    if (!isOverridableToken(id)) continue;
     const hex = normalizeHexColor(`#${rawHex}`);
     if (hex) out[id] = hex;
   }

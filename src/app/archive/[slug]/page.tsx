@@ -17,6 +17,13 @@ import { listAllUsers } from "@/lib/users";
 import { resolveFollowState } from "@/lib/follows";
 import ArchiveEntryBody from "./ArchiveEntryBody";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
+import { listNotes } from "@/lib/contentNotes";
+import NotesPanel from "@/app/_shared/NotesPanel";
+import {
+  archiveHref,
+  characterHref,
+  missionHref,
+} from "@/lib/contentRoutes";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -83,7 +90,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
   // -Präferenz mehr.
   // - owners: nur laden, wenn der Betrachter den Eintrag umtragen darf — exakt
   //   das Server-Gate von setOwnerAction (content.moderate).
-  const [allUsers, followInitialState] = await Promise.all([
+  const [allUsers, followInitialState, notes] = await Promise.all([
     viewerHasPermission(viewer, "content.moderate")
       ? listAllUsers()
       : Promise.resolve([]),
@@ -91,6 +98,8 @@ export default async function ArchiveEntryPage({ params }: Props) {
     // ActionsMenu → FollowButtons als initialState durchgereicht, damit die
     // Buttons sofort mitgerendert werden statt per Client-Fetch nachzuladen.
     resolveFollowState(viewer?.userId ?? null, "archive_entry", slug),
+    // Notizen/Kommentare am Eintrag — nur für eingeloggte Personen.
+    listNotes("archive", entry.slug, viewer),
   ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
 
@@ -119,6 +128,15 @@ export default async function ArchiveEntryPage({ params }: Props) {
         followInitialState={followInitialState}
       />
 
+      {viewer && (
+        <NotesPanel
+          contentType="archive"
+          contentSlug={entry.slug}
+          path={archiveHref(entry.slug)}
+          notes={notes}
+        />
+      )}
+
       <RelatedSection title="Verweise" links={entry.links} />
       <RelatedSection title="Erwähnt in" links={entry.backlinks} />
 
@@ -126,7 +144,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
         title="Charaktere"
         color={CONTENT_TYPE_COLOR.character}
         refs={entry.metadata.characters.map((c) => ({
-          href: `/characters/${c.slug}`,
+          href: characterHref(c.slug),
           label: c.name,
         }))}
       />
@@ -135,7 +153,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
         title="Missionen"
         color={CONTENT_TYPE_COLOR.mission}
         refs={entry.metadata.missions.map((m) => ({
-          href: `/missions/${m.slug}`,
+          href: missionHref(m.slug),
           label: m.title,
         }))}
       />
@@ -204,7 +222,7 @@ function RelatedSection({
         {links.map((link) => (
           <Link
             key={link.slug}
-            href={`/archive/${link.slug}`}
+            href={archiveHref(link.slug)}
             className="archive-chip"
             style={
               {

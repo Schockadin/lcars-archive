@@ -19,42 +19,10 @@ html[data-ui^="minimal"] {
   --lcars-radius-pill: 6px;
 }
 
-/* ── Helle Variante (data-ui="minimal-light") ──────────────────────────
-   Dieselbe schlanke Optik wie das dunkle minimalistische UI (alle Regeln
-   hier greifen über data-ui^="minimal" für beide), nur mit hellem Hintergrund
-   und dunklem Text. Überschrieben werden sowohl die --lcars-* Tokens (rohe
-   CSS-Regeln) als auch die --color-lcars-* Tokens (Tailwind-Utilities wie
-   text-lcars-ink, bg-lcars-surface). Die Akzentfarben (primary…senary) bleiben
-   die des gewählten Farbthemas — auf hellem Grund weiterhin gut sichtbar. */
-html[data-ui="minimal-light"] {
-  --lcars-bg: #f4f4f8;
-  --lcars-surface: #ffffff;
-  --lcars-surface-2: #e9e9f1;
-  --lcars-border: #d3d3df;
-  --lcars-ink: #1b1b2c;
-  --lcars-ink-dim: #55556b;
-  --lcars-ink-data: #12539e;
-  --lcars-ink-contrast: #0e0e18;
-  --lcars-ink-light: #0e0e18;
-
-  --color-lcars-bg: #f4f4f8;
-  --color-lcars-surface: #ffffff;
-  --color-lcars-surface-2: #e9e9f1;
-  --color-lcars-border: #d3d3df;
-  --color-lcars-ink: #1b1b2c;
-  --color-lcars-ink-dim: #55556b;
-  --color-lcars-ink-data: #12539e;
-  --color-lcars-ink-contrast: #0e0e18;
-  --color-lcars-ink-light: #0e0e18;
-}
-
-/* Gefüllte Akzent-Flächen (Amber & Co.) behalten dunklen Text — heller Text
-   auf einer hellen Akzentfarbe wäre kontrastarm. */
-html[data-ui="minimal-light"] .lcars-pill-btn,
-html[data-ui="minimal-light"] .lcars-data-row-text,
-html[data-ui="minimal-light"] .reading-mode-toggle {
-  color: #08081a;
-}
+/* Hell/Dunkel ist keine Eigenschaft des minimalistischen UIs mehr, sondern eine
+   eigene Achse (data-mode, siehe src/styles/color-mode.css) — der frühere
+   data-ui="minimal-light"-Block ist dorthin gewandert und gilt jetzt für beide
+   UIs. */
 
 /* ── Typografie: Systemschrift, normale Laufweite, keine Versalien ──── */
 html[data-ui^="minimal"] body {

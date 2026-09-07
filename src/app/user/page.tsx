@@ -27,10 +27,16 @@ import EditorSpellcheckSettingsForm from "./EditorSpellcheckSettingsForm";
 import CharacterColorForm from "./CharacterColorForm";
 import ThemeSettingsForm from "./ThemeSettingsForm";
 import UiModeSettingsForm from "./UiModeSettingsForm";
-import { normalizeUiMode } from "@/lib/uiMode";
+import ColorModeSettingsForm from "./ColorModeSettingsForm";
+import SettingsPanel from "@/app/_shared/SettingsPanel";
+import { isMinimalUiMode, normalizeUiMode } from "@/lib/uiMode";
+import { COLOR_MODE_LIGHT, normalizeColorMode } from "@/lib/colorMode";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 import DataRow from "@/components/lcars/DataRow";
+import {
+  characterHref,
+} from "@/lib/contentRoutes";
 
 export const metadata: Metadata = {
   title: "Profil",
@@ -73,6 +79,7 @@ export default async function UserPage() {
   const colorTheme = normalizeThemeId(target.color_theme);
   const themeOverrides = sanitizeThemeOverrides(target.theme_overrides);
   const uiMode = normalizeUiMode(target.ui_mode);
+  const colorMode = normalizeColorMode(target.color_mode);
 
   // Charakter-Farben: eine Liste statt einer einzigen Wahl, seit die Farbe
   // pro Charakter statt pro User lebt (Multis sollen für jeden Charakter
@@ -105,7 +112,7 @@ export default async function UserPage() {
           </p>
 
           {needsPassword && (
-            <p className="text-lcars-primary">
+            <p className="text-lcars-primary-ink">
               Du hast noch kein Passwort gesetzt.{" "}
               <Link href="#password" className="underline">
                 Jetzt festlegen
@@ -138,7 +145,7 @@ export default async function UserPage() {
                         className="flex flex-col gap-[12px]"
                       >
                         <h3>
-                          <Link href={`/characters/${character.slug}`}>
+                          <Link href={characterHref(character.slug)}>
                             {character.name}
                           </Link>
                         </h3>
@@ -158,26 +165,39 @@ export default async function UserPage() {
               label="Darstellung"
               value={COLOR_THEMES.length}
             >
-              <section id="theme" className="flex flex-col gap-[16px]">
-                <h2>Farbtheme</h2>
+              {/* Alle Darstellungs-Einstellungen als aufklappbare Panels
+                  (SettingsPanel): Farben, Hell/Dunkel und Oberfläche stehen
+                  sonst als eine sehr lange Liste untereinander. Jedes Panel
+                  bleibt ein eigenes Formular mit eigenem „Speichern". */}
+              <section id="theme" className="flex flex-col gap-[12px]">
                 <p>
-                  Färbe die gesamte Oberfläche in einem der LCARS-Farbschemata —
-                  wahlweise mit eigenen Akzentfarben feinjustiert. Die Wahl gilt
-                  nur für dich und bleibt bei jedem Login erhalten.
+                  Färbe die Oberfläche nach deinem Geschmack: Basis-Schema,
+                  Hintergrund, Schriftfarben und Akzente lassen sich einzeln
+                  einstellen. Alle Angaben gelten nur für dich und bleiben bei
+                  jedem Login erhalten.
                 </p>
+
                 <ThemeSettingsForm
                   currentTheme={colorTheme}
                   currentOverrides={themeOverrides}
+                  currentMode={colorMode}
                 />
 
-                <h2 className="mt-[8px]">Oberfläche</h2>
-                <p>
-                  Bevorzugst du es schlicht? Deaktiviere das LCARS-Design und
-                  nutze stattdessen ein schlankes, minimalistisches Interface.
-                  Die Wahl gilt nur für dich und bleibt bei jedem Login
-                  erhalten.
-                </p>
-                <UiModeSettingsForm currentMode={uiMode} />
+                <SettingsPanel
+                  title="Hell/Dunkel"
+                  hint="Helles oder dunkles Erscheinungsbild — unabhängig vom Interface"
+                  badge={colorMode === COLOR_MODE_LIGHT ? "Hell" : "Dunkel"}
+                >
+                  <ColorModeSettingsForm currentMode={colorMode} />
+                </SettingsPanel>
+
+                <SettingsPanel
+                  title="Oberfläche"
+                  hint="Volles LCARS-Design oder schlankes, minimalistisches Interface"
+                  badge={isMinimalUiMode(uiMode) ? "Minimalistisch" : "LCARS"}
+                >
+                  <UiModeSettingsForm currentMode={uiMode} />
+                </SettingsPanel>
               </section>
             </DataRow>
 

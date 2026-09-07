@@ -56,7 +56,11 @@ export interface Talent {
   category: TalentCategory;
   // Voraussetzung („Control 9+", „Vulcan", …) — null, wenn es keine gibt.
   requirement: string | null;
+  // Rohtext (Markdown), wie er gespeichert ist — das Formular arbeitet damit.
   description: string;
+  // Derselbe Text als bereinigtes HTML für Auswahlliste und Spickzettel. Im
+  // PDF wird stattdessen der Rohtext über toPdfBlocks zerlegt.
+  descriptionHtml: string;
   // true = von der Spielleitung ergänztes Talent (nicht aus dem Regeltext).
   isCustom: boolean;
 }
@@ -176,7 +180,10 @@ export function talentOptionLabel(talent: Talent): string {
 // Sortierung für Listen und Auswahlfelder: erst Kategorie in der Reihenfolge
 // des Regeltexts, dann alphabetisch. Sprachunabhängig über localeCompare mit
 // "de", damit Umlaute dort landen, wo man sie erwartet.
-export function byTalentOrder(a: Talent, b: Talent): number {
+export function byTalentOrder(
+  a: Pick<Talent, "category" | "name">,
+  b: Pick<Talent, "category" | "name">,
+): number {
   const ai = TALENT_CATEGORIES.indexOf(a.category);
   const bi = TALENT_CATEGORIES.indexOf(b.category);
   if (ai !== bi) return ai - bi;

@@ -81,12 +81,12 @@ export default async function AdminCampaignPage() {
 
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">Ingame-Jahr</h2>
+            <h2 className="text-lcars-primary-ink">Ingame-Jahr</h2>
             <IngameYearForm info={ingameYearInfo} />
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">Erfahrungspunkte (AP)</h2>
+            <h2 className="text-lcars-primary-ink">Erfahrungspunkte (AP)</h2>
             <p className="text-lcars-ink-dim text-[13px]">
               Je {rules.apPerSession} AP für eine gespielte Session und{" "}
               {rules.apPerLogbook} AP für ein geschriebenes Logbuch; die Beträge
@@ -102,7 +102,7 @@ export default async function AdminCampaignPage() {
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">Mission abschließen</h2>
+            <h2 className="text-lcars-primary-ink">Mission abschließen</h2>
             <p className="text-lcars-ink-dim text-[13px]">
               AP für einen Missionsabschluss gibt es nur hier: die Mission wird
               dabei ausgewählt und auf „abgeschlossen“ gesetzt. Vorbelegt sind{" "}
@@ -117,7 +117,7 @@ export default async function AdminCampaignPage() {
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">Charaktere</h2>
+            <h2 className="text-lcars-primary-ink">Charaktere</h2>
             <CharacterAssignmentTable
               characters={characters}
               users={characterUserOptions}
@@ -125,7 +125,7 @@ export default async function AdminCampaignPage() {
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">Missionen</h2>
+            <h2 className="text-lcars-primary-ink">Missionen</h2>
             <AdminMissionsBrowser
               missions={missions}
               users={missionUserOptions}

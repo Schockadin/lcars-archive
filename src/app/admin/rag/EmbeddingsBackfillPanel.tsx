@@ -37,7 +37,7 @@ export default function EmbeddingsBackfillPanel() {
       })}
       renderCaption={({ processed, total, totals, done }) =>
         done ? (
-          <span className="text-lcars-primary">
+          <span className="text-lcars-primary-ink">
             Fertig: {totals.embedded}{" "}
             {totals.embedded === 1 ? "Inhalt" : "Inhalte"} embedded
             {totals.removed > 0

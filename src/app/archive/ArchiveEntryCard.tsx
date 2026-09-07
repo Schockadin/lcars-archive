@@ -2,6 +2,9 @@ import { ArchiveEntryPreview } from "@/types/archive";
 import { CATEGORY_CONFIG, archiveTitle } from "@/lib/archiveFormat";
 import { fmtDate } from "@/lib/missionFormat";
 import { LcarsAkteCard } from "@/components/lcars";
+import {
+  archiveHref,
+} from "@/lib/contentRoutes";
 
 // Eintrags-Karte im Stil der Missions-Akten. Dialoge zeigen Teilnehmer, Ort
 // und Datum; andere Kategorien ihre Attribute und Tags.
@@ -23,7 +26,7 @@ export default function ArchiveEntryCard({
       href={
         isDialogue
           ? `/characters/dialogues/${entry.slug}`
-          : `/archive/${entry.slug}`
+          : archiveHref(entry.slug)
       }
       color={cfg.color}
       title={archiveTitle(entry)}

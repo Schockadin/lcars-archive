@@ -1,4 +1,5 @@
 import "server-only";
+import { toHref, type NewsContentRow } from "@/lib/recentActivityFormat";
 import sql from "@/lib/db";
 import type { TimelineSourceType } from "@/types/timeline";
 
@@ -17,31 +18,11 @@ export interface ContentActivityItem {
   actorName: string | null;
 }
 
-interface ActivityRow {
-  target_type: TimelineSourceType;
-  slug: string;
-  title: string;
-  mission_slug: string | null;
-  dialogue_open: boolean | null;
-  author_name: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-function toHref(row: ActivityRow): string {
-  switch (row.target_type) {
-    case "character":
-      return `/characters/${row.slug}`;
-    case "mission":
-      return `/missions/${row.slug}`;
-    case "mission_log":
-      return `/missions/${row.mission_slug}/${row.slug}`;
-    case "archive_entry":
-      return row.dialogue_open
-        ? `/dialogues/${row.slug}`
-        : `/archive/${row.slug}`;
-  }
-}
+// Dieselbe Zeile wie im Dashboard-Neuigkeiten-Block: beide lesen die
+// Inhaltstabellen per UNION mit denselben Spalten. Typ UND Adress-Zuordnung
+// kommen deshalb aus recentActivityFormat.ts — sie standen hier einmal Wort
+// für Wort noch einmal, samt Kommentaren.
+type ActivityRow = NewsContentRow;
 
 // Admin-only Content-Aktivitätslog für /admin/audit-log, neben der
 // sicherheitsrelevanten Useraccount-Historie (auditLog.ts). Anders als

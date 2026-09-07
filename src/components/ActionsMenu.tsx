@@ -19,6 +19,10 @@ import type { FollowTargetType } from "@/lib/follows";
 import type { OwnerContentType } from "@/app/actions/owner";
 import type { TrashContentType } from "@/lib/adminContent";
 import type { AdminVisibilityContentType } from "@/app/actions/visibility";
+import {
+  missionHref,
+  missionLogEditHref,
+} from "@/lib/contentRoutes";
 
 // ContentToolType (Autolink/Wikilinks/Format-Buttons) und OwnerContentType
 // (setOwnerAction) heißen für Mission-Log/Archiv-Eintrag unterschiedlich
@@ -136,9 +140,11 @@ export default function ActionsMenu({
     : contentType === "character"
       ? "/characters"
       : contentType === "mission"
-        ? "/missions"
+        ? // Nach dem Löschen einer Mission zurück in die Chronologie — dort
+          // steht seit dem Zusammenlegen die Missions-Übersicht.
+          "/chronologie"
         : contentType === "missionLog" && "mission_slug" in content
-          ? `/missions/${content.mission_slug}`
+          ? missionHref(content.mission_slug)
           : "/archive";
 
   return (
@@ -208,7 +214,7 @@ export default function ActionsMenu({
             // der No-op-Default). Bearbeiten passiert stattdessen auf der
             // eigenen Formular-Seite, wie auch in UserContentBrowser.tsx.
             <Link
-              href={`/user/mission-logs/${content.id}/edit`}
+              href={missionLogEditHref(content.id)}
               className="lcars-icon-btn self-start"
               aria-label="Bearbeiten"
               title="Bearbeiten"

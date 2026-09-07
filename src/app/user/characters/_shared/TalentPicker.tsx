@@ -130,7 +130,7 @@ export function TalentModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-[16px]">
-          <h2 className="text-lcars-primary">Talent wählen</h2>
+          <h2 className="text-lcars-primary-ink">Talent wählen</h2>
           <button
             type="button"
             onClick={onClose}
@@ -221,9 +221,14 @@ export function TalentModal({
 
                   {isOpen && (
                     <div className="flex flex-col gap-[8px] pt-[6px]">
-                      <p className="stat-talent-description">
-                        {talent.description}
-                      </p>
+                      {/* Der Regeltext ist Markdown; das HTML kommt bereits
+                          bereinigt aus markdownToHtml (siehe listTalents). */}
+                      <div
+                        className="stat-talent-description mission-body"
+                        dangerouslySetInnerHTML={{
+                          __html: talent.descriptionHtml,
+                        }}
+                      />
                       {note && (
                         <p className="text-lcars-ink-dim text-[12px]">{note}</p>
                       )}

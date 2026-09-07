@@ -69,7 +69,7 @@ export default async function NewMissionLogPage({
               zu schreiben. Wende dich dafür an die Spielleitung.
             </p>
             <p>
-              <Link href="/user" className="text-lcars-primary underline">
+              <Link href="/user" className="text-lcars-primary-ink underline">
                 ← Zurück zum Profil
               </Link>
             </p>
@@ -81,7 +81,7 @@ export default async function NewMissionLogPage({
               könnte.
             </p>
             <p>
-              <Link href="/user" className="text-lcars-primary underline">
+              <Link href="/user" className="text-lcars-primary-ink underline">
                 ← Zurück zum Profil
               </Link>
             </p>

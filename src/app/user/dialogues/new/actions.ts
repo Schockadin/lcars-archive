@@ -20,6 +20,9 @@ import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { parseList } from "@/lib/formParsing";
 import { logCaughtError } from "@/lib/errorLog";
+import {
+  dialogueHref,
+} from "@/lib/contentRoutes";
 
 export interface CreateDialogueState {
   error?: string;
@@ -282,5 +285,5 @@ export async function createDialogueAction(
     }
   }
 
-  redirect(`/dialogues/${slug}`);
+  redirect(dialogueHref(slug));
 }

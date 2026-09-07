@@ -18,7 +18,7 @@ export default async function LandingStats() {
         value={sessionCount}
         label="Logs"
         color={CONTENT_TYPE_COLOR.mission_log}
-        href="/missions"
+        href="/chronologie"
       />
       <LcarsDataRow
         value={entryCount}

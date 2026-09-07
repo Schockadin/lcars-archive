@@ -33,13 +33,13 @@ export default function RevalidateCachePanel() {
       </button>
 
       {state?.error && (
-        <p className="text-lcars-quinary" role="alert">
+        <p className="text-lcars-quinary-ink" role="alert">
           {state.error}
         </p>
       )}
 
       {state?.tags && (
-        <p className="text-lcars-primary">
+        <p className="text-lcars-primary-ink">
           Cache invalidiert: {state.tags.length ? state.tags.join(", ") : "—"}
         </p>
       )}

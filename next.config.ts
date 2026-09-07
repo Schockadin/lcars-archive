@@ -2,8 +2,8 @@ import type { NextConfig } from "next";
 
 // Statische CSP ohne Nonce (bewusste Entscheidung, siehe Rückfrage): eine
 // echte Nonce-CSP bräuchte proxy.ts (Next 16, ehem. middleware.ts) und würde
-// ALLE Seiten auf dynamic rendering zwingen — auch missions/[missionSlug]/
-// page.tsx, die einzige bewusst statische Seite (generateStaticParams). Ohne
+// ALLE Seiten auf dynamic rendering zwingen — auch chronologie/mission/
+// [missionSlug]/page.tsx, die einzige bewusst statische Seite (generateStaticParams). Ohne
 // Nonce bleibt script-src auf 'unsafe-inline' angewiesen: Next injiziert bei
 // Streaming-SSR (App-Router-Default) selbst Inline-<script>-Tags zur
 // progressiven Hydration, ein 'self'-only script-src bricht die Seite ohne
@@ -48,6 +48,28 @@ function buildCspHeader(): string {
   ].join("; ");
 }
 
+
+// Die Hostnamen, unter denen dieses Deployment erreichbar ist — aus Netlifys
+// Umgebungsvariablen (URL, DEPLOY_PRIME_URL, DEPLOY_URL). Lokal ist die Liste
+// leer, dort stimmen Origin und Host ohnehin überein.
+function netlifyOrigins(): string[] {
+  const hosts = new Set<string>();
+  for (const value of [
+    process.env.URL,
+    process.env.DEPLOY_PRIME_URL,
+    process.env.DEPLOY_URL,
+  ]) {
+    if (!value) continue;
+    try {
+      hosts.add(new URL(value).host);
+    } catch {
+      // Kein gültiger Wert — dann eben nicht. Eine kaputte Variable darf den
+      // Build nicht anhalten.
+    }
+  }
+  return [...hosts];
+}
+
 const nextConfig: NextConfig = {
   // Cache Components (Next 16, ehem. dynamicIO/ppr/useCache als ein Flag):
   // Alle Seiten sind per Default dynamisch; statisch cachebare Teile werden
@@ -70,6 +92,18 @@ const nextConfig: NextConfig = {
       // da Charakter-Portraits und Content-Bilder typischerweise mehrere MB
       // groß sind (JPEG/PNG-Originale vor R2-Speicherung).
       bodySizeLimit: "10mb",
+      // Next vergleicht bei jeder Server Action den Origin-Header mit Host
+      // bzw. X-Forwarded-Host (CSRF-Schutz, siehe
+      // node_modules/next/dist/docs/01-app/02-guides/data-security.md) und
+      // antwortet bei Abweichung mit 403 — im Browser als „An unexpected
+      // response was received from the server". Hinter Netlifys Proxy können
+      // die beiden Werte auseinanderlaufen, vor allem auf Deploy-Previews
+      // (…--neo-archiv.netlify.app neben der Hauptdomain). Deshalb die
+      // Adressen, unter denen die App wirklich läuft, ausdrücklich erlauben —
+      // aus Netlifys eigenen Umgebungsvariablen gelesen (URL = Hauptdomain,
+      // DEPLOY_PRIME_URL/DEPLOY_URL = Preview), nicht als Platzhalter:
+      // erlaubt wird genau das, was Netlify selbst ausliefert.
+      allowedOrigins: netlifyOrigins(),
     },
   },
   // Lighthouse (Best Practices) bemängelte fehlende Source Maps für die
@@ -116,6 +150,21 @@ const nextConfig: NextConfig = {
       {
         source: "/users/:id/settings",
         destination: "/user",
+        permanent: true,
+      },
+      // Die Missionsseiten liegen unter der Chronologie (siehe
+      // src/lib/contentRoutes.ts) — /missions gibt es nicht mehr. Beide
+      // Regeln fangen alte Lesezeichen, Mail-Links und Suchmaschinen-
+      // Einträge ab; die Reihenfolge zählt, /missions allein trifft die
+      // Wildcard-Regel darunter nicht.
+      {
+        source: "/missions",
+        destination: "/chronologie",
+        permanent: true,
+      },
+      {
+        source: "/missions/:path*",
+        destination: "/chronologie/mission/:path*",
         permanent: true,
       },
     ];

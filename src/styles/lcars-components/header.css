@@ -144,7 +144,7 @@
   margin-top: 4px;
   padding-top: 10px;
   border-top: 1px solid var(--lcars-border);
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
   font-family: var(--lcars-font-mono);
   font-size: 12.5px;
   letter-spacing: 0.04em;
@@ -254,6 +254,15 @@
   display: flex;
   min-height: 0;
   width: 200px;
+}
+/* Der Logout steht IMMER allein in der unteren Reihe, die übrigen Pills
+   (Profil, Leitung, Admin) in der oberen. grid-column: 1 erzwingt das ohne
+   Rechnerei: die erste Spalte der aktuellen Reihe ist schon belegt, also
+   rutscht das Element in die nächste — egal, ob eine, zwei oder drei Pills
+   davor stehen. In der Sidebar (minimalistisches UI) ist die Nav eine
+   flex-Spalte, dort greift die Regel nicht und muss es auch nicht. */
+.lcars-usernav--header .lcars-usernav-form {
+  grid-column: 1;
 }
 .lcars-usernav-form .lcars-usernav-pill {
   width: 100%;
@@ -457,4 +466,20 @@
   .lcars-header-top .lcars-usernav-form {
     width: 84px;
   }
+}
+
+/* Gruppen-Überschrift im Staff-Dropdown (HeaderUserNav.tsx). Das Admin-Menü
+   hat zwölf Einträge — ohne Zwischenüberschriften ist das eine Liste, die man
+   von oben nach unten lesen muss. */
+.lcars-search-group-label {
+  padding: 8px 10px 2px;
+  font-family: var(--lcars-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-dim);
+}
+.lcars-search-dropdown > div + div .lcars-search-group-label {
+  border-top: 1px solid var(--lcars-border);
+  margin-top: 4px;
 }

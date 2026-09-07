@@ -42,7 +42,7 @@ export default async function AdminAuditLogPage() {
 
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[16px]">
-            <h2 className="text-lcars-primary">
+            <h2 className="text-lcars-primary-ink">
               Sicherheitsrelevante Aktionen
             </h2>
             <p className="text-lcars-ink-dim text-[13px]">
@@ -54,7 +54,7 @@ export default async function AdminAuditLogPage() {
           </section>
 
           <section className="flex flex-col gap-[16px]">
-            <h2 className="text-lcars-primary">
+            <h2 className="text-lcars-primary-ink">
               Content-Aktivität (letzte {CONTENT_ACTIVITY_DAYS} Tage)
             </h2>
             <p className="text-lcars-ink-dim text-[13px]">

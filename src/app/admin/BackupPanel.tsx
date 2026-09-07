@@ -212,7 +212,7 @@ export default function BackupPanel<S>({
             </button>
           </div>
           {r2SavedKey && (
-            <p className="text-lcars-primary text-[13px]">
+            <p className="text-lcars-primary-ink text-[13px]">
               Im Bucket gespeichert als „{r2SavedKey}“.
             </p>
           )}
@@ -252,7 +252,7 @@ export default function BackupPanel<S>({
           </div>
 
           {r2ListError && (
-            <p className="text-lcars-quinary" role="alert">
+            <p className="text-lcars-quinary-ink" role="alert">
               {r2ListError}
             </p>
           )}
@@ -301,12 +301,12 @@ export default function BackupPanel<S>({
       </div>
 
       {error && (
-        <p className="text-lcars-quinary" role="alert">
+        <p className="text-lcars-quinary-ink" role="alert">
           {error}
         </p>
       )}
 
-      {summary && <p className="text-lcars-primary">{renderSummary(summary)}</p>}
+      {summary && <p className="text-lcars-primary-ink">{renderSummary(summary)}</p>}
     </div>
   );
 }

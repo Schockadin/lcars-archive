@@ -106,6 +106,15 @@
 .lcars-details-summary::-webkit-details-marker {
   display: none;
 }
+
+/* Kopfzeile untereinander (siehe SettingsPanel, Prop `stacked`). In einem
+   1000px breiten Panel stand die Kurzinfo sonst ganz rechts außen, weit weg
+   von dem Titel, zu dem sie gehört. */
+.lcars-details-summary--stacked {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
 .lcars-details[open] > .lcars-details-summary .lcars-data-row-chevron {
   transform: rotate(-135deg);
 }
@@ -139,7 +148,7 @@
   transition: color 250ms;
 }
 .lcars-text :is(p, li, td, th, blockquote, h1, h2, h3, h4, h5, h6) > a:hover {
-  color: var(--lcars-tertiary);
+  color: var(--lcars-tertiary-ink);
   text-decoration: underline;
 }
 
@@ -154,7 +163,7 @@
 }
 .lcars-wikilink:hover,
 .lcars-link-text:hover {
-  color: var(--lcars-tertiary);
+  color: var(--lcars-tertiary-ink);
   text-decoration: underline;
 }
 .lcars-link-text {
@@ -162,12 +171,12 @@
 }
 
 .lcars-wikilink--missing {
-  color: var(--lcars-quinary);
+  color: var(--lcars-quinary-ink);
   border-bottom: 1px dashed var(--lcars-quinary);
   cursor: help;
 }
 .lcars-wikilink--missing:hover {
-  color: var(--lcars-quinary);
+  color: var(--lcars-quinary-ink);
   text-decoration: none;
   border-bottom: 1px dashed var(--lcars-quinary);
 }
@@ -183,7 +192,7 @@
   transition: color 250ms;
 }
 .lcars-changelog-tutorial-link:hover {
-  color: var(--lcars-tertiary);
+  color: var(--lcars-tertiary-ink);
 }
 
 /* Gemeinsame Typografie für .char-file-pill (char-file.css, Personalakte)
@@ -214,7 +223,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  color: var(--lcars-tertiary);
+  color: var(--lcars-tertiary-ink);
 }
 /* Schlichte, gestapelte Liste ohne Aufzählungszeichen — Inhaltsverzeichnis
    und Buchungsjournal teilen sich dasselbe Grundlayout. */
@@ -269,12 +278,12 @@
   letter-spacing: 0.05em;
   text-transform: uppercase;
   line-height: 1.05;
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
   text-decoration: none;
   transition: color 150ms;
 }
 .lcars-back-link:hover {
-  color: var(--lcars-primary-light);
+  color: var(--lcars-primary-light-ink);
 }
 
 .follow-buttons {
@@ -490,13 +499,13 @@
 }
 .markdown-hint-trigger {
   cursor: help;
-  color: var(--lcars-tertiary);
+  color: var(--lcars-tertiary-ink);
   text-decoration: underline dotted;
   text-underline-offset: 3px;
 }
 .markdown-hint-trigger:hover,
 .markdown-hint-trigger:focus-visible {
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
 }
 .markdown-hint-popover {
   position: absolute;
@@ -519,7 +528,7 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 13px;
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
 }
 .markdown-hint-popover-list {
   display: flex;
@@ -846,12 +855,12 @@
   border: none;
   border-radius: 50%;
   background: none;
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
   cursor: pointer;
   transition: color 150ms;
 }
 .password-input-toggle:hover {
-  color: var(--lcars-primary-light);
+  color: var(--lcars-primary-light-ink);
 }
 .password-input-toggle svg {
   width: 20px;
@@ -1082,7 +1091,7 @@
   color: var(--lcars-ink-dim);
 }
 .db-explorer-item[aria-current="true"] .db-explorer-item-icon {
-  color: var(--lcars-primary);
+  color: var(--lcars-primary-ink);
 }
 .db-explorer-item-name {
   flex: 1;
@@ -1111,4 +1120,299 @@
   gap: 8px;
   font-size: 12px;
   color: var(--lcars-ink-dim);
+}
+
+/* ─── Sprungmarke zum Hauptinhalt ──────────────────────────────────────
+   Erstes fokussierbares Element im Shell (AppShell.tsx). Liegt außerhalb des
+   sichtbaren Bereichs und rutscht bei Tastaturfokus ein — Mausnutzer sehen
+   sie nie, Tastaturnutzer überspringen damit die Seitenleiste. Bewusst NICHT
+   display:none/visibility:hidden: das nähme dem Link die Fokussierbarkeit. */
+.lcars-skip-link {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 2000;
+  padding: 10px 18px;
+  border-radius: var(--lcars-radius-pill);
+  background: var(--lcars-primary);
+  color: var(--lcars-ink-dark);
+  font-family: var(--lcars-font-sans);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  /* Aus dem Bild geschoben statt versteckt. */
+  transform: translateY(-200%);
+  transition: transform 150ms;
+}
+.lcars-skip-link:focus-visible,
+.lcars-skip-link:focus {
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .lcars-skip-link {
+    transition: none;
+  }
+}
+
+/* ─── Changelog: Kategorie-Filter und Etiketten ─────────────────────────
+   Die Leiste über der Änderungsliste (/changelog) und über der Box „Neue
+   Funktionen" auf dem Dashboard — beide rendern dieselbe Komponente
+   (ChangelogControls.tsx), also steht die Optik hier einmal.
+
+   Der Filter ist ein Auswahlfeld in derselben Bauart wie der Autor-Filter der
+   Missions-Übersicht (.mission-author-filter, mission-list.css): acht Knöpfe
+   nebeneinander brauchten eine waagerecht scrollende Zeile, die auf schmalen
+   Schirmen rechts abgeschnitten aussieht. */
+.changelog-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.changelog-sort {
+  display: flex;
+  width: 100%;
+}
+.changelog-filter {
+  height: 40px;
+  padding: 0 14px;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  background-color: var(--lcars-surface);
+  color: var(--lcars-ink-data);
+  border: solid 1px var(--lcars-ink-data);
+  cursor: pointer;
+}
+.changelog-filter:focus {
+  outline: none;
+  border-color: var(--lcars-primary);
+}
+
+/* Das Etikett vor jedem Stichpunkt. Klein und in der Kategoriefarbe — es
+   ordnet ein, es soll den Satz nicht überschreien (dieselbe Rolle wie
+   .timeline-tag). */
+.changelog-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border: 1px solid var(--changelog-color, var(--lcars-border));
+  color: var(--changelog-color, var(--lcars-ink-data));
+  font-family: var(--lcars-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  vertical-align: 1px;
+}
+
+/* ── Aktionen-Feld am Fuß einer Inhaltsseite ─────────────────────────
+   Zugeklappt, damit der Text oben anfängt und nicht hinter der Redaktion
+   (siehe ContentActionsPanel.tsx). Dieselbe Form wie die aufklappbaren
+   Felder der Chronologie. */
+.content-actions {
+  margin-top: 24px;
+  border-top: 1px solid var(--lcars-border);
+}
+.content-actions-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0 0;
+  cursor: pointer;
+  font-family: var(--lcars-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-dim);
+  list-style: none;
+}
+.content-actions-head::-webkit-details-marker {
+  display: none;
+}
+.content-actions-head::before {
+  content: "\25B8";
+  display: inline-block;
+  transition: transform 120ms;
+  color: var(--lcars-primary);
+}
+.content-actions[open] > .content-actions-head::before {
+  transform: rotate(90deg);
+}
+.content-actions-head:hover {
+  color: var(--lcars-ink);
+}
+.content-actions-body {
+  padding: 10px 0 4px;
+}
+/* Ein zugeklapptes Feld mit Überschrift in der Kopfzeile — das Nachtragen
+   einer Session unter /gm/sessions. Wie .content-actions aufgebaut (Dreieck
+   statt Marker, dreht sich beim Öffnen), nur mit einer Überschrift statt
+   einer Kleinschrift-Zeile: der Bereich hat auch zugeklappt einen Namen. */
+.lcars-collapsible {
+  border-top: 1px solid var(--lcars-border);
+  padding-top: 8px;
+}
+.lcars-collapsible-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+}
+.lcars-collapsible-summary::-webkit-details-marker {
+  display: none;
+}
+.lcars-collapsible-summary::before {
+  content: "\25B8";
+  display: inline-block;
+  transition: transform 120ms;
+  color: var(--lcars-primary);
+}
+.lcars-collapsible[open] > .lcars-collapsible-summary::before {
+  transform: rotate(90deg);
+}
+.lcars-collapsible-summary > h2 {
+  margin: 0;
+}
+
+/* Nicht angemeldet: nur die Bilder-Galerie, ohne Feld drumherum. */
+.content-actions-anon {
+  margin-top: 20px;
+}
+
+/* ── Spieltermine (Dashboard) ────────────────────────────────────────
+   Ein angekündigter Termin mit Zu-/Absage (UpcomingSessionsSection). Karte
+   ohne Link: hier wird geantwortet, nicht weitergeklickt. */
+.session-card {
+  padding: 10px 14px;
+  background: var(--lcars-surface);
+  border-left: 4px solid var(--lcars-primary);
+  border-radius: 4px 14px 14px 4px;
+}
+.session-card-when {
+  font-family: var(--lcars-font-mono);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--lcars-ink-data);
+}
+.session-card-title {
+  font-weight: 700;
+  margin-top: 2px;
+}
+.session-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 4px;
+  font-family: var(--lcars-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-contrast);
+}
+.session-card-meta b {
+  font-weight: 400;
+  color: var(--lcars-ink-data);
+}
+.session-card-notes {
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--lcars-ink-light);
+}
+.session-rsvp {
+  margin-top: 10px;
+}
+.session-rsvp-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Die eigene Antwort wird hervorgehoben, damit man auf einen Blick sieht,
+   was man gesagt hat. */
+.session-rsvp-buttons button[aria-pressed="true"] {
+  background: var(--lcars-primary);
+  color: var(--lcars-ink-dark);
+  border-color: var(--lcars-primary);
+}
+.session-rsvp-own {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--lcars-ink-dim);
+}
+
+/* ── Gruppenblatt (/gm/gruppe) ───────────────────────────────────────
+   Die Werte aller Charaktere nebeneinander. Waagerecht scrollbar statt
+   umbrechend: eine umgebrochene Wertetabelle taugt nicht mehr zum
+   Vergleichen. */
+.party-sheet-scroll {
+  overflow-x: auto;
+}
+.party-sheet {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 900px;
+  font-family: var(--lcars-font-mono);
+  font-size: 13px;
+}
+.party-sheet th,
+.party-sheet td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--lcars-border);
+  text-align: center;
+}
+.party-sheet thead th {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-data);
+  white-space: nowrap;
+}
+/* Die Namensspalte trägt Text, keine Zahl — links statt mittig, und sie
+   bleibt beim waagerechten Scrollen stehen. */
+.party-sheet tbody th {
+  position: sticky;
+  left: 0;
+  text-align: left;
+  background: var(--lcars-bg);
+  white-space: nowrap;
+}
+/* Der Name öffnet den Charakterbogen im Fenster — ein Knopf, der aussieht
+   wie ein Link: die Tabelle soll beim Nachschlagen stehen bleiben. */
+.party-sheet-name {
+  display: block;
+  color: var(--lcars-ink-data);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.party-sheet-name:hover,
+.party-sheet-name:focus-visible {
+  text-decoration: underline;
+}
+.party-sheet-player {
+  display: block;
+  font-size: 11px;
+  color: var(--lcars-ink-dim);
+}
+/* Der Weg zur Charakterseite selbst — klein, unter dem Namen. */
+.party-sheet-link {
+  display: block;
+  font-size: 11px;
+}
+.party-sheet-lists {
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.party-sheet-lists h2 {
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+.party-sheet-lists b {
+  font-family: var(--lcars-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-data);
+  font-weight: 400;
 }

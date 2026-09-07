@@ -385,6 +385,20 @@ export function SearchNavIcon() {
   );
 }
 
+// Zeitstrahl — Menü-Icon der Chronologie (siehe MAIN_NAV/SidebarMenu.tsx).
+// Eine Linie mit drei Ereignispunkten: dasselbe Bild, das die Seite selbst
+// zeichnet (Schiene mit Punkten, siehe timeline.css).
+export function TimelineNavIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M4 12h16" />
+      <circle cx="8" cy="12" r="2" />
+      <circle cx="14" cy="12" r="2" />
+      <path d="M8 12V6M14 12v6" />
+    </svg>
+  );
+}
+
 // --- Nav-Icons für die Header-Menüpunkte (im minimalistischen UI in der
 // Sidebar; nur auf Mobile als reine Icons sichtbar, siehe minimal-ui.css). ---
 

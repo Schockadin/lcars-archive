@@ -1,5 +1,6 @@
 import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
+import { recordRevision } from "@/lib/contentRevisions";
 import type { Visibility } from "@/lib/visibility";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
@@ -437,7 +438,10 @@ export async function updateArchiveEntryContent(
   archiveEntryId: number,
   bodyMarkdown: string,
   contentHtml: string,
+  // Nur für die Versionshistorie (siehe contentRevisions.ts).
+  editorId: number | null = null,
 ): Promise<void> {
+  await recordRevision("archive", archiveEntryId, editorId, bodyMarkdown);
   await sql`
     UPDATE archive_entries
     SET content = ${contentHtml}, source_md = ${bodyMarkdown}, updated_at = NOW()
@@ -654,6 +658,8 @@ export async function updateOwnArchiveEntryContent(
 ): Promise<
   { slug: string; visibility: "private" | "gm" | "public"; wasDraft: boolean } | null
 > {
+  await recordRevision("archive", entryId, userId, input.bodyMarkdown);
+
   const contentHtml =
     input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
   const attributes = buildArchiveAttributes(input.category, input.attributeValues);
@@ -707,6 +713,8 @@ export async function updateOwnArchiveEntryBody(
   // Siehe createArchiveEntry oben — Opt-in "Automatisch verlinken".
   contentHtmlOverride?: string,
 ): Promise<{ slug: string; title: string; contentHtml: string } | null> {
+  await recordRevision("archive", entryId, userId, bodyMarkdown);
+
   const contentHtml =
     contentHtmlOverride ?? (await renderContentHtml(bodyMarkdown));
 

@@ -49,7 +49,7 @@ export async function getAllContentForAdmin(): Promise<AdminContentItem[]> {
     UNION ALL
 
     SELECT 'mission'::text, m.id, m.slug, m.title,
-           ('/missions/' || m.slug),
+           ('/chronologie/mission/' || m.slug),
            m.owner_user_id, ou.name,
            m.updated_at::text
     FROM missions m
@@ -59,7 +59,7 @@ export async function getAllContentForAdmin(): Promise<AdminContentItem[]> {
     UNION ALL
 
     SELECT 'mission_log'::text, ml.id, ml.slug, ml.title,
-           ('/missions/' || m.slug || '/' || ml.slug),
+           ('/chronologie/mission/' || m.slug || '/' || ml.slug),
            ml.owner_user_id, ou.name,
            ml.updated_at::text
     FROM mission_logs ml

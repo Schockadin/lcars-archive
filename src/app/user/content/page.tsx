@@ -47,7 +47,7 @@ export default async function UserContentPage() {
       <PageMeta title="Meine Inhalte" section="users" />
       {/* Überschrift und Inhalt teilen sich die zentrierte Spalte, damit der
           Titel über dem Inhalt sitzt und nicht am linken Rand (Breite wie
-          /missions, /search). */}
+          /chronologie, /search). */}
       <div className="lcars-wide-column">
         <h1>Meine Inhalte</h1>
         <article className="mb-[10px] gap-[20px] lcars-flex-switch">

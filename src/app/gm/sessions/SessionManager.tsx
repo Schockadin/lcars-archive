@@ -1,6 +1,7 @@
 "use client";
 import { useActionState, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { formatISODate } from "@/utils/formateISODate";
 import type {
@@ -116,21 +117,20 @@ function NewSessionForm({
         )}
       </fieldset>
 
-      <label className="flex flex-col gap-[4px]">
-        <span className="lcars-eyebrow">Notizen (optional)</span>
-        <textarea
-          name="notes"
-          rows={10}
-          className="lcars-input h-auto w-full"
-        />
-      </label>
+      <div className="flex flex-col gap-[4px]">
+        <label htmlFor="new-session-notes" className="lcars-eyebrow">
+          Notizen (optional)
+        </label>
+        {/* Markdown wie in den übrigen Textfeldern des Projekts. */}
+        <MarkdownEditor id="new-session-notes" name="notes" rows={10} />
+      </div>
 
       <button
         type="submit"
         disabled={pending}
         className="lcars-pill-btn--outline self-start disabled:opacity-50"
       >
-        Session eintragen
+        Session nachtragen
       </button>
 
       <FormError message={state.error} />
@@ -347,15 +347,20 @@ function SessionRow({
               )}
             </fieldset>
 
-            <label className="flex flex-col gap-[4px]">
-              <span className="lcars-eyebrow">Notizen</span>
-              <textarea
+            <div className="flex flex-col gap-[4px]">
+              <label
+                htmlFor={`session-${session.id}-notes`}
+                className="lcars-eyebrow"
+              >
+                Notizen
+              </label>
+              <MarkdownEditor
+                id={`session-${session.id}-notes`}
                 name="notes"
                 rows={10}
                 defaultValue={session.notes}
-                className="lcars-input h-auto w-full"
               />
-            </label>
+            </div>
             <p className="text-lcars-ink-dim text-[12px]">
               Eingetragen von {session.createdByName ?? "unbekannt"}. Beim
               Speichern werden die Gutschriften dieser Session neu gebucht:
@@ -398,9 +403,11 @@ function SessionRow({
       )}
 
       {!open && session.notes && (
-        <p className="text-lcars-ink-dim text-[13px] line-clamp-2">
-          {session.notes}
-        </p>
+        // Zweizeilige Vorschau des Markdown-Textes (siehe listGameSessions).
+        <div
+          className="text-lcars-ink-dim mission-body line-clamp-2 text-[13px]"
+          dangerouslySetInnerHTML={{ __html: session.notesHtml }}
+        />
       )}
 
       <FormError message={state.error ?? deleteState.error} />
@@ -411,8 +418,13 @@ function SessionRow({
   );
 }
 
-// Sessions der Spielleitung: oben eintragen, darunter die Liste der bisherigen
-// Sessions zum Aufklappen.
+// Sessions der Spielleitung: oben das (zugeklappte) Nachtragen von Hand,
+// darunter die Liste der bisherigen Sessions zum Aufklappen.
+//
+// Der übliche Weg ist der Knopf „Session eintragen" am angekündigten Termin
+// (PlannedSessionManager) — er bringt Datum, Titel und Besetzung schon mit.
+// Von Hand nachgetragen wird, was ohne Ankündigung gespielt wurde; deshalb
+// steht dieses Formular zugeklappt.
 export default function SessionManager({
   sessions,
   characters,
@@ -434,17 +446,21 @@ export default function SessionManager({
 }) {
   return (
     <div className="flex flex-col gap-[24px]">
-      <section className="flex flex-col gap-[12px]">
-        <h2 className="text-lcars-primary">Session eintragen</h2>
-        <NewSessionForm
-          characters={characters}
-          defaultSessionAp={defaultSessionAp}
-          today={today}
-        />
-      </section>
+      <details className="lcars-collapsible">
+        <summary className="lcars-collapsible-summary">
+          <h2 className="text-lcars-primary-ink">Session nachtragen</h2>
+        </summary>
+        <div className="pt-[12px]">
+          <NewSessionForm
+            characters={characters}
+            defaultSessionAp={defaultSessionAp}
+            today={today}
+          />
+        </div>
+      </details>
 
       <section className="flex flex-col gap-[12px]">
-        <h2 className="text-lcars-primary">Bisherige Sessions</h2>
+        <h2 className="text-lcars-primary-ink">Bisherige Sessions</h2>
         {sessions.length === 0 ? (
           <p className="lcars-empty-state">Noch keine Session eingetragen.</p>
         ) : (

@@ -37,7 +37,7 @@ export default async function GmApPage() {
 
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">Kontostände</h2>
+            <h2 className="text-lcars-primary-ink">Kontostände</h2>
             {accounts.length === 0 ? (
               <p className="lcars-empty-state">Noch keine AP vergeben.</p>
             ) : (
@@ -88,7 +88,7 @@ export default async function GmApPage() {
                 style={{ margin: "0 4px 0 2px" }}
                 aria-hidden="true"
               />
-              <h2 className="inline text-lcars-primary">Alle Buchungen</h2>
+              <h2 className="inline text-lcars-primary-ink">Alle Buchungen</h2>
               <span className="text-lcars-ink-dim text-[13px]">
                 {" "}
                 · {ledger.length} Einträge
@@ -100,7 +100,7 @@ export default async function GmApPage() {
           </details>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">Regelwerk</h2>
+            <h2 className="text-lcars-primary-ink">Regelwerk</h2>
             <p className="text-lcars-ink-dim text-[13px]">
               Gilt ab sofort für alle Charakterbögen: Kosten der Steigerungen,
               Budgets der Ersterschaffung und die Vorbelegung der Vergabe.

@@ -1,4 +1,5 @@
 "use client";
+import type { ReactNode } from "react";
 import PersonnelFileView from "./PersonnelFileView";
 import {
   parseTalentEntry,
@@ -6,16 +7,63 @@ import {
   type Talent,
 } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
+import { CORE_RULES } from "@/lib/coreRules";
+import type { CampaignRule } from "@/lib/campaignRuleTypes";
 
-// Der Charakterbogen als dreiblättrige Vorschau — dasselbe, was der
+// Der Charakterbogen als vierblättrige Vorschau — dasselbe, was der
 // PDF-Export erzeugt:
 //   Blatt 1  das Personnel File mit Stammdaten und Werten
-//   Blatt 2  der Talent-Spickzettel
-//   Blatt 3  die Biografie im selben Papier-Look
+//   Blatt 2  der Spickzettel: die Talente des Charakters
+//   Blatt 3  die Regeln: Kernregeln (Momentum, Bedrohung, Entschlossenheit)
+//            und die eigenen Regeln der Runde (/gm/rules)
+//   Blatt 4  die Biografie im selben Papier-Look
+//
+// Talente und Regeln standen einmal auf einem Blatt. Getrennt, weil sie
+// Verschiedenes sind: die Talente gehören diesem Charakter, die Regeln gelten
+// für alle am Tisch — als eigenes Blatt lässt sich der Regelteil einmal
+// ausdrucken und in die Mitte legen.
 //
 // Reine Darstellung ohne eigenen Zustand: der Anlege-Assistent zeigt damit
 // die noch nicht gespeicherten Eingaben, die Charakterseite den gespeicherten
 // Stand. Beide Male dieselben Blätter.
+//
+// Die Zusatzblätter tragen dieselbe Star-Trek-Adventures-Aufmachung wie Blatt 1
+// (der gedruckte Bogen): der Rahmen, das „STAR TREK ADVENTURES"-Logo oben links
+// und der farbige Titelreiter oben rechts (wie „PERSONNEL FILE" auf dem Bogen)
+// stecken im gemeinsamen DocSheet-Gerüst (siehe .pf-doc* in personnel-file.css).
+
+// Fußzeile wie auf dem gedruckten Bogen (Blatt 1) — dieselbe Markenzeile, damit
+// die Zusatzblätter erkennbar zum selben Dokument gehören.
+const SHEET_FOOTER =
+  "TM & © 2024 CBS Studios Inc. STAR TREK and related marks and logos " +
+  "are trademarks of CBS Studios, Inc. All Rights Reserved.";
+
+// Gemeinsames Blatt-Gerüst für Spickzettel und Biografie: Papier-Look plus die
+// STA-Chrome (Rahmen, Logo, Titelreiter, Fußzeile) des Hauptblatts.
+function DocSheet({
+  title,
+  subtitle,
+  children,
+}: {
+  title: string;
+  subtitle: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="pf-doc">
+      <div className="pf-doc-frame">
+        <div className="pf-doc-masthead">
+          <span className="pf-doc-wordmark">Star Trek Adventures</span>
+          <span className="pf-doc-mast-rule" aria-hidden="true" />
+          <span className="pf-doc-tab">{title}</span>
+        </div>
+        <p className="pf-doc-subtitle">{subtitle}</p>
+        <div className="pf-doc-content">{children}</div>
+        <p className="pf-doc-footer">{SHEET_FOOTER}</p>
+      </div>
+    </div>
+  );
+}
 
 export interface CharacterSheetPreviewInput {
   characterName: string;
@@ -28,6 +76,9 @@ export interface CharacterSheetPreviewInput {
   // Charakterseite reicht das gespeicherte HTML durch.
   bioHtml: string | null;
   talents: Talent[];
+  // Hausregeln der Runde für den Spickzettel (gepflegt unter /gm/rules).
+  // Leer = es gibt keine, dann fällt der Abschnitt weg.
+  campaignRules: CampaignRule[];
 }
 
 function TalentSheet({
@@ -46,10 +97,10 @@ function TalentSheet({
   );
 
   return (
-    <div className="pf-doc">
-      <h2 className="pf-doc-title">Talents</h2>
-      <p className="pf-doc-subtitle">Spickzettel · {characterName}</p>
-
+    <DocSheet title="Cheat Sheet" subtitle={`Spickzettel · ${characterName}`}>
+      <h3 className="pf-doc-heading">
+        Talente <span className="pf-doc-heading-original">Talents</span>
+      </h3>
       {entries.length === 0 ? (
         <p className="pf-doc-empty">Noch keine Talente eingetragen.</p>
       ) : (
@@ -65,15 +116,92 @@ function TalentSheet({
                   {talent.requirement ? ` · ${talent.requirement}` : ""}
                 </div>
               )}
-              <p className="pf-doc-text">
-                {talent
-                  ? talent.description
-                  : "Nicht im Katalog — kein Regeltext hinterlegt."}
-              </p>
+              {talent ? (
+                // Regeltext als Markdown (siehe listTalents).
+                <div
+                  className="pf-doc-text"
+                  dangerouslySetInnerHTML={{ __html: talent.descriptionHtml }}
+                />
+              ) : (
+                <p className="pf-doc-text">
+                  Nicht im Katalog — kein Regeltext hinterlegt.
+                </p>
+              )}
             </div>
           );
         })
       )}
+    </DocSheet>
+  );
+}
+
+// Blatt 3: die Regeln. Eigenes Blatt, weil sie an keinem Charakter hängen —
+// wer sie am Tisch braucht, druckt genau dieses eine Blatt.
+function RulesSheet({
+  characterName,
+  campaignRules,
+}: {
+  characterName: string;
+  campaignRules: CampaignRule[];
+}) {
+  return (
+    <DocSheet title="Rules" subtitle={`Regeln · ${characterName}`}>
+      <CoreRulesSection />
+      <CampaignRulesSection rules={campaignRules} />
+    </DocSheet>
+  );
+}
+
+// Momentum, Bedrohung und Entschlossenheit — dieselben Regeln, die man am
+// Tisch dauernd nachschlägt, direkt hinter den Talenten. Sie hängen an keinem
+// Charakter, stehen also auf jedem Spickzettel gleich (siehe coreRules.ts).
+function CoreRulesSection() {
+  return (
+    <>
+      {CORE_RULES.map((section) => (
+        <div key={section.title}>
+          <h3 className="pf-doc-heading">
+            {section.title}{" "}
+            <span className="pf-doc-heading-original">{section.original}</span>
+          </h3>
+          {section.intro && <p className="pf-doc-intro">{section.intro}</p>}
+          {section.items.map((item) => (
+            <div key={item.term} className="pf-doc-rule">
+              <span className="pf-doc-rule-term">{item.term}</span>
+              {item.cost && (
+                <span className="pf-doc-rule-cost">{item.cost}</span>
+              )}
+              <p className="pf-doc-rule-text">{item.text}</p>
+            </div>
+          ))}
+        </div>
+      ))}
+    </>
+  );
+}
+
+// Die Hausregeln der Runde, hinter den Regeln aus dem Regelwerk. Gibt es
+// keine, fällt der Abschnitt ganz weg — eine leere Überschrift auf dem
+// gedruckten Bogen wäre nur Platzverschwendung.
+function CampaignRulesSection({ rules }: { rules: CampaignRule[] }) {
+  if (rules.length === 0) return null;
+  return (
+    <div>
+      <h3 className="pf-doc-heading">
+        Eigene Regeln{" "}
+        <span className="pf-doc-heading-original">House Rules</span>
+      </h3>
+      {rules.map((rule) => (
+        <div key={rule.id} className="pf-doc-rule">
+          <span className="pf-doc-rule-term">{rule.name}</span>
+          {/* Der Regeltext ist Markdown; das HTML kommt bereits bereinigt aus
+              markdownToHtml (siehe listCampaignRules). */}
+          <div
+            className="pf-doc-rule-text"
+            dangerouslySetInnerHTML={{ __html: rule.bodyHtml }}
+          />
+        </div>
+      ))}
     </div>
   );
 }
@@ -86,10 +214,7 @@ function BioSheet({
   bioHtml: string | null;
 }) {
   return (
-    <div className="pf-doc">
-      <h2 className="pf-doc-title">Biography</h2>
-      <p className="pf-doc-subtitle">Biografie · {characterName}</p>
-
+    <DocSheet title="Biography" subtitle={`Biografie · ${characterName}`}>
       {bioHtml ? (
         // Das HTML stammt aus markdownToHtml und ist dort bereits bereinigt
         // (rehype-sanitize) — dieselbe Quelle wie die Charakterseite.
@@ -100,7 +225,7 @@ function BioSheet({
       ) : (
         <p className="pf-doc-empty">Noch keine Biografie geschrieben.</p>
       )}
-    </div>
+    </DocSheet>
   );
 }
 
@@ -125,6 +250,10 @@ export default function CharacterSheetPreview({
         characterName={input.characterName}
         entries={input.stats.talents}
         talents={input.talents}
+      />
+      <RulesSheet
+        characterName={input.characterName}
+        campaignRules={input.campaignRules}
       />
       <BioSheet characterName={input.characterName} bioHtml={input.bioHtml} />
     </div>

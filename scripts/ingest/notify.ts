@@ -1,6 +1,11 @@
 import postgres from "postgres";
 import { sendSubscriptionDigest } from "../../src/lib/mailCore";
 import { sendPushToUser } from "../../src/lib/pushCore";
+import {
+  CHRONOLOGY_PATH,
+  missionHref,
+  missionLogHref,
+} from "../../src/lib/contentRoutes";
 
 // Erste URL aus SITE_URL (kommaseparierte Liste, siehe index.ts) als
 // Basis für Links in der Mail — ein lokaler Ingest-Lauf gegen eine
@@ -103,9 +108,15 @@ export async function notifySubscribers(
 
   for (const row of rows) {
     const href =
-      row.target_type === "mission_log"
-        ? `${baseUrl}/missions/${row.mission_slug}/${row.slug}`
-        : `${baseUrl}/${row.target_type === "mission" ? "missions" : "archive"}/${row.slug}`;
+      // mission_slug ist nur bei Logbüchern gesetzt; fehlt es (verwaister
+      // Log), führt der Link auf die Chronologie statt ins Leere.
+      row.target_type === "mission_log" && row.mission_slug
+        ? `${baseUrl}${missionLogHref(row.mission_slug, row.slug)}`
+        : row.target_type === "mission"
+          ? `${baseUrl}${missionHref(row.slug)}`
+          : row.target_type === "mission_log"
+            ? `${baseUrl}${CHRONOLOGY_PATH}`
+            : `${baseUrl}/archive/${row.slug}`;
     const entry = byUser.get(row.user_id) ?? {
       email: row.email,
       name: row.name,

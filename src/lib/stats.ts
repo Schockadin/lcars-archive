@@ -14,7 +14,7 @@ export interface HeaderStats {
 //
 // Nur ÖFFENTLICHE, nicht-Entwurf-Inhalte werden gezählt: die Kennzahlen stehen
 // auf der öffentlichen Landing-Page („Aktueller Datenbestand") und verlinken
-// auf /characters, /missions, /archive, die anonymen Besuchern ebenfalls nur
+// auf /characters, /chronologie, /archive, die anonymen Besuchern ebenfalls nur
 // public-Inhalte zeigen. Ein cache-weiter Einzelwert kann ohnehin nicht
 // betrachterabhängig sein — die öffentliche Zahl ist der einzige, der zur
 // verlinkten Liste passt und nicht verrät, wie viele nicht-öffentliche

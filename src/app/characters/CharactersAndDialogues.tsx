@@ -46,10 +46,7 @@ export default function CharactersAndDialogues({
         onChange={setTab}
       />
 
-      <div
-        className="chars-dialogues-col w-full max-w-[640px]"
-        data-tab="characters"
-      >
+      <div className="chars-dialogues-col" data-tab="characters">
         <CharacterPage characters={characters} />
       </div>
 

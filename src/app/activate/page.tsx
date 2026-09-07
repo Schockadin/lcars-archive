@@ -56,7 +56,7 @@ async function ActivateContent({
 
   if (!token || !setupToken || !user) {
     return (
-      <p className="text-lcars-quinary">
+      <p className="text-lcars-quinary-ink">
         Dieser Link ist ungültig oder abgelaufen. Bitte wende dich an die
         Spielleitung für eine neue Einladung oder fordere unter{" "}
         <a href="/forgot-password" className="underline">

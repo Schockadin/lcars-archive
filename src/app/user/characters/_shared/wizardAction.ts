@@ -18,7 +18,11 @@ import { parseStatsPayload } from "@/lib/characterStatsPayload";
 import { checkOpenCreationStats } from "@/lib/characterStatsRules";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
+import { listFocuses } from "@/lib/focuses";
 import { readCharacterHead } from "./characterHead";
+import {
+  characterEditHref,
+} from "@/lib/contentRoutes";
 
 export interface CharacterWizardState {
   error?: string;
@@ -62,14 +66,17 @@ export async function createCharacterWizardAction(
   // ausdrücklich (siehe lockCreationAction).
   stats.creationLocked = false;
 
-  const [rules, catalog] = await Promise.all([
+  const [rules, catalog, focusCatalog] = await Promise.all([
     getAdvancementRules(),
     listTalents(),
+    listFocuses(),
   ]);
   const statsError = checkOpenCreationStats(
     stats,
     rules,
     catalog.map((talent) => talent.name),
+    [],
+    focusCatalog.map((focus) => focus.name),
   );
   if (statsError) return { error: statsError };
 
@@ -77,7 +84,7 @@ export async function createCharacterWizardAction(
   let bioHtml: string | undefined;
   if (bodyMarkdown && formData.get("autoLink") === "on") {
     // Beim Anlegen gibt es noch keinen eigenen Slug, den man vom Autolinking
-    // ausnehmen müsste (siehe characterAction).
+    // ausnehmen müsste — anders als beim Bearbeiten (panelActions.ts).
     const linked = await autoLinkMarkdown(bodyMarkdown);
     bodyMarkdown = linked.sourceMd;
     bioHtml = linked.html;
@@ -116,5 +123,5 @@ export async function createCharacterWizardAction(
 
   // Auf die eigene Charakterseite statt auf die öffentliche: von dort geht es
   // direkt weiter mit Steigern, Bearbeiten und der Bogen-Vorschau.
-  redirect(`/user/characters/${result.id}`);
+  redirect(characterEditHref(result.id));
 }

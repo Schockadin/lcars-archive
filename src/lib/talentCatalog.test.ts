@@ -21,6 +21,7 @@ function talent(partial: Partial<Talent>): Talent {
     category: "general",
     requirement: null,
     description: "Beschreibung.",
+    descriptionHtml: "<p>Beschreibung.</p>",
     isCustom: false,
     ...partial,
   };

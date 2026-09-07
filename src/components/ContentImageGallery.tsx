@@ -211,7 +211,7 @@ export default function ContentImageGallery({
           )}
 
           {error && (
-            <p className="text-lcars-quinary text-[13px]" role="alert">
+            <p className="text-lcars-quinary-ink text-[13px]" role="alert">
               {error}
             </p>
           )}

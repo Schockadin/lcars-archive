@@ -8,10 +8,18 @@ import { getOwnCharacterForEdit, getOwnCharacterStats } from "@/lib/characters";
 import { getApAccount } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
+import { listFocuses } from "@/lib/focuses";
+import { listCampaignRules } from "@/lib/campaignRules";
 import CharacterHeadPanel from "./CharacterHeadPanel";
 import CharacterValuesPanel from "./CharacterValuesPanel";
 import CharacterBioPanel from "./CharacterBioPanel";
+import RevisionsPanel from "@/app/_shared/RevisionsPanel";
+import { listRevisions } from "@/lib/contentRevisions";
+import { getViewer } from "@/lib/visibility";
 import CharacterSheetButton from "./CharacterSheetButton";
+import {
+  characterEditHref,
+} from "@/lib/contentRoutes";
 
 export const metadata: Metadata = {
   title: "Charakter",
@@ -45,12 +53,18 @@ export default async function OwnCharacterPage({ params }: Props) {
 
   // Erst NACH dem Owner-Check: vorher ist nicht klar, ob der Charakter
   // überhaupt zu diesem Konto gehört.
-  const [account, rules, talents, viewer, roleMap] = await Promise.all([
+  const [account, rules, talents, focuses, campaignRules, viewer, roleMap, revisions] =
+    await Promise.all([
     getApAccount(sheet.id),
     getAdvancementRules(),
     listTalents(),
+    listFocuses(),
+    listCampaignRules(),
     getUserById(session.userId),
     getRoleMap(),
+    // Versionshistorie der Biografie — der Owner-Check oben ist bereits
+    // gelaufen, listRevisions prüft ihn über den Viewer noch einmal selbst.
+    getViewer().then((v) => listRevisions("character", character.id, v)),
   ]);
   const isAdminOrGM =
     !!viewer && userCan(viewer, "content.autolink_tools", roleMap);
@@ -71,6 +85,7 @@ export default async function OwnCharacterPage({ params }: Props) {
             stats: sheet.stats,
             bioHtml: character.bioHtml,
             talents,
+            campaignRules,
           }}
         />
 
@@ -87,6 +102,7 @@ export default async function OwnCharacterPage({ params }: Props) {
           account={account}
           rules={rules}
           talents={talents}
+          focuses={focuses}
         />
 
         <CharacterBioPanel
@@ -95,6 +111,13 @@ export default async function OwnCharacterPage({ params }: Props) {
           isAdminOrGM={isAdminOrGM}
           bioHtml={character.bioHtml}
           sourceMarkdown={character.sourceMarkdown}
+        />
+
+        <RevisionsPanel
+          contentType="character"
+          contentId={character.id}
+          path={characterEditHref(character.id)}
+          revisions={revisions}
         />
       </article>
     </>

@@ -53,6 +53,10 @@ import { getBaseUrl } from "@/lib/http";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { logCaughtError } from "@/lib/errorLog";
+import {
+  archiveHref,
+  dialogueHref,
+} from "@/lib/contentRoutes";
 
 export interface DialogueMessageState {
   error?: string;
@@ -143,7 +147,7 @@ export async function postDialogueMessageAction(
 
   // Offene Dialoge sind für keinen gecachten Leser sichtbar (siehe
   // src/lib/archive.ts) — nur die eigene, ungecachte Seite muss frisch sein.
-  revalidatePath(`/dialogues/${entrySlug}`);
+  revalidatePath(dialogueHref(entrySlug));
 
   // Nur wer diesen Dialog abonniert hat (Default beim Anlegen, dort und auf
   // der Dialog-Seite abbestellbar) bekommt eine Mail — statt bedingungslos
@@ -244,9 +248,9 @@ export async function editDialogueMessageAction(
   // /archive (siehe Redirect in beiden Seiten) — welcher zutrifft, ist hier
   // nicht bekannt, deshalb werden vorsichtshalber beide invalidiert (nötig
   // erst seit Moderations-Edits auch auf geschlossenen Dialogen möglich sind).
-  revalidatePath(`/dialogues/${entrySlug}`);
+  revalidatePath(dialogueHref(entrySlug));
   revalidateArchiveEntry(entrySlug);
-  revalidatePath(`/archive/${entrySlug}`);
+  revalidatePath(archiveHref(entrySlug));
   return { success: true };
 }
 
@@ -290,9 +294,9 @@ export async function deleteDialogueMessageAction(
     throw err;
   }
 
-  revalidatePath(`/dialogues/${entrySlug}`);
+  revalidatePath(dialogueHref(entrySlug));
   revalidateArchiveEntry(entrySlug);
-  revalidatePath(`/archive/${entrySlug}`);
+  revalidatePath(archiveHref(entrySlug));
   return {};
 }
 
@@ -401,7 +405,7 @@ export async function completeDialogueAction(
     return { error: "Dieser Dialog existiert nicht." };
   }
   if (!entry.open) {
-    redirect(`/archive/${entrySlug}`);
+    redirect(archiveHref(entrySlug));
   }
 
   const participant = await getDialogueParticipant(entry.id, session.userId);
@@ -415,7 +419,7 @@ export async function completeDialogueAction(
   await completeDialogue(entry.id);
 
   revalidateArchiveEntry(entrySlug);
-  revalidatePath(`/archive/${entrySlug}`);
+  revalidatePath(archiveHref(entrySlug));
 
   // Sowohl Charakter-Abonnenten (Fans, die keinem der beiden Teilnehmer
   // selbst entsprechen müssen) als auch die tatsächlichen Teilnehmer-Spieler
@@ -472,7 +476,7 @@ export async function completeDialogueAction(
     }
   }
 
-  redirect(`/archive/${entrySlug}`);
+  redirect(archiveHref(entrySlug));
 }
 
 export interface DeleteDialogueState {
@@ -510,8 +514,8 @@ export async function deleteDialogueAction(
   }
 
   revalidateArchiveEntry(entrySlug);
-  revalidatePath(`/archive/${entrySlug}`);
-  revalidatePath(`/dialogues/${entrySlug}`);
+  revalidatePath(archiveHref(entrySlug));
+  revalidatePath(dialogueHref(entrySlug));
 
   // Mit Gesprächs-ID, damit auch die NPC-Sprecher informiert werden: das
   // Löschen ist ein Soft-Delete (deleted_at), die Zeilen in
@@ -551,7 +555,7 @@ export async function setDialogueViewPreferenceAction(
   if (!session) return;
 
   await updateDialogueViewPreference(session.userId, flowingTextEnabled);
-  revalidatePath(`/archive/${entrySlug}`);
+  revalidatePath(archiveHref(entrySlug));
 }
 
 // Verschickt Mail/Push an alle, die "informiere mich, wenn die Sperre
@@ -672,9 +676,9 @@ export async function inviteDialogueParticipantAction(
     return { error: "Dieser Dialog existiert nicht mehr." };
   }
 
-  revalidatePath(`/dialogues/${entrySlug}`);
+  revalidatePath(dialogueHref(entrySlug));
   revalidateArchiveEntry(entrySlug);
-  revalidatePath(`/archive/${entrySlug}`);
+  revalidatePath(archiveHref(entrySlug));
 
   if (invited.length > 0) {
     const dialogueUrl = `${await getBaseUrl()}/dialogues/${entrySlug}`;
@@ -763,7 +767,7 @@ export async function reserveDialogueReplyAction(
     throw err;
   }
 
-  revalidatePath(`/dialogues/${entrySlug}`);
+  revalidatePath(dialogueHref(entrySlug));
   return {};
 }
 
@@ -790,7 +794,7 @@ export async function releaseDialogueReservationAction(
   const released = await forceReleaseDialogueReservation(entry.id);
   await notifyReservationReleased(released);
 
-  revalidatePath(`/dialogues/${entrySlug}`);
+  revalidatePath(dialogueHref(entrySlug));
   return {};
 }
 
@@ -814,5 +818,5 @@ export async function dialogueReservationNotifyAction(
   if (!participant) return;
 
   await requestDialogueReservationNotification(entry.id, session.userId);
-  revalidatePath(`/dialogues/${entrySlug}`);
+  revalidatePath(dialogueHref(entrySlug));
 }

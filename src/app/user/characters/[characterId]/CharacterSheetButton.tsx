@@ -4,7 +4,7 @@ import { FileTextIcon } from "@/lib/icons";
 import CharacterSheetPreviewOverlay from "@/components/character/CharacterSheetPreviewOverlay";
 import type { CharacterSheetPreviewInput } from "@/components/character/CharacterSheetPreview";
 
-// Knopf über den Panels: öffnet den Charakterbogen als dreiblättrige Vorschau
+// Knopf über den Panels: öffnet den Charakterbogen als mehrblättrige Vorschau
 // (Bogen, Talent-Spickzettel, Biografie) — dort stehen dann Drucken und
 // Speichern als Icon-Knöpfe.
 //

@@ -17,7 +17,7 @@
    umgestellt:
      • --lcars-*        → von den Komponenten-Styles per var() gelesen
      • --color-lcars-*  → von den Tailwind-Utilities (bg-lcars-primary,
-                          text-lcars-secondary …) gelesen; aus @theme (tokens.css)
+                          text-lcars-secondary-ink …) gelesen; aus @theme (tokens.css)
                           als :root-Variablen erzeugt und hier zur Laufzeit
                           überschreibbar.
 

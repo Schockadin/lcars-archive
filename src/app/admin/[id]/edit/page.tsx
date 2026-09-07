@@ -9,6 +9,9 @@ import EditUserForm from "./EditUserForm";
 import PermissionsForm from "./PermissionsForm";
 import UserStatusActions from "./UserStatusActions";
 import type { UserAdminDetail } from "@/lib/users";
+import {
+  characterHref,
+} from "@/lib/contentRoutes";
 
 export const metadata: Metadata = {
   title: "User bearbeiten",
@@ -76,8 +79,8 @@ export default async function EditUserPage({
                     {target.characters.map((c) => (
                       <Link
                         key={c.id}
-                        href={`/characters/${c.slug}`}
-                        className="text-lcars-primary underline"
+                        href={characterHref(c.slug)}
+                        className="text-lcars-primary-ink underline"
                       >
                         {c.name}
                       </Link>
@@ -89,7 +92,7 @@ export default async function EditUserPage({
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">Daten & Rollen bearbeiten</h2>
+            <h2 className="text-lcars-primary-ink">Daten & Rollen bearbeiten</h2>
             <EditUserForm
               user={target}
               isSelf={isSelf}
@@ -98,7 +101,7 @@ export default async function EditUserPage({
           </section>
 
           <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary">Individuelle Rechte</h2>
+            <h2 className="text-lcars-primary-ink">Individuelle Rechte</h2>
             <PermissionsForm
               userId={target.id}
               roles={Array.from(

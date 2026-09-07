@@ -37,6 +37,12 @@ import {
   type ChunkInput,
   type SqlClient,
 } from "@/lib/embeddings";
+import {
+  archiveHref,
+  characterHref,
+  missionHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 
 interface FetchedRecord {
   chunkInput: ChunkInput;
@@ -97,7 +103,7 @@ async function fetchRecord(
         isActive: row.deleted_at == null,
         title: row.name,
         slug: row.slug,
-        href: `/characters/${row.slug}`,
+        href: characterHref(row.slug),
       };
     }
     case "mission": {
@@ -137,7 +143,7 @@ async function fetchRecord(
         isActive: row.deleted_at == null,
         title: row.title,
         slug: row.slug,
-        href: `/missions/${row.slug}`,
+        href: missionHref(row.slug),
       };
     }
     case "mission_log": {
@@ -187,7 +193,7 @@ async function fetchRecord(
         isActive: row.deleted_at == null,
         title: row.title,
         slug: row.slug,
-        href: `/missions/${row.mission_slug}/${row.slug}`,
+        href: missionLogHref(row.mission_slug, row.slug),
       };
     }
     case "archive_entry": {
@@ -231,7 +237,7 @@ async function fetchRecord(
         isActive: row.deleted_at == null,
         title: row.title,
         slug: row.slug,
-        href: `/archive/${row.slug}`,
+        href: archiveHref(row.slug),
       };
     }
     case "dialogue": {
@@ -283,7 +289,7 @@ async function fetchRecord(
         isActive: row.deleted_at == null,
         title: row.title,
         slug: row.slug,
-        href: `/archive/${row.slug}`,
+        href: archiveHref(row.slug),
       };
     }
   }

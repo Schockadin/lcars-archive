@@ -2,6 +2,7 @@
 import { useActionState, useMemo, useState } from "react";
 import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import { confirmSubmit } from "@/lib/confirmSubmit";
+import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import {
   TALENT_CATEGORIES,
   TALENT_CATEGORY_LABELS,
@@ -68,17 +69,20 @@ function TalentFields({
           />
         </label>
       </div>
-      <label className="flex flex-col gap-[4px]">
-        <span className="lcars-eyebrow">Beschreibung</span>
-        <textarea
+      <div className="flex flex-col gap-[4px]">
+        <label htmlFor={`${idPrefix}-description`} className="lcars-eyebrow">
+          Beschreibung
+        </label>
+        {/* Markdown wie in den übrigen Textfeldern; der Regeltext wird in der
+            Auswahlliste und auf dem Spickzettel gerendert. */}
+        <MarkdownEditor
           id={`${idPrefix}-description`}
           name="description"
           required
-          rows={5}
+          rows={10}
           defaultValue={talent?.description ?? ""}
-          className="lcars-input w-full"
         />
-      </label>
+      </div>
     </>
   );
 }
@@ -156,9 +160,12 @@ function TalentRow({ talent }: { talent: Talent }) {
       </button>
 
       {!open && (
-        <p className="text-lcars-ink text-[13px] line-clamp-2">
-          {talent.description}
-        </p>
+        // Zusammengeklappt nur eine zweizeilige Vorschau — der Regeltext ist
+        // Markdown, das HTML kommt bereinigt aus markdownToHtml.
+        <div
+          className="text-lcars-ink mission-body line-clamp-2 text-[13px]"
+          dangerouslySetInnerHTML={{ __html: talent.descriptionHtml }}
+        />
       )}
 
       {open && (

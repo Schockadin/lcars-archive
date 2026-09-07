@@ -5,6 +5,14 @@
 // computeNewsItems() mit den geladenen Zeilen auf.
 import type { TimelineSourceType } from "@/types/timeline";
 import type { Permission } from "@/lib/permissions";
+import {
+  CHRONOLOGY_PATH,
+  archiveHref,
+  characterHref,
+  dialogueHref,
+  missionHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 
 // Sichtbarkeits-Flags für den News-Feed, aus den EFFEKTIVEN Rechten eines
 // Betrachters abgeleitet (nicht aus seiner Primärrolle!). Muss dieselbe
@@ -78,17 +86,22 @@ export interface NewsSeenEntry {
 export function toHref(row: NewsContentRow): string {
   switch (row.target_type) {
     case "character":
-      return `/characters/${row.slug}`;
+      return characterHref(row.slug);
     case "mission":
-      return `/missions/${row.slug}`;
+      return missionHref(row.slug);
     case "mission_log":
-      return `/missions/${row.mission_slug}/${row.slug}`;
+      // mission_slug ist in der Abfrage nullable typisiert, in den Daten aber
+      // immer gesetzt (Fremdschlüssel). Fehlt er doch, führt der Link in die
+      // Chronologie statt auf eine Adresse mit „null" darin.
+      return row.mission_slug
+        ? missionLogHref(row.mission_slug, row.slug)
+        : CHRONOLOGY_PATH;
     case "archive_entry":
       // Offene Dialoge leben unter /dialogues, nicht /archive (siehe
       // toFollowedContent in src/lib/follows.ts für dasselbe Muster).
       return row.dialogue_open
-        ? `/dialogues/${row.slug}`
-        : `/archive/${row.slug}`;
+        ? dialogueHref(row.slug)
+        : archiveHref(row.slug);
   }
 }
 
