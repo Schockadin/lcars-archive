@@ -263,6 +263,29 @@ CREATE INDEX IF NOT EXISTS idx_dialogue_messages_fts
 ALTER TABLE timeline_events ALTER COLUMN source_type DROP NOT NULL;
 ALTER TABLE timeline_events ALTER COLUMN source_slug DROP NOT NULL;
 
+-- Wer an einem von Hand eingetragenen Ereignis beteiligt ist. Die übrigen
+-- Ereignisse ziehen ihre Beteiligten aus ihrer Quelle (Missionsbesetzung,
+-- Logbuch-Autor, Gesprächsteilnehmer); ein freies Ereignis hat keine Quelle,
+-- also braucht es eine eigene Zuordnung. Bewusst OHNE Vorauswahl und über
+-- ALLE Figuren (auch zurückgezogene): ein historisches Ereignis betrifft oft
+-- gerade die, die nicht mehr aktiv sind.
+CREATE TABLE IF NOT EXISTS timeline_event_characters (
+  event_id      INTEGER NOT NULL REFERENCES timeline_events(id) ON DELETE CASCADE,
+  character_id  INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  PRIMARY KEY (event_id, character_id)
+);
+CREATE INDEX IF NOT EXISTS idx_timeline_event_characters_character
+  ON timeline_event_characters (character_id);
+
+-- „person" und „character" waren dieselbe Ereignisart mit zwei Schlüsseln:
+-- die gepflegte Art heißt 'character' (Beschriftung „Person"), aus Markern
+-- und aus dem Sprachmodell kam mitunter 'person' — das fiel als unbekannter
+-- Wert auf „Sonstiges" zurück und stand als zweite, gleichbedeutende Art in
+-- der Auswahl. Ab v1.29.49 normalisiert der Code beide auf 'character';
+-- bestehende Zeilen werden hier nachgezogen.
+UPDATE timeline_events SET category = 'character' WHERE category = 'person';
+
+
 -- v1.29.44 — Session-Planer (siehe schema.sql).
 -- ── Session-Planer ───────────────────────────────────────────────────────
 -- game_sessions (oben) ist die NACHbuchung: eine gespielte Session mit ihren

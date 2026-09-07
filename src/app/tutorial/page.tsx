@@ -165,7 +165,9 @@ export default function TutorialPage() {
                 Fenster — Datum, Titel, Ereignisart, auf Wunsch ein, zwei Sätze
                 dazu. Das Datumsfeld steht schon auf dem jüngsten Ereignis der
                 Chronologie; meist musst du nur den Tag ändern. Die
-                Beschreibung nimmt <strong>Markdown</strong> wie überall sonst. Solche
+                Beschreibung nimmt <strong>Markdown</strong> wie überall sonst,
+                und du kannst <strong>Beteiligte</strong> auswählen — aus allen
+                Figuren, auch den zurückgezogenen; vorausgewählt ist keine. Solche
                 Ereignisse tragen den Hinweis <em>von Hand eingetragen</em>,
                 sind nicht verlinkt (es gibt ja keinen Eintrag dahinter) und
                 lassen sich von dir oder der Spielleitung wieder entfernen.

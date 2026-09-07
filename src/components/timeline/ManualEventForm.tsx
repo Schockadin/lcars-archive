@@ -24,12 +24,17 @@ import {
 // nicht zwischen Filterleiste und Zeitstrahl.
 export default function ManualEventForm({
   defaultDate,
+  characters,
 }: {
   // Das Datum des jüngsten Ereignisses der Chronologie. Wer etwas einträgt,
   // trägt fast immer etwas ein, das kurz danach passiert ist — hier fängt man
   // also an zu tippen, statt das Jahrhundert von Hand zu suchen. Null, wenn
   // die Chronologie noch leer ist.
   defaultDate: string | null;
+  // Das ganze Ensemble, ausdrücklich auch zurückgezogene Figuren und NPCs:
+  // ein historisches Ereignis betrifft oft gerade die, die nicht mehr im
+  // Dienst sind. Keine davon ist vorausgewählt.
+  characters: { id: number; name: string }[];
 }) {
   const [state, formAction, pending] = useActionState<
     ManualEventState,
@@ -114,6 +119,28 @@ export default function ManualEventForm({
                 rows={4}
               />
             </FormField>
+            {characters.length > 0 && (
+              <fieldset className="flex flex-col gap-[6px] mb-[10px]">
+                <legend className="lcars-eyebrow">
+                  Beteiligte (optional)
+                </legend>
+                <div className="flex flex-wrap gap-[12px]">
+                  {characters.map((character) => (
+                    <label
+                      key={character.id}
+                      className="flex items-center gap-[6px]"
+                    >
+                      <input
+                        type="checkbox"
+                        name="characterIds"
+                        value={character.id}
+                      />
+                      <span>{character.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
             <SubmitButton pending={pending} pendingLabel="Wird eingetragen…">
               Eintragen
             </SubmitButton>

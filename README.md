@@ -565,7 +565,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Seite, ungecacht (der Inhalt hängt am Betrachter, wie beim Beziehungsgraph).
   Umfang, Sortierrichtung, Suche, Ereignisart, Beteiligte und Jahr laufen als
   reine Funktionen in `src/lib/timelineTypes.ts` und sind
-  dort einzeln getestet.
+  dort einzeln getestet. `normalizeCategory` führt dabei **`person` und
+  `character`** zusammen: die gepflegte Art heißt `character` (Beschriftung
+  „Person"), aus Markern und aus dem Sprachmodell kam mitunter `person` — das
+  fiel als unbekannter Wert auf „Sonstiges" zurück und stand als zweite,
+  gleichbedeutende Art in Auswahl und Jahresleiste. Normalisiert wird beim
+  Lesen (Anzeige, Filter, Auswahl) **und** beim Schreiben (Marker, Modell,
+  Formular); bestehende Zeilen zieht die Migration nach.
 - **Ereignisse von Hand eintragen** — der Knopf „Ereignis eintragen" über dem
   Zeitstrahl (`ManualEventForm`, für alle mit `content.create`) öffnet ein
   Fenster (`ModalOverlay`) und legt eine
@@ -579,6 +585,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   es gibt nichts, worauf sie zeigen könnte. Keine Sichtbarkeitsprüfung: ohne
   Quelle gibt es nichts zu verbergen. Entfernen darf, wer sie eingetragen hat,
   und die Moderation; die Liste unter `/gm/chronologie` zeigt beide Herkünfte.
+  **Beteiligte** lassen sich dabei mitgeben (`timeline_event_characters`):
+  angeboten wird das **ganze Ensemble** — auch zurückgezogene Figuren und
+  NPCs, denn ein historisches Ereignis betrifft oft gerade die, die nicht
+  mehr im Dienst sind —, **ohne Vorauswahl**, Entwürfe ausgenommen. Die
+  übrigen Ereignisse ziehen ihre Beteiligten aus ihrer Quelle
+  (Missionsbesetzung, Logbuch-Autor:in, Gesprächsteilnehmer); ein freies
+  Ereignis hat keine, also braucht es die eigene Zuordnung.
   Das Datumsfeld ist ein echter Datumswähler und mit dem **jüngsten Ereignis**
   der Chronologie vorbelegt (`latestEventDate`): was neu dazukommt, schließt
   fast immer an das an, was zuletzt geschah — sonst suchte man das Jahrhundert

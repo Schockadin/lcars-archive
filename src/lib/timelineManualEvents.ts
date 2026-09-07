@@ -2,7 +2,7 @@ import "server-only";
 import { revalidateTag } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
-import { EVENT_CATEGORIES } from "@/lib/timelineTypes";
+import { EVENT_CATEGORIES, normalizeCategory } from "@/lib/timelineTypes";
 
 // Ereignisse, die zu keinem Inhalt gehören.
 //
@@ -22,6 +22,9 @@ export interface ManualEventInput {
   title: string;
   detail: string | null;
   category: string;
+  // Wer beteiligt ist. Bewusst OHNE Vorauswahl: ein freies Ereignis betrifft
+  // in der Regel niemanden aus der Runde, und wenn doch, dann gezielt.
+  characterIds: number[];
 }
 
 export class ManualEventError extends Error {}
@@ -37,6 +40,7 @@ export function parseManualEvent(form: {
   title: string;
   detail: string;
   category: string;
+  characterIds?: string[];
 }): ManualEventInput {
   const title = form.title.trim();
   if (title === "") throw new ManualEventError("Das Ereignis braucht einen Titel.");
@@ -58,7 +62,7 @@ export function parseManualEvent(form: {
     throw new ManualEventError("Dieses Datum gibt es nicht.");
   }
 
-  const category = form.category.trim();
+  const category = normalizeCategory(form.category);
   if (!EVENT_CATEGORIES.some((c) => c.key === category)) {
     throw new ManualEventError("Unbekannte Ereignisart.");
   }
@@ -70,12 +74,22 @@ export function parseManualEvent(form: {
     );
   }
 
+  const characterIds: number[] = [];
+  for (const raw of form.characterIds ?? []) {
+    const id = Number(raw);
+    if (!Number.isInteger(id) || id <= 0) {
+      throw new ManualEventError("Ungültige Auswahl der Beteiligten.");
+    }
+    if (!characterIds.includes(id)) characterIds.push(id);
+  }
+
   return {
     // Vierstellig speichern, damit die Sortierung als Text stimmt.
     date: `${String(year).padStart(4, "0")}-${date.slice(-5)}`,
     title,
     detail: detail === "" ? null : detail,
     category,
+    characterIds,
   };
 }
 
@@ -83,16 +97,42 @@ export async function createManualEvent(
   input: ManualEventInput,
   createdBy: number,
 ): Promise<number> {
-  const [row] = await sql<{ id: number }[]>`
-    INSERT INTO timeline_events
-      (event_date, title, detail, category, source_type, source_slug, href,
-       origin, created_by)
-    VALUES (${input.date}, ${input.title}, ${input.detail}, ${input.category},
-            NULL, NULL, '', 'manual', ${createdBy})
-    RETURNING id
-  `;
+  // Ereignis und Beteiligte in EINER Transaktion: ein Ereignis, dem die Hälfte
+  // seiner Besetzung fehlt, wäre schlechter als keines.
+  const id = await sql.begin(async (tx) => {
+    const [row] = await tx<{ id: number }[]>`
+      INSERT INTO timeline_events
+        (event_date, title, detail, category, source_type, source_slug, href,
+         origin, created_by)
+      VALUES (${input.date}, ${input.title}, ${input.detail}, ${input.category},
+              NULL, NULL, '', 'manual', ${createdBy})
+      RETURNING id
+    `;
+    for (const characterId of input.characterIds) {
+      await tx`
+        INSERT INTO timeline_event_characters (event_id, character_id)
+        VALUES (${row.id}, ${characterId})
+        ON CONFLICT DO NOTHING
+      `;
+    }
+    return row.id;
+  });
   revalidateTag(cacheTags.timeline, { expire: 0 });
-  return row.id;
+  return id;
+}
+
+// Alle Figuren, die sich mit einem Ereignis verknüpfen lassen: das ganze
+// Ensemble, ausdrücklich auch zurückgezogene und NPCs — ein historisches
+// Ereignis betrifft oft gerade die, die nicht mehr im Dienst sind. Draußen
+// bleiben nur Entwürfe (noch nicht veröffentlicht) und Gelöschtes.
+export async function listCharactersForEvents(): Promise<
+  { id: number; name: string }[]
+> {
+  return sql<{ id: number; name: string }[]>`
+    SELECT id, name FROM characters
+    WHERE deleted_at IS NULL AND is_draft = false
+    ORDER BY name ASC
+  `;
 }
 
 // Entfernen darf, wer es eingetragen hat — und wer fremde Inhalte moderieren

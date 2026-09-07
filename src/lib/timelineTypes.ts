@@ -64,6 +64,25 @@ const CATEGORY_BY_KEY = new Map(
   EVENT_CATEGORIES.map((c) => [c.key, c] as const),
 );
 
+// Zwei Schlüssel, eine Sache: die gepflegte Ereignisart heißt 'character'
+// (Beschriftung „Person"), aus Markern und aus dem Sprachmodell kam mitunter
+// 'person'. Als unbekannter Wert fiel das auf „Sonstiges" zurück und stand
+// als zweite, gleichbedeutende Art in Auswahl und Jahresleiste. Seit v1.29.49
+// laufen beide auf 'character' zusammen — Farbe und Beschriftung sind die der
+// bisherigen „Person".
+const CATEGORY_ALIASES: Record<string, TimelineCategory> = {
+  person: "character",
+  charakter: "character",
+};
+
+// Normalisiert einen Kategorie-Wert (aus Marker, Modell, Route oder
+// Formular). Unbekannte Werte bleiben unangetastet — categoryVisual zeigt
+// sie weiterhin als „Sonstiges" mit ihrem eigenen Text.
+export function normalizeCategory(key: string): string {
+  const trimmed = key.trim();
+  return CATEGORY_ALIASES[trimmed.toLowerCase()] ?? trimmed;
+}
+
 // Ein unbekannter Kategoriewert (alter Marker, von Hand getippt) fällt auf
 // „Sonstiges" zurück, behält aber seinen Text als Beschriftung — verschluckt
 // wird nichts.
@@ -72,7 +91,7 @@ export function categoryVisual(key: string): {
   label: string;
   color: string;
 } {
-  const known = CATEGORY_BY_KEY.get(key as TimelineCategory);
+  const known = CATEGORY_BY_KEY.get(normalizeCategory(key) as TimelineCategory);
   if (known) return known;
   return {
     key,
@@ -169,7 +188,7 @@ export function parseTimelineMarkers(markdown: string): ParsedMarker[] {
     out.push({
       date,
       title,
-      category: category || "other",
+      category: category ? normalizeCategory(category) : "other",
       anchor,
     });
   }
@@ -268,7 +287,7 @@ export function isMissionStart(event: TimelineEvent): boolean {
 export function isTimelineCategory(value: string): value is TimelineCategory {
   return (
     !RESERVED_CHRONOLOGY_SEGMENTS.includes(value) &&
-    EVENT_CATEGORIES.some((c) => c.key === value)
+    EVENT_CATEGORIES.some((c) => c.key === normalizeCategory(value))
   );
 }
 
@@ -331,7 +350,14 @@ export function filterEvents(
   return events.filter((event) => {
     if (scope === "missions" && !isMissionStart(event)) return false;
     if (filter.person && !event.people.includes(filter.person)) return false;
-    if (filter.category && event.category !== filter.category) return false;
+    // Über die normalisierten Schlüssel vergleichen: ein Ereignis mit der
+    // Alt-Art „person" gehört zur Auswahl „Person" (character).
+    if (
+      filter.category &&
+      normalizeCategory(event.category) !== normalizeCategory(filter.category)
+    ) {
+      return false;
+    }
     if (filter.year && yearOf(event.date) !== filter.year) return false;
     if (!q) return true;
     // Gesucht wird über das, was auf der Karte steht — Titel, Beschreibung,

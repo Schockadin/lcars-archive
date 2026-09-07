@@ -351,7 +351,13 @@ export default function DevGalleryPage() {
             steht der Knopf darüber, für alle mit `content.create`. Hier mit
             demselben Datum vorbelegt, das die Attrappen-Ereignisse als
             jüngstes führen. */}
-        <ManualEventForm defaultDate={latestEventDate(DEMO_TIMELINE)} />
+        <ManualEventForm
+          defaultDate={latestEventDate(DEMO_TIMELINE)}
+          characters={[
+            { id: 1, name: "Tuvok" },
+            { id: 2, name: "Kira" },
+          ]}
+        />
         <TimelineView events={DEMO_TIMELINE} />
       </section>
 

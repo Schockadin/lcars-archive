@@ -6,6 +6,7 @@ import {
   isIsoDate,
   isMissionStart,
   latestEventDate,
+  normalizeCategory,
   missionEndDates,
   parseTimelineMarkers,
   peopleOf,
@@ -369,5 +370,44 @@ describe("latestEventDate", () => {
 
   it("gibt bei leerer Chronologie nichts vor", () => {
     expect(latestEventDate([])).toBeNull();
+  });
+});
+
+// „person" und „character" waren dieselbe Ereignisart mit zwei Schlüsseln —
+// die eine gepflegt, die andere aus Markern und aus dem Sprachmodell. Die
+// zweite fiel als unbekannter Wert auf „Sonstiges" zurück und stand als
+// eigene, gleichbedeutende Art in der Auswahl.
+describe("normalizeCategory", () => {
+  it("führt person und character zusammen", () => {
+    expect(normalizeCategory("person")).toBe("character");
+    expect(normalizeCategory("Person")).toBe("character");
+    expect(normalizeCategory("charakter")).toBe("character");
+    expect(normalizeCategory("character")).toBe("character");
+  });
+
+  it("lässt alles andere unangetastet", () => {
+    expect(normalizeCategory("conflict")).toBe("conflict");
+    expect(normalizeCategory("kaputt")).toBe("kaputt");
+  });
+
+  it("zeigt die Alt-Art mit Farbe und Beschriftung der Person", () => {
+    const alt = categoryVisual("person");
+    expect(alt.label).toBe("Person");
+    expect(alt).toEqual(categoryVisual("character"));
+  });
+
+  it("filtert die Alt-Art mit, wenn nach Person gefiltert wird", () => {
+    const events = [
+      event({ id: "a", category: "person" }),
+      event({ id: "b", category: "character" }),
+      event({ id: "c", category: "conflict" }),
+    ];
+    const gefiltert = filterEvents(events, {
+      query: "",
+      category: "character",
+      year: null,
+      scope: "all",
+    });
+    expect(gefiltert.map((e) => e.id)).toEqual(["a", "b"]);
   });
 });

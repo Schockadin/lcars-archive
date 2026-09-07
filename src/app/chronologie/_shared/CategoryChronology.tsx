@@ -6,6 +6,7 @@ import { getTimeline } from "@/lib/timeline";
 import { categoryVisual, latestEventDate } from "@/lib/timelineTypes";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import ManualEventForm from "@/components/timeline/ManualEventForm";
+import { listCharactersForEvents } from "@/lib/timelineManualEvents";
 
 // Das Gerüst und der Datenzugriff der Chronologie — geteilt von den drei
 // Seiten, die sie zeigen: /chronologie, /chronologie/mission und
@@ -45,13 +46,18 @@ export default async function CategoryTimeline({
   // Wer eigene Inhalte anlegen darf, darf auch ein Ereignis eintragen, das zu
   // keinem Inhalt gehört (siehe timelineManualEvents.ts).
   const canAddEvent = viewerHasPermission(viewer, "content.create");
+  // Nur für die, die auch eintragen dürfen — sonst eine Abfrage für nichts.
+  const characters = canAddEvent ? await listCharactersForEvents() : [];
   return (
     <>
       {/* Dieselbe Spaltenbreite wie der Zeitstrahl darunter
           (TimelineView rendert .lcars-wide-column). */}
       {canAddEvent && (
         <div className="lcars-wide-column">
-          <ManualEventForm defaultDate={latestEventDate(events)} />
+          <ManualEventForm
+            defaultDate={latestEventDate(events)}
+            characters={characters}
+          />
         </div>
       )}
       <TimelineView events={events} initialCategory={category} syncUrl />

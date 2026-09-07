@@ -13,6 +13,7 @@ import {
   ORIGIN_LABELS,
   TIMELINE_SCOPES,
   categoryVisual,
+  normalizeCategory,
   filterEvents,
   fmtDate,
   missionEndDates,
@@ -100,7 +101,9 @@ export default function TimelineView({
   // in der Jahresleiste. Der Fall ist über /chronologie/[kategorie] leicht zu
   // erreichen: die Adresse wählt eine Art vor, die es (noch) nicht gibt.
   const categories = useMemo(() => {
-    const present = new Set(inScope.map((e) => e.category));
+    // Normalisiert, damit die Alt-Art „person“ und „character“ EINE
+    // Art in der Auswahl sind (siehe normalizeCategory).
+    const present = new Set(inScope.map((e) => normalizeCategory(e.category)));
     if (category) present.add(category);
     return EVENT_CATEGORIES.filter((c) => present.has(c.key));
   }, [inScope, category]);

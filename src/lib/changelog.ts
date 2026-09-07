@@ -142,6 +142,16 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Hell/Dunkel frei wählbar — plus eigene Grundfarben",
     items: [
       {
+        text: "„Charakter“ und „Person“ waren zwei Namen für dieselbe Ereignisart und standen beide in der Chronologie zur Auswahl — jetzt ist es eine: „Person“, in ihrer bisherigen Farbe. Ältere Einträge mit der anderen Schreibweise wandern automatisch mit.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Beim Eintragen eines Ereignisses von Hand lassen sich jetzt Beteiligte auswählen — aus allen Figuren, ausdrücklich auch den zurückgezogenen, und keine ist vorausgewählt. Die Namen stehen danach an der Karte und der Filter „Beteiligte Person“ findet das Ereignis.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
         text: "Das Menü für angemeldete Konten ist aufgeräumt: „Charaktere“, „Meine Inhalte“ und „Einstellungen“ stehen jetzt zusammen unter einem Knopf „Profil“ mit Aufklapp-Menü — so wie „Leitung“ und „Admin“. Der Abmelden-Knopf steht immer allein in der unteren Reihe.",
         category: "konto",
       },

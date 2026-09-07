@@ -164,7 +164,8 @@ function markerEvents(
 }
 
 export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[]> {
-  const [missions, logs, entries, characters, inferred] = await Promise.all([
+  const [missions, logs, entries, characters, inferred, eventCharacters] =
+    await Promise.all([
     sql<MissionRow[]>`
       SELECT m.slug, m.title,
              m.started_at::text AS started_at,
@@ -208,7 +209,24 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
              source_type, source_slug, origin
       FROM timeline_events
     `,
+    // Die Beteiligten der von Hand eingetragenen Ereignisse. Eine Abfrage für
+    // alle statt einer je Ereignis; die Namen kommen aus der Figur selbst,
+    // damit eine Umbenennung überall durchschlägt.
+    sql<{ eventId: number; name: string }[]>`
+      SELECT ec.event_id AS "eventId", c.name
+      FROM timeline_event_characters ec
+      JOIN characters c ON c.id = ec.character_id
+      WHERE c.deleted_at IS NULL
+      ORDER BY c.name ASC
+    `,
   ]);
+
+  const manualPeople = new Map<number, string[]>();
+  for (const row of eventCharacters) {
+    const list = manualPeople.get(row.eventId) ?? [];
+    list.push(row.name);
+    manualPeople.set(row.eventId, list);
+  }
 
   const events: TimelineEvent[] = [];
   // Welche Inhalte die betrachtende Person sehen darf — die abgeleiteten
@@ -470,7 +488,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
         sourceType: "archive_entry",
         sourceTitle: row.title,
         href: null,
-        people: [],
+        people: manualPeople.get(row.id) ?? [],
       });
       continue;
     }

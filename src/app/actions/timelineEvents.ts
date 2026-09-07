@@ -7,6 +7,7 @@ import {
   ManualEventError,
   createManualEvent,
   deleteManualEvent,
+  listCharactersForEvents,
   parseManualEvent,
 } from "@/lib/timelineManualEvents";
 
@@ -38,7 +39,18 @@ export async function createManualEventAction(
       title: String(formData.get("title") ?? ""),
       detail: String(formData.get("detail") ?? ""),
       category: String(formData.get("category") ?? ""),
+      characterIds: formData.getAll("characterIds").map(String),
     });
+
+    // Wie überall: die Auswahl gegen den Bestand prüfen — ein manipuliertes
+    // Formular soll keine gelöschte oder fremde Entwurfs-Figur verknüpfen.
+    const bekannt = new Set(
+      (await listCharactersForEvents()).map((character) => character.id),
+    );
+    if (input.characterIds.some((id) => !bekannt.has(id))) {
+      return { error: "Mindestens eine ausgewählte Figur gibt es nicht." };
+    }
+
     await createManualEvent(input, user.id);
     return { success: true };
   } catch (err) {
