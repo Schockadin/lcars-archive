@@ -21,6 +21,9 @@ import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
 import { readCharacterHead } from "./characterHead";
+import {
+  characterEditHref,
+} from "@/lib/contentRoutes";
 
 // Die drei Panels der eigenen Charakterseite speichern jeweils für sich:
 // Stammdaten, Biografie und Werte. Der frühere ContentEditor schickte alles
@@ -134,7 +137,7 @@ export async function updateCharacterHeadAction(
   }
 
   revalidateCharacter(result.slug);
-  revalidatePath(`/user/characters/${characterId}`);
+  revalidatePath(characterEditHref(characterId));
   revalidatePath("/user/characters");
 
   await notifyUpdated({
@@ -203,7 +206,7 @@ export async function updateCharacterBioAction(
   }
 
   revalidateCharacter(result.slug);
-  revalidatePath(`/user/characters/${characterId}`);
+  revalidatePath(characterEditHref(characterId));
 
   await notifyUpdated({
     userId: session.userId,
@@ -282,7 +285,7 @@ export async function saveCharacterStatsAction(
   // Die Werte hängen an der Charakter-Akte (metadata) — deren Cache-Tags
   // müssen mit, damit z.B. die Charakterseite frische Daten bekommt.
   revalidateCharacter(result.slug);
-  revalidatePath(`/user/characters/${characterId}`);
+  revalidatePath(characterEditHref(characterId));
   revalidatePath("/user/characters");
 
   // Bewusst KEINE Abonnenten-Benachrichtigung: Werte ändern sich im

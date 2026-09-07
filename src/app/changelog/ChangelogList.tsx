@@ -3,20 +3,7 @@ import { LcarsDataRow } from "@/components/lcars";
 import ChangelogControls from "@/components/changelog/ChangelogControls";
 import ChangelogItems from "@/components/changelog/ChangelogItems";
 import { useChangelogView } from "@/components/changelog/useChangelogView";
-import type { ChangelogEntry } from "@/lib/changelog";
-
-// Vergleicht zwei "Major.Minor"-Versionsstrings numerisch statt
-// lexikografisch — ein reiner String-Vergleich würde "1.10" fälschlich vor
-// "1.9" einsortieren.
-function compareVersions(a: string, b: string): number {
-  const partsA = a.split(".").map(Number);
-  const partsB = b.split(".").map(Number);
-  for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
-    const diff = (partsA[i] ?? 0) - (partsB[i] ?? 0);
-    if (diff !== 0) return diff;
-  }
-  return 0;
-}
+import { compareVersions, type ChangelogEntry } from "@/lib/changelog";
 
 // Die vollständige Änderungsliste: ein Akkordeon je Version, darüber die
 // gemeinsame Leiste aus Sortierung und Kategorie-Filter (siehe

@@ -6,6 +6,9 @@ import { requireGM, getRoleMap } from "@/lib/dal";
 import { getAllOpenDialoguesForGM } from "@/lib/dialogues";
 import { formatDateTime } from "@/utils/formateISODate";
 import { LcarsAkteCard } from "@/components/lcars";
+import {
+  dialogueHref,
+} from "@/lib/contentRoutes";
 
 export const metadata: Metadata = {
   title: "Gespräche",
@@ -47,7 +50,7 @@ export default async function AdminDialoguesPage() {
               {dialogues.map((d) => (
                 <div key={d.slug} className="flex flex-col gap-[4px]">
                   <LcarsAkteCard
-                    href={`/dialogues/${d.slug}`}
+                    href={dialogueHref(d.slug)}
                     color="var(--lcars-senary)"
                     title={d.title}
                     meta={

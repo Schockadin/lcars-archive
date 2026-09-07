@@ -10,6 +10,9 @@ import EditArchiveEntryForm from "./EditArchiveEntryForm";
 import RevisionsPanel from "@/app/_shared/RevisionsPanel";
 import { listRevisions } from "@/lib/contentRevisions";
 import { getViewer } from "@/lib/visibility";
+import {
+  archiveEditHref,
+} from "@/lib/contentRoutes";
 
 export const metadata: Metadata = {
   title: "Datenbank-Eintrag bearbeiten",
@@ -59,7 +62,7 @@ export default async function EditArchiveEntryPage({
           <RevisionsPanel
             contentType="archive"
             contentId={entry.id}
-            path={`/user/archive/${entry.id}/edit`}
+            path={archiveEditHref(entry.id)}
             revisions={revisions}
           />
         </div>

@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import PageMeta from "@/components/PageMeta";
-import PageSkeleton from "@/app/_shared/PageSkeleton";
 import CategoryTimeline, {
+  ChronologyShell,
   categoryMetadata,
 } from "@/app/chronologie/_shared/CategoryChronology";
 
@@ -15,11 +13,8 @@ export const metadata: Metadata = categoryMetadata("mission");
 
 export default function ChronologieMissionenPage() {
   return (
-    <>
-      <PageMeta title="Chronologie" section="chronologie" />
-      <Suspense fallback={<PageSkeleton />}>
-        <CategoryTimeline category="mission" />
-      </Suspense>
-    </>
+    <ChronologyShell>
+      <CategoryTimeline category="mission" />
+    </ChronologyShell>
   );
 }

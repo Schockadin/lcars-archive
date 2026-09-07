@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
-import PageMeta from "@/components/PageMeta";
-import PageSkeleton from "@/app/_shared/PageSkeleton";
-import TimelineView from "@/components/timeline/TimelineView";
-import { getTimeline } from "@/lib/timeline";
-import { getViewer } from "@/lib/visibility";
+import CategoryTimeline, {
+  ChronologyShell,
+} from "@/app/chronologie/_shared/CategoryChronology";
 
 export const metadata: Metadata = {
   title: "Chronologie",
@@ -17,21 +14,12 @@ export const metadata: Metadata = {
 //
 // Nicht gecacht — die Liste hängt an der Sichtbarkeit der betrachtenden
 // Person (nicht-öffentliche Logbücher, Entwürfe), genau wie der
-// Beziehungsgraph. Unter cacheComponents muss dieser Zugriff deshalb in einer
-// Suspense-Grenze liegen, damit die statische Hülle sofort steht.
+// Beziehungsgraph. Gerüst und Datenzugriff teilt sie sich mit den
+// Kategorie-Seiten (siehe _shared/CategoryChronology.tsx).
 export default function ChronologiePage() {
   return (
-    <>
-      <PageMeta title="Chronologie" section="chronologie" />
-      <Suspense fallback={<PageSkeleton />}>
-        <ChronologieContent />
-      </Suspense>
-    </>
+    <ChronologyShell>
+      <CategoryTimeline />
+    </ChronologyShell>
   );
-}
-
-async function ChronologieContent() {
-  const viewer = await getViewer();
-  const events = await getTimeline(viewer);
-  return <TimelineView events={events} syncUrl />;
 }

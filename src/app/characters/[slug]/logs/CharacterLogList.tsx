@@ -13,7 +13,11 @@ import {
   byDateDesc,
   sessionLabel,
 } from "@/lib/missionFormat";
-import { missionHref, missionLogHref } from "@/lib/contentRoutes";
+import {
+  characterHref,
+  missionHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 
 type LogSortMode = "date" | "mission";
 
@@ -64,7 +68,7 @@ export default function CharacterLogList({
     <div className="mission-loglist">
       <div className="mission-loglist-head">
         <Link
-          href={`/characters/${characterSlug}`}
+          href={characterHref(characterSlug)}
           className="lcars-back-link"
         >
           ‹ {characterName}

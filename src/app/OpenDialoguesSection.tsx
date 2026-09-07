@@ -1,5 +1,8 @@
 import { LcarsAkteCard, LcarsDataRow } from "@/components/lcars";
 import type { DialogueSummary } from "@/lib/dialogues";
+import {
+  dialogueHref,
+} from "@/lib/contentRoutes";
 
 // Eigene Akkordeon-Sektion für offene Gespräche — standardmäßig
 // aufgeklappt (defaultOpen), da laufende Gespräche im Gegensatz zu den
@@ -23,7 +26,7 @@ export default function OpenDialoguesSection({
         {items.map((d) => (
           <LcarsAkteCard
             key={d.slug}
-            href={`/dialogues/${d.slug}`}
+            href={dialogueHref(d.slug)}
             color="var(--lcars-senary)"
             title={d.title}
             meta={

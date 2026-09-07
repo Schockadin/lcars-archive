@@ -9,7 +9,10 @@ import { fmtDate, sessionLabel } from "@/lib/missionFormat";
 import { LcarsReadingModeToggle } from "@/components/lcars";
 import ContentBody from "@/components/ContentBody";
 import { useNeo } from "@/hooks/useNeo";
-import { missionLogHref } from "@/lib/contentRoutes";
+import {
+  characterHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 
 // Ein Sprung zum Nachbar-Log desselben Autors. `dir` steuert Pfeil + Ausrichtung.
 function LogNavLink({ item, dir }: { item: LogNavItem; dir: "prev" | "next" }) {
@@ -58,7 +61,7 @@ export default function LogDetail({
             <span>
               <b>Autor</b>{" "}
               {log.author_slug ? (
-                <Link href={`/characters/${log.author_slug}`}>
+                <Link href={characterHref(log.author_slug)}>
                   {log.author_name}
                 </Link>
               ) : (

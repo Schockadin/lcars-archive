@@ -17,6 +17,9 @@ import {
 import { getDialogueViewPreference } from "@/lib/users";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 import DialogueContentView from "./DialogueContentView";
+import {
+  dialogueHref,
+} from "@/lib/contentRoutes";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -63,7 +66,7 @@ export default async function CharacterDialoguePage({ params }: Props) {
 
   // Offenes Gespräch → Spielansicht. Der Teilnehmer-Gate dort ist die richtige
   // Zugriffsprüfung (jeder Teilnehmer, nicht nur der Ersteller).
-  if (entry.dialogue_open) redirect(`/dialogues/${entry.slug}`);
+  if (entry.dialogue_open) redirect(dialogueHref(entry.slug));
 
   if (
     entry.visibility !== "public" &&

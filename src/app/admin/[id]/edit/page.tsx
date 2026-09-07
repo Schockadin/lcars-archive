@@ -9,6 +9,9 @@ import EditUserForm from "./EditUserForm";
 import PermissionsForm from "./PermissionsForm";
 import UserStatusActions from "./UserStatusActions";
 import type { UserAdminDetail } from "@/lib/users";
+import {
+  characterHref,
+} from "@/lib/contentRoutes";
 
 export const metadata: Metadata = {
   title: "User bearbeiten",
@@ -76,7 +79,7 @@ export default async function EditUserPage({
                     {target.characters.map((c) => (
                       <Link
                         key={c.id}
-                        href={`/characters/${c.slug}`}
+                        href={characterHref(c.slug)}
                         className="text-lcars-primary-ink underline"
                       >
                         {c.name}

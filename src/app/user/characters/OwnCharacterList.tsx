@@ -6,6 +6,10 @@ import VisibilitySelect from "../content/VisibilitySelect";
 import DeleteOwnContentButton from "../content/DeleteOwnContentButton";
 import ContentActionRow from "../content/ContentActionRow";
 import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
+import {
+  characterEditHref,
+  characterHref,
+} from "@/lib/contentRoutes";
 
 const STATUS_LABELS = CHARACTER_STATUS_LABEL;
 
@@ -63,7 +67,7 @@ export default function OwnCharacterList({
           className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
         >
           <LcarsAkteCard
-            href={`/characters/${c.slug}`}
+            href={characterHref(c.slug)}
             color={c.isDraft ? "var(--lcars-quinary)" : "var(--lcars-primary)"}
             className="flex-1"
             title={c.name}
@@ -101,7 +105,7 @@ export default function OwnCharacterList({
             // also ohnehin an dieselbe Adresse. Die doppelte Pille war mit
             // 180px zudem der Grund, warum die Aktionszeile auf einem
             // Telefon (410px) über den Rand hinauslief.
-            editHref={`/user/characters/${c.id}`}
+            editHref={characterEditHref(c.id)}
             editLabel="Öffnen und bearbeiten"
             deleteButton={
               <DeleteOwnContentButton

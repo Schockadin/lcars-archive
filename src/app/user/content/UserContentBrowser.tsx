@@ -15,7 +15,15 @@ import VisibilitySelect from "./VisibilitySelect";
 import DeleteOwnContentButton from "./DeleteOwnContentButton";
 import ContentActionRow from "./ContentActionRow";
 import { LcarsListFilterInput } from "@/components/lcars";
-import { missionHref, missionLogHref } from "@/lib/contentRoutes";
+import {
+  archiveEditHref,
+  archiveHref,
+  dialogueHref,
+  missionEditHref,
+  missionHref,
+  missionLogEditHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 
 // Charaktere sind bewusst KEINE Kategorie mehr: sie haben mit
 // /user/characters eine eigene Übersicht (inkl. Werte-Formular). Die
@@ -268,7 +276,7 @@ export default function UserContentBrowser({
                     }
                   />
                   <ContentActionRow
-                    editHref={`/user/missions/${m.id}/edit`}
+                    editHref={missionEditHref(m.id)}
                     deleteButton={
                       <DeleteOwnContentButton
                         contentType="mission"
@@ -308,7 +316,7 @@ export default function UserContentBrowser({
                       initialValue={log.visibility}
                     />
                   }
-                  editHref={`/user/mission-logs/${log.id}/edit`}
+                  editHref={missionLogEditHref(log.id)}
                   deleteButton={
                     <DeleteOwnContentButton
                       contentType="mission_log"
@@ -325,7 +333,7 @@ export default function UserContentBrowser({
                 className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
               >
                 <LcarsAkteCard
-                  href={`/archive/${entry.slug}`}
+                  href={archiveHref(entry.slug)}
                   color={CONTENT_DRAFT_COLOR}
                   className="flex-1"
                   title={entry.title}
@@ -348,7 +356,7 @@ export default function UserContentBrowser({
                       initialValue={entry.visibility}
                     />
                   }
-                  editHref={`/user/archive/${entry.id}/edit`}
+                  editHref={archiveEditHref(entry.id)}
                   deleteButton={
                     <DeleteOwnContentButton
                       contentType="archive_entry"
@@ -409,7 +417,7 @@ export default function UserContentBrowser({
                         initialValue={log.visibility}
                       />
                     }
-                    editHref={`/user/mission-logs/${log.id}/edit`}
+                    editHref={missionLogEditHref(log.id)}
                     deleteButton={
                       <DeleteOwnContentButton
                         contentType="mission_log"
@@ -445,7 +453,7 @@ export default function UserContentBrowser({
                   <LcarsAkteCard
                     href={
                       d.open
-                        ? `/dialogues/${d.slug}`
+                        ? dialogueHref(d.slug)
                         : `/characters/dialogues/${d.slug}`
                     }
                     color={
@@ -511,7 +519,7 @@ export default function UserContentBrowser({
                   className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
                 >
                   <LcarsAkteCard
-                    href={`/archive/${entry.slug}`}
+                    href={archiveHref(entry.slug)}
                     color={CONTENT_TYPE_COLOR.archive_entry}
                     className="flex-1"
                     title={entry.title}
@@ -532,7 +540,7 @@ export default function UserContentBrowser({
                         initialValue={entry.visibility}
                       />
                     }
-                    editHref={`/user/archive/${entry.id}/edit`}
+                    editHref={archiveEditHref(entry.id)}
                     deleteButton={
                       <DeleteOwnContentButton
                         contentType="archive_entry"
@@ -580,7 +588,7 @@ export default function UserContentBrowser({
                     }
                   />
                   <ContentActionRow
-                    editHref={`/user/missions/${m.id}/edit`}
+                    editHref={missionEditHref(m.id)}
                     deleteButton={
                       <DeleteOwnContentButton
                         contentType="mission"

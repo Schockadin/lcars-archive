@@ -17,6 +17,9 @@ import RevisionsPanel from "@/app/_shared/RevisionsPanel";
 import { listRevisions } from "@/lib/contentRevisions";
 import { getViewer } from "@/lib/visibility";
 import CharacterSheetButton from "./CharacterSheetButton";
+import {
+  characterEditHref,
+} from "@/lib/contentRoutes";
 
 export const metadata: Metadata = {
   title: "Charakter",
@@ -113,7 +116,7 @@ export default async function OwnCharacterPage({ params }: Props) {
         <RevisionsPanel
           contentType="character"
           contentId={character.id}
-          path={`/user/characters/${character.id}`}
+          path={characterEditHref(character.id)}
           revisions={revisions}
         />
       </article>

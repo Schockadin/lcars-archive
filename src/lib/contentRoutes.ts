@@ -9,7 +9,13 @@
 //
 // Bewusst OHNE "server-only": dieselben Funktionen bauen Links im Browser
 // (Listen, Karten) und absolute URLs auf dem Server (Mail, PDF) — dort mit
-// der Basis-Adresse davor.
+// der Basis-Adresse davor. Auch ohne weitere Importe, damit die
+// Ingest-Skripte das Modul außerhalb von Next laden können.
+//
+// NICHT erreichbar sind zwei Stellen, an denen die Adresse in SQL entsteht:
+// die UNION-Abfragen in src/lib/adminContent.ts und src/lib/contentImages.ts
+// setzen sie als ('/archive/' || slug) zusammen, weil sie über alle
+// Inhaltsarten zugleich laufen. Wer hier etwas ändert, muss dort nachsehen.
 
 // Die Chronologie ist die Übersicht ALLER datierten Inhalte und zugleich die
 // Missions-Übersicht (siehe TimelineView).
@@ -27,6 +33,59 @@ export function missionHref(slug: string): string {
 export function missionLogHref(missionSlug: string, logSlug: string): string {
   return `${MISSION_PATH}/${missionSlug}/${logSlug}`;
 }
+
+// ── Die Leseseiten der Inhalte ──────────────────────────────────────────
+// Vier Inhaltsarten, vier Adressen. Sie standen an rund siebzig Stellen von
+// Hand zusammengesetzt; seit dem Umzug der Missionen ging der Missions-Link
+// über einen Helfer und der Archiv-Link in derselben Zeile weiter per
+// Zeichenkette — halb vereinheitlicht ist schlechter als gar nicht, weil
+// niemand mehr sieht, ob das Absicht ist.
+
+export function characterHref(slug: string): string {
+  return `/characters/${slug}`;
+}
+
+// Unterseiten einer Personalakte: die Logbücher dieser Figur und der
+// Charakterbogen als Leseansicht.
+export function characterLogsHref(slug: string): string {
+  return `${characterHref(slug)}/logs`;
+}
+
+export function characterSheetHref(slug: string): string {
+  return `${characterHref(slug)}/sheet`;
+}
+
+export function archiveHref(slug: string): string {
+  return `/archive/${slug}`;
+}
+
+// Offene Gespräche leben unter /dialogues, abgeschlossene unter /archive
+// (siehe toFollowedContent in src/lib/follows.ts).
+export function dialogueHref(slug: string): string {
+  return `/dialogues/${slug}`;
+}
+
+// ── Die Bearbeitungsseiten im eigenen Bereich ───────────────────────────
+// Adressiert über die ID, nicht den Slug: der Slug kann sich mit dem Titel
+// ändern, die Bearbeitungsseite soll unter derselben Adresse bleiben.
+
+export function characterEditHref(id: number | string): string {
+  return `/user/characters/${id}`;
+}
+
+export function missionEditHref(id: number | string): string {
+  return `/user/missions/${id}/edit`;
+}
+
+export function missionLogEditHref(id: number | string): string {
+  return `/user/mission-logs/${id}/edit`;
+}
+
+export function archiveEditHref(id: number | string): string {
+  return `/user/archive/${id}/edit`;
+}
+
+// ── Die Chronologie ─────────────────────────────────────────────────────
 
 // Die Chronologie, auf eine Ereignisart eingeschränkt. Ohne Angabe (oder für
 // eine unbekannte Art) die ungefilterte Seite.

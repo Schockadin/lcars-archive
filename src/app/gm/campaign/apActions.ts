@@ -3,6 +3,9 @@ import { revalidatePath } from "next/cache";
 import { requireGM } from "@/lib/dal";
 import { awardAp, isApReason } from "@/lib/characterAp";
 import { listActiveCharactersForAp } from "@/lib/gameSessions";
+import {
+  characterEditHref,
+} from "@/lib/contentRoutes";
 
 export interface ApAwardState {
   error?: string;
@@ -75,7 +78,7 @@ export async function awardApAction(
   // ohnehin in character_ap_entries (created_by/created_at/note).
 
   revalidatePath("/gm/campaign");
-  revalidatePath(`/user/characters/${characterId}`);
+  revalidatePath(characterEditHref(characterId));
 
   return {
     success: `${amount > 0 ? "+" : ""}${amount} AP gebucht.`,

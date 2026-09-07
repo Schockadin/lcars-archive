@@ -1,6 +1,10 @@
 import "server-only";
 import sql from "@/lib/db";
 import { canView, type Viewer, type Visibility } from "@/lib/visibility";
+import {
+  archiveHref,
+  characterHref,
+} from "@/lib/contentRoutes";
 
 // „Wer kennt wen" — Beziehungen einer Figur, abgeleitet aus dem, was ohnehin
 // schon erfasst ist. Es gibt keine eigene Beziehungstabelle und dieses Modul
@@ -108,7 +112,7 @@ export async function getRelationsOf(
       slug: row.slug,
       name: row.name,
       kind: "character",
-      href: `/characters/${row.slug}`,
+      href: characterHref(row.slug),
       sharedMissions: row.shared,
       sharedDialogues: 0,
     });
@@ -124,7 +128,7 @@ export async function getRelationsOf(
       name: info.name,
       kind: info.kind,
       href:
-        info.kind === "character" ? `/characters/${slug}` : `/archive/${slug}`,
+        info.kind === "character" ? characterHref(slug) : archiveHref(slug),
       sharedMissions: 0,
       sharedDialogues: info.count,
     });
@@ -199,7 +203,7 @@ export function collectDialogueEdges(
           name: p.name ?? p.slug,
           kind,
           href:
-            kind === "character" ? `/characters/${p.slug}` : `/archive/${p.slug}`,
+            kind === "character" ? characterHref(p.slug) : archiveHref(p.slug),
         });
       }
     }
@@ -278,7 +282,7 @@ export async function getRelationGraph(
           slug,
           name,
           kind: "character",
-          href: `/characters/${slug}`,
+          href: characterHref(slug),
         });
       }
     }

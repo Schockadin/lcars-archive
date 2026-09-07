@@ -20,6 +20,9 @@ import {
   getReferenceFields,
 } from "@/lib/archiveMetadataFields";
 import type { ArchiveCategory } from "@/types/archive";
+import {
+  archiveHref,
+} from "@/lib/contentRoutes";
 
 // Liest alle Metadaten-Felder (Attribute + Verweise) für die gewählte
 // Kategorie aus dem FormData — welche Felder das sind, hängt von der
@@ -198,5 +201,5 @@ export async function archiveEntryAction(
       notifyPublic: true,
     });
   }
-  redirect(`/archive/${result.slug}`);
+  redirect(archiveHref(result.slug));
 }

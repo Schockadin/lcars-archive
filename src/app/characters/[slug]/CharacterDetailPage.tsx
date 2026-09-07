@@ -11,6 +11,9 @@ import RelationsSection from "@/app/_shared/RelationsSection";
 import type { Relation } from "@/lib/relations";
 import NotesPanel from "@/app/_shared/NotesPanel";
 import type { ContentNote } from "@/lib/contentNotes";
+import {
+  characterHref,
+} from "@/lib/contentRoutes";
 
 export default function CharakterDetailPage({
   character,
@@ -66,7 +69,7 @@ export default function CharakterDetailPage({
           <NotesPanel
             contentType="character"
             contentSlug={character.slug}
-            path={`/characters/${character.slug}`}
+            path={characterHref(character.slug)}
             notes={notes}
           />
         )}

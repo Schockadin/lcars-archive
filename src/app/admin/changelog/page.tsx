@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireAdmin } from "@/lib/dal";
-import { CHANGELOG, featuredChangelogEntries } from "@/lib/changelog";
+import {
+  CHANGELOG,
+  compareVersions,
+  featuredChangelogEntries,
+} from "@/lib/changelog";
 import {
   getFeaturedChangelogVersions,
   getHiddenChangelogCategories,
@@ -17,18 +21,6 @@ export const metadata: Metadata = {
   title: "Changelog",
   robots: { index: false, follow: false },
 };
-
-// Numerischer „Major.Minor"-Vergleich (String-Vergleich sortierte „1.9" hinter
-// „1.10") — für die Anzeige neueste Version zuerst.
-function compareVersions(a: string, b: string): number {
-  const pa = a.split(".").map(Number);
-  const pb = b.split(".").map(Number);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const diff = (pa[i] ?? 0) - (pb[i] ?? 0);
-    if (diff !== 0) return diff;
-  }
-  return 0;
-}
 
 // /admin/changelog: der Admin wählt per Checkbox, welche Changelog-Versionen
 // mit ihren Neuerungen auf dem Dashboard in der „Neue Funktionen"-Box erscheinen

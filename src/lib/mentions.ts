@@ -4,7 +4,11 @@ import { WIKILINK_RE } from "@/lib/markdown";
 import { slugifyBase } from "@/lib/slug";
 import { normalizeWikilinkTarget } from "@/lib/autolink";
 import { canView, type Viewer, type Visibility } from "@/lib/visibility";
-import { missionHref, missionLogHref } from "@/lib/contentRoutes";
+import {
+  archiveHref,
+  missionHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 
 // „Erwähnt in" für Charaktere, Missionen und Logbücher.
 //
@@ -158,7 +162,7 @@ export async function getMentionsOf(
       slug: row.slug,
       title: row.title,
       sublabel: "Datenbank",
-      href: `/archive/${row.slug}`,
+      href: archiveHref(row.slug),
     });
   }
 

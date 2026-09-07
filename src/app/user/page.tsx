@@ -34,6 +34,9 @@ import { COLOR_MODE_LIGHT, normalizeColorMode } from "@/lib/colorMode";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 import DataRow from "@/components/lcars/DataRow";
+import {
+  characterHref,
+} from "@/lib/contentRoutes";
 
 export const metadata: Metadata = {
   title: "Profil",
@@ -142,7 +145,7 @@ export default async function UserPage() {
                         className="flex flex-col gap-[12px]"
                       >
                         <h3>
-                          <Link href={`/characters/${character.slug}`}>
+                          <Link href={characterHref(character.slug)}>
                             {character.name}
                           </Link>
                         </h3>

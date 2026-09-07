@@ -1,6 +1,15 @@
 import { describe, it, expect } from "vitest";
 import {
   CHRONOLOGY_PATH,
+  archiveEditHref,
+  archiveHref,
+  characterEditHref,
+  characterHref,
+  characterLogsHref,
+  characterSheetHref,
+  dialogueHref,
+  missionEditHref,
+  missionLogEditHref,
   MISSION_PATH,
   RESERVED_CHRONOLOGY_SEGMENTS,
   chronologyCategoryHref,
@@ -18,6 +27,23 @@ describe("contentRoutes", () => {
     expect(missionLogHref("erste-mission", "log-1")).toBe(
       "/chronologie/mission/erste-mission/log-1",
     );
+  });
+
+  it("kennt die Leseseiten aller vier Inhaltsarten", () => {
+    expect(characterHref("tuvok")).toBe("/characters/tuvok");
+    expect(characterLogsHref("tuvok")).toBe("/characters/tuvok/logs");
+    expect(characterSheetHref("tuvok")).toBe("/characters/tuvok/sheet");
+    expect(archiveHref("erster-kontakt")).toBe("/archive/erster-kontakt");
+    // Offene Gespräche liegen NICHT unter /archive.
+    expect(dialogueHref("plausch")).toBe("/dialogues/plausch");
+  });
+
+  it("adressiert die Bearbeitungsseiten über die ID, nicht den Slug", () => {
+    // Der Slug wandert mit dem Titel; die Bearbeitungsseite soll bleiben.
+    expect(characterEditHref(7)).toBe("/user/characters/7");
+    expect(missionEditHref(7)).toBe("/user/missions/7/edit");
+    expect(missionLogEditHref(7)).toBe("/user/mission-logs/7/edit");
+    expect(archiveEditHref(7)).toBe("/user/archive/7/edit");
   });
 
   it("fällt ohne Kategorie auf die ungefilterte Chronologie zurück", () => {

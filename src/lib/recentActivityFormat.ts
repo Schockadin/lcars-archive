@@ -7,6 +7,9 @@ import type { TimelineSourceType } from "@/types/timeline";
 import type { Permission } from "@/lib/permissions";
 import {
   CHRONOLOGY_PATH,
+  archiveHref,
+  characterHref,
+  dialogueHref,
   missionHref,
   missionLogHref,
 } from "@/lib/contentRoutes";
@@ -83,7 +86,7 @@ export interface NewsSeenEntry {
 export function toHref(row: NewsContentRow): string {
   switch (row.target_type) {
     case "character":
-      return `/characters/${row.slug}`;
+      return characterHref(row.slug);
     case "mission":
       return missionHref(row.slug);
     case "mission_log":
@@ -97,8 +100,8 @@ export function toHref(row: NewsContentRow): string {
       // Offene Dialoge leben unter /dialogues, nicht /archive (siehe
       // toFollowedContent in src/lib/follows.ts für dasselbe Muster).
       return row.dialogue_open
-        ? `/dialogues/${row.slug}`
-        : `/archive/${row.slug}`;
+        ? dialogueHref(row.slug)
+        : archiveHref(row.slug);
   }
 }
 

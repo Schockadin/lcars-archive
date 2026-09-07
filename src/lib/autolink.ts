@@ -3,7 +3,11 @@ import sql from "@/lib/db";
 import { markdownToHtml } from "@/lib/markdown";
 import { slugifyBase } from "@/lib/slug";
 import { isRangeProtected, type ProtectedRange } from "@/lib/protectedRanges";
-import { missionHref } from "@/lib/contentRoutes";
+import {
+  archiveHref,
+  characterHref,
+  missionHref,
+} from "@/lib/contentRoutes";
 
 export type AutolinkTargetType = "character" | "mission" | "archive";
 
@@ -157,14 +161,14 @@ export async function getAutolinkTargets(
     ...characters.map((c) => ({
       type: "character" as const,
       slug: c.slug,
-      href: `/characters/${c.slug}`,
+      href: characterHref(c.slug),
       canonical: c.name,
       phrases: [c.name, ...(c.aliases ?? [])],
     })),
     ...archiveEntries.map((a) => ({
       type: "archive" as const,
       slug: a.slug,
-      href: `/archive/${a.slug}`,
+      href: archiveHref(a.slug),
       canonical: a.title,
       phrases: [a.title],
     })),
@@ -361,12 +365,12 @@ export async function resolveAllWikilinks(html: string): Promise<string> {
     hrefBySlug.set(m.slug, missionHref(m.slug));
   }
   for (const a of archiveEntries) {
-    hrefByTitle.set(normalizeWikilinkTarget(a.title), `/archive/${a.slug}`);
-    hrefBySlug.set(a.slug, `/archive/${a.slug}`);
+    hrefByTitle.set(normalizeWikilinkTarget(a.title), archiveHref(a.slug));
+    hrefBySlug.set(a.slug, archiveHref(a.slug));
   }
   for (const c of characters) {
-    hrefByTitle.set(normalizeWikilinkTarget(c.name), `/characters/${c.slug}`);
-    hrefBySlug.set(c.slug, `/characters/${c.slug}`);
+    hrefByTitle.set(normalizeWikilinkTarget(c.name), characterHref(c.slug));
+    hrefBySlug.set(c.slug, characterHref(c.slug));
   }
 
   return html.replace(

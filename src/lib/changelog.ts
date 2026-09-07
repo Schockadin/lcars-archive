@@ -1432,7 +1432,11 @@ export function latestChangelogEntry(
   return latest;
 }
 
-function compareVersions(a: string, b: string): number {
+// Numerischer „Major.Minor"-Vergleich: ein reiner String-Vergleich sortierte
+// „1.10" vor „1.9". Exportiert, weil dieselbe Rechnung auch die Anzeige
+// ordnet (/changelog und /admin/changelog) — sie stand dort zweimal als
+// Kopie, einmal sogar mit anderen Variablennamen.
+export function compareVersions(a: string, b: string): number {
   const partsA = a.split(".").map(Number);
   const partsB = b.split(".").map(Number);
   for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {

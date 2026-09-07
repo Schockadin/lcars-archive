@@ -20,6 +20,10 @@ import {
   CHARACTER_STATUS_COLOR,
   CHARACTER_STATUS_LABEL,
 } from "@/lib/characterFormat";
+import {
+  characterLogsHref,
+  characterSheetHref,
+} from "@/lib/contentRoutes";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
 function slugify(text: string): string {
@@ -228,7 +232,7 @@ export default function CharacterHero({
               <LcarsDataRow
                 value={logCount}
                 label="Logs"
-                href={`/characters/${character.slug}/logs`}
+                href={characterLogsHref(character.slug)}
                 color={CONTENT_TYPE_COLOR.mission_log}
               />
               <LcarsDataRow
@@ -280,7 +284,7 @@ export default function CharacterHero({
             {(viewer?.userId === character.player_id ||
               viewer?.permissions.includes("gm.access")) && (
               <Link
-                href={`/characters/${character.slug}/sheet`}
+                href={characterSheetHref(character.slug)}
                 className="lcars-pill-btn--outline mt-[16px] inline-flex items-center gap-[6px]"
               >
                 <FileTextIcon />

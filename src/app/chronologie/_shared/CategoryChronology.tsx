@@ -1,30 +1,47 @@
+import { Suspense } from "react";
+import PageMeta from "@/components/PageMeta";
+import PageSkeleton from "@/app/_shared/PageSkeleton";
 import TimelineView from "@/components/timeline/TimelineView";
 import { getTimeline } from "@/lib/timeline";
 import { categoryVisual } from "@/lib/timelineTypes";
 import { getViewer } from "@/lib/visibility";
 
-// Die Chronologie, auf eine Ereignisart eingeschränkt
-// (/chronologie/[kategorie] und, weil ein statisches Segment das dynamische
-// schlägt, /chronologie/mission als eigene Seite). Beide zeigen denselben
-// Zeitstrahl wie /chronologie, nur mit vorgewählter Art.
+// Das Gerüst und der Datenzugriff der Chronologie — geteilt von den drei
+// Seiten, die sie zeigen: /chronologie, /chronologie/mission und
+// /chronologie/[kategorie]. Sie unterscheiden sich nur in der vorgewählten
+// Ereignisart; das Drumherum (Kopfzeile, Suspense-Grenze, Betrachter,
+// Ereignisse) stand dreimal gleich da.
 //
-// Gefiltert wird weiterhin im Browser — die Route ist der Einstieg und der
-// teilbare Link, kein zweiter Datenzugriff.
+// Gefiltert wird weiterhin im Browser — die Kategorie-Route ist der Einstieg
+// und der teilbare Link, kein zweiter Datenzugriff.
+
 export function categoryMetadata(category: string) {
   return { title: `Chronologie · ${categoryVisual(category).label}` };
 }
 
-// Nur der datenabhängige Teil: die Seiten rahmen ihn selbst in <Suspense>.
-// Unter cacheComponents muss jeder Laufzeit-Zugriff (Cookies für den
-// Betrachter, die Ereignisse selbst, und in der dynamischen Route auch das
-// Auflösen von params) INNERHALB dieser Grenze liegen, sonst blockiert er die
-// ganze Seite — der Build bricht darüber ab.
+// Die Hülle: Kopfzeile plus Suspense-Grenze. Unter cacheComponents muss jeder
+// Laufzeit-Zugriff INNERHALB dieser Grenze liegen — die Cookies des
+// Betrachters, die Ereignisse, und in der dynamischen Route auch das Auflösen
+// von params. Sonst blockiert er die ganze Seite und der Build bricht ab;
+// deshalb reicht die Hülle `children` durch, statt selbst zu laden.
+export function ChronologyShell({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <PageMeta title="Chronologie" section="chronologie" />
+      <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
+    </>
+  );
+}
+
+// Der datenabhängige Teil. Ohne `category` die ungefilterte Chronologie.
 export default async function CategoryTimeline({
-  category,
+  category = null,
 }: {
-  category: string;
+  category?: string | null;
 }) {
   const viewer = await getViewer();
   const events = await getTimeline(viewer);
-  return <TimelineView events={events} initialCategory={category} syncUrl />;
+  return (
+    <TimelineView events={events} initialCategory={category} syncUrl />
+  );
 }

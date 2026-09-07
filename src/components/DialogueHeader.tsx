@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { fmtDate } from "@/lib/missionFormat";
 import type { ArchiveParticipant, ArchiveLocationRef } from "@/types/archive";
+import {
+  archiveHref,
+  characterHref,
+} from "@/lib/contentRoutes";
 
 // Dialog-Header: Titel, verlinkte Teilnehmer + Ort + Datum. Genutzt sowohl
 // von /characters/dialogues/[slug] (abgeschlossene Gespräche) als auch
@@ -45,8 +49,8 @@ export default function DialogueHeader({
                     key={p.slug}
                     href={
                       p.kind === "character"
-                        ? `/characters/${p.slug}`
-                        : `/archive/${p.slug}`
+                        ? characterHref(p.slug)
+                        : archiveHref(p.slug)
                     }
                     className="archive-chip"
                     style={
@@ -67,7 +71,7 @@ export default function DialogueHeader({
           <div className="archive-dialogue-row">
             <span className="archive-dialogue-label">Ort</span>
             <Link
-              href={`/archive/${location.slug}`}
+              href={archiveHref(location.slug)}
               className="archive-chip"
               style={
                 { "--chip-color": "var(--lcars-senary)" } as React.CSSProperties

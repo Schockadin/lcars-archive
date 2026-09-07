@@ -37,7 +37,12 @@ import {
   type ChunkInput,
   type SqlClient,
 } from "@/lib/embeddings";
-import { missionHref, missionLogHref } from "@/lib/contentRoutes";
+import {
+  archiveHref,
+  characterHref,
+  missionHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 
 interface FetchedRecord {
   chunkInput: ChunkInput;
@@ -98,7 +103,7 @@ async function fetchRecord(
         isActive: row.deleted_at == null,
         title: row.name,
         slug: row.slug,
-        href: `/characters/${row.slug}`,
+        href: characterHref(row.slug),
       };
     }
     case "mission": {
@@ -232,7 +237,7 @@ async function fetchRecord(
         isActive: row.deleted_at == null,
         title: row.title,
         slug: row.slug,
-        href: `/archive/${row.slug}`,
+        href: archiveHref(row.slug),
       };
     }
     case "dialogue": {
@@ -284,7 +289,7 @@ async function fetchRecord(
         isActive: row.deleted_at == null,
         title: row.title,
         slug: row.slug,
-        href: `/archive/${row.slug}`,
+        href: archiveHref(row.slug),
       };
     }
   }

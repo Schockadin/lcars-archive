@@ -20,6 +20,9 @@ import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
 import { readCharacterHead } from "./characterHead";
+import {
+  characterEditHref,
+} from "@/lib/contentRoutes";
 
 export interface CharacterWizardState {
   error?: string;
@@ -120,5 +123,5 @@ export async function createCharacterWizardAction(
 
   // Auf die eigene Charakterseite statt auf die öffentliche: von dort geht es
   // direkt weiter mit Steigern, Bearbeiten und der Bogen-Vorschau.
-  redirect(`/user/characters/${result.id}`);
+  redirect(characterEditHref(result.id));
 }

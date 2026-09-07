@@ -5,7 +5,12 @@ import { WIKILINK_RE } from "@/lib/markdown";
 import type { ArchiveCategory } from "@/types/archive";
 import type { SearchResult, SearchResultType } from "@/types/search";
 import type { FollowTargetType } from "@/lib/follows";
-import { missionHref, missionLogHref } from "@/lib/contentRoutes";
+import {
+  archiveHref,
+  characterHref,
+  missionHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 
 const LIVE_PER_TYPE_LIMIT = 6;
 // Großzügige Sicherheitsgrenze statt echter Pagination — im Repo gibt es
@@ -289,7 +294,7 @@ function mapResults(
     type: "character" as const,
     label: c.name,
     sublabel: "Charakter",
-    href: `/characters/${c.slug}`,
+    href: characterHref(c.slug),
     slug: c.slug,
   }));
 
@@ -339,7 +344,7 @@ function mapResults(
             (a.setting ? `Gespräch auf ${a.setting}` : "Gespräch")
           : a.title,
       sublabel: CATEGORY_CONFIG[a.category]?.label ?? "Datenbank",
-      href: `/archive/${a.slug}${archiveHit ? `#:~:text=${toTextFragment(archiveHit.text)}` : ""}`,
+      href: `${archiveHref(a.slug)}${archiveHit ? `#:~:text=${toTextFragment(archiveHit.text)}` : ""}`,
       slug: a.slug,
       snippet,
     };

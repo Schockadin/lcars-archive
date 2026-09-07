@@ -445,7 +445,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Missionsseiten liegen jetzt unter der Chronologie
   (`/chronologie/mission/[missionSlug]`, das Logbuch eine Ebene tiefer) —
   alle Adressen kommen aus `src/lib/contentRoutes.ts`, `/missions` und
-  `/missions/…` leiten dauerhaft dorthin um (`next.config.ts`).
+  `/missions/…` leiten dauerhaft dorthin um (`next.config.ts`). In demselben
+  Modul liegen inzwischen **alle** Inhalts-Adressen — Charaktere (samt
+  `/logs` und `/sheet`), Datenbank-Einträge, offene Gespräche und die
+  Bearbeitungsseiten im eigenen Bereich: sie standen an rund siebzig Stellen
+  von Hand zusammengesetzt, und nach dem Missions-Umzug ging in derselben
+  Zeile der Missions-Link über einen Helfer und der Archiv-Link weiter per
+  Zeichenkette. Nicht erreichbar bleiben zwei SQL-Stellen
+  (`adminContent.ts`, `contentImages.ts`), die die Adresse in einer
+  UNION-Abfrage über alle Inhaltsarten zusammensetzen — der Kopfkommentar von
+  `contentRoutes.ts` nennt sie.
   Jede Ereignisart hat zusätzlich eine eigene Adresse
   (`/chronologie/[kategorie]`, z.B. `/chronologie/conflict`); die Auswahl im
   Filterfeld schreibt sie per `history.replaceState` in die Adresszeile, ohne

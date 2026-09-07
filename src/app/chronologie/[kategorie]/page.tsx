@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import PageMeta from "@/components/PageMeta";
-import PageSkeleton from "@/app/_shared/PageSkeleton";
 import CategoryTimeline, {
+  ChronologyShell,
   categoryMetadata,
 } from "@/app/chronologie/_shared/CategoryChronology";
 import { isTimelineCategory } from "@/lib/timelineTypes";
@@ -27,12 +25,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default function ChronologieKategoriePage({ params }: Props) {
   return (
-    <>
-      <PageMeta title="Chronologie" section="chronologie" />
-      <Suspense fallback={<PageSkeleton />}>
-        <KategorieContent params={params} />
-      </Suspense>
-    </>
+    <ChronologyShell>
+      <KategorieContent params={params} />
+    </ChronologyShell>
   );
 }
 

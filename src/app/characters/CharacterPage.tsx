@@ -13,6 +13,9 @@ import {
   CHARACTER_STATUS_ORDER,
   type CharacterStatus,
 } from "@/lib/characterFormat";
+import {
+  characterHref,
+} from "@/lib/contentRoutes";
 
 // ─── Konfiguration ──────────────────────────────────────────
 // Zentrale Definition der Status-Gruppen: Reihenfolge, Label, Farbe.
@@ -154,7 +157,7 @@ function CharacterRows({
       {characters.map((c) => (
         <Link
           key={c.id}
-          href={`/characters/${c.slug}`}
+          href={characterHref(c.slug)}
           className="character-entry"
           style={
             {

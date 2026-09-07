@@ -11,7 +11,12 @@ import {
   type TimelineEvent,
   type TimelineSourceType,
 } from "@/lib/timelineTypes";
-import { missionHref, missionLogHref } from "@/lib/contentRoutes";
+import {
+  archiveHref,
+  characterHref,
+  missionHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 
 // Die Chronologie (/chronologie): alle Ereignisse der Kampagne in zeitlicher
 // Folge, aus drei Quellen zusammengetragen.
@@ -338,7 +343,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     const href =
       entry.category === "dialogue"
         ? `/characters/dialogues/${entry.slug}`
-        : `/archive/${entry.slug}`;
+        : archiveHref(entry.slug);
     const metadata = entry.metadata ?? {};
     const participants = Array.isArray(metadata.participants)
       ? (metadata.participants as { name?: unknown }[])
@@ -392,7 +397,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
   for (const character of characters) {
     if (!canView(character.visibility, character.player_id, viewer)) continue;
     if (character.is_draft) continue;
-    const href = `/characters/${character.slug}`;
+    const href = characterHref(character.slug);
     const metadata = character.metadata ?? {};
     visibleSources.set(`character:${character.slug}`, {
       title: character.name,

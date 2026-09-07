@@ -8,6 +8,9 @@ import EditMissionForm from "./EditMissionForm";
 import RevisionsPanel from "@/app/_shared/RevisionsPanel";
 import { listRevisions } from "@/lib/contentRevisions";
 import { getViewer } from "@/lib/visibility";
+import {
+  missionEditHref,
+} from "@/lib/contentRoutes";
 
 export const metadata: Metadata = {
   title: "Mission bearbeiten",
@@ -47,7 +50,7 @@ export default async function EditMissionPage({
           <RevisionsPanel
             contentType="mission"
             contentId={mission.id}
-            path={`/user/missions/${mission.id}/edit`}
+            path={missionEditHref(mission.id)}
             revisions={revisions}
           />
         </div>

@@ -9,6 +9,9 @@ import EditMissionLogForm from "./EditMissionLogForm";
 import RevisionsPanel from "@/app/_shared/RevisionsPanel";
 import { listRevisions } from "@/lib/contentRevisions";
 import { getViewer } from "@/lib/visibility";
+import {
+  missionLogEditHref,
+} from "@/lib/contentRoutes";
 
 export const metadata: Metadata = {
   title: "Missionslog bearbeiten",
@@ -56,7 +59,7 @@ export default async function EditMissionLogPage({
           <RevisionsPanel
             contentType="mission_log"
             contentId={log.id}
-            path={`/user/mission-logs/${log.id}/edit`}
+            path={missionLogEditHref(log.id)}
             revisions={revisions}
           />
         </div>

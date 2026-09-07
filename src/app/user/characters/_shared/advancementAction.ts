@@ -12,6 +12,9 @@ import type { AdvancementKind } from "@/lib/advancement";
 import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
 import { parseTalentEntry } from "@/lib/talentCatalog";
+import {
+  characterEditHref,
+} from "@/lib/contentRoutes";
 
 export interface AdvancementActionResult {
   error?: string;
@@ -91,7 +94,7 @@ export async function advanceCharacterAction(
   if (!result.ok) return { error: result.error };
 
   revalidateCharacter(result.slug);
-  revalidatePath(`/user/characters/${characterId}`);
+  revalidatePath(characterEditHref(characterId));
 
   return { success: `${result.label} für ${result.cost} AP gesteigert.` };
 }
@@ -128,7 +131,7 @@ export async function lockCreationAction(
   }
 
   revalidateCharacter(result.slug);
-  revalidatePath(`/user/characters/${characterId}`);
+  revalidatePath(characterEditHref(characterId));
 
   const base =
     "Erschaffung abgeschlossen — Attribute und Disziplinen lassen sich jetzt nur noch mit AP steigern.";

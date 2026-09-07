@@ -8,6 +8,9 @@ import type { FollowState } from "@/app/actions/follows";
 import MissionSynopsisEditor from "./MissionSynopsisEditor";
 import ActionsMenu from "@/components/ActionsMenu";
 import ContentBody from "@/components/ContentBody";
+import {
+  characterHref,
+} from "@/lib/contentRoutes";
 
 // Rechte Spalte der Mission-Detailseite: Synopsis + Metadaten.
 export default function MissionSynopsis({
@@ -40,7 +43,7 @@ export default function MissionSynopsis({
             {mission.participants.map((p, i) => (
               <span key={p.slug}>
                 {i > 0 && ", "}
-                <Link href={`/characters/${p.slug}`}>{p.name}</Link>
+                <Link href={characterHref(p.slug)}>{p.name}</Link>
               </span>
             ))}
           </div>

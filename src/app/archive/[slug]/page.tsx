@@ -19,7 +19,11 @@ import ArchiveEntryBody from "./ArchiveEntryBody";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 import { listNotes } from "@/lib/contentNotes";
 import NotesPanel from "@/app/_shared/NotesPanel";
-import { missionHref } from "@/lib/contentRoutes";
+import {
+  archiveHref,
+  characterHref,
+  missionHref,
+} from "@/lib/contentRoutes";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -128,7 +132,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
         <NotesPanel
           contentType="archive"
           contentSlug={entry.slug}
-          path={`/archive/${entry.slug}`}
+          path={archiveHref(entry.slug)}
           notes={notes}
         />
       )}
@@ -140,7 +144,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
         title="Charaktere"
         color={CONTENT_TYPE_COLOR.character}
         refs={entry.metadata.characters.map((c) => ({
-          href: `/characters/${c.slug}`,
+          href: characterHref(c.slug),
           label: c.name,
         }))}
       />
@@ -218,7 +222,7 @@ function RelatedSection({
         {links.map((link) => (
           <Link
             key={link.slug}
-            href={`/archive/${link.slug}`}
+            href={archiveHref(link.slug)}
             className="archive-chip"
             style={
               {
