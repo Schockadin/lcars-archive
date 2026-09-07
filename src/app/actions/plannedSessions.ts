@@ -1,10 +1,9 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { checkPermission, requireGM } from "@/lib/dal";
+import { requireGM } from "@/lib/dal";
 import {
   createPlannedSession,
   deletePlannedSession,
-  setRsvp,
   updatePlannedSession,
 } from "@/lib/plannedSessions";
 import { parsePlannedSession } from "@/lib/plannedSessionFormat";
@@ -16,7 +15,10 @@ export interface PlannedSessionState {
 }
 
 // Termine pflegt die Spielleitung (requireGM prüft das Recht frisch aus der
-// DB); zu- und absagen darf jede angemeldete Person außer Gästen.
+// DB). Das Zu- und Absagen liegt NICHT hier, sondern in der Route
+// /api/rsvp — es war die einzige Aktion, die vom Dashboard ("/") aus lief,
+// und genau sie scheiterte in der Netlify-Umgebung mit einem 403 (die
+// Begründung steht ausführlich in src/app/api/rsvp/route.ts).
 //
 // Nach jeder Änderung beide Seiten neu bauen: die Verwaltung unter
 // /gm/sessions und das Dashboard, auf dem der Termin steht.
@@ -96,46 +98,4 @@ export async function deletePlannedSessionAction(
   await deletePlannedSession(id);
   revalidateBoth();
   return { success: "Termin abgesagt und entfernt." };
-}
-
-export async function setRsvpAction(
-  _state: PlannedSessionState,
-  formData: FormData,
-): Promise<PlannedSessionState> {
-  // checkPermission statt requireNonGuest: das harte Gate ruft forbidden()
-  // auf, und ein Auth-Interrupt in einer über useActionState aufgerufenen
-  // Action wird zu einer 403-Antwort, mit der der Client nichts anfangen kann
-  // („An unexpected response was received from the server", nachgestellt).
-  // Fehlt der Rolle das Recht „Nicht-Gast" (users.browse) — in einer über
-  // /admin/permissions angepassten Rechte-Tabelle schnell passiert —, steht
-  // das jetzt als Satz am Knopf, statt die Seite abstürzen zu lassen.
-  const check = await checkPermission("users.browse");
-  if ("error" in check) return { error: check.error };
-  const user = check.user;
-
-  const id = Number(formData.get("id"));
-  if (!Number.isInteger(id)) return { error: "Unbekannter Termin." };
-
-  const response = String(formData.get("response") ?? "");
-  if (response !== "yes" && response !== "no") {
-    return { error: "Bitte zu- oder absagen." };
-  }
-  const note = String(formData.get("note") ?? "").trim().slice(0, 200);
-
-  // Der einzige Schreibzugriff, den JEDE angemeldete Person auslöst — und der
-  // einzige, der auf eine Tabelle trifft, die erst mit der Migration entsteht.
-  // Fehlt sie (oder ihr Primärschlüssel, den ON CONFLICT braucht), soll das
-  // eine lesbare Meldung am Knopf sein und keine kaputte Seite: eine
-  // fehlgeschlagene Zusage darf das Dashboard nicht mitreißen.
-  try {
-    await setRsvp(id, user.id, response, note);
-  } catch (error) {
-    console.error("setRsvpAction", error);
-    return {
-      error:
-        "Die Antwort konnte nicht gespeichert werden. Bitte der Spielleitung Bescheid geben — die Datenbank meldet einen Fehler.",
-    };
-  }
-  revalidateBoth();
-  return { success: response === "yes" ? "Zugesagt." : "Abgesagt." };
 }

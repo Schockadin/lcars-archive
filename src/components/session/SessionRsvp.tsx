@@ -1,15 +1,18 @@
 "use client";
-import { useActionState } from "react";
-import {
-  setRsvpAction,
-  type PlannedSessionState,
-} from "@/app/actions/plannedSessions";
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { FormError } from "@/app/_shared/FormPrimitives";
 import type { RsvpResponse } from "@/lib/plannedSessionTypes";
 
 // Zu- und Absage an einem Termin. Zwei Knöpfe statt eines Umschalters: eine
 // Absage ist eine eigene Aussage, kein „nicht zugesagt" — und wer nie
 // geantwortet hat, steht auf keiner der beiden Listen.
+//
+// Geschickt wird an /api/rsvp statt an eine Server Action: die Action war die
+// einzige, die vom Dashboard ("/") aus lief, und genau sie scheiterte in der
+// Netlify-Umgebung mit einem 403 (siehe route.ts). Die Antwort steht sofort
+// (eigener Zustand), router.refresh() holt danach die Zahlen und Namen frisch
+// vom Server.
 export default function SessionRsvp({
   sessionId,
   own,
@@ -17,44 +20,67 @@ export default function SessionRsvp({
   sessionId: number;
   own: RsvpResponse | null;
 }) {
-  const [state, formAction, pending] = useActionState<
-    PlannedSessionState,
-    FormData
-  >(setRsvpAction, {});
+  const router = useRouter();
+  const [answer, setAnswer] = useState<RsvpResponse | null>(own);
+  const [error, setError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
+  const [sending, setSending] = useState(false);
+
+  async function antworten(response: RsvpResponse) {
+    setSending(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/rsvp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: sessionId, response }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        setError(data.error ?? "Die Antwort kam nicht an. Bitte noch einmal.");
+        return;
+      }
+      setAnswer(response);
+      startTransition(() => router.refresh());
+    } catch {
+      setError("Die Antwort kam nicht an. Bitte noch einmal.");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  const busy = sending || pending;
 
   return (
     <div className="session-rsvp">
-      <form action={formAction} className="session-rsvp-buttons">
-        <input type="hidden" name="id" value={sessionId} />
+      <div className="session-rsvp-buttons">
         <button
-          type="submit"
-          name="response"
-          value="yes"
+          type="button"
           className="lcars-pill-btn--outline"
-          aria-pressed={own === "yes"}
-          disabled={pending}
+          aria-pressed={answer === "yes"}
+          disabled={busy}
+          onClick={() => antworten("yes")}
         >
           Ich bin dabei
         </button>
         <button
-          type="submit"
-          name="response"
-          value="no"
+          type="button"
           className="lcars-pill-btn--outline"
-          aria-pressed={own === "no"}
-          disabled={pending}
+          aria-pressed={answer === "no"}
+          disabled={busy}
+          onClick={() => antworten("no")}
         >
           Ich kann nicht
         </button>
-      </form>
+      </div>
       <p className="session-rsvp-own">
-        {own === "yes"
+        {answer === "yes"
           ? "Du hast zugesagt."
-          : own === "no"
+          : answer === "no"
             ? "Du hast abgesagt."
             : "Du hast noch nicht geantwortet."}
       </p>
-      <FormError message={state.error} />
+      <FormError message={error ?? undefined} />
     </div>
   );
 }

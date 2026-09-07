@@ -452,16 +452,25 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   passiert —, der bekommt jetzt einen Satz am Knopf; im Dashboard werden ihm
   die Knöpfe gar nicht erst angeboten.
 
-  Bleibt es trotz gesetztem Recht bei einem **403**, kommt er nicht mehr aus
-  der App, sondern aus Next selbst: Bei jeder Server Action wird der
-  `Origin`-Header mit `Host` bzw. `X-Forwarded-Host` verglichen (CSRF-Schutz);
-  laufen die hinter Netlifys Proxy auseinander — vor allem auf
-  Deploy-Previews —, antwortet Next mit 403, im Browser als „An unexpected
-  response was received from the server". `next.config.ts` erlaubt deshalb
-  über `serverActions.allowedOrigins` genau die Hostnamen, unter denen das
-  Deployment wirklich läuft, gelesen aus Netlifys eigenen Variablen (`URL`,
-  `DEPLOY_PRIME_URL`, `DEPLOY_URL`) — keine Platzhalter, und lokal eine leere
-  Liste.
+  Bleibt es trotz gesetztem Recht bei einem **403**, kommt er nicht aus der
+  App. Genau das war der Fall: In der Netlify-Umgebung scheiterte **allein**
+  die Zu-/Absage reproduzierbar mit einem 403 auf dem POST — jede andere
+  Aktion (auf `/gm`, `/user`, den Inhaltsseiten) lief unverändert, und lokal
+  war es weder im Dev-Server noch gegen einen Produktions-Build nachzustellen.
+  Das Verbindende: es war die **einzige** Server Action, die von der Route
+  `"/"` aus aufgerufen wurde.
+
+  Seit v1.29.52 geht sie deshalb über eine gewöhnliche Route
+  (`src/app/api/rsvp/route.ts`) — dieselbe Ausnahme wie `/api/news/seen` und
+  die Export-Routen, hier weil sie die Action-Zustellung an `"/"` samt der
+  Prüfungen, die Next daran knüpft, vollständig umgeht. Die
+  Berechtigungsprüfung (`checkPermission("users.browse")`) und die
+  Fehlerbehandlung sind dieselben wie zuvor in der Action; die Knöpfe melden
+  sofort (eigener Zustand) und holen die Zahlen per `router.refresh()` nach.
+  `serverActions.allowedOrigins` in `next.config.ts` bleibt trotzdem gesetzt:
+  hinter einem Proxy können `Origin` und `X-Forwarded-Host` auseinanderlaufen,
+  und dann antwortete Next für *jede* Action mit 403 — das ist unabhängig von
+  diesem Fall die richtige Einstellung.
 - **Offen für dich** — der Dashboard-Abschnitt mit dem, was diese Person
   schuldet (`src/lib/pendingActions.ts`): Missionen, an denen eine eigene
   Figur teilnimmt und zu denen **kein eigenes Logbuch** existiert; Gespräche,

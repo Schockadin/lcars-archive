@@ -142,7 +142,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Hell/Dunkel frei wählbar — plus eigene Grundfarben",
     items: [
       {
-        text: "Zu- und Absagen zu einem Spieltermin scheiterten auf der Testumgebung mit einer nichtssagenden Server-Meldung — Ursache war eine Sicherheitsprüfung, die hinter dem Hosting-Proxy fälschlich zuschlug. Die Adressen der Testumgebung sind jetzt ausdrücklich erlaubt.",
+        text: "Zu- und Absagen zu einem Spieltermin scheiterten mit einer nichtssagenden Server-Meldung — als einzige Aktion des Archivs, und nur auf dem Server, nicht lokal. Sie läuft jetzt über einen eigenen Weg zum Server und funktioniert wieder; die Antwort steht sofort am Knopf.",
         category: "spielleitung",
       },
       {
