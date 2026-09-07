@@ -400,6 +400,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     Disziplin-Filter, bearbeiten, ergänzen; löschbar nur selbst ergänzte).
   - `/gm/rules` — eigene Regeln der Runde für den Spickzettel (Name,
     Regeltext, Reihenfolge). Hier ist jede Regel löschbar.
+- **Offen für dich** — der Dashboard-Abschnitt mit dem, was diese Person
+  schuldet (`src/lib/pendingActions.ts`): Missionen, an denen eine eigene
+  Figur teilnimmt und zu denen **kein eigenes Logbuch** existiert; Gespräche,
+  in denen man beteiligt ist und die **letzte Nachricht von jemand anderem**
+  stammt; eigene **Entwürfe**, die länger als `DRAFT_STALE_DAYS` (7) liegen.
+  Ältestes zuerst. Bewusst **ohne eigene Tabelle**: eine Aufgabe ist immer
+  eine Ableitung aus dem Bestand, kein Zustand, der gepflegt werden müsste —
+  ein geschriebenes Logbuch lässt die Zeile von selbst verschwinden. Steht vor
+  den Neuigkeiten: die zeigen, was andere getan haben.
 - **Persönliche News** — der News-Feed auf dem Dashboard bleibt persistent
   sichtbar (nicht mehr nur bis zum nächsten Besuch): jede Meldung lässt sich
   einzeln per X ausblenden (gilt danach als gelesen) und verschwindet automatisch,

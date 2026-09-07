@@ -147,6 +147,7 @@
    in einem Link ist weder gültiges HTML noch mit der Tastatur bedienbar.
    Verlinkt ist der Titel. */
 .timeline-card {
+  position: relative;
   display: flex;
   min-width: 0;
   margin-bottom: 12px;
@@ -154,6 +155,28 @@
   color: var(--lcars-ink-dark);
   border-radius: 4px 14px 14px 4px;
   overflow: hidden;
+  transition: filter 120ms;
+}
+/* Die ganze Karte ist anklickbar, nicht nur der Titel — aber NICHT als
+   umschließender Link: die Karte enthält aufklappbare Felder, und ein Knopf
+   in einem Link ist weder gültiges HTML noch mit der Tastatur bedienbar.
+   Stattdessen legt der Titel-Link eine unsichtbare Fläche über die Karte
+   (::after), und die Felder liegen mit z-index darüber. So bleibt genau ein
+   Link im Markup, die Tastatur springt einmal pro Karte, und Text lässt sich
+   weiterhin markieren. */
+.timeline-card-title::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.timeline-card:has(.timeline-card-title[href]:hover),
+.timeline-card:has(.timeline-card-title[href]:focus-visible) {
+  filter: brightness(1.08);
+}
+.timeline-card:has(.timeline-card-title[href]:focus-visible) {
+  outline: 2px solid var(--lcars-ink-dark);
+  outline-offset: 2px;
 }
 .timeline-card-body {
   flex: 1;
@@ -180,8 +203,10 @@
   text-decoration: none;
   min-width: 0;
 }
-.timeline-card-title:hover {
-  text-decoration: underline;
+/* Kein eigener Hover mehr am Titel: die ganze Karte hellt auf (siehe oben),
+   ein zusätzlich unterstrichener Titel wäre doppelt gemoppelt. */
+.timeline-card-title:focus-visible {
+  outline: none;
 }
 .timeline-card-date {
   margin-top: 6px;
@@ -202,6 +227,11 @@
    Beteiligten zu. Ohne JavaScript — der Zustand gehört ins Element, nicht
    in den Zustand der Liste. */
 .timeline-panel {
+  /* Über der Klickfläche der Karte (siehe .timeline-card-title::after):
+     ein Klick auf „Teaser"/„Beteiligt" soll auf- und zuklappen, nicht
+     navigieren. */
+  position: relative;
+  z-index: 1;
   margin-top: 8px;
   border-top: 1px solid color-mix(in srgb, var(--lcars-ink-dark) 25%, transparent);
 }

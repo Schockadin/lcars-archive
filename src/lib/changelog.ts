@@ -234,6 +234,15 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "chronologie",
       },
       {
+        text: "Das Dashboard zeigt jetzt „Offen für dich“ — was du noch zu tun hast: Missionen, an denen deine Figur teilnimmt und zu denen von dir noch kein Logbuch existiert, Gespräche, in denen du am Zug bist, und eigene Entwürfe, die seit über einer Woche liegen. Das Älteste steht oben; erledigte Punkte verschwinden von selbst.",
+        category: "inhalte",
+      },
+      {
+        text: "Ein Eintrag in der Chronologie lässt sich jetzt auf ganzer Fläche anklicken, nicht mehr nur am Titel — die aufklappbaren Felder für Teaser und Beteiligte bleiben davon unberührt.",
+        category: "darstellung",
+        tutorial: "chronologie",
+      },
+      {
         text: "Du kannst jetzt Ereignisse direkt in die Chronologie eintragen, auch wenn es dazu keinen Eintrag gibt — einen Vertragsschluss, einen Regierungswechsel, eine Naturkatastrophe. Über dem Zeitstrahl steht dafür „Ereignis eintragen“; nötig sind Datum, Titel und Ereignisart. Solche Ereignisse tragen den Hinweis „von Hand eingetragen“ und lassen sich von dir oder der Spielleitung wieder entfernen.",
         category: "inhalte",
         tutorial: "chronologie",

@@ -6,8 +6,10 @@ import { getNewsItems } from "@/lib/recentActivity";
 import { newsVisibility } from "@/lib/recentActivityFormat";
 import { getCurrentUserPermissions } from "@/lib/dal";
 import { getDialoguesForUser } from "@/lib/dialogues";
+import { getPendingActions } from "@/lib/pendingActions";
 import FollowedContentSection from "./FollowedContentSection";
 import OpenDialoguesSection from "./OpenDialoguesSection";
+import PendingActionsSection from "./PendingActionsSection";
 import NewsSection from "./NewsSection";
 import ChangelogSection from "./ChangelogSection";
 import OnboardingSection from "./OnboardingSection";
@@ -37,12 +39,13 @@ export default async function Dashboard({ user }: { user: User }) {
   // Primärrolle. getCurrentUserPermissions ist React-cache-dedupliziert
   // (siehe dal.ts), der Aufruf ist damit praktisch gratis.
   const permissions = await getCurrentUserPermissions();
-  const [hasPasswordSet, bookmarks, newsItems, openDialogues] =
+  const [hasPasswordSet, bookmarks, newsItems, openDialogues, pendingActions] =
     await Promise.all([
       hasPassword(user.id),
       getBookmarkedContent(user.id),
       getNewsItems(user.id, user.news_kinds, newsVisibility(permissions)),
       getDialoguesForUser(user.id, "open"),
+      getPendingActions(user.id),
     ]);
   const needsPassword = !hasPasswordSet;
   const firstVisit = user.previous_login_at === null;
@@ -82,6 +85,10 @@ export default async function Dashboard({ user }: { user: User }) {
           {/* Verschwindet von selbst, sobald alle Schritte erledigt sind
               (siehe OnboardingSection). */}
           <OnboardingSection userId={user.id} />
+
+          {/* Was ICH noch zu tun habe — vor den Neuigkeiten, die zeigen,
+              was andere getan haben. */}
+          <PendingActionsSection items={pendingActions} />
 
           <OpenDialoguesSection items={openDialogues} />
 

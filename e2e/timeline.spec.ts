@@ -307,6 +307,31 @@ test.describe("Chronologie", () => {
     await expect(page.locator("#timeline")).toContainText("1 von 6");
   });
 
+  test("führt ein Klick irgendwo auf der Karte zum Eintrag", async ({
+    page,
+  }) => {
+    // Die ganze Karte ist anklickbar, nicht nur der Titel — umgesetzt über
+    // eine unsichtbare Fläche des Titel-Links (siehe timeline.css).
+    const karte = page.locator("#timeline .timeline-card").first();
+    // Auf die Datumszeile gezielt — per Maus-Koordinate, weil Playwright
+    // sonst meldet, dass der Titel-Link die Klicks abfängt. Genau das ist ja
+    // der Zweck: die unsichtbare Fläche liegt über der Karte.
+    await karte.scrollIntoViewIfNeeded();
+    const datum = await karte.locator(".timeline-card-date").boundingBox();
+    await page.mouse.click(datum!.x + datum!.width / 2, datum!.y + datum!.height / 2);
+    await expect(page).toHaveURL(/\/chronologie\/mission\/zweite-mission$/);
+  });
+
+  test("klappt ein Feld auf, ohne der Karte zu folgen", async ({ page }) => {
+    // Die Felder liegen über der Klickfläche: ein Klick auf „Beteiligt"
+    // klappt auf und navigiert NICHT.
+    const karte = page.locator("#timeline .timeline-card").first();
+    const beteiligte = karte.locator(".timeline-panel").last();
+    await beteiligte.locator("summary").click();
+    await expect(beteiligte.locator(".timeline-panel-body")).toBeVisible();
+    await expect(page).toHaveURL(/\/dev-gallery$/);
+  });
+
   test("verlinkt eine im Text markierte Stelle auf ihre Sprungmarke", async ({
     page,
   }) => {
