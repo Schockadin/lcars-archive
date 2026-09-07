@@ -77,10 +77,17 @@ export default function TimelineView({
     [events, scope],
   );
 
+  // Die gewählte Art bleibt in der Liste, auch wenn es im Umfang gerade kein
+  // Ereignis dieser Art gibt — sonst zeigte das Feld „Alle Arten", während
+  // der Filter greift, und ließe sich nicht mehr zurücknehmen (ein Klick auf
+  // den ohnehin angezeigten Eintrag löst kein change aus). Dieselbe Regel wie
+  // in der Jahresleiste. Der Fall ist über /chronologie/[kategorie] leicht zu
+  // erreichen: die Adresse wählt eine Art vor, die es (noch) nicht gibt.
   const categories = useMemo(() => {
     const present = new Set(inScope.map((e) => e.category));
+    if (category) present.add(category);
     return EVENT_CATEGORIES.filter((c) => present.has(c.key));
-  }, [inScope]);
+  }, [inScope, category]);
 
   const people = useMemo(() => peopleOf(inScope), [inScope]);
 
@@ -188,8 +195,10 @@ export default function TimelineView({
             />
 
             {/* In der Missions-Ansicht ist jedes Ereignis eine Mission — eine
-                Auswahl mit einem Eintrag wäre nur Beiwerk. */}
-            {categories.length > 1 && (
+                Auswahl mit einem Eintrag wäre nur Beiwerk. Läuft aber gerade
+                ein Filter, muss er sich zurücknehmen lassen, auch wenn er der
+                einzige Eintrag ist (wie bei der Jahresleiste). */}
+            {(categories.length > 1 || category !== null) && (
               <select
                 className="mission-author-filter rounded-full"
                 value={category ?? ""}
