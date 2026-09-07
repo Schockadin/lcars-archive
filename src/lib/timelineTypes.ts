@@ -262,6 +262,23 @@ export function isTimelineCategory(value: string): value is TimelineCategory {
   );
 }
 
+// Das Ende je Mission, nach der Adresse der Missionsseite geschlüsselt
+// (Beginn und Abschluss tragen dieselbe). Damit trägt der Umfang „Missionen"
+// je Einsatz EINE Karte mit dem ganzen Zeitraum, statt nur den Beginn zu
+// zeigen — das Wort „Missionen" meint dort die Einsätze, das Wort „Mission"
+// im Ereignisart-Filter dagegen die einzelnen Marker (Beginn UND Abschluss).
+// Ohne diese Trennung standen zwei gleich klingende Bedienelemente für
+// Verschiedenes.
+export function missionEndDates(events: TimelineEvent[]): Map<string, string> {
+  const ends = new Map<string, string>();
+  for (const event of events) {
+    if (event.sourceType === "mission" && event.phase === "end") {
+      ends.set(event.href, event.date);
+    }
+  }
+  return ends;
+}
+
 // Alle Beteiligten, die in diesen Ereignissen vorkommen — alphabetisch, für
 // die Auswahlliste. Ohne Datum gepflegte Figuren tauchen hier nicht auf, das
 // ist gewollt: die Liste soll nur zeigen, wonach sich filtern lässt.

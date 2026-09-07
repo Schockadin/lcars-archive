@@ -9,7 +9,7 @@ import {
 } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import LogDetail from "../../LogDetail";
-import ActionsMenu from "@/components/ActionsMenu";
+import ContentActionsPanel from "@/components/ContentActionsPanel";
 import { getMentionsOf } from "@/lib/mentions";
 import MentionsSection from "@/app/_shared/MentionsSection";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
@@ -79,13 +79,6 @@ export default async function LogPage({ params }: Props) {
   return (
     <>
       <MarkNewsSeen type="mission_log" slug={log.slug} />
-      <ActionsMenu
-        viewer={viewer}
-        owners={owners}
-        content={log}
-        contentType="missionLog"
-        playerId={log.ownerUserId}
-      />
       <LogDetail log={log} nav={nav} />
       <div className="lcars-text lcars-wide-column mt-[16px] flex flex-col gap-[16px]">
         {viewer && (
@@ -97,6 +90,15 @@ export default async function LogPage({ params }: Props) {
           />
         )}
         <MentionsSection mentions={mentions} />
+        <ContentActionsPanel
+          viewer={viewer}
+          owners={owners}
+          content={log}
+          contentType="missionLog"
+          playerId={log.ownerUserId}
+          imageContentType="mission_log"
+          imageContentId={log.id}
+        />
       </div>
     </>
   );

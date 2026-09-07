@@ -9,6 +9,7 @@ import {
   type SortDir,
 } from "@/components/lcars";
 import { MissionLogListItem } from "@/types/missions";
+import { CHRONOLOGY_PATH } from "@/lib/contentRoutes";
 import {
   byDateAsc,
   byDateDesc,
@@ -75,8 +76,10 @@ export default function MissionLogList({
   return (
     <div className="mission-loglist">
       <div className="mission-loglist-head">
-        <Link href="/chronologie" className="lcars-back-link">
-          ‹ Missionen
+        {/* Der Rücklink hieß „Missionen" und führte auf /chronologie — eine
+            Seite dieses Namens gibt es seit dem Umzug nicht mehr. */}
+        <Link href={CHRONOLOGY_PATH} className="lcars-back-link">
+          ‹ Chronologie
         </Link>
       </div>
 

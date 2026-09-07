@@ -5,13 +5,14 @@ import {
   filterEvents,
   isIsoDate,
   isMissionStart,
+  missionEndDates,
   parseTimelineMarkers,
   peopleOf,
   periodKey,
   periodLabel,
   sortEvents,
-  yearsOf,
   type TimelineEvent,
+  yearsOf,
 } from "./timelineTypes";
 
 function event(partial: Partial<TimelineEvent>): TimelineEvent {
@@ -306,5 +307,45 @@ describe("Umfang der Chronologie", () => {
   it("sammelt die Beteiligten alphabetisch und ohne Dubletten", () => {
     expect(peopleOf(events)).toEqual(["Kira", "Tuvok"]);
     expect(peopleOf([])).toEqual([]);
+  });
+});
+
+describe("missionEndDates", () => {
+  it("ordnet jedem Einsatz sein Ende zu", () => {
+    // Beginn und Abschluss tragen dieselbe Adresse — daran hängt die
+    // Zuordnung, damit der Umfang „Missionen" den Zeitraum zeigen kann.
+    const events = [
+      event({
+        id: "start",
+        sourceType: "mission",
+        phase: "start",
+        href: "/chronologie/mission/a",
+        date: "2401-01-01",
+      }),
+      event({
+        id: "end",
+        sourceType: "mission",
+        phase: "end",
+        href: "/chronologie/mission/a",
+        date: "2401-02-01",
+      }),
+      // Ein Logbuch derselben Mission ist kein Abschluss.
+      event({
+        id: "log",
+        sourceType: "mission_log",
+        href: "/chronologie/mission/a/log",
+        date: "2401-01-15",
+      }),
+    ];
+    const ends = missionEndDates(events);
+    expect(ends.get("/chronologie/mission/a")).toBe("2401-02-01");
+    expect(ends.size).toBe(1);
+  });
+
+  it("lässt eine laufende Mission ohne Ende", () => {
+    const ends = missionEndDates([
+      event({ sourceType: "mission", phase: "start", href: "/m/b" }),
+    ]);
+    expect(ends.get("/m/b")).toBeUndefined();
   });
 });

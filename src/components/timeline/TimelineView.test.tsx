@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
 import TimelineView from "./TimelineView";
 import type { TimelineEvent } from "@/lib/timelineTypes";
@@ -55,6 +55,31 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
     );
     expect(artFilter()).toBeInTheDocument();
     expect(artFilter().value).toBe("mission");
+  });
+
+  it("legt beim Wechsel der Art einen Verlaufseintrag an", () => {
+    // Vorher schrieb die Auswahl die Adresse per replaceState: sie änderte
+    // sich, aber „Zurück" verließ die Chronologie, statt die vorige Auswahl
+    // zu zeigen.
+    const pushes: (string | URL | null | undefined)[] = [];
+    const push = vi
+      .spyOn(window.history, "pushState")
+      .mockImplementation((_s, _t, url) => {
+        pushes.push(url);
+      });
+    const replace = vi.spyOn(window.history, "replaceState");
+
+    render(<TimelineView events={EVENTS} syncUrl />);
+    fireEvent.change(
+      screen.getByLabelText("Umfang der Chronologie"),
+      { target: { value: "all" } },
+    );
+    fireEvent.change(artFilter(), { target: { value: "log" } });
+
+    expect(pushes).toContain("/chronologie/log");
+    expect(replace).not.toHaveBeenCalled();
+    push.mockRestore();
+    replace.mockRestore();
   });
 
   it("stellt ohne vorgewählte Art auf den Umfang Missionen", () => {

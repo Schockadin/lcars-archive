@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import ActionsMenu from "@/components/ActionsMenu";
+import ContentActionsPanel from "@/components/ContentActionsPanel";
 import DialogueThread from "@/components/DialogueThread";
 import DialogueFlowingText from "@/components/DialogueFlowingText";
 import DialogueViewToggle from "@/components/DialogueViewToggle";
@@ -40,18 +40,6 @@ export default function ArchiveEntryBody({
 
   return (
     <>
-      <ActionsMenu
-        viewer={viewer}
-        owners={owners}
-        contentType="archiveEntry"
-        followType="archive_entry"
-        followInitialState={followInitialState}
-        playerId={entry.ownerUserId}
-        content={entry}
-        onEdit={() => setEditMode(true)}
-        hideEdit={entry.category === "dialogue"}
-      />
-
       {entry.metadata.summary && entry.category != "dialogue" && (
         <p className="lcars-eyebrow mb-[5px]">{entry.metadata.summary}</p>
       )}
@@ -130,6 +118,22 @@ export default function ArchiveEntryBody({
           Kein Inhalt zu diesem Eintrag hinterlegt.
         </p>
       )}
+
+      <ContentActionsPanel
+        viewer={viewer}
+        owners={owners}
+        contentType="archiveEntry"
+        followType="archive_entry"
+        followInitialState={followInitialState}
+        playerId={entry.ownerUserId}
+        content={entry}
+        onEdit={() => setEditMode(true)}
+        hideEdit={entry.category === "dialogue"}
+        // Dialoge haben keine eigene Bilder-Galerie (der Inhalt lebt in
+        // dialogue_messages, siehe ActionsMenu.tsx).
+        imageContentType={entry.category === "dialogue" ? null : "archive_entry"}
+        imageContentId={entry.id}
+      />
     </>
   );
 }

@@ -213,6 +213,37 @@ test.describe("Chronologie", () => {
     ).toHaveCount(1);
   });
 
+  test("zeigt im Missions-Umfang den Zeitraum statt des Startdatums", async ({
+    page,
+  }) => {
+    // „Missionen" meint die Einsätze: eine Karte je Einsatz, die Beginn UND
+    // Abschluss trägt. Das Wort „Mission" im Ereignisart-Filter meint dagegen
+    // die einzelnen Marker — deshalb steht hier ein Zeitraum, dort ein Datum.
+    const ersteMission = page
+      .locator("#timeline .timeline-card")
+      .filter({ hasText: "Erste Mission" });
+    await expect(ersteMission.locator(".timeline-card-date")).toHaveText(
+      "Zeitraum 05.03.2401 – 20.03.2401",
+    );
+    // Die noch laufende zweite Mission hat kein Ende und behält ihr Datum.
+    await expect(
+      page
+        .locator("#timeline .timeline-card")
+        .filter({ hasText: "Zweite Mission" })
+        .locator(".timeline-card-date"),
+    ).toHaveText("Datum 12.06.2401");
+
+    // Mit „Alle Ereignisse" sind Beginn und Abschluss wieder eigene Marker.
+    await alleEreignisse(page);
+    await expect(
+      page
+        .locator("#timeline .timeline-card")
+        .filter({ hasText: "Erste Mission" })
+        .first()
+        .locator(".timeline-card-date"),
+    ).toContainText("Datum");
+  });
+
   test("zeigt Art und Titel in der Kopfzeile, Datum darunter", async ({
     page,
   }) => {

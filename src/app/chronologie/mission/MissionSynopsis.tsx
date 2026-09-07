@@ -6,7 +6,7 @@ import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import type { Viewer } from "@/lib/visibility";
 import type { FollowState } from "@/app/actions/follows";
 import MissionSynopsisEditor from "./MissionSynopsisEditor";
-import ActionsMenu from "@/components/ActionsMenu";
+import ContentActionsPanel from "@/components/ContentActionsPanel";
 import ContentBody from "@/components/ContentBody";
 import {
   characterHref,
@@ -50,17 +50,6 @@ export default function MissionSynopsis({
         )}
       </header>
 
-      <ActionsMenu
-        viewer={viewer}
-        owners={owners}
-        contentType="mission"
-        followType="mission"
-        followInitialState={followInitialState}
-        content={mission}
-        playerId={mission.ownerUserId}
-        onEdit={() => setEditMode(true)}
-      />
-
       {/* Client-Komponente: Recht direkt am (bereits aufgelösten) permissions-
           Array prüfen — NICHT über viewerHasPermission aus visibility.ts, das
           "server-only" ist und die DB-Kette (roles.ts → db.ts) in den
@@ -83,6 +72,18 @@ export default function MissionSynopsis({
           )}
         </>
       )}
+      <ContentActionsPanel
+        viewer={viewer}
+        owners={owners}
+        contentType="mission"
+        followType="mission"
+        followInitialState={followInitialState}
+        content={mission}
+        playerId={mission.ownerUserId}
+        onEdit={() => setEditMode(true)}
+        imageContentType="mission"
+        imageContentId={mission.id}
+      />
     </article>
   );
 }

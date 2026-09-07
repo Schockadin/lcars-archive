@@ -1204,3 +1204,47 @@
   text-transform: uppercase;
   vertical-align: 1px;
 }
+
+/* ── Aktionen-Feld am Fuß einer Inhaltsseite ─────────────────────────
+   Zugeklappt, damit der Text oben anfängt und nicht hinter der Redaktion
+   (siehe ContentActionsPanel.tsx). Dieselbe Form wie die aufklappbaren
+   Felder der Chronologie. */
+.content-actions {
+  margin-top: 24px;
+  border-top: 1px solid var(--lcars-border);
+}
+.content-actions-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0 0;
+  cursor: pointer;
+  font-family: var(--lcars-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-dim);
+  list-style: none;
+}
+.content-actions-head::-webkit-details-marker {
+  display: none;
+}
+.content-actions-head::before {
+  content: "\25B8";
+  display: inline-block;
+  transition: transform 120ms;
+  color: var(--lcars-primary);
+}
+.content-actions[open] > .content-actions-head::before {
+  transform: rotate(90deg);
+}
+.content-actions-head:hover {
+  color: var(--lcars-ink);
+}
+.content-actions-body {
+  padding: 10px 0 4px;
+}
+/* Nicht angemeldet: nur die Bilder-Galerie, ohne Feld drumherum. */
+.content-actions-anon {
+  margin-top: 20px;
+}

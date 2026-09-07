@@ -1,5 +1,5 @@
 "use client";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   LcarsSortSwitch,
@@ -15,6 +15,7 @@ import {
   categoryVisual,
   filterEvents,
   fmtDate,
+  missionEndDates,
   peopleOf,
   periodKey,
   periodLabel,
@@ -40,16 +41,31 @@ import { chronologyCategoryHref } from "@/lib/contentRoutes";
 // Chronologie ist die Kampagne, nicht ein Suchindex — sie umfasst ein paar
 // hundert Ereignisse, und ein Filter, der eine Server-Runde kostet, fühlt
 // sich bei dieser Größe falsch an.
+// Die Ereignisart aus der aktuellen Adresse: /chronologie/<art> → <art>,
+// /chronologie → null. Umfänge sind keine Arten (siehe
+// RESERVED_CHRONOLOGY_SEGMENTS in contentRoutes.ts) und kommen hier nicht vor,
+// weil sie nie in die Adresse geschrieben werden.
+function categoryFromPath(): string | null {
+  const segments = window.location.pathname.split("/").filter(Boolean);
+  if (segments[0] !== "chronologie" || segments.length < 2) return null;
+  // /chronologie/mission/<slug> ist eine Missionsseite, keine Kategorie.
+  if (segments.length > 2) return null;
+  return decodeURIComponent(segments[1]);
+}
+
 // initialCategory kommt aus der Route (/chronologie/[kategorie], siehe
 // src/app/chronologie/[kategorie]/page.tsx). Eine vorgewählte Ereignisart
 // setzt den Umfang zwingend auf „Alle Ereignisse": in der Missions-Ansicht
 // gibt es nur Missionen, /chronologie/conflict wäre dort garantiert leer.
 //
 // syncUrl schreibt die gewählte Art in die Adresszeile zurück — per
-// history.replaceState statt router.push, damit der Zeitstrahl nicht neu
-// geladen wird und Suche, Beteiligte und Jahr stehen bleiben. Die
-// Attrappen-Ansicht auf /dev-gallery lässt es aus: sie hat keine Route, in
-// die sie schreiben dürfte.
+// history.pushState statt router.push, damit der Zeitstrahl nicht neu geladen
+// wird und Suche, Beteiligte und Jahr stehen bleiben. pushState legt einen
+// echten Verlaufseintrag an, und ein popstate-Horcher liest die Art beim
+// Zurück/Vorwärts wieder aus der Adresse: vorher (replaceState) änderte sich
+// die Adresse, aber „Zurück" verließ die Chronologie, statt die vorige
+// Auswahl zu zeigen. Die Attrappen-Ansicht auf /dev-gallery lässt es aus: sie
+// hat keine Route, in die sie schreiben dürfte.
 export default function TimelineView({
   events,
   initialCategory = null,
@@ -91,6 +107,12 @@ export default function TimelineView({
 
   const people = useMemo(() => peopleOf(inScope), [inScope]);
 
+  // Im Umfang „Missionen" steht je Einsatz eine Karte, die den ganzen
+  // Zeitraum trägt — das Ende kommt aus dem (dort ausgeblendeten)
+  // Abschluss-Ereignis. Gebildet aus ALLEN Ereignissen, nicht nur denen im
+  // Umfang: das Abschluss-Ereignis ist ja gerade herausgefiltert.
+  const missionEnds = useMemo(() => missionEndDates(events), [events]);
+
   // Die Jahresleiste zeigt nur Jahre, in denen unter den ÜBRIGEN Filtern noch
   // etwas liegt: sie wird aus den nach Suche und Ereignisart gefilterten
   // Ereignissen gebaut, aber ohne den Jahresfilter selbst — sonst bliebe nach
@@ -117,6 +139,18 @@ export default function TimelineView({
     [events, query, category, person, year, scope, sortDir],
   );
 
+  // Zurück/Vorwärts: die Art steht in der Adresse, also von dort lesen. Nur
+  // der Zustand wird gesetzt — die Seite bleibt stehen, sonst ginge beim
+  // Blättern durch den Verlauf jedes Mal die übrige Auswahl verloren.
+  useEffect(() => {
+    if (!syncUrl) return;
+    function onPop() {
+      setCategory(categoryFromPath());
+    }
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, [syncUrl]);
+
   const activeCategory = category ? categoryVisual(category).label : null;
 
   // Ereignisart wechseln = Adresse wechseln: /chronologie/conflict ist ein
@@ -124,8 +158,8 @@ export default function TimelineView({
   // /chronologie.
   function changeCategory(next: string | null) {
     setCategory(next);
-    if (syncUrl) {
-      window.history.replaceState(null, "", chronologyCategoryHref(next));
+    if (syncUrl && next !== categoryFromPath()) {
+      window.history.pushState(null, "", chronologyCategoryHref(next));
     }
   }
 
@@ -145,7 +179,7 @@ export default function TimelineView({
         <h1 className="lcars-data-row-heading">Chronologie</h1>
         <p className="lcars-eyebrow">
           {scope === "missions"
-            ? "Die Einsätze der Kampagne in ihrer eigenen Zeitrechnung"
+            ? "Die Einsätze der Kampagne mit ihrem Zeitraum"
             : "Ereignisse der Kampagne in ihrer eigenen Zeitrechnung"}{" "}
           · {sortDir === "desc" ? "neueste zuerst" : "älteste zuerst"}
           {activeCategory ? ` · ${activeCategory}` : ""}
@@ -280,7 +314,12 @@ export default function TimelineView({
                         {periodLabel(event.date)}
                       </h2>
                     )}
-                    <EventRow event={event} />
+                    <EventRow
+                      event={event}
+                      endDate={
+                        scope === "missions" ? missionEnds.get(event.href) : undefined
+                      }
+                    />
                   </Fragment>
                 );
               })}
@@ -313,7 +352,15 @@ export default function TimelineView({
 //
 // <details> statt eigenem Zustand: der Auf-/Zu-Zustand gehört zur einzelnen
 // Karte, nicht in die Liste — und beim Filtern soll er nicht mitwandern.
-function EventRow({ event }: { event: TimelineEvent }) {
+function EventRow({
+  event,
+  endDate,
+}: {
+  event: TimelineEvent;
+  // Nur im Umfang „Missionen" gesetzt: dann trägt die Karte den Zeitraum des
+  // Einsatzes statt des Datums seines Beginns.
+  endDate?: string;
+}) {
   const visual = categoryVisual(event.category);
 
   return (
@@ -346,7 +393,15 @@ function EventRow({ event }: { event: TimelineEvent }) {
               und die Quelle wiederholte meist bloß den Titel — der Titel
               führt ohnehin dorthin. */}
           <p className="timeline-card-date">
-            <b>Datum</b> {fmtDate(event.date)}
+            {endDate ? (
+              <>
+                <b>Zeitraum</b> {fmtDate(event.date)} – {fmtDate(endDate)}
+              </>
+            ) : (
+              <>
+                <b>Datum</b> {fmtDate(event.date)}
+              </>
+            )}
           </p>
 
           {event.detail && (

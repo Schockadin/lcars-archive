@@ -131,9 +131,12 @@ export default function TutorialPage() {
               <p>
                 Sie ist zugleich die <strong>Missions-Übersicht</strong>: Ganz
                 links im Umschalter steht <strong>„Missionen“</strong> — dann
-                zeigt der Zeitstrahl je Einsatz genau einen Eintrag, seinen
-                Beginn, und ein Klick führt auf die Missionsseite mit ihren
-                Einsatzberichten. Mit <strong>„Alle Ereignisse“</strong>
+                zeigt der Zeitstrahl je Einsatz genau einen Eintrag mit seinem
+                ganzen <strong>Zeitraum</strong> (Beginn bis Abschluss), und
+                ein Klick führt auf die Missionsseite mit ihren
+                Einsatzberichten. Die Ereignisart <strong>„Mission“</strong>
+                im Filter meint etwas anderes: dort sind Beginn und Abschluss
+                zwei eigene Marken auf dem Strahl. Mit <strong>„Alle Ereignisse“</strong>
                 kommen Logbücher, markierte Textstellen, Gespräche,
                 Geburtstage und abgeleitete Begebenheiten dazu. Geordnet wird
                 immer nach <strong>Datum</strong> — der Knopf dreht die

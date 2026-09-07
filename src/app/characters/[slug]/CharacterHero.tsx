@@ -12,7 +12,7 @@ import CharacterPortrait from "./CharacterPortrait";
 import CharacterBioEditor from "./CharacterBioEditor";
 import type { Viewer } from "@/lib/visibility";
 import type { FollowState } from "@/app/actions/follows";
-import ActionsMenu from "@/components/ActionsMenu";
+import ContentActionsPanel from "@/components/ContentActionsPanel";
 import { FileTextIcon } from "@/lib/icons";
 import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import {
@@ -309,17 +309,6 @@ export default function CharacterHero({
               <h1 className="char-file-name">{character.name}</h1>
             </div>
 
-            <ActionsMenu
-              viewer={viewer}
-              owners={owners}
-              content={character}
-              contentType="character"
-              followType="character"
-              followInitialState={followInitialState}
-              playerId={character.player_id}
-              onEdit={() => setEditMode(true)}
-            />
-
             {sourceMarkdown != null ? (
               <CharacterBioEditor
                 bioHtml={bio?.html ?? null}
@@ -341,6 +330,19 @@ export default function CharacterHero({
                 Keine biografischen Daten in der Datenbank hinterlegt.
               </p>
             )}
+
+            <ContentActionsPanel
+              viewer={viewer}
+              owners={owners}
+              content={character}
+              contentType="character"
+              followType="character"
+              followInitialState={followInitialState}
+              playerId={character.player_id}
+              onEdit={() => setEditMode(true)}
+              imageContentType="character"
+              imageContentId={character.id}
+            />
           </div>
         </div>
       </section>

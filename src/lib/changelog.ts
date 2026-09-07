@@ -234,6 +234,15 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "chronologie",
       },
       {
+        text: "Die Aktionen einer Inhaltsseite (Folgen, Merken, Teilen, Bilder, Bearbeiten, Owner) stehen jetzt in einem zugeklappten Feld am Ende des Eintrags statt zwischen Titel und Text. Der Text beginnt damit oben; der Lesemodus-Schalter bleibt, wo er war.",
+        category: "darstellung",
+      },
+      {
+        text: "Der Zeitstrahl trennt jetzt sauber zwischen Einsätzen und Ereignissen: Der Umfang „Missionen“ zeigt je Einsatz eine Karte mit dem ganzen Zeitraum (Beginn bis Abschluss), die Ereignisart „Mission“ dagegen Beginn und Abschluss als eigene Marken. Und der Zurück-Knopf des Browsers führt jetzt zur vorigen Auswahl statt aus der Chronologie heraus.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
         text: "Die Missionsakte als PDF ist jetzt aufgemacht wie der Charakterbogen — derselbe Rahmen, dieselbe Kopfzeile, und der Text erscheint formatiert mit Überschriften, Aufzählungen und Zitaten statt als Fließtext. Neu davor: ein Inhaltsverzeichnis, dessen Einträge im PDF direkt zum jeweiligen Einsatzbericht springen.",
         category: "export",
         tutorial: "merken-abonnieren",

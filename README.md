@@ -458,10 +458,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Jede Ereignisart hat zusätzlich eine eigene Adresse
   (`/chronologie/[kategorie]`, z.B. `/chronologie/conflict`); die Auswahl im
   Filterfeld schreibt sie per `history.replaceState` in die Adresszeile, ohne
-  den Zeitstrahl neu zu laden. `/chronologie/mission` ist dafür eine eigene
+  den Zeitstrahl neu zu laden (per `pushState`, siehe oben). `/chronologie/mission` ist dafür eine eigene
   Seite, weil ein statisches Segment in Next das gleichnamige dynamische
   schlägt — es ist zugleich das Präfix der Missionsseiten. Ein unbekanntes
   Segment ist eine 404 (`isTimelineCategory`), keine leere Liste.
+  Der Umfang **„Missionen"** zeigt je Einsatz EINE Karte mit dem ganzen
+  **Zeitraum** (Beginn–Abschluss, `missionEndDates`); die Ereignisart
+  **„Mission"** — im Filter und unter `/chronologie/mission` — zeigt Beginn
+  und Abschluss dagegen als eigene Marker. Vorher hießen beide fast gleich
+  und zeigten Verschiedenes.
   Die **Ereigniskarte** (`.timeline-card`) trägt die Farbe ihrer Ereignisart
   als ganze Fläche mit dunkler Schrift (`--lcars-ink-dark`, das Token für
   „Text auf Akzentflächen" — es bleibt in beiden Helligkeitsmodi dunkel;
@@ -469,7 +474,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Aufbau: Art-Etikett und verlinkter Titel in einer Zeile, ggf. das
   Herkunfts-Etikett daneben, darunter nur das Datum — Ereignisart und Quelle
   standen dort doppelt —, dann Teaser und Beteiligte als `<details>`-Felder
-  (Teaser offen, Beteiligte zu). Die Karte ist bewusst kein Link als Ganzes:
+  (Teaser offen, Beteiligte zu). Die Auswahl einer Ereignisart schreibt die
+  Adresse per `history.pushState` und legt damit einen echten
+  Verlaufseintrag an; ein `popstate`-Horcher liest sie beim Zurück/Vorwärts
+  zurück. Die Karte ist bewusst kein Link als Ganzes:
   ein Knopf in einem Link ist weder gültiges HTML noch tastaturbedienbar,
   verlinkt ist der Titel.
   Filter und Sortierung richten sich nach dem Umfang: Ereignisart und
@@ -920,6 +928,13 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     └── utils/                # Stardate, Datumsformatierung …
 
 ### Komponenten
+
+Die Aktionen einer Inhaltsseite (Owner, Sichtbarkeit, Folgen/Merken, Teilen,
+Bilder, Bearbeiten, Löschen) stehen in `ContentActionsPanel` — einem
+zugeklappten `<details>` am **Fuß** des Inhalts. Vorher saßen sie zwischen
+Titel und Text: gelesen wird häufiger als verwaltet. Der Lesemodus-Schalter
+bleibt oben, er gehört zum Lesen. Nicht angemeldete Besucher sehen kein Feld,
+sondern nur die Bilder-Galerie.
 
 Wiederkehrende UI-Muster leben als geteilte Bausteine statt als Kopie je
 Seite: `LcarsAkteCard` (Karte mit farbiger Schiene, Titel, Meta-Zeile — die
