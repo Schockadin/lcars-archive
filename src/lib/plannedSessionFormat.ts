@@ -5,31 +5,38 @@
 import type { PlannedSession, RsvpResponse } from "@/lib/plannedSessionTypes";
 
 export interface PlannedSessionFormInput {
-  date: string;
-  time: string;
+  // Ein einziges Feld aus <input type="datetime-local">: „2026-06-12T19:30".
+  scheduledAt: string;
   title: string;
   location: string;
   notes: string;
+  characterIds: string[];
 }
 
 export type ParseResult =
-  | { ok: true; scheduledAt: string; title: string; location: string; notes: string }
+  | {
+      ok: true;
+      scheduledAt: string;
+      title: string;
+      location: string;
+      notes: string;
+      characterIds: number[];
+    }
   | { ok: false; error: string };
 
-// Datum und Uhrzeit kommen getrennt aus dem Formular (zwei native Felder
-// statt eines datetime-local: das liest sich auf dem Handy besser und ist
-// für die Spielleitung schneller zu tippen).
+// Datum und Uhrzeit kommen als EIN Wert aus dem datetime-local-Feld. Die
+// Sekunden sind optional — Firefox liefert „…T19:30", Chrome kann
+// „…T19:30:00" schicken.
+const DATETIME_LOCAL = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})(:\d{2})?$/;
+
 export function parsePlannedSession(
   input: PlannedSessionFormInput,
 ): ParseResult {
-  const date = input.date.trim();
-  const time = input.time.trim();
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    return { ok: false, error: "Bitte ein Datum angeben." };
+  const match = DATETIME_LOCAL.exec(input.scheduledAt.trim());
+  if (!match) {
+    return { ok: false, error: "Bitte Datum und Uhrzeit angeben." };
   }
-  if (!/^\d{2}:\d{2}$/.test(time)) {
-    return { ok: false, error: "Bitte eine Uhrzeit angeben (z.B. 19:30)." };
-  }
+  const [, date, time] = match;
   const title = input.title.trim();
   if (title.length > 200) {
     return { ok: false, error: "Der Titel ist zu lang (höchstens 200 Zeichen)." };
@@ -40,13 +47,35 @@ export function parsePlannedSession(
   if (Number.isNaN(new Date(`${date}T${time}`).getTime())) {
     return { ok: false, error: "Diesen Zeitpunkt gibt es nicht." };
   }
+  const characterIds: number[] = [];
+  for (const raw of input.characterIds) {
+    const id = Number(raw);
+    if (!Number.isInteger(id) || id <= 0) {
+      return { ok: false, error: "Ungültige Auswahl der Teilnehmenden." };
+    }
+    if (!characterIds.includes(id)) characterIds.push(id);
+  }
   return {
     ok: true,
     scheduledAt,
     title,
     location: input.location.trim().slice(0, 200),
     notes: input.notes.trim().slice(0, 2000),
+    characterIds,
   };
+}
+
+// Der Wert für <input type="datetime-local"> aus dem, was die Datenbank
+// liefert („2026-06-12 19:30:00+00"). Ohne die Umschrift bliebe das Feld beim
+// Ändern leer.
+export function toDateTimeLocal(iso: string): string {
+  const date = new Date(iso.replace(" ", "T").replace(/([+-]\d{2})$/, "$1:00"));
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+    `T${pad(date.getHours())}:${pad(date.getMinutes())}`
+  );
 }
 
 // „Freitag, 12. Juni 2026, 19:30 Uhr"

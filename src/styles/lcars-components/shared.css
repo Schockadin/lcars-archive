@@ -1244,6 +1244,37 @@
 .content-actions-body {
   padding: 10px 0 4px;
 }
+/* Ein zugeklapptes Feld mit Überschrift in der Kopfzeile — das Nachtragen
+   einer Session unter /gm/sessions. Wie .content-actions aufgebaut (Dreieck
+   statt Marker, dreht sich beim Öffnen), nur mit einer Überschrift statt
+   einer Kleinschrift-Zeile: der Bereich hat auch zugeklappt einen Namen. */
+.lcars-collapsible {
+  border-top: 1px solid var(--lcars-border);
+  padding-top: 8px;
+}
+.lcars-collapsible-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  list-style: none;
+}
+.lcars-collapsible-summary::-webkit-details-marker {
+  display: none;
+}
+.lcars-collapsible-summary::before {
+  content: "\25B8";
+  display: inline-block;
+  transition: transform 120ms;
+  color: var(--lcars-primary);
+}
+.lcars-collapsible[open] > .lcars-collapsible-summary::before {
+  transform: rotate(90deg);
+}
+.lcars-collapsible-summary > h2 {
+  margin: 0;
+}
+
 /* Nicht angemeldet: nur die Bilder-Galerie, ohne Feld drumherum. */
 .content-actions-anon {
   margin-top: 20px;
@@ -1346,14 +1377,28 @@
   background: var(--lcars-bg);
   white-space: nowrap;
 }
-.party-sheet tbody th a {
+/* Der Name öffnet den Charakterbogen im Fenster — ein Knopf, der aussieht
+   wie ein Link: die Tabelle soll beim Nachschlagen stehen bleiben. */
+.party-sheet-name {
+  display: block;
   color: var(--lcars-ink-data);
   font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+.party-sheet-name:hover,
+.party-sheet-name:focus-visible {
+  text-decoration: underline;
 }
 .party-sheet-player {
   display: block;
   font-size: 11px;
   color: var(--lcars-ink-dim);
+}
+/* Der Weg zur Charakterseite selbst — klein, unter dem Namen. */
+.party-sheet-link {
+  display: block;
+  font-size: 11px;
 }
 .party-sheet-lists {
   font-size: 13.5px;

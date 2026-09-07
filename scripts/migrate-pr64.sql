@@ -298,3 +298,42 @@ CREATE TABLE IF NOT EXISTS planned_session_rsvps (
 );
 CREATE INDEX IF NOT EXISTS idx_planned_session_rsvps_user
   ON planned_session_rsvps (user_id);
+
+-- Sicherung gegen eine halb angelegte Tabelle: ohne den Primärschlüssel
+-- scheitert das ON CONFLICT (session_id, user_id) der Zusage mit
+-- „there is no unique or exclusion constraint matching the ON CONFLICT
+-- specification" — lesen ginge, zusagen nicht. CREATE TABLE IF NOT EXISTS
+-- repariert eine bereits vorhandene Tabelle nicht, deshalb hier eigens.
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conrelid = 'planned_session_rsvps'::regclass AND contype = 'p'
+  ) THEN
+    ALTER TABLE planned_session_rsvps
+      ADD CONSTRAINT planned_session_rsvps_pkey PRIMARY KEY (session_id, user_id);
+  END IF;
+END $$;
+
+-- Wer zu einem Termin eingeplant ist. Bewusst CHARAKTERE statt Konten: die
+-- Zusage (planned_session_rsvps) gibt der Mensch ab, eingeplant wird die
+-- Figur — beim Nachtragen der gespielten Session sind es genau diese
+-- Charaktere, die AP bekommen. Beim Ankündigen sind alle aktiven Figuren
+-- vorausgewählt; wer nicht mitspielt, wird abgewählt.
+CREATE TABLE IF NOT EXISTS planned_session_characters (
+  session_id    INTEGER NOT NULL REFERENCES planned_sessions(id) ON DELETE CASCADE,
+  character_id  INTEGER NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  PRIMARY KEY (session_id, character_id)
+);
+CREATE INDEX IF NOT EXISTS idx_planned_session_characters_character
+  ON planned_session_characters (character_id);
+
+-- Der Termin, aus dem eine gespielte Session geworden ist. Gesetzt vom Knopf
+-- „Session eintragen" am Termin: aus der Ankündigung wird die Nachbuchung mit
+-- AP (game_sessions). Der Termin bleibt stehen — er trägt die Zusagen, die
+-- eine gespielte Session nicht mehr kennt —, verschwindet aber aus der
+-- Startseite, weil er erledigt ist. ON DELETE SET NULL: wird die Session
+-- zurückgenommen, steht der Termin wieder als offen da.
+ALTER TABLE planned_sessions
+  ADD COLUMN IF NOT EXISTS game_session_id INTEGER
+  REFERENCES game_sessions(id) ON DELETE SET NULL;

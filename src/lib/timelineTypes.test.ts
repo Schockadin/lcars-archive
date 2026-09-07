@@ -5,6 +5,7 @@ import {
   filterEvents,
   isIsoDate,
   isMissionStart,
+  latestEventDate,
   missionEndDates,
   parseTimelineMarkers,
   peopleOf,
@@ -347,5 +348,26 @@ describe("missionEndDates", () => {
       event({ sourceType: "mission", phase: "start", href: "/m/b" }),
     ]);
     expect(ends.get("/m/b")).toBeUndefined();
+  });
+});
+
+describe("latestEventDate", () => {
+  it("nennt das jüngste Datum als Vorbelegung", () => {
+    const events = [
+      event({ id: "a", date: "2399-11-02" }),
+      event({ id: "b", date: "2401-03-05" }),
+      event({ id: "c", date: "2400-01-01" }),
+    ];
+    expect(latestEventDate(events)).toBe("2401-03-05");
+  });
+
+  it("füllt ein dreistelliges Jahr auf vier Stellen auf", () => {
+    // <input type="date"> lehnt „845-02-01" ab; die Chronologie kennt solche
+    // Daten aber (drei Stellen sind erlaubt).
+    expect(latestEventDate([event({ date: "845-02-01" })])).toBe("0845-02-01");
+  });
+
+  it("gibt bei leerer Chronologie nichts vor", () => {
+    expect(latestEventDate([])).toBeNull();
   });
 });

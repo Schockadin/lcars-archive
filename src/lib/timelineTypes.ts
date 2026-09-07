@@ -287,6 +287,20 @@ export function missionEndDates(events: TimelineEvent[]): Map<string, string> {
 // Alle Beteiligten, die in diesen Ereignissen vorkommen — alphabetisch, für
 // die Auswahlliste. Ohne Datum gepflegte Figuren tauchen hier nicht auf, das
 // ist gewollt: die Liste soll nur zeigen, wonach sich filtern lässt.
+// Das Datum des jüngsten Ereignisses — die Vorbelegung des Datumsfeldes beim
+// Eintragen von Hand: was neu dazukommt, schließt fast immer an das an, was
+// zuletzt geschah. Vierstellig aufgefüllt, damit <input type="date"> den Wert
+// annimmt (ein dreistelliges Jahr lehnt es ab).
+export function latestEventDate(events: TimelineEvent[]): string | null {
+  let latest: string | null = null;
+  for (const event of events) {
+    if (latest === null || event.date > latest) latest = event.date;
+  }
+  if (latest === null) return null;
+  const [year, ...rest] = latest.split("-");
+  return [year.padStart(4, "0"), ...rest].join("-");
+}
+
 export function peopleOf(events: TimelineEvent[]): string[] {
   const names = new Set<string>();
   for (const event of events) for (const name of event.people) names.add(name);

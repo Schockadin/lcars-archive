@@ -130,7 +130,7 @@ function NewSessionForm({
         disabled={pending}
         className="lcars-pill-btn--outline self-start disabled:opacity-50"
       >
-        Session eintragen
+        Session nachtragen
       </button>
 
       <FormError message={state.error} />
@@ -418,8 +418,13 @@ function SessionRow({
   );
 }
 
-// Sessions der Spielleitung: oben eintragen, darunter die Liste der bisherigen
-// Sessions zum Aufklappen.
+// Sessions der Spielleitung: oben das (zugeklappte) Nachtragen von Hand,
+// darunter die Liste der bisherigen Sessions zum Aufklappen.
+//
+// Der übliche Weg ist der Knopf „Session eintragen" am angekündigten Termin
+// (PlannedSessionManager) — er bringt Datum, Titel und Besetzung schon mit.
+// Von Hand nachgetragen wird, was ohne Ankündigung gespielt wurde; deshalb
+// steht dieses Formular zugeklappt.
 export default function SessionManager({
   sessions,
   characters,
@@ -441,14 +446,18 @@ export default function SessionManager({
 }) {
   return (
     <div className="flex flex-col gap-[24px]">
-      <section className="flex flex-col gap-[12px]">
-        <h2 className="text-lcars-primary-ink">Session eintragen</h2>
-        <NewSessionForm
-          characters={characters}
-          defaultSessionAp={defaultSessionAp}
-          today={today}
-        />
-      </section>
+      <details className="lcars-collapsible">
+        <summary className="lcars-collapsible-summary">
+          <h2 className="text-lcars-primary-ink">Session nachtragen</h2>
+        </summary>
+        <div className="pt-[12px]">
+          <NewSessionForm
+            characters={characters}
+            defaultSessionAp={defaultSessionAp}
+            today={today}
+          />
+        </div>
+      </details>
 
       <section className="flex flex-col gap-[12px]">
         <h2 className="text-lcars-primary-ink">Bisherige Sessions</h2>

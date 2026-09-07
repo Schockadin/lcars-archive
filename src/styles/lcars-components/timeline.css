@@ -315,42 +315,15 @@
    Zugeklapptes Formular über dem Zeitstrahl (ManualEventForm.tsx). Für
    Begebenheiten, die zu keinem Eintrag gehören — dieselbe Form wie das
    Aktionen-Feld der Inhaltsseiten. */
+/* Die Zeile über dem Zeitstrahl mit dem Knopf „Ereignis eintragen" — das
+   Formular selbst steht seit v1.29.46 in einem Fenster (ModalOverlay), nicht
+   mehr in einem aufklappbaren Feld. */
 .timeline-newevent {
   margin-bottom: 16px;
-  border: 1px solid var(--lcars-border);
-  border-radius: 4px 14px 14px 4px;
-  padding: 8px 14px;
-  background: var(--lcars-surface);
-}
-.timeline-newevent-head {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  font-family: var(--lcars-font-mono);
-  font-size: 11px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--lcars-ink-dim);
-  list-style: none;
-}
-.timeline-newevent-head::-webkit-details-marker {
-  display: none;
-}
-.timeline-newevent-head::before {
-  content: "\25B8";
-  display: inline-block;
-  transition: transform 120ms;
-  color: var(--lcars-primary);
-}
-.timeline-newevent[open] > .timeline-newevent-head::before {
-  transform: rotate(90deg);
-}
-.timeline-newevent-head:hover {
-  color: var(--lcars-ink);
-}
-.timeline-newevent-body {
-  padding-top: 10px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
 }
 /* Datum und Art nebeneinander, solange Platz ist. */
 .timeline-newevent-row {

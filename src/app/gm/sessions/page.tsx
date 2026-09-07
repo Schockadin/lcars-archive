@@ -46,7 +46,11 @@ export default async function GmSessionsPage() {
         <div className="lcars-text flex flex-col gap-[16px]">
           {/* Erst der Blick nach vorn (Termine), dann die Nachbuchung der
               gespielten Sessions. */}
-          <PlannedSessionManager sessions={planned} />
+          <PlannedSessionManager
+            sessions={planned}
+            characters={characters}
+            defaultSessionAp={rules.apPerSession}
+          />
 
           <p className="text-lcars-ink-dim text-[13px]">
             Eine eingetragene Session schreibt allen ausgewählten Charakteren

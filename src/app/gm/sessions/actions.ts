@@ -9,6 +9,10 @@ import {
   setSessionLogbooks,
 } from "@/lib/gameSessions";
 import { validateGameSessionInput } from "@/lib/gameSessionFormat";
+import {
+  getPlannedSession,
+  linkPlannedSession,
+} from "@/lib/plannedSessions";
 
 export interface SessionFormState {
   error?: string;
@@ -175,5 +179,74 @@ export async function setSessionLogbooksAction(
       logIds.length > 0
         ? `${logIds.length} Logbuch/Logbücher verknüpft — die Logbuch-AP sind gebucht.`
         : "Keine Logbücher mehr verknüpft — die Logbuch-AP wurden zurückgenommen.",
+  };
+}
+
+// Aus einem angekündigten Termin wird die gespielte Session: Datum, Titel und
+// die eingeplanten Figuren stehen schon, im Fenster kommen AP-Beträge, Notizen
+// und die letzte Korrektur der Teilnehmerliste dazu.
+//
+// Danach zeigt der Termin auf die gebuchte Session (linkPlannedSession) und
+// verschwindet von der Startseite — die Zusagen bleiben an ihm stehen. Wird
+// die Session später zurückgenommen, steht der Termin wieder als offen da
+// (ON DELETE SET NULL).
+export async function recordPlannedSessionAction(
+  state: SessionFormState,
+  formData: FormData,
+): Promise<SessionFormState> {
+  const user = await requireGM();
+
+  const plannedId = Number(formData.get("plannedId"));
+  if (!Number.isInteger(plannedId) || plannedId <= 0) {
+    return { error: "Unbekannter Termin." };
+  }
+  const planned = await getPlannedSession(plannedId);
+  if (!planned) return { error: "Termin nicht gefunden." };
+  if (planned.gameSessionId !== null) {
+    return { error: "Dieser Termin ist bereits eingetragen." };
+  }
+
+  const parsed = validateGameSessionInput({
+    sessionDate: String(formData.get("sessionDate") ?? ""),
+    title: String(formData.get("title") ?? ""),
+    sessionAp: String(formData.get("sessionAp") ?? ""),
+    bonusAp: String(formData.get("bonusAp") ?? ""),
+    notes: String(formData.get("notes") ?? ""),
+    characterIds: formData.getAll("characterIds").map(String),
+  });
+  if (!parsed.ok) return { error: parsed.error };
+
+  // Wie beim Anlegen von Hand: nur aktive, gutschreibbare Akten kommen aufs
+  // Konto.
+  const allowed = new Set(
+    (await listActiveCharactersForAp()).map((character) => character.id),
+  );
+  const characterIds = parsed.value.characterIds.filter((id) =>
+    allowed.has(id),
+  );
+  if (characterIds.length !== parsed.value.characterIds.length) {
+    return {
+      error: "Mindestens ein ausgewählter Charakter ist nicht (mehr) aktiv.",
+    };
+  }
+
+  const sessionId = await createGameSession({
+    ...parsed.value,
+    characterIds,
+    createdByUserId: user.id,
+  });
+  await linkPlannedSession(plannedId, sessionId);
+
+  revalidatePath("/gm/sessions");
+  revalidatePath("/gm/ap");
+  revalidatePath("/gm/campaign");
+  revalidatePath("/");
+
+  const perCharacter = parsed.value.sessionAp + parsed.value.bonusAp;
+  return {
+    success:
+      characterIds.length > 0 && perCharacter > 0
+        ? `Termin eingetragen, je ${perCharacter} AP an ${characterIds.length} Charaktere gebucht.`
+        : "Termin eingetragen.",
   };
 }

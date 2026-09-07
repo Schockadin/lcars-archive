@@ -161,8 +161,10 @@ export default function TutorialPage() {
               <p>
                 Was zur Kampagne gehört, aber in keinem Eintrag steht, trägst
                 du <strong>von Hand</strong> ein: Über dem Zeitstrahl steht{" "}
-                <strong>„Ereignis eintragen“</strong> — Datum, Titel,
-                Ereignisart, auf Wunsch ein, zwei Sätze dazu. Solche
+                der Knopf <strong>„Ereignis eintragen“</strong> und öffnet ein
+                Fenster — Datum, Titel, Ereignisart, auf Wunsch ein, zwei Sätze
+                dazu. Das Datumsfeld steht schon auf dem jüngsten Ereignis der
+                Chronologie; meist musst du nur den Tag ändern. Solche
                 Ereignisse tragen den Hinweis <em>von Hand eingetragen</em>,
                 sind nicht verlinkt (es gibt ja keinen Eintrag dahinter) und
                 lassen sich von dir oder der Spielleitung wieder entfernen.
@@ -678,7 +680,9 @@ export default function TutorialPage() {
                 <strong>„Ich bin dabei“</strong> oder{" "}
                 <strong>„Ich kann nicht“</strong> sagst du zu oder ab — du
                 kannst es dir jederzeit anders überlegen, die neue Antwort
-                ersetzt die alte. Wer zugesagt hat, steht am Termin.
+                ersetzt die alte. Wer zugesagt hat, steht am Termin. Ist der
+                Abend gespielt und von der Spielleitung eingetragen,
+                verschwindet der Termin von der Startseite.
               </p>
               <p>
                 Eingeloggt zeigt dir die <strong>Startseite</strong> dein
@@ -999,9 +1003,23 @@ export default function TutorialPage() {
                   Stress und Entschlossenheit in einer Tabelle, darunter je
                   Figur die Talente, Schwerpunkte und Werte. Praktisch am
                   Tisch, wenn schnell klar sein muss, wer die beste Probe hat.
+                  Ein Klick auf einen Namen öffnet den vollständigen
+                  Charakterbogen dieser Figur im Fenster.
                 </li>
                 <li>
-                  Unter <strong>„Sessions“</strong> gespielte Sessions eintragen
+                  Unter <strong>„Sessions“</strong> mit{" "}
+                  <strong>„Termin ankündigen“</strong> den nächsten Spielabend
+                  ansetzen (Zeitpunkt, Ort, Notiz und wer mitspielt — alle
+                  aktiven Figuren sind vorausgewählt). Ist er gespielt, macht{" "}
+                  <strong>„Session eintragen“</strong> am Termin daraus in einem
+                  Schritt die Nachbuchung: ein Fenster fragt Session-AP,
+                  Bonus-AP und Notizen ab, übernimmt Datum, Titel und Besetzung
+                  und bucht die AP. Der Termin bleibt mit seinen Zusagen in der
+                  Liste stehen, verschwindet aber von der Startseite.
+                </li>
+                <li>
+                  Unter <strong>„Sessions“</strong> auch von Hand{" "}
+                  (<strong>„Session nachtragen“</strong>) gespielte Sessions eintragen
                   (Datum, Titel, Session-AP, Bonus-AP, Notizen) und damit allen
                   Beteiligten die AP in einem Rutsch gutschreiben. Vorausgewählt
                   sind alle aktiven Charaktere mit verknüpftem Konto — wer

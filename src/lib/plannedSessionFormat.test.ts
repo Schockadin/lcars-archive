@@ -4,22 +4,23 @@ import {
   formatSessionMoment,
   ownResponse,
   parsePlannedSession,
+  toDateTimeLocal,
 } from "./plannedSessionFormat";
 import type { PlannedSession } from "./plannedSessionTypes";
 
-function form(overrides: Partial<Record<string, string>> = {}) {
+function form(overrides: Record<string, unknown> = {}) {
   return {
-    date: "2026-06-12",
-    time: "19:30",
+    scheduledAt: "2026-06-12T19:30",
     title: "Fortsetzung",
     location: "Bei Anna",
     notes: "",
+    characterIds: [] as string[],
     ...overrides,
   };
 }
 
 describe("parsePlannedSession", () => {
-  it("setzt Datum und Uhrzeit zu einem Zeitpunkt zusammen", () => {
+  it("übernimmt den Zeitpunkt aus dem datetime-local-Feld", () => {
     const result = parsePlannedSession(form());
     expect(result).toMatchObject({
       ok: true,
@@ -30,12 +31,31 @@ describe("parsePlannedSession", () => {
   });
 
   it("besteht auf Datum und Uhrzeit", () => {
-    expect(parsePlannedSession(form({ date: "" }))).toMatchObject({
+    expect(parsePlannedSession(form({ scheduledAt: "" }))).toMatchObject({
       ok: false,
     });
-    expect(parsePlannedSession(form({ time: "" }))).toMatchObject({
-      ok: false,
-    });
+    // Nur ein Datum genügt nicht — ohne Uhrzeit lässt sich nicht zusagen.
+    expect(
+      parsePlannedSession(form({ scheduledAt: "2026-06-12" })),
+    ).toMatchObject({ ok: false });
+  });
+
+  it("nimmt auch die Sekunden-Schreibweise mancher Browser", () => {
+    expect(
+      parsePlannedSession(form({ scheduledAt: "2026-06-12T19:30:00" })),
+    ).toMatchObject({ ok: true, scheduledAt: "2026-06-12 19:30" });
+  });
+
+  it("liest die Teilnehmenden als Zahlen und wirft Doppelte weg", () => {
+    expect(
+      parsePlannedSession(form({ characterIds: ["3", "7", "3"] })),
+    ).toMatchObject({ ok: true, characterIds: [3, 7] });
+  });
+
+  it("weist eine unsinnige Teilnehmer-Auswahl ab", () => {
+    expect(
+      parsePlannedSession(form({ characterIds: ["abc"] })),
+    ).toMatchObject({ ok: false });
   });
 
   it("weist einen Titel ab, der zu lang ist", () => {
@@ -70,6 +90,8 @@ function session(rsvps: PlannedSession["rsvps"]): PlannedSession {
     location: "",
     notes: "",
     createdByName: null,
+    characterIds: [],
+    gameSessionId: null,
     rsvps,
   };
 }
@@ -90,5 +112,19 @@ describe("countRsvps / ownResponse", () => {
     // Wer nicht geantwortet hat, steht auf keiner Liste.
     expect(ownResponse(s, 2)).toBeNull();
     expect(ownResponse(s, null)).toBeNull();
+  });
+});
+
+describe("toDateTimeLocal", () => {
+  it("macht aus dem Datenbankwert einen Wert für das Eingabefeld", () => {
+    // „2026-06-12 19:30:00+00" versteht <input type="datetime-local"> nicht;
+    // ohne die Umschrift bliebe das Feld beim Ändern leer.
+    expect(toDateTimeLocal("2026-06-12 19:30:00+00")).toMatch(
+      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/,
+    );
+  });
+
+  it("gibt bei Unsinn nichts zurück statt „Invalid Date“", () => {
+    expect(toDateTimeLocal("kein Datum")).toBe("");
   });
 });

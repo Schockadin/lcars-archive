@@ -19,5 +19,11 @@ export interface PlannedSession {
   location: string;
   notes: string;
   createdByName: string | null;
+  // Die eingeplanten Figuren — beim Nachtragen der gespielten Session sind
+  // genau sie vorausgewählt.
+  characterIds: number[];
+  // Die gespielte Session, zu der dieser Termin geworden ist (null = steht
+  // noch aus). Erledigte Termine fallen von der Startseite weg.
+  gameSessionId: number | null;
   rsvps: PlannedSessionRsvp[];
 }

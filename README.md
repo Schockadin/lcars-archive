@@ -370,7 +370,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     (`metadata->stats` über `parseCharacterStats`, Stress über
     `computeStress`), es gibt also keine zweite Rechenlogik
     (`src/lib/partySheet.ts`). Die Namensspalte bleibt beim seitlichen
-    Scrollen stehen.
+    Scrollen stehen; ein **Klick auf den Namen** öffnet den vollständigen
+    Charakterbogen im Fenster (dasselbe `CharacterSheetPreviewOverlay` wie
+    unter „Meine Charaktere", samt Drucken und PDF — die Export-Route lässt
+    `gm.access` ohnehin an jeden Bogen). Talent-Katalog und Hausregeln lädt die
+    Seite einmal für alle Bögen, nicht je Zeile. Die Seite nutzt die **volle
+    Breite** statt der 1100px-Spalte: bei fünfzehn Wertespalten ist jeder
+    Deckel ein Scrollbalken.
   - `/gm/sessions` — gespielte Sessions eintragen (Datum, Titel, Session-AP,
     Bonus-AP, Notizen) und allen ausgewählten Charakteren in einem Rutsch
     gutschreiben. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
@@ -410,8 +416,21 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   - `/gm/rules` — eigene Regeln der Runde für den Spickzettel (Name,
     Regeltext, Reihenfolge). Hier ist jede Regel löschbar.
 - **Session-Planer** — die Spielleitung kündigt Termine an (`/gm/sessions`,
-  oberhalb der gespielten Sessions), alle Angemeldeten sehen sie auf der
-  Startseite und sagen zu oder ab. Zwei eigene Tabellen (`planned_sessions`,
+  Knopf „Termin ankündigen" über der Terminliste, Formular im Fenster), alle
+  Angemeldeten sehen sie auf der Startseite und sagen zu oder ab. Der Zeitpunkt
+  ist **ein** `datetime-local`-Feld (Datum und Uhrzeit gehören zusammen), und
+  zu jedem Termin gehört eine **Besetzung** (`planned_session_characters`, alle
+  aktiven Figuren vorausgewählt). Ist der Abend gespielt, macht der Knopf
+  **„Session eintragen"** am Termin daraus in einem Schritt die Nachbuchung:
+  ein Fenster fragt AP-Beträge, Notizen und die letzte Korrektur der Besetzung
+  ab, legt die `game_sessions`-Zeile samt Gutschriften an und hängt sie über
+  `planned_sessions.game_session_id` an den Termin. Der Termin bleibt stehen —
+  er trägt die Zusagen —, verschwindet aber von der Startseite; wird die
+  Session zurückgenommen, steht er per `ON DELETE SET NULL` wieder als offen
+  da. Von Hand nachtragen lässt sich weiterhin alles, was ohne Ankündigung
+  gespielt wurde: „Session nachtragen" darunter, zugeklappt.
+
+  Zwei eigene Tabellen (`planned_sessions`,
   `planned_session_rsvps`): `game_sessions` ist die **Nachbuchung** einer
   gespielten Session mitsamt AP — ein Termin hat weder AP noch Gutschriften,
   und eine gespielte Session braucht keine Zusagen mehr. Wer nicht geantwortet
@@ -535,8 +554,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Umfang, Sortierrichtung, Suche, Ereignisart, Beteiligte und Jahr laufen als
   reine Funktionen in `src/lib/timelineTypes.ts` und sind
   dort einzeln getestet.
-- **Ereignisse von Hand eintragen** — „Ereignis eintragen" über dem
-  Zeitstrahl (`ManualEventForm`, für alle mit `content.create`) legt eine
+- **Ereignisse von Hand eintragen** — der Knopf „Ereignis eintragen" über dem
+  Zeitstrahl (`ManualEventForm`, für alle mit `content.create`) öffnet ein
+  Fenster (`ModalOverlay`) und legt eine
   Begebenheit an, die zu **keinem Inhalt** gehört: der Vertrag, der
   unterzeichnet wird, der Regierungswechsel. Bis v1.29.42 verlangte
   `timeline_events` eine Quelle — ein solcher Meilenstein hatte damit kein
@@ -547,6 +567,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   es gibt nichts, worauf sie zeigen könnte. Keine Sichtbarkeitsprüfung: ohne
   Quelle gibt es nichts zu verbergen. Entfernen darf, wer sie eingetragen hat,
   und die Moderation; die Liste unter `/gm/chronologie` zeigt beide Herkünfte.
+  Das Datumsfeld ist ein echter Datumswähler und mit dem **jüngsten Ereignis**
+  der Chronologie vorbelegt (`latestEventDate`): was neu dazukommt, schließt
+  fast immer an das an, was zuletzt geschah — sonst suchte man das Jahrhundert
+  bei jedem Eintrag von Hand.
 - **Ereignisse ableiten (`/gm/chronologie`)** — die Spielleitung lässt je Inhalt
   das Sprachmodell die Begebenheiten nennen, die im Text stecken, aber in keinem
   Feld stehen („drei Tage später …"). Verwendet dieselbe Retrieval-Pipeline wie

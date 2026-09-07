@@ -9,6 +9,8 @@ import {
 } from "@/components/lcars";
 import CharacterWizard from "@/app/user/characters/new/CharacterWizard";
 import CharacterSheetPreviewOverlay from "@/components/character/CharacterSheetPreviewOverlay";
+import ManualEventForm from "@/components/timeline/ManualEventForm";
+import { latestEventDate } from "@/lib/timelineTypes";
 import PersonnelFileView from "@/components/character/PersonnelFileView";
 import RelationGraph from "@/components/character/RelationGraph";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
@@ -345,6 +347,11 @@ export default function DevGalleryPage() {
           Seite braucht die Datenbank und die Sichtbarkeit des Betrachters. */}
       <section id="timeline" className="flex flex-col gap-[8px] mb-[24px]">
         <h2 className="lcars-text">Chronologie</h2>
+        {/* Das Eintragen-Fenster gehört zur Chronologie: auf der echten Seite
+            steht der Knopf darüber, für alle mit `content.create`. Hier mit
+            demselben Datum vorbelegt, das die Attrappen-Ereignisse als
+            jüngstes führen. */}
+        <ManualEventForm defaultDate={latestEventDate(DEMO_TIMELINE)} />
         <TimelineView events={DEMO_TIMELINE} />
       </section>
 

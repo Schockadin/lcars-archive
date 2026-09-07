@@ -8,6 +8,9 @@ import {
   DEPARTMENT_FIELDS,
 } from "@/lib/characterStats";
 import { characterHref } from "@/lib/contentRoutes";
+import { listTalents } from "@/lib/talents";
+import { listCampaignRules } from "@/lib/campaignRules";
+import PartyMemberSheet from "./PartyMemberSheet";
 
 export const metadata: Metadata = {
   title: "Gruppenblatt",
@@ -23,20 +26,30 @@ export const metadata: Metadata = {
 // eine umgebrochene Wertetabelle ist keine mehr.
 export default async function GmPartySheetPage() {
   await requireGM();
-  const party = await getPartySheet();
+  // Talent-Katalog und Hausregeln einmal für alle Bögen — sie sind für jede
+  // Figur dieselben; je Zeile geladen wären es N Abfragen für ein Ergebnis.
+  const [party, talents, campaignRules] = await Promise.all([
+    getPartySheet(),
+    listTalents(),
+    listCampaignRules(),
+  ]);
 
   return (
     <>
       <PageMeta title="Gruppenblatt" section="users" />
-      <article className="mb-[10px] lcars-wide-column">
+      {/* Volle Breite statt der 1100px-Spalte: die Wertetabelle hat so
+          viele Spalten, dass jede gedeckelte Spalte sie in den Scrollbalken
+          drängt. */}
+      <article className="mb-[10px] w-full">
         <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
         <h1>Gruppenblatt</h1>
 
         <div className="lcars-text flex flex-col gap-[16px]">
           <p className="text-lcars-ink-dim text-[13px]">
             Die Werte aller aktiven, zugewiesenen Charaktere nebeneinander.
-            Talente und Schwerpunkte stehen mit Namen; den vollen Regeltext
-            zeigt der jeweilige Charakterbogen.
+            Talente und Schwerpunkte stehen mit Namen; ein Klick auf den Namen
+            öffnet den vollständigen Charakterbogen samt Regeltext, Spickzettel
+            und Biografie.
           </p>
 
           {party.length === 0 ? (
@@ -74,13 +87,30 @@ export default async function GmPartySheetPage() {
                   {party.map((member) => (
                     <tr key={member.id}>
                       <th scope="row">
-                        <Link href={characterHref(member.slug)}>
-                          {member.name}
-                        </Link>
+                        <PartyMemberSheet
+                          characterId={member.id}
+                          name={member.name}
+                          input={{
+                            characterName: member.name,
+                            rank: member.rank,
+                            species: member.species,
+                            portrait: member.portrait,
+                            stats: member.stats,
+                            bioHtml: member.bioHtml,
+                            talents,
+                            campaignRules,
+                          }}
+                        />
                         <span className="party-sheet-player">
                           {member.rank ? `${member.rank} · ` : ""}
                           {member.playerName}
                         </span>
+                        <Link
+                          href={characterHref(member.slug)}
+                          className="party-sheet-link"
+                        >
+                          Zur Akte
+                        </Link>
                       </th>
                       {ATTRIBUTE_FIELDS.map((f) => (
                         <td key={f.key}>{member.stats.attributes[f.key] ?? "–"}</td>

@@ -344,3 +344,42 @@ test.describe("Chronologie", () => {
     await expect(link).toHaveAttribute("href", /#timeline-1$/);
   });
 });
+
+// Das Eintragen von Hand steht seit v1.29.46 in einem Fenster (ModalOverlay)
+// statt in einem aufklappbaren Feld — mit einem echten Datumswähler, der auf
+// dem jüngsten Ereignis der Chronologie steht.
+test.describe("Ereignis eintragen", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto("/dev-gallery");
+    await expect(page.locator("#timeline .timeline-event").first()).toBeVisible();
+  });
+
+  test("öffnet das Formular als Fenster, mit dem jüngsten Datum vorbelegt", async ({
+    page,
+  }) => {
+    // Zugeklappt gibt es kein Formular, nur den Knopf.
+    await expect(page.locator("#manual-event-date")).toHaveCount(0);
+
+    await page
+      .locator("#timeline")
+      .getByRole("button", { name: "Ereignis eintragen" })
+      .click();
+
+    const dialog = page.getByRole("dialog", { name: "Ereignis eintragen" });
+    await expect(dialog).toBeVisible();
+    const datum = page.locator("#manual-event-date");
+    await expect(datum).toHaveAttribute("type", "date");
+    // Das jüngste Attrappen-Ereignis der Galerie.
+    await expect(datum).toHaveValue("2401-06-12");
+  });
+
+  test("schließt das Fenster mit Escape", async ({ page }) => {
+    await page
+      .locator("#timeline")
+      .getByRole("button", { name: "Ereignis eintragen" })
+      .click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+  });
+});

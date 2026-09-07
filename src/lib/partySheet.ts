@@ -20,6 +20,11 @@ export interface PartyMember {
   name: string;
   playerName: string;
   rank: string | null;
+  // Für die Bogen-Vorschau, die ein Klick auf den Namen öffnet — dieselben
+  // Angaben, die auch auf der Charakterseite in den Bogen gehen.
+  species: string | null;
+  portrait: string | null;
+  bioHtml: string | null;
   stats: CharacterStats;
   // Aus Fitness + Talent-Bonus gerechnet (computeStress), nicht gepflegt.
   maxStress: number | null;
@@ -38,11 +43,29 @@ export async function getPartySheet(): Promise<PartyMember[]> {
       name: string;
       playerName: string;
       rank: string | null;
+      species: string | null;
+      portrait: string | null;
+      bioHtml: string | null;
       metadata: { stats?: unknown; rank?: string } | null;
     }[]
   >`
     SELECT c.id, c.slug, c.name, u.name AS "playerName",
-           c.metadata->>'rank' AS rank,
+           -- Rang und Spezies stehen bei App-Charakteren in metadata, bei
+           -- importierten in der gleichnamigen Spalte (siehe
+           -- getCharacterStatsForGm) — erst metadata, dann die Spalte.
+           COALESCE(NULLIF(c.metadata ->> 'rank', ''), c.rank) AS rank,
+           COALESCE(
+             NULLIF(
+               (SELECT string_agg(value, ', ')
+                FROM jsonb_array_elements_text(
+                  CASE WHEN jsonb_typeof(c.metadata -> 'species') = 'array'
+                       THEN c.metadata -> 'species' ELSE '[]'::jsonb END
+                ) AS value),
+               ''
+             ),
+             c.species
+           ) AS species,
+           c.portrait, c.bio AS "bioHtml",
            c.metadata
     FROM characters c
     JOIN users u ON u.id = c.player_id
@@ -60,6 +83,9 @@ export async function getPartySheet(): Promise<PartyMember[]> {
       name: row.name,
       playerName: row.playerName,
       rank: row.rank,
+      species: row.species,
+      portrait: row.portrait,
+      bioHtml: row.bioHtml,
       stats,
       maxStress: computeStress(stats),
       // Ein Talent kann umbenannt gespeichert sein („Eigener Name (Original)",

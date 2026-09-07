@@ -3,7 +3,7 @@ import PageMeta from "@/components/PageMeta";
 import PageSkeleton from "@/app/_shared/PageSkeleton";
 import TimelineView from "@/components/timeline/TimelineView";
 import { getTimeline } from "@/lib/timeline";
-import { categoryVisual } from "@/lib/timelineTypes";
+import { categoryVisual, latestEventDate } from "@/lib/timelineTypes";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import ManualEventForm from "@/components/timeline/ManualEventForm";
 
@@ -51,7 +51,7 @@ export default async function CategoryTimeline({
           (TimelineView rendert .lcars-wide-column). */}
       {canAddEvent && (
         <div className="lcars-wide-column">
-          <ManualEventForm />
+          <ManualEventForm defaultDate={latestEventDate(events)} />
         </div>
       )}
       <TimelineView events={events} initialCategory={category} syncUrl />

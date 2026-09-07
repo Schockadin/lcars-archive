@@ -142,6 +142,19 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Hell/Dunkel frei wählbar — plus eigene Grundfarben",
     items: [
       {
+        text: "Das Gruppenblatt zeigt jetzt auf Klick den ganzen Bogen: ein Klick auf den Namen öffnet den vollständigen Charakterbogen der Figur im Fenster — Personalakte, Spickzettel, Regeln und Biografie, samt Drucken und PDF. Die Tabelle nutzt dabei die volle Bildschirmbreite.",
+        category: "spielleitung",
+      },
+      {
+        text: "Aus einem angekündigten Spieltermin wird die gespielte Session in einem Schritt: Der Knopf „Session eintragen“ am Termin öffnet ein Fenster für AP und Notizen, übernimmt Datum, Titel und die eingeplanten Figuren und bucht die AP. Zum Termin gehört jetzt auch eine Besetzung (alle aktiven Figuren vorausgewählt), der Zeitpunkt wird mit einem Datums- und Uhrzeitwähler gesetzt, und „Termin ankündigen“ ist ein Knopf, der das Formular als Fenster öffnet. Eingetragene Termine verschwinden von der Startseite — ihre Zusagen bleiben erhalten. Was ohne Ankündigung gespielt wurde, trägt man weiter von Hand nach („Session nachtragen“, zugeklappt).",
+        category: "spielleitung",
+      },
+      {
+        text: "„Ereignis eintragen“ in der Chronologie ist jetzt ein Knopf, der ein Fenster öffnet, und das Datum ist ein Kalenderfeld, das mit dem jüngsten Ereignis der Chronologie vorbelegt ist — man tippt nur noch, was sich geändert hat.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
         text: "Neu für die Spielleitung unter „Leitung → Gruppenblatt“: alle Spieler-Charaktere in einer einzigen Tabelle — Attribute, Disziplinen, Schutz, Stress und Entschlossenheit nebeneinander, dazu je Figur die Talente, Schwerpunkte und Werte. So sieht man am Tisch auf einen Blick, wer die beste Probe hat, ohne jede Charakterseite einzeln zu öffnen.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
