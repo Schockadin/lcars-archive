@@ -8,6 +8,7 @@ export const TYPE_COLOR: Record<SearchResultType, string> = {
   mission: "var(--lcars-primary)",
   log: "var(--lcars-secondary)",
   archive: "var(--lcars-ink-data)",
+  dialogue_message: "var(--lcars-secondary)",
 };
 
 // Plural-Label für den Typ-Filter auf /search.
@@ -16,4 +17,5 @@ export const TYPE_FILTER_LABEL: Record<SearchResultType, string> = {
   mission: "Missionen",
   log: "Logs",
   archive: "Datenbank",
+  dialogue_message: "Gesagtes",
 };

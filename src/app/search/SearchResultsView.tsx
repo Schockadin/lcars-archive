@@ -11,6 +11,7 @@ const TYPE_ORDER: SearchResultType[] = [
   "mission",
   "log",
   "archive",
+  "dialogue_message",
 ];
 
 // Ergebnisliste der /search-Seite: Filter nach Treffertyp. Reihenfolge
@@ -34,6 +35,7 @@ export default function SearchResultsView({
       mission: 0,
       log: 0,
       archive: 0,
+      dialogue_message: 0,
     };
     for (const r of results) c[r.type]++;
     return c;

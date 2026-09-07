@@ -872,6 +872,18 @@ ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS search_vector tsvector
   ) STORED;
 CREATE INDEX IF NOT EXISTS idx_archive_fts ON archive_entries USING GIN (search_vector);
 
+-- Gesprochenes ist auch Inhalt: was in einem Gespräch gesagt wird, lag bis
+-- v1.29.41 außerhalb der Suche — gefunden wurde nur der Eintrag drumherum,
+-- dessen Text bei Gesprächen meist leer ist (der Inhalt lebt in
+-- dialogue_messages). Kein title_vector: eine Nachricht hat keinen Titel, sie
+-- taucht deshalb nur in der Volltextsuche auf, nicht im Header-Dropdown.
+ALTER TABLE dialogue_messages ADD COLUMN IF NOT EXISTS search_vector tsvector
+  GENERATED ALWAYS AS (
+    to_tsvector('german', coalesce(source_md, content, ''))
+  ) STORED;
+CREATE INDEX IF NOT EXISTS idx_dialogue_messages_fts
+  ON dialogue_messages USING GIN (search_vector);
+
 -- Titel-only-Vektor: die Live-Suche (Header-Dropdown) vergleicht bewusst NUR
 -- Titel/Namen — mit dem vollen search_vector würde sie plötzlich auch
 -- Fließtext treffen und ein anderes Verhalten zeigen als bisher. Eigene

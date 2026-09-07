@@ -526,6 +526,17 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `src/lib/onboarding.ts` holt die Tatsachen). Dieselbe Liste erscheint auf dem
   Dashboard (`OnboardingSection`) und verschwindet dort, sobald alles erledigt
   ist; `/willkommen` bleibt als Übersicht erreichbar.
+- **Gesagtes ist auffindbar** — die Volltextsuche kennt seit v1.29.41 einen
+  fünften Treffertyp: einzelne **Gesprächs-Nachrichten**
+  (`dialogue_messages.search_vector`, eigener GIN-Index). Vorher fand die
+  Suche nur den Eintrag drumherum, dessen Text bei Gesprächen meist leer ist —
+  was am Tisch gesagt wurde, war damit unauffindbar. Je Gespräch erscheint
+  höchstens eine Nachricht (`DISTINCT ON`, beste zuerst), sonst füllte ein
+  langer Dialog die ganze Liste; der Treffer nennt Sprecher und Gespräch und
+  springt per Text-Fragment an die Stelle. Die Sichtbarkeit hängt am
+  zugehörigen Eintrag (eine Nachricht erbt sie), gelöschte Nachrichten sind
+  draußen. **Kein** `title_vector`: eine Nachricht hat keinen Titel und taucht
+  deshalb nicht im Titel-Dropdown des Headers auf, nur in der Volltextsuche.
 - **Missionsakte als PDF** — `/api/export/mission-book/[missionSlug]` (Knopf
   auf der Mission-Detailseite, nur für Angemeldete) packt **eine** Mission in
   eine Datei: Titelblatt mit Zeitraum, Status und Beteiligten, ein

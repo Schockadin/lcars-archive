@@ -249,3 +249,11 @@ ALTER TABLE timeline_events ALTER COLUMN href SET DEFAULT '';
 -- Spielleitung die Ableitung zweimal laufen lässt.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_timeline_events_unique
   ON timeline_events(source_type, source_slug, event_date, title);
+
+-- v1.29.41 — Gesprächsinhalte durchsuchbar (siehe schema.sql).
+ALTER TABLE dialogue_messages ADD COLUMN IF NOT EXISTS search_vector tsvector
+  GENERATED ALWAYS AS (
+    to_tsvector('german', coalesce(source_md, content, ''))
+  ) STORED;
+CREATE INDEX IF NOT EXISTS idx_dialogue_messages_fts
+  ON dialogue_messages USING GIN (search_vector);

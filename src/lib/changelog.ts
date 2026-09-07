@@ -234,6 +234,10 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "chronologie",
       },
       {
+        text: "Die Suche findet jetzt auch, was in Gesprächen gesagt wurde. Bisher fand sie nur das Gespräch als Ganzes — der eigentliche Wortwechsel blieb außen vor. Ein Treffer nennt Sprecher und Gespräch, zeigt den Textausschnitt und springt beim Öffnen an die Stelle. Über den Filter „Gesagtes“ lässt sich die Trefferliste darauf einschränken.",
+        category: "inhalte",
+      },
+      {
         text: "Die Aktionen einer Inhaltsseite (Folgen, Merken, Teilen, Bilder, Bearbeiten, Owner) stehen jetzt in einem zugeklappten Feld am Ende des Eintrags statt zwischen Titel und Text. Der Text beginnt damit oben; der Lesemodus-Schalter bleibt, wo er war.",
         category: "darstellung",
       },

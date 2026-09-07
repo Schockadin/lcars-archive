@@ -7,6 +7,7 @@ import type { SearchResult, SearchResultType } from "@/types/search";
 import type { FollowTargetType } from "@/lib/follows";
 import {
   archiveHref,
+  dialogueHref,
   characterHref,
   missionHref,
   missionLogHref,
@@ -45,11 +46,27 @@ interface ArchiveRow {
   source_md?: string | null;
 }
 
+// Eine Nachricht aus einem Gespräch. Der Sprecher steht in einer anderen
+// Tabelle (Charakter oder NPC-Eintrag), deshalb kommt er über LEFT JOINs
+// dazu statt aus der Zeile selbst.
+interface DialogueMessageRow {
+  entry_slug: string;
+  entry_title: string;
+  setting: string | null;
+  dialogue_open: boolean;
+  speaker: string | null;
+  content: string;
+  source_md: string | null;
+}
+
 interface RawRows {
   chars: CharacterRow[];
   missions: MissionRow[];
   logs: LogRow[];
   archive: ArchiveRow[];
+  // Nur bei der Volltextsuche gefüllt: eine Nachricht hat keinen Titel und
+  // gehört deshalb nicht in die Titel-Live-Suche des Headers.
+  dialogueMessages: DialogueMessageRow[];
 }
 
 // Führt die 4 Such-Queries parallel aus. `includeContent` steuert sowohl die
@@ -98,7 +115,7 @@ async function runSearchQueries(
   const vec = (col: string) =>
     includeContent ? sql`${sql(col)}.search_vector` : sql`${sql(col)}.title_vector`;
 
-  const [chars, missions, logs, archive] = await Promise.all([
+  const [chars, missions, logs, archive, dialogueMessages] = await Promise.all([
     sql<CharacterRow[]>`
       SELECT name, slug
       FROM characters
@@ -155,9 +172,40 @@ async function runSearchQueries(
                title ASC
       LIMIT ${limit}
     `,
+    // Was in Gesprächen gesagt wird. DISTINCT ON je Gespräch: sonst füllte
+    // ein einziger langer Dialog mit zwanzig Treffern die ganze Liste — die
+    // beste Nachricht steht für das Gespräch.
+    //
+    // Anders als die vier Zweige darüber liegt der Sichtbarkeits-Filter am
+    // ZUGEHÖRIGEN Eintrag, nicht an der Zeile selbst: eine Nachricht erbt die
+    // Sichtbarkeit ihres Gesprächs. Gelöschte Nachrichten (deleted_at) sind
+    // draußen, offene Gespräche bleiben drin — anders als beim Eintrag
+    // selbst, wo sie ausgeschlossen sind, weil dort der leere Rahmen ohne
+    // Inhalt gefunden würde. Hier ist der Inhalt ja gerade der Treffer.
+    includeContent
+      ? sql<DialogueMessageRow[]>`
+          SELECT DISTINCT ON (dm.archive_entry_id)
+                 ae.slug AS entry_slug, ae.title AS entry_title,
+                 ae.metadata->>'setting' AS setting, ae.dialogue_open,
+                 coalesce(c.name, npc.title) AS speaker,
+                 dm.content, dm.source_md
+          FROM dialogue_messages dm
+          JOIN archive_entries ae ON ae.id = dm.archive_entry_id
+          LEFT JOIN characters c ON c.id = dm.character_id
+          LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
+          WHERE (dm.content ILIKE ${like} OR dm.search_vector @@ ${ts})
+            AND dm.deleted_at IS NULL
+            AND ae.visibility = 'public'
+            AND ae.deleted_at IS NULL AND ae.is_draft = false
+          ORDER BY dm.archive_entry_id,
+                   ts_rank_cd(dm.search_vector, ${ts}) DESC,
+                   dm.created_at ASC
+          LIMIT ${limit}
+        `
+      : Promise.resolve([] as DialogueMessageRow[]),
   ]);
 
-  return { chars, missions, logs, archive };
+  return { chars, missions, logs, archive, dialogueMessages };
 }
 
 function matchesQuery(text: string, q: string): boolean {
@@ -288,7 +336,7 @@ function mapResults(
   q: string,
   opts: { includeContent: boolean },
 ): SearchResult[] {
-  const { chars, missions, logs, archive } = rows;
+  const { chars, missions, logs, archive, dialogueMessages } = rows;
 
   const characterResults: SearchResult[] = chars.map((c) => ({
     type: "character" as const,
@@ -350,11 +398,36 @@ function mapResults(
     };
   });
 
+  // Eine gefundene Nachricht führt in ihr Gespräch — offene unter
+  // /dialogues, abgeschlossene unter /archive (siehe contentRoutes.ts). Der
+  // Textausschnitt ist hier IMMER gesetzt: die Nachricht hat keinen Titel,
+  // ohne Ausschnitt stünde nur der Name des Gesprächs da und man wüsste
+  // nicht, warum es getroffen hat.
+  const dialogueResults: SearchResult[] = dialogueMessages.map((m) => {
+    const plain = plainTextFor(m);
+    const hit = findSnippetMatch(plain, q);
+    const href = m.dialogue_open
+      ? dialogueHref(m.entry_slug)
+      : archiveHref(m.entry_slug);
+    const gespraech =
+      m.entry_title?.trim() ||
+      (m.setting ? `Gespräch auf ${m.setting}` : "Gespräch");
+    return {
+      type: "dialogue_message" as const,
+      label: m.speaker ? `${m.speaker} in \u201e${gespraech}\u201c` : gespraech,
+      sublabel: "Gespräch",
+      href: `${href}${hit ? `#:~:text=${toTextFragment(hit.text)}` : ""}`,
+      slug: m.entry_slug,
+      snippet: buildSnippet(plain, q),
+    };
+  });
+
   return [
     ...characterResults,
     ...missionResults,
     ...logResults,
     ...archiveResults,
+    ...dialogueResults,
   ];
 }
 
