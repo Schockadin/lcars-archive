@@ -94,8 +94,11 @@ interface InferredRow {
   title: string;
   detail: string | null;
   category: string;
-  source_type: TimelineSourceType;
-  source_slug: string;
+  // Leer bei einem von Hand eingetragenen Ereignis (origin 'manual'): es
+  // gehört zu keinem Inhalt.
+  source_type: TimelineSourceType | null;
+  source_slug: string | null;
+  origin: "inferred" | "manual";
 }
 
 // Kurzer Anriss für die Karte. Markdown-Auszeichnungen fallen weg, damit auf
@@ -201,7 +204,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     `,
     sql<InferredRow[]>`
       SELECT id, event_date::text AS event_date, title, detail, category,
-             source_type, source_slug
+             source_type, source_slug, origin
       FROM timeline_events
     `,
   ]);
@@ -449,6 +452,32 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
   // Netz für Zeilen, die vor dieser Regel entstanden sind oder deren Quelle
   // ihr Datum seither bekommen hat.
   for (const row of inferred) {
+    // Von Hand eingetragene Ereignisse hängen an keinem Inhalt: keine
+    // Sichtbarkeitsprüfung (es gibt keine Quelle, die etwas verbergen
+    // könnte), keine Dopplungs-Prüfung (sie stehen für sich) und kein Link.
+    if (row.origin === "manual") {
+      events.push({
+        id: `manual:${row.id}`,
+        date: row.event_date,
+        title: row.title,
+        detail: row.detail,
+        category: row.category,
+        origin: "manual",
+        // sourceType trägt die Karte als „Quelle"; ein freies Ereignis hat
+        // keine, nimmt aber den Platz im Typ ein — archive_entry ist die
+        // neutralste der vier und wird nirgends verlinkt, weil href null ist.
+        sourceType: "archive_entry",
+        sourceTitle: row.title,
+        href: null,
+        people: [],
+      });
+      continue;
+    }
+
+    // Ein abgeleitetes Ereignis OHNE Quelle kann es nicht geben (die
+    // Ableitung läuft je Inhalt) — die Spalten sind nur wegen der freien
+    // Ereignisse nullable.
+    if (!row.source_type || !row.source_slug) continue;
     const source = visibleSources.get(`${row.source_type}:${row.source_slug}`);
     if (!source) continue;
     if (

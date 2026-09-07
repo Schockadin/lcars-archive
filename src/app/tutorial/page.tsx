@@ -159,6 +159,15 @@ export default function TutorialPage() {
                 diese Stelle im Bericht.
               </p>
               <p>
+                Was zur Kampagne gehört, aber in keinem Eintrag steht, trägst
+                du <strong>von Hand</strong> ein: Über dem Zeitstrahl steht{" "}
+                <strong>„Ereignis eintragen“</strong> — Datum, Titel,
+                Ereignisart, auf Wunsch ein, zwei Sätze dazu. Solche
+                Ereignisse tragen den Hinweis <em>von Hand eingetragen</em>,
+                sind nicht verlinkt (es gibt ja keinen Eintrag dahinter) und
+                lassen sich von dir oder der Spielleitung wieder entfernen.
+              </p>
+              <p>
                 Drittens kann die <strong>Spielleitung Ereignisse ableiten
                 lassen</strong>: das Sprachmodell liest einen Bericht und nennt
                 die Begebenheiten, die darin stecken, aber in keinem Feld

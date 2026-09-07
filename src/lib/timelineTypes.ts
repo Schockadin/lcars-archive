@@ -16,12 +16,15 @@ export { fmtDate };
 //   marker   — aus einem <!-- timeline: … -->-Marker im Fließtext
 //   inferred — vom Sprachmodell aus dem Text abgeleitet (siehe
 //              src/lib/timelineInference.ts), von der Spielleitung übernommen
-export type TimelineOrigin = "metadata" | "marker" | "inferred";
+//   manual   — von Hand eingetragen, ohne zugehörigen Inhalt (ein
+//              Kampagnen-Meilenstein, der in keinem Eintrag steht)
+export type TimelineOrigin = "metadata" | "marker" | "inferred" | "manual";
 
 export const ORIGIN_LABELS: Record<TimelineOrigin, string> = {
   metadata: "aus den Angaben des Eintrags",
   marker: "im Text markiert",
   inferred: "aus dem Text abgeleitet",
+  manual: "von Hand eingetragen",
 };
 
 // Die Inhaltsart, aus der das Ereignis stammt — dieselben vier wie überall
@@ -92,7 +95,9 @@ export interface TimelineEvent {
   origin: TimelineOrigin;
   sourceType: TimelineSourceType;
   sourceTitle: string;
-  href: string;
+  // Wohin die Karte führt — null bei einem von Hand eingetragenen Ereignis:
+  // es hat keinen Inhalt, auf den zu zeigen wäre (origin "manual").
+  href: string | null;
   // Nur an den beiden gepflegten Missions-Ereignissen: ob dies der Beginn
   // oder der Abschluss des Einsatzes ist. Die Standardansicht der Chronologie
   // zeigt genau die Starts (siehe TIMELINE_SCOPES) — sie sind das, was die
@@ -272,7 +277,7 @@ export function isTimelineCategory(value: string): value is TimelineCategory {
 export function missionEndDates(events: TimelineEvent[]): Map<string, string> {
   const ends = new Map<string, string>();
   for (const event of events) {
-    if (event.sourceType === "mission" && event.phase === "end") {
+    if (event.sourceType === "mission" && event.phase === "end" && event.href) {
       ends.set(event.href, event.date);
     }
   }

@@ -872,6 +872,16 @@ ALTER TABLE archive_entries ADD COLUMN IF NOT EXISTS search_vector tsvector
   ) STORED;
 CREATE INDEX IF NOT EXISTS idx_archive_fts ON archive_entries USING GIN (search_vector);
 
+-- Ein Ereignis ohne eigenen Inhalt: source_type/source_slug dürfen leer sein.
+-- Bis v1.29.42 hing JEDES Ereignis an einer Mission, einem Logbuch, einem
+-- Eintrag oder einer Figur — ein reiner Kampagnen-Meilenstein („Der Vertrag
+-- von Algeron wird unterzeichnet") hatte damit kein Zuhause, außer man legte
+-- eigens einen Datenbank-Eintrag dafür an. origin unterscheidet die drei
+-- Herkünfte: 'inferred' (vom Modell abgeleitet), 'manual' (von Hand
+-- eingetragen).
+ALTER TABLE timeline_events ALTER COLUMN source_type DROP NOT NULL;
+ALTER TABLE timeline_events ALTER COLUMN source_slug DROP NOT NULL;
+
 -- Gesprochenes ist auch Inhalt: was in einem Gespräch gesagt wird, lag bis
 -- v1.29.41 außerhalb der Suche — gefunden wurde nur der Eintrag drumherum,
 -- dessen Text bei Gesprächen meist leer ist (der Inhalt lebt in

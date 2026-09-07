@@ -166,8 +166,13 @@ function EventRowForm({ event }: { event: StoredInferredEvent }) {
             <span className="text-lcars-ink text-[13px]">{event.detail}</span>
           )}
           <span className="text-lcars-ink-dim text-[12px]">
-            {visual.label} · {SOURCE_TYPE_LABELS[event.sourceType]}{" "}
-            {event.sourceSlug}
+            {visual.label} ·{" "}
+            {/* Ein von Hand eingetragenes Ereignis hat keine Quelle (siehe
+                timelineManualEvents.ts) — statt eines leeren Feldes steht
+                dort, woher es kommt. */}
+            {event.sourceType
+              ? `${SOURCE_TYPE_LABELS[event.sourceType]} ${event.sourceSlug ?? ""}`
+              : "von Hand eingetragen"}
             {/* Die Sicherheit ist ein Hinweis des Modells, kein Maß — sie
                 steht deshalb als Nebentext und nicht als Balken. */}
             {event.confidence !== null &&

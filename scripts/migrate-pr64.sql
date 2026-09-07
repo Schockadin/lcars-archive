@@ -257,3 +257,8 @@ ALTER TABLE dialogue_messages ADD COLUMN IF NOT EXISTS search_vector tsvector
   ) STORED;
 CREATE INDEX IF NOT EXISTS idx_dialogue_messages_fts
   ON dialogue_messages USING GIN (search_vector);
+
+-- v1.29.42 — freie Chronologie-Ereignisse ohne eigenen Inhalt (siehe
+-- schema.sql).
+ALTER TABLE timeline_events ALTER COLUMN source_type DROP NOT NULL;
+ALTER TABLE timeline_events ALTER COLUMN source_slug DROP NOT NULL;

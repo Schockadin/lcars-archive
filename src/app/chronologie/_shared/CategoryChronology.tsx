@@ -4,7 +4,8 @@ import PageSkeleton from "@/app/_shared/PageSkeleton";
 import TimelineView from "@/components/timeline/TimelineView";
 import { getTimeline } from "@/lib/timeline";
 import { categoryVisual } from "@/lib/timelineTypes";
-import { getViewer } from "@/lib/visibility";
+import { getViewer, viewerHasPermission } from "@/lib/visibility";
+import ManualEventForm from "@/components/timeline/ManualEventForm";
 
 // Das Gerüst und der Datenzugriff der Chronologie — geteilt von den drei
 // Seiten, die sie zeigen: /chronologie, /chronologie/mission und
@@ -41,7 +42,19 @@ export default async function CategoryTimeline({
 }) {
   const viewer = await getViewer();
   const events = await getTimeline(viewer);
+  // Wer eigene Inhalte anlegen darf, darf auch ein Ereignis eintragen, das zu
+  // keinem Inhalt gehört (siehe timelineManualEvents.ts).
+  const canAddEvent = viewerHasPermission(viewer, "content.create");
   return (
-    <TimelineView events={events} initialCategory={category} syncUrl />
+    <>
+      {/* Dieselbe Spaltenbreite wie der Zeitstrahl darunter
+          (TimelineView rendert .lcars-wide-column). */}
+      {canAddEvent && (
+        <div className="lcars-wide-column">
+          <ManualEventForm />
+        </div>
+      )}
+      <TimelineView events={events} initialCategory={category} syncUrl />
+    </>
   );
 }

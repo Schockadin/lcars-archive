@@ -234,6 +234,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "chronologie",
       },
       {
+        text: "Du kannst jetzt Ereignisse direkt in die Chronologie eintragen, auch wenn es dazu keinen Eintrag gibt — einen Vertragsschluss, einen Regierungswechsel, eine Naturkatastrophe. Über dem Zeitstrahl steht dafür „Ereignis eintragen“; nötig sind Datum, Titel und Ereignisart. Solche Ereignisse tragen den Hinweis „von Hand eingetragen“ und lassen sich von dir oder der Spielleitung wieder entfernen.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
         text: "Die Suche findet jetzt auch, was in Gesprächen gesagt wurde. Bisher fand sie nur das Gespräch als Ganzes — der eigentliche Wortwechsel blieb außen vor. Ein Treffer nennt Sprecher und Gespräch, zeigt den Textausschnitt und springt beim Öffnen an die Stelle. Über den Filter „Gesagtes“ lässt sich die Trefferliste darauf einschränken.",
         category: "inhalte",
       },

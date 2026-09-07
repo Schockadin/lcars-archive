@@ -280,3 +280,54 @@
     display: none;
   }
 }
+
+/* ── „Ereignis eintragen" ─────────────────────────────────────────────
+   Zugeklapptes Formular über dem Zeitstrahl (ManualEventForm.tsx). Für
+   Begebenheiten, die zu keinem Eintrag gehören — dieselbe Form wie das
+   Aktionen-Feld der Inhaltsseiten. */
+.timeline-newevent {
+  margin-bottom: 16px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 4px 14px 14px 4px;
+  padding: 8px 14px;
+  background: var(--lcars-surface);
+}
+.timeline-newevent-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-family: var(--lcars-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-dim);
+  list-style: none;
+}
+.timeline-newevent-head::-webkit-details-marker {
+  display: none;
+}
+.timeline-newevent-head::before {
+  content: "\25B8";
+  display: inline-block;
+  transition: transform 120ms;
+  color: var(--lcars-primary);
+}
+.timeline-newevent[open] > .timeline-newevent-head::before {
+  transform: rotate(90deg);
+}
+.timeline-newevent-head:hover {
+  color: var(--lcars-ink);
+}
+.timeline-newevent-body {
+  padding-top: 10px;
+}
+/* Datum und Art nebeneinander, solange Platz ist. */
+.timeline-newevent-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.timeline-newevent-row > * {
+  flex: 1 1 180px;
+}

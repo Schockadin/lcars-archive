@@ -229,8 +229,13 @@ export interface StoredInferredEvent {
   detail: string | null;
   category: string;
   confidence: number | null;
-  sourceType: TimelineSourceType;
-  sourceSlug: string;
+  // Leer bei einem von Hand eingetragenen Ereignis (origin "manual", siehe
+  // timelineManualEvents.ts): es gehört zu keinem Inhalt. Die Liste der
+  // Spielleitung zeigt beide Herkünfte, damit sich auch die freien
+  // Ereignisse dort wieder entfernen lassen.
+  sourceType: TimelineSourceType | null;
+  sourceSlug: string | null;
+  origin: "inferred" | "manual";
   createdAt: string;
 }
 
@@ -273,13 +278,15 @@ export async function listInferredEvents(): Promise<StoredInferredEvent[]> {
       detail: string | null;
       category: string;
       confidence: number | null;
-      source_type: TimelineSourceType;
-      source_slug: string;
+      source_type: TimelineSourceType | null;
+      source_slug: string | null;
+      origin: "inferred" | "manual";
       created_at: string;
     }[]
   >`
     SELECT id, event_date::text AS event_date, title, detail, category,
-           confidence, source_type, source_slug, created_at::text AS created_at
+           confidence, source_type, source_slug, origin,
+           created_at::text AS created_at
     FROM timeline_events
     ORDER BY event_date DESC, id DESC
   `;
@@ -292,6 +299,7 @@ export async function listInferredEvents(): Promise<StoredInferredEvent[]> {
     confidence: row.confidence,
     sourceType: row.source_type,
     sourceSlug: row.source_slug,
+    origin: row.origin,
     createdAt: row.created_at,
   }));
 }

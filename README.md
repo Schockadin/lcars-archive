@@ -506,6 +506,18 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Umfang, Sortierrichtung, Suche, Ereignisart, Beteiligte und Jahr laufen als
   reine Funktionen in `src/lib/timelineTypes.ts` und sind
   dort einzeln getestet.
+- **Ereignisse von Hand eintragen** — „Ereignis eintragen" über dem
+  Zeitstrahl (`ManualEventForm`, für alle mit `content.create`) legt eine
+  Begebenheit an, die zu **keinem Inhalt** gehört: der Vertrag, der
+  unterzeichnet wird, der Regierungswechsel. Bis v1.29.42 verlangte
+  `timeline_events` eine Quelle — ein solcher Meilenstein hatte damit kein
+  Zuhause, außer man legte eigens einen Datenbank-Eintrag dafür an.
+  `source_type`/`source_slug` sind jetzt nullable, `origin` unterscheidet
+  `inferred` (vom Modell) von `manual` (von Hand). Die Karte trägt das
+  Etikett „von Hand eingetragen" und ist **nicht verlinkt** (`href` null) —
+  es gibt nichts, worauf sie zeigen könnte. Keine Sichtbarkeitsprüfung: ohne
+  Quelle gibt es nichts zu verbergen. Entfernen darf, wer sie eingetragen hat,
+  und die Moderation; die Liste unter `/gm/chronologie` zeigt beide Herkünfte.
 - **Ereignisse ableiten (`/gm/chronologie`)** — die Spielleitung lässt je Inhalt
   das Sprachmodell die Begebenheiten nennen, die im Text stecken, aber in keinem
   Feld stehen („drei Tage später …"). Verwendet dieselbe Retrieval-Pipeline wie

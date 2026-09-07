@@ -317,7 +317,9 @@ export default function TimelineView({
                     <EventRow
                       event={event}
                       endDate={
-                        scope === "missions" ? missionEnds.get(event.href) : undefined
+                        scope === "missions" && event.href
+                          ? missionEnds.get(event.href)
+                          : undefined
                       }
                     />
                   </Fragment>
@@ -372,13 +374,19 @@ function EventRow({
         <div className="timeline-card-body">
           <div className="timeline-card-head">
             <span className="timeline-tag">{visual.label}</span>
-            <Link
-              href={event.href}
-              className="timeline-card-title"
-              aria-label={`${event.title} — ${visual.label}, ${fmtDate(event.date)}`}
-            >
-              {event.title}
-            </Link>
+            {/* Ein von Hand eingetragenes Ereignis hat keinen Inhalt, auf
+                den zu zeigen wäre — dann steht der Titel als reiner Text. */}
+            {event.href ? (
+              <Link
+                href={event.href}
+                className="timeline-card-title"
+                aria-label={`${event.title} — ${visual.label}, ${fmtDate(event.date)}`}
+              >
+                {event.title}
+              </Link>
+            ) : (
+              <span className="timeline-card-title">{event.title}</span>
+            )}
             {/* Der Herkunftshinweis steht nur da, wo er etwas einschränkt:
                 dass ein Ereignis aus den gepflegten Angaben stammt, ist der
                 Normalfall und braucht keine Marke. */}
