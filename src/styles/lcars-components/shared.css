@@ -1309,3 +1309,65 @@
   font-size: 12px;
   color: var(--lcars-ink-dim);
 }
+
+/* ── Gruppenblatt (/gm/gruppe) ───────────────────────────────────────
+   Die Werte aller Charaktere nebeneinander. Waagerecht scrollbar statt
+   umbrechend: eine umgebrochene Wertetabelle taugt nicht mehr zum
+   Vergleichen. */
+.party-sheet-scroll {
+  overflow-x: auto;
+}
+.party-sheet {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 900px;
+  font-family: var(--lcars-font-mono);
+  font-size: 13px;
+}
+.party-sheet th,
+.party-sheet td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--lcars-border);
+  text-align: center;
+}
+.party-sheet thead th {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-data);
+  white-space: nowrap;
+}
+/* Die Namensspalte trägt Text, keine Zahl — links statt mittig, und sie
+   bleibt beim waagerechten Scrollen stehen. */
+.party-sheet tbody th {
+  position: sticky;
+  left: 0;
+  text-align: left;
+  background: var(--lcars-bg);
+  white-space: nowrap;
+}
+.party-sheet tbody th a {
+  color: var(--lcars-ink-data);
+  font-weight: 700;
+}
+.party-sheet-player {
+  display: block;
+  font-size: 11px;
+  color: var(--lcars-ink-dim);
+}
+.party-sheet-lists {
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.party-sheet-lists h2 {
+  font-size: 15px;
+  margin-bottom: 2px;
+}
+.party-sheet-lists b {
+  font-family: var(--lcars-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-data);
+  font-weight: 400;
+}

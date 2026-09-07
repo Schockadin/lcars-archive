@@ -362,6 +362,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     bleiben als Direktlinks auf die Einzelansichten erhalten).
   - `/gm/dialogues` — alle offenen Gespräche, unabhängig von eigener
     Teilnahme; darunter `[slug]/edit` für die Metadaten (`dialogues.moderate`).
+  - `/gm/gruppe` — das **Gruppenblatt**: alle aktiven, nicht als Entwurf
+    markierten Charaktere mit Spieler:in in einer Tabelle — die sechs
+    Attribute, die sechs Disziplinen sowie Schutz, Stress-Maximum und
+    Entschlossenheit nebeneinander, darunter je Figur Talente, Schwerpunkte
+    und Werte. Die Werte kommen aus derselben Quelle wie der Charakterbogen
+    (`metadata->stats` über `parseCharacterStats`, Stress über
+    `computeStress`), es gibt also keine zweite Rechenlogik
+    (`src/lib/partySheet.ts`). Die Namensspalte bleibt beim seitlichen
+    Scrollen stehen.
   - `/gm/sessions` — gespielte Sessions eintragen (Datum, Titel, Session-AP,
     Bonus-AP, Notizen) und allen ausgewählten Charakteren in einem Rutsch
     gutschreiben. Vorausgewählt sind alle aktiven Charaktere mit verknüpftem

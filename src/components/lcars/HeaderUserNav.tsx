@@ -34,6 +34,9 @@ interface StaffMenuItem {
 // weiterhin NACH RECHTEN gefiltert (nicht nach Rolle).
 const GM_ITEMS: StaffMenuItem[] = [
   { href: "/gm/campaign", label: "Kampagne", permission: "gm.access" },
+  // Das Blatt für den Tisch: alle Werte nebeneinander, wenn eine Probe
+  // angesagt wird.
+  { href: "/gm/gruppe", label: "Gruppenblatt", permission: "gm.access" },
   { href: "/gm/sessions", label: "Sessions", permission: "gm.access" },
   { href: "/gm/ap", label: "AP", permission: "gm.access" },
   { href: "/gm/talents", label: "Talente", permission: "gm.access" },

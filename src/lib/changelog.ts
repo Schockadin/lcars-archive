@@ -142,6 +142,11 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Hell/Dunkel frei wählbar — plus eigene Grundfarben",
     items: [
       {
+        text: "Neu für die Spielleitung unter „Leitung → Gruppenblatt“: alle Spieler-Charaktere in einer einzigen Tabelle — Attribute, Disziplinen, Schutz, Stress und Entschlossenheit nebeneinander, dazu je Figur die Talente, Schwerpunkte und Werte. So sieht man am Tisch auf einen Blick, wer die beste Probe hat, ohne jede Charakterseite einzeln zu öffnen.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
         text: "Hell oder dunkel ist jetzt eine eigene Einstellung, unabhängig vom Interface: Du kannst LCARS und das minimalistische UI jeweils in hell oder dunkel nutzen — jede Kombination ist möglich. Die Wahl triffst du im Profil unter „Darstellung“ und sie bleibt bei jedem Login erhalten.",
         category: "darstellung",
         tutorial: "farbschema",

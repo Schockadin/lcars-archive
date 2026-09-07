@@ -994,6 +994,13 @@ export default function TutorialPage() {
                   Gespräche-Sektion oben beschrieben.)
                 </li>
                 <li>
+                  Unter <strong>„Gruppenblatt“</strong> alle Charaktere der
+                  Runde nebeneinander sehen: Attribute, Disziplinen, Schutz,
+                  Stress und Entschlossenheit in einer Tabelle, darunter je
+                  Figur die Talente, Schwerpunkte und Werte. Praktisch am
+                  Tisch, wenn schnell klar sein muss, wer die beste Probe hat.
+                </li>
+                <li>
                   Unter <strong>„Sessions“</strong> gespielte Sessions eintragen
                   (Datum, Titel, Session-AP, Bonus-AP, Notizen) und damit allen
                   Beteiligten die AP in einem Rutsch gutschreiben. Vorausgewählt
