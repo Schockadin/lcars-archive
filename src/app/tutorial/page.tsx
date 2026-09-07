@@ -673,6 +673,14 @@ export default function TutorialPage() {
                 weiterhin nur von der Person, der der Charakter gehört.
               </p>
               <p>
+                Kündigt die Spielleitung einen <strong>Spieltermin</strong> an,
+                steht er oben auf der Startseite: Datum, Uhrzeit, Ort. Mit{" "}
+                <strong>„Ich bin dabei“</strong> oder{" "}
+                <strong>„Ich kann nicht“</strong> sagst du zu oder ab — du
+                kannst es dir jederzeit anders überlegen, die neue Antwort
+                ersetzt die alte. Wer zugesagt hat, steht am Termin.
+              </p>
+              <p>
                 Eingeloggt zeigt dir die <strong>Startseite</strong> dein
                 persönliches Dashboard: offene Gespräche in einer eigenen
                 Sektion sowie einen farbcodierten <strong>News-Feed</strong> mit

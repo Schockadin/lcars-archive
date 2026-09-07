@@ -7,9 +7,11 @@ import { newsVisibility } from "@/lib/recentActivityFormat";
 import { getCurrentUserPermissions } from "@/lib/dal";
 import { getDialoguesForUser } from "@/lib/dialogues";
 import { getPendingActions } from "@/lib/pendingActions";
+import { listUpcomingSessions } from "@/lib/plannedSessions";
 import FollowedContentSection from "./FollowedContentSection";
 import OpenDialoguesSection from "./OpenDialoguesSection";
 import PendingActionsSection from "./PendingActionsSection";
+import UpcomingSessionsSection from "./UpcomingSessionsSection";
 import NewsSection from "./NewsSection";
 import ChangelogSection from "./ChangelogSection";
 import OnboardingSection from "./OnboardingSection";
@@ -39,13 +41,21 @@ export default async function Dashboard({ user }: { user: User }) {
   // Primärrolle. getCurrentUserPermissions ist React-cache-dedupliziert
   // (siehe dal.ts), der Aufruf ist damit praktisch gratis.
   const permissions = await getCurrentUserPermissions();
-  const [hasPasswordSet, bookmarks, newsItems, openDialogues, pendingActions] =
+  const [
+    hasPasswordSet,
+    bookmarks,
+    newsItems,
+    openDialogues,
+    pendingActions,
+    upcomingSessions,
+  ] =
     await Promise.all([
       hasPassword(user.id),
       getBookmarkedContent(user.id),
       getNewsItems(user.id, user.news_kinds, newsVisibility(permissions)),
       getDialoguesForUser(user.id, "open"),
       getPendingActions(user.id),
+      listUpcomingSessions(),
     ]);
   const needsPassword = !hasPasswordSet;
   const firstVisit = user.previous_login_at === null;
@@ -85,6 +95,13 @@ export default async function Dashboard({ user }: { user: User }) {
           {/* Verschwindet von selbst, sobald alle Schritte erledigt sind
               (siehe OnboardingSection). */}
           <OnboardingSection userId={user.id} />
+
+          {/* Der nächste Spielabend zuerst — er hat ein Datum, alles andere
+              wartet. */}
+          <UpcomingSessionsSection
+            sessions={upcomingSessions}
+            userId={user.id}
+          />
 
           {/* Was ICH noch zu tun habe — vor den Neuigkeiten, die zeigen,
               was andere getan haben. */}

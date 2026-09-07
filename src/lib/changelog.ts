@@ -234,6 +234,10 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "chronologie",
       },
       {
+        text: "Es gibt einen Session-Planer: Die Spielleitung kündigt unter „Leitung → Sessions“ den nächsten Spieltermin mit Datum, Uhrzeit, Ort und Notiz an; alle Angemeldeten sehen ihn auf der Startseite und sagen dort zu oder ab. Wer zugesagt hat, steht am Termin — und die Spielleitung sieht Zu- und Absagen auf einen Blick.",
+        category: "spielleitung",
+      },
+      {
         text: "Das Dashboard zeigt jetzt „Offen für dich“ — was du noch zu tun hast: Missionen, an denen deine Figur teilnimmt und zu denen von dir noch kein Logbuch existiert, Gespräche, in denen du am Zug bist, und eigene Entwürfe, die seit über einer Woche liegen. Das Älteste steht oben; erledigte Punkte verschwinden von selbst.",
         category: "inhalte",
       },

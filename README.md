@@ -400,6 +400,17 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
     Disziplin-Filter, bearbeiten, ergänzen; löschbar nur selbst ergänzte).
   - `/gm/rules` — eigene Regeln der Runde für den Spickzettel (Name,
     Regeltext, Reihenfolge). Hier ist jede Regel löschbar.
+- **Session-Planer** — die Spielleitung kündigt Termine an (`/gm/sessions`,
+  oberhalb der gespielten Sessions), alle Angemeldeten sehen sie auf der
+  Startseite und sagen zu oder ab. Zwei eigene Tabellen (`planned_sessions`,
+  `planned_session_rsvps`): `game_sessions` ist die **Nachbuchung** einer
+  gespielten Session mitsamt AP — ein Termin hat weder AP noch Gutschriften,
+  und eine gespielte Session braucht keine Zusagen mehr. Wer nicht geantwortet
+  hat, hat **keine Zeile**; „noch offen" ist damit die Abwesenheit einer
+  Antwort und kein Wert, der gepflegt werden müsste. Ein Termin verschwindet
+  erst **sechs Stunden nach Beginn** aus der Liste — sonst fiele der Abend
+  mitten im Spielen heraus. Eine zweite Antwort ersetzt die erste; eine
+  verschobene Uhrzeit lässt die Zusagen stehen.
 - **Offen für dich** — der Dashboard-Abschnitt mit dem, was diese Person
   schuldet (`src/lib/pendingActions.ts`): Missionen, an denen eine eigene
   Figur teilnimmt und zu denen **kein eigenes Logbuch** existiert; Gespräche,

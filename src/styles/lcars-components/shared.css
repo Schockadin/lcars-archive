@@ -1248,3 +1248,64 @@
 .content-actions-anon {
   margin-top: 20px;
 }
+
+/* ── Spieltermine (Dashboard) ────────────────────────────────────────
+   Ein angekündigter Termin mit Zu-/Absage (UpcomingSessionsSection). Karte
+   ohne Link: hier wird geantwortet, nicht weitergeklickt. */
+.session-card {
+  padding: 10px 14px;
+  background: var(--lcars-surface);
+  border-left: 4px solid var(--lcars-primary);
+  border-radius: 4px 14px 14px 4px;
+}
+.session-card-when {
+  font-family: var(--lcars-font-mono);
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  color: var(--lcars-ink-data);
+}
+.session-card-title {
+  font-weight: 700;
+  margin-top: 2px;
+}
+.session-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-top: 4px;
+  font-family: var(--lcars-font-mono);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--lcars-ink-contrast);
+}
+.session-card-meta b {
+  font-weight: 400;
+  color: var(--lcars-ink-data);
+}
+.session-card-notes {
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--lcars-ink-light);
+}
+.session-rsvp {
+  margin-top: 10px;
+}
+.session-rsvp-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Die eigene Antwort wird hervorgehoben, damit man auf einen Blick sieht,
+   was man gesagt hat. */
+.session-rsvp-buttons button[aria-pressed="true"] {
+  background: var(--lcars-primary);
+  color: var(--lcars-ink-dark);
+  border-color: var(--lcars-primary);
+}
+.session-rsvp-own {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--lcars-ink-dim);
+}

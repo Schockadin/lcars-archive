@@ -262,3 +262,39 @@ CREATE INDEX IF NOT EXISTS idx_dialogue_messages_fts
 -- schema.sql).
 ALTER TABLE timeline_events ALTER COLUMN source_type DROP NOT NULL;
 ALTER TABLE timeline_events ALTER COLUMN source_slug DROP NOT NULL;
+
+-- v1.29.44 — Session-Planer (siehe schema.sql).
+-- ── Session-Planer ───────────────────────────────────────────────────────
+-- game_sessions (oben) ist die NACHbuchung: eine gespielte Session mit ihren
+-- AP. Was fehlte, war der Blick nach vorn — ein Termin, den die Spielleitung
+-- ankündigt und zu dem die Runde zu- oder absagt. Bewusst eine eigene
+-- Tabelle: eine geplante Session hat weder AP noch Teilnehmer-Gutschriften,
+-- und eine gespielte braucht keine Zusagen mehr.
+CREATE TABLE IF NOT EXISTS planned_sessions (
+  id            SERIAL PRIMARY KEY,
+  -- Zeitpunkt mit Uhrzeit: „Freitag" allein reicht nicht, um zuzusagen.
+  scheduled_at  TIMESTAMPTZ NOT NULL,
+  title         TEXT NOT NULL DEFAULT '',
+  -- Wo gespielt wird (Adresse, „bei Anna", ein Videolink).
+  location      TEXT NOT NULL DEFAULT '',
+  notes         TEXT NOT NULL DEFAULT '',
+  created_by    INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_planned_sessions_date
+  ON planned_sessions (scheduled_at DESC);
+
+-- Zu- und Absagen. Eine Zeile je Person und Termin; wer nicht geantwortet
+-- hat, hat keine Zeile — „noch offen" ist damit die Abwesenheit einer
+-- Antwort und kein eigener Wert, der gepflegt werden müsste.
+CREATE TABLE IF NOT EXISTS planned_session_rsvps (
+  session_id  INTEGER NOT NULL REFERENCES planned_sessions(id) ON DELETE CASCADE,
+  user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  response    TEXT NOT NULL CHECK (response IN ('yes', 'no')),
+  note        TEXT NOT NULL DEFAULT '',
+  updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (session_id, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_planned_session_rsvps_user
+  ON planned_session_rsvps (user_id);
