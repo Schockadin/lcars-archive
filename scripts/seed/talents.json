@@ -324,6 +324,12 @@
     "description": "Choose a single attribute when this talent is selected. You gain the Extraordinary Attribute 1 special rule (page 350\\) for the chosen attribute, granting one automatic success on all tasks using that attribute. When you use this ability, increase the complication range by 2 for that task. This talent may be selected multiple times, choosing a different attribute each time."
   },
   {
+    "name": "Chrysalis",
+    "category": "augment",
+    "requirement": "Technomage",
+    "description": "You're a novice Technomage. You still have a Chrysalis, which functions as a holo-emitter, tricorder and communicator. It also allows your mentor to remotely disable and enable your Technomage abilities."
+  },
+  {
     "name": "Durability",
     "category": "augment",
     "requirement": "Augment or Cyborg trait",

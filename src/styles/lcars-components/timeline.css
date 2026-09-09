@@ -233,7 +233,8 @@
   position: relative;
   z-index: 1;
   margin-top: 8px;
-  border-top: 1px solid color-mix(in srgb, var(--lcars-ink-dark) 25%, transparent);
+  border-top: 1px solid
+    color-mix(in srgb, var(--lcars-ink-dark) 25%, transparent);
 }
 .timeline-panel-head {
   display: flex;
@@ -319,7 +320,7 @@
    Formular selbst steht seit v1.29.46 in einem Fenster (ModalOverlay), nicht
    mehr in einem aufklappbaren Feld. */
 .timeline-newevent {
-  margin-bottom: 16px;
+  /* margin-bottom: 16px; */
   display: flex;
   flex-direction: column;
   align-items: flex-start;

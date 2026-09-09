@@ -49,18 +49,13 @@ export default async function CategoryTimeline({
   // Nur für die, die auch eintragen dürfen — sonst eine Abfrage für nichts.
   const characters = canAddEvent ? await listCharactersForEvents() : [];
   return (
-    <>
-      {/* Dieselbe Spaltenbreite wie der Zeitstrahl darunter
-          (TimelineView rendert .lcars-wide-column). */}
-      {canAddEvent && (
-        <div className="lcars-wide-column">
-          <ManualEventForm
-            defaultDate={latestEventDate(events)}
-            characters={characters}
-          />
-        </div>
-      )}
-      <TimelineView events={events} initialCategory={category} syncUrl />
-    </>
+    <TimelineView
+      events={events}
+      initialCategory={category}
+      canAddEvent={canAddEvent}
+      characters={characters}
+      latestEventDate={latestEventDate(events)}
+      syncUrl
+    />
   );
 }

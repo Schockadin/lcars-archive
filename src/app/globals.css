@@ -154,7 +154,8 @@
     line-height: 1.175;
     letter-spacing: 1px;
     font-size: 22px;
-    font-family: var(--lcars-font-sans);
+    /* font-family: var(--lcars-font-sans); */
+    font-family: var(--font-antonio);
     text-decoration: none;
   }
 

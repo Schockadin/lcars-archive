@@ -13,6 +13,7 @@ import {
   createManualEventAction,
   type ManualEventState,
 } from "@/app/actions/timelineEvents";
+import { PlusIcon } from "@/lib/icons";
 
 // „Ereignis eintragen" über dem Zeitstrahl: ein Knopf, der ein Fenster mit dem
 // Formular öffnet — für alles, was zur Kampagne gehört, aber in keinem Eintrag
@@ -43,13 +44,15 @@ export default function ManualEventForm({
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="timeline-newevent">
+    <div className="timeline-newevent ">
       <button
         type="button"
-        className="lcars-pill-btn--outline"
         onClick={() => setOpen(true)}
+        className="lcars-icon-btn self-start"
+        aria-label="Event hinzufügen"
+        title="Event hinzufügen"
       >
-        Ereignis eintragen
+        <PlusIcon />
       </button>
 
       {open && (
@@ -113,17 +116,11 @@ export default function ManualEventForm({
               htmlFor="manual-event-detail"
             >
               {/* Markdown wie in allen anderen Textfeldern des Projekts. */}
-              <MarkdownEditor
-                id="manual-event-detail"
-                name="detail"
-                rows={4}
-              />
+              <MarkdownEditor id="manual-event-detail" name="detail" rows={4} />
             </FormField>
             {characters.length > 0 && (
               <fieldset className="flex flex-col gap-[6px] mb-[10px]">
-                <legend className="lcars-eyebrow">
-                  Beteiligte (optional)
-                </legend>
+                <legend className="lcars-eyebrow">Beteiligte (optional)</legend>
                 <div className="flex flex-wrap gap-[12px]">
                   {characters.map((character) => (
                     <label

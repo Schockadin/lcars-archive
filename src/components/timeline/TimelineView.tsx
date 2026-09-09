@@ -26,6 +26,7 @@ import {
   type TimelineScope,
 } from "@/lib/timelineTypes";
 import { chronologyCategoryHref } from "@/lib/contentRoutes";
+import ManualEventForm from "./ManualEventForm";
 
 // Die Chronologie als Zeitstrahl: links Datum und Schiene, rechts die
 // Ereigniskarte. Aufbau nach dem Entwurf (Jahresleiste, Monats-Trenner,
@@ -71,10 +72,16 @@ export default function TimelineView({
   events,
   initialCategory = null,
   syncUrl = false,
+  canAddEvent = false,
+  characters = [],
+  latestEventDate = null,
 }: {
   events: TimelineEvent[];
   initialCategory?: string | null;
   syncUrl?: boolean;
+  canAddEvent?: boolean;
+  characters?: { id: number; name: string }[];
+  latestEventDate?: string | null;
 }) {
   const [scope, setScope] = useState<TimelineScope>(
     initialCategory ? "all" : DEFAULT_TIMELINE_SCOPE,
@@ -90,7 +97,8 @@ export default function TimelineView({
   // garantiert nichts treffen. Innerhalb des Umfangs aber ungefiltert — sonst
   // fiele die eigene Auswahl aus der Liste, sobald sie greift.
   const inScope = useMemo(
-    () => filterEvents(events, { query: "", category: null, year: null, scope }),
+    () =>
+      filterEvents(events, { query: "", category: null, year: null, scope }),
     [events, scope],
   );
 
@@ -200,6 +208,12 @@ export default function TimelineView({
       ) : (
         <>
           <div className="lcars-toolbar">
+            {canAddEvent && latestEventDate && (
+              <ManualEventForm
+                defaultDate={latestEventDate}
+                characters={characters}
+              />
+            )}
             {/* Der Umfang steht zuerst: er entscheidet, was die übrigen
                 Filter überhaupt zu filtern haben. */}
             <select
@@ -292,7 +306,9 @@ export default function TimelineView({
                   // Ein zweiter Klick auf das aktive Jahr hebt den Filter
                   // wieder auf — sonst müsste man dafür bis nach „Alle"
                   // zurückscrollen.
-                  onClick={() => setYear((current) => (current === y ? null : y))}
+                  onClick={() =>
+                    setYear((current) => (current === y ? null : y))
+                  }
                 >
                   {y}
                 </button>
@@ -309,7 +325,8 @@ export default function TimelineView({
               {visible.map((event, index) => {
                 const previous = index > 0 ? visible[index - 1] : null;
                 const showPeriod =
-                  !previous || periodKey(previous.date) !== periodKey(event.date);
+                  !previous ||
+                  periodKey(previous.date) !== periodKey(event.date);
                 return (
                   <Fragment key={event.id}>
                     {showPeriod && (
