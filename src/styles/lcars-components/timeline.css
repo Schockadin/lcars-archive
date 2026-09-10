@@ -81,11 +81,15 @@
   background: var(--lcars-border);
 }
 
-/* Eine Zeile: Datum · Schiene mit Punkt · Karte. */
+/* Eine Zeile: Datum · Schiene mit Punkt · Karte. Die Datenbank (/archive)
+   nutzt dieselbe Zeile ohne Datumsspalte — dort ordnet das Alphabet. */
 .timeline-event {
   display: grid;
   grid-template-columns: 74px 18px 1fr;
   align-items: stretch;
+}
+.timeline-event-undated {
+  grid-template-columns: 18px 1fr;
 }
 .timeline-date {
   padding: 6px 10px 0 0;
@@ -216,11 +220,47 @@
   text-transform: uppercase;
   color: inherit;
 }
-/* Die Beschriftung „Datum" tritt gegenüber dem Wert zurück: auf der farbigen
-   Fläche geht das über Deckkraft statt über eine zweite Farbe. */
-.timeline-card-date b {
+/* Die mehrteilige Mono-Zeile der Datenbank (Attribute, Tags, Teilnehmer):
+   dieselbe Schrift wie das Datum, aber umbrechend — eine Karte trägt bis zu
+   vier Angaben nebeneinander. */
+.timeline-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 14px;
+  row-gap: 2px;
+  margin-top: 6px;
+  font-family: var(--lcars-font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: inherit;
+}
+/* Die Kurzfassung unter dem Titel (Datenbank): Fließtext, der gegenüber dem
+   Titel zurücktritt — auf der farbigen Fläche über Deckkraft. */
+.timeline-card-summary {
+  margin-top: 6px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: inherit;
+  opacity: 0.85;
+}
+/* Die Beschriftung („Datum", „Tags", …) tritt gegenüber dem Wert zurück: auf
+   der farbigen Fläche geht das über Deckkraft statt über eine zweite Farbe. */
+.timeline-card-date b,
+.timeline-card-meta b {
   font-weight: 400;
   opacity: 0.7;
+}
+/* Die Textzeilen fangen keine Klicks ab: über der Karte liegt die unsichtbare
+   Fläche des Titel-Links (siehe .timeline-card-title::after), und ein Klick
+   auf die Kurzfassung oder auf „Spieler" soll dorthin führen wie jeder andere
+   Klick auf die Karte — sonst wäre „die ganze Karte ist anklickbar" nur dort
+   wahr, wo gerade kein Text steht. Die aufklappbaren Felder liegen bewusst
+   darüber (siehe .timeline-panel) und bleiben bedienbar. */
+.timeline-card-summary,
+.timeline-card-date,
+.timeline-card-meta {
+  pointer-events: none;
 }
 
 /* Aufklappbares Feld (<details>): die Kurzfassung steht offen, die
@@ -233,7 +273,8 @@
   position: relative;
   z-index: 1;
   margin-top: 8px;
-  border-top: 1px solid color-mix(in srgb, var(--lcars-ink-dark) 25%, transparent);
+  border-top: 1px solid
+    color-mix(in srgb, var(--lcars-ink-dark) 25%, transparent);
 }
 .timeline-panel-head {
   display: flex;
@@ -319,7 +360,7 @@
    Formular selbst steht seit v1.29.46 in einem Fenster (ModalOverlay), nicht
    mehr in einem aufklappbaren Feld. */
 .timeline-newevent {
-  margin-bottom: 16px;
+  /* margin-bottom: 16px; */
   display: flex;
   flex-direction: column;
   align-items: flex-start;

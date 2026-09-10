@@ -20,6 +20,7 @@ import type { OwnerContentType } from "@/app/actions/owner";
 import type { TrashContentType } from "@/lib/adminContent";
 import type { AdminVisibilityContentType } from "@/app/actions/visibility";
 import {
+  dialoguesHref,
   missionHref,
   missionLogEditHref,
 } from "@/lib/contentRoutes";
@@ -136,7 +137,7 @@ export default function ActionsMenu({
     ? "dialogue"
     : OWNER_CONTENT_TYPE[contentType];
   const deleteRedirectTo = isDialogue
-    ? "/characters/dialogues"
+    ? dialoguesHref()
     : contentType === "character"
       ? "/characters"
       : contentType === "mission"

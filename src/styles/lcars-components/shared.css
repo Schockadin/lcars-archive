@@ -195,12 +195,11 @@
   color: var(--lcars-tertiary-ink);
 }
 
-/* Gemeinsame Typografie für .char-file-pill (char-file.css, Personalakte)
-   und .character-entry-stub (character.css, Charakterliste) — beide sind
-   kleine, dunkel eingefärbte Mono-Label-Chips, nur letter-spacing
-   unterscheidet sich je Kontext (bleibt in der jeweiligen eigenen Regel). */
-.char-file-pill,
-.character-entry-stub {
+/* Kleines, dunkel eingefärbtes Mono-Label-Chip der Personalakte
+   (.char-file-pill, char-file.css). Die Typografie teilte sich früher mit dem
+   Stub der Charakterliste (.character-entry-stub); die Liste trägt jetzt die
+   Karte der Chronologie und hat keinen Stub mehr. */
+.char-file-pill {
   font-family: var(--lcars-font-mono);
   font-size: 12px;
   font-weight: 700;

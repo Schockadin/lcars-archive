@@ -36,6 +36,7 @@ export default function MenuItem({
       className="flex-1 min-h-0 flex"
       style={{
         textDecoration: "none",
+        fontFamily: "var(--lcars-font-sans)",
       }}
     >
       <div
@@ -48,7 +49,7 @@ export default function MenuItem({
           </div>
         )}
         {id && <div className="lcars-menu-id">{id}</div>}
-        {text && <div className="lcars-menu-text">-{text}</div>}
+        {text && <div className="lcars-menu-text">{text}</div>}
       </div>
     </Link>
   );

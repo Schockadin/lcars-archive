@@ -1,59 +1,12 @@
 /* ─── Character Page & Portrait ───────────────────────────────────────
-   Charakterliste (Stub + Balken) und der Portrait-Rahmen. Die
+   Der Portrait-Rahmen der Personalakte. Die Charakterliste (/characters)
+   trägt seit dem Zusammenlegen die Zeile und die Karte der Chronologie
+   (ChronoRow/ChronoCard, siehe timeline.css) — ihre früheren eigenen Zeilen
+   (.character-entry: farbiger Stub + Balken) sind damit entfallen. Die
    Vollbild-Lightbox selbst (.portrait-overlay*) lebt in shared.css, da sie
    sich CharacterPortrait.tsx jetzt mit ContentBody.tsx (Inline-Bilder in
    Missions-/Log-/Archiv-Texten) teilt.
 ──────────────────────────────────────────────────────────────────── */
-
-/* Charakterliste + Gespräche-Übersicht nebeneinander (/characters,
-   /characters/dialogues — siehe CharactersAndDialogues.tsx). Auf breiten
-   Screens beide Spalten sichtbar, der Umschalter bleibt versteckt. Unter dem
-   Breakpoint zeigt der Umschalter nur die per data-active-tab gewählte
-   Spalte — analog zum Kategorien/Inhalt-Umbruch von .archive-browser, aber
-   mit echtem Tab-Wechsel statt Stapeln, da hier zwei eigenständige Listen
-   (nicht Navigation + Inhalt) um denselben Platz konkurrieren. */
-/* Container-Layout: siehe .lcars-split (shared.css). */
-.chars-dialogues-col {
-  min-width: 0;
-}
-.chars-dialogues-switch {
-  display: none;
-}
-
-/* Auf breiten Screens teilen sich beide Spalten (Charaktere/Gespräche) den
-   Platz zu gleichen Teilen: gleiche flex-basis (0) und gleiches Wachstum, so
-   sind sie exakt gleich breit — vorher war die Charakter-Spalte auf 640px
-   gedeckelt, die Gespräche-Spalte nahm den Rest und war dadurch breiter. */
-@media (min-width: 901px) {
-  .chars-dialogues-col {
-    flex: 1 1 0;
-  }
-}
-
-@media (max-width: 900px) {
-  .chars-dialogues-layout {
-    flex-direction: column;
-  }
-  /* Gestapelt füllt die sichtbare Spalte die ganze Breite: das Layout nutzt
-     align-items: flex-start (damit die beiden Spalten nebeneinander auf ihre
-     Inhaltsbreite schrumpfen); ohne diese Regel schrumpfte die aktive Spalte
-     auch mobil auf ihre Inhaltsbreite — lange Karteninhalte (z.B. viele
-     Teilnehmer) liefen dann über den Bildschirmrand statt umzubrechen. */
-  .chars-dialogues-col {
-    width: 100%;
-  }
-  .chars-dialogues-switch {
-    display: flex;
-    width: 100%;
-    margin-top: 16px;
-  }
-  .chars-dialogues-layout[data-active-tab="characters"]
-    .chars-dialogues-col[data-tab="dialogues"],
-  .chars-dialogues-layout[data-active-tab="dialogues"]
-    .chars-dialogues-col[data-tab="characters"] {
-    display: none;
-  }
-}
 
 .character-portrait {
   border-top: 3px solid var(--lcars-secondary);
@@ -63,91 +16,6 @@
   border: 3px solid var(--lcars-secondary);
 }
 
-.character-entry {
-  width: 100%;
-  display: flex;
-  align-items: stretch;
-  height: 34px;
-  text-decoration: none;
-}
-
-/* Typografie (Mono, 12px, 700, dunkle Schrift) teilt sich mit
-   .char-file-pill (char-file.css) — siehe die kombinierte Regel in
-   shared.css. */
-.character-entry-stub {
-  width: 60px;
-  flex-shrink: 0;
-  border-radius: 100vmax 0 0 100vmax;
-  background: var(--entry-color);
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding-right: 10px;
-  letter-spacing: 0.05em;
-  transition: filter 100ms;
-}
-
-.character-entry-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  /* Füllt den Platz nach dem 60px-Stub statt fester 400px — so nutzt die
-     Charakterliste die verfügbare Breite (bis zur Container-Grenze
-     --lcars-charpage-w) und wird auf schmalen Screens nicht künstlich
-     eingeengt. */
-  flex: 1 1 auto;
-  min-width: 0;
-  margin-left: 3px;
-  padding: 0 16px;
-  background: var(--lcars-surface);
-  transition:
-    background 150ms,
-    color 150ms;
-}
-
-.character-entry-name {
-  font-family: var(--lcars-font-sans);
-  font-size: 19px;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--lcars-ink-contrast);
-  line-height: 1;
-}
-
-.character-entry-rank {
-  margin-left: 20px;
-  font-size: 19px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--lcars-ink-dim);
-  justify-self: right;
-}
-
-.character-entry:hover .character-entry-bar {
-  background: var(--entry-color);
-}
-.character-entry:hover .character-entry-name {
-  color: var(--lcars-bg);
-}
-.character-entry:hover .character-entry-rank {
-  color: var(--lcars-bg);
-  opacity: 0.7;
-}
-.character-entry:hover .character-entry-stub {
-  filter: brightness(1.2);
-}
-
-@media (max-width: 640px) {
-  .character-entry-name,
-  .character-entry-rank {
-    font-size: 16px;
-  }
-
-  .character-entry-stub {
-    display: none;
-  }
-}
 
 /* Unter sm-Breakpoint (≤ 639px) */
 @media (max-width: 639px) {

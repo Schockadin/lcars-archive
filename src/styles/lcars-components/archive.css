@@ -1,42 +1,19 @@
-/* ─── Archiv-Browser, Archiv-Eintrag & Dialoge ────────────────────────
-   Zwei-Spalten-Browser (Kategorien | Liste/Eintrag), die Detailseite
-   eines Archiv-Eintrags samt Chips/Tags sowie die Dialog-Nachrichten
-   zwischen zwei Charakteren.
+/* ─── Archiv-Übersicht, Archiv-Eintrag & Dialoge ──────────────────────
+   Alphabetische Datenbankliste mit Schiene sowie die Detailansichten.
 ──────────────────────────────────────────────────────────────────── */
 
-/* Container-Layout: siehe .lcars-split (shared.css). */
-.archive-browser-nav {
-  flex: 0 0 260px;
-  min-width: 0;
-  position: sticky;
-  top: 5px;
-  align-self: flex-start;
-  max-height: calc(100dvh - 24px);
-}
-.archive-browser-main {
-  flex: 1 1 0;
-  min-width: 0;
-  margin-left: 24px;
-}
-
-.archive-cat-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-/* Eintrags-Liste (Akten-Karten) der gewählten Kategorie */
+/* Alphabetische Entsprechung zum Zeitstrahl: Buchstaben-Perioden über einer
+   durchgehenden Schiene und den zugehörigen Karten. Zeile (ChronoRow, ohne
+   Datumsspalte) und Karte (ChronoCard) sind dieselben wie in der
+   Chronologie — ihre Optik steht deshalb vollständig in timeline.css. */
 .archive-entry-list {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  margin-top: 16px;
-  margin-bottom: 5px;
+  margin: 16px 0 5px;
 }
-.archive-placeholder {
-  max-width: 520px;
+.archive-letter-period {
+  margin-top: 22px;
 }
-
 /* ── Archiv-Eintrag (Detailseite) ────────────────────────────────── */
 /* Nimmt auf Desktop die volle Breite der Inhaltsspalte ein (kein Lese-Cap);
    die schmalere, zentrierte Lesebreite bleibt dem mobilen Lesemodus
@@ -180,25 +157,4 @@
   display: flex;
   gap: 8px;
   margin-top: 8px;
-}
-
-/* Gestapelt (Kategorien oben, volle Breite fürs Inhalts-Panel) auf schmalen
-   UND mittleren Screens — kein Sticky. Breakpoint bewusst bis 900px (statt
-   768px), damit auch Landscape-Handys und kleine Tablets den Inhalt über die
-   volle Breite bekommen, statt ihn mit der 260px-Kategorienspalte zu teilen. */
-@media (max-width: 900px) {
-  .archive-browser {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .archive-browser-nav {
-    flex: none;
-    width: 100%;
-    position: static;
-    max-height: none;
-    overflow: visible;
-  }
-  .archive-browser-main {
-    margin-left: 0px;
-  }
 }

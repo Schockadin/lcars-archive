@@ -243,8 +243,8 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
   const dayKey = (
     sourceType: TimelineSourceType,
     slug: string,
-    date: string,
-  ) => `${sourceType}:${slug}|${date}`;
+    date: string | null,
+  ) => `${sourceType}:${slug}|${date ?? "undated"}`;
   // Ereignisse einsammeln UND ihren Tag vermerken. Beides an einer Stelle,
   // damit die Sammlung nicht vergessen wird, wenn eine Quelle dazukommt.
   const addDeterministic = (
@@ -386,7 +386,12 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
         ? metadata.logDate.trim()
         : null;
     const date = logDate ?? dateFromAttributes(metadata);
-    if (date) {
+    // Ein Gespräch steht in der Chronologie AUCH ohne Datum: sie ist seit dem
+    // Umzug aus dem Charaktere-Bereich die Übersicht der Gespräche, und ein
+    // Gespräch ohne gepflegtes In-Story-Datum wäre sonst nirgends zu finden.
+    // Es landet in der Gruppe „Ohne Datum" am Ende (siehe sortEvents).
+    const isDialogue = entry.category === "dialogue";
+    if (date || isDialogue) {
       addDeterministic(entry.slug, {
         id: eventId("archive_entry", entry.slug, "date"),
         date,
@@ -395,7 +400,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
           typeof metadata.summary === "string" && metadata.summary
             ? synopsisExcerpt(metadata.summary, 180)
             : excerptOf(entry.source_md),
-        category: entry.category === "dialogue" ? "dialogue" : "other",
+        category: isDialogue ? "dialogue" : "other",
         origin: "metadata",
         sourceType: "archive_entry",
         sourceTitle: entry.title,

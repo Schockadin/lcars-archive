@@ -1,12 +1,12 @@
 "use client";
 import { Fragment, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   LcarsSortSwitch,
   LcarsListFilterInput,
   type SortDir,
 } from "@/components/lcars";
 import ChronoRow from "@/components/timeline/ChronoRow";
+import ChronoCard, { ChronoPanel } from "@/components/timeline/ChronoCard";
 import {
   DEFAULT_TIMELINE_SCOPE,
   EVENT_CATEGORIES,
@@ -26,6 +26,7 @@ import {
   type TimelineScope,
 } from "@/lib/timelineTypes";
 import { chronologyCategoryHref } from "@/lib/contentRoutes";
+import ManualEventForm from "./ManualEventForm";
 
 // Die Chronologie als Zeitstrahl: links Datum und Schiene, rechts die
 // Ereigniskarte. Aufbau nach dem Entwurf (Jahresleiste, Monats-Trenner,
@@ -70,19 +71,29 @@ function categoryFromPath(): string | null {
 export default function TimelineView({
   events,
   initialCategory = null,
+  initialScope,
+  initialPerson = null,
   syncUrl = false,
+  canAddEvent = false,
+  characters = [],
+  latestEventDate = null,
 }: {
   events: TimelineEvent[];
   initialCategory?: string | null;
+  initialScope?: TimelineScope;
+  initialPerson?: string | null;
   syncUrl?: boolean;
+  canAddEvent?: boolean;
+  characters?: { id: number; name: string }[];
+  latestEventDate?: string | null;
 }) {
   const [scope, setScope] = useState<TimelineScope>(
-    initialCategory ? "all" : DEFAULT_TIMELINE_SCOPE,
+    initialScope ?? (initialCategory ? "all" : DEFAULT_TIMELINE_SCOPE),
   );
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(initialCategory);
-  const [person, setPerson] = useState<string | null>(null);
+  const [person, setPerson] = useState<string | null>(initialPerson);
   const [year, setYear] = useState<string | null>(null);
 
   // Ereignisart und Beteiligte richten sich nach dem UMFANG, nicht nach dem
@@ -90,7 +101,8 @@ export default function TimelineView({
   // garantiert nichts treffen. Innerhalb des Umfangs aber ungefiltert — sonst
   // fiele die eigene Auswahl aus der Liste, sobald sie greift.
   const inScope = useMemo(
-    () => filterEvents(events, { query: "", category: null, year: null, scope }),
+    () =>
+      filterEvents(events, { query: "", category: null, year: null, scope }),
     [events, scope],
   );
 
@@ -200,6 +212,12 @@ export default function TimelineView({
       ) : (
         <>
           <div className="lcars-toolbar">
+            {canAddEvent && latestEventDate && (
+              <ManualEventForm
+                defaultDate={latestEventDate}
+                characters={characters}
+              />
+            )}
             {/* Der Umfang steht zuerst: er entscheidet, was die übrigen
                 Filter überhaupt zu filtern haben. */}
             <select
@@ -292,7 +310,9 @@ export default function TimelineView({
                   // Ein zweiter Klick auf das aktive Jahr hebt den Filter
                   // wieder auf — sonst müsste man dafür bis nach „Alle"
                   // zurückscrollen.
-                  onClick={() => setYear((current) => (current === y ? null : y))}
+                  onClick={() =>
+                    setYear((current) => (current === y ? null : y))
+                  }
                 >
                   {y}
                 </button>
@@ -309,7 +329,8 @@ export default function TimelineView({
               {visible.map((event, index) => {
                 const previous = index > 0 ? visible[index - 1] : null;
                 const showPeriod =
-                  !previous || periodKey(previous.date) !== periodKey(event.date);
+                  !previous ||
+                  periodKey(previous.date) !== periodKey(event.date);
                 return (
                   <Fragment key={event.id}>
                     {showPeriod && (
@@ -355,8 +376,8 @@ export default function TimelineView({
 // übrigen Archivs; bei einigen hundert Ereignissen war das eine Wand aus
 // Text, durch die man das Datum suchen musste.
 //
-// <details> statt eigenem Zustand: der Auf-/Zu-Zustand gehört zur einzelnen
-// Karte, nicht in die Liste — und beim Filtern soll er nicht mitwandern.
+// Gerüst und Karte teilt sie mit der Datenbank (ChronoRow/ChronoCard) — hier
+// steht nur, was ein Ereignis von einem Datenbank-Eintrag unterscheidet.
 function EventRow({
   event,
   endDate,
@@ -370,79 +391,63 @@ function EventRow({
 
   return (
     <ChronoRow date={event.date} color={visual.color}>
-      <div
-        className="timeline-card"
-        style={{ "--timeline-color": visual.color } as React.CSSProperties}
+      <ChronoCard
+        color={visual.color}
+        tag={visual.label}
+        title={event.title}
+        // Ein von Hand eingetragenes Ereignis hat keinen Inhalt, auf den zu
+        // zeigen wäre — dann steht der Titel als reiner Text.
+        href={event.href ?? undefined}
+        ariaLabel={
+          event.date
+            ? `${event.title} — ${visual.label}, ${fmtDate(event.date)}`
+            : `${event.title} — ${visual.label}`
+        }
+        // Der Herkunftshinweis steht nur da, wo er etwas einschränkt: dass
+        // ein Ereignis aus den gepflegten Angaben stammt, ist der Normalfall
+        // und braucht keine Marke.
+        badge={
+          event.origin !== "metadata" ? (
+            <span className="timeline-origin">
+              {ORIGIN_LABELS[event.origin]}
+            </span>
+          ) : undefined
+        }
+        // Nur das Datum. Die Ereignisart steht schon als Etikett darüber,
+        // und die Quelle wiederholte meist bloß den Titel — der Titel führt
+        // ohnehin dorthin. Ohne Datum entfällt die Zeile: „Datum —" wäre eine
+        // Zeile, die nichts sagt (die Gruppe darüber sagt es).
+        date={
+          !event.date ? undefined : endDate ? (
+            <>
+              <b>Zeitraum</b> {fmtDate(event.date)} – {fmtDate(endDate)}
+            </>
+          ) : (
+            <>
+              <b>Datum</b> {fmtDate(event.date)}
+            </>
+          )
+        }
       >
-        <div className="timeline-card-body">
-          <div className="timeline-card-head">
-            <span className="timeline-tag">{visual.label}</span>
-            {/* Ein von Hand eingetragenes Ereignis hat keinen Inhalt, auf
-                den zu zeigen wäre — dann steht der Titel als reiner Text. */}
-            {event.href ? (
-              <Link
-                href={event.href}
-                className="timeline-card-title"
-                aria-label={`${event.title} — ${visual.label}, ${fmtDate(event.date)}`}
-              >
-                {event.title}
-              </Link>
-            ) : (
-              <span className="timeline-card-title">{event.title}</span>
-            )}
-            {/* Der Herkunftshinweis steht nur da, wo er etwas einschränkt:
-                dass ein Ereignis aus den gepflegten Angaben stammt, ist der
-                Normalfall und braucht keine Marke. */}
-            {event.origin !== "metadata" && (
-              <span className="timeline-origin">
-                {ORIGIN_LABELS[event.origin]}
-              </span>
-            )}
-          </div>
+        {event.detail && (
+          <ChronoPanel
+            label="Teaser"
+            open
+            // Von Hand eingetragene Beschreibungen sind Markdown (siehe
+            // getTimeline) — die übrigen sind schlichter Text.
+            bodyClassName={event.detailHtml ? "mission-body" : undefined}
+            bodyHtml={event.detailHtml ?? undefined}
+          >
+            {event.detail}
+          </ChronoPanel>
+        )}
 
-          {/* Nur das Datum. Die Ereignisart steht schon als Etikett darüber,
-              und die Quelle wiederholte meist bloß den Titel — der Titel
-              führt ohnehin dorthin. */}
-          <p className="timeline-card-date">
-            {endDate ? (
-              <>
-                <b>Zeitraum</b> {fmtDate(event.date)} – {fmtDate(endDate)}
-              </>
-            ) : (
-              <>
-                <b>Datum</b> {fmtDate(event.date)}
-              </>
-            )}
-          </p>
-
-          {event.detail && (
-            <details className="timeline-panel" open>
-              <summary className="timeline-panel-head">Teaser</summary>
-              {/* Von Hand eingetragene Beschreibungen sind Markdown (siehe
-                  getTimeline) — die übrigen sind schlichter Text. */}
-              {event.detailHtml ? (
-                <div
-                  className="timeline-panel-body mission-body"
-                  dangerouslySetInnerHTML={{ __html: event.detailHtml }}
-                />
-              ) : (
-                <div className="timeline-panel-body">{event.detail}</div>
-              )}
-            </details>
-          )}
-
-          {event.people.length > 0 && (
-            <details className="timeline-panel">
-              <summary className="timeline-panel-head">
-                Beteiligt ({event.people.length})
-              </summary>
-              <div className="timeline-panel-body">
-                {event.people.join(" · ")}
-              </div>
-            </details>
-          )}
-        </div>
-      </div>
+        {event.people.length > 0 && (
+          <ChronoPanel label={`Beteiligt (${event.people.length})`}>
+            {event.people.join(" · ")}
+          </ChronoPanel>
+        )}
+      </ChronoCard>
     </ChronoRow>
   );
 }

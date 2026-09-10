@@ -1,6 +1,6 @@
 import { getCharacterListItems } from "@/lib/characters";
-import { getAllArchiveEntries } from "@/lib/archive";
-import CharactersAndDialogues from "./CharactersAndDialogues";
+import PageMeta from "@/components/PageMeta";
+import CharacterPage from "./CharacterPage";
 
 export const metadata = {
   title: {
@@ -8,19 +8,17 @@ export const metadata = {
   },
 };
 
+// Nur noch die Charakterliste: die Gespräche sind aus dem Charaktere-Bereich
+// in die Chronologie umgezogen (Ereignisart „Gespräch", siehe
+// dialoguesHref in contentRoutes.ts) — dort stehen sie zwischen den übrigen
+// datierten Inhalten der Kampagne, statt in einer zweiten Spalte daneben.
 export default async function CharakterePage() {
-  const [characters, entries] = await Promise.all([
-    getCharacterListItems(),
-    getAllArchiveEntries(),
-  ]);
-  const dialogueEntries = entries.filter((e) => e.category === "dialogue");
+  const characters = await getCharacterListItems();
 
   return (
-    <CharactersAndDialogues
-      pageTitle="Charaktere"
-      characters={characters}
-      dialogueEntries={dialogueEntries}
-      initialTab="characters"
-    />
+    <>
+      <PageMeta title="Charaktere" section="characters" />
+      <CharacterPage characters={characters} />
+    </>
   );
 }

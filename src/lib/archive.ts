@@ -48,7 +48,10 @@ export function buildArchiveAttributes(
   attributeValues: Record<string, string>,
 ): ArchiveAttribute[] {
   return getAttributeFields(category)
-    .map((field) => ({ label: field.label, value: (attributeValues[field.key] ?? "").trim() }))
+    .map((field) => ({
+      label: field.label,
+      value: (attributeValues[field.key] ?? "").trim(),
+    }))
     .filter((attr): attr is ArchiveAttribute => attr.value !== "");
 }
 
@@ -74,7 +77,10 @@ async function saveArchiveReferences(
   ownSlug: string,
   category: ArchiveCategory,
   referenceValues: Record<string, string>,
-): Promise<{ missions: ArchiveMissionRef[]; characters: ArchiveCharacterRef[] }> {
+): Promise<{
+  missions: ArchiveMissionRef[];
+  characters: ArchiveCharacterRef[];
+}> {
   let missions: ArchiveMissionRef[] = [];
   let characters: ArchiveCharacterRef[] = [];
   const linkTargets: { targetId: number; label: string }[] = [];
@@ -130,7 +136,8 @@ async function saveArchiveReferences(
     // archive_links hat PRIMARY KEY (source_id, target_id), also pro
     // (source,target) nur eine Zeile; letztes Label gewinnt.
     const uniqueTargets = new Map<number, string>();
-    for (const { targetId, label } of linkTargets) uniqueTargets.set(targetId, label);
+    for (const { targetId, label } of linkTargets)
+      uniqueTargets.set(targetId, label);
     const rows = Array.from(uniqueTargets, ([targetId, label]) => ({
       source_id: entryId,
       target_id: targetId,
@@ -218,6 +225,8 @@ export async function getAllArchiveEntries(): Promise<ArchiveEntryPreview[]> {
         tags,
         metadata
       FROM archive_entries
+      -- Abgeschlossene Gespräche gehören in die Datenbank; ein noch offenes
+      -- lebt unter /dialogues und hat in einer Übersicht nichts zu suchen.
       WHERE NOT (category = 'dialogue' AND dialogue_open)
         AND visibility = 'public'
         AND deleted_at IS NULL
@@ -338,7 +347,11 @@ export async function setArchiveEntryVisibility(
   userId: number,
   archiveEntryId: number,
   visibility: "private" | "gm" | "public",
-): Promise<{ slug: string; title: string; sourceMarkdown: string | null } | null> {
+): Promise<{
+  slug: string;
+  title: string;
+  sourceMarkdown: string | null;
+} | null> {
   const rows = await sql<
     { slug: string; title: string; sourceMarkdown: string | null }[]
   >`
@@ -347,7 +360,8 @@ export async function setArchiveEntryVisibility(
     WHERE id = ${archiveEntryId} AND category != 'dialogue' AND owner_user_id = ${userId}
     RETURNING slug, title, source_md AS "sourceMarkdown"
   `;
-  if (rows[0]) syncEmbeddingVisibility("archive_entry", archiveEntryId, visibility);
+  if (rows[0])
+    syncEmbeddingVisibility("archive_entry", archiveEntryId, visibility);
   return rows[0] ?? null;
 }
 
@@ -499,7 +513,10 @@ export async function createArchiveEntry(input: {
   const slug = await generateUniqueArchiveEntrySlug(input.title);
   const contentHtml =
     input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
-  const attributes = buildArchiveAttributes(input.category, input.attributeValues);
+  const attributes = buildArchiveAttributes(
+    input.category,
+    input.attributeValues,
+  );
 
   const metadata: ArchiveMetadata = {
     summary: input.summary,
@@ -603,7 +620,9 @@ export async function getOwnArchiveEntryForEdit(
 
   const referenceValues: Record<string, string> = {
     related_missions: (metadata.missions ?? []).map((m) => m.slug).join(", "),
-    related_characters: (metadata.characters ?? []).map((c) => c.slug).join(", "),
+    related_characters: (metadata.characters ?? [])
+      .map((c) => c.slug)
+      .join(", "),
   };
   const linkRows = await sql<{ slug: string; label: string | null }[]>`
     SELECT e.slug, al.label
@@ -655,20 +674,29 @@ export async function updateOwnArchiveEntryContent(
     // Siehe createArchiveEntry oben — Opt-in "Automatisch verlinken".
     contentHtml?: string;
   },
-): Promise<
-  { slug: string; visibility: "private" | "gm" | "public"; wasDraft: boolean } | null
-> {
+): Promise<{
+  slug: string;
+  visibility: "private" | "gm" | "public";
+  wasDraft: boolean;
+} | null> {
   await recordRevision("archive", entryId, userId, input.bodyMarkdown);
 
   const contentHtml =
     input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
-  const attributes = buildArchiveAttributes(input.category, input.attributeValues);
+  const attributes = buildArchiveAttributes(
+    input.category,
+    input.attributeValues,
+  );
   const metadataPatch = { summary: input.summary, attributes };
 
   // wasDraft (Stand VOR diesem Update) per CTE — siehe
   // updateOwnCharacterContent in characters.ts für dieselbe Begründung.
   const rows = await sql<
-    { slug: string; visibility: "private" | "gm" | "public"; wasDraft: boolean }[]
+    {
+      slug: string;
+      visibility: "private" | "gm" | "public";
+      wasDraft: boolean;
+    }[]
   >`
     WITH old AS (SELECT is_draft FROM archive_entries WHERE id = ${entryId})
     UPDATE archive_entries
@@ -766,7 +794,10 @@ export async function notifyArchiveEntrySubscribers(input: {
         if (!result.sent) {
           const message = `Datenbank-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`;
           console.error(message);
-          void logCaughtError(new Error(message), "archive.ts:notifyArchiveEntrySubscribers");
+          void logCaughtError(
+            new Error(message),
+            "archive.ts:notifyArchiveEntrySubscribers",
+          );
         }
       }
       if (subscriber.pushNotificationsEnabled) {

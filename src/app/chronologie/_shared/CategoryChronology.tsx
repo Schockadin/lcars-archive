@@ -3,9 +3,8 @@ import PageMeta from "@/components/PageMeta";
 import PageSkeleton from "@/app/_shared/PageSkeleton";
 import TimelineView from "@/components/timeline/TimelineView";
 import { getTimeline } from "@/lib/timeline";
-import { categoryVisual, latestEventDate } from "@/lib/timelineTypes";
+import { categoryVisual, latestEventDate, type TimelineScope } from "@/lib/timelineTypes";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
-import ManualEventForm from "@/components/timeline/ManualEventForm";
 import { listCharactersForEvents } from "@/lib/timelineManualEvents";
 
 // Das Gerüst und der Datenzugriff der Chronologie — geteilt von den drei
@@ -38,8 +37,12 @@ export function ChronologyShell({ children }: { children: React.ReactNode }) {
 // Der datenabhängige Teil. Ohne `category` die ungefilterte Chronologie.
 export default async function CategoryTimeline({
   category = null,
+  initialScope,
+  initialPerson = null,
 }: {
   category?: string | null;
+  initialScope?: TimelineScope;
+  initialPerson?: string | null;
 }) {
   const viewer = await getViewer();
   const events = await getTimeline(viewer);
@@ -49,18 +52,15 @@ export default async function CategoryTimeline({
   // Nur für die, die auch eintragen dürfen — sonst eine Abfrage für nichts.
   const characters = canAddEvent ? await listCharactersForEvents() : [];
   return (
-    <>
-      {/* Dieselbe Spaltenbreite wie der Zeitstrahl darunter
-          (TimelineView rendert .lcars-wide-column). */}
-      {canAddEvent && (
-        <div className="lcars-wide-column">
-          <ManualEventForm
-            defaultDate={latestEventDate(events)}
-            characters={characters}
-          />
-        </div>
-      )}
-      <TimelineView events={events} initialCategory={category} syncUrl />
-    </>
+    <TimelineView
+      events={events}
+      initialCategory={category}
+      initialScope={initialScope}
+      initialPerson={initialPerson}
+      canAddEvent={canAddEvent}
+      characters={characters}
+      latestEventDate={latestEventDate(events)}
+      syncUrl
+    />
   );
 }

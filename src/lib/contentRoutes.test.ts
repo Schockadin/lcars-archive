@@ -31,7 +31,7 @@ describe("contentRoutes", () => {
 
   it("kennt die Leseseiten aller vier Inhaltsarten", () => {
     expect(characterHref("tuvok")).toBe("/characters/tuvok");
-    expect(characterLogsHref("tuvok")).toBe("/characters/tuvok/logs");
+    expect(characterLogsHref("Tuvok")).toBe("/chronologie?scope=all&category=log&person=Tuvok");
     expect(characterSheetHref("tuvok")).toBe("/characters/tuvok/sheet");
     expect(archiveHref("erster-kontakt")).toBe("/archive/erster-kontakt");
     // Offene Gespräche liegen NICHT unter /archive.

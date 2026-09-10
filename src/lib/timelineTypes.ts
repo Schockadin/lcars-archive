@@ -105,8 +105,12 @@ export interface TimelineEvent {
   // Ereignisse entstehen beim Lesen aus den Feldern des Inhalts. Aufgebaut
   // als "<quelle>:<slug>:<was>" (siehe eventId).
   id: string;
-  // In-Story-Datum, ISO (YYYY-MM-DD).
-  date: string;
+  // In-Story-Datum, ISO (YYYY-MM-DD). null nur, wo ein Eintrag ohne Datum
+  // trotzdem in die Chronologie gehört: Gespräche haben dort seit dem Umzug
+  // aus dem Charaktere-Bereich ihre Übersicht, und ein Gespräch ohne
+  // gepflegtes In-Story-Datum wäre sonst nirgends zu finden. Sie stehen als
+  // eigene Gruppe „Ohne Datum" am Ende (siehe sortEvents/periodLabel).
+  date: string | null;
   title: string;
   // Ein bis zwei Sätze zum Ereignis; leer, wo es nichts zu sagen gibt.
   detail: string | null;
@@ -212,6 +216,13 @@ export function sortEvents(
 ): TimelineEvent[] {
   const factor = dir === "asc" ? 1 : -1;
   return [...events].sort((a, b) => {
+    // Undatierte Ereignisse stehen in BEIDEN Richtungen am Ende: sie liegen
+    // nicht früher oder später, sie liegen nirgends — als Gruppe „Ohne Datum"
+    // hinter dem Zeitstrahl statt mitten darin.
+    if (a.date === null || b.date === null) {
+      if (a.date === b.date) return a.title.localeCompare(b.title, "de");
+      return a.date === null ? 1 : -1;
+    }
     if (a.date !== b.date) return a.date < b.date ? -factor : factor;
     // Bei gleichem Datum immer dieselbe Reihenfolge, sonst springen die
     // Karten zwischen zwei Aufrufen — der Titel entscheidet.
@@ -240,25 +251,36 @@ const MONTH_NAMES = [
 
 // Zwischenüberschrift über einer Gruppe: „2401 · März". Der Entwurf schreibt
 // dort „2167 // MÄRZ"; die Versalien macht das Stylesheet, nicht der Text.
-export function periodLabel(date: string): string {
+// Ohne Datum trägt die Gruppe am Ende ihren eigenen Titel.
+export function periodLabel(date: string | null): string {
+  if (!date) return "Ohne Datum";
   const month = Number(date.slice(5, 7));
   const name = MONTH_NAMES[month - 1];
   return name ? `${yearOf(date)} · ${name}` : yearOf(date);
 }
 
-export function periodKey(date: string): string {
-  return date.slice(0, 7);
+export function periodKey(date: string | null): string {
+  return date ? date.slice(0, 7) : "undated";
 }
 
 // Alle Jahre, in denen mindestens ein Ereignis liegt — NEUESTE ZUERST, wie die
-// Liste darunter in ihrer Voreinstellung.
+// Liste darunter in ihrer Voreinstellung. Undatierte Ereignisse liegen in
+// keinem Jahr und stehen deshalb in keiner Jahresleiste.
 //
 // Die Jahresleiste wird bewusst aus den bereits nach Suche und Ereignisart
 // gefilterten Ereignissen gebaut (siehe TimelineView): ein Jahr anzubieten,
 // das mit den übrigen Filtern keinen einzigen Treffer hat, führt nur in eine
 // leere Liste.
 export function yearsOf(events: TimelineEvent[]): string[] {
-  return [...new Set(events.map((e) => yearOf(e.date)))].sort().reverse();
+  return [
+    ...new Set(
+      events
+        .filter((e): e is TimelineEvent & { date: string } => e.date !== null)
+        .map((e) => yearOf(e.date)),
+    ),
+  ]
+    .sort()
+    .reverse();
 }
 
 // Der Umfang der Ansicht. Die Chronologie ist seit dem Zusammenlegen mit der
@@ -301,7 +323,12 @@ export function isTimelineCategory(value: string): value is TimelineCategory {
 export function missionEndDates(events: TimelineEvent[]): Map<string, string> {
   const ends = new Map<string, string>();
   for (const event of events) {
-    if (event.sourceType === "mission" && event.phase === "end" && event.href) {
+    if (
+      event.sourceType === "mission" &&
+      event.phase === "end" &&
+      event.href &&
+      event.date
+    ) {
       ends.set(event.href, event.date);
     }
   }
@@ -318,6 +345,7 @@ export function missionEndDates(events: TimelineEvent[]): Map<string, string> {
 export function latestEventDate(events: TimelineEvent[]): string | null {
   let latest: string | null = null;
   for (const event of events) {
+    if (event.date === null) continue;
     if (latest === null || event.date > latest) latest = event.date;
   }
   if (latest === null) return null;
@@ -358,7 +386,8 @@ export function filterEvents(
     ) {
       return false;
     }
-    if (filter.year && yearOf(event.date) !== filter.year) return false;
+    if (filter.year && (event.date === null || yearOf(event.date) !== filter.year))
+      return false;
     if (!q) return true;
     // Gesucht wird über das, was auf der Karte steht — Titel, Beschreibung,
     // Quelle und die genannten Personen.

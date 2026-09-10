@@ -1,13 +1,13 @@
 import { ArchiveEntryPreview } from "@/types/archive";
 import { CATEGORY_CONFIG, archiveTitle } from "@/lib/archiveFormat";
 import { fmtDate } from "@/lib/missionFormat";
-import { LcarsAkteCard } from "@/components/lcars";
-import {
-  archiveHref,
-} from "@/lib/contentRoutes";
+import ChronoCard from "@/components/timeline/ChronoCard";
+import { archiveHref } from "@/lib/contentRoutes";
 
-// Eintrags-Karte im Stil der Missions-Akten. Dialoge zeigen Teilnehmer, Ort
-// und Datum; andere Kategorien ihre Attribute und Tags.
+// Eintrags-Karte der Datenbank — dieselbe Karte wie in der Chronologie
+// (ChronoCard): Kategorie-Etikett und Titel oben, darunter die Kurzfassung
+// und die Mono-Zeile. Dialoge zeigen Teilnehmer, Ort und Datum; andere
+// Kategorien ihre Attribute und Tags.
 export default function ArchiveEntryCard({
   entry,
 }: {
@@ -18,9 +18,14 @@ export default function ArchiveEntryCard({
   const isDialogue = entry.category === "dialogue";
   const participants = m.participants?.map((p) => p.name) ?? [];
   const ort = m.location?.title ?? m.setting ?? null;
+  const title = archiveTitle(entry);
 
   return (
-    <LcarsAkteCard
+    <ChronoCard
+      color={cfg.color}
+      tag={cfg.label}
+      title={title}
+      ariaLabel={`${title} — ${cfg.label}`}
       // Gespräche haben ihr Zuhause im Charaktere-Bereich; die Zielseite
       // reicht ein noch offenes Gespräch selbst an /dialogues weiter.
       href={
@@ -28,8 +33,6 @@ export default function ArchiveEntryCard({
           ? `/characters/dialogues/${entry.slug}`
           : archiveHref(entry.slug)
       }
-      color={cfg.color}
-      title={archiveTitle(entry)}
       summary={m.summary}
       meta={
         isDialogue ? (

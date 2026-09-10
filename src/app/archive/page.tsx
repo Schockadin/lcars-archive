@@ -1,7 +1,9 @@
 import { redirect } from "next/navigation";
 import { getAllArchiveEntries } from "@/lib/archive";
-import { CATEGORY_CONFIG, isArchiveCategory } from "@/lib/archiveFormat";
+import { isArchiveCategory } from "@/lib/archiveFormat";
 import PageMeta from "@/components/PageMeta";
+import { getViewer, viewerHasPermission } from "@/lib/visibility";
+import { dialoguesHref } from "@/lib/contentRoutes";
 import ArchiveEntryList from "./ArchiveEntryList";
 
 export const metadata = {
@@ -10,8 +12,9 @@ export const metadata = {
   },
 };
 
-// Rechte Spalte der Archiv-Übersicht: ohne ?cat= ein Hinweis, mit gültiger
-// Kategorie die Liste ihrer Einträge (als Akten-Karten).
+// Die Datenbank ist — wie die Chronologie — zuerst eine vollständige
+// Übersicht. Kategorien bleiben als teilbare ?cat=-Auswahl erhalten, die
+// eigentliche Filterung läuft aber im Browser ohne neuen Server-Request.
 export default async function ArchivePage({
   searchParams,
 }: {
@@ -19,44 +22,39 @@ export default async function ArchivePage({
 }) {
   const { cat, participant } = await searchParams;
 
-  // Gespräche sind aus dem Archiv in den Charaktere-Bereich umgezogen — alte
-  // Links/Bookmarks auf ?cat=dialogue (inkl. ?participant=) landen jetzt dort.
-  if (cat === "dialogue") {
-    redirect(
-      participant
-        ? `/characters/dialogues?participant=${encodeURIComponent(participant)}`
-        : "/characters/dialogues",
-    );
+  // Ein Gespräch eines bestimmten Teilnehmers sucht man nicht im Alphabet,
+  // sondern in der Chronologie: dort gibt es den Personenfilter. Der alte
+  // ?participant=<slug> lässt sich dort nicht weiterverwenden (gefiltert wird
+  // über den Namen), also führt der Link auf die Gespräche insgesamt. Ohne
+  // Teilnehmer bleibt „Gespräche" eine Kategorie der Datenbank wie jede
+  // andere.
+  if (cat === "dialogue" && participant) {
+    redirect(dialoguesHref());
   }
 
-  const entries = await getAllArchiveEntries();
-
-  const category = cat && isArchiveCategory(cat) ? cat : null;
-  const list = category ? entries.filter((e) => e.category === category) : [];
+  const [entries, viewer] = await Promise.all([
+    getAllArchiveEntries(),
+    getViewer(),
+  ]);
+  const initialCategory = cat && isArchiveCategory(cat) ? cat : null;
+  const canCreate = viewerHasPermission(viewer, "content.create");
+  const canAutoLink = viewerHasPermission(viewer, "content.autolink_tools");
 
   return (
     <>
       <PageMeta title="Datenbank" section="archive" />
-
-      {category ? (
-        <div className="lcars-wide-column">
-          <h1 className="lcars-data-row-heading">
-            {`${CATEGORY_CONFIG[category].plural}`}
-          </h1>
-          {list.length === 0 ? (
-            <p className="lcars-empty-state">
-              Keine Einträge in dieser Kategorie.
-            </p>
-          ) : (
-            <ArchiveEntryList entries={list} />
-          )}
-        </div>
-      ) : (
-        <div className="archive-placeholder">
-          {/* <h1 className="lcars-data-row-heading">Datenbank</h1>
-          <p className="lcars-eyebrow">Enzyklopädie der bekannten Welt</p> */}
-        </div>
-      )}
+      <div className="lcars-wide-column">
+        <h1 className="lcars-data-row-heading">Datenbank</h1>
+        <p className="lcars-eyebrow mb-2">Enzyklopädie der bekannten Welt</p>
+        <ArchiveEntryList
+          key={initialCategory ?? "all"}
+          entries={entries}
+          initialCategory={initialCategory}
+          canCreate={canCreate}
+          userId={viewer?.userId}
+          canAutoLink={canAutoLink}
+        />
+      </div>
     </>
   );
 }
