@@ -20,15 +20,13 @@ export default async function ArchivePage({
 }: {
   searchParams: Promise<{ cat?: string; participant?: string }>;
 }) {
-  const { cat, participant } = await searchParams;
+  const { cat } = await searchParams;
 
-  // Ein Gespräch eines bestimmten Teilnehmers sucht man nicht im Alphabet,
-  // sondern in der Chronologie: dort gibt es den Personenfilter. Der alte
-  // ?participant=<slug> lässt sich dort nicht weiterverwenden (gefiltert wird
-  // über den Namen), also führt der Link auf die Gespräche insgesamt. Ohne
-  // Teilnehmer bleibt „Gespräche" eine Kategorie der Datenbank wie jede
-  // andere.
-  if (cat === "dialogue" && participant) {
+  // Gespräche stehen nur in der Chronologie (Ereignisart „Gespräch") — die
+  // Datenbank führt sie gar nicht. Alte Links/Bookmarks auf ?cat=dialogue
+  // landen deshalb dort. Der alte ?participant=<slug> lässt sich nicht
+  // weiterverwenden: der Personenfilter der Chronologie arbeitet mit Namen.
+  if (cat === "dialogue") {
     redirect(dialoguesHref());
   }
 

@@ -2,6 +2,17 @@
 
 Next.js 16 (App Router, Cache Components) + Postgres. Star-Trek-Adventures campaign archive.
 
+## 2026-06 — Gespräche nur noch in der Chronologie
+
+`getAllArchiveEntries` führt Gespräche wieder gar nicht
+(`WHERE NOT category = 'dialogue'`) — die Datenbank ist die Enzyklopädie,
+Gespräche stehen ausschließlich in der Chronologie (Ereignisart „Gespräch",
+inkl. der Gruppe „Ohne Datum"). `?cat=dialogue` auf `/archive` leitet
+vollständig auf `dialoguesHref()` um, und der Gesprächs-Zweig in
+`ArchiveEntryCard` (Teilnehmer/Ort/Datum) ist als toter Code entfallen.
+Geprüft: `tsc` + `eslint` clean, vitest 855 passed. E2E läuft über den
+GitHub-Workflow.
+
 ## 2026-06 — Charaktere, Gespräche und die eine Liste
 
 ### Problem / Auftrag

@@ -225,9 +225,12 @@ export async function getAllArchiveEntries(): Promise<ArchiveEntryPreview[]> {
         tags,
         metadata
       FROM archive_entries
-      -- Abgeschlossene Gespräche gehören in die Datenbank; ein noch offenes
-      -- lebt unter /dialogues und hat in einer Übersicht nichts zu suchen.
-      WHERE NOT (category = 'dialogue' AND dialogue_open)
+      -- Gespräche gehören in die Chronologie, nicht in die Enzyklopädie: ein
+      -- offenes lebt unter /dialogues, ein abgeschlossenes steht in der
+      -- Chronologie unter der Ereignisart „Gespräch" (siehe getTimeline).
+      -- Diese Übersicht führt sie deshalb gar nicht — sie ist zugleich die
+      -- Auswahl der verknüpfbaren Orte/NPCs in den Gesprächs-Formularen.
+      WHERE NOT category = 'dialogue'
         AND visibility = 'public'
         AND deleted_at IS NULL
         AND is_draft = false
