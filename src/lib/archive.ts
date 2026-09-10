@@ -225,7 +225,9 @@ export async function getAllArchiveEntries(): Promise<ArchiveEntryPreview[]> {
         tags,
         metadata
       FROM archive_entries
-      WHERE NOT category = 'dialogue'
+      -- Abgeschlossene Gespräche gehören in die Datenbank; ein noch offenes
+      -- lebt unter /dialogues und hat in einer Übersicht nichts zu suchen.
+      WHERE NOT (category = 'dialogue' AND dialogue_open)
         AND visibility = 'public'
         AND deleted_at IS NULL
         AND is_draft = false

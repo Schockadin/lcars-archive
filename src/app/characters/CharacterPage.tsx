@@ -1,11 +1,9 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import {
-  LcarsDataRow,
-  LcarsSwitch,
-  LcarsListFilterInput,
-} from "@/components/lcars";
+import { LcarsSwitch, LcarsListFilterInput } from "@/components/lcars";
+import ChronoRow from "@/components/timeline/ChronoRow";
+import ChronoCard from "@/components/timeline/ChronoCard";
 import type { CharacterListItem } from "@/lib/characters";
 import {
   CHARACTER_STATUS_COLOR,
@@ -13,14 +11,20 @@ import {
   CHARACTER_STATUS_ORDER,
   type CharacterStatus,
 } from "@/lib/characterFormat";
-import {
-  characterHref,
-} from "@/lib/contentRoutes";
+import { characterHref } from "@/lib/contentRoutes";
+import { PlusIcon } from "@/lib/icons";
 
-// ─── Konfiguration ──────────────────────────────────────────
+// Die Charakterliste (/characters) — dieselbe Liste wie Chronologie und
+// Datenbank: Schiene mit Punkt (ChronoRow, ohne Datumsspalte), Aktenkarte
+// (ChronoCard) und eine Gruppen-Überschrift darüber. Wo die Chronologie den
+// Monat und die Datenbank den Buchstaben schreibt, steht hier der Status —
+// „Aktiv", „Inaktiv", „Verstorben" — bzw. die Generation.
+//
+// Vorher waren es eigene, flache Zeilen (.character-entry: farbiger Stub +
+// Balken) und die Gruppen standen als LcarsDataRow darüber. Drei Übersichten,
+// drei Bauweisen — jetzt eine.
+
 // Zentrale Definition der Status-Gruppen: Reihenfolge, Label, Farbe.
-// Beide Sortiermodi greifen auf dasselbe Farbschema zurück, damit
-// die Optik konsistent bleibt.
 const STATUS_GROUPS: {
   key: CharacterStatus;
   label: string;
@@ -38,7 +42,8 @@ const GENERATIONS: { num: number; label: string; color: string }[] = [
   { num: 3, label: "Dritte Generation", color: "var(--lcars-quaternary)" },
 ];
 
-// Lookup Map für Rank-Mapping
+// Rang-Kürzel für das Etikett der Karte — dort ist Platz für drei bis vier
+// Zeichen, nicht für „Lieutenant Junior Grade".
 const RANK_MAP: Record<string, string> = {
   Ensign: "ENS",
   "Lieutenant Junior Grade": "LTJG",
@@ -54,7 +59,6 @@ const RANK_MAP: Record<string, string> = {
 
 type SortMode = "status" | "generation";
 
-// ─── Hauptkomponente ────────────────────────────────────────
 export default function CharacterPage({
   characters,
 }: {
@@ -83,7 +87,7 @@ export default function CharacterPage({
       : GENERATIONS.map((g) => ({
           label: g.label,
           color: g.color,
-          // Ein Charakter kann in mehreren Generationen auftauchen
+          // Ein Charakter kann in mehreren Generationen auftauchen —
           // er erscheint in jeder zutreffenden Gruppe.
           items: filteredCharacters.filter((c) =>
             (c.metadata.generation ?? []).includes(g.num),
@@ -91,18 +95,37 @@ export default function CharacterPage({
         }));
 
   return (
-    <div className="flex flex-col items-start">
-      <div className="mb-[16px] flex flex-col items-start w-full">
+    <div className="lcars-wide-column">
+      <div className="mb-[16px]">
         <div className="flex w-full flex-wrap items-baseline justify-between gap-[8px]">
           <h1 className="lcars-data-row-heading">Charaktere</h1>
           {/* Einstieg in den Beziehungsgraph der Kampagne — er gehört zu den
-              Charakteren, hat aber zu viel Fläche für diese Spalte. */}
+              Charakteren, hat aber zu viel Fläche für diese Seite. */}
           <Link href="/characters/beziehungen" className="lcars-wikilink">
             Beziehungen
           </Link>
         </div>
+        <p className="lcars-eyebrow">
+          Das Ensemble der Kampagne ·{" "}
+          {mode === "status" ? "nach Status" : "nach Generation"}
+        </p>
+      </div>
+
+      <div className="lcars-toolbar">
+        {/* Dieselbe Stelle wie „Ereignis eintragen" in der Chronologie und
+            „Eintrag anlegen" in der Datenbank: der Knopf, der etwas Neues
+            beginnt, steht links vor den Filtern. */}
+        <Link
+          href="/user/characters/new"
+          className="lcars-icon-btn self-start"
+          aria-label="Charakter anlegen"
+          title="Charakter anlegen"
+        >
+          <PlusIcon />
+        </Link>
+
         <LcarsSwitch
-          className="flex w-full"
+          className="flex"
           options={[
             { key: "status", label: "Status" },
             { key: "generation", label: "Generation" },
@@ -110,74 +133,91 @@ export default function CharacterPage({
           active={mode}
           onChange={setMode}
         />
+
         <LcarsListFilterInput
           value={query}
           onChange={setQuery}
           ariaLabel="Charaktere filtern"
-          className="mt-[8px] w-full max-w-[640px]"
         />
       </div>
 
       {filteredCharacters.length === 0 ? (
         <p className="lcars-empty-state">Keine Charaktere für diesen Filter.</p>
       ) : (
-        groups.map(
-          (group) =>
-            group.items.length > 0 && (
-              <section key={group.label} className="mb-[20px] w-full">
-                <LcarsDataRow
-                  value={group.items.length}
-                  label={group.label}
-                  accentColor={group.color}
-                  color={group.color}
-                  className="ml-auto"
-                />
-                <CharacterRows characters={group.items} color={group.color} />
-              </section>
-            ),
-        )
+        <>
+          <div className="archive-entry-list">
+            {groups.map(
+              (group) =>
+                group.items.length > 0 && (
+                  <div key={group.label} className="contents">
+                    <h2 className="timeline-period archive-letter-period">
+                      {group.label}
+                    </h2>
+                    {group.items.map((character) => (
+                      <ChronoRow key={character.id} color={group.color}>
+                        <CharacterCard
+                          character={character}
+                          color={group.color}
+                        />
+                      </ChronoRow>
+                    ))}
+                  </div>
+                ),
+            )}
+          </div>
+          <p className="lcars-eyebrow mt-[12px]">
+            {filteredCharacters.length === characters.length
+              ? `${characters.length} Charaktere`
+              : `${filteredCharacters.length} von ${characters.length} Charakteren`}
+          </p>
+        </>
       )}
     </div>
   );
 }
 
-// ─── Charakter-Zeilen ───────────────────────────────────────
-// Klassisches LCARS-Muster: farbiger Stub + flache Daten-Leiste.
-// Die Hover-Farbe wird per CSS-Variable injiziert, damit eine einzige
-// .character-entry-Regel in globals.css für alle Gruppen funktioniert.
-function CharacterRows({
-  characters,
+// Eine Charakterkarte: Rang-Kürzel als Etikett, der Name als Titel, darunter
+// Spezies, Zugehörigkeit und Spieler — die Angaben, nach denen am Tisch
+// gefragt wird. Die Farbe ist die der Gruppe (Status bzw. Generation).
+function CharacterCard({
+  character,
   color,
 }: {
-  characters: CharacterListItem[];
+  character: CharacterListItem;
   color: string;
 }) {
+  const m = character.metadata;
+  const affiliation = [
+    ...(m.affiliation?.ships ?? []),
+    ...(m.affiliation?.factions ?? []),
+  ];
+
   return (
-    <div className="mt-[8px] flex flex-col gap-[3px]">
-      {characters.map((c) => (
-        <Link
-          key={c.id}
-          href={characterHref(c.slug)}
-          className="character-entry"
-          style={
-            {
-              "--entry-color": color,
-            } as React.CSSProperties
-          }
-        >
-          <span className="character-entry-stub">
-            {String(c.id).padStart(3, "0")}
-          </span>
-          <span className="character-entry-bar">
-            <span className="character-entry-name">{c.name}</span>
-            {c.metadata.rank && (
-              <span className="character-entry-rank">
-                {RANK_MAP[c.metadata.rank]}
-              </span>
-            )}
-          </span>
-        </Link>
-      ))}
-    </div>
+    <ChronoCard
+      color={color}
+      tag={m.rank ? (RANK_MAP[m.rank] ?? m.rank) : undefined}
+      title={character.name}
+      href={characterHref(character.slug)}
+      ariaLabel={m.rank ? `${character.name} — ${m.rank}` : character.name}
+      meta={
+        <>
+          {m.species.length > 0 && (
+            <span>
+              <b>Spezies</b> {m.species.join(" / ")}
+            </span>
+          )}
+          {affiliation.length > 0 && (
+            <span>
+              <b>Zugehörigkeit</b> {affiliation.join(", ")}
+            </span>
+          )}
+          {m.player && (
+            <span>
+              <b>Spieler</b> {m.player}
+            </span>
+          )}
+        </>
+      }
+    />
   );
 }

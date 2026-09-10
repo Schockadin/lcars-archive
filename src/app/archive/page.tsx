@@ -3,6 +3,7 @@ import { getAllArchiveEntries } from "@/lib/archive";
 import { isArchiveCategory } from "@/lib/archiveFormat";
 import PageMeta from "@/components/PageMeta";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
+import { dialoguesHref } from "@/lib/contentRoutes";
 import ArchiveEntryList from "./ArchiveEntryList";
 
 export const metadata = {
@@ -21,14 +22,14 @@ export default async function ArchivePage({
 }) {
   const { cat, participant } = await searchParams;
 
-  // Gespräche sind aus dem Archiv in den Charaktere-Bereich umgezogen — alte
-  // Links/Bookmarks auf ?cat=dialogue (inkl. ?participant=) landen jetzt dort.
-  if (cat === "dialogue") {
-    redirect(
-      participant
-        ? `/characters/dialogues?participant=${encodeURIComponent(participant)}`
-        : "/characters/dialogues",
-    );
+  // Ein Gespräch eines bestimmten Teilnehmers sucht man nicht im Alphabet,
+  // sondern in der Chronologie: dort gibt es den Personenfilter. Der alte
+  // ?participant=<slug> lässt sich dort nicht weiterverwenden (gefiltert wird
+  // über den Namen), also führt der Link auf die Gespräche insgesamt. Ohne
+  // Teilnehmer bleibt „Gespräche" eine Kategorie der Datenbank wie jede
+  // andere.
+  if (cat === "dialogue" && participant) {
+    redirect(dialoguesHref());
   }
 
   const [entries, viewer] = await Promise.all([

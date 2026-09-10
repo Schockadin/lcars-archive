@@ -14,7 +14,7 @@ const BETEILIGT = 'select[aria-label="Nach beteiligter Person filtern"]';
 
 async function alleEreignisse(page: Page) {
   await page.locator(`#timeline ${UMFANG}`).selectOption("all");
-  await expect(page.locator("#timeline .timeline-event")).toHaveCount(6);
+  await expect(page.locator("#timeline .timeline-event")).toHaveCount(7);
 }
 
 test.describe("Chronologie", () => {
@@ -46,8 +46,8 @@ test.describe("Chronologie", () => {
   test("zeigt mit „Alle Ereignisse“ den vollen Zeitstrahl", async ({ page }) => {
     await alleEreignisse(page);
     const timeline = page.locator("#timeline");
-    await expect(timeline.locator(".timeline-card-title")).toHaveCount(6);
-    await expect(timeline).toContainText("6 Ereignisse");
+    await expect(timeline.locator(".timeline-card-title")).toHaveCount(7);
+    await expect(timeline).toContainText("7 Ereignisse");
   });
 
   test("sortiert absteigend und dreht auf Klick um", async ({ page }) => {
@@ -56,11 +56,15 @@ test.describe("Chronologie", () => {
       page.locator("#timeline .timeline-card-title").allTextContents();
     const desc = await titles();
     expect(desc[0]).toContain("Zweite Mission");
-    expect(desc[desc.length - 1]).toContain("Tuvok geboren");
+    expect(desc[desc.length - 2]).toContain("Tuvok geboren");
+    // Undatiert steht in BEIDEN Richtungen am Ende — es liegt nicht früher
+    // oder später, es liegt nirgends.
+    expect(desc[desc.length - 1]).toContain("Schichtwechsel");
 
     await page.locator("#timeline .mission-sort button").first().click();
     const asc = await titles();
     expect(asc[0]).toContain("Tuvok geboren");
+    expect(asc[asc.length - 1]).toContain("Schichtwechsel");
   });
 
   test("bietet nur das Datum als Sortierung an", async ({ page }) => {
@@ -77,9 +81,10 @@ test.describe("Chronologie", () => {
   test("trennt die Monate mit einer Zwischenüberschrift", async ({ page }) => {
     await alleEreignisse(page);
     const periods = page.locator("#timeline .timeline-period");
-    // 2401 · Juni, 2401 · März und 2364 · Mai.
-    await expect(periods).toHaveCount(3);
+    // 2401 · Juni, 2401 · März, 2364 · Mai und die undatierte Gruppe.
+    await expect(periods).toHaveCount(4);
     await expect(periods.first()).toContainText("2401");
+    await expect(periods.last()).toHaveText("Ohne Datum");
   });
 
   test("bietet je Jahr einen Knopf und schränkt darauf ein", async ({
@@ -95,7 +100,7 @@ test.describe("Chronologie", () => {
 
     // Ein zweiter Klick auf dasselbe Jahr hebt den Filter wieder auf.
     await years.filter({ hasText: "2364" }).click();
-    await expect(page.locator("#timeline .timeline-event")).toHaveCount(6);
+    await expect(page.locator("#timeline .timeline-event")).toHaveCount(7);
   });
 
   test("stellt das neueste Jahr nach links", async ({ page }) => {
@@ -297,14 +302,32 @@ test.describe("Chronologie", () => {
     await expect(beteiligte).toHaveText("Kira");
   });
 
-  test("nennt die Zahl der angezeigten Ereignisse", async ({ page }) => {
+  test("zeigt Gespräche ohne Datum als eigene Gruppe am Ende", async ({
+    page,
+  }) => {
     await alleEreignisse(page);
-    await expect(page.locator("#timeline")).toContainText("6 Ereignisse");
+    // Die Chronologie ist die Übersicht der Gespräche (früher eine eigene
+    // Spalte im Charaktere-Bereich) — eines ohne In-Story-Datum wäre sonst
+    // nirgends zu finden.
+    const letzte = page.locator("#timeline .timeline-event").last();
+    await expect(letzte.locator(".timeline-tag")).toHaveText("Gespräch");
+    await expect(letzte.locator(".timeline-card-title")).toContainText(
+      "Schichtwechsel",
+    );
+    // Kein Datum auf der Karte: „Datum —" wäre eine Zeile, die nichts sagt.
+    await expect(letzte.locator(".timeline-card-date")).toHaveCount(0);
+    await expect(
+      page.locator("#timeline .timeline-period").last(),
+    ).toHaveText("Ohne Datum");
+  });
+
+  test("nennt die Zahl der angezeigten Ereignisse", async ({ page }) => {    await alleEreignisse(page);
+    await expect(page.locator("#timeline")).toContainText("7 Ereignisse");
     await page
       .locator("#timeline .timeline-year")
       .filter({ hasText: "2364" })
       .click();
-    await expect(page.locator("#timeline")).toContainText("1 von 6");
+    await expect(page.locator("#timeline")).toContainText("1 von 7");
   });
 
   test("führt ein Klick irgendwo auf der Karte zum Eintrag", async ({

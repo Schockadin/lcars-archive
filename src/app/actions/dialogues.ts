@@ -56,6 +56,7 @@ import { logCaughtError } from "@/lib/errorLog";
 import {
   archiveHref,
   dialogueHref,
+  dialoguesHref,
 } from "@/lib/contentRoutes";
 
 export interface DialogueMessageState {
@@ -539,7 +540,7 @@ export async function deleteDialogueAction(
     }
   }
 
-  redirect("/characters/dialogues");
+  redirect(dialoguesHref());
 }
 
 // Globale Präferenz (nicht pro Dialog, siehe DialogueViewToggle.tsx) —

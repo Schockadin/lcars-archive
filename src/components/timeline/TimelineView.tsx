@@ -398,7 +398,11 @@ function EventRow({
         // Ein von Hand eingetragenes Ereignis hat keinen Inhalt, auf den zu
         // zeigen wäre — dann steht der Titel als reiner Text.
         href={event.href ?? undefined}
-        ariaLabel={`${event.title} — ${visual.label}, ${fmtDate(event.date)}`}
+        ariaLabel={
+          event.date
+            ? `${event.title} — ${visual.label}, ${fmtDate(event.date)}`
+            : `${event.title} — ${visual.label}`
+        }
         // Der Herkunftshinweis steht nur da, wo er etwas einschränkt: dass
         // ein Ereignis aus den gepflegten Angaben stammt, ist der Normalfall
         // und braucht keine Marke.
@@ -411,9 +415,10 @@ function EventRow({
         }
         // Nur das Datum. Die Ereignisart steht schon als Etikett darüber,
         // und die Quelle wiederholte meist bloß den Titel — der Titel führt
-        // ohnehin dorthin.
+        // ohnehin dorthin. Ohne Datum entfällt die Zeile: „Datum —" wäre eine
+        // Zeile, die nichts sagt (die Gruppe darüber sagt es).
         date={
-          endDate ? (
+          !event.date ? undefined : endDate ? (
             <>
               <b>Zeitraum</b> {fmtDate(event.date)} – {fmtDate(endDate)}
             </>

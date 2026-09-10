@@ -251,6 +251,17 @@
   font-weight: 400;
   opacity: 0.7;
 }
+/* Die Textzeilen fangen keine Klicks ab: über der Karte liegt die unsichtbare
+   Fläche des Titel-Links (siehe .timeline-card-title::after), und ein Klick
+   auf die Kurzfassung oder auf „Spieler" soll dorthin führen wie jeder andere
+   Klick auf die Karte — sonst wäre „die ganze Karte ist anklickbar" nur dort
+   wahr, wo gerade kein Text steht. Die aufklappbaren Felder liegen bewusst
+   darüber (siehe .timeline-panel) und bleiben bedienbar. */
+.timeline-card-summary,
+.timeline-card-date,
+.timeline-card-meta {
+  pointer-events: none;
+}
 
 /* Aufklappbares Feld (<details>): die Kurzfassung steht offen, die
    Beteiligten zu. Ohne JavaScript — der Zustand gehört ins Element, nicht

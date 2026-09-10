@@ -16,12 +16,14 @@ import RelationGraph from "@/components/character/RelationGraph";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import TimelineView from "@/components/timeline/TimelineView";
 import ArchiveEntryList from "@/app/archive/ArchiveEntryList";
+import CharacterPage from "@/app/characters/CharacterPage";
 import SettingsPanel from "@/app/_shared/SettingsPanel";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import PortraitPicker from "@/app/user/characters/_shared/PortraitPicker";
 import { buildOnboardingSteps } from "@/lib/onboardingSteps";
 import type { TimelineEvent } from "@/lib/timelineTypes";
 import type { ArchiveEntryPreview } from "@/types/archive";
+import type { CharacterListItem } from "@/lib/characters";
 import { missionHref, missionLogHref } from "@/lib/contentRoutes";
 import { DEFAULT_ADVANCEMENT_RULES } from "@/lib/advancement";
 import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
@@ -173,6 +175,88 @@ const DEMO_TIMELINE: TimelineEvent[] = [
     sourceTitle: "Tuvok",
     href: "/characters/tuvok",
     people: ["Tuvok"],
+  },
+  // Ein Gespräch ohne In-Story-Datum: die Chronologie ist seit dem Umzug aus
+  // dem Charaktere-Bereich die Übersicht der Gespräche, also gehört es dazu —
+  // als Gruppe „Ohne Datum" am Ende (siehe sortEvents in timelineTypes.ts).
+  {
+    id: "archive_entry:schichtwechsel:date",
+    date: null,
+    title: "Schichtwechsel auf Deck 9",
+    detail: "Ein Gespräch ohne gepflegtes Datum.",
+    category: "dialogue",
+    origin: "metadata",
+    sourceType: "archive_entry",
+    sourceTitle: "Schichtwechsel auf Deck 9",
+    href: "/characters/dialogues/schichtwechsel-auf-deck-9",
+    people: ["Kira"],
+  },
+];
+
+// Attrappen-Charaktere: je Status einer, einmal mit vollen Angaben (Rang,
+// Spezies, Zugehörigkeit, Spieler) und einmal fast leer — mehr braucht die
+// Karte nicht, um alle ihre Zeilen zu zeigen.
+const DEMO_CHARACTERS: CharacterListItem[] = [
+  {
+    id: 1,
+    slug: "tuvok",
+    name: "Tuvok",
+    status: "active",
+    updated_at: "2401-06-12",
+    metadata: {
+      rank: "Lieutenant Commander",
+      species: ["Vulkanier"],
+      homeworld: "Vulcan",
+      age: null,
+      dateOfBirth: "2364-05-11",
+      affiliation: {
+        ships: ["USS Aurora"],
+        factions: ["Sternenflotte"],
+        division: "command",
+      },
+      player: "Dominic",
+      tags: [],
+      aliases: [],
+      generation: [1],
+    },
+  },
+  {
+    id: 2,
+    slug: "kira",
+    name: "Kira Nerys",
+    status: "retired",
+    updated_at: "2401-03-20",
+    metadata: {
+      rank: "Commander",
+      species: ["Bajoraner"],
+      homeworld: null,
+      age: null,
+      dateOfBirth: null,
+      affiliation: null,
+      player: null,
+      tags: [],
+      aliases: [],
+      generation: [1, 2],
+    },
+  },
+  {
+    id: 3,
+    slug: "shran",
+    name: "Thy'lek Shran",
+    status: "deceased",
+    updated_at: "2400-11-02",
+    metadata: {
+      rank: null,
+      species: ["Andorianer"],
+      homeworld: "Andor",
+      age: null,
+      dateOfBirth: null,
+      affiliation: null,
+      player: null,
+      tags: [],
+      aliases: [],
+      generation: [2],
+    },
   },
 ];
 
@@ -430,6 +514,14 @@ export default function DevGalleryPage() {
       <section id="archive-list" className="flex flex-col gap-[8px] mb-[24px]">
         <h2 className="lcars-text">Datenbank</h2>
         <ArchiveEntryList entries={DEMO_ARCHIVE} />
+      </section>
+
+      {/* Die Charakterliste (/characters) mit Attrappen-Figuren: sie trägt
+          seit der Zusammenlegung dieselbe Zeile und Karte, nur steht über
+          jeder Gruppe der Status statt eines Monats oder Buchstabens. */}
+      <section id="character-list" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Charaktere</h2>
+        <CharacterPage characters={DEMO_CHARACTERS} />
       </section>
 
       {/* Portrait wählen und zuschneiden (Stammdaten der eigenen

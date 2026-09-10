@@ -65,6 +65,16 @@ export function dialogueHref(slug: string): string {
   return `/dialogues/${slug}`;
 }
 
+// Die Übersicht der Gespräche ist die Chronologie, Ereignisart „Gespräch" —
+// vorher eine eigene Spalte im Charaktere-Bereich (/characters/dialogues).
+// Mit Namen einer Figur: dieselbe Ansicht, auf ihre Gespräche eingeschränkt
+// (der Personenfilter der Chronologie, wie bei characterLogsHref).
+export function dialoguesHref(personName?: string | null): string {
+  return personName
+    ? `${CHRONOLOGY_PATH}?scope=all&category=dialogue&person=${encodeURIComponent(personName)}`
+    : `${CHRONOLOGY_PATH}/dialogue`;
+}
+
 // ── Die Bearbeitungsseiten im eigenen Bereich ───────────────────────────
 // Adressiert über die ID, nicht den Slug: der Slug kann sich mit dem Titel
 // ändern, die Bearbeitungsseite soll unter derselben Adresse bleiben.

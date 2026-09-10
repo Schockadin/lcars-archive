@@ -129,6 +129,46 @@ describe("sortEvents", () => {
     sortEvents(events, "asc");
     expect(events.map((e) => e.id)).toEqual(["b", "a"]);
   });
+
+  it("stellt undatierte Ereignisse in beiden Richtungen ans Ende", () => {
+    const events = [
+      event({ id: "ohne", date: null, title: "Gespräch" }),
+      event({ id: "b", date: "2401-06-12" }),
+      event({ id: "a", date: "2401-03-05" }),
+    ];
+    expect(sortEvents(events, "asc").map((e) => e.id)).toEqual([
+      "a",
+      "b",
+      "ohne",
+    ]);
+    expect(sortEvents(events, "desc").map((e) => e.id)).toEqual([
+      "b",
+      "a",
+      "ohne",
+    ]);
+  });
+});
+
+describe("undatierte Ereignisse", () => {
+  it("stehen unter einer eigenen Zwischenüberschrift", () => {
+    expect(periodLabel(null)).toBe("Ohne Datum");
+    expect(periodKey(null)).toBe("undated");
+  });
+
+  it("liegen in keinem Jahr und fallen dem Jahresfilter zum Opfer", () => {
+    const events = [event({ date: null }), event({ date: "2401-03-05" })];
+    expect(yearsOf(events)).toEqual(["2401"]);
+    expect(
+      filterEvents(events, { query: "", category: null, year: "2401" }),
+    ).toHaveLength(1);
+  });
+
+  it("bestimmen die Vorbelegung des Datumsfeldes nicht", () => {
+    expect(
+      latestEventDate([event({ date: null }), event({ date: "2401-03-05" })]),
+    ).toBe("2401-03-05");
+    expect(latestEventDate([event({ date: null })])).toBeNull();
+  });
 });
 
 describe("periodLabel", () => {

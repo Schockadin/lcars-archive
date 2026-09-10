@@ -51,16 +51,17 @@ test.describe("Datenbank", () => {
   test("führt ein Klick irgendwo auf der Karte zum Eintrag", async ({ page }) => {
     const karte = page.locator("#archive-list .timeline-card").first();
     await karte.scrollIntoViewIfNeeded();
-    // Auf die Meta-Zeile gezielt — per Maus-Koordinate, weil Playwright sonst
-    // meldet, dass der Titel-Link die Klicks abfängt. Genau das ist ja der
-    // Zweck: die unsichtbare Fläche liegt über der ganzen Karte.
-    const meta = (await karte.locator(".timeline-card-meta").boundingBox())!;
+    // Weit neben dem Titel geklickt — per Maus-Koordinate, weil Playwright
+    // sonst meldet, dass der Titel-Link die Klicks abfängt. Genau das ist ja
+    // der Zweck: die unsichtbare Fläche liegt über der ganzen Karte (siehe
+    // .timeline-card-title::after).
+    const box = (await karte.boundingBox())!;
     // Geprüft wird die ANFRAGE, nicht die Zielseite: die Datenbank-Seite
     // braucht die Datenbank, die es auf /dev-gallery nicht gibt.
     const angefragt = page.waitForRequest((request) =>
       request.url().includes("/archive/andor"),
     );
-    await page.mouse.click(meta.x + meta.width / 2, meta.y + meta.height / 2);
+    await page.mouse.click(box.x + box.width - 20, box.y + box.height / 2);
     expect((await angefragt).url()).toContain("/archive/andor");
   });
 

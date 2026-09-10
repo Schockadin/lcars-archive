@@ -23,6 +23,7 @@ import {
 import {
   characterLogsHref,
   characterSheetHref,
+  dialoguesHref,
 } from "@/lib/contentRoutes";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
@@ -225,9 +226,9 @@ export default function CharacterHero({
             />
 
             {/* Schnellzugriffe direkt unter dem Bild: Logs + Gespräche des
-                Charakters, jeweils mit Anzahl. Gespräche verlinkt auf die
-                nach diesem Teilnehmer gefilterte Gesprächs-Liste im
-                Charaktere-Bereich. */}
+                Charakters, jeweils mit Anzahl. Beide führen in die
+                Chronologie, auf diese Person gefiltert — die Gespräche haben
+                dort seit dem Umzug aus dem Charaktere-Bereich ihr Zuhause. */}
             <div className="char-file-links">
               <LcarsDataRow
                 value={logCount}
@@ -238,7 +239,7 @@ export default function CharacterHero({
               <LcarsDataRow
                 value={conversationCount}
                 label="Gespräche"
-                href={`/characters/dialogues?participant=${character.slug}`}
+                href={dialoguesHref(character.name)}
                 color={CONTENT_TYPE_COLOR.dialogue}
               />
             </div>

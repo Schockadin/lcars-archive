@@ -2,6 +2,67 @@
 
 Next.js 16 (App Router, Cache Components) + Postgres. Star-Trek-Adventures campaign archive.
 
+## 2026-06 — Charaktere, Gespräche und die eine Liste
+
+### Problem / Auftrag
+1. Die Gespräche sollen aus dem Charaktere-Bereich verschwinden und in der
+   Chronologie ihren Platz haben (Ereignisart „Gespräch").
+2. `/characters` soll dieselbe Ansicht tragen wie `/chronologie` und
+   `/archive`, mit dem Status als Gruppen-Überschrift und einem „+"-Knopf, der
+   auf `/user/characters/new` führt.
+
+### Done
+- **Gespräche raus aus /characters**: `CharactersAndDialogues.tsx` (Zwei-Spalten
+  mit Umschalter) und `characters/dialogues/DialogueList.tsx` +
+  `characters/dialogues/page.tsx` entfernt. `/characters` rendert nur noch die
+  Charakterliste; die Detailseiten `/characters/dialogues/[slug]` bleiben.
+  `.chars-dialogues-*` in `character.css` entfallen.
+- **Neuer Helfer** `dialoguesHref(personName?)` in `contentRoutes.ts`:
+  `/chronologie/dialogue` bzw. mit Person
+  `/chronologie?scope=all&category=dialogue&person=…`. Genutzt von
+  `CharacterHero` („Gespräche"-Schnellzugriff), `ActionsMenu`
+  (Löschen-Redirect), `actions/dialogues.ts` und dem `?cat=dialogue&participant=`
+  -Redirect der Datenbank.
+- **Gespräche in der Chronologie**: `getAllArchiveEntries` filtert wieder nur
+  OFFENE Gespräche weg (`NOT (category = 'dialogue' AND dialogue_open)`), und
+  ein Gespräch OHNE In-Story-Datum steht jetzt trotzdem im Zeitstrahl:
+  `TimelineEvent.date` ist `string | null`, undatierte Ereignisse stehen in
+  beiden Sortierrichtungen am Ende unter der Zwischenüberschrift „Ohne Datum"
+  (`sortEvents`, `periodKey`/`periodLabel`, `yearsOf`, `filterEvents`,
+  `latestEventDate`, `missionEndDates` angepasst). Die Karte lässt die
+  Datumszeile dann weg.
+- **/characters im Design der beiden anderen Listen**: `CharacterPage.tsx`
+  nutzt `ChronoRow` (ohne Datumsspalte) + `ChronoCard`; `<h2>` je Gruppe ist
+  der Status („Aktiv", „Inaktiv", „Verstorben") bzw. die Generation. Karte:
+  Rang-Kürzel als Etikett, Name als Titel, Meta-Zeile aus Spezies,
+  Zugehörigkeit und Spieler. Toolbar wie überall (`+`-Knopf →
+  `/user/characters/new`, Status/Generation-Umschalter, Filterfeld,
+  „Beziehungen"-Link, Trefferzähler). Die alten `.character-entry*`-Regeln und
+  die geteilte Typografie-Regel in `shared.css` sind entfallen, `loading.tsx`
+  bildet die neue Form nach.
+- **Klickfläche**: die Textzeilen der Karte (`-summary`, `-date`, `-meta`)
+  bekommen `pointer-events: none`, damit „die ganze Karte ist anklickbar"
+  auch dort gilt, wo Text steht.
+- **Attrappen + Tests**: `/dev-gallery` zeigt zusätzlich `#character-list`
+  (drei Figuren, je ein Status) und ein undatiertes Gespräch im Zeitstrahl.
+  Neu: `e2e/characters-list.spec.ts` (7 Fälle × 2 Viewports),
+  `src/app/characters/CharacterPage.test.tsx` (7 Fälle), Fälle für die
+  undatierte Gruppe in `timelineTypes.test.ts` und `e2e/timeline.spec.ts`.
+
+### Verification
+- `tsc --noEmit` + `eslint src e2e`: clean.
+- vitest: 855 passed (87 Dateien).
+- `npx playwright test`: 276 passed, 4 skipped, 0 failed.
+
+### Offen / Backlog
+- P2: sandbox-taugliches Schema (oder Mock) für Postgres, damit
+  `npm run build` lokal nicht an `archive_entries` scheitert (pgvector fehlt).
+- P2: E2E für die Detailseite eines Datenbank-Eintrags / einer Personalakte
+  (braucht DB oder eine weitere Attrappe).
+- P2: Der alte `?participant=<slug>`-Link der Datenbank landet jetzt auf allen
+  Gesprächen — der Personenfilter der Chronologie arbeitet mit Namen, nicht
+  mit Slugs.
+
 ## 2026-06 — Chronologie & Datenbank teilen Zeile und Karte
 
 ### Problem
@@ -16,44 +77,16 @@ Archiv-Einträgen fehlte außerdem das Kategorie-Etikett der Chronologie.
 - **Neu** `src/components/timeline/ChronoCard.tsx`: die gemeinsame Karte
   (Etikett, verlinkter Titel, Zusatzmarke, Kurzfassung, Datums- bzw.
   Meta-Zeile) samt exportiertem `ChronoPanel` für die `<details>`-Felder.
-  Markup und alle `.timeline-card*`-Klassen unverändert — die E2E-Suite
-  greift darauf zu.
-- **`ChronoRow`** kennt jetzt eine Zeile ohne Datumsspalte (`date`
-  weggelassen → `.timeline-event-undated`); die Datenbank nutzt sie, ihre
-  kopierte Schiene (`.archive-entry-row/-rail/-dot`) ist entfallen.
-- **`TimelineView.EventRow`** und **`ArchiveEntryCard`** bauen beide auf
-  `ChronoCard`; `ArchiveEntryRow` ist nur noch die ChronoRow-Hülle.
-- **Kategorie-Etikett** in der Datenbank: `CATEGORY_CONFIG[...].label` als
-  `.timeline-tag` (ORT, FRAKTION, NPC …) — wie das Art-Etikett der
-  Chronologie. Gilt auch für die Gesprächsliste (`/characters/dialogues`),
-  die dieselbe Karte nutzt.
-- **CSS**: `.timeline-card-meta` (umbrechende Mono-Zeile) und
-  `.timeline-card-summary` neu in `timeline.css`; die 70 Zeilen
-  Nachbau-/Umlackier-Regeln in `archive.css` sind weg.
-- **Attrappen-Ansicht**: `/dev-gallery` hat eine Sektion `#archive-list` mit
-  drei Attrappen-Einträgen — die Datenbank ist damit ohne DB prüfbar.
-- **Tests**: neue E2E-Datei `e2e/archive-list.spec.ts` (7 Fälle × 2 Viewports:
-  Zeile ohne Datumsspalte, Etikett, Kartenfarbe, Klick auf die ganze Karte,
-  Suche, Kategorie-Filter, Buchstabengruppen) und ein Unit-Fall für das
-  Etikett in `ArchiveEntryList.test.tsx`.
-
-### Verification
-- `npx tsc --noEmit` + `eslint`: clean.
-- vitest: 844 passed (86 Dateien).
-- `npx playwright test`: 260 passed, 4 skipped, 0 failed.
-
-### Offen / Backlog
-- P2: sandbox-taugliches Schema (oder Mock) für Postgres, damit
-  `npm run build` lokal nicht an `archive_entries` scheitert (pgvector fehlt).
-- P2: E2E für die Detailseite eines Datenbank-Eintrags (braucht DB oder eine
-  weitere Attrappe).
-
-### Environment notes
-- Unit-Tests brauchen ein gesetztes `DATABASE_URL` (z.B.
-  `postgresql://postgres:postgres@localhost:5432/lcars_test`), sonst werfen
-  11 Dateien beim Import von `src/lib/db.ts`.
-- E2E/CI laufen gegen `npm run dev` auf :3000 und einen Listener auf
-  127.0.0.1:5432, damit DB-Routen schnell scheitern statt zu hängen.
+- **`ChronoRow`** kennt eine Zeile ohne Datumsspalte (`date` weggelassen →
+  `.timeline-event-undated`); Datenbank und Charakterliste nutzen sie.
+- **`TimelineView.EventRow`**, **`ArchiveEntryCard`** und die Charakterliste
+  bauen auf `ChronoCard`.
+- **Kategorie-Etikett** in der Datenbank (`CATEGORY_CONFIG[...].label`).
+- **CSS**: `.timeline-card-meta`, `.timeline-card-summary` neu in
+  `timeline.css`; die Nachbau-Regeln in `archive.css` sind weg.
+- **Tests**: `e2e/archive-list.spec.ts`, Etikett-Fall in
+  `ArchiveEntryList.test.tsx`, Attrappen-Sektion `#archive-list` in
+  `/dev-gallery`.
 
 ## 2026-06 — Build fix + E2E suite review
 
@@ -62,16 +95,19 @@ Archiv-Einträgen fehlte außerdem das Kategorie-Etikett der Chronologie.
 2. E2E suite drifted from the current app state.
 
 ### Done
-- **Fixed** `src/app/chronologie/page.tsx`: page component is no longer `async`; `searchParams` is now awaited inside a `ChronologieContent` child rendered within `ChronologyShell`'s `<Suspense>` boundary (mirrors the sibling `[kategorie]/page.tsx` pattern). Build now compiles + passes TypeScript.
-- **E2E drift fixed** (`e2e/timeline.spec.ts`): the manual event-creation trigger is now an icon button `aria-label="Event hinzufügen"` (was looked up as button "Ereignis eintragen"; that string is now only the modal title). Updated 2 tests.
-- **Stale unit test fixed** (`src/components/timeline/TimelineView.test.tsx`): aria-label `"Nach beteiligter Person"` → `"Nach beteiligter Person filtern"`.
-
-### Verification
-- `npm test` (vitest): 843 passed.
-- `npm run lint`: clean.
-- `npx playwright test` (full e2e): 246 passed, 4 skipped, 0 failed — run against a local Postgres so DB-backed routes fail fast like CI.
-- Note: the earlier card-click e2e failures were purely environmental (no Postgres listening on :5432 in the sandbox made the DB-backed mission route hang past the 5s `toHaveURL` timeout). Not a drift and not changed.
+- **Fixed** `src/app/chronologie/page.tsx`: `searchParams` wird in einem Kind
+  innerhalb der `<Suspense>`-Grenze aufgelöst.
+- **E2E drift fixed** (`e2e/timeline.spec.ts`): Icon-Knopf
+  `aria-label="Event hinzufügen"` statt Button „Ereignis eintragen".
+- **Stale unit test fixed** (`TimelineView.test.tsx`): aria-label „Nach
+  beteiligter Person filtern".
 
 ### Environment notes
-- E2E/CI use a dummy `DATABASE_URL` and a real Postgres listener on 127.0.0.1:5432; the pg client fails fast on missing tables so routes render quickly.
-- Full production `npm run build` additionally needs the real DB schema (`scripts/schema.sql`, requires the `vector`/pgvector extension) — present in the deploy env, absent in this sandbox.
+- Unit-Tests brauchen ein gesetztes `DATABASE_URL` (z.B.
+  `postgresql://postgres:postgres@localhost:5432/lcars_test`), sonst werfen
+  11 Dateien beim Import von `src/lib/db.ts`.
+- E2E/CI laufen gegen `npm run dev` auf :3000 und einen Listener auf
+  127.0.0.1:5432, damit DB-Routen schnell scheitern statt zu hängen.
+- Full production `npm run build` braucht zusätzlich das echte Schema
+  (`scripts/schema.sql`, benötigt pgvector) — im Deploy vorhanden, im Sandbox
+  nicht.
