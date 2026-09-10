@@ -1,35 +1,19 @@
 // src/app/characters/[slug]/logs/page.tsx
-import { getCharacterBySlug, getLogsByCharacter } from "@/lib/characters";
-import { notFound } from "next/navigation";
+import { getCharacterBySlug } from "@/lib/characters";
+import { notFound, redirect } from "next/navigation";
 import { getViewer, canView } from "@/lib/visibility";
-import PageMeta from "@/components/PageMeta";
-import CharacterLogList from "./CharacterLogList";
+import { characterLogsHref } from "@/lib/contentRoutes";
 
 interface Props {
   params: Promise<{ slug: string }>;
 }
 
-
-export async function generateMetadata({ params }: Props) {
-  const { slug } = await params;
-  const character = await getCharacterBySlug(slug);
-  const visible =
-    character &&
-    (character.visibility === "public" ||
-      canView(character.visibility, character.player_id, await getViewer()));
-  return {
-    title: visible
-      ? `Logs · ${character.name} · Neo Archive`
-      : "Nicht gefunden · Neo Archive",
-  };
-}
-
+// Alte, gespeicherte Logbuch-Links bleiben gültig, führen aber zur gefilterten
+// Chronologie. Sichtbarkeit wird vor dem Redirect wie auf der früheren Seite
+// geprüft, damit ein privater Charaktername nicht über die URL preisgegeben
+// wird.
 export default async function CharacterLogsPage({ params }: Props) {
   const { slug } = await params;
-
-  // Charakter und Betrachter parallel laden (getViewer liest nur die Session,
-  // nicht den Charakter) — spart die Round-Trip-Latenz gegenüber dem früheren
-  // sequenziellen Nachladen des Betrachters.
   const [character, viewer] = await Promise.all([
     getCharacterBySlug(slug),
     getViewer(),
@@ -43,16 +27,5 @@ export default async function CharacterLogsPage({ params }: Props) {
     notFound();
   }
 
-  const logs = await getLogsByCharacter(character.id);
-
-  return (
-    <div className="w-full max-w-[640px]">
-      <PageMeta title={character.name} section="characters" />
-      <CharacterLogList
-        characterName={character.name}
-        characterSlug={character.slug}
-        logs={logs}
-      />
-    </div>
-  );
+  redirect(characterLogsHref(character.name));
 }

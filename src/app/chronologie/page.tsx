@@ -2,24 +2,31 @@ import type { Metadata } from "next";
 import CategoryTimeline, {
   ChronologyShell,
 } from "@/app/chronologie/_shared/CategoryChronology";
+import { isTimelineCategory, type TimelineScope } from "@/lib/timelineTypes";
 
 export const metadata: Metadata = {
   title: "Chronologie",
 };
 
-// Die Chronologie der Kampagne: alle Ereignisse in ihrer eigenen
-// Zeitrechnung, zusammengetragen aus den Angaben der Inhalte, den Marken im
-// Fließtext und dem, was die Spielleitung aus den Texten hat ableiten lassen
-// (siehe src/lib/timeline.ts).
-//
-// Nicht gecacht — die Liste hängt an der Sichtbarkeit der betrachtenden
-// Person (nicht-öffentliche Logbücher, Entwürfe), genau wie der
-// Beziehungsgraph. Gerüst und Datenzugriff teilt sie sich mit den
-// Kategorie-Seiten (siehe _shared/CategoryChronology.tsx).
-export default function ChronologiePage() {
+// Filter in der Adresse sind teilbar. Die frühere Charakter-Logbuchseite
+// nutzt das für „Alle Ereignisse → Logbücher → Charakter".
+export default async function ChronologiePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ scope?: string; category?: string; person?: string }>;
+}) {
+  const { scope, category, person } = await searchParams;
+  const initialScope: TimelineScope | undefined = scope === "all" ? "all" : undefined;
+  const initialCategory = category && isTimelineCategory(category) ? category : null;
+  const initialPerson = person?.trim() || null;
+
   return (
     <ChronologyShell>
-      <CategoryTimeline />
+      <CategoryTimeline
+        category={initialCategory}
+        initialScope={initialScope}
+        initialPerson={initialPerson}
+      />
     </ChronologyShell>
   );
 }

@@ -43,8 +43,7 @@
   .reading-mode > div > footer {
     display: none; /* Elbow-Bar oben + Footer-Bar unten */
   }
-  .reading-mode .mission-detail-logs,
-  .reading-mode .archive-browser-nav {
+  .reading-mode .mission-detail-logs {
     display: none; /* sekundäre Listen-Navigation */
   }
 

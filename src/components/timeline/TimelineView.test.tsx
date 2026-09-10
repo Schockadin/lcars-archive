@@ -82,6 +82,27 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
     replace.mockRestore();
   });
 
+  it("übernimmt einen teilbaren Logbuch- und Personenfilter", () => {
+    render(
+      <TimelineView
+        events={[
+          event({ id: "log-tuvok", title: "Logbuch Tuvok", category: "log", people: ["Tuvok"] }),
+          event({ id: "log-kim", title: "Logbuch Kim", category: "log", people: ["Harry Kim"] }),
+          event({ id: "mission-tuvok", title: "Mission Tuvok", category: "mission", people: ["Tuvok"] }),
+        ]}
+        initialScope="all"
+        initialCategory="log"
+        initialPerson="Tuvok"
+      />,
+    );
+
+    expect(screen.getByLabelText("Umfang der Chronologie")).toHaveValue("all");
+    expect(artFilter()).toHaveValue("log");
+    expect(screen.getByLabelText("Nach beteiligter Person")).toHaveValue("Tuvok");
+    expect(screen.getByText("Logbuch Tuvok")).toBeInTheDocument();
+    expect(screen.queryByText("Logbuch Kim")).toBeNull();
+    expect(screen.queryByText("Mission Tuvok")).toBeNull();
+  });
   it("stellt ohne vorgewählte Art auf den Umfang Missionen", () => {
     // Vorgabe der Chronologie: nur die Missionsstarts. Eine Art aus der
     // Route hebt das auf „Alle Ereignisse" an, weil sie sonst garantiert

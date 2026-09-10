@@ -45,10 +45,10 @@ export function characterHref(slug: string): string {
   return `/characters/${slug}`;
 }
 
-// Unterseiten einer Personalakte: die Logbücher dieser Figur und der
-// Charakterbogen als Leseansicht.
-export function characterLogsHref(slug: string): string {
-  return `${characterHref(slug)}/logs`;
+// Das Logbuch einer Figur ist Teil der Chronologie, nicht mehr eine eigene
+// Leseseite. Der Name ist der vorhandene Personenfilter der Chronologie.
+export function characterLogsHref(characterName: string): string {
+  return `${CHRONOLOGY_PATH}?scope=all&category=log&person=${encodeURIComponent(characterName)}`;
 }
 
 export function characterSheetHref(slug: string): string {

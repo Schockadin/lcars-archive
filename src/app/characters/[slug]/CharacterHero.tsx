@@ -232,7 +232,7 @@ export default function CharacterHero({
               <LcarsDataRow
                 value={logCount}
                 label="Logs"
-                href={characterLogsHref(character.slug)}
+                href={characterLogsHref(character.name)}
                 color={CONTENT_TYPE_COLOR.mission_log}
               />
               <LcarsDataRow

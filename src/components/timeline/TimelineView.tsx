@@ -71,6 +71,8 @@ function categoryFromPath(): string | null {
 export default function TimelineView({
   events,
   initialCategory = null,
+  initialScope,
+  initialPerson = null,
   syncUrl = false,
   canAddEvent = false,
   characters = [],
@@ -78,18 +80,20 @@ export default function TimelineView({
 }: {
   events: TimelineEvent[];
   initialCategory?: string | null;
+  initialScope?: TimelineScope;
+  initialPerson?: string | null;
   syncUrl?: boolean;
   canAddEvent?: boolean;
   characters?: { id: number; name: string }[];
   latestEventDate?: string | null;
 }) {
   const [scope, setScope] = useState<TimelineScope>(
-    initialCategory ? "all" : DEFAULT_TIMELINE_SCOPE,
+    initialScope ?? (initialCategory ? "all" : DEFAULT_TIMELINE_SCOPE),
   );
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(initialCategory);
-  const [person, setPerson] = useState<string | null>(null);
+  const [person, setPerson] = useState<string | null>(initialPerson);
   const [year, setYear] = useState<string | null>(null);
 
   // Ereignisart und Beteiligte richten sich nach dem UMFANG, nicht nach dem
