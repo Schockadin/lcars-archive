@@ -98,7 +98,7 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
 
     expect(screen.getByLabelText("Umfang der Chronologie")).toHaveValue("all");
     expect(artFilter()).toHaveValue("log");
-    expect(screen.getByLabelText("Nach beteiligter Person")).toHaveValue("Tuvok");
+    expect(screen.getByLabelText("Nach beteiligter Person filtern")).toHaveValue("Tuvok");
     expect(screen.getByText("Logbuch Tuvok")).toBeInTheDocument();
     expect(screen.queryByText("Logbuch Kim")).toBeNull();
     expect(screen.queryByText("Mission Tuvok")).toBeNull();

@@ -362,7 +362,7 @@ test.describe("Ereignis eintragen", () => {
 
     await page
       .locator("#timeline")
-      .getByRole("button", { name: "Ereignis eintragen" })
+      .getByRole("button", { name: "Event hinzufügen" })
       .click();
 
     const dialog = page.getByRole("dialog", { name: "Ereignis eintragen" });
@@ -376,7 +376,7 @@ test.describe("Ereignis eintragen", () => {
   test("schließt das Fenster mit Escape", async ({ page }) => {
     await page
       .locator("#timeline")
-      .getByRole("button", { name: "Ereignis eintragen" })
+      .getByRole("button", { name: "Event hinzufügen" })
       .click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.keyboard.press("Escape");

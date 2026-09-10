@@ -8,25 +8,34 @@ export const metadata: Metadata = {
   title: "Chronologie",
 };
 
+interface Props {
+  searchParams: Promise<{ scope?: string; category?: string; person?: string }>;
+}
+
 // Filter in der Adresse sind teilbar. Die frühere Charakter-Logbuchseite
 // nutzt das für „Alle Ereignisse → Logbücher → Charakter".
-export default async function ChronologiePage({
-  searchParams,
-}: {
-  searchParams: Promise<{ scope?: string; category?: string; person?: string }>;
-}) {
+export default function ChronologiePage({ searchParams }: Props) {
+  return (
+    <ChronologyShell>
+      <ChronologieContent searchParams={searchParams} />
+    </ChronologyShell>
+  );
+}
+
+// searchParams wird hier drin aufgelöst, nicht in der Seite selbst: unter
+// cacheComponents ist es ein Laufzeit-Zugriff und würde außerhalb der
+// Suspense-Grenze die ganze Seite blockieren.
+async function ChronologieContent({ searchParams }: Props) {
   const { scope, category, person } = await searchParams;
   const initialScope: TimelineScope | undefined = scope === "all" ? "all" : undefined;
   const initialCategory = category && isTimelineCategory(category) ? category : null;
   const initialPerson = person?.trim() || null;
 
   return (
-    <ChronologyShell>
-      <CategoryTimeline
-        category={initialCategory}
-        initialScope={initialScope}
-        initialPerson={initialPerson}
-      />
-    </ChronologyShell>
+    <CategoryTimeline
+      category={initialCategory}
+      initialScope={initialScope}
+      initialPerson={initialPerson}
+    />
   );
 }
