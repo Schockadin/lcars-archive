@@ -2,6 +2,59 @@
 
 Next.js 16 (App Router, Cache Components) + Postgres. Star-Trek-Adventures campaign archive.
 
+## 2026-06 — Chronologie & Datenbank teilen Zeile und Karte
+
+### Problem
+`/chronologie` und `/archive` (Datenbank) zeigten dieselbe Sache doppelt: die
+Chronologie mit `ChronoRow` + einer inline gebauten `.timeline-card`
+(`EventRow` in `TimelineView.tsx`), die Datenbank mit `ArchiveEntryRow`
+(eigene, kopierte Schiene) + `ArchiveEntryCard` auf Basis von `AkteCard`, die
+in `archive.css` erst wieder zur Ereigniskarte umlackiert werden musste.
+Archiv-Einträgen fehlte außerdem das Kategorie-Etikett der Chronologie.
+
+### Done
+- **Neu** `src/components/timeline/ChronoCard.tsx`: die gemeinsame Karte
+  (Etikett, verlinkter Titel, Zusatzmarke, Kurzfassung, Datums- bzw.
+  Meta-Zeile) samt exportiertem `ChronoPanel` für die `<details>`-Felder.
+  Markup und alle `.timeline-card*`-Klassen unverändert — die E2E-Suite
+  greift darauf zu.
+- **`ChronoRow`** kennt jetzt eine Zeile ohne Datumsspalte (`date`
+  weggelassen → `.timeline-event-undated`); die Datenbank nutzt sie, ihre
+  kopierte Schiene (`.archive-entry-row/-rail/-dot`) ist entfallen.
+- **`TimelineView.EventRow`** und **`ArchiveEntryCard`** bauen beide auf
+  `ChronoCard`; `ArchiveEntryRow` ist nur noch die ChronoRow-Hülle.
+- **Kategorie-Etikett** in der Datenbank: `CATEGORY_CONFIG[...].label` als
+  `.timeline-tag` (ORT, FRAKTION, NPC …) — wie das Art-Etikett der
+  Chronologie. Gilt auch für die Gesprächsliste (`/characters/dialogues`),
+  die dieselbe Karte nutzt.
+- **CSS**: `.timeline-card-meta` (umbrechende Mono-Zeile) und
+  `.timeline-card-summary` neu in `timeline.css`; die 70 Zeilen
+  Nachbau-/Umlackier-Regeln in `archive.css` sind weg.
+- **Attrappen-Ansicht**: `/dev-gallery` hat eine Sektion `#archive-list` mit
+  drei Attrappen-Einträgen — die Datenbank ist damit ohne DB prüfbar.
+- **Tests**: neue E2E-Datei `e2e/archive-list.spec.ts` (7 Fälle × 2 Viewports:
+  Zeile ohne Datumsspalte, Etikett, Kartenfarbe, Klick auf die ganze Karte,
+  Suche, Kategorie-Filter, Buchstabengruppen) und ein Unit-Fall für das
+  Etikett in `ArchiveEntryList.test.tsx`.
+
+### Verification
+- `npx tsc --noEmit` + `eslint`: clean.
+- vitest: 844 passed (86 Dateien).
+- `npx playwright test`: 260 passed, 4 skipped, 0 failed.
+
+### Offen / Backlog
+- P2: sandbox-taugliches Schema (oder Mock) für Postgres, damit
+  `npm run build` lokal nicht an `archive_entries` scheitert (pgvector fehlt).
+- P2: E2E für die Detailseite eines Datenbank-Eintrags (braucht DB oder eine
+  weitere Attrappe).
+
+### Environment notes
+- Unit-Tests brauchen ein gesetztes `DATABASE_URL` (z.B.
+  `postgresql://postgres:postgres@localhost:5432/lcars_test`), sonst werfen
+  11 Dateien beim Import von `src/lib/db.ts`.
+- E2E/CI laufen gegen `npm run dev` auf :3000 und einen Listener auf
+  127.0.0.1:5432, damit DB-Routen schnell scheitern statt zu hängen.
+
 ## 2026-06 — Build fix + E2E suite review
 
 ### Problem

@@ -15,11 +15,13 @@ import PersonnelFileView from "@/components/character/PersonnelFileView";
 import RelationGraph from "@/components/character/RelationGraph";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import TimelineView from "@/components/timeline/TimelineView";
+import ArchiveEntryList from "@/app/archive/ArchiveEntryList";
 import SettingsPanel from "@/app/_shared/SettingsPanel";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import PortraitPicker from "@/app/user/characters/_shared/PortraitPicker";
 import { buildOnboardingSteps } from "@/lib/onboardingSteps";
 import type { TimelineEvent } from "@/lib/timelineTypes";
+import type { ArchiveEntryPreview } from "@/types/archive";
 import { missionHref, missionLogHref } from "@/lib/contentRoutes";
 import { DEFAULT_ADVANCEMENT_RULES } from "@/lib/advancement";
 import { EMPTY_CHARACTER_STATS } from "@/lib/characterStats";
@@ -173,6 +175,67 @@ const DEMO_TIMELINE: TimelineEvent[] = [
     people: ["Tuvok"],
   },
 ];
+
+// Attrappen-Einträge der Datenbank: je Kategorie eine andere Farbe, einmal
+// mit Kurzfassung/Attributen/Tags und einmal ohne — mehr braucht die Karte
+// nicht, um alle ihre Zeilen zu zeigen.
+const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
+  {
+    id: 1,
+    slug: "andor",
+    title: "Andor",
+    category: "location",
+    tags: ["Eiswelt", "Föderation"],
+    metadata: {
+      summary: "Der Heimatplanet der Andorianer, ein Eismond im Kuiper-Gürtel.",
+      attributes: [
+        { label: "System", value: "Procyon" },
+        { label: "Status", value: "Mitglied" },
+      ],
+      characters: [],
+      missions: [],
+      setting: null,
+      logDate: null,
+      participants: [],
+      location: null,
+    },
+  },
+  {
+    id: 2,
+    slug: "shran",
+    title: "Thy'lek Shran",
+    category: "npc",
+    tags: [],
+    metadata: {
+      summary: null,
+      attributes: [{ label: "Spezies", value: "Andorianer" }],
+      characters: [],
+      missions: [],
+      setting: null,
+      logDate: null,
+      participants: [],
+      location: null,
+    },
+  },
+  {
+    id: 3,
+    slug: "obsidianischer-orden",
+    title: "Obsidianischer Orden",
+    category: "faction",
+    tags: ["Geheimdienst"],
+    metadata: {
+      summary: "Der cardassianische Geheimdienst — offiziell aufgelöst.",
+      attributes: [],
+      characters: [],
+      missions: [],
+      setting: null,
+      logDate: null,
+      participants: [],
+      location: null,
+    },
+  },
+];
+
 
 
 // Nur für lokale Playwright-E2E-Läufe (next dev) — testet Layout-Details
@@ -359,6 +422,14 @@ export default function DevGalleryPage() {
           ]}
         />
         <TimelineView events={DEMO_TIMELINE} />
+      </section>
+
+      {/* Die Datenbank (/archive) mit Attrappen-Einträgen: sie trägt seit der
+          Zusammenlegung dieselbe Zeile und dieselbe Karte wie die Chronologie
+          darüber (ChronoRow/ChronoCard) — hier nebeneinander zu sehen. */}
+      <section id="archive-list" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Datenbank</h2>
+        <ArchiveEntryList entries={DEMO_ARCHIVE} />
       </section>
 
       {/* Portrait wählen und zuschneiden (Stammdaten der eigenen

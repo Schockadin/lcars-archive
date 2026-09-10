@@ -71,6 +71,13 @@ describe("ArchiveEntryList", () => {
     expect(visibleTitles()).toEqual(["Mars", "Erdorbit", "Erde", "Andor"]);
   });
 
+  it("zeigt je Eintrag ein Kategorie-Etikett wie in der Chronologie", () => {
+    const { container } = render(<ArchiveEntryList entries={ENTRIES} />);
+    expect(
+      [...container.querySelectorAll(".timeline-tag")].map((tag) => tag.textContent),
+    ).toEqual(["NPC", "Ort", "Ort", "Ort"]);
+  });
+
   it("zeigt eine Leermeldung, wenn nichts passt", () => {
     render(<ArchiveEntryList entries={ENTRIES} />);
     fireEvent.change(screen.getByLabelText("Einträge filtern"), {

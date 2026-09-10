@@ -3,7 +3,9 @@
 ──────────────────────────────────────────────────────────────────── */
 
 /* Alphabetische Entsprechung zum Zeitstrahl: Buchstaben-Perioden über einer
-   durchgehenden Schiene und den zugehörigen Akten. */
+   durchgehenden Schiene und den zugehörigen Karten. Zeile (ChronoRow, ohne
+   Datumsspalte) und Karte (ChronoCard) sind dieselben wie in der
+   Chronologie — ihre Optik steht deshalb vollständig in timeline.css. */
 .archive-entry-list {
   display: flex;
   flex-direction: column;
@@ -11,67 +13,6 @@
 }
 .archive-letter-period {
   margin-top: 22px;
-}
-.archive-entry-row {
-  display: grid;
-  grid-template-columns: 18px 1fr;
-  align-items: stretch;
-}
-.archive-entry-rail {
-  position: relative;
-}
-.archive-entry-rail::before {
-  content: "";
-  position: absolute;
-  left: 8px;
-  top: 0;
-  bottom: 0;
-  width: 1px;
-  background: var(--lcars-border);
-}
-.archive-entry-row:last-child .archive-entry-rail::before {
-  bottom: auto;
-  height: 14px;
-}
-.archive-entry-dot {
-  position: absolute;
-  left: 3px;
-  top: 9px;
-  width: 11px;
-  height: 11px;
-  border: 2px solid var(--archive-rail-color, var(--lcars-primary));
-  background: var(--lcars-bg);
-}
-/* Die Kategorie wird zur Fläche wie in der Chronologie. --mission-color
-   kommt von LcarsAkteCard; die alte 9px-Schiene wäre darauf unsichtbar. */
-.archive-entry-row .archive-entry-card {
-  margin-bottom: 12px;
-  background: var(--mission-color, var(--lcars-primary));
-  color: var(--lcars-ink-dark);
-  transition: filter 120ms;
-}
-.archive-entry-row .archive-entry-card:hover {
-  background: var(--mission-color, var(--lcars-primary));
-  filter: brightness(1.08);
-}
-.archive-entry-row .archive-entry-card:focus-visible {
-  outline: 2px solid var(--lcars-ink-dark);
-  outline-offset: 2px;
-}
-.archive-entry-row .archive-entry-card .mission-akte-rail {
-  display: none;
-}
-.archive-entry-row .archive-entry-card .mission-akte-title,
-.archive-entry-row .archive-entry-card .mission-akte-summary,
-.archive-entry-row .archive-entry-card .mission-akte-meta {
-  color: inherit;
-}
-.archive-entry-row .archive-entry-card .mission-akte-summary {
-  opacity: 0.8;
-}
-.archive-entry-row .archive-entry-card .mission-akte-meta b {
-  color: inherit;
-  opacity: 0.7;
 }
 /* ── Archiv-Eintrag (Detailseite) ────────────────────────────────── */
 /* Nimmt auf Desktop die volle Breite der Inhaltsspalte ein (kein Lese-Cap);

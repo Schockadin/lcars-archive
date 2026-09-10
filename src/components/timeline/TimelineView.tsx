@@ -1,12 +1,12 @@
 "use client";
 import { Fragment, useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import {
   LcarsSortSwitch,
   LcarsListFilterInput,
   type SortDir,
 } from "@/components/lcars";
 import ChronoRow from "@/components/timeline/ChronoRow";
+import ChronoCard, { ChronoPanel } from "@/components/timeline/ChronoCard";
 import {
   DEFAULT_TIMELINE_SCOPE,
   EVENT_CATEGORIES,
@@ -376,8 +376,8 @@ export default function TimelineView({
 // übrigen Archivs; bei einigen hundert Ereignissen war das eine Wand aus
 // Text, durch die man das Datum suchen musste.
 //
-// <details> statt eigenem Zustand: der Auf-/Zu-Zustand gehört zur einzelnen
-// Karte, nicht in die Liste — und beim Filtern soll er nicht mitwandern.
+// Gerüst und Karte teilt sie mit der Datenbank (ChronoRow/ChronoCard) — hier
+// steht nur, was ein Ereignis von einem Datenbank-Eintrag unterscheidet.
 function EventRow({
   event,
   endDate,
@@ -391,79 +391,58 @@ function EventRow({
 
   return (
     <ChronoRow date={event.date} color={visual.color}>
-      <div
-        className="timeline-card"
-        style={{ "--timeline-color": visual.color } as React.CSSProperties}
+      <ChronoCard
+        color={visual.color}
+        tag={visual.label}
+        title={event.title}
+        // Ein von Hand eingetragenes Ereignis hat keinen Inhalt, auf den zu
+        // zeigen wäre — dann steht der Titel als reiner Text.
+        href={event.href ?? undefined}
+        ariaLabel={`${event.title} — ${visual.label}, ${fmtDate(event.date)}`}
+        // Der Herkunftshinweis steht nur da, wo er etwas einschränkt: dass
+        // ein Ereignis aus den gepflegten Angaben stammt, ist der Normalfall
+        // und braucht keine Marke.
+        badge={
+          event.origin !== "metadata" ? (
+            <span className="timeline-origin">
+              {ORIGIN_LABELS[event.origin]}
+            </span>
+          ) : undefined
+        }
+        // Nur das Datum. Die Ereignisart steht schon als Etikett darüber,
+        // und die Quelle wiederholte meist bloß den Titel — der Titel führt
+        // ohnehin dorthin.
+        date={
+          endDate ? (
+            <>
+              <b>Zeitraum</b> {fmtDate(event.date)} – {fmtDate(endDate)}
+            </>
+          ) : (
+            <>
+              <b>Datum</b> {fmtDate(event.date)}
+            </>
+          )
+        }
       >
-        <div className="timeline-card-body">
-          <div className="timeline-card-head">
-            <span className="timeline-tag">{visual.label}</span>
-            {/* Ein von Hand eingetragenes Ereignis hat keinen Inhalt, auf
-                den zu zeigen wäre — dann steht der Titel als reiner Text. */}
-            {event.href ? (
-              <Link
-                href={event.href}
-                className="timeline-card-title"
-                aria-label={`${event.title} — ${visual.label}, ${fmtDate(event.date)}`}
-              >
-                {event.title}
-              </Link>
-            ) : (
-              <span className="timeline-card-title">{event.title}</span>
-            )}
-            {/* Der Herkunftshinweis steht nur da, wo er etwas einschränkt:
-                dass ein Ereignis aus den gepflegten Angaben stammt, ist der
-                Normalfall und braucht keine Marke. */}
-            {event.origin !== "metadata" && (
-              <span className="timeline-origin">
-                {ORIGIN_LABELS[event.origin]}
-              </span>
-            )}
-          </div>
+        {event.detail && (
+          <ChronoPanel
+            label="Teaser"
+            open
+            // Von Hand eingetragene Beschreibungen sind Markdown (siehe
+            // getTimeline) — die übrigen sind schlichter Text.
+            bodyClassName={event.detailHtml ? "mission-body" : undefined}
+            bodyHtml={event.detailHtml ?? undefined}
+          >
+            {event.detail}
+          </ChronoPanel>
+        )}
 
-          {/* Nur das Datum. Die Ereignisart steht schon als Etikett darüber,
-              und die Quelle wiederholte meist bloß den Titel — der Titel
-              führt ohnehin dorthin. */}
-          <p className="timeline-card-date">
-            {endDate ? (
-              <>
-                <b>Zeitraum</b> {fmtDate(event.date)} – {fmtDate(endDate)}
-              </>
-            ) : (
-              <>
-                <b>Datum</b> {fmtDate(event.date)}
-              </>
-            )}
-          </p>
-
-          {event.detail && (
-            <details className="timeline-panel" open>
-              <summary className="timeline-panel-head">Teaser</summary>
-              {/* Von Hand eingetragene Beschreibungen sind Markdown (siehe
-                  getTimeline) — die übrigen sind schlichter Text. */}
-              {event.detailHtml ? (
-                <div
-                  className="timeline-panel-body mission-body"
-                  dangerouslySetInnerHTML={{ __html: event.detailHtml }}
-                />
-              ) : (
-                <div className="timeline-panel-body">{event.detail}</div>
-              )}
-            </details>
-          )}
-
-          {event.people.length > 0 && (
-            <details className="timeline-panel">
-              <summary className="timeline-panel-head">
-                Beteiligt ({event.people.length})
-              </summary>
-              <div className="timeline-panel-body">
-                {event.people.join(" · ")}
-              </div>
-            </details>
-          )}
-        </div>
-      </div>
+        {event.people.length > 0 && (
+          <ChronoPanel label={`Beteiligt (${event.people.length})`}>
+            {event.people.join(" · ")}
+          </ChronoPanel>
+        )}
+      </ChronoCard>
     </ChronoRow>
   );
 }
