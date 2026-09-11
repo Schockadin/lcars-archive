@@ -5,6 +5,7 @@ import type { Visibility } from "@/lib/visibility";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
+import { contentImageSrc } from "@/lib/contentRoutes";
 // getDialogueSubscribers deckt jeden archive_entry-Slug ab, nicht nur offene
 // Dialoge (siehe Kommentar dort in dialoguesCore.ts) — hier für "normale"
 // (nicht-Dialog-)Einträge wiederverwendet statt einer identischen Query.
@@ -212,31 +213,51 @@ export async function getNpcOptions(): Promise<NpcOption[]> {
   `;
 }
 
+// Zeilenform von getAllArchiveEntries: wie die Vorschau, nur trägt die
+// Abfrage statt des fertigen Bild-Links die Id des ersten hochgeladenen
+// Bildes (null = keines).
+interface ArchiveEntryRow extends Omit<ArchiveEntryPreview, "thumbnail"> {
+  image_id: number | null;
+}
+
 export async function getAllArchiveEntries(): Promise<ArchiveEntryPreview[]> {
   "use cache";
   cacheTag(cacheTags.archive);
   cacheLife("max");
-  const rows = await sql<ArchiveEntryPreview[]>`
+  const rows = await sql<ArchiveEntryRow[]>`
       SELECT
-        id,
-        slug,
-        title,
-        category,
-        tags,
-        metadata
-      FROM archive_entries
+        a.id,
+        a.slug,
+        a.title,
+        a.category,
+        a.tags,
+        a.metadata,
+        -- Das zuerst hochgeladene Bild des Eintrags als Vorschaubild der
+        -- Karte; LATERAL statt einer zweiten Abfrage je Zeile.
+        img.id AS image_id
+      FROM archive_entries a
+      LEFT JOIN LATERAL (
+        SELECT i.id
+        FROM content_images i
+        WHERE i.content_type = 'archive_entry' AND i.content_id = a.id
+        ORDER BY i.created_at ASC, i.id ASC
+        LIMIT 1
+      ) img ON TRUE
       -- Gespräche gehören in die Chronologie, nicht in die Enzyklopädie: ein
       -- offenes lebt unter /dialogues, ein abgeschlossenes steht in der
       -- Chronologie unter der Ereignisart „Gespräch" (siehe getTimeline).
       -- Diese Übersicht führt sie deshalb gar nicht — sie ist zugleich die
       -- Auswahl der verknüpfbaren Orte/NPCs in den Gesprächs-Formularen.
-      WHERE NOT category = 'dialogue'
-        AND visibility = 'public'
-        AND deleted_at IS NULL
-        AND is_draft = false
-      ORDER BY title ASC
+      WHERE NOT a.category = 'dialogue'
+        AND a.visibility = 'public'
+        AND a.deleted_at IS NULL
+        AND a.is_draft = false
+      ORDER BY a.title ASC
     `;
-  return rows.map(parseMeta);
+  return rows.map(({ image_id, ...row }) => ({
+    ...parseMeta(row),
+    thumbnail: image_id ? contentImageSrc(image_id) : null,
+  }));
 }
 
 // Ein Archiv-Eintrag per Slug inkl. aufgelöster Verweise (ein-/ausgehend).

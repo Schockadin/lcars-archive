@@ -16,6 +16,7 @@ import Link from "next/link";
 // Verlinkt ist der Titel, der per ::after die ganze Karte anklickbar macht.
 export default function ChronoCard({
   color,
+  thumbnailSrc,
   tag,
   title,
   href,
@@ -28,6 +29,10 @@ export default function ChronoCard({
 }: {
   // Farbe der Fläche; kommt aus der Ereignisart bzw. der Kategorie.
   color: string;
+  // Kleines Vorschaubild links in der Karte — das erste hochgeladene Bild des
+  // Eintrags (bei Charakteren das Portrait). Fehlt es, bleibt die Karte wie
+  // bisher: KEIN Platzhalter, kein leerer Kasten.
+  thumbnailSrc?: string | null;
   // Das Art-Etikett links vor dem Titel (.timeline-tag).
   tag?: React.ReactNode;
   title: React.ReactNode;
@@ -51,6 +56,20 @@ export default function ChronoCard({
       className="timeline-card"
       style={{ "--timeline-color": color } as React.CSSProperties}
     >
+      {thumbnailSrc && (
+        /* Rein schmückend: Titel und Angaben stehen daneben, deshalb leeres
+           alt und kein eigener Link (die ganze Karte ist ohnehin anklickbar).
+           <img> statt next/image wie überall bei /api/content-images/… — die
+           Größen sind unbekannt und die Route liefert die Bytes direkt. */
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className="timeline-card-thumb"
+          src={thumbnailSrc}
+          alt=""
+          loading="lazy"
+          decoding="async"
+        />
+      )}
       <div className="timeline-card-body">
         <div className="timeline-card-head">
           {tag && <span className="timeline-tag">{tag}</span>}

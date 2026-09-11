@@ -21,6 +21,9 @@ export default function ArchiveEntryCard({
   return (
     <ChronoCard
       color={cfg.color}
+      // Erstes hochgeladenes Bild des Eintrags als Vorschaubild links in der
+      // Karte; ohne Bild bleibt die Karte wie bisher.
+      thumbnailSrc={entry.thumbnail}
       tag={cfg.label}
       title={title}
       ariaLabel={`${title} — ${cfg.label}`}

@@ -134,6 +134,11 @@ export interface TimelineEvent {
   // Beteiligte Figuren/NPCs, soweit am Inhalt gepflegt — im Entwurf die Zeile
   // „PERSONEN: …".
   people: string[];
+  // Vorschaubild der Karte: das erste hochgeladene Bild des Quell-Inhalts
+  // (beim Charakter sein Portrait). Fehlt es — und bei einem von Hand
+  // eingetragenen Ereignis, das zu keinem Inhalt gehört —, zeigt die Karte
+  // kein Bild und auch keinen Platzhalter.
+  thumbnail?: string | null;
 }
 
 export function eventId(

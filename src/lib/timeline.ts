@@ -17,7 +17,9 @@ import {
   characterHref,
   missionHref,
   missionLogHref,
+  contentImageSrc,
 } from "@/lib/contentRoutes";
+import { getFirstContentImageIdsBySlug } from "@/lib/contentImages";
 
 // Die Chronologie (/chronologie): alle Ereignisse der Kampagne in zeitlicher
 // Folge, aus drei Quellen zusammengetragen.
@@ -82,6 +84,9 @@ interface CharacterRow {
   metadata: Record<string, unknown>;
   source_md: string | null;
   bio: string | null;
+  // Zugeschnittenes Portrait der Figur (Adresse), falls gepflegt — es ist das
+  // Vorschaubild ihrer Karten.
+  portrait: string | null;
   visibility: Visibility;
   // Charaktere führen ihre Eigentümerin/ihren Eigentümer als player_id, nicht
   // als owner_user_id wie die übrigen Inhalte.
@@ -164,8 +169,15 @@ function markerEvents(
 }
 
 export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[]> {
-  const [missions, logs, entries, characters, inferred, eventCharacters] =
-    await Promise.all([
+  const [
+    missions,
+    logs,
+    entries,
+    characters,
+    inferred,
+    eventCharacters,
+    thumbnails,
+  ] = await Promise.all([
     sql<MissionRow[]>`
       SELECT m.slug, m.title,
              m.started_at::text AS started_at,
@@ -199,7 +211,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
       WHERE deleted_at IS NULL
     `,
     sql<CharacterRow[]>`
-      SELECT slug, name, metadata, source_md, bio,
+      SELECT slug, name, metadata, source_md, bio, portrait,
              visibility, player_id, is_draft
       FROM characters
       WHERE deleted_at IS NULL
@@ -219,7 +231,32 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
       WHERE c.deleted_at IS NULL
       ORDER BY c.name ASC
     `,
+    // Das erste hochgeladene Bild je Inhalt („<Inhaltsart>:<Slug>" → Bild-Id)
+    // — daraus wird das Vorschaubild der Karte. Eine Abfrage für alle
+    // Ereignisse; wer kein Bild hat, steht gar nicht in der Map und bekommt
+    // auch keinen Platzhalter.
+    getFirstContentImageIdsBySlug(),
   ]);
+
+  // Das Vorschaubild einer Quelle — der Charakter nimmt sein Portrait, sofern
+  // er eines hat (dasselbe Bild, das die Personalakte zeigt), sonst gilt für
+  // alle vier Inhaltsarten das erste hochgeladene Bild.
+  const portraits = new Map(
+    characters
+      .filter((character) => character.portrait)
+      .map((character) => [character.slug, character.portrait as string]),
+  );
+  const thumbnailOf = (
+    sourceType: TimelineSourceType,
+    slug: string,
+  ): string | null => {
+    if (sourceType === "character") {
+      const portrait = portraits.get(slug);
+      if (portrait) return portrait;
+    }
+    const imageId = thumbnails.get(`${sourceType}:${slug}`);
+    return imageId ? contentImageSrc(imageId) : null;
+  };
 
   const manualPeople = new Map<number, string[]>();
   for (const row of eventCharacters) {
@@ -252,6 +289,10 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     ...added: TimelineEvent[]
   ): void => {
     for (const event of added) {
+      // Das Vorschaubild hängt an der Quelle, nicht am einzelnen Ereignis —
+      // deshalb hier zentral gesetzt statt an jeder der Stellen, die ein
+      // Ereignis bauen.
+      event.thumbnail = thumbnailOf(event.sourceType, slug);
       events.push(event);
       deterministicDays.add(dayKey(event.sourceType, slug, event.date));
     }
@@ -494,6 +535,8 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
         sourceTitle: row.title,
         href: null,
         people: manualPeople.get(row.id) ?? [],
+        // Kein Inhalt, also kein Bild.
+        thumbnail: null,
       });
       continue;
     }
@@ -522,6 +565,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
       sourceTitle: source.title,
       href: source.href,
       people: [],
+      thumbnail: thumbnailOf(row.source_type, row.source_slug),
     });
   }
 

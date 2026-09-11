@@ -183,6 +183,60 @@ export async function listContentImages(
   return rows.map(mapRow);
 }
 
+// ── Thumbnails der Übersichten ───────────────────────────────────────────
+// Charakterliste, Chronologie und Datenbank zeigen links in der Karte ein
+// kleines Vorschaubild, sofern der Eintrag ein Bild hat (fehlt es, bleibt die
+// Karte wie bisher — kein Platzhalter). Gezeigt wird das ZUERST hochgeladene
+// Bild, dasselbe, das die Galerie oben führt.
+//
+// Eine Abfrage für die ganze Liste (DISTINCT ON) statt einer je Eintrag: die
+// Übersichten haben einige hundert Zeilen. Die Bytes liefert wie überall
+// /api/content-images/<id> (contentImageSrc in contentRoutes.ts), der r2_key bleibt
+// intern.
+
+// Die Bild-Id je content_id — für Listen, die ihre Einträge ohnehin mit der
+// numerischen Id laden (Charaktere, Datenbank).
+export async function getFirstContentImageIds(
+  contentType: ContentImageType,
+  contentIds: number[],
+): Promise<Map<number, number>> {
+  if (contentIds.length === 0) return new Map();
+  const rows = await sql<{ content_id: number; id: number }[]>`
+    SELECT DISTINCT ON (content_id) content_id, id
+    FROM content_images
+    WHERE content_type = ${contentType} AND content_id = ANY(${contentIds})
+    ORDER BY content_id, created_at ASC, id ASC
+  `;
+  return new Map(rows.map((row) => [row.content_id, row.id]));
+}
+
+// Dasselbe, aber über den Slug und über ALLE vier Inhaltstypen: die
+// Chronologie führt ihre Ereignisse als „<Inhaltsart>:<Slug>" (siehe
+// eventId in timelineTypes.ts) und kennt die numerischen Ids gar nicht.
+// Schlüssel der Map ist genau dieses Paar.
+export async function getFirstContentImageIdsBySlug(): Promise<
+  Map<string, number>
+> {
+  const rows = await sql<
+    { content_type: ContentImageType; slug: string; id: number }[]
+  >`
+    SELECT DISTINCT ON (i.content_type, s.slug)
+           i.content_type, s.slug, i.id
+    FROM content_images i
+    JOIN (
+      SELECT 'character'::text     AS content_type, id, slug FROM characters
+      UNION ALL
+      SELECT 'mission'::text       AS content_type, id, slug FROM missions
+      UNION ALL
+      SELECT 'mission_log'::text   AS content_type, id, slug FROM mission_logs
+      UNION ALL
+      SELECT 'archive_entry'::text AS content_type, id, slug FROM archive_entries
+    ) s ON s.content_type = i.content_type AND s.id = i.content_id
+    ORDER BY i.content_type, s.slug, i.created_at ASC, i.id ASC
+  `;
+  return new Map(rows.map((row) => [`${row.content_type}:${row.slug}`, row.id]));
+}
+
 export async function getContentImageById(id: number): Promise<ContentImage | null> {
   const [row] = await sql<ContentImageRow[]>`
     SELECT id, content_type, content_id, r2_key, content_mime, size_bytes, uploaded_by, created_at

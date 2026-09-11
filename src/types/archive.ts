@@ -70,6 +70,10 @@ export interface ArchiveEntryPreview {
   category: ArchiveCategory;
   tags: string[];
   metadata: ArchiveMetadata;
+  // Vorschaubild der Karte (siehe ChronoCard): das erste hochgeladene Bild
+  // des Eintrags. null = kein Bild hinterlegt — dann zeigt die Karte auch
+  // keinen Platzhalter.
+  thumbnail: string | null;
 }
 
 // Eine aufgelöste Querverweis-Kante zwischen Archiv-Einträgen.

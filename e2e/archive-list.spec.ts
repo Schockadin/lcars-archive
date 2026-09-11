@@ -17,6 +17,14 @@ test.describe("Datenbank", () => {
     ).toBeVisible();
   });
 
+  test("zeigt ein Vorschaubild nur bei Einträgen mit Bild", async ({ page }) => {
+    const liste = page.locator("#archive-list");
+    // Genau ein Attrappen-Eintrag hat ein Bild (siehe DEMO_ARCHIVE in
+    // dev-gallery/page.tsx); ohne Bild bleibt die Karte ohne Platzhalter.
+    await expect(liste.locator("img.timeline-card-thumb")).toHaveCount(1);
+    await expect(liste.locator(".timeline-card")).toHaveCount(3);
+  });
+
   test("zeigt jeden Eintrag in der Zeile der Chronologie, ohne Datumsspalte", async ({
     page,
   }) => {

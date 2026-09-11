@@ -4,6 +4,7 @@ import { recordRevision } from "@/lib/contentRevisions";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
+import { contentImageSrc } from "@/lib/contentRoutes";
 import { Character, CharacterMetadata } from "@/types/character";
 import type { CharacterStats } from "@/types/characterStats";
 import { parseCharacterStats } from "@/lib/characterStats";
@@ -77,25 +78,51 @@ function stripStats(metadata: CharacterMetadata): CharacterMetadata {
 export type CharacterListItem = Pick<
   Character,
   "id" | "slug" | "name" | "status" | "metadata" | "updated_at"
->;
+> & {
+  // Das Vorschaubild der Karte (siehe ChronoCard): das Portrait der Figur,
+  // ersatzweise ihr erstes hochgeladenes Bild. null, wenn es beides nicht
+  // gibt — dann zeigt die Karte kein Bild und keinen Platzhalter.
+  thumbnail: string | null;
+};
+
+interface CharacterListRow
+  extends Pick<
+    Character,
+    "id" | "slug" | "name" | "status" | "metadata" | "updated_at" | "portrait"
+  > {
+  // Erstes hochgeladenes Bild der Figur (content_images), falls sie kein
+  // Portrait hat.
+  image_id: number | null;
+}
 
 export async function getCharacterListItems(): Promise<CharacterListItem[]> {
   "use cache";
   cacheTag(cacheTags.characters);
   cacheLife("max");
-  const rows = await sql<CharacterListItem[]>`
-        SELECT id, slug, name, status, metadata, updated_at
-        FROM characters
-        WHERE visibility = 'public' AND deleted_at IS NULL AND is_draft = false
+  const rows = await sql<CharacterListRow[]>`
+        SELECT c.id, c.slug, c.name, c.status, c.metadata, c.updated_at,
+               c.portrait,
+               img.id AS image_id
+        FROM characters c
+        -- Das zuerst hochgeladene Bild der Figur — dasselbe, das die Galerie
+        -- oben führt. LATERAL statt einer zweiten Abfrage je Zeile.
+        LEFT JOIN LATERAL (
+          SELECT i.id
+          FROM content_images i
+          WHERE i.content_type = 'character' AND i.content_id = c.id
+          ORDER BY i.created_at ASC, i.id ASC
+          LIMIT 1
+        ) img ON TRUE
+        WHERE c.visibility = 'public' AND c.deleted_at IS NULL AND c.is_draft = false
         ORDER BY
-          CASE status
+          CASE c.status
             WHEN 'active'   THEN 1
             WHEN 'retired'  THEN 2
             WHEN 'deceased' THEN 3
           END,
-          name ASC
+          c.name ASC
       `;
-  return rows.map((row) => ({
+  return rows.map(({ portrait, image_id, ...row }) => ({
     ...row,
     // stats bleiben draußen, siehe parseCharacter oben — die Liste ist eine
     // Client-Komponente und zeigt keine Werte an.
@@ -104,6 +131,7 @@ export async function getCharacterListItems(): Promise<CharacterListItem[]> {
         ? (JSON.parse(row.metadata) as CharacterMetadata)
         : row.metadata,
     ),
+    thumbnail: portrait ?? (image_id ? contentImageSrc(image_id) : null),
   }));
 }
 

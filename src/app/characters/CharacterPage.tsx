@@ -61,8 +61,14 @@ type SortMode = "status" | "generation";
 
 export default function CharacterPage({
   characters,
+  canCreate = false,
 }: {
   characters: CharacterListItem[];
+  // Ob die betrachtende Person Charaktere anlegen darf (Recht
+  // "content.create", siehe /user/characters/new). Ohne das Recht führt der
+  // Knopf nur auf eine Absage — dann wird er gar nicht erst angeboten, wie
+  // schon in der Datenbank („Eintrag anlegen", siehe ArchiveEntryList).
+  canCreate?: boolean;
 }) {
   const [mode, setMode] = useState<SortMode>("status");
   // Freitext-Filter über Name (und Rang) — grenzt vor der Gruppierung ein.
@@ -115,14 +121,16 @@ export default function CharacterPage({
         {/* Dieselbe Stelle wie „Ereignis eintragen" in der Chronologie und
             „Eintrag anlegen" in der Datenbank: der Knopf, der etwas Neues
             beginnt, steht links vor den Filtern. */}
-        <Link
-          href="/user/characters/new"
-          className="lcars-icon-btn self-start"
-          aria-label="Charakter anlegen"
-          title="Charakter anlegen"
-        >
-          <PlusIcon />
-        </Link>
+        {canCreate && (
+          <Link
+            href="/user/characters/new"
+            className="lcars-icon-btn self-start"
+            aria-label="Charakter anlegen"
+            title="Charakter anlegen"
+          >
+            <PlusIcon />
+          </Link>
+        )}
 
         <LcarsSwitch
           className="flex"
@@ -195,6 +203,9 @@ function CharacterCard({
   return (
     <ChronoCard
       color={color}
+      // Portrait (ersatzweise das erste hochgeladene Bild) als Vorschaubild
+      // links in der Karte; ohne Bild bleibt die Karte wie bisher.
+      thumbnailSrc={character.thumbnail}
       tag={m.rank ? (RANK_MAP[m.rank] ?? m.rank) : undefined}
       title={character.name}
       href={characterHref(character.slug)}

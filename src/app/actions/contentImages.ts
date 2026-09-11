@@ -3,7 +3,10 @@ import { getSession } from "@/lib/session";
 import { getUserById } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
 import { getViewer, canView, resolveViewer } from "@/lib/visibility";
-import { revalidateCharacter } from "@/lib/revalidate";
+import {
+  revalidateCharacter,
+  revalidateContentImageLists,
+} from "@/lib/revalidate";
 import {
   isContentImageType,
   getContentAccessContext,
@@ -98,6 +101,9 @@ export async function uploadContentImagesAction(
     throw err;
   }
 
+  // Die Übersichten tragen das erste Bild als Vorschaubild — nach einem
+  // Upload also die zwischengespeicherten Listen auffrischen.
+  revalidateContentImageLists(access.contentType);
   return { images: await listContentImages(access.contentType, contentId) };
 }
 
@@ -110,6 +116,9 @@ export async function deleteContentImageAction(
   if ("error" in access) return access;
 
   await deleteContentImage(access.contentType, contentId, imageId);
+  // War es das Vorschaubild der Übersicht, rückt jetzt das nächste nach (oder
+  // die Karte zeigt gar keins mehr).
+  revalidateContentImageLists(access.contentType);
   return { images: await listContentImages(access.contentType, contentId) };
 }
 

@@ -54,6 +54,15 @@ test.describe("Charakterliste", () => {
     await expect(liste).toContainText("1 von 3 Charakteren");
   });
 
+  test("zeigt ein Vorschaubild nur bei Figuren mit Bild", async ({ page }) => {
+    const liste = page.locator("#character-list");
+    // Von den drei Attrappen hat genau eine ein Bild (siehe DEMO_CHARACTERS
+    // in dev-gallery/page.tsx) — die beiden anderen bekommen KEINEN
+    // Platzhalter, sondern gar kein Element.
+    await expect(liste.locator("img.timeline-card-thumb")).toHaveCount(1);
+    await expect(liste.locator(".timeline-card")).toHaveCount(3);
+  });
+
   test("führt zum Anlegen eines Charakters", async ({ page }) => {
     await expect(
       page.locator('#character-list a[aria-label="Charakter anlegen"]'),
