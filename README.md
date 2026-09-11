@@ -873,6 +873,12 @@ Lege eine Datei `.env.local` an (Vorlage: [`.env.example`](.env.example)):
 # PostgreSQL-Verbindungsstring
 DATABASE_URL="postgres://user:password@host:5432/datenbank"
 
+# Verschlüsselung zur Datenbank: Ohne DB_SSL entscheidet das sslmode der
+# DATABASE_URL. Steht die Datenbank NICHT im selben privaten Netz wie die
+# App, gehört `?sslmode=require` an die URL (oder DB_SSL="require") — sonst
+# laufen auch die Passwort-Hashes im Klartext über die Leitung.
+# DB_SSL="require"
+
 # Pfad zum Markdown-Vault (für die Ingestion)
 VAULT_PATH="/pfad/zum/vault"
 

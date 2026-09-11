@@ -36,7 +36,6 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-!.env.example
 
 # vercel
 .vercel
@@ -50,3 +49,11 @@ next-env.d.ts
 credentials.json
 *.key
 .credentials
+
+# Die Ausnahme steht bewusst GANZ am Ende: Bei gitignore gewinnt die zuletzt
+# passende Regel. Solange sie weiter oben stand, hoben die Muster ".env.*"
+# und "*.env" darunter sie wieder auf — .env.example war dadurch nicht
+# einchequierbar und fehlte im Repository, obwohl README, src/lib/http.ts und
+# scripts/create-initial-admin.ts darauf verweisen. Neue .env-Muster deshalb
+# ÜBER dieser Zeile ergänzen, nicht darunter.
+!.env.example
