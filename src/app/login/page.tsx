@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
-import { getSession } from "@/lib/session";
+import { getActiveSession } from "@/lib/dal";
 import LoginForm from "./LoginForm";
 
 // Keine Verlinkung im Hauptmenü — Seite ist bewusst nur über die direkte
@@ -12,10 +12,14 @@ export const metadata: Metadata = {
 };
 
 export default async function LoginPage() {
-  const session = await getSession();
+  const session = await getActiveSession();
 
   // Bereits angemeldet — die eigene Personendatei ist der eigentliche
-  // Ziel-Bereich, /login ist nur der Einstieg dorthin.
+  // Ziel-Bereich, /login ist nur der Einstieg dorthin. Bewusst
+  // getActiveSession statt der bloßen Cookie-Prüfung: ein deaktiviertes
+  // Konto würde sonst hierher nach /user geschickt, wo das DAL-Gate es
+  // umgehend zurück nach /login wirft — eine Endlosschleife, die den Login
+  // für genau diese Person unbenutzbar macht.
   if (session) {
     redirect("/user");
   }

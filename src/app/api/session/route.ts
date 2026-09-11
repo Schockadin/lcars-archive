@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
-import { touchLastVisit, getUserById } from "@/lib/users";
+import { getActiveUser } from "@/lib/dal";
+import { touchLastVisit } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
 import { userPermissions } from "@/lib/permissions";
 import { userHasCharacters } from "@/lib/characters";
@@ -30,14 +30,16 @@ import { userHasCharacters } from "@/lib/characters";
 // (wiederverwendeten) Instanz auf unbestimmte Zeit — beobachtet als leerer
 // Header/endlose Ladezustände auf komplett anderen Seiten.
 export async function GET() {
-  const session = await getSession();
   // Rolle UND effektive Rechte frisch aus der DB auflösen (nicht aus dem
   // Cookie) — eine vom Admin geänderte Rolle/Rechte-Zuweisung wirkt so sofort,
   // ohne dass sich der User neu einloggen muss. Steuert die Header-Navigation
-  // (HeaderUserNav) per Recht statt per Rolle.
-  const user = session ? await getUserById(session.userId) : null;
-  if (session) {
-    await touchLastVisit(session.userId);
+  // (HeaderUserNav) per Recht statt per Rolle. getActiveUser prüft dabei
+  // zugleich is_active und session_version mit: ein deaktiviertes Konto
+  // bekommt hier dieselbe Antwort wie ein ausgeloggtes, statt weiter seine
+  // vollständige Navigation zu sehen.
+  const user = await getActiveUser();
+  if (user) {
+    await touchLastVisit(user.id);
   }
   // Rollen-Map laden und explizit durchreichen, damit userPermissions gegen die
   // aktuellen (evtl. bearbeiteten/eigenen) Rollen auflöst.
@@ -57,8 +59,8 @@ export async function GET() {
   // Header aussehen.
   return NextResponse.json(
     {
-      userId: session?.userId ?? null,
-      role: user?.role ?? session?.role ?? null,
+      userId: user?.id ?? null,
+      role: user?.role ?? null,
       permissions,
       hasCharacters,
     },

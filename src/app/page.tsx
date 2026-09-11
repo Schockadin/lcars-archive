@@ -5,8 +5,7 @@ import LandingStats from "@/components/lcars/LandingStats";
 import { LcarsSkeleton } from "@/components/lcars";
 import PageSkeleton from "@/app/_shared/PageSkeleton";
 import { APP_VERSION } from "@/lib/version";
-import { getSession } from "@/lib/session";
-import { getUserById } from "@/lib/users";
+import { getActiveUser } from "@/lib/dal";
 
 // Platzhalter für die DB-Statistik, während getDBStats() lädt. Der Rest der
 // Startseite rendert sofort, nur dieser Block streamt nach.
@@ -44,8 +43,10 @@ export default function Page() {
 }
 
 async function HomeContent() {
-  const session = await getSession();
-  const user = session ? await getUserById(session.userId) : null;
+  // getActiveUser (nicht die bloße Cookie-Prüfung): ein deaktiviertes Konto
+  // oder ein Cookie, das ein Passwortwechsel entwertet hat, bekommt hier die
+  // Landingpage statt weiter sein Dashboard zu sehen.
+  const user = await getActiveUser();
 
   if (user) {
     return <Dashboard user={user} />;

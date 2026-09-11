@@ -1,7 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { getSession } from "@/lib/session";
-import { getCurrentUser } from "@/lib/dal";
+import { getActiveSession, getCurrentUser } from "@/lib/dal";
 import {
   getEditorSpellcheckPreference,
   updateEditorSpellcheckPreference,
@@ -9,13 +8,13 @@ import {
 
 // Wird direkt aus MarkdownEditor.tsx aufgerufen (Client-Fetch per useEffect,
 // kein Formular) — gleiches Muster wie getFollowState in app/actions/
-// follows.ts: getSession() statt getCurrentUser()/verifySession(), damit ein
-// fehlender Login keinen Redirect auslöst, sondern einfach den DB-Default
+// follows.ts: getActiveSession() statt getCurrentUser()/verifySession(), damit
+// ein fehlender Login keinen Redirect auslöst, sondern einfach den DB-Default
 // (true) liefert. MarkdownEditor.tsx wird zwar nur in bereits
 // eingeloggten Kontexten gerendert, ein Session-Ablauf zwischen Seitenladen
 // und diesem Fetch soll trotzdem nicht crashen.
 export async function getEditorSpellcheckPreferenceAction(): Promise<boolean> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return true;
   return getEditorSpellcheckPreference(session.userId);
 }

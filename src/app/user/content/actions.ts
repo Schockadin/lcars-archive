@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { userCan } from "@/lib/permissions";
 import { getRoleMap } from "@/lib/roles";
-import { getSession } from "@/lib/session";
+import { getActiveSession } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { setCharacterVisibility, deleteOwnCharacter } from "@/lib/characters";
 import {
@@ -71,7 +71,7 @@ export async function setVisibilityAction(
   id: number,
   visibility: string,
 ): Promise<{ error?: string }> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return { error: "Nicht angemeldet." };
   if (!isValidVisibility(visibility)) return { error: "Ungültige Sichtbarkeit." };
 
@@ -162,7 +162,7 @@ export async function deleteOwnContentAction(
   contentType: DeleteContentType,
   id: number,
 ): Promise<{ error?: string }> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return { error: "Nicht angemeldet." };
 
   if (contentType === "character") {

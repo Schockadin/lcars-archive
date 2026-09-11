@@ -1,7 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
-import { getSession } from "@/lib/session";
+import { getActiveSession } from "@/lib/dal";
 import { getUserById, updateDialogueViewPreference } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
 import { canPlayNpcs, canView, resolveViewer } from "@/lib/visibility";
@@ -72,7 +72,7 @@ export async function postDialogueMessageAction(
   _state: DialogueMessageState,
   formData: FormData,
 ): Promise<DialogueMessageState> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) {
     return { error: "Bitte melde dich an." };
   }
@@ -206,7 +206,7 @@ export async function editDialogueMessageAction(
   _state: EditMessageState,
   formData: FormData,
 ): Promise<EditMessageState> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) {
     return { error: "Bitte melde dich an." };
   }
@@ -263,7 +263,7 @@ export async function deleteDialogueMessageAction(
   _state: DeleteMessageState,
   formData: FormData,
 ): Promise<DeleteMessageState> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) {
     return { error: "Bitte melde dich an." };
   }
@@ -312,7 +312,7 @@ export interface MessageSourceState {
 export async function getDialogueMessageSourceAction(
   messageId: number,
 ): Promise<MessageSourceState> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return { error: "Bitte melde dich an." };
   if (!Number.isInteger(messageId)) return { error: "Ungültige Nachricht." };
 
@@ -355,7 +355,7 @@ const CLOSED_SNAPSHOT: DialogueSnapshot = {
 export async function getDialogueSnapshotAction(
   entrySlug: string,
 ): Promise<DialogueSnapshot> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return CLOSED_SNAPSHOT;
 
   const entry = await getDialogueForPlay(entrySlug);
@@ -395,7 +395,7 @@ export async function completeDialogueAction(
   _state: CompleteDialogueState,
   formData: FormData,
 ): Promise<CompleteDialogueState> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) {
     return { error: "Bitte melde dich an." };
   }
@@ -493,7 +493,7 @@ export async function deleteDialogueAction(
   _state: DeleteDialogueState,
   formData: FormData,
 ): Promise<DeleteDialogueState> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) {
     return { error: "Bitte melde dich an." };
   }
@@ -552,7 +552,7 @@ export async function setDialogueViewPreferenceAction(
   flowingTextEnabled: boolean,
   entrySlug: string,
 ): Promise<void> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return;
 
   await updateDialogueViewPreference(session.userId, flowingTextEnabled);
@@ -612,7 +612,7 @@ export async function inviteDialogueParticipantAction(
   // und NPC-Datenbank-Einträge gemischt.
   speakerKeys: string[],
 ): Promise<InviteParticipantState> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return { error: "Bitte melde dich an." };
 
   const entry = await getDialogueForPlay(entrySlug);
@@ -728,7 +728,7 @@ export interface ReserveReplyState {
 export async function reserveDialogueReplyAction(
   entrySlug: string,
 ): Promise<ReserveReplyState> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return { error: "Bitte melde dich an." };
 
   const entry = await getDialogueForPlay(entrySlug);
@@ -781,7 +781,7 @@ export async function reserveDialogueReplyAction(
 export async function releaseDialogueReservationAction(
   entrySlug: string,
 ): Promise<ReserveReplyState> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return { error: "Bitte melde dich an." };
 
   const user = await getUserById(session.userId);
@@ -809,7 +809,7 @@ export async function releaseDialogueReservationAction(
 export async function dialogueReservationNotifyAction(
   entrySlug: string,
 ): Promise<void> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return;
 
   const entry = await getDialogueForPlay(entrySlug);

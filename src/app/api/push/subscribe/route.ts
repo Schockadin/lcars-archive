@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
+import { getActiveSession } from "@/lib/dal";
 import {
   deleteSubscription,
   saveSubscription,
@@ -12,12 +12,12 @@ interface SubscribeBody {
   keys?: { p256dh?: string; auth?: string };
 }
 
-// Reines JSON-API — bewusst per getSession() statt verifySession()/
+// Reines JSON-API — bewusst per getActiveSession() statt verifySession()/
 // getCurrentUser() geprüft, die bei fehlender Session redirecten würden
 // (richtig für Seiten, falsch für einen Fetch-Endpunkt); gleiches Muster
 // wie src/app/api/session/route.ts.
 export async function POST(request: Request) {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) {
     return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
   }
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) {
     return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
   }

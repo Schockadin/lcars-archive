@@ -1,5 +1,5 @@
 "use server";
-import { getSession } from "@/lib/session";
+import { getActiveSession } from "@/lib/dal";
 import {
   updateOwnCharacterBio,
   getOwnCharacterForEdit,
@@ -25,7 +25,7 @@ export async function updateOwnCharacterBioAction(
   _state: CharacterBioEditState,
   formData: FormData,
 ): Promise<CharacterBioEditState> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return { error: "Nicht angemeldet." };
 
   const characterId = Number(formData.get("characterId"));

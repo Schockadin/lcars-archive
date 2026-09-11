@@ -194,11 +194,29 @@ export async function updateUserPermissionOverrides(
 // Löschen ein hartes DELETE — schema-sicher, da characters.player_id/
 // dialogue_messages.author_user_id ON DELETE SET NULL sind und
 // content_follows.user_id ON DELETE CASCADE ist.
+// Beim DEAKTIVIEREN wird zusätzlich session_version erhöht (wie bei
+// setPassword) — damit stirbt jedes bereits ausgestellte Cookie dieser Person
+// sofort, statt sich allein auf die is_active-Prüfung in den Zugriffs-Gates zu
+// verlassen. Zwei unabhängige Riegel für denselben Vorgang: fasst ein
+// künftiger Aufrufer die Sitzung mal wieder nur über die Cookie-Signatur an,
+// greift wenigstens die Versionsprüfung.
+//
+// Beim REAKTIVIEREN bleibt die Version unverändert: das Cookie von vor der
+// Deaktivierung ist durch den Bump oben ohnehin schon tot, ein zweiter
+// brächte nichts.
 export async function setUserActive(
   id: number,
   active: boolean,
 ): Promise<void> {
-  await sql`UPDATE users SET is_active = ${active} WHERE id = ${id}`;
+  if (active) {
+    await sql`UPDATE users SET is_active = true WHERE id = ${id}`;
+    return;
+  }
+  await sql`
+    UPDATE users
+    SET is_active = false, session_version = session_version + 1
+    WHERE id = ${id}
+  `;
 }
 
 export async function deleteUser(id: number): Promise<void> {
