@@ -629,16 +629,25 @@ export async function getPasswordHash(userId: number): Promise<string | null> {
 // password_hash über den Login-Weg. session_version wird erhöht, damit
 // alle bereits ausgestellten Session-Cookies (andere Geräte/Browser)
 // ungültig werden — siehe SessionPayload.sessionVersion in session.ts.
+//
+// Gibt die NEUE session_version zurück (wie invalidateOtherSessions unten):
+// Wer im selben Vorgang ein frisches Cookie für die gerade laufende Sitzung
+// ausstellt — die Aktivierung über den Mail-Link, der Passwortwechsel im
+// Profil — muss genau diesen Wert hineinschreiben. Ein vor dem Aufruf
+// geladenes User-Objekt trägt noch den alten und ergäbe ein Cookie, das
+// die Zugriffs-Gates sofort wieder verwerfen.
 export async function setPassword(
   userId: number,
   passwordHash: string,
-): Promise<void> {
-  await sql`
+): Promise<number> {
+  const [row] = await sql<{ session_version: number }[]>`
     UPDATE users
     SET password_hash = ${passwordHash}, requires_activation = false,
         session_version = session_version + 1
     WHERE id = ${userId}
+    RETURNING session_version
   `;
+  return row.session_version;
 }
 
 // Self-Service-Pendant zu setPassword oben, aber ohne Passwortänderung: für
