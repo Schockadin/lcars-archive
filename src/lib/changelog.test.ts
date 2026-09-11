@@ -7,6 +7,8 @@ import {
   changelogItemText,
   changelogItemTutorial,
   changelogVersionExists,
+  missingChangelogVersions,
+  CHANGELOG_KNOWN_GAPS,
   featuredChangelogEntries,
   filterChangelogEntries,
   hideChangelogCategories,
@@ -207,5 +209,39 @@ describe("Changelog-Kategorien", () => {
     expect(entry.items.map(changelogItemText)).toEqual(["C", "B"]);
     const [, reversed] = sortChangelogItemsByCategory(TEST_ENTRIES, "desc");
     expect(reversed.items.map(changelogItemText)).toEqual(["B", "C"]);
+  });
+});
+
+describe("missingChangelogVersions", () => {
+  // AGENTS.md verlangt einen Eintrag pro zusammengeführtem Pull Request.
+  // Genau das prüft dieser Test: Wer die Minor-Version erhöht, ohne den
+  // Changelog zu ergänzen, bekommt hier einen roten Lauf statt einer still
+  // wachsenden Lücke.
+  it("findet keine Lücke im echten Changelog", () => {
+    expect(missingChangelogVersions()).toEqual([]);
+  });
+
+  it("meldet eine fehlende Zwischenversion", () => {
+    const entries: ChangelogEntry[] = [
+      { version: "3.0", title: "a", items: [] },
+      { version: "3.2", title: "c", items: [] },
+    ];
+    expect(missingChangelogVersions(entries)).toEqual(["3.1"]);
+  });
+
+  it("zählt Minor-Versionen je Major, nicht durchgehend", () => {
+    // Die Minor-Reihe beginnt mit jeder Major-Version wieder bei 0 (siehe
+    // version.ts) — zwischen 3.2 und 4.0 fehlt also nichts.
+    const entries: ChangelogEntry[] = [
+      { version: "3.2", title: "a", items: [] },
+      { version: "4.0", title: "b", items: [] },
+    ];
+    expect(missingChangelogVersions(entries)).toEqual([]);
+  });
+
+  it("hält die bekannten Alt-Lücken für abschließend", () => {
+    // Wächst diese Liste, ist eine neue Lücke stillschweigend legitimiert
+    // worden — genau das soll der Test verhindern.
+    expect([...CHANGELOG_KNOWN_GAPS]).toEqual(["1.4", "1.5", "1.6", "1.7"]);
   });
 });

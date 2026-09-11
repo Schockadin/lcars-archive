@@ -22,6 +22,53 @@ export const verifySession = cache(async (): Promise<SessionPayload> => {
   return session;
 });
 
+// Frische-Prüfung einer bestehenden Sitzung OHNE Redirect — das nicht
+// umleitende Gegenstück zu getCurrentUser() unten. Gedacht für Aufrufer, für
+// die ein redirect() der falsche Ausgang wäre: Server Actions, die dem Client
+// eine Meldung zurückgeben wollen, JSON-Routen (ein Fetch-Endpunkt soll 401
+// antworten, nicht die Login-Seite ausliefern) und Seiten, die für anonyme
+// Besucher eine andere Ansicht rendern (Startseite, /login).
+//
+// Genau diese Aufrufer haben bisher direkt getSession() benutzt — das prüft
+// aber NUR Signatur und Ablaufdatum des Cookies. is_active und
+// session_version blieben dabei ungeprüft, wodurch ein deaktiviertes Konto
+// (und ein Cookie, das ein Passwortwechsel entwerten sollte) bis zum
+// natürlichen Ablauf (30 Tage) weiter schreiben durfte. Deshalb hier
+// dieselben drei Prüfungen wie in getCurrentUser, nur mit null statt
+// redirect als Ausgang.
+//
+// getUserById ist selbst React-cache-dedupliziert (siehe users.ts) — ein
+// Aufrufer, der danach ohnehin den User braucht, nimmt getActiveUser() und
+// zahlt die Abfrage trotzdem nur einmal pro Anfrage.
+export const getActiveSession = cache(async (): Promise<SessionPayload | null> => {
+  const session = await getSession();
+  if (!session) return null;
+  const user = await getUserById(session.userId);
+  if (!isSessionFresh(session, user)) return null;
+  return session;
+});
+
+// Wie getActiveSession, liefert aber gleich den (frisch geladenen) User —
+// für die Mehrzahl der Aufrufer, die direkt danach Rollen/Rechte prüfen.
+export const getActiveUser = cache(async (): Promise<User | null> => {
+  const session = await getSession();
+  if (!session) return null;
+  const user = await getUserById(session.userId);
+  return isSessionFresh(session, user) ? user : null;
+});
+
+// Die gemeinsame Bedingung hinter getActiveSession/getActiveUser und den
+// Redirects in getCurrentUser: das Konto existiert noch, ist aktiv, und das
+// Cookie stammt nicht aus der Zeit vor dem letzten Passwortwechsel.
+function isSessionFresh(
+  session: SessionPayload,
+  user: User | null,
+): user is User {
+  if (!user) return false;
+  if (!user.is_active) return false;
+  return session.sessionVersion === user.session_version;
+}
+
 export const getCurrentUser = cache(async (): Promise<User> => {
   const session = await verifySession();
   const user = await getUserById(session.userId);

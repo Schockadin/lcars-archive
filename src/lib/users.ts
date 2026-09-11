@@ -194,11 +194,29 @@ export async function updateUserPermissionOverrides(
 // Löschen ein hartes DELETE — schema-sicher, da characters.player_id/
 // dialogue_messages.author_user_id ON DELETE SET NULL sind und
 // content_follows.user_id ON DELETE CASCADE ist.
+// Beim DEAKTIVIEREN wird zusätzlich session_version erhöht (wie bei
+// setPassword) — damit stirbt jedes bereits ausgestellte Cookie dieser Person
+// sofort, statt sich allein auf die is_active-Prüfung in den Zugriffs-Gates zu
+// verlassen. Zwei unabhängige Riegel für denselben Vorgang: fasst ein
+// künftiger Aufrufer die Sitzung mal wieder nur über die Cookie-Signatur an,
+// greift wenigstens die Versionsprüfung.
+//
+// Beim REAKTIVIEREN bleibt die Version unverändert: das Cookie von vor der
+// Deaktivierung ist durch den Bump oben ohnehin schon tot, ein zweiter
+// brächte nichts.
 export async function setUserActive(
   id: number,
   active: boolean,
 ): Promise<void> {
-  await sql`UPDATE users SET is_active = ${active} WHERE id = ${id}`;
+  if (active) {
+    await sql`UPDATE users SET is_active = true WHERE id = ${id}`;
+    return;
+  }
+  await sql`
+    UPDATE users
+    SET is_active = false, session_version = session_version + 1
+    WHERE id = ${id}
+  `;
 }
 
 export async function deleteUser(id: number): Promise<void> {
@@ -611,16 +629,25 @@ export async function getPasswordHash(userId: number): Promise<string | null> {
 // password_hash über den Login-Weg. session_version wird erhöht, damit
 // alle bereits ausgestellten Session-Cookies (andere Geräte/Browser)
 // ungültig werden — siehe SessionPayload.sessionVersion in session.ts.
+//
+// Gibt die NEUE session_version zurück (wie invalidateOtherSessions unten):
+// Wer im selben Vorgang ein frisches Cookie für die gerade laufende Sitzung
+// ausstellt — die Aktivierung über den Mail-Link, der Passwortwechsel im
+// Profil — muss genau diesen Wert hineinschreiben. Ein vor dem Aufruf
+// geladenes User-Objekt trägt noch den alten und ergäbe ein Cookie, das
+// die Zugriffs-Gates sofort wieder verwerfen.
 export async function setPassword(
   userId: number,
   passwordHash: string,
-): Promise<void> {
-  await sql`
+): Promise<number> {
+  const [row] = await sql<{ session_version: number }[]>`
     UPDATE users
     SET password_hash = ${passwordHash}, requires_activation = false,
         session_version = session_version + 1
     WHERE id = ${userId}
+    RETURNING session_version
   `;
+  return row.session_version;
 }
 
 // Self-Service-Pendant zu setPassword oben, aber ohne Passwortänderung: für

@@ -1,5 +1,5 @@
 "use server";
-import { getSession } from "@/lib/session";
+import { getActiveSession } from "@/lib/dal";
 import {
   getFollowStatus,
   setBookmark,
@@ -19,15 +19,17 @@ const LOGGED_OUT_STATE: FollowState = {
   subscribed: false,
 };
 
-// Nutzt bewusst getSession() (reine Cookie-Prüfung) statt getCurrentUser()/
-// verifySession(), die bei fehlender Session auf /login umleiten würden —
-// anonyme Besucher auf öffentlichen Missions-/Archiv-Seiten sollen einfach
-// keine Bookmark/Abo-Buttons sehen, nicht umgeleitet werden.
+// Nutzt bewusst getActiveSession() statt getCurrentUser()/verifySession(), die
+// bei fehlender Session auf /login umleiten würden — anonyme Besucher auf
+// öffentlichen Missions-/Archiv-Seiten sollen einfach keine Bookmark/Abo-
+// Buttons sehen, nicht umgeleitet werden. getActiveSession prüft dabei (anders
+// als das frühere getSession) is_active und session_version frisch aus der DB
+// mit, gibt aber wie dieses null statt eines Redirects zurück.
 export async function getFollowState(
   targetType: FollowTargetType,
   targetSlug: string,
 ): Promise<FollowState> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return LOGGED_OUT_STATE;
 
   const status = await getFollowStatus(session.userId, targetType, targetSlug);
@@ -39,7 +41,7 @@ export async function toggleBookmark(
   targetSlug: string,
   value: boolean,
 ): Promise<boolean> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return false;
 
   await setBookmark(session.userId, targetType, targetSlug, value);
@@ -51,7 +53,7 @@ export async function toggleSubscription(
   targetSlug: string,
   value: boolean,
 ): Promise<boolean> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return false;
 
   await setSubscription(session.userId, targetType, targetSlug, value);

@@ -147,6 +147,22 @@ function assertValidBackup(value: unknown): asserts value is DbBackup {
 // die Datei liefert nur die Werte. Ohne diese Whitelist könnte eine
 // manipulierte Backup-Datei über einen präparierten Objekt-Key SQL in die
 // Identifier-Liste einschleusen.
+// Postgres nimmt höchstens 65535 gebundene Parameter pro Statement. Wie
+// viele Zeilen in einen Block passen, hängt deshalb an der Spaltenzahl; die
+// Obergrenze von 500 Zeilen hält zusätzlich den Speicherbedarf eines
+// einzelnen Statements im Rahmen.
+function blockSize(spalten: number): number {
+  return Math.max(1, Math.min(500, Math.floor(60000 / spalten)));
+}
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const blocks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) {
+    blocks.push(items.slice(i, i + size));
+  }
+  return blocks;
+}
+
 export async function importDatabaseBackup(
   backup: unknown,
 ): Promise<RestoreDbSummary> {
@@ -169,25 +185,63 @@ export async function importDatabaseBackup(
       const knownColumns = TABLE_COLUMNS[table] as readonly string[];
       const jsonbCols = new Set(JSONB_COLUMNS[table] ?? []);
 
+      // Zeilen nach ihrer Spaltenmenge gruppieren und blockweise einfügen
+      // statt ein INSERT pro Zeile. Ein Restore war sonst eine Kette von
+      // Round-Trips über den Pool, deren Länge mit dem Datenbestand wächst —
+      // ausgerechnet in dem Moment, in dem es schnell gehen soll.
+      //
+      // Die Gruppierung ist nötig, weil sich die Spaltenmenge von Zeile zu
+      // Zeile unterscheiden kann: Nur bekannte UND in der Zeile vorhandene
+      // Spalten werden übernommen (Whitelist-Schnitt statt Object.keys(row)
+      // direkt) — zusätzliche/unbekannte Keys aus einer neueren/älteren
+      // Backup-Datei werden stillschweigend ignoriert, fehlende sollen der
+      // Spalten-Vorgabe überlassen bleiben. Zeilen mit gleicher Spaltenmenge
+      // passen in dasselbe Statement.
+      //
+      // Der Schlüssel dient nur der Gruppierung; die Spaltenliste selbst wird
+      // daneben als Array gehalten, statt sie aus dem Schlüssel
+      // zurückzuspalten — sonst hinge die Korrektheit daran, dass kein
+      // Spaltenname je ein Komma enthält.
+      const gruppen = new Map<
+        string,
+        { columns: string[]; zeilen: Record<string, unknown>[] }
+      >();
       for (const row of rows) {
-        // Nur bekannte Spalten übernehmen (Whitelist-Schnitt statt
-        // Object.keys(row) direkt) — zusätzliche/unbekannte Keys aus einer
-        // neueren/älteren Backup-Datei werden stillschweigend ignoriert.
         const columns = knownColumns.filter((c) => c in row);
-        const values = columns.map((col) => {
-          const value = row[col];
-          return jsonbCols.has(col) && value !== null
-            ? tx.json(value as ReturnType<typeof JSON.parse>)
-            : value;
-        });
+        // Eine Zeile ohne eine einzige bekannte Spalte trägt nichts bei, was
+        // sich einfügen ließe (ein INSERT ohne Spalten ist kein gültiges SQL).
+        // Sie wird übersprungen statt den ganzen Restore scheitern zu lassen;
+        // vorkommen kann das nur bei einer kaputten Datei, denn jede Tabelle
+        // hier führt mindestens eine id.
+        if (columns.length === 0) continue;
+        const key = columns.join("\u0000");
+        const gruppe = gruppen.get(key) ?? { columns, zeilen: [] };
+        gruppe.zeilen.push(row);
+        gruppen.set(key, gruppe);
+      }
+
+      for (const { columns, zeilen: gruppenZeilen } of gruppen.values()) {
         const identifierList = columns.map((c) => `"${c}"`).join(", ");
-        const placeholderList = columns
-          .map((_, i) => `$${i + 1}`)
-          .join(", ");
-        await tx.unsafe(
-          `INSERT INTO "${table}" (${identifierList}) VALUES (${placeholderList})`,
-          values as never[],
-        );
+        for (const block of chunk(gruppenZeilen, blockSize(columns.length))) {
+          const values: unknown[] = [];
+          const tupel = block.map((row) => {
+            const platzhalter = columns.map((col) => {
+              const value = row[col];
+              values.push(
+                jsonbCols.has(col) && value !== null
+                  ? tx.json(value as ReturnType<typeof JSON.parse>)
+                  : value,
+              );
+              return `$${values.length}`;
+            });
+            return `(${platzhalter.join(", ")})`;
+          });
+
+          await tx.unsafe(
+            `INSERT INTO "${table}" (${identifierList}) VALUES ${tupel.join(", ")}`,
+            values as never[],
+          );
+        }
       }
 
       summary.tables.push({ name: table, rows: rows.length });

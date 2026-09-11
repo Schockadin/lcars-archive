@@ -561,6 +561,23 @@ CREATE INDEX IF NOT EXISTS idx_password_reset_requests_email_time ON password_re
 CREATE INDEX IF NOT EXISTS idx_password_reset_requests_ip_time    ON password_reset_requests(ip, requested_at);
 
 -- ---------------------------------------------------------------------------
+-- rag_requests
+-- ---------------------------------------------------------------------------
+-- Dritte Tabelle nach demselben Muster wie login_attempts und
+-- password_reset_requests, hier für den Datenbank-Assistenten
+-- (src/lib/ragLimiter.ts). Das Limit lag zuvor in einer Map im Modulscope der
+-- Route — auf serverless bekommt jede Funktionsinstanz ihre eigene, das Limit
+-- skalierte also mit der Instanzzahl mit, statt zu bremsen. Am anderen Ende
+-- hängt ein abrechnender Anbieter, deshalb gehört der Zähler dorthin, wo ihn
+-- sich alle Instanzen teilen.
+CREATE TABLE IF NOT EXISTS rag_requests (
+  id           SERIAL PRIMARY KEY,
+  user_id      INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  requested_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_rag_requests_user_time ON rag_requests(user_id, requested_at);
+
+-- ---------------------------------------------------------------------------
 -- admin_audit_log
 -- ---------------------------------------------------------------------------
 -- Protokoll sicherheitsrelevanter Admin-Actions auf Useraccounts (src/lib/

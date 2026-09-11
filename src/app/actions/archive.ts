@@ -1,5 +1,5 @@
 "use server";
-import { getSession } from "@/lib/session";
+import { getActiveSession } from "@/lib/dal";
 import {
   updateOwnArchiveEntryBody,
   getOwnArchiveEntryForEdit,
@@ -26,7 +26,7 @@ export async function updateOwnArchiveEntryAction(
   _state: ArchiveEntryEditState,
   formData: FormData,
 ): Promise<ArchiveEntryEditState> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return { error: "Nicht angemeldet." };
 
   const entryId = Number(formData.get("entryId"));

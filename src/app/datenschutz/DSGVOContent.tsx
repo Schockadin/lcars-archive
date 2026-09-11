@@ -53,8 +53,9 @@ export default function DSGVOContent({ year }: { year: number }) {
           <code>/forgot-password</code>, oder ausgelöst durch die
           Administration) wird ein einmaliger, zeitlich befristeter Link per
           E-Mail verschickt. Der Link selbst wird nur als Hash gespeichert,
-          verliert nach Benutzung oder nach 7 Tagen seine Gültigkeit
-          (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO). Fordert ein Account
+          verliert nach Benutzung, nach 7 Tagen oder sobald ein neuer Link für
+          dasselbe Konto angefordert wird seine Gültigkeit (Rechtsgrundlage:
+          Art. 6 Abs. 1 lit. b DSGVO). Fordert ein Account
           selbst einen Reset an, wird die Administration zusätzlich per E-Mail
           über die anfragende E-Mail-Adresse informiert (berechtigtes Interesse
           an der Erkennung missbräuchlicher Reset-Anfragen, Rechtsgrundlage:
@@ -263,6 +264,15 @@ export default function DSGVOContent({ year }: { year: number }) {
           nach ihren Leserechten ohnehin einsehen darf. Der Assistent ist ein
           optionales Zusatzangebot für angemeldete Nutzer:innen; wer ihn nicht
           verwendet, löst keine solche Übermittlung aus.
+        </p>
+        <p>
+          Damit der Assistent nicht versehentlich in Dauerschleife Anfragen an
+          diese Anbieter auslöst, ist die Zahl der Fragen pro Minute und Konto
+          begrenzt. Dafür speichert die Anwendung zu jeder gestellten Frage das
+          Konto und den Zeitpunkt — nicht die Frage selbst (Rechtsgrundlage:
+          Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse an der Begrenzung
+          kostenpflichtiger Fremdanfragen). Diese Einträge werden nach
+          spätestens 24 Stunden automatisch gelöscht.
         </p>
 
         <h2>5. Datenübertragung in Drittländer</h2>

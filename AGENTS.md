@@ -2,7 +2,26 @@
 
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->
+
+# Diese Datei hat zwei Teile
+
+Oben steht ein Block zwischen `<!-- BEGIN:nextjs-agent-rules -->` und
+`<!-- END:nextjs-agent-rules -->`. Der gehört NICHT uns: `next dev` schreibt
+ihn bei jedem Start neu und ersetzt dabei alles zwischen den beiden Markern
+(siehe `upsertAgentRulesBlock` in
+`node_modules/next/dist/server/lib/generate-agent-files.js`).
+
+Alles außerhalb der Marker bleibt unangetastet — deshalb stehen unsere
+eigenen Regeln ab hier, unterhalb des Blocks. **Nie wieder etwas zwischen die
+Marker schreiben.** Genau das war passiert: Die Regeln unten standen komplett
+innerhalb des Blocks, und ein einziger `npm run dev` hat sie gelöscht (37
+Zeilen auf 9). Der eingesetzte Text forderte sogar dazu auf, den Verlust
+mitzucommitten.
 
 # How to handle version.ts
 
@@ -33,5 +52,3 @@ Base the items on the current Pull Request's body (see "The Pull Request Body" a
 Still yours with each commit: **write and adjust the tests** for what you changed (unit and e2e, as before — the suite is only run elsewhere, not written elsewhere). After pushing, **watch the CI run for that commit** and fix whatever it reports; a red CI is your work, not something to hand over. Only reach for a local run when CI has failed and you need to reproduce that one failing test — then run that test alone, never the whole suite.
 
 Also do a full scope code review each time you are instrcuted to merge. Fix all problems found while reviewing and repeat unless no more problems occur. If no problems show up, always update the `README.md`, `/impressum`, `/datenschutz` und `/tutorial` to reflect the latest changes. Only then and if CI and Netlify show green merge the PR.
-
-<!-- END:nextjs-agent-rules -->

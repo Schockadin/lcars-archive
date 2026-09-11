@@ -1,5 +1,5 @@
 "use server";
-import { getSession } from "@/lib/session";
+import { getActiveSession } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
 import { getViewer, canView, resolveViewer } from "@/lib/visibility";
@@ -36,7 +36,7 @@ async function requireContentImageAccess(
   if (!isContentImageType(contentTypeRaw)) {
     return { error: "Ungültiger Inhaltstyp." };
   }
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return { error: "Nicht angemeldet." };
 
   const user = await getUserById(session.userId);
@@ -81,7 +81,7 @@ export async function uploadContentImagesAction(
     return { error: `Höchstens ${MAX_UPLOAD_BATCH} Bilder auf einmal.` };
   }
 
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return { error: "Nicht angemeldet." };
 
   try {

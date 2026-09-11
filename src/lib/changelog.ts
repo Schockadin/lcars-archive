@@ -138,6 +138,27 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.30",
+    title: "Anmeldung, die hält, was sie sagt",
+    items: [
+      {
+        text: "Wer sein Passwort über den Link aus der Mail festlegt, bleibt danach auch wirklich angemeldet. Bisher landete man beim nächsten Klick auf „Profil“, „Leitung“ oder „Admin“ sofort wieder auf der Anmeldeseite — direkt nachdem man das Passwort gesetzt hatte.",
+        category: "konto",
+        tutorial: "konto-rollen",
+      },
+      {
+        text: "Das Ändern des Passworts im Profil meldet dich nur noch auf den ANDEREN Geräten ab, nicht mehr auf dem, an dem du gerade sitzt.",
+        category: "konto",
+        tutorial: "konto-rollen",
+      },
+      {
+        text: "Ein deaktiviertes Konto ist ab sofort wirklich ausgesperrt — überall und sofort. Bisher blieb es auf dem Dashboard und in einigen Aktionen noch bis zu 30 Tage handlungsfähig, bis sein Anmelde-Cookie von selbst ablief. Dasselbe gilt für einen Aktivierungslink, der nach dem Deaktivieren noch offen war.",
+        category: "konto",
+        tutorial: "konto-rollen",
+      },
+    ],
+  },
+  {
     version: "1.29",
     title: "Hell/Dunkel frei wählbar — plus eigene Grundfarben",
     items: [
@@ -1553,6 +1574,52 @@ export function compareVersions(a: string, b: string): number {
     if (diff !== 0) return diff;
   }
   return 0;
+}
+
+// Versionen, für die bewusst KEIN Eintrag existiert. Sie stammen aus der
+// Zeit vor der heutigen Git-Historie dieses Repositories (die beginnt bei
+// 1.29) — was in diesen Pull Requests steckte, lässt sich nicht mehr
+// rekonstruieren, und erfundene Release-Notes wären schlechter als die
+// Lücke. Die Liste ist abschließend und darf NICHT wachsen: Ein Test
+// (changelog.test.ts) prüft, dass die Versionsreihe außerhalb dieser
+// Ausnahmen lückenlos ist, damit ein künftig vergessener Eintrag auffällt
+// statt still zu fehlen.
+export const CHANGELOG_KNOWN_GAPS: readonly string[] = [
+  "1.4",
+  "1.5",
+  "1.6",
+  "1.7",
+];
+
+// Alle Major.Minor-Versionen, die zwischen der ältesten und der jüngsten
+// vorhandenen liegen und weder einen Eintrag noch eine bekannte Ausnahme
+// haben. Leer, solange der Changelog vollständig ist.
+export function missingChangelogVersions(
+  entries: ChangelogEntry[] = CHANGELOG,
+): string[] {
+  const vorhanden = new Set(entries.map((entry) => entry.version));
+  const bekannteLuecken = new Set(CHANGELOG_KNOWN_GAPS);
+
+  // Nach Major gruppieren: Die Minor-Reihe beginnt mit jeder neuen
+  // Major-Version wieder bei 0 (siehe src/lib/version.ts), eine
+  // durchgehende Zählung über Major-Grenzen hinweg gäbe es also nicht.
+  const proMajor = new Map<number, number[]>();
+  for (const version of vorhanden) {
+    const [major, minor] = version.split(".").map(Number);
+    if (!Number.isInteger(major) || !Number.isInteger(minor)) continue;
+    proMajor.set(major, [...(proMajor.get(major) ?? []), minor]);
+  }
+
+  const fehlend: string[] = [];
+  for (const [major, minors] of proMajor) {
+    for (let minor = Math.min(...minors); minor <= Math.max(...minors); minor++) {
+      const version = `${major}.${minor}`;
+      if (!vorhanden.has(version) && !bekannteLuecken.has(version)) {
+        fehlend.push(version);
+      }
+    }
+  }
+  return fehlend.sort(compareVersions);
 }
 
 // Gibt es einen Changelog-Eintrag mit dieser „Major.Minor"-Version?

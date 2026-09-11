@@ -1,6 +1,7 @@
 "use server";
 
 import { getCurrentUser } from "@/lib/dal";
+import { createSession } from "@/lib/session";
 import { getPasswordHash, setPassword } from "@/lib/users";
 import { hashPassword, validatePassword, verifyPassword } from "@/lib/password";
 
@@ -39,7 +40,17 @@ export async function updatePasswordAction(
     }
   }
 
-  await setPassword(currentUser.id, await hashPassword(newPassword));
+  // setPassword erhöht session_version — jedes andere Gerät ist damit
+  // abgemeldet. Für die gerade laufende Sitzung wird sofort ein frisches
+  // Cookie mit dem neuen Wert ausgestellt, sonst sperrt sich die Person mit
+  // dem eigenen Passwortwechsel selbst aus und sähe nach der Erfolgsmeldung
+  // beim nächsten Klick die Login-Seite. Gleiches Vorgehen wie in
+  // sessionActions.ts ("Auf allen anderen Geräten abmelden").
+  const sessionVersion = await setPassword(
+    currentUser.id,
+    await hashPassword(newPassword),
+  );
+  await createSession({ ...currentUser, session_version: sessionVersion });
 
   return { success: true };
 }

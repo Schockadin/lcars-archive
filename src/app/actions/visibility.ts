@@ -1,5 +1,5 @@
 "use server";
-import { getSession } from "@/lib/session";
+import { getActiveSession } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
 import { userCan } from "@/lib/permissions";
@@ -36,7 +36,7 @@ export async function setVisibilityAdminAction(
   id: number,
   visibility: string,
 ): Promise<{ error?: string }> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return { error: "Nicht angemeldet." };
 
   const user = await getUserById(session.userId);

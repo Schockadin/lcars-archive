@@ -255,6 +255,12 @@ export const PROTECTED_WRITE_TABLES: readonly string[] = [
   "password_setup_tokens",
   "password_reset_requests",
   "login_attempts",
+  // Dritte Rate-Limit-Tabelle (src/lib/ragLimiter.ts). Steht nicht in
+  // TABLE_COLUMNS und ist damit für das Zeilen-Overlay ohnehin unsichtbar —
+  // das freie SQL-Panel ist aber bewusst NICHT auf diese Whitelist
+  // beschränkt (siehe runAdminQuery), ein DELETE hier würde also das eigene
+  // Limit zurücksetzen.
+  "rag_requests",
   "admin_audit_log",
 ];
 

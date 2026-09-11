@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSession } from "@/lib/session";
+import { getActiveSession } from "@/lib/dal";
 import { markNewsSeen, type NewsSeenTargetType } from "@/lib/newsSeen";
 
 const VALID_TYPES: NewsSeenTargetType[] = [
@@ -16,7 +16,7 @@ const VALID_TYPES: NewsSeenTargetType[] = [
 // Detailseiten statisch/gecacht bleiben und nicht pro Betrachter dynamisch
 // werden. Kein Login = stiller No-op.
 export async function POST(request: Request): Promise<Response> {
-  const session = await getSession();
+  const session = await getActiveSession();
   if (!session) return NextResponse.json({ ok: false }, { status: 200 });
 
   let body: { type?: unknown; slug?: unknown };

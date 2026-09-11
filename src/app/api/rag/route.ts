@@ -8,6 +8,7 @@ import {
   type RagSource,
 } from "@/lib/rag";
 import { logCaughtError } from "@/lib/errorLog";
+import { checkAndRecordRagRequest } from "@/lib/ragLimiter";
 
 // Streaming-Endpoint des RAG-Assistenten (/rag). Immer frisch — hängt an der
 // Frage im POST-Body und am eingeloggten Betrachter (per-Request, nie
@@ -21,37 +22,12 @@ export const maxDuration = 60;
 
 const MAX_QUESTION_LENGTH = 1000;
 
-// Best-effort In-Memory-Rate-Limit pro User (Schutz vor versehentlichem
-// Dauerfeuer / Kostenexplosion bei Workers AI). BEWUSST prozess-lokal: auf
-// serverless (Netlify) teilt sich nicht jede Instanz denselben Speicher, das
-// Limit ist daher eine grobe Bremse, keine harte Garantie — für ein kleines
-// Fan-Archiv (5–10 Spieler) ausreichend. Ein hartes, instanzübergreifendes
-// Limit wäre DB-gestützt (wie passwordResetLimiter.ts) und kann später
-// nachgezogen werden.
-const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX = 8;
-const recentRequests = new Map<number, number[]>();
-
-function isRateLimited(userId: number): boolean {
-  const now = Date.now();
-  // Sicherheitsnetz gegen unbegrenztes Wachstum der Map: bei vielen Keys die
-  // Einträge entfernen, deren jüngster Zugriff außerhalb des Fensters liegt.
-  // Läuft praktisch nie (kleines Archiv), hält die Map aber theoretisch
-  // beschränkt.
-  if (recentRequests.size > 500) {
-    for (const [uid, ts] of recentRequests) {
-      if (ts.length === 0 || now - ts[ts.length - 1] >= RATE_LIMIT_WINDOW_MS) {
-        recentRequests.delete(uid);
-      }
-    }
-  }
-  const hits = (recentRequests.get(userId) ?? []).filter(
-    (t) => now - t < RATE_LIMIT_WINDOW_MS,
-  );
-  hits.push(now);
-  recentRequests.set(userId, hits);
-  return hits.length > RATE_LIMIT_MAX;
-}
+// Ratelimit pro User — DB-gestützt (src/lib/ragLimiter.ts). Lag bis zuletzt
+// als Map im Modulscope genau hier: auf serverless bekommt jede
+// Funktionsinstanz ihre eigene, das Limit skalierte damit mit der
+// Instanzzahl mit, statt zu bremsen. Am anderen Ende hängt ein abrechnender
+// Anbieter, deshalb teilen sich die Instanzen den Zähler jetzt über die
+// Datenbank — dasselbe Muster wie bei Login und Passwort-Reset.
 
 // Kodiert ein SSE-Event (named oder default). data ist immer JSON.
 function sseEvent(data: unknown, event?: string): string {
@@ -76,7 +52,7 @@ export async function POST(req: Request): Promise<Response> {
       { status: 503 },
     );
   }
-  if (isRateLimited(viewer.userId)) {
+  if (await checkAndRecordRagRequest(viewer.userId)) {
     return Response.json(
       { error: "Zu viele Anfragen. Bitte kurz warten." },
       { status: 429 },

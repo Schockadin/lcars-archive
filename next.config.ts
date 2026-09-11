@@ -87,6 +87,22 @@ const nextConfig: NextConfig = {
   // Zugriffsverweigerungen.
   experimental: {
     authInterrupts: true,
+    // Turbopack legt seit Next 16.3 auch beim BUILD einen persistenten Cache
+    // unter .next/cache/turbopack/ an (vorher nur im Dev-Server). In dessen
+    // Segmentdateien landen die zur Compile-Zeit gelesenen Umgebungswerte im
+    // Klartext — Netlifys Secret-Scanner fand dort SESSION_SECRET,
+    // RESEND_API_KEY, R2_ACCESS_KEY_ID und weitere und brach den Deploy ab.
+    //
+    // Abgeschaltet statt den Scanner auf diesen Pfad blind zu stellen: Der
+    // Fund ist echt, kein Fehlalarm. Der Cache wird zwischen Builds
+    // aufgehoben, die Geheimnisse lägen also dauerhaft entschlüsselt in der
+    // Build-Infrastruktur — sie gar nicht erst zu schreiben ist die
+    // engere Lösung, und sie hält den Scan überall scharf.
+    //
+    // Preis: Builds starten kalt. Für ein Projekt dieser Größe ist das
+    // vertretbar; die Option gehört wieder auf true, sobald Turbopack die
+    // Werte nicht mehr im Klartext ablegt.
+    turbopackFileSystemCacheForBuild: false,
     serverActions: {
       // Standard-Limit (1 MB) greift bei Bild-Uploads — erhöht auf 10 MB,
       // da Charakter-Portraits und Content-Bilder typischerweise mehrere MB

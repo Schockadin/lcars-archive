@@ -59,30 +59,53 @@ test.describe("Changelog", () => {
     page,
   }) => {
     await page.goto("/changelog");
-    // Die offene (neueste) Version zeigt ihre Stichpunkte in gepflegter
-    // Reihenfolge — gemischte Kategorien.
     // textContent statt innerText: die Etiketten der zugeklappten Versionen
     // stehen zwar im DOM, liefern als innerText aber nur Leerstrings.
-    const tagsOf = () =>
-      page
-        .locator("article .lcars-accordion")
-        .first()
+    const versionen = page.locator("article .lcars-accordion");
+    const tagsVon = (index: number) =>
+      versionen
+        .nth(index)
         .locator(".changelog-tag")
-        .evaluateAll((nodes) =>
-          nodes.map((n) => (n.textContent ?? "").trim()),
-        );
-    const before = await tagsOf();
+        .evaluateAll((nodes) => nodes.map((n) => (n.textContent ?? "").trim()));
+
+    // Zeigen lässt sich die Sortierung nur an einer Version, die überhaupt
+    // mehrere Kategorien mischt. Welche das ist, hängt am gepflegten Inhalt
+    // von src/lib/changelog.ts — deshalb die erste passende SUCHEN statt
+    // die neueste anzunehmen: Eine Version darf ohne Weiteres nur eine
+    // einzige Kategorie haben (1.30 etwa besteht nur aus „Konto &
+    // Sicherheit"), und daran soll dieser Test nicht scheitern.
+    const anzahl = await versionen.count();
+    let index = -1;
+    let before: string[] = [];
+    for (let i = 0; i < anzahl; i++) {
+      const tags = await tagsVon(i);
+      if (new Set(tags).size > 1) {
+        index = i;
+        before = tags;
+        break;
+      }
+    }
+    // Gäbe es im ganzen Changelog keine solche Version, prüfte der Test
+    // nichts mehr — dann soll er laut scheitern statt still durchzulaufen.
+    expect(
+      index,
+      "keine Version mit gemischten Kategorien im Changelog",
+    ).toBeGreaterThanOrEqual(0);
     expect(new Set(before).size).toBeGreaterThan(1);
 
     await page
       .locator(".changelog-sort button", { hasText: "KATEGORIE" })
       .click();
 
+    // Die Sortierung ordnet nur INNERHALB einer Version um (siehe
+    // useChangelogView), die Versionsreihenfolge bleibt — derselbe Index
+    // zeigt danach also auf dieselbe Version.
+    //
     // Danach stehen gleiche Kategorien beieinander: die Anzahl der Wechsel
     // von einer Kategorie zur nächsten entspricht der Anzahl Kategorien - 1.
     await expect
       .poll(async () => {
-        const after = await tagsOf();
+        const after = await tagsVon(index);
         const wechsel = after.filter((t, i) => i > 0 && t !== after[i - 1]).length;
         return wechsel === new Set(after).size - 1;
       })
