@@ -1181,7 +1181,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_overrides JSONB NOT NULL
 -- color_mode: Hell/Dunkel-Modus, unabhängig von ui_mode/color_theme (siehe
 -- src/lib/colorMode.ts). Default 'dark'. Die Datenmigration alter
 -- ui_mode='minimal-light'-Konten nach ui_mode='minimal' + color_mode='light'
--- lebt bewusst nur in migrate-pr64.sql (kein datenveränderndes UPDATE hier).
+-- lebt bewusst nur in migrate-pr66.sql (kein datenveränderndes UPDATE hier).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS color_mode TEXT NOT NULL
   DEFAULT 'dark';
 

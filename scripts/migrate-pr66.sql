@@ -1,7 +1,15 @@
--- Migration für PR #64 (claude/dialogues-characters-design-5n5o63 → master)
--- Gegen die Produktions-DB ausführen, nachdem der PR gemergt wurde. Identisch
--- zum entsprechenden Abschnitt in scripts/schema.sql (Struktur) plus der
--- einmaligen Datenmigration der Alt-Werte.
+-- Migration für PR #66 (claude/dialogues-characters-design-5n5o63 → master)
+-- Hieß bis v1.29.56 migrate-pr64.sql — die Nummer war geraten, bevor der Pull
+-- Request stand; es ist dieselbe Datei für denselben Branch, nur richtig
+-- benannt. Wer sie schon ausgeführt hat, kann sie gefahrlos erneut laufen
+-- lassen (siehe „Idempotent" unten).
+--
+-- WICHTIG: Gegen die Datenbank ausführen, BEVOR der Stand ausgeliefert wird —
+-- die Deploy-Preview hängt an derselben Datenbank wie die Produktion. Fehlt
+-- eine der neuen Spalten, schlägt jede Abfrage fehl, die einen User lädt
+-- (USER_COLUMNS in src/lib/users.ts), und die Seiten antworten mit 500.
+-- Identisch zum entsprechenden Abschnitt in scripts/schema.sql (Struktur) plus
+-- der einmaligen Datenmigration der Alt-Werte.
 --
 -- Dieser PR entkoppelt Hell/Dunkel vom UI-Modus: „hell" ist keine Variante des
 -- minimalistischen UIs mehr (ui_mode='minimal-light'), sondern eine eigene

@@ -1466,6 +1466,16 @@ Rollen-Hochstufungs-Bug verursacht). Datenverändernde bzw. einmalige Schritte
 `scripts/migrate-pr<NN>.sql`, die nach dem Merge einmalig gegen die Produktions-
 DB ausgeführt wird.
 
+**Achtung bei additiven Spalten:** Wird eine Spalte hinzugefügt, die die App
+anschließend liest (z.B. `users.font_sans`/`font_mono` in `USER_COLUMNS`), muss
+die Migration laufen, **bevor** der Stand ausgeliefert wird — auch für die
+Deploy-Preview, die an derselben Datenbank hängt. Sonst scheitert jede Abfrage,
+die einen User lädt, und die Seiten antworten mit 500:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr66.sql
+```
+
 Nach `scripts/migrate-pr62.sql` einmalig `npm run db:seed-talents` ausführen —
 das füllt den neuen Talent-Katalog; ein zweiter Lauf ändert nichts und
 überschreibt keine Anpassungen der Spielleitung.
