@@ -11,14 +11,31 @@ function hashToken(rawToken: string): string {
 // Legt einen neuen Aktivierungs-Token an und gibt den Rohtoken zurück (nur
 // dieser darf im Mail-Link stehen — in der DB liegt nur der Hash, siehe
 // scripts/schema.sql).
+//
+// Dabei werden alle noch offenen Tokens desselben Kontos entwertet: Es gibt
+// mehrere Wege, die einen Link erzeugen (Konto anlegen, „Passwort
+// vergessen", und bei jedem Login-Versuch auf ein Konto ohne Passwort ein
+// weiterer) — ohne diesen Schritt lägen schnell mehrere gleichzeitig
+// gültige Links über sieben Tage in verschiedenen Postfächern. Nach dem
+// Anfordern eines neuen Links soll genau einer funktionieren: der neueste.
+//
+// Beides in EINER Transaktion, damit nie ein Zustand entsteht, in dem die
+// alten Tokens schon entwertet sind, der neue aber nicht angelegt wurde.
 export async function createPasswordSetupToken(userId: number): Promise<string> {
   const rawToken = crypto.randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + TOKEN_TTL_MS);
 
-  await sql`
-    INSERT INTO password_setup_tokens (user_id, token_hash, expires_at)
-    VALUES (${userId}, ${hashToken(rawToken)}, ${expiresAt})
-  `;
+  await sql.begin(async (tx) => {
+    await tx`
+      UPDATE password_setup_tokens
+      SET used_at = NOW()
+      WHERE user_id = ${userId} AND used_at IS NULL
+    `;
+    await tx`
+      INSERT INTO password_setup_tokens (user_id, token_hash, expires_at)
+      VALUES (${userId}, ${hashToken(rawToken)}, ${expiresAt})
+    `;
+  });
 
   return rawToken;
 }
