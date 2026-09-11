@@ -49,7 +49,7 @@ export default function MenuItem({
           </div>
         )}
         {id && <div className="lcars-menu-id">{id}</div>}
-        {text && <div className="lcars-menu-text">{text}</div>}
+        {text && <div className="lcars-menu-text">&nbsp;·&nbsp;{text}</div>}
       </div>
     </Link>
   );
