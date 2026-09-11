@@ -27,6 +27,14 @@ import {
   DEFAULT_COLOR_MODE,
   normalizeColorMode,
 } from "@/lib/colorMode";
+import {
+  FONT_SANS_COOKIE_NAME,
+  FONT_MONO_COOKIE_NAME,
+  DEFAULT_FONT_SANS,
+  DEFAULT_FONT_MONO,
+  normalizeFontSans,
+  normalizeFontMono,
+} from "@/lib/fonts";
 
 // Re-Export für serverseitige Aufrufer (z.B. src/app/layout.tsx), die die
 // Namen bisher aus der Session bezogen haben. Definiert werden sie in themes.ts
@@ -53,6 +61,8 @@ export async function createSession(user: {
   theme_overrides?: Record<string, string>;
   ui_mode?: string;
   color_mode?: string;
+  font_sans?: string;
+  font_mono?: string;
 }): Promise<void> {
   const expiresAt = Date.now() + SESSION_DURATION_MS;
   const token = encodeSessionToken({
@@ -79,6 +89,40 @@ export async function createSession(user: {
   );
   await setUiModeCookie(normalizeUiMode(user.ui_mode), expiresAt);
   await setColorModeCookie(normalizeColorMode(user.color_mode), expiresAt);
+  await setFontCookies(user.font_sans, user.font_mono, expiresAt);
+}
+
+// Schreibt (oder entfernt) die beiden JS-lesbaren Schrift-Cookies. Wie bei
+// Theme und UI-Modus wird für die Vorgabe gelöscht statt gesetzt — „kein
+// Cookie" und „die Vorgabe" behandelt das Init-Skript identisch.
+export async function setFontCookies(
+  fontSans: string | null | undefined,
+  fontMono: string | null | undefined,
+  expiresAtMs: number = Date.now() + SESSION_DURATION_MS,
+): Promise<void> {
+  const cookieStore = await cookies();
+  const expires = new Date(expiresAtMs);
+  const options = {
+    httpOnly: false,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax" as const,
+    expires,
+    path: "/",
+  };
+
+  const sans = normalizeFontSans(fontSans);
+  if (sans === DEFAULT_FONT_SANS) {
+    cookieStore.delete(FONT_SANS_COOKIE_NAME);
+  } else {
+    cookieStore.set(FONT_SANS_COOKIE_NAME, sans, options);
+  }
+
+  const mono = normalizeFontMono(fontMono);
+  if (mono === DEFAULT_FONT_MONO) {
+    cookieStore.delete(FONT_MONO_COOKIE_NAME);
+  } else {
+    cookieStore.set(FONT_MONO_COOKIE_NAME, mono, options);
+  }
 }
 
 // Schreibt (oder entfernt) das JS-lesbare Hell/Dunkel-Cookie. Für "dark"
@@ -186,4 +230,6 @@ export async function deleteSession(): Promise<void> {
   cookieStore.delete(THEME_CUSTOM_COOKIE_NAME);
   cookieStore.delete(UI_MODE_COOKIE_NAME);
   cookieStore.delete(COLOR_MODE_COOKIE_NAME);
+  cookieStore.delete(FONT_SANS_COOKIE_NAME);
+  cookieStore.delete(FONT_MONO_COOKIE_NAME);
 }

@@ -19,7 +19,8 @@ const USER_COLUMNS = sql`
   id, email, name, slug, role, is_active, created_at, last_login_at, previous_login_at,
   last_visit_at, last_dashboard_visit_at,
   email_notifications_enabled, push_notifications_enabled, notify_content_types,
-  news_kinds, color_theme, theme_overrides, ui_mode, color_mode, additional_roles, permission_overrides,
+  news_kinds, color_theme, theme_overrides, ui_mode, color_mode, font_sans, font_mono,
+  additional_roles, permission_overrides,
   session_version
 `;
 
@@ -361,6 +362,20 @@ export async function updateColorModePreference(
   `;
 }
 
+// Schriftwahl (siehe src/lib/fonts.ts) — zwei eigene Achsen neben ui_mode,
+// color_mode und color_theme. Beide werden zusammen gespeichert: das Profil
+// stellt sie in EINEM Formular ein.
+export async function updateFontPreferences(
+  userId: number,
+  fontSans: string,
+  fontMono: string,
+): Promise<void> {
+  await sql`
+    UPDATE users SET font_sans = ${fontSans}, font_mono = ${fontMono}
+    WHERE id = ${userId}
+  `;
+}
+
 // Charakter-Farbe: lebt jetzt auf characters.character_color statt hier (ein
 // User mit mehreren Charakteren — „Multis" — kann so für jeden Charakter eine
 // eigene Farbe wählen statt einer einzigen für alle). Siehe
@@ -408,6 +423,8 @@ export interface UserCredentials {
   theme_overrides: Record<string, string>;
   ui_mode: string;
   color_mode: string;
+  font_sans: string;
+  font_mono: string;
 }
 
 // client optional per Default der globale sql-Client, kann aber eine
@@ -421,7 +438,8 @@ export async function getUserCredentialsByEmail(
 ): Promise<UserCredentials | null> {
   const rows = await client<UserCredentials[]>`
     SELECT id, email, name, role, is_active, password_hash, requires_activation,
-           session_version, color_theme, theme_overrides, ui_mode, color_mode
+           session_version, color_theme, theme_overrides, ui_mode, color_mode,
+           font_sans, font_mono
     FROM users
     WHERE lower(email) = ${email}
     LIMIT 1

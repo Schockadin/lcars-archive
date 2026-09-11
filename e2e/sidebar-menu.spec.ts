@@ -15,6 +15,9 @@ const ERSTER = ".lcars-sidebar .lcars-menu-bar";
 
 test.describe("Hauptnavigation in der Seitenleiste", () => {
   test("schreibt im LCARS-UI „0X-Name“", async ({ page }) => {
+    // Ausdrücklich breit: die Suite läuft in zwei Projekten (mobil und
+    // Desktop), und die Beschriftung unterscheidet sich genau darin.
+    await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/tutorial");
     const eintrag = page.locator(ERSTER).first();
     await expect(eintrag).toBeVisible();
@@ -32,6 +35,7 @@ test.describe("Hauptnavigation in der Seitenleiste", () => {
     await page
       .context()
       .addCookies([{ name: "neo_ui", value: "minimal", url: baseURL! }]);
+    await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto("/tutorial");
     await expect(page.locator("html")).toHaveAttribute("data-ui", "minimal");
 

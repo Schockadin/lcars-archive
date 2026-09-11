@@ -95,6 +95,15 @@ export default function TutorialPage() {
                 per Einladung vergeben (siehe nächster Abschnitt).
               </p>
               <p>
+                In den drei Übersichten — <strong>Charaktere</strong>,{" "}
+                <strong>Chronologie</strong> und <strong>Datenbank</strong> —
+                steht links in der Karte ein kleines{" "}
+                <strong>Vorschaubild</strong>, sofern zum Eintrag eines
+                hinterlegt ist: bei einer Figur ihr Portrait, sonst das zuerst
+                hochgeladene Bild. Einträge ohne Bild bleiben schlicht ohne — es
+                wird kein Platzhalter angezeigt.
+              </p>
+              <p>
                 Kleiner Tipp am Rand: Auf schmalen Bildschirmen gibt es oben
                 einen <strong>Lesemodus</strong>-Knopf, der die Navigation
                 ausblendet und den Text breiter/größer darstellt.
@@ -1242,6 +1251,23 @@ export default function TutorialPage() {
                 <strong>„Hell/Dunkel“</strong> ein — <em>unabhängig</em> davon,
                 ob du LCARS oder das minimalistische Interface nutzt. Jede
                 Kombination ist möglich (LCARS hell, minimal dunkel, …).
+              </p>
+              <p>
+                Unter <strong>„Schriften“</strong> wählst du, in welcher Schrift
+                das Archiv gesetzt wird — getrennt für{" "}
+                <strong>Überschriften und Fließtext</strong> (Vorgabe:{" "}
+                <em>Antonio</em>, die schmalen LCARS-Versalien) und für{" "}
+                <strong>Daten und Code</strong> (Vorgabe:{" "}
+                <em>Share Tech Mono</em>, die Mono-Zeilen der Karten und
+                Aktenfelder). Als Alternativen stehen gängige, gut lesbare
+                Schriften bereit; jede Karte zeigt ein Beispiel in der Schrift
+                selbst. Wählst du eine andere Textschrift als Antonio, werden
+                Überschriften und Beschriftungen normal geschrieben statt
+                durchgehend groß — die Farben und Formen von LCARS bleiben.
+                Alle Schriften liefert das Archiv selbst aus; es geht keine
+                Anfrage an fremde Server. Die Wahl gilt nur für dich, erscheint
+                sofort als Vorschau und bleibt nach dem{" "}
+                <strong>Speichern</strong> erhalten.
               </p>
               <p>
                 Wenn du es lieber schlicht magst, kannst du unter{" "}

@@ -360,3 +360,14 @@ CREATE INDEX IF NOT EXISTS idx_planned_session_characters_character
 ALTER TABLE planned_sessions
   ADD COLUMN IF NOT EXISTS game_session_id INTEGER
   REFERENCES game_sessions(id) ON DELETE SET NULL;
+
+
+-- v1.29.55 — wählbare Schriften (siehe schema.sql).
+-- Beschriftungs-/Fließtextschrift und Mono-/Datenschrift lassen sich im Profil
+-- unabhängig voneinander umstellen (src/lib/fonts.ts). Die Defaults sind die
+-- bisherigen LCARS-Schriften — Bestandskonten sehen nach der Migration
+-- unverändert Antonio + Share Tech Mono.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS font_sans TEXT NOT NULL
+  DEFAULT 'antonio';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS font_mono TEXT NOT NULL
+  DEFAULT 'share-tech-mono';

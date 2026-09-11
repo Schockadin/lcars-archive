@@ -139,6 +139,12 @@ CREATE TABLE IF NOT EXISTS users (
   -- src/styles/color-mode.css). Kein DB-CHECK (analog ui_mode), unbekannte
   -- Werte fallen App-seitig auf 'dark' zurück.
   color_mode                    TEXT NOT NULL DEFAULT 'dark',
+  -- Gewählte Schriften der Oberfläche (siehe src/lib/fonts.ts /
+  -- src/styles/fonts.css): Beschriftungs-/Fließtextschrift und Mono-/
+  -- Datenschrift, je unabhängig wählbar. Kein DB-CHECK (analog ui_mode),
+  -- unbekannte Werte fallen App-seitig auf die Vorgabe zurück.
+  font_sans                     TEXT NOT NULL DEFAULT 'antonio',
+  font_mono                     TEXT NOT NULL DEFAULT 'share-tech-mono',
   additional_roles              TEXT[] NOT NULL DEFAULT '{}',
   permission_overrides          JSONB NOT NULL DEFAULT '{}'
 );
@@ -1178,6 +1184,14 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS theme_overrides JSONB NOT NULL
 -- lebt bewusst nur in migrate-pr64.sql (kein datenveränderndes UPDATE hier).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS color_mode TEXT NOT NULL
   DEFAULT 'dark';
+
+-- font_sans/font_mono: gewählte Schriften der Oberfläche (siehe
+-- src/lib/fonts.ts). Defaults = die bisherigen LCARS-Schriften, Bestandskonten
+-- sehen also unverändert Antonio + Share Tech Mono.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS font_sans TEXT NOT NULL
+  DEFAULT 'antonio';
+ALTER TABLE users ADD COLUMN IF NOT EXISTS font_mono TEXT NOT NULL
+  DEFAULT 'share-tech-mono';
 
 -- RBAC: weitere Rollen (ein User kann mehrere haben) + individuelle
 -- Rechte-Overrides (siehe src/lib/permissions.ts). Reine Struktur-Anlage; die

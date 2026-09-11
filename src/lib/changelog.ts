@@ -380,6 +380,20 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "Das PDF des Charakterbogens sieht jetzt aus wie der Bogen am Bildschirm — Zeile für Zeile an derselben Stelle: gleiche Schrift und Laufweite, dasselbe Portrait mit derselben Schräge, und die Kästchen für Entschlossenheit und Stress stehen auch auf dem Ausdruck da, wo sie hingehören (die ungenutzten Stress-Kästchen blass).",
         category: "export",
       },
+      {
+        text: "Charakterliste, Chronologie und Datenbank zeigen links in der Karte jetzt ein kleines Vorschaubild des Eintrags: bei einer Figur ihr Portrait, sonst das zuerst hochgeladene Bild. Einträge ohne Bild bleiben schlicht ohne — es steht kein Platzhalter im Weg.",
+        category: "darstellung",
+        tutorial: "fuer-besucher",
+      },
+      {
+        text: "Die Schriftart lässt sich jetzt wählen: im Profil unter „Darstellung → Schriften“ getrennt für Überschriften und Fließtext (Vorgabe Antonio) sowie für Daten und Code (Vorgabe Share Tech Mono), jeweils mit gängigen, gut lesbaren Alternativen und einem Beispiel in der Schrift selbst. Wählst du eine andere Textschrift als Antonio, werden Überschriften normal statt durchgehend groß geschrieben; die Farben und Formen bleiben. Die Wahl gilt nur für dich und bleibt bei jedem Login erhalten.",
+        category: "darstellung",
+        tutorial: "farbschema",
+      },
+      {
+        text: "Der „+“-Knopf über der Charakterliste erscheint nur noch für Konten, die auch Charaktere anlegen dürfen — vorher führte er Gäste auf eine Seite, die ihnen nur absagte.",
+        category: "charaktere",
+      },
     ],
   },
   {
