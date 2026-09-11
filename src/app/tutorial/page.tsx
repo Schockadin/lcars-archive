@@ -242,6 +242,17 @@ export default function TutorialPage() {
                 über den du dein Passwort festlegst. Ein Passwort vergessen?
                 Über „Passwort vergessen“ auf der Login-Seite kannst du dir
                 jederzeit selbst einen neuen Aktivierungslink zuschicken lassen.
+                Der neue Link macht dabei einen eventuell noch offenen älteren
+                ungültig — es funktioniert also immer nur der zuletzt
+                angeforderte.
+              </p>
+              <p>
+                Änderst du dein Passwort später im Profil, bleibst du auf dem
+                Gerät angemeldet, an dem du gerade sitzt; alle anderen Geräte
+                werden abgemeldet. Dasselbe erreichst du ohne Passwortwechsel
+                über „Auf allen anderen Geräten abmelden“. Wird ein Konto von
+                der Administration deaktiviert, greift das sofort und überall —
+                auch dort, wo es noch angemeldet war.
               </p>
               <p>Es gibt fünf Rollen mit unterschiedlichen Rechten:</p>
               <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">

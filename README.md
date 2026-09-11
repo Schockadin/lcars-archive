@@ -1430,6 +1430,16 @@ Datenbestands — ein klassisches **RAG** (Retrieval-Augmented Generation):
 **Kosten:** Initial-Embedding der kleinen Fan-Datenbank < 0,10 $; Workers AI läuft
 für das erwartete Fragevolumen voraussichtlich im Free Tier.
 
+**Ratelimit:** Acht Fragen pro Minute und Konto, gezählt in der Tabelle
+`rag_requests` ([`src/lib/ragLimiter.ts`](src/lib/ragLimiter.ts)) — dasselbe
+Muster wie `login_attempts`/`password_reset_requests`, inklusive
+`pg_advisory_xact_lock` gegen gleichzeitige Anfragen. Bewusst in der
+Datenbank statt im Prozessspeicher: Auf serverless bekommt jede
+Funktionsinstanz ihren eigenen Speicher, ein prozess-lokaler Zähler skaliert
+also mit der Instanzzahl mit, statt zu bremsen — und am anderen Ende hängt
+ein abrechnender Anbieter. Alte Zeilen räumt der Schreibpfad selbst nach 24
+Stunden ab.
+
 ### Dev-/Preview-Umgebung
 
 Netlify Deploy-Previews (ein Build pro PR) laufen standardmäßig gegen
@@ -1495,10 +1505,14 @@ DB ausgeführt wird.
 anschließend liest (z.B. `users.font_sans`/`font_mono` in `USER_COLUMNS`), muss
 die Migration laufen, **bevor** der Stand ausgeliefert wird — auch für die
 Deploy-Preview, die an derselben Datenbank hängt. Sonst scheitert jede Abfrage,
-die einen User lädt, und die Seiten antworten mit 500:
+die einen User lädt, und die Seiten antworten mit 500. Dasselbe gilt für eine
+neue **Tabelle**, die die App liest: `scripts/migrate-pr67.sql` legt
+`rag_requests` an (das Ratelimit des Datenbank-Assistenten, siehe
+[`src/lib/ragLimiter.ts`](src/lib/ragLimiter.ts)) — fehlt sie, antwortet
+`/api/rag` mit 500, sobald jemand eine Frage stellt:
 
 ```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr66.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr67.sql
 ```
 
 Nach `scripts/migrate-pr62.sql` einmalig `npm run db:seed-talents` ausführen —
