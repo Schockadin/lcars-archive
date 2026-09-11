@@ -1555,6 +1555,52 @@ export function compareVersions(a: string, b: string): number {
   return 0;
 }
 
+// Versionen, für die bewusst KEIN Eintrag existiert. Sie stammen aus der
+// Zeit vor der heutigen Git-Historie dieses Repositories (die beginnt bei
+// 1.29) — was in diesen Pull Requests steckte, lässt sich nicht mehr
+// rekonstruieren, und erfundene Release-Notes wären schlechter als die
+// Lücke. Die Liste ist abschließend und darf NICHT wachsen: Ein Test
+// (changelog.test.ts) prüft, dass die Versionsreihe außerhalb dieser
+// Ausnahmen lückenlos ist, damit ein künftig vergessener Eintrag auffällt
+// statt still zu fehlen.
+export const CHANGELOG_KNOWN_GAPS: readonly string[] = [
+  "1.4",
+  "1.5",
+  "1.6",
+  "1.7",
+];
+
+// Alle Major.Minor-Versionen, die zwischen der ältesten und der jüngsten
+// vorhandenen liegen und weder einen Eintrag noch eine bekannte Ausnahme
+// haben. Leer, solange der Changelog vollständig ist.
+export function missingChangelogVersions(
+  entries: ChangelogEntry[] = CHANGELOG,
+): string[] {
+  const vorhanden = new Set(entries.map((entry) => entry.version));
+  const bekannteLuecken = new Set(CHANGELOG_KNOWN_GAPS);
+
+  // Nach Major gruppieren: Die Minor-Reihe beginnt mit jeder neuen
+  // Major-Version wieder bei 0 (siehe src/lib/version.ts), eine
+  // durchgehende Zählung über Major-Grenzen hinweg gäbe es also nicht.
+  const proMajor = new Map<number, number[]>();
+  for (const version of vorhanden) {
+    const [major, minor] = version.split(".").map(Number);
+    if (!Number.isInteger(major) || !Number.isInteger(minor)) continue;
+    proMajor.set(major, [...(proMajor.get(major) ?? []), minor]);
+  }
+
+  const fehlend: string[] = [];
+  for (const [major, minors] of proMajor) {
+    for (let minor = Math.min(...minors); minor <= Math.max(...minors); minor++) {
+      const version = `${major}.${minor}`;
+      if (!vorhanden.has(version) && !bekannteLuecken.has(version)) {
+        fehlend.push(version);
+      }
+    }
+  }
+  return fehlend.sort(compareVersions);
+}
+
 // Gibt es einen Changelog-Eintrag mit dieser „Major.Minor"-Version?
 export function changelogVersionExists(
   version: string,
