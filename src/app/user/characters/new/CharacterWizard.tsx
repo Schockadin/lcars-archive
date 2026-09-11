@@ -7,6 +7,7 @@ import { SubmitButton, FormError } from "@/app/_shared/FormPrimitives";
 import { MarkdownFormatHint } from "@/app/_shared/MarkdownHint";
 import { renderMarkdownPreview } from "@/app/actions/markdownPreview";
 import CharacterSheetPreview from "@/components/character/CharacterSheetPreview";
+import { parsePortraitCrop, type PortraitCrop } from "@/lib/portraitCrop";
 import CharacterValuesEditor from "../_shared/CharacterValuesEditor";
 import PortraitPicker from "../_shared/PortraitPicker";
 import {
@@ -60,11 +61,26 @@ const headFields = characterHeadFields.map((field) => ({
 // Was die Vorschau über die Akte wissen muss. Kommt nicht aus einem State,
 // sondern beim Wechsel auf den letzten Schritt frisch aus dem Formular — dort
 // steht ohnehin genau das, was gleich abgeschickt wird.
+// Das versteckte Feld des PortraitPickers trägt den Ausschnitt als JSON. Ein
+// kaputter Wert darf die Vorschau nicht scheitern lassen — parsePortraitCrop
+// fällt dann auf die Mitte zurück.
+function safeJson(value: string | null): unknown {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
 interface HeadSnapshot {
   name: string;
   rank: string | null;
   species: string | null;
   portrait: string | null;
+  // Der im PortraitPicker gewählte Ausschnitt — die Vorschau zeigt ihn genau
+  // so, wie der Bogen ihn später anwendet (siehe src/lib/portraitCrop.ts).
+  portraitCrop: PortraitCrop | null;
 }
 
 // Anlege-Assistent für einen neuen Charakter: vier Schritte, jederzeit vor und
@@ -117,23 +133,22 @@ export default function CharacterWizard({
     const data = new FormData(form);
     const text = (key: string) => String(data.get(key) ?? "").trim() || null;
 
-    // Für die Vorschau zählt, was der Bogen später zeigt: der gewählte
-    // Ausschnitt, sonst die hochgeladene Datei (lokal angezeigt, ins Netz geht
-    // sie erst beim Abschicken). Ein neuer Charakter hat sonst nichts —
+    // Für die Vorschau zählt, was der Bogen später zeigt: die hochgeladene
+    // Datei (lokal angezeigt, ins Netz geht sie erst beim Abschicken) mit dem
+    // gewählten Ausschnitt darüber. Ein neuer Charakter hat sonst nichts —
     // Portraits kommen ausschließlich als Datei.
-    const cropped = text("portraitCropped");
     const file = data.get("portraitFile");
     const portrait =
-      cropped ||
-      (file instanceof File && file.size > 0
+      file instanceof File && file.size > 0
         ? URL.createObjectURL(file)
-        : null);
+        : null;
 
     return {
       name: String(data.get("name") ?? "").trim(),
       rank: text("rank"),
       species: text("species"),
       portrait,
+      portraitCrop: parsePortraitCrop(safeJson(text("portraitCrop"))),
     };
   }
 
@@ -340,6 +355,7 @@ export default function CharacterWizard({
               rank: head.rank,
               species: head.species,
               portrait: head.portrait,
+              portraitCrop: head.portraitCrop,
               stats,
               bioHtml,
               talents,

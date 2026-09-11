@@ -1,4 +1,9 @@
 import Link from "next/link";
+import {
+  DEFAULT_CROP,
+  previewStyle,
+  type PortraitCrop,
+} from "@/lib/portraitCrop";
 
 // Die gemeinsame Karte der beiden Zeit-/Bestandslisten: Chronologie
 // (/chronologie) und Datenbank (/archive). Beide zeigten dasselbe — ein
@@ -17,6 +22,7 @@ import Link from "next/link";
 export default function ChronoCard({
   color,
   thumbnailSrc,
+  thumbnailCrop,
   tag,
   title,
   href,
@@ -33,6 +39,10 @@ export default function ChronoCard({
   // Eintrags (bei Charakteren das Portrait). Fehlt es, bleibt die Karte wie
   // bisher: KEIN Platzhalter, kein leerer Kasten.
   thumbnailSrc?: string | null;
+  // Der am Portrait gewählte Ausschnitt (siehe src/lib/portraitCrop.ts) — so
+  // zeigt die Karte dieselbe Bildstelle wie der Charakterbogen. Ohne Angabe
+  // gilt die Bildmitte.
+  thumbnailCrop?: PortraitCrop | null;
   // Das Art-Etikett links vor dem Titel (.timeline-tag).
   tag?: React.ReactNode;
   title: React.ReactNode;
@@ -57,18 +67,23 @@ export default function ChronoCard({
       style={{ "--timeline-color": color } as React.CSSProperties}
     >
       {thumbnailSrc && (
-        /* Rein schmückend: Titel und Angaben stehen daneben, deshalb leeres
-           alt und kein eigener Link (die ganze Karte ist ohnehin anklickbar).
-           <img> statt next/image wie überall bei /api/content-images/… — die
-           Größen sind unbekannt und die Route liefert die Bytes direkt. */
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          className="timeline-card-thumb"
-          src={thumbnailSrc}
-          alt=""
-          loading="lazy"
-          decoding="async"
-        />
+        /* Der Kasten schneidet ab, das Bild darin trägt den gewählten
+           Ausschnitt. Rein schmückend: Titel und Angaben stehen daneben,
+           deshalb leeres alt und kein eigener Link (die ganze Karte ist
+           ohnehin anklickbar). <img> statt next/image wie überall bei
+           /api/content-images/… — die Größen sind unbekannt und die Route
+           liefert die Bytes direkt. */
+        <span className="timeline-card-thumb-box">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            className="timeline-card-thumb"
+            style={previewStyle(thumbnailCrop ?? DEFAULT_CROP)}
+            src={thumbnailSrc}
+            alt=""
+            loading="lazy"
+            decoding="async"
+          />
+        </span>
       )}
       <div className="timeline-card-body">
         <div className="timeline-card-head">

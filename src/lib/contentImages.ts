@@ -28,6 +28,7 @@ import {
   OWNER_CONTENT_TYPES,
   type OwnerContentTypeKey,
 } from "@/lib/contentTypeFormat";
+import { contentImageSrc } from "@/lib/contentRoutes";
 
 export const CONTENT_IMAGE_PREFIX = "content-images/";
 
@@ -449,8 +450,16 @@ export async function setCharacterPortraitFromImage(
   `;
   if (!image) return null;
 
+  // Das Galeriebild wird zum Portrait — und ist damit das ORIGINAL, auf das
+  // sich ein künftiger Ausschnitt bezieht (siehe src/lib/portraitCrop.ts). Der
+  // Altbestands-Zeiger auf ein früheres Original und der Ausschnitt dazu
+  // müssen deshalb weg: sonst zeigte der Bogen weiter das alte Bild, bzw. der
+  // Ausschnitt des alten Bildes läge über dem neuen.
   const [character] = await sql<{ slug: string }[]>`
-    UPDATE characters SET portrait = ${`/api/content-images/${imageId}`}, updated_at = NOW()
+    UPDATE characters
+    SET portrait = ${contentImageSrc(imageId)},
+        metadata = (metadata - 'portraitSource') - 'portraitCrop',
+        updated_at = NOW()
     WHERE id = ${characterId}
     RETURNING slug
   `;

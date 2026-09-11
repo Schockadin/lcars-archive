@@ -95,6 +95,15 @@ export default function TutorialPage() {
                 per Einladung vergeben (siehe nächster Abschnitt).
               </p>
               <p>
+                <strong>Bilder</strong> zu einem Eintrag lädst du über den
+                Bilder-Knopf im Aktionen-Feld hoch (Charaktere, Missionen,
+                Logbücher, Datenbank-Einträge). Mehrere auf einmal sind
+                möglich; jedes Bild geht einzeln los, und sehr große werden
+                vorher automatisch verkleinert, damit der Upload nicht am
+                Größenlimit scheitert. Klappt eines nicht, steht der Grund
+                direkt darunter.
+              </p>
+              <p>
                 In den drei Übersichten — <strong>Charaktere</strong>,{" "}
                 <strong>Chronologie</strong> und <strong>Datenbank</strong> —
                 steht links in der Karte ein kleines{" "}
@@ -352,11 +361,14 @@ export default function TutorialPage() {
                 den Bildkasten samt seiner Schräge zeigt — ziehen verschiebt
                 das Bild, der Regler vergrößert es bis zum Vierfachen.{" "}
                 <strong>„Übernehmen“</strong> merkt den Ausschnitt vor;
-                gespeichert wird er mit dem Formular, und zwar fertig
-                zugeschnitten, sodass Bildschirm und PDF dasselbe zeigen. Das
-                Original bleibt hinterlegt: beim nächsten Bearbeiten kannst du
-                den Ausschnitt neu wählen, ohne die Datei erneut zu suchen.
-                Ohne eigenen Ausschnitt zeigt der Bogen die Bildmitte. Früher
+                gespeichert wird er mit dem Formular. Gespeichert wird dabei{" "}
+                <em>dein Originalbild</em> — der Ausschnitt ist nur die Angabe,
+                welcher Teil davon im Bildkasten erscheint (Bildschirm wie
+                PDF). Du kannst ihn also jederzeit neu wählen, ohne dass das
+                Bild bei jedem Mal schlechter wird, und wo das ganze Bild
+                hingehört — im Karussell auf deiner Charakterseite — steht es
+                unbeschnitten. Ohne eigenen Ausschnitt zeigt der Bogen die
+                Bildmitte. Früher
                 eingetragene Adressen holt die Administration einmalig ins
                 Archiv, sodass am Ende jedes Portrait dem Archiv selbst
                 gehört — dein Bogen sieht danach aus wie vorher, nur hängt er

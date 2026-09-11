@@ -6,6 +6,7 @@
 // contentNoteTypes.ts/contentNotes.ts.
 
 import { fmtDate } from "@/lib/missionFormat";
+import type { PortraitCrop } from "@/lib/portraitCrop";
 import { RESERVED_CHRONOLOGY_SEGMENTS } from "@/lib/contentRoutes";
 
 export { fmtDate };
@@ -139,6 +140,9 @@ export interface TimelineEvent {
   // eingetragenen Ereignis, das zu keinem Inhalt gehört —, zeigt die Karte
   // kein Bild und auch keinen Platzhalter.
   thumbnail?: string | null;
+  // Der am Portrait gewählte Ausschnitt (nur bei Charakteren) — die Karte
+  // zeigt damit dieselbe Bildstelle wie der Charakterbogen.
+  thumbnailCrop?: PortraitCrop | null;
 }
 
 export function eventId(

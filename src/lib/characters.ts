@@ -8,7 +8,7 @@ import { contentImageSrc } from "@/lib/contentRoutes";
 import { Character, CharacterMetadata } from "@/types/character";
 import type { CharacterStats } from "@/types/characterStats";
 import { parseCharacterStats } from "@/lib/characterStats";
-import type { PortraitCrop } from "@/lib/portraitCrop";
+import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 import { MissionLogPreview } from "@/types/missionLog";
 // getCharacterSubscribers lebt in dialoguesCore.ts (ursprünglich für den
 // Dialog-Abschluss gebraucht, siehe dort) und wird hier für die
@@ -83,6 +83,9 @@ export type CharacterListItem = Pick<
   // ersatzweise ihr erstes hochgeladenes Bild. null, wenn es beides nicht
   // gibt — dann zeigt die Karte kein Bild und keinen Platzhalter.
   thumbnail: string | null;
+  // Der am Portrait gewählte Ausschnitt — die Karte zeigt damit dieselbe
+  // Bildstelle wie der Charakterbogen (siehe src/lib/portraitCrop.ts).
+  thumbnailCrop: PortraitCrop | null;
 };
 
 interface CharacterListRow
@@ -122,17 +125,30 @@ export async function getCharacterListItems(): Promise<CharacterListItem[]> {
           END,
           c.name ASC
       `;
-  return rows.map(({ portrait, image_id, ...row }) => ({
-    ...row,
+  return rows.map(({ portrait, image_id, ...row }) => {
     // stats bleiben draußen, siehe parseCharacter oben — die Liste ist eine
     // Client-Komponente und zeigt keine Werte an.
-    metadata: stripStats(
+    const metadata = stripStats(
       typeof row.metadata === "string"
         ? (JSON.parse(row.metadata) as CharacterMetadata)
         : row.metadata,
-    ),
-    thumbnail: portrait ?? (image_id ? contentImageSrc(image_id) : null),
-  }));
+    );
+    // Dasselbe Bild und derselbe Ausschnitt wie auf dem Bogen: im Altbestand
+    // steht in portrait das eingebackene Bild und daneben das Original.
+    const view = resolvePortraitView(
+      portrait,
+      metadata.portraitSource,
+      metadata.portraitCrop,
+    );
+    return {
+      ...row,
+      metadata,
+      thumbnail: view.src ?? (image_id ? contentImageSrc(image_id) : null),
+      // Der Ausschnitt gehört zum Portrait — für ein Galeriebild als Ersatz
+      // gilt die Bildmitte.
+      thumbnailCrop: view.src ? view.crop : null,
+    };
+  });
 }
 
 // Nur public-Charaktere — speist die Detail-generateStaticParams, die
@@ -790,8 +806,11 @@ export interface OwnCharacterStats {
   name: string;
   // Das Portrait ist zugleich das „Photo" des Charakterbogens — der Bogen
   // zeigt es an und lädt es hoch,
-  // statt ein zweites Bild neben dem Portrait zu führen.
+  // statt ein zweites Bild neben dem Portrait zu führen. Geliefert wird das
+  // ORIGINAL samt gewähltem Ausschnitt (siehe src/lib/portraitCrop.ts); im
+  // Altbestand ist das Original metadata.portraitSource.
   portrait: string | null;
+  portraitCrop: PortraitCrop;
   // Spezies der Akte — die Talent-Auswahl prüft damit Voraussetzungen wie
   // „Vulcan" (siehe talentRequirements.ts).
   species: string | null;
@@ -812,12 +831,16 @@ export async function getOwnCharacterStats(
       slug: string;
       name: string;
       portrait: string | null;
+      portrait_source: string | null;
+      portrait_crop: unknown;
       species: string | null;
       rank: string | null;
       stats: unknown;
     }[]
   >`
     SELECT id, slug, name, portrait,
+           metadata ->> 'portraitSource' AS portrait_source,
+           metadata -> 'portraitCrop'    AS portrait_crop,
            -- Rang und Spezies pflegt die App in metadata (siehe
            -- createCharacter/updateOwnCharacterContent); die gleichnamigen
            -- Spalten stammen aus dem Vault-Ingest und bleiben bei einem in der
@@ -843,11 +866,22 @@ export async function getOwnCharacterStats(
   const row = rows[0];
   if (!row) return null;
 
+  const portraitView = resolvePortraitView(
+    row.portrait,
+    row.portrait_source,
+    typeof row.portrait_crop === "string"
+      ? JSON.parse(row.portrait_crop)
+      : row.portrait_crop,
+  );
+
   return {
     id: row.id,
     slug: row.slug,
     name: row.name,
-    portrait: row.portrait,
+    // Angezeigt (und ins PDF gereicht) wird das Original; der Ausschnitt
+    // kommt als Anweisung daneben.
+    portrait: portraitView.src,
+    portraitCrop: portraitView.crop,
     species: row.species,
     rank: row.rank,
     // metadata->'stats' kommt je nach Treiber als Objekt ODER als JSON-String
@@ -872,12 +906,16 @@ export async function getCharacterStatsForGm(
       slug: string;
       name: string;
       portrait: string | null;
+      portrait_source: string | null;
+      portrait_crop: unknown;
       species: string | null;
       rank: string | null;
       stats: unknown;
     }[]
   >`
     SELECT id, slug, name, portrait,
+           metadata ->> 'portraitSource' AS portrait_source,
+           metadata -> 'portraitCrop'    AS portrait_crop,
            -- Rang und Spezies pflegt die App in metadata (siehe
            -- createCharacter/updateOwnCharacterContent); die gleichnamigen
            -- Spalten stammen aus dem Vault-Ingest und bleiben bei einem in der
@@ -903,11 +941,22 @@ export async function getCharacterStatsForGm(
   const row = rows[0];
   if (!row) return null;
 
+  const portraitView = resolvePortraitView(
+    row.portrait,
+    row.portrait_source,
+    typeof row.portrait_crop === "string"
+      ? JSON.parse(row.portrait_crop)
+      : row.portrait_crop,
+  );
+
   return {
     id: row.id,
     slug: row.slug,
     name: row.name,
-    portrait: row.portrait,
+    // Angezeigt (und ins PDF gereicht) wird das Original; der Ausschnitt
+    // kommt als Anweisung daneben.
+    portrait: portraitView.src,
+    portraitCrop: portraitView.crop,
     species: row.species,
     rank: row.rank,
     stats: parseCharacterStats(

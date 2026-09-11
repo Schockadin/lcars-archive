@@ -7,7 +7,6 @@ import {
   parsePortraitCrop,
   type PortraitCrop,
 } from "@/lib/portraitCrop";
-import { parseImageDataUrl } from "@/lib/portraitSource";
 import type { Character } from "@/types/character";
 
 // Die Stammdaten der Charakter-Akte aus einem Formular lesen — geteilt vom
@@ -17,19 +16,14 @@ import type { Character } from "@/types/character";
 
 const VALID_STATUSES: Character["status"][] = ["active", "retired", "deceased"];
 
-// Wie groß eine zugeschnittene Vorschau höchstens sein darf, bevor sie
-// abgewiesen wird. Der Browser liefert rund 390 × 434 Bildpunkte als JPEG,
-// das sind wenige hundert Kilobyte — 4 MB sind reichlich Luft und ziehen
-// zugleich eine Grenze gegen missbräuchlich große Data-URLs.
-const MAX_CROPPED_BYTES = 4 * 1024 * 1024;
-
 export interface CharacterHeadInput {
   name: string;
   status: Character["status"];
   portrait: string | null;
-  // Das Original, aus dem der Ausschnitt geschnitten wurde, und die
-  // Einstellung dazu — damit sich der Ausschnitt später neu wählen lässt,
-  // ohne die Datei erneut zu suchen (siehe src/lib/portraitCrop.ts).
+  // Das Original aus dem Altbestand: dort steht in portrait das eingebackene
+  // Bild und hier das Bild, aus dem es geschnitten wurde. Neue Datensätze
+  // führen das Original direkt in portrait und lassen dieses Feld leer (siehe
+  // src/lib/portraitCrop.ts).
   portraitSource: string | null;
   portraitCrop: PortraitCrop | null;
   rank: string | null;
@@ -55,6 +49,9 @@ export type CharacterHeadResult =
 export interface CurrentPortrait {
   portrait: string | null;
   portraitSource: string | null;
+  // Der bisher gespeicherte Ausschnitt — er bleibt stehen, wenn das Formular
+  // gar kein Ausschnitt-Feld mitschickt.
+  portraitCrop?: unknown;
 }
 
 export async function readCharacterHead(
@@ -69,8 +66,11 @@ export async function readCharacterHead(
     return { error: "Ungültiger Status." };
   }
 
-  // Portrait: eine hochgeladene Datei oder ein im Browser zugeschnittener
-  // Ausschnitt — sonst bleibt stehen, was schon gespeichert ist.
+  // Portrait: eine hochgeladene Datei — sonst bleibt stehen, was schon
+  // gespeichert ist. Hochgeladen wird das ORIGINAL; der gewählte Ausschnitt
+  // ist eine Anweisung dazu (Zoom + Mittelpunkt) und wird erst beim Anzeigen
+  // angewandt (siehe src/lib/portraitCrop.ts). Bis v1.29.57 buk der Browser
+  // den Ausschnitt in ein zweites Bild ein und lud dieses hoch.
   //
   // Eine Bild-ADRESSE gibt es nicht mehr: ein Portrait, das auf einem fremden
   // Server liegt, verschwindet, wenn dort jemand aufräumt, lässt sich hier
@@ -81,10 +81,6 @@ export async function readCharacterHead(
   // kann damit gar nicht mehr aus einem Formular kommen, auch nicht aus einem
   // von Hand zusammengebauten.
   //
-  // Der Zuschnitt kommt als Data-URL aus dem PortraitPicker — dort wird er
-  // auf einer Leinwand im Seitenverhältnis des Bildkastens gezeichnet. Er wird
-  // wie jedes andere Bild in den Asset-Bucket geladen; Bogen und PDF sehen
-  // danach nur noch ein Bild, das ohnehin passt.
   let portrait = current?.portrait ?? null;
   let portraitSource = current?.portraitSource ?? null;
 
@@ -95,35 +91,28 @@ export async function readCharacterHead(
         buffer: Buffer.from(await portraitFile.arrayBuffer()),
         mimeType: portraitFile.type,
       });
+      // Die hochgeladene Datei IST das Portrait — unbeschnitten. Der
+      // Altbestands-Zeiger auf ein früheres Original wird damit gegenstandslos
+      // und fällt weg, sonst zeigte der Bogen weiter das alte Bild.
       portrait = uploaded;
-      // Die hochgeladene Datei IST das Original — ein späterer Zuschnitt geht
-      // von ihr aus, nicht vom bereits beschnittenen Ergebnis.
-      portraitSource = uploaded;
+      portraitSource = null;
     } catch (err) {
       if (err instanceof InvalidAssetError) return { error: err.message };
       throw err;
     }
   }
 
-  let portraitCrop: PortraitCrop | null = null;
-  const croppedRaw = String(formData.get("portraitCropped") ?? "").trim();
-  if (croppedRaw) {
-    const decoded = decodeDataUrl(croppedRaw);
-    if (!decoded) return { error: "Der Bildausschnitt ist unbrauchbar." };
-    if (decoded.buffer.byteLength > MAX_CROPPED_BYTES) {
-      return { error: "Der Bildausschnitt ist zu groß." };
-    }
-    try {
-      portrait = await uploadCharacterPortraitImage(decoded);
-    } catch (err) {
-      if (err instanceof InvalidAssetError) return { error: err.message };
-      throw err;
-    }
-    const crop = parsePortraitCrop(safeJson(formData.get("portraitCrop")));
-    // Ein unveränderter Ausschnitt braucht nicht gespeichert zu werden — er
-    // ist die Vorgabe.
-    portraitCrop = isDefaultCrop(crop) ? null : crop;
-  }
+  // Der Ausschnitt: das Formular schickt ihn immer mit (PortraitPicker), auch
+  // wenn nur er geändert wurde. Fehlt das Feld ganz — ein Formular ohne
+  // Portrait-Bereich —, bleibt der gespeicherte Wert stehen.
+  const cropField = formData.get("portraitCrop");
+  const crop =
+    cropField === null
+      ? parsePortraitCrop(current?.portraitCrop)
+      : parsePortraitCrop(safeJson(cropField));
+  // Ein unveränderter Ausschnitt braucht nicht gespeichert zu werden — er ist
+  // die Vorgabe.
+  const portraitCrop: PortraitCrop | null = isDefaultCrop(crop) ? null : crop;
 
   const ageRaw = String(formData.get("age") ?? "").trim();
   const age = ageRaw ? Number(ageRaw) : null;
@@ -160,17 +149,6 @@ export async function readCharacterHead(
       tags: parseList(formData.get("tags")),
     },
   };
-}
-
-// Eine Data-URL in Bytes zerlegen. Das Zerlegen selbst steht in
-// portraitSource.ts — es wird auch beim Import einer Adresse gebraucht.
-function decodeDataUrl(
-  value: string,
-): { buffer: Buffer; mimeType: string } | null {
-  const parsed = parseImageDataUrl(value);
-  if (!parsed) return null;
-  const buffer = Buffer.from(parsed.base64, "base64");
-  return buffer.byteLength > 0 ? { buffer, mimeType: parsed.mimeType } : null;
 }
 
 // Das Formular liefert die Einstellung als JSON. Ein kaputter Wert darf das

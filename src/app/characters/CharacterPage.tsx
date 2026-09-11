@@ -206,6 +206,7 @@ function CharacterCard({
       // Portrait (ersatzweise das erste hochgeladene Bild) als Vorschaubild
       // links in der Karte; ohne Bild bleibt die Karte wie bisher.
       thumbnailSrc={character.thumbnail}
+      thumbnailCrop={character.thumbnailCrop}
       tag={m.rank ? (RANK_MAP[m.rank] ?? m.rank) : undefined}
       title={character.name}
       href={characterHref(character.slug)}

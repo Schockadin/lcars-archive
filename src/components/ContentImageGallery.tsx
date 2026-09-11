@@ -17,6 +17,14 @@ import {
   XIcon,
   PortraitIcon,
 } from "@/lib/icons";
+import { contentImageSrc } from "@/lib/contentRoutes";
+import {
+  MAX_UPLOAD_BYTES,
+  formatMegabytes,
+  prepareImageForUpload,
+  rejectionReason,
+  uploadErrorMessage,
+} from "@/lib/imageUpload";
 
 // Bilder-Galerie für Charaktere/Missionen/Missionslogs/Archiv-Einträge
 // (nicht Dialoge) — analog zu ContentLinkToolButton.tsx als Icon-Button + Modal
@@ -47,45 +55,92 @@ export default function ContentImageGallery({
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    getContentImagesAction(contentType, contentId).then((result) => {
-      if (!cancelled) setImages(result);
-    });
+    getContentImagesAction(contentType, contentId)
+      .then((result) => {
+        if (!cancelled) setImages(result);
+      })
+      .catch(() => {
+        // Auch hier: ein Fehlschlag darf nicht als ewiges „Lädt…" enden.
+        if (cancelled) return;
+        setImages([]);
+        setError("Die Bilderliste konnte nicht geladen werden.");
+      });
     return () => {
       cancelled = true;
     };
   }, [open, contentType, contentId]);
 
+  // Jede Datei einzeln — und vorher verkleinert.
+  //
+  // Vorher gingen alle gewählten Bilder als EIN Formular in voller Größe an
+  // die Server Action. Eine Server Action ist eine normale Anfrage an die
+  // Funktion, die die App ausliefert, und die hat auf der Plattform ein hartes
+  // Größenlimit (Netlify/Lambda: 6 MB inklusive Multipart-Rahmen). Wird das
+  // gerissen, weist die Plattform die Anfrage ab, bevor unser Code sie sieht:
+  // die Action meldet keinen Fehler, sie kommt nie an. Zusammen mit dem
+  // fehlenden try/catch unten blieb die Anzeige deshalb bei „Wird
+  // hochgeladen…" stehen — ohne Fehler, ohne Ergebnis.
+  //
+  // Deshalb: pro Datei eine Anfrage (jede für sich klein genug), große Bilder
+  // vorher im Browser verkleinern (siehe src/lib/imageUpload.ts), und JEDER
+  // Fehlschlag wird angezeigt statt verschluckt.
   function handleFilesSelected(files: FileList | null) {
     if (!files || files.length === 0) return;
-    const formData = new FormData();
-    formData.set("contentType", contentType);
-    formData.set("contentId", String(contentId));
-    for (const file of files) formData.append("files", file);
+    const selected = [...files];
 
     startTransition(async () => {
-      const result = await uploadContentImagesAction({}, formData);
-      if (result.error) {
-        setError(result.error);
-      } else {
-        setError(null);
-        setImages(result.images ?? []);
+      const problems: string[] = [];
+      let latest: ContentImage[] | null = null;
+
+      for (const original of selected) {
+        const reason = rejectionReason(original);
+        if (reason) {
+          problems.push(reason);
+          continue;
+        }
+
+        const file = await prepareImageForUpload(original);
+        const formData = new FormData();
+        formData.set("contentType", contentType);
+        formData.set("contentId", String(contentId));
+        formData.append("files", file);
+
+        try {
+          const result = await uploadContentImagesAction({}, formData);
+          if (result.error) {
+            problems.push(`„${original.name}": ${result.error}`);
+          } else if (result.images) {
+            latest = result.images;
+          }
+        } catch {
+          // Abgewiesene oder abgebrochene Anfrage (Größenlimit der Plattform,
+          // Verbindung weg). Ohne dieses catch bliebe die Transition hängen.
+          problems.push(uploadErrorMessage(file));
+        }
       }
+
+      if (latest) setImages(latest);
+      setError(problems.length > 0 ? problems.join(" ") : null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     });
   }
 
   function handleDelete(imageId: number) {
     startTransition(async () => {
-      const result = await deleteContentImageAction(
-        contentType,
-        contentId,
-        imageId,
-      );
-      if (result.error) {
-        setError(result.error);
-      } else {
-        setError(null);
-        setImages(result.images ?? []);
+      try {
+        const result = await deleteContentImageAction(
+          contentType,
+          contentId,
+          imageId,
+        );
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setError(null);
+          setImages(result.images ?? []);
+        }
+      } catch {
+        setError("Das Bild konnte nicht gelöscht werden.");
       }
     });
   }
@@ -98,12 +153,16 @@ export default function ContentImageGallery({
   // erreichen.
   function handleSetPortrait(imageId: number) {
     startTransition(async () => {
-      const result = await setCharacterPortraitAction(contentId, imageId);
-      if (result.error) {
-        setError(result.error);
-      } else {
-        setError(null);
-        router.refresh();
+      try {
+        const result = await setCharacterPortraitAction(contentId, imageId);
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setError(null);
+          router.refresh();
+        }
+      } catch {
+        setError("Das Profilbild konnte nicht gesetzt werden.");
       }
     });
   }
@@ -143,14 +202,18 @@ export default function ContentImageGallery({
             <p className="text-[13px]">Noch keine Bilder hochgeladen.</p>
           )}
 
-          <p className="text-[13px]">(Max. 10MB pro Upload)</p>
+          <p className="text-[13px]">
+            Mehrere Bilder auf einmal möglich; jedes wird einzeln hochgeladen.
+            Große Bilder werden vorher automatisch verkleinert (max.{" "}
+            {formatMegabytes(MAX_UPLOAD_BYTES)} je Bild).
+          </p>
 
           {images !== null && images.length > 0 && (
             <div className="flex flex-wrap gap-[10px]">
               {images.map((image) => (
                 <div key={image.id} className="relative">
                   <Image
-                    src={`/api/content-images/${image.id}`}
+                    src={contentImageSrc(image.id)}
                     alt=""
                     width={100}
                     height={100}

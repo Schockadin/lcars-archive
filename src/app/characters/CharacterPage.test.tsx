@@ -30,6 +30,8 @@ const CHARACTERS: CharacterListItem[] = [
     // Eine Figur MIT Bild — die beiden anderen ohne, damit beide Fälle in der
     // Liste vorkommen.
     thumbnail: "/api/content-images/7",
+    // Mit Ausschnitt: die Karte zeigt dieselbe Bildstelle wie der Bogen.
+    thumbnailCrop: { zoom: 2, x: 40, y: 30 },
     metadata: metadata({
       rank: "Lieutenant Commander",
       species: ["Vulkanier"],
@@ -44,6 +46,7 @@ const CHARACTERS: CharacterListItem[] = [
     status: "retired",
     updated_at: "2401-03-20",
     thumbnail: null,
+    thumbnailCrop: null,
     metadata: metadata({ rank: "Commander", generation: [2] }),
   },
   {
@@ -53,6 +56,7 @@ const CHARACTERS: CharacterListItem[] = [
     status: "deceased",
     updated_at: "2400-11-02",
     thumbnail: null,
+    thumbnailCrop: null,
     metadata: metadata({ generation: [2] }),
   },
 ];

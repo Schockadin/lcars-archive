@@ -28,8 +28,7 @@ async function openEditor(page: Page) {
 
   const dialog = page.getByRole("dialog", { name: "Bildausschnitt wählen" });
   await expect(dialog).toBeVisible();
-  // Erst wenn das Bild wirklich geladen ist, kann die Leinwand daraus
-  // zeichnen — sonst schlüge „Übernehmen“ mit einer Meldung fehl.
+  // Gewartet wird auf das geladene Bild, damit Ziehen an echten Maßen rechnet.
   await expect
     .poll(() =>
       dialog
@@ -71,8 +70,11 @@ test.describe("Portrait-Zuschnitt", () => {
     await dialog.getByRole("button", { name: "Übernehmen" }).click();
     await expect(dialog).toBeHidden();
 
-    const cropped = section.locator('input[name="portraitCropped"]');
-    await expect(cropped).toHaveValue(/^data:image\/jpeg;base64,/);
+    // Das Ergebnis ist die Anweisung, KEIN zweites Bild: es gibt kein Feld
+    // mehr mit einer eingebackenen Data-URL (bis v1.29.57 stand dort eine).
+    await expect(
+      section.locator('input[name="portraitCropped"]'),
+    ).toHaveCount(0);
 
     const setting = JSON.parse(
       await section.locator('input[name="portraitCrop"]').inputValue(),
@@ -89,25 +91,29 @@ test.describe("Portrait-Zuschnitt", () => {
       section.locator('input[name="portraitSource"]'),
     ).toHaveCount(0);
 
-    // Die Vorschau zeigt ab jetzt das Ergebnis.
-    await expect(section.locator(".portrait-picker-thumb")).toHaveAttribute(
-      "src",
-      /^data:image\/jpeg;base64,/,
-    );
+    // Der Daumen zeigt weiterhin das Original — mit dem Ausschnitt als
+    // CSS-Anweisung darüber.
+    const thumb = section.locator(".portrait-picker-img");
+    await expect(thumb).toHaveAttribute("src", /^blob:/);
+    await expect(thumb).toHaveAttribute("style", /scale\(2\)/);
   });
 
-  test("„Zuschnitt verwerfen“ räumt das Ergebnis wieder weg", async ({
+  test("„Zuschnitt verwerfen“ stellt die Bildmitte wieder her", async ({
     page,
   }) => {
     const { section, dialog } = await openEditor(page);
+    await dialog.locator('input[type="range"]').fill("2");
     await dialog.getByRole("button", { name: "Übernehmen" }).click();
 
-    const cropped = section.locator('input[name="portraitCropped"]');
-    await expect(cropped).not.toHaveValue("");
+    const setting = section.locator('input[name="portraitCrop"]');
+    expect(JSON.parse(await setting.inputValue()).zoom).toBe(2);
 
     await section.getByRole("button", { name: "Zuschnitt verwerfen" }).click();
-    await expect(cropped).toHaveValue("");
-    await expect(section.locator('input[name="portraitCrop"]')).toHaveValue("");
+    expect(JSON.parse(await setting.inputValue())).toEqual({
+      zoom: 1,
+      x: 50,
+      y: 50,
+    });
   });
 
   test("„Abbrechen“ übernimmt nichts", async ({ page }) => {
@@ -116,8 +122,12 @@ test.describe("Portrait-Zuschnitt", () => {
     await dialog.getByRole("button", { name: "Abbrechen" }).last().click();
 
     await expect(dialog).toBeHidden();
-    await expect(
-      section.locator('input[name="portraitCropped"]'),
-    ).toHaveValue("");
+    // Der Ausschnitt wirkt im Fenster sofort — „Abbrechen" muss ihn deshalb
+    // auf den Stand von vorher zurücksetzen.
+    expect(
+      JSON.parse(
+        await section.locator('input[name="portraitCrop"]').inputValue(),
+      ),
+    ).toEqual({ zoom: 1, x: 50, y: 50 });
   });
 });

@@ -66,6 +66,11 @@ import {
   type Talent,
 } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
+import {
+  DEFAULT_CROP,
+  pdfCropBox,
+  type PortraitCrop,
+} from "@/lib/portraitCrop";
 import { PERSONNEL_FILE_ART_PNG } from "./personnelFileArt";
 import { CORE_RULES } from "@/lib/coreRules";
 import type { CampaignRule } from "@/lib/campaignRuleTypes";
@@ -366,6 +371,8 @@ export interface CharacterSheetPdfInput {
   rank: string | null;
   species: string | null;
   portrait: string | null;
+  // Der auf dem Original gewählte Ausschnitt (siehe src/lib/portraitCrop.ts).
+  portraitCrop?: PortraitCrop | null;
   stats: CharacterStats;
   // Katalog für den Spickzettel — der Regeltext steht nicht am Charakter.
   talents: Talent[];
@@ -378,7 +385,8 @@ export interface CharacterSheetPdfInput {
 }
 
 // Das Portrait im Bildkasten oben links. Es füllt den Kasten (wie
-// object-fit: cover am Bildschirm) und ist oben links unter 45° angeschnitten,
+// object-fit: cover am Bildschirm, zuzüglich des gewählten Ausschnitts) und
+// ist oben links unter 45° angeschnitten,
 // damit es die gedruckte Schräge des Kastens aufnimmt — dieselben Anteile wie
 // .pf-photo (33 % der Breite, 30 % der Höhe). @react-pdf kennt kein clip-path;
 // der Zuschnitt läuft deshalb über eine SVG-Maske.
@@ -396,17 +404,39 @@ const SvgImage = Image as unknown as React.ComponentType<{
 const PHOTO_BEVEL_X = PHOTO_BOX.width * 0.33;
 const PHOTO_BEVEL_Y = PHOTO_BOX.height * 0.3;
 
-function Portrait({ src }: { src: string }) {
+function Portrait({
+  src,
+  crop,
+}: {
+  src: string;
+  crop?: PortraitCrop | null;
+}) {
   const { width: w, height: h } = PHOTO_BOX;
+  // Derselbe Ausschnitt wie am Bildschirm, nur anders ausgedrückt: @react-pdf
+  // kennt kein transform, aber overflow: hidden am <View> und objectFit/
+  // objectPosition am <Image> (siehe pdfCropBox in src/lib/portraitCrop.ts).
+  // Gespeichert ist das unbeschnittene Original.
+  const box = pdfCropBox(crop ?? DEFAULT_CROP, PHOTO_BOX);
   return (
     <>
-      {/* Das Bild füllt den Kasten. objectFit gibt es nur an der Seiten-Variante
-          von <Image> — die SVG-Variante ignoriert preserveAspectRatio und würde
-          das Bild verzerren. */}
-      <Image
-        style={{ ...boxStyle(PHOTO_BOX), objectFit: "cover" }}
-        src={src}
-      />
+      <View style={{ ...boxStyle(PHOTO_BOX), overflow: "hidden" }}>
+        {/* Das Bild füllt den (ggf. vergrößerten) Kasten. objectFit gibt es nur
+            an der Seiten-Variante von <Image> — die SVG-Variante ignoriert
+            preserveAspectRatio und würde das Bild verzerren. */}
+        <Image
+          style={{
+            position: "absolute",
+            left: box.left,
+            top: box.top,
+            width: box.width,
+            height: box.height,
+            objectFit: "cover",
+            objectPositionX: box.objectPositionX,
+            objectPositionY: box.objectPositionY,
+          }}
+          src={src}
+        />
+      </View>
       {/* Die Schräge oben links: statt das Bild zu beschneiden (clip-path kennt
           @react-pdf nicht), wird die Ecke des Bogens noch einmal ÜBER das Bild
           gelegt — dieselbe Grafik, auf das Dreieck beschnitten. So bleibt die
@@ -476,7 +506,9 @@ function SheetPage({ input }: { input: CharacterSheetPdfInput }) {
       {/* Das Portrait im Bildkasten oben links. Fehlt es oder ist es nicht
           abrufbar, bleibt der Kasten leer — ein fehlgeschlagener Bild-Download
           darf den Export nicht scheitern lassen (siehe renderCharacterSheetPdf). */}
-      {input.portrait && <Portrait src={input.portrait} />}
+      {input.portrait && (
+        <Portrait src={input.portrait} crop={input.portraitCrop} />
+      )}
 
       <Field box={HEAD_BOXES.name} value={input.name} />
       <Field box={HEAD_BOXES.pronouns} value={stats.pronouns} />

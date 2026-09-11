@@ -10,6 +10,11 @@ import {
 } from "@/lib/characterStats";
 import type { CharacterStats } from "@/types/characterStats";
 import {
+  DEFAULT_CROP,
+  previewStyle,
+  type PortraitCrop,
+} from "@/lib/portraitCrop";
+import {
   ATTRIBUTE_BOXES,
   DEPARTMENT_BOXES,
   DETERMINATION_POINTS,
@@ -71,13 +76,18 @@ export default function PersonnelFileView({
   rank,
   species,
   portrait,
+  portraitCrop,
   stats,
   expandable = true,
 }: {
   characterName: string;
   rank: string | null;
   species: string | null;
+  // Das Portrait-ORIGINAL und der darauf gewählte Ausschnitt (siehe
+  // src/lib/portraitCrop.ts). Ohne Ausschnitt zeigt der Kasten die Bildmitte,
+  // wie `object-fit: cover` es immer getan hat.
   portrait: string | null;
+  portraitCrop?: PortraitCrop | null;
   stats: CharacterStats;
   // Der Vollbild-Knopf gehört zur Einzelansicht des Bogens. In der
   // mehrblättrigen Vorschau (CharacterSheetPreview) ist das Fenster selbst
@@ -127,16 +137,22 @@ export default function PersonnelFileView({
 
         <div className="pf-form-layer">
           {portrait && (
-            // Bewusst <img> statt next/image: die Portraits liegen im
-            // öffentlichen Asset-Bucket unter beliebigen Hosts, für die
-            // next/image eine Domain-Freigabe bräuchte.
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              className="pf-photo"
-              style={boxStyle(PHOTO_BOX)}
-              src={portrait}
-              alt={`Portrait von ${characterName}`}
-            />
+            // Der Kasten schneidet ab, das Bild darin trägt den gewählten
+            // Ausschnitt (Zoom + Mittelpunkt). Gespeichert ist das Original —
+            // der Ausschnitt ist nur eine Anweisung darauf (siehe
+            // src/lib/portraitCrop.ts).
+            <span className="pf-photo" style={boxStyle(PHOTO_BOX)}>
+              {/* Bewusst <img> statt next/image: die Portraits liegen im
+                  öffentlichen Asset-Bucket unter beliebigen Hosts, für die
+                  next/image eine Domain-Freigabe bräuchte. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="pf-photo-img"
+                style={previewStyle(portraitCrop ?? DEFAULT_CROP)}
+                src={portrait}
+                alt={`Portrait von ${characterName}`}
+              />
+            </span>
           )}
 
           {/* ── Kopfbereich ───────────────────────────────────────── */}

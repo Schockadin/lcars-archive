@@ -1284,7 +1284,13 @@ was käme); bis dahin liest die App sie weiterhin per Fallback aus dem
 Backup-Bucket. Erlaubt sind JPEG/PNG/WebP/GIF bis 5 MB pro Datei;
 Hochladen/Löschen darf, wer den jeweiligen Inhalt auch sonst bearbeiten darf
 (bei Charakteren/Missionslogs nur der Owner, bei Missionen/Datenbank-Einträgen
-zusätzlich jeder Admin). Die vorhandenen Galerie-Bilder werden weiterhin über
+zusätzlich jeder Admin). Hochgeladen wird **Datei für Datei** (eine Server
+Action je Bild) und große Bilder werden vorher im Browser verkleinert
+(`src/lib/imageUpload.ts`, längste Kante 2000 px): ein Formular mit mehreren
+Originalen riss sonst das Payload-Limit der Plattform (Netlify/Lambda: 6 MB) —
+die Anfrage wurde abgewiesen, bevor der Code sie sah, und die Galerie blieb
+mangels `catch` bei „Wird hochgeladen…" stehen. Jeder Fehlschlag wird jetzt
+angezeigt statt verschluckt. Die vorhandenen Galerie-Bilder werden weiterhin über
 die sichtbarkeitsgeprüfte Route `/api/content-images/[id]` ausgeliefert (die
 jetzt aus dem Asset-Bucket liest); neu am Asset-Bucket hängende Assets
 (hochgeladenes Charakter-Portrait bei der Anlage) nutzen die
@@ -1312,12 +1318,19 @@ ins eigene Netz wird (SSRF), und deckelt Größe und Wartezeit. Beim Anlegen und
 sich der **Bildausschnitt** selbst wählen (`PortraitPicker.tsx`,
 Rechenweg in `src/lib/portraitCrop.ts`): ziehen verschiebt, ein Regler
 vergrößert bis 4×, der Rahmen zeigt den hochkant stehenden Bildkasten des
-Bogens samt Schräge. Der Ausschnitt wird im Browser auf eine Leinwand
-gezeichnet und **fertig zugeschnitten** hochgeladen — Bogen und PDF brauchen
-dadurch keine eigene Zuschnitt-Logik und zeigen zwangsläufig dasselbe.
-Original-URL und Einstellung wandern als `metadata.portraitSource` bzw.
-`metadata.portraitCrop` mit, damit sich der Ausschnitt später ohne erneutes
-Hochladen nachjustieren lässt. Bei Missionen, Missionslogs und
+Bogens samt Schräge. Hochgeladen wird seit v1.29.57 das **Original**;
+der Ausschnitt ist eine **Anweisung** darauf (`metadata.portraitCrop`: Zoom +
+Mittelpunkt) und wird erst beim Anzeigen angewandt — am Bildschirm per CSS
+(`previewStyle`), im PDF über dieselbe Rechnung (`pdfCropBox`, `overflow:
+hidden` am `<View>` plus `objectFit`/`objectPosition` am `<Image>`), in den
+Karten der Übersichten ebenso. Vorher buk der Browser den Ausschnitt auf einer
+Leinwand ein und lud das Ergebnis hoch: in `characters.portrait` lag damit
+eine verlustbehaftete Kopie, jedes Nachjustieren schrieb eine weitere in den
+Bucket, und ein Bild von einem fremden Server ließ sich wegen der
+„verunreinigten" Leinwand gar nicht zuschneiden. Für den Altbestand bleibt
+`metadata.portraitSource` die Quelle: dort steht das Original, auf das der
+gespeicherte Ausschnitt passt — `resolvePortraitView()` nimmt es, wo es eines
+gibt, sonst das Portrait selbst. Bei Missionen, Missionslogs und
 Datenbank-Einträgen lässt sich stattdessen ein bereits hochgeladenes Bild direkt
 aus der Markdown-Editor-Toolbar heraus als `![Bild](...)` in den Text
 einfügen. Wird der zugehörige Inhalt endgültig gelöscht (Papierkorb-Purge

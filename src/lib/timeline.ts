@@ -20,6 +20,7 @@ import {
   contentImageSrc,
 } from "@/lib/contentRoutes";
 import { getFirstContentImageIdsBySlug } from "@/lib/contentImages";
+import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 
 // Die Chronologie (/chronologie): alle Ereignisse der Kampagne in zeitlicher
 // Folge, aus drei Quellen zusammengetragen.
@@ -242,20 +243,34 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
   // er eines hat (dasselbe Bild, das die Personalakte zeigt), sonst gilt für
   // alle vier Inhaltsarten das erste hochgeladene Bild.
   const portraits = new Map(
-    characters
-      .filter((character) => character.portrait)
-      .map((character) => [character.slug, character.portrait as string]),
+    characters.map((character) => {
+      const metadata = character.metadata ?? {};
+      return [
+        character.slug,
+        resolvePortraitView(
+          character.portrait,
+          typeof metadata.portraitSource === "string"
+            ? metadata.portraitSource
+            : null,
+          metadata.portraitCrop,
+        ),
+      ] as const;
+    }),
   );
   const thumbnailOf = (
     sourceType: TimelineSourceType,
     slug: string,
-  ): string | null => {
+  ): { src: string | null; crop: PortraitCrop | null } => {
     if (sourceType === "character") {
-      const portrait = portraits.get(slug);
-      if (portrait) return portrait;
+      const view = portraits.get(slug);
+      // Portrait samt Ausschnitt — dieselbe Darstellung wie auf dem Bogen.
+      if (view?.src) return { src: view.src, crop: view.crop };
     }
     const imageId = thumbnails.get(`${sourceType}:${slug}`);
-    return imageId ? contentImageSrc(imageId) : null;
+    return {
+      src: imageId ? contentImageSrc(imageId) : null,
+      crop: null,
+    };
   };
 
   const manualPeople = new Map<number, string[]>();
@@ -292,7 +307,9 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
       // Das Vorschaubild hängt an der Quelle, nicht am einzelnen Ereignis —
       // deshalb hier zentral gesetzt statt an jeder der Stellen, die ein
       // Ereignis bauen.
-      event.thumbnail = thumbnailOf(event.sourceType, slug);
+      const thumbnail = thumbnailOf(event.sourceType, slug);
+      event.thumbnail = thumbnail.src;
+      event.thumbnailCrop = thumbnail.crop;
       events.push(event);
       deterministicDays.add(dayKey(event.sourceType, slug, event.date));
     }
@@ -554,6 +571,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     ) {
       continue;
     }
+    const thumbnail = thumbnailOf(row.source_type, row.source_slug);
     events.push({
       id: `inferred:${row.id}`,
       date: row.event_date,
@@ -565,7 +583,8 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
       sourceTitle: source.title,
       href: source.href,
       people: [],
-      thumbnail: thumbnailOf(row.source_type, row.source_slug),
+      thumbnail: thumbnail.src,
+      thumbnailCrop: thumbnail.crop,
     });
   }
 

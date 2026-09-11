@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { getContentImagesAction } from "@/app/actions/contentImages";
 import { insertAtCursor } from "@/lib/textareaEdit";
+import { contentImageSrc } from "@/lib/contentRoutes";
 import ContentToolPreviewOverlay from "@/components/ContentToolPreviewOverlay";
 import type { ContentImage, ContentImageType } from "@/lib/contentImages";
 import { ImageIcon } from "@/lib/icons";
@@ -28,9 +29,15 @@ export default function InsertImageButton({
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
-    getContentImagesAction(contentType, contentId).then((result) => {
-      if (!cancelled) setImages(result);
-    });
+    getContentImagesAction(contentType, contentId)
+      .then((result) => {
+        if (!cancelled) setImages(result);
+      })
+      // Ein Fehlschlag darf nicht als ewiges „Lädt…" enden (siehe
+      // ContentImageGallery) — dann eben die leere Liste samt Hinweis.
+      .catch(() => {
+        if (!cancelled) setImages([]);
+      });
     return () => {
       cancelled = true;
     };
@@ -39,7 +46,7 @@ export default function InsertImageButton({
   function handleInsert(imageId: number) {
     const textarea = document.getElementById(textareaId);
     if (textarea instanceof HTMLTextAreaElement) {
-      insertAtCursor(textarea, `![Bild](/api/content-images/${imageId})`, {
+      insertAtCursor(textarea, `![Bild](${contentImageSrc(imageId)})`, {
         ownLine: true,
       });
     }
@@ -85,7 +92,7 @@ export default function InsertImageButton({
                   title="Dieses Bild einfügen"
                 >
                   <Image
-                    src={`/api/content-images/${image.id}`}
+                    src={contentImageSrc(image.id)}
                     alt=""
                     width={100}
                     height={100}

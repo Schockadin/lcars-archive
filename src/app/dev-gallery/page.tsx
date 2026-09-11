@@ -209,6 +209,7 @@ const DEMO_CHARACTERS: CharacterListItem[] = [
     // Galerie beides nebeneinander: mit Vorschaubild und ohne (ohne Bild
     // wird kein Platzhalter gezeigt).
     thumbnail: "/icons/icon-192.png",
+    thumbnailCrop: null,
     metadata: {
       rank: "Lieutenant Commander",
       species: ["Vulkanier"],
@@ -233,6 +234,7 @@ const DEMO_CHARACTERS: CharacterListItem[] = [
     status: "retired",
     updated_at: "2401-03-20",
     thumbnail: null,
+    thumbnailCrop: null,
     metadata: {
       rank: "Commander",
       species: ["Bajoraner"],
@@ -253,6 +255,7 @@ const DEMO_CHARACTERS: CharacterListItem[] = [
     status: "deceased",
     updated_at: "2400-11-02",
     thumbnail: null,
+    thumbnailCrop: null,
     metadata: {
       rank: null,
       species: ["Andorianer"],

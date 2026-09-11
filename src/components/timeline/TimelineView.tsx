@@ -396,6 +396,7 @@ function EventRow({
         // Bild des Quell-Inhalts als Vorschaubild links in der Karte; ohne
         // Bild bleibt die Karte wie bisher.
         thumbnailSrc={event.thumbnail}
+        thumbnailCrop={event.thumbnailCrop}
         tag={visual.label}
         title={event.title}
         // Ein von Hand eingetragenes Ereignis hat keinen Inhalt, auf den zu

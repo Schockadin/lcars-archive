@@ -394,6 +394,16 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "Der „+“-Knopf über der Charakterliste erscheint nur noch für Konten, die auch Charaktere anlegen dürfen — vorher führte er Gäste auf eine Seite, die ihnen nur absagte.",
         category: "charaktere",
       },
+      {
+        text: "Beim Portrait wird jetzt dein Originalbild gespeichert; der gewählte Ausschnitt ist nur noch die Angabe, welcher Teil davon im Bildkasten des Bogens erscheint. Du kannst ihn beliebig oft neu wählen, ohne dass das Bild jedes Mal schlechter wird — und im Karussell deiner Charakterseite steht das ganze Bild. Bogen, PDF und die Karten der Übersichten zeigen weiterhin genau deinen Ausschnitt.",
+        category: "charaktere",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Bilder hochladen funktioniert wieder: Sie blieben bisher ohne jede Meldung bei „Wird hochgeladen…“ stehen. Jetzt geht jedes Bild einzeln los, sehr große werden vorher automatisch verkleinert, und wenn doch etwas schiefgeht, steht der Grund direkt darunter statt gar nichts.",
+        category: "inhalte",
+        tutorial: "fuer-besucher",
+      },
     ],
   },
   {
