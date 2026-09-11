@@ -138,6 +138,27 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.30",
+    title: "Anmeldung, die hält, was sie sagt",
+    items: [
+      {
+        text: "Wer sein Passwort über den Link aus der Mail festlegt, bleibt danach auch wirklich angemeldet. Bisher landete man beim nächsten Klick auf „Profil“, „Leitung“ oder „Admin“ sofort wieder auf der Anmeldeseite — direkt nachdem man das Passwort gesetzt hatte.",
+        category: "konto",
+        tutorial: "konto-rollen",
+      },
+      {
+        text: "Das Ändern des Passworts im Profil meldet dich nur noch auf den ANDEREN Geräten ab, nicht mehr auf dem, an dem du gerade sitzt.",
+        category: "konto",
+        tutorial: "konto-rollen",
+      },
+      {
+        text: "Ein deaktiviertes Konto ist ab sofort wirklich ausgesperrt — überall und sofort. Bisher blieb es auf dem Dashboard und in einigen Aktionen noch bis zu 30 Tage handlungsfähig, bis sein Anmelde-Cookie von selbst ablief. Dasselbe gilt für einen Aktivierungslink, der nach dem Deaktivieren noch offen war.",
+        category: "konto",
+        tutorial: "konto-rollen",
+      },
+    ],
+  },
+  {
     version: "1.29",
     title: "Hell/Dunkel frei wählbar — plus eigene Grundfarben",
     items: [
