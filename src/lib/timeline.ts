@@ -210,6 +210,12 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
              visibility, owner_user_id, is_draft
       FROM archive_entries
       WHERE deleted_at IS NULL
+        -- Ein LAUFENDES Gespräch gehört noch nicht in die Chronologie: es ist
+        -- kein abgeschlossenes Ereignis, und seine Karte führte auf eine
+        -- Seite, die für alle außer den Beteiligten auf /dialogues/<slug>
+        -- umleitet (dort ist dann Schluss). Dieselbe Bedingung wie in
+        -- getAllArchivePaths (src/lib/archive.ts).
+        AND NOT (category = 'dialogue' AND dialogue_open)
     `,
     sql<CharacterRow[]>`
       SELECT slug, name, metadata, source_md, bio, portrait,
@@ -390,20 +396,23 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
       sourceType: "mission_log",
     });
 
-    if (log.log_date) {
-      addDeterministic(log.slug, {
-        id: eventId("mission_log", log.slug, "date"),
-        date: log.log_date,
-        title: log.title,
-        detail: excerptOf(log.source_md),
-        category: "log",
-        origin: "metadata",
-        sourceType: "mission_log",
-        sourceTitle: log.title,
-        href,
-        people,
-      });
-    }
+    // Das Datum ist am Logbuch optional (siehe missionLogHeadFields.ts). Ein
+    // undatiertes Logbuch stand deshalb in keiner Chronologie — obwohl die
+    // Charakterseite mit ihrer Zahl „Logs" genau dorthin verlinkt und die
+    // Zahl es mitzählte. Es steht jetzt wie ein undatiertes Gespräch in der
+    // Gruppe „Ohne Datum" am Ende (siehe sortEvents).
+    addDeterministic(log.slug, {
+      id: eventId("mission_log", log.slug, "date"),
+      date: log.log_date,
+      title: log.title,
+      detail: excerptOf(log.source_md),
+      category: "log",
+      origin: "metadata",
+      sourceType: "mission_log",
+      sourceTitle: log.title,
+      href,
+      people,
+    });
     addDeterministic(
       log.slug,
       ...markerEvents(log.source_md, {

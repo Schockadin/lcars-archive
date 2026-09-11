@@ -6,7 +6,7 @@ import {
   listCharactersForEvents,
 } from "@/lib/timelineManualEvents";
 import { getTimeline } from "@/lib/timeline";
-import { insertUser, insertCharacter } from "./helpers";
+import { insertUser, insertCharacter, insertMission } from "./helpers";
 
 // Ereignisse ohne eigenen Inhalt (origin 'manual') liegen in derselben
 // Tabelle wie die abgeleiteten, hängen aber an keiner Quelle.
@@ -128,5 +128,57 @@ describe("freie Chronologie-Ereignisse", () => {
     expect(namen).toContain("Aktiv");
     expect(namen).toContain("Zurückgezogen");
     expect(namen).not.toContain("Entwurf");
+  });
+});
+
+// Was in die Chronologie gehört und was nicht — zwei Regeln, die beim
+// Zusammenlegen von Datenbank und Chronologie unter die Räder kamen.
+describe("Chronologie: Umfang der Quellen", () => {
+  it("führt ein LAUFENDES Gespräch nicht", async () => {
+    // Ein offenes Gespräch ist kein abgeschlossenes Ereignis, und seine Karte
+    // führte auf eine Seite, die alle außer den Beteiligten weiterleitet.
+    const [offen] = await sql<{ slug: string }[]>`
+      INSERT INTO archive_entries
+        (slug, title, category, content, visibility, is_draft, dialogue_open,
+         metadata, frontmatter)
+      VALUES ('gespraech-offen', 'Laufendes Gespräch', 'dialogue', '',
+              'public', false, true, ${sql.json({})}, ${sql.json({})})
+      RETURNING slug
+    `;
+    const [zu] = await sql<{ slug: string }[]>`
+      INSERT INTO archive_entries
+        (slug, title, category, content, visibility, is_draft, dialogue_open,
+         metadata, frontmatter)
+      VALUES ('gespraech-zu', 'Abgeschlossenes Gespräch', 'dialogue', '',
+              'public', false, false, ${sql.json({})}, ${sql.json({})})
+      RETURNING slug
+    `;
+
+    const titles = (await getTimeline(null)).map((event) => event.title);
+    expect(titles).not.toContain("Laufendes Gespräch");
+    // Das abgeschlossene steht dort — auch ohne In-Story-Datum.
+    expect(titles).toContain("Abgeschlossenes Gespräch");
+    expect(offen.slug).toBe("gespraech-offen");
+    expect(zu.slug).toBe("gespraech-zu");
+  });
+
+  it("führt ein Logbuch auch ohne Datum", async () => {
+    // Das Datum ist am Logbuch optional. Ohne diese Regel zählte die
+    // Charakterseite es unter „Logs", der Link dorthin zeigte es aber nicht.
+    const mission = await insertMission();
+    await sql`
+      INSERT INTO mission_logs
+        (slug, title, mission_id, content, visibility, is_draft, log_date)
+      VALUES ('log-ohne-datum', 'Logbuch ohne Datum', ${mission.id}, '',
+              'public', false, NULL)
+    `;
+
+    const event = (await getTimeline(null)).find(
+      (e) => e.title === "Logbuch ohne Datum",
+    );
+    expect(event).toBeDefined();
+    // Es steht in der Gruppe „Ohne Datum" am Ende (date === null).
+    expect(event!.date).toBeNull();
+    expect(event!.category).toBe("log");
   });
 });

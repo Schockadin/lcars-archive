@@ -543,6 +543,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (`adminContent.ts`, `contentImages.ts`), die die Adresse in einer
   UNION-Abfrage über alle Inhaltsarten zusammensetzen — der Kopfkommentar von
   `contentRoutes.ts` nennt sie.
+  Einträge ohne Datum gehen nicht verloren: abgeschlossene Gespräche und
+  Logbücher ohne gepflegtes In-Story-Datum stehen in der Gruppe „Ohne Datum"
+  am Ende (`sortEvents`). Ein **laufendes** Gespräch (`dialogue_open`) bleibt
+  dagegen draußen — es ist kein abgeschlossenes Ereignis, und seine Karte
+  führte auf eine Seite, die alle außer den Beteiligten weiterleitet (dieselbe
+  Bedingung wie in `getAllArchivePaths`).
   Jede Ereignisart hat zusätzlich eine eigene Adresse
   (`/chronologie/[kategorie]`, z.B. `/chronologie/conflict`); die Auswahl im
   Filterfeld schreibt sie per `history.replaceState` in die Adresszeile, ohne

@@ -400,6 +400,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "eigene-inhalte",
       },
       {
+        text: "Die Chronologie zeigt jetzt auch Logbücher ohne gepflegtes In-Story-Datum — sie stehen bei den abgeschlossenen Gesprächen ohne Datum unter „Ohne Datum“ am Ende, statt gar nicht aufzutauchen, obwohl die Charakterseite sie unter „Logs“ mitzählt. Umgekehrt stehen laufende Gespräche nicht mehr darin: Sie sind noch nichts Abgeschlossenes und liegen weiterhin auf deiner Startseite unter den offenen Gesprächen.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
         text: "Bilder hochladen funktioniert wieder: Sie blieben bisher ohne jede Meldung bei „Wird hochgeladen…“ stehen. Jetzt geht jedes Bild einzeln los, sehr große werden vorher automatisch verkleinert, und wenn doch etwas schiefgeht, steht der Grund direkt darunter statt gar nichts.",
         category: "inhalte",
         tutorial: "fuer-besucher",

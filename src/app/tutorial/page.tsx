@@ -165,6 +165,15 @@ export default function TutorialPage() {
                 deshalb nicht mehr — die alte Adresse führt hierher.
               </p>
               <p>
+                Einträge <strong>ohne Datum</strong> gehen dabei nicht
+                verloren: abgeschlossene Gespräche und Logbücher, bei denen
+                kein In-Story-Datum gepflegt ist, stehen unter{" "}
+                <strong>„Ohne Datum“</strong> am Ende der Liste. Ein{" "}
+                <em>laufendes</em> Gespräch steht noch nicht in der
+                Chronologie — es ist ja nichts Abgeschlossenes; es findet sich
+                auf deiner Startseite unter den offenen Gesprächen.
+              </p>
+              <p>
                 Die Ereignisse kommen aus <strong>drei Quellen</strong>. Erstens
                 aus dem, was ohnehin gepflegt ist: Beginn und Ende einer
                 Mission, das Datum eines Logbuchs oder Gesprächs, das
@@ -182,7 +191,9 @@ export default function TutorialPage() {
                 der Knopf <strong>„Ereignis eintragen“</strong> und öffnet ein
                 Fenster — Datum, Titel, Ereignisart, auf Wunsch ein, zwei Sätze
                 dazu. Das Datumsfeld steht schon auf dem jüngsten Ereignis der
-                Chronologie; meist musst du nur den Tag ändern. Die
+                Chronologie — ist sie noch leer, bleibt das Feld leer, der
+                Knopf steht aber auch dort schon bereit; meist musst du nur den
+                Tag ändern. Die
                 Beschreibung nimmt <strong>Markdown</strong> wie überall sonst,
                 und du kannst <strong>Beteiligte</strong> auswählen — aus allen
                 Figuren, auch den zurückgezogenen; vorausgewählt ist keine. Solche

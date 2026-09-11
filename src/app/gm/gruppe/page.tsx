@@ -95,6 +95,7 @@ export default async function GmPartySheetPage() {
                             rank: member.rank,
                             species: member.species,
                             portrait: member.portrait,
+                            portraitCrop: member.portraitCrop,
                             stats: member.stats,
                             bioHtml: member.bioHtml,
                             talents,

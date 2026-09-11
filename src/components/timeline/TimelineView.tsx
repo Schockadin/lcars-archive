@@ -204,15 +204,31 @@ export default function TimelineView({
       </div>
 
       {events.length === 0 ? (
-        <p className="lcars-empty-state">
-          Noch keine Ereignisse. Sie entstehen aus den Datumsangaben der
-          Missionen, Logbücher, Gespräche und Personalakten — und aus den
-          Marken, die ihr im Text setzt.
-        </p>
+        <>
+          {/* Auch die leere Chronologie braucht den Knopf: sonst ließe sich
+              das ERSTE Ereignis von Hand nie eintragen. Die Filter daneben
+              hätten hier nichts zu filtern und bleiben weg. */}
+          {canAddEvent && (
+            <div className="lcars-toolbar">
+              <ManualEventForm
+                defaultDate={latestEventDate}
+                characters={characters}
+              />
+            </div>
+          )}
+          <p className="lcars-empty-state">
+            Noch keine Ereignisse. Sie entstehen aus den Datumsangaben der
+            Missionen, Logbücher, Gespräche und Personalakten — und aus den
+            Marken, die ihr im Text setzt.
+          </p>
+        </>
       ) : (
         <>
           <div className="lcars-toolbar">
-            {canAddEvent && latestEventDate && (
+            {/* Ohne latestEventDate (leere oder nur undatierte Chronologie)
+                bleibt das Datumsfeld leer — ManualEventForm nimmt null
+                ausdrücklich entgegen. */}
+            {canAddEvent && (
               <ManualEventForm
                 defaultDate={latestEventDate}
                 characters={characters}
