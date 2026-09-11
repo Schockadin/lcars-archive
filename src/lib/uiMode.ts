@@ -29,7 +29,7 @@ export const UI_MODE_MINIMAL = "minimal";
 
 // Alt-Wert aus der Zeit, als das minimalistische UI die Helligkeit selbst trug
 // (data-ui="minimal-light"). Wird beim Einlesen auf "minimal" + color_mode
-// "light" abgebildet (siehe normalizeUiMode und migrate-pr64.sql). Nur noch für
+// "light" abgebildet (siehe normalizeUiMode und migrate-pr66.sql). Nur noch für
 // die Migration alter Cookies/DB-Werte relevant.
 export const UI_MODE_MINIMAL_LIGHT_LEGACY = "minimal-light";
 

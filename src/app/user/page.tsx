@@ -27,10 +27,17 @@ import EditorSpellcheckSettingsForm from "./EditorSpellcheckSettingsForm";
 import CharacterColorForm from "./CharacterColorForm";
 import ThemeSettingsForm from "./ThemeSettingsForm";
 import UiModeSettingsForm from "./UiModeSettingsForm";
+import FontSettingsForm from "./FontSettingsForm";
 import ColorModeSettingsForm from "./ColorModeSettingsForm";
 import SettingsPanel from "@/app/_shared/SettingsPanel";
 import { isMinimalUiMode, normalizeUiMode } from "@/lib/uiMode";
 import { COLOR_MODE_LIGHT, normalizeColorMode } from "@/lib/colorMode";
+import {
+  fontSansLabel,
+  fontMonoLabel,
+  normalizeFontSans,
+  normalizeFontMono,
+} from "@/lib/fonts";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 import DataRow from "@/components/lcars/DataRow";
@@ -80,6 +87,8 @@ export default async function UserPage() {
   const themeOverrides = sanitizeThemeOverrides(target.theme_overrides);
   const uiMode = normalizeUiMode(target.ui_mode);
   const colorMode = normalizeColorMode(target.color_mode);
+  const fontSans = normalizeFontSans(target.font_sans);
+  const fontMono = normalizeFontMono(target.font_mono);
 
   // Charakter-Farben: eine Liste statt einer einzigen Wahl, seit die Farbe
   // pro Charakter statt pro User lebt (Multis sollen für jeden Charakter
@@ -189,6 +198,17 @@ export default async function UserPage() {
                   badge={colorMode === COLOR_MODE_LIGHT ? "Hell" : "Dunkel"}
                 >
                   <ColorModeSettingsForm currentMode={colorMode} />
+                </SettingsPanel>
+
+                <SettingsPanel
+                  title="Schriften"
+                  hint="Beschriftungs- und Datenschrift getrennt wählbar"
+                  badge={`${fontSansLabel(fontSans)} · ${fontMonoLabel(fontMono)}`}
+                >
+                  <FontSettingsForm
+                    currentSans={fontSans}
+                    currentMono={fontMono}
+                  />
                 </SettingsPanel>
 
                 <SettingsPanel

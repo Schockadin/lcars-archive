@@ -14,6 +14,14 @@ import {
   UI_MODE_MINIMAL_LIGHT_LEGACY,
 } from "@/lib/uiMode";
 import { COLOR_MODE_COOKIE_NAME, COLOR_MODE_LIGHT } from "@/lib/colorMode";
+import {
+  FONT_SANS_COOKIE_NAME,
+  FONT_MONO_COOKIE_NAME,
+  DEFAULT_FONT_SANS,
+  DEFAULT_FONT_MONO,
+  normalizeFontSans,
+  normalizeFontMono,
+} from "@/lib/fonts";
 
 function readCookie(name: string): string | null {
   if (typeof document === "undefined") return null;
@@ -21,8 +29,8 @@ function readCookie(name: string): string | null {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
-// Wendet Farbtheme + Individualisierung + UI-Modus + Hell/Dunkel-Modus aus den
-// Cookies auf <html> an — dieselbe Logik wie das Pre-Paint-Init-Skript in
+// Wendet Farbtheme + Individualisierung + UI-Modus + Hell/Dunkel-Modus +
+// Schriftwahl aus den Cookies auf <html> an — dieselbe Logik wie das Pre-Paint-Init-Skript in
 // src/app/layout.tsx, nur clientseitig bei jedem Routenwechsel. Nötig, weil das
 // Init-Skript nur bei einem echten Full-Load läuft: nach dem Login
 // (Soft-Navigation via redirect()) und nach dem Logout greift sonst kein Theme,
@@ -71,6 +79,22 @@ function applyThemeFromCookies() {
     root.setAttribute("data-mode", COLOR_MODE_LIGHT);
   } else {
     root.removeAttribute("data-mode");
+  }
+
+  // Schriftwahl — wie oben: die Vorgabe setzt kein Attribut (dann gelten die
+  // Stacks aus tokens.css), unbekannte Werte fallen still auf sie zurück.
+  const fontSans = normalizeFontSans(readCookie(FONT_SANS_COOKIE_NAME));
+  if (fontSans !== DEFAULT_FONT_SANS) {
+    root.setAttribute("data-font-sans", fontSans);
+  } else {
+    root.removeAttribute("data-font-sans");
+  }
+
+  const fontMono = normalizeFontMono(readCookie(FONT_MONO_COOKIE_NAME));
+  if (fontMono !== DEFAULT_FONT_MONO) {
+    root.setAttribute("data-font-mono", fontMono);
+  } else {
+    root.removeAttribute("data-font-mono");
   }
 }
 

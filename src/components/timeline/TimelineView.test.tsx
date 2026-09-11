@@ -120,3 +120,38 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
     expect(umfaenge[umfaenge.length - 1].value).toBe("all");
   });
 });
+
+// Der Knopf „Event hinzufügen" (öffnet „Ereignis eintragen") hing an zwei
+// Bedingungen zu viel: er stand
+// nur im Zweig mit Ereignissen UND nur, wenn es schon ein datiertes gab. In
+// einer frischen Kampagne ließ sich damit das erste Ereignis nie von Hand
+// eintragen — obwohl ManualEventForm ein leeres Datum ausdrücklich annimmt.
+describe("TimelineView – Ereignis eintragen", () => {
+  it("bietet den Knopf auch in einer leeren Chronologie an", () => {
+    render(<TimelineView events={[]} canAddEvent latestEventDate={null} />);
+    expect(
+      screen.getByRole("button", { name: "Event hinzufügen" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Noch keine Ereignisse/)).toBeInTheDocument();
+  });
+
+  it("bietet ihn auch ohne datiertes Ereignis an", () => {
+    render(
+      <TimelineView
+        events={[event({ date: null, category: "dialogue", phase: undefined })]}
+        canAddEvent
+        latestEventDate={null}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Event hinzufügen" }),
+    ).toBeInTheDocument();
+  });
+
+  it("zeigt ihn nicht ohne das nötige Recht", () => {
+    render(<TimelineView events={[]} />);
+    expect(
+      screen.queryByRole("button", { name: "Event hinzufügen" }),
+    ).toBeNull();
+  });
+});

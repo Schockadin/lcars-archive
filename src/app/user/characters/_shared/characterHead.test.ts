@@ -57,24 +57,20 @@ describe("readCharacterHead — Portrait", () => {
     expect(uploadCharacterPortraitImage).not.toHaveBeenCalled();
   });
 
-  it("lädt einen zugeschnittenen Ausschnitt hoch und merkt sich die Einstellung", async () => {
+  it("merkt sich den gewählten Ausschnitt, ohne ein zweites Bild zu bauen", async () => {
     const result = await readCharacterHead(
-      form({
-        portraitCropped: `data:image/png;base64,${PNG_BASE64}`,
-        portraitCrop: JSON.stringify({ zoom: 2, x: 40, y: 60 }),
-      }),
+      form({ portraitCrop: JSON.stringify({ zoom: 2, x: 40, y: 60 }) }),
       {
-        portrait: "https://assets.example/alt.png",
-        portraitSource: "https://assets.example/original.png",
+        portrait: "https://assets.example/original.png",
+        portraitSource: null,
       },
     );
-    expect(uploadCharacterPortraitImage).toHaveBeenCalledTimes(1);
+    // Kein Upload: der Ausschnitt ist eine Anweisung auf dem Original, kein
+    // eigenes Bild (bis v1.29.57 wurde er hier eingebacken und hochgeladen).
+    expect(uploadCharacterPortraitImage).not.toHaveBeenCalled();
     expect(result).toMatchObject({
       head: {
-        portrait: expect.stringContaining("https://assets.example/"),
-        // Das Original bleibt stehen — aus ihm lässt sich später neu
-        // zuschneiden.
-        portraitSource: "https://assets.example/original.png",
+        portrait: "https://assets.example/original.png",
         portraitCrop: { zoom: 2, x: 40, y: 60 },
       },
     });
@@ -82,44 +78,30 @@ describe("readCharacterHead — Portrait", () => {
 
   it("speichert einen unveränderten Ausschnitt nicht — er ist die Vorgabe", async () => {
     const result = await readCharacterHead(
-      form({
-        portraitCropped: `data:image/png;base64,${PNG_BASE64}`,
-        portraitCrop: JSON.stringify({ zoom: 1, x: 50, y: 50 }),
-      }),
+      form({ portraitCrop: JSON.stringify({ zoom: 1, x: 50, y: 50 }) }),
     );
     expect(result).toMatchObject({ head: { portraitCrop: null } });
-  });
-
-  it("weist eine unbrauchbare Data-URL ab, statt sie hochzuladen", async () => {
-    for (const value of ["nicht-wirklich-eine-data-url", "data:text/plain;base64,QQ=="]) {
-      const result = await readCharacterHead(form({ portraitCropped: value }));
-      expect(result).toEqual({ error: "Der Bildausschnitt ist unbrauchbar." });
-    }
-    expect(uploadCharacterPortraitImage).not.toHaveBeenCalled();
-  });
-
-  it("weist einen übergroßen Ausschnitt ab", async () => {
-    // 5 MB Base64 — über der Grenze von 4 MB.
-    const huge = "A".repeat(7 * 1024 * 1024);
-    const result = await readCharacterHead(
-      form({ portraitCropped: `data:image/png;base64,${huge}` }),
-    );
-    expect(result).toEqual({ error: "Der Bildausschnitt ist zu groß." });
-    expect(uploadCharacterPortraitImage).not.toHaveBeenCalled();
   });
 
   it("verträgt eine kaputte Einstellung und fällt auf die Vorgabe zurück", async () => {
-    const result = await readCharacterHead(
-      form({
-        portraitCropped: `data:image/png;base64,${PNG_BASE64}`,
-        portraitCrop: "{kein json",
-      }),
-    );
-    // Vorgabe = unverändert = wird nicht gespeichert.
+    const result = await readCharacterHead(form({ portraitCrop: "{kein json" }));
     expect(result).toMatchObject({ head: { portraitCrop: null } });
   });
 
-  it("macht die hochgeladene Datei zum Original für spätere Zuschnitte", async () => {
+  it("behält den gespeicherten Ausschnitt, wenn das Formular keinen mitschickt", async () => {
+    // Ein Formular ohne Portrait-Bereich darf den gewählten Ausschnitt nicht
+    // stillschweigend verwerfen.
+    const result = await readCharacterHead(form({}), {
+      portrait: "https://assets.example/original.png",
+      portraitSource: null,
+      portraitCrop: { zoom: 1.5, x: 20, y: 80 },
+    });
+    expect(result).toMatchObject({
+      head: { portraitCrop: { zoom: 1.5, x: 20, y: 80 } },
+    });
+  });
+
+  it("macht die hochgeladene Datei zum Portrait und lädt genau sie hoch", async () => {
     const data = form({});
     data.set(
       "portraitFile",
@@ -127,12 +109,20 @@ describe("readCharacterHead — Portrait", () => {
         type: "image/png",
       }),
     );
-    const result = await readCharacterHead(data);
-    expect(result).toMatchObject({ head: {} });
-    if ("head" in result) {
-      // Ohne eigenen Ausschnitt sind Bild und Original dasselbe — der Editor
-      // schneidet später aus der Datei, nicht aus einem Ergebnis.
-      expect(result.head.portraitSource).toBe(result.head.portrait);
-    }
+    const result = await readCharacterHead(data, {
+      // Altbestand: bisher lag hier ein eingebackenes Bild mit Original
+      // daneben. Mit dem neuen Bild ist beides gegenstandslos.
+      portrait: "https://assets.example/alt-eingebacken.png",
+      portraitSource: "https://assets.example/alt-original.png",
+    });
+    expect(uploadCharacterPortraitImage).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({
+      head: {
+        portrait: expect.stringContaining("https://assets.example/image-png-"),
+        // Der Zeiger auf das frühere Original fällt weg — das hochgeladene
+        // Bild IST jetzt das Original.
+        portraitSource: null,
+      },
+    });
   });
 });

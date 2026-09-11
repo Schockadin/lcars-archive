@@ -105,6 +105,7 @@ export default async function CharacterSheetPage({ params }: Props) {
             rank: sheet.rank,
             species: sheet.species,
             portrait: sheet.portrait,
+            portraitCrop: sheet.portraitCrop,
             stats: sheet.stats,
             // characters.bio hält bereits das gerenderte, bereinigte HTML
             // (siehe updateOwnCharacterBio) — dieselbe Quelle wie die

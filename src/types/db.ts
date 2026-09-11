@@ -69,6 +69,12 @@ export interface User {
   // oder "light" (siehe src/lib/colorMode.ts). Freier String; die App
   // normalisiert unbekannte Werte auf "dark" (normalizeColorMode).
   color_mode: string;
+  // Gewählte Schriften der Oberfläche (siehe src/lib/fonts.ts): die
+  // Beschriftungs-/Fließtextschrift ("antonio" = Default) und die Mono-/
+  // Datenschrift ("share-tech-mono" = Default). Freie Strings; die App
+  // normalisiert unbekannte Werte auf die Vorgabe (normalizeFontSans/-Mono).
+  font_sans: string;
+  font_mono: string;
   // Wird bei jeder Passwortänderung (setPassword) erhöht und im
   // Session-Cookie mitgeführt (siehe SessionPayload.sessionVersion) — ein
   // Cookie mit veraltetem Wert wird von getCurrentUser() als abgelaufen

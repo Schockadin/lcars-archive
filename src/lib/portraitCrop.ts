@@ -7,16 +7,28 @@
 // Ausschnitt selbst.
 //
 // Bewusst OHNE `server-only`: die Zuschnitt-Rechnung braucht der Editor im
-// Browser (Vorschau, Zeichnen auf die Leinwand) UND der Server (Prüfung beim
-// Speichern).
+// Browser (Vorschau) UND der Server (Prüfung beim Speichern, Anzeige auf dem
+// Bogen, PDF).
 //
-// Der Zuschnitt wird beim Speichern EINGEBACKEN: der Browser zeichnet das
-// Ergebnis im Seitenverhältnis des Kastens auf eine Leinwand und lädt dieses
-// Bild hoch. Bogen und PDF bekommen dadurch ein Bild, das ohnehin passt, und
-// brauchen keine eigene Ausschnitt-Logik — was auf dem Bildschirm steht, steht
-// auch im PDF. Die Einstellung selbst wird trotzdem mitgespeichert
-// (metadata.portraitCrop), damit sich der Ausschnitt später aus dem Original
-// (metadata.portraitSource) neu wählen lässt, ohne die Datei erneut zu suchen.
+// Gespeichert wird das ORIGINAL, nicht das zugeschnittene Bild.
+//
+// Bis v1.29.57 buk der Browser den Ausschnitt ein: er zeichnete ihn auf eine
+// Leinwand und lud dieses Bild als Portrait hoch. Damit lag in
+// characters.portrait eine verlustbehaftete, klein gerechnete Kopie — das
+// Original existierte nur noch als Nebeneintrag, und jedes Nachjustieren
+// schrieb eine weitere Kopie in den Bucket.
+//
+// Jetzt ist characters.portrait das hochgeladene Original, und der Ausschnitt
+// ist eine ANWEISUNG dazu (metadata.portraitCrop: Zoom + Mittelpunkt), die
+// beim Anzeigen angewandt wird — am Bildschirm per CSS (previewStyle), im PDF
+// über dieselbe Rechnung (pdfCropBox). Nachjustieren ändert nur noch drei
+// Zahlen, und wer das Bild woanders braucht (Karten-Thumbnail, Karussell auf
+// der Charakterseite), bekommt das unbeschnittene Original.
+//
+// Altbestand: dort steht in characters.portrait das eingebackene Bild und in
+// metadata.portraitSource das Original. resolvePortraitView nimmt deshalb das
+// Original, wo es eines gibt — auf dieses passt der gespeicherte Ausschnitt,
+// und das Ergebnis sieht aus wie bisher.
 
 import { PHOTO_BOX } from "@/lib/personnelFileLayout";
 
@@ -67,50 +79,6 @@ export function isDefaultCrop(crop: PortraitCrop): boolean {
   return crop.zoom === 1 && crop.x === 50 && crop.y === 50;
 }
 
-export interface CropRect {
-  // Der Ausschnitt im Quellbild, in dessen eigenen Pixeln.
-  sx: number;
-  sy: number;
-  sWidth: number;
-  sHeight: number;
-}
-
-// Welcher Teil des Quellbildes im Kasten landet.
-//
-// Zuerst der größte Ausschnitt im Seitenverhältnis des Kastens, der ins Bild
-// passt (das ist `cover`), dann durch den Zoom verkleinert, dann über x/y
-// verschoben — aber nie über den Bildrand hinaus, sonst stünde im Kasten ein
-// Streifen Nichts.
-export function cropRect(
-  imageWidth: number,
-  imageHeight: number,
-  crop: PortraitCrop,
-): CropRect {
-  if (imageWidth <= 0 || imageHeight <= 0) {
-    return { sx: 0, sy: 0, sWidth: 0, sHeight: 0 };
-  }
-  const zoom = clamp(crop.zoom, MIN_ZOOM, MAX_ZOOM);
-
-  // Der deckende Ausschnitt: so groß wie möglich im Verhältnis des Kastens.
-  let width = imageWidth;
-  let height = width / PORTRAIT_ASPECT;
-  if (height > imageHeight) {
-    height = imageHeight;
-    width = height * PORTRAIT_ASPECT;
-  }
-  width /= zoom;
-  height /= zoom;
-
-  // Die Mitte des Ausschnitts liegt auf dem gewählten Punkt, bleibt aber so
-  // weit vom Rand entfernt, dass der Ausschnitt vollständig im Bild liegt.
-  const centerX = (clamp(crop.x, 0, 100) / 100) * imageWidth;
-  const centerY = (clamp(crop.y, 0, 100) / 100) * imageHeight;
-  const sx = clamp(centerX - width / 2, 0, imageWidth - width);
-  const sy = clamp(centerY - height / 2, 0, imageHeight - height);
-
-  return { sx, sy, sWidth: width, sHeight: height };
-}
-
 // Die Vorschau im Editor zeigt dasselbe über CSS: das Bild deckt den Kasten
 // (`cover`), wird um den Zoom vergrößert und am gewählten Punkt verankert.
 // object-position und transform-origin tragen denselben Punkt, damit das Bild
@@ -128,9 +96,55 @@ export function previewStyle(crop: PortraitCrop): {
   };
 }
 
-// Wie groß das zugeschnittene Bild gespeichert wird. Das Doppelte der
-// Kastenmaße reicht für den Druck (der Bogen ist 8,5 × 11 Zoll bei 96 dpi,
-// das Bild landet also mit rund 190 dpi auf dem Papier) und hält die Datei
-// klein.
-export const CROP_OUTPUT_WIDTH = PHOTO_BOX.width * 2;
-export const CROP_OUTPUT_HEIGHT = PHOTO_BOX.height * 2;
+// Dieselbe Darstellung für das PDF. @react-pdf kennt weder transform noch
+// transform-origin, aber `overflow: hidden` an einem <View> und objectFit/
+// objectPosition am <Image> — damit lässt sich exakt dasselbe ausdrücken:
+//
+//   Der Kasten schneidet ab (overflow: hidden). Darin liegt das Bild um den
+//   Zoom vergrößert und so verschoben, dass der gewählte Punkt dort bleibt,
+//   wo er auch am Bildschirm liegt (das ist genau das, was
+//   transform-origin an derselben Stelle bewirkt).
+//
+// Maße in den Einheiten des Kastens; objectPosition wird als Prozent gesetzt.
+export function pdfCropBox(
+  crop: PortraitCrop,
+  box: { width: number; height: number },
+): {
+  width: number;
+  height: number;
+  left: number;
+  top: number;
+  objectPositionX: string;
+  objectPositionY: string;
+} {
+  const zoom = clamp(crop.zoom, MIN_ZOOM, MAX_ZOOM);
+  const x = clamp(crop.x, 0, 100);
+  const y = clamp(crop.y, 0, 100);
+  // `+ 0` glättet die -0, die bei zoom === 1 bzw. x/y === 0 entsteht — sie ist
+  // rechnerisch dasselbe, liest sich aber weder im Test noch im PDF gut.
+  return {
+    width: box.width * zoom,
+    height: box.height * zoom,
+    left: -(zoom - 1) * (x / 100) * box.width + 0,
+    top: -(zoom - 1) * (y / 100) * box.height + 0,
+    objectPositionX: `${x}%`,
+    objectPositionY: `${y}%`,
+  };
+}
+
+// Welches Bild mit welchem Ausschnitt im Bildkasten landet.
+//
+// Der Ausschnitt gehört zum ORIGINAL. Neue Datensätze führen es direkt in
+// characters.portrait; im Altbestand steht dort das eingebackene Bild und das
+// Original in metadata.portraitSource — dann gilt dieses, denn auf es passt
+// der gespeicherte Ausschnitt (siehe Dateikopf).
+export function resolvePortraitView(
+  portrait: string | null | undefined,
+  portraitSource: string | null | undefined,
+  rawCrop: unknown,
+): { src: string | null; crop: PortraitCrop } {
+  return {
+    src: portraitSource || portrait || null,
+    crop: parsePortraitCrop(rawCrop),
+  };
+}

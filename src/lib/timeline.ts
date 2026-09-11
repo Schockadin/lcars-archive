@@ -17,7 +17,10 @@ import {
   characterHref,
   missionHref,
   missionLogHref,
+  contentImageSrc,
 } from "@/lib/contentRoutes";
+import { getFirstContentImageIdsBySlug } from "@/lib/contentImages";
+import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 
 // Die Chronologie (/chronologie): alle Ereignisse der Kampagne in zeitlicher
 // Folge, aus drei Quellen zusammengetragen.
@@ -82,6 +85,9 @@ interface CharacterRow {
   metadata: Record<string, unknown>;
   source_md: string | null;
   bio: string | null;
+  // Zugeschnittenes Portrait der Figur (Adresse), falls gepflegt — es ist das
+  // Vorschaubild ihrer Karten.
+  portrait: string | null;
   visibility: Visibility;
   // Charaktere führen ihre Eigentümerin/ihren Eigentümer als player_id, nicht
   // als owner_user_id wie die übrigen Inhalte.
@@ -164,8 +170,15 @@ function markerEvents(
 }
 
 export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[]> {
-  const [missions, logs, entries, characters, inferred, eventCharacters] =
-    await Promise.all([
+  const [
+    missions,
+    logs,
+    entries,
+    characters,
+    inferred,
+    eventCharacters,
+    thumbnails,
+  ] = await Promise.all([
     sql<MissionRow[]>`
       SELECT m.slug, m.title,
              m.started_at::text AS started_at,
@@ -197,9 +210,15 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
              visibility, owner_user_id, is_draft
       FROM archive_entries
       WHERE deleted_at IS NULL
+        -- Ein LAUFENDES Gespräch gehört noch nicht in die Chronologie: es ist
+        -- kein abgeschlossenes Ereignis, und seine Karte führte auf eine
+        -- Seite, die für alle außer den Beteiligten auf /dialogues/<slug>
+        -- umleitet (dort ist dann Schluss). Dieselbe Bedingung wie in
+        -- getAllArchivePaths (src/lib/archive.ts).
+        AND NOT (category = 'dialogue' AND dialogue_open)
     `,
     sql<CharacterRow[]>`
-      SELECT slug, name, metadata, source_md, bio,
+      SELECT slug, name, metadata, source_md, bio, portrait,
              visibility, player_id, is_draft
       FROM characters
       WHERE deleted_at IS NULL
@@ -219,7 +238,46 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
       WHERE c.deleted_at IS NULL
       ORDER BY c.name ASC
     `,
+    // Das erste hochgeladene Bild je Inhalt („<Inhaltsart>:<Slug>" → Bild-Id)
+    // — daraus wird das Vorschaubild der Karte. Eine Abfrage für alle
+    // Ereignisse; wer kein Bild hat, steht gar nicht in der Map und bekommt
+    // auch keinen Platzhalter.
+    getFirstContentImageIdsBySlug(),
   ]);
+
+  // Das Vorschaubild einer Quelle — der Charakter nimmt sein Portrait, sofern
+  // er eines hat (dasselbe Bild, das die Personalakte zeigt), sonst gilt für
+  // alle vier Inhaltsarten das erste hochgeladene Bild.
+  const portraits = new Map(
+    characters.map((character) => {
+      const metadata = character.metadata ?? {};
+      return [
+        character.slug,
+        resolvePortraitView(
+          character.portrait,
+          typeof metadata.portraitSource === "string"
+            ? metadata.portraitSource
+            : null,
+          metadata.portraitCrop,
+        ),
+      ] as const;
+    }),
+  );
+  const thumbnailOf = (
+    sourceType: TimelineSourceType,
+    slug: string,
+  ): { src: string | null; crop: PortraitCrop | null } => {
+    if (sourceType === "character") {
+      const view = portraits.get(slug);
+      // Portrait samt Ausschnitt — dieselbe Darstellung wie auf dem Bogen.
+      if (view?.src) return { src: view.src, crop: view.crop };
+    }
+    const imageId = thumbnails.get(`${sourceType}:${slug}`);
+    return {
+      src: imageId ? contentImageSrc(imageId) : null,
+      crop: null,
+    };
+  };
 
   const manualPeople = new Map<number, string[]>();
   for (const row of eventCharacters) {
@@ -252,6 +310,12 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     ...added: TimelineEvent[]
   ): void => {
     for (const event of added) {
+      // Das Vorschaubild hängt an der Quelle, nicht am einzelnen Ereignis —
+      // deshalb hier zentral gesetzt statt an jeder der Stellen, die ein
+      // Ereignis bauen.
+      const thumbnail = thumbnailOf(event.sourceType, slug);
+      event.thumbnail = thumbnail.src;
+      event.thumbnailCrop = thumbnail.crop;
       events.push(event);
       deterministicDays.add(dayKey(event.sourceType, slug, event.date));
     }
@@ -332,20 +396,23 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
       sourceType: "mission_log",
     });
 
-    if (log.log_date) {
-      addDeterministic(log.slug, {
-        id: eventId("mission_log", log.slug, "date"),
-        date: log.log_date,
-        title: log.title,
-        detail: excerptOf(log.source_md),
-        category: "log",
-        origin: "metadata",
-        sourceType: "mission_log",
-        sourceTitle: log.title,
-        href,
-        people,
-      });
-    }
+    // Das Datum ist am Logbuch optional (siehe missionLogHeadFields.ts). Ein
+    // undatiertes Logbuch stand deshalb in keiner Chronologie — obwohl die
+    // Charakterseite mit ihrer Zahl „Logs" genau dorthin verlinkt und die
+    // Zahl es mitzählte. Es steht jetzt wie ein undatiertes Gespräch in der
+    // Gruppe „Ohne Datum" am Ende (siehe sortEvents).
+    addDeterministic(log.slug, {
+      id: eventId("mission_log", log.slug, "date"),
+      date: log.log_date,
+      title: log.title,
+      detail: excerptOf(log.source_md),
+      category: "log",
+      origin: "metadata",
+      sourceType: "mission_log",
+      sourceTitle: log.title,
+      href,
+      people,
+    });
     addDeterministic(
       log.slug,
       ...markerEvents(log.source_md, {
@@ -494,6 +561,8 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
         sourceTitle: row.title,
         href: null,
         people: manualPeople.get(row.id) ?? [],
+        // Kein Inhalt, also kein Bild.
+        thumbnail: null,
       });
       continue;
     }
@@ -511,6 +580,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     ) {
       continue;
     }
+    const thumbnail = thumbnailOf(row.source_type, row.source_slug);
     events.push({
       id: `inferred:${row.id}`,
       date: row.event_date,
@@ -522,6 +592,8 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
       sourceTitle: source.title,
       href: source.href,
       people: [],
+      thumbnail: thumbnail.src,
+      thumbnailCrop: thumbnail.crop,
     });
   }
 

@@ -27,6 +27,11 @@ const CHARACTERS: CharacterListItem[] = [
     name: "Tuvok",
     status: "active",
     updated_at: "2401-06-12",
+    // Eine Figur MIT Bild — die beiden anderen ohne, damit beide Fälle in der
+    // Liste vorkommen.
+    thumbnail: "/api/content-images/7",
+    // Mit Ausschnitt: die Karte zeigt dieselbe Bildstelle wie der Bogen.
+    thumbnailCrop: { zoom: 2, x: 40, y: 30 },
     metadata: metadata({
       rank: "Lieutenant Commander",
       species: ["Vulkanier"],
@@ -40,6 +45,8 @@ const CHARACTERS: CharacterListItem[] = [
     name: "Kira Nerys",
     status: "retired",
     updated_at: "2401-03-20",
+    thumbnail: null,
+    thumbnailCrop: null,
     metadata: metadata({ rank: "Commander", generation: [2] }),
   },
   {
@@ -48,6 +55,8 @@ const CHARACTERS: CharacterListItem[] = [
     name: "Shran",
     status: "deceased",
     updated_at: "2400-11-02",
+    thumbnail: null,
+    thumbnailCrop: null,
     metadata: metadata({ generation: [2] }),
   },
 ];
@@ -82,11 +91,26 @@ describe("CharacterPage", () => {
     ).toEqual(["/characters/tuvok", "/characters/kira", "/characters/shran"]);
   });
 
-  it("bietet das Anlegen eines Charakters an", () => {
-    render(<CharacterPage characters={CHARACTERS} />);
+  it("bietet das Anlegen eines Charakters an, wer es darf", () => {
+    render(<CharacterPage characters={CHARACTERS} canCreate />);
     expect(
       screen.getByLabelText("Charakter anlegen").getAttribute("href"),
     ).toBe("/user/characters/new");
+  });
+
+  it("verschweigt den Anlegen-Knopf ohne das nötige Recht", () => {
+    render(<CharacterPage characters={CHARACTERS} />);
+    expect(screen.queryByLabelText("Charakter anlegen")).toBeNull();
+  });
+
+  it("zeigt ein Vorschaubild nur bei Figuren, die eines haben", () => {
+    const { container } = render(<CharacterPage characters={CHARACTERS} />);
+    const thumbs = [...container.querySelectorAll("img.timeline-card-thumb")];
+    expect(thumbs.map((img) => img.getAttribute("src"))).toEqual([
+      "/api/content-images/7",
+    ]);
+    // Ohne Bild bleibt die Karte leer — kein Platzhalter.
+    expect(container.querySelectorAll(".timeline-card")).toHaveLength(3);
   });
 
   it("gruppiert auf Wunsch nach Generation", () => {

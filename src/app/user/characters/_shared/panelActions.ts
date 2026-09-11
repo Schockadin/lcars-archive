@@ -123,6 +123,7 @@ export async function updateCharacterHeadAction(
   const headResult = await readCharacterHead(formData, {
     portrait: current.portrait,
     portraitSource: current.portraitSource,
+    portraitCrop: current.portraitCrop,
   });
   if ("error" in headResult) return { error: headResult.error };
 

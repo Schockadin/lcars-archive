@@ -623,14 +623,25 @@
   gap: 14px;
 }
 
-/* 195 × 217 wie PHOTO_BOX in personnelFileLayout.ts. */
+/* 195 × 217 wie PHOTO_BOX in personnelFileLayout.ts. Der Daumen ist der
+   Kasten; das Bild darin trägt den gewählten Ausschnitt (Zoom + Mittelpunkt)
+   und wird am Kastenrand abgeschnitten — dasselbe, was der Bogen später
+   zeigt. Gespeichert wird trotzdem das Original (siehe portraitCrop.ts). */
 .portrait-picker-thumb {
+  display: block;
   flex-shrink: 0;
   width: 78px;
   aspect-ratio: 195 / 217;
-  object-fit: cover;
+  overflow: hidden;
   border: 1px solid var(--lcars-border);
   background: var(--lcars-surface);
+}
+
+.portrait-picker-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .portrait-picker-thumb--empty {

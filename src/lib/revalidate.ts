@@ -74,6 +74,20 @@ export function revalidateArchiveEntry(slug: string): string[] {
   ]);
 }
 
+// Nach Upload/Löschen eines Bildes: die Übersichten zeigen seit v1.29.53 das
+// erste Bild eines Eintrags als Vorschaubild in der Karte (siehe ChronoCard).
+// Charakterliste und Datenbank sind zwischengespeichert ("use cache") — ohne
+// diese Invalidierung erschiene ein neues Bild dort erst mit der nächsten
+// inhaltlichen Änderung. Die Chronologie liest ungecacht (Sichtbarkeit hängt
+// an der betrachtenden Person) und braucht nichts.
+export function revalidateContentImageLists(
+  contentType: "character" | "mission" | "mission_log" | "archive_entry",
+): string[] {
+  if (contentType === "character") return revalidate([cacheTags.characters]);
+  if (contentType === "archive_entry") return revalidate([cacheTags.archive]);
+  return [];
+}
+
 // Invalidiert nur den timeline-Tag. Wird beim Löschen von Inhalten
 // (contentDeleteActions) weiterhin mit-aufgerufen; der Tag/die timeline_events-
 // Tabelle werden derzeit von nichts mehr gelesen (Timeline-Seite und -Ingest

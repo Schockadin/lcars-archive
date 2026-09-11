@@ -94,12 +94,18 @@
    rund 65 Layout-Einheiten in beide Richtungen; als Prozentwerte je Achse
    (65/195 ≈ 33 %, 65/217 ≈ 30 %) bleibt die Schräge bei jeder Skalierung
    45°, weil beide aus demselben Maß stammen. */
+/* Der Bildkasten: er beschneidet (overflow) und trägt die Schräge oben links
+   (clip-path). Das Bild darin liegt unbeschnitten vor und bekommt den
+   gewählten Ausschnitt als CSS-Anweisung — Zoom über transform, Mittelpunkt
+   über object-position/transform-origin (siehe previewStyle in
+   src/lib/portraitCrop.ts). Gespeichert ist immer das Original. */
 .pf-photo {
   --pf-photo-bevel-x: 33%;
   --pf-photo-bevel-y: 30%;
   position: absolute;
   z-index: 1;
-  object-fit: cover;
+  display: block;
+  overflow: hidden;
   pointer-events: none;
   clip-path: polygon(
     var(--pf-photo-bevel-x) 0,
@@ -108,6 +114,12 @@
     0 100%,
     0 var(--pf-photo-bevel-y)
   );
+}
+.pf-photo-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 /* Alles, was auf dem Blatt "geschrieben" steht — Eingabefelder, Ansichts-

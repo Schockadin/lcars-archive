@@ -1,9 +1,14 @@
 import { getDBStats } from "@/lib/stats";
 import LcarsDataRow from "@/components/lcars/DataRow";
 import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
+import { getCampaignYears } from "@/lib/constants";
 
 export default async function LandingStats() {
-  const { characterCount, sessionCount, entryCount } = await getDBStats();
+  const {
+    characterCount,
+    sessionCount: missionCount,
+    entryCount,
+  } = await getDBStats();
 
   return (
     <div className="flex flex-col gap-[8px] mt-[8px]">
@@ -15,10 +20,10 @@ export default async function LandingStats() {
         href="/characters"
       />
       <LcarsDataRow
-        value={sessionCount}
+        value={missionCount}
         label="Logs"
         color={CONTENT_TYPE_COLOR.mission_log}
-        href="/chronologie"
+        href="/chronologie/log"
       />
       <LcarsDataRow
         value={entryCount}
@@ -26,11 +31,10 @@ export default async function LandingStats() {
         color={CONTENT_TYPE_COLOR.archive_entry}
         href="/archive"
       />
-      {/* „Jahre" bleibt als reine Kennzahl — die frühere Verlinkung auf
-          /timeline entfällt (Timeline-Seite entfernt). */}
       <LcarsDataRow
-        value={15}
+        value={getCampaignYears()}
         label="Jahre"
+        href="/chronologie?scope=all"
       />
     </div>
   );

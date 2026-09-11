@@ -23,6 +23,11 @@
    unlayered Tier liegen. Orthogonal zu Farbthema (data-theme) und UI-Modus
    (data-ui) — jede Kombination ist erlaubt. */
 @import "../styles/color-mode.css";
+/* Unlayered, aus demselben Grund wie lcars-themes.css oben: die Schriftwahl
+   (html[data-font-sans]/[data-font-mono], Spezifität 0,1,1 > :root) hängt die
+   kanonischen Schrift-Stacks aus tokens.css um. Eigene Achse neben Farbthema,
+   Hell/Dunkel und UI-Modus — jede Kombination ist erlaubt. */
+@import "../styles/fonts.css";
 /* Unlayered, aus demselben Grund wie tokens.css oben: der
    Lesemodus muss u.a. die Sidebar (<aside className="flex …">) per
    display:none ausblenden. Läge diese Regel (wie vorher) in
@@ -154,8 +159,11 @@
     line-height: 1.175;
     letter-spacing: 1px;
     font-size: 22px;
-    /* font-family: var(--lcars-font-sans); */
-    font-family: var(--font-antonio);
+    /* Der kanonische Stack, nicht var(--font-antonio) direkt: nur so folgt
+       die Menü-Beschriftung der im Profil gewählten Schrift (siehe
+       src/styles/fonts.css). Aufgelöst ist es dieselbe Schrift — der Stack
+       beginnt mit genau dieser Variable. */
+    font-family: var(--lcars-font-sans);
     text-decoration: none;
   }
 

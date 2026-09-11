@@ -203,6 +203,13 @@ const DEMO_CHARACTERS: CharacterListItem[] = [
     name: "Tuvok",
     status: "active",
     updated_at: "2401-06-12",
+    // Eine Figur MIT Bild: auf der echten Seite das Portrait bzw. das erste
+    // hochgeladene Bild, hier ein Symbol aus /public (die Galerie hat keine
+    // Datenbank). Die beiden anderen bleiben ohne Bild — so steht in der
+    // Galerie beides nebeneinander: mit Vorschaubild und ohne (ohne Bild
+    // wird kein Platzhalter gezeigt).
+    thumbnail: "/icons/icon-192.png",
+    thumbnailCrop: null,
     metadata: {
       rank: "Lieutenant Commander",
       species: ["Vulkanier"],
@@ -226,6 +233,8 @@ const DEMO_CHARACTERS: CharacterListItem[] = [
     name: "Kira Nerys",
     status: "retired",
     updated_at: "2401-03-20",
+    thumbnail: null,
+    thumbnailCrop: null,
     metadata: {
       rank: "Commander",
       species: ["Bajoraner"],
@@ -245,6 +254,8 @@ const DEMO_CHARACTERS: CharacterListItem[] = [
     name: "Thy'lek Shran",
     status: "deceased",
     updated_at: "2400-11-02",
+    thumbnail: null,
+    thumbnailCrop: null,
     metadata: {
       rank: null,
       species: ["Andorianer"],
@@ -270,6 +281,9 @@ const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
     title: "Andor",
     category: "location",
     tags: ["Eiswelt", "Föderation"],
+    // Ein Eintrag MIT Bild, die beiden anderen ohne — so steht in der Galerie
+    // beides nebeneinander (ohne Bild kein Platzhalter).
+    thumbnail: "/icons/icon-192.png",
     metadata: {
       summary: "Der Heimatplanet der Andorianer, ein Eismond im Kuiper-Gürtel.",
       attributes: [
@@ -290,6 +304,7 @@ const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
     title: "Thy'lek Shran",
     category: "npc",
     tags: [],
+    thumbnail: null,
     metadata: {
       summary: null,
       attributes: [{ label: "Spezies", value: "Andorianer" }],
@@ -307,6 +322,7 @@ const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
     title: "Obsidianischer Orden",
     category: "faction",
     tags: ["Geheimdienst"],
+    thumbnail: null,
     metadata: {
       summary: "Der cardassianische Geheimdienst — offiziell aufgelöst.",
       attributes: [],
@@ -521,7 +537,7 @@ export default function DevGalleryPage() {
           jeder Gruppe der Status statt eines Monats oder Buchstabens. */}
       <section id="character-list" className="flex flex-col gap-[8px] mb-[24px]">
         <h2 className="lcars-text">Charaktere</h2>
-        <CharacterPage characters={DEMO_CHARACTERS} />
+        <CharacterPage characters={DEMO_CHARACTERS} canCreate />
       </section>
 
       {/* Portrait wählen und zuschneiden (Stammdaten der eigenen

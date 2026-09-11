@@ -95,6 +95,24 @@ export default function TutorialPage() {
                 per Einladung vergeben (siehe nächster Abschnitt).
               </p>
               <p>
+                <strong>Bilder</strong> zu einem Eintrag lädst du über den
+                Bilder-Knopf im Aktionen-Feld hoch (Charaktere, Missionen,
+                Logbücher, Datenbank-Einträge). Mehrere auf einmal sind
+                möglich; jedes Bild geht einzeln los, und sehr große werden
+                vorher automatisch verkleinert, damit der Upload nicht am
+                Größenlimit scheitert. Klappt eines nicht, steht der Grund
+                direkt darunter.
+              </p>
+              <p>
+                In den drei Übersichten — <strong>Charaktere</strong>,{" "}
+                <strong>Chronologie</strong> und <strong>Datenbank</strong> —
+                steht links in der Karte ein kleines{" "}
+                <strong>Vorschaubild</strong>, sofern zum Eintrag eines
+                hinterlegt ist: bei einer Figur ihr Portrait, sonst das zuerst
+                hochgeladene Bild. Einträge ohne Bild bleiben schlicht ohne — es
+                wird kein Platzhalter angezeigt.
+              </p>
+              <p>
                 Kleiner Tipp am Rand: Auf schmalen Bildschirmen gibt es oben
                 einen <strong>Lesemodus</strong>-Knopf, der die Navigation
                 ausblendet und den Text breiter/größer darstellt.
@@ -147,6 +165,15 @@ export default function TutorialPage() {
                 deshalb nicht mehr — die alte Adresse führt hierher.
               </p>
               <p>
+                Einträge <strong>ohne Datum</strong> gehen dabei nicht
+                verloren: abgeschlossene Gespräche und Logbücher, bei denen
+                kein In-Story-Datum gepflegt ist, stehen unter{" "}
+                <strong>„Ohne Datum“</strong> am Ende der Liste. Ein{" "}
+                <em>laufendes</em> Gespräch steht noch nicht in der
+                Chronologie — es ist ja nichts Abgeschlossenes; es findet sich
+                auf deiner Startseite unter den offenen Gesprächen.
+              </p>
+              <p>
                 Die Ereignisse kommen aus <strong>drei Quellen</strong>. Erstens
                 aus dem, was ohnehin gepflegt ist: Beginn und Ende einer
                 Mission, das Datum eines Logbuchs oder Gesprächs, das
@@ -164,7 +191,9 @@ export default function TutorialPage() {
                 der Knopf <strong>„Ereignis eintragen“</strong> und öffnet ein
                 Fenster — Datum, Titel, Ereignisart, auf Wunsch ein, zwei Sätze
                 dazu. Das Datumsfeld steht schon auf dem jüngsten Ereignis der
-                Chronologie; meist musst du nur den Tag ändern. Die
+                Chronologie — ist sie noch leer, bleibt das Feld leer, der
+                Knopf steht aber auch dort schon bereit; meist musst du nur den
+                Tag ändern. Die
                 Beschreibung nimmt <strong>Markdown</strong> wie überall sonst,
                 und du kannst <strong>Beteiligte</strong> auswählen — aus allen
                 Figuren, auch den zurückgezogenen; vorausgewählt ist keine. Solche
@@ -343,11 +372,14 @@ export default function TutorialPage() {
                 den Bildkasten samt seiner Schräge zeigt — ziehen verschiebt
                 das Bild, der Regler vergrößert es bis zum Vierfachen.{" "}
                 <strong>„Übernehmen“</strong> merkt den Ausschnitt vor;
-                gespeichert wird er mit dem Formular, und zwar fertig
-                zugeschnitten, sodass Bildschirm und PDF dasselbe zeigen. Das
-                Original bleibt hinterlegt: beim nächsten Bearbeiten kannst du
-                den Ausschnitt neu wählen, ohne die Datei erneut zu suchen.
-                Ohne eigenen Ausschnitt zeigt der Bogen die Bildmitte. Früher
+                gespeichert wird er mit dem Formular. Gespeichert wird dabei{" "}
+                <em>dein Originalbild</em> — der Ausschnitt ist nur die Angabe,
+                welcher Teil davon im Bildkasten erscheint (Bildschirm wie
+                PDF). Du kannst ihn also jederzeit neu wählen, ohne dass das
+                Bild bei jedem Mal schlechter wird, und wo das ganze Bild
+                hingehört — im Karussell auf deiner Charakterseite — steht es
+                unbeschnitten. Ohne eigenen Ausschnitt zeigt der Bogen die
+                Bildmitte. Früher
                 eingetragene Adressen holt die Administration einmalig ins
                 Archiv, sodass am Ende jedes Portrait dem Archiv selbst
                 gehört — dein Bogen sieht danach aus wie vorher, nur hängt er
@@ -1242,6 +1274,23 @@ export default function TutorialPage() {
                 <strong>„Hell/Dunkel“</strong> ein — <em>unabhängig</em> davon,
                 ob du LCARS oder das minimalistische Interface nutzt. Jede
                 Kombination ist möglich (LCARS hell, minimal dunkel, …).
+              </p>
+              <p>
+                Unter <strong>„Schriften“</strong> wählst du, in welcher Schrift
+                das Archiv gesetzt wird — getrennt für{" "}
+                <strong>Überschriften und Fließtext</strong> (Vorgabe:{" "}
+                <em>Antonio</em>, die schmalen LCARS-Versalien) und für{" "}
+                <strong>Daten und Code</strong> (Vorgabe:{" "}
+                <em>Share Tech Mono</em>, die Mono-Zeilen der Karten und
+                Aktenfelder). Als Alternativen stehen gängige, gut lesbare
+                Schriften bereit; jede Karte zeigt ein Beispiel in der Schrift
+                selbst. Wählst du eine andere Textschrift als Antonio, werden
+                Überschriften und Beschriftungen normal geschrieben statt
+                durchgehend groß — die Farben und Formen von LCARS bleiben.
+                Alle Schriften liefert das Archiv selbst aus; es geht keine
+                Anfrage an fremde Server. Die Wahl gilt nur für dich, erscheint
+                sofort als Vorschau und bleibt nach dem{" "}
+                <strong>Speichern</strong> erhalten.
               </p>
               <p>
                 Wenn du es lieber schlicht magst, kannst du unter{" "}

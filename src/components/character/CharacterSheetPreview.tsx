@@ -1,6 +1,7 @@
 "use client";
 import type { ReactNode } from "react";
 import PersonnelFileView from "./PersonnelFileView";
+import type { PortraitCrop } from "@/lib/portraitCrop";
 import {
   parseTalentEntry,
   talentCategoryLabel,
@@ -69,7 +70,10 @@ export interface CharacterSheetPreviewInput {
   characterName: string;
   rank: string | null;
   species: string | null;
+  // Das Portrait-ORIGINAL und der darauf gewählte Ausschnitt (siehe
+  // src/lib/portraitCrop.ts).
   portrait: string | null;
+  portraitCrop?: PortraitCrop | null;
   stats: CharacterStats;
   // Bereits gerendertes, bereinigtes Biografie-HTML (markdownToHtml). Der
   // Assistent lässt es beim Wechsel auf die Vorschau erzeugen, die
@@ -241,6 +245,7 @@ export default function CharacterSheetPreview({
         rank={input.rank}
         species={input.species}
         portrait={input.portrait}
+        portraitCrop={input.portraitCrop}
         stats={input.stats}
         // Das umgebende Fenster bzw. der Assistent ist bereits die
         // Vollansicht — ein zweiter Vollbild-Knopf säße nur im Weg.

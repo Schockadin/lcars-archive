@@ -49,7 +49,19 @@ export default function MenuItem({
           </div>
         )}
         {id && <div className="lcars-menu-id">{id}</div>}
-        {text && <div className="lcars-menu-text">{text}</div>}
+        {text && (
+          <div className="lcars-menu-text">
+            {/* Trennzeichen als eigenes Element: im LCARS-UI steht auf dem
+                Desktop „0X-Name", im minimalistischen UI nur der Name (dort
+                sind Nummer UND Bindestrich ausgeblendet, siehe
+                minimal-ui.css). Auf schmalen Screens verschwindet der ganze
+                Text samt Trenner — es bleiben Nummer und Icon. */}
+            <span className="lcars-menu-sep" aria-hidden="true">
+              -
+            </span>
+            {text}
+          </div>
+        )}
       </div>
     </Link>
   );

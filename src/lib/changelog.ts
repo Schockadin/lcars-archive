@@ -380,6 +380,35 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "Das PDF des Charakterbogens sieht jetzt aus wie der Bogen am Bildschirm — Zeile für Zeile an derselben Stelle: gleiche Schrift und Laufweite, dasselbe Portrait mit derselben Schräge, und die Kästchen für Entschlossenheit und Stress stehen auch auf dem Ausdruck da, wo sie hingehören (die ungenutzten Stress-Kästchen blass).",
         category: "export",
       },
+      {
+        text: "Charakterliste, Chronologie und Datenbank zeigen links in der Karte jetzt ein kleines Vorschaubild des Eintrags: bei einer Figur ihr Portrait, sonst das zuerst hochgeladene Bild. Einträge ohne Bild bleiben schlicht ohne — es steht kein Platzhalter im Weg.",
+        category: "darstellung",
+        tutorial: "fuer-besucher",
+      },
+      {
+        text: "Die Schriftart lässt sich jetzt wählen: im Profil unter „Darstellung → Schriften“ getrennt für Überschriften und Fließtext (Vorgabe Antonio) sowie für Daten und Code (Vorgabe Share Tech Mono), jeweils mit gängigen, gut lesbaren Alternativen und einem Beispiel in der Schrift selbst. Wählst du eine andere Textschrift als Antonio, werden Überschriften normal statt durchgehend groß geschrieben; die Farben und Formen bleiben. Die Wahl gilt nur für dich und bleibt bei jedem Login erhalten.",
+        category: "darstellung",
+        tutorial: "farbschema",
+      },
+      {
+        text: "Der „+“-Knopf über der Charakterliste erscheint nur noch für Konten, die auch Charaktere anlegen dürfen — vorher führte er Gäste auf eine Seite, die ihnen nur absagte.",
+        category: "charaktere",
+      },
+      {
+        text: "Beim Portrait wird jetzt dein Originalbild gespeichert; der gewählte Ausschnitt ist nur noch die Angabe, welcher Teil davon im Bildkasten des Bogens erscheint. Du kannst ihn beliebig oft neu wählen, ohne dass das Bild jedes Mal schlechter wird — und im Karussell deiner Charakterseite steht das ganze Bild. Bogen, PDF und die Karten der Übersichten zeigen weiterhin genau deinen Ausschnitt.",
+        category: "charaktere",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Die Chronologie zeigt jetzt auch Logbücher ohne gepflegtes In-Story-Datum — sie stehen bei den abgeschlossenen Gesprächen ohne Datum unter „Ohne Datum“ am Ende, statt gar nicht aufzutauchen, obwohl die Charakterseite sie unter „Logs“ mitzählt. Umgekehrt stehen laufende Gespräche nicht mehr darin: Sie sind noch nichts Abgeschlossenes und liegen weiterhin auf deiner Startseite unter den offenen Gesprächen.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Bilder hochladen funktioniert wieder: Sie blieben bisher ohne jede Meldung bei „Wird hochgeladen…“ stehen. Jetzt geht jedes Bild einzeln los, sehr große werden vorher automatisch verkleinert, und wenn doch etwas schiefgeht, steht der Grund direkt darunter statt gar nichts.",
+        category: "inhalte",
+        tutorial: "fuer-besucher",
+      },
     ],
   },
   {

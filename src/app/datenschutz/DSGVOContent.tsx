@@ -307,6 +307,16 @@ export default function DSGVOContent({ year }: { year: number }) {
             aus demselben Grund nicht <code>HttpOnly</code>, wird nur bei der
             minimalistischen Ansicht gesetzt und beim Abmelden wieder entfernt.
           </li>
+          <li>
+            <code>neo_mode</code> speichert, ob du im Profil ein helles oder
+            dunkles Erscheinungsbild gewählt hast, <code>neo_font_sans</code>{" "}
+            und <code>neo_font_mono</code> die dort gewählten Schriftarten —
+            aus demselben Grund und mit denselben Eigenschaften wie{" "}
+            <code>neo_ui</code>: reine Anzeige-Einstellung ohne
+            personenbezogene Daten, nicht <code>HttpOnly</code>, nur gesetzt,
+            wenn du von der Vorgabe abweichst, und beim Abmelden wieder
+            entfernt.
+          </li>
         </ul>
         <p>
           Da es sich ausschließlich um unbedingt erforderliche bzw. für die von
@@ -323,7 +333,9 @@ export default function DSGVOContent({ year }: { year: number }) {
         </p>
 
         {/* Abschnitt "Externe Schriftarten" entfernt: Antonio und Share Tech
-          Mono werden über next/font/google eingebunden (siehe
+          Mono — und seit v1.29.55 ebenso die im Profil wählbaren Alternativen
+          (Inter, Roboto, Open Sans, JetBrains Mono, Roboto Mono, Source Code
+          Pro) — werden über next/font/google eingebunden (siehe
           src/app/layout.tsx), das die Font-Dateien bereits zur Build-Zeit
           herunterlädt und selbst ausliefert — es gibt keine Laufzeit-Anfrage
           an Google-Server mehr und damit keine Übertragung der IP-Adresse. */}

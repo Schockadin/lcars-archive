@@ -1,0 +1,64 @@
+/* ── Schriftwahl ──────────────────────────────────────────────────────
+   Die im Profil (/user → Darstellung → Schriften) gewählten Schriften.
+   Registry und Vorgaben: src/lib/fonts.ts; geladen (self-hosted) werden sie
+   in src/app/layout.tsx per next/font/google.
+
+   Umgehängt werden genau die beiden kanonischen Stacks aus tokens.css —
+   --lcars-font-sans und --lcars-font-mono. Alles, was eine Textrolle stylt,
+   greift auf sie zu (auch die Tailwind-Utilities font-lcars/font-lcars-mono,
+   siehe @theme in tokens.css), also reicht dieser eine Griff.
+
+   Ohne Attribut bleibt es bei den Werten aus tokens.css (Antonio bzw. Share
+   Tech Mono) — die Vorgabe setzt deshalb bewusst KEIN Attribut, genau wie
+   „standard" beim Farbthema und „dark" beim Hell/Dunkel-Modus.
+
+   Die Spezifität (html[data-…], 0,1,1) liegt über :root aus tokens.css;
+   unlayered eingebunden, aus demselben Grund wie lcars-themes.css (siehe
+   globals.css). */
+
+/* ── Beschriftungs-/Fließtextschrift ──────────────────────────────── */
+html[data-font-sans="inter"] {
+  --lcars-font-sans: var(--font-inter), "Inter", "Helvetica Neue", Arial,
+    sans-serif;
+}
+html[data-font-sans="roboto"] {
+  --lcars-font-sans: var(--font-roboto), "Roboto", "Helvetica Neue", Arial,
+    sans-serif;
+}
+html[data-font-sans="open-sans"] {
+  --lcars-font-sans: var(--font-open-sans), "Open Sans", "Helvetica Neue",
+    Arial, sans-serif;
+}
+
+/* ── Mono-/Datenschrift ───────────────────────────────────────────── */
+html[data-font-mono="jetbrains-mono"] {
+  --lcars-font-mono: var(--font-jetbrains-mono), "JetBrains Mono", monospace;
+}
+html[data-font-mono="roboto-mono"] {
+  --lcars-font-mono: var(--font-roboto-mono), "Roboto Mono", monospace;
+}
+html[data-font-mono="source-code-pro"] {
+  --lcars-font-mono: var(--font-source-code-pro), "Source Code Pro", monospace;
+}
+
+/* Die LCARS-Versalien gehören zu Antonio, nicht zur Textrolle: eine andere
+   Schrift in derselben Spationierung und durchgehend groß geschrieben wird
+   schnell unleserlich. Wer die Beschriftungsschrift wechselt, bekommt
+   deshalb normale Groß-/Kleinschreibung und die normale Laufweite — die
+   Farbflächen und Formen von LCARS bleiben unberührt. Im minimalistischen UI
+   passiert genau dasselbe (siehe minimal-ui.css), dort für alle Schriften. */
+html[data-font-sans]:not([data-font-sans="antonio"]) h1,
+html[data-font-sans]:not([data-font-sans="antonio"]) h2,
+html[data-font-sans]:not([data-font-sans="antonio"]) h3,
+html[data-font-sans]:not([data-font-sans="antonio"]) h4,
+html[data-font-sans]:not([data-font-sans="antonio"]) h5,
+html[data-font-sans]:not([data-font-sans="antonio"]) .lcars-heading,
+html[data-font-sans]:not([data-font-sans="antonio"]) .lcars-header-title,
+html[data-font-sans]:not([data-font-sans="antonio"]) .lcars-eyebrow,
+html[data-font-sans]:not([data-font-sans="antonio"]) .lcars-menu-text,
+html[data-font-sans]:not([data-font-sans="antonio"]) .lcars-menu-id,
+html[data-font-sans]:not([data-font-sans="antonio"]) .lcars-data-row-text,
+html[data-font-sans]:not([data-font-sans="antonio"]) .timeline-card-title {
+  text-transform: none;
+  letter-spacing: normal;
+}

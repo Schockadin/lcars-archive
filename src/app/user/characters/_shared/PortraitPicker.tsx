@@ -4,15 +4,14 @@ import { createPortal } from "react-dom";
 import { useOverlayDismiss } from "@/hooks/useOverlayDismiss";
 import { XIcon } from "@/lib/icons";
 import {
-  CROP_OUTPUT_HEIGHT,
-  CROP_OUTPUT_WIDTH,
   DEFAULT_CROP,
   MAX_ZOOM,
   MIN_ZOOM,
-  cropRect,
+  isDefaultCrop,
   previewStyle,
   type PortraitCrop,
 } from "@/lib/portraitCrop";
+import { prepareImageForUpload, rejectionReason } from "@/lib/imageUpload";
 
 // Portrait wählen UND zuschneiden.
 //
@@ -21,17 +20,17 @@ import {
 // den Ausschnitt selbst: ziehen zum Verschieben, Regler zum Vergrößern, in
 // einer Vorschau, die den Kasten samt seiner Fase zeigt.
 //
-// Der Zuschnitt wird beim Abschicken EINGEBACKEN: der Browser zeichnet das
-// Ergebnis auf eine Leinwand und schickt es als Bild mit. Bogen und PDF
-// bekommen dadurch ein Bild, das ohnehin passt — sie brauchen keine eigene
-// Ausschnitt-Logik, und was am Bildschirm steht, steht auch im PDF. Die
-// Einstellung selbst fährt als JSON mit, damit sich der Ausschnitt später aus
-// demselben Original neu wählen lässt.
-
-const OUTPUT_TYPE = "image/jpeg";
-// Genug für den Druck, ohne die Datei aufzublähen. Der Wert ist bewusst hoch:
-// ein Portrait wird einmal gewählt und dann oft gedruckt.
-const OUTPUT_QUALITY = 0.92;
+// Hochgeladen wird das ORIGINAL; der Ausschnitt fährt als Anweisung mit
+// (Zoom + Mittelpunkt, JSON im Feld portraitCrop) und wird erst beim Anzeigen
+// angewandt — am Bildschirm per CSS, im PDF über dieselbe Rechnung (siehe
+// src/lib/portraitCrop.ts). Bis v1.29.57 buk der Browser den Ausschnitt hier
+// auf eine Leinwand und lud das Ergebnis hoch; das Original blieb nur als
+// Nebeneintrag zurück, und jedes Nachjustieren erzeugte eine weitere
+// verlustbehaftete Kopie.
+//
+// Nebeneffekt, der einen eigenen Satz wert ist: ohne Leinwand gibt es auch
+// das CORS-Problem nicht mehr — ein Bild von einem fremden Server ließ sich
+// vorher gar nicht zuschneiden („verunreinigte" Leinwand).
 
 export default function PortraitPicker({
   idPrefix,
@@ -40,26 +39,28 @@ export default function PortraitPicker({
   defaultCrop = DEFAULT_CROP,
 }: {
   idPrefix: string;
-  // Das aktuell gespeicherte (bereits zugeschnittene) Portrait.
+  // Das gespeicherte Portrait. Bei neuen Datensätzen ist das bereits das
+  // Original; im Altbestand das eingebackene Bild.
   defaultUrl?: string;
-  // Das Original, aus dem es geschnitten wurde — Grundlage fürs Nachjustieren.
+  // Das Original aus dem Altbestand (metadata.portraitSource) — dort ist es
+  // die Grundlage fürs Nachjustieren.
   defaultSource?: string;
   defaultCrop?: PortraitCrop;
 }) {
-  // Die Quelle, an der der Editor arbeitet: entweder die gerade gewählte Datei
-  // (als Objekt-URL) oder das gespeicherte Original.
+  // Die Quelle, an der der Editor arbeitet — und die zugleich angezeigt wird:
+  // entweder die gerade gewählte Datei (als Objekt-URL) oder das gespeicherte
+  // Original (im Altbestand metadata.portraitSource, sonst das Portrait
+  // selbst).
   const [sourceUrl, setSourceUrl] = useState<string | null>(
     defaultSource || defaultUrl || null,
   );
-  // Ob gerade eine Datei gewählt ist. Nur für die Vorschau: dann zeigt der
-  // Daumen die neue Datei, sonst das gespeicherte Portrait.
-  const [hasPickedFile, setHasPickedFile] = useState(false);
   const [crop, setCrop] = useState<PortraitCrop>(defaultCrop);
   const [open, setOpen] = useState(false);
-  // Das Ergebnis: Data-URL des zugeschnittenen Bildes, geht als verstecktes
-  // Feld mit dem Formular ab.
-  const [cropped, setCropped] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
+  // Der Stand beim Öffnen des Fensters. „Abbrechen" stellt ihn wieder her —
+  // seit der Ausschnitt selbst das Ergebnis ist (und nicht mehr ein daraus
+  // gezeichnetes Bild), wirkt jede Bewegung im Fenster sofort.
+  const cropBeforeEdit = useRef<PortraitCrop>(defaultCrop);
 
   // Die Objekt-URL der gewählten Datei muss wieder freigegeben werden, sonst
   // hält die Seite die Datei im Speicher. Sie entsteht im Änderungs-Handler
@@ -72,29 +73,47 @@ export default function PortraitPicker({
     [],
   );
 
-  function pickFile(file: File | null) {
+  // Die gewählte Datei wird — wie in der Bilder-Galerie — vor dem Abschicken
+  // verkleinert, falls sie sehr groß ist (siehe src/lib/imageUpload.ts): ein
+  // Handyfoto reißt sonst das Größenlimit der Plattform, und der Upload
+  // scheitert stumm. Das Ergebnis landet über ein DataTransfer wieder im
+  // Dateifeld, damit das Formular ganz normal genau diese Datei abschickt.
+  async function pickFile(input: HTMLInputElement) {
+    const file = input.files?.[0] ?? null;
     if (objectUrlRef.current) {
       URL.revokeObjectURL(objectUrlRef.current);
       objectUrlRef.current = null;
     }
     setError(null);
-    setCropped("");
     setCrop(DEFAULT_CROP);
-    setHasPickedFile(Boolean(file));
     if (!file) {
       setSourceUrl(defaultSource || defaultUrl || null);
       return;
     }
-    const url = URL.createObjectURL(file);
+
+    const reason = rejectionReason(file);
+    if (reason) {
+      setError(reason);
+      input.value = "";
+      setSourceUrl(defaultSource || defaultUrl || null);
+      return;
+    }
+
+    const prepared = await prepareImageForUpload(file);
+    if (prepared !== file && typeof DataTransfer !== "undefined") {
+      const transfer = new DataTransfer();
+      transfer.items.add(prepared);
+      input.files = transfer.files;
+    }
+
+    const url = URL.createObjectURL(prepared);
     objectUrlRef.current = url;
     setSourceUrl(url);
   }
 
-  // Reihenfolge der Vorschau: der frische Zuschnitt, sonst die eben gewählte
-  // Datei, sonst das gespeicherte Portrait. Ohne den mittleren Fall zeigte der
-  // Daumen nach dem Auswählen weiter das alte Bild.
-  const previewSrc =
-    cropped || (hasPickedFile ? sourceUrl : defaultUrl) || sourceUrl || "";
+  // Gezeigt wird immer das Original — mit dem Ausschnitt als Anweisung
+  // darüber, genau wie später auf dem Bogen.
+  const previewSrc = sourceUrl || defaultUrl || "";
 
   return (
     <>
@@ -105,12 +124,17 @@ export default function PortraitPicker({
 
         <div className="portrait-picker">
           {previewSrc ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              className="portrait-picker-thumb"
-              src={previewSrc}
-              alt="Aktuelles Portrait"
-            />
+            // Der Daumen zeigt, was auf dem Bogen stehen wird: das Original
+            // im Kasten, mit dem gewählten Ausschnitt darüber.
+            <span className="portrait-picker-thumb">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="portrait-picker-img"
+                src={previewSrc}
+                alt="Aktuelles Portrait"
+                style={previewStyle(crop)}
+              />
+            </span>
           ) : (
             <span className="portrait-picker-thumb portrait-picker-thumb--empty" />
           )}
@@ -124,7 +148,9 @@ export default function PortraitPicker({
                 type="file"
                 accept="image/jpeg,image/png,image/webp,image/gif"
                 className="lcars-input lcars-file-input rounded-full w-full"
-                onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
+                onChange={(e) => {
+                  void pickFile(e.currentTarget);
+                }}
               />
             </label>
 
@@ -135,27 +161,25 @@ export default function PortraitPicker({
                 disabled={!sourceUrl}
                 onClick={() => {
                   setError(null);
+                  cropBeforeEdit.current = crop;
                   setOpen(true);
                 }}
               >
                 Ausschnitt wählen
               </button>
-              {cropped && (
+              {!isDefaultCrop(crop) && (
                 <button
                   type="button"
                   className="lcars-link-text text-[12px]"
-                  onClick={() => {
-                    setCropped("");
-                    setCrop(DEFAULT_CROP);
-                  }}
+                  onClick={() => setCrop(DEFAULT_CROP)}
                 >
                   Zuschnitt verwerfen
                 </button>
               )}
               <span className="text-lcars-ink-dim text-[12px]">
-                {cropped
-                  ? "Zugeschnitten — wird beim Speichern übernommen."
-                  : "JPEG/PNG/WebP/GIF bis 5 MB. Ohne eigenen Ausschnitt zeigt der Bogen die Bildmitte."}
+                {isDefaultCrop(crop)
+                  ? "JPEG/PNG/WebP/GIF bis 5 MB. Ohne eigenen Ausschnitt zeigt der Bogen die Bildmitte; gespeichert wird immer das Original."
+                  : `Ausschnitt gewählt (${crop.zoom.toFixed(1)}×) — er wird beim Speichern übernommen. Das Bild selbst bleibt unbeschnitten.`}
               </span>
             </div>
 
@@ -165,58 +189,53 @@ export default function PortraitPicker({
           </div>
         </div>
 
-        {/* Was das Formular sieht: das fertige Bild und die Einstellung, aus
-            der es entstanden ist. Adresse und Original stehen bewusst NICHT
-            dabei — der Server nimmt den bisherigen Stand aus der Datenbank
-            (siehe characterHead.ts), damit eine Adresse gar nicht erst aus
-            einem Formular kommen kann. */}
-        <input type="hidden" name="portraitCropped" value={cropped} />
+        {/* Was das Formular sieht: die Bilddatei oben (unverändert, nur ggf.
+            verkleinert) und hier der Ausschnitt als Anweisung. Eine Bild-
+            ADRESSE steht bewusst NICHT dabei — der Server nimmt den bisherigen
+            Stand aus der Datenbank (siehe characterHead.ts), damit eine
+            Adresse gar nicht erst aus einem Formular kommen kann. */}
         <input
           type="hidden"
           name="portraitCrop"
-          value={cropped ? JSON.stringify(crop) : ""}
+          value={JSON.stringify(crop)}
         />
       </div>
 
-      {open && sourceUrl && (
+      {open && previewSrc && (
         <CropOverlay
-          src={sourceUrl}
+          src={previewSrc}
           crop={crop}
           onChange={setCrop}
-          onCancel={() => setOpen(false)}
-          onApply={(dataUrl) => {
-            setCropped(dataUrl);
+          onCancel={() => {
+            setCrop(cropBeforeEdit.current);
             setOpen(false);
           }}
-          onError={(message) => {
-            setError(message);
-            setOpen(false);
-          }}
+          onApply={() => setOpen(false)}
         />
       )}
     </>
   );
 }
 
+// Das Fenster, in dem der Ausschnitt gewählt wird. Es zeichnet nichts mehr —
+// es stellt nur noch die drei Zahlen ein (Zoom, x, y), die das Formular
+// mitschickt.
 function CropOverlay({
   src,
   crop,
   onChange,
   onApply,
   onCancel,
-  onError,
 }: {
   src: string;
   crop: PortraitCrop;
   onChange: (crop: PortraitCrop) => void;
-  onApply: (dataUrl: string) => void;
+  onApply: () => void;
   onCancel: () => void;
-  onError: (message: string) => void;
 }) {
   const close = useCallback(() => onCancel(), [onCancel]);
   useOverlayDismiss(close);
   const boxRef = useRef<HTMLDivElement | null>(null);
-  const imageRef = useRef<HTMLImageElement | null>(null);
   const dragRef = useRef<{ x: number; y: number; crop: PortraitCrop } | null>(
     null,
   );
@@ -244,43 +263,6 @@ function CropOverlay({
   };
   const endDrag = () => {
     dragRef.current = null;
-  };
-
-  const apply = () => {
-    const image = imageRef.current;
-    if (!image || !image.naturalWidth) {
-      onError("Das Bild konnte nicht geladen werden.");
-      return;
-    }
-    const rect = cropRect(image.naturalWidth, image.naturalHeight, crop);
-    const canvas = document.createElement("canvas");
-    canvas.width = CROP_OUTPUT_WIDTH;
-    canvas.height = CROP_OUTPUT_HEIGHT;
-    const context = canvas.getContext("2d");
-    if (!context) {
-      onError("Der Browser kann das Bild nicht zuschneiden.");
-      return;
-    }
-    context.drawImage(
-      image,
-      rect.sx,
-      rect.sy,
-      rect.sWidth,
-      rect.sHeight,
-      0,
-      0,
-      canvas.width,
-      canvas.height,
-    );
-    try {
-      onApply(canvas.toDataURL(OUTPUT_TYPE, OUTPUT_QUALITY));
-    } catch {
-      // Ein Bild von einem fremden Server ohne CORS-Freigabe „verunreinigt"
-      // die Leinwand; auslesen lässt sie sich dann nicht mehr.
-      onError(
-        "Dieses Bild liegt auf einem fremden Server und lässt sich hier nicht zuschneiden. Lade es als Datei hoch, dann geht es.",
-      );
-    }
   };
 
   return createPortal(
@@ -319,15 +301,13 @@ function CropOverlay({
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            ref={imageRef}
             className="portrait-crop-image"
             src={src}
             alt=""
             draggable={false}
-            // Für ein Bild aus dem eigenen Asset-Bucket reicht das, um die
-            // Leinwand sauber zu halten; fehlt die Freigabe, greift die
-            // Meldung in apply().
-            crossOrigin="anonymous"
+            // Kein crossOrigin mehr: gelesen wird das Bild nicht (keine
+            // Leinwand), und die Angabe ließ ein Bild ohne CORS-Freigabe erst
+            // gar nicht laden.
             style={previewStyle(crop)}
           />
         </div>
@@ -352,7 +332,7 @@ function CropOverlay({
         </label>
 
         <div className="flex flex-wrap gap-[8px]">
-          <button type="button" className="lcars-pill-btn" onClick={apply}>
+          <button type="button" className="lcars-pill-btn" onClick={onApply}>
             Übernehmen
           </button>
           <button

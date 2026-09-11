@@ -7,6 +7,7 @@ function entry(
   id: number,
   title: string,
   category: ArchiveCategory = "location",
+  thumbnail: string | null = null,
 ): ArchiveEntryPreview {
   return {
     id,
@@ -14,6 +15,7 @@ function entry(
     title,
     category,
     tags: [],
+    thumbnail,
     metadata: {
       summary: null,
       attributes: [],

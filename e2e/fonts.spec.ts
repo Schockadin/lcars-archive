@@ -123,3 +123,73 @@ test("ohne minimalistisches UI bleibt die Pillen-Schrift die LCARS-Vorgabe", asy
 
   expect(fontFamily).toContain("Antonio");
 });
+
+// ── Wählbare Schriften (Profil → Darstellung → Schriften) ────────────
+// Die Wahl landet als data-font-sans/data-font-mono auf <html> (Init-Skript
+// im Root-Layout, aus den neo_font_*-Cookies) und hängt dort die beiden
+// kanonischen Stacks um (src/styles/fonts.css). Geprüft wie oben am computed
+// style — nur so deckt der Test ab, dass die Regel bis ans Element findet.
+test("die gewählte Textschrift ersetzt Antonio", async ({ page, baseURL }) => {
+  await page
+    .context()
+    .addCookies([{ name: "neo_font_sans", value: "inter", url: baseURL! }]);
+  await page.goto("/tutorial");
+  await expect(page.locator("html")).toHaveAttribute("data-font-sans", "inter");
+
+  const fontFamily = await page.evaluate(() => {
+    const el = document.createElement("div");
+    el.className = "lcars-data-row-text";
+    document.body.appendChild(el);
+    const value = getComputedStyle(el).fontFamily;
+    el.remove();
+    return value;
+  });
+  expect(fontFamily).toContain("Inter");
+  expect(fontFamily).not.toContain("Antonio");
+});
+
+test("die gewählte Mono-Schrift ersetzt Share Tech Mono", async ({
+  page,
+  baseURL,
+}) => {
+  await page.context().addCookies([
+    { name: "neo_font_mono", value: "jetbrains-mono", url: baseURL! },
+  ]);
+  await page.goto("/tutorial");
+  await expect(page.locator("html")).toHaveAttribute(
+    "data-font-mono",
+    "jetbrains-mono",
+  );
+
+  const code = page.locator(".tutorial-content code").first();
+  await code.waitFor();
+  const fontFamily = await code.evaluate((el) => getComputedStyle(el).fontFamily);
+  expect(fontFamily).toContain("JetBrains Mono");
+  expect(fontFamily).not.toContain("Share Tech Mono");
+});
+
+test("ein unbekannter Schrift-Wert bleibt bei der Vorgabe", async ({
+  page,
+  baseURL,
+}) => {
+  // Das Init-Skript setzt nur bekannte IDs — ein manipuliertes Cookie darf
+  // weder ein Attribut erzeugen noch die Schrift zerlegen.
+  await page.context().addCookies([
+    { name: "neo_font_sans", value: "comic-sans", url: baseURL! },
+  ]);
+  await page.goto("/tutorial");
+  await expect(page.locator("html")).not.toHaveAttribute(
+    "data-font-sans",
+    "comic-sans",
+  );
+
+  const fontFamily = await page.evaluate(() => {
+    const el = document.createElement("div");
+    el.className = "lcars-data-row-text";
+    document.body.appendChild(el);
+    const value = getComputedStyle(el).fontFamily;
+    el.remove();
+    return value;
+  });
+  expect(fontFamily).toContain("Antonio");
+});

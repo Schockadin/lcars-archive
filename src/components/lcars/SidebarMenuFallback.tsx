@@ -4,6 +4,7 @@ import {
   CharactersNavIcon,
   DatabaseNavIcon,
   SearchNavIcon,
+  TimelineNavIcon,
 } from "@/lib/icons";
 import LcarsMenuItem from "./MenuItem";
 import type { ReactNode } from "react";
@@ -19,6 +20,7 @@ const NAV_ICONS: Record<string, ReactNode> = {
   "/": <HomeNavIcon />,
   "/characters": <CharactersNavIcon />,
   "/archive": <DatabaseNavIcon />,
+  "/chronologie": <TimelineNavIcon />,
   "/search": <SearchNavIcon />,
 };
 

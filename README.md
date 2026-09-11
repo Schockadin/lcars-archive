@@ -515,6 +515,14 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   YAML-Frontmatter) oder als PDF (serverseitig erzeugt, ohne Chromium/
   Puppeteer — läuft dadurch auf Netlify Functions). Berücksichtigt dieselbe
   Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst.
+- **Vorschaubilder in den Übersichten** — Charakterliste, Chronologie und
+  Datenbank zeigen links in der Karte (`ChronoCard`) ein Thumbnail des
+  Eintrags: bei einer Figur ihr Portrait, sonst das zuerst hochgeladene Bild
+  (`content_images`). Ohne Bild wird nichts gerendert — kein Platzhalter. Die
+  Listen holen die Bild-Id in ihrer bestehenden Abfrage mit (`LEFT JOIN
+  LATERAL`), die Chronologie über eine Abfrage für alle vier Inhaltsarten
+  (`getFirstContentImageIdsBySlug`); ausgeliefert werden die Bytes wie überall
+  über `/api/content-images/<id>` (`contentImageSrc`).
 - **Chronologie (`/chronologie`)** — die Kampagne als Zeitstrahl nach ihrer
   eigenen Zeitrechnung (In-Story-Datum), nicht nach Bearbeitungszeit. Sie ist
   zugleich die **Missions-Übersicht**: in der Vorgabe (`TIMELINE_SCOPES`,
@@ -535,6 +543,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (`adminContent.ts`, `contentImages.ts`), die die Adresse in einer
   UNION-Abfrage über alle Inhaltsarten zusammensetzen — der Kopfkommentar von
   `contentRoutes.ts` nennt sie.
+  Einträge ohne Datum gehen nicht verloren: abgeschlossene Gespräche und
+  Logbücher ohne gepflegtes In-Story-Datum stehen in der Gruppe „Ohne Datum"
+  am Ende (`sortEvents`). Ein **laufendes** Gespräch (`dialogue_open`) bleibt
+  dagegen draußen — es ist kein abgeschlossenes Ereignis, und seine Karte
+  führte auf eine Seite, die alle außer den Beteiligten weiterleitet (dieselbe
+  Bedingung wie in `getAllArchivePaths`).
   Jede Ereignisart hat zusätzlich eine eigene Adresse
   (`/chronologie/[kategorie]`, z.B. `/chronologie/conflict`); die Auswahl im
   Filterfeld schreibt sie per `history.replaceState` in die Adresszeile, ohne
@@ -709,16 +723,27 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   geräteübergreifend erhalten. Die Farbe des eigentlichen Fließtexts bleibt dabei
   bewusst konstant (feste `--lcars-ink-*`-Tokens), damit der Text in jedem Theme
   gut lesbar bleibt.
+- **Wählbare Schriften** — angemeldete User stellen im Profil unter
+  „Darstellung → Schriften“ getrennt ein, in welcher Schrift Überschriften und
+  Fließtext (Vorgabe Antonio) und in welcher Daten und Code gesetzt werden
+  (Vorgabe Share Tech Mono). Als Alternativen stehen gängige Bildschirmschriften
+  bereit (Inter, Roboto, Open Sans bzw. JetBrains Mono, Roboto Mono, Source Code
+  Pro), alle über `next/font` selbst ausgeliefert — keine Laufzeit-Anfrage an
+  Google. Rein CSS-basiert wie die übrigen Darstellungs-Achsen
+  (`html[data-font-sans]`/`[data-font-mono]` hängen `--lcars-font-sans`/`-mono`
+  um, Pre-Paint-Cookies `neo_font_sans`/`neo_font_mono`, Registry in
+  `src/lib/fonts.ts`). Wer eine andere Textschrift als Antonio wählt, bekommt
+  normale Groß-/Kleinschreibung statt LCARS-Versalien — die Farben und Formen
+  bleiben.
 - **Abschaltbares LCARS-Design (minimalistisches UI)** — wer es lieber schlicht
   mag, deaktiviert im Profil unter „Darstellung → Oberfläche“ das LCARS-Design
   und bekommt stattdessen ein schlankes, minimalistisches Interface: System-
   schrift, keine dekorativen Elbows/Balken/Versalien, kein Header — die gesamte
   Navigation liegt links in der Sidebar (auf dem Handy als reine Symbole). Es
-  gibt es in zwei Ausführungen — **dunkel** (`data-ui="minimal"`) und **hell**
-  (`data-ui="minimal-light"`, überschreibt zusätzlich Hintergrund-/Textfarben
-  auf ein helles Schema). Rein CSS-basiert (gemeinsamer Selektor
-  `html[data-ui^="minimal"]`, Pre-Paint-Cookie `neo_ui`), die eigentliche
-  Zugriffskontrolle bleibt unberührt.
+  Hell oder dunkel ist davon **unabhängig** (eigene Achse `data-mode`, siehe
+  `src/lib/colorMode.ts`) — jede Kombination ist möglich. Rein CSS-basiert
+  (gemeinsamer Selektor `html[data-ui^="minimal"]`, Pre-Paint-Cookie `neo_ui`),
+  die eigentliche Zugriffskontrolle bleibt unberührt.
 - **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und Spielleitung.
 - **Markdown-Vault als Ursprungsimport** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
@@ -820,7 +845,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 | Styling    | [Tailwind CSS v4](https://tailwindcss.com)                          |
 | Datenbank  | PostgreSQL (via [`postgres`](https://github.com/porsager/postgres)) |
 | Content    | Markdown + YAML-Frontmatter (`gray-matter`, `remark`, `rehype`)     |
-| Schriften  | Antonio & Share Tech Mono (`next/font`)                             |
+| Schriften  | Antonio & Share Tech Mono, alternativ wählbar (`next/font`)         |
 | Sprache    | TypeScript                                                          |
 | Deployment | Netlify (`@netlify/plugin-nextjs`)                                  |
 
@@ -1057,6 +1082,8 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     │   ├── tokens.css         # Design-Tokens (:root + @theme) inkl. Responsive-Overrides
     │   ├── lcars-themes.css   # Nutzer-Farbthemes (html[data-theme="…"])
     │   ├── minimal-ui.css     # Minimalistisches UI (html[data-ui="minimal"])
+    │   ├── color-mode.css     # Hell/Dunkel (html[data-mode="light"])
+    │   ├── fonts.css          # Schriftwahl (html[data-font-sans]/[data-font-mono])
     │   ├── lcars-components.css  # Sammel-Import der Domänen-Dateien
     │   └── lcars-components/  # Je Domäne eine Datei (header, archive, shared, …)
     ├── types/                # TypeScript-Typen
@@ -1263,7 +1290,13 @@ was käme); bis dahin liest die App sie weiterhin per Fallback aus dem
 Backup-Bucket. Erlaubt sind JPEG/PNG/WebP/GIF bis 5 MB pro Datei;
 Hochladen/Löschen darf, wer den jeweiligen Inhalt auch sonst bearbeiten darf
 (bei Charakteren/Missionslogs nur der Owner, bei Missionen/Datenbank-Einträgen
-zusätzlich jeder Admin). Die vorhandenen Galerie-Bilder werden weiterhin über
+zusätzlich jeder Admin). Hochgeladen wird **Datei für Datei** (eine Server
+Action je Bild) und große Bilder werden vorher im Browser verkleinert
+(`src/lib/imageUpload.ts`, längste Kante 2000 px): ein Formular mit mehreren
+Originalen riss sonst das Payload-Limit der Plattform (Netlify/Lambda: 6 MB) —
+die Anfrage wurde abgewiesen, bevor der Code sie sah, und die Galerie blieb
+mangels `catch` bei „Wird hochgeladen…" stehen. Jeder Fehlschlag wird jetzt
+angezeigt statt verschluckt. Die vorhandenen Galerie-Bilder werden weiterhin über
 die sichtbarkeitsgeprüfte Route `/api/content-images/[id]` ausgeliefert (die
 jetzt aus dem Asset-Bucket liest); neu am Asset-Bucket hängende Assets
 (hochgeladenes Charakter-Portrait bei der Anlage) nutzen die
@@ -1291,12 +1324,19 @@ ins eigene Netz wird (SSRF), und deckelt Größe und Wartezeit. Beim Anlegen und
 sich der **Bildausschnitt** selbst wählen (`PortraitPicker.tsx`,
 Rechenweg in `src/lib/portraitCrop.ts`): ziehen verschiebt, ein Regler
 vergrößert bis 4×, der Rahmen zeigt den hochkant stehenden Bildkasten des
-Bogens samt Schräge. Der Ausschnitt wird im Browser auf eine Leinwand
-gezeichnet und **fertig zugeschnitten** hochgeladen — Bogen und PDF brauchen
-dadurch keine eigene Zuschnitt-Logik und zeigen zwangsläufig dasselbe.
-Original-URL und Einstellung wandern als `metadata.portraitSource` bzw.
-`metadata.portraitCrop` mit, damit sich der Ausschnitt später ohne erneutes
-Hochladen nachjustieren lässt. Bei Missionen, Missionslogs und
+Bogens samt Schräge. Hochgeladen wird seit v1.29.57 das **Original**;
+der Ausschnitt ist eine **Anweisung** darauf (`metadata.portraitCrop`: Zoom +
+Mittelpunkt) und wird erst beim Anzeigen angewandt — am Bildschirm per CSS
+(`previewStyle`), im PDF über dieselbe Rechnung (`pdfCropBox`, `overflow:
+hidden` am `<View>` plus `objectFit`/`objectPosition` am `<Image>`), in den
+Karten der Übersichten ebenso. Vorher buk der Browser den Ausschnitt auf einer
+Leinwand ein und lud das Ergebnis hoch: in `characters.portrait` lag damit
+eine verlustbehaftete Kopie, jedes Nachjustieren schrieb eine weitere in den
+Bucket, und ein Bild von einem fremden Server ließ sich wegen der
+„verunreinigten" Leinwand gar nicht zuschneiden. Für den Altbestand bleibt
+`metadata.portraitSource` die Quelle: dort steht das Original, auf das der
+gespeicherte Ausschnitt passt — `resolvePortraitView()` nimmt es, wo es eines
+gibt, sonst das Portrait selbst. Bei Missionen, Missionslogs und
 Datenbank-Einträgen lässt sich stattdessen ein bereits hochgeladenes Bild direkt
 aus der Markdown-Editor-Toolbar heraus als `![Bild](...)` in den Text
 einfügen. Wird der zugehörige Inhalt endgültig gelöscht (Papierkorb-Purge
@@ -1444,6 +1484,16 @@ Rollen-Hochstufungs-Bug verursacht). Datenverändernde bzw. einmalige Schritte
 (Backfills, Seeds, Constraint-Wechsel) liegen pro Pull Request in einer eigenen
 `scripts/migrate-pr<NN>.sql`, die nach dem Merge einmalig gegen die Produktions-
 DB ausgeführt wird.
+
+**Achtung bei additiven Spalten:** Wird eine Spalte hinzugefügt, die die App
+anschließend liest (z.B. `users.font_sans`/`font_mono` in `USER_COLUMNS`), muss
+die Migration laufen, **bevor** der Stand ausgeliefert wird — auch für die
+Deploy-Preview, die an derselben Datenbank hängt. Sonst scheitert jede Abfrage,
+die einen User lädt, und die Seiten antworten mit 500:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr66.sql
+```
 
 Nach `scripts/migrate-pr62.sql` einmalig `npm run db:seed-talents` ausführen —
 das füllt den neuen Talent-Katalog; ein zweiter Lauf ändert nichts und

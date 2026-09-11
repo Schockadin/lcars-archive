@@ -3,6 +3,7 @@ import sql from "@/lib/db";
 import { parseCharacterStats, computeStress } from "@/lib/characterStats";
 import { parseTalentEntry } from "@/lib/talentCatalog";
 import type { CharacterStats } from "@/types/characterStats";
+import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 
 // Das Gruppenblatt: die Werte aller Spielercharaktere nebeneinander.
 //
@@ -23,7 +24,11 @@ export interface PartyMember {
   // Für die Bogen-Vorschau, die ein Klick auf den Namen öffnet — dieselben
   // Angaben, die auch auf der Charakterseite in den Bogen gehen.
   species: string | null;
+  // Das Portrait-ORIGINAL und der darauf gewählte Ausschnitt — damit die
+  // Bogen-Vorschau hier dieselbe Bildstelle zeigt wie die Charakterseite
+  // und das PDF (siehe src/lib/portraitCrop.ts).
   portrait: string | null;
+  portraitCrop: PortraitCrop;
   bioHtml: string | null;
   stats: CharacterStats;
   // Aus Fitness + Talent-Bonus gerechnet (computeStress), nicht gepflegt.
@@ -46,7 +51,12 @@ export async function getPartySheet(): Promise<PartyMember[]> {
       species: string | null;
       portrait: string | null;
       bioHtml: string | null;
-      metadata: { stats?: unknown; rank?: string } | null;
+      metadata: {
+        stats?: unknown;
+        rank?: string;
+        portraitSource?: string | null;
+        portraitCrop?: unknown;
+      } | null;
     }[]
   >`
     SELECT c.id, c.slug, c.name, u.name AS "playerName",
@@ -77,6 +87,11 @@ export async function getPartySheet(): Promise<PartyMember[]> {
 
   return rows.map((row) => {
     const stats = parseCharacterStats(row.metadata?.stats);
+    const portraitView = resolvePortraitView(
+      row.portrait,
+      row.metadata?.portraitSource,
+      row.metadata?.portraitCrop,
+    );
     return {
       id: row.id,
       slug: row.slug,
@@ -84,7 +99,8 @@ export async function getPartySheet(): Promise<PartyMember[]> {
       playerName: row.playerName,
       rank: row.rank,
       species: row.species,
-      portrait: row.portrait,
+      portrait: portraitView.src,
+      portraitCrop: portraitView.crop,
       bioHtml: row.bioHtml,
       stats,
       maxStress: computeStress(stats),

@@ -17,9 +17,7 @@ import {
 import { getDialogueViewPreference } from "@/lib/users";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 import DialogueContentView from "./DialogueContentView";
-import {
-  dialogueHref,
-} from "@/lib/contentRoutes";
+import { dialogueHref, dialoguesHref } from "@/lib/contentRoutes";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -91,7 +89,10 @@ export default async function CharacterDialoguePage({ params }: Props) {
       {/* Zurück-Knopf oben links, der Lesemodus-Icon darunter (nur mobil
           sichtbar) — beide linksbündig gestapelt. */}
       <div className="flex flex-col items-start gap-[8px]">
-        <Link href="/characters/dialogues" className="lcars-back-link">
+        {/* Die Gesprächs-Übersicht ist die Chronologie (Ereignisart
+            „Gespräch"); die frühere Seite /characters/dialogues gibt es nicht
+            mehr — der Link lief ins Leere. */}
+        <Link href={dialoguesHref()} className="lcars-back-link">
           ‹ Gespräche
         </Link>
         <LcarsReadingModeToggle />

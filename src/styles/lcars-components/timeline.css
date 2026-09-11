@@ -187,6 +187,31 @@
   min-width: 0;
   padding: 11px 16px 12px;
 }
+/* Vorschaubild links in der Karte — das erste hochgeladene Bild des Eintrags
+   (beim Charakter sein Portrait). Es gibt es nur, wenn der Eintrag wirklich
+   ein Bild hat: ohne Bild wird gar kein Element gerendert (ChronoCard.tsx),
+   es bleibt also kein leerer Kasten und kein Platzhalter stehen.
+   Feste Breite, volle Kartenhöhe, `cover` — so bleibt die Zeile so ruhig wie
+   ohne Bild, egal welches Seitenverhältnis hochgeladen wurde. */
+.timeline-card-thumb-box {
+  flex: 0 0 auto;
+  display: block;
+  width: 76px;
+  align-self: stretch;
+  overflow: hidden;
+  /* Eigener Grund hinter durchscheinenden Bildern (PNG/WebP mit Alpha):
+     sonst leuchtet die Kartenfarbe durch. */
+  background: var(--lcars-bg);
+}
+/* Das Bild liegt unbeschnitten vor; der am Portrait gewählte Ausschnitt kommt
+   als CSS-Anweisung darüber (previewStyle in src/lib/portraitCrop.ts) — die
+   Karte zeigt damit dieselbe Bildstelle wie der Charakterbogen. */
+.timeline-card-thumb {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
 
 /* Titelzeile: Art-Etikett, Titel, ggf. der Herkunftshinweis. Sie umbricht,
    damit ein langer Titel das Etikett nicht aus der Karte drückt. */
@@ -349,6 +374,11 @@
   }
   .timeline-date {
     display: none;
+  }
+  /* Auf schmalen Screens bleibt das Vorschaubild, wird aber schmaler — die
+     Karte trägt daneben noch Titel, Datum und Meta-Zeile. */
+  .timeline-card-thumb-box {
+    width: 56px;
   }
 }
 

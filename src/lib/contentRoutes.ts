@@ -95,6 +95,16 @@ export function archiveEditHref(id: number | string): string {
   return `/user/archive/${id}/edit`;
 }
 
+// ── Hochgeladene Bilder ─────────────────────────────────────────────────
+
+// Die Adresse, unter der ein hochgeladenes Bild ausgeliefert wird (siehe
+// src/app/api/content-images/[id]/route.ts). Sie stand bisher an gut einem
+// halben Dutzend Stellen als Literal — mit den Thumbnails der Übersichten
+// kamen weitere dazu.
+export function contentImageSrc(id: number): string {
+  return `/api/content-images/${id}`;
+}
+
 // ── Die Chronologie ─────────────────────────────────────────────────────
 
 // Die Chronologie, auf eine Ereignisart eingeschränkt. Ohne Angabe (oder für
