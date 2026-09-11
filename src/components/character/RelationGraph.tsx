@@ -27,8 +27,8 @@ export default function RelationGraph({ graph }: { graph: LayoutInput }) {
   if (layout.nodes.length === 0) {
     return (
       <p className="lcars-empty-state">
-        Noch keine Verbindungen — sie entstehen aus gemeinsamen Missionen und
-        Gesprächen.
+        Noch keine Verbindungen — sie entstehen aus gemeinsamen Missionen,
+        Gesprächen und Verlinkungen.
       </p>
     );
   }

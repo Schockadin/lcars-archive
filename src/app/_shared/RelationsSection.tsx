@@ -3,8 +3,8 @@ import SettingsPanel from "@/app/_shared/SettingsPanel";
 import type { Relation } from "@/lib/relations";
 
 // „Wer kennt wen" auf der Charakterseite. Zeigt zu jeder Verbindung, WORAUS
-// sie stammt (gemeinsame Missionen/Gespräche) — eine bloße Namensliste ohne
-// Begründung wäre schwer einzuordnen.
+// sie stammt (gemeinsame Missionen/Gespräche, gegenseitige Verlinkungen) —
+// eine bloße Namensliste ohne Begründung wäre schwer einzuordnen.
 function reason(r: Relation): string {
   const parts: string[] = [];
   if (r.sharedMissions > 0) {
@@ -15,6 +15,11 @@ function reason(r: Relation): string {
   if (r.sharedDialogues > 0) {
     parts.push(
       r.sharedDialogues === 1 ? "1 Gespräch" : `${r.sharedDialogues} Gespräche`,
+    );
+  }
+  if (r.sharedLinks > 0) {
+    parts.push(
+      r.sharedLinks === 1 ? "1 Verlinkung" : `${r.sharedLinks} Verlinkungen`,
     );
   }
   return parts.join(" · ");
@@ -34,7 +39,7 @@ export default function RelationsSection({
     <SettingsPanel
       title={title}
       stacked
-      hint="Abgeleitet aus gemeinsamen Missionen und Gesprächen"
+      hint="Abgeleitet aus gemeinsamen Missionen, Gesprächen und Verlinkungen"
       badge={`${relations.length} ${relations.length === 1 ? "Verbindung" : "Verbindungen"}`}
     >
       <p className="text-lcars-ink-dim text-[13px]">
