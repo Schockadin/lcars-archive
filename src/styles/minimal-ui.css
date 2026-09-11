@@ -132,8 +132,11 @@ html[data-ui^="minimal"] .lcars-menu-text {
   font-size: 16px;
   font-weight: 500;
 }
-/* Die reine Positionsnummer (LCARS-Deko) im schlanken UI weglassen. */
-html[data-ui^="minimal"] .lcars-menu-id {
+/* Die reine Positionsnummer (LCARS-Deko) im schlanken UI weglassen — und mit
+   ihr den Bindestrich davor: im LCARS-UI steht „01-Charaktere", hier nur
+   „Charaktere". */
+html[data-ui^="minimal"] .lcars-menu-id,
+html[data-ui^="minimal"] .lcars-menu-sep {
   display: none;
 }
 /* Auf Desktop KEINE Icons im Menü (nur Text). Das Icon wird erst auf Mobile
