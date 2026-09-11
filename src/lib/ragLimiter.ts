@@ -12,7 +12,7 @@ const CLEANUP_AFTER_MS = 24 * 60 * 60 * 1000; // 1 Tag
 const RAG_LOCK_NAMESPACE = 4711;
 
 // client optional per Default der globale sql-Client, kann aber eine
-// Transaction (tx aus sql.begin()) sein — siehe withRagUserLock unten,
+// Transaction (tx aus sql.begin()) sein — siehe checkAndRecordRagRequest unten,
 // gleiches Prinzip wie in loginAttempts.ts / passwordResetLimiter.ts.
 type SqlClient = postgres.ISql;
 

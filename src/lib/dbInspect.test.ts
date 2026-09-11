@@ -151,6 +151,14 @@ describe("isProtectedWriteTable", () => {
     expect(isProtectedWriteTable("ROLES")).toBe(true);
     expect(isProtectedWriteTable("admin_audit_log")).toBe(true);
   });
+  // Alle drei Rate-Limit-Tabellen gehören dazu: Wer darin schreiben darf,
+  // setzt seine eigene Sperre zurück. Die Liste wurde beim Hinzufügen von
+  // rag_requests einmal vergessen — dieser Test hält sie beisammen.
+  it("sperrt jede Rate-Limit-Tabelle", () => {
+    expect(isProtectedWriteTable("login_attempts")).toBe(true);
+    expect(isProtectedWriteTable("password_reset_requests")).toBe(true);
+    expect(isProtectedWriteTable("rag_requests")).toBe(true);
+  });
   it("lässt Inhalts-Tabellen zu", () => {
     expect(isProtectedWriteTable("characters")).toBe(false);
     expect(isProtectedWriteTable("mission_logs")).toBe(false);

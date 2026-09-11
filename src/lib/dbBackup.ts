@@ -197,17 +197,30 @@ export async function importDatabaseBackup(
       // Backup-Datei werden stillschweigend ignoriert, fehlende sollen der
       // Spalten-Vorgabe überlassen bleiben. Zeilen mit gleicher Spaltenmenge
       // passen in dasselbe Statement.
-      const gruppen = new Map<string, Record<string, unknown>[]>();
+      //
+      // Der Schlüssel dient nur der Gruppierung; die Spaltenliste selbst wird
+      // daneben als Array gehalten, statt sie aus dem Schlüssel
+      // zurückzuspalten — sonst hinge die Korrektheit daran, dass kein
+      // Spaltenname je ein Komma enthält.
+      const gruppen = new Map<
+        string,
+        { columns: string[]; zeilen: Record<string, unknown>[] }
+      >();
       for (const row of rows) {
         const columns = knownColumns.filter((c) => c in row);
-        const key = columns.join(",");
-        gruppen.set(key, [...(gruppen.get(key) ?? []), row]);
+        // Eine Zeile ohne eine einzige bekannte Spalte trägt nichts bei, was
+        // sich einfügen ließe (ein INSERT ohne Spalten ist kein gültiges SQL).
+        // Sie wird übersprungen statt den ganzen Restore scheitern zu lassen;
+        // vorkommen kann das nur bei einer kaputten Datei, denn jede Tabelle
+        // hier führt mindestens eine id.
+        if (columns.length === 0) continue;
+        const key = columns.join("\u0000");
+        const gruppe = gruppen.get(key) ?? { columns, zeilen: [] };
+        gruppe.zeilen.push(row);
+        gruppen.set(key, gruppe);
       }
 
-      for (const [key, gruppenZeilen] of gruppen) {
-        const columns = key === "" ? [] : key.split(",");
-        if (columns.length === 0) continue;
-
+      for (const { columns, zeilen: gruppenZeilen } of gruppen.values()) {
         const identifierList = columns.map((c) => `"${c}"`).join(", ");
         for (const block of chunk(gruppenZeilen, blockSize(columns.length))) {
           const values: unknown[] = [];
