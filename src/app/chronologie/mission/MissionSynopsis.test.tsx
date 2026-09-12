@@ -106,6 +106,21 @@ describe("MissionSynopsis", () => {
     expect(screen.queryByText("Teilnehmer")).toBeNull();
   });
 
+  it("legt die Zusammenfassung in ein aufklappbares Feld — offen", () => {
+    // Dasselbe Feld wie auf den Missions-Karten der Chronologie (ChronoPanel).
+    const { container } = render(
+      <MissionSynopsis mission={mission()} viewer={null} owners={[]} />
+    );
+
+    const panel = container.querySelector("details.timeline-panel");
+    expect(panel).toBeTruthy();
+    expect(panel).toHaveAttribute("open");
+    expect(panel?.querySelector(".timeline-panel-head")).toHaveTextContent(
+      "Zusammenfassung",
+    );
+    expect(panel?.querySelector(".mission-body")).toBeTruthy();
+  });
+
   it("zeigt einen Hinweis, wenn keine Zusammenfassung vorliegt", () => {
     const { container } = render(
       <MissionSynopsis

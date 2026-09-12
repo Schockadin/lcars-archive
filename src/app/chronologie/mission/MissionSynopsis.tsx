@@ -7,6 +7,7 @@ import type { FollowState } from "@/app/actions/follows";
 import MissionSynopsisEditor from "./MissionSynopsisEditor";
 import ContentActionsPanel from "@/components/ContentActionsPanel";
 import ContentBody from "@/components/ContentBody";
+import { ChronoPanel } from "@/components/timeline/ChronoCard";
 import ContentDetailHeader, {
   ContentChip,
   ContentChipList,
@@ -85,13 +86,13 @@ export default function MissionSynopsis({
           onEditModeChange={setEditMode}
         />
       ) : (
-        <>
+        <ChronoPanel label="Zusammenfassung" open>
           {mission.metadata.body ? (
             <ContentBody html={mission.metadata.body} />
           ) : (
             <p className="lcars-empty-state">Keine Zusammenfassung vorhanden</p>
           )}
-        </>
+        </ChronoPanel>
       )}
       <ContentActionsPanel
         viewer={viewer}

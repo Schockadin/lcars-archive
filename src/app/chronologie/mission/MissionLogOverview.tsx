@@ -28,7 +28,9 @@ export default function MissionLogOverview({
   logs: MissionLogListItem[];
   canCreateLog: boolean;
 }) {
-  const [sort, setSort] = useState<LogSortMode>("date");
+  // Vorgabe: nach Autor gruppiert — innerhalb einer Mission ist „wer hat
+  // geschrieben" die nützlichere Ordnung als die reine Chronologie.
+  const [sort, setSort] = useState<LogSortMode>("author");
   const [dateDir, setDateDir] = useState<SortDir>("desc");
 
   const dateView = useMemo(

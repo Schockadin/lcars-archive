@@ -103,12 +103,13 @@ test.describe("MissionLogOverview", () => {
     await expect(list.locator(".mission-log-entry")).toHaveCount(0);
   });
 
-  test("gruppiert auf Wunsch nach Autor", async ({ page }) => {
+  test("gruppiert von Haus aus nach Autor", async ({ page }) => {
     await page.goto("/dev-gallery");
     const list = page.locator("#mission-log-overview");
 
-    await expect(list.locator(".timeline-period")).toHaveCount(0);
-    await list.getByRole("button", { name: /Autor/ }).click();
+    // Zwei Autoren in den Demo-Daten.
     await expect(list.locator(".timeline-period")).toHaveCount(2);
+    await list.getByRole("button", { name: /Datum/ }).click();
+    await expect(list.locator(".timeline-period")).toHaveCount(0);
   });
 });

@@ -76,43 +76,55 @@ describe("MissionLogOverview", () => {
   it("zeigt Sitzungsnummer und Datum an der Karte", () => {
     const { container } = renderOverview();
 
-    const tags = [...container.querySelectorAll(".timeline-tag")].map(
-      (node) => node.textContent,
-    );
-    // Absteigend nach Datum, deshalb die höchste Sitzung zuerst.
-    expect(tags).toEqual(["S-03", "S-02", "S-01"]);
+    expect(container.querySelectorAll(".timeline-tag")).toHaveLength(3);
     expect(screen.getAllByText("11.09.2400").length).toBeGreaterThan(0);
   });
 
-  it("sortiert standardmäßig nach Datum, neueste zuerst", () => {
+  it("gruppiert von Haus aus nach Autor", () => {
     const { container } = renderOverview();
-
-    const titles = [...container.querySelectorAll(".timeline-card-title")].map(
-      (node) => node.textContent,
-    );
-    expect(titles).toEqual(["Nachspiel", "Rückzug", "Erster Kontakt"]);
-  });
-
-  it("gruppiert auf Wunsch nach Autor", () => {
-    const { container } = renderOverview();
-
-    fireEvent.click(screen.getByRole("button", { name: /Autor/ }));
 
     const groups = [...container.querySelectorAll(".timeline-period")].map(
       (node) => node.textContent,
     );
     expect(groups).toEqual(["T'Lara · 2", "Marcus Hale · 1"]);
+    expect(screen.getByText(/nach Autor gruppiert/)).toBeInTheDocument();
+  });
+
+  it("sortiert auf Wunsch nach Datum und lässt die Gruppen fallen", () => {
+    const { container } = renderOverview();
+    const datum = screen.getByRole("button", { name: /Datum/ });
+
+    // Erster Klick auf eine noch inaktive Option sortiert aufsteigend — das
+    // ist die Regel von LcarsSortSwitch, die überall in der App gilt.
+    fireEvent.click(datum);
+    expect(container.querySelectorAll(".timeline-period")).toHaveLength(0);
+    expect(
+      [...container.querySelectorAll(".timeline-card-title")].map(
+        (node) => node.textContent,
+      ),
+    ).toEqual(["Erster Kontakt", "Rückzug", "Nachspiel"]);
+    expect(screen.getByText(/älteste zuerst/)).toBeInTheDocument();
+
+    // Ein weiterer Klick dreht die Richtung um.
+    fireEvent.click(datum);
+    expect(
+      [...container.querySelectorAll(".timeline-tag")].map(
+        (node) => node.textContent,
+      ),
+    ).toEqual(["S-03", "S-02", "S-01"]);
+    expect(screen.getByText(/neueste zuerst/)).toBeInTheDocument();
   });
 
   it("nennt den Autor in der Datums-Ansicht, nicht in den Gruppen", () => {
     const { container } = renderOverview();
 
+    // Gruppiert steht der Name schon in der Überschrift.
+    expect(container.querySelector(".timeline-card-meta")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: /Datum/ }));
     expect(container.querySelector(".timeline-card-meta")).toHaveTextContent(
       "Autor",
     );
-
-    fireEvent.click(screen.getByRole("button", { name: /Autor/ }));
-    expect(container.querySelector(".timeline-card-meta")).toBeNull();
   });
 
   it("bietet „Neues Log“ nur an, wenn der Betrachter teilnimmt", () => {
