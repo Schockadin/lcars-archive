@@ -10,6 +10,21 @@ import type { Viewer } from "@/lib/visibility";
 vi.mock("@/app/actions/missions", () => ({
   updateMissionSynopsisAction: vi.fn(),
 }));
+// Der Lesemodus-Umschalter im Kopf zieht useNeo() und damit den NeoProvider
+// nach, den es im Test nicht gibt. Die Funktionen sind stabil, damit der
+// Effekt in ReadingModeToggle nicht bei jedem Render neu läuft.
+const neo = vi.hoisted(() => ({
+  readingMode: false,
+  toggleReadingMode: () => {},
+  resetReadingModeOnUnmount: () => {},
+  preserveReadingModeOnce: () => {},
+}));
+vi.mock("@/hooks/useNeo", () => ({ useNeo: () => neo }));
+// Das Aktionen-Panel zieht Router und Bildergalerie nach; geprüft wird hier
+// der Kopf, nicht das Panel. Der Platzhalter zeigt nur, WO es steht.
+vi.mock("@/components/ContentActionsPanel", () => ({
+  default: () => <div data-testid="actions-panel" />,
+}));
 vi.mock("@/app/_shared/MarkdownEditor", () => ({
   default: ({ id }: { id: string }) => <textarea id={id} />,
 }));
@@ -106,18 +121,17 @@ describe("MissionSynopsis", () => {
     expect(container.querySelector(".mission-body")).toBeNull();
   });
 
-  it("zeigt das Aktionen-Panel nur Angemeldeten", () => {
-    // Gäste bekommen lediglich die Bildergalerie (content-actions-anon),
-    // Angemeldete das aufklappbare Panel am Fuß des Artikels.
-    const { container: gast } = render(
-      <MissionSynopsis mission={mission()} viewer={null} owners={[]} />
-    );
-    expect(gast.querySelector("details.content-actions")).toBeNull();
-    expect(gast.querySelector(".content-actions-anon")).toBeTruthy();
-
-    const { container: angemeldet } = render(
+  it("hält das Aktionen-Panel im Artikel, unterhalb des Textes", () => {
+    // Bewusst nicht im Footer-Stack der Seite: der Stift im Panel schaltet
+    // den editMode dieser Client-Komponente (gleiches Muster wie
+    // CharacterHero). Nur die Log-Seite ohne Inline-Editor legt es nach außen.
+    const { container } = render(
       <MissionSynopsis mission={mission()} viewer={viewer()} owners={[]} />
     );
-    expect(angemeldet.querySelector("details.content-actions")).toBeTruthy();
+
+    const article = container.querySelector("article.mission-detail-article");
+    const panel = screen.getByTestId("actions-panel");
+    expect(article).toContainElement(panel);
+    expect(article?.lastElementChild).toBe(panel);
   });
 });
