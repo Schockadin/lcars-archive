@@ -46,7 +46,13 @@ export interface GraphLayout {
 
 export interface LayoutInput {
   nodes: { slug: string; name: string; kind: "character" | "npc"; href: string }[];
-  edges: { source: string; target: string; sharedMissions: number; sharedDialogues: number }[];
+  edges: {
+    source: string;
+    target: string;
+    sharedMissions: number;
+    sharedDialogues: number;
+    sharedLinks: number;
+  }[];
 }
 
 // Wie oft die Barycenter-Vorsortierung läuft. Drei Durchgänge bündeln
@@ -57,8 +63,9 @@ export const BARYCENTER_PASSES = 3;
 export function edgeWeight(edge: {
   sharedMissions: number;
   sharedDialogues: number;
+  sharedLinks: number;
 }): number {
-  return edge.sharedMissions + edge.sharedDialogues;
+  return edge.sharedMissions + edge.sharedDialogues + edge.sharedLinks;
 }
 
 // Nachbarschaftsliste, Slug → Slugs. Reine Hilfsfunktion, exportiert für die

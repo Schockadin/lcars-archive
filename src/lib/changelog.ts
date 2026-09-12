@@ -138,6 +138,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.31",
+    title: "Beziehungen entstehen jetzt auch aus Verlinkungen",
+    items: [
+      {
+        text: "Der Beziehungsgraph und „Wer kennt wen“ auf der Charakterseite zählen ab sofort auch Verlinkungen: Wer in seiner Biografie oder in einem NPC-Eintrag eine andere Figur verlinkt, ist mit ihr verbunden — auch ohne gemeinsame Mission und ohne gemeinsames Gespräch. Gegenseitige Verweise wiegen doppelt, und unter jeder Verbindung steht, woraus sie stammt.",
+        category: "charaktere",
+        tutorial: "verlinkung",
+      },
+    ],
+  },
+  {
     version: "1.30",
     title: "Anmeldung, die hält, was sie sagt",
     items: [

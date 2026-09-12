@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 // Der Beziehungsgraph (/characters/beziehungen). Geprüft auf /dev-gallery,
 // weil die echte Seite Datenbank UND Sichtbarkeit des Betrachters braucht —
 // gerendert wird dort dieselbe Komponente mit einem kleinen Attrappen-Graph
-// (drei Figuren, zwei Kanten).
+// (vier Figuren, drei Kanten — eine davon rein aus Verlinkungen).
 test.describe("Beziehungsgraph", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/dev-gallery");
@@ -14,8 +14,8 @@ test.describe("Beziehungsgraph", () => {
     page,
   }) => {
     const graph = page.locator("#relation-graph");
-    await expect(graph.locator("svg circle")).toHaveCount(3);
-    await expect(graph.locator("svg line")).toHaveCount(2);
+    await expect(graph.locator("svg circle")).toHaveCount(4);
+    await expect(graph.locator("svg line")).toHaveCount(3);
   });
 
   test("schreibt keine NaN-Koordinaten ins SVG", async ({ page }) => {
@@ -39,6 +39,20 @@ test.describe("Beziehungsgraph", () => {
         lines.map((l) => parseFloat(l.getAttribute("stroke-width") ?? "0")),
       );
     expect(Math.max(...widths)).toBeGreaterThan(Math.min(...widths));
+  });
+
+  // Eine Verbindung, die nur aus Verlinkungen zwischen Charakter und NPC
+  // besteht, hat dasselbe Recht auf eine Linie wie eine aus Missionen.
+  test("zeichnet auch eine Verbindung, die nur aus Verlinkungen stammt", async ({
+    page,
+  }) => {
+    const widths = await page
+      .locator("#relation-graph svg line")
+      .evaluateAll((lines) =>
+        lines.map((l) => parseFloat(l.getAttribute("stroke-width") ?? "0")),
+      );
+    expect(widths).toHaveLength(3);
+    expect(Math.min(...widths)).toBeGreaterThan(0);
   });
 
   test("hält jeden Namen im sichtbaren Bereich des Bildes", async ({ page }) => {

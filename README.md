@@ -236,9 +236,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   nutzen kann), der DB-Zugriff mit eigenem Cache-Tag in
   `src/lib/campaignRules.ts`.
 - **Beziehungsgraph** — `/characters/beziehungen` zeigt die ganze Kampagne als
-  Graph: Knoten sind Figuren und NPCs, Kanten ihre gemeinsamen Missionen und
-  Gespräche (`getRelationGraph` in `src/lib/relations.ts`, eine Abfrage je
-  Quelle statt `getRelationsOf` je Figur). Das Layout ist ein **Kreis** mit
+  Graph: Knoten sind Figuren und NPCs, Kanten ihre gemeinsamen Missionen,
+  Gespräche und **Verlinkungen** (`getRelationGraph` in
+  `src/lib/relations.ts`, eine Abfrage je Quelle statt `getRelationsOf` je
+  Figur). Die dritte Quelle sind die `[[Wikilinks]]` im `source_md` von
+  Charakteren und NPC-Einträgen, die Verweisfelder eines NPC-Eintrags auf
+  Charaktere (`metadata.characters`) und die Verweise zwischen zwei
+  NPC-Einträgen (`archive_links`) — gerichtet erfasst, aber für die Beziehung
+  in beide Richtungen gezählt (`loadLinks`/`collectLinkEdges`). Gelesen wird
+  nur `source_md`, nie `bio`/`content`: dort stehen die Links schon aufgelöst
+  als HTML. Das Layout ist ein **Kreis** mit
   Barycenter-Vorsortierung (`src/lib/relationGraphLayout.ts`): eine
   Kräftesimulation bräuchte eine Bibliothek, liefe bei jedem Aufruf anders und
   wäre nicht prüfbar — hier ist alles eine reine, getestete Funktion. Gezeichnet

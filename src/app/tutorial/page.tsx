@@ -120,8 +120,12 @@ export default function TutorialPage() {
               <p>
                 Unter <strong>Charaktere → „Beziehungen“</strong> steht der{" "}
                 <strong>Beziehungsgraph</strong> der Kampagne: wer mit wem im
-                Einsatz war und wer mit wem geredet hat, abgeleitet aus
-                gemeinsamen Missionen und Gesprächen. Dicke Linien stehen für
+                Einsatz war, wer mit wem geredet hat und wer im eigenen Text auf
+                wen verweist — abgeleitet aus gemeinsamen Missionen, gemeinsamen
+                Gesprächen und den <strong>Verlinkungen</strong> zwischen
+                Charakteren und NPCs. Verlinkst du in einer Biografie oder einem
+                NPC-Eintrag eine andere Figur (siehe „Verlinkung“), entsteht
+                daraus also eine Verbindung. Dicke Linien stehen für
                 viele Berührungspunkte, große Punkte für gut vernetzte Figuren;
                 Spielfiguren und NPCs sind farblich unterschieden. Zeigst du auf
                 eine Figur, treten sie und ihre Verbindungen hervor, ein Klick

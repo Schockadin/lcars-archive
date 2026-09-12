@@ -34,11 +34,13 @@ export default async function BeziehungenPage() {
 
         <div className="lcars-text flex flex-col gap-[16px]">
           <p>
-            Wer war mit wem im Einsatz und wer hat mit wem geredet — abgeleitet
-            aus gemeinsamen Missionen und Gesprächen. Es gibt keine eigene
-            Beziehungspflege: Verbindungen entstehen im Spiel. Je dicker eine
-            Linie, desto mehr Berührungspunkte; je größer ein Punkt, desto mehr
-            Verbindungen hat die Figur. Ein Klick führt zur Figur.
+            Wer war mit wem im Einsatz, wer hat mit wem geredet und wer
+            verweist im eigenen Text auf wen — abgeleitet aus gemeinsamen
+            Missionen, gemeinsamen Gesprächen und den Verlinkungen zwischen
+            Charakteren und NPCs. Es gibt keine eigene Beziehungspflege:
+            Verbindungen entstehen im Spiel. Je dicker eine Linie, desto mehr
+            Berührungspunkte; je größer ein Punkt, desto mehr Verbindungen hat
+            die Figur. Ein Klick führt zur Figur.
           </p>
 
           <RelationGraph graph={graph} />

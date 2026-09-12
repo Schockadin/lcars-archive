@@ -70,18 +70,45 @@ const DEMO_RULES: CampaignRule[] = [
   },
 ];
 
-// Ein kleiner Beziehungsgraph: drei Figuren, zwei Kanten — genug, um Knoten,
+// Ein kleiner Beziehungsgraph: vier Figuren, drei Kanten — genug, um Knoten,
 // Kantenstärke und das Hervorheben beim Zeigen zu prüfen (siehe
-// /characters/beziehungen).
+// /characters/beziehungen). Die Kante Kira–Sareth stammt ausschließlich aus
+// Verlinkungen: eine Verbindung ohne gemeinsame Mission und ohne gemeinsames
+// Gespräch muss genauso gezeichnet werden wie jede andere.
 const DEMO_GRAPH = {
   nodes: [
     { slug: "tuvok", name: "Tuvok", kind: "character" as const, href: "/characters/tuvok" },
     { slug: "quark", name: "Barkeeper Quark", kind: "npc" as const, href: "/archive/quark" },
     { slug: "kira", name: "Kira", kind: "character" as const, href: "/characters/kira" },
+    {
+      slug: "sareth",
+      name: "Wirtin Sareth",
+      kind: "npc" as const,
+      href: "/archive/sareth",
+    },
   ],
   edges: [
-    { source: "kira", target: "tuvok", sharedMissions: 3, sharedDialogues: 1 },
-    { source: "quark", target: "tuvok", sharedMissions: 0, sharedDialogues: 2 },
+    {
+      source: "kira",
+      target: "tuvok",
+      sharedMissions: 3,
+      sharedDialogues: 1,
+      sharedLinks: 0,
+    },
+    {
+      source: "quark",
+      target: "tuvok",
+      sharedMissions: 0,
+      sharedDialogues: 2,
+      sharedLinks: 1,
+    },
+    {
+      source: "kira",
+      target: "sareth",
+      sharedMissions: 0,
+      sharedDialogues: 0,
+      sharedLinks: 2,
+    },
   ],
 };
 

@@ -19,13 +19,35 @@ function node(slug: string) {
   };
 }
 
-function edge(source: string, target: string, missions = 1, dialogues = 0) {
-  return { source, target, sharedMissions: missions, sharedDialogues: dialogues };
+function edge(
+  source: string,
+  target: string,
+  missions = 1,
+  dialogues = 0,
+  links = 0,
+) {
+  return {
+    source,
+    target,
+    sharedMissions: missions,
+    sharedDialogues: dialogues,
+    sharedLinks: links,
+  };
 }
 
 describe("edgeWeight", () => {
-  it("zählt Missionen und Gespräche zusammen", () => {
-    expect(edgeWeight({ sharedMissions: 2, sharedDialogues: 3 })).toBe(5);
+  it("zählt Missionen, Gespräche und Verlinkungen zusammen", () => {
+    expect(
+      edgeWeight({ sharedMissions: 2, sharedDialogues: 3, sharedLinks: 4 }),
+    ).toBe(9);
+  });
+
+  // Eine Verbindung kann allein aus Verlinkungen bestehen — dann darf sie
+  // nicht als gewichtslos durchs Layout fallen.
+  it("trägt auch eine reine Verlinkungs-Verbindung", () => {
+    expect(
+      edgeWeight({ sharedMissions: 0, sharedDialogues: 0, sharedLinks: 2 }),
+    ).toBe(2);
   });
 });
 
