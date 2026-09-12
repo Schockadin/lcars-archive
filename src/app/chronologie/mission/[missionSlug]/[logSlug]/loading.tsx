@@ -1,7 +1,6 @@
 import { LcarsSkeleton } from "@/components/lcars";
 
-// Skeleton-Fallback eines einzelnen Logs (rechte Spalte). Greift beim
-// Wechsel zwischen Logs derselben Mission – die Liste links bleibt stehen.
+// Skeleton-Fallback eines einzelnen Logbuchs.
 export default function Loading() {
   return (
     <article className="mission-detail-article">

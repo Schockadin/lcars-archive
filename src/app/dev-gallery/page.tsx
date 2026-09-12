@@ -24,6 +24,8 @@ import ContentDetailHeader, {
   ContentMetaValue,
 } from "@/components/ContentDetailHeader";
 import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
+import MissionLogOverview from "@/app/chronologie/mission/MissionLogOverview";
+import type { MissionLogListItem } from "@/types/missions";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import PortraitPicker from "@/app/user/characters/_shared/PortraitPicker";
 import { buildOnboardingSteps } from "@/lib/onboardingSteps";
@@ -377,6 +379,36 @@ const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
 // wird. In echten Deployments nicht buildbar/erreichbar.
 if (process.env.NODE_ENV === "production") notFound();
 
+const DEMO_MISSION_LOGS: MissionLogListItem[] = [
+  {
+    id: 1,
+    slug: "erster-kontakt",
+    title: "Erster Kontakt",
+    session_nr: 1,
+    log_date: "2400-09-15",
+    author_name: "T'Lara",
+    author_slug: "t-lara",
+  },
+  {
+    id: 2,
+    slug: "rueckzug",
+    title: "Rückzug vom Orbit",
+    session_nr: 2,
+    log_date: "2400-09-22",
+    author_name: "Marcus Hale",
+    author_slug: "marcus-hale",
+  },
+  {
+    id: 3,
+    slug: "nachspiel",
+    title: "Nachspiel auf der Krankenstation",
+    session_nr: 3,
+    log_date: "2400-10-02",
+    author_name: "T'Lara",
+    author_slug: "t-lara",
+  },
+];
+
 export default function DevGalleryPage() {
   const [twoOption, setTwoOption] = useState<"a" | "b">("a");
   const [fiveOption, setFiveOption] = useState<"1" | "2" | "3" | "4" | "5">(
@@ -562,6 +594,21 @@ export default function DevGalleryPage() {
               ),
             },
           ]}
+        />
+      </section>
+
+      {/* Die Logbuch-Übersicht einer Mission — dieselbe Zeile/Karte wie
+          Chronologie und Datenbank. Die echte Seite braucht eine Datenbank,
+          die es in der E2E-Umgebung bewusst nicht gibt. */}
+      <section
+        id="mission-log-overview"
+        className="flex flex-col gap-[8px] mb-[24px]"
+      >
+        <h2 className="lcars-text">MissionLogOverview</h2>
+        <MissionLogOverview
+          missionSlug="demo-mission"
+          logs={DEMO_MISSION_LOGS}
+          canCreateLog
         />
       </section>
 

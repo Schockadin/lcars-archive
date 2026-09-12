@@ -1,53 +1,19 @@
-/* ─── Missions-Detailseite (Master-Detail per Route) ──────────────────
-   Zweispaltige Detailansicht (Log-Liste links, Synopsis/Log-Text
-   rechts) samt Vor/Zurück-Navigation zwischen Logs desselben Autors.
+/* ─── Missions-Detailseite ────────────────────────────────────────────
+   Synopsis der Mission, darunter die Übersicht ihrer Logbücher, sowie die
+   Logbuch-Seite selbst samt Vor/Zurück-Navigation zwischen Logs desselben
+   Autors.
+
+   Bis zum Redesign war das eine Master-Detail-Ansicht: links eine 320px
+   schmale, mitscrollende Log-Schiene (.mission-detail-logs/.mission-loglist),
+   rechts der Text. Die Übersicht steht jetzt in der Seite und nutzt dieselbe
+   Liste wie Chronologie und Datenbank (ChronoRow/ChronoCard, timeline.css) —
+   das Zwei-Spalten-Gerüst und die Hervorhebung des offenen Logs sind damit
+   entfallen.
 ──────────────────────────────────────────────────────────────────── */
 
-/* Container-Layout: siehe .lcars-split (shared.css). */
-.mission-detail-logs {
-  flex: 0 0 320px;
-  min-width: 0;
-  /* wandert beim Scrollen mit und bleibt 5px unter der Elbow-Bar stehen;
-     bei sehr langen Listen scrollt sie intern */
-  position: sticky;
-  top: 5px;
-  align-self: flex-start;
-  max-height: calc(100dvh - 24px);
-  overflow-y: auto;
-}
-.mission-detail-main {
-  flex: 1 1 0;
-  min-width: 0;
-}
-
-/* linke Log-Liste: Rücklink + Überschrift mit Zähler */
-.mission-loglist-head {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-bottom: 14px;
-}
-
-/* Synopsis-Zeile (oberste Zeile, verlinkt auf die Mission-Synopsis) */
-.mission-log-synopsis {
-  margin-bottom: 8px;
-}
-.mission-log-synopsis .mission-log-stub {
-  font-size: 10px;
-  letter-spacing: 0.08em;
-}
-
-/* aktives Log hervorheben (statt Hover) */
-.mission-log-entry[data-active="true"] .mission-log-bar {
-  background: var(--mission-color);
-}
-.mission-log-entry[data-active="true"] .mission-log-name {
-  color: var(--lcars-bg);
-}
-.mission-log-entry[data-active="true"] .mission-log-author,
-.mission-log-entry[data-active="true"] .mission-log-date {
-  color: var(--lcars-bg);
-  opacity: 0.75;
+/* Übersicht der Logbücher unter der Synopsis. */
+.mission-log-overview {
+  margin-top: 32px;
 }
 
 /* rechte Spalte: Synopsis / Log-Text — nimmt auf Desktop die volle Breite
@@ -124,24 +90,10 @@
   letter-spacing: 0.05em;
 }
 
-/* gestapelt auf schmalen Screens — kein Sticky, Liste oben */
+/* Der Stub (Sitzungsnummer) der Log-Zeilen ist auf schmalen Displays zu eng
+   und entfällt dort. Die Regel gilt jetzt nur noch der Charakter-Log-Liste
+   (LcarsLogEntry): die Missionsseite nutzt seit dem Redesign ChronoRow. */
 @media (max-width: 768px) {
-  .mission-detail {
-    flex-direction: column;
-    /* align-items: flex-start oben steuert bei row-Layout die vertikale
-       Ausrichtung — bei column-Layout hier aber die Breite (Cross-Achse
-       dreht sich mit). Ohne stretch würden Kinder (z.B. .mission-detail-main)
-       nur so breit wie ihr eigener Inhalt, wodurch nicht umbrechbare
-       Button-Zeilen den gesamten Viewport sprengen. */
-    align-items: stretch;
-  }
-  .mission-detail-logs {
-    flex: none;
-    width: 100%;
-    position: static;
-    max-height: none;
-    overflow: visible;
-  }
   .mission-log-stub {
     display: none;
   }

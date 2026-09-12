@@ -56,7 +56,7 @@
 
 /* Label-Text der Pill (siehe DataRow.tsx) — einzeilig mit Ellipsis statt
    Umbruch, sonst sprengt ein langer Wert (z.B. ein Spielername als
-   Gruppen-Label in MissionLogList.tsx) die fixe Zeilenhöhe
+   Gruppen-Label in CharacterLogList.tsx) die fixe Zeilenhöhe
    (--lcars-datarow-h) und überlappt die nächste Zeile. min-width: 0 auf
    beiden Flex-Ebenen (.lcars-data-row-text und hier), sonst greift die
    Ellipsis nie (Flex-Items schrumpfen sonst nicht unter ihre

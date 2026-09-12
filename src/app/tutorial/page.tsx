@@ -169,6 +169,16 @@ export default function TutorialPage() {
                 deshalb nicht mehr — die alte Adresse führt hierher.
               </p>
               <p>
+                Die <strong>Missionsseite</strong> selbst zeigt oben Status,
+                Zeitraum und die beteiligten Figuren, darunter die
+                Zusammenfassung des Einsatzes und dann die{" "}
+                <strong>Übersicht ihrer Logbücher</strong> — dieselbe Liste wie
+                hier in der Chronologie, wahlweise nach <strong>Datum</strong>{" "}
+                geordnet oder nach <strong>Autor</strong> gruppiert. Ein Klick
+                öffnet den Einsatzbericht; von dort führt der Link oben links
+                zurück zur Mission.
+              </p>
+              <p>
                 Einträge <strong>ohne Datum</strong> gehen dabei nicht
                 verloren: abgeschlossene Gespräche und Logbücher, bei denen
                 kein In-Story-Datum gepflegt ist, stehen unter{" "}

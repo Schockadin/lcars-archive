@@ -112,6 +112,14 @@
 }
 
 /* ── Log-Liste ───────────────────────────────────────────────────── */
+/* Kopf der Charakter-Log-Liste (nur der Rücklink). Stand bis zum Redesign der
+   Missionsseite in mission-detail.css, weil beide Listen ihn trugen — die
+   Missionsseite hat inzwischen eine Übersicht im Listen-System statt einer
+   eigenen Schiene, übrig bleibt /characters/[slug]/logs. */
+.mission-loglist-head {
+  margin-bottom: 10px;
+}
+
 .mission-logs-sub {
   margin: 0 0 14px;
   letter-spacing: 0.18em;

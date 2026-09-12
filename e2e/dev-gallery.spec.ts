@@ -85,3 +85,30 @@ test.describe("ContentDetailHeader", () => {
     await expect(header.locator(".archive-chip-static")).toHaveCount(2);
   });
 });
+
+// Die Logbuch-Übersicht einer Mission lag früher als schmale Schiene neben dem
+// Text und war die einzige Übersicht der App außerhalb des gemeinsamen
+// Listen-Systems. Geprüft wird, dass sie jetzt dieselbe Zeile und Karte trägt
+// wie Chronologie und Datenbank.
+test.describe("MissionLogOverview", () => {
+  test("nutzt Zeile und Karte des gemeinsamen Listen-Systems", async ({
+    page,
+  }) => {
+    await page.goto("/dev-gallery");
+    const list = page.locator("#mission-log-overview");
+
+    await expect(list.locator(".timeline-event")).toHaveCount(3);
+    await expect(list.locator(".timeline-card")).toHaveCount(3);
+    // Die alten Balken-Zeilen kommen hier nicht mehr vor.
+    await expect(list.locator(".mission-log-entry")).toHaveCount(0);
+  });
+
+  test("gruppiert auf Wunsch nach Autor", async ({ page }) => {
+    await page.goto("/dev-gallery");
+    const list = page.locator("#mission-log-overview");
+
+    await expect(list.locator(".timeline-period")).toHaveCount(0);
+    await list.getByRole("button", { name: /Autor/ }).click();
+    await expect(list.locator(".timeline-period")).toHaveCount(2);
+  });
+});

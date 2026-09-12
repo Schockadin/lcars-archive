@@ -1,7 +1,8 @@
 import { LcarsSkeleton } from "@/components/lcars";
 
-// Skeleton-Fallback der Mission-Synopsis (rechte Spalte). Die linke
-// Log-Liste lebt im Layout und bleibt beim Navigieren erhalten.
+// Skeleton-Fallback der Missionsseite: Kopf und Text der Synopsis. Die
+// Logbuch-Übersicht darunter kommt mit der Seite und braucht kein eigenes
+// Gerüst (bis zum Redesign lag sie als Schiene im Layout daneben).
 export default function Loading() {
   return (
     <article className="mission-detail-article">

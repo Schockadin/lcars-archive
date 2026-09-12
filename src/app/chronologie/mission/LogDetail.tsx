@@ -16,6 +16,7 @@ import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import { useNeo } from "@/hooks/useNeo";
 import {
   characterHref,
+  missionHref,
   missionLogHref,
 } from "@/lib/contentRoutes";
 
@@ -58,7 +59,16 @@ export default function LogDetail({
 
   return (
     <article className="mission-detail-article mb-[16px]">
-      <LcarsReadingModeToggle />
+      {/* Zurück zur Mission: Seit die Logbuch-Übersicht in der Missionsseite
+          steht statt in einer mitscrollenden Schiene daneben, ist dieser Link
+          der Weg zurück — wie „‹ Charaktere"/„‹ Gespräche" zeigt er auf die
+          Liste, aus der der Eintrag stammt. */}
+      <div className="flex flex-col items-start gap-[8px]">
+        <Link href={missionHref(log.mission_slug)} className="lcars-back-link">
+          ‹ {log.mission_title}
+        </Link>
+        <LcarsReadingModeToggle />
+      </div>
       <ContentDetailHeader
         title={log.title}
         rows={[

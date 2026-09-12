@@ -1,5 +1,10 @@
 import { notFound, redirect } from "next/navigation";
-import { getMissionBySlug } from "@/lib/missions";
+import {
+  getLogsByMissionId,
+  getMissionBySlug,
+  getMissionParticipantIds,
+} from "@/lib/missions";
+import { getCharactersForUser } from "@/lib/characters";
 import { stripHtml } from "@/lib/missionFormat";
 import {
   getViewer,
@@ -9,6 +14,8 @@ import {
 import { setSubscription, resolveFollowState } from "@/lib/follows";
 import { listAllUsers } from "@/lib/users";
 import MissionSynopsis from "../MissionSynopsis";
+import MissionLogOverview from "../MissionLogOverview";
+import PageMeta from "@/components/PageMeta";
 import { getMentionsOf } from "@/lib/mentions";
 import MentionsSection from "@/app/_shared/MentionsSection";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
@@ -72,17 +79,33 @@ export default async function MissionPage({ params, searchParams }: Props) {
   // Owner-Liste (optional) und Follow-Stand parallel. followInitialState wird
   // an FollowButtons durchgereicht, damit Bookmark/Abo sofort mitgerendert
   // werden statt sie nach der Hydration per Client-Fetch nachzuladen.
-  const [allUsers, followInitialState, mentions, notes] = await Promise.all([
-    canReassignOwner ? listAllUsers() : Promise.resolve([]),
-    resolveFollowState(viewer?.userId ?? null, "mission", missionSlug),
-    // Wer verweist auf diese Mission? (Archiv-Verweisfelder + Wikilinks)
-    getMentionsOf({ slug: mission.slug, name: mission.title }, viewer),
-    listNotes("mission", mission.slug, viewer),
-  ]);
+  const [allUsers, followInitialState, mentions, notes, logs] =
+    await Promise.all([
+      canReassignOwner ? listAllUsers() : Promise.resolve([]),
+      resolveFollowState(viewer?.userId ?? null, "mission", missionSlug),
+      // Wer verweist auf diese Mission? (Archiv-Verweisfelder + Wikilinks)
+      getMentionsOf({ slug: mission.slug, name: mission.title }, viewer),
+      listNotes("mission", mission.slug, viewer),
+      // Die Logbücher dieser Mission — bis zum Redesign lagen sie im Layout,
+      // das die schmale Navigationsschiene daneben gerendert hat.
+      getLogsByMissionId(mission.id),
+    ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
+
+  // „Neues Log" nur für Betrachter, die mit einem eigenen Charakter an DIESER
+  // Mission teilnehmen (mission_participants) — nicht schon bei irgendeinem
+  // eigenen Charakter, da der Knopf auf genau diese Mission verlinkt.
+  const [characters, participantIds] = viewer
+    ? await Promise.all([
+        getCharactersForUser(viewer.userId),
+        getMissionParticipantIds(mission.id),
+      ])
+    : [[], []];
+  const canCreateLog = characters.some((c) => participantIds.includes(c.id));
 
   return (
     <>
+      <PageMeta title={mission.title} section="chronologie" />
       <MarkNewsSeen type="mission" slug={mission.slug} />
       <MissionSynopsis
         mission={mission}
@@ -90,6 +113,12 @@ export default async function MissionPage({ params, searchParams }: Props) {
         viewer={viewer}
         followInitialState={followInitialState}
       />
+      <MissionLogOverview
+        missionSlug={mission.slug}
+        logs={logs}
+        canCreateLog={canCreateLog}
+      />
+
       <div className="lcars-text lcars-wide-column mt-[16px] flex flex-col gap-[16px]">
         {/* Die Akte dieser Mission als PDF — nur für Angemeldete, die Route
             weist Gäste ohnehin ab (ein Link zur Anmeldung wäre eine
