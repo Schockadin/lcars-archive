@@ -52,7 +52,10 @@ describe("ContentDetailHeader", () => {
       <ContentDetailHeader
         title="Teilweise"
         rows={[
-          { label: "Autor", children: <ContentMetaValue>T'Lara</ContentMetaValue> },
+          {
+            label: "Autor",
+            children: <ContentMetaValue>{"T'Lara"}</ContentMetaValue>,
+          },
           logDate && {
             label: "Datum",
             children: <ContentMetaValue>{logDate}</ContentMetaValue>,
