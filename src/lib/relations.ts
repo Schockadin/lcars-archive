@@ -374,6 +374,13 @@ interface LinkNpcRow extends LinkCharacterRow {
 // nicht zuverlässig vergleichen (siehe src/lib/mentions.ts), und der Text
 // aller Figuren und NPCs ist bei einer Kampagne dieser Größe eine Abfrage
 // wert. Dieselbe Ladung versorgt die Charakterseite und den Gesamtgraphen.
+//
+// Knoten ist nur, was der Betrachter auch sehen darf: öffentliche Charaktere
+// (wie im Missions-Zweig) und die per canView() sichtbaren NPC-Einträge. Ein
+// Verweis auf etwas anderes löst sich deshalb gar nicht erst auf. Das gilt
+// auch für die AUSGEHENDEN Verweise einer nicht-öffentlichen Figur: sie ist
+// selbst kein Knoten, ihre Links zählen also nicht — dasselbe Verhalten wie
+// bei gemeinsamen Missionen, wo sie ebenfalls in keiner Kante auftaucht.
 async function loadLinks(viewer: Viewer | null): Promise<{
   nodes: Map<string, GraphNode>;
   pairs: Map<string, number>;
