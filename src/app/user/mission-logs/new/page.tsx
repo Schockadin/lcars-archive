@@ -35,7 +35,7 @@ export default async function NewMissionLogPage({
   const missions = publishedCharacters.length > 0 ? await getAllMissions() : [];
 
   // Vorbelegung der Mission über ?mission=<slug> — verlinkt vom "Neues
-  // Log"-Button auf der Mission-Detailseite (MissionLogList.tsx). Nur
+  // Log"-Button auf der Mission-Detailseite (MissionLogOverview.tsx). Nur
   // übernehmen, wenn der Slug tatsächlich zu einer bestehenden Mission
   // gehört, sonst bleibt es beim ersten Eintrag der Liste (Default des
   // <select> ohne explizite defaultValue).

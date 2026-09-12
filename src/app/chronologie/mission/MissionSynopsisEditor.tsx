@@ -7,6 +7,7 @@ import {
 import AutoLinkCheckbox from "@/app/_shared/AutoLinkCheckbox";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import ContentBody from "@/components/ContentBody";
+import { ChronoPanel } from "@/components/timeline/ChronoCard";
 import { CheckIcon, XIcon } from "@/lib/icons";
 
 const initialState: MissionSynopsisEditState = {};
@@ -47,15 +48,22 @@ export default function MissionSynopsisEditor({
 
   const displayHtml = state.updatedHtml ?? bodyHtml;
 
+  // Lesen: dasselbe aufklappbare Feld wie auf den Missions-Karten der
+  // Chronologie. Im Editiermodus steht das Formular OHNE Feld da — sonst
+  // ließe sich das Eingabefeld zuklappen, während man darin schreibt.
   if (!editMode) {
     return (
-      <div className="flex flex-col gap-[8px]">
+      <ChronoPanel
+        label="Zusammenfassung"
+        open
+        className="mission-synopsis-panel"
+      >
         {displayHtml ? (
           <ContentBody html={displayHtml} />
         ) : (
           <p className="lcars-empty-state">Keine Zusammenfassung vorhanden</p>
         )}
-      </div>
+      </ChronoPanel>
     );
   }
 

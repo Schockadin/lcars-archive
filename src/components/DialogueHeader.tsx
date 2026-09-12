@@ -1,15 +1,17 @@
-import Link from "next/link";
 import { fmtDate } from "@/lib/missionFormat";
 import type { ArchiveParticipant, ArchiveLocationRef } from "@/types/archive";
-import {
-  archiveHref,
-  characterHref,
-} from "@/lib/contentRoutes";
+import { archiveHref, characterHref } from "@/lib/contentRoutes";
+import ContentDetailHeader, {
+  ContentChip,
+  ContentChipList,
+  ContentMetaValue,
+} from "./ContentDetailHeader";
 
 // Dialog-Header: Titel, verlinkte Teilnehmer + Ort + Datum. Genutzt sowohl
 // von /characters/dialogues/[slug] (abgeschlossene Gespräche) als auch
 // /dialogues/[slug] (offene Gespräche) — identisches Markup für beide
-// Zustände.
+// Zustände. Der Rahmen (Titel + beschriftete Metazeilen) steckt in
+// ContentDetailHeader und wird mit der Missionsseite geteilt.
 export default function DialogueHeader({
   title,
   participants,
@@ -22,73 +24,52 @@ export default function DialogueHeader({
   logDate: string | null;
 }) {
   return (
-    <header className="archive-entry-head">
-      <h1 className="char-file-name text-left">{title}</h1>
-
-      <div className="archive-dialogue-meta">
-        {participants.length > 0 && (
-          <div className="archive-dialogue-row">
-            <span className="archive-dialogue-label">Teilnehmer</span>
-            <div className="archive-related-grid">
+    <ContentDetailHeader
+      title={title}
+      rows={[
+        participants.length > 0 && {
+          label: "Teilnehmer",
+          children: (
+            <ContentChipList>
               {participants.map((p) =>
                 p.kind === "unknown" ? (
                   // Kein eigener Eintrag → nur Name, kein Link.
-                  <span
+                  <ContentChip
                     key={p.slug}
-                    className="archive-chip archive-chip-static"
-                    style={
-                      {
-                        "--chip-color": "var(--lcars-ink-dim)",
-                      } as React.CSSProperties
-                    }
-                  >
-                    <span className="archive-chip-title">{p.name}</span>
-                  </span>
+                    color="var(--lcars-ink-dim)"
+                    title={p.name}
+                  />
                 ) : (
-                  <Link
+                  <ContentChip
                     key={p.slug}
                     href={
                       p.kind === "character"
                         ? characterHref(p.slug)
                         : archiveHref(p.slug)
                     }
-                    className="archive-chip"
-                    style={
-                      {
-                        "--chip-color": "var(--lcars-tertiary)",
-                      } as React.CSSProperties
-                    }
-                  >
-                    <span className="archive-chip-title">{p.name}</span>
-                  </Link>
+                    color="var(--lcars-tertiary)"
+                    title={p.name}
+                  />
                 ),
               )}
-            </div>
-          </div>
-        )}
-
-        {location && (
-          <div className="archive-dialogue-row">
-            <span className="archive-dialogue-label">Ort</span>
-            <Link
+            </ContentChipList>
+          ),
+        },
+        location && {
+          label: "Ort",
+          children: (
+            <ContentChip
               href={archiveHref(location.slug)}
-              className="archive-chip"
-              style={
-                { "--chip-color": "var(--lcars-senary)" } as React.CSSProperties
-              }
-            >
-              <span className="archive-chip-title">{location.title}</span>
-            </Link>
-          </div>
-        )}
-
-        {logDate && (
-          <div className="archive-dialogue-row">
-            <span className="archive-dialogue-label">Datum</span>
-            <span className="archive-dialogue-value">{fmtDate(logDate)}</span>
-          </div>
-        )}
-      </div>
-    </header>
+              color="var(--lcars-senary)"
+              title={location.title}
+            />
+          ),
+        },
+        logDate && {
+          label: "Datum",
+          children: <ContentMetaValue>{fmtDate(logDate)}</ContentMetaValue>,
+        },
+      ]}
+    />
   );
 }

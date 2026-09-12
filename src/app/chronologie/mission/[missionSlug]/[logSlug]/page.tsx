@@ -9,6 +9,7 @@ import {
 } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import LogDetail from "../../LogDetail";
+import PageMeta from "@/components/PageMeta";
 import ContentActionsPanel from "@/components/ContentActionsPanel";
 import { getMentionsOf } from "@/lib/mentions";
 import MentionsSection from "@/app/_shared/MentionsSection";
@@ -20,7 +21,6 @@ import { missionLogHref } from "@/lib/contentRoutes";
 interface Props {
   params: Promise<{ missionSlug: string; logSlug: string }>;
 }
-
 
 export async function generateMetadata({ params }: Props) {
   const { missionSlug, logSlug } = await params;
@@ -78,9 +78,10 @@ export default async function LogPage({ params }: Props) {
 
   return (
     <>
+      <PageMeta title={log.mission_title} section="chronologie" />
       <MarkNewsSeen type="mission_log" slug={log.slug} />
       <LogDetail log={log} nav={nav} />
-      <div className="lcars-text lcars-wide-column mt-[16px] flex flex-col gap-[16px]">
+      <div className="lcars-text lcars-wide-column mt-[16px] px-[16px] flex flex-col gap-[16px]">
         {viewer && (
           <NotesPanel
             contentType="mission_log"

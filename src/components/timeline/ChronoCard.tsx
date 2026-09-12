@@ -89,7 +89,11 @@ export default function ChronoCard({
         <div className="timeline-card-head">
           {tag && <span className="timeline-tag">{tag}</span>}
           {href ? (
-            <Link href={href} className="timeline-card-title" aria-label={ariaLabel}>
+            <Link
+              href={href}
+              className="timeline-card-title"
+              aria-label={ariaLabel}
+            >
               {title}
             </Link>
           ) : (
@@ -113,12 +117,16 @@ export default function ChronoCard({
 export function ChronoPanel({
   label,
   open = false,
+  className: panelClassName,
   bodyClassName,
   bodyHtml,
   children,
 }: {
   label: React.ReactNode;
   open?: boolean;
+  // Zusatzklasse am <details> — für Stellen außerhalb einer Karte, die den
+  // Auf-/Zuklapper deutlicher zeigen müssen (siehe .mission-synopsis-panel).
+  className?: string;
   bodyClassName?: string;
   // Vorgerendertes Markdown (siehe getTimeline) — sonst children.
   bodyHtml?: string;
@@ -129,7 +137,12 @@ export function ChronoPanel({
     : "timeline-panel-body";
 
   return (
-    <details className="timeline-panel" open={open}>
+    <details
+      className={
+        panelClassName ? `timeline-panel ${panelClassName}` : "timeline-panel"
+      }
+      open={open}
+    >
       <summary className="timeline-panel-head">{label}</summary>
       {bodyHtml ? (
         <div

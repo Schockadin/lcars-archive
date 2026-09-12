@@ -18,6 +18,15 @@ import TimelineView from "@/components/timeline/TimelineView";
 import ArchiveEntryList from "@/app/archive/ArchiveEntryList";
 import CharacterPage from "@/app/characters/CharacterPage";
 import SettingsPanel from "@/app/_shared/SettingsPanel";
+import ContentDetailHeader, {
+  ContentChip,
+  ContentChipList,
+  ContentMetaValue,
+} from "@/components/ContentDetailHeader";
+import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
+import MissionLogOverview from "@/app/chronologie/mission/MissionLogOverview";
+import { ChronoPanel } from "@/components/timeline/ChronoCard";
+import type { MissionLogListItem } from "@/types/missions";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import PortraitPicker from "@/app/user/characters/_shared/PortraitPicker";
 import { buildOnboardingSteps } from "@/lib/onboardingSteps";
@@ -371,6 +380,36 @@ const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
 // wird. In echten Deployments nicht buildbar/erreichbar.
 if (process.env.NODE_ENV === "production") notFound();
 
+const DEMO_MISSION_LOGS: MissionLogListItem[] = [
+  {
+    id: 1,
+    slug: "erster-kontakt",
+    title: "Erster Kontakt",
+    session_nr: 1,
+    log_date: "2400-09-15",
+    author_name: "T'Lara",
+    author_slug: "t-lara",
+  },
+  {
+    id: 2,
+    slug: "rueckzug",
+    title: "Rückzug vom Orbit",
+    session_nr: 2,
+    log_date: "2400-09-22",
+    author_name: "Marcus Hale",
+    author_slug: "marcus-hale",
+  },
+  {
+    id: 3,
+    slug: "nachspiel",
+    title: "Nachspiel auf der Krankenstation",
+    session_nr: 3,
+    log_date: "2400-10-02",
+    author_name: "T'Lara",
+    author_slug: "t-lara",
+  },
+];
+
 export default function DevGalleryPage() {
   const [twoOption, setTwoOption] = useState<"a" | "b">("a");
   const [fiveOption, setFiveOption] = useState<"1" | "2" | "3" | "4" | "5">(
@@ -508,6 +547,92 @@ export default function DevGalleryPage() {
       >
         <h2 className="lcars-text">Erste Schritte</h2>
         <OnboardingChecklist steps={DEMO_ONBOARDING} />
+      </section>
+
+      {/* Der gemeinsame Kopf aller Content-Detailseiten. Die echten Seiten
+          (/chronologie/mission/…, /archive/…, /characters/dialogues/…)
+          brauchen eine Datenbank, die es in der E2E-Umgebung bewusst nicht
+          gibt — hier ist er ohne DB prüfbar. */}
+      <section
+        id="content-detail-header"
+        className="flex flex-col gap-[8px] mb-[24px]"
+      >
+        <h2 className="lcars-text">ContentDetailHeader</h2>
+        <ContentDetailHeader
+          title="Zwischenfall auf Deneb IV"
+          rows={[
+            {
+              label: "Status",
+              children: (
+                <ContentChip
+                  color="var(--lcars-tertiary)"
+                  title="Abgeschlossen"
+                />
+              ),
+            },
+            {
+              label: "Zeitraum",
+              children: (
+                <ContentMetaValue>15.09.2400 – 02.10.2400</ContentMetaValue>
+              ),
+            },
+            {
+              label: "Teilnehmer",
+              children: (
+                <ContentChipList>
+                  <ContentChip
+                    href="/characters/demo-eins"
+                    color={CONTENT_TYPE_COLOR.character}
+                    title="T'Lara"
+                  />
+                  <ContentChip
+                    href="/characters/demo-zwei"
+                    color={CONTENT_TYPE_COLOR.character}
+                    title="Marcus Hale"
+                  />
+                  <ContentChip color="var(--lcars-ink-dim)" title="Unbekannt" />
+                </ContentChipList>
+              ),
+            },
+          ]}
+        />
+      </section>
+
+      {/* Die Zusammenfassung der Missionsseite: dasselbe ChronoPanel wie auf
+          den Missions-Karten der Chronologie, aber als deutlich sichtbarer
+          Schalter (eigene Fläche, Dreieck, „Einblenden"/„Ausblenden"). */}
+      <section
+        id="synopsis-panel"
+        className="flex flex-col gap-[8px] mb-[24px]"
+      >
+        <h2 className="lcars-text">ChronoPanel (Zusammenfassung)</h2>
+        <ChronoPanel
+          label="Zusammenfassung"
+          open
+          className="mission-synopsis-panel"
+        >
+          <div className="mission-body lcars-text">
+            <p>
+              Der Einsatz begann mit einem Notruf aus dem Deneb-System und
+              endete zwei Wochen später mit der Bergung der Sonde.
+            </p>
+          </div>
+        </ChronoPanel>
+      </section>
+
+      {/* Die Logbuch-Übersicht einer Mission — dieselbe Zeile/Karte wie
+          Chronologie und Datenbank. Die echte Seite braucht eine Datenbank,
+          die es in der E2E-Umgebung bewusst nicht gibt. */}
+      <section
+        id="mission-log-overview"
+        className="flex flex-col gap-[8px] mb-[24px]"
+      >
+        <h2 className="lcars-text">MissionLogOverview</h2>
+        <MissionLogOverview
+          missionSlug="demo-mission"
+          logs={DEMO_MISSION_LOGS}
+          canCreateLog
+        />
       </section>
 
       <section id="settings-panel" className="flex flex-col gap-[8px] mb-[24px]">

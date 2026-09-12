@@ -59,7 +59,6 @@ test("Meta-Text ist überall dieselbe Rolle", async ({ page }) => {
   await page.goto("/tutorial");
   const classes = [
     "lcars-meta-text",
-    "lcars-meta-row",
     "mission-logs-sub",
     "news-row-meta",
     "lcars-search-sub",
