@@ -5,7 +5,12 @@ import { LcarsSortSwitch, type SortDir } from "@/components/lcars";
 import ChronoRow from "@/components/timeline/ChronoRow";
 import ChronoCard from "@/components/timeline/ChronoCard";
 import { MissionLogListItem } from "@/types/missions";
-import { byDateAsc, byDateDesc, fmtDate, sessionLabel } from "@/lib/missionFormat";
+import {
+  byDateAsc,
+  byDateDesc,
+  fmtDate,
+  sessionLabel,
+} from "@/lib/missionFormat";
 import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import { missionLogHref } from "@/lib/contentRoutes";
 
@@ -42,12 +47,15 @@ export default function MissionLogOverview({
   // der gewählten Richtung.
   const authorGroups = useMemo(() => {
     const sorted = [...logs].sort(byDateDesc);
-    const map = new Map<string, { name: string; logs: MissionLogListItem[] }>();
+    const map = new Map<
+      string,
+      { key: string; name: string; logs: MissionLogListItem[] }
+    >();
     for (const log of sorted) {
       const key = log.author_slug ?? log.author_name ?? "none";
       let group = map.get(key);
       if (!group) {
-        group = { name: log.author_name ?? "Unbekannt", logs: [] };
+        group = { key, name: log.author_name ?? "Unbekannt", logs: [] };
         map.set(key, group);
       }
       group.logs.push(log);
@@ -56,7 +64,7 @@ export default function MissionLogOverview({
   }, [logs]);
 
   return (
-    <section className="mission-log-overview lcars-wide-column">
+    <section className="mission-log-overview">
       <h2 className="lcars-data-row-heading">Logbücher</h2>
       <p className="lcars-eyebrow">
         {logs.length === 1 ? "1 Logbuch" : `${logs.length} Logbücher`}
@@ -107,12 +115,19 @@ export default function MissionLogOverview({
       ) : sort === "date" ? (
         <div>
           {dateView.map((log) => (
-            <LogRow key={log.id} log={log} missionSlug={missionSlug} withAuthor />
+            <LogRow
+              key={log.id}
+              log={log}
+              missionSlug={missionSlug}
+              withAuthor
+            />
           ))}
         </div>
       ) : (
         authorGroups.map((group) => (
-          <div key={group.name}>
+          // Nach dem Slug, nicht nach dem Anzeigenamen: zwei Autoren
+          // dürfen gleich heißen.
+          <div key={group.key}>
             <h3 className="timeline-period">
               {group.name} · {group.logs.length}
             </h3>

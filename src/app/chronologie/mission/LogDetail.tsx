@@ -74,7 +74,9 @@ export default function LogDetail({
         rows={[
           log.log_date && {
             label: "Datum",
-            children: <ContentMetaValue>{fmtDate(log.log_date)}</ContentMetaValue>,
+            children: (
+              <ContentMetaValue>{fmtDate(log.log_date)}</ContentMetaValue>
+            ),
           },
           log.author_name && {
             label: "Autor",

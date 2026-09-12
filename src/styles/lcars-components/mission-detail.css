@@ -11,9 +11,12 @@
    entfallen.
 ──────────────────────────────────────────────────────────────────── */
 
-/* Übersicht der Logbücher unter der Synopsis. */
+/* Übersicht der Logbücher unter der Synopsis — derselbe seitliche Abstand
+   wie der Artikel darüber, damit Überschrift und Liste mit dem Text
+   fluchten. */
 .mission-log-overview {
   margin-top: 32px;
+  padding-inline: 16px;
 }
 
 /* ── Zusammenfassung im aufklappbaren Feld ────────────────────────────
@@ -71,6 +74,11 @@
 .mission-detail-article {
   width: 100%;
   margin-top: 32px;
+  /* Links wie rechts derselbe Abstand: Der Artikel lief links bündig an der
+     Sidebar an (die Inhaltsfläche beginnt exakt an deren Kante), während
+     rechts der Rand der Fläche Luft ließ. Gleicher Wert wie das
+     padding-right von .archive-entry. */
+  padding-inline: 16px;
 }
 
 /* ── Log-Navigation (Vor/Zurück innerhalb desselben Autors) ───────── */

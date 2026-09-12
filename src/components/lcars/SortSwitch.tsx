@@ -18,7 +18,8 @@ export interface SortSwitchOption<T extends string> {
 }
 
 // Sortier-Variante von Switch: der erste Klick auf eine (noch inaktive)
-// Option aktiviert sie immer aufsteigend (Pfeil nach oben); jeder weitere
+// Option aktiviert sie aufsteigend (Pfeil nach oben) — oder in der Richtung,
+// die die Option als defaultDir mitbringt; jeder weitere
 // Klick auf dieselbe, bereits aktive Option togglet zwischen auf-/
 // absteigend. Ersetzt das bisherige Muster aus primärem Sortier-Switch +
 // separatem, nur bedingt sichtbarem Auf-/Absteigend-Switch — eine einzelne
@@ -73,7 +74,6 @@ export default function SortSwitch<T extends string>({
               {opt.label}
               <span
                 className="lcars-sort-switch-arrow"
-                aria-hidden={!isActive}
                 style={{
                   display: "inline-flex",
                   visibility: isActive ? undefined : "hidden",

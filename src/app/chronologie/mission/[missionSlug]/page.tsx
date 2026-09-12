@@ -28,7 +28,6 @@ interface Props {
   searchParams: Promise<{ activateFollow?: string }>;
 }
 
-
 export async function generateMetadata({ params }: Props) {
   const { missionSlug } = await params;
   const mission = await getMissionBySlug(missionSlug);
@@ -79,28 +78,33 @@ export default async function MissionPage({ params, searchParams }: Props) {
   // Owner-Liste (optional) und Follow-Stand parallel. followInitialState wird
   // an FollowButtons durchgereicht, damit Bookmark/Abo sofort mitgerendert
   // werden statt sie nach der Hydration per Client-Fetch nachzuladen.
-  const [allUsers, followInitialState, mentions, notes, logs] =
-    await Promise.all([
-      canReassignOwner ? listAllUsers() : Promise.resolve([]),
-      resolveFollowState(viewer?.userId ?? null, "mission", missionSlug),
-      // Wer verweist auf diese Mission? (Archiv-Verweisfelder + Wikilinks)
-      getMentionsOf({ slug: mission.slug, name: mission.title }, viewer),
-      listNotes("mission", mission.slug, viewer),
-      // Die Logbücher dieser Mission — bis zum Redesign lagen sie im Layout,
-      // das die schmale Navigationsschiene daneben gerendert hat.
-      getLogsByMissionId(mission.id),
-    ]);
+  //
+  // „Neues Log" zeigt die Übersicht nur Betrachtern, die mit einem eigenen
+  // Charakter an DIESER Mission teilnehmen (mission_participants) — nicht
+  // schon bei irgendeinem eigenen Charakter, da der Knopf auf genau diese
+  // Mission verlinkt. Beide Abfragen hängen nur an viewer und mission.id und
+  // laufen deshalb in derselben Runde mit, statt eine zweite anzuhängen.
+  const [
+    allUsers,
+    followInitialState,
+    mentions,
+    notes,
+    logs,
+    characters,
+    participantIds,
+  ] = await Promise.all([
+    canReassignOwner ? listAllUsers() : Promise.resolve([]),
+    resolveFollowState(viewer?.userId ?? null, "mission", missionSlug),
+    // Wer verweist auf diese Mission? (Archiv-Verweisfelder + Wikilinks)
+    getMentionsOf({ slug: mission.slug, name: mission.title }, viewer),
+    listNotes("mission", mission.slug, viewer),
+    // Die Logbücher dieser Mission — bis zum Redesign lagen sie im Layout,
+    // das die schmale Navigationsschiene daneben gerendert hat.
+    getLogsByMissionId(mission.id),
+    viewer ? getCharactersForUser(viewer.userId) : Promise.resolve([]),
+    viewer ? getMissionParticipantIds(mission.id) : Promise.resolve([]),
+  ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));
-
-  // „Neues Log" nur für Betrachter, die mit einem eigenen Charakter an DIESER
-  // Mission teilnehmen (mission_participants) — nicht schon bei irgendeinem
-  // eigenen Charakter, da der Knopf auf genau diese Mission verlinkt.
-  const [characters, participantIds] = viewer
-    ? await Promise.all([
-        getCharactersForUser(viewer.userId),
-        getMissionParticipantIds(mission.id),
-      ])
-    : [[], []];
   const canCreateLog = characters.some((c) => participantIds.includes(c.id));
 
   return (
@@ -119,7 +123,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
         canCreateLog={canCreateLog}
       />
 
-      <div className="lcars-text lcars-wide-column mt-[16px] flex flex-col gap-[16px]">
+      <div className="lcars-text lcars-wide-column mt-[16px] px-[16px] flex flex-col gap-[16px]">
         {/* Die Akte dieser Mission als PDF — nur für Angemeldete, die Route
             weist Gäste ohnehin ab (ein Link zur Anmeldung wäre eine
             Sackgasse). Ohne eigene Suspense-Grenze: die Seite ist durch das

@@ -35,7 +35,7 @@ function renderOverview(
       logs={LOGS}
       canCreateLog={false}
       {...props}
-    />
+    />,
   );
 }
 
@@ -67,10 +67,9 @@ describe("MissionLogOverview", () => {
   it("verlinkt jede Karte auf das Logbuch in dieser Mission", () => {
     renderOverview();
 
-    expect(screen.getByRole("link", { name: /Erster Kontakt/ })).toHaveAttribute(
-      "href",
-      "/chronologie/mission/deneb-iv/log-1",
-    );
+    expect(
+      screen.getByRole("link", { name: /Erster Kontakt/ }),
+    ).toHaveAttribute("href", "/chronologie/mission/deneb-iv/log-1");
   });
 
   it("zeigt Sitzungsnummer und Datum an der Karte", () => {

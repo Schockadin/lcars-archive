@@ -89,7 +89,11 @@ export default function ChronoCard({
         <div className="timeline-card-head">
           {tag && <span className="timeline-tag">{tag}</span>}
           {href ? (
-            <Link href={href} className="timeline-card-title" aria-label={ariaLabel}>
+            <Link
+              href={href}
+              className="timeline-card-title"
+              aria-label={ariaLabel}
+            >
               {title}
             </Link>
           ) : (

@@ -63,11 +63,21 @@ describe("MissionSynopsis", () => {
     expect(title).toHaveClass("char-file-name");
   });
 
+  it("führt mit dem Rücklink zurück auf die Missionsliste", () => {
+    // Der Link saß bis zum Redesign im Kopf der Log-Schiene — ohne ihn führt
+    // von der Missionsseite kein Weg zurück.
+    render(<MissionSynopsis mission={mission()} viewer={null} owners={[]} />);
+
+    const back = screen.getByRole("link", { name: "‹ Missionen" });
+    expect(back).toHaveAttribute("href", "/chronologie/mission");
+    expect(back).toHaveClass("lcars-back-link");
+  });
+
   it("nennt den Status der Mission im Klartext", () => {
     // Der Status war vorher nur eine Farbe — das Label aus STATUS_CONFIG
     // wurde auf keiner Seite gerendert.
     const { container } = render(
-      <MissionSynopsis mission={mission()} viewer={null} owners={[]} />
+      <MissionSynopsis mission={mission()} viewer={null} owners={[]} />,
     );
 
     expect(screen.getByText("Status")).toHaveClass("archive-dialogue-label");
@@ -100,7 +110,7 @@ describe("MissionSynopsis", () => {
         mission={mission({ participants: [] })}
         viewer={null}
         owners={[]}
-      />
+      />,
     );
 
     expect(screen.queryByText("Teilnehmer")).toBeNull();
@@ -109,7 +119,7 @@ describe("MissionSynopsis", () => {
   it("legt die Zusammenfassung in ein aufklappbares Feld — offen", () => {
     // Dasselbe Feld wie auf den Missions-Karten der Chronologie (ChronoPanel).
     const { container } = render(
-      <MissionSynopsis mission={mission()} viewer={null} owners={[]} />
+      <MissionSynopsis mission={mission()} viewer={null} owners={[]} />,
     );
 
     const panel = container.querySelector("details.timeline-panel");
@@ -130,12 +140,12 @@ describe("MissionSynopsis", () => {
         mission={mission({ metadata: { tags: [], body: null, teaser: null } })}
         viewer={null}
         owners={[]}
-      />
+      />,
     );
 
-    expect(
-      screen.getByText("Keine Zusammenfassung vorhanden"),
-    ).toHaveClass("lcars-empty-state");
+    expect(screen.getByText("Keine Zusammenfassung vorhanden")).toHaveClass(
+      "lcars-empty-state",
+    );
     expect(container.querySelector(".mission-body")).toBeNull();
   });
 
@@ -144,7 +154,7 @@ describe("MissionSynopsis", () => {
     // den editMode dieser Client-Komponente (gleiches Muster wie
     // CharacterHero). Nur die Log-Seite ohne Inline-Editor legt es nach außen.
     const { container } = render(
-      <MissionSynopsis mission={mission()} viewer={viewer()} owners={[]} />
+      <MissionSynopsis mission={mission()} viewer={viewer()} owners={[]} />,
     );
 
     const article = container.querySelector("article.mission-detail-article");

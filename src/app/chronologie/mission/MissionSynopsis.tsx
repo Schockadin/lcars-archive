@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import { MissionDetail } from "@/types/missions";
 import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import type { Viewer } from "@/lib/visibility";
@@ -15,9 +16,7 @@ import ContentDetailHeader, {
 } from "@/components/ContentDetailHeader";
 import { LcarsReadingModeToggle } from "@/components/lcars";
 import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
-import {
-  characterHref,
-} from "@/lib/contentRoutes";
+import { MISSION_PATH, characterHref } from "@/lib/contentRoutes";
 
 // Rechte Spalte der Mission-Detailseite: Synopsis + Metadaten.
 export default function MissionSynopsis({
@@ -36,7 +35,16 @@ export default function MissionSynopsis({
 
   return (
     <article className="mission-detail-article">
-      <LcarsReadingModeToggle />
+      {/* Zurück zur Missionsliste. Der Link saß bis zum Redesign im Kopf der
+          Log-Schiene; ohne sie führte von hier kein Weg mehr zurück. Wie
+          „‹ Charaktere"/„‹ Gespräche" zeigt er auf die Liste, aus der der
+          Eintrag stammt. */}
+      <div className="flex flex-col items-start gap-[8px]">
+        <Link href={MISSION_PATH} className="lcars-back-link">
+          ‹ Missionen
+        </Link>
+        <LcarsReadingModeToggle />
+      </div>
       <ContentDetailHeader
         title={mission.title}
         rows={[
@@ -87,10 +95,10 @@ export default function MissionSynopsis({
         />
       ) : (
         <ChronoPanel
-        label="Zusammenfassung"
-        open
-        className="mission-synopsis-panel"
-      >
+          label="Zusammenfassung"
+          open
+          className="mission-synopsis-panel"
+        >
           {mission.metadata.body ? (
             <ContentBody html={mission.metadata.body} />
           ) : (

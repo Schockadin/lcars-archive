@@ -40,34 +40,31 @@ export default function TutorialPage() {
           >
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
-                Frisch dabei? Angemeldet führt dich{" "}
-                <strong>/willkommen</strong> durch den Einstieg: was dieses
-                Archiv ist und welche Schritte anstehen — Passwort festlegen,
-                Charakter anlegen, Erschaffung abschließen, erstes Logbuch
-                schreiben, ein Gespräch beginnen. Zu jedem offenen Schritt
-                steht dort ein Link, der direkt in den passenden Ablauf führt.
+                Frisch dabei? Angemeldet führt dich <strong>/willkommen</strong>{" "}
+                durch den Einstieg: was dieses Archiv ist und welche Schritte
+                anstehen — Passwort festlegen, Charakter anlegen, Erschaffung
+                abschließen, erstes Logbuch schreiben, ein Gespräch beginnen. Zu
+                jedem offenen Schritt steht dort ein Link, der direkt in den
+                passenden Ablauf führt.
               </p>
               <p>
-                Der Fortschritt wird nirgends abgehakt, sondern an deinen
-                Daten abgelesen: sobald ein Charakter existiert, gilt der
-                Schritt als erledigt — und wenn du ihn wieder löschst, ist er
-                es auch wieder nicht. Die Liste steht zusätzlich auf deinem{" "}
+                Der Fortschritt wird nirgends abgehakt, sondern an deinen Daten
+                abgelesen: sobald ein Charakter existiert, gilt der Schritt als
+                erledigt — und wenn du ihn wieder löschst, ist er es auch wieder
+                nicht. Die Liste steht zusätzlich auf deinem{" "}
                 <strong>Dashboard</strong> und verschwindet dort von selbst,
-                sobald alles erledigt ist. Die Seite <strong>/willkommen</strong>{" "}
-                bleibt danach als Übersicht erreichbar.
+                sobald alles erledigt ist. Die Seite{" "}
+                <strong>/willkommen</strong> bleibt danach als Übersicht
+                erreichbar.
               </p>
               <p>
-                Nichts davon ist Pflicht: Wer nur mitlesen möchte, braucht
-                weder Charakter noch Logbuch.
+                Nichts davon ist Pflicht: Wer nur mitlesen möchte, braucht weder
+                Charakter noch Logbuch.
               </p>
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow
-            value={2}
-            htmlId="fuer-besucher"
-            label="Für Besucher"
-          >
+          <LcarsDataRow value={2} htmlId="fuer-besucher" label="Für Besucher">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Ohne Konto lässt sich der Großteil der Datenbank lesen:{" "}
@@ -97,11 +94,10 @@ export default function TutorialPage() {
               <p>
                 <strong>Bilder</strong> zu einem Eintrag lädst du über den
                 Bilder-Knopf im Aktionen-Feld hoch (Charaktere, Missionen,
-                Logbücher, Datenbank-Einträge). Mehrere auf einmal sind
-                möglich; jedes Bild geht einzeln los, und sehr große werden
-                vorher automatisch verkleinert, damit der Upload nicht am
-                Größenlimit scheitert. Klappt eines nicht, steht der Grund
-                direkt darunter.
+                Logbücher, Datenbank-Einträge). Mehrere auf einmal sind möglich;
+                jedes Bild geht einzeln los, und sehr große werden vorher
+                automatisch verkleinert, damit der Upload nicht am Größenlimit
+                scheitert. Klappt eines nicht, steht der Grund direkt darunter.
               </p>
               <p>
                 In den drei Übersichten — <strong>Charaktere</strong>,{" "}
@@ -125,8 +121,8 @@ export default function TutorialPage() {
                 Gesprächen und den <strong>Verlinkungen</strong> zwischen
                 Charakteren und NPCs. Verlinkst du in einer Biografie oder einem
                 NPC-Eintrag eine andere Figur (siehe „Verlinkung“), entsteht
-                daraus also eine Verbindung. Dicke Linien stehen für
-                viele Berührungspunkte, große Punkte für gut vernetzte Figuren;
+                daraus also eine Verbindung. Dicke Linien stehen für viele
+                Berührungspunkte, große Punkte für gut vernetzte Figuren;
                 Spielfiguren und NPCs sind farblich unterschieden. Zeigst du auf
                 eine Figur, treten sie und ihre Verbindungen hervor, ein Klick
                 führt zu ihr. Darunter stehen dieselben Figuren noch einmal als
@@ -135,18 +131,14 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow
-            value={3}
-            htmlId="chronologie"
-            label="Chronologie"
-          >
+          <LcarsDataRow value={3} htmlId="chronologie" label="Chronologie">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 <strong>Chronologie</strong> zeigt dieselben Inhalte wie der
-                Rest des Archivs, aber nach der Zeit der Kampagne statt nach
-                dem Bearbeitungsdatum: ein Zeitstrahl von der ältesten bis zur
-                jüngsten bekannten Begebenheit. Was du dort siehst, richtet
-                sich nach deinen Leserechten — ein Logbuch, das du nicht lesen
+                Rest des Archivs, aber nach der Zeit der Kampagne statt nach dem
+                Bearbeitungsdatum: ein Zeitstrahl von der ältesten bis zur
+                jüngsten bekannten Begebenheit. Was du dort siehst, richtet sich
+                nach deinen Leserechten — ein Logbuch, das du nicht lesen
                 darfst, taucht auch in der Chronologie nicht auf. Entwürfe
                 erscheinen dort grundsätzlich nicht, auch nicht die eigenen.
               </p>
@@ -154,75 +146,82 @@ export default function TutorialPage() {
                 Sie ist zugleich die <strong>Missions-Übersicht</strong>: Ganz
                 links im Umschalter steht <strong>„Missionen“</strong> — dann
                 zeigt der Zeitstrahl je Einsatz genau einen Eintrag mit seinem
-                ganzen <strong>Zeitraum</strong> (Beginn bis Abschluss), und
-                ein Klick führt auf die Missionsseite mit ihren
-                Einsatzberichten. Die Ereignisart <strong>„Mission“</strong>
+                ganzen <strong>Zeitraum</strong> (Beginn bis Abschluss), und ein
+                Klick führt auf die Missionsseite mit ihren Einsatzberichten.
+                Die Ereignisart <strong>„Mission“</strong>
                 im Filter meint etwas anderes: dort sind Beginn und Abschluss
-                zwei eigene Marken auf dem Strahl. Mit <strong>„Alle Ereignisse“</strong>
-                kommen Logbücher, markierte Textstellen, Gespräche,
-                Geburtstage und abgeleitete Begebenheiten dazu. Geordnet wird
-                immer nach <strong>Datum</strong> — der Knopf dreht die
-                Richtung um —, gefiltert nach Suchbegriff,{" "}
-                <strong>Ereignisart</strong>, <strong>beteiligter Person</strong>{" "}
-                und Jahr; wechselst du den Umschalter, setzen sich die übrigen
-                Filter zurück. Einen eigenen Menüpunkt „Missionen“ gibt es
-                deshalb nicht mehr — die alte Adresse führt hierher.
+                zwei eigene Marken auf dem Strahl. Mit{" "}
+                <strong>„Alle Ereignisse“</strong>
+                kommen Logbücher, markierte Textstellen, Gespräche, Geburtstage
+                und abgeleitete Begebenheiten dazu. Geordnet wird immer nach{" "}
+                <strong>Datum</strong> — der Knopf dreht die Richtung um —,
+                gefiltert nach Suchbegriff, <strong>Ereignisart</strong>,{" "}
+                <strong>beteiligter Person</strong> und Jahr; wechselst du den
+                Umschalter, setzen sich die übrigen Filter zurück. Einen eigenen
+                Menüpunkt „Missionen“ gibt es deshalb nicht mehr — die alte
+                Adresse führt hierher.
               </p>
               <p>
                 Die <strong>Missionsseite</strong> selbst zeigt oben Status,
-                Zeitraum und die beteiligten Figuren, darunter die
-                Zusammenfassung des Einsatzes und dann die{" "}
+                Zeitraum und die beteiligten Figuren, darunter die{" "}
+                <strong>Zusammenfassung</strong> des Einsatzes — sie lässt sich
+                über die Zeile „Zusammenfassung“ ein- und ausklappen, wenn du
+                gleich zu den Berichten willst. Darunter steht die{" "}
                 <strong>Übersicht ihrer Logbücher</strong> — dieselbe Liste wie
-                hier in der Chronologie, wahlweise nach <strong>Datum</strong>{" "}
-                geordnet oder nach <strong>Autor</strong> gruppiert. Ein Klick
-                öffnet den Einsatzbericht; von dort führt der Link oben links
-                zurück zur Mission.
+                hier in der Chronologie, von Haus aus nach{" "}
+                <strong>Autor</strong> gruppiert, auf Wunsch nach{" "}
+                <strong>Datum</strong> geordnet. Ein Klick öffnet den
+                Einsatzbericht; von dort führt der Link oben links zurück zur
+                Mission.
               </p>
               <p>
-                Einträge <strong>ohne Datum</strong> gehen dabei nicht
-                verloren: abgeschlossene Gespräche und Logbücher, bei denen
-                kein In-Story-Datum gepflegt ist, stehen unter{" "}
+                Einträge <strong>ohne Datum</strong> gehen dabei nicht verloren:
+                abgeschlossene Gespräche und Logbücher, bei denen kein
+                In-Story-Datum gepflegt ist, stehen unter{" "}
                 <strong>„Ohne Datum“</strong> am Ende der Liste. Ein{" "}
-                <em>laufendes</em> Gespräch steht noch nicht in der
-                Chronologie — es ist ja nichts Abgeschlossenes; es findet sich
-                auf deiner Startseite unter den offenen Gesprächen.
+                <em>laufendes</em> Gespräch steht noch nicht in der Chronologie
+                — es ist ja nichts Abgeschlossenes; es findet sich auf deiner
+                Startseite unter den offenen Gesprächen.
               </p>
               <p>
                 Die Ereignisse kommen aus <strong>drei Quellen</strong>. Erstens
                 aus dem, was ohnehin gepflegt ist: Beginn und Ende einer
                 Mission, das Datum eines Logbuchs oder Gesprächs, das
-                Geburtsdatum einer Figur. Zweitens aus <strong>Marken im
-                Text</strong> — der Kalender-Knopf in der Werkzeugleiste jedes
-                Textfeldes setzt an der Cursor-Stelle{" "}
-                <code>&lt;!-- timeline: JJJJ-MM-TT | Titel | Kategorie --&gt;</code>.
-                Die Marke ist im gerenderten Text unsichtbar, erzeugt dort aber
-                eine Sprungmarke: die Karte in der Chronologie führt genau an
-                diese Stelle im Bericht.
+                Geburtsdatum einer Figur. Zweitens aus{" "}
+                <strong>Marken im Text</strong> — der Kalender-Knopf in der
+                Werkzeugleiste jedes Textfeldes setzt an der Cursor-Stelle{" "}
+                <code>
+                  &lt;!-- timeline: JJJJ-MM-TT | Titel | Kategorie --&gt;
+                </code>
+                . Die Marke ist im gerenderten Text unsichtbar, erzeugt dort
+                aber eine Sprungmarke: die Karte in der Chronologie führt genau
+                an diese Stelle im Bericht.
               </p>
               <p>
-                Was zur Kampagne gehört, aber in keinem Eintrag steht, trägst
-                du <strong>von Hand</strong> ein: Über dem Zeitstrahl steht{" "}
-                der Knopf <strong>„Ereignis eintragen“</strong> und öffnet ein
+                Was zur Kampagne gehört, aber in keinem Eintrag steht, trägst du{" "}
+                <strong>von Hand</strong> ein: Über dem Zeitstrahl steht der
+                Knopf <strong>„Ereignis eintragen“</strong> und öffnet ein
                 Fenster — Datum, Titel, Ereignisart, auf Wunsch ein, zwei Sätze
                 dazu. Das Datumsfeld steht schon auf dem jüngsten Ereignis der
-                Chronologie — ist sie noch leer, bleibt das Feld leer, der
-                Knopf steht aber auch dort schon bereit; meist musst du nur den
-                Tag ändern. Die
-                Beschreibung nimmt <strong>Markdown</strong> wie überall sonst,
-                und du kannst <strong>Beteiligte</strong> auswählen — aus allen
-                Figuren, auch den zurückgezogenen; vorausgewählt ist keine. Solche
-                Ereignisse tragen den Hinweis <em>von Hand eingetragen</em>,
-                sind nicht verlinkt (es gibt ja keinen Eintrag dahinter) und
-                lassen sich von dir oder der Spielleitung wieder entfernen.
+                Chronologie — ist sie noch leer, bleibt das Feld leer, der Knopf
+                steht aber auch dort schon bereit; meist musst du nur den Tag
+                ändern. Die Beschreibung nimmt <strong>Markdown</strong> wie
+                überall sonst, und du kannst <strong>Beteiligte</strong>{" "}
+                auswählen — aus allen Figuren, auch den zurückgezogenen;
+                vorausgewählt ist keine. Solche Ereignisse tragen den Hinweis{" "}
+                <em>von Hand eingetragen</em>, sind nicht verlinkt (es gibt ja
+                keinen Eintrag dahinter) und lassen sich von dir oder der
+                Spielleitung wieder entfernen.
               </p>
               <p>
-                Drittens kann die <strong>Spielleitung Ereignisse ableiten
-                lassen</strong>: das Sprachmodell liest einen Bericht und nennt
-                die Begebenheiten, die darin stecken, aber in keinem Feld
-                stehen (&bdquo;drei Tage später …&ldquo;). Solche Einträge sind auf der
-                Karte als <em>aus dem Text abgeleitet</em> gekennzeichnet — sie
-                sind eine Lesehilfe, keine gepflegte Angabe. Was nicht stimmt,
-                entfernt die Spielleitung unter &bdquo;Leitung → Chronologie&ldquo;.
+                Drittens kann die{" "}
+                <strong>Spielleitung Ereignisse ableiten lassen</strong>: das
+                Sprachmodell liest einen Bericht und nennt die Begebenheiten,
+                die darin stecken, aber in keinem Feld stehen (&bdquo;drei Tage
+                später …&ldquo;). Solche Einträge sind auf der Karte als{" "}
+                <em>aus dem Text abgeleitet</em> gekennzeichnet — sie sind eine
+                Lesehilfe, keine gepflegte Angabe. Was nicht stimmt, entfernt
+                die Spielleitung unter &bdquo;Leitung → Chronologie&ldquo;.
               </p>
               <p>
                 Jede <strong>Ereignisart hat eine eigene Adresse</strong>:
@@ -230,9 +229,8 @@ export default function TutorialPage() {
                 der Adresszeile <code>/chronologie/conflict</code>; die
                 Missionen liegen unter <code>/chronologie/mission</code>. Diese
                 Adressen kannst du weitergeben oder als Lesezeichen ablegen —
-                sie öffnen die Chronologie mit genau dieser Auswahl.
-                &bdquo;Alle Arten&ldquo; führt zurück auf{" "}
-                <code>/chronologie</code>.
+                sie öffnen die Chronologie mit genau dieser Auswahl. &bdquo;Alle
+                Arten&ldquo; führt zurück auf <code>/chronologie</code>.
               </p>
               <p>
                 Auch die <strong>Missionsseiten</strong> liegen unter der
@@ -243,11 +241,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow
-            value={4}
-            htmlId="konto-rollen"
-            label="Konto & Rollen"
-          >
+          <LcarsDataRow value={4} htmlId="konto-rollen" label="Konto & Rollen">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Konten entstehen nur durch Einladung: Spielleitung oder
@@ -330,11 +324,10 @@ export default function TutorialPage() {
                 Unter <strong>„Profil → Meine Inhalte“</strong> (Menü oben,
                 sobald du eingeloggt bist — dort liegen auch{" "}
                 <strong>„Charaktere“</strong> und{" "}
-                <strong>„Einstellungen“</strong>) findest du zwei klar
-                getrennte Bereiche:{" "}
-                <strong>„Neue Inhalte“</strong> mit den Anlegen-Knöpfen und{" "}
-                <strong>„Inhalte verwalten“</strong>, wo alles auftaucht, was
-                dir bereits gehört:
+                <strong>„Einstellungen“</strong>) findest du zwei klar getrennte
+                Bereiche: <strong>„Neue Inhalte“</strong> mit den
+                Anlegen-Knöpfen und <strong>„Inhalte verwalten“</strong>, wo
+                alles auftaucht, was dir bereits gehört:
               </p>
               <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
                 <li>
@@ -393,22 +386,21 @@ export default function TutorialPage() {
                 verschwindet, sobald dort jemand aufräumt, und lässt sich hier
                 nicht zuschneiden. Passt das Bild nicht ins hochkant stehende
                 Bildfeld des Bogens, wähl den Ausschnitt selbst:{" "}
-                <strong>„Ausschnitt wählen“</strong> öffnet ein Fenster, das
-                den Bildkasten samt seiner Schräge zeigt — ziehen verschiebt
-                das Bild, der Regler vergrößert es bis zum Vierfachen.{" "}
+                <strong>„Ausschnitt wählen“</strong> öffnet ein Fenster, das den
+                Bildkasten samt seiner Schräge zeigt — ziehen verschiebt das
+                Bild, der Regler vergrößert es bis zum Vierfachen.{" "}
                 <strong>„Übernehmen“</strong> merkt den Ausschnitt vor;
                 gespeichert wird er mit dem Formular. Gespeichert wird dabei{" "}
                 <em>dein Originalbild</em> — der Ausschnitt ist nur die Angabe,
-                welcher Teil davon im Bildkasten erscheint (Bildschirm wie
-                PDF). Du kannst ihn also jederzeit neu wählen, ohne dass das
-                Bild bei jedem Mal schlechter wird, und wo das ganze Bild
-                hingehört — im Karussell auf deiner Charakterseite — steht es
-                unbeschnitten. Ohne eigenen Ausschnitt zeigt der Bogen die
-                Bildmitte. Früher
+                welcher Teil davon im Bildkasten erscheint (Bildschirm wie PDF).
+                Du kannst ihn also jederzeit neu wählen, ohne dass das Bild bei
+                jedem Mal schlechter wird, und wo das ganze Bild hingehört — im
+                Karussell auf deiner Charakterseite — steht es unbeschnitten.
+                Ohne eigenen Ausschnitt zeigt der Bogen die Bildmitte. Früher
                 eingetragene Adressen holt die Administration einmalig ins
-                Archiv, sodass am Ende jedes Portrait dem Archiv selbst
-                gehört — dein Bogen sieht danach aus wie vorher, nur hängt er
-                nicht mehr an einem fremden Server.
+                Archiv, sodass am Ende jedes Portrait dem Archiv selbst gehört —
+                dein Bogen sieht danach aus wie vorher, nur hängt er nicht mehr
+                an einem fremden Server.
               </p>
               <p>
                 Im Schritt <strong>Werte</strong> trägst du die sechs Attribute
@@ -423,11 +415,11 @@ export default function TutorialPage() {
                 zum Entfernen. Talente <em>und Schwerpunkte</em> kommen aus
                 ihrem Katalog (siehe unten). Bei Werten, Schwerpunkten und
                 Talenten steht dabei, wie viele der freien Plätze aus der
-                Ersterschaffung du schon vergeben hast.
-                Spezies-Fähigkeiten und Sonderregeln bleiben Textfelder — dort
-                stehen meist ganze Regelsätze. Leere Felder gelten als „nicht
-                angegeben“; der maximale Stress ist kein Eingabefeld, sondern
-                ergibt sich aus Fitness und dem Bonus aus Talenten.
+                Ersterschaffung du schon vergeben hast. Spezies-Fähigkeiten und
+                Sonderregeln bleiben Textfelder — dort stehen meist ganze
+                Regelsätze. Leere Felder gelten als „nicht angegeben“; der
+                maximale Stress ist kein Eingabefeld, sondern ergibt sich aus
+                Fitness und dem Bonus aus Talenten.
               </p>
               <p>
                 <strong>Deine Charakterseite</strong> zeigt danach Stammdaten,
@@ -436,21 +428,21 @@ export default function TutorialPage() {
                 der Titelzeile das Formular an Ort und Stelle; die Werte
                 steigerst du mit AP (siehe unten). Ganz oben öffnet{" "}
                 <strong>„Charakterbogen“</strong> die Vorschau: Blatt 1 der
-                Personalbogen mit Stammdaten und Werten, Blatt 2 der
-                Spickzettel mit deinen Talenten, Blatt 3 die Regeln
-                (Momentum, Bedrohung, Entschlossenheit und die eigenen Regeln
-                der Runde), Blatt 4 die Biografie im selben Look. Dort
-                stehen auch die Knöpfe zum <strong>Drucken</strong> und zum{" "}
+                Personalbogen mit Stammdaten und Werten, Blatt 2 der Spickzettel
+                mit deinen Talenten, Blatt 3 die Regeln (Momentum, Bedrohung,
+                Entschlossenheit und die eigenen Regeln der Runde), Blatt 4 die
+                Biografie im selben Look. Dort stehen auch die Knöpfe zum{" "}
+                <strong>Drucken</strong> und zum{" "}
                 <strong>Speichern als PDF</strong> — die PDF-Datei enthält
-                dieselben Blätter. Weil die Regeln für alle am Tisch gelten
-                und an keinem Charakter hängen, stehen sie auf einem eigenen
-                Blatt: so lässt sich genau dieses eine ausdrucken und in die
-                Mitte legen. Rang und Spezies stehen auf dem Bogen,
-                kommen aber aus den Stammdaten; im Kasten „Species &amp; Traits“
-                steht die Spezies vorne, deine weiteren Merkmale trägst du
-                dahinter ein. In „Meine Inhalte“ tauchen Charaktere nicht auf —
-                der Charakter-Filter für Einsatzberichte und Gespräche bleibt
-                dort aber erhalten.
+                dieselben Blätter. Weil die Regeln für alle am Tisch gelten und
+                an keinem Charakter hängen, stehen sie auf einem eigenen Blatt:
+                so lässt sich genau dieses eine ausdrucken und in die Mitte
+                legen. Rang und Spezies stehen auf dem Bogen, kommen aber aus
+                den Stammdaten; im Kasten „Species &amp; Traits“ steht die
+                Spezies vorne, deine weiteren Merkmale trägst du dahinter ein.
+                In „Meine Inhalte“ tauchen Charaktere nicht auf — der
+                Charakter-Filter für Einsatzberichte und Gespräche bleibt dort
+                aber erhalten.
               </p>
               <p>
                 <strong>Erfahrungspunkte (AP)</strong>: Für die Ersterschaffung
@@ -607,11 +599,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow
-            value={6}
-            htmlId="gespraeche"
-            label="Gespräche"
-          >
+          <LcarsDataRow value={6} htmlId="gespraeche" label="Gespräche">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Ein <strong>Gespräch</strong> startest du mit deinem Charakter
@@ -716,26 +704,25 @@ export default function TutorialPage() {
               </p>
               <p>
                 Auf der <strong>Seite einer Mission</strong> steht angemeldet
-                der Knopf <strong>„Missionsakte (PDF)“</strong>: er packt
-                genau diese Mission in eine Datei — Titelblatt mit Zeitraum,
-                Status und Beteiligten, ein <strong>Inhaltsverzeichnis</strong>
+                der Knopf <strong>„Missionsakte (PDF)“</strong>: er packt genau
+                diese Mission in eine Datei — Titelblatt mit Zeitraum, Status
+                und Beteiligten, ein <strong>Inhaltsverzeichnis</strong>
                 (jeder Eintrag springt im PDF zu seinem Bericht), danach die
                 Beschreibung und jedes Logbuch auf einer eigenen Seite,
                 chronologisch. Aufgemacht ist die Akte wie der Charakterbogen:
-                derselbe blaue Rahmen, dieselbe Kopfzeile, formatierter Text
-                mit Überschriften, Aufzählungen und Zitaten. Die Akte
-                enthält genau das, was du auch sonst lesen darfst; nicht
-                öffentliche Logbücher stehen darin mit einem entsprechenden
-                Hinweis.
+                derselbe blaue Rahmen, dieselbe Kopfzeile, formatierter Text mit
+                Überschriften, Aufzählungen und Zitaten. Die Akte enthält genau
+                das, was du auch sonst lesen darfst; nicht öffentliche Logbücher
+                stehen darin mit einem entsprechenden Hinweis.
               </p>
               <p>
                 Auf der Seite deines eigenen Charakters (und für die
                 Spielleitung auf jeder Charakterseite) steht außerdem der Knopf{" "}
-                <strong>„Charakterbogen“</strong>: er zeigt dieselben
-                Blätter wie unter „Meine Charaktere“ — Personalakte,
-                Spickzettel, Regeln und Biografie — als reine Ansicht, mit Drucken und demselben
-                PDF-Download. Gepflegt werden die Werte
-                weiterhin nur von der Person, der der Charakter gehört.
+                <strong>„Charakterbogen“</strong>: er zeigt dieselben Blätter
+                wie unter „Meine Charaktere“ — Personalakte, Spickzettel, Regeln
+                und Biografie — als reine Ansicht, mit Drucken und demselben
+                PDF-Download. Gepflegt werden die Werte weiterhin nur von der
+                Person, der der Charakter gehört.
               </p>
               <p>
                 Kündigt die Spielleitung einen <strong>Spieltermin</strong> an,
@@ -760,8 +747,8 @@ export default function TutorialPage() {
                 <strong>Kategorie</strong> (etwa „Charaktere &amp; Regeln“ oder
                 „Spielleitung“) — über das Auswahlfeld darüber schränkst du die
                 Liste auf eine davon ein, und der Umschalter daneben sortiert
-                wahlweise nach Version oder nach Kategorie.
-                Dieselbe Bedienung findest du auf der vollständigen Liste unter{" "}
+                wahlweise nach Version oder nach Kategorie. Dieselbe Bedienung
+                findest du auf der vollständigen Liste unter{" "}
                 <strong>/changelog</strong> (erreichbar über die Versionsnummer
                 unten). Die Administration kann einzelne Kategorien für eine
                 Rolle aus dem Dashboard ausblenden — unter /changelog steht
@@ -794,14 +781,14 @@ export default function TutorialPage() {
           <LcarsDataRow value={8} htmlId="notizen" label="Notizen">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
-                Unter Charakteren, Missionen, Logbüchern und
-                Datenbank-Einträgen findest du eingeloggt den aufklappbaren
-                Bereich <strong>„Notizen“</strong>. Beim Schreiben wählst du,
-                wer die Notiz sieht: <strong>„Nur ich“</strong> legt einen
-                persönlichen Merkzettel an, den niemand sonst zu Gesicht bekommt
-                — auch die Spielleitung nicht. <strong>„Für die Runde“</strong>{" "}
-                schreibt einen Kommentar, den alle angemeldeten Personen lesen
-                können; so lässt sich direkt am Eintrag über ihn diskutieren.
+                Unter Charakteren, Missionen, Logbüchern und Datenbank-Einträgen
+                findest du eingeloggt den aufklappbaren Bereich{" "}
+                <strong>„Notizen“</strong>. Beim Schreiben wählst du, wer die
+                Notiz sieht: <strong>„Nur ich“</strong> legt einen persönlichen
+                Merkzettel an, den niemand sonst zu Gesicht bekommt — auch die
+                Spielleitung nicht. <strong>„Für die Runde“</strong> schreibt
+                einen Kommentar, den alle angemeldeten Personen lesen können; so
+                lässt sich direkt am Eintrag über ihn diskutieren.
               </p>
               <p>
                 Der Bereich klappt auf und zu — genau wie{" "}
@@ -823,11 +810,11 @@ export default function TutorialPage() {
           <LcarsDataRow value={9} htmlId="versionen" label="Versionen">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
-                Beim Bearbeiten eines Charakters, einer Mission, eines
-                Logbuchs oder eines Datenbank-Eintrags findest du unter dem
-                Formular den Bereich <strong>„Versionen“</strong>: Dort stehen
-                die letzten zwanzig Fassungen des Textes mit Datum,
-                bearbeitender Person, Länge und einer Vorschau. Ein Klick auf{" "}
+                Beim Bearbeiten eines Charakters, einer Mission, eines Logbuchs
+                oder eines Datenbank-Eintrags findest du unter dem Formular den
+                Bereich <strong>„Versionen“</strong>: Dort stehen die letzten
+                zwanzig Fassungen des Textes mit Datum, bearbeitender Person,
+                Länge und einer Vorschau. Ein Klick auf{" "}
                 <strong>„Wiederherstellen“</strong> holt die gewählte Fassung
                 zurück.
               </p>
@@ -971,15 +958,14 @@ export default function TutorialPage() {
               <p>
                 Die <strong>Werkzeugleiste</strong> (Fett, Kursiv, Überschrift,
                 Link, Listen, Zitat, Code) und der Umschalter{" "}
-                <strong>Rohtext/Vorschau</strong> stehen nicht nur an den
-                großen Inhaltsformularen, sondern auch an den kleineren
-                Textfeldern: <strong>Notizen</strong> und Kommentare, eigenen{" "}
-                <strong>Regeln</strong>, Talent- und
-                Schwerpunkt-Beschreibungen, <strong>Session-Notizen</strong>{" "}
-                sowie Antworten und Nachrichten in Gesprächen. Überall dort
-                wird der Text beim Anzeigen auch als Markdown dargestellt — im
-                PDF-Spickzettel werden Auszeichnungen auf ihren Text
-                zurückgeführt, Listen bleiben Listen.
+                <strong>Rohtext/Vorschau</strong> stehen nicht nur an den großen
+                Inhaltsformularen, sondern auch an den kleineren Textfeldern:{" "}
+                <strong>Notizen</strong> und Kommentare, eigenen{" "}
+                <strong>Regeln</strong>, Talent- und Schwerpunkt-Beschreibungen,{" "}
+                <strong>Session-Notizen</strong> sowie Antworten und Nachrichten
+                in Gesprächen. Überall dort wird der Text beim Anzeigen auch als
+                Markdown dargestellt — im PDF-Spickzettel werden Auszeichnungen
+                auf ihren Text zurückgeführt, Listen bleiben Listen.
               </p>
               <p>
                 Nicht als Markdown gedacht sind drei Stellen, an denen der Text
@@ -994,11 +980,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow
-            value={12}
-            htmlId="verlinkung"
-            label="Verlinkung"
-          >
+          <LcarsDataRow value={12} htmlId="verlinkung" label="Verlinkung">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Um im Fließtext auf einen Charakter, eine Mission oder einen
@@ -1052,9 +1034,8 @@ export default function TutorialPage() {
                   Über das eigene <strong>„Leitung“</strong>-Menü im Header (es
                   steht getrennt neben dem Admin-Menü — wer beide Rollen hat,
                   sieht beide Menüs nebeneinander — und ist wie dieses nach
-                  Aufgaben gegliedert: Kampagne, Charaktere, Regelwerk,
-                  Inhalte) unter{" "}
-                  <strong>„Kampagne“</strong> an einer Stelle das aktuelle{" "}
+                  Aufgaben gegliedert: Kampagne, Charaktere, Regelwerk, Inhalte)
+                  unter <strong>„Kampagne“</strong> an einer Stelle das aktuelle{" "}
                   <strong>Ingame-Jahr</strong> einstellen, Charaktere
                   Spieler:innen zuweisen (Gast-Accounts ausgenommen) und alle
                   Missionen mit Bearbeiten-, Löschen- und Besitzer:in-Zuordnung
@@ -1066,10 +1047,10 @@ export default function TutorialPage() {
                   Unter <strong>„Gruppenblatt“</strong> alle Charaktere der
                   Runde nebeneinander sehen: Attribute, Disziplinen, Schutz,
                   Stress und Entschlossenheit in einer Tabelle, darunter je
-                  Figur die Talente, Schwerpunkte und Werte. Praktisch am
-                  Tisch, wenn schnell klar sein muss, wer die beste Probe hat.
-                  Ein Klick auf einen Namen öffnet den vollständigen
-                  Charakterbogen dieser Figur im Fenster.
+                  Figur die Talente, Schwerpunkte und Werte. Praktisch am Tisch,
+                  wenn schnell klar sein muss, wer die beste Probe hat. Ein
+                  Klick auf einen Namen öffnet den vollständigen Charakterbogen
+                  dieser Figur im Fenster.
                 </li>
                 <li>
                   Unter <strong>„Sessions“</strong> mit{" "}
@@ -1083,14 +1064,14 @@ export default function TutorialPage() {
                   Liste stehen, verschwindet aber von der Startseite.
                 </li>
                 <li>
-                  Unter <strong>„Sessions“</strong> auch von Hand{" "}
-                  (<strong>„Session nachtragen“</strong>) gespielte Sessions eintragen
-                  (Datum, Titel, Session-AP, Bonus-AP, Notizen) und damit allen
-                  Beteiligten die AP in einem Rutsch gutschreiben. Vorausgewählt
-                  sind alle aktiven Charaktere mit verknüpftem Konto — wer
-                  gefehlt hat, wird einfach abgewählt. Eine versehentlich
-                  eingetragene Session lässt sich zurücknehmen, die Gutschriften
-                  werden dann mit storniert.
+                  Unter <strong>„Sessions“</strong> auch von Hand (
+                  <strong>„Session nachtragen“</strong>) gespielte Sessions
+                  eintragen (Datum, Titel, Session-AP, Bonus-AP, Notizen) und
+                  damit allen Beteiligten die AP in einem Rutsch gutschreiben.
+                  Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
+                  Konto — wer gefehlt hat, wird einfach abgewählt. Eine
+                  versehentlich eingetragene Session lässt sich zurücknehmen,
+                  die Gutschriften werden dann mit storniert.
                 </li>
                 <li>
                   Einer eingetragenen Session <strong>Logbücher</strong>{" "}
@@ -1260,11 +1241,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow
-            value={15}
-            htmlId="farbschema"
-            label="Farbschema"
-          >
+          <LcarsDataRow value={15} htmlId="farbschema" label="Farbschema">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Die Farbgebung der gesamten Oberfläche kannst du in deinem{" "}
@@ -1311,11 +1288,11 @@ export default function TutorialPage() {
                 Schriften bereit; jede Karte zeigt ein Beispiel in der Schrift
                 selbst. Wählst du eine andere Textschrift als Antonio, werden
                 Überschriften und Beschriftungen normal geschrieben statt
-                durchgehend groß — die Farben und Formen von LCARS bleiben.
-                Alle Schriften liefert das Archiv selbst aus; es geht keine
-                Anfrage an fremde Server. Die Wahl gilt nur für dich, erscheint
-                sofort als Vorschau und bleibt nach dem{" "}
-                <strong>Speichern</strong> erhalten.
+                durchgehend groß — die Farben und Formen von LCARS bleiben. Alle
+                Schriften liefert das Archiv selbst aus; es geht keine Anfrage
+                an fremde Server. Die Wahl gilt nur für dich, erscheint sofort
+                als Vorschau und bleibt nach dem <strong>Speichern</strong>{" "}
+                erhalten.
               </p>
               <p>
                 Wenn du es lieber schlicht magst, kannst du unter{" "}
@@ -1323,9 +1300,9 @@ export default function TutorialPage() {
                 und stattdessen ein <strong>minimalistisches Interface</strong>{" "}
                 wählen: schlichte Systemschrift, keine dekorativen Balken und
                 Rundungen, und die gesamte Navigation kompakt in der linken
-                Seitenleiste (auf dem Handy platzsparend als Symbole). Auch diese
-                Wahl gilt nur für dich, wird sofort als Vorschau angewendet und
-                bleibt nach dem Speichern erhalten.
+                Seitenleiste (auf dem Handy platzsparend als Symbole). Auch
+                diese Wahl gilt nur für dich, wird sofort als Vorschau
+                angewendet und bleibt nach dem Speichern erhalten.
               </p>
             </div>
           </LcarsDataRow>
