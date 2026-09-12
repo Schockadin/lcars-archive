@@ -18,6 +18,12 @@ import TimelineView from "@/components/timeline/TimelineView";
 import ArchiveEntryList from "@/app/archive/ArchiveEntryList";
 import CharacterPage from "@/app/characters/CharacterPage";
 import SettingsPanel from "@/app/_shared/SettingsPanel";
+import ContentDetailHeader, {
+  ContentChip,
+  ContentChipList,
+  ContentMetaValue,
+} from "@/components/ContentDetailHeader";
+import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import PortraitPicker from "@/app/user/characters/_shared/PortraitPicker";
 import { buildOnboardingSteps } from "@/lib/onboardingSteps";
@@ -508,6 +514,55 @@ export default function DevGalleryPage() {
       >
         <h2 className="lcars-text">Erste Schritte</h2>
         <OnboardingChecklist steps={DEMO_ONBOARDING} />
+      </section>
+
+      {/* Der gemeinsame Kopf aller Content-Detailseiten. Die echten Seiten
+          (/chronologie/mission/…, /archive/…, /characters/dialogues/…)
+          brauchen eine Datenbank, die es in der E2E-Umgebung bewusst nicht
+          gibt — hier ist er ohne DB prüfbar. */}
+      <section
+        id="content-detail-header"
+        className="flex flex-col gap-[8px] mb-[24px]"
+      >
+        <h2 className="lcars-text">ContentDetailHeader</h2>
+        <ContentDetailHeader
+          title="Zwischenfall auf Deneb IV"
+          rows={[
+            {
+              label: "Status",
+              children: (
+                <ContentChip
+                  color="var(--lcars-tertiary)"
+                  title="Abgeschlossen"
+                />
+              ),
+            },
+            {
+              label: "Zeitraum",
+              children: (
+                <ContentMetaValue>15.09.2400 – 02.10.2400</ContentMetaValue>
+              ),
+            },
+            {
+              label: "Teilnehmer",
+              children: (
+                <ContentChipList>
+                  <ContentChip
+                    href="/characters/demo-eins"
+                    color={CONTENT_TYPE_COLOR.character}
+                    title="T'Lara"
+                  />
+                  <ContentChip
+                    href="/characters/demo-zwei"
+                    color={CONTENT_TYPE_COLOR.character}
+                    title="Marcus Hale"
+                  />
+                  <ContentChip color="var(--lcars-ink-dim)" title="Unbekannt" />
+                </ContentChipList>
+              ),
+            },
+          ]}
+        />
       </section>
 
       <section id="settings-panel" className="flex flex-col gap-[8px] mb-[24px]">

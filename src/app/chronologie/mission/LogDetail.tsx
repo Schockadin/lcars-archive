@@ -8,6 +8,11 @@ import {
 import { fmtDate, sessionLabel } from "@/lib/missionFormat";
 import { LcarsReadingModeToggle } from "@/components/lcars";
 import ContentBody from "@/components/ContentBody";
+import ContentDetailHeader, {
+  ContentChip,
+  ContentMetaValue,
+} from "@/components/ContentDetailHeader";
+import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import { useNeo } from "@/hooks/useNeo";
 import {
   characterHref,
@@ -54,24 +59,31 @@ export default function LogDetail({
   return (
     <article className="mission-detail-article mb-[16px]">
       <LcarsReadingModeToggle />
-      <header className="mission-detail-header">
-        <div className="lcars-meta-row">
-          {log.log_date && <span>{fmtDate(log.log_date)}</span>}
-          {log.author_name && (
-            <span>
-              <b>Autor</b>{" "}
-              {log.author_slug ? (
-                <Link href={characterHref(log.author_slug)}>
-                  {log.author_name}
-                </Link>
-              ) : (
-                log.author_name
-              )}
-            </span>
-          )}
-        </div>
-        <h1 className="mission-detail-title">{log.title}</h1>
-      </header>
+      <ContentDetailHeader
+        title={log.title}
+        rows={[
+          log.log_date && {
+            label: "Datum",
+            children: <ContentMetaValue>{fmtDate(log.log_date)}</ContentMetaValue>,
+          },
+          log.author_name && {
+            label: "Autor",
+            children: log.author_slug ? (
+              <ContentChip
+                href={characterHref(log.author_slug)}
+                color={CONTENT_TYPE_COLOR.character}
+                title={log.author_name}
+              />
+            ) : (
+              // Autor ohne eigenen Charaktereintrag → Chip ohne Link.
+              <ContentChip
+                color="var(--lcars-ink-dim)"
+                title={log.author_name}
+              />
+            ),
+          },
+        ]}
+      />
 
       <ContentBody html={log.content} imageAlt={`Bild aus „${log.title}“`} />
 

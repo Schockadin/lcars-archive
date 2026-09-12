@@ -9,13 +9,12 @@ import {
   type SortDir,
 } from "@/components/lcars";
 import { MissionLogListItem } from "@/types/missions";
-import { CHRONOLOGY_PATH } from "@/lib/contentRoutes";
 import {
   byDateAsc,
   byDateDesc,
   sessionLabel,
 } from "@/lib/missionFormat";
-import { missionHref, missionLogHref } from "@/lib/contentRoutes";
+import { MISSION_PATH, missionHref, missionLogHref } from "@/lib/contentRoutes";
 
 type LogSortMode = "date" | "author";
 
@@ -74,13 +73,17 @@ export default function MissionLogList({
   }, [sortedByDate]);
 
   return (
-    <div className="mission-loglist">
+    <nav className="mission-loglist" aria-label="Logbücher dieser Mission">
+      {/* Der Rücklink bleibt in dieser Spalte statt im Artikel: auf schmalen
+          Displays stapelt die Liste ÜBER dem Text, ein Link im Artikel wäre
+          erst hinter der gesamten Liste erreichbar. Ziel ist die
+          Missions-Kategorieseite — wie „‹ Charaktere"/„‹ Gespräche" zeigt er
+          auf die Liste, aus der der Eintrag stammt. */}
       <div className="mission-loglist-head">
-        {/* Der Rücklink hieß „Missionen" und führte auf /chronologie — eine
-            Seite dieses Namens gibt es seit dem Umzug nicht mehr. */}
-        <Link href={CHRONOLOGY_PATH} className="lcars-back-link">
-          ‹ Chronologie
+        <Link href={MISSION_PATH} className="lcars-back-link">
+          ‹ Missionen
         </Link>
+        <h2 className="lcars-eyebrow">Logbücher · {logs.length}</h2>
       </div>
 
       {canCreateLog && (
@@ -160,6 +163,6 @@ export default function MissionLogList({
           )}
         </>
       )}
-    </div>
+    </nav>
   );
 }

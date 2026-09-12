@@ -1111,6 +1111,13 @@ Titel und Text: gelesen wird häufiger als verwaltet. Der Lesemodus-Schalter
 bleibt oben, er gehört zum Lesen. Nicht angemeldete Besucher sehen kein Feld,
 sondern nur die Bilder-Galerie.
 
+Den Kopf einer Inhaltsseite — Titel plus beschriftete Metazeilen — stellt
+`ContentDetailHeader`. Missions-Zusammenfassung, Logbuch-Seite und
+Gesprächsseite teilen ihn sich; Verweise darin (Teilnehmer, Ort, Autor) sind
+`ContentChip`s, deren Farbe aus `CONTENT_TYPE_COLOR` bzw. dem Missionsstatus
+kommt. Die Missionsseite trug bis dahin als einzige Inhaltsseite noch einen
+eigenen Kopf.
+
 Wiederkehrende UI-Muster leben als geteilte Bausteine statt als Kopie je
 Seite: `LcarsAkteCard` (Karte mit farbiger Schiene, Titel, Meta-Zeile — die
 Listen in Datenbank, Missionen, Suche, Profil, „Meine Inhalte“, Follows und

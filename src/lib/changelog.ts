@@ -138,6 +138,21 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.32",
+    title: "Die Missionsseite im Gewand der übrigen Inhalte",
+    items: [
+      {
+        text: "Der Status einer Mission steht jetzt auf der Missionsseite selbst — „Aktiv“, „Abgeschlossen“, „Gescheitert“ oder „Abgebrochen“ war bisher nur als Farbe zu erahnen.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Der Lesemodus lässt sich auf schmalen Displays auch aus der Missions-Zusammenfassung heraus einschalten, nicht mehr nur aus einem einzelnen Logbuch.",
+        category: "darstellung",
+      },
+    ],
+  },
+  {
     version: "1.31",
     title: "Beziehungen entstehen jetzt auch aus Verlinkungen",
     items: [

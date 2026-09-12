@@ -53,3 +53,35 @@ test.describe("Switch layout", () => {
     await expect(optionB).toHaveAttribute("aria-pressed", "true");
   });
 });
+
+// Der gemeinsame Kopf der Content-Detailseiten. Die echten Seiten
+// (/chronologie/mission/…, /archive/…, /characters/dialogues/…) brauchen eine
+// Datenbank, die es in der E2E-Umgebung bewusst nicht gibt — geprüft wird
+// deshalb am Galerie-Abschnitt, dass Titel, Beschriftungen und Chips die
+// gemeinsamen Klassen tragen und sichtbar sind.
+test.describe("ContentDetailHeader", () => {
+  test("zeigt Titel, beschriftete Metazeilen und Chips", async ({ page }) => {
+    await page.goto("/dev-gallery");
+    const header = page.locator("#content-detail-header .archive-entry-head");
+
+    await expect(header.locator("h1.char-file-name")).toHaveText(
+      "Zwischenfall auf Deneb IV",
+    );
+    await expect(header.locator(".archive-dialogue-label")).toHaveText([
+      "Status",
+      "Zeitraum",
+      "Teilnehmer",
+    ]);
+    // Drei Teilnehmer-Chips plus der Status-Chip.
+    await expect(header.locator(".archive-chip")).toHaveCount(4);
+  });
+
+  test("verlinkt nur die Chips, die ein Ziel haben", async ({ page }) => {
+    await page.goto("/dev-gallery");
+    const header = page.locator("#content-detail-header .archive-entry-head");
+
+    await expect(header.locator("a.archive-chip")).toHaveCount(2);
+    // Status und der nicht aufgelöste Teilnehmer bleiben statisch.
+    await expect(header.locator(".archive-chip-static")).toHaveCount(2);
+  });
+});

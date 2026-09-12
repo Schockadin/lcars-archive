@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import Link from "next/link";
 import { MissionDetail } from "@/types/missions";
 import { STATUS_CONFIG, periodLabel } from "@/lib/missionFormat";
 import type { Viewer } from "@/lib/visibility";
@@ -8,6 +7,13 @@ import type { FollowState } from "@/app/actions/follows";
 import MissionSynopsisEditor from "./MissionSynopsisEditor";
 import ContentActionsPanel from "@/components/ContentActionsPanel";
 import ContentBody from "@/components/ContentBody";
+import ContentDetailHeader, {
+  ContentChip,
+  ContentChipList,
+  ContentMetaValue,
+} from "@/components/ContentDetailHeader";
+import { LcarsReadingModeToggle } from "@/components/lcars";
+import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import {
   characterHref,
 } from "@/lib/contentRoutes";
@@ -29,26 +35,41 @@ export default function MissionSynopsis({
 
   return (
     <article className="mission-detail-article">
-      <header
-        className="mission-detail-header"
-        style={{ "--mission-color": cfg.color } as React.CSSProperties}
-      >
-        <h1 className="mission-detail-title">{mission.title}</h1>
-        <div className="lcars-meta-row">
-          <b>Zeitraum</b> {periodLabel(mission.started_at, mission.ended_at)}
-        </div>
-        {mission.participants.length > 0 && (
-          <div className="lcars-meta-row">
-            <b>Teilnehmer</b>{" "}
-            {mission.participants.map((p, i) => (
-              <span key={p.slug}>
-                {i > 0 && ", "}
-                <Link href={characterHref(p.slug)}>{p.name}</Link>
-              </span>
-            ))}
-          </div>
-        )}
-      </header>
+      <LcarsReadingModeToggle />
+      <ContentDetailHeader
+        title={mission.title}
+        rows={[
+          {
+            label: "Status",
+            // Der Status stand bisher nur als Farbe in der Log-Liste — das
+            // Label aus STATUS_CONFIG wurde nirgends gerendert.
+            children: <ContentChip color={cfg.color} title={cfg.label} />,
+          },
+          {
+            label: "Zeitraum",
+            children: (
+              <ContentMetaValue>
+                {periodLabel(mission.started_at, mission.ended_at)}
+              </ContentMetaValue>
+            ),
+          },
+          mission.participants.length > 0 && {
+            label: "Teilnehmer",
+            children: (
+              <ContentChipList>
+                {mission.participants.map((p) => (
+                  <ContentChip
+                    key={p.slug}
+                    href={characterHref(p.slug)}
+                    color={CONTENT_TYPE_COLOR.character}
+                    title={p.name}
+                  />
+                ))}
+              </ContentChipList>
+            ),
+          },
+        ]}
+      />
 
       {/* Client-Komponente: Recht direkt am (bereits aufgelösten) permissions-
           Array prüfen — NICHT über viewerHasPermission aus visibility.ts, das

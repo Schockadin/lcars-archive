@@ -5,13 +5,18 @@ import { LcarsSkeleton } from "@/components/lcars";
 export default function Loading() {
   return (
     <article className="mission-detail-article">
-      <header className="mission-detail-header">
-        <div className="flex flex-wrap gap-[16px]">
-          <LcarsSkeleton className="h-[14px] w-[90px]" />
-          <LcarsSkeleton className="h-[14px] w-[110px]" />
-          <LcarsSkeleton className="h-[14px] w-[140px]" />
+      {/* Form folgt ContentDetailHeader: Titel zuerst, darunter die
+          beschrifteten Metazeilen (Datum, Autor). */}
+      <header className="archive-entry-head">
+        <LcarsSkeleton className="h-[40px] w-[60%]" />
+        <div className="archive-dialogue-meta">
+          {[110, 180].map((width) => (
+            <div key={width} className="archive-dialogue-row">
+              <LcarsSkeleton className="h-[14px] w-[92px]" />
+              <LcarsSkeleton className="h-[26px]" style={{ width }} />
+            </div>
+          ))}
         </div>
-        <LcarsSkeleton className="mt-[10px] h-[40px] w-[60%]" />
       </header>
 
       <div className="mt-[16px] flex flex-col gap-[10px]">
