@@ -84,7 +84,9 @@ export default function MissionLogOverview({
             <LcarsSortSwitch
               className="mission-sort"
               options={[
-                { key: "date", label: "Datum" },
+                // Beim Wechsel auf Datum sind die neuesten Logbücher
+                // gemeint, nicht die ältesten.
+                { key: "date", label: "Datum", defaultDir: "desc" as const },
                 { key: "author", label: "Autor", sortable: false },
               ]}
               sortKey={sort}

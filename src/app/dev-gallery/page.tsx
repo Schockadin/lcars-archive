@@ -25,6 +25,7 @@ import ContentDetailHeader, {
 } from "@/components/ContentDetailHeader";
 import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import MissionLogOverview from "@/app/chronologie/mission/MissionLogOverview";
+import { ChronoPanel } from "@/components/timeline/ChronoCard";
 import type { MissionLogListItem } from "@/types/missions";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import PortraitPicker from "@/app/user/characters/_shared/PortraitPicker";
@@ -595,6 +596,28 @@ export default function DevGalleryPage() {
             },
           ]}
         />
+      </section>
+
+      {/* Die Zusammenfassung der Missionsseite: dasselbe ChronoPanel wie auf
+          den Missions-Karten der Chronologie, aber als deutlich sichtbarer
+          Schalter (eigene Fläche, Dreieck, „Einblenden"/„Ausblenden"). */}
+      <section
+        id="synopsis-panel"
+        className="flex flex-col gap-[8px] mb-[24px]"
+      >
+        <h2 className="lcars-text">ChronoPanel (Zusammenfassung)</h2>
+        <ChronoPanel
+          label="Zusammenfassung"
+          open
+          className="mission-synopsis-panel"
+        >
+          <div className="mission-body lcars-text">
+            <p>
+              Der Einsatz begann mit einem Notruf aus dem Deneb-System und
+              endete zwei Wochen später mit der Bergung der Sonde.
+            </p>
+          </div>
+        </ChronoPanel>
       </section>
 
       {/* Die Logbuch-Übersicht einer Mission — dieselbe Zeile/Karte wie

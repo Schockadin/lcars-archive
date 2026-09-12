@@ -115,6 +115,9 @@ describe("MissionSynopsis", () => {
     const panel = container.querySelector("details.timeline-panel");
     expect(panel).toBeTruthy();
     expect(panel).toHaveAttribute("open");
+    // Eigene Klasse: auf der Seite muss der Schalter deutlicher zu sehen
+    // sein als der Nebentext auf einer Karte (siehe mission-detail.css).
+    expect(panel).toHaveClass("mission-synopsis-panel");
     expect(panel?.querySelector(".timeline-panel-head")).toHaveTextContent(
       "Zusammenfassung",
     );

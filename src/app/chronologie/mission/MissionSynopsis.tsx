@@ -86,7 +86,11 @@ export default function MissionSynopsis({
           onEditModeChange={setEditMode}
         />
       ) : (
-        <ChronoPanel label="Zusammenfassung" open>
+        <ChronoPanel
+        label="Zusammenfassung"
+        open
+        className="mission-synopsis-panel"
+      >
           {mission.metadata.body ? (
             <ContentBody html={mission.metadata.body} />
           ) : (

@@ -86,6 +86,28 @@ test.describe("ContentDetailHeader", () => {
   });
 });
 
+// Die Zusammenfassung der Missionsseite steckt im selben ChronoPanel wie die
+// Teaser der Missions-Karten — auf der Seite muss aber zu sehen sein, DASS es
+// sich zuklappen lässt.
+test.describe("ChronoPanel der Zusammenfassung", () => {
+  test("zeigt den Auf-/Zuklapper mit wechselnder Beschriftung", async ({
+    page,
+  }) => {
+    await page.goto("/dev-gallery");
+    const panel = page.locator("#synopsis-panel .mission-synopsis-panel");
+    const head = panel.locator("summary");
+
+    await expect(panel).toHaveAttribute("open", "");
+    const hint = () =>
+      head.evaluate((el) => getComputedStyle(el, "::after").content);
+    expect(await hint()).toContain("Ausblenden");
+
+    await head.click();
+    await expect(panel).not.toHaveAttribute("open", "");
+    expect(await hint()).toContain("Einblenden");
+  });
+});
+
 // Die Logbuch-Übersicht einer Mission lag früher als schmale Schiene neben dem
 // Text und war die einzige Übersicht der App außerhalb des gemeinsamen
 // Listen-Systems. Geprüft wird, dass sie jetzt dieselbe Zeile und Karte trägt
@@ -111,5 +133,21 @@ test.describe("MissionLogOverview", () => {
     await expect(list.locator(".timeline-period")).toHaveCount(2);
     await list.getByRole("button", { name: /Datum/ }).click();
     await expect(list.locator(".timeline-period")).toHaveCount(0);
+  });
+
+  // .mission-sort trug ein gap: 10px — die Füllung der aktiven Option ließ
+  // daneben einen dunklen Streifen stehen und wirkte zu schmal. Beide Hälften
+  // müssen gleich breit sein und bündig aneinanderstoßen.
+  test("füllt die aktive Sortier-Option über ihre ganze Hälfte", async ({
+    page,
+  }) => {
+    await page.goto("/dev-gallery");
+    const buttons = page.locator("#mission-log-overview .mission-sort button");
+    await expect(buttons).toHaveCount(2);
+
+    const first = await buttons.nth(0).boundingBox();
+    const second = await buttons.nth(1).boundingBox();
+    expect(Math.abs(first!.x + first!.width - second!.x)).toBeLessThan(1);
+    expect(Math.abs(first!.width - second!.width)).toBeLessThanOrEqual(1);
   });
 });

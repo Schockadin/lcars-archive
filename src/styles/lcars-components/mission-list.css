@@ -8,9 +8,12 @@
 /* ── Toolbar (Sortierung + Auswahlfelder) ────────────────────────── */
 /* Das Toolbar-Layout selbst kommt aus .lcars-toolbar (shared.css); hier
    stehen nur die Teile, die an den Listen datierter Einträge hängen. */
+/* Ohne gap: Die Optionen stoßen an der 1px-Trennlinie aneinander
+   (.lcars-switch-item hat border-right), sodass die Füllung der aktiven
+   Option ihre ganze Hälfte der Pille einnimmt. Mit gap blieb daneben ein
+   dunkler Streifen stehen und die Füllung wirkte zu schmal. */
 .mission-sort {
   display: flex;
-  gap: 10px;
   flex: 1;
   min-width: 220px;
 }

@@ -53,7 +53,11 @@ export default function MissionSynopsisEditor({
   // ließe sich das Eingabefeld zuklappen, während man darin schreibt.
   if (!editMode) {
     return (
-      <ChronoPanel label="Zusammenfassung" open>
+      <ChronoPanel
+        label="Zusammenfassung"
+        open
+        className="mission-synopsis-panel"
+      >
         {displayHtml ? (
           <ContentBody html={displayHtml} />
         ) : (

@@ -11,6 +11,10 @@ export interface SortSwitchOption<T extends string> {
   // "Mission"/"Autor", die intern immer fest sortiert ist) — Klick wählt
   // sie nur aus, kein Pfeil, kein Richtungs-Toggle. Default true.
   sortable?: boolean;
+  // Richtung, mit der diese Option beim Aktivieren startet. Default "asc"
+  // (siehe unten). "desc" für Felder, bei denen das Neueste die nützliche
+  // Vorgabe ist — etwa das Datum einer Logbuch-Liste.
+  defaultDir?: SortDir;
 }
 
 // Sortier-Variante von Switch: der erste Klick auf eine (noch inaktive)
@@ -40,7 +44,14 @@ export default function SortSwitch<T extends string>({
       onChange(key, sortDir);
       return;
     }
-    onChange(key, key === sortKey ? (sortDir === "asc" ? "desc" : "asc") : "asc");
+    onChange(
+      key,
+      key === sortKey
+        ? sortDir === "asc"
+          ? "desc"
+          : "asc"
+        : (opt?.defaultDir ?? "asc"),
+    );
   }
 
   return (
@@ -53,23 +64,31 @@ export default function SortSwitch<T extends string>({
         const sortable = opt.sortable ?? true;
         return {
           key: opt.key,
-          label:
-            isActive && sortable ? (
-              <span className="lcars-sort-switch-label">
-                {opt.label}
-                <span
-                  className="lcars-sort-switch-arrow"
-                  style={{
-                    display: "inline-flex",
-                    transform: sortDir === "desc" ? "rotate(180deg)" : undefined,
-                  }}
-                >
-                  <SortArrowIcon />
-                </span>
+          // Der Pfeil bleibt bei jeder sortierbaren Option im Layout — nur
+          // sichtbar ist er an der aktiven. Sonst wanderte die Beschriftung
+          // beim Umschalten seitlich, weil die inaktive Option plötzlich
+          // schmaler wird.
+          label: sortable ? (
+            <span className="lcars-sort-switch-label">
+              {opt.label}
+              <span
+                className="lcars-sort-switch-arrow"
+                aria-hidden={!isActive}
+                style={{
+                  display: "inline-flex",
+                  visibility: isActive ? undefined : "hidden",
+                  transform:
+                    isActive && sortDir === "desc"
+                      ? "rotate(180deg)"
+                      : undefined,
+                }}
+              >
+                <SortArrowIcon />
               </span>
-            ) : (
-              opt.label
-            ),
+            </span>
+          ) : (
+            opt.label
+          ),
         };
       })}
     />

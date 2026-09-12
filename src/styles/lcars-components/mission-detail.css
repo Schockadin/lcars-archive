@@ -16,6 +16,51 @@
   margin-top: 32px;
 }
 
+/* ── Zusammenfassung im aufklappbaren Feld ────────────────────────────
+   Dasselbe ChronoPanel wie auf den Missions-Karten der Chronologie. Dort
+   ist es ein Nebentext auf einer farbigen Karte und darf zurückhaltend
+   sein; hier trägt es den Haupttext der Seite und muss als Schalter zu
+   erkennen sein — also eine eigene Fläche mit Rahmen, voller Deckkraft,
+   größerem Dreieck und einer Beschriftung, die den nächsten Klick nennt. */
+.mission-synopsis-panel {
+  margin-top: 16px;
+  border-top: none;
+}
+.mission-synopsis-panel > .timeline-panel-head {
+  gap: 10px;
+  padding: 10px 16px;
+  font-size: 13px;
+  opacity: 1;
+  color: var(--lcars-primary-ink);
+  background: var(--lcars-surface);
+  border: 1px solid var(--lcars-border);
+  border-radius: var(--lcars-radius-pill);
+  transition:
+    background-color 150ms,
+    color 150ms;
+}
+.mission-synopsis-panel > .timeline-panel-head:hover {
+  background: var(--lcars-surface-2);
+}
+.mission-synopsis-panel > .timeline-panel-head::before {
+  font-size: 16px;
+  line-height: 1;
+}
+/* Sagt, was der Klick tut — ein Dreieck allein wird leicht übersehen. */
+.mission-synopsis-panel > .timeline-panel-head::after {
+  content: "Einblenden";
+  margin-left: auto;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--lcars-ink-dim);
+}
+.mission-synopsis-panel[open] > .timeline-panel-head::after {
+  content: "Ausblenden";
+}
+.mission-synopsis-panel > .timeline-panel-body {
+  padding-top: 12px;
+}
+
 /* rechte Spalte: Synopsis / Log-Text — nimmt auf Desktop die volle Breite
    der Inhaltsspalte ein (kein Lese-Cap). Die schmalere, zentrierte Lesebreite
    bleibt dem mobilen Lesemodus vorbehalten (reading-mode.css).

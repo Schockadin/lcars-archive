@@ -90,20 +90,21 @@ describe("MissionLogOverview", () => {
     expect(screen.getByText(/nach Autor gruppiert/)).toBeInTheDocument();
   });
 
-  it("sortiert auf Wunsch nach Datum und lässt die Gruppen fallen", () => {
+  it("sortiert auf Wunsch nach Datum — neueste zuerst", () => {
     const { container } = renderOverview();
     const datum = screen.getByRole("button", { name: /Datum/ });
 
-    // Erster Klick auf eine noch inaktive Option sortiert aufsteigend — das
-    // ist die Regel von LcarsSortSwitch, die überall in der App gilt.
+    // Die Option trägt defaultDir="desc": beim Datum eines Logbuchs ist das
+    // Neueste gemeint, nicht das Älteste (LcarsSortSwitch startet sonst
+    // aufsteigend).
     fireEvent.click(datum);
     expect(container.querySelectorAll(".timeline-period")).toHaveLength(0);
     expect(
       [...container.querySelectorAll(".timeline-card-title")].map(
         (node) => node.textContent,
       ),
-    ).toEqual(["Erster Kontakt", "Rückzug", "Nachspiel"]);
-    expect(screen.getByText(/älteste zuerst/)).toBeInTheDocument();
+    ).toEqual(["Nachspiel", "Rückzug", "Erster Kontakt"]);
+    expect(screen.getByText(/neueste zuerst/)).toBeInTheDocument();
 
     // Ein weiterer Klick dreht die Richtung um.
     fireEvent.click(datum);
@@ -111,8 +112,8 @@ describe("MissionLogOverview", () => {
       [...container.querySelectorAll(".timeline-tag")].map(
         (node) => node.textContent,
       ),
-    ).toEqual(["S-03", "S-02", "S-01"]);
-    expect(screen.getByText(/neueste zuerst/)).toBeInTheDocument();
+    ).toEqual(["S-01", "S-02", "S-03"]);
+    expect(screen.getByText(/älteste zuerst/)).toBeInTheDocument();
   });
 
   it("nennt den Autor in der Datums-Ansicht, nicht in den Gruppen", () => {
