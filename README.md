@@ -997,6 +997,28 @@ Liest die Markdown-Dateien aus `VAULT_PATH` ein und schreibt sie per Upsert in d
 > Credential-Spalten und Auth-Tabellen sind geschützt), ohne dafür erst ein
 > komplettes Backup exportieren zu müssen.
 
+**Welche Tabellen wo auftauchen**, steht als eine Liste in
+[`src/lib/dbTables.ts`](src/lib/dbTables.ts). Daraus leiten sich beide Seiten
+ab:
+
+- **Tabellenbrowser** (`VIEWABLE_TABLES`): jede Tabelle des Schemas außer den
+  reinen Geheimnis-Tabellen (`password_setup_tokens`). Die vier
+  Inhaltstabellen sieht jeder mit `sql_read`, alles andere verlangt
+  zusätzlich `db_view_system_tables`; `users` steht ohne `password_hash` da
+  und ist wie die übrigen Auth-Tabellen gegen Schreibzugriff gesperrt
+  (`PROTECTED_WRITE_TABLES` in [`src/lib/dbInspect.ts`](src/lib/dbInspect.ts)).
+- **DB-Backup** (`BACKUP_TABLES`): eine bewusst engere Auswahl. Der Restore
+  leert jede dort genannte Tabelle, bevor er sie neu einspielt — eine ältere
+  Backup-Datei kennt eine neu aufgenommene Tabelle aber nicht und würde sie
+  damit leeren statt wiederherstellen. Die Auswahl zu erweitern ist deshalb
+  eine eigene Entscheidung samt Versionssprung des Dateiformats
+  (`DbBackup.version`), kein Nebeneffekt einer neuen Tabelle.
+
+`src/lib/dbTables.test.ts` gleicht die Liste bei jedem CI-Lauf mit
+`scripts/schema.sql` ab: Eine neue Tabelle oder Spalte, die dort fehlt, lässt
+den Test rot werden — vorher wuchs die Liste nur mit, wenn jemand beim Anlegen
+einer Tabelle zufällig ans Backup dachte.
+
 ### 6. Entwicklungsserver starten
 
 ```bash

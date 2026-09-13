@@ -10,8 +10,8 @@ import {
   viewableColumns,
   getTableColumns,
   quoteIdent,
+  type TableName,
 } from "@/lib/dbInspect";
-import type { TableName } from "@/lib/dbBackup";
 import { TABLE_PAGE_SIZE } from "./tableExplorerConfig";
 import sql from "@/lib/db";
 

@@ -1,6 +1,27 @@
 import "server-only";
 import sql from "@/lib/db";
-import { TABLE_COLUMNS, type TableName } from "./dbBackup";
+import {
+  CONTENT_TABLES,
+  HIDDEN_FROM_VIEW,
+  VIEWABLE_TABLES,
+  isContentTable,
+  isViewableTable,
+  tableColumns,
+  type TableName,
+} from "./dbTables";
+
+// Die Tabellen-Liste selbst liegt in src/lib/dbTables.ts (DB-frei, damit sie
+// gegen scripts/schema.sql geprüft werden kann). Hier wird sie nur
+// weitergereicht, damit die Aufrufer im Admin-Bereich weiterhin EINE Adresse
+// für „alles über Tabellen" haben.
+export {
+  CONTENT_TABLES,
+  HIDDEN_FROM_VIEW,
+  VIEWABLE_TABLES,
+  isContentTable,
+  isViewableTable,
+  type TableName,
+};
 
 // Quotet einen SQL-Identifier (Tabelle/Spalte) als delimited identifier und
 // verdoppelt interne Anführungszeichen (SQL-Standard). Alle Aufrufer prüfen
@@ -9,36 +30,6 @@ import { TABLE_COLUMNS, type TableName } from "./dbBackup";
 // eingebettetem `"`, damit der Identifier nicht vorzeitig endet.
 export function quoteIdent(name: string): string {
   return `"${name.replace(/"/g, '""')}"`;
-}
-
-// Read-only Tabellen-Viewer für /admin/db — nutzt dieselbe Spalten-Whitelist
-// wie der DB-Backup-Export (dbBackup.ts), aber OHNE password_setup_tokens
-// (enthält token_hash, den auch ein Admin nicht einsehen soll) und ohne
-// mission_participants (reine n:m-Relationstabelle ohne eigene Spalten
-// außer den beiden FKs — anders als z.B. archive_links, das mit label noch
-// eigene Daten trägt und deshalb sichtbar bleibt).
-const HIDDEN_FROM_VIEW: readonly TableName[] = [
-  "password_setup_tokens",
-  "mission_participants",
-];
-
-export const VIEWABLE_TABLES = (
-  Object.keys(TABLE_COLUMNS) as TableName[]
-).filter((t) => !(HIDDEN_FROM_VIEW as string[]).includes(t));
-
-export const CONTENT_TABLES: readonly TableName[] = [
-  "characters",
-  "missions",
-  "mission_logs",
-  "archive_entries",
-];
-
-export function isContentTable(table: string): boolean {
-  return (CONTENT_TABLES as readonly string[]).includes(table);
-}
-
-export function isViewableTable(value: string): value is TableName {
-  return (VIEWABLE_TABLES as string[]).includes(value);
 }
 
 // Einheitliche Tabellen-Schranke für ALLE Explorer-Aktionen (lesen, einfügen,
@@ -57,7 +48,7 @@ export function tableAccessError(
 }
 
 export function viewableColumns(table: TableName): readonly string[] {
-  return TABLE_COLUMNS[table];
+  return tableColumns(table);
 }
 
 export async function countTableRows(table: TableName): Promise<number> {
@@ -68,7 +59,7 @@ export async function countTableRows(table: TableName): Promise<number> {
 }
 
 // Spaltennamen (SELECT-Liste, Sortierspalte) kommen wie beim Backup-Export
-// nie aus User-Input, sondern immer aus der TABLE_COLUMNS-Whitelist — nur
+// nie aus User-Input, sondern immer aus der Spalten-Whitelist (dbTables) — nur
 // table/limit/offset sind veränderlich, table ist über isViewableTable()
 // bereits geprüft, bevor diese Funktion aufgerufen wird. Der Tabellen-Explorer
 // bietet bewusst keine Sortier-/Filter-UI. Liefert die ROHEN Spaltenwerte
@@ -80,7 +71,7 @@ export async function listTableRows(
   limit: number,
   offset: number,
 ): Promise<Record<string, unknown>[]> {
-  const validColumns = TABLE_COLUMNS[table] as readonly string[];
+  const validColumns = tableColumns(table);
   const columns = validColumns.map((c) => quoteIdent(c)).join(", ");
 
   // Stabile GESAMT-Ordnung für LIMIT/OFFSET: nach dem eindeutigen "id" (PK),
@@ -234,7 +225,7 @@ export function assertQueryShape(query: string): void {
 
 // Credential-Spalten, die im freien SQL-Panel weder explizit selektiert noch
 // (über SELECT *) im Ergebnis ausgegeben werden dürfen — der Tabellen-Explorer
-// blendet sie über die TABLE_COLUMNS-Whitelist ohnehin aus, das freie Panel tat
+// blendet sie über die Spalten-Whitelist (dbTables) ohnehin aus, das freie Panel tat
 // das bisher nicht. runAdminQuery entfernt sie zusätzlich aus jedem Ergebnis
 // (fängt SELECT * ab, das die Spalte nicht namentlich nennt).
 export const SECRET_COLUMNS: readonly string[] = ["password_hash", "token_hash"];
@@ -255,11 +246,11 @@ export const PROTECTED_WRITE_TABLES: readonly string[] = [
   "password_setup_tokens",
   "password_reset_requests",
   "login_attempts",
-  // Dritte Rate-Limit-Tabelle (src/lib/ragLimiter.ts). Steht nicht in
-  // TABLE_COLUMNS und ist damit für das Zeilen-Overlay ohnehin unsichtbar —
-  // das freie SQL-Panel ist aber bewusst NICHT auf diese Whitelist
-  // beschränkt (siehe runAdminQuery), ein DELETE hier würde also das eigene
-  // Limit zurücksetzen.
+  // Dritte Rate-Limit-Tabelle (src/lib/ragLimiter.ts). Ein DELETE hier würde
+  // das eigene Limit zurücksetzen — sowohl über das freie SQL-Panel (das
+  // bewusst NICHT auf die Spalten-Whitelist beschränkt ist, siehe
+  // runAdminQuery) als auch über das Zeilen-Overlay, seit der
+  // Tabellen-Browser alle Tabellen anbietet.
   "rag_requests",
   "admin_audit_log",
 ];
@@ -378,7 +369,7 @@ export interface FreeQueryResult {
 }
 
 // Freie Admin-SQL-Query für /admin/db, gegated durch die übergebenen Rechte
-// (caps). Nicht auf die TABLE_COLUMNS-Whitelist beschränkt (ein db_backup-
+// (caps). Nicht auf die Spalten-Whitelist (dbTables) beschränkt (ein db_backup-
 // Export sieht ohnehin die komplette DB, siehe dbBackup.ts).
 //
 // - read (SELECT/WITH): läuft in einer "SET TRANSACTION READ ONLY"-Transaktion,
