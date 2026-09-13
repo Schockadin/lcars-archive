@@ -1,4 +1,4 @@
-import type { Character } from "@/types/character";
+import type { Character, CharacterMetadata } from "@/types/character";
 
 // Gemeinsame Darstellung des Charakter-Status — React-/DB-frei, damit sie in
 // Server-, Client-Komponenten UND Tests nutzbar ist (gleiches Muster wie
@@ -48,3 +48,31 @@ export const CHARACTER_STATUS_OPTIONS: { value: CharacterStatus; label: string }
     value,
     label: CHARACTER_STATUS_LABEL[value],
   }));
+
+// metadata ist jsonb: Was beim Anlegen nicht geschrieben wurde, FEHLT dort
+// schlicht — bei eingespielten Akten aus dem Vault und bei allem, was vor der
+// Einführung eines Felds entstanden ist. Der Typ CharacterMetadata verspricht
+// aber Listen, und jede Anzeige, die darauf .length oder .join aufruft (die
+// Akte auf der Charakterseite, das Stammdaten-Panel der eigenen Seite), stürbe
+// an dem undefined mit „Cannot read properties of undefined (reading
+// 'length')". Deshalb werden die Listen hier EINMAL an der Lesekante
+// aufgefüllt, statt an jeder Anzeigestelle einzeln abgesichert.
+export function normalizeCharacterMetadata(
+  raw: CharacterMetadata | null | undefined,
+): CharacterMetadata {
+  const metadata = (raw ?? {}) as CharacterMetadata;
+  const list = <T>(value: unknown): T[] => (Array.isArray(value) ? value : []);
+  return {
+    ...metadata,
+    rank: metadata.rank ?? null,
+    homeworld: metadata.homeworld ?? null,
+    age: metadata.age ?? null,
+    dateOfBirth: metadata.dateOfBirth ?? null,
+    affiliation: metadata.affiliation ?? null,
+    player: metadata.player ?? null,
+    species: list<string>(metadata.species),
+    aliases: list<string>(metadata.aliases),
+    tags: list<string>(metadata.tags),
+    generation: list<number>(metadata.generation),
+  };
+}

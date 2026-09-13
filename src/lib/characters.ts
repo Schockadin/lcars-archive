@@ -8,6 +8,7 @@ import { contentImageSrc } from "@/lib/contentRoutes";
 import { Character, CharacterMetadata } from "@/types/character";
 import type { CharacterStats } from "@/types/characterStats";
 import { parseCharacterStats } from "@/lib/characterStats";
+import { normalizeCharacterMetadata } from "@/lib/characterFormat";
 import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 import { MissionLogPreview } from "@/types/missionLog";
 // getCharacterSubscribers lebt in dialoguesCore.ts (ursprünglich für den
@@ -48,10 +49,11 @@ function parseCharacter(
   row: Character,
   options?: { keepStats?: boolean },
 ): Character {
-  const metadata =
+  const metadata = normalizeCharacterMetadata(
     typeof row.metadata === "string"
       ? (JSON.parse(row.metadata) as CharacterMetadata)
-      : row.metadata;
+      : row.metadata,
+  );
 
   return {
     ...row,
@@ -129,9 +131,11 @@ export async function getCharacterListItems(): Promise<CharacterListItem[]> {
     // stats bleiben draußen, siehe parseCharacter oben — die Liste ist eine
     // Client-Komponente und zeigt keine Werte an.
     const metadata = stripStats(
-      typeof row.metadata === "string"
-        ? (JSON.parse(row.metadata) as CharacterMetadata)
-        : row.metadata,
+      normalizeCharacterMetadata(
+        typeof row.metadata === "string"
+          ? (JSON.parse(row.metadata) as CharacterMetadata)
+          : row.metadata,
+      ),
     );
     // Dasselbe Bild und derselbe Ausschnitt wie auf dem Bogen: im Altbestand
     // steht in portrait das eingebackene Bild und daneben das Original.
@@ -675,8 +679,9 @@ export async function getOwnCharacterForEdit(
   const row = rows[0];
   if (!row) return null;
 
-  const metadata: CharacterMetadata =
-    typeof row.metadata === "string" ? JSON.parse(row.metadata) : row.metadata;
+  const metadata: CharacterMetadata = normalizeCharacterMetadata(
+    typeof row.metadata === "string" ? JSON.parse(row.metadata) : row.metadata,
+  );
 
   return {
     id: row.id,
