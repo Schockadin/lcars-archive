@@ -14,6 +14,9 @@ export const AP_REASONS = [
   "mission", // Abschluss einer Mission / eines Story-Arcs (+X)
   "manual", // Freie Korrektur durch die Spielleitung
   "advancement", // Ausgabe beim Steigern (negativ)
+  "reset", // Rücknahme beim erneuten Öffnen der Erschaffung (siehe
+           // reopenCharacterCreation): Gutschrift der zurückgenommenen
+           // Steigerungen und Rückbuchung des Erschaffungsrests (negativ).
 ] as const;
 
 export type ApReason = (typeof AP_REASONS)[number];
@@ -26,6 +29,7 @@ export const AP_REASON_LABELS: Record<ApReason, string> = {
   mission: "Mission / Story-Arc abgeschlossen",
   manual: "Korrektur",
   advancement: "Steigerung",
+  reset: "Erschaffung zurückgesetzt",
 };
 
 export function isApReason(value: string): value is ApReason {

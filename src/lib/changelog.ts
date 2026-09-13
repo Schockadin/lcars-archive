@@ -138,6 +138,22 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.33",
+    title: "Die Erschaffung lässt sich wieder öffnen",
+    items: [
+      {
+        text: "Die Spielleitung kann eine abgeschlossene Charaktererschaffung wieder öffnen. Alle Steigerungen seit dem Abschluss werden dabei zurückgenommen — die Werte fallen auf den Stand der Erschaffung, die AP kommen aufs Konto zurück — aber nichts geht verloren: Sie stehen als Notiz am Bogen und werden beim erneuten Abschließen automatisch wieder angewandt.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Ist deine Erschaffung wieder geöffnet, listet der AP-Bereich deines Bogens die zurückgenommenen Steigerungen samt Kosten auf — du siehst also, welcher Teil deiner AP schon vergeben ist, bevor du sie neu verplanst.",
+        category: "charaktere",
+        tutorial: "eigene-inhalte",
+      },
+    ],
+  },
+  {
     version: "1.32",
     title: "Die Missionsseite im Gewand der übrigen Inhalte",
     items: [

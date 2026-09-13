@@ -226,6 +226,22 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   diese beiden Prüfungen hinterließe ein direkt abgeschickter POST einen
   dauerhaft überzogenen bzw. leeren Bogen — nach dem Festschreiben sind die
   Felder schreibgeschützt, und `checkAdvancement` steigert keinen leeren Wert.
+  **Zurücksetzen:** Die Spielleitung kann eine abgeschlossene Erschaffung unter
+  `/gm/characters` wieder öffnen (`reopenCharacterCreation`, Recht
+  `characters.assign`). Dabei werden alle Steigerungen seit dem Festschreiben
+  zurückgenommen — die reine Logik dazu liegt in `src/lib/creationReset.ts`:
+  `revertAdvancements` läuft das Journal rückwärts (neueste Buchung zuerst) und
+  liest aus dem Klartext jeder Buchung („Control 9 → 10", Talent-/
+  Schwerpunktname) Ziel und Vorzustand zurück. Die Werte fallen damit auf den
+  Stand der Erschaffung, die ausgegebenen AP werden gutgeschrieben und der
+  damals übertragene Erschaffungsrest zurückgebucht (Buchungsgrund `reset`).
+  Verloren geht dabei nichts: Was zurückgenommen wurde, steht als
+  `metadata.stats.pendingAdvancements` am Charakter und wird vom erneuten
+  `lockOwnCharacterCreation` über `reapplyAdvancements` automatisch wieder
+  angewandt — in der ursprünglichen Reihenfolge, aber mit den dann geltenden
+  Regeln und derselben Prüfung wie beim Steigern; was nicht mehr passt, wird in
+  der Rückmeldung mit Grund genannt. Rücknahme, Notiz und Gegenbuchungen laufen
+  wie das Festschreiben in EINER Transaktion.
 - **Eigene Regeln der Runde** — Hausregeln (Name, Regeltext, `sort_order`)
   liegen in `campaign_rules`, gepflegt unter `/gm/rules`, und erscheinen auf
   dem Spickzettel jedes Charakterbogens hinter den Kernregeln — in der
@@ -1535,6 +1551,15 @@ neue **Tabelle**, die die App liest: `scripts/migrate-pr67.sql` legt
 
 ```bash
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr67.sql
+```
+
+Ebenso `scripts/migrate-pr70.sql`: Es erweitert die Prüfbedingung von
+`character_ap_entries.reason` um den Buchungsgrund `reset` (Zurücksetzen einer
+abgeschlossenen Erschaffung, siehe oben). Fehlt die Migration, scheitert das
+Zurücksetzen mit einer verletzten Check-Constraint:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr70.sql
 ```
 
 Nach `scripts/migrate-pr62.sql` einmalig `npm run db:seed-talents` ausführen —

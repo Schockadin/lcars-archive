@@ -13,6 +13,10 @@ import {
   type AdvancementRules,
 } from "@/lib/advancement";
 import { getAdvancementRules } from "@/lib/advancementSettings";
+import {
+  revertAdvancements,
+  reapplyAdvancements,
+} from "@/lib/creationReset";
 import type { CharacterStats } from "@/types/characterStats";
 
 // Die Buchungsgründe und Kontotypen selbst liegen DB-frei in
@@ -243,10 +247,19 @@ export class CreationOverBudgetError extends Error {}
 // gespeichert sind (siehe hasCompleteCreationValues).
 export class CreationIncompleteError extends Error {}
 
+export interface LockCreationResult {
+  slug: string;
+  carryOver: number;
+  // Beim Zurücksetzen notierte Steigerungen, die jetzt wieder angewandt wurden.
+  reapplied: { label: string; cost: number }[];
+  // … und die, für die es nicht mehr gereicht hat, mit dem Grund.
+  skipped: { label: string; error: string }[];
+}
+
 export async function lockOwnCharacterCreation(
   userId: number,
   characterId: number,
-): Promise<{ slug: string; carryOver: number } | null> {
+): Promise<LockCreationResult | null> {
   // Regelwerk VOR der Transaktion laden — siehe advanceOwnCharacter.
   const rules = await getAdvancementRules();
 
@@ -266,7 +279,9 @@ export async function lockOwnCharacterCreation(
 
     // Bereits festgeschrieben? Dann nichts tun — ein zweiter Aufruf (Doppelklick,
     // erneut abgeschickt) darf die Rest-AP nicht ein zweites Mal gutschreiben.
-    if (stats.creationLocked) return { slug: row.slug, carryOver: 0 };
+    if (stats.creationLocked) {
+      return { slug: row.slug, carryOver: 0, reapplied: [], skipped: [] };
+    }
 
     // Überzogenes Erschaffungsbudget wird hier abgelehnt, nicht nur im
     // Formular (dort ist der Knopf deaktiviert): ein direkt abgeschickter
@@ -293,9 +308,32 @@ export async function lockOwnCharacterCreation(
 
     const carryOver = creationCarryOver(stats, rules);
 
+    // Hat die Spielleitung die Erschaffung zurückgesetzt, stehen die damals
+    // zurückgenommenen Steigerungen als Notiz am Bogen (siehe
+    // reopenCharacterCreation). Sie werden jetzt wieder angewandt — mit den
+    // HEUTE geltenden Regeln, dem Kontostand NACH der Gutschrift des
+    // Erschaffungsrests und derselben Prüfung wie beim Steigern. Was nicht
+    // mehr geht (AP reichen nicht, Regelgrenze), bleibt liegen und wird
+    // gemeldet statt still angewandt.
+    const [balance] = await tx<{ available: number }[]>`
+      SELECT COALESCE(SUM(amount), 0)::int AS available
+      FROM character_ap_entries
+      WHERE character_id = ${characterId}
+    `;
+    const reapplied = reapplyAdvancements(
+      stats,
+      stats.pendingAdvancements,
+      (balance?.available ?? 0) + carryOver,
+      rules,
+    );
+    const nextStats: CharacterStats = {
+      ...reapplied.stats,
+      creationLocked: true,
+    };
+
     await tx`
       UPDATE characters
-      SET metadata = metadata || ${tx.json({ stats: { ...stats, creationLocked: true } } as ReturnType<typeof JSON.parse>)},
+      SET metadata = metadata || ${tx.json({ stats: nextStats } as ReturnType<typeof JSON.parse>)},
           updated_at = NOW()
       WHERE id = ${characterId} AND player_id = ${userId}
     `;
@@ -308,6 +346,133 @@ export async function lockOwnCharacterCreation(
       `;
     }
 
-    return { slug: row.slug, carryOver };
+    for (const booking of reapplied.applied) {
+      await tx`
+        INSERT INTO character_ap_entries (character_id, amount, reason, note, created_by)
+        VALUES (${characterId}, ${-booking.cost}, 'advancement',
+                ${booking.label}, ${userId})
+      `;
+    }
+
+    return {
+      slug: row.slug,
+      carryOver,
+      reapplied: reapplied.applied,
+      skipped: reapplied.skipped,
+    };
+  });
+}
+
+// ── Erschaffung wieder öffnen (Spielleitung) ───────────────────────────
+// Gegenstück zu lockOwnCharacterCreation: der Bogen geht zurück in die
+// Erschaffung, alles seither Gesteigerte wird zurückgenommen — aber am
+// Charakter notiert, damit dieselben Steigerungen beim erneuten Abschließen
+// automatisch wieder angewandt werden (siehe src/lib/creationReset.ts).
+//
+// Alles in EINER Transaktion: Werte, Notiz und die Gegenbuchungen gehören
+// zusammen — ein Abbruch dazwischen hinterließe entweder zurückgesetzte Werte
+// ohne Gutschrift oder eine Gutschrift ohne Rücknahme.
+//
+// Nicht owner-gescoped (anders als die übrigen Funktionen hier): das ist eine
+// Handlung der Spielleitung an einem fremden Charakter. Das Recht prüft der
+// Aufrufer (siehe reopenCreationAction).
+export type ReopenCreationResult =
+  | {
+      ok: true;
+      slug: string;
+      name: string;
+      // Zurückgenommene Steigerungen (werden beim Abschließen wieder angewandt).
+      reverted: { label: string; cost: number }[];
+      // Summe der Gutschriften abzüglich des zurückgebuchten Erschaffungsrests.
+      apChange: number;
+      // Buchungen, die sich keinem Ziel zuordnen ließen — sie bleiben stehen.
+      unresolved: string[];
+    }
+  | { ok: false; error: string };
+
+export async function reopenCharacterCreation(
+  characterId: number,
+  gmUserId: number,
+): Promise<ReopenCreationResult> {
+  return sql.begin(async (tx) => {
+    const rows = await tx<{ slug: string; name: string; stats: unknown }[]>`
+      SELECT slug, name, metadata -> 'stats' AS stats
+      FROM characters
+      WHERE id = ${characterId} AND deleted_at IS NULL
+      FOR UPDATE
+    `;
+    const row = rows[0];
+    if (!row) {
+      return { ok: false as const, error: "Charakter nicht gefunden." };
+    }
+
+    const stats = parseCharacterStats(
+      typeof row.stats === "string" ? JSON.parse(row.stats) : row.stats,
+    );
+
+    if (!stats.creationLocked) {
+      return {
+        ok: false as const,
+        error: `„${row.name}" ist bereits in der Erschaffung.`,
+      };
+    }
+
+    // Die Steigerungen in der Reihenfolge des Journals (neueste zuerst) —
+    // genau so nimmt revertAdvancements sie Schritt für Schritt zurück.
+    const bookings = await tx<
+      { amount: number; note: string | null; createdAt: string }[]
+    >`
+      SELECT amount, note, created_at::text AS "createdAt"
+      FROM character_ap_entries
+      WHERE character_id = ${characterId}
+        AND reason = 'advancement' AND amount < 0
+      ORDER BY created_at DESC, id DESC
+    `;
+
+    const result = revertAdvancements(stats, bookings);
+
+    // Der beim Festschreiben gutgeschriebene Erschaffungsrest muss zurück:
+    // beim erneuten Abschließen wird er neu berechnet und neu gutgeschrieben,
+    // sonst stünde er doppelt auf dem Konto.
+    const [credited] = await tx<{ total: number }[]>`
+      SELECT COALESCE(SUM(amount), 0)::int AS total
+      FROM character_ap_entries
+      WHERE character_id = ${characterId} AND reason = 'creation'
+    `;
+    const carryOverCredited = credited?.total ?? 0;
+
+    await tx`
+      UPDATE characters
+      SET metadata = metadata || ${tx.json({ stats: result.stats } as ReturnType<typeof JSON.parse>)},
+          updated_at = NOW()
+      WHERE id = ${characterId}
+    `;
+
+    for (const refund of result.refunds) {
+      await tx`
+        INSERT INTO character_ap_entries (character_id, amount, reason, note, created_by)
+        VALUES (${characterId}, ${refund.cost}, 'reset',
+                ${`Zurückgenommen: ${refund.label}`}, ${gmUserId})
+      `;
+    }
+
+    if (carryOverCredited > 0) {
+      await tx`
+        INSERT INTO character_ap_entries (character_id, amount, reason, note, created_by)
+        VALUES (${characterId}, ${-carryOverCredited}, 'reset',
+                'Erschaffungsrest zurückgebucht', ${gmUserId})
+      `;
+    }
+
+    const refunded = result.refunds.reduce((sum, r) => sum + r.cost, 0);
+
+    return {
+      ok: true as const,
+      slug: row.slug,
+      name: row.name,
+      reverted: result.refunds,
+      apChange: refunded - carryOverCredited,
+      unresolved: result.unresolved,
+    };
   });
 }

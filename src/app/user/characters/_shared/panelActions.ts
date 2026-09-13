@@ -247,6 +247,10 @@ export async function saveCharacterStatsAction(
   }
 
   stats.creationLocked = current.stats.creationLocked;
+  // Wie creationLocked kommt auch die Notiz zurückgenommener Steigerungen nie
+  // aus dem Formular — sie entsteht beim Zurücksetzen der Erschaffung durch
+  // die Spielleitung und wird beim Abschließen abgearbeitet.
+  stats.pendingAdvancements = current.stats.pendingAdvancements;
   if (current.stats.creationLocked) {
     stats.attributes = current.stats.attributes;
     stats.departments = current.stats.departments;
