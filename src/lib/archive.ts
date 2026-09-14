@@ -611,10 +611,20 @@ export interface OwnArchiveEntryForEdit {
 // dialogue_messages). slug wird zusätzlich zurückgegeben, damit das Opt-in
 // "Automatisch verlinken" (updateArchiveEntryAction) den Eintrag selbst als
 // Autolinking-Ziel ausschließen kann.
+//
+// asModerator hebt die Owner-Prüfung auf: Seit der Bearbeiten-Stift auf der
+// Leseseite in genau diesen Editor springt (siehe ActionsMenu.tsx), muss er
+// auch für die Spielleitung/Administration erreichbar sein — dieselbe Gruppe,
+// die den Stift auf fremden Einträgen überhaupt sieht (content.moderate). Das
+// Recht prüft die aufrufende Seite bzw. Action, NICHT diese Funktion.
 export async function getOwnArchiveEntryForEdit(
   userId: number,
   entryId: number,
+  asModerator = false,
 ): Promise<OwnArchiveEntryForEdit | null> {
+  const ownerScope = asModerator
+    ? sql``
+    : sql`AND owner_user_id = ${userId}`;
   const rows = await sql<
     {
       id: number;
@@ -630,7 +640,7 @@ export async function getOwnArchiveEntryForEdit(
     SELECT id, slug, title, category, tags, COALESCE(source_md, '') AS "sourceMarkdown",
            metadata, is_draft AS "isDraft"
     FROM archive_entries
-    WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
+    WHERE id = ${entryId} AND category != 'dialogue' ${ownerScope}
       AND deleted_at IS NULL
     LIMIT 1
   `;
@@ -704,12 +714,19 @@ export async function updateOwnArchiveEntryContent(
     // Siehe createArchiveEntry oben — Opt-in "Automatisch verlinken".
     contentHtml?: string;
   },
+  // Wie bei getOwnArchiveEntryForEdit oben: hebt die Owner-Prüfung für die
+  // Moderation auf. Das Recht (content.moderate) prüft die Action.
+  asModerator = false,
 ): Promise<{
   slug: string;
   visibility: "private" | "gm" | "public";
   wasDraft: boolean;
 } | null> {
   await recordRevision("archive", entryId, userId, input.bodyMarkdown);
+
+  const ownerScope = asModerator
+    ? sql``
+    : sql`AND owner_user_id = ${userId}`;
 
   const contentHtml =
     input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
@@ -739,7 +756,7 @@ export async function updateOwnArchiveEntryContent(
         metadata = metadata || ${sql.json(metadataPatch as ReturnType<typeof JSON.parse>)},
         is_draft = ${input.isDraft}, updated_at = NOW()
     FROM old
-    WHERE id = ${entryId} AND category != 'dialogue' AND owner_user_id = ${userId}
+    WHERE id = ${entryId} AND category != 'dialogue' ${ownerScope}
     RETURNING slug, visibility, old.is_draft AS "wasDraft"
   `;
   const result = rows[0];
@@ -764,8 +781,8 @@ export async function updateOwnArchiveEntryContent(
   return result;
 }
 
-// Nur der Inhalt, nicht Titel/Kategorie/Tags — für den Inline-Editor auf der
-// Detailseite (ArchiveEntryEditor.tsx), analog updateMissionSynopsis in
+// Nur der Inhalt, nicht Titel/Kategorie/Tags — für das Zurückholen einer
+// älteren Fassung (app/actions/revisions.ts), analog updateMissionSynopsis in
 // src/lib/missions.ts (dort ebenfalls nur der Body, nicht Titel/Status/
 // Termine). Owner-gescoped wie updateOwnArchiveEntryContent oben.
 export async function updateOwnArchiveEntryBody(

@@ -508,12 +508,11 @@ export interface UpdateMissionSynopsisResult {
   metadata: MissionMetaData;
 }
 
-// Nur-Synopsis-Bearbeitung (inline auf /chronologie/mission/[slug],
-// MissionSynopsisEditor)
-// — Titel/Status/Zeitraum/Tags bleiben unangetastet, deshalb reicht slug +
-// die aktualisierte metadata als Rückgabe. title zusätzlich (nicht nur slug)
-// für notifyMissionSubscribers im Aufrufer (actions/missions.ts), der sonst
-// eine zweite Query bräuchte.
+// Nur-Synopsis-Bearbeitung — für das Zurückholen einer älteren Fassung
+// (app/actions/revisions.ts) und die Inhalts-Werkzeuge: Titel/Status/
+// Zeitraum/Tags bleiben unangetastet, deshalb reicht slug + die
+// aktualisierte metadata als Rückgabe. title zusätzlich (nicht nur slug) für
+// Benachrichtigungen im Aufrufer, der sonst eine zweite Query bräuchte.
 export async function updateMissionSynopsis(
   missionId: number,
   bodyMarkdown: string,

@@ -595,11 +595,13 @@ export default function TutorialPage() {
                 „Meine Inhalte“ bzw. „Charaktere“, dort deutlich markiert.
               </p>
               <p>
-                Mission-Synopsen, Datenbank-Einträge und Charakter-Biografien
-                lassen sich zusätzlich{" "}
-                <strong>direkt auf ihrer Detailseite</strong> bearbeiten
-                („Bearbeiten“-Knopf über dem Text) — ohne Umweg über ein
-                separates Formular.
+                Auch auf der Leseseite eines Inhalts führt der{" "}
+                <strong>Stift</strong> (im aufklappbaren Feld „Aktionen &amp;
+                Verwaltung“ am Fuß des Textes) direkt in dessen Editor — und
+                zwar in denselben, in dem auch Titel, Kategorie, Tags und
+                Metadaten dranhängen. Früher öffnete er dort nur ein Feld für
+                den Fließtext; wer den Titel ändern wollte, musste den Eintrag
+                in „Meine Inhalte“ erst wiederfinden.
               </p>
               <p>
                 <strong>Gespräche</strong> sind ein eigener Inhaltstyp mit ein

@@ -108,9 +108,8 @@ export interface ArchiveEntryDetail {
   isDraft: boolean;
   updated_at: string;
   // Roher Markdown-Body (leerer String bei Dialogen — deren Inhalt lebt in
-  // dialogue_messages) — für den Inline-Editor des Owners auf der
-  // Detailseite (siehe ArchiveEntryEditor.tsx), analog
-  // MissionDetail.sourceMarkdown.
+  // dialogue_messages) — Grundlage des Markdown-Exports (contentExport.ts),
+  // analog MissionDetail.sourceMarkdown.
   sourceMarkdown: string;
   // Ausgehende Verweise (dieser Eintrag → andere Archiv-Einträge).
   links: ArchiveLink[];

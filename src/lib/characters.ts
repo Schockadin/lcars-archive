@@ -1020,15 +1020,12 @@ export async function userHasCharacters(userId: number): Promise<boolean> {
 
 // Benachrichtigt alle Abonnenten eines Charakters (content_follows,
 // target_type 'character'), dass sich etwas an der Akte geändert hat —
-// gerufen von beiden Bearbeiten-Wegen (Stammdaten-/Biografie-Panel:
-// characters/_shared/panelActions.ts; Inline-Bio-Editor:
-// app/actions/characters.ts#updateOwnCharacterBioAction), jeweils NACH dem
-// erfolgreichen Speichern. Best-effort wie die Dialog-Benachrichtigungen in
+// gerufen aus dem Stammdaten-/Biografie-Panel
+// (characters/_shared/panelActions.ts) NACH dem erfolgreichen Speichern. Best-effort wie die Dialog-Benachrichtigungen in
 // app/actions/dialogues.ts: einzelne fehlgeschlagene Mails werden geloggt,
 // brechen den Rest nicht ab. editingUserId schließt den Bearbeitenden selbst
-// aus — er ist immer der Owner (beide Editier-Wege sind owner-only, siehe
-// CharacterBioEditor.tsx/EditCharacterForm.tsx), braucht also keine
-// Benachrichtigung über die eigene Änderung.
+// aus — er ist immer der Owner (der Charakter-Editor ist owner-only),
+// braucht also keine Benachrichtigung über die eigene Änderung.
 export async function notifyCharacterSubscribers(input: {
   characterSlug: string;
   characterName: string;
@@ -1078,9 +1075,9 @@ export async function notifyCharacterSubscribers(input: {
   );
 }
 
-// Nur die Biografie, nicht Name/Status/Metadaten — für den Inline-Editor auf
-// der Detailseite (CharacterBioEditor.tsx), analog updateOwnArchiveEntryBody
-// in src/lib/archive.ts. Anders als dort darf der Text leer sein (ein
+// Nur die Biografie, nicht Name/Status/Metadaten — für das Biografie-Panel
+// des eigenen Bereichs, analog updateOwnArchiveEntryBody in
+// src/lib/archive.ts. Anders als dort darf der Text leer sein (ein
 // Charakter ohne Bio ist ein normaler Zustand, siehe die "Keine
 // biografischen Daten"-Leerdarstellung in CharacterHero.tsx) — bio/source_md
 // werden dann auf null gesetzt statt einen leeren String zu speichern.

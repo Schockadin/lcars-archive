@@ -15,14 +15,13 @@ import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { parseList } from "@/lib/formParsing";
+import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import {
   getAttributeFields,
   getReferenceFields,
 } from "@/lib/archiveMetadataFields";
 import type { ArchiveCategory } from "@/types/archive";
-import {
-  archiveHref,
-} from "@/lib/contentRoutes";
+import { archiveHref } from "@/lib/contentRoutes";
 
 // Liest alle Metadaten-Felder (Attribute + Verweise) für die gewählte
 // Kategorie aus dem FormData — welche Felder das sind, hängt von der
@@ -30,7 +29,10 @@ import {
 function readMetadataValues(
   formData: FormData,
   category: Exclude<ArchiveCategory, "dialogue">,
-): { attributeValues: Record<string, string>; referenceValues: Record<string, string> } {
+): {
+  attributeValues: Record<string, string>;
+  referenceValues: Record<string, string>;
+} {
   const attributeValues: Record<string, string> = {};
   for (const field of getAttributeFields(category)) {
     attributeValues[field.key] = String(formData.get(field.key) ?? "").trim();
@@ -106,21 +108,38 @@ export async function archiveEntryAction(
   }
 
   const categoryValue = category as Exclude<ArchiveCategory, "dialogue">;
-  const { attributeValues, referenceValues } = readMetadataValues(formData, categoryValue);
+  const { attributeValues, referenceValues } = readMetadataValues(
+    formData,
+    categoryValue,
+  );
 
   if (isEdit) {
-    const result = await updateOwnArchiveEntryContent(session.userId, entryId!, {
-      title,
-      category: categoryValue,
-      tags,
-      summary,
-      aliases,
-      attributeValues,
-      referenceValues,
-      bodyMarkdown,
-      isDraft,
-      contentHtml,
-    });
+    // Spielleitung/Administration (content.moderate) dürfen auch fremde
+    // Einträge bearbeiten — es ist dieselbe Gruppe, die den Bearbeiten-Stift
+    // auf einem fremden Eintrag überhaupt sieht (ActionsMenu.tsx) und für die
+    // die Bearbeiten-Seite den Eintrag lädt. Ohne dieses Recht bleibt es beim
+    // Owner-Scope in der Abfrage selbst.
+    const asModerator = viewerHasPermission(
+      await getViewer(),
+      "content.moderate",
+    );
+    const result = await updateOwnArchiveEntryContent(
+      session.userId,
+      entryId!,
+      {
+        title,
+        category: categoryValue,
+        tags,
+        summary,
+        aliases,
+        attributeValues,
+        referenceValues,
+        bodyMarkdown,
+        isDraft,
+        contentHtml,
+      },
+      asModerator,
+    );
     if (!result) {
       return { error: "Eintrag nicht gefunden oder keine Berechtigung." };
     }

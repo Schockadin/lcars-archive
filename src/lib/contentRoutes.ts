@@ -95,6 +95,27 @@ export function archiveEditHref(id: number | string): string {
   return `/user/archive/${id}/edit`;
 }
 
+// Eine Adresse für alle vier: Der Bearbeiten-Stift auf den Leseseiten
+// springt seit v1.34 in genau diesen Editor, statt einen Inline-Editor nur
+// für den Fließtext aufzuklappen — dort lassen sich auch Titel und
+// Metadaten ändern. Die Namen sind die der ContentToolType-Zuordnung in
+// ActionsMenu.tsx.
+export function contentEditHref(
+  type: "character" | "mission" | "missionLog" | "archiveEntry",
+  id: number | string,
+): string {
+  switch (type) {
+    case "character":
+      return characterEditHref(id);
+    case "mission":
+      return missionEditHref(id);
+    case "missionLog":
+      return missionLogEditHref(id);
+    case "archiveEntry":
+      return archiveEditHref(id);
+  }
+}
+
 // ── Hochgeladene Bilder ─────────────────────────────────────────────────
 
 // Die Adresse, unter der ein hochgeladenes Bild ausgeliefert wird (siehe

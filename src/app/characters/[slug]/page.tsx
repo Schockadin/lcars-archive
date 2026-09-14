@@ -2,7 +2,6 @@
 import {
   getCharacterBySlug,
   getLogsByCharacter,
-  getCharacterSourceBySlug,
 } from "@/lib/characters";
 import { getDialogueCountByParticipant } from "@/lib/archive";
 import { resolveFollowState } from "@/lib/follows";
@@ -65,17 +64,11 @@ export default async function CharakterPage({ params }: Props) {
     notFound();
   }
 
-  // Rohen Markdown-Body nur laden, wenn der Betrachter auch tatsächlich der
-  // Owner ist (einzige Zielgruppe des Inline-Bio-Editors, siehe
-  // CharacterHero.tsx) — spart die Extra-Query für alle anderen Aufrufe.
-  const isOwner = viewer != null && viewer.userId === character.player_id;
-
-  const [logs, conversationCount, allUsers, source, ingameYear, followInitialState, mentions, relations, notes] =
+  const [logs, conversationCount, allUsers, ingameYear, followInitialState, mentions, relations, notes] =
     await Promise.all([
       getLogsByCharacter(character.id),
       getDialogueCountByParticipant(character.slug),
       viewerHasPermission(viewer, "content.moderate") ? listAllUsers() : Promise.resolve([]),
-      isOwner ? getCharacterSourceBySlug(character.slug) : Promise.resolve(null),
       getIngameYear(),
       // Bookmark/Abo-Stand serverseitig vorlösen → an FollowButtons als
       // initialState durchgereicht (kein Client-Fetch nach der Hydration).
@@ -107,7 +100,6 @@ export default async function CharakterPage({ params }: Props) {
         viewer={viewer}
         owners={owners}
         displayAge={displayAge}
-        sourceMarkdown={isOwner ? (source?.sourceMarkdown ?? "") : null}
         followInitialState={followInitialState}
         mentions={mentions}
         relations={relations}

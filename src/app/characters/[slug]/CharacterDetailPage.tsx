@@ -22,7 +22,6 @@ export default function CharakterDetailPage({
   viewer,
   owners,
   displayAge,
-  sourceMarkdown,
   followInitialState,
   mentions,
   relations,
@@ -38,9 +37,6 @@ export default function CharakterDetailPage({
   // serverseitig berechnet (siehe page.tsx) — CharacterHero ist eine Client
   // Component und kann das server-only campaign.ts nicht selbst importieren.
   displayAge: number | null;
-  // Nur gesetzt, wenn viewer === Owner (siehe page.tsx) — Grundlage für den
-  // Inline-Bio-Editor in CharacterHero.tsx.
-  sourceMarkdown: string | null;
   followInitialState?: FollowState;
   // Eingehende Verweise (siehe src/lib/mentions.ts).
   mentions: Mention[];
@@ -61,7 +57,6 @@ export default function CharakterDetailPage({
         viewer={viewer}
         owners={owners}
         displayAge={displayAge}
-        sourceMarkdown={sourceMarkdown}
         followInitialState={followInitialState}
       />
       <div className="lcars-text lcars-wide-column mt-[16px] flex flex-col gap-[16px]">

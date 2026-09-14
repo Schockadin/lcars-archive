@@ -229,6 +229,59 @@ describe("getOwnArchiveEntryForEdit", () => {
   });
 });
 
+// Der Bearbeiten-Stift auf der Leseseite führt seit v1.34 in den vollen
+// Editor — auch für Spielleitung/Administration auf einem fremden Eintrag.
+// Dessen Abfragen heben den Owner-Scope dafür auf (asModerator); das Recht
+// content.moderate prüfen Seite und Action davor.
+describe("Moderation fremder Einträge", () => {
+  it("lädt einen fremden Eintrag nur mit asModerator zum Bearbeiten", async () => {
+    const owner = await insertUser();
+    const moderator = await insertUser();
+    const entry = await createArchiveEntry(
+      baseEntryInput({ ownerUserId: owner.id, title: "Fremder Eintrag" }),
+    );
+
+    expect(await getOwnArchiveEntryForEdit(moderator.id, entry.id)).toBeNull();
+    const asModerator = await getOwnArchiveEntryForEdit(
+      moderator.id,
+      entry.id,
+      true,
+    );
+    expect(asModerator?.title).toBe("Fremder Eintrag");
+  });
+
+  it("speichert einen fremden Eintrag nur mit asModerator", async () => {
+    const owner = await insertUser();
+    const moderator = await insertUser();
+    const entry = await createArchiveEntry(
+      baseEntryInput({ ownerUserId: owner.id, title: "Vorher" }),
+    );
+
+    expect(
+      await updateOwnArchiveEntryContent(
+        moderator.id,
+        entry.id,
+        baseEntryInput({ title: "Ohne Recht" }),
+      ),
+    ).toBeNull();
+
+    const result = await updateOwnArchiveEntryContent(
+      moderator.id,
+      entry.id,
+      baseEntryInput({ title: "Nachher" }),
+      true,
+    );
+    expect(result?.slug).toBe(entry.slug);
+
+    const [row] = await sql<{ title: string; owner_user_id: number }[]>`
+      SELECT title, owner_user_id FROM archive_entries WHERE id = ${entry.id}
+    `;
+    expect(row.title).toBe("Nachher");
+    // Die Moderation ändert den Inhalt, nicht die Eigentümerschaft.
+    expect(row.owner_user_id).toBe(owner.id);
+  });
+});
+
 // Aliase: wie bei Charakteren weitere Namen desselben Eintrags. Sie liegen in
 // metadata und müssen den Weg Anlegen → Bearbeiten-Formular → Speichern
 // unverändert überstehen.

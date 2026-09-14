@@ -142,6 +142,16 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Aliase für Datenbank-Einträge",
     items: [
       {
+        text: "Der Bearbeiten-Stift auf einer Leseseite führt jetzt direkt in den vollen Editor des Inhalts — dort lassen sich auch Titel, Kategorie, Tags und Metadaten ändern. Bisher klappte er bei Charakteren, Missionen und Datenbank-Einträgen nur ein Feld für den Fließtext auf.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Spielleitung und Administration können einen fremden Datenbank-Eintrag im selben vollen Editor bearbeiten, statt ihn nur löschen oder umhängen zu können.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
         text: "Datenbank-Einträge haben jetzt — wie Charaktere — ein Feld für Aliase: weitere Namen, unter denen derselbe Ort, Gegenstand oder NPC bekannt ist. Sie stehen auf der Eintragsseite unter „Auch bekannt als“ und werden bei der automatischen Verlinkung ebenfalls erkannt, ein „DS12“ im Text führt also zum Eintrag „Deep Space 12“.",
         category: "inhalte",
         tutorial: "verlinkung",

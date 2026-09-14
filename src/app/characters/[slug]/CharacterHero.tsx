@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { Character } from "@/types/character";
 import {
   LcarsDataRow,
@@ -9,7 +9,6 @@ import {
 } from "@/components/lcars";
 import Link from "next/link";
 import CharacterPortrait from "./CharacterPortrait";
-import CharacterBioEditor from "./CharacterBioEditor";
 import type { Viewer } from "@/lib/visibility";
 import type { FollowState } from "@/app/actions/follows";
 import ContentActionsPanel from "@/components/ContentActionsPanel";
@@ -134,7 +133,6 @@ export default function CharacterHero({
   viewer,
   owners,
   displayAge = null,
-  sourceMarkdown,
   followInitialState,
 }: {
   character: Character;
@@ -145,12 +143,9 @@ export default function CharacterHero({
   // Aus Geburtsdatum + Ingame-Jahr abgeleitetes Alter (Fallback: metadata.age),
   // serverseitig berechnet und durchgereicht (siehe CharacterDetailPage).
   displayAge?: number | null;
-  // Nur gesetzt, wenn viewer === Owner (player_id) — siehe page.tsx.
-  sourceMarkdown: string | null;
   followInitialState?: FollowState;
 }) {
   const { metadata } = character;
-  const [editMode, setEditMode] = useState(false);
 
   // Deko-Codes deterministisch aus der Charakter-ID ableiten
   const rng = makeRng(character.id * 2654435761);
@@ -310,18 +305,12 @@ export default function CharacterHero({
               <h1 className="char-file-name">{character.name}</h1>
             </div>
 
-            {sourceMarkdown != null ? (
-              <CharacterBioEditor
-                bioHtml={bio?.html ?? null}
-                sourceMarkdown={sourceMarkdown}
-                isAdminOrGM={
-                  viewer?.permissions.includes("content.autolink_tools") ?? false
-                }
-                character={character}
-                editMode={editMode}
-                onEditModeChange={setEditMode}
-              />
-            ) : bio ? (
+            {/* Read-only: Die Biografie wird seit v1.34 im vollen Editor
+                unter /user/characters/[characterId] bearbeitet (dorthin
+                springt der Stift in ActionsMenu) — dort hängen Name,
+                Stammdaten und Werte mit dran, die der frühere Inline-Editor
+                nicht kannte. */}
+            {bio ? (
               <div
                 className="char-file-bio lcars-text"
                 dangerouslySetInnerHTML={{ __html: bio.html }}
@@ -340,7 +329,6 @@ export default function CharacterHero({
               followType="character"
               followInitialState={followInitialState}
               playerId={character.player_id}
-              onEdit={() => setEditMode(true)}
               imageContentType="character"
               imageContentId={character.id}
             />
