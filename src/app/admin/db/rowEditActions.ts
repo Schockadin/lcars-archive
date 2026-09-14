@@ -41,15 +41,13 @@ export async function updateDbRowAction(input: {
   );
   if (accessError) return { error: accessError };
 
-  // Defense in Depth: Auth-/Sicherheits-Tabellen sind fürs Schreiben gesperrt.
-  // Heute redundant — tableAccessError begrenzt den Zeilen-Editor ohnehin auf
-  // VIEWABLE_TABLES (Backup-Whitelist minus HIDDEN_FROM_VIEW), die keine dieser
-  // Tabellen enthält. BEWUSST trotzdem hier: würde jemand später eine
-  // Auth-Tabelle (z.B. users) zu TABLE_COLUMNS/dbBackup hinzufügen, ohne sie in
-  // HIDDEN_FROM_VIEW zu ergänzen, wäre sie sonst schlagartig über das Overlay
-  // beschreibbar (Rechte-Eskalation). Die Sperre koppelt diese zweite Barriere
-  // an dieselbe PROTECTED_WRITE_TABLES-Liste wie das freie SQL-Panel. Nicht
-  // entfernen.
+  // Die Sperre, auf die es hier ankommt: Der Tabellen-Browser zeigt seit
+  // dbTables.ts ALLE Tabellen außer den reinen Geheimnis-Tabellen — also auch
+  // users, roles, die Rate-Limit-Tabellen und das Audit-Protokoll.
+  // tableAccessError lässt sie damit durch (Lesen ist gewollt), und einzig
+  // diese Prüfung verhindert, dass sich jemand mit sql_write über das Overlay
+  // selbst Rechte einträgt. Dieselbe PROTECTED_WRITE_TABLES-Liste wie im
+  // freien SQL-Panel. Nicht entfernen.
   if (isProtectedWriteTable(input.table)) {
     return { error: `Schreibzugriff auf „${input.table}“ ist gesperrt.` };
   }

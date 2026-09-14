@@ -422,6 +422,16 @@ export default function TutorialPage() {
                 Fitness und dem Bonus aus Talenten.
               </p>
               <p>
+                Hat die Spielleitung deine <strong>Erschaffung wieder
+                geöffnet</strong>, sind Attribute, Disziplinen, Talente und
+                Schwerpunkte erneut frei editierbar. Die Steigerungen, die du
+                seit dem Abschluss gekauft hattest, sind dabei zurückgenommen
+                und die AP wieder gutgeschrieben — sie stehen als Liste im
+                AP-Bereich deines Bogens. Verplane sie nicht neu: Beim
+                Abschließen werden genau diese Steigerungen automatisch wieder
+                angewandt und die AP erneut abgebucht.
+              </p>
+              <p>
                 <strong>Deine Charakterseite</strong> zeigt danach Stammdaten,
                 Werte und Biografie als drei Abschnitte untereinander. Bei
                 Stammdaten und Biografie öffnet der <strong>Stift</strong> in
@@ -1036,12 +1046,26 @@ export default function TutorialPage() {
                   sieht beide Menüs nebeneinander — und ist wie dieses nach
                   Aufgaben gegliedert: Kampagne, Charaktere, Regelwerk, Inhalte)
                   unter <strong>„Kampagne“</strong> an einer Stelle das aktuelle{" "}
-                  <strong>Ingame-Jahr</strong> einstellen, Charaktere
-                  Spieler:innen zuweisen (Gast-Accounts ausgenommen) und alle
-                  Missionen mit Bearbeiten-, Löschen- und Besitzer:in-Zuordnung
-                  pro Zeile verwalten. (Der ebenfalls dort liegende Eintrag{" "}
-                  <strong>„Gespräche“</strong> ist in der eigenen
-                  Gespräche-Sektion oben beschrieben.)
+                  <strong>Ingame-Jahr</strong> einstellen, AP vergeben,
+                  Missionen abschließen und alle Missionen mit Bearbeiten-,
+                  Löschen- und Besitzer:in-Zuordnung pro Zeile verwalten. (Der
+                  ebenfalls dort liegende Eintrag <strong>„Gespräche“</strong>{" "}
+                  ist in der eigenen Gespräche-Sektion oben beschrieben.)
+                </li>
+                <li>
+                  Unter <strong>„Charaktere“</strong> Figuren den Konten{" "}
+                  <strong>zuordnen</strong> (Gast-Accounts ausgenommen) und eine{" "}
+                  <strong>abgeschlossene Erschaffung wieder öffnen</strong> —
+                  etwa, wenn sich die Runde nachträglich auf andere Startwerte
+                  einigt. Alle Steigerungen seit dem Abschluss werden dabei
+                  zurückgenommen: die Werte fallen auf den Stand der
+                  Erschaffung, die ausgegebenen AP kommen aufs Konto zurück
+                  (und der damals gutgeschriebene Erschaffungsrest wieder
+                  herunter). Nichts davon geht verloren: Was zurückgenommen
+                  wurde, steht als Notiz am Bogen und wird beim erneuten
+                  Abschließen automatisch wieder angewandt — soweit Regeln und
+                  AP es dann noch hergeben; was nicht mehr passt, wird beim
+                  Abschließen mit Grund genannt.
                 </li>
                 <li>
                   Unter <strong>„Gruppenblatt“</strong> alle Charaktere der

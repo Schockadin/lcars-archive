@@ -1,5 +1,10 @@
 import "server-only";
 import sql from "@/lib/db";
+import {
+  BACKUP_TABLES,
+  DB_TABLE_COLUMNS,
+  type BackupTableName,
+} from "./dbTables";
 
 // Ersetzt das frühere Vault-Backup (siehe git-history src/lib/vaultExport.ts)
 // als Weg, den kompletten Inhalt der Anwendung zu sichern — anders als das
@@ -11,66 +16,18 @@ import sql from "@/lib/db";
 // Upsert per E-Mail statt vollem Replace) — ein DB-Backup-Restore hier lässt
 // die users-Tabelle unangetastet, referenzierte user_id/player_id-Werte in
 // den restaurierten Zeilen müssen also zu noch vorhandenen Usern passen.
-// Tabellen in Eltern-vor-Kind-Reihenfolge (FK-Constraints) — beim Restore
-// relevant für Lesbarkeit, nicht für Korrektheit (TRUNCATE...CASCADE unten
-// ignoriert die Reihenfolge ohnehin).
-// Exportiert (statt modul-intern) — src/lib/dbInspect.ts nutzt dieselbe
-// Whitelist für den read-only Tabellen-Viewer im Admin-Bereich.
-export const TABLE_COLUMNS = {
-  characters: [
-    "id", "slug", "name", "status", "player_id", "portrait", "species",
-    "rank", "bio", "metadata", "source_md", "frontmatter", "created_at",
-    "updated_at", "visibility", "deleted_at", "is_draft",
-  ],
-  missions: [
-    "id", "slug", "title", "status", "started_at", "ended_at", "metadata",
-    "source_md", "frontmatter", "created_at", "updated_at", "owner_user_id",
-    "deleted_at", "is_draft",
-  ],
-  mission_participants: ["mission_id", "character_id"],
-  mission_logs: [
-    "id", "slug", "mission_id", "author_id", "title", "content", "log_date",
-    "session_nr", "metadata", "source_md", "frontmatter", "created_at",
-    "updated_at", "owner_user_id", "visibility", "deleted_at", "is_draft",
-  ],
-  archive_entries: [
-    "id", "slug", "title", "category", "content", "tags", "metadata",
-    "source_md", "frontmatter", "created_at", "updated_at", "dialogue_open",
-    "owner_user_id", "visibility", "deleted_at", "is_draft",
-  ],
-  archive_links: ["source_id", "target_id", "label"],
-  dialogue_messages: [
-    "id", "archive_entry_id", "character_id", "author_user_id", "content",
-    "source_md", "created_at", "edited_at", "deleted_at",
-  ],
-  timeline_events: [
-    "id", "event_date", "title", "category", "source_type", "source_slug",
-    "href", "created_at",
-  ],
-  password_setup_tokens: [
-    "id", "user_id", "token_hash", "expires_at", "used_at", "created_at",
-  ],
-  content_follows: [
-    "id", "user_id", "target_type", "target_slug", "bookmarked_at",
-    "subscribed_at", "created_at",
-  ],
-  push_subscriptions: [
-    "id", "user_id", "endpoint", "p256dh", "auth", "created_at",
-  ],
-  content_deletions: [
-    "id", "target_type", "title", "visibility", "owner_user_id",
-    "deleted_by", "deleted_at",
-  ],
-  dialogue_reservations: [
-    "archive_entry_id", "held_by_user_id", "expires_at", "created_at",
-  ],
-  dialogue_reservation_notify_requests: [
-    "archive_entry_id", "user_id", "created_at",
-  ],
-} as const satisfies Record<string, readonly string[]>;
+// WELCHE Tabellen gesichert werden und mit welchen Spalten, steht in
+// src/lib/dbTables.ts (BACKUP_TABLES) — derselben Liste, aus der sich auch der
+// Tabellen-Browser unter /admin/db speist. Dort steht auch, warum die
+// Backup-Auswahl enger ist als die Tabellen der Datenbank.
+const TABLES = BACKUP_TABLES;
+type TableName = BackupTableName;
 
-const TABLES = Object.keys(TABLE_COLUMNS) as (keyof typeof TABLE_COLUMNS)[];
-export type TableName = (typeof TABLES)[number];
+// Spalten-Whitelist für den Import (siehe importDatabaseBackup): nur diese
+// Namen landen je als Identifier in einem INSERT.
+export const TABLE_COLUMNS = Object.fromEntries(
+  TABLES.map((table) => [table, DB_TABLE_COLUMNS[table]]),
+) as { [T in TableName]: (typeof DB_TABLE_COLUMNS)[T] };
 
 // Tabellen mit SERIAL-id-Spalte — deren Sequence muss nach dem Restore auf
 // MAX(id)+1 gesetzt werden, sonst kollidiert der nächste per App erzeugte

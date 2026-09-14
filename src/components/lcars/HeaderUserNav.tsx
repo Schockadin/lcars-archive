@@ -38,6 +38,8 @@ interface NavMenuItem {
 const GM_ITEMS: NavMenuItem[] = [
   { href: "/gm/campaign", label: "Kampagne", permission: "gm.access", group: "Kampagne" },
   { href: "/gm/sessions", label: "Sessions", permission: "gm.access", group: "Kampagne" },
+  // Verwaltung der Figuren: wem sie gehören und wo ihre Erschaffung steht.
+  { href: "/gm/characters", label: "Charaktere", permission: "gm.access", group: "Charaktere" },
   // Das Blatt für den Tisch: alle Werte nebeneinander, wenn eine Probe
   // angesagt wird — zusammen mit den AP-Konten das, was an den Figuren hängt.
   { href: "/gm/gruppe", label: "Gruppenblatt", permission: "gm.access", group: "Charaktere" },

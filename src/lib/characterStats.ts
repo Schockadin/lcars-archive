@@ -11,6 +11,7 @@ import type {
   CharacterDepartments,
   CharacterExperience,
   CharacterStats,
+  PendingAdvancement,
 } from "@/types/characterStats";
 
 // Labels: deutsches Label plus der englische Begriff des offiziellen Bogens —
@@ -166,6 +167,7 @@ export const LIST_FIELDS: StatFieldSpec<ListKey>[] = [
 
 export const EMPTY_CHARACTER_STATS: CharacterStats = {
   creationLocked: false,
+  pendingAdvancements: [],
   pronouns: null,
   characterRole: null,
   assignment: null,
@@ -231,6 +233,40 @@ function normalizeNumber(
   return num;
 }
 
+// Zurückgenommene Steigerungen (siehe PendingAdvancement). Wie überall hier
+// tolerant: was nicht die erwartete Form hat, fliegt raus statt kaputt
+// weitergereicht zu werden — die Liste steuert später echte Buchungen.
+function normalizePendingAdvancements(value: unknown): PendingAdvancement[] {
+  if (!Array.isArray(value)) return [];
+  const kinds = ["attribute", "department", "talent", "focus"] as const;
+  return value.flatMap((raw): PendingAdvancement[] => {
+    const source = asRecord(raw);
+    const kind = kinds.find((k) => k === source.kind);
+    const label = normalizeText(source.label);
+    const cost = typeof source.cost === "number" ? source.cost : NaN;
+    if (!kind || !label || !Number.isInteger(cost) || cost < 0) return [];
+    const key = normalizeText(source.key);
+    const entry = normalizeText(source.entry);
+    // Ohne Ziel lässt sich nichts wieder anwenden: Werte brauchen den
+    // Schlüssel, Talente/Schwerpunkte den Eintrag.
+    if (kind === "attribute" || kind === "department") {
+      if (!key) return [];
+    } else if (!entry) {
+      return [];
+    }
+    return [
+      {
+        kind,
+        key,
+        entry,
+        label,
+        cost,
+        recordedAt: normalizeText(source.recordedAt) ?? "",
+      },
+    ];
+  });
+}
+
 function normalizeList(value: unknown): string[] {
   if (!Array.isArray(value)) return [];
   return value
@@ -271,6 +307,7 @@ export function parseCharacterStats(raw: unknown): CharacterStats {
     attributes,
     departments,
     creationLocked: source.creationLocked === true,
+    pendingAdvancements: normalizePendingAdvancements(source.pendingAdvancements),
     experience:
       typeof source.experience === "string" &&
       isCharacterExperience(source.experience)

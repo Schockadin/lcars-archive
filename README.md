@@ -226,6 +226,22 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   diese beiden Prüfungen hinterließe ein direkt abgeschickter POST einen
   dauerhaft überzogenen bzw. leeren Bogen — nach dem Festschreiben sind die
   Felder schreibgeschützt, und `checkAdvancement` steigert keinen leeren Wert.
+  **Zurücksetzen:** Die Spielleitung kann eine abgeschlossene Erschaffung unter
+  `/gm/characters` wieder öffnen (`reopenCharacterCreation`, Recht
+  `characters.assign`). Dabei werden alle Steigerungen seit dem Festschreiben
+  zurückgenommen — die reine Logik dazu liegt in `src/lib/creationReset.ts`:
+  `revertAdvancements` läuft das Journal rückwärts (neueste Buchung zuerst) und
+  liest aus dem Klartext jeder Buchung („Control 9 → 10", Talent-/
+  Schwerpunktname) Ziel und Vorzustand zurück. Die Werte fallen damit auf den
+  Stand der Erschaffung, die ausgegebenen AP werden gutgeschrieben und der
+  damals übertragene Erschaffungsrest zurückgebucht (Buchungsgrund `reset`).
+  Verloren geht dabei nichts: Was zurückgenommen wurde, steht als
+  `metadata.stats.pendingAdvancements` am Charakter und wird vom erneuten
+  `lockOwnCharacterCreation` über `reapplyAdvancements` automatisch wieder
+  angewandt — in der ursprünglichen Reihenfolge, aber mit den dann geltenden
+  Regeln und derselben Prüfung wie beim Steigern; was nicht mehr passt, wird in
+  der Rückmeldung mit Grund genannt. Rücknahme, Notiz und Gegenbuchungen laufen
+  wie das Festschreiben in EINER Transaktion.
 - **Eigene Regeln der Runde** — Hausregeln (Name, Regeltext, `sort_order`)
   liegen in `campaign_rules`, gepflegt unter `/gm/rules`, und erscheinen auf
   dem Spickzettel jedes Charakterbogens hinter den Kernregeln — in der
@@ -368,9 +384,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   liegenden Seiten `campaign`, `dialogues`, `characters` und `missions` sind
   hierher umgezogen, `/admin` ist dadurch reine Verwaltung (`requireStaff`
   verlangt dort kein `gm.access` mehr).
-  - `/gm/campaign` — Ingame-Jahr, AP-Vergabe, Charakter-Zuweisung und
-    Missions-Übersicht an einem Ort (`/gm/characters` und `/gm/missions`
-    bleiben als Direktlinks auf die Einzelansichten erhalten).
+  - `/gm/campaign` — Ingame-Jahr, AP-Vergabe, Missionsabschluss und
+    Missions-Übersicht an einem Ort (`/gm/missions` bleibt als Direktlink auf
+    die Einzelansicht erhalten).
+  - `/gm/characters` — die Charakter-Verwaltung: Zuordnung der Figuren zu
+    Konten und der Erschaffungs-Status samt „Erschaffung wieder öffnen“
+    (siehe oben). Eigener Menüpunkt; die Zuordnung stand übergangsweise
+    zusätzlich auf der Kampagnen-Seite und ist dort entfallen.
   - `/gm/dialogues` — alle offenen Gespräche, unabhängig von eigener
     Teilnahme; darunter `[slug]/edit` für die Metadaten (`dialogues.moderate`).
   - `/gm/gruppe` — das **Gruppenblatt**: alle aktiven, nicht als Entwurf
@@ -981,6 +1001,28 @@ Liest die Markdown-Dateien aus `VAULT_PATH` ein und schreibt sie per Upsert in d
 > Credential-Spalten und Auth-Tabellen sind geschützt), ohne dafür erst ein
 > komplettes Backup exportieren zu müssen.
 
+**Welche Tabellen wo auftauchen**, steht als eine Liste in
+[`src/lib/dbTables.ts`](src/lib/dbTables.ts). Daraus leiten sich beide Seiten
+ab:
+
+- **Tabellenbrowser** (`VIEWABLE_TABLES`): jede Tabelle des Schemas außer den
+  reinen Geheimnis-Tabellen (`password_setup_tokens`). Die vier
+  Inhaltstabellen sieht jeder mit `sql_read`, alles andere verlangt
+  zusätzlich `db_view_system_tables`; `users` steht ohne `password_hash` da
+  und ist wie die übrigen Auth-Tabellen gegen Schreibzugriff gesperrt
+  (`PROTECTED_WRITE_TABLES` in [`src/lib/dbInspect.ts`](src/lib/dbInspect.ts)).
+- **DB-Backup** (`BACKUP_TABLES`): eine bewusst engere Auswahl. Der Restore
+  leert jede dort genannte Tabelle, bevor er sie neu einspielt — eine ältere
+  Backup-Datei kennt eine neu aufgenommene Tabelle aber nicht und würde sie
+  damit leeren statt wiederherstellen. Die Auswahl zu erweitern ist deshalb
+  eine eigene Entscheidung samt Versionssprung des Dateiformats
+  (`DbBackup.version`), kein Nebeneffekt einer neuen Tabelle.
+
+`src/lib/dbTables.test.ts` gleicht die Liste bei jedem CI-Lauf mit
+`scripts/schema.sql` ab: Eine neue Tabelle oder Spalte, die dort fehlt, lässt
+den Test rot werden — vorher wuchs die Liste nur mit, wenn jemand beim Anlegen
+einer Tabelle zufällig ans Backup dachte.
+
 ### 6. Entwicklungsserver starten
 
 ```bash
@@ -1535,6 +1577,15 @@ neue **Tabelle**, die die App liest: `scripts/migrate-pr67.sql` legt
 
 ```bash
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr67.sql
+```
+
+Ebenso `scripts/migrate-pr70.sql`: Es erweitert die Prüfbedingung von
+`character_ap_entries.reason` um den Buchungsgrund `reset` (Zurücksetzen einer
+abgeschlossenen Erschaffung, siehe oben). Fehlt die Migration, scheitert das
+Zurücksetzen mit einer verletzten Check-Constraint:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr70.sql
 ```
 
 Nach `scripts/migrate-pr62.sql` einmalig `npm run db:seed-talents` ausführen —

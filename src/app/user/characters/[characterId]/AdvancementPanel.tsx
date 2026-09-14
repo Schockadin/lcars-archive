@@ -169,7 +169,9 @@ export default function AdvancementPanel({
               onClick={(e) => {
                 if (
                   !window.confirm(
-                    "Erschaffung abschließen? Danach lassen sich Attribute, Disziplinen, Talente und Schwerpunkte nur noch mit AP steigern.",
+                    stats.pendingAdvancements.length > 0
+                      ? `Erschaffung abschließen? Danach lassen sich Attribute, Disziplinen, Talente und Schwerpunkte nur noch mit AP steigern. Die ${stats.pendingAdvancements.length} zurückgenommenen Steigerungen werden dabei automatisch wieder angewandt und die AP erneut abgebucht.`
+                      : "Erschaffung abschließen? Danach lassen sich Attribute, Disziplinen, Talente und Schwerpunkte nur noch mit AP steigern.",
                   )
                 ) {
                   e.preventDefault();
@@ -179,6 +181,41 @@ export default function AdvancementPanel({
               {lockPending ? "Schreibt fest …" : "Erschaffung abschließen"}
             </button>
           </form>
+        </div>
+      )}
+
+      {/* Hat die Spielleitung die Erschaffung wieder geöffnet, stehen die
+          dabei zurückgenommenen Steigerungen als Notiz am Bogen — sie
+          werden beim Abschließen automatisch wieder angewandt. Das gehört
+          sichtbar hierher: die AP dafür stehen gerade wieder auf dem Konto
+          und sind eben NICHT frei verplanbar. */}
+      {!locked && stats.pendingAdvancements.length > 0 && (
+        <div className="stat-ap-block">
+          <h3 className="stat-ap-heading">
+            Reverted{" "}
+            <span className="stat-label-secondary">
+              Zurückgenommene Steigerungen
+            </span>
+          </h3>
+          <p className="stat-sheet-rule">
+            Die Spielleitung hat die Erschaffung wieder geöffnet. Diese
+            Steigerungen wurden zurückgenommen und die AP gutgeschrieben —
+            beim Abschließen werden sie automatisch wieder angewandt,
+            soweit Regeln und AP es dann zulassen.
+          </p>
+          <ul className="stat-ap-step-list">
+            {stats.pendingAdvancements.map((entry) => (
+              <li
+                key={`${entry.recordedAt}-${entry.label}`}
+                className="stat-ap-step"
+              >
+                <span className="stat-ap-step-label">{entry.label}</span>
+                <span className="stat-label-secondary">
+                  {entry.cost} AP
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 

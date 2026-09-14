@@ -712,12 +712,17 @@ CREATE INDEX IF NOT EXISTS idx_content_images_content ON content_images(content_
 -- amount: positiv = vergeben, negativ = ausgegeben. reason klassifiziert die
 -- Buchung (siehe AP_REASONS in src/lib/characterAp.ts), note trägt den
 -- Klartext ("Session 42", "Kontrolle 9 → 10").
+--
+-- 'reset' entsteht, wenn die Spielleitung eine abgeschlossene Erschaffung
+-- wieder öffnet (siehe reopenCharacterCreation): jede zurückgenommene
+-- Steigerung wird gutgeschrieben, der beim Festschreiben übertragene
+-- Erschaffungsrest wieder abgezogen.
 CREATE TABLE IF NOT EXISTS character_ap_entries (
   id           SERIAL PRIMARY KEY,
   character_id INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
   amount       INT NOT NULL CHECK (amount <> 0),
   reason       TEXT NOT NULL
-                 CHECK (reason IN ('session', 'logbook', 'bonus', 'mission', 'manual', 'advancement', 'creation')),
+                 CHECK (reason IN ('session', 'logbook', 'bonus', 'mission', 'manual', 'advancement', 'creation', 'reset')),
   note         TEXT,
   created_by   INT REFERENCES users(id) ON DELETE SET NULL,
   created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()

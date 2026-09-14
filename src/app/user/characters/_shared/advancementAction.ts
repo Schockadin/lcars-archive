@@ -133,12 +133,29 @@ export async function lockCreationAction(
   revalidateCharacter(result.slug);
   revalidatePath(characterEditHref(characterId));
 
-  const base =
-    "Erschaffung abgeschlossen — Attribute und Disziplinen lassen sich jetzt nur noch mit AP steigern.";
-  return {
-    success:
-      result.carryOver > 0
-        ? `${base} ${result.carryOver} nicht verbrauchte AP wurden gutgeschrieben.`
-        : base,
-  };
+  const parts = [
+    "Erschaffung abgeschlossen — Attribute und Disziplinen lassen sich jetzt nur noch mit AP steigern.",
+  ];
+  if (result.carryOver > 0) {
+    parts.push(
+      `${result.carryOver} nicht verbrauchte AP wurden gutgeschrieben.`,
+    );
+  }
+  // Hatte die Spielleitung die Erschaffung zurückgesetzt, wurden die damals
+  // zurückgenommenen Steigerungen jetzt wieder angewandt (siehe
+  // reopenCharacterCreation) — das gehört in die Meldung, sonst wundert sich
+  // der Bogen über plötzlich abgebuchte AP.
+  if (result.reapplied.length > 0) {
+    parts.push(
+      `${result.reapplied.length} zurückgenommene Steigerung${result.reapplied.length === 1 ? " wurde" : "en wurden"} wieder angewandt.`,
+    );
+  }
+  if (result.skipped.length > 0) {
+    parts.push(
+      `Nicht wieder angewandt: ${result.skipped
+        .map((entry) => `${entry.label} (${entry.error})`)
+        .join(" ")}`,
+    );
+  }
+  return { success: parts.join(" ") };
 }

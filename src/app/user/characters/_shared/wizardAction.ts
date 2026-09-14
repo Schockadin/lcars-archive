@@ -65,6 +65,9 @@ export async function createCharacterWizardAction(
   // steht immer am Anfang seiner Erschaffung, abgeschlossen wird sie später
   // ausdrücklich (siehe lockCreationAction).
   stats.creationLocked = false;
+  // Dasselbe gilt für die Notiz zurückgenommener Steigerungen: ein neuer
+  // Charakter hat noch nichts gesteigert, das zurückgenommen sein könnte.
+  stats.pendingAdvancements = [];
 
   const [rules, catalog, focusCatalog] = await Promise.all([
     getAdvancementRules(),

@@ -29,12 +29,39 @@ export interface CharacterDepartments {
 // englische Schlüssel, angezeigt das deutsche Label (siehe EXPERIENCE_OPTIONS).
 export type CharacterExperience = "novice" | "experienced" | "veteran";
 
+// Eine Steigerung, die beim erneuten Öffnen der Erschaffung zurückgenommen
+// wurde (siehe src/lib/creationReset.ts). Die Werte sind dabei auf den Stand
+// vor der Steigerung zurückgefallen und die AP wieder gutgeschrieben — die
+// Notiz hier hält fest, WAS zurückgenommen wurde, damit dieselbe Steigerung
+// beim erneuten Abschließen der Erschaffung automatisch wieder angewandt
+// werden kann.
+export interface PendingAdvancement {
+  kind: "attribute" | "department" | "talent" | "focus";
+  // Bei attribute/department: der Schlüssel des Werts (z.B. "control").
+  key: string | null;
+  // Bei talent/focus: der Eintrag, wie er auf dem Bogen stand.
+  entry: string | null;
+  // Klartext der ursprünglichen Buchung („Kontrolle 9 → 10", Talentname).
+  label: string;
+  // AP, die die Steigerung damals gekostet hat (beim erneuten Anwenden wird
+  // mit den DANN geltenden Regeln neu gerechnet).
+  cost: number;
+  // Zeitpunkt der ursprünglichen Buchung — die Reihenfolge der Liste ist
+  // chronologisch, ältestes zuerst.
+  recordedAt: string;
+}
+
 export interface CharacterStats {
   // Ersterschaffung abgeschlossen? Solange false, sind Attribute und
   // Disziplinen frei editierbar und laufen gegen die Erschaffungsbudgets
   // (320/320 AP, siehe src/lib/advancement.ts). Danach lassen sie sich nur
   // noch über AP-Steigerungen erhöhen.
   creationLocked: boolean;
+
+  // Zurückgenommene Steigerungen einer wieder geöffneten Erschaffung. Leer,
+  // solange die Erschaffung nie zurückgesetzt wurde; beim Abschließen wird die
+  // Liste abgearbeitet und wieder geleert.
+  pendingAdvancements: PendingAdvancement[];
 
   // ── Kopf der Personalakte ────────────────────────────────────────
   pronouns: string | null;
