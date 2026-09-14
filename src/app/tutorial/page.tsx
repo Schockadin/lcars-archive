@@ -326,7 +326,9 @@ export default function TutorialPage() {
                 <strong>„Charaktere“</strong> und{" "}
                 <strong>„Einstellungen“</strong>) findest du zwei klar getrennte
                 Bereiche: <strong>„Neue Inhalte“</strong> mit den
-                Anlegen-Knöpfen und <strong>„Inhalte verwalten“</strong>, wo
+                Anlegen-Knöpfen — jeder öffnet sein Formular in einem Fenster
+                über der Liste, sodass du beim Abbrechen wieder in deiner
+                Übersicht stehst — und <strong>„Inhalte verwalten“</strong>, wo
                 alles auftaucht, was dir bereits gehört:
               </p>
               <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">

@@ -1,15 +1,29 @@
 import type { Metadata } from "next";
 import { userCan } from "@/lib/permissions";
 import { getRoleMap } from "@/lib/roles";
-import { canPlayNpcs, resolveViewer } from "@/lib/visibility";
-import Link from "next/link";
+import { canPlayNpcs, canView, resolveViewer } from "@/lib/visibility";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnCharacters } from "../dal";
-import { getLogsForUser } from "@/lib/characters";
+import {
+  getCharactersForParticipantPicker,
+  getCharactersWithPlayers,
+  getLogsForUser,
+} from "@/lib/characters";
 import { getDialoguesForUser } from "@/lib/dialogues";
-import { getArchiveEntriesForUser } from "@/lib/archive";
-import { getAllMissionsIncludingDrafts } from "@/lib/missions";
+import {
+  getAllArchiveEntries,
+  getArchiveEntriesForUser,
+  getNpcOptions,
+} from "@/lib/archive";
+import {
+  getAllMissions,
+  getAllMissionsIncludingDrafts,
+  getMostRecentLogDate,
+  getNextSessionNr,
+} from "@/lib/missions";
+import { listGmUsers } from "@/lib/users";
 import UserContentBrowser from "./UserContentBrowser";
+import NewContentButtons, { type NewContentData } from "./NewContentButtons";
 
 export const metadata: Metadata = {
   title: "Meine Inhalte",
@@ -26,7 +40,16 @@ export default async function UserContentPage() {
   // fehlte einem reinen Admin-Konto der Knopf für einen Weg, der für es
   // funktioniert.
   const viewer = resolveViewer(user, roleMap);
-  const canStartDialogue = characters.length > 0 || canPlayNpcs(viewer);
+  const playsNpcs = canPlayNpcs(viewer);
+  // Nur eigene bereits veröffentlichte Charaktere kommen als Autor eines Logs
+  // oder als Gesprächsstarter infrage — dieselbe Regel wie auf den
+  // Anlege-Seiten (ein Entwurf ist für niemand außer dem Owner sichtbar).
+  const publishedCharacters = characters.filter((c) => !c.is_draft);
+  const ownCharacterOptions = publishedCharacters.map((c) => ({
+    id: c.id,
+    slug: c.slug,
+    name: c.name,
+  }));
   // Nur Slug und Name an die Client-Komponente: die vollen Charakter-Objekte
   // tragen den Werte-Teilbaum (keepStats in getCharactersForUser) und hätten
   // ihn ungenutzt im RSC-Payload mitgeschickt.
@@ -42,6 +65,81 @@ export default async function UserContentPage() {
     isGM ? getAllMissionsIncludingDrafts() : Promise.resolve([]),
   ]);
 
+  // Die Anlege-Formulare öffnen sich hier in einem Fenster (siehe
+  // NewContentButtons.tsx) und können darin nichts nachladen — ihre
+  // Auswahllisten und Vorbelegungen entstehen deshalb schon hier. Geladen
+  // wird nur, was der jeweilige Knopf überhaupt zeigt: ohne eigenen
+  // veröffentlichten Charakter kein Log-Formular, ohne Spielleitung kein
+  // Missions-Formular.
+  const canWriteLog = publishedCharacters.length > 0;
+  const npcOptions = (await getNpcOptions()).filter((npc) =>
+    canView(npc.visibility, npc.ownerUserId, viewer),
+  );
+  const canStartDialogue = canWriteLog || (playsNpcs && npcOptions.length > 0);
+
+  const [
+    logMissions,
+    defaultLogDate,
+    partnerCharacters,
+    allArchiveEntries,
+    gms,
+    participantOptions,
+  ] = await Promise.all([
+    canWriteLog ? getAllMissions() : Promise.resolve([]),
+    // Auch das Missions-Formular belegt damit sein Startdatum vor.
+    canWriteLog || canStartDialogue || isGM
+      ? getMostRecentLogDate()
+      : Promise.resolve(null),
+    canStartDialogue ? getCharactersWithPlayers(user.id) : Promise.resolve([]),
+    canStartDialogue ? getAllArchiveEntries() : Promise.resolve([]),
+    // Wer kann für die NPCs schreiben? Nur nötig, wenn es überhaupt NPCs zur
+    // Auswahl gibt und die anfragende Person sie nicht selbst spielt.
+    canStartDialogue && npcOptions.length > 0 && !playsNpcs
+      ? listGmUsers()
+      : Promise.resolve([]),
+    isGM ? getCharactersForParticipantPicker() : Promise.resolve([]),
+  ]);
+
+  // Grober Vorschlagswert für die Session-Nr (erster eigener Charakter, erste
+  // Mission) — wie unter /user/mission-logs/new, das Feld bleibt editierbar.
+  const nextSessionNr =
+    canWriteLog && logMissions[0]
+      ? await getNextSessionNr(logMissions[0].id, publishedCharacters[0].id)
+      : 1;
+
+  const newContent: NewContentData = {
+    userId: user.id,
+    isAdminOrGM: userCan(user, "content.autolink_tools", roleMap),
+    missionLog:
+      canWriteLog && logMissions.length > 0
+        ? {
+            ownCharacters: ownCharacterOptions,
+            missions: logMissions.map((m) => ({
+              slug: m.slug,
+              title: m.title,
+            })),
+            defaultSessionNr: nextSessionNr,
+            defaultLogDate,
+          }
+        : null,
+    dialogue: canStartDialogue
+      ? {
+          ownCharacters: ownCharacterOptions,
+          partnerCharacters,
+          npcs: npcOptions,
+          canPlayNpcs: playsNpcs,
+          gms,
+          locations: allArchiveEntries
+            .filter((e) => e.category === "location")
+            .map((l) => ({ slug: l.slug, title: l.title })),
+          defaultLogDate,
+        }
+      : null,
+    mission: isGM
+      ? { defaultStartedAt: defaultLogDate, characters: participantOptions }
+      : null,
+  };
+
   return (
     <>
       <PageMeta title="Meine Inhalte" section="users" />
@@ -50,62 +148,16 @@ export default async function UserContentPage() {
           /chronologie, /search). */}
       <div className="lcars-wide-column">
         <h1>Meine Inhalte</h1>
-        <article className="mb-[10px] gap-[20px] lcars-flex-switch">
-          <section className="flex flex-col gap-[12px] justify-center items-end">
+        {/* Die Knöpfe stehen ÜBER der Liste, nicht daneben: neben ihr blieb
+            dem Inhaltsbrowser nur eine schmale Restspalte, obwohl er die
+            Tabelle mit den meisten Spalten dieser Seite trägt. */}
+        <article className="mb-[10px] flex flex-col gap-[20px]">
+          <section className="flex flex-col gap-[12px]">
             <h2>Neue Inhalte</h2>
-            <div className="lcars-btn-stack max-sm:w-full">
-              {characters.length > 0 && (
-                <Link
-                  href="/user/mission-logs/new"
-                  className="lcars-pill-btn max-sm:self-stretch"
-                >
-                  Neuer Missionslog
-                </Link>
-              )}
-              {canStartDialogue && (
-                <Link
-                  href="/user/dialogues/new"
-                  className="lcars-pill-btn max-sm:self-stretch"
-                >
-                  Neues Gespräch
-                </Link>
-              )}
-              {/* Anders als Missionslog/Gespräch (eigener Charakter) oder
-                Mission (gm/admin) sind Datenbank-Einträge an keine
-                Voraussetzung geknüpft — jeder eingeloggte User darf welche
-                anlegen. */}
-              <Link
-                href="/user/archive/new"
-                className="lcars-pill-btn max-sm:self-stretch"
-              >
-                Neuer Datenbank-Eintrag
-              </Link>
-              {/* Ein NPC ist kein eigener Charakter, sondern ein
-                Datenbank-Eintrag der Kategorie „NPC" — der Knopf öffnet
-                deshalb das Datenbank-Formular mit vorgewählter Kategorie und
-                steht wie dieses jedem eingeloggten User offen (siehe
-                /user/archive/new: dort gibt es keine Rollen-Voraussetzung).
-                Der frühere Knopf „Neuer Charakter" steht hier nicht mehr —
-                eigene Charaktere haben mit /user/characters ihren eigenen
-                Bereich, und dort steht er weiterhin. */}
-              <Link
-                href="/user/archive/new?category=npc"
-                className="lcars-pill-btn max-sm:self-stretch"
-              >
-                Neuer NPC
-              </Link>
-              {isGM && (
-                <Link
-                  href="/user/missions/new"
-                  className="lcars-pill-btn max-sm:self-stretch"
-                >
-                  Neue Mission
-                </Link>
-              )}
-            </div>
+            <NewContentButtons data={newContent} />
           </section>
 
-          <section className="flex flex-col items-end gap-[12px]">
+          <section className="flex flex-col gap-[12px]">
             <h2>Inhalte verwalten</h2>
             <div className="lcars-text w-full">
               <UserContentBrowser

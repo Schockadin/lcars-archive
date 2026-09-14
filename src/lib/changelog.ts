@@ -142,6 +142,11 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Aliase für Datenbank-Einträge",
     items: [
       {
+        text: "„Meine Inhalte“: Die Knöpfe für neue Inhalte öffnen das jeweilige Formular jetzt in einem Fenster über der Liste, statt auf eine eigene Seite zu führen — wer abbricht, steht wieder in seiner Übersicht. Ausgenommen bleiben Charaktere mit ihrem mehrstufigen Assistenten.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+      {
         text: "Der Bearbeiten-Stift auf einer Leseseite führt jetzt direkt in den vollen Editor des Inhalts — dort lassen sich auch Titel, Kategorie, Tags und Metadaten ändern. Bisher klappte er bei Charakteren, Missionen und Datenbank-Einträgen nur ein Feld für den Fließtext auf.",
         category: "inhalte",
         tutorial: "eigene-inhalte",
