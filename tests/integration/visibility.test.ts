@@ -2,9 +2,10 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import sql from "@/lib/db";
 import {
   canView,
-  canViewDraft,
   canViewMissionDraft,
-  canSetVisibility,
+  canSetContentState,
+  contentState,
+  isContentState,
   getViewer,
   makeViewer,
   type Viewer,
@@ -44,67 +45,32 @@ describe("canView", () => {
   const player: Viewer = makeViewer(3, ["player"]);
   const owner: Viewer = makeViewer(4, ["player"]);
 
-  it("lets anyone see public content, even anonymous viewers", () => {
-    expect(canView("public", null, null)).toBe(true);
-    expect(canView("public", 4, player)).toBe(true);
-  });
-
-  it("lets an admin see private content they don't own", () => {
-    expect(canView("private", 4, admin)).toBe(true);
-  });
-
-  it("lets the owner see their own private content", () => {
-    expect(canView("private", 4, owner)).toBe(true);
-  });
-
-  it("does not let a non-owning, non-admin player see private content", () => {
-    expect(canView("private", 4, player)).toBe(false);
-  });
-
-  it("does not let an anonymous viewer see private content", () => {
-    expect(canView("private", 4, null)).toBe(false);
-  });
-
-  it("lets gm and admin see gm-visibility content, but not a plain player", () => {
-    expect(canView("gm", 4, gm)).toBe(true);
-    expect(canView("gm", 4, admin)).toBe(true);
-    expect(canView("gm", 4, player)).toBe(false);
-  });
-});
-
-describe("canViewDraft", () => {
-  const admin: Viewer = makeViewer(1, ["admin"]);
-  const gm: Viewer = makeViewer(2, ["gm"]);
-  const player: Viewer = makeViewer(3, ["player"]);
-  const owner: Viewer = makeViewer(4, ["player"]);
-
-  it("lets anyone see non-draft content regardless of viewer", () => {
-    expect(canViewDraft(false, 4, null)).toBe(true);
-    expect(canViewDraft(false, 4, player)).toBe(true);
+  it("lets anyone see published content, even anonymous viewers", () => {
+    expect(canView(false, null, null)).toBe(true);
+    expect(canView(false, 4, player)).toBe(true);
   });
 
   it("lets the owner see their own draft", () => {
-    expect(canViewDraft(true, 4, owner)).toBe(true);
+    expect(canView(true, 4, owner)).toBe(true);
   });
 
-  it("does NOT let an admin see a draft they don't own, unlike canView", () => {
-    expect(canViewDraft(true, 4, admin)).toBe(false);
+  it("lets someone who may see everything read a foreign draft", () => {
+    // content.view_all — der eine Bypass, den die Administration braucht,
+    // um Inhalte auch verwalten zu können.
+    expect(canView(true, 4, admin)).toBe(true);
   });
 
-  it("does NOT let a gm see a draft they don't own", () => {
-    expect(canViewDraft(true, 4, gm)).toBe(false);
+  it("does NOT let a gm see a foreign draft", () => {
+    expect(canView(true, 4, gm)).toBe(false);
   });
 
-  it("does not let a non-owning player see a draft", () => {
-    expect(canViewDraft(true, 4, player)).toBe(false);
+  it("does not let a non-owning player or an anonymous viewer see a draft", () => {
+    expect(canView(true, 4, player)).toBe(false);
+    expect(canView(true, 4, null)).toBe(false);
   });
 
-  it("does not let an anonymous viewer see a draft", () => {
-    expect(canViewDraft(true, 4, null)).toBe(false);
-  });
-
-  it("returns false when there is no owner to match against, even for the same userId coincidentally matching null", () => {
-    expect(canViewDraft(true, null, owner)).toBe(false);
+  it("returns false for a draft without an owner to match against", () => {
+    expect(canView(true, null, owner)).toBe(false);
   });
 });
 
@@ -113,12 +79,12 @@ describe("canViewMissionDraft", () => {
   const gm: Viewer = makeViewer(2, ["gm"]);
   const player: Viewer = makeViewer(3, ["player"]);
 
-  it("lets anyone see a non-draft mission regardless of viewer", () => {
+  it("lets anyone see a published mission regardless of viewer", () => {
     expect(canViewMissionDraft(false, null)).toBe(true);
     expect(canViewMissionDraft(false, player)).toBe(true);
   });
 
-  it("lets ANY gm or admin see a mission draft, not just the creator, unlike canViewDraft", () => {
+  it("lets ANY gm or admin see a mission draft, not just the creator", () => {
     expect(canViewMissionDraft(true, gm)).toBe(true);
     expect(canViewMissionDraft(true, admin)).toBe(true);
   });
@@ -132,19 +98,28 @@ describe("canViewMissionDraft", () => {
   });
 });
 
-describe("canSetVisibility", () => {
-  it("only lets the owner change visibility, not admin/gm/anonymous", () => {
+describe("canSetContentState", () => {
+  it("only lets the owner publish or unpublish, not admin/gm/anonymous", () => {
     const owner: Viewer = makeViewer(4, ["player"]);
     const admin: Viewer = makeViewer(1, ["admin"]);
 
-    expect(canSetVisibility(4, owner)).toBe(true);
-    expect(canSetVisibility(4, admin)).toBe(false);
-    expect(canSetVisibility(4, null)).toBe(false);
+    expect(canSetContentState(4, owner)).toBe(true);
+    expect(canSetContentState(4, admin)).toBe(false);
+    expect(canSetContentState(4, null)).toBe(false);
   });
 
   it("returns false when there is no owner to match against", () => {
     const owner: Viewer = makeViewer(4, ["player"]);
-    expect(canSetVisibility(null, owner)).toBe(false);
+    expect(canSetContentState(null, owner)).toBe(false);
+  });
+});
+
+describe("contentState", () => {
+  it("names the two states", () => {
+    expect(contentState(true)).toBe("draft");
+    expect(contentState(false)).toBe("published");
+    expect(isContentState("draft")).toBe(true);
+    expect(isContentState("public")).toBe(false);
   });
 });
 

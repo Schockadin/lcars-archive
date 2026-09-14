@@ -83,7 +83,7 @@ export async function archiveEntryAction(
   const aliases = parseList(formData.get("aliases"));
 
   // Im Entwurf-Modus (ContentEditor.tsx-Checkbox) ist nur der Inhalt
-  // optional — siehe canViewDraft-Kommentar in src/lib/visibility.ts.
+  // optional — siehe canView-Kommentar in src/lib/visibility.ts.
   const isDraft = formData.get("isDraft") === "on";
 
   let bodyMarkdown = String(formData.get("bodyMarkdown") ?? "").trim();
@@ -165,7 +165,7 @@ export async function archiveEntryAction(
           contentTitle: title,
           contentUrl,
           preview,
-          notifyPublic: result.visibility === "public",
+          notifyPublic: true,
         });
       } else {
         await notifyArchiveEntrySubscribers({
@@ -183,7 +183,7 @@ export async function archiveEntryAction(
           contentTitle: title,
           contentUrl,
           preview,
-          notifyPublic: result.visibility === "public",
+          notifyPublic: true,
         });
       }
     }
@@ -212,7 +212,7 @@ export async function archiveEntryAction(
 
     // Archiv-Einträge sind standardmäßig public (siehe scripts/schema.sql) —
     // ein neu angelegter Eintrag benachrichtigt die Abonnenten des
-    // Erstellers deshalb ungegated (keine separate visibility im
+    // Erstellers deshalb ungegated (kein separater Zustand im
     // createArchiveEntry-Result).
     await notifyContentChange({
       contentType: "archive_entry",

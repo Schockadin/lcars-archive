@@ -9,9 +9,27 @@ import {
   type RoleMap,
 } from "@/lib/permissions";
 
-export type Visibility = "private" | "gm" | "public";
+// Der eine Zustand jedes Inhalts. Bis v1.34 waren es zwei Achsen: visibility
+// ('private' | 'gm' | 'public') UND is_draft — zwei Mechaniken für dieselbe
+// Frage, und wer einen Entwurf veröffentlichen wollte, musste ihn im Editor
+// öffnen und dort ein Häkchen entfernen. Geblieben ist is_draft, hier als
+// sprechender Zustand: „Entwurf" oder „veröffentlicht".
+export type ContentState = "draft" | "published";
 
-export const VISIBILITY_OPTIONS: Visibility[] = ["private", "gm", "public"];
+export const CONTENT_STATES: ContentState[] = ["draft", "published"];
+
+export const CONTENT_STATE_LABEL: Record<ContentState, string> = {
+  draft: "Entwurf",
+  published: "Veröffentlicht",
+};
+
+export function contentState(isDraft: boolean): ContentState {
+  return isDraft ? "draft" : "published";
+}
+
+export function isContentState(value: string): value is ContentState {
+  return (CONTENT_STATES as readonly string[]).includes(value);
+}
 
 export interface Viewer {
   userId: number;
@@ -63,8 +81,8 @@ export function resolveViewer(user: User, roleMap: RoleMap): Viewer {
 
 // Betrachter frisch aus der DB auflösen (Rolle nie aus dem Cookie übernehmen,
 // siehe requireGM/requireAdmin in src/lib/dal.ts) — aber ohne Redirect: ein
-// anonymer Betrachter (Rückgabe null) ist hier ein gültiger Fall, der nur
-// public-Inhalte sieht.
+// anonymer Betrachter (Rückgabe null) ist hier ein gültiger Fall, der alles
+// Veröffentlichte sieht — aber keine Entwürfe.
 
 export async function getViewer(): Promise<Viewer | null> {
   const session = await getSession();
@@ -73,7 +91,7 @@ export async function getViewer(): Promise<Viewer | null> {
   if (!user) return null;
   // Deaktivierte Person bzw. veraltete session_version wie in getCurrentUser
   // (dal.ts) behandeln — sonst behielte ein bereits ausgestelltes Cookie die
-  // erhöhte Lese-Sichtbarkeit (content.view_gm/content.view_all) auf den
+  // erhöhte Lese-Sichtbarkeit (content.view_all) auf den
   // öffentlichen Inhaltsseiten und dem Bild-Endpoint bis zum natürlichen
   // Cookie-Ablauf (30 Tage), obwohl das Konto deaktiviert oder das Passwort
   // (session_version) seither geändert wurde. Rückgabe null = anonymer
@@ -86,36 +104,30 @@ export async function getViewer(): Promise<Viewer | null> {
   return resolveViewer(user, roleMap);
 }
 
-// „GM-Sicht“ heißt jetzt: darf gm-sichtbare Inhalte sehen (content.view_gm).
-function canViewGm(viewer: Viewer | null): boolean {
-  return viewer != null && viewer.permissions.includes("content.view_gm");
-}
-
-// Darf dieser Betrachter einen Inhalt mit dieser visibility/Owner sehen?
+// Darf dieser Betrachter diesen Inhalt sehen? Veröffentlicht heißt: jede und
+// jeder, auch ohne Anmeldung. Ein Entwurf gehört nur der Owner-Person — nicht
+// einmal die Spielleitung sieht ihn; „alles sehen" (content.view_all) bleibt
+// der eine Bypass für die Administration, die Inhalte auch im Papierkorb und
+// in den Übersichten verwalten können muss.
+//
 // ownerId ist die für den Inhaltstyp zuständige Owner-Spalte (player_id bei
 // Charakteren, owner_user_id bei Mission-Logs/Archiv-Einträgen — siehe
 // scripts/schema.sql).
-//
-// Admin sieht IMMER alles, auch "private" (bewusster Bypass für die
-// Admin-Owner-Verwaltung: Admins sollen Owner auch auf sonst privaten
-// Inhalten sehen/ändern können — anders als "gm", dessen private-Sperre
-// unverändert bestehen bleibt).
 export function canView(
-  visibility: Visibility,
+  isDraft: boolean,
   ownerId: number | null,
   viewer: Viewer | null,
 ): boolean {
-  if (visibility === "public") return true;
-  // „Alles sehen“ (content.view_all) ist der frühere Admin-Bypass.
+  if (!isDraft) return true;
   if (viewer?.permissions.includes("content.view_all")) return true;
-  if (viewer && ownerId != null && viewer.userId === ownerId) return true;
-  return visibility === "gm" && canViewGm(viewer);
+  return viewer != null && ownerId != null && viewer.userId === ownerId;
 }
 
-// Darf dieser Betrachter die Sichtbarkeit dieses Inhalts ändern? Nur der
-// Owner selbst — auch ein GM/Admin darf fremde Inhalte hier nicht
-// umstellen (das wäre ein eigenes, hier nicht gebautes Feature).
-export function canSetVisibility(
+// Darf dieser Betrachter veröffentlichen bzw. zurückziehen? Nur die
+// Owner-Person selbst — wie bisher bei der Sichtbarkeit. Für fremde Inhalte
+// gibt es den Weg über die Moderation (content.moderate, siehe
+// app/actions/visibility.ts).
+export function canSetContentState(
   ownerId: number | null,
   viewer: Viewer | null,
 ): boolean {
@@ -136,35 +148,19 @@ export function canPlayNpcs(viewer: Viewer | null): boolean {
   );
 }
 
-// Entwürfe (is_draft, siehe scripts/schema.sql) sind eine eigene, striktere
-// Sichtbarkeitsachse als canView oben: unabhängig von visibility sieht sie
-// NIEMAND außer dem Owner selbst — bewusst OHNE Admin-Bypass (anders als
-// canView), da ein Entwurf schlicht noch nicht existieren soll, solange die
-// Owner-Person ihn nicht veröffentlicht. Gilt nur für Charaktere/Missionen/
-// Missionslogs/Archiv-Einträge; Dialoge kennen kein Entwurf-Konzept.
-export function canViewDraft(
-  isDraft: boolean,
-  ownerId: number | null,
-  viewer: Viewer | null,
-): boolean {
-  if (!isDraft) return true;
-  return viewer != null && ownerId != null && viewer.userId === ownerId;
-}
-
 // Entwurf-Gate für Missionen: anders als bei Charakteren/Missionslogs/
-// Archiv-Einträgen (canViewDraft oben, dort strikt Owner-only) dürfen hier
-// ALLE GM/Admin einen Mission-Entwurf sehen, nicht nur die anlegende Person
-// — Missionen haben kein Einzel-Owner-Bearbeitungsmodell, jeder GM/Admin
-// darf jede Mission ohnehin bearbeiten (siehe missionAction in
-// user/missions/_shared/contentAction.ts). canViewDraft passt mit seinem
-// strikten ownerId-Vergleich hier deshalb nicht.
+// Archiv-Einträgen (canView oben, dort strikt Owner-only) dürfen hier ALLE
+// GM/Admin einen Mission-Entwurf sehen, nicht nur die anlegende Person —
+// Missionen haben kein Einzel-Owner-Bearbeitungsmodell, jeder GM/Admin darf
+// jede Mission ohnehin bearbeiten (siehe missionAction in
+// user/missions/_shared/contentAction.ts).
 export function canViewMissionDraft(
   isDraft: boolean,
   viewer: Viewer | null,
 ): boolean {
   if (!isDraft) return true;
-  // Wer Missionen verwaltet (missions.manage) oder alles sieht (content.view_all)
-  // darf auch Mission-Entwürfe sehen — Entsprechung zum früheren „gm oder admin“.
+  // Wer Missionen verwaltet (missions.manage) oder alles sieht
+  // (content.view_all) darf auch Mission-Entwürfe sehen.
   return (
     viewer != null &&
     (viewer.permissions.includes("missions.manage") ||

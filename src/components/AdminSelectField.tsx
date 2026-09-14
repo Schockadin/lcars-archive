@@ -2,10 +2,10 @@
 import { FormError } from "@/app/_shared/FormPrimitives";
 
 // Gemeinsames Label+Select+Error-Wrapper-Markup hinter OwnerSelect.tsx und
-// AdminVisibilitySelect.tsx — beide binden sich an useOptimisticAdminSelect
+// AdminContentStateSelect.tsx — beide binden sich an useOptimisticAdminSelect
 // und unterscheiden sich nur in Label-Text und Optionsliste. Rein
 // string-basiert (Select-Werte sind immer Strings) — die Umwandlung
-// zu/von domänenspezifischen Typen (Visibility, number | null) bleibt beim
+// zu/von domänenspezifischen Typen (ContentState, number | null) bleibt beim
 // jeweiligen Aufrufer.
 export default function AdminSelectField({
   label,

@@ -455,13 +455,6 @@ function MissionBookDocument({ input }: { input: MissionBookPdfInput }) {
                 {logMetaLine(log) !== "" && (
                   <Text style={styles.tocMeta}>{logMetaLine(log)}</Text>
                 )}
-                {log.visibility !== "public" && (
-                  <Text style={styles.tocMeta}>
-                    {log.visibility === "gm"
-                      ? "Nur für die Spielleitung sichtbar"
-                      : "Nicht öffentlich sichtbar"}
-                  </Text>
-                )}
               </Link>
             ))}
           </>
@@ -498,13 +491,6 @@ function MissionBookDocument({ input }: { input: MissionBookPdfInput }) {
           </Text>
           {logMetaLine(log) !== "" && (
             <Text style={styles.meta}>{logMetaLine(log)}</Text>
-          )}
-          {log.visibility !== "public" && (
-            <Text style={styles.notice}>
-              {log.visibility === "gm"
-                ? "Nur für die Spielleitung sichtbar"
-                : "Nicht öffentlich sichtbar"}
-            </Text>
           )}
           <Blocks markdown={log.sourceMarkdown} />
           <Link

@@ -54,18 +54,18 @@ export async function insertCharacter(
     slug: string;
     name: string;
     playerId: number | null;
-    visibility: string;
+    isDraft: boolean;
     status: string;
   }> = {},
 ): Promise<{ id: number; slug: string }> {
   const s = suffix();
   const [row] = await sql<{ id: number; slug: string }[]>`
-    INSERT INTO characters (slug, name, player_id, visibility, status)
+    INSERT INTO characters (slug, name, player_id, is_draft, status)
     VALUES (
       ${overrides.slug ?? `char-${s}`},
       ${overrides.name ?? "Test Character"},
       ${overrides.playerId ?? null},
-      ${overrides.visibility ?? "public"},
+      ${overrides.isDraft ?? false},
       ${overrides.status ?? "active"}
     )
     RETURNING id, slug
@@ -79,17 +79,16 @@ export async function insertNpcEntry(
   overrides: Partial<{
     slug: string;
     title: string;
-    visibility: string;
     isDraft: boolean;
   }> = {},
 ): Promise<{ id: number; slug: string; title: string }> {
   const s = suffix();
   const [row] = await sql<{ id: number; slug: string; title: string }[]>`
-    INSERT INTO archive_entries (slug, title, category, content, visibility, is_draft, metadata, frontmatter)
+    INSERT INTO archive_entries (slug, title, category, content, is_draft, metadata, frontmatter)
     VALUES (
       ${overrides.slug ?? `npc-${s}`},
       ${overrides.title ?? "Test NPC"},
-      'npc', '', ${overrides.visibility ?? "public"},
+      'npc', '',
       ${overrides.isDraft ?? false},
       ${sql.json({})}, ${sql.json({})}
     )

@@ -1,7 +1,5 @@
 import "server-only";
 import sql from "@/lib/db";
-import { canView, type Viewer } from "@/lib/visibility";
-import type { Visibility } from "@/lib/visibility";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { markdownToHtml } from "@/lib/markdown";
 import {
@@ -61,7 +59,6 @@ interface LogRow {
   title: string;
   log_date: string | null;
   source_md: string | null;
-  visibility: Visibility;
   owner_user_id: number | null;
   is_draft: boolean;
   mission_slug: string;
@@ -74,7 +71,6 @@ interface ArchiveRow {
   category: string;
   metadata: Record<string, unknown>;
   source_md: string | null;
-  visibility: Visibility;
   owner_user_id: number | null;
   is_draft: boolean;
 }
@@ -88,7 +84,6 @@ interface CharacterRow {
   // Zugeschnittenes Portrait der Figur (Adresse), falls gepflegt — es ist das
   // Vorschaubild ihrer Karten.
   portrait: string | null;
-  visibility: Visibility;
   // Charaktere führen ihre Eigentümerin/ihren Eigentümer als player_id, nicht
   // als owner_user_id wie die übrigen Inhalte.
   player_id: number | null;
@@ -169,7 +164,11 @@ function markerEvents(
   }));
 }
 
-export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[]> {
+// Ohne Betrachter-Parameter: Die Chronologie zeigt ausschließlich
+// veröffentlichte Inhalte, und die sieht seit v1.34 jede und jeder — auch ohne
+// Anmeldung. Entwürfe bleiben ihrer Owner-Person im eigenen Bereich
+// vorbehalten (/user/content).
+export async function getTimeline(): Promise<TimelineEvent[]> {
   const [
     missions,
     logs,
@@ -197,7 +196,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     sql<LogRow[]>`
       SELECT ml.slug, ml.title,
              ml.log_date::text AS log_date,
-             ml.source_md, ml.visibility, ml.owner_user_id, ml.is_draft,
+             ml.source_md, ml.owner_user_id, ml.is_draft,
              m.slug AS mission_slug,
              c.name AS author_name
       FROM mission_logs ml
@@ -207,7 +206,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     `,
     sql<ArchiveRow[]>`
       SELECT slug, title, category, metadata, source_md,
-             visibility, owner_user_id, is_draft
+             owner_user_id, is_draft
       FROM archive_entries
       WHERE deleted_at IS NULL
         -- Ein LAUFENDES Gespräch gehört noch nicht in die Chronologie: es ist
@@ -219,7 +218,7 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
     `,
     sql<CharacterRow[]>`
       SELECT slug, name, metadata, source_md, bio, portrait,
-             visibility, player_id, is_draft
+             player_id, is_draft
       FROM characters
       WHERE deleted_at IS NULL
     `,
@@ -386,7 +385,8 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
 
   // ── Logbücher ────────────────────────────────────────────────────────────
   for (const log of logs) {
-    if (!canView(log.visibility, log.owner_user_id, viewer)) continue;
+    // Entwürfe bleiben draußen — auch für ihre Owner-Person: die Chronologie
+    // erzählt, was passiert IST, nicht was jemand noch schreibt.
     if (log.is_draft) continue;
     const href = missionLogHref(log.mission_slug, log.slug);
     const people = log.author_name ? [log.author_name] : [];
@@ -427,7 +427,8 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
 
   // ── Datenbank-Einträge ───────────────────────────────────────────────────
   for (const entry of entries) {
-    if (!canView(entry.visibility, entry.owner_user_id, viewer)) continue;
+    // Entwürfe bleiben draußen — auch für ihre Owner-Person: die Chronologie
+    // erzählt, was passiert IST, nicht was jemand noch schreibt.
     if (entry.is_draft) continue;
     const href =
       entry.category === "dialogue"
@@ -489,7 +490,8 @@ export async function getTimeline(viewer: Viewer | null): Promise<TimelineEvent[
 
   // ── Charaktere ───────────────────────────────────────────────────────────
   for (const character of characters) {
-    if (!canView(character.visibility, character.player_id, viewer)) continue;
+    // Entwürfe bleiben draußen — auch für ihre Owner-Person: die Chronologie
+    // erzählt, was passiert IST, nicht was jemand noch schreibt.
     if (character.is_draft) continue;
     const href = characterHref(character.slug);
     const metadata = character.metadata ?? {};

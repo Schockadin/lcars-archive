@@ -5,11 +5,11 @@
 // Hier lebt das, was embeddings.ts bewusst NICHT kennt: das typabhängige
 // Nachladen eines Inhalts aus der DB (inkl. der Joins für die Header —
 // Mission-Titel, Autor-Name, Teilnehmer) und die daraus abgeleiteten,
-// denormalisierten RBAC-Felder (visibility/owner/is_draft/is_active).
+// denormalisierten RBAC-Felder (owner/is_draft/is_active).
 //
 // Zwei Nutzergruppen:
 //   - Fire-and-forget-Trigger aus den Content-Mutationen (syncEmbeddings /
-//     purgeEmbeddings / syncEmbeddingVisibility / syncEmbeddingActive): nutzen
+//     purgeEmbeddings / syncEmbeddingDraft / syncEmbeddingActive): nutzen
 //     den globalen sql-Client, werfen nie in den Aufrufer zurück (Fehler nur
 //     geloggt), und überspringen still, solange OPENAI_API_KEY fehlt — genau
 //     wie sendEmail/sendPush ohne Key. Der Backfill (scripts/embed-all.ts) ist
@@ -23,13 +23,12 @@
 
 import sql from "@/lib/db";
 import { stripHtml } from "@/lib/missionFormat";
-import type { Visibility } from "@/lib/visibility";
 import {
   chunkContent,
   embedTexts,
   upsertEmbeddings,
   deleteEmbeddings,
-  updateEmbeddingVisibility,
+  updateEmbeddingDraft,
   updateEmbeddingActive,
   updateEmbeddingOwner,
   hasEmbeddingConfig,
@@ -46,7 +45,6 @@ import {
 
 interface FetchedRecord {
   chunkInput: ChunkInput;
-  visibility: Visibility;
   ownerId: number | null;
   isDraft: boolean;
   isActive: boolean;
@@ -74,14 +72,13 @@ async function fetchRecord(
           status: string | null;
           bio: string | null;
           source_md: string | null;
-          visibility: Visibility;
           player_id: number | null;
           is_draft: boolean;
           deleted_at: Date | null;
         }[]
       >`
         SELECT slug, name, species, rank, status, bio, source_md,
-               visibility, player_id, is_draft, deleted_at
+               player_id, is_draft, deleted_at
         FROM characters WHERE id = ${contentId}
       `;
       if (!row) return null;
@@ -97,7 +94,6 @@ async function fetchRecord(
             fallbackText: row.bio,
           },
         },
-        visibility: row.visibility,
         ownerId: row.player_id,
         isDraft: row.is_draft,
         isActive: row.deleted_at == null,
@@ -136,8 +132,6 @@ async function fetchRecord(
             sourceMd: row.source_md,
           },
         },
-        // Missionen sind immer public (siehe scripts/schema.sql).
-        visibility: "public",
         ownerId: row.owner_user_id,
         isDraft: row.is_draft,
         isActive: row.deleted_at == null,
@@ -155,7 +149,6 @@ async function fetchRecord(
           source_md: string | null;
           session_nr: number | null;
           log_date: string | null;
-          visibility: Visibility;
           owner_user_id: number | null;
           is_draft: boolean;
           deleted_at: Date | null;
@@ -165,7 +158,7 @@ async function fetchRecord(
         }[]
       >`
         SELECT ml.slug, ml.title, ml.content, ml.source_md, ml.session_nr,
-               ml.log_date::text, ml.visibility, ml.owner_user_id, ml.is_draft,
+               ml.log_date::text, ml.owner_user_id, ml.is_draft,
                ml.deleted_at, m.slug AS mission_slug, m.title AS mission_title,
                ch.name AS author_name
         FROM mission_logs ml
@@ -187,7 +180,6 @@ async function fetchRecord(
             fallbackText: row.content ? stripHtml(row.content) : null,
           },
         },
-        visibility: row.visibility,
         ownerId: row.owner_user_id,
         isDraft: row.is_draft,
         isActive: row.deleted_at == null,
@@ -207,7 +199,6 @@ async function fetchRecord(
           content: string | null;
           source_md: string | null;
           setting: string | null;
-          visibility: Visibility;
           owner_user_id: number | null;
           is_draft: boolean;
           deleted_at: Date | null;
@@ -215,7 +206,7 @@ async function fetchRecord(
       >`
         SELECT slug, title, category, content, source_md,
                metadata->>'setting' AS setting,
-               visibility, owner_user_id, is_draft, deleted_at
+               owner_user_id, is_draft, deleted_at
         FROM archive_entries
         WHERE id = ${contentId} AND category <> 'dialogue'
       `;
@@ -231,7 +222,6 @@ async function fetchRecord(
             fallbackText: row.content ? stripHtml(row.content) : null,
           },
         },
-        visibility: row.visibility,
         ownerId: row.owner_user_id,
         isDraft: row.is_draft,
         isActive: row.deleted_at == null,
@@ -252,7 +242,6 @@ async function fetchRecord(
           source_md: string | null;
           setting: string | null;
           participants: { name?: string }[] | null;
-          visibility: Visibility;
           owner_user_id: number | null;
           is_draft: boolean;
           deleted_at: Date | null;
@@ -261,7 +250,7 @@ async function fetchRecord(
         SELECT slug, title, content, source_md,
                metadata->>'setting' AS setting,
                metadata->'participants' AS participants,
-               visibility, owner_user_id, is_draft, deleted_at
+               owner_user_id, is_draft, deleted_at
         FROM archive_entries
         WHERE id = ${contentId} AND category = 'dialogue'
           AND dialogue_open = FALSE
@@ -283,7 +272,6 @@ async function fetchRecord(
             fallbackText: row.content ? stripHtml(row.content) : null,
           },
         },
-        visibility: row.visibility,
         ownerId: row.owner_user_id,
         isDraft: row.is_draft,
         isActive: row.deleted_at == null,
@@ -323,7 +311,6 @@ export async function embedOne(
     contentType,
     contentId,
     chunks: embedded,
-    visibility: rec.visibility,
     ownerId: rec.ownerId,
     isDraft: rec.isDraft,
     isActive: rec.isActive,
@@ -394,15 +381,15 @@ export function syncEmbeddings(
   );
 }
 
-// Sichtbarkeits-Änderung → nur das denormalisierte Feld nachziehen (kein
-// Re-Embedding, kein OpenAI-Key nötig).
-export function syncEmbeddingVisibility(
+// Veröffentlichen/Zurückziehen → nur das denormalisierte Feld nachziehen
+// (kein Re-Embedding, kein OpenAI-Key nötig).
+export function syncEmbeddingDraft(
   contentType: EmbeddingContentType,
   contentId: number,
-  visibility: Visibility,
+  isDraft: boolean,
 ): void {
-  void updateEmbeddingVisibility(sql, contentType, contentId, visibility).catch(
-    (err) => logEmbeddingError(`visibility:${contentType}:${contentId}`, err),
+  void updateEmbeddingDraft(sql, contentType, contentId, isDraft).catch((err) =>
+    logEmbeddingError(`draft:${contentType}:${contentId}`, err),
   );
 }
 

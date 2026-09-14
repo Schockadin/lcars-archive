@@ -1,6 +1,5 @@
 import "server-only";
 import sql from "@/lib/db";
-import { canView, type Viewer, type Visibility } from "@/lib/visibility";
 import { normalizeWikilinkTarget } from "@/lib/autolink";
 import { wikilinkTargets } from "@/lib/mentions";
 import { slugifyBase } from "@/lib/slug";
@@ -45,8 +44,6 @@ export interface Relation {
 }
 
 interface DialogueRow {
-  visibility: Visibility;
-  owner_user_id: number | null;
   participants: { kind?: string; name?: string; slug?: string }[] | null;
 }
 
@@ -81,13 +78,14 @@ export function countDialoguePartners(
   return out;
 }
 
+// Ohne Betrachter-Parameter: Alle Abfragen führen ausschließlich
+// veröffentlichte Inhalte, und die sieht seit v1.34 jede und jeder.
 export async function getRelationsOf(
   characterSlug: string,
-  viewer: Viewer | null,
 ): Promise<Relation[]> {
   const [missionRows, dialogueRows, links] = await Promise.all([
     // Gemeinsame Missionen: über mission_participants auf sich selbst
-    // zurückgejoint. Nur öffentliche, nicht gelöschte Charaktere.
+    // zurückgejoint. Nur veröffentlichte, nicht gelöschte Charaktere.
     sql<{ slug: string; name: string; shared: number }[]>`
       SELECT other.slug, other.name, COUNT(*)::int AS shared
       FROM characters me
@@ -98,12 +96,11 @@ export async function getRelationsOf(
       JOIN missions m ON m.id = mine.mission_id
       WHERE me.slug = ${characterSlug}
         AND other.deleted_at IS NULL AND other.is_draft = false
-        AND other.visibility = 'public'
         AND m.deleted_at IS NULL AND m.is_draft = false
       GROUP BY other.slug, other.name
     `,
     sql<DialogueRow[]>`
-      SELECT visibility, owner_user_id, metadata->'participants' AS participants
+      SELECT metadata->'participants' AS participants
       FROM archive_entries
       WHERE category = 'dialogue'
         AND deleted_at IS NULL AND is_draft = false
@@ -111,12 +108,12 @@ export async function getRelationsOf(
           { slug: characterSlug },
         ] as unknown as ReturnType<typeof JSON.parse>)}
     `,
-    loadLinks(viewer),
+    loadLinks(),
   ]);
 
-  const visibleDialogues = dialogueRows.filter((r) =>
-    canView(r.visibility, r.owner_user_id, viewer),
-  );
+  // Die Abfrage führt nur veröffentlichte Gespräche (is_draft = false) —
+  // seit v1.34 sieht die jede und jeder.
+  const visibleDialogues = dialogueRows;
   const partners = countDialoguePartners(visibleDialogues, characterSlug);
 
   const bySlug = new Map<string, Relation>();
@@ -363,8 +360,6 @@ interface LinkCharacterRow {
 }
 
 interface LinkNpcRow extends LinkCharacterRow {
-  visibility: Visibility;
-  owner_user_id: number | null;
   character_refs: { slug?: string }[] | null;
 }
 
@@ -375,13 +370,12 @@ interface LinkNpcRow extends LinkCharacterRow {
 // aller Figuren und NPCs ist bei einer Kampagne dieser Größe eine Abfrage
 // wert. Dieselbe Ladung versorgt die Charakterseite und den Gesamtgraphen.
 //
-// Knoten ist nur, was der Betrachter auch sehen darf: öffentliche Charaktere
-// (wie im Missions-Zweig) und die per canView() sichtbaren NPC-Einträge. Ein
-// Verweis auf etwas anderes löst sich deshalb gar nicht erst auf. Das gilt
-// auch für die AUSGEHENDEN Verweise einer nicht-öffentlichen Figur: sie ist
-// selbst kein Knoten, ihre Links zählen also nicht — dasselbe Verhalten wie
-// bei gemeinsamen Missionen, wo sie ebenfalls in keiner Kante auftaucht.
-async function loadLinks(viewer: Viewer | null): Promise<{
+// Knoten ist nur, was veröffentlicht ist: Entwürfe (Charaktere wie
+// NPC-Einträge) bleiben draußen, auch für ihre Owner-Person. Ein Verweis auf
+// etwas anderes löst sich deshalb gar nicht erst auf — dasselbe Verhalten wie
+// bei gemeinsamen Missionen, wo ein Entwurf ebenfalls in keiner Kante
+// auftaucht.
+async function loadLinks(): Promise<{
   nodes: Map<string, GraphNode>;
   pairs: Map<string, number>;
 }> {
@@ -389,10 +383,10 @@ async function loadLinks(viewer: Viewer | null): Promise<{
     sql<LinkCharacterRow[]>`
       SELECT slug, name, source_md
       FROM characters
-      WHERE deleted_at IS NULL AND is_draft = false AND visibility = 'public'
+      WHERE deleted_at IS NULL AND is_draft = false
     `,
     sql<LinkNpcRow[]>`
-      SELECT slug, title AS name, source_md, visibility, owner_user_id,
+      SELECT slug, title AS name, source_md,
              metadata->'characters' AS character_refs
       FROM archive_entries
       WHERE category = 'npc' AND deleted_at IS NULL AND is_draft = false
@@ -411,9 +405,7 @@ async function loadLinks(viewer: Viewer | null): Promise<{
     `,
   ]);
 
-  const visibleNpcs = npcRows.filter((r) =>
-    canView(r.visibility, r.owner_user_id, viewer),
-  );
+  const visibleNpcs = npcRows;
 
   const nodes = new Map<string, GraphNode>();
   for (const row of characterRows) {
@@ -465,9 +457,7 @@ async function loadLinks(viewer: Viewer | null): Promise<{
   return { nodes, pairs: collectLinkEdges(sources, lookup) };
 }
 
-export async function getRelationGraph(
-  viewer: Viewer | null,
-): Promise<RelationGraph> {
+export async function getRelationGraph(): Promise<RelationGraph> {
   const [missionRows, dialogueRows, links] = await Promise.all([
     // Jedes Paar nur EINMAL: a.character_id < b.character_id statt <>, sonst
     // käme jede Kante doppelt zurück.
@@ -487,18 +477,18 @@ export async function getRelationGraph(
       JOIN characters ca ON ca.id = pa.character_id
       JOIN characters cb ON cb.id = pb.character_id
       JOIN missions m ON m.id = pa.mission_id
-      WHERE ca.deleted_at IS NULL AND ca.is_draft = false AND ca.visibility = 'public'
-        AND cb.deleted_at IS NULL AND cb.is_draft = false AND cb.visibility = 'public'
+      WHERE ca.deleted_at IS NULL AND ca.is_draft = false
+        AND cb.deleted_at IS NULL AND cb.is_draft = false
         AND m.deleted_at IS NULL AND m.is_draft = false
       GROUP BY ca.slug, ca.name, cb.slug, cb.name
     `,
     sql<DialogueRow[]>`
-      SELECT visibility, owner_user_id, metadata->'participants' AS participants
+      SELECT metadata->'participants' AS participants
       FROM archive_entries
       WHERE category = 'dialogue'
         AND deleted_at IS NULL AND is_draft = false
     `,
-    loadLinks(viewer),
+    loadLinks(),
   ]);
 
   const nodes = new Map<string, GraphNode>();
@@ -550,9 +540,9 @@ export async function getRelationGraph(
     putEdge(a, b, { sharedLinks: count });
   }
 
-  const visibleDialogues = dialogueRows.filter((r) =>
-    canView(r.visibility, r.owner_user_id, viewer),
-  );
+  // Die Abfrage führt nur veröffentlichte Gespräche (is_draft = false) —
+  // seit v1.34 sieht die jede und jeder.
+  const visibleDialogues = dialogueRows;
   const fromDialogues = collectDialogueEdges(visibleDialogues);
   for (const [slug, node] of fromDialogues.nodes) {
     // Ein bereits aus den Missionen bekannter Charakter behält seinen Namen

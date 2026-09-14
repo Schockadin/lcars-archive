@@ -18,7 +18,6 @@ function log(partial: Partial<MissionBookLog>): MissionBookLog {
     logDate: null,
     authorName: null,
     sourceMarkdown: "",
-    visibility: "public",
     ...partial,
   };
 }

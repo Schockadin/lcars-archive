@@ -4,7 +4,6 @@ import { stripHtml } from "@/lib/missionFormat";
 import {
   getViewer,
   canView,
-  canViewDraft,
   viewerHasPermission,
 } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
@@ -29,10 +28,7 @@ export async function generateMetadata({ params }: Props) {
     return { title: "Nicht gefunden" };
   }
   const viewerForMeta = await getViewer();
-  const visible =
-    (log.visibility === "public" ||
-      canView(log.visibility, log.ownerUserId, viewerForMeta)) &&
-    canViewDraft(log.isDraft, log.ownerUserId, viewerForMeta);
+  const visible = canView(log.isDraft, log.ownerUserId, viewerForMeta);
   if (!visible) return { title: "Nicht gefunden" };
 
   return {
@@ -50,13 +46,7 @@ export default async function LogPage({ params }: Props) {
 
   // Log muss existieren UND zur Mission im Pfad gehören (sonst 404).
   if (!log || log.mission_slug !== missionSlug) notFound();
-  if (
-    log.visibility !== "public" &&
-    !canView(log.visibility, log.ownerUserId, viewer)
-  ) {
-    notFound();
-  }
-  if (!canViewDraft(log.isDraft, log.ownerUserId, viewer)) notFound();
+  if (!canView(log.isDraft, log.ownerUserId, viewer)) notFound();
 
   // Autor-Navigation und Owner-Auswahl sind voneinander unabhängig — parallel
   // laden statt nacheinander. nav: Vor-/Zurück zwischen Logs desselben Autors
@@ -71,7 +61,7 @@ export default async function LogPage({ params }: Props) {
       ? listAllUsers()
       : Promise.resolve([]),
     // Wer verweist auf dieses Logbuch? (Wikilinks in anderen Texten)
-    getMentionsOf({ slug: log.slug, name: log.title }, viewer),
+    getMentionsOf({ slug: log.slug, name: log.title }),
     listNotes("mission_log", log.slug, viewer),
   ]);
   const owners = allUsers.map((u) => ({ id: u.id, name: u.name }));

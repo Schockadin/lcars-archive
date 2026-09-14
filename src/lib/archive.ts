@@ -1,7 +1,6 @@
 import { cacheTag, cacheLife } from "next/cache";
 import sql from "@/lib/db";
 import { recordRevision } from "@/lib/contentRevisions";
-import type { Visibility } from "@/lib/visibility";
 import { cacheTags } from "@/lib/cacheTags";
 import { renderContentHtml } from "@/lib/autolink";
 import { slugifyBase } from "@/lib/slug";
@@ -17,7 +16,7 @@ import { logCaughtError } from "@/lib/errorLog";
 // Fire-and-forget-Re-Embedding (RAG-Index) — siehe src/lib/embeddingSync.ts.
 import {
   syncEmbeddings,
-  syncEmbeddingVisibility,
+  syncEmbeddingDraft,
   syncEmbeddingActive,
   syncEmbeddingOwner,
 } from "@/lib/embeddingSync";
@@ -187,29 +186,27 @@ export interface NpcOption {
   id: number;
   slug: string;
   name: string;
-  // Für die Sichtbarkeitsprüfung beim Aufrufer (canView): ein NPC ist oft
-  // nicht öffentlich, sondern nur intern („gm") sichtbar.
-  visibility: Visibility;
+  // Für die Sichtbarkeitsprüfung beim Aufrufer (canView): ein NPC kann ein
+  // unveröffentlichter Entwurf sein.
+  isDraft: boolean;
   // Wer den Eintrag angelegt hat — gehört mit in canView, sonst sähe die
-  // Person ihren eigenen, als „privat" angelegten NPC selbst nicht.
+  // Person ihren eigenen Entwurf selbst nicht.
   ownerUserId: number | null;
 }
 
 // NPCs für die Gesprächs-Auswahl: Datenbank-Einträge der Kategorie "npc".
 // Sie gehören niemandem — für sie schreibt im Gespräch ein Konto der
 // Spielleitung (siehe dialogue_npc_speakers in scripts/schema.sql).
-// Entwürfe bleiben draußen (sieht außer dem Owner niemand, canViewDraft).
-//
-// Bewusst OHNE Sichtbarkeits-Filter in der Query: welche NPCs jemand sehen
-// darf, entscheidet dieselbe canView-Regel wie überall sonst (public für
-// alle, „gm"/„privat" nur mit den entsprechenden Rechten) — der Aufrufer
-// filtert damit, statt dass hier eine zweite, abweichende Regel entsteht.
+// Bewusst OHNE Sichtbarkeits-Filter in der Query: ob jemand einen NPC sehen
+// darf, entscheidet dieselbe canView-Regel wie überall sonst (veröffentlicht
+// für alle, Entwurf nur für die Owner-Person) — der Aufrufer filtert damit,
+// statt dass hier eine zweite, abweichende Regel entsteht.
 export async function getNpcOptions(): Promise<NpcOption[]> {
   return sql<NpcOption[]>`
-    SELECT id, slug, title AS name, visibility,
+    SELECT id, slug, title AS name, is_draft AS "isDraft",
            owner_user_id AS "ownerUserId"
     FROM archive_entries
-    WHERE category = 'npc' AND deleted_at IS NULL AND is_draft = false
+    WHERE category = 'npc' AND deleted_at IS NULL
     ORDER BY title ASC
   `;
 }
@@ -250,7 +247,6 @@ export async function getAllArchiveEntries(): Promise<ArchiveEntryPreview[]> {
       -- Diese Übersicht führt sie deshalb gar nicht — sie ist zugleich die
       -- Auswahl der verknüpfbaren Orte/NPCs in den Gesprächs-Formularen.
       WHERE NOT a.category = 'dialogue'
-        AND a.visibility = 'public'
         AND a.deleted_at IS NULL
         AND a.is_draft = false
       ORDER BY a.title ASC
@@ -278,7 +274,6 @@ export async function getArchiveEntryBySlug(
           tags,
           metadata,
           dialogue_open,
-          visibility,
           owner_user_id AS "ownerUserId",
           is_draft AS "isDraft",
           updated_at::text AS updated_at,
@@ -332,7 +327,7 @@ export async function getDialogueCountByParticipant(
         FROM archive_entries
         WHERE category = 'dialogue'
           AND NOT dialogue_open
-          AND visibility = 'public'
+          AND is_draft = false
           AND deleted_at IS NULL
           AND metadata->'participants' @> ${sql.json([{ slug }])}
       `;
@@ -344,7 +339,6 @@ export interface UserContentArchiveEntry {
   slug: string;
   title: string;
   category: ArchiveCategory;
-  visibility: "private" | "gm" | "public";
   isDraft: boolean;
 }
 
@@ -357,21 +351,21 @@ export async function getArchiveEntriesForUser(
   userId: number,
 ): Promise<UserContentArchiveEntry[]> {
   return sql<UserContentArchiveEntry[]>`
-    SELECT id, slug, title, category, visibility, is_draft AS "isDraft"
+    SELECT id, slug, title, category, is_draft AS "isDraft"
     FROM archive_entries
     WHERE owner_user_id = ${userId} AND category != 'dialogue' AND deleted_at IS NULL
     ORDER BY title ASC
   `;
 }
 
-// Nur der Owner (owner_user_id) darf die Sichtbarkeit ändern — ein
+// Nur der Owner (owner_user_id) darf veröffentlichen oder zurückziehen — ein
 // fremdes/gefälschtes id trifft dann einfach 0 Zeilen (gleiches Prinzip wie
-// setDialogueVisibility in src/lib/dialoguesCore.ts, nur ohne die
+// setDialogueDraft in src/lib/dialoguesCore.ts, nur ohne die
 // category='dialogue'-Einschränkung).
-export async function setArchiveEntryVisibility(
+export async function setArchiveEntryDraft(
   userId: number,
   archiveEntryId: number,
-  visibility: "private" | "gm" | "public",
+  isDraft: boolean,
 ): Promise<{
   slug: string;
   title: string;
@@ -381,38 +375,36 @@ export async function setArchiveEntryVisibility(
     { slug: string; title: string; sourceMarkdown: string | null }[]
   >`
     UPDATE archive_entries
-    SET visibility = ${visibility}, updated_at = NOW()
+    SET is_draft = ${isDraft}, updated_at = NOW()
     WHERE id = ${archiveEntryId} AND category != 'dialogue' AND owner_user_id = ${userId}
     RETURNING slug, title, source_md AS "sourceMarkdown"
   `;
-  if (rows[0])
-    syncEmbeddingVisibility("archive_entry", archiveEntryId, visibility);
+  if (rows[0]) syncEmbeddingDraft("archive_entry", archiveEntryId, isDraft);
   return rows[0] ?? null;
 }
 
-// Admin-Sichtbarkeits-Verwaltung (ActionsMenu.tsx/AdminVisibilitySelect.tsx):
-// anders als setArchiveEntryVisibility/setDialogueVisibility oben NICHT auf
-// den Owner gescoped (nur admin darf das, geprüft in
-// setVisibilityAdminAction) und OHNE category-Einschränkung — Admins dürfen
-// hier bewusst auch Gespräche umstellen, anders als setArchiveEntryOwner
-// unten, das Dialoge bewusst ausschließt (eigenes Owner-/Teilnehmer-Modell,
-// aber kein eigenes Sichtbarkeits-Modell: dialogue-Einträge nutzen dieselbe
-// visibility-Spalte).
-export async function setArchiveEntryVisibilityAdmin(
+// Moderation (ActionsMenu.tsx/AdminContentStateSelect.tsx): anders als
+// setArchiveEntryDraft/setDialogueDraft oben NICHT auf den Owner gescoped
+// (nur mit content.moderate, geprüft in setContentStateAdminAction) und OHNE
+// category-Einschränkung — die Moderation darf hier bewusst auch Gespräche
+// umstellen, anders als setArchiveEntryOwner unten, das Dialoge ausschließt
+// (eigenes Owner-/Teilnehmer-Modell, aber kein eigenes Entwurf-Modell:
+// dialogue-Einträge nutzen dieselbe is_draft-Spalte).
+export async function setArchiveEntryDraftAdmin(
   archiveEntryId: number,
-  visibility: "private" | "gm" | "public",
+  isDraft: boolean,
 ): Promise<{ slug: string } | null> {
   const rows = await sql<{ slug: string }[]>`
     UPDATE archive_entries
-    SET visibility = ${visibility}, updated_at = NOW()
+    SET is_draft = ${isDraft}, updated_at = NOW()
     WHERE id = ${archiveEntryId}
     RETURNING slug
   `;
-  // Diese Admin-Funktion umfasst auch Dialoge (kein category-Filter) — beide
+  // Diese Funktion umfasst auch Dialoge (kein category-Filter) — beide
   // möglichen content_type-Zeilen nachziehen (nur eine existiert je Id).
   if (rows[0]) {
-    syncEmbeddingVisibility("archive_entry", archiveEntryId, visibility);
-    syncEmbeddingVisibility("dialogue", archiveEntryId, visibility);
+    syncEmbeddingDraft("archive_entry", archiveEntryId, isDraft);
+    syncEmbeddingDraft("dialogue", archiveEntryId, isDraft);
   }
   return rows[0] ?? null;
 }
@@ -451,7 +443,6 @@ export async function getAllArchivePaths(): Promise<ArchivePath[]> {
       SELECT slug, updated_at::text AS updated_at
       FROM archive_entries
       WHERE NOT (category = 'dialogue' AND dialogue_open)
-        AND visibility = 'public'
         AND deleted_at IS NULL
         AND is_draft = false
     `;
@@ -517,9 +508,7 @@ export async function generateUniqueArchiveEntrySlug(
 // eingeloggte User darf Archiv-Einträge anlegen, siehe
 // /user/archive/new/actions.ts). Kategorie 'dialogue' ausgeschlossen —
 // Dialoge haben ihr eigenes Anlage-Formular (createDialogue in
-// dialoguesCore.ts) mit eigenem Daten-/Teilnehmer-Modell. visibility bleibt
-// unangegeben → DB-Default 'public' (gleiche Konvention wie createMission/
-// createMissionLog in src/lib/missions.ts).
+// dialoguesCore.ts) mit eigenem Daten-/Teilnehmer-Modell.
 export async function createArchiveEntry(input: {
   title: string;
   category: Exclude<ArchiveCategory, "dialogue">;
@@ -719,7 +708,6 @@ export async function updateOwnArchiveEntryContent(
   asModerator = false,
 ): Promise<{
   slug: string;
-  visibility: "private" | "gm" | "public";
   wasDraft: boolean;
 } | null> {
   await recordRevision("archive", entryId, userId, input.bodyMarkdown);
@@ -745,7 +733,6 @@ export async function updateOwnArchiveEntryContent(
   const rows = await sql<
     {
       slug: string;
-      visibility: "private" | "gm" | "public";
       wasDraft: boolean;
     }[]
   >`
@@ -757,7 +744,7 @@ export async function updateOwnArchiveEntryContent(
         is_draft = ${input.isDraft}, updated_at = NOW()
     FROM old
     WHERE id = ${entryId} AND category != 'dialogue' ${ownerScope}
-    RETURNING slug, visibility, old.is_draft AS "wasDraft"
+    RETURNING slug, old.is_draft AS "wasDraft"
   `;
   const result = rows[0];
   if (!result) return null;
@@ -881,7 +868,6 @@ export async function deleteArchiveEntry(
     {
       slug: string;
       title: string;
-      visibility: string;
       ownerUserId: number | null;
       isDraft: boolean;
     }[]
@@ -889,14 +875,14 @@ export async function deleteArchiveEntry(
     UPDATE archive_entries
     SET deleted_at = NOW()
     WHERE id = ${archiveEntryId} AND category != 'dialogue' AND deleted_at IS NULL
-    RETURNING slug, title, visibility, owner_user_id AS "ownerUserId", is_draft AS "isDraft"
+    RETURNING slug, title, owner_user_id AS "ownerUserId", is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
   if (row) syncEmbeddingActive("archive_entry", archiveEntryId, false);
   if (row && !row.isDraft) {
     await sql`
-      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
-      VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${row.ownerUserId}, ${deletedByUserId})
+      INSERT INTO content_deletions (target_type, title, owner_user_id, deleted_by)
+      VALUES ('archive_entry', ${row.title}, ${row.ownerUserId}, ${deletedByUserId})
     `;
   }
   return row ? { slug: row.slug } : null;
@@ -916,7 +902,6 @@ export async function deleteOwnArchiveEntry(
     {
       slug: string;
       title: string;
-      visibility: string;
       isDraft: boolean;
     }[]
   >`
@@ -924,14 +909,14 @@ export async function deleteOwnArchiveEntry(
     SET deleted_at = NOW()
     WHERE id = ${archiveEntryId} AND owner_user_id = ${userId}
       AND category != 'dialogue' AND deleted_at IS NULL
-    RETURNING slug, title, visibility, is_draft AS "isDraft"
+    RETURNING slug, title, is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
   if (row) syncEmbeddingActive("archive_entry", archiveEntryId, false);
   if (row && !row.isDraft) {
     await sql`
-      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
-      VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${userId}, ${userId})
+      INSERT INTO content_deletions (target_type, title, owner_user_id, deleted_by)
+      VALUES ('archive_entry', ${row.title}, ${userId}, ${userId})
     `;
   }
   return row ? { slug: row.slug } : null;

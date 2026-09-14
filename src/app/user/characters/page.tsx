@@ -32,7 +32,6 @@ export default async function UserCharactersPage() {
     name: c.name,
     rank: c.metadata.rank,
     status: c.status,
-    visibility: c.visibility,
     isDraft: c.is_draft,
     hasStats: !isCharacterStatsEmpty(parseCharacterStats(c.metadata.stats)),
   }));

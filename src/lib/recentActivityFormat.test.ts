@@ -228,12 +228,12 @@ describe("computeNewsItems", () => {
 });
 
 describe("newsVisibility", () => {
-  it("leitet die gm-Sichtbarkeit aus einer ZUSATZrolle ab, nicht aus der Primärrolle", () => {
-    // Dokumentierter Multi-Rollen-Fall: Primärrolle „player", Zusatzrolle „gm".
-    // Der frühere role-String-Check (viewerRole === "gm") war hier false und
-    // hätte gm-Inhalte im News-Feed fälschlich ausgeblendet.
-    const perms = resolvePermissions(["player", "gm"], null);
-    expect(newsVisibility(perms)).toEqual({ canViewGm: true, canViewAll: false });
+  it("leitet das Recht aus einer ZUSATZrolle ab, nicht aus der Primärrolle", () => {
+    // Dokumentierter Multi-Rollen-Fall: Primärrolle „player", Zusatzrolle
+    // „admin". Ein früherer role-String-Check (viewerRole === "admin") war
+    // hier false und hätte fremde Entwürfe im News-Feed ausgeblendet.
+    const perms = resolvePermissions(["player", "admin"], null);
+    expect(newsVisibility(perms)).toEqual({ canViewAll: true });
   });
 
   it("berücksichtigt einen Override, der content.view_all gewährt", () => {
@@ -241,13 +241,13 @@ describe("newsVisibility", () => {
     expect(newsVisibility(perms).canViewAll).toBe(true);
   });
 
-  it("berücksichtigt einen Override, der content.view_gm entzieht", () => {
-    const perms = resolvePermissions(["gm"], { "content.view_gm": false });
-    expect(newsVisibility(perms).canViewGm).toBe(false);
+  it("berücksichtigt einen Override, der content.view_all entzieht", () => {
+    const perms = resolvePermissions(["admin"], { "content.view_all": false });
+    expect(newsVisibility(perms).canViewAll).toBe(false);
   });
 
-  it("ein reiner Spieler sieht weder gm- noch alle Inhalte", () => {
+  it("ein reiner Spieler sieht keine fremden Entwürfe", () => {
     const perms = resolvePermissions(["player"], null);
-    expect(newsVisibility(perms)).toEqual({ canViewGm: false, canViewAll: false });
+    expect(newsVisibility(perms)).toEqual({ canViewAll: false });
   });
 });

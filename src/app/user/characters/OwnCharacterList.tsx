@@ -2,7 +2,7 @@
 import { useOptimistic } from "react";
 import { LcarsAkteCard } from "@/components/lcars";
 import type { Character } from "@/types/character";
-import VisibilitySelect from "../content/VisibilitySelect";
+import ContentStateSelect from "../content/ContentStateSelect";
 import DeleteOwnContentButton from "../content/DeleteOwnContentButton";
 import ContentActionRow from "../content/ContentActionRow";
 import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
@@ -23,7 +23,6 @@ export interface OwnCharacterItem {
   name: string;
   rank: string | null;
   status: Character["status"];
-  visibility: Character["visibility"];
   isDraft: boolean;
   // Ob unter metadata.stats bereits Werte gepflegt sind (siehe
   // isCharacterStatsEmpty) — serverseitig ermittelt, damit die Liste die
@@ -93,11 +92,11 @@ export default function OwnCharacterList({
             }
           />
           <ContentActionRow
-            visibility={
-              <VisibilitySelect
+            state={
+              <ContentStateSelect
                 contentType="character"
                 id={c.id}
-                initialValue={c.visibility}
+                isDraft={c.isDraft}
               />
             }
             // Kein zusätzlicher „Öffnen"-Knopf mehr: Stammdaten, Werte und

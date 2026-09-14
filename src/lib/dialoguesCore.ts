@@ -14,7 +14,7 @@ import { NPC_COLOR, resolveCharacterColor } from "@/lib/characterColor";
 // Kontext (siehe autolink-Kette über @/lib/characters).
 import {
   syncEmbeddings,
-  syncEmbeddingVisibility,
+  syncEmbeddingDraft,
   syncEmbeddingActive,
 } from "@/lib/embeddingSync";
 import {
@@ -1437,21 +1437,21 @@ export async function completeDialogue(archiveEntryId: number): Promise<void> {
 }
 
 // Nur der Ersteller (owner_user_id, siehe createDialogue) darf die
-// Sichtbarkeit ändern — ein fremdes/gefälschtes id trifft dann einfach 0
-// Zeilen (kein separater Vorab-Check nötig, gleiches Prinzip wie
+// Veröffentlichen oder zurückziehen — ein fremdes/gefälschtes id trifft dann
+// einfach 0 Zeilen (kein separater Vorab-Check nötig, gleiches Prinzip wie
 // assignCharacterToUser in src/lib/characters.ts).
-export async function setDialogueVisibility(
+export async function setDialogueDraft(
   userId: number,
   archiveEntryId: number,
-  visibility: "private" | "gm" | "public",
+  isDraft: boolean,
 ): Promise<{ slug: string; title: string } | null> {
   const rows = await sql<{ slug: string; title: string }[]>`
     UPDATE archive_entries
-    SET visibility = ${visibility}, updated_at = NOW()
+    SET is_draft = ${isDraft}, updated_at = NOW()
     WHERE id = ${archiveEntryId} AND category = 'dialogue' AND owner_user_id = ${userId}
     RETURNING slug, title
   `;
-  if (rows[0]) syncEmbeddingVisibility("dialogue", archiveEntryId, visibility);
+  if (rows[0]) syncEmbeddingDraft("dialogue", archiveEntryId, isDraft);
   return rows[0] ?? null;
 }
 
@@ -1485,22 +1485,21 @@ export async function deleteDialogue(
       slug: string;
       title: string;
       metadata: unknown;
-      visibility: string;
       owner_user_id: number | null;
     }[]
   >`
     UPDATE archive_entries
     SET deleted_at = NOW()
     WHERE id = ${archiveEntryId} AND category = 'dialogue' AND deleted_at IS NULL
-    RETURNING slug, title, metadata, visibility, owner_user_id
+    RETURNING slug, title, metadata, owner_user_id
   `;
   const row = rows[0];
   if (!row) return null;
   syncEmbeddingActive("dialogue", archiveEntryId, false);
 
   await sql`
-    INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
-    VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${row.owner_user_id}, ${deletedByUserId})
+    INSERT INTO content_deletions (target_type, title, owner_user_id, deleted_by)
+    VALUES ('archive_entry', ${row.title}, ${row.owner_user_id}, ${deletedByUserId})
   `;
 
   return {
@@ -1512,7 +1511,7 @@ export async function deleteDialogue(
 
 // Selbstlöschung durch den Owner (wer das Gespräch begonnen hat, Meine
 // Inhalte) — Ownership per owner_user_id direkt im WHERE erzwungen, gleiches
-// Prinzip wie setDialogueVisibility oben und deleteMissionLog in
+// Prinzip wie setDialogueDraft oben und deleteMissionLog in
 // missions.ts. Kein Admin-Bypass (bleibt deleteDialogue vorbehalten) und kein
 // isDraft-Guard nötig — Dialoge kennen kein Entwurf-Konzept, landen also
 // immer im "gelöscht"-News-Feed wie bisher.
@@ -1520,21 +1519,19 @@ export async function deleteOwnDialogue(
   userId: number,
   archiveEntryId: number,
 ): Promise<{ slug: string } | null> {
-  const rows = await sql<
-    { slug: string; title: string; visibility: string }[]
-  >`
+  const rows = await sql<{ slug: string; title: string }[]>`
     UPDATE archive_entries
     SET deleted_at = NOW()
     WHERE id = ${archiveEntryId} AND category = 'dialogue'
       AND owner_user_id = ${userId} AND deleted_at IS NULL
-    RETURNING slug, title, visibility
+    RETURNING slug, title
   `;
   const row = rows[0] ?? null;
   if (row) {
     syncEmbeddingActive("dialogue", archiveEntryId, false);
     await sql`
-      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
-      VALUES ('archive_entry', ${row.title}, ${row.visibility}, ${userId}, ${userId})
+      INSERT INTO content_deletions (target_type, title, owner_user_id, deleted_by)
+      VALUES ('archive_entry', ${row.title}, ${userId}, ${userId})
     `;
   }
   return row ? { slug: row.slug } : null;
@@ -1811,7 +1808,7 @@ export interface DialogueSummary {
   open: boolean;
   characterSlug: string;
   characterName: string;
-  visibility: "private" | "gm" | "public";
+  isDraft: boolean;
   ownerUserId: number | null;
 }
 
@@ -1847,7 +1844,7 @@ export async function getDialoguesForUser(
       metadata: unknown;
       updated_at: string;
       dialogue_open: boolean;
-      visibility: "private" | "gm" | "public";
+      is_draft: boolean;
       owner_user_id: number | null;
     };
     // Ein einfaches text[] für den ANY(...)-Vergleich unten — abgeleitet aus
@@ -1858,7 +1855,7 @@ export async function getDialoguesForUser(
       scope === "open"
         ? await sql<DialogueRow[]>`
             SELECT id, slug, title, metadata, updated_at::text AS updated_at,
-                   dialogue_open, visibility, owner_user_id
+                   dialogue_open, is_draft, owner_user_id
             FROM archive_entries
             WHERE category = 'dialogue'
               AND EXISTS (
@@ -1880,7 +1877,7 @@ export async function getDialoguesForUser(
           `
         : await sql<DialogueRow[]>`
             SELECT id, slug, title, metadata, updated_at::text AS updated_at,
-                   dialogue_open, visibility, owner_user_id
+                   dialogue_open, is_draft, owner_user_id
             FROM archive_entries
             WHERE category = 'dialogue'
               AND EXISTS (
@@ -1919,7 +1916,7 @@ export async function getDialoguesForUser(
         open: row.dialogue_open,
         characterSlug: own.slug,
         characterName: own.name,
-        visibility: row.visibility,
+        isDraft: row.is_draft,
         ownerUserId: row.owner_user_id,
       });
     }
@@ -1936,7 +1933,7 @@ export async function getDialoguesForUser(
     metadata: unknown;
     updated_at: string;
     dialogue_open: boolean;
-    visibility: "private" | "gm" | "public";
+    is_draft: boolean;
     owner_user_id: number | null;
     character_slug: string;
     character_name: string;
@@ -1944,7 +1941,7 @@ export async function getDialoguesForUser(
   const npcRows = await sql<NpcDialogueRow[]>`
     SELECT ae.id, ae.slug, ae.title, ae.metadata,
            ae.updated_at::text AS updated_at, ae.dialogue_open,
-           ae.visibility, ae.owner_user_id,
+           ae.is_draft, ae.owner_user_id,
            c.slug AS character_slug, c.title AS character_name
     FROM dialogue_npc_speakers s
     JOIN archive_entries ae ON ae.id = s.archive_entry_id
@@ -1968,7 +1965,7 @@ export async function getDialoguesForUser(
       open: row.dialogue_open,
       characterSlug: row.character_slug,
       characterName: row.character_name,
-      visibility: row.visibility,
+      isDraft: row.is_draft,
       ownerUserId: row.owner_user_id,
     });
   }

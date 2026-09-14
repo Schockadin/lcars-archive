@@ -64,8 +64,8 @@ describe("applyAutolinks", () => {
 
 describe("getAutolinkTargets", () => {
   it("only includes public characters and public non-dialogue archive entries, plus all missions", async () => {
-    const publicChar = await insertCharacter({ name: "Öffentlich", visibility: "public" });
-    await insertCharacter({ name: "Privat", visibility: "private" });
+    const publicChar = await insertCharacter({ name: "Öffentlich" });
+    await insertCharacter({ name: "Privat", isDraft: true });
     const mission = await insertMission({ title: "Eine Mission" });
 
     const targets = await getAutolinkTargets();
@@ -103,7 +103,7 @@ describe("getAutolinkTargets", () => {
   });
 
   it("excludes the given target from the result", async () => {
-    const character = await insertCharacter({ name: "Ausgeschlossen", visibility: "public" });
+    const character = await insertCharacter({ name: "Ausgeschlossen" });
 
     const targets = await getAutolinkTargets({
       type: "character",
@@ -116,7 +116,7 @@ describe("getAutolinkTargets", () => {
 
 describe("resolveAllWikilinks", () => {
   it("resolves a wikilink anchor to the target's real href", async () => {
-    const character = await insertCharacter({ name: "Ziel Person", visibility: "public" });
+    const character = await insertCharacter({ name: "Ziel Person" });
     const html = `<a href="wikilink://Ziel Person">Ziel Person</a>`;
 
     const result = await resolveAllWikilinks(html);
@@ -143,7 +143,7 @@ describe("resolveAllWikilinks", () => {
 
 describe("renderContentHtml", () => {
   it("renders markdown to HTML and resolves any [[wikilinks]] against the DB", async () => {
-    const character = await insertCharacter({ name: "Verlinkte Person", visibility: "public" });
+    const character = await insertCharacter({ name: "Verlinkte Person" });
 
     const html = await renderContentHtml("Ein Verweis auf [[Verlinkte Person]].");
 

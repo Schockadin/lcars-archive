@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Viewer } from "@/lib/visibility";
 import { Character } from "@/types/character";
 import OwnerSelect from "./OwnerSelect";
-import AdminVisibilitySelect from "./AdminVisibilitySelect";
+import AdminContentStateSelect from "./AdminContentStateSelect";
 import ContentLinkToolButton from "@/components/ContentLinkToolButton";
 import DeleteContentButton from "@/components/DeleteContentButton";
 import ContentImageGallery from "@/components/ContentImageGallery";
@@ -49,9 +49,10 @@ const IMAGE_CONTENT_TYPE: Record<ContentToolType, ContentImageType> = {
   archiveEntry: "archive_entry",
 };
 
-// Wie OWNER_CONTENT_TYPE oben, aber ohne "mission" — Missionen haben keine
-// visibility-Spalte (immer öffentlich, siehe lib/missions.ts), AdminVisibilitySelect
-// wird für contentType "mission" deshalb gar nicht gerendert.
+// Wie OWNER_CONTENT_TYPE oben, aber ohne "mission" — den Entwurfs-Zustand
+// einer Mission stellt der Missions-Editor (nur Spielleitung/Administration),
+// AdminContentStateSelect wird für contentType "mission" deshalb gar nicht
+// gerendert.
 const VISIBILITY_CONTENT_TYPE: Partial<
   Record<ContentToolType, AdminVisibilityContentType>
 > = {
@@ -165,11 +166,11 @@ export default function ActionsMenu({
       )}
       {viewer?.permissions.includes("content.moderate") &&
         visibilityContentType &&
-        "visibility" in content && (
-          <AdminVisibilitySelect
+        "isDraft" in content && (
+          <AdminContentStateSelect
             contentType={visibilityContentType}
             id={content.id}
-            initialValue={content.visibility}
+            isDraft={content.isDraft}
           />
         )}
       <div className="flex gap-[5px]">

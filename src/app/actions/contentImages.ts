@@ -139,7 +139,7 @@ export async function getContentImagesAction(
   if (!access) return [];
 
   const viewer = await getViewer();
-  if (!canView(access.visibility, access.ownerId, viewer)) return [];
+  if (!canView(access.isDraft, access.ownerId, viewer)) return [];
 
   return listContentImages(contentTypeRaw, contentId);
 }

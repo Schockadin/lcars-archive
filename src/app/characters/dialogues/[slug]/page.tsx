@@ -11,7 +11,6 @@ import { getDialogueMessages } from "@/lib/dialogues";
 import {
   getViewer,
   canView,
-  canViewDraft,
   viewerHasPermission,
 } from "@/lib/visibility";
 import { getDialogueViewPreference } from "@/lib/users";
@@ -34,10 +33,8 @@ export async function generateMetadata({ params }: Props) {
   // entschieden — Metadaten dafür nicht zusätzlich blocken.
   const viewerForMeta = await getViewer();
   const visible =
-    (entry.visibility === "public" ||
-      entry.dialogue_open ||
-      canView(entry.visibility, entry.ownerUserId, viewerForMeta)) &&
-    canViewDraft(entry.isDraft, entry.ownerUserId, viewerForMeta);
+    entry.dialogue_open ||
+    canView(entry.isDraft, entry.ownerUserId, viewerForMeta);
   if (!visible) return { title: "Nicht gefunden · Neo Archive" };
 
   const desc = entry.metadata.summary ?? stripHtml(entry.content);
@@ -66,13 +63,7 @@ export default async function CharacterDialoguePage({ params }: Props) {
   // Zugriffsprüfung (jeder Teilnehmer, nicht nur der Ersteller).
   if (entry.dialogue_open) redirect(dialogueHref(entry.slug));
 
-  if (
-    entry.visibility !== "public" &&
-    !canView(entry.visibility, entry.ownerUserId, viewer)
-  ) {
-    notFound();
-  }
-  if (!canViewDraft(entry.isDraft, entry.ownerUserId, viewer)) notFound();
+  if (!canView(entry.isDraft, entry.ownerUserId, viewer)) notFound();
 
   const [messages, flowingTextPreferred] = await Promise.all([
     getDialogueMessages(entry.id),

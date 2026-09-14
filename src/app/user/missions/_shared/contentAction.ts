@@ -214,7 +214,7 @@ export async function missionAction(
   }
 
   // Im Entwurf-Modus (siehe ContentEditor.tsx-Checkbox) ist nur der Text
-  // optional — Titel & Co. bleiben Pflicht, siehe canViewDraft-Kommentar in
+  // optional — Titel & Co. bleiben Pflicht, siehe canView-Kommentar in
   // src/lib/visibility.ts für die Begründung.
   const isDraft = formData.get("isDraft") === "on";
 

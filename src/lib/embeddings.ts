@@ -23,7 +23,6 @@
 import type { Sql } from "postgres";
 import OpenAI from "openai";
 import { stripMarkdown } from "@/lib/search";
-import type { Visibility } from "@/lib/visibility";
 
 // Ein postgres.js-Client ODER eine Transaktion (sql.begin(tx => …)). Beide
 // tragen dasselbe Tagged-Template-Interface. Gleiches Muster wie der
@@ -469,7 +468,6 @@ export interface UpsertEmbeddingsParams {
   contentId: number;
   chunks: EmbeddedChunk[];
   // Denormalisierte RBAC-Felder (siehe scripts/schema.sql / canView).
-  visibility: Visibility;
   ownerId: number | null;
   isDraft: boolean;
   isActive: boolean;
@@ -492,7 +490,6 @@ export async function upsertEmbeddings(
     contentType,
     contentId,
     chunks,
-    visibility,
     ownerId,
     isDraft,
     isActive,
@@ -519,19 +516,18 @@ export async function upsertEmbeddings(
     await client`
       INSERT INTO content_embeddings (
         content_type, content_id, chunk_index, chunk_text, embedding,
-        visibility, owner_id, is_draft, is_active, title, slug, href,
+        owner_id, is_draft, is_active, title, slug, href,
         metadata, updated_at
       ) VALUES (
         ${contentType}, ${contentId}, ${chunk.index}, ${chunk.text},
         ${toVectorLiteral(chunk.embedding)}::vector,
-        ${visibility}, ${ownerId}, ${isDraft}, ${isActive},
+        ${ownerId}, ${isDraft}, ${isActive},
         ${title}, ${slug}, ${href},
         ${client.json(metadata as ReturnType<typeof JSON.parse>)}, NOW()
       )
       ON CONFLICT (content_type, content_id, chunk_index) DO UPDATE SET
         chunk_text = EXCLUDED.chunk_text,
         embedding  = EXCLUDED.embedding,
-        visibility = EXCLUDED.visibility,
         owner_id   = EXCLUDED.owner_id,
         is_draft   = EXCLUDED.is_draft,
         is_active  = EXCLUDED.is_active,
@@ -556,16 +552,16 @@ export async function deleteEmbeddings(
   `;
 }
 
-// Sichtbarkeits-Änderung: nur das denormalisierte Feld nachziehen (kein
-// Re-Embedding nötig — der Text ändert sich nicht).
-export async function updateEmbeddingVisibility(
+// Veröffentlichen/Zurückziehen: nur das denormalisierte Feld nachziehen
+// (kein Re-Embedding nötig — der Text ändert sich nicht).
+export async function updateEmbeddingDraft(
   client: SqlClient,
   contentType: EmbeddingContentType,
   contentId: number,
-  visibility: Visibility,
+  isDraft: boolean,
 ): Promise<void> {
   await client`
-    UPDATE content_embeddings SET visibility = ${visibility}, updated_at = NOW()
+    UPDATE content_embeddings SET is_draft = ${isDraft}, updated_at = NOW()
     WHERE content_type = ${contentType} AND content_id = ${contentId}
   `;
 }

@@ -177,11 +177,13 @@ CREATE TABLE IF NOT EXISTS roles (
 -- characters
 -- ---------------------------------------------------------------------------
 -- source_md = roher Markdown-Body, frontmatter = geparstes Frontmatter.
--- visibility: private (nur Owner) | gm (Owner + gm/admin) | public (alle) —
--- Auswertung in src/lib/visibility.ts. deleted_at: Soft-Delete (7-Tage-
--- Papierkorb, danach purge-soft-deleted.ts). is_draft: unfertiger Entwurf,
--- für NIEMANDEN außer dem Owner sichtbar (auch nicht Admin/GM, siehe
--- canViewDraft), erlaubt leeren Text beim Speichern. character_color: vom
+-- deleted_at: Soft-Delete (7-Tage-Papierkorb, danach purge-soft-deleted.ts).
+-- is_draft: der EINE Sichtbarkeits-Schalter jedes Inhalts — false =
+-- veröffentlicht (für alle sichtbar, auch ohne Anmeldung), true = Entwurf
+-- (nur für die Owner-Person, auch nicht für GM; siehe canView in
+-- src/lib/visibility.ts) und erlaubt leeren Text beim Speichern. Die frühere
+-- zweite Achse visibility (private|gm|public) ist entfallen, siehe
+-- scripts/migrate-pr71.sql. character_color: vom
 -- Owner gewählte Farbe für DIESEN Charakter (färbt dessen wörtliche Rede im
 -- Fließtext-Modus sowie seine Nachrichten-Karten in Dialogen, siehe
 -- src/lib/characterColor.ts) — freie Hex-Farbe (#rrggbb), NULL = keine
@@ -206,8 +208,6 @@ CREATE TABLE IF NOT EXISTS characters (
   frontmatter     JSONB NOT NULL DEFAULT '{}',
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  visibility      TEXT NOT NULL DEFAULT 'public'
-                    CHECK (visibility IN ('private', 'gm', 'public')),
   deleted_at      TIMESTAMPTZ,
   is_draft        BOOLEAN NOT NULL DEFAULT false,
   character_color TEXT
@@ -230,8 +230,9 @@ CREATE INDEX IF NOT EXISTS idx_characters_name_trgm  ON characters USING GIN (na
 -- ---------------------------------------------------------------------------
 -- missions
 -- ---------------------------------------------------------------------------
--- Missionen haben BEWUSST keine visibility-Spalte (immer public): ohne
--- Einzel-Owner-Modell wäre „private“ nicht sinnvoll definierbar. owner_user_id
+-- Missionen sind immer für alle sichtbar, sobald sie kein Entwurf mehr sind
+-- (is_draft) — ein Mission-Entwurf ist zusätzlich für die Spielleitung
+-- sichtbar, siehe canViewMissionDraft. owner_user_id
 -- (aus „owner: <user-slug>“-Frontmatter, resolveOwner in
 -- scripts/ingest/shared.ts) dient nur der Zuordnung/Bearbeitungs-Berechtigung.
 -- (Eine früher zeitweise existierende summary/synopsis-Spalte wurde wieder
@@ -264,8 +265,7 @@ CREATE INDEX IF NOT EXISTS idx_missions_title_trgm ON missions USING GIN (title 
 -- mission_logs
 -- ---------------------------------------------------------------------------
 -- author_id: ON DELETE SET NULL — eine Charakter-Neuzuordnung reißt bereits
--- geschriebene Logs nicht mit. visibility/deleted_at/is_draft wie bei
--- characters.
+-- geschriebene Logs nicht mit. deleted_at/is_draft wie bei characters.
 CREATE TABLE IF NOT EXISTS mission_logs (
   id            SERIAL PRIMARY KEY,
   slug          TEXT UNIQUE NOT NULL,
@@ -281,8 +281,6 @@ CREATE TABLE IF NOT EXISTS mission_logs (
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   owner_user_id INT REFERENCES users(id) ON DELETE SET NULL,
-  visibility    TEXT NOT NULL DEFAULT 'public'
-                  CHECK (visibility IN ('private', 'gm', 'public')),
   deleted_at    TIMESTAMPTZ,
   is_draft      BOOLEAN NOT NULL DEFAULT false
 );
@@ -301,8 +299,8 @@ CREATE INDEX IF NOT EXISTS idx_mission_logs_content_trgm ON mission_logs USING G
 -- Kategorie-CHECK enthält 'npc' und 'dialogue' direkt. dialogue_open: In-App-
 -- Dialoge (category='dialogue') sind offen (nur unter /dialogues/<slug>,
 -- nehmen Nachrichten an) vs. abgeschlossen (im Archiv, read-only) — Vault-
--- Dialoge bleiben beim Default FALSE. owner_user_id/visibility/deleted_at/
--- is_draft wie bei den übrigen Inhaltstypen.
+-- Dialoge bleiben beim Default FALSE. owner_user_id/deleted_at/is_draft wie
+-- bei den übrigen Inhaltstypen.
 CREATE TABLE IF NOT EXISTS archive_entries (
   id            SERIAL PRIMARY KEY,
   slug          TEXT UNIQUE NOT NULL,
@@ -321,8 +319,6 @@ CREATE TABLE IF NOT EXISTS archive_entries (
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   dialogue_open BOOLEAN NOT NULL DEFAULT FALSE,
   owner_user_id INT REFERENCES users(id) ON DELETE SET NULL,
-  visibility    TEXT NOT NULL DEFAULT 'public'
-                  CHECK (visibility IN ('private', 'gm', 'public')),
   deleted_at    TIMESTAMPTZ,
   is_draft      BOOLEAN NOT NULL DEFAULT false
 );
@@ -499,14 +495,13 @@ CREATE INDEX IF NOT EXISTS idx_push_subscriptions_user ON push_subscriptions(use
 -- (NewsSection.tsx). Inhalte werden weich gelöscht (deleted_at auf der
 -- Ursprungstabelle) — dieses Protokoll wird beim Weich-Löschen befüllt und
 -- ist die eigenständige Datenquelle für einen „X wurde gelöscht“-Eintrag.
--- visibility/owner_user_id werden zum Löschzeitpunkt übernommen (visibility
--- NULL = Mission, die wie live keine eigene visibility hat und immer public
--- ist), damit getRecentDeletions dieselbe Sichtbarkeitsregel anwenden kann.
+-- owner_user_id wird zum Löschzeitpunkt übernommen, damit
+-- getRecentDeletions dieselbe Sichtbarkeitsregel anwenden kann wie die
+-- Inhaltsseiten.
 CREATE TABLE IF NOT EXISTS content_deletions (
   id            SERIAL PRIMARY KEY,
   target_type   TEXT NOT NULL,
   title         TEXT NOT NULL,
-  visibility    TEXT,
   owner_user_id INT REFERENCES users(id) ON DELETE SET NULL,
   deleted_by    INT REFERENCES users(id) ON DELETE SET NULL,
   deleted_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -1101,15 +1096,15 @@ CREATE INDEX IF NOT EXISTS idx_news_seen_user ON news_seen(user_id);
 -- text-embedding-3-small, volle 1536 Dimensionen) und einer Kopie des
 -- Chunk-Textes für den Prompt-Kontext.
 --
--- RBAC-Felder (visibility/owner_id/is_draft/is_active) sind BEWUSST vom
+-- RBAC-Felder (owner_id/is_draft/is_active) sind BEWUSST vom
 -- Quell-Inhalt DENORMALISIERT: die Vektorsuche filtert direkt auf dieser
 -- Tabelle (kein JOIN auf characters/missions/… pro Query), mit derselben
 -- Logik wie canView() in src/lib/visibility.ts. Sie werden von den
--- Content-Mutationen mitgeschrieben (Sichtbarkeits-Änderung → UPDATE
--- visibility; Soft-Delete → is_active=false; siehe embeddings.ts).
+-- Content-Mutationen mitgeschrieben (Veröffentlichen/Zurückziehen → UPDATE
+-- is_draft; Soft-Delete → is_active=false; siehe embeddings.ts).
 --   - owner_id: die für den Typ zuständige Owner-Spalte (player_id bei
---     characters, owner_user_id bei mission_logs/archive_entries; missions
---     sind immer public und haben keinen wirksamen Owner-Bypass).
+--     characters, owner_user_id bei mission_logs/archive_entries; bei
+--     Missionen entscheidet stattdessen das Recht missions.manage).
 --   - is_active: false, sobald der Quell-Inhalt soft-deleted ist
 --     (deleted_at IS NOT NULL) — die Suche schließt inaktive Chunks aus,
 --     ohne die Zeile sofort löschen zu müssen (das erledigt der endgültige
@@ -1132,8 +1127,6 @@ CREATE TABLE IF NOT EXISTS content_embeddings (
   chunk_index  INT NOT NULL,
   chunk_text   TEXT NOT NULL,
   embedding    vector(1536) NOT NULL,
-  visibility   TEXT NOT NULL DEFAULT 'public'
-                 CHECK (visibility IN ('private', 'gm', 'public')),
   owner_id     INT,
   is_draft     BOOLEAN NOT NULL DEFAULT false,
   is_active    BOOLEAN NOT NULL DEFAULT true,
@@ -1153,7 +1146,7 @@ CREATE INDEX IF NOT EXISTS idx_content_embeddings_vec
   ON content_embeddings USING hnsw (embedding vector_cosine_ops);
 -- Für den RBAC-Vorfilter der Vektorsuche (nur aktive, sichtbare Chunks).
 CREATE INDEX IF NOT EXISTS idx_content_embeddings_rbac
-  ON content_embeddings(is_active, visibility);
+  ON content_embeddings(is_active, is_draft);
 
 -- ---------------------------------------------------------------------------
 -- Migrationen seit der letzten Schema-Konsolidierung
@@ -1326,3 +1319,25 @@ CREATE TABLE IF NOT EXISTS campaign_rules (
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+
+-- ---------------------------------------------------------------------------
+-- Aus drei Sichtbarkeiten werden zwei Zustände (siehe migrate-pr71.sql)
+-- ---------------------------------------------------------------------------
+-- Ausnahmsweise NICHT additiv: visibility ('private'|'gm'|'public') fällt
+-- weg, es bleibt is_draft. Bestehende Inhalte, die kein Entwurf sind, sind
+-- damit veröffentlicht — auch die vorher privaten. Das ist so entschieden
+-- worden; wer einzelne verborgen halten will, setzt sie vorher auf is_draft
+-- (die Beispiel-UPDATEs stehen in scripts/migrate-pr71.sql).
+ALTER TABLE characters        DROP COLUMN IF EXISTS visibility;
+ALTER TABLE mission_logs      DROP COLUMN IF EXISTS visibility;
+ALTER TABLE archive_entries   DROP COLUMN IF EXISTS visibility;
+ALTER TABLE content_deletions DROP COLUMN IF EXISTS visibility;
+DROP INDEX IF EXISTS idx_content_embeddings_rbac;
+ALTER TABLE content_embeddings DROP COLUMN IF EXISTS visibility;
+CREATE INDEX IF NOT EXISTS idx_content_embeddings_rbac
+  ON content_embeddings(is_active, is_draft);
+
+-- Das Recht „GM-Inhalte sehen" ist mit visibility entfallen (siehe oben).
+UPDATE roles SET permissions = array_remove(permissions, 'content.view_gm')
+WHERE 'content.view_gm' = ANY(permissions);

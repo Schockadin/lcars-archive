@@ -120,7 +120,7 @@ async function runSearchQueries(
       SELECT name, slug
       FROM characters
       WHERE (name ILIKE ${like} OR ${vec("characters")} @@ ${ts})
-        AND visibility = 'public' AND deleted_at IS NULL
+        AND deleted_at IS NULL
         AND is_draft = false
       ORDER BY (name ILIKE ${prefix}) DESC,
                ts_rank_cd(${vec("characters")}, ${ts}) DESC,
@@ -147,7 +147,6 @@ async function runSearchQueries(
           ${includeContent ? sql`OR ml.content ILIKE ${like}` : sql``}
           OR ${vec("ml")} @@ ${ts}
         )
-        AND ml.visibility = 'public'
         AND ml.deleted_at IS NULL AND m.deleted_at IS NULL AND ml.is_draft = false
       ORDER BY (ml.title ILIKE ${prefix}) DESC,
                ts_rank_cd(${vec("ml")}, ${ts}) DESC,
@@ -165,7 +164,6 @@ async function runSearchQueries(
           OR ${vec("archive_entries")} @@ ${ts}
         )
         AND NOT (category = 'dialogue' AND dialogue_open)
-        AND visibility = 'public'
         AND deleted_at IS NULL AND is_draft = false
       ORDER BY (title ILIKE ${prefix}) DESC,
                ts_rank_cd(${vec("archive_entries")}, ${ts}) DESC,
@@ -195,7 +193,6 @@ async function runSearchQueries(
           LEFT JOIN archive_entries npc ON npc.id = dm.npc_entry_id
           WHERE (dm.content ILIKE ${like} OR dm.search_vector @@ ${ts})
             AND dm.deleted_at IS NULL
-            AND ae.visibility = 'public'
             AND ae.deleted_at IS NULL AND ae.is_draft = false
           ORDER BY dm.archive_entry_id,
                    ts_rank_cd(dm.search_vector, ${ts}) DESC,

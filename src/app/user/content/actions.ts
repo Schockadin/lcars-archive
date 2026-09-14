@@ -4,14 +4,14 @@ import { userCan } from "@/lib/permissions";
 import { getRoleMap } from "@/lib/roles";
 import { getActiveSession } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
-import { setCharacterVisibility, deleteOwnCharacter } from "@/lib/characters";
+import { setCharacterDraft, deleteOwnCharacter } from "@/lib/characters";
 import {
-  setMissionLogVisibility,
+  setMissionLogDraft,
   deleteMissionLog,
   deleteMission,
 } from "@/lib/missions";
-import { setDialogueVisibility, deleteOwnDialogue } from "@/lib/dialogues";
-import { setArchiveEntryVisibility, deleteOwnArchiveEntry } from "@/lib/archive";
+import { setDialogueDraft, deleteOwnDialogue } from "@/lib/dialogues";
+import { setArchiveEntryDraft, deleteOwnArchiveEntry } from "@/lib/archive";
 import { notifyUserSubscribers } from "@/lib/follows";
 import {
   revalidateCharacter,
@@ -22,7 +22,7 @@ import {
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { missionLogHref } from "@/lib/contentRoutes";
-import { VISIBILITY_OPTIONS, type Visibility } from "@/lib/visibility";
+import { isContentState } from "@/lib/visibility";
 
 export type VisibilityContentType =
   | "character"
@@ -30,20 +30,16 @@ export type VisibilityContentType =
   | "dialogue"
   | "archive_entry";
 
-function isValidVisibility(value: string): value is Visibility {
-  return (VISIBILITY_OPTIONS as readonly string[]).includes(value);
-}
-
 // Benachrichtigt Abonnenten des Users (target_type 'user', siehe
-// notifyUserSubscribers in lib/follows.ts) NUR beim Wechsel auf public — ein
-// Wechsel auf private/gm ist kein "neuer öffentlicher Inhalt" und daher kein
+// notifyUserSubscribers in lib/follows.ts) NUR beim Veröffentlichen — etwas
+// zurückzuziehen ist kein „neuer Inhalt" und daher kein
 // Benachrichtigungs-Ereignis.
-async function notifyIfPublic(
-  visibility: Visibility,
+async function notifyIfPublished(
+  isDraft: boolean,
   userId: number,
   input: { contentTypeLabel: string; title: string; url: string; preview: string },
 ): Promise<void> {
-  if (visibility !== "public") return;
+  if (isDraft) return;
   await notifyUserSubscribers({
     authorUserId: userId,
     contentTypeLabel: input.contentTypeLabel,
@@ -54,35 +50,36 @@ async function notifyIfPublic(
 }
 
 // Eine gemeinsame Action für alle vier Inhaltstypen aus "Meine Inhalte" statt
-// vier fast identischer Varianten. Jede der setXVisibility-Schreibfunktionen
+// vier fast identischer Varianten. Jede der setXDraft-Schreibfunktionen
 // scoped ihr UPDATE selbst auf den Owner — ein gefälschtes id trifft dann
 // einfach 0 Zeilen, kein separater Vorab-Check hier nötig (gleiches Prinzip
 // wie setBookmark/setSubscription in src/lib/follows.ts bzw.
 // assignCharacterAction in src/app/admin/actions.ts).
 //
-// Gibt { error? } statt void zurück — VisibilitySelect.tsx braucht das für
+// Gibt { error? } statt void zurück — ContentStateSelect.tsx braucht das für
 // den Rollback des optimistischen useOptimistic-Werts: bleibt die
 // Server-Antwort ohne Fehler, revalidiert revalidatePath unten die Seite
 // mit dem neuen Wert; schlägt es fehl, bleibt der reale Wert unverändert
 // und der optimistische fällt nach Abschluss der Transition automatisch
 // darauf zurück.
-export async function setVisibilityAction(
+export async function setContentStateAction(
   contentType: VisibilityContentType,
   id: number,
-  visibility: string,
+  state: string,
 ): Promise<{ error?: string }> {
   const session = await getActiveSession();
   if (!session) return { error: "Nicht angemeldet." };
-  if (!isValidVisibility(visibility)) return { error: "Ungültige Sichtbarkeit." };
+  if (!isContentState(state)) return { error: "Ungültiger Zustand." };
+  const isDraft = state === "draft";
 
   const baseUrl = await getBaseUrl();
   let ok = false;
   if (contentType === "character") {
-    const character = await setCharacterVisibility(session.userId, id, visibility);
+    const character = await setCharacterDraft(session.userId, id, isDraft);
     if (character) {
       revalidateCharacter(character.slug);
       ok = true;
-      await notifyIfPublic(visibility, session.userId, {
+      await notifyIfPublished(isDraft, session.userId, {
         contentTypeLabel: "einen Charakter",
         title: character.name,
         url: `${baseUrl}/characters/${character.slug}`,
@@ -92,11 +89,11 @@ export async function setVisibilityAction(
       });
     }
   } else if (contentType === "mission_log") {
-    const log = await setMissionLogVisibility(session.userId, id, visibility);
+    const log = await setMissionLogDraft(session.userId, id, isDraft);
     if (log) {
       revalidateLog(log.missionId, log.slug);
       ok = true;
-      await notifyIfPublic(visibility, session.userId, {
+      await notifyIfPublished(isDraft, session.userId, {
         contentTypeLabel: "einen Mission-Log",
         title: log.title,
         url: `${baseUrl}${missionLogHref(log.missionSlug, log.slug)}`,
@@ -106,11 +103,11 @@ export async function setVisibilityAction(
       });
     }
   } else if (contentType === "dialogue") {
-    const dialogue = await setDialogueVisibility(session.userId, id, visibility);
+    const dialogue = await setDialogueDraft(session.userId, id, isDraft);
     if (dialogue) {
       revalidateArchiveEntry(dialogue.slug);
       ok = true;
-      await notifyIfPublic(visibility, session.userId, {
+      await notifyIfPublished(isDraft, session.userId, {
         contentTypeLabel: "ein Gespräch",
         title: dialogue.title,
         url: `${baseUrl}/archive/${dialogue.slug}`,
@@ -118,11 +115,11 @@ export async function setVisibilityAction(
       });
     }
   } else {
-    const entry = await setArchiveEntryVisibility(session.userId, id, visibility);
+    const entry = await setArchiveEntryDraft(session.userId, id, isDraft);
     if (entry) {
       revalidateArchiveEntry(entry.slug);
       ok = true;
-      await notifyIfPublic(visibility, session.userId, {
+      await notifyIfPublished(isDraft, session.userId, {
         contentTypeLabel: "einen Datenbank-Eintrag",
         title: entry.title,
         url: `${baseUrl}/archive/${entry.slug}`,
@@ -135,7 +132,7 @@ export async function setVisibilityAction(
 
   revalidatePath("/user/content");
   // Charaktere leben seit dem Umzug unter /user/characters — beide Seiten
-  // nutzen dieselben Aktionen (VisibilitySelect/DeleteOwnContentButton), also
+  // nutzen dieselben Aktionen (ContentStateSelect/DeleteOwnContentButton), also
   // auch beide revalidieren.
   revalidatePath("/user/characters");
   return ok ? {} : { error: "Änderung fehlgeschlagen (keine Berechtigung?)." };

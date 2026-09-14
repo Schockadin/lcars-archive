@@ -10,13 +10,14 @@ import { PencilIcon } from "@/lib/icons";
 // (/user/characters, siehe OwnCharacterList.tsx) dieselbe Aktionszeile
 // braucht.
 export default function ContentActionRow({
-  visibility,
+  state,
   extraAction,
   editHref,
   editLabel = "Bearbeiten",
   deleteButton,
 }: {
-  visibility?: React.ReactNode;
+  // Entwurf/veröffentlicht-Umschalter (ContentStateSelect).
+  state?: React.ReactNode;
   // Zusätzliche Aktion vor dem Bearbeiten-Stift (z.B. „Werte" auf der
   // Charakter-Übersicht).
   extraAction?: React.ReactNode;
@@ -30,7 +31,7 @@ export default function ContentActionRow({
   // rutscht sie in eine zweite Zeile, statt links aus dem Bild zu laufen.
   return (
     <div className="flex flex-wrap items-center justify-end gap-[8px]">
-      {visibility}
+      {state}
       {extraAction}
       {editHref && (
         <Link

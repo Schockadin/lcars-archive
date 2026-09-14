@@ -11,7 +11,7 @@ import {
   CONTENT_DRAFT_COLOR,
 } from "@/lib/contentTypeFormat";
 import type { MissionPreview } from "@/types/missions";
-import VisibilitySelect from "./VisibilitySelect";
+import ContentStateSelect from "./ContentStateSelect";
 import DeleteOwnContentButton from "./DeleteOwnContentButton";
 import ContentActionRow from "./ContentActionRow";
 import { LcarsListFilterInput } from "@/components/lcars";
@@ -309,11 +309,11 @@ export default function UserContentBrowser({
                   }
                 />
                 <ContentActionRow
-                  visibility={
-                    <VisibilitySelect
+                  state={
+                    <ContentStateSelect
                       contentType="mission_log"
                       id={log.id}
-                      initialValue={log.visibility}
+                      isDraft={log.is_draft}
                     />
                   }
                   editHref={missionLogEditHref(log.id)}
@@ -349,11 +349,11 @@ export default function UserContentBrowser({
                   }
                 />
                 <ContentActionRow
-                  visibility={
-                    <VisibilitySelect
+                  state={
+                    <ContentStateSelect
                       contentType="archive_entry"
                       id={entry.id}
-                      initialValue={entry.visibility}
+                      isDraft={entry.isDraft}
                     />
                   }
                   editHref={archiveEditHref(entry.id)}
@@ -410,11 +410,11 @@ export default function UserContentBrowser({
                     }
                   />
                   <ContentActionRow
-                    visibility={
-                      <VisibilitySelect
+                    state={
+                      <ContentStateSelect
                         contentType="mission_log"
                         id={log.id}
-                        initialValue={log.visibility}
+                        isDraft={log.is_draft}
                       />
                     }
                     editHref={missionLogEditHref(log.id)}
@@ -476,11 +476,11 @@ export default function UserContentBrowser({
                       nutzbar — der Gesprächspartner sieht nur den Status. */}
                   {d.ownerUserId === ownUserId ? (
                     <ContentActionRow
-                      visibility={
-                        <VisibilitySelect
+                      state={
+                        <ContentStateSelect
                           contentType="dialogue"
                           id={d.id}
-                          initialValue={d.visibility}
+                          isDraft={d.isDraft}
                         />
                       }
                       deleteButton={
@@ -533,11 +533,11 @@ export default function UserContentBrowser({
                     }
                   />
                   <ContentActionRow
-                    visibility={
-                      <VisibilitySelect
+                    state={
+                      <ContentStateSelect
                         contentType="archive_entry"
                         id={entry.id}
-                        initialValue={entry.visibility}
+                        isDraft={entry.isDraft}
                       />
                     }
                     editHref={archiveEditHref(entry.id)}

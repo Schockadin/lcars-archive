@@ -60,7 +60,7 @@ async function loadArchiveEntryExport(slug: string): Promise<ExportableContent |
     if (!participant && !viewerHasPermission(viewer, "gm.access")) {
       return null;
     }
-  } else if (!canView(entry.visibility, entry.ownerUserId, viewer)) {
+  } else if (!canView(entry.isDraft, entry.ownerUserId, viewer)) {
     return null;
   }
 
@@ -124,9 +124,7 @@ async function loadMissionLogExport(slug: string): Promise<ExportableContent | n
   if (!log) return null;
 
   const viewer = await getViewer();
-  const visible =
-    log.visibility === "public" || canView(log.visibility, log.ownerUserId, viewer);
-  if (!visible) return null;
+  if (!canView(log.isDraft, log.ownerUserId, viewer)) return null;
 
   const [row] = await sql<{ source_md: string | null }[]>`
     SELECT source_md FROM mission_logs WHERE slug = ${slug}
@@ -156,10 +154,7 @@ async function loadCharacterExport(slug: string): Promise<ExportableContent | nu
   if (!character) return null;
 
   const viewer = await getViewer();
-  const visible =
-    character.visibility === "public" ||
-    canView(character.visibility, character.player_id, viewer);
-  if (!visible) return null;
+  if (!canView(character.is_draft, character.player_id, viewer)) return null;
 
   const source = await getCharacterSourceBySlug(slug);
 

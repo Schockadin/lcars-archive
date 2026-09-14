@@ -91,7 +91,6 @@ export interface MissionLogDetail {
   mission_id: number;
   mission_slug: string;
   mission_title: string;
-  visibility: "private" | "gm" | "public";
   ownerUserId: number | null;
   isDraft: boolean;
 }

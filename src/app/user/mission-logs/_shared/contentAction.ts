@@ -157,7 +157,7 @@ export async function missionLogAction(
           contentTitle: title,
           contentUrl,
           preview,
-          notifyPublic: result.visibility === "public",
+          notifyPublic: true,
         });
         await notifyLogSubscribers(
           result.authorSlug,
@@ -179,7 +179,7 @@ export async function missionLogAction(
           contentTitle: title,
           contentUrl,
           preview,
-          notifyPublic: result.visibility === "public",
+          notifyPublic: true,
         });
       }
     }

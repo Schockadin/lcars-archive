@@ -15,11 +15,10 @@ export interface HeaderStats {
 // Nur ÖFFENTLICHE, nicht-Entwurf-Inhalte werden gezählt: die Kennzahlen stehen
 // auf der öffentlichen Landing-Page („Aktueller Datenbestand") und verlinken
 // auf /characters, /chronologie, /archive, die anonymen Besuchern ebenfalls nur
-// public-Inhalte zeigen. Ein cache-weiter Einzelwert kann ohnehin nicht
-// betrachterabhängig sein — die öffentliche Zahl ist der einzige, der zur
-// verlinkten Liste passt und nicht verrät, wie viele nicht-öffentliche
-// Inhalte existieren (dieselbe visibility-Grenze wie die Suche in
-// src/lib/search.ts).
+// veröffentlichte Inhalte zählen. Ein cache-weiter Einzelwert kann ohnehin
+// nicht betrachterabhängig sein — die veröffentlichte Zahl ist die einzige,
+// die zur verlinkten Liste passt und nicht verrät, wie viele Entwürfe es gibt
+// (dieselbe Grenze wie die Suche in src/lib/search.ts).
 export async function getDBStats(): Promise<HeaderStats> {
   "use cache";
   cacheTag(cacheTags.stats, cacheTags.characters, cacheTags.missionLogs);
@@ -35,12 +34,12 @@ export async function getDBStats(): Promise<HeaderStats> {
   >`
       SELECT
         (SELECT COUNT(*) FROM characters
-          WHERE visibility = 'public' AND deleted_at IS NULL AND is_draft = false)   AS character_count,
+          WHERE deleted_at IS NULL AND is_draft = false)   AS character_count,
         (SELECT COUNT(*) FROM mission_logs
-          WHERE visibility = 'public' AND deleted_at IS NULL AND is_draft = false)   AS session_count,
+          WHERE deleted_at IS NULL AND is_draft = false)   AS session_count,
         (SELECT COUNT(*) FROM archive_entries
-          WHERE visibility = 'public' AND NOT (category = 'dialogue' AND dialogue_open)
-            AND deleted_at IS NULL AND is_draft = false)                             AS entry_count
+          WHERE NOT (category = 'dialogue' AND dialogue_open)
+            AND deleted_at IS NULL AND is_draft = false)   AS entry_count
     `;
 
   return {

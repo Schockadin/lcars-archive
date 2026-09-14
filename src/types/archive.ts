@@ -103,7 +103,6 @@ export interface ArchiveEntryDetail {
   // immer false. Steuert den Redirect auf /dialogues/<slug> in
   // archive/[slug]/page.tsx.
   dialogue_open: boolean;
-  visibility: "private" | "gm" | "public";
   ownerUserId: number | null;
   isDraft: boolean;
   updated_at: string;

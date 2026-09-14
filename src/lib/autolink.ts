@@ -147,7 +147,7 @@ export async function getAutolinkTargets(
     sql<{ slug: string; name: string; aliases: string[] | null }[]>`
       SELECT slug, name, metadata->'aliases' AS aliases
       FROM characters
-      WHERE visibility = 'public'
+      WHERE is_draft = false AND deleted_at IS NULL
     `,
     sql<{ slug: string; title: string }[]>`
       SELECT slug, title FROM missions
@@ -155,7 +155,7 @@ export async function getAutolinkTargets(
     sql<{ slug: string; title: string; aliases: string[] | null }[]>`
       SELECT slug, title, metadata->'aliases' AS aliases
       FROM archive_entries
-      WHERE visibility = 'public' AND category != 'dialogue'
+      WHERE is_draft = false AND deleted_at IS NULL AND category != 'dialogue'
     `,
   ]);
 

@@ -142,6 +142,16 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Aliase für Datenbank-Einträge",
     items: [
       {
+        text: "Aus drei Sichtbarkeiten werden zwei Zustände: Ein Inhalt ist entweder ein Entwurf (nur für dich) oder veröffentlicht (für alle sichtbar, auch ohne Anmeldung). „Privat“ und „GM“ entfallen — alles, was bisher kein Entwurf war, ist jetzt veröffentlicht.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Einen Entwurf veröffentlichst du direkt in der Liste unter „Meine Inhalte“ bzw. „Charaktere“ — das Dropdown daneben schaltet zwischen Entwurf und Veröffentlicht um, ohne den Inhalt erst zu öffnen.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+      {
         text: "„Meine Inhalte“: Die Knöpfe für neue Inhalte öffnen das jeweilige Formular jetzt in einem Fenster über der Liste, statt auf eine eigene Seite zu führen — wer abbricht, steht wieder in seiner Übersicht. Ausgenommen bleiben Charaktere mit ihrem mehrstufigen Assistenten.",
         category: "inhalte",
         tutorial: "eigene-inhalte",

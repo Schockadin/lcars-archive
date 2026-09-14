@@ -96,7 +96,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
     canReassignOwner ? listAllUsers() : Promise.resolve([]),
     resolveFollowState(viewer?.userId ?? null, "mission", missionSlug),
     // Wer verweist auf diese Mission? (Archiv-Verweisfelder + Wikilinks)
-    getMentionsOf({ slug: mission.slug, name: mission.title }, viewer),
+    getMentionsOf({ slug: mission.slug, name: mission.title }),
     listNotes("mission", mission.slug, viewer),
     // Die Logbücher dieser Mission — bis zum Redesign lagen sie im Layout,
     // das die schmale Navigationsschiene daneben gerendert hat.

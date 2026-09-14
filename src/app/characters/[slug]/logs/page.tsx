@@ -20,12 +20,7 @@ export default async function CharacterLogsPage({ params }: Props) {
   ]);
   if (!character) notFound();
 
-  if (
-    character.visibility !== "public" &&
-    !canView(character.visibility, character.player_id, viewer)
-  ) {
-    notFound();
-  }
+  if (!canView(character.is_draft, character.player_id, viewer)) notFound();
 
   redirect(characterLogsHref(character.name));
 }

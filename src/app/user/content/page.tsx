@@ -73,7 +73,7 @@ export default async function UserContentPage() {
   // Missions-Formular.
   const canWriteLog = publishedCharacters.length > 0;
   const npcOptions = (await getNpcOptions()).filter((npc) =>
-    canView(npc.visibility, npc.ownerUserId, viewer),
+    canView(npc.isDraft, npc.ownerUserId, viewer),
   );
   const canStartDialogue = canWriteLog || (playsNpcs && npcOptions.length > 0);
 

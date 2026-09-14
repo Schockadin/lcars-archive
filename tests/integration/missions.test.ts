@@ -3,7 +3,7 @@ import sql from "@/lib/db";
 import {
   createMission,
   createMissionLog,
-  setMissionLogVisibility,
+  setMissionLogDraft,
   deleteMissionLog,
   restoreMissionLog,
   deleteMission,
@@ -79,8 +79,8 @@ describe("createMissionLog", () => {
   });
 });
 
-describe("setMissionLogVisibility", () => {
-  it("lets the author character's player change visibility", async () => {
+describe("setMissionLogDraft", () => {
+  it("lets the author character's player pull a log back to a draft", async () => {
     const author = await insertUser();
     const mission = await insertMission();
     const character = await insertCharacter({ playerId: author.id });
@@ -88,16 +88,16 @@ describe("setMissionLogVisibility", () => {
       baseLogInput({ missionId: mission.id, authorId: character.id }),
     );
 
-    const result = await setMissionLogVisibility(author.id, log.id, "gm");
+    const result = await setMissionLogDraft(author.id, log.id, true);
 
     expect(result?.slug).toBe(log.slug);
-    const [row] = await sql<{ visibility: string }[]>`
-      SELECT visibility FROM mission_logs WHERE id = ${log.id}
+    const [row] = await sql<{ is_draft: boolean }[]>`
+      SELECT is_draft FROM mission_logs WHERE id = ${log.id}
     `;
-    expect(row.visibility).toBe("gm");
+    expect(row.is_draft).toBe(true);
   });
 
-  it("does not let a different user change visibility", async () => {
+  it("does not let a different user change the state", async () => {
     const author = await insertUser();
     const intruder = await insertUser();
     const mission = await insertMission();
@@ -106,7 +106,7 @@ describe("setMissionLogVisibility", () => {
       baseLogInput({ missionId: mission.id, authorId: character.id }),
     );
 
-    const result = await setMissionLogVisibility(intruder.id, log.id, "gm");
+    const result = await setMissionLogDraft(intruder.id, log.id, true);
 
     expect(result).toBeNull();
   });
