@@ -157,8 +157,10 @@ export default async function UserContentPage() {
             <NewContentButtons data={newContent} />
           </section>
 
+          {/* Ohne eigene Überschrift: Die Liste bringt ihre eigenen
+              Abschnittsüberschriften mit (eine je Kategorie, wie die
+              Buchstaben der Datenbank und die Monate der Chronologie). */}
           <section className="flex flex-col gap-[12px]">
-            <h2>Inhalte verwalten</h2>
             <div className="lcars-text w-full">
               <UserContentBrowser
                 characters={characterFilterOptions}

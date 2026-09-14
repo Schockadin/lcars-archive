@@ -1,6 +1,12 @@
 "use client";
-import { useMemo, useOptimistic, useState } from "react";
-import { LcarsAkteCard, LcarsDataRow } from "@/components/lcars";
+import { Fragment, useMemo, useOptimistic, useState } from "react";
+import {
+  LcarsListFilterInput,
+  LcarsSortSwitch,
+  type SortDir,
+} from "@/components/lcars";
+import ChronoRow from "@/components/timeline/ChronoRow";
+import ChronoCard from "@/components/timeline/ChronoCard";
 import type { UserContentLog } from "@/lib/characters";
 import type { DialogueSummary } from "@/lib/dialoguesCore";
 import type { UserContentArchiveEntry } from "@/lib/archive";
@@ -8,13 +14,14 @@ import { fmtDate, sessionLabel, periodLabel } from "@/lib/missionFormat";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
 import {
   CONTENT_TYPE_COLOR,
+  CONTENT_TYPE_LABEL,
+  CONTENT_TYPE_LABEL_PLURAL,
   CONTENT_DRAFT_COLOR,
 } from "@/lib/contentTypeFormat";
 import type { MissionPreview } from "@/types/missions";
 import ContentStateSelect from "./ContentStateSelect";
 import DeleteOwnContentButton from "./DeleteOwnContentButton";
 import ContentActionRow from "./ContentActionRow";
-import { LcarsListFilterInput } from "@/components/lcars";
 import {
   archiveEditHref,
   archiveHref,
@@ -37,28 +44,65 @@ export interface ContentFilterCharacter {
   slug: string;
   name: string;
 }
-type CategoryFilter = "all" | "logs" | "dialogues" | "archive" | "missions";
+
+// Die Inhaltsarten dieser Seite. „dialogue" ist kein eigener Owner-Typ (ein
+// Gespräch ist ein archive_entry der Kategorie „dialogue"), wird hier aber
+// wie überall getrennt ausgewiesen.
+type ContentKind = "mission_log" | "dialogue" | "archive_entry" | "mission";
+
+// Reihenfolge der Abschnitte bei der Sortierung nach Kategorie — von dem,
+// was beim Spielen entsteht, zu dem, was die Runde verwaltet.
+const KIND_ORDER: ContentKind[] = [
+  "mission_log",
+  "dialogue",
+  "archive_entry",
+  "mission",
+];
+
+type CategoryFilter = "all" | ContentKind | "drafts";
 
 const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   all: "Alle Kategorien",
-  logs: "Einsatzberichte",
-  dialogues: "Gespräche",
-  archive: "Datenbank-Einträge",
-  missions: "Missionen",
+  drafts: "Nur Entwürfe",
+  mission_log: CONTENT_TYPE_LABEL_PLURAL.mission_log,
+  dialogue: CONTENT_TYPE_LABEL_PLURAL.dialogue,
+  archive_entry: CONTENT_TYPE_LABEL_PLURAL.archive_entry,
+  mission: CONTENT_TYPE_LABEL_PLURAL.mission,
 };
 
-// "Meine Inhalte": fünf feste Kategorien (Charaktere, Einsatzberichte,
-// Gespräche, Archiv-Einträge, Missionen), jede ein Akkordeon mit
-// Sichtbarkeit/Bearbeiten/Löschen pro Eintrag in einer Zeile. Eigene
-// Charaktere/Missionen/Einsatzberichte/Archiv-Einträge, die noch als Entwurf
-// gespeichert sind (siehe is_draft, scripts/schema.sql), werden aus ihren
-// jeweiligen Akkordeons herausgenommen und stattdessen gemeinsam in einer
-// eigenen "Entwürfe"-DataRow oben angezeigt — unabhängig vom Kategorie-Filter,
-// da sie den schnellen Überblick über die eigene unfertige Arbeit bieten
-// soll. Darüber zwei Filter (Charakter, Kategorie) in einem responsiven
-// Grid — Charakter-Filter wirkt auf Charaktere/Einsatzberichte/Gespräche
-// (Archiv-Einträge/Missionen sind Owner-, nicht Charakter-gebunden),
-// Kategorie-Filter blendet einzelne Akkordeons (außer Entwürfe) komplett aus.
+type SortKey = "category" | "title";
+
+// Eine Zeile der Liste, aus allen vier Inhaltsarten auf dieselbe Form
+// gebracht: So sortiert und gruppiert der Rest dieser Datei ÜBER die Arten
+// hinweg, statt für jede eine eigene Liste zu führen.
+interface ContentItem {
+  key: string;
+  kind: ContentKind;
+  title: string;
+  href: string;
+  isDraft: boolean;
+  // Farbe des Punktes an der Schiene: die Farbe der Inhaltsart, bei einem
+  // Entwurf die Zustandsfarbe (CONTENT_DRAFT_COLOR) — an ihr erkennt man auf
+  // der ganzen Seite, was noch nicht veröffentlicht ist.
+  color: string;
+  // Zum Filtern nach Charakter (Einsatzberichte/Gespräche); die übrigen
+  // Arten hängen am Owner, nicht an einer Figur.
+  characterSlug?: string;
+  meta: React.ReactNode;
+  actions: React.ReactNode;
+}
+
+// „Meine Inhalte": EINE Liste über alle Inhaltsarten, im Aufbau der
+// Chronologie und der Datenbank — Abschnittsüberschrift, Schiene mit Punkt,
+// Karte (siehe ChronoRow/ChronoCard). Vorher war jede Art ein eigenes
+// Akkordeon (LcarsDataRow), das man einzeln aufklappen musste, und Entwürfe
+// lagen in einem sechsten darüber; wer wissen wollte, was er zuletzt
+// angefasst hat, klickte sich durch fünf Klappen.
+//
+// Vorgabe ist die Sortierung nach Kategorie (Abschnitte in KIND_ORDER),
+// alternativ alphabetisch über alles. Entwürfe stehen jetzt in ihrer
+// Kategorie — erkennbar an der Farbe, dem Etikett und dem Umschalter in der
+// Zeile; der Kategorie-Filter hat dafür den Eintrag „Nur Entwürfe".
 export default function UserContentBrowser({
   characters,
   logs,
@@ -78,13 +122,16 @@ export default function UserContentBrowser({
 }) {
   const [characterFilter, setCharacterFilter] = useState<string | null>(null);
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const [sortKey, setSortKey] = useState<SortKey>("category");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [query, setQuery] = useState("");
 
   // Missionen sind eine eigene Kategorie, aber nur für Admin/GM sichtbar
   // (siehe canManageMissions) — kein Owner-/Charakter-Konzept wie bei den
-  // anderen vier Kategorien, deshalb auch vom Charakter-Filter unberührt.
+  // anderen Kategorien, deshalb auch vom Charakter-Filter unberührt.
   const visibleCategoryKeys = (
     Object.keys(CATEGORY_LABELS) as CategoryFilter[]
-  ).filter((key) => key !== "missions" || canManageMissions);
+  ).filter((key) => key !== "mission" || canManageMissions);
 
   // Für die optimistische Löschung (DeleteOwnContentButton): entfernt den
   // Eintrag sofort aus der jeweiligen Liste, fällt aber automatisch auf die
@@ -108,125 +155,247 @@ export default function UserContentBrowser({
     (state, id: number) => state.filter((m) => m.id !== id),
   );
 
-  const filteredLogs = useMemo(
-    () =>
-      optimisticLogs.filter(
-        (l) => !characterFilter || l.character_slug === characterFilter,
-      ),
-    [optimisticLogs, characterFilter],
-  );
-  const filteredDialogues = useMemo(
-    () =>
-      optimisticDialogues.filter(
-        (d) => !characterFilter || d.characterSlug === characterFilter,
-      ),
-    [optimisticDialogues, characterFilter],
-  );
+  const items = useMemo<ContentItem[]>(() => {
+    const dotColor = (kind: ContentKind, isDraft: boolean) =>
+      isDraft ? CONTENT_DRAFT_COLOR : CONTENT_TYPE_COLOR[kind];
 
-  // Entwürfe aus den jeweiligen Listen herausgetrennt — publishedX rendert
-  // im normalen Akkordeon, draftX in der gemeinsamen Entwürfe-DataRow unten.
-  const publishedLogs = useMemo(
-    () => filteredLogs.filter((l) => !l.is_draft),
-    [filteredLogs],
-  );
-  const draftLogs = useMemo(
-    () => filteredLogs.filter((l) => l.is_draft),
-    [filteredLogs],
-  );
-  const publishedArchiveEntries = useMemo(
-    () => optimisticArchiveEntries.filter((e) => !e.isDraft),
-    [optimisticArchiveEntries],
-  );
-  const draftArchiveEntries = useMemo(
-    () => optimisticArchiveEntries.filter((e) => e.isDraft),
-    [optimisticArchiveEntries],
-  );
-  const publishedMissions = useMemo(
-    () => optimisticMissions.filter((m) => !m.isDraft),
-    [optimisticMissions],
-  );
-  const draftMissions = useMemo(
-    () => optimisticMissions.filter((m) => m.isDraft),
-    [optimisticMissions],
-  );
+    const logItems: ContentItem[] = optimisticLogs.map((log) => ({
+      key: `mission_log-${log.id}`,
+      kind: "mission_log",
+      title: log.title,
+      href: missionLogHref(log.mission_slug, log.slug),
+      isDraft: log.is_draft,
+      color: dotColor("mission_log", log.is_draft),
+      characterSlug: log.character_slug,
+      meta: (
+        <>
+          <span>
+            <b>Mission</b> {log.mission_title}
+          </span>
+          <span>
+            <b>Session</b> {sessionLabel(log.session_nr)}
+          </span>
+          {log.log_date && (
+            <span>
+              <b>Datum</b> {fmtDate(log.log_date)}
+            </span>
+          )}
+          <span>
+            <b>Figur</b> {log.character_name}
+          </span>
+        </>
+      ),
+      actions: (
+        <ContentActionRow
+          state={
+            <ContentStateSelect
+              contentType="mission_log"
+              id={log.id}
+              isDraft={log.is_draft}
+            />
+          }
+          editHref={missionLogEditHref(log.id)}
+          deleteButton={
+            <DeleteOwnContentButton
+              contentType="mission_log"
+              id={log.id}
+              onOptimisticDelete={() => removeOptimisticLog(log.id)}
+            />
+          }
+        />
+      ),
+    }));
 
-  const totalDrafts =
-    draftLogs.length +
-    draftArchiveEntries.length +
-    (canManageMissions ? draftMissions.length : 0);
+    const dialogueItems: ContentItem[] = optimisticDialogues.map((d) => ({
+      key: `dialogue-${d.id}`,
+      kind: "dialogue",
+      title: d.title,
+      href: d.open ? dialogueHref(d.slug) : `/characters/dialogues/${d.slug}`,
+      isDraft: d.isDraft,
+      color: dotColor("dialogue", d.isDraft),
+      characterSlug: d.characterSlug,
+      meta: (
+        <>
+          <span>
+            <b>Gesprächspartner</b> {d.partnerName}
+          </span>
+          <span>
+            <b>Status</b> {d.open ? "Offen" : "Abgeschlossen"}
+          </span>
+          <span>
+            <b>Figur</b> {d.characterName}
+          </span>
+        </>
+      ),
+      // Umschalten/Löschen kann nur, wer das Gespräch begonnen hat
+      // (owner_user_id) — die Gegenseite sieht nur den Stand.
+      actions:
+        d.ownerUserId === ownUserId ? (
+          <ContentActionRow
+            state={
+              <ContentStateSelect
+                contentType="dialogue"
+                id={d.id}
+                isDraft={d.isDraft}
+              />
+            }
+            deleteButton={
+              <DeleteOwnContentButton
+                contentType="dialogue"
+                id={d.id}
+                onOptimisticDelete={() => removeOptimisticDialogue(d.id)}
+              />
+            }
+          />
+        ) : null,
+    }));
 
-  const total =
-    logs.length +
-    dialogues.length +
-    archiveEntries.length +
-    (canManageMissions ? missions.length : 0);
+    const archiveItems: ContentItem[] = optimisticArchiveEntries.map(
+      (entry) => ({
+        key: `archive_entry-${entry.id}`,
+        kind: "archive_entry",
+        title: entry.title,
+        href: archiveHref(entry.slug),
+        isDraft: entry.isDraft,
+        color: dotColor("archive_entry", entry.isDraft),
+        meta: (
+          <span>
+            <b>Kategorie</b> {CATEGORY_CONFIG[entry.category].label}
+          </span>
+        ),
+        actions: (
+          <ContentActionRow
+            state={
+              <ContentStateSelect
+                contentType="archive_entry"
+                id={entry.id}
+                isDraft={entry.isDraft}
+              />
+            }
+            editHref={archiveEditHref(entry.id)}
+            deleteButton={
+              <DeleteOwnContentButton
+                contentType="archive_entry"
+                id={entry.id}
+                onOptimisticDelete={() => removeOptimisticArchiveEntry(entry.id)}
+              />
+            }
+          />
+        ),
+      }),
+    );
 
-  const [query, setQuery] = useState("");
-  const entries = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return {
-      dialogues: filteredDialogues.filter((e) =>
-        e.title.toLowerCase().includes(q),
-      ),
-      publishedArchiveEntries: publishedArchiveEntries.filter((e) =>
-        e.title.toLowerCase().includes(q),
-      ),
-      draftArchiveEntries: draftArchiveEntries.filter((e) =>
-        e.title.toLowerCase().includes(q),
-      ),
-      publishedLogs: publishedLogs.filter((e) =>
-        e.title.toLowerCase().includes(q),
-      ),
-      draftLogs: draftLogs.filter((e) => e.title.toLowerCase().includes(q)),
-      publishedMissions: publishedMissions.filter((e) =>
-        e.title.toLowerCase().includes(q),
-      ),
-      draftMissions: draftMissions.filter((e) =>
-        e.title.toLowerCase().includes(q),
-      ),
-    };
+    const missionItems: ContentItem[] = canManageMissions
+      ? optimisticMissions.map((m) => ({
+          key: `mission-${m.id}`,
+          kind: "mission",
+          title: m.title,
+          href: missionHref(m.slug),
+          isDraft: m.isDraft,
+          color: dotColor("mission", m.isDraft),
+          meta: (
+            <span>
+              <b>Zeitraum</b> {periodLabel(m.started_at, m.ended_at)}
+            </span>
+          ),
+          actions: (
+            <ContentActionRow
+              editHref={missionEditHref(m.id)}
+              deleteButton={
+                <DeleteOwnContentButton
+                  contentType="mission"
+                  id={m.id}
+                  onOptimisticDelete={() => removeOptimisticMission(m.id)}
+                />
+              }
+            />
+          ),
+        }))
+      : [];
+
+    return [...logItems, ...dialogueItems, ...archiveItems, ...missionItems];
   }, [
-    filteredDialogues,
-    publishedArchiveEntries,
-    draftArchiveEntries,
-    publishedLogs,
-    draftLogs,
-    publishedMissions,
-    draftMissions,
-    query,
+    optimisticLogs,
+    optimisticDialogues,
+    optimisticArchiveEntries,
+    optimisticMissions,
+    canManageMissions,
+    ownUserId,
+    removeOptimisticLog,
+    removeOptimisticDialogue,
+    removeOptimisticArchiveEntry,
+    removeOptimisticMission,
   ]);
 
-  if (total === 0) {
+  const list = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return items
+      .filter((item) =>
+        categoryFilter === "all"
+          ? true
+          : categoryFilter === "drafts"
+            ? item.isDraft
+            : item.kind === categoryFilter,
+      )
+      .filter(
+        (item) =>
+          !characterFilter ||
+          item.characterSlug === undefined ||
+          item.characterSlug === characterFilter,
+      )
+      .filter((item) => !q || item.title.toLowerCase().includes(q))
+      .sort((a, b) => {
+        const byTitle = a.title.localeCompare(b.title, "de");
+        const comparison =
+          sortKey === "title"
+            ? byTitle
+            : KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || byTitle;
+        return sortDir === "asc" ? comparison : -comparison;
+      });
+  }, [items, categoryFilter, characterFilter, query, sortKey, sortDir]);
+
+  if (items.length === 0) {
     return <p className="lcars-empty-state">Noch keine Inhalte vorhanden.</p>;
   }
 
-  const showLogs = categoryFilter === "all" || categoryFilter === "logs";
-  const showDialogues =
-    categoryFilter === "all" || categoryFilter === "dialogues";
-  const showArchive = categoryFilter === "all" || categoryFilter === "archive";
-  const showMissions =
-    canManageMissions &&
-    (categoryFilter === "all" || categoryFilter === "missions");
-
   return (
-    <div className="flex flex-col gap-[16px]">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-[12px]">
+    <div>
+      <div className="lcars-toolbar">
+        <LcarsSortSwitch
+          className="mission-sort"
+          options={[
+            { key: "category", label: "Kategorie" },
+            { key: "title", label: "Alphabetisch" },
+          ]}
+          sortKey={sortKey}
+          sortDir={sortDir}
+          onChange={(key, direction) => {
+            setSortKey(key as SortKey);
+            setSortDir(direction);
+          }}
+        />
+        <LcarsListFilterInput
+          value={query}
+          onChange={setQuery}
+          ariaLabel="Einträge filtern"
+        />
+        {characters.length > 0 && (
+          <select
+            className="mission-author-filter rounded-full"
+            value={characterFilter ?? ""}
+            onChange={(e) => setCharacterFilter(e.target.value || null)}
+            aria-label="Nach Charakter filtern"
+          >
+            <option value="">Alle Charaktere</option>
+            {characters.map((c) => (
+              <option key={c.slug} value={c.slug}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        )}
         <select
-          className="lcars-input rounded-full text-right"
-          value={characterFilter ?? ""}
-          onChange={(e) => setCharacterFilter(e.target.value || null)}
-          aria-label="Nach Charakter filtern"
-        >
-          <option value="">Alle Charaktere</option>
-          {characters.map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-
-        <select
-          className="lcars-input rounded-full text-right"
+          className="mission-author-filter rounded-full"
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value as CategoryFilter)}
           aria-label="Nach Kategorie filtern"
@@ -238,370 +407,57 @@ export default function UserContentBrowser({
           ))}
         </select>
       </div>
-      <div className="flex lcars-filters">
-        <LcarsListFilterInput
-          value={query}
-          onChange={setQuery}
-          ariaLabel="Einträge filtern"
-          className="mb-[16px]"
-        />
-      </div>
 
-      <LcarsDataRow
-        value={totalDrafts}
-        label="Entwürfe"
-        color={CONTENT_DRAFT_COLOR}
-      >
-        {totalDrafts === 0 ? (
-          <p className="lcars-empty-state">Keine Entwürfe vorhanden.</p>
-        ) : (
-          <div className="flex flex-col gap-[6px]">
-            {canManageMissions &&
-              entries.draftMissions.map((m) => (
-                <div
-                  key={`mission-${m.id}`}
-                  className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
-                >
-                  <LcarsAkteCard
-                    href={missionHref(m.slug)}
-                    color={CONTENT_DRAFT_COLOR}
-                    className="flex-1"
-                    title={m.title}
-                    meta={
-                      <>
-                        <span>
-                          <b>Typ</b> Mission
-                        </span>
-                      </>
-                    }
-                  />
-                  <ContentActionRow
-                    editHref={missionEditHref(m.id)}
-                    deleteButton={
-                      <DeleteOwnContentButton
-                        contentType="mission"
-                        id={m.id}
-                        onOptimisticDelete={() => removeOptimisticMission(m.id)}
-                      />
-                    }
-                  />
-                </div>
-              ))}
-            {entries.draftLogs.map((log) => (
-              <div
-                key={`log-${log.id}`}
-                className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
-              >
-                <LcarsAkteCard
-                  href={missionLogHref(log.mission_slug, log.slug)}
-                  color={CONTENT_DRAFT_COLOR}
-                  className="flex-1"
-                  title={log.title}
-                  meta={
-                    <>
-                      <span>
-                        <b>Typ</b> Einsatzbericht
-                      </span>
-                      <span>
-                        <b>Mission</b> {log.mission_title}
-                      </span>
-                    </>
-                  }
-                />
-                <ContentActionRow
-                  state={
-                    <ContentStateSelect
-                      contentType="mission_log"
-                      id={log.id}
-                      isDraft={log.is_draft}
-                    />
-                  }
-                  editHref={missionLogEditHref(log.id)}
-                  deleteButton={
-                    <DeleteOwnContentButton
-                      contentType="mission_log"
-                      id={log.id}
-                      onOptimisticDelete={() => removeOptimisticLog(log.id)}
-                    />
-                  }
-                />
-              </div>
-            ))}
-            {entries.draftArchiveEntries.map((entry) => (
-              <div
-                key={`archive-${entry.id}`}
-                className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
-              >
-                <LcarsAkteCard
-                  href={archiveHref(entry.slug)}
-                  color={CONTENT_DRAFT_COLOR}
-                  className="flex-1"
-                  title={entry.title}
-                  meta={
-                    <>
-                      <span>
-                        <b>Typ</b> Datenbank-Eintrag
-                      </span>
-                      <span>
-                        <b>Kategorie</b> {CATEGORY_CONFIG[entry.category].label}
-                      </span>
-                    </>
-                  }
-                />
-                <ContentActionRow
-                  state={
-                    <ContentStateSelect
-                      contentType="archive_entry"
-                      id={entry.id}
-                      isDraft={entry.isDraft}
-                    />
-                  }
-                  editHref={archiveEditHref(entry.id)}
-                  deleteButton={
-                    <DeleteOwnContentButton
-                      contentType="archive_entry"
-                      id={entry.id}
-                      onOptimisticDelete={() =>
-                        removeOptimisticArchiveEntry(entry.id)
-                      }
-                    />
-                  }
-                />
-              </div>
-            ))}
-          </div>
-        )}
-      </LcarsDataRow>
+      {list.length === 0 ? (
+        <p className="lcars-empty-state">Keine Einträge für diesen Filter.</p>
+      ) : (
+        <>
+          <div className="archive-entry-list">
+            {list.map((item, index) => {
+              // Abschnitte nur bei der Sortierung nach Kategorie — alphabetisch
+              // sortiert wäre eine Überschrift je Zeile, und die Liste soll
+              // dann durchlaufen wie die Datenbank unter einem Buchstaben.
+              const previous = index > 0 ? list[index - 1] : null;
+              const startsSection =
+                sortKey === "category" &&
+                (!previous || previous.kind !== item.kind);
 
-      {showLogs && (
-        <LcarsDataRow
-          value={entries.publishedLogs.length}
-          label="Einsatzberichte"
-          color={CONTENT_TYPE_COLOR.mission_log}
-        >
-          {entries.publishedLogs.length === 0 ? (
-            <p className="lcars-empty-state">
-              Keine Einsatzberichte für diese Auswahl.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-[6px]">
-              {entries.publishedLogs.map((log) => (
-                <div
-                  key={log.id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
-                >
-                  <LcarsAkteCard
-                    href={missionLogHref(log.mission_slug, log.slug)}
-                    color={CONTENT_TYPE_COLOR.mission_log}
-                    className="flex-1"
-                    title={log.title}
-                    meta={
-                      <>
-                        <span>
-                          <b>Session</b> {sessionLabel(log.session_nr)}
-                        </span>
-                        <span>
-                          <b>Datum</b> {fmtDate(log.log_date)}
-                        </span>
-                        <span>
-                          <b>Mission</b> {log.mission_title}
-                        </span>
-                      </>
-                    }
-                  />
-                  <ContentActionRow
-                    state={
-                      <ContentStateSelect
-                        contentType="mission_log"
-                        id={log.id}
-                        isDraft={log.is_draft}
-                      />
-                    }
-                    editHref={missionLogEditHref(log.id)}
-                    deleteButton={
-                      <DeleteOwnContentButton
-                        contentType="mission_log"
-                        id={log.id}
-                        onOptimisticDelete={() => removeOptimisticLog(log.id)}
-                      />
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </LcarsDataRow>
-      )}
-
-      {showDialogues && (
-        <LcarsDataRow
-          value={entries.dialogues.length}
-          label="Gespräche"
-          color={CONTENT_TYPE_COLOR.dialogue}
-        >
-          {entries.dialogues.length === 0 ? (
-            <p className="lcars-empty-state">
-              Keine Gespräche für diese Auswahl.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-[6px]">
-              {entries.dialogues.map((d) => (
-                <div
-                  key={d.slug}
-                  className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
-                >
-                  <LcarsAkteCard
-                    href={
-                      d.open
-                        ? dialogueHref(d.slug)
-                        : `/characters/dialogues/${d.slug}`
-                    }
-                    color={
-                      d.open ? "var(--lcars-senary)" : "var(--lcars-quinary)"
-                    }
-                    className="flex-1"
-                    title={d.title}
-                    meta={
-                      <>
-                        <span>
-                          <b>Gesprächspartner</b> {d.partnerName}
-                        </span>
-                        <span>
-                          <b>Status</b> {d.open ? "Offen" : "Abgeschlossen"}
-                        </span>
-                      </>
-                    }
-                  />
-                  {/* Sichtbarkeit/Löschen sind nur vom Ersteller (owner_user_id)
-                      nutzbar — der Gesprächspartner sieht nur den Status. */}
-                  {d.ownerUserId === ownUserId ? (
-                    <ContentActionRow
-                      state={
-                        <ContentStateSelect
-                          contentType="dialogue"
-                          id={d.id}
-                          isDraft={d.isDraft}
-                        />
-                      }
-                      deleteButton={
-                        <DeleteOwnContentButton
-                          contentType="dialogue"
-                          id={d.id}
-                          onOptimisticDelete={() =>
-                            removeOptimisticDialogue(d.id)
+              return (
+                <Fragment key={item.key}>
+                  {startsSection && (
+                    <h2 className="timeline-period archive-letter-period">
+                      {CONTENT_TYPE_LABEL_PLURAL[item.kind]}
+                    </h2>
+                  )}
+                  <ChronoRow color={item.color}>
+                    <div className="flex flex-1 flex-col gap-[8px] sm:flex-row sm:items-start">
+                      <div className="flex-1">
+                        <ChronoCard
+                          color={item.color}
+                          tag={
+                            item.isDraft
+                              ? `${CONTENT_TYPE_LABEL[item.kind]} · Entwurf`
+                              : CONTENT_TYPE_LABEL[item.kind]
                           }
+                          title={item.title}
+                          href={item.href}
+                          ariaLabel={`${item.title} — ${CONTENT_TYPE_LABEL[item.kind]}`}
+                          meta={item.meta}
                         />
-                      }
-                    />
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          )}
-        </LcarsDataRow>
-      )}
-
-      {showArchive && (
-        <LcarsDataRow
-          value={entries.publishedArchiveEntries.length}
-          label="Datenbank-Einträge"
-          color={CONTENT_TYPE_COLOR.archive_entry}
-        >
-          {entries.publishedArchiveEntries.length === 0 ? (
-            <p className="lcars-empty-state">
-              Noch keine eigenen Datenbank-Einträge vorhanden.
-            </p>
-          ) : (
-            <div className="flex flex-col gap-[6px]">
-              {entries.publishedArchiveEntries.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
-                >
-                  <LcarsAkteCard
-                    href={archiveHref(entry.slug)}
-                    color={CONTENT_TYPE_COLOR.archive_entry}
-                    className="flex-1"
-                    title={entry.title}
-                    meta={
-                      <>
-                        <span>
-                          <b>Kategorie</b>{" "}
-                          {CATEGORY_CONFIG[entry.category].label}
-                        </span>
-                      </>
-                    }
-                  />
-                  <ContentActionRow
-                    state={
-                      <ContentStateSelect
-                        contentType="archive_entry"
-                        id={entry.id}
-                        isDraft={entry.isDraft}
-                      />
-                    }
-                    editHref={archiveEditHref(entry.id)}
-                    deleteButton={
-                      <DeleteOwnContentButton
-                        contentType="archive_entry"
-                        id={entry.id}
-                        onOptimisticDelete={() =>
-                          removeOptimisticArchiveEntry(entry.id)
-                        }
-                      />
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </LcarsDataRow>
-      )}
-
-      {showMissions && (
-        <LcarsDataRow
-          value={entries.publishedMissions.length}
-          label="Missionen"
-          color={CONTENT_TYPE_COLOR.mission}
-        >
-          {entries.publishedMissions.length === 0 ? (
-            <p className="lcars-empty-state">Noch keine Missionen vorhanden.</p>
-          ) : (
-            <div className="flex flex-col gap-[6px]">
-              {entries.publishedMissions.map((m) => (
-                <div
-                  key={m.id}
-                  className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
-                >
-                  <LcarsAkteCard
-                    href={missionHref(m.slug)}
-                    color={CONTENT_TYPE_COLOR.mission}
-                    className="flex-1"
-                    title={m.title}
-                    meta={
-                      <>
-                        <span>
-                          <b>Zeitraum</b>{" "}
-                          {periodLabel(m.started_at, m.ended_at)}
-                        </span>
-                      </>
-                    }
-                  />
-                  <ContentActionRow
-                    editHref={missionEditHref(m.id)}
-                    deleteButton={
-                      <DeleteOwnContentButton
-                        contentType="mission"
-                        id={m.id}
-                        onOptimisticDelete={() => removeOptimisticMission(m.id)}
-                      />
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </LcarsDataRow>
+                      </div>
+                      {item.actions}
+                    </div>
+                  </ChronoRow>
+                </Fragment>
+              );
+            })}
+          </div>
+          <p className="lcars-eyebrow mt-[12px]">
+            {list.length === items.length
+              ? `${items.length} Einträge`
+              : `${list.length} von ${items.length} Einträgen`}
+          </p>
+        </>
       )}
     </div>
   );

@@ -80,6 +80,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Client-Panel in `src/app/_shared/NotesPanel.tsx`. Gruppen-Notizen darf
   zusätzlich `content.moderate` löschen, private nie; beim endgültigen Löschen
   eines Inhalts räumt `purgeContent.ts` sie mit ab.
+- **„Meine Inhalte" als eine Liste** (`/user/content`) — Abschnittsüberschrift
+  je Kategorie, Schiene, Karte: derselbe Aufbau wie Chronologie und Datenbank
+  (`ChronoRow`/`ChronoCard`), statt fünf einzeln aufklappbarer `LcarsDataRow`s.
+  Vorgabe ist die Sortierung nach Kategorie (Berichte → Gespräche →
+  Datenbank-Einträge → Missionen), alternativ alphabetisch über alles; Entwürfe
+  stehen in ihrer Kategorie, tragen die Entwurfs-Farbe und lassen sich über den
+  Kategorie-Filter „Nur Entwürfe" zusammen ansehen (vorher eine sechste
+  Klappe darüber). Die Anlegen-Knöpfe darüber öffnen ihr Formular in einem
+  Fenster (`NewContentButtons.tsx`), statt auf eine eigene Seite zu führen.
 - **Eigene Inhalte** — eingeloggte User legen eigene Charaktere, Einsatzberichte,
   Datenbank-Einträge und Gespräche zwischen Charakteren an — jeweils als
   **Entwurf** oder **veröffentlicht** (umstellbar direkt in der Liste) — und

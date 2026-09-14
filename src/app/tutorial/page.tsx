@@ -328,8 +328,14 @@ export default function TutorialPage() {
                 Bereiche: <strong>„Neue Inhalte“</strong> mit den
                 Anlegen-Knöpfen — jeder öffnet sein Formular in einem Fenster
                 über der Liste, sodass du beim Abbrechen wieder in deiner
-                Übersicht stehst — und <strong>„Inhalte verwalten“</strong>, wo
-                alles auftaucht, was dir bereits gehört:
+                Übersicht stehst — und darunter die Liste alles dessen, was dir
+                bereits gehört. Sie ist wie Chronologie und Datenbank gebaut:
+                eine Überschrift je Kategorie, darunter die Einträge an der
+                Schiene. Sortiert wird in der Vorgabe nach Kategorie,
+                wahlweise alphabetisch über alles; Entwürfe stehen farblich
+                markiert in ihrer Kategorie und lassen sich über den Filter{" "}
+                <strong>„Nur Entwürfe“</strong> zusammen ansehen. Anlegen darfst
+                du:
               </p>
               <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
                 <li>
