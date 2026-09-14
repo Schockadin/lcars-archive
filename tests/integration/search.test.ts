@@ -128,11 +128,11 @@ describe("searchFull – Gesprochenes", () => {
     expect(result.filter((r) => r.type === "dialogue_message")).toHaveLength(1);
   });
 
-  it("übergeht gelöschte Nachrichten und nicht öffentliche Gespräche", async () => {
+  it("übergeht gelöschte Nachrichten und Gespräche im Entwurf", async () => {
     const user = await insertUser();
     const [offen] = await sql<{ id: number }[]>`
-      INSERT INTO archive_entries (slug, title, category, content, tags, metadata, source_md, dialogue_open, owner_user_id)
-      VALUES ('geheim', 'Geheimes Gespräch', 'dialogue', '', '{}', '{}', NULL, 'private', TRUE, ${user.id})
+      INSERT INTO archive_entries (slug, title, category, content, tags, metadata, source_md, dialogue_open, is_draft, owner_user_id)
+      VALUES ('geheim', 'Geheimes Gespräch', 'dialogue', '', '{}', '{}', NULL, TRUE, TRUE, ${user.id})
       RETURNING id
     `;
     const [sichtbar] = await sql<{ id: number }[]>`
@@ -149,8 +149,8 @@ describe("searchFull – Gesprochenes", () => {
       VALUES (${sichtbar.id}, ${user.id}, '<p>Tarnvorrichtung defekt.</p>', 'Tarnvorrichtung defekt.', NOW())
     `;
 
-    // Eine Nachricht erbt die Sichtbarkeit ihres Gesprächs; die gelöschte
-    // fällt ohnehin weg.
+    // Eine Nachricht erbt den Zustand ihres Gesprächs — ein Entwurf taucht
+    // in der Suche nicht auf; die gelöschte fällt ohnehin weg.
     expect(await searchFull("Tarnvorrichtung")).toHaveLength(0);
   });
 });

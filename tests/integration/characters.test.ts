@@ -32,7 +32,7 @@ function baseCharacterInput(overrides: Partial<Parameters<typeof createCharacter
 }
 
 describe("createCharacter", () => {
-  it("creates a character owned by the given user with a public default visibility", async () => {
+  it("creates a character owned by the given user, published by default", async () => {
     const user = await insertUser();
 
     const result = await createCharacter(

@@ -89,12 +89,12 @@ describe("getPendingActions", () => {
   it("erinnert an liegengebliebene eigene Entwürfe", async () => {
     const user = await insertUser();
     await sql`
-      INSERT INTO archive_entries (slug, title, category, content, tags, metadata, source_md, visibility, is_draft, owner_user_id, updated_at)
+      INSERT INTO archive_entries (slug, title, category, content, tags, metadata, source_md, is_draft, owner_user_id, updated_at)
       VALUES ('alt', 'Alter Entwurf', 'location', '', '{}', '{}', NULL, TRUE, ${user.id},
               NOW() - ${`${DRAFT_STALE_DAYS + 1} days`}::interval)
     `;
     await sql`
-      INSERT INTO archive_entries (slug, title, category, content, tags, metadata, source_md, visibility, is_draft, owner_user_id, updated_at)
+      INSERT INTO archive_entries (slug, title, category, content, tags, metadata, source_md, is_draft, owner_user_id, updated_at)
       VALUES ('frisch', 'Frischer Entwurf', 'location', '', '{}', '{}', NULL, TRUE, ${user.id}, NOW())
     `;
 
