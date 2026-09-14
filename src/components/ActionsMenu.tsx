@@ -106,12 +106,13 @@ export default function ActionsMenu({
   const isDialogue =
     contentType === "archiveEntry" && "category" in content && content.category === "dialogue";
 
-  // Wer darf diesen Inhalt bearbeiten? Sowohl für den Bearbeiten-Stift unten
-  // als auch für die Bilder-Galerie genutzt (wer bearbeiten darf, darf auch
-  // Bilder hochladen/löschen).
+  const isOwner = viewer != null && viewer.userId === playerId;
+  const canModerate = !!viewer?.permissions.includes("content.moderate");
+
+  // Wer darf diesen Inhalt BEARBEITEN (der Stift unten)?
   //
   //   Charakter/Missionslog — ausschließlich der Owner selbst (kein
-  //     Admin-Bypass, siehe updateOwnCharacterBioAction).
+  //     Admin-Bypass, siehe updateOwnCharacterContent).
   //   Datenbank-Eintrag    — der Owner, dazu die Moderation
   //     (content.moderate); deren Bearbeiten-Seite hebt dafür den
   //     Owner-Scope auf (siehe getOwnArchiveEntryForEdit).
@@ -120,13 +121,21 @@ export default function ActionsMenu({
   //     eigenen Bereich für Missionen kommt (requireOwnGM in
   //     /user/missions). Ein Stift für einen Owner ohne diese Rolle führte
   //     nur auf eine gesperrte Seite.
-  const canManageContent =
+  const canEditContent =
     contentType === "mission"
-      ? !!viewer?.permissions.includes("missions.manage") ||
-        !!viewer?.permissions.includes("content.moderate")
-      : (contentType === "archiveEntry" &&
-          !!viewer?.permissions.includes("content.moderate")) ||
-        viewer?.userId === playerId;
+      ? !!viewer?.permissions.includes("missions.manage") || canModerate
+      : (contentType === "archiveEntry" && canModerate) || isOwner;
+
+  // Wer darf die BILDER dieses Inhalts verwalten? Eine eigene Frage mit einer
+  // eigenen Antwort — sie muss canManageContentImages (src/lib/contentImages.ts)
+  // spiegeln, sonst zeigt die Galerie Knöpfe, die der Server ablehnt: dort
+  // darf immer der Owner, dazu die Moderation bei Mission und
+  // Datenbank-Eintrag. Eine Spielleitung ohne content.moderate bearbeitet
+  // also eine fremde Mission, verwaltet aber nicht deren Bilder.
+  const canManageImages =
+    isOwner ||
+    (canModerate &&
+      (contentType === "mission" || contentType === "archiveEntry"));
 
   // Für den WhatsApp-Teilen-Text im ShareMenu (siehe FollowButtons.tsx) —
   // Character hat "name" statt "title" wie die übrigen drei Inhaltstypen.
@@ -198,13 +207,11 @@ export default function ActionsMenu({
             exportSlug={content.slug}
           />
         )}
-        {/* Bilder verwaltet, wer den Inhalt auch bearbeiten darf — siehe
-            canManageContent oben. */}
         {!isDialogue && (
           <ContentImageGallery
             contentType={IMAGE_CONTENT_TYPE[contentType]}
             contentId={content.id}
-            canManage={canManageContent}
+            canManage={canManageImages}
           />
         )}
         {/* Der Stift führt für JEDEN Inhaltstyp in dessen vollen Editor im
@@ -214,7 +221,7 @@ export default function ActionsMenu({
             bearbeiten konnte; wer den Titel ändern wollte, musste den
             passenden Editor selbst finden. Nur Mission-Logs sprangen schon
             immer so, wie es jetzt alle tun. */}
-        {!hideEdit && canManageContent && (
+        {!hideEdit && canEditContent && (
           <Link
             href={contentEditHref(contentType, content.id)}
             className="lcars-icon-btn self-start"

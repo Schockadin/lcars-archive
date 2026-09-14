@@ -110,18 +110,20 @@ export default async function UserContentPage() {
   const newContent: NewContentData = {
     userId: user.id,
     isAdminOrGM: userCan(user, "content.autolink_tools", roleMap),
-    missionLog:
-      canWriteLog && logMissions.length > 0
-        ? {
-            ownCharacters: ownCharacterOptions,
-            missions: logMissions.map((m) => ({
-              slug: m.slug,
-              title: m.title,
-            })),
-            defaultSessionNr: nextSessionNr,
-            defaultLogDate,
-          }
-        : null,
+    // Auch ohne Missionen durchgereicht: Der Knopf bleibt sichtbar und das
+    // Fenster erklärt, dass es noch nichts gibt, dem ein Log zugeordnet
+    // werden könnte — wie es die Anlege-Seite tut.
+    missionLog: canWriteLog
+      ? {
+          ownCharacters: ownCharacterOptions,
+          missions: logMissions.map((m) => ({
+            slug: m.slug,
+            title: m.title,
+          })),
+          defaultSessionNr: nextSessionNr,
+          defaultLogDate,
+        }
+      : null,
     dialogue: canStartDialogue
       ? {
           ownCharacters: ownCharacterOptions,

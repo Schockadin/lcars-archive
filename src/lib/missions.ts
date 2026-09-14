@@ -1228,7 +1228,6 @@ export async function getAllLogPaths(): Promise<LogPath[]> {
       FROM mission_logs ml
       JOIN missions m ON m.id = ml.mission_id
       WHERE ml.is_draft = false AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
-        AND ml.is_draft = false
     `;
   return rows;
 }

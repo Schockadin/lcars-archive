@@ -440,8 +440,8 @@ export async function getLogsByCharacter(
           m.title           AS mission_title
         FROM mission_logs ml
         JOIN missions m ON m.id = ml.mission_id
-        WHERE ml.author_id = ${characterId} AND ml.is_draft = false AND ml.deleted_at IS NULL
-          AND ml.is_draft = false
+        WHERE ml.author_id = ${characterId} AND ml.is_draft = false
+          AND ml.deleted_at IS NULL
         ORDER BY ml.session_nr DESC NULLS LAST
       `;
   return rows;

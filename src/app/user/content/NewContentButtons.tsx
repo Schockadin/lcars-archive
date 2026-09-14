@@ -100,16 +100,26 @@ export default function NewContentButtons({ data }: { data: NewContentData }) {
 
       {open && (
         <ModalOverlay title={TITLES[open]} onClose={close} width={960}>
-          {open === "missionLog" && data.missionLog && (
-            <NewMissionLogForm
-              userId={data.userId}
-              ownCharacters={data.missionLog.ownCharacters}
-              missions={data.missionLog.missions}
-              defaultSessionNr={data.missionLog.defaultSessionNr}
-              defaultLogDate={data.missionLog.defaultLogDate}
-              isAdminOrGM={data.isAdminOrGM}
-            />
-          )}
+          {open === "missionLog" &&
+            data.missionLog &&
+            (data.missionLog.missions.length === 0 ? (
+              // Denselben Hinweis gab die Anlege-Seite; im Fenster darf er
+              // nicht verloren gehen, sonst stünde man vor einem Formular
+              // ohne wählbare Mission.
+              <p className="lcars-text">
+                Es gibt noch keine Missionen, denen ein Log zugeordnet werden
+                könnte.
+              </p>
+            ) : (
+              <NewMissionLogForm
+                userId={data.userId}
+                ownCharacters={data.missionLog.ownCharacters}
+                missions={data.missionLog.missions}
+                defaultSessionNr={data.missionLog.defaultSessionNr}
+                defaultLogDate={data.missionLog.defaultLogDate}
+                isAdminOrGM={data.isAdminOrGM}
+              />
+            ))}
           {open === "dialogue" && data.dialogue && (
             <CreateDialogueForm
               userId={data.userId}

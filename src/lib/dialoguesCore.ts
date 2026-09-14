@@ -1486,21 +1486,28 @@ export async function deleteDialogue(
       title: string;
       metadata: unknown;
       owner_user_id: number | null;
+      is_draft: boolean;
     }[]
   >`
     UPDATE archive_entries
     SET deleted_at = NOW()
     WHERE id = ${archiveEntryId} AND category = 'dialogue' AND deleted_at IS NULL
-    RETURNING slug, title, metadata, owner_user_id
+    RETURNING slug, title, metadata, owner_user_id, is_draft
   `;
   const row = rows[0];
   if (!row) return null;
   syncEmbeddingActive("dialogue", archiveEntryId, false);
 
-  await sql`
-    INSERT INTO content_deletions (target_type, title, owner_user_id, deleted_by)
-    VALUES ('archive_entry', ${row.title}, ${row.owner_user_id}, ${deletedByUserId})
-  `;
+  // Ein Entwurf war für niemanden außer seiner Owner-Person sichtbar — sein
+  // Löschen gehört deshalb nicht in den „gelöscht"-News-Feed, dessen Titel
+  // sonst die erste Spur wäre, die andere von ihm zu sehen bekommen (gleiche
+  // Regel wie bei den übrigen Inhaltstypen, siehe deleteArchiveEntry).
+  if (!row.is_draft) {
+    await sql`
+      INSERT INTO content_deletions (target_type, title, owner_user_id, deleted_by)
+      VALUES ('archive_entry', ${row.title}, ${row.owner_user_id}, ${deletedByUserId})
+    `;
+  }
 
   return {
     slug: row.slug,
@@ -1512,27 +1519,31 @@ export async function deleteDialogue(
 // Selbstlöschung durch den Owner (wer das Gespräch begonnen hat, Meine
 // Inhalte) — Ownership per owner_user_id direkt im WHERE erzwungen, gleiches
 // Prinzip wie setDialogueDraft oben und deleteMissionLog in
-// missions.ts. Kein Admin-Bypass (bleibt deleteDialogue vorbehalten) und kein
-// isDraft-Guard nötig — Dialoge kennen kein Entwurf-Konzept, landen also
-// immer im "gelöscht"-News-Feed wie bisher.
+// missions.ts. Kein Admin-Bypass (bleibt deleteDialogue vorbehalten); der
+// isDraft-Guard gilt aber auch hier, seit ein Gespräch wie jeder andere
+// Inhalt ein Entwurf sein kann.
 export async function deleteOwnDialogue(
   userId: number,
   archiveEntryId: number,
 ): Promise<{ slug: string } | null> {
-  const rows = await sql<{ slug: string; title: string }[]>`
+  const rows = await sql<
+    { slug: string; title: string; is_draft: boolean }[]
+  >`
     UPDATE archive_entries
     SET deleted_at = NOW()
     WHERE id = ${archiveEntryId} AND category = 'dialogue'
       AND owner_user_id = ${userId} AND deleted_at IS NULL
-    RETURNING slug, title
+    RETURNING slug, title, is_draft
   `;
   const row = rows[0] ?? null;
   if (row) {
     syncEmbeddingActive("dialogue", archiveEntryId, false);
-    await sql`
-      INSERT INTO content_deletions (target_type, title, owner_user_id, deleted_by)
-      VALUES ('archive_entry', ${row.title}, ${userId}, ${userId})
-    `;
+    if (!row.is_draft) {
+      await sql`
+        INSERT INTO content_deletions (target_type, title, owner_user_id, deleted_by)
+        VALUES ('archive_entry', ${row.title}, ${userId}, ${userId})
+      `;
+    }
   }
   return row ? { slug: row.slug } : null;
 }
