@@ -20,6 +20,7 @@ import { listNotes } from "@/lib/contentNotes";
 import NotesPanel from "@/app/_shared/NotesPanel";
 import {
   archiveHref,
+  archiveListHref,
   characterHref,
   missionHref,
 } from "@/lib/contentRoutes";
@@ -104,7 +105,20 @@ export default async function ArchiveEntryPage({ params }: Props) {
     >
       <PageMeta title={title} section="archive" />
       <MarkNewsSeen type="archive_entry" slug={entry.slug} />
-      <LcarsReadingModeToggle />
+
+      {/* Zurück in die Liste, aus der der Eintrag stammt — auf seine
+          Kategorie vorgefiltert, wie „‹ Missionen" auf der Missionsseite und
+          „‹ <Mission>" am Logbuch. Darunter der Lesemodus-Schalter (nur
+          mobil sichtbar), beide linksbündig gestapelt. */}
+      <div className="flex flex-col items-start gap-[8px]">
+        <Link
+          href={archiveListHref(entry.category)}
+          className="lcars-back-link"
+        >
+          ‹ {cfg.plural}
+        </Link>
+        <LcarsReadingModeToggle />
+      </div>
 
       <div className="flex items-start">
         <StandardHeader entry={entry} title={title} label={cfg.label} />

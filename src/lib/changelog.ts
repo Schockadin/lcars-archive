@@ -142,6 +142,11 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Aliase für Datenbank-Einträge",
     items: [
       {
+        text: "Ein Datenbank-Eintrag hat oben links einen Zurück-Link in seine Kategorie („‹ Personen“, „‹ Orte“ …) — wie ihn Missionen und Logbücher schon hatten.",
+        category: "darstellung",
+        tutorial: "fuer-besucher",
+      },
+      {
         text: "„Meine Inhalte“ ist jetzt EINE Liste im Aufbau von Chronologie und Datenbank — Abschnitt je Kategorie, Schiene, Karte — statt fünf Klappen. Vorgabe ist die Sortierung nach Kategorie, alternativ alphabetisch über alles; Entwürfe stehen in ihrer Kategorie (farblich markiert) und lassen sich über den Filter „Nur Entwürfe“ zusammen ansehen.",
         category: "inhalte",
         tutorial: "eigene-inhalte",

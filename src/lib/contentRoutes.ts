@@ -59,6 +59,14 @@ export function archiveHref(slug: string): string {
   return `/archive/${slug}`;
 }
 
+// Die Datenbank-Übersicht, wahlweise auf eine Kategorie vorgefiltert — die
+// teilbare ?cat=-Auswahl der Kategorienleiste (siehe /archive/page.tsx). Der
+// Zurück-Link einer Eintragsseite führt damit in die Liste, aus der der
+// Eintrag stammt, statt in die ungefilterte Gesamtliste.
+export function archiveListHref(category?: string | null): string {
+  return category ? `/archive?cat=${encodeURIComponent(category)}` : "/archive";
+}
+
 // Offene Gespräche leben unter /dialogues, abgeschlossene unter /archive
 // (siehe toFollowedContent in src/lib/follows.ts).
 export function dialogueHref(slug: string): string {
