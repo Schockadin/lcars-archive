@@ -187,7 +187,10 @@ export async function archiveEntryAction(
         });
       }
     }
-    redirect("/user/content");
+    // Nach dem Speichern dorthin, wo der Eintrag steht — wie beim Anlegen
+    // (unten) und aus demselben Grund: Wer bearbeitet hat, will das Ergebnis
+    // sehen, nicht wieder die Liste.
+    redirect(archiveHref(result.slug));
   }
 
   const result = await createArchiveEntry({

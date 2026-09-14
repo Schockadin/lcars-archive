@@ -333,7 +333,8 @@ export async function missionAction(
         });
       }
     }
-    redirect("/user/content");
+    // Nach dem Speichern auf die Missionsseite — wie beim Anlegen (unten).
+    redirect(missionHref(result.slug));
   }
 
   // Slug-Vergabe + Uniqueness-Check nur beim Anlegen — beim Bearbeiten ist

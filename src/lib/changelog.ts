@@ -142,6 +142,11 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Aliase für Datenbank-Einträge",
     items: [
       {
+        text: "Nach dem Speichern landest du auf der Seite des Inhalts — bei Datenbank-Einträgen, Missionen und Einsatzberichten, beim Anlegen wie beim Bearbeiten. Bisher führte das Bearbeiten zurück in die Liste „Meine Inhalte“.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+      {
         text: "Aus drei Sichtbarkeiten werden zwei Zustände: Ein Inhalt ist entweder ein Entwurf (nur für dich) oder veröffentlicht (für alle sichtbar, auch ohne Anmeldung). „Privat“ und „GM“ entfallen — alles, was bisher kein Entwurf war, ist jetzt veröffentlicht.",
         category: "inhalte",
         tutorial: "eigene-inhalte",
