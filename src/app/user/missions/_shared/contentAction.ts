@@ -214,7 +214,7 @@ export async function missionAction(
   }
 
   // Im Entwurf-Modus (siehe ContentEditor.tsx-Checkbox) ist nur der Text
-  // optional — Titel & Co. bleiben Pflicht, siehe canViewDraft-Kommentar in
+  // optional — Titel & Co. bleiben Pflicht, siehe canView-Kommentar in
   // src/lib/visibility.ts für die Begründung.
   const isDraft = formData.get("isDraft") === "on";
 
@@ -333,7 +333,8 @@ export async function missionAction(
         });
       }
     }
-    redirect("/user/content");
+    // Nach dem Speichern auf die Missionsseite — wie beim Anlegen (unten).
+    redirect(missionHref(result.slug));
   }
 
   // Slug-Vergabe + Uniqueness-Check nur beim Anlegen — beim Bearbeiten ist

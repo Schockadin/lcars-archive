@@ -322,6 +322,7 @@ const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
     thumbnail: "/icons/icon-192.png",
     metadata: {
       summary: "Der Heimatplanet der Andorianer, ein Eismond im Kuiper-Gürtel.",
+      aliases: [],
       attributes: [
         { label: "System", value: "Procyon" },
         { label: "Status", value: "Mitglied" },
@@ -343,6 +344,7 @@ const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
     thumbnail: null,
     metadata: {
       summary: null,
+      aliases: [],
       attributes: [{ label: "Spezies", value: "Andorianer" }],
       characters: [],
       missions: [],
@@ -361,6 +363,7 @@ const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
     thumbnail: null,
     metadata: {
       summary: "Der cardassianische Geheimdienst — offiziell aufgelöst.",
+      aliases: [],
       attributes: [],
       characters: [],
       missions: [],

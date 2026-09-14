@@ -156,20 +156,20 @@ describe("listContentImages / deleteContentImage", () => {
 });
 
 describe("getContentAccessContext", () => {
-  it("returns visibility + owner for a character", async () => {
+  it("returns draft state + owner for a character", async () => {
     const user = await insertUser();
-    const character = await insertCharacter({ playerId: user.id, visibility: "gm" });
+    const character = await insertCharacter({ playerId: user.id, isDraft: true });
 
     const access = await getContentAccessContext("character", character.id);
-    expect(access).toEqual({ visibility: "gm", ownerId: user.id });
+    expect(access).toEqual({ isDraft: true, ownerId: user.id });
   });
 
-  it("treats missions as always public with owner_user_id as owner", async () => {
+  it("reads a mission's draft state and owner_user_id", async () => {
     const user = await insertUser();
     const mission = await insertMission({ ownerUserId: user.id });
 
     const access = await getContentAccessContext("mission", mission.id);
-    expect(access).toEqual({ visibility: "public", ownerId: user.id });
+    expect(access).toEqual({ isDraft: false, ownerId: user.id });
   });
 
   it("returns null for a nonexistent content id", async () => {

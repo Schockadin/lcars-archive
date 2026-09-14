@@ -5,7 +5,7 @@ import AdminSelectField from "./AdminSelectField";
 
 // Admin-only Owner-Anzeige/-Änderung auf den vier Inhalts-Detailseiten
 // (Charakter, Mission, Missionslog, Archiv-Eintrag) — mirrort
-// VisibilitySelect.tsx/AdminVisibilitySelect.tsx (useOptimisticAdminSelect:
+// ContentStateSelect.tsx/AdminContentStateSelect.tsx (useOptimisticAdminSelect:
 // automatischer Rollback, falls setOwnerAction fehlschlägt).
 export default function OwnerSelect({
   contentType,

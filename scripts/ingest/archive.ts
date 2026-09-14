@@ -124,6 +124,11 @@ export async function ingestArchive(
 
       const metadata = {
         summary: str(fm.teaser),
+        // Weitere Namen aus dem Frontmatter — dasselbe Feld wie bei
+        // Charakteren (scripts/ingest/characters.ts), damit ein importierter
+        // Eintrag dieselben Autolink-Treffer mitbringt wie ein in der App
+        // gepflegter.
+        aliases: toStringArray(fm.aliases),
         attributes,
         characters: [] as { slug: string; name: string }[],
         missions: [] as { slug: string; title: string }[],

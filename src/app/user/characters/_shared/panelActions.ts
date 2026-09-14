@@ -47,7 +47,6 @@ async function notifyUpdated(input: {
   userId: number;
   slug: string;
   name: string;
-  visibility: "private" | "gm" | "public";
   wasDraft: boolean;
   isDraft: boolean;
   bodyMarkdown: string;
@@ -72,7 +71,7 @@ async function notifyUpdated(input: {
       contentTitle: input.name,
       contentUrl,
       preview,
-      notifyPublic: input.visibility === "public",
+      notifyPublic: true,
     });
     return;
   }
@@ -92,7 +91,7 @@ async function notifyUpdated(input: {
     contentTitle: input.name,
     contentUrl,
     preview,
-    notifyPublic: input.visibility === "public",
+    notifyPublic: true,
   });
 }
 
@@ -145,7 +144,6 @@ export async function updateCharacterHeadAction(
     userId: session.userId,
     slug: result.slug,
     name: headResult.head.name,
-    visibility: result.visibility,
     wasDraft: result.wasDraft,
     isDraft,
     bodyMarkdown: current.sourceMarkdown,
@@ -213,7 +211,6 @@ export async function updateCharacterBioAction(
     userId: session.userId,
     slug: result.slug,
     name: current.name,
-    visibility: result.visibility,
     wasDraft: result.wasDraft,
     isDraft: current.isDraft,
     bodyMarkdown,

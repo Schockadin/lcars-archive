@@ -70,7 +70,7 @@ export function hasRagConfig(): boolean {
 // ---------------------------------------------------------------------------
 
 // Reine Vorschau des RBAC-Filters, den die Retrieval-Query in SQL abbildet —
-// spiegelt canView()/canViewDraft() aus src/lib/visibility.ts auf den
+// spiegelt canView() aus src/lib/visibility.ts auf den
 // denormalisierten Embedding-Feldern. Als eigenständige, testbare Funktion
 // gehalten (Unit-Tests), damit die sicherheitskritische Logik nicht nur im
 // SQL-String lebt.
@@ -80,7 +80,6 @@ export function hasRagConfig(): boolean {
 // aber nie zu freizügig (ein RAG-Kontext soll keine fremden Entwürfe zitieren).
 export function chunkAllowedForViewer(
   row: {
-    visibility: "private" | "gm" | "public";
     ownerId: number | null;
     isDraft: boolean;
     isActive: boolean;
@@ -90,15 +89,9 @@ export function chunkAllowedForViewer(
   if (!row.isActive) return false;
   const isOwner =
     viewer != null && row.ownerId != null && viewer.userId === row.ownerId;
-  if (row.isDraft && !isOwner) return false;
-
-  if (row.visibility === "public") return true;
+  if (!row.isDraft) return true;
   if (viewer?.permissions.includes("content.view_all")) return true;
-  if (isOwner) return true;
-  if (row.visibility === "gm" && viewer?.permissions.includes("content.view_gm")) {
-    return true;
-  }
-  return false;
+  return isOwner;
 }
 
 // ---------------------------------------------------------------------------
@@ -111,15 +104,12 @@ export function chunkAllowedForViewer(
 function rbacFilter(viewer: Viewer | null) {
   const viewerId = viewer?.userId ?? -1;
   const canViewAll = viewer?.permissions.includes("content.view_all") ?? false;
-  const canViewGm = viewer?.permissions.includes("content.view_gm") ?? false;
   return sql`
     is_active = TRUE
-    AND (is_draft = FALSE OR (owner_id IS NOT NULL AND owner_id = ${viewerId}))
     AND (
-      visibility = 'public'
+      is_draft = FALSE
       OR ${canViewAll}
       OR (owner_id IS NOT NULL AND owner_id = ${viewerId})
-      OR (visibility = 'gm' AND ${canViewGm})
     )
   `;
 }

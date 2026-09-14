@@ -1,9 +1,8 @@
 import "server-only";
 import sql from "@/lib/db";
-import { canView, type Viewer, type Visibility } from "@/lib/visibility";
 
-// Die Missionsakte: EINE Mission mit ihrer Beschreibung und allen Logbüchern,
-// die der Betrachter lesen darf — die Datenseite dazu (das Layout steht in
+// Die Missionsakte: EINE Mission mit ihrer Beschreibung und allen
+// veröffentlichten Logbüchern — die Datenseite dazu (das Layout steht in
 // src/lib/pdf/MissionBookPdfDocument.tsx).
 //
 // Vorher war das ein Kampagnenband über alle Missionen. Der Band war ein
@@ -23,10 +22,6 @@ export interface MissionBookLog {
   logDate: string | null;
   authorName: string | null;
   sourceMarkdown: string;
-  // Nur zur Kennzeichnung in der Akte: was nicht öffentlich ist, steht im
-  // Ausdruck mit einem Hinweis, damit niemand versehentlich ein
-  // Spielleitungs-Logbuch weiterreicht.
-  visibility: Visibility;
 }
 
 export interface MissionBook {
@@ -60,8 +55,6 @@ interface LogRow {
   log_date: string | null;
   author_name: string | null;
   source_md: string | null;
-  visibility: Visibility;
-  owner_user_id: number | null;
 }
 
 // Die Akte einer Mission. Ohne Treffer null — die Route macht daraus ein 404,
@@ -72,7 +65,6 @@ interface LogRow {
 // Regel gehört an eine Stelle (die Route), nicht in zwei.
 export async function getMissionBook(
   slug: string,
-  viewer: Viewer | null,
 ): Promise<MissionBook | null> {
   const [mission] = await sql<MissionRow[]>`
     SELECT id, slug, title, status,
@@ -94,9 +86,7 @@ export async function getMissionBook(
              ml.session_nr,
              ml.log_date::text AS log_date,
              c.name            AS author_name,
-             ml.source_md,
-             ml.visibility,
-             ml.owner_user_id
+             ml.source_md
       FROM mission_logs ml
       LEFT JOIN characters c ON c.id = ml.author_id
       WHERE ml.deleted_at IS NULL
@@ -113,10 +103,9 @@ export async function getMissionBook(
     `,
   ]);
 
+  // Die Akte führt nur veröffentlichte Logbücher (is_draft = false in der
+  // Abfrage oben) — dieselbe Grenze wie die Logbuch-Seite.
   const logs = logRows
-    // Die Sichtbarkeitsregel ist dieselbe wie auf der Logbuch-Seite — in der
-    // Akte darf nichts stehen, was die Person nicht ohnehin lesen darf.
-    .filter((row) => canView(row.visibility, row.owner_user_id, viewer))
     .map((row) => ({
       slug: row.slug,
       title: row.title,
@@ -124,7 +113,6 @@ export async function getMissionBook(
       logDate: row.log_date,
       authorName: row.author_name,
       sourceMarkdown: row.source_md ?? "",
-      visibility: row.visibility,
     }));
 
   return {

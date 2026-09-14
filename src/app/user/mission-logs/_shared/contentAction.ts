@@ -10,6 +10,7 @@ import {
   updateMissionLogContent,
 } from "@/lib/missions";
 import { revalidateLog } from "@/lib/revalidate";
+import { missionLogHref } from "@/lib/contentRoutes";
 import { autoLinkMarkdown } from "@/lib/autolink";
 import { getCharacterSubscribers } from "@/lib/dialogues";
 import { sendNewMissionLogEmail } from "@/lib/mail";
@@ -143,7 +144,7 @@ export async function missionLogAction(
     revalidateLog(result.missionId, result.slug);
 
     if (!isDraft) {
-      const contentUrl = `${await getBaseUrl()}/missions/${result.missionSlug}/${result.slug}`;
+      const contentUrl = `${await getBaseUrl()}${missionLogHref(result.missionSlug, result.slug)}`;
       const preview = synopsisExcerpt(bodyMarkdown, 140);
 
       if (result.wasDraft) {
@@ -157,7 +158,7 @@ export async function missionLogAction(
           contentTitle: title,
           contentUrl,
           preview,
-          notifyPublic: result.visibility === "public",
+          notifyPublic: true,
         });
         await notifyLogSubscribers(
           result.authorSlug,
@@ -179,11 +180,14 @@ export async function missionLogAction(
           contentTitle: title,
           contentUrl,
           preview,
-          notifyPublic: result.visibility === "public",
+          notifyPublic: true,
         });
       }
     }
-    redirect("/user/content");
+    // Nach dem Speichern dorthin, wo der Inhalt steht — statt zurück in die
+    // Liste. Wer bearbeitet hat, will sehen, wie es jetzt aussieht; der Weg
+    // zurück in „Meine Inhalte" ist von dort einen Klick entfernt.
+    redirect(missionLogHref(result.missionSlug, result.slug));
   }
 
   // Autor/Mission/Session-Nr/Slug nur beim Anlegen — im Edit-Modus fehlen
@@ -264,11 +268,13 @@ export async function missionLogAction(
       authorName: user.name,
       contentTypeLabel: "einen neuen Mission-Log",
       contentTitle: title,
-      contentUrl: `${await getBaseUrl()}/missions/${mission.slug}/${result.slug}`,
+      contentUrl: `${await getBaseUrl()}${missionLogHref(mission.slug, result.slug)}`,
       preview: synopsisExcerpt(bodyMarkdown, 140),
       notifyPublic: true,
     });
   }
 
-  redirect("/user");
+  // Wie beim Bearbeiten oben: auf den frisch angelegten Log statt auf das
+  // Profil.
+  redirect(missionLogHref(mission.slug, result.slug));
 }

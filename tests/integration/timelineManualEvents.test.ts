@@ -37,7 +37,7 @@ describe("freie Chronologie-Ereignisse", () => {
 
     // Auch für jemanden ohne Konto: das Ereignis hängt an keinem Inhalt, es
     // gibt also keine Sichtbarkeit, die etwas verbergen könnte.
-    const events = await getTimeline(null);
+    const events = await getTimeline();
     const event = events.find((e) => e.title === "Vertrag von Algeron");
     expect(event).toBeDefined();
     expect(event!.origin).toBe("manual");
@@ -90,7 +90,7 @@ describe("freie Chronologie-Ereignisse", () => {
       user.id,
     );
 
-    const events = await getTimeline(null);
+    const events = await getTimeline();
     const event = events.find((e) => e.title === "Konferenz von Khitomer");
     expect(event!.people.sort()).toEqual(["Kira", "Tuvok"]);
   });
@@ -139,22 +139,22 @@ describe("Chronologie: Umfang der Quellen", () => {
     // führte auf eine Seite, die alle außer den Beteiligten weiterleitet.
     const [offen] = await sql<{ slug: string }[]>`
       INSERT INTO archive_entries
-        (slug, title, category, content, visibility, is_draft, dialogue_open,
+        (slug, title, category, content, is_draft, dialogue_open,
          metadata, frontmatter)
       VALUES ('gespraech-offen', 'Laufendes Gespräch', 'dialogue', '',
-              'public', false, true, ${sql.json({})}, ${sql.json({})})
+              false, true, ${sql.json({})}, ${sql.json({})})
       RETURNING slug
     `;
     const [zu] = await sql<{ slug: string }[]>`
       INSERT INTO archive_entries
-        (slug, title, category, content, visibility, is_draft, dialogue_open,
+        (slug, title, category, content, is_draft, dialogue_open,
          metadata, frontmatter)
       VALUES ('gespraech-zu', 'Abgeschlossenes Gespräch', 'dialogue', '',
-              'public', false, false, ${sql.json({})}, ${sql.json({})})
+              false, false, ${sql.json({})}, ${sql.json({})})
       RETURNING slug
     `;
 
-    const titles = (await getTimeline(null)).map((event) => event.title);
+    const titles = (await getTimeline()).map((event) => event.title);
     expect(titles).not.toContain("Laufendes Gespräch");
     // Das abgeschlossene steht dort — auch ohne In-Story-Datum.
     expect(titles).toContain("Abgeschlossenes Gespräch");
@@ -168,12 +168,12 @@ describe("Chronologie: Umfang der Quellen", () => {
     const mission = await insertMission();
     await sql`
       INSERT INTO mission_logs
-        (slug, title, mission_id, content, visibility, is_draft, log_date)
+        (slug, title, mission_id, content, is_draft, log_date)
       VALUES ('log-ohne-datum', 'Logbuch ohne Datum', ${mission.id}, '',
-              'public', false, NULL)
+              false, NULL)
     `;
 
-    const event = (await getTimeline(null)).find(
+    const event = (await getTimeline()).find(
       (e) => e.title === "Logbuch ohne Datum",
     );
     expect(event).toBeDefined();

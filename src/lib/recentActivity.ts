@@ -24,15 +24,14 @@ const NEWS_WINDOW_DAYS = 90;
 // (created/updated-Ableitung, „gesehen"-Filter, Sortierung) der reinen,
 // getesteten Funktion computeNewsItems (recentActivityFormat.ts).
 //
-// News umfassen ALLE neuen Inhalte, die der Betrachter sehen darf: wer
-// content.view_all hat sieht jede Sichtbarkeit, content.view_gm zusätzlich
-// gm-Inhalte, alle anderen nur öffentliche + eigene (Entwürfe bleiben immer
-// owner-only, siehe canViewDraft). Offene Gespräche bleiben ausgeschlossen
-// (eigene Sektion). Die Sichtbarkeit wird über die EFFEKTIVEN Rechte des
-// Betrachters (canViewGm/canViewAll aus newsVisibility) gesteuert, nicht über
-// seine Primärrolle — damit ein Multi-Rollen-User (Primärrolle „player" +
-// Zusatzrolle „gm"/„admin") bzw. ein per Override berechtigter User im Feed
-// exakt dasselbe sieht wie über canView (src/lib/visibility.ts) im Rest der App.
+// News umfassen ALLE neuen Inhalte, die der Betrachter sehen darf: alles
+// Veröffentlichte, dazu die eigenen Entwürfe — und für wen content.view_all
+// gilt (Administration) auch fremde Entwürfe, wie überall sonst (canView in
+// src/lib/visibility.ts). Offene Gespräche bleiben ausgeschlossen (eigene
+// Sektion). Maßgeblich sind die EFFEKTIVEN Rechte (canViewAll aus
+// newsVisibility), nicht die Primärrolle — damit ein Multi-Rollen-User bzw.
+// ein per Override berechtigter User im Feed exakt dasselbe sieht wie im Rest
+// der App.
 export async function getNewsItems(
   userId: number,
   newsKinds: string[],
@@ -43,7 +42,7 @@ export async function getNewsItems(
   const wantDeleted = newsKinds.includes("deleted");
   if (!wantCreated && !wantUpdated && !wantDeleted) return [];
 
-  const { canViewGm, canViewAll } = visibility;
+  const { canViewAll } = visibility;
 
   const since = new Date();
   since.setDate(since.getDate() - NEWS_WINDOW_DAYS);
@@ -59,11 +58,9 @@ export async function getNewsItems(
              c.created_at::text AS created_at, c.updated_at::text AS updated_at
       FROM characters c
       LEFT JOIN users pu ON pu.id = c.player_id
-      WHERE (c.visibility = 'public' OR c.player_id = ${userId}
-             OR ${canViewAll} OR (${canViewGm} AND c.visibility = 'gm'))
-        AND (c.created_at > ${since} OR c.updated_at > ${since})
+      WHERE (c.created_at > ${since} OR c.updated_at > ${since})
         AND c.deleted_at IS NULL
-        AND (c.is_draft = false OR c.player_id = ${userId})
+        AND (c.is_draft = false OR c.player_id = ${userId} OR ${canViewAll})
 
       UNION ALL
 
@@ -86,11 +83,9 @@ export async function getNewsItems(
       FROM mission_logs ml
       JOIN missions m ON m.id = ml.mission_id
       LEFT JOIN users ou ON ou.id = ml.owner_user_id
-      WHERE (ml.visibility = 'public' OR ml.owner_user_id = ${userId}
-             OR ${canViewAll} OR (${canViewGm} AND ml.visibility = 'gm'))
-        AND (ml.created_at > ${since} OR ml.updated_at > ${since})
+      WHERE (ml.created_at > ${since} OR ml.updated_at > ${since})
         AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
-        AND (ml.is_draft = false OR ml.owner_user_id = ${userId})
+        AND (ml.is_draft = false OR ml.owner_user_id = ${userId} OR ${canViewAll})
 
       UNION ALL
 
@@ -100,12 +95,10 @@ export async function getNewsItems(
              a.created_at::text, a.updated_at::text
       FROM archive_entries a
       LEFT JOIN users au ON au.id = a.owner_user_id
-      WHERE (a.visibility = 'public' OR a.owner_user_id = ${userId}
-             OR ${canViewAll} OR (${canViewGm} AND a.visibility = 'gm'))
-        AND (a.created_at > ${since} OR a.updated_at > ${since})
+      WHERE (a.created_at > ${since} OR a.updated_at > ${since})
         AND (a.category != 'dialogue' OR a.dialogue_open = FALSE)
         AND a.deleted_at IS NULL
-        AND (a.is_draft = false OR a.owner_user_id = ${userId})
+        AND (a.is_draft = false OR a.owner_user_id = ${userId} OR ${canViewAll})
     `;
   }
 
@@ -117,9 +110,6 @@ export async function getNewsItems(
       FROM content_deletions cd
       LEFT JOIN users du ON du.id = cd.deleted_by
       WHERE cd.deleted_at > ${since}
-        AND (cd.visibility IS NULL OR cd.visibility = 'public'
-             OR cd.owner_user_id = ${userId}
-             OR ${canViewAll} OR (${canViewGm} AND cd.visibility = 'gm'))
       ORDER BY cd.deleted_at DESC
     `;
   }

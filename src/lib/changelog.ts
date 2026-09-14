@@ -138,6 +138,57 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.34",
+    title: "Aliase für Datenbank-Einträge",
+    items: [
+      {
+        text: "Ein Datenbank-Eintrag hat oben links einen Zurück-Link in seine Kategorie („‹ Personen“, „‹ Orte“ …) — wie ihn Missionen und Logbücher schon hatten.",
+        category: "darstellung",
+        tutorial: "fuer-besucher",
+      },
+      {
+        text: "„Meine Inhalte“ ist jetzt EINE Liste im Aufbau von Chronologie und Datenbank — Abschnitt je Kategorie, Schiene, Karte — statt fünf Klappen. Vorgabe ist die Sortierung nach Kategorie, alternativ alphabetisch über alles; Entwürfe stehen in ihrer Kategorie (farblich markiert) und lassen sich über den Filter „Nur Entwürfe“ zusammen ansehen.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Nach dem Speichern landest du auf der Seite des Inhalts — bei Datenbank-Einträgen, Missionen und Einsatzberichten, beim Anlegen wie beim Bearbeiten. Bisher führte das Bearbeiten zurück in die Liste „Meine Inhalte“.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Aus drei Sichtbarkeiten werden zwei Zustände: Ein Inhalt ist entweder ein Entwurf (nur für dich) oder veröffentlicht (für alle sichtbar, auch ohne Anmeldung). „Privat“ und „GM“ entfallen — alles, was bisher kein Entwurf war, ist jetzt veröffentlicht.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Einen Entwurf veröffentlichst du direkt in der Liste unter „Meine Inhalte“ bzw. „Charaktere“ — das Dropdown daneben schaltet zwischen Entwurf und Veröffentlicht um, ohne den Inhalt erst zu öffnen.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "„Meine Inhalte“: Die Knöpfe für neue Inhalte öffnen das jeweilige Formular jetzt in einem Fenster über der Liste, statt auf eine eigene Seite zu führen — wer abbricht, steht wieder in seiner Übersicht. Ausgenommen bleiben Charaktere mit ihrem mehrstufigen Assistenten.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Der Bearbeiten-Stift auf einer Leseseite führt jetzt direkt in den vollen Editor des Inhalts — dort lassen sich auch Titel, Kategorie, Tags und Metadaten ändern. Bisher klappte er bei Charakteren, Missionen und Datenbank-Einträgen nur ein Feld für den Fließtext auf.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Spielleitung und Administration können einen fremden Datenbank-Eintrag im selben vollen Editor bearbeiten, statt ihn nur löschen oder umhängen zu können.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Datenbank-Einträge haben jetzt — wie Charaktere — ein Feld für Aliase: weitere Namen, unter denen derselbe Ort, Gegenstand oder NPC bekannt ist. Sie stehen auf der Eintragsseite unter „Auch bekannt als“ und werden bei der automatischen Verlinkung ebenfalls erkannt, ein „DS12“ im Text führt also zum Eintrag „Deep Space 12“.",
+        category: "inhalte",
+        tutorial: "verlinkung",
+      },
+    ],
+  },
+  {
     version: "1.33",
     title: "Die Erschaffung lässt sich wieder öffnen",
     items: [

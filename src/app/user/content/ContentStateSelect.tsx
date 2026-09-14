@@ -1,29 +1,35 @@
 "use client";
 import { useOptimistic, useState, useTransition } from "react";
-import { setVisibilityAction, type VisibilityContentType } from "./actions";
-import type { Visibility } from "@/lib/visibility";
+import { setContentStateAction, type VisibilityContentType } from "./actions";
 
-// Eigene Label-Liste statt VISIBILITY_LABELS aus @/lib/visibility zu
+// Entwurf oder veröffentlicht — der eine Sichtbarkeits-Schalter jedes Inhalts
+// (bis v1.34 waren es drei Stufen „Privat/GM/Öffentlich" PLUS ein
+// Entwurf-Häkchen im Editor). Hier steht er direkt in der Liste: Ein Entwurf
+// lässt sich veröffentlichen, ohne ihn erst im Editor zu öffnen.
+//
+// Eigene Label-Liste statt CONTENT_STATE_LABEL aus @/lib/visibility zu
 // importieren — jenes Modul ist "server-only" und darf aus einer Client
 // Component nicht als Wert (nur als Typ) importiert werden.
-const OPTIONS: { value: Visibility; label: string }[] = [
-  { value: "private", label: "Privat" },
-  { value: "gm", label: "GM" },
-  { value: "public", label: "Öffentlich" },
+type ContentState = "draft" | "published";
+
+const OPTIONS: { value: ContentState; label: string }[] = [
+  { value: "draft", label: "Entwurf" },
+  { value: "published", label: "Veröffentlicht" },
 ];
 
-export default function VisibilitySelect({
+export default function ContentStateSelect({
   contentType,
   id,
-  initialValue,
+  isDraft,
 }: {
   contentType: VisibilityContentType;
   id: number;
-  initialValue: Visibility;
+  isDraft: boolean;
 }) {
+  const initialValue: ContentState = isDraft ? "draft" : "published";
   // useOptimistic statt useState: zeigt den neuen Wert sofort an, fällt aber
   // automatisch auf initialValue zurück, sobald die Transition abgeschlossen
-  // ist UND initialValue sich NICHT geändert hat (weil setVisibilityAction
+  // ist UND initialValue sich NICHT geändert hat (weil setContentStateAction
   // fehlgeschlagen ist und revalidatePath deshalb den alten DB-Stand
   // zurückliefert) — kein manueller Rollback-Code nötig.
   const [optimisticValue, setOptimisticValue] = useOptimistic(initialValue);
@@ -36,16 +42,16 @@ export default function VisibilitySelect({
         value={optimisticValue}
         disabled={pending}
         onChange={(e) => {
-          const next = e.target.value as Visibility;
+          const next = e.target.value as ContentState;
           setError(null);
           startTransition(async () => {
             setOptimisticValue(next);
-            const result = await setVisibilityAction(contentType, id, next);
+            const result = await setContentStateAction(contentType, id, next);
             if (result.error) setError(result.error);
           });
         }}
         className="lcars-input rounded-full"
-        aria-label="Sichtbarkeit"
+        aria-label="Veröffentlichung"
       >
         {OPTIONS.map((o) => (
           <option key={o.value} value={o.value}>

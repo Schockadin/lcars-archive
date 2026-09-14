@@ -183,13 +183,13 @@ export async function getBookmarkedContent(
     FROM content_follows cf
     JOIN archive_entries a ON a.slug = cf.target_slug AND cf.target_type = 'archive_entry'
     WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
-      AND (a.visibility = 'public' OR a.owner_user_id = ${userId}) AND a.deleted_at IS NULL
+      AND (a.is_draft = false OR a.owner_user_id = ${userId}) AND a.deleted_at IS NULL
     UNION ALL
     SELECT 'character'::text AS target_type, c.slug, c.name AS title, NULL::boolean AS dialogue_open
     FROM content_follows cf
     JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
     WHERE cf.user_id = ${userId} AND cf.bookmarked_at IS NOT NULL
-      AND (c.visibility = 'public' OR c.player_id = ${userId}) AND c.deleted_at IS NULL
+      AND (c.is_draft = false OR c.player_id = ${userId}) AND c.deleted_at IS NULL
     ORDER BY title ASC
   `;
   return rows.map(toFollowedContent);
@@ -215,13 +215,13 @@ export async function getSubscribedContent(
     FROM content_follows cf
     JOIN archive_entries a ON a.slug = cf.target_slug AND cf.target_type = 'archive_entry'
     WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
-      AND (a.visibility = 'public' OR a.owner_user_id = ${userId}) AND a.deleted_at IS NULL
+      AND (a.is_draft = false OR a.owner_user_id = ${userId}) AND a.deleted_at IS NULL
     UNION ALL
     SELECT 'character'::text AS target_type, c.slug, c.name AS title, NULL::boolean AS dialogue_open
     FROM content_follows cf
     JOIN characters c ON c.slug = cf.target_slug AND cf.target_type = 'character'
     WHERE cf.user_id = ${userId} AND cf.subscribed_at IS NOT NULL
-      AND (c.visibility = 'public' OR c.player_id = ${userId}) AND c.deleted_at IS NULL
+      AND (c.is_draft = false OR c.player_id = ${userId}) AND c.deleted_at IS NULL
     ORDER BY title ASC
   `;
   return rows.map(toFollowedContent);
@@ -421,8 +421,9 @@ async function getAdminContentSubscribers(
 // Admin-Opt-in "Über alle Inhalte benachrichtigt werden" (notify_content_types)
 // — anders als notifyUserSubscribers oben (nur öffentliche Inhalte eigener
 // Abonnenten) meldet dies JEDES Anlegen/Bearbeiten des gewählten Inhaltstyps
-// durch JEDEN User, unabhängig von visibility/Owner (Admins dürfen ohnehin
-// alles sehen, siehe canView in lib/visibility.ts). Schließt den handelnden
+// durch JEDEN User, unabhängig von Entwurf-Zustand und Owner (die
+// Administration darf ohnehin alles sehen, siehe canView in
+// lib/visibility.ts). Schließt den handelnden
 // User selbst aus (ein Admin, der selbst editiert, muss sich nicht über die
 // eigene Aktion benachrichtigen). authorName kommt vom Aufrufer statt einer
 // eigenen SELECT-Query — Aufrufer haben den Namen des handelnden Users
@@ -465,9 +466,9 @@ export async function notifyAdminContentSubscribers(input: {
 // Änderung IMMER den Admin-Abonnenten (notifyAdminContentSubscribers) und
 // PARALLEL dazu — nur wenn notifyPublic true ist — den eigenen Abonnenten
 // des Erstellers (notifyUserSubscribers). notifyPublic ist bei Missionen
-// immer false (keine visibility-Spalte, kein Public-Follow-Modell für
-// Missionen selbst), bei den anderen drei Typen true bei Neuanlage bzw. bei
-// `result.visibility === "public"` beim Bearbeiten.
+// immer false (kein Public-Follow-Modell für Missionen selbst), bei den
+// anderen drei Typen true, sobald der Inhalt veröffentlicht ist (kein
+// Entwurf).
 export async function notifyContentChange(input: {
   contentType: AdminContentNotifyType;
   event: "created" | "updated";

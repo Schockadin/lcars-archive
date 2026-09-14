@@ -45,7 +45,7 @@ export default async function CategoryTimeline({
   initialPerson?: string | null;
 }) {
   const viewer = await getViewer();
-  const events = await getTimeline(viewer);
+  const events = await getTimeline();
   // Wer eigene Inhalte anlegen darf, darf auch ein Ereignis eintragen, das zu
   // keinem Inhalt gehört (siehe timelineManualEvents.ts).
   const canAddEvent = viewerHasPermission(viewer, "content.create");

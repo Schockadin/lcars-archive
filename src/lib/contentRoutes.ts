@@ -59,6 +59,14 @@ export function archiveHref(slug: string): string {
   return `/archive/${slug}`;
 }
 
+// Die Datenbank-Übersicht, wahlweise auf eine Kategorie vorgefiltert — die
+// teilbare ?cat=-Auswahl der Kategorienleiste (siehe /archive/page.tsx). Der
+// Zurück-Link einer Eintragsseite führt damit in die Liste, aus der der
+// Eintrag stammt, statt in die ungefilterte Gesamtliste.
+export function archiveListHref(category?: string | null): string {
+  return category ? `/archive?cat=${encodeURIComponent(category)}` : "/archive";
+}
+
 // Offene Gespräche leben unter /dialogues, abgeschlossene unter /archive
 // (siehe toFollowedContent in src/lib/follows.ts).
 export function dialogueHref(slug: string): string {
@@ -93,6 +101,27 @@ export function missionLogEditHref(id: number | string): string {
 
 export function archiveEditHref(id: number | string): string {
   return `/user/archive/${id}/edit`;
+}
+
+// Eine Adresse für alle vier: Der Bearbeiten-Stift auf den Leseseiten
+// springt seit v1.34 in genau diesen Editor, statt einen Inline-Editor nur
+// für den Fließtext aufzuklappen — dort lassen sich auch Titel und
+// Metadaten ändern. Die Namen sind die der ContentToolType-Zuordnung in
+// ActionsMenu.tsx.
+export function contentEditHref(
+  type: "character" | "mission" | "missionLog" | "archiveEntry",
+  id: number | string,
+): string {
+  switch (type) {
+    case "character":
+      return characterEditHref(id);
+    case "mission":
+      return missionEditHref(id);
+    case "missionLog":
+      return missionLogEditHref(id);
+    case "archiveEntry":
+      return archiveEditHref(id);
+  }
 }
 
 // ── Hochgeladene Bilder ─────────────────────────────────────────────────

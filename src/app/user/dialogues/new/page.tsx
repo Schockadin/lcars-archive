@@ -19,7 +19,7 @@ export default async function NewDialoguePage() {
 
   // Nur eigene bereits veröffentlichte Charaktere kommen als Gesprächsstarter
   // infrage — analog zu mission-logs/new/page.tsx: ein Entwurf ist für
-  // niemand außer dem Owner sichtbar (siehe canViewDraft in visibility.ts).
+  // niemand außer dem Owner sichtbar (siehe canView in visibility.ts).
   const publishedCharacters = characters.filter((c) => !c.is_draft);
 
   // NPCs als Gegenüber: angeboten wird, was diese Person sehen darf —
@@ -27,7 +27,7 @@ export default async function NewDialoguePage() {
   // Rechten (canView, wie überall sonst).
   const viewer = await getViewer();
   const npcs = (await getNpcOptions()).filter((npc) =>
-    canView(npc.visibility, npc.ownerUserId, viewer),
+    canView(npc.isDraft, npc.ownerUserId, viewer),
   );
   // Wer NPCs spielt, darf ein Gespräch auch AUS SICHT eines NPC beginnen —
   // für diese Person ist die Seite deshalb auch ohne eigenen Charakter

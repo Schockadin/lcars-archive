@@ -6,9 +6,9 @@ function viewer(permissions: Viewer["permissions"]): Viewer {
   return { userId: 1, role: "player", permissions };
 }
 
-// NPCs (Datenbank-Einträge der Kategorie "npc") hängen an zwei Regeln: wer sie im Gespräch
-// SPRICHT (canPlayNpcs) und wer sie überhaupt SIEHT (canView, mit ownerId
-// null — ein NPC gehört niemandem).
+// NPCs (Datenbank-Einträge der Kategorie "npc") hängen an zwei Regeln: wer
+// sie im Gespräch SPRICHT (canPlayNpcs) und wer sie überhaupt SIEHT (canView;
+// ein NPC gehört meist niemandem, ownerId also null).
 describe("canPlayNpcs", () => {
   it("erlaubt es der Spielleitung und der Administration", () => {
     expect(canPlayNpcs(viewer(["gm.access"]))).toBe(true);
@@ -24,19 +24,21 @@ describe("canPlayNpcs", () => {
 });
 
 describe("Sichtbarkeit von NPCs (canView ohne Owner)", () => {
-  it("zeigt öffentliche NPCs allen, auch ohne Login", () => {
-    expect(canView("public", null, null)).toBe(true);
+  it("zeigt veröffentlichte NPCs allen, auch ohne Login", () => {
+    expect(canView(false, null, null)).toBe(true);
   });
 
-  it("hält intern gehaltene NPCs von Spieler:innen fern", () => {
+  it("hält einen NPC-Entwurf von Spieler:innen fern", () => {
     const player = viewer(["content.create"]);
-    expect(canView("gm", null, player)).toBe(false);
-    expect(canView("private", null, player)).toBe(false);
+    expect(canView(true, null, player)).toBe(false);
+    expect(canView(true, null, null)).toBe(false);
   });
 
-  it("zeigt sie der Spielleitung (gm) bzw. der Administration (alle)", () => {
-    expect(canView("gm", null, viewer(["content.view_gm"]))).toBe(true);
-    expect(canView("private", null, viewer(["content.view_gm"]))).toBe(false);
-    expect(canView("private", null, viewer(["content.view_all"]))).toBe(true);
+  it("zeigt einen Entwurf seiner Owner-Person und der Administration", () => {
+    // Ein NPC gehört in der Regel niemandem (ownerId null) — dann sieht ihn
+    // als Entwurf ausschließlich, wer alles sehen darf.
+    expect(canView(true, 1, viewer(["content.create"]))).toBe(true);
+    expect(canView(true, 2, viewer(["content.create"]))).toBe(false);
+    expect(canView(true, null, viewer(["content.view_all"]))).toBe(true);
   });
 });

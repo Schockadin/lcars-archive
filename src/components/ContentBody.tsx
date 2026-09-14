@@ -7,8 +7,8 @@ import { ChevronLeftIcon, ChevronRightIcon, XIcon } from "@/lib/icons";
 import { useReturnFocus } from "@/hooks/useReturnFocus";
 
 // Ersetzt die bisherigen einfachen <div dangerouslySetInnerHTML> für
-// Missions-/Log-/Archiv-Eintrag-Texte (MissionSynopsis.tsx,
-// MissionSynopsisEditor.tsx, LogDetail.tsx, ArchiveEntryEditor.tsx): Bilder,
+// Missions-/Log-/Archiv-Eintrag-Texte (MissionSynopsis.tsx, LogDetail.tsx,
+// ArchiveEntryBody.tsx): Bilder,
 // die per InsertImageButton.tsx als `![Bild](...)` in den Markdown-Text
 // eingefügt wurden, lassen sich jetzt anklicken und öffnen dieselbe
 // Vollbild-Lightbox wie CharacterPortrait.tsx (geteiltes CSS in

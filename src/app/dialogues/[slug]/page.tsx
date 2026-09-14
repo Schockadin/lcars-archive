@@ -98,7 +98,7 @@ export default async function DialoguePlayPage({ params }: Props) {
           playerName: c.playerName,
         })),
         ...npcCandidatesRaw
-          .filter((npc) => canView(npc.visibility, npc.ownerUserId, viewerForNpcs))
+          .filter((npc) => canView(npc.isDraft, npc.ownerUserId, viewerForNpcs))
           .map((npc) => ({
             key: speakerKey({ kind: "npc" as const, id: npc.id }),
             slug: npc.slug,

@@ -74,16 +74,13 @@ describe("getBookmarkedContent", () => {
     const otherOwner = await insertUser();
     const ownPrivate = await insertCharacter({
       playerId: user.id,
-      visibility: "private",
-      name: "Eigener Charakter",
+      isDraft: true, name: "Eigener Charakter",
     });
     const foreignPrivate = await insertCharacter({
       playerId: otherOwner.id,
-      visibility: "private",
-      name: "Fremder Charakter",
+      isDraft: true, name: "Fremder Charakter",
     });
     const publicChar = await insertCharacter({
-      visibility: "public",
       name: "Öffentlicher Charakter",
     });
 

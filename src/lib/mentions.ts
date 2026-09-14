@@ -3,7 +3,6 @@ import sql from "@/lib/db";
 import { WIKILINK_RE } from "@/lib/markdown";
 import { slugifyBase } from "@/lib/slug";
 import { normalizeWikilinkTarget } from "@/lib/autolink";
-import { canView, type Viewer, type Visibility } from "@/lib/visibility";
 import {
   archiveHref,
   missionHref,
@@ -54,7 +53,6 @@ export interface MentionTarget {
 interface CandidateRow {
   slug: string;
   title: string;
-  visibility: Visibility | null;
   owner_user_id: number | null;
   source_md: string | null;
   structured: boolean;
@@ -100,10 +98,12 @@ function isRealMention(row: CandidateRow, target: MentionTarget): boolean {
   return wikilinkPointsTo(row.source_md ?? "", target);
 }
 
-export async function getMentionsOf(
-  target: MentionTarget,
-  viewer: Viewer | null,
-): Promise<Mention[]> {
+// Ohne Betrachter-Parameter: Die Abfragen unten führen ausschließlich
+// veröffentlichte Inhalte (is_draft = false, nicht gelöscht) — und die sieht
+// seit v1.34 jede und jeder. Ein Entwurf taucht in keiner Erwähnungsliste auf,
+// auch nicht in der der eigenen Owner-Person: er soll erst mit dem
+// Veröffentlichen sichtbar werden.
+export async function getMentionsOf(target: MentionTarget): Promise<Mention[]> {
   // WICHTIG: sql.json() statt eines JSON-Strings. Wird der Wert als String
   // gebunden, wertet Postgres das @>-Containment nicht als jsonb aus und die
   // Abfrage liefert stumm NULL Treffer (nachgemessen: 0 statt 2) — obwohl
@@ -116,7 +116,7 @@ export async function getMentionsOf(
 
   const [archiveRows, missionRows, logRows] = await Promise.all([
     sql<(CandidateRow & { category: string })[]>`
-      SELECT slug, title, category, visibility, owner_user_id, source_md,
+      SELECT slug, title, category, owner_user_id, source_md,
              (metadata->'characters' @> ${ref}
               OR metadata->'missions' @> ${ref}
               OR metadata->'participants' @> ${ref}) AS structured
@@ -130,9 +130,8 @@ export async function getMentionsOf(
         )
       ORDER BY title ASC
     `,
-    // Missionen haben keine visibility-Spalte — nur Entwurf/gelöscht filtern.
     sql<CandidateRow[]>`
-      SELECT slug, title, NULL::text AS visibility, owner_user_id, source_md,
+      SELECT slug, title, owner_user_id, source_md,
              false AS structured
       FROM missions
       WHERE deleted_at IS NULL AND is_draft = false
@@ -140,7 +139,7 @@ export async function getMentionsOf(
       ORDER BY title ASC
     `,
     sql<(CandidateRow & { mission_slug: string; mission_title: string })[]>`
-      SELECT ml.slug, ml.title, ml.visibility, ml.owner_user_id, ml.source_md,
+      SELECT ml.slug, ml.title, ml.owner_user_id, ml.source_md,
              false AS structured,
              m.slug AS mission_slug, m.title AS mission_title
       FROM mission_logs ml
@@ -156,7 +155,6 @@ export async function getMentionsOf(
   for (const row of archiveRows) {
     if (row.slug === target.slug) continue;
     if (!isRealMention(row, target)) continue;
-    if (!canView(row.visibility ?? "public", row.owner_user_id, viewer)) continue;
     mentions.push({
       kind: "archive",
       slug: row.slug,
@@ -179,7 +177,6 @@ export async function getMentionsOf(
 
   for (const row of logRows) {
     if (!isRealMention(row, target)) continue;
-    if (!canView(row.visibility ?? "public", row.owner_user_id, viewer)) continue;
     mentions.push({
       kind: "log",
       slug: row.slug,

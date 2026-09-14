@@ -3,7 +3,6 @@ import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import RelationGraph from "@/components/character/RelationGraph";
 import { getRelationGraph } from "@/lib/relations";
-import { getViewer } from "@/lib/visibility";
 
 export const metadata: Metadata = {
   title: "Beziehungen",
@@ -15,12 +14,12 @@ export const metadata: Metadata = {
 // „beziehungen" wäre also nicht mehr erreichbar — bei einem deutschen
 // Sachbegriff als Figurenname ist das ein hinnehmbarer Preis.
 //
-// Nicht gecacht („use cache" fehlt bewusst): der Graph hängt an der
-// Sichtbarkeit des Betrachters (nicht-öffentliche Gespräche), ein geteilter
-// Cache würde ihn quer über Konten ausliefern.
+// Nicht gecacht („use cache" fehlt bewusst): Der Graph ist zwar seit v1.34
+// für alle derselbe (er kennt nur Veröffentlichtes), die Seite selbst bleibt
+// aber dynamisch — die Daten kommen aus mehreren Tabellen, deren Cache-Tags
+// hier nicht sauber zu bündeln wären.
 export default async function BeziehungenPage() {
-  const viewer = await getViewer();
-  const graph = await getRelationGraph(viewer);
+  const graph = await getRelationGraph();
 
   const characterCount = graph.nodes.filter((n) => n.kind === "character").length;
   const npcCount = graph.nodes.length - characterCount;

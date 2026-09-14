@@ -22,7 +22,7 @@ const NPCS = [
     id: 3,
     slug: "npc",
     name: "Barkeeper",
-    visibility: "gm" as const,
+    isDraft: false,
     ownerUserId: null,
   },
 ];

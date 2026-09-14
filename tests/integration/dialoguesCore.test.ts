@@ -5,7 +5,7 @@ import {
   postDialogueMessage,
   editDialogueMessage,
   deleteDialogueMessage,
-  setDialogueVisibility,
+  setDialogueDraft,
   deleteDialogue,
   restoreDialogue,
   completeDialogue,
@@ -344,23 +344,23 @@ describe("deleteDialogueMessage", () => {
   });
 });
 
-describe("setDialogueVisibility", () => {
-  it("lets the creator change visibility", async () => {
+describe("setDialogueDraft", () => {
+  it("lets the creator pull a dialogue back to a draft", async () => {
     const { ownUser, dialogue, entryId } = await setupDialogue();
 
-    const result = await setDialogueVisibility(ownUser.id, entryId, "private");
+    const result = await setDialogueDraft(ownUser.id, entryId, true);
 
     expect(result?.slug).toBe(dialogue.slug);
-    const [row] = await sql<{ visibility: string }[]>`
-      SELECT visibility FROM archive_entries WHERE id = ${entryId}
+    const [row] = await sql<{ is_draft: boolean }[]>`
+      SELECT is_draft FROM archive_entries WHERE id = ${entryId}
     `;
-    expect(row.visibility).toBe("private");
+    expect(row.is_draft).toBe(true);
   });
 
-  it("does not let the partner (non-creator) change visibility", async () => {
+  it("does not let the partner (non-creator) change the state", async () => {
     const { partnerUser, entryId } = await setupDialogue();
 
-    const result = await setDialogueVisibility(partnerUser.id, entryId, "private");
+    const result = await setDialogueDraft(partnerUser.id, entryId, true);
 
     expect(result).toBeNull();
   });
@@ -1059,12 +1059,11 @@ describe("Gespräche mit NPCs", () => {
     // tatsächlich in die EXISTS-Auswertung (jsonb_array_elements) gerät — sonst
     // liefe der Test am kritischen Pfad vorbei.
     await sql`
-      INSERT INTO archive_entries (slug, title, category, visibility, content, dialogue_open, metadata)
+      INSERT INTO archive_entries (slug, title, category, content, dialogue_open, metadata)
       VALUES (
         'kaputt-participants',
         'Kaputt',
         'dialogue',
-        'public',
         '',
         true,
         ${sql.json({ participants: {} })}

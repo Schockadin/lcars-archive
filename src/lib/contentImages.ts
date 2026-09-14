@@ -22,7 +22,6 @@ import {
   canView,
   viewerHasPermission,
   type Viewer,
-  type Visibility,
 } from "@/lib/visibility";
 import {
   OWNER_CONTENT_TYPES,
@@ -88,11 +87,11 @@ function mapRow(row: ContentImageRow): ContentImage {
 }
 
 export interface ContentAccessContext {
-  visibility: Visibility;
+  isDraft: boolean;
   ownerId: number | null;
 }
 
-// Owner-/Sichtbarkeits-Kontext des Inhalts, für den ein Bild hochgeladen
+// Owner-/Entwurfs-Kontext des Inhalts, für den ein Bild hochgeladen
 // werden soll — dieselbe Quelle für die View-Berechtigung des Bild-Proxys
 // (canView, wie contentExport.ts) und die Upload/Lösch-Berechtigung
 // (canManageContentImages unten). Direktes SQL statt einer der bestehenden
@@ -104,32 +103,31 @@ export async function getContentAccessContext(
   contentId: number,
 ): Promise<ContentAccessContext | null> {
   if (contentType === "character") {
-    const [row] = await sql<{ visibility: Visibility; player_id: number | null }[]>`
-      SELECT visibility, player_id FROM characters
+    const [row] = await sql<{ is_draft: boolean; player_id: number | null }[]>`
+      SELECT is_draft, player_id FROM characters
       WHERE id = ${contentId} AND deleted_at IS NULL
     `;
-    return row ? { visibility: row.visibility, ownerId: row.player_id } : null;
+    return row ? { isDraft: row.is_draft, ownerId: row.player_id } : null;
   }
   if (contentType === "mission") {
-    // Missionen haben keine eigene Sichtbarkeits-Sperre (immer öffentlich
-    // lesbar, siehe contentExport.ts/loadMissionExport).
-    const [row] = await sql<{ id: number; owner_user_id: number | null }[]>`
-      SELECT id, owner_user_id FROM missions WHERE id = ${contentId} AND deleted_at IS NULL
-    `;
-    return row ? { visibility: "public", ownerId: row.owner_user_id } : null;
-  }
-  if (contentType === "mission_log") {
-    const [row] = await sql<{ visibility: Visibility; owner_user_id: number | null }[]>`
-      SELECT visibility, owner_user_id FROM mission_logs
+    const [row] = await sql<{ is_draft: boolean; owner_user_id: number | null }[]>`
+      SELECT is_draft, owner_user_id FROM missions
       WHERE id = ${contentId} AND deleted_at IS NULL
     `;
-    return row ? { visibility: row.visibility, ownerId: row.owner_user_id } : null;
+    return row ? { isDraft: row.is_draft, ownerId: row.owner_user_id } : null;
   }
-  const [row] = await sql<{ visibility: Visibility; owner_user_id: number | null }[]>`
-    SELECT visibility, owner_user_id FROM archive_entries
+  if (contentType === "mission_log") {
+    const [row] = await sql<{ is_draft: boolean; owner_user_id: number | null }[]>`
+      SELECT is_draft, owner_user_id FROM mission_logs
+      WHERE id = ${contentId} AND deleted_at IS NULL
+    `;
+    return row ? { isDraft: row.is_draft, ownerId: row.owner_user_id } : null;
+  }
+  const [row] = await sql<{ is_draft: boolean; owner_user_id: number | null }[]>`
+    SELECT is_draft, owner_user_id FROM archive_entries
     WHERE id = ${contentId} AND deleted_at IS NULL AND category != 'dialogue'
   `;
-  return row ? { visibility: row.visibility, ownerId: row.owner_user_id } : null;
+  return row ? { isDraft: row.is_draft, ownerId: row.owner_user_id } : null;
 }
 
 // Wer darf Bilder für diesen Inhalt hochladen/löschen? Spiegelt exakt die

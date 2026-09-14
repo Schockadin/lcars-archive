@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 // Entwürfe) mit Bearbeiten/Löschen/Owner-Zuweisung pro Zeile, neuer
 // GM-Menüpunkt "Missionen" (siehe HeaderUserNav.tsx). Kein
 // Sichtbarkeits-Feld: Missionen haben (anders als Charaktere/Mission-Logs/
-// Archiv-Einträge) keine visibility-Spalte, siehe ActionsMenu.tsx.
+// Archiv-Einträge) keinen Umschalter im Aktionen-Panel, siehe ActionsMenu.tsx.
 export default async function AdminMissionsPage() {
   await requireGM();
 

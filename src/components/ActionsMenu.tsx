@@ -3,7 +3,7 @@ import Link from "next/link";
 import type { Viewer } from "@/lib/visibility";
 import { Character } from "@/types/character";
 import OwnerSelect from "./OwnerSelect";
-import AdminVisibilitySelect from "./AdminVisibilitySelect";
+import AdminContentStateSelect from "./AdminContentStateSelect";
 import ContentLinkToolButton from "@/components/ContentLinkToolButton";
 import DeleteContentButton from "@/components/DeleteContentButton";
 import ContentImageGallery from "@/components/ContentImageGallery";
@@ -20,9 +20,9 @@ import type { OwnerContentType } from "@/app/actions/owner";
 import type { TrashContentType } from "@/lib/adminContent";
 import type { AdminVisibilityContentType } from "@/app/actions/visibility";
 import {
+  contentEditHref,
   dialoguesHref,
   missionHref,
-  missionLogEditHref,
 } from "@/lib/contentRoutes";
 
 // ContentToolType (Autolink/Wikilinks/Format-Buttons) und OwnerContentType
@@ -49,9 +49,10 @@ const IMAGE_CONTENT_TYPE: Record<ContentToolType, ContentImageType> = {
   archiveEntry: "archive_entry",
 };
 
-// Wie OWNER_CONTENT_TYPE oben, aber ohne "mission" — Missionen haben keine
-// visibility-Spalte (immer öffentlich, siehe lib/missions.ts), AdminVisibilitySelect
-// wird für contentType "mission" deshalb gar nicht gerendert.
+// Wie OWNER_CONTENT_TYPE oben, aber ohne "mission" — den Entwurfs-Zustand
+// einer Mission stellt der Missions-Editor (nur Spielleitung/Administration),
+// AdminContentStateSelect wird für contentType "mission" deshalb gar nicht
+// gerendert.
 const VISIBILITY_CONTENT_TYPE: Partial<
   Record<ContentToolType, AdminVisibilityContentType>
 > = {
@@ -76,17 +77,10 @@ interface ActionMenuProps {
   // eigenen Client-Fetch zurück (unverändertes Verhalten).
   followInitialState?: FollowState;
   playerId: number | null;
-  // Optional statt required: Server Components (z.B. der Dialog-Zweig in
-  // archive/[slug]/page.tsx oder die Mission-Log-Detailseite) rendern
-  // ActionsMenu direkt, ohne dass dort ein Editor existiert, der editMode
-  // liest — und dürfen als Server Component keine Inline-Funktion als Prop
-  // übergeben. Der No-op-Default lebt deshalb hier in der Client Component
-  // selbst statt von außen durchgereicht zu werden.
-  onEdit?: () => void;
   // Abgeschlossene Dialoge (archive/[slug]/ArchiveEntryBody.tsx) bleiben
   // vollständig read-only, auch für den ursprünglichen Autor (siehe
-  // DialogueThread.tsx) — dafür gibt es keinen Inline-Editor, der onEdit
-  // liest, der Bearbeiten-Button wäre dort also nur eine tote Schaltfläche.
+  // DialogueThread.tsx) — sie haben keinen Editor, in den der Stift springen
+  // könnte, er wäre dort also nur eine tote Schaltfläche.
   hideEdit?: boolean;
 }
 
@@ -98,7 +92,6 @@ export default function ActionsMenu({
   followType,
   followInitialState,
   playerId,
-  onEdit = () => {},
   hideEdit = false,
 }: ActionMenuProps) {
   const visibilityContentType = VISIBILITY_CONTENT_TYPE[contentType];
@@ -113,16 +106,36 @@ export default function ActionsMenu({
   const isDialogue =
     contentType === "archiveEntry" && "category" in content && content.category === "dialogue";
 
-  // Wer darf diesen Inhalt bearbeiten? Bei Mission/Archiv-Eintrag jeder
-  // Admin, bei Missionslog/Charakter ausschließlich der Owner selbst (kein
-  // Admin-Bypass, siehe updateOwnCharacterBioAction). Sowohl für den
-  // Bearbeiten-Button unten als auch für die Bilder-Galerie genutzt (wer
-  // bearbeiten darf, darf auch Bilder hochladen/löschen).
-  const canManageContent =
-    (contentType !== "missionLog" &&
-      contentType !== "character" &&
-      !!viewer?.permissions.includes("content.moderate")) ||
-    viewer?.userId === playerId;
+  const isOwner = viewer != null && viewer.userId === playerId;
+  const canModerate = !!viewer?.permissions.includes("content.moderate");
+
+  // Wer darf diesen Inhalt BEARBEITEN (der Stift unten)?
+  //
+  //   Charakter/Missionslog — ausschließlich der Owner selbst (kein
+  //     Admin-Bypass, siehe updateOwnCharacterContent).
+  //   Datenbank-Eintrag    — der Owner, dazu die Moderation
+  //     (content.moderate); deren Bearbeiten-Seite hebt dafür den
+  //     Owner-Scope auf (siehe getOwnArchiveEntryForEdit).
+  //   Mission              — Spielleitung und Administration, NICHT der
+  //     Owner allein: Missionen legt und bearbeitet nur an, wer in den
+  //     eigenen Bereich für Missionen kommt (requireOwnGM in
+  //     /user/missions). Ein Stift für einen Owner ohne diese Rolle führte
+  //     nur auf eine gesperrte Seite.
+  const canEditContent =
+    contentType === "mission"
+      ? !!viewer?.permissions.includes("missions.manage") || canModerate
+      : (contentType === "archiveEntry" && canModerate) || isOwner;
+
+  // Wer darf die BILDER dieses Inhalts verwalten? Eine eigene Frage mit einer
+  // eigenen Antwort — sie muss canManageContentImages (src/lib/contentImages.ts)
+  // spiegeln, sonst zeigt die Galerie Knöpfe, die der Server ablehnt: dort
+  // darf immer der Owner, dazu die Moderation bei Mission und
+  // Datenbank-Eintrag. Eine Spielleitung ohne content.moderate bearbeitet
+  // also eine fremde Mission, verwaltet aber nicht deren Bilder.
+  const canManageImages =
+    isOwner ||
+    (canModerate &&
+      (contentType === "mission" || contentType === "archiveEntry"));
 
   // Für den WhatsApp-Teilen-Text im ShareMenu (siehe FollowButtons.tsx) —
   // Character hat "name" statt "title" wie die übrigen drei Inhaltstypen.
@@ -162,11 +175,11 @@ export default function ActionsMenu({
       )}
       {viewer?.permissions.includes("content.moderate") &&
         visibilityContentType &&
-        "visibility" in content && (
-          <AdminVisibilitySelect
+        "isDraft" in content && (
+          <AdminContentStateSelect
             contentType={visibilityContentType}
             id={content.id}
-            initialValue={content.visibility}
+            isDraft={content.isDraft}
           />
         )}
       <div className="flex gap-[5px]">
@@ -194,45 +207,30 @@ export default function ActionsMenu({
             exportSlug={content.slug}
           />
         )}
-        {/* "character" ist hier wie "missionLog" ausgeschlossen: der
-            Bio-Editor ist bewusst reines Owner-Feature ohne Admin-Konzept
-            (siehe CharacterBioEditor.tsx) — sourceMarkdown wird serverseitig
-            nur für den Owner geladen, ein Admin-Klick würde sonst ins Leere
-            laufen. */}
         {!isDialogue && (
           <ContentImageGallery
             contentType={IMAGE_CONTENT_TYPE[contentType]}
             contentId={content.id}
-            canManage={canManageContent}
+            canManage={canManageImages}
           />
         )}
-        {!hideEdit &&
-          canManageContent &&
-          (contentType === "missionLog" ? (
-            // Mission-Logs haben (anders als Charakter/Mission/Archiv-Eintrag)
-            // keinen Inline-Editor auf der Detailseite — die Mission-Log-
-            // Detailseite übergibt deshalb auch gar kein onEdit (bliebe sonst
-            // der No-op-Default). Bearbeiten passiert stattdessen auf der
-            // eigenen Formular-Seite, wie auch in UserContentBrowser.tsx.
-            <Link
-              href={missionLogEditHref(content.id)}
-              className="lcars-icon-btn self-start"
-              aria-label="Bearbeiten"
-              title="Bearbeiten"
-            >
-              <PencilIcon />
-            </Link>
-          ) : (
-            <button
-              type="button"
-              onClick={onEdit}
-              className="lcars-icon-btn self-start"
-              aria-label="Bearbeiten"
-              title="Bearbeiten"
-            >
-              <PencilIcon />
-            </button>
-          ))}
+        {/* Der Stift führt für JEDEN Inhaltstyp in dessen vollen Editor im
+            eigenen Bereich — dort lassen sich Titel und Metadaten mit
+            ändern. Vorher klappte er bei Charakter, Mission und
+            Datenbank-Eintrag einen Inline-Editor auf, der nur den Fließtext
+            bearbeiten konnte; wer den Titel ändern wollte, musste den
+            passenden Editor selbst finden. Nur Mission-Logs sprangen schon
+            immer so, wie es jetzt alle tun. */}
+        {!hideEdit && canEditContent && (
+          <Link
+            href={contentEditHref(contentType, content.id)}
+            className="lcars-icon-btn self-start"
+            aria-label="Bearbeiten"
+            title="Bearbeiten"
+          >
+            <PencilIcon />
+          </Link>
+        )}
         {viewer?.permissions.includes("content.moderate") && (
           <DeleteContentButton
             contentType={trashContentType}

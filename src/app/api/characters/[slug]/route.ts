@@ -19,9 +19,9 @@ export async function GET(_req: Request, { params }: Params) {
       );
     }
 
-    if (character.visibility !== 'public') {
+    if (character.is_draft) {
       const viewer = await getViewer();
-      if (!canView(character.visibility, character.player_id, viewer)) {
+      if (!canView(character.is_draft, character.player_id, viewer)) {
         return NextResponse.json(
           { error: 'Charakter nicht gefunden' },
           { status: 404 }

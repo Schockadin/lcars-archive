@@ -24,7 +24,7 @@ export const DB_TABLE_COLUMNS = {
   characters: [
     "id", "slug", "name", "status", "player_id", "portrait", "species",
     "rank", "bio", "metadata", "source_md", "frontmatter", "created_at",
-    "updated_at", "visibility", "deleted_at", "is_draft", "character_color",
+    "updated_at", "deleted_at", "is_draft", "character_color",
   ],
   missions: [
     "id", "slug", "title", "status", "started_at", "ended_at", "metadata",
@@ -35,13 +35,13 @@ export const DB_TABLE_COLUMNS = {
   mission_logs: [
     "id", "slug", "mission_id", "author_id", "title", "content", "log_date",
     "session_nr", "metadata", "source_md", "frontmatter", "created_at",
-    "updated_at", "owner_user_id", "visibility", "deleted_at", "is_draft",
+    "updated_at", "owner_user_id", "deleted_at", "is_draft",
     "session_id",
   ],
   archive_entries: [
     "id", "slug", "title", "category", "content", "tags", "metadata",
     "source_md", "frontmatter", "created_at", "updated_at", "dialogue_open",
-    "owner_user_id", "visibility", "deleted_at", "is_draft",
+    "owner_user_id", "deleted_at", "is_draft",
   ],
   archive_links: ["source_id", "target_id", "label"],
   dialogue_messages: [
@@ -76,7 +76,7 @@ export const DB_TABLE_COLUMNS = {
     "created_at",
   ],
   content_deletions: [
-    "id", "target_type", "title", "visibility", "owner_user_id",
+    "id", "target_type", "title", "owner_user_id",
     "deleted_by", "deleted_at",
   ],
   content_follows: [
@@ -85,7 +85,7 @@ export const DB_TABLE_COLUMNS = {
   ],
   content_embeddings: [
     "id", "content_type", "content_id", "chunk_index", "chunk_text",
-    "visibility", "owner_id", "is_draft", "is_active", "title", "slug",
+    "owner_id", "is_draft", "is_active", "title", "slug",
     "href", "metadata", "updated_at",
   ],
   news_seen: ["user_id", "target_type", "target_key", "seen_at"],

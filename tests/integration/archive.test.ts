@@ -3,12 +3,14 @@ import sql from "@/lib/db";
 import {
   createArchiveEntry,
   updateOwnArchiveEntryContent,
-  setArchiveEntryVisibility,
+  setArchiveEntryDraft,
   getOwnArchiveEntryForEdit,
   setArchiveEntryOwner,
 } from "@/lib/archive";
+import { getNpcOptions } from "@/lib/archive";
+import { canView } from "@/lib/visibility";
 import { createDialogue } from "@/lib/dialoguesCore";
-import { insertUser, insertCharacter } from "./helpers";
+import { insertUser, insertCharacter, insertNpcEntry } from "./helpers";
 
 function baseEntryInput(
   overrides: Partial<Parameters<typeof createArchiveEntry>[0]> = {},
@@ -18,6 +20,7 @@ function baseEntryInput(
     category: "location" as const,
     tags: [],
     summary: null,
+    aliases: [],
     attributeValues: {},
     referenceValues: {},
     bodyMarkdown: "",
@@ -28,18 +31,18 @@ function baseEntryInput(
 }
 
 describe("createArchiveEntry", () => {
-  it("creates an entry owned by the given user with public default visibility", async () => {
+  it("creates an entry owned by the given user, published by default", async () => {
     const user = await insertUser();
 
     const result = await createArchiveEntry(
       baseEntryInput({ ownerUserId: user.id }),
     );
 
-    const [row] = await sql<{ owner_user_id: number; visibility: string }[]>`
-      SELECT owner_user_id, visibility FROM archive_entries WHERE id = ${result.id}
+    const [row] = await sql<{ owner_user_id: number; is_draft: boolean }[]>`
+      SELECT owner_user_id, is_draft FROM archive_entries WHERE id = ${result.id}
     `;
     expect(row.owner_user_id).toBe(user.id);
-    expect(row.visibility).toBe("public");
+    expect(row.is_draft).toBe(false);
   });
 
   it("resolves a reference field into an archive_links row", async () => {
@@ -121,26 +124,40 @@ describe("updateOwnArchiveEntryContent", () => {
   });
 });
 
-describe("setArchiveEntryVisibility", () => {
-  it("lets the owner change visibility", async () => {
+describe("setArchiveEntryDraft", () => {
+  it("lets the owner pull a published entry back to a draft", async () => {
     const user = await insertUser();
     const entry = await createArchiveEntry(baseEntryInput({ ownerUserId: user.id }));
 
-    const result = await setArchiveEntryVisibility(user.id, entry.id, "private");
+    const result = await setArchiveEntryDraft(user.id, entry.id, true);
 
     expect(result?.slug).toBe(entry.slug);
-    const [row] = await sql<{ visibility: string }[]>`
-      SELECT visibility FROM archive_entries WHERE id = ${entry.id}
+    const [row] = await sql<{ is_draft: boolean }[]>`
+      SELECT is_draft FROM archive_entries WHERE id = ${entry.id}
     `;
-    expect(row.visibility).toBe("private");
+    expect(row.is_draft).toBe(true);
   });
 
-  it("does not let a non-owner change visibility", async () => {
+  it("lets the owner publish a draft straight from the list", async () => {
+    const user = await insertUser();
+    const entry = await createArchiveEntry(
+      baseEntryInput({ ownerUserId: user.id, isDraft: true }),
+    );
+
+    await setArchiveEntryDraft(user.id, entry.id, false);
+
+    const [row] = await sql<{ is_draft: boolean }[]>`
+      SELECT is_draft FROM archive_entries WHERE id = ${entry.id}
+    `;
+    expect(row.is_draft).toBe(false);
+  });
+
+  it("does not let a non-owner change the state", async () => {
     const owner = await insertUser();
     const intruder = await insertUser();
     const entry = await createArchiveEntry(baseEntryInput({ ownerUserId: owner.id }));
 
-    const result = await setArchiveEntryVisibility(intruder.id, entry.id, "private");
+    const result = await setArchiveEntryDraft(intruder.id, entry.id, true);
 
     expect(result).toBeNull();
   });
@@ -225,5 +242,133 @@ describe("getOwnArchiveEntryForEdit", () => {
     const result = await getOwnArchiveEntryForEdit(intruder.id, entry.id);
 
     expect(result).toBeNull();
+  });
+});
+
+// Der Bearbeiten-Stift auf der Leseseite führt seit v1.34 in den vollen
+// Editor — auch für Spielleitung/Administration auf einem fremden Eintrag.
+// Dessen Abfragen heben den Owner-Scope dafür auf (asModerator); das Recht
+// content.moderate prüfen Seite und Action davor.
+describe("Moderation fremder Einträge", () => {
+  it("lädt einen fremden Eintrag nur mit asModerator zum Bearbeiten", async () => {
+    const owner = await insertUser();
+    const moderator = await insertUser();
+    const entry = await createArchiveEntry(
+      baseEntryInput({ ownerUserId: owner.id, title: "Fremder Eintrag" }),
+    );
+
+    expect(await getOwnArchiveEntryForEdit(moderator.id, entry.id)).toBeNull();
+    const asModerator = await getOwnArchiveEntryForEdit(
+      moderator.id,
+      entry.id,
+      true,
+    );
+    expect(asModerator?.title).toBe("Fremder Eintrag");
+  });
+
+  it("speichert einen fremden Eintrag nur mit asModerator", async () => {
+    const owner = await insertUser();
+    const moderator = await insertUser();
+    const entry = await createArchiveEntry(
+      baseEntryInput({ ownerUserId: owner.id, title: "Vorher" }),
+    );
+
+    expect(
+      await updateOwnArchiveEntryContent(
+        moderator.id,
+        entry.id,
+        baseEntryInput({ title: "Ohne Recht" }),
+      ),
+    ).toBeNull();
+
+    const result = await updateOwnArchiveEntryContent(
+      moderator.id,
+      entry.id,
+      baseEntryInput({ title: "Nachher" }),
+      true,
+    );
+    expect(result?.slug).toBe(entry.slug);
+
+    const [row] = await sql<{ title: string; owner_user_id: number }[]>`
+      SELECT title, owner_user_id FROM archive_entries WHERE id = ${entry.id}
+    `;
+    expect(row.title).toBe("Nachher");
+    // Die Moderation ändert den Inhalt, nicht die Eigentümerschaft.
+    expect(row.owner_user_id).toBe(owner.id);
+  });
+});
+
+// Die eine Sichtbarkeitsachse seit v1.34: veröffentlicht oder Entwurf. Was
+// früher „gm" oder „privat" war, ist mit der Migration veröffentlicht — es gibt
+// keine Abfrage mehr, die daran noch filtern könnte.
+describe("getNpcOptions — veröffentlicht oder Entwurf", () => {
+  it("bietet jeden veröffentlichten NPC an, auch anonym", async () => {
+    const npc = await insertNpcEntry({ title: "Wirtin Sareth" });
+
+    const options = await getNpcOptions();
+    const found = options.find((o) => o.id === npc.id);
+
+    expect(found).toMatchObject({ isDraft: false });
+    expect(canView(found!.isDraft, found!.ownerUserId, null)).toBe(true);
+  });
+
+  it("führt einen NPC-Entwurf mit, überlässt das Filtern aber canView", async () => {
+    // Die Abfrage filtert bewusst nicht selbst (siehe getNpcOptions) — sonst
+    // sähe die Owner-Person ihren eigenen Entwurf nicht.
+    const draft = await insertNpcEntry({ title: "Halbfertig", isDraft: true });
+
+    const options = await getNpcOptions();
+    const found = options.find((o) => o.id === draft.id);
+
+    expect(found?.isDraft).toBe(true);
+    expect(canView(found!.isDraft, found!.ownerUserId, null)).toBe(false);
+  });
+});
+
+// Aliase: wie bei Charakteren weitere Namen desselben Eintrags. Sie liegen in
+// metadata und müssen den Weg Anlegen → Bearbeiten-Formular → Speichern
+// unverändert überstehen.
+describe("Aliase eines Datenbank-Eintrags", () => {
+  it("speichert sie beim Anlegen und gibt sie zum Bearbeiten zurück", async () => {
+    const user = await insertUser();
+    const entry = await createArchiveEntry(
+      baseEntryInput({
+        ownerUserId: user.id,
+        title: "Deep Space 12",
+        aliases: ["DS12", "Terok Nor II"],
+      }),
+    );
+
+    const [row] = await sql<{ metadata: { aliases?: string[] } }[]>`
+      SELECT metadata FROM archive_entries WHERE id = ${entry.id}
+    `;
+    expect(row.metadata.aliases).toEqual(["DS12", "Terok Nor II"]);
+
+    const forEdit = await getOwnArchiveEntryForEdit(user.id, entry.id);
+    expect(forEdit?.aliases).toEqual(["DS12", "Terok Nor II"]);
+  });
+
+  it("ersetzt sie beim Speichern der Bearbeitung", async () => {
+    const user = await insertUser();
+    const entry = await createArchiveEntry(
+      baseEntryInput({ ownerUserId: user.id, aliases: ["Alt"] }),
+    );
+
+    await updateOwnArchiveEntryContent(
+      user.id,
+      entry.id,
+      baseEntryInput({ aliases: ["Neu", "Neuer"] }),
+    );
+
+    const forEdit = await getOwnArchiveEntryForEdit(user.id, entry.id);
+    expect(forEdit?.aliases).toEqual(["Neu", "Neuer"]);
+  });
+
+  it("ist ohne Angabe eine leere Liste — nie undefined", async () => {
+    const user = await insertUser();
+    const entry = await createArchiveEntry(baseEntryInput({ ownerUserId: user.id }));
+
+    const forEdit = await getOwnArchiveEntryForEdit(user.id, entry.id);
+    expect(forEdit?.aliases).toEqual([]);
   });
 });

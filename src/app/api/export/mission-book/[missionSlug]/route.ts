@@ -3,9 +3,9 @@
 // statt einer Server Action, damit der Browser den Download über
 // Content-Disposition direkt anstößt.
 //
-// Was in der Akte steht, richtet sich nach der Sichtbarkeit der anfordernden
-// Person — die Filterung passiert in getMissionBook über dasselbe canView wie
-// auf den Inhaltsseiten, nicht erst in der Anzeige.
+// In der Akte stehen ausschließlich veröffentlichte Logbücher (dieselbe
+// Grenze wie die Logbuch-Seiten) — gefiltert wird in getMissionBook, nicht
+// erst in der Anzeige.
 //
 // Nur für Angemeldete, wie schon beim Vorgänger (dem Kampagnenband): eine
 // Akte bündelt einen ganzen Missionsverlauf in einer weiterreichbaren Datei,
@@ -31,7 +31,7 @@ export async function GET(
   const { missionSlug } = await params;
 
   const [book, user, baseUrl] = await Promise.all([
-    getMissionBook(missionSlug, viewer),
+    getMissionBook(missionSlug),
     getUserById(session.userId),
     getBaseUrl(),
   ]);

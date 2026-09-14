@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import sql from "@/lib/db";
 import { getRelationsOf, getRelationGraph } from "@/lib/relations";
-import { makeViewer } from "@/lib/visibility";
 import { insertCharacter, insertNpcEntry } from "./helpers";
 
 // Die dritte Beziehungsquelle: Verlinkungen zwischen Charakteren und NPCs.
@@ -43,7 +42,7 @@ describe("getRelationsOf — Verlinkungen", () => {
       "Kennt [[Wirtin Sareth]] seit Jahren.",
     );
 
-    const relations = await getRelationsOf(character.slug, null);
+    const relations = await getRelationsOf(character.slug);
 
     expect(relations).toHaveLength(1);
     expect(relations[0]).toMatchObject({
@@ -63,7 +62,7 @@ describe("getRelationsOf — Verlinkungen", () => {
     await setSourceMd("characters", "tuvok", "Über [[Wirtin Sareth]].");
     await setSourceMd("archive_entries", "sareth", "Bedient [[Tuvok]] gern.");
 
-    const [relation] = await getRelationsOf("tuvok", null);
+    const [relation] = await getRelationsOf("tuvok");
 
     expect(relation.sharedLinks).toBe(2);
   });
@@ -73,24 +72,23 @@ describe("getRelationsOf — Verlinkungen", () => {
     await insertNpcEntry({ slug: "sareth", title: "Wirtin Sareth" });
     await setCharacterRefs("sareth", [{ slug: "tuvok", name: "Tuvok" }]);
 
-    const [relation] = await getRelationsOf("tuvok", null);
+    const [relation] = await getRelationsOf("tuvok");
 
     expect(relation).toMatchObject({ slug: "sareth", sharedLinks: 1 });
   });
 
-  it("verschweigt einen NPC, den der Betrachter nicht sehen darf", async () => {
+  it("verschweigt einen NPC, der noch ein Entwurf ist", async () => {
+    // Seit v1.34 gibt es keine Zwischenstufe mehr: Ein Entwurf ist für
+    // niemanden ein Knoten — auch nicht für die Spielleitung.
     await insertCharacter({ slug: "tuvok", name: "Tuvok" });
     await insertNpcEntry({
       slug: "sareth",
       title: "Wirtin Sareth",
-      visibility: "gm",
+      isDraft: true,
     });
     await setSourceMd("characters", "tuvok", "Über [[Wirtin Sareth]].");
 
-    expect(await getRelationsOf("tuvok", null)).toEqual([]);
-    // Die Spielleitung sieht dieselbe Verbindung sehr wohl.
-    const asGm = await getRelationsOf("tuvok", makeViewer(1, ["gm"]));
-    expect(asGm).toHaveLength(1);
+    expect(await getRelationsOf("tuvok")).toEqual([]);
   });
 
   it("verlinkt sich nicht selbst und nicht ins Leere", async () => {
@@ -101,7 +99,7 @@ describe("getRelationsOf — Verlinkungen", () => {
       "[[Tuvok]] denkt an [[Die lange Nacht]].",
     );
 
-    expect(await getRelationsOf("tuvok", null)).toEqual([]);
+    expect(await getRelationsOf("tuvok")).toEqual([]);
   });
 });
 
@@ -111,7 +109,7 @@ describe("getRelationGraph — Verlinkungen", () => {
     await insertNpcEntry({ slug: "sareth", title: "Wirtin Sareth" });
     await setSourceMd("characters", "tuvok", "Über [[Wirtin Sareth]].");
 
-    const graph = await getRelationGraph(null);
+    const graph = await getRelationGraph();
 
     expect(graph.nodes.map((n) => n.slug).sort()).toEqual(["sareth", "tuvok"]);
     expect(graph.edges).toEqual([
@@ -133,7 +131,7 @@ describe("getRelationGraph — Verlinkungen", () => {
       VALUES (${a.id}, ${b.id}, 'Verwandte')
     `;
 
-    const graph = await getRelationGraph(null);
+    const graph = await getRelationGraph();
 
     expect(graph.edges).toHaveLength(1);
     expect(graph.edges[0]).toMatchObject({ sharedLinks: 1 });
@@ -143,7 +141,7 @@ describe("getRelationGraph — Verlinkungen", () => {
     await insertCharacter({ slug: "tuvok", name: "Tuvok" });
     await insertNpcEntry({ slug: "sareth", title: "Wirtin Sareth" });
 
-    const graph = await getRelationGraph(null);
+    const graph = await getRelationGraph();
 
     expect(graph.nodes).toEqual([]);
     expect(graph.edges).toEqual([]);

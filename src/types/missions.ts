@@ -61,8 +61,8 @@ export interface MissionDetail {
   updated_at: string;
   ownerUserId: number | null;
   isDraft: boolean;
-  // Roher Markdown-Body der Synopsis (source_md) — Grundlage für die
-  // inline-Bearbeitung auf der Mission-Detailseite (MissionSynopsisEditor).
+  // Roher Markdown-Body der Synopsis (source_md) — Vorbelegung des
+  // Bearbeiten-Formulars (/user/missions/[missionId]/edit).
   sourceMarkdown: string | null;
   participants: MissionParticipant[];
 }
@@ -91,7 +91,6 @@ export interface MissionLogDetail {
   mission_id: number;
   mission_slug: string;
   mission_title: string;
-  visibility: "private" | "gm" | "public";
   ownerUserId: number | null;
   isDraft: boolean;
 }

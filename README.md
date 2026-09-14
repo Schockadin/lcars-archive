@@ -80,9 +80,19 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Client-Panel in `src/app/_shared/NotesPanel.tsx`. Gruppen-Notizen darf
   zusätzlich `content.moderate` löschen, private nie; beim endgültigen Löschen
   eines Inhalts räumt `purgeContent.ts` sie mit ab.
+- **„Meine Inhalte" als eine Liste** (`/user/content`) — Abschnittsüberschrift
+  je Kategorie, Schiene, Karte: derselbe Aufbau wie Chronologie und Datenbank
+  (`ChronoRow`/`ChronoCard`), statt fünf einzeln aufklappbarer `LcarsDataRow`s.
+  Vorgabe ist die Sortierung nach Kategorie (Berichte → Gespräche →
+  Datenbank-Einträge → Missionen), alternativ alphabetisch über alles; Entwürfe
+  stehen in ihrer Kategorie, tragen die Entwurfs-Farbe und lassen sich über den
+  Kategorie-Filter „Nur Entwürfe" zusammen ansehen (vorher eine sechste
+  Klappe darüber). Die Anlegen-Knöpfe darüber öffnen ihr Formular in einem
+  Fenster (`NewContentButtons.tsx`), statt auf eine eigene Seite zu führen.
 - **Eigene Inhalte** — eingeloggte User legen eigene Charaktere, Einsatzberichte,
-  Datenbank-Einträge und Gespräche zwischen Charakteren an, mit Sichtbarkeitsstufen
-  (privat/GM/öffentlich) und einem persönlichen Dashboard (farbcodierter News-Feed,
+  Datenbank-Einträge und Gespräche zwischen Charakteren an — jeweils als
+  **Entwurf** oder **veröffentlicht** (umstellbar direkt in der Liste) — und
+  einem persönlichen Dashboard (farbcodierter News-Feed,
   offene Gespräche, Lesezeichen/Abos). Gespräche können bereits bei der
   Erstellung mehr als einen Gesprächspartner haben (Mehrfachauswahl) und
   jederzeit auch danach um weitere Teilnehmende erweitert werden
@@ -117,8 +127,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `kind: "archive"` und verlinkt damit nach `/archive/<slug>` statt
   `/characters/<slug>`. Welche NPCs jemand angeboten bekommt, entscheidet die
   normale Sichtbarkeitsregel (`canView` mit dem `owner_user_id` des Eintrags):
-  öffentliche alle,
-  intern gehaltene nur mit `content.view_gm`/`content.view_all`. Auch **nachträglich**
+  veröffentlichte alle, Entwürfe nur die eigene Person bzw. `content.view_all`. Auch **nachträglich**
   lassen sich NPCs in ein laufendes Gespräch holen — das darf, wer sie spielt,
   und wird dabei ihr Sprecher.
 - **NPCs anlegen** — unter „Meine Inhalte" gibt es für **jedes eingeloggte
@@ -133,8 +142,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   haben mit `/user/characters` ihren eigenen Bereich, und dort legt man sie an.
 - **Eigene Charaktere & Charakterwerte** — wer mindestens einen verknüpften
   Charakter hat, bekommt im Kopfmenü den Punkt „Charaktere" (`/user/characters`):
-  Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Sichtbarkeit, Öffnen,
-  Löschen und dem Anlegen weiterer Charaktere.
+  Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Veröffentlichen,
+  Öffnen, Löschen und dem Anlegen weiterer Charaktere.
 - **Anlegen als Assistent** (`/user/characters/new`) — vier Schritte:
   Stammdaten, Werte, Biografie, Vorschau. Alle vier liegen in **einem**
   Formular und bleiben im DOM (nur ausgeblendet): das Blättern verliert keine
@@ -267,8 +276,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   wäre nicht prüfbar — hier ist alles eine reine, getestete Funktion. Gezeichnet
   wird als Inline-SVG (`RelationGraph.tsx`), der Rand ergibt sich aus dem
   längsten Namen, damit keine Beschriftung aus dem Bild läuft. Die Seite ist
-  bewusst **nicht** gecacht: der Graph hängt an der Sichtbarkeit des
-  Betrachters.
+  bewusst **nicht** gecacht: Er entsteht aus mehreren Tabellen, deren
+  Cache-Tags sich hier nicht sauber bündeln lassen.
 - **Schwerpunkt-Katalog** — Focuses liegen wie die Talente in einer eigenen
   Tabelle (`focuses`: Name, Disziplin, optionale Erläuterung, `is_custom`),
   gepflegt unter `/gm/focuses`. `UNIQUE (name, discipline)` statt nur über den
@@ -692,13 +701,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   auf der Mission-Detailseite, nur für Angemeldete) packt **eine** Mission in
   eine Datei: Titelblatt mit Zeitraum, Status und Beteiligten, ein
   **Inhaltsverzeichnis**, danach die Beschreibung und jedes Logbuch auf einer
-  eigenen Seite, chronologisch. Der
-  Inhalt richtet sich nach der Sichtbarkeit der anfordernden Person —
-  dieselbe `canView`-Regel wie auf den Inhaltsseiten, angewandt in
-  `src/lib/missionBook.ts`; nicht öffentliche Logbücher sind in der Akte als
-  solche gekennzeichnet, und eine Entwurfs-Mission liefert dieselbe 404 wie
-  ihre Seite. Bewusst ungecacht: die Akte hängt am Betrachter, ein Cache wäre
-  ein Cache je Konto. Layout: `src/lib/pdf/MissionBookPdfDocument.tsx` —
+  eigenen Seite, chronologisch. In der Akte stehen nur **veröffentlichte**
+  Logbücher (`src/lib/missionBook.ts`), und eine Entwurfs-Mission liefert
+  dieselbe 404 wie ihre Seite. Layout: `src/lib/pdf/MissionBookPdfDocument.tsx` —
   dieselbe Aufmachung wie der Charakterbogen (blauer Rahmen, Kopfzeile aus
   Kampagne und Titelreiter, formatierter Markdown-Text), Farben und die
   Auszeichnung der Textstücke gemeinsam in `src/lib/pdf/sheetTheme.tsx`.
@@ -726,11 +731,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Bilder, deren zugehöriger Inhalt bereits gelöscht wurde.
 - **Entwürfe** — Charaktere, Missionen, Missionslogs und Datenbank-Einträge lassen
   sich beim Anlegen/Bearbeiten statt zu veröffentlichen erst als Entwurf
-  speichern (Text-Pflichtfeld entfällt dann); ein Entwurf ist unabhängig von
-  seiner Sichtbarkeitsstufe für niemanden außer der eigenen Person sichtbar,
-  auch nicht für Spielleitung/Administration (Ausnahme: Missionen, die jede
-  Spielleitung sehen kann, da Missionen kein Einzel-Owner-Modell haben), und
-  erscheint bis zur Veröffentlichung nur unter „Meine Inhalte“.
+  speichern (Text-Pflichtfeld entfällt dann) — und ihn später direkt in der
+  Liste veröffentlichen, ohne ihn erneut zu öffnen. Ein Entwurf ist für
+  niemanden außer der eigenen Person sichtbar, auch nicht für die
+  Spielleitung (Ausnahmen: Missionen, die jede Spielleitung sieht, da
+  Missionen kein Einzel-Owner-Modell haben, und `content.view_all` für die
+  Administration), und erscheint bis zur Veröffentlichung nur unter „Meine
+  Inhalte“. **Entwurf oder veröffentlicht ist der einzige
+  Sichtbarkeits-Schalter** — die früheren drei Stufen `private`/`gm`/`public`
+  sind mit v1.34 entfallen (siehe `scripts/migrate-pr71.sql`).
 - **PWA mit Push-Benachrichtigungen und Offline-Betrieb** — installierbar auf
   Mobilgeräten (inkl. maskable Icon), Web-Push für neue Dialog-Nachrichten und
   abonnierte Inhalte. Ein Service Worker macht bereits besuchte Seiten offline
@@ -854,8 +863,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (semantische Vektorsuche + lexikalische Keyword-/Trigramm-Suche) gegen die
   vektorisierten Inhalte (`content_embeddings`, pgvector) gematcht, und Cloudflare
   Workers AI formuliert daraus streamend eine Antwort mit Quellen-Angabe —
-  gefiltert nach den Leserechten des Betrachters (private/GM-Inhalte fließen nur
-  ein, wenn erlaubt). Details siehe „Datenbank-Assistent (RAG)" unter Deployment.
+  gefiltert nach den Leserechten des Betrachters (Entwürfe fließen nur ein,
+  wenn erlaubt). Details siehe „Datenbank-Assistent (RAG)" unter Deployment.
 - **Custom-Markdown-Pipeline** — `remark`/`rehype` wandeln Markdown in HTML um und rendern
   `h2`-Überschriften als LCARS-Data-Rows.
 - **SEO-fertig** — `robots.ts`, `sitemap.ts`, dynamische Metadaten und 404-Seite.
@@ -1239,8 +1248,8 @@ Dieser Abschnitt ist nur für die GM-Sicht und wird nicht veröffentlicht.
   `mission`, `mission-log`, `archive-entry`).
 - **`slug`** muss URL-sicher sein (`a–z`, `0–9`, `-`).
 - **`owner`** (optional, außer bei Charakteren: dort steuert `player` dieselbe
-  Zuordnung) verweist per User-Slug auf den Owner des Inhalts — Grundlage für
-  das Sichtbarkeits-Flag (`private`/`gm`/`public`). Unbekannte/fehlende Werte
+  Zuordnung) verweist per User-Slug auf den Owner des Inhalts — er entscheidet,
+  wer einen Entwurf sieht und wer ihn veröffentlichen darf. Unbekannte/fehlende Werte
   brechen den Import nicht ab, der Inhalt bleibt dann ownerlos. Bei
   Mission-Logs fällt der Owner ohne `owner`-Feld automatisch auf den Spieler
   des `author`-Charakters zurück.
@@ -1452,11 +1461,11 @@ Datenbestands — ein klassisches **RAG** (Retrieval-Augmented Generation):
    zerlegt (`src/lib/embeddings.ts`), per **OpenAI** `text-embedding-3-small`
    (volle 1536 Dimensionen) eingebettet und in der Tabelle
    **`content_embeddings`** (Extension **pgvector**) abgelegt. RBAC-Felder
-   (`visibility`/`owner_id`/`is_draft`/`is_active`) sind auf der Embedding-Zeile
+   (`owner_id`/`is_draft`/`is_active`) sind auf der Embedding-Zeile
    **denormalisiert**, damit die Suche ohne Join filtern kann (gleiche Logik wie
    `canView()`). Die Vektoren werden als `'[…]'::vector`-Literal inline gecastet
    (kein pgvector-npm-Paket, `prepare:false`-kompatibel).
-2. **Aktualisierung.** Content-Mutationen (Anlegen/Bearbeiten/Sichtbarkeit/
+2. **Aktualisierung.** Content-Mutationen (Anlegen/Bearbeiten/Veröffentlichen/
    Owner/Soft-Delete/Restore) stoßen ein **Fire-and-forget**-Re-Embedding an
    (`src/lib/embeddingSync.ts`) — ohne `OPENAI_API_KEY` still übersprungen. Der
    endgültige Purge räumt `content_embeddings` mit ab.

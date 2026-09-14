@@ -79,12 +79,12 @@ export default function TutorialPage() {
                 erreichbar über das Lupen-Symbol im Menü).
               </p>
               <p>
-                Manche Inhalte sind nicht öffentlich: Jeder Eintrag hat eine
-                Sichtbarkeitsstufe — <strong>Öffentlich</strong> (alle),{" "}
-                <strong>GM</strong> (nur Spielleitung + der/die Ersteller:in)
-                oder <strong>Privat</strong> (nur der/die Ersteller:in).
-                Nicht-öffentliche Inhalte sind für dich als Besucher:in einfach
-                nicht vorhanden.
+                Jeder Eintrag ist entweder <strong>veröffentlicht</strong> oder
+                ein <strong>Entwurf</strong>. Veröffentlichtes kannst du lesen,
+                auch ohne Konto; ein Entwurf existiert nur für die Person, die
+                ihn schreibt. Die früheren drei Stufen „Öffentlich/GM/Privat“
+                gibt es nicht mehr — was fertig ist, gehört allen, was noch
+                nicht fertig ist, niemandem sonst.
               </p>
               <p>
                 Ein eigenes Konto kannst du dir nicht selbst anlegen — Zugänge
@@ -273,13 +273,13 @@ export default function TutorialPage() {
                   <strong>Spielleitung (GM)</strong> — verwaltet Missionen,
                   weist Charaktere Spieler:innen zu und nutzt die
                   Admin-Werkzeuge an Inhalten (siehe Abschnitt „Für Spielleitung
-                  & Admins“), aber keine Nutzerverwaltung — private Inhalte
-                  anderer bleiben ihr ebenfalls verborgen.
+                  & Admins“), aber keine Nutzerverwaltung — fremde Entwürfe
+                  bleiben ihr ebenfalls verborgen.
                 </li>
                 <li>
                   <strong>Spieler:in</strong> — legt eigene Charaktere,
                   Einsatzberichte, Gespräche und Datenbank-Einträge an und
-                  verwaltet deren Sichtbarkeit.
+                  entscheidet, wann sie veröffentlicht werden.
                 </li>
                 <li>
                   <strong>Betrachter:in</strong> — technisch identisch zu
@@ -326,8 +326,16 @@ export default function TutorialPage() {
                 <strong>„Charaktere“</strong> und{" "}
                 <strong>„Einstellungen“</strong>) findest du zwei klar getrennte
                 Bereiche: <strong>„Neue Inhalte“</strong> mit den
-                Anlegen-Knöpfen und <strong>„Inhalte verwalten“</strong>, wo
-                alles auftaucht, was dir bereits gehört:
+                Anlegen-Knöpfen — jeder öffnet sein Formular in einem Fenster
+                über der Liste, sodass du beim Abbrechen wieder in deiner
+                Übersicht stehst — und darunter die Liste alles dessen, was dir
+                bereits gehört. Sie ist wie Chronologie und Datenbank gebaut:
+                eine Überschrift je Kategorie, darunter die Einträge an der
+                Schiene. Sortiert wird in der Vorgabe nach Kategorie,
+                wahlweise alphabetisch über alles; Entwürfe stehen farblich
+                markiert in ihrer Kategorie und lassen sich über den Filter{" "}
+                <strong>„Nur Entwürfe“</strong> zusammen ansehen. Anlegen darfst
+                du:
               </p>
               <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
                 <li>
@@ -349,11 +357,11 @@ export default function TutorialPage() {
                 </li>
               </ul>
               <p>
-                Bei jedem eigenen Eintrag legst du die Sichtbarkeit fest:{" "}
-                <strong>Privat</strong> (nur du), <strong>GM</strong> (du +
-                Spielleitung) oder <strong>Öffentlich</strong> (alle) — änderbar
-                jederzeit über das Dropdown neben dem Eintrag in „Meine
-                Inhalte“. Direkt daneben findest du zwei Symbol-Knöpfe zum{" "}
+                Bei jedem eigenen Eintrag entscheidest du über das Dropdown
+                daneben, ob er ein <strong>Entwurf</strong> bleibt oder{" "}
+                <strong>veröffentlicht</strong> ist — jederzeit umstellbar, ohne
+                den Eintrag erst zu öffnen. Direkt daneben findest du zwei
+                Symbol-Knöpfe zum{" "}
                 <strong>Bearbeiten</strong> (Stift) und <strong>Löschen</strong>{" "}
                 (Mülleimer) — Löschen steht bei allen fünf Inhaltstypen zur
                 Verfügung, auch bei eigenen Charakteren, Missionen (nur
@@ -364,8 +372,8 @@ export default function TutorialPage() {
                 <strong>Deine Charaktere</strong> haben einen eigenen Menüpunkt:
                 Sobald mindestens ein Charakter mit deinem Konto verknüpft ist,
                 erscheint oben <strong>„Charaktere“</strong>. Dort stehen alle
-                deine Charaktere (auch Entwürfe) mit Knöpfen für Sichtbarkeit,
-                Öffnen und Löschen — und du kannst weitere anlegen.
+                deine Charaktere (auch Entwürfe) mit Knöpfen zum
+                Veröffentlichen, Öffnen und Löschen — und du kannst weitere anlegen.
               </p>
               <p>
                 <strong>Einen neuen Charakter</strong> legst du in vier
@@ -587,19 +595,20 @@ export default function TutorialPage() {
                 eines Einsatzberichts oder eines Datenbank-Eintrags kannst du
                 das Formular statt zu veröffentlichen auch erst als{" "}
                 <strong>Entwurf</strong> speichern (Checkbox unter dem Textfeld)
-                — der Text ist dann nicht mehr Pflicht. Ein Entwurf bleibt
-                unabhängig von seiner Sichtbarkeitsstufe für niemanden außer dir
-                sichtbar, nicht einmal für Spielleitung oder Administration
+                — der Text ist dann nicht mehr Pflicht. Ein Entwurf bleibt für
+                niemanden außer dir sichtbar, nicht einmal für die Spielleitung
                 (Ausnahme: Missionen sehen alle aus der Spielleitung, da sie
                 kein Einzel-Owner-Modell haben), erscheint aber bereits unter
                 „Meine Inhalte“ bzw. „Charaktere“, dort deutlich markiert.
               </p>
               <p>
-                Mission-Synopsen, Datenbank-Einträge und Charakter-Biografien
-                lassen sich zusätzlich{" "}
-                <strong>direkt auf ihrer Detailseite</strong> bearbeiten
-                („Bearbeiten“-Knopf über dem Text) — ohne Umweg über ein
-                separates Formular.
+                Auch auf der Leseseite eines Inhalts führt der{" "}
+                <strong>Stift</strong> (im aufklappbaren Feld „Aktionen &amp;
+                Verwaltung“ am Fuß des Textes) direkt in dessen Editor — und
+                zwar in denselben, in dem auch Titel, Kategorie, Tags und
+                Metadaten dranhängen. Früher öffnete er dort nur ein Feld für
+                den Fließtext; wer den Titel ändern wollte, musste den Eintrag
+                in „Meine Inhalte“ erst wiederfinden.
               </p>
               <p>
                 <strong>Gespräche</strong> sind ein eigener Inhaltstyp mit ein
@@ -830,7 +839,8 @@ export default function TutorialPage() {
               </p>
               <p>
                 Zurückgeholt wird dabei nur der <strong>Fließtext</strong> —
-                Titel, Stammdaten und Sichtbarkeit bleiben unverändert. Der
+                Titel, Stammdaten und der Veröffentlichungs-Zustand bleiben
+                unverändert. Der
                 Stand, den du gerade ersetzt, geht nicht verloren: Er wandert
                 selbst als neue Fassung in die Historie, du kannst ein
                 Wiederherstellen also wieder rückgängig machen. Eine neue
@@ -1005,8 +1015,9 @@ export default function TutorialPage() {
                 Wer sich das Tippen der Klammern sparen will, nutzt beim
                 Speichern das Kästchen <strong>„Automatisch verlinken“</strong>{" "}
                 unter dem Textfeld: Es durchsucht deinen Text nach bekannten
-                Charakter-Namen (inkl. Aliasen), Missions- und
-                Datenbank-Eintrag-Titeln und verlinkt <strong>jede</strong>{" "}
+                Charakter-Namen, Missions-Titeln und Datenbank-Eintrag-Titeln
+                — bei Charakteren und Datenbank-Einträgen zusätzlich unter ihren{" "}
+                <strong>Aliasen</strong> — und verlinkt <strong>jede</strong>{" "}
                 Erwähnung automatisch. Bei <strong>neuen</strong> Inhalten ist
                 dieses Kästchen bereits vorausgewählt; beim Bearbeiten
                 bestehender Inhalte ist es standardmäßig aus. Codeblöcke,

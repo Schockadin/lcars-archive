@@ -71,7 +71,7 @@ export async function createDialogueAction(
   // diese Person sie überhaupt sehen darf; als EIGENER Sprecher-Charakter nur
   // denen, die NPCs spielen (Spielleitung/Administration).
   const npcs = (await getNpcOptions()).filter((npc) =>
-    canView(npc.visibility, npc.ownerUserId, viewer),
+    canView(npc.isDraft, npc.ownerUserId, viewer),
   );
   const ownCharacters = await getCharactersForUser(session.userId);
   const ownIsNpc = ownSpeaker.kind === "npc";

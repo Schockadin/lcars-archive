@@ -20,7 +20,7 @@ import { logCaughtError } from "@/lib/errorLog";
 // Fire-and-forget-Re-Embedding (RAG-Index) — siehe src/lib/embeddingSync.ts.
 import {
   syncEmbeddings,
-  syncEmbeddingVisibility,
+  syncEmbeddingDraft,
   syncEmbeddingActive,
   syncEmbeddingOwner,
   syncMissionLogsActiveByMission,
@@ -94,7 +94,7 @@ export async function getAllMissions(): Promise<MissionPreview[]> {
 // Einzel-Owner-Bearbeitungsmodell (jeder GM/Admin darf jede Mission
 // bearbeiten, siehe missionAction), ein Mission-Entwurf ist deshalb für
 // jeden GM/Admin sichtbar statt nur für den ursprünglichen Ersteller (siehe
-// canViewDraft-Kommentar in missions/[missionSlug]/page.tsx für dieselbe
+// canView-Kommentar in missions/[missionSlug]/page.tsx für dieselbe
 // Abweichung auf der Detailseite).
 export async function getAllMissionsIncludingDrafts(): Promise<
   MissionPreview[]
@@ -508,12 +508,11 @@ export interface UpdateMissionSynopsisResult {
   metadata: MissionMetaData;
 }
 
-// Nur-Synopsis-Bearbeitung (inline auf /chronologie/mission/[slug],
-// MissionSynopsisEditor)
-// — Titel/Status/Zeitraum/Tags bleiben unangetastet, deshalb reicht slug +
-// die aktualisierte metadata als Rückgabe. title zusätzlich (nicht nur slug)
-// für notifyMissionSubscribers im Aufrufer (actions/missions.ts), der sonst
-// eine zweite Query bräuchte.
+// Nur-Synopsis-Bearbeitung — für das Zurückholen einer älteren Fassung
+// (app/actions/revisions.ts) und die Inhalts-Werkzeuge: Titel/Status/
+// Zeitraum/Tags bleiben unangetastet, deshalb reicht slug + die
+// aktualisierte metadata als Rückgabe. title zusätzlich (nicht nur slug) für
+// Benachrichtigungen im Aufrufer, der sonst eine zweite Query bräuchte.
 export async function updateMissionSynopsis(
   missionId: number,
   bodyMarkdown: string,
@@ -677,7 +676,7 @@ export async function getLogsByMissionId(
           c.slug AS author_slug
         FROM mission_logs ml
         LEFT JOIN characters c ON c.id = ml.author_id
-        WHERE ml.mission_id = ${missionId} AND ml.visibility = 'public' AND ml.deleted_at IS NULL
+        WHERE ml.mission_id = ${missionId} AND ml.deleted_at IS NULL
           AND ml.is_draft = false
         ORDER BY ml.session_nr DESC NULLS LAST, ml.created_at DESC
       `;
@@ -704,7 +703,6 @@ export async function getLogBySlug(
           m.id    AS mission_id,
           m.slug  AS mission_slug,
           m.title AS mission_title,
-          ml.visibility,
           ml.owner_user_id AS "ownerUserId",
           ml.is_draft AS "isDraft"
         FROM mission_logs ml
@@ -817,10 +815,10 @@ export async function setMissionLogOwner(
   return rows[0] ?? null;
 }
 
-export async function setMissionLogVisibility(
+export async function setMissionLogDraft(
   userId: number,
   logId: number,
-  visibility: "private" | "gm" | "public",
+  isDraft: boolean,
 ): Promise<{
   slug: string;
   missionId: number;
@@ -838,32 +836,32 @@ export async function setMissionLogVisibility(
     }[]
   >`
     UPDATE mission_logs ml
-    SET visibility = ${visibility}, updated_at = NOW()
+    SET is_draft = ${isDraft}, updated_at = NOW()
     FROM characters c, missions m
     WHERE ml.id = ${logId} AND c.id = ml.author_id AND c.player_id = ${userId}
       AND m.id = ml.mission_id
     RETURNING ml.slug, ml.mission_id AS "missionId", m.slug AS "missionSlug",
               ml.title, ml.source_md AS "sourceMarkdown"
   `;
-  if (rows[0]) syncEmbeddingVisibility("mission_log", logId, visibility);
+  if (rows[0]) syncEmbeddingDraft("mission_log", logId, isDraft);
   return rows[0] ?? null;
 }
 
-// Admin-Sichtbarkeits-Verwaltung (ActionsMenu.tsx/AdminVisibilitySelect.tsx):
-// anders als setMissionLogVisibility oben NICHT auf den Autor-Charakter des
-// aufrufenden Users gescoped (nur admin darf das, geprüft in
-// setVisibilityAdminAction) — mirrort setMissionLogOwner oben.
-export async function setMissionLogVisibilityAdmin(
+// Moderation (ActionsMenu.tsx/AdminContentStateSelect.tsx): anders als
+// setMissionLogDraft oben NICHT auf den Autor-Charakter des aufrufenden
+// Users gescoped (nur mit content.moderate, geprüft in
+// setContentStateAdminAction) — mirrort setMissionLogOwner oben.
+export async function setMissionLogDraftAdmin(
   logId: number,
-  visibility: "private" | "gm" | "public",
+  isDraft: boolean,
 ): Promise<{ slug: string; missionId: number } | null> {
   const rows = await sql<{ slug: string; missionId: number }[]>`
     UPDATE mission_logs
-    SET visibility = ${visibility}, updated_at = NOW()
+    SET is_draft = ${isDraft}, updated_at = NOW()
     WHERE id = ${logId}
     RETURNING slug, mission_id AS "missionId"
   `;
-  if (rows[0]) syncEmbeddingVisibility("mission_log", logId, visibility);
+  if (rows[0]) syncEmbeddingDraft("mission_log", logId, isDraft);
   return rows[0] ?? null;
 }
 
@@ -940,7 +938,6 @@ export async function updateMissionLogContent(
   slug: string;
   missionId: number;
   missionSlug: string;
-  visibility: "private" | "gm" | "public";
   wasDraft: boolean;
   authorSlug: string;
   authorName: string;
@@ -955,7 +952,6 @@ export async function updateMissionLogContent(
       slug: string;
       missionId: number;
       missionSlug: string;
-      visibility: "private" | "gm" | "public";
       wasDraft: boolean;
       authorSlug: string;
       authorName: string;
@@ -975,7 +971,7 @@ export async function updateMissionLogContent(
     WHERE ml.id = ${logId} AND c.id = ml.author_id AND c.player_id = ${userId}
       AND m.id = ml.mission_id
     RETURNING ml.slug, ml.mission_id AS "missionId", m.slug AS "missionSlug",
-              ml.visibility, old.is_draft AS "wasDraft",
+              old.is_draft AS "wasDraft",
               c.slug AS "authorSlug", c.name AS "authorName"
   `;
   if (rows[0]) syncEmbeddings("mission_log", logId);
@@ -998,7 +994,6 @@ export async function deleteMissionLog(
       slug: string;
       missionId: number;
       title: string;
-      visibility: string;
       ownerUserId: number | null;
       isDraft: boolean;
     }[]
@@ -1010,7 +1005,7 @@ export async function deleteMissionLog(
       AND c.id = ml.author_id AND c.player_id = ${userId}
       AND ml.deleted_at IS NULL
     RETURNING ml.slug, ml.mission_id AS "missionId",
-              ml.title, ml.visibility, ml.owner_user_id AS "ownerUserId",
+              ml.title, ml.owner_user_id AS "ownerUserId",
               ml.is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
@@ -1025,8 +1020,8 @@ export async function deleteMissionLog(
   // dem Owner sichtbar, ihr Löschen darf also nicht im News-Feed auftauchen.
   if (row && !row.isDraft) {
     await sql`
-      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
-      VALUES ('mission_log', ${row.title}, ${row.visibility}, ${row.ownerUserId}, ${userId})
+      INSERT INTO content_deletions (target_type, title, owner_user_id, deleted_by)
+      VALUES ('mission_log', ${row.title}, ${row.ownerUserId}, ${userId})
     `;
   }
   return row;
@@ -1065,7 +1060,6 @@ export async function deleteMissionLogAsAdmin(
       slug: string;
       missionId: number;
       title: string;
-      visibility: string;
       ownerUserId: number | null;
       isDraft: boolean;
     }[]
@@ -1074,7 +1068,7 @@ export async function deleteMissionLogAsAdmin(
     SET deleted_at = NOW()
     WHERE id = ${logId} AND deleted_at IS NULL
     RETURNING slug, mission_id AS "missionId",
-              title, visibility, owner_user_id AS "ownerUserId", is_draft AS "isDraft"
+              title, owner_user_id AS "ownerUserId", is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
   if (row) {
@@ -1083,8 +1077,8 @@ export async function deleteMissionLogAsAdmin(
   }
   if (row && !row.isDraft) {
     await sql`
-      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
-      VALUES ('mission_log', ${row.title}, ${row.visibility}, ${row.ownerUserId}, ${deletedByUserId})
+      INSERT INTO content_deletions (target_type, title, owner_user_id, deleted_by)
+      VALUES ('mission_log', ${row.title}, ${row.ownerUserId}, ${deletedByUserId})
     `;
   }
   return row;
@@ -1124,13 +1118,11 @@ export async function deleteMission(
     const row = rows[0] ?? null;
     if (!row) return null;
 
-    // Missionen haben keine visibility-Spalte (immer öffentlich) — visibility
-    // bleibt NULL, getRecentDeletions behandelt das wie live Missionen.
     // Entwürfe ausgenommen (waren für niemanden außer GM/Admin sichtbar).
     if (!row.isDraft) {
       await tx`
-        INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
-        VALUES ('mission', ${row.title}, NULL, ${row.ownerUserId}, ${deletedByUserId})
+        INSERT INTO content_deletions (target_type, title, owner_user_id, deleted_by)
+        VALUES ('mission', ${row.title}, ${row.ownerUserId}, ${deletedByUserId})
       `;
     }
 
@@ -1235,8 +1227,7 @@ export async function getAllLogPaths(): Promise<LogPath[]> {
         ml.updated_at::text AS updated_at
       FROM mission_logs ml
       JOIN missions m ON m.id = ml.mission_id
-      WHERE ml.visibility = 'public' AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
-        AND ml.is_draft = false
+      WHERE ml.is_draft = false AND ml.deleted_at IS NULL AND m.deleted_at IS NULL
     `;
   return rows;
 }

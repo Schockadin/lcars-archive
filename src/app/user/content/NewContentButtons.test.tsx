@@ -1,0 +1,110 @@
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent } from "@testing-library/react";
+import NewContentButtons, { type NewContentData } from "./NewContentButtons";
+
+// Die vier Formulare ziehen ihre Server-Actions und damit die Datenschicht
+// nach — geprüft wird hier, WELCHES Formular ein Knopf öffnet, nicht dessen
+// Inhalt (gleiches Muster wie MissionSynopsis.test.tsx).
+vi.mock("@/app/user/mission-logs/new/NewMissionLogForm", () => ({
+  default: () => <div data-testid="form-missionLog" />,
+}));
+vi.mock("@/app/user/dialogues/new/CreateDialogueForm", () => ({
+  default: () => <div data-testid="form-dialogue" />,
+}));
+vi.mock("@/app/user/archive/new/NewArchiveEntryForm", () => ({
+  default: ({ initialCategory }: { initialCategory?: string }) => (
+    <div data-testid="form-archive" data-category={initialCategory} />
+  ),
+}));
+vi.mock("@/app/user/missions/new/NewMissionForm", () => ({
+  default: () => <div data-testid="form-mission" />,
+}));
+
+function data(overrides: Partial<NewContentData> = {}): NewContentData {
+  return {
+    userId: 1,
+    isAdminOrGM: false,
+    missionLog: {
+      ownCharacters: [{ id: 1, slug: "tuvok", name: "Tuvok" }],
+      missions: [{ slug: "deneb", title: "Deneb" }],
+      defaultSessionNr: 3,
+      defaultLogDate: "2400-01-01",
+    },
+    dialogue: {
+      ownCharacters: [{ id: 1, slug: "tuvok", name: "Tuvok" }],
+      partnerCharacters: [],
+      npcs: [],
+      canPlayNpcs: false,
+      gms: [],
+      locations: [],
+      defaultLogDate: "2400-01-01",
+    },
+    mission: { defaultStartedAt: "2400-01-01", characters: [] },
+    ...overrides,
+  };
+}
+
+describe("NewContentButtons", () => {
+  it("öffnet jeden Inhaltstyp in einem Fenster statt auf einer eigenen Seite", () => {
+    render(<NewContentButtons data={data()} />);
+
+    // Vorher waren es Links auf /user/mission-logs/new & Co. — die Seiten
+    // gibt es weiterhin, hier führt der Weg aber nicht mehr weg von der Liste.
+    expect(screen.queryByRole("link")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Neuer Missionslog" }));
+    expect(screen.getByRole("dialog")).toHaveAttribute(
+      "aria-label",
+      "Neuen Missionslog anlegen",
+    );
+    expect(screen.getByTestId("form-missionLog")).toBeInTheDocument();
+  });
+
+  it("legt einen NPC im Datenbank-Formular mit vorgewählter Kategorie an", () => {
+    render(<NewContentButtons data={data()} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Neuer NPC" }));
+
+    expect(screen.getByTestId("form-archive")).toHaveAttribute(
+      "data-category",
+      "npc",
+    );
+  });
+
+  it("schließt das Fenster wieder", () => {
+    render(<NewContentButtons data={data()} />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Neuer Datenbank-Eintrag" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Schließen" }));
+
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("zeigt nur die Knöpfe, für die es auch ein Formular gibt", () => {
+    // Ohne eigenen veröffentlichten Charakter kein Log, ohne Spielleitung
+    // keine Mission — die Seite reicht dann gar keine Daten dafür durch.
+    render(
+      <NewContentButtons
+        data={data({ missionLog: null, dialogue: null, mission: null })}
+      />,
+    );
+
+    expect(screen.queryByRole("button", { name: "Neuer Missionslog" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Neues Gespräch" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Neue Mission" })).toBeNull();
+    // Datenbank-Einträge darf jeder eingeloggte User anlegen.
+    expect(
+      screen.getByRole("button", { name: "Neuer Datenbank-Eintrag" }),
+    ).toBeInTheDocument();
+  });
+
+  it("bietet keinen Knopf für einen neuen Charakter", () => {
+    // Charaktere entstehen im Assistenten unter /user/characters — er führt
+    // über mehrere Schritte und gehört nicht in ein Fenster.
+    render(<NewContentButtons data={data()} />);
+
+    expect(screen.queryByText(/Charakter/)).toBeNull();
+  });
+});

@@ -2,12 +2,14 @@ import { describe, it, expect } from "vitest";
 import {
   CHRONOLOGY_PATH,
   archiveEditHref,
+  archiveListHref,
   archiveHref,
   characterEditHref,
   characterHref,
   characterLogsHref,
   characterSheetHref,
   dialogueHref,
+  contentEditHref,
   missionEditHref,
   missionLogEditHref,
   MISSION_PATH,
@@ -44,6 +46,24 @@ describe("contentRoutes", () => {
     expect(missionEditHref(7)).toBe("/user/missions/7/edit");
     expect(missionLogEditHref(7)).toBe("/user/mission-logs/7/edit");
     expect(archiveEditHref(7)).toBe("/user/archive/7/edit");
+  });
+
+  it("führt aus einem Eintrag zurück in seine Kategorie-Liste", () => {
+    // Der Zurück-Link der Eintragsseite — wie „‹ Missionen" auf der
+    // Missionsseite zeigt er auf die Liste, aus der der Eintrag stammt.
+    expect(archiveListHref("person")).toBe("/archive?cat=person");
+    expect(archiveListHref(null)).toBe("/archive");
+    expect(archiveListHref()).toBe("/archive");
+  });
+
+  it("führt den Bearbeiten-Stift jedes Inhaltstyps auf dessen Editor", () => {
+    // Der Stift auf den Leseseiten (ActionsMenu.tsx) springt seit v1.34 für
+    // ALLE vier Typen in den vollen Editor — vorher klappten drei davon nur
+    // einen Inline-Editor für den Fließtext auf.
+    expect(contentEditHref("character", 7)).toBe(characterEditHref(7));
+    expect(contentEditHref("mission", 7)).toBe(missionEditHref(7));
+    expect(contentEditHref("missionLog", 7)).toBe(missionLogEditHref(7));
+    expect(contentEditHref("archiveEntry", 7)).toBe(archiveEditHref(7));
   });
 
   it("fällt ohne Kategorie auf die ungefilterte Chronologie zurück", () => {

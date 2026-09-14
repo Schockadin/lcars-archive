@@ -30,7 +30,7 @@ import { isUniqueViolation } from "@/lib/users";
 // src/lib/embeddingSync.ts (überspringt still ohne OPENAI_API_KEY).
 import {
   syncEmbeddings,
-  syncEmbeddingVisibility,
+  syncEmbeddingDraft,
   syncEmbeddingActive,
   syncEmbeddingOwner,
   syncCharacterEmbeddingsOwnerCleared,
@@ -118,7 +118,7 @@ export async function getCharacterListItems(): Promise<CharacterListItem[]> {
           ORDER BY i.created_at ASC, i.id ASC
           LIMIT 1
         ) img ON TRUE
-        WHERE c.visibility = 'public' AND c.deleted_at IS NULL AND c.is_draft = false
+        WHERE c.deleted_at IS NULL AND c.is_draft = false
         ORDER BY
           CASE c.status
             WHEN 'active'   THEN 1
@@ -167,7 +167,7 @@ export async function getAllCharacters(): Promise<Character[]> {
   const rows = await sql<Character[]>`
         SELECT *
         FROM characters
-        WHERE visibility = 'public' AND deleted_at IS NULL AND is_draft = false
+        WHERE deleted_at IS NULL AND is_draft = false
         ORDER BY
           CASE status
             WHEN 'active'   THEN 1
@@ -344,13 +344,13 @@ export async function unassignCharactersFromUser(
   syncCharacterEmbeddingsOwnerCleared(userId);
 }
 
-// Nur der Owner (player_id) darf die Sichtbarkeit ändern — ein fremdes/
-// gefälschtes id trifft dann einfach 0 Zeilen (gleiches Prinzip wie
+// Nur der Owner (player_id) darf veröffentlichen oder zurückziehen — ein
+// fremdes/gefälschtes id trifft dann einfach 0 Zeilen (gleiches Prinzip wie
 // assignCharacterToUser oben).
-export async function setCharacterVisibility(
+export async function setCharacterDraft(
   userId: number,
   characterId: number,
-  visibility: "private" | "gm" | "public",
+  isDraft: boolean,
 ): Promise<{
   slug: string;
   name: string;
@@ -360,29 +360,29 @@ export async function setCharacterVisibility(
     { slug: string; name: string; sourceMarkdown: string | null }[]
   >`
     UPDATE characters
-    SET visibility = ${visibility}, updated_at = NOW()
+    SET is_draft = ${isDraft}, updated_at = NOW()
     WHERE id = ${characterId} AND player_id = ${userId}
     RETURNING slug, name, source_md AS "sourceMarkdown"
   `;
-  if (rows[0]) syncEmbeddingVisibility("character", characterId, visibility);
+  if (rows[0]) syncEmbeddingDraft("character", characterId, isDraft);
   return rows[0] ?? null;
 }
 
-// Admin-Sichtbarkeits-Verwaltung (ActionsMenu.tsx/AdminVisibilitySelect.tsx):
-// anders als setCharacterVisibility oben NICHT auf den Owner gescoped (nur
-// admin darf das, geprüft in setVisibilityAdminAction) — mirrort
+// Moderation (ActionsMenu.tsx/AdminContentStateSelect.tsx): anders als
+// setCharacterDraft oben NICHT auf den Owner gescoped (nur mit
+// content.moderate, geprüft in setContentStateAdminAction) — mirrort
 // setOwnerAction/assignCharacterToUser in src/app/actions/owner.ts.
-export async function setCharacterVisibilityAdmin(
+export async function setCharacterDraftAdmin(
   characterId: number,
-  visibility: "private" | "gm" | "public",
+  isDraft: boolean,
 ): Promise<{ slug: string } | null> {
   const rows = await sql<{ slug: string }[]>`
     UPDATE characters
-    SET visibility = ${visibility}, updated_at = NOW()
+    SET is_draft = ${isDraft}, updated_at = NOW()
     WHERE id = ${characterId}
     RETURNING slug
   `;
-  if (rows[0]) syncEmbeddingVisibility("character", characterId, visibility);
+  if (rows[0]) syncEmbeddingDraft("character", characterId, isDraft);
   return rows[0] ?? null;
 }
 
@@ -396,7 +396,6 @@ export interface UserContentLog {
   mission_title: string;
   character_slug: string;
   character_name: string;
-  visibility: "private" | "gm" | "public";
   is_draft: boolean;
 }
 
@@ -410,7 +409,7 @@ export async function getLogsForUser(
   return sql<UserContentLog[]>`
     SELECT
       ml.id, ml.slug, ml.title, ml.session_nr, ml.log_date::text AS log_date,
-      m.slug AS mission_slug, m.title AS mission_title, ml.visibility,
+      m.slug AS mission_slug, m.title AS mission_title,
       c.slug AS character_slug, c.name AS character_name, ml.is_draft
     FROM mission_logs ml
     JOIN characters c ON c.id = ml.author_id
@@ -441,8 +440,8 @@ export async function getLogsByCharacter(
           m.title           AS mission_title
         FROM mission_logs ml
         JOIN missions m ON m.id = ml.mission_id
-        WHERE ml.author_id = ${characterId} AND ml.visibility = 'public' AND ml.deleted_at IS NULL
-          AND ml.is_draft = false
+        WHERE ml.author_id = ${characterId} AND ml.is_draft = false
+          AND ml.deleted_at IS NULL
         ORDER BY ml.session_nr DESC NULLS LAST
       `;
   return rows;
@@ -539,9 +538,7 @@ function buildAffiliation(input: {
 // Gäste laut Produktentscheidung keinen Charakter zugewiesen haben dürfen,
 // siehe assignCharacterAction in src/app/admin/actions.ts). player_id wird
 // direkt auf den anlegenden User gesetzt (sofortige Verknüpfung).
-// visibility bleibt unangegeben → DB-Default 'public' (gleiche Konvention
-// wie createArchiveEntry/createMission). player (Anzeigename, ingest-only)
-// bleibt null — das Formular deckt nur Spieler-relevante Felder ab.
+// player (Anzeigename, ingest-only) bleibt null — das Formular deckt nur Spieler-relevante Felder ab.
 export async function createCharacter(input: {
   name: string;
   status: Character["status"];
@@ -565,7 +562,7 @@ export async function createCharacter(input: {
   // KEINE Charaktere, sondern Datenbank-Einträge der Kategorie "npc").
   // Zuordnen lässt er sich später jederzeit unter /gm/characters.
   ownerUserId: number | null;
-  // Entwurf statt sofort veröffentlicht (siehe canViewDraft in
+  // Entwurf statt sofort veröffentlicht (siehe canView in
   // src/lib/visibility.ts) — bewusst kein Default hier, jeder Aufrufer muss
   // sich explizit entscheiden.
   isDraft: boolean;
@@ -743,7 +740,6 @@ export async function updateOwnCharacterContent(
   },
 ): Promise<{
   slug: string;
-  visibility: "private" | "gm" | "public";
   wasDraft: boolean;
 } | null> {
   const trimmedBody = input.bodyMarkdown.trim();
@@ -775,11 +771,10 @@ export async function updateOwnCharacterContent(
   // "wasDraft" (Stand VOR diesem Update) per CTE mitgeliefert — der
   // Aufrufer (contentAction.ts) braucht ihn, um einen Entwurf→Veröffentlicht-
   // Übergang von einer normalen Bearbeitung zu unterscheiden (siehe
-  // canViewDraft-Kommentar).
+  // canView-Kommentar).
   const rows = await sql<
     {
       slug: string;
-      visibility: "private" | "gm" | "public";
       wasDraft: boolean;
     }[]
   >`
@@ -791,7 +786,7 @@ export async function updateOwnCharacterContent(
         updated_at = NOW()
     FROM old
     WHERE id = ${characterId} AND player_id = ${userId}
-    RETURNING slug, visibility, old.is_draft AS "wasDraft"
+    RETURNING slug, old.is_draft AS "wasDraft"
   `;
   if (rows[0]) syncEmbeddings("character", characterId);
   return rows[0] ?? null;
@@ -1020,15 +1015,12 @@ export async function userHasCharacters(userId: number): Promise<boolean> {
 
 // Benachrichtigt alle Abonnenten eines Charakters (content_follows,
 // target_type 'character'), dass sich etwas an der Akte geändert hat —
-// gerufen von beiden Bearbeiten-Wegen (Stammdaten-/Biografie-Panel:
-// characters/_shared/panelActions.ts; Inline-Bio-Editor:
-// app/actions/characters.ts#updateOwnCharacterBioAction), jeweils NACH dem
-// erfolgreichen Speichern. Best-effort wie die Dialog-Benachrichtigungen in
+// gerufen aus dem Stammdaten-/Biografie-Panel
+// (characters/_shared/panelActions.ts) NACH dem erfolgreichen Speichern. Best-effort wie die Dialog-Benachrichtigungen in
 // app/actions/dialogues.ts: einzelne fehlgeschlagene Mails werden geloggt,
 // brechen den Rest nicht ab. editingUserId schließt den Bearbeitenden selbst
-// aus — er ist immer der Owner (beide Editier-Wege sind owner-only, siehe
-// CharacterBioEditor.tsx/EditCharacterForm.tsx), braucht also keine
-// Benachrichtigung über die eigene Änderung.
+// aus — er ist immer der Owner (der Charakter-Editor ist owner-only),
+// braucht also keine Benachrichtigung über die eigene Änderung.
 export async function notifyCharacterSubscribers(input: {
   characterSlug: string;
   characterName: string;
@@ -1078,9 +1070,9 @@ export async function notifyCharacterSubscribers(input: {
   );
 }
 
-// Nur die Biografie, nicht Name/Status/Metadaten — für den Inline-Editor auf
-// der Detailseite (CharacterBioEditor.tsx), analog updateOwnArchiveEntryBody
-// in src/lib/archive.ts. Anders als dort darf der Text leer sein (ein
+// Nur die Biografie, nicht Name/Status/Metadaten — für das Biografie-Panel
+// des eigenen Bereichs, analog updateOwnArchiveEntryBody in
+// src/lib/archive.ts. Anders als dort darf der Text leer sein (ein
 // Charakter ohne Bio ist ein normaler Zustand, siehe die "Keine
 // biografischen Daten"-Leerdarstellung in CharacterHero.tsx) — bio/source_md
 // werden dann auf null gesetzt statt einen leeren String zu speichern.
@@ -1182,7 +1174,6 @@ export async function deleteCharacter(
     {
       slug: string;
       name: string;
-      visibility: string;
       ownerUserId: number | null;
       isDraft: boolean;
     }[]
@@ -1190,7 +1181,7 @@ export async function deleteCharacter(
     UPDATE characters
     SET deleted_at = NOW()
     WHERE id = ${characterId} AND deleted_at IS NULL
-    RETURNING slug, name, visibility, player_id AS "ownerUserId", is_draft AS "isDraft"
+    RETURNING slug, name, player_id AS "ownerUserId", is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
   if (row) syncEmbeddingActive("character", characterId, false);
@@ -1200,8 +1191,8 @@ export async function deleteCharacter(
   // diesem Entwurf erfährt).
   if (row && !row.isDraft) {
     await sql`
-      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
-      VALUES ('character', ${row.name}, ${row.visibility}, ${row.ownerUserId}, ${deletedByUserId})
+      INSERT INTO content_deletions (target_type, title, owner_user_id, deleted_by)
+      VALUES ('character', ${row.name}, ${row.ownerUserId}, ${deletedByUserId})
     `;
   }
   return row ? { slug: row.slug } : null;
@@ -1220,21 +1211,20 @@ export async function deleteOwnCharacter(
     {
       slug: string;
       name: string;
-      visibility: string;
       isDraft: boolean;
     }[]
   >`
     UPDATE characters
     SET deleted_at = NOW()
     WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
-    RETURNING slug, name, visibility, is_draft AS "isDraft"
+    RETURNING slug, name, is_draft AS "isDraft"
   `;
   const row = rows[0] ?? null;
   if (row) syncEmbeddingActive("character", characterId, false);
   if (row && !row.isDraft) {
     await sql`
-      INSERT INTO content_deletions (target_type, title, visibility, owner_user_id, deleted_by)
-      VALUES ('character', ${row.name}, ${row.visibility}, ${userId}, ${userId})
+      INSERT INTO content_deletions (target_type, title, owner_user_id, deleted_by)
+      VALUES ('character', ${row.name}, ${userId}, ${userId})
     `;
   }
   return row ? { slug: row.slug } : null;

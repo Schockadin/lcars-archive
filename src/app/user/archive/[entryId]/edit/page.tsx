@@ -9,7 +9,7 @@ import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
 import EditArchiveEntryForm from "./EditArchiveEntryForm";
 import RevisionsPanel from "@/app/_shared/RevisionsPanel";
 import { listRevisions } from "@/lib/contentRevisions";
-import { getViewer } from "@/lib/visibility";
+import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import {
   archiveEditHref,
 } from "@/lib/contentRoutes";
@@ -27,8 +27,15 @@ export default async function EditArchiveEntryPage({
   const { entryId } = await params;
   const session = await verifySession();
 
+  // Der Bearbeiten-Stift auf der Leseseite führt seit v1.34 hierher — auch
+  // für Spielleitung/Administration auf einem fremden Eintrag (siehe
+  // ActionsMenu.tsx). Ohne content.moderate bleibt die Abfrage owner-gescoped
+  // und ein fremder Eintrag führt zurück auf die eigenen Inhalte.
+  const contentViewer = await getViewer();
+  const asModerator = viewerHasPermission(contentViewer, "content.moderate");
+
   const [entry, viewer, roleMap] = await Promise.all([
-    getOwnArchiveEntryForEdit(session.userId, Number(entryId)),
+    getOwnArchiveEntryForEdit(session.userId, Number(entryId), asModerator),
     getUserById(session.userId),
     getRoleMap(),
   ]);
@@ -36,10 +43,10 @@ export default async function EditArchiveEntryPage({
     redirect("/user/content");
   }
 
-  // Versionshistorie: getOwnArchiveEntryForEdit oben hat die Eigentümerschaft
-  // bereits geprüft; listRevisions prüft sie über den Viewer noch einmal
-  // selbst (siehe canManageRevisions).
-  const revisions = await listRevisions("archive", entry.id, await getViewer());
+  // Versionshistorie: die Abfrage oben hat den Zugriff bereits geprüft;
+  // listRevisions prüft ihn über den Viewer noch einmal selbst (siehe
+  // canManageRevisions).
+  const revisions = await listRevisions("archive", entry.id, contentViewer);
 
   return (
     <>

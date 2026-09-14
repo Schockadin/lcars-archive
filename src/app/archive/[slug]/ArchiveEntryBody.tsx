@@ -1,20 +1,18 @@
 "use client";
-import { useState } from "react";
 import ContentActionsPanel from "@/components/ContentActionsPanel";
 import DialogueThread from "@/components/DialogueThread";
 import DialogueFlowingText from "@/components/DialogueFlowingText";
 import DialogueViewToggle from "@/components/DialogueViewToggle";
-import ArchiveEntryEditor from "./ArchiveEntryEditor";
+import ContentBody from "@/components/ContentBody";
 import { ArchiveEntryDetail } from "@/types/archive";
 import type { Viewer } from "@/lib/visibility";
 import type { FollowState } from "@/app/actions/follows";
 import type { DialogueMessage } from "@/lib/dialoguesCore";
 
-// Hält den editMode lokal (statt über einen globalen Context) — ActionsMenu
-// (Bearbeiten-Button) und ArchiveEntryEditor sind hier Geschwister unter
-// einem gemeinsamen Client-Component-Elternknoten, exakt das React-Standard-
-// muster "State nach oben heben". Die Elternseite (page.tsx) bleibt eine
-// async Server Component und kann diesen State nicht selbst halten.
+// Der Inhalt eines Datenbank-Eintrags, read-only: Bearbeitet wird seit v1.34
+// ausschließlich im vollen Editor unter /user/archive/[entryId]/edit (dorthin
+// springt der Stift in ActionsMenu), wo auch Titel, Kategorie, Tags und
+// Metadaten dranhängen. Der frühere Inline-Editor konnte nur den Fließtext.
 export default function ArchiveEntryBody({
   entry,
   viewer,
@@ -32,9 +30,6 @@ export default function ArchiveEntryBody({
   flowingTextPreferred: boolean;
   followInitialState?: FollowState;
 }) {
-  const [editMode, setEditMode] = useState(false);
-  const isAdminOrGM =
-    viewer?.permissions.includes("content.autolink_tools") ?? false;
   const canModerateDialogue =
     viewer?.permissions.includes("dialogues.moderate") ?? false;
 
@@ -45,8 +40,19 @@ export default function ArchiveEntryBody({
       )}
 
       {entry.category !== "dialogue" &&
-        entry.metadata.attributes.length > 0 && (
+        (entry.metadata.attributes.length > 0 ||
+          entry.metadata.aliases.length > 0) && (
           <div className="char-file-data archive-entry-attrs">
+            {entry.metadata.aliases.length > 0 && (
+              <div className="char-file-field">
+                <span className="char-file-field-label">
+                  Auch bekannt als:
+                </span>{" "}
+                <span className="char-file-field-value">
+                  {entry.metadata.aliases.join(", ")}
+                </span>
+              </div>
+            )}
             {entry.metadata.attributes.map((attr) => (
               <div key={attr.label} className="char-file-field">
                 <span className="char-file-field-label">{attr.label}:</span>{" "}
@@ -105,14 +111,7 @@ export default function ArchiveEntryBody({
           </p>
         )
       ) : entry.content ? (
-        <ArchiveEntryEditor
-          entryId={entry.id}
-          contentHtml={entry.content}
-          sourceMarkdown={entry.sourceMarkdown}
-          isAdminOrGM={isAdminOrGM}
-          editMode={editMode}
-          onEditModeChange={setEditMode}
-        />
+        <ContentBody html={entry.content} />
       ) : (
         <p className="lcars-empty-state">
           Kein Inhalt zu diesem Eintrag hinterlegt.
@@ -127,7 +126,6 @@ export default function ArchiveEntryBody({
         followInitialState={followInitialState}
         playerId={entry.ownerUserId}
         content={entry}
-        onEdit={() => setEditMode(true)}
         hideEdit={entry.category === "dialogue"}
         // Dialoge haben keine eigene Bilder-Galerie (der Inhalt lebt in
         // dialogue_messages, siehe ActionsMenu.tsx).

@@ -2,7 +2,7 @@
 import { useOptimistic, useState, useTransition } from "react";
 
 // Gemeinsames Muster für admin-only Inline-Selects auf den Inhalts-
-// Detailseiten (OwnerSelect.tsx, AdminVisibilitySelect.tsx): optimistischer
+// Detailseiten (OwnerSelect.tsx, AdminContentStateSelect.tsx): optimistischer
 // Wert (useOptimistic statt useState — automatischer Rollback, falls die
 // Server Action fehlschlägt und die Seite beim nächsten Datenabruf denselben
 // Wert wie vorher zeigt), Pending-State fürs Deaktivieren des <select>

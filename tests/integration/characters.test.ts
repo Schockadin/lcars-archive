@@ -3,7 +3,7 @@ import sql from "@/lib/db";
 import {
   createCharacter,
   updateOwnCharacterContent,
-  setCharacterVisibility,
+  setCharacterDraft,
   assignCharacterToUser,
   getCharactersForParticipantPicker,
 } from "@/lib/characters";
@@ -32,7 +32,7 @@ function baseCharacterInput(overrides: Partial<Parameters<typeof createCharacter
 }
 
 describe("createCharacter", () => {
-  it("creates a character owned by the given user with a public default visibility", async () => {
+  it("creates a character owned by the given user, published by default", async () => {
     const user = await insertUser();
 
     const result = await createCharacter(
@@ -40,11 +40,11 @@ describe("createCharacter", () => {
     );
 
     expect(result.slug).toBeTruthy();
-    const [row] = await sql<{ player_id: number; visibility: string }[]>`
-      SELECT player_id, visibility FROM characters WHERE id = ${result.id}
+    const [row] = await sql<{ player_id: number; is_draft: boolean }[]>`
+      SELECT player_id, is_draft FROM characters WHERE id = ${result.id}
     `;
     expect(row.player_id).toBe(user.id);
-    expect(row.visibility).toBe("public");
+    expect(row.is_draft).toBe(false);
   });
 
   it("de-duplicates slugs for characters with the same name", async () => {
@@ -114,42 +114,32 @@ describe("updateOwnCharacterContent", () => {
   });
 });
 
-describe("setCharacterVisibility", () => {
-  it("lets the owner change visibility", async () => {
+describe("setCharacterDraft", () => {
+  it("lets the owner pull a character back to a draft", async () => {
     const owner = await insertUser();
-    const character = await insertCharacter({
-      playerId: owner.id,
-      visibility: "public",
-    });
+    const character = await insertCharacter({ playerId: owner.id });
 
-    const result = await setCharacterVisibility(owner.id, character.id, "private");
+    const result = await setCharacterDraft(owner.id, character.id, true);
 
     expect(result?.slug).toBe(character.slug);
-    const [row] = await sql<{ visibility: string }[]>`
-      SELECT visibility FROM characters WHERE id = ${character.id}
+    const [row] = await sql<{ is_draft: boolean }[]>`
+      SELECT is_draft FROM characters WHERE id = ${character.id}
     `;
-    expect(row.visibility).toBe("private");
+    expect(row.is_draft).toBe(true);
   });
 
-  it("does not let a non-owner change visibility", async () => {
+  it("does not let a non-owner change the state", async () => {
     const owner = await insertUser();
     const intruder = await insertUser();
-    const character = await insertCharacter({
-      playerId: owner.id,
-      visibility: "public",
-    });
+    const character = await insertCharacter({ playerId: owner.id });
 
-    const result = await setCharacterVisibility(
-      intruder.id,
-      character.id,
-      "private",
-    );
+    const result = await setCharacterDraft(intruder.id, character.id, true);
 
     expect(result).toBeNull();
-    const [row] = await sql<{ visibility: string }[]>`
-      SELECT visibility FROM characters WHERE id = ${character.id}
+    const [row] = await sql<{ is_draft: boolean }[]>`
+      SELECT is_draft FROM characters WHERE id = ${character.id}
     `;
-    expect(row.visibility).toBe("public");
+    expect(row.is_draft).toBe(false);
   });
 });
 

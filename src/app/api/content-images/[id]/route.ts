@@ -32,7 +32,7 @@ export async function GET(
   }
 
   const viewer = await getViewer();
-  if (!canView(access.visibility, access.ownerId, viewer)) {
+  if (!canView(access.isDraft, access.ownerId, viewer)) {
     return new Response("Kein Zugriff.", { status: 404 });
   }
 

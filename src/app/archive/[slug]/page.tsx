@@ -10,7 +10,6 @@ import { LcarsReadingModeToggle } from "@/components/lcars";
 import {
   getViewer,
   canView,
-  canViewDraft,
   viewerHasPermission,
 } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
@@ -21,6 +20,7 @@ import { listNotes } from "@/lib/contentNotes";
 import NotesPanel from "@/app/_shared/NotesPanel";
 import {
   archiveHref,
+  archiveListHref,
   characterHref,
   missionHref,
 } from "@/lib/contentRoutes";
@@ -39,10 +39,8 @@ export async function generateMetadata({ params }: Props) {
   // owner_user_id — Metadaten dafür also nicht zusätzlich blocken.
   const viewerForMeta = await getViewer();
   const visible =
-    (entry.visibility === "public" ||
-      (entry.category === "dialogue" && entry.dialogue_open) ||
-      canView(entry.visibility, entry.ownerUserId, viewerForMeta)) &&
-    canViewDraft(entry.isDraft, entry.ownerUserId, viewerForMeta);
+    (entry.category === "dialogue" && entry.dialogue_open) ||
+    canView(entry.isDraft, entry.ownerUserId, viewerForMeta);
   if (!visible) return { title: "Nicht gefunden · Neo Archive" };
 
   const desc = entry.metadata.summary ?? stripHtml(entry.content);
@@ -76,13 +74,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
     redirect(`/characters/dialogues/${entry.slug}`);
   }
 
-  if (
-    entry.visibility !== "public" &&
-    !canView(entry.visibility, entry.ownerUserId, viewer)
-  ) {
-    notFound();
-  }
-  if (!canViewDraft(entry.isDraft, entry.ownerUserId, viewer)) notFound();
+  if (!canView(entry.isDraft, entry.ownerUserId, viewer)) notFound();
 
   // Owner-Auswahl und Bookmark/Abo-Stand sind voneinander unabhängig —
   // parallel laden. Gespräche werden hier nicht mehr gerendert (sie leiten
@@ -113,7 +105,20 @@ export default async function ArchiveEntryPage({ params }: Props) {
     >
       <PageMeta title={title} section="archive" />
       <MarkNewsSeen type="archive_entry" slug={entry.slug} />
-      <LcarsReadingModeToggle />
+
+      {/* Zurück in die Liste, aus der der Eintrag stammt — auf seine
+          Kategorie vorgefiltert, wie „‹ Missionen" auf der Missionsseite und
+          „‹ <Mission>" am Logbuch. Darunter der Lesemodus-Schalter (nur
+          mobil sichtbar), beide linksbündig gestapelt. */}
+      <div className="flex flex-col items-start gap-[8px]">
+        <Link
+          href={archiveListHref(entry.category)}
+          className="lcars-back-link"
+        >
+          ‹ {cfg.plural}
+        </Link>
+        <LcarsReadingModeToggle />
+      </div>
 
       <div className="flex items-start">
         <StandardHeader entry={entry} title={title} label={cfg.label} />

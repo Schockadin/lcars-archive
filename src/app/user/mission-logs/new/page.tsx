@@ -26,7 +26,7 @@ export default async function NewMissionLogPage({
 
   // Nur eigene bereits veröffentlichte Charaktere kommen als Autor für einen
   // neuen Log infrage — ein noch als Entwurf gespeicherter Charakter ist für
-  // niemand außer dem Owner sichtbar (siehe canViewDraft in visibility.ts),
+  // niemand außer dem Owner sichtbar (siehe canView in visibility.ts),
   // der Autor-Link im Log würde also für alle anderen ins Leere laufen.
   const publishedCharacters = characters.filter((c) => !c.is_draft);
 

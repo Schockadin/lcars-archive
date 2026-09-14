@@ -4,12 +4,6 @@ import MissionSynopsis from "./MissionSynopsis";
 import type { MissionDetail } from "@/types/missions";
 import type { Viewer } from "@/lib/visibility";
 
-// Die Server-Actions werden im Test nicht ausgeführt — sie ziehen die
-// Datenschicht nach und haben mit der Darstellung nichts zu tun (gleiches
-// Muster wie CreateDialogueForm.test.tsx).
-vi.mock("@/app/actions/missions", () => ({
-  updateMissionSynopsisAction: vi.fn(),
-}));
 // Der Lesemodus-Umschalter im Kopf zieht useNeo() und damit den NeoProvider
 // nach, den es im Test nicht gibt. Die Funktionen sind stabil, damit der
 // Effekt in ReadingModeToggle nicht bei jedem Render neu läuft.
@@ -24,9 +18,6 @@ vi.mock("@/hooks/useNeo", () => ({ useNeo: () => neo }));
 // der Kopf, nicht das Panel. Der Platzhalter zeigt nur, WO es steht.
 vi.mock("@/components/ContentActionsPanel", () => ({
   default: () => <div data-testid="actions-panel" />,
-}));
-vi.mock("@/app/_shared/MarkdownEditor", () => ({
-  default: ({ id }: { id: string }) => <textarea id={id} />,
 }));
 
 function mission(overrides: Partial<MissionDetail> = {}): MissionDetail {
@@ -149,10 +140,26 @@ describe("MissionSynopsis", () => {
     expect(container.querySelector(".mission-body")).toBeNull();
   });
 
+  it("zeigt die Zusammenfassung auch der Spielleitung nur zum Lesen", () => {
+    // Bis v1.34 klappte hier für missions.manage ein Inline-Editor auf, der
+    // nur den Fließtext kannte. Bearbeitet wird jetzt im vollen Editor, in
+    // den der Stift des Aktionen-Panels springt.
+    const { container } = render(
+      <MissionSynopsis
+        mission={mission()}
+        viewer={viewer(["missions.manage"])}
+        owners={[]}
+      />,
+    );
+
+    expect(container.querySelector("details.timeline-panel")).toBeTruthy();
+    expect(container.querySelector("form")).toBeNull();
+    expect(container.querySelector("textarea")).toBeNull();
+  });
+
   it("hält das Aktionen-Panel im Artikel, unterhalb des Textes", () => {
-    // Bewusst nicht im Footer-Stack der Seite: der Stift im Panel schaltet
-    // den editMode dieser Client-Komponente (gleiches Muster wie
-    // CharacterHero). Nur die Log-Seite ohne Inline-Editor legt es nach außen.
+    // Bewusst nicht im Footer-Stack der Seite: es gehört zum Inhalt dieser
+    // Spalte, nicht zum Seitenfuß.
     const { container } = render(
       <MissionSynopsis mission={mission()} viewer={viewer()} owners={[]} />,
     );
