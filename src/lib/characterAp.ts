@@ -417,6 +417,22 @@ export async function reopenCharacterCreation(
       };
     }
 
+    // Maßgeblich ist NUR, was seit dem letzten Zurücksetzen gebucht wurde:
+    // Ältere Steigerungen hat der damalige Reset bereits zurückgenommen und
+    // erstattet — und beim erneuten Abschließen wurden sie als NEUE Buchung
+    // wieder angewandt. Ohne diese Grenze zählte ein zweites Zurücksetzen
+    // dieselbe Steigerung doppelt: doppelte Gutschrift und ein doppelter
+    // Eintrag in der Notiz, der beim nächsten Abschließen zweimal steigern
+    // würde. Die SERIAL-id wächst je Buchung, taugt also als Marke — anders
+    // als created_at, das innerhalb einer Transaktion für alle Zeilen gleich
+    // ist.
+    const [marker] = await tx<{ lastReset: number | null }[]>`
+      SELECT MAX(id) AS "lastReset"
+      FROM character_ap_entries
+      WHERE character_id = ${characterId} AND reason = 'reset'
+    `;
+    const sinceId = marker?.lastReset ?? 0;
+
     // Die Steigerungen in der Reihenfolge des Journals (neueste zuerst) —
     // genau so nimmt revertAdvancements sie Schritt für Schritt zurück.
     const bookings = await tx<
@@ -426,18 +442,21 @@ export async function reopenCharacterCreation(
       FROM character_ap_entries
       WHERE character_id = ${characterId}
         AND reason = 'advancement' AND amount < 0
-      ORDER BY created_at DESC, id DESC
+        AND id > ${sinceId}
+      ORDER BY id DESC
     `;
 
     const result = revertAdvancements(stats, bookings);
 
     // Der beim Festschreiben gutgeschriebene Erschaffungsrest muss zurück:
     // beim erneuten Abschließen wird er neu berechnet und neu gutgeschrieben,
-    // sonst stünde er doppelt auf dem Konto.
+    // sonst stünde er doppelt auf dem Konto. Auch hier zählt nur, was seit dem
+    // letzten Zurücksetzen dazukam (siehe oben).
     const [credited] = await tx<{ total: number }[]>`
       SELECT COALESCE(SUM(amount), 0)::int AS total
       FROM character_ap_entries
       WHERE character_id = ${characterId} AND reason = 'creation'
+        AND id > ${sinceId}
     `;
     const carryOverCredited = credited?.total ?? 0;
 

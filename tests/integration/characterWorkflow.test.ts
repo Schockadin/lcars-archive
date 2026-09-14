@@ -390,6 +390,36 @@ describe("reopenCharacterCreation", () => {
     expect(after.available).toBe(beforeReset.available);
   });
 
+  it("zählt beim zweiten Zurücksetzen nicht doppelt", async () => {
+    const { user, gm, id } = await lockedCharacterWithAdvancement();
+    const beforeReset = await getApAccount(id);
+
+    // Zwei volle Runden: zurücksetzen → abschließen → zurücksetzen →
+    // abschließen. Nach der ersten Runde steht dieselbe Steigerung ZWEIMAL im
+    // Journal (die ursprüngliche und die wieder angewandte) — würde die zweite
+    // Rücknahme beide zählen, gäbe es die AP doppelt zurück und die Notiz
+    // führte die Steigerung zweimal.
+    await reopenCharacterCreation(id, gm.id);
+    await lockOwnCharacterCreation(user.id, id);
+
+    const second = await reopenCharacterCreation(id, gm.id);
+    expect(second.ok).toBe(true);
+    if (second.ok) expect(second.reverted).toHaveLength(1);
+
+    const sheet = await getOwnCharacterStats(user.id, id);
+    expect(sheet?.stats.pendingAdvancements).toHaveLength(1);
+    expect(sheet?.stats.attributes.control).toBe(10);
+
+    const locked = await lockOwnCharacterCreation(user.id, id);
+    expect(locked?.reapplied).toHaveLength(1);
+
+    const after = await getApAccount(id);
+    expect(after.available).toBe(beforeReset.available);
+    expect(
+      (await getOwnCharacterStats(user.id, id))?.stats.attributes.control,
+    ).toBe(11);
+  });
+
   it("lehnt einen Charakter ab, der noch in der Erschaffung steht", async () => {
     const user = await loginAsPlayer();
     const gm = await insertUser({ role: "gm" });

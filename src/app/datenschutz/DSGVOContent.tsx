@@ -100,7 +100,11 @@ export default function DSGVOContent({ year }: { year: number }) {
           Buchungsjournal: Jede Gutschrift und jede Steigerung wird dauerhaft
           mit Betrag, Grund, Zeitpunkt und dem Account festgehalten, der sie
           gebucht hat (in der Regel die Spielleitung, bei Steigerungen die
-          spielende Person selbst). Ebenso werden gespielte{" "}
+          spielende Person selbst). Setzt die Spielleitung eine abgeschlossene
+          Charaktererschaffung zurück, bleibt auch das im Journal stehen: die
+          zurückgenommenen Steigerungen werden als Gutschrift gebucht und
+          zusätzlich am Charakter vermerkt, bis sie beim erneuten Abschließen
+          wieder angewandt werden. Ebenso werden gespielte{" "}
           <strong>Sessions</strong> mit Datum, Titel, Notizen und
           Teilnehmerliste gespeichert. Diese Angaben sind für Spielleitung und
           die jeweilige Person einsehbar und dienen ausschließlich dem
