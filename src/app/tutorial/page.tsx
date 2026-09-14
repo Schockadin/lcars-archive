@@ -718,8 +718,13 @@ export default function TutorialPage() {
                 Missionslogs und bereits abgeschlossenen Gesprächen) einen{" "}
                 <strong>„Teilen“</strong>-Knopf: Link kopieren, per WhatsApp
                 teilen, oder den Inhalt als Markdown-Datei (mit Frontmatter)
-                bzw. als PDF herunterladen. Bei noch offenen, laufenden
-                Gesprächen fehlt er bewusst, da sich deren Inhalt noch ändert.
+                bzw. als PDF herunterladen. Das PDF ist aufgemacht wie
+                Charakterbogen und Missionsakte — derselbe blaue Rahmen,
+                dieselbe Kopfzeile, ein beschrifteter Datenblock (Status,
+                Zeitraum, Beteiligte …) und darunter der Text mit
+                Überschriften, Aufzählungen, Zitaten sowie Fett und Kursiv.
+                Bei noch offenen, laufenden Gesprächen fehlt der Knopf
+                bewusst, da sich deren Inhalt noch ändert.
               </p>
               <p>
                 Auf der <strong>Seite einer Mission</strong> steht angemeldet

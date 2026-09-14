@@ -138,6 +138,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.35",
+    title: "Ein Ausdruck, eine Aufmachung",
+    items: [
+      {
+        text: "Der PDF-Export einzelner Inhalte über „Teilen“ liefert jetzt ein Blatt im Stil von Charakterbogen und Missionsakte: blauer Rahmen, Kopfzeile mit Titelreiter, ein beschrifteter Datenblock (Status, Zeitraum, Beteiligte …) statt roher Feldnamen — und der Text erscheint formatiert mit Überschriften, Aufzählungen, Zitaten sowie Fett und Kursiv, statt die Markdown-Zeichen mit auszudrucken.",
+        category: "export",
+        tutorial: "merken-abonnieren",
+      },
+    ],
+  },
+  {
     version: "1.34",
     title: "Aliase für Datenbank-Einträge",
     items: [
