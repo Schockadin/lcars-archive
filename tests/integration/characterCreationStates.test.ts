@@ -19,7 +19,15 @@ import {
 } from "@/lib/characters";
 import { insertCharacter, insertUser } from "./helpers";
 
-async function setStats(id: number, stats: Record<string, unknown>) {
+// Ein JSON-taugliches Objekt: sql.json() nimmt kein Record<string, unknown>
+// (das schlösse Funktionen und Date mit ein), die Werte hier sind aber reines
+// JSON aus der metadata-Spalte.
+type JsonValue = string | number | boolean | null | JsonValue[] | JsonObject;
+interface JsonObject {
+  [key: string]: JsonValue;
+}
+
+async function setStats(id: number, stats: JsonObject) {
   await sql`
     UPDATE characters
     SET metadata = ${sql.json({ stats })}
