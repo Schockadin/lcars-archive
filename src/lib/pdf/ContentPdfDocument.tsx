@@ -232,7 +232,10 @@ const FRONTMATTER_LABELS: Record<string, string> = {
   started_at: "Beginn",
   ended_at: "Ende",
   teaser: "Anreißer",
-  mission: "Mission",
+  // Ein Logbuch trägt beides: die Kennung der Mission und ihren Titel. Beide
+  // „Mission" zu nennen ergäbe zwei gleich beschriftete Zeilen mit
+  // verschiedenem Inhalt.
+  mission: "Missions-Kennung",
   mission_title: "Mission",
   author: "Autor",
   session_nr: "Session",
@@ -256,10 +259,26 @@ export function frontmatterLabel(key: string): string {
   return FRONTMATTER_LABELS[key] ?? key;
 }
 
+// Ein Datum aus der Datenbank wie in der Missionsakte: ausgeschrieben auf
+// Deutsch. postgres.js liefert DATE-Spalten (started_at, ended_at, log_date)
+// als JS-Date, obwohl die Typen der App dort `string | null` behaupten — ohne
+// diesen Zweig fiele so ein Wert unten in den Objekt-Zweig, Object.entries
+// eines Date ist leer, und die Zeile verschwände aus dem Ausdruck. Genau das
+// ist „Beginn", „Ende" und „Datum" bisher passiert.
+function formatDateValue(value: Date): string {
+  if (Number.isNaN(value.getTime())) return "";
+  return value.toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 // Reduziert einen beliebigen Frontmatter-Wert auf eine druckbare Zeile —
 // null/leere Werte werden vom Aufrufer schon vorher gefiltert (siehe
 // formatFrontmatterLines).
 function formatValue(value: unknown): string {
+  if (value instanceof Date) return formatDateValue(value);
   if (Array.isArray(value)) {
     if (value.length === 0) return "";
     if (
@@ -276,7 +295,7 @@ function formatValue(value: unknown): string {
   if (value && typeof value === "object") {
     return Object.entries(value as Record<string, unknown>)
       .filter(([, v]) => v != null && v !== "")
-      .map(([k, v]) => `${frontmatterLabel(k)}: ${v}`)
+      .map(([k, v]) => `${frontmatterLabel(k)}: ${formatValue(v)}`)
       .join(" · ");
   }
   return String(value);

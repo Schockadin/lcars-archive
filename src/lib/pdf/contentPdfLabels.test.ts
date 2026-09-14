@@ -81,6 +81,19 @@ describe("formatFrontmatterLines", () => {
     ]);
   });
 
+  it("schreibt ein Datum aus, statt es zu verschlucken", () => {
+    // postgres.js liefert DATE-Spalten als JS-Date. Ohne eigenen Zweig fiele
+    // der Wert in den Objekt-Zweig, Object.entries eines Date ist leer — die
+    // Zeile verschwände komplett aus dem Ausdruck.
+    expect(
+      formatFrontmatterLines({ started_at: new Date("2401-03-05T00:00:00Z") }),
+    ).toEqual([{ key: "started_at", label: "Beginn", text: "05. März 2401" }]);
+  });
+
+  it("lässt ein ungültiges Datum weg, statt „Invalid Date“ zu drucken", () => {
+    expect(formatFrontmatterLines({ log_date: new Date("keins") })).toEqual([]);
+  });
+
   it("übersetzt auch die Schlüssel innerhalb eines Objektwerts", () => {
     expect(
       formatFrontmatterLines({
