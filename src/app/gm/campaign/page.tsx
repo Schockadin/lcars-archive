@@ -1,8 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { userCan } from "@/lib/permissions";
 import PageMeta from "@/components/PageMeta";
-import { requireGM, getRoleMap } from "@/lib/dal";
+import { requireGM } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
 import { getAllCharactersForAdmin } from "@/lib/characters";
 import { getAllMissionsForGmOverview } from "@/lib/missions";
@@ -13,7 +12,6 @@ import {
   listCompletableMissions,
   listActiveCharactersForAp,
 } from "@/lib/gameSessions";
-import CharacterAssignmentTable from "../CharacterAssignmentTable";
 import AdminMissionsBrowser from "../missions/AdminMissionsBrowser";
 import IngameYearForm from "./IngameYearForm";
 import ApAwardPanel from "./ApAwardPanel";
@@ -24,12 +22,15 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-// GM-oder-admin — konsolidierte Kampagnen-Seite (früher getrennte Menüpunkte
-// "Missionen" + "Charaktere"): Ingame-Jahr einstellen, Charaktere zuordnen
-// und alle Missionen verwalten an einem Ort. Neuer GM-Menüpunkt "Kampagne"
-// (siehe HeaderUserNav.tsx), der den bisherigen "Missionen"-Punkt ablöst; die
-// alten Routen /gm/missions und /gm/characters bleiben per Direktlink
-// weiter erreichbar.
+// GM-oder-admin — die Kampagnen-Seite: Ingame-Jahr, AP-Vergabe,
+// Missionsabschluss und die Missionsverwaltung an einem Ort (sie löste den
+// früheren Menüpunkt "Missionen" ab, /gm/missions bleibt als Direktlink
+// erreichbar).
+//
+// Die Zuordnung der Charaktere zu Konten stand hier ebenfalls, seit es dafür
+// keinen eigenen Menüpunkt mehr gab. Sie steht jetzt wieder unter
+// "Charaktere" (/gm/characters) — zusammen mit dem Erschaffungs-Status, der
+// ohnehin nur dort ist. Zweimal dieselbe Tabelle zu pflegen, half niemandem.
 export default async function AdminCampaignPage() {
   await requireGM();
 
@@ -64,12 +65,6 @@ export default async function AdminCampaignPage() {
     available: balanceByCharacter.get(c.id) ?? 0,
   }));
 
-  // Gäste dürfen keinen Charakter zugewiesen bekommen (siehe
-  // assignCharacterAction) — sie fehlen deshalb schon hier in der Auswahl.
-  const roleMap = await getRoleMap();
-  const characterUserOptions = users
-    .filter((u) => userCan(u, "characters.assignable", roleMap))
-    .map((u) => ({ id: u.id, name: u.name }));
   const missionUserOptions = users.map((u) => ({ id: u.id, name: u.name }));
 
   return (
@@ -113,14 +108,6 @@ export default async function AdminCampaignPage() {
               missions={completableMissions}
               characters={apCharacterOptions}
               defaultMissionAp={rules.apPerMission}
-            />
-          </section>
-
-          <section className="flex flex-col gap-[12px]">
-            <h2 className="text-lcars-primary-ink">Charaktere</h2>
-            <CharacterAssignmentTable
-              characters={characters}
-              users={characterUserOptions}
             />
           </section>
 

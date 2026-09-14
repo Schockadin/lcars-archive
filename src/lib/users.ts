@@ -509,7 +509,7 @@ export interface UserAdminDetail extends User {
 // anzeigt — inkl. Passwort-/Aktivierungsstatus (wieder nur als Boolean,
 // nie der Hash selbst, siehe Kommentar oben bei UserCredentials) und
 // zugewiesene Charaktere (read-only Kontext, Zuweisung selbst bleibt
-// CharacterAssignmentTable auf /admin vorbehalten).
+// CharacterAssignmentTable unter /gm/characters vorbehalten).
 export async function getUserForAdmin(
   id: number,
 ): Promise<UserAdminDetail | null> {

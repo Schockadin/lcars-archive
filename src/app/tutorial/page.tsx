@@ -1046,15 +1046,15 @@ export default function TutorialPage() {
                   sieht beide Menüs nebeneinander — und ist wie dieses nach
                   Aufgaben gegliedert: Kampagne, Charaktere, Regelwerk, Inhalte)
                   unter <strong>„Kampagne“</strong> an einer Stelle das aktuelle{" "}
-                  <strong>Ingame-Jahr</strong> einstellen, Charaktere
-                  Spieler:innen zuweisen (Gast-Accounts ausgenommen) und alle
-                  Missionen mit Bearbeiten-, Löschen- und Besitzer:in-Zuordnung
-                  pro Zeile verwalten. (Der ebenfalls dort liegende Eintrag{" "}
-                  <strong>„Gespräche“</strong> ist in der eigenen
-                  Gespräche-Sektion oben beschrieben.)
+                  <strong>Ingame-Jahr</strong> einstellen, AP vergeben,
+                  Missionen abschließen und alle Missionen mit Bearbeiten-,
+                  Löschen- und Besitzer:in-Zuordnung pro Zeile verwalten. (Der
+                  ebenfalls dort liegende Eintrag <strong>„Gespräche“</strong>{" "}
+                  ist in der eigenen Gespräche-Sektion oben beschrieben.)
                 </li>
                 <li>
-                  Auf derselben Seite (<strong>„Charaktere“</strong>) eine{" "}
+                  Unter <strong>„Charaktere“</strong> Figuren den Konten{" "}
+                  <strong>zuordnen</strong> (Gast-Accounts ausgenommen) und eine{" "}
                   <strong>abgeschlossene Erschaffung wieder öffnen</strong> —
                   etwa, wenn sich die Runde nachträglich auf andere Startwerte
                   einigt. Alle Steigerungen seit dem Abschluss werden dabei

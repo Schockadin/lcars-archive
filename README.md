@@ -384,9 +384,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   liegenden Seiten `campaign`, `dialogues`, `characters` und `missions` sind
   hierher umgezogen, `/admin` ist dadurch reine Verwaltung (`requireStaff`
   verlangt dort kein `gm.access` mehr).
-  - `/gm/campaign` — Ingame-Jahr, AP-Vergabe, Charakter-Zuweisung und
-    Missions-Übersicht an einem Ort (`/gm/characters` und `/gm/missions`
-    bleiben als Direktlinks auf die Einzelansichten erhalten).
+  - `/gm/campaign` — Ingame-Jahr, AP-Vergabe, Missionsabschluss und
+    Missions-Übersicht an einem Ort (`/gm/missions` bleibt als Direktlink auf
+    die Einzelansicht erhalten).
+  - `/gm/characters` — die Charakter-Verwaltung: Zuordnung der Figuren zu
+    Konten und der Erschaffungs-Status samt „Erschaffung wieder öffnen“
+    (siehe oben). Eigener Menüpunkt; die Zuordnung stand übergangsweise
+    zusätzlich auf der Kampagnen-Seite und ist dort entfallen.
   - `/gm/dialogues` — alle offenen Gespräche, unabhängig von eigener
     Teilnahme; darunter `[slug]/edit` für die Metadaten (`dialogues.moderate`).
   - `/gm/gruppe` — das **Gruppenblatt**: alle aktiven, nicht als Entwurf
