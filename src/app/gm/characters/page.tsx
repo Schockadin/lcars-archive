@@ -3,12 +3,14 @@ import { userCan } from "@/lib/permissions";
 import PageMeta from "@/components/PageMeta";
 import { requireGM, getRoleMap } from "@/lib/dal";
 import { listAllUsers } from "@/lib/users";
-import { getAllCharactersForAdmin } from "@/lib/characters";
+import {
+  getAllCharactersForAdmin,
+  getCharacterCreationStates,
+} from "@/lib/characters";
 import CharacterAssignmentTable from "./CharacterAssignmentTable";
 import CreationResetTable, {
   type CreationStateRow,
 } from "./CreationResetTable";
-import { parseCharacterStats } from "@/lib/characterStats";
 
 export const metadata: Metadata = {
   title: "Charaktere",
@@ -22,9 +24,10 @@ export const metadata: Metadata = {
 export default async function AdminCharactersPage() {
   await requireGM();
 
-  const [users, characters] = await Promise.all([
+  const [users, characters, creationStates] = await Promise.all([
     listAllUsers(),
     getAllCharactersForAdmin(),
+    getCharacterCreationStates(),
   ]);
   // Gäste dürfen keinen Charakter zugewiesen bekommen (siehe
   // assignCharacterAction in ../actions.ts, das dieselbe Regel serverseitig
@@ -34,23 +37,20 @@ export default async function AdminCharactersPage() {
     .filter((u) => userCan(u, "characters.assignable", roleMap))
     .map((u) => ({ id: u.id, name: u.name }));
 
-  // Erschaffungs-Status je Charakter. Die Werte liegen roh in metadata.stats
-  // und werden wie überall über parseCharacterStats gelesen; an die
-  // Client-Komponente gehen nur die Angaben, die die Tabelle zeigt — der ganze
-  // Wertesatz wäre unnötiger Ballast im Bundle.
+  // Erschaffungs-Status je Charakter. Er kommt aus getCharacterCreationStates
+  // und NICHT aus den Charakterzeilen oben: die haben metadata.stats bereits
+  // abgestreift (siehe parseCharacter), womit hier für jeden Bogen der
+  // Vorgabewert stand und die Tabelle auch fertige Charaktere als „in
+  // Erschaffung" zeigte. An die Client-Komponente gehen nur die Angaben, die
+  // die Tabelle zeigt — der ganze Wertesatz wäre unnötiger Ballast im Bundle.
   const nameById = new Map(users.map((u) => [u.id, u.name]));
-  const creationRows: CreationStateRow[] = characters.map((character) => {
-    const stats = parseCharacterStats(character.metadata.stats);
-    return {
-      id: character.id,
-      name: character.name,
-      playerName: character.player_id
-        ? (nameById.get(character.player_id) ?? null)
-        : null,
-      creationLocked: stats.creationLocked,
-      pending: stats.pendingAdvancements,
-    };
-  });
+  const creationRows: CreationStateRow[] = creationStates.map((state) => ({
+    id: state.id,
+    name: state.name,
+    playerName: state.playerId ? (nameById.get(state.playerId) ?? null) : null,
+    creationLocked: state.creationLocked,
+    pending: state.pending,
+  }));
 
   return (
     <>
