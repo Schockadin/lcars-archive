@@ -57,3 +57,30 @@ test("der mobile Lesemodus behält seine schmale Lesebreite", async ({
 
   expect(maxWidth).toBe("680px");
 });
+
+// Gegenprobe zur Breite: Synopsis, Logbuch-Text und die Logbuch-Übersicht
+// sitzen bündig in der Inhaltsfläche, statt einen zweiten seitlichen Rand
+// über den der Fläche zu legen. Wie oben am computed style geprüft — die
+// echten Seiten brauchen eine Datenbank, die es in der E2E-Umgebung nicht
+// gibt.
+const FLUSH_CONTAINERS = ["mission-detail-article", "mission-log-overview"];
+
+for (const className of FLUSH_CONTAINERS) {
+  test(`.${className} hat keinen eigenen seitlichen Abstand`, async ({
+    page,
+  }) => {
+    await page.goto("/tutorial");
+
+    const padding = await page.evaluate((cls) => {
+      const el = document.createElement("article");
+      el.className = cls;
+      document.body.appendChild(el);
+      const style = getComputedStyle(el);
+      const value = [style.paddingLeft, style.paddingRight];
+      el.remove();
+      return value;
+    }, className);
+
+    expect(padding).toEqual(["0px", "0px"]);
+  });
+}

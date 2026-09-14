@@ -4,7 +4,9 @@
 // der Browser den Download direkt über Content-Disposition anstößt).
 // renderContentPdf (src/lib/pdf/ContentPdfDocument.tsx) nutzt
 // @react-pdf/renderer — eine reine Node-Bibliothek ohne Chromium, läuft
-// dadurch auf Netlify Functions.
+// dadurch auf Netlify Functions. Die Inhaltsart wird mitgegeben, weil sie im
+// Ausdruck sichtbar wird (Titelreiter und Unterzeile, wie bei Charakterbogen
+// und Missionsakte).
 import {
   loadExportableContent,
   isExportContentType,
@@ -27,7 +29,7 @@ export async function GET(request: Request) {
     });
   }
 
-  const pdfBuffer = await renderContentPdf(content);
+  const pdfBuffer = await renderContentPdf(content, type);
 
   return new Response(new Uint8Array(pdfBuffer), {
     headers: {

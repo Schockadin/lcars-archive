@@ -123,7 +123,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
         canCreateLog={canCreateLog}
       />
 
-      <div className="lcars-text lcars-wide-column mt-[16px] px-[16px] flex flex-col gap-[16px]">
+      <div className="lcars-text lcars-wide-column mt-[16px] flex flex-col gap-[16px]">
         {/* Die Akte dieser Mission als PDF — nur für Angemeldete, die Route
             weist Gäste ohnehin ab (ein Link zur Anmeldung wäre eine
             Sackgasse). Ohne eigene Suspense-Grenze: die Seite ist durch das

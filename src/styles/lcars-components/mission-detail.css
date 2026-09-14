@@ -11,12 +11,11 @@
    entfallen.
 ──────────────────────────────────────────────────────────────────── */
 
-/* Übersicht der Logbücher unter der Synopsis — derselbe seitliche Abstand
-   wie der Artikel darüber, damit Überschrift und Liste mit dem Text
-   fluchten. */
+/* Übersicht der Logbücher unter der Synopsis — bündig mit dem Artikel
+   darüber (beide ohne eigenen seitlichen Abstand), damit Überschrift und
+   Liste mit dem Text fluchten. */
 .mission-log-overview {
   margin-top: 32px;
-  padding-inline: 16px;
 }
 
 /* ── Zusammenfassung im aufklappbaren Feld ────────────────────────────
@@ -74,11 +73,12 @@
 .mission-detail-article {
   width: 100%;
   margin-top: 32px;
-  /* Links wie rechts derselbe Abstand: Der Artikel lief links bündig an der
-     Sidebar an (die Inhaltsfläche beginnt exakt an deren Kante), während
-     rechts der Rand der Fläche Luft ließ. Gleicher Wert wie das
-     padding-right von .archive-entry. */
-  padding-inline: 16px;
+  /* Kein eigener seitlicher Abstand: Synopsis wie Logbuch sitzen bündig in
+     der Inhaltsfläche (.lcars-main-content), die ihren Rand selbst setzt.
+     Die 16px, die hier eine Zeit lang links wie rechts standen, legten sich
+     als zweiter Rand über den der Fläche — auf schmalen Displays fehlte die
+     Breite dem Text, den sie einrahmen sollten. */
+  padding-inline: 0;
 }
 
 /* ── Log-Navigation (Vor/Zurück innerhalb desselben Autors) ───────── */

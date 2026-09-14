@@ -550,7 +550,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   kopieren/WhatsApp auch den Download des Inhalts als Markdown-Datei (mit
   YAML-Frontmatter) oder als PDF (serverseitig erzeugt, ohne Chromium/
   Puppeteer — läuft dadurch auf Netlify Functions). Berücksichtigt dieselbe
-  Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst.
+  Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst. Das
+  PDF trägt seit v1.35 die Aufmachung von Charakterbogen und Missionsakte
+  (`ContentPdfDocument.tsx`): blauer Rahmen, Kopfzeile aus Wortmarke und
+  Titelreiter, Datenblock mit deutschen Beschriftungen und der Text über
+  `toPdfBlocks` statt roher Markdown-Zeichen. Farben und Textauszeichnung
+  kommen wie dort aus `src/lib/pdf/sheetTheme.tsx`.
 - **Vorschaubilder in den Übersichten** — Charakterliste, Chronologie und
   Datenbank zeigen links in der Karte (`ChronoCard`) ein Thumbnail des
   Eintrags: bei einer Figur ihr Portrait, sonst das zuerst hochgeladene Bild

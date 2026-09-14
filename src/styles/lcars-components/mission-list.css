@@ -228,8 +228,12 @@
 
 /* Mission-Body (Synopsis / Log-Text) */
 .mission-body {
-  margin: 0px 5px 10px 15px;
-  padding-left: 10px;
+  /* Kein eigener seitlicher Abstand: Der Block saß mit 15px Rand plus 10px
+     Polsterung links deutlich weiter innen als rechts (dort nur 5px) — auf
+     der Missionsseite fiel das als schiefer Text auf, seit Artikel und
+     Logbuch-Übersicht bündig in der Inhaltsfläche sitzen. Den Rand setzt
+     der jeweilige Container, nicht der Textblock. */
+  margin: 0 0 10px;
   font-size: 16px;
   line-height: 1.6;
 }

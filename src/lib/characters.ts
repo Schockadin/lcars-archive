@@ -200,6 +200,70 @@ export async function getAllCharactersForAdmin(): Promise<Character[]> {
   return rows.map((row) => parseCharacter(row));
 }
 
+// Erschaffungs-Stand aller Charaktere für die Verwaltung der Spielleitung
+// (/gm/characters, Abschnitt „Erschaffung").
+//
+// Eigene Abfrage statt getAllCharactersForAdmin: parseCharacter entfernt
+// metadata.stats absichtlich (siehe dort) — genau darin steht aber, ob die
+// Erschaffung abgeschlossen ist. Die Seite las deshalb für JEDEN Bogen den
+// Vorgabewert creationLocked: false und zeigte auch fertig erschaffene
+// Charaktere als „in Erschaffung", ohne Knopf zum Wiederöffnen.
+//
+// Herausgereicht wird nur, was die Tabelle zeigt; der Wertesatz selbst bleibt
+// hier — dieselbe Überlegung, die stripStats überhaupt eingeführt hat.
+// Dieselbe Reihenfolge und derselbe Filter wie getAllCharactersForAdmin,
+// damit beide Abschnitte der Seite dieselben Figuren in derselben Ordnung
+// zeigen.
+export interface CharacterCreationState {
+  id: number;
+  name: string;
+  playerId: number | null;
+  creationLocked: boolean;
+  pending: CharacterStats["pendingAdvancements"];
+}
+
+export async function getCharacterCreationStates(): Promise<
+  CharacterCreationState[]
+> {
+  "use cache";
+  cacheTag(cacheTags.characters);
+  cacheLife("max");
+  const rows = await sql<
+    {
+      id: number;
+      name: string;
+      player_id: number | null;
+      metadata: CharacterMetadata | string | null;
+    }[]
+  >`
+      SELECT id, name, player_id, metadata
+      FROM characters
+      WHERE deleted_at IS NULL AND is_draft = false
+      ORDER BY
+        CASE status
+          WHEN 'active'   THEN 1
+          WHEN 'retired'  THEN 2
+          WHEN 'deceased' THEN 3
+        END,
+        name ASC
+    `;
+  return rows.map((row) => {
+    const metadata = normalizeCharacterMetadata(
+      typeof row.metadata === "string"
+        ? (JSON.parse(row.metadata) as CharacterMetadata)
+        : row.metadata,
+    );
+    const stats = parseCharacterStats(metadata.stats);
+    return {
+      id: row.id,
+      name: row.name,
+      playerId: row.player_id,
+      creationLocked: stats.creationLocked,
+      pending: stats.pendingAdvancements,
+    };
+  });
+}
+
 export async function getCharacterBySlug(
   slug: string,
 ): Promise<Character | null> {
