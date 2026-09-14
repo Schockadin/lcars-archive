@@ -18,6 +18,7 @@ function entry(
     thumbnail,
     metadata: {
       summary: null,
+      aliases: [],
       attributes: [],
       characters: [],
       missions: [],

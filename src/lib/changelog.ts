@@ -138,6 +138,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.34",
+    title: "Aliase für Datenbank-Einträge",
+    items: [
+      {
+        text: "Datenbank-Einträge haben jetzt — wie Charaktere — ein Feld für Aliase: weitere Namen, unter denen derselbe Ort, Gegenstand oder NPC bekannt ist. Sie stehen auf der Eintragsseite unter „Auch bekannt als“ und werden bei der automatischen Verlinkung ebenfalls erkannt, ein „DS12“ im Text führt also zum Eintrag „Deep Space 12“.",
+        category: "inhalte",
+        tutorial: "verlinkung",
+      },
+    ],
+  },
+  {
     version: "1.33",
     title: "Die Erschaffung lässt sich wieder öffnen",
     items: [

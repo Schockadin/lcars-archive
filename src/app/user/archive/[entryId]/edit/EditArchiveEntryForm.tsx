@@ -32,6 +32,7 @@ export default function EditArchiveEntryForm({
         title: entry.title,
         category: entry.category,
         tags: entry.tags.join(", "),
+        aliases: entry.aliases.join(", "),
       }}
       metadataSlot={
         <ArchiveMetadataSlot

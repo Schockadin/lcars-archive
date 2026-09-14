@@ -50,6 +50,12 @@ export interface ArchiveLocationRef {
 export interface ArchiveMetadata {
   // Kurzbeschreibung (Frontmatter "teaser") für Übersicht / Meta-Description.
   summary: string | null;
+  // Weitere Namen, unter denen der Eintrag bekannt ist ("USS Enterprise" →
+  // "Enterprise", "NCC-1701"). Wie bei Charakteren (characters.metadata
+  // .aliases) sind sie zusätzliche Treffer für die automatische Verlinkung
+  // (siehe src/lib/autolink.ts) und stehen auf der Detailseite unter „Auch
+  // bekannt als".
+  aliases: string[];
   // Typ-spezifische Skalar-Felder (Status, Klasse, System, …) zur Anzeige.
   attributes: ArchiveAttribute[];
   // Verknüpfte Charaktere / Missionen (eigene Tabellen).

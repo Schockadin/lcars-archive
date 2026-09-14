@@ -6,7 +6,8 @@ import {
   resolveAllWikilinks,
   type AutolinkTarget,
 } from "@/lib/autolink";
-import { insertCharacter, insertMission } from "./helpers";
+import { createArchiveEntry } from "@/lib/archive";
+import { insertCharacter, insertMission, insertUser } from "./helpers";
 
 describe("applyAutolinks", () => {
   const targets: AutolinkTarget[] = [
@@ -73,6 +74,32 @@ describe("getAutolinkTargets", () => {
     expect(slugs).toContain(publicChar.slug);
     expect(slugs).toContain(mission.slug);
     expect(targets.find((t) => t.canonical === "Privat")).toBeUndefined();
+  });
+
+  // Aliase eines Datenbank-Eintrags sind wie die eines Charakters weitere
+  // Namen, unter denen der Eintrag im Fließtext erkannt werden soll.
+  it("matches an archive entry under its metadata aliases", async () => {
+    const user = await insertUser();
+    const entry = await createArchiveEntry({
+      title: "Deep Space 12",
+      category: "location",
+      tags: [],
+      summary: null,
+      aliases: ["DS12"],
+      attributeValues: {},
+      referenceValues: {},
+      bodyMarkdown: "",
+      ownerUserId: user.id,
+      isDraft: false,
+    });
+
+    const targets = await getAutolinkTargets();
+    const target = targets.find((t) => t.slug === entry.slug);
+
+    expect(target?.phrases).toEqual(["Deep Space 12", "DS12"]);
+    expect(applyAutolinks("Zurück auf DS12.", targets).sourceMd).toBe(
+      "Zurück auf [[Deep Space 12|DS12]].",
+    );
   });
 
   it("excludes the given target from the result", async () => {

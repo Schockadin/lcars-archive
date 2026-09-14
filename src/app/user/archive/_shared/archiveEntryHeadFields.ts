@@ -31,4 +31,12 @@ export const archiveEntryHeadFields: HeadField[] = [
     name: "tags",
     label: "Tags (kommagetrennt)",
   },
+  // Weitere Namen desselben Eintrags — wie bei Charakteren (siehe
+  // characterHeadFields.ts) sind sie zusätzliche Treffer für die automatische
+  // Verlinkung.
+  {
+    kind: "text",
+    name: "aliases",
+    label: "Aliase (kommagetrennt)",
+  },
 ];

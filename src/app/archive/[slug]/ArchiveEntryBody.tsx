@@ -45,8 +45,19 @@ export default function ArchiveEntryBody({
       )}
 
       {entry.category !== "dialogue" &&
-        entry.metadata.attributes.length > 0 && (
+        (entry.metadata.attributes.length > 0 ||
+          entry.metadata.aliases.length > 0) && (
           <div className="char-file-data archive-entry-attrs">
+            {entry.metadata.aliases.length > 0 && (
+              <div className="char-file-field">
+                <span className="char-file-field-label">
+                  Auch bekannt als:
+                </span>{" "}
+                <span className="char-file-field-value">
+                  {entry.metadata.aliases.join(", ")}
+                </span>
+              </div>
+            )}
             {entry.metadata.attributes.map((attr) => (
               <div key={attr.label} className="char-file-field">
                 <span className="char-file-field-label">{attr.label}:</span>{" "}

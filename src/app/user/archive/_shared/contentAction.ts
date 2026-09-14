@@ -76,6 +76,10 @@ export async function archiveEntryAction(
 
   const summary = String(formData.get("summary") ?? "").trim() || null;
 
+  // Aliase: dieselbe kommagetrennte Schreibweise wie Tags und wie die Aliase
+  // eines Charakters (parseList dedupliziert und wirft Leeres weg).
+  const aliases = parseList(formData.get("aliases"));
+
   // Im Entwurf-Modus (ContentEditor.tsx-Checkbox) ist nur der Inhalt
   // optional — siehe canViewDraft-Kommentar in src/lib/visibility.ts.
   const isDraft = formData.get("isDraft") === "on";
@@ -110,6 +114,7 @@ export async function archiveEntryAction(
       category: categoryValue,
       tags,
       summary,
+      aliases,
       attributeValues,
       referenceValues,
       bodyMarkdown,
@@ -171,6 +176,7 @@ export async function archiveEntryAction(
     category: categoryValue,
     tags,
     summary,
+    aliases,
     attributeValues,
     referenceValues,
     bodyMarkdown,

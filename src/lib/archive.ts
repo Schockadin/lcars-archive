@@ -165,6 +165,7 @@ function parseMeta<T extends { metadata: ArchiveMetadata }>(row: T): T {
     ...row,
     metadata: {
       summary: raw.summary ?? null,
+      aliases: raw.aliases ?? [],
       attributes: raw.attributes ?? [],
       characters: raw.characters ?? [],
       missions: raw.missions ?? [],
@@ -524,6 +525,7 @@ export async function createArchiveEntry(input: {
   category: Exclude<ArchiveCategory, "dialogue">;
   tags: string[];
   summary: string | null;
+  aliases: string[];
   attributeValues: Record<string, string>;
   referenceValues: Record<string, string>;
   bodyMarkdown: string;
@@ -544,6 +546,7 @@ export async function createArchiveEntry(input: {
 
   const metadata: ArchiveMetadata = {
     summary: input.summary,
+    aliases: input.aliases,
     attributes,
     characters: [],
     missions: [],
@@ -593,6 +596,7 @@ export interface OwnArchiveEntryForEdit {
   tags: string[];
   sourceMarkdown: string;
   summary: string | null;
+  aliases: string[];
   // key (siehe archiveMetadataFields.ts) → aktueller Wert, für die
   // "Metadaten +/-"-Sektion.
   attributeValues: Record<string, string>;
@@ -670,6 +674,7 @@ export async function getOwnArchiveEntryForEdit(
     tags: row.tags,
     sourceMarkdown: row.sourceMarkdown,
     summary: metadata.summary,
+    aliases: metadata.aliases ?? [],
     attributeValues,
     referenceValues,
     isDraft: row.isDraft,
@@ -691,6 +696,7 @@ export async function updateOwnArchiveEntryContent(
     category: Exclude<ArchiveCategory, "dialogue">;
     tags: string[];
     summary: string | null;
+    aliases: string[];
     attributeValues: Record<string, string>;
     referenceValues: Record<string, string>;
     bodyMarkdown: string;
@@ -711,7 +717,11 @@ export async function updateOwnArchiveEntryContent(
     input.category,
     input.attributeValues,
   );
-  const metadataPatch = { summary: input.summary, attributes };
+  const metadataPatch = {
+    summary: input.summary,
+    aliases: input.aliases,
+    attributes,
+  };
 
   // wasDraft (Stand VOR diesem Update) per CTE — siehe
   // updateOwnCharacterContent in characters.ts für dieselbe Begründung.

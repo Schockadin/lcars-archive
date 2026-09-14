@@ -291,6 +291,9 @@ export async function commitArchiveMarkdown(
 
     const metadata: ArchiveMetadata = {
       summary: edits.summary,
+      // Aliase stehen nur im Frontmatter — das Import-Formular bearbeitet sie
+      // (noch) nicht, verlieren soll der Import sie deshalb trotzdem nicht.
+      aliases: toStringArray(parsed.data.aliases),
       attributes: buildArchiveAttributes(parsed.category, edits.attributeValues),
       characters: [],
       missions: [],

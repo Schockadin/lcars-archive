@@ -1005,8 +1005,9 @@ export default function TutorialPage() {
                 Wer sich das Tippen der Klammern sparen will, nutzt beim
                 Speichern das Kästchen <strong>„Automatisch verlinken“</strong>{" "}
                 unter dem Textfeld: Es durchsucht deinen Text nach bekannten
-                Charakter-Namen (inkl. Aliasen), Missions- und
-                Datenbank-Eintrag-Titeln und verlinkt <strong>jede</strong>{" "}
+                Charakter-Namen, Missions-Titeln und Datenbank-Eintrag-Titeln
+                — bei Charakteren und Datenbank-Einträgen zusätzlich unter ihren{" "}
+                <strong>Aliasen</strong> — und verlinkt <strong>jede</strong>{" "}
                 Erwähnung automatisch. Bei <strong>neuen</strong> Inhalten ist
                 dieses Kästchen bereits vorausgewählt; beim Bearbeiten
                 bestehender Inhalte ist es standardmäßig aus. Codeblöcke,

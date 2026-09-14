@@ -18,6 +18,7 @@ function baseEntryInput(
     category: "location" as const,
     tags: [],
     summary: null,
+    aliases: [],
     attributeValues: {},
     referenceValues: {},
     bodyMarkdown: "",
@@ -225,5 +226,53 @@ describe("getOwnArchiveEntryForEdit", () => {
     const result = await getOwnArchiveEntryForEdit(intruder.id, entry.id);
 
     expect(result).toBeNull();
+  });
+});
+
+// Aliase: wie bei Charakteren weitere Namen desselben Eintrags. Sie liegen in
+// metadata und müssen den Weg Anlegen → Bearbeiten-Formular → Speichern
+// unverändert überstehen.
+describe("Aliase eines Datenbank-Eintrags", () => {
+  it("speichert sie beim Anlegen und gibt sie zum Bearbeiten zurück", async () => {
+    const user = await insertUser();
+    const entry = await createArchiveEntry(
+      baseEntryInput({
+        ownerUserId: user.id,
+        title: "Deep Space 12",
+        aliases: ["DS12", "Terok Nor II"],
+      }),
+    );
+
+    const [row] = await sql<{ metadata: { aliases?: string[] } }[]>`
+      SELECT metadata FROM archive_entries WHERE id = ${entry.id}
+    `;
+    expect(row.metadata.aliases).toEqual(["DS12", "Terok Nor II"]);
+
+    const forEdit = await getOwnArchiveEntryForEdit(user.id, entry.id);
+    expect(forEdit?.aliases).toEqual(["DS12", "Terok Nor II"]);
+  });
+
+  it("ersetzt sie beim Speichern der Bearbeitung", async () => {
+    const user = await insertUser();
+    const entry = await createArchiveEntry(
+      baseEntryInput({ ownerUserId: user.id, aliases: ["Alt"] }),
+    );
+
+    await updateOwnArchiveEntryContent(
+      user.id,
+      entry.id,
+      baseEntryInput({ aliases: ["Neu", "Neuer"] }),
+    );
+
+    const forEdit = await getOwnArchiveEntryForEdit(user.id, entry.id);
+    expect(forEdit?.aliases).toEqual(["Neu", "Neuer"]);
+  });
+
+  it("ist ohne Angabe eine leere Liste — nie undefined", async () => {
+    const user = await insertUser();
+    const entry = await createArchiveEntry(baseEntryInput({ ownerUserId: user.id }));
+
+    const forEdit = await getOwnArchiveEntryForEdit(user.id, entry.id);
+    expect(forEdit?.aliases).toEqual([]);
   });
 });

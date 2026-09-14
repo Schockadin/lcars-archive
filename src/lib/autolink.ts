@@ -17,7 +17,8 @@ export interface AutolinkTarget {
   href: string;
   canonical: string;
   // Namen/Aliase, gegen die im Fließtext gematcht wird — für Charaktere
-  // zusätzlich metadata.aliases, für Missionen/Archiv-Einträge nur der Titel.
+  // zusätzlich metadata.aliases — dasselbe gilt seit v1.34 für
+  // Datenbank-Einträge; für Missionen nur der Titel.
   phrases: string[];
 }
 
@@ -151,8 +152,9 @@ export async function getAutolinkTargets(
     sql<{ slug: string; title: string }[]>`
       SELECT slug, title FROM missions
     `,
-    sql<{ slug: string; title: string }[]>`
-      SELECT slug, title FROM archive_entries
+    sql<{ slug: string; title: string; aliases: string[] | null }[]>`
+      SELECT slug, title, metadata->'aliases' AS aliases
+      FROM archive_entries
       WHERE visibility = 'public' AND category != 'dialogue'
     `,
   ]);
@@ -170,7 +172,7 @@ export async function getAutolinkTargets(
       slug: a.slug,
       href: archiveHref(a.slug),
       canonical: a.title,
-      phrases: [a.title],
+      phrases: [a.title, ...(a.aliases ?? [])],
     })),
     ...missions.map((m) => ({
       type: "mission" as const,
