@@ -63,14 +63,14 @@ export async function saveAutolinkedContent(
       await updateMissionSynopsisWithHtml(content.id, sourceMd, html, editorId);
       revalidateIfInRequest(() => revalidateMission(content.slug));
       break;
-    case "missionLog":
+    case "missionLog": {
       await updateMissionLogSourceMd(content.id, sourceMd, html, editorId);
-      if (content.missionId != null) {
-        revalidateIfInRequest(() =>
-          revalidateLog(content.missionId!, content.slug),
-        );
+      const missionId = content.missionId;
+      if (missionId != null) {
+        revalidateIfInRequest(() => revalidateLog(missionId, content.slug));
       }
       break;
+    }
     case "archiveEntry":
       await updateArchiveEntryContent(content.id, sourceMd, html, editorId);
       revalidateIfInRequest(() => revalidateArchiveEntry(content.slug));

@@ -2,6 +2,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  edgeWeight,
   edgeWidth,
   layoutRelationGraph,
   nodeRadius,
@@ -31,7 +32,22 @@ import {
 // und ohne Filter — und die Verbindungsliste darunter trägt dieselbe
 // Information in Textform.
 
+// Obergrenze der Mindeststärke-Auswahl. Angeboten wird nur, was es im
+// Graphen auch gibt (aus dem stärksten Kantengewicht abgeleitet, siehe
+// minWeightOptions) — eine Auswahl, die garantiert nichts liefert, hilft
+// niemandem; dieselbe Regel wie bei den Changelog-Kategorien und der
+// Chronologie. Der Deckel hält die Liste kurz, wenn eine einzelne Verbindung
+// sehr viele Berührungspunkte hat.
 const MAX_MIN_WEIGHT = 10;
+
+function minWeightOptions(graph: LayoutInput): number[] {
+  const strongest = graph.edges.reduce(
+    (max, edge) => Math.max(max, edgeWeight(edge)),
+    1,
+  );
+  const highest = Math.min(MAX_MIN_WEIGHT, strongest);
+  return Array.from({ length: highest }, (_, i) => i + 1);
+}
 
 export default function RelationGraph({ graph }: { graph: LayoutInput }) {
   const [active, setActive] = useState<string | null>(null);
@@ -49,6 +65,8 @@ export default function RelationGraph({ graph }: { graph: LayoutInput }) {
   // Auswahlliste für den Fokus: immer alle Figuren des ungefilterten Graphen,
   // alphabetisch — sonst könnte man die gerade fokussierte Figur nicht mehr
   // wechseln, sobald der Filter sie als einzige übrig lässt.
+  const weightOptions = useMemo(() => minWeightOptions(graph), [graph]);
+
   const allNodes = useMemo(
     () => [...graph.nodes].sort((a, b) => a.name.localeCompare(b.name, "de")),
     [graph.nodes],
@@ -142,15 +160,13 @@ export default function RelationGraph({ graph }: { graph: LayoutInput }) {
                 setFilter((f) => ({ ...f, minWeight: Number(e.target.value) }))
               }
             >
-              {Array.from({ length: MAX_MIN_WEIGHT }, (_, i) => i + 1).map(
-                (value) => (
-                  <option key={value} value={value}>
-                    {value === 1
-                      ? "alle Verbindungen"
-                      : `ab ${value} Berührungspunkten`}
-                  </option>
-                ),
-              )}
+              {weightOptions.map((value) => (
+                <option key={value} value={value}>
+                  {value === 1
+                    ? "alle Verbindungen"
+                    : `ab ${value} Berührungspunkten`}
+                </option>
+              ))}
             </select>
           </label>
 
@@ -168,8 +184,9 @@ export default function RelationGraph({ graph }: { graph: LayoutInput }) {
 
       {layout.nodes.length === 0 ? (
         <p className="lcars-empty-state">
-          Keine Verbindung passt zu dieser Auswahl — eine Quelle wieder
-          zuschalten oder die Mindeststärke senken.
+          Keine Verbindung passt zu dieser Auswahl — eine Quelle oder die
+          NPCs wieder zuschalten, die Mindeststärke senken oder den Fokus
+          aufheben.
         </p>
       ) : (
         <svg
