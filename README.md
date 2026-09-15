@@ -485,10 +485,28 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   gespielten Session mitsamt AP — ein Termin hat weder AP noch Gutschriften,
   und eine gespielte Session braucht keine Zusagen mehr. Wer nicht geantwortet
   hat, hat **keine Zeile**; „noch offen" ist damit die Abwesenheit einer
-  Antwort und kein Wert, der gepflegt werden müsste. Ein Termin verschwindet
-  erst **sechs Stunden nach Beginn** aus der Liste — sonst fiele der Abend
-  mitten im Spielen heraus. Eine zweite Antwort ersetzt die erste; eine
-  verschobene Uhrzeit lässt die Zusagen stehen. Die Zusage-Action prüft ihr
+  Antwort und kein Wert, der gepflegt werden müsste. Auf der Startseite steht
+  seit v1.38 nur noch, was **in der Zukunft liegt** (`listUpcomingSessions`:
+  `scheduled_at > NOW()`); bis dahin galt eine Nachlauffrist von sechs
+  Stunden, damit ein Abend nicht mitten im Spielen aus der Liste fällt — das
+  Dashboard zeigte dadurch aber stundenlang einen längst begonnenen Abend samt
+  Zusage-Knöpfen. Die Spielleitung sieht die vergangenen weiterhin über
+  `listAllPlannedSessions` unter `/gm/sessions`. Eine zweite Antwort ersetzt
+  die erste; eine verschobene Uhrzeit lässt die Zusagen stehen.
+
+  Ein **neu angekündigter** Termin erreicht die Spielenden seiner eingeplanten
+  Figuren per **Mail/Push** (`notifyPlannedSessionPlayers` in
+  `src/app/actions/plannedSessions.ts`, Empfänger aus
+  `getPlannedSessionPlayers`) — vorher stand er nur auf dem Dashboard und wurde
+  entsprechend übersehen. Kein Opt-in nötig (wie bei einer neuen Mission mit
+  eigener Figur), die globalen Schalter für Mail und Push gelten weiter. Je
+  Person genau eine Nachricht, auch bei zwei eingeplanten Figuren; die
+  ankündigende Person selbst bekommt keine. Nur für Termine in der Zukunft
+  (`isUpcoming` in `plannedSessionFormat.ts`, rein und getestet): ein
+  nachträglich festgehaltener Abend ist keine Ankündigung. Der Versand läuft
+  sequentiell (Rate-Limit bei Resend) und lässt den Termin stehen, wenn eine
+  Mail scheitert — der Fehler landet im Fehlerprotokoll, und die Rückmeldung im
+  Formular nennt, wie viele Personen **tatsächlich** erreicht wurden. Die Zusage-Action prüft ihr
   Recht (`users.browse`, „Nicht-Gast") über **`checkPermission`**, nicht über
   `requireNonGuest`: das harte Gate ruft `forbidden()` auf, und ein
   Auth-Interrupt in einer über `useActionState` aufgerufenen Action wird zu

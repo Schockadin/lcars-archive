@@ -3,6 +3,7 @@ import sql from "@/lib/db";
 import {
   createPlannedSession,
   deletePlannedSession,
+  getPlannedSessionPlayers,
   listAllPlannedSessions,
   listUpcomingSessions,
   setRsvp,
@@ -41,8 +42,9 @@ describe("Session-Planer", () => {
     expect(sessions[0].location).toBe("Bei Anna");
   });
 
-  it("lässt einen Termin erst sechs Stunden nach Beginn verschwinden", async () => {
-    // Sonst fiele der Abend mitten im Spielen aus der Liste.
+  it("zeigt auf dem Dashboard nur, was noch bevorsteht", async () => {
+    // Seit v1.38 ohne Nachlauffrist: Ein begonnener Abend ist kein „nächster
+    // Spieltermin" mehr. Die Spielleitung sieht die vergangenen weiterhin.
     const gm = await insertUser();
     await createPlannedSession(
       { scheduledAt: inTagen(-0.1), title: "Läuft gerade", location: "", notes: "", characterIds: [] },
@@ -52,15 +54,57 @@ describe("Session-Planer", () => {
       { scheduledAt: inTagen(-2), title: "Vorbei", location: "", notes: "", characterIds: [] },
       gm.id,
     );
+    await createPlannedSession(
+      { scheduledAt: inTagen(1), title: "Morgen", location: "", notes: "", characterIds: [] },
+      gm.id,
+    );
 
     expect((await listUpcomingSessions()).map((s) => s.title)).toEqual([
-      "Läuft gerade",
+      "Morgen",
     ]);
     // Die Spielleitung sieht auch die vergangenen.
     expect((await listAllPlannedSessions()).map((s) => s.title)).toEqual([
+      "Morgen",
       "Läuft gerade",
       "Vorbei",
     ]);
+  });
+
+  describe("getPlannedSessionPlayers", () => {
+    it("nennt je Person einen Eintrag samt ihrer eingeplanten Figuren", async () => {
+      const anna = await insertUser({ name: "Anna" });
+      const bert = await insertUser({ name: "Bert" });
+      const tuvok = await insertCharacter({ playerId: anna.id, name: "Tuvok" });
+      const kim = await insertCharacter({ playerId: anna.id, name: "Kim" });
+      const shran = await insertCharacter({ playerId: bert.id, name: "Shran" });
+
+      const players = await getPlannedSessionPlayers([
+        tuvok.id,
+        kim.id,
+        shran.id,
+      ]);
+
+      expect(players).toHaveLength(2);
+      expect(players.map((p) => p.name)).toEqual(["Anna", "Bert"]);
+      // Zwei eigene Figuren, aber nur EIN Empfänger-Eintrag.
+      expect(players[0].characterNames.sort()).toEqual(["Kim", "Tuvok"]);
+      expect(players[1].characterNames).toEqual(["Shran"]);
+    });
+
+    it("lässt Figuren ohne Spieler:in und leere Besetzungen aus", async () => {
+      const herrenlos = await insertCharacter({ name: "Niemandes Figur" });
+
+      expect(await getPlannedSessionPlayers([herrenlos.id])).toEqual([]);
+      expect(await getPlannedSessionPlayers([])).toEqual([]);
+    });
+
+    it("schweigt über stillgelegte Konten", async () => {
+      const inaktiv = await insertUser({ name: "Ehemalig" });
+      const figur = await insertCharacter({ playerId: inaktiv.id });
+      await sql`UPDATE users SET is_active = false WHERE id = ${inaktiv.id}`;
+
+      expect(await getPlannedSessionPlayers([figur.id])).toEqual([]);
+    });
   });
 
   it("nimmt Zu- und Absagen an und lässt sie ändern", async () => {

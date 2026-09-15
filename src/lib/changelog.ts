@@ -167,6 +167,16 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "charaktere",
         tutorial: "gespraeche",
       },
+      {
+        text: "Kündigt die Spielleitung einen Spieltermin an, für den einer deiner Charaktere eingeplant ist, bekommst du dazu eine Mail und eine Push-Nachricht — mit Zeitpunkt, Ort und der Notiz der Spielleitung. Abonnieren musst du dafür nichts.",
+        category: "benachrichtigungen",
+        tutorial: "merken-abonnieren",
+      },
+      {
+        text: "Auf der Startseite stehen nur noch Spieltermine, die noch bevorstehen. Ein Abend, der schon begonnen hat oder vorbei ist, verschwindet von dort; die Spielleitung sieht die vergangenen Termine weiterhin in ihrer Übersicht.",
+        category: "darstellung",
+        tutorial: "merken-abonnieren",
+      },
     ],
   },
   {

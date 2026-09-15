@@ -595,3 +595,45 @@ export async function sendUserMissionParticipationEmail(input: {
     `,
   });
 }
+
+// An die Spielenden der eingeplanten Figuren, sobald die Spielleitung einen
+// Spieltermin in der Zukunft ankündigt (siehe createPlannedSessionAction).
+// Kein Opt-in nötig: Wer mit seiner Figur eingeplant ist, ist Teil des
+// Abends — bis dahin stand ein neuer Termin nur auf dem Dashboard und wurde
+// entsprechend übersehen. Ein Termin OHNE eigene Figur löst nichts aus.
+//
+// scheduledAtLabel kommt fertig formatiert herein (formatSessionMoment in
+// src/lib/plannedSessionFormat.ts) — die Aufbereitung des
+// Postgres-Zeitstempels gehört nicht in ein Mail-Template. location und
+// notes sind optional; ein Termin braucht beides nicht.
+export async function sendPlannedSessionAnnouncedEmail(input: {
+  to: string;
+  name: string;
+  characterNames: string[];
+  sessionTitle: string;
+  scheduledAtLabel: string;
+  location: string;
+  notes: string;
+  dashboardUrl: string;
+}): Promise<SendEmailResult> {
+  const dashboardUrl = escapeHtml(input.dashboardUrl);
+  const withTitle = input.sessionTitle
+    ? `„${input.sessionTitle}" am ${input.scheduledAtLabel}`
+    : input.scheduledAtLabel;
+  return sendEmail({
+    to: input.to,
+    subject: `Neuer Spieltermin: ${withTitle}`,
+    html: `
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>
+        es ist ein neuer Spieltermin angekündigt: <strong>${escapeHtml(withTitle)}</strong>.
+        Mit dabei eingeplant: ${escapeHtml(input.characterNames.join(", "))}.
+      </p>
+      ${input.location ? `<p><strong>Wo:</strong> ${escapeHtml(input.location)}</p>` : ""}
+      ${input.notes ? previewBlock(input.notes) : ""}
+      <p>Zu- und absagen kannst du auf deiner Startseite:</p>
+      <p><a href="${dashboardUrl}">${dashboardUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}

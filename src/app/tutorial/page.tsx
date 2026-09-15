@@ -567,9 +567,25 @@ export default function TutorialPage() {
                 <strong>„Ich bin dabei“</strong> oder{" "}
                 <strong>„Ich kann nicht“</strong> sagst du zu oder ab — du
                 kannst es dir jederzeit anders überlegen, die neue Antwort
-                ersetzt die alte. Wer zugesagt hat, steht am Termin. Ist der
-                Abend gespielt und von der Spielleitung eingetragen,
-                verschwindet der Termin von der Startseite.
+                ersetzt die alte. Wer zugesagt hat, steht am Termin.
+              </p>
+              <p>
+                Ist einer deiner Charaktere für den Termin{" "}
+                <strong>eingeplant</strong>, erfährst du davon außerdem per{" "}
+                <strong>Mail und Push</strong>, sobald der Termin angekündigt
+                wird — samt Zeitpunkt, Ort und der Notiz der Spielleitung. Dafür
+                musst du nichts abonnieren; es gelten nur deine allgemeinen
+                Schalter für Mail- und Push-Benachrichtigungen unter
+                „Einstellungen“. Auch mit zwei eingeplanten Figuren bekommst du
+                nur eine Nachricht.
+              </p>
+              <p>
+                Auf der Startseite stehen ausschließlich Termine, die{" "}
+                <strong>noch bevorstehen</strong>. Ein Abend, der bereits
+                begonnen hat oder vorbei ist, verschwindet von dort — ebenso
+                einer, den die Spielleitung als gespielte Session eingetragen
+                hat. Die Spielleitung sieht auch die vergangenen Termine
+                weiterhin in ihrer eigenen Übersicht.
               </p>
               <p>
                 Eingeloggt zeigt dir die <strong>Startseite</strong> dein
