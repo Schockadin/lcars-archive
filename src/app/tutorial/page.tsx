@@ -365,12 +365,14 @@ export default function TutorialPage() {
                 begonnen hat).
               </p>
               <p>
-                <strong>Deine Charaktere</strong> haben einen eigenen Menüpunkt:
-                Sobald mindestens ein Charakter mit deinem Konto verknüpft ist,
-                erscheint oben <strong>„Charaktere“</strong>. Dort stehen alle
-                deine Charaktere (auch Entwürfe) mit Knöpfen zum
-                Veröffentlichen, Öffnen und Löschen — und du kannst weitere
-                anlegen. Wie das Anlegen selbst abläuft, steht im nächsten
+                <strong>Deine Charaktere</strong> haben einen eigenen
+                Menüpunkt: Unter <strong>„Profil“</strong> steht{" "}
+                <strong>„Charaktere“</strong>, sobald du entweder einen
+                Charakter verknüpft hast oder selbst welche anlegen darfst —
+                als <strong>Spieler</strong> also von Anfang an, auch vor
+                deiner ersten Figur. Dort stehen alle deine Charaktere (auch
+                Entwürfe) mit Knöpfen zum Veröffentlichen, Öffnen und Löschen
+                — und dort legst du neue an. Wie das Anlegen selbst abläuft, steht im nächsten
                 Abschnitt <strong>„Charaktererschaffung“</strong> — dort
                 gesammelt, weil es der längste Ablauf im ganzen Archiv ist. Auf
                 der Seite „Charaktere“ selbst öffnet der Knopf{" "}

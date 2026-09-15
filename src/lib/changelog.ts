@@ -177,6 +177,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "darstellung",
         tutorial: "merken-abonnieren",
       },
+      {
+        text: "„Charaktere“ steht im Profil-Menü ab sofort auch dann, wenn du noch gar keinen Charakter hast — als Spieler kommst du damit von Anfang an zum Anlege-Assistenten, statt den Einstieg erst über die Startseite suchen zu müssen.",
+        category: "charaktere",
+        tutorial: "eigene-inhalte",
+      },
     ],
   },
   {

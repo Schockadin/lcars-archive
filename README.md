@@ -146,10 +146,21 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   davon unabhängig und richtet sich weiterhin nach `canPlayNpcs`.
   Der Knopf **„Neuer Charakter"** steht dort nicht mehr: eigene Charaktere
   haben mit `/user/characters` ihren eigenen Bereich, und dort legt man sie an.
-- **Eigene Charaktere & Charakterwerte** — wer mindestens einen verknüpften
-  Charakter hat, bekommt im Kopfmenü den Punkt „Charaktere" (`/user/characters`):
-  Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Veröffentlichen,
-  Öffnen, Löschen und dem Anlegen weiterer Charaktere.
+- **Eigene Charaktere & Charakterwerte** — den Punkt „Charaktere"
+  (`/user/characters`) im Profil-Menü bekommt, wer dort etwas zu tun hat: wer
+  mindestens einen verknüpften Charakter hat **oder** das Recht
+  `content.create` besitzt (bei der Rolle „Spieler" der Normalfall). Dahinter
+  die Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Veröffentlichen,
+  Öffnen, Löschen und dem Anlegen weiterer.
+
+  Das zweite Kriterium kam mit v1.38.5 dazu und schließt eine Sackgasse: Der
+  Punkt hing allein an „hat schon eine Akte", und seit „Neuer Charakter" aus
+  „Meine Inhalte" nach `/user/characters` ausgezogen ist, führte für eine
+  Spieler-Rolle **ohne** Akte kein Menüweg mehr zum Anlege-Assistenten — nur
+  noch die Einstiegs-Liste auf `/willkommen` bzw. dem Dashboard und der Knopf
+  auf der öffentlichen Charakterliste. Geprüft wird wie überall das Recht,
+  nicht die Primärrolle; serverseitig maßgeblich bleibt
+  `createCharacterWizardAction`.
 - **Anlegen als Assistent** (`/user/characters/new`) — vier Schritte:
   Stammdaten, Werte, Biografie, Vorschau. Alle vier liegen in **einem**
   Formular und bleiben im DOM (nur ausgeblendet): das Blättern verliert keine
