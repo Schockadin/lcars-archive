@@ -1139,13 +1139,16 @@ export async function getDialogueParticipant(
   };
 }
 
-// Wer schreibt in diesem Gespräch bereits für NPCs? Ein Gespräch hat höchstens
-// EIN solches Konto (createDialogue/inviteDialogueParticipants tragen für alle
-// NPCs dasselbe ein), deshalb genügt die erste Zeile.
+// Wer schreibt in diesem Gespräch bereits für NPCs? Zurück kommt EIN Konto:
+// createDialogue trägt für alle NPCs eines Gesprächs dasselbe ein, und mehr
+// braucht der einzige Aufrufer nicht.
 //
-// Gebraucht beim nachträglichen Einladen: Steht der Sprecher schon fest, muss
-// die einladende Person nicht erneut eine Spielleitung wählen — und es kann
-// auch nicht versehentlich eine zweite für dasselbe Gespräch zuständig werden.
+// Gebraucht beim nachträglichen Einladen durch eine Person, die NPCs nicht
+// selbst spielt: Steht der Sprecher schon fest, muss sie nicht erneut eine
+// Spielleitung wählen — und es wird nicht versehentlich eine zweite für
+// dasselbe Gespräch zuständig. Lädt dagegen die SPIELLEITUNG selbst einen NPC
+// nach, wird sie dessen Sprecher (unverändert) — ein Gespräch kann dadurch
+// sehr wohl zwei NPC-sprechende Konten bekommen, jedes für seine NPCs.
 export async function getDialogueNpcSpeakerUserId(
   archiveEntryId: number,
 ): Promise<number | null> {

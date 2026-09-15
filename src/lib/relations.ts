@@ -175,7 +175,6 @@ export async function getRelationsOf(
   );
 }
 
-
 // ── Die Figuren hinter den Verbindungen ────────────────────────────────
 // Ein Knoten ist eine Figur oder ein NPC-Eintrag: Name, Art und Adresse, wie
 // sie „Wer kennt wen" auf der Charakterseite anzeigt.
@@ -195,10 +194,10 @@ export function edgeKey(a: string, b: string): string {
 
 // ── Verlinkungen zwischen Figuren ──────────────────────────────────────
 // Die dritte Quelle neben Missionen und Gesprächen: wer verweist im eigenen
-// Text auf wen. Anders als
-// Missionen und Gespräche ist eine Verlinkung gerichtet — „Tuvok erwähnt
-// Sareth" heißt nicht, dass Sareth Tuvok erwähnt. Für die Beziehung zählt
-// beides gleich, gegenseitige Verweise geben deshalb zwei Berührungspunkte.
+// Text auf wen. Anders als diese beiden ist eine Verlinkung gerichtet —
+// „Tuvok erwähnt Sareth" heißt nicht, dass Sareth Tuvok erwähnt. Für die
+// Beziehung zählt beides gleich, gegenseitige Verweise geben deshalb zwei
+// Berührungspunkte.
 //
 // Zwei Formen, beide im Projekt vorhanden und keine neue Pflege:
 //   • [[Wikilinks]] im Fließtext (source_md) — von Hand getippt oder vom
