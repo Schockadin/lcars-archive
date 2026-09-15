@@ -22,6 +22,30 @@ import {
 // Verlinkungslogik, hier der Schreibzugriff auf die vier Content-Tabellen.
 // Die Datenschicht (characters.ts/missions.ts/archive.ts) darf dieses Modul
 // NICHT importieren, sonst entstünde ein Import-Kreis.
+
+// Next wirft in revalidateTag eine Invariante ("static generation store
+// missing", Fehlercode E263), wenn es außerhalb eines Requests gerufen wird.
+// Beim Bulk-Werkzeug passiert das nie (Server Action), beim Nachziehen nach
+// einer Umbenennung schon: der Lauf hängt zwar per after() an einer Antwort,
+// läuft aber in Tests und Skripten auch ganz ohne Request — und dort gibt es
+// auch keinen Cache, der zu leeren wäre. Genau dieser Fall wird deshalb
+// verschluckt; jeder andere Fehler fliegt weiter.
+function isMissingRequestScope(err: unknown): boolean {
+  const code = (err as { __NEXT_ERROR_CODE?: string } | null)?.__NEXT_ERROR_CODE;
+  if (code === "E263") return true;
+  return (
+    err instanceof Error && err.message.includes("static generation store")
+  );
+}
+
+function revalidateIfInRequest(revalidate: () => void): void {
+  try {
+    revalidate();
+  } catch (err) {
+    if (!isMissingRequestScope(err)) throw err;
+  }
+}
+
 export async function saveAutolinkedContent(
   content: Pick<AutolinkableContent, "contentType" | "id" | "slug" | "missionId">,
   sourceMd: string,
@@ -33,21 +57,23 @@ export async function saveAutolinkedContent(
   switch (content.contentType) {
     case "character":
       await updateCharacterBio(content.id, sourceMd, html, editorId);
-      revalidateCharacter(content.slug);
+      revalidateIfInRequest(() => revalidateCharacter(content.slug));
       break;
     case "mission":
       await updateMissionSynopsisWithHtml(content.id, sourceMd, html, editorId);
-      revalidateMission(content.slug);
+      revalidateIfInRequest(() => revalidateMission(content.slug));
       break;
     case "missionLog":
       await updateMissionLogSourceMd(content.id, sourceMd, html, editorId);
       if (content.missionId != null) {
-        revalidateLog(content.missionId, content.slug);
+        revalidateIfInRequest(() =>
+          revalidateLog(content.missionId!, content.slug),
+        );
       }
       break;
     case "archiveEntry":
       await updateArchiveEntryContent(content.id, sourceMd, html, editorId);
-      revalidateArchiveEntry(content.slug);
+      revalidateIfInRequest(() => revalidateArchiveEntry(content.slug));
       break;
   }
 }
