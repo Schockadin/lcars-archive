@@ -2,6 +2,8 @@ import { getCharacterListItems } from "@/lib/characters";
 import PageMeta from "@/components/PageMeta";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import CharacterPage from "./CharacterPage";
+import HelpButton from "@/components/help/HelpButton";
+import { PublicCharactersGuide } from "@/components/help/guides/PublicGuides";
 
 export const metadata = {
   title: {
@@ -26,7 +28,15 @@ export default async function CharakterePage() {
   return (
     <>
       <PageMeta title="Charaktere" section="characters" />
-      <CharacterPage characters={characters} canCreate={canCreate} />
+      <CharacterPage
+        characters={characters}
+        canCreate={canCreate}
+        help={
+          <HelpButton title="Charaktere" tutorial="seiten-im-ueberblick">
+            <PublicCharactersGuide />
+          </HelpButton>
+        }
+      />
     </>
   );
 }

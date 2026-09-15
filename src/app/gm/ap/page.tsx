@@ -10,6 +10,8 @@ import {
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import ApLedgerTable from "./ApLedgerTable";
 import AdvancementRulesForm from "./AdvancementRulesForm";
+import HelpHeading from "@/components/help/HelpHeading";
+import { GmApGuide } from "@/components/help/guides/GmGuides";
 
 export const metadata: Metadata = {
   title: "AP",
@@ -32,8 +34,14 @@ export default async function GmApPage() {
     <>
       <PageMeta title="AP" section="users" />
       <article className="mb-[10px] lcars-wide-column">
-        <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
-        <h1>Erfahrungspunkte</h1>
+        <HelpHeading
+          eyebrow="Zugriff · Spielleitung"
+          title="Erfahrungspunkte"
+          helpTitle="Leitung · AP"
+          tutorial="spielleitung-admins"
+        >
+          <GmApGuide />
+        </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[12px]">

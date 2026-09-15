@@ -149,6 +149,32 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.39",
+    title: "Ein Fragezeichen auf jeder Seite",
+    items: [
+      {
+        text: "Jede Seite erklärt sich jetzt selbst: Oben rechts steht ein Fragezeichen, das die Anleitung zu genau diesem Bereich in einem Fenster öffnet — mit Schaubildern und ohne die Seite zu verlassen. Es gibt sie für alle zehn Bereiche der Spielleitung, für „Meine Inhalte“ und das Profil sowie für Startseite, Charaktere, Chronologie, Datenbank und Suche.",
+        category: "inhalte",
+        tutorial: "seiten-im-ueberblick",
+      },
+      {
+        text: "Die zehn Werkzeuge der Spielleitung sind ausführlich beschrieben — Kampagne, Sessions, Charaktere, Gruppenblatt, AP, Talente, Schwerpunkte, eigene Regeln, Chronologie und Gespräche, jedes mit einem Schaubild seiner Maske.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Die Anleitung ist von der Fußzeile ins Menü gezogen: Angemeldet führt dich dort das Fragezeichen „Hilfe“ hin, in der LCARS-Oberfläche wie im minimalistischen Interface.",
+        category: "darstellung",
+        tutorial: "seiten-im-ueberblick",
+      },
+      {
+        text: "„Erschaffung erklärt“ heißt jetzt einfach: das Fragezeichen. Der Knopf über der Charakterliste, im Anlege-Assistenten und auf jeder Charakterseite trägt dasselbe Zeichen wie überall sonst — der Text dahinter ist unverändert.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+    ],
+  },
+  {
     version: "1.38",
     title: "Erschaffung zur Hand, Termine im Blick",
     // Der Beziehungsgraph (/characters/beziehungen) ist in dieser Version

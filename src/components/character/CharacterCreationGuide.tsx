@@ -6,7 +6,7 @@ import {
   StatsFigure,
   StepsFigure,
 } from "./CharacterCreationFigures";
-import type { ReactNode } from "react";
+import GuideSection, { GuideBody } from "@/components/help/GuideSection";
 
 // Der Charakter-Erschaffungsprozess, an einer Stelle beschrieben und an vier
 // Stellen gezeigt: als eigener Abschnitt der Anleitung (/tutorial, Anker
@@ -14,7 +14,7 @@ import type { ReactNode } from "react";
 // über der eigenen Charakterliste (/user/characters), im Anlege-Assistenten
 // (/user/characters/new) und auf der eigenen Charakterseite — also überall
 // dort, wo man gerade an einer Figur arbeitet und nachschlagen will, ohne die
-// halb ausgefüllte Seite zu verlassen.
+// halb ausgefüllte Seite zu verlassen (siehe help/HelpButton.tsx).
 //
 // Bewusst reines JSX ohne Hooks, Server-Importe und "use client": so lässt
 // sich dieselbe Datei von der server-gerenderten Anleitung UND aus dem
@@ -25,55 +25,16 @@ import type { ReactNode } from "react";
 // ist lang, und wer ihn MITTEN im Anlegen aufschlägt, sucht eine bestimmte
 // Stelle („Wie war das mit den Talenten?") statt ihn von vorn zu lesen. Die
 // Überschriften sind die Sprungmarken dafür; jeder Abschnitt trägt ein
-// kleines Schema seiner Maske (siehe CharacterCreationFigures.tsx).
+// kleines Schema seiner Maske (siehe CharacterCreationFigures.tsx). Abschnitt
+// und Rahmen kommen aus help/GuideSection.tsx — dieselben wie in den übrigen
+// Bereichs-Anleitungen.
 //
 // Die Überschrift des Ganzen setzt die jeweilige Umgebung (Akkordeon-Zeile
 // bzw. Fenster-Kopf), hier stehen nur die Abschnitte.
 
-// Ein Abschnitt: Überschrift, Text und daneben (auf breiten Schirmen) sein
-// Schema. Unter 900px rutscht das Bild unter den Text — nebeneinander bliebe
-// für beide zu wenig Breite.
-function GuideSection({
-  title,
-  figure,
-  children,
-}: {
-  title: string;
-  figure?: ReactNode;
-  children: ReactNode;
-}) {
-  return (
-    <section className="flex flex-col gap-[10px]">
-      {/* h3, nicht h2: Im Fenster steht darüber die h2 des Fenster-Kopfs
-          („Charaktererschaffung", siehe ModalOverlay) — dort stimmt die
-          Staffelung also genau. In der Anleitung sitzt an dieser Stelle die
-          Akkordeon-Zeile, die ein <button> ist und keine Überschrift; dort
-          fehlt zwischen der h1 „Tutorial" und diesen Abschnitten formal eine
-          Ebene. Das gilt für jeden Abschnitt der Anleitung gleichermaßen und
-          ist keine Eigenheit dieses Textes — die Alternative wäre, die
-          Überschriftenebene je Einbettung durchzureichen, was einen Text mit
-          zwei verschiedenen Ebenen hinterließe. */}
-      <h3 className="text-[17px] font-bold tracking-[0.08em] uppercase">
-        {title}
-      </h3>
-      <div className="flex flex-col gap-[12px] min-[900px]:flex-row min-[900px]:items-start min-[900px]:gap-[20px]">
-        <div className="flex flex-col gap-[12px] min-[900px]:flex-1">
-          {children}
-        </div>
-        {figure && (
-          <div className="min-[900px]:w-[280px] shrink-0">{figure}</div>
-        )}
-      </div>
-    </section>
-  );
-}
-
 export default function CharacterCreationGuide() {
   return (
-    // gap-[24px] statt der 12px zwischen Absätzen: Der Abstand ZWISCHEN
-    // Abschnitten muss größer sein als der innerhalb, sonst trägt die
-    // Gliederung nicht.
-    <div className="lcars-text flex flex-col gap-[24px]">
+    <GuideBody>
       <GuideSection title="Die vier Schritte" figure={<StepsFigure />}>
         <p>
           <strong>Einen neuen Charakter</strong> legst du in vier Schritten an:
@@ -291,6 +252,6 @@ export default function CharacterCreationGuide() {
           AP erneut abgebucht.
         </p>
       </GuideSection>
-    </div>
+    </GuideBody>
   );
 }

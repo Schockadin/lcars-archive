@@ -33,6 +33,7 @@ async function ChronologieContent({ searchParams }: Props) {
 
   return (
     <CategoryTimeline
+      help
       category={initialCategory}
       initialScope={initialScope}
       initialPerson={initialPerson}

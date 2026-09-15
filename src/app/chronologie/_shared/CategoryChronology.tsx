@@ -6,6 +6,8 @@ import { getTimeline } from "@/lib/timeline";
 import { categoryVisual, latestEventDate, type TimelineScope } from "@/lib/timelineTypes";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import { listCharactersForEvents } from "@/lib/timelineManualEvents";
+import HelpButton from "@/components/help/HelpButton";
+import { PublicChronologyGuide } from "@/components/help/guides/PublicGuides";
 
 // Das Gerüst und der Datenzugriff der Chronologie — geteilt von den drei
 // Seiten, die sie zeigen: /chronologie, /chronologie/mission und
@@ -39,10 +41,16 @@ export default async function CategoryTimeline({
   category = null,
   initialScope,
   initialPerson = null,
+  help = false,
 }: {
   category?: string | null;
   initialScope?: TimelineScope;
   initialPerson?: string | null;
+  // Den Fragezeichen-Knopf trägt nur die Chronologie selbst (/chronologie).
+  // Die Kategorie- und Missions-Routen zeigen dieselbe Ansicht mit
+  // vorgewähltem Filter — dort erklärt derselbe Text nichts Neues, und die
+  // Kopfzeile bliebe doppelt beknöpft, wenn man von dort weiterklickt.
+  help?: boolean;
 }) {
   const viewer = await getViewer();
   const events = await getTimeline();
@@ -53,6 +61,13 @@ export default async function CategoryTimeline({
   const characters = canAddEvent ? await listCharactersForEvents() : [];
   return (
     <TimelineView
+      help={
+        help ? (
+          <HelpButton title="Chronologie" tutorial="seiten-im-ueberblick">
+            <PublicChronologyGuide />
+          </HelpButton>
+        ) : undefined
+      }
       events={events}
       initialCategory={category}
       initialScope={initialScope}

@@ -91,6 +91,49 @@ test("/tutorial#<abschnitt> klappt den Ziel-Abschnitt automatisch auf", async ({
   await expect(trigger).toHaveAttribute("aria-expanded", "true");
 });
 
+test("die öffentliche Seite erklärt sich über ihr Fragezeichen", async ({
+  page,
+}) => {
+  // Der Menüpunkt „Hilfe" steht nur Angemeldeten zur Verfügung — ohne Konto
+  // ist dieser Knopf die einzige Erklärung, die es gibt. Geprüft auf /search,
+  // das für anonyme Besucher ohne Datenbank auskommt.
+  await page.goto("/search");
+  await page.getByRole("button", { name: "Hilfe: Suche" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Suche" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("Volltextsuche");
+  // Die Schemata sind Inhalt, keine Dekoration.
+  await expect(dialog.locator('svg[role="img"]').first()).toBeVisible();
+
+  // Und wieder zu.
+  await dialog.getByRole("button", { name: "Schließen" }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+});
+
+test("die Anleitung führt die Bereichs-Abschnitte", async ({ page }) => {
+  // Dieselben Texte, die hinter den Fragezeichen stehen, gehören auch am
+  // Stück lesbar in die Anleitung — sonst gäbe es sie zweimal.
+  await page.goto("/tutorial#seiten-im-ueberblick");
+  const seiten = page.locator("#seiten-im-ueberblick");
+  await expect(
+    seiten.locator(".lcars-accordion-trigger").first(),
+  ).toHaveAttribute("aria-expanded", "true");
+  await expect(seiten).toContainText("Pen-&-Paper-Kampagne");
+
+  await page.goto("/tutorial#mein-bereich");
+  await expect(page.locator("#mein-bereich")).toContainText("Meine Inhalte");
+});
+
+test("der Footer führt die Anleitung nicht mehr", async ({ page }) => {
+  // Sie ist in das Menü gezogen (Fragezeichen, nur für Angemeldete) — im
+  // Footer bleibt, was rechtlich dorthin gehört.
+  await page.goto("/tutorial");
+  const footer = page.locator(".lcars-footer-bar");
+  await expect(footer.getByRole("link", { name: "Impressum" })).toBeVisible();
+  await expect(footer.getByRole("link", { name: "Tutorial" })).toHaveCount(0);
+});
+
 test("der Changelog verlinkt in die Anleitung", async ({ page }) => {
   await page.goto("/changelog");
   const link = page

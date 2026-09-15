@@ -23,13 +23,21 @@ export function HeaderBar() {
   );
 }
 
+// Der frühere Link „Tutorial" steht hier nicht mehr: Die Anleitung ist seit
+// v1.39 ein Menüpunkt (Fragezeichen, nur für Angemeldete — siehe
+// HeaderUserNav.tsx), und wer ohne Konto liest, bekommt seine Erklärung auf
+// der Seite selbst (siehe components/help/). Im Footer bleibt, was rechtlich
+// dorthin gehört.
 export function FooterBar({ appVersion }: { appVersion: string | null }) {
   return (
     // lcars-footer-bar: im minimalistischen UI zu einer schlichten Textzeile
     // umgestylt (siehe src/styles/minimal-ui.css); die reinen Farbblöcke
     // (lcars-deco-block) werden dort ausgeblendet, die Links bleiben.
     <div className="lcars-footer-bar lcars-elbow-bar gap-[5px]">
-      <div className="lcars-deco-block w-[25%] h-[var(--lcars-bar-h)] bg-[var(--lcars-secondary)]" />
+      {/* 35% statt der früheren 25%: Ohne den Tutorial-Link fehlten sonst
+          10% an der Leiste und rechts klaffte eine Lücke — die Balken und die
+          beiden verbliebenen Links (je 10%) müssen zusammen 100% ergeben. */}
+      <div className="lcars-deco-block w-[35%] h-[var(--lcars-bar-h)] bg-[var(--lcars-secondary)]" />
       <div className="lcars-deco-block w-[15%] h-[var(--lcars-bar-h)] bg-[var(--lcars-tertiary)]" />
       <div className="w-[30%] h-[var(--lcars-bar-h)] bg-[var(--lcars-quinary)] flex items-center justify-end px-[10px]">
         {appVersion && (
@@ -38,9 +46,6 @@ export function FooterBar({ appVersion }: { appVersion: string | null }) {
           </Link>
         )}
       </div>
-      <Link href="/tutorial" className="lcars-footer-menu">
-        Tutorial
-      </Link>
       <Link href="/impressum" className="lcars-footer-menu">
         Impressum
       </Link>

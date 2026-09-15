@@ -3,6 +3,8 @@ import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
 import { listFocusesFresh } from "@/lib/focuses";
 import FocusEditor from "./FocusEditor";
+import HelpHeading from "@/components/help/HelpHeading";
+import { GmFocusesGuide } from "@/components/help/guides/GmGuides";
 
 export const metadata: Metadata = {
   title: "Schwerpunkte",
@@ -21,8 +23,14 @@ export default async function GmFocusesPage() {
     <>
       <PageMeta title="Schwerpunkte" section="users" />
       <article className="mb-[10px] lcars-wide-column">
-        <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
-        <h1>Schwerpunkte</h1>
+        <HelpHeading
+          eyebrow="Zugriff · Spielleitung"
+          title="Schwerpunkte"
+          helpTitle="Leitung · Schwerpunkte"
+          tutorial="spielleitung-admins"
+        >
+          <GmFocusesGuide />
+        </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[16px]">
           <p className="text-lcars-ink-contrast text-[13px]">

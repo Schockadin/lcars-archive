@@ -5,6 +5,9 @@ import PageMeta from "@/components/PageMeta";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import { dialoguesHref } from "@/lib/contentRoutes";
 import ArchiveEntryList from "./ArchiveEntryList";
+import HelpButton from "@/components/help/HelpButton";
+import { HelpTitleRow } from "@/components/help/HelpHeading";
+import { PublicDatabaseGuide } from "@/components/help/guides/PublicGuides";
 
 export const metadata = {
   title: {
@@ -42,7 +45,15 @@ export default async function ArchivePage({
     <>
       <PageMeta title="Datenbank" section="archive" />
       <div className="lcars-wide-column">
-        <h1 className="lcars-data-row-heading">Datenbank</h1>
+        <HelpTitleRow
+          help={
+            <HelpButton title="Datenbank" tutorial="seiten-im-ueberblick">
+              <PublicDatabaseGuide />
+            </HelpButton>
+          }
+        >
+          <h1 className="lcars-data-row-heading">Datenbank</h1>
+        </HelpTitleRow>
         <p className="lcars-eyebrow mb-2">Enzyklopädie der bekannten Welt</p>
         <ArchiveEntryList
           key={initialCategory ?? "all"}

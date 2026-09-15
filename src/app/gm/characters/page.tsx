@@ -11,6 +11,8 @@ import CharacterAssignmentTable from "./CharacterAssignmentTable";
 import CreationResetTable, {
   type CreationStateRow,
 } from "./CreationResetTable";
+import HelpHeading from "@/components/help/HelpHeading";
+import { GmCharactersGuide } from "@/components/help/guides/GmGuides";
 
 export const metadata: Metadata = {
   title: "Charaktere",
@@ -56,8 +58,14 @@ export default async function AdminCharactersPage() {
     <>
       <PageMeta title="Charaktere" section="users" />
       <article className="mb-[10px] lcars-wide-column">
-        <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
-        <h1>Charaktere</h1>
+        <HelpHeading
+          eyebrow="Zugriff · Spielleitung"
+          title="Charaktere"
+          helpTitle="Leitung · Charaktere"
+          tutorial="spielleitung-admins"
+        >
+          <GmCharactersGuide />
+        </HelpHeading>
 
         {/* Zwei Abschnitte wie auf der Kampagnen-Seite: erst wem die Figur
             gehört, dann wo ihre Erschaffung steht. */}

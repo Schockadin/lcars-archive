@@ -6,6 +6,8 @@ import { LcarsSkeleton } from "@/components/lcars";
 import PageSkeleton from "@/app/_shared/PageSkeleton";
 import { APP_VERSION } from "@/lib/version";
 import { getActiveUser } from "@/lib/dal";
+import HelpButton from "@/components/help/HelpButton";
+import { HomeGuide } from "@/components/help/guides/PublicGuides";
 
 // Platzhalter für die DB-Statistik, während getDBStats() lädt. Der Rest der
 // Startseite rendert sofort, nur dieser Block streamt nach.
@@ -55,6 +57,11 @@ async function HomeContent() {
   return (
     <LandingPage
       appVersion={APP_VERSION}
+      help={
+        <HelpButton title="Startseite" tutorial="seiten-im-ueberblick">
+          <HomeGuide />
+        </HelpButton>
+      }
       stats={
         <Suspense fallback={<StatsSkeleton />}>
           <LandingStats />

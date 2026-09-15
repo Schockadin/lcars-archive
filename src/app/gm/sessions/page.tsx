@@ -10,6 +10,8 @@ import { getAdvancementRules } from "@/lib/advancementSettings";
 import SessionManager from "./SessionManager";
 import PlannedSessionManager from "./PlannedSessionManager";
 import { listAllPlannedSessions } from "@/lib/plannedSessions";
+import HelpHeading from "@/components/help/HelpHeading";
+import { GmSessionsGuide } from "@/components/help/guides/GmGuides";
 
 export const metadata: Metadata = {
   title: "Sessions",
@@ -40,8 +42,14 @@ export default async function GmSessionsPage() {
     <>
       <PageMeta title="Sessions" section="users" />
       <article className="mb-[10px] lcars-wide-column">
-        <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
-        <h1>Sessions</h1>
+        <HelpHeading
+          eyebrow="Zugriff · Spielleitung"
+          title="Sessions"
+          helpTitle="Leitung · Sessions"
+          tutorial="spielleitung-admins"
+        >
+          <GmSessionsGuide />
+        </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[16px]">
           {/* Erst der Blick nach vorn (Termine), dann die Nachbuchung der

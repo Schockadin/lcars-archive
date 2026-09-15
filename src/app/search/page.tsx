@@ -4,6 +4,9 @@ import { hasRagConfig } from "@/lib/rag";
 import PageMeta from "@/components/PageMeta";
 import SearchResultsView from "./SearchResultsView";
 import RagChat from "@/app/rag/RagChat";
+import HelpButton from "@/components/help/HelpButton";
+import { HelpTitleRow } from "@/components/help/HelpHeading";
+import { PublicSearchGuide } from "@/components/help/guides/PublicGuides";
 
 export const metadata = {
   title: {
@@ -30,7 +33,15 @@ export default async function SearchPage({
       <PageMeta title="Suche" section="search" />
       <div className="lcars-wide-column">
         <div className="mb-[16px]">
-          <h1 className="lcars-data-row-heading">Suche</h1>
+          <HelpTitleRow
+            help={
+              <HelpButton title="Suche" tutorial="seiten-im-ueberblick">
+                <PublicSearchGuide />
+              </HelpButton>
+            }
+          >
+            <h1 className="lcars-data-row-heading">Suche</h1>
+          </HelpTitleRow>
           <p className="lcars-eyebrow">
             {q ? `Ergebnisse für „${q}“` : "Datenbank durchsuchen"}
           </p>

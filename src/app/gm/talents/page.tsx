@@ -3,6 +3,8 @@ import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
 import { listTalentsFresh } from "@/lib/talents";
 import TalentEditor from "./TalentEditor";
+import HelpHeading from "@/components/help/HelpHeading";
+import { GmTalentsGuide } from "@/components/help/guides/GmGuides";
 
 export const metadata: Metadata = {
   title: "Talente",
@@ -20,8 +22,14 @@ export default async function GmTalentsPage() {
     <>
       <PageMeta title="Talente" section="users" />
       <article className="mb-[10px] lcars-wide-column">
-        <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
-        <h1>Talente</h1>
+        <HelpHeading
+          eyebrow="Zugriff · Spielleitung"
+          title="Talente"
+          helpTitle="Leitung · Talente"
+          tutorial="spielleitung-admins"
+        >
+          <GmTalentsGuide />
+        </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[16px]">
           <p className="text-lcars-ink-contrast text-[13px]">

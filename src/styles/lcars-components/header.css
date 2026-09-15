@@ -288,6 +288,25 @@
   background-color: var(--lcars-tertiary);
 }
 
+/* ── „Hilfe" — der Fragezeichen-Menüpunkt ──────────────────────────── */
+/* Er sitzt im Header-Raster in der UNTEREN Reihe neben dem Logout: die obere
+   ist mit Profil/Leitung/Admin schon voll (drei Spalten), ein vierter Punkt
+   dort erzwänge eine dritte Reihe und ließe alle Pillen schrumpfen. order
+   statt einer anderen Markup-Reihenfolge, weil in der Sidebar
+   (minimalistisches UI) die Reihenfolge des Markups gilt — dort steht „Hilfe"
+   über dem Logout, wo man einen Menüpunkt erwartet. */
+.lcars-usernav--header .lcars-usernav-form {
+  order: 1;
+}
+.lcars-usernav--header .lcars-usernav-pill--help {
+  order: 2;
+}
+/* Dass „Hilfe" als einziger Menüpunkt sein Icon IMMER zeigt, steht in
+   minimal-ui.css: Die Regel, die die Icons ausblendet, wohnt dort — und weil
+   diese Datei unter layer(components) importiert wird, verlöre ein Override
+   hier gegen das unlayered importierte minimal-ui.css, ganz gleich wie
+   spezifisch er wäre (siehe globals.css). */
+
 @media (max-width: 920px) {
   .lcars-usernav {
     grid-template-columns: repeat(var(--usernav-cols), 158px);

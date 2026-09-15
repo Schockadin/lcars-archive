@@ -24,6 +24,8 @@ import {
 import { listGmUsers } from "@/lib/users";
 import UserContentBrowser from "./UserContentBrowser";
 import NewContentButtons, { type NewContentData } from "./NewContentButtons";
+import HelpHeading from "@/components/help/HelpHeading";
+import { MyContentGuide } from "@/components/help/guides/UserGuides";
 
 export const metadata: Metadata = {
   title: "Meine Inhalte",
@@ -149,7 +151,9 @@ export default async function UserContentPage() {
           Titel über dem Inhalt sitzt und nicht am linken Rand (Breite wie
           /chronologie, /search). */}
       <div className="lcars-wide-column">
-        <h1>Meine Inhalte</h1>
+        <HelpHeading title="Meine Inhalte" tutorial="mein-bereich">
+          <MyContentGuide />
+        </HelpHeading>
         {/* Die Knöpfe stehen ÜBER der Liste, nicht daneben: neben ihr blieb
             dem Inhaltsbrowser nur eine schmale Restspalte, obwohl er die
             Tabelle mit den meisten Spalten dieser Seite trägt. */}

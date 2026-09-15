@@ -2,13 +2,19 @@
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { LcarsHorSep } from "@/components/lcars";
 import { CAMPAIGN_START_YEAR, getCampaignYears } from "@/lib/constants";
+import { HelpTitleRow } from "@/components/help/HelpHeading";
 
 export default function LandingPage({
   stats,
   appVersion,
+  help,
 }: {
   stats: React.ReactNode;
   appVersion: string | null;
+  // Der fertige Hilfe-Knopf samt Anleitung, von der Seite gereicht (siehe
+  // help/HelpButton.tsx) — als Prop, damit der Anleitungstext
+  // server-gerendert bleibt.
+  help?: React.ReactNode;
 }) {
   usePageMeta("Home", "home");
 
@@ -25,9 +31,9 @@ export default function LandingPage({
       {/* Trennlinie */}
       <LcarsHorSep startColor="var(--lcars-primary)" />
 
-      <div className="flex">
+      <HelpTitleRow help={help}>
         <div className="lcars-heading">Willkommen im Neo Archiv</div>
-      </div>
+      </HelpTitleRow>
 
       {/* Erklärtext */}
       <p className="lcars-body lcars-text">

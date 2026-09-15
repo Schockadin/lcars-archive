@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import Link from "next/link";
 import { LcarsSwitch, LcarsListFilterInput } from "@/components/lcars";
 import ChronoRow from "@/components/timeline/ChronoRow";
@@ -13,6 +13,7 @@ import {
 } from "@/lib/characterFormat";
 import { characterHref } from "@/lib/contentRoutes";
 import { PlusIcon } from "@/lib/icons";
+import { HelpTitleRow } from "@/components/help/HelpHeading";
 
 // Die Charakterliste (/characters) — dieselbe Liste wie Chronologie und
 // Datenbank: Schiene mit Punkt (ChronoRow, ohne Datumsspalte), Aktenkarte
@@ -62,8 +63,14 @@ type SortMode = "status" | "generation";
 export default function CharacterPage({
   characters,
   canCreate = false,
+  help,
 }: {
   characters: CharacterListItem[];
+  // Der fertige Hilfe-Knopf samt Anleitung, von der Seite gereicht (siehe
+  // help/HelpButton.tsx). Als Prop und nicht hier gebaut, damit der
+  // Anleitungstext server-gerendert bleibt und nicht im Browser-Bündel dieser
+  // Liste landet.
+  help?: ReactNode;
   // Ob die betrachtende Person Charaktere anlegen darf (Recht
   // "content.create", siehe /user/characters/new). Ohne das Recht führt der
   // Knopf nur auf eine Absage — dann wird er gar nicht erst angeboten, wie
@@ -103,7 +110,9 @@ export default function CharacterPage({
   return (
     <div className="lcars-wide-column">
       <div className="mb-[16px]">
-        <h1 className="lcars-data-row-heading">Charaktere</h1>
+        <HelpTitleRow help={help}>
+          <h1 className="lcars-data-row-heading">Charaktere</h1>
+        </HelpTitleRow>
         <p className="lcars-eyebrow">
           Das Ensemble der Kampagne ·{" "}
           {mode === "status" ? "nach Status" : "nach Generation"}
