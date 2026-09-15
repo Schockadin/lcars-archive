@@ -21,11 +21,13 @@ import type { ReactNode } from "react";
 // Telefon volle Breite unter dem Text, auf dem Desktop schmal daneben (das
 // Raster steckt in GuideFigure unten).
 
-// Gemeinsamer Rahmen: Bildfläche + Bildunterschrift. Das SVG bekommt eine
+// Gemeinsamer Rahmen: Bildfläche + Bildunterschrift. Nicht exportiert — nach
+// außen gehen nur die fertigen Bilder, damit die Anleitung keine halben
+// Bausteine zusammensetzen muss. Das SVG bekommt eine
 // echte Beschriftung (role="img" + aria-label), damit es für Screenreader
 // nicht als Dekoration verschwindet — die Bildunterschrift steht ohnehin
 // sichtbar darunter.
-export function GuideFigure({
+function GuideFigure({
   label,
   caption,
   children,

@@ -793,7 +793,10 @@ export async function inviteDialogueParticipantAction(
     if (speaker?.push_notifications_enabled) {
       await sendPushToUser(speaker.id, {
         title: `NPC in "${title}"`,
-        body: `${inviter?.name ?? "Die Administration"} hat ${npcList} ins Gespräch geholt — du schreibst für ${newNpcNames.length === 1 ? "ihn" : "sie"}.`,
+        // Ohne Pronomen für den NPC: Ein Eintrag kann jedes Geschlecht
+        // haben, „für ihn" wäre bei „Wirtin Sareth" schlicht falsch — und
+        // die Zahl (ein NPC oder mehrere) steckt ohnehin schon in npcList.
+        body: `${inviter?.name ?? "Die Administration"} hat ${npcList} ins Gespräch geholt. Das Schreiben übernimmst du.`,
         url: dialogueUrl,
       });
     }

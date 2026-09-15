@@ -241,7 +241,9 @@ export async function sendDialogueNpcSpeakerEmail(input: {
   to: string;
   name: string;
   invitedByName: string;
-  // Bereits zusammengesetzte Namensliste der neu hinzugekommenen NPCs.
+  // Bereits zusammengesetzte Namensliste der neu hinzugekommenen NPCs. Der
+  // Text kommt ohne Pronomen für sie aus: Ein NPC-Eintrag kann jedes
+  // Geschlecht haben, und die Vorlage kennt es nicht.
   npcNames: string;
   dialogueTitle: string;
   dialogueUrl: string;
@@ -254,8 +256,8 @@ export async function sendDialogueNpcSpeakerEmail(input: {
       <p>Hallo ${escapeHtml(input.name)},</p>
       <p>
         ${escapeHtml(input.invitedByName)} hat ${escapeHtml(input.npcNames)} zum
-        laufenden Gespräch "${escapeHtml(input.dialogueTitle)}" hinzugefügt —
-        du schreibst dort ab jetzt für sie:
+        laufenden Gespräch "${escapeHtml(input.dialogueTitle)}" hinzugefügt.
+        Das Schreiben übernimmst du:
       </p>
       <p><a href="${dialogueUrl}">${dialogueUrl}</a></p>
       <p>— Neo Archive</p>
