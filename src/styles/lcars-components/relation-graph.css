@@ -21,8 +21,8 @@
 }
 
 /* Bedienleiste über dem Graphen (Quellen/NPCs, Fokus, Mindeststärke).
-   Zwei Zeilen, die auf schmalen Geräten umbrechen — die Schalter sind
-   gewöhnliche Pill-Buttons und Selects, hier nur zusammengefasst. */
+   Zwei Zeilen, die auf schmalen Geräten umbrechen — die Bedienelemente sind
+   gewöhnliche Kästchen und Auswahlfelder, hier nur zusammengefasst. */
 .relation-graph-controls {
   display: flex;
   flex-wrap: wrap;
@@ -31,9 +31,10 @@
   gap: 8px 16px;
 }
 
-/* Ein abgeschalteter Schalter bleibt lesbar, tritt aber zurück. */
-.relation-graph-controls button[aria-pressed="false"] {
-  opacity: 0.7;
+/* Die Beschriftung gehört zum Kästchen und schaltet mit — also auch der
+   Zeiger. */
+.relation-graph-controls label {
+  cursor: pointer;
 }
 
 .relation-graph-controls select {

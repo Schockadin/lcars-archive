@@ -129,7 +129,7 @@ export default function TutorialPage() {
               </p>
               <p>
                 Weil eine ganze Kampagne schnell unübersichtlich wird, lässt
-                sich der Graph über der Zeichnung eingrenzen: Die Schalter{" "}
+                sich der Graph über der Zeichnung eingrenzen: Die Kästchen{" "}
                 <strong>Missionen</strong>, <strong>Gespräche</strong>,{" "}
                 <strong>Verlinkungen</strong> und <strong>NPCs</strong> nehmen
                 einzelne Quellen bzw. die NPCs heraus,{" "}

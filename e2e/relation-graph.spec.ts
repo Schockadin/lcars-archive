@@ -71,7 +71,7 @@ test.describe("Beziehungsgraph", () => {
   // Graphen bei vielen Figuren wieder lesbar machen.
   test("blendet NPCs samt ihrer Verbindungen aus", async ({ page }) => {
     const graph = page.locator("#relation-graph");
-    await graph.getByRole("button", { name: "NPCs" }).click();
+    await graph.getByLabel("NPCs").uncheck();
 
     // Übrig bleibt nur die Verbindung zwischen den beiden Charakteren.
     await expect(graph.locator("svg circle")).toHaveCount(2);
@@ -91,7 +91,7 @@ test.describe("Beziehungsgraph", () => {
 
   test("lässt sich auf den vollen Blick zurücksetzen", async ({ page }) => {
     const graph = page.locator("#relation-graph");
-    await graph.getByRole("button", { name: "Gespräche" }).click();
+    await graph.getByLabel("Gespräche").uncheck();
     const reset = graph.getByRole("button", { name: "Filter zurücksetzen" });
     await expect(reset).toBeVisible();
 

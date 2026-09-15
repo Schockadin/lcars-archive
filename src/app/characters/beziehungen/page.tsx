@@ -36,7 +36,7 @@ export default async function BeziehungenPage() {
             Verbindungen entstehen im Spiel. Je dicker eine Linie, desto mehr
             Berührungspunkte; je größer ein Punkt, desto mehr Verbindungen hat
             die Figur. Ein Klick führt zur Figur. Wird es zu voll: Die
-            Schalter über dem Graphen blenden Quellen oder NPCs aus, heben die
+            Kästchen über dem Graphen blenden Quellen oder NPCs aus, heben die
             Mindeststärke an oder zeigen nur eine Figur samt ihren direkten
             Verbindungen; die Liste darunter trägt dieselbe Auswahl in
             Textform.

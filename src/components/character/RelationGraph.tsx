@@ -23,7 +23,7 @@ import {
 // Client-Komponente aus zwei Gründen:
 //   • Hervorheben: Zeigt oder tastet man auf eine Figur, treten sie und ihre
 //     Verbindungen hervor, alles andere tritt zurück.
-//   • Filtern: Quellen, NPCs, Mindeststärke und Fokus grenzen ein, was
+//   • Filtern: Quellen (Kästchen), NPCs, Mindeststärke und Fokus grenzen ein, was
 //     überhaupt gezeichnet wird (siehe src/lib/relationGraphFilter.ts — dort
 //     steht auch, warum gefiltert statt anders gezeichnet wird).
 //
@@ -83,7 +83,7 @@ export default function RelationGraph({ graph }: { graph: LayoutInput }) {
   return (
     <div className="flex flex-col gap-[12px]">
       <div className="relation-graph-controls">
-        <div className="flex flex-wrap items-center gap-[6px]">
+        <div className="flex flex-wrap items-center gap-[6px_14px]">
           <span className="lcars-eyebrow text-lcars-ink-dim">Zeigen</span>
           {(
             [
@@ -93,19 +93,21 @@ export default function RelationGraph({ graph }: { graph: LayoutInput }) {
               ["npcs", "NPCs"],
             ] as const
           ).map(([key, label]) => (
-            <button
-              key={key}
-              type="button"
-              aria-pressed={filter[key]}
-              onClick={() => toggle(key)}
-              className={
-                filter[key]
-                  ? "lcars-pill-btn"
-                  : "lcars-pill-btn--outline"
-              }
-            >
-              {label}
-            </button>
+            <div key={key} className="flex items-center gap-[6px]">
+              <input
+                id={`relation-graph-${key}`}
+                type="checkbox"
+                className="lcars-checkbox"
+                checked={filter[key]}
+                onChange={() => toggle(key)}
+              />
+              <label
+                htmlFor={`relation-graph-${key}`}
+                className="lcars-eyebrow"
+              >
+                {label}
+              </label>
+            </div>
           ))}
         </div>
 
