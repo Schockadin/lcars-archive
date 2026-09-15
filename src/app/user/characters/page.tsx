@@ -9,7 +9,8 @@ import {
 } from "@/lib/characterStats";
 import { requireOwnCharacters } from "../dal";
 import OwnCharacterList, { type OwnCharacterItem } from "./OwnCharacterList";
-import CharacterCreationHelpButton from "./CharacterCreationHelpButton";
+import HelpButton from "@/components/help/HelpButton";
+import CharacterCreationGuide from "@/components/character/CharacterCreationGuide";
 
 export const metadata: Metadata = {
   title: "Meine Charaktere",
@@ -67,7 +68,13 @@ export default async function UserCharactersPage() {
               {/* Die Erklärung steht neben dem Knopf, der den Ablauf startet —
                   und bleibt auch für Gast-Accounts sichtbar: mitlesen dürfen
                   sie, nur anlegen nicht. */}
-              <CharacterCreationHelpButton />
+              <HelpButton
+                title="Charaktererschaffung"
+                tutorial="charaktererschaffung"
+                className="self-center"
+              >
+                <CharacterCreationGuide />
+              </HelpButton>
             </div>
           </section>
 

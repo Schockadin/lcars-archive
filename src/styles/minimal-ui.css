@@ -219,6 +219,22 @@ html[data-ui^="minimal"] .lcars-usernav-pill {
   width: 22px;
   height: 22px;
 }
+/* Ausnahme: „Hilfe" zeigt sein Fragezeichen IMMER — in beiden Oberflächen
+   und in jeder Breite. Es ist dort die eigentliche Beschriftung, dasselbe
+   Zeichen wie auf den Hilfe-Knöpfen der Seiten selbst (siehe
+   components/help/). Die Regel steht hier und nicht in header.css, weil die
+   Regel darüber hier wohnt und diese Datei unlayered importiert wird — ein
+   Override aus layer(components) käme gegen sie nicht an (siehe
+   globals.css). */
+.lcars-usernav-pill--help .lcars-usernav-icon {
+  display: flex;
+  align-items: center;
+  margin-right: 6px;
+}
+.lcars-usernav-pill--help .lcars-usernav-icon svg {
+  width: 18px;
+  height: 18px;
+}
 
 /* Sekundär-Navigation einblenden und vertikal, schlicht darstellen. */
 html[data-ui^="minimal"] .lcars-sidebar-usernav {
@@ -284,6 +300,13 @@ html[data-ui^="minimal"] .lcars-main-content {
   html[data-ui^="minimal"] .lcars-menu-text,
   html[data-ui^="minimal"] .lcars-usernav-label {
     display: none;
+  }
+  /* „Hilfe" bekommt hier dasselbe Maß wie die übrigen Icons — sonst stünde
+     das Fragezeichen als einziges kleiner in der Reihe (es trägt außerhalb
+     dieser Breite eine eigene, kleinere Größe, siehe oben). */
+  html[data-ui^="minimal"] .lcars-usernav-pill--help .lcars-usernav-icon svg {
+    width: 22px;
+    height: 22px;
   }
   /* Menüpunkte als zentrierte Icon-Buttons. */
   html[data-ui^="minimal"] .lcars-menu-bar,

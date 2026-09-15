@@ -3,6 +3,9 @@ import PageMeta from "@/components/PageMeta";
 import { LcarsDataRow } from "@/components/lcars";
 import InstallPwaPrompt from "@/app/user/InstallPwaPrompt";
 import CharacterCreationGuide from "@/components/character/CharacterCreationGuide";
+import PublicAreaGuides from "@/components/help/guides/PublicGuides";
+import UserAreaGuides from "@/components/help/guides/UserGuides";
+import GmAreaGuides from "@/components/help/guides/GmGuides";
 
 export const metadata: Metadata = {
   title: "Tutorial",
@@ -10,12 +13,19 @@ export const metadata: Metadata = {
 };
 
 // Öffentliche, statische Tutorial-Seite — erklärt das Archiv für drei
-// Zielgruppen (Besucher/User/Spielleitung), erreichbar über /tutorial
-// direkt, den Footer-Link (siehe ElbowBar.tsx) und einen Verweis im Profil
-// (siehe users/[id]/page.tsx). Als DataRow-Akkordeons strukturiert (gleiches Muster
-// wie "Meine Inhalte"/Admin-Panel) statt einer langen Textwüste — die
+// Zielgruppen (Besucher/User/Spielleitung), erreichbar über /tutorial direkt,
+// den Menüpunkt „Hilfe" (Fragezeichen, angemeldet — siehe HeaderUserNav.tsx)
+// und einen Verweis im Profil. Als DataRow-Akkordeons strukturiert (gleiches
+// Muster wie "Meine Inhalte"/Admin-Panel) statt einer langen Textwüste — die
 // breitesten Themen (Markdown/Verlinkung/PWA) stehen standardmäßig offen,
 // rollenspezifische Abschnitte eingeklappt.
+//
+// Drei Abschnitte bestehen ganz aus Bausteinen, die auch anderswo stehen:
+// „Die Seiten im Überblick", „Mein Bereich" und der Leitungs-Teil von
+// „Spielleitung & Admins" zeigen dieselben Texte, die auf der jeweiligen
+// Seite hinter dem Fragezeichen-Knopf aufgehen (siehe components/help/) —
+// eine Fassung im Tutorial und eine im Fenster liefen unweigerlich
+// auseinander.
 export default function TutorialPage() {
   return (
     <>
@@ -127,7 +137,19 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={3} htmlId="chronologie" label="Chronologie">
+          {/* Dieselben Texte, die auf den öffentlichen Seiten hinter dem
+              Fragezeichen stehen (siehe help/guides/PublicGuides.tsx) — hier
+              am Stück, damit man sie auch lesen kann, ohne jede Seite einmal
+              aufzuschlagen. */}
+          <LcarsDataRow
+            value={3}
+            htmlId="seiten-im-ueberblick"
+            label="Die Seiten im Überblick"
+          >
+            <PublicAreaGuides />
+          </LcarsDataRow>
+
+          <LcarsDataRow value={4} htmlId="chronologie" label="Chronologie">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 <strong>Chronologie</strong> zeigt dieselben Inhalte wie der
@@ -237,7 +259,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={4} htmlId="konto-rollen" label="Konto & Rollen">
+          <LcarsDataRow value={5} htmlId="konto-rollen" label="Konto & Rollen">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Konten entstehen nur durch Einladung: Spielleitung oder
@@ -311,7 +333,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={5}
+            value={6}
             htmlId="eigene-inhalte"
             label="Eigene Inhalte"
           >
@@ -375,10 +397,10 @@ export default function TutorialPage() {
                 — und dort legst du neue an. Wie das Anlegen selbst abläuft, steht im nächsten
                 Abschnitt <strong>„Charaktererschaffung“</strong> — dort
                 gesammelt, weil es der längste Ablauf im ganzen Archiv ist.
-                Denselben Text öffnet der Knopf{" "}
-                <strong>„Erschaffung erklärt“</strong> als Fenster — auf der
-                Seite „Charaktere“, im Anlege-Assistenten und auf der Seite
-                jedes deiner Charaktere. Du kannst also mitten im Ausfüllen
+                Denselben Text öffnet das{" "}
+                <strong>Fragezeichen</strong> neben der Überschrift als Fenster
+                — auf der Seite „Charaktere“, im Anlege-Assistenten und auf der
+                Seite jedes deiner Charaktere. Du kannst also mitten im Ausfüllen
                 nachschlagen, ohne die Seite zu verlassen.
               </p>
               <p>
@@ -415,20 +437,31 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
+          {/* Die beiden übrigen Punkte des Profil-Menüs — „Meine Inhalte"
+              und „Einstellungen" — mit denselben Texten, die dort hinter dem
+              Fragezeichen stehen (siehe help/guides/UserGuides.tsx). */}
+          <LcarsDataRow
+            value={7}
+            htmlId="mein-bereich"
+            label="Mein Bereich"
+          >
+            <UserAreaGuides />
+          </LcarsDataRow>
+
           {/* Eigener Abschnitt statt eines Absatzes in „Eigene Inhalte": Die
               Erschaffung ist der längste Ablauf im Archiv, und ihr Text wird
               zusätzlich als Fenster auf /user/characters gezeigt — dafür
               braucht er eine eigene, wiederverwendbare Komponente und einen
               eigenen Anker (siehe CharacterCreationGuide.tsx). */}
           <LcarsDataRow
-            value={6}
+            value={8}
             htmlId="charaktererschaffung"
             label="Charaktererschaffung"
           >
             <CharacterCreationGuide />
           </LcarsDataRow>
 
-          <LcarsDataRow value={7} htmlId="gespraeche" label="Gespräche">
+          <LcarsDataRow value={9} htmlId="gespraeche" label="Gespräche">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Ein <strong>Gespräch</strong> startest du mit deinem Charakter
@@ -515,7 +548,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={8}
+            value={10}
             htmlId="merken-abonnieren"
             label="Merken & Abonnieren"
           >
@@ -638,7 +671,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={9} htmlId="notizen" label="Notizen">
+          <LcarsDataRow value={11} htmlId="notizen" label="Notizen">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Unter Charakteren, Missionen, Logbüchern und Datenbank-Einträgen
@@ -667,7 +700,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={10} htmlId="versionen" label="Versionen">
+          <LcarsDataRow value={12} htmlId="versionen" label="Versionen">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Beim Bearbeiten eines Charakters, einer Mission, eines Logbuchs
@@ -691,7 +724,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={11}
+            value={13}
             htmlId="datenbank-assistent"
             label="Datenbank-Assistent"
           >
@@ -727,7 +760,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={12} htmlId="markdown" label="Markdown">
+          <LcarsDataRow value={14} htmlId="markdown" label="Markdown">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Alle längeren Texte (Biografien, Synopsen, Einsatzberichte,
@@ -841,7 +874,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={13} htmlId="verlinkung" label="Verlinkung">
+          <LcarsDataRow value={15} htmlId="verlinkung" label="Verlinkung">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Um im Fließtext auf einen Charakter, eine Mission oder einen
@@ -892,147 +925,31 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={14}
+            value={16}
             htmlId="spielleitung-admins"
             label="Spielleitung & Admins"
           >
             <div className="lcars-text flex flex-col gap-[12px]">
-              <p>Zusätzlich zu allem oben Genannten kann die Spielleitung:</p>
+              <p>
+                Zusätzlich zu allem oben Genannten hat die Spielleitung ein
+                eigenes <strong>„Leitung“</strong>-Menü. Es steht getrennt
+                neben dem Admin-Menü — wer beide Rollen hat, sieht beide
+                nebeneinander — und ist nach Aufgaben gegliedert: Kampagne,
+                Charaktere, Regelwerk, Inhalte. Jeder seiner zehn Bereiche ist
+                hier erklärt; denselben Text öffnet auf der jeweiligen Seite
+                das <strong>Fragezeichen</strong> neben der Überschrift.
+              </p>
+              <GmAreaGuides />
+              <p>Unabhängig vom Menü kann die Spielleitung außerdem:</p>
               <ul className="list-disc pl-[20px] flex flex-col gap-[4px]">
                 <li>
                   Missionen anlegen, bearbeiten und Einsatzberichte dazu
                   einsehen.
                 </li>
                 <li>
-                  Über das eigene <strong>„Leitung“</strong>-Menü im Header (es
-                  steht getrennt neben dem Admin-Menü — wer beide Rollen hat,
-                  sieht beide Menüs nebeneinander — und ist wie dieses nach
-                  Aufgaben gegliedert: Kampagne, Charaktere, Regelwerk, Inhalte)
-                  unter <strong>„Kampagne“</strong> an einer Stelle das aktuelle{" "}
-                  <strong>Ingame-Jahr</strong> einstellen, AP vergeben,
-                  Missionen abschließen und alle Missionen mit Bearbeiten-,
-                  Löschen- und Besitzer:in-Zuordnung pro Zeile verwalten. (Der
-                  ebenfalls dort liegende Eintrag <strong>„Gespräche“</strong>{" "}
-                  ist in der eigenen Gespräche-Sektion oben beschrieben.)
-                </li>
-                <li>
-                  Unter <strong>„Charaktere“</strong> Figuren den Konten{" "}
-                  <strong>zuordnen</strong> (Gast-Accounts ausgenommen) und eine{" "}
-                  <strong>abgeschlossene Erschaffung wieder öffnen</strong> —
-                  etwa, wenn sich die Runde nachträglich auf andere Startwerte
-                  einigt. Alle Steigerungen seit dem Abschluss werden dabei
-                  zurückgenommen: die Werte fallen auf den Stand der
-                  Erschaffung, die ausgegebenen AP kommen aufs Konto zurück
-                  (und der damals gutgeschriebene Erschaffungsrest wieder
-                  herunter). Nichts davon geht verloren: Was zurückgenommen
-                  wurde, steht als Notiz am Bogen und wird beim erneuten
-                  Abschließen automatisch wieder angewandt — soweit Regeln und
-                  AP es dann noch hergeben; was nicht mehr passt, wird beim
-                  Abschließen mit Grund genannt.
-                </li>
-                <li>
-                  Unter <strong>„Gruppenblatt“</strong> alle Charaktere der
-                  Runde nebeneinander sehen: Attribute, Disziplinen, Schutz,
-                  Stress und Entschlossenheit in einer Tabelle, darunter je
-                  Figur die Talente, Schwerpunkte und Werte. Praktisch am Tisch,
-                  wenn schnell klar sein muss, wer die beste Probe hat. Ein
-                  Klick auf einen Namen öffnet den vollständigen Charakterbogen
-                  dieser Figur im Fenster.
-                </li>
-                <li>
-                  Unter <strong>„Sessions“</strong> mit{" "}
-                  <strong>„Termin ankündigen“</strong> den nächsten Spielabend
-                  ansetzen (Zeitpunkt, Ort, Notiz und wer mitspielt — alle
-                  aktiven Figuren sind vorausgewählt). Ist er gespielt, macht{" "}
-                  <strong>„Session eintragen“</strong> am Termin daraus in einem
-                  Schritt die Nachbuchung: ein Fenster fragt Session-AP,
-                  Bonus-AP und Notizen ab, übernimmt Datum, Titel und Besetzung
-                  und bucht die AP. Der Termin bleibt mit seinen Zusagen in der
-                  Liste stehen, verschwindet aber von der Startseite.
-                </li>
-                <li>
-                  Unter <strong>„Sessions“</strong> auch von Hand (
-                  <strong>„Session nachtragen“</strong>) gespielte Sessions
-                  eintragen (Datum, Titel, Session-AP, Bonus-AP, Notizen) und
-                  damit allen Beteiligten die AP in einem Rutsch gutschreiben.
-                  Vorausgewählt sind alle aktiven Charaktere mit verknüpftem
-                  Konto — wer gefehlt hat, wird einfach abgewählt. Eine
-                  versehentlich eingetragene Session lässt sich zurücknehmen,
-                  die Gutschriften werden dann mit storniert.
-                </li>
-                <li>
-                  Einer eingetragenen Session <strong>Logbücher</strong>{" "}
-                  zuordnen: Sobald mindestens eines daran hängt, bekommen alle
-                  Teilnehmenden automatisch die Logbuch-AP extra — einmal je
-                  Session, egal wie viele Logbücher geschrieben werden. Wird die
-                  Zuordnung wieder gelöst oder das letzte Logbuch entfernt,
-                  verschwindet die Gutschrift ebenso automatisch — auch dann,
-                  wenn das Logbuch mit seiner ganzen Mission gelöscht oder einer
-                  anderen Session zugeordnet wird (ein Logbuch hängt immer an
-                  genau einer Session).
-                </li>
-                <li>
-                  AP für einen <strong>Missionsabschluss</strong> gibt es nur
-                  über den Abschnitt „Mission abschließen“ auf der
-                  Kampagnen-Seite: Dort wird die Mission ausgewählt, die AP
-                  vergeben — und die Mission dabei auf „abgeschlossen“ gesetzt.
-                </li>
-                <li>
-                  Unter <strong>„AP“</strong> alle Kontostände und das gesamte
-                  Buchungsjournal einsehen (nach Charakter und Grund filterbar)
-                  sowie das <strong>AP-Regelwerk</strong> einstellen: Kosten je
-                  Steigerungsschritt, Kosten für Talente und Schwerpunkte, die
-                  Budgets und Freikontingente der Ersterschaffung und die AP je
-                  Session und Logbuch — jederzeit auf die Standardwerte
-                  zurücksetzbar. Bereits gebuchte AP bleiben unberührt; nur was
-                  künftig gesteigert wird, rechnet mit den neuen Zahlen.
-                </li>
-                <li>
-                  Unter <strong>„Talente“</strong> den Talent-Katalog pflegen,
-                  aus dem die Charakterbögen ihre Auswahlliste speisen:
-                  durchsuchen, filtern, bestehende Talente bearbeiten und eigene
-                  ergänzen. Löschen lassen sich nur selbst ergänzte Talente —
-                  sonst verschwänden Einträge unter bereits gepflegten Bögen.
-                </li>
-                <li>
-                  Unter <strong>„Regeln“</strong> eigene Regeln der Runde
-                  hinterlegen: Name, Regeltext und eine Zahl für die
-                  Reihenfolge. Sie erscheinen auf dem Spickzettel jedes
-                  Charakterbogens (auch im PDF) hinter den Regeln aus dem
-                  Regelwerk und gelten dort für alle gleich. Anders als bei
-                  Talenten und Schwerpunkten lässt sich jede Regel wieder
-                  löschen — sie steht auf keinem Bogen als Eintrag.
-                </li>
-                <li>
-                  Genauso unter <strong>„Schwerpunkte“</strong> den
-                  Schwerpunkt-Katalog (Focuses): 170 Einträge aus dem Regelwerk,
-                  nach Disziplin gegliedert, durchsuchbar und filterbar. Neue
-                  Schwerpunkte bekommen einen Namen, eine Disziplin und
-                  wahlweise eine Erläuterung; auch hier lassen sich nur selbst
-                  ergänzte löschen. Ein Name darf in zwei Disziplinen stehen —
-                  auf dem Bogen ist es derselbe Schwerpunkt.
-                </li>
-                <li>
-                  Das <strong>Ingame-Jahr</strong> (unter „Kampagne“) bestimmt
-                  das angezeigte <strong>Alter</strong> von Charakteren: Trägt
-                  ein Charakter ein Geburtsdatum, wird sein Alter automatisch
-                  aus Ingame-Jahr minus Geburtsjahr berechnet (sonst gilt das
-                  manuell eingetragene Alter).
-                </li>
-                <li>
                   Über die „Admin-Aktionen“ jeder Detailseite Autolinking,
                   Wikilinks-Entfernen und Text-Formatieren auch auf fremde,
                   bereits gespeicherte Inhalte anwenden.
-                </li>
-                <li>
-                  Zeitleisten-Marker (
-                  <code>
-                    &lt;!-- timeline: JJJJ-MM-TT | Titel | Kategorie --&gt;
-                  </code>
-                  ) über den Kalender-Knopf in der Textwerkzeugleiste einfügen.
-                  Sie setzen eine unsichtbare Sprungmarke an der Textstelle und
-                  halten die Datengrundlage für eine mögliche künftige
-                  Zeitleisten-Funktion vor.
                 </li>
               </ul>
               <p>
@@ -1097,7 +1014,7 @@ export default function TutorialPage() {
           </LcarsDataRow>
 
           <LcarsDataRow
-            value={15}
+            value={17}
             htmlId="app-installieren"
             label="App installieren"
           >
@@ -1128,7 +1045,7 @@ export default function TutorialPage() {
             </div>
           </LcarsDataRow>
 
-          <LcarsDataRow value={16} htmlId="farbschema" label="Farbschema">
+          <LcarsDataRow value={18} htmlId="farbschema" label="Farbschema">
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Die Farbgebung der gesamten Oberfläche kannst du in deinem{" "}

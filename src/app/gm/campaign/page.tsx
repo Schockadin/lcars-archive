@@ -16,6 +16,8 @@ import AdminMissionsBrowser from "../missions/AdminMissionsBrowser";
 import IngameYearForm from "./IngameYearForm";
 import ApAwardPanel from "./ApAwardPanel";
 import MissionApPanel from "./MissionApPanel";
+import HelpHeading from "@/components/help/HelpHeading";
+import { GmCampaignGuide } from "@/components/help/guides/GmGuides";
 
 export const metadata: Metadata = {
   title: "Kampagne",
@@ -71,8 +73,14 @@ export default async function AdminCampaignPage() {
     <>
       <PageMeta title="Kampagne" section="users" />
       <article className="mb-[10px] lcars-wide-column">
-        <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
-        <h1>Kampagne</h1>
+        <HelpHeading
+          eyebrow="Zugriff · Spielleitung"
+          title="Kampagne"
+          helpTitle="Leitung · Kampagne"
+          tutorial="spielleitung-admins"
+        >
+          <GmCampaignGuide />
+        </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[32px]">
           <section className="flex flex-col gap-[12px]">

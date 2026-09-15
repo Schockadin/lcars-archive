@@ -44,6 +44,8 @@ import DataRow from "@/components/lcars/DataRow";
 import {
   characterHref,
 } from "@/lib/contentRoutes";
+import HelpHeading from "@/components/help/HelpHeading";
+import { UserProfileGuide } from "@/components/help/guides/UserGuides";
 
 export const metadata: Metadata = {
   title: "Profil",
@@ -112,7 +114,13 @@ export default async function UserPage() {
     <>
       <PageMeta title="Profil" section="users" />
       <article className="mb-[10px] lcars-wide-column">
-        <h1>Profil</h1>
+        <HelpHeading
+          title="Profil"
+          helpTitle="Profil & Einstellungen"
+          tutorial="mein-bereich"
+        >
+          <UserProfileGuide />
+        </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[16px]">
           <p>
@@ -259,9 +267,12 @@ export default async function UserPage() {
               <section id="tutorial" className="flex flex-col gap-[8px]">
                 <h2>Hilfe & Anleitung</h2>
                 <p>
-                  Unsicher, wie etwas funktioniert? Das Tutorial erklärt alle
-                  Funktionen der Datenbank — von der Suche bis zur
-                  Markdown-Formatierung.
+                  Unsicher, wie etwas funktioniert? Das{" "}
+                  <strong>Fragezeichen im Menü</strong> öffnet die Anleitung —
+                  sie erklärt alle Funktionen der Datenbank, von der Suche bis
+                  zur Markdown-Formatierung. Dasselbe Zeichen steht oben rechts
+                  auf jeder Seite und erklärt dort genau diesen einen Bereich,
+                  ohne dass du die Seite verlässt.
                 </p>
                 <Link
                   href="/tutorial"

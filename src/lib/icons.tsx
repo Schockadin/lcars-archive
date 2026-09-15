@@ -494,3 +494,17 @@ export function LoginNavIcon() {
     </svg>
   );
 }
+
+// Hilfe/Anleitung — Fragezeichen im Kreis. Trägt jeden Hilfe-Knopf
+// (HelpButton, siehe src/components/help/) und den Menüpunkt „Hilfe" in der
+// UserNav: ein Fragezeichen ist das eine Symbol, das überall dasselbe
+// bedeutet, und braucht deshalb keine Beschriftung daneben.
+export function HelpIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M9.4 9.2a2.7 2.7 0 1 1 3.4 2.6c-.6.2-.9.7-.9 1.3v.6" />
+      <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}

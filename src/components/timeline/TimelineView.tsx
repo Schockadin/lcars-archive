@@ -1,5 +1,5 @@
 "use client";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   LcarsSortSwitch,
   LcarsListFilterInput,
@@ -27,6 +27,7 @@ import {
 } from "@/lib/timelineTypes";
 import { chronologyCategoryHref } from "@/lib/contentRoutes";
 import ManualEventForm from "./ManualEventForm";
+import { HelpTitleRow } from "@/components/help/HelpHeading";
 
 // Die Chronologie als Zeitstrahl: links Datum und Schiene, rechts die
 // Ereigniskarte. Aufbau nach dem Entwurf (Jahresleiste, Monats-Trenner,
@@ -77,6 +78,7 @@ export default function TimelineView({
   canAddEvent = false,
   characters = [],
   latestEventDate = null,
+  help,
 }: {
   events: TimelineEvent[];
   initialCategory?: string | null;
@@ -86,6 +88,11 @@ export default function TimelineView({
   canAddEvent?: boolean;
   characters?: { id: number; name: string }[];
   latestEventDate?: string | null;
+  // Der fertige Hilfe-Knopf samt Anleitung, von der Seite gereicht (siehe
+  // help/HelpButton.tsx) — als Prop, damit der Anleitungstext
+  // server-gerendert bleibt. Die Chronologie steht auch eingebettet auf
+  // anderen Seiten; dort bleibt die Prop weg und die Kopfzeile ohne Knopf.
+  help?: ReactNode;
 }) {
   const [scope, setScope] = useState<TimelineScope>(
     initialScope ?? (initialCategory ? "all" : DEFAULT_TIMELINE_SCOPE),
@@ -191,7 +198,9 @@ export default function TimelineView({
   return (
     <div className="lcars-wide-column">
       <div className="mb-[16px]">
-        <h1 className="lcars-data-row-heading">Chronologie</h1>
+        <HelpTitleRow help={help}>
+          <h1 className="lcars-data-row-heading">Chronologie</h1>
+        </HelpTitleRow>
         <p className="lcars-eyebrow">
           {scope === "missions"
             ? "Die Einsätze der Kampagne mit ihrem Zeitraum"

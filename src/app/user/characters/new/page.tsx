@@ -8,7 +8,9 @@ import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
 import { listCampaignRules } from "@/lib/campaignRules";
 import CharacterWizard from "./CharacterWizard";
-import CharacterCreationHelpButton from "../CharacterCreationHelpButton";
+import HelpButton from "@/components/help/HelpButton";
+import { HelpTitleRow } from "@/components/help/HelpHeading";
+import CharacterCreationGuide from "@/components/character/CharacterCreationGuide";
 
 export const metadata: Metadata = {
   title: "Neuer Charakter",
@@ -30,7 +32,21 @@ export default async function NewCharacterPage() {
       <>
         <PageMeta title="Neuer Charakter" section="users" />
         <article className="mb-[10px]">
-          <h1>Neuen Charakter anlegen</h1>
+          {/* Auch hier, wo nichts anzulegen ist: Mitlesen dürfen
+              Gast-Accounts, nur anlegen nicht — dieselbe Abwägung wie bei
+              der Übersicht (/user/characters). */}
+          <HelpTitleRow
+            help={
+              <HelpButton
+                title="Charaktererschaffung"
+                tutorial="charaktererschaffung"
+              >
+                <CharacterCreationGuide />
+              </HelpButton>
+            }
+          >
+            <h1>Neuen Charakter anlegen</h1>
+          </HelpTitleRow>
           <p className="lcars-empty-state">
             Gast-Accounts können keine Charaktere anlegen.
           </p>
@@ -53,7 +69,22 @@ export default async function NewCharacterPage() {
     <>
       <PageMeta title="Neuer Charakter" section="users" />
       <article className="mb-[10px]">
-        <h1>Neuen Charakter anlegen</h1>
+        {/* Die ausführliche Erklärung als Fenster, nicht als Link: Wer sie
+            mitten im Assistenten aufschlägt, darf die halb ausgefüllten
+            Felder nicht verlieren. Sie steht da, wo sie auf jeder anderen
+            Seite steht — oben rechts neben der Überschrift. */}
+        <HelpTitleRow
+          help={
+            <HelpButton
+              title="Charaktererschaffung"
+              tutorial="charaktererschaffung"
+            >
+              <CharacterCreationGuide />
+            </HelpButton>
+          }
+        >
+          <h1>Neuen Charakter anlegen</h1>
+        </HelpTitleRow>
         <p className="lcars-text">
           In vier Schritten: Stammdaten, Werte, Biografie und zum Schluss eine
           Vorschau des fertigen Charakterbogens. Zwischen den Schritten kannst
@@ -61,12 +92,6 @@ export default async function NewCharacterPage() {
           mit „Fertig“.
         </p>
 
-        {/* Die ausführliche Erklärung als Fenster, nicht als Link: Wer sie
-            mitten im Assistenten aufschlägt, darf die halb ausgefüllten
-            Felder nicht verlieren. */}
-        <div className="mb-[16px]">
-          <CharacterCreationHelpButton className="lcars-pill-btn--outline max-sm:w-full" />
-        </div>
         <CharacterWizard
           userId={user.id}
           isAdminOrGM={userCan(user, "content.autolink_tools", roleMap)}

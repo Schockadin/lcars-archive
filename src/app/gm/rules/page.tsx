@@ -3,6 +3,8 @@ import PageMeta from "@/components/PageMeta";
 import { requireGM } from "@/lib/dal";
 import { listCampaignRulesFresh } from "@/lib/campaignRules";
 import RuleEditor from "./RuleEditor";
+import HelpHeading from "@/components/help/HelpHeading";
+import { GmRulesGuide } from "@/components/help/guides/GmGuides";
 
 export const metadata: Metadata = {
   title: "Eigene Regeln",
@@ -20,8 +22,14 @@ export default async function GmRulesPage() {
     <>
       <PageMeta title="Eigene Regeln" section="users" />
       <article className="mb-[10px] lcars-wide-column">
-        <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
-        <h1>Eigene Regeln</h1>
+        <HelpHeading
+          eyebrow="Zugriff · Spielleitung"
+          title="Eigene Regeln"
+          helpTitle="Leitung · Eigene Regeln"
+          tutorial="spielleitung-admins"
+        >
+          <GmRulesGuide />
+        </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[16px]">
           <p className="text-lcars-ink-contrast text-[13px]">

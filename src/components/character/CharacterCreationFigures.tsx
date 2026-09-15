@@ -1,87 +1,22 @@
-import type { ReactNode } from "react";
+import {
+  GuideFigure,
+  Line,
+  PRIMARY,
+  SECONDARY,
+  TERTIARY,
+  SENARY,
+  BORDER,
+} from "@/components/help/GuideFigure";
 
 // Kleine Schema-Bilder für die Anleitung zur Charaktererschaffung (siehe
 // CharacterCreationGuide.tsx). Sie zeigen den AUFBAU der jeweiligen Maske —
 // vier Schritt-Knöpfe, ein Bildkasten mit seiner Schräge, Zahlenfelder mit
 // Budget-Leiste —, nicht ihren Inhalt.
 //
-// Bewusst Inline-SVG statt Screenshots:
-//   • Ein Screenshot veraltet mit der ersten Layout-Änderung und niemand
-//     merkt es; ein Schema zeigt ohnehin nur die Anordnung.
-//   • Die Farben kommen aus den Theme-Tokens (var(--lcars-…)), die Bilder
-//     machen also jedes Farbschema und den Hellmodus mit — ein PNG nicht.
-//   • Keine Binärdateien im Repo, nichts, was geladen werden muss, und in
-//     jeder Größe scharf.
-//
-// Wie der Rest der Anleitung: reines JSX ohne Hooks und ohne "use client",
-// damit dieselbe Datei server-gerendert (im /tutorial) und im Client-Fenster
-// (auf /user/characters …) läuft.
-//
-// viewBox statt fester Maße: Die Bilder skalieren mit ihrer Spalte — auf dem
-// Telefon volle Breite unter dem Text, auf dem Desktop schmal daneben (das
-// Raster steckt in GuideFigure unten).
-
-// Gemeinsamer Rahmen: Bildfläche + Bildunterschrift. Nicht exportiert — nach
-// außen gehen nur die fertigen Bilder, damit die Anleitung keine halben
-// Bausteine zusammensetzen muss. Das SVG bekommt eine
-// echte Beschriftung (role="img" + aria-label), damit es für Screenreader
-// nicht als Dekoration verschwindet — die Bildunterschrift steht ohnehin
-// sichtbar darunter.
-function GuideFigure({
-  label,
-  caption,
-  children,
-}: {
-  label: string;
-  caption: string;
-  children: ReactNode;
-}) {
-  return (
-    <figure className="m-0 flex flex-col gap-[6px]">
-      <svg
-        viewBox="0 0 200 110"
-        role="img"
-        aria-label={label}
-        className="w-full max-w-[280px] rounded-[6px] border border-lcars-border bg-lcars-surface-2"
-      >
-        {children}
-      </svg>
-      <figcaption className="text-lcars-ink-dim font-lcars-mono text-[11px]">
-        {caption}
-      </figcaption>
-    </figure>
-  );
-}
-
-// Farben als Kürzel — jedes Bild greift auf dieselben Tokens zu.
-const PRIMARY = "var(--lcars-primary)";
-const SECONDARY = "var(--lcars-secondary)";
-const TERTIARY = "var(--lcars-tertiary)";
-const SENARY = "var(--lcars-senary)";
-const BORDER = "var(--lcars-border)";
-const INK_DIM = "var(--lcars-ink-dim)";
-
-// Eine „Textzeile" als graues Balkenstück — in allen Bildern dasselbe Mittel,
-// damit sie als eine Familie lesbar sind.
-function Line({
-  x,
-  y,
-  w,
-  h = 4,
-  fill = INK_DIM,
-  opacity = 0.5,
-}: {
-  x: number;
-  y: number;
-  w: number;
-  h?: number;
-  fill?: string;
-  opacity?: number;
-}) {
-  return (
-    <rect x={x} y={y} width={w} height={h} rx={h / 2} fill={fill} opacity={opacity} />
-  );
-}
+// Rahmen, Farben und die „Textzeile" kommen aus dem gemeinsamen Baukasten
+// (help/GuideFigure.tsx), den sich diese Bilder mit den Schemata der übrigen
+// Bereichs-Anleitungen teilen — dort steht auch, warum es Inline-SVG und
+// keine Screenshots sind.
 
 // ── Die vier Schritte ────────────────────────────────────────────────
 // Vier Reiter nebeneinander, der erste aktiv — darunter die Felder des

@@ -11,6 +11,8 @@ import { characterHref } from "@/lib/contentRoutes";
 import { listTalents } from "@/lib/talents";
 import { listCampaignRules } from "@/lib/campaignRules";
 import PartyMemberSheet from "./PartyMemberSheet";
+import HelpHeading from "@/components/help/HelpHeading";
+import { GmPartySheetGuide } from "@/components/help/guides/GmGuides";
 
 export const metadata: Metadata = {
   title: "Gruppenblatt",
@@ -41,8 +43,14 @@ export default async function GmPartySheetPage() {
           viele Spalten, dass jede gedeckelte Spalte sie in den Scrollbalken
           drängt. */}
       <article className="mb-[10px] w-full">
-        <p className="lcars-eyebrow">Zugriff · Spielleitung</p>
-        <h1>Gruppenblatt</h1>
+        <HelpHeading
+          eyebrow="Zugriff · Spielleitung"
+          title="Gruppenblatt"
+          helpTitle="Leitung · Gruppenblatt"
+          tutorial="spielleitung-admins"
+        >
+          <GmPartySheetGuide />
+        </HelpHeading>
 
         <div className="lcars-text flex flex-col gap-[16px]">
           <p className="text-lcars-ink-dim text-[13px]">

@@ -9,9 +9,11 @@
 export const TUTORIAL_SECTIONS = [
   { id: "erste-schritte", label: "Erste Schritte" },
   { id: "fuer-besucher", label: "Für Besucher" },
+  { id: "seiten-im-ueberblick", label: "Die Seiten im Überblick" },
   { id: "chronologie", label: "Chronologie" },
   { id: "konto-rollen", label: "Konto & Rollen" },
   { id: "eigene-inhalte", label: "Eigene Inhalte" },
+  { id: "mein-bereich", label: "Mein Bereich" },
   { id: "charaktererschaffung", label: "Charaktererschaffung" },
   { id: "gespraeche", label: "Gespräche" },
   { id: "merken-abonnieren", label: "Merken & Abonnieren" },

@@ -827,35 +827,58 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und
   Spielleitung. Die Abschnitte und ihre Anker-ids liegen zentral in
   `src/lib/tutorialSections.ts`, damit Changelog-Deep-Links nicht ins Leere
-  zeigen (ein Test prüft, dass jede id als `htmlId` auf der Seite steht). Der
-  Abschnitt **„Charaktererschaffung"** ist dabei keine Prosa in `page.tsx`,
-  sondern eine eigene Komponente
-  (`src/components/character/CharacterCreationGuide.tsx`): reines JSX ohne
-  Hooks und ohne `"use client"`, damit dieselbe Datei von der
-  server-gerenderten Anleitung UND aus dem Fenster „Erschaffung erklärt"
-  (`CharacterCreationHelpButton.tsx` um `ModalOverlay`) eingebunden werden
-  kann. Zwei Kopien desselben Ablaufs liefen unweigerlich auseinander.
+  zeigen (ein Test prüft, dass jede id als `htmlId` auf der Seite steht).
+  Erreichbar ist sie über den Menüpunkt **„Hilfe"** (Fragezeichen) der
+  UserNav — im Header (LCARS) wie in der Sidebar (minimalistisches UI), und
+  nur für Angemeldete. Im Footer steht sie seit v1.39 nicht mehr.
+- **Kontexthilfe: ein Fragezeichen auf jeder Seite**
+  (`src/components/help/`) — wer ohne Konto liest, käme über den Menüpunkt
+  gar nicht an eine Erklärung; und wer mitten in einem Formular steckt, will
+  die Seite nicht verlassen, um nachzuschlagen. Deshalb trägt jede
+  Bereichsseite oben rechts einen **Icon-Knopf mit Fragezeichen**
+  (`HelpButton`), der die Anleitung zu genau diesem Bereich als Fenster
+  (`ModalOverlay`) öffnet — mit `width={1040}` und `tall` deutlich größer als
+  ein Formular-Overlay (`tall` hebt die Höhe von 85vh auf 92vh): Es ist zum
+  **Lesen** da, und bei 760px stünde der Text in einer schmalen Säule ohne
+  Platz für die Schemata. Unten im Fenster führt ein Link auf denselben
+  Abschnitt der Anleitung.
 
-  Der Knopf steht auf **allen drei** Seiten, an denen man an einer Figur
+  Den Inhalt bekommt der Knopf als `children` von der jeweiligen Seite
+  gereicht (fast immer eine Server-Komponente), statt ihn selbst zu
+  importieren: So bleiben die Anleitungstexte server-gerendert und wandern
+  nicht in das Browser-Bündel jeder Seite, auf der ein Hilfe-Knopf steht. Für
+  die drei Seiten, deren Kopfzeile in einer Client-Komponente steckt
+  (Charakterliste, Chronologie, Landingpage), wird der fertige Knopf als Prop
+  durchgereicht — derselbe Mechanismus. Die Kopfzeile baut `HelpHeading`
+  (Augenbraue, `h1`, Knopf) bzw. `HelpTitleRow` für Seiten mit eigener
+  `h1`-Klasse.
+
+  Die Texte liegen als **wiederverwendbare Bausteine** in
+  `src/components/help/guides/` — reines JSX ohne Hooks und ohne
+  `"use client"`, damit dieselbe Datei aus dem Client-Fenster UND aus der
+  server-gerenderten Anleitung eingebunden werden kann. Denn jeder Baustein
+  steht an zwei Stellen: im Fenster seiner Seite und gesammelt in einem
+  Abschnitt von `/tutorial` (`seiten-im-ueberblick`, `mein-bereich`,
+  `spielleitung-admins`). Zwei Fassungen desselben Textes liefen unweigerlich
+  auseinander. Abgedeckt sind die zehn Bereiche des Leitungs-Menüs, „Meine
+  Inhalte" und das Profil sowie die fünf öffentlichen Seiten des Hauptmenüs.
+
+  Jeder Abschnitt (`GuideSection`, `<h3>`) trägt ein kleines **Schema** seiner
+  Maske (`src/components/help/figures/`) — Inline-SVG statt Screenshot: Die
+  Farben kommen aus den Theme-Tokens (`var(--lcars-…)`), die Bilder machen
+  also Farbschema und Hellmodus mit, veralten nicht mit der ersten
+  Layout-Änderung und bringen keine Binärdateien ins Repo. Ab 900px steht das
+  Schema neben seinem Text, darunter fällt es darunter. Rahmen, Farben und
+  Bausteine teilen sich alle Schemata in `help/GuideFigure.tsx`.
+
+  Die **Charaktererschaffung** ist der älteste und längste dieser Bausteine
+  (`src/components/character/CharacterCreationGuide.tsx`, acht Abschnitte).
+  Ihr Knopf steht auf **allen drei** Seiten, an denen man an einer Figur
   arbeitet: `/user/characters`, `/user/characters/new` und
   `/user/characters/[characterId]` — nachschlagen soll nirgends heißen, die
-  halb ausgefüllte Seite zu verlassen. Er nimmt seine Klassen als Prop, damit
-  er sich in die jeweilige Leiste einfügt.
-
-  Der Text ist in **acht benannte Abschnitte** (`<h3>`) gegliedert statt einer
-  Absatzfolge: Wer ihn mitten im Anlegen aufschlägt, sucht eine bestimmte
-  Stelle, nicht den Anfang. Zu den meisten Abschnitten gehört ein kleines
-  **Schema** der jeweiligen Maske
-  (`src/components/character/CharacterCreationFigures.tsx`) — Inline-SVG statt
-  Screenshot: Die Farben kommen aus den Theme-Tokens (`var(--lcars-…)`), die
-  Bilder machen also Farbschema und Hellmodus mit, veralten nicht mit der
-  ersten Layout-Änderung und bringen keine Binärdateien ins Repo. Ab 900px
-  steht das Schema neben seinem Text, darunter fällt es darunter.
-
-  Das Fenster ist mit `width={1040}` und `tall` deutlich größer als ein
-  Formular-Overlay (`tall` hebt die Höhe von 85vh auf 92vh, siehe
-  `ModalOverlay`): Es ist zum **Lesen** da, und bei 760px stand der Text in
-  einer schmalen Säule ohne Platz für die Schemata.
+  halb ausgefüllte Seite zu verlassen. Er trug bis v1.39 die Aufschrift
+  „Erschaffung erklärt" und ist seitdem dasselbe Fragezeichen wie überall
+  sonst.
 - **Markdown-Vault als Ursprungsimport** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
   entstehen danach direkt in der App (Datenbank als alleinige Source of Truth).
@@ -1220,6 +1243,7 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     │   ├── robots.ts
     │   └── sitemap.ts
     ├── components/lcars/      # LCARS-UI-Komponenten
+    ├── components/help/       # Fragezeichen-Knopf, Fenster & Bereichs-Anleitungen
     ├── context/              # React-Context (Neo)
     ├── hooks/                # useNeo, usePageMeta …
     ├── lib/                  # DB-Zugriff & Datenabfragen

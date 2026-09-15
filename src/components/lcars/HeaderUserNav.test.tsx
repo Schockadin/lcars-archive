@@ -118,3 +118,36 @@ describe("HeaderUserNav: Gliederung des Leitungs-Menüs", () => {
     ]);
   });
 });
+
+// Die Anleitung steht seit v1.39 im Menü statt im Footer — als Link mit
+// Fragezeichen, und nur hier, also nur für Angemeldete.
+describe("HeaderUserNav: Hilfe", () => {
+  it("führt als Link auf die Anleitung", () => {
+    render(<HeaderUserNav permissions={["users.browse"]} />);
+
+    expect(
+      screen.getByRole("link", { name: "Hilfe" }).getAttribute("href"),
+    ).toBe("/tutorial");
+  });
+
+  it("markiert sich auf der Anleitung selbst als aktiv", () => {
+    pathname.current = "/tutorial";
+    render(<HeaderUserNav permissions={["users.browse"]} />);
+
+    expect(screen.getByRole("link", { name: "Hilfe" }).className).toContain(
+      "lcars-menu-active",
+    );
+    pathname.current = "/user";
+  });
+
+  // Das Fragezeichen ist hier die eigentliche Beschriftung (siehe
+  // header.css) — ohne Icon-Element bliebe im minimalistischen UI auf Mobile,
+  // wo die Labels ausgeblendet sind, ein leerer Knopf stehen.
+  it("trägt ein eigenes Icon-Element", () => {
+    render(<HeaderUserNav permissions={["users.browse"]} />);
+
+    const hilfe = screen.getByRole("link", { name: "Hilfe" });
+    expect(hilfe.className).toContain("lcars-usernav-pill--help");
+    expect(hilfe.querySelector(".lcars-usernav-icon svg")).not.toBeNull();
+  });
+});

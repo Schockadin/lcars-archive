@@ -11,6 +11,7 @@ import {
   AdminNavIcon,
   GmNavIcon,
   LogoutNavIcon,
+  HelpIcon,
 } from "@/lib/icons";
 import { useAnchoredDropdown } from "./useAnchoredDropdown";
 
@@ -311,6 +312,31 @@ export default function HeaderUserNav({
           placement={placement}
         />
       )}
+
+      {/* Die Anleitung sitzt seit v1.39 im Menü statt im Footer — und nur
+          hier, also nur für Angemeldete. Wer ohne Konto liest, bekommt seine
+          Erklärung stattdessen auf der Seite selbst: jede öffentliche Seite
+          hat oben rechts denselben Fragezeichen-Knopf (siehe
+          components/help/). Ein Link und kein Dropdown: Es gibt nichts
+          auszuwählen.
+
+          Als einziger Menüpunkt zeigt er sein Icon IMMER (sonst sind die
+          Icons nur im minimalistischen UI auf Mobile zu sehen, siehe
+          minimal-ui.css) — das Fragezeichen IST hier die Beschriftung, in
+          jeder Oberfläche dasselbe Zeichen wie auf den Seiten. Im
+          Header-Raster rutscht er per CSS neben den Logout in die untere
+          Reihe: die obere ist mit Profil/Leitung/Admin schon voll (siehe
+          header.css). */}
+      <Link
+        href="/tutorial"
+        className={
+          pathname === "/tutorial"
+            ? "lcars-usernav-pill lcars-usernav-pill--help lcars-menu-active"
+            : "lcars-usernav-pill lcars-usernav-pill--help"
+        }
+      >
+        <NavPillContent icon={<HelpIcon />} label="Hilfe" />
+      </Link>
 
       <form
         action={logout}
