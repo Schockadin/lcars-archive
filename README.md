@@ -789,7 +789,18 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `src/lib/colorMode.ts`) — jede Kombination ist möglich. Rein CSS-basiert
   (gemeinsamer Selektor `html[data-ui^="minimal"]`, Pre-Paint-Cookie `neo_ui`),
   die eigentliche Zugriffskontrolle bleibt unberührt.
-- **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und Spielleitung.
+- **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und
+  Spielleitung. Die Abschnitte und ihre Anker-ids liegen zentral in
+  `src/lib/tutorialSections.ts`, damit Changelog-Deep-Links nicht ins Leere
+  zeigen (ein Test prüft, dass jede id als `htmlId` auf der Seite steht). Der
+  Abschnitt **„Charaktererschaffung"** ist dabei keine Prosa in `page.tsx`,
+  sondern eine eigene Komponente
+  (`src/components/character/CharacterCreationGuide.tsx`): reines JSX ohne
+  Hooks und ohne `"use client"`, damit dieselbe Datei von der
+  server-gerenderten Anleitung UND aus dem Fenster
+  „Erschaffung erklärt" auf `/user/characters` eingebunden werden kann
+  (`CharacterCreationHelpButton.tsx` um `ModalOverlay`). Zwei Kopien desselben
+  Ablaufs liefen unweigerlich auseinander.
 - **Markdown-Vault als Ursprungsimport** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
   entstehen danach direkt in der App (Datenbank als alleinige Source of Truth).

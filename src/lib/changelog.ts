@@ -156,7 +156,13 @@ export const CHANGELOG: ChangelogEntry[] = [
     // Eine entfallene Funktion ist keine neue, sie steht laut AGENTS.md
     // deshalb nicht als Stichpunkt hier; „Wer kennt wen" auf der
     // Personalakte bleibt unverändert.
-    items: [],
+    items: [
+      {
+        text: "Die Charaktererschaffung hat in der Anleitung einen eigenen Abschnitt — und steht zusätzlich dort, wo man sie braucht: Auf „Charaktere“ öffnet der Knopf „Erschaffung erklärt“ denselben Text in einem Fenster, ohne die Seite zu verlassen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+    ],
   },
   {
     version: "1.37",
