@@ -81,7 +81,10 @@ export default async function OwnCharacterPage({ params }: Props) {
             Schwerpunkten schlägt man genau dann nach. */}
         <HelpTitleRow
           help={
-            <HelpButton title="Charaktererschaffung" tutorial="charaktererschaffung">
+            <HelpButton
+              title="Charaktererschaffung"
+              tutorial="charaktererschaffung"
+            >
               <CharacterCreationGuide />
             </HelpButton>
           }

@@ -26,11 +26,13 @@ import {
 // Server-Komponente): So bleiben die Anleitungstexte selbst server-gerendert
 // und wandern nicht in das Browser-Bündel jeder Seite, auf der ein
 // Hilfe-Knopf steht.
+//
+// Ohne Klassen-Prop: Der Knopf sitzt überall in derselben Kopfzeile (siehe
+// HelpTitleRow) und braucht sich in keine andere Leiste einzufügen.
 export default function HelpButton({
   title,
   tutorial,
   children,
-  className = "",
 }: {
   // Überschrift des Fensters — zugleich die Beschriftung des Knopfs
   // („Hilfe: <title>").
@@ -39,9 +41,6 @@ export default function HelpButton({
   // entfällt der Link ans Ende des Fensters.
   tutorial?: TutorialSectionId;
   children: ReactNode;
-  // Zusätzliche Klassen für die Leiste, in der der Knopf steht (z.B.
-  // self-start in einer Knopfreihe).
-  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const label = `Hilfe: ${title}`;
@@ -51,7 +50,7 @@ export default function HelpButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className={`lcars-icon-btn ${className}`.trim()}
+        className="lcars-icon-btn"
         aria-label={label}
         title={label}
       >

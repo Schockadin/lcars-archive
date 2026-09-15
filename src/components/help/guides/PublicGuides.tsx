@@ -80,16 +80,23 @@ export function PublicCharactersGuide() {
 
       <GuideSection title="Die Personalakte">
         <p>
-          Ein Klick öffnet die <strong>Personalakte</strong>: Stammdaten,
-          Biografie und — falls die Erschaffung abgeschlossen ist — der
-          vollständige <strong>Charakterbogen</strong> zum Aufklappen, Drucken
-          und Speichern als PDF.
+          Ein Klick öffnet die <strong>Personalakte</strong>: links das Portrait
+          mit den Stammdaten (Akten-ID, Rang, Spezies, Alter …), rechts die{" "}
+          <strong>Biografie</strong> mit ihrem Inhaltsverzeichnis. Unter dem
+          Bild führen zwei Zeilen mit Anzahl direkt zu den{" "}
+          <strong>Logbüchern</strong> und <strong>Gesprächen</strong> dieser
+          Figur — beide in der Chronologie, auf sie gefiltert.
         </p>
         <p>
-          Unten steht <strong>„Wer kennt wen“</strong>: mit welchen Figuren und
-          NPCs diese Person zu tun hat, abgeleitet aus gemeinsamen Missionen,
-          Gesprächen und Erwähnungen. Darunter die Übersicht ihrer
-          abgeschlossenen <strong>Gespräche</strong>.
+          Weiter unten steht <strong>„Wer kennt wen“</strong>: mit welchen
+          Figuren und NPCs diese Person zu tun hat, abgeleitet aus gemeinsamen
+          Missionen, Gesprächen und Erwähnungen. Darunter{" "}
+          <strong>„Erwähnt in“</strong> — alle Einträge, die auf sie verweisen.
+        </p>
+        <p>
+          Den <strong>Charakterbogen</strong> mit den Werten gibt es nur für die
+          Spielerin oder den Spieler der Figur und für die Spielleitung; für
+          alle anderen existiert er nicht. Die Akte selbst steht allen offen.
         </p>
       </GuideSection>
     </GuideBody>
@@ -155,8 +162,11 @@ export function PublicDatabaseGuide() {
         <p>
           Oben grenzt das Auswahlfeld auf eine <strong>Kategorie</strong> ein,
           das Filterfeld sucht im <strong>Titel</strong>, und der Knopf daneben
-          dreht die alphabetische Reihenfolge um. Jede Kategorie hat ihre eigene
-          Adresse und lässt sich damit verlinken.
+          dreht die alphabetische Reihenfolge um. Gefiltert wird dabei im
+          Browser, ohne neue Anfrage — die Adresse ändert sich nicht. Wer einen
+          Link auf eine Kategorie weitergeben will, hängt sie an:{" "}
+          <code>/archive?cat=person</code> öffnet die Datenbank gleich mit
+          dieser Auswahl.
         </p>
       </GuideSection>
 
@@ -188,10 +198,10 @@ export function PublicSearchGuide() {
           eingrenzen.
         </p>
         <p>
-          Dasselbe Feld steckt oben im Kopf jeder Seite — dort mit einer
-          Vorschau schon während des Tippens. Die Suchseite selbst arbeitet ohne
-          Vorschau, dafür steht der Suchbegriff in der Adresse und lässt sich
-          weitergeben.
+          Ohne Konto steht dasselbe Feld zusätzlich oben im Kopf jeder Seite —
+          dort mit einer Vorschau schon während des Tippens. Die Suchseite
+          selbst arbeitet ohne Vorschau, dafür steht der Suchbegriff in der
+          Adresse und lässt sich weitergeben.
         </p>
       </GuideSection>
 

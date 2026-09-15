@@ -220,36 +220,40 @@ export function ApLedgerFigure() {
 }
 
 // ── Talent-/Schwerpunkt-Katalog (Leitung) ────────────────────────────
-// Suchfeld und Filter über einer Liste, jede Zeile mit Stift und Minus; ganz
-// unten das Formular für einen neuen Eintrag.
+// Ganz oben das Formular für einen neuen Eintrag (so steht es auf beiden
+// Seiten), darunter Suchfeld und Filter über der Liste; jede Zeile mit Stift
+// und Minus.
 export function CatalogEditorFigure() {
   return (
     <GuideFigure
-      label="Ein Suchfeld mit Filter über einer Liste; jede Zeile hat einen Stift und ein Minus, darunter ein Formular für einen neuen Eintrag."
-      caption="Suchen, bearbeiten — und unten Neues ergänzen"
+      label="Oben ein Formular für einen neuen Eintrag, darunter ein Suchfeld mit Filter über einer Liste; jede Zeile hat einen Stift und ein Minus."
+      caption="Oben Neues ergänzen, darunter suchen und bearbeiten"
     >
-      <Box x={10} y={10} w={112} h={13} />
-      <Box x={128} y={10} w={62} h={13} />
+      <Box x={10} y={9} w={110} h={13} stroke={TERTIARY} />
+      <Pill x={128} y={10} w={62} h={11} fill={PRIMARY} />
+
+      <Box x={10} y={32} w={112} h={12} />
+      <Box x={128} y={32} w={62} h={12} />
       {[0, 1, 2].map((i) => (
         <g key={i}>
-          <Line x={10} y={35 + i * 16} w={88} opacity={0.7} />
+          <Line x={10} y={57 + i * 16} w={88} opacity={0.7} />
           <circle
             cx={160}
-            cy={37 + i * 16}
+            cy={59 + i * 16}
             r={5}
             fill={SECONDARY}
             opacity={0.7}
           />
           <circle
             cx={178}
-            cy={37 + i * 16}
+            cy={59 + i * 16}
             r={5}
             fill={QUINARY}
             opacity={0.7}
           />
           <rect
             x={10}
-            y={45 + i * 16}
+            y={67 + i * 16}
             width={180}
             height={1}
             fill={BORDER}
@@ -257,8 +261,6 @@ export function CatalogEditorFigure() {
           />
         </g>
       ))}
-      <Box x={10} y={86} w={110} h={13} />
-      <Pill x={128} y={87} w={62} h={11} fill={PRIMARY} />
     </GuideFigure>
   );
 }
@@ -297,32 +299,42 @@ export function CampaignRulesFigure() {
 }
 
 // ── Chronologie-Werkbank ─────────────────────────────────────────────
-// Links die Inhalte, je Zeile der Knopf, der den Durchlauf startet; rechts
-// die vorgeschlagenen Ereignisse zum Prüfen.
+// Oben die Inhalte mit Filterfeld, je Zeile der Knopf, der den Durchlauf
+// startet; DARUNTER — nicht daneben, so steht es auf der Seite — die
+// abgeleiteten Ereignisse zum Prüfen.
 export function TimelineWorkbenchFigure() {
   return (
     <GuideFigure
-      label="Eine Liste von Inhalten mit je einem Knopf, daneben die abgeleiteten Ereignisse mit Datum."
-      caption="Je Inhalt auf Knopfdruck — das Ergebnis wird geprüft"
+      label="Oben ein Filterfeld über einer Liste von Inhalten mit je einem Knopf, darunter der Abschnitt mit den abgeleiteten Ereignissen."
+      caption="Oben ableiten, darunter das Ergebnis prüfen"
     >
-      {[0, 1, 2].map((i) => (
+      <Line x={10} y={9} w={52} fill={TERTIARY} opacity={0.9} />
+      <Box x={10} y={17} w={180} h={11} />
+      {[0, 1].map((i) => (
         <g key={i}>
-          <Line x={10} y={16 + i * 22} w={56} opacity={0.7} />
+          <Line x={10} y={36 + i * 16} w={72} opacity={0.7} />
           <Pill
-            x={10}
-            y={25 + i * 22}
-            w={44}
-            h={9}
+            x={140}
+            y={33 + i * 16}
+            w={50}
+            h={10}
             fill={i === 0 ? PRIMARY : BORDER}
           />
         </g>
       ))}
-      <rect x={92} y={8} width={1} height={94} fill={BORDER} />
-      {[0, 1, 2, 3].map((i) => (
+      <rect x={10} y={68} width={180} height={1} fill={BORDER} />
+      <Line x={10} y={74} w={64} fill={TERTIARY} opacity={0.9} />
+      {[0, 1].map((i) => (
         <g key={i}>
-          <circle cx={106} cy={18 + i * 22} r={3.5} fill={TERTIARY} />
-          <Line x={116} y={13 + i * 22} w={30} h={3} opacity={0.8} />
-          <Line x={116} y={21 + i * 22} w={70} h={3} opacity={0.45} />
+          <circle cx={14} cy={90 + i * 14} r={3.5} fill={TERTIARY} />
+          <Line x={24} y={88 + i * 14} w={116} h={3} opacity={0.6} />
+          <circle
+            cx={182}
+            cy={90 + i * 14}
+            r={4.5}
+            fill={QUINARY}
+            opacity={0.7}
+          />
         </g>
       ))}
     </GuideFigure>
@@ -330,7 +342,8 @@ export function TimelineWorkbenchFigure() {
 }
 
 // ── Gespräche (Leitung) ──────────────────────────────────────────────
-// Die Liste aller offenen Gespräche mit Beteiligten und letztem Beitrag.
+// Die Liste aller offenen Gespräche: Titel, Beteiligte, Owner und wann
+// zuletzt geschrieben wurde.
 export function GmDialoguesFigure() {
   return (
     <GuideFigure

@@ -10,6 +10,7 @@ import {
 import { requireOwnCharacters } from "../dal";
 import OwnCharacterList, { type OwnCharacterItem } from "./OwnCharacterList";
 import HelpButton from "@/components/help/HelpButton";
+import { HelpTitleRow } from "@/components/help/HelpHeading";
 import CharacterCreationGuide from "@/components/character/CharacterCreationGuide";
 
 export const metadata: Metadata = {
@@ -44,7 +45,21 @@ export default async function UserCharactersPage() {
       {/* Zentrierte breite Spalte wie /chronologie, /search und „Meine Inhalte" —
           Überschrift und Inhalt teilen sie sich. */}
       <div className="lcars-wide-column">
-        <h1>Meine Charaktere</h1>
+        {/* Der Fragezeichen-Knopf steht hier wie auf jeder anderen Seite
+            neben der Überschrift — auch für Gast-Accounts: mitlesen dürfen
+            sie, nur anlegen nicht. */}
+        <HelpTitleRow
+          help={
+            <HelpButton
+              title="Charaktererschaffung"
+              tutorial="charaktererschaffung"
+            >
+              <CharacterCreationGuide />
+            </HelpButton>
+          }
+        >
+          <h1>Meine Charaktere</h1>
+        </HelpTitleRow>
 
         <article className="mb-[10px] gap-[20px] lcars-flex-switch">
           <section className="flex flex-col gap-[12px] justify-center items-end">
@@ -65,16 +80,6 @@ export default async function UserCharactersPage() {
                   Gast-Accounts können keine Charaktere anlegen.
                 </p>
               )}
-              {/* Die Erklärung steht neben dem Knopf, der den Ablauf startet —
-                  und bleibt auch für Gast-Accounts sichtbar: mitlesen dürfen
-                  sie, nur anlegen nicht. */}
-              <HelpButton
-                title="Charaktererschaffung"
-                tutorial="charaktererschaffung"
-                className="self-center"
-              >
-                <CharacterCreationGuide />
-              </HelpButton>
             </div>
           </section>
 

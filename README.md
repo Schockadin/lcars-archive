@@ -850,8 +850,11 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   die drei Seiten, deren Kopfzeile in einer Client-Komponente steckt
   (Charakterliste, Chronologie, Landingpage), wird der fertige Knopf als Prop
   durchgereicht — derselbe Mechanismus. Die Kopfzeile baut `HelpHeading`
-  (Augenbraue, `h1`, Knopf) bzw. `HelpTitleRow` für Seiten mit eigener
-  `h1`-Klasse.
+  (Augenbraue, `h1`, Knopf); es setzt selbst auf `HelpTitleRow` auf, das
+  Seiten mit eigener Überschrift (eigene `h1`-Klasse wie
+  `lcars-data-row-heading`, Augenbraue unter dem Titel, Titel aus den Daten)
+  direkt verwenden. Der Knopf hat bewusst keine Klassen-Prop: Er sitzt überall
+  in derselben Zeile.
 
   Die Texte liegen als **wiederverwendbare Bausteine** in
   `src/components/help/guides/` — reines JSX ohne Hooks und ohne

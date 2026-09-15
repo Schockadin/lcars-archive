@@ -329,6 +329,11 @@ export default function HeaderUserNav({
           header.css). */}
       <Link
         href="/tutorial"
+        // aria-label, weil die Beschriftung im minimalistischen UI auf Mobile
+        // ausgeblendet wird (siehe minimal-ui.css) — ein Link, von dem dann
+        // nur ein aria-hidden-Icon übrig bliebe, hätte für Screenreader gar
+        // keinen Namen mehr.
+        aria-label="Hilfe"
         className={
           pathname === "/tutorial"
             ? "lcars-usernav-pill lcars-usernav-pill--help lcars-menu-active"

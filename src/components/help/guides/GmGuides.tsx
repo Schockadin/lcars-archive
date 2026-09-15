@@ -47,8 +47,11 @@ export function GmCampaignGuide() {
       <GuideSection title="Kampagne · AP und Missionen">
         <p>
           Darunter liegt die <strong>AP-Vergabe</strong> für einzelne Figuren:
-          Charakter wählen, Betrag und Grund eintragen, buchen. Für alles, was
-          eine ganze Session betrifft, ist der Bereich{" "}
+          je Charakter eine Zeile mit ihrem Kontostand, den{" "}
+          <strong>Schnellknöpfen</strong> für eine Session und ein Logbuch
+          (Beträge aus dem Regelwerk unter „AP“) und einer{" "}
+          <strong>freien Buchung</strong> aus Betrag, Grund und Notiz. Für
+          alles, was eine ganze Session betrifft, ist der Bereich{" "}
           <strong>„Sessions“</strong> der richtige Ort — hier geht es um die
           Einzelbuchung, die dazwischen anfällt.
         </p>
@@ -84,6 +87,13 @@ export function GmSessionsGuide() {
           Spielabend an: Zeitpunkt, Ort, eine Notiz und wer mitspielt — alle
           aktiven Figuren sind vorausgewählt. Der Termin erscheint danach auf
           der Startseite aller Beteiligten, die dort zu- oder absagen können.
+        </p>
+        <p>
+          Liegt er in der Zukunft, geht die Ankündigung zusätzlich als{" "}
+          <strong>Mail und Push</strong> an die Spielenden der eingeplanten
+          Figuren — mit Zeitpunkt, Ort und deiner Notiz. Abonnieren muss dafür
+          niemand etwas; die Rückmeldung im Formular nennt, wie viele Personen
+          tatsächlich erreicht wurden.
         </p>
       </GuideSection>
 
@@ -186,6 +196,9 @@ export function GmPartySheetGuide() {
           Ein Klick auf einen Namen öffnet den vollständigen{" "}
           <strong>Charakterbogen</strong> dieser Figur im Fenster — mit
           Spickzettel und allem, was auch die Spielerin oder der Spieler sieht.
+          Ein Fenster und kein Link, damit die Tabelle beim Nachschlagen stehen
+          bleibt; wer die Akte selbst will, nimmt <strong>„Zur Akte“</strong>{" "}
+          darunter.
         </p>
       </GuideSection>
     </GuideBody>
@@ -244,10 +257,10 @@ export function GmTalentsGuide() {
           wird, muss deshalb hier stehen.
         </p>
         <p>
-          Beim Anlegen gilt: Der{" "}
-          <strong>Name darf keine Klammern enthalten</strong> — die sind für den
-          eigenen Namen reserviert, den sich eine Figur beim Übernehmen geben
-          darf („Eigener Name (Originalname)“). Die{" "}
+          Das Formular für einen <strong>neuen Eintrag</strong> steht ganz oben.
+          Dabei gilt: Der <strong>Name darf keine Klammern enthalten</strong> —
+          die sind für den eigenen Namen reserviert, den sich eine Figur beim
+          Übernehmen geben darf („Eigener Name (Originalname)“). Die{" "}
           <strong>Voraussetzung</strong> („Conn 2+“ und dergleichen) gehört ins
           eigene Feld; der Bogen setzt sie selbst in Klammern dahinter und
           blendet damit Talente aus, deren Bedingungen eine Figur nicht erfüllt.
@@ -275,12 +288,13 @@ export function GmFocusesGuide() {
           filterbar.
         </p>
         <p>
-          Ein neuer Schwerpunkt bekommt einen <strong>Namen</strong>, eine{" "}
-          <strong>Disziplin</strong> und wahlweise eine Erläuterung. Derselbe
-          Name darf in <em>zwei</em> Disziplinen stehen — auf dem Bogen ist es
-          derselbe Schwerpunkt, die Liste zeigt ihn als eine Zeile mit beiden
-          Disziplinen daneben. Anders als bei Talenten gibt es keinen eigenen
-          Namen: Auf dem Bogen steht der Katalogname.
+          Ein neuer Schwerpunkt — das Formular dafür steht ganz oben — bekommt
+          einen <strong>Namen</strong>, eine <strong>Disziplin</strong> und
+          wahlweise eine Erläuterung. Derselbe Name darf in <em>zwei</em>{" "}
+          Disziplinen stehen — auf dem Bogen ist es derselbe Schwerpunkt, die
+          Liste zeigt ihn als eine Zeile mit beiden Disziplinen daneben. Anders
+          als bei Talenten gibt es keinen eigenen Namen: Auf dem Bogen steht der
+          Katalogname.
         </p>
         <p>
           Auch hier lassen sich nur <strong>selbst ergänzte</strong> Einträge
@@ -324,9 +338,18 @@ export function GmTimelineGuide() {
         <p>
           Die Werkbank hinter der öffentlichen Chronologie: Aus einem Inhalt —
           einer Mission, einem Logbuch, einem Datenbank-Eintrag — lässt du hier{" "}
-          <strong>Ereignisse ableiten</strong> und pflegst das Ergebnis. Links
-          steht die Liste der Inhalte, je Zeile der Knopf, der den Durchlauf
-          startet; rechts, was dabei herauskommt.
+          <strong>Ereignisse ableiten</strong> und pflegst das Ergebnis. Oben
+          steht unter <strong>„Ereignisse ableiten“</strong> die Liste der
+          Inhalte samt Filterfeld, je Zeile der Knopf, der den Durchlauf
+          startet. Darunter stehen die <strong>abgeleiteten Ereignisse</strong>{" "}
+          mit ihrer Anzahl — was nicht stimmt, entfernst du dort; der Text des
+          Inhalts bleibt davon unberührt.
+        </p>
+        <p>
+          Ohne die Zugänge des Datenbank-Assistenten lässt sich nichts ableiten;
+          die Knöpfe sind dann gesperrt und ein Hinweis sagt es. Die Chronologie
+          funktioniert trotzdem — dann eben nur aus den gepflegten Angaben und
+          den Marken im Text.
         </p>
         <p>
           Bewusst je Inhalt auf Knopfdruck und nicht automatisch beim Speichern:
@@ -354,15 +377,19 @@ export function GmDialoguesGuide() {
       <GuideSection title="Gespräche" figure={<GmDialoguesFigure />}>
         <p>
           Die Übersicht <strong>aller offenen Gespräche</strong> — unabhängig
-          davon, ob die Spielleitung selbst beteiligt ist. Je Zeile stehen
-          Titel, Beteiligte und wann zuletzt geschrieben wurde; ein Klick führt
-          ins Gespräch.
+          davon, ob die Spielleitung selbst beteiligt ist. Je Karte stehen{" "}
+          <strong>Titel</strong>, <strong>Teilnehmer</strong>,{" "}
+          <strong>Owner</strong> und wann zuletzt geschrieben wurde; ein Klick
+          führt ins Gespräch.
         </p>
         <p>
-          Der Bereich ist <strong>rein lesend</strong>: Das Gespräch selbst
-          öffnet sich für Leitung und Administration ohne Antwortformular,
+          Die Übersicht selbst greift nicht ein: Das Gespräch öffnet sich für
+          Leitung und Administration <strong>ohne Antwortformular</strong>,
           solange sie nicht selbst teilnehmen. So lässt sich verfolgen, wo etwas
-          hakt oder wo eine Antwort fehlt, ohne sich ungefragt einzumischen.
+          hakt oder wo eine Antwort fehlt, ohne sich ungefragt einzumischen. Wer
+          Gespräche moderieren darf, findet unter jeder Karte zusätzlich{" "}
+          <strong>„Metadaten bearbeiten“</strong> — dort lassen sich Titel,
+          Beteiligte und Besitzer:in korrigieren.
         </p>
       </GuideSection>
     </GuideBody>

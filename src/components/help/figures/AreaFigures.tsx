@@ -126,82 +126,70 @@ export function HomeFigure() {
 }
 
 // ── Charakterliste ───────────────────────────────────────────────────
-// Die Kacheln mit Vorschaubild, gruppiert unter einer Gruppenüberschrift.
+// Die Werkzeugleiste (Anlegen-Knopf, Umschalter Status/Generation,
+// Filterfeld), darunter die Gruppenüberschrift und die Karten an ihrer
+// Schiene — wie in Chronologie und Datenbank.
 export function CharacterListFigure() {
   return (
     <GuideFigure
-      label="Eine Filterleiste, darunter eine Gruppenüberschrift und vier Karten mit je einem kleinen Vorschaubild und zwei Textzeilen."
+      label="Eine Werkzeugleiste mit rundem Knopf, Umschalter und Filterfeld; darunter eine Gruppenüberschrift und drei Karten an einer senkrechten Schiene, jede mit kleinem Portrait."
       caption="Charaktere — nach Status oder Generation gruppiert"
     >
-      <Box x={10} y={8} w={96} h={12} />
-      <Pill x={112} y={8} w={36} h={12} fill={BORDER} />
-      <Pill x={154} y={8} w={36} h={12} fill={SECONDARY} opacity={0.7} />
-      <Line x={10} y={28} w={54} fill={TERTIARY} opacity={0.9} />
-      {[0, 1].map((row) =>
-        [0, 1].map((col) => (
-          <g key={`${row}-${col}`}>
-            <Box x={10 + col * 94} y={38 + row * 32} w={88} h={26} />
-            <rect
-              x={14 + col * 94}
-              y={42 + row * 32}
-              width={18}
-              height={18}
-              rx={3}
-              fill={SECONDARY}
-              opacity={0.6}
-            />
-            <Line
-              x={38 + col * 94}
-              y={46 + row * 32}
-              w={52}
-              h={3}
-              opacity={0.8}
-            />
-            <Line
-              x={38 + col * 94}
-              y={54 + row * 32}
-              w={36}
-              h={3}
-              opacity={0.45}
-            />
-          </g>
-        )),
-      )}
+      <circle cx={16} cy={15} r={7} fill={PRIMARY} />
+      <Pill x={28} y={9} w={40} h={12} fill={TERTIARY} opacity={0.85} />
+      <Pill x={70} y={9} w={40} h={12} fill={BORDER} />
+      <Box x={118} y={9} w={72} h={12} />
+
+      <Line x={10} y={31} w={54} fill={TERTIARY} opacity={0.9} />
+      <rect x={16} y={42} width={2} height={60} fill={BORDER} />
+      {[0, 1, 2].map((i) => (
+        <g key={i}>
+          <circle cx={17} cy={54 + i * 22} r={4} fill={SECONDARY} />
+          <Box x={28} y={44 + i * 22} w={162} h={20} />
+          <rect
+            x={33}
+            y={48 + i * 22}
+            width={12}
+            height={12}
+            rx={2}
+            fill={SECONDARY}
+            opacity={0.6}
+          />
+          <Line x={51} y={50 + i * 22} w={60} h={3} opacity={0.8} />
+          <Line x={51} y={57 + i * 22} w={40} h={3} opacity={0.45} />
+        </g>
+      ))}
     </GuideFigure>
   );
 }
 
 // ── Chronologie ──────────────────────────────────────────────────────
-// Der Zeitstrahl: eine senkrechte Linie, daran datierte Ereignisse.
+// Die Werkzeugleiste (Umfang, Sortierrichtung, Filterfeld, Ereignisart und
+// Person), darunter der senkrechte Zeitstrahl mit seinen datierten
+// Ereignissen.
 export function ChronologyFigure() {
   return (
     <GuideFigure
-      label="Eine Filterleiste über einem senkrechten Zeitstrahl, an dem vier datierte Ereignisse hängen."
-      caption="Chronologie — ein Strahl, nach Art filterbar"
+      label="Eine Werkzeugleiste aus Auswahlfeldern, Sortierschalter und Filterfeld; darunter ein senkrechter Zeitstrahl, an dem drei datierte Ereignisse hängen."
+      caption="Chronologie — ein Strahl, nach Art und Person filterbar"
     >
-      <Pill x={10} y={8} w={30} h={11} fill={PRIMARY} />
-      {[0, 1, 2, 3].map((i) => (
-        <Pill
-          key={i}
-          x={46 + i * 38}
-          y={8}
-          w={34}
-          h={11}
-          fill={[SECONDARY, TERTIARY, QUATERNARY, BORDER][i]}
-          opacity={0.75}
-        />
-      ))}
-      <rect x={26} y={28} width={2} height={76} fill={BORDER} />
-      {[0, 1, 2, 3].map((i) => (
+      <Box x={10} y={8} w={52} h={12} stroke={TERTIARY} />
+      <Pill x={68} y={8} w={28} h={12} fill={BORDER} />
+      <Box x={102} y={8} w={40} h={12} />
+      <Box x={148} y={8} w={42} h={12} />
+      <Box x={10} y={24} w={52} h={12} />
+
+      <rect x={26} y={44} width={2} height={58} fill={BORDER} />
+      {[0, 1, 2].map((i) => (
         <g key={i}>
           <circle
             cx={27}
-            cy={36 + i * 20}
+            cy={54 + i * 20}
             r={5}
-            fill={[SECONDARY, TERTIARY, QUATERNARY, SENARY][i]}
+            fill={[SECONDARY, TERTIARY, QUATERNARY][i]}
           />
-          <Line x={40} y={30 + i * 20} w={34} h={3} opacity={0.8} />
-          <Line x={40} y={38 + i * 20} w={120} h={3} opacity={0.45} />
+          <Line x={40} y={48 + i * 20} w={34} h={3} opacity={0.8} />
+          <Line x={40} y={56 + i * 20} w={120} h={3} opacity={0.45} />
         </g>
       ))}
     </GuideFigure>
@@ -209,43 +197,56 @@ export function ChronologyFigure() {
 }
 
 // ── Datenbank ────────────────────────────────────────────────────────
-// Die Kategorie-Pillen über der Liste der Einträge.
+// Die Werkzeugleiste (Anlegen, Sortierung, Filterfeld, Kategorie-Auswahl),
+// darunter die Einträge unter ihrem Anfangsbuchstaben.
 export function DatabaseFigure() {
   return (
     <GuideFigure
-      label="Zwei Reihen Kategorie-Knöpfe über einer Liste von Einträgen mit kleinem Vorschaubild."
-      caption="Datenbank — erst die Kategorie, dann der Eintrag"
+      label="Eine Werkzeugleiste mit rundem Knopf, Sortierschalter, Filterfeld und Kategorie-Auswahl; darunter ein Anfangsbuchstabe und drei Einträge mit kleinem Vorschaubild."
+      caption="Datenbank — alphabetisch, nach Kategorie eingrenzbar"
     >
-      {[0, 1].map((row) =>
-        [0, 1, 2, 3].map((col) => (
-          <Pill
-            key={`${row}-${col}`}
-            x={10 + col * 46}
-            y={8 + row * 16}
-            w={42}
-            h={12}
-            fill={
-              row === 0 && col === 0
-                ? PRIMARY
-                : [SECONDARY, TERTIARY, QUATERNARY, SENARY][col]
-            }
-            opacity={row === 0 && col === 0 ? 1 : 0.65}
-          />
-        )),
-      )}
-      {[0, 1, 2].map((i) => (
-        <g key={i}>
-          <rect
+      <circle cx={16} cy={15} r={7} fill={PRIMARY} />
+      <Pill x={28} y={9} w={46} h={12} fill={BORDER} />
+      <Box x={80} y={9} w={56} h={12} />
+      <Box x={142} y={9} w={48} h={12} stroke={QUATERNARY} />
+
+      {[0, 1].map((block) => (
+        <g key={block}>
+          <Line
             x={10}
-            y={48 + i * 20}
-            width={16}
-            height={16}
-            rx={3}
-            fill={SECONDARY}
-            opacity={0.55}
+            y={32 + block * 38}
+            w={10}
+            h={6}
+            fill={TERTIARY}
+            opacity={0.9}
           />
-          <Line x={32} y={51 + i * 20} w={64} h={3} opacity={0.8} />
-          <Line x={32} y={59 + i * 20} w={140} h={3} opacity={0.4} />
+          {[0, 1].map((i) => (
+            <g key={i}>
+              <rect
+                x={10}
+                y={44 + block * 38 + i * 16}
+                width={12}
+                height={12}
+                rx={2}
+                fill={SECONDARY}
+                opacity={0.55}
+              />
+              <Line
+                x={28}
+                y={46 + block * 38 + i * 16}
+                w={62}
+                h={3}
+                opacity={0.8}
+              />
+              <Line
+                x={28}
+                y={53 + block * 38 + i * 16}
+                w={150}
+                h={3}
+                opacity={0.4}
+              />
+            </g>
+          ))}
         </g>
       ))}
     </GuideFigure>

@@ -80,20 +80,6 @@ describe("HelpButton", () => {
     }
   });
 
-  // Der Knopf steht in ganz verschiedenen Leisten und muss sich in jede
-  // einfügen können — die Grundklasse bleibt dabei erhalten.
-  it("nimmt zusätzliche Klassen der Leiste an, in der er steht", () => {
-    render(
-      <HelpButton title="Kampagne" className="self-center">
-        <p>Text</p>
-      </HelpButton>,
-    );
-
-    expect(
-      screen.getByRole("button", { name: "Hilfe: Kampagne" }).className,
-    ).toBe("lcars-icon-btn self-center");
-  });
-
   // Der Deep-Link muss auf den Anker der Anleitung zeigen — sonst landet man
   // oben auf /tutorial statt im passenden Abschnitt.
   it("verlinkt den passenden Abschnitt der Anleitung", () => {
