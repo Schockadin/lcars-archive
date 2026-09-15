@@ -788,7 +788,10 @@ export default function TutorialPage() {
                 <strong>/changelog</strong> (erreichbar über die Versionsnummer
                 unten). Die Administration kann einzelne Kategorien für eine
                 Rolle aus dem Dashboard ausblenden — unter /changelog steht
-                immer alles.
+                immer alles. Versionen, die nur hinter den Kulissen aufräumen,
+                bringen keine Stichpunkte mit: Im Dashboard erscheinen sie
+                deshalb nicht, unter /changelog stehen sie mit einem
+                entsprechenden Hinweis.
               </p>
               <p>
                 Der News-Feed bleibt <strong>dauerhaft</strong> sichtbar (nicht

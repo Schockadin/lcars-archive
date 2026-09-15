@@ -56,7 +56,7 @@ test.describe("Switch layout", () => {
 
 // Mehrwortige Beschriftungen ("Karten-Ansicht", "Gespeichert (12)") brachen
 // auf schmalen Viewports in der Pille um. Statt umzubrechen schrumpfen
-// Schriftgröße, Innenabstand und Laufweite jetzt mit (siehe
+// Schriftgröße und Innenabstand jetzt mit (siehe
 // .lcars-switch-item in controls.css) — geprüft wird das an den beiden
 // Galerie-Abschnitten mit den längsten echten Beschriftungen, in beiden
 // Viewport-Projekten (mobil 375px und Desktop).

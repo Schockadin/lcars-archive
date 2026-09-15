@@ -23,17 +23,22 @@
   /* Mehrwortige Beschriftungen ("Karten-Ansicht", "Alphabetisch",
      "Gespeichert (12)") brachen auf schmalen Viewports mitten im Wort um und
      machten aus der Pille einen zweizeiligen Klotz. Statt umzubrechen wird
-     der Text jetzt kleiner: nowrap hält ihn in einer Zeile, Schriftgröße,
-     Innenabstand und Laufweite schrumpfen unterhalb von ~615px Fensterbreite
-     mit. Oberhalb davon greifen exakt die bisherigen Werte (16px / 24px /
-     0.08em) — am Desktop ändert sich also nichts. */
+     der Text jetzt kleiner: nowrap hält ihn in einer Zeile, Schriftgröße und
+     Innenabstand schrumpfen unterhalb von ~615px Fensterbreite mit (die
+     Laufweite unten zieht als em-Wert von selbst nach). Oberhalb davon
+     greifen exakt die bisherigen Werte (16px / 24px) — am Desktop ändert
+     sich also nichts.
+
+     min-width: 0, damit die Optionen sich den Platz weiterhin gleichmäßig
+     teilen: Ohne das setzt die längste Beschriftung eine Mindestbreite und
+     schiebt die Nachbarn aus der Pille. */
   white-space: nowrap;
   min-width: 0;
   padding: 4px clamp(8px, 2.2vw, 24px);
-  font-size: clamp(11px, 2.6vw, 16px);
+  font-size: clamp(12px, 2.6vw, 16px);
   font-weight: bolder;
   text-transform: uppercase;
-  letter-spacing: clamp(0.02em, 0.4vw, 0.08em);
+  letter-spacing: 0.08em;
   text-decoration: none;
   transition:
     color 200ms,
