@@ -2,7 +2,11 @@
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { getActiveSession } from "@/lib/dal";
-import { getUserById, updateDialogueViewPreference } from "@/lib/users";
+import {
+  getUserById,
+  listGmUsers,
+  updateDialogueViewPreference,
+} from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
 import { canPlayNpcs, canView, resolveViewer } from "@/lib/visibility";
 import { getNpcOptions } from "@/lib/archive";
@@ -24,6 +28,7 @@ import {
   getDialogueMessageForEdit,
   getDialogueMessages,
   getDialogueLockStatus,
+  getDialogueNpcSpeakerUserId,
   postDialogueMessage,
   editDialogueMessage,
   deleteDialogueMessage,
@@ -606,11 +611,22 @@ export interface InviteParticipantState {
 // Dialog. Direkt-Hinzufügen ohne Annehmen/Ablehnen, nur eine Info-Mail an
 // die neu Eingeladenen. Direkt aus einem Client-onClick aufgerufen
 // (useTransition), kein useActionState-Formular nötig.
+//
+// NPCs kann dabei JEDE einladende Person hinzunehmen, nicht nur die
+// Spielleitung — genau wie beim Anlegen eines Gesprächs, wo NPCs allen als
+// Gegenüber offenstehen. Wer sie nicht selbst spielt, benennt (wie dort) ein
+// Spielleitungs-Konto, das für sie schreibt; steht für dieses Gespräch schon
+// eines fest, bleibt es dabei. Vorher endete das Nachträgliche an der
+// Spielleitung: Ein Gespräch, in dem später ein NPC dazukommen sollte, musste
+// neu begonnen werden.
 export async function inviteDialogueParticipantAction(
   entrySlug: string,
   // Sprecher-Schlüssel ("c12"/"n7", siehe dialogueSpeaker.ts) — Charaktere
   // und NPC-Datenbank-Einträge gemischt.
   speakerKeys: string[],
+  // Wahl aus dem Formular, wenn NPCs dabei sind und die einladende Person sie
+  // nicht selbst spielt. Nie blind übernommen: geprüft wird gegen listGmUsers.
+  npcSpeakerUserIdChoice?: number | null,
 ): Promise<InviteParticipantState> {
   const session = await getActiveSession();
   if (!session) return { error: "Bitte melde dich an." };
@@ -625,25 +641,51 @@ export async function inviteDialogueParticipantAction(
     .filter((s): s is NonNullable<typeof s> => s != null);
   if (speakers.length === 0) return {};
 
-  // NPCs darf nur einladen, wer sie auch spielt —
-  // die einladende Person wird dann ihr Sprecher in diesem Gespräch.
   const inviter = await getUserById(session.userId);
   const roleMap = await getRoleMap();
   const viewer = inviter ? resolveViewer(inviter, roleMap) : null;
   const mayPlayNpcs = canPlayNpcs(viewer);
 
-  // Den mitgeschickten NPC-Schlüsseln nie blind vertrauen: sie kommen aus
-  // einem Client-Select, das nur die sichtbaren NPCs anbietet — geprüft wird
-  // die Sichtbarkeit aber hier, mit derselben canView-Regel wie beim Aufbau
-  // der Liste (siehe /dialogues/[slug]/page.tsx). Sonst ließe sich ein
-  // fremder, intern gehaltener NPC-Eintrag in die Teilnehmerliste schreiben.
+  // Wer schreibt für die neu hinzukommenden NPCs? Dieselbe Rechnung wie in
+  // createDialogueAction: die Spielleitung spielt ihre NPCs selbst, alle
+  // anderen benennen eine — oder erben den Sprecher, der in diesem Gespräch
+  // schon für NPCs zuständig ist.
+  let npcSpeakerUserId: number | null = null;
   if (speakers.some((sp) => sp.kind === "npc")) {
-    if (!mayPlayNpcs) {
-      return {
-        error:
-          "NPCs kann nur die Spielleitung hinzufügen — sie schreibt dann für sie.",
-      };
+    if (mayPlayNpcs) {
+      npcSpeakerUserId = session.userId;
+    } else {
+      npcSpeakerUserId = await getDialogueNpcSpeakerUserId(entry.id);
+      if (npcSpeakerUserId == null) {
+        const gms = await listGmUsers();
+        if (gms.length === 0) {
+          return {
+            error:
+              "Für NPCs muss es mindestens ein Konto mit Spielleitungs-Rechten geben.",
+          };
+        }
+        // Wie im Anlege-Formular: nur eine echte ID (> 0) zählt als
+        // getroffene Wahl — bei genau einer Spielleitung gibt es nichts zu
+        // wählen, dann ist sie es.
+        const chosen =
+          npcSpeakerUserIdChoice != null && npcSpeakerUserIdChoice > 0
+            ? gms.find((gm) => gm.id === npcSpeakerUserIdChoice)
+            : gms.length === 1
+              ? gms[0]
+              : undefined;
+        if (!chosen) {
+          return { error: "Bitte die Spielleitung für die NPCs auswählen." };
+        }
+        npcSpeakerUserId = chosen.id;
+      }
     }
+
+    // Den mitgeschickten NPC-Schlüsseln nie blind vertrauen: sie kommen aus
+    // einem Client-Select, das nur die sichtbaren NPCs anbietet — geprüft
+    // wird die Sichtbarkeit aber hier, mit derselben canView-Regel wie beim
+    // Aufbau der Liste (siehe /dialogues/[slug]/page.tsx). Sonst ließe sich
+    // ein fremder, intern gehaltener NPC-Eintrag in die Teilnehmerliste
+    // schreiben.
     const visibleNpcIds = new Set(
       (await getNpcOptions())
         .filter((npc) => canView(npc.isDraft, npc.ownerUserId, viewer))
@@ -662,7 +704,7 @@ export async function inviteDialogueParticipantAction(
     ({ title, invited } = await inviteDialogueParticipants(
       entry.id,
       speakers,
-      mayPlayNpcs ? session.userId : null,
+      npcSpeakerUserId,
     ));
   } catch (err) {
     if (err instanceof DialogueNpcSpeakerRequiredError) {

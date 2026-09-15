@@ -162,6 +162,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "charaktere",
         tutorial: "charaktererschaffung",
       },
+      {
+        text: "NPCs lassen sich jetzt auch in ein Gespräch holen, das längst läuft — über dieselbe Liste „Weitere Personen einladen“, in der auch die Charaktere stehen, und nicht mehr nur durch die Spielleitung. Spielst du die NPCs nicht selbst, wählst du dabei wie beim Anlegen, wer für sie schreibt.",
+        category: "charaktere",
+        tutorial: "gespraeche",
+      },
     ],
   },
   {

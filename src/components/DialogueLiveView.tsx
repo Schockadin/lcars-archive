@@ -15,6 +15,7 @@ import CompleteDialogueButton from "./CompleteDialogueButton";
 import DeleteDialogueButton from "./DeleteDialogueButton";
 import FollowButtons from "./FollowButtons";
 import type { InviteCandidate } from "./InviteDialogueParticipantForm";
+import type { GmContact } from "@/lib/users";
 import { speakerKey } from "@/lib/dialogueSpeaker";
 
 export interface DialogueReplyCharacter {
@@ -51,6 +52,9 @@ export default function DialogueLiveView({
   myCharacters,
   isOwner,
   inviteCandidates,
+  inviteGms,
+  inviterPlaysNpcs,
+  dialogueNpcSpeakerUserId,
   initialMessages,
   initialLockStatus,
   initialCanReplyNow,
@@ -68,6 +72,12 @@ export default function DialogueLiveView({
   myCharacters: DialogueReplyCharacter[];
   isOwner: boolean;
   inviteCandidates: InviteCandidate[];
+  // Nur für das Einladen durchgereicht (siehe InviteDialogueParticipantForm):
+  // wer für nachträglich eingeladene NPCs schreiben kann, ob die einladende
+  // Person das selbst darf und wer es in diesem Gespräch schon tut.
+  inviteGms: GmContact[];
+  inviterPlaysNpcs: boolean;
+  dialogueNpcSpeakerUserId: number | null;
   initialMessages: DialogueMessage[];
   initialLockStatus: DialogueLockStatus | null;
   initialCanReplyNow: boolean;
@@ -223,6 +233,9 @@ export default function DialogueLiveView({
           <InviteDialogueParticipantForm
             entrySlug={entrySlug}
             candidates={inviteCandidates}
+            gms={inviteGms}
+            inviterPlaysNpcs={inviterPlaysNpcs}
+            npcSpeakerUserId={dialogueNpcSpeakerUserId}
           />
         )}
         <div className="flex items-center gap-[8px]">

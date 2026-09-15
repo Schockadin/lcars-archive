@@ -127,9 +127,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `kind: "archive"` und verlinkt damit nach `/archive/<slug>` statt
   `/characters/<slug>`. Welche NPCs jemand angeboten bekommt, entscheidet die
   normale Sichtbarkeitsregel (`canView` mit dem `owner_user_id` des Eintrags):
-  veröffentlichte alle, Entwürfe nur die eigene Person bzw. `content.view_all`. Auch **nachträglich**
-  lassen sich NPCs in ein laufendes Gespräch holen — das darf, wer sie spielt,
-  und wird dabei ihr Sprecher.
+  veröffentlichte alle, Entwürfe nur die eigene Person bzw. `content.view_all`.
+  Auch **nachträglich** lassen sich NPCs in ein laufendes Gespräch holen, und
+  zwar von jedem Owner — nicht nur von der Spielleitung (bis v1.37 war das der
+  Fall; wer später einen NPC brauchte, musste das Gespräch neu beginnen). Die
+  Sprecher-Frage läuft dabei wie beim Anlegen: Wer NPCs selbst spielt, wird ihr
+  Sprecher; alle anderen benennen ein Spielleitungs-Konto, und steht für dieses
+  Gespräch schon eines fest (`getDialogueNpcSpeakerUserId`), bleibt es dabei —
+  ein Gespräch hat immer höchstens EIN NPC-sprechendes Konto. Die Wahl aus dem
+  Formular wird nie blind übernommen, sondern gegen `listGmUsers` geprüft.
 - **NPCs anlegen** — unter „Meine Inhalte" gibt es für **jedes eingeloggte
   Konto** den Knopf **„Neuer NPC"** (`/user/archive/new?category=npc`). Das ist
   das normale Datenbank-Formular mit vorgewählter Kategorie „NPC"; der Eintrag

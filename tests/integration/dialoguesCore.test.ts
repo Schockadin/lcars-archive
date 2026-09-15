@@ -12,6 +12,7 @@ import {
   regenerateDialogueContent,
   getClosedDialogueIds,
   inviteDialogueParticipants,
+  getDialogueNpcSpeakerUserId,
   reserveDialogueReply,
   requestDialogueReservationNotification,
   hasRequestedDialogueReservationNotification,
@@ -1129,6 +1130,40 @@ describe("Gespräche mit NPCs", () => {
         AND target_slug = ${dialogue.slug}
     `;
     expect(follow).toBeDefined();
+  });
+
+  // Grundlage des nachträglichen Einladens durch eine Person, die NPCs nicht
+  // selbst spielt: Steht der Sprecher für dieses Gespräch schon fest, wird
+  // nicht erneut nach einer Spielleitung gefragt (siehe
+  // inviteDialogueParticipantAction).
+  it("nennt die Spielleitung, die in diesem Gespräch für NPCs schreibt", async () => {
+    const { gmUser, entryId } = await setupNpcDialogue();
+
+    expect(await getDialogueNpcSpeakerUserId(entryId)).toBe(gmUser.id);
+  });
+
+  it("nennt niemanden, solange kein NPC beteiligt ist", async () => {
+    const playerUser = await insertUser();
+    const a = await insertCharacter({ playerId: playerUser.id, name: "A" });
+    const partnerUser = await insertUser();
+    const b = await insertCharacter({ playerId: partnerUser.id, name: "B" });
+    const dialogue = await createDialogue({
+      title: "Ohne NPC",
+      ownSpeaker: { kind: "character", id: a.id },
+      partners: [{ kind: "character", id: b.id }],
+      authorUserId: playerUser.id,
+      setting: null,
+      locationSlug: null,
+      logDate: null,
+      tags: [],
+      bodyMarkdown: "Hallo.",
+      subscribeSelf: true,
+    });
+    const [entry] = await sql<{ id: number }[]>`
+      SELECT id FROM archive_entries WHERE slug = ${dialogue.slug}
+    `;
+
+    expect(await getDialogueNpcSpeakerUserId(entry.id)).toBeNull();
   });
 
   it("holt einen NPC-Entwurf nicht ins Gespräch", async () => {

@@ -2,6 +2,7 @@
 import { useState, useTransition } from "react";
 import { FormField, FormError } from "@/app/_shared/FormPrimitives";
 import { inviteDialogueParticipantAction } from "@/app/actions/dialogues";
+import type { GmContact } from "@/lib/users";
 
 // Charaktere UND NPC-Datenbank-Einträge in einer Liste — identifiziert über
 // den Sprecher-Schlüssel ("c12"/"n7", siehe src/lib/dialogueSpeaker.ts),
@@ -19,19 +20,44 @@ export interface InviteCandidate {
 // (inviteDialogueParticipantAction). candidates enthält bereits nur
 // Charaktere, die noch NICHT teilnehmen (Filterung serverseitig in
 // page.tsx, gleiches Muster wie bei MissionParticipantsField).
+//
+// NPCs stehen dabei allen offen, nicht nur der Spielleitung — dieselbe Regel
+// wie beim Anlegen eines Gesprächs. Wer sie nicht selbst spielt, benennt eine
+// Spielleitung, die für sie schreibt; steht für dieses Gespräch schon eine
+// fest, entfällt die Frage (npcSpeakerUserId). Verbindlich geprüft wird das
+// ohnehin in der Action.
 export default function InviteDialogueParticipantForm({
   entrySlug,
   candidates,
+  gms,
+  inviterPlaysNpcs,
+  npcSpeakerUserId,
 }: {
   entrySlug: string;
   candidates: InviteCandidate[];
+  // Auswahl „wer spielt die NPCs?" — leer, wenn die einladende Person sie
+  // selbst spielt (dann ist sie es).
+  gms: GmContact[];
+  inviterPlaysNpcs: boolean;
+  // Wer in diesem Gespräch bereits für NPCs schreibt, falls schon jemand.
+  npcSpeakerUserId: number | null;
 }) {
   const [pending, startTransition] = useTransition();
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [chosenGmId, setChosenGmId] = useState<number | null>(null);
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState(false);
 
   if (candidates.length === 0) return null;
+
+  // Ist ein NPC ausgewählt? Entscheidet, ob nach der Spielleitung gefragt
+  // wird — wie im Anlege-Formular am Präfix des Sprecher-Schlüssels erkannt.
+  const npcSelected = selectedKeys.some((key) => key.startsWith("n"));
+  const needsGm = npcSelected && !inviterPlaysNpcs && npcSpeakerUserId === null;
+  // Bei genau einer Spielleitung gibt es nichts zu wählen — sie wird still
+  // mitgeschickt (die Action setzt sie auch ohne Feld, das Feld hält die
+  // Anzeige nur ehrlich).
+  const needsGmChoice = needsGm && gms.length > 1;
 
   function handleInvite() {
     if (selectedKeys.length === 0) return;
@@ -41,12 +67,14 @@ export default function InviteDialogueParticipantForm({
       const result = await inviteDialogueParticipantAction(
         entrySlug,
         selectedKeys,
+        chosenGmId,
       );
       if (result.error) {
         setError(result.error);
       } else {
         setSuccess(true);
         setSelectedKeys([]);
+        setChosenGmId(null);
       }
     });
   }
@@ -56,7 +84,7 @@ export default function InviteDialogueParticipantForm({
       <FormField
         label="Weitere Personen einladen"
         htmlFor="dlg-invite-participants"
-        hint="Mehrfachauswahl per Strg/Cmd- oder Shift-Klick. Direkt hinzugefügt, kein Annehmen/Ablehnen nötig — die eingeladene Person bekommt eine Info-Mail."
+        hint="Mehrfachauswahl per Strg/Cmd- oder Shift-Klick. Direkt hinzugefügt, kein Annehmen/Ablehnen nötig — die eingeladene Person bekommt eine Info-Mail. NPCs schreibt die Spielleitung."
       >
         <select
           id="dlg-invite-participants"
@@ -77,6 +105,43 @@ export default function InviteDialogueParticipantForm({
           ))}
         </select>
       </FormField>
+
+      {/* Wer schreibt für die NPCs? Nur wenn welche ausgewählt sind, die
+          einladende Person sie nicht selbst spielt und für dieses Gespräch
+          noch keine Spielleitung zuständig ist. */}
+      {needsGm && (
+        <FormField
+          label="Spielleitung für die NPCs"
+          htmlFor="dlg-invite-npc-speaker"
+          hint="Diese Person schreibt in diesem Gespräch für die beteiligten NPCs."
+        >
+          {needsGmChoice ? (
+            <select
+              id="dlg-invite-npc-speaker"
+              value={chosenGmId ?? ""}
+              onChange={(e) => setChosenGmId(Number(e.currentTarget.value))}
+              className="lcars-input rounded-lcars-pill"
+            >
+              <option value="">Bitte wählen</option>
+              {gms.map((gm) => (
+                <option key={gm.id} value={gm.id}>
+                  {gm.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            // Genau eine Spielleitung (oder gar keine): nichts zu wählen. Das
+            // Feld zeigt nur, wer es sein wird; die Action setzt sie selbst.
+            <input
+              id="dlg-invite-npc-speaker"
+              type="text"
+              readOnly
+              value={gms[0]?.name ?? "Keine Spielleitung verfügbar"}
+              className="lcars-input rounded-lcars-pill"
+            />
+          )}
+        </FormField>
+      )}
 
       <button
         type="button"

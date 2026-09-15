@@ -442,9 +442,16 @@ export default function TutorialPage() {
                 Als Gegenüber kannst du auch einen <strong>NPC</strong> wählen —
                 also einen Datenbank-Eintrag der Kategorie „NPC“. Für ihn
                 schreibt die Spielleitung; gibt es mehr als eine, wählst du beim
-                Anlegen aus, wer den NPC übernimmt. Umgekehrt kann die
-                Spielleitung ein Gespräch aus Sicht eines NPC mit euren
-                Charakteren beginnen. Danach läuft alles wie gewohnt: Der NPC
+                Anlegen aus, wer den NPC übernimmt. Das gilt genauso{" "}
+                <strong>nachträglich</strong>: Auch in ein Gespräch, das längst
+                läuft, kannst du als Owner einen NPC noch dazuholen — über
+                dieselbe Liste „Weitere Personen einladen“, in der auch die
+                Charaktere stehen. Spielst du die NPCs nicht selbst, wirst du
+                dabei wieder nach der Spielleitung gefragt; schreibt in diesem
+                Gespräch schon jemand für NPCs, bleibt es bei ihr. Bisher ging
+                das nur beim Anlegen — wer später einen NPC brauchte, musste das
+                Gespräch neu beginnen. Umgekehrt kann die Spielleitung ein
+                Gespräch aus Sicht eines NPC mit euren Charakteren beginnen. Danach läuft alles wie gewohnt: Der NPC
                 steht der Spielleitung beim Antworten wie ein eigener Charakter
                 zur Auswahl, und das Gespräch erscheint bei ihr unter „Deine
                 Gespräche“. Neue NPCs legt ihr unter „Meine Inhalte“ über den

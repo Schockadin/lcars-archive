@@ -102,6 +102,20 @@ describe("CreateDialogueForm", () => {
     ).toBe("10");
   });
 
+  // rounded-full macht aus einem aufgeklappten Listenfeld einen Kasten mit
+  // Vollkreis-Ecken, der seine erste und letzte Zeile anschneidet — die
+  // Charakter-Auswahl trägt deshalb die Pillen-Rundung wie beim
+  // nachträglichen Einladen.
+  it("rundet die Charakter-Auswahl wie eine Pille, nicht als Vollkreis", () => {
+    renderForm();
+
+    for (const label of [/Dein Charakter/, /Gesprächspartner/]) {
+      const field = screen.getByLabelText(label);
+      expect(field.className).toContain("rounded-lcars-pill");
+      expect(field.className).not.toContain("rounded-full");
+    }
+  });
+
   it("lässt die Spielleitung aus Sicht eines NPC beginnen, ohne nach einer Leitung zu fragen", () => {
     renderForm({ canPlayNpcs: true, gms: [] });
 

@@ -1139,6 +1139,25 @@ export async function getDialogueParticipant(
   };
 }
 
+// Wer schreibt in diesem Gespräch bereits für NPCs? Ein Gespräch hat höchstens
+// EIN solches Konto (createDialogue/inviteDialogueParticipants tragen für alle
+// NPCs dasselbe ein), deshalb genügt die erste Zeile.
+//
+// Gebraucht beim nachträglichen Einladen: Steht der Sprecher schon fest, muss
+// die einladende Person nicht erneut eine Spielleitung wählen — und es kann
+// auch nicht versehentlich eine zweite für dasselbe Gespräch zuständig werden.
+export async function getDialogueNpcSpeakerUserId(
+  archiveEntryId: number,
+): Promise<number | null> {
+  const [row] = await sql<{ user_id: number }[]>`
+    SELECT user_id FROM dialogue_npc_speakers
+    WHERE archive_entry_id = ${archiveEntryId}
+    ORDER BY npc_entry_id ASC
+    LIMIT 1
+  `;
+  return row?.user_id ?? null;
+}
+
 // Eigene Teilnehmer-Charaktere UND die NPC-Einträge, für die userId in genau
 // diesem Gespräch schreibt (dialogue_npc_speakers) — beides in einer Abfrage,
 // da für alles Weitere (Antworten, Abschließen, Export) gleichwertig.
