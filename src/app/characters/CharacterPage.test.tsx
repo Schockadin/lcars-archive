@@ -87,7 +87,7 @@ describe("CharacterPage", () => {
       screen
         .getAllByRole("link")
         .map((link) => link.getAttribute("href"))
-        .filter((href) => href?.startsWith("/characters/") && href !== "/characters/beziehungen"),
+        .filter((href) => href?.startsWith("/characters/")),
     ).toEqual(["/characters/tuvok", "/characters/kira", "/characters/shran"]);
   });
 

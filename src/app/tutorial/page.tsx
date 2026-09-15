@@ -114,31 +114,14 @@ export default function TutorialPage() {
                 ausblendet und den Text breiter/größer darstellt.
               </p>
               <p>
-                Unter <strong>Charaktere → „Beziehungen“</strong> steht der{" "}
-                <strong>Beziehungsgraph</strong> der Kampagne: wer mit wem im
-                Einsatz war, wer mit wem geredet hat und wer im eigenen Text auf
-                wen verweist — abgeleitet aus gemeinsamen Missionen, gemeinsamen
-                Gesprächen und den <strong>Verlinkungen</strong> zwischen
-                Charakteren und NPCs. Verlinkst du in einer Biografie oder einem
-                NPC-Eintrag eine andere Figur (siehe „Verlinkung“), entsteht
-                daraus also eine Verbindung. Dicke Linien stehen für viele
-                Berührungspunkte, große Punkte für gut vernetzte Figuren;
-                Spielfiguren und NPCs sind farblich unterschieden. Zeigst du auf
-                eine Figur, treten sie und ihre Verbindungen hervor, ein Klick
-                führt zu ihr.
-              </p>
-              <p>
-                Weil eine ganze Kampagne schnell unübersichtlich wird, lässt
-                sich der Graph über der Zeichnung eingrenzen: Die Kästchen{" "}
-                <strong>Missionen</strong>, <strong>Gespräche</strong>,{" "}
-                <strong>Verlinkungen</strong> und <strong>NPCs</strong> nehmen
-                einzelne Quellen bzw. die NPCs heraus,{" "}
-                <strong>Mindeststärke</strong> zeigt nur Verbindungen ab einer
-                gewählten Zahl an Berührungspunkten, und <strong>Fokus</strong>{" "}
-                beschränkt alles auf eine Figur und ihre direkten Verbindungen.
-                Ein Knopf setzt die Auswahl wieder zurück. Darunter stehen
-                dieselben (gefilterten) Figuren noch einmal als Liste — je Figur
-                ihre Verbindungen, die stärkste zuerst.
+                Auf jeder Personalakte steht unten{" "}
+                <strong>„Wer kennt wen“</strong>: mit welchen Figuren und NPCs
+                diese Person zu tun hat — abgeleitet aus gemeinsamen Missionen,
+                gemeinsamen Gesprächen und den <strong>Verlinkungen</strong>{" "}
+                zwischen Charakteren und NPCs. Verlinkst du in einer Biografie
+                oder einem NPC-Eintrag eine andere Figur (siehe „Verlinkung“),
+                entsteht daraus also eine Verbindung. Unter jedem Namen steht,
+                woraus sie stammt, und ein Klick führt zur Figur.
               </p>
             </div>
           </LcarsDataRow>

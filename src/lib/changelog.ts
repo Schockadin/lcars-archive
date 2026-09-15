@@ -149,6 +149,16 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.38",
+    title: "Erschaffung zur Hand, Termine im Blick",
+    // Der Beziehungsgraph (/characters/beziehungen) ist in dieser Version
+    // ersatzlos entfallen — bis eine tragfähigere Darstellung dafür steht.
+    // Eine entfallene Funktion ist keine neue, sie steht laut AGENTS.md
+    // deshalb nicht als Stichpunkt hier; „Wer kennt wen" auf der
+    // Personalakte bleibt unverändert.
+    items: [],
+  },
+  {
     version: "1.37",
     title: "Ruhe im Fehlerprotokoll",
     // Bewusst ohne Stichpunkte: Diese Version bringt keine neue Funktion,

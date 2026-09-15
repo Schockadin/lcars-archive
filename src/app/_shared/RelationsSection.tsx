@@ -42,11 +42,6 @@ export default function RelationsSection({
       hint="Abgeleitet aus gemeinsamen Missionen, Gesprächen und Verlinkungen"
       badge={`${relations.length} ${relations.length === 1 ? "Verbindung" : "Verbindungen"}`}
     >
-      <p className="text-lcars-ink-dim text-[13px]">
-        <Link href="/characters/beziehungen" className="lcars-wikilink">
-          Ganze Kampagne als Graph
-        </Link>
-      </p>
       <ul className="flex flex-col gap-[4px]">
         {relations.map((r) => (
           <li

@@ -40,8 +40,8 @@ import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 //
 // Bewusst OHNE "use cache": die Chronologie hängt an der Sichtbarkeit der
 // betrachtenden Person (nicht-öffentliche Logbücher) — dieselbe
-// Begründung wie beim Beziehungsgraph und bei der Missionsakte. Es sind fünf
-// Abfragen für die ganze Seite, nicht eine je Inhalt.
+// Begründung wie bei der Missionsakte. Es sind fünf Abfragen für die ganze
+// Seite, nicht eine je Inhalt.
 
 interface MissionRow {
   slug: string;

@@ -103,14 +103,7 @@ export default function CharacterPage({
   return (
     <div className="lcars-wide-column">
       <div className="mb-[16px]">
-        <div className="flex w-full flex-wrap items-baseline justify-between gap-[8px]">
-          <h1 className="lcars-data-row-heading">Charaktere</h1>
-          {/* Einstieg in den Beziehungsgraph der Kampagne — er gehört zu den
-              Charakteren, hat aber zu viel Fläche für diese Seite. */}
-          <Link href="/characters/beziehungen" className="lcars-wikilink">
-            Beziehungen
-          </Link>
-        </div>
+        <h1 className="lcars-data-row-heading">Charaktere</h1>
         <p className="lcars-eyebrow">
           Das Ensemble der Kampagne ·{" "}
           {mode === "status" ? "nach Status" : "nach Generation"}

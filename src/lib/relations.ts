@@ -21,9 +21,9 @@ import {
 //   3. Verlinkungen zwischen Charakteren und NPCs — wer verweist auf wen.
 //      Quelle sind die [[Wikilinks]] im Fließtext (source_md) von Charakteren
 //      und NPC-Einträgen, die strukturierten Verweisfelder eines NPC-Eintrags
-//      auf Charaktere (metadata.characters) und die Verweise zwischen zwei
-//      NPC-Einträgen (archive_links). Wer im Text eines anderen auftaucht,
-//      hat mit ihm zu tun — auch ohne je zusammen im Einsatz gewesen zu sein.
+//      auf Charaktere (metadata.characters). Wer im Text eines anderen
+//      auftaucht, hat mit ihm zu tun — auch ohne je zusammen im Einsatz
+//      gewesen zu sein.
 //
 // Sortiert nach Anzahl der Berührungspunkte: wer oft zusammen unterwegs war,
 // steht oben. Sichtbarkeit wird wie sonst im Projekt in JS über canView()
@@ -176,11 +176,9 @@ export async function getRelationsOf(
 }
 
 
-// ── Beziehungsgraph der ganzen Kampagne ────────────────────────────────
-// Dieselben drei Quellen wie oben, nur nicht von einer Figur aus, sondern für
-// alle auf einmal: Knoten sind Figuren und NPCs, Kanten ihre Berührungspunkte.
-// Bewusst EINE Abfrage je Quelle statt getRelationsOf() je Figur — bei 30
-// Figuren wären das 60 Abfragen für dasselbe Ergebnis.
+// ── Die Figuren hinter den Verbindungen ────────────────────────────────
+// Ein Knoten ist eine Figur oder ein NPC-Eintrag: Name, Art und Adresse, wie
+// sie „Wer kennt wen" auf der Charakterseite anzeigt.
 
 export interface GraphNode {
   slug: string;
@@ -189,85 +187,24 @@ export interface GraphNode {
   href: string;
 }
 
-export interface GraphEdge {
-  // Slugs der beiden Enden, immer alphabetisch sortiert — so gibt es je Paar
-  // genau eine Kante, egal in welcher Reihenfolge die Quellen sie liefern.
-  source: string;
-  target: string;
-  sharedMissions: number;
-  sharedDialogues: number;
-  sharedLinks: number;
-}
-
-export interface RelationGraph {
-  nodes: GraphNode[];
-  edges: GraphEdge[];
-}
-
-// Kanten-Schlüssel: sortiertes Paar. Exportiert, weil die Zusammenführung
-// aller Quellen daran hängt und genau das getestet wird.
+// Paar-Schlüssel: sortiertes Slug-Paar. Exportiert, weil die Zusammenführung
+// der Verweise daran hängt und genau das getestet wird.
 export function edgeKey(a: string, b: string): string {
   return a < b ? `${a}|${b}` : `${b}|${a}`;
 }
 
-// Baut aus den Gesprächszeilen alle Paare von Mitteilnehmenden auf. Wie
-// countDialoguePartners ausgelagert und exportiert, damit die JSON-Auswertung
-// ohne Datenbank testbar ist.
-export function collectDialogueEdges(
-  rows: { participants: DialogueRow["participants"] }[],
-): {
-  nodes: Map<string, GraphNode>;
-  pairs: Map<string, number>;
-} {
-  const nodes = new Map<string, GraphNode>();
-  const pairs = new Map<string, number>();
-
-  for (const row of rows) {
-    const parts = (row.participants ?? []).filter(
-      (p): p is { kind?: string; name?: string; slug: string } =>
-        typeof p?.slug === "string" && p.slug.length > 0,
-    );
-    // Doppelte Slugs innerhalb eines Gesprächs würden ein Paar mit sich
-    // selbst und eine doppelte Zählung ergeben.
-    const seen = new Set<string>();
-    const unique = parts.filter((p) => !seen.has(p.slug) && seen.add(p.slug));
-
-    for (const p of unique) {
-      if (!nodes.has(p.slug)) {
-        const kind = p.kind === "character" ? "character" : "npc";
-        nodes.set(p.slug, {
-          slug: p.slug,
-          name: p.name ?? p.slug,
-          kind,
-          href:
-            kind === "character" ? characterHref(p.slug) : archiveHref(p.slug),
-        });
-      }
-    }
-    for (let i = 0; i < unique.length; i++) {
-      for (let j = i + 1; j < unique.length; j++) {
-        const key = edgeKey(unique[i].slug, unique[j].slug);
-        pairs.set(key, (pairs.get(key) ?? 0) + 1);
-      }
-    }
-  }
-
-  return { nodes, pairs };
-}
-
 // ── Verlinkungen zwischen Figuren ──────────────────────────────────────
-// Die dritte Quelle: wer verweist im eigenen Text auf wen. Anders als
+// Die dritte Quelle neben Missionen und Gesprächen: wer verweist im eigenen
+// Text auf wen. Anders als
 // Missionen und Gespräche ist eine Verlinkung gerichtet — „Tuvok erwähnt
 // Sareth" heißt nicht, dass Sareth Tuvok erwähnt. Für die Beziehung zählt
 // beides gleich, gegenseitige Verweise geben deshalb zwei Berührungspunkte.
 //
-// Drei Formen, alle im Projekt vorhanden und keine neue Pflege:
+// Zwei Formen, beide im Projekt vorhanden und keine neue Pflege:
 //   • [[Wikilinks]] im Fließtext (source_md) — von Hand getippt oder vom
 //     Autolinking gesetzt (siehe src/lib/autolink.ts).
 //   • Strukturierte Verweisfelder eines NPC-Eintrags auf Charaktere
 //     (metadata.characters, siehe saveArchiveReferences in archive.ts).
-//   • archive_links zwischen zwei NPC-Einträgen (dieselbe Tabelle, die
-//     „Verweise" auf der Archivseite speist).
 //
 // Gelesen wird ausschließlich source_md, nie bio/content: dort steht bereits
 // gerendertes HTML, in dem die Wikilinks aufgelöst sind.
@@ -313,8 +250,7 @@ export function resolveLinkTarget(
 export interface LinkSource {
   slug: string;
   sourceMd: string | null;
-  // Strukturierte Verweise als Slugs (metadata.characters eines NPCs,
-  // archive_links eines NPC-Eintrags).
+  // Strukturierte Verweise als Slugs (metadata.characters eines NPCs).
   refs?: string[];
 }
 
@@ -335,7 +271,7 @@ export function linkedSlugsOf(
   return [...out];
 }
 
-// Zählt die Verweise je Paar. Wie collectDialogueEdges ausgelagert und
+// Zählt die Verweise je Paar. Wie countDialoguePartners ausgelagert und
 // exportiert, damit die Auswertung ohne Datenbank testbar ist.
 export function collectLinkEdges(
   sources: LinkSource[],
@@ -362,12 +298,17 @@ interface LinkNpcRow extends LinkCharacterRow {
   character_refs: { slug?: string }[] | null;
 }
 
-// Lädt Knoten und Verweise der ganzen Kampagne in einem Rutsch: Charaktere,
-// NPC-Einträge und die Verweise zwischen zwei NPC-Einträgen. Bewusst
-// vollständig statt je Figur vorgefiltert — ein Wikilink lässt sich in SQL
-// nicht zuverlässig vergleichen (siehe src/lib/mentions.ts), und der Text
-// aller Figuren und NPCs ist bei einer Kampagne dieser Größe eine Abfrage
-// wert. Dieselbe Ladung versorgt die Charakterseite und den Gesamtgraphen.
+// Lädt Knoten und Verweise der ganzen Kampagne in einem Rutsch: Charaktere
+// und NPC-Einträge. Bewusst vollständig statt je Figur vorgefiltert — ein
+// Wikilink lässt sich in SQL nicht zuverlässig vergleichen (siehe
+// src/lib/mentions.ts), und der Text aller Figuren und NPCs ist bei einer
+// Kampagne dieser Größe eine Abfrage wert.
+//
+// Verweise zwischen ZWEI NPC-Einträgen (archive_links) wurden hier früher
+// mitgeladen — sie speisten ausschließlich den Gesamtgraphen. Seit der weg
+// ist, fragt nur noch die Charakterseite (getRelationsOf) diese Ladung ab,
+// und die behält nur Paare, an denen ihre Figur hängt: ein NPC-NPC-Paar
+// könnte darin nie auftauchen. Die Abfrage ist deshalb ersatzlos entfallen.
 //
 // Knoten ist nur, was veröffentlicht ist: Entwürfe (Charaktere wie
 // NPC-Einträge) bleiben draußen, auch für ihre Owner-Person. Ein Verweis auf
@@ -378,7 +319,7 @@ async function loadLinks(): Promise<{
   nodes: Map<string, GraphNode>;
   pairs: Map<string, number>;
 }> {
-  const [characterRows, npcRows, npcLinkRows] = await Promise.all([
+  const [characterRows, npcRows] = await Promise.all([
     sql<LinkCharacterRow[]>`
       SELECT slug, name, source_md
       FROM characters
@@ -389,18 +330,6 @@ async function loadLinks(): Promise<{
              metadata->'characters' AS character_refs
       FROM archive_entries
       WHERE category = 'npc' AND deleted_at IS NULL AND is_draft = false
-    `,
-    // Verweise zwischen zwei NPC-Einträgen (archive_links speist auch die
-    // „Verweise"-Liste der Archivseite). Andere Kategorien sind hier keine
-    // Knoten und würden nur ins Leere zeigen.
-    sql<{ source: string; target: string }[]>`
-      SELECT src.slug AS source, tgt.slug AS target
-      FROM archive_links al
-      JOIN archive_entries src ON src.id = al.source_id
-      JOIN archive_entries tgt ON tgt.id = al.target_id
-      WHERE src.category = 'npc' AND tgt.category = 'npc'
-        AND src.deleted_at IS NULL AND src.is_draft = false
-        AND tgt.deleted_at IS NULL AND tgt.is_draft = false
     `,
   ]);
 
@@ -427,15 +356,6 @@ async function loadLinks(): Promise<{
 
   const lookup = buildLinkLookup(nodes.values());
 
-  // Die archive_links eines NPCs zählen wie seine eigenen Verweise — beide
-  // gehen von ihm aus.
-  const npcRefs = new Map<string, string[]>();
-  for (const row of npcLinkRows) {
-    const list = npcRefs.get(row.source);
-    if (list) list.push(row.target);
-    else npcRefs.set(row.source, [row.target]);
-  }
-
   const sources: LinkSource[] = [
     ...characterRows.map((row) => ({
       slug: row.slug,
@@ -444,127 +364,11 @@ async function loadLinks(): Promise<{
     ...visibleNpcs.map((row) => ({
       slug: row.slug,
       sourceMd: row.source_md,
-      refs: [
-        ...(row.character_refs ?? [])
-          .map((r) => r?.slug)
-          .filter((s): s is string => typeof s === "string" && s.length > 0),
-        ...(npcRefs.get(row.slug) ?? []),
-      ],
+      refs: (row.character_refs ?? [])
+        .map((r) => r?.slug)
+        .filter((s): s is string => typeof s === "string" && s.length > 0),
     })),
   ];
 
   return { nodes, pairs: collectLinkEdges(sources, lookup) };
-}
-
-export async function getRelationGraph(): Promise<RelationGraph> {
-  const [missionRows, dialogueRows, links] = await Promise.all([
-    // Jedes Paar nur EINMAL: a.character_id < b.character_id statt <>, sonst
-    // käme jede Kante doppelt zurück.
-    sql<{
-      aSlug: string;
-      aName: string;
-      bSlug: string;
-      bName: string;
-      shared: number;
-    }[]>`
-      SELECT ca.slug AS "aSlug", ca.name AS "aName",
-             cb.slug AS "bSlug", cb.name AS "bName",
-             COUNT(*)::int AS shared
-      FROM mission_participants pa
-      JOIN mission_participants pb ON pb.mission_id = pa.mission_id
-                                  AND pb.character_id > pa.character_id
-      JOIN characters ca ON ca.id = pa.character_id
-      JOIN characters cb ON cb.id = pb.character_id
-      JOIN missions m ON m.id = pa.mission_id
-      WHERE ca.deleted_at IS NULL AND ca.is_draft = false
-        AND cb.deleted_at IS NULL AND cb.is_draft = false
-        AND m.deleted_at IS NULL AND m.is_draft = false
-      GROUP BY ca.slug, ca.name, cb.slug, cb.name
-    `,
-    sql<DialogueRow[]>`
-      SELECT metadata->'participants' AS participants
-      FROM archive_entries
-      WHERE category = 'dialogue'
-        AND deleted_at IS NULL AND is_draft = false
-    `,
-    loadLinks(),
-  ]);
-
-  const nodes = new Map<string, GraphNode>();
-  const edges = new Map<string, GraphEdge>();
-
-  const putEdge = (a: string, b: string, patch: Partial<GraphEdge>) => {
-    const key = edgeKey(a, b);
-    const [source, target] = key.split("|");
-    const existing = edges.get(key) ?? {
-      source,
-      target,
-      sharedMissions: 0,
-      sharedDialogues: 0,
-      sharedLinks: 0,
-    };
-    edges.set(key, {
-      ...existing,
-      sharedMissions: existing.sharedMissions + (patch.sharedMissions ?? 0),
-      sharedDialogues: existing.sharedDialogues + (patch.sharedDialogues ?? 0),
-      sharedLinks: existing.sharedLinks + (patch.sharedLinks ?? 0),
-    });
-  };
-
-  for (const row of missionRows) {
-    for (const [slug, name] of [
-      [row.aSlug, row.aName],
-      [row.bSlug, row.bName],
-    ] as const) {
-      if (!nodes.has(slug)) {
-        nodes.set(slug, {
-          slug,
-          name,
-          kind: "character",
-          href: characterHref(slug),
-        });
-      }
-    }
-    putEdge(row.aSlug, row.bSlug, { sharedMissions: row.shared });
-  }
-
-  // Verlinkungen vor den Gesprächen einhängen: ihre Namen kommen aus den
-  // Tabellen (characters.name/archive_entries.title), die im Gesprächs-JSON
-  // gespeicherten können veraltet sein.
-  for (const [slug, node] of links.nodes) {
-    if (!nodes.has(slug)) nodes.set(slug, node);
-  }
-  for (const [key, count] of links.pairs) {
-    const [a, b] = key.split("|");
-    putEdge(a, b, { sharedLinks: count });
-  }
-
-  // Die Abfrage führt nur veröffentlichte Gespräche (is_draft = false) —
-  // seit v1.34 sieht die jede und jeder.
-  const visibleDialogues = dialogueRows;
-  const fromDialogues = collectDialogueEdges(visibleDialogues);
-  for (const [slug, node] of fromDialogues.nodes) {
-    // Ein bereits aus den Missionen bekannter Charakter behält seinen Namen
-    // aus der Tabelle — der im Gesprächs-JSON kann veraltet sein.
-    if (!nodes.has(slug)) nodes.set(slug, node);
-  }
-  for (const [key, count] of fromDialogues.pairs) {
-    const [a, b] = key.split("|");
-    putEdge(a, b, { sharedDialogues: count });
-  }
-
-  // Knoten ohne jede Kante fliegen raus: ein einzelner Punkt ohne Verbindung
-  // sagt im Beziehungsgraph nichts aus und macht ihn nur voller.
-  const connected = new Set<string>();
-  for (const edge of edges.values()) {
-    connected.add(edge.source);
-    connected.add(edge.target);
-  }
-
-  return {
-    nodes: [...nodes.values()]
-      .filter((n) => connected.has(n.slug))
-      .sort((a, b) => a.name.localeCompare(b.name, "de")),
-    edges: [...edges.values()],
-  };
 }

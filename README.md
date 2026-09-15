@@ -260,31 +260,28 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `src/lib/campaignRuleTypes.ts` (ohne `server-only`, damit die Vorschau sie
   nutzen kann), der DB-Zugriff mit eigenem Cache-Tag in
   `src/lib/campaignRules.ts`.
-- **Beziehungsgraph** — `/characters/beziehungen` zeigt die ganze Kampagne als
-  Graph: Knoten sind Figuren und NPCs, Kanten ihre gemeinsamen Missionen,
-  Gespräche und **Verlinkungen** (`getRelationGraph` in
-  `src/lib/relations.ts`, eine Abfrage je Quelle statt `getRelationsOf` je
-  Figur). Die dritte Quelle sind die `[[Wikilinks]]` im `source_md` von
-  Charakteren und NPC-Einträgen, die Verweisfelder eines NPC-Eintrags auf
-  Charaktere (`metadata.characters`) und die Verweise zwischen zwei
-  NPC-Einträgen (`archive_links`) — gerichtet erfasst, aber für die Beziehung
-  in beide Richtungen gezählt (`loadLinks`/`collectLinkEdges`). Gelesen wird
-  nur `source_md`, nie `bio`/`content`: dort stehen die Links schon aufgelöst
-  als HTML. Das Layout ist ein **Kreis** mit
-  Barycenter-Vorsortierung (`src/lib/relationGraphLayout.ts`): eine
-  Kräftesimulation bräuchte eine Bibliothek, liefe bei jedem Aufruf anders und
-  wäre nicht prüfbar — hier ist alles eine reine, getestete Funktion. Gezeichnet
-  wird als Inline-SVG (`RelationGraph.tsx`), der Rand ergibt sich aus dem
-  längsten Namen, damit keine Beschriftung aus dem Bild läuft. Die Seite ist
-  bewusst **nicht** gecacht: Er entsteht aus mehreren Tabellen, deren
-  Cache-Tags sich hier nicht sauber bündeln lassen. Gegen die Unübersicht bei
-  vielen Figuren filtert die Seite im Browser statt anders zu zeichnen
-  (`src/lib/relationGraphFilter.ts`, reine Funktionen): Quellen einzeln
-  zuschaltbar, NPCs ausblendbar, Mindeststärke je Verbindung und Fokus auf
-  eine Figur samt ihren direkten Verbindungen. Knoten ohne verbleibende Kante
-  fallen weg — dieselbe Regel wie serverseitig. Unter dem Bild steht derselbe
-  (gefilterte) Graph als Rangliste (`relationGraphList`): je Figur ihre
-  Verbindungen, stärkste zuerst.
+- **„Wer kennt wen"** — auf jeder Personalakte steht unter dem Inhalt, mit
+  wem die Figur zu tun hat (`getRelationsOf` in `src/lib/relations.ts`,
+  angezeigt von `src/app/_shared/RelationsSection.tsx`). Drei Quellen:
+  gemeinsame Missionen, gemeinsame Gespräche und **Verlinkungen** — die
+  `[[Wikilinks]]` im `source_md` von Charakteren und NPC-Einträgen sowie die
+  Verweisfelder eines NPC-Eintrags auf Charaktere (`metadata.characters`),
+  gerichtet erfasst, aber für die Beziehung in beide Richtungen gezählt
+  (`loadLinks`/`collectLinkEdges`). Gelesen wird nur `source_md`, nie
+  `bio`/`content`: dort stehen die Links schon aufgelöst als HTML. Zu jeder
+  Verbindung steht, woraus sie stammt — eine bloße Namensliste ohne
+  Begründung wäre schwer einzuordnen.
+
+  Bis v1.37 stand daneben ein **Beziehungsgraph** der ganzen Kampagne unter
+  `/characters/beziehungen` (Kreis-Layout als Inline-SVG, im Browser
+  filterbar). Er ist mit v1.38 ersatzlos entfallen: Bei der Figurenzahl
+  dieser Runde war das Bild vor allem voll, und was darin zu erkennen war,
+  stand ohnehin genauer in „Wer kennt wen". Eine tragfähigere Darstellung
+  kann später an seine Stelle treten. Mit ihm entfiel auch die Abfrage der
+  `archive_links` zwischen zwei NPC-Einträgen in `loadLinks`: sie speiste
+  ausschließlich den Graphen — `getRelationsOf` behält nur Paare, an denen
+  die betrachtete Figur hängt, und ein NPC-NPC-Paar konnte darin nie
+  auftauchen.
 - **Schwerpunkt-Katalog** — Focuses liegen wie die Talente in einer eigenen
   Tabelle (`focuses`: Name, Disziplin, optionale Erläuterung, `is_custom`),
   gepflegt unter `/gm/focuses`. `UNIQUE (name, discipline)` statt nur über den
@@ -644,7 +641,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (1) und (2) entstehen beim Lesen und werden **nicht** gespeichert: eine
   gespeicherte Kopie liefe bei jeder Bearbeitung auseinander und die
   Sichtbarkeit müsste doppelt gepflegt werden. Fünf Abfragen für die ganze
-  Seite, ungecacht (der Inhalt hängt am Betrachter, wie beim Beziehungsgraph).
+  Seite, ungecacht (der Inhalt hängt am Betrachter, wie bei der Missionsakte).
   Umfang, Sortierrichtung, Suche, Ereignisart, Beteiligte und Jahr laufen als
   reine Funktionen in `src/lib/timelineTypes.ts` und sind
   dort einzeln getestet. `normalizeCategory` führt dabei **`person` und
@@ -1092,7 +1089,7 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind                                                                                                    |
 | `npm run db:purge-deleted`  | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist                                                              |
 | `npm run test`              | Führt die Unit-Tests aus (`src/**/*.test.ts`)                                                                                                    |
-| `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Zugangs-Gates der kontogebundenen Routen, Komponenten-Galerie inkl. Charakter-Assistent, Bogen-Ansicht, Beziehungsgraph, Chronologie, Einstiegs-Liste und aufklappbaren Abschnitten sowie Layout-/Schrift-Regressionen an beiden Viewports) |
+| `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Zugangs-Gates der kontogebundenen Routen, Komponenten-Galerie inkl. Charakter-Assistent, Bogen-Ansicht, Chronologie, Einstiegs-Liste und aufklappbaren Abschnitten sowie Layout-/Schrift-Regressionen an beiden Viewports) |
 | `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz **mit pgvector**, siehe unten)               |
 
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
