@@ -12,7 +12,6 @@ import CharacterSheetPreviewOverlay from "@/components/character/CharacterSheetP
 import ManualEventForm from "@/components/timeline/ManualEventForm";
 import { latestEventDate } from "@/lib/timelineTypes";
 import PersonnelFileView from "@/components/character/PersonnelFileView";
-import RelationGraph from "@/components/character/RelationGraph";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import TimelineView from "@/components/timeline/TimelineView";
 import ArchiveEntryList from "@/app/archive/ArchiveEntryList";
@@ -78,48 +77,6 @@ const DEMO_RULES: CampaignRule[] = [
     sortOrder: 0,
   },
 ];
-
-// Ein kleiner Beziehungsgraph: vier Figuren, drei Kanten — genug, um Knoten,
-// Kantenstärke und das Hervorheben beim Zeigen zu prüfen (siehe
-// /characters/beziehungen). Die Kante Kira–Sareth stammt ausschließlich aus
-// Verlinkungen: eine Verbindung ohne gemeinsame Mission und ohne gemeinsames
-// Gespräch muss genauso gezeichnet werden wie jede andere.
-const DEMO_GRAPH = {
-  nodes: [
-    { slug: "tuvok", name: "Tuvok", kind: "character" as const, href: "/characters/tuvok" },
-    { slug: "quark", name: "Barkeeper Quark", kind: "npc" as const, href: "/archive/quark" },
-    { slug: "kira", name: "Kira", kind: "character" as const, href: "/characters/kira" },
-    {
-      slug: "sareth",
-      name: "Wirtin Sareth",
-      kind: "npc" as const,
-      href: "/archive/sareth",
-    },
-  ],
-  edges: [
-    {
-      source: "kira",
-      target: "tuvok",
-      sharedMissions: 3,
-      sharedDialogues: 1,
-      sharedLinks: 0,
-    },
-    {
-      source: "quark",
-      target: "tuvok",
-      sharedMissions: 0,
-      sharedDialogues: 2,
-      sharedLinks: 1,
-    },
-    {
-      source: "kira",
-      target: "sareth",
-      sharedMissions: 0,
-      sharedDialogues: 0,
-      sharedLinks: 2,
-    },
-  ],
-};
 
 // Einstiegs-Schritte mit halbem Fortschritt (siehe /willkommen): Passwort und
 // Charakter erledigt, der Rest offen.
@@ -599,11 +556,6 @@ export default function DevGalleryPage() {
             values: ["Logik zuerst"],
           }}
         />
-      </section>
-
-      <section id="relation-graph" className="flex flex-col gap-[8px] mb-[24px]">
-        <h2 className="lcars-text">Beziehungsgraph</h2>
-        <RelationGraph graph={DEMO_GRAPH} />
       </section>
 
       <section

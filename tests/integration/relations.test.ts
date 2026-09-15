@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import sql from "@/lib/db";
-import { getRelationsOf, getRelationGraph } from "@/lib/relations";
+import { getRelationsOf } from "@/lib/relations";
 import { insertCharacter, insertNpcEntry } from "./helpers";
 
 // Die dritte Beziehungsquelle: Verlinkungen zwischen Charakteren und NPCs.
@@ -100,50 +100,5 @@ describe("getRelationsOf — Verlinkungen", () => {
     );
 
     expect(await getRelationsOf("tuvok")).toEqual([]);
-  });
-});
-
-describe("getRelationGraph — Verlinkungen", () => {
-  it("nimmt eine rein verlinkte Verbindung als Kante auf", async () => {
-    await insertCharacter({ slug: "tuvok", name: "Tuvok" });
-    await insertNpcEntry({ slug: "sareth", title: "Wirtin Sareth" });
-    await setSourceMd("characters", "tuvok", "Über [[Wirtin Sareth]].");
-
-    const graph = await getRelationGraph();
-
-    expect(graph.nodes.map((n) => n.slug).sort()).toEqual(["sareth", "tuvok"]);
-    expect(graph.edges).toEqual([
-      {
-        source: "sareth",
-        target: "tuvok",
-        sharedMissions: 0,
-        sharedDialogues: 0,
-        sharedLinks: 1,
-      },
-    ]);
-  });
-
-  it("verbindet zwei NPC-Einträge über ihre Verweise (archive_links)", async () => {
-    const a = await insertNpcEntry({ slug: "sareth", title: "Wirtin Sareth" });
-    const b = await insertNpcEntry({ slug: "t-mok", title: "T'Mok" });
-    await sql`
-      INSERT INTO archive_links (source_id, target_id, label)
-      VALUES (${a.id}, ${b.id}, 'Verwandte')
-    `;
-
-    const graph = await getRelationGraph();
-
-    expect(graph.edges).toHaveLength(1);
-    expect(graph.edges[0]).toMatchObject({ sharedLinks: 1 });
-  });
-
-  it("lässt Figuren ohne jede Verbindung weiterhin draußen", async () => {
-    await insertCharacter({ slug: "tuvok", name: "Tuvok" });
-    await insertNpcEntry({ slug: "sareth", title: "Wirtin Sareth" });
-
-    const graph = await getRelationGraph();
-
-    expect(graph.nodes).toEqual([]);
-    expect(graph.edges).toEqual([]);
   });
 });

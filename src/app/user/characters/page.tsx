@@ -9,6 +9,7 @@ import {
 } from "@/lib/characterStats";
 import { requireOwnCharacters } from "../dal";
 import OwnCharacterList, { type OwnCharacterItem } from "./OwnCharacterList";
+import CharacterCreationHelpButton from "./CharacterCreationHelpButton";
 
 export const metadata: Metadata = {
   title: "Meine Charaktere",
@@ -63,6 +64,10 @@ export default async function UserCharactersPage() {
                   Gast-Accounts können keine Charaktere anlegen.
                 </p>
               )}
+              {/* Die Erklärung steht neben dem Knopf, der den Ablauf startet —
+                  und bleibt auch für Gast-Accounts sichtbar: mitlesen dürfen
+                  sie, nur anlegen nicht. */}
+              <CharacterCreationHelpButton />
             </div>
           </section>
 

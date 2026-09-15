@@ -8,6 +8,7 @@ import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
 import { listCampaignRules } from "@/lib/campaignRules";
 import CharacterWizard from "./CharacterWizard";
+import CharacterCreationHelpButton from "../CharacterCreationHelpButton";
 
 export const metadata: Metadata = {
   title: "Neuer Charakter",
@@ -59,6 +60,13 @@ export default async function NewCharacterPage() {
           du jederzeit hin und her wechseln — angelegt wird der Charakter erst
           mit „Fertig“.
         </p>
+
+        {/* Die ausführliche Erklärung als Fenster, nicht als Link: Wer sie
+            mitten im Assistenten aufschlägt, darf die halb ausgefüllten
+            Felder nicht verlieren. */}
+        <div className="mb-[16px]">
+          <CharacterCreationHelpButton className="lcars-pill-btn--outline max-sm:w-full" />
+        </div>
         <CharacterWizard
           userId={user.id}
           isAdminOrGM={userCan(user, "content.autolink_tools", roleMap)}

@@ -56,6 +56,27 @@ test("/tutorial shows the dedicated Gespräche section", async ({ page }) => {
   ).toBeVisible();
 });
 
+test("/tutorial führt die Charaktererschaffung als eigenen Abschnitt", async ({
+  page,
+}) => {
+  // Der Ablauf stand früher als Absatzfolge in „Eigene Inhalte". Er ist
+  // jetzt ein eigener Abschnitt, damit /user/characters denselben Text im
+  // Fenster zeigen und der Changelog ihn verlinken kann.
+  await page.goto("/tutorial#charaktererschaffung");
+  const section = page.locator("#charaktererschaffung");
+  await expect(section.locator(".lcars-accordion-trigger").first()).toHaveAttribute(
+    "aria-expanded",
+    "true",
+  );
+  await expect(section).toContainText("Einen neuen Charakter");
+
+  // Gegliedert statt als Absatzwüste — und mit einem Schema je Abschnitt.
+  await expect(
+    section.getByRole("heading", { level: 3, name: "Talente" }),
+  ).toBeVisible();
+  await expect(section.locator("svg[role=\"img\"]").first()).toBeVisible();
+});
+
 test("/tutorial#<abschnitt> klappt den Ziel-Abschnitt automatisch auf", async ({
   page,
 }) => {

@@ -12,6 +12,7 @@ import {
   regenerateDialogueContent,
   getClosedDialogueIds,
   inviteDialogueParticipants,
+  getDialogueNpcSpeakerUserId,
   reserveDialogueReply,
   requestDialogueReservationNotification,
   hasRequestedDialogueReservationNotification,
@@ -1094,7 +1095,7 @@ describe("Gespräche mit NPCs", () => {
     const { gmUser, entryId, dialogue } = await setupNpcDialogue();
     const zweiterNpc = await insertNpcEntry({ title: "Wirtin" });
 
-    const { invited } = await inviteDialogueParticipants(
+    const { invited, newNpcNames } = await inviteDialogueParticipants(
       entryId,
       [{ kind: "npc", id: zweiterNpc.id }],
       gmUser.id,
@@ -1102,6 +1103,11 @@ describe("Gespräche mit NPCs", () => {
     // Ein NPC hat keinen Spieler, den man anschreiben könnte — die
     // Einladungs-Mails gehen nur an Charakter-Spieler.
     expect(invited).toEqual([]);
+    // Dafür steht er in newNpcNames: Daran erkennt die Action-Ebene, dass
+    // sie die benannte Spielleitung benachrichtigen muss (siehe
+    // inviteDialogueParticipantAction) — sonst wäre sie still für eine
+    // Figur zuständig geworden.
+    expect(newNpcNames).toEqual(["Wirtin"]);
 
     const [entry] = await sql<
       { metadata: { participants: { slug: string; kind: string }[] } }[]
@@ -1131,16 +1137,53 @@ describe("Gespräche mit NPCs", () => {
     expect(follow).toBeDefined();
   });
 
+  // Grundlage des nachträglichen Einladens durch eine Person, die NPCs nicht
+  // selbst spielt: Steht der Sprecher für dieses Gespräch schon fest, wird
+  // nicht erneut nach einer Spielleitung gefragt (siehe
+  // inviteDialogueParticipantAction).
+  it("nennt die Spielleitung, die in diesem Gespräch für NPCs schreibt", async () => {
+    const { gmUser, entryId } = await setupNpcDialogue();
+
+    expect(await getDialogueNpcSpeakerUserId(entryId)).toBe(gmUser.id);
+  });
+
+  it("nennt niemanden, solange kein NPC beteiligt ist", async () => {
+    const playerUser = await insertUser();
+    const a = await insertCharacter({ playerId: playerUser.id, name: "A" });
+    const partnerUser = await insertUser();
+    const b = await insertCharacter({ playerId: partnerUser.id, name: "B" });
+    const dialogue = await createDialogue({
+      title: "Ohne NPC",
+      ownSpeaker: { kind: "character", id: a.id },
+      partners: [{ kind: "character", id: b.id }],
+      authorUserId: playerUser.id,
+      setting: null,
+      locationSlug: null,
+      logDate: null,
+      tags: [],
+      bodyMarkdown: "Hallo.",
+      subscribeSelf: true,
+    });
+    const [entry] = await sql<{ id: number }[]>`
+      SELECT id FROM archive_entries WHERE slug = ${dialogue.slug}
+    `;
+
+    expect(await getDialogueNpcSpeakerUserId(entry.id)).toBeNull();
+  });
+
   it("holt einen NPC-Entwurf nicht ins Gespräch", async () => {
     const { gmUser, entryId } = await setupNpcDialogue();
     const entwurf = await insertNpcEntry({ title: "Geheimer NPC", isDraft: true });
 
-    const { invited } = await inviteDialogueParticipants(
+    const { invited, newNpcNames } = await inviteDialogueParticipants(
       entryId,
       [{ kind: "npc", id: entwurf.id }],
       gmUser.id,
     );
     expect(invited).toEqual([]);
+    // Ein Entwurf kommt gar nicht erst herein — also auch keine Nachricht an
+    // eine Spielleitung über einen NPC, der nicht teilnimmt.
+    expect(newNpcNames).toEqual([]);
 
     const [entry] = await sql<
       { metadata: { participants: { slug: string }[] } }[]

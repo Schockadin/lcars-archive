@@ -2,12 +2,13 @@
 import { userCan } from "@/lib/permissions";
 import { notFound, redirect, forbidden } from "next/navigation";
 import { verifySession, getRoleMap } from "@/lib/dal";
-import { getUserById } from "@/lib/users";
+import { getUserById, listGmUsers } from "@/lib/users";
 import {
   getDialogueForPlay,
   getDialogueParticipantCharacters,
   getDialogueMessages,
   getDialogueLockStatus,
+  getDialogueNpcSpeakerUserId,
   hasRequestedDialogueReservationNotification,
 } from "@/lib/dialogues";
 import { getCharactersForParticipantPicker } from "@/lib/characters";
@@ -77,18 +78,32 @@ export default async function DialoguePlayPage({ params }: Props) {
   //   Selbstgespräch-Verbot in postDialogueMessage der einzige Schutz.
   const multiParty = entry.participants.length > 2;
   const isOwner = entry.ownerUserId === session.userId;
-  // Der Owner kann nachträglich einladen: Charaktere mit Spieler immer,
-  // NPCs nur, wenn er sie selbst spielen darf (er wird dann ihr Sprecher,
-  // siehe inviteDialogueParticipantAction) und sie überhaupt sehen darf.
+  // Der Owner kann nachträglich einladen: Charaktere mit Spieler und NPCs,
+  // soweit er sie überhaupt sehen darf — genau wie beim Anlegen eines
+  // Gesprächs, wo NPCs allen als Gegenüber offenstehen. Wer sie nicht selbst
+  // spielt, benennt dabei eine Spielleitung, die für sie schreibt; steht für
+  // dieses Gespräch schon eine fest, bleibt es bei ihr (npcSpeakerUserId).
   const viewerForNpcs = viewer ? resolveViewer(viewer, roleMap) : null;
-  const mayInviteNpcs = isOwner && canPlayNpcs(viewerForNpcs);
-  const [messages, lockStatus, inviteCandidatesRaw, npcCandidatesRaw] =
-    await Promise.all([
-      getDialogueMessages(entry.id),
-      multiParty ? getDialogueLockStatus(entry.id) : Promise.resolve(null),
-      isOwner ? getCharactersForParticipantPicker() : Promise.resolve([]),
-      mayInviteNpcs ? getNpcOptions() : Promise.resolve([]),
-    ]);
+  const ownerPlaysNpcs = canPlayNpcs(viewerForNpcs);
+  const [
+    messages,
+    lockStatus,
+    inviteCandidatesRaw,
+    npcCandidatesRaw,
+    gms,
+    npcSpeakerUserId,
+  ] = await Promise.all([
+    getDialogueMessages(entry.id),
+    multiParty ? getDialogueLockStatus(entry.id) : Promise.resolve(null),
+    isOwner ? getCharactersForParticipantPicker() : Promise.resolve([]),
+    isOwner ? getNpcOptions() : Promise.resolve([]),
+    // Die Auswahl „wer spielt die NPCs?" braucht nur, wer sie nicht selbst
+    // spielt (sonst ist sie es selbst).
+    isOwner && !ownerPlaysNpcs ? listGmUsers() : Promise.resolve([]),
+    isOwner && !ownerPlaysNpcs
+      ? getDialogueNpcSpeakerUserId(entry.id)
+      : Promise.resolve(null),
+  ]);
   const inviteCandidates = isOwner
     ? [
         ...inviteCandidatesRaw.map((c) => ({
@@ -149,6 +164,9 @@ export default async function DialoguePlayPage({ params }: Props) {
         myCharacters={myCharacters}
         isOwner={isOwner}
         inviteCandidates={inviteCandidates}
+        inviteGms={gms}
+        inviterPlaysNpcs={ownerPlaysNpcs}
+        dialogueNpcSpeakerUserId={npcSpeakerUserId}
         initialMessages={messages}
         initialLockStatus={lockStatus}
         initialCanReplyNow={canReplyNow}

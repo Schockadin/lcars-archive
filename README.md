@@ -127,9 +127,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `kind: "archive"` und verlinkt damit nach `/archive/<slug>` statt
   `/characters/<slug>`. Welche NPCs jemand angeboten bekommt, entscheidet die
   normale Sichtbarkeitsregel (`canView` mit dem `owner_user_id` des Eintrags):
-  veröffentlichte alle, Entwürfe nur die eigene Person bzw. `content.view_all`. Auch **nachträglich**
-  lassen sich NPCs in ein laufendes Gespräch holen — das darf, wer sie spielt,
-  und wird dabei ihr Sprecher.
+  veröffentlichte alle, Entwürfe nur die eigene Person bzw. `content.view_all`.
+  Auch **nachträglich** lassen sich NPCs in ein laufendes Gespräch holen, und
+  zwar von jedem Owner — nicht nur von der Spielleitung (bis v1.37 war das der
+  Fall; wer später einen NPC brauchte, musste das Gespräch neu beginnen). Die
+  Sprecher-Frage läuft dabei wie beim Anlegen: Wer NPCs selbst spielt, wird ihr
+  Sprecher; alle anderen benennen ein Spielleitungs-Konto, und steht für dieses
+  Gespräch schon eines fest (`getDialogueNpcSpeakerUserId`), bleibt es dabei —
+  ein Gespräch hat immer höchstens EIN NPC-sprechendes Konto. Die Wahl aus dem
+  Formular wird nie blind übernommen, sondern gegen `listGmUsers` geprüft.
 - **NPCs anlegen** — unter „Meine Inhalte" gibt es für **jedes eingeloggte
   Konto** den Knopf **„Neuer NPC"** (`/user/archive/new?category=npc`). Das ist
   das normale Datenbank-Formular mit vorgewählter Kategorie „NPC"; der Eintrag
@@ -140,10 +146,21 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   davon unabhängig und richtet sich weiterhin nach `canPlayNpcs`.
   Der Knopf **„Neuer Charakter"** steht dort nicht mehr: eigene Charaktere
   haben mit `/user/characters` ihren eigenen Bereich, und dort legt man sie an.
-- **Eigene Charaktere & Charakterwerte** — wer mindestens einen verknüpften
-  Charakter hat, bekommt im Kopfmenü den Punkt „Charaktere" (`/user/characters`):
-  Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Veröffentlichen,
-  Öffnen, Löschen und dem Anlegen weiterer Charaktere.
+- **Eigene Charaktere & Charakterwerte** — den Punkt „Charaktere"
+  (`/user/characters`) im Profil-Menü bekommt, wer dort etwas zu tun hat: wer
+  mindestens einen verknüpften Charakter hat **oder** das Recht
+  `content.create` besitzt (bei der Rolle „Spieler" der Normalfall). Dahinter
+  die Übersicht aller eigenen Charaktere (inkl. Entwürfe) mit Veröffentlichen,
+  Öffnen, Löschen und dem Anlegen weiterer.
+
+  Das zweite Kriterium kam mit v1.38.5 dazu und schließt eine Sackgasse: Der
+  Punkt hing allein an „hat schon eine Akte", und seit „Neuer Charakter" aus
+  „Meine Inhalte" nach `/user/characters` ausgezogen ist, führte für eine
+  Spieler-Rolle **ohne** Akte kein Menüweg mehr zum Anlege-Assistenten — nur
+  noch die Einstiegs-Liste auf `/willkommen` bzw. dem Dashboard und der Knopf
+  auf der öffentlichen Charakterliste. Geprüft wird wie überall das Recht,
+  nicht die Primärrolle; serverseitig maßgeblich bleibt
+  `createCharacterWizardAction`.
 - **Anlegen als Assistent** (`/user/characters/new`) — vier Schritte:
   Stammdaten, Werte, Biografie, Vorschau. Alle vier liegen in **einem**
   Formular und bleiben im DOM (nur ausgeblendet): das Blättern verliert keine
@@ -260,31 +277,28 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `src/lib/campaignRuleTypes.ts` (ohne `server-only`, damit die Vorschau sie
   nutzen kann), der DB-Zugriff mit eigenem Cache-Tag in
   `src/lib/campaignRules.ts`.
-- **Beziehungsgraph** — `/characters/beziehungen` zeigt die ganze Kampagne als
-  Graph: Knoten sind Figuren und NPCs, Kanten ihre gemeinsamen Missionen,
-  Gespräche und **Verlinkungen** (`getRelationGraph` in
-  `src/lib/relations.ts`, eine Abfrage je Quelle statt `getRelationsOf` je
-  Figur). Die dritte Quelle sind die `[[Wikilinks]]` im `source_md` von
-  Charakteren und NPC-Einträgen, die Verweisfelder eines NPC-Eintrags auf
-  Charaktere (`metadata.characters`) und die Verweise zwischen zwei
-  NPC-Einträgen (`archive_links`) — gerichtet erfasst, aber für die Beziehung
-  in beide Richtungen gezählt (`loadLinks`/`collectLinkEdges`). Gelesen wird
-  nur `source_md`, nie `bio`/`content`: dort stehen die Links schon aufgelöst
-  als HTML. Das Layout ist ein **Kreis** mit
-  Barycenter-Vorsortierung (`src/lib/relationGraphLayout.ts`): eine
-  Kräftesimulation bräuchte eine Bibliothek, liefe bei jedem Aufruf anders und
-  wäre nicht prüfbar — hier ist alles eine reine, getestete Funktion. Gezeichnet
-  wird als Inline-SVG (`RelationGraph.tsx`), der Rand ergibt sich aus dem
-  längsten Namen, damit keine Beschriftung aus dem Bild läuft. Die Seite ist
-  bewusst **nicht** gecacht: Er entsteht aus mehreren Tabellen, deren
-  Cache-Tags sich hier nicht sauber bündeln lassen. Gegen die Unübersicht bei
-  vielen Figuren filtert die Seite im Browser statt anders zu zeichnen
-  (`src/lib/relationGraphFilter.ts`, reine Funktionen): Quellen einzeln
-  zuschaltbar, NPCs ausblendbar, Mindeststärke je Verbindung und Fokus auf
-  eine Figur samt ihren direkten Verbindungen. Knoten ohne verbleibende Kante
-  fallen weg — dieselbe Regel wie serverseitig. Unter dem Bild steht derselbe
-  (gefilterte) Graph als Rangliste (`relationGraphList`): je Figur ihre
-  Verbindungen, stärkste zuerst.
+- **„Wer kennt wen"** — auf jeder Personalakte steht unter dem Inhalt, mit
+  wem die Figur zu tun hat (`getRelationsOf` in `src/lib/relations.ts`,
+  angezeigt von `src/app/_shared/RelationsSection.tsx`). Drei Quellen:
+  gemeinsame Missionen, gemeinsame Gespräche und **Verlinkungen** — die
+  `[[Wikilinks]]` im `source_md` von Charakteren und NPC-Einträgen sowie die
+  Verweisfelder eines NPC-Eintrags auf Charaktere (`metadata.characters`),
+  gerichtet erfasst, aber für die Beziehung in beide Richtungen gezählt
+  (`loadLinks`/`collectLinkEdges`). Gelesen wird nur `source_md`, nie
+  `bio`/`content`: dort stehen die Links schon aufgelöst als HTML. Zu jeder
+  Verbindung steht, woraus sie stammt — eine bloße Namensliste ohne
+  Begründung wäre schwer einzuordnen.
+
+  Bis v1.37 stand daneben ein **Beziehungsgraph** der ganzen Kampagne unter
+  `/characters/beziehungen` (Kreis-Layout als Inline-SVG, im Browser
+  filterbar). Er ist mit v1.38 ersatzlos entfallen: Bei der Figurenzahl
+  dieser Runde war das Bild vor allem voll, und was darin zu erkennen war,
+  stand ohnehin genauer in „Wer kennt wen". Eine tragfähigere Darstellung
+  kann später an seine Stelle treten. Mit ihm entfiel auch die Abfrage der
+  `archive_links` zwischen zwei NPC-Einträgen in `loadLinks`: sie speiste
+  ausschließlich den Graphen — `getRelationsOf` behält nur Paare, an denen
+  die betrachtete Figur hängt, und ein NPC-NPC-Paar konnte darin nie
+  auftauchen.
 - **Schwerpunkt-Katalog** — Focuses liegen wie die Talente in einer eigenen
   Tabelle (`focuses`: Name, Disziplin, optionale Erläuterung, `is_custom`),
   gepflegt unter `/gm/focuses`. `UNIQUE (name, discipline)` statt nur über den
@@ -482,10 +496,28 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   gespielten Session mitsamt AP — ein Termin hat weder AP noch Gutschriften,
   und eine gespielte Session braucht keine Zusagen mehr. Wer nicht geantwortet
   hat, hat **keine Zeile**; „noch offen" ist damit die Abwesenheit einer
-  Antwort und kein Wert, der gepflegt werden müsste. Ein Termin verschwindet
-  erst **sechs Stunden nach Beginn** aus der Liste — sonst fiele der Abend
-  mitten im Spielen heraus. Eine zweite Antwort ersetzt die erste; eine
-  verschobene Uhrzeit lässt die Zusagen stehen. Die Zusage-Action prüft ihr
+  Antwort und kein Wert, der gepflegt werden müsste. Auf der Startseite steht
+  seit v1.38 nur noch, was **in der Zukunft liegt** (`listUpcomingSessions`:
+  `scheduled_at > NOW()`); bis dahin galt eine Nachlauffrist von sechs
+  Stunden, damit ein Abend nicht mitten im Spielen aus der Liste fällt — das
+  Dashboard zeigte dadurch aber stundenlang einen längst begonnenen Abend samt
+  Zusage-Knöpfen. Die Spielleitung sieht die vergangenen weiterhin über
+  `listAllPlannedSessions` unter `/gm/sessions`. Eine zweite Antwort ersetzt
+  die erste; eine verschobene Uhrzeit lässt die Zusagen stehen.
+
+  Ein **neu angekündigter** Termin erreicht die Spielenden seiner eingeplanten
+  Figuren per **Mail/Push** (`notifyPlannedSessionPlayers` in
+  `src/app/actions/plannedSessions.ts`, Empfänger aus
+  `getPlannedSessionPlayers`) — vorher stand er nur auf dem Dashboard und wurde
+  entsprechend übersehen. Kein Opt-in nötig (wie bei einer neuen Mission mit
+  eigener Figur), die globalen Schalter für Mail und Push gelten weiter. Je
+  Person genau eine Nachricht, auch bei zwei eingeplanten Figuren; die
+  ankündigende Person selbst bekommt keine. Nur für Termine in der Zukunft
+  (`isUpcoming` in `plannedSessionFormat.ts`, rein und getestet): ein
+  nachträglich festgehaltener Abend ist keine Ankündigung. Der Versand läuft
+  sequentiell (Rate-Limit bei Resend) und lässt den Termin stehen, wenn eine
+  Mail scheitert — der Fehler landet im Fehlerprotokoll, und die Rückmeldung im
+  Formular nennt, wie viele Personen **tatsächlich** erreicht wurden. Die Zusage-Action prüft ihr
   Recht (`users.browse`, „Nicht-Gast") über **`checkPermission`**, nicht über
   `requireNonGuest`: das harte Gate ruft `forbidden()` auf, und ein
   Auth-Interrupt in einer über `useActionState` aufgerufenen Action wird zu
@@ -644,7 +676,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (1) und (2) entstehen beim Lesen und werden **nicht** gespeichert: eine
   gespeicherte Kopie liefe bei jeder Bearbeitung auseinander und die
   Sichtbarkeit müsste doppelt gepflegt werden. Fünf Abfragen für die ganze
-  Seite, ungecacht (der Inhalt hängt am Betrachter, wie beim Beziehungsgraph).
+  Seite, ungecacht (der Inhalt hängt am Betrachter, wie bei der Missionsakte).
   Umfang, Sortierrichtung, Suche, Ereignisart, Beteiligte und Jahr laufen als
   reine Funktionen in `src/lib/timelineTypes.ts` und sind
   dort einzeln getestet. `normalizeCategory` führt dabei **`person` und
@@ -792,7 +824,38 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `src/lib/colorMode.ts`) — jede Kombination ist möglich. Rein CSS-basiert
   (gemeinsamer Selektor `html[data-ui^="minimal"]`, Pre-Paint-Cookie `neo_ui`),
   die eigentliche Zugriffskontrolle bleibt unberührt.
-- **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und Spielleitung.
+- **Tutorial-Seite** — erklärt alle Funktionen für Besucher, User und
+  Spielleitung. Die Abschnitte und ihre Anker-ids liegen zentral in
+  `src/lib/tutorialSections.ts`, damit Changelog-Deep-Links nicht ins Leere
+  zeigen (ein Test prüft, dass jede id als `htmlId` auf der Seite steht). Der
+  Abschnitt **„Charaktererschaffung"** ist dabei keine Prosa in `page.tsx`,
+  sondern eine eigene Komponente
+  (`src/components/character/CharacterCreationGuide.tsx`): reines JSX ohne
+  Hooks und ohne `"use client"`, damit dieselbe Datei von der
+  server-gerenderten Anleitung UND aus dem Fenster „Erschaffung erklärt"
+  (`CharacterCreationHelpButton.tsx` um `ModalOverlay`) eingebunden werden
+  kann. Zwei Kopien desselben Ablaufs liefen unweigerlich auseinander.
+
+  Der Knopf steht auf **allen drei** Seiten, an denen man an einer Figur
+  arbeitet: `/user/characters`, `/user/characters/new` und
+  `/user/characters/[characterId]` — nachschlagen soll nirgends heißen, die
+  halb ausgefüllte Seite zu verlassen. Er nimmt seine Klassen als Prop, damit
+  er sich in die jeweilige Leiste einfügt.
+
+  Der Text ist in **acht benannte Abschnitte** (`<h3>`) gegliedert statt einer
+  Absatzfolge: Wer ihn mitten im Anlegen aufschlägt, sucht eine bestimmte
+  Stelle, nicht den Anfang. Zu den meisten Abschnitten gehört ein kleines
+  **Schema** der jeweiligen Maske
+  (`src/components/character/CharacterCreationFigures.tsx`) — Inline-SVG statt
+  Screenshot: Die Farben kommen aus den Theme-Tokens (`var(--lcars-…)`), die
+  Bilder machen also Farbschema und Hellmodus mit, veralten nicht mit der
+  ersten Layout-Änderung und bringen keine Binärdateien ins Repo. Ab 900px
+  steht das Schema neben seinem Text, darunter fällt es darunter.
+
+  Das Fenster ist mit `width={1040}` und `tall` deutlich größer als ein
+  Formular-Overlay (`tall` hebt die Höhe von 85vh auf 92vh, siehe
+  `ModalOverlay`): Es ist zum **Lesen** da, und bei 760px stand der Text in
+  einer schmalen Säule ohne Platz für die Schemata.
 - **Markdown-Vault als Ursprungsimport** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
   entstehen danach direkt in der App (Datenbank als alleinige Source of Truth).
@@ -1092,7 +1155,7 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 | `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind                                                                                                    |
 | `npm run db:purge-deleted`  | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist                                                              |
 | `npm run test`              | Führt die Unit-Tests aus (`src/**/*.test.ts`)                                                                                                    |
-| `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Zugangs-Gates der kontogebundenen Routen, Komponenten-Galerie inkl. Charakter-Assistent, Bogen-Ansicht, Beziehungsgraph, Chronologie, Einstiegs-Liste und aufklappbaren Abschnitten sowie Layout-/Schrift-Regressionen an beiden Viewports) |
+| `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Zugangs-Gates der kontogebundenen Routen, Komponenten-Galerie inkl. Charakter-Assistent, Bogen-Ansicht, Chronologie, Einstiegs-Liste und aufklappbaren Abschnitten sowie Layout-/Schrift-Regressionen an beiden Viewports) |
 | `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz **mit pgvector**, siehe unten)               |
 
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante

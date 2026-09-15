@@ -65,7 +65,7 @@ describe("HeaderUserNav: Profil-Menü", () => {
     expect(menuEintraege()).toEqual(["Meine Inhalte", "Einstellungen"]);
   });
 
-  it("zeigt den Charaktere-Eintrag nur mit eigenen Figuren", () => {
+  it("zeigt den Charaktere-Eintrag mit eigenen Figuren", () => {
     render(<HeaderUserNav permissions={["users.browse"]} hasCharacters />);
 
     fireEvent.click(screen.getByRole("button", { name: /Profil/ }));
@@ -74,6 +74,29 @@ describe("HeaderUserNav: Profil-Menü", () => {
       "Meine Inhalte",
       "Einstellungen",
     ]);
+  });
+
+  // Sonst säße eine Spieler-Rolle ohne Akte in einer Sackgasse: Seit „Neuer
+  // Charakter" aus „Meine Inhalte" ausgezogen ist, führt nur noch
+  // /user/characters zum Anlege-Assistenten.
+  it("zeigt ihn auch ohne eigene Figur, wenn die Rolle anlegen darf", () => {
+    render(<HeaderUserNav permissions={["users.browse", "content.create"]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Profil/ }));
+    expect(menuEintraege()).toEqual([
+      "Charaktere",
+      "Meine Inhalte",
+      "Einstellungen",
+    ]);
+  });
+
+  // Eine reine Leserolle ohne Akte hätte dort nichts zu tun — und ein
+  // Gast-Account darf gar nicht anlegen (content.create fehlt ihm).
+  it("lässt ihn weg, wer weder Figur noch Anlege-Recht hat", () => {
+    render(<HeaderUserNav permissions={["users.browse"]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Profil/ }));
+    expect(menuEintraege()).not.toContain("Charaktere");
   });
 });
 

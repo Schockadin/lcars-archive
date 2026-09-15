@@ -19,13 +19,23 @@ export default function ModalOverlay({
   onClose,
   children,
   width = 640,
+  tall = false,
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   // Maximale Breite in Pixeln — ein Formular mit Teilnehmerliste braucht mehr
-  // Platz als eine einzelne Eingabezeile.
+  // Platz als eine einzelne Eingabezeile. Auf schmalen Schirmen begrenzt
+  // ohnehin die Bildschirmbreite (w-full im Kasten, p-[16px] außen), der Wert
+  // wirkt also erst ab dieser Breite.
   width?: number;
+  // Fenster zum LESEN statt zum Ausfüllen (die Anleitung zur
+  // Charaktererschaffung): Ein langer Text soll die Höhe auch nutzen dürfen,
+  // sonst scrollt man in einem Briefschlitz. Formulare bleiben bei 85vh —
+  // dort steht der Knopf am Ende, und ein Fenster, das den Schirm fast füllt,
+  // wirkt wie eine eigene Seite und nimmt dem „daneben klicken schließt"
+  // seine Fläche.
+  tall?: boolean;
 }) {
   useReturnFocus(true);
   useOverlayDismiss(onClose);
@@ -39,7 +49,9 @@ export default function ModalOverlay({
       onClick={onClose}
     >
       <div
-        className="flex max-h-[85vh] w-full flex-col gap-[12px] overflow-y-auto rounded-[8px] border border-lcars-border bg-lcars-surface p-[20px]"
+        className={`flex w-full flex-col gap-[12px] overflow-y-auto rounded-[8px] border border-lcars-border bg-lcars-surface p-[20px] ${
+          tall ? "max-h-[92vh]" : "max-h-[85vh]"
+        }`}
         style={{ maxWidth: `${width}px` }}
         onClick={(e) => e.stopPropagation()}
       >

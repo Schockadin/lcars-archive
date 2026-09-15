@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   countRsvps,
   formatSessionMoment,
+  isUpcoming,
   ownResponse,
   parsePlannedSession,
   toDateTimeLocal,
@@ -127,5 +128,35 @@ describe("toDateTimeLocal", () => {
 
   it("gibt bei Unsinn nichts zurück statt „Invalid Date“", () => {
     expect(toDateTimeLocal("kein Datum")).toBe("");
+  });
+});
+
+// Entscheidet, ob ein neu angekündigter Termin die Spielenden seiner Figuren
+// per Mail/Push erreicht (siehe createPlannedSessionAction) — und spiegelt
+// die Regel, nach der das Dashboard nur noch Zukünftiges zeigt.
+describe("isUpcoming", () => {
+  const now = new Date("2026-06-12T19:30:00Z");
+
+  it("nimmt an, was noch bevorsteht", () => {
+    expect(isUpcoming("2026-06-12 19:31:00+00", now)).toBe(true);
+    expect(isUpcoming("2026-07-01 20:00:00+00", now)).toBe(true);
+  });
+
+  it("lehnt ab, was schon läuft oder vorbei ist", () => {
+    // Genau jetzt zählt nicht mehr als „steht bevor".
+    expect(isUpcoming("2026-06-12 19:30:00+00", now)).toBe(false);
+    expect(isUpcoming("2026-06-12 19:29:00+00", now)).toBe(false);
+    expect(isUpcoming("2026-01-01 20:00:00+00", now)).toBe(false);
+  });
+
+  // Der Wert kommt mal aus dem Formular („…T19:30" bzw. „… 19:30"), mal aus
+  // Postgres („… 19:30:00+00") — beide Schreibweisen müssen durchgehen.
+  it("versteht Formular- wie Datenbankschreibweise", () => {
+    expect(isUpcoming("2026-07-01 20:00", now)).toBe(true);
+    expect(isUpcoming("2026-07-01T20:00", now)).toBe(true);
+  });
+
+  it("schweigt lieber, als einen unlesbaren Zeitpunkt anzukündigen", () => {
+    expect(isUpcoming("kein Datum", now)).toBe(false);
   });
 });

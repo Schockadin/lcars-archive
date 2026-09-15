@@ -149,6 +149,47 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.38",
+    title: "Erschaffung zur Hand, Termine im Blick",
+    // Der Beziehungsgraph (/characters/beziehungen) ist in dieser Version
+    // ersatzlos entfallen — bis eine tragfähigere Darstellung dafür steht.
+    // Eine entfallene Funktion ist keine neue, sie steht laut AGENTS.md
+    // deshalb nicht als Stichpunkt hier; „Wer kennt wen" auf der
+    // Personalakte bleibt unverändert.
+    items: [
+      {
+        text: "Die Charaktererschaffung hat in der Anleitung einen eigenen Abschnitt — und steht zusätzlich dort, wo man sie braucht: Auf „Charaktere“ öffnet der Knopf „Erschaffung erklärt“ denselben Text in einem Fenster, ohne die Seite zu verlassen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "NPCs lassen sich jetzt auch in ein Gespräch holen, das längst läuft — über dieselbe Liste „Weitere Personen einladen“, in der auch die Charaktere stehen, und nicht mehr nur durch die Spielleitung. Spielst du die NPCs nicht selbst, wählst du dabei wie beim Anlegen, wer für sie schreibt; diese Person bekommt darüber eine Mail und eine Push-Nachricht.",
+        category: "charaktere",
+        tutorial: "gespraeche",
+      },
+      {
+        text: "Kündigt die Spielleitung einen Spieltermin an, für den einer deiner Charaktere eingeplant ist, bekommst du dazu eine Mail und eine Push-Nachricht — mit Zeitpunkt, Ort und der Notiz der Spielleitung. Abonnieren musst du dafür nichts.",
+        category: "benachrichtigungen",
+        tutorial: "merken-abonnieren",
+      },
+      {
+        text: "Auf der Startseite stehen nur noch Spieltermine, die noch bevorstehen. Ein Abend, der schon begonnen hat oder vorbei ist, verschwindet von dort; die Spielleitung sieht die vergangenen Termine weiterhin in ihrer Übersicht.",
+        category: "darstellung",
+        tutorial: "merken-abonnieren",
+      },
+      {
+        text: "„Charaktere“ steht im Profil-Menü ab sofort auch dann, wenn du noch gar keinen Charakter hast — als Spieler kommst du damit von Anfang an zum Anlege-Assistenten, statt den Einstieg erst über die Startseite suchen zu müssen.",
+        category: "charaktere",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "„Erschaffung erklärt“ öffnet jetzt auch im Anlege-Assistenten und auf der Seite jedes deiner Charaktere — du kannst also mitten im Ausfüllen nachschlagen. Der Text selbst ist in benannte Abschnitte gegliedert, jeder mit einem kleinen Schaubild der jeweiligen Maske, und das Fenster nutzt auf großen Bildschirmen deutlich mehr Platz.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+    ],
+  },
+  {
     version: "1.37",
     title: "Ruhe im Fehlerprotokoll",
     // Bewusst ohne Stichpunkte: Diese Version bringt keine neue Funktion,

@@ -19,6 +19,12 @@ const inputClass = "rounded-lcars-pill lcars-input";
 // Selects tragen durchgängig lcars-input + rounded-full (siehe die übrigen
 // Auswahlfelder der App); die Textfelder daneben behalten ihren Pillen-Radius.
 const selectClass = "lcars-input rounded-full";
+// Ausnahme: die Charakter-Auswahl. Ein aufgeklapptes Mehrfach-Listenfeld
+// (size > 1) ist ein hoher Kasten — mit rounded-full schneidet der
+// Vollkreis-Radius die obersten und untersten Zeilen an. Dieselbe
+// Pillen-Rundung wie beim nachträglichen Einladen
+// (InviteDialogueParticipantForm) statt eines Sonderwegs.
+const characterListClass = "lcars-input rounded-lcars-pill";
 
 export default function CreateDialogueForm({
   userId,
@@ -80,7 +86,7 @@ export default function CreateDialogueForm({
           id="dlg-own-character"
           name="ownSpeaker"
           required
-          className={selectClass}
+          className={characterListClass}
           onChange={(e) => setOwnIsNpc(e.target.value.startsWith("n"))}
         >
           {ownCharacters.map((c) => (
@@ -117,7 +123,7 @@ export default function CreateDialogueForm({
           multiple
           required
           size={Math.min(6, Math.max(partnerCharacters.length + npcs.length, 2))}
-          className={`${selectClass} h-auto py-[8px]`}
+          className={`${characterListClass} h-auto py-[8px]`}
           onChange={(e) =>
             setNpcPartnerCount(
               [...e.target.selectedOptions].filter((o) =>

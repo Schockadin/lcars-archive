@@ -231,9 +231,10 @@ export default function HeaderUserNav({
   variant = "header",
 }: {
   permissions: string[];
-  // Nur User mit mindestens einem verknüpften Charakter sehen „Charaktere"
-  // (/user/characters) — für alle anderen wäre die Seite leer. Ihren ERSTEN
-  // Charakter legen sie weiterhin über „Inhalte" an (siehe /user/content).
+  // Ob mit dem Konto mindestens ein Charakter verknüpft ist. Entscheidet
+  // allein darüber, ob „Charaktere" auch OHNE das Recht „Inhalte anlegen"
+  // erscheint (z.B. eine Leserolle, der die Spielleitung eine Akte zugewiesen
+  // hat) — wer anlegen darf, sieht den Punkt ohnehin, siehe unten.
   hasCharacters?: boolean;
   columns?: number;
   // "header": horizontales Pill-Grid im Header (LCARS). "sidebar": vertikale
@@ -252,10 +253,19 @@ export default function HeaderUserNav({
   // als drei einzelne Pills daneben; zusammen mit den beiden Staff-Menüs und
   // dem Logout sprengte das die Zeile, und drei der sechs Pills führten in
   // denselben Bereich (/user).
+  //
+  // „Charaktere" (/user/characters) sieht, wer dort etwas zu tun hat: eine
+  // verknüpfte Akte ODER das Recht, eine anzulegen. Der zweite Fall war eine
+  // Sackgasse — der Punkt hing allein an hasCharacters, und seit „Neuer
+  // Charakter" aus „Meine Inhalte" ausgezogen ist, führte für eine
+  // Spieler-Rolle ohne Akte KEIN Menüweg mehr zum Anlegen ihrer ersten.
+  // Geprüft wird das Recht, nicht die Primärrolle (wie überall sonst): so
+  // zählt es auch aus einer Zusatzrolle oder einem Rechte-Override.
+  // Serverseitig maßgeblich bleibt createCharacterWizardAction, das dasselbe
+  // Recht frisch aus der DB prüft.
+  const mayCreateCharacter = permissions.includes("content.create");
   const profileItems: NavMenuItem[] = [
-    // Ohne verknüpften Charakter wäre die Seite leer — den ERSTEN Charakter
-    // legt man weiterhin über „Meine Inhalte" an.
-    ...(hasCharacters
+    ...(hasCharacters || mayCreateCharacter
       ? [{ href: "/user/characters", label: "Charaktere" }]
       : []),
     { href: "/user/content", label: "Meine Inhalte" },

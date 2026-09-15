@@ -101,6 +101,23 @@ export function formatSessionMoment(iso: string): string {
   })} Uhr`;
 }
 
+// Liegt der Termin noch bevor? Entscheidet, ob ein neu angekündigter Termin
+// die Spielenden seiner Figuren per Mail/Push erreicht (siehe
+// createPlannedSessionAction): Ein nachträglich festgehaltener Abend ist keine
+// Ankündigung — und stünde auch auf keinem Dashboard.
+//
+// Nimmt dieselben zwei Schreibweisen an wie formatSessionMoment: den Wert aus
+// dem Formular („2026-06-12 19:30") und den Postgres-Zeitstempel
+// („2026-06-12 19:30:00+00"). Ein unlesbarer Wert gilt als NICHT zukünftig —
+// lieber keine Nachricht als eine für einen Zeitpunkt, den niemand kennt.
+export function isUpcoming(iso: string, now: Date = new Date()): boolean {
+  const date = new Date(
+    iso.replace(" ", "T").replace(/([+-]\d{2})$/, "$1:00"),
+  );
+  if (Number.isNaN(date.getTime())) return false;
+  return date.getTime() > now.getTime();
+}
+
 // Wie viele haben zu-, wie viele abgesagt.
 export function countRsvps(session: Pick<PlannedSession, "rsvps">): {
   yes: number;

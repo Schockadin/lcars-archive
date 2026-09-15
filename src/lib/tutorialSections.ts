@@ -12,6 +12,7 @@ export const TUTORIAL_SECTIONS = [
   { id: "chronologie", label: "Chronologie" },
   { id: "konto-rollen", label: "Konto & Rollen" },
   { id: "eigene-inhalte", label: "Eigene Inhalte" },
+  { id: "charaktererschaffung", label: "Charaktererschaffung" },
   { id: "gespraeche", label: "Gespräche" },
   { id: "merken-abonnieren", label: "Merken & Abonnieren" },
   { id: "notizen", label: "Notizen" },

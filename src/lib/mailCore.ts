@@ -229,6 +229,42 @@ export async function sendDialogueInvitedEmail(input: {
   });
 }
 
+// An die Spielleitung, die durch eine nachträgliche Einladung neu für einen
+// NPC in einem laufenden Gespräch zuständig wird (siehe
+// inviteDialogueParticipantAction). Seit v1.38 darf JEDE Person, die ein
+// Gespräch begonnen hat, NPCs nachholen und dabei eine Spielleitung benennen
+// — die erfuhr davon bisher nichts, weil ein NPC keine Spieler:in hat und
+// deshalb in keiner Einladungs-Mail auftaucht. Beim Anlegen eines Gesprächs
+// wird sie längst benachrichtigt (sendDialogueStartedEmail); das ist das
+// Gegenstück fürs Nachholen.
+export async function sendDialogueNpcSpeakerEmail(input: {
+  to: string;
+  name: string;
+  invitedByName: string;
+  // Bereits zusammengesetzte Namensliste der neu hinzugekommenen NPCs. Der
+  // Text kommt ohne Pronomen für sie aus: Ein NPC-Eintrag kann jedes
+  // Geschlecht haben, und die Vorlage kennt es nicht.
+  npcNames: string;
+  dialogueTitle: string;
+  dialogueUrl: string;
+}): Promise<SendEmailResult> {
+  const dialogueUrl = escapeHtml(input.dialogueUrl);
+  return sendEmail({
+    to: input.to,
+    subject: `NPC im Gespräch "${input.dialogueTitle}"`,
+    html: `
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>
+        ${escapeHtml(input.invitedByName)} hat ${escapeHtml(input.npcNames)} zum
+        laufenden Gespräch "${escapeHtml(input.dialogueTitle)}" hinzugefügt.
+        Das Schreiben übernimmst du:
+      </p>
+      <p><a href="${dialogueUrl}">${dialogueUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
 // An alle aktiven GM-Accounts, sobald irgendein User ein neues Gespräch
 // beginnt (siehe createDialogueAction) — unabhängig von eigener Teilnahme,
 // reine Oversight-Info ohne Opt-in (anders als sendDialogueStartedEmail
@@ -591,6 +627,48 @@ export async function sendUserMissionParticipationEmail(input: {
       </p>
       ${previewBlock(input.preview)}
       <p><a href="${missionUrl}">${missionUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
+// An die Spielenden der eingeplanten Figuren, sobald die Spielleitung einen
+// Spieltermin in der Zukunft ankündigt (siehe createPlannedSessionAction).
+// Kein Opt-in nötig: Wer mit seiner Figur eingeplant ist, ist Teil des
+// Abends — bis dahin stand ein neuer Termin nur auf dem Dashboard und wurde
+// entsprechend übersehen. Ein Termin OHNE eigene Figur löst nichts aus.
+//
+// scheduledAtLabel kommt fertig formatiert herein (formatSessionMoment in
+// src/lib/plannedSessionFormat.ts) — die Aufbereitung des
+// Postgres-Zeitstempels gehört nicht in ein Mail-Template. location und
+// notes sind optional; ein Termin braucht beides nicht.
+export async function sendPlannedSessionAnnouncedEmail(input: {
+  to: string;
+  name: string;
+  characterNames: string[];
+  sessionTitle: string;
+  scheduledAtLabel: string;
+  location: string;
+  notes: string;
+  dashboardUrl: string;
+}): Promise<SendEmailResult> {
+  const dashboardUrl = escapeHtml(input.dashboardUrl);
+  const withTitle = input.sessionTitle
+    ? `„${input.sessionTitle}" am ${input.scheduledAtLabel}`
+    : input.scheduledAtLabel;
+  return sendEmail({
+    to: input.to,
+    subject: `Neuer Spieltermin: ${withTitle}`,
+    html: `
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>
+        es ist ein neuer Spieltermin angekündigt: <strong>${escapeHtml(withTitle)}</strong>.
+        Mit dabei eingeplant: ${escapeHtml(input.characterNames.join(", "))}.
+      </p>
+      ${input.location ? `<p><strong>Wo:</strong> ${escapeHtml(input.location)}</p>` : ""}
+      ${input.notes ? previewBlock(input.notes) : ""}
+      <p>Zu- und absagen kannst du auf deiner Startseite:</p>
+      <p><a href="${dashboardUrl}">${dashboardUrl}</a></p>
       <p>— Neo Archive</p>
     `,
   });
