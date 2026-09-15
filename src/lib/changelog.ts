@@ -98,6 +98,17 @@ export function filterChangelogEntries(
     .filter((entry) => entry.items.length > 0);
 }
 
+// Nur Versionen mit mindestens einem Stichpunkt. In den Changelog kommen nur
+// neue Funktionen (siehe AGENTS.md), ein reiner Wartungs-Pull-Request hat
+// deshalb einen Eintrag ohne items — unter /changelog steht dafür ein
+// erklärender Satz (ChangelogItems), in der Dashboard-Box „Neue Funktionen"
+// hätte eine solche Version dagegen nichts anzukündigen.
+export function entriesWithItems(
+  entries: ChangelogEntry[],
+): ChangelogEntry[] {
+  return entries.filter((entry) => entry.items.length > 0);
+}
+
 // Dasselbe, aber zum Ausblenden: alles außer den genannten Kategorien bleibt
 // stehen. Für die Dashboard-Box, in der die Administration je Rolle
 // Kategorien abschaltet (siehe changelogSettings.ts).
@@ -137,6 +148,15 @@ export function sortChangelogItemsByCategory(
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.37",
+    title: "Ruhe im Fehlerprotokoll",
+    // Bewusst ohne Stichpunkte: Diese Version bringt keine neue Funktion,
+    // sondern räumt das Protokoll der Serverfehler auf (siehe
+    // src/lib/recoverableRenderErrors.ts). Reine Wartung gehört laut
+    // AGENTS.md nicht in die items-Liste.
+    items: [],
+  },
   {
     version: "1.36",
     title: "Namen finden ihren Weg",
@@ -1761,7 +1781,10 @@ export function featuredChangelogEntries(
   entries: ChangelogEntry[] = CHANGELOG,
 ): ChangelogEntry[] {
   if (selected === null) {
-    const latest = latestChangelogEntry(entries);
+    // Die jüngste Version MIT Stichpunkten: Eine reine Wartungs-Version hat
+    // keine (siehe entriesWithItems) — die Box zeigt dann weiter die letzte
+    // Version mit neuen Funktionen, statt ganz zu verschwinden.
+    const latest = latestChangelogEntry(entriesWithItems(entries));
     return latest ? [latest] : [];
   }
   const wanted = new Set(selected);

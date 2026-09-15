@@ -7,6 +7,7 @@ import {
   changelogItemText,
   changelogItemTutorial,
   changelogVersionExists,
+  entriesWithItems,
   missingChangelogVersions,
   CHANGELOG_KNOWN_GAPS,
   featuredChangelogEntries,
@@ -64,7 +65,6 @@ describe("latestChangelogEntry", () => {
     const entry = latestChangelogEntry();
     expect(entry).not.toBeNull();
     expect(CHANGELOG.map((e) => e.version)).toContain(entry?.version);
-    expect(entry?.items.length).toBeGreaterThan(0);
   });
 });
 
@@ -243,5 +243,35 @@ describe("missingChangelogVersions", () => {
     // Wächst diese Liste, ist eine neue Lücke stillschweigend legitimiert
     // worden — genau das soll der Test verhindern.
     expect([...CHANGELOG_KNOWN_GAPS]).toEqual(["1.4", "1.5", "1.6", "1.7"]);
+  });
+});
+
+describe("entriesWithItems", () => {
+  it("lässt Versionen ohne Stichpunkte weg", () => {
+    const entries: ChangelogEntry[] = [
+      { version: "3.0", title: "Wartung", items: [] },
+      { version: "3.1", title: "Neu", items: [{ text: "A", category: "inhalte" }] },
+    ];
+    expect(entriesWithItems(entries).map((e) => e.version)).toEqual(["3.1"]);
+  });
+});
+
+describe("featuredChangelogEntries (Vorgabe)", () => {
+  it("überspringt eine Wartungs-Version ohne Stichpunkte", () => {
+    // Ohne Auswahl zeigt die Dashboard-Box die jüngste Version. Ist die eine
+    // reine Wartungs-Version, wäre die Box leer — gezeigt wird deshalb die
+    // letzte Version mit neuen Funktionen.
+    const entries: ChangelogEntry[] = [
+      { version: "3.1", title: "Wartung", items: [] },
+      { version: "3.0", title: "Neu", items: [{ text: "A", category: "inhalte" }] },
+    ];
+    expect(featuredChangelogEntries(null, entries).map((e) => e.version)).toEqual(
+      ["3.0"],
+    );
+  });
+
+  it("die echte Vorgabe hat immer etwas zu zeigen", () => {
+    const [entry] = featuredChangelogEntries(null);
+    expect(entry?.items.length).toBeGreaterThan(0);
   });
 });

@@ -1,5 +1,6 @@
 import { LcarsDataRow } from "@/components/lcars";
 import {
+  entriesWithItems,
   featuredChangelogEntries,
   hideChangelogCategories,
 } from "@/lib/changelog";
@@ -35,9 +36,13 @@ export default async function ChangelogSection({
     getHiddenChangelogCategories(),
   ]);
 
-  const entries = hideChangelogCategories(
-    featuredChangelogEntries(selected),
-    hiddenCategoriesForRoles(hiddenByRole, roles),
+  // entriesWithItems: eine reine Wartungs-Version hat keine Stichpunkte und
+  // damit hier nichts anzukündigen (siehe changelog.ts).
+  const entries = entriesWithItems(
+    hideChangelogCategories(
+      featuredChangelogEntries(selected),
+      hiddenCategoriesForRoles(hiddenByRole, roles),
+    ),
   );
   if (entries.length === 0) return null;
 

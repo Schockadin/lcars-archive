@@ -24,6 +24,18 @@ export default function ChangelogItems({
 }: {
   items: (string | ChangelogItem)[];
 }) {
+  // Eine Version ohne Stichpunkte gibt es durchaus: In den Changelog kommen
+  // nur neue Funktionen (siehe AGENTS.md), ein Pull Request kann aber auch
+  // reine Wartung sein. Statt einer leeren Liste steht dann ein Satz da, der
+  // das erklärt.
+  if (items.length === 0) {
+    return (
+      <p className="lcars-text">
+        Wartungs-Version ohne neue Funktionen — hinter den Kulissen aufgeräumt.
+      </p>
+    );
+  }
+
   return (
     <ul className="flex list-disc flex-col gap-[4px] pl-[20px]">
       {items.map((item, index) => {
