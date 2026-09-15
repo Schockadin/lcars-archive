@@ -44,6 +44,15 @@ function GuideSection({
 }) {
   return (
     <section className="flex flex-col gap-[10px]">
+      {/* h3, nicht h2: Im Fenster steht darüber die h2 des Fenster-Kopfs
+          („Charaktererschaffung", siehe ModalOverlay) — dort stimmt die
+          Staffelung also genau. In der Anleitung sitzt an dieser Stelle die
+          Akkordeon-Zeile, die ein <button> ist und keine Überschrift; dort
+          fehlt zwischen der h1 „Tutorial" und diesen Abschnitten formal eine
+          Ebene. Das gilt für jeden Abschnitt der Anleitung gleichermaßen und
+          ist keine Eigenheit dieses Textes — die Alternative wäre, die
+          Überschriftenebene je Einbettung durchzureichen, was einen Text mit
+          zwei verschiedenen Ebenen hinterließe. */}
       <h3 className="text-[17px] font-bold tracking-[0.08em] uppercase">
         {title}
       </h3>

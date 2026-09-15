@@ -17,6 +17,7 @@ import { sendPlannedSessionAnnouncedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { logCaughtError } from "@/lib/errorLog";
+import { synopsisExcerpt } from "@/lib/missionFormat";
 
 export interface PlannedSessionState {
   error?: string;
@@ -133,7 +134,10 @@ async function notifyPlannedSessionPlayers(
         sessionTitle: session.title,
         scheduledAtLabel,
         location: session.location,
-        notes: session.notes,
+        // Angerissen statt vollständig: Die Notiz darf 2000 Zeichen lang sein
+        // (parsePlannedSession) und ist roher Markdown — als Vorschau in der
+        // Mail reicht der Anfang, wie bei jeder anderen Vorschau im Projekt.
+        notes: synopsisExcerpt(session.notes, 200),
         dashboardUrl,
       });
       if (result.sent) {

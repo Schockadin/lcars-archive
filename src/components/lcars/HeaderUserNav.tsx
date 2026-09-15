@@ -253,6 +253,7 @@ export default function HeaderUserNav({
   // als drei einzelne Pills daneben; zusammen mit den beiden Staff-Menüs und
   // dem Logout sprengte das die Zeile, und drei der sechs Pills führten in
   // denselben Bereich (/user).
+  //
   // „Charaktere" (/user/characters) sieht, wer dort etwas zu tun hat: eine
   // verknüpfte Akte ODER das Recht, eine anzulegen. Der zweite Fall war eine
   // Sackgasse — der Punkt hing allein an hasCharacters, und seit „Neuer

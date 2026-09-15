@@ -201,7 +201,14 @@ export default function DSGVOContent({ year }: { year: number }) {
           Aktivierungs-Links, Passwort-Reset-Links sowie Benachrichtigungen zu
           abonnierten Inhalten und Gesprächsnachrichten werden über den
           E-Mail-Dienstleister <strong>Resend</strong> (San Francisco, USA)
-          verschickt. Dabei werden E-Mail-Adresse, Name und der jeweilige
+          verschickt. Nicht jede Benachrichtigung setzt ein Abonnement voraus:
+          Kündigt die Spielleitung einen Spieltermin an, für den ein Charakter
+          eines Kontos eingeplant ist, geht an dieses Konto eine Mail; ebenso an
+          die Spielleitung, die in einem Gespräch für einen nachträglich
+          hinzugefügten NPC schreiben soll. In beiden Fällen ergibt sich die
+          Benachrichtigung aus der Beteiligung selbst. Wer gar keine
+          E-Mail-Benachrichtigungen möchte, schaltet sie in den eigenen
+          Einstellungen vollständig ab. Dabei werden E-Mail-Adresse, Name und der jeweilige
           Mailinhalt (z. B. der Link oder der Titel des betroffenen Inhalts) an
           Resend übermittelt. Resend verarbeitet diese Daten als
           Auftragsverarbeiter gemäß Art. 28 DSGVO, ausschließlich zum Versand

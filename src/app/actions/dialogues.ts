@@ -51,6 +51,7 @@ import {
   sendCharacterDialogueClosedEmail,
   sendDialogueDeletedEmail,
   sendDialogueInvitedEmail,
+  sendDialogueNpcSpeakerEmail,
   sendDialogueReservationEndedEmail,
 } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
@@ -700,8 +701,9 @@ export async function inviteDialogueParticipantAction(
 
   let title: string;
   let invited: DialogueEmailTarget[];
+  let newNpcNames: string[];
   try {
-    ({ title, invited } = await inviteDialogueParticipants(
+    ({ title, invited, newNpcNames } = await inviteDialogueParticipants(
       entry.id,
       speakers,
       npcSpeakerUserId,
@@ -750,6 +752,50 @@ export async function inviteDialogueParticipantAction(
           url: dialogueUrl,
         });
       }
+    }
+  }
+
+  // Die Spielleitung, die ab jetzt für die neuen NPCs schreibt, ist Gegenüber
+  // und nicht bloß Aufsicht — sie bekommt dieselbe Info wie ein eingeladener
+  // Spieler. Ein NPC hat keine Spieler:in und steht deshalb nie in `invited`;
+  // ohne diese Stelle wäre sie still für eine Figur zuständig geworden und
+  // hätte es nur beim nächsten Blick in „Deine Gespräche" gemerkt.
+  //
+  // createDialogueAction macht beim Anlegen genau dasselbe. Wer sich selbst
+  // die NPCs zuteilt (die Spielleitung als Einladende), braucht über die
+  // eigene Aktion keine Nachricht.
+  if (
+    newNpcNames.length > 0 &&
+    npcSpeakerUserId != null &&
+    npcSpeakerUserId !== session.userId
+  ) {
+    const speaker = await getUserById(npcSpeakerUserId);
+    const dialogueUrl = `${await getBaseUrl()}/dialogues/${entrySlug}`;
+    const npcList = newNpcNames.join(", ");
+    if (speaker?.email_notifications_enabled) {
+      const result = await sendDialogueNpcSpeakerEmail({
+        to: speaker.email,
+        name: speaker.name,
+        invitedByName: inviter?.name ?? "Die Administration",
+        npcNames: npcList,
+        dialogueTitle: title,
+        dialogueUrl,
+      });
+      if (!result.sent) {
+        const message = `NPC-Sprecher-Mail an ${speaker.email} fehlgeschlagen: ${result.error}`;
+        console.error(message);
+        void logCaughtError(
+          new Error(message),
+          "actions/dialogues.ts:inviteDialogueParticipantAction",
+        );
+      }
+    }
+    if (speaker?.push_notifications_enabled) {
+      await sendPushToUser(speaker.id, {
+        title: `NPC in "${title}"`,
+        body: `${inviter?.name ?? "Die Administration"} hat ${npcList} ins Gespräch geholt — du schreibst für ${newNpcNames.length === 1 ? "ihn" : "sie"}.`,
+        url: dialogueUrl,
+      });
     }
   }
 

@@ -453,6 +453,15 @@ export async function createDialogue(
 export interface InviteParticipantsResult {
   title: string;
   invited: DialogueEmailTarget[];
+  // Die Namen der NPCs, die mit DIESEM Aufruf neu dazugekommen sind. Leer,
+  // wenn keine dabei waren oder alle schon teilnahmen.
+  //
+  // Ein NPC hat keine Spieler:in, taucht in `invited` also nie auf — wer für
+  // ihn schreibt, erführe sonst nichts davon. Die Action-Ebene benachrichtigt
+  // die benannte Spielleitung anhand dieser Liste (siehe
+  // inviteDialogueParticipantAction), genau wie createDialogue sie beim
+  // Anlegen benachrichtigt.
+  newNpcNames: string[];
 }
 
 // Fügt weitere Charaktere zu einem Dialog hinzu — jederzeit möglich, auch
@@ -484,7 +493,9 @@ export async function inviteDialogueParticipants(
       FOR UPDATE
     `;
     if (!entry) throw new Error("Dialog nicht gefunden.");
-    if (speakers.length === 0) return { title: entry.title, invited: [] };
+    if (speakers.length === 0) {
+      return { title: entry.title, invited: [], newNpcNames: [] };
+    }
 
     const participants = parseParticipants(entry.metadata);
     const existingSlugs = new Set(participants.map((p) => p.slug));
@@ -510,7 +521,7 @@ export async function inviteDialogueParticipants(
     const newChars = chars.filter((c) => !existingSlugs.has(c.slug));
     const newNpcs = npcs.filter((n) => !existingSlugs.has(n.slug));
     if (newChars.length === 0 && newNpcs.length === 0) {
-      return { title: entry.title, invited: [] };
+      return { title: entry.title, invited: [], newNpcNames: [] };
     }
 
     const metadata = {
@@ -586,7 +597,11 @@ export async function inviteDialogueParticipants(
       }
     }
 
-    return { title: entry.title, invited };
+    return {
+      title: entry.title,
+      invited,
+      newNpcNames: newNpcs.map((npc) => npc.name),
+    };
   });
 }
 

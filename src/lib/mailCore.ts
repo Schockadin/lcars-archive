@@ -229,6 +229,40 @@ export async function sendDialogueInvitedEmail(input: {
   });
 }
 
+// An die Spielleitung, die durch eine nachträgliche Einladung neu für einen
+// NPC in einem laufenden Gespräch zuständig wird (siehe
+// inviteDialogueParticipantAction). Seit v1.38 darf JEDE Person, die ein
+// Gespräch begonnen hat, NPCs nachholen und dabei eine Spielleitung benennen
+// — die erfuhr davon bisher nichts, weil ein NPC keine Spieler:in hat und
+// deshalb in keiner Einladungs-Mail auftaucht. Beim Anlegen eines Gesprächs
+// wird sie längst benachrichtigt (sendDialogueStartedEmail); das ist das
+// Gegenstück fürs Nachholen.
+export async function sendDialogueNpcSpeakerEmail(input: {
+  to: string;
+  name: string;
+  invitedByName: string;
+  // Bereits zusammengesetzte Namensliste der neu hinzugekommenen NPCs.
+  npcNames: string;
+  dialogueTitle: string;
+  dialogueUrl: string;
+}): Promise<SendEmailResult> {
+  const dialogueUrl = escapeHtml(input.dialogueUrl);
+  return sendEmail({
+    to: input.to,
+    subject: `NPC im Gespräch "${input.dialogueTitle}"`,
+    html: `
+      <p>Hallo ${escapeHtml(input.name)},</p>
+      <p>
+        ${escapeHtml(input.invitedByName)} hat ${escapeHtml(input.npcNames)} zum
+        laufenden Gespräch "${escapeHtml(input.dialogueTitle)}" hinzugefügt —
+        du schreibst dort ab jetzt für sie:
+      </p>
+      <p><a href="${dialogueUrl}">${dialogueUrl}</a></p>
+      <p>— Neo Archive</p>
+    `,
+  });
+}
+
 // An alle aktiven GM-Accounts, sobald irgendein User ein neues Gespräch
 // beginnt (siehe createDialogueAction) — unabhängig von eigener Teilnahme,
 // reine Oversight-Info ohne Opt-in (anders als sendDialogueStartedEmail
