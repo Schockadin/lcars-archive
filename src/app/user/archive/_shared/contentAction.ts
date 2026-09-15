@@ -11,6 +11,7 @@ import {
 import { isArchiveCategory } from "@/lib/archiveFormat";
 import { revalidateArchiveEntry } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
+import { syncAutolinksAfterRename } from "@/lib/autolinkSync";
 import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
@@ -144,6 +145,18 @@ export async function archiveEntryAction(
       return { error: "Eintrag nicht gefunden oder keine Berechtigung." };
     }
     revalidateArchiveEntry(result.slug);
+
+    // Heißt der Eintrag jetzt anders oder hat er neue Aliase, prüfen alle
+    // anderen Inhalte im Hintergrund, ob sie ihn nun verlinken können — und
+    // bestehende Links auf den alten Titel werden mitgezogen.
+    syncAutolinksAfterRename({
+      type: "archive",
+      slug: result.slug,
+      previousName: result.previousTitle,
+      previousAliases: result.previousAliases ?? [],
+      name: title,
+      aliases,
+    });
 
     // Solange der Eintrag ein Entwurf bleibt, sieht ihn außer dem Owner
     // niemand — keine Benachrichtigung. Beim Veröffentlichen (wasDraft true,

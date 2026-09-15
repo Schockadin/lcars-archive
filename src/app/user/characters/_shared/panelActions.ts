@@ -11,6 +11,7 @@ import {
 import { revalidateCharacter } from "@/lib/revalidate";
 import { revalidatePath } from "next/cache";
 import { autoLinkMarkdown } from "@/lib/autolink";
+import { syncAutolinksAfterRename } from "@/lib/autolinkSync";
 import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
@@ -139,6 +140,18 @@ export async function updateCharacterHeadAction(
   revalidateCharacter(result.slug);
   revalidatePath(characterEditHref(characterId));
   revalidatePath("/user/characters");
+
+  // Heißt der Charakter jetzt anders oder hat er neue Aliase, prüfen alle
+  // anderen Inhalte im Hintergrund, ob sie ihn nun verlinken können — und
+  // bestehende Links auf den alten Namen werden mitgezogen.
+  syncAutolinksAfterRename({
+    type: "character",
+    slug: result.slug,
+    previousName: result.previousName,
+    previousAliases: result.previousAliases ?? [],
+    name: headResult.head.name,
+    aliases: headResult.head.aliases,
+  });
 
   await notifyUpdated({
     userId: session.userId,

@@ -22,3 +22,13 @@ export function slugifyBase(title: string): string {
 
   return slug || "gespraech";
 }
+
+// Vergleichsform eines [[Wikilink]]-Ziels bzw. eines Titels/Namens: trimmen
+// und kleinschreiben. Liegt hier neben slugifyBase, weil beide dieselbe
+// Aufgabe aus zwei Richtungen lösen (Vergleich über den Titel, Rückfallebene
+// über den Slug) und beide ohne Datenbank auskommen — so können auch reine
+// Textmodule wie autolinkRename.ts sie nutzen, ohne den DB-Import von
+// autolink.ts mitzuziehen.
+export function normalizeWikilinkTarget(s: string): string {
+  return s.trim().toLowerCase();
+}

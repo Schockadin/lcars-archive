@@ -23,6 +23,7 @@ import { getUserSubscribersForSlugs, notifyContentChange } from "@/lib/follows";
 import { slugifyBase } from "@/lib/slug";
 import { revalidateMission } from "@/lib/revalidate";
 import { autoLinkMarkdown } from "@/lib/autolink";
+import { syncAutolinksAfterRename } from "@/lib/autolinkSync";
 import {
   sendMissionParticipantEmail,
   sendCharacterMissionParticipationEmail,
@@ -286,6 +287,18 @@ export async function missionAction(
     // Änderung der Liste.
     await setMissionParticipants(missionId!, participantCharacterIds);
     revalidateMission(result.slug);
+
+    // Heißt die Mission jetzt anders, prüfen alle anderen Inhalte im
+    // Hintergrund, ob sie sie nun verlinken können — und bestehende Links
+    // auf den alten Titel werden mitgezogen. Missionen haben keine Aliase.
+    syncAutolinksAfterRename({
+      type: "mission",
+      slug: result.slug,
+      previousName: result.previousTitle,
+      previousAliases: [],
+      name: title,
+      aliases: [],
+    });
 
     const updatePreview = synopsisExcerpt(teaser ?? bodyMarkdown, 140);
 

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import RelationGraph from "@/components/character/RelationGraph";
 import { getRelationGraph } from "@/lib/relations";
@@ -21,9 +20,6 @@ export const metadata: Metadata = {
 export default async function BeziehungenPage() {
   const graph = await getRelationGraph();
 
-  const characterCount = graph.nodes.filter((n) => n.kind === "character").length;
-  const npcCount = graph.nodes.length - characterCount;
-
   return (
     <>
       <PageMeta title="Beziehungen" section="characters" />
@@ -39,52 +35,14 @@ export default async function BeziehungenPage() {
             Charakteren und NPCs. Es gibt keine eigene Beziehungspflege:
             Verbindungen entstehen im Spiel. Je dicker eine Linie, desto mehr
             Berührungspunkte; je größer ein Punkt, desto mehr Verbindungen hat
-            die Figur. Ein Klick führt zur Figur.
+            die Figur. Ein Klick führt zur Figur. Wird es zu voll: Die
+            Schalter über dem Graphen blenden Quellen oder NPCs aus, heben die
+            Mindeststärke an oder zeigen nur eine Figur samt ihren direkten
+            Verbindungen; die Liste darunter trägt dieselbe Auswahl in
+            Textform.
           </p>
 
           <RelationGraph graph={graph} />
-
-          <p className="text-lcars-ink-dim text-[13px]">
-            {graph.nodes.length === 0
-              ? "Noch keine Verbindungen erfasst."
-              : `${characterCount} ${characterCount === 1 ? "Charakter" : "Charaktere"}` +
-                (npcCount > 0
-                  ? ` und ${npcCount} ${npcCount === 1 ? "NPC" : "NPCs"}`
-                  : "") +
-                ` · ${graph.edges.length} ${graph.edges.length === 1 ? "Verbindung" : "Verbindungen"}`}
-          </p>
-
-          {/* Dieselbe Information in Textform — für Screenreader, für kleine
-              Bildschirme und für alle, die lieber lesen als deuten. */}
-          {graph.nodes.length > 0 && (
-            <details className="lcars-details">
-              <summary className="lcars-details-summary">
-                <span
-                  className="lcars-data-row-chevron"
-                  style={{ margin: "0 4px 0 2px" }}
-                  aria-hidden="true"
-                />
-                <span className="lcars-eyebrow text-lcars-primary-ink">
-                  Alle Figuren als Liste
-                </span>
-              </summary>
-              <ul className="mt-[12px] flex flex-col gap-[4px]">
-                {graph.nodes.map((node) => (
-                  <li key={`${node.kind}:${node.slug}`}>
-                    <Link href={node.href} className="lcars-wikilink">
-                      {node.name}
-                    </Link>
-                    {node.kind === "npc" && (
-                      <span className="text-lcars-ink-dim font-lcars-mono text-[12px]">
-                        {" "}
-                        · NPC
-                      </span>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </details>
-          )}
         </div>
       </article>
     </>

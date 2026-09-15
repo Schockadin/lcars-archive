@@ -9,18 +9,7 @@ import {
   type AutolinkTarget,
 } from "@/lib/autolink";
 import { markdownToHtml } from "@/lib/markdown";
-import { updateCharacterBio } from "@/lib/characters";
-import {
-  updateMissionSynopsisWithHtml,
-  updateMissionLogSourceMd,
-} from "@/lib/missions";
-import { updateArchiveEntryContent } from "@/lib/archive";
-import {
-  revalidateCharacter,
-  revalidateMission,
-  revalidateLog,
-  revalidateArchiveEntry,
-} from "@/lib/revalidate";
+import { saveAutolinkedContent } from "@/lib/autolinkWrite";
 
 export interface LinkAllBatchResult {
   error?: string;
@@ -101,26 +90,7 @@ export async function linkAllContentBatchAction(
       matches,
     );
 
-    switch (content.contentType) {
-      case "character":
-        await updateCharacterBio(content.id, sourceMd, html);
-        revalidateCharacter(content.slug);
-        break;
-      case "mission":
-        await updateMissionSynopsisWithHtml(content.id, sourceMd, html);
-        revalidateMission(content.slug);
-        break;
-      case "missionLog":
-        await updateMissionLogSourceMd(content.id, sourceMd, html);
-        if (content.missionId != null) {
-          revalidateLog(content.missionId, content.slug);
-        }
-        break;
-      case "archiveEntry":
-        await updateArchiveEntryContent(content.id, sourceMd, html);
-        revalidateArchiveEntry(content.slug);
-        break;
-    }
+    await saveAutolinkedContent(content, sourceMd, html);
 
     changedInBatch += 1;
     linksInBatch += matches.length;

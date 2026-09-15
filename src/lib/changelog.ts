@@ -138,6 +138,22 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.36",
+    title: "Namen finden ihren Weg",
+    items: [
+      {
+        text: "Bekommt eine Figur, ein Datenbank-Eintrag oder eine Mission einen neuen Namen oder einen neuen Alias, durchsuchen alle anderen Inhalte sich selbst im Hintergrund und verlinken die neue Schreibweise, wo sie im Text vorkommt. Bestehende Verweise auf den alten Namen ziehen mit um, statt ins Leere zu zeigen.",
+        category: "inhalte",
+        tutorial: "verlinkung",
+      },
+      {
+        text: "Der Beziehungsgraph lässt sich eingrenzen: Missionen, Gespräche, Verlinkungen und NPCs einzeln zu- und abschalten, nur Verbindungen ab einer wählbaren Stärke zeigen oder auf eine Figur samt ihren direkten Verbindungen fokussieren. Darunter steht dieselbe Auswahl als Rangliste — je Figur ihre Verbindungen, stärkste zuerst.",
+        category: "darstellung",
+        tutorial: "fuer-besucher",
+      },
+    ],
+  },
+  {
     version: "1.35",
     title: "Ein Ausdruck, eine Aufmachung",
     items: [

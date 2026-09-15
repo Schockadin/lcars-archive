@@ -1,7 +1,7 @@
 import "server-only";
 import sql from "@/lib/db";
 import { markdownToHtml } from "@/lib/markdown";
-import { slugifyBase } from "@/lib/slug";
+import { slugifyBase, normalizeWikilinkTarget } from "@/lib/slug";
 import { isRangeProtected, type ProtectedRange } from "@/lib/protectedRanges";
 import {
   archiveHref,
@@ -274,9 +274,9 @@ export async function getAllAutolinkableContent(): Promise<
   ];
 }
 
-export function normalizeWikilinkTarget(s: string): string {
-  return s.trim().toLowerCase();
-}
+// Weiterhin von hier aus verfügbar (die Auflösung der Wikilinks ist das
+// Thema dieses Moduls), die Funktion selbst steht in slug.ts.
+export { normalizeWikilinkTarget };
 
 // rehype-stringify kodiert Apostrophe im href-Attribut als numerische
 // HTML-Entity (&#x27;, hex — nicht &#39;, dezimal), was decodeURIComponent

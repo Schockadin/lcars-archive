@@ -20,6 +20,27 @@
   overflow: visible;
 }
 
+/* Bedienleiste über dem Graphen (Quellen/NPCs, Fokus, Mindeststärke).
+   Zwei Zeilen, die auf schmalen Geräten umbrechen — die Schalter sind
+   gewöhnliche Pill-Buttons und Selects, hier nur zusammengefasst. */
+.relation-graph-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+/* Ein abgeschalteter Schalter bleibt lesbar, tritt aber zurück. */
+.relation-graph-controls button[aria-pressed="false"] {
+  opacity: 0.7;
+}
+
+.relation-graph-controls select {
+  font-size: 13px;
+  padding-block: 2px;
+}
+
 .relation-graph-edge {
   stroke: var(--lcars-tertiary);
   stroke-opacity: 0.45;

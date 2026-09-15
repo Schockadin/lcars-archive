@@ -277,7 +277,14 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   wird als Inline-SVG (`RelationGraph.tsx`), der Rand ergibt sich aus dem
   längsten Namen, damit keine Beschriftung aus dem Bild läuft. Die Seite ist
   bewusst **nicht** gecacht: Er entsteht aus mehreren Tabellen, deren
-  Cache-Tags sich hier nicht sauber bündeln lassen.
+  Cache-Tags sich hier nicht sauber bündeln lassen. Gegen die Unübersicht bei
+  vielen Figuren filtert die Seite im Browser statt anders zu zeichnen
+  (`src/lib/relationGraphFilter.ts`, reine Funktionen): Quellen einzeln
+  zuschaltbar, NPCs ausblendbar, Mindeststärke je Verbindung und Fokus auf
+  eine Figur samt ihren direkten Verbindungen. Knoten ohne verbleibende Kante
+  fallen weg — dieselbe Regel wie serverseitig. Unter dem Bild steht derselbe
+  (gefilterte) Graph als Rangliste (`relationGraphList`): je Figur ihre
+  Verbindungen, stärkste zuerst.
 - **Schwerpunkt-Katalog** — Focuses liegen wie die Talente in einer eigenen
   Tabelle (`focuses`: Name, Disziplin, optionale Erläuterung, `is_custom`),
   gepflegt unter `/gm/focuses`. `UNIQUE (name, discipline)` statt nur über den
@@ -821,7 +828,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   neu angelegten, bearbeiteten und gelöschten Inhalte. Zwei Wartungs-Skripte
   laufen blockweise mit Fortschrittsanzeige (jeweils ausblendbar): „Alle Inhalte
   verlinken" (Bulk-Autolinking; Autolinking ist bei neuen Inhalten außerdem
-  standardmäßig vorausgewählt) und „Gespräche-Fließtext erzeugen" (Backfill für
+  standardmäßig vorausgewählt — und ändern sich Name/Titel oder Aliase eines
+  Inhalts, zieht `src/lib/autolinkSync.ts` die Verlinkungen aller anderen
+  Inhalte per `after()` im Hintergrund nach: neue Schreibweisen werden
+  verlinkt, bestehende `[[Wikilinks]]` auf den alten Namen umgeschrieben) und „Gespräche-Fließtext erzeugen" (Backfill für
   vor Einführung des Features abgeschlossene Dialoge). Wer `dialogues.moderate`
   hat (per Default Admins), darf als Moderation jede Nachricht in jedem Gespräch
   bearbeiten oder löschen, auch fremde und auch in bereits abgeschlossenen

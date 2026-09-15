@@ -125,8 +125,20 @@ export default function TutorialPage() {
                 Berührungspunkte, große Punkte für gut vernetzte Figuren;
                 Spielfiguren und NPCs sind farblich unterschieden. Zeigst du auf
                 eine Figur, treten sie und ihre Verbindungen hervor, ein Klick
-                führt zu ihr. Darunter stehen dieselben Figuren noch einmal als
-                Liste.
+                führt zu ihr.
+              </p>
+              <p>
+                Weil eine ganze Kampagne schnell unübersichtlich wird, lässt
+                sich der Graph über der Zeichnung eingrenzen: Die Schalter{" "}
+                <strong>Missionen</strong>, <strong>Gespräche</strong>,{" "}
+                <strong>Verlinkungen</strong> und <strong>NPCs</strong> nehmen
+                einzelne Quellen bzw. die NPCs heraus,{" "}
+                <strong>Mindeststärke</strong> zeigt nur Verbindungen ab einer
+                gewählten Zahl an Berührungspunkten, und <strong>Fokus</strong>{" "}
+                beschränkt alles auf eine Figur und ihre direkten Verbindungen.
+                Ein Knopf setzt die Auswahl wieder zurück. Darunter stehen
+                dieselben (gefilterten) Figuren noch einmal als Liste — je Figur
+                ihre Verbindungen, die stärkste zuerst.
               </p>
             </div>
           </LcarsDataRow>
@@ -1028,6 +1040,17 @@ export default function TutorialPage() {
                 bestehender Inhalte ist es standardmäßig aus. Codeblöcke,
                 Inline-Code, Bilder und bereits vorhandene Links bleiben dabei
                 unangetastet, und dein eigener Eintrag verlinkt sich nie selbst.
+              </p>
+              <p>
+                Bekommt ein Inhalt später einen <strong>anderen Namen</strong>{" "}
+                oder einen <strong>neuen Alias</strong>, musst du die alten
+                Texte nicht noch einmal durchgehen: Im Hintergrund prüfen alle
+                anderen Inhalte, ob die neue Schreibweise bei ihnen im Text
+                vorkommt, und verlinken sie. Verweise, die noch auf den alten
+                Namen zeigen, werden dabei auf den neuen umgeschrieben — im Text
+                steht weiterhin das Wort, das dort stand. Nachverlinkt werden
+                nur die <strong>neuen</strong> Schreibweisen; alles andere
+                bleibt, wie du es geschrieben hast.
               </p>
               <p>
                 Spielleitung/Admin haben zusätzlich ein eigenständiges

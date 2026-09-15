@@ -769,6 +769,17 @@ export async function getOwnCharacterForEdit(
   };
 }
 
+// Ergebnis von updateOwnCharacterContent. Name und Aliase VOR dem Update
+// kommen mit zurück: nur so erkennt der Aufrufer eine Umbenennung und kann
+// die Verlinkungen in allen anderen Inhalten nachziehen lassen (siehe
+// syncAutolinksAfterRename in src/lib/autolinkSync.ts).
+export interface UpdateOwnCharacterResult {
+  slug: string;
+  wasDraft: boolean;
+  previousName: string;
+  previousAliases: string[] | null;
+}
+
 // Bearbeitet Name/Status/Portrait/Metadaten/Bio eines eigenen Charakters —
 // für das volle Bearbeiten-Formular. Owner-gescoped im WHERE (gleiches
 // Prinzip wie updateOwnArchiveEntryContent in src/lib/archive.ts). metadata
@@ -802,10 +813,7 @@ export async function updateOwnCharacterContent(
     // Siehe createCharacter oben — Opt-in "Automatisch verlinken".
     bioHtml?: string;
   },
-): Promise<{
-  slug: string;
-  wasDraft: boolean;
-} | null> {
+): Promise<UpdateOwnCharacterResult | null> {
   const trimmedBody = input.bodyMarkdown.trim();
   const bio = trimmedBody
     ? (input.bioHtml ?? (await renderContentHtml(trimmedBody)))
@@ -836,13 +844,11 @@ export async function updateOwnCharacterContent(
   // Aufrufer (contentAction.ts) braucht ihn, um einen Entwurf→Veröffentlicht-
   // Übergang von einer normalen Bearbeitung zu unterscheiden (siehe
   // canView-Kommentar).
-  const rows = await sql<
-    {
-      slug: string;
-      wasDraft: boolean;
-    }[]
-  >`
-    WITH old AS (SELECT is_draft FROM characters WHERE id = ${characterId})
+  const rows = await sql<UpdateOwnCharacterResult[]>`
+    WITH old AS (
+      SELECT is_draft, name, metadata->'aliases' AS aliases
+      FROM characters WHERE id = ${characterId}
+    )
     UPDATE characters
     SET name = ${input.name}, status = ${input.status}, portrait = ${input.portrait},
         metadata = metadata || ${sql.json(metadataPatch as ReturnType<typeof JSON.parse>)},
@@ -850,7 +856,8 @@ export async function updateOwnCharacterContent(
         updated_at = NOW()
     FROM old
     WHERE id = ${characterId} AND player_id = ${userId}
-    RETURNING slug, old.is_draft AS "wasDraft"
+    RETURNING slug, old.is_draft AS "wasDraft",
+              old.name AS "previousName", old.aliases AS "previousAliases"
   `;
   if (rows[0]) syncEmbeddings("character", characterId);
   return rows[0] ?? null;

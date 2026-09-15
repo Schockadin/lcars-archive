@@ -67,6 +67,39 @@ test.describe("Beziehungsgraph", () => {
     expect(overflow).toBe(0);
   });
 
+  // Die Bedienleiste (siehe src/lib/relationGraphFilter.ts): Sie soll den
+  // Graphen bei vielen Figuren wieder lesbar machen.
+  test("blendet NPCs samt ihrer Verbindungen aus", async ({ page }) => {
+    const graph = page.locator("#relation-graph");
+    await graph.getByRole("button", { name: "NPCs" }).click();
+
+    // Übrig bleibt nur die Verbindung zwischen den beiden Charakteren.
+    await expect(graph.locator("svg circle")).toHaveCount(2);
+    await expect(graph.locator("svg line")).toHaveCount(1);
+  });
+
+  test("zeigt im Fokus nur eine Figur und ihre direkten Verbindungen", async ({
+    page,
+  }) => {
+    const graph = page.locator("#relation-graph");
+    await graph.getByLabel("Fokus").selectOption({ label: "Kira" });
+
+    // Kira hängt an Tuvok und an Wirtin Sareth.
+    await expect(graph.locator("svg circle")).toHaveCount(3);
+    await expect(graph.locator("svg line")).toHaveCount(2);
+  });
+
+  test("lässt sich auf den vollen Blick zurücksetzen", async ({ page }) => {
+    const graph = page.locator("#relation-graph");
+    await graph.getByRole("button", { name: "Gespräche" }).click();
+    const reset = graph.getByRole("button", { name: "Filter zurücksetzen" });
+    await expect(reset).toBeVisible();
+
+    await reset.click();
+    await expect(reset).toHaveCount(0);
+    await expect(graph.locator("svg circle")).toHaveCount(4);
+  });
+
   test("nennt den Graph für Screenreader und bietet dieselben Namen als Liste", async ({
     page,
   }) => {
