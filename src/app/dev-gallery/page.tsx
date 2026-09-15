@@ -418,6 +418,12 @@ export default function DevGalleryPage() {
   const [fiveOption, setFiveOption] = useState<"1" | "2" | "3" | "4" | "5">(
     "1",
   );
+  const [longOption, setLongOption] = useState<"flowing" | "cards">("flowing");
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [longSortKey, setLongSortKey] = useState<"category" | "title">(
+    "category",
+  );
+  const [longSortDir, setLongSortDir] = useState<SortDir>("asc");
   const [sortKey, setSortKey] = useState<"name">("name");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [previewOpen, setPreviewOpen] = useState(false);
@@ -450,6 +456,62 @@ export default function DevGalleryPage() {
           ]}
           active={fiveOption}
           onChange={setFiveOption}
+        />
+      </section>
+
+      {/* Die längsten Beschriftungen, die in der App wirklich vorkommen —
+          hier, damit der Umbruch-Test (e2e/dev-gallery.spec.ts) sie auf
+          schmalen Viewports messen kann, ohne die echten Seiten (Login +
+          Datenbank) zu brauchen. */}
+      <section id="switch-long" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Switch (lange Beschriftungen)</h2>
+        <LcarsSwitch
+          options={[
+            { key: "flowing" as const, label: "Fließtext" },
+            { key: "cards" as const, label: "Karten-Ansicht" },
+          ]}
+          active={longOption}
+          onChange={setLongOption}
+        />
+      </section>
+
+      {/* Der SortSwitch mit langer Beschriftung: Hier kommt zum Text noch der
+          Richtungs-Pfeil in der Pille dazu (siehe SortSwitch.tsx) — der
+          engste Fall der App ("Meine Inhalte", /user/content). */}
+      <section id="sort-switch-long" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">SortSwitch (lange Beschriftungen)</h2>
+        <LcarsSortSwitch
+          options={[
+            { key: "category" as const, label: "Kategorie" },
+            { key: "title" as const, label: "Alphabetisch" },
+          ]}
+          sortKey={longSortKey}
+          sortDir={longSortDir}
+          onChange={(key, dir) => {
+            setLongSortKey(key);
+            setLongSortDir(dir);
+          }}
+        />
+      </section>
+
+      {/* Derselbe Switch in der zweispaltigen Gitter-Variante der Suche
+          (.search-type-filter) — dort sind die Beschriftungen um die
+          Trefferzahl länger und die Spalten halb so breit. */}
+      <section id="switch-type-filter" className="flex flex-col gap-[8px] mb-[24px]">
+        <h2 className="lcars-text">Switch (Typ-Filter der Suche)</h2>
+        <LcarsSwitch
+          className="search-type-filter"
+          options={[
+            { key: "all", label: "Alle (128)" },
+            { key: "character", label: "Charaktere (24)" },
+            { key: "mission", label: "Missionen (31)" },
+            { key: "log", label: "Logs (48)" },
+            { key: "archive", label: "Datenbank (17)" },
+            { key: "dialogue_message", label: "Gesagtes (8)" },
+            { key: "saved", label: "Gespeichert (12)" },
+          ]}
+          active={typeFilter}
+          onChange={setTypeFilter}
         />
       </section>
 

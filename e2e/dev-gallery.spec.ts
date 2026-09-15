@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Locator } from "@playwright/test";
 
 // Regressionstest für den Switch-Gap/Divider-Bug: zwei benachbarte
 // Switch-Optionen dürfen keine sichtbare Lücke zwischen sich haben (z.B.
@@ -52,6 +52,73 @@ test.describe("Switch layout", () => {
     await optionB.click();
     await expect(optionB).toHaveAttribute("aria-pressed", "true");
   });
+});
+
+// Mehrwortige Beschriftungen ("Karten-Ansicht", "Gespeichert (12)") brachen
+// auf schmalen Viewports in der Pille um. Statt umzubrechen schrumpfen
+// Schriftgröße, Innenabstand und Laufweite jetzt mit (siehe
+// .lcars-switch-item in controls.css) — geprüft wird das an den beiden
+// Galerie-Abschnitten mit den längsten echten Beschriftungen, in beiden
+// Viewport-Projekten (mobil 375px und Desktop).
+test.describe("Switch ohne Wortumbruch", () => {
+  // Zeilen eines Elements: Ein Range über den Inhalt liefert Rechtecke, die
+  // nach ihrer senkrechten Mitte zu Zeilen zusammengefasst werden. Die bloße
+  // Anzahl der Rechtecke genügt nicht — der SortSwitch setzt neben den Text
+  // noch den Richtungs-Pfeil, der in DERSELBEN Zeile ein eigenes Rechteck
+  // bekommt. Und die Box-Höhe allein hinge an Padding und min-height, sagt
+  // über einen Umbruch also nichts.
+  const lineCount = (locator: Locator) =>
+    locator.evaluate((el: Element) => {
+      const style = getComputedStyle(el);
+      const lineHeight =
+        parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.2;
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      const centers = [...range.getClientRects()]
+        .map((rect) => rect.top + rect.height / 2)
+        .sort((a, b) => a - b);
+
+      let lines = 0;
+      let previous = -Infinity;
+      for (const center of centers) {
+        if (center - previous > lineHeight * 0.6) {
+          lines++;
+          previous = center;
+        }
+      }
+      return lines;
+    });
+
+  for (const section of [
+    "#switch-long",
+    "#sort-switch-long",
+    "#switch-type-filter",
+  ]) {
+    test(`${section}: jede Option bleibt einzeilig und wird nicht abgeschnitten`, async ({
+      page,
+    }) => {
+      await page.goto("/dev-gallery");
+      const buttons = page.locator(`${section} button`);
+      const count = await buttons.count();
+      expect(count).toBeGreaterThan(1);
+
+      for (let i = 0; i < count; i++) {
+        const button = buttons.nth(i);
+        expect(
+          await lineCount(button),
+          `${await button.innerText()} bricht um`,
+        ).toBe(1);
+        // Und der Text passt auch wirklich in die Pille, statt am
+        // overflow: hidden der Gruppe abgeschnitten zu werden.
+        const fits = await button.evaluate(
+          (el: Element) => el.scrollWidth <= el.clientWidth + 1,
+        );
+        expect(fits, `${await button.innerText()} wird abgeschnitten`).toBe(
+          true,
+        );
+      }
+    });
+  }
 });
 
 // Der gemeinsame Kopf der Content-Detailseiten. Die echten Seiten

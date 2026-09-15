@@ -16,16 +16,24 @@
 }
 .lcars-switch-item {
   cursor: pointer;
-  /* min-height statt height: bei schmalen Viewports kann mehrwortiger
-     Button-Text (z.B. "Zeitleisten-Ereignis einfügen") auf zwei Zeilen
-     umbrechen — mit fixer Höhe würde die zweite Zeile über die Button-Box
-     hinaus in die Nachbarzeile ragen, statt die Box wachsen zu lassen. */
+  /* min-height statt height: Sollte ein Text doch einmal umbrechen (sehr
+     langes Label, sehr schmales Fenster), wächst die Box mit, statt die
+     zweite Zeile in die Nachbarzeile ragen zu lassen. */
   min-height: 30px;
-  padding: 4px 24px;
-  font-size: clamp(12px, 16px, 16px);
+  /* Mehrwortige Beschriftungen ("Karten-Ansicht", "Alphabetisch",
+     "Gespeichert (12)") brachen auf schmalen Viewports mitten im Wort um und
+     machten aus der Pille einen zweizeiligen Klotz. Statt umzubrechen wird
+     der Text jetzt kleiner: nowrap hält ihn in einer Zeile, Schriftgröße,
+     Innenabstand und Laufweite schrumpfen unterhalb von ~615px Fensterbreite
+     mit. Oberhalb davon greifen exakt die bisherigen Werte (16px / 24px /
+     0.08em) — am Desktop ändert sich also nichts. */
+  white-space: nowrap;
+  min-width: 0;
+  padding: 4px clamp(8px, 2.2vw, 24px);
+  font-size: clamp(11px, 2.6vw, 16px);
   font-weight: bolder;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: clamp(0.02em, 0.4vw, 0.08em);
   text-decoration: none;
   transition:
     color 200ms,
