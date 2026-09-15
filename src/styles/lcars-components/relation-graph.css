@@ -20,6 +20,28 @@
   overflow: visible;
 }
 
+/* Bedienleiste über dem Graphen (Quellen/NPCs, Fokus, Mindeststärke).
+   Zwei Zeilen, die auf schmalen Geräten umbrechen — die Bedienelemente sind
+   gewöhnliche Kästchen und Auswahlfelder, hier nur zusammengefasst. */
+.relation-graph-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+/* Die Beschriftung gehört zum Kästchen und schaltet mit — also auch der
+   Zeiger. */
+.relation-graph-controls label {
+  cursor: pointer;
+}
+
+.relation-graph-controls select {
+  font-size: 13px;
+  padding-block: 2px;
+}
+
 .relation-graph-edge {
   stroke: var(--lcars-tertiary);
   stroke-opacity: 0.45;

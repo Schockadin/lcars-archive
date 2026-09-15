@@ -391,6 +391,11 @@ export interface UpdateMissionResult {
   slug: string;
   ownerSlug: string | null;
   wasDraft: boolean;
+  // Titel VOR dem Update — nur so erkennt der Aufrufer eine Umbenennung und
+  // kann die Verlinkungen in allen anderen Inhalten nachziehen lassen (siehe
+  // syncAutolinksAfterRename in src/lib/autolinkSync.ts). Missionen haben
+  // keine Aliase, der Titel ist ihre einzige Schreibweise.
+  previousTitle: string;
 }
 
 // Vollständige Bearbeitung einer Mission (Admin/GM-Formular unter
@@ -423,7 +428,7 @@ export async function updateMissionContent(
   const bodyHtml = input.bodyHtml ?? (await renderContentHtml(input.bodyMarkdown));
 
   const rows = await sql<UpdateMissionResult[]>`
-    WITH old AS (SELECT is_draft FROM missions WHERE id = ${missionId})
+    WITH old AS (SELECT is_draft, title FROM missions WHERE id = ${missionId})
     UPDATE missions m
     SET
       title      = ${input.title},
@@ -439,7 +444,8 @@ export async function updateMissionContent(
     RETURNING
       m.slug,
       (SELECT slug FROM users WHERE id = m.owner_user_id) AS "ownerSlug",
-      old.is_draft AS "wasDraft"
+      old.is_draft AS "wasDraft",
+      old.title AS "previousTitle"
   `;
   if (rows[0]) syncEmbeddings("mission", missionId);
   return rows[0] ?? null;

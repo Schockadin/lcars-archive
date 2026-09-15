@@ -680,6 +680,16 @@ export async function getOwnArchiveEntryForEdit(
   };
 }
 
+// Ergebnis von updateOwnArchiveEntryContent. Titel und Aliase VOR dem Update
+// kommen mit zurück — siehe UpdateOwnCharacterResult in characters.ts für
+// dieselbe Begründung (Umbenennung erkennen, Verlinkungen nachziehen).
+export interface UpdateOwnArchiveEntryResult {
+  slug: string;
+  wasDraft: boolean;
+  previousTitle: string;
+  previousAliases: string[] | null;
+}
+
 // Bearbeitet Titel/Kategorie/Tags/Text eines eigenen Archiv-Eintrags — für
 // das volle Bearbeiten-Formular (/user/archive/[entryId]/edit). Owner-
 // gescoped im WHERE (ein gefälschtes id trifft dann einfach 0 Zeilen, kein
@@ -706,10 +716,7 @@ export async function updateOwnArchiveEntryContent(
   // Wie bei getOwnArchiveEntryForEdit oben: hebt die Owner-Prüfung für die
   // Moderation auf. Das Recht (content.moderate) prüft die Action.
   asModerator = false,
-): Promise<{
-  slug: string;
-  wasDraft: boolean;
-} | null> {
+): Promise<UpdateOwnArchiveEntryResult | null> {
   await recordRevision("archive", entryId, userId, input.bodyMarkdown);
 
   const ownerScope = asModerator
@@ -730,13 +737,11 @@ export async function updateOwnArchiveEntryContent(
 
   // wasDraft (Stand VOR diesem Update) per CTE — siehe
   // updateOwnCharacterContent in characters.ts für dieselbe Begründung.
-  const rows = await sql<
-    {
-      slug: string;
-      wasDraft: boolean;
-    }[]
-  >`
-    WITH old AS (SELECT is_draft FROM archive_entries WHERE id = ${entryId})
+  const rows = await sql<UpdateOwnArchiveEntryResult[]>`
+    WITH old AS (
+      SELECT is_draft, title, metadata->'aliases' AS aliases
+      FROM archive_entries WHERE id = ${entryId}
+    )
     UPDATE archive_entries
     SET title = ${input.title}, category = ${input.category}, tags = ${input.tags},
         content = ${contentHtml}, source_md = ${input.bodyMarkdown},
@@ -744,7 +749,8 @@ export async function updateOwnArchiveEntryContent(
         is_draft = ${input.isDraft}, updated_at = NOW()
     FROM old
     WHERE id = ${entryId} AND category != 'dialogue' ${ownerScope}
-    RETURNING slug, old.is_draft AS "wasDraft"
+    RETURNING slug, old.is_draft AS "wasDraft",
+              old.title AS "previousTitle", old.aliases AS "previousAliases"
   `;
   const result = rows[0];
   if (!result) return null;

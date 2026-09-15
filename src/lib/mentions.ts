@@ -1,8 +1,7 @@
 import "server-only";
 import sql from "@/lib/db";
 import { WIKILINK_RE } from "@/lib/markdown";
-import { slugifyBase } from "@/lib/slug";
-import { normalizeWikilinkTarget } from "@/lib/autolink";
+import { slugifyBase, normalizeWikilinkTarget } from "@/lib/slug";
 import {
   archiveHref,
   missionHref,
