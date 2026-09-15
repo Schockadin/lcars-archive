@@ -23,6 +23,53 @@ describe("CharacterCreationHelpButton", () => {
     expect(dialog).toHaveTextContent("Stammdaten");
   });
 
+  // Der Text ist lang und wird MITTEN im Anlegen aufgeschlagen — wer etwas
+  // Bestimmtes sucht, braucht Überschriften zum Springen, keine Absatzwüste.
+  it("gliedert den Text in benannte Abschnitte", () => {
+    render(<CharacterCreationHelpButton />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Erschaffung erklärt" }),
+    );
+
+    expect(
+      screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent),
+    ).toEqual([
+      "Die vier Schritte",
+      "Das Portrait und sein Ausschnitt",
+      "Werte eintragen",
+      "Erfahrungspunkte (AP)",
+      "Talente",
+      "Schwerpunkte",
+      "Nach dem Abschließen",
+      "Wenn die Erschaffung wieder geöffnet wird",
+    ]);
+  });
+
+  // Die Schemata sind Inhalt, keine Dekoration: Sie zeigen den Aufbau der
+  // jeweiligen Maske und tragen deshalb eine eigene Beschriftung.
+  it("zeigt zu den Abschnitten beschriftete Beispielbilder", () => {
+    render(<CharacterCreationHelpButton />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Erschaffung erklärt" }),
+    );
+
+    const figures = screen.getAllByRole("img");
+    expect(figures.length).toBeGreaterThanOrEqual(6);
+    for (const figure of figures) {
+      expect(figure.getAttribute("aria-label")).toBeTruthy();
+    }
+  });
+
+  // Der Knopf steht in drei verschiedenen Leisten (Übersicht, Assistent,
+  // Charakterseite) und muss sich in jede einfügen können.
+  it("übernimmt die Klassen der Leiste, in der er steht", () => {
+    render(<CharacterCreationHelpButton className="eigene-klasse" />);
+
+    expect(
+      screen.getByRole("button", { name: "Erschaffung erklärt" }).className,
+    ).toBe("eigene-klasse");
+  });
+
   // Der Deep-Link muss auf den Anker der Anleitung zeigen — sonst landet man
   // oben auf /tutorial statt im passenden Abschnitt.
   it("verlinkt den passenden Abschnitt der Anleitung", () => {

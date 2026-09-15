@@ -69,6 +69,12 @@ test("/tutorial führt die Charaktererschaffung als eigenen Abschnitt", async ({
     "true",
   );
   await expect(section).toContainText("Einen neuen Charakter");
+
+  // Gegliedert statt als Absatzwüste — und mit einem Schema je Abschnitt.
+  await expect(
+    section.getByRole("heading", { level: 3, name: "Talente" }),
+  ).toBeVisible();
+  await expect(section.locator("svg[role=\"img\"]").first()).toBeVisible();
 });
 
 test("/tutorial#<abschnitt> klappt den Ziel-Abschnitt automatisch auf", async ({

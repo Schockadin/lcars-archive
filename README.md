@@ -832,10 +832,30 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   sondern eine eigene Komponente
   (`src/components/character/CharacterCreationGuide.tsx`): reines JSX ohne
   Hooks und ohne `"use client"`, damit dieselbe Datei von der
-  server-gerenderten Anleitung UND aus dem Fenster
-  „Erschaffung erklärt" auf `/user/characters` eingebunden werden kann
-  (`CharacterCreationHelpButton.tsx` um `ModalOverlay`). Zwei Kopien desselben
-  Ablaufs liefen unweigerlich auseinander.
+  server-gerenderten Anleitung UND aus dem Fenster „Erschaffung erklärt"
+  (`CharacterCreationHelpButton.tsx` um `ModalOverlay`) eingebunden werden
+  kann. Zwei Kopien desselben Ablaufs liefen unweigerlich auseinander.
+
+  Der Knopf steht auf **allen drei** Seiten, an denen man an einer Figur
+  arbeitet: `/user/characters`, `/user/characters/new` und
+  `/user/characters/[characterId]` — nachschlagen soll nirgends heißen, die
+  halb ausgefüllte Seite zu verlassen. Er nimmt seine Klassen als Prop, damit
+  er sich in die jeweilige Leiste einfügt.
+
+  Der Text ist in **acht benannte Abschnitte** (`<h3>`) gegliedert statt einer
+  Absatzfolge: Wer ihn mitten im Anlegen aufschlägt, sucht eine bestimmte
+  Stelle, nicht den Anfang. Zu den meisten Abschnitten gehört ein kleines
+  **Schema** der jeweiligen Maske
+  (`src/components/character/CharacterCreationFigures.tsx`) — Inline-SVG statt
+  Screenshot: Die Farben kommen aus den Theme-Tokens (`var(--lcars-…)`), die
+  Bilder machen also Farbschema und Hellmodus mit, veralten nicht mit der
+  ersten Layout-Änderung und bringen keine Binärdateien ins Repo. Ab 900px
+  steht das Schema neben seinem Text, darunter fällt es darunter.
+
+  Das Fenster ist mit `width={1040}` und `tall` deutlich größer als ein
+  Formular-Overlay (`tall` hebt die Höhe von 85vh auf 92vh, siehe
+  `ModalOverlay`): Es ist zum **Lesen** da, und bei 760px stand der Text in
+  einer schmalen Säule ohne Platz für die Schemata.
 - **Markdown-Vault als Ursprungsimport** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
   entstehen danach direkt in der App (Datenbank als alleinige Source of Truth).

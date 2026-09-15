@@ -374,10 +374,12 @@ export default function TutorialPage() {
                 Entwürfe) mit Knöpfen zum Veröffentlichen, Öffnen und Löschen
                 — und dort legst du neue an. Wie das Anlegen selbst abläuft, steht im nächsten
                 Abschnitt <strong>„Charaktererschaffung“</strong> — dort
-                gesammelt, weil es der längste Ablauf im ganzen Archiv ist. Auf
-                der Seite „Charaktere“ selbst öffnet der Knopf{" "}
-                <strong>„Erschaffung erklärt“</strong> denselben Text in einem
-                Fenster, ohne dass du die Seite verlassen musst.
+                gesammelt, weil es der längste Ablauf im ganzen Archiv ist.
+                Denselben Text öffnet der Knopf{" "}
+                <strong>„Erschaffung erklärt“</strong> als Fenster — auf der
+                Seite „Charaktere“, im Anlege-Assistenten und auf der Seite
+                jedes deiner Charaktere. Du kannst also mitten im Ausfüllen
+                nachschlagen, ohne die Seite zu verlassen.
               </p>
               <p>
                 Eigene Entwürfe (siehe unten) erscheinen in „Meine Inhalte“

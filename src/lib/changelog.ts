@@ -182,6 +182,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "charaktere",
         tutorial: "eigene-inhalte",
       },
+      {
+        text: "„Erschaffung erklärt“ öffnet jetzt auch im Anlege-Assistenten und auf der Seite jedes deiner Charaktere — du kannst also mitten im Ausfüllen nachschlagen. Der Text selbst ist in benannte Abschnitte gegliedert, jeder mit einem kleinen Schaubild der jeweiligen Maske, und das Fenster nutzt auf großen Bildschirmen deutlich mehr Platz.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
     ],
   },
   {

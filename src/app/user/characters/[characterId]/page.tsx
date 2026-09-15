@@ -17,6 +17,7 @@ import RevisionsPanel from "@/app/_shared/RevisionsPanel";
 import { listRevisions } from "@/lib/contentRevisions";
 import { getViewer } from "@/lib/visibility";
 import CharacterSheetButton from "./CharacterSheetButton";
+import CharacterCreationHelpButton from "../CharacterCreationHelpButton";
 import {
   characterEditHref,
 } from "@/lib/contentRoutes";
@@ -74,6 +75,13 @@ export default async function OwnCharacterPage({ params }: Props) {
       <PageMeta title={character.name} section="users" />
       <article className="mb-[10px] flex flex-col gap-[16px]">
         <h1>{character.name}</h1>
+
+        {/* Auch hier, nicht nur im Assistenten: Gesteigert und nachgetragen
+            wird lange nach dem Anlegen — die Regeln zu AP, Talenten und
+            Schwerpunkten schlägt man genau dann nach. */}
+        <div>
+          <CharacterCreationHelpButton className="lcars-pill-btn--outline max-sm:w-full" />
+        </div>
 
         <CharacterSheetButton
           characterId={sheet.id}
