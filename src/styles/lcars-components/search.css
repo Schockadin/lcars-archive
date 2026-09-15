@@ -13,7 +13,8 @@
      orientiert — bei unterschiedlich langen Labels (z.B. "Archiv-Einträge"
      vs. "Logs") wurden die beiden Spalten dadurch sichtbar unterschiedlich
      breit (x-Offset der Hintergrund-/Trennlinie). minmax(0, …) erzwingt
-     wirklich gleich breite Spalten, überlanger Text bricht stattdessen um. */
+     wirklich gleich breite Spalten; überlanger Text bricht dort nicht um,
+     sondern schrumpft mit (siehe .lcars-switch-item in controls.css). */
   grid-template-columns: repeat(2, minmax(0, 1fr));
   /* row-gap/column-gap statt gap-Shorthand: die beiden Spalten müssen ohne
      Zwischenraum aneinanderstoßen, sonst bleibt links/rechts der von
@@ -27,7 +28,10 @@
   margin-bottom: 16px;
 }
 .search-type-filter .lcars-switch-item {
-  padding: 0 14px;
+  /* Wie .lcars-switch-item: schmalere Innenabstände auf schmalen Viewports,
+     damit "Gespeichert (12)" in einer Zeile bleibt. 14px am Desktop wie
+     bisher. */
+  padding: 0 clamp(4px, 1.4vw, 14px);
   text-align: center;
   /* Durchgehende Trennlinie (::before unten) ersetzt die einzelnen
      Zeilen-Ränder, die durch das 2-spaltige Grid ohnehin nur pro Zeile

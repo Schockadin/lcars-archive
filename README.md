@@ -871,7 +871,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Serverfehler (auch bereits im Code abgefangene) wird dauerhaft über
   `src/instrumentation.ts` bzw. `logCaughtError()` in der Tabelle
   `error_logs` protokolliert und ist im Adminbereich unter „Fehler-Log“
-  einsehbar.
+  einsehbar. Ausgenommen sind die Render-Fehler, die React selbst wieder
+  auffängt (PPR-Resume, siehe `src/lib/recoverableRenderErrors.ts`): Sie
+  sind kein Absturz — die Antwort geht raus, React rendert den betroffenen
+  Teil nur im Browser — und würden das Protokoll sonst zudecken.
 - **Datenbank-Assistent (RAG)** — ein KI-Assistent (unter `/rag` sowie unterhalb der
   Volltextsuche auf `/search`) beantwortet Fragen zum Kampagneninhalt in
   natürlicher Sprache. Die Frage wird per OpenAI-Embedding vektorisiert, **hybrid**
