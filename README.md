@@ -102,7 +102,11 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   optionaler Mail/Push-Benachrichtigung, sobald die Sperre wieder endet.
   Offene Gespräche aktualisieren sich dabei automatisch per Polling (alle
   8 Sekunden, pausiert bei nicht sichtbarem Tab) — neue Nachrichten und
-  Sperr-Status-Änderungen erscheinen ohne manuelles Neuladen der Seite.
+  Sperr-Status-Änderungen erscheinen ohne manuelles Neuladen der Seite. Jede
+  Nachrichtenkarte eines **laufenden** Gesprächs trägt neben dem Sprechernamen
+  ihren Zeitstempel (`formatDateTimeShort`, fest auf `Europe/Berlin` — Server-
+  Render und Hydration liefern denselben String); abgeschlossene Gespräche
+  bleiben ohne, dort ist der Verlauf ein zusammenhängender Lesetext.
 - **Gespräche mit NPCs** — Gesprächspartner kann auch ein **NPC** sein. Ein NPC
   ist **kein Charakter**, sondern ein **Datenbank-Eintrag der Kategorie `npc`**
   (`archive_entries.category = 'npc'`, siehe `getNpcOptions`). Wer im Gespräch
@@ -589,7 +593,14 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   kopieren/WhatsApp auch den Download des Inhalts als Markdown-Datei (mit
   YAML-Frontmatter) oder als PDF (serverseitig erzeugt, ohne Chromium/
   Puppeteer — läuft dadurch auf Netlify Functions). Berücksichtigt dieselbe
-  Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst. Das
+  Sichtbarkeits-/Teilnehmer-Prüfung wie die jeweilige Detailseite selbst. Bei
+  abgeschlossenen Gesprächen (`/characters/dialogues/<slug>`) steht der Knopf
+  unter dem Verlauf, neben den Moderations-Schaltflächen; Export-Typ ist
+  `archive_entry` (ein Gespräch IST ein Datenbank-Eintrag der Kategorie
+  `dialogue`). Fehlt einem Gespräch das `source_md` — offene Gespräche haben
+  noch keins, alte abgeschlossene mitunter auch nicht —, baut
+  `loadExportableContent` den Verlauf live aus `dialogue_messages`
+  (`buildDialogueFlowingText`), statt eine leere Datei auszuliefern. Das
   PDF trägt seit v1.35 die Aufmachung von Charakterbogen und Missionsakte
   (`ContentPdfDocument.tsx`): blauer Rahmen, Kopfzeile aus Wortmarke und
   Titelreiter, Datenblock mit deutschen Beschriftungen und der Text über
