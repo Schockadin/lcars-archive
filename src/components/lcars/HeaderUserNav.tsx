@@ -5,6 +5,7 @@ import { useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { logout } from "@/app/login/actions";
 import { clearServiceWorkerPageCache } from "@/lib/swCache";
+import { clearAllInputDrafts } from "@/lib/inputDraft";
 import { DB_PERMISSIONS } from "@/lib/permissions";
 import {
   ProfileNavIcon,
@@ -37,34 +38,139 @@ interface NavMenuItem {
 // Entstehens: was die Runde als Ganzes betrifft, was an den Figuren hängt,
 // was aus dem Regelwerk kommt, was am Archiv gepflegt wird.
 const GM_ITEMS: NavMenuItem[] = [
-  { href: "/gm/campaign", label: "Kampagne", permission: "gm.access", group: "Kampagne" },
-  { href: "/gm/sessions", label: "Sessions", permission: "gm.access", group: "Kampagne" },
+  {
+    href: "/gm/campaign",
+    label: "Kampagne",
+    permission: "gm.access",
+    group: "Kampagne",
+  },
+  {
+    href: "/gm/sessions",
+    label: "Sessions",
+    permission: "gm.access",
+    group: "Kampagne",
+  },
   // Verwaltung der Figuren: wem sie gehören und wo ihre Erschaffung steht.
-  { href: "/gm/characters", label: "Charaktere", permission: "gm.access", group: "Charaktere" },
+  {
+    href: "/gm/characters",
+    label: "Charaktere",
+    permission: "gm.access",
+    group: "Charaktere",
+  },
   // Das Blatt für den Tisch: alle Werte nebeneinander, wenn eine Probe
   // angesagt wird — zusammen mit den AP-Konten das, was an den Figuren hängt.
-  { href: "/gm/gruppe", label: "Gruppenblatt", permission: "gm.access", group: "Charaktere" },
+  {
+    href: "/gm/gruppe",
+    label: "Gruppenblatt",
+    permission: "gm.access",
+    group: "Charaktere",
+  },
   { href: "/gm/ap", label: "AP", permission: "gm.access", group: "Charaktere" },
-  { href: "/gm/talents", label: "Talente", permission: "gm.access", group: "Regelwerk" },
-  { href: "/gm/focuses", label: "Schwerpunkte", permission: "gm.access", group: "Regelwerk" },
-  { href: "/gm/rules", label: "Regeln", permission: "gm.access", group: "Regelwerk" },
-  { href: "/gm/chronologie", label: "Chronologie", permission: "gm.access", group: "Inhalte" },
-  { href: "/gm/dialogues", label: "Gespräche", permission: "gm.access", group: "Inhalte" },
+  {
+    href: "/gm/talents",
+    label: "Talente",
+    permission: "gm.access",
+    group: "Regelwerk",
+  },
+  {
+    href: "/gm/focuses",
+    label: "Schwerpunkte",
+    permission: "gm.access",
+    group: "Regelwerk",
+  },
+  {
+    href: "/gm/rules",
+    label: "Regeln",
+    permission: "gm.access",
+    group: "Regelwerk",
+  },
+  {
+    href: "/gm/chronologie",
+    label: "Chronologie",
+    permission: "gm.access",
+    group: "Inhalte",
+  },
+  {
+    href: "/gm/dialogues",
+    label: "Gespräche",
+    permission: "gm.access",
+    group: "Inhalte",
+  },
 ];
 
 const ADMIN_ITEMS: NavMenuItem[] = [
-  { href: "/admin/users", label: "User", permission: "users.manage", group: "Konten" },
-  { href: "/admin/permissions", label: "Rollen", permission: "users.manage", group: "Konten" },
-  { href: "/admin/content", label: "Inhalte", permission: "content.moderate", group: "Inhalte" },
-  { href: "/admin/content/trash", label: "Papierkorb", permission: "content.moderate", group: "Inhalte" },
-  { href: "/admin/content/images", label: "Bilder", permission: "content.moderate", group: "Inhalte" },
-  { href: "/admin/changelog", label: "Changelog", permission: "admin.access", group: "Inhalte" },
-  { href: "/admin/db", label: "DB", permission: DB_PERMISSIONS, group: "System" },
-  { href: "/admin/scripts", label: "Scripts", permission: "admin.access", group: "System" },
-  { href: "/admin/rag", label: "RAG", permission: "admin.access", group: "System" },
-  { href: "/admin/import", label: "Import", permission: "admin.access", group: "System" },
-  { href: "/admin/audit-log", label: "Audit-Log", permission: "admin.access", group: "Protokolle" },
-  { href: "/admin/error-log", label: "Fehler-Log", permission: "admin.access", group: "Protokolle" },
+  {
+    href: "/admin/users",
+    label: "User",
+    permission: "users.manage",
+    group: "Konten",
+  },
+  {
+    href: "/admin/permissions",
+    label: "Rollen",
+    permission: "users.manage",
+    group: "Konten",
+  },
+  {
+    href: "/admin/content",
+    label: "Inhalte",
+    permission: "content.moderate",
+    group: "Inhalte",
+  },
+  {
+    href: "/admin/content/trash",
+    label: "Papierkorb",
+    permission: "content.moderate",
+    group: "Inhalte",
+  },
+  {
+    href: "/admin/content/images",
+    label: "Bilder",
+    permission: "content.moderate",
+    group: "Inhalte",
+  },
+  {
+    href: "/admin/changelog",
+    label: "Changelog",
+    permission: "admin.access",
+    group: "Inhalte",
+  },
+  {
+    href: "/admin/db",
+    label: "DB",
+    permission: DB_PERMISSIONS,
+    group: "System",
+  },
+  {
+    href: "/admin/scripts",
+    label: "Scripts",
+    permission: "admin.access",
+    group: "System",
+  },
+  {
+    href: "/admin/rag",
+    label: "RAG",
+    permission: "admin.access",
+    group: "System",
+  },
+  {
+    href: "/admin/import",
+    label: "Import",
+    permission: "admin.access",
+    group: "System",
+  },
+  {
+    href: "/admin/audit-log",
+    label: "Audit-Log",
+    permission: "admin.access",
+    group: "Protokolle",
+  },
+  {
+    href: "/admin/error-log",
+    label: "Fehler-Log",
+    permission: "admin.access",
+    group: "Protokolle",
+  },
 ];
 
 // Bündelt die (bereits nach Rechten gefilterten) Einträge in der Reihenfolge
@@ -160,9 +266,7 @@ function NavDropdown({
         aria-haspopup="true"
         aria-expanded={open}
         className={
-          active
-            ? "lcars-usernav-pill lcars-menu-active"
-            : "lcars-usernav-pill"
+          active ? "lcars-usernav-pill lcars-menu-active" : "lcars-usernav-pill"
         }
       >
         <NavPillContent icon={icon} label={label} />
@@ -348,8 +452,12 @@ export default function HeaderUserNav({
         className="lcars-usernav-form"
         // Vor dem Abmelden den Offline-Seiten-Cache des Service Workers leeren,
         // damit personalisierte Seiten nach dem Logout nicht offline abrufbar
-        // bleiben (siehe public/sw.js).
-        onSubmit={() => clearServiceWorkerPageCache()}
+        // bleiben (siehe public/sw.js) — und aus demselben Grund die
+        // gesicherten Formular-Eingaben dieser Sitzung (src/lib/inputDraft.ts).
+        onSubmit={() => {
+          clearServiceWorkerPageCache();
+          clearAllInputDrafts();
+        }}
       >
         <button type="submit" className="lcars-usernav-pill bg-lcars-quinary">
           <NavPillContent icon={<LogoutNavIcon />} label="Logout" />

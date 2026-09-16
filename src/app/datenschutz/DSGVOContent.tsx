@@ -169,7 +169,9 @@ export default function DSGVOContent({ year }: { year: number }) {
           an einer verlustfreien Bedienung). Diese Zwischenstände verbleiben
           ausschließlich auf dem jeweiligen Gerät, werden nicht an den Server
           oder Dritte übertragen und vom Browser spätestens beim Schließen des
-          Tabs bzw. Fensters gelöscht. Passwortfelder, Einmalcodes und
+          Tabs bzw. Fensters gelöscht — beim An- und Abmelden zusätzlich
+          sofort, damit auf einem geteilten Gerät keine Zwischenstände einer
+          anderen Person zurückbleiben. Passwortfelder, Einmalcodes und
           Zahlungsdaten werden dabei grundsätzlich nicht gesichert.
         </p>
         <p>

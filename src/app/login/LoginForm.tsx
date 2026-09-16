@@ -3,6 +3,7 @@
 import { useActionState } from "react";
 import { login, type LoginState } from "./actions";
 import { clearServiceWorkerPageCache } from "@/lib/swCache";
+import { clearAllInputDrafts } from "@/lib/inputDraft";
 import PasswordInput from "@/app/_shared/PasswordInput";
 import { FormError } from "@/app/_shared/FormPrimitives";
 
@@ -18,7 +19,13 @@ export default function LoginForm() {
       // Vor dem Anmelden einen evtl. noch vorhandenen Offline-Seiten-Cache
       // eines früheren Kontos leeren (Defense-in-Depth zum Logout-Clear, falls
       // die vorherige Sitzung nie sauber abgemeldet wurde) — siehe public/sw.js.
-      onSubmit={() => clearServiceWorkerPageCache()}
+      // Aus demselben Grund die Formular-Entwürfe dieser Sitzung: Sie können
+      // aus der Sitzung einer anderen Person auf diesem Gerät stammen (siehe
+      // src/lib/inputDraft.ts).
+      onSubmit={() => {
+        clearServiceWorkerPageCache();
+        clearAllInputDrafts();
+      }}
     >
       <div className="flex flex-col gap-[6px]">
         <label htmlFor="email" className="lcars-eyebrow">

@@ -590,7 +590,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   zurückgesetztes Formular (`reset`) verliert seinen Stand, und vor dem
   Verlassen der Seite (`pagehide`) wird der tatsächliche DOM-Stand
   festgehalten — damit ein von React nach erfolgreicher Server-Action
-  geleertes Formular nicht mit altem Text wieder aufersteht.
+  geleertes Formular nicht mit altem Text wieder aufersteht. Beim An- UND
+  Abmelden wird der gesamte Entwurfs-Speicher verworfen
+  (`clearAllInputDrafts()` in `HeaderUserNav`/`LoginForm`, an derselben Stelle
+  wie das Leeren des Offline-Seiten-Caches): Auf einem geteilten Gerät soll
+  die nächste Person weder fremde Zwischenstände vorfinden noch eigene
+  hinterlassen. Der `MutationObserver` läuft nur an, wenn eine Änderung
+  wirklich ein Element hinzugefügt hat, und der Wiederherstellungs-Durchgang
+  bricht sofort ab, solange es für die Seite nichts Gesichertes gibt — auf
+  Seiten mit Live-Aktualisierung (Gesprächs-Poll, Toasts) kostet er damit
+  praktisch nichts.
 - **Öffentliches Changelog** — die Seite `/changelog` listet je Version die
   end-nutzerrelevanten Neuerungen (gepflegt in `src/lib/changelog.ts`). Jeder
   Stichpunkt trägt eine **Kategorie** (`src/lib/changelogCategories.ts`);
@@ -1735,6 +1744,16 @@ neue **Tabelle**, die die App liest: `scripts/migrate-pr67.sql` legt
 
 ```bash
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr67.sql
+```
+
+Ebenso `scripts/migrate-pr78.sql`: Es ergänzt `error_logs` um die drei
+Herkunfts-Spalten (`app_version`, `deploy_context`, `commit_ref`, siehe
+[`src/lib/deployInfo.ts`](src/lib/deployInfo.ts)). Fehlt die Migration, gibt es
+zwar keine 500er — das Schreiben ins Fehler-Log ist in `try/catch` gekapselt —
+aber das Protokoll bliebe still leer:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr78.sql
 ```
 
 Ebenso `scripts/migrate-pr70.sql`: Es erweitert die Prüfbedingung von

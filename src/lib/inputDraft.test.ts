@@ -4,6 +4,7 @@ import {
   INPUT_DRAFT_MAX_VALUE_LENGTH,
   applyFieldValue,
   clearAllDraftRecords,
+  clearAllInputDrafts,
   clearDraftRecord,
   draftFieldKey,
   draftFieldKeys,
@@ -356,6 +357,23 @@ describe("Speicher-Zugriff", () => {
     clearAllDraftRecords(storage);
     expect(readDraftRecord(storage, "/a")).toEqual({});
     expect(storage.getItem("neo_theme")).toBe("standard");
+  });
+
+  it("clearAllInputDrafts räumt den Sitzungsspeicher des Browsers ab", () => {
+    // Beim An- und Abmelden aufgerufen (HeaderUserNav, LoginForm): Auf einem
+    // geteilten Gerät darf die nächste Person die Entwürfe der vorigen nicht
+    // vorfinden. Fremde Schlüssel bleiben auch hier unangetastet.
+    window.sessionStorage.setItem(
+      draftStorageKey("/user"),
+      JSON.stringify({ k: { kind: "text", value: "geheim genug" } }),
+    );
+    window.sessionStorage.setItem("etwas_anderes", "bleibt");
+
+    clearAllInputDrafts();
+
+    expect(readDraftRecord(window.sessionStorage, "/user")).toEqual({});
+    expect(window.sessionStorage.getItem("etwas_anderes")).toBe("bleibt");
+    window.sessionStorage.clear();
   });
 
   it("scheitert still, wenn der Speicher nicht mitspielt", () => {

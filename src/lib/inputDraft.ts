@@ -367,3 +367,17 @@ export function clearAllDraftRecords(storage: Storage | null | undefined) {
     for (const key of keys) storage.removeItem(key);
   } catch {}
 }
+
+// Dasselbe für den Browser, ohne dass die Aufrufstelle an den Speicher
+// herankommen muss: beim An- UND Abmelden aufgerufen (siehe HeaderUserNav,
+// LoginForm — dieselbe Stelle, an der auch der Offline-Seiten-Cache geleert
+// wird). Auf einem geteilten Gerät soll die nächste Person weder die Entwürfe
+// der vorigen sehen noch die eigenen hinterlassen.
+export function clearAllInputDrafts(): void {
+  if (typeof window === "undefined") return;
+  try {
+    clearAllDraftRecords(window.sessionStorage);
+  } catch {
+    // Kein Zugriff auf den Sitzungsspeicher — dann gibt es dort auch nichts.
+  }
+}

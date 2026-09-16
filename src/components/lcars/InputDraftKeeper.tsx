@@ -114,6 +114,12 @@ export default function InputDraftKeeper() {
     // noch nicht gab.
     const restore = () => {
       const record = recordRef.current;
+      // Ohne gesicherten Stand gibt es nichts einzusetzen — und damit auch
+      // keinen Grund, das Dokument abzusuchen. Das ist der Normalfall (jede
+      // Seite, auf der noch nichts getippt wurde), und er soll den
+      // MutationObserver unten praktisch nichts kosten: Die Schlüssel fürs
+      // Speichern holt keyFor() ohnehin erst beim ersten Tastendruck.
+      if (Object.keys(record).length === 0) return;
       const keys = draftFieldKeys(document);
       restoringRef.current = true;
       try {
@@ -182,8 +188,20 @@ export default function InputDraftKeeper() {
     // füllen. Gebündelt über einen Microtask-Timer, damit ein Renderdurchlauf
     // mit vielen Knoten nur einen Durchgang auslöst.
     let restoreTimer: ReturnType<typeof setTimeout> | null = null;
-    const observer = new MutationObserver(() => {
+    const observer = new MutationObserver((mutations) => {
+      // Die Positions-Ausweichschlüssel (Felder ohne name/id) hängen an der
+      // Reihenfolge im Dokument — jede Änderung kann sie verschieben.
       keyCache = new WeakMap<Element, string>();
+      // Nur ein hinzugekommenes ELEMENT kann ein neues Feld mitbringen.
+      // Live-Ansichten (Gesprächs-Poll, Toasts, Zähler) tauschen fortlaufend
+      // Textknoten aus; ohne diese Prüfung liefe für jeden davon ein
+      // vollständiger Dokument-Durchgang.
+      const addedElement = mutations.some((mutation) =>
+        Array.from(mutation.addedNodes).some(
+          (node) => node.nodeType === Node.ELEMENT_NODE,
+        ),
+      );
+      if (!addedElement) return;
       if (restoreTimer) return;
       restoreTimer = setTimeout(() => {
         restoreTimer = null;

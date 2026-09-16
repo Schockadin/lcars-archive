@@ -431,7 +431,8 @@ export default function TutorialPage() {
                 Gesichert wird ausschließlich auf deinem Gerät und nur bis zum
                 Schließen des Tabs; Passwortfelder bleiben grundsätzlich außen
                 vor. Sobald ein Formular erfolgreich abgeschickt und geleert
-                wurde, ist auch die Sicherung dazu weg.
+                wurde, ist auch die Sicherung dazu weg — und beim An- oder
+                Abmelden wird ohnehin alles davon verworfen.
               </p>
               <p>
                 Auch auf der Leseseite eines Inhalts führt der{" "}
