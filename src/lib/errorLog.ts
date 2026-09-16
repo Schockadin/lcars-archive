@@ -7,6 +7,7 @@
 // logCaughtError, siehe dortige Aufrufstellen).
 import "server-only";
 import sql from "@/lib/db";
+import { currentDeployOrigin } from "@/lib/deployInfo";
 
 export interface ErrorLogEntry {
   digest?: string;
@@ -25,6 +26,11 @@ export interface ErrorLogRow {
   routePath: string | null;
   routeType: string | null;
   method: string | null;
+  // Woher der werfende Code stammt (siehe src/lib/deployInfo.ts). Bei
+  // Einträgen aus der Zeit vor dieser Spalte null.
+  appVersion: string | null;
+  deployContext: string | null;
+  commitRef: string | null;
   createdAt: string;
 }
 
@@ -35,11 +41,20 @@ export interface ErrorLogRow {
 // crashen (kein zweiter, ungefangener Fehler in der Fehlerbehandlung).
 export async function logServerError(entry: ErrorLogEntry): Promise<void> {
   try {
+    // Die Herkunft kommt NICHT vom Aufrufer, sondern vom laufenden Build
+    // selbst — sonst müsste jede der zwei Quellen (instrumentation.ts,
+    // logCaughtError) daran denken, und ausgerechnet der alte Deploy, dessen
+    // Fehler man zuordnen will, hätte sie nicht.
+    const origin = currentDeployOrigin();
     await sql`
-      INSERT INTO error_logs (digest, message, stack, route_path, route_type, method)
+      INSERT INTO error_logs (
+        digest, message, stack, route_path, route_type, method,
+        app_version, deploy_context, commit_ref
+      )
       VALUES (
         ${entry.digest ?? null}, ${entry.message}, ${entry.stack ?? null},
-        ${entry.routePath ?? null}, ${entry.routeType ?? null}, ${entry.method ?? null}
+        ${entry.routePath ?? null}, ${entry.routeType ?? null}, ${entry.method ?? null},
+        ${origin.appVersion}, ${origin.deployContext}, ${origin.commitRef}
       )
     `;
   } catch (err) {
@@ -67,6 +82,9 @@ interface RawErrorLogRow {
   route_path: string | null;
   route_type: string | null;
   method: string | null;
+  app_version: string | null;
+  deploy_context: string | null;
+  commit_ref: string | null;
   created_at: string;
 }
 
@@ -79,6 +97,9 @@ function mapErrorLogRow(row: RawErrorLogRow): ErrorLogRow {
     routePath: row.route_path,
     routeType: row.route_type,
     method: row.method,
+    appVersion: row.app_version,
+    deployContext: row.deploy_context,
+    commitRef: row.commit_ref,
     createdAt: row.created_at,
   };
 }
@@ -87,7 +108,8 @@ export async function getServerErrorByDigest(
   digest: string,
 ): Promise<ErrorLogRow | null> {
   const [row] = await sql<RawErrorLogRow[]>`
-    SELECT id, digest, message, stack, route_path, route_type, method, created_at
+    SELECT id, digest, message, stack, route_path, route_type, method,
+           app_version, deploy_context, commit_ref, created_at
     FROM error_logs
     WHERE digest = ${digest}
     ORDER BY created_at DESC
@@ -98,7 +120,8 @@ export async function getServerErrorByDigest(
 
 export async function listRecentServerErrors(limit = 200): Promise<ErrorLogRow[]> {
   const rows = await sql<RawErrorLogRow[]>`
-    SELECT id, digest, message, stack, route_path, route_type, method, created_at
+    SELECT id, digest, message, stack, route_path, route_type, method,
+           app_version, deploy_context, commit_ref, created_at
     FROM error_logs
     ORDER BY created_at DESC
     LIMIT ${limit}

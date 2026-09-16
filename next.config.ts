@@ -70,7 +70,33 @@ function netlifyOrigins(): string[] {
   return [...hosts];
 }
 
+// Netlifys Build-Metadaten in den Build eingebacken: Welcher Kontext
+// (production / deploy-preview / branch-deploy), welcher Branch, welcher
+// Commit und — bei Previews — welche PR-Nummer. Sie beschreiben den BUILD,
+// nicht die Anfrage, und stehen der laufenden Function nicht verlässlich zur
+// Verfügung; Next ersetzt process.env.NEO_BUILD_* dagegen beim Build durch
+// den Wert (siehe node_modules/next/dist/docs/01-app/03-api-reference/05-config/
+// 01-next-config-js/env.md).
+//
+// Gelesen von src/lib/deployInfo.ts und mit jedem Eintrag ins Fehler-Log
+// geschrieben: Sonst ist einem Eintrag nicht anzusehen, ob ihn die aktuelle
+// Produktion geworfen hat oder ein Jahre alter Deploy-Permalink, den ein
+// Crawler aufgerufen hat (beide sprechen mit derselben Datenbank).
+//
+// Keine Geheimnisse: Kontext, Branch und Commit-Hash stehen ohnehin öffentlich
+// im Repository — nichts davon darf je aus einer Variablen mit Zugangsdaten
+// kommen.
+function netlifyBuildEnv(): Record<string, string> {
+  return {
+    NEO_BUILD_CONTEXT: process.env.CONTEXT ?? "",
+    NEO_BUILD_BRANCH: process.env.BRANCH ?? "",
+    NEO_BUILD_COMMIT: process.env.COMMIT_REF ?? "",
+    NEO_BUILD_REVIEW_ID: process.env.REVIEW_ID ?? "",
+  };
+}
+
 const nextConfig: NextConfig = {
+  env: netlifyBuildEnv(),
   // Cache Components (Next 16, ehem. dynamicIO/ppr/useCache als ein Flag):
   // Alle Seiten sind per Default dynamisch; statisch cachebare Teile werden
   // per "use cache"-Direktive markiert (siehe src/lib/*.ts, in denen die

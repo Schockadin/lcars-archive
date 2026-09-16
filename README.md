@@ -958,7 +958,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Gesprächen, dessen Metadaten (Titel/Datum/Schauplatz/Ort/Tags — nicht den
   Verlauf) direkt auf der Gesprächsseite bearbeiten, sowie jederzeit den Besitzer
   eines Gesprächs neu zuordnen. Eine weitere Unterseite, das Fehler-Log, listet
-  alle unerwarteten Serverfehler (Zeitpunkt, Route, Meldung, Digest); zusätzlich
+  alle unerwarteten Serverfehler (Zeitpunkt, Route, Meldung, Build, Digest); zusätzlich
   erhält die Administration jeden Morgen um 6 Uhr (Berliner Zeit) automatisch eine
   Mail mit allen Fehler- und Audit-Log-Einträgen der letzten 24 Stunden.
   Die Spielleitung hat ein eigenes „Leitung“-Dropdown im Header, das getrennt
@@ -991,7 +991,17 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Serverfehler (auch bereits im Code abgefangene) wird dauerhaft über
   `src/instrumentation.ts` bzw. `logCaughtError()` in der Tabelle
   `error_logs` protokolliert und ist im Adminbereich unter „Fehler-Log“
-  einsehbar. Ausgenommen sind die Render-Fehler, die React selbst wieder
+  einsehbar. Jeder Eintrag trägt dabei die **Herkunft des werfenden Codes**
+  (`app_version`, `deploy_context`, `commit_ref` — zusammengestellt in
+  `src/lib/deployInfo.ts` aus `APP_VERSION` und Netlifys Build-Variablen, die
+  `next.config.ts` per `env` zur Build-Zeit einsetzt). Ohne sie ist einem
+  Eintrag nicht anzusehen, welcher Build ihn geworfen hat: Netlify hält jeden
+  früheren Deploy unter seinem Permalink und jede Deploy-Preview dauerhaft
+  erreichbar, und diese alten Lambdas sprechen mit derselben Live-Datenbank —
+  ein Aufruf von außen lässt dort Code laufen, der beliebig alt sein kann
+  (genau so entstanden nach v1.34.3 „column \"visibility\" does not exist"-
+  Einträge auf `/`: aus Builds, die noch auf die inzwischen entfernte Spalte
+  filterten). Ausgenommen sind die Render-Fehler, die React selbst wieder
   auffängt (PPR-Resume, siehe `src/lib/recoverableRenderErrors.ts`): Sie
   sind kein Absturz — die Antwort geht raus, React rendert den betroffenen
   Teil nur im Browser — und würden das Protokoll sonst zudecken.
@@ -1267,7 +1277,7 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     │   │   ├── db/             #   DB-Backup, Tabellenbrowser, freies SQL-Abfragefeld
     │   │   ├── scripts/        #   Bulk-Autolinking, Gespräche-Fließtext, Cache-Rebuild, u.a.
     │   │   ├── audit-log/      #   Sicherheits-Audit-Log + Content-Aktivitätsfeed
-    │   │   ├── error-log/      #   Protokollierte Serverfehler (Zeitpunkt, Route, Meldung)
+    │   │   ├── error-log/      #   Protokollierte Serverfehler (Zeitpunkt, Route, Meldung, Build)
     │   │   ├── content/        #   Owner-/Sichtbarkeits-Übersteuerung fremder Inhalte
     │   │   └── import/         #   Markdown-Datei-Upload → neue Einträge (mit Vorschau)
     │   ├── api/               # /api/characters, /api/health …

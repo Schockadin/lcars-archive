@@ -5,6 +5,7 @@ import {
   getServerErrorByDigest,
   listRecentServerErrors,
 } from "@/lib/errorLog";
+import { APP_VERSION } from "@/lib/version";
 
 describe("logServerError / listRecentServerErrors", () => {
   it("records all fields and lists them back, newest first", async () => {
@@ -28,6 +29,19 @@ describe("logServerError / listRecentServerErrors", () => {
     });
     expect(entry.id).toBeTypeOf("number");
     expect(entry.createdAt).toBeTruthy();
+  });
+
+  it("records where the running build came from, without being told", async () => {
+    // Die Herkunft kommt aus dem Build selbst (src/lib/deployInfo.ts), nicht
+    // vom Aufrufer — genau deshalb trägt sie auch ein alter Deploy, dessen
+    // Fehler man später zuordnen will. Unter Test ist kein Netlify-Kontext
+    // gesetzt, die Version steht trotzdem.
+    await logServerError({ message: "Woher kam das?" });
+
+    const [entry] = await listRecentServerErrors();
+    expect(entry.appVersion).toBe(APP_VERSION);
+    expect(entry).toHaveProperty("deployContext");
+    expect(entry).toHaveProperty("commitRef");
   });
 
   it("defaults optional fields to null when omitted", async () => {
