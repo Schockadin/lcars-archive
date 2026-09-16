@@ -155,7 +155,7 @@ export const DB_TABLE_COLUMNS = {
   ],
   error_logs: [
     "id", "digest", "message", "stack", "route_path", "route_type", "method",
-    "created_at",
+    "app_version", "deploy_context", "commit_ref", "created_at",
   ],
 } as const satisfies Record<string, readonly string[]>;
 

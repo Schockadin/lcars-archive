@@ -571,6 +571,38 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Ingame-Jahr, die Charakter-Zuweisung und die Missions-Übersicht. Charaktere
   haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen
   Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
+- **Eingaben überleben den Reload** — jede Eingabe in jedem Formular der App
+  wird für die Browser-Sitzung gesichert (`sessionStorage`) und beim nächsten
+  Aufbau derselben Seite wieder eingesetzt: Neuladen, versehentliches Zurück
+  oder ein Fehlerbildschirm kosten keinen getippten Text mehr. Die Regeln
+  (welches Feld, welcher Schlüssel, welcher Wert) liegen React-frei und
+  unit-testbar in `src/lib/inputDraft.ts`, die Verdrahtung mit dem Dokument in
+  `src/components/lcars/InputDraftKeeper.tsx` — eine einzige Stelle im
+  Root-Layout statt einer Änderung an ~80 Formularen: die Sicherung hängt per
+  Event-Delegation an `document` und findet neue Felder (Fenster, Akkordeons,
+  nachgeladene Bereiche) über einen `MutationObserver`. Der Schlüssel eines
+  Feldes besteht aus Seitenpfad, Formular (`id`/`name`/Position) und Feld
+  (`name`/`id`/Position), Kästchen zusätzlich mit ihrem `value`. Nicht
+  gesichert werden Passwörter, Einmalcodes und Zahlungsdaten
+  (`autocomplete`-Kennung bzw. `type`) sowie alles unterhalb von
+  `data-no-draft` — das trägt u.a. `PasswordInput` (ihr Feld wechselt beim
+  Anzeigen auf `type="text"`) und die globale Kopfzeilen-Suche. Ein
+  zurückgesetztes Formular (`reset`) verliert seinen Stand, und vor dem
+  Verlassen der Seite (`pagehide`) wird der DOM-Stand der **bereits
+  gesicherten** Felder nachgeführt (`withKnownDraftValue`) — damit ein von
+  React nach erfolgreicher Server-Action geleertes Formular nicht mit altem
+  Text wieder aufersteht, ein nur geöffnetes Bearbeiten-Formular aber auch
+  nicht seine serverseitigen Vorgabewerte sichert und sie später über
+  inzwischen geänderte Inhalte legt. Beim An- UND
+  Abmelden wird der gesamte Entwurfs-Speicher verworfen
+  (`clearAllInputDrafts()` in `HeaderUserNav`/`LoginForm`, an derselben Stelle
+  wie das Leeren des Offline-Seiten-Caches): Auf einem geteilten Gerät soll
+  die nächste Person weder fremde Zwischenstände vorfinden noch eigene
+  hinterlassen. Der `MutationObserver` läuft nur an, wenn eine Änderung
+  wirklich ein Element hinzugefügt hat, und der Wiederherstellungs-Durchgang
+  bricht sofort ab, solange es für die Seite nichts Gesichertes gibt — auf
+  Seiten mit Live-Aktualisierung (Gesprächs-Poll, Toasts) kostet er damit
+  praktisch nichts.
 - **Öffentliches Changelog** — die Seite `/changelog` listet je Version die
   end-nutzerrelevanten Neuerungen (gepflegt in `src/lib/changelog.ts`). Jeder
   Stichpunkt trägt eine **Kategorie** (`src/lib/changelogCategories.ts`);
@@ -938,7 +970,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Gesprächen, dessen Metadaten (Titel/Datum/Schauplatz/Ort/Tags — nicht den
   Verlauf) direkt auf der Gesprächsseite bearbeiten, sowie jederzeit den Besitzer
   eines Gesprächs neu zuordnen. Eine weitere Unterseite, das Fehler-Log, listet
-  alle unerwarteten Serverfehler (Zeitpunkt, Route, Meldung, Digest); zusätzlich
+  alle unerwarteten Serverfehler (Zeitpunkt, Route, Meldung, Build, Digest); zusätzlich
   erhält die Administration jeden Morgen um 6 Uhr (Berliner Zeit) automatisch eine
   Mail mit allen Fehler- und Audit-Log-Einträgen der letzten 24 Stunden.
   Die Spielleitung hat ein eigenes „Leitung“-Dropdown im Header, das getrennt
@@ -971,7 +1003,17 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Serverfehler (auch bereits im Code abgefangene) wird dauerhaft über
   `src/instrumentation.ts` bzw. `logCaughtError()` in der Tabelle
   `error_logs` protokolliert und ist im Adminbereich unter „Fehler-Log“
-  einsehbar. Ausgenommen sind die Render-Fehler, die React selbst wieder
+  einsehbar. Jeder Eintrag trägt dabei die **Herkunft des werfenden Codes**
+  (`app_version`, `deploy_context`, `commit_ref` — zusammengestellt in
+  `src/lib/deployInfo.ts` aus `APP_VERSION` und Netlifys Build-Variablen, die
+  `next.config.ts` per `env` zur Build-Zeit einsetzt). Ohne sie ist einem
+  Eintrag nicht anzusehen, welcher Build ihn geworfen hat: Netlify hält jeden
+  früheren Deploy unter seinem Permalink und jede Deploy-Preview dauerhaft
+  erreichbar, und diese alten Lambdas sprechen mit derselben Live-Datenbank —
+  ein Aufruf von außen lässt dort Code laufen, der beliebig alt sein kann
+  (genau so entstanden nach v1.34.3 „column \"visibility\" does not exist"-
+  Einträge auf `/`: aus Builds, die noch auf die inzwischen entfernte Spalte
+  filterten). Ausgenommen sind die Render-Fehler, die React selbst wieder
   auffängt (PPR-Resume, siehe `src/lib/recoverableRenderErrors.ts`): Sie
   sind kein Absturz — die Antwort geht raus, React rendert den betroffenen
   Teil nur im Browser — und würden das Protokoll sonst zudecken.
@@ -1247,7 +1289,7 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     │   │   ├── db/             #   DB-Backup, Tabellenbrowser, freies SQL-Abfragefeld
     │   │   ├── scripts/        #   Bulk-Autolinking, Gespräche-Fließtext, Cache-Rebuild, u.a.
     │   │   ├── audit-log/      #   Sicherheits-Audit-Log + Content-Aktivitätsfeed
-    │   │   ├── error-log/      #   Protokollierte Serverfehler (Zeitpunkt, Route, Meldung)
+    │   │   ├── error-log/      #   Protokollierte Serverfehler (Zeitpunkt, Route, Meldung, Build)
     │   │   ├── content/        #   Owner-/Sichtbarkeits-Übersteuerung fremder Inhalte
     │   │   └── import/         #   Markdown-Datei-Upload → neue Einträge (mit Vorschau)
     │   ├── api/               # /api/characters, /api/health …
@@ -1705,6 +1747,16 @@ neue **Tabelle**, die die App liest: `scripts/migrate-pr67.sql` legt
 
 ```bash
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr67.sql
+```
+
+Ebenso `scripts/migrate-pr78.sql`: Es ergänzt `error_logs` um die drei
+Herkunfts-Spalten (`app_version`, `deploy_context`, `commit_ref`, siehe
+[`src/lib/deployInfo.ts`](src/lib/deployInfo.ts)). Fehlt die Migration, gibt es
+zwar keine 500er — das Schreiben ins Fehler-Log ist in `try/catch` gekapselt —
+aber das Protokoll bliebe still leer:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr78.sql
 ```
 
 Ebenso `scripts/migrate-pr70.sql`: Es erweitert die Prüfbedingung von

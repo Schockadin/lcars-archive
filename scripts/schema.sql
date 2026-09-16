@@ -670,6 +670,16 @@ CREATE TABLE IF NOT EXISTS error_logs (
 );
 CREATE INDEX IF NOT EXISTS idx_error_logs_created_at ON error_logs(created_at);
 CREATE INDEX IF NOT EXISTS idx_error_logs_digest     ON error_logs(digest);
+-- Herkunft des werfenden Codes (src/lib/deployInfo.ts): App-Version,
+-- Netlify-Kontext ('production', 'deploy-preview #78', 'branch-deploy (x)')
+-- und Kurz-Commit. Ohne sie ist einem Eintrag nicht anzusehen, ob ihn die
+-- aktuelle Produktion geworfen hat oder ein alter Deploy-Permalink bzw. eine
+-- alte Deploy-Preview — die bleiben bei Netlify dauerhaft erreichbar und
+-- sprechen mit derselben Datenbank, laufen aber mit Code von damals.
+-- Nachgezogen, deshalb nullable: Altbestand hat sie nicht.
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS app_version    TEXT;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS deploy_context TEXT;
+ALTER TABLE error_logs ADD COLUMN IF NOT EXISTS commit_ref     TEXT;
 
 -- ---------------------------------------------------------------------------
 -- content_images

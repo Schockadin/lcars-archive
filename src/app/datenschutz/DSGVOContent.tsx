@@ -160,6 +160,21 @@ export default function DSGVOContent({ year }: { year: number }) {
           Browser für ungültig erklärt wird.
         </p>
         <p>
+          Damit bei einem Neuladen der Seite, einem Verbindungsabbruch oder
+          einem Fehler keine bereits getippten Texte verloren gehen, sichert die
+          Anwendung Eingaben aus Formularfeldern im{" "}
+          <strong>Sitzungsspeicher</strong> (sessionStorage) des Browsers und
+          setzt sie beim erneuten Aufruf derselben Seite wieder ein
+          (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse
+          an einer verlustfreien Bedienung). Diese Zwischenstände verbleiben
+          ausschließlich auf dem jeweiligen Gerät, werden nicht an den Server
+          oder Dritte übertragen und vom Browser spätestens beim Schließen des
+          Tabs bzw. Fensters gelöscht — beim An- und Abmelden zusätzlich
+          sofort, damit auf einem geteilten Gerät keine Zwischenstände einer
+          anderen Person zurückbleiben. Passwortfelder, Einmalcodes und
+          Zahlungsdaten werden dabei grundsätzlich nicht gesichert.
+        </p>
+        <p>
           Für den Offline-Betrieb der installierbaren App (PWA) legt ein{" "}
           <strong>Service Worker</strong> Kopien bereits aufgerufener Seiten
           sowie statischer Dateien (Programmcode, Schriften, Symbole) im lokalen

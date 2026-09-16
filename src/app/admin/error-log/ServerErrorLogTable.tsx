@@ -11,6 +11,12 @@ const ROUTE_TYPE_LABELS: Record<string, string> = {
   caught: "Abgefangen",
 };
 
+// „1.40.1 · deploy-preview #78" — beides zusammen, weil die Version allein
+// nicht verrät, ob es die laufende Produktion war.
+function originText(entry: ErrorLogRow): string {
+  return [entry.appVersion, entry.deployContext].filter(Boolean).join(" · ");
+}
+
 const columns: LogColumn<ErrorLogRow>[] = [
   {
     key: "createdAt",
@@ -23,7 +29,8 @@ const columns: LogColumn<ErrorLogRow>[] = [
     key: "routeType",
     label: "Typ",
     sortValue: (e) => e.routeType ?? "",
-    filterValue: (e) => ROUTE_TYPE_LABELS[e.routeType ?? ""] ?? e.routeType ?? "",
+    filterValue: (e) =>
+      ROUTE_TYPE_LABELS[e.routeType ?? ""] ?? e.routeType ?? "",
     render: (e) => ROUTE_TYPE_LABELS[e.routeType ?? ""] ?? e.routeType ?? "—",
   },
   {
@@ -45,11 +52,33 @@ const columns: LogColumn<ErrorLogRow>[] = [
     label: "Meldung",
     sortValue: (e) => e.message,
     filterValue: (e) => e.message,
-    render: (e) => <span className="block max-w-[400px] truncate">{e.message}</span>,
+    render: (e) => (
+      <span className="block max-w-[400px] truncate">{e.message}</span>
+    ),
     // Volle Meldung + Stacktrace fürs Zeilendetails-Modal statt nur des
     // bisherigen title-Tooltips — Stacktraces sind oft mehrere hundert
     // Zeichen lang und in einem Hover-Tooltip kaum lesbar.
     modalValue: (e) => (e.stack ? `${e.message}\n\n${e.stack}` : e.message),
+  },
+  {
+    // Woher der werfende Code stammt (siehe src/lib/deployInfo.ts): Version
+    // und Deploy-Kontext in der Zelle, der Commit dazu im Zeilendetail.
+    // Netlify hält alte Deploys und Deploy-Previews dauerhaft erreichbar, und
+    // sie sprechen mit derselben Datenbank — ohne diese Spalte steht der
+    // Fehler eines uralten Builds ununterscheidbar neben einem echten.
+    key: "origin",
+    label: "Build",
+    sortValue: (e) => `${e.appVersion ?? ""} ${e.deployContext ?? ""}`,
+    filterValue: (e) => originText(e),
+    render: (e) => originText(e) || "—",
+    modalValue: (e) =>
+      [
+        e.appVersion ? `Version: ${e.appVersion}` : null,
+        e.deployContext ? `Kontext: ${e.deployContext}` : null,
+        e.commitRef ? `Commit: ${e.commitRef}` : null,
+      ]
+        .filter(Boolean)
+        .join("\n") || "Keine Angabe (Eintrag vor dieser Spalte).",
   },
   {
     key: "digest",
