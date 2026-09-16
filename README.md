@@ -588,9 +588,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `data-no-draft` — das trägt u.a. `PasswordInput` (ihr Feld wechselt beim
   Anzeigen auf `type="text"`) und die globale Kopfzeilen-Suche. Ein
   zurückgesetztes Formular (`reset`) verliert seinen Stand, und vor dem
-  Verlassen der Seite (`pagehide`) wird der tatsächliche DOM-Stand
-  festgehalten — damit ein von React nach erfolgreicher Server-Action
-  geleertes Formular nicht mit altem Text wieder aufersteht. Beim An- UND
+  Verlassen der Seite (`pagehide`) wird der DOM-Stand der **bereits
+  gesicherten** Felder nachgeführt (`withKnownDraftValue`) — damit ein von
+  React nach erfolgreicher Server-Action geleertes Formular nicht mit altem
+  Text wieder aufersteht, ein nur geöffnetes Bearbeiten-Formular aber auch
+  nicht seine serverseitigen Vorgabewerte sichert und sie später über
+  inzwischen geänderte Inhalte legt. Beim An- UND
   Abmelden wird der gesamte Entwurfs-Speicher verworfen
   (`clearAllInputDrafts()` in `HeaderUserNav`/`LoginForm`, an derselben Stelle
   wie das Leeren des Offline-Seiten-Caches): Auf einem geteilten Gerät soll

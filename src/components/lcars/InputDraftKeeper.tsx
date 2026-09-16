@@ -8,6 +8,7 @@ import {
   readDraftRecord,
   readFieldValue,
   withDraftValue,
+  withKnownDraftValue,
   writeDraftRecord,
   type DraftField,
   type DraftRecord,
@@ -159,15 +160,28 @@ export default function InputDraftKeeper() {
       }, 0);
     };
 
-    // Vor dem Verlassen/Verstecken der Seite den tatsächlichen Stand aller
-    // Felder festhalten. Das deckt den Fall ab, dass React ein Formular nach
-    // einer erfolgreichen Server-Action selbst geleert hat (ohne reset-Event):
-    // gesichert wird dann das leere Feld, nicht der abgeschickte Text.
+    // Vor dem Verlassen/Verstecken der Seite den tatsächlichen Stand der
+    // bereits gesicherten Felder nachführen. Das deckt den Fall ab, dass React
+    // ein Formular nach einer erfolgreichen Server-Action selbst geleert hat
+    // (ohne reset-Event): gesichert wird dann das leere Feld, nicht der
+    // abgeschickte Text.
+    //
+    // Ausdrücklich nur BEKANNTE Felder (withKnownDraftValue): Ein
+    // Bearbeiten-Formular, das jemand nur geöffnet und dann in einen anderen
+    // Tab gewechselt hat, darf seine serverseitigen Vorgabewerte nicht
+    // sichern — sie lägen beim nächsten Aufruf über inzwischen geänderte
+    // Inhalte, ohne dass je jemand etwas getippt hätte.
     const snapshot = () => {
       let record = recordRef.current;
-      for (const [el, key] of draftFieldKeys(document))
-        record = withDraftValue(record, key, readFieldValue(el));
-      recordRef.current = record;
+      // Ist nichts gesichert, gibt es auch nichts nachzuführen — der
+      // Dokument-Durchgang bleibt dann aus. Geschrieben wird trotzdem: flush()
+      // holt einen noch ausstehenden gebündelten Stand nach, und genau darauf
+      // kommt es beim Verlassen der Seite an.
+      if (Object.keys(record).length > 0) {
+        for (const [el, key] of draftFieldKeys(document))
+          record = withKnownDraftValue(record, key, readFieldValue(el));
+        recordRef.current = record;
+      }
       flush();
     };
 

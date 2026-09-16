@@ -14,6 +14,7 @@ import {
   readDraftRecord,
   readFieldValue,
   withDraftValue,
+  withKnownDraftValue,
   writeDraftRecord,
   type DraftField,
   type DraftRecord,
@@ -301,6 +302,28 @@ describe("withDraftValue", () => {
       value: "geändert",
     });
     expect(updated.f0).toEqual({ kind: "text", value: "geändert" });
+  });
+});
+
+describe("withKnownDraftValue", () => {
+  it("führt einen bekannten Stand nach", () => {
+    const record: DraftRecord = { a: { kind: "text", value: "alt" } };
+    expect(
+      withKnownDraftValue(record, "a", { kind: "text", value: "" }),
+    ).toEqual({ a: { kind: "text", value: "" } });
+  });
+
+  it("nimmt ein unberührtes Feld NICHT auf", () => {
+    // Der Fall, für den es die Funktion gibt: Ein nur geöffnetes
+    // Bearbeiten-Formular darf beim Tab-Wechsel nicht seine serverseitigen
+    // Vorgabewerte sichern und sie später über geänderte Inhalte legen.
+    const record: DraftRecord = {};
+    expect(
+      withKnownDraftValue(record, "unberührt", {
+        kind: "text",
+        value: "Vorgabe vom Server",
+      }),
+    ).toBe(record);
   });
 });
 

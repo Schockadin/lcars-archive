@@ -300,6 +300,24 @@ export function withDraftValue(
   return { ...record, [key]: value };
 }
 
+// Nur einen BEREITS gesicherten Stand nachführen, nie einen neuen aufnehmen.
+// Gebraucht für die Sicherung kurz vor dem Verlassen der Seite: Dort wird der
+// tatsächliche Stand des Dokuments festgehalten, damit ein von React nach
+// erfolgreicher Server-Action geleertes Formular nicht mit altem Text wieder
+// aufersteht. Würde dieser Durchgang auch UNBERÜHRTE Felder aufnehmen, geriete
+// das Gegenteil des Gewollten heraus: Ein Bearbeiten-Formular, das jemand nur
+// geöffnet und dann den Tab gewechselt hat, hätte seine serverseitigen
+// Vorgabewerte gesichert — und würde sie beim nächsten Aufruf über
+// inzwischen geänderte Inhalte legen, ohne dass je jemand getippt hätte.
+export function withKnownDraftValue(
+  record: DraftRecord,
+  key: string,
+  value: DraftValue,
+): DraftRecord {
+  if (!(key in record)) return record;
+  return withDraftValue(record, key, value);
+}
+
 function sameDraftValue(a: DraftValue, b: DraftValue): boolean {
   if (a.kind !== b.kind) return false;
   if (a.kind === "multi" && b.kind === "multi")

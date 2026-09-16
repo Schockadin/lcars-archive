@@ -51,3 +51,21 @@ test("ein geleertes Feld bleibt geleert", async ({ page }) => {
   await page.reload();
   await expect(page.locator("#email")).toHaveValue("");
 });
+
+test("ein unberührtes Formular hinterlässt nichts im Speicher", async ({
+  page,
+}) => {
+  // Die Sicherung kurz vor dem Verlassen der Seite führt nur BEREITS
+  // gesicherte Felder nach. Sonst würde ein bloß geöffnetes Bearbeiten-
+  // Formular seine serverseitigen Vorgabewerte sichern und sie beim nächsten
+  // Aufruf über inzwischen geänderte Inhalte legen.
+  await page.goto("/login");
+  await expect(page.locator("#email")).toBeVisible();
+
+  await page.reload();
+
+  const stored = await page.evaluate(() =>
+    Object.keys(sessionStorage).filter((key) => key.startsWith("neo_draft:")),
+  );
+  expect(stored).toEqual([]);
+});
