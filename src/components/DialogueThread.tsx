@@ -4,6 +4,7 @@ import { AUTHOR_COLORS } from "@/lib/missionFormat";
 import type { DialogueMessage } from "@/lib/dialogues";
 import type { ArchiveParticipant } from "@/types/archive";
 import DialogueMessageActions from "./DialogueMessageActions";
+import { formatDateTimeShort, toIsoDateTime } from "@/utils/formateISODate";
 
 // Reihenfolge kommt bereits chronologisch (ältester zuerst) aus
 // getDialogueMessages — kein Re-Sort nötig. Farbe kommt von der Charakter-
@@ -77,6 +78,21 @@ export default function DialogueThread({
         const editedBadge = msg.editedAt && !msg.deletedAt && (
           <span className="dialogue-message-meta">bearbeitet</span>
         );
+        // Wann wurde diese Nachricht abgeschickt? Nur im laufenden Gespräch
+        // — dort wird wie in einem Chat mitgelesen, und der Abstand zwischen
+        // zwei Beiträgen (Minuten oder Tage) ist Teil der Information. Im
+        // abgeschlossenen Gespräch ist der Verlauf ein zusammenhängender
+        // Text; echte Uhrzeiten aus der Entstehung stören dort nur.
+        // formatDateTimeShort setzt die Zeitzone fest auf Europe/Berlin —
+        // Server-Render und Hydration liefern denselben String.
+        const sentAt = dialogueOpen && (
+          <time
+            className="dialogue-message-meta"
+            dateTime={toIsoDateTime(msg.createdAt)}
+          >
+            {formatDateTimeShort(msg.createdAt)}
+          </time>
+        );
 
         const colorIndex = participants.findIndex(
           (p) => p.slug === msg.characterSlug,
@@ -95,6 +111,7 @@ export default function DialogueThread({
             <span className="dialogue-message-body">
               <span className="dialogue-message-author">
                 {msg.characterName ?? "Unbekannt"}
+                {sentAt}
                 {editedBadge}
               </span>
               <span

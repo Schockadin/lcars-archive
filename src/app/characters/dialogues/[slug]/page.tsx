@@ -7,6 +7,7 @@ import PageMeta from "@/components/PageMeta";
 import { LcarsReadingModeToggle } from "@/components/lcars";
 import DialogueHeader from "@/components/DialogueHeader";
 import DeleteDialogueButton from "@/components/DeleteDialogueButton";
+import ShareMenu from "@/components/ShareMenu";
 import { getDialogueMessages } from "@/lib/dialogues";
 import {
   getViewer,
@@ -71,6 +72,7 @@ export default async function CharacterDialoguePage({ params }: Props) {
   ]);
 
   const title = archiveTitle(entry);
+  const canModerateDialogue = viewerHasPermission(viewer, "dialogues.moderate");
 
   return (
     <article className="archive-entry">
@@ -101,22 +103,41 @@ export default async function CharacterDialoguePage({ params }: Props) {
         viewer={viewer}
         messages={messages}
         flowingTextPreferred={flowingTextPreferred}
-        canModerate={viewerHasPermission(viewer, "dialogues.moderate")}
+        canModerate={canModerateDialogue}
       />
 
-      {viewerHasPermission(viewer, "dialogues.moderate") && (
-        <div className="flex flex-wrap items-center gap-[8px]">
-          {/* Metadaten (Titel/Datum/Ort/Tags) bearbeiten — nicht der
-              Gesprächsverlauf. */}
-          <Link
-            href={`/gm/dialogues/${entry.slug}/edit`}
-            className="lcars-pill-btn--outline"
-          >
-            Metadaten bearbeiten
-          </Link>
-          <DeleteDialogueButton entrySlug={entry.slug} />
-        </div>
-      )}
+      {/* Die Leiste unter dem Verlauf. Seit hier auch Teilen/Export steht,
+          sieht sie jeder Betrachter (vorher nur die Moderation) — deshalb ein
+          eigener Abstand nach oben, statt bündig am letzten Absatz des
+          Gesprächs zu kleben. */}
+      <div className="mt-[16px] flex flex-wrap items-center gap-[8px]">
+        {/* Teilen/Export wie bei jedem anderen Inhalt (Datenbank-Eintrag,
+            Mission, Missionslog, Charakter): ein abgeschlossenes Gespräch IST
+            ein Datenbank-Eintrag der Kategorie „dialogue", der Export-Typ ist
+            deshalb archive_entry — loadArchiveEntryExport (contentExport.ts)
+            baut daraus den Gesprächsverlauf als Markdown bzw. PDF. Für alle
+            sichtbar, nicht nur für die Moderation: Wer die Seite sehen darf,
+            darf sie auch teilen und exportieren (die Export-Route prüft
+            dieselbe Sichtbarkeit noch einmal selbst). */}
+        <ShareMenu
+          title={title}
+          exportType="archive_entry"
+          exportSlug={entry.slug}
+        />
+        {canModerateDialogue && (
+          <>
+            {/* Metadaten (Titel/Datum/Ort/Tags) bearbeiten — nicht der
+                Gesprächsverlauf. */}
+            <Link
+              href={`/gm/dialogues/${entry.slug}/edit`}
+              className="lcars-pill-btn--outline"
+            >
+              Metadaten bearbeiten
+            </Link>
+            <DeleteDialogueButton entrySlug={entry.slug} />
+          </>
+        )}
+      </div>
     </article>
   );
 }

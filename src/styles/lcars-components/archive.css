@@ -142,9 +142,14 @@
   text-transform: uppercase;
   color: var(--message-color);
 }
+/* Nebenangaben in der Autoren-Zeile (Zeitstempel, „bearbeitet"). Die Zeile
+   selbst ist gesperrt und in Versalien gesetzt — beides hier zurücknehmen,
+   sonst liest sich ein Datum wie „16.09.2026, 12:00" auseinandergezogen. */
 .dialogue-message-meta {
   margin-left: 8px;
   font-size: 12px;
+  letter-spacing: normal;
+  text-transform: none;
   color: var(--lcars-ink-dim);
 }
 .dialogue-message-text {

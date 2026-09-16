@@ -149,6 +149,22 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.40",
+    title: "Gespräche zum Mitnehmen und mit Uhrzeit",
+    items: [
+      {
+        text: "Abgeschlossene Gespräche lassen sich jetzt teilen und exportieren wie jeder andere Inhalt: Der Teilen-Knopf unter dem Verlauf kopiert den Link, schickt ihn zu WhatsApp oder lädt das ganze Gespräch als Markdown-Datei oder als PDF herunter.",
+        category: "export",
+        tutorial: "gespraeche",
+      },
+      {
+        text: "In einem laufenden Gespräch steht an jeder Nachricht, wann sie verschickt wurde — Datum und Uhrzeit neben dem Namen der sprechenden Person. So siehst du auf einen Blick, ob zwischen zwei Beiträgen Minuten oder Tage lagen.",
+        category: "charaktere",
+        tutorial: "gespraeche",
+      },
+    ],
+  },
+  {
     version: "1.39",
     title: "Ein Fragezeichen auf jeder Seite",
     items: [

@@ -507,7 +507,11 @@ export default function TutorialPage() {
                 Person selbst, endet sie vorzeitig). Ein offenes Gespräch
                 aktualisiert sich dabei automatisch — neue Nachrichten und
                 Änderungen am Antwortrecht erscheinen von selbst, ohne dass du
-                die Seite neu laden musst.
+                die Seite neu laden musst. An jeder Nachrichtenkarte eines
+                laufenden Gesprächs steht neben dem Namen der sprechenden
+                Person, <strong>wann sie verschickt wurde</strong> (Datum und
+                Uhrzeit) — so siehst du, ob zwischen zwei Beiträgen Minuten
+                oder Tage lagen.
               </p>
               <p>
                 Sobald eine teilnehmende Person es abschließt, wird es{" "}
@@ -525,6 +529,13 @@ export default function TutorialPage() {
                 automatisch eine der LCARS-Farben). NPCs sprechen einheitlich in
                 einem hellen Grau — daran erkennst du auf einen Blick, wer von
                 einer Spielerin/einem Spieler geführt wird.
+              </p>
+              <p>
+                Ein abgeschlossenes Gespräch lässt sich <strong>teilen und
+                exportieren</strong> wie jeder andere Inhalt: Der Teilen-Knopf
+                unter dem Verlauf kopiert den Link, schickt ihn zu WhatsApp oder
+                lädt das ganze Gespräch als <strong>Markdown-Datei</strong> oder
+                als <strong>PDF</strong> herunter.
               </p>
               <p>
                 <strong>Spielleitung:</strong> Über das „Leitung“-Menü im Header

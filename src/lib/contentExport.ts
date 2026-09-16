@@ -81,12 +81,18 @@ async function loadArchiveEntryExport(slug: string): Promise<ExportableContent |
     frontmatter.location = entry.metadata.location?.slug ?? null;
     frontmatter.logDate = entry.metadata.logDate;
     frontmatter.setting = entry.metadata.setting;
-    if (isOpenDialogue) {
+    if (isOpenDialogue || bodyMarkdown.trim().length === 0) {
       // Offene Dialoge haben noch keinen Fließtext auf der archive_entries-
       // Zeile selbst (der entsteht erst beim Abschließen, siehe
       // regenerateDialogueContent) — dieselbe Nachrichten-Zusammenfassung
       // live aus dialogue_messages bauen, statt eine zweite Implementierung
       // zu pflegen.
+      //
+      // Dasselbe für abgeschlossene Dialoge OHNE source_md: Gespräche, die
+      // schon vor regenerateDialogueContent abgeschlossen wurden (oder deren
+      // content beim Abschließen bereits gefüllt war — die Regeneration
+      // überschreibt nie), hätten sonst eine leere Export-Datei. Der
+      // Verlauf liegt in beiden Fällen vollständig in dialogue_messages.
       bodyMarkdown = (await buildDialogueFlowingText(sql, entry.id)).markdown;
     }
   }
