@@ -69,3 +69,70 @@ test("ein unberührtes Formular hinterlässt nichts im Speicher", async ({
   );
   expect(stored).toEqual([]);
 });
+
+// Der Fall, an dem die Sicherung zuerst scheiterte: Ein Feld mit einem vom
+// Server gerenderten Vorgabewert (defaultValue) — also jeder Markdown-Editor
+// und jedes Bearbeiten-Formular. Der Entwurf wurde gesichert, aber Reacts
+// Hydration schrieb unmittelbar danach den Vorgabewert zurück. /dev-gallery
+// rendert einen solchen Editor ohne Datenbank.
+test("ein Editor mit Vorgabewert behält den getippten Text", async ({
+  page,
+}) => {
+  await page.goto("/dev-gallery");
+  const editor = page.locator("#demo-markdown");
+  await expect(editor).toHaveValue("**Text**");
+  // Erst tippen, wenn die Seite steht — der Normalfall. Das Tippen davor ist
+  // ein eigener Fall, siehe unten.
+  await page.waitForTimeout(1500);
+
+  await editor.fill("Mein eigener Text");
+  await page.waitForTimeout(500);
+
+  await page.reload();
+
+  // Wichtig ist das Standhalten NACH der Hydration, nicht nur unmittelbar
+  // nach dem Aufbau — toHaveValue wiederholt bis zum Timeout, deshalb danach
+  // noch einmal ausdrücklich prüfen.
+  await expect(editor).toHaveValue("Mein eigener Text");
+  await page.waitForTimeout(2000);
+  await expect(editor).toHaveValue("Mein eigener Text");
+});
+
+test("das Anheften hält die Person nicht auf", async ({ page }) => {
+  // Während der Anheft-Phase darf ein Feld nur nachgezogen werden, solange
+  // niemand es anfasst — wer direkt nach dem Aufbau weitertippt, behält seinen
+  // Text. Ohne Wartezeit nach dem Reload: genau das Fenster, in dem angeheftet
+  // wird.
+  await page.goto("/dev-gallery");
+  const editor = page.locator("#demo-markdown");
+  await page.waitForTimeout(1500);
+  await editor.fill("Erster Stand");
+  await page.waitForTimeout(500);
+
+  await page.reload();
+  // Sobald der Entwurf steht, sofort etwas anderes tippen — mitten in der
+  // Anheft-Phase.
+  await expect(editor).toHaveValue("Erster Stand");
+  await editor.fill("Sofort überschrieben");
+  await page.waitForTimeout(2000);
+
+  await expect(editor).toHaveValue("Sofort überschrieben");
+});
+
+test("was vor dem Aufbau getippt wurde, geht nicht verloren", async ({
+  page,
+}) => {
+  // Wer schneller tippt, als die Seite fertig wird, tippt in ein Feld, dessen
+  // Eingaben noch niemand mitschreibt. Der erste Durchgang der Sicherung
+  // übernimmt diesen Stand, statt ihn zu übergehen.
+  await page.goto("/dev-gallery");
+  const editor = page.locator("#demo-markdown");
+  // Ohne Wartezeit: direkt nach dem Aufbau, vor der Hydration.
+  await editor.fill("Schneller als die Seite");
+  await page.waitForTimeout(2500);
+
+  const stored = await page.evaluate(() =>
+    sessionStorage.getItem("neo_draft:/dev-gallery"),
+  );
+  expect(stored).toContain("Schneller als die Seite");
+});

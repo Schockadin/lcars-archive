@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { FormError } from "@/app/_shared/FormPrimitives";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import SettingsPanel from "@/app/_shared/SettingsPanel";
@@ -41,6 +41,7 @@ export default function NotesPanel({
     initialState,
   );
   const [visibility, setVisibility] = useState<"private" | "group">("private");
+  const formRef = useRef<HTMLFormElement>(null);
   // Der Markdown-Editor ist unkontrolliert; nach einem erfolgreichen
   // Speichern wird er über einen neuen key neu aufgebaut und ist damit leer.
   const [submitCount, setSubmitCount] = useState(0);
@@ -49,6 +50,16 @@ export default function NotesPanel({
     setSeenSuccess(state.success);
     if (state.success) setSubmitCount((n) => n + 1);
   }
+
+  // Zusätzlich zum neuen key ein echtes reset() auf dem Formular — wie es
+  // DialogueReplyForm nach dem Absenden auch tut. Der key leert nur das Feld;
+  // das reset-Ereignis ist das Signal, an dem die Entwurfs-Sicherung den
+  // gespeicherten Stand dieses Formulars vergisst (siehe
+  // src/lib/inputDraft.ts). Ohne es stünde die eben gespeicherte Notiz beim
+  // nächsten Aufruf der Seite wieder im frischen Feld.
+  useEffect(() => {
+    if (state.success) formRef.current?.reset();
+  }, [state.success, submitCount]);
 
   const own = notes.filter((n) => n.visibility === "private");
   const group = notes.filter((n) => n.visibility === "group");
@@ -67,7 +78,11 @@ export default function NotesPanel({
       <NoteList title="Meine Notizen" notes={own} path={path} empty="Noch keine eigene Notiz." />
       <NoteList title="Diskussion" notes={group} path={path} empty="Noch keine Kommentare." />
 
-      <form action={formAction} className="flex flex-col gap-[8px]">
+      <form
+        ref={formRef}
+        action={formAction}
+        className="flex flex-col gap-[8px]"
+      >
         <input type="hidden" name="contentType" value={contentType} />
         <input type="hidden" name="contentSlug" value={contentSlug} />
         <input type="hidden" name="path" value={path} />

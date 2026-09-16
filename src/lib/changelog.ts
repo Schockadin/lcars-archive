@@ -149,6 +149,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.42",
+    title: "Getipptes bleibt getippt — jetzt auch im Editor",
+    // Bewusst ohne Stichpunkte: Diese Version bringt keine neue Funktion,
+    // sondern lässt die aus 1.41 dort wirken, wo sie am meisten zählt — in
+    // den Text-Editoren. Deren Felder tragen einen vom Server gelieferten
+    // Vorgabewert, und der wurde beim Aufbau der Seite über den gesicherten
+    // Stand zurückgeschrieben. Ein Fehler in einer bereits angekündigten
+    // Funktion ist laut AGENTS.md kein eigener Stichpunkt.
+    items: [],
+  },
+  {
     version: "1.41",
     title: "Getipptes bleibt getippt",
     items: [
