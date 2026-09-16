@@ -149,6 +149,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.41",
+    title: "Getipptes bleibt getippt",
+    items: [
+      {
+        text: "Kein verlorener Text mehr: Was du in ein Formular eintippst — Titel, Fließtext, Auswahlfelder, Kästchen — wird für die laufende Sitzung auf deinem Gerät gesichert. Lädst du die Seite neu, drückst versehentlich „Zurück“ oder läuft etwas schief, steht beim nächsten Aufruf derselben Seite alles wieder da. Passwortfelder bleiben außen vor.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+    ],
+  },
+  {
     version: "1.40",
     title: "Gespräche zum Mitnehmen und mit Uhrzeit",
     items: [

@@ -421,6 +421,19 @@ export default function TutorialPage() {
                 „Meine Inhalte“ bzw. „Charaktere“, dort deutlich markiert.
               </p>
               <p>
+                <strong>Getipptes geht nicht verloren.</strong> Jede Eingabe in
+                jedem Formular des Archivs — Titel, Fließtext, Auswahlfelder,
+                Kästchen — wird automatisch für die laufende Browser-Sitzung
+                gesichert. Lädst du die Seite neu, drückst versehentlich
+                „Zurück“ oder läuft etwas schief, steht beim nächsten Aufruf
+                derselben Seite wieder da, was du geschrieben hattest. Das
+                passiert ohne Knopf und ohne Hinweis: Du tippst einfach weiter.
+                Gesichert wird ausschließlich auf deinem Gerät und nur bis zum
+                Schließen des Tabs; Passwortfelder bleiben grundsätzlich außen
+                vor. Sobald ein Formular erfolgreich abgeschickt und geleert
+                wurde, ist auch die Sicherung dazu weg.
+              </p>
+              <p>
                 Auch auf der Leseseite eines Inhalts führt der{" "}
                 <strong>Stift</strong> (im aufklappbaren Feld „Aktionen &amp;
                 Verwaltung“ am Fuß des Textes) direkt in dessen Editor — und

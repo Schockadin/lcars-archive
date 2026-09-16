@@ -571,6 +571,26 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Ingame-Jahr, die Charakter-Zuweisung und die Missions-Übersicht. Charaktere
   haben ein Geburtsdatum-Feld; ihr angezeigtes Alter wird daraus und dem aktuellen
   Ingame-Jahr automatisch berechnet (sonst manuelles Alter).
+- **Eingaben überleben den Reload** — jede Eingabe in jedem Formular der App
+  wird für die Browser-Sitzung gesichert (`sessionStorage`) und beim nächsten
+  Aufbau derselben Seite wieder eingesetzt: Neuladen, versehentliches Zurück
+  oder ein Fehlerbildschirm kosten keinen getippten Text mehr. Die Regeln
+  (welches Feld, welcher Schlüssel, welcher Wert) liegen React-frei und
+  unit-testbar in `src/lib/inputDraft.ts`, die Verdrahtung mit dem Dokument in
+  `src/components/lcars/InputDraftKeeper.tsx` — eine einzige Stelle im
+  Root-Layout statt einer Änderung an ~80 Formularen: die Sicherung hängt per
+  Event-Delegation an `document` und findet neue Felder (Fenster, Akkordeons,
+  nachgeladene Bereiche) über einen `MutationObserver`. Der Schlüssel eines
+  Feldes besteht aus Seitenpfad, Formular (`id`/`name`/Position) und Feld
+  (`name`/`id`/Position), Kästchen zusätzlich mit ihrem `value`. Nicht
+  gesichert werden Passwörter, Einmalcodes und Zahlungsdaten
+  (`autocomplete`-Kennung bzw. `type`) sowie alles unterhalb von
+  `data-no-draft` — das trägt u.a. `PasswordInput` (ihr Feld wechselt beim
+  Anzeigen auf `type="text"`) und die globale Kopfzeilen-Suche. Ein
+  zurückgesetztes Formular (`reset`) verliert seinen Stand, und vor dem
+  Verlassen der Seite (`pagehide`) wird der tatsächliche DOM-Stand
+  festgehalten — damit ein von React nach erfolgreicher Server-Action
+  geleertes Formular nicht mit altem Text wieder aufersteht.
 - **Öffentliches Changelog** — die Seite `/changelog` listet je Version die
   end-nutzerrelevanten Neuerungen (gepflegt in `src/lib/changelog.ts`). Jeder
   Stichpunkt trägt eine **Kategorie** (`src/lib/changelogCategories.ts`);

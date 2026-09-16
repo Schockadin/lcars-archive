@@ -128,8 +128,13 @@ export default function HeaderSearch() {
           strokeLinecap="round"
         />
       </svg>
+      {/* data-no-draft: Die globale Suche ist ein Navigationswerkzeug, kein
+          Formularfeld — ein wiederhergestellter Suchbegriff würde beim
+          nächsten Aufbau der Seite unaufgefordert eine Suche auslösen (siehe
+          src/lib/inputDraft.ts). */}
       <input
         ref={inputRef}
+        data-no-draft
         type="search"
         className="lcars-search-input"
         placeholder="Datenbank durchsuchen…"

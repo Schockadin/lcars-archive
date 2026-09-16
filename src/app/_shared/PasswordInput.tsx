@@ -7,13 +7,18 @@ import { EyeIcon, EyeOffIcon } from "@/lib/icons";
 // minLength, className …) und setzt `type` selbst je nach Sichtbarkeit. Der
 // Umschalter sitzt rechts im Feld (siehe .password-input-wrap in shared.css,
 // die das rechte Innen-Padding des Feldes bereitstellt).
+//
+// data-no-draft am Rahmen: Passwörter gehören nie in die Entwurfs-Sicherung
+// (siehe src/lib/inputDraft.ts). Das Attribut ist hier nötig, weil das Feld
+// bei sichtbarem Passwort type="text" trägt — die Typ-Prüfung allein würde
+// es dann durchlassen.
 export default function PasswordInput({
   className = "",
   ...props
 }: Omit<InputHTMLAttributes<HTMLInputElement>, "type">) {
   const [show, setShow] = useState(false);
   return (
-    <div className="password-input-wrap">
+    <div className="password-input-wrap" data-no-draft>
       <input
         {...props}
         type={show ? "text" : "password"}

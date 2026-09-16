@@ -10,6 +10,7 @@ export { default as LcarsAppShell } from "./AppShell";
 export { default as LcarsReadingModeToggle } from "./ReadingModeToggle";
 export { default as LcarsCookieNotice } from "./CookieNotice";
 export { default as LcarsServiceWorkerRegister } from "./ServiceWorkerRegister";
+export { default as LcarsInputDraftKeeper } from "./InputDraftKeeper";
 export { default as LcarsSwitch, type SwitchOption } from "./Switch";
 export { default as LcarsListFilterInput } from "./ListFilterInput";
 export {
