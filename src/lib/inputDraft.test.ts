@@ -10,8 +10,10 @@ import {
   draftFieldKeys,
   draftStorageKey,
   isDraftableField,
+  isFieldAtDefault,
   parseDraftRecord,
   readDraftRecord,
+  readDefaultFieldValue,
   readFieldValue,
   withDraftValue,
   withKnownDraftValue,
@@ -246,6 +248,55 @@ describe("readFieldValue / applyFieldValue", () => {
     expect(applyFieldValue(text, { kind: "checked", value: true })).toBe(false);
     expect(applyFieldValue(box, { kind: "text", value: "x" })).toBe(false);
     expect(applyFieldValue(text, { kind: "multi", value: ["x"] })).toBe(false);
+  });
+});
+
+describe("readDefaultFieldValue / isFieldAtDefault", () => {
+  it("liest den vom Server gelieferten Stand, nicht den aktuellen", () => {
+    mount(`<textarea>Vom Server</textarea>`);
+    const field = document.querySelector("textarea") as HTMLTextAreaElement;
+    field.value = "Inzwischen getippt";
+    expect(readDefaultFieldValue(field)).toEqual({
+      kind: "text",
+      value: "Vom Server",
+    });
+    expect(isFieldAtDefault(field)).toBe(false);
+  });
+
+  it("erkennt ein unberührtes Feld", () => {
+    mount(`
+      <input id="t" type="text" value="Vorgabe">
+      <input id="c" type="checkbox" checked>
+      <select id="m" multiple>
+        <option value="a" selected>a</option>
+        <option value="b">b</option>
+      </select>
+    `);
+    for (const id of ["t", "c", "m"])
+      expect(
+        isFieldAtDefault(document.querySelector(`#${id}`) as DraftField),
+      ).toBe(true);
+  });
+
+  it("erkennt ein angefasstes Kästchen und eine geänderte Auswahl", () => {
+    mount(`
+      <input id="c" type="checkbox" checked>
+      <select id="m" multiple>
+        <option value="a" selected>a</option>
+        <option value="b">b</option>
+      </select>
+    `);
+    const box = document.querySelector("#c") as HTMLInputElement;
+    box.checked = false;
+    expect(isFieldAtDefault(box)).toBe(false);
+
+    const select = document.querySelector("#m") as HTMLSelectElement;
+    select.options[1].selected = true;
+    expect(isFieldAtDefault(select)).toBe(false);
+    expect(readDefaultFieldValue(select)).toEqual({
+      kind: "multi",
+      value: ["a"],
+    });
   });
 });
 

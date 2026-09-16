@@ -587,7 +587,11 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (`autocomplete`-Kennung bzw. `type`) sowie alles unterhalb von
   `data-no-draft` — das trägt u.a. `PasswordInput` (ihr Feld wechselt beim
   Anzeigen auf `type="text"`) und die globale Kopfzeilen-Suche. Ein
-  zurückgesetztes Formular (`reset`) verliert seinen Stand, und vor dem
+  zurückgesetztes Formular (`reset`) verliert seinen Stand — sofort, nicht im
+  nächsten Tick, damit ein Formular, das sich per neuem `key` neu aufbaut
+  (Notiz-Editor), nicht doch wieder mit dem eben abgeschickten Text gefüllt
+  wird; `NotesPanel` löst dafür nach dem Speichern ein echtes `reset()` aus,
+  wie `DialogueReplyForm` es tut. Vor dem
   Verlassen der Seite (`pagehide`) wird der DOM-Stand der **bereits
   gesicherten** Felder nachgeführt (`withKnownDraftValue`) — damit ein von
   React nach erfolgreicher Server-Action geleertes Formular nicht mit altem
@@ -603,6 +607,21 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   bricht sofort ab, solange es für die Seite nichts Gesichertes gibt — auf
   Seiten mit Live-Aktualisierung (Gesprächs-Poll, Toasts) kostet er damit
   praktisch nichts.
+
+  **Einmal einsetzen genügt nicht**, sobald ein Feld einen vom Server
+  gerenderten Vorgabewert trägt — also bei jedem Bearbeiten-Formular und jedem
+  `MarkdownEditor`. React hydriert die Seite nach dem Einsetzen und schreibt
+  dabei den Vorgabewert zurück; der Entwurf war gesichert, aber sofort wieder
+  überschrieben (genau der Fehler, den die erste Fassung in allen Editoren
+  hatte). Deshalb wird der Stand nach dem Aufbau **angeheftet**: Durchgänge
+  alle 150 ms für 1,5 s (`PIN_WINDOW_MS`), die ein Feld nachziehen, solange
+  niemand es anfasst — die erste Eingabe von Hand beendet das Anheften für
+  dieses Feld, danach gilt wieder „einmal einsetzen, dann in Ruhe lassen".
+  Dieselbe Phase läuft für nachgeladene Bereiche, die erst beim Eintreffen
+  hydrieren. Und was **vor** dem ersten Durchgang schon im Feld stand (wer
+  schneller tippt, als die Seite fertig wird), erkennt die Sicherung am
+  Abweichen vom Vorgabewert (`isFieldAtDefault`) und übernimmt es, statt es
+  zu überschreiben.
 - **Öffentliches Changelog** — die Seite `/changelog` listet je Version die
   end-nutzerrelevanten Neuerungen (gepflegt in `src/lib/changelog.ts`). Jeder
   Stichpunkt trägt eine **Kategorie** (`src/lib/changelogCategories.ts`);

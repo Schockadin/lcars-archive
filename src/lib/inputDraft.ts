@@ -165,6 +165,37 @@ export function readFieldValue(el: DraftField): DraftValue {
   return { kind: "text", value: (el as HTMLInputElement).value };
 }
 
+// Der Wert, mit dem der Server das Feld ausgeliefert hat — das Attribut, nicht
+// der aktuelle Stand. Weicht ein Feld davon ab, hat jemand es angefasst.
+export function readDefaultFieldValue(el: DraftField): DraftValue {
+  if (el.tagName === "INPUT") {
+    const input = el as HTMLInputElement;
+    if (input.type === "checkbox" || input.type === "radio")
+      return { kind: "checked", value: input.defaultChecked };
+  }
+  if (el.tagName === "SELECT") {
+    const select = el as HTMLSelectElement;
+    if (select.multiple)
+      return {
+        kind: "multi",
+        value: Array.from(select.options)
+          .filter((o) => o.defaultSelected)
+          .map((o) => o.value),
+      };
+  }
+  return { kind: "text", value: (el as HTMLInputElement).defaultValue };
+}
+
+// Steht im Feld noch, was der Server geliefert hat?
+//
+// Gebraucht für den ersten Durchgang nach dem Aufbau der Seite: Wer schneller
+// tippt, als die Seite fertig wird, hat seinen Text schon im Feld, bevor die
+// Sicherung überhaupt zuhört. Dieser Text ist der jüngere — er darf nicht von
+// einem älteren Entwurf überschrieben, sondern muss selbst gesichert werden.
+export function isFieldAtDefault(el: DraftField): boolean {
+  return sameDraftValue(readFieldValue(el), readDefaultFieldValue(el));
+}
+
 // Einen gesicherten Wert in das Feld zurückschreiben. Gibt zurück, ob dabei
 // etwas verändert wurde (unverändert ⇒ kein Event, kein Rendern).
 //

@@ -5,6 +5,7 @@ import {
   applyFieldValue,
   draftFieldKeys,
   isDraftableField,
+  isFieldAtDefault,
   readDraftRecord,
   readFieldValue,
   withDraftValue,
@@ -39,6 +40,18 @@ import {
 // Sitzungsspeicher braucht aber nicht jedes Zeichen einzeln zu sehen.
 const WRITE_DEBOUNCE_MS = 300;
 
+// Ein einmaliges Einsetzen genügt NICHT, sobald ein Feld einen vom Server
+// gerenderten Vorgabewert hat (defaultValue) — also bei jedem Bearbeiten-
+// Formular und jedem Markdown-Editor. React hydriert die Seite nach unserem
+// Durchgang und schreibt dabei den Vorgabewert zurück; der Entwurf war
+// gesichert, aber sofort wieder überschrieben. Deshalb wird der Stand nach dem
+// Aufbau eine kurze Zeit lang „angeheftet": mehrere Durchgänge, die ein Feld
+// so lange nachziehen, bis die Person es selbst anfasst. Danach gilt wieder
+// „einmal einsetzen, dann in Ruhe lassen" — die App soll ihre eigenen Felder
+// steuern dürfen.
+const PIN_WINDOW_MS = 1500;
+const PIN_INTERVAL_MS = 150;
+
 export default function InputDraftKeeper() {
   const pathname = usePathname();
   // Der zuletzt geschriebene Stand, damit nicht bei jedem Zeichen aus dem
@@ -69,6 +82,10 @@ export default function InputDraftKeeper() {
     // der Observer eine spätere Nutzereingabe wieder auf den Entwurf
     // zurücksetzen.
     const restored = new WeakSet<Element>();
+    // Vom Menschen angefasste Felder. Während der Anheft-Phase ist das die
+    // Grenze: Ein angefasstes Feld gehört der Person, nicht dem Entwurf.
+    // Unsere eigenen Ereignisse zählen nicht (restoringRef schützt onInput).
+    const touched = new WeakSet<Element>();
 
     const keyFor = (el: DraftField): string | null => {
       const cached = keyCache.get(el);
@@ -94,13 +111,22 @@ export default function InputDraftKeeper() {
       }, WRITE_DEBOUNCE_MS);
     };
 
-    const remember = (el: DraftField) => {
+    // Den Stand eines Feldes in den Datensatz übernehmen — ohne Aussage
+    // darüber, WER ihn verursacht hat.
+    const recordValue = (el: DraftField) => {
       const key = keyFor(el);
       if (!key) return;
       const next = withDraftValue(recordRef.current, key, readFieldValue(el));
       if (next === recordRef.current) return;
       recordRef.current = next;
       scheduleWrite();
+    };
+
+    // Eine Eingabe von Hand: Ab jetzt gehört das Feld der Person, das Anheften
+    // lässt es in Ruhe.
+    const remember = (el: DraftField) => {
+      touched.add(el);
+      recordValue(el);
     };
 
     const onInput = (event: Event) => {
@@ -113,26 +139,47 @@ export default function InputDraftKeeper() {
     // Nach dem Wiederherstellen eines Feldes ist sein Wert bereits gesichert —
     // hier geht es nur darum, Felder zu füllen, die es beim letzten Durchgang
     // noch nicht gab.
-    const restore = () => {
+    // Der allererste Durchgang nach dem Aufbau: Dort — und nur dort — gilt ein
+    // Feld, das schon vom Vorgabewert abweicht, als angefasst (siehe unten).
+    let firstPass = true;
+
+    const restore = (pinning: boolean) => {
       const record = recordRef.current;
       // Ohne gesicherten Stand gibt es nichts einzusetzen — und damit auch
       // keinen Grund, das Dokument abzusuchen. Das ist der Normalfall (jede
       // Seite, auf der noch nichts getippt wurde), und er soll den
       // MutationObserver unten praktisch nichts kosten: Die Schlüssel fürs
       // Speichern holt keyFor() ohnehin erst beim ersten Tastendruck.
-      if (Object.keys(record).length === 0) return;
+      //
+      // Der erste Durchgang läuft trotzdem: Er übernimmt, was vor dem Zuhören
+      // schon getippt wurde (siehe unten).
+      if (!firstPass && Object.keys(record).length === 0) return;
       const keys = draftFieldKeys(document);
       restoringRef.current = true;
       try {
         for (const [el, key] of keys) {
           keyCache.set(el, key);
-          if (restored.has(el)) continue;
+          const firstTime = !restored.has(el);
           restored.add(el);
+          // Wer schneller tippt, als die Seite fertig wird, hat seinen Text
+          // schon im Feld, bevor diese Sicherung überhaupt zuhört. Er ist der
+          // jüngere Stand: nicht überschreiben, sondern übernehmen — und zwar
+          // OHNE das Feld als angefasst zu markieren, denn die Hydration steht
+          // ja noch bevor. Angeheftet wird dann dieser übernommene Stand.
+          if (firstTime && !isFieldAtDefault(el)) {
+            recordValue(el);
+            continue;
+          }
+          // Nach der Anheft-Phase jedes Feld nur einmal; in ihr so lange, bis
+          // es angefasst wurde (siehe PIN_WINDOW_MS oben).
+          if (!firstTime && !pinning) continue;
+          if (touched.has(el)) continue;
           const value = record[key];
           if (value) applyFieldValue(el, value);
         }
       } finally {
         restoringRef.current = false;
+        firstPass = false;
       }
     };
 
@@ -142,22 +189,24 @@ export default function InputDraftKeeper() {
     const onReset = (event: Event) => {
       const form = event.target as HTMLFormElement | null;
       if (!form || form.tagName !== "FORM") return;
-      const keys = draftFieldKeys(form);
-      // Erst im nächsten Tick: bis dahin stehen die Vorgabewerte im Formular.
-      setTimeout(() => {
-        const next = { ...recordRef.current };
-        let changed = false;
-        for (const key of keys.values()) {
-          if (key in next) {
-            delete next[key];
-            changed = true;
-          }
+      // Sofort, nicht im nächsten Tick: Formulare, die sich nach dem Absenden
+      // per neuem key neu aufbauen (z.B. der Notiz-Editor), lösen dabei einen
+      // Durchgang des MutationObservers aus. Läge das Vergessen dahinter,
+      // gewänne das Rennen mal der eine, mal der andere — und der eben
+      // abgeschickte Text stünde wieder im frischen Feld. Gelesen werden hier
+      // ohnehin nur die Schlüssel, nicht die Werte.
+      const next = { ...recordRef.current };
+      let changed = false;
+      for (const key of draftFieldKeys(form).values()) {
+        if (key in next) {
+          delete next[key];
+          changed = true;
         }
-        if (changed) {
-          recordRef.current = next;
-          flush();
-        }
-      }, 0);
+      }
+      if (changed) {
+        recordRef.current = next;
+        flush();
+      }
     };
 
     // Vor dem Verlassen/Verstecken der Seite den tatsächlichen Stand der
@@ -196,11 +245,31 @@ export default function InputDraftKeeper() {
     window.addEventListener("pagehide", onPageHide);
     document.addEventListener("visibilitychange", onVisibilityChange);
 
-    restore();
+    // Der Aufbau der Seite — und damit die Hydration, gegen die angeheftet
+    // wird (siehe PIN_WINDOW_MS oben).
+    let pinUntil = 0;
+    let pinTimer: ReturnType<typeof setInterval> | null = null;
+    const startPinning = () => {
+      pinUntil = Date.now() + PIN_WINDOW_MS;
+      restore(true);
+      if (pinTimer) return;
+      pinTimer = setInterval(() => {
+        if (Date.now() > pinUntil) {
+          clearInterval(pinTimer as ReturnType<typeof setInterval>);
+          pinTimer = null;
+          return;
+        }
+        restore(true);
+      }, PIN_INTERVAL_MS);
+    };
+
+    startPinning();
 
     // Nachgeladene Formulare (Fenster, Akkordeons, Live-Ansichten) ebenfalls
-    // füllen. Gebündelt über einen Microtask-Timer, damit ein Renderdurchlauf
-    // mit vielen Knoten nur einen Durchgang auslöst.
+    // füllen — auch sie werden angeheftet: Ein per Suspense nachgestreamter
+    // Bereich hydriert erst, wenn er da ist. Gebündelt über einen
+    // Microtask-Timer, damit ein Renderdurchlauf mit vielen Knoten nur einen
+    // Durchgang auslöst.
     let restoreTimer: ReturnType<typeof setTimeout> | null = null;
     const observer = new MutationObserver((mutations) => {
       // Die Positions-Ausweichschlüssel (Felder ohne name/id) hängen an der
@@ -219,7 +288,7 @@ export default function InputDraftKeeper() {
       if (restoreTimer) return;
       restoreTimer = setTimeout(() => {
         restoreTimer = null;
-        restore();
+        startPinning();
       }, 0);
     });
     observer.observe(document.body, { childList: true, subtree: true });
@@ -227,6 +296,7 @@ export default function InputDraftKeeper() {
     return () => {
       observer.disconnect();
       if (restoreTimer) clearTimeout(restoreTimer);
+      if (pinTimer) clearInterval(pinTimer);
       document.removeEventListener("input", onInput, true);
       document.removeEventListener("change", onInput, true);
       document.removeEventListener("reset", onReset, true);
