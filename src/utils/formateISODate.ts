@@ -12,11 +12,22 @@ export function formatISODate(iso: string | null): string {
 // mit Leerzeichen statt „T" und mit zweistelligem Zonen-Offset ohne Minuten.
 // Node parst das zufällig noch, strengere Browser-Engines (Safari) nicht: dort
 // entstünde NaN und damit ein Unterschied zwischen Server-Render und
-// Hydration. Deshalb vor dem Parsen in echtes ISO 8601 umschreiben (dieselbe
-// Umschrift wie formatSessionMoment in src/lib/plannedSessionFormat.ts).
+// Hydration. Deshalb vor dem Parsen in echtes ISO 8601 umschreiben.
+//
+// Bewusst als vollständiges Muster statt als zwei replace()-Aufrufe wie in
+// formatSessionMoment (src/lib/plannedSessionFormat.ts): ein bloßes
+// /([+-]\d{2})$/ trifft auch den Tag eines reinen Datums („2026-09-16" →
+// „2026-09-16:00", Invalid Date). Alles, was nicht exakt so aussieht, geht
+// unverändert an Date — eine echte ISO-Zeichenkette braucht hier nichts.
+const PG_TIMESTAMPTZ =
+  /^(\d{4}-\d{2}-\d{2})[ T](\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?)([+-]\d{2})$/;
+
 function toDate(value: Date | string): Date {
   if (typeof value !== "string") return value;
-  return new Date(value.replace(" ", "T").replace(/([+-]\d{2})$/, "$1:00"));
+  const match = PG_TIMESTAMPTZ.exec(value);
+  return new Date(
+    match ? `${match[1]}T${match[2]}${match[3]}:00` : value,
+  );
 }
 
 // Maschinenlesbare ISO-8601-Fassung desselben Zeitpunkts — für das

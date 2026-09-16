@@ -106,7 +106,11 @@ export default async function CharacterDialoguePage({ params }: Props) {
         canModerate={canModerateDialogue}
       />
 
-      <div className="flex flex-wrap items-center gap-[8px]">
+      {/* Die Leiste unter dem Verlauf. Seit hier auch Teilen/Export steht,
+          sieht sie jeder Betrachter (vorher nur die Moderation) — deshalb ein
+          eigener Abstand nach oben, statt bündig am letzten Absatz des
+          Gesprächs zu kleben. */}
+      <div className="mt-[16px] flex flex-wrap items-center gap-[8px]">
         {/* Teilen/Export wie bei jedem anderen Inhalt (Datenbank-Eintrag,
             Mission, Missionslog, Charakter): ein abgeschlossenes Gespräch IST
             ein Datenbank-Eintrag der Kategorie „dialogue", der Export-Typ ist

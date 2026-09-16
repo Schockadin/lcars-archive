@@ -58,6 +58,23 @@ describe("Postgres-Schreibweise (TIMESTAMPTZ::text)", () => {
     );
   });
 
+  it("fasst ein reines Datum nicht an", () => {
+    // Der Tag am Ende („…-16") sieht aus wie ein Zonen-Offset — ein
+    // ungenaueres Muster machte daraus „2026-09-16:00" und damit ein
+    // Invalid Date.
+    expect(toIsoDateTime("2026-09-16")).toBe("2026-09-16T00:00:00.000Z");
+    expect(formatDateTime("2026-09-16")).toContain("September");
+  });
+
+  it("versteht einen anderen Offset und Sekundenbruchteile", () => {
+    expect(toIsoDateTime("2026-09-16 10:00:00+02")).toBe(
+      "2026-09-16T08:00:00.000Z",
+    );
+    expect(toIsoDateTime("2026-09-16 10:00:00.123456+00")).toBe(
+      "2026-09-16T10:00:00.123Z",
+    );
+  });
+
   it("liefert für unparsbare Werte kein NaN", () => {
     expect(formatDateTime("Kein Datum")).toBe("—");
     expect(formatDateTimeShort("Kein Datum")).toBe("—");
