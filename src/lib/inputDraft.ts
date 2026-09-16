@@ -179,7 +179,7 @@ export function applyFieldValue(el: DraftField, value: DraftValue): boolean {
     if (el.tagName !== "INPUT") return false;
     if (input.type !== "checkbox" && input.type !== "radio") return false;
     if (input.checked === value.value) return false;
-    input.checked = value.value;
+    setNativeChecked(input, value.value);
     dispatchFieldEvents(el);
     return true;
   }
@@ -207,6 +207,19 @@ export function applyFieldValue(el: DraftField, value: DraftValue): boolean {
   setNativeValue(field, value.value);
   dispatchFieldEvents(el);
   return true;
+}
+
+// Kästchen und Radios führt React über dieselbe Setter-Falle wie den value
+// (node._valueTracker) — eine direkte Zuweisung an .checked bliebe einem
+// kontrollierten Feld deshalb verborgen, und der nächste Renderdurchlauf
+// setzte es stillschweigend zurück.
+function setNativeChecked(el: HTMLInputElement, checked: boolean) {
+  const setter = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    "checked",
+  )?.set;
+  if (setter) setter.call(el, checked);
+  else el.checked = checked;
 }
 
 function setNativeValue(el: HTMLInputElement, value: string) {

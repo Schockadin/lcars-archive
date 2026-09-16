@@ -209,6 +209,20 @@ describe("readFieldValue / applyFieldValue", () => {
     expect((field as HTMLInputElement).checked).toBe(false);
   });
 
+  it("meldet ein gesetztes Kästchen als change (kontrollierte Felder)", () => {
+    // Wie beim value läuft das Setzen über den nativen Prototyp-Setter: React
+    // führt .checked über dieselbe Setter-Falle, eine direkte Zuweisung bliebe
+    // einem kontrollierten Kästchen verborgen.
+    mount(`<input type="checkbox">`);
+    const field = document.querySelector("input") as HTMLInputElement;
+    let seen: boolean | null = null;
+    field.addEventListener("change", (e) => {
+      seen = (e.target as HTMLInputElement).checked;
+    });
+    applyFieldValue(field, { kind: "checked", value: true });
+    expect(seen).toBe(true);
+  });
+
   it("sichert und setzt Mehrfachauswahlen", () => {
     mount(`
       <select multiple>
