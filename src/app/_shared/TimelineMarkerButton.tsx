@@ -47,6 +47,21 @@ function CalendarIcon() {
 // sind unkontrolliert (defaultValue), ein direkter Werteingriff ist hier
 // deshalb genau das richtige Werkzeug und spart eine aufwändige
 // Ref-Weiterreichung durch mehrere Formular-Ebenen.
+// Baut die Marke aus den drei Feldern. Der Titel wird dabei entschärft: „|"
+// trennt die Felder der Marke (ein Strich im Titel schöbe die Kategorie
+// weiter), und „-->" beendet den HTML-Kommentar — ein Titel mit Pfeil ließe
+// den Rest der Marke im sichtbaren Text landen. Beides kann jemand arglos
+// tippen („Vertrag | Unterzeichnung", „2401 --> 2402"), deshalb wird es hier
+// ersetzt statt abgewiesen.
+export function timelineMarker(
+  date: string,
+  title: string,
+  category: string,
+): string {
+  const safeTitle = title.trim().replace(/\|/g, "/").replace(/-->/g, "→");
+  return `<!-- timeline: ${date} | ${safeTitle} | ${category} -->`;
+}
+
 export default function TimelineMarkerButton({
   textareaId,
 }: {
@@ -66,8 +81,9 @@ export default function TimelineMarkerButton({
     const textarea = document.getElementById(textareaId);
     if (!(textarea instanceof HTMLTextAreaElement)) return;
 
-    const marker = `<!-- timeline: ${date} | ${title.trim()} | ${category} -->`;
-    insertAtCursor(textarea, marker, { ownLine: true });
+    insertAtCursor(textarea, timelineMarker(date, title, category), {
+      ownLine: true,
+    });
 
     setDate("");
     setTitle("");

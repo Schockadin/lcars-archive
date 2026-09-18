@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import TimelineMarkerButton from "./TimelineMarkerButton";
+import TimelineMarkerButton, { timelineMarker } from "./TimelineMarkerButton";
 import { EVENT_CATEGORIES, parseTimelineMarkers } from "@/lib/timelineTypes";
 
 // Der Knopf schreibt in eine FREMDE Textarea (per id, siehe
@@ -94,6 +94,22 @@ describe("TimelineMarkerButton", () => {
     );
   });
 
+  it("entschärft Zeichen im Titel, die die Marke zerlegen würden", () => {
+    const textarea = setup();
+    oeffnen();
+    ausfuellen({ titel: "Vertrag | Fassung 2401 --> 2402" });
+
+    expect(textarea.value).toBe(
+      "<!-- timeline: 2401-03-14 | Vertrag / Fassung 2401 → 2402 | discovery -->",
+    );
+    // Entscheidend: die Marke bleibt eine Marke — Titel und Kategorie stehen
+    // noch dort, wo die Chronologie sie erwartet.
+    expect(parseTimelineMarkers(textarea.value)[0]).toMatchObject({
+      title: "Vertrag / Fassung 2401 → 2402",
+      category: "discovery",
+    });
+  });
+
   it("schließt das Fenster nach dem Einfügen und beginnt beim nächsten Mal leer", () => {
     setup();
     oeffnen();
@@ -106,5 +122,23 @@ describe("TimelineMarkerButton", () => {
     expect((screen.getByLabelText("Ereignisart") as HTMLSelectElement).value).toBe(
       "other",
     );
+  });
+});
+
+describe("timelineMarker", () => {
+  it("baut die Marke in der Form, die parseTimelineMarkers liest", () => {
+    expect(timelineMarker("2401-03-14", "  Erstkontakt  ", "discovery")).toBe(
+      "<!-- timeline: 2401-03-14 | Erstkontakt | discovery -->",
+    );
+  });
+
+  it("ersetzt Trennstrich und Kommentar-Ende im Titel", () => {
+    expect(timelineMarker("2401-03-14", "a | b", "other")).toContain("a / b");
+    expect(timelineMarker("2401-03-14", "a --> b", "other")).toContain("a → b");
+    // Auch drei Striche enden den Kommentar: „-->" darf danach nur noch
+    // einmal vorkommen — als Ende der Marke selbst.
+    const marke = timelineMarker("2401-03-14", "a ---> b", "other");
+    expect(marke.match(/-->/g)).toHaveLength(1);
+    expect(marke.endsWith("-->")).toBe(true);
   });
 });

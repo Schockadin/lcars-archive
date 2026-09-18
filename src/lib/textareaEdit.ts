@@ -4,6 +4,16 @@
 // MarkdownEditor.tsx (wrapSelection/applyLinePrefix/insertAtCursor) und
 // TimelineMarkerButton.tsx (insertAtCursor) genutzt.
 
+// Ein per Skript gesetztes .value löst KEIN input-Ereignis aus — die globale
+// Entwurfs-Sicherung (InputDraftKeeper.tsx) hört aber genau darauf. Ohne
+// diesen Anstoß überlebte jedes getippte Zeichen einen Reload, ausgerechnet
+// das über die Werkzeugleiste Eingefügte aber nicht: der gesicherte Stand
+// wäre der von vor dem Klick und würde beim nächsten Aufbau darübergelegt.
+// Deshalb meldet jede der Funktionen hier ihre Änderung selbst an.
+function notifyInput(textarea: HTMLTextAreaElement): void {
+  textarea.dispatchEvent(new Event("input", { bubbles: true }));
+}
+
 // Umschließt die aktuelle Selektion mit before/after (z.B. **fett**,
 // *kursiv*, `Code`) — ohne Selektion wird stattdessen placeholder
 // eingefügt und markiert, damit sofort weitergetippt werden kann. Die
@@ -29,6 +39,7 @@ export function wrapSelection(
   const selEnd = selStart + selected.length;
   textarea.setSelectionRange(selStart, selEnd);
   textarea.focus();
+  notifyInput(textarea);
 }
 
 // Wendet prefixFn auf jede Zeile an, die die aktuelle Selektion berührt
@@ -55,6 +66,7 @@ export function applyLinePrefix(
   textarea.value = value.slice(0, lineStart) + prefixed + value.slice(lineEnd);
   textarea.setSelectionRange(lineStart, lineStart + prefixed.length);
   textarea.focus();
+  notifyInput(textarea);
 }
 
 // Fügt text an der aktuellen Cursor-Position ein (ersetzt eine vorhandene
@@ -86,4 +98,5 @@ export function insertAtCursor(
   const cursorPos = (before + insert).length;
   textarea.setSelectionRange(cursorPos, cursorPos);
   textarea.focus();
+  notifyInput(textarea);
 }
