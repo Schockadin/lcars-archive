@@ -59,6 +59,21 @@
   opacity: 0.4;
 }
 
+/* Entwurf/Veröffentlicht in den Inhaltslisten (ContentStateSelect.tsx): Der
+   Schalter steht dort in der Aktionszeile neben den runden Icon-Knöpfen und
+   richtet sich deshalb an deren 40px aus. Die Beschriftungen sind länger als
+   in einer Toolbar ("Veröffentlicht"), gleichzeitig ist der Platz neben Stift
+   und Papierkorb knapper — darum engere Innenabstände und eine Spur kleinere
+   Schrift als am Standard-Switch. */
+.content-state-switch {
+  height: 40px;
+}
+.content-state-switch .lcars-switch-item {
+  padding: 4px clamp(8px, 1.8vw, 14px);
+  font-size: clamp(11px, 2.2vw, 13px);
+  letter-spacing: 0.06em;
+}
+
 /* SortSwitch.tsx: Label + Richtungs-Pfeil der aktiven, sortierbaren Option. */
 .lcars-sort-switch-label {
   display: inline-flex;

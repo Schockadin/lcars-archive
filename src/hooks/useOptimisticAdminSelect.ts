@@ -16,6 +16,11 @@ export function useOptimisticAdminSelect<T>(
   const [error, setError] = useState<string | null>(null);
 
   function change(next: T) {
+    // Der bereits aktive Wert ist kein Wechsel — kein Schreibzugriff, keine
+    // Benachrichtigung. Spart nicht nur eine leere Runde, sondern nimmt auch
+    // einem versehentlich ausgelösten Ereignis (Leertaste auf dem ohnehin
+    // aktiven Knopf) jede Wirkung.
+    if (next === optimisticValue) return;
     setError(null);
     startTransition(async () => {
       setOptimisticValue(next);

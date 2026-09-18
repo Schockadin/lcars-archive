@@ -582,11 +582,21 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Event-Delegation an `document` und findet neue Felder (Fenster, Akkordeons,
   nachgeladene Bereiche) über einen `MutationObserver`. Der Schlüssel eines
   Feldes besteht aus Seitenpfad, Formular (`id`/`name`/Position) und Feld
-  (`name`/`id`/Position), Kästchen zusätzlich mit ihrem `value`. Nicht
+  (`name`/`id`/Position), Kästchen zusätzlich mit ihrem `value`. Die Position
+  ist dabei nur INNERHALB eines Formulars der Ausweg — dort steht die
+  Felderliste fest; ein Feld ganz ohne Formular und ohne `name`/`id` bleibt
+  außen vor (`hasStableKey`). Sonst zeigt derselbe Schlüssel nach dem
+  nächsten Filtern oder Sortieren auf ein anderes Feld, und das Einsetzen
+  löst ein echtes `change`-Ereignis aus: Genau so veröffentlichte der
+  Entwurf/Veröffentlicht-Schalter unter „Meine Inhalte" (ein namenloses
+  Auswahlfeld je Zeile) fremde Entwürfe, bis v1.43 ihn zu Knöpfen machte.
+  Lieber kein gesicherter Entwurf als ein Wert im falschen Feld. Nicht
   gesichert werden Passwörter, Einmalcodes und Zahlungsdaten
   (`autocomplete`-Kennung bzw. `type`) sowie alles unterhalb von
   `data-no-draft` — das trägt u.a. `PasswordInput` (ihr Feld wechselt beim
-  Anzeigen auf `type="text"`) und die globale Kopfzeilen-Suche. Ein
+  Anzeigen auf `type="text"`), die globale Kopfzeilen-Suche und
+  `AdminSelectField` (ein Befehlsfeld, das bei jeder Änderung schreibt, ist
+  kein Entwurf). Ein
   zurückgesetztes Formular (`reset`) verliert seinen Stand — sofort, nicht im
   nächsten Tick, damit ein Formular, das sich per neuem `key` neu aufbaut
   (Notiz-Editor), nicht doch wieder mit dem eben abgeschickten Text gefüllt
@@ -838,7 +848,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
 - **Entwürfe** — Charaktere, Missionen, Missionslogs und Datenbank-Einträge lassen
   sich beim Anlegen/Bearbeiten statt zu veröffentlichen erst als Entwurf
   speichern (Text-Pflichtfeld entfällt dann) — und ihn später direkt in der
-  Liste veröffentlichen, ohne ihn erneut zu öffnen. Ein Entwurf ist für
+  Liste veröffentlichen, ohne ihn erneut zu öffnen — dort steht dafür ein
+  Schalter aus zwei Knöpfen (`LcarsSwitch`, seit v1.43; als Auswahlfeld
+  wechselte er bei jedem Pfeiltasten-Druck des noch fokussierten Feldes zur
+  nächsten Option und schrieb sie sofort weg). Ein Entwurf ist für
   niemanden außer der eigenen Person sichtbar, auch nicht für die
   Spielleitung (Ausnahmen: Missionen, die jede Spielleitung sieht, da
   Missionen kein Einzel-Owner-Modell haben, und `content.view_all` für die

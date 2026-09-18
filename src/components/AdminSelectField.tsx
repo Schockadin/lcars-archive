@@ -25,7 +25,12 @@ export default function AdminSelectField({
   error?: string | null;
 }) {
   return (
-    <div className="flex items-center gap-[8px] text-[13px]">
+    // data-no-draft: Dieses Auswahlfeld ist ein Befehl, kein Entwurf — jede
+    // Änderung geht sofort als Server-Action weg. Die Entwurfs-Sicherung
+    // (src/lib/inputDraft.ts) darf hier deshalb niemals einen gespeicherten
+    // Stand einsetzen: Ihr Einsetzen löst ein echtes change-Ereignis aus und
+    // damit einen Schreibzugriff, den niemand angefordert hat.
+    <div className="flex items-center gap-[8px] text-[13px]" data-no-draft>
       <span className="lcars-eyebrow">{label}</span>
       <select
         value={value}
