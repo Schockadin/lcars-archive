@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
-import { userCan } from "@/lib/permissions";
-import { verifySession, getRoleMap } from "@/lib/dal";
-import { getUserById } from "@/lib/users";
+import { verifySession } from "@/lib/dal";
 import { getOwnCharacterForEdit, getOwnCharacterStats } from "@/lib/characters";
 import { getApAccount } from "@/lib/characterAp";
 import { getAdvancementRules } from "@/lib/advancementSettings";
@@ -56,21 +54,17 @@ export default async function OwnCharacterPage({ params }: Props) {
 
   // Erst NACH dem Owner-Check: vorher ist nicht klar, ob der Charakter
   // überhaupt zu diesem Konto gehört.
-  const [account, rules, talents, focuses, campaignRules, viewer, roleMap, revisions] =
+  const [account, rules, talents, focuses, campaignRules, revisions] =
     await Promise.all([
     getApAccount(sheet.id),
     getAdvancementRules(),
     listTalents(),
     listFocuses(),
     listCampaignRules(),
-    getUserById(session.userId),
-    getRoleMap(),
     // Versionshistorie der Biografie — der Owner-Check oben ist bereits
     // gelaufen, listRevisions prüft ihn über den Viewer noch einmal selbst.
     getViewer().then((v) => listRevisions("character", character.id, v)),
   ]);
-  const isAdminOrGM =
-    !!viewer && userCan(viewer, "content.autolink_tools", roleMap);
 
   return (
     <>
@@ -126,7 +120,6 @@ export default async function OwnCharacterPage({ params }: Props) {
         <CharacterBioPanel
           userId={session.userId}
           characterId={character.id}
-          isAdminOrGM={isAdminOrGM}
           bioHtml={character.bioHtml}
           sourceMarkdown={character.sourceMarkdown}
         />

@@ -13,12 +13,10 @@ const initialState: ArchiveEntryFormState = {};
 
 export default function NewArchiveEntryForm({
   userId,
-  isAdminOrGM,
   // Vorgewählte Kategorie (siehe page.tsx) — änderbar wie jede andere.
   initialCategory = "other",
 }: {
   userId: number;
-  isAdminOrGM: boolean;
   initialCategory?: Exclude<ArchiveCategory, "dialogue">;
 }) {
   return (
@@ -41,7 +39,6 @@ export default function NewArchiveEntryForm({
       bodyHint={<MarkdownFormatHint />}
       bodyRequired
       bodyLarge
-      isAdminOrGM={isAdminOrGM}
       submitLabel="Speichern"
       submitPendingLabel="Speichern…"
     />

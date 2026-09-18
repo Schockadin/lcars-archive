@@ -94,7 +94,6 @@ export default async function NewCharacterPage() {
 
         <CharacterWizard
           userId={user.id}
-          isAdminOrGM={userCan(user, "content.autolink_tools", roleMap)}
           rules={rules}
           talents={talents}
           focuses={focuses}

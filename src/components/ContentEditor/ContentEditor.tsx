@@ -31,7 +31,6 @@ interface ContentEditorProps {
   bodyDefaultValue?: string;
   bodyRequired?: boolean;
   bodyLarge?: boolean;
-  isAdminOrGM?: boolean;
   // Nur im Edit-Modus sinnvoll (contentId bekannt) — siehe MarkdownEditor.tsx.
   insertImage?: { contentType: ContentImageType; contentId: number };
   // z.B. Mission-Logs Autor-/Missions-Select (dynamische Optionen, nur create).
@@ -67,7 +66,6 @@ export default function ContentEditor({
   bodyDefaultValue,
   bodyRequired = false,
   bodyLarge = false,
-  isAdminOrGM = false,
   insertImage,
   extraHeadSlot,
   metadataFields,
@@ -143,12 +141,15 @@ export default function ContentEditor({
         htmlFor={`${idPrefix}-body`}
         hint={bodyHint}
       >
+        {/* Missionen, Logbücher und Datenbank-Einträge stehen allesamt in
+            der Chronologie — der Kalender-Knopf für Zeitleisten-Marken gehört
+            hier deshalb immer dazu (siehe TimelineMarkerButton.tsx). */}
         <MarkdownEditor
           id={`${idPrefix}-body`}
           name={bodyName}
           required={bodyRequired && !isDraft}
           defaultValue={bodyDefaultValue}
-          isAdminOrGM={isAdminOrGM}
+          timelineMarker
           large={bodyLarge}
           insertImage={insertImage}
         />

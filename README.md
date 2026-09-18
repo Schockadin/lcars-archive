@@ -739,7 +739,19 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
      Figur, ein Datums-Attribut eines Datenbank-Eintrags).
   2. **Marken im Fließtext** — `<!-- timeline: JJJJ-MM-TT | Titel | Kategorie -->`,
      gesetzt über den Kalender-Knopf im MarkdownEditor (`TimelineMarkerButton`).
-     Sie erzeugen im gerenderten Text eine unsichtbare Sprungmarke
+     Er steht in der Werkzeugleiste der Textfelder der vier Inhaltsarten, die
+     überhaupt in der Chronologie stehen — Charakter, Mission, Logbuch und
+     Datenbank-Eintrag (`MarkdownEditor`-Prop `timelineMarker`, gesetzt von
+     `ContentEditor`, `CharacterWizard` und `CharacterBioPanel`). Textfelder
+     daneben (Notizen, Regeln, Talente, Gespräche, Import-Vorschau) lassen ihn
+     weg: deren Text kommt nicht in die Chronologie, eine Marke darin bliebe
+     wirkungslos. Der Knopf öffnet ein Fenster (`ModalOverlay`) mit Datum,
+     Ereignisart und Titel; die **Ereignisart ist ein Auswahlfeld über
+     `EVENT_CATEGORIES`** — dieselbe Quelle, aus der die Chronologie ihre
+     Farben, Beschriftungen und Filter zieht und aus der auch „Ereignis
+     eintragen" wählen lässt. Eingefügt wird an der Cursor-Stelle, auf eigener
+     Zeile (`insertAtCursor` in `src/lib/textareaEdit.ts`).
+     Marken erzeugen im gerenderten Text eine unsichtbare Sprungmarke
      `#timeline-N` (`remarkTimelineAnchors` in `src/lib/markdown.ts`); die Karte
      verlinkt genau dorthin. Die Zählung folgt der Dokumentreihenfolge ALLER
      Marken — auch ungültiger —, sonst zeigten die Links hinter einer kaputten

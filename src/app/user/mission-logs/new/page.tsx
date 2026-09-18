@@ -1,5 +1,3 @@
-import { userCan } from "@/lib/permissions";
-import { getRoleMap } from "@/lib/roles";
 import type { Metadata } from "next";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
@@ -22,7 +20,6 @@ export default async function NewMissionLogPage({
   searchParams: Promise<{ mission?: string }>;
 }) {
   const { user, characters } = await requireOwnCharacters();
-  const roleMap = await getRoleMap();
 
   // Nur eigene bereits veröffentlichte Charaktere kommen als Autor für einen
   // neuen Log infrage — ein noch als Entwurf gespeicherter Charakter ist für
@@ -98,7 +95,6 @@ export default async function NewMissionLogPage({
             defaultSessionNr={nextSessionNr}
             defaultLogDate={defaultLogDate}
             defaultMissionSlug={preselectedMission?.slug}
-            isAdminOrGM={userCan(user, "content.autolink_tools", roleMap)}
           />
         )}
       </article>

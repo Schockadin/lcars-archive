@@ -39,7 +39,6 @@ export default async function ArchivePage({
   ]);
   const initialCategory = cat && isArchiveCategory(cat) ? cat : null;
   const canCreate = viewerHasPermission(viewer, "content.create");
-  const canAutoLink = viewerHasPermission(viewer, "content.autolink_tools");
 
   return (
     <>
@@ -61,7 +60,6 @@ export default async function ArchivePage({
           initialCategory={initialCategory}
           canCreate={canCreate}
           userId={viewer?.userId}
-          canAutoLink={canAutoLink}
         />
       </div>
     </>

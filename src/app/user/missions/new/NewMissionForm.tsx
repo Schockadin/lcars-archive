@@ -34,7 +34,6 @@ export default function NewMissionForm({
       bodyHint={<MarkdownFormatHint />}
       bodyRequired
       bodyLarge
-      isAdminOrGM
       submitLabel="Speichern"
       submitPendingLabel="Speichern…"
       extraHeadSlot={

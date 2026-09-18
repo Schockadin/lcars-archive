@@ -16,11 +16,9 @@ const initialState: MissionLogFormState = {};
 export default function EditMissionLogForm({
   userId,
   log,
-  isAdminOrGM,
 }: {
   userId: number;
   log: OwnMissionLogForEdit;
-  isAdminOrGM: boolean;
 }) {
   return (
     <ContentEditor
@@ -41,7 +39,6 @@ export default function EditMissionLogForm({
       bodyDefaultValue={log.sourceMarkdown}
       bodyRequired
       bodyLarge
-      isAdminOrGM={isAdminOrGM}
       draftDefaultValue={log.isDraft}
       insertImage={{ contentType: "mission_log", contentId: log.id }}
       submitLabel="Änderungen speichern"

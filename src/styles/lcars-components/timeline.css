@@ -396,7 +396,9 @@
   align-items: flex-start;
   gap: 8px;
 }
-/* Datum und Art nebeneinander, solange Platz ist. */
+/* Datum und Art nebeneinander, solange Platz ist. Dieselbe Zeile nutzt das
+   Fenster des Kalender-Knopfs in den Text-Werkzeugleisten
+   (TimelineMarkerButton.tsx) — dort stehen dieselben zwei Felder. */
 .timeline-newevent-row {
   display: flex;
   flex-wrap: wrap;

@@ -206,8 +206,13 @@ export default function TutorialPage() {
                 aus dem, was ohnehin gepflegt ist: Beginn und Ende einer
                 Mission, das Datum eines Logbuchs oder Gesprächs, das
                 Geburtsdatum einer Figur. Zweitens aus{" "}
-                <strong>Marken im Text</strong> — der Kalender-Knopf in der
-                Werkzeugleiste jedes Textfeldes setzt an der Cursor-Stelle{" "}
+                <strong>Marken im Text</strong> — der{" "}
+                <strong>Kalender-Knopf</strong> in der Werkzeugleiste über den
+                Textfeldern von <strong>Charakteren</strong>,{" "}
+                <strong>Missionen</strong>, <strong>Logbüchern</strong> und{" "}
+                <strong>Datenbank-Einträgen</strong> öffnet ein Fenster: Datum,
+                Ereignisart aus derselben Liste wie im Zeitstrahl und ein Titel
+                — und setzt daraus an der Cursor-Stelle{" "}
                 <code>
                   &lt;!-- timeline: JJJJ-MM-TT | Titel | Kategorie --&gt;
                 </code>

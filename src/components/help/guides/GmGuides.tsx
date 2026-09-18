@@ -360,10 +360,14 @@ export function GmTimelineGuide() {
         </p>
         <p>
           Von Hand gesetzte Marken im Text (
-          <code>&lt;!-- timeline: JJJJ-MM-TT | Titel | Kategorie --&gt;</code>,
-          einzufügen über den Kalender-Knopf der Textwerkzeugleiste) sind der
-          zweite Weg: Sie setzen eine unsichtbare Sprungmarke an genau der
-          Textstelle.
+          <code>&lt;!-- timeline: JJJJ-MM-TT | Titel | Kategorie --&gt;</code>)
+          sind der zweite Weg: Sie setzen eine unsichtbare Sprungmarke an genau
+          der Textstelle. Einzufügen sind sie über den{" "}
+          <strong>Kalender-Knopf</strong> der Werkzeugleiste — an den
+          Textfeldern von Charakteren, Missionen, Logbüchern und
+          Datenbank-Einträgen. Er öffnet ein Fenster mit Datum, Titel und der
+          Ereignisart zur Auswahl; die Liste ist dieselbe wie im Zeitstrahl, ein
+          Vertippen bei der Art ist damit ausgeschlossen.
         </p>
       </GuideSection>
     </GuideBody>

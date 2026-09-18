@@ -1,10 +1,8 @@
-import { userCan } from "@/lib/permissions";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import PageMeta from "@/components/PageMeta";
-import { verifySession, getRoleMap } from "@/lib/dal";
+import { verifySession } from "@/lib/dal";
 import { getOwnArchiveEntryForEdit } from "@/lib/archive";
-import { getUserById } from "@/lib/users";
 import { CATEGORY_CONFIG } from "@/lib/archiveFormat";
 import EditArchiveEntryForm from "./EditArchiveEntryForm";
 import RevisionsPanel from "@/app/_shared/RevisionsPanel";
@@ -34,11 +32,11 @@ export default async function EditArchiveEntryPage({
   const contentViewer = await getViewer();
   const asModerator = viewerHasPermission(contentViewer, "content.moderate");
 
-  const [entry, viewer, roleMap] = await Promise.all([
-    getOwnArchiveEntryForEdit(session.userId, Number(entryId), asModerator),
-    getUserById(session.userId),
-    getRoleMap(),
-  ]);
+  const entry = await getOwnArchiveEntryForEdit(
+    session.userId,
+    Number(entryId),
+    asModerator,
+  );
   if (!entry) {
     redirect("/user/content");
   }
@@ -60,9 +58,6 @@ export default async function EditArchiveEntryPage({
         <EditArchiveEntryForm
           userId={session.userId}
           entry={entry}
-          isAdminOrGM={
-            !!viewer && userCan(viewer, "content.autolink_tools", roleMap)
-          }
         />
 
         <div className="mt-[16px]">

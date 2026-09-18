@@ -15,11 +15,9 @@ const initialState: ArchiveEntryFormState = {};
 export default function EditArchiveEntryForm({
   userId,
   entry,
-  isAdminOrGM,
 }: {
   userId: number;
   entry: OwnArchiveEntryForEdit;
-  isAdminOrGM: boolean;
 }) {
   return (
     <ContentEditor
@@ -50,7 +48,6 @@ export default function EditArchiveEntryForm({
       bodyDefaultValue={entry.sourceMarkdown}
       bodyRequired
       bodyLarge
-      isAdminOrGM={isAdminOrGM}
       draftDefaultValue={entry.isDraft}
       insertImage={{ contentType: "archive_entry", contentId: entry.id }}
       submitLabel="Änderungen speichern"

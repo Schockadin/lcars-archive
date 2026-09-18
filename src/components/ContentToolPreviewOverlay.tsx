@@ -2,9 +2,9 @@
 import { createPortal } from "react-dom";
 
 // Gemeinsames Overlay für beide Modi des ContentLinkToolButton.tsx —
-// gleiches Muster wie TimelineMarkerButton.tsx (.timeline-marker-overlay):
-// als Portal auf document.body gerendert, Klick auf den Hintergrund
-// entspricht Abbrechen. Vorher lag die Vorschau inline im schmalen
+// gleiches Muster wie die Portrait-Lightbox (.portrait-overlay): als Portal
+// auf document.body gerendert, Klick auf den Hintergrund entspricht
+// Abbrechen. Vorher lag die Vorschau inline im schmalen
 // Actions-Menü-Flex (Breite/Position per CSS-Hack erzwungen) — das war auf
 // schmalen Bildschirmen kaum lesbar und quetschte sich neben den
 // Geschwister-Button. Als zentriertes, breitengekapptes Modal ist die

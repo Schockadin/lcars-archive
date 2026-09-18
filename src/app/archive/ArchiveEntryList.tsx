@@ -19,13 +19,11 @@ export default function ArchiveEntryList({
   initialCategory = null,
   canCreate = false,
   userId,
-  canAutoLink = false,
 }: {
   entries: ArchiveEntryPreview[];
   initialCategory?: ArchiveEntryPreview["category"] | null;
   canCreate?: boolean;
   userId?: number;
-  canAutoLink?: boolean;
 }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<ArchiveEntryPreview["category"] | null>(
@@ -60,7 +58,6 @@ export default function ArchiveEntryList({
         {canCreate && userId && (
           <ArchiveEntryCreateOverlay
             userId={userId}
-            canAutoLink={canAutoLink}
             initialCategory={category === "dialogue" ? "other" : category ?? "other"}
           />
         )}

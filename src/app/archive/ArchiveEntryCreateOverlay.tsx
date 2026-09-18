@@ -11,11 +11,9 @@ import type { ArchiveCategory } from "@/types/archive";
 // Server-Action entscheidet weiterhin über Anmeldung und Berechtigung.
 export default function ArchiveEntryCreateOverlay({
   userId,
-  canAutoLink,
   initialCategory,
 }: {
   userId: number;
-  canAutoLink: boolean;
   initialCategory: Exclude<ArchiveCategory, "dialogue">;
 }) {
   const [open, setOpen] = useState(false);
@@ -41,7 +39,6 @@ export default function ArchiveEntryCreateOverlay({
           <NewArchiveEntryForm
             userId={userId}
             initialCategory={initialCategory}
-            isAdminOrGM={canAutoLink}
           />
         </ModalOverlay>
       )}

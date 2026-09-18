@@ -32,7 +32,6 @@ import type { GmContact } from "@/lib/users";
 // einem Fenster keinen Platz hätten.
 export interface NewContentData {
   userId: number;
-  isAdminOrGM: boolean;
   missionLog: {
     ownCharacters: { id: number; slug: string; name: string }[];
     missions: { slug: string; title: string }[];
@@ -117,7 +116,6 @@ export default function NewContentButtons({ data }: { data: NewContentData }) {
                 missions={data.missionLog.missions}
                 defaultSessionNr={data.missionLog.defaultSessionNr}
                 defaultLogDate={data.missionLog.defaultLogDate}
-                isAdminOrGM={data.isAdminOrGM}
               />
             ))}
           {open === "dialogue" && data.dialogue && (
@@ -136,7 +134,6 @@ export default function NewContentButtons({ data }: { data: NewContentData }) {
             <NewArchiveEntryForm
               userId={data.userId}
               initialCategory={open === "npc" ? "npc" : "other"}
-              isAdminOrGM={data.isAdminOrGM}
             />
           )}
           {open === "mission" && data.mission && (

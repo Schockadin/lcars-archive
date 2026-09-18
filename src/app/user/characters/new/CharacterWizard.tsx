@@ -91,14 +91,12 @@ interface HeadSnapshot {
 // keinen halben Charakter zurück.
 export default function CharacterWizard({
   userId,
-  isAdminOrGM,
   rules,
   talents,
   focuses,
   campaignRules,
 }: {
   userId: number;
-  isAdminOrGM: boolean;
   // Regelwerk und Kataloge für den Werte-Schritt (Budgets, Freikontingente,
   // Talent- und Schwerpunkt-Auswahl).
   rules: AdvancementRules;
@@ -331,7 +329,9 @@ export default function CharacterWizard({
           <label htmlFor="wizard-body" className="lcars-eyebrow">
             Biografie (optional)
           </label>
-          <MarkdownEditor id="wizard-body" isAdminOrGM={isAdminOrGM} large />
+          {/* Der Charakter steht in der Chronologie (Geburtsdatum, Marken
+              in der Biografie) — deshalb hier der Kalender-Knopf. */}
+          <MarkdownEditor id="wizard-body" timelineMarker large />
           <p className="lcars-text text-[14px]">
             <MarkdownFormatHint />
           </p>
