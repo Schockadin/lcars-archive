@@ -375,10 +375,11 @@ export default function TutorialPage() {
                 </li>
               </ul>
               <p>
-                Bei jedem eigenen Eintrag entscheidest du über das Dropdown
+                Bei jedem eigenen Eintrag entscheidest du über den Schalter
                 daneben, ob er ein <strong>Entwurf</strong> bleibt oder{" "}
-                <strong>veröffentlicht</strong> ist — jederzeit umstellbar, ohne
-                den Eintrag erst zu öffnen. Direkt daneben findest du zwei
+                <strong>veröffentlicht</strong> ist — ein Druck auf die andere
+                Hälfte stellt ihn um, jederzeit und ohne den Eintrag erst zu
+                öffnen. Direkt daneben findest du zwei
                 Symbol-Knöpfe zum{" "}
                 <strong>Bearbeiten</strong> (Stift) und <strong>Löschen</strong>{" "}
                 (Mülleimer) — Löschen steht bei allen fünf Inhaltstypen zur

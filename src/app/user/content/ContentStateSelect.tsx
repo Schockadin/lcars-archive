@@ -61,6 +61,12 @@ export default function ContentStateSelect({
       <div role="group" aria-label="Veröffentlichung">
         <LcarsSwitch
           className="content-state-switch"
+          // Ohne flex-1: „Veröffentlicht" ist mehr als doppelt so lang wie
+          // „Entwurf" — in zwei gleich breiten Hälften lief das längere Wort
+          // auf dem Telefon aus seiner Hälfte heraus und wurde vom
+          // overflow:hidden der Pille abgeschnitten. Hier bekommt jede Hälfte
+          // die Breite ihrer Beschriftung.
+          itemClassName="lcars-switch-item"
           options={OPTIONS.map((o) => ({ ...o, disabled: pending }))}
           active={optimisticValue}
           onChange={(next) => {
