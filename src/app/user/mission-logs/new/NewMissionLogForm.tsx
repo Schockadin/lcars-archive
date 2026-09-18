@@ -24,7 +24,6 @@ export default function NewMissionLogForm({
   defaultSessionNr,
   defaultLogDate,
   defaultMissionSlug,
-  isAdminOrGM,
 }: {
   userId: number;
   ownCharacters: { id: number; slug: string; name: string }[];
@@ -32,7 +31,6 @@ export default function NewMissionLogForm({
   defaultSessionNr: number;
   defaultLogDate: string | null;
   defaultMissionSlug?: string;
-  isAdminOrGM: boolean;
 }) {
   return (
     <ContentEditor
@@ -48,7 +46,6 @@ export default function NewMissionLogForm({
       bodyHint={<MarkdownFormatHint />}
       bodyRequired
       bodyLarge
-      isAdminOrGM={isAdminOrGM}
       submitLabel="Speichern"
       submitPendingLabel="Speichern…"
       extraHeadSlot={

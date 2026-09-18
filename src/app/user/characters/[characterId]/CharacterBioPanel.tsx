@@ -18,13 +18,11 @@ const initialState: CharacterPanelState = {};
 export default function CharacterBioPanel({
   userId,
   characterId,
-  isAdminOrGM,
   bioHtml,
   sourceMarkdown,
 }: {
   userId: number;
   characterId: number;
-  isAdminOrGM: boolean;
   // Bereits gerendertes, bereinigtes HTML aus der Akte.
   bioHtml: string | null;
   sourceMarkdown: string;
@@ -74,7 +72,7 @@ export default function CharacterBioPanel({
             <MarkdownEditor
               id="bio-panel-body"
               defaultValue={sourceMarkdown}
-              isAdminOrGM={isAdminOrGM}
+              timelineMarker
               large
             />
             <p className="lcars-text text-[14px]">

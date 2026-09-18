@@ -64,7 +64,8 @@ export default async function GmChronologiePage() {
             zieht ihre Ereignisse zuerst aus dem, was ohnehin gepflegt ist:
             Missionsdaten, Logbuch-Daten, das Datum eines Gesprächs, das
             Geburtsdatum einer Figur — und aus den Marken, die ihr mit dem
-            Kalender-Knopf in jedem Textfeld setzt. Hier kommt die dritte
+            Kalender-Knopf an den Textfeldern von Charakteren, Missionen,
+            Logbüchern und Datenbank-Einträgen setzt. Hier kommt die dritte
             Quelle dazu: das Sprachmodell liest einen Text und schlägt die
             Ereignisse vor, die darin stecken, aber in keinem Feld stehen.
           </p>

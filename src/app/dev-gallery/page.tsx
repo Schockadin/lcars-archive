@@ -495,7 +495,6 @@ export default function DevGalleryPage() {
         <h2 className="lcars-text">Charakter-Assistent</h2>
         <CharacterWizard
           userId={1}
-          isAdminOrGM={false}
           rules={DEFAULT_ADVANCEMENT_RULES}
           talents={DEMO_TALENTS}
           focuses={DEMO_FOCUSES}
@@ -672,7 +671,14 @@ export default function DevGalleryPage() {
         className="flex flex-col gap-[8px] mb-[24px]"
       >
         <h2 className="lcars-text">Markdown-Editor (10 Zeilen)</h2>
-        <MarkdownEditor id="demo-markdown" rows={10} defaultValue="**Text**" />
+        {/* Mit dem Kalender-Knopf: derselbe Editor wie an den Textfeldern
+            der vier Inhaltsarten (siehe TimelineMarkerButton.tsx). */}
+        <MarkdownEditor
+          id="demo-markdown"
+          rows={10}
+          defaultValue="**Text**"
+          timelineMarker
+        />
       </section>
 
       {/* Die Chronologie (/chronologie) mit Attrappen-Ereignissen: die echte

@@ -149,6 +149,22 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.44",
+    title: "Ereignisse mitten im Text",
+    items: [
+      {
+        text: "Der Kalender-Knopf über den Textfeldern steht wieder bei Charakteren, Missionen, Logbüchern und Datenbank-Einträgen — und für alle, die den Eintrag bearbeiten dürfen, nicht mehr nur für die Spielleitung. Er öffnet ein Fenster mit Datum, Ereignisart und Titel und setzt daraus an der Cursor-Stelle eine Marke: unsichtbar im fertigen Text, aber als Ereignis in der Chronologie, dessen Karte genau an diese Stelle zurückführt.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Die Ereignisart wird dabei ausgewählt statt getippt — dieselben acht Arten wie im Zeitstrahl, samt Farbe und Filter. Vorher standen dort drei Vorschläge, von denen zwei gar keine Art der Chronologie waren: solche Ereignisse landeten stumm bei „Sonstiges“.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+    ],
+  },
+  {
     version: "1.43",
     title: "Entwurf bleibt Entwurf",
     // Bewusst ohne Stichpunkte: Diese Version bringt keine neue Funktion,

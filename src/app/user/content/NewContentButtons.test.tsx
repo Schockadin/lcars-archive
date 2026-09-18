@@ -23,7 +23,6 @@ vi.mock("@/app/user/missions/new/NewMissionForm", () => ({
 function data(overrides: Partial<NewContentData> = {}): NewContentData {
   return {
     userId: 1,
-    isAdminOrGM: false,
     missionLog: {
       ownCharacters: [{ id: 1, slug: "tuvok", name: "Tuvok" }],
       missions: [{ slug: "deneb", title: "Deneb" }],

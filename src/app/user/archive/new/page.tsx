@@ -1,5 +1,3 @@
-import { userCan } from "@/lib/permissions";
-import { getRoleMap } from "@/lib/roles";
 import type { Metadata } from "next";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "../../dal";
@@ -25,7 +23,6 @@ interface Props {
 
 export default async function NewArchiveEntryPage({ searchParams }: Props) {
   const user = await requireOwnUser();
-  const roleMap = await getRoleMap();
   const requested = (await searchParams).category;
   // "dialogue" ist keine von Hand anlegbare Kategorie (Gespräche entstehen
   // unter /user/dialogues/new) — deshalb hier ausgenommen.
@@ -43,7 +40,6 @@ export default async function NewArchiveEntryPage({ searchParams }: Props) {
         <NewArchiveEntryForm
           userId={user.id}
           initialCategory={initialCategory}
-          isAdminOrGM={userCan(user, "content.autolink_tools", roleMap)}
         />
       </article>
     </>

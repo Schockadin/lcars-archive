@@ -55,7 +55,6 @@ export default function EditMissionForm({
         bodyDefaultValue={mission.sourceMarkdown ?? ""}
         bodyRequired
         bodyLarge
-        isAdminOrGM
         draftDefaultValue={mission.isDraft}
         insertImage={{ contentType: "mission", contentId: mission.id }}
         extraHeadSlot={

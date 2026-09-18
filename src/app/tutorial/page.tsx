@@ -206,8 +206,13 @@ export default function TutorialPage() {
                 aus dem, was ohnehin gepflegt ist: Beginn und Ende einer
                 Mission, das Datum eines Logbuchs oder Gesprächs, das
                 Geburtsdatum einer Figur. Zweitens aus{" "}
-                <strong>Marken im Text</strong> — der Kalender-Knopf in der
-                Werkzeugleiste jedes Textfeldes setzt an der Cursor-Stelle{" "}
+                <strong>Marken im Text</strong> — der{" "}
+                <strong>Kalender-Knopf</strong> in der Werkzeugleiste über den
+                Textfeldern von <strong>Charakteren</strong>,{" "}
+                <strong>Missionen</strong>, <strong>Logbüchern</strong> und{" "}
+                <strong>Datenbank-Einträgen</strong> öffnet ein Fenster: Datum,
+                Ereignisart aus derselben Liste wie im Zeitstrahl und ein Titel
+                — und setzt daraus an der Cursor-Stelle{" "}
                 <code>
                   &lt;!-- timeline: JJJJ-MM-TT | Titel | Kategorie --&gt;
                 </code>
@@ -868,12 +873,16 @@ export default function TutorialPage() {
                 </table>
               </div>
               <p>
-                Für Spielleitung/Admin gibt es in derselben Werkzeugleiste
-                zusätzlich einen Kalender-Knopf, der an der Cursor-Position
-                einen Zeitleisten-Marker einfügt (siehe „Verlinkung“ unten und
-                den Abschnitt für Spielleitung/Admins) — er hält den zugehörigen
-                In-Story-Zeitpunkt des Ereignisses in der Chronik der Datenbank
-                fest.
+                An den Textfeldern von <strong>Charakteren</strong>,{" "}
+                <strong>Missionen</strong>, <strong>Logbüchern</strong> und{" "}
+                <strong>Datenbank-Einträgen</strong> steht in derselben
+                Werkzeugleiste zusätzlich ein <strong>Kalender-Knopf</strong>.
+                Er öffnet ein Fenster mit Datum, Ereignisart und Titel und setzt
+                daraus an der Cursor-Position eine Zeitleisten-Marke (siehe
+                „Chronologie“ oben) — der zugehörige In-Story-Zeitpunkt steht
+                damit im Text und das Ereignis in der Chronologie. An den
+                übrigen Textfeldern fehlt der Knopf: deren Text kommt nicht in
+                die Chronologie.
               </p>
               <p>
                 Die <strong>Werkzeugleiste</strong> (Fett, Kursiv, Überschrift,

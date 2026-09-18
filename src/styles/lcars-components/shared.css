@@ -330,18 +330,17 @@
 /* Admin-Content-Tools (ContentLinkToolButton, Autolink- wie Delink-Modus) —
    gemeinsames Vorschau-Overlay auf den vier Inhalts-Detailseiten (Mission,
    Log, Archiv-Eintrag, Charakter), gerendert über ContentToolPreviewOverlay.tsx.
-   Gleiches Overlay-Muster wie TimelineMarkerButton.tsx
-   (.timeline-marker-overlay), nur breiter für Trefferlisten + optionale
-   HTML-Vorschau. Vorher lag die Vorschau inline in einer per width:110%/
-   translate:15% aus dem schmalen Actions-Menü-Flex "herausgeschobenen" Box
-   ohne Padding — auf schmalen Bildschirmen kaum lesbar und quetschte sich
-   neben den Geschwister-Button. */
+   Gleiches Overlay-Muster wie die Portrait-Lightbox, nur breiter für
+   Trefferlisten + optionale HTML-Vorschau. Vorher lag die Vorschau inline in
+   einer per width:110%/translate:15% aus dem schmalen Actions-Menü-Flex
+   "herausgeschobenen" Box ohne Padding — auf schmalen Bildschirmen kaum
+   lesbar und quetschte sich neben den Geschwister-Button. */
 /* Gemeinsames Overlay-Muster: abgedunkelter Vollbild-Hintergrund, Inhalt
-   mittig. Alle drei Overlays der Anwendung teilen es sich — die Lightbox
-   ergänzt nur ihren eigenen Cursor. */
+   mittig. Beide Overlays teilen es sich — die Lightbox ergänzt nur ihren
+   eigenen Cursor. Eingabe-Fenster nehmen stattdessen den gemeinsamen Rahmen
+   ModalOverlay.tsx (Escape schließt, Fokus kehrt zurück). */
 .content-tool-preview-overlay,
-.portrait-overlay,
-.timeline-marker-overlay {
+.portrait-overlay {
   position: fixed;
   inset: 0;
   z-index: 1000;
@@ -451,22 +450,6 @@
 
 .portrait-overlay-nav--next {
   right: 20px;
-}
-
-/* TimelineMarkerButton.tsx — Modal zum Einfügen eines Zeitleisten-Markers
-   an der Cursor-Position (Overlay siehe oben, hier nur die Karte darin). */
-.timeline-marker-modal {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: min(420px, 100%);
-  max-height: calc(100vh - 48px);
-  overflow-y: auto;
-  padding: 20px;
-  border: 1px solid var(--lcars-border);
-  border-radius: 8px;
-  background: var(--lcars-bg);
-  box-shadow: var(--lcars-shadow-float);
 }
 
 /* MarkdownEditor.tsx — Formatierungs-Toolbar + Rohtext/Vorschau-Umschalter

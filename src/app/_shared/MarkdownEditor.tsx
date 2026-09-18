@@ -90,7 +90,7 @@ export default function MarkdownEditor({
   name = "bodyMarkdown",
   defaultValue,
   required = false,
-  isAdminOrGM = false,
+  timelineMarker = false,
   large = false,
   rows,
   insertImage,
@@ -99,10 +99,13 @@ export default function MarkdownEditor({
   name?: string;
   defaultValue?: string;
   required?: boolean;
-  // Nur relevant für Formulare, die den Timeline-Marker-Button überhaupt
-  // zeigen dürfen (siehe TimelineMarkerButton.tsx-Aufrufer) — hier als
-  // Icon-Button in der Toolbar statt als eigenständige Textpille darüber.
-  isAdminOrGM?: boolean;
+  // Blendet den Kalender-Knopf für Zeitleisten-Marken in die Werkzeugleiste
+  // ein (siehe TimelineMarkerButton.tsx). Gesetzt an den Textfeldern der vier
+  // Inhaltsarten, die in der Chronologie stehen — Charakter, Mission, Logbuch
+  // und Datenbank-Eintrag. Textfelder daneben (Notizen, Regeln, Talente,
+  // Gespräche, Import-Vorschau) lassen ihn weg: deren Text kommt nicht in die
+  // Chronologie, eine Marke darin bliebe wirkungslos.
+  timelineMarker?: boolean;
   // Größere Mindesthöhe für die vollen New-/Edit-Formulare (400px) statt
   // der kompakteren Inline-Editoren (300px) — zwei feste Tailwind-Klassen,
   // da sich Utility-Klassen nicht dynamisch aus Props zusammensetzen lassen.
@@ -170,7 +173,7 @@ export default function MarkdownEditor({
             {action.icon}
           </button>
         ))}
-        {isAdminOrGM && <TimelineMarkerButton textareaId={id} iconOnly />}
+        {timelineMarker && <TimelineMarkerButton textareaId={id} />}
         {insertImage && (
           <InsertImageButton
             textareaId={id}
