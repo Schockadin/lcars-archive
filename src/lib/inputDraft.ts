@@ -118,6 +118,25 @@ function fieldIdentityKey(el: DraftField, ordinal: number): string {
   return base;
 }
 
+// Ein Feld ohne name und ohne id kann nur über seine laufende Nummer
+// wiedergefunden werden — und die trägt nur innerhalb eines Formulars: Dessen
+// Felderliste steht fest, während die Felder des Dokuments („doc") sich mit
+// jeder Liste ändern, die filtert, sortiert oder eine Zeile dazubekommt.
+//
+// Genau daran ging der Entwurf/Veröffentlicht-Schalter unter „Meine Inhalte"
+// kaputt: je Zeile ein namenloses Auswahlfeld, und nach dem Filtern stand
+// hinter „doc|o:select:6" eine ANDERE Zeile als beim Sichern. Der gesicherte
+// Stand wurde ihr eingesetzt — samt echtem change-Ereignis, das dort eine
+// Server-Action auslöst. Aus fremden Entwürfen wurden so veröffentlichte
+// Inhalte.
+//
+// Solche Felder bleiben deshalb ganz außen vor: lieber kein gesicherter
+// Entwurf als ein Wert im falschen Feld. Wer die Sicherung braucht, gibt dem
+// Feld einen name oder eine id — oder stellt es in ein Formular.
+function hasStableKey(el: DraftField): boolean {
+  return Boolean(el.getAttribute("name") || el.id || el.form);
+}
+
 // Alle sicherbaren Felder unterhalb von root mit ihrem Speicher-Schlüssel.
 // Wird in einem Durchgang berechnet, weil die laufende Nummer (Ausweg für
 // namenlose Felder) nur im Zusammenhang aller Felder eines Formulars stabil
@@ -130,6 +149,7 @@ export function draftFieldKeys(root: ParentNode): Map<DraftField, string> {
   );
   for (const el of candidates) {
     if (!isDraftableField(el)) continue;
+    if (!hasStableKey(el)) continue;
     const scope = formScopeKey(el);
     const counterKey = `${scope}|${el.tagName}`;
     const ordinal = counters.get(counterKey) ?? 0;

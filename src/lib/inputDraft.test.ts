@@ -143,6 +143,32 @@ describe("draftFieldKeys", () => {
     expect(draftFieldKeys(document).get(field)).toBe("doc|n:filter");
   });
 
+  // Regression: Unter „Meine Inhalte" steht je Zeile ein namenloses
+  // Auswahlfeld (Entwurf/Veröffentlicht) — ohne Formular. Deren einziger
+  // Schlüssel wäre die Position im Dokument, und die zeigt nach jedem Filtern,
+  // Sortieren oder Nachladen auf eine ANDERE Zeile. Der gesicherte Stand
+  // landete so im falschen Feld und löste dort eine echte Server-Action aus:
+  // aus fremden Entwürfen wurden veröffentlichte Inhalte.
+  it("übergeht formularlose Felder ohne name und ohne id", () => {
+    mount(`
+      <div>
+        <select><option value="draft">E</option></select>
+        <select id="mit-id"><option value="draft">E</option></select>
+        <select name="mit-name"><option value="draft">E</option></select>
+      </div>
+    `);
+    const keys = Array.from(draftFieldKeys(document).values());
+    expect(keys).toEqual(["doc|i:mit-id", "doc|n:mit-name"]);
+  });
+
+  // Innerhalb eines Formulars bleibt die Position der Ausweg — dort steht die
+  // Felderliste fest (siehe den Test weiter oben).
+  it("behält namenlose Felder innerhalb eines Formulars", () => {
+    mount(`<form id="f"><input type="text"></form>`);
+    const keys = Array.from(draftFieldKeys(document).values());
+    expect(keys).toEqual(["form#f|o:input:0"]);
+  });
+
   it("übergeht abgewählte Felder ganz", () => {
     mount(`
       <form id="f">

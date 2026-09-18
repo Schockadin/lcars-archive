@@ -61,10 +61,34 @@ describe("useOptimisticAdminSelect", () => {
     });
     await waitFor(() => expect(result.current.error).toBe("Fehlgeschlagen"));
 
+    // Ein ANDERER Wert: Der bereits aktive wäre kein Wechsel und damit auch
+    // kein neuer Versuch (siehe den Test darunter). Nach dem Fehlschlag steht
+    // der optimistische Wert wieder auf "public".
+    act(() => {
+      result.current.change("gm");
+    });
+
+    expect(result.current.error).toBeNull();
+  });
+
+  // Regression: Der Zustand hing an einem <select>, das bei jedem
+  // Pfeiltasten-Druck die Nachbaroption wegschrieb. Der Schalter besteht
+  // jetzt aus Knöpfen (AdminContentStateSelect.tsx) — und der Knopf, auf dem
+  // der Fokus steht, ist immer der bereits aktive. Ihn (etwa mit der
+  // Leertaste) erneut auszulösen, darf nichts schreiben und niemanden
+  // benachrichtigen.
+  it("does nothing when the already active value is chosen again", () => {
+    const action = vi.fn().mockResolvedValue({});
+
+    const { result } = renderHook(() =>
+      useOptimisticAdminSelect<string>("public", action),
+    );
+
     act(() => {
       result.current.change("public");
     });
 
-    expect(result.current.error).toBeNull();
+    expect(action).not.toHaveBeenCalled();
+    expect(result.current.pending).toBe(false);
   });
 });

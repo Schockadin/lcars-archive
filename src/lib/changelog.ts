@@ -149,6 +149,20 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.43",
+    title: "Entwurf bleibt Entwurf",
+    // Bewusst ohne Stichpunkte: Diese Version bringt keine neue Funktion,
+    // sondern nimmt dem Entwurf/Veröffentlicht-Schalter unter „Meine Inhalte"
+    // zwei Fallen. Er war ein Auswahlfeld ohne name — und damit (1) für die
+    // Entwurfs-Sicherung aus 1.41 nur über seine Position im Dokument
+    // auffindbar, die nach jedem Filtern auf eine andere Zeile zeigte, und
+    // (2) tastaturempfindlich: ein fokussiertes Auswahlfeld springt bei jedem
+    // Pfeiltasten-Druck zur nächsten Option. Beides schrieb sofort weg, ohne
+    // dass jemand es wollte. Ein Fehler in einer bereits angekündigten
+    // Funktion ist laut AGENTS.md kein eigener Stichpunkt.
+    items: [],
+  },
+  {
     version: "1.42",
     title: "Getipptes bleibt getippt — jetzt auch im Editor",
     // Bewusst ohne Stichpunkte: Diese Version bringt keine neue Funktion,
