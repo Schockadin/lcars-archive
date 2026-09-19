@@ -1440,7 +1440,10 @@ vom eigenen Kasten aus) und der Kasten ist `sticky` statt `fixed`. Der Kasten
 bleibt auch unsichtbar im Baum — er ist der Anker für genau dieses `closest` —,
 ist 0 Pixel hoch und lässt Klicks durch; der Knopf darin sitzt absolut
 positioniert darüber. Wer Bewegung reduziert haben will, bekommt den Sprung
-ohne Animation.
+ohne Animation. Nach dem Klick wandert der Fokus auf `#lcars-main` — dasselbe
+Ziel wie die Sprungmarke „Zum Inhalt springen": Der Knopf verschwindet oben
+angekommen, und mit ihm ginge der Fokus sonst an den Seitenkörper verloren.
+Auf Papier (`@media print`) ist er ausgeblendet.
 
 Die Aktionen einer Inhaltsseite (Owner, Sichtbarkeit, Folgen/Merken, Teilen,
 Bilder, Bearbeiten, Löschen) stehen in `ContentActionsPanel` — einem

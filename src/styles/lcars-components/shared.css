@@ -1426,3 +1426,10 @@
   pointer-events: auto;
   box-shadow: var(--lcars-shadow-float);
 }
+/* Auf Papier gehört er nicht: Ein schwebender Knopf über dem Text wäre dort
+   nur ein Fleck — anders als auf dem Schirm gibt es da nichts zu scrollen. */
+@media print {
+  .scroll-top-dock {
+    display: none;
+  }
+}

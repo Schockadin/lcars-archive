@@ -157,27 +157,27 @@ export default function DialogueLiveView({
   // (der Reserve-Button wird gesperrt, Server-Guard zusätzlich).
   const canReserve = eligibleReplyCharacters.length > 0;
 
+  // Klebt das Antwortfeld am unteren Rand? Die Wahl steht im localStorage
+  // (siehe src/lib/replyDockPreference.ts) und gehört hierher, weil der
+  // Sprung ans Verlaufsende sie ebenfalls braucht. Erster Aufbau immer mit
+  // der Vorgabe, damit Server-Render und Hydration übereinstimmen — den
+  // Speicher gibt es erst im Effekt darunter.
+  const [stickyReply, setStickyReply] = useState(true);
+  const threadRef = useRef<HTMLDivElement>(null);
+
   // Beim Öffnen ans Ende des Verlaufs springen — wie in einem Chat, statt
   // ihn von oben lesen zu müssen. Lag bis v1.45 in DialogueThread und ist
   // hierher gewandert, weil der Sprung seit dem klebenden Antwortfeld beides
   // kennen muss: Ein Sprung auf die letzte Nachricht („block: end") legt
   // deren Unterkante auf die Unterkante der Inhaltsfläche — und genau dort
   // steht jetzt das Feld. Die letzte Nachricht wäre also ausgerechnet nach
-  // dem Sprung verdeckt. scroll-margin-bottom in Höhe des Docks hält sie
-  // frei; ohne Dock (Zuschauer, fremde Reservierung) bleibt es bei 0.
+  // dem Sprung verdeckt. scroll-margin-bottom in Höhe des Kastens hält sie
+  // frei; ohne Kasten (Zuschauer, fremde Reservierung) bleibt es bei 0.
   //
   // Nur beim ersten Aufbau (leere Deps): Spätere Polls dürfen die
   // Leseposition nicht nach unten reißen, während jemand ältere Nachrichten
   // liest. Geschlossene Gespräche kommen hier nie an — die Seite leitet sie
   // vorher um (siehe /dialogues/[slug]/page.tsx).
-  // Klebt das Antwortfeld? Die Wahl steht im localStorage (siehe
-  // src/lib/replyDockPreference.ts) und gehört hierher, weil der Sprung
-  // unten sie ebenfalls braucht. Erster Aufbau immer mit der Vorgabe, damit
-  // Server-Render und Hydration übereinstimmen — der Speicher ist erst im
-  // Effekt zu haben.
-  const [stickyReply, setStickyReply] = useState(true);
-  const threadRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const preferred = readReplyDockSticky();
     // Bewusst im Mount-Effect statt als Initialwert: localStorage gibt es

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, act } from "@testing-library/react";
 import DialogueReplyForm from "./DialogueReplyForm";
 
 // Die Server-Action zieht die halbe Datenschicht nach — hier gemockt, geprüft
@@ -87,6 +87,22 @@ describe("DialogueReplyForm", () => {
       renderForm();
 
       expect(pinBox().hasAttribute("data-no-draft")).toBe(true);
+    });
+
+    // Der Haken steht IM Formular, und das setzt sich nach erfolgreichem
+    // Senden selbst zurück (formRef.reset()). Für einen kontrollierten
+    // Haken stellt React den Zustand danach wieder her — diese Zusicherung
+    // hält der Fall fest, damit ein späteres defaultChecked nicht
+    // unbemerkt einen Haken zurücklässt, der nicht mehr zum Kasten passt.
+    it("überlebt das Zurücksetzen des Formulars nach dem Senden", () => {
+      const { container } = renderForm();
+      const form = container.querySelector("form")!;
+
+      act(() => {
+        form.reset();
+      });
+
+      expect(pinBox().checked).toBe(true);
     });
 
     it("gilt auch für den Wartehinweis", () => {

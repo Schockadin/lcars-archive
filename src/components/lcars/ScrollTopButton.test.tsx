@@ -11,8 +11,16 @@ let scrollTo: ReturnType<typeof vi.fn<(options?: ScrollToOptions) => void>>;
 function renderInScroller() {
   scroller = document.createElement("div");
   scroller.className = "lcars-main-content";
+  // Der Inhaltsbereich, auf den der Fokus nach dem Sprung wandert (in der
+  // App <main id="lcars-main">, siehe MainContent.tsx).
+  const main = document.createElement("main");
+  main.id = "lcars-main";
+  main.tabIndex = -1;
+  scroller.appendChild(main);
   document.body.appendChild(scroller);
-  return render(<ScrollTopButton />, { container: scroller });
+  const mounted = document.createElement("div");
+  scroller.appendChild(mounted);
+  return render(<ScrollTopButton />, { container: mounted });
 }
 
 function scrollTop(px: number) {
@@ -91,6 +99,17 @@ describe("ScrollTopButton", () => {
     fireEvent.click(button()!);
 
     expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: "auto" });
+  });
+
+  // Der Knopf verschwindet oben angekommen; ohne dieses Weiterreichen läge
+  // der Fokus danach auf dem Seitenkörper.
+  it("reicht den Fokus an den Inhaltsbereich weiter", () => {
+    renderInScroller();
+    scrollTop(400);
+
+    fireEvent.click(button()!);
+
+    expect(document.activeElement?.id).toBe("lcars-main");
   });
 
   // Der Kasten ist der Anker, über den der Knopf seine Scrollfläche findet —

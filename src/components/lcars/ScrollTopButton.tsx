@@ -54,6 +54,17 @@ export default function ScrollTopButton() {
       "(prefers-reduced-motion: reduce)",
     )?.matches;
     scroller.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
+
+    // Oben angekommen verschwindet der Knopf — mit ihm ginge der Fokus an
+    // den Seitenkörper verloren, und wer mit der Tastatur arbeitet, müsste
+    // sich von vorn durch die Seite tabben. Er wandert deshalb auf den
+    // Inhaltsbereich, dasselbe Ziel, auf das auch die Sprungmarke „Zum
+    // Inhalt springen" führt (tabIndex -1, siehe AppShell.tsx).
+    // preventScroll: Das Scrollen erledigt schon die Zeile darüber, und zwar
+    // weich — ein zweiter, harter Sprung durch den Fokus wäre ein Ruck.
+    scroller
+      .querySelector<HTMLElement>("#lcars-main")
+      ?.focus({ preventScroll: true });
   }
 
   return (
