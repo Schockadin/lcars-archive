@@ -1,7 +1,11 @@
 "use client";
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { LcarsAkteCard, LcarsDataRow } from "@/components/lcars";
+import {
+  LcarsAkteCard,
+  LcarsDataRow,
+  LcarsListFilterInput,
+} from "@/components/lcars";
 import OwnerSelect from "@/components/OwnerSelect";
 import DeleteContentButton from "@/components/DeleteContentButton";
 import { PencilIcon } from "@/lib/icons";
@@ -40,6 +44,7 @@ export default function AdminContentBrowser({
   items: AdminContentItem[];
   users: { id: number; name: string }[];
 }) {
+  const [query, setQuery] = useState("");
   const [ownerFilter, setOwnerFilter] = useState<string>("all");
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -48,18 +53,22 @@ export default function AdminContentBrowser({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<number | null>(null);
 
-  const filteredItems = useMemo(
-    () =>
-      items.filter((item) => {
-        if (categoryFilter !== "all" && item.contentType !== categoryFilter) {
-          return false;
-        }
-        if (ownerFilter === "all") return true;
-        if (ownerFilter === NO_OWNER) return item.ownerId == null;
-        return item.ownerId === Number(ownerFilter);
-      }),
-    [items, categoryFilter, ownerFilter],
-  );
+  // Die eine Liste, an der alles hängt: die Gruppen darunter, deren Zählung
+  // und „Alle auswählen", das genau die SICHTBAREN auswählt.
+  const filteredItems = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return items.filter((item) => {
+      if (categoryFilter !== "all" && item.contentType !== categoryFilter) {
+        return false;
+      }
+      // Gesucht wird im Titel — das ist, was in der Liste steht. Nach Owner
+      // grenzt das Auswahlfeld daneben ein, nach Art das zweite.
+      if (q && !item.title.toLowerCase().includes(q)) return false;
+      if (ownerFilter === "all") return true;
+      if (ownerFilter === NO_OWNER) return item.ownerId == null;
+      return item.ownerId === Number(ownerFilter);
+    });
+  }, [items, categoryFilter, ownerFilter, query]);
 
   const groups = useMemo(() => {
     const byType: Record<OwnerContentType, AdminContentItem[]> = {
@@ -121,6 +130,17 @@ export default function AdminContentBrowser({
 
   return (
     <div className="flex flex-col gap-[16px]">
+      {/* Das Suchfeld über den beiden Auswahlfeldern und über die volle
+          Breite: Bei dreistelligen Inhaltszahlen ist der Titel der kürzeste
+          Weg zu einem bestimmten Eintrag, die Filter daneben grenzen ein. */}
+      <LcarsListFilterInput
+        value={query}
+        onChange={setQuery}
+        ariaLabel="Inhalte nach Titel durchsuchen"
+        placeholder="Titel suchen…"
+        className="w-full"
+      />
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-[12px]">
         <select
           className="lcars-input rounded-full text-right"
@@ -209,11 +229,30 @@ export default function AdminContentBrowser({
         )}
       </div>
 
+      {/* Eine Zeile statt vier leerer Gruppenkästen: Mit dem Suchfeld trifft
+          „nichts gefunden" nun regelmäßig zu, und vier Mal „Keine Inhalte für
+          diese Auswahl" untereinander sagt nicht mehr als dieser eine Satz. */}
+      {filteredItems.length === 0 && (
+        <p className="lcars-empty-state">
+          Kein Inhalt passt zu Suche und Filtern.
+        </p>
+      )}
+
       {(Object.keys(groups) as OwnerContentType[]).map((contentType) => {
         if (categoryFilter !== "all" && categoryFilter !== contentType) {
           return null;
         }
         const groupItems = groups[contentType];
+        // Einen leeren Kasten zeigen wir nur, solange die Übersicht auch eine
+        // Bestandsaufnahme ist. Sobald gesucht wird — oder überhaupt nichts
+        // mehr passt — ist „Missionen 0" nur im Weg; dann steht oben der eine
+        // Satz.
+        if (
+          groupItems.length === 0 &&
+          (query.trim() !== "" || filteredItems.length === 0)
+        ) {
+          return null;
+        }
         return (
           <LcarsDataRow
             key={contentType}

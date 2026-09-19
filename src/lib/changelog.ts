@@ -160,6 +160,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     // zum Eintrag führt.
     items: [
       {
+        text: "Die Inhaltsübersicht der Administration hat ein Suchfeld: Titel eintippen grenzt die Liste über alle vier Inhaltsarten hinweg ein, und Arten ohne Treffer verschwinden solange. Owner- und Kategorie-Filter wirken weiterhin zusätzlich.",
+        category: "inhalte",
+      },
+      {
         text: "Ein Verweis auf einen Abschnitt — [[Klingonen#Frühe Jahre]] — springt jetzt auch dorthin, statt nur oben auf der Seite zu landen. Der Anzeigetext lässt sich wie gewohnt dahintersetzen: [[Klingonen#Frühe Jahre|damals]].",
         category: "inhalte",
         tutorial: "verlinkung",
