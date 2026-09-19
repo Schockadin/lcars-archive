@@ -113,7 +113,16 @@ export interface SearchViewer {
 // Dieselbe Regel wie participantSpeakerRows in dialoguesCore.ts, nur als
 // Bedingung statt als Abfrage. Teilnehmer mit kind = "archive" sind NPCs;
 // alles andere (auch das alte "unknown" aus dem Vault-Import) zählt als
-// Charakter.
+// Charakter. Die Trennung nach kind ist keine Kosmetik: characters und
+// archive_entries haben GETRENNTE Slug-Namensräume, ein gleichnamiger,
+// unbeteiligter Charakter machte sonst dessen Spieler zum Mitleser.
+//
+// Ein Unterschied zu dort, bewusst: Der NPC-Zweig prüft nur, dass die Person
+// in DIESEM Gespräch für einen NPC schreibt, nicht zusätzlich, dass dieser
+// NPC noch in der Teilnehmerliste steht. Wer für einen später entfernten NPC
+// geschrieben hat, war beim Schreiben dabei und hat den Verlauf ohnehin
+// gelesen — ihm die Suche darin zu lassen, gibt nichts preis, was er nicht
+// schon kennt.
 function openDialogueVisibleSql(viewer: SearchViewer | null) {
   if (viewer?.isGm) return sql`true`;
   if (!viewer) return sql`ae.dialogue_open = false`;

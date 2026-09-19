@@ -553,6 +553,15 @@ export default function TutorialPage() {
                 dein Browser für dieses Gerät.
               </p>
               <p>
+                Ein laufendes Gespräch bleibt unter seinen Beteiligten: Wer
+                nicht mitspielt, kann es nicht öffnen — und findet seinen
+                Wortlaut auch nicht über die <strong>Suche</strong>. Für die
+                Spielleitung gilt das nicht, sie darf jedes Gespräch
+                aufschlagen. Nach dem <strong>Abschluss</strong> ist es ein
+                gewöhnlicher Eintrag und für alle lesbar, die den Bereich
+                sehen dürfen.
+              </p>
+              <p>
                 Sobald eine teilnehmende Person es abschließt, wird es{" "}
                 <strong>unwiderruflich geschlossen</strong> und taucht danach in
                 der Gespräche-Übersicht bei den Charakteren auf — standardmäßig
