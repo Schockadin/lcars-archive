@@ -214,4 +214,19 @@ describe("UserContentBrowser", () => {
     const types = screen.getAllByTestId("link-tool").map((el) => el.dataset.type);
     expect(types).toEqual(["missionLog", "missionLog", "archiveEntry"]);
   });
+
+  it("hält auf dem Telefon Abstand zwischen Aktionszeile und nächstem Eintrag", () => {
+    renderBrowser();
+
+    // Auf schmalen Schirmen steht die Zeile UNTER der Karte — deren
+    // margin-bottom trennt dann Karte und Zeile statt die Einträge, die
+    // Knöpfe klebten am nächsten Eintrag. Ab sm stehen beide nebeneinander,
+    // dort trennt wieder die Karte selbst.
+    const rows = [...document.querySelectorAll(".content-action-row")];
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(row.className).toContain("mb-[12px]");
+      expect(row.className).toContain("sm:mb-0");
+    }
+  });
 });

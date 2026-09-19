@@ -60,6 +60,14 @@ const KIND_ORDER: ContentKind[] = [
   "mission",
 ];
 
+// Auf schmalen Schirmen steht die Aktionszeile UNTER ihrer Karte (siehe die
+// Spalte/Zeile-Umschaltung weiter unten). Dort trennt das margin-bottom der
+// Karte (.timeline-card, 12px) dann Karte und Zeile — und nicht mehr die
+// Einträge voneinander: Die Knöpfe klebten am nächsten Eintrag. Dieselben
+// 12px unter der Zeile stellen den Abstand wieder her. Ab sm stehen Karte und
+// Zeile nebeneinander, dort trennt wieder die Karte selbst.
+const ACTION_ROW_SPACING = "mb-[12px] sm:mb-0";
+
 type CategoryFilter = "all" | ContentKind | "drafts";
 
 const CATEGORY_LABELS: Record<CategoryFilter, string> = {
@@ -197,6 +205,7 @@ export default function UserContentBrowser({
       ),
       actions: (
         <ContentActionRow
+          className={ACTION_ROW_SPACING}
           state={
             <ContentStateSelect
               contentType="mission_log"
@@ -249,6 +258,7 @@ export default function UserContentBrowser({
       actions:
         d.ownerUserId === ownUserId ? (
           <ContentActionRow
+            className={ACTION_ROW_SPACING}
             state={
               <ContentStateSelect
                 contentType="dialogue"
@@ -282,6 +292,7 @@ export default function UserContentBrowser({
         ),
         actions: (
           <ContentActionRow
+            className={ACTION_ROW_SPACING}
             state={
               <ContentStateSelect
                 contentType="archive_entry"
@@ -324,6 +335,7 @@ export default function UserContentBrowser({
           ),
           actions: (
             <ContentActionRow
+              className={ACTION_ROW_SPACING}
               extraAction={
                 canLinkAnyContent ? (
                   <ContentLinkToolButton
