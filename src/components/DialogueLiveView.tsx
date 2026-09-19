@@ -153,6 +153,30 @@ export default function DialogueLiveView({
   // (der Reserve-Button wird gesperrt, Server-Guard zusätzlich).
   const canReserve = eligibleReplyCharacters.length > 0;
 
+  // Beim Öffnen ans Ende des Verlaufs springen — wie in einem Chat, statt
+  // ihn von oben lesen zu müssen. Lag bis v1.45 in DialogueThread und ist
+  // hierher gewandert, weil der Sprung seit dem klebenden Antwortfeld beides
+  // kennen muss: Ein Sprung auf die letzte Nachricht („block: end") legt
+  // deren Unterkante auf die Unterkante der Inhaltsfläche — und genau dort
+  // steht jetzt das Feld. Die letzte Nachricht wäre also ausgerechnet nach
+  // dem Sprung verdeckt. scroll-margin-bottom in Höhe des Docks hält sie
+  // frei; ohne Dock (Zuschauer, fremde Reservierung) bleibt es bei 0.
+  //
+  // Nur beim ersten Aufbau (leere Deps): Spätere Polls dürfen die
+  // Leseposition nicht nach unten reißen, während jemand ältere Nachrichten
+  // liest. Geschlossene Gespräche kommen hier nie an — die Seite leitet sie
+  // vorher um (siehe /dialogues/[slug]/page.tsx).
+  const threadRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const thread = threadRef.current;
+    if (!thread) return;
+    const dock = thread.parentElement?.querySelector(".dialogue-reply-dock");
+    thread.style.scrollMarginBottom = dock
+      ? `${Math.round(dock.getBoundingClientRect().height)}px`
+      : "";
+    thread.scrollIntoView({ behavior: "instant", block: "end" });
+  }, []);
+
   const [releasePending, startRelease] = useTransition();
   function handleRelease() {
     startRelease(async () => {
@@ -163,18 +187,39 @@ export default function DialogueLiveView({
 
   return (
     <>
-      {messages.length > 0 ? (
-        <DialogueThread
-          messages={messages}
-          participants={participants}
-          currentUserId={currentUserId}
-          dialogueOpen={open}
-          entrySlug={entrySlug}
-          canModerate={canModerate}
-        />
-      ) : (
-        <p className="lcars-empty-state">Noch keine Nachrichten.</p>
-      )}
+      {/* Verlauf und Antwortfeld gehören in EINEN Block: Das Feld klebt per
+          position: sticky am unteren Rand (.dialogue-reply-dock), und kleben
+          kann es nur, solange sein umschließender Block im Bild ist. Stünde
+          es wie früher unten im Bedienteil, wäre dieser Block erst am Ende
+          des Verlaufs zu sehen — also genau dann, wenn man es ohnehin sieht. */}
+      <div className="dialogue-play">
+        <div ref={threadRef}>
+          {messages.length > 0 ? (
+            <DialogueThread
+              messages={messages}
+              participants={participants}
+              currentUserId={currentUserId}
+              dialogueOpen={open}
+              entrySlug={entrySlug}
+              canModerate={canModerate}
+            />
+          ) : (
+            <p className="lcars-empty-state">Noch keine Nachrichten.</p>
+          )}
+        </div>
+
+        {open && isParticipant && (
+          <DialogueReplyForm
+            entrySlug={entrySlug}
+            canReplyNow={canReplyNow}
+            replyCharacters={eligibleReplyCharacters}
+            hasOnlyBlockedCharacter={
+              myCharacters.length > 0 && eligibleReplyCharacters.length === 0
+            }
+            onSent={poll}
+          />
+        )}
+      </div>
 
       {!open && (
         <p className="text-lcars-primary-ink text-[13px] mt-[8px]" role="status">
@@ -191,17 +236,6 @@ export default function DialogueLiveView({
             title={title}
             subscribeOnly
             showShare={!open}
-          />
-        )}
-        {open && isParticipant && (
-          <DialogueReplyForm
-            entrySlug={entrySlug}
-            canReplyNow={canReplyNow}
-            replyCharacters={eligibleReplyCharacters}
-            hasOnlyBlockedCharacter={
-              myCharacters.length > 0 && eligibleReplyCharacters.length === 0
-            }
-            onSent={poll}
           />
         )}
         {open && isParticipant && multiParty && !canReplyNow && (

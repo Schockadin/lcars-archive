@@ -106,7 +106,15 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Nachrichtenkarte eines **laufenden** Gesprächs trägt neben dem Sprechernamen
   ihren Zeitstempel (`formatDateTimeShort`, fest auf `Europe/Berlin` — Server-
   Render und Hydration liefern denselben String); abgeschlossene Gespräche
-  bleiben ohne, dort ist der Verlauf ein zusammenhängender Lesetext.
+  bleiben ohne, dort ist der Verlauf ein zusammenhängender Lesetext. Das
+  **Antwortfeld klebt am unteren Rand** der Inhaltsfläche
+  (`.dialogue-reply-dock`, `position: sticky` — gescrollt wird
+  `.lcars-main-content`, nicht das Fenster, deshalb kein `fixed`). Kleben kann
+  es nur, solange sein umschließender Block im Bild ist: `.dialogue-play`
+  umfasst deshalb Verlauf UND Feld. Den Sprung ans Verlaufsende beim Öffnen
+  macht darum `DialogueLiveView` statt wie früher `DialogueThread` — er muss
+  die Höhe des Felds als `scroll-margin-bottom` freihalten, sonst läge die
+  letzte Nachricht ausgerechnet danach darunter.
 - **Gespräche mit NPCs** — Gesprächspartner kann auch ein **NPC** sein. Ein NPC
   ist **kein Charakter**, sondern ein **Datenbank-Eintrag der Kategorie `npc`**
   (`archive_entries.category = 'npc'`, siehe `getNpcOptions`). Wer im Gespräch

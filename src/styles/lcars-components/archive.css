@@ -163,3 +163,51 @@
   gap: 8px;
   margin-top: 8px;
 }
+
+/* ── Antwortfeld offener Gespräche ───────────────────────────────── */
+/* Bleibt beim Lesen des Verlaufs am unteren Rand der Inhaltsfläche stehen,
+   statt erst nach dem letzten Beitrag aufzutauchen — wer mitten im Gespräch
+   etwas nachlesen will, musste sonst vor jeder Antwort wieder ganz nach
+   unten scrollen.
+
+   sticky, nicht fixed: Gescrollt wird nicht das Fenster, sondern
+   .lcars-main-content (siehe MainContent.tsx) — ein fixed-Kasten säße
+   relativ zum Fenster und damit quer über Seitenleiste und Fußzeile.
+   Kleben kann er nur, solange sein umschließender Block im Bild ist;
+   .dialogue-play umfasst deshalb Verlauf UND Feld (DialogueLiveView.tsx).
+   Am Ende des Verlaufs angekommen, rückt der Kasten von selbst an seinen
+   Platz. */
+.dialogue-reply-dock {
+  position: sticky;
+  bottom: 0;
+  /* Über den Nachrichten, die darunter durchlaufen — bewusst niedrig:
+     Overlays der App (Modale, Popover) liegen deutlich höher. */
+  z-index: 2;
+  margin-top: 16px;
+  padding: 10px 0 8px;
+  /* Deckend, sonst schimmert der Verlauf durch. Dieselbe Farbe wie die
+     Inhaltsfläche, damit der Kasten nicht als Karte wirkt. */
+  background: var(--lcars-bg);
+  border-top: 1px solid var(--lcars-border);
+}
+/* Gedeckelt wird das Textfeld selbst, NICHT der Kasten: Ein max-height mit
+   overflow am Dock würde das nach oben aufklappende Markdown-Popover
+   abschneiden (.markdown-hint-popover in shared.css). Das Feld lässt sich
+   weiterhin ziehen (resize-y), nur eben nicht über den halben Schirm
+   hinaus — sonst bliebe vom Verlauf nichts übrig. Eine Textarea scrollt
+   ohnehin von sich aus, es geht dabei also nichts verloren. */
+.dialogue-reply-dock textarea {
+  max-height: 40svh;
+}
+.dialogue-reply-dock .markdown-editor-preview {
+  max-height: 40svh;
+  overflow-y: auto;
+}
+/* Auf niedrigen Schirmen (Telefon im Querformat, aufgeklappte Tastatur)
+   zählt jede Zeile. */
+@media (max-height: 560px) {
+  .dialogue-reply-dock textarea,
+  .dialogue-reply-dock .markdown-editor-preview {
+    max-height: 30svh;
+  }
+}
