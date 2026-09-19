@@ -11,6 +11,14 @@ import { FormError } from "@/app/_shared/FormPrimitives";
 
 const initialState: DialogueMessageState = {};
 
+// Der Kasten bleibt in beiden Fällen ein Kasten (Rahmen, Hintergrund, Abstand)
+// — nur das Kleben schaltet der Modifier ab, siehe archive.css.
+function dockClassName(sticky: boolean): string {
+  return sticky
+    ? "dialogue-reply-dock"
+    : "dialogue-reply-dock dialogue-reply-dock--loose";
+}
+
 // Wird nur gerendert, wenn der Aufrufer (die Server-Seite) das auch will —
 // /dialogues/[slug] prüft Teilnahme + offen-Status bereits serverseitig.
 // canReplyNow ist zusätzlich für Dialoge mit mehr als zwei Teilnehmenden
@@ -29,12 +37,19 @@ export default function DialogueReplyForm({
   replyCharacters,
   hasOnlyBlockedCharacter = false,
   onSent,
+  sticky = true,
+  onStickyChange,
 }: {
   entrySlug: string;
   canReplyNow?: boolean;
   replyCharacters: DialogueReplyCharacter[];
   hasOnlyBlockedCharacter?: boolean;
   onSent?: () => void;
+  // Klebt der Kasten am unteren Rand? Die Wahl gehört dem Aufrufer
+  // (DialogueLiveView), weil er sie auch für den Sprung ans Verlaufsende
+  // braucht — die Checkbox unten meldet sie nur zurück.
+  sticky?: boolean;
+  onStickyChange?: (sticky: boolean) => void;
 }) {
   const [state, formAction, pending] = useActionState(
     postDialogueMessageAction,
@@ -62,73 +77,106 @@ export default function DialogueReplyForm({
   if (!canReplyNow) return null;
 
   if (hasOnlyBlockedCharacter || replyCharacters.length === 0) {
+    // Auch der Hinweis sitzt im Dock: Er steht an der Stelle, an der sonst
+    // das Feld steht, und beantwortet beim Scrollen durch den Verlauf genau
+    // die Frage, die man dort stellt („warum kann ich nicht schreiben?").
     return (
-      <p className="text-lcars-primary-ink text-[13px] mt-[16px]" role="status">
-        Dein Charakter war zuletzt am Zug — warte, bis jemand anderes
-        geantwortet hat.
-      </p>
+      <div className={dockClassName(sticky)}>
+        <p className="text-lcars-primary-ink text-[13px]" role="status">
+          Dein Charakter war zuletzt am Zug — warte, bis jemand anderes
+          geantwortet hat.
+        </p>
+      </div>
     );
   }
 
   const single = replyCharacters.length === 1;
 
+  // Der Dock-Kasten klebt am unteren Rand der Inhaltsfläche, damit das Feld
+  // beim Lesen des Verlaufs nicht verschwindet (siehe .dialogue-reply-dock in
+  // archive.css). Er sitzt HIER und nicht in DialogueLiveView, weil nur diese
+  // Komponente weiß, ob sie überhaupt etwas anzeigt — sonst bliebe bei einer
+  // fremden Antwort-Reservierung ein leerer Balken am Bildrand kleben.
   return (
-    <form
-      ref={formRef}
-      action={formAction}
-      className="flex flex-col gap-[8px] mt-[16px]"
-    >
-      <input type="hidden" name="entrySlug" value={entrySlug} />
-
-      {/* Immer sichtbar: mit welchem Charakter geantwortet wird. Bei mehreren
-          eigenen Teilnehmer-Charakteren als Auswahl, sonst als reine Anzeige
-          (+ Hidden-Input für den Sprecher-Schlüssel). */}
-      {single ? (
-        <p className="lcars-eyebrow">
-          Antworten als{" "}
-          <span className="text-lcars-ink-contrast">
-            {replyCharacters[0].name}
-          </span>
-          <input type="hidden" name="speaker" value={replyCharacters[0].key} />
-        </p>
-      ) : (
-        <label className="flex flex-col gap-[4px]">
-          <span className="lcars-eyebrow">Antworten als</span>
-          <select
-            name="speaker"
-            value={validCharKey}
-            onChange={(e) => setCharKey(e.target.value)}
-            className="lcars-input rounded-full self-start"
-          >
-            {replyCharacters.map((c) => (
-              <option key={c.key} value={c.key}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
-
-      <label htmlFor="dlg-reply-body" className="lcars-eyebrow">
-        Antworten
-      </label>
-      {/* Der Beitrag wird als Markdown gerendert — deshalb hier derselbe
-          Editor mit Toolbar und Vorschau wie in den Content-Formularen,
-          statt eines nackten Eingabefelds. */}
-      <MarkdownEditor id="dlg-reply-body" name="bodyMarkdown" required rows={10} />
-      <p className="text-lcars-ink text-[14px]">
-        <MarkdownFormatHint />
-      </p>
-
-      <button
-        type="submit"
-        disabled={pending}
-        className="lcars-pill-btn--outline self-start disabled:opacity-50"
+    <div className={dockClassName(sticky)}>
+      <form
+        ref={formRef}
+        action={formAction}
+        className="flex flex-col gap-[8px]"
       >
-        {pending ? "Wird gesendet…" : "Senden"}
-      </button>
+        <input type="hidden" name="entrySlug" value={entrySlug} />
 
-      <FormError message={state?.error} />
-    </form>
+        {/* Immer sichtbar: mit welchem Charakter geantwortet wird. Bei mehreren
+            eigenen Teilnehmer-Charakteren als Auswahl, sonst als reine Anzeige
+            (+ Hidden-Input für den Sprecher-Schlüssel). */}
+        {single ? (
+          <p className="lcars-eyebrow">
+            Antworten als{" "}
+            <span className="text-lcars-ink-contrast">
+              {replyCharacters[0].name}
+            </span>
+            <input type="hidden" name="speaker" value={replyCharacters[0].key} />
+          </p>
+        ) : (
+          <label className="flex flex-col gap-[4px]">
+            <span className="lcars-eyebrow">Antworten als</span>
+            <select
+              name="speaker"
+              value={validCharKey}
+              onChange={(e) => setCharKey(e.target.value)}
+              className="lcars-input rounded-full self-start"
+            >
+              {replyCharacters.map((c) => (
+                <option key={c.key} value={c.key}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        <div className="flex flex-wrap items-center justify-between gap-[8px]">
+          <label htmlFor="dlg-reply-body" className="lcars-eyebrow">
+            Antworten
+          </label>
+          {/* data-no-draft: Die Entwurfs-Sicherung soll diesen Haken NICHT
+              mitschreiben (siehe INPUT_DRAFT_OPT_OUT_ATTR in
+              src/lib/inputDraft.ts) — er ist keine Eingabe, die verloren
+              gehen könnte, sondern eine Anzeige-Vorliebe mit eigenem
+              Speicher. Ohne das Opt-out würden sich beide beim Neuaufbau
+              gegenseitig überschreiben. */}
+          <label className="flex items-center gap-[8px]">
+            <input
+              type="checkbox"
+              className="lcars-checkbox"
+              data-no-draft
+              checked={sticky}
+              onChange={(e) => onStickyChange?.(e.target.checked)}
+            />
+            <span className="lcars-eyebrow">Feld angeheftet</span>
+          </label>
+        </div>
+        {/* Der Beitrag wird als Markdown gerendert — deshalb hier derselbe
+            Editor mit Toolbar und Vorschau wie in den Content-Formularen,
+            statt eines nackten Eingabefelds. Vier Zeilen statt zehn: Der
+            Kasten steht jetzt dauerhaft im Bild und nähme sonst den halben
+            Schirm ein. Ziehen geht weiterhin (resize-y am Feld), nach oben
+            gedeckelt durch die max-height des Docks. */}
+        <MarkdownEditor id="dlg-reply-body" name="bodyMarkdown" required rows={4} />
+        <p className="text-lcars-ink text-[14px]">
+          <MarkdownFormatHint />
+        </p>
+
+        <button
+          type="submit"
+          disabled={pending}
+          className="lcars-pill-btn--outline self-start disabled:opacity-50"
+        >
+          {pending ? "Wird gesendet…" : "Senden"}
+        </button>
+
+        <FormError message={state?.error} />
+      </form>
+    </div>
   );
 }

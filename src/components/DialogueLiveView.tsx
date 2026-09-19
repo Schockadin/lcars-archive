@@ -17,6 +17,10 @@ import FollowButtons from "./FollowButtons";
 import type { InviteCandidate } from "./InviteDialogueParticipantForm";
 import type { GmContact } from "@/lib/users";
 import { speakerKey } from "@/lib/dialogueSpeaker";
+import {
+  readReplyDockSticky,
+  writeReplyDockSticky,
+} from "@/lib/replyDockPreference";
 
 export interface DialogueReplyCharacter {
   // Sprecher-Schlüssel ("c12"/"n7", siehe src/lib/dialogueSpeaker.ts) —
@@ -153,6 +157,57 @@ export default function DialogueLiveView({
   // (der Reserve-Button wird gesperrt, Server-Guard zusätzlich).
   const canReserve = eligibleReplyCharacters.length > 0;
 
+  // Klebt das Antwortfeld am unteren Rand? Die Wahl steht im localStorage
+  // (siehe src/lib/replyDockPreference.ts) und gehört hierher, weil der
+  // Sprung ans Verlaufsende sie ebenfalls braucht. Erster Aufbau immer mit
+  // der Vorgabe, damit Server-Render und Hydration übereinstimmen — den
+  // Speicher gibt es erst im Effekt darunter.
+  const [stickyReply, setStickyReply] = useState(true);
+  const threadRef = useRef<HTMLDivElement>(null);
+
+  // Beim Öffnen ans Ende des Verlaufs springen — wie in einem Chat, statt
+  // ihn von oben lesen zu müssen. Lag bis v1.45 in DialogueThread und ist
+  // hierher gewandert, weil der Sprung seit dem klebenden Antwortfeld beides
+  // kennen muss: Ein Sprung auf die letzte Nachricht („block: end") legt
+  // deren Unterkante auf die Unterkante der Inhaltsfläche — und genau dort
+  // steht jetzt das Feld. Die letzte Nachricht wäre also ausgerechnet nach
+  // dem Sprung verdeckt. scroll-margin-bottom in Höhe des Kastens hält sie
+  // frei; ohne Kasten (Zuschauer, fremde Reservierung) bleibt es bei 0.
+  //
+  // Nur beim ersten Aufbau (leere Deps): Spätere Polls dürfen die
+  // Leseposition nicht nach unten reißen, während jemand ältere Nachrichten
+  // liest. Geschlossene Gespräche kommen hier nie an — die Seite leitet sie
+  // vorher um (siehe /dialogues/[slug]/page.tsx).
+  useEffect(() => {
+    const preferred = readReplyDockSticky();
+    // Bewusst im Mount-Effect statt als Initialwert: localStorage gibt es
+    // beim SSR nicht, das erste Client-Render muss aber zum Server-Render
+    // passen (Hydration). Gelesen wird genau einmal, es gibt also auch
+    // nichts zu abonnieren — kein Fall für useSyncExternalStore.
+    // eslint-disable-next-line react-hooks/set-state-in-effect, react-you-might-not-need-an-effect/no-initialize-state
+    setStickyReply(preferred);
+
+    const thread = threadRef.current;
+    if (!thread) return;
+    // Die Höhe des Kastens steht schon jetzt fest (sie hängt nicht am
+    // Kleben), die gewählte Einstellung aber erst seit dieser Zeile — also
+    // beides hier, vor dem einen Sprung. Klebt der Kasten nicht, verdeckt er
+    // auch nichts und es braucht keinen Abstand. Nachführen muss man ihn
+    // später nicht: Gesprungen wird nur dieses eine Mal.
+    const dock = preferred
+      ? thread.parentElement?.querySelector(".dialogue-reply-dock")
+      : null;
+    thread.style.scrollMarginBottom = dock
+      ? `${Math.round(dock.getBoundingClientRect().height)}px`
+      : "";
+    thread.scrollIntoView({ behavior: "instant", block: "end" });
+  }, []);
+
+  function handleStickyChange(next: boolean) {
+    setStickyReply(next);
+    writeReplyDockSticky(next);
+  }
+
   const [releasePending, startRelease] = useTransition();
   function handleRelease() {
     startRelease(async () => {
@@ -163,18 +218,41 @@ export default function DialogueLiveView({
 
   return (
     <>
-      {messages.length > 0 ? (
-        <DialogueThread
-          messages={messages}
-          participants={participants}
-          currentUserId={currentUserId}
-          dialogueOpen={open}
-          entrySlug={entrySlug}
-          canModerate={canModerate}
-        />
-      ) : (
-        <p className="lcars-empty-state">Noch keine Nachrichten.</p>
-      )}
+      {/* Verlauf und Antwortfeld gehören in EINEN Block: Das Feld klebt per
+          position: sticky am unteren Rand (.dialogue-reply-dock), und kleben
+          kann es nur, solange sein umschließender Block im Bild ist. Stünde
+          es wie früher unten im Bedienteil, wäre dieser Block erst am Ende
+          des Verlaufs zu sehen — also genau dann, wenn man es ohnehin sieht. */}
+      <div className="dialogue-play">
+        <div ref={threadRef}>
+          {messages.length > 0 ? (
+            <DialogueThread
+              messages={messages}
+              participants={participants}
+              currentUserId={currentUserId}
+              dialogueOpen={open}
+              entrySlug={entrySlug}
+              canModerate={canModerate}
+            />
+          ) : (
+            <p className="lcars-empty-state">Noch keine Nachrichten.</p>
+          )}
+        </div>
+
+        {open && isParticipant && (
+          <DialogueReplyForm
+            entrySlug={entrySlug}
+            canReplyNow={canReplyNow}
+            replyCharacters={eligibleReplyCharacters}
+            hasOnlyBlockedCharacter={
+              myCharacters.length > 0 && eligibleReplyCharacters.length === 0
+            }
+            onSent={poll}
+            sticky={stickyReply}
+            onStickyChange={handleStickyChange}
+          />
+        )}
+      </div>
 
       {!open && (
         <p className="text-lcars-primary-ink text-[13px] mt-[8px]" role="status">
@@ -191,17 +269,6 @@ export default function DialogueLiveView({
             title={title}
             subscribeOnly
             showShare={!open}
-          />
-        )}
-        {open && isParticipant && (
-          <DialogueReplyForm
-            entrySlug={entrySlug}
-            canReplyNow={canReplyNow}
-            replyCharacters={eligibleReplyCharacters}
-            hasOnlyBlockedCharacter={
-              myCharacters.length > 0 && eligibleReplyCharacters.length === 0
-            }
-            onSent={poll}
           />
         )}
         {open && isParticipant && multiParty && !canReplyNow && (

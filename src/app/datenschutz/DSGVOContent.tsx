@@ -177,6 +177,18 @@ export default function DSGVOContent({ year }: { year: number }) {
           Zahlungsdaten werden dabei grundsätzlich nicht gesichert.
         </p>
         <p>
+          Ebenfalls nur auf deinem Gerät, dafür dauerhaft, liegen einzelne{" "}
+          <strong>Anzeige-Einstellungen</strong> im{" "}
+          <strong>lokalen Speicher</strong> (localStorage) des Browsers: ob der
+          Hinweis zu Cookies bereits gelesen wurde und ob das Antwortfeld in
+          einem laufenden Gespräch am unteren Rand angeheftet bleiben soll
+          (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse
+          daran, eine einmal getroffene Wahl nicht bei jedem Aufruf erneut
+          abzufragen). Diese Angaben werden nicht an den Server oder Dritte
+          übertragen, enthalten keine personenbezogenen Daten und lassen sich
+          jederzeit durch Leeren der Websitedaten im Browser entfernen.
+        </p>
+        <p>
           Für den Offline-Betrieb der installierbaren App (PWA) legt ein{" "}
           <strong>Service Worker</strong> Kopien bereits aufgerufener Seiten
           sowie statischer Dateien (Programmcode, Schriften, Symbole) im lokalen

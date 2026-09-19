@@ -149,6 +149,26 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.46",
+    title: "Antworten, ohne den Platz zu verlieren",
+    items: [
+      {
+        text: "In einem laufenden Gespräch bleibt das Antwortfeld jetzt am unteren Rand stehen, während du den Verlauf durchscrollst. Wer mitten im Gespräch etwas nachlesen will, muss danach nicht mehr ganz nach unten scrollen, um zu schreiben.",
+        category: "charaktere",
+        tutorial: "gespraeche",
+      },
+      {
+        text: "Auf jeder Seite steht unten rechts ein Pfeil zurück an den Seitenanfang, sobald du ein Stück nach unten gescrollt hast — praktisch bei langen Biografien, Logbüchern und Gesprächsverläufen.",
+        category: "darstellung",
+      },
+      {
+        text: "Über dem Antwortfeld steht dafür ein Haken „Feld angeheftet“: Nimmst du ihn heraus, rückt das Feld wieder ans Ende des Verlaufs und gibt den vollen Platz zum Lesen frei. Dein Browser merkt sich die Wahl für dieses Gerät.",
+        category: "charaktere",
+        tutorial: "gespraeche",
+      },
+    ],
+  },
+  {
     version: "1.45",
     title: "Verweise in Klammern führen wieder ans Ziel",
     // Der Hauptteil dieser Version ist ein Fehler in einer bereits

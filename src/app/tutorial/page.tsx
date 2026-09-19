@@ -98,6 +98,13 @@ export default function TutorialPage() {
                 nicht fertig ist, niemandem sonst.
               </p>
               <p>
+                Auf langen Seiten — Biografien, Logbüchern,
+                Gesprächsverläufen — erscheint unten rechts ein{" "}
+                <strong>Pfeil nach oben</strong>, sobald du ein Stück gescrollt
+                hast. Ein Klick bringt dich zurück an den Seitenanfang; am
+                Anfang angekommen, verschwindet er wieder.
+              </p>
+              <p>
                 Ein eigenes Konto kannst du dir nicht selbst anlegen — Zugänge
                 werden ausschließlich von der Spielleitung oder Administration
                 per Einladung vergeben (siehe nächster Abschnitt).
@@ -532,6 +539,18 @@ export default function TutorialPage() {
                 Person, <strong>wann sie verschickt wurde</strong> (Datum und
                 Uhrzeit) — so siehst du, ob zwischen zwei Beiträgen Minuten
                 oder Tage lagen.
+              </p>
+              <p>
+                Beim Öffnen springt die Seite ans <strong>Ende</strong> des
+                Verlaufs, und das <strong>Antwortfeld bleibt beim Scrollen am
+                unteren Rand stehen</strong>: Du kannst also weiter oben etwas
+                nachlesen und trotzdem sofort tippen, ohne vorher wieder ganz
+                nach unten zu scrollen. Das Feld lässt sich an seiner unteren
+                Kante größer ziehen, wenn du mehr Platz zum Schreiben brauchst.
+                Wer lieber den vollen Platz zum Lesen hat, nimmt den Haken{" "}
+                <strong>„Feld angeheftet&ldquo;</strong> über dem Feld heraus — dann
+                steht es wieder am Ende des Verlaufs. Diese Wahl merkt sich
+                dein Browser für dieses Gerät.
               </p>
               <p>
                 Sobald eine teilnehmende Person es abschließt, wird es{" "}

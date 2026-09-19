@@ -220,6 +220,15 @@ export function ChevronLeftIcon() {
     </svg>
   );
 }
+// Zurück an den Seitenanfang (ScrollTopButton.tsx) — dieselbe Winkel-Form
+// wie die beiden Chevrons daneben, nur nach oben.
+export function ChevronUpIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <path d="M5 15l7-7 7 7" />
+    </svg>
+  );
+}
 export function ChevronRightIcon() {
   return (
     <svg {...ICON_PROPS}>

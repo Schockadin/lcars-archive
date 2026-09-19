@@ -1397,3 +1397,39 @@
   color: var(--lcars-ink-data);
   font-weight: 400;
 }
+
+/* ── „Nach oben" ─────────────────────────────────────────────────── */
+/* Der Knopf unten rechts, der erscheint, sobald es etwas nach oben zu
+   scrollen gibt (ScrollTopButton.tsx). Gescrollt wird .lcars-main-content und
+   nicht das Fenster, deshalb sticky statt fixed — fixed säße relativ zum
+   Fenster und damit quer über Seitenleiste und Fußzeile.
+
+   Der Kasten ist 0 Pixel hoch und liegt damit am Ende des Inhalts, ohne dort
+   Platz zu belegen; der Knopf darin ist absolut positioniert und sitzt
+   deshalb ÜBER der Unterkante statt darunter. pointer-events: none hält den
+   unsichtbaren Kasten aus dem Weg — nur der Knopf selbst nimmt Klicks an. */
+.scroll-top-dock {
+  position: sticky;
+  bottom: 0;
+  height: 0;
+  /* Über dem Antwortfeld offener Gespräche (.dialogue-reply-dock, z-index 2),
+     das ebenfalls am unteren Rand klebt. */
+  z-index: 3;
+  pointer-events: none;
+}
+/* Optik kommt von .lcars-icon-btn (Kreis, Rahmen, Hover) — hier nur die
+   Position und der Schatten, der ihn vom Inhalt darunter abhebt. */
+.scroll-top-btn {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  pointer-events: auto;
+  box-shadow: var(--lcars-shadow-float);
+}
+/* Auf Papier gehört er nicht: Ein schwebender Knopf über dem Text wäre dort
+   nur ein Fleck — anders als auf dem Schirm gibt es da nichts zu scrollen. */
+@media print {
+  .scroll-top-dock {
+    display: none;
+  }
+}

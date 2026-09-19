@@ -106,7 +106,21 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Nachrichtenkarte eines **laufenden** Gesprächs trägt neben dem Sprechernamen
   ihren Zeitstempel (`formatDateTimeShort`, fest auf `Europe/Berlin` — Server-
   Render und Hydration liefern denselben String); abgeschlossene Gespräche
-  bleiben ohne, dort ist der Verlauf ein zusammenhängender Lesetext.
+  bleiben ohne, dort ist der Verlauf ein zusammenhängender Lesetext. Das
+  **Antwortfeld klebt am unteren Rand** der Inhaltsfläche
+  (`.dialogue-reply-dock`, `position: sticky` — gescrollt wird
+  `.lcars-main-content`, nicht das Fenster, deshalb kein `fixed`). Kleben kann
+  es nur, solange sein umschließender Block im Bild ist: `.dialogue-play`
+  umfasst deshalb Verlauf UND Feld. Den Sprung ans Verlaufsende beim Öffnen
+  macht darum `DialogueLiveView` statt wie früher `DialogueThread` — er muss
+  die Höhe des Felds als `scroll-margin-bottom` freihalten, sonst läge die
+  letzte Nachricht ausgerechnet danach darunter. Die **Checkbox „Feld
+  angeheftet"** im Kasten schaltet das Kleben ab
+  (`.dialogue-reply-dock--loose`); die Wahl liegt im `localStorage`
+  (`src/lib/replyDockPreference.ts`), nicht am Konto — sie gilt dem Layout
+  des jeweiligen Geräts, und eine Spalte in `users` verlangte eine Migration
+  gegen dieselbe Datenbank, an der auch die Deploy-Preview hängt. Der Haken
+  trägt `data-no-draft`, sonst schriebe ihn die Entwurfs-Sicherung mit.
 - **Gespräche mit NPCs** — Gesprächspartner kann auch ein **NPC** sein. Ein NPC
   ist **kein Charakter**, sondern ein **Datenbank-Eintrag der Kategorie `npc`**
   (`archive_entries.category = 'npc'`, siehe `getNpcOptions`). Wer im Gespräch
@@ -1417,6 +1431,19 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     └── utils/                # Stardate, Datumsformatierung …
 
 ### Komponenten
+
+**„Nach oben"** (`ScrollTopButton`) steht als letztes Kind der Scrollfläche in
+`MainContent` und damit auf jeder Seite: unten rechts, sichtbar erst ab
+120 gescrollten Pixeln. Gescrollt wird `.lcars-main-content` und nicht das
+Fenster, deshalb hängt der Zuhörer an diesem Element (gefunden per `closest`
+vom eigenen Kasten aus) und der Kasten ist `sticky` statt `fixed`. Der Kasten
+bleibt auch unsichtbar im Baum — er ist der Anker für genau dieses `closest` —,
+ist 0 Pixel hoch und lässt Klicks durch; der Knopf darin sitzt absolut
+positioniert darüber. Wer Bewegung reduziert haben will, bekommt den Sprung
+ohne Animation. Nach dem Klick wandert der Fokus auf `#lcars-main` — dasselbe
+Ziel wie die Sprungmarke „Zum Inhalt springen": Der Knopf verschwindet oben
+angekommen, und mit ihm ginge der Fokus sonst an den Seitenkörper verloren.
+Auf Papier (`@media print`) ist er ausgeblendet.
 
 Die Aktionen einer Inhaltsseite (Owner, Sichtbarkeit, Folgen/Merken, Teilen,
 Bilder, Bearbeiten, Löschen) stehen in `ContentActionsPanel` — einem

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import HashScrollRestorer from "./HashScrollRestorer";
 import PullToRefresh from "./PullToRefresh";
+import ScrollTopButton from "./ScrollTopButton";
 
 export default function MainContent({
   children,
@@ -19,6 +20,10 @@ export default function MainContent({
       <main id="lcars-main" tabIndex={-1} className="flex-1 w-full flex flex-col">
         <div className="w-full h-full">{children}</div>
       </main>
+      {/* Letztes Kind der Scrollfläche: Von hier aus findet der Knopf sie per
+          closest, und sein klebender Kasten liegt über allem, was darüber
+          steht (siehe .scroll-top-dock in shared.css). */}
+      <ScrollTopButton />
     </div>
   );
 }
