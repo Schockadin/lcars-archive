@@ -921,6 +921,28 @@ export default function TutorialPage() {
                 existiert.
               </p>
               <p>
+                Soll der Verweis nicht nur auf die Seite, sondern auf einen{" "}
+                <strong>Abschnitt</strong> darin führen, hängst du dessen
+                Überschrift mit einer Raute an:{" "}
+                <code>[[Klingonen#Frühe Jahre]]</code>. Der Link springt dann
+                genau zu dieser Überschrift. Beides lässt sich verbinden:{" "}
+                <code>[[Klingonen#Frühe Jahre|damals]]</code>.
+              </p>
+              <p>
+                Gesucht wird dabei nach dem <strong>Titel</strong> bzw.{" "}
+                <strong>Namen</strong>, nach der <strong>Adresse</strong> des
+                Eintrags (<code>[[t-mok]]</code>) und nach seinen{" "}
+                <strong>Aliasen</strong> — ein Zweitname in Klammern führt also
+                genauso ans Ziel wie im Fließtext. Groß- und Kleinschreibung
+                spielt keine Rolle. Findet sich zu einem Verweis nichts, bleibt
+                er als <em>„Kein Eintrag gefunden“</em> markiert stehen, statt
+                als Link zu erscheinen, der nirgendwohin führt — so siehst du
+                auf einen Blick, wo noch ein Eintrag fehlt oder ein Name
+                falsch geschrieben ist. Dasselbe zeigt dir schon der{" "}
+                <strong>Vorschau</strong>-Umschalter über dem Textfeld, bevor
+                du speicherst.
+              </p>
+              <p>
                 Wer sich das Tippen der Klammern sparen will, nutzt beim
                 Speichern das Kästchen <strong>„Automatisch verlinken“</strong>{" "}
                 unter dem Textfeld: Es durchsucht deinen Text nach bekannten
@@ -945,16 +967,27 @@ export default function TutorialPage() {
                 bleibt, wie du es geschrieben hast.
               </p>
               <p>
-                Spielleitung/Admin haben zusätzlich ein eigenständiges
-                Autolinking-Werkzeug direkt auf jeder Detailseite (im
-                „Admin-Aktionen“-Bereich), das denselben Mechanismus auf bereits
-                gespeicherte Inhalte anwendet, plus ein Werkzeug, um Wikilinks
-                wieder zu entfernen (macht Autolinking-Ergebnisse rückgängig)
-                und eines, das gerade Anführungszeichen/Apostrophe zu
-                typografisch korrekten Zeichen vereinheitlicht. Für alle Inhalte
-                auf einmal gibt es unter „Scripts“ im Adminbereich den Knopf{" "}
+                Auch <strong>nachträglich</strong> lässt sich verlinken: Das{" "}
+                <strong>Verlinkungs-Werkzeug</strong> wendet denselben
+                Mechanismus auf einen bereits gespeicherten Inhalt an — mit
+                Vorschau, du siehst also erst die Trefferliste und bestätigst
+                dann. Derselbe Knopf schaltet nach dem Durchlauf auf{" "}
+                <strong>Verlinkung entfernen</strong> um und macht das Ergebnis
+                wieder rückgängig. Du findest ihn an <strong>deinen</strong>{" "}
+                Inhalten: auf der Detailseite im Aktionen-Bereich und in der
+                Liste unter <strong>„Meine Inhalte“</strong>. Bei{" "}
+                <strong>Gesprächen</strong> gibt es ihn nicht — deren Text steht
+                in den einzelnen Nachrichten.
+              </p>
+              <p>
+                Die <strong>Spielleitung</strong> darf das zusätzlich auf{" "}
+                <strong>fremden</strong> Inhalten (Recht
+                „Verlinkungs-Werkzeuge“), und für alle Inhalte auf einmal gibt
+                es unter „Scripts“ im Adminbereich den Knopf{" "}
                 <strong>„Alle Inhalte verlinken“</strong> (siehe Abschnitt für
-                Spielleitung &amp; Admins).
+                Spielleitung &amp; Admins). Dort steht auch das Werkzeug, das
+                gerade Anführungszeichen/Apostrophe zu typografisch korrekten
+                Zeichen vereinheitlicht.
               </p>
             </div>
           </LcarsDataRow>

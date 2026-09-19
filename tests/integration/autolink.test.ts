@@ -1,12 +1,15 @@
 import { describe, it, expect } from "vitest";
 import {
   applyAutolinks,
+  autoLinkMarkdown,
   getAutolinkTargets,
   renderContentHtml,
   resolveAllWikilinks,
+  resolvePublicWikilinks,
   type AutolinkTarget,
 } from "@/lib/autolink";
 import { createArchiveEntry } from "@/lib/archive";
+import sql from "@/lib/db";
 import { insertCharacter, insertMission, insertUser } from "./helpers";
 
 describe("applyAutolinks", () => {
@@ -102,6 +105,23 @@ describe("getAutolinkTargets", () => {
     );
   });
 
+  // Gegenstück zum gelöschten Ziel in resolveAllWikilinks weiter unten: Eine
+  // gelöschte Mission darf auch gar nicht erst automatisch verlinkt werden —
+  // getMissionBySlug lädt nur mit `deleted_at IS NULL`, der Link liefe also
+  // ins Leere. Missionen haben keine Draft-/Sichtbarkeitssperre, deshalb ist
+  // das hier die einzige Einschränkung.
+  it("excludes a soft-deleted mission", async () => {
+    const mission = await insertMission({ title: "Verschollene Mission" });
+    await sql`UPDATE missions SET deleted_at = NOW() WHERE id = ${mission.id}`;
+
+    const targets = await getAutolinkTargets();
+
+    expect(targets.find((t) => t.slug === mission.slug)).toBeUndefined();
+    expect(applyAutolinks("Zurück zur Verschollene Mission.", targets).sourceMd).toBe(
+      "Zurück zur Verschollene Mission.",
+    );
+  });
+
   it("excludes the given target from the result", async () => {
     const character = await insertCharacter({ name: "Ausgeschlossen" });
 
@@ -139,6 +159,17 @@ describe("resolveAllWikilinks", () => {
     const html = "<p>Ganz normaler Text.</p>";
     expect(await resolveAllWikilinks(html)).toBe(html);
   });
+
+  it("schreibt das Ziel escaped in den Hinweis des Platzhalters", async () => {
+    // Das Ziel steht in einem title-Attribut des gespeicherten HTML; ein
+    // Anführungszeichen darin dürfte es nicht beenden.
+    const html = `<a href="wikilink://${encodeURIComponent('a" x')}">a" x</a>`;
+
+    const result = await resolveAllWikilinks(html);
+
+    expect(result).toContain("Kein Eintrag gefunden: a&quot; x");
+    expect(result).not.toContain('gefunden: a" x"');
+  });
 });
 
 describe("renderContentHtml", () => {
@@ -148,5 +179,175 @@ describe("renderContentHtml", () => {
     const html = await renderContentHtml("Ein Verweis auf [[Verlinkte Person]].");
 
     expect(html).toContain(`href="/characters/${character.slug}"`);
+  });
+});
+
+describe("resolveAllWikilinks und gelöschte Inhalte", () => {
+  it("behandelt ein gelöschtes Ziel als nicht gefunden", async () => {
+    const character = await insertCharacter({ name: "Weggeräumt" });
+    await sql`UPDATE characters SET deleted_at = NOW() WHERE id = ${character.id}`;
+
+    const result = await resolveAllWikilinks(
+      `<a href="wikilink://Weggeräumt">Weggeräumt</a>`,
+    );
+
+    // Die Detailseite lädt nur mit deleted_at IS NULL — ein Link dorthin
+    // liefe ins Leere.
+    expect(result).toContain("lcars-wikilink--missing");
+    expect(result).not.toContain(character.slug);
+  });
+});
+
+describe("resolvePublicWikilinks", () => {
+  it("löst öffentliche Ziele auf", async () => {
+    const character = await insertCharacter({ name: "Öffentlich Bekannt" });
+
+    const result = await resolvePublicWikilinks(
+      `<a href="wikilink://Öffentlich Bekannt">Öffentlich Bekannt</a>`,
+    );
+
+    expect(result).toBe(
+      `<a href="/characters/${character.slug}" class="lcars-wikilink">Öffentlich Bekannt</a>`,
+    );
+  });
+
+  it("verrät keine Entwürfe — die Vorschau ist ohne Anmeldung aufrufbar", async () => {
+    await insertCharacter({ name: "Geheimer Entwurf", isDraft: true });
+
+    const result = await resolvePublicWikilinks(
+      `<a href="wikilink://Geheimer Entwurf">Geheimer Entwurf</a>`,
+    );
+
+    expect(result).toContain("lcars-wikilink--missing");
+  });
+
+  it("fragt die DB gar nicht erst, wenn kein Wikilink im HTML steht", async () => {
+    const html = "<p>Nichts zu tun.</p>";
+    expect(await resolvePublicWikilinks(html)).toBe(html);
+  });
+});
+
+// Der Fehler: Ein von Hand getipptes [[Ziel]] gehört für applyAutolinks zu den
+// geschützten Bereichen und steht deshalb nie in dessen matches — es blieb
+// beim Speichern MIT dem Haken „Automatisch verlinken" als toter
+// <a href="wikilink://Ziel"> stehen. Ohne den Haken lief derselbe Text über
+// renderContentHtml und wurde korrekt aufgelöst.
+describe("autoLinkMarkdown und von Hand gesetzte Wikilinks", () => {
+  it("löst ein [[Ziel]] auf, das sonst nirgends im Text steht", async () => {
+    const character = await insertCharacter({ name: "Handverlinkt" });
+
+    const { sourceMd, html } = await autoLinkMarkdown(
+      "Ein Verweis auf [[Handverlinkt]].",
+    );
+
+    // Der Quelltext bleibt, wie er getippt wurde — nur das HTML wird aufgelöst.
+    expect(sourceMd).toBe("Ein Verweis auf [[Handverlinkt]].");
+    expect(html).toContain(`href="/characters/${character.slug}"`);
+    expect(html).toContain("lcars-wikilink");
+    expect(html).not.toContain("wikilink://");
+  });
+
+  it("löst auch den Alias-Fall [[Ziel|Text]] auf", async () => {
+    const character = await insertCharacter({ name: "Handverlinkt" });
+
+    const { html } = await autoLinkMarkdown(
+      "Ein Verweis auf [[Handverlinkt|die Person]].",
+    );
+
+    expect(html).toContain(`href="/characters/${character.slug}"`);
+    expect(html).toContain(">die Person</a>");
+  });
+
+  it("löst ein [[Ziel]] auf, das nur als Slug geschrieben ist", async () => {
+    const character = await insertCharacter({
+      name: "Slug Person",
+      slug: "slug-person",
+    });
+
+    const { html } = await autoLinkMarkdown("Siehe [[slug-person]].");
+
+    expect(html).toContain(`href="/characters/${character.slug}"`);
+  });
+
+  it("löst ein [[Ziel]] auf, das ein Zweitname des Eintrags ist", async () => {
+    const author = await insertUser();
+    // Im Fließtext verlinkt das Autolinking den Zweitnamen längst — in
+    // Klammern gesetzt galt derselbe Name bisher als „nicht gefunden".
+    const entry = await createArchiveEntry({
+      title: "Klingonen",
+      category: "other",
+      tags: [],
+      summary: null,
+      aliases: ["Klingonisches Reich"],
+      attributeValues: {},
+      referenceValues: {},
+      bodyMarkdown: "Ein Volk.",
+      ownerUserId: author.id,
+      isDraft: false,
+    });
+
+    const { html } = await autoLinkMarkdown(
+      "Das [[Klingonisches Reich]] schweigt.",
+    );
+
+    expect(html).toContain(`href="/archive/${entry.slug}"`);
+    expect(html).not.toContain("lcars-wikilink--missing");
+  });
+
+  it("hängt den Abschnitt als Anker an den Link", async () => {
+    const character = await insertCharacter({ name: "Mit Abschnitten" });
+
+    const { html } = await autoLinkMarkdown(
+      "Siehe [[Mit Abschnitten#Frühe Jahre]].",
+    );
+
+    // Derselbe Anker, den rehypeSlug auf der Zielseite an die Überschrift
+    // „Frühe Jahre" schreibt (siehe headingAnchor-Test in markdown.test.ts).
+    expect(html).toContain(
+      `href="/characters/${character.slug}#frühe-jahre"`,
+    );
+  });
+
+  it("behält Anzeigetext und Abschnitt gemeinsam bei", async () => {
+    const character = await insertCharacter({ name: "Mit Abschnitten" });
+
+    const { html } = await autoLinkMarkdown(
+      "Siehe [[Mit Abschnitten#Dienstakte|dort]].",
+    );
+
+    expect(html).toContain(`href="/characters/${character.slug}#dienstakte"`);
+    expect(html).toContain(">dort</a>");
+  });
+
+  it("markiert ein unauffindbares Ziel mit Abschnitt ebenfalls als nicht gefunden", async () => {
+    const { html } = await autoLinkMarkdown("Siehe [[Gibt Es Nicht#Kapitel]].");
+
+    expect(html).toContain("lcars-wikilink--missing");
+    // Im Hinweis steht das Ziel, nicht der Anker.
+    expect(html).toContain('Kein Eintrag gefunden: Gibt Es Nicht"');
+  });
+
+  it("markiert ein unauffindbares Ziel als nicht gefunden statt als toten Link", async () => {
+    const { html } = await autoLinkMarkdown("Bericht über [[Gibt Es Nicht]].");
+
+    expect(html).toContain("lcars-wikilink--missing");
+    expect(html).not.toContain("wikilink://");
+  });
+
+  it("verlinkt daneben weiterhin freie Erwähnungen automatisch", async () => {
+    const character = await insertCharacter({ name: "Doppelt Genannt" });
+
+    const { sourceMd, html } = await autoLinkMarkdown(
+      "[[Doppelt Genannt]] kam, Doppelt Genannt ging.",
+    );
+
+    // Die freie Erwähnung wird zur Marke, die bereits gesetzte bleibt, wie
+    // sie ist — und beide führen auf dieselbe Seite.
+    expect(sourceMd).toBe(
+      "[[Doppelt Genannt]] kam, [[Doppelt Genannt]] ging.",
+    );
+    expect(
+      html.match(new RegExp(`href="/characters/${character.slug}"`, "g")),
+    ).toHaveLength(2);
   });
 });

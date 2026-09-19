@@ -22,6 +22,7 @@ import type { MissionPreview } from "@/types/missions";
 import ContentStateSelect from "./ContentStateSelect";
 import DeleteOwnContentButton from "./DeleteOwnContentButton";
 import ContentActionRow from "./ContentActionRow";
+import ContentLinkToolButton from "@/components/ContentLinkToolButton";
 import {
   archiveEditHref,
   archiveHref,
@@ -58,6 +59,14 @@ const KIND_ORDER: ContentKind[] = [
   "archive_entry",
   "mission",
 ];
+
+// Auf schmalen Schirmen steht die Aktionszeile UNTER ihrer Karte (siehe die
+// Spalte/Zeile-Umschaltung weiter unten). Dort trennt das margin-bottom der
+// Karte (.timeline-card, 12px) dann Karte und Zeile — und nicht mehr die
+// Einträge voneinander: Die Knöpfe klebten am nächsten Eintrag. Dieselben
+// 12px unter der Zeile stellen den Abstand wieder her. Ab sm stehen Karte und
+// Zeile nebeneinander, dort trennt wieder die Karte selbst.
+const ACTION_ROW_SPACING = "mb-[12px] sm:mb-0";
 
 type CategoryFilter = "all" | ContentKind | "drafts";
 
@@ -110,6 +119,7 @@ export default function UserContentBrowser({
   archiveEntries,
   missions,
   canManageMissions,
+  canLinkAnyContent = false,
   ownUserId,
 }: {
   characters: ContentFilterCharacter[];
@@ -118,6 +128,14 @@ export default function UserContentBrowser({
   archiveEntries: UserContentArchiveEntry[];
   missions: MissionPreview[];
   canManageMissions: boolean;
+  // Trägt die Person content.autolink_tools? Logbücher und Datenbank-Einträge
+  // dieser Seite gehören ihr ohnehin selbst (getLogsForUser/
+  // getArchiveEntriesForUser) — dort braucht es das Recht nicht. Die
+  // Missionsliste zeigt der Spielleitung dagegen ALLE Missionen
+  // (getAllMissionsIncludingDrafts), auch fremde: dort steht das Werkzeug
+  // deshalb nur mit dem Recht, sonst stünde da ein Knopf, den der Server
+  // ablehnt (mayUseContentTools in src/app/actions/contentTools.ts).
+  canLinkAnyContent?: boolean;
   ownUserId: number;
 }) {
   const [characterFilter, setCharacterFilter] = useState<string | null>(null);
@@ -187,11 +205,19 @@ export default function UserContentBrowser({
       ),
       actions: (
         <ContentActionRow
+          className={ACTION_ROW_SPACING}
           state={
             <ContentStateSelect
               contentType="mission_log"
               id={log.id}
               isDraft={log.is_draft}
+            />
+          }
+          extraAction={
+            <ContentLinkToolButton
+              contentType="missionLog"
+              slug={log.slug}
+              detectMode={false}
             />
           }
           editHref={missionLogEditHref(log.id)}
@@ -232,6 +258,7 @@ export default function UserContentBrowser({
       actions:
         d.ownerUserId === ownUserId ? (
           <ContentActionRow
+            className={ACTION_ROW_SPACING}
             state={
               <ContentStateSelect
                 contentType="dialogue"
@@ -265,11 +292,19 @@ export default function UserContentBrowser({
         ),
         actions: (
           <ContentActionRow
+            className={ACTION_ROW_SPACING}
             state={
               <ContentStateSelect
                 contentType="archive_entry"
                 id={entry.id}
                 isDraft={entry.isDraft}
+              />
+            }
+            extraAction={
+              <ContentLinkToolButton
+                contentType="archiveEntry"
+                slug={entry.slug}
+                detectMode={false}
               />
             }
             editHref={archiveEditHref(entry.id)}
@@ -300,6 +335,16 @@ export default function UserContentBrowser({
           ),
           actions: (
             <ContentActionRow
+              className={ACTION_ROW_SPACING}
+              extraAction={
+                canLinkAnyContent ? (
+                  <ContentLinkToolButton
+                    contentType="mission"
+                    slug={m.slug}
+                    detectMode={false}
+                  />
+                ) : undefined
+              }
               editHref={missionEditHref(m.id)}
               deleteButton={
                 <DeleteOwnContentButton
@@ -320,6 +365,7 @@ export default function UserContentBrowser({
     optimisticArchiveEntries,
     optimisticMissions,
     canManageMissions,
+    canLinkAnyContent,
     ownUserId,
     removeOptimisticLog,
     removeOptimisticDialogue,

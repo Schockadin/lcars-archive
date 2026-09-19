@@ -1,15 +1,14 @@
 "use server";
-import { requirePermission } from "@/lib/dal";
+import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import {
   applyAutolinks,
   getAutolinkTargets,
-  resolveAutolinkedWikilinks,
+  renderAutolinkedHtml,
   renderContentHtml,
   type AutolinkExclude,
   type AutolinkMatch,
 } from "@/lib/autolink";
 import { stripWikilinks, type WikilinkRemoval } from "@/lib/wikilinkCleanup";
-import { markdownToHtml } from "@/lib/markdown";
 import {
   getMissionBySlug,
   getMissionLogSourceBySlug,
@@ -54,12 +53,38 @@ export interface WikilinkCleanupApplyResult {
 
 interface ContentAccessor {
   sourceMd: string;
+  // Wem der Inhalt gehört — Grundlage der Rechteprüfung unten. null bei
+  // Inhalten ohne Owner (z.B. aus dem Vault-Import); die kann nur bearbeiten,
+  // wer content.autolink_tools hat.
+  ownerId: number | null;
   save: (newSourceMd: string, newHtml: string) => Promise<void>;
 }
 
+// Wer darf die Werkzeuge auf DIESEN Inhalt anwenden?
+//
+// Der Owner auf seinem eigenen Inhalt — immer. Er darf dessen Text ohnehin
+// bearbeiten; ein Werkzeug, das genau diesen Text umschreibt, ihm aber
+// vorzuenthalten, ergibt keinen Sinn. Genau das war der Fehler: Die Aktionen
+// verlangten ausnahmslos content.autolink_tools, ein Recht, das nur die
+// Rolle `gm` trägt — auf den eigenen Inhalten sah niemand sonst das Werkzeug.
+//
+// content.autolink_tools hebt die Beschränkung auf den eigenen Inhalt auf und
+// erlaubt sie auf FREMDEN — genau so beschreibt src/lib/permissions.ts das
+// Recht auch („Autolinking/Entlinken auf fremde Inhalte").
+async function mayUseContentTools(ownerId: number | null): Promise<boolean> {
+  const viewer = await getViewer();
+  if (!viewer) return false;
+  if (ownerId != null && viewer.userId === ownerId) return true;
+  return viewerHasPermission(viewer, "content.autolink_tools");
+}
+
+const NO_ACCESS = "Keine Berechtigung für dieses Werkzeug.";
+
 // Gemeinsame Grundlage für Autolinking UND Wikilink-Entfernung: liest den
-// rohen Markdown-Quelltext eines Inhalts unabhängig von Sichtbarkeit/Owner
-// (Admin-Zugriff) und liefert eine passende Speicherfunktion. save() nimmt
+// rohen Markdown-Quelltext eines Inhalts unabhängig von Sichtbarkeit und
+// Owner und liefert eine passende Speicherfunktion — ob die aufrufende Person
+// ihn anfassen darf, entscheidet mayUseContentTools oben, dem der Owner von
+// hier mitgegeben wird. save() nimmt
 // das fertig gerenderte HTML als Parameter entgegen (statt es selbst zu
 // rendern) — die Aufrufer unten müssen zwischen Rendern und Speichern noch
 // frisch erstellte [[Wikilinks]] auflösen (siehe planAutolink).
@@ -76,6 +101,7 @@ async function getContentAccessor(
       }
       return {
         sourceMd: mission.sourceMarkdown,
+        ownerId: mission.ownerUserId,
         save: async (nextMd, nextHtml) => {
           await updateMissionSynopsisWithHtml(mission.id, nextMd, nextHtml);
           revalidateMission(slug);
@@ -90,6 +116,7 @@ async function getContentAccessor(
       }
       return {
         sourceMd: log.sourceMarkdown,
+        ownerId: log.ownerId,
         save: async (nextMd, nextHtml) => {
           await updateMissionLogSourceMd(log.id, nextMd, nextHtml);
           revalidateLog(log.missionId, slug);
@@ -104,6 +131,7 @@ async function getContentAccessor(
       }
       return {
         sourceMd: entry.sourceMarkdown,
+        ownerId: entry.ownerId,
         save: async (nextMd, nextHtml) => {
           await updateArchiveEntryContent(entry.id, nextMd, nextHtml);
           revalidateArchiveEntry(slug);
@@ -118,6 +146,7 @@ async function getContentAccessor(
       }
       return {
         sourceMd: character.sourceMarkdown,
+        ownerId: character.ownerId,
         save: async (nextMd, nextHtml) => {
           await updateCharacterBio(character.id, nextMd, nextHtml);
           revalidateCharacter(slug);
@@ -160,23 +189,21 @@ interface AutolinkPlan {
 // applyAutolinks() erzeugt [[Wikilinks]] statt direkter Markdown-Links,
 // damit das Ergebnis mit "Wikilinks entfernen" symmetrisch bleibt.
 // markdownToHtml() rendert diese zunächst als <a href="wikilink://…">
-// (siehe remarkWikiLinks in lib/markdown.ts) — resolveAutolinkedWikilinks()
-// löst direkt danach genau die hier neu erstellten anhand der bekannten
-// Ziel-Pfade auf, damit sie sofort funktionieren statt erst beim nächsten
-// Vault-Ingest.
+// (siehe remarkWikiLinks in lib/markdown.ts) — renderAutolinkedHtml() löst
+// direkt danach die hier neu erstellten anhand der bekannten Ziel-Pfade auf,
+// damit sie sofort funktionieren statt erst beim nächsten Vault-Ingest, und
+// alle übrigen (von Hand getippten) gegen die DB.
 async function planAutolink(
   contentType: ContentToolType,
   slug: string,
 ): Promise<AutolinkPlan | { error: string }> {
   const accessor = await getContentAccessor(contentType, slug);
   if ("error" in accessor) return accessor;
+  if (!(await mayUseContentTools(accessor.ownerId))) return { error: NO_ACCESS };
 
   const targets = await getAutolinkTargets(selfExcludeFor(contentType, slug));
   const { sourceMd, matches } = applyAutolinks(accessor.sourceMd, targets);
-  const previewHtml = resolveAutolinkedWikilinks(
-    await markdownToHtml(sourceMd),
-    matches,
-  );
+  const previewHtml = await renderAutolinkedHtml(sourceMd, matches);
   return {
     matches,
     previewHtml,
@@ -202,10 +229,9 @@ export async function hasAutolinkMatchesAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<boolean> {
-  await requirePermission("content.autolink_tools");
-
   const accessor = await getContentAccessor(contentType, slug);
   if ("error" in accessor) return false;
+  if (!(await mayUseContentTools(accessor.ownerId))) return false;
 
   const targets = await getAutolinkTargets(selfExcludeFor(contentType, slug));
   return applyAutolinks(accessor.sourceMd, targets).matches.length > 0;
@@ -215,8 +241,6 @@ export async function previewAutolinkAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<AutolinkPreviewResult | { error: string }> {
-  await requirePermission("content.autolink_tools");
-
   const plan = await planAutolink(contentType, slug);
   if ("error" in plan) return plan;
 
@@ -227,8 +251,6 @@ export async function applyAutolinkAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<AutolinkApplyResult | { error: string }> {
-  await requirePermission("content.autolink_tools");
-
   const plan = await planAutolink(contentType, slug);
   if ("error" in plan) return plan;
   if (plan.matches.length === 0) {
@@ -251,6 +273,7 @@ async function planWikilinkCleanup(
 ): Promise<WikilinkCleanupPlan | { error: string }> {
   const accessor = await getContentAccessor(contentType, slug);
   if ("error" in accessor) return accessor;
+  if (!(await mayUseContentTools(accessor.ownerId))) return { error: NO_ACCESS };
 
   const { sourceMd, removed } = stripWikilinks(accessor.sourceMd);
   const previewHtml = await renderContentHtml(sourceMd);
@@ -265,8 +288,6 @@ export async function previewWikilinkCleanupAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<WikilinkCleanupPreviewResult | { error: string }> {
-  await requirePermission("content.autolink_tools");
-
   const plan = await planWikilinkCleanup(contentType, slug);
   if ("error" in plan) return plan;
 
@@ -277,8 +298,6 @@ export async function applyWikilinkCleanupAction(
   contentType: ContentToolType,
   slug: string,
 ): Promise<WikilinkCleanupApplyResult | { error: string }> {
-  await requirePermission("content.autolink_tools");
-
   const plan = await planWikilinkCleanup(contentType, slug);
   if ("error" in plan) return plan;
   if (plan.removed.length === 0) {

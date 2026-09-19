@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { act, cleanup, fireEvent, render } from "@testing-library/react";
-import InputDraftKeeper from "./InputDraftKeeper";
+import InputDraftKeeper, {
+  dropInputDraftsForPage,
+} from "./InputDraftKeeper";
 import { draftStorageKey } from "@/lib/inputDraft";
 
 // usePathname braucht einen Next-Runtime — hier stellvertretend gemockt (wie
@@ -141,5 +143,59 @@ describe("InputDraftKeeper", () => {
     expect(
       window.sessionStorage.getItem(draftStorageKey("/testseite")),
     ).toBeNull();
+  });
+
+  // Siehe RevisionsPanel.tsx: Holt jemand eine frühere Fassung zurück, hat
+  // der Server den Text absichtlich ersetzt — der gesicherte Stand beschreibt
+  // dann etwas, das es nicht mehr geben soll.
+  describe("dropInputDraftsForPage", () => {
+    it("setzt den verworfenen Stand nicht mehr ein", () => {
+      seedDraft("doc|n:body", "Mein Entwurf");
+      render(<Seite />);
+      expect(feld().value).toBe("Mein Entwurf");
+
+      act(() => {
+        dropInputDraftsForPage();
+      });
+      hydrationSetzt(feld(), "Wiederhergestellte Fassung");
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+
+      // Ohne das Verwerfen zöge die Anheft-Phase hier wieder den Entwurf nach.
+      expect(feld().value).toBe("Wiederhergestellte Fassung");
+    });
+
+    it("räumt den Sitzungsspeicher dieser Seite ab", () => {
+      seedDraft("doc|n:body", "Mein Entwurf");
+      render(<Seite />);
+
+      act(() => {
+        dropInputDraftsForPage();
+      });
+
+      expect(
+        window.sessionStorage.getItem(draftStorageKey("/testseite")),
+      ).toBeNull();
+    });
+
+    it("schreibt den Stand auch beim Verlassen der Seite nicht zurück", () => {
+      // Der eigentliche Grund für das Ereignis: Die Sicherung hält denselben
+      // Stand zusätzlich im Arbeitsspeicher und schreibt ihn bei pagehide
+      // zurück. Ein Löschen an ihr vorbei wäre damit sofort wieder erledigt.
+      seedDraft("doc|n:body", "Mein Entwurf");
+      render(<Seite />);
+
+      act(() => {
+        dropInputDraftsForPage();
+      });
+      act(() => {
+        window.dispatchEvent(new Event("pagehide"));
+      });
+
+      expect(
+        window.sessionStorage.getItem(draftStorageKey("/testseite")),
+      ).toBeNull();
+    });
   });
 });

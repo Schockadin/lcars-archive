@@ -15,6 +15,7 @@ export default function ContentActionRow({
   editHref,
   editLabel = "Bearbeiten",
   deleteButton,
+  className = "",
 }: {
   // Entwurf/veröffentlicht-Umschalter (ContentStateSelect).
   state?: React.ReactNode;
@@ -26,11 +27,19 @@ export default function ContentActionRow({
   // Charakter-Übersicht führt damit auf die ganze Akte).
   editLabel?: string;
   deleteButton?: React.ReactNode;
+  // Abstände der aufrufenden Liste — die beiden Listen hängen die Zeile
+  // unterschiedlich ein (siehe .content-action-row unten).
+  className?: string;
 }) {
   // flex-wrap + justify-end: passt die Zeile nicht in die Breite (Telefon),
   // rutscht sie in eine zweite Zeile, statt links aus dem Bild zu laufen.
+  //
+  // .content-action-row trägt keine eigene Optik — sie macht die Zeile für
+  // die Tests auffindbar, die prüfen, was die jeweilige Liste ihr mitgibt.
   return (
-    <div className="flex flex-wrap items-center justify-end gap-[8px]">
+    <div
+      className={`content-action-row flex flex-wrap items-center justify-end gap-[8px] ${className}`}
+    >
       {state}
       {extraAction}
       {editHref && (

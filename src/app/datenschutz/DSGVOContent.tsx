@@ -171,7 +171,9 @@ export default function DSGVOContent({ year }: { year: number }) {
           oder Dritte übertragen und vom Browser spätestens beim Schließen des
           Tabs bzw. Fensters gelöscht — beim An- und Abmelden zusätzlich
           sofort, damit auf einem geteilten Gerät keine Zwischenstände einer
-          anderen Person zurückbleiben. Passwortfelder, Einmalcodes und
+          anderen Person zurückbleiben, und ebenso, sobald eine frühere Fassung
+          eines Inhalts wiederhergestellt wird (der gesicherte Zwischenstand
+          beschriebe dann einen überholten Text). Passwortfelder, Einmalcodes und
           Zahlungsdaten werden dabei grundsätzlich nicht gesichert.
         </p>
         <p>

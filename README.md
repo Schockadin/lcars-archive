@@ -612,7 +612,21 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (`clearAllInputDrafts()` in `HeaderUserNav`/`LoginForm`, an derselben Stelle
   wie das Leeren des Offline-Seiten-Caches): Auf einem geteilten Gerät soll
   die nächste Person weder fremde Zwischenstände vorfinden noch eigene
-  hinterlassen. Der `MutationObserver` läuft nur an, wenn eine Änderung
+  hinterlassen. **Ersetzt der Server den Text absichtlich**, ist der
+  gesicherte Stand überholt und wird verworfen
+  (`dropInputDraftsForPage()`, seit v1.45): Genau das passiert beim
+  **Wiederherstellen einer früheren Fassung** (`RevisionsPanel`) — ohne das
+  legte die Sicherung den ersetzten Text beim nächsten Aufbau wieder über den
+  wiederhergestellten, und ein anschließendes Speichern schrieb ihn sogar
+  zurück in die Datenbank. Bewusst als **Ereignis** an `document` und nicht
+  als Aufruf von `clearDraftRecord()`: Die Sicherung hält denselben Stand
+  zusätzlich im Arbeitsspeicher (`recordRef`) und schreibt ihn beim
+  `pagehide` zurück — ein Löschen an ihr vorbei wäre beim nächsten
+  Seitenwechsel wieder erledigt. Das Panel lädt danach die Seite neu, denn
+  das Textfeld des Editors ist unkontrolliert (`defaultValue`): Hat jemand
+  darin getippt, gilt es dem Browser als „dirty" und übernimmt einen neuen
+  Vorgabewert nicht mehr — das `revalidatePath` der Action erneuert die
+  Seite, nicht aber den Text im Feld. Der `MutationObserver` läuft nur an, wenn eine Änderung
   wirklich ein Element hinzugefügt hat, und der Wiederherstellungs-Durchgang
   bricht sofort ab, solange es für die Seite nichts Gesichertes gibt — auf
   Seiten mit Live-Aktualisierung (Gesprächs-Poll, Toasts) kostet er damit
@@ -843,6 +857,50 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Spielen die Akte der Mission, die gerade auf dem Tisch liegt.
 - **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und
   automatische bzw. manuelle Verlinkung (`[[Wikilinks]]`) zwischen Inhalten.
+- **Verweise in doppelten Klammern** — `[[Ziel]]`, `[[Ziel|Anzeigetext]]`
+  bzw. `[[Ziel#Abschnitt]]` im Fließtext. `markdownToHtml` rendert sie
+  zunächst als `<a href="wikilink://Ziel#anker">`; aufgelöst wird erst danach,
+  wenn feststeht, was es überhaupt gibt. Gesucht wird nach **Titel/Name**, dann nach **Slug**
+  (`[[t-mok]]`), dann nach **Zweitname/Alias**; was nirgends passt, wird als
+  „Kein Eintrag gefunden" markiert statt als toter Link stehen zu bleiben,
+  und gelöschte Inhalte zählen nicht mit (ihre Detailseiten laden nur mit
+  `deleted_at IS NULL`) — weder beim Auflösen noch als **Autolink-Ziel**
+  (`getAutolinkTargets`), sonst setzte ein Durchlauf einen Link auf eine
+  Seite, die es nicht mehr gibt. Zwei Auflöser in `src/lib/autolink.ts` teilen sich
+  diese Mechanik: `resolveAllWikilinks` (ganze DB, inkl. Entwürfe) hängt an
+  jedem Speicher-Pfad, `resolvePublicWikilinks` (nur die öffentlichen Ziele
+  aus `getAutolinkTargets`) an der Editor-Vorschau, die ohne Anmeldung
+  aufrufbar ist und deshalb keine Entwurfstitel verraten darf.
+  **Auch beim Autolinking**: `renderAutolinkedHtml` löst erst die vom
+  Durchlauf selbst erzeugten Marken auf (aus dessen `matches`, ohne weitere
+  Abfrage) und danach alles Übrige. Bis v1.44 fehlte der zweite Schritt —
+  ein von Hand getipptes `[[Ziel]]` blieb mit gesetztem Haken „Automatisch
+  verlinken" ein toter Link, weil es für `applyAutolinks` zu den geschützten
+  Bereichen zählt und deshalb nie in `matches` steht. Nur scheinbar ging es
+  gut, wenn derselbe Name woanders im Text unverklammert vorkam.
+  **Nachträglich verlinken** lässt sich ein gespeicherter Inhalt über
+  `ContentLinkToolButton` (Vorschau → Bestätigen, derselbe Knopf schaltet
+  danach auf „Verlinkung entfernen"). Wer das darf, entscheidet
+  `mayUseContentTools` (`src/app/actions/contentTools.ts`) **am konkreten
+  Inhalt**: der Owner auf seinem eigenen immer — er darf den Text ohnehin
+  bearbeiten —, `content.autolink_tools` zusätzlich auf fremden. Bis v1.45
+  verlangten alle fünf Aktionen ausnahmslos das Recht, das nur die Rolle `gm`
+  trägt; auf den eigenen Inhalten sah es deshalb niemand sonst. Der Knopf
+  steht auf der Detailseite (`ActionsMenu.tsx`, gleiche Bedingung) und in der
+  Liste unter „Meine Inhalte"; dort mit `detectMode={false}`, sonst liefe pro
+  Zeile eine eigene Abfrage über den ganzen Text, nur um den Anfangsmodus zu
+  setzen.
+  **Der Abschnitt** (`[[Ziel#Frühe Jahre]]`) wird zum Sprungziel auf der
+  Ziel-Seite. Die Überschrift wird dafür mit `headingAnchor` (`src/lib/
+  markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
+  also genau der Funktion, aus der `rehypeSlug` in derselben Pipeline die
+  `id` der Überschrift bildet, und nicht mit `slugifyBase` aus `lib/slug.ts`
+  (das zusätzlich Diakritika auflöst und aus „Frühe Jahre" `fruhe-jahre`
+  statt `frühe-jahre` machen würde — der Link zeigte dann neben das Ziel).
+  `markdown.test.ts` prüft beide Wege gegeneinander, statt die
+  Übereinstimmung nur zu behaupten. Ziel und Anker sind im `wikilink://`-Pfad
+  einzeln URL-kodiert; ein `#` im Text steht deshalb als `%23` und das erste
+  rohe `#` trennt die beiden Teile (`splitWikilinkTarget`).
 - **Bilder-Galerie** — Charaktere, Missionen, Missionslogs und Datenbank-Einträge
   (nicht Gespräche) können mehrere Bilder haben (JPEG/PNG/WebP/GIF, max. 5 MB
   pro Datei); Hochladen/Löschen ist auf dieselbe Person beschränkt, die den

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { markdownToHtml } from "./markdown";
+import { markdownToHtml, headingAnchor } from "./markdown";
 
 describe("markdownToHtml", () => {
   it("strips a javascript: URL from a link instead of rendering it live", async () => {
@@ -27,6 +27,40 @@ describe("markdownToHtml", () => {
   it("still lets rehype-slug assign heading ids (not clobber-prefixed)", async () => {
     const html = await markdownToHtml("# Ein Titel");
     expect(html).toContain('id="ein-titel"');
+  });
+
+  it("nimmt den Abschnitt eines Wikilinks als Anker mit", async () => {
+    const html = await markdownToHtml("[[Zielartikel#Frühe Jahre]]");
+    expect(html).toContain('href="wikilink://Zielartikel#fr%C3%BChe-jahre"');
+  });
+
+  it("zeigt den Ziel-Titel an, wenn der Verweis nur einen Abschnitt nennt", async () => {
+    const html = await markdownToHtml("[[Zielartikel#Frühe Jahre|dort]]");
+    expect(html).toContain(">dort</a>");
+    expect(html).toContain("#fr%C3%BChe-jahre");
+  });
+});
+
+// Der Anker MUSS derselbe sein, den rehypeSlug auf der Zielseite an die
+// Überschrift schreibt — sonst springt der Link daneben. Beide Wege werden
+// hier gegeneinander geprüft, statt die Übereinstimmung nur zu behaupten.
+describe("headingAnchor", () => {
+  it.each([
+    "Frühe Jahre",
+    "Ein Titel",
+    "Krieg & Frieden",
+    "2401: Der Vertrag",
+    "Mit  mehreren   Leerzeichen",
+  ])("stimmt für %s mit der id von rehypeSlug überein", async (heading) => {
+    const html = await markdownToHtml(`## ${heading}`);
+    const id = /id="([^"]*)"/.exec(html)?.[1];
+
+    expect(id).toBeTruthy();
+    expect(headingAnchor(heading)).toBe(id);
+  });
+
+  it("ignoriert führende und folgende Leerzeichen", () => {
+    expect(headingAnchor("  Frühe Jahre  ")).toBe("frühe-jahre");
   });
 
   // Block-Konstrukte: sichern, dass die Pipeline (remark-Plugins für deutsche

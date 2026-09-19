@@ -16,6 +16,11 @@ vi.mock("./ContentStateSelect", () => ({
 vi.mock("./DeleteOwnContentButton", () => ({
   default: () => <button type="button">Löschen</button>,
 }));
+vi.mock("@/components/ContentLinkToolButton", () => ({
+  default: ({ contentType, slug }: { contentType: string; slug: string }) => (
+    <div data-testid="link-tool" data-type={contentType} data-slug={slug} />
+  ),
+}));
 
 const log: UserContentLog = {
   id: 1,
@@ -82,6 +87,7 @@ function renderBrowser(props: Partial<Parameters<typeof UserContentBrowser>[0]> 
       archiveEntries={[entry]}
       missions={[mission]}
       canManageMissions
+      canLinkAnyContent
       ownUserId={1}
       {...props}
     />,
@@ -172,5 +178,55 @@ describe("UserContentBrowser", () => {
 
     expect(screen.getByText("Abend in der Kantine")).toBeInTheDocument();
     expect(screen.queryByTestId("state-select")).toBeNull();
+  });
+
+  it("gibt jedem eigenen Inhalt das Verlinkungs-Werkzeug — außer Gesprächen", () => {
+    renderBrowser();
+
+    const tools = screen.getAllByTestId("link-tool");
+    expect(
+      tools.map((el) => [el.dataset.type, el.dataset.slug]),
+    ).toEqual([
+      // Beide Logbücher (auch der Entwurf), der Datenbank-Eintrag und die
+      // Mission — das Gespräch nicht: dessen Text liegt in den Nachrichten,
+      // nicht in einem Markdown-Feld (siehe getArchiveEntrySourceBySlug).
+      ["missionLog", "erster-tag"],
+      ["missionLog", "halbfertig"],
+      ["archiveEntry", "deep-space-12"],
+      ["mission", "deneb"],
+    ]);
+  });
+
+  it("zeigt kein Werkzeug an einem fremden Gespräch", () => {
+    renderBrowser({ ownUserId: 99 });
+
+    expect(
+      screen.getAllByTestId("link-tool").every((el) => el.dataset.type !== "dialogue"),
+    ).toBe(true);
+  });
+
+  it("lässt das Werkzeug an Missionen weg, wo das Recht dafür fehlt", () => {
+    // Die Missionsliste zeigt der Spielleitung ALLE Missionen, auch fremde —
+    // ohne content.autolink_tools stünde dort ein Knopf, den der Server
+    // ablehnt. Die eigenen Logbücher und Einträge bleiben davon unberührt.
+    renderBrowser({ canLinkAnyContent: false });
+
+    const types = screen.getAllByTestId("link-tool").map((el) => el.dataset.type);
+    expect(types).toEqual(["missionLog", "missionLog", "archiveEntry"]);
+  });
+
+  it("hält auf dem Telefon Abstand zwischen Aktionszeile und nächstem Eintrag", () => {
+    renderBrowser();
+
+    // Auf schmalen Schirmen steht die Zeile UNTER der Karte — deren
+    // margin-bottom trennt dann Karte und Zeile statt die Einträge, die
+    // Knöpfe klebten am nächsten Eintrag. Ab sm stehen beide nebeneinander,
+    // dort trennt wieder die Karte selbst.
+    const rows = [...document.querySelectorAll(".content-action-row")];
+    expect(rows.length).toBeGreaterThan(0);
+    for (const row of rows) {
+      expect(row.className).toContain("mb-[12px]");
+      expect(row.className).toContain("sm:mb-0");
+    }
   });
 });

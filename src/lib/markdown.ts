@@ -17,6 +17,7 @@ import type {
 } from "mdast";
 import type { Handlers as MdastToHastHandlers } from "mdast-util-to-hast";
 import type { Root as HastRoot, Element as HastElement } from "hast";
+import { slug as githubSlug } from "github-slugger";
 import {
   opensQuote,
   GERMAN_QUOTE_OPEN,
@@ -24,13 +25,24 @@ import {
 } from "@/lib/typography";
 
 // Obsidian-artige [[Ziel]] / [[Ziel|Anzeigetext]] / [[Ziel#Abschnitt|Text]]
-// Verweise. Der Abschnitt (#...) wird beim Auflösen aktuell ignoriert, nur
-// der Ziel-Titel zählt. Wird als Link mit Sonder-Schema "wikilink://<Ziel>"
-// codiert – erst die Ingest-Nachbearbeitung (scripts/ingest/wikilinks.ts)
-// löst das anhand aller Titel/Namen in der DB zum echten href auf, weil zum
-// Zeitpunkt der Markdown→HTML-Konvertierung einzelner Dateien noch nicht
-// bekannt ist, worauf der Verweis zeigt.
-export const WIKILINK_RE = /\[\[([^\]|#]+)(?:#[^\]|]*)?(?:\|([^\]]+))?\]\]/g;
+// Verweise. Drei Gruppen: Ziel, Abschnitt (ohne #), Anzeigetext — die letzten
+// beiden optional. Wird als Link mit Sonder-Schema
+// "wikilink://<Ziel>#<Anker>" codiert; aufgelöst wird erst danach
+// (resolveAllWikilinks in src/lib/autolink.ts, beim Vault-Import
+// scripts/ingest/wikilinks.ts), weil zum Zeitpunkt der Markdown→HTML-
+// Konvertierung noch nicht bekannt ist, worauf der Verweis zeigt.
+export const WIKILINK_RE =
+  /\[\[([^\]|#]+)(?:#([^\]|]*))?(?:\|([^\]]+))?\]\]/g;
+
+// Der Abschnitt eines Verweises ist die ÜBERSCHRIFT, nicht deren Anker —
+// [[Klingonen#Frühe Jahre]]. Den Anker dazu erzeugt auf der Zielseite
+// rehypeSlug, und das ist github-slugger. Genau die Funktion hier zu nehmen
+// (statt slugifyBase aus lib/slug.ts, das zusätzlich Diakritika auflöst) ist
+// der ganze Punkt: „Frühe Jahre" wird zu "frühe-jahre", nicht zu
+// "fruhe-jahre" — sonst zeigte der Link neben das Ziel.
+export function headingAnchor(heading: string): string {
+  return githubSlug(heading.trim());
+}
 
 function remarkWikiLinks() {
   return (tree: MdastRoot) => {
@@ -49,7 +61,7 @@ function remarkWikiLinks() {
         let match: RegExpExecArray | null;
 
         while ((match = WIKILINK_RE.exec(value))) {
-          const [full, target, alias] = match;
+          const [full, target, section, alias] = match;
           if (match.index > lastIndex) {
             newNodes.push({
               type: "text",
@@ -57,9 +69,16 @@ function remarkWikiLinks() {
             });
           }
           const label = (alias ?? target).trim();
+          // Ziel und Anker getrennt kodieren: encodeURIComponent macht aus
+          // einem # im Text %23, das # zwischen beiden bleibt deshalb das
+          // einzige echte — daran trennen die Auflöser wieder (siehe
+          // splitWikilinkTarget in src/lib/autolink.ts).
+          const anchor = section ? headingAnchor(section) : "";
           newNodes.push({
             type: "link",
-            url: `wikilink://${encodeURIComponent(target.trim())}`,
+            url:
+              `wikilink://${encodeURIComponent(target.trim())}` +
+              (anchor ? `#${encodeURIComponent(anchor)}` : ""),
             children: [{ type: "text", value: label }],
           });
           lastIndex = match.index + full.length;
