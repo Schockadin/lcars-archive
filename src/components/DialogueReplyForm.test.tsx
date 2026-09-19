@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import DialogueReplyForm from "./DialogueReplyForm";
 
 // Die Server-Action zieht die halbe Datenschicht nach — hier gemockt, geprüft
@@ -23,6 +23,10 @@ function renderForm(
   return render(
     <DialogueReplyForm entrySlug="gespraech" replyCharacters={CHARS} {...props} />,
   );
+}
+
+function pinBox(): HTMLInputElement {
+  return screen.getByRole("checkbox", { name: "Feld angeheftet" });
 }
 
 describe("DialogueReplyForm", () => {
@@ -51,6 +55,50 @@ describe("DialogueReplyForm", () => {
     const dock = container.querySelector(".dialogue-reply-dock");
     expect(dock?.textContent).toContain("zuletzt am Zug");
     expect(dock?.querySelector("form")).toBeNull();
+  });
+
+  describe("Checkbox „Feld angeheftet\u201c", () => {
+    it("ist angehakt, solange der Kasten klebt", () => {
+      renderForm();
+
+      expect(pinBox().checked).toBe(true);
+    });
+
+    it("meldet das Abwählen nach oben", () => {
+      const onStickyChange = vi.fn();
+      renderForm({ onStickyChange });
+
+      fireEvent.click(pinBox());
+
+      expect(onStickyChange).toHaveBeenCalledWith(false);
+    });
+
+    it("nimmt dem Kasten abgewählt das Kleben", () => {
+      const { container } = renderForm({ sticky: false });
+
+      const dock = container.querySelector(".dialogue-reply-dock");
+      expect(dock?.classList.contains("dialogue-reply-dock--loose")).toBe(true);
+      expect(pinBox().checked).toBe(false);
+    });
+
+    // Sonst überschrieben sich Entwurfs-Sicherung und gemerkte Wahl
+    // gegenseitig (siehe INPUT_DRAFT_OPT_OUT_ATTR in src/lib/inputDraft.ts).
+    it("ist von der Entwurfs-Sicherung ausgenommen", () => {
+      renderForm();
+
+      expect(pinBox().hasAttribute("data-no-draft")).toBe(true);
+    });
+
+    it("gilt auch für den Wartehinweis", () => {
+      const { container } = renderForm({
+        hasOnlyBlockedCharacter: true,
+        sticky: false,
+      });
+
+      expect(
+        container.querySelector(".dialogue-reply-dock--loose"),
+      ).not.toBeNull();
+    });
   });
 
   it("hält das Textfeld kompakt, weil der Kasten dauerhaft im Bild steht", () => {

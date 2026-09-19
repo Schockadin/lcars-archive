@@ -157,6 +157,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "charaktere",
         tutorial: "gespraeche",
       },
+      {
+        text: "Über dem Antwortfeld steht dafür ein Haken „Feld angeheftet“: Nimmst du ihn heraus, rückt das Feld wieder ans Ende des Verlaufs und gibt den vollen Platz zum Lesen frei. Dein Browser merkt sich die Wahl für dieses Gerät.",
+        category: "charaktere",
+        tutorial: "gespraeche",
+      },
     ],
   },
   {

@@ -190,6 +190,15 @@
   background: var(--lcars-bg);
   border-top: 1px solid var(--lcars-border);
 }
+/* Abgewählte Checkbox „Feld angeheftet" (siehe DialogueReplyForm.tsx): Der
+   Kasten bleibt, wie er ist — er steht nur wieder am Ende des Verlaufs statt
+   am unteren Rand. Wer viel am Stück liest, bekommt so den vollen Platz
+   zurück; die Wahl merkt sich der Browser (localStorage, siehe
+   src/lib/replyDockPreference.ts). */
+.dialogue-reply-dock--loose {
+  position: static;
+}
+
 /* Gedeckelt wird das Textfeld selbst, NICHT der Kasten: Ein max-height mit
    overflow am Dock würde das nach oben aufklappende Markdown-Popover
    abschneiden (.markdown-hint-popover in shared.css). Das Feld lässt sich

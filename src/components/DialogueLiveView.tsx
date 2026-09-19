@@ -17,6 +17,10 @@ import FollowButtons from "./FollowButtons";
 import type { InviteCandidate } from "./InviteDialogueParticipantForm";
 import type { GmContact } from "@/lib/users";
 import { speakerKey } from "@/lib/dialogueSpeaker";
+import {
+  readReplyDockSticky,
+  writeReplyDockSticky,
+} from "@/lib/replyDockPreference";
 
 export interface DialogueReplyCharacter {
   // Sprecher-Schlüssel ("c12"/"n7", siehe src/lib/dialogueSpeaker.ts) —
@@ -166,16 +170,43 @@ export default function DialogueLiveView({
   // Leseposition nicht nach unten reißen, während jemand ältere Nachrichten
   // liest. Geschlossene Gespräche kommen hier nie an — die Seite leitet sie
   // vorher um (siehe /dialogues/[slug]/page.tsx).
+  // Klebt das Antwortfeld? Die Wahl steht im localStorage (siehe
+  // src/lib/replyDockPreference.ts) und gehört hierher, weil der Sprung
+  // unten sie ebenfalls braucht. Erster Aufbau immer mit der Vorgabe, damit
+  // Server-Render und Hydration übereinstimmen — der Speicher ist erst im
+  // Effekt zu haben.
+  const [stickyReply, setStickyReply] = useState(true);
   const threadRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
+    const preferred = readReplyDockSticky();
+    // Bewusst im Mount-Effect statt als Initialwert: localStorage gibt es
+    // beim SSR nicht, das erste Client-Render muss aber zum Server-Render
+    // passen (Hydration). Gelesen wird genau einmal, es gibt also auch
+    // nichts zu abonnieren — kein Fall für useSyncExternalStore.
+    // eslint-disable-next-line react-hooks/set-state-in-effect, react-you-might-not-need-an-effect/no-initialize-state
+    setStickyReply(preferred);
+
     const thread = threadRef.current;
     if (!thread) return;
-    const dock = thread.parentElement?.querySelector(".dialogue-reply-dock");
+    // Die Höhe des Kastens steht schon jetzt fest (sie hängt nicht am
+    // Kleben), die gewählte Einstellung aber erst seit dieser Zeile — also
+    // beides hier, vor dem einen Sprung. Klebt der Kasten nicht, verdeckt er
+    // auch nichts und es braucht keinen Abstand. Nachführen muss man ihn
+    // später nicht: Gesprungen wird nur dieses eine Mal.
+    const dock = preferred
+      ? thread.parentElement?.querySelector(".dialogue-reply-dock")
+      : null;
     thread.style.scrollMarginBottom = dock
       ? `${Math.round(dock.getBoundingClientRect().height)}px`
       : "";
     thread.scrollIntoView({ behavior: "instant", block: "end" });
   }, []);
+
+  function handleStickyChange(next: boolean) {
+    setStickyReply(next);
+    writeReplyDockSticky(next);
+  }
 
   const [releasePending, startRelease] = useTransition();
   function handleRelease() {
@@ -217,6 +248,8 @@ export default function DialogueLiveView({
               myCharacters.length > 0 && eligibleReplyCharacters.length === 0
             }
             onSent={poll}
+            sticky={stickyReply}
+            onStickyChange={handleStickyChange}
           />
         )}
       </div>

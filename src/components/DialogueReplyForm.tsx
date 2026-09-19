@@ -11,6 +11,14 @@ import { FormError } from "@/app/_shared/FormPrimitives";
 
 const initialState: DialogueMessageState = {};
 
+// Der Kasten bleibt in beiden Fällen ein Kasten (Rahmen, Hintergrund, Abstand)
+// — nur das Kleben schaltet der Modifier ab, siehe archive.css.
+function dockClassName(sticky: boolean): string {
+  return sticky
+    ? "dialogue-reply-dock"
+    : "dialogue-reply-dock dialogue-reply-dock--loose";
+}
+
 // Wird nur gerendert, wenn der Aufrufer (die Server-Seite) das auch will —
 // /dialogues/[slug] prüft Teilnahme + offen-Status bereits serverseitig.
 // canReplyNow ist zusätzlich für Dialoge mit mehr als zwei Teilnehmenden
@@ -29,12 +37,19 @@ export default function DialogueReplyForm({
   replyCharacters,
   hasOnlyBlockedCharacter = false,
   onSent,
+  sticky = true,
+  onStickyChange,
 }: {
   entrySlug: string;
   canReplyNow?: boolean;
   replyCharacters: DialogueReplyCharacter[];
   hasOnlyBlockedCharacter?: boolean;
   onSent?: () => void;
+  // Klebt der Kasten am unteren Rand? Die Wahl gehört dem Aufrufer
+  // (DialogueLiveView), weil er sie auch für den Sprung ans Verlaufsende
+  // braucht — die Checkbox unten meldet sie nur zurück.
+  sticky?: boolean;
+  onStickyChange?: (sticky: boolean) => void;
 }) {
   const [state, formAction, pending] = useActionState(
     postDialogueMessageAction,
@@ -66,7 +81,7 @@ export default function DialogueReplyForm({
     // das Feld steht, und beantwortet beim Scrollen durch den Verlauf genau
     // die Frage, die man dort stellt („warum kann ich nicht schreiben?").
     return (
-      <div className="dialogue-reply-dock">
+      <div className={dockClassName(sticky)}>
         <p className="text-lcars-primary-ink text-[13px]" role="status">
           Dein Charakter war zuletzt am Zug — warte, bis jemand anderes
           geantwortet hat.
@@ -83,7 +98,7 @@ export default function DialogueReplyForm({
   // Komponente weiß, ob sie überhaupt etwas anzeigt — sonst bliebe bei einer
   // fremden Antwort-Reservierung ein leerer Balken am Bildrand kleben.
   return (
-    <div className="dialogue-reply-dock">
+    <div className={dockClassName(sticky)}>
       <form
         ref={formRef}
         action={formAction}
@@ -120,9 +135,27 @@ export default function DialogueReplyForm({
           </label>
         )}
 
-        <label htmlFor="dlg-reply-body" className="lcars-eyebrow">
-          Antworten
-        </label>
+        <div className="flex flex-wrap items-center justify-between gap-[8px]">
+          <label htmlFor="dlg-reply-body" className="lcars-eyebrow">
+            Antworten
+          </label>
+          {/* data-no-draft: Die Entwurfs-Sicherung soll diesen Haken NICHT
+              mitschreiben (siehe INPUT_DRAFT_OPT_OUT_ATTR in
+              src/lib/inputDraft.ts) — er ist keine Eingabe, die verloren
+              gehen könnte, sondern eine Anzeige-Vorliebe mit eigenem
+              Speicher. Ohne das Opt-out würden sich beide beim Neuaufbau
+              gegenseitig überschreiben. */}
+          <label className="flex items-center gap-[8px]">
+            <input
+              type="checkbox"
+              className="lcars-checkbox"
+              data-no-draft
+              checked={sticky}
+              onChange={(e) => onStickyChange?.(e.target.checked)}
+            />
+            <span className="lcars-eyebrow">Feld angeheftet</span>
+          </label>
+        </div>
         {/* Der Beitrag wird als Markdown gerendert — deshalb hier derselbe
             Editor mit Toolbar und Vorschau wie in den Content-Formularen,
             statt eines nackten Eingabefelds. Vier Zeilen statt zehn: Der

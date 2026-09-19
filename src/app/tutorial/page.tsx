@@ -540,6 +540,10 @@ export default function TutorialPage() {
                 nachlesen und trotzdem sofort tippen, ohne vorher wieder ganz
                 nach unten zu scrollen. Das Feld lässt sich an seiner unteren
                 Kante größer ziehen, wenn du mehr Platz zum Schreiben brauchst.
+                Wer lieber den vollen Platz zum Lesen hat, nimmt den Haken{" "}
+                <strong>„Feld angeheftet&ldquo;</strong> über dem Feld heraus — dann
+                steht es wieder am Ende des Verlaufs. Diese Wahl merkt sich
+                dein Browser für dieses Gerät.
               </p>
               <p>
                 Sobald eine teilnehmende Person es abschließt, wird es{" "}

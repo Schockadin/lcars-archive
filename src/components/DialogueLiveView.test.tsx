@@ -3,6 +3,7 @@ import { render } from "@testing-library/react";
 import DialogueLiveView from "./DialogueLiveView";
 import type { DialogueMessage } from "@/lib/dialoguesCore";
 import type { ArchiveParticipant } from "@/types/archive";
+import { REPLY_DOCK_STICKY_KEY } from "@/lib/replyDockPreference";
 
 // Alles, was an Server Actions hängt: gemockt. Geprüft wird die Komposition
 // aus Verlauf und klebendem Antwortfeld — und der Sprung ans Verlaufsende.
@@ -46,6 +47,7 @@ const MESSAGES: DialogueMessage[] = [
 let scrollIntoView: ReturnType<typeof vi.fn<Element["scrollIntoView"]>>;
 
 beforeEach(() => {
+  window.localStorage.clear();
   scrollIntoView = vi.fn<Element["scrollIntoView"]>();
   // jsdom kennt scrollIntoView nicht und misst nichts — beides hier
   // stellvertretend, damit die Höhe des Docks überhaupt einen Wert hat.
@@ -124,6 +126,19 @@ describe("DialogueLiveView", () => {
     expect(threadWrapper(container).style.scrollMarginBottom).toBe(
       `${DOCK_HEIGHT}px`,
     );
+  });
+
+  // Die Checkbox im Kasten (siehe DialogueReplyForm) — abgewählt klebt
+  // nichts, also ist auch nichts freizuhalten.
+  it("hält nichts frei, wenn der Kasten abgewählt nicht klebt", () => {
+    window.localStorage.setItem(REPLY_DOCK_STICKY_KEY, "0");
+
+    const { container } = renderView();
+
+    expect(threadWrapper(container).style.scrollMarginBottom).toBe("");
+    expect(
+      container.querySelector(".dialogue-reply-dock--loose"),
+    ).not.toBeNull();
   });
 
   it("hält nichts frei, wenn es gar kein Antwortfeld gibt", () => {

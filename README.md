@@ -114,7 +114,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   umfasst deshalb Verlauf UND Feld. Den Sprung ans Verlaufsende beim Öffnen
   macht darum `DialogueLiveView` statt wie früher `DialogueThread` — er muss
   die Höhe des Felds als `scroll-margin-bottom` freihalten, sonst läge die
-  letzte Nachricht ausgerechnet danach darunter.
+  letzte Nachricht ausgerechnet danach darunter. Die **Checkbox „Feld
+  angeheftet"** im Kasten schaltet das Kleben ab
+  (`.dialogue-reply-dock--loose`); die Wahl liegt im `localStorage`
+  (`src/lib/replyDockPreference.ts`), nicht am Konto — sie gilt dem Layout
+  des jeweiligen Geräts, und eine Spalte in `users` verlangte eine Migration
+  gegen dieselbe Datenbank, an der auch die Deploy-Preview hängt. Der Haken
+  trägt `data-no-draft`, sonst schriebe ihn die Entwurfs-Sicherung mit.
 - **Gespräche mit NPCs** — Gesprächspartner kann auch ein **NPC** sein. Ein NPC
   ist **kein Charakter**, sondern ein **Datenbank-Eintrag der Kategorie `npc`**
   (`archive_entries.category = 'npc'`, siehe `getNpcOptions`). Wer im Gespräch
