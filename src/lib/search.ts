@@ -85,14 +85,73 @@ export function escapeLikePattern(value: string): string {
   return value.replace(/[\\%_]/g, "\\$&");
 }
 
+// Wer die Suche stellt — nötig für die Nachrichten LAUFENDER Gespräche
+// (siehe openDialogueVisibleSql unten). null = nicht angemeldet.
+export interface SearchViewer {
+  userId: number;
+  // Spielleitung (gm.access): darf jedes Gespräch öffnen, siehe das
+  // forbidden()-Gate in /dialogues/[slug]/page.tsx.
+  isGm: boolean;
+}
+
+// Darf der Betrachter die Nachrichten DIESES Gesprächs lesen?
+//
+// Ein abgeschlossenes Gespräch ist ein gewöhnlicher Datenbank-Eintrag: Wer
+// ihn sehen darf (is_draft/deleted_at prüft die Abfrage selbst), darf auch
+// seinen Verlauf lesen. Ein LAUFENDES Gespräch dagegen gehört ausschließlich
+// seinen Teilnehmenden — /dialogues/[slug]/page.tsx antwortet allen anderen
+// mit forbidden().
+//
+// Genau diese Schranke fehlte hier: Die Volltextsuche (/search, ohne
+// Anmeldung erreichbar) lieferte den Wortlaut laufender Gespräche samt
+// Sprecher, Titel und Sprungmarke an jede Person, die danach suchte. Die
+// Abfrage der EINTRÄGE schließt offene Gespräche seit jeher aus; für die
+// Nachrichten war es schlicht übersehen worden.
+//
+// Teilnehmer ist, wem ein Charakter aus metadata.participants gehört — oder
+// wer in diesem Gespräch für einen NPC schreibt (dialogue_npc_speakers).
+// Dieselbe Regel wie participantSpeakerRows in dialoguesCore.ts, nur als
+// Bedingung statt als Abfrage. Teilnehmer mit kind = "archive" sind NPCs;
+// alles andere (auch das alte "unknown" aus dem Vault-Import) zählt als
+// Charakter. Die Trennung nach kind ist keine Kosmetik: characters und
+// archive_entries haben GETRENNTE Slug-Namensräume, ein gleichnamiger,
+// unbeteiligter Charakter machte sonst dessen Spieler zum Mitleser.
+//
+// Ein Unterschied zu dort, bewusst: Der NPC-Zweig prüft nur, dass die Person
+// in DIESEM Gespräch für einen NPC schreibt, nicht zusätzlich, dass dieser
+// NPC noch in der Teilnehmerliste steht. Wer für einen später entfernten NPC
+// geschrieben hat, war beim Schreiben dabei und hat den Verlauf ohnehin
+// gelesen — ihm die Suche darin zu lassen, gibt nichts preis, was er nicht
+// schon kennt.
+function openDialogueVisibleSql(viewer: SearchViewer | null) {
+  if (viewer?.isGm) return sql`true`;
+  if (!viewer) return sql`ae.dialogue_open = false`;
+  return sql`(
+    ae.dialogue_open = false
+    OR EXISTS (
+      SELECT 1
+      FROM jsonb_array_elements(
+             coalesce(ae.metadata->'participants', '[]'::jsonb)
+           ) AS p
+      JOIN characters c ON c.slug = p->>'slug'
+      WHERE coalesce(p->>'kind', 'character') <> 'archive'
+        AND c.player_id = ${viewer.userId}
+    )
+    OR EXISTS (
+      SELECT 1 FROM dialogue_npc_speakers s
+      WHERE s.archive_entry_id = ae.id AND s.user_id = ${viewer.userId}
+    )
+  )`;
+}
+
 async function runSearchQueries(
   q: string,
-  opts: { includeContent: boolean; limit: number },
+  opts: { includeContent: boolean; limit: number; viewer: SearchViewer | null },
 ): Promise<RawRows> {
   const escaped = escapeLikePattern(q);
   const like = `%${escaped}%`;
   const prefix = `${escaped}%`;
-  const { includeContent, limit } = opts;
+  const { includeContent, limit, viewer } = opts;
 
   // Volltext-Anfrage aus der Nutzereingabe. websearch_to_tsquery versteht die
   // von Suchmaschinen gewohnte Syntax (mehrere Wörter = UND, "in
@@ -194,6 +253,7 @@ async function runSearchQueries(
           WHERE (dm.content ILIKE ${like} OR dm.search_vector @@ ${ts})
             AND dm.deleted_at IS NULL
             AND ae.deleted_at IS NULL AND ae.is_draft = false
+            AND ${openDialogueVisibleSql(viewer)}
           ORDER BY dm.archive_entry_id,
                    ts_rank_cd(dm.search_vector, ${ts}) DESC,
                    dm.created_at ASC
@@ -465,19 +525,21 @@ async function annotateSaved(
 async function search(
   q: string,
   mode: "live" | "full",
-  userId?: number,
+  viewer: SearchViewer | null,
 ): Promise<SearchResult[]> {
   const includeContent = mode === "full";
   const limit = mode === "full" ? FULL_PER_TYPE_LIMIT : LIVE_PER_TYPE_LIMIT;
-  const rows = await runSearchQueries(q, { includeContent, limit });
+  const rows = await runSearchQueries(q, { includeContent, limit, viewer });
   const results = mapResults(rows, q, { includeContent });
-  return userId != null ? annotateSaved(results, userId) : results;
+  return viewer ? annotateSaved(results, viewer.userId) : results;
 }
 
 // Live-Dropdown im Header — reine Titelsuche (inkl. Schauplatz als
 // Titel-Ersatz bei Gesprächen), niedriges Limit.
 export function searchLive(q: string): Promise<SearchResult[]> {
-  return search(q, "live");
+  // Ohne Betrachter: Das Dropdown durchsucht ohnehin nur Titel, und der
+  // Nachrichten-Zweig läuft ausschließlich in der Volltextsuche.
+  return search(q, "live", null);
 }
 
 // Volltextsuche für die eigene Suchseite (/search) — Titel UND Inhalt,
@@ -486,7 +548,7 @@ export function searchLive(q: string): Promise<SearchResult[]> {
 // "Gespeichert"-Filter.
 export function searchFull(
   q: string,
-  userId?: number,
+  viewer: SearchViewer | null,
 ): Promise<SearchResult[]> {
-  return search(q, "full", userId);
+  return search(q, "full", viewer);
 }
