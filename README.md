@@ -864,7 +864,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (`[[t-mok]]`), dann nach **Zweitname/Alias**; was nirgends passt, wird als
   „Kein Eintrag gefunden" markiert statt als toter Link stehen zu bleiben,
   und gelöschte Inhalte zählen nicht mit (ihre Detailseiten laden nur mit
-  `deleted_at IS NULL`). Zwei Auflöser in `src/lib/autolink.ts` teilen sich
+  `deleted_at IS NULL`) — weder beim Auflösen noch als **Autolink-Ziel**
+  (`getAutolinkTargets`), sonst setzte ein Durchlauf einen Link auf eine
+  Seite, die es nicht mehr gibt. Zwei Auflöser in `src/lib/autolink.ts` teilen sich
   diese Mechanik: `resolveAllWikilinks` (ganze DB, inkl. Entwürfe) hängt an
   jedem Speicher-Pfad, `resolvePublicWikilinks` (nur die öffentlichen Ziele
   aus `getAutolinkTargets`) an der Editor-Vorschau, die ohne Anmeldung

@@ -105,6 +105,23 @@ describe("getAutolinkTargets", () => {
     );
   });
 
+  // Gegenstück zum gelöschten Ziel in resolveAllWikilinks weiter unten: Eine
+  // gelöschte Mission darf auch gar nicht erst automatisch verlinkt werden —
+  // getMissionBySlug lädt nur mit `deleted_at IS NULL`, der Link liefe also
+  // ins Leere. Missionen haben keine Draft-/Sichtbarkeitssperre, deshalb ist
+  // das hier die einzige Einschränkung.
+  it("excludes a soft-deleted mission", async () => {
+    const mission = await insertMission({ title: "Verschollene Mission" });
+    await sql`UPDATE missions SET deleted_at = NOW() WHERE id = ${mission.id}`;
+
+    const targets = await getAutolinkTargets();
+
+    expect(targets.find((t) => t.slug === mission.slug)).toBeUndefined();
+    expect(applyAutolinks("Zurück zur Verschollene Mission.", targets).sourceMd).toBe(
+      "Zurück zur Verschollene Mission.",
+    );
+  });
+
   it("excludes the given target from the result", async () => {
     const character = await insertCharacter({ name: "Ausgeschlossen" });
 

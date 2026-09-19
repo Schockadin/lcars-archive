@@ -137,9 +137,11 @@ export interface AutolinkExclude {
 // Alle verlinkbaren Ziele aus der DB — nur öffentlich sichtbare (ein per
 // Autolinking gesetzter Link in öffentlichem Inhalt darf nicht auf etwas
 // zeigen, das die meisten Leser gar nicht sehen dürfen). Missionen haben
-// keine eigene Sichtbarkeits-Sperre. Gespräche (category = 'dialogue')
-// werden ausgeschlossen — ihr Titel ist ein generierter Platzhalter, kein
-// Name, den jemand im Fließtext erwähnen würde.
+// keine eigene Sichtbarkeits-Sperre; gelöscht sind sie aber auch hier kein
+// Ziel — getMissionBySlug lädt nur mit `deleted_at IS NULL`, ein Link darauf
+// liefe also ins Leere (dieselbe Regel wie in resolveAllWikilinks unten).
+// Gespräche (category = 'dialogue') werden ausgeschlossen — ihr Titel ist ein
+// generierter Platzhalter, kein Name, den jemand im Fließtext erwähnen würde.
 export async function getAutolinkTargets(
   exclude?: AutolinkExclude,
 ): Promise<AutolinkTarget[]> {
@@ -150,7 +152,7 @@ export async function getAutolinkTargets(
       WHERE is_draft = false AND deleted_at IS NULL
     `,
     sql<{ slug: string; title: string }[]>`
-      SELECT slug, title FROM missions
+      SELECT slug, title FROM missions WHERE deleted_at IS NULL
     `,
     sql<{ slug: string; title: string; aliases: string[] | null }[]>`
       SELECT slug, title, metadata->'aliases' AS aliases
@@ -359,7 +361,7 @@ export async function resolveAllWikilinks(html: string): Promise<string> {
       SELECT slug, name, metadata->'aliases' AS aliases
       FROM characters WHERE deleted_at IS NULL`,
     sql<{ slug: string; title: string }[]>`
-      SELECT slug, title FROM missions WHERE deleted_at IS NULL`,
+      SELECT slug, title FROM missions`,
     sql<{ slug: string; title: string; aliases: string[] | null }[]>`
       SELECT slug, title, metadata->'aliases' AS aliases
       FROM archive_entries WHERE deleted_at IS NULL`,
