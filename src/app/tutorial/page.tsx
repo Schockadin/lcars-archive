@@ -98,6 +98,13 @@ export default function TutorialPage() {
                 nicht fertig ist, niemandem sonst.
               </p>
               <p>
+                Auf langen Seiten — Biografien, Logbüchern,
+                Gesprächsverläufen — erscheint unten rechts ein{" "}
+                <strong>Pfeil nach oben</strong>, sobald du ein Stück gescrollt
+                hast. Ein Klick bringt dich zurück an den Seitenanfang; am
+                Anfang angekommen, verschwindet er wieder.
+              </p>
+              <p>
                 Ein eigenes Konto kannst du dir nicht selbst anlegen — Zugänge
                 werden ausschließlich von der Spielleitung oder Administration
                 per Einladung vergeben (siehe nächster Abschnitt).

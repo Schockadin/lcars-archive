@@ -1432,6 +1432,16 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
 
 ### Komponenten
 
+**„Nach oben"** (`ScrollTopButton`) steht als letztes Kind der Scrollfläche in
+`MainContent` und damit auf jeder Seite: unten rechts, sichtbar erst ab
+120 gescrollten Pixeln. Gescrollt wird `.lcars-main-content` und nicht das
+Fenster, deshalb hängt der Zuhörer an diesem Element (gefunden per `closest`
+vom eigenen Kasten aus) und der Kasten ist `sticky` statt `fixed`. Der Kasten
+bleibt auch unsichtbar im Baum — er ist der Anker für genau dieses `closest` —,
+ist 0 Pixel hoch und lässt Klicks durch; der Knopf darin sitzt absolut
+positioniert darüber. Wer Bewegung reduziert haben will, bekommt den Sprung
+ohne Animation.
+
 Die Aktionen einer Inhaltsseite (Owner, Sichtbarkeit, Folgen/Merken, Teilen,
 Bilder, Bearbeiten, Löschen) stehen in `ContentActionsPanel` — einem
 zugeklappten `<details>` am **Fuß** des Inhalts. Vorher saßen sie zwischen

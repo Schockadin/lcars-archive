@@ -158,6 +158,10 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "gespraeche",
       },
       {
+        text: "Auf jeder Seite steht unten rechts ein Pfeil zurück an den Seitenanfang, sobald du ein Stück nach unten gescrollt hast — praktisch bei langen Biografien, Logbüchern und Gesprächsverläufen.",
+        category: "darstellung",
+      },
+      {
         text: "Über dem Antwortfeld steht dafür ein Haken „Feld angeheftet“: Nimmst du ihn heraus, rückt das Feld wieder ans Ende des Verlaufs und gibt den vollen Platz zum Lesen frei. Dein Browser merkt sich die Wahl für dieses Gerät.",
         category: "charaktere",
         tutorial: "gespraeche",
