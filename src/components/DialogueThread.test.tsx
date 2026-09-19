@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeAll } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import DialogueThread from "./DialogueThread";
 import type { DialogueMessage } from "@/lib/dialoguesCore";
@@ -9,12 +9,6 @@ import type { ArchiveParticipant } from "@/types/archive";
 vi.mock("./DialogueMessageActions", () => ({
   default: () => null,
 }));
-
-// jsdom kennt scrollIntoView nicht; im laufenden Gespräch springt
-// DialogueThread beim Mounten aber ans Ende (siehe Effect dort).
-beforeAll(() => {
-  Element.prototype.scrollIntoView = vi.fn();
-});
 
 const PARTICIPANTS: ArchiveParticipant[] = [
   { slug: "ada", name: "Ada", kind: "character" },

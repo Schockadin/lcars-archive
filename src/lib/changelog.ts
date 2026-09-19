@@ -149,6 +149,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.46",
+    title: "Antworten, ohne den Platz zu verlieren",
+    items: [
+      {
+        text: "In einem laufenden Gespräch bleibt das Antwortfeld jetzt am unteren Rand stehen, während du den Verlauf durchscrollst. Wer mitten im Gespräch etwas nachlesen will, muss danach nicht mehr ganz nach unten scrollen, um zu schreiben.",
+        category: "charaktere",
+        tutorial: "gespraeche",
+      },
+    ],
+  },
+  {
     version: "1.45",
     title: "Verweise in Klammern führen wieder ans Ziel",
     // Der Hauptteil dieser Version ist ein Fehler in einer bereits

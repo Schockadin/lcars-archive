@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useRef } from "react";
 import { AUTHOR_COLORS } from "@/lib/missionFormat";
 import type { DialogueMessage } from "@/lib/dialogues";
 import type { ArchiveParticipant } from "@/types/archive";
@@ -46,31 +45,14 @@ export default function DialogueThread({
   canModerate?: boolean;
 }) {
   const isModerator = canModerate;
-  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Bei offenen Dialogen direkt zur letzten Nachricht springen (wie ein
-  // Chat), statt den Verlauf von oben lesen zu müssen — nur beim initialen
-  // Mount (leeres Deps-Array), damit spätere Polls (siehe
-  // DialogueLiveView.tsx) die Leseposition nicht immer wieder nach unten
-  // reißen, während gerade ältere Nachrichten gelesen werden. Geschlossene
-  // Dialoge bleiben unangetastet — dort ist der gesamte, meist kürzere
-  // Verlauf (oder der Fließtext) das eigentliche Leseerlebnis.
-  useEffect(() => {
-    // Kein „Event-Handler per Prop/Effect", sondern ein reiner DOM-Nebeneffekt
-    // beim initialen Mount: einmalig ans Ende scrollen. dialogueOpen ist hier
-    // nur die Bedingung, ob überhaupt gescrollt wird — es gibt kein Ereignis im
-    // Parent, das man stattdessen behandeln könnte.
-    // eslint-disable-next-line react-you-might-not-need-an-effect/no-event-handler
-    if (!dialogueOpen) return;
-    containerRef.current?.lastElementChild?.scrollIntoView({
-      behavior: "instant",
-      block: "end",
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+  // Der Sprung ans Ende des Verlaufs (nur bei offenen Gesprächen, wie in
+  // einem Chat) liegt seit v1.46 in DialogueLiveView: Dort steht unter
+  // diesem Verlauf das am unteren Rand klebende Antwortfeld, das die letzte
+  // Nachricht sonst genau nach dem Sprung verdecken würde — und nur der
+  // Aufrufer kennt beides. Hier wird deshalb nicht mehr gescrollt.
   return (
-    <div ref={containerRef} className="flex flex-col gap-[10px]">
+    <div className="flex flex-col gap-[10px]">
       {messages.map((msg) => {
         const canModerate =
           !msg.deletedAt &&

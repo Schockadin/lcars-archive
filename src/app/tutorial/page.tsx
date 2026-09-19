@@ -534,6 +534,14 @@ export default function TutorialPage() {
                 oder Tage lagen.
               </p>
               <p>
+                Beim Öffnen springt die Seite ans <strong>Ende</strong> des
+                Verlaufs, und das <strong>Antwortfeld bleibt beim Scrollen am
+                unteren Rand stehen</strong>: Du kannst also weiter oben etwas
+                nachlesen und trotzdem sofort tippen, ohne vorher wieder ganz
+                nach unten zu scrollen. Das Feld lässt sich an seiner unteren
+                Kante größer ziehen, wenn du mehr Platz zum Schreiben brauchst.
+              </p>
+              <p>
                 Sobald eine teilnehmende Person es abschließt, wird es{" "}
                 <strong>unwiderruflich geschlossen</strong> und taucht danach in
                 der Gespräche-Übersicht bei den Charakteren auf — standardmäßig
