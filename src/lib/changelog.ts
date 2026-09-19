@@ -160,6 +160,11 @@ export const CHANGELOG: ChangelogEntry[] = [
     // zum Eintrag führt.
     items: [
       {
+        text: "Ein Verweis auf einen Abschnitt — [[Klingonen#Frühe Jahre]] — springt jetzt auch dorthin, statt nur oben auf der Seite zu landen. Der Anzeigetext lässt sich wie gewohnt dahintersetzen: [[Klingonen#Frühe Jahre|damals]].",
+        category: "inhalte",
+        tutorial: "verlinkung",
+      },
+      {
         text: "Ein Zweitname (Alias) in doppelten Klammern führt jetzt ebenfalls zum Eintrag — bisher galt das nur für den Haupttitel, obwohl dieselbe Schreibweise im Fließtext längst automatisch verlinkt wurde. Was sich nirgends zuordnen lässt, steht weiterhin als „Kein Eintrag gefunden“ da, und die Vorschau über dem Textfeld zeigt beides schon vor dem Speichern.",
         category: "inhalte",
         tutorial: "verlinkung",

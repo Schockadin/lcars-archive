@@ -277,6 +277,39 @@ describe("autoLinkMarkdown und von Hand gesetzte Wikilinks", () => {
     expect(html).not.toContain("lcars-wikilink--missing");
   });
 
+  it("hängt den Abschnitt als Anker an den Link", async () => {
+    const character = await insertCharacter({ name: "Mit Abschnitten" });
+
+    const { html } = await autoLinkMarkdown(
+      "Siehe [[Mit Abschnitten#Frühe Jahre]].",
+    );
+
+    // Derselbe Anker, den rehypeSlug auf der Zielseite an die Überschrift
+    // „Frühe Jahre" schreibt (siehe headingAnchor-Test in markdown.test.ts).
+    expect(html).toContain(
+      `href="/characters/${character.slug}#frühe-jahre"`,
+    );
+  });
+
+  it("behält Anzeigetext und Abschnitt gemeinsam bei", async () => {
+    const character = await insertCharacter({ name: "Mit Abschnitten" });
+
+    const { html } = await autoLinkMarkdown(
+      "Siehe [[Mit Abschnitten#Dienstakte|dort]].",
+    );
+
+    expect(html).toContain(`href="/characters/${character.slug}#dienstakte"`);
+    expect(html).toContain(">dort</a>");
+  });
+
+  it("markiert ein unauffindbares Ziel mit Abschnitt ebenfalls als nicht gefunden", async () => {
+    const { html } = await autoLinkMarkdown("Siehe [[Gibt Es Nicht#Kapitel]].");
+
+    expect(html).toContain("lcars-wikilink--missing");
+    // Im Hinweis steht das Ziel, nicht der Anker.
+    expect(html).toContain('Kein Eintrag gefunden: Gibt Es Nicht"');
+  });
+
   it("markiert ein unauffindbares Ziel als nicht gefunden statt als toten Link", async () => {
     const { html } = await autoLinkMarkdown("Bericht über [[Gibt Es Nicht]].");
 

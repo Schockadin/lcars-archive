@@ -843,10 +843,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Spielen die Akte der Mission, die gerade auf dem Tisch liegt.
 - **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und
   automatische bzw. manuelle Verlinkung (`[[Wikilinks]]`) zwischen Inhalten.
-- **Verweise in doppelten Klammern** — `[[Ziel]]` bzw. `[[Ziel|Anzeigetext]]`
-  im Fließtext. `markdownToHtml` rendert sie zunächst als
-  `<a href="wikilink://Ziel">`; aufgelöst wird erst danach, wenn feststeht,
-  was es überhaupt gibt. Gesucht wird nach **Titel/Name**, dann nach **Slug**
+- **Verweise in doppelten Klammern** — `[[Ziel]]`, `[[Ziel|Anzeigetext]]`
+  bzw. `[[Ziel#Abschnitt]]` im Fließtext. `markdownToHtml` rendert sie
+  zunächst als `<a href="wikilink://Ziel#anker">`; aufgelöst wird erst danach,
+  wenn feststeht, was es überhaupt gibt. Gesucht wird nach **Titel/Name**, dann nach **Slug**
   (`[[t-mok]]`), dann nach **Zweitname/Alias**; was nirgends passt, wird als
   „Kein Eintrag gefunden" markiert statt als toter Link stehen zu bleiben,
   und gelöschte Inhalte zählen nicht mit (ihre Detailseiten laden nur mit
@@ -862,6 +862,17 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   verlinken" ein toter Link, weil es für `applyAutolinks` zu den geschützten
   Bereichen zählt und deshalb nie in `matches` steht. Nur scheinbar ging es
   gut, wenn derselbe Name woanders im Text unverklammert vorkam.
+  **Der Abschnitt** (`[[Ziel#Frühe Jahre]]`) wird zum Sprungziel auf der
+  Ziel-Seite. Die Überschrift wird dafür mit `headingAnchor` (`src/lib/
+  markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
+  also genau der Funktion, aus der `rehypeSlug` in derselben Pipeline die
+  `id` der Überschrift bildet, und nicht mit `slugifyBase` aus `lib/slug.ts`
+  (das zusätzlich Diakritika auflöst und aus „Frühe Jahre" `fruhe-jahre`
+  statt `frühe-jahre` machen würde — der Link zeigte dann neben das Ziel).
+  `markdown.test.ts` prüft beide Wege gegeneinander, statt die
+  Übereinstimmung nur zu behaupten. Ziel und Anker sind im `wikilink://`-Pfad
+  einzeln URL-kodiert; ein `#` im Text steht deshalb als `%23` und das erste
+  rohe `#` trennt die beiden Teile (`splitWikilinkTarget`).
 - **Bilder-Galerie** — Charaktere, Missionen, Missionslogs und Datenbank-Einträge
   (nicht Gespräche) können mehrere Bilder haben (JPEG/PNG/WebP/GIF, max. 5 MB
   pro Datei); Hochladen/Löschen ist auf dieselbe Person beschränkt, die den

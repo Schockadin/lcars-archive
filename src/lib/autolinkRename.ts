@@ -1,4 +1,5 @@
 import { normalizeWikilinkTarget } from "@/lib/slug";
+import { WIKILINK_RE } from "@/lib/markdown";
 
 // Reine Textarbeit für das Nachziehen der Verlinkungen nach einer
 // Umbenennung — ohne Datenbank und ohne Next, damit sie sich als Einheit
@@ -15,11 +16,6 @@ export interface AutolinkRenameInput {
   aliases: string[];
 }
 
-// Wikilinks mit allen Bestandteilen: [[Ziel#Abschnitt|Anzeigetext]]. Wie
-// WIKILINK_RE in markdown.ts, nur mit Abschnitt und Anzeigetext als eigene
-// Gruppen — beide müssen beim Umschreiben erhalten bleiben.
-const WIKILINK_PARTS_RE = /\[\[([^\]|#]+)(#[^\]|]*)?(?:\|([^\]]+))?\]\]/g;
-
 // Schreibt [[Alter Name]] auf [[Neuer Name|Alter Name]] um: das Ziel zeigt
 // wieder auf den Inhalt, im Text steht weiterhin das Wort, das dort stand.
 // Ein bereits vorhandener Anzeigetext ([[Alter Name|sie]]) bleibt erhalten.
@@ -33,8 +29,10 @@ export function retargetWikilinks(
     return { sourceMd, retargeted: 0 };
   }
   let retargeted = 0;
+  // WIKILINK_RE liefert alle drei Bestandteile ([[Ziel#Abschnitt|Text]]);
+  // Abschnitt und Anzeigetext müssen beim Umschreiben erhalten bleiben.
   const next = sourceMd.replace(
-    WIKILINK_PARTS_RE,
+    WIKILINK_RE,
     (
       full: string,
       rawTarget: string,
@@ -43,7 +41,8 @@ export function retargetWikilinks(
     ) => {
       if (normalizeWikilinkTarget(rawTarget) !== wanted) return full;
       retargeted += 1;
-      return `[[${to}${section ?? ""}|${alias ?? rawTarget.trim()}]]`;
+      const keptSection = section === undefined ? "" : `#${section}`;
+      return `[[${to}${keptSection}|${alias ?? rawTarget.trim()}]]`;
     },
   );
   return { sourceMd: next, retargeted };

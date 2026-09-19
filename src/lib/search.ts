@@ -230,8 +230,10 @@ export function stripMarkdown(md: string): string {
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/`([^`]*)`/g, "$1")
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, "$1")
-    .replace(WIKILINK_RE, (_, target: string, alias?: string) =>
-      (alias ?? target).trim(),
+    .replace(
+      WIKILINK_RE,
+      (_, target: string, _section: string | undefined, alias?: string) =>
+        (alias ?? target).trim(),
     )
     .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")
     .replace(/^\s{0,3}(#{1,6}|>|[-*+]|\d+\.)\s+/gm, "")

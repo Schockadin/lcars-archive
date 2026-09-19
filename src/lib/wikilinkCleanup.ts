@@ -47,7 +47,9 @@ export function stripWikilinks(sourceMd: string): WikilinkCleanupResult {
     const end = start + m[0].length;
     if (isProtected(start, end)) continue;
 
-    const [full, target, alias] = m;
+    // Der Abschnitt (Gruppe 2) fällt beim Entfernen mit weg — übrig bleibt
+    // der reine Anzeigetext.
+    const [full, target, , alias] = m;
     const replacement = (alias ?? target).trim();
     parts.push(sourceMd.slice(lastIndex, start));
     parts.push(replacement);

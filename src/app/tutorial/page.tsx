@@ -921,6 +921,14 @@ export default function TutorialPage() {
                 existiert.
               </p>
               <p>
+                Soll der Verweis nicht nur auf die Seite, sondern auf einen{" "}
+                <strong>Abschnitt</strong> darin führen, hängst du dessen
+                Überschrift mit einer Raute an:{" "}
+                <code>[[Klingonen#Frühe Jahre]]</code>. Der Link springt dann
+                genau zu dieser Überschrift. Beides lässt sich verbinden:{" "}
+                <code>[[Klingonen#Frühe Jahre|damals]]</code>.
+              </p>
+              <p>
                 Gesucht wird dabei nach dem <strong>Titel</strong> bzw.{" "}
                 <strong>Namen</strong>, nach der <strong>Adresse</strong> des
                 Eintrags (<code>[[t-mok]]</code>) und nach seinen{" "}

@@ -485,14 +485,36 @@ function replaceWikilinkTags(
   return html.replace(
     WIKILINK_TAG_RE,
     (_full, rawTarget: string, text: string) => {
-      const target = decodeHtmlEntities(decodeURIComponent(rawTarget));
+      const { target, anchor } = splitWikilinkTarget(rawTarget);
       const href = hrefFor(target);
       if (!href) {
         return `<span class="lcars-wikilink lcars-wikilink--missing" title="Kein Eintrag gefunden: ${escapeAttribute(target)}">${text}</span>`;
       }
-      return `<a href="${href}" class="lcars-wikilink">${text}</a>`;
+      return `<a href="${escapeAttribute(href + anchor)}" class="lcars-wikilink">${text}</a>`;
     },
   );
+}
+
+// Trennt "Ziel#anker" aus dem wikilink://-Pfad wieder auf. Beide Teile sind
+// einzeln URL-kodiert (siehe remarkWikiLinks in src/lib/markdown.ts), ein #
+// im Ziel oder im Anker steht dort also als %23 — das erste rohe # ist
+// deshalb immer das Trennzeichen. Der Anker kommt fertig slugifiziert an
+// (headingAnchor, dieselbe Funktion, aus der rehypeSlug die id der
+// Überschrift auf der Zielseite bildet) und wird unverändert an den Pfad
+// gehängt.
+export function splitWikilinkTarget(rawTarget: string): {
+  target: string;
+  anchor: string;
+} {
+  const hash = rawTarget.indexOf("#");
+  const rawName = hash === -1 ? rawTarget : rawTarget.slice(0, hash);
+  const rawAnchor = hash === -1 ? "" : rawTarget.slice(hash + 1);
+  return {
+    target: decodeHtmlEntities(decodeURIComponent(rawName)),
+    anchor: rawAnchor
+      ? `#${decodeHtmlEntities(decodeURIComponent(rawAnchor))}`
+      : "",
+  };
 }
 
 // Rendert Markdown zu HTML UND löst darin enthaltene Wikilinks auf — der
