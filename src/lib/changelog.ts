@@ -149,6 +149,24 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.45",
+    title: "Verweise in Klammern führen wieder ans Ziel",
+    // Der Hauptteil dieser Version ist ein Fehler in einer bereits
+    // angekündigten Funktion (1.8: „Manuell eingetippte Wikilinks
+    // funktionieren jetzt immer als echte Links") und laut AGENTS.md deshalb
+    // kein eigener Stichpunkt: Mit gesetztem Haken „Automatisch verlinken" —
+    // bei neuen Inhalten die Vorgabe — blieb ein von Hand getipptes [[Ziel]]
+    // ein Link ins Leere. Neu ist allein, dass auch ein Zweitname in Klammern
+    // zum Eintrag führt.
+    items: [
+      {
+        text: "Ein Zweitname (Alias) in doppelten Klammern führt jetzt ebenfalls zum Eintrag — bisher galt das nur für den Haupttitel, obwohl dieselbe Schreibweise im Fließtext längst automatisch verlinkt wurde. Was sich nirgends zuordnen lässt, steht weiterhin als „Kein Eintrag gefunden“ da, und die Vorschau über dem Textfeld zeigt beides schon vor dem Speichern.",
+        category: "inhalte",
+        tutorial: "verlinkung",
+      },
+    ],
+  },
+  {
     version: "1.44",
     title: "Ereignisse mitten im Text",
     items: [

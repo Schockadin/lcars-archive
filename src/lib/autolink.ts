@@ -350,40 +350,145 @@ function slugifyForWikilinkFallback(value: string): string {
 export async function resolveAllWikilinks(html: string): Promise<string> {
   if (!html.includes("wikilink://")) return html;
 
+  // Gelöschte Inhalte bleiben in der Tabelle stehen (Papierkorb, siehe
+  // /admin/content/trash), ihre Detailseiten laden aber nur mit
+  // `deleted_at IS NULL` — ein Wikilink darauf führte ins Leere. Solche Ziele
+  // gelten deshalb als nicht gefunden, nicht als Link.
   const [characters, missions, archiveEntries] = await Promise.all([
-    sql<{ slug: string; name: string }[]>`SELECT slug, name FROM characters`,
-    sql<{ slug: string; title: string }[]>`SELECT slug, title FROM missions`,
-    sql<
-      { slug: string; title: string }[]
-    >`SELECT slug, title FROM archive_entries`,
+    sql<{ slug: string; name: string; aliases: string[] | null }[]>`
+      SELECT slug, name, metadata->'aliases' AS aliases
+      FROM characters WHERE deleted_at IS NULL`,
+    sql<{ slug: string; title: string }[]>`
+      SELECT slug, title FROM missions WHERE deleted_at IS NULL`,
+    sql<{ slug: string; title: string; aliases: string[] | null }[]>`
+      SELECT slug, title, metadata->'aliases' AS aliases
+      FROM archive_entries WHERE deleted_at IS NULL`,
   ]);
 
   // Priorität bei Titel-/Slug-Kollisionen: Charaktere > Archiv-Einträge >
   // Missionen — dieselbe Reihenfolge wie TYPE_PRIORITY oben/beim Ingest.
-  const hrefByTitle = new Map<string, string>();
-  const hrefBySlug = new Map<string, string>();
+  const lookup = emptyLookup();
   for (const m of missions) {
-    hrefByTitle.set(normalizeWikilinkTarget(m.title), missionHref(m.slug));
-    hrefBySlug.set(m.slug, missionHref(m.slug));
+    addToLookup(lookup, missionHref(m.slug), m.slug, m.title, null);
   }
   for (const a of archiveEntries) {
-    hrefByTitle.set(normalizeWikilinkTarget(a.title), archiveHref(a.slug));
-    hrefBySlug.set(a.slug, archiveHref(a.slug));
+    addToLookup(lookup, archiveHref(a.slug), a.slug, a.title, a.aliases);
   }
   for (const c of characters) {
-    hrefByTitle.set(normalizeWikilinkTarget(c.name), characterHref(c.slug));
-    hrefBySlug.set(c.slug, characterHref(c.slug));
+    addToLookup(lookup, characterHref(c.slug), c.slug, c.name, c.aliases);
   }
 
+  return replaceWikilinkTags(html, (target) => hrefFromLookup(lookup, target));
+}
+
+// Die Nachschlagetabellen beider Auflöser: Titel/Name, Slug und Zweitnamen.
+interface WikilinkLookup {
+  byTitle: Map<string, string>;
+  bySlug: Map<string, string>;
+  byAlias: Map<string, string>;
+}
+
+function emptyLookup(): WikilinkLookup {
+  return { byTitle: new Map(), bySlug: new Map(), byAlias: new Map() };
+}
+
+function addToLookup(
+  lookup: WikilinkLookup,
+  href: string,
+  slug: string,
+  title: string,
+  aliases: string[] | null,
+): void {
+  lookup.byTitle.set(normalizeWikilinkTarget(title), href);
+  lookup.bySlug.set(slug, href);
+  for (const alias of aliases ?? []) {
+    if (typeof alias !== "string") continue;
+    const key = normalizeWikilinkTarget(alias);
+    if (key) lookup.byAlias.set(key, href);
+  }
+}
+
+// Titel, dann Slug, dann Zweitname. Die Zweitnamen kommen zuletzt, damit ein
+// echter Titel immer gegen den Zweitnamen eines anderen Eintrags gewinnt.
+//
+// Dass sie überhaupt zählen, ist der Sinn der Sache: Im Fließtext verlinkt
+// applyAutolinks einen Zweitnamen automatisch (phrases umfasst die Aliase) —
+// wer denselben Namen ausdrücklich in [[Klammern]] setzt, bekam dagegen
+// „Kein Eintrag gefunden". Das war genau andersherum, als man es erwartet.
+// Der Vault-Ingest (scripts/ingest/wikilinks.ts) kennt die Aliase nicht; er
+// läuft gegen die Obsidian-Dateien, in denen Obsidian selbst schon auflöst.
+function hrefFromLookup(
+  lookup: WikilinkLookup,
+  target: string,
+): string | undefined {
+  return (
+    lookup.byTitle.get(normalizeWikilinkTarget(target)) ??
+    lookup.bySlug.get(slugifyForWikilinkFallback(target)) ??
+    lookup.byAlias.get(normalizeWikilinkTarget(target))
+  );
+}
+
+// Wie resolveAllWikilinks, aber ausschließlich gegen die ÖFFENTLICHEN Ziele
+// (getAutolinkTargets: keine Entwürfe, keine gelöschten Inhalte, keine
+// Gespräche) — für die Vorschau im Editor (renderMarkdownPreview), die ohne
+// Anmeldung aufrufbar ist und deshalb nicht verraten darf, welche Entwürfe es
+// gibt. Was sie auflöst, steht ohnehin in den öffentlichen Listen. Ein
+// Verweis auf den eigenen, noch nicht veröffentlichten Entwurf erscheint in
+// der Vorschau folglich als „nicht gefunden" und wird beim Speichern (dort
+// gilt resolveAllWikilinks) zum Link.
+export async function resolvePublicWikilinks(html: string): Promise<string> {
+  if (!html.includes("wikilink://")) return html;
+
+  const targets = await getAutolinkTargets();
+  const lookup = emptyLookup();
+  // Rückwärts durch die Prioritätenliste, damit der höchstpriorisierte Typ
+  // zuletzt schreibt und damit gewinnt — wie in resolveAllWikilinks.
+  for (const type of [...TYPE_PRIORITY].reverse()) {
+    for (const target of targets.filter((t) => t.type === type)) {
+      addToLookup(
+        lookup,
+        target.href,
+        target.slug,
+        target.canonical,
+        // phrases = kanonischer Name + Aliase; der kanonische Name steht
+        // ohnehin schon in byTitle.
+        target.phrases.filter((p) => p !== target.canonical),
+      );
+    }
+  }
+
+  return replaceWikilinkTags(html, (target) => hrefFromLookup(lookup, target));
+}
+
+// Das Ziel eines nicht auflösbaren Verweises landet in einem title-Attribut
+// des gespeicherten HTML — und stammt aus dem Text, den jemand geschrieben
+// hat. Ein " darin würde das Attribut beenden. Heute kann das nicht passieren,
+// weil remarkGermanQuotes gerade Anführungszeichen schon vor dem Wikilink-
+// Schritt zu typografischen macht (siehe src/lib/markdown.ts) — aber daran
+// soll die Sicherheit dieser Zeile nicht hängen.
+function escapeAttribute(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+// Die gemeinsame Ersetzung der beiden Auflöser oben: jeder
+// <a href="wikilink://Ziel">Text</a> wird zum echten Link — oder, wenn das
+// Ziel nirgends gefunden wird, zum „nicht gefunden"-Platzhalter, wie beim
+// Ingest (scripts/ingest/wikilinks.ts).
+function replaceWikilinkTags(
+  html: string,
+  hrefFor: (target: string) => string | undefined,
+): string {
   return html.replace(
     WIKILINK_TAG_RE,
-    (full, rawTarget: string, text: string) => {
+    (_full, rawTarget: string, text: string) => {
       const target = decodeHtmlEntities(decodeURIComponent(rawTarget));
-      const href =
-        hrefByTitle.get(normalizeWikilinkTarget(target)) ??
-        hrefBySlug.get(slugifyForWikilinkFallback(target));
+      const href = hrefFor(target);
       if (!href) {
-        return `<span class="lcars-wikilink lcars-wikilink--missing" title="Kein Eintrag gefunden: ${target}">${text}</span>`;
+        return `<span class="lcars-wikilink lcars-wikilink--missing" title="Kein Eintrag gefunden: ${escapeAttribute(target)}">${text}</span>`;
       }
       return `<a href="${href}" class="lcars-wikilink">${text}</a>`;
     },
@@ -413,9 +518,31 @@ export async function autoLinkMarkdown(
 ): Promise<{ sourceMd: string; html: string }> {
   const targets = await getAutolinkTargets(exclude);
   const { sourceMd, matches } = applyAutolinks(bodyMarkdown, targets);
-  const html = resolveAutolinkedWikilinks(
-    await markdownToHtml(sourceMd),
-    matches,
+  return { sourceMd, html: await renderAutolinkedHtml(sourceMd, matches) };
+}
+
+// Das HTML eines Autolinking-Durchlaufs — und zwar mit ALLEN Wikilinks
+// aufgelöst, nicht nur den eben erzeugten.
+//
+// Das war der Fehler: Ein von Hand getipptes [[Ziel]] gehört für
+// applyAutolinks zu den geschützten Bereichen (PROTECTED_RE) und steht
+// deshalb nie in matches — resolveAutolinkedWikilinks kennt es also nicht und
+// ließ es als <a href="wikilink://Ziel"> stehen: ein Link, der wie einer
+// aussieht, aber nirgendwohin führt. Betroffen war jeder Inhalt, der MIT dem
+// Haken „Automatisch verlinken" gespeichert wurde (bei neuen Inhalten die
+// Vorgabe); ohne den Haken lief derselbe Text über renderContentHtml und
+// wurde korrekt aufgelöst. Nur scheinbar funktionierte es, wenn derselbe Name
+// woanders im Text unverklammert vorkam: dann brachte ihn erst der
+// Autolinking-Treffer in matches.
+//
+// Die Reihenfolge bleibt: erst die eben erzeugten Links aus matches (ohne
+// weitere Abfrage), dann für alles Übriggebliebene ein Blick in die DB —
+// resolveAllWikilinks steigt sofort aus, wenn nichts übrig ist.
+export async function renderAutolinkedHtml(
+  sourceMd: string,
+  matches: AutolinkMatch[],
+): Promise<string> {
+  return resolveAllWikilinks(
+    resolveAutolinkedWikilinks(await markdownToHtml(sourceMd), matches),
   );
-  return { sourceMd, html };
 }

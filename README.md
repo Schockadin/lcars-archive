@@ -843,6 +843,25 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Spielen die Akte der Mission, die gerade auf dem Tisch liegt.
 - **Markdown-Editor** — Formatierungs-Toolbar, Rohtext/Vorschau-Umschalter und
   automatische bzw. manuelle Verlinkung (`[[Wikilinks]]`) zwischen Inhalten.
+- **Verweise in doppelten Klammern** — `[[Ziel]]` bzw. `[[Ziel|Anzeigetext]]`
+  im Fließtext. `markdownToHtml` rendert sie zunächst als
+  `<a href="wikilink://Ziel">`; aufgelöst wird erst danach, wenn feststeht,
+  was es überhaupt gibt. Gesucht wird nach **Titel/Name**, dann nach **Slug**
+  (`[[t-mok]]`), dann nach **Zweitname/Alias**; was nirgends passt, wird als
+  „Kein Eintrag gefunden" markiert statt als toter Link stehen zu bleiben,
+  und gelöschte Inhalte zählen nicht mit (ihre Detailseiten laden nur mit
+  `deleted_at IS NULL`). Zwei Auflöser in `src/lib/autolink.ts` teilen sich
+  diese Mechanik: `resolveAllWikilinks` (ganze DB, inkl. Entwürfe) hängt an
+  jedem Speicher-Pfad, `resolvePublicWikilinks` (nur die öffentlichen Ziele
+  aus `getAutolinkTargets`) an der Editor-Vorschau, die ohne Anmeldung
+  aufrufbar ist und deshalb keine Entwurfstitel verraten darf.
+  **Auch beim Autolinking**: `renderAutolinkedHtml` löst erst die vom
+  Durchlauf selbst erzeugten Marken auf (aus dessen `matches`, ohne weitere
+  Abfrage) und danach alles Übrige. Bis v1.44 fehlte der zweite Schritt —
+  ein von Hand getipptes `[[Ziel]]` blieb mit gesetztem Haken „Automatisch
+  verlinken" ein toter Link, weil es für `applyAutolinks` zu den geschützten
+  Bereichen zählt und deshalb nie in `matches` steht. Nur scheinbar ging es
+  gut, wenn derselbe Name woanders im Text unverklammert vorkam.
 - **Bilder-Galerie** — Charaktere, Missionen, Missionslogs und Datenbank-Einträge
   (nicht Gespräche) können mehrere Bilder haben (JPEG/PNG/WebP/GIF, max. 5 MB
   pro Datei); Hochladen/Löschen ist auf dieselbe Person beschränkt, die den

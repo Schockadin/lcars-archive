@@ -54,6 +54,16 @@ function decodeEntities(value: string): string {
     .replace(/&#([0-9]+);/g, (_m, dec) => String.fromCodePoint(parseInt(dec, 10)));
 }
 
+// Das Ziel landet in einem title-Attribut — ein " darin würde es beenden
+// (dieselbe Absicherung wie in src/lib/autolink.ts).
+function escapeAttribute(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
 function resolveHtml(
   html: string,
   titleMap: Map<string, TitleEntry>,
@@ -63,7 +73,7 @@ function resolveHtml(
     const target = decodeEntities(decodeURIComponent(rawTarget));
     const entry = titleMap.get(norm(target)) ?? slugMap.get(slugify(target));
     if (!entry) {
-      return `<span class="lcars-wikilink lcars-wikilink--missing" title="Kein Eintrag gefunden: ${target}">${text}</span>`;
+      return `<span class="lcars-wikilink lcars-wikilink--missing" title="Kein Eintrag gefunden: ${escapeAttribute(target)}">${text}</span>`;
     }
     return `<a href="${entry.url}" class="lcars-wikilink">${text}</a>`;
   });

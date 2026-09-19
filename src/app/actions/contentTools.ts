@@ -3,13 +3,12 @@ import { requirePermission } from "@/lib/dal";
 import {
   applyAutolinks,
   getAutolinkTargets,
-  resolveAutolinkedWikilinks,
+  renderAutolinkedHtml,
   renderContentHtml,
   type AutolinkExclude,
   type AutolinkMatch,
 } from "@/lib/autolink";
 import { stripWikilinks, type WikilinkRemoval } from "@/lib/wikilinkCleanup";
-import { markdownToHtml } from "@/lib/markdown";
 import {
   getMissionBySlug,
   getMissionLogSourceBySlug,
@@ -160,10 +159,10 @@ interface AutolinkPlan {
 // applyAutolinks() erzeugt [[Wikilinks]] statt direkter Markdown-Links,
 // damit das Ergebnis mit "Wikilinks entfernen" symmetrisch bleibt.
 // markdownToHtml() rendert diese zunächst als <a href="wikilink://…">
-// (siehe remarkWikiLinks in lib/markdown.ts) — resolveAutolinkedWikilinks()
-// löst direkt danach genau die hier neu erstellten anhand der bekannten
-// Ziel-Pfade auf, damit sie sofort funktionieren statt erst beim nächsten
-// Vault-Ingest.
+// (siehe remarkWikiLinks in lib/markdown.ts) — renderAutolinkedHtml() löst
+// direkt danach die hier neu erstellten anhand der bekannten Ziel-Pfade auf,
+// damit sie sofort funktionieren statt erst beim nächsten Vault-Ingest, und
+// alle übrigen (von Hand getippten) gegen die DB.
 async function planAutolink(
   contentType: ContentToolType,
   slug: string,
@@ -173,10 +172,7 @@ async function planAutolink(
 
   const targets = await getAutolinkTargets(selfExcludeFor(contentType, slug));
   const { sourceMd, matches } = applyAutolinks(accessor.sourceMd, targets);
-  const previewHtml = resolveAutolinkedWikilinks(
-    await markdownToHtml(sourceMd),
-    matches,
-  );
+  const previewHtml = await renderAutolinkedHtml(sourceMd, matches);
   return {
     matches,
     previewHtml,

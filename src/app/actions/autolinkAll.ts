@@ -4,11 +4,10 @@ import {
   applyAutolinks,
   getAutolinkTargets,
   getAllAutolinkableContent,
-  resolveAutolinkedWikilinks,
+  renderAutolinkedHtml,
   type AutolinkContentType,
   type AutolinkTarget,
 } from "@/lib/autolink";
-import { markdownToHtml } from "@/lib/markdown";
 import { saveAutolinkedContent } from "@/lib/autolinkWrite";
 
 export interface LinkAllBatchResult {
@@ -85,10 +84,10 @@ export async function linkAllContentBatchAction(
     const { sourceMd, matches } = applyAutolinks(content.sourceMd, targets);
     if (matches.length === 0) continue;
 
-    const html = resolveAutolinkedWikilinks(
-      await markdownToHtml(sourceMd),
-      matches,
-    );
+    // renderAutolinkedHtml statt nur resolveAutolinkedWikilinks: sonst
+    // würden von Hand getippte [[Wikilinks]] in bereits bestehenden Inhalten
+    // bei einem Durchlauf hier zu toten Links (siehe dort).
+    const html = await renderAutolinkedHtml(sourceMd, matches);
 
     await saveAutolinkedContent(content, sourceMd, html);
 

@@ -921,6 +921,20 @@ export default function TutorialPage() {
                 existiert.
               </p>
               <p>
+                Gesucht wird dabei nach dem <strong>Titel</strong> bzw.{" "}
+                <strong>Namen</strong>, nach der <strong>Adresse</strong> des
+                Eintrags (<code>[[t-mok]]</code>) und nach seinen{" "}
+                <strong>Aliasen</strong> — ein Zweitname in Klammern führt also
+                genauso ans Ziel wie im Fließtext. Groß- und Kleinschreibung
+                spielt keine Rolle. Findet sich zu einem Verweis nichts, bleibt
+                er als <em>„Kein Eintrag gefunden“</em> markiert stehen, statt
+                als Link zu erscheinen, der nirgendwohin führt — so siehst du
+                auf einen Blick, wo noch ein Eintrag fehlt oder ein Name
+                falsch geschrieben ist. Dasselbe zeigt dir schon der{" "}
+                <strong>Vorschau</strong>-Umschalter über dem Textfeld, bevor
+                du speicherst.
+              </p>
+              <p>
                 Wer sich das Tippen der Klammern sparen will, nutzt beim
                 Speichern das Kästchen <strong>„Automatisch verlinken“</strong>{" "}
                 unter dem Textfeld: Es durchsucht deinen Text nach bekannten
