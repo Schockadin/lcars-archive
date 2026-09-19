@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import {
   applyFieldValue,
+  clearDraftRecord,
   draftFieldKeys,
   isDraftableField,
   isFieldAtDefault,
@@ -51,6 +52,28 @@ const WRITE_DEBOUNCE_MS = 300;
 // steuern dürfen.
 const PIN_WINDOW_MS = 1500;
 const PIN_INTERVAL_MS = 150;
+
+export const INPUT_DRAFT_DROP_EVENT = "neo:input-draft-drop";
+
+// Den gesicherten Stand der AKTUELLEN Seite verwerfen — aufrufbar von
+// überall, ohne an den Sitzungsspeicher zu müssen.
+//
+// Gebraucht, wenn der Server den Text ABSICHTLICH ersetzt hat: Beim
+// Wiederherstellen einer früheren Fassung (RevisionsPanel.tsx) beschreibt der
+// Entwurf einen Stand, den es gerade nicht mehr geben soll — ohne dieses
+// Verwerfen legte die Sicherung ihn beim nächsten Aufbau wieder über den
+// wiederhergestellten Text, und ein anschließendes Speichern schriebe ihn
+// sogar zurück in die Datenbank.
+//
+// Als Ereignis statt als direkter Aufruf von clearDraftRecord(): Die
+// Sicherung hält denselben Stand zusätzlich im Arbeitsspeicher (recordRef)
+// und schreibt ihn beim Verlassen der Seite zurück (pagehide → snapshot).
+// Ein Löschen an ihr vorbei wäre damit beim nächsten Seitenwechsel wieder
+// rückgängig gemacht.
+export function dropInputDraftsForPage(): void {
+  if (typeof document === "undefined") return;
+  document.dispatchEvent(new Event(INPUT_DRAFT_DROP_EVENT));
+}
 
 export default function InputDraftKeeper() {
   const pathname = usePathname();
@@ -234,6 +257,13 @@ export default function InputDraftKeeper() {
       flush();
     };
 
+    // Siehe dropInputDraftsForPage() oben: Der Stand dieser Seite ist
+    // überholt — im Speicher UND im Arbeitsspeicher.
+    const onDrop = () => {
+      recordRef.current = {};
+      clearDraftRecord(storage, path);
+    };
+
     const onPageHide = () => snapshot();
     const onVisibilityChange = () => {
       if (document.visibilityState === "hidden") snapshot();
@@ -242,6 +272,7 @@ export default function InputDraftKeeper() {
     document.addEventListener("input", onInput, true);
     document.addEventListener("change", onInput, true);
     document.addEventListener("reset", onReset, true);
+    document.addEventListener(INPUT_DRAFT_DROP_EVENT, onDrop);
     window.addEventListener("pagehide", onPageHide);
     document.addEventListener("visibilitychange", onVisibilityChange);
 
@@ -300,6 +331,7 @@ export default function InputDraftKeeper() {
       document.removeEventListener("input", onInput, true);
       document.removeEventListener("change", onInput, true);
       document.removeEventListener("reset", onReset, true);
+      document.removeEventListener(INPUT_DRAFT_DROP_EVENT, onDrop);
       window.removeEventListener("pagehide", onPageHide);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       flush();

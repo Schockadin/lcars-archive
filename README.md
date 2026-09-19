@@ -612,7 +612,21 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   (`clearAllInputDrafts()` in `HeaderUserNav`/`LoginForm`, an derselben Stelle
   wie das Leeren des Offline-Seiten-Caches): Auf einem geteilten Gerät soll
   die nächste Person weder fremde Zwischenstände vorfinden noch eigene
-  hinterlassen. Der `MutationObserver` läuft nur an, wenn eine Änderung
+  hinterlassen. **Ersetzt der Server den Text absichtlich**, ist der
+  gesicherte Stand überholt und wird verworfen
+  (`dropInputDraftsForPage()`, seit v1.45): Genau das passiert beim
+  **Wiederherstellen einer früheren Fassung** (`RevisionsPanel`) — ohne das
+  legte die Sicherung den ersetzten Text beim nächsten Aufbau wieder über den
+  wiederhergestellten, und ein anschließendes Speichern schrieb ihn sogar
+  zurück in die Datenbank. Bewusst als **Ereignis** an `document` und nicht
+  als Aufruf von `clearDraftRecord()`: Die Sicherung hält denselben Stand
+  zusätzlich im Arbeitsspeicher (`recordRef`) und schreibt ihn beim
+  `pagehide` zurück — ein Löschen an ihr vorbei wäre beim nächsten
+  Seitenwechsel wieder erledigt. Das Panel lädt danach die Seite neu, denn
+  das Textfeld des Editors ist unkontrolliert (`defaultValue`): Hat jemand
+  darin getippt, gilt es dem Browser als „dirty" und übernimmt einen neuen
+  Vorgabewert nicht mehr — das `revalidatePath` der Action erneuert die
+  Seite, nicht aber den Text im Feld. Der `MutationObserver` läuft nur an, wenn eine Änderung
   wirklich ein Element hinzugefügt hat, und der Wiederherstellungs-Durchgang
   bricht sofort ab, solange es für die Seite nichts Gesichertes gibt — auf
   Seiten mit Live-Aktualisierung (Gesprächs-Poll, Toasts) kostet er damit

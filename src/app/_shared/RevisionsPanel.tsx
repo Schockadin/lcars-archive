@@ -1,7 +1,8 @@
 "use client";
-import { useActionState } from "react";
+import { useActionState, useEffect } from "react";
 import { FormError } from "@/app/_shared/FormPrimitives";
 import SettingsPanel from "@/app/_shared/SettingsPanel";
+import { dropInputDraftsForPage } from "@/components/lcars/InputDraftKeeper";
 import {
   restoreRevisionAction,
   type RevisionActionState,
@@ -77,6 +78,26 @@ function RevisionItem({
     restoreRevisionAction,
     initialState,
   );
+
+  // Nach dem Wiederherstellen die Seite neu laden — sonst sieht man das
+  // Ergebnis gar nicht.
+  //
+  // Zwei Gründe, beide unabhängig voneinander: (1) Das Textfeld des Editors
+  // ist unkontrolliert (defaultValue). Hat jemand darin getippt, gilt es dem
+  // Browser als „dirty" und übernimmt einen neuen Vorgabewert nicht mehr —
+  // das revalidatePath der Action erneuert also die Seite, nicht aber den
+  // Text im Feld. (2) Die Entwurfs-Sicherung (v1.41/1.42) legte ihren
+  // gesicherten Stand ohnehin wieder darüber. Deshalb wird er hier zuerst
+  // verworfen: Wer eine frühere Fassung zurückholt, will genau sie sehen,
+  // nicht den Text, der sie ersetzt hatte. Ohne das blieb die
+  // Wiederherstellung wirkungslos — und ein anschließendes Speichern schrieb
+  // den alten Stand sogar wieder in die Datenbank.
+  useEffect(() => {
+    if (!state.success) return;
+    dropInputDraftsForPage();
+    window.location.reload();
+  }, [state.success]);
+
   return (
     <li className="rounded-[8px] border border-lcars-border bg-lcars-surface px-[12px] py-[8px]">
       <div className="flex flex-wrap items-baseline justify-between gap-[8px]">
