@@ -22,6 +22,7 @@ import type { MissionPreview } from "@/types/missions";
 import ContentStateSelect from "./ContentStateSelect";
 import DeleteOwnContentButton from "./DeleteOwnContentButton";
 import ContentActionRow from "./ContentActionRow";
+import ContentLinkToolButton from "@/components/ContentLinkToolButton";
 import {
   archiveEditHref,
   archiveHref,
@@ -110,6 +111,7 @@ export default function UserContentBrowser({
   archiveEntries,
   missions,
   canManageMissions,
+  canLinkAnyContent = false,
   ownUserId,
 }: {
   characters: ContentFilterCharacter[];
@@ -118,6 +120,14 @@ export default function UserContentBrowser({
   archiveEntries: UserContentArchiveEntry[];
   missions: MissionPreview[];
   canManageMissions: boolean;
+  // Trägt die Person content.autolink_tools? Logbücher und Datenbank-Einträge
+  // dieser Seite gehören ihr ohnehin selbst (getLogsForUser/
+  // getArchiveEntriesForUser) — dort braucht es das Recht nicht. Die
+  // Missionsliste zeigt der Spielleitung dagegen ALLE Missionen
+  // (getAllMissionsIncludingDrafts), auch fremde: dort steht das Werkzeug
+  // deshalb nur mit dem Recht, sonst stünde da ein Knopf, den der Server
+  // ablehnt (mayUseContentTools in src/app/actions/contentTools.ts).
+  canLinkAnyContent?: boolean;
   ownUserId: number;
 }) {
   const [characterFilter, setCharacterFilter] = useState<string | null>(null);
@@ -192,6 +202,13 @@ export default function UserContentBrowser({
               contentType="mission_log"
               id={log.id}
               isDraft={log.is_draft}
+            />
+          }
+          extraAction={
+            <ContentLinkToolButton
+              contentType="missionLog"
+              slug={log.slug}
+              detectMode={false}
             />
           }
           editHref={missionLogEditHref(log.id)}
@@ -272,6 +289,13 @@ export default function UserContentBrowser({
                 isDraft={entry.isDraft}
               />
             }
+            extraAction={
+              <ContentLinkToolButton
+                contentType="archiveEntry"
+                slug={entry.slug}
+                detectMode={false}
+              />
+            }
             editHref={archiveEditHref(entry.id)}
             deleteButton={
               <DeleteOwnContentButton
@@ -300,6 +324,15 @@ export default function UserContentBrowser({
           ),
           actions: (
             <ContentActionRow
+              extraAction={
+                canLinkAnyContent ? (
+                  <ContentLinkToolButton
+                    contentType="mission"
+                    slug={m.slug}
+                    detectMode={false}
+                  />
+                ) : undefined
+              }
               editHref={missionEditHref(m.id)}
               deleteButton={
                 <DeleteOwnContentButton
@@ -320,6 +353,7 @@ export default function UserContentBrowser({
     optimisticArchiveEntries,
     optimisticMissions,
     canManageMissions,
+    canLinkAnyContent,
     ownUserId,
     removeOptimisticLog,
     removeOptimisticDialogue,

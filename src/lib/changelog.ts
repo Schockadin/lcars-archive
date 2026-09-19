@@ -160,6 +160,11 @@ export const CHANGELOG: ChangelogEntry[] = [
     // zum Eintrag führt.
     items: [
       {
+        text: "Das Verlinkungs-Werkzeug steht jetzt an den eigenen Inhalten zur Verfügung — bisher sah es nur die Spielleitung. Es verlinkt einen bereits gespeicherten Text nachträglich (mit Vorschau, erst bestätigen) und macht das über denselben Knopf auch wieder rückgängig. Zu finden auf der Seite des Inhalts und neu auch in der Liste unter „Meine Inhalte“.",
+        category: "inhalte",
+        tutorial: "verlinkung",
+      },
+      {
         text: "Die Inhaltsübersicht der Administration hat ein Suchfeld: Titel eintippen grenzt die Liste über alle vier Inhaltsarten hinweg ein, und Arten ohne Treffer verschwinden solange. Owner- und Kategorie-Filter wirken weiterhin zusätzlich.",
         category: "inhalte",
       },

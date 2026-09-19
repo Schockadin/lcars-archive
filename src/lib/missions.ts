@@ -1247,6 +1247,9 @@ export async function getMissionLogSourceBySlug(slug: string): Promise<{
   missionId: number;
   missionSlug: string;
   sourceMarkdown: string | null;
+  // Für die Rechteprüfung der Content-Werkzeuge (src/app/actions/
+  // contentTools.ts): Wer den Inhalt besitzt, darf sie darauf anwenden.
+  ownerId: number | null;
 } | null> {
   const rows = await sql<
     {
@@ -1254,10 +1257,11 @@ export async function getMissionLogSourceBySlug(slug: string): Promise<{
       missionId: number;
       missionSlug: string;
       sourceMarkdown: string | null;
+      ownerId: number | null;
     }[]
   >`
     SELECT ml.id, ml.mission_id AS "missionId", m.slug AS "missionSlug",
-           ml.source_md AS "sourceMarkdown"
+           ml.source_md AS "sourceMarkdown", ml.owner_user_id AS "ownerId"
     FROM mission_logs ml
     JOIN missions m ON m.id = ml.mission_id
     WHERE ml.slug = ${slug}

@@ -453,11 +453,17 @@ export async function getAllArchivePaths(): Promise<ArchivePath[]> {
 // id + rohen Markdown-Quelltext, unabhängig von Sichtbarkeit/Owner.
 // Gespräche (category = 'dialogue') werden ausgeschlossen — deren Inhalt
 // besteht aus Chat-Nachrichten (dialogue_messages), nicht aus source_md.
-export async function getArchiveEntrySourceBySlug(
-  slug: string,
-): Promise<{ id: number; sourceMarkdown: string | null } | null> {
-  const rows = await sql<{ id: number; sourceMarkdown: string | null }[]>`
-    SELECT id, source_md AS "sourceMarkdown"
+export async function getArchiveEntrySourceBySlug(slug: string): Promise<{
+  id: number;
+  sourceMarkdown: string | null;
+  // Für die Rechteprüfung der Content-Werkzeuge (src/app/actions/
+  // contentTools.ts): Wer den Inhalt besitzt, darf sie darauf anwenden.
+  ownerId: number | null;
+} | null> {
+  const rows = await sql<
+    { id: number; sourceMarkdown: string | null; ownerId: number | null }[]
+  >`
+    SELECT id, source_md AS "sourceMarkdown", owner_user_id AS "ownerId"
     FROM archive_entries
     WHERE slug = ${slug} AND category != 'dialogue'
   `;

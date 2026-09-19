@@ -514,11 +514,19 @@ export async function getLogsByCharacter(
 // Für die Admin-Action "Autolinking" (src/app/actions/autolink.ts) — braucht
 // id + rohen Markdown-Quelltext, unabhängig von Sichtbarkeit/Owner (Admins
 // dürfen jeden Charakter autolinken).
-export async function getCharacterSourceBySlug(
-  slug: string,
-): Promise<{ id: number; sourceMarkdown: string | null } | null> {
-  const rows = await sql<{ id: number; sourceMarkdown: string | null }[]>`
-    SELECT id, source_md AS "sourceMarkdown" FROM characters WHERE slug = ${slug}
+export async function getCharacterSourceBySlug(slug: string): Promise<{
+  id: number;
+  sourceMarkdown: string | null;
+  // Für die Rechteprüfung der Content-Werkzeuge (src/app/actions/
+  // contentTools.ts): Wer den Inhalt besitzt, darf sie darauf anwenden. Beim
+  // Charakter ist das player_id, wie überall sonst auch.
+  ownerId: number | null;
+} | null> {
+  const rows = await sql<
+    { id: number; sourceMarkdown: string | null; ownerId: number | null }[]
+  >`
+    SELECT id, source_md AS "sourceMarkdown", player_id AS "ownerId"
+    FROM characters WHERE slug = ${slug}
   `;
   return rows[0] ?? null;
 }

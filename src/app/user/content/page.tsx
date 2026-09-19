@@ -174,6 +174,11 @@ export default async function UserContentPage() {
                 archiveEntries={archiveEntries}
                 missions={missions}
                 canManageMissions={isGM}
+                canLinkAnyContent={userCan(
+                  user,
+                  "content.autolink_tools",
+                  roleMap,
+                )}
                 ownUserId={user.id}
               />
             </div>

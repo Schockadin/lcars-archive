@@ -26,8 +26,10 @@ const TYPE_LABEL: Record<
 
 type Mode = "autolink" | "delink";
 
-// Admin/GM-only Content-Werkzeug auf den vier Inhalts-Detailseiten (Mission,
-// Log, Archiv-Eintrag, Charakter) — vereint die früher getrennten
+// Content-Werkzeug auf den vier Inhalts-Detailseiten (Mission, Log,
+// Archiv-Eintrag, Charakter) und in der Liste unter „Meine Inhalte" —
+// sichtbar für den Owner des Inhalts sowie für content.autolink_tools auf
+// fremden (siehe mayUseContentTools in src/app/actions/contentTools.ts) — vereint die früher getrennten
 // AutolinkButton/RemoveWikilinksButton zu EINEM Aktions-Button, der zwischen
 // „Verlinkung hinzufügen“ (Autolinking, siehe src/lib/autolink.ts) und
 // „Verlinkung entfernen“ (Wikilink-Cleanup, siehe src/lib/wikilinkCleanup.ts)
@@ -45,9 +47,16 @@ type Mode = "autolink" | "delink";
 export default function ContentLinkToolButton({
   contentType,
   slug,
+  detectMode = true,
 }: {
   contentType: ContentToolType;
   slug: string;
+  // Beim Mounten prüfen, welcher Modus der sinnvollere ist? Auf einer
+  // Detailseite steht genau ein Knopf, die eine Abfrage lohnt sich dort. In
+  // einer LISTE (/user/content) steht er in jeder Zeile — dort liefe pro
+  // Eintrag eine eigene Abfrage über den ganzen Text los, nur um einen
+  // Anfangszustand zu setzen. Dann bleibt es beim Vorgabe-Modus Autolink.
+  detectMode?: boolean;
 }) {
   const [mode, setMode] = useState<Mode>("autolink");
 
@@ -58,6 +67,7 @@ export default function ContentLinkToolButton({
   // automatische Moduswechsel (siehe die beiden Effekte unten) sollen davon
   // unberührt bleiben.
   useEffect(() => {
+    if (!detectMode) return;
     let cancelled = false;
     hasAutolinkMatchesAction(contentType, slug).then((hasMatches) => {
       if (!cancelled && !hasMatches) setMode("delink");

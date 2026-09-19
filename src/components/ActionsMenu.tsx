@@ -183,12 +183,19 @@ export default function ActionsMenu({
           />
         )}
       <div className="flex gap-[5px]">
-        {viewer?.permissions.includes("content.autolink_tools") && !isDialogue && (
-          <ContentLinkToolButton
-            contentType={contentType}
-            slug={content.slug}
-          />
-        )}
+        {/* Verlinkungs-Werkzeug: der Owner auf seinem eigenen Inhalt, dazu
+            content.autolink_tools auf fremden. Dieselbe Regel prüft der
+            Server an der konkreten Zeile (mayUseContentTools in
+            src/app/actions/contentTools.ts) — sonst stünde hier ein Knopf,
+            den die Aktion dahinter ablehnt. */}
+        {(isOwner ||
+          viewer?.permissions.includes("content.autolink_tools")) &&
+          !isDialogue && (
+            <ContentLinkToolButton
+              contentType={contentType}
+              slug={content.slug}
+            />
+          )}
         {viewer?.role && followType && (
           <FollowButtons
             targetType={followType}

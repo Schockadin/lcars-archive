@@ -862,6 +862,18 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   verlinken" ein toter Link, weil es für `applyAutolinks` zu den geschützten
   Bereichen zählt und deshalb nie in `matches` steht. Nur scheinbar ging es
   gut, wenn derselbe Name woanders im Text unverklammert vorkam.
+  **Nachträglich verlinken** lässt sich ein gespeicherter Inhalt über
+  `ContentLinkToolButton` (Vorschau → Bestätigen, derselbe Knopf schaltet
+  danach auf „Verlinkung entfernen"). Wer das darf, entscheidet
+  `mayUseContentTools` (`src/app/actions/contentTools.ts`) **am konkreten
+  Inhalt**: der Owner auf seinem eigenen immer — er darf den Text ohnehin
+  bearbeiten —, `content.autolink_tools` zusätzlich auf fremden. Bis v1.45
+  verlangten alle fünf Aktionen ausnahmslos das Recht, das nur die Rolle `gm`
+  trägt; auf den eigenen Inhalten sah es deshalb niemand sonst. Der Knopf
+  steht auf der Detailseite (`ActionsMenu.tsx`, gleiche Bedingung) und in der
+  Liste unter „Meine Inhalte"; dort mit `detectMode={false}`, sonst liefe pro
+  Zeile eine eigene Abfrage über den ganzen Text, nur um den Anfangsmodus zu
+  setzen.
   **Der Abschnitt** (`[[Ziel#Frühe Jahre]]`) wird zum Sprungziel auf der
   Ziel-Seite. Die Überschrift wird dafür mit `headingAnchor` (`src/lib/
   markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
