@@ -100,6 +100,17 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Teilnehmende, muss man sich das Antwortrecht
   erst per Button für zwei Stunden reservieren, mit Sperr-Anzeige und
   optionaler Mail/Push-Benachrichtigung, sobald die Sperre wieder endet.
+  **Die Suche kennt dieselbe Schranke:** Nachrichten eines LAUFENDEN Gesprächs
+  liefert `searchFull` nur an Beteiligte und an `gm.access`
+  (`openDialogueVisibleSql` in `src/lib/search.ts`, Teilnehmer-Regel wie
+  `participantSpeakerRows` in `dialoguesCore.ts`). Ohne diese Bedingung gab
+  die ohne Anmeldung erreichbare Volltextsuche den Wortlaut laufender
+  Gespräche samt Sprecher und Sprungmarke an jede Person heraus, die danach
+  suchte — die Abfrage der EINTRÄGE schloss offene Gespräche seit jeher aus,
+  für die Nachrichten war es übersehen worden. Abgeschlossene Gespräche sind
+  gewöhnliche Einträge und bleiben für alle auffindbar. Dieselbe Regel gilt im
+  RAG-Index (`embeddingSync.ts` nimmt nur `dialogue_open = FALSE`) und in der
+  Chronologie (`timeline.ts`).
   Offene Gespräche aktualisieren sich dabei automatisch per Polling (alle
   8 Sekunden, pausiert bei nicht sichtbarem Tab) — neue Nachrichten und
   Sperr-Status-Änderungen erscheinen ohne manuelles Neuladen der Seite. Jede

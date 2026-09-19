@@ -22,7 +22,16 @@ export default async function SearchPage({
 }) {
   const q = (await searchParams).q?.trim() ?? "";
   const viewer = await getViewer();
-  const results = q.length >= 2 ? await searchFull(q, viewer?.userId) : [];
+  // Der Betrachter entscheidet über die Nachrichten LAUFENDER Gespräche: Die
+  // gehören nur ihren Teilnehmenden (und der Spielleitung, die jedes Gespräch
+  // öffnen darf) — siehe openDialogueVisibleSql in src/lib/search.ts.
+  const searchViewer = viewer
+    ? {
+        userId: viewer.userId,
+        isGm: viewerHasPermission(viewer, "gm.access"),
+      }
+    : null;
+  const results = q.length >= 2 ? await searchFull(q, searchViewer) : [];
   // Der Archiv-Assistent (RAG) erscheint unter der Volltextsuche — nur für
   // Berechtigte (rag.use). configured spiegelt, ob die API-Schlüssel gesetzt
   // sind (sonst zeigt RagChat einen Hinweis statt des Eingabefelds).

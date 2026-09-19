@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import sql from "@/lib/db";
 import { searchFull, searchLive, buildSnippet, stripMarkdown } from "@/lib/search";
+import { createDialogue } from "@/lib/dialoguesCore";
 import { insertUser, insertCharacter, insertMission } from "./helpers";
 
 describe("stripMarkdown", () => {
@@ -50,7 +51,7 @@ describe("searchFull", () => {
       VALUES ('ein-artikel', 'Ein Artikel', 'location', 'Enthält das Wort Raumschiff im Text.', '{}', '{}', NULL, FALSE, ${user.id})
     `;
 
-    const result = await searchFull("Raumschiff");
+    const result = await searchFull("Raumschiff", null);
 
     expect(result).toHaveLength(1);
     expect(result[0].slug).toBe("ein-artikel");
@@ -67,7 +68,7 @@ describe("searchFull", () => {
       VALUES (${user.id}, 'character', ${character.slug}, NOW())
     `;
 
-    const result = await searchFull("Bookmarked", user.id);
+    const result = await searchFull("Bookmarked", { userId: user.id, isGm: false });
 
     expect(result[0].saved).toBe(true);
   });
@@ -75,7 +76,7 @@ describe("searchFull", () => {
   it("does not mark results as saved for an anonymous search (no userId)", async () => {
     await insertCharacter({ name: "Anonymous Search Target" });
 
-    const result = await searchFull("Anonymous Search Target");
+    const result = await searchFull("Anonymous Search Target", null);
 
     expect(result[0].saved).toBeUndefined();
   });
@@ -97,7 +98,11 @@ describe("searchFull – Gesprochenes", () => {
       VALUES (${entry.id}, ${kira.id}, ${user.id}, '<p>Einen Raktajino, heiß.</p>', 'Einen Raktajino, heiß.')
     `;
 
-    const result = await searchFull("Raktajino");
+    // Aus Sicht der Spielleitung: Ein LAUFENDES Gespräch gehört nur seinen
+    // Teilnehmenden, und dieses hier hat keine eingetragenen (metadata '{}').
+    // Geprüft wird die Darstellung des Treffers, nicht die Schranke davor —
+    // die hat ihre eigenen Fälle weiter unten.
+    const result = await searchFull("Raktajino", { userId: user.id, isGm: true });
 
     expect(result).toHaveLength(1);
     expect(result[0].type).toBe("dialogue_message");
@@ -124,7 +129,7 @@ describe("searchFull – Gesprochenes", () => {
       `;
     }
 
-    const result = await searchFull("Warpkern");
+    const result = await searchFull("Warpkern", { userId: user.id, isGm: true });
     expect(result.filter((r) => r.type === "dialogue_message")).toHaveLength(1);
   });
 
@@ -150,7 +155,96 @@ describe("searchFull – Gesprochenes", () => {
     `;
 
     // Eine Nachricht erbt den Zustand ihres Gesprächs — ein Entwurf taucht
-    // in der Suche nicht auf; die gelöschte fällt ohnehin weg.
-    expect(await searchFull("Tarnvorrichtung")).toHaveLength(0);
+    // in der Suche nicht auf; die gelöschte fällt ohnehin weg. Gefragt wird
+    // als Spielleitung, damit hier wirklich Entwurf und Löschung greifen und
+    // nicht schon die Teilnehmer-Schranke für laufende Gespräche.
+    expect(
+      await searchFull("Tarnvorrichtung", { userId: user.id, isGm: true }),
+    ).toHaveLength(0);
+  });
+});
+
+
+// Ein laufendes Gespräch gehört seinen Teilnehmenden: /dialogues/[slug]
+// antwortet allen anderen mit forbidden(). Die Volltextsuche ist dagegen ohne
+// Anmeldung erreichbar — sie muss dieselbe Schranke ziehen, sonst liegt der
+// Wortlaut eines laufenden Gesprächs für jede Person offen, die danach sucht.
+describe("searchFull und laufende Gespräche", () => {
+  const GEHEIM = "Zinnoberkiesel";
+
+  async function laufendesGespraech() {
+    const a = await insertUser();
+    const b = await insertUser();
+    const fremde = await insertUser();
+    const charA = await insertCharacter({ playerId: a.id, name: "Alpha Eins" });
+    const charB = await insertCharacter({ playerId: b.id, name: "Beta Zwei" });
+
+    const dialogue = await createDialogue({
+      title: "Vertrauliche Besprechung",
+      ownSpeaker: { kind: "character", id: charA.id },
+      partners: [{ kind: "character", id: charB.id }],
+      authorUserId: a.id,
+      setting: null,
+      locationSlug: null,
+      logDate: null,
+      tags: [],
+      bodyMarkdown: `Das Geheimwort lautet ${GEHEIM}.`,
+      subscribeSelf: true,
+    });
+
+    return { a, b, fremde, dialogue };
+  }
+
+  it("verschweigt den Wortlaut gegenüber nicht angemeldeten Personen", async () => {
+    await laufendesGespraech();
+
+    expect(await searchFull(GEHEIM, null)).toEqual([]);
+  });
+
+  it("verschweigt ihn auch gegenüber angemeldeten Unbeteiligten", async () => {
+    const { fremde } = await laufendesGespraech();
+
+    expect(
+      await searchFull(GEHEIM, { userId: fremde.id, isGm: false }),
+    ).toEqual([]);
+  });
+
+  it("zeigt ihn beiden Teilnehmenden", async () => {
+    const { a, b } = await laufendesGespraech();
+
+    for (const teilnehmer of [a, b]) {
+      const treffer = await searchFull(GEHEIM, {
+        userId: teilnehmer.id,
+        isGm: false,
+      });
+      expect(treffer).toHaveLength(1);
+      expect(treffer[0].snippet).toContain(GEHEIM);
+    }
+  });
+
+  // Die Spielleitung darf jedes Gespräch öffnen (gm.access, siehe das
+  // forbidden()-Gate) — für sie ändert sich durch die Schranke nichts.
+  it("zeigt ihn der Spielleitung", async () => {
+    const { fremde } = await laufendesGespraech();
+
+    const treffer = await searchFull(GEHEIM, {
+      userId: fremde.id,
+      isGm: true,
+    });
+
+    expect(treffer).toHaveLength(1);
+  });
+
+  // Nach dem Abschluss ist das Gespräch ein gewöhnlicher, öffentlich lesbarer
+  // Eintrag — dann darf die Suche seinen Verlauf auch zeigen.
+  it("zeigt ihn nach dem Abschluss des Gesprächs allen", async () => {
+    const { dialogue } = await laufendesGespraech();
+    await sql`
+      UPDATE archive_entries SET dialogue_open = false WHERE slug = ${dialogue.slug}
+    `;
+
+    const treffer = await searchFull(GEHEIM, null);
+
+    expect(treffer).toHaveLength(1);
   });
 });

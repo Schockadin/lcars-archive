@@ -163,6 +163,24 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: buildCspHeader(),
           },
+          // Der Browser soll den Typ einer Antwort NICHT erraten, sondern
+          // den mitgelieferten Content-Type glauben. Betrifft vor allem die
+          // hochgeladenen Bilder (/api/content-images/[id]): Deren Typ kommt
+          // aus dem, was der Browser beim Hochladen gemeldet hat (siehe
+          // ALLOWED_MIME_TO_EXT in src/lib/contentImages.ts) — ohne nosniff
+          // könnte eine als Bild deklarierte Datei mit anderem Inhalt vom
+          // Browser umgedeutet werden.
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          // Beim Verlassen der Seite nur die Herkunft mitgeben, nicht den
+          // vollen Pfad: Eine URL wie /dialogues/<slug> verrät sonst über den
+          // Referer, welches Gespräch jemand gerade liest.
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
         ],
       },
     ];

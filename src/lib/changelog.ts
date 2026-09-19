@@ -149,6 +149,21 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.47",
+    title: "Laufende Gespräche bleiben unter sich",
+    // Streng genommen eine Fehlerkorrektur und damit laut AGENTS.md kein
+    // Stichpunkt — hier trotzdem einer: Es ging um den Wortlaut privater
+    // Gespräche. Wer gelesen hat, was nicht für ihn bestimmt war, soll es
+    // erfahren können, statt es aus der Versionsnummer zu erraten.
+    items: [
+      {
+        text: "Die Volltextsuche zeigt Nachrichten aus einem laufenden Gespräch nur noch den Beteiligten (und der Spielleitung). Bisher fand sie jede und jeder — auch ohne Anmeldung. Abgeschlossene Gespräche bleiben wie gehabt für alle lesbar.",
+        category: "inhalte",
+        tutorial: "gespraeche",
+      },
+    ],
+  },
+  {
     version: "1.46",
     title: "Antworten, ohne den Platz zu verlieren",
     items: [
