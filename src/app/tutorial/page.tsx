@@ -1092,6 +1092,16 @@ export default function TutorialPage() {
                   Audit-Log-Einträgen der letzten 24 Stunden.
                 </li>
                 <li>
+                  Unter <strong>„Datenbank“</strong> den kompletten
+                  Datenbankinhalt als Datei sichern und wieder einspielen, die
+                  Tabellen durchsehen und Abfragen stellen. Zusätzlich läuft
+                  jede Nacht automatisch eine Sicherung; sie umfasst alle
+                  Inhalte und die Kampagnendaten (AP-Konto, Talente,
+                  Schwerpunkte, Hausregeln, Spielabende, Notizen, frühere
+                  Fassungen, Bilder und Rollen). Nutzerkonten haben eine
+                  eigene, separate Sicherung.
+                </li>
+                <li>
                   Unter <strong>„Import“</strong> eine oder mehrere
                   Markdown-Dateien im Vault-Frontmatter-Format hochladen, um
                   daraus neue Datenbank-Einträge, Missionen, Charaktere oder

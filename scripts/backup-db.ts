@@ -11,7 +11,32 @@
 // eigener Server-Build normalerweise implizit setzt.
 import sql from "@/lib/db";
 import { exportDatabaseBackup } from "@/lib/dbBackup";
+import { BACKUP_EXCLUDED_TABLES, BACKUP_TABLES } from "@/lib/dbTables";
 import { uploadDbBackupToR2 } from "./r2Client";
+
+// Kennt das Backup noch alle Tabellen, die es in der LAUFENDEN Datenbank
+// gibt?
+//
+// src/lib/dbTables.test.ts prüft die Listen gegen scripts/schema.sql und
+// fängt damit alles ab, was über das Repo läuft. Eine Tabelle, die jemand
+// direkt an der produktiven Datenbank anlegt, sieht dieser Test nie — sie
+// fiele still aus dem nächtlichen Backup. Deshalb hier derselbe Abgleich
+// gegen die echte Datenbank.
+//
+// Gemeldet wird NACH dem Upload: Das Backup des Tages soll erst sicher
+// liegen, bevor der Lauf rot wird.
+async function unbekannteTabellen(): Promise<string[]> {
+  const rows = await sql<{ table_name: string }[]>`
+    SELECT table_name FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+    ORDER BY table_name
+  `;
+  const bekannt = new Set<string>([
+    ...BACKUP_TABLES,
+    ...BACKUP_EXCLUDED_TABLES,
+  ]);
+  return rows.map((r) => r.table_name).filter((name) => !bekannt.has(name));
+}
 
 async function main() {
   console.log("🔌 Exportiere Datenbank...");
@@ -30,7 +55,23 @@ async function main() {
   console.log(`☁️  Lade Backup nach R2 hoch (Key: ${key})...`);
   await uploadDbBackupToR2(key, json);
 
-  console.log(`✓ Backup hochgeladen (${(json.length / 1024).toFixed(1)} KB)`);
+  const tabellen = Object.keys(backup.tables).length;
+  console.log(
+    `✓ Backup hochgeladen (${(json.length / 1024).toFixed(1)} KB, ` +
+      `${tabellen} Tabellen, Format ${backup.version})`,
+  );
+
+  const unbekannt = await unbekannteTabellen();
+  if (unbekannt.length > 0) {
+    console.error(
+      "✗ Diese Tabellen stehen in der Datenbank, aber in keiner der beiden " +
+        "Listen in src/lib/dbTables.ts — sie sind NICHT im Backup:\n  " +
+        unbekannt.join("\n  ") +
+        "\n  Eintragen in BACKUP_TABLES (sichern) oder " +
+        "BACKUP_EXCLUDED_TABLES (mit Grund auslassen).",
+    );
+    process.exitCode = 1;
+  }
 }
 
 main()

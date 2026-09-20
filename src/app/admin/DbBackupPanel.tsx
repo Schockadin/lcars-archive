@@ -35,7 +35,9 @@ export default function DbBackupPanel() {
         <>
           Exportiert den kompletten Datenbankinhalt außer Useraccounts
           (Charaktere, Missionen, Mission-Logs, Datenbank-Einträge, Follows,
-          Dialog-Nachrichten, Timeline, …) als eine JSON-Datei. User laufen
+          Dialog-Nachrichten, Timeline, dazu seit Format 2 auch AP-Konto,
+          Talente, Schwerpunkte, Hausregeln, Sessions, Notizen, Fassungen,
+          Bilder und Rollen) als eine JSON-Datei. User laufen
           über ein eigenes, paralleles Backup (siehe „User-Backup“ oben). Der
           Import ERSETZT den gesamten aktuellen Inhalt (außer Usern) durch den
           Stand der gewählten Datei. Die Datei ist entsprechend sensibel — nur
@@ -58,6 +60,19 @@ export default function DbBackupPanel() {
         <>
           Wiederhergestellt:{" "}
           {summary.tables.map((t) => `${t.name} (${t.rows})`).join(" · ")}
+          {/* Eine Datei im alten Zuschnitt (Format 1) kennt die
+              Kampagnentabellen nicht. Sie werden beim Restore trotzdem
+              geleert, sobald sie an einem wiederhergestellten Inhalt hängen
+              (TRUNCATE ... CASCADE, siehe dbBackup.ts) — das soll hier stehen
+              und nicht erst auffallen, wenn das AP-Konto fehlt. */}
+          {summary.missingTables.length > 0 && (
+            <div className="mt-[8px] text-lcars-quinary-ink">
+              Die Datei (Format {summary.version}) enthielt diese Tabellen
+              nicht:{" "}
+              {summary.missingTables.join(" · ")}. Wo sie an einem
+              wiederhergestellten Inhalt hängen, sind sie jetzt leer.
+            </div>
+          )}
         </>
       )}
     />

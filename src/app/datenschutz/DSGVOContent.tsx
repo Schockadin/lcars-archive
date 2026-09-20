@@ -224,6 +224,29 @@ export default function DSGVOContent({ year }: { year: number }) {
             netlify.com/privacy
           </a>
         </p>
+        <p>
+          Der Inhalt der Datenbank wird einmal täglich automatisch als
+          Sicherungsdatei über eine verschlüsselte Verbindung in einen nicht
+          öffentlichen Speicher („R2“) bei <strong>Cloudflare</strong>
+          {" "}(Cloudflare, Inc., San Francisco, USA) hochgeladen. Gesichert
+          wird derselbe Datenbestand, den diese Erklärung beschreibt — also
+          auch eingestellte Inhalte, Notizen, Gesprächsnachrichten und, in
+          einer eigenen Datei, die Nutzerkonten. Zweck ist allein die
+          Wiederherstellbarkeit nach einem Datenverlust (Rechtsgrundlage:
+          Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse an einem
+          ausfallsicheren Betrieb). Sicherungen, die älter als 30 Tage sind,
+          werden automatisch gelöscht; ein gelöschtes Konto oder ein
+          gelöschter Inhalt kann deshalb noch bis zu 30 Tage lang in einer
+          Sicherung enthalten sein. Cloudflare verarbeitet die Daten als
+          Auftragsverarbeiter gemäß Art. 28 DSGVO. Mehr Informationen:{" "}
+          <a
+            href="https://www.cloudflare.com/privacypolicy/"
+            target="_blank"
+            rel="noreferrer"
+          >
+            cloudflare.com/privacypolicy
+          </a>
+        </p>
 
         <h2>3. E-Mail-Versand</h2>
         <p>
