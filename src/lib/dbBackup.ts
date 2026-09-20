@@ -33,11 +33,22 @@ export const TABLE_COLUMNS = Object.fromEntries(
 // MAX(id)+1 gesetzt werden, sonst kollidiert der nächste per App erzeugte
 // Datensatz mit einer wiederhergestellten id (archive_links/
 // mission_participants haben keine id, nutzen ein zusammengesetztes PK).
+// campaign_settings steht hier nicht zufällig: Ihre id ist BOOLEAN PRIMARY KEY
+// DEFAULT TRUE (Ein-Zeilen-Tabelle, siehe schema.sql). MAX(id) darauf gibt es
+// in Postgres nicht — der setval-Block unten würde daran scheitern.
 const NO_SERIAL_ID: readonly TableName[] = [
   "archive_links",
   "mission_participants",
   "dialogue_reservations",
   "dialogue_reservation_notify_requests",
+  "dialogue_npc_speakers",
+  "timeline_event_characters",
+  "game_session_characters",
+  "planned_session_characters",
+  "planned_session_rsvps",
+  "campaign_settings",
+  // Schlüssel ist der Rollen-Key (TEXT), keine Sequence.
+  "roles",
 ];
 const SERIAL_TABLES = TABLES.filter(
   (t) => !(NO_SERIAL_ID as string[]).includes(t),
@@ -52,10 +63,21 @@ const JSONB_COLUMNS: Partial<Record<TableName, readonly string[]>> = {
   missions: ["metadata", "frontmatter"],
   mission_logs: ["metadata", "frontmatter"],
   archive_entries: ["metadata", "frontmatter"],
+  campaign_settings: [
+    "advancement_rules",
+    "changelog_featured_versions",
+    "changelog_hidden_categories",
+  ],
 };
 
+// 1 = die enge Tabellenauswahl bis v1.47, 2 = alle Inhalts- und
+// Kampagnentabellen (siehe BACKUP_TABLES in dbTables.ts). Beide lassen sich
+// einspielen: Der Restore richtet sich nach dem, was die Datei mitbringt,
+// nicht nach ihrer Nummer — die Nummer sagt nur, was man erwarten darf.
+export const DB_BACKUP_VERSION = 2;
+
 export interface DbBackup {
-  version: 1;
+  version: 1 | 2;
   exportedAt: string;
   tables: Partial<Record<TableName, Record<string, unknown>[]>>;
 }
@@ -69,20 +91,35 @@ export async function exportDatabaseBackup(): Promise<DbBackup> {
   for (const table of TABLES) {
     tables[table] = await sql.unsafe(`SELECT * FROM "${table}" ORDER BY 1`);
   }
-  return { version: 1, exportedAt: new Date().toISOString(), tables };
+  return {
+    version: DB_BACKUP_VERSION,
+    exportedAt: new Date().toISOString(),
+    tables,
+  };
 }
 
 export interface RestoreDbSummary {
   tables: { name: string; rows: number }[];
+  // Format der eingespielten Datei (siehe DB_BACKUP_VERSION).
+  version: DbBackup["version"];
+  // Gesicherte Tabellen, die in der Datei FEHLTEN — bei einer Datei im alten
+  // Zuschnitt (v1) sind das die Kampagnentabellen. Wichtig zu wissen, weil
+  // TRUNCATE ... CASCADE sie trotzdem leert, sofern sie an einem
+  // wiederhergestellten Inhalt hängen: character_ap_entries zeigt auf
+  // characters, wird mit geleert und findet in der Datei nichts zum
+  // Wiederauffüllen. Das Panel weist darauf hin, statt es den Admin
+  // hinterher herausfinden zu lassen.
+  missingTables: string[];
 }
 
 export class InvalidBackupError extends Error {}
 
 function assertValidBackup(value: unknown): asserts value is DbBackup {
+  const version = (value as DbBackup | null)?.version;
   if (
     !value ||
     typeof value !== "object" ||
-    (value as DbBackup).version !== 1 ||
+    (version !== 1 && version !== 2) ||
     typeof (value as DbBackup).tables !== "object"
   ) {
     throw new InvalidBackupError(
@@ -125,19 +162,43 @@ export async function importDatabaseBackup(
 ): Promise<RestoreDbSummary> {
   assertValidBackup(backup);
 
-  const summary: RestoreDbSummary = { tables: [] };
+  const vorhandene = TABLES.filter((t) => Array.isArray(backup.tables[t]));
+  const summary: RestoreDbSummary = {
+    tables: [],
+    version: backup.version,
+    missingTables: TABLES.filter((t) => !vorhandene.includes(t)),
+  };
 
+  // Angefasst wird NUR, was die Datei mitbringt: Eine Tabelle, die darin mit
+  // leerer Liste steht, ist eine Aussage („war leer") und wird geleert; eine,
+  // die gar nicht vorkommt, geht den Restore nichts an. Das schützt die
+  // unabhängigen Tabellen (talents, focuses, campaign_rules, roles,
+  // campaign_settings …) beim Einspielen einer Datei im alten Zuschnitt.
+  //
+  // Vollständig schützen kann es sie nicht, und das ist keine Nachlässigkeit,
+  // sondern TRUNCATE: Wer eine Tabelle leert, leert per CASCADE auch alles,
+  // was per Fremdschlüssel auf sie zeigt — character_ap_entries hängt an
+  // characters und ist nach einem Restore von characters leer, ob es in der
+  // Datei steht oder nicht. Steht es darin (seit v2), wird es gleich wieder
+  // gefüllt; fehlt es (v1), bleibt es leer. Genau diese Tabellen nennt
+  // summary.missingTables, damit es niemand erst hinterher merkt.
   await sql.begin(async (tx) => {
-    // Eine einzige TRUNCATE...CASCADE-Anweisung für alle Tabellen — die
-    // Reihenfolge darin ist wegen CASCADE irrelevant. Ohne RESTART IDENTITY:
-    // die Sequences werden unten pro Tabelle gezielt auf MAX(id) gesetzt,
-    // das deckt volle wie leere Backups (Sequence dann zurück auf 1)
-    // einheitlich ab.
-    await tx.unsafe(
-      `TRUNCATE ${TABLES.map((t) => `"${t}"`).join(", ")} CASCADE`,
-    );
+    // Eine einzige TRUNCATE...CASCADE-Anweisung — die Reihenfolge darin ist
+    // wegen CASCADE irrelevant. Ohne RESTART IDENTITY: die Sequences werden
+    // unten pro Tabelle gezielt auf MAX(id) gesetzt, das deckt volle wie
+    // leere Backups (Sequence dann zurück auf 1) einheitlich ab.
+    //
+    // CASCADE kann dabei über die Liste hinausgreifen: Was per Fremdschlüssel
+    // auf eine geleerte Tabelle zeigt, wird mit geleert. Genau deshalb führt
+    // BACKUP_TABLES inzwischen auch die Kindtabellen von characters &
+    // Co. — sonst leert der Restore sie und füllt sie nie wieder.
+    if (vorhandene.length > 0) {
+      await tx.unsafe(
+        `TRUNCATE ${vorhandene.map((t) => `"${t}"`).join(", ")} CASCADE`,
+      );
+    }
 
-    for (const table of TABLES) {
+    for (const table of vorhandene) {
       const rows = backup.tables[table] ?? [];
       const knownColumns = TABLE_COLUMNS[table] as readonly string[];
       const jsonbCols = new Set(JSONB_COLUMNS[table] ?? []);
@@ -209,7 +270,7 @@ export async function importDatabaseBackup(
     // eingespielten id. setval(..., false) heißt "der NÄCHSTE nextval()-Call
     // liefert genau diesen Wert" — MAX(id)+1 ist damit korrekt, auch für
     // eine leere Tabelle (COALESCE(...,0)+1 = 1, wie eine frische Sequence).
-    for (const table of SERIAL_TABLES) {
+    for (const table of SERIAL_TABLES.filter((t) => vorhandene.includes(t))) {
       await tx.unsafe(`
         SELECT setval(
           pg_get_serial_sequence('"${table}"', 'id'),

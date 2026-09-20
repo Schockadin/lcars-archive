@@ -149,6 +149,16 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.48",
+    title: "Das Backup sichert wieder alles",
+    items: [
+      {
+        text: "Die tägliche Sicherung umfasst jetzt auch AP-Konto, Talente, Schwerpunkte, Hausregeln, Spielabende, Notizen, frühere Fassungen, Bilder und Rollen. Bisher fehlten sie — und wurden beim Einspielen einer Sicherung sogar geleert, weil sie an den gesicherten Inhalten hängen. Das AP-Konto einer Runde war danach weg.",
+        category: "spielleitung",
+      },
+    ],
+  },
+  {
     version: "1.47",
     title: "Laufende Gespräche bleiben unter sich",
     // Streng genommen eine Fehlerkorrektur und damit laut AGENTS.md kein

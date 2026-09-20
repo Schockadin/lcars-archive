@@ -1062,7 +1062,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   angezeigt (Datei 1 von N mit Vor-/Zurück-Navigation), in der sich alle
   Felder inklusive Text noch bearbeiten lassen, bevor sie einzeln bestätigt
   wird.
-- **DB-Backup** — der komplette Datenbankinhalt lässt sich im Admin-Panel als
+- **DB-Backup** — der komplette Datenbankinhalt (seit Dateiformat 2 inklusive
+  AP-Konto, Talenten, Schwerpunkten, Hausregeln, Sessions, Notizen, Fassungen,
+  Bildern und Rollen) lässt sich im Admin-Panel als
   JSON-Datei herunterladen und bei Bedarf wieder vollständig einspielen; ein
   täglicher Cronjob sichert zusätzlich automatisch nach Cloudflare R2 und
   löscht dort Backups, die älter als 30 Tage sind. Manuelles Sichern/
@@ -1307,17 +1309,37 @@ ab:
   zusätzlich `db_view_system_tables`; `users` steht ohne `password_hash` da
   und ist wie die übrigen Auth-Tabellen gegen Schreibzugriff gesperrt
   (`PROTECTED_WRITE_TABLES` in [`src/lib/dbInspect.ts`](src/lib/dbInspect.ts)).
-- **DB-Backup** (`BACKUP_TABLES`): eine bewusst engere Auswahl. Der Restore
-  leert jede dort genannte Tabelle, bevor er sie neu einspielt — eine ältere
-  Backup-Datei kennt eine neu aufgenommene Tabelle aber nicht und würde sie
-  damit leeren statt wiederherstellen. Die Auswahl zu erweitern ist deshalb
-  eine eigene Entscheidung samt Versionssprung des Dateiformats
-  (`DbBackup.version`), kein Nebeneffekt einer neuen Tabelle.
+- **DB-Backup** (`BACKUP_TABLES` und `BACKUP_EXCLUDED_TABLES`): Seit
+  **Dateiformat 2** stehen dort alle Inhalts- und Kampagnentabellen. Draußen
+  bleiben nur `users` (eigenes Backup, siehe unten), die Betriebsdaten
+  (Sperren, Protokolle, gelesene Neuigkeiten) und die Einbettungen, die
+  ohnehin neu entstehen — jede mit Begründung in der zweiten Liste.
 
-`src/lib/dbTables.test.ts` gleicht die Liste bei jedem CI-Lauf mit
-`scripts/schema.sql` ab: Eine neue Tabelle oder Spalte, die dort fehlt, lässt
-den Test rot werden — vorher wuchs die Liste nur mit, wenn jemand beim Anlegen
-einer Tabelle zufällig ans Backup dachte.
+  Bis Format 1 war die Auswahl eng, weil der Restore jede genannte Tabelle
+  leerte und eine ältere Datei die neu aufgenommene nicht kannte. Seit
+  Format 2 fasst der Restore **nur an, was die Datei mitbringt**, und die
+  Sorge entfällt. Was er nicht verhindern kann, ist `TRUNCATE … CASCADE`:
+  Wer `characters` wiederherstellt, leert alles, was per Fremdschlüssel daran
+  hängt. Genau daran krankte die enge Auswahl — `character_ap_entries`,
+  `game_session_characters`, `planned_session_characters` und
+  `timeline_event_characters` wurden beim Restore mit geleert und mangels
+  Daten in der Datei **nie wieder gefüllt**: Das AP-Konto einer Runde war
+  nach einem Restore weg. Beim Einspielen einer Datei im alten Zuschnitt
+  nennt die Zusammenfassung deshalb die fehlenden Tabellen
+  (`RestoreDbSummary.missingTables`), und das Admin-Panel zeigt sie an.
+
+Drei Wächter halten die Listen aktuell:
+
+1. `src/lib/dbTables.test.ts` gleicht sie mit `scripts/schema.sql` ab — eine
+   neue Tabelle oder Spalte, die dort fehlt, macht den Test rot.
+2. Derselbe Test verlangt, dass **jede** Tabelle in genau einer der beiden
+   Backup-Listen steht: sichern oder mit Grund auslassen, eine dritte
+   Möglichkeit gibt es nicht.
+3. `tests/integration/dbBackup.test.ts` und der nächtliche Lauf
+   (`scripts/backup-db.ts`) stellen dieselbe Frage an die **laufende**
+   Datenbank. Eine Tabelle, die jemand direkt an der produktiven Datenbank
+   anlegt, sieht kein Parser — der Backup-Lauf meldet sie, nachdem das
+   Backup des Tages sicher im Bucket liegt.
 
 ### 6. Entwicklungsserver starten
 

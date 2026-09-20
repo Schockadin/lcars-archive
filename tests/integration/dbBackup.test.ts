@@ -5,7 +5,8 @@ import {
   importDatabaseBackup,
   InvalidBackupError,
 } from "@/lib/dbBackup";
-import { insertCharacter } from "./helpers";
+import { BACKUP_EXCLUDED_TABLES, BACKUP_TABLES } from "@/lib/dbTables";
+import { insertCharacter, insertUser } from "./helpers";
 
 // users steht bewusst NICHT im DB-Backup (dafür gibt es src/lib/userBackup.ts)
 // — die Tests laufen deshalb über characters, das zugleich JSONB-Spalten
@@ -96,5 +97,169 @@ describe("exportDatabaseBackup / importDatabaseBackup", () => {
     await expect(importDatabaseBackup(null)).rejects.toBeInstanceOf(
       InvalidBackupError,
     );
+  });
+});
+
+
+// Bis v1 sicherte das Backup eine enge Auswahl. Weil TRUNCATE ... CASCADE
+// aber auf alles übergreift, was per Fremdschlüssel auf eine geleerte Tabelle
+// zeigt, leerte ein Restore die Kindtabellen von characters gleich mit — und
+// füllte sie mangels Daten nie wieder. Das AP-Konto einer Runde war danach
+// weg. Seit v2 stehen sie in BACKUP_TABLES.
+describe("DB-Backup, Umfang seit v2", () => {
+  async function apPunkte(): Promise<number> {
+    const [row] = await sql<{ count: number }[]>`
+      SELECT COUNT(*)::int AS count FROM character_ap_entries
+    `;
+    return row.count;
+  }
+
+  async function apEintrag() {
+    const user = await insertUser();
+    const figur = await insertCharacter({ name: "AP-Figur" });
+    await sql`
+      INSERT INTO character_ap_entries (character_id, amount, reason, created_by)
+      VALUES (${figur.id}, 3, 'bonus', ${user.id})
+    `;
+    return { user, figur };
+  }
+
+  it("trägt die Kampagnentabellen im Export", async () => {
+    await apEintrag();
+
+    const backup = await exportDatabaseBackup();
+
+    expect(backup.version).toBe(2);
+    expect(backup.tables.character_ap_entries).toHaveLength(1);
+    // Stichproben quer durch die Gruppen, die v1 ausließ.
+    for (const table of [
+      "talents",
+      "focuses",
+      "campaign_rules",
+      "game_sessions",
+      "planned_sessions",
+      "content_revisions",
+      "content_images",
+      "content_notes",
+      "roles",
+    ] as const) {
+      expect(backup.tables[table]).toBeDefined();
+    }
+  });
+
+  it("holt das AP-Konto beim Wiedereinspielen zurück", async () => {
+    await apEintrag();
+    const backup = await exportDatabaseBackup();
+
+    await importDatabaseBackup(backup);
+
+    expect(await apPunkte()).toBe(1);
+  });
+
+  // Was eine Datei im alten Zuschnitt anrichtet — und was nicht. TRUNCATE
+  // CASCADE lässt sich nicht aushebeln: Wer characters leert, leert auch
+  // alles, was daran hängt. Unabhängige Tabellen bleiben dagegen unangetastet,
+  // weil der Restore nur noch anfasst, was die Datei nennt.
+  it("lässt unabhängige Tabellen in Ruhe, die eine ältere Datei nicht kennt", async () => {
+    await apEintrag();
+    const user = await insertUser();
+    await sql`
+      INSERT INTO talents (name, category, description, created_by)
+      VALUES ('Ausweichen', 'general', 'Beschreibung', ${user.id})
+    `;
+
+    // Eine Datei im alten Zuschnitt: nur characters, keine Kampagnentabellen.
+    const summary = await importDatabaseBackup({
+      version: 1 as const,
+      exportedAt: new Date().toISOString(),
+      tables: { characters: [] },
+    });
+
+    // talents hängt an nichts, was die Datei leert — bleibt also stehen.
+    const [talente] = await sql<{ count: number }[]>`
+      SELECT COUNT(*)::int AS count FROM talents
+    `;
+    expect(talente.count).toBe(1);
+
+    // character_ap_entries hängt an characters und ist deshalb leer. Das
+    // sagt die Zusammenfassung auch: Die Tabelle fehlte in der Datei.
+    expect(await apPunkte()).toBe(0);
+    expect(summary.version).toBe(1);
+    expect(summary.missingTables).toContain("character_ap_entries");
+    expect(summary.missingTables).toContain("talents");
+  });
+
+  it("meldet bei einer vollständigen Datei nichts als fehlend", async () => {
+    const backup = await exportDatabaseBackup();
+
+    const summary = await importDatabaseBackup(backup);
+
+    expect(summary.version).toBe(2);
+    expect(summary.missingTables).toEqual([]);
+  });
+
+  it("nennt im Ergebnis nur die eingespielten Tabellen", async () => {
+    const summary = await importDatabaseBackup({
+      version: 2 as const,
+      exportedAt: new Date().toISOString(),
+      tables: { characters: [] },
+    });
+
+    expect(summary.tables.map((t) => t.name)).toEqual(["characters"]);
+  });
+
+  // campaign_settings hat als einzige gesicherte Tabelle eine BOOLEAN-id
+  // (Ein-Zeilen-Tabelle). Liefe sie durch den setval-Block, scheiterte der
+  // Restore an MAX(id) auf einem Boolean.
+  it("spielt die Ein-Zeilen-Tabelle campaign_settings ein", async () => {
+    await sql`
+      INSERT INTO campaign_settings (id, ingame_year, advancement_rules)
+      VALUES (TRUE, 2402, ${sql.json({ ap: 3 })})
+      ON CONFLICT (id) DO UPDATE SET ingame_year = EXCLUDED.ingame_year,
+                                     advancement_rules = EXCLUDED.advancement_rules
+    `;
+    const backup = await exportDatabaseBackup();
+
+    await importDatabaseBackup(backup);
+
+    const [row] = await sql<{ ingame_year: number; advancement_rules: unknown }[]>`
+      SELECT ingame_year, advancement_rules FROM campaign_settings
+    `;
+    expect(row.ingame_year).toBe(2402);
+    expect(row.advancement_rules).toEqual({ ap: 3 });
+  });
+
+  it("führt jede gesicherte Tabelle auch wirklich im Export", async () => {
+    const backup = await exportDatabaseBackup();
+
+    for (const table of BACKUP_TABLES) {
+      expect(Object.keys(backup.tables)).toContain(table);
+    }
+  });
+});
+
+
+// Derselbe Abgleich, den der nächtliche Lauf gegen die produktive Datenbank
+// macht (scripts/backup-db.ts) — hier gegen die Testdatenbank, die aus
+// scripts/schema.sql entsteht. dbTables.test.ts liest dieselbe Datei als Text;
+// dieser Fall fragt stattdessen die fertige Datenbank und deckt damit auch
+// ab, was ein Parser übersehen könnte.
+describe("DB-Backup gegen die laufende Datenbank", () => {
+  it("kennt jede Tabelle der Datenbank — gesichert oder begründet ausgelassen", async () => {
+    const rows = await sql<{ table_name: string }[]>`
+      SELECT table_name FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+      ORDER BY table_name
+    `;
+    const bekannt = new Set<string>([
+      ...BACKUP_TABLES,
+      ...BACKUP_EXCLUDED_TABLES,
+    ]);
+
+    const unbekannt = rows
+      .map((r) => r.table_name)
+      .filter((name) => !bekannt.has(name));
+
+    expect(unbekannt).toEqual([]);
   });
 });

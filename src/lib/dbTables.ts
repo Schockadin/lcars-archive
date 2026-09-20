@@ -211,24 +211,28 @@ export function isViewableTable(value: string): value is TableName {
 
 // ── DB-Backup (src/lib/dbBackup.ts) ────────────────────────────────
 
-// Was ins DB-Backup wandert — eine eigene, ENGERE Auswahl, kein Abfall der
-// Browser-Liste. Sie ist hier unverändert geblieben: Der Restore leert jede
-// genannte Tabelle (TRUNCATE) und spielt sie neu ein, eine ältere Backup-Datei
-// kennt die neu aufgenommene Tabelle aber nicht — sie würde beim
-// Zurückspielen also geleert statt wiederhergestellt. Die Liste zu erweitern
-// ist deshalb eine eigene Entscheidung samt Versionssprung des Dateiformats
-// (DbBackup.version) und nicht Teil des Tabellen-Browsers.
+// Was ins DB-Backup wandert — und, gleich darunter, was bewusst draußen
+// bleibt. Zusammen ergeben beide Listen ALLE Tabellen; dbTables.test.ts prüft
+// genau das. Eine neue Tabelle zwingt damit zu einer Entscheidung, statt
+// stillschweigend aus dem Backup zu fallen.
 //
-// Damit fehlen im Backup derzeit die jüngeren Kampagnen-Tabellen (AP-Konto,
-// Talente, Schwerpunkte, Hausregeln, Sessions, Notizen, Fassungen, Bilder).
-// users bleibt bewusst draußen: Konten haben ihr eigenes, parallel laufendes
-// Backup (src/lib/userBackup.ts). Betriebsdaten (Rate-Limits, Fehler- und
-// Audit-Protokolle, gelesene News, Embeddings) gehören ohnehin nicht in einen
-// Inhalts-Dump — Embeddings entstehen neu, die Protokolle beschreiben den
-// Betrieb, nicht den Stand der Kampagne.
+// Bis v1 des Dateiformats war die Liste eine enge Auswahl, und das Erweitern
+// galt als riskant: Der Restore leerte JEDE genannte Tabelle, eine ältere
+// Datei kannte die neu aufgenommene aber nicht — sie wäre danach leer
+// gewesen. Seit v2 leert der Restore nur noch, was die Datei auch mitbringt
+// (siehe importDatabaseBackup), und die Sorge entfällt.
 //
-// Reihenfolge: Eltern vor Kind (FK-Constraints).
+// Dass die Auswahl eng blieb, war seinerseits nicht folgenlos: TRUNCATE
+// CASCADE greift auf alles über, was per Fremdschlüssel auf eine geleerte
+// Tabelle zeigt. character_ap_entries, game_session_characters,
+// planned_session_characters und timeline_event_characters hängen an
+// characters — sie wurden beim Restore mit geleert und mangels Daten in der
+// Datei nie wieder gefüllt. Das AP-Konto einer Runde war nach einem Restore
+// also weg.
+//
+// Reihenfolge: Eltern vor Kind (die Inserts laufen in dieser Reihenfolge).
 export const BACKUP_TABLES = [
+  // ── Inhalte ──────────────────────────────────────────────────────
   "characters",
   "missions",
   "mission_participants",
@@ -236,13 +240,65 @@ export const BACKUP_TABLES = [
   "archive_entries",
   "archive_links",
   "dialogue_messages",
-  "timeline_events",
-  "password_setup_tokens",
-  "content_follows",
-  "push_subscriptions",
-  "content_deletions",
+  "dialogue_npc_speakers",
   "dialogue_reservations",
   "dialogue_reservation_notify_requests",
+  "timeline_events",
+  "timeline_event_characters",
+  "content_images",
+  "content_notes",
+  "content_revisions",
+  "content_deletions",
+  "content_follows",
+
+  // ── Kampagne und Regelwerk ───────────────────────────────────────
+  "character_ap_entries",
+  "campaign_settings",
+  "campaign_rules",
+  "talents",
+  "focuses",
+  "game_sessions",
+  "game_session_characters",
+  "planned_sessions",
+  "planned_session_rsvps",
+  "planned_session_characters",
+
+  // ── Konten und Rechte ────────────────────────────────────────────
+  // roles: die Rollen-Vorgaben aus /admin/permissions. users.role und
+  // users.additional_roles verweisen als freier Text darauf (kein
+  // Fremdschlüssel, siehe schema.sql) — ohne die Tabelle zeigten die
+  // wiederhergestellten Konten auf Rollen, die es nicht mehr gibt. Stand
+  // bisher in KEINEM Backup, auch nicht im Konten-Backup (userBackup.ts,
+  // das nur users sichert).
+  "roles",
+  "password_setup_tokens",
+  "push_subscriptions",
+] as const satisfies readonly TableName[];
+
+// Was NICHT ins Backup gehört, mit Grund. Zusammen mit BACKUP_TABLES deckt
+// diese Liste alle Tabellen ab (geprüft in dbTables.test.ts) — wer eine
+// Tabelle anlegt, muss sie hier oder dort eintragen.
+export const BACKUP_EXCLUDED_TABLES = [
+  // Konten haben ihr eigenes, parallel laufendes Backup mit anderer
+  // Semantik: Upsert per E-Mail statt vollem Replace (src/lib/userBackup.ts).
+  "users",
+
+  // Betriebsdaten. Sie beschreiben den Betrieb, nicht den Stand der
+  // Kampagne — und ein Restore soll weder alte Sperren noch alte Protokolle
+  // zurückholen.
+  "login_attempts",
+  "password_reset_requests",
+  "rag_requests",
+  "admin_audit_log",
+  "error_logs",
+
+  // Pro Person gelesene Neuigkeiten: hängen an Konten, die dieses Backup
+  // nicht anfasst, und sind nach einem Restore ohnehin bedeutungslos.
+  "news_seen",
+
+  // Entsteht neu aus dem Inhalt (Einbettungen, src/lib/embeddingSync.ts) —
+  // eine Kopie wäre nur groß, nicht wertvoll.
+  "content_embeddings",
 ] as const satisfies readonly TableName[];
 
 export type BackupTableName = (typeof BACKUP_TABLES)[number];

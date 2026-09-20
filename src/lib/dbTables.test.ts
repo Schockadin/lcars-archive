@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
+  BACKUP_EXCLUDED_TABLES,
   BACKUP_TABLES,
   CONTENT_TABLES,
   DB_TABLES,
@@ -170,5 +171,30 @@ describe("abgeleitete Listen", () => {
       expect(DB_TABLES).toContain(table);
     }
     expect(new Set(BACKUP_TABLES).size).toBe(BACKUP_TABLES.length);
+  });
+
+  // Der eigentliche Wächter: Jede Tabelle steht in genau einer der beiden
+  // Listen. Wer eine neue anlegt, muss sich entscheiden — sichern oder mit
+  // Begründung auslassen. Ohne das fiele sie stillschweigend aus dem Backup,
+  // und genau so ist die Lücke entstanden, die v2 geschlossen hat.
+  it("ordnet JEDE Tabelle dem Backup zu oder schließt sie begründet aus", () => {
+    const zugeordnet = [...BACKUP_TABLES, ...BACKUP_EXCLUDED_TABLES];
+
+    expect(new Set(zugeordnet).size).toBe(zugeordnet.length);
+    expect([...zugeordnet].sort()).toEqual([...DB_TABLES].sort());
+  });
+
+  // Die Kindtabellen, die beim Restore sonst per TRUNCATE ... CASCADE
+  // mitgeleert und nie wieder gefüllt würden (siehe dbBackup.ts).
+  it("sichert die Kindtabellen der gesicherten Inhalte mit", () => {
+    for (const table of [
+      "character_ap_entries",
+      "game_session_characters",
+      "planned_session_characters",
+      "timeline_event_characters",
+      "dialogue_npc_speakers",
+    ] as const) {
+      expect(BACKUP_TABLES).toContain(table);
+    }
   });
 });

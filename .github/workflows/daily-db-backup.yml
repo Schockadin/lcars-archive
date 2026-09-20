@@ -28,6 +28,12 @@ jobs:
       #   R2_ACCESS_KEY_ID    — R2-API-Token Access Key ID
       #   R2_SECRET_ACCESS_KEY — R2-API-Token Secret Access Key
       #   R2_BUCKET_NAME      — Ziel-Bucket für die Backup-Dateien
+      # Sichert seit Format 2 ALLE Inhalts- und Kampagnentabellen (Auswahl
+      # und begründete Ausnahmen: BACKUP_TABLES/BACKUP_EXCLUDED_TABLES in
+      # src/lib/dbTables.ts). Der Schritt meldet sich zusätzlich rot, wenn
+      # die produktive Datenbank eine Tabelle führt, die in keiner der beiden
+      # Listen steht — das Backup des Tages liegt dann bereits im Bucket,
+      # der rote Lauf ist der Hinweis, die Liste nachzuziehen.
       - run: npm run db:backup
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
