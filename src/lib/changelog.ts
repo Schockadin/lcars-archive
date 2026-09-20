@@ -149,6 +149,19 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.49",
+    title: "Umzug auf einen eigenen Server — der Plan",
+    // Bewusst ohne Stichpunkte: Diese Version enthält ausschließlich ein
+    // Planungsdokument (docs/migration-netcup.md) für den Umzug von Netlify
+    // und Cloudflare R2 auf einen eigenen Root-Server. Für Spielende und
+    // Spielleitung ändert sich nichts — kein Stichpunkt laut AGENTS.md. Wenn
+    // der Umzug wirklich stattfindet, ändert sich immer noch nichts an den
+    // Funktionen; erwähnenswert wird dann höchstens, dass die Daten in einem
+    // deutschen Rechenzentrum liegen, und das gehört in die Datenschutz-
+    // erklärung, nicht hierher.
+    items: [],
+  },
+  {
     version: "1.48",
     title: "Das Backup sichert wieder alles",
     items: [
