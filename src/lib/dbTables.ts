@@ -230,9 +230,18 @@ export function isViewableTable(value: string): value is TableName {
 // Datei nie wieder gefüllt. Das AP-Konto einer Runde war nach einem Restore
 // also weg.
 //
-// Reihenfolge: Eltern vor Kind (die Inserts laufen in dieser Reihenfolge).
+// Reihenfolge: Eltern vor Kind — die Inserts laufen in dieser Reihenfolge,
+// ein Kind vor seinem Elternteil liefe in eine Fremdschlüssel-Verletzung und
+// damit in einen komplett zurückgerollten Restore. dbTables.test.ts liest die
+// Fremdschlüssel aus scripts/schema.sql und prüft die Reihenfolge nach.
 export const BACKUP_TABLES = [
   // ── Inhalte ──────────────────────────────────────────────────────
+  // game_sessions gehört inhaltlich in den Block „Kampagne und Regelwerk"
+  // weiter unten, steht aber hier ganz vorn: mission_logs.session_id und
+  // character_ap_entries.session_id zeigen darauf. Weiter unten stehend
+  // scheiterte der Restore jeder Runde, die Logbücher oder AP-Gutschriften
+  // einer Spielsitzung zugeordnet hat.
+  "game_sessions",
   "characters",
   "missions",
   "mission_participants",
@@ -257,7 +266,7 @@ export const BACKUP_TABLES = [
   "campaign_rules",
   "talents",
   "focuses",
-  "game_sessions",
+  // game_sessions steht oben im Inhalte-Block, siehe dort.
   "game_session_characters",
   "planned_sessions",
   "planned_session_rsvps",

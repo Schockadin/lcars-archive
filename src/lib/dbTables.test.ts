@@ -26,12 +26,33 @@ interface SchemaTable {
   // Von Postgres selbst gefüllte Spalten (tsvector-Suchindizes). Sie lassen
   // sich nicht einfügen und gehören deshalb in keine der beiden Listen.
   generated: Set<string>;
+  // Tabellen, auf die diese hier per Fremdschlüssel zeigt — egal ob aus dem
+  // CREATE TABLE, einem nachgereichten ADD COLUMN oder einem ADD CONSTRAINT.
+  // Braucht die Reihenfolge-Prüfung von BACKUP_TABLES weiter unten.
+  references: Set<string>;
+}
+
+// Alle REFERENCES-Ziele einer Anweisung der Tabelle zuschlagen, der die
+// Anweisung gehört. Der Selbstbezug bleibt draußen: Eine Reihenfolge in der
+// Liste kann ihn ohnehin nicht auflösen.
+function merkeReferenzen(
+  entry: SchemaTable,
+  name: string,
+  statement: string,
+): void {
+  for (const match of statement.matchAll(/REFERENCES\s+(\w+)/g)) {
+    if (match[1] !== name) entry.references.add(match[1]);
+  }
 }
 
 function parseSchema(sql: string): Map<string, SchemaTable> {
   const tables = new Map<string, SchemaTable>();
   const table = (name: string): SchemaTable => {
-    const found = tables.get(name) ?? { columns: [], generated: new Set() };
+    const found = tables.get(name) ?? {
+      columns: [],
+      generated: new Set<string>(),
+      references: new Set<string>(),
+    };
     tables.set(name, found);
     return found;
   };
@@ -49,6 +70,7 @@ function parseSchema(sql: string): Map<string, SchemaTable> {
     );
     if (create) {
       const entry = table(create[1]);
+      merkeReferenzen(entry, create[1], statement);
       // Spaltendefinitionen sind die Kommas der OBERSTEN Klammerebene —
       // innerhalb von CHECK (…) stehen ebenfalls welche.
       let depth = 0;
@@ -85,6 +107,7 @@ function parseSchema(sql: string): Map<string, SchemaTable> {
     const alter = /ALTER TABLE (\w+)/.exec(statement);
     if (!alter) continue;
     const entry = table(alter[1]);
+    merkeReferenzen(entry, alter[1], statement);
     for (const added of statement.matchAll(
       /ADD COLUMN IF NOT EXISTS (\w+)([\s\S]*?)(?=ADD COLUMN|$)/g,
     )) {
@@ -118,6 +141,12 @@ describe("scripts/schema.sql lässt sich lesen", () => {
     expect(schema.size).toBeGreaterThan(30);
     expect(schema.get("characters")?.columns).toContain("character_color");
     expect(schema.get("characters")?.generated.has("search_vector")).toBe(true);
+    // Fremdschlüssel aus beiden Schreibweisen: im CREATE TABLE deklariert …
+    expect(schema.get("mission_logs")?.references.has("missions")).toBe(true);
+    // … und per ALTER TABLE nachgereicht.
+    expect(schema.get("mission_logs")?.references.has("game_sessions")).toBe(
+      true,
+    );
   });
 });
 
@@ -196,5 +225,35 @@ describe("abgeleitete Listen", () => {
     ] as const) {
       expect(BACKUP_TABLES).toContain(table);
     }
+  });
+});
+
+// Der Restore fügt die Tabellen in genau der Reihenfolge ein, in der sie in
+// BACKUP_TABLES stehen (importDatabaseBackup in dbBackup.ts). Steht ein Kind
+// vor seinem Elternteil, scheitert sein INSERT an der Fremdschlüssel-Prüfung
+// und reißt den ganzen Restore mit — die Transaktion rollt zurück, die
+// Datenbank bleibt auf dem alten Stand und der Admin steht vor einer
+// Fehlermeldung. Genau so lag es bei game_sessions, auf das
+// mission_logs.session_id und character_ap_entries.session_id zeigen.
+describe("Reihenfolge von BACKUP_TABLES", () => {
+  it("nennt jede Tabelle erst nach ihren Fremdschlüssel-Zielen", () => {
+    const platz = new Map<string, number>(
+      BACKUP_TABLES.map((table, index) => [table as string, index]),
+    );
+    const verstoesse: string[] = [];
+
+    for (const table of BACKUP_TABLES) {
+      for (const ziel of schema.get(table)?.references ?? []) {
+        const zielPlatz = platz.get(ziel);
+        // Ein Ziel außerhalb des Backups (users) wird nicht angefasst und
+        // steht beim Restore unverändert da — nur die Reihenfolge INNERHALB
+        // der Liste ist hier die Frage.
+        if (zielPlatz !== undefined && zielPlatz > platz.get(table)!) {
+          verstoesse.push(`${table} → ${ziel}`);
+        }
+      }
+    }
+
+    expect(verstoesse).toEqual([]);
   });
 });

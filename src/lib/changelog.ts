@@ -155,6 +155,7 @@ export const CHANGELOG: ChangelogEntry[] = [
       {
         text: "Die tägliche Sicherung umfasst jetzt auch AP-Konto, Talente, Schwerpunkte, Hausregeln, Spielabende, Notizen, frühere Fassungen, Bilder und Rollen. Bisher fehlten sie — und wurden beim Einspielen einer Sicherung sogar geleert, weil sie an den gesicherten Inhalten hängen. Das AP-Konto einer Runde war danach weg.",
         category: "spielleitung",
+        tutorial: "spielleitung-admins",
       },
     ],
   },

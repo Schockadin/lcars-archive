@@ -1328,7 +1328,7 @@ ab:
   nennt die Zusammenfassung deshalb die fehlenden Tabellen
   (`RestoreDbSummary.missingTables`), und das Admin-Panel zeigt sie an.
 
-Drei Wächter halten die Listen aktuell:
+Vier Wächter halten die Listen aktuell:
 
 1. `src/lib/dbTables.test.ts` gleicht sie mit `scripts/schema.sql` ab — eine
    neue Tabelle oder Spalte, die dort fehlt, macht den Test rot.
@@ -1340,6 +1340,11 @@ Drei Wächter halten die Listen aktuell:
    Datenbank. Eine Tabelle, die jemand direkt an der produktiven Datenbank
    anlegt, sieht kein Parser — der Backup-Lauf meldet sie, nachdem das
    Backup des Tages sicher im Bucket liegt.
+4. `dbTables.test.ts` liest zusätzlich die Fremdschlüssel aus
+   `scripts/schema.sql` und prüft, dass in `BACKUP_TABLES` jede Tabelle hinter
+   ihren Zielen steht. Der Restore fügt in Listenreihenfolge ein; ein Kind vor
+   seinem Elternteil lässt sein `INSERT` an der Fremdschlüssel-Prüfung
+   scheitern und rollt die gesamte Wiederherstellung zurück.
 
 ### 6. Entwicklungsserver starten
 

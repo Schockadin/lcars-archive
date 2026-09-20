@@ -6,7 +6,7 @@ import {
   InvalidBackupError,
 } from "@/lib/dbBackup";
 import { BACKUP_EXCLUDED_TABLES, BACKUP_TABLES } from "@/lib/dbTables";
-import { insertCharacter, insertUser } from "./helpers";
+import { insertCharacter, insertMission, insertUser } from "./helpers";
 
 // users steht bewusst NICHT im DB-Backup (dafür gibt es src/lib/userBackup.ts)
 // — die Tests laufen deshalb über characters, das zugleich JSONB-Spalten
@@ -227,6 +227,48 @@ describe("DB-Backup, Umfang seit v2", () => {
     `;
     expect(row.ingame_year).toBe(2402);
     expect(row.advancement_rules).toEqual({ ap: 3 });
+  });
+
+  // Die Inserts des Restores laufen in der Reihenfolge von BACKUP_TABLES.
+  // mission_logs und character_ap_entries zeigen per session_id auf
+  // game_sessions — stünde game_sessions in der Liste dahinter, scheiterte
+  // dieser Restore an der Fremdschlüssel-Prüfung und risse (eine
+  // Transaktion) die gesamte Wiederherstellung mit. Eine Runde, die
+  // Logbücher und AP-Gutschriften ihren Spielabenden zuordnet, ist der
+  // Normalfall, nicht der Sonderfall.
+  it("spielt Logbücher und AP-Gutschriften mit Session-Bezug wieder ein", async () => {
+    const user = await insertUser();
+    const figur = await insertCharacter({ name: "Session-Figur" });
+    const mission = await insertMission();
+    const [session] = await sql<{ id: number }[]>`
+      INSERT INTO game_sessions (session_date, title, created_by)
+      VALUES ('2401-05-12', 'Der Abend am Rand', ${user.id})
+      RETURNING id
+    `;
+    await sql`
+      INSERT INTO mission_logs (slug, mission_id, title, content, session_id)
+      VALUES ('log-mit-session', ${mission.id}, 'Logbuch', 'Text', ${session.id})
+    `;
+    await sql`
+      INSERT INTO character_ap_entries (character_id, amount, reason, session_id)
+      VALUES (${figur.id}, 4, 'session', ${session.id})
+    `;
+
+    const backup = await exportDatabaseBackup();
+    await importDatabaseBackup(backup);
+
+    const [log] = await sql<{ session_id: number | null }[]>`
+      SELECT session_id FROM mission_logs WHERE slug = 'log-mit-session'
+    `;
+    const [ap] = await sql<{ session_id: number | null; amount: number }[]>`
+      SELECT session_id, amount FROM character_ap_entries
+    `;
+    // Nicht nur „überlebt", sondern mit unveränderter Zuordnung: Der Abend
+    // hängt nach dem Restore noch am selben Logbuch und an derselben
+    // Gutschrift.
+    expect(log?.session_id).toBe(session.id);
+    expect(ap?.session_id).toBe(session.id);
+    expect(ap?.amount).toBe(4);
   });
 
   it("führt jede gesicherte Tabelle auch wirklich im Export", async () => {
