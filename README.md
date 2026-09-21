@@ -577,8 +577,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   diesem Fall die richtige Einstellung.
 - **Konfigurierbares Dashboard** — jede Person stellt unter `/user` (Klappe
   „Startseite", Anker `#dashboard`) selbst ein, welche Abschnitte auf `"/"`
-  erscheinen: Erste Schritte, Spielabende, To Dos, offene Gespräche, die vier
-  Anlege-Knöpfe, die eigenen Charaktere, Versionen, News und Lesezeichen. Das
+  erscheinen: Erste Schritte, Spielabende, To Dos, offene Gespräche, die
+  Anlege-Knöpfe samt Import, die eigenen Entwürfe, die eigenen Charaktere,
+  Versionen, News und Lesezeichen. Das
   Zahnrad neben der Dashboard-Überschrift springt direkt dorthin.
   Die Sektionen samt Vorgabe stehen einmal in
   [`src/lib/dashboardSections.ts`](src/lib/dashboardSections.ts); gespeichert
@@ -646,6 +647,19 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   nur, was der jeweilige Knopf zeigt: Eintrag und NPC sind dasselbe Formular
   mit vorgewählter Kategorie und brauchen gar keine Vorarbeit — wer nur sie
   zeigt, löst keine einzige zusätzliche Abfrage aus.
+- **Entwürfe** — ein eigener Abschnitt auf der Startseite und über der Liste
+  unter „Meine Inhalte" ([`DraftsSection.tsx`](src/app/DraftsSection.tsx),
+  Daten aus [`src/lib/drafts.ts`](src/lib/drafts.ts)). Ein Entwurf ist für
+  niemanden außer seinem Besitzer sichtbar, nicht einmal für die
+  Spielleitung — ohne eine Stelle, die ihn nennt, bleibt er liegen.
+  Maßgeblich ist der **Besitz** (`owner_user_id`), nicht die Beteiligung:
+  `getDialoguesForUser` sucht über die eigenen Figuren und fände damit auch
+  fremde Gesprächs-Entwürfe, veröffentlichen darf sie aber nur ihr Besitzer
+  (`setDialogueDraft`). Deshalb eine eigene Abfrage statt einer Ableitung aus
+  den Listen von „Meine Inhalte" — und eine einzige über `UNION ALL` statt
+  drei: Der Abschnitt steht auf der meistbesuchten Seite der Anwendung.
+  Charaktere fehlen darin bewusst, wie schon in der Liste unter „Meine
+  Inhalte" — sie haben mit `/user/characters` ihren eigenen Bereich.
 - **Offen für dich** — der Dashboard-Abschnitt mit dem, was diese Person
   schuldet (`src/lib/pendingActions.ts`): Missionen, an denen eine eigene
   Figur teilnimmt und zu denen **kein eigenes Logbuch** existiert; Gespräche,

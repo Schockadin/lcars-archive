@@ -25,6 +25,7 @@ const VORGABEN: Record<DashboardSectionId, boolean> = {
   "neuer-eintrag": true,
   "neuer-npc": true,
   import: true,
+  entwuerfe: true,
   charaktere: true,
   versionen: false,
   news: true,

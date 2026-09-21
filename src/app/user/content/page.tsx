@@ -2,12 +2,15 @@ import type { Metadata } from "next";
 import { userCan } from "@/lib/permissions";
 import { getRoleMap } from "@/lib/roles";
 import PageMeta from "@/components/PageMeta";
+import { LcarsCollapsiblePanel } from "@/components/lcars";
 import { requireOwnCharacters } from "../dal";
 import { getLogsForUser } from "@/lib/characters";
 import { getDialoguesForUser } from "@/lib/dialogues";
 import { getArchiveEntriesForUser } from "@/lib/archive";
+import { getOwnDrafts } from "@/lib/drafts";
 import { getAllMissionsIncludingDrafts } from "@/lib/missions";
 import UserContentBrowser from "./UserContentBrowser";
+import DraftsSection from "@/app/DraftsSection";
 import NewContentPanel from "./NewContentPanel";
 import { loadNewContentData } from "./newContentData";
 import HelpHeading from "@/components/help/HelpHeading";
@@ -30,12 +33,17 @@ export default async function UserContentPage() {
     name: c.name,
   }));
 
-  const [logs, dialogues, archiveEntries, missions, newContent] =
+  const [logs, dialogues, archiveEntries, missions, drafts, newContent] =
     await Promise.all([
       getLogsForUser(user.id),
       getDialoguesForUser(user.id, "all"),
       getArchiveEntriesForUser(user.id),
       isGM ? getAllMissionsIncludingDrafts() : Promise.resolve([]),
+      // Eigene Abfrage statt einer Ableitung aus den Listen darüber: Die
+      // suchen über Besitz UND Teilnahme, „meine Entwürfe" fragt nur nach
+      // Besitz (siehe getOwnDrafts). Dieselbe Liste steht auf der
+      // Startseite.
+      getOwnDrafts(user.id),
       // Die Auswahllisten der Anlege-Formulare — hier alle, weil diese Seite
       // alle Knöpfe zeigt. Der gemeinsame Ladeweg mit dem Dashboard steht in
       // newContentData.ts.
@@ -69,10 +77,24 @@ export default async function UserContentPage() {
             storageId="content:anlegen"
           />
 
-          {/* Ohne eigene Überschrift: Die Liste bringt ihre eigenen
-              Abschnittsüberschriften mit (eine je Kategorie, wie die
-              Buchstaben der Datenbank und die Monate der Chronologie). */}
-          <section className="flex flex-col gap-[12px]">
+          {/* Über der Liste: was noch unfertig ist. Dieselbe Komponente wie
+              auf der Startseite. */}
+          <DraftsSection drafts={drafts} storageId="content:entwuerfe" />
+
+          {/* Die Liste bringt ihre eigenen Abschnittsüberschriften mit (eine
+              je Kategorie, wie die Buchstaben der Datenbank und die Monate
+              der Chronologie) — die Klappe darum trägt deshalb nur die
+              Gesamtzahl. */}
+          <LcarsCollapsiblePanel
+            title="Meine Inhalte"
+            badge={
+              logs.length +
+              dialogues.length +
+              archiveEntries.length +
+              missions.length
+            }
+            storageId="content:liste"
+          >
             <div className="lcars-text w-full">
               <UserContentBrowser
                 characters={characterFilterOptions}
@@ -89,7 +111,7 @@ export default async function UserContentPage() {
                 ownUserId={user.id}
               />
             </div>
-          </section>
+          </LcarsCollapsiblePanel>
         </article>
       </div>
     </>

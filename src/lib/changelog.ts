@@ -168,6 +168,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "mein-bereich",
       },
       {
+        text: "Neuer Abschnitt „Entwürfe“ — auf der Startseite und unter „Meine Inhalte“: alles, was du angefangen und noch nicht veröffentlicht hast, das zuletzt Bearbeitete oben, jeweils mit einem Klick zurück in den Editor. Ein Entwurf ist für niemanden außer dir sichtbar; ohne eine Stelle, die ihn nennt, bleibt er leicht liegen.",
+        category: "inhalte",
+        tutorial: "mein-bereich",
+      },
+      {
         text: "Ebenfalls neu auf der Startseite: deine eigenen Charaktere, jeder mit einem Stift, der direkt in seine Kopfdaten führt. Welche davon erscheinen, wählst du einzeln aus — wer viele Figuren führt, hält die Seite so kurz.",
         category: "charaktere",
         tutorial: "mein-bereich",

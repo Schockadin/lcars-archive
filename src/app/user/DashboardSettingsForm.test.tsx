@@ -4,6 +4,7 @@ import DashboardSettingsForm from "./DashboardSettingsForm";
 import {
   DASHBOARD_SECTIONS,
   EMPTY_DASHBOARD_PREFS,
+  type DashboardSectionId,
 } from "@/lib/dashboardSections";
 
 // Die Action zieht die Datenschicht nach — geprüft wird hier das Formular:
@@ -18,8 +19,19 @@ vi.mock("./dashboardSettingsActions", () => ({
     )(...args),
 }));
 
-function checkbox(label: string): HTMLInputElement {
-  return screen.getByLabelText(label, { exact: false }) as HTMLInputElement;
+// Über die id, nicht über die Beschriftung: Ein <label> umfasst hier auch
+// die Erklärzeile darunter, und getByLabelText liest die mit. „Entwürfe"
+// stand damit in zwei Kästchen — einmal als Sektion, einmal im Hinweis zu
+// den To Dos („offene Entwürfe"). Die id ist eindeutig und ändert sich nicht
+// mit dem Wortlaut.
+function sektion(id: DashboardSectionId): HTMLInputElement {
+  return document.getElementById(`dashboard-${id}`) as HTMLInputElement;
+}
+
+function charakter(id: number): HTMLInputElement {
+  return document.getElementById(
+    `dashboard-character-${id}`,
+  ) as HTMLInputElement;
 }
 
 function versteckteWerte(name: string): string[] {
@@ -39,7 +51,7 @@ describe("DashboardSettingsForm", () => {
     );
 
     for (const section of DASHBOARD_SECTIONS) {
-      expect(checkbox(section.label).checked).toBe(section.default);
+      expect(sektion(section.id).checked).toBe(section.default);
     }
   });
 
@@ -51,10 +63,10 @@ describe("DashboardSettingsForm", () => {
       />,
     );
 
-    expect(checkbox("News").checked).toBe(false);
-    expect(checkbox("Versionen").checked).toBe(true);
+    expect(sektion("news").checked).toBe(false);
+    expect(sektion("versionen").checked).toBe(true);
     // Unberührte Sektionen bleiben auf ihrer Vorgabe.
-    expect(checkbox("Nächste Spielabende").checked).toBe(true);
+    expect(sektion("spielabende").checked).toBe(true);
   });
 
   // Ohne dieses versteckte Feld wäre ein entferntes Häkchen von „das
@@ -81,8 +93,8 @@ describe("DashboardSettingsForm", () => {
       />,
     );
 
-    expect(checkbox("T'Vel").checked).toBe(true);
-    expect(checkbox("Rina Dax").checked).toBe(true);
+    expect(charakter(4).checked).toBe(true);
+    expect(charakter(9).checked).toBe(true);
     expect(versteckteWerte("knownCharacters")).toEqual(["4", "9"]);
   });
 
@@ -97,8 +109,8 @@ describe("DashboardSettingsForm", () => {
       />,
     );
 
-    expect(checkbox("T'Vel").checked).toBe(true);
-    expect(checkbox("Rina Dax").checked).toBe(false);
+    expect(charakter(4).checked).toBe(true);
+    expect(charakter(9).checked).toBe(false);
   });
 
   it("lässt die Charakter-Liste weg, solange es keine gibt", () => {
@@ -110,6 +122,6 @@ describe("DashboardSettingsForm", () => {
     expect(versteckteWerte("knownCharacters")).toEqual([]);
     // Die Sektion selbst bleibt trotzdem wählbar — sie soll beim ersten
     // Charakter sofort greifen.
-    expect(checkbox("Meine Charaktere").checked).toBe(true);
+    expect(sektion("charaktere").checked).toBe(true);
   });
 });

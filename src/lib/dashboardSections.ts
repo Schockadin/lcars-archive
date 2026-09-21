@@ -68,6 +68,12 @@ export const DASHBOARD_SECTIONS = [
     default: true,
   },
   {
+    id: "entwuerfe",
+    label: "Entwürfe",
+    hint: "Deine unfertigen Inhalte mit dem Weg zurück in den Editor.",
+    default: true,
+  },
+  {
     id: "charaktere",
     label: "Meine Charaktere",
     hint: "Deine Charaktere mit Bearbeiten-Knopf. Welche davon erscheinen, wählst du darunter einzeln.",

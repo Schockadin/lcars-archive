@@ -26,6 +26,13 @@ export function DashboardGuide() {
           gelöscht haben.
         </p>
         <p>
+          Dazu kommen deine <strong>Entwürfe</strong> — alles, was du
+          angefangen und noch nicht veröffentlicht hast, jeweils mit dem Weg
+          zurück in den Editor. Ein Entwurf ist für niemanden außer dir
+          sichtbar, nicht einmal für die Spielleitung; ohne eine Stelle, die
+          ihn nennt, bleibt er leicht liegen.
+        </p>
+        <p>
           Dazu kommen drei Sektionen, die zunächst ausgeschaltet sind: die{" "}
           <strong>Erste-Schritte-Liste</strong>, deine{" "}
           <strong>To Dos</strong> (was von dir noch aussteht) und die{" "}
@@ -86,6 +93,17 @@ export function MyContentGuide() {
         <p>
           Genau dieselbe Knopfleiste steht auf deiner <strong>Startseite</strong>
           {" "}— dort mit den Knöpfen, die du im Profil eingeschaltet hast.
+        </p>
+      </GuideSection>
+
+      <GuideSection title="Meine Inhalte · Entwürfe">
+        <p>
+          Zwischen den Knöpfen und der Liste steht, was noch unfertig ist:
+          deine <strong>Entwürfe</strong>, das zuletzt Bearbeitete oben, jeder
+          mit dem Weg zurück in seinen Editor. Dieselbe Liste steht auf deiner
+          Startseite. Maßgeblich ist, wem der Entwurf <em>gehört</em> — ein
+          Gespräch, das jemand anderes begonnen hat und in dem deine Figur
+          mitspielt, kann auch nur diese Person veröffentlichen.
         </p>
       </GuideSection>
 

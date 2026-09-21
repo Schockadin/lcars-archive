@@ -7,6 +7,7 @@ import { newsVisibility } from "@/lib/recentActivityFormat";
 import { getCurrentUserPermissions } from "@/lib/dal";
 import { getCharactersForUser } from "@/lib/characters";
 import { getDialoguesForUser } from "@/lib/dialogues";
+import { getOwnDrafts } from "@/lib/drafts";
 import { getPendingActions } from "@/lib/pendingActions";
 import { listUpcomingSessions } from "@/lib/plannedSessions";
 import { getRoleMap } from "@/lib/roles";
@@ -25,6 +26,7 @@ import UpcomingSessionsSection from "./UpcomingSessionsSection";
 import DashboardCharactersSection, {
   toDashboardCharacterItem,
 } from "./DashboardCharactersSection";
+import DraftsSection from "./DraftsSection";
 import NewsSection from "./NewsSection";
 import ChangelogSection from "./ChangelogSection";
 import OnboardingSection from "./OnboardingSection";
@@ -95,6 +97,7 @@ export default async function Dashboard({ user }: { user: User }) {
     openDialogues,
     pendingActions,
     upcomingSessions,
+    drafts,
     characters,
     roleMap,
   ] = await Promise.all([
@@ -108,6 +111,7 @@ export default async function Dashboard({ user }: { user: User }) {
       : Promise.resolve([]),
     zeigt("todos") ? getPendingActions(user.id) : Promise.resolve([]),
     zeigt("spielabende") ? listUpcomingSessions() : Promise.resolve([]),
+    zeigt("entwuerfe") ? getOwnDrafts(user.id) : Promise.resolve([]),
     brauchtCharaktere ? getCharactersForUser(user.id) : Promise.resolve([]),
     brauchtRollen ? getRoleMap() : Promise.resolve({}),
   ]);
@@ -225,6 +229,12 @@ export default async function Dashboard({ user }: { user: User }) {
             title="Neues anlegen"
             storageId="dashboard:anlegen"
           />
+
+          {/* Ein Entwurf ist für niemanden außer seinem Besitzer sichtbar —
+              ohne eine Stelle, die ihn nennt, bleibt er leicht liegen. */}
+          {zeigt("entwuerfe") && (
+            <DraftsSection drafts={drafts} storageId="dashboard:entwuerfe" />
+          )}
 
           {zeigtCharaktere && (
             <DashboardCharactersSection
