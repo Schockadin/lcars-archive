@@ -5,10 +5,7 @@ import NewMissionLogForm from "@/app/user/mission-logs/new/NewMissionLogForm";
 import CreateDialogueForm from "@/app/user/dialogues/new/CreateDialogueForm";
 import NewArchiveEntryForm from "@/app/user/archive/new/NewArchiveEntryForm";
 import NewMissionForm from "@/app/user/missions/new/NewMissionForm";
-import type { CharacterWithOwner } from "@/lib/characters";
-import type { CharacterParticipantOption } from "@/lib/characters";
-import type { NpcOption } from "@/lib/archive";
-import type { GmContact } from "@/lib/users";
+import type { NewContentData } from "./newContentData";
 
 // Die Knöpfe „Neue Inhalte" unter /user/content — jeder öffnet sein Formular
 // in einem Fenster über der Liste, statt auf eine eigene Seite zu führen.
@@ -30,30 +27,7 @@ import type { GmContact } from "@/lib/users";
 // Charaktere kommen hier nicht vor — sie haben mit /user/characters ihren
 // eigenen Bereich, und ihr Assistent führt über mehrere Schritte, die in
 // einem Fenster keinen Platz hätten.
-export interface NewContentData {
-  userId: number;
-  missionLog: {
-    ownCharacters: { id: number; slug: string; name: string }[];
-    missions: { slug: string; title: string }[];
-    defaultSessionNr: number;
-    defaultLogDate: string | null;
-  } | null;
-  dialogue: {
-    ownCharacters: { id: number; slug: string; name: string }[];
-    partnerCharacters: CharacterWithOwner[];
-    npcs: NpcOption[];
-    canPlayNpcs: boolean;
-    gms: GmContact[];
-    locations: { slug: string; title: string }[];
-    defaultLogDate: string | null;
-  } | null;
-  mission: {
-    defaultStartedAt: string | null;
-    characters: CharacterParticipantOption[];
-  } | null;
-}
-
-type OpenForm = "missionLog" | "dialogue" | "archiveEntry" | "npc" | "mission";
+export type OpenForm = "missionLog" | "dialogue" | "archiveEntry" | "npc" | "mission";
 
 const TITLES: Record<OpenForm, string> = {
   missionLog: "Neuen Missionslog anlegen",
@@ -63,9 +37,20 @@ const TITLES: Record<OpenForm, string> = {
   mission: "Neue Mission anlegen",
 };
 
-export default function NewContentButtons({ data }: { data: NewContentData }) {
+export default function NewContentButtons({
+  data,
+  show,
+}: {
+  data: NewContentData;
+  // Welche Knöpfe erscheinen. Ohne Angabe alle — so zeigt „Meine Inhalte"
+  // weiterhin das volle Angebot. Das Dashboard reicht hier die zwei Knöpfe
+  // durch, die dort eingeschaltet sind (siehe dashboardSections.ts); die
+  // Formulare selbst bleiben dieselben.
+  show?: readonly OpenForm[];
+}) {
   const [open, setOpen] = useState<OpenForm | null>(null);
   const close = () => setOpen(null);
+  const visible = (form: OpenForm) => !show || show.includes(form);
 
   const button = (form: OpenForm, label: string) => (
     <button
@@ -84,17 +69,21 @@ export default function NewContentButtons({ data }: { data: NewContentData }) {
           unten. Die feste Breite hält sie untereinander gleich groß — wie im
           Stapel. */}
       <div className="flex flex-wrap gap-[12px]">
-        {data.missionLog && button("missionLog", "Neuer Missionslog")}
-        {data.dialogue && button("dialogue", "Neues Gespräch")}
+        {visible("missionLog") &&
+          data.missionLog &&
+          button("missionLog", "Neuer Missionslog")}
+        {visible("dialogue") &&
+          data.dialogue &&
+          button("dialogue", "Neues Gespräch")}
         {/* Anders als Missionslog/Gespräch (eigener Charakter) oder Mission
             (gm/admin) sind Datenbank-Einträge an keine Voraussetzung
             geknüpft — jeder eingeloggte User darf welche anlegen. */}
-        {button("archiveEntry", "Neuer Datenbank-Eintrag")}
+        {visible("archiveEntry") && button("archiveEntry", "Neuer Datenbank-Eintrag")}
         {/* Ein NPC ist kein eigener Charakter, sondern ein Datenbank-Eintrag
             der Kategorie „NPC" — dasselbe Formular mit vorgewählter
             Kategorie. */}
-        {button("npc", "Neuer NPC")}
-        {data.mission && button("mission", "Neue Mission")}
+        {visible("npc") && button("npc", "Neuer NPC")}
+        {visible("mission") && data.mission && button("mission", "Neue Mission")}
       </div>
 
       {open && (

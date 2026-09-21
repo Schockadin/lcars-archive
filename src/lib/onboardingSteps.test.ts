@@ -11,7 +11,6 @@ const NOTHING: OnboardingFacts = {
   characterCount: 0,
   lockedCharacterCount: 0,
   logCount: 0,
-  dialogueCount: 0,
 };
 
 const ALL: OnboardingFacts = {
@@ -19,7 +18,6 @@ const ALL: OnboardingFacts = {
   characterCount: 1,
   lockedCharacterCount: 1,
   logCount: 2,
-  dialogueCount: 1,
 };
 
 describe("buildOnboardingSteps", () => {
@@ -31,8 +29,8 @@ describe("buildOnboardingSteps", () => {
     const steps = buildOnboardingSteps(ALL);
     expect(steps.every((s) => s.done)).toBe(true);
     expect(onboardingProgress(steps)).toEqual({
-      done: 5,
-      total: 5,
+      done: 4,
+      total: 4,
       complete: true,
     });
   });
@@ -66,9 +64,16 @@ describe("buildOnboardingSteps", () => {
     });
     expect(onboardingProgress(steps)).toEqual({
       done: 2,
-      total: 5,
+      total: 4,
       complete: false,
     });
+  });
+
+  // „Ein Gespräch beginnen" ist als Schritt entfallen (siehe den Kopf von
+  // onboardingSteps.ts): Er hing an einem Gegenüber, das mitspielen muss.
+  it("führt keinen Schritt mehr, der ein Gegenüber braucht", () => {
+    const ids = buildOnboardingSteps(NOTHING).map((s) => s.id);
+    expect(ids).toEqual(["passwort", "charakter", "erschaffung", "logbuch"]);
   });
 
   it("gibt jedem Schritt eine eindeutige id", () => {

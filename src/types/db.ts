@@ -31,6 +31,11 @@ export interface User {
   // Individuelle Rechte-Overrides (Permission→bool: true=zusätzlich gewähren,
   // false=entziehen), unabhängig von den Rollen-Presets.
   permission_overrides: Record<string, boolean>;
+  // Was das Dashboard ("/" für eingeloggte User) zeigt: je Sektion an/aus und
+  // welche eigenen Charaktere dort erscheinen. Default (DB) = {} („alles wie
+  // vorgegeben"). Rohes JSONB — beim Lesen durch sanitizeDashboardPrefs
+  // schicken, nicht direkt auswerten (siehe src/lib/dashboardSections.ts).
+  dashboard_prefs: unknown;
   is_active: boolean;
   created_at: Date;
   last_login_at: Date | null;

@@ -54,19 +54,18 @@ export default function TutorialPage() {
                 Frisch dabei? Angemeldet führt dich <strong>/willkommen</strong>{" "}
                 durch den Einstieg: was dieses Archiv ist und welche Schritte
                 anstehen — Passwort festlegen, Charakter anlegen, Erschaffung
-                abschließen, erstes Logbuch schreiben, ein Gespräch beginnen. Zu
-                jedem offenen Schritt steht dort ein Link, der direkt in den
-                passenden Ablauf führt.
+                abschließen, erstes Logbuch schreiben. Zu jedem offenen Schritt
+                steht dort ein Link, der direkt in den passenden Ablauf führt.
               </p>
               <p>
                 Der Fortschritt wird nirgends abgehakt, sondern an deinen Daten
                 abgelesen: sobald ein Charakter existiert, gilt der Schritt als
                 erledigt — und wenn du ihn wieder löschst, ist er es auch wieder
-                nicht. Die Liste steht zusätzlich auf deinem{" "}
-                <strong>Dashboard</strong> und verschwindet dort von selbst,
-                sobald alles erledigt ist. Die Seite{" "}
-                <strong>/willkommen</strong> bleibt danach als Übersicht
-                erreichbar.
+                nicht. Die Liste lässt sich zusätzlich auf deiner{" "}
+                <strong>Startseite</strong> einblenden (siehe „Mein Bereich“);
+                dort verschwindet sie von selbst, sobald alles erledigt ist.
+                Die Seite <strong>/willkommen</strong> bleibt danach als
+                Übersicht erreichbar.
               </p>
               <p>
                 Nichts davon ist Pflicht: Wer nur mitlesen möchte, braucht weder

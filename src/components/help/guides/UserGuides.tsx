@@ -1,13 +1,57 @@
 import GuideSection, { GuideBody } from "../GuideSection";
 import { MyContentFigure, ProfileFigure } from "../figures/AreaFigures";
 
-// Die Anleitungen zu den Bereichen des Profil-Menüs — „Meine Inhalte" und
-// „Einstellungen". Der dritte Punkt des Menüs, „Charaktere", hat seine eigene
-// (viel längere) Anleitung: character/CharacterCreationGuide.tsx.
+// Die Anleitungen zum eigenen Bereich: die angemeldete Startseite und die
+// Punkte des Profil-Menüs — „Meine Inhalte" und „Einstellungen". Der dritte
+// Punkt des Menüs, „Charaktere", hat seine eigene (viel längere) Anleitung:
+// character/CharacterCreationGuide.tsx.
 //
 // Wie die Leitungs-Anleitungen (GmGuides.tsx) steht jeder Baustein an zwei
 // Stellen: als Fenster hinter dem Fragezeichen der jeweiligen Seite und
 // gesammelt im Abschnitt „Mein Bereich" der Anleitung (/tutorial).
+
+// ── Startseite (Dashboard) ───────────────────────────────────────────
+export function DashboardGuide() {
+  return (
+    <GuideBody>
+      <GuideSection title="Startseite · Was hier steht">
+        <p>
+          Angemeldet zeigt die Startseite deinen eigenen Stand statt der
+          öffentlichen Übersicht: die nächsten <strong>Spielabende</strong> samt
+          Zu- und Absage, deine <strong>offenen Gespräche</strong>, Knöpfe für
+          einen neuen <strong>Missionslog</strong> und ein neues{" "}
+          <strong>Gespräch</strong>, deine <strong>Charaktere</strong> mit
+          einem Stift zum Bearbeiten und die <strong>News</strong> — was andere
+          zuletzt angelegt, geändert oder gelöscht haben.
+        </p>
+        <p>
+          Dazu kommen drei Sektionen, die zunächst ausgeschaltet sind: die{" "}
+          <strong>Erste-Schritte-Liste</strong>, deine{" "}
+          <strong>To Dos</strong> (was von dir noch aussteht) und die{" "}
+          <strong>Versionen</strong> — was sich zuletzt an der Datenbank selbst
+          geändert hat.
+        </p>
+      </GuideSection>
+
+      <GuideSection title="Startseite · Selbst zusammenstellen">
+        <p>
+          Über das <strong>Zahnrad</strong> neben der Überschrift kommst du
+          direkt zu der Klappe im Profil, in der du jede dieser Sektionen
+          einzeln an- und abschaltest. Bei den Charakteren entscheidest du
+          zusätzlich je Figur, ob sie hier erscheint — wer viele Charaktere
+          führt, hält so die Startseite kurz. Was du abschaltest, wird auch
+          nicht mehr geladen; die Seite wird dadurch schneller.
+        </p>
+        <p>
+          Die Einstellung gilt nur für dich und bleibt bei jedem Login
+          erhalten. Eine Sektion, die nichts zu zeigen hat, bleibt ohnehin
+          leer — eingeschaltet heißt „darf erscheinen“, nicht „erscheint
+          immer“.
+        </p>
+      </GuideSection>
+    </GuideBody>
+  );
+}
 
 // ── Meine Inhalte ────────────────────────────────────────────────────
 export function MyContentGuide() {
@@ -117,6 +161,7 @@ export function UserProfileGuide() {
 export default function UserAreaGuides() {
   return (
     <GuideBody>
+      <DashboardGuide />
       <MyContentGuide />
       <UserProfileGuide />
     </GuideBody>

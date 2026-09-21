@@ -504,6 +504,18 @@ export function LoginNavIcon() {
   );
 }
 
+// Einstellungen — Zahnrad. Steht auf dem Dashboard neben dem Hilfe-Knopf und
+// führt zu dem Panel im Profil, in dem sich einstellen lässt, was dort
+// überhaupt erscheint (siehe src/app/Dashboard.tsx).
+export function SettingsIcon() {
+  return (
+    <svg {...ICON_PROPS}>
+      <circle cx="12" cy="12" r="3.2" />
+      <path d="M12 2.8v2.4M12 18.8v2.4M4.5 4.5l1.7 1.7M17.8 17.8l1.7 1.7M2.8 12h2.4M18.8 12h2.4M4.5 19.5l1.7-1.7M17.8 6.2l1.7-1.7" />
+    </svg>
+  );
+}
+
 // Hilfe/Anleitung — Fragezeichen im Kreis. Trägt jeden Hilfe-Knopf
 // (HelpButton, siehe src/components/help/) und den Menüpunkt „Hilfe" in der
 // UserNav: ein Fragezeichen ist das eine Symbol, das überall dasselbe

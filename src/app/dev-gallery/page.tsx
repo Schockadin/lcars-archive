@@ -85,7 +85,6 @@ const DEMO_ONBOARDING = buildOnboardingSteps({
   characterCount: 1,
   lockedCharacterCount: 0,
   logCount: 0,
-  dialogueCount: 0,
 });
 
 // Sechs Ereignisse der Chronologie über zwei Jahre: genug für die

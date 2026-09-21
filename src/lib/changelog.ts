@@ -149,6 +149,27 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.49",
+    title: "Die Startseite gehört dir",
+    items: [
+      {
+        text: "Du bestimmst jetzt selbst, was auf deiner Startseite steht: Spielabende, offene Gespräche, To Dos, News, Versionen, Lesezeichen und die Erste-Schritte-Liste lassen sich einzeln an- und abschalten. Das Zahnrad neben der Überschrift führt direkt zu der Einstellung. Was du abwählst, wird auch nicht mehr geladen — die Seite wird dadurch schneller.",
+        category: "darstellung",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Neu auf der Startseite: Knöpfe für einen neuen Missionslog und ein neues Gespräch. Beide öffnen dasselbe Formular wie unter „Meine Inhalte“, nur ohne den Umweg dorthin.",
+        category: "inhalte",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Ebenfalls neu auf der Startseite: deine eigenen Charaktere, jeder mit einem Stift, der direkt in seine Kopfdaten führt. Welche davon erscheinen, wählst du einzeln aus — wer viele Figuren führt, hält die Seite so kurz.",
+        category: "charaktere",
+        tutorial: "mein-bereich",
+      },
+    ],
+  },
+  {
     version: "1.48",
     title: "Das Backup sichert wieder alles",
     items: [

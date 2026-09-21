@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import NewContentButtons, { type NewContentData } from "./NewContentButtons";
+import NewContentButtons from "./NewContentButtons";
+import type { NewContentData } from "./newContentData";
 
 // Die vier Formulare ziehen ihre Server-Actions und damit die Datenschicht
 // nach — geprüft wird hier, WELCHES Formular ein Knopf öffnet, nicht dessen

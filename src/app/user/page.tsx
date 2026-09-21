@@ -18,6 +18,7 @@ import {
   resolveCharacterDefaultColor,
   takenColorsForCharacter,
 } from "@/lib/characterColor";
+import DashboardSettingsForm from "./DashboardSettingsForm";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
 import LogoutEverywhereButton from "./LogoutEverywhereButton";
@@ -30,6 +31,11 @@ import UiModeSettingsForm from "./UiModeSettingsForm";
 import FontSettingsForm from "./FontSettingsForm";
 import ColorModeSettingsForm from "./ColorModeSettingsForm";
 import SettingsPanel from "@/app/_shared/SettingsPanel";
+import {
+  DASHBOARD_SECTIONS,
+  dashboardSectionEnabled,
+  sanitizeDashboardPrefs,
+} from "@/lib/dashboardSections";
 import { isMinimalUiMode, normalizeUiMode } from "@/lib/uiMode";
 import { COLOR_MODE_LIGHT, normalizeColorMode } from "@/lib/colorMode";
 import {
@@ -91,6 +97,10 @@ export default async function UserPage() {
   const colorMode = normalizeColorMode(target.color_mode);
   const fontSans = normalizeFontSans(target.font_sans);
   const fontMono = normalizeFontMono(target.font_mono);
+  const dashboardPrefs = sanitizeDashboardPrefs(target.dashboard_prefs);
+  const aktiveSektionen = DASHBOARD_SECTIONS.filter((section) =>
+    dashboardSectionEnabled(dashboardPrefs, section.id),
+  ).length;
 
   // Charakter-Farben: eine Liste statt einer einzigen Wahl, seit die Farbe
   // pro Charakter statt pro User lebt (Multis sollen für jeden Charakter
@@ -139,6 +149,27 @@ export default async function UserPage() {
           )}
 
           <div className="flex flex-col gap-[16px]">
+            {/* Ganz oben und mit eigener Anker-id: Das Zahnrad neben der
+                Überschrift des Dashboards führt direkt hierher
+                (/user#dashboard) — DataRow klappt den Abschnitt dabei selbst
+                auf (htmlId, siehe DataRowAccordion). */}
+            <DataRow
+              label="Startseite"
+              htmlId="dashboard"
+              value={aktiveSektionen}
+            >
+              <section className="flex flex-col gap-[12px]">
+                <h2>Was auf der Startseite steht</h2>
+                <DashboardSettingsForm
+                  prefs={dashboardPrefs}
+                  characters={characters.map((c) => ({
+                    id: c.id,
+                    name: c.name,
+                  }))}
+                />
+              </section>
+            </DataRow>
+
             {characterColors.length > 0 && (
               <DataRow
                 label="Charakterfarben"

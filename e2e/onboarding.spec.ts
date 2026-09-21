@@ -9,20 +9,23 @@ test.describe("Erste Schritte", () => {
     await expect(page.locator("#onboarding-checklist")).toBeVisible();
   });
 
-  test("führt fünf Schritte auf", async ({ page }) => {
-    await expect(page.locator("#onboarding-checklist ol > li")).toHaveCount(5);
+  test("führt vier Schritte auf", async ({ page }) => {
+    // „Ein Gespräch beginnen" ist als fünfter Schritt entfallen: Er hing
+    // anders als die übrigen an einem Gegenüber, das mitspielen muss (siehe
+    // den Kopf von src/lib/onboardingSteps.ts).
+    await expect(page.locator("#onboarding-checklist ol > li")).toHaveCount(4);
   });
 
   test("nennt den Fortschritt in Zahlen", async ({ page }) => {
     await expect(page.locator("#onboarding-checklist")).toContainText(
-      "2 von 5 Schritten erledigt",
+      "2 von 4 Schritten erledigt",
     );
   });
 
   test("verlinkt nur die offenen Schritte", async ({ page }) => {
     // Erledigte Schritte brauchen keinen Link — es gibt dort nichts mehr zu
-    // tun. Zwei von fünf sind in der Attrappe erledigt.
-    await expect(page.locator("#onboarding-checklist ol a")).toHaveCount(3);
+    // tun. Zwei von vier sind in der Attrappe erledigt.
+    await expect(page.locator("#onboarding-checklist ol a")).toHaveCount(2);
   });
 
   test("führt vom offenen Charakter-Schritt in den Assistenten", async ({

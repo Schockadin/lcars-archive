@@ -575,6 +575,32 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   hinter einem Proxy können `Origin` und `X-Forwarded-Host` auseinanderlaufen,
   und dann antwortete Next für *jede* Action mit 403 — das ist unabhängig von
   diesem Fall die richtige Einstellung.
+- **Konfigurierbares Dashboard** — jede Person stellt unter `/user` (Klappe
+  „Startseite", Anker `#dashboard`) selbst ein, welche Abschnitte auf `"/"`
+  erscheinen: Erste Schritte, Spielabende, To Dos, offene Gespräche, die beiden
+  Anlege-Knöpfe, die eigenen Charaktere, Versionen, News und Lesezeichen. Das
+  Zahnrad neben der Dashboard-Überschrift springt direkt dorthin.
+  Die Sektionen samt Vorgabe stehen einmal in
+  [`src/lib/dashboardSections.ts`](src/lib/dashboardSections.ts); gespeichert
+  wird in `users.dashboard_prefs` (JSONB) **nur, was von der Vorgabe
+  abweicht**. Das ist kein Geiz, sondern der Punkt: Eine neue Sektion bekommt
+  so ihre Code-Vorgabe, ohne dass ein Bestandskonto angefasst werden müsste,
+  und eine später geänderte Vorgabe erreicht auch die, die einmal auf
+  „Speichern" gedrückt haben. Die eigenen Charaktere sind zusätzlich **einzeln**
+  wählbar (gespeichert als Liste der ausgeblendeten ids — andersherum müsste
+  jede neu angelegte Figur erst freigeschaltet werden).
+  Abgewählt heißt auch **nicht geladen**: `Dashboard.tsx` fragt nur noch ab,
+  was jemand tatsächlich sieht — vorher liefen bei jedem Aufruf sechs Abfragen
+  parallel, egal wie viel davon gelesen wurde, und `"/"` ist die meistbesuchte
+  Seite der Anwendung.
+- **Anlegen ohne Umweg** — „Neuer Missionslog" und „Neues Gespräch" stehen
+  jetzt auch auf dem Dashboard und öffnen dieselben Formular-Fenster wie unter
+  „Meine Inhalte". Der Ladeweg dafür (Auswahllisten, Vorbelegungen,
+  Berechtigungen) lebt seither einmal in
+  [`src/app/user/content/newContentData.ts`](src/app/user/content/newContentData.ts)
+  statt in der Seite unter `/user/content` — zwei Fassungen derselben
+  Berechtigungslogik laufen früher oder später auseinander. Geladen wird nur,
+  was der jeweilige Knopf zeigt.
 - **Offen für dich** — der Dashboard-Abschnitt mit dem, was diese Person
   schuldet (`src/lib/pendingActions.ts`): Missionen, an denen eine eigene
   Figur teilnimmt und zu denen **kein eigenes Logbuch** existiert; Gespräche,
@@ -847,12 +873,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Modellaufruf und gehört gelesen, bevor er in der Chronologie aller steht.
 - **Erste Schritte (`/willkommen`)** — Einstiegsseite für neue Konten: was das
   Archiv ist, plus eine Liste der ersten Schritte (Passwort, Charakter,
-  Erschaffung, Logbuch, Gespräch) mit Link in den jeweiligen Ablauf. Bewusst
+  Erschaffung, Logbuch) mit Link in den jeweiligen Ablauf. Bewusst
   OHNE eigene Fortschritts-Tabelle: jeder Schritt wird an den vorhandenen Daten
   abgelesen (`src/lib/onboardingSteps.ts` als reine, testbare Funktion,
-  `src/lib/onboarding.ts` holt die Tatsachen). Dieselbe Liste erscheint auf dem
-  Dashboard (`OnboardingSection`) und verschwindet dort, sobald alles erledigt
-  ist; `/willkommen` bleibt als Übersicht erreichbar.
+  `src/lib/onboarding.ts` holt die Tatsachen). Dieselbe Liste lässt sich auf dem
+  Dashboard einblenden (`OnboardingSection`, per Vorgabe aus — siehe
+  „Konfigurierbares Dashboard") und verschwindet dort, sobald alles erledigt
+  ist; `/willkommen` bleibt als Übersicht erreichbar. „Ein Gespräch beginnen"
+  stand bis v1.48 als fünfter Schritt dabei und ist entfallen: Er hängt anders
+  als die übrigen nicht am eigenen Konto allein, sondern an einem Gegenüber,
+  das mitspielen muss — ein Einstieg sollte sich allein erledigen lassen.
 - **Gesagtes ist auffindbar** — die Volltextsuche kennt seit v1.29.41 einen
   fünften Treffertyp: einzelne **Gesprächs-Nachrichten**
   (`dialogue_messages.search_vector`, eigener GIN-Index). Vorher fand die
@@ -1423,7 +1453,7 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
 └── src/
     ├── app/                  # Next.js App Router (Seiten & API-Routes)
     │   ├── page.tsx           # "/" — Landingpage (anonym) / Dashboard (eingeloggt)
-    │   ├── Dashboard.tsx       # Persönliches Dashboard: News-Feed, offene Gespräche, Abos
+    │   ├── Dashboard.tsx       # Persönliches Dashboard: je Person konfigurierbar (dashboardSections.ts)
     │   ├── characters/        # Charakterübersicht, -detailseiten & abgeschlossene Gespräche (dialogues/[slug])
     │   ├── missions/
     │   ├── archive/
@@ -1914,6 +1944,17 @@ neue **Tabelle**, die die App liest: `scripts/migrate-pr67.sql` legt
 
 ```bash
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr67.sql
+```
+
+Ebenso `scripts/migrate-pr86.sql`: Es ergänzt `users` um `dashboard_prefs`
+(was das Dashboard je Person zeigt, siehe
+[`src/lib/dashboardSections.ts`](src/lib/dashboardSections.ts)). Die Spalte
+steht in `USER_COLUMNS` und wird damit bei **jedem** Laden eines Users
+mitgelesen — fehlt sie, scheitern Dashboard und Profil mit
+`column "dashboard_prefs" does not exist`:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr86.sql
 ```
 
 Ebenso `scripts/migrate-pr78.sql`: Es ergänzt `error_logs` um die drei

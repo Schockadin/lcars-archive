@@ -55,13 +55,22 @@ describe("Anleitungen zu den Leitungs-Bereichen", () => {
 });
 
 describe("Anleitungen zum eigenen Bereich", () => {
-  it("erklärt „Meine Inhalte“ und das Profil", () => {
+  it("erklärt die Startseite, „Meine Inhalte“ und das Profil", () => {
     render(<UserAreaGuides />);
     const text = ueberschriften().join(" | ");
 
+    expect(text).toContain("Startseite");
     expect(text).toContain("Meine Inhalte");
     expect(text).toContain("Profil");
     erwarteBeschrifteteBilder(2);
+  });
+
+  // Das Zahnrad neben der Überschrift ist der einzige Weg zu den
+  // Dashboard-Einstellungen — steht er nicht in der Anleitung, findet ihn
+  // niemand.
+  it("nennt den Weg zum Ein- und Ausschalten der Sektionen", () => {
+    render(<UserAreaGuides />);
+    expect(screen.getAllByText(/Zahnrad/).length).toBeGreaterThan(0);
   });
 });
 
