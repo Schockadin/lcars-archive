@@ -2,7 +2,8 @@ import { userCan, type Permission, type Role, type RoleMap } from "@/lib/permiss
 
 // Wer darf welche Inhaltsart per Markdown hochladen?
 //
-// Der Upload war bis v1.49 der Administration vorbehalten, und der
+// Der Upload war bis v1.49 der Administration vorbehalten (siehe den
+// Changelog-Eintrag zu 1.49), und der
 // Kopfkommentar von src/lib/markdownImport.ts stützte seine Unbedenklichkeit
 // genau darauf: Die *Edits-Objekte überschreiben das geparste Frontmatter
 // vollständig — einschließlich des EIGENTÜMERS. Das ist harmlos, solange nur

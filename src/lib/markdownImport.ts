@@ -1,7 +1,7 @@
 // Markdown-Upload (/admin/import und /user/import): parst hochgeladene
 // .md-Dateien im selben Frontmatter-Format wie das CLI-Ingest
-// (scripts/ingest/*.ts, siehe
-// dortige VaultPath-basierte Batch-Verarbeitung) und legt daraus neue
+// (scripts/ingest/*.ts, siehe dortige VaultPath-basierte
+// Batch-Verarbeitung) und legt daraus neue
 // Archiv-Einträge/Missionen/Charaktere/Missionslogs an — aber einzeln statt
 // als Batch: jede Datei wird zuerst nur geparst (preview*, keine
 // Schreibaktion) und kann vor dem Anlegen in der UI bearbeitet werden

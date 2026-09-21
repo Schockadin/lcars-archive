@@ -72,6 +72,20 @@ describe("Anleitungen zum eigenen Bereich", () => {
     render(<UserAreaGuides />);
     expect(screen.getAllByText(/Zahnrad/).length).toBeGreaterThan(0);
   });
+
+  // Der Import ist der einzige Knopf der Anlege-Leiste, der auf eine eigene
+  // Seite führt — und der einzige, bei dem der Server zwei Dinge anders
+  // entscheidet als die hochgeladene Datei. Beides gehört in die Anleitung,
+  // sonst wirkt eine abgewiesene Datei wie ein Fehler.
+  it("erklärt den Import samt seiner beiden Grenzen", () => {
+    render(<UserAreaGuides />);
+    expect(ueberschriften().join(" | ")).toContain("Import");
+
+    expect(screen.getAllByText(/gehört dir/).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(/eigenen, veröffentlichten Figur/).length,
+    ).toBeGreaterThan(0);
+  });
 });
 
 describe("Anleitungen zu den öffentlichen Seiten", () => {

@@ -59,7 +59,7 @@ interface ImportAccess {
 }
 
 // Die gemeinsame Schranke beider Actions. Sie ersetzt das frühere
-// requireAdmin(): Der Import steht seit v1.50 auch der normalen Nutzerschaft
+// requireAdmin(): Der Import steht seit v1.49 auch der normalen Nutzerschaft
 // offen (Knopf im Abschnitt „Neue Inhalte“), und zwar je Inhaltsart mit
 // genau der Berechtigung, die auch das normale Anlege-Formular verlangt —
 // die Matrix dazu steht in src/lib/importAccess.ts.
