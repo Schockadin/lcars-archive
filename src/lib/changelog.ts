@@ -157,6 +157,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "inhalte",
         tutorial: "mein-bereich",
       },
+      {
+        text: "Die Startseite hält sich selbst auf dem Laufenden: Alle zehn Sekunden holt sie neue Zu- und Absagen zum Spielabend, neue Nachrichten in offenen Gesprächen und die News der anderen — ohne dass du neu laden musst. Liegt der Tab im Hintergrund, pausiert sie und ist beim Zurückkommen sofort wieder aktuell.",
+        category: "darstellung",
+        tutorial: "mein-bereich",
+      },
     ],
   },
   {

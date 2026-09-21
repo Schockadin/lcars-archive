@@ -26,6 +26,7 @@ import DashboardCharactersSection, {
   toDashboardCharacterItem,
 } from "./DashboardCharactersSection";
 import DraftsSection from "./DraftsSection";
+import DashboardAutoRefresh from "./DashboardAutoRefresh";
 import NewsSection from "./NewsSection";
 import ChangelogSection from "./ChangelogSection";
 import OnboardingSection from "./OnboardingSection";
@@ -141,6 +142,10 @@ export default async function Dashboard({ user }: { user: User }) {
   return (
     <>
       <PageMeta title="Home" section="home" />
+      {/* Hält die Seite im Zehn-Sekunden-Takt aktuell (siehe
+          DashboardAutoRefresh) — sie zeigt lauter Dinge, die sich woanders
+          ändern. Rendert nichts. */}
+      <DashboardAutoRefresh />
       <article className="mb-[10px] lcars-wide-column">
         {/* Zwei Symbol-Knöpfe neben der Überschrift: das Fragezeichen erklärt
             diese Seite, das Zahnrad führt zu der Klappe im Profil, in der

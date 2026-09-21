@@ -39,6 +39,16 @@ export function DashboardGuide() {
           <strong>Versionen</strong> — was sich zuletzt an der Datenbank selbst
           geändert hat.
         </p>
+        <p>
+          <strong>Die Seite hält sich selbst aktuell.</strong> Alle zehn
+          Sekunden holt sie nach, was sich inzwischen getan hat — eine Zusage
+          zum Spielabend, eine neue Nachricht in einem offenen Gespräch, die
+          News der anderen. Du musst also nicht neu laden. Das geschieht
+          unauffällig: Die Seite bleibt stehen, wo du bist, aufgeklappte
+          Abschnitte bleiben offen, und ein Fenster, in das du gerade tippst,
+          bleibt unangetastet. Liegt der Tab im Hintergrund, pausiert sie und
+          ist beim Zurückkommen sofort wieder auf Stand.
+        </p>
       </GuideSection>
 
       <GuideSection title="Startseite · Selbst zusammenstellen">

@@ -679,6 +679,23 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   über ein optionales `onPublished`, das **innerhalb** derselben Transition
   läuft wie der Action-Aufruf (sonst gäbe es den automatischen Rücklauf
   nicht).
+- **Die Startseite aktualisiert sich selbst** — alle 10 Sekunden ein
+  `router.refresh()`
+  ([`DashboardAutoRefresh.tsx`](src/app/DashboardAutoRefresh.tsx)). Sie zeigt
+  lauter Dinge, die sich woanders ändern (Zu-/Absagen zum Spielabend, neue
+  Nachrichten in offenen Gesprächen, News, eigene Entwürfe), und bis v1.49 sah
+  man das erst beim nächsten Aufruf. `router.refresh()` statt eines eigenen
+  Poll-Endpunkts wie in `DialogueLiveView`: Für ein Dutzend unabhängiger
+  Abschnitte gibt es keinen gemeinsamen Snapshot, und der Refresh ist
+  **weich** — die bestehende Oberfläche bleibt stehen, bis die neuen Daten da
+  sind, kein Flackern und kein verlorener Client-Zustand (aufgeklappte
+  Abschnitte, ein offenes Anlege-Fenster samt getippter Felder).
+  **Pausiert bei unsichtbarem Tab** und holt beim Zurückkehren sofort frische
+  Daten — dasselbe Muster wie der Dialog-Poll, hier aber nicht nur Kosmetik:
+  Ein Refresh rendert die meistbesuchte Seite der Anwendung vollständig neu,
+  und ein vergessener Hintergrund-Tab liefe sonst tagelang im
+  Zehn-Sekunden-Takt gegen die Datenbank. Wer wenig anzeigt, zahlt auch wenig:
+  Was im Profil abgeschaltet ist, wird auch beim Refresh nicht geladen.
 - **Markdown-Import für alle** — der Upload fertiger `.md`-Dateien war bis
   v1.49 admin-only (`/admin/import`, beide Actions `requireAdmin()`). Er steht
   jetzt auch der normalen Nutzerschaft offen (`/user/import`); Oberfläche und
