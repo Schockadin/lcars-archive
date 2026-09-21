@@ -634,6 +634,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   steht deshalb nur, wo er trägt). Als Link statt Fenster: Der Import blättert
   durch mehrere Dateien und bestätigt jede einzeln, dafür ist ein Fenster zu
   klein — dieselbe Überlegung wie beim Charakter-Assistenten.
+  Die Leiste selbst bricht in drei Stufen um (`.lcars-btn-row` in
+  `controls.css`): schmal einer pro Zeile, ab 640px zwei, ab 1024px alle
+  nebeneinander. Als Klasse statt Utility-Kette, weil der Outline-Knopf ein
+  `min-width: 180px` mitbringt, das der breiten Stufe im Weg steht —
+  `.lcars-btn-row > *` schlägt es über die Spezifität, ein Utility täte das
+  nur bei passender Stylesheet-Reihenfolge.
   Der Ladeweg (Auswahllisten, Vorbelegungen, Berechtigungen) lebt ebenfalls
   nur einmal, in
   [`newContentData.ts`](src/app/user/content/newContentData.ts). Geladen wird
