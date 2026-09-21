@@ -10,14 +10,14 @@ import { getDialoguesForUser } from "@/lib/dialogues";
 import { getPendingActions } from "@/lib/pendingActions";
 import { listUpcomingSessions } from "@/lib/plannedSessions";
 import { getRoleMap } from "@/lib/roles";
-import { LcarsCollapsiblePanel } from "@/components/lcars";
 import {
   dashboardCharacterVisible,
   dashboardSectionEnabled,
   sanitizeDashboardPrefs,
 } from "@/lib/dashboardSections";
 import { loadNewContentData } from "./user/content/newContentData";
-import NewContentButtons from "./user/content/NewContentButtons";
+import NewContentPanel from "./user/content/NewContentPanel";
+import { userCan } from "@/lib/permissions";
 import FollowedContentSection from "./FollowedContentSection";
 import OpenDialoguesSection from "./OpenDialoguesSection";
 import PendingActionsSection from "./PendingActionsSection";
@@ -63,11 +63,15 @@ export default async function Dashboard({ user }: { user: User }) {
   const zeigtNeuesGespraech = zeigt("neues-gespraech");
   const zeigtNeuenEintrag = zeigt("neuer-eintrag");
   const zeigtNeuenNpc = zeigt("neuer-npc");
+  const zeigtImport = zeigt("import");
   // Nur Logbuch und Gespräch brauchen vorgeladene Auswahllisten (Missionen,
   // Gesprächspartner, NPCs, Orte …). Ein Datenbank-Eintrag und ein NPC sind
   // dasselbe Formular mit vorgewählter Kategorie und kommen ohne aus — wer
   // nur diese beiden Knöpfe zeigt, löst damit keine einzige Abfrage aus.
   const brauchtFormularDaten = zeigtNeuesLog || zeigtNeuesGespraech;
+  // Die Rollen-Map braucht auch der Import-Knopf: Er darf nur dastehen, wo er
+  // funktioniert — Seite und Actions unter /admin/import rufen requireAdmin().
+  const brauchtRollen = brauchtFormularDaten || zeigtImport;
   // Die Charakter-Liste brauchen zwei Dinge: die Sektion selbst und die
   // beiden Formulare, die fragen, mit welcher Figur geschrieben wird.
   const brauchtCharaktere = zeigtCharaktere || brauchtFormularDaten;
@@ -105,7 +109,7 @@ export default async function Dashboard({ user }: { user: User }) {
     zeigt("todos") ? getPendingActions(user.id) : Promise.resolve([]),
     zeigt("spielabende") ? listUpcomingSessions() : Promise.resolve([]),
     brauchtCharaktere ? getCharactersForUser(user.id) : Promise.resolve([]),
-    brauchtFormularDaten ? getRoleMap() : Promise.resolve({}),
+    brauchtRollen ? getRoleMap() : Promise.resolve({}),
   ]);
 
   // Die Auswahllisten der Anlege-Formulare. Erst hier, weil sie die
@@ -124,20 +128,10 @@ export default async function Dashboard({ user }: { user: User }) {
     ...(zeigtNeuenEintrag ? (["archiveEntry"] as const) : []),
     ...(zeigtNeuenNpc ? (["npc"] as const) : []),
   ];
-  // Wie viele Knöpfe am Ende wirklich dastehen. Eingeschaltet allein reicht
-  // nicht: Logbuch und Gespräch setzen einen eigenen veröffentlichten
-  // Charakter voraus und fehlen ohne ihn (dann ist ihr Teil in newContent
-  // null). Eintrag und NPC stehen jedem eingeloggten Konto offen — der
-  // Server prüft dort nur die Session (siehe archiveEntryAction).
-  //
-  // Die Zahl ist zugleich die Kurzinfo in der Kopfzeile und die Antwort auf
-  // „lohnt sich der Abschnitt überhaupt": Ohne einen einzigen Knopf stünde
-  // sonst eine Überschrift über einer leeren Zeile.
-  const anzahlAnlegeKnoepfe =
-    (zeigtNeuesLog && newContent.missionLog !== null ? 1 : 0) +
-    (zeigtNeuesGespraech && newContent.dialogue !== null ? 1 : 0) +
-    (zeigtNeuenEintrag ? 1 : 0) +
-    (zeigtNeuenNpc ? 1 : 0);
+  // Der Import-Knopf führt nach /admin/import — Seite und Actions dort rufen
+  // requireAdmin(). Ohne dieses Recht bliebe er ein Link in eine
+  // Fehlermeldung, also steht er nur, wo er auch trägt.
+  const darfImportieren = zeigtImport && userCan(user, "admin.access", roleMap);
 
   const needsPassword = !hasPasswordSet;
   const firstVisit = user.previous_login_at === null;
@@ -224,15 +218,13 @@ export default async function Dashboard({ user }: { user: User }) {
               Als Klappe wie die übrigen Abschnitte, damit die Seite eine
               Gestalt hat und nicht eine Überschrift zwischen lauter
               Kopfzeilen. */}
-          {anzahlAnlegeKnoepfe > 0 && (
-            <LcarsCollapsiblePanel
-              title="Neues anlegen"
-              badge={anzahlAnlegeKnoepfe}
-              storageId="dashboard:anlegen"
-            >
-              <NewContentButtons data={newContent} show={anlegeKnoepfe} />
-            </LcarsCollapsiblePanel>
-          )}
+          <NewContentPanel
+            data={newContent}
+            show={anlegeKnoepfe}
+            canImport={darfImportieren}
+            title="Neues anlegen"
+            storageId="dashboard:anlegen"
+          />
 
           {zeigtCharaktere && (
             <DashboardCharactersSection

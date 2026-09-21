@@ -618,17 +618,28 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   vom Dashboard tot, sobald das Profil per Vorgabe zugeklappt ist.
   `SettingsPanel` bleibt daneben bestehen: Es merkt sich nichts und ist dafür
   server-renderbar.
-- **Anlegen ohne Umweg** — „Neuer Missionslog", „Neues Gespräch", „Neuer
-  Datenbank-Eintrag" und „Neuer NPC" stehen jetzt auch auf dem Dashboard und
-  öffnen dieselben Formular-Fenster wie unter „Meine Inhalte" (je einzeln
-  abschaltbar). Der Ladeweg dafür (Auswahllisten, Vorbelegungen,
-  Berechtigungen) lebt seither einmal in
-  [`src/app/user/content/newContentData.ts`](src/app/user/content/newContentData.ts)
-  statt in der Seite unter `/user/content` — zwei Fassungen derselben
-  Berechtigungslogik laufen früher oder später auseinander. Geladen wird nur,
-  was der jeweilige Knopf zeigt: Eintrag und NPC sind dasselbe Formular mit
-  vorgewählter Kategorie und brauchen gar keine Vorarbeit, wer nur sie zeigt,
-  löst keine einzige zusätzliche Abfrage aus.
+- **Anlegen ohne Umweg** — der Abschnitt „Neue Inhalte" steht auf **beiden**
+  Seiten: unter `/user/content` mit allen Knöpfen, auf dem Dashboard mit den
+  im Profil eingeschalteten. Er ist **eine** Komponente
+  ([`NewContentPanel.tsx`](src/app/user/content/NewContentPanel.tsx)), und
+  welche Knöpfe dastehen, entscheidet **eine** Funktion
+  ([`newContentForms.ts`](src/app/user/content/newContentForms.ts)) — aus der
+  sich auch die Zahl in der Kopfzeile speist. Sie liegt in einem eigenen Modul
+  ohne `"use client"` und ohne `"server-only"`, weil beide Seiten sie
+  brauchen: die Knopfleiste im Browser, der Abschnitt drumherum auf dem
+  Server. Läge die Zählung doppelt vor, liefe sie irgendwann auseinander — und
+  dann stünde eine Überschrift über einer leeren Zeile.
+  Für die Administration kommt **„Inhalte importieren"** dazu (`/admin/import`,
+  `admin.access` — Seite *und* beide Actions rufen `requireAdmin()`, der Knopf
+  steht deshalb nur, wo er trägt). Als Link statt Fenster: Der Import blättert
+  durch mehrere Dateien und bestätigt jede einzeln, dafür ist ein Fenster zu
+  klein — dieselbe Überlegung wie beim Charakter-Assistenten.
+  Der Ladeweg (Auswahllisten, Vorbelegungen, Berechtigungen) lebt ebenfalls
+  nur einmal, in
+  [`newContentData.ts`](src/app/user/content/newContentData.ts). Geladen wird
+  nur, was der jeweilige Knopf zeigt: Eintrag und NPC sind dasselbe Formular
+  mit vorgewählter Kategorie und brauchen gar keine Vorarbeit — wer nur sie
+  zeigt, löst keine einzige zusätzliche Abfrage aus.
 - **Offen für dich** — der Dashboard-Abschnitt mit dem, was diese Person
   schuldet (`src/lib/pendingActions.ts`): Missionen, an denen eine eigene
   Figur teilnimmt und zu denen **kein eigenes Logbuch** existiert; Gespräche,

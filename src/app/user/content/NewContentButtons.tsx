@@ -1,11 +1,18 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import ModalOverlay from "@/components/ModalOverlay";
 import NewMissionLogForm from "@/app/user/mission-logs/new/NewMissionLogForm";
 import CreateDialogueForm from "@/app/user/dialogues/new/CreateDialogueForm";
 import NewArchiveEntryForm from "@/app/user/archive/new/NewArchiveEntryForm";
 import NewMissionForm from "@/app/user/missions/new/NewMissionForm";
 import type { NewContentData } from "./newContentData";
+import {
+  NEW_CONTENT_LABELS,
+  NEW_CONTENT_TITLES,
+  visibleNewContentForms,
+  type OpenForm,
+} from "./newContentForms";
 
 // Die Knöpfe „Neue Inhalte" unter /user/content — jeder öffnet sein Formular
 // in einem Fenster über der Liste, statt auf eine eigene Seite zu führen.
@@ -27,38 +34,40 @@ import type { NewContentData } from "./newContentData";
 // Charaktere kommen hier nicht vor — sie haben mit /user/characters ihren
 // eigenen Bereich, und ihr Assistent führt über mehrere Schritte, die in
 // einem Fenster keinen Platz hätten.
-export type OpenForm = "missionLog" | "dialogue" | "archiveEntry" | "npc" | "mission";
-
-const TITLES: Record<OpenForm, string> = {
-  missionLog: "Neuen Missionslog anlegen",
-  dialogue: "Neues Gespräch beginnen",
-  archiveEntry: "Neuen Datenbank-Eintrag anlegen",
-  npc: "Neuen NPC anlegen",
-  mission: "Neue Mission anlegen",
-};
-
 export default function NewContentButtons({
   data,
   show,
+  canImport = false,
 }: {
   data: NewContentData;
   // Welche Knöpfe erscheinen. Ohne Angabe alle — so zeigt „Meine Inhalte"
-  // weiterhin das volle Angebot. Das Dashboard reicht hier die zwei Knöpfe
-  // durch, die dort eingeschaltet sind (siehe dashboardSections.ts); die
-  // Formulare selbst bleiben dieselben.
+  // weiterhin das volle Angebot. Das Dashboard reicht hier die dort
+  // eingeschalteten durch (siehe dashboardSections.ts); die Formulare selbst
+  // bleiben dieselben.
   show?: readonly OpenForm[];
+  // Der Markdown-Import. Anders als die übrigen kein Fenster, sondern ein
+  // Link auf /admin/import: Der Ablauf blättert durch mehrere Dateien und
+  // bestätigt jede einzeln — dafür ist ein Fenster zu klein (gleiche
+  // Überlegung wie beim Charakter-Assistenten).
+  //
+  // Der Aufrufer entscheidet, ob der Knopf dasteht, und muss dafür
+  // admin.access prüfen: Sowohl die Seite als auch ihre beiden Actions rufen
+  // requireAdmin(). Ein Knopf ohne dieses Recht führte in eine
+  // Fehlermeldung.
+  canImport?: boolean;
 }) {
   const [open, setOpen] = useState<OpenForm | null>(null);
   const close = () => setOpen(null);
-  const visible = (form: OpenForm) => !show || show.includes(form);
+  const sichtbar = visibleNewContentForms(data, show);
 
-  const button = (form: OpenForm, label: string) => (
+  const button = (form: OpenForm) => (
     <button
+      key={form}
       type="button"
       onClick={() => setOpen(form)}
       className="lcars-pill-btn w-[260px] max-w-full max-sm:w-full"
     >
-      {label}
+      {NEW_CONTENT_LABELS[form]}
     </button>
   );
 
@@ -69,25 +78,22 @@ export default function NewContentButtons({
           unten. Die feste Breite hält sie untereinander gleich groß — wie im
           Stapel. */}
       <div className="flex flex-wrap gap-[12px]">
-        {visible("missionLog") &&
-          data.missionLog &&
-          button("missionLog", "Neuer Missionslog")}
-        {visible("dialogue") &&
-          data.dialogue &&
-          button("dialogue", "Neues Gespräch")}
-        {/* Anders als Missionslog/Gespräch (eigener Charakter) oder Mission
-            (gm/admin) sind Datenbank-Einträge an keine Voraussetzung
-            geknüpft — jeder eingeloggte User darf welche anlegen. */}
-        {visible("archiveEntry") && button("archiveEntry", "Neuer Datenbank-Eintrag")}
-        {/* Ein NPC ist kein eigener Charakter, sondern ein Datenbank-Eintrag
-            der Kategorie „NPC" — dasselbe Formular mit vorgewählter
-            Kategorie. */}
-        {visible("npc") && button("npc", "Neuer NPC")}
-        {visible("mission") && data.mission && button("mission", "Neue Mission")}
+        {/* Welche Knöpfe hier stehen, entscheidet visibleNewContentForms —
+            dieselbe Funktion, aus der der Abschnitt drumherum seine Kurzinfo
+            bildet (siehe newContentForms.ts). */}
+        {sichtbar.map(button)}
+        {canImport && (
+          <Link
+            href="/admin/import"
+            className="lcars-pill-btn--outline flex w-[260px] max-w-full items-center justify-center max-sm:w-full"
+          >
+            Inhalte importieren
+          </Link>
+        )}
       </div>
 
       {open && (
-        <ModalOverlay title={TITLES[open]} onClose={close} width={960}>
+        <ModalOverlay title={NEW_CONTENT_TITLES[open]} onClose={close} width={960}>
           {open === "missionLog" &&
             data.missionLog &&
             (data.missionLog.missions.length === 0 ? (

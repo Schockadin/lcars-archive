@@ -8,7 +8,7 @@ import { getDialoguesForUser } from "@/lib/dialogues";
 import { getArchiveEntriesForUser } from "@/lib/archive";
 import { getAllMissionsIncludingDrafts } from "@/lib/missions";
 import UserContentBrowser from "./UserContentBrowser";
-import NewContentButtons from "./NewContentButtons";
+import NewContentPanel from "./NewContentPanel";
 import { loadNewContentData } from "./newContentData";
 import HelpHeading from "@/components/help/HelpHeading";
 import { MyContentGuide } from "@/components/help/guides/UserGuides";
@@ -60,10 +60,14 @@ export default async function UserContentPage() {
             dem Inhaltsbrowser nur eine schmale Restspalte, obwohl er die
             Tabelle mit den meisten Spalten dieser Seite trägt. */}
         <article className="mb-[10px] flex flex-col gap-[20px]">
-          <section className="flex flex-col gap-[12px]">
-            <h2>Neue Inhalte</h2>
-            <NewContentButtons data={newContent} />
-          </section>
+          {/* Derselbe Abschnitt wie auf der Startseite (NewContentPanel) —
+              hier mit allen Knöpfen und aufgeklappt: Etwas anzulegen ist der
+              Zweck dieser Seite, nicht eine Möglichkeit am Rande. */}
+          <NewContentPanel
+            data={newContent}
+            canImport={userCan(user, "admin.access", roleMap)}
+            storageId="content:anlegen"
+          />
 
           {/* Ohne eigene Überschrift: Die Liste bringt ihre eigenen
               Abschnittsüberschriften mit (eine je Kategorie, wie die

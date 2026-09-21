@@ -135,6 +135,30 @@ describe("NewContentButtons", () => {
     expect(screen.getByRole("button", { name: "Neuer NPC" })).toBeInTheDocument();
   });
 
+  // Der Import führt nach /admin/import — Seite und Actions dort rufen
+  // requireAdmin(). Der Knopf darf deshalb nur stehen, wo der Aufrufer das
+  // Recht geprüft hat; ohne canImport gibt es ihn nicht.
+  it("zeigt den Import nur, wenn der Aufrufer ihn erlaubt", () => {
+    const { unmount } = render(<NewContentButtons data={data()} />);
+    expect(screen.queryByRole("link", { name: "Inhalte importieren" })).toBeNull();
+    unmount();
+
+    render(<NewContentButtons data={data()} canImport />);
+    expect(
+      screen.getByRole("link", { name: "Inhalte importieren" }),
+    ).toHaveAttribute("href", "/admin/import");
+  });
+
+  // Anders als die übrigen kein Fenster: Der Ablauf blättert durch mehrere
+  // Dateien und bestätigt jede einzeln — dafür ist ein Fenster zu klein.
+  it("führt beim Import auf die Seite statt in ein Fenster", () => {
+    render(<NewContentButtons data={data()} canImport />);
+
+    expect(
+      screen.queryByRole("button", { name: "Inhalte importieren" }),
+    ).toBeNull();
+  });
+
   it("bietet keinen Knopf für einen neuen Charakter", () => {
     // Charaktere entstehen im Assistenten unter /user/characters — er führt
     // über mehrere Schritte und gehört nicht in ein Fenster.

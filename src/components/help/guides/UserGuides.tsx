@@ -18,13 +18,12 @@ export function DashboardGuide() {
         <p>
           Angemeldet zeigt die Startseite deinen eigenen Stand statt der
           öffentlichen Übersicht: die nächsten <strong>Spielabende</strong> samt
-          Zu- und Absage, deine <strong>offenen Gespräche</strong>, die
-          Anlegen-Knöpfe (<strong>Missionslog</strong>,{" "}
-          <strong>Gespräch</strong>, <strong>Datenbank-Eintrag</strong>,{" "}
-          <strong>NPC</strong> — dieselben Fenster wie unter „Meine Inhalte“),
-          deine <strong>Charaktere</strong> mit einem Stift zum Bearbeiten und
-          die <strong>News</strong> — was andere zuletzt angelegt, geändert
-          oder gelöscht haben.
+          Zu- und Absage, deine <strong>offenen Gespräche</strong>, den
+          Abschnitt <strong>„Neues anlegen“</strong> (dieselben Knöpfe und
+          Fenster wie unter „Meine Inhalte“), deine{" "}
+          <strong>Charaktere</strong> mit einem Stift zum Bearbeiten und die{" "}
+          <strong>News</strong> — was andere zuletzt angelegt, geändert oder
+          gelöscht haben.
         </p>
         <p>
           Dazu kommen drei Sektionen, die zunächst ausgeschaltet sind: die{" "}
@@ -79,7 +78,14 @@ export function MyContentGuide() {
           <strong>Charakter</strong> jede:r außer Gast-Accounts,{" "}
           <strong>Einsatzbericht</strong> und <strong>Gespräch</strong> setzen
           einen eigenen Charakter voraus, <strong>Mission</strong> bleibt der
-          Spielleitung vorbehalten.
+          Spielleitung vorbehalten. Die Administration findet daneben{" "}
+          <strong>„Inhalte importieren“</strong> — der einzige Knopf, der auf
+          eine eigene Seite führt statt in ein Fenster: Der Import blättert
+          durch mehrere Dateien und lässt jede einzeln bestätigen.
+        </p>
+        <p>
+          Genau dieselbe Knopfleiste steht auf deiner <strong>Startseite</strong>
+          {" "}— dort mit den Knöpfen, die du im Profil eingeschaltet hast.
         </p>
       </GuideSection>
 

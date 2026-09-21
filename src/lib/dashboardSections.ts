@@ -62,6 +62,12 @@ export const DASHBOARD_SECTIONS = [
     default: true,
   },
   {
+    id: "import",
+    label: "Import",
+    hint: "Knopf zum Markdown-Import. Erscheint nur für die Administration — nur sie darf importieren.",
+    default: true,
+  },
+  {
     id: "charaktere",
     label: "Meine Charaktere",
     hint: "Deine Charaktere mit Bearbeiten-Knopf. Welche davon erscheinen, wählst du darunter einzeln.",
