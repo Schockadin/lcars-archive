@@ -10,6 +10,7 @@ import { getDialoguesForUser } from "@/lib/dialogues";
 import { getPendingActions } from "@/lib/pendingActions";
 import { listUpcomingSessions } from "@/lib/plannedSessions";
 import { getRoleMap } from "@/lib/roles";
+import { LcarsCollapsiblePanel } from "@/components/lcars";
 import {
   dashboardCharacterVisible,
   dashboardSectionEnabled,
@@ -123,16 +124,20 @@ export default async function Dashboard({ user }: { user: User }) {
     ...(zeigtNeuenEintrag ? (["archiveEntry"] as const) : []),
     ...(zeigtNeuenNpc ? (["npc"] as const) : []),
   ];
-  // Ein Knopf, den es für dieses Konto nicht gibt (kein eigener
-  // veröffentlichter Charakter), lässt die Überschrift sonst über einer
-  // leeren Zeile stehen. Eintrag und NPC stehen jedem eingeloggten Konto
-  // offen (der Server prüft nur die Session, siehe archiveEntryAction) —
-  // sie zählen deshalb ohne weitere Bedingung.
-  const hatAnlegeKnopf =
-    zeigtNeuenEintrag ||
-    zeigtNeuenNpc ||
-    (zeigtNeuesLog && newContent.missionLog !== null) ||
-    (zeigtNeuesGespraech && newContent.dialogue !== null);
+  // Wie viele Knöpfe am Ende wirklich dastehen. Eingeschaltet allein reicht
+  // nicht: Logbuch und Gespräch setzen einen eigenen veröffentlichten
+  // Charakter voraus und fehlen ohne ihn (dann ist ihr Teil in newContent
+  // null). Eintrag und NPC stehen jedem eingeloggten Konto offen — der
+  // Server prüft dort nur die Session (siehe archiveEntryAction).
+  //
+  // Die Zahl ist zugleich die Kurzinfo in der Kopfzeile und die Antwort auf
+  // „lohnt sich der Abschnitt überhaupt": Ohne einen einzigen Knopf stünde
+  // sonst eine Überschrift über einer leeren Zeile.
+  const anzahlAnlegeKnoepfe =
+    (zeigtNeuesLog && newContent.missionLog !== null ? 1 : 0) +
+    (zeigtNeuesGespraech && newContent.dialogue !== null ? 1 : 0) +
+    (zeigtNeuenEintrag ? 1 : 0) +
+    (zeigtNeuenNpc ? 1 : 0);
 
   const needsPassword = !hasPasswordSet;
   const firstVisit = user.previous_login_at === null;
@@ -215,12 +220,18 @@ export default async function Dashboard({ user }: { user: User }) {
           {/* Die Anlege-Knöpfe: dieselben Formulare wie unter „Meine
               Inhalte", nur die hier eingeschalteten. Sie stehen zwischen dem,
               was ansteht, und dem, was andere getan haben — dort, wo man
-              beim Lesen auf die Idee kommt, selbst etwas zu schreiben. */}
-          {hatAnlegeKnopf && (
-            <section className="flex flex-col gap-[12px]">
-              <h2>Neues anlegen</h2>
+              beim Lesen auf die Idee kommt, selbst etwas zu schreiben.
+              Als Klappe wie die übrigen Abschnitte, damit die Seite eine
+              Gestalt hat und nicht eine Überschrift zwischen lauter
+              Kopfzeilen. */}
+          {anzahlAnlegeKnoepfe > 0 && (
+            <LcarsCollapsiblePanel
+              title="Neues anlegen"
+              badge={anzahlAnlegeKnoepfe}
+              storageId="dashboard:anlegen"
+            >
               <NewContentButtons data={newContent} show={anlegeKnoepfe} />
-            </section>
+            </LcarsCollapsiblePanel>
           )}
 
           {zeigtCharaktere && (
