@@ -50,6 +50,13 @@ export function DashboardGuide() {
           leer — eingeschaltet heißt „darf erscheinen“, nicht „erscheint
           immer“.
         </p>
+        <p>
+          Unabhängig davon lässt sich jeder Abschnitt <strong>zuklappen</strong>
+          {" "}— ein Klick auf seine Überschrift. Wie du die Seite verlässt, so
+          findest du sie wieder: Der Zustand wird auf dem jeweiligen Gerät
+          gemerkt, am Telefon also getrennt vom Rechner. Die Zahl rechts in
+          der Kopfzeile sagt dir auch zugeklappt, wie viel darin steckt.
+        </p>
       </GuideSection>
     </GuideBody>
   );
@@ -115,11 +122,13 @@ export function UserProfileGuide() {
         figure={<ProfileFigure />}
       >
         <p>
-          Dein Profil ist in aufklappbare Zeilen gegliedert:{" "}
+          Dein Profil ist in aufklappbare Abschnitte gegliedert:{" "}
+          <strong>Startseite</strong> (was dort erscheint),{" "}
           <strong>Charakterfarben</strong> (nur, wenn dir eine Figur gehört),{" "}
           <strong>Darstellung</strong> und <strong>Settings</strong>. Jede
           Klappe enthält eigene Formulare mit eigenem „Speichern“ — was du
-          änderst, gilt nur für dich und bleibt bei jedem Login erhalten.
+          änderst, gilt nur für dich und bleibt bei jedem Login erhalten. Auch
+          hier merkt sich die Seite, welche Abschnitte du offen gelassen hast.
         </p>
         <p>
           Unter <strong>Charakterfarben</strong> bekommt jede deiner Figuren

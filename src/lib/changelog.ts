@@ -163,6 +163,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "mein-bereich",
       },
       {
+        text: "Jeder Abschnitt auf der Startseite und im Profil lässt sich zuklappen — ein Klick auf die Überschrift. Wie du die Seite verlässt, so findest du sie wieder; gemerkt wird das auf dem jeweiligen Gerät, am Telefon also getrennt vom Rechner.",
+        category: "darstellung",
+        tutorial: "mein-bereich",
+      },
+      {
         text: "Ebenfalls neu auf der Startseite: deine eigenen Charaktere, jeder mit einem Stift, der direkt in seine Kopfdaten führt. Welche davon erscheinen, wählst du einzeln aus — wer viele Figuren führt, hält die Seite so kurz.",
         category: "charaktere",
         tutorial: "mein-bereich",

@@ -593,6 +593,25 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   was jemand tatsächlich sieht — vorher liefen bei jedem Aufruf sechs Abfragen
   parallel, egal wie viel davon gelesen wurde, und `"/"` ist die meistbesuchte
   Seite der Anwendung.
+- **Aufklappbare Abschnitte, die sich erinnern** — Startseite und Profil
+  tragen keine DataRow-Akkordeons mehr (die breiten, farbigen LCARS-Balken mit
+  der Zahl links), sondern die schlanke Klappe aus
+  [`src/components/lcars/CollapsiblePanel.tsx`](src/components/lcars/CollapsiblePanel.tsx):
+  per Vorgabe **offen**, je Abschnitt zuklappbar, und der Zustand wird **je
+  Gerät** gemerkt (`localStorage`, siehe
+  [`src/lib/panelState.ts`](src/lib/panelState.ts)). Der Grund für den Umbau:
+  Die DataRow ist als Navigationszeile gedacht; eine Seite aus zehn davon
+  liest sich wie ein Inhaltsverzeichnis, nicht wie ein Arbeitsplatz. Die Zahl
+  steht als Kurzinfo rechts weiter da — ein zugeklappter Abschnitt soll nicht
+  verschweigen, wie viel in ihm steckt.
+  Gemerkt wird wie bei den Sektionen selbst nur die **Abweichung**: Wer nichts
+  anfasst, hat keinen Eintrag, und eine später geänderte Vorgabe erreicht ihn.
+  Gerät statt Konto ist Absicht (gleiche Überlegung wie beim angehefteten
+  Antwortfeld): Am Telefon will man die lange News-Liste vielleicht zu haben,
+  am großen Schirm nicht. Ein Anker (`/user#dashboard`, das Zahnrad auf der
+  Startseite) schlägt den gemerkten Zustand — sonst käme man dort an und sähe
+  nichts. `SettingsPanel` bleibt daneben bestehen: Es merkt sich nichts und
+  ist dafür server-renderbar.
 - **Anlegen ohne Umweg** — „Neuer Missionslog", „Neues Gespräch", „Neuer
   Datenbank-Eintrag" und „Neuer NPC" stehen jetzt auch auf dem Dashboard und
   öffnen dieselben Formular-Fenster wie unter „Meine Inhalte" (je einzeln

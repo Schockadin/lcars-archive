@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LcarsAkteCard, LcarsDataRow } from "@/components/lcars";
+import { LcarsAkteCard, LcarsCollapsiblePanel } from "@/components/lcars";
 import { PencilIcon } from "@/lib/icons";
 import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
 import { characterEditHref, characterHref } from "@/lib/contentRoutes";
@@ -48,7 +48,11 @@ export default function DashboardCharactersSection({
   if (characters.length === 0) return null;
 
   return (
-    <LcarsDataRow value={characters.length} label="Meine Charaktere">
+    <LcarsCollapsiblePanel
+      title="Meine Charaktere"
+      badge={characters.length}
+      storageId="dashboard:charaktere"
+    >
       <div className="flex flex-col gap-[6px]">
         {characters.map((character) => (
           <div
@@ -96,6 +100,6 @@ export default function DashboardCharactersSection({
           </div>
         ))}
       </div>
-    </LcarsDataRow>
+    </LcarsCollapsiblePanel>
   );
 }

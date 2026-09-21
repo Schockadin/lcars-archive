@@ -1,4 +1,4 @@
-import { LcarsDataRow } from "@/components/lcars";
+import { LcarsCollapsiblePanel } from "@/components/lcars";
 import {
   entriesWithItems,
   featuredChangelogEntries,
@@ -46,13 +46,17 @@ export default async function ChangelogSection({
   );
   if (entries.length === 0) return null;
 
-  // Gesamtzahl der Stichpunkte über alle gewählten Versionen — steht als Wert
-  // links in der DataRow.
+  // Gesamtzahl der Stichpunkte über alle gewählten Versionen — steht als
+  // Kurzinfo rechts in der Kopfzeile des Abschnitts.
   const totalItems = entries.reduce((sum, entry) => sum + entry.items.length, 0);
 
   return (
-    <LcarsDataRow value={totalItems} label="Neue Funktionen">
+    <LcarsCollapsiblePanel
+      title="Neue Funktionen"
+      badge={totalItems}
+      storageId="dashboard:versionen"
+    >
       <ChangelogFeatureList entries={entries} />
-    </LcarsDataRow>
+    </LcarsCollapsiblePanel>
   );
 }

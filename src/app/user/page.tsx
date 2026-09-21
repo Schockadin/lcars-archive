@@ -46,7 +46,7 @@ import {
 } from "@/lib/fonts";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
-import DataRow from "@/components/lcars/DataRow";
+import { LcarsCollapsiblePanel } from "@/components/lcars";
 import {
   characterHref,
 } from "@/lib/contentRoutes";
@@ -151,12 +151,14 @@ export default async function UserPage() {
           <div className="flex flex-col gap-[16px]">
             {/* Ganz oben und mit eigener Anker-id: Das Zahnrad neben der
                 Überschrift des Dashboards führt direkt hierher
-                (/user#dashboard) — DataRow klappt den Abschnitt dabei selbst
-                auf (htmlId, siehe DataRowAccordion). */}
-            <DataRow
-              label="Startseite"
+                (/user#dashboard). Der Anker klappt den Abschnitt dabei auf,
+                auch wenn er zuletzt zugeklappt verlassen wurde — siehe
+                CollapsiblePanel. */}
+            <LcarsCollapsiblePanel
+              title="Startseite"
               htmlId="dashboard"
-              value={aktiveSektionen}
+              badge={`${aktiveSektionen} von ${DASHBOARD_SECTIONS.length}`}
+              storageId="user:startseite"
             >
               <section className="flex flex-col gap-[12px]">
                 <h2>Was auf der Startseite steht</h2>
@@ -168,12 +170,13 @@ export default async function UserPage() {
                   }))}
                 />
               </section>
-            </DataRow>
+            </LcarsCollapsiblePanel>
 
             {characterColors.length > 0 && (
-              <DataRow
-                label="Charakterfarben"
-                value={characterColors.length}
+              <LcarsCollapsiblePanel
+                title="Charakterfarben"
+                badge={characterColors.length}
+                storageId="user:charakterfarben"
               >
                 <section
                   id="character-colors"
@@ -206,12 +209,13 @@ export default async function UserPage() {
                     ),
                   )}
                 </section>
-              </DataRow>
+              </LcarsCollapsiblePanel>
             )}
 
-            <DataRow
-              label="Darstellung"
-              value={COLOR_THEMES.length}
+            <LcarsCollapsiblePanel
+              title="Darstellung"
+              badge={`${COLOR_THEMES.length} Schemata`}
+              storageId="user:darstellung"
             >
               {/* Alle Darstellungs-Einstellungen als aufklappbare Panels
                   (SettingsPanel): Farben, Hell/Dunkel und Oberfläche stehen
@@ -258,11 +262,11 @@ export default async function UserPage() {
                   <UiModeSettingsForm currentMode={uiMode} />
                 </SettingsPanel>
               </section>
-            </DataRow>
+            </LcarsCollapsiblePanel>
 
-            <DataRow
-              label="Settings"
-              value={9}
+            <LcarsCollapsiblePanel
+              title="Settings"
+              storageId="user:settings"
             >
               <h2>User-Daten</h2>
               <SettingsForm user={{ name: target.name, email: target.email }} />
@@ -359,7 +363,7 @@ export default async function UserPage() {
                 <h2>App installieren</h2>
                 <InstallPwaPrompt />
               </section>
-            </DataRow>
+            </LcarsCollapsiblePanel>
           </div>
         </div>
       </article>

@@ -3,6 +3,7 @@ export { default as LcarsMenuItem } from "./MenuItem";
 export { HeaderBar as LcarsHeaderBar } from "./ElbowBar";
 export { FooterBar as LcarsFooterBar } from "./ElbowBar";
 export { default as LcarsDataRow } from "./DataRow";
+export { default as LcarsCollapsiblePanel } from "./CollapsiblePanel";
 export { default as LcarsHorSep } from "./HorizontalSeparator";
 export { default as LcarsToc, type TocHeading } from "./Toc";
 export { default as LcarsSkeleton } from "./Skeleton";

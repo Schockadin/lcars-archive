@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { LcarsDataRow } from "@/components/lcars";
+import { LcarsCollapsiblePanel } from "@/components/lcars";
 import OnboardingChecklist from "@/components/OnboardingChecklist";
 import { getOnboardingSteps } from "@/lib/onboarding";
 import { onboardingProgress } from "@/lib/onboardingSteps";
@@ -18,7 +18,11 @@ export default async function OnboardingSection({
   if (progress.complete) return null;
 
   return (
-    <LcarsDataRow value={progress.total - progress.done} label="Erste Schritte">
+    <LcarsCollapsiblePanel
+      title="Erste Schritte"
+      badge={`${progress.total - progress.done} offen`}
+      storageId="dashboard:erste-schritte"
+    >
       <div className="lcars-text flex flex-col gap-[16px]">
         <OnboardingChecklist steps={steps} />
         <p>
@@ -27,6 +31,6 @@ export default async function OnboardingSection({
           </Link>
         </p>
       </div>
-    </LcarsDataRow>
+    </LcarsCollapsiblePanel>
   );
 }

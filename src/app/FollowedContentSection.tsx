@@ -1,4 +1,4 @@
-import { LcarsAkteCard, LcarsDataRow } from "@/components/lcars";
+import { LcarsAkteCard, LcarsCollapsiblePanel } from "@/components/lcars";
 import type { FollowedContent, FollowTargetType } from "@/lib/follows";
 
 const TYPE_LABELS: Record<FollowTargetType, string> = {
@@ -11,7 +11,7 @@ const TYPE_LABELS: Record<FollowTargetType, string> = {
 // Gleicher Kartenstil wie die Akkordeons in UserContentBrowser.tsx — hier
 // ohne Meta-Zeile, da FollowedContent nur Titel + Ziel-Typ liefert. Ganz
 // ausgeblendet statt Leerzustand-Platzhalter, wenn es nichts anzuzeigen
-// gibt (Dashboard soll keine leeren DataRows zeigen).
+// gibt (das Dashboard soll keine leeren Abschnitte zeigen).
 export default function FollowedContentSection({
   heading,
   items,
@@ -22,9 +22,10 @@ export default function FollowedContentSection({
   if (items.length === 0) return null;
 
   return (
-    <LcarsDataRow
-      value={items.length}
-      label={heading}
+    <LcarsCollapsiblePanel
+      title={heading}
+      badge={items.length}
+      storageId="dashboard:lesezeichen"
     >
       <div className="flex flex-col gap-[6px]">
         {items.map((item) => (
@@ -41,6 +42,6 @@ export default function FollowedContentSection({
           />
         ))}
       </div>
-    </LcarsDataRow>
+    </LcarsCollapsiblePanel>
   );
 }

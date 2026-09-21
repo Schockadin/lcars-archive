@@ -1,4 +1,4 @@
-import { LcarsDataRow } from "@/components/lcars";
+import { LcarsCollapsiblePanel } from "@/components/lcars";
 import SessionRsvp from "@/components/session/SessionRsvp";
 import {
   countRsvps,
@@ -28,10 +28,10 @@ export default function UpcomingSessionsSection({
   if (sessions.length === 0) return null;
 
   return (
-    <LcarsDataRow
-      value={sessions.length}
-      label="Nächste Spieltermine"
-      defaultOpen
+    <LcarsCollapsiblePanel
+      title="Nächste Spieltermine"
+      badge={sessions.length}
+      storageId="dashboard:spielabende"
     >
       <div className="flex flex-col gap-[10px]">
         {sessions.map((s) => {
@@ -74,6 +74,6 @@ export default function UpcomingSessionsSection({
           );
         })}
       </div>
-    </LcarsDataRow>
+    </LcarsCollapsiblePanel>
   );
 }
