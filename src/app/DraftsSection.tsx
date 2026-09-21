@@ -71,7 +71,11 @@ export default function DraftsSection({
       storageId={storageId}
       defaultOpen={defaultOpen}
     >
-      <div className="flex flex-col gap-[6px]">
+      {/* Gedeckelt wie die Charakter-Übersicht (OwnCharacterList), die
+          dieselbe Zeile aus Akte und Aktionen trägt: Über ~900px zerreißt
+          sie optisch — die Akte wächst weiter, die Knöpfe bleiben rechts
+          stehen. Ohne Aktionszeile war das hier kein Thema. */}
+      <div className="flex w-full max-w-[900px] flex-col gap-[6px]">
         {offeneEntwuerfe.map((draft) => {
           const key = draftKey(draft);
           const umschalten = switchType(draft.kind);
@@ -81,7 +85,7 @@ export default function DraftsSection({
             // „Meine Inhalte": Die Karte nimmt den Platz, der übrig bleibt.
             <div
               key={key}
-              className="flex flex-col gap-[8px] sm:flex-row sm:items-start"
+              className="flex flex-col gap-[8px] sm:flex-row sm:items-center"
             >
               <LcarsAkteCard
                 className="flex-1"

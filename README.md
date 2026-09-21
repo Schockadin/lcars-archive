@@ -678,7 +678,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Transition wieder zurück. `ContentStateSelect` meldet das Veröffentlichen
   über ein optionales `onPublished`, das **innerhalb** derselben Transition
   läuft wie der Action-Aufruf (sonst gäbe es den automatischen Rücklauf
-  nicht).
+  nicht). Die Zeile ist wie in der Charakter-Übersicht auf **900px**
+  gedeckelt (`OwnCharacterList`): Darüber zerreißt das Paar aus Akte und
+  Aktionen optisch — die Akte wächst weiter, die Knöpfe bleiben rechts
+  stehen. Ohne Aktionszeile war das hier kein Thema.
 - **Die Startseite aktualisiert sich selbst** — alle 10 Sekunden ein
   `router.refresh()`
   ([`DashboardAutoRefresh.tsx`](src/app/DashboardAutoRefresh.tsx)). Sie zeigt
