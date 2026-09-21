@@ -577,7 +577,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   diesem Fall die richtige Einstellung.
 - **Konfigurierbares Dashboard** — jede Person stellt unter `/user` (Klappe
   „Startseite", Anker `#dashboard`) selbst ein, welche Abschnitte auf `"/"`
-  erscheinen: Erste Schritte, Spielabende, To Dos, offene Gespräche, die beiden
+  erscheinen: Erste Schritte, Spielabende, To Dos, offene Gespräche, die vier
   Anlege-Knöpfe, die eigenen Charaktere, Versionen, News und Lesezeichen. Das
   Zahnrad neben der Dashboard-Überschrift springt direkt dorthin.
   Die Sektionen samt Vorgabe stehen einmal in
@@ -593,14 +593,17 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   was jemand tatsächlich sieht — vorher liefen bei jedem Aufruf sechs Abfragen
   parallel, egal wie viel davon gelesen wurde, und `"/"` ist die meistbesuchte
   Seite der Anwendung.
-- **Anlegen ohne Umweg** — „Neuer Missionslog" und „Neues Gespräch" stehen
-  jetzt auch auf dem Dashboard und öffnen dieselben Formular-Fenster wie unter
-  „Meine Inhalte". Der Ladeweg dafür (Auswahllisten, Vorbelegungen,
+- **Anlegen ohne Umweg** — „Neuer Missionslog", „Neues Gespräch", „Neuer
+  Datenbank-Eintrag" und „Neuer NPC" stehen jetzt auch auf dem Dashboard und
+  öffnen dieselben Formular-Fenster wie unter „Meine Inhalte" (je einzeln
+  abschaltbar). Der Ladeweg dafür (Auswahllisten, Vorbelegungen,
   Berechtigungen) lebt seither einmal in
   [`src/app/user/content/newContentData.ts`](src/app/user/content/newContentData.ts)
   statt in der Seite unter `/user/content` — zwei Fassungen derselben
   Berechtigungslogik laufen früher oder später auseinander. Geladen wird nur,
-  was der jeweilige Knopf zeigt.
+  was der jeweilige Knopf zeigt: Eintrag und NPC sind dasselbe Formular mit
+  vorgewählter Kategorie und brauchen gar keine Vorarbeit, wer nur sie zeigt,
+  löst keine einzige zusätzliche Abfrage aus.
 - **Offen für dich** — der Dashboard-Abschnitt mit dem, was diese Person
   schuldet (`src/lib/pendingActions.ts`): Missionen, an denen eine eigene
   Figur teilnimmt und zu denen **kein eigenes Logbuch** existiert; Gespräche,

@@ -100,6 +100,41 @@ describe("NewContentButtons", () => {
     ).toBeInTheDocument();
   });
 
+  // Das Dashboard reicht hier durch, welche Knöpfe dort eingeschaltet sind
+  // (siehe src/lib/dashboardSections.ts) — „Meine Inhalte" reicht nichts
+  // durch und zeigt weiterhin alle.
+  it("zeigt mit `show` nur die verlangten Knöpfe", () => {
+    render(
+      <NewContentButtons data={data()} show={["archiveEntry", "npc"]} />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "Neuer Datenbank-Eintrag" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Neuer NPC" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Neuer Missionslog" }),
+    ).toBeNull();
+    expect(screen.queryByRole("button", { name: "Neues Gespräch" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Neue Mission" })).toBeNull();
+  });
+
+  // `show` erlaubt, es ersetzt die Prüfung nicht: Ein Knopf ohne Formular
+  // bleibt weg, auch wenn er ausdrücklich verlangt wurde.
+  it("zeigt auch mit `show` keinen Knopf ohne Formular", () => {
+    render(
+      <NewContentButtons
+        data={data({ missionLog: null })}
+        show={["missionLog", "npc"]}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "Neuer Missionslog" }),
+    ).toBeNull();
+    expect(screen.getByRole("button", { name: "Neuer NPC" })).toBeInTheDocument();
+  });
+
   it("bietet keinen Knopf für einen neuen Charakter", () => {
     // Charaktere entstehen im Assistenten unter /user/characters — er führt
     // über mehrere Schritte und gehört nicht in ein Fenster.

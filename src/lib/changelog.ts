@@ -158,7 +158,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "mein-bereich",
       },
       {
-        text: "Neu auf der Startseite: Knöpfe für einen neuen Missionslog und ein neues Gespräch. Beide öffnen dasselbe Formular wie unter „Meine Inhalte“, nur ohne den Umweg dorthin.",
+        text: "Neu auf der Startseite: Knöpfe für einen neuen Missionslog, ein neues Gespräch, einen neuen Datenbank-Eintrag und einen neuen NPC. Alle vier öffnen dasselbe Formular wie unter „Meine Inhalte“, nur ohne den Umweg dorthin — und jeder lässt sich einzeln abschalten.",
         category: "inhalte",
         tutorial: "mein-bereich",
       },

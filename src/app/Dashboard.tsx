@@ -60,10 +60,16 @@ export default async function Dashboard({ user }: { user: User }) {
   const zeigtCharaktere = zeigt("charaktere");
   const zeigtNeuesLog = zeigt("neues-log");
   const zeigtNeuesGespraech = zeigt("neues-gespraech");
+  const zeigtNeuenEintrag = zeigt("neuer-eintrag");
+  const zeigtNeuenNpc = zeigt("neuer-npc");
+  // Nur Logbuch und Gespräch brauchen vorgeladene Auswahllisten (Missionen,
+  // Gesprächspartner, NPCs, Orte …). Ein Datenbank-Eintrag und ein NPC sind
+  // dasselbe Formular mit vorgewählter Kategorie und kommen ohne aus — wer
+  // nur diese beiden Knöpfe zeigt, löst damit keine einzige Abfrage aus.
+  const brauchtFormularDaten = zeigtNeuesLog || zeigtNeuesGespraech;
   // Die Charakter-Liste brauchen zwei Dinge: die Sektion selbst und die
-  // Anlege-Formulare (sie fragen, mit welcher Figur geschrieben wird).
-  const brauchtCharaktere =
-    zeigtCharaktere || zeigtNeuesLog || zeigtNeuesGespraech;
+  // beiden Formulare, die fragen, mit welcher Figur geschrieben wird.
+  const brauchtCharaktere = zeigtCharaktere || brauchtFormularDaten;
 
   // Effektive Rechte (aus allen Rollen + Overrides) — der News-Feed muss
   // dieselbe Sichtbarkeit wie canView im Rest der App anwenden, nicht die
@@ -98,30 +104,35 @@ export default async function Dashboard({ user }: { user: User }) {
     zeigt("todos") ? getPendingActions(user.id) : Promise.resolve([]),
     zeigt("spielabende") ? listUpcomingSessions() : Promise.resolve([]),
     brauchtCharaktere ? getCharactersForUser(user.id) : Promise.resolve([]),
-    zeigtNeuesLog || zeigtNeuesGespraech ? getRoleMap() : Promise.resolve({}),
+    brauchtFormularDaten ? getRoleMap() : Promise.resolve({}),
   ]);
 
-  // Die Auswahllisten der beiden Anlege-Formulare. Erst hier, weil sie die
-  // Charakter-Liste von oben brauchen — und nur für die Knöpfe, die auch
-  // eingeschaltet sind (siehe loadNewContentData).
-  const newContent =
-    zeigtNeuesLog || zeigtNeuesGespraech
-      ? await loadNewContentData(user, characters, roleMap, {
-          missionLog: zeigtNeuesLog,
-          dialogue: zeigtNeuesGespraech,
-        })
-      : null;
+  // Die Auswahllisten der Anlege-Formulare. Erst hier, weil sie die
+  // Charakter-Liste von oben brauchen — und nur für die Knöpfe, die sie
+  // überhaupt benötigen (siehe loadNewContentData). Eintrag und NPC kommen
+  // mit dem leeren Gerüst aus: Sie brauchen nur die eigene User-id.
+  const newContent = brauchtFormularDaten
+    ? await loadNewContentData(user, characters, roleMap, {
+        missionLog: zeigtNeuesLog,
+        dialogue: zeigtNeuesGespraech,
+      })
+    : { userId: user.id, missionLog: null, dialogue: null, mission: null };
   const anlegeKnoepfe = [
     ...(zeigtNeuesLog ? (["missionLog"] as const) : []),
     ...(zeigtNeuesGespraech ? (["dialogue"] as const) : []),
+    ...(zeigtNeuenEintrag ? (["archiveEntry"] as const) : []),
+    ...(zeigtNeuenNpc ? (["npc"] as const) : []),
   ];
   // Ein Knopf, den es für dieses Konto nicht gibt (kein eigener
   // veröffentlichter Charakter), lässt die Überschrift sonst über einer
-  // leeren Zeile stehen.
+  // leeren Zeile stehen. Eintrag und NPC stehen jedem eingeloggten Konto
+  // offen (der Server prüft nur die Session, siehe archiveEntryAction) —
+  // sie zählen deshalb ohne weitere Bedingung.
   const hatAnlegeKnopf =
-    newContent !== null &&
-    ((zeigtNeuesLog && newContent.missionLog !== null) ||
-      (zeigtNeuesGespraech && newContent.dialogue !== null));
+    zeigtNeuenEintrag ||
+    zeigtNeuenNpc ||
+    (zeigtNeuesLog && newContent.missionLog !== null) ||
+    (zeigtNeuesGespraech && newContent.dialogue !== null);
 
   const needsPassword = !hasPasswordSet;
   const firstVisit = user.previous_login_at === null;
@@ -205,7 +216,7 @@ export default async function Dashboard({ user }: { user: User }) {
               Inhalte", nur die hier eingeschalteten. Sie stehen zwischen dem,
               was ansteht, und dem, was andere getan haben — dort, wo man
               beim Lesen auf die Idee kommt, selbst etwas zu schreiben. */}
-          {hatAnlegeKnopf && newContent && (
+          {hatAnlegeKnopf && (
             <section className="flex flex-col gap-[12px]">
               <h2>Neues anlegen</h2>
               <NewContentButtons data={newContent} show={anlegeKnoepfe} />

@@ -50,6 +50,18 @@ export const DASHBOARD_SECTIONS = [
     default: true,
   },
   {
+    id: "neuer-eintrag",
+    label: "Neuer Datenbank-Eintrag",
+    hint: "Knopf, der das Formular für einen neuen Datenbank-Eintrag öffnet.",
+    default: true,
+  },
+  {
+    id: "neuer-npc",
+    label: "Neuer NPC",
+    hint: "Knopf für einen neuen Datenbank-Eintrag mit vorgewählter Kategorie „NPC“.",
+    default: true,
+  },
+  {
     id: "charaktere",
     label: "Meine Charaktere",
     hint: "Deine Charaktere mit Bearbeiten-Knopf. Welche davon erscheinen, wählst du darunter einzeln.",

@@ -18,11 +18,13 @@ export function DashboardGuide() {
         <p>
           Angemeldet zeigt die Startseite deinen eigenen Stand statt der
           öffentlichen Übersicht: die nächsten <strong>Spielabende</strong> samt
-          Zu- und Absage, deine <strong>offenen Gespräche</strong>, Knöpfe für
-          einen neuen <strong>Missionslog</strong> und ein neues{" "}
-          <strong>Gespräch</strong>, deine <strong>Charaktere</strong> mit
-          einem Stift zum Bearbeiten und die <strong>News</strong> — was andere
-          zuletzt angelegt, geändert oder gelöscht haben.
+          Zu- und Absage, deine <strong>offenen Gespräche</strong>, die
+          Anlegen-Knöpfe (<strong>Missionslog</strong>,{" "}
+          <strong>Gespräch</strong>, <strong>Datenbank-Eintrag</strong>,{" "}
+          <strong>NPC</strong> — dieselben Fenster wie unter „Meine Inhalte“),
+          deine <strong>Charaktere</strong> mit einem Stift zum Bearbeiten und
+          die <strong>News</strong> — was andere zuletzt angelegt, geändert
+          oder gelöscht haben.
         </p>
         <p>
           Dazu kommen drei Sektionen, die zunächst ausgeschaltet sind: die{" "}
