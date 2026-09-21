@@ -55,13 +55,36 @@ describe("Anleitungen zu den Leitungs-Bereichen", () => {
 });
 
 describe("Anleitungen zum eigenen Bereich", () => {
-  it("erklärt „Meine Inhalte“ und das Profil", () => {
+  it("erklärt die Startseite, „Meine Inhalte“ und das Profil", () => {
     render(<UserAreaGuides />);
     const text = ueberschriften().join(" | ");
 
+    expect(text).toContain("Startseite");
     expect(text).toContain("Meine Inhalte");
     expect(text).toContain("Profil");
     erwarteBeschrifteteBilder(2);
+  });
+
+  // Das Zahnrad neben der Überschrift ist der einzige Weg zu den
+  // Dashboard-Einstellungen — steht er nicht in der Anleitung, findet ihn
+  // niemand.
+  it("nennt den Weg zum Ein- und Ausschalten der Sektionen", () => {
+    render(<UserAreaGuides />);
+    expect(screen.getAllByText(/Zahnrad/).length).toBeGreaterThan(0);
+  });
+
+  // Der Import ist der einzige Knopf der Anlege-Leiste, der auf eine eigene
+  // Seite führt — und der einzige, bei dem der Server zwei Dinge anders
+  // entscheidet als die hochgeladene Datei. Beides gehört in die Anleitung,
+  // sonst wirkt eine abgewiesene Datei wie ein Fehler.
+  it("erklärt den Import samt seiner beiden Grenzen", () => {
+    render(<UserAreaGuides />);
+    expect(ueberschriften().join(" | ")).toContain("Import");
+
+    expect(screen.getAllByText(/gehört dir/).length).toBeGreaterThan(0);
+    expect(
+      screen.getAllByText(/eigenen, veröffentlichten Figur/).length,
+    ).toBeGreaterThan(0);
   });
 });
 

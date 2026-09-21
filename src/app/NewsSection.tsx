@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
-import { LcarsDataRow } from "@/components/lcars";
+import { LcarsCollapsiblePanel } from "@/components/lcars";
 import type { NewsFeedItem } from "@/lib/recentActivity";
 import { dismissNewsAction, markAllNewsSeenAction } from "@/app/actions/news";
 import { fmtDate } from "@/lib/missionFormat";
@@ -127,10 +127,10 @@ export default function NewsSection({ items }: { items: NewsFeedItem[] }) {
   if (visible.length === 0) return null;
 
   return (
-    <LcarsDataRow
-      value={visible.length}
-      label="News"
-      defaultOpen
+    <LcarsCollapsiblePanel
+      title="News"
+      badge={visible.length}
+      storageId="dashboard:news"
     >
       <div className="flex flex-col gap-[8px]">
         <button
@@ -147,6 +147,6 @@ export default function NewsSection({ items }: { items: NewsFeedItem[] }) {
           ))}
         </div>
       </div>
-    </LcarsDataRow>
+    </LcarsCollapsiblePanel>
   );
 }

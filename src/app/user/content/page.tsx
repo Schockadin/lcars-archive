@@ -1,29 +1,18 @@
 import type { Metadata } from "next";
 import { userCan } from "@/lib/permissions";
 import { getRoleMap } from "@/lib/roles";
-import { canPlayNpcs, canView, resolveViewer } from "@/lib/visibility";
 import PageMeta from "@/components/PageMeta";
+import { LcarsCollapsiblePanel } from "@/components/lcars";
 import { requireOwnCharacters } from "../dal";
-import {
-  getCharactersForParticipantPicker,
-  getCharactersWithPlayers,
-  getLogsForUser,
-} from "@/lib/characters";
+import { getLogsForUser } from "@/lib/characters";
 import { getDialoguesForUser } from "@/lib/dialogues";
-import {
-  getAllArchiveEntries,
-  getArchiveEntriesForUser,
-  getNpcOptions,
-} from "@/lib/archive";
-import {
-  getAllMissions,
-  getAllMissionsIncludingDrafts,
-  getMostRecentLogDate,
-  getNextSessionNr,
-} from "@/lib/missions";
-import { listGmUsers } from "@/lib/users";
+import { getArchiveEntriesForUser } from "@/lib/archive";
+import { getOwnDrafts } from "@/lib/drafts";
+import { getAllMissionsIncludingDrafts } from "@/lib/missions";
 import UserContentBrowser from "./UserContentBrowser";
-import NewContentButtons, { type NewContentData } from "./NewContentButtons";
+import DraftsSection from "@/app/DraftsSection";
+import NewContentPanel from "./NewContentPanel";
+import { loadNewContentData } from "./newContentData";
 import HelpHeading from "@/components/help/HelpHeading";
 import { MyContentGuide } from "@/components/help/guides/UserGuides";
 
@@ -36,22 +25,6 @@ export default async function UserContentPage() {
   const { user, characters } = await requireOwnCharacters();
   const roleMap = await getRoleMap();
   const isGM = userCan(user, "missions.manage", roleMap);
-  // Die Spielleitung kann ein Gespräch auch ohne eigenen Charakter beginnen —
-  // aus Sicht eines NPC (siehe /user/dialogues/new). Maßgeblich ist deshalb
-  // dieselbe Regel wie dort (canPlayNpcs = gm.access ODER admin.access), sonst
-  // fehlte einem reinen Admin-Konto der Knopf für einen Weg, der für es
-  // funktioniert.
-  const viewer = resolveViewer(user, roleMap);
-  const playsNpcs = canPlayNpcs(viewer);
-  // Nur eigene bereits veröffentlichte Charaktere kommen als Autor eines Logs
-  // oder als Gesprächsstarter infrage — dieselbe Regel wie auf den
-  // Anlege-Seiten (ein Entwurf ist für niemand außer dem Owner sichtbar).
-  const publishedCharacters = characters.filter((c) => !c.is_draft);
-  const ownCharacterOptions = publishedCharacters.map((c) => ({
-    id: c.id,
-    slug: c.slug,
-    name: c.name,
-  }));
   // Nur Slug und Name an die Client-Komponente: die vollen Charakter-Objekte
   // tragen den Werte-Teilbaum (keepStats in getCharactersForUser) und hätten
   // ihn ungenutzt im RSC-Payload mitgeschickt.
@@ -60,88 +33,26 @@ export default async function UserContentPage() {
     name: c.name,
   }));
 
-  const [logs, dialogues, archiveEntries, missions] = await Promise.all([
-    getLogsForUser(user.id),
-    getDialoguesForUser(user.id, "all"),
-    getArchiveEntriesForUser(user.id),
-    isGM ? getAllMissionsIncludingDrafts() : Promise.resolve([]),
-  ]);
-
-  // Die Anlege-Formulare öffnen sich hier in einem Fenster (siehe
-  // NewContentButtons.tsx) und können darin nichts nachladen — ihre
-  // Auswahllisten und Vorbelegungen entstehen deshalb schon hier. Geladen
-  // wird nur, was der jeweilige Knopf überhaupt zeigt: ohne eigenen
-  // veröffentlichten Charakter kein Log-Formular, ohne Spielleitung kein
-  // Missions-Formular.
-  const canWriteLog = publishedCharacters.length > 0;
-  const npcOptions = (await getNpcOptions()).filter((npc) =>
-    canView(npc.isDraft, npc.ownerUserId, viewer),
-  );
-  const canStartDialogue = canWriteLog || (playsNpcs && npcOptions.length > 0);
-
-  const [
-    logMissions,
-    defaultLogDate,
-    partnerCharacters,
-    allArchiveEntries,
-    gms,
-    participantOptions,
-  ] = await Promise.all([
-    canWriteLog ? getAllMissions() : Promise.resolve([]),
-    // Auch das Missions-Formular belegt damit sein Startdatum vor.
-    canWriteLog || canStartDialogue || isGM
-      ? getMostRecentLogDate()
-      : Promise.resolve(null),
-    canStartDialogue ? getCharactersWithPlayers(user.id) : Promise.resolve([]),
-    canStartDialogue ? getAllArchiveEntries() : Promise.resolve([]),
-    // Wer kann für die NPCs schreiben? Nur nötig, wenn es überhaupt NPCs zur
-    // Auswahl gibt und die anfragende Person sie nicht selbst spielt.
-    canStartDialogue && npcOptions.length > 0 && !playsNpcs
-      ? listGmUsers()
-      : Promise.resolve([]),
-    isGM ? getCharactersForParticipantPicker() : Promise.resolve([]),
-  ]);
-
-  // Grober Vorschlagswert für die Session-Nr (erster eigener Charakter, erste
-  // Mission) — wie unter /user/mission-logs/new, das Feld bleibt editierbar.
-  const nextSessionNr =
-    canWriteLog && logMissions[0]
-      ? await getNextSessionNr(logMissions[0].id, publishedCharacters[0].id)
-      : 1;
-
-  const newContent: NewContentData = {
-    userId: user.id,
-    // Auch ohne Missionen durchgereicht: Der Knopf bleibt sichtbar und das
-    // Fenster erklärt, dass es noch nichts gibt, dem ein Log zugeordnet
-    // werden könnte — wie es die Anlege-Seite tut.
-    missionLog: canWriteLog
-      ? {
-          ownCharacters: ownCharacterOptions,
-          missions: logMissions.map((m) => ({
-            slug: m.slug,
-            title: m.title,
-          })),
-          defaultSessionNr: nextSessionNr,
-          defaultLogDate,
-        }
-      : null,
-    dialogue: canStartDialogue
-      ? {
-          ownCharacters: ownCharacterOptions,
-          partnerCharacters,
-          npcs: npcOptions,
-          canPlayNpcs: playsNpcs,
-          gms,
-          locations: allArchiveEntries
-            .filter((e) => e.category === "location")
-            .map((l) => ({ slug: l.slug, title: l.title })),
-          defaultLogDate,
-        }
-      : null,
-    mission: isGM
-      ? { defaultStartedAt: defaultLogDate, characters: participantOptions }
-      : null,
-  };
+  const [logs, dialogues, archiveEntries, missions, drafts, newContent] =
+    await Promise.all([
+      getLogsForUser(user.id),
+      getDialoguesForUser(user.id, "all"),
+      getArchiveEntriesForUser(user.id),
+      isGM ? getAllMissionsIncludingDrafts() : Promise.resolve([]),
+      // Eigene Abfrage statt einer Ableitung aus den Listen darüber: Die
+      // suchen über Besitz UND Teilnahme, „meine Entwürfe" fragt nur nach
+      // Besitz (siehe getOwnDrafts). Dieselbe Liste steht auf der
+      // Startseite.
+      getOwnDrafts(user.id),
+      // Die Auswahllisten der Anlege-Formulare — hier alle, weil diese Seite
+      // alle Knöpfe zeigt. Der gemeinsame Ladeweg mit dem Dashboard steht in
+      // newContentData.ts.
+      loadNewContentData(user, characters, roleMap, {
+        missionLog: true,
+        dialogue: true,
+        mission: true,
+      }),
+    ]);
 
   return (
     <>
@@ -157,15 +68,33 @@ export default async function UserContentPage() {
             dem Inhaltsbrowser nur eine schmale Restspalte, obwohl er die
             Tabelle mit den meisten Spalten dieser Seite trägt. */}
         <article className="mb-[10px] flex flex-col gap-[20px]">
-          <section className="flex flex-col gap-[12px]">
-            <h2>Neue Inhalte</h2>
-            <NewContentButtons data={newContent} />
-          </section>
+          {/* Derselbe Abschnitt wie auf der Startseite (NewContentPanel) —
+              hier mit allen Knöpfen und aufgeklappt: Etwas anzulegen ist der
+              Zweck dieser Seite, nicht eine Möglichkeit am Rande. */}
+          <NewContentPanel
+            data={newContent}
+            canImport
+            storageId="content:anlegen"
+          />
 
-          {/* Ohne eigene Überschrift: Die Liste bringt ihre eigenen
-              Abschnittsüberschriften mit (eine je Kategorie, wie die
-              Buchstaben der Datenbank und die Monate der Chronologie). */}
-          <section className="flex flex-col gap-[12px]">
+          {/* Über der Liste: was noch unfertig ist. Dieselbe Komponente wie
+              auf der Startseite. */}
+          <DraftsSection drafts={drafts} storageId="content:entwuerfe" />
+
+          {/* Die Liste bringt ihre eigenen Abschnittsüberschriften mit (eine
+              je Kategorie, wie die Buchstaben der Datenbank und die Monate
+              der Chronologie) — die Klappe darum trägt deshalb nur die
+              Gesamtzahl. */}
+          <LcarsCollapsiblePanel
+            title="Alle Inhalte"
+            badge={
+              logs.length +
+              dialogues.length +
+              archiveEntries.length +
+              missions.length
+            }
+            storageId="content:liste"
+          >
             <div className="lcars-text w-full">
               <UserContentBrowser
                 characters={characterFilterOptions}
@@ -182,7 +111,7 @@ export default async function UserContentPage() {
                 ownUserId={user.id}
               />
             </div>
-          </section>
+          </LcarsCollapsiblePanel>
         </article>
       </div>
     </>

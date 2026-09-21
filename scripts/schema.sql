@@ -146,7 +146,11 @@ CREATE TABLE IF NOT EXISTS users (
   font_sans                     TEXT NOT NULL DEFAULT 'antonio',
   font_mono                     TEXT NOT NULL DEFAULT 'share-tech-mono',
   additional_roles              TEXT[] NOT NULL DEFAULT '{}',
-  permission_overrides          JSONB NOT NULL DEFAULT '{}'
+  permission_overrides          JSONB NOT NULL DEFAULT '{}',
+  -- Welche Sektionen das Dashboard zeigt und welche eigenen Charaktere dort
+  -- erscheinen (siehe src/lib/dashboardSections.ts). Enthält NUR Abweichungen
+  -- von den Code-Vorgaben; '{}' = alles wie vorgegeben.
+  dashboard_prefs               JSONB NOT NULL DEFAULT '{}'
 );
 CREATE UNIQUE INDEX IF NOT EXISTS idx_users_slug ON users(slug);
 
@@ -1224,6 +1228,14 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS font_mono TEXT NOT NULL
 -- lebt bewusst nur in migrate-pr51.sql (kein datenveränderndes UPDATE hier).
 ALTER TABLE users ADD COLUMN IF NOT EXISTS additional_roles TEXT[] NOT NULL DEFAULT '{}';
 ALTER TABLE users ADD COLUMN IF NOT EXISTS permission_overrides JSONB NOT NULL DEFAULT '{}';
+
+-- dashboard_prefs: welche Sektionen das Dashboard ("/" für eingeloggte User)
+-- zeigt und welche eigenen Charaktere dort erscheinen (siehe
+-- src/lib/dashboardSections.ts). Gespeichert werden NUR Abweichungen von den
+-- Code-Vorgaben, '{}' heißt also „alles wie vorgegeben" — eine neue Sektion
+-- bekommt damit ihre Vorgabe, ohne dass Bestandskonten angefasst werden.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS dashboard_prefs JSONB NOT NULL
+  DEFAULT '{}';
 
 -- RBAC: Rollen sind jetzt DB-gestützt (Tabelle roles) und frei anlegbar. Der
 -- alte feste CHECK auf users.role wird entfernt; gültige Schlüssel prüft die

@@ -202,6 +202,62 @@
   }
 }
 
+/* Die Anlege-Knopfleiste (NewContentPanel: „Neue Inhalte" unter
+   /user/content und „Neues anlegen" auf der Startseite). Drei Stufen:
+   schmal einer pro Zeile, mittel zwei, breit alle nebeneinander.
+
+   Als eigene Klasse und nicht als Utility-Kette an der Call-Site: Der
+   Outline-Knopf bringt ein min-width: 180px mit, das der breiten Stufe im
+   Weg steht (dort teilen sich die Knöpfe die Zeile und müssen unter ihre
+   Wunschbreite schrumpfen dürfen). `.lcars-btn-row > *` ist eine Klasse plus
+   ein Element und schlägt die eine Klasse von .lcars-pill-btn--outline — ein
+   Utility gleicher Spezifität täte das nur, wenn die Reihenfolge der
+   Stylesheets zufällig passt.
+
+   flex: 1 1 auto und NICHT 1 1 0 in der breiten Stufe: Gleiche Spalten sähen
+   ruhiger aus, schneiden aber lange Beschriftungen ab — .lcars-pill-btn hat
+   white-space: nowrap und overflow: hidden ohne text-overflow, und wegen
+   justify-content: flex-end verschwindet dabei der WORTANFANG. Nachgemessen
+   mit der echten Schrift: Sechs Knöpfe brauchen 1046px, jeder gleich breit
+   bekäme aber nur 173px — „Neuer Datenbank-Eintrag" allein will 252px. Mit
+   `auto` bringt jeder Knopf seine Textbreite als Basis mit, geteilt wird nur
+   der Rest.
+
+   Dazu wrap statt nowrap: Die sechs passen heute in die 1100px breite Spalte
+   (1046px), aber eine längere Beschriftung später soll die Zeile umbrechen
+   lassen und nicht still Text fressen. */
+.lcars-btn-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lcars-btn-row > * {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .lcars-btn-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  /* 50% minus die halbe Lücke — zwei Knöpfe und eine Lücke ergeben genau
+     die Zeilenbreite. */
+  .lcars-btn-row > * {
+    width: calc(50% - 6px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .lcars-btn-row {
+    flex-wrap: wrap;
+  }
+  .lcars-btn-row > * {
+    width: auto;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+}
+
 /* Icon+Text-Pillen (z.B. DbBackupPanel.tsx/UserBackupPanel.tsx): ohne diese
    Regel rendert ein SVG-Icon ohne eigenes width/height-Attribut in seiner
    ungebremsten Intrinsic-Größe (Browser-Default 300×150) statt kompakt

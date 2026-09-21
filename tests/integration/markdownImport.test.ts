@@ -255,6 +255,7 @@ function characterEdits(overrides: Partial<CharacterImportEdits> = {}, body = "B
     aliases: [],
     generation: [],
     tags: [],
+    ownerSlug: null,
     ...overrides,
   };
 }

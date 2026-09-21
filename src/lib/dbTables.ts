@@ -135,6 +135,7 @@ export const DB_TABLE_COLUMNS = {
     "dialogue_flowing_text_enabled", "editor_spellcheck_enabled",
     "news_kinds", "color_theme", "theme_overrides", "ui_mode", "color_mode",
     "font_sans", "font_mono", "additional_roles", "permission_overrides",
+    "dashboard_prefs",
   ],
   roles: [
     "key", "label", "description", "permissions", "is_system", "sort_order",

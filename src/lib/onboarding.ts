@@ -1,7 +1,6 @@
 import "server-only";
 import { hasPassword } from "@/lib/users";
 import { getCharactersForUser, getLogsForUser } from "@/lib/characters";
-import { getDialoguesForUser } from "@/lib/dialogues";
 import { parseCharacterStats } from "@/lib/characterStats";
 import {
   buildOnboardingSteps,
@@ -17,13 +16,10 @@ import {
 export async function getOnboardingSteps(
   userId: number,
 ): Promise<OnboardingStep[]> {
-  const [passwordSet, characters, logs, dialogues] = await Promise.all([
+  const [passwordSet, characters, logs] = await Promise.all([
     hasPassword(userId),
     getCharactersForUser(userId),
     getLogsForUser(userId),
-    // "all" statt "open": ein abgeschlossenes Gespräch zählt genauso — der
-    // Schritt fragt, ob die Person schon einmal eines geführt hat.
-    getDialoguesForUser(userId, "all"),
   ]);
 
   return buildOnboardingSteps({
@@ -35,6 +31,5 @@ export async function getOnboardingSteps(
       (character) => parseCharacterStats(character.metadata.stats).creationLocked,
     ).length,
     logCount: logs.length,
-    dialogueCount: dialogues.length,
   });
 }

@@ -5,6 +5,7 @@ import sql from "@/lib/db";
 import { slugifyBase } from "@/lib/slug";
 import { buildRoleMap } from "@/lib/roles";
 import { userPermissions } from "@/lib/permissions";
+import type { DashboardPrefs } from "@/lib/dashboardSections";
 import type { User } from "@/types/db";
 
 // Optionaler Client-Parameter für Aufrufe innerhalb einer Transaktion (z.B.
@@ -20,7 +21,7 @@ const USER_COLUMNS = sql`
   last_visit_at, last_dashboard_visit_at,
   email_notifications_enabled, push_notifications_enabled, notify_content_types,
   news_kinds, color_theme, theme_overrides, ui_mode, color_mode, font_sans, font_mono,
-  additional_roles, permission_overrides,
+  additional_roles, permission_overrides, dashboard_prefs,
   session_version
 `;
 
@@ -267,6 +268,20 @@ export async function updateNotificationPreferences(
 // Welche News-Arten der User auf dem Dashboard sehen will (Teilmenge von
 // "created"/"updated"/"deleted", siehe NewsSection.tsx). Leeres Array =
 // keine News.
+// Was das Dashboard zeigt (siehe src/lib/dashboardSections.ts). Gespeichert
+// wird die bereits auf Abweichungen reduzierte Struktur — was hier fehlt,
+// gilt beim Lesen mit seiner Code-Vorgabe.
+export async function updateDashboardPrefs(
+  id: number,
+  prefs: DashboardPrefs,
+): Promise<void> {
+  await sql`
+    UPDATE users
+    SET dashboard_prefs = ${sql.json(prefs as ReturnType<typeof JSON.parse>)}
+    WHERE id = ${id}
+  `;
+}
+
 export async function updateNewsKinds(
   id: number,
   kinds: string[],

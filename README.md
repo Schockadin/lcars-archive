@@ -575,6 +575,124 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   hinter einem Proxy können `Origin` und `X-Forwarded-Host` auseinanderlaufen,
   und dann antwortete Next für *jede* Action mit 403 — das ist unabhängig von
   diesem Fall die richtige Einstellung.
+- **Konfigurierbares Dashboard** — jede Person stellt unter `/user` (Klappe
+  „Startseite", Anker `#dashboard`) selbst ein, welche Abschnitte auf `"/"`
+  erscheinen: Erste Schritte, Spielabende, To Dos, offene Gespräche, die
+  Anlege-Knöpfe samt Import, die eigenen Entwürfe, die eigenen Charaktere,
+  Versionen, News und Lesezeichen. Das
+  Zahnrad neben der Dashboard-Überschrift springt direkt dorthin.
+  Die Sektionen samt Vorgabe stehen einmal in
+  [`src/lib/dashboardSections.ts`](src/lib/dashboardSections.ts); gespeichert
+  wird in `users.dashboard_prefs` (JSONB) **nur, was von der Vorgabe
+  abweicht**. Das ist kein Geiz, sondern der Punkt: Eine neue Sektion bekommt
+  so ihre Code-Vorgabe, ohne dass ein Bestandskonto angefasst werden müsste,
+  und eine später geänderte Vorgabe erreicht auch die, die einmal auf
+  „Speichern" gedrückt haben. Die eigenen Charaktere sind zusätzlich **einzeln**
+  wählbar (gespeichert als Liste der ausgeblendeten ids — andersherum müsste
+  jede neu angelegte Figur erst freigeschaltet werden).
+  Abgewählt heißt auch **nicht geladen**: `Dashboard.tsx` fragt nur noch ab,
+  was jemand tatsächlich sieht — vorher liefen bei jedem Aufruf sechs Abfragen
+  parallel, egal wie viel davon gelesen wurde, und `"/"` ist die meistbesuchte
+  Seite der Anwendung.
+- **Aufklappbare Abschnitte, die sich erinnern** — Startseite und Profil
+  tragen keine DataRow-Akkordeons mehr (die breiten, farbigen LCARS-Balken mit
+  der Zahl links), sondern die schlanke Klappe aus
+  [`src/components/lcars/CollapsiblePanel.tsx`](src/components/lcars/CollapsiblePanel.tsx):
+  je Abschnitt zuklappbar, und der Zustand wird **je Gerät** gemerkt
+  (`localStorage`, siehe [`src/lib/panelState.ts`](src/lib/panelState.ts)).
+  Die Vorgabe unterscheidet sich nach Seite: Die **Startseite** steht offen
+  (man überfliegt sie), das **Profil** zugeklappt (man schlägt dort nach —
+  ausgeklappt wäre es meterlang). Der Grund für den Umbau:
+  Die DataRow ist als Navigationszeile gedacht; eine Seite aus zehn davon
+  liest sich wie ein Inhaltsverzeichnis, nicht wie ein Arbeitsplatz. Die Zahl
+  steht als Kurzinfo rechts weiter da — ein zugeklappter Abschnitt soll nicht
+  verschweigen, wie viel in ihm steckt.
+  Gemerkt wird wie bei den Sektionen selbst nur die **Abweichung**: Wer nichts
+  anfasst, hat keinen Eintrag, und eine später geänderte Vorgabe erreicht ihn.
+  Gerät statt Konto ist Absicht (gleiche Überlegung wie beim angehefteten
+  Antwortfeld): Am Telefon will man die lange News-Liste vielleicht zu haben,
+  am großen Schirm nicht.
+  Ein **Anker schlägt den gemerkten Zustand** — und zwar auch einer, der auf
+  etwas *innerhalb* des Abschnitts zeigt: `/user#password` liegt in „Settings",
+  und ein geschlossenes `<details>` versteckt seinen Inhalt, der Browser
+  spränge sonst nirgendwohin. Ohne diese Regel wäre der Link „Jetzt festlegen"
+  vom Dashboard tot, sobald das Profil per Vorgabe zugeklappt ist.
+  `SettingsPanel` bleibt daneben bestehen: Es merkt sich nichts und ist dafür
+  server-renderbar.
+- **Anlegen ohne Umweg** — der Abschnitt „Neue Inhalte" steht auf **beiden**
+  Seiten: unter `/user/content` mit allen Knöpfen, auf dem Dashboard mit den
+  im Profil eingeschalteten. Er ist **eine** Komponente
+  ([`NewContentPanel.tsx`](src/app/user/content/NewContentPanel.tsx)), und
+  welche Knöpfe dastehen, entscheidet **eine** Funktion
+  ([`newContentForms.ts`](src/app/user/content/newContentForms.ts)) — aus der
+  sich auch die Zahl in der Kopfzeile speist. Sie liegt in einem eigenen Modul
+  ohne `"use client"` und ohne `"server-only"`, weil beide Seiten sie
+  brauchen: die Knopfleiste im Browser, der Abschnitt drumherum auf dem
+  Server. Läge die Zählung doppelt vor, liefe sie irgendwann auseinander — und
+  dann stünde eine Überschrift über einer leeren Zeile.
+  Dazu kommt **„Import"** (`/user/import`) — als Link statt Fenster: Der
+  Import blättert durch mehrere Dateien und bestätigt jede einzeln, dafür ist
+  ein Fenster zu klein (dieselbe Überlegung wie beim Charakter-Assistenten).
+  Der Knopf hängt an keinem Recht mehr, weil die Seite dahinter je Inhaltsart
+  gatet (siehe **Markdown-Import für alle** unten).
+  Die Leiste selbst bricht in drei Stufen um (`.lcars-btn-row` in
+  `controls.css`): schmal einer pro Zeile, ab 640px zwei, ab 1024px alle
+  nebeneinander. Als Klasse statt Utility-Kette, weil der Outline-Knopf ein
+  `min-width: 180px` mitbringt, das der breiten Stufe im Weg steht —
+  `.lcars-btn-row > *` schlägt es über die Spezifität, ein Utility täte das
+  nur bei passender Stylesheet-Reihenfolge. In der breiten Stufe `flex: 1 1
+  auto`, **nicht** `1 1 0`: Gleiche Spalten sähen ruhiger aus, schnitten aber
+  lange Beschriftungen ab (nachgemessen mit der echten Schrift: sechs Knöpfe
+  brauchen 1046px in der 1100px-Spalte, gleich verteilt bekäme jeder nur
+  173px, „Neuer Datenbank-Eintrag" allein will 252px) — und wegen
+  `justify-content: flex-end` verschwände dabei der Wortanfang.
+  Der Ladeweg (Auswahllisten, Vorbelegungen, Berechtigungen) lebt ebenfalls
+  nur einmal, in
+  [`newContentData.ts`](src/app/user/content/newContentData.ts). Geladen wird
+  nur, was der jeweilige Knopf zeigt: Eintrag und NPC sind dasselbe Formular
+  mit vorgewählter Kategorie und brauchen gar keine Vorarbeit — wer nur sie
+  zeigt, löst keine einzige zusätzliche Abfrage aus.
+- **Entwürfe** — ein eigener Abschnitt auf der Startseite und über der Liste
+  unter „Meine Inhalte" ([`DraftsSection.tsx`](src/app/DraftsSection.tsx),
+  Daten aus [`src/lib/drafts.ts`](src/lib/drafts.ts)). Ein Entwurf ist für
+  niemanden außer seinem Besitzer sichtbar, nicht einmal für die
+  Spielleitung — ohne eine Stelle, die ihn nennt, bleibt er liegen.
+  Maßgeblich ist der **Besitz** (`owner_user_id`), nicht die Beteiligung:
+  `getDialoguesForUser` sucht über die eigenen Figuren und fände damit auch
+  fremde Gesprächs-Entwürfe, veröffentlichen darf sie aber nur ihr Besitzer
+  (`setDialogueDraft`). Deshalb eine eigene Abfrage statt einer Ableitung aus
+  den Listen von „Meine Inhalte" — und eine einzige über `UNION ALL` statt
+  drei: Der Abschnitt steht auf der meistbesuchten Seite der Anwendung.
+  Charaktere fehlen darin bewusst, wie schon in der Liste unter „Meine
+  Inhalte" — sie haben mit `/user/characters` ihren eigenen Bereich.
+- **Markdown-Import für alle** — der Upload fertiger `.md`-Dateien war bis
+  v1.49 admin-only (`/admin/import`, beide Actions `requireAdmin()`). Er steht
+  jetzt auch der normalen Nutzerschaft offen (`/user/import`); Oberfläche und
+  Actions liegen deshalb gemeinsam unter
+  [`src/app/_shared/import/`](src/app/_shared/import), `/admin/import` ist nur
+  noch eine zweite Seite darauf.
+  Entscheidend ist dabei **eine** Regel: Der Import darf nirgends mehr
+  erlauben als das normale Anlege-Formular derselben Inhaltsart. Die Matrix
+  dazu steht in [`src/lib/importAccess.ts`](src/lib/importAccess.ts) —
+  Datenbank-Eintrag: eingeloggt (wie `archiveEntryAction`), Charakter und
+  Missionslog: `content.create` (wie Assistent bzw. Logbuch-Formular),
+  Mission: `missions.manage` (wie `/user/missions/new`). `admin.access` deckt
+  alle vier ab, weil das admin-Preset weder `content.create` noch
+  `missions.manage` enthält und `/admin/import` sonst auf den
+  Datenbank-Eintrag zusammengeschrumpft wäre.
+  Dazu kommen zwei Korrekturen in
+  [`actions.ts`](src/app/_shared/import/actions.ts), ohne die die Öffnung ein
+  Loch gewesen wäre: `commit*` übernimmt das `*Edits`-Objekt **vollständig**,
+  also auch den Eigentümer und beim Logbuch die Autoren-Figur (siehe
+  Kopfkommentar in `markdownImport.ts`). Für alle außer der Administration
+  wird deshalb `ownerSlug` auf den Aufrufer **erzwungen** (das Formularfeld
+  entfällt dort ganz), und `authorSlug` muss eine **eigene, veröffentlichte**
+  Figur sein (`ownsCharacterSlug`) — dieselbe Grenze, die das normale
+  Logbuch-Formular über seine Auswahlliste zieht. Beide Actions antworten bei
+  fehlender Berechtigung mit einer Meldung statt `forbidden()`: Sie werden
+  programmatisch aufgerufen, wo ein Auth-Interrupt beim Client nur als
+  nichtssagender Fehler ankäme (gleiche Überlegung wie bei `checkPermission`
+  in `dal.ts`).
 - **Offen für dich** — der Dashboard-Abschnitt mit dem, was diese Person
   schuldet (`src/lib/pendingActions.ts`): Missionen, an denen eine eigene
   Figur teilnimmt und zu denen **kein eigenes Logbuch** existiert; Gespräche,
@@ -847,12 +965,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Modellaufruf und gehört gelesen, bevor er in der Chronologie aller steht.
 - **Erste Schritte (`/willkommen`)** — Einstiegsseite für neue Konten: was das
   Archiv ist, plus eine Liste der ersten Schritte (Passwort, Charakter,
-  Erschaffung, Logbuch, Gespräch) mit Link in den jeweiligen Ablauf. Bewusst
+  Erschaffung, Logbuch) mit Link in den jeweiligen Ablauf. Bewusst
   OHNE eigene Fortschritts-Tabelle: jeder Schritt wird an den vorhandenen Daten
   abgelesen (`src/lib/onboardingSteps.ts` als reine, testbare Funktion,
-  `src/lib/onboarding.ts` holt die Tatsachen). Dieselbe Liste erscheint auf dem
-  Dashboard (`OnboardingSection`) und verschwindet dort, sobald alles erledigt
-  ist; `/willkommen` bleibt als Übersicht erreichbar.
+  `src/lib/onboarding.ts` holt die Tatsachen). Dieselbe Liste lässt sich auf dem
+  Dashboard einblenden (`OnboardingSection`, per Vorgabe aus — siehe
+  „Konfigurierbares Dashboard") und verschwindet dort, sobald alles erledigt
+  ist; `/willkommen` bleibt als Übersicht erreichbar. „Ein Gespräch beginnen"
+  stand bis v1.48 als fünfter Schritt dabei und ist entfallen: Er hängt anders
+  als die übrigen nicht am eigenen Konto allein, sondern an einem Gegenüber,
+  das mitspielen muss — ein Einstieg sollte sich allein erledigen lassen.
 - **Gesagtes ist auffindbar** — die Volltextsuche kennt seit v1.29.41 einen
   fünften Treffertyp: einzelne **Gesprächs-Nachrichten**
   (`dialogue_messages.search_vector`, eigener GIN-Index). Vorher fand die
@@ -1423,7 +1545,7 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
 └── src/
     ├── app/                  # Next.js App Router (Seiten & API-Routes)
     │   ├── page.tsx           # "/" — Landingpage (anonym) / Dashboard (eingeloggt)
-    │   ├── Dashboard.tsx       # Persönliches Dashboard: News-Feed, offene Gespräche, Abos
+    │   ├── Dashboard.tsx       # Persönliches Dashboard: je Person konfigurierbar (dashboardSections.ts)
     │   ├── characters/        # Charakterübersicht, -detailseiten & abgeschlossene Gespräche (dialogues/[slug])
     │   ├── missions/
     │   ├── archive/
@@ -1432,8 +1554,11 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     │   ├── search/            # Volltextsuche + eingebetteter Datenbank-Assistent
     │   ├── tutorial/          # Anleitung für Besucher/User/Spielleitung
     │   ├── login/, activate/, forgot-password/
+    │   ├── _shared/           # Von mehreren Bereichen genutzte Panels/Actions
+    │   │   └── import/         #   Markdown-Upload: Panel + Actions (von /admin/import UND /user/import)
     │   ├── user/              # Eigenes Profil, Settings, eigene Inhalte anlegen/verwalten
-    │   │   └── characters/     #   Eigene Charaktere: Übersicht, anlegen, bearbeiten, Werte ([id]/stats)
+    │   │   ├── characters/     #   Eigene Charaktere: Übersicht, anlegen, bearbeiten, Werte ([id]/stats)
+    │   │   └── import/         #   Markdown-Upload für alle (je Inhaltsart gegatet, siehe importAccess.ts)
     │   ├── admin/             # Admin-Bereich (staff-baseline, feiner je Unterseite):
     │   │   ├── users/          #   Nutzerverwaltung (Tabelle + Detailseite [id]/edit/)
     │   │   ├── permissions/    #   Rollen-Editor: Rollen anlegen/bearbeiten + zuweisen
@@ -1445,7 +1570,7 @@ GitHub-Actions-Secrets oben) und haben deshalb keine `:dev`-Variante. Siehe
     │   │   ├── audit-log/      #   Sicherheits-Audit-Log + Content-Aktivitätsfeed
     │   │   ├── error-log/      #   Protokollierte Serverfehler (Zeitpunkt, Route, Meldung, Build)
     │   │   ├── content/        #   Owner-/Sichtbarkeits-Übersteuerung fremder Inhalte
-    │   │   └── import/         #   Markdown-Datei-Upload → neue Einträge (mit Vorschau)
+    │   │   └── import/         #   Markdown-Datei-Upload → neue Einträge (mit Vorschau), Eigentümer frei wählbar
     │   ├── api/               # /api/characters, /api/health …
     │   ├── error.tsx           # Custom 500-Seite (Server Components/Route Handlers)
     │   ├── global-error.tsx    # Custom 500-Seite bei Fehlern im Root-Layout selbst
@@ -1575,12 +1700,18 @@ Dieser Abschnitt ist nur für die GM-Sicht und wird nicht veröffentlicht.
 - **`type`** steuert, in welche Tabelle ein Eintrag wandert (`character`,
   `mission`, `mission-log`, `archive-entry`).
 - **`slug`** muss URL-sicher sein (`a–z`, `0–9`, `-`).
-- **`owner`** (optional, außer bei Charakteren: dort steuert `player` dieselbe
-  Zuordnung) verweist per User-Slug auf den Owner des Inhalts — er entscheidet,
-  wer einen Entwurf sieht und wer ihn veröffentlichen darf. Unbekannte/fehlende Werte
-  brechen den Import nicht ab, der Inhalt bleibt dann ownerlos. Bei
-  Mission-Logs fällt der Owner ohne `owner`-Feld automatisch auf den Spieler
-  des `author`-Charakters zurück.
+- **`owner`** (optional) verweist per User-Slug auf den Owner des Inhalts — er
+  entscheidet, wer einen Entwurf sieht und wer ihn veröffentlichen darf.
+  Unbekannte/fehlende Werte brechen den Import nicht ab, der Inhalt bleibt dann
+  ownerlos. Bei Mission-Logs fällt der Owner ohne `owner`-Feld automatisch auf
+  den Spieler des `author`-Charakters zurück. Bei **Charakteren** landet `owner`
+  in `characters.player_id` — der Web-Upload
+  ([`commitCharacterMarkdown`](src/lib/markdownImport.ts)) setzt die Spalte
+  seit v1.49; das CLI-Ingest (`scripts/ingest/characters.ts`) tut es weiterhin
+  nicht, dort bleibt `player` im `metadata` nur ein Anzeigename. Eine Figur
+  ohne `player_id` gehört niemandem: Sie steht in keiner Auswahlliste
+  (`getCharactersForParticipantPicker` joint darüber) und ist für niemanden zu
+  bearbeiten.
 - Alles nach `<!-- private -->` wird beim Import abgeschnitten.
 
 Datenbank-Einträge (`type: archive`) liegen im Ordner `Archiv/`, organisiert nach
@@ -1914,6 +2045,17 @@ neue **Tabelle**, die die App liest: `scripts/migrate-pr67.sql` legt
 
 ```bash
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr67.sql
+```
+
+Ebenso `scripts/migrate-pr87.sql`: Es ergänzt `users` um `dashboard_prefs`
+(was das Dashboard je Person zeigt, siehe
+[`src/lib/dashboardSections.ts`](src/lib/dashboardSections.ts)). Die Spalte
+steht in `USER_COLUMNS` und wird damit bei **jedem** Laden eines Users
+mitgelesen — fehlt sie, scheitern Dashboard und Profil mit
+`column "dashboard_prefs" does not exist`:
+
+```bash
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr87.sql
 ```
 
 Ebenso `scripts/migrate-pr78.sql`: Es ergänzt `error_logs` um die drei

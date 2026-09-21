@@ -1,14 +1,18 @@
 "use client";
 import { useState } from "react";
+import Link from "next/link";
 import ModalOverlay from "@/components/ModalOverlay";
 import NewMissionLogForm from "@/app/user/mission-logs/new/NewMissionLogForm";
 import CreateDialogueForm from "@/app/user/dialogues/new/CreateDialogueForm";
 import NewArchiveEntryForm from "@/app/user/archive/new/NewArchiveEntryForm";
 import NewMissionForm from "@/app/user/missions/new/NewMissionForm";
-import type { CharacterWithOwner } from "@/lib/characters";
-import type { CharacterParticipantOption } from "@/lib/characters";
-import type { NpcOption } from "@/lib/archive";
-import type { GmContact } from "@/lib/users";
+import type { NewContentData } from "./newContentData";
+import {
+  NEW_CONTENT_LABELS,
+  NEW_CONTENT_TITLES,
+  visibleNewContentForms,
+  type OpenForm,
+} from "./newContentForms";
 
 // Die Knöpfe „Neue Inhalte" unter /user/content — jeder öffnet sein Formular
 // in einem Fenster über der Liste, statt auf eine eigene Seite zu führen.
@@ -30,75 +34,64 @@ import type { GmContact } from "@/lib/users";
 // Charaktere kommen hier nicht vor — sie haben mit /user/characters ihren
 // eigenen Bereich, und ihr Assistent führt über mehrere Schritte, die in
 // einem Fenster keinen Platz hätten.
-export interface NewContentData {
-  userId: number;
-  missionLog: {
-    ownCharacters: { id: number; slug: string; name: string }[];
-    missions: { slug: string; title: string }[];
-    defaultSessionNr: number;
-    defaultLogDate: string | null;
-  } | null;
-  dialogue: {
-    ownCharacters: { id: number; slug: string; name: string }[];
-    partnerCharacters: CharacterWithOwner[];
-    npcs: NpcOption[];
-    canPlayNpcs: boolean;
-    gms: GmContact[];
-    locations: { slug: string; title: string }[];
-    defaultLogDate: string | null;
-  } | null;
-  mission: {
-    defaultStartedAt: string | null;
-    characters: CharacterParticipantOption[];
-  } | null;
-}
-
-type OpenForm = "missionLog" | "dialogue" | "archiveEntry" | "npc" | "mission";
-
-const TITLES: Record<OpenForm, string> = {
-  missionLog: "Neuen Missionslog anlegen",
-  dialogue: "Neues Gespräch beginnen",
-  archiveEntry: "Neuen Datenbank-Eintrag anlegen",
-  npc: "Neuen NPC anlegen",
-  mission: "Neue Mission anlegen",
-};
-
-export default function NewContentButtons({ data }: { data: NewContentData }) {
+export default function NewContentButtons({
+  data,
+  show,
+  canImport = false,
+}: {
+  data: NewContentData;
+  // Welche Knöpfe erscheinen. Ohne Angabe alle — so zeigt „Meine Inhalte"
+  // weiterhin das volle Angebot. Das Dashboard reicht hier die dort
+  // eingeschalteten durch (siehe dashboardSections.ts); die Formulare selbst
+  // bleiben dieselben.
+  show?: readonly OpenForm[];
+  // Der Markdown-Import. Anders als die übrigen kein Fenster, sondern ein
+  // Link auf /user/import: Der Ablauf blättert durch mehrere Dateien und
+  // bestätigt jede einzeln — dafür ist ein Fenster zu klein (gleiche
+  // Überlegung wie beim Charakter-Assistenten).
+  //
+  // Kein Rechte-Schalter: Einen Datenbank-Eintrag darf jede eingeloggte
+  // Person hochladen, die Seite zeigt dann eben nur diese eine Art an
+  // (src/lib/importAccess.ts). Der Aufrufer entscheidet damit nur, OB der
+  // Knopf hier Platz bekommt — die Startseite etwa nur, wenn die Sektion im
+  // Profil eingeschaltet ist.
+  canImport?: boolean;
+}) {
   const [open, setOpen] = useState<OpenForm | null>(null);
   const close = () => setOpen(null);
+  const sichtbar = visibleNewContentForms(data, show);
 
-  const button = (form: OpenForm, label: string) => (
+  // Breite und Umbruch kommen aus .lcars-btn-row (controls.css) — hier steht
+  // nur, was der Knopf ist, nicht wie breit er wird.
+  const button = (form: OpenForm) => (
     <button
+      key={form}
       type="button"
       onClick={() => setOpen(form)}
-      className="lcars-pill-btn w-[260px] max-w-full max-sm:w-full"
+      className="lcars-pill-btn"
     >
-      {label}
+      {NEW_CONTENT_LABELS[form]}
     </button>
   );
 
   return (
     <>
-      {/* Nebeneinander statt untereinander (lcars-btn-stack): Die Knöpfe
-          stehen jetzt über der Liste, gestapelt schöben sie sie weit nach
-          unten. Die feste Breite hält sie untereinander gleich groß — wie im
-          Stapel. */}
-      <div className="flex flex-wrap gap-[12px]">
-        {data.missionLog && button("missionLog", "Neuer Missionslog")}
-        {data.dialogue && button("dialogue", "Neues Gespräch")}
-        {/* Anders als Missionslog/Gespräch (eigener Charakter) oder Mission
-            (gm/admin) sind Datenbank-Einträge an keine Voraussetzung
-            geknüpft — jeder eingeloggte User darf welche anlegen. */}
-        {button("archiveEntry", "Neuer Datenbank-Eintrag")}
-        {/* Ein NPC ist kein eigener Charakter, sondern ein Datenbank-Eintrag
-            der Kategorie „NPC" — dasselbe Formular mit vorgewählter
-            Kategorie. */}
-        {button("npc", "Neuer NPC")}
-        {data.mission && button("mission", "Neue Mission")}
+      {/* Drei Stufen, siehe .lcars-btn-row in controls.css: schmal einer pro
+          Zeile, mittel zwei, breit alle nebeneinander. */}
+      <div className="lcars-btn-row">
+        {/* Welche Knöpfe hier stehen, entscheidet visibleNewContentForms —
+            dieselbe Funktion, aus der der Abschnitt drumherum seine Kurzinfo
+            bildet (siehe newContentForms.ts). */}
+        {sichtbar.map(button)}
+        {canImport && (
+          <Link href="/user/import" className="lcars-pill-btn--outline">
+            Import
+          </Link>
+        )}
       </div>
 
       {open && (
-        <ModalOverlay title={TITLES[open]} onClose={close} width={960}>
+        <ModalOverlay title={NEW_CONTENT_TITLES[open]} onClose={close} width={960}>
           {open === "missionLog" &&
             data.missionLog &&
             (data.missionLog.missions.length === 0 ? (

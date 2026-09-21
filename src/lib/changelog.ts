@@ -149,6 +149,42 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.49",
+    title: "Die Startseite gehört dir",
+    items: [
+      {
+        text: "Du bestimmst jetzt selbst, was auf deiner Startseite steht: Spielabende, offene Gespräche, To Dos, News, Versionen, Lesezeichen und die Erste-Schritte-Liste lassen sich einzeln an- und abschalten. Das Zahnrad neben der Überschrift führt direkt zu der Einstellung. Was du abwählst, wird auch nicht mehr geladen — die Seite wird dadurch schneller.",
+        category: "darstellung",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Neu auf der Startseite: Knöpfe für einen neuen Missionslog, ein neues Gespräch, einen neuen Datenbank-Eintrag und einen neuen NPC. Alle vier öffnen dasselbe Formular wie unter „Meine Inhalte“, nur ohne den Umweg dorthin — und jeder lässt sich einzeln abschalten.",
+        category: "inhalte",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Der Markdown-Import steht jetzt allen offen, nicht mehr nur der Administration: Hast du einen Eintrag schon als .md-Datei fertig, lädst du ihn über „Import“ hoch, statt ihn abzutippen — mehrere Dateien auf einmal, jede als Vorschau zum Durchblättern, Nachbearbeiten und einzelnen Bestätigen. Angeboten wird nur, was du auch über das normale Formular anlegen dürftest; was du hochlädst, gehört dir, und ein Einsatzbericht lässt sich nur einer eigenen Figur zuschreiben. Der Knopf steht unter „Meine Inhalte“ und auf der Startseite.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
+      },
+      {
+        text: "Jeder Abschnitt auf der Startseite und im Profil lässt sich zuklappen — ein Klick auf die Überschrift. Wie du die Seite verlässt, so findest du sie wieder; gemerkt wird das auf dem jeweiligen Gerät, am Telefon also getrennt vom Rechner.",
+        category: "darstellung",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Neuer Abschnitt „Entwürfe“ — auf der Startseite und unter „Meine Inhalte“: alles, was du angefangen und noch nicht veröffentlicht hast, das zuletzt Bearbeitete oben, jeweils mit einem Klick zurück in den Editor. Ein Entwurf ist für niemanden außer dir sichtbar; ohne eine Stelle, die ihn nennt, bleibt er leicht liegen.",
+        category: "inhalte",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Ebenfalls neu auf der Startseite: deine eigenen Charaktere, jeder mit einem Stift, der direkt in seine Kopfdaten führt. Welche davon erscheinen, wählst du einzeln aus — wer viele Figuren führt, hält die Seite so kurz.",
+        category: "charaktere",
+        tutorial: "mein-bereich",
+      },
+    ],
+  },
+  {
     version: "1.48",
     title: "Das Backup sichert wieder alles",
     items: [

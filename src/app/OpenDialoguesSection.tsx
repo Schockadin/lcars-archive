@@ -1,4 +1,4 @@
-import { LcarsAkteCard, LcarsDataRow } from "@/components/lcars";
+import { LcarsAkteCard, LcarsCollapsiblePanel } from "@/components/lcars";
 import type { DialogueSummary } from "@/lib/dialogues";
 import {
   dialogueHref,
@@ -17,10 +17,10 @@ export default function OpenDialoguesSection({
   if (items.length === 0) return null;
 
   return (
-    <LcarsDataRow
-      value={items.length}
-      label="Offene Gespräche"
-      defaultOpen
+    <LcarsCollapsiblePanel
+      title="Offene Gespräche"
+      badge={items.length}
+      storageId="dashboard:gespraeche"
     >
       <div className="flex flex-col gap-[6px]">
         {items.map((d) => (
@@ -37,6 +37,6 @@ export default function OpenDialoguesSection({
           />
         ))}
       </div>
-    </LcarsDataRow>
+    </LcarsCollapsiblePanel>
   );
 }

@@ -7,13 +7,17 @@
 // ablesen, was ohnehin in der Datenbank steht. Eine zweite Wahrheit („Schritt
 // als erledigt markiert“) könnte auseinanderlaufen — etwa wenn jemand seinen
 // Charakter wieder löscht.
+//
+// „Ein Gespräch beginnen" stand hier einmal als fünfter Schritt und ist
+// wieder entfallen: Er hängt anders als die übrigen nicht am eigenen Konto
+// allein, sondern an einem Gegenüber, das mitspielen muss — ein Einstieg
+// sollte sich allein erledigen lassen.
 
 export type OnboardingStepId =
   | "passwort"
   | "charakter"
   | "erschaffung"
-  | "logbuch"
-  | "gespraech";
+  | "logbuch";
 
 export interface OnboardingFacts {
   hasPassword: boolean;
@@ -22,7 +26,6 @@ export interface OnboardingFacts {
   // (stats.creationLocked).
   lockedCharacterCount: number;
   logCount: number;
-  dialogueCount: number;
 }
 
 export interface OnboardingStep {
@@ -74,14 +77,6 @@ export function buildOnboardingSteps(
       href: "/user/mission-logs/new",
       linkLabel: "Logbuch schreiben",
       done: facts.logCount > 0,
-    },
-    {
-      id: "gespraech",
-      label: "Ein Gespräch beginnen",
-      hint: "Zwischen den Sitzungen könnt ihr eure Figuren hier miteinander reden lassen.",
-      href: "/user/dialogues/new",
-      linkLabel: "Gespräch beginnen",
-      done: facts.dialogueCount > 0,
     },
   ];
 }

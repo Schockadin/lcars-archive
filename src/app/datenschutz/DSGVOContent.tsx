@@ -180,8 +180,10 @@ export default function DSGVOContent({ year }: { year: number }) {
           Ebenfalls nur auf deinem Gerät, dafür dauerhaft, liegen einzelne{" "}
           <strong>Anzeige-Einstellungen</strong> im{" "}
           <strong>lokalen Speicher</strong> (localStorage) des Browsers: ob der
-          Hinweis zu Cookies bereits gelesen wurde und ob das Antwortfeld in
-          einem laufenden Gespräch am unteren Rand angeheftet bleiben soll
+          Hinweis zu Cookies bereits gelesen wurde, ob das Antwortfeld in
+          einem laufenden Gespräch am unteren Rand angeheftet bleiben soll und
+          welche Abschnitte der Startseite und des Profils auf- bzw.
+          zugeklappt sind
           (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse
           daran, eine einmal getroffene Wahl nicht bei jedem Aufruf erneut
           abzufragen). Diese Angaben werden nicht an den Server oder Dritte

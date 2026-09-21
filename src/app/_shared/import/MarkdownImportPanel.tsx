@@ -132,6 +132,7 @@ function buildEdits(kind: string, fd: FormData): ImportEdits {
         .map(Number)
         .filter((n) => Number.isFinite(n)),
       tags,
+      ownerSlug: String(fd.get("ownerSlug") ?? "").trim() || null,
     };
   }
   // mission_log
@@ -148,8 +149,8 @@ function buildEdits(kind: string, fd: FormData): ImportEdits {
   };
 }
 
-// Admin-only (siehe page.tsx) — Upload einzelner oder mehrerer .md-Dateien im
-// selben Frontmatter-Format wie das CLI-Ingest (scripts/ingest/*.ts). Jede
+// Upload einzelner oder mehrerer .md-Dateien im selben Frontmatter-Format
+// wie das CLI-Ingest (scripts/ingest/*.ts). Jede
 // Datei wird zuerst nur geparst (previewMarkdownImportAction, kein
 // DB-Schreibzugriff), dann einzeln durchblätterbar als editierbares
 // Formular angezeigt (Datei X von N) und muss einzeln bestätigt werden
@@ -157,14 +158,31 @@ function buildEdits(kind: string, fd: FormData): ImportEdits {
 // Formulare bleiben gleichzeitig gemountet (nur per CSS ausgeblendet), damit
 // Änderungen beim Vor-/Zurückblättern nicht verloren gehen — gleiches
 // Prinzip wie MarkdownEditor.tsx beim Rohtext/Vorschau-Umschalten.
+//
+// Zwei Seiten nutzen dieselbe Komponente: /admin/import (alle vier Arten,
+// Eigentümer frei wählbar) und /user/import (nur die Arten, die diese Person
+// auch über das normale Formular anlegen dürfte — siehe
+// src/lib/importAccess.ts). Was hier steht, ist Bequemlichkeit, keine
+// Schranke: Beide Actions prüfen dasselbe noch einmal selbst.
 export default function MarkdownImportPanel({
   missions,
   characters,
+  allowedTypes,
+  canChooseOwner = false,
 }: {
   missions: MissionOption[];
   characters: CharacterOption[];
+  // Die Arten in der Auswahlliste, in dieser Reihenfolge. Die erste ist
+  // vorgewählt.
+  allowedTypes: readonly ImportContentType[];
+  // Darf der Eigentümer (bzw. bei Charakteren: der Spieler) frei gesetzt
+  // werden? Nur für die Administration. Für alle anderen setzt die Action
+  // ihn ohnehin auf den Aufrufer, das Feld wäre also nur eine Attrappe.
+  canChooseOwner?: boolean;
 }) {
-  const [contentType, setContentType] = useState<ImportContentType>("archive");
+  const [contentType, setContentType] = useState<ImportContentType>(
+    allowedTypes[0] ?? "archive",
+  );
   const [rows, setRows] = useState<Row[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loadingPreview, setLoadingPreview] = useState(false);
@@ -270,9 +288,9 @@ export default function MarkdownImportPanel({
           }}
           className="rounded-lcars-pill border border-lcars-border bg-lcars-surface px-[16px] py-[8px] text-lcars-ink-contrast outline-none focus:border-lcars-primary"
         >
-          {Object.entries(CONTENT_TYPE_LABELS).map(([value, label]) => (
+          {allowedTypes.map((value) => (
             <option key={value} value={value}>
-              {label}
+              {CONTENT_TYPE_LABELS[value]}
             </option>
           ))}
         </select>
@@ -335,6 +353,7 @@ export default function MarkdownImportPanel({
                 index={index}
                 missions={missions}
                 characters={characters}
+                canChooseOwner={canChooseOwner}
                 formRef={(el) => {
                   formRefs.current[row.filename] = el;
                 }}
@@ -354,6 +373,7 @@ function ImportRowCard({
   index,
   missions,
   characters,
+  canChooseOwner,
   formRef,
   onConfirm,
   onDiscard,
@@ -362,6 +382,7 @@ function ImportRowCard({
   index: number;
   missions: MissionOption[];
   characters: CharacterOption[];
+  canChooseOwner: boolean;
   formRef: (el: HTMLFormElement | null) => void;
   onConfirm: () => void;
   onDiscard: () => void;
@@ -393,6 +414,7 @@ function ImportRowCard({
                 preview={preview}
                 missions={missions}
                 characters={characters}
+                canChooseOwner={canChooseOwner}
               />
             </form>
           )}
@@ -439,12 +461,27 @@ function ImportEditFields({
   preview,
   missions,
   characters,
+  canChooseOwner,
 }: {
   idPrefix: string;
   preview: Exclude<ImportPreviewResult, { ok: false }>;
   missions: MissionOption[];
   characters: CharacterOption[];
+  canChooseOwner: boolean;
 }) {
+  // Ein und dasselbe Feld bei allen vier Arten — ausgelassen, wo der
+  // Eigentümer ohnehin erzwungen wird.
+  const ownerField = canChooseOwner ? (
+    <FormField label="Eigentümer (User-Slug)" htmlFor={`${idPrefix}-owner`}>
+      <input
+        id={`${idPrefix}-owner`}
+        name="ownerSlug"
+        defaultValue={preview.ownerSlug ?? ""}
+        className={inputClass}
+      />
+    </FormField>
+  ) : null;
+
   if (preview.kind === "archive") {
     return (
       <>
@@ -482,14 +519,7 @@ function ImportEditFields({
             className={`${inputClass} min-h-[60px] resize-y`}
           />
         </FormField>
-        <FormField label="Eigentümer (User-Slug)" htmlFor={`${idPrefix}-owner`}>
-          <input
-            id={`${idPrefix}-owner`}
-            name="ownerSlug"
-            defaultValue={preview.ownerSlug ?? ""}
-            className={inputClass}
-          />
-        </FormField>
+        {ownerField}
         {getAttributeFields(preview.category).map((field) => (
           <FormField key={field.key} label={field.label} htmlFor={`${idPrefix}-attr-${field.key}`}>
             <input
@@ -569,14 +599,7 @@ function ImportEditFields({
             className={inputClass}
           />
         </FormField>
-        <FormField label="Eigentümer (User-Slug)" htmlFor={`${idPrefix}-owner`}>
-          <input
-            id={`${idPrefix}-owner`}
-            name="ownerSlug"
-            defaultValue={preview.ownerSlug ?? ""}
-            className={inputClass}
-          />
-        </FormField>
+        {ownerField}
         <FormField label="Text" htmlFor={`${idPrefix}-body`} hint={<MarkdownFormatHint />}>
           <MarkdownEditor id={`${idPrefix}-body`} defaultValue={preview.bodyMarkdown} />
         </FormField>
@@ -703,6 +726,7 @@ function ImportEditFields({
             className={inputClass}
           />
         </FormField>
+        {ownerField}
         <FormField label="Biografie" htmlFor={`${idPrefix}-body`} hint={<MarkdownFormatHint />}>
           <MarkdownEditor id={`${idPrefix}-body`} defaultValue={preview.bodyMarkdown} />
         </FormField>
@@ -777,14 +801,7 @@ function ImportEditFields({
           className={inputClass}
         />
       </FormField>
-      <FormField label="Eigentümer (User-Slug)" htmlFor={`${idPrefix}-owner`}>
-        <input
-          id={`${idPrefix}-owner`}
-          name="ownerSlug"
-          defaultValue={preview.ownerSlug ?? ""}
-          className={inputClass}
-        />
-      </FormField>
+      {ownerField}
       <FormField label="Text" htmlFor={`${idPrefix}-body`} hint={<MarkdownFormatHint />}>
         <MarkdownEditor id={`${idPrefix}-body`} defaultValue={preview.bodyMarkdown} />
       </FormField>

@@ -54,19 +54,18 @@ export default function TutorialPage() {
                 Frisch dabei? Angemeldet führt dich <strong>/willkommen</strong>{" "}
                 durch den Einstieg: was dieses Archiv ist und welche Schritte
                 anstehen — Passwort festlegen, Charakter anlegen, Erschaffung
-                abschließen, erstes Logbuch schreiben, ein Gespräch beginnen. Zu
-                jedem offenen Schritt steht dort ein Link, der direkt in den
-                passenden Ablauf führt.
+                abschließen, erstes Logbuch schreiben. Zu jedem offenen Schritt
+                steht dort ein Link, der direkt in den passenden Ablauf führt.
               </p>
               <p>
                 Der Fortschritt wird nirgends abgehakt, sondern an deinen Daten
                 abgelesen: sobald ein Charakter existiert, gilt der Schritt als
                 erledigt — und wenn du ihn wieder löschst, ist er es auch wieder
-                nicht. Die Liste steht zusätzlich auf deinem{" "}
-                <strong>Dashboard</strong> und verschwindet dort von selbst,
-                sobald alles erledigt ist. Die Seite{" "}
-                <strong>/willkommen</strong> bleibt danach als Übersicht
-                erreichbar.
+                nicht. Die Liste lässt sich zusätzlich auf deiner{" "}
+                <strong>Startseite</strong> einblenden (siehe „Mein Bereich“);
+                dort verschwindet sie von selbst, sobald alles erledigt ist.
+                Die Seite <strong>/willkommen</strong> bleibt danach als
+                Übersicht erreichbar.
               </p>
               <p>
                 Nichts davon ist Pflicht: Wer nur mitlesen möchte, braucht weder
@@ -386,6 +385,25 @@ export default function TutorialPage() {
                   vorbehalten.
                 </li>
               </ul>
+              <p>
+                Neben den Anlegen-Knöpfen steht <strong>„Import“</strong>. Hast
+                du einen Eintrag schon fertig als{" "}
+                <strong>Markdown-Datei</strong> — aus deinen Notizen, einem
+                Vault, einem anderen Werkzeug —, musst du ihn nicht abtippen:
+                Der Import liest eine oder mehrere <code>.md</code>-Dateien im
+                Vault-Frontmatter-Format ein, zeigt jede als editierbare
+                Vorschau zum Durchblättern und legt sie erst nach einzelner
+                Bestätigung an. Ein bereits vergebener Slug wird abgelehnt — es
+                wird nie etwas überschrieben. Zur Wahl stehen dabei genau die
+                Arten aus der Liste oben, die <em>du</em> anlegen darfst: Der
+                Import ist der bequemere Weg zum selben Ziel, kein zweiter Weg
+                an den Regeln vorbei. Deshalb entscheidet auch nicht die Datei,
+                wem der Inhalt gehört — was du hochlädst, gehört dir —, und ein{" "}
+                <strong>Einsatzbericht</strong> lässt sich nur einer eigenen,
+                veröffentlichten Figur zuschreiben. (Nur die Administration
+                darf beides frei setzen; sie zieht damit fremde Inhalte aus
+                einem Vault herein.)
+              </p>
               <p>
                 Bei jedem eigenen Eintrag entscheidest du über den Schalter
                 daneben, ob er ein <strong>Entwurf</strong> bleibt oder{" "}
@@ -1107,7 +1125,13 @@ export default function TutorialPage() {
                   daraus neue Datenbank-Einträge, Missionen, Charaktere oder
                   Missionslogs anzulegen. Jede Datei lässt sich einzeln
                   durchblättern, vor dem Anlegen noch bearbeiten und muss danach
-                  einzeln bestätigt werden.
+                  einzeln bestätigt werden. Den Import selbst nutzt inzwischen
+                  jede:r (siehe <strong>„Eigene Inhalte“</strong>); der
+                  Admin-Zugang unterscheidet sich in zwei Punkten: Er bietet
+                  alle vier Arten unabhängig von den sonstigen Rechten an und
+                  lässt <strong>Eigentümer</strong> und{" "}
+                  <strong>Autoren-Figur</strong> frei setzen — genau das, was
+                  man für den Umzug fremder Inhalte aus einem Vault braucht.
                 </li>
               </ul>
               <p>

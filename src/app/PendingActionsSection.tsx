@@ -1,4 +1,4 @@
-import { LcarsAkteCard, LcarsDataRow } from "@/components/lcars";
+import { LcarsAkteCard, LcarsCollapsiblePanel } from "@/components/lcars";
 import type { PendingAction, PendingActionKind } from "@/lib/pendingActions";
 import { fmtDate } from "@/lib/missionFormat";
 
@@ -21,7 +21,11 @@ export default function PendingActionsSection({
   if (items.length === 0) return null;
 
   return (
-    <LcarsDataRow value={items.length} label="Offen für dich" defaultOpen>
+    <LcarsCollapsiblePanel
+      title="Offen für dich"
+      badge={items.length}
+      storageId="dashboard:todos"
+    >
       <div className="flex flex-col gap-[6px]">
         {items.map((a) => (
           <LcarsAkteCard
@@ -42,6 +46,6 @@ export default function PendingActionsSection({
           />
         ))}
       </div>
-    </LcarsDataRow>
+    </LcarsCollapsiblePanel>
   );
 }

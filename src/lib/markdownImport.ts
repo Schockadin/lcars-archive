@@ -1,6 +1,7 @@
-// Admin-Markdown-Upload (/admin/import): parst hochgeladene .md-Dateien im
-// selben Frontmatter-Format wie das CLI-Ingest (scripts/ingest/*.ts, siehe
-// dortige VaultPath-basierte Batch-Verarbeitung) und legt daraus neue
+// Markdown-Upload (/admin/import und /user/import): parst hochgeladene
+// .md-Dateien im selben Frontmatter-Format wie das CLI-Ingest
+// (scripts/ingest/*.ts, siehe dortige VaultPath-basierte
+// Batch-Verarbeitung) und legt daraus neue
 // Archiv-Einträge/Missionen/Charaktere/Missionslogs an — aber einzeln statt
 // als Batch: jede Datei wird zuerst nur geparst (preview*, keine
 // Schreibaktion) und kann vor dem Anlegen in der UI bearbeitet werden
@@ -30,10 +31,17 @@
 // Charakteren die restlichen Metadaten-Felder, siehe MarkdownImportPanel.tsx)
 // — diese Werte gewinnen vollständig gegenüber dem geparsten Frontmatter, nur
 // category/Frontmatter-Rohtext (frontmatter-Spalte) kommen weiterhin aus der
-// Datei. Kein Sicherheitsproblem, da beide Actions bereits requireAdmin()
-// prüfen — derselbe Vertrauensrahmen wie jedes andere
-// Inhalts-Erstellformular, das ebenfalls beliebige Freitext-Werte einer
-// eingeloggten Person entgegennimmt.
+// Datei.
+//
+// Das gilt ausdrücklich AUCH für den Eigentümer (ownerSlug) und beim
+// Missionslog für die Autoren-Figur (authorSlug) — dieses Modul prüft beides
+// nicht, es schreibt nur, was ihm gereicht wird. Solange der Upload
+// admin-only war, war das unbedenklich; seit er auch der normalen
+// Nutzerschaft offensteht, ist es das nur noch, weil die aufrufenden Actions
+// (src/app/_shared/import/actions.ts) für alle außer der Administration den
+// Eigentümer auf den Aufrufer ERZWINGEN und eine fremde Autoren-Figur
+// ablehnen. Wer commit* von einer neuen Stelle aus aufruft, muss dasselbe
+// tun — siehe src/lib/importAccess.ts.
 import "server-only";
 import matter from "gray-matter";
 import type postgres from "postgres";
@@ -571,6 +579,10 @@ export interface CharacterImportPreview {
   aliases: string[];
   generation: number[];
   tags: string[];
+  // Wie bei den drei anderen Arten: der User-Slug aus „owner:“ im
+  // Frontmatter. Bei Charakteren landet er in player_id — die Spalte, an der
+  // hängt, wessen Figur das ist (siehe commitCharacterMarkdown).
+  ownerSlug: string | null;
   slugTaken: boolean;
   warnings: string[];
 }
@@ -594,6 +606,7 @@ export interface CharacterImportEdits {
   aliases: string[];
   generation: number[];
   tags: string[];
+  ownerSlug: string | null;
 }
 
 interface CharacterAffiliation {
@@ -663,6 +676,7 @@ export async function previewCharacterMarkdown(
       aliases: toStringArray(fm.aliases),
       generation: toNumberArray(fm.generation),
       tags: toStringArray(fm.tags),
+      ownerSlug: typeof fm.owner === "string" ? fm.owner.trim() || null : null,
       slugTaken: !!existing,
       warnings: existing ? [`Slug "${parsed.slug}" ist bereits vergeben.`] : [],
     };
@@ -739,12 +753,23 @@ export async function commitCharacterMarkdown(
     }
   }
 
+  // player_id ist bei Charakteren das, was owner_user_id bei den anderen
+  // Arten ist: Daran hängt, wem die Figur gehört. Bis v1.49 setzte weder
+  // dieser Import noch das CLI-Ingest die Spalte — eine importierte Figur
+  // gehörte niemandem, tauchte in keiner Auswahlliste auf
+  // (getCharactersForParticipantPicker joint über player_id) und war für
+  // niemanden zu bearbeiten. Beim Anlegen über den Assistenten war sie von
+  // Anfang an gesetzt (createCharacter), und seit der Import auch der
+  // normalen Nutzerschaft offensteht, wäre eine herrenlose eigene Figur das
+  // offensichtlich falsche Ergebnis.
+  const ownerUserId = await resolveOwner(sql, edits.ownerSlug);
+
   const [row] = await sql<{ id: number }[]>`
     INSERT INTO characters (
-      slug, name, status, portrait, bio, metadata,
+      slug, name, status, player_id, portrait, bio, metadata,
       source_md, frontmatter, updated_at
     ) VALUES (
-      ${slug}, ${name}, ${edits.status}, ${portrait}, ${bio},
+      ${slug}, ${name}, ${edits.status}, ${ownerUserId}, ${portrait}, ${bio},
       ${sql.json(metadata as ReturnType<typeof JSON.parse>)}, ${edits.bodyMarkdown},
       ${sql.json(fm as ReturnType<typeof JSON.parse>)}, NOW()
     )

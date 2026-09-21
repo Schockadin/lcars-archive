@@ -11,6 +11,7 @@ const GESCHUETZT = [
   "/user/characters",
   "/user/characters/new",
   "/user/content",
+  "/user/import",
   "/user/mission-logs/new",
   "/user/dialogues/new",
   "/gm",

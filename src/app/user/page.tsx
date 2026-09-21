@@ -18,6 +18,7 @@ import {
   resolveCharacterDefaultColor,
   takenColorsForCharacter,
 } from "@/lib/characterColor";
+import DashboardSettingsForm from "./DashboardSettingsForm";
 import SettingsForm from "./SettingsForm";
 import PasswordForm from "./PasswordForm";
 import LogoutEverywhereButton from "./LogoutEverywhereButton";
@@ -30,6 +31,11 @@ import UiModeSettingsForm from "./UiModeSettingsForm";
 import FontSettingsForm from "./FontSettingsForm";
 import ColorModeSettingsForm from "./ColorModeSettingsForm";
 import SettingsPanel from "@/app/_shared/SettingsPanel";
+import {
+  DASHBOARD_SECTIONS,
+  dashboardSectionEnabled,
+  sanitizeDashboardPrefs,
+} from "@/lib/dashboardSections";
 import { isMinimalUiMode, normalizeUiMode } from "@/lib/uiMode";
 import { COLOR_MODE_LIGHT, normalizeColorMode } from "@/lib/colorMode";
 import {
@@ -40,7 +46,7 @@ import {
 } from "@/lib/fonts";
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
-import DataRow from "@/components/lcars/DataRow";
+import { LcarsCollapsiblePanel } from "@/components/lcars";
 import {
   characterHref,
 } from "@/lib/contentRoutes";
@@ -91,6 +97,10 @@ export default async function UserPage() {
   const colorMode = normalizeColorMode(target.color_mode);
   const fontSans = normalizeFontSans(target.font_sans);
   const fontMono = normalizeFontMono(target.font_mono);
+  const dashboardPrefs = sanitizeDashboardPrefs(target.dashboard_prefs);
+  const aktiveSektionen = DASHBOARD_SECTIONS.filter((section) =>
+    dashboardSectionEnabled(dashboardPrefs, section.id),
+  ).length;
 
   // Charakter-Farben: eine Liste statt einer einzigen Wahl, seit die Farbe
   // pro Charakter statt pro User lebt (Multis sollen für jeden Charakter
@@ -139,10 +149,36 @@ export default async function UserPage() {
           )}
 
           <div className="flex flex-col gap-[16px]">
+            {/* Ganz oben und mit eigener Anker-id: Das Zahnrad neben der
+                Überschrift des Dashboards führt direkt hierher
+                (/user#dashboard). Der Anker klappt den Abschnitt dabei auf,
+                auch wenn er zuletzt zugeklappt verlassen wurde — siehe
+                CollapsiblePanel. */}
+            <LcarsCollapsiblePanel
+              title="Startseite"
+              htmlId="dashboard"
+              badge={`${aktiveSektionen} von ${DASHBOARD_SECTIONS.length}`}
+              storageId="user:startseite"
+              defaultOpen={false}
+            >
+              <section className="flex flex-col gap-[12px]">
+                <h2>Was auf der Startseite steht</h2>
+                <DashboardSettingsForm
+                  prefs={dashboardPrefs}
+                  characters={characters.map((c) => ({
+                    id: c.id,
+                    name: c.name,
+                  }))}
+                />
+              </section>
+            </LcarsCollapsiblePanel>
+
             {characterColors.length > 0 && (
-              <DataRow
-                label="Charakterfarben"
-                value={characterColors.length}
+              <LcarsCollapsiblePanel
+                title="Charakterfarben"
+                badge={characterColors.length}
+                storageId="user:charakterfarben"
+                defaultOpen={false}
               >
                 <section
                   id="character-colors"
@@ -175,12 +211,14 @@ export default async function UserPage() {
                     ),
                   )}
                 </section>
-              </DataRow>
+              </LcarsCollapsiblePanel>
             )}
 
-            <DataRow
-              label="Darstellung"
-              value={COLOR_THEMES.length}
+            <LcarsCollapsiblePanel
+              title="Darstellung"
+              badge={`${COLOR_THEMES.length} Schemata`}
+              storageId="user:darstellung"
+              defaultOpen={false}
             >
               {/* Alle Darstellungs-Einstellungen als aufklappbare Panels
                   (SettingsPanel): Farben, Hell/Dunkel und Oberfläche stehen
@@ -227,26 +265,16 @@ export default async function UserPage() {
                   <UiModeSettingsForm currentMode={uiMode} />
                 </SettingsPanel>
               </section>
-            </DataRow>
+            </LcarsCollapsiblePanel>
 
-            <DataRow
-              label="Settings"
-              value={9}
+            {/* Was dich erreicht und wem du folgst — drei Dinge, die
+                zusammengehören und vorher verstreut in „Settings" standen,
+                zwischen Passwort und Editor-Rechtschreibung. */}
+            <LcarsCollapsiblePanel
+              title="Follows & Benachrichtigungen"
+              storageId="user:benachrichtigungen"
+              defaultOpen={false}
             >
-              <h2>User-Daten</h2>
-              <SettingsForm user={{ name: target.name, email: target.email }} />
-
-              <div className="horizontalBar" />
-
-              <section id="password" className="flex flex-col gap-[12px]">
-                <h2>
-                  {hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}
-                </h2>
-                <PasswordForm hasPassword={hasPasswordSet} />
-              </section>
-
-              <div className="horizontalBar" />
-
               <section id="follows" className="flex flex-col gap-[8px]">
                 <h2>Follows</h2>
                 <p>
@@ -260,6 +288,45 @@ export default async function UserPage() {
                 >
                   Follows verwalten
                 </Link>
+              </section>
+
+              <div className="horizontalBar" />
+
+              <section id="notifications" className="flex flex-col gap-[12px]">
+                <h2>Benachrichtigungen</h2>
+                <NotificationSettingsForm
+                  user={{
+                    emailEnabled: target.email_notifications_enabled,
+                    pushEnabled: target.push_notifications_enabled,
+                    notifyContentTypes: target.notify_content_types,
+                  }}
+                  isAdmin={userCan(target, "admin.access", roleMap)}
+                />
+              </section>
+
+              <div className="horizontalBar" />
+
+              <section id="news" className="flex flex-col gap-[12px]">
+                <h2>News</h2>
+                <NewsSettingsForm newsKinds={target.news_kinds} />
+              </section>
+            </LcarsCollapsiblePanel>
+
+            <LcarsCollapsiblePanel
+              title="Settings"
+              storageId="user:settings"
+              defaultOpen={false}
+            >
+              <h2>User-Daten</h2>
+              <SettingsForm user={{ name: target.name, email: target.email }} />
+
+              <div className="horizontalBar" />
+
+              <section id="password" className="flex flex-col gap-[12px]">
+                <h2>
+                  {hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}
+                </h2>
+                <PasswordForm hasPassword={hasPasswordSet} />
               </section>
 
               <div className="horizontalBar" />
@@ -296,27 +363,6 @@ export default async function UserPage() {
 
               <div className="horizontalBar" />
 
-              <section id="notifications" className="flex flex-col gap-[12px]">
-                <h2>Benachrichtigungen</h2>
-                <NotificationSettingsForm
-                  user={{
-                    emailEnabled: target.email_notifications_enabled,
-                    pushEnabled: target.push_notifications_enabled,
-                    notifyContentTypes: target.notify_content_types,
-                  }}
-                  isAdmin={userCan(target, "admin.access", roleMap)}
-                />
-              </section>
-
-              <div className="horizontalBar" />
-
-              <section id="news" className="flex flex-col gap-[12px]">
-                <h2>News</h2>
-                <NewsSettingsForm newsKinds={target.news_kinds} />
-              </section>
-
-              <div className="horizontalBar" />
-
               <section id="editor" className="flex flex-col gap-[12px]">
                 <h2>Editor</h2>
                 <EditorSpellcheckSettingsForm enabled={spellcheckEnabled} />
@@ -328,7 +374,7 @@ export default async function UserPage() {
                 <h2>App installieren</h2>
                 <InstallPwaPrompt />
               </section>
-            </DataRow>
+            </LcarsCollapsiblePanel>
           </div>
         </div>
       </article>
