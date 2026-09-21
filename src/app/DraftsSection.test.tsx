@@ -1,7 +1,71 @@
-import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { startTransition } from "react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import DraftsSection from "./DraftsSection";
 import type { DraftItem } from "@/lib/drafts";
+
+// Die beiden Aktions-Bausteine sprechen Server-Actions an (und damit die
+// Datenschicht) — geprüft wird hier, WAS dieser Abschnitt ihnen mitgibt und
+// was mit der Liste passiert, wenn sie sich melden. Gleiches Muster wie in
+// UserContentBrowser.test.tsx.
+//
+// Beide Attrappen rufen ihren Rückruf in einer Transition, die NICHT fertig
+// wird — genau so steht es auch im Original, solange die Action noch läuft.
+// Nur währenddessen hält React den optimistischen Wert; wäre die Transition
+// sofort durch, fiele die Liste umgehend auf ihre Prop zurück und der Test
+// sähe die Entfernung gar nicht erst.
+const nieFertig = new Promise<void>(() => {});
+
+function inSchwebe(rueckruf: () => void) {
+  startTransition(async () => {
+    rueckruf();
+    await nieFertig;
+  });
+}
+
+vi.mock("@/app/user/content/ContentStateSelect", () => ({
+  default: ({
+    contentType,
+    id,
+    onPublished,
+  }: {
+    contentType: string;
+    id: number;
+    onPublished?: () => void;
+  }) => (
+    <button
+      type="button"
+      data-testid="state-select"
+      data-type={contentType}
+      data-id={String(id)}
+      onClick={() => inSchwebe(() => onPublished?.())}
+    >
+      Veröffentlichen
+    </button>
+  ),
+}));
+
+vi.mock("@/app/user/content/DeleteOwnContentButton", () => ({
+  default: ({
+    contentType,
+    id,
+    onOptimisticDelete,
+  }: {
+    contentType: string;
+    id: number;
+    onOptimisticDelete: () => void;
+  }) => (
+    <button
+      type="button"
+      data-testid="delete-button"
+      data-type={contentType}
+      data-id={String(id)}
+      onClick={() => inSchwebe(onOptimisticDelete)}
+    >
+      Löschen
+    </button>
+  ),
+}));
 
 const LOG: DraftItem = {
   kind: "mission_log",
@@ -10,6 +74,15 @@ const LOG: DraftItem = {
   title: "Der Abend am Rand",
   updatedAt: "2401-05-12T10:00:00Z",
   href: "/user/mission-logs/7/edit",
+};
+
+const MISSION: DraftItem = {
+  kind: "mission",
+  id: 3,
+  slug: "stille-grenze",
+  title: "Stille Grenze",
+  updatedAt: "2401-05-10T10:00:00Z",
+  href: "/user/missions/3/edit",
 };
 
 describe("DraftsSection", () => {
@@ -50,5 +123,81 @@ describe("DraftsSection", () => {
   it("steht per Vorgabe offen", () => {
     render(<DraftsSection drafts={[LOG]} />);
     expect(document.querySelector("details")?.open).toBe(true);
+  });
+
+  // ── Die Aktionszeile ────────────────────────────────────────────────
+  //
+  // Dieselben drei Aktionen wie in der Liste unter „Meine Inhalte" —
+  // veröffentlichen, bearbeiten, löschen —, jede mit der Art und der id
+  // ihres Eintrags.
+  it("gibt jedem Entwurf Schalter, Stift und Mülleimer", () => {
+    render(<DraftsSection drafts={[LOG]} />);
+
+    expect(screen.getByTestId("state-select")).toHaveAttribute(
+      "data-type",
+      "mission_log",
+    );
+    expect(screen.getByTestId("state-select")).toHaveAttribute("data-id", "7");
+    expect(screen.getByTestId("delete-button")).toHaveAttribute(
+      "data-type",
+      "mission_log",
+    );
+    expect(
+      screen.getByRole("link", { name: "Bearbeiten" }),
+    ).toHaveAttribute("href", "/user/mission-logs/7/edit");
+  });
+
+  // Eine Mission hat kein Einzel-Owner-Modell und deshalb nirgends einen
+  // Entwurf/Veröffentlicht-Umschalter (setContentStateAction kennt sie gar
+  // nicht) — löschen darf die Spielleitung sie trotzdem.
+  it("lässt bei einer Mission den Schalter weg, nicht aber den Mülleimer", () => {
+    render(<DraftsSection drafts={[MISSION]} />);
+
+    expect(screen.queryByTestId("state-select")).toBeNull();
+    expect(screen.getByTestId("delete-button")).toHaveAttribute(
+      "data-type",
+      "mission",
+    );
+  });
+
+  // Veröffentlicht ist kein Entwurf mehr: Der Eintrag gehört sofort nicht
+  // mehr in diese Liste, statt bis zur nächsten Revalidierung stehen zu
+  // bleiben.
+  it("nimmt einen veröffentlichten Entwurf sofort aus der Liste", () => {
+    render(
+      <DraftsSection
+        drafts={[LOG, { ...LOG, id: 8, title: "Bleibt offen" }]}
+      />,
+    );
+    expect(screen.getByText("2")).toBeInTheDocument();
+
+    fireEvent.click(screen.getAllByTestId("state-select")[0]);
+
+    expect(screen.queryByText("Der Abend am Rand")).toBeNull();
+    expect(screen.getByText("Bleibt offen")).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
+  });
+
+  it("nimmt einen gelöschten Entwurf sofort aus der Liste", () => {
+    render(
+      <DraftsSection
+        drafts={[LOG, { ...LOG, id: 8, title: "Bleibt offen" }]}
+      />,
+    );
+
+    fireEvent.click(screen.getAllByTestId("delete-button")[0]);
+
+    expect(screen.queryByText("Der Abend am Rand")).toBeNull();
+    expect(screen.getByText("Bleibt offen")).toBeInTheDocument();
+  });
+
+  // Der letzte Entwurf nimmt den ganzen Abschnitt mit — sonst bliebe eine
+  // Überschrift mit der Zahl 0 stehen.
+  it("verschwindet, wenn der letzte Entwurf die Liste verlässt", () => {
+    const { container } = render(<DraftsSection drafts={[LOG]} />);
+
+    fireEvent.click(screen.getByTestId("delete-button"));
+
+    expect(container).toBeEmptyDOMElement();
   });
 });

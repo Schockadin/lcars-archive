@@ -39,6 +39,16 @@ export function DashboardGuide() {
           <strong>Versionen</strong> — was sich zuletzt an der Datenbank selbst
           geändert hat.
         </p>
+        <p>
+          <strong>Die Seite hält sich selbst aktuell.</strong> Alle zehn
+          Sekunden holt sie nach, was sich inzwischen getan hat — eine Zusage
+          zum Spielabend, eine neue Nachricht in einem offenen Gespräch, die
+          News der anderen. Du musst also nicht neu laden. Das geschieht
+          unauffällig: Die Seite bleibt stehen, wo du bist, aufgeklappte
+          Abschnitte bleiben offen, und ein Fenster, in das du gerade tippst,
+          bleibt unangetastet. Liegt der Tab im Hintergrund, pausiert sie und
+          ist beim Zurückkommen sofort wieder auf Stand.
+        </p>
       </GuideSection>
 
       <GuideSection title="Startseite · Selbst zusammenstellen">
@@ -104,6 +114,17 @@ export function MyContentGuide() {
           Startseite. Maßgeblich ist, wem der Entwurf <em>gehört</em> — ein
           Gespräch, das jemand anderes begonnen hat und in dem deine Figur
           mitspielt, kann auch nur diese Person veröffentlichen.
+        </p>
+        <p>
+          Rechts an jedem Entwurf steht dieselbe Knopfreihe wie in der Liste
+          darunter: der Schalter{" "}
+          <strong>Entwurf / Veröffentlicht</strong>, der{" "}
+          <strong>Stift</strong> und der <strong>Mülleimer</strong>. Du kannst
+          also aus dieser Übersicht heraus veröffentlichen, ohne den Eintrag
+          erst zu öffnen — er verschwindet dann sofort aus der Liste, denn ein
+          Entwurf ist er ja nicht mehr. Bei einer <strong>Mission</strong>
+          {" "}fehlt der Schalter: Sie gehört keiner einzelnen Person, und die
+          Spielleitung stellt ihren Zustand im Missionsformular ein.
         </p>
       </GuideSection>
 

@@ -62,6 +62,41 @@ describe("ContentStateSelect", () => {
     expect(setContentStateAction).not.toHaveBeenCalled();
   });
 
+  // Für Listen, die nur Entwürfe führen (DraftsSection auf der Startseite und
+  // unter „Meine Inhalte"): Der Eintrag gehört nach dem Veröffentlichen nicht
+  // mehr dorthin. Der Rückruf läuft in DERSELBEN Transition wie die Action,
+  // damit React ihn bei einem Fehlschlag von selbst zurücknimmt.
+  it("meldet das Veröffentlichen, nicht aber das Zurückziehen", async () => {
+    const onPublished = vi.fn();
+    const { rerender } = render(
+      <ContentStateSelect
+        contentType="archive_entry"
+        id={7}
+        isDraft
+        onPublished={onPublished}
+      />,
+    );
+    await act(async () => {
+      fireEvent.click(option("Veröffentlicht"));
+    });
+    expect(onPublished).toHaveBeenCalledTimes(1);
+
+    // Der Weg zurück ist kein Anlass: Ein Inhalt, der wieder Entwurf wird,
+    // gehört ja gerade in diese Liste.
+    rerender(
+      <ContentStateSelect
+        contentType="archive_entry"
+        id={7}
+        isDraft={false}
+        onPublished={onPublished}
+      />,
+    );
+    await act(async () => {
+      fireEvent.click(option("Entwurf"));
+    });
+    expect(onPublished).toHaveBeenCalledTimes(1);
+  });
+
   it("zeigt den Fehler der Action an", async () => {
     setContentStateAction.mockResolvedValueOnce({ error: "Änderung fehlgeschlagen." });
     render(<ContentStateSelect contentType="archive_entry" id={7} isDraft />);

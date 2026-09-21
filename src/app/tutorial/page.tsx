@@ -438,7 +438,13 @@ export default function TutorialPage() {
                 Eigene Entwürfe (siehe unten) erscheinen in „Meine Inhalte“
                 gesammelt ganz oben in einer eigenen Übersicht, unabhängig vom
                 Kategorie-Filter — Charakter-Entwürfe stattdessen in der
-                Charakter-Übersicht, dort ebenfalls markiert.
+                Charakter-Übersicht, dort ebenfalls markiert. Dieselbe
+                Übersicht steht auf deiner <strong>Startseite</strong>, und
+                jeder Entwurf trägt dort wie in der Liste darunter seine
+                Knopfreihe: <strong>Entwurf / Veröffentlicht</strong>,{" "}
+                <strong>Stift</strong> und <strong>Mülleimer</strong>. Wer
+                veröffentlicht, sieht den Eintrag sofort aus der
+                Entwurfs-Übersicht verschwinden.
               </p>
               <p>
                 Beim Anlegen oder Bearbeiten eines Charakters, einer Mission,

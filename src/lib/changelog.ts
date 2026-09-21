@@ -149,6 +149,22 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.50",
+    title: "Die Startseite bleibt wach",
+    items: [
+      {
+        text: "Deine Entwürfe tragen jetzt dieselben Knöpfe wie die Liste unter „Meine Inhalte“: veröffentlichen, bearbeiten, löschen — direkt im Abschnitt, ohne den Eintrag erst zu öffnen. Was du veröffentlichst oder löschst, verschwindet sofort daraus; ein Entwurf ist es dann ja nicht mehr.",
+        category: "inhalte",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Die Startseite hält sich selbst auf dem Laufenden: Alle zehn Sekunden holt sie neue Zu- und Absagen zum Spielabend, neue Nachrichten in offenen Gesprächen und die News der anderen — ohne dass du neu laden musst. Liegt der Tab im Hintergrund, pausiert sie und ist beim Zurückkommen sofort wieder aktuell.",
+        category: "darstellung",
+        tutorial: "mein-bereich",
+      },
+    ],
+  },
+  {
     version: "1.49",
     title: "Die Startseite gehört dir",
     items: [
