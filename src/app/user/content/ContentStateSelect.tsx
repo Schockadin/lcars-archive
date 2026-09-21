@@ -37,10 +37,19 @@ export default function ContentStateSelect({
   contentType,
   id,
   isDraft,
+  onPublished,
 }: {
   contentType: VisibilityContentType;
   id: number;
   isDraft: boolean;
+  // Wird INNERHALB derselben Transition wie der Action-Aufruf gerufen, wenn
+  // aus einem Entwurf ein veröffentlichter Inhalt wird. Für Listen, die
+  // ausschließlich Entwürfe führen (DraftsSection): Der Eintrag gehört dann
+  // nicht mehr dahin und verschwindet sofort, statt bis zur nächsten
+  // Revalidierung stehen zu bleiben. Wie bei onOptimisticDelete holt React
+  // ihn automatisch zurück, falls die Action scheitert — vorausgesetzt, die
+  // Action revalidiert die Seite (siehe revalidatePath in actions.ts).
+  onPublished?: () => void;
 }) {
   const initialValue: ContentState = isDraft ? "draft" : "published";
   // useOptimistic statt useState: zeigt den neuen Wert sofort an, fällt aber
@@ -77,6 +86,7 @@ export default function ContentStateSelect({
             setError(null);
             startTransition(async () => {
               setOptimisticValue(next);
+              if (next === "published") onPublished?.();
               const result = await setContentStateAction(contentType, id, next);
               if (result.error) setError(result.error);
             });

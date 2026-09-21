@@ -149,6 +149,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.50",
+    title: "Die Startseite bleibt wach",
+    items: [
+      {
+        text: "Deine Entwürfe tragen jetzt dieselben Knöpfe wie die Liste unter „Meine Inhalte“: veröffentlichen, bearbeiten, löschen — direkt im Abschnitt, ohne den Eintrag erst zu öffnen. Was du veröffentlichst oder löschst, verschwindet sofort daraus; ein Entwurf ist es dann ja nicht mehr.",
+        category: "inhalte",
+        tutorial: "mein-bereich",
+      },
+    ],
+  },
+  {
     version: "1.49",
     title: "Die Startseite gehört dir",
     items: [

@@ -135,6 +135,12 @@ export async function setContentStateAction(
   // nutzen dieselben Aktionen (ContentStateSelect/DeleteOwnContentButton), also
   // auch beide revalidieren.
   revalidatePath("/user/characters");
+  // Und die Startseite: Der Abschnitt „Entwürfe" steht dort mit derselben
+  // Aktionszeile (DraftsSection). Ohne diese Zeile fiele die optimistische
+  // Entfernung dort am Ende der Transition wieder zurück — useOptimistic
+  // behält den neuen Wert nur, wenn die Server-Daten danach ebenfalls neu
+  // sind.
+  revalidatePath("/");
   return ok ? {} : { error: "Änderung fehlgeschlagen (keine Berechtigung?)." };
 }
 
@@ -193,5 +199,7 @@ export async function deleteOwnContentAction(
 
   revalidatePath("/user/content");
   revalidatePath("/user/characters");
+  // Siehe setContentStateAction: die Entwürfe stehen auch auf der Startseite.
+  revalidatePath("/");
   return {};
 }

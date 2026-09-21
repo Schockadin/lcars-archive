@@ -665,6 +665,20 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   drei: Der Abschnitt steht auf der meistbesuchten Seite der Anwendung.
   Charaktere fehlen darin bewusst, wie schon in der Liste unter „Meine
   Inhalte" — sie haben mit `/user/characters` ihren eigenen Bereich.
+  Jeder Entwurf trägt dieselbe Aktionszeile wie die Liste darunter
+  ([`ContentActionRow`](src/app/user/content/ContentActionRow.tsx):
+  Zustands-Schalter, Stift, Mülleimer) — bei einer **Mission** ohne den
+  Schalter, denn `setContentStateAction` kennt sie nicht (kein
+  Einzel-Owner-Modell, siehe `VisibilityContentType`). Beide Wege aus der
+  Liste hinaus, veröffentlichen und löschen, laufen über **einen**
+  `useOptimistic`-Reducer: Was kein offener Entwurf mehr ist, verschwindet
+  sofort, und React holt es bei einer fehlgeschlagenen Action von selbst
+  zurück. Dafür revalidieren beide Actions seit v1.50 auch `"/"` — ohne das
+  fiele die optimistische Entfernung auf der Startseite am Ende der
+  Transition wieder zurück. `ContentStateSelect` meldet das Veröffentlichen
+  über ein optionales `onPublished`, das **innerhalb** derselben Transition
+  läuft wie der Action-Aufruf (sonst gäbe es den automatischen Rücklauf
+  nicht).
 - **Markdown-Import für alle** — der Upload fertiger `.md`-Dateien war bis
   v1.49 admin-only (`/admin/import`, beide Actions `requireAdmin()`). Er steht
   jetzt auch der normalen Nutzerschaft offen (`/user/import`); Oberfläche und
@@ -1073,7 +1087,8 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Spielleitung (Ausnahmen: Missionen, die jede Spielleitung sieht, da
   Missionen kein Einzel-Owner-Modell haben, und `content.view_all` für die
   Administration), und erscheint bis zur Veröffentlichung nur unter „Meine
-  Inhalte“. **Entwurf oder veröffentlicht ist der einzige
+  Inhalte“ bzw. im Abschnitt „Entwürfe“ (dort und auf der Startseite, jeweils
+  mit derselben Aktionszeile). **Entwurf oder veröffentlicht ist der einzige
   Sichtbarkeits-Schalter** — die früheren drei Stufen `private`/`gm`/`public`
   sind mit v1.34 entfallen (siehe `scripts/migrate-pr71.sql`).
 - **PWA mit Push-Benachrichtigungen und Offline-Betrieb** — installierbar auf

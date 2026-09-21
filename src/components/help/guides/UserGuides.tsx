@@ -105,6 +105,17 @@ export function MyContentGuide() {
           Gespräch, das jemand anderes begonnen hat und in dem deine Figur
           mitspielt, kann auch nur diese Person veröffentlichen.
         </p>
+        <p>
+          Rechts an jedem Entwurf steht dieselbe Knopfreihe wie in der Liste
+          darunter: der Schalter{" "}
+          <strong>Entwurf / Veröffentlicht</strong>, der{" "}
+          <strong>Stift</strong> und der <strong>Mülleimer</strong>. Du kannst
+          also aus dieser Übersicht heraus veröffentlichen, ohne den Eintrag
+          erst zu öffnen — er verschwindet dann sofort aus der Liste, denn ein
+          Entwurf ist er ja nicht mehr. Bei einer <strong>Mission</strong>
+          {" "}fehlt der Schalter: Sie gehört keiner einzelnen Person, und die
+          Spielleitung stellt ihren Zustand im Missionsformular ein.
+        </p>
       </GuideSection>
 
       <GuideSection title="Meine Inhalte · Die eigene Liste">
