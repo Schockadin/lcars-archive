@@ -60,12 +60,14 @@ export default function NewContentButtons({
   const close = () => setOpen(null);
   const sichtbar = visibleNewContentForms(data, show);
 
+  // Breite und Umbruch kommen aus .lcars-btn-row (controls.css) — hier steht
+  // nur, was der Knopf ist, nicht wie breit er wird.
   const button = (form: OpenForm) => (
     <button
       key={form}
       type="button"
       onClick={() => setOpen(form)}
-      className="lcars-pill-btn w-[260px] max-w-full max-sm:w-full"
+      className="lcars-pill-btn"
     >
       {NEW_CONTENT_LABELS[form]}
     </button>
@@ -73,20 +75,15 @@ export default function NewContentButtons({
 
   return (
     <>
-      {/* Nebeneinander statt untereinander (lcars-btn-stack): Die Knöpfe
-          stehen jetzt über der Liste, gestapelt schöben sie sie weit nach
-          unten. Die feste Breite hält sie untereinander gleich groß — wie im
-          Stapel. */}
-      <div className="flex flex-wrap gap-[12px]">
+      {/* Drei Stufen, siehe .lcars-btn-row in controls.css: schmal einer pro
+          Zeile, mittel zwei, breit alle nebeneinander. */}
+      <div className="lcars-btn-row">
         {/* Welche Knöpfe hier stehen, entscheidet visibleNewContentForms —
             dieselbe Funktion, aus der der Abschnitt drumherum seine Kurzinfo
             bildet (siehe newContentForms.ts). */}
         {sichtbar.map(button)}
         {canImport && (
-          <Link
-            href="/admin/import"
-            className="lcars-pill-btn--outline flex w-[260px] max-w-full items-center justify-center max-sm:w-full"
-          >
+          <Link href="/admin/import" className="lcars-pill-btn--outline">
             Inhalte importieren
           </Link>
         )}

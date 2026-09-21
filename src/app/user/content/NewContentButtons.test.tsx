@@ -159,6 +159,21 @@ describe("NewContentButtons", () => {
     ).toBeNull();
   });
 
+  // Breite und Umbruch der Leiste stehen in .lcars-btn-row (controls.css),
+  // nicht an den Knöpfen. Trüge ein Knopf wieder eine eigene Breite, schlüge
+  // sie die drei Stufen dort — und niemand sähe es, weil jsdom kein CSS
+  // rechnet. Der Test hält deshalb die Aufteilung fest, nicht das Ergebnis.
+  it("überlässt der Leiste die Breite", () => {
+    const { container } = render(<NewContentButtons data={data()} canImport />);
+
+    expect(container.querySelector(".lcars-btn-row")).not.toBeNull();
+    for (const el of container.querySelectorAll<HTMLElement>(
+      ".lcars-btn-row > *",
+    )) {
+      expect(el.className).not.toMatch(/\bw-\[|\bw-full\b|max-sm:w-/);
+    }
+  });
+
   it("bietet keinen Knopf für einen neuen Charakter", () => {
     // Charaktere entstehen im Assistenten unter /user/characters — er führt
     // über mehrere Schritte und gehört nicht in ein Fenster.

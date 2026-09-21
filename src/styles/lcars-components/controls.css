@@ -202,6 +202,53 @@
   }
 }
 
+/* Die Anlege-Knopfleiste (NewContentPanel: „Neue Inhalte" unter
+   /user/content und „Neues anlegen" auf der Startseite). Drei Stufen:
+   schmal einer pro Zeile, mittel zwei, breit alle nebeneinander.
+
+   Als eigene Klasse und nicht als Utility-Kette an der Call-Site: Der
+   Outline-Knopf bringt ein min-width: 180px mit, das der breiten Stufe im
+   Weg steht (dort teilen sich die Knöpfe die Zeile und müssen unter ihre
+   Wunschbreite schrumpfen dürfen). `.lcars-btn-row > *` ist eine Klasse plus
+   ein Element und schlägt die eine Klasse von .lcars-pill-btn--outline — ein
+   Utility gleicher Spezifität täte das nur, wenn die Reihenfolge der
+   Stylesheets zufällig passt.
+
+   flex: 1 1 0 statt 1 1 auto in der breiten Stufe: Mit `auto` bekäme jeder
+   Knopf seine Textbreite als Basis, lange Beschriftungen bekämen also mehr
+   Platz als kurze. Gleiche Spalten sehen in einer Reihe ruhiger aus. */
+.lcars-btn-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.lcars-btn-row > * {
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .lcars-btn-row {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  /* 50% minus die halbe Lücke — zwei Knöpfe und eine Lücke ergeben genau
+     die Zeilenbreite. */
+  .lcars-btn-row > * {
+    width: calc(50% - 6px);
+  }
+}
+
+@media (min-width: 1024px) {
+  .lcars-btn-row {
+    flex-wrap: nowrap;
+  }
+  .lcars-btn-row > * {
+    width: auto;
+    flex: 1 1 0;
+    min-width: 0;
+  }
+}
+
 /* Icon+Text-Pillen (z.B. DbBackupPanel.tsx/UserBackupPanel.tsx): ohne diese
    Regel rendert ein SVG-Icon ohne eigenes width/height-Attribut in seiner
    ungebremsten Intrinsic-Größe (Browser-Default 300×150) statt kompakt
