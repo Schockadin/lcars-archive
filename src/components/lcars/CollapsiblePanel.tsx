@@ -17,6 +17,25 @@ import { readPanelOpen, writePanelOpen } from "@/lib/panelState";
 // Gerät (siehe src/lib/panelState.ts), und er kann Anker-Ziel sein. Das
 // verlangt Client-State; SettingsPanel bleibt ohne ihn server-renderbar und
 // wird weiter überall dort benutzt, wo nichts gemerkt werden muss.
+// Das Element, auf das der URL-Hash zeigt — der Abschnitt selbst oder etwas
+// darin. null, wenn der Hash leer ist oder woandershin zeigt.
+function ankerZiel(
+  panel: HTMLDetailsElement | null,
+  hash: string,
+  htmlId?: string,
+): HTMLElement | null {
+  if (!panel || hash.length < 2) return null;
+  const id = hash.slice(1);
+  if (htmlId && id === htmlId) return panel;
+  try {
+    // CSS.escape, weil eine id auch Zeichen tragen darf, die ein Selektor
+    // sonst als Syntax liest.
+    return panel.querySelector<HTMLElement>(`#${CSS.escape(id)}`);
+  } catch {
+    return null;
+  }
+}
+
 export default function CollapsiblePanel({
   title,
   badge,
@@ -35,6 +54,10 @@ export default function CollapsiblePanel({
   // Anker-id: /pfad#<id> springt hierher und klappt auf — auch wenn der
   // Abschnitt zuletzt zugeklappt verlassen wurde. Genutzt vom Zahnrad neben
   // der Dashboard-Überschrift (/user#dashboard).
+  //
+  // Nicht nötig, damit ein Anker INNERHALB des Abschnitts funktioniert: Zeigt
+  // der Hash auf irgendetwas hier drin, klappt der Abschnitt ebenfalls auf
+  // (siehe unten).
   htmlId?: string;
   defaultOpen?: boolean;
   children: ReactNode;
@@ -52,19 +75,24 @@ export default function CollapsiblePanel({
   // Die Reihenfolge ist Absicht: Ein Anker schlägt den gemerkten Zustand.
   // Wer auf /user#dashboard klickt, will diesen Abschnitt sehen, auch wenn er
   // ihn beim letzten Mal zugeklappt hat.
+  //
+  // Gesucht wird dabei nicht nur die eigene id, sondern auch ein Ziel INNERHALB
+  // des Abschnitts (/user#password liegt in „Settings"). Ohne das wäre ein
+  // solcher Link tot, sobald der Abschnitt zu ist: Ein geschlossenes <details>
+  // versteckt seinen Inhalt, der Browser springt nirgendwohin. Die Kinder
+  // stehen dabei sehr wohl im DOM — nur unsichtbar —, querySelector findet
+  // sie also.
   /* eslint-disable react-hooks/set-state-in-effect, react-you-might-not-need-an-effect/no-derived-state, react-you-might-not-need-an-effect/no-event-handler */
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    if (htmlId && window.location.hash === `#${htmlId}`) {
+    const ziel = ankerZiel(wrapperRef.current, window.location.hash, htmlId);
+    if (ziel) {
       setOpen(true);
       // Erst nach dem Aufklappen scrollen, damit der Layout-Sprung des
       // geöffneten Abschnitts schon berücksichtigt ist.
       requestAnimationFrame(() => {
-        wrapperRef.current?.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
+        ziel.scrollIntoView({ behavior: "smooth", block: "start" });
       });
       return;
     }

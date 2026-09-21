@@ -118,17 +118,24 @@ export function UserProfileGuide() {
   return (
     <GuideBody>
       <GuideSection
-        title="Profil · Die drei Klappen"
+        title="Profil · Die Klappen"
         figure={<ProfileFigure />}
       >
         <p>
           Dein Profil ist in aufklappbare Abschnitte gegliedert:{" "}
           <strong>Startseite</strong> (was dort erscheint),{" "}
           <strong>Charakterfarben</strong> (nur, wenn dir eine Figur gehört),{" "}
-          <strong>Darstellung</strong> und <strong>Settings</strong>. Jede
-          Klappe enthält eigene Formulare mit eigenem „Speichern“ — was du
-          änderst, gilt nur für dich und bleibt bei jedem Login erhalten. Auch
-          hier merkt sich die Seite, welche Abschnitte du offen gelassen hast.
+          <strong>Darstellung</strong>,{" "}
+          <strong>Follows &amp; Benachrichtigungen</strong> und{" "}
+          <strong>Settings</strong>. Jede Klappe enthält eigene Formulare mit
+          eigenem „Speichern“ — was du änderst, gilt nur für dich und bleibt
+          bei jedem Login erhalten.
+        </p>
+        <p>
+          Anders als auf der Startseite stehen die Abschnitte hier{" "}
+          <strong>zugeklappt</strong>: Das Profil ist eine Seite zum
+          Nachschlagen, keine zum Überfliegen — ausgeklappt wäre sie meterlang.
+          Was du aufklappst, bleibt für dieses Gerät aufgeklappt.
         </p>
         <p>
           Unter <strong>Charakterfarben</strong> bekommt jede deiner Figuren
@@ -150,15 +157,24 @@ export function UserProfileGuide() {
         </p>
       </GuideSection>
 
+      <GuideSection title="Profil · Follows & Benachrichtigungen">
+        <p>
+          Was dich erreicht und wem du folgst, steht zusammen in einer eigenen
+          Klappe: die <strong>Follows</strong> (alle abonnierten Missionen,
+          Datenbank-Einträge und Charaktere an einem Ort, samt der
+          Möglichkeit, einzelne wieder zu beenden), die{" "}
+          <strong>Benachrichtigungen</strong> (E-Mail und Push, einzeln nach
+          Inhaltsart) und die <strong>News</strong>, also welche Meldungen auf
+          deiner Startseite erscheinen — neu, bearbeitet, gelöscht.
+        </p>
+      </GuideSection>
+
       <GuideSection title="Profil · Settings">
         <p>
           Unter <strong>Settings</strong> liegt der Rest deines Kontos: Name und
-          E-Mail, das <strong>Passwort</strong>, die <strong>Follows</strong>{" "}
-          (alle abonnierten Missionen, Datenbank-Einträge und Charaktere an
-          einem Ort), die <strong>Sitzungen</strong> — ein Knopf meldet alle
-          anderen Geräte ab, ohne dass du dein Passwort ändern musst —, die{" "}
-          <strong>Benachrichtigungen</strong> (E-Mail und Push, einzeln nach
-          Inhaltsart), die <strong>News</strong> auf deiner Startseite, die{" "}
+          E-Mail, das <strong>Passwort</strong>, die <strong>Sitzungen</strong>{" "}
+          — ein Knopf meldet alle anderen Geräte ab, ohne dass du dein Passwort
+          ändern musst —, der Weg zur <strong>Anleitung</strong>, die{" "}
           <strong>Rechtschreibprüfung</strong> im Editor und die{" "}
           <strong>Installation als App</strong> auf deinem Gerät.
         </p>

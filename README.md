@@ -597,9 +597,11 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   tragen keine DataRow-Akkordeons mehr (die breiten, farbigen LCARS-Balken mit
   der Zahl links), sondern die schlanke Klappe aus
   [`src/components/lcars/CollapsiblePanel.tsx`](src/components/lcars/CollapsiblePanel.tsx):
-  per Vorgabe **offen**, je Abschnitt zuklappbar, und der Zustand wird **je
-  Gerät** gemerkt (`localStorage`, siehe
-  [`src/lib/panelState.ts`](src/lib/panelState.ts)). Der Grund für den Umbau:
+  je Abschnitt zuklappbar, und der Zustand wird **je Gerät** gemerkt
+  (`localStorage`, siehe [`src/lib/panelState.ts`](src/lib/panelState.ts)).
+  Die Vorgabe unterscheidet sich nach Seite: Die **Startseite** steht offen
+  (man überfliegt sie), das **Profil** zugeklappt (man schlägt dort nach —
+  ausgeklappt wäre es meterlang). Der Grund für den Umbau:
   Die DataRow ist als Navigationszeile gedacht; eine Seite aus zehn davon
   liest sich wie ein Inhaltsverzeichnis, nicht wie ein Arbeitsplatz. Die Zahl
   steht als Kurzinfo rechts weiter da — ein zugeklappter Abschnitt soll nicht
@@ -608,10 +610,14 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   anfasst, hat keinen Eintrag, und eine später geänderte Vorgabe erreicht ihn.
   Gerät statt Konto ist Absicht (gleiche Überlegung wie beim angehefteten
   Antwortfeld): Am Telefon will man die lange News-Liste vielleicht zu haben,
-  am großen Schirm nicht. Ein Anker (`/user#dashboard`, das Zahnrad auf der
-  Startseite) schlägt den gemerkten Zustand — sonst käme man dort an und sähe
-  nichts. `SettingsPanel` bleibt daneben bestehen: Es merkt sich nichts und
-  ist dafür server-renderbar.
+  am großen Schirm nicht.
+  Ein **Anker schlägt den gemerkten Zustand** — und zwar auch einer, der auf
+  etwas *innerhalb* des Abschnitts zeigt: `/user#password` liegt in „Settings",
+  und ein geschlossenes `<details>` versteckt seinen Inhalt, der Browser
+  spränge sonst nirgendwohin. Ohne diese Regel wäre der Link „Jetzt festlegen"
+  vom Dashboard tot, sobald das Profil per Vorgabe zugeklappt ist.
+  `SettingsPanel` bleibt daneben bestehen: Es merkt sich nichts und ist dafür
+  server-renderbar.
 - **Anlegen ohne Umweg** — „Neuer Missionslog", „Neues Gespräch", „Neuer
   Datenbank-Eintrag" und „Neuer NPC" stehen jetzt auch auf dem Dashboard und
   öffnen dieselben Formular-Fenster wie unter „Meine Inhalte" (je einzeln

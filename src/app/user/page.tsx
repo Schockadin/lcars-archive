@@ -159,6 +159,7 @@ export default async function UserPage() {
               htmlId="dashboard"
               badge={`${aktiveSektionen} von ${DASHBOARD_SECTIONS.length}`}
               storageId="user:startseite"
+              defaultOpen={false}
             >
               <section className="flex flex-col gap-[12px]">
                 <h2>Was auf der Startseite steht</h2>
@@ -177,6 +178,7 @@ export default async function UserPage() {
                 title="Charakterfarben"
                 badge={characterColors.length}
                 storageId="user:charakterfarben"
+                defaultOpen={false}
               >
                 <section
                   id="character-colors"
@@ -216,6 +218,7 @@ export default async function UserPage() {
               title="Darstellung"
               badge={`${COLOR_THEMES.length} Schemata`}
               storageId="user:darstellung"
+              defaultOpen={false}
             >
               {/* Alle Darstellungs-Einstellungen als aufklappbare Panels
                   (SettingsPanel): Farben, Hell/Dunkel und Oberfläche stehen
@@ -264,24 +267,14 @@ export default async function UserPage() {
               </section>
             </LcarsCollapsiblePanel>
 
+            {/* Was dich erreicht und wem du folgst — drei Dinge, die
+                zusammengehören und vorher verstreut in „Settings" standen,
+                zwischen Passwort und Editor-Rechtschreibung. */}
             <LcarsCollapsiblePanel
-              title="Settings"
-              storageId="user:settings"
+              title="Follows & Benachrichtigungen"
+              storageId="user:benachrichtigungen"
+              defaultOpen={false}
             >
-              <h2>User-Daten</h2>
-              <SettingsForm user={{ name: target.name, email: target.email }} />
-
-              <div className="horizontalBar" />
-
-              <section id="password" className="flex flex-col gap-[12px]">
-                <h2>
-                  {hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}
-                </h2>
-                <PasswordForm hasPassword={hasPasswordSet} />
-              </section>
-
-              <div className="horizontalBar" />
-
               <section id="follows" className="flex flex-col gap-[8px]">
                 <h2>Follows</h2>
                 <p>
@@ -295,6 +288,45 @@ export default async function UserPage() {
                 >
                   Follows verwalten
                 </Link>
+              </section>
+
+              <div className="horizontalBar" />
+
+              <section id="notifications" className="flex flex-col gap-[12px]">
+                <h2>Benachrichtigungen</h2>
+                <NotificationSettingsForm
+                  user={{
+                    emailEnabled: target.email_notifications_enabled,
+                    pushEnabled: target.push_notifications_enabled,
+                    notifyContentTypes: target.notify_content_types,
+                  }}
+                  isAdmin={userCan(target, "admin.access", roleMap)}
+                />
+              </section>
+
+              <div className="horizontalBar" />
+
+              <section id="news" className="flex flex-col gap-[12px]">
+                <h2>News</h2>
+                <NewsSettingsForm newsKinds={target.news_kinds} />
+              </section>
+            </LcarsCollapsiblePanel>
+
+            <LcarsCollapsiblePanel
+              title="Settings"
+              storageId="user:settings"
+              defaultOpen={false}
+            >
+              <h2>User-Daten</h2>
+              <SettingsForm user={{ name: target.name, email: target.email }} />
+
+              <div className="horizontalBar" />
+
+              <section id="password" className="flex flex-col gap-[12px]">
+                <h2>
+                  {hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}
+                </h2>
+                <PasswordForm hasPassword={hasPasswordSet} />
               </section>
 
               <div className="horizontalBar" />
@@ -327,27 +359,6 @@ export default async function UserPage() {
                   zu ändern.
                 </p>
                 <LogoutEverywhereButton />
-              </section>
-
-              <div className="horizontalBar" />
-
-              <section id="notifications" className="flex flex-col gap-[12px]">
-                <h2>Benachrichtigungen</h2>
-                <NotificationSettingsForm
-                  user={{
-                    emailEnabled: target.email_notifications_enabled,
-                    pushEnabled: target.push_notifications_enabled,
-                    notifyContentTypes: target.notify_content_types,
-                  }}
-                  isAdmin={userCan(target, "admin.access", roleMap)}
-                />
-              </section>
-
-              <div className="horizontalBar" />
-
-              <section id="news" className="flex flex-col gap-[12px]">
-                <h2>News</h2>
-                <NewsSettingsForm newsKinds={target.news_kinds} />
               </section>
 
               <div className="horizontalBar" />

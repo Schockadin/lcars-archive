@@ -1,7 +1,17 @@
-import { describe, expect, it, afterEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
 import { render, screen, act } from "@testing-library/react";
 import CollapsiblePanel from "./CollapsiblePanel";
 import { panelStorageKey } from "@/lib/panelState";
+
+// jsdom kennt scrollIntoView nicht — gleiche Attrappe wie in
+// DialogueLiveView.test.tsx, sonst wirft der Anker-Zweig in der
+// requestAnimationFrame-Rückrufliste, wo es kein Test mehr auffängt.
+let scrollIntoView: ReturnType<typeof vi.fn<Element["scrollIntoView"]>>;
+
+beforeEach(() => {
+  scrollIntoView = vi.fn<Element["scrollIntoView"]>();
+  Element.prototype.scrollIntoView = scrollIntoView;
+});
 
 afterEach(() => {
   window.localStorage.clear();
@@ -107,6 +117,79 @@ describe("CollapsiblePanel", () => {
 
     expect(panel().open).toBe(true);
     expect(panel().id).toBe("dashboard");
+  });
+
+  it("scrollt den Anker heran, nachdem er aufgeklappt ist", async () => {
+    window.location.hash = "#dashboard";
+
+    render(
+      <CollapsiblePanel title="Startseite" htmlId="dashboard">
+        <p>Inhalt</p>
+      </CollapsiblePanel>,
+    );
+
+    // requestAnimationFrame läuft in jsdom über einen Timer.
+    await act(async () => {
+      await new Promise((r) => setTimeout(r, 20));
+    });
+    expect(scrollIntoView).toHaveBeenCalledWith({
+      behavior: "smooth",
+      block: "start",
+    });
+  });
+
+  // Der Fall, der die Klappen auf /user erst möglich macht: Dort stehen sie
+  // per Vorgabe ZU, und /user#password zeigt auf einen Abschnitt INNERHALB
+  // von „Settings". Ein geschlossenes <details> versteckt seinen Inhalt — der
+  // Browser spränge nirgendwohin, der Link vom Dashboard wäre tot.
+  it("klappt auch für einen Anker in seinem Inneren auf", () => {
+    window.location.hash = "#password";
+
+    render(
+      <CollapsiblePanel
+        title="Settings"
+        storageId="user:settings"
+        defaultOpen={false}
+      >
+        <section id="password">Passwort ändern</section>
+      </CollapsiblePanel>,
+    );
+
+    expect(panel().open).toBe(true);
+  });
+
+  it("bleibt zu, wenn der Anker woandershin zeigt", () => {
+    window.location.hash = "#editor";
+
+    render(
+      <CollapsiblePanel
+        title="Settings"
+        storageId="user:settings"
+        defaultOpen={false}
+      >
+        <section id="password">Passwort ändern</section>
+      </CollapsiblePanel>,
+    );
+
+    expect(panel().open).toBe(false);
+  });
+
+  // Vorgabe „zu" heißt nicht „immer zu": Wer den Abschnitt offen verlassen
+  // hat, findet ihn offen wieder.
+  it("achtet den gemerkten Zustand auch bei der Vorgabe „zu“", () => {
+    window.localStorage.setItem(panelStorageKey("user:settings"), "1");
+
+    render(
+      <CollapsiblePanel
+        title="Settings"
+        storageId="user:settings"
+        defaultOpen={false}
+      >
+        <p>Inhalt</p>
+      </CollapsiblePanel>,
+    );
+
+    expect(panel().open).toBe(true);
   });
 
   it("gilt nur für den eigenen Anker", () => {
