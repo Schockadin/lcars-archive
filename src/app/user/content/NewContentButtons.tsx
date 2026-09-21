@@ -46,14 +46,15 @@ export default function NewContentButtons({
   // bleiben dieselben.
   show?: readonly OpenForm[];
   // Der Markdown-Import. Anders als die übrigen kein Fenster, sondern ein
-  // Link auf /admin/import: Der Ablauf blättert durch mehrere Dateien und
+  // Link auf /user/import: Der Ablauf blättert durch mehrere Dateien und
   // bestätigt jede einzeln — dafür ist ein Fenster zu klein (gleiche
   // Überlegung wie beim Charakter-Assistenten).
   //
-  // Der Aufrufer entscheidet, ob der Knopf dasteht, und muss dafür
-  // admin.access prüfen: Sowohl die Seite als auch ihre beiden Actions rufen
-  // requireAdmin(). Ein Knopf ohne dieses Recht führte in eine
-  // Fehlermeldung.
+  // Kein Rechte-Schalter: Einen Datenbank-Eintrag darf jede eingeloggte
+  // Person hochladen, die Seite zeigt dann eben nur diese eine Art an
+  // (src/lib/importAccess.ts). Der Aufrufer entscheidet damit nur, OB der
+  // Knopf hier Platz bekommt — die Startseite etwa nur, wenn die Sektion im
+  // Profil eingeschaltet ist.
   canImport?: boolean;
 }) {
   const [open, setOpen] = useState<OpenForm | null>(null);
@@ -83,8 +84,8 @@ export default function NewContentButtons({
             bildet (siehe newContentForms.ts). */}
         {sichtbar.map(button)}
         {canImport && (
-          <Link href="/admin/import" className="lcars-pill-btn--outline">
-            Inhalte importieren
+          <Link href="/user/import" className="lcars-pill-btn--outline">
+            Import
           </Link>
         )}
       </div>

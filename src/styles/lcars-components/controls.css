@@ -214,9 +214,18 @@
    Utility gleicher Spezifität täte das nur, wenn die Reihenfolge der
    Stylesheets zufällig passt.
 
-   flex: 1 1 0 statt 1 1 auto in der breiten Stufe: Mit `auto` bekäme jeder
-   Knopf seine Textbreite als Basis, lange Beschriftungen bekämen also mehr
-   Platz als kurze. Gleiche Spalten sehen in einer Reihe ruhiger aus. */
+   flex: 1 1 auto und NICHT 1 1 0 in der breiten Stufe: Gleiche Spalten sähen
+   ruhiger aus, schneiden aber lange Beschriftungen ab — .lcars-pill-btn hat
+   white-space: nowrap und overflow: hidden ohne text-overflow, und wegen
+   justify-content: flex-end verschwindet dabei der WORTANFANG. Nachgemessen
+   mit der echten Schrift: Sechs Knöpfe brauchen 1046px, jeder gleich breit
+   bekäme aber nur 173px — „Neuer Datenbank-Eintrag" allein will 252px. Mit
+   `auto` bringt jeder Knopf seine Textbreite als Basis mit, geteilt wird nur
+   der Rest.
+
+   Dazu wrap statt nowrap: Die sechs passen heute in die 1100px breite Spalte
+   (1046px), aber eine längere Beschriftung später soll die Zeile umbrechen
+   lassen und nicht still Text fressen. */
 .lcars-btn-row {
   display: flex;
   flex-direction: column;
@@ -240,11 +249,11 @@
 
 @media (min-width: 1024px) {
   .lcars-btn-row {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
   }
   .lcars-btn-row > * {
     width: auto;
-    flex: 1 1 0;
+    flex: 1 1 auto;
     min-width: 0;
   }
 }

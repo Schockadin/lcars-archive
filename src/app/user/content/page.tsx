@@ -73,7 +73,7 @@ export default async function UserContentPage() {
               Zweck dieser Seite, nicht eine Möglichkeit am Rande. */}
           <NewContentPanel
             data={newContent}
-            canImport={userCan(user, "admin.access", roleMap)}
+            canImport
             storageId="content:anlegen"
           />
 
@@ -86,7 +86,7 @@ export default async function UserContentPage() {
               der Chronologie) — die Klappe darum trägt deshalb nur die
               Gesamtzahl. */}
           <LcarsCollapsiblePanel
-            title="Meine Inhalte"
+            title="Alle Inhalte"
             badge={
               logs.length +
               dialogues.length +

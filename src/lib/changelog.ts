@@ -158,9 +158,14 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "mein-bereich",
       },
       {
-        text: "Neu auf der Startseite: Knöpfe für einen neuen Missionslog, ein neues Gespräch, einen neuen Datenbank-Eintrag und einen neuen NPC. Alle vier öffnen dasselbe Formular wie unter „Meine Inhalte“, nur ohne den Umweg dorthin — und jeder lässt sich einzeln abschalten. Die Administration findet an beiden Stellen zusätzlich den Markdown-Import.",
+        text: "Neu auf der Startseite: Knöpfe für einen neuen Missionslog, ein neues Gespräch, einen neuen Datenbank-Eintrag und einen neuen NPC. Alle vier öffnen dasselbe Formular wie unter „Meine Inhalte“, nur ohne den Umweg dorthin — und jeder lässt sich einzeln abschalten.",
         category: "inhalte",
         tutorial: "mein-bereich",
+      },
+      {
+        text: "Der Markdown-Import steht jetzt allen offen, nicht mehr nur der Administration: Hast du einen Eintrag schon als .md-Datei fertig, lädst du ihn über „Import“ hoch, statt ihn abzutippen — mehrere Dateien auf einmal, jede als Vorschau zum Durchblättern, Nachbearbeiten und einzelnen Bestätigen. Angeboten wird nur, was du auch über das normale Formular anlegen dürftest; was du hochlädst, gehört dir, und ein Einsatzbericht lässt sich nur einer eigenen Figur zuschreiben. Der Knopf steht unter „Meine Inhalte“ und auf der Startseite.",
+        category: "inhalte",
+        tutorial: "eigene-inhalte",
       },
       {
         text: "Jeder Abschnitt auf der Startseite und im Profil lässt sich zuklappen — ein Klick auf die Überschrift. Wie du die Seite verlässt, so findest du sie wieder; gemerkt wird das auf dem jeweiligen Gerät, am Telefon also getrennt vom Rechner.",

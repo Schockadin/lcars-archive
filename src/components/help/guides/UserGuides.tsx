@@ -85,10 +85,10 @@ export function MyContentGuide() {
           <strong>Charakter</strong> jede:r außer Gast-Accounts,{" "}
           <strong>Einsatzbericht</strong> und <strong>Gespräch</strong> setzen
           einen eigenen Charakter voraus, <strong>Mission</strong> bleibt der
-          Spielleitung vorbehalten. Die Administration findet daneben{" "}
-          <strong>„Inhalte importieren“</strong> — der einzige Knopf, der auf
-          eine eigene Seite führt statt in ein Fenster: Der Import blättert
-          durch mehrere Dateien und lässt jede einzeln bestätigen.
+          Spielleitung vorbehalten. Daneben steht{" "}
+          <strong>„Import“</strong> — der einzige Knopf, der auf eine eigene
+          Seite führt statt in ein Fenster: Der Import blättert durch mehrere
+          Dateien und lässt jede einzeln bestätigen.
         </p>
         <p>
           Genau dieselbe Knopfleiste steht auf deiner <strong>Startseite</strong>
@@ -131,6 +131,61 @@ export function MyContentGuide() {
           <strong>Charaktere</strong> stehen nicht in dieser Liste: Sie haben im
           Profil-Menü einen eigenen Punkt, samt eigener Anleitung zur
           Erschaffung.
+        </p>
+      </GuideSection>
+    </GuideBody>
+  );
+}
+
+// ── Import ───────────────────────────────────────────────────────────
+export function ImportGuide() {
+  return (
+    <GuideBody>
+      <GuideSection title="Import · Wofür">
+        <p>
+          Hast du einen Eintrag schon fertig als <strong>Markdown-Datei</strong>{" "}
+          — aus deinen Notizen, einem Vault, einem anderen Werkzeug —, musst du
+          ihn nicht abtippen: Der Import liest eine oder mehrere .md-Dateien
+          ein und macht daraus neue Einträge. Erwartet wird das übliche{" "}
+          <strong>Frontmatter</strong> (der Block zwischen den beiden{" "}
+          <code>---</code>-Zeilen am Anfang) mit mindestens{" "}
+          <code>type</code>, <code>slug</code> und Titel bzw. Name.
+        </p>
+      </GuideSection>
+
+      <GuideSection title="Import · Was du hochladen darfst">
+        <p>
+          Die Auswahlliste oben zeigt nur die Arten, die du auch über das
+          normale Formular anlegen dürftest:{" "}
+          <strong>Datenbank-Eintrag</strong> jede:r,{" "}
+          <strong>Charakter</strong> und <strong>Einsatzbericht</strong> jede:r
+          außer Gast-Accounts, <strong>Mission</strong> nur die Spielleitung.
+          Der Import ist der bequemere Weg zum selben Ziel, kein zweiter Weg an
+          den Regeln vorbei.
+        </p>
+        <p>
+          Zwei Dinge entscheidet deshalb nicht die Datei, sondern der Server:
+          Was du hochlädst, <strong>gehört dir</strong> — ein{" "}
+          <code>owner:</code> im Frontmatter wird überschrieben —, und ein{" "}
+          <strong>Einsatzbericht</strong> lässt sich nur einer{" "}
+          <strong>eigenen, veröffentlichten Figur</strong> zuschreiben.
+        </p>
+      </GuideSection>
+
+      <GuideSection title="Import · Der Ablauf">
+        <p>
+          Nach dem Auswählen wird zunächst nur <em>gelesen</em>, noch nichts
+          angelegt. Jede Datei erscheint als eigene, editierbare{" "}
+          <strong>Vorschau</strong> (&bdquo;Datei 2 von 5&ldquo;, mit Pfeilen
+          zum Blättern) — Titel, Slug, Tags und Text kannst du vorher noch
+          ändern. Erst <strong>Bestätigen</strong> legt den Eintrag an,{" "}
+          <strong>Verwerfen</strong> überspringt die Datei.
+        </p>
+        <p>
+          Ein bereits vergebener <strong>Slug</strong> wird abgelehnt — es wird
+          nie etwas überschrieben. Verweise auf andere Einträge werden nur
+          gegen das aufgelöst, was es schon gibt: Lade Verweisziele zuerst
+          hoch, wenn die Verlinkung gleich stehen soll.
         </p>
       </GuideSection>
     </GuideBody>
@@ -207,13 +262,15 @@ export function UserProfileGuide() {
   );
 }
 
-// Beide Bereiche am Stück — so stehen sie im Abschnitt „Mein Bereich" der
-// Anleitung (/tutorial).
+// Alle Bausteine am Stück — so stehen sie im Abschnitt „Mein Bereich" der
+// Anleitung (/tutorial). Der Import steht zwischen „Meine Inhalte" und dem
+// Profil, weil er von dort aus erreicht wird.
 export default function UserAreaGuides() {
   return (
     <GuideBody>
       <DashboardGuide />
       <MyContentGuide />
+      <ImportGuide />
       <UserProfileGuide />
     </GuideBody>
   );

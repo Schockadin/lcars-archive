@@ -135,18 +135,19 @@ describe("NewContentButtons", () => {
     expect(screen.getByRole("button", { name: "Neuer NPC" })).toBeInTheDocument();
   });
 
-  // Der Import führt nach /admin/import — Seite und Actions dort rufen
-  // requireAdmin(). Der Knopf darf deshalb nur stehen, wo der Aufrufer das
-  // Recht geprüft hat; ohne canImport gibt es ihn nicht.
+  // Der Import führt nach /user/import — was dort angeboten wird, hängt an
+  // der jeweiligen Berechtigung (importAccess.ts), der Knopf selbst aber
+  // nicht: Ob er Platz bekommt, entscheidet allein der Aufrufer (auf der
+  // Startseite die Sektion im Profil).
   it("zeigt den Import nur, wenn der Aufrufer ihn erlaubt", () => {
     const { unmount } = render(<NewContentButtons data={data()} />);
-    expect(screen.queryByRole("link", { name: "Inhalte importieren" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Import" })).toBeNull();
     unmount();
 
     render(<NewContentButtons data={data()} canImport />);
     expect(
-      screen.getByRole("link", { name: "Inhalte importieren" }),
-    ).toHaveAttribute("href", "/admin/import");
+      screen.getByRole("link", { name: "Import" }),
+    ).toHaveAttribute("href", "/user/import");
   });
 
   // Anders als die übrigen kein Fenster: Der Ablauf blättert durch mehrere
@@ -155,7 +156,7 @@ describe("NewContentButtons", () => {
     render(<NewContentButtons data={data()} canImport />);
 
     expect(
-      screen.queryByRole("button", { name: "Inhalte importieren" }),
+      screen.queryByRole("button", { name: "Import" }),
     ).toBeNull();
   });
 

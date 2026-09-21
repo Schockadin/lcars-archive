@@ -18,7 +18,6 @@ import {
 } from "@/lib/dashboardSections";
 import { loadNewContentData } from "./user/content/newContentData";
 import NewContentPanel from "./user/content/NewContentPanel";
-import { userCan } from "@/lib/permissions";
 import FollowedContentSection from "./FollowedContentSection";
 import OpenDialoguesSection from "./OpenDialoguesSection";
 import PendingActionsSection from "./PendingActionsSection";
@@ -71,9 +70,7 @@ export default async function Dashboard({ user }: { user: User }) {
   // dasselbe Formular mit vorgewählter Kategorie und kommen ohne aus — wer
   // nur diese beiden Knöpfe zeigt, löst damit keine einzige Abfrage aus.
   const brauchtFormularDaten = zeigtNeuesLog || zeigtNeuesGespraech;
-  // Die Rollen-Map braucht auch der Import-Knopf: Er darf nur dastehen, wo er
-  // funktioniert — Seite und Actions unter /admin/import rufen requireAdmin().
-  const brauchtRollen = brauchtFormularDaten || zeigtImport;
+  const brauchtRollen = brauchtFormularDaten;
   // Die Charakter-Liste brauchen zwei Dinge: die Sektion selbst und die
   // beiden Formulare, die fragen, mit welcher Figur geschrieben wird.
   const brauchtCharaktere = zeigtCharaktere || brauchtFormularDaten;
@@ -132,10 +129,11 @@ export default async function Dashboard({ user }: { user: User }) {
     ...(zeigtNeuenEintrag ? (["archiveEntry"] as const) : []),
     ...(zeigtNeuenNpc ? (["npc"] as const) : []),
   ];
-  // Der Import-Knopf führt nach /admin/import — Seite und Actions dort rufen
-  // requireAdmin(). Ohne dieses Recht bliebe er ein Link in eine
-  // Fehlermeldung, also steht er nur, wo er auch trägt.
-  const darfImportieren = zeigtImport && userCan(user, "admin.access", roleMap);
+  // Der Import-Knopf führt nach /user/import. Dort gilt je Inhaltsart
+  // dieselbe Schranke wie beim normalen Anlegen (src/lib/importAccess.ts) —
+  // eine davon (der Datenbank-Eintrag) trägt für jede eingeloggte Person,
+  // der Knopf führt also nie ins Leere. Ob er dasteht, entscheidet damit
+  // allein die Sektion im Profil.
 
   const needsPassword = !hasPasswordSet;
   const firstVisit = user.previous_login_at === null;
@@ -225,7 +223,7 @@ export default async function Dashboard({ user }: { user: User }) {
           <NewContentPanel
             data={newContent}
             show={anlegeKnoepfe}
-            canImport={darfImportieren}
+            canImport={zeigtImport}
             title="Neues anlegen"
             storageId="dashboard:anlegen"
           />

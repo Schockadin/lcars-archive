@@ -64,7 +64,7 @@ export const DASHBOARD_SECTIONS = [
   {
     id: "import",
     label: "Import",
-    hint: "Knopf zum Markdown-Import. Erscheint nur für die Administration — nur sie darf importieren.",
+    hint: "Knopf zum Markdown-Import fertiger .md-Dateien.",
     default: true,
   },
   {

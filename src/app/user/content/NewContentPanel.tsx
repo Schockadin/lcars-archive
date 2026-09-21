@@ -27,8 +27,8 @@ export default function NewContentPanel({
   data: NewContentData;
   // Welche Knöpfe diese Seite anbietet. Ohne Angabe alle.
   show?: readonly OpenForm[];
-  // Markdown-Import (/admin/import). Der Aufrufer muss admin.access geprüft
-  // haben — siehe NewContentButtons.
+  // Markdown-Import (/user/import). Kein Rechte-Schalter — siehe
+  // NewContentButtons.
   canImport?: boolean;
   title?: string;
   storageId?: string;

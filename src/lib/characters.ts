@@ -350,6 +350,29 @@ export async function getCharactersForParticipantPicker(): Promise<
   `;
 }
 
+// Gehört diese Figur (über ihren Slug) dieser Person? Für den
+// Markdown-Import: Wer nicht zur Administration gehört, darf ein Logbuch nur
+// einer EIGENEN, veröffentlichten Figur zuschreiben — dieselbe Grenze, die
+// das normale Logbuch-Formular über seine Auswahlliste zieht
+// (ownCharacters in loadNewContentData, dort ebenfalls ohne Entwürfe). Der
+// Slug kommt beim Import aus einem Formularfeld und ist damit frei wählbar;
+// die Prüfung gehört deshalb auf den Server (siehe
+// src/app/_shared/import/actions.ts).
+export async function ownsCharacterSlug(
+  userId: number,
+  slug: string,
+): Promise<boolean> {
+  if (!slug) return false;
+  const [row] = await sql<{ id: number }[]>`
+    SELECT id FROM characters
+    WHERE slug = ${slug}
+      AND player_id = ${userId}
+      AND deleted_at IS NULL
+      AND is_draft = false
+  `;
+  return row !== undefined;
+}
+
 export interface ParticipantCharacterForNotification {
   id: number;
   slug: string;
