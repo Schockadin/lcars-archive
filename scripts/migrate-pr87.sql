@@ -1,4 +1,4 @@
--- Migration für PR #86 (claude/timeline-event-button-editors-ne7aq7 → master)
+-- Migration für PR #87 (claude/timeline-event-button-editors-ne7aq7 → master)
 --
 -- WICHTIG: Gegen die Datenbank ausführen, BEVOR der Stand ausgeliefert wird —
 -- die Deploy-Preview hängt an derselben Datenbank wie die Produktion. Fehlt
@@ -16,7 +16,7 @@
 -- Spielabende, offene Gespräche, die beiden Anlege-Knöpfe und die eigenen
 -- Charaktere an; Erste Schritte, To Dos, Versionen und Lesezeichen aus.
 --
---   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr86.sql
+--   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr87.sql
 --
 -- Idempotent (IF NOT EXISTS) — ein zweiter Lauf ändert nichts.
 

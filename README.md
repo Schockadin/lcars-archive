@@ -1946,7 +1946,7 @@ neue **Tabelle**, die die App liest: `scripts/migrate-pr67.sql` legt
 psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr67.sql
 ```
 
-Ebenso `scripts/migrate-pr86.sql`: Es ergänzt `users` um `dashboard_prefs`
+Ebenso `scripts/migrate-pr87.sql`: Es ergänzt `users` um `dashboard_prefs`
 (was das Dashboard je Person zeigt, siehe
 [`src/lib/dashboardSections.ts`](src/lib/dashboardSections.ts)). Die Spalte
 steht in `USER_COLUMNS` und wird damit bei **jedem** Laden eines Users
@@ -1954,7 +1954,7 @@ mitgelesen — fehlt sie, scheitern Dashboard und Profil mit
 `column "dashboard_prefs" does not exist`:
 
 ```bash
-psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr86.sql
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr87.sql
 ```
 
 Ebenso `scripts/migrate-pr78.sql`: Es ergänzt `error_logs` um die drei
