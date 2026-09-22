@@ -504,24 +504,6 @@ export function LoginNavIcon() {
   );
 }
 
-// Einstellungen — Zahnrad. Steht auf dem Dashboard neben dem Hilfe-Knopf und
-// führt zu dem Panel im Profil, in dem sich einstellen lässt, was dort
-// überhaupt erscheint (siehe src/app/Dashboard.tsx).
-//
-// Gezeichnet als Kranz mit sechs Zähnen um eine Nabe. Vorher waren es acht
-// freistehende Striche um einen Kreis — das ist die Zeichnung einer SONNE
-// (Helligkeit), nicht die eines Zahnrads: Dessen Zähne sitzen AM Kranz, sie
-// schweben nicht daneben. Der Knopf „Startseite einrichten" trug damit
-// sichtbar ein anderes Symbol als das, wofür er steht.
-export function SettingsIcon() {
-  return (
-    <svg {...ICON_PROPS}>
-      <circle cx="12" cy="12" r="3.4" />
-      <path d="M10.3 2.6h3.4l.4 2.4 2.1 1.2 2.2-1 1.7 2.9-1.8 1.6v2.4l1.8 1.6-1.7 2.9-2.2-1-2.1 1.2-.4 2.4h-3.4l-.4-2.4-2.1-1.2-2.2 1-1.7-2.9 1.8-1.6v-2.4L4 8.1l1.7-2.9 2.2 1 2.1-1.2z" />
-    </svg>
-  );
-}
-
 // Hilfe/Anleitung — ein Fragezeichen. Trägt jeden Hilfe-Knopf (HelpButton,
 // siehe src/components/help/) und den Menüpunkt „Hilfe" in der UserNav: ein
 // Fragezeichen ist das eine Symbol, das überall dasselbe bedeutet, und

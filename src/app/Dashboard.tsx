@@ -33,7 +33,7 @@ import OnboardingSection from "./OnboardingSection";
 import HelpButton from "@/components/help/HelpButton";
 import { HelpTitleRow } from "@/components/help/HelpHeading";
 import { DashboardGuide } from "@/components/help/guides/UserGuides";
-import { SettingsIcon } from "@/lib/icons";
+import { ProfileNavIcon } from "@/lib/icons";
 import type { User } from "@/types/db";
 
 const ROLE_LABELS: Record<User["role"], string> = {
@@ -156,13 +156,18 @@ export default async function Dashboard({ user }: { user: User }) {
               <HelpButton title="Startseite" tutorial="mein-bereich">
                 <DashboardGuide />
               </HelpButton>
+              {/* Dasselbe Symbol, mit dem das minimalistische Interface auf
+                  dem Telefon zum Profil führt (ProfileNavIcon, siehe
+                  HeaderUserNav) — dieser Knopf führt an dieselbe Stelle, nur
+                  direkt zu der Klappe darin. Zwei verschiedene Zeichen für
+                  einen Weg wären eines zu viel. */}
               <Link
                 href="/user#dashboard"
                 className="lcars-icon-btn"
                 aria-label="Startseite einrichten"
                 title="Startseite einrichten"
               >
-                <SettingsIcon />
+                <ProfileNavIcon />
               </Link>
             </div>
           }
