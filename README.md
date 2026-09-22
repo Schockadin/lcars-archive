@@ -680,7 +680,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   ([`ContentActionRow`](src/app/user/content/ContentActionRow.tsx):
   Zustands-Schalter, Stift, Mülleimer) — bei einer **Mission** ohne den
   Schalter, denn `setContentStateAction` kennt sie nicht (kein
-  Einzel-Owner-Modell, siehe `VisibilityContentType`). Beide Wege aus der
+  Einzel-Owner-Modell, siehe `VisibilityContentType`). Die große Aktenkarte
+  führt auf die kanonische **Leseseite** des Entwurfs; nur der ausdrückliche
+  Stift führt direkt in den Editor (`href` und `editHref` sind deshalb zwei
+  getrennte Werte). Für Missionslogs liefert die UNION dazu auch den Slug der
+  zugehörigen Mission, offene Gespräche führen unmittelbar in ihre
+  Spielansicht. Beide Wege aus der
   Liste hinaus, veröffentlichen und löschen, laufen über **einen**
   `useOptimistic`-Reducer: Was kein offener Entwurf mehr ist, verschwindet
   sofort, und React holt es bei einer fehlgeschlagenen Action von selbst
@@ -770,7 +775,13 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Event-Delegation an `document` und findet neue Felder (Fenster, Akkordeons,
   nachgeladene Bereiche) über einen `MutationObserver`. Der Schlüssel eines
   Feldes besteht aus Seitenpfad, Formular (`id`/`name`/Position) und Feld
-  (`name`/`id`/Position), Kästchen zusätzlich mit ihrem `value`. Die Position
+  (`name`/`id`/Position), Kästchen zusätzlich mit ihrem `value`. Die gemeinsam
+  gebauten Content-Editoren setzen darüber hinaus einen stabilen
+  `data-draft-scope` aus Inhaltsart und ID (z. B. `archive-entry:42`): Zwei
+  Einträge mit denselben Feldnamen teilen dadurch nie einen Schlüssel. Beim
+  clientseitigen Next-Routenwechsel sperrt eine im Layout-Effect aktualisierte
+  Pfad-Ref außerdem Observer und Timer der alten Seite, bevor sie das neue DOM
+  sehen können. Die Position
   ist dabei nur INNERHALB eines Formulars der Ausweg — dort steht die
   Felderliste fest; ein Feld ganz ohne Formular und ohne `name`/`id` bleibt
   außen vor (`hasStableKey`). Sonst zeigt derselbe Schlüssel nach dem

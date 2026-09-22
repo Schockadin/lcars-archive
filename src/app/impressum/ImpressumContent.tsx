@@ -54,6 +54,12 @@ export default function ImpressumContent() {
           nach den allgemeinen Gesetzen verantwortlich. Eine Pflicht zur
           Überwachung fremder Informationen besteht nicht (§§ 8–10 TMG).
         </p>
+        <p>
+          Noch nicht abgesendete Formulareingaben sind lediglich eine lokale
+          Zwischensicherung im Sitzungsspeicher des jeweiligen Browsers. Sie
+          werden erst durch das ausdrückliche Speichern zu einem Beitrag im
+          Archiv; die Einzelheiten stehen in der Datenschutzerklärung.
+        </p>
 
         <h2>Urheberrecht</h2>
         <p>

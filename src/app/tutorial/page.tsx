@@ -444,7 +444,9 @@ export default function TutorialPage() {
                 Knopfreihe: <strong>Entwurf / Veröffentlicht</strong>,{" "}
                 <strong>Stift</strong> und <strong>Mülleimer</strong>. Wer
                 veröffentlicht, sieht den Eintrag sofort aus der
-                Entwurfs-Übersicht verschwinden.
+                Entwurfs-Übersicht verschwinden. Ein Klick auf die große Karte
+                öffnet den eigentlichen Eintrag mit seinem Kontext und seinen
+                Verknüpfungen; der Stift ist der direkte Weg in den Editor.
               </p>
               <p>
                 Beim Anlegen oder Bearbeiten eines Charakters, einer Mission,
@@ -465,6 +467,9 @@ export default function TutorialPage() {
                 „Zurück“ oder läuft etwas schief, steht beim nächsten Aufruf
                 derselben Seite wieder da, was du geschrieben hattest. Das
                 passiert ohne Knopf und ohne Hinweis: Du tippst einfach weiter.
+                Bearbeitest du nacheinander mehrere Einträge, bleibt jeder
+                Zwischenstand bei genau diesem Eintrag — gleiche Felder wie
+                „Titel“ oder „Text“ werden nicht zwischen Editoren vermischt.
                 Gesichert wird ausschließlich auf deinem Gerät und nur bis zum
                 Schließen des Tabs; Passwortfelder bleiben grundsätzlich außen
                 vor. Sobald ein Formular erfolgreich abgeschickt und geleert
