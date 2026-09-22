@@ -507,25 +507,35 @@ export function LoginNavIcon() {
 // Einstellungen — Zahnrad. Steht auf dem Dashboard neben dem Hilfe-Knopf und
 // führt zu dem Panel im Profil, in dem sich einstellen lässt, was dort
 // überhaupt erscheint (siehe src/app/Dashboard.tsx).
+//
+// Gezeichnet als Kranz mit sechs Zähnen um eine Nabe. Vorher waren es acht
+// freistehende Striche um einen Kreis — das ist die Zeichnung einer SONNE
+// (Helligkeit), nicht die eines Zahnrads: Dessen Zähne sitzen AM Kranz, sie
+// schweben nicht daneben. Der Knopf „Startseite einrichten" trug damit
+// sichtbar ein anderes Symbol als das, wofür er steht.
 export function SettingsIcon() {
   return (
     <svg {...ICON_PROPS}>
-      <circle cx="12" cy="12" r="3.2" />
-      <path d="M12 2.8v2.4M12 18.8v2.4M4.5 4.5l1.7 1.7M17.8 17.8l1.7 1.7M2.8 12h2.4M18.8 12h2.4M4.5 19.5l1.7-1.7M17.8 6.2l1.7-1.7" />
+      <circle cx="12" cy="12" r="3.4" />
+      <path d="M10.3 2.6h3.4l.4 2.4 2.1 1.2 2.2-1 1.7 2.9-1.8 1.6v2.4l1.8 1.6-1.7 2.9-2.2-1-2.1 1.2-.4 2.4h-3.4l-.4-2.4-2.1-1.2-2.2 1-1.7-2.9 1.8-1.6v-2.4L4 8.1l1.7-2.9 2.2 1 2.1-1.2z" />
     </svg>
   );
 }
 
-// Hilfe/Anleitung — Fragezeichen im Kreis. Trägt jeden Hilfe-Knopf
-// (HelpButton, siehe src/components/help/) und den Menüpunkt „Hilfe" in der
-// UserNav: ein Fragezeichen ist das eine Symbol, das überall dasselbe
-// bedeutet, und braucht deshalb keine Beschriftung daneben.
+// Hilfe/Anleitung — ein Fragezeichen. Trägt jeden Hilfe-Knopf (HelpButton,
+// siehe src/components/help/) und den Menüpunkt „Hilfe" in der UserNav: ein
+// Fragezeichen ist das eine Symbol, das überall dasselbe bedeutet, und
+// braucht deshalb keine Beschriftung daneben.
+//
+// OHNE umschließenden Kreis: Das Symbol sitzt fast immer in einem runden
+// .lcars-icon-btn, und dessen Rand war damit ein zweiter, innerer Ring um ein
+// entsprechend kleines Fragezeichen. Ohne ihn füllt das Zeichen die Fläche —
+// dieselbe Geometrie wie zuvor, nur um den Faktor 1,55 um die Mitte gedehnt.
 export function HelpIcon() {
   return (
     <svg {...ICON_PROPS}>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M9.4 9.2a2.7 2.7 0 1 1 3.4 2.6c-.6.2-.9.7-.9 1.3v.6" />
-      <circle cx="12" cy="17" r="1" fill="currentColor" stroke="none" />
+      <path d="M8 7.7a4.2 4.2 0 1 1 5.3 4c-.9.3-1.4 1.1-1.4 2v2.4" />
+      <circle cx="12" cy="19.4" r="1.4" fill="currentColor" stroke="none" />
     </svg>
   );
 }
