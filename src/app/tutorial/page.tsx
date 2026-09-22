@@ -594,7 +594,8 @@ export default function TutorialPage() {
                 Nachrichtenkarten anzeigbar. Diese Einstellung gilt für alle
                 abgeschlossenen Gespräche, die du dir ansiehst. Im Lesetext wird
                 die wörtliche Rede jedes Charakters in dessen{" "}
-                <strong>Charakter-Farbe</strong> dargestellt, ebenso die
+                <strong>Charakter-Farbe</strong> dargestellt — auch dann, wenn
+                sie über mehrere Absätze läuft —, ebenso die
                 Nachrichten-Karten in offenen wie geschlossenen Gesprächen —
                 diese Farbe legst du im Profil unter „Charakter-Farben“ fest,
                 für jeden deiner Charaktere einzeln (ohne eigene Wahl bekommt er

@@ -30,15 +30,30 @@ test.describe("SettingsPanel", () => {
     expect(stackedBox).toBe("column");
   });
 
-  test("lässt die nebeneinander stehende Kopfzeile eine Zeile bleiben", async ({
-    page,
-  }) => {
-    const dir = await page
+  // Die nebeneinander stehende Kopfzeile bleibt eine Zeile — aber nur,
+  // solange Platz dafür ist. Auf dem Telefon teilten sich Erklärung und
+  // Kurzinfo eine Zeile, in der für beide zu wenig Raum war („Antonio ·
+  // JetBrains Mono" neben „Beschriftungs- und Datenschrift getrennt
+  // wählbar"); unterhalb von 641px stapelt sie deshalb ebenfalls.
+  //
+  // Beide Breiten hier ausdrücklich gesetzt, statt sich auf das Projekt zu
+  // verlassen (playwright.config.ts fährt mobil UND Desktop): Der Test prüft
+  // die Grenze selbst, nicht die Seite, auf der er zufällig läuft.
+  test("stapelt die Kopfzeile erst auf schmalen Schirmen", async ({ page }) => {
+    const summary = page
       .locator("#settings-panel details")
       .nth(0)
-      .locator("summary")
-      .evaluate((el) => getComputedStyle(el).flexDirection);
-    expect(dir).toBe("row");
+      .locator("summary");
+
+    await page.setViewportSize({ width: 900, height: 800 });
+    expect(
+      await summary.evaluate((el) => getComputedStyle(el).flexDirection),
+    ).toBe("row");
+
+    await page.setViewportSize({ width: 375, height: 800 });
+    expect(
+      await summary.evaluate((el) => getComputedStyle(el).flexDirection),
+    ).toBe("column");
   });
 });
 

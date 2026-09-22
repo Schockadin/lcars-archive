@@ -114,6 +114,22 @@
   align-items: flex-start;
   gap: 2px;
 }
+/* Dasselbe, aber erst auf schmalen Schirmen (siehe SettingsPanel). Auf dem
+   Telefon teilten sich Erklärung und Kurzinfo eine Zeile, in der für beide zu
+   wenig Platz war; ab 641px stehen sie weiterhin nebeneinander.
+   flex: 0 0 auto an den Kindern, weil das flex-1 des Titel-Blocks in der
+   Spaltenrichtung sonst in die HÖHE wirkte statt in die Breite. */
+@media (max-width: 640px) {
+  .lcars-details-summary--stack-sm {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .lcars-details-summary--stack-sm > * {
+    flex: 0 0 auto;
+  }
+}
+
 .lcars-details[open] > .lcars-details-summary .lcars-data-row-chevron {
   transform: rotate(-135deg);
 }

@@ -131,6 +131,13 @@ describe("colorizeDirectSpeech", () => {
   const O = "„";
   const C = "“";
 
+  // Findet ein <span>, dessen Inhalt (bis zu seinem </span>) eine
+  // Absatzgrenze enthält — genau der Fehler, um den es hier geht. Der
+  // Browser repariert so etwas still, im String steht es aber.
+  function spanUeberspanntBlock(html: string): boolean {
+    return /<span[^>]*>(?:(?!<\/span>)[\s\S])*<\/p>/.test(html);
+  }
+
   it("wraps the quotes AND the inner text in a colored span", () => {
     const out = colorizeDirectSpeech(
       `<p>${O}Hallo!${C} sagte er.</p>`,
@@ -151,6 +158,81 @@ describe("colorizeDirectSpeech", () => {
   it("leaves text without direct speech untouched", () => {
     const html = "<p>Er ging schweigend hinaus.</p>";
     expect(colorizeDirectSpeech(html, "#6bcb8b")).toBe(html);
+  });
+
+  // Der Fehler, um den es ging: Eine Rede über zwei Absätze bekam EIN span
+  // von „ bis “, das die Absatzgrenze überspannte. Der Browser schließt es
+  // am </p> — gefärbt war nur der erste Absatz. Jeder Block braucht sein
+  // eigenes span.
+  it("colors every paragraph of a speech that spans a paragraph break", () => {
+    const out = colorizeDirectSpeech(
+      `<p>${O}Lorem ipsum</p>\n<p>dolor amit${C}</p>`,
+      "#ff9a00",
+    );
+    expect(out).toBe(
+      `<p><span style="color:#ff9a00">${O}Lorem ipsum</span></p>\n` +
+        `<p><span style="color:#ff9a00">dolor amit${C}</span></p>`,
+    );
+    expect(spanUeberspanntBlock(out)).toBe(false);
+  });
+
+  it("keeps the colored spans inside their blocks across three paragraphs", () => {
+    const out = colorizeDirectSpeech(
+      `<p>${O}A</p><p>B</p><p>C${C}</p>`,
+      "#6bcb8b",
+    );
+    for (const teil of ["A", "B", "C"]) {
+      expect(out).toContain(`<span style="color:#6bcb8b">`);
+      expect(out).toContain(teil);
+    }
+    // Drei Blöcke, drei spans — und jedes wieder geschlossen.
+    expect(out.match(/<span /g)?.length).toBe(3);
+    expect(out.match(/<\/span>/g)?.length).toBe(3);
+    expect(spanUeberspanntBlock(out)).toBe(false);
+  });
+
+  // Zwischen </p> und <p> steht im gerenderten Markdown oft ein Zeilenumbruch.
+  // Der gehört zu keinem Block und darf deshalb kein span bekommen.
+  it("leaves the whitespace between two blocks unwrapped", () => {
+    const out = colorizeDirectSpeech(
+      `<p>${O}Eins</p>\n\n<p>Zwei${C}</p>`,
+      "#cd6666",
+    );
+    expect(out).toContain(`</p>\n\n<p>`);
+  });
+
+  // Nicht nur der Absatz: An JEDER Blockgrenze endet die Einfärbung, sonst
+  // stünde ein <span> um Markup, das es nicht umschließen darf. Die Liste
+  // folgt der Allowlist, durch die der Text kommt (defaultSchema von
+  // rehype-sanitize) — details/summary gehören dazu.
+  it.each(["li", "blockquote", "td", "details"])(
+    "schließt die Einfärbung auch an der Grenze von <%s>",
+    (tag) => {
+      const out = colorizeDirectSpeech(
+        `<${tag}>${O}Eins</${tag}><${tag}>Zwei${C}</${tag}>`,
+        "#ff9a66",
+      );
+      const ueberspannt = new RegExp(
+        `<span[^>]*>(?:(?!<\\/span>)[\\s\\S])*<\\/${tag}>`,
+      );
+      expect(ueberspannt.test(out)).toBe(false);
+      // Und beide Hälften tragen trotzdem Farbe.
+      expect(out.match(/<span /g)?.length).toBe(2);
+    },
+  );
+
+  // Ein „ in einem Attributwert ist kein Redeanfang — Tags werden
+  // übersprungen, nicht mitgelesen.
+  it("ignores quote characters inside tags", () => {
+    const html = `<p><a href="/x" title="${O}y${C}">Link</a></p>`;
+    expect(colorizeDirectSpeech(html, "#9a9aff")).toBe(html);
+  });
+
+  // Ohne Gegenstück färbt die Rede bis zum Blockende: dieselbe Regel wie über
+  // Absätze hinweg, nur ohne Ende.
+  it("colors to the end of the block when the closing quote is missing", () => {
+    const out = colorizeDirectSpeech(`<p>${O}Hallo</p>`, "#cd9acd");
+    expect(out).toBe(`<p><span style="color:#cd9acd">${O}Hallo</span></p>`);
   });
 
   it("keeps inline markup inside the quote intact", () => {

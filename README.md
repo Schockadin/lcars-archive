@@ -580,7 +580,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   erscheinen: Erste Schritte, Spielabende, To Dos, offene Gespräche, die
   Anlege-Knöpfe samt Import, die eigenen Entwürfe, die eigenen Charaktere,
   Versionen, News und Lesezeichen. Das
-  Zahnrad neben der Dashboard-Überschrift springt direkt dorthin.
+  Zahnrad neben der Dashboard-Überschrift springt direkt dorthin — es trägt
+  `ProfileNavIcon`, dasselbe Symbol, mit dem das minimalistische Interface auf
+  dem Telefon zum Profil führt: ein Weg, ein Zeichen.
   Die Sektionen samt Vorgabe stehen einmal in
   [`src/lib/dashboardSections.ts`](src/lib/dashboardSections.ts); gespeichert
   wird in `users.dashboard_prefs` (JSONB) **nur, was von der Vorgabe
@@ -618,7 +620,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   spränge sonst nirgendwohin. Ohne diese Regel wäre der Link „Jetzt festlegen"
   vom Dashboard tot, sobald das Profil per Vorgabe zugeklappt ist.
   `SettingsPanel` bleibt daneben bestehen: Es merkt sich nichts und ist dafür
-  server-renderbar.
+  server-renderbar. Seine Kopfzeile kennt drei Fassungen: nebeneinander
+  (Titel mit Erklärung links, Kurzinfo rechts), dauerhaft gestapelt
+  (`stacked` — in sehr breiten Panels stand die Kurzinfo sonst hunderte Pixel
+  vom Titel entfernt), und **ab v1.50 unterhalb von 641px ebenfalls
+  gestapelt** (`.lcars-details-summary--stack-sm`): Auf dem Telefon teilten
+  sich Erklärung und Kurzinfo eine Zeile, in der für beide zu wenig Platz war
+  — „Antonio · JetBrains Mono" drängte „Beschriftungs- und Datenschrift
+  getrennt wählbar" daneben auf ein paar Zeichen zusammen. Der Chevron sitzt
+  dafür in derselben Zeile wie der Titel statt daneben, sonst stünde das
+  Dreieck beim Umbruch allein über der Überschrift.
 - **Anlegen ohne Umweg** — der Abschnitt „Neue Inhalte" steht auf **beiden**
   Seiten: unter `/user/content` mit allen Knöpfen, auf dem Dashboard mit den
   im Profil eingeschalteten. Er ist **eine** Komponente
@@ -1111,6 +1122,19 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   mit derselben Aktionszeile). **Entwurf oder veröffentlicht ist der einzige
   Sichtbarkeits-Schalter** — die früheren drei Stufen `private`/`gm`/`public`
   sind mit v1.34 entfallen (siehe `scripts/migrate-pr71.sql`).
+- **Wörtliche Rede in der Charakter-Farbe** — im Fließtext abgeschlossener
+  Gespräche färbt
+  [`colorizeDirectSpeech`](src/lib/characterColor.ts) alles zwischen „ und “
+  in der Farbe des Sprechers, die Anführungszeichen eingeschlossen. Sie läuft
+  über die **Zeichen** statt über einen Regex, weil eine Rede sich über
+  mehrere Absätze erstrecken darf: Ein einzelnes `<span>` von „ bis “
+  überspannte dann eine Blockgrenze, und der Browser schließt so etwas still
+  am `</p>` — gefärbt war nur der erste Absatz. Stattdessen bekommt **jeder
+  Block seinen eigenen span**, während der Zustand „Rede läuft" über die
+  Grenze hinweg erhalten bleibt. Die Blockliste folgt der Allowlist, durch die
+  der Text kommt (`defaultSchema` von rehype-sanitize). Tags werden dabei
+  übersprungen statt mitgelesen — ein „ in einem Attributwert ist kein
+  Redeanfang.
 - **PWA mit Push-Benachrichtigungen und Offline-Betrieb** — installierbar auf
   Mobilgeräten (inkl. maskable Icon), Web-Push für neue Dialog-Nachrichten und
   abonnierte Inhalte. Ein Service Worker macht bereits besuchte Seiten offline
