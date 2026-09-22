@@ -112,11 +112,17 @@ const QUOTE_CLOSE = "“"; // “
 // Blockwechsel überspannen. Inline-Tags (a, em, strong, code, br …) stehen
 // bewusst NICHT hier — die dürfen innerhalb der Rede vorkommen und bleiben
 // mit eingefärbt.
+//
+// Die Liste deckt die Block-Elemente der Allowlist ab, durch die der Text
+// kommt (defaultSchema von rehype-sanitize, siehe markdownToSafeHtml) —
+// einschließlich details/summary. Ein paar weitere (article, figure,
+// figcaption) stehen vorsorglich darin: Sie kosten nichts und fangen den Fall
+// ab, dass diese Funktion einmal auf anders gerendertes HTML angewendet wird.
 const BLOCK_TAGS = new Set([
   "p", "div", "section", "article", "figure", "figcaption",
   "h1", "h2", "h3", "h4", "h5", "h6",
   "ul", "ol", "li", "dl", "dt", "dd",
-  "blockquote", "pre", "hr",
+  "blockquote", "pre", "hr", "details", "summary",
   "table", "thead", "tbody", "tfoot", "tr", "td", "th",
 ]);
 
@@ -148,6 +154,10 @@ const TAG_RE = /<\/?([a-zA-Z][a-zA-Z0-9-]*)\b[^>]*>/g;
 //
 // Tags werden übersprungen statt mitgelesen: Ein „ in einem Attributwert ist
 // kein Redeanfang.
+//
+// Verschachtelte Rede kennt die Funktion nicht — sie braucht sie auch nicht:
+// Ein Zitat INNERHALB wörtlicher Rede setzt man mit ‚einfachen' Zeichen, ein
+// zweites „ kommt darin also nicht vor.
 //
 // color stammt aus einem validierten Hex (resolveCharacterColor), ist also
 // kein user-freier Wert im style-Attribut — keine Injection. Der Text ist

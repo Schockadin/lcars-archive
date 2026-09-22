@@ -201,6 +201,26 @@ describe("colorizeDirectSpeech", () => {
     expect(out).toContain(`</p>\n\n<p>`);
   });
 
+  // Nicht nur der Absatz: An JEDER Blockgrenze endet die Einfärbung, sonst
+  // stünde ein <span> um Markup, das es nicht umschließen darf. Die Liste
+  // folgt der Allowlist, durch die der Text kommt (defaultSchema von
+  // rehype-sanitize) — details/summary gehören dazu.
+  it.each(["li", "blockquote", "td", "details"])(
+    "schließt die Einfärbung auch an der Grenze von <%s>",
+    (tag) => {
+      const out = colorizeDirectSpeech(
+        `<${tag}>${O}Eins</${tag}><${tag}>Zwei${C}</${tag}>`,
+        "#ff9a66",
+      );
+      const ueberspannt = new RegExp(
+        `<span[^>]*>(?:(?!<\\/span>)[\\s\\S])*<\\/${tag}>`,
+      );
+      expect(ueberspannt.test(out)).toBe(false);
+      // Und beide Hälften tragen trotzdem Farbe.
+      expect(out.match(/<span /g)?.length).toBe(2);
+    },
+  );
+
   // Ein „ in einem Attributwert ist kein Redeanfang — Tags werden
   // übersprungen, nicht mitgelesen.
   it("ignores quote characters inside tags", () => {
