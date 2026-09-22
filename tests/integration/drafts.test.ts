@@ -36,7 +36,7 @@ async function insertMissionLog(over: {
   isDraft?: boolean;
   updatedAt?: string;
 }) {
-  const [row] = await sql<{ id: number }[]>`
+  const [row] = await sql<{ id: number; slug: string }[]>`
     INSERT INTO mission_logs
       (slug, mission_id, title, content, owner_user_id, is_draft, updated_at)
     VALUES (
@@ -44,7 +44,7 @@ async function insertMissionLog(over: {
       ${over.ownerId ?? null}, ${over.isDraft ?? true},
       ${over.updatedAt ?? new Date().toISOString()}
     )
-    RETURNING id
+    RETURNING id, slug
   `;
   return row;
 }
