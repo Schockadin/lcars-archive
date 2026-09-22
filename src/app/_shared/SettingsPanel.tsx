@@ -58,14 +58,17 @@ export default function SettingsPanel({
           )}
         </summary>
       ) : (
-        <summary className="lcars-details-summary">
-          <span
-            className="lcars-data-row-chevron"
-            style={{ margin: "0 4px 0 2px" }}
-            aria-hidden="true"
-          />
+        // Auf dem Telefon klappt auch diese Kopfzeile untereinander (siehe
+        // --stack-sm): Beschreibung oben, aktuelle Auswahl darunter. Neben-
+        // einander blieb für beide zu wenig Platz — „Antonio · JetBrains
+        // Mono" drängte die Erklärung daneben auf ein paar Zeichen zusammen.
+        // Ab 641px bleibt es beim Nebeneinander, dort ist Platz genug.
+        <summary className="lcars-details-summary lcars-details-summary--stack-sm">
+          {/* Chevron und Titel in EINER Zeile, damit das Dreieck beim
+              Umbruch nicht allein über der Überschrift steht — dieselbe
+              Gruppierung wie in der gestapelten Fassung oben. */}
           <span className="flex flex-1 flex-col">
-            <span className="lcars-eyebrow text-lcars-primary-ink">{title}</span>
+            <span className="flex items-center gap-[6px]">{heading}</span>
             {hint && (
               <span className="text-lcars-ink-dim text-[12px]">{hint}</span>
             )}

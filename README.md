@@ -618,7 +618,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   spränge sonst nirgendwohin. Ohne diese Regel wäre der Link „Jetzt festlegen"
   vom Dashboard tot, sobald das Profil per Vorgabe zugeklappt ist.
   `SettingsPanel` bleibt daneben bestehen: Es merkt sich nichts und ist dafür
-  server-renderbar.
+  server-renderbar. Seine Kopfzeile kennt drei Fassungen: nebeneinander
+  (Titel mit Erklärung links, Kurzinfo rechts), dauerhaft gestapelt
+  (`stacked` — in sehr breiten Panels stand die Kurzinfo sonst hunderte Pixel
+  vom Titel entfernt), und **ab v1.50 unterhalb von 641px ebenfalls
+  gestapelt** (`.lcars-details-summary--stack-sm`): Auf dem Telefon teilten
+  sich Erklärung und Kurzinfo eine Zeile, in der für beide zu wenig Platz war
+  — „Antonio · JetBrains Mono" drängte „Beschriftungs- und Datenschrift
+  getrennt wählbar" daneben auf ein paar Zeichen zusammen. Der Chevron sitzt
+  dafür in derselben Zeile wie der Titel statt daneben, sonst stünde das
+  Dreieck beim Umbruch allein über der Überschrift.
 - **Anlegen ohne Umweg** — der Abschnitt „Neue Inhalte" steht auf **beiden**
   Seiten: unter `/user/content` mit allen Knöpfen, auf dem Dashboard mit den
   im Profil eingeschalteten. Er ist **eine** Komponente
