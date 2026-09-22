@@ -18,6 +18,7 @@
 
 export const INPUT_DRAFT_STORAGE_PREFIX = "neo_draft:";
 export const INPUT_DRAFT_OPT_OUT_ATTR = "data-no-draft";
+export const INPUT_DRAFT_SCOPE_ATTR = "data-draft-scope";
 
 // Obergrenzen, damit ein einzelner Riesen-Text bzw. eine Seite mit sehr
 // vielen Feldern den Sitzungsspeicher nicht sprengt (QuotaExceededError).
@@ -87,11 +88,19 @@ export function isDraftableField(el: Element | null): el is DraftField {
   return true;
 }
 
-// Welchem Formular gehört das Feld? Bevorzugt eine vom Markup vergebene,
-// über Reloads stabile Kennung (id, name); sonst die Position unter den
-// Formularen des Dokuments. Felder ohne Formular teilen sich den Namensraum
-// „doc" der Seite.
+// Welchem Formular gehört das Feld? Ein ausdrücklicher data-draft-scope hat
+// Vorrang: Bearbeiten-Formulare gleicher Bauart tragen damit die ID ihres
+// Inhalts im Schlüssel und können selbst während einer clientseitigen
+// Navigation nie den Entwurf des vorherigen Eintrags übernehmen. Danach
+// folgen die vom Markup vergebenen, über Reloads stabilen Kennungen (id,
+// name) und zuletzt die Position unter den Formularen des Dokuments. Felder
+// ohne Formular teilen sich den Namensraum „doc" der Seite.
 function formScopeKey(el: DraftField): string {
+  const explicitScope = el
+    .closest(`[${INPUT_DRAFT_SCOPE_ATTR}]`)
+    ?.getAttribute(INPUT_DRAFT_SCOPE_ATTR)
+    ?.trim();
+  if (explicitScope) return `scope@${explicitScope}`;
   const form = el.form;
   if (!form) return "doc";
   if (form.id) return `form#${form.id}`;

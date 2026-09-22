@@ -42,6 +42,7 @@ export default function NewMissionLogForm({
       metadataFields={missionLogMetadataFields}
       defaults={{ sessionNr: defaultSessionNr, logDate: defaultLogDate ?? undefined }}
       idPrefix="log"
+      draftScope="mission-log:new"
       bodyLabel="Log-Text"
       bodyHint={<MarkdownFormatHint />}
       bodyRequired

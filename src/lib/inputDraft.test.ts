@@ -110,6 +110,25 @@ describe("draftFieldKeys", () => {
     expect(keys.get(a)).not.toBe(keys.get(b));
   });
 
+  it("trennt gleich gebaute Bearbeiten-Formulare nach ihrem Inhalt", () => {
+    mount(`
+      <form data-draft-scope="archive-entry:41">
+        <input name="title" value="Eintrag A">
+      </form>
+      <form data-draft-scope="archive-entry:42">
+        <input name="title" value="Eintrag B">
+      </form>
+    `);
+    const [a, b] = Array.from(
+      document.querySelectorAll("input"),
+    ) as DraftField[];
+    const keys = draftFieldKeys(document);
+
+    expect(keys.get(a)).toBe("scope@archive-entry:41|n:title");
+    expect(keys.get(b)).toBe("scope@archive-entry:42|n:title");
+    expect(keys.get(a)).not.toBe(keys.get(b));
+  });
+
   it("unterscheidet die Kästchen einer Gruppe über ihren value", () => {
     mount(`
       <form id="f">

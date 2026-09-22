@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import {
   applyFieldValue,
@@ -77,6 +77,16 @@ export function dropInputDraftsForPage(): void {
 
 export default function InputDraftKeeper() {
   const pathname = usePathname();
+  // Bei einer clientseitigen Navigation bleibt diese Layout-Komponente
+  // erhalten. Der neue Pfad wird deshalb schon im Commit gesetzt, während
+  // Observer/Timer des alten Effects noch bis zu dessen Cleanup laufen
+  // können. Die Ref stoppt sie sofort, bevor sie Felder der neuen Seite mit
+  // dem Datensatz der alten Seite befüllen. Ein Layout-Effect läuft dabei vor
+  // MutationObserver-Callbacks aus demselben DOM-Umbau.
+  const currentPathRef = useRef(pathname);
+  useLayoutEffect(() => {
+    currentPathRef.current = pathname;
+  }, [pathname]);
   // Der zuletzt geschriebene Stand, damit nicht bei jedem Zeichen aus dem
   // Speicher gelesen (und geparst) werden muss.
   const recordRef = useRef<DraftRecord>({});
@@ -95,6 +105,7 @@ export default function InputDraftKeeper() {
     }
 
     const path = pathname ?? window.location.pathname;
+    const isCurrentPage = () => currentPathRef.current === pathname;
     recordRef.current = readDraftRecord(storage, path);
 
     // Schlüssel je Feld zwischenspeichern: das Ermitteln läuft über das
@@ -153,6 +164,7 @@ export default function InputDraftKeeper() {
     };
 
     const onInput = (event: Event) => {
+      if (!isCurrentPage()) return;
       if (restoringRef.current) return;
       const target = event.target as Element | null;
       if (!isDraftableField(target)) return;
@@ -167,6 +179,7 @@ export default function InputDraftKeeper() {
     let firstPass = true;
 
     const restore = (pinning: boolean) => {
+      if (!isCurrentPage()) return;
       const record = recordRef.current;
       // Ohne gesicherten Stand gibt es nichts einzusetzen — und damit auch
       // keinen Grund, das Dokument abzusuchen. Das ist der Normalfall (jede
@@ -210,6 +223,7 @@ export default function InputDraftKeeper() {
     // z.B. DialogueReplyForm form.reset() auf), hat keinen Entwurf mehr — der
     // abgeschickte Text darf beim nächsten Aufbau nicht wieder auftauchen.
     const onReset = (event: Event) => {
+      if (!isCurrentPage()) return;
       const form = event.target as HTMLFormElement | null;
       if (!form || form.tagName !== "FORM") return;
       // Sofort, nicht im nächsten Tick: Formulare, die sich nach dem Absenden
@@ -244,6 +258,7 @@ export default function InputDraftKeeper() {
     // sichern — sie lägen beim nächsten Aufruf über inzwischen geänderte
     // Inhalte, ohne dass je jemand etwas getippt hätte.
     const snapshot = () => {
+      if (!isCurrentPage()) return;
       let record = recordRef.current;
       // Ist nichts gesichert, gibt es auch nichts nachzuführen — der
       // Dokument-Durchgang bleibt dann aus. Geschrieben wird trotzdem: flush()
@@ -260,6 +275,7 @@ export default function InputDraftKeeper() {
     // Siehe dropInputDraftsForPage() oben: Der Stand dieser Seite ist
     // überholt — im Speicher UND im Arbeitsspeicher.
     const onDrop = () => {
+      if (!isCurrentPage()) return;
       recordRef.current = {};
       clearDraftRecord(storage, path);
     };

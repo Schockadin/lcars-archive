@@ -73,7 +73,8 @@ const LOG: DraftItem = {
   slug: "log-vom-rand",
   title: "Der Abend am Rand",
   updatedAt: "2401-05-12T10:00:00Z",
-  href: "/user/mission-logs/7/edit",
+  href: "/chronologie/mission/erste-mission/log-vom-rand",
+  editHref: "/user/mission-logs/7/edit",
 };
 
 const MISSION: DraftItem = {
@@ -82,17 +83,19 @@ const MISSION: DraftItem = {
   slug: "stille-grenze",
   title: "Stille Grenze",
   updatedAt: "2401-05-10T10:00:00Z",
-  href: "/user/missions/3/edit",
+  href: "/chronologie/mission/stille-grenze",
+  editHref: "/user/missions/3/edit",
 };
 
 describe("DraftsSection", () => {
-  it("führt jeden Entwurf direkt in seinen Editor", () => {
+  it("führt jeden Entwurf zu seinem eigentlichen Eintrag", () => {
     render(<DraftsSection drafts={[LOG]} />);
 
-    // Nicht auf die Leseseite: Die gibt es für einen Entwurf außer für
-    // seinen Besitzer gar nicht, und weiterschreiben ist das, was man will.
     const link = screen.getAllByRole("link")[0];
-    expect(link).toHaveAttribute("href", "/user/mission-logs/7/edit");
+    expect(link).toHaveAttribute(
+      "href",
+      "/chronologie/mission/erste-mission/log-vom-rand",
+    );
     expect(screen.getByText("Der Abend am Rand")).toBeInTheDocument();
   });
 

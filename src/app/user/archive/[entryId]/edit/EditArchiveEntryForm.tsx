@@ -43,6 +43,7 @@ export default function EditArchiveEntryForm({
         />
       }
       idPrefix="edit-archive-entry"
+      draftScope={`archive-entry:${entry.id}`}
       bodyLabel="Inhalt"
       bodyHint={<MarkdownFormatHint />}
       bodyDefaultValue={entry.sourceMarkdown}

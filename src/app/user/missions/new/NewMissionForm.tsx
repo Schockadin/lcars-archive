@@ -30,6 +30,7 @@ export default function NewMissionForm({
       metadataFields={missionMetadataFields}
       defaults={{ status: "active", startedAt: defaultStartedAt ?? undefined }}
       idPrefix="mission"
+      draftScope="mission:new"
       bodyLabel="Zusammenfassung"
       bodyHint={<MarkdownFormatHint />}
       bodyRequired

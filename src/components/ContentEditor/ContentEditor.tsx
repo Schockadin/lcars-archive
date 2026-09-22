@@ -25,6 +25,10 @@ interface ContentEditorProps {
   // Quelle für die defaultValue jedes Head-Felds, per field.name aufgelöst.
   defaults?: Record<string, unknown>;
   idPrefix: string;
+  // Stabiler Namensraum für die Session-Entwürfe. Im Edit-Modus gehört
+  // die Inhalts-ID hinein, damit zwei gleich gebaute Editoren nie dieselben
+  // Feldschlüssel verwenden.
+  draftScope: string;
   bodyName?: string;
   bodyLabel: string;
   bodyHint?: ReactNode;
@@ -60,6 +64,7 @@ export default function ContentEditor({
   headFields,
   defaults = {},
   idPrefix,
+  draftScope,
   bodyName = "bodyMarkdown",
   bodyLabel,
   bodyHint,
@@ -88,7 +93,11 @@ export default function ContentEditor({
   );
 
   return (
-    <form action={formAction} className="flex flex-col gap-[16px]">
+    <form
+      action={formAction}
+      className="flex flex-col gap-[16px]"
+      data-draft-scope={draftScope}
+    >
       {Object.entries(hiddenFields).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
       ))}

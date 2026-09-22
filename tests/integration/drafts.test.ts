@@ -11,15 +11,18 @@ async function insertArchiveEntry(over: {
   isDraft?: boolean;
   deleted?: boolean;
   updatedAt?: string;
+  dialogueOpen?: boolean;
 }) {
   const [row] = await sql<{ id: number }[]>`
     INSERT INTO archive_entries
-      (slug, title, category, content, owner_user_id, is_draft, deleted_at, updated_at)
+      (slug, title, category, content, owner_user_id, is_draft, deleted_at,
+       updated_at, dialogue_open)
     VALUES (
       ${over.slug}, ${over.title}, ${over.category ?? "other"}, 'Text',
       ${over.ownerId ?? null}, ${over.isDraft ?? true},
       ${over.deleted ? new Date().toISOString() : null},
-      ${over.updatedAt ?? new Date().toISOString()}
+      ${over.updatedAt ?? new Date().toISOString()},
+      ${over.dialogueOpen ?? false}
     )
     RETURNING id
   `;
@@ -136,9 +139,7 @@ describe("getOwnDrafts", () => {
     ]);
   });
 
-  // Bei einem Entwurf will man weiterschreiben — die Leseseite gibt es für
-  // andere ohnehin nicht. Jede Art führt deshalb in ihren Editor.
-  it("führt jede Art in ihren Editor", async () => {
+  it("führt jede Art zu ihrer eigentlichen Inhaltsseite", async () => {
     const user = await insertUser();
     const mission = await insertMission();
     const log = await insertMissionLog({
@@ -151,12 +152,37 @@ describe("getOwnDrafts", () => {
       title: "Eintrag",
       ownerId: user.id,
     });
+    await insertArchiveEntry({
+      slug: "gespraech-ziel",
+      title: "Gespräch",
+      category: "dialogue",
+      ownerId: user.id,
+      dialogueOpen: true,
+    });
+    await sql`
+      UPDATE missions SET owner_user_id = ${user.id}, is_draft = true
+      WHERE id = ${mission.id}
+    `;
 
     const drafts = await getOwnDrafts(user.id);
     const href = (kind: string) => drafts.find((d) => d.kind === kind)?.href;
+    const editHref = (kind: string) =>
+      drafts.find((d) => d.kind === kind)?.editHref;
 
-    expect(href("mission_log")).toBe(`/user/mission-logs/${log.id}/edit`);
-    expect(href("archive_entry")).toBe(`/user/archive/${eintrag.id}/edit`);
+    expect(href("mission_log")).toBe(
+      `/chronologie/mission/${mission.slug}/${log.slug}`,
+    );
+    expect(href("archive_entry")).toBe(`/archive/${eintrag.slug}`);
+    expect(href("dialogue")).toBe("/dialogues/gespraech-ziel");
+    expect(href("mission")).toBe(`/chronologie/mission/${mission.slug}`);
+    expect(editHref("mission_log")).toBe(
+      `/user/mission-logs/${log.id}/edit`,
+    );
+    expect(editHref("archive_entry")).toBe(
+      `/user/archive/${eintrag.id}/edit`,
+    );
+    expect(editHref("dialogue")).toMatch(/^\/user\/archive\/\d+\/edit$/);
+    expect(editHref("mission")).toBe(`/user/missions/${mission.id}/edit`);
   });
 
   it("gibt für ein Konto ohne Entwürfe nichts zurück", async () => {
