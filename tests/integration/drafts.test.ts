@@ -13,7 +13,7 @@ async function insertArchiveEntry(over: {
   updatedAt?: string;
   dialogueOpen?: boolean;
 }) {
-  const [row] = await sql<{ id: number }[]>`
+  const [row] = await sql<{ id: number; slug: string }[]>`
     INSERT INTO archive_entries
       (slug, title, category, content, owner_user_id, is_draft, deleted_at,
        updated_at, dialogue_open)
@@ -24,7 +24,7 @@ async function insertArchiveEntry(over: {
       ${over.updatedAt ?? new Date().toISOString()},
       ${over.dialogueOpen ?? false}
     )
-    RETURNING id
+    RETURNING id, slug
   `;
   return row;
 }
