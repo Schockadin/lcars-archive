@@ -50,6 +50,7 @@ export default function EditMissionForm({
           teaser: mission.metadata.teaser ?? undefined,
         }}
         idPrefix="edit-mission"
+        draftScope={`mission:${mission.id}`}
         bodyLabel="Zusammenfassung"
         bodyHint={<MarkdownFormatHint />}
         bodyDefaultValue={mission.sourceMarkdown ?? ""}

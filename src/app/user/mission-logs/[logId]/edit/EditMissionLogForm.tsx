@@ -34,6 +34,7 @@ export default function EditMissionLogForm({
         tags: log.tags.join(", "),
       }}
       idPrefix="edit-log"
+      draftScope={`mission-log:${log.id}`}
       bodyLabel="Log-Text"
       bodyHint={<MarkdownFormatHint />}
       bodyDefaultValue={log.sourceMarkdown}

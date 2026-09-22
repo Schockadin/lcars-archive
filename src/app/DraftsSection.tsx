@@ -12,9 +12,10 @@ import {
 import { fmtDate } from "@/lib/missionFormat";
 import type { DraftItem } from "@/lib/drafts";
 
-// „Entwürfe" — die eigenen unfertigen Inhalte, jeder mit dem Weg zurück in
-// seinen Editor und derselben Aktionszeile wie in der Liste unter „Meine
-// Inhalte" (ContentActionRow: Veröffentlichen-Schalter, Stift, Mülleimer).
+// „Entwürfe" — die eigenen unfertigen Inhalte, jeder mit dem Weg zu seiner
+// eigentlichen Inhaltsseite und derselben Aktionszeile wie in der Liste unter
+// „Meine Inhalte" (ContentActionRow: Veröffentlichen-Schalter, Stift,
+// Mülleimer). Nur der ausdrückliche Stift führt direkt in den Editor.
 //
 // Steht auf zwei Seiten: über der Liste unter „Meine Inhalte" und auf der
 // Startseite. Ein Entwurf ist für niemanden außer seinem Besitzer sichtbar,
@@ -118,12 +119,9 @@ export default function DraftsSection({
                     />
                   ) : undefined
                 }
-                // Dasselbe Ziel wie die Karte selbst — hier führt beides in
-                // den Editor, weil ein Entwurf keine Leseseite hat, die
-                // jemandem etwas nützte. Der Stift steht trotzdem da: Die
-                // Aktionszeile ist überall dieselbe, und wer sie kennt, sucht
-                // ihn an dieser Stelle.
-                editHref={draft.href}
+                // Die Karte öffnet den eigentlichen Eintrag; der ausdrückliche
+                // Stift bleibt der direkte Weg in dessen Editor.
+                editHref={draft.editHref}
                 deleteButton={
                   <DeleteOwnContentButton
                     contentType={draft.kind}

@@ -35,6 +35,7 @@ export default function NewArchiveEntryForm({
         />
       }
       idPrefix="archive-entry"
+      draftScope="archive-entry:new"
       bodyLabel="Inhalt"
       bodyHint={<MarkdownFormatHint />}
       bodyRequired

@@ -149,6 +149,16 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.51",
+    title: "Entwürfe bleiben bei ihrem Eintrag",
+    // Bewusst ohne Stichpunkte: Diese Version ergänzt keine neue Funktion,
+    // sondern trennt die in 1.41 eingeführte Formular-Sicherung sauber nach
+    // Eintrag und korrigiert die Ziele der in 1.49 eingeführten
+    // Entwurfs-Karten. Fehlerkorrekturen ohne Feature-Charakter gehören laut
+    // AGENTS.md nicht in die items-Liste.
+    items: [],
+  },
+  {
     version: "1.50",
     title: "Die Startseite bleibt wach",
     items: [

@@ -166,7 +166,10 @@ export default function DSGVOContent({ year }: { year: number }) {
           <strong>Sitzungsspeicher</strong> (sessionStorage) des Browsers und
           setzt sie beim erneuten Aufruf derselben Seite wieder ein
           (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse
-          an einer verlustfreien Bedienung). Diese Zwischenstände verbleiben
+          an einer verlustfreien Bedienung). Die Zwischenspeicherung ist nach
+          Seite und bei Bearbeitungsformularen zusätzlich nach dem jeweiligen
+          Inhalt getrennt, damit Eingaben nicht in ein anderes Formular
+          übernommen werden. Diese Zwischenstände verbleiben
           ausschließlich auf dem jeweiligen Gerät, werden nicht an den Server
           oder Dritte übertragen und vom Browser spätestens beim Schließen des
           Tabs bzw. Fensters gelöscht — beim An- und Abmelden zusätzlich
