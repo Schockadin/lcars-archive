@@ -1,9 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const logServerError = vi.fn();
+const { logServerError } = vi.hoisted(() => ({ logServerError: vi.fn() }));
 vi.mock("@/lib/errorLog", () => ({ logServerError }));
 
-import { onRequestError } from "./instrumentation";
+import { onRequestError } from "./instrumentation.node";
 
 // Minimal-Stellvertreter für die beiden Argumente, die Next dem Hook neben
 // dem Fehler übergibt.
@@ -15,7 +15,6 @@ const context = {
 
 describe("onRequestError", () => {
   beforeEach(() => logServerError.mockClear());
-  afterEach(() => vi.unstubAllEnvs());
 
   it("protokolliert einen echten Serverfehler", async () => {
     const error = new Error("Datenbank nicht erreichbar");
@@ -36,14 +35,6 @@ describe("onRequestError", () => {
         "The tree doesn't match so React will fallback to client rendering.",
     );
     await onRequestError(error, request, context);
-
-    expect(logServerError).not.toHaveBeenCalled();
-  });
-
-  it("lädt den Node-Logger nicht in der Edge-Runtime", async () => {
-    vi.stubEnv("NEXT_RUNTIME", "edge");
-
-    await onRequestError(new Error("Edge-Fehler"), request, context);
 
     expect(logServerError).not.toHaveBeenCalled();
   });
