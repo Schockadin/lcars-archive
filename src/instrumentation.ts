@@ -21,6 +21,12 @@ export const onRequestError: Instrumentation.onRequestError = async (
   request,
   context,
 ) => {
+  // Next baut instrumentation.ts für Node.js und Edge. Der DB-Logger hängt
+  // vom Node-Modul "net" ab und darf deshalb nicht in den Edge-Modulgraphen
+  // geraten. NEXT_RUNTIME wird von Next beim Bundeln konstant ersetzt, sodass
+  // Webpack den darunterliegenden dynamischen Import im Edge-Bundle entfernt.
+  if (process.env.NEXT_RUNTIME === "edge") return;
+
   const err = error as { digest?: string; message?: string; stack?: string };
   const message = err.message ?? String(error);
 
