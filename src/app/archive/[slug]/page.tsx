@@ -7,11 +7,7 @@ import { stripHtml } from "@/lib/missionFormat";
 import { ArchiveEntryDetail, ArchiveLink } from "@/types/archive";
 import PageMeta from "@/components/PageMeta";
 import { LcarsReadingModeToggle } from "@/components/lcars";
-import {
-  getViewer,
-  canView,
-  viewerHasPermission,
-} from "@/lib/visibility";
+import { getViewer, canView, viewerHasPermission } from "@/lib/visibility";
 import { listAllUsers } from "@/lib/users";
 import { resolveFollowState } from "@/lib/follows";
 import ArchiveEntryBody from "./ArchiveEntryBody";
@@ -22,6 +18,7 @@ import {
   archiveHref,
   archiveListHref,
   characterHref,
+  closedDialogueHref,
   missionHref,
 } from "@/lib/contentRoutes";
 
@@ -71,7 +68,7 @@ export default async function ArchiveEntryPage({ params }: Props) {
   // leitet auf das neue Ziel weiter (das offene Gespräche selbst nach
   // /dialogues weiterreicht).
   if (entry.category === "dialogue") {
-    redirect(`/characters/dialogues/${entry.slug}`);
+    redirect(closedDialogueHref(entry.slug));
   }
 
   if (!canView(entry.isDraft, entry.ownerUserId, viewer)) notFound();

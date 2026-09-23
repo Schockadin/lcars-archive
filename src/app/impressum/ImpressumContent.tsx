@@ -57,8 +57,11 @@ export default function ImpressumContent() {
         <p>
           Noch nicht abgesendete Formulareingaben sind lediglich eine lokale
           Zwischensicherung im Sitzungsspeicher des jeweiligen Browsers. Sie
-          werden erst durch das ausdrückliche Speichern zu einem Beitrag im
-          Archiv; die Einzelheiten stehen in der Datenschutzerklärung.
+          werden nach Seite, Formular und bearbeitetem Eintrag getrennt, damit
+          etwa der Text eines Entwurfs nicht in einem anderen Editor erscheint.
+          Die Zwischenstände verlassen das Gerät nicht und werden erst durch
+          das ausdrückliche Speichern zu einem Beitrag im Archiv; die
+          Einzelheiten stehen in der Datenschutzerklärung.
         </p>
 
         <h2>Urheberrecht</h2>

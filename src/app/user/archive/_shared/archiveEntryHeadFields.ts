@@ -9,7 +9,7 @@ const SELECTABLE_CATEGORIES = CATEGORY_ORDER.filter(
   (c) => c !== "dialogue",
 ) as Exclude<ArchiveCategory, "dialogue">[];
 
-export const archiveEntryHeadFields: HeadField[] = [
+export const archiveEntryHeadFields = [
   {
     kind: "text",
     name: "title",
@@ -39,4 +39,4 @@ export const archiveEntryHeadFields: HeadField[] = [
     name: "aliases",
     label: "Aliase (kommagetrennt)",
   },
-];
+] as const satisfies readonly HeadField[];

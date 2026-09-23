@@ -67,10 +67,26 @@ export function archiveListHref(category?: string | null): string {
   return category ? `/archive?cat=${encodeURIComponent(category)}` : "/archive";
 }
 
-// Offene Gespräche leben unter /dialogues, abgeschlossene unter /archive
-// (siehe toFollowedContent in src/lib/follows.ts).
+// Offene und abgeschlossene Gespräche haben unterschiedliche kanonische
+// Leseseiten. Der frühere Umweg abgeschlossener Gespräche über /archive löste
+// erst serverseitig einen Redirect aus und wurde an mehreren Stellen anders
+// zusammengesetzt.
 export function dialogueHref(slug: string): string {
   return `/dialogues/${slug}`;
+}
+
+export function closedDialogueHref(slug: string): string {
+  return `/characters/dialogues/${slug}`;
+}
+
+export function dialogueContentHref(slug: string, open: boolean): string {
+  return open ? dialogueHref(slug) : closedDialogueHref(slug);
+}
+
+// Absolute URL für Mails und Push-Nachrichten. URL statt String-Verkettung
+// behandelt eine Basis-Adresse mit oder ohne abschließenden Slash identisch.
+export function absoluteContentUrl(baseUrl: string, href: string): string {
+  return new URL(href, `${baseUrl.replace(/\/$/, "")}/`).toString();
 }
 
 // Die Übersicht der Gespräche ist die Chronologie, Ereignisart „Gespräch" —

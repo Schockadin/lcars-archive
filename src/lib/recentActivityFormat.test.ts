@@ -45,17 +45,25 @@ describe("toHref", () => {
     ).toBe("/chronologie/mission/m1/log1");
   });
 
-  it("verlinkt offene Dialoge auf /dialogues, geschlossene auf /archive", () => {
+  it("verlinkt Gespräche direkt auf ihre kanonische Leseseite", () => {
     expect(
       toHref(
-        contentRow({ target_type: "archive_entry", slug: "d1", dialogue_open: true }),
+        contentRow({
+          target_type: "archive_entry",
+          slug: "d1",
+          dialogue_open: true,
+        }),
       ),
     ).toBe("/dialogues/d1");
     expect(
       toHref(
-        contentRow({ target_type: "archive_entry", slug: "e1", dialogue_open: false }),
+        contentRow({
+          target_type: "archive_entry",
+          slug: "e1",
+          dialogue_open: false,
+        }),
       ),
-    ).toBe("/archive/e1");
+    ).toBe("/characters/dialogues/e1");
   });
 });
 
@@ -124,7 +132,11 @@ describe("computeNewsItems", () => {
       contentRows: [contentRow()],
       deletionRows: [],
       seenEntries: [
-        { targetType: "character", targetKey: "kirk", seenAt: "2026-06-01T10:00:00Z" },
+        {
+          targetType: "character",
+          targetKey: "kirk",
+          seenAt: "2026-06-01T10:00:00Z",
+        },
       ],
       newsKinds: ALL_KINDS,
       since: SINCE,
@@ -143,7 +155,11 @@ describe("computeNewsItems", () => {
       deletionRows: [],
       // gesehen bis 01.06. — die Bearbeitung am 20.06. ist neuer.
       seenEntries: [
-        { targetType: "character", targetKey: "kirk", seenAt: "2026-06-01T10:00:00Z" },
+        {
+          targetType: "character",
+          targetKey: "kirk",
+          seenAt: "2026-06-01T10:00:00Z",
+        },
       ],
       newsKinds: ALL_KINDS,
       since: SINCE,
@@ -204,7 +220,11 @@ describe("computeNewsItems", () => {
       contentRows: [],
       deletionRows,
       seenEntries: [
-        { targetType: "deletion", targetKey: "7", seenAt: "2026-06-05T10:00:00Z" },
+        {
+          targetType: "deletion",
+          targetKey: "7",
+          seenAt: "2026-06-05T10:00:00Z",
+        },
       ],
       newsKinds: ["deleted"],
       since: SINCE,
@@ -215,8 +235,16 @@ describe("computeNewsItems", () => {
   it("sortiert absteigend nach Zeitstempel", () => {
     const items = computeNewsItems({
       contentRows: [
-        contentRow({ slug: "a", created_at: "2026-06-01T00:00:00Z", updated_at: "2026-06-01T00:00:00Z" }),
-        contentRow({ slug: "b", created_at: "2026-06-15T00:00:00Z", updated_at: "2026-06-15T00:00:00Z" }),
+        contentRow({
+          slug: "a",
+          created_at: "2026-06-01T00:00:00Z",
+          updated_at: "2026-06-01T00:00:00Z",
+        }),
+        contentRow({
+          slug: "b",
+          created_at: "2026-06-15T00:00:00Z",
+          updated_at: "2026-06-15T00:00:00Z",
+        }),
       ],
       deletionRows: [],
       seenEntries: [],

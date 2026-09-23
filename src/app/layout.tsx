@@ -16,7 +16,7 @@ import {
   LcarsCookieNotice,
   LcarsServiceWorkerRegister,
   LcarsInputDraftKeeper,
-} from "@/components/lcars";
+} from "@/components/lcars/shell";
 import ThemeApplier from "@/components/lcars/ThemeApplier";
 import { NeoProvider } from "@/context/NeoProvider";
 import { ToastProvider } from "@/components/toast/ToastProvider";

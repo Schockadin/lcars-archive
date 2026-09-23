@@ -7,7 +7,7 @@ import type { SearchResult, SearchResultType } from "@/types/search";
 import type { FollowTargetType } from "@/lib/follows";
 import {
   archiveHref,
-  dialogueHref,
+  dialogueContentHref,
   characterHref,
   missionHref,
   missionLogHref,
@@ -172,7 +172,9 @@ async function runSearchQueries(
   // Fließtext treffen. Die Volltextsuche nutzt den vollen Vektor (Titel +
   // Inhalt). Beide sind eigene, indizierte Spalten (siehe schema.sql).
   const vec = (col: string) =>
-    includeContent ? sql`${sql(col)}.search_vector` : sql`${sql(col)}.title_vector`;
+    includeContent
+      ? sql`${sql(col)}.search_vector`
+      : sql`${sql(col)}.title_vector`;
 
   const [chars, missions, logs, archive, dialogueMessages] = await Promise.all([
     sql<CharacterRow[]>`
@@ -338,13 +340,17 @@ export function findSnippetMatch(
 
   const direct = hay.indexOf(q.toLowerCase().trim());
   if (q.trim() && direct !== -1) {
-    return { index: direct, text: plainText.slice(direct, direct + q.trim().length) };
+    return {
+      index: direct,
+      text: plainText.slice(direct, direct + q.trim().length),
+    };
   }
 
   const terms = searchTerms(q);
   for (const term of terms) {
     const i = hay.indexOf(term);
-    if (i !== -1) return { index: i, text: plainText.slice(i, i + term.length) };
+    if (i !== -1)
+      return { index: i, text: plainText.slice(i, i + term.length) };
   }
   for (const term of terms) {
     for (let len = term.length - 1; len >= MIN_STEM_LENGTH; len--) {
@@ -353,7 +359,8 @@ export function findSnippetMatch(
       if (i !== -1) {
         // Bis zum Wortende ausdehnen, damit der Ausschnitt das ganze Wort
         // zeigt („Gespräch") und nicht den abgeschnittenen Stamm.
-        const rest = /^[\p{L}\p{N}]*/u.exec(plainText.slice(i + len))?.[0] ?? "";
+        const rest =
+          /^[\p{L}\p{N}]*/u.exec(plainText.slice(i + len))?.[0] ?? "";
         return { index: i, text: plainText.slice(i, i + len + rest.length) };
       }
     }
@@ -458,16 +465,14 @@ function mapResults(
   });
 
   // Eine gefundene Nachricht führt in ihr Gespräch — offene unter
-  // /dialogues, abgeschlossene unter /archive (siehe contentRoutes.ts). Der
+  // /dialogues, abgeschlossene in der Gesprächsakte. Der
   // Textausschnitt ist hier IMMER gesetzt: die Nachricht hat keinen Titel,
   // ohne Ausschnitt stünde nur der Name des Gesprächs da und man wüsste
   // nicht, warum es getroffen hat.
   const dialogueResults: SearchResult[] = dialogueMessages.map((m) => {
     const plain = plainTextFor(m);
     const hit = findSnippetMatch(plain, q);
-    const href = m.dialogue_open
-      ? dialogueHref(m.entry_slug)
-      : archiveHref(m.entry_slug);
+    const href = dialogueContentHref(m.entry_slug, m.dialogue_open);
     const gespraech =
       m.entry_title?.trim() ||
       (m.setting ? `Gespräch auf ${m.setting}` : "Gespräch");

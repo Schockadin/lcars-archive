@@ -7,8 +7,14 @@ const STATUS_OPTIONS = [
   { value: "abandoned", label: "Abgebrochen" },
 ];
 
-export const missionHeadFields: HeadField[] = [
-  { kind: "text", name: "title", label: "Titel", required: true, fullWidth: true },
+export const missionHeadFields = [
+  {
+    kind: "text",
+    name: "title",
+    label: "Titel",
+    required: true,
+    fullWidth: true,
+  },
   {
     kind: "text",
     name: "slug",
@@ -21,8 +27,8 @@ export const missionHeadFields: HeadField[] = [
   { kind: "date", name: "startedAt", label: "Start" },
   { kind: "date", name: "endedAt", label: "Ende (optional)" },
   { kind: "text", name: "tags", label: "Tags (kommagetrennt)" },
-];
+] as const satisfies readonly HeadField[];
 
-export const missionMetadataFields: HeadField[] = [
+export const missionMetadataFields = [
   { kind: "text", name: "teaser", label: "Teaser", fullWidth: true },
-];
+] as const satisfies readonly HeadField[];

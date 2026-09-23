@@ -591,6 +591,12 @@ export default function TutorialPage() {
                 sehen dürfen.
               </p>
               <p>
+                Links aus „Meine Inhalte“, Entwürfen, Suche, Chronologie und
+                News führen dabei immer direkt an die richtige Stelle: ein
+                offenes Gespräch in die Spielansicht, ein abgeschlossenes in
+                seine Leseseite. Nur der Stift öffnet ausdrücklich den Editor.
+              </p>
+              <p>
                 Sobald eine teilnehmende Person es abschließt, wird es{" "}
                 <strong>unwiderruflich geschlossen</strong> und taucht danach in
                 der Gespräche-Übersicht bei den Charakteren auf — standardmäßig

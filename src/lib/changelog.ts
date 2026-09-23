@@ -103,9 +103,7 @@ export function filterChangelogEntries(
 // deshalb einen Eintrag ohne items — unter /changelog steht dafür ein
 // erklärender Satz (ChangelogItems), in der Dashboard-Box „Neue Funktionen"
 // hätte eine solche Version dagegen nichts anzukündigen.
-export function entriesWithItems(
-  entries: ChangelogEntry[],
-): ChangelogEntry[] {
+export function entriesWithItems(entries: ChangelogEntry[]): ChangelogEntry[] {
   return entries.filter((entry) => entry.items.length > 0);
 }
 
@@ -148,6 +146,15 @@ export function sortChangelogItemsByCategory(
 }
 
 export const CHANGELOG: ChangelogEntry[] = [
+  {
+    version: "1.52",
+    title: "Gemeinsame Bausteine unter der Haube",
+    // Bewusst ohne Stichpunkte: Der Pull Request vereinheitlicht interne
+    // Komponenten, Routen, Formularverträge und Benachrichtigungen. Das senkt
+    // den Wartungsaufwand, führt aber keine neue Funktion für Spielende oder
+    // Spielleitung ein.
+    items: [],
+  },
   {
     version: "1.51",
     title: "Entwürfe bleiben bei ihrem Eintrag",
@@ -2027,7 +2034,11 @@ export function missingChangelogVersions(
 
   const fehlend: string[] = [];
   for (const [major, minors] of proMajor) {
-    for (let minor = Math.min(...minors); minor <= Math.max(...minors); minor++) {
+    for (
+      let minor = Math.min(...minors);
+      minor <= Math.max(...minors);
+      minor++
+    ) {
       const version = `${major}.${minor}`;
       if (!vorhanden.has(version) && !bekannteLuecken.has(version)) {
         fehlend.push(version);

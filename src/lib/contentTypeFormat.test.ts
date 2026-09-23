@@ -1,9 +1,11 @@
 import { describe, it, expect } from "vitest";
 import {
+  CONTENT_TYPES,
   CONTENT_TYPE_COLOR,
   CONTENT_TYPE_LABEL,
   CONTENT_TYPE_LABEL_PLURAL,
   CONTENT_DRAFT_COLOR,
+  OWNER_CONTENT_TYPES,
   type ContentTypeKey,
 } from "./contentTypeFormat";
 import { CATEGORY_CONFIG } from "./archiveFormat";
@@ -24,11 +26,22 @@ const KEYS: ContentTypeKey[] = [
 
 describe("contentTypeFormat", () => {
   it("deckt jeden Inhaltstyp mit Farbe und beiden Beschriftungen ab", () => {
+    expect(Object.keys(CONTENT_TYPES)).toEqual(KEYS);
     for (const key of KEYS) {
       expect(CONTENT_TYPE_COLOR[key]).toBeTruthy();
       expect(CONTENT_TYPE_LABEL[key]).toBeTruthy();
       expect(CONTENT_TYPE_LABEL_PLURAL[key]).toBeTruthy();
     }
+  });
+
+  it("leitet die Owner-Typen aus derselben Registry ab", () => {
+    expect(OWNER_CONTENT_TYPES).toEqual([
+      "character",
+      "mission",
+      "mission_log",
+      "archive_entry",
+    ]);
+    expect(OWNER_CONTENT_TYPES).not.toContain("dialogue");
   });
 
   it("vergibt je Inhaltstyp eine eigene Farbe (keine Doppelbelegung)", () => {

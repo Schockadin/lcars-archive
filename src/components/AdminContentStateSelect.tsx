@@ -3,17 +3,7 @@ import {
   setContentStateAdminAction,
   type AdminVisibilityContentType,
 } from "@/app/actions/visibility";
-import { useOptimisticAdminSelect } from "@/hooks/useOptimisticAdminSelect";
-// Direkt aus der Datei statt über den Barrel — siehe ContentStateSelect.tsx.
-import LcarsSwitch from "@/components/lcars/Switch";
-import { FormError } from "@/app/_shared/FormPrimitives";
-
-type ContentState = "draft" | "published";
-
-const OPTIONS: { key: ContentState; label: string }[] = [
-  { key: "draft", label: "Entwurf" },
-  { key: "published", label: "Veröffentlicht" },
-];
+import ContentStateSwitch from "@/components/ContentStateSwitch";
 
 // Veröffentlichen oder zurückziehen auf den Inhalts-Detailseiten (Charakter,
 // Missionslog, Archiv-Eintrag/Gespräch) — mirrort OwnerSelect.tsx
@@ -36,34 +26,19 @@ export default function AdminContentStateSelect({
   id: number;
   isDraft: boolean;
 }) {
-  const { value, pending, error, change } = useOptimisticAdminSelect<ContentState>(
-    isDraft ? "draft" : "published",
-    (next) => setContentStateAdminAction(contentType, id, next),
-  );
+  const labelId = `content-state-label-${contentType}-${id}`;
 
   return (
     <div className="flex items-center gap-[8px] text-[13px]">
-      <span className="lcars-eyebrow" id={`content-state-label-${contentType}-${id}`}>
+      <span className="lcars-eyebrow" id={labelId}>
         Veröffentlichung:
       </span>
-      <div
-        role="group"
-        aria-labelledby={`content-state-label-${contentType}-${id}`}
-      >
-        <LcarsSwitch
-          className="content-state-switch"
-          // Ohne flex-1: „Veröffentlicht" ist mehr als doppelt so lang wie
-          // „Entwurf" — in zwei gleich breiten Hälften lief das längere Wort
-          // auf dem Telefon aus seiner Hälfte heraus und wurde vom
-          // overflow:hidden der Pille abgeschnitten. Hier bekommt jede Hälfte
-          // die Breite ihrer Beschriftung.
-          itemClassName="lcars-switch-item"
-          options={OPTIONS.map((o) => ({ ...o, disabled: pending }))}
-          active={value}
-          onChange={change}
-        />
-      </div>
-      <FormError message={error ?? undefined} className="text-[12px]" />
+      <ContentStateSwitch
+        isDraft={isDraft}
+        action={(next) => setContentStateAdminAction(contentType, id, next)}
+        ariaLabelledBy={labelId}
+        errorPresentation="toast"
+      />
     </div>
   );
 }

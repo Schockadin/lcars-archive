@@ -2,6 +2,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { updateFontsAction, type FontState } from "./fontActions";
 import { SaveFooter } from "@/app/_shared/FormPrimitives";
+import ChoiceCardGroup from "@/app/_shared/ChoiceCardGroup";
 import {
   FONT_SANS_OPTIONS,
   FONT_MONO_OPTIONS,
@@ -69,26 +70,36 @@ export default function FontSettingsForm({
         geht keine Anfrage an fremde Server.
       </p>
 
-      <FontChoice
+      <ChoiceCardGroup
         legend="Überschriften und Fließtext"
         hint="Trägt Menü, Überschriften, Pillen und die Texte."
         name="font-sans-choice"
         options={FONT_SANS_OPTIONS}
         selected={sans}
         onSelect={setSans}
-        preview="Neo Archive · Chronologie"
-        previewStyle="sans"
+        renderPreview={(option) => (
+          <FontPreview
+            optionId={option.id}
+            text="Neo Archive · Chronologie"
+            style="sans"
+          />
+        )}
       />
 
-      <FontChoice
+      <ChoiceCardGroup
         legend="Daten und Code"
         hint="Trägt die Mono-Zeilen der Karten, die Aktenfelder und Codeblöcke."
         name="font-mono-choice"
         options={FONT_MONO_OPTIONS}
         selected={mono}
         onSelect={setMono}
-        preview="SD 2401-06-12 · 4711"
-        previewStyle="mono"
+        renderPreview={(option) => (
+          <FontPreview
+            optionId={option.id}
+            text="SD 2401-06-12 · 4711"
+            style="mono"
+          />
+        )}
       />
 
       <SaveFooter state={state} pending={pending} />
@@ -96,80 +107,22 @@ export default function FontSettingsForm({
   );
 }
 
-// Eine der beiden Auswahlgruppen. Jede Karte zeigt die Schrift an einem
-// Beispielsatz in ihr selbst — die Wahl trifft man am Aussehen, nicht am
-// Namen.
-function FontChoice({
-  legend,
-  hint,
-  name,
-  options,
-  selected,
-  onSelect,
-  preview,
-  previewStyle,
+function FontPreview({
+  optionId,
+  text,
+  style,
 }: {
-  legend: string;
-  hint: string;
-  name: string;
-  options: { id: string; label: string; description: string }[];
-  selected: string;
-  onSelect: (id: string) => void;
-  preview: string;
-  previewStyle: "sans" | "mono";
+  optionId: string;
+  text: string;
+  style: "sans" | "mono";
 }) {
   return (
-    <fieldset className="flex flex-col gap-[8px]">
-      <legend className="lcars-eyebrow">{legend}</legend>
-      <p className="text-lcars-ink-dim text-[12px]">{hint}</p>
-
-      {options.map((option) => {
-        const isSelected = selected === option.id;
-        return (
-          <label
-            key={option.id}
-            className={`relative flex items-center gap-[12px] rounded-[var(--lcars-radius-pill)] border px-[16px] py-[10px] cursor-pointer transition-colors ${
-              isSelected
-                ? "border-lcars-primary bg-lcars-surface-2"
-                : "border-lcars-border bg-lcars-surface"
-            }`}
-          >
-            <input
-              type="radio"
-              name={name}
-              value={option.id}
-              checked={isSelected}
-              onChange={() => onSelect(option.id)}
-              className="sr-only"
-            />
-            <span className="flex flex-col gap-[2px] min-w-0">
-              <span
-                className={`lcars-eyebrow ${
-                  isSelected ? "text-lcars-primary-ink" : "text-lcars-ink-light"
-                }`}
-              >
-                {option.label}
-              </span>
-              <span className="text-lcars-ink-dim text-[12px]">
-                {option.description}
-              </span>
-              {/* Das Beispiel in der jeweiligen Schrift: die Familien sind
-                  auf <html> als CSS-Variablen angemeldet (siehe layout.tsx),
-                  hier wird die passende direkt gesetzt — unabhängig davon,
-                  was gerade ausgewählt ist. */}
-              <span
-                className="text-[15px] text-lcars-ink truncate"
-                style={{
-                  fontFamily: `var(${cssVariableOf(option.id, previewStyle)})`,
-                }}
-              >
-                {preview}
-              </span>
-            </span>
-          </label>
-        );
-      })}
-    </fieldset>
+    <span
+      className="text-[15px] text-lcars-ink truncate"
+      style={{ fontFamily: `var(${cssVariableOf(optionId, style)})` }}
+    >
+      {text}
+    </span>
   );
 }
 

@@ -1,9 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const logServerError = vi.fn();
+const { logServerError } = vi.hoisted(() => ({ logServerError: vi.fn() }));
 vi.mock("@/lib/errorLog", () => ({ logServerError }));
 
-import { onRequestError } from "./instrumentation";
+import { onRequestError } from "./instrumentation.node";
 
 // Minimal-Stellvertreter für die beiden Argumente, die Next dem Hook neben
 // dem Fehler übergibt.
