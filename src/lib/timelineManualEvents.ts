@@ -2,7 +2,12 @@ import "server-only";
 import { revalidateTag } from "next/cache";
 import sql from "@/lib/db";
 import { cacheTags } from "@/lib/cacheTags";
-import { EVENT_CATEGORIES, normalizeCategory } from "@/lib/timelineTypes";
+import {
+  EVENT_CATEGORIES,
+  isIsoDate,
+  normalizeCategory,
+} from "@/lib/timelineTypes";
+import { purgeContentImagesFor } from "@/lib/contentImages";
 
 // Ereignisse, die zu keinem Inhalt gehören.
 //
@@ -20,6 +25,7 @@ import { EVENT_CATEGORIES, normalizeCategory } from "@/lib/timelineTypes";
 export interface ManualEventInput {
   date: string;
   title: string;
+  teaser: string | null;
   detail: string | null;
   category: string;
   // Wer beteiligt ist. Bewusst OHNE Vorauswahl: ein freies Ereignis betrifft
@@ -30,7 +36,8 @@ export interface ManualEventInput {
 export class ManualEventError extends Error {}
 
 const MAX_TITLE = 200;
-const MAX_DETAIL = 2000;
+const MAX_TEASER = 500;
+const MAX_DETAIL = 10_000;
 
 // Prüft die Eingabe, bevor sie in die Datenbank geht. Exportiert, weil sich
 // die Regeln ohne Datenbank prüfen lassen — die Fehlermeldungen sind das,
@@ -38,12 +45,14 @@ const MAX_DETAIL = 2000;
 export function parseManualEvent(form: {
   date: string;
   title: string;
+  teaser: string;
   detail: string;
   category: string;
   characterIds?: string[];
 }): ManualEventInput {
   const title = form.title.trim();
-  if (title === "") throw new ManualEventError("Das Ereignis braucht einen Titel.");
+  if (title === "")
+    throw new ManualEventError("Das Ereignis braucht einen Titel.");
   if (title.length > MAX_TITLE) {
     throw new ManualEventError(
       `Der Titel ist zu lang (höchstens ${MAX_TITLE} Zeichen).`,
@@ -58,7 +67,12 @@ export function parseManualEvent(form: {
     throw new ManualEventError("Bitte ein Datum im Format JJJJ-MM-TT angeben.");
   }
   const [year, month, day] = date.split("-").map(Number);
-  if (month < 1 || month > 12 || day < 1 || day > 31) {
+  const normalizedDate = [
+    String(year).padStart(4, "0"),
+    String(month).padStart(2, "0"),
+    String(day).padStart(2, "0"),
+  ].join("-");
+  if (!isIsoDate(normalizedDate)) {
     throw new ManualEventError("Dieses Datum gibt es nicht.");
   }
 
@@ -68,6 +82,12 @@ export function parseManualEvent(form: {
   }
 
   const detail = form.detail.trim();
+  const teaser = form.teaser.trim();
+  if (teaser.length > MAX_TEASER) {
+    throw new ManualEventError(
+      `Der Teaser ist zu lang (höchstens ${MAX_TEASER} Zeichen).`,
+    );
+  }
   if (detail.length > MAX_DETAIL) {
     throw new ManualEventError(
       `Die Beschreibung ist zu lang (höchstens ${MAX_DETAIL} Zeichen).`,
@@ -85,8 +105,9 @@ export function parseManualEvent(form: {
 
   return {
     // Vierstellig speichern, damit die Sortierung als Text stimmt.
-    date: `${String(year).padStart(4, "0")}-${date.slice(-5)}`,
+    date: normalizedDate,
     title,
+    teaser: teaser === "" ? null : teaser,
     detail: detail === "" ? null : detail,
     category,
     characterIds,
@@ -97,28 +118,39 @@ export async function createManualEvent(
   input: ManualEventInput,
   createdBy: number,
 ): Promise<number> {
-  // Ereignis und Beteiligte in EINER Transaktion: ein Ereignis, dem die Hälfte
-  // seiner Besetzung fehlt, wäre schlechter als keines.
-  const id = await sql.begin(async (tx) => {
-    const [row] = await tx<{ id: number }[]>`
-      INSERT INTO timeline_events
-        (event_date, title, detail, category, source_type, source_slug, href,
-         origin, created_by)
-      VALUES (${input.date}, ${input.title}, ${input.detail}, ${input.category},
-              NULL, NULL, '', 'manual', ${createdBy})
-      RETURNING id
-    `;
-    for (const characterId of input.characterIds) {
-      await tx`
-        INSERT INTO timeline_event_characters (event_id, character_id)
-        VALUES (${row.id}, ${characterId})
-        ON CONFLICT DO NOTHING
+  return (await createManualEvents([input], createdBy))[0];
+}
+
+// CSV-Importe werden als ein Batch geschrieben: Ist eine Zeile technisch
+// nicht speicherbar, bleibt nicht die Hälfte der Datei in der Chronologie.
+export async function createManualEvents(
+  inputs: ManualEventInput[],
+  createdBy: number,
+): Promise<number[]> {
+  const ids = await sql.begin(async (tx) => {
+    const created: number[] = [];
+    for (const input of inputs) {
+      const [row] = await tx<{ id: number }[]>`
+        INSERT INTO timeline_events
+          (event_date, title, teaser, detail, category, source_type, source_slug, href,
+           origin, created_by)
+        VALUES (${input.date}, ${input.title}, ${input.teaser}, ${input.detail},
+                ${input.category}, NULL, NULL, '', 'manual', ${createdBy})
+        RETURNING id
       `;
+      for (const characterId of input.characterIds) {
+        await tx`
+          INSERT INTO timeline_event_characters (event_id, character_id)
+          VALUES (${row.id}, ${characterId})
+          ON CONFLICT DO NOTHING
+        `;
+      }
+      created.push(row.id);
     }
-    return row.id;
+    return created;
   });
   revalidateTag(cacheTags.timeline, { expire: 0 });
-  return id;
+  return ids;
 }
 
 // Alle Figuren, die sich mit einem Ereignis verknüpfen lassen: das ganze
@@ -148,6 +180,9 @@ export async function deleteManualEvent(
       AND (${viewer.canModerate} OR created_by = ${viewer.userId})
     RETURNING id
   `;
-  if (rows.length > 0) revalidateTag(cacheTags.timeline, { expire: 0 });
+  if (rows.length > 0) {
+    await purgeContentImagesFor("timeline_event", id);
+    revalidateTag(cacheTags.timeline, { expire: 0 });
+  }
   return rows.length > 0;
 }

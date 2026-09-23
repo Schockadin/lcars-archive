@@ -3,6 +3,13 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import TimelineView from "./TimelineView";
 import type { TimelineEvent } from "@/lib/timelineTypes";
 
+// Die Galerie selbst hat eigene Tests und benötigt den Next-Router sowie
+// Server-Actions. Hier interessiert nur, dass die Ereignis-Detailansicht sie
+// mit anbietet; die Attrappe hält diesen Komponenten-Test bewusst isoliert.
+vi.mock("@/components/ContentImageGallery", () => ({
+  default: () => <button type="button">Bilder</button>,
+}));
+
 // Die vorgewählte Ereignisart kommt aus der Route (/chronologie/[kategorie]).
 // Sie kann eine Art benennen, zu der es (noch) kein Ereignis gibt — die
 // Adresse ist teilbar und überlebt das Löschen des letzten Konflikts.
@@ -24,7 +31,10 @@ function event(partial: Partial<TimelineEvent>): TimelineEvent {
   };
 }
 
-const EVENTS = [event({}), event({ id: "e2", category: "log", phase: undefined })];
+const EVENTS = [
+  event({}),
+  event({ id: "e2", category: "log", phase: undefined }),
+];
 
 function artFilter(): HTMLSelectElement {
   return screen.getByLabelText("Nach Ereignisart filtern") as HTMLSelectElement;
@@ -44,15 +54,15 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
 
     // Und der Weg zurück steht offen.
     fireEvent.change(artFilter(), { target: { value: "" } });
-    expect(screen.queryByText("Keine Ereignisse für diese Auswahl.")).toBeNull();
+    expect(
+      screen.queryByText("Keine Ereignisse für diese Auswahl."),
+    ).toBeNull();
   });
 
   it("zeigt das Auswahlfeld auch, wenn nur eine Art übrig ist", () => {
     // Eine Auswahl mit einem Eintrag ist sonst nur Beiwerk und wird
     // ausgeblendet — läuft aber ein Filter, muss er erreichbar bleiben.
-    render(
-      <TimelineView events={[event({})]} initialCategory="mission" />,
-    );
+    render(<TimelineView events={[event({})]} initialCategory="mission" />);
     expect(artFilter()).toBeInTheDocument();
     expect(artFilter().value).toBe("mission");
   });
@@ -70,10 +80,9 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
     const replace = vi.spyOn(window.history, "replaceState");
 
     render(<TimelineView events={EVENTS} syncUrl />);
-    fireEvent.change(
-      screen.getByLabelText("Umfang der Chronologie"),
-      { target: { value: "all" } },
-    );
+    fireEvent.change(screen.getByLabelText("Umfang der Chronologie"), {
+      target: { value: "all" },
+    });
     fireEvent.change(artFilter(), { target: { value: "log" } });
 
     expect(pushes).toContain("/chronologie/log");
@@ -86,9 +95,24 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
     render(
       <TimelineView
         events={[
-          event({ id: "log-tuvok", title: "Logbuch Tuvok", category: "log", people: ["Tuvok"] }),
-          event({ id: "log-kim", title: "Logbuch Kim", category: "log", people: ["Harry Kim"] }),
-          event({ id: "mission-tuvok", title: "Mission Tuvok", category: "mission", people: ["Tuvok"] }),
+          event({
+            id: "log-tuvok",
+            title: "Logbuch Tuvok",
+            category: "log",
+            people: ["Tuvok"],
+          }),
+          event({
+            id: "log-kim",
+            title: "Logbuch Kim",
+            category: "log",
+            people: ["Harry Kim"],
+          }),
+          event({
+            id: "mission-tuvok",
+            title: "Mission Tuvok",
+            category: "mission",
+            people: ["Tuvok"],
+          }),
         ]}
         initialScope="all"
         initialCategory="log"
@@ -98,7 +122,9 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
 
     expect(screen.getByLabelText("Umfang der Chronologie")).toHaveValue("all");
     expect(artFilter()).toHaveValue("log");
-    expect(screen.getByLabelText("Nach beteiligter Person filtern")).toHaveValue("Tuvok");
+    expect(
+      screen.getByLabelText("Nach beteiligter Person filtern"),
+    ).toHaveValue("Tuvok");
     expect(screen.getByText("Logbuch Tuvok")).toBeInTheDocument();
     expect(screen.queryByText("Logbuch Kim")).toBeNull();
     expect(screen.queryByText("Mission Tuvok")).toBeNull();
@@ -153,5 +179,39 @@ describe("TimelineView – Ereignis eintragen", () => {
     expect(
       screen.queryByRole("button", { name: "Event hinzufügen" }),
     ).toBeNull();
+  });
+});
+
+describe("TimelineView – eigenes Ereignis", () => {
+  it("öffnet Teaser und Volltext in einer Detailansicht", () => {
+    render(
+      <TimelineView
+        events={[
+          event({
+            id: "manual:41",
+            title: "Vertrag von Algeron",
+            detail: "Der kurze Teaser.",
+            fullDetailHtml: "<p>Der <strong>vollständige</strong> Text.</p>",
+            origin: "manual",
+            href: null,
+            category: "political",
+            phase: undefined,
+            manualEventId: 41,
+            manualEventCreatedBy: 7,
+          }),
+        ]}
+        initialScope="all"
+        currentUserId={7}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: /Vertrag von Algeron/ }),
+    );
+    expect(screen.getAllByText("Der kurze Teaser.").length).toBeGreaterThan(0);
+    expect(
+      screen.getByText("vollständige", { exact: false }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Ereignisbilder")).toBeInTheDocument();
   });
 });

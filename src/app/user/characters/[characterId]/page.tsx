@@ -15,9 +15,7 @@ import RevisionsPanel from "@/app/_shared/RevisionsPanel";
 import { listRevisions } from "@/lib/contentRevisions";
 import { getViewer } from "@/lib/visibility";
 import CharacterSheetButton from "./CharacterSheetButton";
-import {
-  characterEditHref,
-} from "@/lib/contentRoutes";
+import { characterEditHref } from "@/lib/contentRoutes";
 import HelpButton from "@/components/help/HelpButton";
 import { HelpTitleRow } from "@/components/help/HelpHeading";
 import CharacterCreationGuide from "@/components/character/CharacterCreationGuide";
@@ -31,7 +29,7 @@ interface Props {
   params: Promise<{ characterId: string }>;
 }
 
-// Die eigene Charakterseite: Stammdaten, Werte und Biografie als drei Panels
+// Die eigene Charakterseite: Personalakte, Werte und Biografie als drei Panels
 // untereinander, darüber der Knopf für die Bogen-Vorschau. Kein Assistent —
 // der ist nur fürs Anlegen da (siehe /user/characters/new).
 //
@@ -56,15 +54,15 @@ export default async function OwnCharacterPage({ params }: Props) {
   // überhaupt zu diesem Konto gehört.
   const [account, rules, talents, focuses, campaignRules, revisions] =
     await Promise.all([
-    getApAccount(sheet.id),
-    getAdvancementRules(),
-    listTalents(),
-    listFocuses(),
-    listCampaignRules(),
-    // Versionshistorie der Biografie — der Owner-Check oben ist bereits
-    // gelaufen, listRevisions prüft ihn über den Viewer noch einmal selbst.
-    getViewer().then((v) => listRevisions("character", character.id, v)),
-  ]);
+      getApAccount(sheet.id),
+      getAdvancementRules(),
+      listTalents(),
+      listFocuses(),
+      listCampaignRules(),
+      // Versionshistorie der Biografie — der Owner-Check oben ist bereits
+      // gelaufen, listRevisions prüft ihn über den Viewer noch einmal selbst.
+      getViewer().then((v) => listRevisions("character", character.id, v)),
+    ]);
 
   return (
     <>
@@ -101,11 +99,15 @@ export default async function OwnCharacterPage({ params }: Props) {
           }}
         />
 
-        <CharacterHeadPanel userId={session.userId} character={character} />
+        <CharacterHeadPanel
+          userId={session.userId}
+          character={character}
+          stats={sheet.stats}
+        />
 
-        {/* Das Werte-Panel bringt seine eigenen Abschnitte mit (AP-Konto,
-            Kopfdaten, Attribute, Disziplinen, Listen) — eine zusätzliche Hülle
-            darum wären nur zwei Titelleisten übereinander. */}
+        {/* Das Werte-Panel bringt Attribute, Disziplinen und Listen samt ihren
+            direkten AP-Aktionen mit — eine zusätzliche Hülle darum wären nur
+            zwei Titelleisten übereinander. */}
         <CharacterValuesPanel
           userId={session.userId}
           characterId={sheet.id}

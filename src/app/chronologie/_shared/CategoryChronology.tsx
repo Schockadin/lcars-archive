@@ -3,7 +3,11 @@ import PageMeta from "@/components/PageMeta";
 import PageSkeleton from "@/app/_shared/PageSkeleton";
 import TimelineView from "@/components/timeline/TimelineView";
 import { getTimeline } from "@/lib/timeline";
-import { categoryVisual, latestEventDate, type TimelineScope } from "@/lib/timelineTypes";
+import {
+  categoryVisual,
+  latestEventDate,
+  type TimelineScope,
+} from "@/lib/timelineTypes";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import { listCharactersForEvents } from "@/lib/timelineManualEvents";
 import HelpButton from "@/components/help/HelpButton";
@@ -75,6 +79,8 @@ export default async function CategoryTimeline({
       canAddEvent={canAddEvent}
       characters={characters}
       latestEventDate={latestEventDate(events)}
+      currentUserId={viewer?.userId ?? null}
+      canModerateEvents={viewerHasPermission(viewer, "content.moderate")}
       syncUrl
     />
   );

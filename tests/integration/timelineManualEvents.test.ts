@@ -28,7 +28,8 @@ describe("freie Chronologie-Ereignisse", () => {
       {
         date: "2399-11-02",
         title: "Vertrag von Algeron",
-        detail: "Die Grenze wird festgeschrieben.",
+        teaser: "Eine neue Grenze für den Quadranten.",
+        detail: "Die Grenze wird **festgeschrieben**.",
         category: "political",
         characterIds: [],
       },
@@ -42,27 +43,45 @@ describe("freie Chronologie-Ereignisse", () => {
     expect(event).toBeDefined();
     expect(event!.origin).toBe("manual");
     expect(event!.href).toBeNull();
-    expect(event!.detail).toBe("Die Grenze wird festgeschrieben.");
+    expect(event!.detail).toBe("Eine neue Grenze für den Quadranten.");
+    expect(event!.fullDetailHtml).toContain("<strong>festgeschrieben</strong>");
+    expect(event!.manualEventCreatedBy).toBe(user.id);
   });
 
   it("lässt sich von der eintragenden Person wieder entfernen", async () => {
     const user = await insertUser();
     const id = await createManualEvent(
-      { date: "2400-01-01", title: "Weg damit", detail: null, category: "other", characterIds: [] },
+      {
+        date: "2400-01-01",
+        title: "Weg damit",
+        teaser: null,
+        detail: null,
+        category: "other",
+        characterIds: [],
+      },
       user.id,
     );
 
     expect(
       await deleteManualEvent(id, { userId: user.id, canModerate: false }),
     ).toBe(true);
-    expect(await sql`SELECT id FROM timeline_events WHERE id = ${id}`).toHaveLength(0);
+    expect(
+      await sql`SELECT id FROM timeline_events WHERE id = ${id}`,
+    ).toHaveLength(0);
   });
 
   it("schützt fremde Ereignisse vor allen außer der Moderation", async () => {
     const autor = await insertUser();
     const fremd = await insertUser();
     const id = await createManualEvent(
-      { date: "2400-01-01", title: "Meins", detail: null, category: "other", characterIds: [] },
+      {
+        date: "2400-01-01",
+        title: "Meins",
+        teaser: null,
+        detail: null,
+        category: "other",
+        characterIds: [],
+      },
       autor.id,
     );
 
@@ -83,6 +102,7 @@ describe("freie Chronologie-Ereignisse", () => {
       {
         date: "2399-11-02",
         title: "Konferenz von Khitomer",
+        teaser: null,
         detail: null,
         category: "political",
         characterIds: [tuvok.id, kira.id],
@@ -102,6 +122,7 @@ describe("freie Chronologie-Ereignisse", () => {
       {
         date: "2400-01-01",
         title: "Kurzlebig",
+        teaser: null,
         detail: null,
         category: "other",
         characterIds: [figur.id],

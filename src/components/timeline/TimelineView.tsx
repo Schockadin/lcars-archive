@@ -28,6 +28,8 @@ import {
 import { chronologyCategoryHref } from "@/lib/contentRoutes";
 import ManualEventForm from "./ManualEventForm";
 import { HelpTitleRow } from "@/components/help/HelpHeading";
+import ModalOverlay from "@/components/ModalOverlay";
+import ContentImageGallery from "@/components/ContentImageGallery";
 
 // Die Chronologie als Zeitstrahl: links Datum und Schiene, rechts die
 // Ereigniskarte. Aufbau nach dem Entwurf (Jahresleiste, Monats-Trenner,
@@ -79,6 +81,8 @@ export default function TimelineView({
   characters = [],
   latestEventDate = null,
   help,
+  currentUserId = null,
+  canModerateEvents = false,
 }: {
   events: TimelineEvent[];
   initialCategory?: string | null;
@@ -93,6 +97,8 @@ export default function TimelineView({
   // server-gerendert bleibt. Die Chronologie steht auch eingebettet auf
   // anderen Seiten; dort bleibt die Prop weg und die Kopfzeile ohne Knopf.
   help?: ReactNode;
+  currentUserId?: number | null;
+  canModerateEvents?: boolean;
 }) {
   const [scope, setScope] = useState<TimelineScope>(
     initialScope ?? (initialCategory ? "all" : DEFAULT_TIMELINE_SCOPE),
@@ -102,6 +108,7 @@ export default function TimelineView({
   const [category, setCategory] = useState<string | null>(initialCategory);
   const [person, setPerson] = useState<string | null>(initialPerson);
   const [year, setYear] = useState<string | null>(null);
+  const [manualDetail, setManualDetail] = useState<TimelineEvent | null>(null);
 
   // Ereignisart und Beteiligte richten sich nach dem UMFANG, nicht nach dem
   // ganzen Bestand: in der Missions-Ansicht gäbe es sonst Einträge, die
@@ -365,6 +372,7 @@ export default function TimelineView({
                     )}
                     <EventRow
                       event={event}
+                      onOpenManual={() => setManualDetail(event)}
                       endDate={
                         scope === "missions" && event.href
                           ? missionEnds.get(event.href)
@@ -391,6 +399,48 @@ export default function TimelineView({
           </p>
         </>
       )}
+
+      {manualDetail?.origin === "manual" && manualDetail.manualEventId && (
+        <ModalOverlay
+          title={manualDetail.title}
+          onClose={() => setManualDetail(null)}
+          width={760}
+        >
+          <div className="flex flex-col gap-[12px]">
+            <p className="lcars-eyebrow">
+              {manualDetail.date ? fmtDate(manualDetail.date) : "Ohne Datum"}
+              {manualDetail.people.length > 0
+                ? ` · ${manualDetail.people.join(" · ")}`
+                : ""}
+            </p>
+            {manualDetail.detail && (
+              <p className="text-lcars-ink-contrast">{manualDetail.detail}</p>
+            )}
+            {manualDetail.fullDetailHtml ? (
+              <div
+                className="mission-body lcars-text"
+                dangerouslySetInnerHTML={{
+                  __html: manualDetail.fullDetailHtml,
+                }}
+              />
+            ) : (
+              <p className="lcars-empty-state">Kein Volltext hinterlegt.</p>
+            )}
+            <div className="flex items-center gap-[8px]">
+              <span className="lcars-eyebrow">Ereignisbilder</span>
+              <ContentImageGallery
+                contentType="timeline_event"
+                contentId={manualDetail.manualEventId}
+                canManage={
+                  canModerateEvents ||
+                  (currentUserId !== null &&
+                    currentUserId === manualDetail.manualEventCreatedBy)
+                }
+              />
+            </div>
+          </div>
+        </ModalOverlay>
+      )}
     </div>
   );
 }
@@ -406,11 +456,13 @@ export default function TimelineView({
 function EventRow({
   event,
   endDate,
+  onOpenManual,
 }: {
   event: TimelineEvent;
   // Nur im Umfang „Missionen" gesetzt: dann trägt die Karte den Zeitraum des
   // Einsatzes statt des Datums seines Beginns.
   endDate?: string;
+  onOpenManual: () => void;
 }) {
   const visual = categoryVisual(event.category);
 
@@ -427,6 +479,7 @@ function EventRow({
         // Ein von Hand eingetragenes Ereignis hat keinen Inhalt, auf den zu
         // zeigen wäre — dann steht der Titel als reiner Text.
         href={event.href ?? undefined}
+        onActivate={event.origin === "manual" ? onOpenManual : undefined}
         ariaLabel={
           event.date
             ? `${event.title} — ${visual.label}, ${fmtDate(event.date)}`
@@ -459,14 +512,7 @@ function EventRow({
         }
       >
         {event.detail && (
-          <ChronoPanel
-            label="Teaser"
-            open
-            // Von Hand eingetragene Beschreibungen sind Markdown (siehe
-            // getTimeline) — die übrigen sind schlichter Text.
-            bodyClassName={event.detailHtml ? "mission-body" : undefined}
-            bodyHtml={event.detailHtml ?? undefined}
-          >
+          <ChronoPanel label="Teaser" open>
             {event.detail}
           </ChronoPanel>
         )}

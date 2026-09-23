@@ -8,6 +8,7 @@ function form(overrides: Partial<Record<string, string>> = {}) {
   return {
     date: "2401-03-05",
     title: "Vertrag von Algeron",
+    teaser: "",
     detail: "",
     category: "political",
     ...overrides,
@@ -19,6 +20,7 @@ describe("parseManualEvent", () => {
     expect(parseManualEvent(form({ detail: "Die Grenze steht." }))).toEqual({
       date: "2401-03-05",
       title: "Vertrag von Algeron",
+      teaser: null,
       detail: "Die Grenze steht.",
       category: "political",
       // Ohne Auswahl bleibt die Besetzung leer — ein freies Ereignis
@@ -32,6 +34,14 @@ describe("parseManualEvent", () => {
     expect(parseManualEvent(form()).detail).toBeNull();
   });
 
+  it("führt Teaser und Volltext getrennt", () => {
+    const input = parseManualEvent(
+      form({ teaser: "Kurzer Anriss", detail: "Ausführlicher **Volltext**." }),
+    );
+    expect(input.teaser).toBe("Kurzer Anriss");
+    expect(input.detail).toBe("Ausführlicher **Volltext**.");
+  });
+
   it("besteht auf Titel und gültigem Datum", () => {
     expect(() => parseManualEvent(form({ title: "   " }))).toThrow(
       ManualEventError,
@@ -40,6 +50,9 @@ describe("parseManualEvent", () => {
       /JJJJ-MM-TT/,
     );
     expect(() => parseManualEvent(form({ date: "2401-13-05" }))).toThrow(
+      /gibt es nicht/,
+    );
+    expect(() => parseManualEvent(form({ date: "2401-02-31" }))).toThrow(
       /gibt es nicht/,
     );
   });
@@ -64,7 +77,13 @@ describe("parseManualEvent", () => {
     );
     expect(() =>
       parseManualEvent(form({ detail: "x".repeat(2001) })),
+    ).not.toThrow();
+    expect(() =>
+      parseManualEvent(form({ detail: "x".repeat(10_001) })),
     ).toThrow(/zu lang/);
+    expect(() => parseManualEvent(form({ teaser: "x".repeat(501) }))).toThrow(
+      /Teaser/,
+    );
   });
 
   it("liest die Beteiligten als Zahlen und wirft Doppelte weg", () => {

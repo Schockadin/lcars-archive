@@ -842,6 +842,9 @@ export async function updateOwnCharacterContent(
     isDraft: boolean;
     // Siehe createCharacter oben — Opt-in "Automatisch verlinken".
     bioHtml?: string;
+    // Personnel-File-Felder werden zusammen mit den Stammdaten gespeichert.
+    // Die übrigen Werte bleiben dabei aus dem gespeicherten Stand erhalten.
+    stats?: CharacterStats;
   },
 ): Promise<UpdateOwnCharacterResult | null> {
   const trimmedBody = input.bodyMarkdown.trim();
@@ -868,6 +871,7 @@ export async function updateOwnCharacterContent(
     affiliation: buildAffiliation(input),
     tags: input.tags,
     ...portraitMetadata(input),
+    ...(input.stats ? { stats: input.stats } : {}),
   };
 
   // "wasDraft" (Stand VOR diesem Update) per CTE mitgeliefert — der

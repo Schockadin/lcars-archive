@@ -37,6 +37,7 @@ export async function createManualEventAction(
     const input = parseManualEvent({
       date: String(formData.get("date") ?? ""),
       title: String(formData.get("title") ?? ""),
+      teaser: String(formData.get("teaser") ?? ""),
       detail: String(formData.get("detail") ?? ""),
       category: String(formData.get("category") ?? ""),
       characterIds: formData.getAll("characterIds").map(String),
@@ -81,5 +82,8 @@ export async function deleteManualEventAction(
   });
   return removed
     ? { success: true }
-    : { error: "Das Ereignis gibt es nicht mehr — oder es gehört jemand anderem." };
+    : {
+        error:
+          "Das Ereignis gibt es nicht mehr — oder es gehört jemand anderem.",
+      };
 }

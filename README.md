@@ -60,9 +60,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Höhe in Zeilen statt in Pixeln (Notizen und Regeln: 10). Die zugehörigen
   Datenzugriffe liefern neben dem Rohtext ein gerendertes `*Html`-Feld
   (`listNotes`, `listCampaignRules`, `listTalents`, `listFocuses`,
-  `listGameSessions`, `listUpcomingSessions`; in der Chronologie trägt nur das
-  von Hand eingetragene Ereignis ein `detailHtml` — die übrigen
-  Beschreibungen sind generierte Sätze) — das Formular arbeitet auf dem Rohtext, die Anzeige auf
+  `listGameSessions`, `listUpcomingSessions`; in der Chronologie wird der
+  Volltext eines von Hand eingetragenen Ereignisses als `fullDetailHtml`
+  gerendert) — das Formular arbeitet auf dem Rohtext, die Anzeige auf
   dem HTML. Im PDF gibt es kein HTML, dort zerlegt `toPdfBlocks` denselben
   Rohtext (wie beim Biografie-Blatt). Die Kataloge sind gecacht, das Rendern
   passiert also einmal je Cache-Generation.
@@ -214,9 +214,11 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   sechs Disziplinen, Protection/Determination/Reputation/Stress-Bonus sowie die
   Listenfelder (Werte, Schwerpunkte, Talente, Spezies-Fähigkeiten,
   Sonderregeln, Angriffe, Ausrüstung, Hobbys, Karriere-Ereignisse).
-- **Die eigene Charakterseite** (`/user/characters/[id]`) — Stammdaten, Werte
-  und Biografie als **Panels untereinander** statt getrennter Seiten mit
-  Umschalter. Stammdaten und Biografie haben je einen Stift-Knopf und werden an
+- **Die eigene Charakterseite** (`/user/characters/[id]`) — Personalakte,
+  Werte und Biografie als **Panels untereinander** statt getrennter Seiten mit
+  Umschalter. Die Personalakte führt Stammdaten und die früher doppelten
+  Personnel-File-Kopfdaten zusammen. Personalakte und Biografie haben je einen
+  Stift-Knopf und werden an
   Ort und Stelle bearbeitet; jedes Panel speichert nur seinen Teil
   (`_shared/panelActions.ts`) und übernimmt den Rest aus dem gespeicherten
   Stand — `updateOwnCharacterContent` schreibt die Akte immer vollständig, ein
@@ -267,11 +269,14 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Alle Zahlen des Regelwerks sind Standardwerte: die Spielleitung stellt sie
   unter `/gm/ap` ein, gespeichert in `campaign_settings.advancement_rules`
   (`src/lib/advancementSettings.ts`); die Funktionen in `advancement.ts` nehmen
-  den geltenden Satz als Argument entgegen. Der AP-Bereich des Charakterbogens
+  den geltenden Satz als Argument entgegen. Der Wertebereich des Charakterbogens
   rechnet **live** mit: der State der Attribut-/Disziplin-Eingaben liegt in der
-  Klammer-Komponente `CharacterSheet.tsx`, sodass Budget, Rest und
-  Übertrags-Vorschau schon beim Tippen mitlaufen; nach der Erschaffung zeigt
-  jeder Steigern-Knopf, wie viele AP danach bleiben. Nicht verbrauchtes
+  Klammer-Komponente `CharacterValuesPanel.tsx`, sodass Budget, Rest und
+  Übertrags-Vorschau schon beim Tippen mitlaufen. Nach der Erschaffung sitzt der
+  grüne oder rote Steigern-Knopf samt Kosten direkt am jeweiligen Wert; Talente
+  und Schwerpunkte haben dort ihren eigenen Plus-Knopf. Das Buchungsjournal
+  bleibt eine Leitungsansicht unter `/gm/ap` und steht nicht mehr im Bogen.
+  Nicht verbrauchtes
   Erschaffungsbudget wird beim Festschreiben als AP gutgeschrieben, gedeckelt
   durch `creationCarryOverMax` (Standard 10) — Gutschrift und Sperre in einer
   Transaktion. Festgeschrieben wird dabei ausschließlich der **gespeicherte**
@@ -886,8 +891,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Eintrags: bei einer Figur ihr Portrait, sonst das zuerst hochgeladene Bild
   (`content_images`). Ohne Bild wird nichts gerendert — kein Platzhalter. Die
   Listen holen die Bild-Id in ihrer bestehenden Abfrage mit (`LEFT JOIN
-  LATERAL`), die Chronologie über eine Abfrage für alle vier Inhaltsarten
-  (`getFirstContentImageIdsBySlug`); ausgeliefert werden die Bytes wie überall
+  LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
+  Inhaltsarten (`getFirstContentImageIdsBySlug`) und bei eigenen Ereignissen
+  direkt über deren ID; ausgeliefert werden die Bytes wie überall
   über `/api/content-images/<id>` (`contentImageSrc`).
 - **Chronologie (`/chronologie`)** — die Kampagne als Zeitstrahl nach ihrer
   eigenen Zeitrechnung (In-Story-Datum), nicht nach Bearbeitungszeit. Sie ist
@@ -946,7 +952,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   nicht ihrem Owner (die Missions-Übersicht zeigte sie noch nie, und ein
   Zeitstrahl, der für eine Person Ereignisse enthält, die für alle anderen
   nicht existieren, erzählt eine andere Kampagne als die am Tisch).
-  Die Ereignisse kommen aus drei Quellen und werden in `src/lib/timeline.ts`
+  Die Ereignisse kommen aus vier Quellen und werden in `src/lib/timeline.ts`
   zusammengetragen:
   1. **Gepflegte Angaben** der Inhalte (Missionsbeginn/-ende, `log_date` eines
      Logbuchs, `metadata.logDate` eines Gesprächs, `metadata.dateOfBirth` einer
@@ -971,6 +977,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
      Marken — auch ungültiger —, sonst zeigten die Links hinter einer kaputten
      Marke auf die falsche Stelle.
   3. **Abgeleitete Ereignisse** aus dem Sprachmodell (siehe unten).
+  4. **Eigene Ereignisse**, einzeln eingetragen oder von der Spielleitung per
+     CSV importiert (siehe unten).
+
   (1) und (2) entstehen beim Lesen und werden **nicht** gespeichert: eine
   gespeicherte Kopie liefe bei jeder Bearbeitung auseinander und die
   Sichtbarkeit müsste doppelt gepflegt werden. Fünf Abfragen für die ganze
@@ -993,8 +1002,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Zuhause, außer man legte eigens einen Datenbank-Eintrag dafür an.
   `source_type`/`source_slug` sind jetzt nullable, `origin` unterscheidet
   `inferred` (vom Modell) von `manual` (von Hand). Die Karte trägt das
-  Etikett „von Hand eingetragen" und ist **nicht verlinkt** (`href` null) —
-  es gibt nichts, worauf sie zeigen könnte. Keine Sichtbarkeitsprüfung: ohne
+  Etikett „von Hand eingetragen". Ihr Titel ist ein Knopf: Er öffnet ein
+  Detail-Overlay mit getrenntem Teaser, Markdown-Volltext und der gemeinsamen
+  Bildergalerie; das erste Bild dient als Thumbnail. Keine
+  Sichtbarkeitsprüfung: ohne
   Quelle gibt es nichts zu verbergen. Entfernen darf, wer sie eingetragen hat,
   und die Moderation; die Liste unter `/gm/chronologie` zeigt beide Herkünfte.
   **Beteiligte** lassen sich dabei mitgeben (`timeline_event_characters`):
@@ -1008,6 +1019,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   der Chronologie vorbelegt (`latestEventDate`): was neu dazukommt, schließt
   fast immer an das an, was zuletzt geschah — sonst suchte man das Jahrhundert
   bei jedem Eintrag von Hand.
+  Die Spielleitung kann unter `/gm/chronologie` zusätzlich eine CSV mit
+  `Datum;Titel;Teaser;Text;Charaktere` importieren. Figuren in der letzten
+  Spalte sind kommagetrennt; unbekannte oder mehrdeutige Namen und jede andere
+  ungültige Zeile brechen den atomaren Batch ab, bevor etwas gespeichert wird.
 - **Ereignisse ableiten (`/gm/chronologie`)** — die Spielleitung lässt je Inhalt
   das Sprachmodell die Begebenheiten nennen, die im Text stecken, aber in keinem
   Feld stehen („drei Tage später …"). Verwendet dieselbe Retrieval-Pipeline wie
@@ -1015,8 +1030,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   plus einen nicht-streamenden Aufruf (`completeText` in `src/lib/rag.ts`). Die
   Antwort eines Modells ist Text, keine Datenstruktur: `parseInferredEvents`
   schneidet das JSON-Array heraus und prüft jedes Feld einzeln (13 Tests).
-  Übernommene Ereignisse landen in `timeline_events` (die Tabelle hält
-  ausschließlich abgeleitete Ereignisse), sind in der Ansicht als „aus dem Text
+  Übernommene Ereignisse landen in `timeline_events`, sind in der Ansicht als „aus dem Text
   abgeleitet" gekennzeichnet und hängen in ihrer Sichtbarkeit am Quell-Inhalt.
   Bewusst nicht automatisch beim Speichern: ein Durchlauf kostet einen
   Modellaufruf und gehört gelesen, bevor er in der Chronologie aller steht.

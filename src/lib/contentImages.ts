@@ -1,5 +1,6 @@
-// Bild-Uploads für Charaktere/Missionen/Missionslogs/Archiv-Einträge (nicht
-// Dialoge, siehe Kommentar über content_images in scripts/schema.sql). DB
+// Bild-Uploads für Charaktere/Missionen/Missionslogs/Archiv-Einträge und
+// eigene Chronologie-Ereignisse (nicht Dialoge, siehe Kommentar über
+// content_images in scripts/schema.sql). DB
 // (content_images) hält nur Metadaten, die eigentlichen Bytes liegen im
 // öffentlichen Asset-Bucket (R2_ASSET_BUCKET_NAME, src/lib/r2Backup.ts) unter
 // dem Präfix CONTENT_IMAGE_PREFIX — beide Seiten werden hier zusammen
@@ -18,11 +19,7 @@ import {
   getAssetObjectBytesFromR2,
   deleteAssetObjectFromR2,
 } from "@/lib/r2Backup";
-import {
-  canView,
-  viewerHasPermission,
-  type Viewer,
-} from "@/lib/visibility";
+import { canView, viewerHasPermission, type Viewer } from "@/lib/visibility";
 import {
   OWNER_CONTENT_TYPES,
   type OwnerContentTypeKey,
@@ -31,10 +28,14 @@ import { contentImageSrc } from "@/lib/contentRoutes";
 
 export const CONTENT_IMAGE_PREFIX = "content-images/";
 
-// Bildbare Inhaltstypen = die vier Owner-Inhaltstypen (kanonische Liste in
-// src/lib/contentTypeFormat.ts).
-export const CONTENT_IMAGE_TYPES = OWNER_CONTENT_TYPES;
-export type ContentImageType = OwnerContentTypeKey;
+// Die vier Owner-Inhaltstypen plus eigene Chronologie-Ereignisse. Letztere
+// sind kein allgemeiner Content-Typ, verwenden aber dieselbe Upload-, Proxy-
+// und Galerie-Infrastruktur.
+export const CONTENT_IMAGE_TYPES = [
+  ...OWNER_CONTENT_TYPES,
+  "timeline_event",
+] as const;
+export type ContentImageType = OwnerContentTypeKey | "timeline_event";
 
 export function isContentImageType(value: string): value is ContentImageType {
   return (CONTENT_IMAGE_TYPES as readonly string[]).includes(value);
@@ -97,7 +98,7 @@ export interface ContentAccessContext {
 // (canManageContentImages unten). Direktes SQL statt einer der bestehenden
 // getXBySlug-Funktionen: die brauchen einen Slug statt einer ID und liefern
 // pro Typ unterschiedliche Shapes — hier reicht eine schlanke, einheitliche
-// Projektion für alle vier Typen.
+// Projektion für alle unterstützten Typen.
 export async function getContentAccessContext(
   contentType: ContentImageType,
   contentId: number,
@@ -110,20 +111,33 @@ export async function getContentAccessContext(
     return row ? { isDraft: row.is_draft, ownerId: row.player_id } : null;
   }
   if (contentType === "mission") {
-    const [row] = await sql<{ is_draft: boolean; owner_user_id: number | null }[]>`
+    const [row] = await sql<
+      { is_draft: boolean; owner_user_id: number | null }[]
+    >`
       SELECT is_draft, owner_user_id FROM missions
       WHERE id = ${contentId} AND deleted_at IS NULL
     `;
     return row ? { isDraft: row.is_draft, ownerId: row.owner_user_id } : null;
   }
   if (contentType === "mission_log") {
-    const [row] = await sql<{ is_draft: boolean; owner_user_id: number | null }[]>`
+    const [row] = await sql<
+      { is_draft: boolean; owner_user_id: number | null }[]
+    >`
       SELECT is_draft, owner_user_id FROM mission_logs
       WHERE id = ${contentId} AND deleted_at IS NULL
     `;
     return row ? { isDraft: row.is_draft, ownerId: row.owner_user_id } : null;
   }
-  const [row] = await sql<{ is_draft: boolean; owner_user_id: number | null }[]>`
+  if (contentType === "timeline_event") {
+    const [row] = await sql<{ created_by: number | null }[]>`
+      SELECT created_by FROM timeline_events
+      WHERE id = ${contentId} AND origin = 'manual'
+    `;
+    return row ? { isDraft: false, ownerId: row.created_by } : null;
+  }
+  const [row] = await sql<
+    { is_draft: boolean; owner_user_id: number | null }[]
+  >`
     SELECT is_draft, owner_user_id FROM archive_entries
     WHERE id = ${contentId} AND deleted_at IS NULL AND category != 'dialogue'
   `;
@@ -149,7 +163,9 @@ export function canManageContentImages(
   if (ownerId != null && viewer.userId === ownerId) return true;
   return (
     viewerHasPermission(viewer, "content.moderate") &&
-    (contentType === "mission" || contentType === "archive_entry")
+    (contentType === "mission" ||
+      contentType === "archive_entry" ||
+      contentType === "timeline_event")
   );
 }
 
@@ -209,7 +225,7 @@ export async function getFirstContentImageIds(
   return new Map(rows.map((row) => [row.content_id, row.id]));
 }
 
-// Dasselbe, aber über den Slug und über ALLE vier Inhaltstypen: die
+// Dasselbe, aber über den Slug und über alle slug-basierten Inhaltstypen: die
 // Chronologie führt ihre Ereignisse als „<Inhaltsart>:<Slug>" (siehe
 // eventId in timelineTypes.ts) und kennt die numerischen Ids gar nicht.
 // Schlüssel der Map ist genau dieses Paar.
@@ -233,10 +249,14 @@ export async function getFirstContentImageIdsBySlug(): Promise<
     ) s ON s.content_type = i.content_type AND s.id = i.content_id
     ORDER BY i.content_type, s.slug, i.created_at ASC, i.id ASC
   `;
-  return new Map(rows.map((row) => [`${row.content_type}:${row.slug}`, row.id]));
+  return new Map(
+    rows.map((row) => [`${row.content_type}:${row.slug}`, row.id]),
+  );
 }
 
-export async function getContentImageById(id: number): Promise<ContentImage | null> {
+export async function getContentImageById(
+  id: number,
+): Promise<ContentImage | null> {
   const [row] = await sql<ContentImageRow[]>`
     SELECT id, content_type, content_id, r2_key, content_mime, size_bytes, uploaded_by, created_at
     FROM content_images WHERE id = ${id}
@@ -271,7 +291,9 @@ export async function uploadContentImage(
 ): Promise<ContentImage> {
   const extension = ALLOWED_MIME_TO_EXT[file.mimeType];
   if (!extension) {
-    throw new InvalidContentImageError(`Nicht unterstützter Bildtyp: "${file.mimeType}"`);
+    throw new InvalidContentImageError(
+      `Nicht unterstützter Bildtyp: "${file.mimeType}"`,
+    );
   }
   if (file.buffer.byteLength === 0) {
     throw new InvalidContentImageError("Die Datei ist leer.");
@@ -317,8 +339,8 @@ export async function deleteContentImage(
 }
 
 // Entfernt alle Bilder eines Inhalts inkl. R2-Objekten — von purgeContent.ts
-// beim endgültigen Löschen eines Inhalts aufgerufen. content_images hat
-// keine Fremdschlüssel-Beziehung zu den vier Inhaltstabellen (polymorph
+// und beim Löschen eigener Ereignisse aufgerufen. content_images hat
+// keine Fremdschlüssel-Beziehung zu den Inhaltstabellen (polymorph
 // über content_type/content_id), ein DELETE der Ursprungszeile räumt Bilder
 // deshalb nicht automatisch mit auf — ohne diesen Aufruf blieben sowohl die
 // DB-Zeilen als auch die R2-Objekte für immer verwaist liegen.
@@ -373,7 +395,9 @@ interface AdminContentImageRow extends ContentImageRow {
 // Für /admin/content/images (Bucket-Übersicht über alle vier Inhaltstypen
 // hinweg) — LEFT JOIN statt JOIN, damit auch Bilder zu bereits gelöschtem
 // Inhalt sichtbar bleiben (siehe AdminContentImage-Kommentar oben).
-export async function getAllContentImagesForAdmin(): Promise<AdminContentImage[]> {
+export async function getAllContentImagesForAdmin(): Promise<
+  AdminContentImage[]
+> {
   const rows = await sql<AdminContentImageRow[]>`
     SELECT ci.id, ci.content_type, ci.content_id, ci.r2_key, ci.content_mime,
            ci.size_bytes, ci.uploaded_by, ci.created_at,
@@ -417,6 +441,18 @@ export async function getAllContentImagesForAdmin(): Promise<AdminContentImage[]
     LEFT JOIN archive_entries a ON a.id = ci.content_id AND ci.content_type = 'archive_entry'
     LEFT JOIN users u ON u.id = ci.uploaded_by
     WHERE ci.content_type = 'archive_entry'
+
+    UNION ALL
+
+    SELECT ci.id, ci.content_type, ci.content_id, ci.r2_key, ci.content_mime,
+           ci.size_bytes, ci.uploaded_by, ci.created_at,
+           te.title, '/chronologie',
+           u.name
+    FROM content_images ci
+    LEFT JOIN timeline_events te
+      ON te.id = ci.content_id AND ci.content_type = 'timeline_event'
+    LEFT JOIN users u ON u.id = ci.uploaded_by
+    WHERE ci.content_type = 'timeline_event'
 
     ORDER BY created_at DESC
   `;

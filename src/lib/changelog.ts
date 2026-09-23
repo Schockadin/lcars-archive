@@ -147,6 +147,22 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.53",
+    title: "Eigene Ereignisse werden zu Chronik-Akten",
+    items: [
+      {
+        text: "Eigene Chronologie-Ereignisse haben jetzt einen kurzen Teaser und einen getrennten Volltext. Ein Klick auf die Karte öffnet die Detailansicht; dort lassen sich auch Bilder zum Ereignis ansehen und – mit den passenden Rechten – verwalten.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Die Spielleitung kann eigene Chronologie-Ereignisse gesammelt aus einer CSV-Datei importieren. Datum, Titel, Teaser, Volltext und beteiligte Figuren werden vor dem gemeinsamen Speichern vollständig geprüft.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+    ],
+  },
+  {
     version: "1.52",
     title: "Gemeinsame Bausteine unter der Haube",
     // Bewusst ohne Stichpunkte: Der Pull Request vereinheitlicht interne

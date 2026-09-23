@@ -9,6 +9,7 @@ import {
   type TimelineSourceType,
 } from "@/lib/timelineTypes";
 import { cacheTags } from "@/lib/cacheTags";
+import { purgeContentImagesFor } from "@/lib/contentImages";
 import { revalidateTag } from "next/cache";
 
 // Ereignisse aus einem Text ableiten — die zweite Datenquelle der Chronologie
@@ -305,7 +306,13 @@ export async function listInferredEvents(): Promise<StoredInferredEvent[]> {
 }
 
 export async function deleteInferredEvent(id: number): Promise<void> {
-  await sql`DELETE FROM timeline_events WHERE id = ${id}`;
+  const [deleted] = await sql<{ origin: "inferred" | "manual" }[]>`
+    DELETE FROM timeline_events WHERE id = ${id}
+    RETURNING origin
+  `;
+  if (deleted?.origin === "manual") {
+    await purgeContentImagesFor("timeline_event", id);
+  }
   revalidateTag(cacheTags.timeline, { expire: 0 });
 }
 
@@ -317,5 +324,7 @@ export async function countInferredBySource(): Promise<Map<string, number>> {
     FROM timeline_events
     GROUP BY source_type, source_slug
   `;
-  return new Map(rows.map((r) => [`${r.source_type}:${r.source_slug}`, r.count]));
+  return new Map(
+    rows.map((r) => [`${r.source_type}:${r.source_slug}`, r.count]),
+  );
 }

@@ -13,6 +13,7 @@ import TimelineInferencePanel, {
 } from "./TimelineInferencePanel";
 import HelpHeading from "@/components/help/HelpHeading";
 import { GmTimelineGuide } from "@/components/help/guides/GmGuides";
+import TimelineCsvImportPanel from "./TimelineCsvImportPanel";
 
 export const metadata: Metadata = {
   title: "Chronologie",
@@ -76,6 +77,8 @@ export default async function GmChronologiePage() {
             stimmt. Ein zweiter Durchlauf über denselben Inhalt legt nichts
             doppelt an.
           </p>
+
+          <TimelineCsvImportPanel />
 
           <TimelineInferencePanel
             sources={rows}

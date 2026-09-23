@@ -8,7 +8,14 @@ import { formatDateTime } from "@/utils/formateISODate";
 import { TrashIcon } from "@/lib/icons";
 import { CONTENT_TYPE_LABEL } from "@/lib/contentTypeFormat";
 
-// Beschriftungen kommen aus der geteilten Quelle (contentTypeFormat.ts).
+// Die vier Inhaltsarten kommen aus der geteilten Quelle
+// (contentTypeFormat.ts). Eigene Chronologie-Ereignisse nutzen zwar dieselbe
+// Bildablage, sind aber bewusst kein allgemeiner OwnerContentType.
+function contentTypeLabel(type: AdminContentImage["contentType"]): string {
+  return type === "timeline_event"
+    ? "Chronologie-Ereignis"
+    : CONTENT_TYPE_LABEL[type];
+}
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -71,7 +78,7 @@ export default function ImagesAdminGrid({
               className="size-[140px] object-cover rounded-[4px]"
             />
             <p className="text-[11px] uppercase tracking-[.1em] text-lcars-ink">
-              {CONTENT_TYPE_LABEL[image.contentType]}
+              {contentTypeLabel(image.contentType)}
             </p>
             {image.contentTitle && image.contentHref ? (
               <Link

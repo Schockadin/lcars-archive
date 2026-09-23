@@ -59,7 +59,11 @@ export function timelineMarker(
   category: string,
 ): string {
   const safeTitle = title.trim().replace(/\|/g, "/").replace(/-->/g, "→");
-  return `<!-- timeline: ${date} | ${safeTitle} | ${category} -->`;
+  // In redaktionellen Markdown-Dateien soll die lesbare Kategorie stehen.
+  // Der Parser normalisiert „Person“ weiterhin auf den internen Schlüssel
+  // `character`, damit Filter und Farben unverändert typsicher bleiben.
+  const storedCategory = category === "character" ? "Person" : category;
+  return `<!-- timeline: ${date} | ${safeTitle} | ${storedCategory} -->`;
 }
 
 export default function TimelineMarkerButton({

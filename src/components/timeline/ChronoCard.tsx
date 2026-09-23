@@ -26,6 +26,7 @@ export default function ChronoCard({
   tag,
   title,
   href,
+  onActivate,
   ariaLabel,
   badge,
   summary,
@@ -49,6 +50,9 @@ export default function ChronoCard({
   // Ohne Ziel bleibt der Titel reiner Text — von Hand eingetragene
   // Ereignisse haben keinen Inhalt, auf den zu zeigen wäre.
   href?: string;
+  // Für eigenständige Timeline-Ereignisse ohne Zielseite: öffnet deren
+  // Detail-Overlay, während echte Inhalte weiterhin einen Link verwenden.
+  onActivate?: () => void;
   ariaLabel?: string;
   // Zusatzmarke rechts neben dem Titel (Herkunftshinweis der Chronologie).
   badge?: React.ReactNode;
@@ -96,6 +100,15 @@ export default function ChronoCard({
             >
               {title}
             </Link>
+          ) : onActivate ? (
+            <button
+              type="button"
+              className="timeline-card-title timeline-card-title-button"
+              aria-label={ariaLabel}
+              onClick={onActivate}
+            >
+              {title}
+            </button>
           ) : (
             <span className="timeline-card-title">{title}</span>
           )}

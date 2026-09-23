@@ -60,7 +60,7 @@ export const DB_TABLE_COLUMNS = {
   ],
   timeline_events: [
     "id", "event_date", "title", "category", "source_type", "source_slug",
-    "href", "origin", "detail", "confidence", "created_by", "created_at",
+    "href", "origin", "detail", "teaser", "confidence", "created_by", "created_at",
   ],
   timeline_event_characters: ["event_id", "character_id"],
   content_images: [

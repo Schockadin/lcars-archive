@@ -121,6 +121,10 @@ export function PublicChronologyGuide() {
           Mit <strong>„Alle Ereignisse“</strong> kommen Logbücher, Gespräche,
           markierte Textstellen, Geburtstage und abgeleitete Begebenheiten dazu.
         </p>
+        <p>
+          Eigene Ereignisse zeigen auf der Karte einen kurzen Teaser. Ein Klick
+          auf ihren Titel öffnet die Detailansicht mit Volltext und Bildern.
+        </p>
       </GuideSection>
 
       <GuideSection title="Filtern und verlinken">

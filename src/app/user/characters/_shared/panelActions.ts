@@ -17,17 +17,19 @@ import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
 import { parseStatsPayload } from "@/lib/characterStatsPayload";
 import { checkOpenCreationStats } from "@/lib/characterStatsRules";
-import { validateCharacterStats } from "@/lib/characterStats";
+import {
+  TEXT_FIELDS,
+  isCharacterExperience,
+  validateCharacterStats,
+} from "@/lib/characterStats";
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
 import { readCharacterHead } from "./characterHead";
-import {
-  characterEditHref,
-} from "@/lib/contentRoutes";
+import { characterEditHref } from "@/lib/contentRoutes";
 
-// Die drei Panels der eigenen Charakterseite speichern jeweils für sich:
-// Stammdaten, Biografie und Werte. Der frühere ContentEditor schickte alles
+// Die drei Bereiche der eigenen Charakterseite speichern jeweils für sich:
+// Personalakte, Biografie und Werte. Der frühere ContentEditor schickte alles
 // zusammen und sprang danach auf eine andere Seite — für ein Panel mit
 // Bearbeiten-Knopf wäre beides falsch (man verlöre die anderen beiden Panels
 // aus dem Blick und müsste zurücknavigieren).
@@ -101,7 +103,7 @@ function readCharacterId(formData: FormData): number | null {
   return Number.isInteger(raw) && raw > 0 ? raw : null;
 }
 
-// ── Panel „Stammdaten" ────────────────────────────────────────────────
+// ── Panel „Personalakte" ──────────────────────────────────────────────
 export async function updateCharacterHeadAction(
   _state: CharacterPanelState,
   formData: FormData,
@@ -115,8 +117,11 @@ export async function updateCharacterHeadAction(
   // Der bisherige Stand wird ZUERST gebraucht: das Portrait steht nicht mehr
   // im Formular (siehe characterHead.ts), ein Speichern ohne neues Bild
   // übernimmt deshalb das gespeicherte.
-  const current = await getOwnCharacterForEdit(session.userId, characterId);
-  if (!current) {
+  const [current, currentSheet] = await Promise.all([
+    getOwnCharacterForEdit(session.userId, characterId),
+    getOwnCharacterStats(session.userId, characterId),
+  ]);
+  if (!current || !currentSheet) {
     return { error: "Charakter nicht gefunden oder keine Berechtigung." };
   }
 
@@ -128,10 +133,19 @@ export async function updateCharacterHeadAction(
   if ("error" in headResult) return { error: headResult.error };
 
   const isDraft = formData.get("isDraft") === "on";
+  const stats = { ...currentSheet.stats };
+  const textStats = stats as unknown as Record<string, string | null>;
+  for (const field of TEXT_FIELDS) {
+    textStats[field.key] = String(formData.get(field.key) ?? "").trim() || null;
+  }
+  const experience = String(formData.get("experience") ?? "");
+  stats.experience = isCharacterExperience(experience) ? experience : null;
+
   const result = await updateOwnCharacterContent(session.userId, characterId, {
     ...headResult.head,
     bodyMarkdown: current.sourceMarkdown,
     isDraft,
+    stats,
   });
   if (!result) {
     return { error: "Charakter nicht gefunden oder keine Berechtigung." };
@@ -162,7 +176,7 @@ export async function updateCharacterHeadAction(
     bodyMarkdown: current.sourceMarkdown,
   });
 
-  return { success: "Stammdaten gespeichert." };
+  return { success: "Personalakte gespeichert." };
 }
 
 // ── Panel „Biografie" ─────────────────────────────────────────────────

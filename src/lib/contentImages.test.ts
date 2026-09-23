@@ -11,7 +11,13 @@ function viewer(userId: number, permissions: Viewer["permissions"]): Viewer {
 describe("canManageContentImages", () => {
   it("erlaubt dem Owner die Verwaltung bei jedem Inhaltstyp", () => {
     const owner = viewer(7, []);
-    for (const type of ["character", "mission", "mission_log", "archive_entry"] as const) {
+    for (const type of [
+      "character",
+      "mission",
+      "mission_log",
+      "archive_entry",
+      "timeline_event",
+    ] as const) {
       expect(canManageContentImages(type, 7, owner)).toBe(true);
     }
   });
@@ -20,6 +26,7 @@ describe("canManageContentImages", () => {
     const mod = viewer(1, ["content.moderate"]);
     expect(canManageContentImages("mission", 999, mod)).toBe(true);
     expect(canManageContentImages("archive_entry", 999, mod)).toBe(true);
+    expect(canManageContentImages("timeline_event", 999, mod)).toBe(true);
   });
 
   it("verweigert content.moderate bei Charakteren/Missionslogs (owner-only)", () => {
@@ -34,7 +41,9 @@ describe("canManageContentImages", () => {
     // unabhängig von seiner Rolle.
     const noModerate = viewer(1, ["content.view_all", "admin.access"]);
     expect(canManageContentImages("mission", 999, noModerate)).toBe(false);
-    expect(canManageContentImages("archive_entry", 999, noModerate)).toBe(false);
+    expect(canManageContentImages("archive_entry", 999, noModerate)).toBe(
+      false,
+    );
   });
 
   it("verweigert einem anonymen Betrachter", () => {

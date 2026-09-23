@@ -359,6 +359,13 @@ export function GmTimelineGuide() {
           Titel, Art und Länge.
         </p>
         <p>
+          Eigene Ereignisse lassen sich außerdem gesammelt als CSV importieren.
+          Die Spalten heißen <code>Datum;Titel;Teaser;Text;Charaktere</code>;
+          mehrere Figuren in der letzten Spalte werden durch Kommas getrennt.
+          Die Datei wird erst vollständig geprüft und dann als Ganzes
+          gespeichert.
+        </p>
+        <p>
           Von Hand gesetzte Marken im Text (
           <code>&lt;!-- timeline: JJJJ-MM-TT | Titel | Kategorie --&gt;</code>)
           sind der zweite Weg: Sie setzen eine unsichtbare Sprungmarke an genau

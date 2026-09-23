@@ -79,19 +79,24 @@ export function revalidateArchiveEntry(slug: string): string[] {
 // Charakterliste und Datenbank sind zwischengespeichert ("use cache") — ohne
 // diese Invalidierung erschiene ein neues Bild dort erst mit der nächsten
 // inhaltlichen Änderung. Die Chronologie liest ungecacht (Sichtbarkeit hängt
-// an der betrachtenden Person) und braucht nichts.
+// an der betrachtenden Person); ihre aktuelle Karte wird nach einer
+// Bildänderung zusätzlich per router.refresh() neu geladen.
 export function revalidateContentImageLists(
-  contentType: "character" | "mission" | "mission_log" | "archive_entry",
+  contentType:
+    | "character"
+    | "mission"
+    | "mission_log"
+    | "archive_entry"
+    | "timeline_event",
 ): string[] {
   if (contentType === "character") return revalidate([cacheTags.characters]);
   if (contentType === "archive_entry") return revalidate([cacheTags.archive]);
+  if (contentType === "timeline_event") return revalidate([cacheTags.timeline]);
   return [];
 }
 
-// Invalidiert nur den timeline-Tag. Wird beim Löschen von Inhalten
-// (contentDeleteActions) weiterhin mit-aufgerufen; der Tag/die timeline_events-
-// Tabelle werden derzeit von nichts mehr gelesen (Timeline-Seite und -Ingest
-// entfernt), aber für eine mögliche künftige Timeline-Funktion beibehalten.
+// Invalidiert nur den timeline-Tag. Wird von Änderungen an Ereignissen sowie
+// beim Löschen timeline-relevanter Inhalte aufgerufen.
 export function revalidateTimeline(): string[] {
   return revalidate([cacheTags.timeline]);
 }

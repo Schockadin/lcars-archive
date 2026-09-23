@@ -111,8 +111,17 @@ export default function ManualEventForm({
                 className="lcars-input"
               />
             </FormField>
+            <FormField label="Teaser (optional)" htmlFor="manual-event-teaser">
+              <textarea
+                id="manual-event-teaser"
+                name="teaser"
+                maxLength={500}
+                rows={2}
+                className="lcars-input resize-y"
+              />
+            </FormField>
             <FormField
-              label="Beschreibung (optional)"
+              label="Volltext (optional)"
               htmlFor="manual-event-detail"
             >
               {/* Markdown wie in allen anderen Textfeldern des Projekts. */}

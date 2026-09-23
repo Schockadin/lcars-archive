@@ -17,7 +17,9 @@ function setup(initial = "") {
 }
 
 function oeffnen() {
-  fireEvent.click(screen.getByRole("button", { name: "Zeitleisten-Ereignis einfügen" }));
+  fireEvent.click(
+    screen.getByRole("button", { name: "Zeitleisten-Ereignis einfügen" }),
+  );
 }
 
 function ausfuellen({
@@ -25,12 +27,18 @@ function ausfuellen({
   titel = "Erstkontakt",
   art = "discovery",
 }: { datum?: string; titel?: string; art?: string } = {}) {
-  fireEvent.change(screen.getByLabelText("Datum"), { target: { value: datum } });
-  fireEvent.change(screen.getByLabelText("Titel"), { target: { value: titel } });
+  fireEvent.change(screen.getByLabelText("Datum"), {
+    target: { value: datum },
+  });
+  fireEvent.change(screen.getByLabelText("Titel"), {
+    target: { value: titel },
+  });
   fireEvent.change(screen.getByLabelText("Ereignisart"), {
     target: { value: art },
   });
-  fireEvent.submit(screen.getByRole("button", { name: "Einfügen" }).closest("form")!);
+  fireEvent.submit(
+    screen.getByRole("button", { name: "Einfügen" }).closest("form")!,
+  );
 }
 
 describe("TimelineMarkerButton", () => {
@@ -66,6 +74,17 @@ describe("TimelineMarkerButton", () => {
     expect(textarea.value).toBe(
       "<!-- timeline: 2401-03-14 | Erstkontakt | discovery -->",
     );
+  });
+
+  it("schreibt die sichtbare Kategorie Person statt des internen Schlüssels", () => {
+    const textarea = setup();
+    oeffnen();
+    ausfuellen({ art: "character", titel: "Beförderung" });
+
+    expect(textarea.value).toBe(
+      "<!-- timeline: 2401-03-14 | Beförderung | Person -->",
+    );
+    expect(parseTimelineMarkers(textarea.value)[0].category).toBe("character");
   });
 
   it("schreibt eine Marke, die die Chronologie wieder einliest", () => {
@@ -119,9 +138,9 @@ describe("TimelineMarkerButton", () => {
     oeffnen();
     expect((screen.getByLabelText("Datum") as HTMLInputElement).value).toBe("");
     expect((screen.getByLabelText("Titel") as HTMLInputElement).value).toBe("");
-    expect((screen.getByLabelText("Ereignisart") as HTMLSelectElement).value).toBe(
-      "other",
-    );
+    expect(
+      (screen.getByLabelText("Ereignisart") as HTMLSelectElement).value,
+    ).toBe("other");
   });
 });
 

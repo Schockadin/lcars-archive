@@ -387,6 +387,9 @@ CREATE TABLE IF NOT EXISTS timeline_events (
   origin      TEXT NOT NULL DEFAULT 'inferred',
   -- Ein bis zwei Sätze zum Ereignis, vom Modell formuliert.
   detail      TEXT,
+  -- Kurzer Kartentext für von Hand gepflegte Ereignisse; deren detail ist
+  -- der davon getrennte Volltext.
+  teaser      TEXT,
   -- Wie sicher sich das Modell war (0…1) — nur zur Anzeige, nie als Filter:
   -- ein Modell weiß seine eigene Verlässlichkeit nicht, der Wert ist ein
   -- Hinweis für die Spielleitung, kein Maß.
@@ -697,7 +700,8 @@ CREATE TABLE IF NOT EXISTS content_images (
   id           SERIAL PRIMARY KEY,
   content_type TEXT NOT NULL
                  CHECK (content_type IN (
-                   'character', 'mission', 'mission_log', 'archive_entry'
+                   'character', 'mission', 'mission_log', 'archive_entry',
+                   'timeline_event'
                  )),
   content_id   INT NOT NULL,
   r2_key       TEXT UNIQUE NOT NULL,
@@ -992,6 +996,17 @@ ALTER TABLE planned_sessions
 -- eingetragen).
 ALTER TABLE timeline_events ALTER COLUMN source_type DROP NOT NULL;
 ALTER TABLE timeline_events ALTER COLUMN source_slug DROP NOT NULL;
+ALTER TABLE timeline_events ADD COLUMN IF NOT EXISTS teaser TEXT;
+UPDATE timeline_events
+SET teaser = detail
+WHERE origin = 'manual' AND teaser IS NULL AND detail IS NOT NULL;
+
+-- Eigene Chronologie-Ereignisse nutzen dieselbe Bildablage wie Inhalte.
+ALTER TABLE content_images DROP CONSTRAINT IF EXISTS content_images_content_type_check;
+ALTER TABLE content_images ADD CONSTRAINT content_images_content_type_check
+  CHECK (content_type IN (
+    'character', 'mission', 'mission_log', 'archive_entry', 'timeline_event'
+  ));
 
 -- Wer an einem von Hand eingetragenen Ereignis beteiligt ist. Die übrigen
 -- Ereignisse ziehen ihre Beteiligten aus ihrer Quelle (Missionsbesetzung,

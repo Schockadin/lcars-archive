@@ -50,7 +50,6 @@
 .stat-sheet-rule,
 .stat-editor-list-count,
 .stat-editor-list-empty,
-.stat-ap-ledger-meta,
 .stat-budget-spent,
 .stat-budget-figure span,
 .lcars-search-sub,
@@ -242,14 +241,23 @@
 /* Schlichte, gestapelte Liste ohne Aufzählungszeichen — Inhaltsverzeichnis
    und Buchungsjournal teilen sich dasselbe Grundlayout. */
 .lcars-plain-list,
-.lcars-toc-list,
-.stat-ap-ledger {
+.lcars-toc-list {
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
+}
+
+/* AP-Zahlen stehen in mehreren Leitungsansichten (Kampagne, Sessions,
+   Gesamtjournal) und gehören deshalb zur gemeinsamen Formensprache statt zum
+   inzwischen entfernten Advancement-Panel des Charakterbogens. */
+.stat-ap-amount {
+  font-family: var(--lcars-font-mono);
+  font-size: 15px;
+  text-align: right;
+  color: var(--lcars-quinary-ink);
 }
 .lcars-toc-link {
   display: block;

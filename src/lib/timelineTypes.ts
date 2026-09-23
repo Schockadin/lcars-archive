@@ -115,11 +115,11 @@ export interface TimelineEvent {
   title: string;
   // Ein bis zwei Sätze zum Ereignis; leer, wo es nichts zu sagen gibt.
   detail: string | null;
-  // Nur bei von Hand eingetragenen Ereignissen gesetzt: deren Beschreibung
-  // wird als Markdown erfasst (MarkdownEditor) und deshalb auch als Markdown
-  // angezeigt. Die übrigen Beschreibungen sind generierte Sätze („Beginn des
-  // Einsatzes.") oder Textausschnitte — dafür lohnt kein HTML.
-  detailHtml?: string | null;
+  // Eigene Ereignisse tragen auf der Karte `detail` als kurzen Teaser und
+  // öffnen ihren davon getrennten Markdown-Volltext in einem Overlay.
+  fullDetailHtml?: string | null;
+  manualEventId?: number;
+  manualEventCreatedBy?: number | null;
   category: string;
   origin: TimelineOrigin;
   sourceType: TimelineSourceType;
@@ -395,7 +395,10 @@ export function filterEvents(
     ) {
       return false;
     }
-    if (filter.year && (event.date === null || yearOf(event.date) !== filter.year))
+    if (
+      filter.year &&
+      (event.date === null || yearOf(event.date) !== filter.year)
+    )
       return false;
     if (!q) return true;
     // Gesucht wird über das, was auf der Karte steht — Titel, Beschreibung,
