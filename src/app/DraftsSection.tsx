@@ -76,7 +76,7 @@ export default function DraftsSection({
           dieselbe Zeile aus Akte und Aktionen trägt: Über ~900px zerreißt
           sie optisch — die Akte wächst weiter, die Knöpfe bleiben rechts
           stehen. Ohne Aktionszeile war das hier kein Thema. */}
-      <div className="flex w-full max-w-[900px] flex-col gap-[6px]">
+      <div className="flex w-full flex-col gap-[6px]">
         {offeneEntwuerfe.map((draft) => {
           const key = draftKey(draft);
           const umschalten = switchType(draft.kind);
