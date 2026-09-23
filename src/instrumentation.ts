@@ -22,6 +22,7 @@ export const onRequestError: Instrumentation.onRequestError = (...args) => {
   if (process.env.NEXT_RUNTIME === "edge") {
     return;
   } else {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Next dokumentiert require() für runtime-spezifische Instrumentation.
     const nodeInstrumentation = require("./instrumentation.node") as {
       onRequestError: Instrumentation.onRequestError;
     };
