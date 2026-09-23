@@ -26,7 +26,7 @@ import ContentLinkToolButton from "@/components/ContentLinkToolButton";
 import {
   archiveEditHref,
   archiveHref,
-  dialogueHref,
+  dialogueContentHref,
   missionEditHref,
   missionHref,
   missionLogEditHref,
@@ -236,7 +236,7 @@ export default function UserContentBrowser({
       key: `dialogue-${d.id}`,
       kind: "dialogue",
       title: d.title,
-      href: d.open ? dialogueHref(d.slug) : `/characters/dialogues/${d.slug}`,
+      href: dialogueContentHref(d.slug, d.open),
       isDraft: d.isDraft,
       color: dotColor("dialogue", d.isDraft),
       characterSlug: d.characterSlug,
@@ -312,7 +312,9 @@ export default function UserContentBrowser({
               <DeleteOwnContentButton
                 contentType="archive_entry"
                 id={entry.id}
-                onOptimisticDelete={() => removeOptimisticArchiveEntry(entry.id)}
+                onOptimisticDelete={() =>
+                  removeOptimisticArchiveEntry(entry.id)
+                }
               />
             }
           />
@@ -395,7 +397,8 @@ export default function UserContentBrowser({
         const comparison =
           sortKey === "title"
             ? byTitle
-            : KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) || byTitle;
+            : KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind) ||
+              byTitle;
         return sortDir === "asc" ? comparison : -comparison;
       });
   }, [items, categoryFilter, characterFilter, query, sortKey, sortDir]);

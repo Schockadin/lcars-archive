@@ -13,6 +13,7 @@ import {
 import {
   archiveHref,
   characterHref,
+  closedDialogueHref,
   missionHref,
   missionLogHref,
   contentImageSrc,
@@ -123,7 +124,9 @@ function excerptOf(markdown: string | null): string | null {
 // dafür verwendet, steht nirgends fest. Deshalb: das erste Attribut, dessen
 // Label nach einem Datum klingt UND dessen Wert ein ISO-Datum ist. Exportiert,
 // weil genau diese Heuristik prüfbar sein soll.
-export function dateFromAttributes(metadata: Record<string, unknown>): string | null {
+export function dateFromAttributes(
+  metadata: Record<string, unknown>,
+): string | null {
   const attributes = metadata.attributes;
   if (!Array.isArray(attributes)) return null;
   for (const attribute of attributes) {
@@ -304,10 +307,7 @@ export async function getTimeline(): Promise<TimelineEvent[]> {
   ) => `${sourceType}:${slug}|${date ?? "undated"}`;
   // Ereignisse einsammeln UND ihren Tag vermerken. Beides an einer Stelle,
   // damit die Sammlung nicht vergessen wird, wenn eine Quelle dazukommt.
-  const addDeterministic = (
-    slug: string,
-    ...added: TimelineEvent[]
-  ): void => {
+  const addDeterministic = (slug: string, ...added: TimelineEvent[]): void => {
     for (const event of added) {
       // Das Vorschaubild hängt an der Quelle, nicht am einzelnen Ereignis —
       // deshalb hier zentral gesetzt statt an jeder der Stellen, die ein
@@ -432,7 +432,7 @@ export async function getTimeline(): Promise<TimelineEvent[]> {
     if (entry.is_draft) continue;
     const href =
       entry.category === "dialogue"
-        ? `/characters/dialogues/${entry.slug}`
+        ? closedDialogueHref(entry.slug)
         : archiveHref(entry.slug);
     const metadata = entry.metadata ?? {};
     const participants = Array.isArray(metadata.participants)

@@ -16,7 +16,7 @@ import { sendMissionUpdatedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { missionHref } from "@/lib/contentRoutes";
-import { logCaughtError } from "@/lib/errorLog";
+import { deliverNotifications } from "@/lib/notificationDelivery";
 // Fire-and-forget-Re-Embedding (RAG-Index) — siehe src/lib/embeddingSync.ts.
 import {
   syncEmbeddings,
@@ -363,7 +363,8 @@ export async function createMission(input: {
   // Rendern hier erneut aufgelöst zu werden (harmlos, aber unnötig).
   bodyHtml?: string;
 }): Promise<{ id: number; slug: string }> {
-  const bodyHtml = input.bodyHtml ?? (await renderContentHtml(input.bodyMarkdown));
+  const bodyHtml =
+    input.bodyHtml ?? (await renderContentHtml(input.bodyMarkdown));
 
   const rows = await sql<{ id: number; slug: string }[]>`
     INSERT INTO missions (
@@ -425,7 +426,8 @@ export async function updateMissionContent(
 ): Promise<UpdateMissionResult | null> {
   await recordRevision("mission", missionId, editorId, input.bodyMarkdown);
 
-  const bodyHtml = input.bodyHtml ?? (await renderContentHtml(input.bodyMarkdown));
+  const bodyHtml =
+    input.bodyHtml ?? (await renderContentHtml(input.bodyMarkdown));
 
   const rows = await sql<UpdateMissionResult[]>`
     WITH old AS (SELECT is_draft, title FROM missions WHERE id = ${missionId})
@@ -475,37 +477,24 @@ export async function notifyMissionSubscribers(input: {
   if (subscribers.length === 0) return;
 
   const missionUrl = `${await getBaseUrl()}${missionHref(input.missionSlug)}`;
-  // Parallel statt sequenziell: die Aktion, die diese Funktion aufruft
-  // (Inline-Synopsis-Editor wie voller Formular-Speichern), wartet auf das
-  // Ergebnis, bevor sie ihren Erfolg zurückmeldet — bei vielen Abonnenten
-  // würde eine sequenzielle Schleife die Antwortzeit linear mit der
-  // Abonnentenzahl wachsen lassen (gleiches Prinzip wie notifyContentChange
-  // in follows.ts).
-  await Promise.allSettled(
-    subscribers.map(async (subscriber) => {
-      if (subscriber.emailNotificationsEnabled) {
-        const result = await sendMissionUpdatedEmail({
-          to: subscriber.email,
-          name: subscriber.name,
-          missionTitle: input.missionTitle,
-          missionUrl,
-          preview: input.preview,
-        });
-        if (!result.sent) {
-          const message = `Mission-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`;
-          console.error(message);
-          void logCaughtError(new Error(message), "missions.ts:notifyMissionSubscribers");
-        }
-      }
-      if (subscriber.pushNotificationsEnabled) {
-        await sendPushToUser(subscriber.id, {
-          title: `Aktualisiert: ${input.missionTitle}`,
-          body: input.preview,
-          url: missionUrl,
-        });
-      }
-    }),
-  );
+  await deliverNotifications(subscribers, {
+    context: "missions.ts:notifyMissionSubscribers",
+    emailFailureLabel: "Mission-Update-Mail",
+    sendEmail: (subscriber) =>
+      sendMissionUpdatedEmail({
+        to: subscriber.email,
+        name: subscriber.name,
+        missionTitle: input.missionTitle,
+        missionUrl,
+        preview: input.preview,
+      }),
+    sendPush: (subscriber) =>
+      sendPushToUser(subscriber.id, {
+        title: `Aktualisiert: ${input.missionTitle}`,
+        body: input.preview,
+        url: missionUrl,
+      }),
+  });
 }
 
 export interface UpdateMissionSynopsisResult {
@@ -1115,7 +1104,12 @@ export async function deleteMission(
     `;
 
     const rows = await tx<
-      { slug: string; title: string; ownerUserId: number | null; isDraft: boolean }[]
+      {
+        slug: string;
+        title: string;
+        ownerUserId: number | null;
+        isDraft: boolean;
+      }[]
     >`
       UPDATE missions SET deleted_at = NOW()
       WHERE id = ${missionId} AND deleted_at IS NULL

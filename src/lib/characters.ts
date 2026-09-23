@@ -24,7 +24,7 @@ import { sendCharacterUpdatedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
-import { logCaughtError } from "@/lib/errorLog";
+import { deliverNotifications } from "@/lib/notificationDelivery";
 import { isUniqueViolation } from "@/lib/users";
 // Fire-and-forget-Re-Embedding (RAG-Index) nach Content-Mutationen — siehe
 // src/lib/embeddingSync.ts (überspringt still ohne OPENAI_API_KEY).
@@ -90,11 +90,10 @@ export type CharacterListItem = Pick<
   thumbnailCrop: PortraitCrop | null;
 };
 
-interface CharacterListRow
-  extends Pick<
-    Character,
-    "id" | "slug" | "name" | "status" | "metadata" | "updated_at" | "portrait"
-  > {
+interface CharacterListRow extends Pick<
+  Character,
+  "id" | "slug" | "name" | "status" | "metadata" | "updated_at" | "portrait"
+> {
   // Erstes hochgeladenes Bild der Figur (content_images), falls sie kein
   // Portrait hat.
   image_id: number | null;
@@ -1140,36 +1139,24 @@ export async function notifyCharacterSubscribers(input: {
     ? synopsisExcerpt(input.bioMarkdown, 140)
     : "Die Akte wurde aktualisiert.";
   const characterUrl = `${await getBaseUrl()}/characters/${input.characterSlug}`;
-  // Parallel statt sequenziell — siehe gleicher Kommentar bei
-  // notifyMissionSubscribers in missions.ts.
-  await Promise.allSettled(
-    subscribers.map(async (subscriber) => {
-      if (subscriber.emailNotificationsEnabled) {
-        const result = await sendCharacterUpdatedEmail({
-          to: subscriber.email,
-          name: subscriber.name,
-          characterName: input.characterName,
-          characterUrl,
-          preview,
-        });
-        if (!result.sent) {
-          const message = `Charakter-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`;
-          console.error(message);
-          void logCaughtError(
-            new Error(message),
-            "characters.ts:notifyCharacterSubscribers",
-          );
-        }
-      }
-      if (subscriber.pushNotificationsEnabled) {
-        await sendPushToUser(subscriber.id, {
-          title: `Aktualisiert: ${input.characterName}`,
-          body: preview,
-          url: characterUrl,
-        });
-      }
-    }),
-  );
+  await deliverNotifications(subscribers, {
+    context: "characters.ts:notifyCharacterSubscribers",
+    emailFailureLabel: "Charakter-Update-Mail",
+    sendEmail: (subscriber) =>
+      sendCharacterUpdatedEmail({
+        to: subscriber.email,
+        name: subscriber.name,
+        characterName: input.characterName,
+        characterUrl,
+        preview,
+      }),
+    sendPush: (subscriber) =>
+      sendPushToUser(subscriber.id, {
+        title: `Aktualisiert: ${input.characterName}`,
+        body: preview,
+        url: characterUrl,
+      }),
+  });
 }
 
 // Nur die Biografie, nicht Name/Status/Metadaten — für das Biografie-Panel

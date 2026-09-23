@@ -9,7 +9,7 @@ import {
   CHRONOLOGY_PATH,
   archiveHref,
   characterHref,
-  dialogueHref,
+  dialogueContentHref,
   missionHref,
   missionLogHref,
 } from "@/lib/contentRoutes";
@@ -95,11 +95,9 @@ export function toHref(row: NewsContentRow): string {
         ? missionLogHref(row.mission_slug, row.slug)
         : CHRONOLOGY_PATH;
     case "archive_entry":
-      // Offene Dialoge leben unter /dialogues, nicht /archive (siehe
-      // toFollowedContent in src/lib/follows.ts für dasselbe Muster).
-      return row.dialogue_open
-        ? dialogueHref(row.slug)
-        : archiveHref(row.slug);
+      return row.dialogue_open == null
+        ? archiveHref(row.slug)
+        : dialogueContentHref(row.slug, row.dialogue_open);
   }
 }
 
@@ -146,8 +144,7 @@ export function computeNewsItems(input: ComputeNewsInput): NewsFeedItem[] {
     for (const row of input.contentRows) {
       const href = toHref(row);
       const createdInWindow = new Date(row.created_at) > input.since;
-      const wasEdited =
-        new Date(row.updated_at) > new Date(row.created_at);
+      const wasEdited = new Date(row.updated_at) > new Date(row.created_at);
 
       if (
         wantCreated &&

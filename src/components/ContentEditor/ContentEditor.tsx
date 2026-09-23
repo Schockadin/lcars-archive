@@ -2,17 +2,22 @@
 import { useActionState, useState, type ReactNode } from "react";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import AutoLinkCheckbox from "@/app/_shared/AutoLinkCheckbox";
-import { FormField, SubmitButton, FormError } from "@/app/_shared/FormPrimitives";
+import {
+  FormField,
+  SubmitButton,
+  FormError,
+} from "@/app/_shared/FormPrimitives";
 import HeadFieldRenderer from "./HeadFieldRenderer";
 import MetadataSection from "./MetadataSection";
 import type { HeadField } from "./headFields";
 import type { ContentImageType } from "@/lib/contentImages";
+import SessionDraftForm from "@/components/SessionDraftForm";
 
 interface ContentEditorState {
   error?: string;
 }
 
-interface ContentEditorProps {
+interface ContentEditorProps<FieldName extends string> {
   mode: "create" | "edit";
   action: (
     state: ContentEditorState,
@@ -21,9 +26,9 @@ interface ContentEditorProps {
   initialState: ContentEditorState;
   // z.B. userId (immer) + entryId/characterId/... (nur im Edit-Modus).
   hiddenFields: Record<string, string | number>;
-  headFields: HeadField[];
+  headFields: readonly HeadField<FieldName>[];
   // Quelle für die defaultValue jedes Head-Felds, per field.name aufgelöst.
-  defaults?: Record<string, unknown>;
+  defaults?: Partial<Record<FieldName, unknown>>;
   idPrefix: string;
   // Stabiler Namensraum für die Session-Entwürfe. Im Edit-Modus gehört
   // die Inhalts-ID hinein, damit zwei gleich gebaute Editoren nie dieselben
@@ -43,7 +48,7 @@ interface ContentEditorProps {
   // (Charakter/Mission/Mission-Log — keine Reaktivität auf andere Feldwerte
   // nötig). Für Archiv-Einträge (Metadaten-Felder hängen von der gewählten
   // Kategorie ab) stattdessen metadataSlot verwenden.
-  metadataFields?: HeadField[];
+  metadataFields?: readonly HeadField<FieldName>[];
   // Voll selbst gebauter Ersatz für metadataFields, inkl. eigenem
   // MetadataSection-Wrapper — für Fälle, die auf andere Feldwerte reagieren
   // müssen (z.B. Archiv-Kategorie).
@@ -56,7 +61,7 @@ interface ContentEditorProps {
   submitPendingLabel: string;
 }
 
-export default function ContentEditor({
+export default function ContentEditor<FieldName extends string>({
   mode,
   action,
   initialState,
@@ -78,7 +83,7 @@ export default function ContentEditor({
   draftDefaultValue = false,
   submitLabel,
   submitPendingLabel,
-}: ContentEditorProps) {
+}: ContentEditorProps<FieldName>) {
   const [state, formAction, pending] = useActionState(action, initialState);
   // Steuert sowohl die Checkbox als auch das required-Attribut des
   // Textfelds unten (siehe MarkdownEditor required={bodyRequired &&
@@ -93,10 +98,10 @@ export default function ContentEditor({
   );
 
   return (
-    <form
+    <SessionDraftForm
       action={formAction}
       className="flex flex-col gap-[16px]"
-      data-draft-scope={draftScope}
+      draftScope={draftScope}
     >
       {Object.entries(hiddenFields).map(([name, value]) => (
         <input key={name} type="hidden" name={name} value={value} />
@@ -139,17 +144,16 @@ export default function ContentEditor({
           onChange={(e) => setIsDraft(e.target.checked)}
           className="h-[16px] w-[16px]"
         />
-        <label htmlFor={`${idPrefix}-is-draft`} className="lcars-text text-[14px]">
+        <label
+          htmlFor={`${idPrefix}-is-draft`}
+          className="lcars-text text-[14px]"
+        >
           Als Entwurf speichern (Text ist dann optional; sichtbar nur für dich,
           bis du den Entwurf veröffentlichst)
         </label>
       </div>
 
-      <FormField
-        label={bodyLabel}
-        htmlFor={`${idPrefix}-body`}
-        hint={bodyHint}
-      >
+      <FormField label={bodyLabel} htmlFor={`${idPrefix}-body`} hint={bodyHint}>
         {/* Missionen, Logbücher und Datenbank-Einträge stehen allesamt in
             der Chronologie — der Kalender-Knopf für Zeitleisten-Marken gehört
             hier deshalb immer dazu (siehe TimelineMarkerButton.tsx). */}
@@ -166,13 +170,16 @@ export default function ContentEditor({
 
       {/* Neue Inhalte: Autolinking standardmäßig aktiv (siehe AutoLinkCheckbox);
           beim Bearbeiten bleibt es aus. */}
-      <AutoLinkCheckbox idPrefix={idPrefix} defaultChecked={mode === "create"} />
+      <AutoLinkCheckbox
+        idPrefix={idPrefix}
+        defaultChecked={mode === "create"}
+      />
 
       <SubmitButton pending={pending} pendingLabel={submitPendingLabel}>
         {submitLabel}
       </SubmitButton>
 
       <FormError message={state?.error} />
-    </form>
+    </SessionDraftForm>
   );
 }

@@ -2,11 +2,11 @@ import "server-only";
 import sql from "@/lib/db";
 import { sendUserContentEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
-import { logCaughtError } from "@/lib/errorLog";
+import { deliverNotifications } from "@/lib/notificationDelivery";
 import {
   archiveHref,
   characterHref,
-  dialogueHref,
+  dialogueContentHref,
   missionHref,
 } from "@/lib/contentRoutes";
 
@@ -155,11 +155,9 @@ function toFollowedContent(row: {
         ? missionHref(row.slug)
         : row.target_type === "character"
           ? characterHref(row.slug)
-          : // Offene Dialoge leben unter /dialogues, nicht /archive (siehe
-            // src/app/user/content/page.tsx für dasselbe Muster).
-            row.dialogue_open
-            ? dialogueHref(row.slug)
-            : archiveHref(row.slug),
+          : row.dialogue_open == null
+            ? archiveHref(row.slug)
+            : dialogueContentHref(row.slug, row.dialogue_open),
   };
 }
 
@@ -329,9 +327,11 @@ async function dispatchToSubscribers(
   message: NotificationMessage,
   errorLabel: string,
 ): Promise<void> {
-  for (const subscriber of subscribers) {
-    if (subscriber.emailNotificationsEnabled) {
-      const result = await sendUserContentEmail({
+  await deliverNotifications(subscribers, {
+    context: `follows.ts:${errorLabel}`,
+    emailFailureLabel: errorLabel,
+    sendEmail: (subscriber) =>
+      sendUserContentEmail({
         to: subscriber.email,
         name: subscriber.name,
         authorName: message.authorName,
@@ -339,21 +339,14 @@ async function dispatchToSubscribers(
         contentTitle: message.contentTitle,
         contentUrl: message.contentUrl,
         preview: message.preview,
-      });
-      if (!result.sent) {
-        const message = `${errorLabel} an ${subscriber.email} fehlgeschlagen: ${result.error}`;
-        console.error(message);
-        void logCaughtError(new Error(message), `follows.ts:${errorLabel}`);
-      }
-    }
-    if (subscriber.pushNotificationsEnabled) {
-      await sendPushToUser(subscriber.id, {
+      }),
+    sendPush: (subscriber) =>
+      sendPushToUser(subscriber.id, {
         title: `${message.authorName}: ${message.contentTitle}`,
         body: message.preview,
         url: message.contentUrl,
-      });
-    }
-  }
+      }),
+  });
 }
 
 // An alle Abonnenten eines Users, sobald dieser User einen neuen öffentlichen

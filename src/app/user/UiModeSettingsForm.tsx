@@ -2,6 +2,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { updateUiModeAction, type UiModeState } from "./uiModeActions";
 import { SaveFooter } from "@/app/_shared/FormPrimitives";
+import ChoiceCardGroup from "@/app/_shared/ChoiceCardGroup";
 import {
   UI_MODE_LCARS,
   UI_MODE_MINIMAL,
@@ -70,49 +71,17 @@ export default function UiModeSettingsForm({
       <input type="hidden" name="uiMode" value={selected} />
 
       <p className="text-lcars-ink-dim text-[13px]">
-        Die Vorschau erscheint sofort; gespeichert wird sie erst mit „Speichern“.
+        Die Vorschau erscheint sofort; gespeichert wird sie erst mit
+        „Speichern“.
       </p>
 
-      <div
-        role="radiogroup"
-        aria-label="Oberfläche"
-        className="flex flex-col gap-[8px]"
-      >
-        {UI_MODE_OPTIONS.map((option) => {
-          const isSelected = selected === option.id;
-          return (
-            <label
-              key={option.id}
-              className={`relative flex items-center gap-[12px] rounded-[var(--lcars-radius-pill)] border px-[16px] py-[10px] cursor-pointer transition-colors ${
-                isSelected
-                  ? "border-lcars-primary bg-lcars-surface-2"
-                  : "border-lcars-border bg-lcars-surface"
-              }`}
-            >
-              <input
-                type="radio"
-                name="ui-mode-choice"
-                value={option.id}
-                checked={isSelected}
-                onChange={() => setSelected(option.id)}
-                className="sr-only"
-              />
-              <span className="flex flex-col">
-                <span
-                  className={`lcars-eyebrow ${
-                    isSelected ? "text-lcars-primary-ink" : "text-lcars-ink-light"
-                  }`}
-                >
-                  {option.label}
-                </span>
-                <span className="text-lcars-ink-dim text-[12px]">
-                  {option.description}
-                </span>
-              </span>
-            </label>
-          );
-        })}
-      </div>
+      <ChoiceCardGroup
+        name="ui-mode-choice"
+        ariaLabel="Oberfläche"
+        options={UI_MODE_OPTIONS}
+        selected={selected}
+        onSelect={setSelected}
+      />
 
       <SaveFooter state={state} pending={pending} />
     </form>

@@ -10,12 +10,12 @@ import {
   updateMissionLogContent,
 } from "@/lib/missions";
 import { revalidateLog } from "@/lib/revalidate";
-import { missionLogHref } from "@/lib/contentRoutes";
+import { absoluteContentUrl, missionLogHref } from "@/lib/contentRoutes";
 import { autoLinkMarkdown } from "@/lib/autolink";
 import { getCharacterSubscribers } from "@/lib/dialogues";
 import { sendNewMissionLogEmail } from "@/lib/mail";
-import { logCaughtError } from "@/lib/errorLog";
 import { sendPushToUser } from "@/lib/push";
+import { deliverNotifications } from "@/lib/notificationDelivery";
 import { notifyContentChange } from "@/lib/follows";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
@@ -44,11 +44,16 @@ async function notifyLogSubscribers(
   const subscribers = await getCharacterSubscribers(authorCharacterSlug);
   if (subscribers.length === 0) return;
 
-  const logUrl = `${await getBaseUrl()}/missions/${missionSlug}/${logSlug}`;
+  const logUrl = absoluteContentUrl(
+    await getBaseUrl(),
+    missionLogHref(missionSlug, logSlug),
+  );
   const preview = synopsisExcerpt(bodyMarkdown, 140);
-  for (const subscriber of subscribers) {
-    if (subscriber.emailNotificationsEnabled) {
-      const mailResult = await sendNewMissionLogEmail({
+  await deliverNotifications(subscribers, {
+    context: "user/mission-logs/_shared/contentAction.ts:subscriberNotify",
+    emailFailureLabel: "Neuer-Log-Mail",
+    sendEmail: (subscriber) =>
+      sendNewMissionLogEmail({
         to: subscriber.email,
         name: subscriber.name,
         characterName: authorCharacterName,
@@ -56,24 +61,14 @@ async function notifyLogSubscribers(
         logTitle,
         logUrl,
         preview,
-      });
-      if (!mailResult.sent) {
-        const message = `Neuer-Log-Mail an ${subscriber.email} fehlgeschlagen: ${mailResult.error}`;
-        console.error(message);
-        void logCaughtError(
-          new Error(message),
-          "user/mission-logs/_shared/contentAction.ts:subscriberNotify",
-        );
-      }
-    }
-    if (subscriber.pushNotificationsEnabled) {
-      await sendPushToUser(subscriber.id, {
+      }),
+    sendPush: (subscriber) =>
+      sendPushToUser(subscriber.id, {
         title: `Neuer Log von ${authorCharacterName}`,
         body: preview,
         url: logUrl,
-      });
-    }
-  }
+      }),
+  });
 }
 
 // Vereint createMissionLogAction + updateMissionLogAction (vorher

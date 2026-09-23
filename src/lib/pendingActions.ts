@@ -2,7 +2,7 @@ import "server-only";
 import sql from "@/lib/db";
 import {
   archiveHref,
-  dialogueHref,
+  dialogueContentHref,
   missionHref,
 } from "@/lib/contentRoutes";
 
@@ -89,9 +89,7 @@ export async function getPendingActions(
     `,
     // 3. Eigene Entwürfe, die liegengeblieben sind — über alle vier
     // Inhaltsarten hinweg.
-    sql<
-      { slug: string; title: string; kind: string; since: string }[]
-    >`
+    sql<{ slug: string; title: string; kind: string; since: string }[]>`
       SELECT slug, title, 'archive_entry' AS kind, updated_at::text AS since
       FROM archive_entries
       WHERE owner_user_id = ${userId} AND is_draft = true AND deleted_at IS NULL
@@ -118,7 +116,7 @@ export async function getPendingActions(
       kind: "dialogue_reply" as const,
       label: "Im Gespräch antworten",
       subject: d.title,
-      href: d.open ? dialogueHref(d.slug) : archiveHref(d.slug),
+      href: dialogueContentHref(d.slug, d.open),
       since: d.since,
     })),
     ...drafts.map((d) => ({

@@ -8,7 +8,10 @@ import {
   characterHref,
   characterLogsHref,
   characterSheetHref,
+  closedDialogueHref,
+  dialogueContentHref,
   dialogueHref,
+  absoluteContentUrl,
   contentEditHref,
   missionEditHref,
   missionLogEditHref,
@@ -33,11 +36,27 @@ describe("contentRoutes", () => {
 
   it("kennt die Leseseiten aller vier Inhaltsarten", () => {
     expect(characterHref("tuvok")).toBe("/characters/tuvok");
-    expect(characterLogsHref("Tuvok")).toBe("/chronologie?scope=all&category=log&person=Tuvok");
+    expect(characterLogsHref("Tuvok")).toBe(
+      "/chronologie?scope=all&category=log&person=Tuvok",
+    );
     expect(characterSheetHref("tuvok")).toBe("/characters/tuvok/sheet");
     expect(archiveHref("erster-kontakt")).toBe("/archive/erster-kontakt");
-    // Offene Gespräche liegen NICHT unter /archive.
+    // Gesprächslinks zeigen ohne Redirect direkt auf ihre kanonische Seite.
     expect(dialogueHref("plausch")).toBe("/dialogues/plausch");
+    expect(closedDialogueHref("plausch")).toBe("/characters/dialogues/plausch");
+    expect(dialogueContentHref("plausch", true)).toBe("/dialogues/plausch");
+    expect(dialogueContentHref("plausch", false)).toBe(
+      "/characters/dialogues/plausch",
+    );
+  });
+
+  it("baut absolute Inhalts-URLs unabhängig vom abschließenden Slash", () => {
+    expect(
+      absoluteContentUrl("https://example.test", missionHref("alpha")),
+    ).toBe("https://example.test/chronologie/mission/alpha");
+    expect(
+      absoluteContentUrl("https://example.test/", archiveHref("beta")),
+    ).toBe("https://example.test/archive/beta");
   });
 
   it("adressiert die Bearbeitungsseiten über die ID, nicht den Slug", () => {

@@ -9,22 +9,55 @@
 // nach Seite eine andere Farbe bzw. Schreibweise. Diese Datei ist die EINE
 // Quelle dafür.
 
-// Die vier Typen mit eigenem Datensatz und Owner. Sie sind die kanonische
-// Union hinter OwnerContentType (app/actions/owner.ts) und TimelineSourceType
-// (types/timeline.ts) — vorher stand dieselbe Aufzählung dreimal im Code.
-export const OWNER_CONTENT_TYPES = [
-  "character",
-  "mission",
-  "mission_log",
-  "archive_entry",
-] as const;
+// Eine Registry statt paralleler Listen: neue Inhaltstypen erhalten damit an
+// genau einer Stelle Beschriftung, Farbe und Fähigkeiten. Das Objekt bleibt
+// React-/DB-frei und darf deshalb auch in Client Components importiert werden.
+export const CONTENT_TYPES = {
+  character: {
+    label: "Charakter",
+    pluralLabel: "Charaktere",
+    color: "var(--lcars-primary)",
+    hasOwner: true,
+  },
+  mission: {
+    label: "Mission",
+    pluralLabel: "Missionen",
+    color: "var(--lcars-senary)",
+    hasOwner: true,
+  },
+  mission_log: {
+    label: "Missionslog",
+    pluralLabel: "Missionslogs",
+    color: "var(--lcars-tertiary)",
+    hasOwner: true,
+  },
+  archive_entry: {
+    label: "Datenbank-Eintrag",
+    pluralLabel: "Datenbank-Einträge",
+    color: "var(--lcars-secondary)",
+    hasOwner: true,
+  },
+  // Gespräche liegen technisch als archive_entry vor, werden in Ansichten
+  // und im Papierkorb aber als eigener Typ geführt.
+  dialogue: {
+    label: "Gespräch",
+    pluralLabel: "Gespräche",
+    color: "var(--lcars-ink-data)",
+    hasOwner: false,
+  },
+} as const;
 
-export type OwnerContentTypeKey = (typeof OWNER_CONTENT_TYPES)[number];
+export type ContentTypeKey = keyof typeof CONTENT_TYPES;
+export type OwnerContentTypeKey = {
+  [Key in ContentTypeKey]: (typeof CONTENT_TYPES)[Key]["hasOwner"] extends true
+    ? Key
+    : never;
+}[ContentTypeKey];
 
-// "dialogue" ist kein Owner-Inhaltstyp (Gespräche liegen als archive_entry der
-// Kategorie "dialogue"), wird aber in Papierkorb/„Meine Inhalte" getrennt
-// ausgewiesen und braucht darum eine eigene Farbe/Beschriftung.
-export type ContentTypeKey = OwnerContentTypeKey | "dialogue";
+export const OWNER_CONTENT_TYPES = Object.keys(CONTENT_TYPES).filter(
+  (key): key is OwnerContentTypeKey =>
+    CONTENT_TYPES[key as ContentTypeKey].hasOwner,
+);
 
 // Farbe der DataRow-Pille je Inhaltstyp. Bewusst NUR für Inhaltstypen —
 // dekorative Farbrotationen (z.B. je Autor oder je Version) gibt es nicht mehr,
@@ -32,13 +65,9 @@ export type ContentTypeKey = OwnerContentTypeKey | "dialogue";
 // eine farbige Pille immer dieselbe Bedeutung, statt bloß Abwechslung zu sein.
 // Die Gesprächsfarbe stimmt mit CATEGORY_CONFIG.dialogue.color
 // (archiveFormat.ts) überein, weil Gespräche dort dieselbe Kategorie sind.
-export const CONTENT_TYPE_COLOR: Record<ContentTypeKey, string> = {
-  character: "var(--lcars-primary)",
-  mission: "var(--lcars-senary)",
-  mission_log: "var(--lcars-tertiary)",
-  archive_entry: "var(--lcars-secondary)",
-  dialogue: "var(--lcars-ink-data)",
-};
+export const CONTENT_TYPE_COLOR = Object.fromEntries(
+  Object.entries(CONTENT_TYPES).map(([key, value]) => [key, value.color]),
+) as Record<ContentTypeKey, string>;
 
 // Zustandsfarbe für „Entwurf" — quer über ALLE Inhaltstypen (die Entwurfs-
 // Sektion in „Meine Inhalte" mischt Charaktere, Logs, Gespräche und
@@ -48,19 +77,11 @@ export const CONTENT_DRAFT_COLOR = "var(--lcars-quinary)";
 
 // Einzahl — für Zeilen, die genau einen Inhalt beschreiben (Papierkorb,
 // Bilderliste, Audit-Log, Import-Vorschau).
-export const CONTENT_TYPE_LABEL: Record<ContentTypeKey, string> = {
-  character: "Charakter",
-  mission: "Mission",
-  mission_log: "Missionslog",
-  archive_entry: "Datenbank-Eintrag",
-  dialogue: "Gespräch",
-};
+export const CONTENT_TYPE_LABEL = Object.fromEntries(
+  Object.entries(CONTENT_TYPES).map(([key, value]) => [key, value.label]),
+) as Record<ContentTypeKey, string>;
 
 // Mehrzahl — für Gruppen-/Abschnittsüberschriften und Filter.
-export const CONTENT_TYPE_LABEL_PLURAL: Record<ContentTypeKey, string> = {
-  character: "Charaktere",
-  mission: "Missionen",
-  mission_log: "Missionslogs",
-  archive_entry: "Datenbank-Einträge",
-  dialogue: "Gespräche",
-};
+export const CONTENT_TYPE_LABEL_PLURAL = Object.fromEntries(
+  Object.entries(CONTENT_TYPES).map(([key, value]) => [key, value.pluralLabel]),
+) as Record<ContentTypeKey, string>;

@@ -16,10 +16,10 @@ import { getNpcOptions } from "@/lib/archive";
 import { speakerKey } from "@/lib/dialogueSpeaker";
 import { canPlayNpcs, canView, resolveViewer } from "@/lib/visibility";
 import { canReplyToDialogue } from "@/lib/dialogueLock";
+import { closedDialogueHref } from "@/lib/contentRoutes";
 import PageMeta from "@/components/PageMeta";
 import DialogueHeader from "@/components/DialogueHeader";
 import DialogueLiveView from "@/components/DialogueLiveView";
-
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -47,7 +47,7 @@ export default async function DialoguePlayPage({ params }: Props) {
 
   // Abgeschlossene Gespräche leben unter /characters/dialogues/<slug>
   // (Single-Content-Ansicht) — kein doppeltes Ziel.
-  if (!entry.open) redirect(`/characters/dialogues/${slug}`);
+  if (!entry.open) redirect(closedDialogueHref(slug));
 
   // Teilnehmer-Charaktere, Viewer und Rollen-Map hängen alle nur an
   // session.userId/entry.id, nicht voneinander — in einem Batch laden statt

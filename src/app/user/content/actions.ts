@@ -21,7 +21,13 @@ import {
 } from "@/lib/revalidate";
 import { getBaseUrl } from "@/lib/http";
 import { synopsisExcerpt } from "@/lib/missionFormat";
-import { missionLogHref } from "@/lib/contentRoutes";
+import {
+  absoluteContentUrl,
+  archiveHref,
+  characterHref,
+  dialogueHref,
+  missionLogHref,
+} from "@/lib/contentRoutes";
 import { isContentState } from "@/lib/visibility";
 
 export type VisibilityContentType =
@@ -37,7 +43,12 @@ export type VisibilityContentType =
 async function notifyIfPublished(
   isDraft: boolean,
   userId: number,
-  input: { contentTypeLabel: string; title: string; url: string; preview: string },
+  input: {
+    contentTypeLabel: string;
+    title: string;
+    url: string;
+    preview: string;
+  },
 ): Promise<void> {
   if (isDraft) return;
   await notifyUserSubscribers({
@@ -82,7 +93,7 @@ export async function setContentStateAction(
       await notifyIfPublished(isDraft, session.userId, {
         contentTypeLabel: "einen Charakter",
         title: character.name,
-        url: `${baseUrl}/characters/${character.slug}`,
+        url: absoluteContentUrl(baseUrl, characterHref(character.slug)),
         preview: character.sourceMarkdown
           ? synopsisExcerpt(character.sourceMarkdown, 140)
           : "Die Akte wurde veröffentlicht.",
@@ -96,7 +107,10 @@ export async function setContentStateAction(
       await notifyIfPublished(isDraft, session.userId, {
         contentTypeLabel: "einen Mission-Log",
         title: log.title,
-        url: `${baseUrl}${missionLogHref(log.missionSlug, log.slug)}`,
+        url: absoluteContentUrl(
+          baseUrl,
+          missionLogHref(log.missionSlug, log.slug),
+        ),
         preview: log.sourceMarkdown
           ? synopsisExcerpt(log.sourceMarkdown, 140)
           : "Der Log wurde veröffentlicht.",
@@ -110,7 +124,7 @@ export async function setContentStateAction(
       await notifyIfPublished(isDraft, session.userId, {
         contentTypeLabel: "ein Gespräch",
         title: dialogue.title,
-        url: `${baseUrl}/archive/${dialogue.slug}`,
+        url: absoluteContentUrl(baseUrl, dialogueHref(dialogue.slug)),
         preview: "Das Gespräch wurde veröffentlicht.",
       });
     }
@@ -122,7 +136,7 @@ export async function setContentStateAction(
       await notifyIfPublished(isDraft, session.userId, {
         contentTypeLabel: "einen Datenbank-Eintrag",
         title: entry.title,
-        url: `${baseUrl}/archive/${entry.slug}`,
+        url: absoluteContentUrl(baseUrl, archiveHref(entry.slug)),
         preview: entry.sourceMarkdown
           ? synopsisExcerpt(entry.sourceMarkdown, 140)
           : "Der Eintrag wurde veröffentlicht.",
@@ -170,17 +184,21 @@ export async function deleteOwnContentAction(
 
   if (contentType === "character") {
     const deleted = await deleteOwnCharacter(session.userId, id);
-    if (!deleted) return { error: "Charakter nicht gefunden oder keine Berechtigung." };
+    if (!deleted)
+      return { error: "Charakter nicht gefunden oder keine Berechtigung." };
     revalidateCharacter(deleted.slug);
   } else if (contentType === "archive_entry") {
     const deleted = await deleteOwnArchiveEntry(session.userId, id);
     if (!deleted) {
-      return { error: "Datenbank-Eintrag nicht gefunden oder keine Berechtigung." };
+      return {
+        error: "Datenbank-Eintrag nicht gefunden oder keine Berechtigung.",
+      };
     }
     revalidateArchiveEntry(deleted.slug);
   } else if (contentType === "dialogue") {
     const deleted = await deleteOwnDialogue(session.userId, id);
-    if (!deleted) return { error: "Gespräch nicht gefunden oder keine Berechtigung." };
+    if (!deleted)
+      return { error: "Gespräch nicht gefunden oder keine Berechtigung." };
     revalidateArchiveEntry(deleted.slug);
   } else if (contentType === "mission") {
     const user = await getUserById(session.userId);
@@ -193,7 +211,8 @@ export async function deleteOwnContentAction(
     for (const logSlug of deleted.logSlugs) revalidateLog(id, logSlug);
   } else {
     const deleted = await deleteMissionLog(session.userId, id);
-    if (!deleted) return { error: "Log nicht gefunden oder keine Berechtigung." };
+    if (!deleted)
+      return { error: "Log nicht gefunden oder keine Berechtigung." };
     revalidateLog(deleted.missionId, deleted.slug);
   }
 

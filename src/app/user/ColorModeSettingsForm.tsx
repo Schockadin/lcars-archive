@@ -2,6 +2,7 @@
 import { useActionState, useEffect, useState } from "react";
 import { updateColorModeAction, type ColorModeState } from "./colorModeActions";
 import { SaveFooter } from "@/app/_shared/FormPrimitives";
+import ChoiceCardGroup from "@/app/_shared/ChoiceCardGroup";
 import {
   COLOR_MODE_DARK,
   COLOR_MODE_LIGHT,
@@ -70,49 +71,17 @@ export default function ColorModeSettingsForm({
       <input type="hidden" name="colorMode" value={selected} />
 
       <p className="text-lcars-ink-dim text-[13px]">
-        Die Vorschau erscheint sofort; gespeichert wird sie erst mit „Speichern“.
+        Die Vorschau erscheint sofort; gespeichert wird sie erst mit
+        „Speichern“.
       </p>
 
-      <div
-        role="radiogroup"
-        aria-label="Hell/Dunkel"
-        className="flex flex-col gap-[8px]"
-      >
-        {COLOR_MODE_OPTIONS.map((option) => {
-          const isSelected = selected === option.id;
-          return (
-            <label
-              key={option.id}
-              className={`relative flex items-center gap-[12px] rounded-[var(--lcars-radius-pill)] border px-[16px] py-[10px] cursor-pointer transition-colors ${
-                isSelected
-                  ? "border-lcars-primary bg-lcars-surface-2"
-                  : "border-lcars-border bg-lcars-surface"
-              }`}
-            >
-              <input
-                type="radio"
-                name="color-mode-choice"
-                value={option.id}
-                checked={isSelected}
-                onChange={() => setSelected(option.id)}
-                className="sr-only"
-              />
-              <span className="flex flex-col">
-                <span
-                  className={`lcars-eyebrow ${
-                    isSelected ? "text-lcars-primary-ink" : "text-lcars-ink-light"
-                  }`}
-                >
-                  {option.label}
-                </span>
-                <span className="text-lcars-ink-dim text-[12px]">
-                  {option.description}
-                </span>
-              </span>
-            </label>
-          );
-        })}
-      </div>
+      <ChoiceCardGroup
+        name="color-mode-choice"
+        ariaLabel="Hell/Dunkel"
+        options={COLOR_MODE_OPTIONS}
+        selected={selected}
+        onSelect={setSelected}
+      />
 
       <SaveFooter state={state} pending={pending} />
     </form>

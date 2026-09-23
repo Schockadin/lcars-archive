@@ -12,7 +12,7 @@ import { getDialogueSubscribers } from "@/lib/dialogues";
 import { sendArchiveEntryUpdatedEmail } from "@/lib/mail";
 import { sendPushToUser } from "@/lib/push";
 import { getBaseUrl } from "@/lib/http";
-import { logCaughtError } from "@/lib/errorLog";
+import { deliverNotifications } from "@/lib/notificationDelivery";
 // Fire-and-forget-Re-Embedding (RAG-Index) — siehe src/lib/embeddingSync.ts.
 import {
   syncEmbeddings,
@@ -617,9 +617,7 @@ export async function getOwnArchiveEntryForEdit(
   entryId: number,
   asModerator = false,
 ): Promise<OwnArchiveEntryForEdit | null> {
-  const ownerScope = asModerator
-    ? sql``
-    : sql`AND owner_user_id = ${userId}`;
+  const ownerScope = asModerator ? sql`` : sql`AND owner_user_id = ${userId}`;
   const rows = await sql<
     {
       id: number;
@@ -725,9 +723,7 @@ export async function updateOwnArchiveEntryContent(
 ): Promise<UpdateOwnArchiveEntryResult | null> {
   await recordRevision("archive", entryId, userId, input.bodyMarkdown);
 
-  const ownerScope = asModerator
-    ? sql``
-    : sql`AND owner_user_id = ${userId}`;
+  const ownerScope = asModerator ? sql`` : sql`AND owner_user_id = ${userId}`;
 
   const contentHtml =
     input.contentHtml ?? (await renderContentHtml(input.bodyMarkdown));
@@ -829,36 +825,24 @@ export async function notifyArchiveEntrySubscribers(input: {
   if (subscribers.length === 0) return;
 
   const entryUrl = `${await getBaseUrl()}/archive/${input.entrySlug}`;
-  // Parallel statt sequenziell — siehe gleicher Kommentar bei
-  // notifyMissionSubscribers in missions.ts.
-  await Promise.allSettled(
-    subscribers.map(async (subscriber) => {
-      if (subscriber.emailNotificationsEnabled) {
-        const result = await sendArchiveEntryUpdatedEmail({
-          to: subscriber.email,
-          name: subscriber.name,
-          entryTitle: input.entryTitle,
-          entryUrl,
-          preview: input.preview,
-        });
-        if (!result.sent) {
-          const message = `Datenbank-Update-Mail an ${subscriber.email} fehlgeschlagen: ${result.error}`;
-          console.error(message);
-          void logCaughtError(
-            new Error(message),
-            "archive.ts:notifyArchiveEntrySubscribers",
-          );
-        }
-      }
-      if (subscriber.pushNotificationsEnabled) {
-        await sendPushToUser(subscriber.id, {
-          title: `Aktualisiert: ${input.entryTitle}`,
-          body: input.preview,
-          url: entryUrl,
-        });
-      }
-    }),
-  );
+  await deliverNotifications(subscribers, {
+    context: "archive.ts:notifyArchiveEntrySubscribers",
+    emailFailureLabel: "Datenbank-Update-Mail",
+    sendEmail: (subscriber) =>
+      sendArchiveEntryUpdatedEmail({
+        to: subscriber.email,
+        name: subscriber.name,
+        entryTitle: input.entryTitle,
+        entryUrl,
+        preview: input.preview,
+      }),
+    sendPush: (subscriber) =>
+      sendPushToUser(subscriber.id, {
+        title: `Aktualisiert: ${input.entryTitle}`,
+        body: input.preview,
+        url: entryUrl,
+      }),
+  });
 }
 
 // Löscht einen Archiv-Eintrag (KEINE Dialoge — dafür siehe deleteDialogue in
