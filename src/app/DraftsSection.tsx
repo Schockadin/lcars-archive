@@ -72,10 +72,9 @@ export default function DraftsSection({
       storageId={storageId}
       defaultOpen={defaultOpen}
     >
-      {/* Gedeckelt wie die Charakter-Übersicht (OwnCharacterList), die
-          dieselbe Zeile aus Akte und Aktionen trägt: Über ~900px zerreißt
-          sie optisch — die Akte wächst weiter, die Knöpfe bleiben rechts
-          stehen. Ohne Aktionszeile war das hier kein Thema. */}
+      {/* Die Entwurfsakte nutzt die verfügbare Breite. Karte und Aktionszeile
+          bleiben durch das gemeinsame Flex-Layout trotzdem als eine Einheit
+          lesbar; auf schmalen Ansichten wandern die Aktionen darunter. */}
       <div className="flex w-full flex-col gap-[6px]">
         {offeneEntwuerfe.map((draft) => {
           const key = draftKey(draft);

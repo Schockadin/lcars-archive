@@ -776,9 +776,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   nachgeladene Bereiche) über einen `MutationObserver`. Der Schlüssel eines
   Feldes besteht aus Seitenpfad, Formular (`id`/`name`/Position) und Feld
   (`name`/`id`/Position), Kästchen zusätzlich mit ihrem `value`. Die gemeinsam
-  gebauten Content-Editoren setzen darüber hinaus einen stabilen
-  `data-draft-scope` aus Inhaltsart und ID (z. B. `archive-entry:42`): Zwei
-  Einträge mit denselben Feldnamen teilen dadurch nie einen Schlüssel. Beim
+  gebauten Content-Editoren kapseln das in `SessionDraftForm`: Dessen
+  verpflichtender `draftScope` setzt einen stabilen `data-draft-scope` aus
+  Inhaltsart und ID (z. B. `archive-entry:42`). Zwei Einträge mit denselben
+  Feldnamen teilen dadurch nie einen Schlüssel. Beim
   clientseitigen Next-Routenwechsel sperrt eine im Layout-Effect aktualisierte
   Pfad-Ref außerdem Observer und Timer der alten Seite, bevor sie das neue DOM
   sehen können. Die Position
@@ -1704,10 +1705,14 @@ Wiederkehrende UI-Muster leben als geteilte Bausteine statt als Kopie je
 Seite: `LcarsAkteCard` (Karte mit farbiger Schiene, Titel, Meta-Zeile — die
 Listen in Datenbank, Missionen, Suche, Profil, „Meine Inhalte“, Follows und
 GM-/Admin-Übersichten), `FormPrimitives` (`FormField`, `SaveFooter`,
-`SubmitButton`, Fehler-/Erfolgs-Toast), `ConfirmSubmitIconButton` und
+`SubmitButton`, Fehler-/Erfolgs-Toast), `ChoiceCardGroup` für die
+Darstellungsoptionen, `ContentStateSwitch` für Owner- und Moderationsansichten,
+`SessionDraftForm` als sichere Formulargrenze, `ConfirmSubmitIconButton` und
 `DangerZoneButton` für bestätigungspflichtige Aktionen, `BackupPanel`
 (Export/Import für DB- und User-Backup) sowie `BatchScriptPanel` (die
-blockweise laufenden Admin-Skripte mit Fortschrittsbalken).
+blockweise laufenden Admin-Skripte mit Fortschrittsbalken). Inhaltslabels,
+-farben und Owner-Fähigkeit kommen gemeinsam aus `contentTypeFormat.ts`;
+kanonische Lese- und Bearbeitungsadressen aus `contentRoutes.ts`.
 
 Verhalten, das mehrere Komponenten teilen, steckt in Hooks: `useOverlayDismiss`
 (Escape schließt, Hintergrund-Scroll gesperrt, optional Pfeiltasten fürs
@@ -1825,6 +1830,14 @@ tags: [planet, klasse-m]
 Das Projekt ist für **Netlify** vorkonfiguriert (`@netlify/plugin-nextjs`).
 `DATABASE_URL` als Environment-Variable im Netlify-Dashboard hinterlegen; die Ingestion
 (`db:setup` / `db:ingest`) wird gegen die produktive Datenbank ausgeführt.
+
+Der Produktionsbuild auf Netlify und der Playwright-Webserver verwenden
+explizit Webpack (`next build --webpack` bzw. `next dev --webpack`). Damit
+umgehen sie den sporadischen Turbopack-Resolverfehler von `next/font/google`;
+der normale lokale Entwicklungsserver bleibt beim Next.js-Standard Turbopack.
+Die globale Instrumentation trennt ihren DB-Logger zusätzlich über
+`instrumentation.node.ts` vom Edge-Bundle, damit `postgres` und seine
+Node-Built-ins dort nicht aufgelöst werden.
 
 ### Tägliches DB-Backup
 
