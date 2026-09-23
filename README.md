@@ -214,11 +214,12 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   sechs Disziplinen, Protection/Determination/Reputation/Stress-Bonus sowie die
   Listenfelder (Werte, Schwerpunkte, Talente, Spezies-Fähigkeiten,
   Sonderregeln, Angriffe, Ausrüstung, Hobbys, Karriere-Ereignisse).
-- **Die eigene Charakterseite** (`/user/characters/[id]`) — Personalakte,
-  Werte und Biografie als **Panels untereinander** statt getrennter Seiten mit
-  Umschalter. Die Personalakte führt Stammdaten und die früher doppelten
-  Personnel-File-Kopfdaten zusammen. Personalakte und Biografie haben je einen
-  Stift-Knopf und werden an
+- **Die eigene Charakterseite** (`/user/characters/[id]`) — Profilbild,
+  Personalakte, Werte, Biografie und Versionen als standardmäßig offene
+  **Klapp-Panels untereinander** statt getrennter Seiten mit Umschalter. Das
+  Profilbild hat einen eigenen Speicherweg; die Personalakte führt Stammdaten
+  und die früher doppelten Personnel-File-Kopfdaten zusammen. Personalakte und
+  Biografie haben je einen Stift-Knopf und werden an
   Ort und Stelle bearbeitet; jedes Panel speichert nur seinen Teil
   (`_shared/panelActions.ts`) und übernimmt den Rest aus dem gespeicherten
   Stand — `updateOwnCharacterContent` schreibt die Akte immer vollständig, ein

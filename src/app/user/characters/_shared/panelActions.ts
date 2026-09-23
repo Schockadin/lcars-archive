@@ -7,6 +7,7 @@ import {
   notifyCharacterSubscribers,
   updateOwnCharacterContent,
   updateOwnCharacterStats,
+  type OwnCharacterForEdit,
 } from "@/lib/characters";
 import { revalidateCharacter } from "@/lib/revalidate";
 import { revalidatePath } from "next/cache";
@@ -25,14 +26,13 @@ import {
 import { getAdvancementRules } from "@/lib/advancementSettings";
 import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
-import { readCharacterHead } from "./characterHead";
+import { readCharacterHead, readCharacterPortrait } from "./characterHead";
 import { characterEditHref } from "@/lib/contentRoutes";
 
-// Die drei Bereiche der eigenen Charakterseite speichern jeweils für sich:
-// Personalakte, Biografie und Werte. Der frühere ContentEditor schickte alles
-// zusammen und sprang danach auf eine andere Seite — für ein Panel mit
-// Bearbeiten-Knopf wäre beides falsch (man verlöre die anderen beiden Panels
-// aus dem Blick und müsste zurücknavigieren).
+// Die vier Bereiche der eigenen Charakterseite speichern jeweils für sich:
+// Profilbild, Personalakte, Biografie und Werte. Der frühere ContentEditor
+// schickte alles zusammen und sprang danach auf eine andere Seite — für ein
+// Panel mit Bearbeiten-Knopf wäre beides falsch.
 //
 // Jede Action liest nur ihren Teil und übernimmt den Rest aus dem
 // gespeicherten Stand: updateOwnCharacterContent schreibt die Akte immer
@@ -101,6 +101,77 @@ async function notifyUpdated(input: {
 function readCharacterId(formData: FormData): number | null {
   const raw = Number(formData.get("characterId"));
   return Number.isInteger(raw) && raw > 0 ? raw : null;
+}
+
+// Felder, die eine Teil-Action unverändert wieder an den gemeinsamen
+// Charakter-Updatepfad reicht. Zentral gehalten, damit Profilbild und
+// Biografie nicht zwei lange, leicht auseinanderlaufende Kopien pflegen.
+function unchangedCharacterContent(current: OwnCharacterForEdit) {
+  return {
+    name: current.name,
+    status: current.status,
+    portrait: current.portrait,
+    rank: current.rank,
+    species: current.species,
+    homeworld: current.homeworld,
+    aliases: current.aliases,
+    age: current.age,
+    dateOfBirth: current.dateOfBirth,
+    generation: current.generation,
+    factions: current.factions,
+    ships: current.ships,
+    division: current.division,
+    tags: current.tags,
+  };
+}
+
+// ── Panel „Profilbild" ───────────────────────────────────────────────
+export async function updateCharacterPortraitAction(
+  _state: CharacterPanelState,
+  formData: FormData,
+): Promise<CharacterPanelState> {
+  const session = await verifySession();
+  requireMatchingFormUserId(formData, session);
+
+  const characterId = readCharacterId(formData);
+  if (characterId === null) return { error: "Ungültiger Charakter." };
+
+  const current = await getOwnCharacterForEdit(session.userId, characterId);
+  if (!current) {
+    return { error: "Charakter nicht gefunden oder keine Berechtigung." };
+  }
+
+  const portraitResult = await readCharacterPortrait(formData, {
+    portrait: current.portrait,
+    portraitSource: current.portraitSource,
+    portraitCrop: current.portraitCrop,
+  });
+  if ("error" in portraitResult) return { error: portraitResult.error };
+
+  const result = await updateOwnCharacterContent(session.userId, characterId, {
+    ...unchangedCharacterContent(current),
+    ...portraitResult.portrait,
+    bodyMarkdown: current.sourceMarkdown,
+    isDraft: current.isDraft,
+  });
+  if (!result) {
+    return { error: "Charakter nicht gefunden oder keine Berechtigung." };
+  }
+
+  revalidateCharacter(result.slug);
+  revalidatePath(characterEditHref(characterId));
+  revalidatePath("/user/characters");
+
+  await notifyUpdated({
+    userId: session.userId,
+    slug: result.slug,
+    name: current.name,
+    wasDraft: result.wasDraft,
+    isDraft: current.isDraft,
+    bodyMarkdown: current.sourceMarkdown,
+  });
+
+  return { success: "Profilbild gespeichert." };
 }
 
 // ── Panel „Personalakte" ──────────────────────────────────────────────
@@ -209,20 +280,7 @@ export async function updateCharacterBioAction(
   }
 
   const result = await updateOwnCharacterContent(session.userId, characterId, {
-    name: current.name,
-    status: current.status,
-    portrait: current.portrait,
-    rank: current.rank,
-    species: current.species,
-    homeworld: current.homeworld,
-    aliases: current.aliases,
-    age: current.age,
-    dateOfBirth: current.dateOfBirth,
-    generation: current.generation,
-    factions: current.factions,
-    ships: current.ships,
-    division: current.division,
-    tags: current.tags,
+    ...unchangedCharacterContent(current),
     bodyMarkdown,
     isDraft: current.isDraft,
     bioHtml,

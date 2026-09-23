@@ -53,7 +53,8 @@ export default function CharacterCreationGuide() {
         figure={<PortraitFigure />}
       >
         <p>
-          Das <strong>Portrait</strong> lädst du in den Stammdaten als
+          Das <strong>Portrait</strong> lädst du beim Anlegen in den Stammdaten
+          und später im eigenen <strong>Profilbild-Panel</strong> als
           <strong> Bilddatei</strong> hoch — eine Bild-Adresse kannst du nicht
           mehr angeben: ein Bild auf einem fremden Server verschwindet, sobald
           dort jemand aufräumt, und lässt sich hier nicht zuschneiden. Passt das
@@ -207,15 +208,17 @@ export default function CharacterCreationGuide() {
 
       <GuideSection title="Nach dem Abschließen" figure={<SheetFigure />}>
         <p>
-          <strong>Deine Charakterseite</strong> zeigt danach Personalakte, Werte
-          und Biografie als drei Abschnitte untereinander. Bei Personalakte und
-          Biografie öffnet der <strong>Stift</strong> in der Titelzeile das
-          Formular an Ort und Stelle; die Werte steigerst du mit AP (siehe
-          unten). Ganz oben öffnet <strong>„Charakterbogen“</strong> die
-          Vorschau: Blatt 1 der Personalbogen mit Stammdaten und Werten, Blatt 2
-          der Spickzettel mit deinen Talenten, Blatt 3 die Regeln (Momentum,
-          Bedrohung, Entschlossenheit und die eigenen Regeln der Runde), Blatt 4
-          die Biografie im selben Look. Dort stehen auch die Knöpfe zum{" "}
+          <strong>Deine Charakterseite</strong> zeigt danach Profilbild,
+          Personalakte, Werte, Biografie und Versionen als zunächst offene
+          Klapp-Panels untereinander. Ein Klick auf die Titelzeile klappt einen
+          Bereich ein oder wieder auf. Bei Personalakte und Biografie öffnet der
+          <strong>Stift</strong> das Formular an Ort und Stelle; die Werte
+          steigerst du mit AP (siehe unten). Ganz oben öffnet
+          <strong> „Charakterbogen“</strong> die Vorschau: Blatt 1 der
+          Personalbogen mit Stammdaten und Werten, Blatt 2 der Spickzettel mit
+          deinen Talenten, Blatt 3 die Regeln (Momentum, Bedrohung,
+          Entschlossenheit und die eigenen Regeln der Runde), Blatt 4 die
+          Biografie im selben Look. Dort stehen auch die Knöpfe zum{" "}
           <strong>Drucken</strong> und zum <strong>Speichern als PDF</strong> —
           die PDF-Datei enthält dieselben Blätter. Weil die Regeln für alle am
           Tisch gelten und an keinem Charakter hängen, stehen sie auf einem

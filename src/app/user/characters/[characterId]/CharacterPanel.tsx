@@ -2,11 +2,10 @@
 import type { ReactNode } from "react";
 import { PencilIcon, XIcon } from "@/lib/icons";
 
-// Gemeinsame Hülle der drei Panels der eigenen Charakterseite (Stammdaten,
-// Werte, Biografie): Titelleiste im Bogen-Stil, rechts optional der
-// Bearbeiten-Knopf. Bewusst dieselbe Optik wie die Abschnitte des
-// Werte-Editors, damit die Seite als ein Block liest und nicht als drei
-// verschiedene Formulare.
+// Gemeinsame aufklappbare Hülle der Panels der eigenen Charakterseite:
+// Titelleiste im Bogen-Stil, rechts optional der Bearbeiten-Knopf. Natives
+// <details> hält Tastaturbedienung und Verhalten ohne zusätzlichen State
+// bereit; alle Panels beginnen offen.
 export default function CharacterPanel({
   en,
   de,
@@ -14,6 +13,7 @@ export default function CharacterPanel({
   onToggleEdit,
   editLabel = "Bearbeiten",
   children,
+  defaultOpen = true,
 }: {
   en: string;
   de: string;
@@ -23,15 +23,28 @@ export default function CharacterPanel({
   onToggleEdit?: () => void;
   editLabel?: string;
   children: ReactNode;
+  defaultOpen?: boolean;
 }) {
   return (
-    <section className="stat-sheet-section">
-      <h2 className="stat-sheet-section-title">
-        {en} <span className="stat-label-secondary">{de}</span>
+    <details className="stat-sheet-section stat-sheet-panel" open={defaultOpen}>
+      <summary className="stat-sheet-section-title">
+        <span
+          className="lcars-data-row-chevron stat-sheet-panel-chevron"
+          aria-hidden="true"
+        />
+        <h2 className="stat-sheet-panel-heading">
+          {en} <span className="stat-label-secondary">{de}</span>
+        </h2>
         {onToggleEdit && (
           <button
             type="button"
-            onClick={onToggleEdit}
+            onClick={(event) => {
+              // Der Stift liegt in <summary>, soll aber ausschließlich den
+              // Bearbeitungsmodus wechseln und nicht zugleich zuklappen.
+              event.preventDefault();
+              event.stopPropagation();
+              onToggleEdit();
+            }}
             className="lcars-icon-btn ml-auto"
             aria-label={editing ? "Bearbeiten abbrechen" : editLabel}
             title={editing ? "Bearbeiten abbrechen" : editLabel}
@@ -40,8 +53,8 @@ export default function CharacterPanel({
             {editing ? <XIcon /> : <PencilIcon />}
           </button>
         )}
-      </h2>
+      </summary>
       {children}
-    </section>
+    </details>
   );
 }

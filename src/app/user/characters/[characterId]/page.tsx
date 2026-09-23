@@ -9,6 +9,7 @@ import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
 import { listCampaignRules } from "@/lib/campaignRules";
 import CharacterHeadPanel from "./CharacterHeadPanel";
+import CharacterPortraitPanel from "./CharacterPortraitPanel";
 import CharacterValuesPanel from "./CharacterValuesPanel";
 import CharacterBioPanel from "./CharacterBioPanel";
 import RevisionsPanel from "@/app/_shared/RevisionsPanel";
@@ -29,11 +30,11 @@ interface Props {
   params: Promise<{ characterId: string }>;
 }
 
-// Die eigene Charakterseite: Personalakte, Werte und Biografie als drei Panels
-// untereinander, darüber der Knopf für die Bogen-Vorschau. Kein Assistent —
-// der ist nur fürs Anlegen da (siehe /user/characters/new).
+// Die eigene Charakterseite: Profilbild, Personalakte, Werte, Biografie und
+// Versionen als standardmäßig offene Klapp-Panels untereinander, darüber der
+// Knopf für die Bogen-Vorschau. Kein Assistent — der ist nur fürs Anlegen da.
 //
-// Die Berechtigung steckt wie überall in den Abfragen selbst (alle drei sind
+// Die Berechtigung steckt wie überall in den Abfragen selbst (beide sind
 // owner-gescoped): ein fremder oder unbekannter Charakter führt zurück auf
 // die Übersicht, statt einen Fehler zu zeigen — das verrät auch nicht, ob es
 // die id überhaupt gibt.
@@ -99,15 +100,16 @@ export default async function OwnCharacterPage({ params }: Props) {
           }}
         />
 
+        <CharacterPortraitPanel userId={session.userId} character={character} />
+
         <CharacterHeadPanel
           userId={session.userId}
           character={character}
           stats={sheet.stats}
         />
 
-        {/* Das Werte-Panel bringt Attribute, Disziplinen und Listen samt ihren
-            direkten AP-Aktionen mit — eine zusätzliche Hülle darum wären nur
-            zwei Titelleisten übereinander. */}
+        {/* Das Werte-Panel bündelt seine fachlichen Unterabschnitte in einer
+            gemeinsamen, aufklappbaren Hülle. */}
         <CharacterValuesPanel
           userId={session.userId}
           characterId={sheet.id}
@@ -131,6 +133,7 @@ export default async function OwnCharacterPage({ params }: Props) {
           contentId={character.id}
           path={characterEditHref(character.id)}
           revisions={revisions}
+          defaultOpen
         />
       </article>
     </>
