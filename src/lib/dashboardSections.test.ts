@@ -22,6 +22,7 @@ const VORGABEN: Record<DashboardSectionId, boolean> = {
   gespraeche: true,
   "neues-log": true,
   "neues-gespraech": true,
+  "neues-event": true,
   "neuer-eintrag": true,
   "neuer-npc": true,
   import: true,

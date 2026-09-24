@@ -59,9 +59,9 @@ export default function ImpressumContent() {
           Zwischensicherung im Sitzungsspeicher des jeweiligen Browsers. Sie
           werden nach Seite, Formular und bearbeitetem Eintrag getrennt, damit
           etwa der Text eines Entwurfs nicht in einem anderen Editor erscheint.
-          Die Zwischenstände verlassen das Gerät nicht und werden erst durch
-          das ausdrückliche Speichern zu einem Beitrag im Archiv; die
-          Einzelheiten stehen in der Datenschutzerklärung.
+          Die Zwischenstände verlassen das Gerät nicht und werden erst durch das
+          ausdrückliche Speichern zu einem Beitrag im Archiv; die Einzelheiten
+          stehen in der Datenschutzerklärung.
         </p>
 
         <h2>Urheberrecht</h2>
@@ -73,9 +73,10 @@ export default function ImpressumContent() {
         </p>
         <p>
           Die Rechte an den von den Mitspielenden selbst verfassten Inhalten –
-          etwa Charakterbiografien, Einsatzberichten, Gesprächen und
-          Datenbank-Einträgen – liegen bei den jeweiligen Autor*innen. Der
-          Seitenbetreiber stellt lediglich die Plattform zur gemeinsamen
+          etwa Charakterbiografien, Einsatzberichten, Gesprächen, freien
+          Chronologie-Ereignissen, Datenbank-Einträgen und zusätzlich zu einer
+          Figur hinterlegten Dokumenten – liegen bei den jeweiligen Autor*innen.
+          Der Seitenbetreiber stellt lediglich die Plattform zur gemeinsamen
           Dokumentation der Kampagne bereit und beansprucht keine darüber
           hinausgehenden Rechte an diesen nutzergenerierten Beiträgen.
         </p>

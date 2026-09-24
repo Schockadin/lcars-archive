@@ -8,7 +8,7 @@ import {
   GmDialoguesFigure,
   PartySheetFigure,
   SessionsFigure,
-  TimelineWorkbenchFigure,
+  TimelineCsvImportFigure,
 } from "../figures/GmFigures";
 
 // Die Anleitungen zu den zehn Bereichen des Leitungs-Menüs — je Bereich ein
@@ -332,31 +332,27 @@ export function GmTimelineGuide() {
   return (
     <GuideBody>
       <GuideSection
-        title="Chronologie · Ereignisse ableiten"
-        figure={<TimelineWorkbenchFigure />}
+        title="Chronologie · Ereignisse importieren"
+        figure={<TimelineCsvImportFigure />}
       >
         <p>
-          Die Werkbank hinter der öffentlichen Chronologie: Aus einem Inhalt —
-          einer Mission, einem Logbuch, einem Datenbank-Eintrag — lässt du hier{" "}
-          <strong>Ereignisse ableiten</strong> und pflegst das Ergebnis. Oben
-          steht unter <strong>„Ereignisse ableiten“</strong> die Liste der
-          Inhalte samt Filterfeld, je Zeile der Knopf, der den Durchlauf
-          startet. Darunter stehen die <strong>abgeleiteten Ereignisse</strong>{" "}
-          mit ihrer Anzahl — was nicht stimmt, entfernst du dort; der Text des
-          Inhalts bleibt davon unberührt.
+          Hier ergänzt du die öffentliche Chronologie gesammelt um{" "}
+          <strong>eigene Ereignisse aus einer CSV-Datei</strong>. Lade zuerst
+          die leere Musterdatei herunter: Sie enthält die richtige Kopfzeile und
+          eine Kommentarzeile mit den wichtigsten Formatregeln.
         </p>
         <p>
-          Ohne die Zugänge des Datenbank-Assistenten lässt sich nichts ableiten;
-          die Knöpfe sind dann gesperrt und ein Hinweis sagt es. Die Chronologie
-          funktioniert trotzdem — dann eben nur aus den gepflegten Angaben und
-          den Marken im Text.
+          Die Spalten heißen <code>Datum;Titel;Teaser;Text;Charaktere</code>;
+          mehrere Figuren in der letzten Spalte werden durch Kommas getrennt.
+          Eigene Kommentarzeilen beginnen mit <code>#</code>. Die Datei wird
+          erst vollständig geprüft und dann als Ganzes gespeichert — bei einem
+          unbekannten oder mehrdeutigen Charakternamen wird nichts importiert.
         </p>
         <p>
-          Bewusst je Inhalt auf Knopfdruck und nicht automatisch beim Speichern:
-          Ein Durchlauf kostet einen Modellaufruf, und was dabei herauskommt,
-          gehört gelesen, bevor es in der Chronologie aller steht. Der Text
-          selbst bleibt dabei auf dem Server — die Liste im Browser kennt nur
-          Titel, Art und Länge.
+          Darunter stehen alle frei eingetragenen oder importierten Ereignisse.
+          Dort lassen sie sich wieder entfernen. Noch vorhandene Einträge aus
+          der früheren automatischen Ableitung bleiben ebenfalls sichtbar und
+          löschbar; neue Ableitungen gibt es nicht mehr.
         </p>
         <p>
           Von Hand gesetzte Marken im Text (

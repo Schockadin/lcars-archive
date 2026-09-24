@@ -1,9 +1,11 @@
 // src/app/not-found.tsx
 import { LcarsMenuItem } from "@/components/lcars";
+import ErrorPageReporter from "./_shared/ErrorPageReporter";
 
 export default function NotFound() {
   return (
     <div className="flex flex-col items-center justify-center gap-[16px] pt-[80px] px-8 text-center">
+      <ErrorPageReporter status={404} />
       {/* Fehlercode – groß und in LCARS-Amber */}
       <div
         className="font-lcars-mono uppercase tracking-widest text-lcars-primary-ink"

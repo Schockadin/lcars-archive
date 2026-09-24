@@ -2,12 +2,12 @@
 // den täglichen Backup-Cronjob (scripts/backup-db.ts/cleanup-db-backups.ts,
 // re-exportiert über scripts/r2Client.ts, läuft per tsx außerhalb von Next,
 // siehe dortiger --conditions=react-server-Kommentar) als auch für den
-// manuellen Export/Import im Adminpanel (dbBackupActions.ts) UND für
-// beliebige Binärobjekte (Content-Bilder, src/lib/contentImages.ts) — alle
-// drei teilen sich denselben Bucket (R2_BUCKET_NAME), nur der Key-Präfix
-// unterscheidet den "Namensraum" (db-backups/, user-backups/,
-// content-images/). "auto" statt einer echten AWS-Region und der
-// Account-spezifische S3-Endpoint, siehe Cloudflare-R2-Doku.
+// manuellen Export/Import im Adminpanel (dbBackupActions.ts) UND für private
+// Binärobjekte wie Charakterdokumente. Diese teilen sich den privaten Bucket
+// (R2_BUCKET_NAME); der Key-Präfix trennt die Namensräume (db-backups/,
+// user-backups/, character-documents/). Öffentliche Nutzer-Assets liegen im
+// separaten Asset-Bucket weiter unten. "auto" statt einer echten AWS-Region
+// und der Account-spezifische S3-Endpoint, siehe Cloudflare-R2-Doku.
 import "server-only";
 import {
   S3Client,
@@ -79,7 +79,10 @@ export function assetPublicUrl(key: string): string {
 // buildManualUserBackupKey, beide in src/lib/backupRetention.ts), diese
 // Funktion kennt nur den Upload-Mechanismus und wird für beide Backup-Arten
 // (DB + User) genutzt.
-export async function uploadDbBackupToR2(key: string, json: string): Promise<void> {
+export async function uploadDbBackupToR2(
+  key: string,
+  json: string,
+): Promise<void> {
   const { client, bucket } = createR2Client();
   await client.send(
     new PutObjectCommand({
@@ -125,7 +128,9 @@ export async function listDbBackupsInR2(
         });
       }
     }
-    continuationToken = page.IsTruncated ? page.NextContinuationToken : undefined;
+    continuationToken = page.IsTruncated
+      ? page.NextContinuationToken
+      : undefined;
   } while (continuationToken);
 
   return objects.sort((a, b) => b.key.localeCompare(a.key));
@@ -150,10 +155,14 @@ export async function downloadDbBackupFromR2(
     throw new InvalidBackupKeyError(`Ungültiger Backup-Key: "${key}"`);
   }
   const { client, bucket } = createR2Client();
-  const result = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+  const result = await client.send(
+    new GetObjectCommand({ Bucket: bucket, Key: key }),
+  );
   const body = await result.Body?.transformToString();
   if (body == null) {
-    throw new Error(`Backup "${key}" konnte nicht gelesen werden (leerer Inhalt).`);
+    throw new Error(
+      `Backup "${key}" konnte nicht gelesen werden (leerer Inhalt).`,
+    );
   }
   return body;
 }
@@ -163,13 +172,39 @@ export interface R2ObjectBytes {
   contentType: string | null;
 }
 
-export async function getObjectBytesFromR2(key: string): Promise<R2ObjectBytes | null> {
+// Private Binärobjekte, die ausschließlich über authentifizierte App-Routen
+// ausgeliefert werden. Anders als Nutzerbilder gehören sie nicht in den
+// öffentlichen Asset-Bucket; Charakterdokumente nutzen diesen Pfad.
+export async function uploadObjectBytesToR2(
+  key: string,
+  body: Buffer,
+  contentType: string,
+): Promise<void> {
+  const { client, bucket } = createR2Client();
+  await client.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    }),
+  );
+}
+
+export async function getObjectBytesFromR2(
+  key: string,
+): Promise<R2ObjectBytes | null> {
   const { client, bucket } = createR2Client();
   try {
-    const result = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    const result = await client.send(
+      new GetObjectCommand({ Bucket: bucket, Key: key }),
+    );
     const bytes = await result.Body?.transformToByteArray();
     if (bytes == null) return null;
-    return { body: Buffer.from(bytes), contentType: result.ContentType ?? null };
+    return {
+      body: Buffer.from(bytes),
+      contentType: result.ContentType ?? null,
+    };
   } catch (err) {
     if (err instanceof Error && err.name === "NoSuchKey") return null;
     throw err;
@@ -193,7 +228,12 @@ export async function uploadAssetObjectToR2(
 ): Promise<void> {
   const { client, bucket } = createAssetR2Client();
   await client.send(
-    new PutObjectCommand({ Bucket: bucket, Key: key, Body: body, ContentType: contentType }),
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    }),
   );
 }
 
@@ -202,10 +242,15 @@ export async function getAssetObjectBytesFromR2(
 ): Promise<R2ObjectBytes | null> {
   const { client, bucket } = createAssetR2Client();
   try {
-    const result = await client.send(new GetObjectCommand({ Bucket: bucket, Key: key }));
+    const result = await client.send(
+      new GetObjectCommand({ Bucket: bucket, Key: key }),
+    );
     const bytes = await result.Body?.transformToByteArray();
     if (bytes == null) return null;
-    return { body: Buffer.from(bytes), contentType: result.ContentType ?? null };
+    return {
+      body: Buffer.from(bytes),
+      contentType: result.ContentType ?? null,
+    };
   } catch (err) {
     if (err instanceof Error && err.name === "NoSuchKey") return null;
     throw err;

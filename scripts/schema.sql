@@ -232,6 +232,29 @@ CREATE INDEX IF NOT EXISTS idx_characters_name_trgm  ON characters USING GIN (na
 -- exist" fehlschlagen, bevor die Spalte angelegt wurde.
 
 -- ---------------------------------------------------------------------------
+-- character_documents
+-- ---------------------------------------------------------------------------
+-- Zusätzliche Dokumente einer Figur. Die Bytes liegen im privaten R2-
+-- Backup-Bucket; in der Datenbank stehen nur Metadaten und der beim Upload sicher
+-- extrahierte Text für Vorschau und PDF-Export. PDF-Dateien benötigen keinen
+-- extrahierten Text, da der Browser sie direkt rendert und der Export ihre
+-- Seiten unverändert übernimmt.
+CREATE TABLE IF NOT EXISTS character_documents (
+  id             SERIAL PRIMARY KEY,
+  character_id   INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  r2_key         TEXT UNIQUE NOT NULL,
+  file_name      TEXT NOT NULL,
+  file_kind      TEXT NOT NULL CHECK (file_kind IN ('pdf', 'md', 'docx', 'txt')),
+  content_mime   TEXT NOT NULL,
+  size_bytes     INT NOT NULL CHECK (size_bytes > 0 AND size_bytes <= 8388608),
+  extracted_text TEXT,
+  uploaded_by    INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_character_documents_character
+  ON character_documents(character_id);
+
+-- ---------------------------------------------------------------------------
 -- missions
 -- ---------------------------------------------------------------------------
 -- Missionen sind immer für alle sichtbar, sobald sie kein Entwurf mehr sind
@@ -351,22 +374,25 @@ CREATE INDEX IF NOT EXISTS idx_archive_links_target ON archive_links(target_id);
 -- ---------------------------------------------------------------------------
 -- timeline_events
 -- ---------------------------------------------------------------------------
--- Die abgeleiteten Ereignisse der Chronologie (/chronologie) — und NUR die.
+-- Persistierte Ereignisse der Chronologie (/chronologie): von Hand gepflegte
+-- Kampagnen-Ereignisse (einschließlich CSV-Import) sowie Altbestand aus der
+-- früheren Modellableitung.
 --
 -- Was sich aus den Feldern eines Inhalts ergibt (Missionsdatum, Logbuch-Datum,
 -- Geburtsdatum …) oder aus einem <!-- timeline: JJJJ-MM-TT | Titel | Kategorie
 -- -->-Marker im Fließtext, wird beim Lesen aus den Inhalten selbst gebildet
 -- (src/lib/timeline.ts) und bewusst NICHT hier gespeichert: eine gespeicherte
 -- Kopie liefe bei jeder Bearbeitung auseinander, und die Sichtbarkeit müsste
--- doppelt gepflegt werden. Hier steht deshalb nur, was das Sprachmodell aus
--- einem Text gelesen hat und die Spielleitung übernommen hat
--- (src/lib/timelineInference.ts) — das kostet einen Modellaufruf und darf
--- nicht bei jedem Seitenaufruf neu entstehen.
+-- doppelt gepflegt werden. Freie Ereignisse haben dagegen keinen Quell-Inhalt
+-- und brauchen deshalb diese Tabelle; source_type/source_slug sind für sie
+-- NULL. Ihre Beteiligten liegen in timeline_event_characters, ihre Bilder in
+-- content_images mit content_type 'timeline_event'.
 --
--- Die Sichtbarkeit hängt weiterhin am Quell-Inhalt: getTimeline() verknüpft
--- die Zeilen über source_type/source_slug zurück und wendet dasselbe canView
--- an wie auf den Inhaltsseiten. Ein gelöschter Inhalt nimmt seine Ereignisse
--- mit (purgeContent.ts).
+-- Beim Altbestand hängt die Sichtbarkeit weiterhin am Quell-Inhalt:
+-- getTimeline() verknüpft die Zeilen über source_type/source_slug zurück und
+-- wendet dasselbe canView an wie auf den Inhaltsseiten. Ein gelöschter Inhalt
+-- nimmt seine Ereignisse mit (purgeContent.ts). Freie Ereignisse sind Teil der
+-- öffentlichen Kampagnenchronik.
 --
 -- idx_..._created bediente getRecentActivitySince() (filtert nach created_at
 -- statt nach dem In-Story-Datum event_date).
@@ -375,21 +401,22 @@ CREATE TABLE IF NOT EXISTS timeline_events (
   event_date  DATE NOT NULL,
   title       TEXT NOT NULL,
   category    TEXT NOT NULL DEFAULT 'sonstiges',
-  source_type TEXT NOT NULL
+  source_type TEXT
                 CHECK (source_type IN (
                   'character', 'mission', 'mission_log', 'archive_entry'
                 )),
-  source_slug TEXT NOT NULL,
+  source_slug TEXT,
   href        TEXT NOT NULL DEFAULT '',
-  -- Woher das Ereignis stammt. Faktisch immer 'inferred' (siehe oben); die
-  -- Spalte steht trotzdem da, damit die Herkunft am Datensatz ablesbar ist
-  -- und nicht nur aus dem Umstand folgt, in welcher Tabelle er liegt.
+  -- Woher das Ereignis stammt: 'manual' für freie Ereignisse, 'inferred' für
+  -- den verbliebenen Altbestand aus der früheren Modellableitung.
   origin      TEXT NOT NULL DEFAULT 'inferred',
-  -- Ein bis zwei Sätze zum Ereignis, vom Modell formuliert.
+  -- Volltext des freien Ereignisses bzw. Beschreibung im abgeleiteten Altbestand.
   detail      TEXT,
-  -- Wie sicher sich das Modell war (0…1) — nur zur Anzeige, nie als Filter:
-  -- ein Modell weiß seine eigene Verlässlichkeit nicht, der Wert ist ein
-  -- Hinweis für die Spielleitung, kein Maß.
+  -- Kurzer Kartentext für von Hand gepflegte Ereignisse; deren detail ist
+  -- der davon getrennte Volltext.
+  teaser      TEXT,
+  -- Wie sicher sich das Modell im abgeleiteten Altbestand war (0…1); bei
+  -- freien Ereignissen NULL.
   confidence  REAL,
   created_by  INT REFERENCES users(id) ON DELETE SET NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -658,10 +685,12 @@ CREATE TABLE IF NOT EXISTS dialogue_reservation_notify_requests (
 -- ---------------------------------------------------------------------------
 -- Protokoll unerwarteter Serverfehler (Next.js instrumentation.ts/
 -- onRequestError, src/lib/errorLog.ts) — sowohl nicht abgefangene Abstürze
--- (route_type 'render'/'route'/'action') als auch manuell per logCaughtError
--- ergänzte 'caught'-Fehler. Rein lesend über /admin/error-log. digest =
+-- (route_type 'render'/'route'/'action'), manuell per logCaughtError ergänzte
+-- 'caught'-Fehler und tatsächlich angezeigte 'error-page'-Fallbacks. Rein
+-- lesend über /admin/error-log. digest =
 -- Next.js-Korrelations-Hash (nullable, nicht jeder Pfad liefert einen).
--- route_type bewusst freies TEXT ohne CHECK (deckt Next.js-Werte UND 'caught').
+-- route_type bewusst freies TEXT ohne CHECK (Next.js-Werte, 'caught',
+-- 'error-page').
 CREATE TABLE IF NOT EXISTS error_logs (
   id         SERIAL PRIMARY KEY,
   digest     TEXT,
@@ -697,7 +726,8 @@ CREATE TABLE IF NOT EXISTS content_images (
   id           SERIAL PRIMARY KEY,
   content_type TEXT NOT NULL
                  CHECK (content_type IN (
-                   'character', 'mission', 'mission_log', 'archive_entry'
+                   'character', 'mission', 'mission_log', 'archive_entry',
+                   'timeline_event'
                  )),
   content_id   INT NOT NULL,
   r2_key       TEXT UNIQUE NOT NULL,
@@ -992,6 +1022,17 @@ ALTER TABLE planned_sessions
 -- eingetragen).
 ALTER TABLE timeline_events ALTER COLUMN source_type DROP NOT NULL;
 ALTER TABLE timeline_events ALTER COLUMN source_slug DROP NOT NULL;
+ALTER TABLE timeline_events ADD COLUMN IF NOT EXISTS teaser TEXT;
+UPDATE timeline_events
+SET teaser = detail
+WHERE origin = 'manual' AND teaser IS NULL AND detail IS NOT NULL;
+
+-- Eigene Chronologie-Ereignisse nutzen dieselbe Bildablage wie Inhalte.
+ALTER TABLE content_images DROP CONSTRAINT IF EXISTS content_images_content_type_check;
+ALTER TABLE content_images ADD CONSTRAINT content_images_content_type_check
+  CHECK (content_type IN (
+    'character', 'mission', 'mission_log', 'archive_entry', 'timeline_event'
+  ));
 
 -- Wer an einem von Hand eingetragenen Ereignis beteiligt ist. Die übrigen
 -- Ereignisse ziehen ihre Beteiligten aus ihrer Quelle (Missionsbesetzung,

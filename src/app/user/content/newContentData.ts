@@ -12,6 +12,7 @@ import {
   getNextSessionNr,
 } from "@/lib/missions";
 import { listGmUsers } from "@/lib/users";
+import { listCharactersForEvents } from "@/lib/timelineManualEvents";
 import type { CharacterWithOwner } from "@/lib/characters";
 import type { CharacterParticipantOption } from "@/lib/characters";
 import type { NpcOption } from "@/lib/archive";
@@ -44,10 +45,14 @@ export interface NewContentData {
     defaultStartedAt: string | null;
     characters: CharacterParticipantOption[];
   } | null;
+  event: {
+    defaultDate: string | null;
+    characters: { id: number; name: string }[];
+  } | null;
 }
 
 // Welche Formulare überhaupt gebraucht werden. „Meine Inhalte" zeigt alle
-// Knöpfe, das Dashboard nur die beiden, die dort eingeschaltet sind — und was
+// Knöpfe, das Dashboard nur die dort eingeschalteten — und was
 // niemand zeigt, wird auch nicht geladen. Die Abfragen darunter sind nicht
 // billig (alle Missionen, alle Datenbank-Einträge, alle Charaktere mit ihren
 // Spielern), und das Dashboard ist die meistbesuchte Seite der Anwendung.
@@ -55,6 +60,7 @@ export interface NewContentWanted {
   missionLog?: boolean;
   dialogue?: boolean;
   mission?: boolean;
+  event?: boolean;
 }
 
 // Gemeinsamer Ladeweg für /user/content und das Dashboard. Zuvor stand er nur
@@ -90,6 +96,8 @@ export async function loadNewContentData(
   const wantMissionLog = wanted.missionLog === true;
   const wantDialogue = wanted.dialogue === true;
   const wantMission = wanted.mission === true && isGM;
+  const wantEvent =
+    wanted.event === true && userCan(user, "content.create", roleMap);
 
   // NPCs braucht nur das Gesprächs-Formular — und zugleich die Frage, ob es
   // überhaupt angeboten werden kann.
@@ -111,10 +119,11 @@ export async function loadNewContentData(
     allArchiveEntries,
     gms,
     participantOptions,
+    eventCharacters,
   ] = await Promise.all([
     canWriteLog ? getAllMissions() : Promise.resolve([]),
     // Auch das Missions-Formular belegt damit sein Startdatum vor.
-    canWriteLog || canStartDialogue || wantMission
+    canWriteLog || canStartDialogue || wantMission || wantEvent
       ? getMostRecentLogDate()
       : Promise.resolve(null),
     canStartDialogue ? getCharactersWithPlayers(user.id) : Promise.resolve([]),
@@ -125,6 +134,7 @@ export async function loadNewContentData(
       ? listGmUsers()
       : Promise.resolve([]),
     wantMission ? getCharactersForParticipantPicker() : Promise.resolve([]),
+    wantEvent ? listCharactersForEvents() : Promise.resolve([]),
   ]);
 
   // Grober Vorschlagswert für die Session-Nr (erster eigener Charakter, erste
@@ -162,6 +172,12 @@ export async function loadNewContentData(
       : null,
     mission: wantMission
       ? { defaultStartedAt: defaultLogDate, characters: participantOptions }
+      : null,
+    // Für die Vorbelegung reicht hier bewusst das jüngste Logbuch-Datum.
+    // Den kompletten Zeitstrahl nur für einen Formular-Knopf zu laden, würde
+    // sieben zusätzliche Abfragen auf der meistbesuchten Seite auslösen.
+    event: wantEvent
+      ? { defaultDate: defaultLogDate, characters: eventCharacters }
       : null,
   };
 }

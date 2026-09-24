@@ -9,7 +9,8 @@ const uploadCharacterPortraitImage = vi.fn(
 
 vi.mock("@/lib/characterAssets", () => ({ uploadCharacterPortraitImage }));
 
-const { readCharacterHead } = await import("./characterHead");
+const { readCharacterHead, readCharacterPortrait } =
+  await import("./characterHead");
 
 // Ein winziges, gültiges PNG (1×1, transparent).
 const PNG_BASE64 =
@@ -28,6 +29,24 @@ beforeEach(() => {
 });
 
 describe("readCharacterHead — Portrait", () => {
+  it("liest das eigenständige Profilbild-Formular ohne Stammdaten", async () => {
+    const data = new FormData();
+    data.set("portraitCrop", JSON.stringify({ zoom: 1.5, x: 35, y: 65 }));
+
+    await expect(
+      readCharacterPortrait(data, {
+        portrait: "https://assets.example/original.png",
+        portraitSource: null,
+      }),
+    ).resolves.toEqual({
+      portrait: {
+        portrait: "https://assets.example/original.png",
+        portraitSource: null,
+        portraitCrop: { zoom: 1.5, x: 35, y: 65 },
+      },
+    });
+  });
+
   // Eine Bild-ADRESSE kann nicht mehr aus dem Formular kommen: sie steht dort
   // nicht mehr, und der Server liest auch keins mehr aus.
   it("übergeht eine im Formular untergeschobene Bild-Adresse", async () => {
@@ -84,7 +103,9 @@ describe("readCharacterHead — Portrait", () => {
   });
 
   it("verträgt eine kaputte Einstellung und fällt auf die Vorgabe zurück", async () => {
-    const result = await readCharacterHead(form({ portraitCrop: "{kein json" }));
+    const result = await readCharacterHead(
+      form({ portraitCrop: "{kein json" }),
+    );
     expect(result).toMatchObject({ head: { portraitCrop: null } });
   });
 

@@ -1,8 +1,8 @@
 /* ─── Rund um den Charakterbogen (/user/characters/[id]/stats) ────────
    Das Blatt selbst liegt in personnel-file.css (Faksimile der Vorlage).
-   Hier stehen die Teile DRUMHERUM, die es auf dem Papier nicht gibt: der
-   AP-Bereich (Konto, Erschaffungsbudget, Steigern, Buchungsjournal), der
-   Talent-Spickzettel am Fuß der Seite und die Regelverstoß-Liste.
+   Hier stehen die Teile DRUMHERUM, die es auf dem Papier nicht gibt:
+   Erschaffungsbudgets, Inline-Steigerungen, der Talent-Spickzettel am Fuß der
+   Seite und die Regelverstoß-Liste.
 
    Abschnitte mit farbiger Kopfleiste und zweisprachiger Beschriftung
    (englischer Originalbegriff, deutsche Entsprechung darunter) nehmen die
@@ -36,6 +36,84 @@
   letter-spacing: 0.12em;
   text-transform: uppercase;
   line-height: 1.3;
+}
+
+/* Im Werte-Panel der bestehenden Charakterakte ist der äußere Rahmen bereits
+   vorhanden. Die Untergruppen bleiben klar überschrieben und getrennt, ohne
+   fünf weitere Panels ineinander zu stapeln. */
+.stat-editor-section {
+  min-width: 0;
+  padding: 0 0 18px;
+  border-bottom: 1px solid var(--lcars-border);
+}
+
+.stat-editor-section:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.stat-editor-section-title {
+  margin: 0 0 12px;
+  color: var(--lcars-primary-ink);
+  font-family: var(--lcars-font-sans);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.stat-editor-section-title .stat-label-secondary {
+  display: inline;
+  margin-left: 8px;
+}
+
+.stat-editor-section > .stat-editor-body {
+  padding-inline: 0;
+}
+
+.stat-editor-section > .stat-sheet-rule {
+  margin-inline: 0;
+}
+
+/* Die obersten Bereiche der eigenen Charakterseite sind native
+   <details>-Elemente. Geschlossen bleibt nur die farbige Titelleiste stehen;
+   geöffnet gilt derselbe Abstand wie bei den festen Unterabschnitten des
+   Wertebogens. */
+.stat-sheet-panel {
+  padding-bottom: 0;
+}
+
+.stat-sheet-panel > .stat-sheet-section-title {
+  margin-bottom: 0;
+  cursor: pointer;
+  list-style: none;
+}
+
+.stat-sheet-panel > .stat-sheet-section-title::-webkit-details-marker {
+  display: none;
+}
+
+.stat-sheet-panel[open] {
+  padding-bottom: 14px;
+}
+
+.stat-sheet-panel[open] > .stat-sheet-section-title {
+  margin-bottom: 14px;
+}
+
+.stat-sheet-panel[open] > .stat-sheet-section-title .stat-sheet-panel-chevron {
+  transform: rotate(-135deg);
+}
+
+.stat-sheet-panel-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 0;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
 }
 
 /* Regel-Hinweis unter der Kopfleiste (z.B. „7–12, höchstens 1× 12"). */
@@ -175,6 +253,77 @@
   color: var(--lcars-quinary-ink);
 }
 
+.stat-editor-value-control {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+}
+
+/* Semantische Farben bleiben absichtlich fest: Die Aussage „bezahlbar“
+   (grün) beziehungsweise „nicht möglich“ (rot) darf sich nicht mit dem
+   gewählten LCARS-Farbthema verändern. */
+.stat-inline-advance {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 4px 10px;
+  border: 0;
+  border-radius: 100vmax;
+  color: #08081a;
+  font-family: var(--lcars-font-sans);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.stat-inline-advance--allowed {
+  background: #6bcb8b;
+  cursor: pointer;
+}
+
+.stat-inline-advance--blocked {
+  background: #cd6666;
+  cursor: not-allowed;
+}
+
+.stat-inline-advance:disabled {
+  opacity: 1;
+}
+
+.stat-inline-advance svg {
+  width: 15px;
+  height: 15px;
+}
+
+.stat-ap-inline-balance {
+  margin: 0;
+  color: var(--lcars-ink-dim);
+  font-family: var(--lcars-font-mono);
+  font-size: 13px;
+}
+
+.stat-ap-inline-balance strong {
+  color: var(--lcars-senary-ink);
+  font-family: var(--lcars-font-sans);
+  font-size: 24px;
+}
+
+.stat-creation-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px 14px;
+  border: 1px solid var(--lcars-border);
+  border-radius: 8px;
+  background: var(--lcars-surface);
+}
+
 /* Eine gepflegte Liste (Werte, Schwerpunkte, Talente, …): Kopfzeile mit
    Zählung und Plus, darunter die Einträge als Zeilen. */
 .stat-editor-list {
@@ -194,7 +343,6 @@
   gap: 10px;
 }
 
-
 .stat-editor-list-line {
   display: flex;
   align-items: center;
@@ -211,7 +359,6 @@
   border-bottom: none;
 }
 
-
 /* Abgeleiteter Wert (max. Stress) — steht neben seinen Eingabefeldern und ist
    selbst keines. */
 .stat-editor-derived {
@@ -227,124 +374,6 @@
   font-family: var(--lcars-font-sans);
   font-size: 22px;
   color: var(--lcars-ink-data);
-}
-
-/* ── AP-Bereich (Konto, Erschaffungsbudget, Steigern, Journal) ─────── */
-.stat-ap-account,
-.stat-ap-block {
-  padding: 0 14px 14px;
-}
-
-.stat-ap-balance {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.stat-ap-value {
-  font-family: var(--lcars-font-sans);
-  font-size: 38px;
-  font-weight: 700;
-  line-height: 1;
-  color: var(--lcars-ink-data);
-}
-
-.stat-ap-heading {
-  margin: 0 0 6px;
-  font-family: var(--lcars-font-sans);
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--lcars-ink-data);
-}
-
-.stat-ap-budget {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.stat-ap-warning {
-  margin-bottom: 10px;
-  color: var(--lcars-quinary-ink);
-  font-family: var(--lcars-font-mono);
-  font-size: 13px;
-}
-
-.stat-ap-steps {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 16px;
-  margin-bottom: 14px;
-}
-
-.stat-ap-step-list {
-  list-style: none;
-  margin: 6px 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.stat-ap-step {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 2px 0;
-}
-
-.stat-ap-step-label {
-  font-family: var(--lcars-font-sans);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  font-size: 15px;
-}
-
-.stat-ap-adds {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 14px;
-}
-
-.stat-ap-add {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-/* Buchungsjournal — je Zeile Betrag, Grund und Zeitpunkt.
-   Listen-Grundlayout: siehe .lcars-plain-list (shared.css). */
-
-.stat-ap-ledger-row {
-  display: grid;
-  grid-template-columns: 56px 1fr auto;
-  gap: 10px;
-  align-items: baseline;
-  padding: 3px 0;
-  border-bottom: 1px solid var(--lcars-border);
-}
-
-.stat-ap-amount {
-  font-family: var(--lcars-font-mono);
-  font-size: 15px;
-  text-align: right;
-  color: var(--lcars-quinary-ink);
-}
-
-.stat-ap-amount--plus {
-  color: var(--lcars-senary-ink);
-}
-
-.stat-ap-ledger-text {
-  min-width: 0;
-}
-
-.stat-ap-ledger-meta {
-  white-space: nowrap;
 }
 
 /* Regeltext des im Talent-Auswahlfeld gewählten Talents (TalentPicker.tsx).
@@ -490,7 +519,6 @@
   color: var(--lcars-ink);
 }
 
-
 .stat-budget-figure {
   display: flex;
   align-items: baseline;
@@ -504,7 +532,6 @@
   line-height: 1;
   color: var(--lcars-ink-data);
 }
-
 
 /* Verbrauchsbalken: volle Breite unter den beiden Zeilen. */
 .stat-budget-meter {

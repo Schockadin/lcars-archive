@@ -6,7 +6,6 @@ import DashboardCharactersSection, {
 
 const TVEL: DashboardCharacterItem = {
   id: 4,
-  slug: "t-vel",
   name: "T'Vel",
   rank: "Lieutenant",
   status: "active",
@@ -14,19 +13,14 @@ const TVEL: DashboardCharacterItem = {
 };
 
 describe("DashboardCharactersSection", () => {
-  it("führt jeden Charakter mit einem Knopf in seine Kopfdaten", () => {
+  it("führt die Charakterkarte ohne redundanten Edit-Knopf in die eigene Akte", () => {
     render(<DashboardCharactersSection characters={[TVEL]} />);
 
-    // Die Karte führt in die Akte …
     const ziele = screen
       .getAllByRole("link")
       .map((link) => link.getAttribute("href"));
-    expect(ziele).toContain("/characters/t-vel");
-    // … der Stift daneben direkt ins Bearbeiten. Genau dafür ist die Sektion
-    // da: der kurze Weg, der vorher über zwei Seiten ging.
-    expect(
-      screen.getByRole("link", { name: "T'Vel bearbeiten" }),
-    ).toHaveAttribute("href", "/user/characters/4");
+    expect(ziele).toEqual(["/user/characters/4"]);
+    expect(screen.queryByLabelText("T'Vel bearbeiten")).toBeNull();
   });
 
   // Das Dashboard soll keine leeren Kästen zeigen — wer alle Charaktere

@@ -1,17 +1,20 @@
 import type { HeadField } from "@/components/ContentEditor/headFields";
 import { CHARACTER_STATUS_OPTIONS } from "@/lib/characterFormat";
 
-const STATUS_OPTIONS = [
-  ...CHARACTER_STATUS_OPTIONS,
-];
+const STATUS_OPTIONS = [...CHARACTER_STATUS_OPTIONS];
 
 export const characterHeadFields: HeadField[] = [
-  { kind: "text", name: "name", label: "Name", required: true, fullWidth: true },
+  {
+    kind: "text",
+    name: "name",
+    label: "Name",
+    required: true,
+    fullWidth: true,
+  },
   { kind: "select", name: "status", label: "Status", options: STATUS_OPTIONS },
-  // Portrait steht NICHT in dieser Liste: es hat einen eigenen Editor
-  // (PortraitPicker), in dem sich der Bildausschnitt wählen lässt. Die
-  // Formularfelder heißen dort weiterhin portrait/portraitFile, readCharacterHead
-  // liest also unverändert dieselben Namen.
+  // Portrait steht NICHT in dieser Liste: Beim Anlegen hat es im Wizard einen
+  // eigenen Editor, danach ein eigenes Panel. Beide verwenden PortraitPicker
+  // und den gemeinsamen readCharacterPortrait-Parser.
   { kind: "text", name: "species", label: "Spezies (kommagetrennt)" },
   { kind: "text", name: "rank", label: "Rang (optional)" },
   { kind: "text", name: "homeworld", label: "Heimatwelt (optional)" },

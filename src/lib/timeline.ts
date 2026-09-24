@@ -1,7 +1,7 @@
 import "server-only";
 import sql from "@/lib/db";
 import { synopsisExcerpt } from "@/lib/missionFormat";
-import { markdownToHtml } from "@/lib/markdown";
+import { markdownToSafeHtml } from "@/lib/markdown";
 import {
   eventId,
   parseTimelineMarkers,
@@ -22,7 +22,8 @@ import { getFirstContentImageIdsBySlug } from "@/lib/contentImages";
 import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 
 // Die Chronologie (/chronologie): alle Ereignisse der Kampagne in zeitlicher
-// Folge, aus drei Quellen zusammengetragen.
+// Folge, aus gepflegten Angaben, Textmarken und freien Events
+// zusammengetragen.
 //
 //   1. Den gepflegten Angaben der Inhalte selbst — Missionsbeginn und -ende,
 //      Logbuch-Datum, Datum eines Gesprächs, Geburtsdatum einer Figur.
@@ -30,14 +31,14 @@ import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 //      Fließtext. Die gibt es seit langem (TimelineMarkerButton in der
 //      Werkzeugleiste jedes Textfeldes); sie erzeugen im gerenderten Text eine
 //      unsichtbare Sprungmarke #timeline-N, auf die die Karte hier verlinkt.
-//   3. Den vom Sprachmodell abgeleiteten Ereignissen, die die Spielleitung
-//      übernommen hat (Tabelle timeline_events, siehe timelineInference.ts).
+//   3. Den frei eingetragenen Ereignissen (Tabelle timeline_events, siehe
+//      timelineManualEvents.ts). Frühere Modellableitungen bleiben als
+//      Altbestand lesbar, können aber nicht mehr neu erzeugt werden.
 //
 // (1) und (2) werden BEIM LESEN aus den Inhalten gebildet und nicht
 // gespeichert: eine gespeicherte Kopie liefe bei jeder Bearbeitung
 // auseinander, und die Sichtbarkeit müsste doppelt gepflegt werden. Nur (3)
-// liegt in einer Tabelle — es kostet einen Modellaufruf und darf nicht bei
-// jedem Seitenaufruf neu entstehen.
+// liegt in einer Tabelle.
 //
 // Bewusst OHNE "use cache": die Chronologie hängt an der Sichtbarkeit der
 // betrachtenden Person (nicht-öffentliche Logbücher) — dieselbe
@@ -95,6 +96,7 @@ interface InferredRow {
   id: number;
   event_date: string;
   title: string;
+  teaser: string | null;
   detail: string | null;
   category: string;
   // Leer bei einem von Hand eingetragenen Ereignis (origin 'manual'): es
@@ -102,6 +104,8 @@ interface InferredRow {
   source_type: TimelineSourceType | null;
   source_slug: string | null;
   origin: "inferred" | "manual";
+  created_by: number | null;
+  image_id: number | null;
 }
 
 // Kurzer Anriss für die Karte. Markdown-Auszeichnungen fallen weg, damit auf
@@ -171,7 +175,14 @@ function markerEvents(
 // veröffentlichte Inhalte, und die sieht seit v1.34 jede und jeder — auch ohne
 // Anmeldung. Entwürfe bleiben ihrer Owner-Person im eigenen Bereich
 // vorbehalten (/user/content).
-export async function getTimeline(): Promise<TimelineEvent[]> {
+export async function getTimeline({
+  renderManualDetails = true,
+}: {
+  // Zähler und andere reine Listenansichten brauchen den gerenderten
+  // Markdown-Volltext freier Ereignisse nicht. Die Chronologie selbst lässt
+  // die Vorgabe an, damit das Detail-Overlay vollständig bleibt.
+  renderManualDetails?: boolean;
+} = {}): Promise<TimelineEvent[]> {
   const [
     missions,
     logs,
@@ -226,9 +237,17 @@ export async function getTimeline(): Promise<TimelineEvent[]> {
       WHERE deleted_at IS NULL
     `,
     sql<InferredRow[]>`
-      SELECT id, event_date::text AS event_date, title, detail, category,
-             source_type, source_slug, origin
-      FROM timeline_events
+      SELECT te.id, te.event_date::text AS event_date, te.title, te.teaser,
+             te.detail, te.category, te.source_type, te.source_slug, te.origin,
+             te.created_by,
+             (
+               SELECT ci.id FROM content_images ci
+               WHERE ci.content_type = 'timeline_event'
+                 AND ci.content_id = te.id
+               ORDER BY ci.created_at ASC, ci.id ASC
+               LIMIT 1
+             ) AS image_id
+      FROM timeline_events te
     `,
     // Die Beteiligten der von Hand eingetragenen Ereignisse. Eine Abfrage für
     // alle statt einer je Ereignis; die Namen kommen aus der Figur selbst,
@@ -534,16 +553,15 @@ export async function getTimeline(): Promise<TimelineEvent[]> {
     );
   }
 
-  // ── Abgeleitete Ereignisse ───────────────────────────────────────────────
-  // Sie hängen an der Sichtbarkeit ihres Quell-Inhalts: ist der für diese
+  // ── Gespeicherte Ereignisse ──────────────────────────────────────────────
+  // Alt-Ableitungen hängen an der Sichtbarkeit ihres Quell-Inhalts: ist der für diese
   // Person nicht sichtbar (oder inzwischen gelöscht), fällt das Ereignis weg.
   //
   // Und sie treten hinter das zurück, was der Eintrag selbst hergibt: steht an
   // diesem Tag von derselben Quelle schon eine gepflegte Angabe oder eine
-  // Marke, ist das Abgeleitete eine Dopplung. Die Ableitung filtert das schon
-  // beim Speichern (dropKnownDates in timelineInference.ts) — hier steht das
-  // Netz für Zeilen, die vor dieser Regel entstanden sind oder deren Quelle
-  // ihr Datum seither bekommen hat.
+  // Marke, ist das Abgeleitete eine Dopplung. Hier steht das Netz für alte
+  // Zeilen, die vor dieser Regel entstanden sind oder deren Quelle ihr Datum
+  // seither bekommen hat. Neue Ableitungen werden nicht mehr erzeugt.
   for (const row of inferred) {
     // Von Hand eingetragene Ereignisse hängen an keinem Inhalt: keine
     // Sichtbarkeitsprüfung (es gibt keine Quelle, die etwas verbergen
@@ -553,7 +571,7 @@ export async function getTimeline(): Promise<TimelineEvent[]> {
         id: `manual:${row.id}`,
         date: row.event_date,
         title: row.title,
-        detail: row.detail,
+        detail: row.teaser,
         category: row.category,
         origin: "manual",
         // sourceType trägt die Karte als „Quelle"; ein freies Ereignis hat
@@ -563,8 +581,9 @@ export async function getTimeline(): Promise<TimelineEvent[]> {
         sourceTitle: row.title,
         href: null,
         people: manualPeople.get(row.id) ?? [],
-        // Kein Inhalt, also kein Bild.
-        thumbnail: null,
+        thumbnail: row.image_id ? contentImageSrc(row.image_id) : null,
+        manualEventId: row.id,
+        manualEventCreatedBy: row.created_by,
       });
       continue;
     }
@@ -599,17 +618,20 @@ export async function getTimeline(): Promise<TimelineEvent[]> {
     });
   }
 
-  // Die Beschreibung eines von Hand eingetragenen Ereignisses wird als
-  // Markdown erfasst (MarkdownEditor im Eintragen-Fenster) — also auch als
-  // Markdown angezeigt. Nur für diese wenigen gerendert: die übrigen
-  // Beschreibungen sind generierte Sätze oder Textausschnitte.
-  await Promise.all(
-    events.map(async (event) => {
-      if (event.origin === "manual" && event.detail) {
-        event.detailHtml = await markdownToHtml(event.detail);
-      }
-    }),
-  );
+  // Der Volltext eines eigenen Ereignisses ist Markdown und erscheint erst
+  // im Detail-Overlay; der Teaser auf der Karte bleibt bewusst kurzer Text.
+  const inferredById = new Map(inferred.map((row) => [row.id, row]));
+  if (renderManualDetails) {
+    await Promise.all(
+      events.map(async (event) => {
+        if (event.origin === "manual" && event.manualEventId) {
+          const row = inferredById.get(event.manualEventId);
+          if (row?.detail)
+            event.fullDetailHtml = await markdownToSafeHtml(row.detail);
+        }
+      }),
+    );
+  }
 
   return sortEvents(events, "desc");
 }

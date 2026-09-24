@@ -147,6 +147,47 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.53",
+    title: "Eigene Ereignisse werden zu Chronik-Akten",
+    items: [
+      {
+        text: "Eigene Chronologie-Ereignisse haben jetzt einen kurzen Teaser und einen getrennten Volltext. Ein Klick auf die Karte öffnet die Detailansicht mit den Bildern; unter „Meine Inhalte“ lassen sich die Ereignisse wiederfinden, bearbeiten und löschen.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Mit „Neues Event“ lassen sich freie Chronologie-Ereignisse jetzt direkt auf der Startseite und unter „Meine Inhalte“ anlegen. Ob der Knopf auf der Startseite erscheint, lässt sich im Profil einstellen.",
+        category: "inhalte",
+        tutorial: "mein-bereich",
+      },
+      {
+        text: "Die Spielleitung kann eigene Chronologie-Ereignisse gesammelt aus einer CSV-Datei importieren. Datum, Titel, Teaser, Volltext und beteiligte Figuren werden vor dem gemeinsamen Speichern vollständig geprüft; eine leere Muster-CSV mit korrekter Kopfzeile und Kommentar steht zum Download bereit.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Die Chronologie lässt sich jetzt direkt zwischen Missionen, Events, Gesprächen, Logbüchern und der Gesamtansicht umschalten. Jeder Bereich kann nach beteiligten Figuren gefiltert werden; bei Events steht zusätzlich die Ereignisart zur Auswahl.",
+        category: "inhalte",
+        tutorial: "chronologie",
+      },
+      {
+        text: "Öffentliche Personalakten zeigen unter dem Portrait jetzt direkte Schnellzugriffe auf Logs, Gespräche, Missionen und Events der Figur – jeweils mit Trefferzahl und bereits gesetztem Personenfilter in der Chronologie.",
+        category: "charaktere",
+        tutorial: "seiten-im-ueberblick",
+      },
+      {
+        text: "In deiner privaten Charakterakte kannst du jetzt zusätzliche PDF-, Markdown-, DOCX- und TXT-Dokumente hinterlegen, direkt im Browser lesen, herunterladen und wieder entfernen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Ein neuer Charakterarchiv-Export stellt eine gemeinsame PDF genau nach deiner Auswahl zusammen: Charakterdaten, einzelne Zusatzdokumente, vollständige Missionen und einzelne vom Charakter verfasste Logbücher.",
+        category: "export",
+        tutorial: "charaktererschaffung",
+      },
+    ],
+  },
+  {
     version: "1.52",
     title: "Gemeinsame Bausteine unter der Haube",
     // Bewusst ohne Stichpunkte: Der Pull Request vereinheitlicht interne

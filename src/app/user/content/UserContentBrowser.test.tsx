@@ -21,6 +21,14 @@ vi.mock("@/components/ContentLinkToolButton", () => ({
     <div data-testid="link-tool" data-type={contentType} data-slug={slug} />
   ),
 }));
+vi.mock("@/components/timeline/ManualEventForm", () => ({
+  default: ({ event }: { event?: { title: string } }) => (
+    <button type="button">Event bearbeiten: {event?.title}</button>
+  ),
+}));
+vi.mock("./DeleteManualEventButton", () => ({
+  default: () => <button type="button">Event löschen</button>,
+}));
 
 const log: UserContentLog = {
   id: 1,
@@ -78,7 +86,9 @@ const mission: MissionPreview = {
   isDraft: false,
 };
 
-function renderBrowser(props: Partial<Parameters<typeof UserContentBrowser>[0]> = {}) {
+function renderBrowser(
+  props: Partial<Parameters<typeof UserContentBrowser>[0]> = {},
+) {
   return render(
     <UserContentBrowser
       characters={[{ slug: "tuvok", name: "Tuvok" }]}
@@ -119,6 +129,41 @@ describe("UserContentBrowser", () => {
     expect(container.querySelector(".lcars-data-row")).toBeNull();
   });
 
+  it("führt eigene Events mit Bearbeiten-Aktion als Inhaltsart", () => {
+    renderBrowser({
+      logs: [],
+      dialogues: [],
+      archiveEntries: [],
+      missions: [],
+      manualEvents: [
+        {
+          id: 41,
+          date: "2400-05-03",
+          title: "Vertrag von Algeron",
+          teaser: "Eine neue Grenze.",
+          detail: "Der vollständige Text.",
+          category: "political",
+          characterIds: [1],
+          characterNames: ["Tuvok"],
+        },
+      ],
+      eventCharacters: [{ id: 1, name: "Tuvok" }],
+    });
+
+    expect(screen.getByRole("heading", { level: 2 })).toHaveTextContent(
+      "Events",
+    );
+    expect(screen.getByText("Vertrag von Algeron")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "Event bearbeiten: Vertrag von Algeron",
+      }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Event löschen" }),
+    ).toBeInTheDocument();
+  });
+
   it("zeigt Entwürfe in ihrer Kategorie, als Entwurf gekennzeichnet", () => {
     renderBrowser();
 
@@ -149,7 +194,9 @@ describe("UserContentBrowser", () => {
       .getAllByRole("link")
       .map((a) => a.textContent)
       .filter((t): t is string => !!t);
-    expect(titles).toEqual([...titles].sort((a, b) => a.localeCompare(b, "de")));
+    expect(titles).toEqual(
+      [...titles].sort((a, b) => a.localeCompare(b, "de")),
+    );
   });
 
   it("hält den Charakter-Filter auf Berichte und Gespräche beschränkt", () => {
@@ -184,9 +231,7 @@ describe("UserContentBrowser", () => {
     renderBrowser();
 
     const tools = screen.getAllByTestId("link-tool");
-    expect(
-      tools.map((el) => [el.dataset.type, el.dataset.slug]),
-    ).toEqual([
+    expect(tools.map((el) => [el.dataset.type, el.dataset.slug])).toEqual([
       // Beide Logbücher (auch der Entwurf), der Datenbank-Eintrag und die
       // Mission — das Gespräch nicht: dessen Text liegt in den Nachrichten,
       // nicht in einem Markdown-Feld (siehe getArchiveEntrySourceBySlug).
@@ -201,7 +246,9 @@ describe("UserContentBrowser", () => {
     renderBrowser({ ownUserId: 99 });
 
     expect(
-      screen.getAllByTestId("link-tool").every((el) => el.dataset.type !== "dialogue"),
+      screen
+        .getAllByTestId("link-tool")
+        .every((el) => el.dataset.type !== "dialogue"),
     ).toBe(true);
   });
 
@@ -211,7 +258,9 @@ describe("UserContentBrowser", () => {
     // ablehnt. Die eigenen Logbücher und Einträge bleiben davon unberührt.
     renderBrowser({ canLinkAnyContent: false });
 
-    const types = screen.getAllByTestId("link-tool").map((el) => el.dataset.type);
+    const types = screen
+      .getAllByTestId("link-tool")
+      .map((el) => el.dataset.type);
     expect(types).toEqual(["missionLog", "missionLog", "archiveEntry"]);
   });
 

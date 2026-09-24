@@ -83,9 +83,10 @@ export function PublicCharactersGuide() {
           Ein Klick öffnet die <strong>Personalakte</strong>: links das Portrait
           mit den Stammdaten (Akten-ID, Rang, Spezies, Alter …), rechts die{" "}
           <strong>Biografie</strong> mit ihrem Inhaltsverzeichnis. Unter dem
-          Bild führen zwei Zeilen mit Anzahl direkt zu den{" "}
-          <strong>Logbüchern</strong> und <strong>Gesprächen</strong> dieser
-          Figur — beide in der Chronologie, auf sie gefiltert.
+          Bild führen vier Zeilen mit Anzahl direkt zu den{" "}
+          <strong>Logbüchern</strong>, <strong>Gesprächen</strong>,{" "}
+          <strong>Missionen</strong> und <strong>Events</strong> dieser Figur —
+          alle in der Chronologie, mit bereits gesetztem Personenfilter.
         </p>
         <p>
           Weiter unten steht <strong>„Wer kennt wen“</strong>: mit welchen
@@ -118,18 +119,24 @@ export function PublicChronologyGuide() {
           Ganz links im Umschalter steht <strong>„Missionen“</strong> — dann
           zeigt der Strahl je Einsatz einen Eintrag mit seinem ganzen Zeitraum,
           und ein Klick führt auf die Missionsseite mit ihren Einsatzberichten.
-          Mit <strong>„Alle Ereignisse“</strong> kommen Logbücher, Gespräche,
-          markierte Textstellen, Geburtstage und abgeleitete Begebenheiten dazu.
+          Daneben führen <strong>Events</strong>, <strong>Gespräche</strong> und{" "}
+          <strong>Logbücher</strong> direkt in ihre jeweilige Liste;{" "}
+          <strong>Alles</strong> verbindet den gesamten Zeitstrahl.
+        </p>
+        <p>
+          Eigene Ereignisse zeigen auf der Karte einen kurzen Teaser. Ein Klick
+          auf ihren Titel öffnet die Detailansicht mit Volltext und Bildern.
         </p>
       </GuideSection>
 
       <GuideSection title="Filtern und verlinken">
         <p>
           Geordnet wird immer nach <strong>Datum</strong> — der Knopf dreht die
-          Richtung um. Gefiltert wird nach Suchbegriff,{" "}
-          <strong>Ereignisart</strong>, <strong>beteiligter Person</strong> und
-          Jahr; wechselst du den Umschalter, setzen sich die übrigen Filter
-          zurück. Einträge ohne In-Story-Datum stehen unter{" "}
+          Richtung um. Jeder Bereich lässt sich nach Suchbegriff,{" "}
+          <strong>beteiligter Person</strong> und Jahr filtern; bei{" "}
+          <strong>Events</strong> kommt die <strong>Ereignisart</strong> hinzu.
+          Wechselst du den Umschalter, setzen sich die übrigen Filter zurück.
+          Einträge ohne In-Story-Datum stehen unter{" "}
           <strong>„Ohne Datum“</strong> am Ende.
         </p>
         <p>

@@ -9,18 +9,21 @@ import { listTalents } from "@/lib/talents";
 import { listFocuses } from "@/lib/focuses";
 import { listCampaignRules } from "@/lib/campaignRules";
 import CharacterHeadPanel from "./CharacterHeadPanel";
+import CharacterPortraitPanel from "./CharacterPortraitPanel";
 import CharacterValuesPanel from "./CharacterValuesPanel";
 import CharacterBioPanel from "./CharacterBioPanel";
 import RevisionsPanel from "@/app/_shared/RevisionsPanel";
 import { listRevisions } from "@/lib/contentRevisions";
 import { getViewer } from "@/lib/visibility";
 import CharacterSheetButton from "./CharacterSheetButton";
-import {
-  characterEditHref,
-} from "@/lib/contentRoutes";
+import { characterEditHref } from "@/lib/contentRoutes";
 import HelpButton from "@/components/help/HelpButton";
 import { HelpTitleRow } from "@/components/help/HelpHeading";
 import CharacterCreationGuide from "@/components/character/CharacterCreationGuide";
+import CharacterDocumentsPanel from "./CharacterDocumentsPanel";
+import { listCharacterDocuments } from "@/lib/characterDocuments";
+import CharacterArchiveExportButton from "./CharacterArchiveExportButton";
+import { getCharacterArchiveOptions } from "@/lib/characterArchive";
 
 export const metadata: Metadata = {
   title: "Charakter",
@@ -31,11 +34,11 @@ interface Props {
   params: Promise<{ characterId: string }>;
 }
 
-// Die eigene Charakterseite: Stammdaten, Werte und Biografie als drei Panels
-// untereinander, darüber der Knopf für die Bogen-Vorschau. Kein Assistent —
-// der ist nur fürs Anlegen da (siehe /user/characters/new).
+// Die eigene Charakterseite: Profilbild, Personalakte, Werte, Biografie und
+// Versionen als standardmäßig offene Klapp-Panels untereinander, darüber der
+// Knopf für die Bogen-Vorschau. Kein Assistent — der ist nur fürs Anlegen da.
 //
-// Die Berechtigung steckt wie überall in den Abfragen selbst (alle drei sind
+// Die Berechtigung steckt wie überall in den Abfragen selbst (beide sind
 // owner-gescoped): ein fremder oder unbekannter Charakter führt zurück auf
 // die Übersicht, statt einen Fehler zu zeigen — das verrät auch nicht, ob es
 // die id überhaupt gibt.
@@ -54,8 +57,16 @@ export default async function OwnCharacterPage({ params }: Props) {
 
   // Erst NACH dem Owner-Check: vorher ist nicht klar, ob der Charakter
   // überhaupt zu diesem Konto gehört.
-  const [account, rules, talents, focuses, campaignRules, revisions] =
-    await Promise.all([
+  const [
+    account,
+    rules,
+    talents,
+    focuses,
+    campaignRules,
+    revisions,
+    documents,
+    archiveOptions,
+  ] = await Promise.all([
     getApAccount(sheet.id),
     getAdvancementRules(),
     listTalents(),
@@ -64,6 +75,8 @@ export default async function OwnCharacterPage({ params }: Props) {
     // Versionshistorie der Biografie — der Owner-Check oben ist bereits
     // gelaufen, listRevisions prüft ihn über den Viewer noch einmal selbst.
     getViewer().then((v) => listRevisions("character", character.id, v)),
+    listCharacterDocuments(character.id),
+    getCharacterArchiveOptions(session.userId, character.id),
   ]);
 
   return (
@@ -86,26 +99,39 @@ export default async function OwnCharacterPage({ params }: Props) {
           <h1>{character.name}</h1>
         </HelpTitleRow>
 
-        <CharacterSheetButton
-          characterId={sheet.id}
-          input={{
-            characterName: sheet.name,
-            rank: sheet.rank,
-            species: sheet.species,
-            portrait: sheet.portrait,
-            portraitCrop: sheet.portraitCrop,
-            stats: sheet.stats,
-            bioHtml: character.bioHtml,
-            talents,
-            campaignRules,
-          }}
+        <div className="flex flex-wrap gap-[8px]">
+          <CharacterSheetButton
+            characterId={sheet.id}
+            input={{
+              characterName: sheet.name,
+              rank: sheet.rank,
+              species: sheet.species,
+              portrait: sheet.portrait,
+              portraitCrop: sheet.portraitCrop,
+              stats: sheet.stats,
+              bioHtml: character.bioHtml,
+              talents,
+              campaignRules,
+            }}
+          />
+          <CharacterArchiveExportButton
+            characterId={character.id}
+            characterName={character.name}
+            documents={documents}
+            missions={archiveOptions}
+          />
+        </div>
+
+        <CharacterPortraitPanel userId={session.userId} character={character} />
+
+        <CharacterHeadPanel
+          userId={session.userId}
+          character={character}
+          stats={sheet.stats}
         />
 
-        <CharacterHeadPanel userId={session.userId} character={character} />
-
-        {/* Das Werte-Panel bringt seine eigenen Abschnitte mit (AP-Konto,
-            Kopfdaten, Attribute, Disziplinen, Listen) — eine zusätzliche Hülle
-            darum wären nur zwei Titelleisten übereinander. */}
+        {/* Das Werte-Panel bündelt seine fachlichen Unterabschnitte in einer
+            gemeinsamen, aufklappbaren Hülle. */}
         <CharacterValuesPanel
           userId={session.userId}
           characterId={sheet.id}
@@ -124,11 +150,17 @@ export default async function OwnCharacterPage({ params }: Props) {
           sourceMarkdown={character.sourceMarkdown}
         />
 
+        <CharacterDocumentsPanel
+          characterId={character.id}
+          documents={documents}
+        />
+
         <RevisionsPanel
           contentType="character"
           contentId={character.id}
           path={characterEditHref(character.id)}
           revisions={revisions}
+          defaultOpen
         />
       </article>
     </>

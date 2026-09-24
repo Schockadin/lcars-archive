@@ -298,42 +298,30 @@ export function CampaignRulesFigure() {
   );
 }
 
-// ── Chronologie-Werkbank ─────────────────────────────────────────────
-// Oben die Inhalte mit Filterfeld, je Zeile der Knopf, der den Durchlauf
-// startet; DARUNTER — nicht daneben, so steht es auf der Seite — die
-// abgeleiteten Ereignisse zum Prüfen.
-export function TimelineWorkbenchFigure() {
+// ── Chronologie-Import ───────────────────────────────────────────────
+// Oben Musterdatei und Upload, darunter die Vorschau der importierten Zeilen.
+export function TimelineCsvImportFigure() {
   return (
     <GuideFigure
-      label="Oben ein Filterfeld über einer Liste von Inhalten mit je einem Knopf, darunter der Abschnitt mit den abgeleiteten Ereignissen."
-      caption="Oben ableiten, darunter das Ergebnis prüfen"
+      label="Oben ein Knopf für die CSV-Musterdatei und ein Dateifeld mit Importknopf, darunter drei Ereigniszeilen."
+      caption="Chronologie — Muster laden, CSV wählen, gemeinsam importieren"
     >
-      <Line x={10} y={9} w={52} fill={TERTIARY} opacity={0.9} />
-      <Box x={10} y={17} w={180} h={11} />
-      {[0, 1].map((i) => (
-        <g key={i}>
-          <Line x={10} y={36 + i * 16} w={72} opacity={0.7} />
+      <Pill x={10} y={12} w={58} h={12} fill={SECONDARY} />
+      <Box x={76} y={10} w={76} h={16} />
+      <Pill x={158} y={12} w={32} h={12} fill={PRIMARY} />
+      <Line x={10} y={34} w={180} h={2} opacity={0.25} />
+      {[0, 1, 2].map((row) => (
+        <g key={row}>
+          <Line x={12} y={45 + row * 21} w={28} h={4} opacity={0.65} />
+          <Line x={48} y={43 + row * 21} w={72} h={5} opacity={0.85} />
+          <Line x={48} y={51 + row * 21} w={104} h={3} opacity={0.4} />
           <Pill
-            x={140}
-            y={33 + i * 16}
-            w={50}
-            h={10}
-            fill={i === 0 ? PRIMARY : BORDER}
-          />
-        </g>
-      ))}
-      <rect x={10} y={68} width={180} height={1} fill={BORDER} />
-      <Line x={10} y={74} w={64} fill={TERTIARY} opacity={0.9} />
-      {[0, 1].map((i) => (
-        <g key={i}>
-          <circle cx={14} cy={90 + i * 14} r={3.5} fill={TERTIARY} />
-          <Line x={24} y={88 + i * 14} w={116} h={3} opacity={0.6} />
-          <circle
-            cx={182}
-            cy={90 + i * 14}
-            r={4.5}
-            fill={QUINARY}
-            opacity={0.7}
+            x={162}
+            y={44 + row * 21}
+            w={26}
+            h={9}
+            fill={[TERTIARY, QUATERNARY, QUINARY][row]}
+            opacity={0.8}
           />
         </g>
       ))}

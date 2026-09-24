@@ -21,7 +21,8 @@ export default function ApLedgerTable({
 
   const characters = useMemo(() => {
     const map = new Map<number, string>();
-    for (const entry of entries) map.set(entry.characterId, entry.characterName);
+    for (const entry of entries)
+      map.set(entry.characterId, entry.characterName);
     return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1], "de"));
   }, [entries]);
 
@@ -75,8 +76,8 @@ export default function ApLedgerTable({
 
       {entries.length >= limit && (
         <p className="text-lcars-ink-dim text-[12px]">
-          Es werden die letzten {limit} Buchungen angezeigt. Ältere stehen
-          weiterhin auf dem jeweiligen Charakterbogen.
+          Es werden die letzten {limit} Buchungen angezeigt. Ältere stehen nicht
+          in dieser begrenzten Ansicht.
         </p>
       )}
 
@@ -92,7 +93,9 @@ export default function ApLedgerTable({
               <span className="lcars-eyebrow w-[190px]">
                 {formatDateTime(entry.createdAt)}
               </span>
-              <span className="min-w-[140px] flex-1">{entry.characterName}</span>
+              <span className="min-w-[140px] flex-1">
+                {entry.characterName}
+              </span>
               <span className="stat-ap-amount w-[70px] text-right">
                 {entry.amount > 0 ? "+" : ""}
                 {entry.amount} AP

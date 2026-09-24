@@ -6,11 +6,14 @@ import {
   archiveHref,
   characterEditHref,
   characterHref,
+  characterEventsHref,
   characterLogsHref,
+  characterMissionsHref,
   characterSheetHref,
   closedDialogueHref,
   dialogueContentHref,
   dialogueHref,
+  dialoguesHref,
   absoluteContentUrl,
   contentEditHref,
   missionEditHref,
@@ -37,7 +40,16 @@ describe("contentRoutes", () => {
   it("kennt die Leseseiten aller vier Inhaltsarten", () => {
     expect(characterHref("tuvok")).toBe("/characters/tuvok");
     expect(characterLogsHref("Tuvok")).toBe(
-      "/chronologie?scope=all&category=log&person=Tuvok",
+      "/chronologie?scope=logs&person=Tuvok",
+    );
+    expect(characterMissionsHref("Seven of Nine")).toBe(
+      "/chronologie?scope=missions&person=Seven%20of%20Nine",
+    );
+    expect(characterEventsHref("Seven of Nine")).toBe(
+      "/chronologie?scope=events&person=Seven%20of%20Nine",
+    );
+    expect(dialoguesHref("Seven of Nine")).toBe(
+      "/chronologie?scope=dialogues&person=Seven%20of%20Nine",
     );
     expect(characterSheetHref("tuvok")).toBe("/characters/tuvok/sheet");
     expect(archiveHref("erster-kontakt")).toBe("/archive/erster-kontakt");

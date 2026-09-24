@@ -26,14 +26,15 @@ import {
   uploadErrorMessage,
 } from "@/lib/imageUpload";
 
-// Bilder-Galerie für Charaktere/Missionen/Missionslogs/Archiv-Einträge
-// (nicht Dialoge) — analog zu ContentLinkToolButton.tsx als Icon-Button + Modal
+// Bilder-Galerie für Charaktere/Missionen/Missionslogs/Archiv-Einträge und
+// eigene Chronologie-Ereignisse (nicht Dialoge) — analog zu
+// ContentLinkToolButton.tsx als Icon-Button + Modal
 // (ContentToolPreviewOverlay), da ActionsMenu.tsx nur eine schmale Spalte
 // aus Icon-Buttons ist und eine dauerhaft eingebettete Galerie den Rahmen
 // jeder Detailseite sprengen würde. Lädt die Bilderliste client-seitig beim
 // Öffnen (gleiches Muster wie getFollowState/getDialogueSnapshotAction)
-// statt sie als RSC-Prop durchzureichen — vermeidet, jede der vier
-// Detailseiten um eine weitere Server-seitige Ladefunktion zu erweitern.
+// statt sie als RSC-Prop durchzureichen — vermeidet, jede Detailseite um eine
+// weitere Server-seitige Ladefunktion zu erweitern.
 export default function ContentImageGallery({
   contentType,
   contentId,
@@ -119,7 +120,10 @@ export default function ContentImageGallery({
         }
       }
 
-      if (latest) setImages(latest);
+      if (latest) {
+        setImages(latest);
+        if (contentType === "timeline_event") router.refresh();
+      }
       setError(problems.length > 0 ? problems.join(" ") : null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     });
@@ -138,6 +142,7 @@ export default function ContentImageGallery({
         } else {
           setError(null);
           setImages(result.images ?? []);
+          if (contentType === "timeline_event") router.refresh();
         }
       } catch {
         setError("Das Bild konnte nicht gelöscht werden.");

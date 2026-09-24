@@ -3,7 +3,12 @@ import PageMeta from "@/components/PageMeta";
 import PageSkeleton from "@/app/_shared/PageSkeleton";
 import TimelineView from "@/components/timeline/TimelineView";
 import { getTimeline } from "@/lib/timeline";
-import { categoryVisual, latestEventDate, type TimelineScope } from "@/lib/timelineTypes";
+import {
+  categoryVisual,
+  latestEventDate,
+  timelineScopeForCategory,
+  type TimelineScope,
+} from "@/lib/timelineTypes";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import { listCharactersForEvents } from "@/lib/timelineManualEvents";
 import HelpButton from "@/components/help/HelpButton";
@@ -59,6 +64,9 @@ export default async function CategoryTimeline({
   const canAddEvent = viewerHasPermission(viewer, "content.create");
   // Nur für die, die auch eintragen dürfen — sonst eine Abfrage für nichts.
   const characters = canAddEvent ? await listCharactersForEvents() : [];
+  const resolvedScope =
+    initialScope ?? (category ? timelineScopeForCategory(category) : undefined);
+  const resolvedCategory = resolvedScope === "events" ? category : null;
   return (
     <TimelineView
       help={
@@ -69,12 +77,14 @@ export default async function CategoryTimeline({
         ) : undefined
       }
       events={events}
-      initialCategory={category}
-      initialScope={initialScope}
+      initialCategory={resolvedCategory}
+      initialScope={resolvedScope}
       initialPerson={initialPerson}
       canAddEvent={canAddEvent}
       characters={characters}
       latestEventDate={latestEventDate(events)}
+      currentUserId={viewer?.userId ?? null}
+      canModerateEvents={viewerHasPermission(viewer, "content.moderate")}
       syncUrl
     />
   );

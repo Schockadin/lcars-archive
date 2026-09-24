@@ -15,6 +15,10 @@ import NewContentPanel from "./NewContentPanel";
 import { loadNewContentData } from "./newContentData";
 import HelpHeading from "@/components/help/HelpHeading";
 import { MyContentGuide } from "@/components/help/guides/UserGuides";
+import {
+  listCharactersForEvents,
+  listManualEventsForUser,
+} from "@/lib/timelineManualEvents";
 
 export const metadata: Metadata = {
   title: "Meine Inhalte",
@@ -33,26 +37,39 @@ export default async function UserContentPage() {
     name: c.name,
   }));
 
-  const [logs, dialogues, archiveEntries, missions, drafts, newContent] =
-    await Promise.all([
-      getLogsForUser(user.id),
-      getDialoguesForUser(user.id, "all"),
-      getArchiveEntriesForUser(user.id),
-      isGM ? getAllMissionsIncludingDrafts() : Promise.resolve([]),
-      // Eigene Abfrage statt einer Ableitung aus den Listen darüber: Die
-      // suchen über Besitz UND Teilnahme, „meine Entwürfe" fragt nur nach
-      // Besitz (siehe getOwnDrafts). Dieselbe Liste steht auf der
-      // Startseite.
-      getOwnDrafts(user.id),
-      // Die Auswahllisten der Anlege-Formulare — hier alle, weil diese Seite
-      // alle Knöpfe zeigt. Der gemeinsame Ladeweg mit dem Dashboard steht in
-      // newContentData.ts.
-      loadNewContentData(user, characters, roleMap, {
-        missionLog: true,
-        dialogue: true,
-        mission: true,
-      }),
-    ]);
+  const [
+    logs,
+    dialogues,
+    archiveEntries,
+    missions,
+    drafts,
+    newContent,
+    manualEvents,
+    eventCharacters,
+  ] = await Promise.all([
+    getLogsForUser(user.id),
+    getDialoguesForUser(user.id, "all"),
+    getArchiveEntriesForUser(user.id),
+    isGM ? getAllMissionsIncludingDrafts() : Promise.resolve([]),
+    // Eigene Abfrage statt einer Ableitung aus den Listen darüber: Die
+    // suchen über Besitz UND Teilnahme, „meine Entwürfe" fragt nur nach
+    // Besitz (siehe getOwnDrafts). Dieselbe Liste steht auf der
+    // Startseite.
+    getOwnDrafts(user.id),
+    // Die Auswahllisten der Anlege-Formulare — hier alle, weil diese Seite
+    // alle Knöpfe zeigt. Der gemeinsame Ladeweg mit dem Dashboard steht in
+    // newContentData.ts.
+    loadNewContentData(user, characters, roleMap, {
+      missionLog: true,
+      dialogue: true,
+      mission: true,
+      event: true,
+    }),
+    listManualEventsForUser(user.id),
+    // Bearbeiten bleibt auch möglich, wenn das Anlegerecht später entzogen
+    // wurde. Deshalb hängt diese Liste nicht an newContent.event.
+    listCharactersForEvents(),
+  ]);
 
   return (
     <>
@@ -91,7 +108,8 @@ export default async function UserContentPage() {
               logs.length +
               dialogues.length +
               archiveEntries.length +
-              missions.length
+              missions.length +
+              manualEvents.length
             }
             storageId="content:liste"
           >
@@ -102,6 +120,8 @@ export default async function UserContentPage() {
                 dialogues={dialogues}
                 archiveEntries={archiveEntries}
                 missions={missions}
+                manualEvents={manualEvents}
+                eventCharacters={eventCharacters}
                 canManageMissions={isGM}
                 canLinkAnyContent={userCan(
                   user,

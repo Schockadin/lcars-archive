@@ -11,9 +11,11 @@ import ModalOverlay from "@/components/ModalOverlay";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import {
   createManualEventAction,
+  updateManualEventAction,
   type ManualEventState,
 } from "@/app/actions/timelineEvents";
-import { PlusIcon } from "@/lib/icons";
+import { PencilIcon, PlusIcon } from "@/lib/icons";
+import type { ManualEventForEdit } from "@/lib/timelineManualEventTypes";
 
 // „Ereignis eintragen" über dem Zeitstrahl: ein Knopf, der ein Fenster mit dem
 // Formular öffnet — für alles, was zur Kampagne gehört, aber in keinem Eintrag
@@ -26,37 +28,67 @@ import { PlusIcon } from "@/lib/icons";
 export default function ManualEventForm({
   defaultDate,
   characters,
+  event,
+  triggerVariant = "icon",
+  dateHint = "Vorbelegt mit dem jüngsten Ereignis der Chronologie",
 }: {
-  // Das Datum des jüngsten Ereignisses der Chronologie. Wer etwas einträgt,
-  // trägt fast immer etwas ein, das kurz danach passiert ist — hier fängt man
-  // also an zu tippen, statt das Jahrhundert von Hand zu suchen. Null, wenn
-  // die Chronologie noch leer ist.
+  // Vorgabedatum des jeweiligen Einstiegs. Die Chronologie verwendet ihr
+  // jüngstes Ereignis, der gemeinsame Anlege-Bereich das jüngste Logbuch.
   defaultDate: string | null;
   // Das ganze Ensemble, ausdrücklich auch zurückgezogene Figuren und NPCs:
   // ein historisches Ereignis betrifft oft gerade die, die nicht mehr im
   // Dienst sind. Keine davon ist vorausgewählt.
   characters: { id: number; name: string }[];
+  // Mit Ereignis wird dasselbe Formular zum Editor. So bleiben Felder,
+  // Validierung und Kategorien beim Anlegen und Bearbeiten identisch.
+  event?: ManualEventForEdit;
+  // In der Chronologie und in Inhaltszeilen bleibt der kompakte Symbolknopf.
+  // Der gemeinsame „Neue Inhalte"-Abschnitt verwendet dieselbe Form dagegen
+  // als beschriftete Pille neben den übrigen Anlege-Knöpfen.
+  triggerVariant?: "icon" | "pill";
+  dateHint?: string;
 }) {
+  const editing = event !== undefined;
   const [state, formAction, pending] = useActionState<
     ManualEventState,
     FormData
-  >(createManualEventAction, {});
+  >(editing ? updateManualEventAction : createManualEventAction, {});
   const [open, setOpen] = useState(false);
+  const idPrefix = editing ? `manual-event-${event.id}` : "manual-event-new";
+  const triggerLabel =
+    triggerVariant === "pill"
+      ? "Neues Event"
+      : editing
+        ? "Event bearbeiten"
+        : "Event hinzufügen";
 
   return (
-    <div className="timeline-newevent ">
+    <div className="timeline-newevent">
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="lcars-icon-btn self-start"
-        aria-label="Event hinzufügen"
-        title="Event hinzufügen"
+        className={
+          triggerVariant === "pill"
+            ? "lcars-pill-btn w-full"
+            : "lcars-icon-btn self-start"
+        }
+        aria-label={triggerLabel}
+        title={triggerLabel}
       >
-        <PlusIcon />
+        {triggerVariant === "pill" ? (
+          "Neues Event"
+        ) : editing ? (
+          <PencilIcon />
+        ) : (
+          <PlusIcon />
+        )}
       </button>
 
       {open && (
-        <ModalOverlay title="Ereignis eintragen" onClose={() => setOpen(false)}>
+        <ModalOverlay
+          title={editing ? "Ereignis bearbeiten" : "Ereignis eintragen"}
+          onClose={() => setOpen(false)}
+        >
           <form
             action={(data) => {
               formAction(data);
@@ -66,6 +98,7 @@ export default function ManualEventForm({
             }}
             className="flex flex-col"
           >
+            {event && <input type="hidden" name="id" value={event.id} />}
             <p className="text-lcars-ink-dim text-[12px] mb-[10px]">
               Für Begebenheiten ohne eigenen Eintrag. Was in einer Mission,
               einem Logbuch oder einem Datenbank-Eintrag steht, kommt von dort
@@ -74,23 +107,23 @@ export default function ManualEventForm({
             <div className="timeline-newevent-row">
               <FormField
                 label="Datum"
-                htmlFor="manual-event-date"
-                hint="Vorbelegt mit dem jüngsten Ereignis der Chronologie"
+                htmlFor={`${idPrefix}-date`}
+                hint={dateHint}
               >
                 <input
-                  id="manual-event-date"
+                  id={`${idPrefix}-date`}
                   type="date"
                   name="date"
                   required
-                  defaultValue={defaultDate ?? ""}
+                  defaultValue={event?.date ?? defaultDate ?? ""}
                   className="lcars-input"
                 />
               </FormField>
-              <FormField label="Ereignisart" htmlFor="manual-event-category">
+              <FormField label="Ereignisart" htmlFor={`${idPrefix}-category`}>
                 <select
-                  id="manual-event-category"
+                  id={`${idPrefix}-category`}
                   name="category"
-                  defaultValue="other"
+                  defaultValue={event?.category ?? "other"}
                   className="lcars-input"
                 >
                   {EVENT_CATEGORIES.map((c) => (
@@ -101,22 +134,38 @@ export default function ManualEventForm({
                 </select>
               </FormField>
             </div>
-            <FormField label="Titel" htmlFor="manual-event-title">
+            <FormField label="Titel" htmlFor={`${idPrefix}-title`}>
               <input
-                id="manual-event-title"
+                id={`${idPrefix}-title`}
                 type="text"
                 name="title"
                 required
                 maxLength={200}
+                defaultValue={event?.title ?? ""}
                 className="lcars-input"
               />
             </FormField>
+            <FormField label="Teaser (optional)" htmlFor={`${idPrefix}-teaser`}>
+              <textarea
+                id={`${idPrefix}-teaser`}
+                name="teaser"
+                maxLength={500}
+                rows={2}
+                defaultValue={event?.teaser ?? ""}
+                className="lcars-input resize-y"
+              />
+            </FormField>
             <FormField
-              label="Beschreibung (optional)"
-              htmlFor="manual-event-detail"
+              label="Volltext (optional)"
+              htmlFor={`${idPrefix}-detail`}
             >
               {/* Markdown wie in allen anderen Textfeldern des Projekts. */}
-              <MarkdownEditor id="manual-event-detail" name="detail" rows={4} />
+              <MarkdownEditor
+                id={`${idPrefix}-detail`}
+                name="detail"
+                rows={4}
+                defaultValue={event?.detail ?? ""}
+              />
             </FormField>
             {characters.length > 0 && (
               <fieldset className="flex flex-col gap-[6px] mb-[10px]">
@@ -131,6 +180,9 @@ export default function ManualEventForm({
                         type="checkbox"
                         name="characterIds"
                         value={character.id}
+                        defaultChecked={event?.characterIds.includes(
+                          character.id,
+                        )}
                       />
                       <span>{character.name}</span>
                     </label>
@@ -138,8 +190,11 @@ export default function ManualEventForm({
                 </div>
               </fieldset>
             )}
-            <SubmitButton pending={pending} pendingLabel="Wird eingetragen…">
-              Eintragen
+            <SubmitButton
+              pending={pending}
+              pendingLabel={editing ? "Wird gespeichert…" : "Wird eingetragen…"}
+            >
+              {editing ? "Speichern" : "Eintragen"}
             </SubmitButton>
           </form>
         </ModalOverlay>
@@ -147,7 +202,11 @@ export default function ManualEventForm({
 
       <FormError message={state.error} />
       {state.success && (
-        <FormSuccess>Das Ereignis steht in der Chronologie.</FormSuccess>
+        <FormSuccess>
+          {editing
+            ? "Das Ereignis wurde gespeichert."
+            : "Das Ereignis steht in der Chronologie."}
+        </FormSuccess>
       )}
     </div>
   );

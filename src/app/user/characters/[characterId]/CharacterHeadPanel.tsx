@@ -3,7 +3,6 @@ import { useActionState, useState } from "react";
 import HeadFieldRenderer from "@/components/ContentEditor/HeadFieldRenderer";
 import { SubmitButton, FormError } from "@/app/_shared/FormPrimitives";
 import CharacterPanel from "./CharacterPanel";
-import PortraitPicker from "../_shared/PortraitPicker";
 import {
   updateCharacterHeadAction,
   type CharacterPanelState,
@@ -14,7 +13,8 @@ import {
 } from "../_shared/characterHeadFields";
 import type { OwnCharacterForEdit } from "@/lib/characters";
 import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
-import { parsePortraitCrop } from "@/lib/portraitCrop";
+import { EXPERIENCE_OPTIONS, TEXT_FIELDS } from "@/lib/characterStats";
+import type { CharacterStats } from "@/types/characterStats";
 
 const initialState: CharacterPanelState = {};
 
@@ -32,16 +32,18 @@ function Row({ label, value }: { label: string; value: string | null }) {
   );
 }
 
-// Panel „Stammdaten" der eigenen Charakterseite: normalerweise eine
+// Zusammengeführte Personalakte der eigenen Charakterseite: normalerweise eine
 // Übersicht, per Stift-Knopf wird daraus dasselbe Formular wie früher unter
 // /edit. Gespeichert wird nur dieser Teil — Biografie und Werte haben ihre
 // eigenen Panels (siehe panelActions.ts).
 export default function CharacterHeadPanel({
   userId,
   character,
+  stats,
 }: {
   userId: number;
   character: OwnCharacterForEdit;
+  stats: CharacterStats;
 }) {
   const [editing, setEditing] = useState(false);
   const [state, formAction, pending] = useActionState(
@@ -65,11 +67,11 @@ export default function CharacterHeadPanel({
 
   return (
     <CharacterPanel
-      en="Personnel Record"
-      de="Stammdaten"
+      en="Personnel File"
+      de="Personalakte"
       editing={editing}
       onToggleEdit={() => setEditing((v) => !v)}
-      editLabel="Stammdaten bearbeiten"
+      editLabel="Personalakte bearbeiten"
     >
       <div className="stat-editor-body">
         {!editing ? (
@@ -97,6 +99,21 @@ export default function CharacterHeadPanel({
               <Row label="Schiffe" value={list(character.ships)} />
               <Row label="Division" value={character.division} />
               <Row label="Tags" value={list(character.tags)} />
+              {TEXT_FIELDS.map((field) => (
+                <Row
+                  key={field.key}
+                  label={field.label}
+                  value={stats[field.key]}
+                />
+              ))}
+              <Row
+                label="Erfahrungsstufe"
+                value={
+                  EXPERIENCE_OPTIONS.find(
+                    (option) => option.value === stats.experience,
+                  )?.label ?? null
+                }
+              />
             </div>
             {character.isDraft && (
               <p className="stat-sheet-rule">
@@ -110,15 +127,6 @@ export default function CharacterHeadPanel({
             <input type="hidden" name="characterId" value={character.id} />
 
             <div className="content-editor-head-grid">
-              {/* Portrait mit eigenem Editor: dort lässt sich der
-                  Bildausschnitt wählen (Zoom + Verschieben), das Ergebnis
-                  geht als fertig zugeschnittenes Bild mit. */}
-              <PortraitPicker
-                idPrefix="head-panel"
-                defaultUrl={character.portrait ?? ""}
-                defaultSource={character.portraitSource ?? ""}
-                defaultCrop={parsePortraitCrop(character.portraitCrop)}
-              />
               {[...characterHeadFields, ...characterMetadataFields].map(
                 (field) => (
                   <HeadFieldRenderer
@@ -147,6 +155,48 @@ export default function CharacterHeadPanel({
                   />
                 ),
               )}
+              {TEXT_FIELDS.map((field) => (
+                <div key={field.key} className="stat-editor-field">
+                  <label
+                    htmlFor={`head-panel-${field.key}`}
+                    className="stat-field-label"
+                  >
+                    <span className="stat-label-primary">
+                      {field.original ?? field.label}
+                    </span>
+                    <span className="stat-label-secondary">{field.label}</span>
+                  </label>
+                  <input
+                    id={`head-panel-${field.key}`}
+                    name={field.key}
+                    type="text"
+                    defaultValue={stats[field.key] ?? ""}
+                    className="stat-field-input"
+                  />
+                </div>
+              ))}
+              <div className="stat-editor-field">
+                <label
+                  htmlFor="head-panel-experience"
+                  className="stat-field-label"
+                >
+                  <span className="stat-label-primary">Experience</span>
+                  <span className="stat-label-secondary">Erfahrungsstufe</span>
+                </label>
+                <select
+                  id="head-panel-experience"
+                  name="experience"
+                  defaultValue={stats.experience ?? ""}
+                  className="stat-field-input"
+                >
+                  <option value="">— keine Angabe —</option>
+                  {EXPERIENCE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="flex items-center gap-[8px]">
@@ -170,7 +220,7 @@ export default function CharacterHeadPanel({
               pendingLabel="Wird gespeichert…"
               className="lcars-pill-btn--outline self-start disabled:opacity-50"
             >
-              Stammdaten speichern
+              Personalakte speichern
             </SubmitButton>
           </form>
         )}

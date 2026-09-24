@@ -53,7 +53,8 @@ export default function CharacterCreationGuide() {
         figure={<PortraitFigure />}
       >
         <p>
-          Das <strong>Portrait</strong> lädst du in den Stammdaten als
+          Das <strong>Portrait</strong> lädst du beim Anlegen in den Stammdaten
+          und später im eigenen <strong>Profilbild-Panel</strong> als
           <strong> Bilddatei</strong> hoch — eine Bild-Adresse kannst du nicht
           mehr angeben: ein Bild auf einem fremden Server verschwindet, sobald
           dort jemand aufräumt, und lässt sich hier nicht zuschneiden. Passt das
@@ -128,16 +129,16 @@ export default function CharacterCreationGuide() {
           <strong>Talent</strong> oder <strong>Schwerpunkt</strong> je 20 AP. AP
           bekommst du von der Spielleitung: je 1 AP für eine gespielte Session
           und ein geschriebenes Logbuch, dazu etwas für abgeschlossene Missionen
-          und Story-Arcs. Auf dem Bogen siehst du dein Konto, die Kosten jeder
-          möglichen Steigerung und alle bisherigen Buchungen. Alle genannten
+          und Story-Arcs. Auf dem Bogen siehst du dein Konto und die Kosten
+          jeder möglichen Steigerung direkt am jeweiligen Wert. Alle genannten
           Zahlen sind die Voreinstellung — die Spielleitung kann das Regelwerk
           anpassen, der Bogen rechnet dann mit ihren Werten.
         </p>
         <p>
-          Der AP-Bereich rechnet dabei <strong>live</strong> mit: Während du in
-          der Erschaffung Attribute und Disziplinen einträgst, siehst du sofort,
-          was deine Verteilung kostet, wie viel Budget noch übrig ist und mit
-          wie vielen AP du nach dem Abschließen startest. Denn was du nicht
+          Der Bogen rechnet dabei <strong>live</strong> mit: Während du in der
+          Erschaffung Attribute und Disziplinen einträgst, siehst du sofort, was
+          deine Verteilung kostet, wie viel Budget noch übrig ist und mit wie
+          vielen AP du nach dem Abschließen startest. Denn was du nicht
           verbrauchst, ist nicht verloren — bis zu 10 übrige AP (von der
           Spielleitung einstellbar) werden dir beim Abschließen gutgeschrieben.
           Nach der Erschaffung zeigt dir jeder Steigern-Knopf, wie viele AP dir
@@ -169,8 +170,8 @@ export default function CharacterCreationGuide() {
           Bogen mit, wie viele deiner <strong>vier freien Talente</strong> du
           schon vergeben hast; ist das Kontingent voll, kommen weitere erst nach
           dem Abschließen der Erschaffung über AP hinzu. Danach ist die Liste
-          schreibgeschützt — Talente ändern sich dann nur noch über den
-          AP-Bereich.
+          schreibgeschützt — Talente ändern sich dann nur noch über den grünen
+          Plus-Knopf direkt an der Talent-Liste.
         </p>
         <p>
           Beim Übernehmen kannst du einem Talent einen{" "}
@@ -207,15 +208,17 @@ export default function CharacterCreationGuide() {
 
       <GuideSection title="Nach dem Abschließen" figure={<SheetFigure />}>
         <p>
-          <strong>Deine Charakterseite</strong> zeigt danach Stammdaten, Werte
-          und Biografie als drei Abschnitte untereinander. Bei Stammdaten und
-          Biografie öffnet der <strong>Stift</strong> in der Titelzeile das
-          Formular an Ort und Stelle; die Werte steigerst du mit AP (siehe
-          unten). Ganz oben öffnet <strong>„Charakterbogen“</strong> die
-          Vorschau: Blatt 1 der Personalbogen mit Stammdaten und Werten, Blatt 2
-          der Spickzettel mit deinen Talenten, Blatt 3 die Regeln (Momentum,
-          Bedrohung, Entschlossenheit und die eigenen Regeln der Runde), Blatt 4
-          die Biografie im selben Look. Dort stehen auch die Knöpfe zum{" "}
+          <strong>Deine Charakterseite</strong> zeigt danach Profilbild,
+          Personalakte, Werte, Biografie und Versionen als zunächst offene
+          Klapp-Panels untereinander. Ein Klick auf die Titelzeile klappt einen
+          Bereich ein oder wieder auf. Bei Personalakte und Biografie öffnet der
+          <strong>Stift</strong> das Formular an Ort und Stelle; die Werte
+          steigerst du mit AP (siehe unten). Ganz oben öffnet
+          <strong> „Charakterbogen“</strong> die Vorschau: Blatt 1 der
+          Personalbogen mit Stammdaten und Werten, Blatt 2 der Spickzettel mit
+          deinen Talenten, Blatt 3 die Regeln (Momentum, Bedrohung,
+          Entschlossenheit und die eigenen Regeln der Runde), Blatt 4 die
+          Biografie im selben Look. Dort stehen auch die Knöpfe zum{" "}
           <strong>Drucken</strong> und zum <strong>Speichern als PDF</strong> —
           die PDF-Datei enthält dieselben Blätter. Weil die Regeln für alle am
           Tisch gelten und an keinem Charakter hängen, stehen sie auf einem
@@ -225,6 +228,16 @@ export default function CharacterCreationGuide() {
           vorne, deine weiteren Merkmale trägst du dahinter ein. In „Meine
           Inhalte“ tauchen Charaktere nicht auf — der Charakter-Filter für
           Einsatzberichte und Gespräche bleibt dort aber erhalten.
+        </p>
+        <p>
+          Im Panel <strong>„Zusätzliche Dokumente“</strong> kannst du PDF-,
+          Markdown-, DOCX- und TXT-Dateien bis 8 MB in deiner privaten
+          Charakterakte hinterlegen, direkt im Browser lesen, herunterladen oder
+          wieder entfernen. Über <strong>„Charakter exportieren“</strong>
+          stellst du außerdem eine gemeinsame PDF-Datei zusammen: wahlweise mit
+          den Charakterdaten, einzelnen Zusatzdokumenten, vollständigen
+          veröffentlichten Missionen und/oder einzelnen Logbüchern, die dieser
+          Charakter verfasst hat.
         </p>
         <p>
           Ganz unten am Bogen findest du einen <strong>Spickzettel</strong>:
@@ -246,10 +259,10 @@ export default function CharacterCreationGuide() {
           <strong>Erschaffung wieder geöffnet</strong>, sind Attribute,
           Disziplinen, Talente und Schwerpunkte erneut frei editierbar. Die
           Steigerungen, die du seit dem Abschluss gekauft hattest, sind dabei
-          zurückgenommen und die AP wieder gutgeschrieben — sie stehen als Liste
-          im AP-Bereich deines Bogens. Verplane sie nicht neu: Beim Abschließen
-          werden genau diese Steigerungen automatisch wieder angewandt und die
-          AP erneut abgebucht.
+          zurückgenommen und die AP wieder gutgeschrieben. Der Bogen weist dich
+          auf die vorgemerkten Steigerungen hin. Verplane sie nicht neu: Beim
+          Abschließen werden genau diese Steigerungen automatisch wieder
+          angewandt und die AP erneut abgebucht.
         </p>
       </GuideSection>
     </GuideBody>

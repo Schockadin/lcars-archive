@@ -63,18 +63,21 @@ export default async function Dashboard({ user }: { user: User }) {
   const zeigtCharaktere = zeigt("charaktere");
   const zeigtNeuesLog = zeigt("neues-log");
   const zeigtNeuesGespraech = zeigt("neues-gespraech");
+  const zeigtNeuesEvent = zeigt("neues-event");
   const zeigtNeuenEintrag = zeigt("neuer-eintrag");
   const zeigtNeuenNpc = zeigt("neuer-npc");
   const zeigtImport = zeigt("import");
-  // Nur Logbuch und Gespräch brauchen vorgeladene Auswahllisten (Missionen,
-  // Gesprächspartner, NPCs, Orte …). Ein Datenbank-Eintrag und ein NPC sind
-  // dasselbe Formular mit vorgewählter Kategorie und kommen ohne aus — wer
-  // nur diese beiden Knöpfe zeigt, löst damit keine einzige Abfrage aus.
-  const brauchtFormularDaten = zeigtNeuesLog || zeigtNeuesGespraech;
+  // Logbuch, Gespräch und Event brauchen vorgeladene Auswahllisten
+  // (Missionen, Gesprächspartner, beteiligte Figuren …). Ein
+  // Datenbank-Eintrag und ein NPC sind dasselbe Formular mit vorgewählter
+  // Kategorie und kommen ohne aus — wer nur diese beiden Knöpfe zeigt, löst
+  // damit keine einzige Abfrage aus.
+  const brauchtEigeneCharaktere = zeigtNeuesLog || zeigtNeuesGespraech;
+  const brauchtFormularDaten = brauchtEigeneCharaktere || zeigtNeuesEvent;
   const brauchtRollen = brauchtFormularDaten;
   // Die Charakter-Liste brauchen zwei Dinge: die Sektion selbst und die
   // beiden Formulare, die fragen, mit welcher Figur geschrieben wird.
-  const brauchtCharaktere = zeigtCharaktere || brauchtFormularDaten;
+  const brauchtCharaktere = zeigtCharaktere || brauchtEigeneCharaktere;
 
   // Effektive Rechte (aus allen Rollen + Overrides) — der News-Feed muss
   // dieselbe Sichtbarkeit wie canView im Rest der App anwenden, nicht die
@@ -122,11 +125,19 @@ export default async function Dashboard({ user }: { user: User }) {
     ? await loadNewContentData(user, characters, roleMap, {
         missionLog: zeigtNeuesLog,
         dialogue: zeigtNeuesGespraech,
+        event: zeigtNeuesEvent,
       })
-    : { userId: user.id, missionLog: null, dialogue: null, mission: null };
+    : {
+        userId: user.id,
+        missionLog: null,
+        dialogue: null,
+        mission: null,
+        event: null,
+      };
   const anlegeKnoepfe = [
     ...(zeigtNeuesLog ? (["missionLog"] as const) : []),
     ...(zeigtNeuesGespraech ? (["dialogue"] as const) : []),
+    ...(zeigtNeuesEvent ? (["event"] as const) : []),
     ...(zeigtNeuenEintrag ? (["archiveEntry"] as const) : []),
     ...(zeigtNeuenNpc ? (["npc"] as const) : []),
   ];

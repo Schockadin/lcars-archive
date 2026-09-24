@@ -16,11 +16,13 @@ import {
   normalizeCategory,
   filterEvents,
   fmtDate,
+  isTimelineScope,
   missionEndDates,
   peopleOf,
   periodKey,
   periodLabel,
   sortEvents,
+  timelineScopeForCategory,
   yearsOf,
   type TimelineEvent,
   type TimelineScope,
@@ -28,6 +30,8 @@ import {
 import { chronologyCategoryHref } from "@/lib/contentRoutes";
 import ManualEventForm from "./ManualEventForm";
 import { HelpTitleRow } from "@/components/help/HelpHeading";
+import ModalOverlay from "@/components/ModalOverlay";
+import ContentImageGallery from "@/components/ContentImageGallery";
 
 // Die Chronologie als Zeitstrahl: links Datum und Schiene, rechts die
 // Ereigniskarte. Aufbau nach dem Entwurf (Jahresleiste, Monats-Trenner,
@@ -35,10 +39,9 @@ import { HelpTitleRow } from "@/components/help/HelpHeading";
 // Archiv — dieselbe Toolbar und dieselbe Aktenkarte wie überall.
 //
 // Die Chronologie ist zugleich die Missions-Übersicht: in der Vorgabe zeigt
-// sie GENAU die Missionsstarts, je einer führt auf seine Missionsseite. Wer
-// mehr will, schaltet den Umfang auf „Alle Ereignisse" — dann kommen
-// Logbücher, Marken im Text, Gespräche, Geburtstage und das vom Modell
-// Abgeleitete dazu, samt der Filter, die dafür nötig sind.
+// sie GENAU die Missionsstarts, je einer führt auf seine Missionsseite.
+// Events, Gespräche und Logbücher bilden eigene Bereiche; „Alles“ verbindet
+// den vollständigen Zeitstrahl.
 //
 // Alle Filter laufen im Browser über die bereits geladene Liste: die
 // Chronologie ist die Kampagne, nicht ein Suchindex — sie umfasst ein paar
@@ -56,10 +59,48 @@ function categoryFromPath(): string | null {
   return decodeURIComponent(segments[1]);
 }
 
+function selectionFromLocation(): {
+  scope: TimelineScope;
+  category: string | null;
+} {
+  const pathCategory = categoryFromPath();
+  if (pathCategory) {
+    const scope = timelineScopeForCategory(pathCategory);
+    return {
+      scope,
+      category: scope === "events" ? pathCategory : null,
+    };
+  }
+  const queryScope = new URLSearchParams(window.location.search).get("scope");
+  return {
+    scope:
+      queryScope && isTimelineScope(queryScope)
+        ? queryScope
+        : DEFAULT_TIMELINE_SCOPE,
+    category: null,
+  };
+}
+
+const SCOPE_DESCRIPTIONS: Record<TimelineScope, string> = {
+  missions: "Die Einsätze der Kampagne mit ihrem Zeitraum",
+  events: "Ereignisse und Meilensteine der Kampagne",
+  dialogues: "Abgeschlossene Gespräche der Kampagne",
+  logs: "Logbücher aus den Missionen",
+  all: "Alle datierten Inhalte der Kampagne",
+};
+
+function scopeCount(scope: TimelineScope, count: number): string {
+  if (scope === "missions") return count === 1 ? "Mission" : "Missionen";
+  if (scope === "dialogues") return count === 1 ? "Gespräch" : "Gespräche";
+  if (scope === "logs") return count === 1 ? "Logbuch" : "Logbücher";
+  return count === 1 ? "Ereignis" : "Ereignisse";
+}
+
 // initialCategory kommt aus der Route (/chronologie/[kategorie], siehe
-// src/app/chronologie/[kategorie]/page.tsx). Eine vorgewählte Ereignisart
-// setzt den Umfang zwingend auf „Alle Ereignisse": in der Missions-Ansicht
-// gibt es nur Missionen, /chronologie/conflict wäre dort garantiert leer.
+// src/app/chronologie/[kategorie]/page.tsx). Daraus folgt der passende
+// Bereich: log → Logbücher, dialogue → Gespräche, alle übrigen Arten →
+// Events. Die Server-Hülle reicht den Bereich normalerweise explizit mit;
+// die Ableitung hier hält die Komponente auch eingebettet konsistent.
 //
 // syncUrl schreibt die gewählte Art in die Adresszeile zurück — per
 // history.pushState statt router.push, damit der Zeitstrahl nicht neu geladen
@@ -79,6 +120,8 @@ export default function TimelineView({
   characters = [],
   latestEventDate = null,
   help,
+  currentUserId = null,
+  canModerateEvents = false,
 }: {
   events: TimelineEvent[];
   initialCategory?: string | null;
@@ -93,15 +136,21 @@ export default function TimelineView({
   // server-gerendert bleibt. Die Chronologie steht auch eingebettet auf
   // anderen Seiten; dort bleibt die Prop weg und die Kopfzeile ohne Knopf.
   help?: ReactNode;
+  currentUserId?: number | null;
+  canModerateEvents?: boolean;
 }) {
   const [scope, setScope] = useState<TimelineScope>(
-    initialScope ?? (initialCategory ? "all" : DEFAULT_TIMELINE_SCOPE),
+    initialScope ??
+      (initialCategory
+        ? timelineScopeForCategory(initialCategory)
+        : DEFAULT_TIMELINE_SCOPE),
   );
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<string | null>(initialCategory);
   const [person, setPerson] = useState<string | null>(initialPerson);
   const [year, setYear] = useState<string | null>(null);
+  const [manualDetail, setManualDetail] = useState<TimelineEvent | null>(null);
 
   // Ereignisart und Beteiligte richten sich nach dem UMFANG, nicht nach dem
   // ganzen Bestand: in der Missions-Ansicht gäbe es sonst Einträge, die
@@ -167,7 +216,11 @@ export default function TimelineView({
   useEffect(() => {
     if (!syncUrl) return;
     function onPop() {
-      setCategory(categoryFromPath());
+      const selection = selectionFromLocation();
+      setScope(selection.scope);
+      setCategory(selection.category);
+      setPerson(null);
+      setYear(null);
     }
     window.addEventListener("popstate", onPop);
     return () => window.removeEventListener("popstate", onPop);
@@ -181,7 +234,11 @@ export default function TimelineView({
   function changeCategory(next: string | null) {
     setCategory(next);
     if (syncUrl && next !== categoryFromPath()) {
-      window.history.pushState(null, "", chronologyCategoryHref(next));
+      window.history.pushState(
+        null,
+        "",
+        next ? chronologyCategoryHref(next) : "/chronologie?scope=events",
+      );
     }
   }
 
@@ -190,9 +247,16 @@ export default function TimelineView({
   // Filter stehen und die Liste wäre unerklärlich leer.
   function changeScope(next: TimelineScope) {
     setScope(next);
-    changeCategory(null);
+    setCategory(null);
     setPerson(null);
     setYear(null);
+    if (syncUrl) {
+      const href =
+        next === DEFAULT_TIMELINE_SCOPE
+          ? "/chronologie"
+          : `/chronologie?scope=${next}`;
+      window.history.pushState(null, "", href);
+    }
   }
 
   return (
@@ -202,10 +266,8 @@ export default function TimelineView({
           <h1 className="lcars-data-row-heading">Chronologie</h1>
         </HelpTitleRow>
         <p className="lcars-eyebrow">
-          {scope === "missions"
-            ? "Die Einsätze der Kampagne mit ihrem Zeitraum"
-            : "Ereignisse der Kampagne in ihrer eigenen Zeitrechnung"}{" "}
-          · {sortDir === "desc" ? "neueste zuerst" : "älteste zuerst"}
+          {SCOPE_DESCRIPTIONS[scope]} ·{" "}
+          {sortDir === "desc" ? "neueste zuerst" : "älteste zuerst"}
           {activeCategory ? ` · ${activeCategory}` : ""}
           {person ? ` · ${person}` : ""}
           {year ? ` · ${year}` : ""}
@@ -278,7 +340,7 @@ export default function TimelineView({
                 Auswahl mit einem Eintrag wäre nur Beiwerk. Läuft aber gerade
                 ein Filter, muss er sich zurücknehmen lassen, auch wenn er der
                 einzige Eintrag ist (wie bei der Jahresleiste). */}
-            {(categories.length > 1 || category !== null) && (
+            {scope === "events" && (
               <select
                 className="mission-author-filter rounded-full"
                 value={category ?? ""}
@@ -365,6 +427,7 @@ export default function TimelineView({
                     )}
                     <EventRow
                       event={event}
+                      onOpenManual={() => setManualDetail(event)}
                       endDate={
                         scope === "missions" && event.href
                           ? missionEnds.get(event.href)
@@ -381,15 +444,56 @@ export default function TimelineView({
               in der Missions-Ansicht wäre „12 von 480 Ereignissen" eine
               Auskunft über etwas, das gerade niemand sehen will. */}
           <p className="lcars-eyebrow mt-[12px]">
-            {scope === "missions"
-              ? visible.length === inScope.length
-                ? `${inScope.length} ${inScope.length === 1 ? "Mission" : "Missionen"}`
-                : `${visible.length} von ${inScope.length} Missionen`
-              : visible.length === events.length
-                ? `${events.length} Ereignisse`
-                : `${visible.length} von ${events.length} Ereignissen`}
+            {visible.length === inScope.length
+              ? `${inScope.length} ${scopeCount(scope, inScope.length)}`
+              : `${visible.length} von ${inScope.length} ${scopeCount(
+                  scope,
+                  inScope.length,
+                )}`}
           </p>
         </>
+      )}
+
+      {manualDetail?.origin === "manual" && manualDetail.manualEventId && (
+        <ModalOverlay
+          title={manualDetail.title}
+          onClose={() => setManualDetail(null)}
+          width={760}
+        >
+          <div className="flex flex-col gap-[12px]">
+            <p className="lcars-eyebrow">
+              {manualDetail.date ? fmtDate(manualDetail.date) : "Ohne Datum"}
+              {manualDetail.people.length > 0
+                ? ` · ${manualDetail.people.join(" · ")}`
+                : ""}
+            </p>
+            {manualDetail.detail && (
+              <p className="text-lcars-ink-contrast">{manualDetail.detail}</p>
+            )}
+            {manualDetail.fullDetailHtml ? (
+              <div
+                className="mission-body lcars-text"
+                dangerouslySetInnerHTML={{
+                  __html: manualDetail.fullDetailHtml,
+                }}
+              />
+            ) : (
+              <p className="lcars-empty-state">Kein Volltext hinterlegt.</p>
+            )}
+            <div className="flex items-center gap-[8px]">
+              <span className="lcars-eyebrow">Ereignisbilder</span>
+              <ContentImageGallery
+                contentType="timeline_event"
+                contentId={manualDetail.manualEventId}
+                canManage={
+                  canModerateEvents ||
+                  (currentUserId !== null &&
+                    currentUserId === manualDetail.manualEventCreatedBy)
+                }
+              />
+            </div>
+          </div>
+        </ModalOverlay>
       )}
     </div>
   );
@@ -406,11 +510,13 @@ export default function TimelineView({
 function EventRow({
   event,
   endDate,
+  onOpenManual,
 }: {
   event: TimelineEvent;
   // Nur im Umfang „Missionen" gesetzt: dann trägt die Karte den Zeitraum des
   // Einsatzes statt des Datums seines Beginns.
   endDate?: string;
+  onOpenManual: () => void;
 }) {
   const visual = categoryVisual(event.category);
 
@@ -427,6 +533,7 @@ function EventRow({
         // Ein von Hand eingetragenes Ereignis hat keinen Inhalt, auf den zu
         // zeigen wäre — dann steht der Titel als reiner Text.
         href={event.href ?? undefined}
+        onActivate={event.origin === "manual" ? onOpenManual : undefined}
         ariaLabel={
           event.date
             ? `${event.title} — ${visual.label}, ${fmtDate(event.date)}`
@@ -459,14 +566,7 @@ function EventRow({
         }
       >
         {event.detail && (
-          <ChronoPanel
-            label="Teaser"
-            open
-            // Von Hand eingetragene Beschreibungen sind Markdown (siehe
-            // getTimeline) — die übrigen sind schlichter Text.
-            bodyClassName={event.detailHtml ? "mission-body" : undefined}
-            bodyHtml={event.detailHtml ?? undefined}
-          >
+          <ChronoPanel label="Teaser" open>
             {event.detail}
           </ChronoPanel>
         )}

@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { MinusCircleIcon, PlusIcon } from "@/lib/icons";
 import {
   ATTRIBUTE_FIELDS,
@@ -16,13 +16,26 @@ import {
   type DistributionRule,
   type NumberFieldSpec,
 } from "@/lib/characterStats";
-import { creationBudget, type AdvancementRules } from "@/lib/advancement";
+import {
+  attributeStepCost,
+  checkAdvancement,
+  creationBudget,
+  departmentStepCost,
+  type AdvancementRules,
+} from "@/lib/advancement";
 import type { CharacterStats } from "@/types/characterStats";
 import type { Talent } from "@/lib/talentCatalog";
 import type { Focus } from "@/lib/focusCatalog";
 import { TalentModal } from "./TalentPicker";
 import { FocusModal } from "./FocusPicker";
 import EntryAddModal from "./EntryAddModal";
+
+export interface InlineAdvancement {
+  characterId: number;
+  availableAp: number;
+  pending: boolean;
+  submit: (payload: FormData) => void;
+}
 
 // Werte-Editor aus normalen Bedienelementen — Gegenstück zum Bogen-Faksimile,
 // das seit dem Umbau nur noch Vorschau ist (PersonnelFileView). Genutzt vom
@@ -108,9 +121,21 @@ function BudgetMeter({
   );
 }
 
-function SectionTitle({ en, de }: { en: string; de: string }) {
+function SectionTitle({
+  en,
+  de,
+  flat,
+}: {
+  en: string;
+  de: string;
+  flat: boolean;
+}) {
   return (
-    <h3 className="stat-sheet-section-title">
+    <h3
+      className={
+        flat ? "stat-editor-section-title" : "stat-sheet-section-title"
+      }
+    >
       {en} <span className="stat-label-secondary">{de}</span>
     </h3>
   );
@@ -125,6 +150,7 @@ function ValueBox({
   invalid,
   readOnly,
   idPrefix,
+  advanceButton,
 }: {
   field: NumberFieldSpec<string>;
   value: string;
@@ -132,6 +158,7 @@ function ValueBox({
   invalid: boolean;
   readOnly: boolean;
   idPrefix: string;
+  advanceButton?: ReactNode;
 }) {
   const id = `${idPrefix}-${field.key}`;
   return (
@@ -142,18 +169,21 @@ function ValueBox({
         </span>
         <span className="stat-label-secondary">{field.label}</span>
       </label>
-      <input
-        id={id}
-        type="number"
-        inputMode="numeric"
-        min={field.min}
-        max={field.max}
-        value={value}
-        readOnly={readOnly}
-        onChange={(e) => onChange(e.target.value)}
-        className={`stat-editor-value-input${invalid ? " stat-editor-value-input--bad" : ""}`}
-        aria-invalid={invalid || undefined}
-      />
+      <div className="stat-editor-value-control">
+        <input
+          id={id}
+          type="number"
+          inputMode="numeric"
+          min={field.min}
+          max={field.max}
+          value={value}
+          readOnly={readOnly}
+          onChange={(e) => onChange(e.target.value)}
+          className={`stat-editor-value-input${invalid ? " stat-editor-value-input--bad" : ""}`}
+          aria-invalid={invalid || undefined}
+        />
+        {advanceButton}
+      </div>
     </div>
   );
 }
@@ -182,6 +212,9 @@ export default function CharacterValuesEditor({
   focuses,
   species,
   idPrefix,
+  advancement,
+  showPersonnelFields = true,
+  flatSections = false,
 }: {
   stats: CharacterStats;
   onChange: (next: CharacterStats) => void;
@@ -195,6 +228,18 @@ export default function CharacterValuesEditor({
   species: string | null;
   // Präfix der Feld-IDs; auf einer Seite können zwei Editoren stehen.
   idPrefix: string;
+  // Nur auf der eigenen Charakterseite nach abgeschlossener Erschaffung:
+  // Inline-Steigerungen verwenden dieselbe Action und dieselbe Kostenprüfung
+  // wie früher das separate Advancement-Panel.
+  advancement?: InlineAdvancement;
+  // Der Anlege-Assistent führt diese Angaben weiterhin in seinem Werte-
+  // Schritt. Auf der bestehenden Charakterseite liegen sie dagegen in der
+  // zusammengeführten Personalakte und würden hier doppelt erscheinen.
+  showPersonnelFields?: boolean;
+  // Auf der bestehenden Charakterseite liegt der Editor bereits in einem
+  // gerahmten, aufklappbaren Werte-Panel. Dort brauchen die Untergruppen
+  // keine weiteren Panelrahmen; im Anlege-Assistenten bleiben sie erhalten.
+  flatSections?: boolean;
 }) {
   // Welches Hinzufügen-Fenster offen ist (Listen-Schlüssel), null = keines.
   const [adding, setAdding] = useState<string | null>(null);
@@ -234,6 +279,54 @@ export default function CharacterValuesEditor({
     return value === null ? "" : String(value);
   }
 
+  function advanceButton(
+    kind: "attribute" | "department",
+    key: string,
+    current: number | null,
+  ): ReactNode {
+    if (!locked || !advancement) return undefined;
+    const next = current === null ? null : current + 1;
+    const cost =
+      next === null
+        ? null
+        : kind === "attribute"
+          ? attributeStepCost(next, rules)
+          : departmentStepCost(next, rules);
+    const check = checkAdvancement(
+      stats,
+      { kind, key },
+      advancement.availableAp,
+      rules,
+    );
+    const allowed = check.ok;
+
+    return (
+      <button
+        type="button"
+        disabled={advancement.pending || !allowed}
+        title={
+          allowed
+            ? `Danach bleiben ${advancement.availableAp - check.plan.cost} AP`
+            : check.error
+        }
+        className={`stat-inline-advance ${
+          allowed
+            ? "stat-inline-advance--allowed"
+            : "stat-inline-advance--blocked"
+        }`}
+        onClick={() => {
+          const payload = new FormData();
+          payload.set("characterId", String(advancement.characterId));
+          payload.set("kind", kind);
+          payload.set("key", key);
+          advancement.submit(payload);
+        }}
+      >
+        +1 · {cost ?? "—"} AP
+      </button>
+    );
+  }
+
   const attributeValues = ATTRIBUTE_FIELDS.map((f) => stats.attributes[f.key]);
   const departmentValues = DEPARTMENT_FIELDS.map(
     (f) => stats.departments[f.key],
@@ -257,74 +350,82 @@ export default function CharacterValuesEditor({
   const managedLists = LIST_FIELDS.filter(
     (field) => !TEXTAREA_LISTS.has(field.key),
   );
+  const sectionClassName = flatSections
+    ? "stat-editor-section"
+    : "stat-sheet-section";
 
   return (
     <div className="flex flex-col gap-[16px]">
-      {/* ── Kopfdaten ─────────────────────────────────────────────── */}
-      <section className="stat-sheet-section">
-        <SectionTitle en="Personnel File" de="Kopfdaten" />
-        <div className="stat-editor-body">
-          <div className="stat-editor-grid">
-            {TEXT_FIELDS.map((field) => (
-              <div key={field.key} className="stat-editor-field">
+      {showPersonnelFields && (
+        <section className={sectionClassName}>
+          <SectionTitle
+            en="Personnel File"
+            de="Kopfdaten"
+            flat={flatSections}
+          />
+          <div className="stat-editor-body">
+            <div className="stat-editor-grid">
+              {TEXT_FIELDS.map((field) => (
+                <div key={field.key} className="stat-editor-field">
+                  <label
+                    htmlFor={`${idPrefix}-${field.key}`}
+                    className="stat-field-label"
+                  >
+                    <span className="stat-label-primary">
+                      {field.original ?? field.label}
+                    </span>
+                    <span className="stat-label-secondary">{field.label}</span>
+                  </label>
+                  <input
+                    id={`${idPrefix}-${field.key}`}
+                    type="text"
+                    value={stats[field.key] ?? ""}
+                    onChange={(event) =>
+                      patch({
+                        [field.key]: event.target.value,
+                      } as Partial<CharacterStats>)
+                    }
+                    className="stat-field-input"
+                  />
+                </div>
+              ))}
+
+              <div className="stat-editor-field">
                 <label
-                  htmlFor={`${idPrefix}-${field.key}`}
+                  htmlFor={`${idPrefix}-experience`}
                   className="stat-field-label"
                 >
-                  <span className="stat-label-primary">
-                    {field.original ?? field.label}
-                  </span>
-                  <span className="stat-label-secondary">{field.label}</span>
+                  <span className="stat-label-primary">Experience</span>
+                  <span className="stat-label-secondary">Erfahrungsstufe</span>
                 </label>
-                <input
-                  id={`${idPrefix}-${field.key}`}
-                  type="text"
-                  value={stats[field.key] ?? ""}
-                  onChange={(e) =>
+                <select
+                  id={`${idPrefix}-experience`}
+                  value={stats.experience ?? ""}
+                  onChange={(event) =>
                     patch({
-                      [field.key]: e.target.value,
-                    } as Partial<CharacterStats>)
+                      experience: isCharacterExperience(event.target.value)
+                        ? event.target.value
+                        : null,
+                    })
                   }
                   className="stat-field-input"
-                />
+                >
+                  <option value="">— keine Angabe —</option>
+                  {EXPERIENCE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </div>
-            ))}
-
-            <div className="stat-editor-field">
-              <label
-                htmlFor={`${idPrefix}-experience`}
-                className="stat-field-label"
-              >
-                <span className="stat-label-primary">Experience</span>
-                <span className="stat-label-secondary">Erfahrungsstufe</span>
-              </label>
-              <select
-                id={`${idPrefix}-experience`}
-                value={stats.experience ?? ""}
-                onChange={(e) =>
-                  patch({
-                    experience: isCharacterExperience(e.target.value)
-                      ? e.target.value
-                      : null,
-                  })
-                }
-                className="stat-field-input"
-              >
-                <option value="">— keine Angabe —</option>
-                {EXPERIENCE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ── Attribute ─────────────────────────────────────────────── */}
-      <section className="stat-sheet-section">
-        <SectionTitle en="Attributes" de="Attribute" />
+      <section className={sectionClassName}>
+        <SectionTitle en="Attributes" de="Attribute" flat={flatSections} />
         {!locked && (
           <BudgetMeter
             label="Attribute"
@@ -352,6 +453,11 @@ export default function CharacterValuesEditor({
                   attributeOver.has(stats.attributes[field.key] as number)
                 }
                 onChange={(next) => setNumber(field.key, next, "attributes")}
+                advanceButton={advanceButton(
+                  "attribute",
+                  field.key,
+                  stats.attributes[field.key],
+                )}
               />
             ))}
           </div>
@@ -359,8 +465,8 @@ export default function CharacterValuesEditor({
       </section>
 
       {/* ── Disziplinen ───────────────────────────────────────────── */}
-      <section className="stat-sheet-section">
-        <SectionTitle en="Departments" de="Disziplinen" />
+      <section className={sectionClassName}>
+        <SectionTitle en="Departments" de="Disziplinen" flat={flatSections} />
         {!locked && (
           <BudgetMeter
             label="Disziplinen"
@@ -388,6 +494,11 @@ export default function CharacterValuesEditor({
                   departmentOver.has(stats.departments[field.key] as number)
                 }
                 onChange={(next) => setNumber(field.key, next, "departments")}
+                advanceButton={advanceButton(
+                  "department",
+                  field.key,
+                  stats.departments[field.key],
+                )}
               />
             ))}
           </div>
@@ -403,8 +514,8 @@ export default function CharacterValuesEditor({
       </section>
 
       {/* ── Abgeleitete Werte ─────────────────────────────────────── */}
-      <section className="stat-sheet-section">
-        <SectionTitle en="Derived" de="Abgeleitete Werte" />
+      <section className={sectionClassName}>
+        <SectionTitle en="Derived" de="Abgeleitete Werte" flat={flatSections} />
         <p className="stat-sheet-rule">
           Der maximale Stress ergibt sich aus Fitness und dem Bonus aus Talenten
           und ist deshalb kein Eingabefeld.
@@ -448,8 +559,8 @@ export default function CharacterValuesEditor({
       </section>
 
       {/* ── Listen ────────────────────────────────────────────────── */}
-      <section className="stat-sheet-section">
-        <SectionTitle en="Lists" de="Listen" />
+      <section className={sectionClassName}>
+        <SectionTitle en="Lists" de="Listen" flat={flatSections} />
         <div className="stat-editor-body">
           {managedLists.map((field) => {
             const entries =
@@ -460,6 +571,12 @@ export default function CharacterValuesEditor({
             // Talente und Schwerpunkte sind nach dem Festschreiben nur noch
             // über AP zu haben; die übrigen Listen bleiben frei pflegbar.
             const listLocked = locked && (isCatalog || isFocus);
+            const listCost = isCatalog ? rules.talentCost : rules.focusCost;
+            const hasCatalogEntries = isCatalog
+              ? talents.length > 0
+              : focuses.length > 0;
+            const canBuyListEntry =
+              hasCatalogEntries && (advancement?.availableAp ?? -1) >= listCost;
             return (
               <div key={field.key} className="stat-editor-list">
                 <div className="stat-editor-list-head">
@@ -475,7 +592,31 @@ export default function CharacterValuesEditor({
                         {entries.length} / {free} frei
                       </span>
                     )}
-                    {!listLocked && (
+                    {listLocked && (isCatalog || isFocus) && advancement ? (
+                      <button
+                        type="button"
+                        disabled={advancement.pending || !canBuyListEntry}
+                        onClick={() => setAdding(field.key)}
+                        className={`stat-inline-advance ${
+                          canBuyListEntry
+                            ? "stat-inline-advance--allowed"
+                            : "stat-inline-advance--blocked"
+                        }`}
+                        aria-label={`${field.label} hinzufügen für ${
+                          listCost
+                        } AP`}
+                        title={
+                          canBuyListEntry
+                            ? `${field.label} hinzufügen`
+                            : hasCatalogEntries
+                              ? "Nicht genug AP"
+                              : "Der Katalog ist leer"
+                        }
+                      >
+                        <PlusIcon />
+                        {listCost} AP
+                      </button>
+                    ) : !listLocked ? (
                       // Icon statt Beschriftung: die Pille „Hinzufügen" war
                       // 180px breit und schob die Listenkopfzeile auf einem
                       // Telefon über den Bildschirmrand hinaus. Was sie tut,
@@ -501,7 +642,7 @@ export default function CharacterValuesEditor({
                       >
                         <PlusIcon />
                       </button>
-                    )}
+                    ) : null}
                   </span>
                 </div>
 
@@ -578,11 +719,24 @@ export default function CharacterValuesEditor({
           species={species}
           taken={stats.talents}
           // Während der Erschaffung kommen Talente aus dem Freikontingent —
-          // kosten also nichts. Gesteigert wird über das AP-Panel.
-          cost={null}
-          affordable
+          // kosten also nichts. Nach dem Festschreiben wird direkt hier mit
+          // AP gesteigert.
+          cost={locked ? rules.talentCost : null}
+          affordable={
+            !locked ||
+            !advancement ||
+            advancement.availableAp >= rules.talentCost
+          }
           onPick={(entry) => {
-            setList(CATALOG_LIST, (prev) => [...prev, entry]);
+            if (locked && advancement) {
+              const payload = new FormData();
+              payload.set("characterId", String(advancement.characterId));
+              payload.set("kind", "talent");
+              payload.set("entry", entry);
+              advancement.submit(payload);
+            } else {
+              setList(CATALOG_LIST, (prev) => [...prev, entry]);
+            }
             setAdding(null);
           }}
           onClose={() => setAdding(null)}
@@ -594,11 +748,23 @@ export default function CharacterValuesEditor({
           taken={stats.focuses}
           // Während der Erschaffung kommen Schwerpunkte aus dem
           // Freikontingent — kosten also nichts. Gesteigert wird über das
-          // AP-Panel.
-          cost={null}
-          affordable
+          // direkt hier mit AP.
+          cost={locked ? rules.focusCost : null}
+          affordable={
+            !locked ||
+            !advancement ||
+            advancement.availableAp >= rules.focusCost
+          }
           onPick={(name) => {
-            setList(FOCUS_LIST, (prev) => [...prev, name]);
+            if (locked && advancement) {
+              const payload = new FormData();
+              payload.set("characterId", String(advancement.characterId));
+              payload.set("kind", "focus");
+              payload.set("entry", name);
+              advancement.submit(payload);
+            } else {
+              setList(FOCUS_LIST, (prev) => [...prev, name]);
+            }
             setAdding(null);
           }}
           onClose={() => setAdding(null)}

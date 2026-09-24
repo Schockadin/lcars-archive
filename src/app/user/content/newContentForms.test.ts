@@ -28,6 +28,7 @@ function alles(over: Partial<NewContentData> = {}): NewContentData {
       defaultLogDate: null,
     },
     mission: { defaultStartedAt: null, characters: [] },
+    event: { defaultDate: null, characters: [] },
     ...over,
   };
 }
@@ -46,6 +47,7 @@ describe("visibleNewContentForms", () => {
     expect(visibleNewContentForms(alles())).toEqual([
       "missionLog",
       "dialogue",
+      "event",
       "archiveEntry",
       "npc",
       "mission",
@@ -58,7 +60,12 @@ describe("visibleNewContentForms", () => {
   it("lässt weg, wofür dieses Konto keine Daten hat", () => {
     expect(
       visibleNewContentForms(
-        alles({ missionLog: null, dialogue: null, mission: null }),
+        alles({
+          missionLog: null,
+          dialogue: null,
+          mission: null,
+          event: null,
+        }),
       ),
     ).toEqual(["archiveEntry", "npc"]);
   });

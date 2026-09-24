@@ -32,6 +32,10 @@ import {
   missionLogEditHref,
   missionLogHref,
 } from "@/lib/contentRoutes";
+import { categoryVisual } from "@/lib/timelineTypes";
+import type { ManualEventForEdit } from "@/lib/timelineManualEventTypes";
+import ManualEventForm from "@/components/timeline/ManualEventForm";
+import DeleteManualEventButton from "./DeleteManualEventButton";
 
 // Charaktere sind bewusst KEINE Kategorie mehr: sie haben mit
 // /user/characters eine eigene Übersicht (inkl. Werte-Formular). Die
@@ -49,13 +53,19 @@ export interface ContentFilterCharacter {
 // Die Inhaltsarten dieser Seite. „dialogue" ist kein eigener Owner-Typ (ein
 // Gespräch ist ein archive_entry der Kategorie „dialogue"), wird hier aber
 // wie überall getrennt ausgewiesen.
-type ContentKind = "mission_log" | "dialogue" | "archive_entry" | "mission";
+type ContentKind =
+  | "mission_log"
+  | "dialogue"
+  | "timeline_event"
+  | "archive_entry"
+  | "mission";
 
 // Reihenfolge der Abschnitte bei der Sortierung nach Kategorie — von dem,
 // was beim Spielen entsteht, zu dem, was die Runde verwaltet.
 const KIND_ORDER: ContentKind[] = [
   "mission_log",
   "dialogue",
+  "timeline_event",
   "archive_entry",
   "mission",
 ];
@@ -75,6 +85,7 @@ const CATEGORY_LABELS: Record<CategoryFilter, string> = {
   drafts: "Nur Entwürfe",
   mission_log: CONTENT_TYPE_LABEL_PLURAL.mission_log,
   dialogue: CONTENT_TYPE_LABEL_PLURAL.dialogue,
+  timeline_event: "Events",
   archive_entry: CONTENT_TYPE_LABEL_PLURAL.archive_entry,
   mission: CONTENT_TYPE_LABEL_PLURAL.mission,
 };
@@ -118,6 +129,8 @@ export default function UserContentBrowser({
   dialogues,
   archiveEntries,
   missions,
+  manualEvents = [],
+  eventCharacters = [],
   canManageMissions,
   canLinkAnyContent = false,
   ownUserId,
@@ -127,6 +140,8 @@ export default function UserContentBrowser({
   dialogues: DialogueSummary[];
   archiveEntries: UserContentArchiveEntry[];
   missions: MissionPreview[];
+  manualEvents?: ManualEventForEdit[];
+  eventCharacters?: { id: number; name: string }[];
   canManageMissions: boolean;
   // Trägt die Person content.autolink_tools? Logbücher und Datenbank-Einträge
   // dieser Seite gehören ihr ohnehin selbst (getLogsForUser/
@@ -172,10 +187,18 @@ export default function UserContentBrowser({
     missions,
     (state, id: number) => state.filter((m) => m.id !== id),
   );
+  const [optimisticManualEvents, removeOptimisticManualEvent] = useOptimistic(
+    manualEvents,
+    (state, id: number) => state.filter((event) => event.id !== id),
+  );
 
   const items = useMemo<ContentItem[]>(() => {
     const dotColor = (kind: ContentKind, isDraft: boolean) =>
-      isDraft ? CONTENT_DRAFT_COLOR : CONTENT_TYPE_COLOR[kind];
+      isDraft
+        ? CONTENT_DRAFT_COLOR
+        : kind === "timeline_event"
+          ? "var(--lcars-quaternary)"
+          : CONTENT_TYPE_COLOR[kind];
 
     const logItems: ContentItem[] = optimisticLogs.map((log) => ({
       key: `mission_log-${log.id}`,
@@ -277,6 +300,51 @@ export default function UserContentBrowser({
         ) : null,
     }));
 
+    const eventItems: ContentItem[] = optimisticManualEvents.map((event) => {
+      const visual = categoryVisual(event.category);
+      return {
+        key: `timeline_event-${event.id}`,
+        kind: "timeline_event",
+        title: event.title,
+        href: "/chronologie?scope=events",
+        isDraft: false,
+        color: visual.color,
+        meta: (
+          <>
+            <span>
+              <b>Datum</b> {fmtDate(event.date)}
+            </span>
+            <span>
+              <b>Art</b> {visual.label}
+            </span>
+            {event.characterNames.length > 0 && (
+              <span>
+                <b>Beteiligte</b> {event.characterNames.join(", ")}
+              </span>
+            )}
+          </>
+        ),
+        actions: (
+          <ContentActionRow
+            className={ACTION_ROW_SPACING}
+            extraAction={
+              <ManualEventForm
+                defaultDate={event.date}
+                characters={eventCharacters}
+                event={event}
+              />
+            }
+            deleteButton={
+              <DeleteManualEventButton
+                id={event.id}
+                onOptimisticDelete={() => removeOptimisticManualEvent(event.id)}
+              />
+            }
+          />
+        ),
+      };
+    });
+
     const archiveItems: ContentItem[] = optimisticArchiveEntries.map(
       (entry) => ({
         key: `archive_entry-${entry.id}`,
@@ -360,12 +428,20 @@ export default function UserContentBrowser({
         }))
       : [];
 
-    return [...logItems, ...dialogueItems, ...archiveItems, ...missionItems];
+    return [
+      ...logItems,
+      ...dialogueItems,
+      ...eventItems,
+      ...archiveItems,
+      ...missionItems,
+    ];
   }, [
     optimisticLogs,
     optimisticDialogues,
     optimisticArchiveEntries,
     optimisticMissions,
+    optimisticManualEvents,
+    eventCharacters,
     canManageMissions,
     canLinkAnyContent,
     ownUserId,
@@ -373,6 +449,7 @@ export default function UserContentBrowser({
     removeOptimisticDialogue,
     removeOptimisticArchiveEntry,
     removeOptimisticMission,
+    removeOptimisticManualEvent,
   ]);
 
   const list = useMemo(() => {
@@ -475,7 +552,9 @@ export default function UserContentBrowser({
                 <Fragment key={item.key}>
                   {startsSection && (
                     <h2 className="timeline-period archive-letter-period">
-                      {CONTENT_TYPE_LABEL_PLURAL[item.kind]}
+                      {item.kind === "timeline_event"
+                        ? "Events"
+                        : CONTENT_TYPE_LABEL_PLURAL[item.kind]}
                     </h2>
                   )}
                   <ChronoRow color={item.color}>
@@ -484,13 +563,19 @@ export default function UserContentBrowser({
                         <ChronoCard
                           color={item.color}
                           tag={
-                            item.isDraft
-                              ? `${CONTENT_TYPE_LABEL[item.kind]} · Entwurf`
-                              : CONTENT_TYPE_LABEL[item.kind]
+                            item.kind === "timeline_event"
+                              ? "Event"
+                              : item.isDraft
+                                ? `${CONTENT_TYPE_LABEL[item.kind]} · Entwurf`
+                                : CONTENT_TYPE_LABEL[item.kind]
                           }
                           title={item.title}
                           href={item.href}
-                          ariaLabel={`${item.title} — ${CONTENT_TYPE_LABEL[item.kind]}`}
+                          ariaLabel={`${item.title} — ${
+                            item.kind === "timeline_event"
+                              ? "Event"
+                              : CONTENT_TYPE_LABEL[item.kind]
+                          }`}
                           meta={item.meta}
                         />
                       </div>

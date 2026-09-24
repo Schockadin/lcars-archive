@@ -16,9 +16,7 @@ import type { Character } from "@/types/character";
 
 const VALID_STATUSES: Character["status"][] = ["active", "retired", "deceased"];
 
-export interface CharacterHeadInput {
-  name: string;
-  status: Character["status"];
+export interface CharacterPortraitInput {
   portrait: string | null;
   // Das Original aus dem Altbestand: dort steht in portrait das eingebackene
   // Bild und hier das Bild, aus dem es geschnitten wurde. Neue Datensätze
@@ -26,6 +24,11 @@ export interface CharacterHeadInput {
   // src/lib/portraitCrop.ts).
   portraitSource: string | null;
   portraitCrop: PortraitCrop | null;
+}
+
+export interface CharacterHeadInput extends CharacterPortraitInput {
+  name: string;
+  status: Character["status"];
   rank: string | null;
   species: string[];
   homeworld: string | null;
@@ -42,6 +45,9 @@ export interface CharacterHeadInput {
 export type CharacterHeadResult =
   | { head: CharacterHeadInput }
   | { error: string };
+export type CharacterPortraitResult =
+  | { portrait: CharacterPortraitInput }
+  | { error: string };
 
 // Was am Charakter schon gespeichert ist. Wird beim Bearbeiten mitgegeben,
 // damit ein Speichern ohne neues Bild das vorhandene behält — das Formular
@@ -52,6 +58,57 @@ export interface CurrentPortrait {
   // Der bisher gespeicherte Ausschnitt — er bleibt stehen, wenn das Formular
   // gar kein Ausschnitt-Feld mitschickt.
   portraitCrop?: unknown;
+}
+
+// Liest ausschließlich Bilddatei und Ausschnitt. Die Personalakte verwendet
+// dieselbe Funktion weiterhin, wenn sie aus dem Anlege-Assistenten kommt; auf
+// der bestehenden Charakterseite ruft das eigene Profilbild-Panel sie direkt
+// auf. So gelten Upload- und Sicherheitsregeln an beiden Stellen identisch.
+export async function readCharacterPortrait(
+  formData: FormData,
+  current?: CurrentPortrait | null,
+): Promise<CharacterPortraitResult> {
+  // Portrait: eine hochgeladene Datei — sonst bleibt stehen, was schon
+  // gespeichert ist. Hochgeladen wird das ORIGINAL; der gewählte Ausschnitt
+  // ist eine Anweisung dazu (Zoom + Mittelpunkt) und wird erst beim Anzeigen
+  // angewandt (siehe src/lib/portraitCrop.ts).
+  //
+  // Eine Bild-ADRESSE gibt es nicht mehr: Der Server liest kein Adressfeld aus
+  // dem Formular, sondern nimmt den bisherigen Stand vom Aufrufer entgegen.
+  let portrait = current?.portrait ?? null;
+  let portraitSource = current?.portraitSource ?? null;
+
+  const portraitFile = formData.get("portraitFile");
+  if (portraitFile instanceof File && portraitFile.size > 0) {
+    try {
+      portrait = await uploadCharacterPortraitImage({
+        buffer: Buffer.from(await portraitFile.arrayBuffer()),
+        mimeType: portraitFile.type,
+      });
+      // Das hochgeladene Bild ist das neue Original; der Altbestands-Zeiger
+      // auf ein früheres Original darf nicht weiterverwendet werden.
+      portraitSource = null;
+    } catch (err) {
+      if (err instanceof InvalidAssetError) return { error: err.message };
+      throw err;
+    }
+  }
+
+  // Fehlt das Feld ganz (z.B. Personalakte ohne Portrait-Bereich), bleibt der
+  // gespeicherte Ausschnitt stehen.
+  const cropField = formData.get("portraitCrop");
+  const crop =
+    cropField === null
+      ? parsePortraitCrop(current?.portraitCrop)
+      : parsePortraitCrop(safeJson(cropField));
+
+  return {
+    portrait: {
+      portrait,
+      portraitSource,
+      portraitCrop: isDefaultCrop(crop) ? null : crop,
+    },
+  };
 }
 
 export async function readCharacterHead(
@@ -66,53 +123,8 @@ export async function readCharacterHead(
     return { error: "Ungültiger Status." };
   }
 
-  // Portrait: eine hochgeladene Datei — sonst bleibt stehen, was schon
-  // gespeichert ist. Hochgeladen wird das ORIGINAL; der gewählte Ausschnitt
-  // ist eine Anweisung dazu (Zoom + Mittelpunkt) und wird erst beim Anzeigen
-  // angewandt (siehe src/lib/portraitCrop.ts). Bis v1.29.57 buk der Browser
-  // den Ausschnitt in ein zweites Bild ein und lud dieses hoch.
-  //
-  // Eine Bild-ADRESSE gibt es nicht mehr: ein Portrait, das auf einem fremden
-  // Server liegt, verschwindet, wenn dort jemand aufräumt, lässt sich hier
-  // nicht zuschneiden (die Leinwand wird „verunreinigt", siehe
-  // PortraitPicker) und meldet jeden Aufruf des Bogens an diesen Server.
-  // Deshalb liest diese Funktion auch KEIN Adressfeld mehr aus dem Formular,
-  // sondern nimmt den bisherigen Stand vom Aufrufer entgegen — eine Adresse
-  // kann damit gar nicht mehr aus einem Formular kommen, auch nicht aus einem
-  // von Hand zusammengebauten.
-  //
-  let portrait = current?.portrait ?? null;
-  let portraitSource = current?.portraitSource ?? null;
-
-  const portraitFile = formData.get("portraitFile");
-  if (portraitFile instanceof File && portraitFile.size > 0) {
-    try {
-      const uploaded = await uploadCharacterPortraitImage({
-        buffer: Buffer.from(await portraitFile.arrayBuffer()),
-        mimeType: portraitFile.type,
-      });
-      // Die hochgeladene Datei IST das Portrait — unbeschnitten. Der
-      // Altbestands-Zeiger auf ein früheres Original wird damit gegenstandslos
-      // und fällt weg, sonst zeigte der Bogen weiter das alte Bild.
-      portrait = uploaded;
-      portraitSource = null;
-    } catch (err) {
-      if (err instanceof InvalidAssetError) return { error: err.message };
-      throw err;
-    }
-  }
-
-  // Der Ausschnitt: das Formular schickt ihn immer mit (PortraitPicker), auch
-  // wenn nur er geändert wurde. Fehlt das Feld ganz — ein Formular ohne
-  // Portrait-Bereich —, bleibt der gespeicherte Wert stehen.
-  const cropField = formData.get("portraitCrop");
-  const crop =
-    cropField === null
-      ? parsePortraitCrop(current?.portraitCrop)
-      : parsePortraitCrop(safeJson(cropField));
-  // Ein unveränderter Ausschnitt braucht nicht gespeichert zu werden — er ist
-  // die Vorgabe.
-  const portraitCrop: PortraitCrop | null = isDefaultCrop(crop) ? null : crop;
+  const portraitResult = await readCharacterPortrait(formData, current);
+  if ("error" in portraitResult) return portraitResult;
 
   const ageRaw = String(formData.get("age") ?? "").trim();
   const age = ageRaw ? Number(ageRaw) : null;
@@ -133,9 +145,7 @@ export async function readCharacterHead(
     head: {
       name,
       status: status as Character["status"],
-      portrait,
-      portraitSource,
-      portraitCrop,
+      ...portraitResult.portrait,
       rank: String(formData.get("rank") ?? "").trim() || null,
       species: parseList(formData.get("species")),
       homeworld: String(formData.get("homeworld") ?? "").trim() || null,

@@ -26,6 +26,10 @@ export const DB_TABLE_COLUMNS = {
     "rank", "bio", "metadata", "source_md", "frontmatter", "created_at",
     "updated_at", "deleted_at", "is_draft", "character_color",
   ],
+  character_documents: [
+    "id", "character_id", "r2_key", "file_name", "file_kind", "content_mime",
+    "size_bytes", "extracted_text", "uploaded_by", "created_at",
+  ],
   missions: [
     "id", "slug", "title", "status", "started_at", "ended_at", "metadata",
     "source_md", "frontmatter", "created_at", "updated_at", "owner_user_id",
@@ -60,7 +64,7 @@ export const DB_TABLE_COLUMNS = {
   ],
   timeline_events: [
     "id", "event_date", "title", "category", "source_type", "source_slug",
-    "href", "origin", "detail", "confidence", "created_by", "created_at",
+    "href", "origin", "detail", "teaser", "confidence", "created_by", "created_at",
   ],
   timeline_event_characters: ["event_id", "character_id"],
   content_images: [
@@ -193,10 +197,11 @@ export const VIEWABLE_TABLES: TableName[] = DB_TABLES.filter(
   (table) => !(HIDDEN_FROM_VIEW as readonly string[]).includes(table),
 );
 
-// Die vier Inhaltstabellen: sie sieht jeder mit sql_read, alles andere
+// Die Inhaltstabellen: sie sieht jeder mit sql_read, alles andere
 // verlangt zusätzlich db_view_system_tables.
 export const CONTENT_TABLES: readonly TableName[] = [
   "characters",
+  "character_documents",
   "missions",
   "mission_logs",
   "archive_entries",
@@ -244,6 +249,7 @@ export const BACKUP_TABLES = [
   // einer Spielsitzung zugeordnet hat.
   "game_sessions",
   "characters",
+  "character_documents",
   "missions",
   "mission_participants",
   "mission_logs",

@@ -1,5 +1,6 @@
 // src/app/forbidden.tsx
 import { LcarsMenuItem } from "@/components/lcars";
+import ErrorPageReporter from "./_shared/ErrorPageReporter";
 
 // Wird von forbidden() (next/navigation) gerendert — ausgelöst von den
 // Zugriffs-Guards in src/lib/dal.ts, src/app/user/dal.ts und
@@ -10,6 +11,7 @@ import { LcarsMenuItem } from "@/components/lcars";
 export default function Forbidden() {
   return (
     <div className="flex flex-col items-center justify-center gap-[16px] pt-[80px] px-8 text-center">
+      <ErrorPageReporter status={403} />
       {/* Fehlercode – groß und in LCARS-Amber, wie not-found.tsx */}
       <div
         className="font-lcars-mono uppercase tracking-widest text-lcars-primary-ink"

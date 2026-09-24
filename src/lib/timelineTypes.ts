@@ -12,11 +12,10 @@ import { RESERVED_CHRONOLOGY_SEGMENTS } from "@/lib/contentRoutes";
 export { fmtDate };
 
 // Woher ein Ereignis stammt. Die Unterscheidung steht in der Ansicht, weil
-// „vom Modell aus dem Text gelesen" etwas anderes ist als „so gepflegt":
+// Altbestand aus der früheren Modellableitung ist etwas anderes als „so gepflegt":
 //   metadata — aus den Feldern des Inhalts (Missionsdatum, Logbuch-Datum, …)
 //   marker   — aus einem <!-- timeline: … -->-Marker im Fließtext
-//   inferred — vom Sprachmodell aus dem Text abgeleitet (siehe
-//              src/lib/timelineInference.ts), von der Spielleitung übernommen
+//   inferred — Altbestand aus der früheren Modellableitung
 //   manual   — von Hand eingetragen, ohne zugehörigen Inhalt (ein
 //              Kampagnen-Meilenstein, der in keinem Eintrag steht)
 export type TimelineOrigin = "metadata" | "marker" | "inferred" | "manual";
@@ -66,7 +65,7 @@ const CATEGORY_BY_KEY = new Map(
 );
 
 // Zwei Schlüssel, eine Sache: die gepflegte Ereignisart heißt 'character'
-// (Beschriftung „Person"), aus Markern und aus dem Sprachmodell kam mitunter
+// (Beschriftung „Person"), aus Markern und früheren Ableitungen kam mitunter
 // 'person'. Als unbekannter Wert fiel das auf „Sonstiges" zurück und stand
 // als zweite, gleichbedeutende Art in Auswahl und Jahresleiste. Seit v1.29.49
 // laufen beide auf 'character' zusammen — Farbe und Beschriftung sind die der
@@ -76,7 +75,7 @@ const CATEGORY_ALIASES: Record<string, TimelineCategory> = {
   charakter: "character",
 };
 
-// Normalisiert einen Kategorie-Wert (aus Marker, Modell, Route oder
+// Normalisiert einen Kategorie-Wert (aus Marker, Altbestand, Route oder
 // Formular). Unbekannte Werte bleiben unangetastet — categoryVisual zeigt
 // sie weiterhin als „Sonstiges" mit ihrem eigenen Text.
 export function normalizeCategory(key: string): string {
@@ -115,11 +114,11 @@ export interface TimelineEvent {
   title: string;
   // Ein bis zwei Sätze zum Ereignis; leer, wo es nichts zu sagen gibt.
   detail: string | null;
-  // Nur bei von Hand eingetragenen Ereignissen gesetzt: deren Beschreibung
-  // wird als Markdown erfasst (MarkdownEditor) und deshalb auch als Markdown
-  // angezeigt. Die übrigen Beschreibungen sind generierte Sätze („Beginn des
-  // Einsatzes.") oder Textausschnitte — dafür lohnt kein HTML.
-  detailHtml?: string | null;
+  // Eigene Ereignisse tragen auf der Karte `detail` als kurzen Teaser und
+  // öffnen ihren davon getrennten Markdown-Volltext in einem Overlay.
+  fullDetailHtml?: string | null;
+  manualEventId?: number;
+  manualEventCreatedBy?: number | null;
   category: string;
   origin: TimelineOrigin;
   sourceType: TimelineSourceType;
@@ -299,15 +298,67 @@ export function yearsOf(events: TimelineEvent[]): string[] {
 // überfliegen will, soll nicht erst filtern müssen.
 export const TIMELINE_SCOPES = [
   { key: "missions", label: "Missionen" },
-  { key: "all", label: "Alle Ereignisse" },
+  { key: "events", label: "Events" },
+  { key: "dialogues", label: "Gespräche" },
+  { key: "logs", label: "Logbücher" },
+  { key: "all", label: "Alles" },
 ] as const;
 
 export type TimelineScope = (typeof TIMELINE_SCOPES)[number]["key"];
 
 export const DEFAULT_TIMELINE_SCOPE: TimelineScope = "missions";
 
+export function isTimelineScope(value: string): value is TimelineScope {
+  return TIMELINE_SCOPES.some((scope) => scope.key === value);
+}
+
 export function isMissionStart(event: TimelineEvent): boolean {
   return event.sourceType === "mission" && event.phase === "start";
+}
+
+export function timelineScopeForCategory(category: string): TimelineScope {
+  switch (normalizeCategory(category)) {
+    case "mission":
+      return "missions";
+    case "log":
+      return "logs";
+    case "dialogue":
+      return "dialogues";
+    default:
+      return "events";
+  }
+}
+
+function eventMatchesScope(
+  event: TimelineEvent,
+  scope: TimelineScope,
+): boolean {
+  // Die fünf Umfänge trennen QUELLEN, nicht Kategorien. Ein frei gepflegtes
+  // Event darf z. B. die Ereignisart „Logbuch“ tragen und bleibt trotzdem ein
+  // Event; umgekehrt ist ein Marker innerhalb einer Mission kein Missionseintrag.
+  // Nur die je Inhalt automatisch erzeugten Metadaten-Karten repräsentieren
+  // Missionen, Logbücher und Gespräche als solche.
+  const isMissionEntry =
+    event.sourceType === "mission" && event.origin === "metadata";
+  const isLogEntry =
+    event.sourceType === "mission_log" && event.origin === "metadata";
+  const isDialogueEntry =
+    event.sourceType === "archive_entry" &&
+    event.origin === "metadata" &&
+    normalizeCategory(event.category) === "dialogue";
+
+  switch (scope) {
+    case "missions":
+      return isMissionStart(event);
+    case "logs":
+      return isLogEntry;
+    case "dialogues":
+      return isDialogueEntry;
+    case "events":
+      return !isMissionEntry && !isLogEntry && !isDialogueEntry;
+    case "all":
+      return true;
+  }
 }
 
 // Die Kategorie-Routen (/chronologie/[kategorie], siehe contentRoutes.ts)
@@ -385,7 +436,7 @@ export function filterEvents(
   const q = filter.query.trim().toLowerCase();
   const scope = filter.scope ?? "all";
   return events.filter((event) => {
-    if (scope === "missions" && !isMissionStart(event)) return false;
+    if (!eventMatchesScope(event, scope)) return false;
     if (filter.person && !event.people.includes(filter.person)) return false;
     // Über die normalisierten Schlüssel vergleichen: ein Ereignis mit der
     // Alt-Art „person" gehört zur Auswahl „Person" (character).
@@ -395,7 +446,10 @@ export function filterEvents(
     ) {
       return false;
     }
-    if (filter.year && (event.date === null || yearOf(event.date) !== filter.year))
+    if (
+      filter.year &&
+      (event.date === null || yearOf(event.date) !== filter.year)
+    )
       return false;
     if (!q) return true;
     // Gesucht wird über das, was auf der Karte steht — Titel, Beschreibung,

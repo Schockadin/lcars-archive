@@ -8,6 +8,7 @@ import { stdin, stdout } from "process";
 // Alle Tabellen in der richtigen Reihenfolge (oder einfach CASCADE nutzen)
 // Wir droppen in umgekehrter Dependency-Reihenfolge – CASCADE macht's ohnehin sicher.
 const TABLES = [
+  "character_documents",
   "timeline_events",
   "archive_links",
   "dialogue_messages",

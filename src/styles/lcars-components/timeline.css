@@ -407,3 +407,13 @@
 .timeline-newevent-row > * {
   flex: 1 1 180px;
 }
+.timeline-card-title-button {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}

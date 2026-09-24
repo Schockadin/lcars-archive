@@ -2,7 +2,6 @@
 import { useMemo } from "react";
 import { Character } from "@/types/character";
 import {
-  LcarsDataRow,
   LcarsToc,
   LcarsReadingModeToggle,
   type TocHeading,
@@ -13,17 +12,15 @@ import type { Viewer } from "@/lib/visibility";
 import type { FollowState } from "@/app/actions/follows";
 import ContentActionsPanel from "@/components/ContentActionsPanel";
 import { FileTextIcon } from "@/lib/icons";
-import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import {
   CHARACTER_STATUS_BG,
   CHARACTER_STATUS_COLOR,
   CHARACTER_STATUS_LABEL,
 } from "@/lib/characterFormat";
-import {
-  characterLogsHref,
-  characterSheetHref,
-  dialoguesHref,
-} from "@/lib/contentRoutes";
+import { characterSheetHref } from "@/lib/contentRoutes";
+import CharacterChronologyLinks, {
+  type CharacterChronologyCounts,
+} from "./CharacterChronologyLinks";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
 function slugify(text: string): string {
@@ -128,16 +125,14 @@ const BAR_SEGMENTS: { flex: number; color: string }[] = [
 
 export default function CharacterHero({
   character,
-  logCount = 0,
-  conversationCount = 0,
+  chronologyCounts,
   viewer,
   owners,
   displayAge = null,
   followInitialState,
 }: {
   character: Character;
-  logCount?: number;
-  conversationCount?: number;
+  chronologyCounts: CharacterChronologyCounts;
   viewer: Viewer | null;
   owners: { id: number; name: string }[];
   // Aus Geburtsdatum + Ingame-Jahr abgeleitetes Alter (Fallback: metadata.age),
@@ -220,24 +215,12 @@ export default function CharacterHero({
               characterId={character.id}
             />
 
-            {/* Schnellzugriffe direkt unter dem Bild: Logs + Gespräche des
-                Charakters, jeweils mit Anzahl. Beide führen in die
-                Chronologie, auf diese Person gefiltert — die Gespräche haben
-                dort seit dem Umzug aus dem Charaktere-Bereich ihr Zuhause. */}
-            <div className="char-file-links">
-              <LcarsDataRow
-                value={logCount}
-                label="Logs"
-                href={characterLogsHref(character.name)}
-                color={CONTENT_TYPE_COLOR.mission_log}
-              />
-              <LcarsDataRow
-                value={conversationCount}
-                label="Gespräche"
-                href={dialoguesHref(character.name)}
-                color={CONTENT_TYPE_COLOR.dialogue}
-              />
-            </div>
+            {/* Schnellzugriffe direkt unter dem Bild: alle vier Bereiche der
+                Chronologie, jeweils auf diese Figur vorgefiltert. */}
+            <CharacterChronologyLinks
+              characterName={character.name}
+              counts={chronologyCounts}
+            />
 
             <div className="char-file-data">
               <FileField label="Akten-ID" value={recordId} />

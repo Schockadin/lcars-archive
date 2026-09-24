@@ -10,7 +10,6 @@ import type { CharacterStats } from "@/types/characterStats";
 import { parseCharacterStats } from "@/lib/characterStats";
 import { normalizeCharacterMetadata } from "@/lib/characterFormat";
 import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
-import { MissionLogPreview } from "@/types/missionLog";
 // getCharacterSubscribers lebt in dialoguesCore.ts (ursprünglich für den
 // Dialog-Abschluss gebraucht, siehe dort) und wird hier für die
 // Charakter-Update-Benachrichtigung wiederverwendet — Import über den
@@ -505,34 +504,6 @@ export async function getLogsForUser(
   `;
 }
 
-// Nur public-Logs — rendert auf der öffentlichen Charakterseite. Eigene
-// private/gm-Logs sieht der Owner weiterhin über "Meine Inhalte"
-// (getLogsForUser, unten) bzw. direkt über die (laufzeitgeprüfte)
-// Log-Detailseite.
-export async function getLogsByCharacter(
-  characterId: number,
-): Promise<MissionLogPreview[]> {
-  "use cache";
-  cacheTag(cacheTags.missionLogs);
-  cacheLife("max");
-  const rows = await sql<MissionLogPreview[]>`
-        SELECT
-          ml.id,
-          ml.slug,
-          ml.title,
-          ml.session_nr,
-          ml.log_date::text AS log_date,
-          m.slug            AS mission_slug,
-          m.title           AS mission_title
-        FROM mission_logs ml
-        JOIN missions m ON m.id = ml.mission_id
-        WHERE ml.author_id = ${characterId} AND ml.is_draft = false
-          AND ml.deleted_at IS NULL
-        ORDER BY ml.session_nr DESC NULLS LAST
-      `;
-  return rows;
-}
-
 // Für die Admin-Action "Autolinking" (src/app/actions/autolink.ts) — braucht
 // id + rohen Markdown-Quelltext, unabhängig von Sichtbarkeit/Owner (Admins
 // dürfen jeden Charakter autolinken).
@@ -842,6 +813,9 @@ export async function updateOwnCharacterContent(
     isDraft: boolean;
     // Siehe createCharacter oben — Opt-in "Automatisch verlinken".
     bioHtml?: string;
+    // Personnel-File-Felder werden zusammen mit den Stammdaten gespeichert.
+    // Die übrigen Werte bleiben dabei aus dem gespeicherten Stand erhalten.
+    stats?: CharacterStats;
   },
 ): Promise<UpdateOwnCharacterResult | null> {
   const trimmedBody = input.bodyMarkdown.trim();
@@ -868,6 +842,7 @@ export async function updateOwnCharacterContent(
     affiliation: buildAffiliation(input),
     tags: input.tags,
     ...portraitMetadata(input),
+    ...(input.stats ? { stats: input.stats } : {}),
   };
 
   // "wasDraft" (Stand VOR diesem Update) per CTE mitgeliefert — der

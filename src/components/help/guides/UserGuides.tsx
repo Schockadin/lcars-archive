@@ -20,24 +20,23 @@ export function DashboardGuide() {
           öffentlichen Übersicht: die nächsten <strong>Spielabende</strong> samt
           Zu- und Absage, deine <strong>offenen Gespräche</strong>, den
           Abschnitt <strong>„Neues anlegen“</strong> (dieselben Knöpfe und
-          Fenster wie unter „Meine Inhalte“), deine{" "}
-          <strong>Charaktere</strong> mit einem Stift zum Bearbeiten und die{" "}
+          Fenster wie unter „Meine Inhalte“), deine <strong>Charaktere</strong>{" "}
+          (ein Klick auf die Karte öffnet direkt ihre Akte) und die{" "}
           <strong>News</strong> — was andere zuletzt angelegt, geändert oder
           gelöscht haben.
         </p>
         <p>
-          Dazu kommen deine <strong>Entwürfe</strong> — alles, was du
-          angefangen und noch nicht veröffentlicht hast, jeweils mit dem Weg
-          zurück in den Editor. Ein Entwurf ist für niemanden außer dir
-          sichtbar, nicht einmal für die Spielleitung; ohne eine Stelle, die
-          ihn nennt, bleibt er leicht liegen.
+          Dazu kommen deine <strong>Entwürfe</strong> — alles, was du angefangen
+          und noch nicht veröffentlicht hast, jeweils mit dem Weg zurück in den
+          Editor. Ein Entwurf ist für niemanden außer dir sichtbar, nicht einmal
+          für die Spielleitung; ohne eine Stelle, die ihn nennt, bleibt er
+          leicht liegen.
         </p>
         <p>
           Dazu kommen drei Sektionen, die zunächst ausgeschaltet sind: die{" "}
-          <strong>Erste-Schritte-Liste</strong>, deine{" "}
-          <strong>To Dos</strong> (was von dir noch aussteht) und die{" "}
-          <strong>Versionen</strong> — was sich zuletzt an der Datenbank selbst
-          geändert hat.
+          <strong>Erste-Schritte-Liste</strong>, deine <strong>To Dos</strong>{" "}
+          (was von dir noch aussteht) und die <strong>Versionen</strong> — was
+          sich zuletzt an der Datenbank selbst geändert hat.
         </p>
         <p>
           <strong>Die Seite hält sich selbst aktuell.</strong> Alle zehn
@@ -61,17 +60,16 @@ export function DashboardGuide() {
           nicht mehr geladen; die Seite wird dadurch schneller.
         </p>
         <p>
-          Die Einstellung gilt nur für dich und bleibt bei jedem Login
-          erhalten. Eine Sektion, die nichts zu zeigen hat, bleibt ohnehin
-          leer — eingeschaltet heißt „darf erscheinen“, nicht „erscheint
-          immer“.
+          Die Einstellung gilt nur für dich und bleibt bei jedem Login erhalten.
+          Eine Sektion, die nichts zu zeigen hat, bleibt ohnehin leer —
+          eingeschaltet heißt „darf erscheinen“, nicht „erscheint immer“.
         </p>
         <p>
-          Unabhängig davon lässt sich jeder Abschnitt <strong>zuklappen</strong>
-          {" "}— ein Klick auf seine Überschrift. Wie du die Seite verlässt, so
+          Unabhängig davon lässt sich jeder Abschnitt <strong>zuklappen</strong>{" "}
+          — ein Klick auf seine Überschrift. Wie du die Seite verlässt, so
           findest du sie wieder: Der Zustand wird auf dem jeweiligen Gerät
-          gemerkt, am Telefon also getrennt vom Rechner. Die Zahl rechts in
-          der Kopfzeile sagt dir auch zugeklappt, wie viel darin steckt.
+          gemerkt, am Telefon also getrennt vom Rechner. Die Zahl rechts in der
+          Kopfzeile sagt dir auch zugeklappt, wie viel darin steckt.
         </p>
       </GuideSection>
     </GuideBody>
@@ -94,37 +92,38 @@ export function MyContentGuide() {
           <strong>Datenbank-Eintrag</strong> darf jede:r anlegen,{" "}
           <strong>Charakter</strong> jede:r außer Gast-Accounts,{" "}
           <strong>Einsatzbericht</strong> und <strong>Gespräch</strong> setzen
-          einen eigenen Charakter voraus, <strong>Mission</strong> bleibt der
-          Spielleitung vorbehalten. Daneben steht{" "}
-          <strong>„Import“</strong> — der einzige Knopf, der auf eine eigene
-          Seite führt statt in ein Fenster: Der Import blättert durch mehrere
-          Dateien und lässt jede einzeln bestätigen.
+          einen eigenen Charakter voraus, <strong>Event</strong> setzt das
+          allgemeine Recht zum Anlegen eigener Inhalte voraus und{" "}
+          <strong>Mission</strong> bleibt der Spielleitung vorbehalten. Daneben
+          steht <strong>„Import“</strong> — der einzige Knopf, der auf eine
+          eigene Seite führt statt in ein Fenster: Der Import blättert durch
+          mehrere Dateien und lässt jede einzeln bestätigen.
         </p>
         <p>
-          Genau dieselbe Knopfleiste steht auf deiner <strong>Startseite</strong>
-          {" "}— dort mit den Knöpfen, die du im Profil eingeschaltet hast.
+          Genau dieselbe Knopfleiste steht auf deiner{" "}
+          <strong>Startseite</strong> — dort mit den Knöpfen, die du im Profil
+          eingeschaltet hast, einschließlich „Neues Event“.
         </p>
       </GuideSection>
 
       <GuideSection title="Meine Inhalte · Entwürfe">
         <p>
-          Zwischen den Knöpfen und der Liste steht, was noch unfertig ist:
-          deine <strong>Entwürfe</strong>, das zuletzt Bearbeitete oben, jeder
-          mit dem Weg zurück in seinen Editor. Dieselbe Liste steht auf deiner
+          Zwischen den Knöpfen und der Liste steht, was noch unfertig ist: deine{" "}
+          <strong>Entwürfe</strong>, das zuletzt Bearbeitete oben, jeder mit dem
+          Weg zurück in seinen Editor. Dieselbe Liste steht auf deiner
           Startseite. Maßgeblich ist, wem der Entwurf <em>gehört</em> — ein
           Gespräch, das jemand anderes begonnen hat und in dem deine Figur
           mitspielt, kann auch nur diese Person veröffentlichen.
         </p>
         <p>
           Rechts an jedem Entwurf steht dieselbe Knopfreihe wie in der Liste
-          darunter: der Schalter{" "}
-          <strong>Entwurf / Veröffentlicht</strong>, der{" "}
+          darunter: der Schalter <strong>Entwurf / Veröffentlicht</strong>, der{" "}
           <strong>Stift</strong> und der <strong>Mülleimer</strong>. Du kannst
           also aus dieser Übersicht heraus veröffentlichen, ohne den Eintrag
           erst zu öffnen — er verschwindet dann sofort aus der Liste, denn ein
-          Entwurf ist er ja nicht mehr. Bei einer <strong>Mission</strong>
-          {" "}fehlt der Schalter: Sie gehört keiner einzelnen Person, und die
-          Spielleitung stellt ihren Zustand im Missionsformular ein.
+          Entwurf ist er ja nicht mehr. Bei einer <strong>Mission</strong> fehlt
+          der Schalter: Sie gehört keiner einzelnen Person, und die Spielleitung
+          stellt ihren Zustand im Missionsformular ein.
         </p>
       </GuideSection>
 
@@ -136,7 +135,8 @@ export function MyContentGuide() {
           alphabetisch über alles. Über den Filter{" "}
           <strong>„Nur Entwürfe“</strong> siehst du alle unfertigen Einträge
           zusammen; ein Charakter-Filter grenzt Einsatzberichte und Gespräche
-          auf eine deiner Figuren ein.
+          auf eine deiner Figuren ein. Auch Ereignisse, die du selbst in die
+          Chronologie eingetragen hast, stehen hier als eigene Kategorie.
         </p>
         <p>
           Je Zeile entscheidest du über das Dropdown daneben, ob ein Eintrag{" "}
@@ -147,6 +147,11 @@ export function MyContentGuide() {
           der <strong>Mülleimer</strong> löscht. Ein Entwurf ist für niemanden
           außer dir sichtbar, nicht einmal für die Spielleitung — Missionen
           ausgenommen, die kein Einzel-Owner-Modell haben.
+        </p>
+        <p>
+          Bei einem eigenen <strong>Event</strong> öffnet der Stift dasselbe
+          Formular wie beim Anlegen: Datum, Kategorie, Teaser, Volltext und
+          Beteiligte lassen sich dort gemeinsam ändern.
         </p>
         <p>
           <strong>Charaktere</strong> stehen nicht in dieser Liste: Sie haben im
@@ -166,23 +171,22 @@ export function ImportGuide() {
         <p>
           Hast du einen Eintrag schon fertig als <strong>Markdown-Datei</strong>{" "}
           — aus deinen Notizen, einem Vault, einem anderen Werkzeug —, musst du
-          ihn nicht abtippen: Der Import liest eine oder mehrere .md-Dateien
-          ein und macht daraus neue Einträge. Erwartet wird das übliche{" "}
+          ihn nicht abtippen: Der Import liest eine oder mehrere .md-Dateien ein
+          und macht daraus neue Einträge. Erwartet wird das übliche{" "}
           <strong>Frontmatter</strong> (der Block zwischen den beiden{" "}
-          <code>---</code>-Zeilen am Anfang) mit mindestens{" "}
-          <code>type</code>, <code>slug</code> und Titel bzw. Name.
+          <code>---</code>-Zeilen am Anfang) mit mindestens <code>type</code>,{" "}
+          <code>slug</code> und Titel bzw. Name.
         </p>
       </GuideSection>
 
       <GuideSection title="Import · Was du hochladen darfst">
         <p>
           Die Auswahlliste oben zeigt nur die Arten, die du auch über das
-          normale Formular anlegen dürftest:{" "}
-          <strong>Datenbank-Eintrag</strong> jede:r,{" "}
-          <strong>Charakter</strong> und <strong>Einsatzbericht</strong> jede:r
-          außer Gast-Accounts, <strong>Mission</strong> nur die Spielleitung.
-          Der Import ist der bequemere Weg zum selben Ziel, kein zweiter Weg an
-          den Regeln vorbei.
+          normale Formular anlegen dürftest: <strong>Datenbank-Eintrag</strong>{" "}
+          jede:r, <strong>Charakter</strong> und <strong>Einsatzbericht</strong>{" "}
+          jede:r außer Gast-Accounts, <strong>Mission</strong> nur die
+          Spielleitung. Der Import ist der bequemere Weg zum selben Ziel, kein
+          zweiter Weg an den Regeln vorbei.
         </p>
         <p>
           Zwei Dinge entscheidet deshalb nicht die Datei, sondern der Server:
@@ -204,9 +208,9 @@ export function ImportGuide() {
         </p>
         <p>
           Ein bereits vergebener <strong>Slug</strong> wird abgelehnt — es wird
-          nie etwas überschrieben. Verweise auf andere Einträge werden nur
-          gegen das aufgelöst, was es schon gibt: Lade Verweisziele zuerst
-          hoch, wenn die Verlinkung gleich stehen soll.
+          nie etwas überschrieben. Verweise auf andere Einträge werden nur gegen
+          das aufgelöst, was es schon gibt: Lade Verweisziele zuerst hoch, wenn
+          die Verlinkung gleich stehen soll.
         </p>
       </GuideSection>
     </GuideBody>
@@ -217,10 +221,7 @@ export function ImportGuide() {
 export function UserProfileGuide() {
   return (
     <GuideBody>
-      <GuideSection
-        title="Profil · Die Klappen"
-        figure={<ProfileFigure />}
-      >
+      <GuideSection title="Profil · Die Klappen" figure={<ProfileFigure />}>
         <p>
           Dein Profil ist in aufklappbare Abschnitte gegliedert:{" "}
           <strong>Startseite</strong> (was dort erscheint),{" "}
@@ -228,8 +229,8 @@ export function UserProfileGuide() {
           <strong>Darstellung</strong>,{" "}
           <strong>Follows &amp; Benachrichtigungen</strong> und{" "}
           <strong>Settings</strong>. Jede Klappe enthält eigene Formulare mit
-          eigenem „Speichern“ — was du änderst, gilt nur für dich und bleibt
-          bei jedem Login erhalten.
+          eigenem „Speichern“ — was du änderst, gilt nur für dich und bleibt bei
+          jedem Login erhalten.
         </p>
         <p>
           Anders als auf der Startseite stehen die Abschnitte hier{" "}
@@ -261,11 +262,11 @@ export function UserProfileGuide() {
         <p>
           Was dich erreicht und wem du folgst, steht zusammen in einer eigenen
           Klappe: die <strong>Follows</strong> (alle abonnierten Missionen,
-          Datenbank-Einträge und Charaktere an einem Ort, samt der
-          Möglichkeit, einzelne wieder zu beenden), die{" "}
-          <strong>Benachrichtigungen</strong> (E-Mail und Push, einzeln nach
-          Inhaltsart) und die <strong>News</strong>, also welche Meldungen auf
-          deiner Startseite erscheinen — neu, bearbeitet, gelöscht.
+          Datenbank-Einträge und Charaktere an einem Ort, samt der Möglichkeit,
+          einzelne wieder zu beenden), die <strong>Benachrichtigungen</strong>{" "}
+          (E-Mail und Push, einzeln nach Inhaltsart) und die{" "}
+          <strong>News</strong>, also welche Meldungen auf deiner Startseite
+          erscheinen — neu, bearbeitet, gelöscht.
         </p>
       </GuideSection>
 

@@ -3,7 +3,7 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import NewContentButtons from "./NewContentButtons";
 import type { NewContentData } from "./newContentData";
 
-// Die vier Formulare ziehen ihre Server-Actions und damit die Datenschicht
+// Die Formulare ziehen ihre Server-Actions und damit die Datenschicht
 // nach — geprüft wird hier, WELCHES Formular ein Knopf öffnet, nicht dessen
 // Inhalt (gleiches Muster wie MissionSynopsis.test.tsx).
 vi.mock("@/app/user/mission-logs/new/NewMissionLogForm", () => ({
@@ -19,6 +19,27 @@ vi.mock("@/app/user/archive/new/NewArchiveEntryForm", () => ({
 }));
 vi.mock("@/app/user/missions/new/NewMissionForm", () => ({
   default: () => <div data-testid="form-mission" />,
+}));
+vi.mock("@/components/timeline/ManualEventForm", () => ({
+  default: ({
+    defaultDate,
+    characters,
+    triggerVariant,
+  }: {
+    defaultDate: string | null;
+    characters: { id: number; name: string }[];
+    triggerVariant?: string;
+  }) => (
+    <button
+      type="button"
+      data-testid="form-event"
+      data-date={defaultDate ?? ""}
+      data-characters={characters.length}
+      data-variant={triggerVariant}
+    >
+      Neues Event
+    </button>
+  ),
 }));
 
 function data(overrides: Partial<NewContentData> = {}): NewContentData {
@@ -40,6 +61,10 @@ function data(overrides: Partial<NewContentData> = {}): NewContentData {
       defaultLogDate: "2400-01-01",
     },
     mission: { defaultStartedAt: "2400-01-01", characters: [] },
+    event: {
+      defaultDate: "2400-01-01",
+      characters: [{ id: 2, name: "Seven" }],
+    },
     ...overrides,
   };
 }
@@ -71,6 +96,23 @@ describe("NewContentButtons", () => {
     );
   });
 
+  it("reicht Datum und Figuren an das gemeinsame Event-Formular durch", () => {
+    render(<NewContentButtons data={data()} />);
+
+    expect(screen.getByRole("button", { name: "Neues Event" })).toHaveAttribute(
+      "data-variant",
+      "pill",
+    );
+    expect(screen.getByTestId("form-event")).toHaveAttribute(
+      "data-date",
+      "2400-01-01",
+    );
+    expect(screen.getByTestId("form-event")).toHaveAttribute(
+      "data-characters",
+      "1",
+    );
+  });
+
   it("schließt das Fenster wieder", () => {
     render(<NewContentButtons data={data()} />);
 
@@ -87,13 +129,21 @@ describe("NewContentButtons", () => {
     // keine Mission — die Seite reicht dann gar keine Daten dafür durch.
     render(
       <NewContentButtons
-        data={data({ missionLog: null, dialogue: null, mission: null })}
+        data={data({
+          missionLog: null,
+          dialogue: null,
+          mission: null,
+          event: null,
+        })}
       />,
     );
 
-    expect(screen.queryByRole("button", { name: "Neuer Missionslog" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Neuer Missionslog" }),
+    ).toBeNull();
     expect(screen.queryByRole("button", { name: "Neues Gespräch" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Neue Mission" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Neues Event" })).toBeNull();
     // Datenbank-Einträge darf jeder eingeloggte User anlegen.
     expect(
       screen.getByRole("button", { name: "Neuer Datenbank-Eintrag" }),
@@ -104,19 +154,20 @@ describe("NewContentButtons", () => {
   // (siehe src/lib/dashboardSections.ts) — „Meine Inhalte" reicht nichts
   // durch und zeigt weiterhin alle.
   it("zeigt mit `show` nur die verlangten Knöpfe", () => {
-    render(
-      <NewContentButtons data={data()} show={["archiveEntry", "npc"]} />,
-    );
+    render(<NewContentButtons data={data()} show={["archiveEntry", "npc"]} />);
 
     expect(
       screen.getByRole("button", { name: "Neuer Datenbank-Eintrag" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Neuer NPC" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Neuer NPC" }),
+    ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Neuer Missionslog" }),
     ).toBeNull();
     expect(screen.queryByRole("button", { name: "Neues Gespräch" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Neue Mission" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Neues Event" })).toBeNull();
   });
 
   // `show` erlaubt, es ersetzt die Prüfung nicht: Ein Knopf ohne Formular
@@ -132,7 +183,9 @@ describe("NewContentButtons", () => {
     expect(
       screen.queryByRole("button", { name: "Neuer Missionslog" }),
     ).toBeNull();
-    expect(screen.getByRole("button", { name: "Neuer NPC" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Neuer NPC" }),
+    ).toBeInTheDocument();
   });
 
   // Der Import führt nach /user/import — was dort angeboten wird, hängt an
@@ -145,9 +198,10 @@ describe("NewContentButtons", () => {
     unmount();
 
     render(<NewContentButtons data={data()} canImport />);
-    expect(
-      screen.getByRole("link", { name: "Import" }),
-    ).toHaveAttribute("href", "/user/import");
+    expect(screen.getByRole("link", { name: "Import" })).toHaveAttribute(
+      "href",
+      "/user/import",
+    );
   });
 
   // Anders als die übrigen kein Fenster: Der Ablauf blättert durch mehrere
@@ -155,9 +209,7 @@ describe("NewContentButtons", () => {
   it("führt beim Import auf die Seite statt in ein Fenster", () => {
     render(<NewContentButtons data={data()} canImport />);
 
-    expect(
-      screen.queryByRole("button", { name: "Import" }),
-    ).toBeNull();
+    expect(screen.queryByRole("button", { name: "Import" })).toBeNull();
   });
 
   // Breite und Umbruch der Leiste stehen in .lcars-btn-row (controls.css),

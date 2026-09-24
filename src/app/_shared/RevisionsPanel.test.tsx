@@ -54,6 +54,7 @@ function renderPanel() {
       contentId={3}
       path="/user/archive/3/edit"
       revisions={[revision]}
+      defaultOpen
     />,
   );
 }
@@ -65,6 +66,11 @@ async function wiederherstellen() {
 }
 
 describe("RevisionsPanel", () => {
+  it("beginnt auf der Charakterseite geöffnet", () => {
+    renderPanel();
+    expect(document.querySelector("details")).toHaveAttribute("open");
+  });
+
   it("verwirft den gesicherten Entwurf und lädt die Seite neu", async () => {
     restore.mockResolvedValue({ success: true });
     renderPanel();

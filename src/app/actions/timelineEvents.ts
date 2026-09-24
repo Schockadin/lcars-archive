@@ -1,4 +1,5 @@
 "use server";
+import { revalidatePath } from "next/cache";
 import { getActiveSession } from "@/lib/dal";
 import { getUserById } from "@/lib/users";
 import { getRoleMap } from "@/lib/roles";
@@ -9,6 +10,7 @@ import {
   deleteManualEvent,
   listCharactersForEvents,
   parseManualEvent,
+  updateManualEvent,
 } from "@/lib/timelineManualEvents";
 
 export interface ManualEventState {
@@ -37,6 +39,7 @@ export async function createManualEventAction(
     const input = parseManualEvent({
       date: String(formData.get("date") ?? ""),
       title: String(formData.get("title") ?? ""),
+      teaser: String(formData.get("teaser") ?? ""),
       detail: String(formData.get("detail") ?? ""),
       category: String(formData.get("category") ?? ""),
       characterIds: formData.getAll("characterIds").map(String),
@@ -52,10 +55,67 @@ export async function createManualEventAction(
     }
 
     await createManualEvent(input, user.id);
+    revalidatePath("/chronologie");
+    revalidatePath("/user/content");
     return { success: true };
   } catch (err) {
     // Eingabefehler gehören zurück an die Person; alles andere ist ein
     // echter Fehler und soll laut scheitern.
+    if (err instanceof ManualEventError) return { error: err.message };
+    throw err;
+  }
+}
+
+export async function updateManualEventAction(
+  _state: ManualEventState,
+  formData: FormData,
+): Promise<ManualEventState> {
+  const session = await getActiveSession();
+  if (!session) return { error: "Nicht angemeldet." };
+
+  const user = await getUserById(session.userId);
+  const roleMap = await getRoleMap();
+  if (!user) return { error: "Nicht angemeldet." };
+
+  const id = Number(formData.get("id"));
+  if (!Number.isInteger(id) || id <= 0) {
+    return { error: "Unbekanntes Ereignis." };
+  }
+
+  try {
+    const input = parseManualEvent({
+      date: String(formData.get("date") ?? ""),
+      title: String(formData.get("title") ?? ""),
+      teaser: String(formData.get("teaser") ?? ""),
+      detail: String(formData.get("detail") ?? ""),
+      category: String(formData.get("category") ?? ""),
+      characterIds: formData.getAll("characterIds").map(String),
+    });
+    const knownCharacterIds = new Set(
+      (await listCharactersForEvents()).map((character) => character.id),
+    );
+    if (
+      input.characterIds.some(
+        (characterId) => !knownCharacterIds.has(characterId),
+      )
+    ) {
+      return { error: "Mindestens eine ausgewählte Figur gibt es nicht." };
+    }
+
+    const updated = await updateManualEvent(id, input, {
+      userId: user.id,
+      canModerate: userCan(user, "content.moderate", roleMap),
+    });
+    if (!updated) {
+      return {
+        error:
+          "Das Ereignis gibt es nicht mehr — oder es gehört jemand anderem.",
+      };
+    }
+    revalidatePath("/chronologie");
+    revalidatePath("/user/content");
+    return { success: true };
+  } catch (err) {
     if (err instanceof ManualEventError) return { error: err.message };
     throw err;
   }
@@ -79,7 +139,14 @@ export async function deleteManualEventAction(
     userId: user.id,
     canModerate: userCan(user, "content.moderate", roleMap),
   });
+  if (removed) {
+    revalidatePath("/chronologie");
+    revalidatePath("/user/content");
+  }
   return removed
     ? { success: true }
-    : { error: "Das Ereignis gibt es nicht mehr — oder es gehört jemand anderem." };
+    : {
+        error:
+          "Das Ereignis gibt es nicht mehr — oder es gehört jemand anderem.",
+      };
 }
