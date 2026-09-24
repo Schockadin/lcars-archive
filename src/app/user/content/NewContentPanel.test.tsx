@@ -3,7 +3,7 @@ import { render, screen } from "@testing-library/react";
 import NewContentPanel from "./NewContentPanel";
 import type { NewContentData } from "./newContentData";
 
-// Die vier Formulare ziehen ihre Server-Actions und damit die Datenschicht
+// Die Formulare ziehen ihre Server-Actions und damit die Datenschicht
 // nach — hier geht es um den Abschnitt drumherum, nicht um ihren Inhalt
 // (gleiches Muster wie NewContentButtons.test.tsx).
 vi.mock("@/app/user/mission-logs/new/NewMissionLogForm", () => ({
@@ -17,6 +17,9 @@ vi.mock("@/app/user/archive/new/NewArchiveEntryForm", () => ({
 }));
 vi.mock("@/app/user/missions/new/NewMissionForm", () => ({
   default: () => null,
+}));
+vi.mock("@/components/timeline/ManualEventForm", () => ({
+  default: () => <button type="button">Neues Event</button>,
 }));
 
 function data(over: Partial<NewContentData> = {}): NewContentData {
@@ -38,6 +41,7 @@ function data(over: Partial<NewContentData> = {}): NewContentData {
       defaultLogDate: null,
     },
     mission: { defaultStartedAt: null, characters: [] },
+    event: { defaultDate: null, characters: [] },
     ...over,
   };
 }
@@ -56,17 +60,15 @@ describe("NewContentPanel", () => {
   it("nennt in der Kopfzeile so viele Knöpfe, wie darunter stehen", () => {
     render(<NewContentPanel data={data()} storageId="content:anlegen" />);
 
-    expect(knopfZahl()).toBe(5);
-    expect(screen.getByText("5")).toBeInTheDocument();
+    expect(knopfZahl()).toBe(6);
+    expect(screen.getByText("6")).toBeInTheDocument();
   });
 
   it("zählt den Import mit", () => {
     render(<NewContentPanel data={data()} canImport />);
 
-    expect(
-      screen.getByRole("link", { name: "Import" }),
-    ).toBeInTheDocument();
-    expect(screen.getByText("6")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Import" })).toBeInTheDocument();
+    expect(screen.getByText("7")).toBeInTheDocument();
   });
 
   it("zählt nur, was die Auswahl der Seite hergibt", () => {
@@ -80,9 +82,7 @@ describe("NewContentPanel", () => {
   // Zeile — möglich etwa für ein Konto, das auf der Startseite alle
   // Anlege-Knöpfe abgewählt hat.
   it("verschwindet ganz, wenn kein Knopf übrig bleibt", () => {
-    const { container } = render(
-      <NewContentPanel data={data()} show={[]} />,
-    );
+    const { container } = render(<NewContentPanel data={data()} show={[]} />);
 
     expect(container).toBeEmptyDOMElement();
   });

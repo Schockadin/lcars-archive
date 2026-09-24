@@ -658,6 +658,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   brauchen: die Knopfleiste im Browser, der Abschnitt drumherum auf dem
   Server. Läge die Zählung doppelt vor, liefe sie irgendwann auseinander — und
   dann stünde eine Überschrift über einer leeren Zeile.
+  **„Neues Event“** verwendet darin dasselbe `ManualEventForm` wie die
+  Chronologie und die Bearbeiten-Aktion unter „Meine Inhalte“. Auf dem
+  Dashboard lässt sich der Knopf im Profil einzeln ein- oder ausblenden; unter
+  `/user/content` gehört er zum vollständigen Angebot.
   Dazu kommt **„Import"** (`/user/import`) — als Link statt Fenster: Der
   Import blättert durch mehrere Dateien und bestätigt jede einzeln, dafür ist
   ein Fenster zu klein (dieselbe Überlegung wie beim Charakter-Assistenten).

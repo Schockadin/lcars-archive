@@ -6,6 +6,7 @@ import NewMissionLogForm from "@/app/user/mission-logs/new/NewMissionLogForm";
 import CreateDialogueForm from "@/app/user/dialogues/new/CreateDialogueForm";
 import NewArchiveEntryForm from "@/app/user/archive/new/NewArchiveEntryForm";
 import NewMissionForm from "@/app/user/missions/new/NewMissionForm";
+import ManualEventForm from "@/components/timeline/ManualEventForm";
 import type { NewContentData } from "./newContentData";
 import {
   NEW_CONTENT_LABELS,
@@ -63,16 +64,31 @@ export default function NewContentButtons({
 
   // Breite und Umbruch kommen aus .lcars-btn-row (controls.css) — hier steht
   // nur, was der Knopf ist, nicht wie breit er wird.
-  const button = (form: OpenForm) => (
-    <button
-      key={form}
-      type="button"
-      onClick={() => setOpen(form)}
-      className="lcars-pill-btn"
-    >
-      {NEW_CONTENT_LABELS[form]}
-    </button>
-  );
+  const button = (form: OpenForm) => {
+    // Das Event-Formular verwaltet sein Fenster selbst, weil dieselbe
+    // Komponente auch in Chronologie und Inhaltsliste zum Bearbeiten dient.
+    if (form === "event" && data.event) {
+      return (
+        <ManualEventForm
+          key={form}
+          defaultDate={data.event.defaultDate}
+          characters={data.event.characters}
+          triggerVariant="pill"
+          dateHint="Vorbelegt mit dem jüngsten Logbuch-Datum"
+        />
+      );
+    }
+    return (
+      <button
+        key={form}
+        type="button"
+        onClick={() => setOpen(form)}
+        className="lcars-pill-btn"
+      >
+        {NEW_CONTENT_LABELS[form]}
+      </button>
+    );
+  };
 
   return (
     <>
@@ -91,7 +107,11 @@ export default function NewContentButtons({
       </div>
 
       {open && (
-        <ModalOverlay title={NEW_CONTENT_TITLES[open]} onClose={close} width={960}>
+        <ModalOverlay
+          title={NEW_CONTENT_TITLES[open]}
+          onClose={close}
+          width={960}
+        >
           {open === "missionLog" &&
             data.missionLog &&
             (data.missionLog.missions.length === 0 ? (

@@ -382,6 +382,11 @@ export default function TutorialPage() {
                   erst, sobald du einen hast).
                 </li>
                 <li>
+                  <strong>Event</strong> — legt eine freie Begebenheit mit
+                  Datum, Teaser, Volltext und beteiligten Figuren für die
+                  Chronologie an.
+                </li>
+                <li>
                   <strong>Mission</strong> — bleibt Spielleitung/Admin
                   vorbehalten.
                 </li>

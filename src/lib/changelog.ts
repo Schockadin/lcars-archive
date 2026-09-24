@@ -156,6 +156,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "chronologie",
       },
       {
+        text: "Mit „Neues Event“ lassen sich freie Chronologie-Ereignisse jetzt direkt auf der Startseite und unter „Meine Inhalte“ anlegen. Ob der Knopf auf der Startseite erscheint, lässt sich im Profil einstellen.",
+        category: "inhalte",
+        tutorial: "mein-bereich",
+      },
+      {
         text: "Die Spielleitung kann eigene Chronologie-Ereignisse gesammelt aus einer CSV-Datei importieren. Datum, Titel, Teaser, Volltext und beteiligte Figuren werden vor dem gemeinsamen Speichern vollständig geprüft.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",

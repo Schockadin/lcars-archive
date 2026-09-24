@@ -50,6 +50,12 @@ export const DASHBOARD_SECTIONS = [
     default: true,
   },
   {
+    id: "neues-event",
+    label: "Neues Event",
+    hint: "Knopf, der das Formular für ein neues Chronologie-Event öffnet.",
+    default: true,
+  },
+  {
     id: "neuer-eintrag",
     label: "Neuer Datenbank-Eintrag",
     hint: "Knopf, der das Formular für einen neuen Datenbank-Eintrag öffnet.",
@@ -144,7 +150,11 @@ export function sanitizeDashboardPrefs(raw: unknown): DashboardPrefs {
   const sections: Partial<Record<DashboardSectionId, boolean>> = {};
   const rawSections = source.sections;
 
-  if (rawSections && typeof rawSections === "object" && !Array.isArray(rawSections)) {
+  if (
+    rawSections &&
+    typeof rawSections === "object" &&
+    !Array.isArray(rawSections)
+  ) {
     for (const [key, value] of Object.entries(
       rawSections as Record<string, unknown>,
     )) {

@@ -15,6 +15,7 @@ import type { NewContentData } from "./newContentData";
 export type OpenForm =
   | "missionLog"
   | "dialogue"
+  | "event"
   | "archiveEntry"
   | "npc"
   | "mission";
@@ -22,6 +23,7 @@ export type OpenForm =
 export const NEW_CONTENT_FORMS: readonly OpenForm[] = [
   "missionLog",
   "dialogue",
+  "event",
   "archiveEntry",
   "npc",
   "mission",
@@ -30,6 +32,7 @@ export const NEW_CONTENT_FORMS: readonly OpenForm[] = [
 export const NEW_CONTENT_TITLES: Record<OpenForm, string> = {
   missionLog: "Neuen Missionslog anlegen",
   dialogue: "Neues Gespräch beginnen",
+  event: "Neues Event anlegen",
   archiveEntry: "Neuen Datenbank-Eintrag anlegen",
   npc: "Neuen NPC anlegen",
   mission: "Neue Mission anlegen",
@@ -38,6 +41,7 @@ export const NEW_CONTENT_TITLES: Record<OpenForm, string> = {
 export const NEW_CONTENT_LABELS: Record<OpenForm, string> = {
   missionLog: "Neuer Missionslog",
   dialogue: "Neues Gespräch",
+  event: "Neues Event",
   archiveEntry: "Neuer Datenbank-Eintrag",
   npc: "Neuer NPC",
   mission: "Neue Mission",
@@ -50,8 +54,8 @@ export const NEW_CONTENT_LABELS: Record<OpenForm, string> = {
 //     durch und bekommt alle).
 //   - Die Daten sagen, welche für dieses Konto möglich sind: Missionslog und
 //     Gespräch setzen einen eigenen veröffentlichten Charakter voraus, eine
-//     Mission die Spielleitung. Fehlt die Voraussetzung, ist der zugehörige
-//     Teil in NewContentData null.
+//     Mission die Spielleitung, ein Event das allgemeine Anlegerecht. Fehlt
+//     die Voraussetzung, ist der zugehörige Teil in NewContentData null.
 //
 // Datenbank-Eintrag und NPC stehen jedem eingeloggten Konto offen — der
 // Server prüft dort nur die Session (siehe archiveEntryAction).
@@ -63,6 +67,7 @@ export function visibleNewContentForms(
     if (show && !show.includes(form)) return false;
     if (form === "missionLog") return data.missionLog !== null;
     if (form === "dialogue") return data.dialogue !== null;
+    if (form === "event") return data.event !== null;
     if (form === "mission") return data.mission !== null;
     return true;
   });

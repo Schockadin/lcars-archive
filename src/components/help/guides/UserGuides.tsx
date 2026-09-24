@@ -91,16 +91,17 @@ export function MyContentGuide() {
           <strong>Datenbank-Eintrag</strong> darf jede:r anlegen,{" "}
           <strong>Charakter</strong> jede:r außer Gast-Accounts,{" "}
           <strong>Einsatzbericht</strong> und <strong>Gespräch</strong> setzen
-          einen eigenen Charakter voraus, <strong>Mission</strong> bleibt der
-          Spielleitung vorbehalten. Daneben steht <strong>„Import“</strong> —
-          der einzige Knopf, der auf eine eigene Seite führt statt in ein
-          Fenster: Der Import blättert durch mehrere Dateien und lässt jede
-          einzeln bestätigen.
+          einen eigenen Charakter voraus, <strong>Event</strong> setzt das
+          allgemeine Recht zum Anlegen eigener Inhalte voraus und{" "}
+          <strong>Mission</strong> bleibt der Spielleitung vorbehalten. Daneben
+          steht <strong>„Import“</strong> — der einzige Knopf, der auf eine
+          eigene Seite führt statt in ein Fenster: Der Import blättert durch
+          mehrere Dateien und lässt jede einzeln bestätigen.
         </p>
         <p>
           Genau dieselbe Knopfleiste steht auf deiner{" "}
           <strong>Startseite</strong> — dort mit den Knöpfen, die du im Profil
-          eingeschaltet hast.
+          eingeschaltet hast, einschließlich „Neues Event“.
         </p>
       </GuideSection>
 

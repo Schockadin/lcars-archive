@@ -63,8 +63,11 @@ export default async function UserContentPage() {
       missionLog: true,
       dialogue: true,
       mission: true,
+      event: true,
     }),
     listManualEventsForUser(user.id),
+    // Bearbeiten bleibt auch möglich, wenn das Anlegerecht später entzogen
+    // wurde. Deshalb hängt diese Liste nicht an newContent.event.
     listCharactersForEvents(),
   ]);
 

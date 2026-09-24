@@ -29,11 +29,11 @@ export default function ManualEventForm({
   defaultDate,
   characters,
   event,
+  triggerVariant = "icon",
+  dateHint = "Vorbelegt mit dem jüngsten Ereignis der Chronologie",
 }: {
-  // Das Datum des jüngsten Ereignisses der Chronologie. Wer etwas einträgt,
-  // trägt fast immer etwas ein, das kurz danach passiert ist — hier fängt man
-  // also an zu tippen, statt das Jahrhundert von Hand zu suchen. Null, wenn
-  // die Chronologie noch leer ist.
+  // Vorgabedatum des jeweiligen Einstiegs. Die Chronologie verwendet ihr
+  // jüngstes Ereignis, der gemeinsame Anlege-Bereich das jüngste Logbuch.
   defaultDate: string | null;
   // Das ganze Ensemble, ausdrücklich auch zurückgezogene Figuren und NPCs:
   // ein historisches Ereignis betrifft oft gerade die, die nicht mehr im
@@ -42,6 +42,11 @@ export default function ManualEventForm({
   // Mit Ereignis wird dasselbe Formular zum Editor. So bleiben Felder,
   // Validierung und Kategorien beim Anlegen und Bearbeiten identisch.
   event?: ManualEventForEdit;
+  // In der Chronologie und in Inhaltszeilen bleibt der kompakte Symbolknopf.
+  // Der gemeinsame „Neue Inhalte"-Abschnitt verwendet dieselbe Form dagegen
+  // als beschriftete Pille neben den übrigen Anlege-Knöpfen.
+  triggerVariant?: "icon" | "pill";
+  dateHint?: string;
 }) {
   const editing = event !== undefined;
   const [state, formAction, pending] = useActionState<
@@ -50,17 +55,33 @@ export default function ManualEventForm({
   >(editing ? updateManualEventAction : createManualEventAction, {});
   const [open, setOpen] = useState(false);
   const idPrefix = editing ? `manual-event-${event.id}` : "manual-event-new";
+  const triggerLabel =
+    triggerVariant === "pill"
+      ? "Neues Event"
+      : editing
+        ? "Event bearbeiten"
+        : "Event hinzufügen";
 
   return (
-    <div className="timeline-newevent ">
+    <div className="timeline-newevent">
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="lcars-icon-btn self-start"
-        aria-label={editing ? "Event bearbeiten" : "Event hinzufügen"}
-        title={editing ? "Event bearbeiten" : "Event hinzufügen"}
+        className={
+          triggerVariant === "pill"
+            ? "lcars-pill-btn w-full"
+            : "lcars-icon-btn self-start"
+        }
+        aria-label={triggerLabel}
+        title={triggerLabel}
       >
-        {editing ? <PencilIcon /> : <PlusIcon />}
+        {triggerVariant === "pill" ? (
+          "Neues Event"
+        ) : editing ? (
+          <PencilIcon />
+        ) : (
+          <PlusIcon />
+        )}
       </button>
 
       {open && (
@@ -87,7 +108,7 @@ export default function ManualEventForm({
               <FormField
                 label="Datum"
                 htmlFor={`${idPrefix}-date`}
-                hint="Vorbelegt mit dem jüngsten Ereignis der Chronologie"
+                hint={dateHint}
               >
                 <input
                   id={`${idPrefix}-date`}
