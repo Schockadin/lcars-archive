@@ -89,7 +89,7 @@
   gap: 4px;
 }
 
-/* Schnellzugriff-Zeilen direkt unter dem Portrait (Logs / Gespräche). */
+/* Schnellzugriff-Zeilen direkt unter dem Portrait (Chronologie-Bereiche). */
 .char-file-links {
   display: flex;
   flex-direction: column;

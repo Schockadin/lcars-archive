@@ -1,7 +1,6 @@
 "use client";
 import { usePageMeta } from "@/hooks/usePageMeta";
 import { Character } from "@/types/character";
-import { MissionLogPreview } from "@/types/missionLog";
 import CharacterHero from "./CharacterHero";
 import type { Viewer } from "@/lib/visibility";
 import type { FollowState } from "@/app/actions/follows";
@@ -11,14 +10,12 @@ import RelationsSection from "@/app/_shared/RelationsSection";
 import type { Relation } from "@/lib/relations";
 import NotesPanel from "@/app/_shared/NotesPanel";
 import type { ContentNote } from "@/lib/contentNotes";
-import {
-  characterHref,
-} from "@/lib/contentRoutes";
+import { characterHref } from "@/lib/contentRoutes";
+import type { CharacterChronologyCounts } from "./CharacterChronologyLinks";
 
 export default function CharakterDetailPage({
   character,
-  logs,
-  conversationCount,
+  chronologyCounts,
   viewer,
   owners,
   displayAge,
@@ -29,8 +26,7 @@ export default function CharakterDetailPage({
   canWriteNotes,
 }: {
   character: Character;
-  logs: MissionLogPreview[];
-  conversationCount: number;
+  chronologyCounts: CharacterChronologyCounts;
   viewer: Viewer | null;
   owners: { id: number; name: string }[];
   // Aus Geburtsdatum + Ingame-Jahr abgeleitetes Alter (Fallback: metadata.age),
@@ -52,8 +48,7 @@ export default function CharakterDetailPage({
     <div className="h-full">
       <CharacterHero
         character={character}
-        logCount={logs.length}
-        conversationCount={conversationCount}
+        chronologyCounts={chronologyCounts}
         viewer={viewer}
         owners={owners}
         displayAge={displayAge}

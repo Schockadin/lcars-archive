@@ -83,9 +83,10 @@ export function PublicCharactersGuide() {
           Ein Klick öffnet die <strong>Personalakte</strong>: links das Portrait
           mit den Stammdaten (Akten-ID, Rang, Spezies, Alter …), rechts die{" "}
           <strong>Biografie</strong> mit ihrem Inhaltsverzeichnis. Unter dem
-          Bild führen zwei Zeilen mit Anzahl direkt zu den{" "}
-          <strong>Logbüchern</strong> und <strong>Gesprächen</strong> dieser
-          Figur — beide in der Chronologie, auf sie gefiltert.
+          Bild führen vier Zeilen mit Anzahl direkt zu den{" "}
+          <strong>Logbüchern</strong>, <strong>Gesprächen</strong>,{" "}
+          <strong>Missionen</strong> und <strong>Events</strong> dieser Figur —
+          alle in der Chronologie, mit bereits gesetztem Personenfilter.
         </p>
         <p>
           Weiter unten steht <strong>„Wer kennt wen“</strong>: mit welchen

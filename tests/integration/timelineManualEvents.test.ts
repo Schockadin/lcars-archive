@@ -48,6 +48,12 @@ describe("freie Chronologie-Ereignisse", () => {
     expect(event!.detail).toBe("Eine neue Grenze für den Quadranten.");
     expect(event!.fullDetailHtml).toContain("<strong>festgeschrieben</strong>");
     expect(event!.manualEventCreatedBy).toBe(user.id);
+
+    const compactEvent = (
+      await getTimeline({ renderManualDetails: false })
+    ).find((entry) => entry.title === "Vertrag von Algeron");
+    expect(compactEvent).toBeDefined();
+    expect(compactEvent!.fullDetailHtml).toBeUndefined();
   });
 
   it("lässt sich von der eintragenden Person wieder entfernen", async () => {

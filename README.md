@@ -325,6 +325,14 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Verbindung steht, woraus sie stammt — eine bloße Namensliste ohne
   Begründung wäre schwer einzuordnen.
 
+- **Chronologie-Schnellzugriffe in der öffentlichen Personalakte** — unter
+  dem Portrait führen vier `LcarsDataRow`-Zeilen zu Logs, Gesprächen,
+  Missionen und Events der Figur. `CharacterChronologyLinks` hält Darstellung
+  und Routen zusammen; die Zähler entstehen über `filterEvents` aus derselben
+  Timeline-Grundmenge und denselben Scope-/Personenfiltern wie die Zielseite.
+  Für die reine Zählung überspringt `getTimeline` das Rendern der
+  Markdown-Volltexte freier Events.
+
   Bis v1.37 stand daneben ein **Beziehungsgraph** der ganzen Kampagne unter
   `/characters/beziehungen` (Kreis-Layout als Inline-SVG, im Browser
   filterbar). Er ist mit v1.38 ersatzlos entfallen: Bei der Figurenzahl

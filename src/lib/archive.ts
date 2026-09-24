@@ -314,26 +314,6 @@ export async function getArchiveEntryBySlug(
   return { ...parseMeta(entry), links, backlinks };
 }
 
-// Anzahl der Gespräche (Dialoge), an denen ein Teilnehmer (per slug — i.d.R.
-// ein Charakter) beteiligt ist. jsonb-Containment auf metadata.participants.
-export async function getDialogueCountByParticipant(
-  slug: string,
-): Promise<number> {
-  "use cache";
-  cacheTag(cacheTags.archive);
-  cacheLife("max");
-  const [row] = await sql<{ count: number }[]>`
-        SELECT COUNT(*)::int AS count
-        FROM archive_entries
-        WHERE category = 'dialogue'
-          AND NOT dialogue_open
-          AND is_draft = false
-          AND deleted_at IS NULL
-          AND metadata->'participants' @> ${sql.json([{ slug }])}
-      `;
-  return row?.count ?? 0;
-}
-
 export interface UserContentArchiveEntry {
   id: number;
   slug: string;

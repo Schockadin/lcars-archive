@@ -176,7 +176,14 @@ function markerEvents(
 // veröffentlichte Inhalte, und die sieht seit v1.34 jede und jeder — auch ohne
 // Anmeldung. Entwürfe bleiben ihrer Owner-Person im eigenen Bereich
 // vorbehalten (/user/content).
-export async function getTimeline(): Promise<TimelineEvent[]> {
+export async function getTimeline({
+  renderManualDetails = true,
+}: {
+  // Zähler und andere reine Listenansichten brauchen den gerenderten
+  // Markdown-Volltext freier Ereignisse nicht. Die Chronologie selbst lässt
+  // die Vorgabe an, damit das Detail-Overlay vollständig bleibt.
+  renderManualDetails?: boolean;
+} = {}): Promise<TimelineEvent[]> {
   const [
     missions,
     logs,
@@ -616,15 +623,17 @@ export async function getTimeline(): Promise<TimelineEvent[]> {
   // Der Volltext eines eigenen Ereignisses ist Markdown und erscheint erst
   // im Detail-Overlay; der Teaser auf der Karte bleibt bewusst kurzer Text.
   const inferredById = new Map(inferred.map((row) => [row.id, row]));
-  await Promise.all(
-    events.map(async (event) => {
-      if (event.origin === "manual" && event.manualEventId) {
-        const row = inferredById.get(event.manualEventId);
-        if (row?.detail)
-          event.fullDetailHtml = await markdownToHtml(row.detail);
-      }
-    }),
-  );
+  if (renderManualDetails) {
+    await Promise.all(
+      events.map(async (event) => {
+        if (event.origin === "manual" && event.manualEventId) {
+          const row = inferredById.get(event.manualEventId);
+          if (row?.detail)
+            event.fullDetailHtml = await markdownToHtml(row.detail);
+        }
+      }),
+    );
+  }
 
   return sortEvents(events, "desc");
 }

@@ -165,6 +165,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "inhalte",
         tutorial: "chronologie",
       },
+      {
+        text: "Öffentliche Personalakten zeigen unter dem Portrait jetzt direkte Schnellzugriffe auf Logs, Gespräche, Missionen und Events der Figur – jeweils mit Trefferzahl und bereits gesetztem Personenfilter in der Chronologie.",
+        category: "charaktere",
+        tutorial: "seiten-im-ueberblick",
+      },
     ],
   },
   {
