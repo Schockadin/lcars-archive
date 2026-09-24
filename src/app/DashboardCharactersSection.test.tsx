@@ -6,7 +6,6 @@ import DashboardCharactersSection, {
 
 const TVEL: DashboardCharacterItem = {
   id: 4,
-  slug: "t-vel",
   name: "T'Vel",
   rank: "Lieutenant",
   status: "active",
@@ -17,13 +16,12 @@ describe("DashboardCharactersSection", () => {
   it("führt jeden Charakter mit einem Knopf in seine Kopfdaten", () => {
     render(<DashboardCharactersSection characters={[TVEL]} />);
 
-    // Die Karte führt in die Akte …
+    // Karte und Stift führen beide in die eigene, bearbeitbare Akte. Die
+    // öffentliche Leseseite wäre hier ein unnötiger Umweg.
     const ziele = screen
       .getAllByRole("link")
       .map((link) => link.getAttribute("href"));
-    expect(ziele).toContain("/characters/t-vel");
-    // … der Stift daneben direkt ins Bearbeiten. Genau dafür ist die Sektion
-    // da: der kurze Weg, der vorher über zwei Seiten ging.
+    expect(ziele).toEqual(["/user/characters/4", "/user/characters/4"]);
     expect(
       screen.getByRole("link", { name: "T'Vel bearbeiten" }),
     ).toHaveAttribute("href", "/user/characters/4");

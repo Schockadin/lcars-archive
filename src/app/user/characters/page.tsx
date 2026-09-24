@@ -31,7 +31,6 @@ export default async function UserCharactersPage() {
   // in den Client-Payload wandern (siehe OwnCharacterItem).
   const items: OwnCharacterItem[] = characters.map((c) => ({
     id: c.id,
-    slug: c.slug,
     name: c.name,
     rank: c.metadata.rank,
     status: c.status,

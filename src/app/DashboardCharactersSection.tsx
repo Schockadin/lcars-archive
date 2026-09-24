@@ -2,7 +2,7 @@ import Link from "next/link";
 import { LcarsAkteCard, LcarsCollapsiblePanel } from "@/components/lcars";
 import { PencilIcon } from "@/lib/icons";
 import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
-import { characterEditHref, characterHref } from "@/lib/contentRoutes";
+import { characterEditHref } from "@/lib/contentRoutes";
 import type { Character } from "@/types/character";
 
 // Nur die Felder, die die Sektion zeigt — der volle Character-Datensatz trägt
@@ -11,7 +11,6 @@ import type { Character } from "@/types/character";
 // /user/characters).
 export interface DashboardCharacterItem {
   id: number;
-  slug: string;
   name: string;
   rank: string | null;
   status: Character["status"];
@@ -23,7 +22,6 @@ export function toDashboardCharacterItem(
 ): DashboardCharacterItem {
   return {
     id: character.id,
-    slug: character.slug,
     name: character.name,
     rank: character.metadata.rank ?? null,
     status: character.status,
@@ -60,7 +58,7 @@ export default function DashboardCharactersSection({
             className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
           >
             <LcarsAkteCard
-              href={characterHref(character.slug)}
+              href={characterEditHref(character.id)}
               color={
                 character.isDraft
                   ? "var(--lcars-quinary)"

@@ -6,10 +6,7 @@ import ContentStateSelect from "../content/ContentStateSelect";
 import DeleteOwnContentButton from "../content/DeleteOwnContentButton";
 import ContentActionRow from "../content/ContentActionRow";
 import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
-import {
-  characterEditHref,
-  characterHref,
-} from "@/lib/contentRoutes";
+import { characterEditHref } from "@/lib/contentRoutes";
 
 const STATUS_LABELS = CHARACTER_STATUS_LABEL;
 
@@ -19,7 +16,6 @@ const STATUS_LABELS = CHARACTER_STATUS_LABEL;
 // CharacterListItem in src/lib/characters.ts).
 export interface OwnCharacterItem {
   id: number;
-  slug: string;
   name: string;
   rank: string | null;
   status: Character["status"];
@@ -66,7 +62,7 @@ export default function OwnCharacterList({
           className="flex flex-col sm:flex-row sm:items-center gap-[8px]"
         >
           <LcarsAkteCard
-            href={characterHref(c.slug)}
+            href={characterEditHref(c.id)}
             color={c.isDraft ? "var(--lcars-quinary)" : "var(--lcars-primary)"}
             className="flex-1"
             title={c.name}
