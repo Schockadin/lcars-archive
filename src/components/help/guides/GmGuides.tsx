@@ -8,6 +8,7 @@ import {
   GmDialoguesFigure,
   PartySheetFigure,
   SessionsFigure,
+  TimelineCsvImportFigure,
 } from "../figures/GmFigures";
 
 // Die Anleitungen zu den zehn Bereichen des Leitungs-Menüs — je Bereich ein
@@ -330,7 +331,10 @@ export function GmRulesGuide() {
 export function GmTimelineGuide() {
   return (
     <GuideBody>
-      <GuideSection title="Chronologie · Ereignisse importieren">
+      <GuideSection
+        title="Chronologie · Ereignisse importieren"
+        figure={<TimelineCsvImportFigure />}
+      >
         <p>
           Hier ergänzt du die öffentliche Chronologie gesammelt um{" "}
           <strong>eigene Ereignisse aus einer CSV-Datei</strong>. Lade zuerst

@@ -21,8 +21,9 @@ export function DashboardGuide() {
           Zu- und Absage, deine <strong>offenen Gespräche</strong>, den
           Abschnitt <strong>„Neues anlegen“</strong> (dieselben Knöpfe und
           Fenster wie unter „Meine Inhalte“), deine <strong>Charaktere</strong>{" "}
-          mit einem Stift zum Bearbeiten und die <strong>News</strong> — was
-          andere zuletzt angelegt, geändert oder gelöscht haben.
+          (ein Klick auf die Karte öffnet direkt ihre Akte) und die{" "}
+          <strong>News</strong> — was andere zuletzt angelegt, geändert oder
+          gelöscht haben.
         </p>
         <p>
           Dazu kommen deine <strong>Entwürfe</strong> — alles, was du angefangen

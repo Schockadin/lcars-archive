@@ -66,7 +66,11 @@ export async function inspectCharacterDocument(
     }
     let pdf: PDFDocument;
     try {
-      pdf = await PDFDocument.load(buffer);
+      // Unter jsdom/Node 24 stammt Buffer aus einem anderen Uint8Array-Realm
+      // als die von pdf-lib geprüfte globale Klasse. Eine echte Kopie ist in
+      // beiden Umgebungen stabil und verhindert, dass gültige PDFs allein an
+      // diesem instanceof-Unterschied scheitern.
+      pdf = await PDFDocument.load(new Uint8Array(buffer));
     } catch {
       throw new InvalidCharacterDocumentError(
         "Das PDF ist beschädigt oder geschützt und kann nicht verarbeitet werden.",

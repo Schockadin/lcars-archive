@@ -298,6 +298,37 @@ export function CampaignRulesFigure() {
   );
 }
 
+// ── Chronologie-Import ───────────────────────────────────────────────
+// Oben Musterdatei und Upload, darunter die Vorschau der importierten Zeilen.
+export function TimelineCsvImportFigure() {
+  return (
+    <GuideFigure
+      label="Oben ein Knopf für die CSV-Musterdatei und ein Dateifeld mit Importknopf, darunter drei Ereigniszeilen."
+      caption="Chronologie — Muster laden, CSV wählen, gemeinsam importieren"
+    >
+      <Pill x={10} y={12} w={58} h={12} fill={SECONDARY} />
+      <Box x={76} y={10} w={76} h={16} />
+      <Pill x={158} y={12} w={32} h={12} fill={PRIMARY} />
+      <Line x={10} y={34} w={180} h={2} opacity={0.25} />
+      {[0, 1, 2].map((row) => (
+        <g key={row}>
+          <Line x={12} y={45 + row * 21} w={28} h={4} opacity={0.65} />
+          <Line x={48} y={43 + row * 21} w={72} h={5} opacity={0.85} />
+          <Line x={48} y={51 + row * 21} w={104} h={3} opacity={0.4} />
+          <Pill
+            x={162}
+            y={44 + row * 21}
+            w={26}
+            h={9}
+            fill={[TERTIARY, QUATERNARY, QUINARY][row]}
+            opacity={0.8}
+          />
+        </g>
+      ))}
+    </GuideFigure>
+  );
+}
+
 // ── Gespräche (Leitung) ──────────────────────────────────────────────
 // Die Liste aller offenen Gespräche: Titel, Beteiligte, Owner und wann
 // zuletzt geschrieben wurde.

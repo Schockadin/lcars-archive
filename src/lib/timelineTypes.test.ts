@@ -414,7 +414,7 @@ describe("Umfang der Chronologie", () => {
       scope: "all",
       person: "Kira",
     });
-    expect(visible.map((e) => e.id)).toEqual(["start"]);
+    expect(visible.map((e) => e.id)).toEqual(["start", "dialog"]);
   });
 
   it("ordnet Kategorie-Links dem passenden Bereich zu", () => {

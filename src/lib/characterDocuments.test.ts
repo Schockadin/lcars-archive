@@ -39,7 +39,10 @@ describe("inspectCharacterDocument", () => {
     const pdf = await PDFDocument.create();
 
     await expect(
-      inspectCharacterDocument("leer.pdf", Buffer.from(await pdf.save())),
+      inspectCharacterDocument(
+        "leer.pdf",
+        Buffer.from(await pdf.save({ addDefaultPage: false })),
+      ),
     ).rejects.toThrow(/keine Seite/);
   });
 
