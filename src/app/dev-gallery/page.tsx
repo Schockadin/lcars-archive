@@ -89,7 +89,7 @@ const DEMO_ONBOARDING = buildOnboardingSteps({
 
 // Sechs Ereignisse der Chronologie über zwei Jahre: genug für die
 // Jahresleiste, die Monats-Trenner, je ein Beispiel der drei Herkünfte
-// (gepflegte Angabe, Marke im Text, vom Modell abgeleitet) — und für beide
+// (gepflegte Angabe, Marke im Text, frühere Modellableitung) — und für beide
 // Umfänge, denn zwei davon sind Missionsstarts (die Vorgabe-Ansicht) und
 // eines ist ein Missionsende, das dort NICHT erscheinen darf.
 const DEMO_TIMELINE: TimelineEvent[] = [

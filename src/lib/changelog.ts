@@ -161,7 +161,7 @@ export const CHANGELOG: ChangelogEntry[] = [
         tutorial: "mein-bereich",
       },
       {
-        text: "Die Spielleitung kann eigene Chronologie-Ereignisse gesammelt aus einer CSV-Datei importieren. Datum, Titel, Teaser, Volltext und beteiligte Figuren werden vor dem gemeinsamen Speichern vollständig geprüft.",
+        text: "Die Spielleitung kann eigene Chronologie-Ereignisse gesammelt aus einer CSV-Datei importieren. Datum, Titel, Teaser, Volltext und beteiligte Figuren werden vor dem gemeinsamen Speichern vollständig geprüft; eine leere Muster-CSV mit korrekter Kopfzeile und Kommentar steht zum Download bereit.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },

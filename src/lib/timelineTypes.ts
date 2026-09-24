@@ -12,11 +12,10 @@ import { RESERVED_CHRONOLOGY_SEGMENTS } from "@/lib/contentRoutes";
 export { fmtDate };
 
 // Woher ein Ereignis stammt. Die Unterscheidung steht in der Ansicht, weil
-// „vom Modell aus dem Text gelesen" etwas anderes ist als „so gepflegt":
+// Altbestand aus der früheren Modellableitung ist etwas anderes als „so gepflegt":
 //   metadata — aus den Feldern des Inhalts (Missionsdatum, Logbuch-Datum, …)
 //   marker   — aus einem <!-- timeline: … -->-Marker im Fließtext
-//   inferred — vom Sprachmodell aus dem Text abgeleitet (siehe
-//              src/lib/timelineInference.ts), von der Spielleitung übernommen
+//   inferred — Altbestand aus der früheren Modellableitung
 //   manual   — von Hand eingetragen, ohne zugehörigen Inhalt (ein
 //              Kampagnen-Meilenstein, der in keinem Eintrag steht)
 export type TimelineOrigin = "metadata" | "marker" | "inferred" | "manual";
@@ -66,7 +65,7 @@ const CATEGORY_BY_KEY = new Map(
 );
 
 // Zwei Schlüssel, eine Sache: die gepflegte Ereignisart heißt 'character'
-// (Beschriftung „Person"), aus Markern und aus dem Sprachmodell kam mitunter
+// (Beschriftung „Person"), aus Markern und früheren Ableitungen kam mitunter
 // 'person'. Als unbekannter Wert fiel das auf „Sonstiges" zurück und stand
 // als zweite, gleichbedeutende Art in Auswahl und Jahresleiste. Seit v1.29.49
 // laufen beide auf 'character' zusammen — Farbe und Beschriftung sind die der
@@ -76,7 +75,7 @@ const CATEGORY_ALIASES: Record<string, TimelineCategory> = {
   charakter: "character",
 };
 
-// Normalisiert einen Kategorie-Wert (aus Marker, Modell, Route oder
+// Normalisiert einen Kategorie-Wert (aus Marker, Altbestand, Route oder
 // Formular). Unbekannte Werte bleiben unangetastet — categoryVisual zeigt
 // sie weiterhin als „Sonstiges" mit ihrem eigenen Text.
 export function normalizeCategory(key: string): string {

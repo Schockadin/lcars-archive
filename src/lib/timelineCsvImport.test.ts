@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { TimelineCsvError, parseTimelineCsv } from "./timelineCsvImport";
+import {
+  TIMELINE_CSV_HEADER,
+  TIMELINE_CSV_TEMPLATE,
+  TimelineCsvError,
+  parseTimelineCsv,
+} from "./timelineCsvImport";
 
 describe("parseTimelineCsv", () => {
   it("liest das vereinbarte Format und kommagetrennte Figuren", () => {
@@ -25,6 +30,28 @@ describe("parseTimelineCsv", () => {
     );
     expect(row.title).toBe("Titel; zwei");
     expect(row.detail).toBe('Zeile 1\nZeile "2"');
+  });
+
+  it("liefert eine leere Vorlage mit korrekter Kopfzeile und Kommentar", () => {
+    expect(TIMELINE_CSV_TEMPLATE.split(/\r?\n/)[0]).toBe(TIMELINE_CSV_HEADER);
+    expect(parseTimelineCsv(TIMELINE_CSV_TEMPLATE)).toEqual([]);
+  });
+
+  it("ignoriert Kommentarzeilen und behält echte Zeilennummern", () => {
+    expect(
+      parseTimelineCsv(
+        `${TIMELINE_CSV_HEADER}\n# Kommentar: Beispiel\n2401-03-05;Erstkontakt;Kurz;Lang;Tuvok`,
+      ),
+    ).toEqual([
+      {
+        line: 3,
+        date: "2401-03-05",
+        title: "Erstkontakt",
+        teaser: "Kurz",
+        detail: "Lang",
+        characterNames: ["Tuvok"],
+      },
+    ]);
   });
 
   it("weist eine falsche Kopfzeile und unvollständige Zeilen ab", () => {

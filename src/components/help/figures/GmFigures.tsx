@@ -298,49 +298,6 @@ export function CampaignRulesFigure() {
   );
 }
 
-// ── Chronologie-Werkbank ─────────────────────────────────────────────
-// Oben die Inhalte mit Filterfeld, je Zeile der Knopf, der den Durchlauf
-// startet; DARUNTER — nicht daneben, so steht es auf der Seite — die
-// abgeleiteten Ereignisse zum Prüfen.
-export function TimelineWorkbenchFigure() {
-  return (
-    <GuideFigure
-      label="Oben ein Filterfeld über einer Liste von Inhalten mit je einem Knopf, darunter der Abschnitt mit den abgeleiteten Ereignissen."
-      caption="Oben ableiten, darunter das Ergebnis prüfen"
-    >
-      <Line x={10} y={9} w={52} fill={TERTIARY} opacity={0.9} />
-      <Box x={10} y={17} w={180} h={11} />
-      {[0, 1].map((i) => (
-        <g key={i}>
-          <Line x={10} y={36 + i * 16} w={72} opacity={0.7} />
-          <Pill
-            x={140}
-            y={33 + i * 16}
-            w={50}
-            h={10}
-            fill={i === 0 ? PRIMARY : BORDER}
-          />
-        </g>
-      ))}
-      <rect x={10} y={68} width={180} height={1} fill={BORDER} />
-      <Line x={10} y={74} w={64} fill={TERTIARY} opacity={0.9} />
-      {[0, 1].map((i) => (
-        <g key={i}>
-          <circle cx={14} cy={90 + i * 14} r={3.5} fill={TERTIARY} />
-          <Line x={24} y={88 + i * 14} w={116} h={3} opacity={0.6} />
-          <circle
-            cx={182}
-            cy={90 + i * 14}
-            r={4.5}
-            fill={QUINARY}
-            opacity={0.7}
-          />
-        </g>
-      ))}
-    </GuideFigure>
-  );
-}
-
 // ── Gespräche (Leitung) ──────────────────────────────────────────────
 // Die Liste aller offenen Gespräche: Titel, Beteiligte, Owner und wann
 // zuletzt geschrieben wurde.

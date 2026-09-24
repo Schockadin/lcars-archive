@@ -8,6 +8,10 @@ import {
   SubmitButton,
 } from "@/app/_shared/FormPrimitives";
 import { importTimelineCsvAction, type TimelineActionState } from "./actions";
+import {
+  TIMELINE_CSV_TEMPLATE,
+  TIMELINE_CSV_TEMPLATE_FILENAME,
+} from "@/lib/timelineCsvImport";
 
 const initialState: TimelineActionState = {};
 
@@ -16,6 +20,9 @@ export default function TimelineCsvImportPanel() {
     importTimelineCsvAction,
     initialState,
   );
+  const templateHref = `data:text/csv;charset=utf-8,${encodeURIComponent(
+    `\uFEFF${TIMELINE_CSV_TEMPLATE}`,
+  )}`;
 
   return (
     <section className="flex flex-col gap-[10px] border-b border-lcars-border pb-[24px]">
@@ -27,6 +34,13 @@ export default function TimelineCsvImportPanel() {
         werden in der letzten Spalte mit Kommas getrennt. Semikolons und
         Zeilenumbrüche im Text sind in Anführungszeichen erlaubt.
       </p>
+      <a
+        href={templateHref}
+        download={TIMELINE_CSV_TEMPLATE_FILENAME}
+        className="lcars-pill-btn--outline self-start"
+      >
+        Leere Muster-CSV herunterladen
+      </a>
       <form action={formAction} className="flex flex-col gap-[8px]">
         <FormField
           label="CSV-Datei"

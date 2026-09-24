@@ -22,7 +22,7 @@ import { getFirstContentImageIdsBySlug } from "@/lib/contentImages";
 import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 
 // Die Chronologie (/chronologie): alle Ereignisse der Kampagne in zeitlicher
-// Folge, aus gepflegten Angaben, Textmarken, Ableitungen und freien Events
+// Folge, aus gepflegten Angaben, Textmarken und freien Events
 // zusammengetragen.
 //
 //   1. Den gepflegten Angaben der Inhalte selbst — Missionsbeginn und -ende,
@@ -31,15 +31,14 @@ import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 //      Fließtext. Die gibt es seit langem (TimelineMarkerButton in der
 //      Werkzeugleiste jedes Textfeldes); sie erzeugen im gerenderten Text eine
 //      unsichtbare Sprungmarke #timeline-N, auf die die Karte hier verlinkt.
-//   3. Den vom Sprachmodell abgeleiteten sowie frei eingetragenen Ereignissen
-//      (Tabelle timeline_events, siehe timelineInference.ts und
-//      timelineManualEvents.ts).
+//   3. Den frei eingetragenen Ereignissen (Tabelle timeline_events, siehe
+//      timelineManualEvents.ts). Frühere Modellableitungen bleiben als
+//      Altbestand lesbar, können aber nicht mehr neu erzeugt werden.
 //
 // (1) und (2) werden BEIM LESEN aus den Inhalten gebildet und nicht
 // gespeichert: eine gespeicherte Kopie liefe bei jeder Bearbeitung
 // auseinander, und die Sichtbarkeit müsste doppelt gepflegt werden. Nur (3)
-// liegt in einer Tabelle — es kostet einen Modellaufruf und darf nicht bei
-// jedem Seitenaufruf neu entstehen.
+// liegt in einer Tabelle.
 //
 // Bewusst OHNE "use cache": die Chronologie hängt an der Sichtbarkeit der
 // betrachtenden Person (nicht-öffentliche Logbücher) — dieselbe
@@ -554,16 +553,15 @@ export async function getTimeline({
     );
   }
 
-  // ── Abgeleitete Ereignisse ───────────────────────────────────────────────
-  // Sie hängen an der Sichtbarkeit ihres Quell-Inhalts: ist der für diese
+  // ── Gespeicherte Ereignisse ──────────────────────────────────────────────
+  // Alt-Ableitungen hängen an der Sichtbarkeit ihres Quell-Inhalts: ist der für diese
   // Person nicht sichtbar (oder inzwischen gelöscht), fällt das Ereignis weg.
   //
   // Und sie treten hinter das zurück, was der Eintrag selbst hergibt: steht an
   // diesem Tag von derselben Quelle schon eine gepflegte Angabe oder eine
-  // Marke, ist das Abgeleitete eine Dopplung. Die Ableitung filtert das schon
-  // beim Speichern (dropKnownDates in timelineInference.ts) — hier steht das
-  // Netz für Zeilen, die vor dieser Regel entstanden sind oder deren Quelle
-  // ihr Datum seither bekommen hat.
+  // Marke, ist das Abgeleitete eine Dopplung. Hier steht das Netz für alte
+  // Zeilen, die vor dieser Regel entstanden sind oder deren Quelle ihr Datum
+  // seither bekommen hat. Neue Ableitungen werden nicht mehr erzeugt.
   for (const row of inferred) {
     // Von Hand eingetragene Ereignisse hängen an keinem Inhalt: keine
     // Sichtbarkeitsprüfung (es gibt keine Quelle, die etwas verbergen

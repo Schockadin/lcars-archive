@@ -244,16 +244,6 @@ export default function TutorialPage() {
                 später gemeinsam bearbeiten.
               </p>
               <p>
-                Drittens kann die{" "}
-                <strong>Spielleitung Ereignisse ableiten lassen</strong>: das
-                Sprachmodell liest einen Bericht und nennt die Begebenheiten,
-                die darin stecken, aber in keinem Feld stehen (&bdquo;drei Tage
-                später …&ldquo;). Solche Einträge sind auf der Karte als{" "}
-                <em>aus dem Text abgeleitet</em> gekennzeichnet — sie sind eine
-                Lesehilfe, keine gepflegte Angabe. Was nicht stimmt, entfernt
-                die Spielleitung unter &bdquo;Leitung → Chronologie&ldquo;.
-              </p>
-              <p>
                 Jede <strong>Ereignisart hat eine eigene Adresse</strong>:
                 Wählst du im Auswahlfeld etwa &bdquo;Konflikt&ldquo;, steht in
                 der Adresszeile <code>/chronologie/conflict</code>; die

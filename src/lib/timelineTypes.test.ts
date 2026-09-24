@@ -480,7 +480,7 @@ describe("latestEventDate", () => {
 });
 
 // „person" und „character" waren dieselbe Ereignisart mit zwei Schlüsseln —
-// die eine gepflegt, die andere aus Markern und aus dem Sprachmodell. Die
+// die eine gepflegt, die andere aus Markern und älteren Modellableitungen. Die
 // zweite fiel als unbekannter Wert auf „Sonstiges" zurück und stand als
 // eigene, gleichbedeutende Art in der Auswahl.
 describe("normalizeCategory", () => {

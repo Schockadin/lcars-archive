@@ -9,7 +9,11 @@ export interface TimelineCsvRow {
 
 export class TimelineCsvError extends Error {}
 
-const EXPECTED_HEADER = ["datum", "titel", "teaser", "text", "charaktere"];
+export const TIMELINE_CSV_HEADER = "Datum;Titel;Teaser;Text;Charaktere";
+export const TIMELINE_CSV_TEMPLATE_FILENAME = "chronologie-events-vorlage.csv";
+export const TIMELINE_CSV_TEMPLATE = `${TIMELINE_CSV_HEADER}\r\n# Kommentar: Eine Datenzeile pro Event. Datum im Format JJJJ-MM-TT. Mehrere Charaktere mit Komma trennen.\r\n`;
+
+const EXPECTED_HEADER = TIMELINE_CSV_HEADER.toLowerCase().split(";");
 
 function rowsOf(input: string): { line: number; cells: string[] }[] {
   const rows: { line: number; cells: string[] }[] = [];
@@ -80,25 +84,27 @@ export function parseTimelineCsv(input: string): TimelineCsvRow[] {
     );
   }
 
-  return rows.map((row) => {
-    if (row.cells.length !== EXPECTED_HEADER.length) {
-      throw new TimelineCsvError(
-        `Zeile ${row.line}: Erwartet werden fünf mit Semikolon getrennte Spalten.`,
+  return rows
+    .filter((row) => !row.cells[0]?.trimStart().startsWith("#"))
+    .map((row) => {
+      if (row.cells.length !== EXPECTED_HEADER.length) {
+        throw new TimelineCsvError(
+          `Zeile ${row.line}: Erwartet werden fünf mit Semikolon getrennte Spalten.`,
+        );
+      }
+      const [date, title, teaser, detail, characters] = row.cells.map((cell) =>
+        cell.trim(),
       );
-    }
-    const [date, title, teaser, detail, characters] = row.cells.map((cell) =>
-      cell.trim(),
-    );
-    return {
-      line: row.line,
-      date,
-      title,
-      teaser,
-      detail,
-      characterNames: characters
-        .split(",")
-        .map((name) => name.trim())
-        .filter(Boolean),
-    };
-  });
+      return {
+        line: row.line,
+        date,
+        title,
+        teaser,
+        detail,
+        characterNames: characters
+          .split(",")
+          .map((name) => name.trim())
+          .filter(Boolean),
+      };
+    });
 }

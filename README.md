@@ -993,9 +993,12 @@ LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
      verlinkt genau dorthin. Die Zählung folgt der Dokumentreihenfolge ALLER
      Marken — auch ungültiger —, sonst zeigten die Links hinter einer kaputten
      Marke auf die falsche Stelle.
-  3. **Abgeleitete Ereignisse** aus dem Sprachmodell (siehe unten).
-  4. **Eigene Ereignisse**, einzeln eingetragen oder von der Spielleitung per
+  3. **Eigene Ereignisse**, einzeln eingetragen oder von der Spielleitung per
      CSV importiert (siehe unten).
+
+  Bereits gespeicherte Ereignisse aus der früheren Modellableitung bleiben als
+  Altbestand sichtbar und können unter `/gm/chronologie` entfernt werden. Neue
+  Ableitungen werden dort nicht mehr erzeugt.
 
   (1) und (2) entstehen beim Lesen und werden **nicht** gespeichert: eine
   gespeicherte Kopie liefe bei jeder Bearbeitung auseinander und die
@@ -1005,10 +1008,10 @@ LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
   reine Funktionen in `src/lib/timelineTypes.ts` und sind
   dort einzeln getestet. `normalizeCategory` führt dabei **`person` und
   `character`** zusammen: die gepflegte Art heißt `character` (Beschriftung
-  „Person"), aus Markern und aus dem Sprachmodell kam mitunter `person` — das
+  „Person"), aus Markern und älteren Ableitungen kam mitunter `person` — das
   fiel als unbekannter Wert auf „Sonstiges" zurück und stand als zweite,
   gleichbedeutende Art in Auswahl und Jahresleiste. Normalisiert wird beim
-  Lesen (Anzeige, Filter, Auswahl) **und** beim Schreiben (Marker, Modell,
+  Lesen (Anzeige, Filter, Auswahl) **und** beim Schreiben (Marker,
   Formular); bestehende Zeilen zieht die Migration nach.
 
 - **Ereignisse von Hand eintragen** — der Knopf „Ereignis eintragen" über dem
@@ -1019,8 +1022,8 @@ LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
   `timeline_events` eine Quelle — ein solcher Meilenstein hatte damit kein
   Zuhause, außer man legte eigens einen Datenbank-Eintrag dafür an.
   `source_type`/`source_slug` sind jetzt nullable, `origin` unterscheidet
-  `inferred` (vom Modell) von `manual` (von Hand). Die Karte trägt das
-  Etikett „von Hand eingetragen". Ihr Titel ist ein Knopf: Er öffnet ein
+  `inferred` (Altbestand der früheren Ableitung) von `manual` (von Hand). Die
+  Karte trägt das Etikett „von Hand eingetragen". Ihr Titel ist ein Knopf: Er öffnet ein
   Detail-Overlay mit getrenntem Teaser, Markdown-Volltext und der gemeinsamen
   Bildergalerie; das erste Bild dient als Thumbnail. Keine
   Sichtbarkeitsprüfung: ohne
@@ -1045,17 +1048,9 @@ LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
   `Datum;Titel;Teaser;Text;Charaktere` importieren. Figuren in der letzten
   Spalte sind kommagetrennt; unbekannte oder mehrdeutige Namen und jede andere
   ungültige Zeile brechen den atomaren Batch ab, bevor etwas gespeichert wird.
-- **Ereignisse ableiten (`/gm/chronologie`)** — die Spielleitung lässt je Inhalt
-  das Sprachmodell die Begebenheiten nennen, die im Text stecken, aber in keinem
-  Feld stehen („drei Tage später …"). Verwendet dieselbe Retrieval-Pipeline wie
-  der Datenbank-Assistent (Zusammenhang aus dem Archiv, gleicher RBAC-Filter)
-  plus einen nicht-streamenden Aufruf (`completeText` in `src/lib/rag.ts`). Die
-  Antwort eines Modells ist Text, keine Datenstruktur: `parseInferredEvents`
-  schneidet das JSON-Array heraus und prüft jedes Feld einzeln (13 Tests).
-  Übernommene Ereignisse landen in `timeline_events`, sind in der Ansicht als „aus dem Text
-  abgeleitet" gekennzeichnet und hängen in ihrer Sichtbarkeit am Quell-Inhalt.
-  Bewusst nicht automatisch beim Speichern: ein Durchlauf kostet einen
-  Modellaufruf und gehört gelesen, bevor er in der Chronologie aller steht.
+  Eine leere Musterdatei mit korrekter Kopfzeile und erklärender Kommentarzeile
+  steht direkt beim Import zum Download; Kommentarzeilen beginnen mit `#` und
+  werden beim Einlesen übersprungen.
 - **Erste Schritte (`/willkommen`)** — Einstiegsseite für neue Konten: was das
   Archiv ist, plus eine Liste der ersten Schritte (Passwort, Charakter,
   Erschaffung, Logbuch) mit Link in den jeweiligen Ablauf. Bewusst
