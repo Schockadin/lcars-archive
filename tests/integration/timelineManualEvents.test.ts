@@ -31,7 +31,8 @@ describe("freie Chronologie-Ereignisse", () => {
         date: "2399-11-02",
         title: "Vertrag von Algeron",
         teaser: "Eine neue Grenze für den Quadranten.",
-        detail: "Die Grenze wird **festgeschrieben**.",
+        detail:
+          "Die Grenze wird **festgeschrieben**.\n\n<script>alert('xss')</script>",
         category: "political",
         characterIds: [],
       },
@@ -47,6 +48,7 @@ describe("freie Chronologie-Ereignisse", () => {
     expect(event!.href).toBeNull();
     expect(event!.detail).toBe("Eine neue Grenze für den Quadranten.");
     expect(event!.fullDetailHtml).toContain("<strong>festgeschrieben</strong>");
+    expect(event!.fullDetailHtml).not.toContain("<script");
     expect(event!.manualEventCreatedBy).toBe(user.id);
 
     const compactEvent = (

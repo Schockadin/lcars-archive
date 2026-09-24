@@ -333,20 +333,29 @@ function eventMatchesScope(
   event: TimelineEvent,
   scope: TimelineScope,
 ): boolean {
+  // Die fünf Umfänge trennen QUELLEN, nicht Kategorien. Ein frei gepflegtes
+  // Event darf z. B. die Ereignisart „Logbuch“ tragen und bleibt trotzdem ein
+  // Event; umgekehrt ist ein Marker innerhalb einer Mission kein Missionseintrag.
+  // Nur die je Inhalt automatisch erzeugten Metadaten-Karten repräsentieren
+  // Missionen, Logbücher und Gespräche als solche.
+  const isMissionEntry =
+    event.sourceType === "mission" && event.origin === "metadata";
+  const isLogEntry =
+    event.sourceType === "mission_log" && event.origin === "metadata";
+  const isDialogueEntry =
+    event.sourceType === "archive_entry" &&
+    event.origin === "metadata" &&
+    normalizeCategory(event.category) === "dialogue";
+
   switch (scope) {
     case "missions":
       return isMissionStart(event);
     case "logs":
-      return normalizeCategory(event.category) === "log";
+      return isLogEntry;
     case "dialogues":
-      return normalizeCategory(event.category) === "dialogue";
+      return isDialogueEntry;
     case "events":
-      return (
-        event.sourceType !== "mission" &&
-        !["mission", "log", "dialogue"].includes(
-          normalizeCategory(event.category),
-        )
-      );
+      return !isMissionEntry && !isLogEntry && !isDialogueEntry;
     case "all":
       return true;
   }

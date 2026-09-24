@@ -184,6 +184,15 @@ export default function TutorialPage() {
                 deshalb nicht mehr — die alte Adresse führt hierher.
               </p>
               <p>
+                Die fünf Bereiche richten sich nach der <strong>Quelle</strong>,
+                nicht nach dem Namen der Ereignisart: Die automatisch erzeugte
+                Karte eines Logbuchs steht unter „Logbücher“, eine im Text
+                gesetzte Marke dagegen unter „Events“ — auch dann, wenn sie in
+                einem Missionstext liegt. Frei eingetragene Ereignisse bleiben
+                ebenfalls unter „Events“; ihre Ereignisart grenzt du dort mit
+                dem zusätzlichen Filter ein.
+              </p>
+              <p>
                 Die <strong>Missionsseite</strong> selbst zeigt oben Status,
                 Zeitraum und die beteiligten Figuren, darunter die{" "}
                 <strong>Zusammenfassung</strong> des Einsatzes — sie lässt sich
@@ -206,7 +215,7 @@ export default function TutorialPage() {
                 Startseite unter den offenen Gesprächen.
               </p>
               <p>
-                Die Ereignisse kommen aus <strong>vier Quellen</strong>. Erstens
+                Die Ereignisse kommen aus <strong>drei Quellen</strong>. Erstens
                 aus dem, was ohnehin gepflegt ist: Beginn und Ende einer
                 Mission, das Datum eines Logbuchs oder Gesprächs, das
                 Geburtsdatum einer Figur. Zweitens aus{" "}
@@ -241,7 +250,9 @@ export default function TutorialPage() {
                 Spielleitung wieder entfernen. Deine eigenen Ereignisse findest
                 du außerdem unter <strong>„Profil → Meine Inhalte“</strong>;
                 dort kannst du Datum, Kategorie, Teaser, Volltext und Beteiligte
-                später gemeinsam bearbeiten.
+                später gemeinsam bearbeiten. Ältere, früher automatisch aus
+                Texten abgeleitete Ereignisse bleiben als gekennzeichneter
+                Altbestand sichtbar; neue Ableitungen werden nicht mehr erzeugt.
               </p>
               <p>
                 Jede <strong>Ereignisart hat eine eigene Adresse</strong>:
@@ -688,6 +699,15 @@ export default function TutorialPage() {
                 und Biografie — als reine Ansicht, mit Drucken und demselben
                 PDF-Download. Gepflegt werden die Werte weiterhin nur von der
                 Person, der der Charakter gehört.
+              </p>
+              <p>
+                Auf deiner eigenen Charakterseite kannst du außerdem unter
+                <strong> „Zusätzliche Dokumente“</strong> PDF-, Markdown-, DOCX-
+                und TXT-Dateien hinterlegen und direkt im Browser ansehen. Der
+                Knopf <strong>„Charakterarchiv (PDF)“</strong> stellt daraus
+                eine gemeinsame Datei zusammen. Vor dem Export wählst du
+                einzeln, ob Charakterdaten, zusätzliche Dokumente, ganze
+                Missionen oder bestimmte Logbücher enthalten sein sollen.
               </p>
               <p>
                 Kündigt die Spielleitung einen <strong>Spieltermin</strong> an,

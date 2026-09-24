@@ -91,13 +91,22 @@ export async function deleteCharacterDocument(
   documentId: number,
 ): Promise<boolean> {
   const [row] = await sql<{ r2_key: string }[]>`
-    DELETE FROM character_documents
+    SELECT r2_key
+    FROM character_documents
     WHERE id = ${documentId} AND character_id = ${characterId}
-    RETURNING r2_key
   `;
   if (!row) return false;
+
+  // Erst das private Objekt entfernen, dann seinen einzigen auffindbaren
+  // Schlüssel. Andersherum würde ein vorübergehender R2-Fehler eine verwaiste
+  // Datei hinterlassen, die ohne DB-Zeile später nicht mehr löschbar ist.
   await deleteObjectFromR2(row.r2_key);
-  return true;
+  const deleted = await sql<{ id: number }[]>`
+    DELETE FROM character_documents
+    WHERE id = ${documentId} AND character_id = ${characterId}
+    RETURNING id
+  `;
+  return deleted.length > 0;
 }
 
 export interface CharacterDocumentAccess {
@@ -192,10 +201,16 @@ export async function getCharacterDocumentsForExport(
 export async function purgeCharacterDocumentsFor(
   characterId: number,
 ): Promise<void> {
-  const rows = await sql<{ r2_key: string }[]>`
-    DELETE FROM character_documents
+  const rows = await sql<{ id: number; r2_key: string }[]>`
+    SELECT id, r2_key
+    FROM character_documents
     WHERE character_id = ${characterId}
-    RETURNING r2_key
   `;
-  for (const row of rows) await deleteObjectFromR2(row.r2_key);
+  for (const row of rows) {
+    await deleteObjectFromR2(row.r2_key);
+    await sql`
+      DELETE FROM character_documents
+      WHERE id = ${row.id} AND character_id = ${characterId}
+    `;
+  }
 }

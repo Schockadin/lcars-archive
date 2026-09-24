@@ -968,7 +968,12 @@ LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
   Der Umfang **„Missionen"** zeigt je Einsatz EINE Karte mit dem ganzen
   **Zeitraum** (Beginn–Abschluss, `missionEndDates`). Der Kategorienfilter
   steht nur unter **„Events"**; alle fünf Bereiche bieten den Filter nach
-  Beteiligten, sofern dort Figuren vorkommen.
+  Beteiligten, sofern dort Figuren vorkommen. Die Umfänge werden nach der
+  tatsächlichen Quelle getrennt, nicht nach dem frei wählbaren Kategorie-Text:
+  automatisch erzeugte Missions-, Logbuch- und Gesprächskarten stehen in
+  ihrem eigenen Bereich; Textmarker, freie Ereignisse und verbliebener
+  Altbestand der früheren Ableitung stehen unter „Events“. So bleibt etwa ein
+  Missionsmarker ein Event und ein freies Event der Art „Logbuch“ ein Event.
   Die **Ereigniskarte** (`.timeline-card`) trägt die Farbe ihrer Ereignisart
   als ganze Fläche mit dunkler Schrift (`--lcars-ink-dark`, das Token für
   „Text auf Akzentflächen" — es bleibt in beiden Helligkeitsmodi dunkel;

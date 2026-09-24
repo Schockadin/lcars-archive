@@ -31,8 +31,7 @@ import {
 // (resolveAllWikilinks in src/lib/autolink.ts, beim Vault-Import
 // scripts/ingest/wikilinks.ts), weil zum Zeitpunkt der Markdown→HTML-
 // Konvertierung noch nicht bekannt ist, worauf der Verweis zeigt.
-export const WIKILINK_RE =
-  /\[\[([^\]|#]+)(?:#([^\]|]*))?(?:\|([^\]]+))?\]\]/g;
+export const WIKILINK_RE = /\[\[([^\]|#]+)(?:#([^\]|]*))?(?:\|([^\]]+))?\]\]/g;
 
 // Der Abschnitt eines Verweises ist die ÜBERSCHRIFT, nicht deren Anker —
 // [[Klingonen#Frühe Jahre]]. Den Anker dazu erzeugt auf der Zielseite
@@ -259,14 +258,14 @@ export async function markdownToHtml(markdown: string): Promise<string> {
 }
 
 // Wie markdownToHtml, aber zusätzlich sanitisiert (rehype-sanitize,
-// Default-Schema) — ausschließlich für Freitext von Usern (Dialog-
-// Nachrichten). remark-rehype verwirft eingebettetes rohes HTML zwar
+// Default-Schema) — für beliebigen Freitext von Usern (Dialog-Nachrichten,
+// Volltexte freier Chronologie-Ereignisse). remark-rehype verwirft rohes HTML zwar
 // schon standardmäßig (kein allowDangerousHtml gesetzt), lässt aber
 // Markdown-Links mit gefährlichem URL-Schema (z.B. "javascript:") als
 // <a href="..."> unverändert durch — bei GM-Vault-Inhalt nie relevant,
 // bei beliebigem User-Freitext ein echter Stored-XSS-Vektor. Kein
 // Wikilink-/Timeline-Anker-/private-Marker-Support hier (alles
-// vault-spezifisch, für Chat-Nachrichten nicht sinnvoll).
+// vault-spezifisch, für freien User-Text nicht sinnvoll).
 export async function markdownToSafeHtml(markdown: string): Promise<string> {
   const result = await unified()
     .use(remarkParse)

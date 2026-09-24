@@ -325,6 +325,20 @@ describe("Umfang der Chronologie", () => {
       date: null,
       people: ["Kira"],
     }),
+    event({
+      id: "missions-marke",
+      origin: "marker",
+      sourceType: "mission",
+      category: "discovery",
+      phase: undefined,
+    }),
+    event({
+      id: "freies-log-event",
+      origin: "manual",
+      sourceType: "archive_entry",
+      category: "log",
+      phase: undefined,
+    }),
   ];
 
   it("zeigt in der Vorgabe nur die Missionsstarts", () => {
@@ -346,7 +360,7 @@ describe("Umfang der Chronologie", () => {
         year: null,
         scope: "events",
       }).map((e) => e.id),
-    ).toEqual(["marke"]);
+    ).toEqual(["marke", "missions-marke", "freies-log-event"]);
     expect(
       filterEvents(events, {
         query: "",
@@ -372,7 +386,7 @@ describe("Umfang der Chronologie", () => {
       year: null,
       scope: "all",
     });
-    expect(visible).toHaveLength(5);
+    expect(visible).toHaveLength(7);
   });
 
   it("hält ein Ereignis ohne Umfang-Angabe für sichtbar", () => {
@@ -380,7 +394,7 @@ describe("Umfang der Chronologie", () => {
     // darf nichts stillschweigend verschwinden.
     expect(
       filterEvents(events, { query: "", category: null, year: null }),
-    ).toHaveLength(5);
+    ).toHaveLength(7);
   });
 
   it("erkennt einen Missionsstart nur an Quelle UND Phase", () => {

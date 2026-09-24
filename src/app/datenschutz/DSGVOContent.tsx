@@ -55,13 +55,13 @@ export default function DSGVOContent({ year }: { year: number }) {
           E-Mail verschickt. Der Link selbst wird nur als Hash gespeichert,
           verliert nach Benutzung, nach 7 Tagen oder sobald ein neuer Link für
           dasselbe Konto angefordert wird seine Gültigkeit (Rechtsgrundlage:
-          Art. 6 Abs. 1 lit. b DSGVO). Fordert ein Account
-          selbst einen Reset an, wird die Administration zusätzlich per E-Mail
-          über die anfragende E-Mail-Adresse informiert (berechtigtes Interesse
-          an der Erkennung missbräuchlicher Reset-Anfragen, Rechtsgrundlage:
-          Art. 6 Abs. 1 lit. f DSGVO). Aus dieser Anfrage selbst lässt sich
-          unabhängig von ihrem Ergebnis nicht ableiten, ob zu einer eingegebenen
-          E-Mail-Adresse ein Konto existiert.
+          Art. 6 Abs. 1 lit. b DSGVO). Fordert ein Account selbst einen Reset
+          an, wird die Administration zusätzlich per E-Mail über die anfragende
+          E-Mail-Adresse informiert (berechtigtes Interesse an der Erkennung
+          missbräuchlicher Reset-Anfragen, Rechtsgrundlage: Art. 6 Abs. 1 lit. f
+          DSGVO). Aus dieser Anfrage selbst lässt sich unabhängig von ihrem
+          Ergebnis nicht ableiten, ob zu einer eingegebenen E-Mail-Adresse ein
+          Konto existiert.
         </p>
         <p>
           Zum Schutz vor automatisierten Anmelde- bzw. Reset-Versuchen
@@ -113,6 +113,27 @@ export default function DSGVOContent({ year }: { year: number }) {
           werden sie gelöscht.
         </p>
         <p>
+          Zu einem eigenen Charakter können angemeldete Personen zusätzlich
+          <strong> private Dokumente</strong> im PDF-, Markdown-, DOCX- oder
+          Textformat speichern. Gespeichert werden die Datei, Dateiname,
+          Dateityp, Größe, ein für Vorschau und Export extrahierter Text sowie
+          Upload-Zeitpunkt und hochladender Account. Zugriff, Vorschau, Download
+          und der daraus erzeugte Charakterarchiv-PDF-Export stehen nur der
+          Person offen, der der Charakter gehört; mit dem endgültigen Löschen
+          des Charakters werden auch die Dokument-Metadaten entfernt
+          (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO — Erfüllung des
+          Nutzungsverhältnisses der Kampagne).
+        </p>
+        <p>
+          Von Hand eingetragene <strong>Chronologie-Ereignisse</strong>{" "}
+          speichern Datum, Titel, Kategorie, Teaser, Volltext, beteiligte
+          Figuren und den anlegenden Account; hochgeladene Ereignisbilder werden
+          ebenfalls dem Ereignis zugeordnet. Diese Ereignisse sind als Teil der
+          Kampagnenchronik öffentlich sichtbar. Eigene Ereignisse lassen sich
+          bearbeiten und löschen, die Inhaltsmoderation darf sie ebenfalls
+          entfernen (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO).
+        </p>
+        <p>
           Angemeldete Personen können an Charakteren, Missionen, Logbüchern und
           Datenbank-Einträgen <strong>Notizen</strong> hinterlegen. Gespeichert
           werden der Text, der schreibende Account, der betroffene Eintrag, der
@@ -131,12 +152,12 @@ export default function DSGVOContent({ year }: { year: number }) {
           Datenbank-Einträgen wird der <strong>bisherige Text</strong> als
           frühere Fassung aufbewahrt, zusammen mit dem Zeitpunkt und dem
           Account, der die Bearbeitung ausgelöst hat. Damit lässt sich ein
-          versehentliches Überschreiben rückgängig machen (Rechtsgrundlage:
-          Art. 6 Abs. 1 lit. b DSGVO — Erfüllung des Nutzungsverhältnisses der
+          versehentliches Überschreiben rückgängig machen (Rechtsgrundlage: Art.
+          6 Abs. 1 lit. b DSGVO — Erfüllung des Nutzungsverhältnisses der
           Kampagne). Aufgehoben werden nur die letzten zwanzig Fassungen je
-          Inhalt; ältere fallen automatisch weg, und mit dem endgültigen
-          Löschen des Inhalts verschwinden auch seine Fassungen. Einsehbar sind
-          sie ausschließlich für die Personen, die den Inhalt auch bearbeiten
+          Inhalt; ältere fallen automatisch weg, und mit dem endgültigen Löschen
+          des Inhalts verschwinden auch seine Fassungen. Einsehbar sind sie
+          ausschließlich für die Personen, die den Inhalt auch bearbeiten
           dürfen.
         </p>
         <p>
@@ -174,22 +195,21 @@ export default function DSGVOContent({ year }: { year: number }) {
           die Kennung dient nur als Teil des Schlüssels im Sitzungsspeicher.
           Diese Zwischenstände verbleiben ausschließlich auf dem jeweiligen
           Gerät, werden nicht an den Server oder Dritte übertragen und vom
-          Browser spätestens beim Schließen des
-          Tabs bzw. Fensters gelöscht — beim An- und Abmelden zusätzlich
-          sofort, damit auf einem geteilten Gerät keine Zwischenstände einer
-          anderen Person zurückbleiben, und ebenso, sobald eine frühere Fassung
-          eines Inhalts wiederhergestellt wird (der gesicherte Zwischenstand
-          beschriebe dann einen überholten Text). Passwortfelder, Einmalcodes und
-          Zahlungsdaten werden dabei grundsätzlich nicht gesichert.
+          Browser spätestens beim Schließen des Tabs bzw. Fensters gelöscht —
+          beim An- und Abmelden zusätzlich sofort, damit auf einem geteilten
+          Gerät keine Zwischenstände einer anderen Person zurückbleiben, und
+          ebenso, sobald eine frühere Fassung eines Inhalts wiederhergestellt
+          wird (der gesicherte Zwischenstand beschriebe dann einen überholten
+          Text). Passwortfelder, Einmalcodes und Zahlungsdaten werden dabei
+          grundsätzlich nicht gesichert.
         </p>
         <p>
           Ebenfalls nur auf deinem Gerät, dafür dauerhaft, liegen einzelne{" "}
           <strong>Anzeige-Einstellungen</strong> im{" "}
           <strong>lokalen Speicher</strong> (localStorage) des Browsers: ob der
-          Hinweis zu Cookies bereits gelesen wurde, ob das Antwortfeld in
-          einem laufenden Gespräch am unteren Rand angeheftet bleiben soll und
-          welche Abschnitte der Startseite und des Profils auf- bzw.
-          zugeklappt sind
+          Hinweis zu Cookies bereits gelesen wurde, ob das Antwortfeld in einem
+          laufenden Gespräch am unteren Rand angeheftet bleiben soll und welche
+          Abschnitte der Startseite und des Profils auf- bzw. zugeklappt sind
           (Rechtsgrundlage: Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse
           daran, eine einmal getroffene Wahl nicht bei jedem Aufruf erneut
           abzufragen). Diese Angaben werden nicht an den Server oder Dritte
@@ -235,18 +255,18 @@ export default function DSGVOContent({ year }: { year: number }) {
         <p>
           Der Inhalt der Datenbank wird einmal täglich automatisch als
           Sicherungsdatei über eine verschlüsselte Verbindung in einen nicht
-          öffentlichen Speicher („R2“) bei <strong>Cloudflare</strong>
-          {" "}(Cloudflare, Inc., San Francisco, USA) hochgeladen. Gesichert
-          wird derselbe Datenbestand, den diese Erklärung beschreibt — also
-          auch eingestellte Inhalte, Notizen, Gesprächsnachrichten und, in
-          einer eigenen Datei, die Nutzerkonten. Zweck ist allein die
-          Wiederherstellbarkeit nach einem Datenverlust (Rechtsgrundlage:
-          Art. 6 Abs. 1 lit. f DSGVO — berechtigtes Interesse an einem
-          ausfallsicheren Betrieb). Sicherungen, die älter als 30 Tage sind,
-          werden automatisch gelöscht; ein gelöschtes Konto oder ein
-          gelöschter Inhalt kann deshalb noch bis zu 30 Tage lang in einer
-          Sicherung enthalten sein. Cloudflare verarbeitet die Daten als
-          Auftragsverarbeiter gemäß Art. 28 DSGVO. Mehr Informationen:{" "}
+          öffentlichen Speicher („R2“) bei <strong>Cloudflare</strong>{" "}
+          (Cloudflare, Inc., San Francisco, USA) hochgeladen. Gesichert wird
+          derselbe Datenbestand, den diese Erklärung beschreibt — also auch
+          eingestellte Inhalte, Notizen, Gesprächsnachrichten und, in einer
+          eigenen Datei, die Nutzerkonten. Zweck ist allein die
+          Wiederherstellbarkeit nach einem Datenverlust (Rechtsgrundlage: Art. 6
+          Abs. 1 lit. f DSGVO — berechtigtes Interesse an einem ausfallsicheren
+          Betrieb). Sicherungen, die älter als 30 Tage sind, werden automatisch
+          gelöscht; ein gelöschtes Konto oder ein gelöschter Inhalt kann deshalb
+          noch bis zu 30 Tage lang in einer Sicherung enthalten sein. Cloudflare
+          verarbeitet die Daten als Auftragsverarbeiter gemäß Art. 28 DSGVO.
+          Mehr Informationen:{" "}
           <a
             href="https://www.cloudflare.com/privacypolicy/"
             target="_blank"
@@ -268,12 +288,12 @@ export default function DSGVOContent({ year }: { year: number }) {
           hinzugefügten NPC schreiben soll. In beiden Fällen ergibt sich die
           Benachrichtigung aus der Beteiligung selbst. Wer gar keine
           E-Mail-Benachrichtigungen möchte, schaltet sie in den eigenen
-          Einstellungen vollständig ab. Dabei werden E-Mail-Adresse, Name und der jeweilige
-          Mailinhalt (z. B. der Link oder der Titel des betroffenen Inhalts) an
-          Resend übermittelt. Resend verarbeitet diese Daten als
-          Auftragsverarbeiter gemäß Art. 28 DSGVO, ausschließlich zum Versand
-          der jeweiligen E-Mail (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO).
-          Mehr Informationen:{" "}
+          Einstellungen vollständig ab. Dabei werden E-Mail-Adresse, Name und
+          der jeweilige Mailinhalt (z. B. der Link oder der Titel des
+          betroffenen Inhalts) an Resend übermittelt. Resend verarbeitet diese
+          Daten als Auftragsverarbeiter gemäß Art. 28 DSGVO, ausschließlich zum
+          Versand der jeweiligen E-Mail (Rechtsgrundlage: Art. 6 Abs. 1 lit. b
+          DSGVO). Mehr Informationen:{" "}
           <a href="https://resend.com" target="_blank" rel="noreferrer">
             resend.com
           </a>
@@ -391,12 +411,11 @@ export default function DSGVOContent({ year }: { year: number }) {
           <li>
             <code>neo_mode</code> speichert, ob du im Profil ein helles oder
             dunkles Erscheinungsbild gewählt hast, <code>neo_font_sans</code>{" "}
-            und <code>neo_font_mono</code> die dort gewählten Schriftarten —
-            aus demselben Grund und mit denselben Eigenschaften wie{" "}
-            <code>neo_ui</code>: reine Anzeige-Einstellung ohne
-            personenbezogene Daten, nicht <code>HttpOnly</code>, nur gesetzt,
-            wenn du von der Vorgabe abweichst, und beim Abmelden wieder
-            entfernt.
+            und <code>neo_font_mono</code> die dort gewählten Schriftarten — aus
+            demselben Grund und mit denselben Eigenschaften wie{" "}
+            <code>neo_ui</code>: reine Anzeige-Einstellung ohne personenbezogene
+            Daten, nicht <code>HttpOnly</code>, nur gesetzt, wenn du von der
+            Vorgabe abweichst, und beim Abmelden wieder entfernt.
           </li>
         </ul>
         <p>

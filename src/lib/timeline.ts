@@ -1,7 +1,7 @@
 import "server-only";
 import sql from "@/lib/db";
 import { synopsisExcerpt } from "@/lib/missionFormat";
-import { markdownToHtml } from "@/lib/markdown";
+import { markdownToSafeHtml } from "@/lib/markdown";
 import {
   eventId,
   parseTimelineMarkers,
@@ -627,7 +627,7 @@ export async function getTimeline({
         if (event.origin === "manual" && event.manualEventId) {
           const row = inferredById.get(event.manualEventId);
           if (row?.detail)
-            event.fullDetailHtml = await markdownToHtml(row.detail);
+            event.fullDetailHtml = await markdownToSafeHtml(row.detail);
         }
       }),
     );
