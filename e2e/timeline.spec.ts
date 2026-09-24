@@ -13,14 +13,33 @@ const ART = 'select[aria-label="Nach Ereignisart filtern"]';
 const BETEILIGT = 'select[aria-label="Nach beteiligter Person filtern"]';
 
 async function alleEreignisse(page: Page) {
-  await page.locator(`#timeline ${UMFANG}`).selectOption("all");
-  await expect(page.locator("#timeline .timeline-event")).toHaveCount(7);
+  const scope = page.locator(`#timeline ${UMFANG}`);
+  const events = page.locator("#timeline .timeline-event");
+  await expect
+    .poll(async () => {
+      await scope.selectOption("all");
+      return events.count();
+    })
+    .toBe(7);
+}
+
+async function eigeneEvents(page: Page) {
+  const scope = page.locator(`#timeline ${UMFANG}`);
+  const events = page.locator("#timeline .timeline-event");
+  await expect
+    .poll(async () => {
+      await scope.selectOption("events");
+      return events.count();
+    })
+    .toBe(3);
 }
 
 test.describe("Chronologie", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/dev-gallery");
-    await expect(page.locator("#timeline .timeline-event").first()).toBeVisible();
+    await expect(
+      page.locator("#timeline .timeline-event").first(),
+    ).toBeVisible();
   });
 
   test("zeigt in der Vorgabe nur die Missionsstarts", async ({ page }) => {
@@ -33,7 +52,9 @@ test.describe("Chronologie", () => {
     await expect(timeline).not.toContainText("Abschluss des Einsatzes");
   });
 
-  test("führt jeden Missionsstart auf seine Missionsseite", async ({ page }) => {
+  test("führt jeden Missionsstart auf seine Missionsseite", async ({
+    page,
+  }) => {
     const hrefs = await page
       .locator("#timeline .timeline-card-title")
       .evaluateAll((nodes) => nodes.map((n) => n.getAttribute("href")));
@@ -43,7 +64,9 @@ test.describe("Chronologie", () => {
     ]);
   });
 
-  test("zeigt mit „Alle Ereignisse“ den vollen Zeitstrahl", async ({ page }) => {
+  test("zeigt mit „Alle Ereignisse“ den vollen Zeitstrahl", async ({
+    page,
+  }) => {
     await alleEreignisse(page);
     const timeline = page.locator("#timeline");
     await expect(timeline.locator(".timeline-card-title")).toHaveCount(7);
@@ -72,7 +95,9 @@ test.describe("Chronologie", () => {
     // Ein Zeitstrahl wird nach dem Datum geordnet, sonst ist er keiner —
     // die frühere zweite Option „Art" ist entfallen.
     await expect(page.locator("#timeline .mission-sort button")).toHaveCount(1);
-    await expect(page.locator("#timeline .mission-sort")).toContainText("Datum");
+    await expect(page.locator("#timeline .mission-sort")).toContainText(
+      "Datum",
+    );
     await expect(page.locator("#timeline .mission-sort")).not.toContainText(
       "Art",
     );
@@ -121,7 +146,7 @@ test.describe("Chronologie", () => {
   test("bietet kein Jahr an, in dem die übrigen Filter nichts übrig lassen", async ({
     page,
   }) => {
-    await alleEreignisse(page);
+    await eigeneEvents(page);
     // Alle Konflikte der Attrappe liegen in 2401 — 2364 hat dann nichts mehr
     // beizutragen. Es bleibt ein einziges Jahr, also gibt es auch nichts mehr
     // auszuwählen und die Leiste verschwindet.
@@ -132,7 +157,7 @@ test.describe("Chronologie", () => {
   test("lässt ein leer gefiltertes Jahr trotzdem abwählbar", async ({
     page,
   }) => {
-    await alleEreignisse(page);
+    await eigeneEvents(page);
     // 2364 wählen, dann auf Konflikte einschränken: 2364 hat keinen Treffer
     // mehr, muss aber sichtbar bleiben — sonst steht man vor einer leeren
     // Liste, deren Ursache man nicht mehr anklicken kann.
@@ -164,7 +189,7 @@ test.describe("Chronologie", () => {
   });
 
   test("filtert nach Ereignisart", async ({ page }) => {
-    await alleEreignisse(page);
+    await eigeneEvents(page);
     await page.locator(`#timeline ${ART}`).selectOption({ label: "Konflikt" });
     await expect(page.locator("#timeline .timeline-event")).toHaveCount(1);
   });
@@ -193,7 +218,7 @@ test.describe("Chronologie", () => {
   test("nimmt beim Wechsel des Umfangs die übrigen Filter zurück", async ({
     page,
   }) => {
-    await alleEreignisse(page);
+    await eigeneEvents(page);
     await page.locator(`#timeline ${ART}`).selectOption({ label: "Konflikt" });
     await expect(page.locator("#timeline .timeline-event")).toHaveCount(1);
 
@@ -212,7 +237,9 @@ test.describe("Chronologie", () => {
     // stehen deshalb als Etikett in der Titelzeile.
     const origins = page.locator("#timeline .timeline-origin");
     await expect(origins).toHaveCount(2);
-    await expect(origins.filter({ hasText: "im Text markiert" })).toHaveCount(1);
+    await expect(origins.filter({ hasText: "im Text markiert" })).toHaveCount(
+      1,
+    );
     await expect(
       origins.filter({ hasText: "aus dem Text abgeleitet" }),
     ).toHaveCount(1);
@@ -316,12 +343,13 @@ test.describe("Chronologie", () => {
     );
     // Kein Datum auf der Karte: „Datum —" wäre eine Zeile, die nichts sagt.
     await expect(letzte.locator(".timeline-card-date")).toHaveCount(0);
-    await expect(
-      page.locator("#timeline .timeline-period").last(),
-    ).toHaveText("Ohne Datum");
+    await expect(page.locator("#timeline .timeline-period").last()).toHaveText(
+      "Ohne Datum",
+    );
   });
 
-  test("nennt die Zahl der angezeigten Ereignisse", async ({ page }) => {    await alleEreignisse(page);
+  test("nennt die Zahl der angezeigten Ereignisse", async ({ page }) => {
+    await alleEreignisse(page);
     await expect(page.locator("#timeline")).toContainText("7 Ereignisse");
     await page
       .locator("#timeline .timeline-year")
@@ -339,10 +367,26 @@ test.describe("Chronologie", () => {
     // Auf die Datumszeile gezielt — per Maus-Koordinate, weil Playwright
     // sonst meldet, dass der Titel-Link die Klicks abfängt. Genau das ist ja
     // der Zweck: die unsichtbare Fläche liegt über der Karte.
-    await karte.scrollIntoViewIfNeeded();
+    // In der Bildschirmmitte bleibt der Klick frei von festen Hinweisen am
+    // unteren Rand (etwa dem technisch notwendigen Cookie-Hinweis).
+    await karte.evaluate((element) =>
+      element.scrollIntoView({ block: "center" }),
+    );
     const datum = await karte.locator(".timeline-card-date").boundingBox();
-    await page.mouse.click(datum!.x + datum!.width / 2, datum!.y + datum!.height / 2);
-    await expect(page).toHaveURL(/\/chronologie\/mission\/zweite-mission$/);
+    const hrefAtDate = await page.evaluate(
+      ({ x, y }) => {
+        const element = document.elementFromPoint(x, y);
+        return element?.closest("a")?.getAttribute("href");
+      },
+      {
+        x: datum!.x + datum!.width / 2,
+        y: datum!.y + datum!.height / 2,
+      },
+    );
+    // Der Galerie fehlt absichtlich die Datenbank für die echte Zielseite.
+    // Der Browser-Hit-Test belegt die Klickfläche, ohne die Navigation von
+    // einer nicht verfügbaren Missionsroute abhängig zu machen.
+    expect(hrefAtDate).toBe("/chronologie/mission/zweite-mission");
   });
 
   test("klappt ein Feld auf, ohne der Karte zu folgen", async ({ page }) => {
@@ -374,14 +418,16 @@ test.describe("Chronologie", () => {
 test.describe("Ereignis eintragen", () => {
   test.beforeEach(async ({ page }) => {
     await page.goto("/dev-gallery");
-    await expect(page.locator("#timeline .timeline-event").first()).toBeVisible();
+    await expect(
+      page.locator("#timeline .timeline-event").first(),
+    ).toBeVisible();
   });
 
   test("öffnet das Formular als Fenster, mit dem jüngsten Datum vorbelegt", async ({
     page,
   }) => {
     // Zugeklappt gibt es kein Formular, nur den Knopf.
-    await expect(page.locator("#manual-event-date")).toHaveCount(0);
+    await expect(page.locator("#manual-event-new-date")).toHaveCount(0);
 
     await page
       .locator("#timeline")
@@ -390,7 +436,7 @@ test.describe("Ereignis eintragen", () => {
 
     const dialog = page.getByRole("dialog", { name: "Ereignis eintragen" });
     await expect(dialog).toBeVisible();
-    const datum = page.locator("#manual-event-date");
+    const datum = page.locator("#manual-event-new-date");
     await expect(datum).toHaveAttribute("type", "date");
     // Das jüngste Attrappen-Ereignis der Galerie.
     await expect(datum).toHaveValue("2401-06-12");
