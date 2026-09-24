@@ -232,6 +232,29 @@ CREATE INDEX IF NOT EXISTS idx_characters_name_trgm  ON characters USING GIN (na
 -- exist" fehlschlagen, bevor die Spalte angelegt wurde.
 
 -- ---------------------------------------------------------------------------
+-- character_documents
+-- ---------------------------------------------------------------------------
+-- Zusätzliche Dokumente einer Figur. Die Bytes liegen im privaten R2-
+-- Backup-Bucket; in der Datenbank stehen nur Metadaten und der beim Upload sicher
+-- extrahierte Text für Vorschau und PDF-Export. PDF-Dateien benötigen keinen
+-- extrahierten Text, da der Browser sie direkt rendert und der Export ihre
+-- Seiten unverändert übernimmt.
+CREATE TABLE IF NOT EXISTS character_documents (
+  id             SERIAL PRIMARY KEY,
+  character_id   INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  r2_key         TEXT UNIQUE NOT NULL,
+  file_name      TEXT NOT NULL,
+  file_kind      TEXT NOT NULL CHECK (file_kind IN ('pdf', 'md', 'docx', 'txt')),
+  content_mime   TEXT NOT NULL,
+  size_bytes     INT NOT NULL CHECK (size_bytes > 0 AND size_bytes <= 8388608),
+  extracted_text TEXT,
+  uploaded_by    INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_character_documents_character
+  ON character_documents(character_id);
+
+-- ---------------------------------------------------------------------------
 -- missions
 -- ---------------------------------------------------------------------------
 -- Missionen sind immer für alle sichtbar, sobald sie kein Entwurf mehr sind

@@ -175,6 +175,16 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "charaktere",
         tutorial: "seiten-im-ueberblick",
       },
+      {
+        text: "In deiner privaten Charakterakte kannst du jetzt zusätzliche PDF-, Markdown-, DOCX- und TXT-Dokumente hinterlegen, direkt im Browser lesen, herunterladen und wieder entfernen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+      {
+        text: "Ein neuer Charakterarchiv-Export stellt eine gemeinsame PDF genau nach deiner Auswahl zusammen: Charakterdaten, einzelne Zusatzdokumente, vollständige Missionen und einzelne vom Charakter verfasste Logbücher.",
+        category: "export",
+        tutorial: "charaktererschaffung",
+      },
     ],
   },
   {

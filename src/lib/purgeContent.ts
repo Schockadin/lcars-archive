@@ -2,6 +2,7 @@ import "server-only";
 import sql from "@/lib/db";
 import type { TrashContentType } from "@/lib/adminContent";
 import { purgeContentImagesFor } from "@/lib/contentImages";
+import { purgeCharacterDocumentsFor } from "@/lib/characterDocuments";
 // RAG-Index endgültig mit aufräumen — content_embeddings hängt NICHT per FK am
 // Inhalt (eigene Tabelle), muss also hier beim harten Löschen mit entfernt
 // werden, sonst blieben verwaiste Vektorzeilen zurück.
@@ -68,6 +69,14 @@ export async function purgeExpiredSoftDeletedContent(
 }> {
   const cutoff = sql`NOW() - (${retentionDays} * INTERVAL '1 day')`;
 
+  const characterTargets = await sql<{ id: number; slug: string }[]>`
+    SELECT id, slug FROM characters
+    WHERE deleted_at IS NOT NULL AND deleted_at < ${cutoff}
+  `;
+  for (const character of characterTargets) {
+    // Vor dem FK-Cascade: Die Objekt-Keys werden zum Löschen aus R2 benötigt.
+    await purgeCharacterDocumentsFor(character.id);
+  }
   const characterRows = await sql<{ id: number; slug: string }[]>`
     DELETE FROM characters WHERE deleted_at IS NOT NULL AND deleted_at < ${cutoff}
     RETURNING id, slug
@@ -153,6 +162,9 @@ export async function purgeContentById(
       SELECT id, slug FROM characters WHERE id = ${id} AND deleted_at IS NOT NULL
     `;
     if (!target) return false;
+    // Vor dem Löschen der Charakterzeile; ON DELETE CASCADE würde sonst die
+    // Metadaten samt R2-Key entfernen, aber das eigentliche Objekt zurücklassen.
+    await purgeCharacterDocumentsFor(target.id);
     await sql`DELETE FROM characters WHERE id = ${id}`;
     await sql`
       DELETE FROM timeline_events

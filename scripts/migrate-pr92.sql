@@ -1,7 +1,8 @@
 -- Migration für die Erweiterung eigener Chronologie-Ereignisse.
 --
 -- Fügt einen getrennten Teaser hinzu und erlaubt Bildern, über die bestehende
--- polymorphe content_images-Tabelle an timeline_events zu hängen.
+-- polymorphe content_images-Tabelle an timeline_events zu hängen. Ergänzt
+-- außerdem zusätzliche PDF-, Markdown-, DOCX- und Textdokumente für Figuren.
 --
 --   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr92.sql
 --
@@ -27,5 +28,20 @@ ALTER TABLE content_images
   CHECK (content_type IN (
     'character', 'mission', 'mission_log', 'archive_entry', 'timeline_event'
   ));
+
+CREATE TABLE IF NOT EXISTS character_documents (
+  id             SERIAL PRIMARY KEY,
+  character_id   INT NOT NULL REFERENCES characters(id) ON DELETE CASCADE,
+  r2_key         TEXT UNIQUE NOT NULL,
+  file_name      TEXT NOT NULL,
+  file_kind      TEXT NOT NULL CHECK (file_kind IN ('pdf', 'md', 'docx', 'txt')),
+  content_mime   TEXT NOT NULL,
+  size_bytes     INT NOT NULL CHECK (size_bytes > 0 AND size_bytes <= 8388608),
+  extracted_text TEXT,
+  uploaded_by    INT REFERENCES users(id) ON DELETE SET NULL,
+  created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_character_documents_character
+  ON character_documents(character_id);
 
 COMMIT;

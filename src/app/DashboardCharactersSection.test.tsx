@@ -13,18 +13,14 @@ const TVEL: DashboardCharacterItem = {
 };
 
 describe("DashboardCharactersSection", () => {
-  it("führt jeden Charakter mit einem Knopf in seine Kopfdaten", () => {
+  it("führt die Charakterkarte ohne redundanten Edit-Knopf in die eigene Akte", () => {
     render(<DashboardCharactersSection characters={[TVEL]} />);
 
-    // Karte und Stift führen beide in die eigene, bearbeitbare Akte. Die
-    // öffentliche Leseseite wäre hier ein unnötiger Umweg.
     const ziele = screen
       .getAllByRole("link")
       .map((link) => link.getAttribute("href"));
-    expect(ziele).toEqual(["/user/characters/4", "/user/characters/4"]);
-    expect(
-      screen.getByRole("link", { name: "T'Vel bearbeiten" }),
-    ).toHaveAttribute("href", "/user/characters/4");
+    expect(ziele).toEqual(["/user/characters/4"]);
+    expect(screen.queryByLabelText("T'Vel bearbeiten")).toBeNull();
   });
 
   // Das Dashboard soll keine leeren Kästen zeigen — wer alle Charaktere

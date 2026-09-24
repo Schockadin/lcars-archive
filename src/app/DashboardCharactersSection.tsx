@@ -1,6 +1,4 @@
-import Link from "next/link";
 import { LcarsAkteCard, LcarsCollapsiblePanel } from "@/components/lcars";
-import { PencilIcon } from "@/lib/icons";
 import { CHARACTER_STATUS_LABEL } from "@/lib/characterFormat";
 import { characterEditHref } from "@/lib/contentRoutes";
 import type { Character } from "@/types/character";
@@ -29,8 +27,8 @@ export function toDashboardCharacterItem(
   };
 }
 
-// Die eigenen Charaktere auf dem Dashboard — jeder mit einem Knopf, der
-// direkt in seine Kopfdaten führt. Gedacht für den häufigsten Weg überhaupt:
+// Die eigenen Charaktere auf dem Dashboard — jede Karte führt direkt in die
+// eigene Akte. Gedacht für den häufigsten Weg überhaupt:
 // „kurz was am eigenen Charakter ändern", der bisher über zwei Seiten ging.
 //
 // WELCHE Charaktere hier stehen, entscheidet das Profil (jeder einzeln,
@@ -84,17 +82,6 @@ export default function DashboardCharactersSection({
                 </>
               }
             />
-            {/* Ein Icon statt „Bearbeiten": Bei mehreren Charakteren stünde
-                dasselbe Wort mehrfach untereinander. Die Beschriftung lebt im
-                aria-label und im Tooltip — wie beim Hilfe-Knopf. */}
-            <Link
-              href={characterEditHref(character.id)}
-              className="lcars-icon-btn shrink-0 max-sm:self-end"
-              aria-label={`${character.name} bearbeiten`}
-              title={`${character.name} bearbeiten`}
-            >
-              <PencilIcon />
-            </Link>
           </div>
         ))}
       </div>

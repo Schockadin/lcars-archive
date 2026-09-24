@@ -442,6 +442,25 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `personnelFileLayout.ts` gelten deshalb unverändert mit Faktor 0,75 (px→pt).
   Die Grafik liegt als eingebettetes PNG bei (`personnelFileArt.ts`, aus dem
   SVG erzeugt), damit der Export weder Datei- noch Netzzugriff braucht.
+- **Private Charakterdokumente** — im Panel „Zusätzliche Dokumente“ der
+  eigenen Charakterakte lassen sich PDF, Markdown, DOCX und TXT bis 8 MB
+  hinterlegen. Die Binärdatei liegt im privaten R2-Backup-Bucket,
+  Metadaten und der für Vorschau/Export extrahierte Text stehen in der Tabelle
+  `character_documents`. Vorschau und Download laufen über die API-Route
+  `/api/character-documents/[id]` und prüfen bei jedem Aufruf Session,
+  Charakter-Owner und Löschstatus; die öffentliche Charakterseite erhält
+  weder Liste noch URLs. Markdown wird als bereinigtes HTML dargestellt,
+  DOCX und TXT als maskierter Text, PDF direkt im Browser.
+- **Granulares Charakterarchiv als PDF** — die API-Route
+  `/api/export/character-archive` setzt serverseitig eine gemeinsame PDF
+  zusammen. Zur Auswahl stehen der komplette Charakterbogen, einzelne
+  Zusatzdokumente, vollständige veröffentlichte Missionen und einzelne vom
+  Charakter verfasste Logbücher (einschließlich eigener Entwürfe). Wurde
+  eine ganze Mission gewählt, werden deren ebenfalls markierte Einzellogs
+  nicht doppelt angehängt. `pdf-lib` kopiert vorhandene PDF-Seiten;
+  Markdown-, DOCX- und TXT-Dokumente werden mit dem bestehenden
+  React-PDF-Renderer zu eigenen Textblättern. Sämtliche IDs werden erneut
+  gegen den angemeldeten Owner und die tatsächlich angebotene Auswahl geprüft.
 - **Listen im Werte-Editor** — dasselbe Muster für alle: Einträge als Zeilen
   mit rotem Minus, „Hinzufügen" öffnet ein Fenster mit freiem Eingabefeld
   (`EntryAddModal.tsx`), Talente stattdessen den Katalog (`TalentPicker.tsx`).
@@ -2022,6 +2041,12 @@ ausschließlich vom Owner auf seiner eigenen Charakterseite
 (`/user/characters/<id>`, Panel „Werte"). Der PDF-Export
 `/api/export/character-sheet?characterId=…` folgt derselben Regel: owner-
 gescopte Abfrage, für `gm.access` zusätzlich jeder Charakter.
+
+Zusätzliche Charakterdokumente sind davon bewusst getrennt: sie erscheinen
+nur in der privaten Akte unter `/user/characters/<id>`. Auch ihre
+Browser-Vorschau, ihr Download und der kombinierte Charakterarchiv-Export
+prüfen den Owner serverseitig; weder öffentliche Besucher noch die
+Spielleitung erhalten allein aufgrund ihrer Rolle Zugriff auf diese Dateien.
 
 Beim Ausrollen: **vor** `scripts/migrate-pr62.sql` einmal
 `npx tsx --conditions=react-server scripts/purge-character-sheet-uploads.ts`

@@ -230,6 +230,16 @@ export default function CharacterCreationGuide() {
           Einsatzberichte und Gespräche bleibt dort aber erhalten.
         </p>
         <p>
+          Im Panel <strong>„Zusätzliche Dokumente“</strong> kannst du PDF-,
+          Markdown-, DOCX- und TXT-Dateien bis 8 MB in deiner privaten
+          Charakterakte hinterlegen, direkt im Browser lesen, herunterladen oder
+          wieder entfernen. Über <strong>„Charakter exportieren“</strong>
+          stellst du außerdem eine gemeinsame PDF-Datei zusammen: wahlweise mit
+          den Charakterdaten, einzelnen Zusatzdokumenten, vollständigen
+          veröffentlichten Missionen und/oder einzelnen Logbüchern, die dieser
+          Charakter verfasst hat.
+        </p>
+        <p>
           Ganz unten am Bogen findest du einen <strong>Spickzettel</strong>:
           alle Talente deines Charakters mit ihrem vollen Regeltext — und
           darunter die wichtigsten Regeln für den Spieltisch: wofür du{" "}

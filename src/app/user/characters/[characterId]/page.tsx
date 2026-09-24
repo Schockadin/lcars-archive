@@ -20,6 +20,10 @@ import { characterEditHref } from "@/lib/contentRoutes";
 import HelpButton from "@/components/help/HelpButton";
 import { HelpTitleRow } from "@/components/help/HelpHeading";
 import CharacterCreationGuide from "@/components/character/CharacterCreationGuide";
+import CharacterDocumentsPanel from "./CharacterDocumentsPanel";
+import { listCharacterDocuments } from "@/lib/characterDocuments";
+import CharacterArchiveExportButton from "./CharacterArchiveExportButton";
+import { getCharacterArchiveOptions } from "@/lib/characterArchive";
 
 export const metadata: Metadata = {
   title: "Charakter",
@@ -53,17 +57,27 @@ export default async function OwnCharacterPage({ params }: Props) {
 
   // Erst NACH dem Owner-Check: vorher ist nicht klar, ob der Charakter
   // überhaupt zu diesem Konto gehört.
-  const [account, rules, talents, focuses, campaignRules, revisions] =
-    await Promise.all([
-      getApAccount(sheet.id),
-      getAdvancementRules(),
-      listTalents(),
-      listFocuses(),
-      listCampaignRules(),
-      // Versionshistorie der Biografie — der Owner-Check oben ist bereits
-      // gelaufen, listRevisions prüft ihn über den Viewer noch einmal selbst.
-      getViewer().then((v) => listRevisions("character", character.id, v)),
-    ]);
+  const [
+    account,
+    rules,
+    talents,
+    focuses,
+    campaignRules,
+    revisions,
+    documents,
+    archiveOptions,
+  ] = await Promise.all([
+    getApAccount(sheet.id),
+    getAdvancementRules(),
+    listTalents(),
+    listFocuses(),
+    listCampaignRules(),
+    // Versionshistorie der Biografie — der Owner-Check oben ist bereits
+    // gelaufen, listRevisions prüft ihn über den Viewer noch einmal selbst.
+    getViewer().then((v) => listRevisions("character", character.id, v)),
+    listCharacterDocuments(character.id),
+    getCharacterArchiveOptions(session.userId, character.id),
+  ]);
 
   return (
     <>
@@ -85,20 +99,28 @@ export default async function OwnCharacterPage({ params }: Props) {
           <h1>{character.name}</h1>
         </HelpTitleRow>
 
-        <CharacterSheetButton
-          characterId={sheet.id}
-          input={{
-            characterName: sheet.name,
-            rank: sheet.rank,
-            species: sheet.species,
-            portrait: sheet.portrait,
-            portraitCrop: sheet.portraitCrop,
-            stats: sheet.stats,
-            bioHtml: character.bioHtml,
-            talents,
-            campaignRules,
-          }}
-        />
+        <div className="flex flex-wrap gap-[8px]">
+          <CharacterSheetButton
+            characterId={sheet.id}
+            input={{
+              characterName: sheet.name,
+              rank: sheet.rank,
+              species: sheet.species,
+              portrait: sheet.portrait,
+              portraitCrop: sheet.portraitCrop,
+              stats: sheet.stats,
+              bioHtml: character.bioHtml,
+              talents,
+              campaignRules,
+            }}
+          />
+          <CharacterArchiveExportButton
+            characterId={character.id}
+            characterName={character.name}
+            documents={documents}
+            missions={archiveOptions}
+          />
+        </div>
 
         <CharacterPortraitPanel userId={session.userId} character={character} />
 
@@ -126,6 +148,11 @@ export default async function OwnCharacterPage({ params }: Props) {
           characterId={character.id}
           bioHtml={character.bioHtml}
           sourceMarkdown={character.sourceMarkdown}
+        />
+
+        <CharacterDocumentsPanel
+          characterId={character.id}
+          documents={documents}
         />
 
         <RevisionsPanel
