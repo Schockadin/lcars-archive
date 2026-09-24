@@ -22,7 +22,8 @@ import { getFirstContentImageIdsBySlug } from "@/lib/contentImages";
 import { resolvePortraitView, type PortraitCrop } from "@/lib/portraitCrop";
 
 // Die Chronologie (/chronologie): alle Ereignisse der Kampagne in zeitlicher
-// Folge, aus drei Quellen zusammengetragen.
+// Folge, aus gepflegten Angaben, Textmarken, Ableitungen und freien Events
+// zusammengetragen.
 //
 //   1. Den gepflegten Angaben der Inhalte selbst — Missionsbeginn und -ende,
 //      Logbuch-Datum, Datum eines Gesprächs, Geburtsdatum einer Figur.

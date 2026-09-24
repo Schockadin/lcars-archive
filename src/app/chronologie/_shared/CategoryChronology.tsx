@@ -6,6 +6,7 @@ import { getTimeline } from "@/lib/timeline";
 import {
   categoryVisual,
   latestEventDate,
+  timelineScopeForCategory,
   type TimelineScope,
 } from "@/lib/timelineTypes";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
@@ -63,6 +64,9 @@ export default async function CategoryTimeline({
   const canAddEvent = viewerHasPermission(viewer, "content.create");
   // Nur für die, die auch eintragen dürfen — sonst eine Abfrage für nichts.
   const characters = canAddEvent ? await listCharactersForEvents() : [];
+  const resolvedScope =
+    initialScope ?? (category ? timelineScopeForCategory(category) : undefined);
+  const resolvedCategory = resolvedScope === "events" ? category : null;
   return (
     <TimelineView
       help={
@@ -73,8 +77,8 @@ export default async function CategoryTimeline({
         ) : undefined
       }
       events={events}
-      initialCategory={category}
-      initialScope={initialScope}
+      initialCategory={resolvedCategory}
+      initialScope={resolvedScope}
       initialPerson={initialPerson}
       canAddEvent={canAddEvent}
       characters={characters}

@@ -33,7 +33,18 @@ function event(partial: Partial<TimelineEvent>): TimelineEvent {
 
 const EVENTS = [
   event({}),
-  event({ id: "e2", category: "log", phase: undefined }),
+  event({
+    id: "e2",
+    category: "log",
+    sourceType: "mission_log",
+    phase: undefined,
+  }),
+  event({
+    id: "e3",
+    category: "discovery",
+    sourceType: "archive_entry",
+    phase: undefined,
+  }),
 ];
 
 function artFilter(): HTMLSelectElement {
@@ -62,9 +73,20 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
   it("zeigt das Auswahlfeld auch, wenn nur eine Art übrig ist", () => {
     // Eine Auswahl mit einem Eintrag ist sonst nur Beiwerk und wird
     // ausgeblendet — läuft aber ein Filter, muss er erreichbar bleiben.
-    render(<TimelineView events={[event({})]} initialCategory="mission" />);
+    render(
+      <TimelineView
+        events={[
+          event({
+            sourceType: "archive_entry",
+            category: "political",
+            phase: undefined,
+          }),
+        ]}
+        initialCategory="political"
+      />,
+    );
     expect(artFilter()).toBeInTheDocument();
-    expect(artFilter().value).toBe("mission");
+    expect(artFilter().value).toBe("political");
   });
 
   it("legt beim Wechsel der Art einen Verlaufseintrag an", () => {
@@ -81,11 +103,11 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
 
     render(<TimelineView events={EVENTS} syncUrl />);
     fireEvent.change(screen.getByLabelText("Umfang der Chronologie"), {
-      target: { value: "all" },
+      target: { value: "events" },
     });
-    fireEvent.change(artFilter(), { target: { value: "log" } });
+    fireEvent.change(artFilter(), { target: { value: "discovery" } });
 
-    expect(pushes).toContain("/chronologie/log");
+    expect(pushes).toContain("/chronologie/discovery");
     expect(replace).not.toHaveBeenCalled();
     push.mockRestore();
     replace.mockRestore();
@@ -99,12 +121,14 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
             id: "log-tuvok",
             title: "Logbuch Tuvok",
             category: "log",
+            sourceType: "mission_log",
             people: ["Tuvok"],
           }),
           event({
             id: "log-kim",
             title: "Logbuch Kim",
             category: "log",
+            sourceType: "mission_log",
             people: ["Harry Kim"],
           }),
           event({
@@ -114,14 +138,15 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
             people: ["Tuvok"],
           }),
         ]}
-        initialScope="all"
-        initialCategory="log"
+        initialScope="logs"
         initialPerson="Tuvok"
       />,
     );
 
-    expect(screen.getByLabelText("Umfang der Chronologie")).toHaveValue("all");
-    expect(artFilter()).toHaveValue("log");
+    expect(screen.getByLabelText("Umfang der Chronologie")).toHaveValue("logs");
+    expect(
+      screen.queryByLabelText("Nach Ereignisart filtern"),
+    ).not.toBeInTheDocument();
     expect(
       screen.getByLabelText("Nach beteiligter Person filtern"),
     ).toHaveValue("Tuvok");
@@ -131,8 +156,7 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
   });
   it("stellt ohne vorgewählte Art auf den Umfang Missionen", () => {
     // Vorgabe der Chronologie: nur die Missionsstarts. Eine Art aus der
-    // Route hebt das auf „Alle Ereignisse" an, weil sie sonst garantiert
-    // ins Leere liefe.
+    // Eine Kategorie-Route wählt automatisch den passenden Bereich.
     render(<TimelineView events={EVENTS} />);
     const umfang = screen.getByLabelText(
       "Umfang der Chronologie",
@@ -143,7 +167,23 @@ describe("TimelineView – vorgewählte Ereignisart", () => {
     const umfaenge = screen.getAllByLabelText(
       "Umfang der Chronologie",
     ) as HTMLSelectElement[];
-    expect(umfaenge[umfaenge.length - 1].value).toBe("all");
+    expect(umfaenge[umfaenge.length - 1].value).toBe("logs");
+  });
+
+  it("bietet alle fünf Bereiche an und Kategorien nur bei Events", () => {
+    render(<TimelineView events={EVENTS} initialScope="events" />);
+    const scope = screen.getByLabelText("Umfang der Chronologie");
+    expect(
+      Array.from((scope as HTMLSelectElement).options).map(
+        (option) => option.text,
+      ),
+    ).toEqual(["Missionen", "Events", "Gespräche", "Logbücher", "Alles"]);
+    expect(artFilter()).toBeInTheDocument();
+
+    fireEvent.change(scope, { target: { value: "logs" } });
+    expect(
+      screen.queryByLabelText("Nach Ereignisart filtern"),
+    ).not.toBeInTheDocument();
   });
 });
 

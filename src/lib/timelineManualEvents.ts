@@ -8,6 +8,7 @@ import {
   normalizeCategory,
 } from "@/lib/timelineTypes";
 import { purgeContentImagesFor } from "@/lib/contentImages";
+import type { ManualEventForEdit } from "@/lib/timelineManualEventTypes";
 
 // Ereignisse, die zu keinem Inhalt gehören.
 //
@@ -151,6 +152,74 @@ export async function createManualEvents(
   });
   revalidateTag(cacheTags.timeline, { expire: 0 });
   return ids;
+}
+
+// Eigene freie Ereignisse bilden auf /user/content eine fünfte Inhaltsart.
+// Anders als abgeleitete Timeline-Einträge haben sie keinen eigenen Inhalt
+// als Quelle; deshalb kommen Bearbeiten und Löschen direkt an diese Liste.
+export async function listManualEventsForUser(
+  userId: number,
+): Promise<ManualEventForEdit[]> {
+  return sql<ManualEventForEdit[]>`
+    SELECT te.id,
+           to_char(te.event_date, 'YYYY-MM-DD') AS date,
+           te.title,
+           te.teaser,
+           te.detail,
+           te.category,
+           ARRAY(
+             SELECT tec.character_id
+             FROM timeline_event_characters tec
+             JOIN characters c ON c.id = tec.character_id
+             WHERE tec.event_id = te.id
+             ORDER BY c.name ASC
+           ) AS "characterIds",
+           ARRAY(
+             SELECT c.name
+             FROM timeline_event_characters tec
+             JOIN characters c ON c.id = tec.character_id
+             WHERE tec.event_id = te.id
+             ORDER BY c.name ASC
+           ) AS "characterNames"
+    FROM timeline_events te
+    WHERE te.origin = 'manual' AND te.created_by = ${userId}
+    ORDER BY te.event_date DESC, te.title ASC
+  `;
+}
+
+export async function updateManualEvent(
+  id: number,
+  input: ManualEventInput,
+  viewer: { userId: number; canModerate: boolean },
+): Promise<boolean> {
+  const updated = await sql.begin(async (tx) => {
+    const rows = await tx<{ id: number }[]>`
+      UPDATE timeline_events
+      SET event_date = ${input.date},
+          title = ${input.title},
+          teaser = ${input.teaser},
+          detail = ${input.detail},
+          category = ${input.category}
+      WHERE id = ${id} AND origin = 'manual'
+        AND (${viewer.canModerate} OR created_by = ${viewer.userId})
+      RETURNING id
+    `;
+    if (rows.length === 0) return false;
+
+    await tx`
+      DELETE FROM timeline_event_characters WHERE event_id = ${id}
+    `;
+    for (const characterId of input.characterIds) {
+      await tx`
+        INSERT INTO timeline_event_characters (event_id, character_id)
+        VALUES (${id}, ${characterId})
+        ON CONFLICT DO NOTHING
+      `;
+    }
+    return true;
+  });
+  if (updated) revalidateTag(cacheTags.timeline, { expire: 0 });
+  return updated;
 }
 
 // Alle Figuren, die sich mit einem Ereignis verknüpfen lassen: das ganze

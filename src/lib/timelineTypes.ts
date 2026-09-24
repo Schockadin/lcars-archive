@@ -299,15 +299,58 @@ export function yearsOf(events: TimelineEvent[]): string[] {
 // überfliegen will, soll nicht erst filtern müssen.
 export const TIMELINE_SCOPES = [
   { key: "missions", label: "Missionen" },
-  { key: "all", label: "Alle Ereignisse" },
+  { key: "events", label: "Events" },
+  { key: "dialogues", label: "Gespräche" },
+  { key: "logs", label: "Logbücher" },
+  { key: "all", label: "Alles" },
 ] as const;
 
 export type TimelineScope = (typeof TIMELINE_SCOPES)[number]["key"];
 
 export const DEFAULT_TIMELINE_SCOPE: TimelineScope = "missions";
 
+export function isTimelineScope(value: string): value is TimelineScope {
+  return TIMELINE_SCOPES.some((scope) => scope.key === value);
+}
+
 export function isMissionStart(event: TimelineEvent): boolean {
   return event.sourceType === "mission" && event.phase === "start";
+}
+
+export function timelineScopeForCategory(category: string): TimelineScope {
+  switch (normalizeCategory(category)) {
+    case "mission":
+      return "missions";
+    case "log":
+      return "logs";
+    case "dialogue":
+      return "dialogues";
+    default:
+      return "events";
+  }
+}
+
+function eventMatchesScope(
+  event: TimelineEvent,
+  scope: TimelineScope,
+): boolean {
+  switch (scope) {
+    case "missions":
+      return isMissionStart(event);
+    case "logs":
+      return normalizeCategory(event.category) === "log";
+    case "dialogues":
+      return normalizeCategory(event.category) === "dialogue";
+    case "events":
+      return (
+        event.sourceType !== "mission" &&
+        !["mission", "log", "dialogue"].includes(
+          normalizeCategory(event.category),
+        )
+      );
+    case "all":
+      return true;
+  }
 }
 
 // Die Kategorie-Routen (/chronologie/[kategorie], siehe contentRoutes.ts)
@@ -385,7 +428,7 @@ export function filterEvents(
   const q = filter.query.trim().toLowerCase();
   const scope = filter.scope ?? "all";
   return events.filter((event) => {
-    if (scope === "missions" && !isMissionStart(event)) return false;
+    if (!eventMatchesScope(event, scope)) return false;
     if (filter.person && !event.people.includes(filter.person)) return false;
     // Über die normalisierten Schlüssel vergleichen: ein Ereignis mit der
     // Alt-Art „person" gehört zur Auswahl „Person" (character).

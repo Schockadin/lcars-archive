@@ -151,7 +151,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Eigene Ereignisse werden zu Chronik-Akten",
     items: [
       {
-        text: "Eigene Chronologie-Ereignisse haben jetzt einen kurzen Teaser und einen getrennten Volltext. Ein Klick auf die Karte öffnet die Detailansicht; dort lassen sich auch Bilder zum Ereignis ansehen und – mit den passenden Rechten – verwalten.",
+        text: "Eigene Chronologie-Ereignisse haben jetzt einen kurzen Teaser und einen getrennten Volltext. Ein Klick auf die Karte öffnet die Detailansicht mit den Bildern; unter „Meine Inhalte“ lassen sich die Ereignisse wiederfinden, bearbeiten und löschen.",
         category: "inhalte",
         tutorial: "chronologie",
       },
@@ -159,6 +159,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         text: "Die Spielleitung kann eigene Chronologie-Ereignisse gesammelt aus einer CSV-Datei importieren. Datum, Titel, Teaser, Volltext und beteiligte Figuren werden vor dem gemeinsamen Speichern vollständig geprüft.",
         category: "spielleitung",
         tutorial: "spielleitung-admins",
+      },
+      {
+        text: "Die Chronologie lässt sich jetzt direkt zwischen Missionen, Events, Gesprächen, Logbüchern und der Gesamtansicht umschalten. Jeder Bereich kann nach beteiligten Figuren gefiltert werden; bei Events steht zusätzlich die Ereignisart zur Auswahl.",
+        category: "inhalte",
+        tutorial: "chronologie",
       },
     ],
   },

@@ -2,7 +2,11 @@ import type { Metadata } from "next";
 import CategoryTimeline, {
   ChronologyShell,
 } from "@/app/chronologie/_shared/CategoryChronology";
-import { isTimelineCategory, type TimelineScope } from "@/lib/timelineTypes";
+import {
+  isTimelineCategory,
+  isTimelineScope,
+  type TimelineScope,
+} from "@/lib/timelineTypes";
 
 export const metadata: Metadata = {
   title: "Chronologie",
@@ -13,7 +17,7 @@ interface Props {
 }
 
 // Filter in der Adresse sind teilbar. Die frühere Charakter-Logbuchseite
-// nutzt das für „Alle Ereignisse → Logbücher → Charakter".
+// nutzt das für „Logbücher → Charakter".
 export default function ChronologiePage({ searchParams }: Props) {
   return (
     <ChronologyShell>
@@ -27,8 +31,10 @@ export default function ChronologiePage({ searchParams }: Props) {
 // Suspense-Grenze die ganze Seite blockieren.
 async function ChronologieContent({ searchParams }: Props) {
   const { scope, category, person } = await searchParams;
-  const initialScope: TimelineScope | undefined = scope === "all" ? "all" : undefined;
-  const initialCategory = category && isTimelineCategory(category) ? category : null;
+  const initialScope: TimelineScope | undefined =
+    scope && isTimelineScope(scope) ? scope : undefined;
+  const initialCategory =
+    category && isTimelineCategory(category) ? category : null;
   const initialPerson = person?.trim() || null;
 
   return (

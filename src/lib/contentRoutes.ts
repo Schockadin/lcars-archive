@@ -48,7 +48,7 @@ export function characterHref(slug: string): string {
 // Das Logbuch einer Figur ist Teil der Chronologie, nicht mehr eine eigene
 // Leseseite. Der Name ist der vorhandene Personenfilter der Chronologie.
 export function characterLogsHref(characterName: string): string {
-  return `${CHRONOLOGY_PATH}?scope=all&category=log&person=${encodeURIComponent(characterName)}`;
+  return `${CHRONOLOGY_PATH}?scope=logs&person=${encodeURIComponent(characterName)}`;
 }
 
 export function characterSheetHref(slug: string): string {
@@ -95,7 +95,7 @@ export function absoluteContentUrl(baseUrl: string, href: string): string {
 // (der Personenfilter der Chronologie, wie bei characterLogsHref).
 export function dialoguesHref(personName?: string | null): string {
   return personName
-    ? `${CHRONOLOGY_PATH}?scope=all&category=dialogue&person=${encodeURIComponent(personName)}`
+    ? `${CHRONOLOGY_PATH}?scope=dialogues&person=${encodeURIComponent(personName)}`
     : `${CHRONOLOGY_PATH}/dialogue`;
 }
 
@@ -168,5 +168,8 @@ export function chronologyCategoryHref(category?: string | null): string {
 // hält die Liste mit TIMELINE_SCOPES deckungsgleich.
 export const RESERVED_CHRONOLOGY_SEGMENTS: readonly string[] = [
   "missions",
+  "events",
+  "dialogues",
+  "logs",
   "all",
 ];

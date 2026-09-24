@@ -5,6 +5,7 @@ import {
   filterEvents,
   isIsoDate,
   isMissionStart,
+  isTimelineScope,
   latestEventDate,
   normalizeCategory,
   missionEndDates,
@@ -13,6 +14,7 @@ import {
   periodKey,
   periodLabel,
   sortEvents,
+  timelineScopeForCategory,
   type TimelineEvent,
   yearsOf,
 } from "./timelineTypes";
@@ -40,7 +42,12 @@ describe("parseTimelineMarkers", () => {
         "Text\n<!-- timeline: 2401-03-14 | Erstkontakt | discovery -->\nmehr Text",
       ),
     ).toEqual([
-      { date: "2401-03-14", title: "Erstkontakt", category: "discovery", anchor: 1 },
+      {
+        date: "2401-03-14",
+        title: "Erstkontakt",
+        category: "discovery",
+        anchor: 1,
+      },
     ]);
   });
 
@@ -216,9 +223,24 @@ describe("yearsOf", () => {
 
 describe("filterEvents", () => {
   const events = [
-    event({ id: "a", title: "Erstkontakt", category: "discovery", people: ["Tuvok"] }),
-    event({ id: "b", title: "Zwischenfall", category: "conflict", date: "2402-06-12" }),
-    event({ id: "c", title: "Verhandlung", detail: "Auf Vulkan.", category: "political" }),
+    event({
+      id: "a",
+      title: "Erstkontakt",
+      category: "discovery",
+      people: ["Tuvok"],
+    }),
+    event({
+      id: "b",
+      title: "Zwischenfall",
+      category: "conflict",
+      date: "2402-06-12",
+    }),
+    event({
+      id: "c",
+      title: "Verhandlung",
+      detail: "Auf Vulkan.",
+      category: "political",
+    }),
   ];
 
   it("filtert nach Kategorie", () => {
@@ -292,8 +314,16 @@ describe("Umfang der Chronologie", () => {
     event({
       id: "marke",
       origin: "marker",
+      sourceType: "archive_entry",
       category: "discovery",
       date: "2401-03-09",
+    }),
+    event({
+      id: "dialog",
+      sourceType: "archive_entry",
+      category: "dialogue",
+      date: null,
+      people: ["Kira"],
     }),
   ];
 
@@ -308,14 +338,41 @@ describe("Umfang der Chronologie", () => {
     expect(visible.map((e) => e.id)).toEqual(["start"]);
   });
 
-  it("zeigt mit „Alle Ereignisse“ wieder alles", () => {
+  it("trennt Events, Gespräche und Logbücher nach ihrer Quelle", () => {
+    expect(
+      filterEvents(events, {
+        query: "",
+        category: null,
+        year: null,
+        scope: "events",
+      }).map((e) => e.id),
+    ).toEqual(["marke"]);
+    expect(
+      filterEvents(events, {
+        query: "",
+        category: null,
+        year: null,
+        scope: "dialogues",
+      }).map((e) => e.id),
+    ).toEqual(["dialog"]);
+    expect(
+      filterEvents(events, {
+        query: "",
+        category: null,
+        year: null,
+        scope: "logs",
+      }).map((e) => e.id),
+    ).toEqual(["log"]);
+  });
+
+  it("zeigt mit „Alles“ wieder den ganzen Bestand", () => {
     const visible = filterEvents(events, {
       query: "",
       category: null,
       year: null,
       scope: "all",
     });
-    expect(visible).toHaveLength(4);
+    expect(visible).toHaveLength(5);
   });
 
   it("hält ein Ereignis ohne Umfang-Angabe für sichtbar", () => {
@@ -323,7 +380,7 @@ describe("Umfang der Chronologie", () => {
     // darf nichts stillschweigend verschwinden.
     expect(
       filterEvents(events, { query: "", category: null, year: null }),
-    ).toHaveLength(4);
+    ).toHaveLength(5);
   });
 
   it("erkennt einen Missionsstart nur an Quelle UND Phase", () => {
@@ -344,6 +401,15 @@ describe("Umfang der Chronologie", () => {
       person: "Kira",
     });
     expect(visible.map((e) => e.id)).toEqual(["start"]);
+  });
+
+  it("ordnet Kategorie-Links dem passenden Bereich zu", () => {
+    expect(timelineScopeForCategory("mission")).toBe("missions");
+    expect(timelineScopeForCategory("log")).toBe("logs");
+    expect(timelineScopeForCategory("dialogue")).toBe("dialogues");
+    expect(timelineScopeForCategory("political")).toBe("events");
+    expect(isTimelineScope("events")).toBe(true);
+    expect(isTimelineScope("unknown")).toBe(false);
   });
 
   it("sammelt die Beteiligten alphabetisch und ohne Dubletten", () => {

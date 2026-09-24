@@ -103,6 +103,7 @@ export default function CharacterValuesPanel({
             species={species}
             idPrefix="values-panel"
             showPersonnelFields={false}
+            flatSections
             advancement={
               stats.creationLocked
                 ? {

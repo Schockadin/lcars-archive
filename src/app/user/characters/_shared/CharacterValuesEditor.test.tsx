@@ -47,8 +47,12 @@ function lockedStats() {
   });
 }
 
-function renderEditor(availableAp: number, submit = vi.fn()) {
-  render(
+function renderEditor(
+  availableAp: number,
+  submit = vi.fn(),
+  flatSections = false,
+) {
+  const result = render(
     <CharacterValuesEditor
       stats={lockedStats()}
       onChange={vi.fn()}
@@ -58,6 +62,7 @@ function renderEditor(availableAp: number, submit = vi.fn()) {
       species={null}
       idPrefix="test-values"
       showPersonnelFields={false}
+      flatSections={flatSections}
       advancement={{
         characterId: 42,
         availableAp,
@@ -66,12 +71,12 @@ function renderEditor(availableAp: number, submit = vi.fn()) {
       }}
     />,
   );
-  return submit;
+  return { submit, ...result };
 }
 
 describe("CharacterValuesEditor – Inline-Steigerungen", () => {
   it("zeigt Kosten am Wert und sendet die konkrete Steigerung", () => {
-    const submit = renderEditor(100);
+    const { submit } = renderEditor(100);
     const input = screen.getByLabelText(/Control/);
     const button = input.parentElement?.querySelector("button");
 
@@ -102,5 +107,11 @@ describe("CharacterValuesEditor – Inline-Steigerungen", () => {
       expect(button).toBeDisabled();
       expect(button).toHaveClass("stat-inline-advance--blocked");
     }
+  });
+
+  it("vermeidet im bestehenden Werte-Panel zusätzliche Panelrahmen", () => {
+    const { container } = renderEditor(100, vi.fn(), true);
+    expect(container.querySelector(".stat-sheet-section")).toBeNull();
+    expect(container.querySelectorAll(".stat-editor-section")).toHaveLength(4);
   });
 });

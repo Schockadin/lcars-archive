@@ -14,7 +14,7 @@ export const metadata: Metadata = categoryMetadata("mission");
 export default function ChronologieMissionenPage() {
   return (
     <ChronologyShell>
-      <CategoryTimeline category="mission" />
+      <CategoryTimeline initialScope="missions" />
     </ChronologyShell>
   );
 }

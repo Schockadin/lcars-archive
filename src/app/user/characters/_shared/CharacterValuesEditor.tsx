@@ -121,9 +121,21 @@ function BudgetMeter({
   );
 }
 
-function SectionTitle({ en, de }: { en: string; de: string }) {
+function SectionTitle({
+  en,
+  de,
+  flat,
+}: {
+  en: string;
+  de: string;
+  flat: boolean;
+}) {
   return (
-    <h3 className="stat-sheet-section-title">
+    <h3
+      className={
+        flat ? "stat-editor-section-title" : "stat-sheet-section-title"
+      }
+    >
       {en} <span className="stat-label-secondary">{de}</span>
     </h3>
   );
@@ -202,6 +214,7 @@ export default function CharacterValuesEditor({
   idPrefix,
   advancement,
   showPersonnelFields = true,
+  flatSections = false,
 }: {
   stats: CharacterStats;
   onChange: (next: CharacterStats) => void;
@@ -223,6 +236,10 @@ export default function CharacterValuesEditor({
   // Schritt. Auf der bestehenden Charakterseite liegen sie dagegen in der
   // zusammengeführten Personalakte und würden hier doppelt erscheinen.
   showPersonnelFields?: boolean;
+  // Auf der bestehenden Charakterseite liegt der Editor bereits in einem
+  // gerahmten, aufklappbaren Werte-Panel. Dort brauchen die Untergruppen
+  // keine weiteren Panelrahmen; im Anlege-Assistenten bleiben sie erhalten.
+  flatSections?: boolean;
 }) {
   // Welches Hinzufügen-Fenster offen ist (Listen-Schlüssel), null = keines.
   const [adding, setAdding] = useState<string | null>(null);
@@ -333,12 +350,19 @@ export default function CharacterValuesEditor({
   const managedLists = LIST_FIELDS.filter(
     (field) => !TEXTAREA_LISTS.has(field.key),
   );
+  const sectionClassName = flatSections
+    ? "stat-editor-section"
+    : "stat-sheet-section";
 
   return (
     <div className="flex flex-col gap-[16px]">
       {showPersonnelFields && (
-        <section className="stat-sheet-section">
-          <SectionTitle en="Personnel File" de="Kopfdaten" />
+        <section className={sectionClassName}>
+          <SectionTitle
+            en="Personnel File"
+            de="Kopfdaten"
+            flat={flatSections}
+          />
           <div className="stat-editor-body">
             <div className="stat-editor-grid">
               {TEXT_FIELDS.map((field) => (
@@ -400,8 +424,8 @@ export default function CharacterValuesEditor({
       )}
 
       {/* ── Attribute ─────────────────────────────────────────────── */}
-      <section className="stat-sheet-section">
-        <SectionTitle en="Attributes" de="Attribute" />
+      <section className={sectionClassName}>
+        <SectionTitle en="Attributes" de="Attribute" flat={flatSections} />
         {!locked && (
           <BudgetMeter
             label="Attribute"
@@ -441,8 +465,8 @@ export default function CharacterValuesEditor({
       </section>
 
       {/* ── Disziplinen ───────────────────────────────────────────── */}
-      <section className="stat-sheet-section">
-        <SectionTitle en="Departments" de="Disziplinen" />
+      <section className={sectionClassName}>
+        <SectionTitle en="Departments" de="Disziplinen" flat={flatSections} />
         {!locked && (
           <BudgetMeter
             label="Disziplinen"
@@ -490,8 +514,8 @@ export default function CharacterValuesEditor({
       </section>
 
       {/* ── Abgeleitete Werte ─────────────────────────────────────── */}
-      <section className="stat-sheet-section">
-        <SectionTitle en="Derived" de="Abgeleitete Werte" />
+      <section className={sectionClassName}>
+        <SectionTitle en="Derived" de="Abgeleitete Werte" flat={flatSections} />
         <p className="stat-sheet-rule">
           Der maximale Stress ergibt sich aus Fitness und dem Bonus aus Talenten
           und ist deshalb kein Eingabefeld.
@@ -535,8 +559,8 @@ export default function CharacterValuesEditor({
       </section>
 
       {/* ── Listen ────────────────────────────────────────────────── */}
-      <section className="stat-sheet-section">
-        <SectionTitle en="Lists" de="Listen" />
+      <section className={sectionClassName}>
+        <SectionTitle en="Lists" de="Listen" flat={flatSections} />
         <div className="stat-editor-body">
           {managedLists.map((field) => {
             const entries =

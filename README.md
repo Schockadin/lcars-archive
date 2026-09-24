@@ -190,6 +190,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   auf der öffentlichen Charakterliste. Geprüft wird wie überall das Recht,
   nicht die Primärrolle; serverseitig maßgeblich bleibt
   `createCharacterWizardAction`.
+
 - **Anlegen als Assistent** (`/user/characters/new`) — vier Schritte:
   Stammdaten, Werte, Biografie, Vorschau. Alle vier liegen in **einem**
   Formular und bleiben im DOM (nur ausgeblendet): das Blättern verliert keine
@@ -334,6 +335,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   ausschließlich den Graphen — `getRelationsOf` behält nur Paare, an denen
   die betrachtete Figur hängt, und ein NPC-NPC-Paar konnte darin nie
   auftauchen.
+
 - **Schwerpunkt-Katalog** — Focuses liegen wie die Talente in einer eigenen
   Tabelle (`focuses`: Name, Disziplin, optionale Erläuterung, `is_custom`),
   gepflegt unter `/gm/focuses`. `UNIQUE (name, discipline)` statt nur über den
@@ -371,7 +373,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   vorausgesetzte Talente) und wertet ihn gegen die live mitgeführten Werte
   und die Spezies der Akte aus. Was sich nicht entscheiden lässt (Merkmale,
   Rollen, „GM's discretion", noch ungepflegte Werte) gilt bewusst als
-  *unbekannt* und bleibt sichtbar — ein Talent zu verstecken, dessen
+  _unbekannt_ und bleibt sichtbar — ein Talent zu verstecken, dessen
   Voraussetzung die App nur nicht versteht, wäre der schlimmere Fehler; ein
   Schalter zeigt zusätzlich die nicht erfüllten. Talente lassen sich beim
   Übernehmen **umbenennen**: gespeichert und angezeigt wird dann
@@ -579,8 +581,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   sofort (eigener Zustand) und holen die Zahlen per `router.refresh()` nach.
   `serverActions.allowedOrigins` in `next.config.ts` bleibt trotzdem gesetzt:
   hinter einem Proxy können `Origin` und `X-Forwarded-Host` auseinanderlaufen,
-  und dann antwortete Next für *jede* Action mit 403 — das ist unabhängig von
+  und dann antwortete Next für _jede_ Action mit 403 — das ist unabhängig von
   diesem Fall die richtige Einstellung.
+
 - **Konfigurierbares Dashboard** — jede Person stellt unter `/user` (Klappe
   „Startseite", Anker `#dashboard`) selbst ein, welche Abschnitte auf `"/"`
   erscheinen: Erste Schritte, Spielabende, To Dos, offene Gespräche, die
@@ -621,7 +624,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Antwortfeld): Am Telefon will man die lange News-Liste vielleicht zu haben,
   am großen Schirm nicht.
   Ein **Anker schlägt den gemerkten Zustand** — und zwar auch einer, der auf
-  etwas *innerhalb* des Abschnitts zeigt: `/user#password` liegt in „Settings",
+  etwas _innerhalb_ des Abschnitts zeigt: `/user#password` liegt in „Settings",
   und ein geschlossenes `<details>` versteckt seinen Inhalt, der Browser
   spränge sonst nirgendwohin. Ohne diese Regel wäre der Link „Jetzt festlegen"
   vom Dashboard tot, sobald das Profil per Vorgabe zugeklappt ist.
@@ -658,7 +661,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   `min-width: 180px` mitbringt, das der breiten Stufe im Weg steht —
   `.lcars-btn-row > *` schlägt es über die Spezifität, ein Utility täte das
   nur bei passender Stylesheet-Reihenfolge. In der breiten Stufe `flex: 1 1
-  auto`, **nicht** `1 1 0`: Gleiche Spalten sähen ruhiger aus, schnitten aber
+auto`, **nicht** `1 1 0`: Gleiche Spalten sähen ruhiger aus, schnitten aber
   lange Beschriftungen ab (nachgemessen mit der echten Schrift: sechs Knöpfe
   brauchen 1046px in der 1100px-Spalte, gleich verteilt bekäme jeder nur
   173px, „Neuer Datenbank-Eintrag" allein will 252px) — und wegen
@@ -852,6 +855,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   schneller tippt, als die Seite fertig wird), erkennt die Sicherung am
   Abweichen vom Vorgabewert (`isFieldAtDefault`) und übernimmt es, statt es
   zu überschreiben.
+
 - **Öffentliches Changelog** — die Seite `/changelog` listet je Version die
   end-nutzerrelevanten Neuerungen (gepflegt in `src/lib/changelog.ts`). Jeder
   Stichpunkt trägt eine **Kategorie** (`src/lib/changelogCategories.ts`);
@@ -892,7 +896,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Eintrags: bei einer Figur ihr Portrait, sonst das zuerst hochgeladene Bild
   (`content_images`). Ohne Bild wird nichts gerendert — kein Platzhalter. Die
   Listen holen die Bild-Id in ihrer bestehenden Abfrage mit (`LEFT JOIN
-  LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
+LATERAL`), die Chronologie über eine Abfrage für alle slug-basierten
   Inhaltsarten (`getFirstContentImageIdsBySlug`) und bei eigenen Ereignissen
   direkt über deren ID; ausgeliefert werden die Bytes wie überall
   über `/api/content-images/<id>` (`contentImageSrc`).
@@ -900,8 +904,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   eigenen Zeitrechnung (In-Story-Datum), nicht nach Bearbeitungszeit. Sie ist
   zugleich die **Missions-Übersicht**: in der Vorgabe (`TIMELINE_SCOPES`,
   Umfang `missions`) zeigt sie genau die **Missionsstarts**, je einer führt auf
-  seine Missionsseite; der Umfang „Alle Ereignisse" schaltet den vollen
-  Zeitstrahl frei. Die frühere eigene Route `/missions` war dieselbe Liste
+  seine Missionsseite. Die Oberauswahl trennt außerdem **Events**,
+  **Gespräche**, **Logbücher** und **Alles** als eigene Grundmengen. Die frühere
+  eigene Route `/missions` war dieselbe Liste
   derselben Missionen nach demselben Datum; sie ist entfallen. Auch die
   Missionsseiten liegen jetzt unter der Chronologie
   (`/chronologie/mission/[missionSlug]`, das Logbuch eine Ebene tiefer) —
@@ -930,10 +935,9 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   schlägt — es ist zugleich das Präfix der Missionsseiten. Ein unbekanntes
   Segment ist eine 404 (`isTimelineCategory`), keine leere Liste.
   Der Umfang **„Missionen"** zeigt je Einsatz EINE Karte mit dem ganzen
-  **Zeitraum** (Beginn–Abschluss, `missionEndDates`); die Ereignisart
-  **„Mission"** — im Filter und unter `/chronologie/mission` — zeigt Beginn
-  und Abschluss dagegen als eigene Marker. Vorher hießen beide fast gleich
-  und zeigten Verschiedenes.
+  **Zeitraum** (Beginn–Abschluss, `missionEndDates`). Der Kategorienfilter
+  steht nur unter **„Events"**; alle fünf Bereiche bieten den Filter nach
+  Beteiligten, sofern dort Figuren vorkommen.
   Die **Ereigniskarte** (`.timeline-card`) trägt die Farbe ihrer Ereignisart
   als ganze Fläche mit dunkler Schrift (`--lcars-ink-dark`, das Token für
   „Text auf Akzentflächen" — es bleibt in beiden Helligkeitsmodi dunkel;
@@ -947,7 +951,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   zurück. Die Karte ist bewusst kein Link als Ganzes:
   ein Knopf in einem Link ist weder gültiges HTML noch tastaturbedienbar,
   verlinkt ist der Titel.
-  Filter und Sortierung richten sich nach dem Umfang: Ereignisart und
+  Filter und Sortierung richten sich nach dem Umfang: Kategorien und
   Beteiligte werden aus den Ereignissen **im Umfang** gebildet, ein
   Umfangwechsel setzt sie zurück. **Entwürfe erscheinen nirgends** — auch
   nicht ihrem Owner (die Missions-Übersicht zeigte sie noch nie, und ein
@@ -994,6 +998,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   gleichbedeutende Art in Auswahl und Jahresleiste. Normalisiert wird beim
   Lesen (Anzeige, Filter, Auswahl) **und** beim Schreiben (Marker, Modell,
   Formular); bestehende Zeilen zieht die Migration nach.
+
 - **Ereignisse von Hand eintragen** — der Knopf „Ereignis eintragen" über dem
   Zeitstrahl (`ManualEventForm`, für alle mit `content.create`) öffnet ein
   Fenster (`ModalOverlay`) und legt eine
@@ -1020,6 +1025,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   der Chronologie vorbelegt (`latestEventDate`): was neu dazukommt, schließt
   fast immer an das an, was zuletzt geschah — sonst suchte man das Jahrhundert
   bei jedem Eintrag von Hand.
+  Eigene Ereignisse erscheinen zusätzlich unter **„Meine Inhalte“** als
+  eigene Kategorie. Dort öffnet der Stift dasselbe `ManualEventForm` mit den
+  vorhandenen Werten; `updateManualEvent` prüft Besitz bzw. Moderationsrecht
+  und ersetzt Ereignisdaten und Beteiligte gemeinsam in einer Transaktion.
   Die Spielleitung kann unter `/gm/chronologie` zusätzlich eine CSV mit
   `Datum;Titel;Teaser;Text;Charaktere` importieren. Figuren in der letzten
   Spalte sind kommagetrennt; unbekannte oder mehrdeutige Namen und jede andere
@@ -1111,7 +1120,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   setzen.
   **Der Abschnitt** (`[[Ziel#Frühe Jahre]]`) wird zum Sprungziel auf der
   Ziel-Seite. Die Überschrift wird dafür mit `headingAnchor` (`src/lib/
-  markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
+markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   also genau der Funktion, aus der `rehypeSlug` in derselben Pipeline die
   `id` der Überschrift bildet, und nicht mit `slugifyBase` aus `lib/slug.ts`
   (das zusätzlich Diakritika auflöst und aus „Frühe Jahre" `fruhe-jahre`
@@ -1260,6 +1269,7 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   halb ausgefüllte Seite zu verlassen. Er trug bis v1.39 die Aufschrift
   „Erschaffung erklärt" und ist seitdem dasselbe Fragezeichen wie überall
   sonst.
+
 - **Markdown-Vault als Ursprungsimport** — Inhalte lassen sich initial aus
   `.md`-Dateien mit YAML-Frontmatter (Obsidian-kompatibel) importieren; neue Inhalte
   entstehen danach direkt in der App (Datenbank als alleinige Source of Truth).
@@ -1574,30 +1584,30 @@ Anschließend die angezeigte Adresse im Browser öffnen.
 
 ## 📜 NPM-Skripte
 
-| Skript                      | Beschreibung                                                                                                                                     |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run dev`               | Startet den Entwicklungsserver (gegen `.env.dev`)                                                                                                |
-| `npm run build`             | Erstellt den Produktions-Build                                                                                                                   |
-| `npm run start`             | Startet den Produktionsserver                                                                                                                    |
-| `npm run lint`              | Führt ESLint aus                                                                                                                                 |
-| `npm run db:setup`          | Legt das Datenbankschema an (`scripts/schema.sql`)                                                                                               |
-| `npm run db:create-admin`   | Legt einen Admin-User an, nur wenn `users` leer ist                                                                                              |
-| `npm run db:ingest`         | Importiert den kompletten Markdown-Vault                                                                                                         |
-| `npm run db:ingest:new`     | Importiert nur Dateien mit noch unbekanntem `slug`                                                                                               |
-| `npm run db:characters`     | Importiert nur die Charaktere                                                                                                                    |
-| `npm run db:missions`       | Importiert nur Missionen + Mission-Logs                                                                                                          |
-| `npm run db:archive`        | Importiert nur die Datenbank-Einträge                                                                                                               |
-| `npm run db:revalidate`     | Invalidiert nur die Caches (siehe `SITE_URL`)                                                                                                    |
-| `npm run db:seed-talents`   | Spielt den Talent-Katalog aus `scripts/seed/talents.json` ein (idempotent)                                                                        |
-| `npm run db:seed-focuses`   | Spielt den Schwerpunkt-Katalog aus `scripts/seed/focuses.json` ein (idempotent)                                                                   |
-| `npm run embed:all`         | Baut den Vektor-Index des Datenbank-Assistenten für alle Inhalte (neu) auf — Backfill, idempotent (siehe „Datenbank-Assistent (RAG)")                  |
-| `npm run db:reset`          | Setzt die Datenbank zurück                                                                                                                       |
-| `npm run db:backup`         | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup")                                                            |
-| `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind                                                                                                    |
-| `npm run db:purge-deleted`  | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist                                                              |
-| `npm run test`              | Führt die Unit-Tests aus (`src/**/*.test.ts`)                                                                                                    |
+| Skript                      | Beschreibung                                                                                                                                                                                                                                                                                    |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `npm run dev`               | Startet den Entwicklungsserver (gegen `.env.dev`)                                                                                                                                                                                                                                               |
+| `npm run build`             | Erstellt den Produktions-Build                                                                                                                                                                                                                                                                  |
+| `npm run start`             | Startet den Produktionsserver                                                                                                                                                                                                                                                                   |
+| `npm run lint`              | Führt ESLint aus                                                                                                                                                                                                                                                                                |
+| `npm run db:setup`          | Legt das Datenbankschema an (`scripts/schema.sql`)                                                                                                                                                                                                                                              |
+| `npm run db:create-admin`   | Legt einen Admin-User an, nur wenn `users` leer ist                                                                                                                                                                                                                                             |
+| `npm run db:ingest`         | Importiert den kompletten Markdown-Vault                                                                                                                                                                                                                                                        |
+| `npm run db:ingest:new`     | Importiert nur Dateien mit noch unbekanntem `slug`                                                                                                                                                                                                                                              |
+| `npm run db:characters`     | Importiert nur die Charaktere                                                                                                                                                                                                                                                                   |
+| `npm run db:missions`       | Importiert nur Missionen + Mission-Logs                                                                                                                                                                                                                                                         |
+| `npm run db:archive`        | Importiert nur die Datenbank-Einträge                                                                                                                                                                                                                                                           |
+| `npm run db:revalidate`     | Invalidiert nur die Caches (siehe `SITE_URL`)                                                                                                                                                                                                                                                   |
+| `npm run db:seed-talents`   | Spielt den Talent-Katalog aus `scripts/seed/talents.json` ein (idempotent)                                                                                                                                                                                                                      |
+| `npm run db:seed-focuses`   | Spielt den Schwerpunkt-Katalog aus `scripts/seed/focuses.json` ein (idempotent)                                                                                                                                                                                                                 |
+| `npm run embed:all`         | Baut den Vektor-Index des Datenbank-Assistenten für alle Inhalte (neu) auf — Backfill, idempotent (siehe „Datenbank-Assistent (RAG)")                                                                                                                                                           |
+| `npm run db:reset`          | Setzt die Datenbank zurück                                                                                                                                                                                                                                                                      |
+| `npm run db:backup`         | Exportiert die komplette DB als JSON nach Cloudflare R2 (siehe „Tägliches DB-Backup")                                                                                                                                                                                                           |
+| `npm run db:backup:cleanup` | Löscht R2-Backups, die älter als 30 Tage sind                                                                                                                                                                                                                                                   |
+| `npm run db:purge-deleted`  | Entfernt weich gelöschte Inhalte endgültig, deren `deleted_at` älter als 7 Tage ist                                                                                                                                                                                                             |
+| `npm run test`              | Führt die Unit-Tests aus (`src/**/*.test.ts`)                                                                                                                                                                                                                                                   |
 | `npm run test:e2e`          | Führt die Playwright-E2E-Tests aus (öffentliche Seiten, Offline-PWA, Zugangs-Gates der kontogebundenen Routen, Komponenten-Galerie inkl. Charakter-Assistent, Bogen-Ansicht, Chronologie, Einstiegs-Liste und aufklappbaren Abschnitten sowie Layout-/Schrift-Regressionen an beiden Viewports) |
-| `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz **mit pgvector**, siehe unten)               |
+| `npm run test:integration`  | Führt die DB-Integrationstests aus (`tests/integration/`, braucht eine erreichbare Postgres-Instanz **mit pgvector**, siehe unten)                                                                                                                                                              |
 
 Jedes `db:*`-Ingest-/Setup-Skript gibt es zusätzlich als `:dev`-Variante
 (z.B. `db:setup:dev`, `db:ingest:dev`, `db:reset:dev`) — identisch, nur mit
@@ -1881,14 +1891,14 @@ die vier `R2_*`-Secrets. Dafür müssen folgende Repository-Secrets gesetzt
 sein (GitHub → Settings → Secrets and variables → Actions → "New repository
 secret"):
 
-| Secret                                      | Wert                                                                                                                                                                                                                                                                                                                                                                                         |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`                              | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. Nötig für den Backup- UND den Purge-Schritt, nicht für das R2-Cleanup.                                                                                                                |
-| `R2_ACCOUNT_ID`                             | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). Nötig für den Backup- UND den Purge-Schritt (Bild-Cleanup), nicht für das R2-Cleanup.                                                                                                                                                                                                                                   |
-| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens").                                                                                                                                                                                                                                                                                                                |
-| `R2_BUCKET_NAME`                            | Name des **Backup**-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). Hochgeladene Assets liegen seit dem Asset-Bucket-Release nicht mehr hier, sondern in `R2_ASSET_BUCKET_NAME` (siehe unten).                                                                                                                                                          |
+| Secret                                      | Wert                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `DATABASE_URL`                              | Dieselbe produktive Connection-URL wie im Netlify-Dashboard — muss hier **zusätzlich** als GitHub-Secret hinterlegt werden, GitHub Actions liest Netlifys Environment-Variablen nicht automatisch mit. Nötig für den Backup- UND den Purge-Schritt, nicht für das R2-Cleanup.                                                                    |
+| `R2_ACCOUNT_ID`                             | Cloudflare-Account-ID (Cloudflare-Dashboard → R2 → Account-Details). Nötig für den Backup- UND den Purge-Schritt (Bild-Cleanup), nicht für das R2-Cleanup.                                                                                                                                                                                       |
+| `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY` | R2-API-Token mit Schreibrecht auf den Ziel-Bucket (R2 → "Manage API Tokens").                                                                                                                                                                                                                                                                    |
+| `R2_BUCKET_NAME`                            | Name des **Backup**-Buckets für die Backup-Dateien (`db-backups/<Datum>.json`, ein Key pro Kalendertag). Hochgeladene Assets liegen seit dem Asset-Bucket-Release nicht mehr hier, sondern in `R2_ASSET_BUCKET_NAME` (siehe unten).                                                                                                              |
 | `R2_ASSET_BUCKET_NAME`                      | Name des **öffentlichen** Asset-Buckets für hochgeladene Assets — Content-Bilder (`content-images/...`), Charakter-Portraits (`character-portraits/...`). Muss in Cloudflare als öffentlicher Bucket eingerichtet sein (eigene Domain oder r2.dev-URL). Für den App-Betrieb (Netlify) und die Migration nötig, **nicht** für den Backup-Cronjob. |
-| `R2_ASSET_PUBLIC_BASE_URL`                  | Öffentliche Basis-URL des Asset-Buckets ohne Trailing-Slash (z.B. `https://assets.neo-archiv.de` oder die von Cloudflare vergebene `https://pub-….r2.dev`). Daraus baut die App die direkten Asset-Links.                                                                                                                                                                                    |
+| `R2_ASSET_PUBLIC_BASE_URL`                  | Öffentliche Basis-URL des Asset-Buckets ohne Trailing-Slash (z.B. `https://assets.neo-archiv.de` oder die von Cloudflare vergebene `https://pub-….r2.dev`). Daraus baut die App die direkten Asset-Links.                                                                                                                                        |
 
 **Wichtig für das manuelle R2-Backup im Adminpanel** (`/admin/db` — "Im
 R2-Bucket speichern" / "Aus R2-Bucket importieren", genauso für das

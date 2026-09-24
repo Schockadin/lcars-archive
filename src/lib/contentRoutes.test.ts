@@ -37,7 +37,7 @@ describe("contentRoutes", () => {
   it("kennt die Leseseiten aller vier Inhaltsarten", () => {
     expect(characterHref("tuvok")).toBe("/characters/tuvok");
     expect(characterLogsHref("Tuvok")).toBe(
-      "/chronologie?scope=all&category=log&person=Tuvok",
+      "/chronologie?scope=logs&person=Tuvok",
     );
     expect(characterSheetHref("tuvok")).toBe("/characters/tuvok/sheet");
     expect(archiveHref("erster-kontakt")).toBe("/archive/erster-kontakt");

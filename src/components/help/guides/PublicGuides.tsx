@@ -118,8 +118,9 @@ export function PublicChronologyGuide() {
           Ganz links im Umschalter steht <strong>„Missionen“</strong> — dann
           zeigt der Strahl je Einsatz einen Eintrag mit seinem ganzen Zeitraum,
           und ein Klick führt auf die Missionsseite mit ihren Einsatzberichten.
-          Mit <strong>„Alle Ereignisse“</strong> kommen Logbücher, Gespräche,
-          markierte Textstellen, Geburtstage und abgeleitete Begebenheiten dazu.
+          Daneben führen <strong>Events</strong>, <strong>Gespräche</strong> und{" "}
+          <strong>Logbücher</strong> direkt in ihre jeweilige Liste;{" "}
+          <strong>Alles</strong> verbindet den gesamten Zeitstrahl.
         </p>
         <p>
           Eigene Ereignisse zeigen auf der Karte einen kurzen Teaser. Ein Klick
@@ -130,10 +131,11 @@ export function PublicChronologyGuide() {
       <GuideSection title="Filtern und verlinken">
         <p>
           Geordnet wird immer nach <strong>Datum</strong> — der Knopf dreht die
-          Richtung um. Gefiltert wird nach Suchbegriff,{" "}
-          <strong>Ereignisart</strong>, <strong>beteiligter Person</strong> und
-          Jahr; wechselst du den Umschalter, setzen sich die übrigen Filter
-          zurück. Einträge ohne In-Story-Datum stehen unter{" "}
+          Richtung um. Jeder Bereich lässt sich nach Suchbegriff,{" "}
+          <strong>beteiligter Person</strong> und Jahr filtern; bei{" "}
+          <strong>Events</strong> kommt die <strong>Ereignisart</strong> hinzu.
+          Wechselst du den Umschalter, setzen sich die übrigen Filter zurück.
+          Einträge ohne In-Story-Datum stehen unter{" "}
           <strong>„Ohne Datum“</strong> am Ende.
         </p>
         <p>

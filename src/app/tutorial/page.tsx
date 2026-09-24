@@ -63,9 +63,9 @@ export default function TutorialPage() {
                 erledigt — und wenn du ihn wieder löschst, ist er es auch wieder
                 nicht. Die Liste lässt sich zusätzlich auf deiner{" "}
                 <strong>Startseite</strong> einblenden (siehe „Mein Bereich“);
-                dort verschwindet sie von selbst, sobald alles erledigt ist.
-                Die Seite <strong>/willkommen</strong> bleibt danach als
-                Übersicht erreichbar.
+                dort verschwindet sie von selbst, sobald alles erledigt ist. Die
+                Seite <strong>/willkommen</strong> bleibt danach als Übersicht
+                erreichbar.
               </p>
               <p>
                 Nichts davon ist Pflicht: Wer nur mitlesen möchte, braucht weder
@@ -97,11 +97,11 @@ export default function TutorialPage() {
                 nicht fertig ist, niemandem sonst.
               </p>
               <p>
-                Auf langen Seiten — Biografien, Logbüchern,
-                Gesprächsverläufen — erscheint unten rechts ein{" "}
-                <strong>Pfeil nach oben</strong>, sobald du ein Stück gescrollt
-                hast. Ein Klick bringt dich zurück an den Seitenanfang; am
-                Anfang angekommen, verschwindet er wieder.
+                Auf langen Seiten — Biografien, Logbüchern, Gesprächsverläufen —
+                erscheint unten rechts ein <strong>Pfeil nach oben</strong>,
+                sobald du ein Stück gescrollt hast. Ein Klick bringt dich zurück
+                an den Seitenanfang; am Anfang angekommen, verschwindet er
+                wieder.
               </p>
               <p>
                 Ein eigenes Konto kannst du dir nicht selbst anlegen — Zugänge
@@ -172,18 +172,16 @@ export default function TutorialPage() {
                 zeigt der Zeitstrahl je Einsatz genau einen Eintrag mit seinem
                 ganzen <strong>Zeitraum</strong> (Beginn bis Abschluss), und ein
                 Klick führt auf die Missionsseite mit ihren Einsatzberichten.
-                Die Ereignisart <strong>„Mission“</strong>
-                im Filter meint etwas anderes: dort sind Beginn und Abschluss
-                zwei eigene Marken auf dem Strahl. Mit{" "}
-                <strong>„Alle Ereignisse“</strong>
-                kommen Logbücher, markierte Textstellen, Gespräche, Geburtstage
-                und abgeleitete Begebenheiten dazu. Geordnet wird immer nach{" "}
+                Daneben stehen <strong>„Events“</strong>,{" "}
+                <strong>„Gespräche“</strong>, <strong>„Logbücher“</strong> und{" "}
+                <strong>„Alles“</strong>. Geordnet wird immer nach{" "}
                 <strong>Datum</strong> — der Knopf dreht die Richtung um —,
-                gefiltert nach Suchbegriff, <strong>Ereignisart</strong>,{" "}
-                <strong>beteiligter Person</strong> und Jahr; wechselst du den
-                Umschalter, setzen sich die übrigen Filter zurück. Einen eigenen
-                Menüpunkt „Missionen“ gibt es deshalb nicht mehr — die alte
-                Adresse führt hierher.
+                jeder Bereich lässt sich nach Suchbegriff,{" "}
+                <strong>beteiligter Person</strong> und Jahr filtern. Nur bei{" "}
+                <strong>Events</strong> kommt die <strong>Ereignisart</strong>{" "}
+                hinzu. Wechselst du den Umschalter, setzen sich die übrigen
+                Filter zurück. Einen eigenen Menüpunkt „Missionen“ gibt es
+                deshalb nicht mehr — die alte Adresse führt hierher.
               </p>
               <p>
                 Die <strong>Missionsseite</strong> selbst zeigt oben Status,
@@ -208,7 +206,7 @@ export default function TutorialPage() {
                 Startseite unter den offenen Gesprächen.
               </p>
               <p>
-                Die Ereignisse kommen aus <strong>drei Quellen</strong>. Erstens
+                Die Ereignisse kommen aus <strong>vier Quellen</strong>. Erstens
                 aus dem, was ohnehin gepflegt ist: Beginn und Ende einer
                 Mission, das Datum eines Logbuchs oder Gesprächs, das
                 Geburtsdatum einer Figur. Zweitens aus{" "}
@@ -240,7 +238,10 @@ export default function TutorialPage() {
                 vorausgewählt ist keine. Solche Ereignisse tragen den Hinweis{" "}
                 <em>von Hand eingetragen</em>, sind nicht verlinkt (es gibt ja
                 keinen Eintrag dahinter) und lassen sich von dir oder der
-                Spielleitung wieder entfernen.
+                Spielleitung wieder entfernen. Deine eigenen Ereignisse findest
+                du außerdem unter <strong>„Profil → Meine Inhalte“</strong>;
+                dort kannst du Datum, Kategorie, Teaser, Volltext und Beteiligte
+                später gemeinsam bearbeiten.
               </p>
               <p>
                 Drittens kann die{" "}
@@ -360,9 +361,9 @@ export default function TutorialPage() {
                 Übersicht stehst — und darunter die Liste alles dessen, was dir
                 bereits gehört. Sie ist wie Chronologie und Datenbank gebaut:
                 eine Überschrift je Kategorie, darunter die Einträge an der
-                Schiene. Sortiert wird in der Vorgabe nach Kategorie,
-                wahlweise alphabetisch über alles; Entwürfe stehen farblich
-                markiert in ihrer Kategorie und lassen sich über den Filter{" "}
+                Schiene. Sortiert wird in der Vorgabe nach Kategorie, wahlweise
+                alphabetisch über alles; Entwürfe stehen farblich markiert in
+                ihrer Kategorie und lassen sich über den Filter{" "}
                 <strong>„Nur Entwürfe“</strong> zusammen ansehen. Anlegen darfst
                 du:
               </p>
@@ -400,17 +401,16 @@ export default function TutorialPage() {
                 an den Regeln vorbei. Deshalb entscheidet auch nicht die Datei,
                 wem der Inhalt gehört — was du hochlädst, gehört dir —, und ein{" "}
                 <strong>Einsatzbericht</strong> lässt sich nur einer eigenen,
-                veröffentlichten Figur zuschreiben. (Nur die Administration
-                darf beides frei setzen; sie zieht damit fremde Inhalte aus
-                einem Vault herein.)
+                veröffentlichten Figur zuschreiben. (Nur die Administration darf
+                beides frei setzen; sie zieht damit fremde Inhalte aus einem
+                Vault herein.)
               </p>
               <p>
                 Bei jedem eigenen Eintrag entscheidest du über den Schalter
                 daneben, ob er ein <strong>Entwurf</strong> bleibt oder{" "}
                 <strong>veröffentlicht</strong> ist — ein Druck auf die andere
                 Hälfte stellt ihn um, jederzeit und ohne den Eintrag erst zu
-                öffnen. Direkt daneben findest du zwei
-                Symbol-Knöpfe zum{" "}
+                öffnen. Direkt daneben findest du zwei Symbol-Knöpfe zum{" "}
                 <strong>Bearbeiten</strong> (Stift) und <strong>Löschen</strong>{" "}
                 (Mülleimer) — Löschen steht bei allen fünf Inhaltstypen zur
                 Verfügung, auch bei eigenen Charakteren, Missionen (nur
@@ -418,30 +418,30 @@ export default function TutorialPage() {
                 begonnen hat).
               </p>
               <p>
-                <strong>Deine Charaktere</strong> haben einen eigenen
-                Menüpunkt: Unter <strong>„Profil“</strong> steht{" "}
+                <strong>Deine Charaktere</strong> haben einen eigenen Menüpunkt:
+                Unter <strong>„Profil“</strong> steht{" "}
                 <strong>„Charaktere“</strong>, sobald du entweder einen
-                Charakter verknüpft hast oder selbst welche anlegen darfst —
-                als <strong>Spieler</strong> also von Anfang an, auch vor
-                deiner ersten Figur. Dort stehen alle deine Charaktere (auch
-                Entwürfe) mit Knöpfen zum Veröffentlichen, Öffnen und Löschen
-                — und dort legst du neue an. Wie das Anlegen selbst abläuft, steht im nächsten
-                Abschnitt <strong>„Charaktererschaffung“</strong> — dort
-                gesammelt, weil es der längste Ablauf im ganzen Archiv ist.
-                Denselben Text öffnet das{" "}
-                <strong>Fragezeichen</strong> neben der Überschrift als Fenster
-                — auf der Seite „Charaktere“, im Anlege-Assistenten und auf der
-                Seite jedes deiner Charaktere. Du kannst also mitten im Ausfüllen
-                nachschlagen, ohne die Seite zu verlassen.
+                Charakter verknüpft hast oder selbst welche anlegen darfst — als{" "}
+                <strong>Spieler</strong> also von Anfang an, auch vor deiner
+                ersten Figur. Dort stehen alle deine Charaktere (auch Entwürfe)
+                mit Knöpfen zum Veröffentlichen, Öffnen und Löschen — und dort
+                legst du neue an. Wie das Anlegen selbst abläuft, steht im
+                nächsten Abschnitt <strong>„Charaktererschaffung“</strong> —
+                dort gesammelt, weil es der längste Ablauf im ganzen Archiv ist.
+                Denselben Text öffnet das <strong>Fragezeichen</strong> neben
+                der Überschrift als Fenster — auf der Seite „Charaktere“, im
+                Anlege-Assistenten und auf der Seite jedes deiner Charaktere. Du
+                kannst also mitten im Ausfüllen nachschlagen, ohne die Seite zu
+                verlassen.
               </p>
               <p>
                 Eigene Entwürfe (siehe unten) erscheinen in „Meine Inhalte“
                 gesammelt ganz oben in einer eigenen Übersicht, unabhängig vom
                 Kategorie-Filter — Charakter-Entwürfe stattdessen in der
-                Charakter-Übersicht, dort ebenfalls markiert. Dieselbe
-                Übersicht steht auf deiner <strong>Startseite</strong>, und
-                jeder Entwurf trägt dort wie in der Liste darunter seine
-                Knopfreihe: <strong>Entwurf / Veröffentlicht</strong>,{" "}
+                Charakter-Übersicht, dort ebenfalls markiert. Dieselbe Übersicht
+                steht auf deiner <strong>Startseite</strong>, und jeder Entwurf
+                trägt dort wie in der Liste darunter seine Knopfreihe:{" "}
+                <strong>Entwurf / Veröffentlicht</strong>,{" "}
                 <strong>Stift</strong> und <strong>Mülleimer</strong>. Wer
                 veröffentlicht, sieht den Eintrag sofort aus der
                 Entwurfs-Übersicht verschwinden. Ein Klick auf die große Karte
@@ -496,11 +496,7 @@ export default function TutorialPage() {
           {/* Die beiden übrigen Punkte des Profil-Menüs — „Meine Inhalte"
               und „Einstellungen" — mit denselben Texten, die dort hinter dem
               Fragezeichen stehen (siehe help/guides/UserGuides.tsx). */}
-          <LcarsDataRow
-            value={7}
-            htmlId="mein-bereich"
-            label="Mein Bereich"
-          >
+          <LcarsDataRow value={7} htmlId="mein-bereich" label="Mein Bereich">
             <UserAreaGuides />
           </LcarsDataRow>
 
@@ -544,14 +540,15 @@ export default function TutorialPage() {
                 Gespräch schon jemand für NPCs, bleibt es bei ihr. Bisher ging
                 das nur beim Anlegen — wer später einen NPC brauchte, musste das
                 Gespräch neu beginnen. Umgekehrt kann die Spielleitung ein
-                Gespräch aus Sicht eines NPC mit euren Charakteren beginnen. Danach läuft alles wie gewohnt: Der NPC
-                steht der Spielleitung beim Antworten wie ein eigener Charakter
-                zur Auswahl, und das Gespräch erscheint bei ihr unter „Deine
-                Gespräche“. Neue NPCs legt ihr unter „Meine Inhalte“ über den
-                Knopf „Neuer NPC“ an — das ist das normale Datenbank-Formular
-                mit vorgewählter Kategorie „NPC“, und der Knopf steht jedem
-                Konto offen. Wer einen NPC im Gespräch spricht, bleibt davon
-                unberührt: das ist weiterhin die Spielleitung.
+                Gespräch aus Sicht eines NPC mit euren Charakteren beginnen.
+                Danach läuft alles wie gewohnt: Der NPC steht der Spielleitung
+                beim Antworten wie ein eigener Charakter zur Auswahl, und das
+                Gespräch erscheint bei ihr unter „Deine Gespräche“. Neue NPCs
+                legt ihr unter „Meine Inhalte“ über den Knopf „Neuer NPC“ an —
+                das ist das normale Datenbank-Formular mit vorgewählter
+                Kategorie „NPC“, und der Knopf steht jedem Konto offen. Wer
+                einen NPC im Gespräch spricht, bleibt davon unberührt: das ist
+                weiterhin die Spielleitung.
               </p>
               <p>
                 Sobald ein Gespräch <strong>mehr als zwei Teilnehmende</strong>{" "}
@@ -566,19 +563,22 @@ export default function TutorialPage() {
                 die Seite neu laden musst. An jeder Nachrichtenkarte eines
                 laufenden Gesprächs steht neben dem Namen der sprechenden
                 Person, <strong>wann sie verschickt wurde</strong> (Datum und
-                Uhrzeit) — so siehst du, ob zwischen zwei Beiträgen Minuten
-                oder Tage lagen.
+                Uhrzeit) — so siehst du, ob zwischen zwei Beiträgen Minuten oder
+                Tage lagen.
               </p>
               <p>
                 Beim Öffnen springt die Seite ans <strong>Ende</strong> des
-                Verlaufs, und das <strong>Antwortfeld bleibt beim Scrollen am
-                unteren Rand stehen</strong>: Du kannst also weiter oben etwas
-                nachlesen und trotzdem sofort tippen, ohne vorher wieder ganz
-                nach unten zu scrollen. Das Feld lässt sich an seiner unteren
-                Kante größer ziehen, wenn du mehr Platz zum Schreiben brauchst.
-                Wer lieber den vollen Platz zum Lesen hat, nimmt den Haken{" "}
-                <strong>„Feld angeheftet&ldquo;</strong> über dem Feld heraus — dann
-                steht es wieder am Ende des Verlaufs. Diese Wahl merkt sich
+                Verlaufs, und das{" "}
+                <strong>
+                  Antwortfeld bleibt beim Scrollen am unteren Rand stehen
+                </strong>
+                : Du kannst also weiter oben etwas nachlesen und trotzdem sofort
+                tippen, ohne vorher wieder ganz nach unten zu scrollen. Das Feld
+                lässt sich an seiner unteren Kante größer ziehen, wenn du mehr
+                Platz zum Schreiben brauchst. Wer lieber den vollen Platz zum
+                Lesen hat, nimmt den Haken{" "}
+                <strong>„Feld angeheftet&ldquo;</strong> über dem Feld heraus —
+                dann steht es wieder am Ende des Verlaufs. Diese Wahl merkt sich
                 dein Browser für dieses Gerät.
               </p>
               <p>
@@ -587,8 +587,8 @@ export default function TutorialPage() {
                 Wortlaut auch nicht über die <strong>Suche</strong>. Für die
                 Spielleitung gilt das nicht, sie darf jedes Gespräch
                 aufschlagen. Nach dem <strong>Abschluss</strong> ist es ein
-                gewöhnlicher Eintrag und für alle lesbar, die den Bereich
-                sehen dürfen.
+                gewöhnlicher Eintrag und für alle lesbar, die den Bereich sehen
+                dürfen.
               </p>
               <p>
                 Links aus „Meine Inhalte“, Entwürfen, Suche, Chronologie und
@@ -606,20 +606,21 @@ export default function TutorialPage() {
                 abgeschlossenen Gespräche, die du dir ansiehst. Im Lesetext wird
                 die wörtliche Rede jedes Charakters in dessen{" "}
                 <strong>Charakter-Farbe</strong> dargestellt — auch dann, wenn
-                sie über mehrere Absätze läuft —, ebenso die
-                Nachrichten-Karten in offenen wie geschlossenen Gesprächen —
-                diese Farbe legst du im Profil unter „Charakter-Farben“ fest,
-                für jeden deiner Charaktere einzeln (ohne eigene Wahl bekommt er
-                automatisch eine der LCARS-Farben). NPCs sprechen einheitlich in
-                einem hellen Grau — daran erkennst du auf einen Blick, wer von
-                einer Spielerin/einem Spieler geführt wird.
+                sie über mehrere Absätze läuft —, ebenso die Nachrichten-Karten
+                in offenen wie geschlossenen Gesprächen — diese Farbe legst du
+                im Profil unter „Charakter-Farben“ fest, für jeden deiner
+                Charaktere einzeln (ohne eigene Wahl bekommt er automatisch eine
+                der LCARS-Farben). NPCs sprechen einheitlich in einem hellen
+                Grau — daran erkennst du auf einen Blick, wer von einer
+                Spielerin/einem Spieler geführt wird.
               </p>
               <p>
-                Ein abgeschlossenes Gespräch lässt sich <strong>teilen und
-                exportieren</strong> wie jeder andere Inhalt: Der Teilen-Knopf
-                unter dem Verlauf kopiert den Link, schickt ihn zu WhatsApp oder
-                lädt das ganze Gespräch als <strong>Markdown-Datei</strong> oder
-                als <strong>PDF</strong> herunter.
+                Ein abgeschlossenes Gespräch lässt sich{" "}
+                <strong>teilen und exportieren</strong> wie jeder andere Inhalt:
+                Der Teilen-Knopf unter dem Verlauf kopiert den Link, schickt ihn
+                zu WhatsApp oder lädt das ganze Gespräch als{" "}
+                <strong>Markdown-Datei</strong> oder als <strong>PDF</strong>{" "}
+                herunter.
               </p>
               <p>
                 <strong>Spielleitung:</strong> Über das „Leitung“-Menü im Header
@@ -666,10 +667,10 @@ export default function TutorialPage() {
                 bzw. als PDF herunterladen. Das PDF ist aufgemacht wie
                 Charakterbogen und Missionsakte — derselbe blaue Rahmen,
                 dieselbe Kopfzeile, ein beschrifteter Datenblock (Status,
-                Zeitraum, Beteiligte …) und darunter der Text mit
-                Überschriften, Aufzählungen, Zitaten sowie Fett und Kursiv.
-                Bei noch offenen, laufenden Gesprächen fehlt der Knopf
-                bewusst, da sich deren Inhalt noch ändert.
+                Zeitraum, Beteiligte …) und darunter der Text mit Überschriften,
+                Aufzählungen, Zitaten sowie Fett und Kursiv. Bei noch offenen,
+                laufenden Gesprächen fehlt der Knopf bewusst, da sich deren
+                Inhalt noch ändert.
               </p>
               <p>
                 Auf der <strong>Seite einer Mission</strong> steht angemeldet
@@ -809,11 +810,11 @@ export default function TutorialPage() {
               <p>
                 Zurückgeholt wird dabei nur der <strong>Fließtext</strong> —
                 Titel, Stammdaten und der Veröffentlichungs-Zustand bleiben
-                unverändert. Der
-                Stand, den du gerade ersetzt, geht nicht verloren: Er wandert
-                selbst als neue Fassung in die Historie, du kannst ein
-                Wiederherstellen also wieder rückgängig machen. Eine neue
-                Fassung entsteht nur, wenn sich der Text wirklich geändert hat.
+                unverändert. Der Stand, den du gerade ersetzt, geht nicht
+                verloren: Er wandert selbst als neue Fassung in die Historie, du
+                kannst ein Wiederherstellen also wieder rückgängig machen. Eine
+                neue Fassung entsteht nur, wenn sich der Text wirklich geändert
+                hat.
               </p>
             </div>
           </LcarsDataRow>
@@ -1001,17 +1002,17 @@ export default function TutorialPage() {
                 spielt keine Rolle. Findet sich zu einem Verweis nichts, bleibt
                 er als <em>„Kein Eintrag gefunden“</em> markiert stehen, statt
                 als Link zu erscheinen, der nirgendwohin führt — so siehst du
-                auf einen Blick, wo noch ein Eintrag fehlt oder ein Name
-                falsch geschrieben ist. Dasselbe zeigt dir schon der{" "}
-                <strong>Vorschau</strong>-Umschalter über dem Textfeld, bevor
-                du speicherst.
+                auf einen Blick, wo noch ein Eintrag fehlt oder ein Name falsch
+                geschrieben ist. Dasselbe zeigt dir schon der{" "}
+                <strong>Vorschau</strong>-Umschalter über dem Textfeld, bevor du
+                speicherst.
               </p>
               <p>
                 Wer sich das Tippen der Klammern sparen will, nutzt beim
                 Speichern das Kästchen <strong>„Automatisch verlinken“</strong>{" "}
                 unter dem Textfeld: Es durchsucht deinen Text nach bekannten
-                Charakter-Namen, Missions-Titeln und Datenbank-Eintrag-Titeln
-                — bei Charakteren und Datenbank-Einträgen zusätzlich unter ihren{" "}
+                Charakter-Namen, Missions-Titeln und Datenbank-Eintrag-Titeln —
+                bei Charakteren und Datenbank-Einträgen zusätzlich unter ihren{" "}
                 <strong>Aliasen</strong> — und verlinkt <strong>jede</strong>{" "}
                 Erwähnung automatisch. Bei <strong>neuen</strong> Inhalten ist
                 dieses Kästchen bereits vorausgewählt; beim Bearbeiten
@@ -1064,12 +1065,12 @@ export default function TutorialPage() {
             <div className="lcars-text flex flex-col gap-[12px]">
               <p>
                 Zusätzlich zu allem oben Genannten hat die Spielleitung ein
-                eigenes <strong>„Leitung“</strong>-Menü. Es steht getrennt
-                neben dem Admin-Menü — wer beide Rollen hat, sieht beide
-                nebeneinander — und ist nach Aufgaben gegliedert: Kampagne,
-                Charaktere, Regelwerk, Inhalte. Jeder seiner zehn Bereiche ist
-                hier erklärt; denselben Text öffnet auf der jeweiligen Seite
-                das <strong>Fragezeichen</strong> neben der Überschrift.
+                eigenes <strong>„Leitung“</strong>-Menü. Es steht getrennt neben
+                dem Admin-Menü — wer beide Rollen hat, sieht beide nebeneinander
+                — und ist nach Aufgaben gegliedert: Kampagne, Charaktere,
+                Regelwerk, Inhalte. Jeder seiner zehn Bereiche ist hier erklärt;
+                denselben Text öffnet auf der jeweiligen Seite das{" "}
+                <strong>Fragezeichen</strong> neben der Überschrift.
               </p>
               <GmAreaGuides />
               <p>Unabhängig vom Menü kann die Spielleitung außerdem:</p>
@@ -1134,8 +1135,8 @@ export default function TutorialPage() {
                   jede Nacht automatisch eine Sicherung; sie umfasst alle
                   Inhalte und die Kampagnendaten (AP-Konto, Talente,
                   Schwerpunkte, Hausregeln, Spielabende, Notizen, frühere
-                  Fassungen, Bilder und Rollen). Nutzerkonten haben eine
-                  eigene, separate Sicherung.
+                  Fassungen, Bilder und Rollen). Nutzerkonten haben eine eigene,
+                  separate Sicherung.
                 </li>
                 <li>
                   Unter <strong>„Import“</strong> eine oder mehrere
