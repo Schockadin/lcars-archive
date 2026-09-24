@@ -1129,9 +1129,13 @@ export default function TutorialPage() {
                   Stacktrace). Tritt ein solcher Fehler auf, sehen alle Besucher
                   eine LCARS-Fehlerseite mit Referenzcode, Administration
                   zusätzlich die volle Fehlermeldung direkt auf dieser Seite.
-                  Zusätzlich erhält die Administration jeden Morgen um 6 Uhr
-                  (Berliner Zeit) automatisch eine Mail mit allen Fehler- und
-                  Audit-Log-Einträgen der letzten 24 Stunden.
+                  Auch jede tatsächlich angezeigte 403-, 404- oder
+                  500-Fehlerseite erscheint im Log als Typ{" "}
+                  <strong>„Fehlerseite“</strong> — selbst wenn kein konkreter
+                  Fehlertext verfügbar war. Zusätzlich erhält die Administration
+                  jeden Morgen um 6 Uhr (Berliner Zeit) automatisch eine Mail
+                  mit allen Fehler- und Audit-Log-Einträgen der letzten 24
+                  Stunden.
                 </li>
                 <li>
                   Unter <strong>„Datenbank“</strong> den kompletten

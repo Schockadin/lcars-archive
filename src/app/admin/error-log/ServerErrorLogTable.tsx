@@ -9,6 +9,7 @@ const ROUTE_TYPE_LABELS: Record<string, string> = {
   action: "Server Action",
   proxy: "Proxy",
   caught: "Abgefangen",
+  "error-page": "Fehlerseite",
 };
 
 // „1.40.1 · deploy-preview #78" — beides zusammen, weil die Version allein

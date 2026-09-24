@@ -1362,7 +1362,11 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   Serverfehler (auch bereits im Code abgefangene) wird dauerhaft über
   `src/instrumentation.ts` bzw. `logCaughtError()` in der Tabelle
   `error_logs` protokolliert und ist im Adminbereich unter „Fehler-Log“
-  einsehbar. Jeder Eintrag trägt dabei die **Herkunft des werfenden Codes**
+  einsehbar. Zusätzlich meldet jede tatsächlich angezeigte 403-, 404- oder
+  500-Seite ihren Mount als eigenen Eintrag vom Typ „Fehlerseite“. Fehlt beim
+  500er die konkrete Meldung (etwa durch Next.js' Produktions-Redaktion), wird
+  trotzdem eine eindeutige Fallback-Meldung samt aufgerufener Route
+  geschrieben. Jeder Eintrag trägt dabei die **Herkunft des werfenden Codes**
   (`app_version`, `deploy_context`, `commit_ref` — zusammengestellt in
   `src/lib/deployInfo.ts` aus `APP_VERSION` und Netlifys Build-Variablen, die
   `next.config.ts` per `env` zur Build-Zeit einsetzt). Ohne sie ist einem

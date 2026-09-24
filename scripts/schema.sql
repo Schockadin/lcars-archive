@@ -661,10 +661,12 @@ CREATE TABLE IF NOT EXISTS dialogue_reservation_notify_requests (
 -- ---------------------------------------------------------------------------
 -- Protokoll unerwarteter Serverfehler (Next.js instrumentation.ts/
 -- onRequestError, src/lib/errorLog.ts) — sowohl nicht abgefangene Abstürze
--- (route_type 'render'/'route'/'action') als auch manuell per logCaughtError
--- ergänzte 'caught'-Fehler. Rein lesend über /admin/error-log. digest =
+-- (route_type 'render'/'route'/'action'), manuell per logCaughtError ergänzte
+-- 'caught'-Fehler und tatsächlich angezeigte 'error-page'-Fallbacks. Rein
+-- lesend über /admin/error-log. digest =
 -- Next.js-Korrelations-Hash (nullable, nicht jeder Pfad liefert einen).
--- route_type bewusst freies TEXT ohne CHECK (deckt Next.js-Werte UND 'caught').
+-- route_type bewusst freies TEXT ohne CHECK (Next.js-Werte, 'caught',
+-- 'error-page').
 CREATE TABLE IF NOT EXISTS error_logs (
   id         SERIAL PRIMARY KEY,
   digest     TEXT,

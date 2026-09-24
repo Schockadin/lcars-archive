@@ -11,7 +11,8 @@ export const metadata: Metadata = {
 
 // Rein lesende Übersicht der zuletzt geloggten Serverfehler (siehe
 // src/lib/errorLog.ts, geschrieben aus src/instrumentation.ts sowie
-// bestehenden catch-Blöcken via logCaughtError) — gleiches Muster wie
+// bestehenden catch-Blöcken via logCaughtError und angezeigten Fehlerseiten)
+// — gleiches Muster wie
 // /admin/audit-log: Server-Component lädt, dünner Client-Wrapper definiert
 // die Spalten für AdminLogTable (Server Components können keine Funktionen
 // als Props übergeben).
@@ -33,7 +34,8 @@ export default async function AdminErrorLogPage() {
             abgefangene Abstürze (Route/Render/Action, zeigen der betroffenen
             Person die 500-Seite) als auch bereits an Ort und Stelle
             abgefangene, unkritische Fehler (Typ „caught“, z.B. fehlgeschlagene
-            Benachrichtigungs-Mails).
+            Benachrichtigungs-Mails) und jede tatsächlich angezeigte
+            403-/404-/500-Fehlerseite (Typ „Fehlerseite“).
           </p>
           <ServerErrorLogTable entries={entries} />
         </div>

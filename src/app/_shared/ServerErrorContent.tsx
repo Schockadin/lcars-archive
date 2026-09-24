@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { LcarsMenuItem } from "@/components/lcars";
+import ErrorPageReporter from "./ErrorPageReporter";
 
 // Geteiltes Inhalts-JSX zwischen src/app/error.tsx und src/app/global-error.tsx
 // (Next.js verlangt für global-error.tsx einen eigenen <html>/<body>-Rahmen,
@@ -86,6 +87,7 @@ export default function ServerErrorContent({
 
   return (
     <div className="flex flex-col items-center justify-center gap-[16px] pt-[80px] px-8 text-center">
+      <ErrorPageReporter status={500} error={error} />
       {/* Fehlercode – groß und in LCARS-Amber */}
       <div
         className="font-lcars-mono uppercase tracking-widest text-lcars-primary-ink"

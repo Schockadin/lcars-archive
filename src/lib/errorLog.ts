@@ -4,7 +4,8 @@
 // (1) src/instrumentation.ts (onRequestError-Hook, nicht abgefangene
 // Serverfehler aus Render/Route Handler/Server Action), (2) bestehende
 // catch-Blöcke, die schon heute console.error nutzen (ergänzt um
-// logCaughtError, siehe dortige Aufrufstellen).
+// logCaughtError, siehe dortige Aufrufstellen), (3) tatsächlich gemountete
+// Fehlerseiten über reportErrorPageDisplay (route_type "error-page").
 import "server-only";
 import sql from "@/lib/db";
 import { currentDeployOrigin } from "@/lib/deployInfo";
@@ -58,7 +59,10 @@ export async function logServerError(entry: ErrorLogEntry): Promise<void> {
       )
     `;
   } catch (err) {
-    console.error("Server-Fehler konnte nicht in error_logs geschrieben werden:", err);
+    console.error(
+      "Server-Fehler konnte nicht in error_logs geschrieben werden:",
+      err,
+    );
   }
 }
 
@@ -68,10 +72,18 @@ export async function logServerError(entry: ErrorLogEntry): Promise<void> {
 // render/route/action aus onRequestError, die einen nicht abgefangenen
 // Absturz bedeuten). context ist ein frei gewählter Datei:Funktion-String,
 // nur zur Zuordnung in der Admin-Übersicht.
-export async function logCaughtError(error: unknown, context: string): Promise<void> {
+export async function logCaughtError(
+  error: unknown,
+  context: string,
+): Promise<void> {
   const message = error instanceof Error ? error.message : String(error);
   const stack = error instanceof Error ? error.stack : undefined;
-  await logServerError({ message, stack, routePath: context, routeType: "caught" });
+  await logServerError({
+    message,
+    stack,
+    routePath: context,
+    routeType: "caught",
+  });
 }
 
 interface RawErrorLogRow {
@@ -118,7 +130,9 @@ export async function getServerErrorByDigest(
   return row ? mapErrorLogRow(row) : null;
 }
 
-export async function listRecentServerErrors(limit = 200): Promise<ErrorLogRow[]> {
+export async function listRecentServerErrors(
+  limit = 200,
+): Promise<ErrorLogRow[]> {
   const rows = await sql<RawErrorLogRow[]>`
     SELECT id, digest, message, stack, route_path, route_type, method,
            app_version, deploy_context, commit_ref, created_at
