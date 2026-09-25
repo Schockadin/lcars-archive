@@ -2,7 +2,6 @@
 // sowohl von der App (via push.ts) als auch von den Ingest-Skripten
 // (scripts/ingest/notify.ts, per tsx außerhalb von Next ausgeführt)
 // importiert werden kann — exakt das gleiche Muster wie mailCore.ts/mail.ts.
-import webpush from "web-push";
 import postgres from "postgres";
 
 export interface PushPayload {
@@ -24,8 +23,28 @@ function isConfigured(): boolean {
   );
 }
 
+// web-push wird erst beim tatsächlichen Versand geladen (siehe loadWebPush):
+// pushCore.ts hängt über push.ts an den Datenmodulen (characters/missions/
+// archive), die nahezu jede Seite lädt — ein statischer Import würde das
+// Paket samt Krypto-Abhängigkeiten bei jedem Kaltstart mit auswerten.
+type WebPushModule = typeof import("web-push");
+
+let webpushModule: WebPushModule | null = null;
+async function loadWebPush(): Promise<WebPushModule> {
+  if (!webpushModule) {
+    // web-push ist CommonJS: je nach Loader (Webpack im Next-Build, Node-ESM
+    // unter tsx in den Skripten) liegen die Funktionen direkt am Namespace
+    // oder unter default — beides abdecken.
+    const mod = (await import("web-push")) as WebPushModule & {
+      default?: WebPushModule;
+    };
+    webpushModule = mod.default ?? mod;
+  }
+  return webpushModule;
+}
+
 let vapidConfigured = false;
-function ensureVapid(): void {
+function ensureVapid(webpush: WebPushModule): void {
   if (vapidConfigured) return;
   webpush.setVapidDetails(
     process.env.VAPID_SUBJECT!,
@@ -48,7 +67,6 @@ export async function sendPushToUser(
   if (!isConfigured()) {
     return { sent: 0, failed: 0 };
   }
-  ensureVapid();
 
   const subscriptions = await sql<
     { endpoint: string; p256dh: string; auth: string }[]
@@ -60,6 +78,8 @@ export async function sendPushToUser(
   if (subscriptions.length === 0) {
     return { sent: 0, failed: 0 };
   }
+  const webpush = await loadWebPush();
+  ensureVapid(webpush);
 
   let sent = 0;
   let failed = 0;

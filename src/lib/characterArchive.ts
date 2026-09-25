@@ -1,5 +1,5 @@
 import "server-only";
-import { PDFDocument } from "pdf-lib";
+import type { PDFDocument } from "pdf-lib";
 import sql from "@/lib/db";
 import {
   getOwnCharacterStats,
@@ -7,10 +7,6 @@ import {
 } from "@/lib/characters";
 import { listTalents } from "@/lib/talents";
 import { listCampaignRules } from "@/lib/campaignRules";
-import { renderCharacterSheetPdf } from "@/lib/pdf/CharacterSheetPdfDocument";
-import { renderMissionBookPdf } from "@/lib/pdf/MissionBookPdfDocument";
-import { renderContentPdf } from "@/lib/pdf/ContentPdfDocument";
-import { renderCharacterArchiveTextPdf } from "@/lib/pdf/CharacterArchiveTextPdfDocument";
 import { getMissionBook } from "@/lib/missionBook";
 import {
   getCharacterDocumentBytes,
@@ -90,11 +86,41 @@ interface SelectedLogRow {
 
 export class CharacterArchiveError extends Error {}
 
-async function appendPdf(target: PDFDocument, bytes: Uint8Array) {
-  const source = await PDFDocument.load(bytes);
-  const pages = await target.copyPages(source, source.getPageIndices());
-  for (const page of pages) target.addPage(page);
+// pdf-lib und die @react-pdf-Renderer werden erst beim eigentlichen Export
+// geladen: Die Seite /user/characters/[characterId] braucht aus diesem Modul
+// nur getCharacterArchiveOptions (die Auswahlliste). Statisch importiert
+// würden @react-pdf/renderer (ein von Next extern gehaltenes Paket, per
+// require() zur Laufzeit geladen) und pdf-lib bei jedem Kaltstart dieser
+// Seite mit ausgewertet.
+async function loadPdfTools() {
+  const [
+    { PDFDocument },
+    { renderCharacterSheetPdf },
+    { renderMissionBookPdf },
+    { renderContentPdf },
+    { renderCharacterArchiveTextPdf },
+  ] = await Promise.all([
+    import("pdf-lib"),
+    import("@/lib/pdf/CharacterSheetPdfDocument"),
+    import("@/lib/pdf/MissionBookPdfDocument"),
+    import("@/lib/pdf/ContentPdfDocument"),
+    import("@/lib/pdf/CharacterArchiveTextPdfDocument"),
+  ]);
+  async function appendPdf(target: PDFDocument, bytes: Uint8Array) {
+    const source = await PDFDocument.load(bytes);
+    const pages = await target.copyPages(source, source.getPageIndices());
+    for (const page of pages) target.addPage(page);
+  }
+  return {
+    PDFDocument,
+    appendPdf,
+    renderCharacterSheetPdf,
+    renderMissionBookPdf,
+    renderContentPdf,
+    renderCharacterArchiveTextPdf,
+  };
 }
+
 
 export async function renderCharacterArchivePdf(input: {
   userId: number;
@@ -173,6 +199,14 @@ export async function renderCharacterArchivePdf(input: {
     );
   }
 
+  const {
+    PDFDocument,
+    appendPdf,
+    renderCharacterSheetPdf,
+    renderMissionBookPdf,
+    renderContentPdf,
+    renderCharacterArchiveTextPdf,
+  } = await loadPdfTools();
   const merged = await PDFDocument.create();
   if (input.includeCharacter) {
     const [talents, bio, campaignRules] = await Promise.all([

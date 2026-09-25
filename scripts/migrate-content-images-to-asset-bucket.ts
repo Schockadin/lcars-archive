@@ -37,7 +37,7 @@ const CONTENT_IMAGE_PREFIX = "content-images/";
 const DRY_RUN = process.argv.includes("--dry-run");
 
 async function listBackupContentImageKeys(): Promise<string[]> {
-  const { client, bucket } = createR2Client();
+  const { client, bucket } = await createR2Client();
   const keys: string[] = [];
   let continuationToken: string | undefined;
   do {

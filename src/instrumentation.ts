@@ -13,6 +13,17 @@
 // Meldung auf der Seite selbst, hier im Hook liegt sie noch im Klartext vor.
 import { type Instrumentation } from "next";
 
+// Siehe register() in instrumentation.node.ts (DB-Verbindung beim Kaltstart
+// vorwärmen). Gleiches Runtime-Muster wie onRequestError unten.
+export function register(): void {
+  if (process.env.NEXT_RUNTIME === "edge") return;
+  // eslint-disable-next-line @typescript-eslint/no-require-imports -- Next dokumentiert require() für runtime-spezifische Instrumentation.
+  const nodeInstrumentation = require("./instrumentation.node") as {
+    register: () => void;
+  };
+  nodeInstrumentation.register();
+}
+
 export const onRequestError: Instrumentation.onRequestError = (...args) => {
   // Next baut instrumentation.ts für Node.js und Edge. Der DB-Logger hängt
   // vom Node-Modul "net" ab und darf deshalb nicht in den Edge-Modulgraphen

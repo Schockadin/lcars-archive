@@ -22,7 +22,7 @@ import { userHasCharacters } from "@/lib/characters";
 // selbst drosselt auf einen DB-Write pro Nutzer alle 15 Minuten (siehe
 // lib/users.ts) — der synchrone await hier kostet praktisch nie eine
 // zusätzliche Antwortzeit spürbarer Größe. BEWUSST kein after() (mehr):
-// lib/db.ts hält pro Funktionsinstanz nur eine einzige DB-Verbindung
+// lib/db.ts hielt pro Funktionsinstanz damals nur eine einzige DB-Verbindung
 // (max: 1, PgBouncer-Transaction-Mode) — friert Netlifys Node-Function-
 // Runtime die Instanz ein, bevor ein nachgelagerter after()-Callback seine
 // Query beendet hat, bleibt diese eine Verbindung in einem hängenden
@@ -38,18 +38,28 @@ export async function GET() {
   // bekommt hier dieselbe Antwort wie ein ausgeloggtes, statt weiter seine
   // vollständige Navigation zu sehen.
   const user = await getActiveUser();
-  if (user) {
-    await touchLastVisit(user.id);
-  }
-  // Rollen-Map laden und explizit durchreichen, damit userPermissions gegen die
-  // aktuellen (evtl. bearbeiteten/eigenen) Rollen auflöst.
-  const permissions = user
-    ? [...userPermissions(user, await getRoleMap())]
-    : [];
-  // Steuert den „Charaktere"-Menüpunkt (HeaderUserNav): nur User mit
-  // mindestens einem verknüpften Charakter bekommen ihn. Bewusst eine eigene
-  // EXISTS-Abfrage statt der vollen Charakterliste — hier zählt nur ja/nein.
-  const hasCharacters = user ? await userHasCharacters(user.id) : false;
+  // Die drei Folgeabfragen hängen nur vom User ab, nicht voneinander — parallel
+  // statt nacheinander (lib/db.ts hält mehrere Verbindungen, siehe dort). Der
+  // Header wartet auf diese Antwort; gerade beim Kaltstart einer Instanz, wo
+  // jede Abfrage zuerst ihre Verbindung aufbauen muss, sparte das zwei
+  // vollständige Roundtrips.
+  //
+  // - touchLastVisit drosselt selbst auf einen Write pro Nutzer alle 15
+  //   Minuten (siehe lib/users.ts).
+  // - Rollen-Map laden und explizit durchreichen, damit userPermissions gegen
+  //   die aktuellen (evtl. bearbeiteten/eigenen) Rollen auflöst.
+  // - hasCharacters steuert den „Charaktere"-Menüpunkt (HeaderUserNav): nur
+  //   User mit mindestens einem verknüpften Charakter bekommen ihn. Bewusst
+  //   eine eigene EXISTS-Abfrage statt der vollen Charakterliste.
+  const [, roleMap, hasCharacters] = user
+    ? await Promise.all([
+        touchLastVisit(user.id),
+        getRoleMap(),
+        userHasCharacters(user.id),
+      ])
+    : [undefined, null, false];
+  const permissions =
+    user && roleMap ? [...userPermissions(user, roleMap)] : [];
   // Explizite No-Store-Header (der Endpunkt ist ohnehin per-Request
   // dynamisch, da er Cookies liest): dieser Endpunkt liefert userId/role,
   // personalisierte Daten,

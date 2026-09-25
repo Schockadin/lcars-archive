@@ -107,6 +107,24 @@ const nextConfig: NextConfig = {
   // den personalisierten Seiten — Laufzeit-Datenzugriff (cookies()/
   // searchParams) muss dafür in eine Suspense-Grenze gekapselt sein.
   cacheComponents: true,
+  // Partial Prefetching (Next 16.3, setzt cacheComponents voraus, siehe
+  // node_modules/next/dist/docs/01-app/02-guides/adopting-partial-prefetching.md):
+  // Ein <Link> lädt vorab nur noch die „App Shell" seiner ZIELROUTE — die
+  // statische Hülle bis zur ersten Suspense-Grenze (bei uns meist das
+  // loading.tsx-Skelett) — und alle Links auf dieselbe Route teilen sich
+  // diese eine Vorab-Antwort. Vorher holte jeder sichtbare Link seinen
+  // eigenen Prefetch: Die Charakter-, Archiv- oder Chronologie-Liste mit
+  // Dutzenden Einträgen löste Dutzende gleichzeitige Anfragen an die
+  // Server-Funktion aus. Auf Netlify bedient eine Funktionsinstanz genau eine
+  // Anfrage zur Zeit — jede dieser Anfragen weckte also eine eigene
+  // (kalte) Instanz samt DB-Verbindung, und der eigentliche Klick musste sich
+  // hinter ihnen anstellen. Da die Seiten ihre params ohnehin erst innerhalb
+  // der Suspense-Grenze auflösen, brachte der Einzel-Prefetch inhaltlich
+  // nicht mehr als das gemeinsame Skelett.
+  //
+  // Kein <Link prefetch={true}> im Code, also nichts, was einen bisherigen
+  // vollständigen Prefetch verlieren würde.
+  partialPrefetching: true,
   // Schaltet forbidden()/app/forbidden.tsx frei (next/navigation) — genutzt
   // von den Zugriffs-Guards in src/lib/dal.ts, src/app/user/dal.ts und
   // src/app/admin/[id]/dal.ts für rollen-/identitätsbasierte

@@ -8,14 +8,16 @@
 // user-backups/, character-documents/). Öffentliche Nutzer-Assets liegen im
 // separaten Asset-Bucket weiter unten. "auto" statt einer echten AWS-Region
 // und der Account-spezifische S3-Endpoint, siehe Cloudflare-R2-Doku.
+//
+// Das AWS-SDK wird nur per dynamic import geladen (siehe loadS3): Über
+// contentImages.ts/characterAssets.ts hängt dieses Modul an den Datenmodulen,
+// die nahezu jede Seite lädt. @aws-sdk/client-s3 ist ein von Next extern
+// gehaltenes Paket (server-external-packages) — ein statischer Import würde
+// es bei JEDEM Kaltstart der Server-Funktion samt @smithy-Unterbau per
+// require() laden, obwohl nur Uploads, Backups und Dokument-Downloads es
+// brauchen.
 import "server-only";
-import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-  DeleteObjectCommand,
-  ListObjectsV2Command,
-} from "@aws-sdk/client-s3";
+import type { S3Client } from "@aws-sdk/client-s3";
 import {
   BACKUP_PREFIX,
   buildManualDbBackupKey,
@@ -35,33 +37,43 @@ export function requireEnv(name: string): string {
 
 // R2-Client ist unabhängig vom Bucket (dieselben Account-Credentials bedienen
 // Backup- und Asset-Bucket) — der Bucketname wird separat aufgelöst.
-function createR2ClientFor(bucketEnvName: string): {
+type S3Module = typeof import("@aws-sdk/client-s3");
+
+let s3Module: Promise<S3Module> | null = null;
+function loadS3(): Promise<S3Module> {
+  s3Module ??= import("@aws-sdk/client-s3");
+  return s3Module;
+}
+
+async function createR2ClientFor(bucketEnvName: string): Promise<{
   client: S3Client;
+  s3: S3Module;
   bucket: string;
-} {
+}> {
   const accountId = requireEnv("R2_ACCOUNT_ID");
   const accessKeyId = requireEnv("R2_ACCESS_KEY_ID");
   const secretAccessKey = requireEnv("R2_SECRET_ACCESS_KEY");
   const bucket = requireEnv(bucketEnvName);
 
-  const client = new S3Client({
+  const s3 = await loadS3();
+  const client = new s3.S3Client({
     region: "auto",
     endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
     credentials: { accessKeyId, secretAccessKey },
   });
 
-  return { client, bucket };
+  return { client, s3, bucket };
 }
 
 // Backup-Bucket (DB-/User-Backups). Für hochgeladene Assets (Content-Bilder,
 // Portraits, Charakterbögen) den öffentlichen Asset-Bucket unten nutzen.
-export function createR2Client(): { client: S3Client; bucket: string } {
+export function createR2Client(): ReturnType<typeof createR2ClientFor> {
   return createR2ClientFor("R2_BUCKET_NAME");
 }
 
 // Öffentlicher Asset-Bucket (R2_ASSET_BUCKET_NAME) — getrennt vom Backup-
 // Bucket, damit hochgeladene Nutzer-Assets nicht zwischen den Backups liegen.
-export function createAssetR2Client(): { client: S3Client; bucket: string } {
+export function createAssetR2Client(): ReturnType<typeof createR2ClientFor> {
   return createR2ClientFor("R2_ASSET_BUCKET_NAME");
 }
 
@@ -83,9 +95,9 @@ export async function uploadDbBackupToR2(
   key: string,
   json: string,
 ): Promise<void> {
-  const { client, bucket } = createR2Client();
+  const { client, s3, bucket } = await createR2Client();
   await client.send(
-    new PutObjectCommand({
+    new s3.PutObjectCommand({
       Bucket: bucket,
       Key: key,
       Body: json,
@@ -107,13 +119,13 @@ export interface R2BackupObject {
 export async function listDbBackupsInR2(
   prefix: string = BACKUP_PREFIX,
 ): Promise<R2BackupObject[]> {
-  const { client, bucket } = createR2Client();
+  const { client, s3, bucket } = await createR2Client();
 
   const objects: R2BackupObject[] = [];
   let continuationToken: string | undefined;
   do {
     const page = await client.send(
-      new ListObjectsV2Command({
+      new s3.ListObjectsV2Command({
         Bucket: bucket,
         Prefix: prefix,
         ContinuationToken: continuationToken,
@@ -154,9 +166,9 @@ export async function downloadDbBackupFromR2(
   if (!key.startsWith(requiredPrefix) || key.includes("..")) {
     throw new InvalidBackupKeyError(`Ungültiger Backup-Key: "${key}"`);
   }
-  const { client, bucket } = createR2Client();
+  const { client, s3, bucket } = await createR2Client();
   const result = await client.send(
-    new GetObjectCommand({ Bucket: bucket, Key: key }),
+    new s3.GetObjectCommand({ Bucket: bucket, Key: key }),
   );
   const body = await result.Body?.transformToString();
   if (body == null) {
@@ -180,9 +192,9 @@ export async function uploadObjectBytesToR2(
   body: Buffer,
   contentType: string,
 ): Promise<void> {
-  const { client, bucket } = createR2Client();
+  const { client, s3, bucket } = await createR2Client();
   await client.send(
-    new PutObjectCommand({
+    new s3.PutObjectCommand({
       Bucket: bucket,
       Key: key,
       Body: body,
@@ -194,10 +206,10 @@ export async function uploadObjectBytesToR2(
 export async function getObjectBytesFromR2(
   key: string,
 ): Promise<R2ObjectBytes | null> {
-  const { client, bucket } = createR2Client();
+  const { client, s3, bucket } = await createR2Client();
   try {
     const result = await client.send(
-      new GetObjectCommand({ Bucket: bucket, Key: key }),
+      new s3.GetObjectCommand({ Bucket: bucket, Key: key }),
     );
     const bytes = await result.Body?.transformToByteArray();
     if (bytes == null) return null;
@@ -212,8 +224,8 @@ export async function getObjectBytesFromR2(
 }
 
 export async function deleteObjectFromR2(key: string): Promise<void> {
-  const { client, bucket } = createR2Client();
-  await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+  const { client, s3, bucket } = await createR2Client();
+  await client.send(new s3.DeleteObjectCommand({ Bucket: bucket, Key: key }));
 }
 
 // ── Öffentlicher Asset-Bucket ──────────────────────────────────────────────
@@ -226,9 +238,9 @@ export async function uploadAssetObjectToR2(
   body: Buffer,
   contentType: string,
 ): Promise<void> {
-  const { client, bucket } = createAssetR2Client();
+  const { client, s3, bucket } = await createAssetR2Client();
   await client.send(
-    new PutObjectCommand({
+    new s3.PutObjectCommand({
       Bucket: bucket,
       Key: key,
       Body: body,
@@ -240,10 +252,10 @@ export async function uploadAssetObjectToR2(
 export async function getAssetObjectBytesFromR2(
   key: string,
 ): Promise<R2ObjectBytes | null> {
-  const { client, bucket } = createAssetR2Client();
+  const { client, s3, bucket } = await createAssetR2Client();
   try {
     const result = await client.send(
-      new GetObjectCommand({ Bucket: bucket, Key: key }),
+      new s3.GetObjectCommand({ Bucket: bucket, Key: key }),
     );
     const bytes = await result.Body?.transformToByteArray();
     if (bytes == null) return null;
@@ -258,6 +270,6 @@ export async function getAssetObjectBytesFromR2(
 }
 
 export async function deleteAssetObjectFromR2(key: string): Promise<void> {
-  const { client, bucket } = createAssetR2Client();
-  await client.send(new DeleteObjectCommand({ Bucket: bucket, Key: key }));
+  const { client, s3, bucket } = await createAssetR2Client();
+  await client.send(new s3.DeleteObjectCommand({ Bucket: bucket, Key: key }));
 }

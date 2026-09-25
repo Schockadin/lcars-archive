@@ -1,5 +1,8 @@
-import mammoth from "mammoth";
-import { PDFDocument } from "pdf-lib";
+// mammoth und pdf-lib werden erst beim Prüfen eines Uploads geladen (siehe
+// inspectCharacterDocument): Über characterDocuments.ts hängt dieses Modul an
+// der öffentlichen Charakterseite, die nur die Dokumentliste braucht — ein
+// statischer Import würde beide Bibliotheken bei jedem Kaltstart mit laden.
+import type { PDFDocument } from "pdf-lib";
 import {
   CHARACTER_DOCUMENT_KINDS,
   MAX_CHARACTER_DOCUMENT_BYTES,
@@ -82,13 +85,14 @@ export async function inspectCharacterDocument(
         "Die Datei ist kein gültiges PDF.",
       );
     }
+    const { PDFDocument: PdfDocument } = await import("pdf-lib");
     let pdf: PDFDocument;
     try {
       // Unter jsdom/Node 24 stammt Buffer aus einem anderen Uint8Array-Realm
       // als die von pdf-lib geprüfte globale Klasse. Eine echte Kopie ist in
       // beiden Umgebungen stabil und verhindert, dass gültige PDFs allein an
       // diesem instanceof-Unterschied scheitern.
-      pdf = await PDFDocument.load(new Uint8Array(buffer));
+      pdf = await PdfDocument.load(new Uint8Array(buffer));
     } catch {
       throw new InvalidCharacterDocumentError(
         "Das PDF ist beschädigt oder geschützt und kann nicht verarbeitet werden.",
@@ -106,6 +110,7 @@ export async function inspectCharacterDocument(
         "Die Datei ist kein gültiges DOCX.",
       );
     }
+    const { default: mammoth } = await import("mammoth");
     try {
       const result = await mammoth.extractRawText({ buffer });
       return {

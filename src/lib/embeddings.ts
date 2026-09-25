@@ -21,7 +21,12 @@
 // prepare:false (pgBouncer, siehe src/lib/db.ts).
 
 import type { Sql } from "postgres";
-import OpenAI from "openai";
+// Nur der Typ wird statisch importiert: embeddings.ts hängt über
+// embeddingSync.ts an den Datenmodulen (characters/missions/archive), die
+// nahezu jede Seite lädt. Ein Wert-Import würde das openai-SDK bei jedem
+// Kaltstart der Server-Funktion mit auswerten, obwohl es nur beim
+// tatsächlichen Embedden gebraucht wird — siehe getOpenAI() unten.
+import type OpenAI from "openai";
 import { stripMarkdown } from "@/lib/search";
 
 // Ein postgres.js-Client ODER eine Transaktion (sql.begin(tx => …)). Beide
@@ -409,13 +414,16 @@ let openaiClient: OpenAI | null = null;
 // Lazy-Instanz — wirft nur, wenn tatsächlich embedded wird und der Key fehlt
 // (der Aufrufer im App-Trigger prüft hasEmbeddingConfig() vorher und
 // überspringt still, wie mail/push ohne Key).
-function getOpenAI(): OpenAI {
+// Das SDK wird erst hier per dynamic import geladen (siehe Import-Kommentar
+// oben), einmal pro Server-Instanz.
+async function getOpenAI(): Promise<OpenAI> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY ist nicht gesetzt.");
   }
   if (!openaiClient) {
-    openaiClient = new OpenAI({ apiKey });
+    const { default: OpenAIClient } = await import("openai");
+    openaiClient = new OpenAIClient({ apiKey });
   }
   return openaiClient;
 }
@@ -436,7 +444,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 // Backfill). Reihenfolge der Ausgabe entspricht der Eingabe.
 export async function embedTexts(texts: string[]): Promise<number[][]> {
   if (texts.length === 0) return [];
-  const client = getOpenAI();
+  const client = await getOpenAI();
   const res = await client.embeddings.create({
     model: EMBEDDING_MODEL,
     dimensions: EMBEDDING_DIMENSIONS,

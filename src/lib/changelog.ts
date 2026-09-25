@@ -147,6 +147,16 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.56",
+    title: "Schnellere Seitenwechsel",
+    // Bewusst ohne Stichpunkte: Der Pull Request beschleunigt Seitenwechsel
+    // (vor allem nach einem Kaltstart des Servers) durch schlankeres Laden,
+    // gemeinsame Vorab-Abrufe je Route und eine Startseite, die ihre
+    // Abschnitte einzeln nachlädt. Neue Funktionen für Spielende oder
+    // Spielleitung kommen damit nicht hinzu.
+    items: [],
+  },
+  {
     version: "1.55",
     title: "Inaktive Figuren als NPCs weiterführen",
     items: [
