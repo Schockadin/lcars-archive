@@ -147,6 +147,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.55",
+    title: "Inaktive Figuren als NPCs weiterführen",
+    items: [
+      {
+        text: "Inaktive und verstorbene Charaktere lassen sich jetzt als NPCs weiterführen. Bogen, AP und Chronologie bleiben erhalten; die Umwandlung kann der Owner jederzeit rückgängig machen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+    ],
+  },
+  {
     version: "1.54",
     title: "Charakterdokumente direkt in der Personalakte",
     items: [

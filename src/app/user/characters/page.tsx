@@ -12,6 +12,7 @@ import OwnCharacterList, { type OwnCharacterItem } from "./OwnCharacterList";
 import HelpButton from "@/components/help/HelpButton";
 import { HelpTitleRow } from "@/components/help/HelpHeading";
 import CharacterCreationGuide from "@/components/character/CharacterCreationGuide";
+import { listOwnedCharacterNpcConversions } from "@/lib/characterNpcConversion";
 
 export const metadata: Metadata = {
   title: "Meine Charaktere",
@@ -25,7 +26,10 @@ export const metadata: Metadata = {
 // löschen und neue Charaktere anlegen.
 export default async function UserCharactersPage() {
   const { user, characters } = await requireOwnCharacters();
-  const roleMap = await getRoleMap();
+  const [roleMap, npcConversions] = await Promise.all([
+    getRoleMap(),
+    listOwnedCharacterNpcConversions(user.id),
+  ]);
 
   // Werte-Status serverseitig ermitteln, damit die rohen metadata.stats nicht
   // in den Client-Payload wandern (siehe OwnCharacterItem).
@@ -36,7 +40,19 @@ export default async function UserCharactersPage() {
     status: c.status,
     isDraft: c.is_draft,
     hasStats: !isCharacterStatsEmpty(parseCharacterStats(c.metadata.stats)),
+    npcSlug: null,
   }));
+  items.push(
+    ...npcConversions.map((npc) => ({
+      id: npc.id,
+      name: npc.name,
+      rank: npc.rank,
+      status: npc.status,
+      isDraft: npc.isDraft,
+      hasStats: false,
+      npcSlug: npc.npcSlug,
+    })),
+  );
 
   return (
     <>

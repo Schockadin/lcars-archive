@@ -24,6 +24,7 @@ import CharacterDocumentsPanel from "./CharacterDocumentsPanel";
 import { listCharacterDocuments } from "@/lib/characterDocuments";
 import CharacterArchiveExportButton from "./CharacterArchiveExportButton";
 import { getCharacterArchiveOptions } from "@/lib/characterArchive";
+import CharacterNpcConversionPanel from "./CharacterNpcConversionPanel";
 
 export const metadata: Metadata = {
   title: "Charakter",
@@ -99,69 +100,82 @@ export default async function OwnCharacterPage({ params }: Props) {
           <h1>{character.name}</h1>
         </HelpTitleRow>
 
-        <div className="flex flex-wrap gap-[8px]">
-          <CharacterSheetButton
-            characterId={sheet.id}
-            input={{
-              characterName: sheet.name,
-              rank: sheet.rank,
-              species: sheet.species,
-              portrait: sheet.portrait,
-              portraitCrop: sheet.portraitCrop,
-              stats: sheet.stats,
-              bioHtml: character.bioHtml,
-              talents,
-              campaignRules,
-            }}
-          />
-          <CharacterArchiveExportButton
-            characterId={character.id}
-            characterName={character.name}
-            documents={documents}
-            missions={archiveOptions}
-          />
-        </div>
-
-        <CharacterPortraitPanel userId={session.userId} character={character} />
-
-        <CharacterHeadPanel
-          userId={session.userId}
-          character={character}
-          stats={sheet.stats}
+        <CharacterNpcConversionPanel
+          characterId={character.id}
+          status={character.status}
+          npcSlug={character.npcSlug}
         />
 
-        {/* Das Werte-Panel bündelt seine fachlichen Unterabschnitte in einer
+        {!character.npcSlug && (
+          <>
+            <div className="flex flex-wrap gap-[8px]">
+              <CharacterSheetButton
+                characterId={sheet.id}
+                input={{
+                  characterName: sheet.name,
+                  rank: sheet.rank,
+                  species: sheet.species,
+                  portrait: sheet.portrait,
+                  portraitCrop: sheet.portraitCrop,
+                  stats: sheet.stats,
+                  bioHtml: character.bioHtml,
+                  talents,
+                  campaignRules,
+                }}
+              />
+              <CharacterArchiveExportButton
+                characterId={character.id}
+                characterName={character.name}
+                documents={documents}
+                missions={archiveOptions}
+              />
+            </div>
+
+            <CharacterPortraitPanel
+              userId={session.userId}
+              character={character}
+            />
+
+            <CharacterHeadPanel
+              userId={session.userId}
+              character={character}
+              stats={sheet.stats}
+            />
+
+            {/* Das Werte-Panel bündelt seine fachlichen Unterabschnitte in einer
             gemeinsamen, aufklappbaren Hülle. */}
-        <CharacterValuesPanel
-          userId={session.userId}
-          characterId={sheet.id}
-          species={sheet.species}
-          savedStats={sheet.stats}
-          account={account}
-          rules={rules}
-          talents={talents}
-          focuses={focuses}
-        />
+            <CharacterValuesPanel
+              userId={session.userId}
+              characterId={sheet.id}
+              species={sheet.species}
+              savedStats={sheet.stats}
+              account={account}
+              rules={rules}
+              talents={talents}
+              focuses={focuses}
+            />
 
-        <CharacterBioPanel
-          userId={session.userId}
-          characterId={character.id}
-          bioHtml={character.bioHtml}
-          sourceMarkdown={character.sourceMarkdown}
-        />
+            <CharacterBioPanel
+              userId={session.userId}
+              characterId={character.id}
+              bioHtml={character.bioHtml}
+              sourceMarkdown={character.sourceMarkdown}
+            />
 
-        <CharacterDocumentsPanel
-          characterId={character.id}
-          documents={documents}
-        />
+            <CharacterDocumentsPanel
+              characterId={character.id}
+              documents={documents}
+            />
 
-        <RevisionsPanel
-          contentType="character"
-          contentId={character.id}
-          path={characterEditHref(character.id)}
-          revisions={revisions}
-          defaultOpen
-        />
+            <RevisionsPanel
+              contentType="character"
+              contentId={character.id}
+              path={characterEditHref(character.id)}
+              revisions={revisions}
+              defaultOpen
+            />
+          </>
+        )}
       </article>
     </>
   );

@@ -183,6 +183,10 @@ async function runSearchQueries(
       WHERE (name ILIKE ${like} OR ${vec("characters")} @@ ${ts})
         AND deleted_at IS NULL
         AND is_draft = false
+        AND NOT EXISTS (
+          SELECT 1 FROM character_npc_conversions conversion
+          WHERE conversion.character_id = characters.id
+        )
       ORDER BY (name ILIKE ${prefix}) DESC,
                ts_rank_cd(${vec("characters")}, ${ts}) DESC,
                name ASC
