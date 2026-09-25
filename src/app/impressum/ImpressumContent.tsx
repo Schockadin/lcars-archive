@@ -78,7 +78,9 @@ export default function ImpressumContent() {
           Figur hinterlegten Dokumenten – liegen bei den jeweiligen Autor*innen.
           Der Seitenbetreiber stellt lediglich die Plattform zur gemeinsamen
           Dokumentation der Kampagne bereit und beansprucht keine darüber
-          hinausgehenden Rechte an diesen nutzergenerierten Beiträgen.
+          hinausgehenden Rechte an diesen nutzergenerierten Beiträgen. Die Owner
+          eines Charakters verwalten die angehängten Dokumente; die Spielleitung
+          kann Dateien veröffentlichter Charaktere ansehen und herunterladen.
         </p>
         <p>
           Der Charakterbogen bildet den Personnel-File-Bogen aus{" "}
