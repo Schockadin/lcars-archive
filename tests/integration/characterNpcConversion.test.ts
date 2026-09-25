@@ -82,8 +82,11 @@ describe("Charaktere reversibel in NPCs umwandeln", () => {
       characterSlug: character.slug,
       npcSlug: converted.npcSlug,
     });
-    const [characterRow] = await sql<{ status: string }[]>`
-      SELECT status FROM characters WHERE id = ${character.id}
+    const [characterRow] = await sql<{
+      status: string;
+      portrait: string | null;
+    }[]>`
+      SELECT status, portrait FROM characters WHERE id = ${character.id}
     `;
     const [npcRow] = await sql<{ deleted_at: Date | null }[]>`
       SELECT deleted_at FROM archive_entries WHERE slug = ${converted.npcSlug}
