@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
+import { cache, Suspense } from "react";
 import { userCan } from "@/lib/permissions";
 import { getRoleMap } from "@/lib/roles";
 import Link from "next/link";
@@ -57,6 +57,8 @@ export const metadata: Metadata = {
   title: "Profil",
   robots: { index: false, follow: false },
 };
+
+const hasPasswordForRender = cache((userId: number) => hasPassword(userId));
 
 const ROLE_LABELS: Record<User["role"], string> = {
   admin: "Administration",
@@ -387,7 +389,7 @@ async function NotificationPreferences({ target }: { target: User }) {
   );
 }
 async function PasswordSettings({ userId }: { userId: number }) {
-  const hasPasswordSet = await hasPassword(userId);
+  const hasPasswordSet = await hasPasswordForRender(userId);
   return (
     <section id="password" className="flex flex-col gap-[12px]">
       <h2>{hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}</h2>
