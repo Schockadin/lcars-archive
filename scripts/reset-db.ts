@@ -9,6 +9,7 @@ import { stdin, stdout } from "process";
 // Wir droppen in umgekehrter Dependency-Reihenfolge – CASCADE macht's ohnehin sicher.
 const TABLES = [
   "character_documents",
+  "character_npc_conversions",
   "timeline_events",
   "archive_links",
   "dialogue_messages",

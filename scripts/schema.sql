@@ -358,6 +358,16 @@ CREATE INDEX IF NOT EXISTS idx_archive_entries_is_draft  ON archive_entries(is_d
 CREATE INDEX IF NOT EXISTS idx_archive_title_trgm        ON archive_entries USING GIN (title gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_archive_content_trgm      ON archive_entries USING GIN (content gin_trgm_ops);
 
+-- Eine umgewandelte Figur bleibt erhalten, damit Missionen, Logs, AP und
+-- Chronologie intakt bleiben. Die Zuordnung ermöglicht die Rücknahme.
+CREATE TABLE IF NOT EXISTS character_npc_conversions (
+  character_id     INT PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
+  archive_entry_id INT NOT NULL UNIQUE REFERENCES archive_entries(id) ON DELETE CASCADE,
+  original_status  TEXT NOT NULL CHECK (original_status IN ('retired', 'deceased')),
+  converted_by     INT REFERENCES users(id) ON DELETE SET NULL,
+  converted_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ---------------------------------------------------------------------------
 -- archive_links
 -- ---------------------------------------------------------------------------

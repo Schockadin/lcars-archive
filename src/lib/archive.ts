@@ -216,6 +216,7 @@ export async function getNpcOptions(): Promise<NpcOption[]> {
 // Bildes (null = keines).
 interface ArchiveEntryRow extends Omit<ArchiveEntryPreview, "thumbnail"> {
   image_id: number | null;
+  converted_character_portrait: string | null;
 }
 
 export async function getAllArchiveEntries(): Promise<ArchiveEntryPreview[]> {
@@ -232,7 +233,8 @@ export async function getAllArchiveEntries(): Promise<ArchiveEntryPreview[]> {
         a.metadata,
         -- Das zuerst hochgeladene Bild des Eintrags als Vorschaubild der
         -- Karte; LATERAL statt einer zweiten Abfrage je Zeile.
-        img.id AS image_id
+        img.id AS image_id,
+        converted_character.portrait AS converted_character_portrait
       FROM archive_entries a
       LEFT JOIN LATERAL (
         SELECT i.id
@@ -241,6 +243,16 @@ export async function getAllArchiveEntries(): Promise<ArchiveEntryPreview[]> {
         ORDER BY i.created_at ASC, i.id ASC
         LIMIT 1
       ) img ON TRUE
+      -- Umgewandelte Charaktere führen ihr Profilbild auf der NPC-Karte weiter,
+      -- auch wenn das NPC-Archiv selbst noch keine eigene Galerie hat.
+      LEFT JOIN LATERAL (
+        SELECT c.portrait
+        FROM character_npc_conversions conversion
+        JOIN characters c ON c.id = conversion.character_id
+        WHERE conversion.archive_entry_id = a.id
+          AND c.deleted_at IS NULL
+        LIMIT 1
+      ) converted_character ON TRUE
       -- Gespräche gehören in die Chronologie, nicht in die Enzyklopädie: ein
       -- offenes lebt unter /dialogues, ein abgeschlossenes steht in der
       -- Chronologie unter der Ereignisart „Gespräch" (siehe getTimeline).
@@ -251,9 +263,11 @@ export async function getAllArchiveEntries(): Promise<ArchiveEntryPreview[]> {
         AND a.is_draft = false
       ORDER BY a.title ASC
     `;
-  return rows.map(({ image_id, ...row }) => ({
+  return rows.map(({ image_id, converted_character_portrait, ...row }) => ({
     ...parseMeta(row),
-    thumbnail: image_id ? contentImageSrc(image_id) : null,
+    thumbnail: image_id
+      ? contentImageSrc(image_id)
+      : converted_character_portrait,
   }));
 }
 

@@ -166,3 +166,19 @@
   letter-spacing: 0.06em;
   font-weight: 600;
 }
+
+/* ── Eingebettete Bilder ─────────────────────────────────────────── */
+
+/* Markdown-Bilder bleiben im Lesefluss kompakt und innerhalb der Spalte.
+   Wer Details sehen möchte, öffnet dieselben Bilder per Klick in der
+   Vollbild-Lightbox von ContentBody. */
+:is(.mission-body, .char-file-bio) img {
+  display: block;
+  max-width: 100%;
+  max-height: min(70vh, 640px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  cursor: zoom-in;
+  border-radius: 6px;
+}

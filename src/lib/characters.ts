@@ -117,6 +117,10 @@ export async function getCharacterListItems(): Promise<CharacterListItem[]> {
           LIMIT 1
         ) img ON TRUE
         WHERE c.deleted_at IS NULL AND c.is_draft = false
+          AND NOT EXISTS (
+            SELECT 1 FROM character_npc_conversions conversion
+            WHERE conversion.character_id = c.id
+          )
         ORDER BY
           CASE c.status
             WHEN 'active'   THEN 1
@@ -166,6 +170,10 @@ export async function getAllCharacters(): Promise<Character[]> {
         SELECT *
         FROM characters
         WHERE deleted_at IS NULL AND is_draft = false
+          AND NOT EXISTS (
+            SELECT 1 FROM character_npc_conversions conversion
+            WHERE conversion.character_id = characters.id
+          )
         ORDER BY
           CASE status
             WHEN 'active'   THEN 1
@@ -187,6 +195,10 @@ export async function getAllCharactersForAdmin(): Promise<Character[]> {
       SELECT *
       FROM characters
       WHERE deleted_at IS NULL AND is_draft = false
+        AND NOT EXISTS (
+          SELECT 1 FROM character_npc_conversions conversion
+          WHERE conversion.character_id = characters.id
+        )
       ORDER BY
         CASE status
           WHEN 'active'   THEN 1
@@ -237,6 +249,10 @@ export async function getCharacterCreationStates(): Promise<
       SELECT id, name, player_id, metadata
       FROM characters
       WHERE deleted_at IS NULL AND is_draft = false
+        AND NOT EXISTS (
+          SELECT 1 FROM character_npc_conversions conversion
+          WHERE conversion.character_id = characters.id
+        )
       ORDER BY
         CASE status
           WHEN 'active'   THEN 1
@@ -272,6 +288,10 @@ export async function getCharacterBySlug(
         SELECT *
         FROM characters
         WHERE slug = ${slug} AND deleted_at IS NULL
+          AND NOT EXISTS (
+            SELECT 1 FROM character_npc_conversions conversion
+            WHERE conversion.character_id = characters.id
+          )
         LIMIT 1
       `;
   return rows[0] ? parseCharacter(rows[0]) : null;
@@ -287,6 +307,10 @@ export async function getCharactersForUser(
     SELECT *
     FROM characters
     WHERE player_id = ${userId} AND deleted_at IS NULL
+      AND NOT EXISTS (
+        SELECT 1 FROM character_npc_conversions conversion
+        WHERE conversion.character_id = characters.id
+      )
     ORDER BY name ASC
   `;
   // keepStats: die eigene Charakterübersicht (/user/characters) leitet daraus
@@ -314,6 +338,10 @@ export async function getCharactersWithPlayers(
     JOIN users u ON u.id = c.player_id
     WHERE c.player_id IS NOT NULL AND c.player_id != ${excludeUserId}
       AND c.deleted_at IS NULL AND c.is_draft = false
+      AND NOT EXISTS (
+        SELECT 1 FROM character_npc_conversions conversion
+        WHERE conversion.character_id = c.id
+      )
     ORDER BY c.name ASC
   `;
 }
@@ -705,6 +733,7 @@ export interface OwnCharacterForEdit {
   // durch die Markdown-Pipeline zu gehen.
   bioHtml: string | null;
   isDraft: boolean;
+  npcSlug: string | null;
 }
 
 // Für /user/characters/[characterId]/edit — lädt die für das volle
@@ -729,13 +758,19 @@ export async function getOwnCharacterForEdit(
       sourceMarkdown: string;
       bioHtml: string | null;
       isDraft: boolean;
+      npcSlug: string | null;
     }[]
   >`
-    SELECT id, slug, name, status, portrait, metadata, is_draft AS "isDraft",
-           bio AS "bioHtml",
-           COALESCE(source_md, '') AS "sourceMarkdown"
-    FROM characters
-    WHERE id = ${characterId} AND player_id = ${userId} AND deleted_at IS NULL
+    SELECT c.id, c.slug, c.name, c.status, c.portrait, c.metadata,
+           c.is_draft AS "isDraft", npc.slug AS "npcSlug",
+           c.bio AS "bioHtml",
+           COALESCE(c.source_md, '') AS "sourceMarkdown"
+    FROM characters c
+    LEFT JOIN character_npc_conversions conversion
+      ON conversion.character_id = c.id
+    LEFT JOIN archive_entries npc ON npc.id = conversion.archive_entry_id
+    WHERE c.id = ${characterId} AND c.player_id = ${userId}
+      AND c.deleted_at IS NULL
     LIMIT 1
   `;
   const row = rows[0];
@@ -756,6 +791,7 @@ export async function getOwnCharacterForEdit(
     sourceMarkdown: row.sourceMarkdown,
     bioHtml: row.bioHtml,
     isDraft: row.isDraft,
+    npcSlug: row.npcSlug,
     rank: metadata.rank,
     species: metadata.species,
     homeworld: metadata.homeworld,
@@ -768,6 +804,23 @@ export async function getOwnCharacterForEdit(
     division: metadata.affiliation?.division ?? null,
     tags: metadata.tags,
   };
+}
+
+// Auf alte Charakter-Links umgeleitete NPC-Umwandlungen.
+export async function getConvertedNpcSlugByCharacterSlug(
+  characterSlug: string,
+): Promise<string | null> {
+  const rows = await sql<{ npcSlug: string }[]>`
+    SELECT npc.slug AS "npcSlug"
+    FROM characters c
+    JOIN character_npc_conversions conversion
+      ON conversion.character_id = c.id
+    JOIN archive_entries npc ON npc.id = conversion.archive_entry_id
+    WHERE c.slug = ${characterSlug} AND c.deleted_at IS NULL
+      AND npc.deleted_at IS NULL AND npc.is_draft = false
+    LIMIT 1
+  `;
+  return rows[0]?.npcSlug ?? null;
 }
 
 // Ergebnis von updateOwnCharacterContent. Name und Aliase VOR dem Update

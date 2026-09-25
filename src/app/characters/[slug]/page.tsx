@@ -1,12 +1,15 @@
 // src/app/characters/[slug]/page.tsx
-import { getCharacterBySlug } from "@/lib/characters";
+import {
+  getCharacterBySlug,
+  getConvertedNpcSlugByCharacterSlug,
+} from "@/lib/characters";
 import { resolveFollowState } from "@/lib/follows";
 import { getIngameYear, inferAgeFromDateOfBirth } from "@/lib/campaign";
 import { getViewer, canView, viewerHasPermission } from "@/lib/visibility";
 import { getMentionsOf } from "@/lib/mentions";
 import { getRelationsOf } from "@/lib/relations";
 import { listAllUsers } from "@/lib/users";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import CharakterDetailPage from "./CharacterDetailPage";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 import { listNotes } from "@/lib/contentNotes";
@@ -47,7 +50,11 @@ export default async function CharakterPage({ params }: Props) {
     getCharacterBySlug(slug),
     getViewer(),
   ]);
-  if (!character) notFound();
+  if (!character) {
+    const npcSlug = await getConvertedNpcSlugByCharacterSlug(slug);
+    if (npcSlug) redirect(`/archive/${npcSlug}`);
+    notFound();
+  }
 
   if (!canView(character.is_draft, character.player_id, viewer)) notFound();
 

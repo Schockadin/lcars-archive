@@ -517,6 +517,14 @@ export default function TutorialPage() {
             label="Charaktererschaffung"
           >
             <CharacterCreationGuide />
+            <p className="lcars-text mt-[12px]">
+              Ist ein Charakter <strong>inaktiv oder verstorben</strong>, kannst
+              du ihn auf seiner Owner-Seite in einen NPC umwandeln. Bogen, AP
+              und bisherige Chronologie bleiben erhalten. Das Profilbild
+              erscheint auch auf der NPC-Karte in der Datenbank. Unter „Meine
+              Charaktere“ findest du ihn wieder und kannst die Umwandlung dort
+              jederzeit rückgängig machen.
+            </p>
           </LcarsDataRow>
 
           <LcarsDataRow value={9} htmlId="gespraeche" label="Gespräche">

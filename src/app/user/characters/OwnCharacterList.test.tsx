@@ -28,4 +28,16 @@ describe("OwnCharacterList", () => {
     expect(ziele).toEqual(["/user/characters/4", "/user/characters/4"]);
     expect(ziele).not.toContain("/characters/t-vel");
   });
+
+  it("führt umgewandelte Charaktere zur Owner-Akte und zum NPC-Eintrag", () => {
+    render(<OwnCharacterList characters={[{ ...TVEL, npcSlug: "t-vel" }]} />);
+
+    expect(
+      screen.getByRole("link", { name: "NPC ansehen" }).getAttribute("href"),
+    ).toBe("/archive/t-vel");
+    expect(
+      screen.getByRole("link", { name: /T'Vel/ }).getAttribute("href"),
+    ).toBe("/user/characters/4");
+    expect(screen.queryByRole("button", { name: "Löschen" })).toBeNull();
+  });
 });
