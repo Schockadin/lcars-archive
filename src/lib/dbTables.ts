@@ -47,6 +47,10 @@ export const DB_TABLE_COLUMNS = {
     "source_md", "frontmatter", "created_at", "updated_at", "dialogue_open",
     "owner_user_id", "deleted_at", "is_draft",
   ],
+  character_npc_conversions: [
+    "character_id", "archive_entry_id", "original_status", "converted_by",
+    "converted_at",
+  ],
   archive_links: ["source_id", "target_id", "label"],
   dialogue_messages: [
     "id", "archive_entry_id", "character_id", "npc_entry_id",
@@ -254,6 +258,7 @@ export const BACKUP_TABLES = [
   "mission_participants",
   "mission_logs",
   "archive_entries",
+  "character_npc_conversions",
   "archive_links",
   "dialogue_messages",
   "dialogue_npc_speakers",
