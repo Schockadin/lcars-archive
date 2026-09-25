@@ -58,6 +58,7 @@ export function buildCharacterNpcMarkdown(input: {
   status: ConversionStatus;
   metadata: CharacterMetadata;
   bodyMarkdown: string | null;
+  portrait: string | null;
 }): string {
   const metadata = normalizeCharacterMetadata(input.metadata);
   const rows: [string, string | null][] = [
@@ -80,7 +81,11 @@ export function buildCharacterNpcMarkdown(input: {
     .filter((row): row is [string, string] => row[1] !== null)
     .map(([label, value]) => `- **${label}:** ${value}`);
   const bio = input.bodyMarkdown?.trim();
+  const portrait = input.portrait
+    ? `![Profilbild](<${input.portrait}>)`
+    : null;
   return [
+    ...(portrait ? [portrait, ""] : []),
     "## Charakterdaten",
     ...details,
     ...(bio ? ["", "## Biografie", bio] : []),
@@ -115,6 +120,7 @@ export async function convertOwnedCharacterToNpc(
     {
       name: string;
       status: ConversionStatus;
+      portrait: string | null;
       metadata: CharacterMetadata | string;
       sourceMarkdown: string | null;
       tags: string[] | null;
@@ -122,7 +128,7 @@ export async function convertOwnedCharacterToNpc(
       updatedAt: Date;
     }[]
   >`
-    SELECT name, status, metadata, source_md AS "sourceMarkdown",
+    SELECT name, status, portrait, metadata, source_md AS "sourceMarkdown",
            metadata->'tags' AS tags, is_draft AS "isDraft",
            updated_at AS "updatedAt"
     FROM characters
@@ -142,6 +148,7 @@ export async function convertOwnedCharacterToNpc(
     status: preparedCharacter.status,
     metadata: normalizedMetadata,
     bodyMarkdown: preparedCharacter.sourceMarkdown,
+    portrait: preparedCharacter.portrait,
   });
   // Wikilink-Auflösung fragt weitere Tabellen ab und muss außerhalb der
   // offenen Transaktion laufen. updated_at wird danach unter Lock verglichen.

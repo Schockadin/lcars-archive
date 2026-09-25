@@ -18,6 +18,7 @@ describe("Charaktere reversibel in NPCs umwandeln", () => {
     await sql`
       UPDATE characters
       SET source_md = 'Ehemalige Chefingenieurin.',
+          portrait = 'https://images.example.test/mira-venn.png',
           metadata = ${sql.json({
             rank: "Commander",
             species: ["Vulkanierin"],
@@ -45,11 +46,12 @@ describe("Charaktere reversibel in NPCs umwandeln", () => {
         category: string;
         title: string;
         content: string;
+        source_md: string;
         tags: string[];
         owner_user_id: number;
       }[]
     >`
-      SELECT category, title, content, tags, owner_user_id
+      SELECT category, title, content, source_md, tags, owner_user_id
       FROM archive_entries
       WHERE slug = ${converted.npcSlug}
     `;
@@ -61,6 +63,10 @@ describe("Charaktere reversibel in NPCs umwandeln", () => {
     });
     expect(npc.content).toContain("Commander");
     expect(npc.content).toContain("Ehemalige Chefingenieurin.");
+    expect(npc.source_md).toContain(
+      "![Profilbild](<https://images.example.test/mira-venn.png>)",
+    );
+    expect(npc.content).toContain("https://images.example.test/mira-venn.png");
     expect(
       (await getCharactersForUser(owner.id)).some(
         (entry) => entry.id === character.id,
@@ -83,6 +89,7 @@ describe("Charaktere reversibel in NPCs umwandeln", () => {
       SELECT deleted_at FROM archive_entries WHERE slug = ${converted.npcSlug}
     `;
     expect(characterRow.status).toBe("retired");
+    expect(characterRow.portrait).toBe("https://images.example.test/mira-venn.png");
     expect(npcRow.deleted_at).not.toBeNull();
     expect(
       (await getCharactersForUser(owner.id)).some(
