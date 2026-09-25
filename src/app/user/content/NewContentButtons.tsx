@@ -1,11 +1,8 @@
 "use client";
 import { useState } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import ModalOverlay from "@/components/ModalOverlay";
-import NewMissionLogForm from "@/app/user/mission-logs/new/NewMissionLogForm";
-import CreateDialogueForm from "@/app/user/dialogues/new/CreateDialogueForm";
-import NewArchiveEntryForm from "@/app/user/archive/new/NewArchiveEntryForm";
-import NewMissionForm from "@/app/user/missions/new/NewMissionForm";
 import ManualEventForm from "@/components/timeline/ManualEventForm";
 import type { NewContentData } from "./newContentData";
 import {
@@ -14,6 +11,33 @@ import {
   visibleNewContentForms,
   type OpenForm,
 } from "./newContentForms";
+
+// Diese Formulare enthalten jeweils weitere Client-Module (u.a. den Markdown-Editor).
+// Sie werden erst geladen, wenn die Person das passende Modal tatsächlich öffnet.
+const NewMissionLogForm = dynamic(
+  () => import("@/app/user/mission-logs/new/NewMissionLogForm"),
+  { loading: () => <FormLoading /> },
+);
+const CreateDialogueForm = dynamic(
+  () => import("@/app/user/dialogues/new/CreateDialogueForm"),
+  { loading: () => <FormLoading /> },
+);
+const NewArchiveEntryForm = dynamic(
+  () => import("@/app/user/archive/new/NewArchiveEntryForm"),
+  { loading: () => <FormLoading /> },
+);
+const NewMissionForm = dynamic(
+  () => import("@/app/user/missions/new/NewMissionForm"),
+  { loading: () => <FormLoading /> },
+);
+
+function FormLoading() {
+  return (
+    <p className="lcars-empty-state" role="status">
+      Formular wird geladen…
+    </p>
+  );
+}
 
 // Die Knöpfe „Neue Inhalte" unter /user/content — jeder öffnet sein Formular
 // in einem Fenster über der Liste, statt auf eine eigene Seite zu führen.

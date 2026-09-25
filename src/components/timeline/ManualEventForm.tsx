@@ -1,5 +1,6 @@
 "use client";
 import { useActionState, useState } from "react";
+import dynamic from "next/dynamic";
 import { EVENT_CATEGORIES } from "@/lib/timelineTypes";
 import {
   FormError,
@@ -8,7 +9,6 @@ import {
   SubmitButton,
 } from "@/app/_shared/FormPrimitives";
 import ModalOverlay from "@/components/ModalOverlay";
-import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import {
   createManualEventAction,
   updateManualEventAction,
@@ -16,6 +16,16 @@ import {
 } from "@/app/actions/timelineEvents";
 import { PencilIcon, PlusIcon } from "@/lib/icons";
 import type { ManualEventForEdit } from "@/lib/timelineManualEventTypes";
+
+// Der Editor gehört nur ins geöffnete Modal, nicht in jede Chronologie- oder
+// Dashboard-Ansicht, die lediglich den Ereignis-Knopf zeigt.
+const MarkdownEditor = dynamic(() => import("@/app/_shared/MarkdownEditor"), {
+  loading: () => (
+    <div className="lcars-empty-state" role="status">
+      Editor wird geladen…
+    </div>
+  ),
+});
 
 // „Ereignis eintragen" über dem Zeitstrahl: ein Knopf, der ein Fenster mit dem
 // Formular öffnet — für alles, was zur Kampagne gehört, aber in keinem Eintrag

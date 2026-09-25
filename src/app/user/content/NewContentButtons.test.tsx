@@ -70,27 +70,41 @@ function data(overrides: Partial<NewContentData> = {}): NewContentData {
 }
 
 describe("NewContentButtons", () => {
-  it("öffnet jeden Inhaltstyp in einem Fenster statt auf einer eigenen Seite", () => {
+  it("öffnet jeden Inhaltstyp in einem Fenster statt auf einer eigenen Seite", async () => {
     render(<NewContentButtons data={data()} />);
 
     // Vorher waren es Links auf /user/mission-logs/new & Co. — die Seiten
     // gibt es weiterhin, hier führt der Weg aber nicht mehr weg von der Liste.
     expect(screen.queryByRole("link")).toBeNull();
 
+    expect(screen.queryByTestId("form-missionLog")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Neuer Missionslog" }));
     expect(screen.getByRole("dialog")).toHaveAttribute(
       "aria-label",
       "Neuen Missionslog anlegen",
     );
-    expect(screen.getByTestId("form-missionLog")).toBeInTheDocument();
+    expect(await screen.findByTestId("form-missionLog")).toBeInTheDocument();
   });
 
-  it("legt einen NPC im Datenbank-Formular mit vorgewählter Kategorie an", () => {
+  it("lädt Gesprächs- und Missionsformulare erst im gewählten Modal", async () => {
+    const { unmount } = render(<NewContentButtons data={data()} />);
+    expect(screen.queryByTestId("form-dialogue")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Neues Gespräch" }));
+    expect(await screen.findByTestId("form-dialogue")).toBeInTheDocument();
+    unmount();
+
+    render(<NewContentButtons data={data()} />);
+    expect(screen.queryByTestId("form-mission")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Neue Mission" }));
+    expect(await screen.findByTestId("form-mission")).toBeInTheDocument();
+  });
+
+  it("legt einen NPC im Datenbank-Formular mit vorgewählter Kategorie an", async () => {
     render(<NewContentButtons data={data()} />);
 
     fireEvent.click(screen.getByRole("button", { name: "Neuer NPC" }));
 
-    expect(screen.getByTestId("form-archive")).toHaveAttribute(
+    expect(await screen.findByTestId("form-archive")).toHaveAttribute(
       "data-category",
       "npc",
     );
