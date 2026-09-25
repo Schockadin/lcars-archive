@@ -3,7 +3,6 @@ import LandingPage from "./LandingPage";
 import Dashboard from "./Dashboard";
 import LandingStats from "@/components/lcars/LandingStats";
 import { LcarsSkeleton } from "@/components/lcars";
-import PageSkeleton from "@/app/_shared/PageSkeleton";
 import { APP_VERSION } from "@/lib/version";
 import { getActiveUser } from "@/lib/dal";
 import HelpButton from "@/components/help/HelpButton";
@@ -16,10 +15,7 @@ function StatsSkeleton() {
     <div className="mt-[8px] flex flex-col gap-[8px]">
       <LcarsSkeleton className="h-[16px] w-[180px] self-end" />
       {Array.from({ length: 5 }).map((_, i) => (
-        <LcarsSkeleton
-          key={i}
-          className="h-lcars-datarow w-[320px]"
-        />
+        <LcarsSkeleton key={i} className="h-lcars-datarow w-[320px]" />
       ))}
     </div>
   );
@@ -38,9 +34,31 @@ export default function Page() {
   // die statische Shell (LCARS-Chrome) sofort ausgeliefert werden kann und die
   // login-abhängige Startseite nachgestreamt wird.
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<HomePageFallback />}>
       <HomeContent />
     </Suspense>
+  );
+}
+
+function HomePageFallback() {
+  return (
+    <article
+      className="mb-[10px] lcars-wide-column"
+      aria-label="Startseite wird geladen"
+    >
+      <div className="mb-[16px]">
+        <h1 className="lcars-data-row-heading">Startseite</h1>
+        <p className="lcars-eyebrow">Kampagnenübersicht</p>
+      </div>
+      <div className="flex flex-col gap-[10px]" aria-hidden="true">
+        {Array.from({ length: 5 }, (_, i) => (
+          <LcarsSkeleton
+            key={i}
+            className="h-[44px] w-full rounded-[var(--lcars-radius-pill)]"
+          />
+        ))}
+      </div>
+    </article>
   );
 }
 
