@@ -1,7 +1,6 @@
 import "server-only";
 import crypto from "node:crypto";
 import sql from "@/lib/db";
-import { sanitizeFileName } from "@/lib/assetStorage";
 import {
   deleteObjectFromR2,
   getObjectBytesFromR2,
@@ -11,7 +10,10 @@ import {
   type CharacterDocument,
   type CharacterDocumentKind,
 } from "@/lib/characterDocumentTypes";
-import { inspectCharacterDocument } from "@/lib/characterDocumentValidation";
+import {
+  inspectCharacterDocument,
+  normalizeCharacterDocumentFileName,
+} from "@/lib/characterDocumentValidation";
 export type { CharacterDocument } from "@/lib/characterDocumentTypes";
 export { InvalidCharacterDocumentError } from "@/lib/characterDocumentValidation";
 
@@ -73,7 +75,7 @@ export async function uploadCharacterDocument(
         (character_id, r2_key, file_name, file_kind, content_mime,
          size_bytes, extracted_text, uploaded_by)
       VALUES
-        (${characterId}, ${key}, ${sanitizeFileName(fileName, `dokument.${inspected.kind}`)},
+        (${characterId}, ${key}, ${normalizeCharacterDocumentFileName(fileName, inspected.kind)},
          ${inspected.kind}, ${inspected.contentMime}, ${buffer.byteLength},
          ${inspected.extractedText}, ${uploadedBy})
       RETURNING id, character_id, r2_key, file_name, file_kind, content_mime,
@@ -84,6 +86,31 @@ export async function uploadCharacterDocument(
     await deleteObjectFromR2(key).catch(() => undefined);
     throw error;
   }
+}
+
+export async function renameCharacterDocument(
+  characterId: number,
+  documentId: number,
+  fileName: string,
+): Promise<string | null> {
+  const [document] = await sql<{ file_kind: CharacterDocumentKind }[]>`
+    SELECT file_kind
+    FROM character_documents
+    WHERE id = ${documentId} AND character_id = ${characterId}
+  `;
+  if (!document) return null;
+
+  const normalized = normalizeCharacterDocumentFileName(
+    fileName,
+    document.file_kind,
+  );
+  const [renamed] = await sql<{ file_name: string }[]>`
+    UPDATE character_documents
+    SET file_name = ${normalized}
+    WHERE id = ${documentId} AND character_id = ${characterId}
+    RETURNING file_name
+  `;
+  return renamed?.file_name ?? null;
 }
 
 export async function deleteCharacterDocument(

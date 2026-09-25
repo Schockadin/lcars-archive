@@ -701,13 +701,16 @@ export default function TutorialPage() {
                 Person, der der Charakter gehört.
               </p>
               <p>
-                Auf deiner eigenen Charakterseite kannst du außerdem unter
-                <strong> „Zusätzliche Dokumente“</strong> PDF-, Markdown-, DOCX-
-                und TXT-Dateien hinterlegen und direkt im Browser ansehen. Der
-                Knopf <strong>„Charakterarchiv (PDF)“</strong> stellt daraus
-                eine gemeinsame Datei zusammen. Vor dem Export wählst du
-                einzeln, ob Charakterdaten, zusätzliche Dokumente, ganze
-                Missionen oder bestimmte Logbücher enthalten sein sollen.
+                Unter <strong>„Zusätzliche Dokumente“</strong> kannst du PDF-,
+                Markdown-, DOCX- und TXT-Dateien hinterlegen und direkt im
+                Browser ansehen. Auf der öffentlichen Charakterseite verwaltest
+                du deine Dateien ebenfalls; lange Namen werden gekürzt angezeigt
+                und lassen sich dort umbenennen. Die Spielleitung kann die
+                angehängten Dateien ansehen und herunterladen. Der Knopf{" "}
+                <strong>„Charakterarchiv (PDF)“</strong> stellt daraus eine
+                gemeinsame Datei zusammen. Vor dem Export wählst du einzeln, ob
+                Charakterdaten, zusätzliche Dokumente, ganze Missionen oder
+                bestimmte Logbücher enthalten sein sollen.
               </p>
               <p>
                 Kündigt die Spielleitung einen <strong>Spieltermin</strong> an,

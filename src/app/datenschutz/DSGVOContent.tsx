@@ -117,12 +117,15 @@ export default function DSGVOContent({ year }: { year: number }) {
           <strong> private Dokumente</strong> im PDF-, Markdown-, DOCX- oder
           Textformat speichern. Gespeichert werden die Datei, Dateiname,
           Dateityp, Größe, ein für Vorschau und Export extrahierter Text sowie
-          Upload-Zeitpunkt und hochladender Account. Zugriff, Vorschau, Download
-          und der daraus erzeugte Charakterarchiv-PDF-Export stehen nur der
-          Person offen, der der Charakter gehört; mit dem endgültigen Löschen
-          des Charakters werden auch die Dokument-Metadaten entfernt
-          (Rechtsgrundlage: Art. 6 Abs. 1 lit. b DSGVO — Erfüllung des
-          Nutzungsverhältnisses der Kampagne).
+          Upload-Zeitpunkt und hochladender Account. Die Person, der der
+          Charakter gehört, kann die Dokumente ansehen, herunterladen,
+          umbenennen und löschen. Die Spielleitung kann Dokumente
+          veröffentlichter Charaktere ansehen und herunterladen; bei Entwürfen
+          gilt das nur mit dem zusätzlichen Recht, alle Inhalte zu sehen. Der
+          Charakterarchiv-PDF-Export steht nur der Person offen, der der
+          Charakter gehört. Mit dem endgültigen Löschen des Charakters werden
+          auch die Dokument-Metadaten entfernt (Rechtsgrundlage: Art. 6 Abs. 1
+          lit. b DSGVO — Erfüllung des Nutzungsverhältnisses der Kampagne).
         </p>
         <p>
           Von Hand eingetragene <strong>Chronologie-Ereignisse</strong>{" "}

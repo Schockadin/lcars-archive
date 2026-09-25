@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import sql from "@/lib/db";
 import {
   deleteCharacterDocument,
+  renameCharacterDocument,
   uploadCharacterDocument,
 } from "@/lib/characterDocuments";
 import { insertCharacter, insertUser } from "./helpers";
@@ -58,5 +59,44 @@ describe("Charakterdokumente", () => {
       await sql`SELECT id FROM character_documents WHERE id = ${document.id}`,
     ).toHaveLength(0);
     expect(r2.objects.size).toBe(0);
+  });
+
+  it("benennt nur das Dokument des angegebenen Charakters um", async () => {
+    const user = await insertUser();
+    const character = await insertCharacter({ playerId: user.id });
+    const otherCharacter = await insertCharacter({ playerId: user.id });
+    const document = await uploadCharacterDocument(
+      character.id,
+      user.id,
+      "alter-name.txt",
+      Buffer.from("Geheime Notiz", "utf8"),
+    );
+    const [before] = await sql<{ r2_key: string }[]>`
+      SELECT r2_key FROM character_documents WHERE id = ${document.id}
+    `;
+
+    await expect(
+      renameCharacterDocument(
+        otherCharacter.id,
+        document.id,
+        "falscher-name.txt",
+      ),
+    ).resolves.toBeNull();
+    await expect(
+      renameCharacterDocument(character.id, document.id, "neuer-name.txt"),
+    ).resolves.toBe("neuer-name.txt");
+
+    const [after] = await sql<{ file_name: string; r2_key: string }[]>`
+      SELECT file_name, r2_key
+      FROM character_documents
+      WHERE id = ${document.id}
+    `;
+    expect(after).toEqual({
+      file_name: "neuer-name.txt",
+      r2_key: before.r2_key,
+    });
+    await expect(
+      renameCharacterDocument(character.id, document.id, "name.pdf"),
+    ).rejects.toThrow(/\.txt/);
   });
 });

@@ -27,74 +27,17 @@ import {
 } from "@react-pdf/renderer";
 import { toPdfBlocks } from "./markdownBlocks";
 import {
+  ARCHIVE_SHEET_STYLES,
+  ArchiveSheetFooter,
+  ArchiveSheetHeader,
   SHEET_BLUE,
   SHEET_BLUE_DIM,
-  SHEET_INK,
   SHEET_MUTED,
   Spans,
 } from "./sheetTheme";
 import type { ExportableContent, ExportContentType } from "@/lib/contentExport";
 
 const styles = StyleSheet.create({
-  // Innerhalb des Rahmens (siehe docFrame), wie in der Missionsakte:
-  // Blattrand plus die Innenabstände des Rahmens.
-  page: {
-    paddingTop: 50,
-    // Platz für die auf jeder Seite wiederholte Fußzeile.
-    paddingBottom: 54,
-    paddingHorizontal: 52,
-    fontFamily: "Helvetica",
-    color: SHEET_INK,
-  },
-  // Der Rahmen als eigenes, absolut gesetztes und `fixed` wiederholtes
-  // Element: ein umschließender View mit Rahmen kann in @react-pdf nicht über
-  // Seiten hinweg fließen, der Rahmen risse am Seitenumbruch ab.
-  docFrame: {
-    position: "absolute",
-    top: 18,
-    left: 18,
-    right: 18,
-    bottom: 18,
-    borderWidth: 2,
-    borderStyle: "solid",
-    borderColor: SHEET_BLUE,
-    borderRadius: 18,
-  },
-  // Kopfzeile wie auf dem Bogen: die Kampagne links (dort die Wortmarke), der
-  // Titelreiter rechts (dort „PERSONNEL FILE").
-  mast: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 4,
-  },
-  wordmark: {
-    fontFamily: "Helvetica-BoldOblique",
-    fontSize: 14,
-    letterSpacing: 1,
-    color: SHEET_BLUE,
-  },
-  tab: {
-    backgroundColor: SHEET_BLUE,
-    color: "#ffffff",
-    fontFamily: "Helvetica-Bold",
-    fontSize: 12,
-    letterSpacing: 3,
-    paddingVertical: 5,
-    paddingHorizontal: 13,
-    borderRadius: 4,
-  },
-  bannerRule: {
-    height: 2,
-    backgroundColor: SHEET_BLUE_DIM,
-    marginTop: 2,
-    marginBottom: 10,
-  },
-  subline: {
-    fontSize: 9,
-    color: SHEET_BLUE,
-    marginBottom: 12,
-  },
   title: {
     fontFamily: "Helvetica-Bold",
     fontSize: 16,
@@ -170,18 +113,6 @@ const styles = StyleSheet.create({
     color: SHEET_MUTED,
     fontFamily: "Helvetica-Oblique",
   },
-  // Blattfuß wie auf dem Bogen: klein und grau, auf jeder Seite wiederholt —
-  // mit Seitenzahl, weil auch ein einzelner Eintrag mehrseitig werden kann.
-  footer: {
-    position: "absolute",
-    bottom: 24,
-    left: 52,
-    right: 52,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    fontSize: 7.5,
-    color: SHEET_MUTED,
-  },
 });
 
 // Der Titelreiter oben rechts — dieselbe Rolle wie „MISSION"/„LOGBUCH" in der
@@ -205,10 +136,7 @@ export function contentTab(type: ExportContentType): string {
   return TAB_LABEL[type];
 }
 
-export function contentSubline(
-  type: ExportContentType,
-  title: string,
-): string {
+export function contentSubline(type: ExportContentType, title: string): string {
   return `${title} — ${TYPE_LABEL[type]}`;
 }
 
@@ -387,16 +315,16 @@ function ContentPdfDocument({
       author={CAMPAIGN_TITLE}
       creator={CAMPAIGN_TITLE}
     >
-      <Page size="A4" style={styles.page} bookmark={content.title}>
-        <View style={styles.docFrame} fixed />
-        <View style={styles.mast}>
-          <Text style={styles.wordmark}>{CAMPAIGN_TITLE.toUpperCase()}</Text>
-          <Text style={styles.tab}>{contentTab(type)}</Text>
-        </View>
-        <View style={styles.bannerRule} />
-        <Text style={styles.subline}>
-          {contentSubline(type, content.title)}
-        </Text>
+      <Page
+        size="A4"
+        style={ARCHIVE_SHEET_STYLES.page}
+        bookmark={content.title}
+      >
+        <ArchiveSheetHeader
+          tab={contentTab(type)}
+          subline={contentSubline(type, content.title)}
+          campaignTitle={CAMPAIGN_TITLE}
+        />
 
         <Text style={styles.title}>{content.title.toUpperCase()}</Text>
 
@@ -405,9 +333,7 @@ function ContentPdfDocument({
             <Text style={styles.section}>DATEN</Text>
             {metaLines.map((line) => (
               <View key={line.key} style={styles.metaRow}>
-                <Text style={styles.metaLabel}>
-                  {line.label.toUpperCase()}
-                </Text>
+                <Text style={styles.metaLabel}>{line.label.toUpperCase()}</Text>
                 <Text style={styles.metaValue}>{line.text}</Text>
               </View>
             ))}
@@ -417,14 +343,7 @@ function ContentPdfDocument({
         <Text style={styles.section}>TEXT</Text>
         <Blocks markdown={content.bodyMarkdown} />
 
-        <View style={styles.footer} fixed>
-          <Text>{content.title}</Text>
-          <Text
-            render={({ pageNumber, totalPages }) =>
-              `${pageNumber} / ${totalPages}`
-            }
-          />
-        </View>
+        <ArchiveSheetFooter title={content.title} />
       </Page>
     </Document>
   );

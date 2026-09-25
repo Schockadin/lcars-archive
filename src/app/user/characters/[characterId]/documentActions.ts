@@ -5,10 +5,11 @@ import { getOwnCharacterForEdit } from "@/lib/characters";
 import {
   InvalidCharacterDocumentError,
   deleteCharacterDocument,
+  renameCharacterDocument,
   uploadCharacterDocument,
 } from "@/lib/characterDocuments";
 import { MAX_CHARACTER_DOCUMENT_BYTES } from "@/lib/characterDocumentTypes";
-import { characterEditHref } from "@/lib/contentRoutes";
+import { characterEditHref, characterHref } from "@/lib/contentRoutes";
 
 export interface CharacterDocumentActionState {
   error?: string;
@@ -21,8 +22,9 @@ async function requireOwnedCharacter(characterId: number) {
   return { session, character };
 }
 
-function refreshCharacterDocuments(characterId: number) {
+function refreshCharacterDocuments(characterId: number, characterSlug: string) {
   revalidatePath(characterEditHref(characterId));
+  revalidatePath(characterHref(characterSlug));
 }
 
 export async function uploadCharacterDocumentAction(
@@ -50,7 +52,7 @@ export async function uploadCharacterDocumentAction(
       file.name,
       Buffer.from(await file.arrayBuffer()),
     );
-    refreshCharacterDocuments(characterId);
+    refreshCharacterDocuments(characterId, character.slug);
     return { success: `„${file.name}“ wurde hinterlegt.` };
   } catch (error) {
     if (error instanceof InvalidCharacterDocumentError) {
@@ -75,6 +77,36 @@ export async function deleteCharacterDocumentAction(
 
   const deleted = await deleteCharacterDocument(characterId, documentId);
   if (!deleted) return { error: "Dokument nicht gefunden." };
-  refreshCharacterDocuments(characterId);
+  refreshCharacterDocuments(characterId, character.slug);
   return { success: "Dokument entfernt." };
+}
+
+export async function renameCharacterDocumentAction(
+  _state: CharacterDocumentActionState,
+  formData: FormData,
+): Promise<CharacterDocumentActionState> {
+  const characterId = Number(formData.get("characterId"));
+  const documentId = Number(formData.get("documentId"));
+  if (!Number.isInteger(characterId) || !Number.isInteger(documentId)) {
+    return { error: "Ungültiges Dokument." };
+  }
+
+  const { character } = await requireOwnedCharacter(characterId);
+  if (!character) return { error: "Charakter nicht gefunden." };
+
+  try {
+    const renamed = await renameCharacterDocument(
+      characterId,
+      documentId,
+      String(formData.get("fileName") ?? ""),
+    );
+    if (!renamed) return { error: "Dokument nicht gefunden." };
+    refreshCharacterDocuments(characterId, character.slug);
+    return { success: `Dokument wurde in „${renamed}“ umbenannt.` };
+  } catch (error) {
+    if (error instanceof InvalidCharacterDocumentError) {
+      return { error: error.message };
+    }
+    throw error;
+  }
 }

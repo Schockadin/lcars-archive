@@ -3,6 +3,7 @@ import { useState } from "react";
 import ModalOverlay from "@/components/ModalOverlay";
 import { DownloadIcon, FileTextIcon } from "@/lib/icons";
 import type { CharacterDocument } from "@/lib/characterDocumentTypes";
+import { characterDocumentDisplayName } from "@/lib/characterDocumentNames";
 import type { CharacterArchiveMissionOption } from "@/lib/characterArchiveTypes";
 import { fmtDate } from "@/lib/missionFormat";
 
@@ -114,8 +115,11 @@ export default function CharacterArchiveExportButton({
                       type="checkbox"
                       name="documentIds"
                       value={document.id}
+                      aria-label={document.fileName}
                     />
-                    <span>{document.fileName}</span>
+                    <span title={document.fileName}>
+                      {characterDocumentDisplayName(document.fileName)}
+                    </span>
                   </label>
                 ))
               )}
