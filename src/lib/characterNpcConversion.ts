@@ -49,8 +49,12 @@ function displayStatus(status: ConversionStatus): string {
   return "Aktiv";
 }
 
-function markdownValue(value: string | null | undefined): string | null {
-  const normalized = value?.trim();
+function markdownValue(value: unknown): string | null {
+  // Ältere/importierte Charakterakten enthalten vereinzelt Nicht-Textwerte
+  // in optionalen Metadatenfeldern. Nicht darstellbare Werte sollen die
+  // Umwandlung nicht abbrechen, sondern einfach ausgelassen werden.
+  if (typeof value !== "string") return null;
+  const normalized = value.trim();
   return normalized ? normalized.replace(/\r?\n/g, " ") : null;
 }
 
