@@ -1,7 +1,16 @@
--- Reversible Umwandlung inaktiver/verstorbener Charaktere in NPC-Archiv-Einträge.
--- Der Originaldatensatz bleibt bestehen, damit Missionen, Logs und AP intakt bleiben.
+-- Migration für PR #94: reversible Umwandlung inaktiver/verstorbener
+-- Charaktere in NPC-Archiv-Einträge.
 --
---   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-character-npc-conversions.sql
+-- Die Zuordnung speichert den Ursprungsstatus und den erzeugten NPC-Eintrag,
+-- damit ein Owner die Umwandlung rückgängig machen kann. Die Tabelle wird
+-- außerdem in src/lib/dbTables.ts als Backup-Tabelle geführt.
+--
+-- Vor dem Deploy ausführen:
+--   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/migrate-pr94.sql
+--
+-- Idempotent: ein erneuter Lauf ändert ein bereits aktuelles Schema nicht.
+
+BEGIN;
 
 CREATE TABLE IF NOT EXISTS character_npc_conversions (
   character_id     INT PRIMARY KEY REFERENCES characters(id) ON DELETE CASCADE,
@@ -10,3 +19,5 @@ CREATE TABLE IF NOT EXISTS character_npc_conversions (
   converted_by     INT REFERENCES users(id) ON DELETE SET NULL,
   converted_at     TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+COMMIT;

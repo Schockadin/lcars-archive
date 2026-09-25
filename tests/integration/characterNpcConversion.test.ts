@@ -18,6 +18,7 @@ describe("Charaktere reversibel in NPCs umwandeln", () => {
     await sql`
       UPDATE characters
       SET source_md = 'Ehemalige Chefingenieurin.',
+          portrait = 'https://images.example.test/mira-venn.png',
           metadata = ${sql.json({
             rank: "Commander",
             species: ["Vulkanierin"],
@@ -45,11 +46,12 @@ describe("Charaktere reversibel in NPCs umwandeln", () => {
         category: string;
         title: string;
         content: string;
+        source_md: string;
         tags: string[];
         owner_user_id: number;
       }[]
     >`
-      SELECT category, title, content, tags, owner_user_id
+      SELECT category, title, content, source_md, tags, owner_user_id
       FROM archive_entries
       WHERE slug = ${converted.npcSlug}
     `;
@@ -61,6 +63,19 @@ describe("Charaktere reversibel in NPCs umwandeln", () => {
     });
     expect(npc.content).toContain("Commander");
     expect(npc.content).toContain("Ehemalige Chefingenieurin.");
+    expect(npc.source_md).toContain(
+      "![Profilbild](<https://images.example.test/mira-venn.png>)",
+    );
+    expect(npc.content).toContain("https://images.example.test/mira-venn.png");
+    const [npcCard] = await sql<{ portrait: string | null }[]>`
+      SELECT c.portrait
+      FROM archive_entries a
+      JOIN character_npc_conversions conversion
+        ON conversion.archive_entry_id = a.id
+      JOIN characters c ON c.id = conversion.character_id
+      WHERE a.slug = ${converted.npcSlug}
+    `;
+    expect(npcCard.portrait).toBe("https://images.example.test/mira-venn.png");
     expect(
       (await getCharactersForUser(owner.id)).some(
         (entry) => entry.id === character.id,
@@ -76,13 +91,17 @@ describe("Charaktere reversibel in NPCs umwandeln", () => {
       characterSlug: character.slug,
       npcSlug: converted.npcSlug,
     });
-    const [characterRow] = await sql<{ status: string }[]>`
-      SELECT status FROM characters WHERE id = ${character.id}
+    const [characterRow] = await sql<{
+      status: string;
+      portrait: string | null;
+    }[]>`
+      SELECT status, portrait FROM characters WHERE id = ${character.id}
     `;
     const [npcRow] = await sql<{ deleted_at: Date | null }[]>`
       SELECT deleted_at FROM archive_entries WHERE slug = ${converted.npcSlug}
     `;
     expect(characterRow.status).toBe("retired");
+    expect(characterRow.portrait).toBe("https://images.example.test/mira-venn.png");
     expect(npcRow.deleted_at).not.toBeNull();
     expect(
       (await getCharactersForUser(owner.id)).some(
