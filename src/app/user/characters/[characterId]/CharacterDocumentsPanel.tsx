@@ -2,30 +2,35 @@
 import { useActionState, useEffect, useRef, useState } from "react";
 import { LcarsCollapsiblePanel } from "@/components/lcars";
 import ModalOverlay from "@/components/ModalOverlay";
-import { DownloadIcon, EyeIcon, TrashIcon, UploadIcon } from "@/lib/icons";
+import {
+  DownloadIcon,
+  EyeIcon,
+  PencilIcon,
+  TrashIcon,
+  UploadIcon,
+} from "@/lib/icons";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import {
   CHARACTER_DOCUMENT_ACCEPT,
   type CharacterDocument,
-  type CharacterDocumentKind,
 } from "@/lib/characterDocumentTypes";
 import {
   deleteCharacterDocumentAction,
+  renameCharacterDocumentAction,
   uploadCharacterDocumentAction,
   type CharacterDocumentActionState,
 } from "./documentActions";
 import {
   FormError,
+  FormField,
   FormSuccess,
   SubmitButton,
 } from "@/app/_shared/FormPrimitives";
+import {
+  characterDocumentDisplayName,
+  characterDocumentKindLabel,
+} from "@/lib/characterDocumentNames";
 
-const KIND_LABELS: Record<CharacterDocumentKind, string> = {
-  pdf: "PDF",
-  md: "Markdown",
-  docx: "DOCX",
-  txt: "Text",
-};
 const initialState: CharacterDocumentActionState = {};
 
 function formatSize(bytes: number): string {
@@ -109,24 +114,78 @@ function UploadDocumentForm({ characterId }: { characterId: number }) {
   );
 }
 
+function RenameDocumentForm({
+  characterId,
+  document,
+}: {
+  characterId: number;
+  document: CharacterDocument;
+}) {
+  const [state, formAction, pending] = useActionState(
+    renameCharacterDocumentAction,
+    initialState,
+  );
+  const inputId = `character-document-${document.id}-name`;
+
+  return (
+    <form action={formAction} className="flex flex-col" data-no-draft>
+      <input type="hidden" name="characterId" value={characterId} />
+      <input type="hidden" name="documentId" value={document.id} />
+      <FormField
+        label="Dateiname"
+        htmlFor={inputId}
+        hint={`Die Dateiendung .${document.kind} muss erhalten bleiben.`}
+      >
+        <input
+          id={inputId}
+          name="fileName"
+          type="text"
+          required
+          maxLength={200}
+          defaultValue={document.fileName}
+          className="lcars-input"
+          autoFocus
+        />
+      </FormField>
+      <FormError message={state.error} />
+      {state.success && <FormSuccess>{state.success}</FormSuccess>}
+      <SubmitButton
+        pending={pending}
+        pendingLabel="Wird umbenannt…"
+        className="lcars-pill-btn--outline self-end disabled:opacity-50"
+      >
+        Dateiname speichern
+      </SubmitButton>
+    </form>
+  );
+}
+
 export default function CharacterDocumentsPanel({
   characterId,
   documents,
+  readOnly = false,
+  defaultOpen = true,
+  storageId,
 }: {
   characterId: number;
   documents: CharacterDocument[];
+  readOnly?: boolean;
+  defaultOpen?: boolean;
+  storageId?: string;
 }) {
   const [openDocument, setOpenDocument] = useState<CharacterDocument | null>(
     null,
   );
+  const [renameDocument, setRenameDocument] =
+    useState<CharacterDocument | null>(null);
 
   return (
     <>
       <LcarsCollapsiblePanel
         title="Zusätzliche Dokumente"
         badge={documents.length}
-        storageId={`character:${characterId}:documents`}
-        defaultOpen
+        storageId={storageId ?? `character:${characterId}:documents`}
+        defaultOpen={defaultOpen}
       >
         {documents.length === 0 ? (
           <p className="lcars-empty-state">Noch keine Dokumente hinterlegt.</p>
@@ -142,17 +201,33 @@ export default function CharacterDocumentsPanel({
                   className="min-w-0 flex-1 bg-transparent text-left text-lcars-ink-data"
                   onClick={() => setOpenDocument(document)}
                 >
-                  <span className="inline-flex items-center gap-[7px]">
+                  <span className="flex min-w-0 items-center gap-[7px]">
                     <span className="size-[20px] shrink-0">
                       <EyeIcon />
                     </span>
-                    <span className="truncate">{document.fileName}</span>
+                    <span
+                      className="min-w-0 truncate"
+                      title={document.fileName}
+                    >
+                      {characterDocumentDisplayName(document.fileName)}
+                    </span>
                   </span>
                   <span className="ml-[27px] block text-[12px] text-lcars-ink-dim">
-                    {KIND_LABELS[document.kind]} ·{" "}
+                    {characterDocumentKindLabel(document.kind)} ·{" "}
                     {formatSize(document.sizeBytes)}
                   </span>
                 </button>
+                {!readOnly && (
+                  <button
+                    type="button"
+                    className="lcars-icon-btn size-[30px]"
+                    aria-label={`Dokument „${document.fileName}“ umbenennen`}
+                    title="Umbenennen"
+                    onClick={() => setRenameDocument(document)}
+                  >
+                    <PencilIcon />
+                  </button>
+                )}
                 <a
                   href={document.downloadUrl}
                   download={document.fileName}
@@ -162,15 +237,17 @@ export default function CharacterDocumentsPanel({
                 >
                   <DownloadIcon />
                 </a>
-                <DeleteDocumentForm
-                  characterId={characterId}
-                  document={document}
-                />
+                {!readOnly && (
+                  <DeleteDocumentForm
+                    characterId={characterId}
+                    document={document}
+                  />
+                )}
               </li>
             ))}
           </ul>
         )}
-        <UploadDocumentForm characterId={characterId} />
+        {!readOnly && <UploadDocumentForm characterId={characterId} />}
       </LcarsCollapsiblePanel>
 
       {openDocument && (
@@ -193,6 +270,19 @@ export default function CharacterDocumentsPanel({
           >
             <DownloadIcon /> Herunterladen
           </a>
+        </ModalOverlay>
+      )}
+
+      {renameDocument && (
+        <ModalOverlay
+          title="Dokument umbenennen"
+          onClose={() => setRenameDocument(null)}
+          width={560}
+        >
+          <RenameDocumentForm
+            characterId={characterId}
+            document={renameDocument}
+          />
         </ModalOverlay>
       )}
     </>

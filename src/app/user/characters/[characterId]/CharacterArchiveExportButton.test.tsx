@@ -13,6 +13,17 @@ const documents = [
     previewUrl: "/preview",
     downloadUrl: "/download",
   },
+  {
+    id: 8,
+    characterId: 4,
+    fileName:
+      "Ausführlicher Bericht über die gesamte Forschungsmission der U.S.S. Beispiel.pdf",
+    kind: "pdf" as const,
+    sizeBytes: 4321,
+    createdAt: "2026-09-25",
+    previewUrl: "/preview-long",
+    downloadUrl: "/download-long",
+  },
 ];
 
 const missions = [
@@ -99,5 +110,24 @@ describe("CharacterArchiveExportButton", () => {
     expect(
       screen.getByRole("checkbox", { name: /Ganze Mission: Geheime Mission/ }),
     ).toBeDisabled();
+  });
+
+  it("kürzt lange Dokumentnamen nur sichtbar, nicht für die Bedienung", () => {
+    const longName = documents[1].fileName;
+    render(
+      <CharacterArchiveExportButton
+        characterId={4}
+        characterName="T'Vel"
+        documents={documents}
+        missions={missions}
+      />,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Charakter exportieren" }),
+    );
+
+    expect(screen.getByRole("checkbox", { name: longName })).toBeVisible();
+    expect(screen.queryByText(longName)).not.toBeInTheDocument();
+    expect(screen.getByTitle(longName).textContent).toMatch(/…\.pdf$/);
   });
 });

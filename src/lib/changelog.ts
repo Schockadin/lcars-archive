@@ -147,6 +147,17 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.54",
+    title: "Charakterdokumente direkt in der Personalakte",
+    items: [
+      {
+        text: "Zusätzliche Dokumente lassen sich jetzt direkt auf der Charakterseite verwalten und umbenennen. Lange Dateinamen werden kompakt angezeigt; die Spielleitung kann die Dateien dort ansehen und herunterladen.",
+        category: "charaktere",
+        tutorial: "charaktererschaffung",
+      },
+    ],
+  },
+  {
     version: "1.53",
     title: "Eigene Ereignisse werden zu Chronik-Akten",
     items: [

@@ -1,9 +1,9 @@
-import { verifySession } from "@/lib/dal";
 import {
   getCharacterDocumentAccess,
   getCharacterDocumentBytes,
 } from "@/lib/characterDocuments";
 import { markdownToSafeHtml } from "@/lib/markdown";
+import { getViewer, viewerHasPermission } from "@/lib/visibility";
 
 function disposition(fileName: string, download: boolean): string {
   const ascii = fileName.replace(/[^\x20-\x7E]/g, "_").replace(/"/g, "");
@@ -26,14 +26,20 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const session = await verifySession();
+  const viewer = await getViewer();
+  if (!viewer) return new Response("Dokument nicht gefunden.", { status: 404 });
   const id = Number((await params).id);
   if (!Number.isInteger(id)) {
     return new Response("Ungültiges Dokument.", { status: 400 });
   }
 
   const access = await getCharacterDocumentAccess(id);
-  if (!access || !access.isActive || access.ownerId !== session.userId) {
+  const canRead =
+    access?.ownerId === viewer.userId ||
+    (access != null &&
+      viewerHasPermission(viewer, "gm.access") &&
+      (!access.isDraft || viewerHasPermission(viewer, "content.view_all")));
+  if (!access || !access.isActive || !canRead) {
     return new Response("Dokument nicht gefunden.", { status: 404 });
   }
 

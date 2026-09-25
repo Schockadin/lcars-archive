@@ -3,6 +3,7 @@ import { PDFDocument } from "pdf-lib";
 import {
   InvalidCharacterDocumentError,
   inspectCharacterDocument,
+  normalizeCharacterDocumentFileName,
 } from "./characterDocumentValidation";
 
 describe("inspectCharacterDocument", () => {
@@ -59,5 +60,25 @@ describe("inspectCharacterDocument", () => {
     await expect(
       inspectCharacterDocument("akte.txt", Buffer.from([0xc3, 0x28])),
     ).rejects.toThrow(/UTF-8/);
+  });
+});
+
+describe("normalizeCharacterDocumentFileName", () => {
+  it("entfernt Pfadanteile und erhält die vorhandene Dateiendung", () => {
+    expect(
+      normalizeCharacterDocumentFileName(
+        "  C:\\fakepath\\Neue Akte.PDF  ",
+        "pdf",
+      ),
+    ).toBe("Neue Akte.PDF");
+  });
+
+  it("weist leere Namen und geänderte Dateiendungen zurück", () => {
+    expect(() => normalizeCharacterDocumentFileName("   ", "pdf")).toThrow(
+      /Dateinamen/,
+    );
+    expect(() =>
+      normalizeCharacterDocumentFileName("Dienstakte.txt", "pdf"),
+    ).toThrow(/\.pdf/);
   });
 });

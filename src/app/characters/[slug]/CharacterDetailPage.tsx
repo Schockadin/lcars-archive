@@ -12,9 +12,12 @@ import NotesPanel from "@/app/_shared/NotesPanel";
 import type { ContentNote } from "@/lib/contentNotes";
 import { characterHref } from "@/lib/contentRoutes";
 import type { CharacterChronologyCounts } from "./CharacterChronologyLinks";
+import type { CharacterDocument } from "@/lib/characterDocumentTypes";
 
 export default function CharakterDetailPage({
   character,
+  documents,
+  documentsReadOnly,
   chronologyCounts,
   viewer,
   owners,
@@ -26,6 +29,8 @@ export default function CharakterDetailPage({
   canWriteNotes,
 }: {
   character: Character;
+  documents: CharacterDocument[];
+  documentsReadOnly: boolean;
   chronologyCounts: CharacterChronologyCounts;
   viewer: Viewer | null;
   owners: { id: number; name: string }[];
@@ -48,6 +53,8 @@ export default function CharakterDetailPage({
     <div className="h-full">
       <CharacterHero
         character={character}
+        documents={documents}
+        documentsReadOnly={documentsReadOnly}
         chronologyCounts={chronologyCounts}
         viewer={viewer}
         owners={owners}

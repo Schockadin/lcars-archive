@@ -5,6 +5,7 @@ import {
   MAX_CHARACTER_DOCUMENT_BYTES,
   type CharacterDocumentKind,
 } from "@/lib/characterDocumentTypes";
+import { sanitizeFileName } from "@/lib/assetStorage";
 
 const MIME_BY_KIND: Record<CharacterDocumentKind, string> = {
   pdf: "application/pdf",
@@ -21,6 +22,23 @@ function extensionOf(fileName: string): CharacterDocumentKind | null {
   return (CHARACTER_DOCUMENT_KINDS as readonly string[]).includes(extension)
     ? (extension as CharacterDocumentKind)
     : null;
+}
+
+export function normalizeCharacterDocumentFileName(
+  fileName: string,
+  kind: CharacterDocumentKind,
+): string {
+  const base = fileName.split(/[\\/]/).pop()?.trim() ?? "";
+  if (!base) {
+    throw new InvalidCharacterDocumentError("Bitte einen Dateinamen eingeben.");
+  }
+  const normalized = sanitizeFileName(base, "");
+  if (!normalized || extensionOf(normalized) !== kind) {
+    throw new InvalidCharacterDocumentError(
+      `Die Dateiendung .${kind} muss erhalten bleiben.`,
+    );
+  }
+  return normalized;
 }
 
 function decodeUtf8(buffer: Buffer): string {

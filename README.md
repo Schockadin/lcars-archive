@@ -447,10 +447,11 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   hinterlegen. Die Binärdatei liegt im privaten R2-Backup-Bucket,
   Metadaten und der für Vorschau/Export extrahierte Text stehen in der Tabelle
   `character_documents`. Vorschau und Download laufen über die API-Route
-  `/api/character-documents/[id]` und prüfen bei jedem Aufruf Session,
-  Charakter-Owner und Löschstatus; die öffentliche Charakterseite erhält
-  weder Liste noch URLs. Markdown wird als bereinigtes HTML dargestellt,
-  DOCX und TXT als maskierter Text, PDF direkt im Browser.
+  `/api/character-documents/[id]`: Owner dürfen Dateien verwalten; die
+  Spielleitung kann Dokumente veröffentlichter Charaktere ansehen und
+  herunterladen. Lange Dateinamen werden in Listen gekürzt angezeigt, können
+  aber vom Owner umbenannt werden. Markdown wird als bereinigtes HTML
+  dargestellt, DOCX und TXT als maskierter Text, PDF direkt im Browser.
 - **Granulares Charakterarchiv als PDF** — die API-Route
   `/api/export/character-archive` setzt serverseitig eine gemeinsame PDF
   zusammen. Zur Auswahl stehen der komplette Charakterbogen, einzelne

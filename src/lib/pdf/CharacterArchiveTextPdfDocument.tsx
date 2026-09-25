@@ -4,44 +4,63 @@ import {
   Page,
   StyleSheet,
   Text,
-  View,
   renderToBuffer,
 } from "@react-pdf/renderer";
 import type { CharacterDocumentKind } from "@/lib/characterDocumentTypes";
+import { characterDocumentKindLabel } from "@/lib/characterDocumentNames";
 import { toPdfBlocks } from "./markdownBlocks";
-import { Spans } from "./sheetTheme";
+import {
+  ARCHIVE_SHEET_STYLES,
+  ArchiveSheetFooter,
+  ArchiveSheetHeader,
+  SHEET_BLUE,
+  SHEET_BLUE_DIM,
+  SHEET_MUTED,
+  Spans,
+} from "./sheetTheme";
 
 const styles = StyleSheet.create({
-  page: {
-    padding: "46 48 52",
-    color: "#172033",
-    fontFamily: "Helvetica",
+  title: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 16,
+    letterSpacing: 1,
+    color: SHEET_BLUE,
+    marginBottom: 2,
+  },
+  section: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 10,
+    letterSpacing: 2,
+    color: SHEET_BLUE,
+    marginTop: 12,
+    marginBottom: 6,
+    paddingBottom: 3,
+    borderBottomWidth: 1,
+    borderBottomColor: SHEET_BLUE_DIM,
+    borderBottomStyle: "solid",
+  },
+  heading: {
+    fontFamily: "Helvetica-Bold",
+    fontSize: 10.5,
+    letterSpacing: 0.8,
+    color: SHEET_BLUE,
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  paragraph: { fontSize: 10, lineHeight: 1.5, marginBottom: 7 },
+  quote: {
     fontSize: 10,
     lineHeight: 1.5,
-  },
-  eyebrow: { color: "#8b5cf6", fontSize: 8, letterSpacing: 1.4 },
-  title: { fontSize: 20, marginTop: 8, marginBottom: 18 },
-  rule: { height: 3, backgroundColor: "#f59e0b", marginBottom: 20 },
-  heading: { fontSize: 13, marginTop: 10, marginBottom: 5, color: "#334155" },
-  paragraph: { marginBottom: 7 },
-  quote: {
     marginBottom: 7,
+    marginLeft: 10,
     paddingLeft: 10,
     borderLeftWidth: 2,
-    borderLeftColor: "#94a3b8",
-    color: "#475569",
+    borderLeftColor: SHEET_BLUE_DIM,
+    borderLeftStyle: "solid",
+    color: SHEET_BLUE,
   },
-  listItem: { marginBottom: 4, paddingLeft: 10 },
-  footer: {
-    position: "absolute",
-    left: 48,
-    right: 48,
-    bottom: 25,
-    flexDirection: "row",
-    justifyContent: "space-between",
-    color: "#64748b",
-    fontSize: 8,
-  },
+  listItem: { fontSize: 10, lineHeight: 1.5, marginBottom: 3, marginLeft: 10 },
+  empty: { fontSize: 10, color: SHEET_MUTED, fontFamily: "Helvetica-Oblique" },
 });
 
 function MarkdownText({ text }: { text: string }) {
@@ -68,30 +87,24 @@ export async function renderCharacterArchiveTextPdf(input: {
   kind: Exclude<CharacterDocumentKind, "pdf">;
   text: string;
 }): Promise<Buffer> {
-  const label = input.kind === "docx" ? "DOCX" : input.kind.toUpperCase();
+  const label = characterDocumentKindLabel(input.kind);
   return renderToBuffer(
     <Document title={input.title} author="Neo Archive" creator="Neo Archive">
-      <Page size="A4" style={styles.page}>
-        <Text style={styles.eyebrow}>
-          ZUSÄTZLICHES CHARAKTERDOKUMENT · {label}
-        </Text>
-        <Text style={styles.title}>{input.title}</Text>
-        <View style={styles.rule} />
-        {input.kind === "md" ? (
+      <Page size="A4" style={ARCHIVE_SHEET_STYLES.page} bookmark={input.title}>
+        <ArchiveSheetHeader
+          tab="DOKUMENT"
+          subline={`${input.title} — ${label}`}
+        />
+        <Text style={styles.title}>{input.title.toUpperCase()}</Text>
+        <Text style={styles.section}>INHALT</Text>
+        {!input.text ? (
+          <Text style={styles.empty}>(Kein Text enthalten.)</Text>
+        ) : input.kind === "md" ? (
           <MarkdownText text={input.text} />
         ) : (
-          <Text style={styles.paragraph}>
-            {input.text || "(Kein Text enthalten.)"}
-          </Text>
+          <Text style={styles.paragraph}>{input.text}</Text>
         )}
-        <View style={styles.footer} fixed>
-          <Text>{input.title}</Text>
-          <Text
-            render={({ pageNumber, totalPages }) =>
-              `${pageNumber} / ${totalPages}`
-            }
-          />
-        </View>
+        <ArchiveSheetFooter title={input.title} />
       </Page>
     </Document>,
   );

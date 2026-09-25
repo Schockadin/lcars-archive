@@ -21,6 +21,8 @@ import { characterSheetHref } from "@/lib/contentRoutes";
 import CharacterChronologyLinks, {
   type CharacterChronologyCounts,
 } from "./CharacterChronologyLinks";
+import CharacterDocumentsPanel from "@/app/user/characters/[characterId]/CharacterDocumentsPanel";
+import type { CharacterDocument } from "@/lib/characterDocumentTypes";
 
 // ── Bio-HTML: h3 mit Anker-IDs versehen + Überschriften für das TOC sammeln ──
 function slugify(text: string): string {
@@ -125,6 +127,8 @@ const BAR_SEGMENTS: { flex: number; color: string }[] = [
 
 export default function CharacterHero({
   character,
+  documents,
+  documentsReadOnly,
   chronologyCounts,
   viewer,
   owners,
@@ -132,6 +136,8 @@ export default function CharacterHero({
   followInitialState,
 }: {
   character: Character;
+  documents: CharacterDocument[];
+  documentsReadOnly: boolean;
   chronologyCounts: CharacterChronologyCounts;
   viewer: Viewer | null;
   owners: { id: number; name: string }[];
@@ -262,13 +268,24 @@ export default function CharacterHero({
                 erscheint. */}
             {(viewer?.userId === character.player_id ||
               viewer?.permissions.includes("gm.access")) && (
-              <Link
-                href={characterSheetHref(character.slug)}
-                className="lcars-pill-btn--outline mt-[16px] inline-flex items-center gap-[6px]"
-              >
-                <FileTextIcon />
-                Charakterbogen
-              </Link>
+              <>
+                <Link
+                  href={characterSheetHref(character.slug)}
+                  className="lcars-pill-btn--outline mt-[16px] inline-flex items-center gap-[6px]"
+                >
+                  <FileTextIcon />
+                  Charakterbogen
+                </Link>
+                <div className="mt-[12px]">
+                  <CharacterDocumentsPanel
+                    characterId={character.id}
+                    documents={documents}
+                    readOnly={documentsReadOnly}
+                    defaultOpen={false}
+                    storageId={`character:${character.id}:public-documents`}
+                  />
+                </div>
+              </>
             )}
 
             {/* Inhaltsverzeichnis der Biografie (sticky, Scrollspy) */}

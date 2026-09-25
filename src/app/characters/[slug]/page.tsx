@@ -12,6 +12,7 @@ import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 import { listNotes } from "@/lib/contentNotes";
 import { getTimeline } from "@/lib/timeline";
 import { filterEvents, type TimelineScope } from "@/lib/timelineTypes";
+import { listCharacterDocuments } from "@/lib/characterDocuments";
 interface Props {
   params: Promise<{ slug: string }>;
 }
@@ -92,6 +93,10 @@ export default async function CharakterPage({ params }: Props) {
   const displayAge =
     inferAgeFromDateOfBirth(character.metadata.dateOfBirth, ingameYear) ??
     character.metadata.age;
+  const isOwner = viewer?.userId === character.player_id;
+  const isGM = viewerHasPermission(viewer, "gm.access");
+  const documents =
+    isOwner || isGM ? await listCharacterDocuments(character.id) : [];
   // Nur {id,name} an die Client Component durchreichen — der volle
   // UserWithCharacters-Datensatz (E-Mail, Login-Zeitstempel, …) würde sonst
   // unnötig ins Client-Bundle dieser Seite wandern (ActionsMenu braucht nur
@@ -103,6 +108,8 @@ export default async function CharakterPage({ params }: Props) {
       <MarkNewsSeen type="character" slug={character.slug} />
       <CharakterDetailPage
         character={character}
+        documents={documents}
+        documentsReadOnly={!isOwner}
         chronologyCounts={chronologyCounts}
         viewer={viewer}
         owners={owners}
