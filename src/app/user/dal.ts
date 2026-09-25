@@ -43,12 +43,14 @@ export interface OwnCharactersAccess {
 export async function requireOwnCharacters(): Promise<OwnCharactersAccess> {
   const session = await verifySession();
 
-  const user = await getUserWithPasswordStatus(session.userId);
+  // Identity is established before either private read; after that, these independent reads run together.
+  const [user, characters] = await Promise.all([
+    getUserWithPasswordStatus(session.userId),
+    getCharactersForUser(session.userId),
+  ]);
   if (!user) {
     redirect("/login");
   }
-
-  const characters = await getCharactersForUser(session.userId);
   return { user, characters };
 }
 

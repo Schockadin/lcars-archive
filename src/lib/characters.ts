@@ -1,4 +1,5 @@
 import { cacheTag, cacheLife } from "next/cache";
+import { cache } from "react";
 import sql from "@/lib/db";
 import { recordRevision } from "@/lib/contentRevisions";
 import { cacheTags } from "@/lib/cacheTags";
@@ -297,10 +298,10 @@ export async function getCharacterBySlug(
   return rows[0] ? parseCharacter(rows[0]) : null;
 }
 
-// Charaktere eines Users (siehe assignCharacterToUser). Kein Cache — die
-// Dashboard-Route ist durch den Session-Zugriff ohnehin dynamisch, analog
-// zu getUserById in src/lib/users.ts.
-export async function getCharactersForUser(
+// Charaktere eines Users (siehe assignCharacterToUser). React cache() gilt
+// nur für denselben Render-Durchlauf — keine gemeinsame oder öffentliche
+// Zwischenspeicherung nutzerbezogener Ergebnisse.
+export const getCharactersForUser = cache(async function getCharactersForUser(
   userId: number,
 ): Promise<Character[]> {
   const rows = await sql<Character[]>`
@@ -316,7 +317,7 @@ export async function getCharactersForUser(
   // keepStats: die eigene Charakterübersicht (/user/characters) leitet daraus
   // ab, ob für einen Charakter schon Werte gepflegt sind.
   return rows.map((row) => parseCharacter(row, { keepStats: true }));
-}
+});
 
 export interface CharacterWithOwner {
   id: number;

@@ -64,6 +64,7 @@ export default function CharacterPage({
   characters,
   canCreate = false,
   help,
+  showHeading = true,
 }: {
   characters: CharacterListItem[];
   // Der fertige Hilfe-Knopf samt Anleitung, von der Seite gereicht (siehe
@@ -76,6 +77,7 @@ export default function CharacterPage({
   // Knopf nur auf eine Absage — dann wird er gar nicht erst angeboten, wie
   // schon in der Datenbank („Eintrag anlegen", siehe ArchiveEntryList).
   canCreate?: boolean;
+  showHeading?: boolean;
 }) {
   const [mode, setMode] = useState<SortMode>("status");
   // Freitext-Filter über Name (und Rang) — grenzt vor der Gruppierung ein.
@@ -108,16 +110,18 @@ export default function CharacterPage({
         }));
 
   return (
-    <div className="lcars-wide-column">
-      <div className="mb-[16px]">
-        <HelpTitleRow help={help}>
-          <h1 className="lcars-data-row-heading">Charaktere</h1>
-        </HelpTitleRow>
-        <p className="lcars-eyebrow">
-          Das Ensemble der Kampagne ·{" "}
-          {mode === "status" ? "nach Status" : "nach Generation"}
-        </p>
-      </div>
+    <div className={showHeading ? "lcars-wide-column" : undefined}>
+      {showHeading && (
+        <div className="mb-[16px]">
+          <HelpTitleRow help={help}>
+            <h1 className="lcars-data-row-heading">Charaktere</h1>
+          </HelpTitleRow>
+          <p className="lcars-eyebrow">
+            Das Ensemble der Kampagne ·{" "}
+            {mode === "status" ? "nach Status" : "nach Generation"}
+          </p>
+        </div>
+      )}
 
       <div className="lcars-toolbar">
         {/* Dieselbe Stelle wie „Ereignis eintragen" in der Chronologie und

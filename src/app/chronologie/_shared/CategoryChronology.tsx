@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import PageMeta from "@/components/PageMeta";
-import PageSkeleton from "@/app/_shared/PageSkeleton";
+import { LcarsSkeleton } from "@/components/lcars";
 import TimelineView from "@/components/timeline/TimelineView";
 import { getTimeline } from "@/lib/timeline";
 import {
@@ -36,11 +36,31 @@ export function ChronologyShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <PageMeta title="Chronologie" section="chronologie" />
-      <Suspense fallback={<PageSkeleton />}>{children}</Suspense>
+      <Suspense fallback={<ChronologyFallback />}>{children}</Suspense>
     </>
   );
 }
 
+function ChronologyFallback() {
+  return (
+    <div className="lcars-wide-column">
+      <div className="mb-[16px]">
+        <h1 className="lcars-data-row-heading">Chronologie</h1>
+        <p className="lcars-eyebrow">Zeitstrahl der Kampagne</p>
+      </div>
+      <div className="lcars-toolbar">
+        <LcarsSkeleton className="h-[34px] w-[160px] rounded-[var(--lcars-radius-pill)]" />
+        <LcarsSkeleton className="h-[34px] w-[160px] rounded-[var(--lcars-radius-pill)]" />
+        <LcarsSkeleton className="h-[34px] flex-1 rounded-[var(--lcars-radius-pill)]" />
+      </div>
+      <div className="archive-entry-list">
+        {Array.from({ length: 4 }, (_, i) => (
+          <LcarsSkeleton key={i} className="h-[92px] w-full" />
+        ))}
+      </div>
+    </div>
+  );
+}
 // Der datenabhängige Teil. Ohne `category` die ungefilterte Chronologie.
 export default async function CategoryTimeline({
   category = null,
@@ -57,8 +77,7 @@ export default async function CategoryTimeline({
   // Kopfzeile bliebe doppelt beknöpft, wenn man von dort weiterklickt.
   help?: boolean;
 }) {
-  const viewer = await getViewer();
-  const events = await getTimeline();
+  const [viewer, events] = await Promise.all([getViewer(), getTimeline()]);
   // Wer eigene Inhalte anlegen darf, darf auch ein Ereignis eintragen, das zu
   // keinem Inhalt gehört (siehe timelineManualEvents.ts).
   const canAddEvent = viewerHasPermission(viewer, "content.create");

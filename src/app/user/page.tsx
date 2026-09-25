@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { userCan } from "@/lib/permissions";
 import { getRoleMap } from "@/lib/roles";
 import Link from "next/link";
@@ -47,11 +48,10 @@ import {
 import InstallPwaPrompt from "./InstallPwaPrompt";
 import type { User } from "@/types/db";
 import { LcarsCollapsiblePanel } from "@/components/lcars";
-import {
-  characterHref,
-} from "@/lib/contentRoutes";
+import { characterHref } from "@/lib/contentRoutes";
 import HelpHeading from "@/components/help/HelpHeading";
 import { UserProfileGuide } from "@/components/help/guides/UserGuides";
+import { LcarsSkeleton } from "@/components/lcars";
 
 export const metadata: Metadata = {
   title: "Profil",
@@ -78,19 +78,6 @@ const ROLE_LABELS: Record<User["role"], string> = {
 export default async function UserPage() {
   const target = await requireOwnUser();
 
-  // Voneinander unabhängig — parallel statt nacheinander abfragen (gleiches
-  // Muster wie in Dashboard.tsx), sonst addieren sich die Roundtrips zur
-  // entfernten DB bei jedem Aufruf des Profils auf.
-  const [roleMap, hasPasswordSet, spellcheckEnabled, characters, usedColors] =
-    await Promise.all([
-      getRoleMap(),
-      hasPassword(target.id),
-      getEditorSpellcheckPreference(target.id),
-      getCharactersForUser(target.id),
-      getUsedCharacterColorsWithIds(),
-    ]);
-
-  const needsPassword = !hasPasswordSet;
   const colorTheme = normalizeThemeId(target.color_theme);
   const themeOverrides = sanitizeThemeOverrides(target.theme_overrides);
   const uiMode = normalizeUiMode(target.ui_mode);
@@ -101,24 +88,6 @@ export default async function UserPage() {
   const aktiveSektionen = DASHBOARD_SECTIONS.filter((section) =>
     dashboardSectionEnabled(dashboardPrefs, section.id),
   ).length;
-
-  // Charakter-Farben: eine Liste statt einer einzigen Wahl, seit die Farbe
-  // pro Charakter statt pro User lebt (Multis sollen für jeden Charakter
-  // eine eigene wählen können, siehe src/lib/characterColor.ts). takenColors
-  // pro Charakter einzeln ermitteln (schließt jeweils nur den eigenen
-  // Charakter aus, nicht die übrigen eigenen — der partielle UNIQUE-Index
-  // macht jede Farbe global exklusiv, auch zwischen den eigenen Charakteren).
-  // Das Ausschließen passiert hier in JS über die EINE oben geladene Liste
-  // aller belegten Farben, statt sie pro Charakter erneut abzufragen.
-  const characterColors = characters.map((c) => {
-    const takenColors = takenColorsForCharacter(c.id, usedColors);
-    const ownColor = resolveCharacterDefaultColor(
-      c.character_color,
-      c.id,
-      new Set(takenColors),
-    );
-    return { character: c, ownColor, takenColors };
-  });
 
   return (
     <>
@@ -138,15 +107,9 @@ export default async function UserPage() {
             {ROLE_LABELS[target.role]}).
           </p>
 
-          {needsPassword && (
-            <p className="text-lcars-primary-ink">
-              Du hast noch kein Passwort gesetzt.{" "}
-              <Link href="#password" className="underline">
-                Jetzt festlegen
-              </Link>
-              .
-            </p>
-          )}
+          <Suspense fallback={null}>
+            <ProfilePasswordNotice userId={target.id} />
+          </Suspense>
 
           <div className="flex flex-col gap-[16px]">
             {/* Ganz oben und mit eigener Anker-id: Das Zahnrad neben der
@@ -161,58 +124,17 @@ export default async function UserPage() {
               storageId="user:startseite"
               defaultOpen={false}
             >
-              <section className="flex flex-col gap-[12px]">
-                <h2>Was auf der Startseite steht</h2>
-                <DashboardSettingsForm
+              <Suspense fallback={<ProfilePanelFallback />}>
+                <DashboardPreferences
+                  userId={target.id}
                   prefs={dashboardPrefs}
-                  characters={characters.map((c) => ({
-                    id: c.id,
-                    name: c.name,
-                  }))}
                 />
-              </section>
+              </Suspense>
             </LcarsCollapsiblePanel>
 
-            {characterColors.length > 0 && (
-              <LcarsCollapsiblePanel
-                title="Charakterfarben"
-                badge={characterColors.length}
-                storageId="user:charakterfarben"
-                defaultOpen={false}
-              >
-                <section
-                  id="character-colors"
-                  className="flex flex-col gap-[24px]"
-                >
-                  <h2>Charakter-Farben</h2>
-                  <p>
-                    Jeder deiner Charaktere kann eine eigene Farbe haben — sie
-                    färbt seine wörtliche Rede im Fließtext-Modus
-                    abgeschlossener Gespräche sowie seine Nachrichten-Karten in
-                    Gesprächen ein.
-                  </p>
-                  {characterColors.map(
-                    ({ character, ownColor, takenColors }) => (
-                      <div
-                        key={character.id}
-                        className="flex flex-col gap-[12px]"
-                      >
-                        <h3>
-                          <Link href={characterHref(character.slug)}>
-                            {character.name}
-                          </Link>
-                        </h3>
-                        <CharacterColorForm
-                          characterId={character.id}
-                          ownColor={ownColor}
-                          takenColors={takenColors}
-                        />
-                      </div>
-                    ),
-                  )}
-                </section>
-              </LcarsCollapsiblePanel>
-            )}
+            <Suspense fallback={<ProfilePanelFallback />}>
+              <CharacterColorsPanel userId={target.id} />
+            </Suspense>
 
             <LcarsCollapsiblePanel
               title="Darstellung"
@@ -294,14 +216,9 @@ export default async function UserPage() {
 
               <section id="notifications" className="flex flex-col gap-[12px]">
                 <h2>Benachrichtigungen</h2>
-                <NotificationSettingsForm
-                  user={{
-                    emailEnabled: target.email_notifications_enabled,
-                    pushEnabled: target.push_notifications_enabled,
-                    notifyContentTypes: target.notify_content_types,
-                  }}
-                  isAdmin={userCan(target, "admin.access", roleMap)}
-                />
+                <Suspense fallback={<ProfilePanelFallback rows={2} />}>
+                  <NotificationPreferences target={target} />
+                </Suspense>
               </section>
 
               <div className="horizontalBar" />
@@ -322,12 +239,9 @@ export default async function UserPage() {
 
               <div className="horizontalBar" />
 
-              <section id="password" className="flex flex-col gap-[12px]">
-                <h2>
-                  {hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}
-                </h2>
-                <PasswordForm hasPassword={hasPasswordSet} />
-              </section>
+              <Suspense fallback={<ProfilePanelFallback rows={2} />}>
+                <PasswordSettings userId={target.id} />
+              </Suspense>
 
               <div className="horizontalBar" />
 
@@ -365,7 +279,9 @@ export default async function UserPage() {
 
               <section id="editor" className="flex flex-col gap-[12px]">
                 <h2>Editor</h2>
-                <EditorSpellcheckSettingsForm enabled={spellcheckEnabled} />
+                <Suspense fallback={<ProfilePanelFallback rows={2} />}>
+                  <SpellcheckSettings userId={target.id} />
+                </Suspense>
               </section>
 
               <div className="horizontalBar" />
@@ -379,5 +295,120 @@ export default async function UserPage() {
         </div>
       </article>
     </>
+  );
+}
+
+function ProfilePanelFallback({ rows = 1 }: { rows?: number }) {
+  return (
+    <div className="flex flex-col gap-[8px]" aria-hidden="true">
+      {Array.from({ length: rows }, (_, i) => (
+        <LcarsSkeleton
+          key={i}
+          className="h-[34px] w-full rounded-[var(--lcars-radius-pill)]"
+        />
+      ))}
+    </div>
+  );
+}
+async function DashboardPreferences({
+  userId,
+  prefs,
+}: {
+  userId: number;
+  prefs: ReturnType<typeof sanitizeDashboardPrefs>;
+}) {
+  const characters = await getCharactersForUser(userId);
+  return (
+    <section className="flex flex-col gap-[12px]">
+      <h2>Was auf der Startseite steht</h2>
+      <DashboardSettingsForm
+        prefs={prefs}
+        characters={characters.map((c) => ({ id: c.id, name: c.name }))}
+      />
+    </section>
+  );
+}
+async function CharacterColorsPanel({ userId }: { userId: number }) {
+  const [characters, usedColors] = await Promise.all([
+    getCharactersForUser(userId),
+    getUsedCharacterColorsWithIds(),
+  ]);
+  const characterColors = characters.map((character) => {
+    const takenColors = takenColorsForCharacter(character.id, usedColors);
+    const ownColor = resolveCharacterDefaultColor(
+      character.character_color,
+      character.id,
+      new Set(takenColors),
+    );
+    return { character, ownColor, takenColors };
+  });
+  if (!characterColors.length) return null;
+  return (
+    <LcarsCollapsiblePanel
+      title="Charakterfarben"
+      badge={characterColors.length}
+      storageId="user:charakterfarben"
+      defaultOpen={false}
+    >
+      <section id="character-colors" className="flex flex-col gap-[24px]">
+        <h2>Charakter-Farben</h2>
+        <p>
+          Jeder deiner Charaktere kann eine eigene Farbe haben — sie färbt seine
+          wörtliche Rede im Fließtext-Modus abgeschlossener Gespräche sowie
+          seine Nachrichten-Karten in Gesprächen ein.
+        </p>
+        {characterColors.map(({ character, ownColor, takenColors }) => (
+          <div key={character.id} className="flex flex-col gap-[12px]">
+            <h3>
+              <Link href={characterHref(character.slug)}>{character.name}</Link>
+            </h3>
+            <CharacterColorForm
+              characterId={character.id}
+              ownColor={ownColor}
+              takenColors={takenColors}
+            />
+          </div>
+        ))}
+      </section>
+    </LcarsCollapsiblePanel>
+  );
+}
+async function NotificationPreferences({ target }: { target: User }) {
+  const roleMap = await getRoleMap();
+  return (
+    <NotificationSettingsForm
+      user={{
+        emailEnabled: target.email_notifications_enabled,
+        pushEnabled: target.push_notifications_enabled,
+        notifyContentTypes: target.notify_content_types,
+      }}
+      isAdmin={userCan(target, "admin.access", roleMap)}
+    />
+  );
+}
+async function PasswordSettings({ userId }: { userId: number }) {
+  const hasPasswordSet = await hasPassword(userId);
+  return (
+    <section id="password" className="flex flex-col gap-[12px]">
+      <h2>{hasPasswordSet ? "Passwort ändern" : "Passwort festlegen"}</h2>
+      <PasswordForm hasPassword={hasPasswordSet} />
+    </section>
+  );
+}
+async function SpellcheckSettings({ userId }: { userId: number }) {
+  const enabled = await getEditorSpellcheckPreference(userId);
+  return <EditorSpellcheckSettingsForm enabled={enabled} />;
+}
+
+async function ProfilePasswordNotice({ userId }: { userId: number }) {
+  if (await hasPassword(userId)) return null;
+  return (
+    <p className="text-lcars-primary-ink">
+      Du hast noch kein Passwort gesetzt.{" "}
+      <Link href="#password" className="underline">
+        Jetzt festlegen
+      </Link>
+      .
+    </p>
   );
 }

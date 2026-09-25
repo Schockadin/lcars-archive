@@ -1,42 +1,68 @@
+import { Suspense } from "react";
+import Link from "next/link";
 import { getCharacterListItems } from "@/lib/characters";
 import PageMeta from "@/components/PageMeta";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import CharacterPage from "./CharacterPage";
 import HelpButton from "@/components/help/HelpButton";
+import { HelpTitleRow } from "@/components/help/HelpHeading";
 import { PublicCharactersGuide } from "@/components/help/guides/PublicGuides";
+import PageSkeleton from "@/app/_shared/PageSkeleton";
+import { LcarsSkeleton } from "@/components/lcars";
+import { PlusIcon } from "@/lib/icons";
 
-export const metadata = {
-  title: {
-    default: "Charaktere",
-  },
-};
+export const metadata = { title: { default: "Charaktere" } };
 
-// Nur noch die Charakterliste: die Gespräche sind aus dem Charaktere-Bereich
-// in die Chronologie umgezogen (Ereignisart „Gespräch", siehe
-// dialoguesHref in contentRoutes.ts) — dort stehen sie zwischen den übrigen
-// datierten Inhalten der Kampagne, statt in einer zweiten Spalte daneben.
-export default async function CharakterePage() {
-  const [characters, viewer] = await Promise.all([
-    getCharacterListItems(),
-    getViewer(),
-  ]);
-  // Ohne das Recht „content.create" (Gast-Accounts, Ausgeloggte) führt der
-  // „+"-Knopf nur auf eine Absage — dann gar nicht erst anbieten, wie in der
-  // Datenbank.
-  const canCreate = viewerHasPermission(viewer, "content.create");
-
+export default function CharakterePage() {
   return (
     <>
       <PageMeta title="Charaktere" section="characters" />
-      <CharacterPage
-        characters={characters}
-        canCreate={canCreate}
-        help={
-          <HelpButton title="Charaktere" tutorial="seiten-im-ueberblick">
-            <PublicCharactersGuide />
-          </HelpButton>
-        }
-      />
+      <div className="lcars-wide-column">
+        <div className="mb-[16px]">
+          <HelpTitleRow
+            help={
+              <HelpButton title="Charaktere" tutorial="seiten-im-ueberblick">
+                <PublicCharactersGuide />
+              </HelpButton>
+            }
+          >
+            <h1 className="lcars-data-row-heading">Charaktere</h1>
+          </HelpTitleRow>
+          <p className="lcars-eyebrow">Das Ensemble der Kampagne</p>
+        </div>
+        <div className="lcars-toolbar">
+          <Suspense
+            fallback={
+              <LcarsSkeleton className="h-[34px] w-[40px] rounded-[100vmax]" />
+            }
+          >
+            <CharacterCreateAction />
+          </Suspense>
+        </div>
+        <Suspense fallback={<PageSkeleton rows={5} />}>
+          <CharacterList />
+        </Suspense>
+      </div>
     </>
+  );
+}
+
+async function CharacterList() {
+  const characters = await getCharacterListItems();
+  return <CharacterPage characters={characters} showHeading={false} />;
+}
+
+async function CharacterCreateAction() {
+  const viewer = await getViewer();
+  if (!viewer || !viewerHasPermission(viewer, "content.create")) return null;
+  return (
+    <Link
+      href="/user/characters/new"
+      className="lcars-icon-btn self-start"
+      aria-label="Charakter anlegen"
+      title="Charakter anlegen"
+    >
+      <PlusIcon />
+    </Link>
   );
 }

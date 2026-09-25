@@ -1,52 +1,116 @@
 "use client";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useTransition } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 export const DASHBOARD_REFRESH_INTERVAL_MS = 10_000;
+const NAVIGATION_GUARD_MS = 15_000;
 
-// Hält die angemeldete Startseite aktuell, ohne dass jemand neu laden muss:
-// alle zehn Sekunden ein router.refresh(). Die Seite zeigt lauter Dinge, die
-// sich woanders ändern — Zu- und Absagen zum nächsten Spielabend, neue
-// Nachrichten in offenen Gesprächen, News der anderen, die eigenen Entwürfe
-// —, und bis hierher sah man das erst beim nächsten Aufruf.
-//
-// router.refresh() statt eines eigenen Poll-Endpunkts (wie in
-// DialogueLiveView, das einen Snapshot holt): Die Startseite besteht aus
-// einem Dutzend unabhängiger Abschnitte, für die es keinen gemeinsamen
-// Snapshot gibt. Der Refresh holt genau das, was die Seite ohnehin rendert,
-// und er ist WEICH — die bestehende Oberfläche bleibt stehen, bis die neuen
-// Daten da sind. Kein Flackern, kein Sprung, und der Zustand der
-// Client-Teile bleibt erhalten: aufgeklappte Abschnitte, ein offenes
-// Anlege-Fenster samt bereits getippten Feldern.
-//
-// Pausiert bei unsichtbarem Tab und holt beim Zurückkehren sofort frische
-// Daten — dasselbe Muster wie der Dialog-Poll. Das ist hier nicht nur Kosmetik:
-// „/" ist die meistbesuchte Seite der Anwendung, ein Refresh rendert sie
-// vollständig neu (also je eingeschalteter Sektion ihre Abfragen), und ein
-// vergessener Hintergrund-Tab liefe sonst tagelang im Zehn-Sekunden-Takt
-// gegen die Datenbank. Wer wenig sehen will, zahlt ohnehin wenig: Was im
-// Profil abgeschaltet ist, wird auch beim Refresh nicht geladen (siehe
-// Dashboard.tsx).
-//
-// Rendert nichts — die Komponente ist nur der Träger des Effekts.
 export default function DashboardAutoRefresh() {
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const routeKey = pathname + "?" + searchParams.toString();
+  const [isPending, startTransition] = useTransition();
+  const refreshQueued = useRef(false);
+  const navigationPending = useRef(false);
+  const navigationTimeout = useRef<number | null>(null);
+
+  const refreshWhenIdle = useCallback(() => {
+    if (
+      document.hidden ||
+      isPending ||
+      navigationPending.current ||
+      refreshQueued.current
+    )
+      return;
+    refreshQueued.current = true;
+    startTransition(() => router.refresh());
+  }, [isPending, router]);
 
   useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (!document.hidden) router.refresh();
-    }, DASHBOARD_REFRESH_INTERVAL_MS);
+    if (!isPending) refreshQueued.current = false;
+  }, [isPending]);
 
-    function handleVisibilityChange() {
-      if (!document.hidden) router.refresh();
+  useEffect(() => {
+    function markNavigation() {
+      navigationPending.current = true;
+      if (navigationTimeout.current !== null)
+        window.clearTimeout(navigationTimeout.current);
+      navigationTimeout.current = window.setTimeout(() => {
+        navigationPending.current = false;
+        navigationTimeout.current = null;
+      }, NAVIGATION_GUARD_MS);
     }
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    function handleClick(event: MouseEvent) {
+      if (
+        event.defaultPrevented ||
+        event.button !== 0 ||
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey
+      )
+        return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      const link = target.closest("a[href]");
+      if (
+        !link ||
+        link.hasAttribute("download") ||
+        (link as HTMLAnchorElement).target === "_blank"
+      )
+        return;
+      const destination = new URL(
+        (link as HTMLAnchorElement).href,
+        window.location.href,
+      );
+      if (destination.origin !== window.location.origin) return;
+      const current = window.location.pathname + window.location.search;
+      if (destination.pathname + destination.search !== current)
+        markNavigation();
+    }
+    function handleSubmit(event: Event) {
+      const form = event.target;
+      if (
+        !(form instanceof HTMLFormElement) ||
+        form.method.toUpperCase() !== "GET"
+      )
+        return;
+      const destination = new URL(
+        form.action || window.location.href,
+        window.location.href,
+      );
+      if (destination.origin === window.location.origin) markNavigation();
+    }
+    document.addEventListener("click", handleClick, true);
+    document.addEventListener("submit", handleSubmit, true);
+    return () => {
+      document.removeEventListener("click", handleClick, true);
+      document.removeEventListener("submit", handleSubmit, true);
+      if (navigationTimeout.current !== null)
+        window.clearTimeout(navigationTimeout.current);
+    };
+  }, []);
 
+  useEffect(() => {
+    navigationPending.current = false;
+    if (navigationTimeout.current !== null) {
+      window.clearTimeout(navigationTimeout.current);
+      navigationTimeout.current = null;
+    }
+  }, [routeKey]);
+
+  useEffect(() => {
+    const intervalId = setInterval(
+      refreshWhenIdle,
+      DASHBOARD_REFRESH_INTERVAL_MS,
+    );
+    document.addEventListener("visibilitychange", refreshWhenIdle);
     return () => {
       clearInterval(intervalId);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      document.removeEventListener("visibilitychange", refreshWhenIdle);
     };
-  }, [router]);
+  }, [refreshWhenIdle]);
 
   return null;
 }

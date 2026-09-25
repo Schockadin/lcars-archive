@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
 import DashboardAutoRefresh, {
   DASHBOARD_REFRESH_INTERVAL_MS,
 } from "./DashboardAutoRefresh";
@@ -7,6 +7,8 @@ import DashboardAutoRefresh, {
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ refresh: () => refresh() }),
+  usePathname: () => "/",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // document.hidden ist nur über document.visibilityState zu steuern — beide
@@ -92,5 +94,29 @@ describe("DashboardAutoRefresh", () => {
     setzeSichtbarkeit("visible");
 
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("vermeidet parallele Refreshes bei schnellen Tab-Wechseln", () => {
+    render(<DashboardAutoRefresh />);
+    setzeSichtbarkeit("hidden");
+    refresh.mockClear();
+
+    setzeSichtbarkeit("visible");
+    setzeSichtbarkeit("hidden");
+    setzeSichtbarkeit("visible");
+
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("pausiert den Poll während einer gestarteten Navigation", () => {
+    render(<DashboardAutoRefresh />);
+    const link = document.createElement("a");
+    link.href = "/characters";
+    document.body.append(link);
+
+    fireEvent.click(link);
+    vi.advanceTimersByTime(DASHBOARD_REFRESH_INTERVAL_MS);
+    expect(refresh).not.toHaveBeenCalled();
+    link.remove();
   });
 });

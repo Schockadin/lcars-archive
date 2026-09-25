@@ -147,6 +147,11 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.56",
+    title: "Schnellere Seitenansichten und getrennte Ladebereiche",
+    items: [],
+  },
+  {
     version: "1.55",
     title: "Inaktive Figuren als NPCs weiterführen",
     items: [

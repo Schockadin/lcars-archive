@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { searchFull } from "@/lib/search";
 import { getViewer, viewerHasPermission } from "@/lib/visibility";
 import { hasRagConfig } from "@/lib/rag";
@@ -7,36 +8,15 @@ import RagChat from "@/app/rag/RagChat";
 import HelpButton from "@/components/help/HelpButton";
 import { HelpTitleRow } from "@/components/help/HelpHeading";
 import { PublicSearchGuide } from "@/components/help/guides/PublicGuides";
+import { LcarsSkeleton } from "@/components/lcars";
 
-export const metadata = {
-  title: {
-    default: "Suche",
-  },
-};
+export const metadata = { title: { default: "Suche" } };
 
-
-export default async function SearchPage({
+export default function SearchPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string }>;
 }) {
-  const q = (await searchParams).q?.trim() ?? "";
-  const viewer = await getViewer();
-  // Der Betrachter entscheidet über die Nachrichten LAUFENDER Gespräche: Die
-  // gehören nur ihren Teilnehmenden (und der Spielleitung, die jedes Gespräch
-  // öffnen darf) — siehe openDialogueVisibleSql in src/lib/search.ts.
-  const searchViewer = viewer
-    ? {
-        userId: viewer.userId,
-        isGm: viewerHasPermission(viewer, "gm.access"),
-      }
-    : null;
-  const results = q.length >= 2 ? await searchFull(q, searchViewer) : [];
-  // Der Archiv-Assistent (RAG) erscheint unter der Volltextsuche — nur für
-  // Berechtigte (rag.use). configured spiegelt, ob die API-Schlüssel gesetzt
-  // sind (sonst zeigt RagChat einen Hinweis statt des Eingabefelds).
-  const canUseRag = viewerHasPermission(viewer, "rag.use");
-
   return (
     <>
       <PageMeta title="Suche" section="search" />
@@ -51,67 +31,161 @@ export default async function SearchPage({
           >
             <h1 className="lcars-data-row-heading">Suche</h1>
           </HelpTitleRow>
-          <p className="lcars-eyebrow">
-            {q ? `Ergebnisse für „${q}“` : "Datenbank durchsuchen"}
-          </p>
+          <p className="lcars-eyebrow">Datenbank durchsuchen</p>
         </div>
-
-        {/* Reines GET-Formular statt der Autovervollständigung im Header
-            (HeaderSearch.tsx) — navigiert bei Submit direkt zu ?q=…, ohne
-            Live-Vorschau während des Tippens. */}
-        <form
-          action="/search"
-          method="get"
-          className="flex flex-col sm:flex-row gap-[8px] mb-[16px]"
-        >
-          <input
-            type="search"
-            name="q"
-            defaultValue={q}
-            placeholder="Datenbank durchsuchen…"
-            className="rounded-lcars-pill lcars-input flex-1"
-            style={{ minWidth: 0 }}
-          />
-          <button
-            type="submit"
-            className="lcars-pill-btn--outline w-full sm:w-auto"
-          >
-            Suchen
-          </button>
-        </form>
-
-        {q.length === 0 ? (
-          <p className="lcars-empty-state">Suchbegriff eingeben.</p>
-        ) : q.length < 2 ? (
-          <p className="lcars-empty-state">Mindestens 2 Zeichen eingeben.</p>
-        ) : (
-          // key={q}: neue Suche über den Header → eigene Filter-/Sort-State-
-          // Instanz, statt den Zustand der vorherigen Suche (z.B. Typ-Filter)
-          // stillschweigend beizubehalten (client-seitige Navigation
-          // rendert sonst dieselbe SearchResultsView-Instanz weiter).
-          <SearchResultsView
-            key={q}
-            query={q}
-            results={results}
-            isLoggedIn={viewer != null}
-          />
-        )}
-
-        {/* Datenbank-Assistent (RAG) unterhalb der Volltextsuche — nur für
-            Berechtigte. Die eigenständige Seite /rag bleibt zusätzlich
-            bestehen (gleiche Komponente). */}
-        {canUseRag ? (
-          <section className="mt-[32px] border-t border-lcars-border pt-[24px]">
-            <div className="mb-[16px]">
-              <h2 className="lcars-data-row-heading">Datenbank-Assistent</h2>
-              <p className="lcars-eyebrow">
-                Fragen an den Kampagnen-Datenbestand stellen
-              </p>
-            </div>
-            <RagChat configured={hasRagConfig()} />
-          </section>
-        ) : null}
+        <Suspense fallback={<SearchFormFallback />}>
+          <SearchForm searchParams={searchParams} />
+        </Suspense>
+        <Suspense fallback={<ResultsFallback />}>
+          <SearchContent searchParams={searchParams} />
+        </Suspense>
       </div>
     </>
+  );
+}
+
+function SearchContent({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  // Request-time session access starts under this outer Suspense boundary;
+  // both dynamic regions share its promise.
+  const viewerPromise = getViewer();
+  return (
+    <>
+      <Suspense fallback={<ResultsFallback />}>
+        <SearchResults
+          searchParams={searchParams}
+          viewerPromise={viewerPromise}
+        />
+      </Suspense>
+      <Suspense fallback={null}>
+        <SearchAssistant viewerPromise={viewerPromise} />
+      </Suspense>
+    </>
+  );
+}
+function SearchFormFallback() {
+  return (
+    <form
+      action="/search"
+      method="get"
+      className="mb-[16px] flex flex-col gap-[8px] sm:flex-row"
+    >
+      <input
+        type="search"
+        name="q"
+        placeholder="Datenbank durchsuchen…"
+        className="lcars-input flex-1 rounded-lcars-pill"
+        style={{ minWidth: 0 }}
+      />
+      <button
+        type="submit"
+        className="lcars-pill-btn--outline w-full sm:w-auto"
+      >
+        Suchen
+      </button>
+    </form>
+  );
+}
+function ResultsFallback() {
+  return (
+    <div
+      className="archive-entry-list"
+      aria-label="Suchergebnisse werden geladen"
+    >
+      {Array.from({ length: 3 }, (_, i) => (
+        <LcarsSkeleton key={i} className="h-[92px] w-full" />
+      ))}
+    </div>
+  );
+}
+
+async function SearchForm({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const q = (await searchParams).q?.trim() ?? "";
+  return (
+    <form
+      action="/search"
+      method="get"
+      className="mb-[16px] flex flex-col gap-[8px] sm:flex-row"
+    >
+      <input
+        type="search"
+        name="q"
+        defaultValue={q}
+        placeholder="Datenbank durchsuchen…"
+        className="lcars-input flex-1 rounded-lcars-pill"
+        style={{ minWidth: 0 }}
+      />
+      <button
+        type="submit"
+        className="lcars-pill-btn--outline w-full sm:w-auto"
+      >
+        Suchen
+      </button>
+    </form>
+  );
+}
+
+async function SearchResults({
+  searchParams,
+  viewerPromise,
+}: {
+  searchParams: Promise<{ q?: string }>;
+  viewerPromise: ReturnType<typeof getViewer>;
+}) {
+  const [{ q: rawQuery }, viewer] = await Promise.all([
+    searchParams,
+    viewerPromise,
+  ]);
+  const q = rawQuery?.trim() ?? "";
+  if (!q) return <p className="lcars-empty-state">Suchbegriff eingeben.</p>;
+  if (q.length < 2)
+    return <p className="lcars-empty-state">Mindestens 2 Zeichen eingeben.</p>;
+
+  // Open conversations are visible only to their participants and the GM.
+  // Keep the authoritative viewer check ahead of the protected search query.
+  const searchViewer = viewer
+    ? {
+        userId: viewer.userId,
+        isGm: viewerHasPermission(viewer, "gm.access"),
+      }
+    : null;
+  const results = await searchFull(q, searchViewer);
+  return (
+    <>
+      <p className="lcars-eyebrow mb-[12px]">Ergebnisse für „{q}“</p>
+      <SearchResultsView
+        key={q}
+        query={q}
+        results={results}
+        isLoggedIn={viewer != null}
+      />
+    </>
+  );
+}
+
+async function SearchAssistant({
+  viewerPromise,
+}: {
+  viewerPromise: ReturnType<typeof getViewer>;
+}) {
+  const viewer = await viewerPromise;
+  if (!viewerHasPermission(viewer, "rag.use")) return null;
+  return (
+    <section className="mt-[32px] border-t border-lcars-border pt-[24px]">
+      <div className="mb-[16px]">
+        <h2 className="lcars-data-row-heading">Datenbank-Assistent</h2>
+        <p className="lcars-eyebrow">
+          Fragen an den Kampagnen-Datenbestand stellen
+        </p>
+      </div>
+      <RagChat configured={hasRagConfig()} />
+    </section>
   );
 }
