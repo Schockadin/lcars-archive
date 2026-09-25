@@ -21,6 +21,7 @@ const RENDERED_MARKDOWN = `
 <ul id="ul"><li id="li1">Punkt eins</li><li id="li2">Punkt zwei<ul id="nested"><li>verschachtelt</li></ul></li></ul>
 <ol id="ol"><li>Erstens</li><li>Zweitens</li></ol>
 <blockquote id="quote"><p>Zitat</p></blockquote>
+<img id="markdown-image" src="/portrait.png" alt="Portrait">
 `;
 
 async function styles(
@@ -54,6 +55,14 @@ async function styles(
         li2: of("li2"),
         nested: of("nested"),
         quote: of("quote"),
+        image: (() => {
+          const cs = getComputedStyle(document.getElementById("markdown-image")!);
+          return {
+            maxWidth: cs.maxWidth,
+            maxHeight: parseFloat(cs.maxHeight),
+            cursor: cs.cursor,
+          };
+        })(),
       };
       el.remove();
       return result;
@@ -125,3 +134,16 @@ test("Links in Listenpunkten sind als Links erkennbar eingefärbt", async ({
   expect(colors.inList).toBe(colors.plain);
   expect(colors.inListDecoration).toBe(colors.plainDecoration);
 });
+
+
+for (const containerClass of ["mission-body", "char-file-bio"]) {
+  test(`.${containerClass}: eingebettete Bilder bleiben kompakt und anklickbar`, async ({
+    page,
+  }) => {
+    const s = await styles(page, containerClass);
+    expect(s.image.maxWidth).toBe("100%");
+    expect(s.image.maxHeight).toBeGreaterThan(0);
+    expect(s.image.maxHeight).toBeLessThanOrEqual(640);
+    expect(s.image.cursor).toBe("zoom-in");
+  });
+}

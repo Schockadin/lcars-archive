@@ -151,7 +151,7 @@ export const CHANGELOG: ChangelogEntry[] = [
     title: "Inaktive Figuren als NPCs weiterführen",
     items: [
       {
-        text: "Inaktive und verstorbene Charaktere lassen sich jetzt als NPCs weiterführen. Bogen, AP, Chronologie und Profilbild bleiben erhalten; die Umwandlung kann der Owner jederzeit rückgängig machen.",
+        text: "Inaktive und verstorbene Charaktere lassen sich jetzt als NPCs weiterführen. Bogen, AP und Chronologie bleiben erhalten, das Profilbild erscheint auch auf der NPC-Karte in der Datenbank; die Umwandlung kann der Owner jederzeit rückgängig machen.",
         category: "charaktere",
         tutorial: "charaktererschaffung",
       },

@@ -67,6 +67,15 @@ describe("Charaktere reversibel in NPCs umwandeln", () => {
       "![Profilbild](<https://images.example.test/mira-venn.png>)",
     );
     expect(npc.content).toContain("https://images.example.test/mira-venn.png");
+    const [npcCard] = await sql<{ portrait: string | null }[]>`
+      SELECT c.portrait
+      FROM archive_entries a
+      JOIN character_npc_conversions conversion
+        ON conversion.archive_entry_id = a.id
+      JOIN characters c ON c.id = conversion.character_id
+      WHERE a.slug = ${converted.npcSlug}
+    `;
+    expect(npcCard.portrait).toBe("https://images.example.test/mira-venn.png");
     expect(
       (await getCharactersForUser(owner.id)).some(
         (entry) => entry.id === character.id,
