@@ -147,6 +147,11 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.56",
+    title: "Robustere NPC-Umwandlung und Dokumentvorschau",
+    items: [],
+  },
+  {
     version: "1.55",
     title: "Inaktive Figuren als NPCs weiterführen",
     items: [

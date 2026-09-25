@@ -260,7 +260,9 @@ export default function CharacterDocumentsPanel({
           <iframe
             src={openDocument.previewUrl}
             title={`Vorschau: ${openDocument.fileName}`}
-            sandbox=""
+            // Der Browser-PDF-Viewer wird durch iframe-sandbox blockiert.
+            // Gerenderte HTML-Vorschauen bleiben weiterhin isoliert.
+            sandbox={openDocument.kind === "pdf" ? undefined : ""}
             className="h-[76vh] min-h-[420px] w-full rounded-[6px] border border-lcars-border bg-white"
           />
           <a

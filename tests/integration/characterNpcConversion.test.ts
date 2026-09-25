@@ -113,6 +113,42 @@ describe("Charaktere reversibel in NPCs umwandeln", () => {
     ).toBeNull();
   });
 
+  it("ignoriert nichttextuelle Alt-Metadaten bei der NPC-Umwandlung", async () => {
+    const owner = await insertUser();
+    const character = await insertCharacter({
+      name: "T'Raal",
+      playerId: owner.id,
+      status: "retired",
+    });
+    await sql`
+      UPDATE characters
+      SET metadata = ${sql.json({
+        rank: 4,
+        homeworld: { name: "Vulcan" },
+        dateOfBirth: 2380,
+        affiliation: {
+          factions: [],
+          ships: [],
+          division: 12,
+        },
+      })}
+      WHERE id = ${character.id}
+    `;
+
+    const converted = await convertOwnedCharacterToNpc(owner.id, character.id);
+    expect(converted.status).toBe("converted");
+    if (converted.status !== "converted") throw new Error("Conversion fehlte");
+
+    const [npc] = await sql<{ source_md: string }[]>`
+      SELECT source_md FROM archive_entries WHERE slug = ${converted.npcSlug}
+    `;
+    expect(npc.source_md).toContain("- **Status:** Inaktiv");
+    expect(npc.source_md).not.toContain("- **Rang:**");
+    expect(npc.source_md).not.toContain("- **Heimatwelt:**");
+    expect(npc.source_md).not.toContain("- **Geburtsdatum:**");
+    expect(npc.source_md).not.toContain("- **Division:**");
+  });
+
   it("verhindert fremde und aktive Charaktere sowie doppelte Umwandlung", async () => {
     const owner = await insertUser();
     const otherUser = await insertUser();
