@@ -52,17 +52,17 @@ describe("register (DB-Verbindung beim Kaltstart vorwärmen)", () => {
     vi.unstubAllEnvs();
   });
 
-  // Der Aufruf ist bewusst fire-and-forget — die Mikrotasks des dynamischen
-  // Imports erst abarbeiten lassen, bevor geprüft wird.
+  // Der Aufruf ist bewusst fire-and-forget. Positive Fälle warten per
+  // vi.waitFor auf den dynamischen Import; für die Abbruchfälle genügt eine
+  // Runde der Ereignisschleife, weil register() dort gar nicht erst importiert.
   const flush = () => new Promise((resolve) => setTimeout(resolve, 0));
 
   it("stößt beim Serverstart genau eine Abfrage an", async () => {
     vi.stubEnv("DATABASE_URL", "postgresql://user:pass@127.0.0.1:5432/db");
     vi.stubEnv("NEXT_PHASE", "");
     register();
-    await flush();
 
-    expect(sql).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(sql).toHaveBeenCalledTimes(1));
   });
 
   it("verbindet während next build nicht", async () => {
@@ -89,7 +89,6 @@ describe("register (DB-Verbindung beim Kaltstart vorwärmen)", () => {
     sql.mockRejectedValueOnce(new Error("ECONNREFUSED"));
 
     expect(() => register()).not.toThrow();
-    await flush();
-    expect(sql).toHaveBeenCalledTimes(1);
+    await vi.waitFor(() => expect(sql).toHaveBeenCalledTimes(1));
   });
 });

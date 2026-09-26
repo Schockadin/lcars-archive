@@ -451,7 +451,10 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   Spielleitung kann Dokumente veröffentlichter Charaktere ansehen und
   herunterladen. Lange Dateinamen werden in Listen gekürzt angezeigt, können
   aber vom Owner umbenannt werden. Markdown wird als bereinigtes HTML
-  dargestellt, DOCX und TXT als maskierter Text, PDF direkt im Browser.
+  dargestellt, DOCX und TXT als maskierter Text, PDF direkt im Browser. Die
+  HTML-Vorschauen laufen in einem `sandbox`-iframe; die PDF-Vorschau bewusst
+  ohne, weil das Sandbox-Attribut den eingebauten PDF-Viewer des Browsers
+  blockiert.
 - **Granulares Charakterarchiv als PDF** — die API-Route
   `/api/export/character-archive` setzt serverseitig eine gemeinsame PDF
   zusammen. Zur Auswahl stehen der komplette Charakterbogen, einzelne
@@ -633,6 +636,11 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   was jemand tatsächlich sieht — vorher liefen bei jedem Aufruf sechs Abfragen
   parallel, egal wie viel davon gelesen wurde, und `"/"` ist die meistbesuchte
   Seite der Anwendung.
+  Jeder eingeschaltete Abschnitt lädt seine Daten selbst, in einer eigenen
+  `<Suspense>`-Grenze (die `*Block`-Komponenten in `Dashboard.tsx`):
+  Überschrift und Kopfzeile stehen sofort, jeder Abschnitt erscheint, sobald
+  seine Abfrage fertig ist, statt dass die ganze Seite auf die langsamste
+  wartet.
 - **Aufklappbare Abschnitte, die sich erinnern** — Startseite und Profil
   tragen keine DataRow-Akkordeons mehr (die breiten, farbigen LCARS-Balken mit
   der Zahl links), sondern die schlanke Klappe aus
@@ -1375,6 +1383,18 @@ markdown.ts`) in einen Anker übersetzt — bewusst mit **`github-slugger`**,
   Inhalte und Profil als drei einzelne Pills daneben — zusammen mit den
   Staff-Menüs und dem Logout sprengte das die Zeile, und drei der sechs
   Pills führten in denselben Bereich (`/user`).
+- **Schnellere Kaltstarts** — auf Netlify bedient jede Function-Instanz eine
+  Anfrage zur Zeit; nach Leerlauf startet sie kalt. Zwei Dinge verkürzen das:
+  Schwere Bibliotheken (`@aws-sdk/client-s3`, `openai`, `web-push`,
+  `pdf-lib`, `mammoth`, `@react-pdf/renderer`) werden erst per `await
+  import()` geladen, wenn Upload, Backup, Push, Embedding oder PDF-Export sie
+  wirklich brauchen — vorher hingen sie über die Datenmodule an fast jeder
+  Seite. Und `register()` in `src/instrumentation.ts` baut beim Serverstart
+  schon die erste DB-Verbindung auf, parallel zum Laden der Routenmodule.
+  Gemessen (PR #97, Median nach 15–20 Minuten Leerlauf): 6,0 s → 4,9 s bis
+  zur fertigen Seite. `partialPrefetching` (Next 16.3) ist bewusst **aus**:
+  Netlify cacht dessen App-Shell-Prefetches nicht, und jede HTML-Antwort
+  wurde 15–23 KB größer (Begründung in `next.config.ts`).
 - **Custom-404/500-Seiten** — unerwartete Serverfehler zeigen eine
   LCARS-gestaltete 500-Seite statt der Next.js-Standardfehlerseite; alle
   Besucher sehen eine freundliche Meldung mit Referenz-Code, eingeloggte
