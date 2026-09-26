@@ -8,9 +8,9 @@ import PageSkeleton from "@/app/_shared/PageSkeleton";
 // gm.access. Die Unterseiten rufen requireGM zusätzlich selbst auf (Defense in
 // Depth, gleiches Muster wie im Admin-Bereich).
 //
-// Anonyme Besucher fängt bereits der Proxy ab (src/proxy.ts kennt /gm als
-// geschützten Präfix); dieses Gate prüft das RECHT, was der optimistische
-// Proxy bewusst nicht tut (bräuchte DB-Zugriff).
+// Dieses Gate leitet Anonyme auf /login und prüft zugleich das RECHT
+// (gm.access) frisch aus der DB. Einen vorgelagerten Proxy gibt es nicht mehr
+// (siehe src/app/user/layout.tsx).
 //
 // Navigation: über das Leitungs-/Admin-Dropdown im Header
 // (HeaderUserNav.tsx), wie bei den /admin-Unterseiten.

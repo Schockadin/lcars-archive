@@ -32,16 +32,16 @@ Admin-Panel) sichert seither den laufenden Datenbestand — siehe
   aller Rollen) und pro Person lassen sich einzelne Rechte zusätzlich gezielt
   **gewähren oder entziehen** (Overrides). Konten entstehen weiterhin nur per
   Einladung (Aktivierungsmail mit Passwort-Setup-Link).
-- **Zentraler Zugriffsschutz (Proxy) + DAL als Source of Truth** — ein
-  Next-16-Proxy (`src/proxy.ts`, ehem. Middleware) leitet nicht angemeldete
-  Besucher:innen der geschützten Bereiche (`/user`, `/admin`, `/gm`) **vor**
-  dem Rendern auf `/login` — eine schnelle, **optimistische** Vorfilterung, die
-  nur die Signatur/Ablauf des Session-Cookies prüft (kein DB-Zugriff, gemäß
-  Next.js-Empfehlung). Die **verbindliche** Zugriffskontrolle (Rollen/Rechte,
-  `is_active`, `session_version`) bleibt in der Data Access Layer
-  (`src/lib/dal.ts`) und in jeder Seite/Server-Action (Defense in Depth). Die
-  reine Krypto-/Token-Logik teilen sich Proxy und Session-Verwaltung über
-  `src/lib/sessionToken.ts`.
+- **Zugriffsschutz in der DAL** — die Zugriffskontrolle (Session-Cookie,
+  Rollen/Rechte, `is_active`, `session_version`) liegt in der Data Access
+  Layer (`src/lib/dal.ts`, `src/app/user/dal.ts`) und wird in jeder
+  geschützten Seite, jedem Layout-Gate (`/admin`, `/gm`) und jeder
+  Server-Action geprüft. Anonyme Besucher:innen landen dabei auf `/login`.
+  Einen vorgelagerten Next-Proxy (ehem. Middleware) gibt es bewusst nicht
+  mehr: Netlify führte ihn als eigene Edge Function vor jeder Anfrage an
+  `/user`, `/admin` und `/gm` aus, mit rund 2 s eigenem Kaltstart. Er prüfte
+  ohnehin nur die Cookie-Signatur, genau wie `verifySession()` in den Seiten.
+  Die reine Krypto-/Token-Logik liegt in `src/lib/sessionToken.ts`.
 - **Versionshistorie** — beim Bearbeiten von Charakteren, Missionen, Logbüchern
   und Datenbank-Einträgen wird vor jedem Überschreiben der bisherige Text in
   `content_revisions` abgelegt (Titel + `source_md`, die jüngsten

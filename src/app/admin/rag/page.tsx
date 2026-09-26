@@ -15,9 +15,8 @@ export const maxDuration = 60;
 // Voll-Backfill des Vektor-Index (vorher unter /admin/scripts) und die
 // OpenAI-Nutzungsanzeige (Kosten/Guthaben des Kontos, das die Embeddings
 // erzeugt). Gleiche Zugriffsschwelle wie die übrigen Admin-Werkzeuge
-// (admin.access) — der Proxy (src/proxy.ts) hält Anonyme fern, das
-// Admin-Layout (requireStaff) die Nicht-Staff, und diese Seite verschärft auf
-// requireAdmin.
+// (admin.access) — das Admin-Layout (requireStaff) hält Anonyme und
+// Nicht-Staff fern, und diese Seite verschärft auf requireAdmin.
 export default async function AdminRagPage() {
   await requireAdmin();
 

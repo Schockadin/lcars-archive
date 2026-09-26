@@ -2,18 +2,14 @@ import crypto from "node:crypto";
 import type { User } from "@/types/db";
 
 // Reine Signatur-/Kodierungslogik des Session-Cookies, bewusst OHNE
-// "server-only" und OHNE next/headers. Grund: dieselbe Verifikation wird an
-// ZWEI Stellen gebraucht, die nicht denselben Kontext haben:
-//   1. src/lib/session.ts (Server Components / Actions, liest cookies() aus
-//      next/headers) — die eigentliche Session-Verwaltung.
-//   2. src/proxy.ts (Next-16-Proxy, ehem. Middleware) — liest das Cookie aus
-//      dem NextRequest, um anonyme Besucher optimistisch von geschützten
-//      Routen wegzuleiten (siehe dortiger Kommentar). Der Proxy darf nicht
-//      "server-only" ziehen und hat keinen Zugriff auf cookies() aus
-//      next/headers.
-// node:crypto läuft in der Node-Runtime des Proxy problemlos; die Prüfung ist
-// rein rechnerisch (HMAC + Ablaufdatum), OHNE DB-Zugriff — genau das, was die
-// Next.js-Doku für optimistische Auth-Checks im Proxy empfiehlt.
+// "server-only" und OHNE next/headers: Die eigentliche Session-Verwaltung
+// liegt in src/lib/session.ts (liest cookies() aus next/headers); dieses
+// Modul bleibt davon frei, damit es auch ohne Next-Kontext (Tests, Skripte)
+// nutzbar ist. Die Prüfung ist rein rechnerisch (HMAC + Ablaufdatum), OHNE
+// DB-Zugriff.
+//
+// Früher las zusätzlich ein Next-Proxy (src/proxy.ts) das Cookie hier aus;
+// er ist entfernt (Begründung in src/app/user/layout.tsx).
 
 export const SESSION_COOKIE_NAME = "neo_session";
 export const SESSION_DURATION_MS = 30 * 24 * 60 * 60 * 1000; // 30 Tage

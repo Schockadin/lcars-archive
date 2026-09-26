@@ -147,6 +147,16 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.57",
+    title: "Schnellerer Einstieg in den eigenen Bereich",
+    // Bewusst ohne Stichpunkte: Der Pull Request streicht die vorgeschaltete
+    // Middleware vor /user, /admin und /gm (auf Netlify eine eigene Edge
+    // Function mit spürbarem Kaltstart) und schärft die Zugangsprüfung der
+    // /user-Seiten nach. Eine neue Funktion für Spielende oder Spielleitung
+    // entsteht dabei nicht.
+    items: [],
+  },
+  {
     version: "1.56",
     title: "Schnellere Seitenwechsel",
     // Bewusst ohne Stichpunkte: Der Pull Request beschleunigt Seitenwechsel
