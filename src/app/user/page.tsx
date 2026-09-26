@@ -4,7 +4,7 @@ import { getRoleMap } from "@/lib/roles";
 import Link from "next/link";
 import PageMeta from "@/components/PageMeta";
 import { requireOwnUser } from "./dal";
-import { hasPassword, getEditorSpellcheckPreference } from "@/lib/users";
+import { getEditorSpellcheckPreference } from "@/lib/users";
 import {
   COLOR_THEMES,
   normalizeThemeId,
@@ -81,15 +81,17 @@ export default async function UserPage() {
   // Voneinander unabhängig — parallel statt nacheinander abfragen (gleiches
   // Muster wie in Dashboard.tsx), sonst addieren sich die Roundtrips zur
   // entfernten DB bei jedem Aufruf des Profils auf.
-  const [roleMap, hasPasswordSet, spellcheckEnabled, characters, usedColors] =
+  // Der Passwort-Status kommt schon mit requireOwnUser (getUserWithPasswordStatus,
+  // eine Query) — keine zweite Abfrage dafür.
+  const [roleMap, spellcheckEnabled, characters, usedColors] =
     await Promise.all([
       getRoleMap(),
-      hasPassword(target.id),
       getEditorSpellcheckPreference(target.id),
       getCharactersForUser(target.id),
       getUsedCharacterColorsWithIds(),
     ]);
 
+  const hasPasswordSet = target.hasPassword;
   const needsPassword = !hasPasswordSet;
   const colorTheme = normalizeThemeId(target.color_theme);
   const themeOverrides = sanitizeThemeOverrides(target.theme_overrides);

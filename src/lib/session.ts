@@ -41,9 +41,9 @@ import {
 // (nicht server-only), damit auch der clientseitige ThemeApplier sie nutzen kann.
 export { THEME_COOKIE_NAME, THEME_CUSTOM_COOKIE_NAME };
 
-// Signatur/Kodierung des Session-Cookies liegen jetzt in sessionToken.ts
-// (ohne server-only/next/headers), damit der Proxy (src/proxy.ts) dieselbe
-// Verifikation nutzen kann. SessionPayload wird re-exportiert, damit die
+// Signatur/Kodierung des Session-Cookies liegen in sessionToken.ts (ohne
+// server-only/next/headers), damit auch Skripte und Tests sie ohne
+// Next-Kontext nutzen können. SessionPayload wird re-exportiert, damit die
 // vielen bestehenden Importe aus @/lib/session unverändert bleiben.
 export type { SessionPayload } from "@/lib/sessionToken";
 

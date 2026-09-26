@@ -15,12 +15,10 @@ import PageSkeleton from "@/app/_shared/PageSkeleton";
 // (eigenes Layout mit requireGM) — ein reiner GM kommt durch dieses Gate
 // deshalb bewusst nicht mehr durch.
 //
-// Anonyme Besucher fängt bereits der Proxy (src/proxy.ts) ab und leitet sie
-// auf /login um. Dieses Gate bleibt trotzdem: Es prüft ROLLEN/RECHTE
-// (admin.access/users.manage/DB-Rechte), was der optimistische Proxy bewusst
-// nicht tut (bräuchte DB-Zugriff). requireStaff ist damit die verbindliche
-// Rechteprüfung (Source of Truth), der Proxy nur die vorgelagerte
-// Session-Filterung.
+// Dieses Gate leitet Anonyme auf /login und prüft ROLLEN/RECHTE
+// (admin.access/users.manage/DB-Rechte) frisch aus der DB — requireStaff ist
+// die verbindliche Rechteprüfung (Source of Truth). Einen vorgelagerten Proxy
+// gibt es nicht mehr (siehe src/app/user/layout.tsx).
 //
 // Das Session-Gate (requireStaff → cookies()) liegt unter cacheComponents in
 // einer Suspense-Grenze: die statische Shell (LCARS-Chrome) wird sofort
