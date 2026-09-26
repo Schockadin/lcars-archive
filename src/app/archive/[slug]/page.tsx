@@ -13,6 +13,7 @@ import { resolveFollowState } from "@/lib/follows";
 import ArchiveEntryBody from "./ArchiveEntryBody";
 import MarkNewsSeen from "@/app/_shared/MarkNewsSeen";
 import { listNotes } from "@/lib/contentNotes";
+import { ARCHIVE_REFERENCES_ID } from "@/lib/archiveToc";
 import NotesPanel from "@/app/_shared/NotesPanel";
 import {
   archiveHref,
@@ -139,26 +140,28 @@ export default async function ArchiveEntryPage({ params }: Props) {
         />
       )}
 
-      <RelatedSection title="Verweise" links={entry.links} />
-      <RelatedSection title="Erwähnt in" links={entry.backlinks} />
+      <div id={ARCHIVE_REFERENCES_ID}>
+        <RelatedSection title="Verweise" links={entry.links} />
+        <RelatedSection title="Erwähnt in" links={entry.backlinks} />
 
-      <RefSection
-        title="Charaktere"
-        color={CONTENT_TYPE_COLOR.character}
-        refs={entry.metadata.characters.map((c) => ({
-          href: characterHref(c.slug),
-          label: c.name,
-        }))}
-      />
+        <RefSection
+          title="Charaktere"
+          color={CONTENT_TYPE_COLOR.character}
+          refs={entry.metadata.characters.map((c) => ({
+            href: characterHref(c.slug),
+            label: c.name,
+          }))}
+        />
 
-      <RefSection
-        title="Missionen"
-        color={CONTENT_TYPE_COLOR.mission}
-        refs={entry.metadata.missions.map((m) => ({
-          href: missionHref(m.slug),
-          label: m.title,
-        }))}
-      />
+        <RefSection
+          title="Missionen"
+          color={CONTENT_TYPE_COLOR.mission}
+          refs={entry.metadata.missions.map((m) => ({
+            href: missionHref(m.slug),
+            label: m.title,
+          }))}
+        />
+      </div>
     </article>
   );
 }

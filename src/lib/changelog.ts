@@ -147,6 +147,16 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.58",
+    title: "Inhaltsverzeichnisse für Datenbankeinträge",
+    items: [
+      {
+        text: "Datenbankeinträge bieten jetzt ein aufklappbares Inhaltsverzeichnis mit Sprungmarken zu ihren Abschnitten und Verweisen. Die Einstellung zum Auf- und Zuklappen wird pro Eintrag gespeichert.",
+        category: "inhalte",
+      },
+    ],
+  },
+  {
     version: "1.57",
     title: "Schnellerer Einstieg in den eigenen Bereich",
     // Bewusst ohne Stichpunkte: Der Pull Request streicht die vorgeschaltete
