@@ -152,8 +152,10 @@ export const CHANGELOG: ChangelogEntry[] = [
     // Bewusst ohne Stichpunkte: Der Pull Request beschleunigt Seitenwechsel
     // (vor allem nach einem Kaltstart des Servers) durch schlankeres Laden,
     // eine vorgewärmte Datenbankverbindung und eine Startseite, die ihre
-    // Abschnitte einzeln nachlädt. Neue Funktionen für Spielende oder
-    // Spielleitung kommen damit nicht hinzu.
+    // Abschnitte einzeln nachlädt. Dazu kommen die Korrekturen aus PR #95
+    // (robustere NPC-Umwandlung älterer Akten, PDF-Vorschau im Browser).
+    // Neue Funktionen für Spielende oder Spielleitung kommen damit nicht
+    // hinzu.
     items: [],
   },
   {
