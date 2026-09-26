@@ -1,4 +1,5 @@
 "use client";
+import { useMemo } from "react";
 import ContentActionsPanel from "@/components/ContentActionsPanel";
 import DialogueThread from "@/components/DialogueThread";
 import DialogueFlowingText from "@/components/DialogueFlowingText";
@@ -8,6 +9,8 @@ import { ArchiveEntryDetail } from "@/types/archive";
 import type { Viewer } from "@/lib/visibility";
 import type { FollowState } from "@/app/actions/follows";
 import type { DialogueMessage } from "@/lib/dialoguesCore";
+import { buildArchiveToc } from "@/lib/archiveToc";
+import { LcarsCollapsiblePanel, LcarsToc } from "@/components/lcars";
 
 // Der Inhalt eines Datenbank-Eintrags, read-only: Bearbeitet wird seit v1.34
 // ausschließlich im vollen Editor unter /user/archive/[entryId]/edit (dorthin
@@ -32,9 +35,25 @@ export default function ArchiveEntryBody({
 }) {
   const canModerateDialogue =
     viewer?.permissions.includes("dialogues.moderate") ?? false;
+  const toc = useMemo(
+    () => buildArchiveToc(entry.content ?? ""),
+    [entry.content],
+  );
 
   return (
     <>
+      <div className="mb-[16px]">
+        <LcarsCollapsiblePanel
+          title="Inhaltsverzeichnis"
+          storageId={`archive:${entry.id}:toc`}
+        >
+          <LcarsToc
+            headings={toc.headings}
+            title="Abschnitte"
+            ariaLabel="Inhaltsverzeichnis des Datenbankeintrags"
+          />
+        </LcarsCollapsiblePanel>
+      </div>
       {entry.metadata.summary && entry.category != "dialogue" && (
         <p className="lcars-eyebrow mb-[5px]">{entry.metadata.summary}</p>
       )}
@@ -45,9 +64,7 @@ export default function ArchiveEntryBody({
           <div className="char-file-data archive-entry-attrs">
             {entry.metadata.aliases.length > 0 && (
               <div className="char-file-field">
-                <span className="char-file-field-label">
-                  Auch bekannt als:
-                </span>{" "}
+                <span className="char-file-field-label">Auch bekannt als:</span>{" "}
                 <span className="char-file-field-value">
                   {entry.metadata.aliases.join(", ")}
                 </span>
@@ -129,7 +146,9 @@ export default function ArchiveEntryBody({
         hideEdit={entry.category === "dialogue"}
         // Dialoge haben keine eigene Bilder-Galerie (der Inhalt lebt in
         // dialogue_messages, siehe ActionsMenu.tsx).
-        imageContentType={entry.category === "dialogue" ? null : "archive_entry"}
+        imageContentType={
+          entry.category === "dialogue" ? null : "archive_entry"
+        }
         imageContentId={entry.id}
       />
     </>
