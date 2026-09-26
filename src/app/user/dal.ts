@@ -20,10 +20,25 @@ import type { Character } from "@/types/character";
 // Profil-Übersicht FREMDER User gibt es nicht mehr (die frühere /users-Route
 // wurde restlos entfernt).
 export async function requireOwnUser(): Promise<UserWithPasswordStatus> {
+  return loadOwnUser();
+}
+
+// Gemeinsamer Kern der drei Gates hier: Session-Cookie (verifySession leitet
+// Anonyme auf /login) plus derselbe Frische-Check wie getCurrentUser in
+// src/lib/dal.ts — das Konto existiert noch, ist aktiv, und das Cookie stammt
+// nicht aus der Zeit vor dem letzten Passwortwechsel (session_version). Ohne
+// diese Prüfung kam ein deaktiviertes Konto (oder ein Cookie, das ein
+// Passwortwechsel entwerten sollte) bis zum natürlichen Ablauf (30 Tage)
+// weiter auf alle /user-Seiten.
+async function loadOwnUser(): Promise<UserWithPasswordStatus> {
   const session = await verifySession();
 
   const user = await getUserWithPasswordStatus(session.userId);
-  if (!user) {
+  if (
+    !user ||
+    !user.is_active ||
+    user.session_version !== session.sessionVersion
+  ) {
     redirect("/login");
   }
 
@@ -41,14 +56,8 @@ export interface OwnCharactersAccess {
 // (Verteidigung in der Tiefe zusätzlich zu den ausgeblendeten Buttons in
 // content/page.tsx).
 export async function requireOwnCharacters(): Promise<OwnCharactersAccess> {
-  const session = await verifySession();
-
-  const user = await getUserWithPasswordStatus(session.userId);
-  if (!user) {
-    redirect("/login");
-  }
-
-  const characters = await getCharactersForUser(session.userId);
+  const user = await loadOwnUser();
+  const characters = await getCharactersForUser(user.id);
   return { user, characters };
 }
 
@@ -62,12 +71,7 @@ export interface OwnGMAccess {
 // frisch aus der DB geprüft, nicht aus dem Cookie, damit ein gerade
 // entzogenes GM-Recht sofort greift.
 export async function requireOwnGM(): Promise<OwnGMAccess> {
-  const session = await verifySession();
-
-  const user = await getUserWithPasswordStatus(session.userId);
-  if (!user) {
-    redirect("/login");
-  }
+  const user = await loadOwnUser();
   if (user.role !== "gm" && user.role !== "admin") {
     forbidden();
   }
