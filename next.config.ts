@@ -107,6 +107,12 @@ const nextConfig: NextConfig = {
   // den personalisierten Seiten — Laufzeit-Datenzugriff (cookies()/
   // searchParams) muss dafür in eine Suspense-Grenze gekapselt sein.
   cacheComponents: true,
+  // Partial Prefetching (partialPrefetching, Next 16.3) bewusst NICHT
+  // aktiviert: In einer Messung auf den Netlify-Previews (PR #97) wurde die
+  // App-Shell-Vorab-Anfrage nicht vom CDN gecacht (weckte jedes Mal die
+  // Function, wo vorher die Prefetches statischer Routen CDN-Treffer waren),
+  // jede HTML-Antwort trug 15–23 KB zusätzliche Seitendaten, und /chronologie
+  // wurde messbar langsamer.
   // Schaltet forbidden()/app/forbidden.tsx frei (next/navigation) — genutzt
   // von den Zugriffs-Guards in src/lib/dal.ts, src/app/user/dal.ts und
   // src/app/admin/[id]/dal.ts für rollen-/identitätsbasierte

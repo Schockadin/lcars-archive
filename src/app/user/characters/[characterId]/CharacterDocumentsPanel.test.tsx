@@ -12,6 +12,47 @@ const longName =
   "Ausführlicher Bericht über die gesamte Forschungsmission der U.S.S. Beispiel.pdf";
 
 describe("CharacterDocumentsPanel", () => {
+  it("lässt PDF-Vorschauen ohne Sandbox im Browser-Viewer öffnen", () => {
+    const document = {
+      id: 8,
+      characterId: 4,
+      fileName: "Akte.pdf",
+      kind: "pdf" as const,
+      sizeBytes: 1234,
+      createdAt: "2026-09-25",
+      previewUrl: "/preview",
+      downloadUrl: "/download",
+    };
+    render(<CharacterDocumentsPanel characterId={4} documents={[document]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Akte\.pdf/ }));
+
+    expect(screen.getByTitle("Vorschau: Akte.pdf")).not.toHaveAttribute(
+      "sandbox",
+    );
+  });
+
+  it("hält HTML-Dokumentvorschauen sandboxed", () => {
+    const document = {
+      id: 9,
+      characterId: 4,
+      fileName: "Akte.md",
+      kind: "md" as const,
+      sizeBytes: 1234,
+      createdAt: "2026-09-25",
+      previewUrl: "/preview",
+      downloadUrl: "/download",
+    };
+    render(<CharacterDocumentsPanel characterId={4} documents={[document]} />);
+
+    fireEvent.click(screen.getByRole("button", { name: /^Akte\.md/ }));
+
+    expect(screen.getByTitle("Vorschau: Akte.md")).toHaveAttribute(
+      "sandbox",
+      "",
+    );
+  });
+
   it("zeigt einen gekürzten Namen und öffnet die Umbenennung mit dem vollständigen Namen", () => {
     render(
       <CharacterDocumentsPanel

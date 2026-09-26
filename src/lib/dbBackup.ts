@@ -49,6 +49,9 @@ const NO_SERIAL_ID: readonly TableName[] = [
   "campaign_settings",
   // Schlüssel ist der Rollen-Key (TEXT), keine Sequence.
   "roles",
+  // Schlüssel ist character_id (ein Datensatz je umgewandeltem Charakter,
+  // siehe schema.sql) — keine eigene id-Spalte, also auch keine Sequence.
+  "character_npc_conversions",
 ];
 const SERIAL_TABLES = TABLES.filter(
   (t) => !(NO_SERIAL_ID as string[]).includes(t),

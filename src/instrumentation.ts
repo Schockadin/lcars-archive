@@ -13,6 +13,26 @@
 // Meldung auf der Seite selbst, hier im Hook liegt sie noch im Klartext vor.
 import { type Instrumentation } from "next";
 
+// Siehe register() in instrumentation.node.ts (DB-Verbindung beim Kaltstart
+// vorwärmen). Gleiches Runtime-Muster wie onRequestError unten.
+//
+// Bewusst dieselbe if/else-Form wie dort, NICHT ein frühes `return` für Edge:
+// Nur diese Form entfernt Webpack auch im Dev-Server zuverlässig aus dem
+// Edge-Bundle. Mit frühem return landete postgres (über
+// instrumentation.node → db.ts) im Edge-Modulgraphen, und `next dev` brach
+// mit „Can't resolve 'net'" ab (der Produktions-Build lief trotzdem durch).
+export function register(): void {
+  if (process.env.NEXT_RUNTIME === "edge") {
+    return;
+  } else {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports -- Next dokumentiert require() für runtime-spezifische Instrumentation.
+    const nodeInstrumentation = require("./instrumentation.node") as {
+      register: () => void;
+    };
+    nodeInstrumentation.register();
+  }
+}
+
 export const onRequestError: Instrumentation.onRequestError = (...args) => {
   // Next baut instrumentation.ts für Node.js und Edge. Der DB-Logger hängt
   // vom Node-Modul "net" ab und darf deshalb nicht in den Edge-Modulgraphen

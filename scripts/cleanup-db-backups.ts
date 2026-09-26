@@ -17,7 +17,7 @@ import { computeBackupCutoff, isStaleBackupKey } from "@/lib/backupRetention";
 const PREFIX = "db-backups/";
 
 async function main() {
-  const { client, bucket } = createR2Client();
+  const { client, bucket } = await createR2Client();
 
   const cutoff = computeBackupCutoff(new Date());
   console.log(
