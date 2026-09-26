@@ -25,7 +25,7 @@ describe("CharacterDocumentsPanel", () => {
     };
     render(<CharacterDocumentsPanel characterId={4} documents={[document]} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Akte\.pdf/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Akte\.pdf/ }));
 
     expect(screen.getByTitle("Vorschau: Akte.pdf")).not.toHaveAttribute(
       "sandbox",
@@ -45,7 +45,7 @@ describe("CharacterDocumentsPanel", () => {
     };
     render(<CharacterDocumentsPanel characterId={4} documents={[document]} />);
 
-    fireEvent.click(screen.getByRole("button", { name: /Akte\.md/ }));
+    fireEvent.click(screen.getByRole("button", { name: /^Akte\.md/ }));
 
     expect(screen.getByTitle("Vorschau: Akte.md")).toHaveAttribute(
       "sandbox",
