@@ -148,7 +148,7 @@ export function sortChangelogItemsByCategory(
 export const CHANGELOG: ChangelogEntry[] = [
   {
     version: "1.59",
-    title: "Netlify-Datenbank für Deploy Previews",
+    title: "Kartenaktionen und Session-Verwaltung",
     items: [
       {
         text: "Automatische Verlinkung startet jetzt auch beim Bearbeiten eines Inhalts; Aliase werden in Genitivformen erkannt und Wikilinks zeigen eine Kurzvorschau.",

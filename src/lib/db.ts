@@ -1,13 +1,7 @@
 import postgres from "postgres";
-import { getConnectionString } from "@netlify/database";
-import { resolveDatabaseUrl } from "./databaseUrl";
 
-const databaseUrl = resolveDatabaseUrl(
-  process.env.USE_NETLIFY_DATABASE === "true",
-  process.env.NEXT_PHASE === "phase-production-build",
-  process.env.DATABASE_URL,
-  getConnectionString,
-);
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error("DATABASE_URL is not set");
 
 const globalForDb = global as unknown as { sql: postgres.Sql };
 
