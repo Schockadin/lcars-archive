@@ -2146,10 +2146,11 @@ Stunden ab.
 
 Netlify Database stellt PostgreSQL-Branches bereit. Netlify erstellt für
 Deploy-Previews einen eigenen Branch; `@netlify/database` liefert der
-Anwendung automatisch die passende Branch-URL. Production bleibt davon
-getrennt: Der Produktivbetrieb verwendet
-weiter `DATABASE_URL` (derzeit Railway), während `USE_NETLIFY_DATABASE=true`
-nur im Netlify-Kontext **Deploy previews** gesetzt wird.
+Anwendung zur Laufzeit automatisch die passende Branch-URL. Next.js rendert
+beim Build jedoch statische Seiten, bevor Netlify die Preview-Migration
+anwendet. Deshalb liest der Build vorübergehend weiter `DATABASE_URL`
+(Railway); erst die Laufzeit wechselt mit `USE_NETLIFY_DATABASE=true` auf
+Netlify. Production bleibt bei Railway.
 
 Das Basisschema für neue Netlify-Branches liegt unter
 `netlify/database/migrations/0001_baseline.sql` und wird vor dem Preview-Deploy

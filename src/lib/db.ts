@@ -4,6 +4,7 @@ import { resolveDatabaseUrl } from "./databaseUrl";
 
 const databaseUrl = resolveDatabaseUrl(
   process.env.USE_NETLIFY_DATABASE === "true",
+  process.env.NEXT_PHASE === "phase-production-build",
   process.env.DATABASE_URL,
   getConnectionString,
 );

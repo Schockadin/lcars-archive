@@ -6,6 +6,7 @@ describe("resolveDatabaseUrl", () => {
     expect(
       resolveDatabaseUrl(
         true,
+        false,
         "postgres://railway/production",
         () => "postgres://netlify/branch",
       ),
@@ -16,6 +17,18 @@ describe("resolveDatabaseUrl", () => {
     expect(
       resolveDatabaseUrl(
         false,
+        false,
+        "postgres://railway/production",
+        () => "postgres://netlify/branch",
+      ),
+    ).toBe("postgres://railway/production");
+  });
+
+  it("uses DATABASE_URL during Next.js builds before preview migrations apply", () => {
+    expect(
+      resolveDatabaseUrl(
+        true,
+        true,
         "postgres://railway/production",
         () => "postgres://netlify/branch",
       ),
@@ -23,17 +36,22 @@ describe("resolveDatabaseUrl", () => {
   });
 
   it("fails clearly when neither connection is configured", () => {
-    expect(() => resolveDatabaseUrl(false, undefined, () => "unused")).toThrow(
-      "DATABASE_URL is not set",
-    );
+    expect(
+      () => resolveDatabaseUrl(false, false, undefined, () => "unused"),
+    ).toThrow("DATABASE_URL is not set");
   });
 
   it("does not fall back to Railway if the Netlify URL is missing", () => {
     expect(
       () =>
-        resolveDatabaseUrl(true, "postgres://railway/production", () => {
-          throw new Error("NETLIFY_DB_URL is not set");
-        }),
+        resolveDatabaseUrl(
+          true,
+          false,
+          "postgres://railway/production",
+          () => {
+            throw new Error("NETLIFY_DB_URL is not set");
+          },
+        ),
     ).toThrow("NETLIFY_DB_URL is not set");
   });
 });
