@@ -147,6 +147,13 @@ export function sortChangelogItemsByCategory(
 
 export const CHANGELOG: ChangelogEntry[] = [
   {
+    version: "1.59",
+    title: "Netlify-Datenbank für Deploy Previews",
+    // Technische Datenbankanbindung und Migration, ohne neue Funktionen für
+    // Spielende oder Spielleitung.
+    items: [],
+  },
+  {
     version: "1.58",
     title: "Inhaltsverzeichnisse für Datenbankeinträge",
     items: [

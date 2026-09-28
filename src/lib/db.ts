@@ -1,8 +1,12 @@
 import postgres from "postgres";
+import { getConnectionString } from "@netlify/database";
+import { resolveDatabaseUrl } from "./databaseUrl";
 
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL is not set");
-}
+const databaseUrl = resolveDatabaseUrl(
+  process.env.USE_NETLIFY_DATABASE === "true",
+  process.env.DATABASE_URL,
+  getConnectionString,
+);
 
 const globalForDb = global as unknown as { sql: postgres.Sql };
 
@@ -55,7 +59,7 @@ const ssl = sslSetting();
 
 const sql =
   globalForDb.sql ??
-  postgres(process.env.DATABASE_URL, {
+  postgres(databaseUrl, {
     // Nur übergeben, wenn ausdrücklich gesetzt — sonst entscheidet das
     // sslmode der DATABASE_URL (siehe sslSetting oben).
     ...(ssl === undefined ? {} : { ssl }),

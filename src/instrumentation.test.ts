@@ -65,6 +65,15 @@ describe("register (DB-Verbindung beim Kaltstart vorwärmen)", () => {
     await vi.waitFor(() => expect(sql).toHaveBeenCalledTimes(1));
   });
 
+  it("wärmt die Netlify-Branch-Datenbank ohne DATABASE_URL vor", async () => {
+    vi.stubEnv("DATABASE_URL", "");
+    vi.stubEnv("USE_NETLIFY_DATABASE", "true");
+    vi.stubEnv("NEXT_PHASE", "");
+    register();
+
+    await vi.waitFor(() => expect(sql).toHaveBeenCalledTimes(1));
+  });
+
   it("verbindet während next build nicht", async () => {
     vi.stubEnv("DATABASE_URL", "postgresql://user:pass@127.0.0.1:5432/db");
     vi.stubEnv("NEXT_PHASE", "phase-production-build");
