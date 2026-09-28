@@ -4,6 +4,7 @@ import { requireGM } from "@/lib/dal";
 import {
   createPlannedSession,
   deletePlannedSession,
+  getPlannedSession,
   getPlannedSessionPlayers,
   updatePlannedSession,
 } from "@/lib/plannedSessions";
@@ -40,7 +41,7 @@ function revalidateBoth(): void {
 function formFields(formData: FormData) {
   return {
     scheduledAt: String(formData.get("scheduledAt") ?? ""),
-    title: String(formData.get("title") ?? ""),
+    missionId: String(formData.get("missionId") ?? ""),
     location: String(formData.get("location") ?? ""),
     notes: String(formData.get("notes") ?? ""),
     characterIds: formData.getAll("characterIds").map(String),
@@ -71,11 +72,13 @@ export async function createPlannedSessionAction(
     return { error: "Mindestens eine ausgewählte Figur ist nicht (mehr) aktiv." };
   }
 
-  await createPlannedSession({ ...parsed, characterIds }, user.id);
+  const sessionId = await createPlannedSession({ ...parsed, characterIds }, user.id);
   revalidateBoth();
 
+  const created = await getPlannedSession(sessionId);
+
   const notified = await notifyPlannedSessionPlayers(
-    { ...parsed, characterIds },
+    { ...parsed, title: created?.title ?? "Spieltermin", characterIds },
     user.id,
   );
   return {

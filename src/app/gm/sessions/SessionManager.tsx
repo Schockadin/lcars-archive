@@ -4,6 +4,7 @@ import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { formatISODate } from "@/utils/formateISODate";
+import { PlusIcon, TrashIcon } from "@/lib/icons";
 import type {
   GameSession,
   ActiveCharacter,
@@ -24,12 +25,14 @@ export function SessionContextFields({
   missions,
   idPrefix,
   initialMissionId,
+  lockedMission = false,
   allowNewMission = true,
   initialBlocks = [],
 }: {
   missions: SessionMissionOption[];
   idPrefix: string;
   initialMissionId?: number | null;
+  lockedMission?: boolean;
   allowNewMission?: boolean;
   initialBlocks?: GameSession["synopsisBlocks"];
 }) {
@@ -46,7 +49,12 @@ export function SessionContextFields({
     <div className="flex flex-col gap-[8px]">
       <label className="flex flex-col gap-[4px]">
         <span className="lcars-eyebrow">Zugehörige Mission</span>
-        <select
+        {lockedMission && initialMissionId ? (
+          <>
+            <input type="hidden" name="missionChoice" value={`mission:${initialMissionId}`} />
+            <span className="lcars-input rounded-full">{missions.find((mission) => mission.id === initialMissionId)?.title ?? "Mission"}</span>
+          </>
+        ) : <select
           name="missionChoice"
           required
           value={missionChoice}
@@ -64,7 +72,7 @@ export function SessionContextFields({
           {allowNewMission && (
             <option value="new">Neue Mission anlegen…</option>
           )}
-        </select>
+        </select>}
       </label>
       {missions.length === 0 && !allowNewMission && (
         <p className="lcars-empty-state">
@@ -129,20 +137,22 @@ export function SessionContextFields({
               </label>
               <button
                 type="button"
-                className="lcars-pill-btn--outline self-end"
+                className="lcars-icon-btn self-end"
+                aria-label={`Zusammenfassungsblock ${index + 1} entfernen`}
+                title="Zusammenfassungsblock entfernen"
                 onClick={() =>
                   setBlocks((current) => current.filter((_, i) => i !== index))
                 }
-              >
-                Block entfernen
-              </button>
+              ><TrashIcon /></button>
             </div>
             <MarkdownEditor id={`${idPrefix}-synopsis-${index}`} name="synopsisText" rows={6} defaultValue={block.body} />
           </div>
         ))}
         <button
           type="button"
-          className="lcars-pill-btn--outline self-start"
+          className="lcars-icon-btn self-start"
+          aria-label="Zusammenfassungsblock hinzufügen"
+          title="Zusammenfassungsblock hinzufügen"
           onClick={() =>
             setBlocks((current) => [
               ...current,
@@ -154,15 +164,13 @@ export function SessionContextFields({
               },
             ])
           }
-        >
-          Zusammenfassungsblock hinzufügen
-        </button>
+        ><PlusIcon /></button>
       </fieldset>
     </div>
   );
 }
 
-// Anlegen: Datum, Titel, AP-Beträge, Teilnehmende und optionale Synopsisblöcke. Die
+// Anlegen: Datum, Mission, AP-Beträge, Teilnehmende und optionale Synopsisblöcke. Die
 // Teilnehmenden sind vorausgewählt — die Regel lautet „alle aktiven
 // Charaktere", wer gefehlt hat, wird abgewählt.
 function NewSessionForm({
@@ -198,15 +206,6 @@ function NewSessionForm({
             required
             defaultValue={today}
             className="lcars-input rounded-full"
-          />
-        </label>
-        <label className="flex flex-col gap-[4px] flex-1 min-w-[200px]">
-          <span className="lcars-eyebrow">Titel (optional)</span>
-          <input
-            name="title"
-            type="text"
-            placeholder="z.B. Der Nebel von Cygnus IV"
-            className="lcars-input rounded-full w-full"
           />
         </label>
         <label className="flex flex-col gap-[4px]">
@@ -426,15 +425,6 @@ function SessionRow({
                   className="lcars-input rounded-full"
                 />
               </label>
-              <label className="flex min-w-[200px] flex-1 flex-col gap-[4px]">
-                <span className="lcars-eyebrow">Titel</span>
-                <input
-                  name="title"
-                  type="text"
-                  defaultValue={session.title}
-                  className="lcars-input rounded-full w-full"
-                />
-              </label>
               <label className="flex flex-col gap-[4px]">
                 <span className="lcars-eyebrow">Session-AP</span>
                 <input
@@ -554,7 +544,7 @@ function SessionRow({
 // darunter die Liste der bisherigen Sessions zum Aufklappen.
 //
 // Der übliche Weg ist der Knopf „Session eintragen" am angekündigten Termin
-// (PlannedSessionManager) — er bringt Datum, Titel und Besetzung schon mit.
+// (PlannedSessionManager) — er bringt Datum, Mission und Besetzung schon mit.
 // Von Hand nachgetragen wird, was ohne Ankündigung gespielt wurde; deshalb
 // steht dieses Formular zugeklappt.
 export default function SessionManager({

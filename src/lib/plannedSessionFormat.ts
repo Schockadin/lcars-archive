@@ -7,7 +7,7 @@ import type { PlannedSession, RsvpResponse } from "@/lib/plannedSessionTypes";
 export interface PlannedSessionFormInput {
   // Ein einziges Feld aus <input type="datetime-local">: „2026-06-12T19:30".
   scheduledAt: string;
-  title: string;
+  missionId: string;
   location: string;
   notes: string;
   characterIds: string[];
@@ -17,7 +17,7 @@ export type ParseResult =
   | {
       ok: true;
       scheduledAt: string;
-      title: string;
+      missionId: number;
       location: string;
       notes: string;
       characterIds: number[];
@@ -37,9 +37,9 @@ export function parsePlannedSession(
     return { ok: false, error: "Bitte Datum und Uhrzeit angeben." };
   }
   const [, date, time] = match;
-  const title = input.title.trim();
-  if (title.length > 200) {
-    return { ok: false, error: "Der Titel ist zu lang (höchstens 200 Zeichen)." };
+  const missionId = Number(input.missionId);
+  if (!Number.isInteger(missionId) || missionId <= 0) {
+    return { ok: false, error: "Bitte eine Mission auswählen." };
   }
   // Ohne Zeitzonen-Angabe interpretiert Postgres den Zeitstempel in der
   // Server-Zeitzone; die Runde spielt in einer Zeitzone, das genügt.
@@ -58,7 +58,7 @@ export function parsePlannedSession(
   return {
     ok: true,
     scheduledAt,
-    title,
+    missionId,
     location: input.location.trim().slice(0, 200),
     notes: input.notes.trim().slice(0, 2000),
     characterIds,

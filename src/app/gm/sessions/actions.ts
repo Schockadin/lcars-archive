@@ -36,7 +36,6 @@ export async function createSessionAction(
 
   const parsed = validateGameSessionInput({
     sessionDate: String(formData.get("sessionDate") ?? ""),
-    title: String(formData.get("title") ?? ""),
     sessionAp: String(formData.get("sessionAp") ?? ""),
     bonusAp: String(formData.get("bonusAp") ?? ""),
     characterIds: formData.getAll("characterIds").map(String),
@@ -107,7 +106,7 @@ export async function deleteSessionAction(
   };
 }
 
-// Eine eingetragene Session korrigieren — Datum, Titel, AP-Beträge, Synopsisblöcke
+// Eine eingetragene Session korrigieren — Datum, Mission, AP-Beträge, Synopsisblöcke
 // und Teilnehmende. Die Gutschriften werden dabei mitgezogen (siehe
 // updateGameSession): eine Korrektur, die die Konten nicht mitnimmt, wäre
 // keine.
@@ -123,7 +122,6 @@ export async function updateSessionAction(
   // Dieselbe Prüfung wie beim Anlegen — Titel-/Notizlängen, Datum, Beträge.
   const parsed = validateGameSessionInput({
     sessionDate: String(formData.get("sessionDate") ?? ""),
-    title: String(formData.get("title") ?? ""),
     sessionAp: String(formData.get("sessionAp") ?? ""),
     bonusAp: String(formData.get("bonusAp") ?? ""),
     characterIds: formData.getAll("characterIds").map(String),
@@ -198,7 +196,7 @@ export async function setSessionLogbooksAction(
   };
 }
 
-// Aus einem angekündigten Termin wird die gespielte Session: Datum, Titel und
+// Aus einem angekündigten Termin wird die gespielte Session: Datum, Mission und
 // die eingeplanten Figuren stehen schon, im Fenster kommen AP-Beträge und Synopsisblöcke
 // und die letzte Korrektur der Teilnehmerliste dazu.
 //
@@ -224,7 +222,6 @@ export async function recordPlannedSessionAction(
 
   const parsed = validateGameSessionInput({
     sessionDate: String(formData.get("sessionDate") ?? ""),
-    title: String(formData.get("title") ?? ""),
     sessionAp: String(formData.get("sessionAp") ?? ""),
     bonusAp: String(formData.get("bonusAp") ?? ""),
     characterIds: formData.getAll("characterIds").map(String),
@@ -232,6 +229,9 @@ export async function recordPlannedSessionAction(
   if (!parsed.ok) return { error: parsed.error };
   const sessionContext = await readSessionContext(formData);
   if ("error" in sessionContext) return { error: sessionContext.error };
+  if (planned.missionId !== null && sessionContext.missionId !== planned.missionId) {
+    return { error: "Die geplante Session muss ihrer zugehörigen Mission folgen." };
+  }
 
   // Wie beim Anlegen von Hand: nur aktive, gutschreibbare Akten kommen aufs
   // Konto.
@@ -249,7 +249,9 @@ export async function recordPlannedSessionAction(
 
   const sessionId = await createGameSession({
     ...parsed.value,
-    missionId: sessionContext.missionId,
+    missionId: planned.missionId ?? sessionContext.missionId,
+    reservedMissionSessionNumber:
+      planned.missionId !== null ? planned.missionSessionNumber ?? undefined : undefined,
     newMission: sessionContext.newMission,
     synopsisBlocks: sessionContext.synopsisBlocks,
     characterIds,

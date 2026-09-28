@@ -27,6 +27,7 @@ import type { PlannedSession } from "@/lib/plannedSessionTypes";
 import type { ActiveCharacter } from "@/lib/gameSessions";
 import type { SessionMissionOption } from "@/lib/gameSessions";
 import { SessionContextFields } from "./SessionManager";
+import { PencilIcon, TrashIcon, XIcon } from "@/lib/icons";
 
 // Die anstehenden Spieltermine — angekündigt von der Spielleitung, mit den
 // Zu- und Absagen der Runde daneben.
@@ -90,9 +91,11 @@ function CharacterChecklist({
 function SessionFields({
   session,
   characters,
+  missions,
 }: {
   session?: PlannedSession;
   characters: ActiveCharacter[];
+  missions: SessionMissionOption[];
 }) {
   const id = session ? `p${session.id}` : "neu";
   return (
@@ -109,19 +112,28 @@ function SessionFields({
           className="lcars-input"
         />
       </FormField>
-      <FormField
-        label="Titel (optional)"
-        htmlFor={`ps-title-${id}`}
-        hint="z.B. „Fortsetzung Nebel von Ceti“"
-      >
-        <input
-          id={`ps-title-${id}`}
-          type="text"
-          name="title"
-          defaultValue={session?.title ?? ""}
-          maxLength={200}
-          className="lcars-input"
-        />
+      <FormField label="Mission" htmlFor={`ps-mission-${id}`}>
+        {session?.gameSessionId !== null && session?.missionId ? (
+          <>
+            <input type="hidden" name="missionId" value={session.missionId} />
+            <span className="lcars-input rounded-full">
+              {session.missionTitle ?? session.title}
+            </span>
+          </>
+        ) : (
+          <select
+            id={`ps-mission-${id}`}
+            name="missionId"
+            required
+            defaultValue={session?.missionId ?? ""}
+            className="lcars-input rounded-full"
+          >
+            <option value="" disabled>Mission auswählen</option>
+            {missions.map((mission) => (
+              <option key={mission.id} value={mission.id}>{mission.title}</option>
+            ))}
+          </select>
+        )}
       </FormField>
       <FormField label="Ort (optional)" htmlFor={`ps-loc-${id}`}>
         <input
@@ -163,7 +175,7 @@ function defaultMoment(): string {
   return `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}T19:30`;
 }
 
-// Aus dem Termin wird die gespielte Session: Zeitpunkt, Titel und Besetzung
+// Aus dem Termin wird die gespielte Session: Zeitpunkt, Mission und Besetzung
 // stehen schon, hier kommen AP und optionale Synopsisblöcke dazu.
 function RecordSessionModal({
   session,
@@ -198,10 +210,11 @@ function RecordSessionModal({
           name="sessionDate"
           value={session.scheduledAt.slice(0, 10)}
         />
-        <input type="hidden" name="title" value={session.title} />
         <SessionContextFields
           missions={missions}
           idPrefix={`record-session-${session.id}`}
+          initialMissionId={session.missionId}
+          lockedMission={session.missionId !== null}
         />
         <div className="flex flex-wrap items-end gap-[8px]">
           <label className="flex flex-col gap-[4px]">
@@ -312,21 +325,23 @@ function PlannedSessionRow({
           )}
           <button
             type="button"
-            className="lcars-pill-btn--outline"
+            className="lcars-icon-btn"
+            aria-label={edit ? "Bearbeitung abbrechen" : "Termin ändern"}
+            title={edit ? "Bearbeitung abbrechen" : "Termin ändern"}
             onClick={() => setEdit((o) => !o)}
           >
-            {edit ? "Abbrechen" : "Ändern"}
+            {edit ? <XIcon /> : <PencilIcon />}
           </button>
           <form action={deleteAction}>
             <input type="hidden" name="id" value={session.id} />
             <SubmitButton
               pending={deletePending}
               pendingLabel="Entfernt…"
-              className="lcars-pill-btn--outline disabled:opacity-50"
+              className="lcars-icon-btn lcars-icon-btn--danger disabled:opacity-50"
+              ariaLabel="Termin entfernen"
+              title="Termin entfernen"
               onClick={confirmSubmit("Diesen Termin entfernen?")}
-            >
-              Entfernen
-            </SubmitButton>
+            ><TrashIcon /></SubmitButton>
           </form>
         </div>
       </div>
@@ -334,7 +349,7 @@ function PlannedSessionRow({
       {edit && (
         <form action={updateAction} className="flex flex-col">
           <input type="hidden" name="id" value={session.id} />
-          <SessionFields session={session} characters={characters} />
+          <SessionFields session={session} characters={characters} missions={missions} />
           <SubmitButton pending={updatePending} pendingLabel="Speichert…">
             Speichern
           </SubmitButton>
@@ -402,7 +417,7 @@ export default function PlannedSessionManager({
             }}
             className="flex flex-col"
           >
-            <SessionFields characters={characters} />
+            <SessionFields characters={characters} missions={missions} />
             <SubmitButton pending={pending} pendingLabel="Wird angekündigt…">
               Ankündigen
             </SubmitButton>

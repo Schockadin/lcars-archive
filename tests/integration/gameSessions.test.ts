@@ -46,7 +46,6 @@ async function setup() {
 
   const sessionId = await createGameSession({
     sessionDate: "2399-01-01",
-    title: "Erste Session",
     missionId: mission.id,
     synopsisBlocks: [{
       ingameDate: "2399-01-01",
@@ -80,7 +79,6 @@ describe("setSessionLogbooks", () => {
     const gm = await insertUser({ role: "gm" });
     const sessionId = await createGameSession({
       sessionDate: "2399-02-01",
-      title: "Neue Mission",
       newMission: {
         slug: `session-created-${gm.id}`,
         title: "Aus der Session angelegte Mission",
@@ -137,7 +135,6 @@ describe("setSessionLogbooks", () => {
 
     const zweiteSession = await createGameSession({
       sessionDate: "2399-01-08",
-      title: "Zweite Session",
       missionId: mission.id,
       synopsisBlocks: [],
       sessionAp: 0,

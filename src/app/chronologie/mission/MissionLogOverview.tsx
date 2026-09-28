@@ -39,6 +39,17 @@ export default function MissionLogOverview({
         {logs.length} {logs.length === 1 ? "Log" : "Logs"} · {synopsisBlocks.length} {synopsisBlocks.length === 1 ? "Synopsis-Block" : "Synopsis-Blöcke"} · chronologisch
       </p>
 
+      {synopsisBlocks.length > 0 && (
+        <nav aria-label="Sprungmarken zu Sessions" className="mt-[12px] flex flex-wrap gap-x-[14px] gap-y-[6px]">
+          {synopsisBlocks.map((block) => (
+            <a key={block.id} href={`#mission-synopsis-${block.id}`} className="text-[13px] underline underline-offset-2">
+              {block.sessionTitle ?? "Session"} · {fmtDate(block.ingameDate)}
+              {block.endDate ? `–${fmtDate(block.endDate)}` : ""}
+            </a>
+          ))}
+        </nav>
+      )}
+
       {(canCreateLog || logs.length > 0) && (
         <div className="lcars-toolbar mt-[16px]">
           {canCreateLog && (
@@ -69,23 +80,24 @@ export default function MissionLogOverview({
               );
             }
             return (
-              <ChronoRow
-                key={`synopsis-${entry.block.id}`}
-                date={entry.block.ingameDate}
-                color={CONTENT_TYPE_COLOR.mission}
-              >
-                <ChronoCard
+              <div key={`synopsis-${entry.block.id}`} id={`mission-synopsis-${entry.block.id}`} className="scroll-mt-24">
+                <ChronoRow
+                  date={entry.block.ingameDate}
                   color={CONTENT_TYPE_COLOR.mission}
-                  tag="Synopsis"
-                  title={entry.block.sessionTitle ?? "Session-Zusammenfassung"}
-                  date={`${fmtDate(entry.block.ingameDate)}${entry.block.endDate ? `–${fmtDate(entry.block.endDate)}` : ""}`}
                 >
-                  <div
-                    className="mission-body"
-                    dangerouslySetInnerHTML={{ __html: entry.block.bodyHtml }}
-                  />
-                </ChronoCard>
-              </ChronoRow>
+                  <ChronoCard
+                    color={CONTENT_TYPE_COLOR.mission}
+                    tag="Synopsis"
+                    title={entry.block.sessionTitle ?? "Session-Zusammenfassung"}
+                    date={`${fmtDate(entry.block.ingameDate)}${entry.block.endDate ? `–${fmtDate(entry.block.endDate)}` : ""}`}
+                  >
+                    <div
+                      className="mission-body"
+                      dangerouslySetInnerHTML={{ __html: entry.block.bodyHtml }}
+                    />
+                  </ChronoCard>
+                </ChronoRow>
+              </div>
             );
           })}
         </div>

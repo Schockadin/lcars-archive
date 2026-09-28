@@ -227,6 +227,12 @@
   right: 8px;
   z-index: 2;
 }
+.timeline-card-actions--open {
+  z-index: 20;
+}
+.timeline-card:has(.timeline-card-actions--open) {
+  z-index: 20;
+}
 .timeline-card-more {
   display: grid;
   width: 24px;

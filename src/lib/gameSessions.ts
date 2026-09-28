@@ -28,6 +28,7 @@ export interface GameSession {
   title: string;
   missionId: number | null;
   missionTitle: string | null;
+  missionSessionNumber: number | null;
   sessionAp: number;
   bonusAp: number;
   createdByName: string | null;
@@ -61,6 +62,7 @@ export async function listGameSessions(): Promise<GameSession[]> {
     SELECT s.id,
            s.session_date::text AS "sessionDate",
            s.title, s.mission_id AS "missionId", m.title AS "missionTitle",
+           s.mission_session_number AS "missionSessionNumber",
            s.session_ap AS "sessionAp", s.bonus_ap AS "bonusAp",
            u.name AS "createdByName",
            s.created_at::text AS "createdAt",
@@ -202,8 +204,8 @@ export async function listActiveCharactersForAp(): Promise<ActiveCharacter[]> {
 
 export interface CreateGameSessionInput {
   sessionDate: string;
-  title: string;
   missionId?: number;
+  reservedMissionSessionNumber?: number;
   newMission?: { slug: string; title: string; ownerUserId: number };
   synopsisBlocks: SessionSynopsisBlockInput[];
   sessionAp: number;
@@ -238,16 +240,28 @@ export async function createGameSession(
     }
     if (!missionId) throw new Error("Für die Session ist eine Mission erforderlich.");
 
-    const [mission] = await tx<{ id: number }[]>`
-      SELECT id FROM missions
+    const [mission] = await tx<{ id: number; title: string }[]>`
+      SELECT id, title FROM missions
       WHERE id = ${missionId} AND deleted_at IS NULL AND is_draft = false
       FOR UPDATE
     `;
     if (!mission) throw new Error("Mission für diese Session nicht gefunden.");
 
+    let missionSessionNumber = input.reservedMissionSessionNumber;
+    if (missionSessionNumber == null) {
+      const [sequence] = await tx<{ number: number }[]>`
+        SELECT GREATEST(
+          COALESCE((SELECT MAX(mission_session_number) FROM game_sessions WHERE mission_id = ${missionId}), 0),
+          COALESCE((SELECT MAX(mission_session_number) FROM planned_sessions WHERE mission_id = ${missionId}), 0)
+        ) + 1 AS number
+      `;
+      missionSessionNumber = sequence.number;
+    }
+    const title = `${mission.title} ${missionSessionNumber}`;
+
     const [session] = await tx<{ id: number }[]>`
-      INSERT INTO game_sessions (session_date, mission_id, title, session_ap, bonus_ap, notes, created_by)
-      VALUES (${input.sessionDate}, ${missionId}, ${input.title}, ${input.sessionAp},
+      INSERT INTO game_sessions (session_date, mission_id, mission_session_number, title, session_ap, bonus_ap, notes, created_by)
+      VALUES (${input.sessionDate}, ${missionId}, ${missionSessionNumber}, ${title}, ${input.sessionAp},
               ${input.bonusAp}, '', ${input.createdByUserId})
       RETURNING id
     `;
@@ -264,7 +278,7 @@ export async function createGameSession(
       `;
     }
 
-    const note = input.title.trim() || `Session vom ${input.sessionDate}`;
+    const note = title;
     const bookings: { amount: number; reason: ApReason }[] = [];
     if (input.sessionAp > 0)
       bookings.push({ amount: input.sessionAp, reason: "session" });
@@ -362,7 +376,6 @@ export async function deleteGameSession(id: number): Promise<string | null> {
 export interface UpdateGameSessionInput {
   id: number;
   sessionDate: string;
-  title: string;
   missionId: number;
   synopsisBlocks: SessionSynopsisBlockInput[];
   sessionAp: number;
@@ -383,28 +396,47 @@ export async function updateGameSession(
   const rules = await getAdvancementRules();
 
   const result = await sql.begin(async (tx) => {
-    const [existing] = await tx<{ missionId: number | null }[]>`
-      SELECT mission_id AS "missionId"
+    const [existing] = await tx<{ missionId: number | null; missionSessionNumber: number | null }[]>`
+      SELECT mission_id AS "missionId", mission_session_number AS "missionSessionNumber"
       FROM game_sessions WHERE id = ${input.id} FOR UPDATE
     `;
     if (!existing) return null;
-    const [mission] = await tx<{ slug: string }[]>`
-      SELECT slug FROM missions
+    const [mission] = await tx<{ slug: string; title: string }[]>`
+      SELECT slug, title FROM missions
       WHERE id = ${input.missionId} AND deleted_at IS NULL AND is_draft = false
       FOR UPDATE
     `;
     if (!mission) throw new Error("Mission für diese Session nicht gefunden.");
 
+    let missionSessionNumber = existing.missionSessionNumber;
+    if (existing.missionId !== input.missionId || missionSessionNumber == null) {
+      const [sequence] = await tx<{ number: number }[]>`
+        SELECT GREATEST(
+          COALESCE((SELECT MAX(mission_session_number) FROM game_sessions WHERE mission_id = ${input.missionId} AND id <> ${input.id}), 0),
+          COALESCE((SELECT MAX(mission_session_number) FROM planned_sessions WHERE mission_id = ${input.missionId}), 0)
+        ) + 1 AS number
+      `;
+      missionSessionNumber = sequence.number;
+    }
+    const title = `${mission.title} ${missionSessionNumber}`;
+
     const rows = await tx<{ id: number }[]>`
       UPDATE game_sessions
       SET session_date = ${input.sessionDate}, mission_id = ${input.missionId},
-          title = ${input.title},
+          mission_session_number = ${missionSessionNumber}, title = ${title},
           session_ap = ${input.sessionAp}, bonus_ap = ${input.bonusAp},
           updated_at = NOW()
       WHERE id = ${input.id}
       RETURNING id
     `;
     if (rows.length === 0) return null;
+    await tx`
+      UPDATE planned_sessions
+      SET mission_id = ${input.missionId},
+          mission_session_number = ${missionSessionNumber},
+          title = ${title}, updated_at = NOW()
+      WHERE game_session_id = ${input.id}
+    `;
     await replaceSessionSynopsisBlocks(
       tx,
       input.id,
@@ -432,7 +464,7 @@ export async function updateGameSession(
       WHERE session_id = ${input.id} AND reason IN ('session', 'bonus')
     `;
 
-    const note = input.title.trim() || `Session vom ${input.sessionDate}`;
+    const note = title;
     const bookings: { amount: number; reason: ApReason }[] = [];
     if (input.sessionAp > 0)
       bookings.push({ amount: input.sessionAp, reason: "session" });

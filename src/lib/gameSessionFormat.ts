@@ -3,12 +3,10 @@
 // dieselbe Funktion nutzen die Server-Action (verbindlich) und die Tests.
 // Der Datenzugriff liegt in src/lib/gameSessions.ts.
 
-export const SESSION_TITLE_MAX = 200;
 export const SESSION_AP_MAX = 999;
 
 export interface GameSessionInput {
   sessionDate: string;
-  title: string;
   sessionAp: number;
   bonusAp: number;
   characterIds: number[];
@@ -42,7 +40,6 @@ function parseAp(raw: string, label: string): number | string {
 
 export function validateGameSessionInput(raw: {
   sessionDate: string;
-  title: string;
   sessionAp: string;
   bonusAp: string;
   characterIds: string[];
@@ -50,11 +47,6 @@ export function validateGameSessionInput(raw: {
   const sessionDate = raw.sessionDate.trim();
   if (!isIsoDate(sessionDate)) {
     return { ok: false, error: "Bitte ein gültiges Datum angeben." };
-  }
-
-  const title = raw.title.trim();
-  if (title.length > SESSION_TITLE_MAX) {
-    return { ok: false, error: `Titel zu lang (max. ${SESSION_TITLE_MAX} Zeichen).` };
   }
 
   const sessionAp = parseAp(raw.sessionAp, "Session-AP");
@@ -80,6 +72,6 @@ export function validateGameSessionInput(raw: {
 
   return {
     ok: true,
-    value: { sessionDate, title, sessionAp, bonusAp, characterIds },
+    value: { sessionDate, sessionAp, bonusAp, characterIds },
   };
 }

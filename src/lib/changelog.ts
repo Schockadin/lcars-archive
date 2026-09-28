@@ -173,6 +173,11 @@ export const CHANGELOG: ChangelogEntry[] = [
         category: "spielleitung",
         tutorial: "spielleitung-admins",
       },
+      {
+        text: "Angekündigte Termine gehören zu einer Mission und erhalten fortlaufende Namen; in der Missionschronik führen Sprungmarken direkt zu den Session-Zusammenfassungen.",
+        category: "spielleitung",
+        tutorial: "spielleitung-admins",
+      },
     ],
   },
   {

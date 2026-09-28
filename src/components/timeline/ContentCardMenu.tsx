@@ -41,7 +41,7 @@ export default function ContentCardMenu({
   const visibilityType: VisibilityContentType | null = contentType;
 
   return (
-    <div className="timeline-card-actions">
+    <div className={open ? "timeline-card-actions timeline-card-actions--open" : "timeline-card-actions"}>
       <button
         type="button"
         className="timeline-card-more"

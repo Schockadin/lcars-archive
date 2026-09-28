@@ -25,7 +25,7 @@ export type {
 
 export interface PlannedSessionInput {
   scheduledAt: string;
-  title: string;
+  missionId: number;
   location: string;
   notes: string;
   characterIds: number[];
@@ -35,6 +35,9 @@ interface Row {
   id: number;
   scheduledAt: string;
   title: string;
+  missionId: number | null;
+  missionTitle: string | null;
+  missionSessionNumber: number | null;
   location: string;
   notes: string;
   createdByName: string | null;
@@ -128,7 +131,10 @@ async function replaceCharacters(
 }
 
 const SELECT_COLUMNS = sql`
-  s.id, s.scheduled_at::text AS "scheduledAt", s.title, s.location, s.notes,
+  s.id, s.scheduled_at::text AS "scheduledAt",
+  COALESCE(m.title || ' ' || s.mission_session_number::text, s.title) AS title,
+  s.mission_id AS "missionId", m.title AS "missionTitle",
+  s.mission_session_number AS "missionSessionNumber", s.location, s.notes,
   s.game_session_id AS "gameSessionId", u.name AS "createdByName"
 `;
 
@@ -144,6 +150,7 @@ export async function listUpcomingSessions(): Promise<PlannedSession[]> {
     SELECT ${SELECT_COLUMNS}
     FROM planned_sessions s
     LEFT JOIN users u ON u.id = s.created_by
+    LEFT JOIN missions m ON m.id = s.mission_id
     WHERE s.scheduled_at > NOW()
       AND s.game_session_id IS NULL
     ORDER BY s.scheduled_at ASC
@@ -221,6 +228,7 @@ export async function listAllPlannedSessions(): Promise<PlannedSession[]> {
     SELECT ${SELECT_COLUMNS}
     FROM planned_sessions s
     LEFT JOIN users u ON u.id = s.created_by
+    LEFT JOIN missions m ON m.id = s.mission_id
     ORDER BY s.scheduled_at DESC
   `;
   return withDetails(rows);
@@ -231,10 +239,23 @@ export async function createPlannedSession(
   createdBy: number,
 ): Promise<number> {
   return sql.begin(async (tx) => {
+    const [mission] = await tx<{ title: string }[]>`
+      SELECT title FROM missions WHERE id = ${input.missionId}
+        AND deleted_at IS NULL AND is_draft = false FOR UPDATE
+    `;
+    if (!mission) throw new Error("Mission für diesen Termin nicht gefunden.");
+    const [sequence] = await tx<{ number: number }[]>`
+      SELECT GREATEST(
+        COALESCE((SELECT MAX(mission_session_number) FROM game_sessions WHERE mission_id = ${input.missionId}), 0),
+        COALESCE((SELECT MAX(mission_session_number) FROM planned_sessions WHERE mission_id = ${input.missionId}), 0)
+      ) + 1 AS number
+    `;
+    const generatedTitle = `${mission.title} ${sequence.number}`;
     const [row] = await tx<{ id: number }[]>`
-      INSERT INTO planned_sessions (scheduled_at, title, location, notes, created_by)
-      VALUES (${input.scheduledAt}, ${input.title}, ${input.location},
-              ${input.notes}, ${createdBy})
+      INSERT INTO planned_sessions
+        (scheduled_at, title, location, notes, created_by, mission_id, mission_session_number)
+      VALUES (${input.scheduledAt}, ${generatedTitle}, ${input.location},
+              ${input.notes}, ${createdBy}, ${input.missionId}, ${sequence.number})
       RETURNING id
     `;
     await replaceCharacters(tx, row.id, input.characterIds);
@@ -247,9 +268,33 @@ export async function updatePlannedSession(
   input: PlannedSessionInput,
 ): Promise<void> {
   await sql.begin(async (tx) => {
+    const [existing] = await tx<{ missionId: number | null; missionSessionNumber: number | null; gameSessionId: number | null }[]>`
+      SELECT mission_id AS "missionId", mission_session_number AS "missionSessionNumber",
+             game_session_id AS "gameSessionId"
+      FROM planned_sessions WHERE id = ${id} FOR UPDATE
+    `;
+    if (!existing) return;
+    const [mission] = await tx<{ title: string }[]>`
+      SELECT title FROM missions WHERE id = ${input.missionId}
+        AND deleted_at IS NULL AND is_draft = false FOR UPDATE
+    `;
+    if (!mission) throw new Error("Mission für diesen Termin nicht gefunden.");
+    let number = existing.missionSessionNumber;
+    if (existing.missionId !== input.missionId || number === null) {
+      if (existing.gameSessionId !== null) throw new Error("Die Mission einer eingetragenen Session kann nicht geändert werden.");
+      const [sequence] = await tx<{ number: number }[]>`
+        SELECT GREATEST(
+          COALESCE((SELECT MAX(mission_session_number) FROM game_sessions WHERE mission_id = ${input.missionId}), 0),
+          COALESCE((SELECT MAX(mission_session_number) FROM planned_sessions WHERE mission_id = ${input.missionId}), 0)
+        ) + 1 AS number
+      `;
+      number = sequence.number;
+    }
     await tx`
       UPDATE planned_sessions
-      SET scheduled_at = ${input.scheduledAt}, title = ${input.title},
+      SET scheduled_at = ${input.scheduledAt},
+          title = ${mission.title} || ' ' || ${number},
+          mission_id = ${input.missionId}, mission_session_number = ${number},
           location = ${input.location}, notes = ${input.notes},
           updated_at = NOW()
       WHERE id = ${id}
@@ -266,9 +311,14 @@ export async function linkPlannedSession(
   gameSessionId: number,
 ): Promise<void> {
   await sql`
-    UPDATE planned_sessions
-    SET game_session_id = ${gameSessionId}, updated_at = NOW()
-    WHERE id = ${id}
+    UPDATE planned_sessions ps
+    SET game_session_id = gs.id, mission_id = gs.mission_id,
+        mission_session_number = gs.mission_session_number,
+        title = COALESCE(m.title || ' ' || gs.mission_session_number::text, ps.title),
+        updated_at = NOW()
+    FROM game_sessions gs
+    LEFT JOIN missions m ON m.id = gs.mission_id
+    WHERE ps.id = ${id} AND gs.id = ${gameSessionId}
   `;
 }
 
@@ -281,6 +331,7 @@ export async function getPlannedSession(
     SELECT ${SELECT_COLUMNS}
     FROM planned_sessions s
     LEFT JOIN users u ON u.id = s.created_by
+    LEFT JOIN missions m ON m.id = s.mission_id
     WHERE s.id = ${id}
   `;
   const [session] = await withDetails(rows);

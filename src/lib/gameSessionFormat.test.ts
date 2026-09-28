@@ -2,13 +2,11 @@ import { describe, it, expect } from "vitest";
 import {
   isIsoDate,
   validateGameSessionInput,
-  SESSION_TITLE_MAX,
   SESSION_AP_MAX,
 } from "@/lib/gameSessionFormat";
 
 const valid = {
   sessionDate: "2026-04-20",
-  title: "  Der Nebel von Cygnus IV  ",
   sessionAp: "1",
   bonusAp: "0",
   characterIds: ["3", "7"],
@@ -36,7 +34,6 @@ describe("validateGameSessionInput", () => {
       ok: true,
       value: {
         sessionDate: "2026-04-20",
-        title: "Der Nebel von Cygnus IV",
         sessionAp: 1,
         bonusAp: 0,
         characterIds: [3, 7],
@@ -64,14 +61,6 @@ describe("validateGameSessionInput", () => {
     expect(
       validateGameSessionInput({ ...valid, bonusAp: String(SESSION_AP_MAX + 1) }).ok,
     ).toBe(false);
-  });
-
-  it("lehnt einen zu langen Titel ab", () => {
-    const result = validateGameSessionInput({
-      ...valid,
-      title: "x".repeat(SESSION_TITLE_MAX + 1),
-    });
-    expect(result.ok).toBe(false);
   });
 
   it("erlaubt eine Session ohne Teilnehmende nur ohne AP", () => {

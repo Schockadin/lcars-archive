@@ -120,7 +120,7 @@ export const DB_TABLE_COLUMNS = {
     "created_at", "updated_at",
   ],
   game_sessions: [
-    "id", "session_date", "mission_id", "title", "session_ap", "bonus_ap",
+    "id", "session_date", "mission_id", "mission_session_number", "title", "session_ap", "bonus_ap",
     "notes",
     "created_by", "created_at", "updated_at",
   ],
@@ -130,7 +130,7 @@ export const DB_TABLE_COLUMNS = {
   ],
   game_session_characters: ["session_id", "character_id"],
   planned_sessions: [
-    "id", "scheduled_at", "title", "location", "notes", "created_by",
+    "id", "scheduled_at", "title", "mission_id", "mission_session_number", "location", "notes", "created_by",
     "created_at", "updated_at", "game_session_id",
   ],
   planned_session_rsvps: [
