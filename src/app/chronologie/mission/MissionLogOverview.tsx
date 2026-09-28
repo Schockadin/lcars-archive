@@ -7,6 +7,7 @@ import { fmtDate, sessionLabel } from "@/lib/missionFormat";
 import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import { missionLogHref } from "@/lib/contentRoutes";
 import type { MissionSynopsisBlock } from "@/lib/gameSessions";
+import { LcarsCollapsiblePanel, LcarsToc } from "@/components/lcars";
 
 // Die Übersicht der Logbücher INNERHALB einer Mission — dieselbe Liste wie
 // die Chronologie und die Datenbank: ChronoRow (Datumsspalte · Schiene mit
@@ -40,14 +41,21 @@ export default function MissionLogOverview({
       </p>
 
       {synopsisBlocks.length > 0 && (
-        <nav aria-label="Sprungmarken zu Sessions" className="mt-[12px] flex flex-wrap gap-x-[14px] gap-y-[6px]">
-          {synopsisBlocks.map((block) => (
-            <a key={block.id} href={`#mission-synopsis-${block.id}`} className="text-[13px] underline underline-offset-2">
-              {block.sessionTitle ?? "Session"} · {fmtDate(block.ingameDate)}
-              {block.endDate ? `–${fmtDate(block.endDate)}` : ""}
-            </a>
-          ))}
-        </nav>
+        <div className="mb-[16px]">
+          <LcarsCollapsiblePanel
+            title="Inhaltsverzeichnis"
+            storageId={`mission:${missionSlug}:chronicle-toc`}
+          >
+            <LcarsToc
+              title="Sessions"
+              ariaLabel="Inhaltsverzeichnis der Missionschronik"
+              headings={synopsisBlocks.map((block) => ({
+                id: `mission-synopsis-${block.id}`,
+                text: `${block.sessionTitle ?? "Session-Zusammenfassung"} · ${fmtDate(block.ingameDate)}${block.endDate ? `–${fmtDate(block.endDate)}` : ""}`,
+              }))}
+            />
+          </LcarsCollapsiblePanel>
+        </div>
       )}
 
       {(canCreateLog || logs.length > 0) && (

@@ -174,9 +174,9 @@ export interface SessionMissionOption {
 export async function listSessionMissions(): Promise<SessionMissionOption[]> {
   return sql<SessionMissionOption[]>`
     SELECT id, title, slug
-    FROM missions
+    FROM missions m
     WHERE deleted_at IS NULL AND is_draft = false
-    ORDER BY title
+    ORDER BY started_at DESC NULLS LAST, created_at DESC, id DESC
   `;
 }
 

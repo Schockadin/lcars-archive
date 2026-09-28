@@ -43,4 +43,16 @@ describe("ContentCardMenu", () => {
     expect(screen.getByRole("menuitem", { name: "Als Entwurf" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Löschen" })).toBeInTheDocument();
   });
+
+  it("schließt das Menü bei Klick außerhalb", () => {
+    render(<ContentCardMenu {...props} />);
+    const trigger = screen.getByRole("button", { name: "Weitere Aktionen" });
+    fireEvent.click(trigger);
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+
+    fireEvent.pointerDown(document.body);
+
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("menu", { name: "Aktionen" })).not.toBeInTheDocument();
+  });
 });

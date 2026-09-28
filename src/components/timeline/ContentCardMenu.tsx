@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import ShareMenu from "@/components/ShareMenu";
 import DeleteOwnContentButton from "@/app/user/content/DeleteOwnContentButton";
@@ -29,6 +29,7 @@ export default function ContentCardMenu({
   href: string;
 }) {
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const isOwner = currentUserId != null && ownerUserId === currentUserId;
   const [pending, startTransition] = useTransition();
@@ -40,8 +41,27 @@ export default function ContentCardMenu({
         : contentType;
   const visibilityType: VisibilityContentType | null = contentType;
 
+  useEffect(() => {
+    if (!open) return;
+    const closeWhenOutside = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("pointerdown", closeWhenOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeWhenOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
   return (
-    <div className={open ? "timeline-card-actions timeline-card-actions--open" : "timeline-card-actions"}>
+    <div
+      ref={rootRef}
+      className={open ? "timeline-card-actions timeline-card-actions--open" : "timeline-card-actions"}
+    >
       <button
         type="button"
         className="timeline-card-more"

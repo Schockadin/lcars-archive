@@ -15,6 +15,7 @@ vi.mock("next/cache", () => ({
 import sql from "@/lib/db";
 import {
   createGameSession,
+  listSessionMissions,
   setSessionLogbooks,
   syncSessionLogbookAp,
 } from "@/lib/gameSessions";
@@ -75,6 +76,18 @@ async function setup() {
 }
 
 describe("setSessionLogbooks", () => {
+  it("sortiert Missionsauswahl nach dem jüngsten Startdatum", async () => {
+    const older = await insertMission({ title: "Ältere Mission" });
+    const newer = await insertMission({ title: "Neuere Mission" });
+    await sql`UPDATE missions SET started_at = '2399-01-01' WHERE id = ${older.id}`;
+    await sql`UPDATE missions SET started_at = '2399-02-01' WHERE id = ${newer.id}`;
+
+    const missions = await listSessionMissions();
+    expect(missions.findIndex((mission) => mission.id === newer.id)).toBeLessThan(
+      missions.findIndex((mission) => mission.id === older.id),
+    );
+  });
+
   it("legt eine neue Mission zusammen mit der Session an", async () => {
     const gm = await insertUser({ role: "gm" });
     const sessionId = await createGameSession({
