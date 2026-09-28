@@ -47,6 +47,8 @@ async function setup() {
   const sessionId = await createGameSession({
     sessionDate: "2399-01-01",
     title: "Erste Session",
+    missionId: mission.id,
+    outcome: "Die Crew erreicht das Ziel.",
     sessionAp: 0,
     bonusAp: 0,
     notes: "",
@@ -93,11 +95,13 @@ describe("setSessionLogbooks", () => {
   // Ein Logbuch hängt an genau EINER Session. Wird es weitergezogen, verliert
   // die alte Session ihr letztes Logbuch — und damit ihre Gutschrift.
   it("zieht die AP der Session mit, der ein Logbuch weggenommen wird", async () => {
-    const { gm, character, sessionId, log } = await setup();
+    const { gm, character, mission, sessionId, log } = await setup();
 
     const zweiteSession = await createGameSession({
       sessionDate: "2399-01-08",
       title: "Zweite Session",
+      missionId: mission.id,
+      outcome: "Die Crew setzt ihre Reise fort.",
       sessionAp: 0,
       bonusAp: 0,
       notes: "",

@@ -275,6 +275,8 @@ const DEMO_CHARACTERS: CharacterListItem[] = [
 const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
   {
     id: 1,
+    ownerUserId: null,
+    isDraft: false,
     slug: "andor",
     title: "Andor",
     category: "location",
@@ -299,6 +301,8 @@ const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
   },
   {
     id: 2,
+    ownerUserId: null,
+    isDraft: false,
     slug: "shran",
     title: "Thy'lek Shran",
     category: "npc",
@@ -318,6 +322,8 @@ const DEMO_ARCHIVE: ArchiveEntryPreview[] = [
   },
   {
     id: 3,
+    ownerUserId: null,
+    isDraft: false,
     slug: "obsidianischer-orden",
     title: "Obsidianischer Orden",
     category: "faction",

@@ -25,6 +25,7 @@ export function toDashboardCharacterItem(
     rank: character.metadata.rank ?? null,
     status: character.status,
     isDraft: character.is_draft,
+    availableAp: 0,
   };
 }
 
