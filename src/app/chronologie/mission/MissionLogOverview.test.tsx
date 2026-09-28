@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import MissionLogOverview from "./MissionLogOverview";
 import type { MissionLogListItem } from "@/types/missions";
 
@@ -17,6 +17,8 @@ function log(
     log_date: date,
     author_name: author,
     author_slug: author ? author.toLowerCase().replace(/\W/g, "-") : null,
+    ownerUserId: 7,
+    isDraft: false,
   };
 }
 
@@ -35,6 +37,7 @@ function renderOverview(
       logs={LOGS}
       synopsisBlocks={[]}
       canCreateLog={false}
+      currentUserId={null}
       {...props}
     />,
   );
@@ -69,6 +72,16 @@ describe("MissionLogOverview", () => {
     expect(
       screen.getByRole("link", { name: /Erster Kontakt/ }),
     ).toHaveAttribute("href", "/chronologie/mission/deneb-iv/log-1");
+  });
+
+  it("zeigt dem Eigentümer die Aktionen eines Missionslogs", () => {
+    renderOverview({ currentUserId: 7 });
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Weitere Aktionen" })[0]);
+
+    expect(screen.getByRole("link", { name: "Bearbeiten" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Als Entwurf" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Löschen" })).toBeInTheDocument();
   });
 
   it("zeigt Sitzungsnummer und Datum an der Karte", () => {

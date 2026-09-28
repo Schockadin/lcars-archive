@@ -8,6 +8,7 @@ import { CONTENT_TYPE_COLOR } from "@/lib/contentTypeFormat";
 import { missionLogHref } from "@/lib/contentRoutes";
 import type { MissionSynopsisBlock } from "@/lib/gameSessions";
 import { LcarsCollapsiblePanel, LcarsToc } from "@/components/lcars";
+import ContentCardMenu from "@/components/timeline/ContentCardMenu";
 
 // Die Übersicht der Logbücher INNERHALB einer Mission — dieselbe Liste wie
 // die Chronologie und die Datenbank: ChronoRow (Datumsspalte · Schiene mit
@@ -22,11 +23,13 @@ export default function MissionLogOverview({
   logs,
   synopsisBlocks,
   canCreateLog,
+  currentUserId = null,
 }: {
   missionSlug: string;
   logs: MissionLogListItem[];
   synopsisBlocks: MissionSynopsisBlock[];
   canCreateLog: boolean;
+  currentUserId?: number | null;
 }) {
   const entries = [
     ...logs.map((log) => ({ kind: "log" as const, date: log.log_date ?? "", log })),
@@ -84,6 +87,7 @@ export default function MissionLogOverview({
                   key={`log-${entry.log.id}`}
                   log={entry.log}
                   missionSlug={missionSlug}
+                  currentUserId={currentUserId}
                 />
               );
             }
@@ -118,9 +122,11 @@ export default function MissionLogOverview({
 function LogRow({
   log,
   missionSlug,
+  currentUserId,
 }: {
   log: MissionLogListItem;
   missionSlug: string;
+  currentUserId: number | null;
 }) {
   return (
     <ChronoRow date={log.log_date} color={CONTENT_TYPE_COLOR.mission_log}>
@@ -136,6 +142,17 @@ function LogRow({
             <b>Session</b> {sessionLabel(log.session_nr)}
             {log.author_name && <> · <b>Autor</b> {log.author_name}</>}
           </span>
+        }
+        actions={
+          <ContentCardMenu
+            contentType="mission_log"
+            id={log.id}
+            ownerUserId={log.ownerUserId}
+            currentUserId={currentUserId}
+            isDraft={log.isDraft}
+            title={log.title}
+            href={missionLogHref(missionSlug, log.slug)}
+          />
         }
       />
     </ChronoRow>

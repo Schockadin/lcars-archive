@@ -678,7 +678,9 @@ export async function getLogsByMissionId(
           ml.session_nr,
           ml.log_date::text AS log_date,
           c.name AS author_name,
-          c.slug AS author_slug
+          c.slug AS author_slug,
+          ml.owner_user_id AS "ownerUserId",
+          ml.is_draft AS "isDraft"
         FROM mission_logs ml
         LEFT JOIN characters c ON c.id = ml.author_id
         WHERE ml.mission_id = ${missionId} AND ml.deleted_at IS NULL

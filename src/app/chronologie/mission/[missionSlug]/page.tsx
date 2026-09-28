@@ -125,6 +125,7 @@ export default async function MissionPage({ params, searchParams }: Props) {
         logs={logs}
         synopsisBlocks={synopsisBlocks}
         canCreateLog={canCreateLog}
+        currentUserId={viewer?.userId ?? null}
       />
 
       <div className="lcars-text lcars-wide-column mt-[16px] flex flex-col gap-[16px]">

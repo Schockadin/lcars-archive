@@ -4,6 +4,7 @@ import { FormError, FormSuccess } from "@/app/_shared/FormPrimitives";
 import MarkdownEditor from "@/app/_shared/MarkdownEditor";
 import { confirmSubmit } from "@/lib/confirmSubmit";
 import { formatISODate } from "@/utils/formateISODate";
+import { defaultSessionSynopsisDate } from "@/lib/sessionSynopsis";
 import { PlusIcon, TrashIcon } from "@/lib/icons";
 import type {
   GameSession,
@@ -158,7 +159,10 @@ export function SessionContextFields({
               ...current,
               {
                 key: crypto.randomUUID(),
-                ingameDate: "",
+                ingameDate: defaultSessionSynopsisDate(
+                  missions.find((mission) => `mission:${mission.id}` === missionChoice)?.startedAt,
+                  current,
+                ),
                 endDate: "",
                 body: "",
               },

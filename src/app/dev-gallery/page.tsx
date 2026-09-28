@@ -360,6 +360,8 @@ const DEMO_MISSION_LOGS: MissionLogListItem[] = [
     log_date: "2400-09-15",
     author_name: "T'Lara",
     author_slug: "t-lara",
+    ownerUserId: null,
+    isDraft: false,
   },
   {
     id: 2,
@@ -369,6 +371,8 @@ const DEMO_MISSION_LOGS: MissionLogListItem[] = [
     log_date: "2400-09-22",
     author_name: "Marcus Hale",
     author_slug: "marcus-hale",
+    ownerUserId: null,
+    isDraft: false,
   },
   {
     id: 3,
@@ -378,6 +382,8 @@ const DEMO_MISSION_LOGS: MissionLogListItem[] = [
     log_date: "2400-10-02",
     author_name: "T'Lara",
     author_slug: "t-lara",
+    ownerUserId: null,
+    isDraft: false,
   },
 ];
 
